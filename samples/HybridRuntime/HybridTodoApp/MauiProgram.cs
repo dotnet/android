@@ -59,11 +59,13 @@ public static class MauiProgram
 		builder.Services.AddSingleton<SeedDataService>();
 		builder.Services.AddSingleton<ModalErrorHandler>();
 		builder.Services.AddSingleton<MainPageModel>();
+#if !HYBRID_RUNTIME
 		builder.Services.AddSingleton<ProjectListPageModel>();
 		builder.Services.AddSingleton<ManageMetaPageModel>();
 
 		builder.Services.AddTransientWithShellRoute<ProjectDetailPage, ProjectDetailPageModel>("project");
 		builder.Services.AddTransientWithShellRoute<TaskDetailPage, TaskDetailPageModel>("task");
+#endif
 
 		return builder.Build();
 	}

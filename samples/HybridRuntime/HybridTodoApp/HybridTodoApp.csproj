@@ -30,6 +30,8 @@
 		<!-- App Identifier -->
 		<ApplicationId Condition=" '$(TodoRuntime)' == 'NativeAOT' ">net.dot.hybridruntime.todo.nativeaot</ApplicationId>
 		<ApplicationId Condition=" '$(TodoRuntime)' != 'NativeAOT' ">net.dot.hybridruntime.todo.coreclr</ApplicationId>
+		<ApplicationId Condition=" '$(HybridRuntime)' == 'true' ">net.dot.hybridruntime</ApplicationId>
+		<DefineConstants Condition=" '$(HybridRuntime)' == 'true' ">$(DefineConstants);HYBRID_RUNTIME</DefineConstants>
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -59,6 +61,7 @@
 
 		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+		<ProguardConfiguration Include="..\Shell\proguard.cfg" Condition=" '$(HybridRuntime)' == 'true' " />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -73,5 +76,28 @@
 		<PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.10" />
 		<PackageReference Include="Syncfusion.Maui.Toolkit" Version="1.0.9" />
 	</ItemGroup>
+
+	<ItemGroup Condition=" '$(HybridRuntime)' == 'true' ">
+		<Compile Remove="AppShell.xaml.cs" />
+		<Compile Remove="Pages\ManageMetaPage.xaml.cs;Pages\ProjectDetailPage.xaml.cs;Pages\ProjectListPage.xaml.cs;Pages\TaskDetailPage.xaml.cs" />
+		<Compile Remove="PageModels\ManageMetaPageModel.cs;PageModels\ProjectDetailPageModel.cs;PageModels\ProjectListPageModel.cs;PageModels\TaskDetailPageModel.cs" />
+		<MauiXaml Remove="AppShell.xaml" />
+		<MauiXaml Remove="Pages\ManageMetaPage.xaml;Pages\ProjectDetailPage.xaml;Pages\ProjectListPage.xaml;Pages\TaskDetailPage.xaml" />
+	</ItemGroup>
+
+	<Target Name="_AndroidReplaceCoreClrProcessRuntimeProvider"
+			AfterTargets="_GenerateTrimmableTypeMap"
+			Condition=" '$(HybridRuntime)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' and Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml') "
+			Inputs="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
+			Outputs="$(IntermediateOutputPath)replace-coreclr-runtime-provider.stamp">
+		<XmlPoke
+				XmlInputPath="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
+				Query="/*[local-name()='manifest']/*[local-name()='application']/*[local-name()='provider' and @*[local-name()='process']=':coreclr' and starts-with(@*[local-name()='name'], 'net.dot.jni.nativeaot.NativeAotRuntimeProvider')]/@*[local-name()='name']"
+				Value="net.dot.hybrid.NoOpRuntimeProvider" />
+		<Touch Files="$(IntermediateOutputPath)replace-coreclr-runtime-provider.stamp" AlwaysCreate="true" />
+		<ItemGroup>
+			<FileWrites Include="$(IntermediateOutputPath)replace-coreclr-runtime-provider.stamp" />
+		</ItemGroup>
+	</Target>
 
 </Project>

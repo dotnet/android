@@ -1,0 +1,41 @@
+<Shell
+    x:Class="HybridTodoApp.HybridAppShell"
+    xmlns:sf="clr-namespace:Syncfusion.Maui.Toolkit.SegmentedControl;assembly=Syncfusion.Maui.Toolkit"
+    xmlns:pages="clr-namespace:HybridTodoApp.Pages"
+    Shell.FlyoutBehavior="Flyout"
+    Title="HybridTodoApp">
+
+    <ShellContent
+        Title="Dashboard"
+        Icon="{StaticResource IconDashboard}"
+        ContentTemplate="{DataTemplate pages:MainPage}"
+        Route="main"
+        SemanticProperties.Description="Dashboard"
+        SemanticProperties.Hint="Navigate to dashboard"/>
+
+    <MenuItem
+        Text="Projects"
+        IconImageSource="{StaticResource IconProjects}"
+        Clicked="OnProjectsClicked"/>
+
+    <MenuItem
+        Text="Manage Meta"
+        IconImageSource="{StaticResource IconMeta}"
+        Clicked="OnManageMetaClicked"/>
+
+    <Shell.FlyoutFooter>
+        <Grid Padding="15">
+            <sf:SfSegmentedControl x:Name="ThemeSegmentedControl"
+                VerticalOptions="Center" HorizontalOptions="Center" SelectionChanged="SfSegmentedControl_SelectionChanged"
+                SegmentWidth="40" SegmentHeight="40">
+                <sf:SfSegmentedControl.ItemsSource>
+                    <x:Array Type="{x:Type sf:SfSegmentItem}">
+                        <sf:SfSegmentItem ImageSource="{StaticResource IconLight}" SemanticProperties.Description="Light mode"/>
+                        <sf:SfSegmentItem ImageSource="{StaticResource IconDark}" SemanticProperties.Description="Dark mode"/>
+                    </x:Array>
+                </sf:SfSegmentedControl.ItemsSource>
+            </sf:SfSegmentedControl>
+        </Grid>
+    </Shell.FlyoutFooter>
+
+</Shell>

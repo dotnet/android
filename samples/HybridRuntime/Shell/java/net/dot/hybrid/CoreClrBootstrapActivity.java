@@ -69,6 +69,11 @@ public final class CoreClrBootstrapActivity extends AppCompatActivity {
 		updateStatus();
 	}
 
+	@Override
+	public void onBackPressed() {
+		finish();
+	}
+
 	private void updateStatus() {
 		switch (CoreClrBootstrap.getState()) {
 		case NOT_STARTED:

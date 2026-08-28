@@ -9,9 +9,16 @@ public partial class App : Application
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		Page rootPage = Preferences.Default.Get (DemoAuthentication.PreferenceKey, false)
-			? new AppShell ()
-			: new LoginPage ();
+		Page rootPage;
+		if (!Preferences.Default.Get (DemoAuthentication.PreferenceKey, false)) {
+			rootPage = new LoginPage ();
+		} else {
+#if HYBRID_RUNTIME
+			rootPage = new HybridAppShell ();
+#else
+			rootPage = new AppShell ();
+#endif
+		}
 		return new Window (rootPage);
 	}
 }

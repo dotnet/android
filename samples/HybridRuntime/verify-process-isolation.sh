@@ -27,19 +27,19 @@ inspect_process() {
 	echo "${maps}" |
 		grep -o '/[^ ]*\.so' |
 		sed 's#.*/##' |
-		grep -E 'HybridRuntimeShell|coreclr|clrjit|monodroid|xamarin-app|assembly-store' |
+		grep -E 'HybridTodoApp|coreclr|clrjit|monodroid|xamarin-app|assembly-store' |
 		sort -u
 	echo
 
 	if [[ "${label}" == "NativeAOT" ]]; then
-		grep -Fq 'libHybridRuntimeShell.so' <<< "${maps}"
+		grep -Fq 'libHybridTodoApp.so' <<< "${maps}"
 		if grep -Fq 'libcoreclr.so' <<< "${maps}"; then
 			echo "CoreCLR was unexpectedly loaded in the NativeAOT process." >&2
 			exit 1
 		fi
 	else
 		grep -Fq 'libcoreclr.so' <<< "${maps}"
-		if grep -Fq 'libHybridRuntimeShell.so' <<< "${maps}"; then
+		if grep -Fq 'libHybridTodoApp.so' <<< "${maps}"; then
 			echo "NativeAOT was unexpectedly loaded in the CoreCLR process." >&2
 			exit 1
 		fi

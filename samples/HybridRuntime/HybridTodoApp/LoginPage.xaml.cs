@@ -20,6 +20,10 @@ public partial class LoginPage : ContentPage
 			throw new InvalidOperationException ("The application window is unavailable.");
 		}
 
+#if HYBRID_RUNTIME
+		application.Windows [0].Page = new HybridAppShell ();
+#else
 		application.Windows [0].Page = new AppShell ();
+#endif
 	}
 }

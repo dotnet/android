@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+		xmlns:tools="http://schemas.android.com/tools">
+	<application
+			android:allowBackup="false"
+			android:icon="@mipmap/appicon"
+			android:label="Hybrid runtime prototype"
+			android:name="net.dot.hybrid.HybridApplication"
+			android:roundIcon="@mipmap/appicon_round"
+			android:supportsRtl="true"
+			tools:replace="android:name">
+		<activity
+				android:name="net.dot.hybrid.CoreClrBootstrapActivity"
+				android:exported="false"
+				android:process=":coreclr"
+				android:theme="@style/Maui.MainTheme.NoActionBar" />
+		<receiver
+				android:name="net.dot.hybrid.CoreClrWarmupReceiver"
+				android:exported="false" />
+		<service
+				android:name="net.dot.hybrid.CoreClrWarmupService"
+				android:exported="false"
+				android:process=":coreclr" />
+	</application>
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+	<uses-permission android:name="android.permission.INTERNET" />
+</manifest>

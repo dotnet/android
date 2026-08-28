@@ -3,7 +3,11 @@ using Android.Runtime;
 
 namespace HybridTodoApp;
 
-[Application]
+#if HYBRID_RUNTIME
+[Register ("net.dot.hybrid.ManagedMauiApplication")]
+#else
+[Application (Name = "net.dot.hybrid.ManagedMauiApplication")]
+#endif
 public class MainApplication : MauiApplication
 {
 	public MainApplication(IntPtr handle, JniHandleOwnership ownership)

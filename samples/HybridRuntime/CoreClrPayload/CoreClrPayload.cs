@@ -48,6 +48,7 @@ public static class CoreClrPayload
 			window.Page = shell;
 			platformView = shell.ToPlatform (windowContext);
 			activity.SetContentView (platformView);
+			NavigateToRequestedRoute (activity, shell);
 			Android.Util.Log.Info ("HybridRuntime", "CoreCLR MAUI TODO UI attached to the secondary-process Activity.");
 		} catch (Exception error) {
 			Android.Util.Log.Error ("HybridRuntime", error.ToString ());
@@ -59,5 +60,30 @@ public static class CoreClrPayload
 			errorView.SetTextColor (Android.Graphics.Color.White);
 			activity.SetContentView (errorView);
 		}
+	}
+
+	static void NavigateToRequestedRoute (Activity activity, Microsoft.Maui.Controls.Shell todoShell)
+	{
+		string? route = activity.Intent?.GetStringExtra ("hybrid-route");
+		if (string.IsNullOrEmpty (route) || route == "main") {
+			return;
+		}
+
+		int id = activity.Intent?.GetIntExtra ("hybrid-id", 0) ?? 0;
+		string destination = route switch {
+			"projects" => "//projects",
+			"manage" => "//manage",
+			"project" when id > 0 => $"project?id={id}",
+			"task" when id > 0 => $"task?id={id}",
+			"task" => "task",
+			_ => throw new InvalidOperationException ($"Unknown CoreCLR route '{route}'."),
+		};
+		todoShell.Dispatcher.Dispatch (async () => {
+			try {
+				await todoShell.GoToAsync (destination);
+			} catch (Exception error) {
+				Android.Util.Log.Error ("HybridRuntime", $"Could not navigate to '{destination}': {error}");
+			}
+		});
 	}
 }

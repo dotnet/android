@@ -152,15 +152,21 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 	[RelayCommand]
 	private Task AddTask()
-		=> Shell.Current.GoToAsync($"task");
+		=> HybridRuntimeNavigation.OpenFullWorkspace("task")
+			? Task.CompletedTask
+			: Shell.Current.GoToAsync($"task");
 
 	[RelayCommand]
 	private Task? NavigateToProject(Project project)
-		=> project is null ? Task.CompletedTask : Shell.Current.GoToAsync($"project?id={project.ID}");
+		=> project is null || HybridRuntimeNavigation.IsEnabled
+			? Task.CompletedTask
+			: Shell.Current.GoToAsync($"project?id={project.ID}");
 
 	[RelayCommand]
 	private Task NavigateToTask(ProjectTask task)
-		=> Shell.Current.GoToAsync($"task?id={task.ID}");
+		=> HybridRuntimeNavigation.IsEnabled
+			? Task.CompletedTask
+			: Shell.Current.GoToAsync($"task?id={task.ID}");
 
 	[RelayCommand]
 	private async Task CleanTasks()
@@ -174,6 +180,10 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
 		OnPropertyChanged(nameof(HasCompletedTasks));
 		Tasks = new(Tasks);
+#if HYBRID_RUNTIME
+		await AppNotifications.DisplayToastAsync ("All cleaned up!");
+#else
 		await AppShell.DisplayToastAsync("All cleaned up!");
+#endif
 	}
 }

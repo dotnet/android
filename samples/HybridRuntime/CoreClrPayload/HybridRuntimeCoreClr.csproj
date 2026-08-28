@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <AndroidJavaSource Include="..\Shell\java\**\*.java" />
+    <AndroidJavaSource Remove="..\Shell\java\net\dot\hybrid\HybridApplication.java" />
     <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
     <ProguardConfiguration Include="..\Shell\proguard.cfg" />
     <ProjectReference Include="..\HybridTodoApp\HybridTodoApp.csproj" />
