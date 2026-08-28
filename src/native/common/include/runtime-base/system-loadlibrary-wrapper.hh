@@ -69,6 +69,10 @@ namespace xamarin::android {
 				Helpers::abort_application ("Java string allocation failed while loading a shared library.");
 			}
 			jni_env->CallStaticVoidMethod (systemKlass, System_loadLibrary, java_lib_name);
+			// This runs while loading the application's shared libraries, before returning to Java, so
+			// the local reference has to be released here or the local reference table fills up.
+			jni_env->DeleteLocalRef (java_lib_name);
+
 			if (jni_env->ExceptionCheck ()) {
 				log_debugf (LOG_ASSEMBLY, "System.loadLibrary threw a Java exception. Will attempt to log it.");
 				jni_env->ExceptionDescribe ();
