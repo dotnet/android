@@ -95,8 +95,9 @@ namespace xamarin::android::internal {
 		static void create_update_dir (char *override_dir) noexcept;
 		static int monodroid_get_system_property (const char *name, char **value) noexcept;
 		static int monodroid_get_system_property (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> &value) noexcept;
-		// Returns the property's NUL-terminated value, or `nullptr` if it is not set. The result is
-		// valid for at least as long as `value` is.
+		// Returns the property's NUL-terminated value, or `nullptr` if it is not set. A property
+		// that is set to an empty value is reported as not set, matching `__system_property_get`,
+		// which cannot tell the two apart. The result is valid for at least as long as `value` is.
 		//
 		// `value` is a scratch buffer of at least `PROPERTY_VALUE_BUFFER_LEN` bytes, used to receive
 		// Android system properties. Bundled properties are returned without copying, so their

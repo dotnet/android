@@ -128,7 +128,9 @@ namespace xamarin::android {
 			return embedded_dso_mode_enabled;
 		}
 
-		// Returns the property's NUL-terminated value, or `nullptr` if it is not set.
+		// Returns the property's NUL-terminated value, or `nullptr` if it is not set. A property
+		// that is set to an empty value is reported as not set, matching `__system_property_get`,
+		// which cannot tell the two apart.
 		//
 		// `value` is a scratch buffer of at least `Constants::PROPERTY_VALUE_BUFFER_LEN` bytes, used
 		// to receive Android system properties. Bundled properties are returned without copying, so
