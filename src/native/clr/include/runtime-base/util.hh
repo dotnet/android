@@ -326,6 +326,22 @@ namespace xamarin::android {
 			return !path.empty () && path.contains ('/');
 		}
 
+		[[gnu::flatten, gnu::always_inline]]
+		static auto ends_with (const char *value, const char *suffix) noexcept -> bool
+		{
+			if (value == nullptr || suffix == nullptr) {
+				return false;
+			}
+
+			size_t value_length = strlen (value);
+			size_t suffix_length = strlen (suffix);
+			if (suffix_length > value_length) {
+				return false;
+			}
+
+			return memcmp (value + value_length - suffix_length, suffix, suffix_length) == 0;
+		}
+
 		// Returns the path length excluding NUL, or the negative required capacity including NUL.
 		static auto format_joined_path (char *buffer, size_t buffer_size, std::string_view first, std::string_view second) noexcept -> ssize_t
 		{
