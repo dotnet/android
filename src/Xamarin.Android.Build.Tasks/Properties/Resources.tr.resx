@@ -318,7 +318,7 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <comment>The following are literal names and should not be translated: ReadyToRun, Debug, Release.</comment>
   </data>
   <data name="XA0119_ReadyToRunWithoutTrimming" xml:space="preserve">
-    <value>ReadyToRun has been disabled because trimming is disabled. Set the 'PublishTrimmed' MSBuild property to 'true' to use ReadyToRun.</value>
+    <value>Kırpma devre dışı bırakıldığı için ReadyToRun da devre dışı bırakıldı. ReadyToRun' öğesini kullanmak için 'PublishTrimmed' MSBuild özelliğini 'true' olarak ayarlayın.</value>
     <comment>The following are literal names and should not be translated: ReadyToRun, 'PublishTrimmed', 'true'.</comment>
   </data>
   <data name="XA0121" xml:space="preserve">
@@ -1064,7 +1064,7 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
 {0} - User supplied Maven repository type</comment>
   </data>
   <data name="XA4240" xml:space="preserve">
-    <value>The Java callable wrapper code generation target '{0}' is no longer supported. The '_AndroidJcwCodegenTarget' property only supports 'XAJavaInterop1'; 'XamarinAndroid' and 'JavaInterop1' are not supported.</value>
+    <value>Java çağrılabilir sarmalayıcı kodu oluşturma '{0}' hedefi artık desteklenmiyor. '_AndroidJcwCodegenTarget' özelliği yalnızca 'XAJavaInterop1' için destek sağlar; 'XamarinAndroid' ve 'JavaInterop1' desteklenmez.</value>
     <comment>The following are literal names and should not be translated: _AndroidJcwCodegenTarget, XAJavaInterop1, XamarinAndroid, JavaInterop1
 {0} - The name of the current Java callable wrapper code generation target</comment>
   </data>

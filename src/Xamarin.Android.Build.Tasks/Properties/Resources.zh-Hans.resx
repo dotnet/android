@@ -318,7 +318,7 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <comment>The following are literal names and should not be translated: ReadyToRun, Debug, Release.</comment>
   </data>
   <data name="XA0119_ReadyToRunWithoutTrimming" xml:space="preserve">
-    <value>ReadyToRun has been disabled because trimming is disabled. Set the 'PublishTrimmed' MSBuild property to 'true' to use ReadyToRun.</value>
+    <value>由于 裁剪已禁用，ReadyToRun 已禁用。将MSBuild 属性 "PublishTrimmed" 设置为 "true" 以使用 ReadyToRun。</value>
     <comment>The following are literal names and should not be translated: ReadyToRun, 'PublishTrimmed', 'true'.</comment>
   </data>
   <data name="XA0121" xml:space="preserve">
@@ -1064,7 +1064,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - User supplied Maven repository type</comment>
   </data>
   <data name="XA4240" xml:space="preserve">
-    <value>The Java callable wrapper code generation target '{0}' is no longer supported. The '_AndroidJcwCodegenTarget' property only supports 'XAJavaInterop1'; 'XamarinAndroid' and 'JavaInterop1' are not supported.</value>
+    <value>不再支持 Java 可调用包装器代码生成目标 "{0}"。"_AndroidJcwCodegenTarget" 属性仅支持 "XAJavaInterop1"；不支持 "XamarinAndroid" 和 "JavaInterop1"。</value>
     <comment>The following are literal names and should not be translated: _AndroidJcwCodegenTarget, XAJavaInterop1, XamarinAndroid, JavaInterop1
 {0} - The name of the current Java callable wrapper code generation target</comment>
   </data>
