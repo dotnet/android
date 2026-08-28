@@ -98,11 +98,15 @@ try {
 	$deviceLog = Join-Path $upload 'adb-devices.log'
 	$deviceReady = $false
 	for ($attempt = 1; $attempt -le 12; $attempt++) {
+		$previousErrorActionPreference = $ErrorActionPreference
+		$ErrorActionPreference = 'Continue'
 		$deviceOutput = @(& $adb devices -l 2>&1)
+		$adbExitCode = $LASTEXITCODE
+		$ErrorActionPreference = $previousErrorActionPreference
 		"===== attempt $attempt =====" | Add-Content -LiteralPath $deviceLog
 		$deviceOutput | Tee-Object -FilePath $deviceLog -Append
-		if ($LASTEXITCODE -ne 0) {
-			throw "adb devices failed with exit code $LASTEXITCODE."
+		if ($adbExitCode -ne 0) {
+			throw "adb devices failed with exit code $adbExitCode."
 		}
 		$onlineDevices = @($deviceOutput | Where-Object { $_ -match '\sdevice(?:\s|$)' })
 		if ($onlineDevices.Count -eq 1) {
@@ -147,14 +151,18 @@ try {
 	$consoleLog = Join-Path $upload 'console.log'
 	for ($attempt = 1; $attempt -le 2; $attempt++) {
 		& $adb logcat -c
+		$previousErrorActionPreference = $ErrorActionPreference
+		$ErrorActionPreference = 'Continue'
 		$instrumentationOutput = @(& $adb shell am instrument -w -r "$packageName/$instrumentation" 2>&1)
+		$adbExitCode = $LASTEXITCODE
+		$ErrorActionPreference = $previousErrorActionPreference
 		"===== instrumentation attempt $attempt =====" | Add-Content -LiteralPath $consoleLog
 		$instrumentationOutput | Tee-Object -FilePath $consoleLog -Append
-		if ($LASTEXITCODE -ne 0) {
+		if ($adbExitCode -ne 0) {
 			if ($attempt -lt 2) {
 				continue
 			}
-			throw "adb instrument failed with exit code $LASTEXITCODE."
+			throw "adb instrument failed with exit code $adbExitCode."
 		}
 
 		$resultPathMatch = [regex]::Match(($instrumentationOutput -join "`n"), '(?m)^INSTRUMENTATION_RESULT: resultsPath=(?<path>.+)$')
