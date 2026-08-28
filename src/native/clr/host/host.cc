@@ -5,9 +5,8 @@
 #include <cerrno>
 #include <cinttypes>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
-#include <string>
-#include <vector>
 #include <unistd.h>
 
 #include <android/looper.h>
@@ -31,9 +30,27 @@
 #include <runtime-base/monodroid-dl.hh>
 #include <runtime-base/monodroid-state.hh>
 #include <runtime-base/timing-internal.hh>
+#include <runtime-base/util.hh>
 #include <shared/log_types.hh>
 
 using namespace xamarin::android;
+
+namespace {
+	// Returns a `malloc`ed copy of `path` which is guaranteed to end with a directory separator.
+	// Aborts if the allocation fails.
+	auto duplicate_with_trailing_separator (const char *path) noexcept -> char*
+	{
+		size_t length = strlen (path);
+		const char *separator = length == 0 || path [length - 1] != '/' ? "/" : "";
+		size_t required_capacity = Helpers::add_with_overflow_check<size_t> (length, strlen (separator) + 1uz);
+
+		char *result = static_cast<char*> (std::malloc (required_capacity));
+		abort_unless (result != nullptr, "Unable to allocate memory for the application base directory");
+		snprintf (result, required_capacity, "%s%s", path, separator);
+
+		return result;
+	}
+}
 
 void Host::clr_error_writer (const char *message) noexcept
 {
@@ -140,10 +157,12 @@ void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
 
 			log_debugf (LOG_ASSEMBLY, "Found assembly store in '%s/%s'", native_lib_dir, Constants::assembly_store_file_name.data ());
 
-			std::string store_path = native_lib_dir;
-			store_path.append ("/"sv);
-			store_path.append (cur->d_name);
-			map_assembly_store_via_dlopen (store_path.c_str ());
+			char stack_buffer [Util::LocalPathBufferSize];
+			char *store_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), native_lib_dir, cur->d_name);
+			map_assembly_store_via_dlopen (store_path);
+			if (store_path != stack_buffer) {
+				std::free (store_path);
+			}
 			break; // we've found all we need
 		}
 	} while (true);
@@ -373,14 +392,13 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// string for us since assemblies are read straight out of the APK. Point it at the application's
 	// files directory, the same value MonoVM has always used. `.NET` terminates the base directory
 	// with a directory separator, so we do too.
-	// Storage must outlive `coreclr_initialize`, hence the function-local static. Assign on every
-	// call rather than relying on the initializer, which would only ever see the first `files_dir`.
-	static std::string app_context_base_directory;
-	app_context_base_directory.assign (files_dir.get_cstr ());
-	if (!app_context_base_directory.ends_with ('/')) {
-		app_context_base_directory.push_back ('/');
-	}
-	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY] = const_cast<char*>(app_context_base_directory.c_str ());
+	// Storage must outlive `coreclr_initialize`, hence the function-local static. A plain pointer is
+	// constant-initialized, so it needs no guard variable. Assign on every call rather than relying
+	// on the initializer, which would only ever see the first `files_dir`.
+	static char *app_context_base_directory = nullptr;
+	std::free (app_context_base_directory);
+	app_context_base_directory = duplicate_with_trailing_separator (files_dir.get_cstr ());
+	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY] = app_context_base_directory;
 
 	const char **prop_names = init_runtime_property_names;
 	const char **prop_values = const_cast<const char**>(init_runtime_property_values);
@@ -393,20 +411,36 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// managed stack traces (file/line).
 	if constexpr (Constants::is_debug_build) {
 		// Storage must outlive `coreclr_initialize`; function-local statics
-		// give us process lifetime without polluting global namespace.
-		static std::string fastdev_tpa_list;
-		static std::vector<const char*> fastdev_prop_names;
-		static std::vector<const char*> fastdev_prop_values;
+		// give us process lifetime without polluting global namespace. All
+		// three are plain pointers, so they are constant-initialized and need
+		// no guard variables.
+		static char *fastdev_tpa_list = nullptr;
+		static const char **fastdev_prop_names = nullptr;
+		static const char **fastdev_prop_values = nullptr;
 
-		if (FastDevAssemblies::build_tpa_list (fastdev_tpa_list)) {
-			fastdev_prop_names.assign (prop_names, prop_names + prop_count);
-			fastdev_prop_values.assign (prop_values, prop_values + prop_count);
-			fastdev_prop_names.push_back (HOST_PROPERTY_TRUSTED_PLATFORM_ASSEMBLIES);
-			fastdev_prop_values.push_back (fastdev_tpa_list.c_str ());
+		std::free (fastdev_tpa_list);
+		fastdev_tpa_list = FastDevAssemblies::build_tpa_list ();
+		if (fastdev_tpa_list != nullptr) {
+			size_t old_count = static_cast<size_t>(prop_count);
+			size_t new_count = Helpers::add_with_overflow_check<size_t> (old_count, 1uz);
 
-			prop_names = fastdev_prop_names.data ();
-			prop_values = fastdev_prop_values.data ();
-			prop_count = static_cast<int>(fastdev_prop_names.size ());
+			std::free (fastdev_prop_names);
+			std::free (fastdev_prop_values);
+			fastdev_prop_names = static_cast<const char**> (std::calloc (new_count, sizeof (const char*)));
+			fastdev_prop_values = static_cast<const char**> (std::calloc (new_count, sizeof (const char*)));
+			abort_unless (
+				fastdev_prop_names != nullptr && fastdev_prop_values != nullptr,
+				"Unable to allocate memory for the FastDev runtime properties"
+			);
+
+			memcpy (fastdev_prop_names, prop_names, old_count * sizeof (const char*));
+			memcpy (fastdev_prop_values, prop_values, old_count * sizeof (const char*));
+			fastdev_prop_names [old_count] = HOST_PROPERTY_TRUSTED_PLATFORM_ASSEMBLIES;
+			fastdev_prop_values [old_count] = fastdev_tpa_list;
+
+			prop_names = fastdev_prop_names;
+			prop_values = fastdev_prop_values;
+			prop_count = static_cast<int>(new_count);
 		}
 	}
 
