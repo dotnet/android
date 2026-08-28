@@ -133,14 +133,14 @@ steps:
       $apk = '$(System.DefaultWorkingDirectory)\${{ testCase.artifactSource }}'
       Remove-Item -LiteralPath $apk -Force -ErrorAction Ignore
       $projectDirectory = Split-Path -Parent '$(System.DefaultWorkingDirectory)\${{ testCase.project }}'
-      $manifest = Join-Path $projectDirectory 'obj\Helix\${{ testCase.name }}\AndroidManifest.xml'
-      New-Item -ItemType Directory -Force -Path (Split-Path -Parent $manifest) | Out-Null
+      $instrumentationSource = Join-Path $projectDirectory 'obj\Helix\${{ testCase.name }}\HelixInstrumentation.cs'
+      New-Item -ItemType Directory -Force -Path (Split-Path -Parent $instrumentationSource) | Out-Null
       @'
-      <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${{ testCase.packageName }}">
-        <application />
-        <instrumentation android:name="${{ testCase.instrumentation }}" android:targetPackage="${{ testCase.packageName }}" />
-      </manifest>
-      '@ | Set-Content -LiteralPath $manifest -Encoding utf8NoBOM
+      [assembly: Android.App.Instrumentation (
+        Name = "${{ testCase.instrumentation }}",
+        TargetPackage = "${{ testCase.packageName }}"
+      )]
+      '@ | Set-Content -LiteralPath $instrumentationSource -Encoding utf8NoBOM
     displayName: Remove stale APK - ${{ testCase.displayName }}
 
   - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
@@ -151,7 +151,7 @@ steps:
         -t:SignAndroidPackage
         -c ${{ testCase.configuration }}
         -p:AndroidPackageFormat=apk
-        -p:_AndroidHelixInstrumentationManifest="obj/Helix/${{ testCase.name }}/AndroidManifest.xml"
+        -p:_AndroidHelixInstrumentationSource="obj/Helix/${{ testCase.name }}/HelixInstrumentation.cs"
         -p:AndroidSdkDirectory="$(ApkTestsAndroidSdkDirectory)"
         -p:JavaSdkDirectory="$(JAVA_HOME)"
         ${{ testCase.extraBuildArguments }}

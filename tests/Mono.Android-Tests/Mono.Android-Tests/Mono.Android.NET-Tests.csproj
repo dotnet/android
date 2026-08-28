@@ -22,8 +22,8 @@
     <AndroidNdkDirectory></AndroidNdkDirectory>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(_AndroidHelixInstrumentationManifest)' != '' ">
-    <AndroidManifestOverlay Include="$(_AndroidHelixInstrumentationManifest)" />
+  <ItemGroup Condition=" '$(_AndroidHelixInstrumentationSource)' != '' ">
+    <Compile Include="$(_AndroidHelixInstrumentationSource)" />
   </ItemGroup>
 
   <!--
