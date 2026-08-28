@@ -93,6 +93,29 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Scan_JniTypeSignatureExplicitInvoker_PreservesAssemblyAndConstructorStyle ()
+	{
+		var peer = FindFixtureByManagedName ("MyApp.IExternalRandomAccess");
+
+		Assert.Equal ("ExternalInvokerFixtures.ExternalRandomAccessInvoker", peer.InvokerTypeName);
+		Assert.Equal ("ExternalInvokerFixtures", peer.InvokerAssemblyName);
+		Assert.Null (peer.InvokerActivationCtorStyle);
+	}
+
+	[Theory]
+	[InlineData ("MyApp.IExplicitJavaInteropCollection", "MyApp.ExplicitJavaInteropCollectionProxy")]
+	[InlineData ("MyApp.IInheritedJavaInteropList", "MyApp.InheritedJavaInteropListProxy")]
+	[InlineData ("MyApp.AbstractJavaInteropList", "MyApp.AbstractJavaInteropListProxy")]
+	public void Scan_JniTypeSignatureExplicitInvoker_UsesJavaInteropConstructor (string targetType, string invokerType)
+	{
+		var peer = FindFixtureByManagedName (targetType);
+
+		Assert.Equal (invokerType, peer.InvokerTypeName);
+		Assert.Equal ("TestFixtures", peer.InvokerAssemblyName);
+		Assert.Equal (ActivationCtorStyle.JavaInterop, peer.InvokerActivationCtorStyle);
+	}
+
+	[Fact]
 	public void Scan_AllTypes_HaveAssemblyName ()
 	{
 		var peers = ScanFixtures ();

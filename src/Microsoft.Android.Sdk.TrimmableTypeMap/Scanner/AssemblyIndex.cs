@@ -324,12 +324,14 @@ sealed class AssemblyIndex : IDisposable
 		}
 
 		var isArrayType = TryGetNamedArgument<int> (value, "ArrayRank", out var rank) && rank > 0;
+		TryGetNamedArgument<string> (value, "InvokerType", out var invokerTypeName);
 
 		return new RegisterInfo {
 			JniName = jniName.Replace ('.', '/'),
 			DoNotGenerateAcw = doNotGenerateAcw,
 			IsFromJniTypeSignature = true,
 			IsArrayType = isArrayType,
+			InvokerTypeName = invokerTypeName,
 		};
 	}
 
@@ -669,6 +671,7 @@ sealed record RegisterInfo
 	public bool DoNotGenerateAcw { get; init; }
 	public bool IsFromJniTypeSignature { get; init; }
 	public bool IsArrayType { get; init; }
+	public string? InvokerTypeName { get; init; }
 }
 
 /// <summary>
