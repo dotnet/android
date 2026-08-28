@@ -2,6 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\scripts\XAVersionInfo.targets" />
   <Import Project="..\scripts\LocalizationLanguages.projitems" />
+  <Import Project="..\..\src\Mono.Android\Mono.Android.Apis.projitems" />
   <PropertyGroup>
     <MSBuildTargetsSrcDir>$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\Android</MSBuildTargetsSrcDir>
     <DefaultRuntimeEntitlementsPath>$(MSBuildThisFileDirectory)runtime-entitlements.plist</DefaultRuntimeEntitlementsPath>
