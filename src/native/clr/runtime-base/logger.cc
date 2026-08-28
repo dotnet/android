@@ -85,6 +85,11 @@ auto Logger::open_file (LogCategories category, const char *custom_path, const c
 	if (ret != nullptr) {
 		return log_and_return (ret, custom_path);
 	}
+
+	if (override_dir == nullptr || *override_dir == '\0') {
+		return nullptr;
+	}
+
 	Util::create_public_directory (override_dir);
 	char stack_buffer [Util::LocalPathBufferSize];
 	char *path_buffer = Util::join_paths (stack_buffer, sizeof (stack_buffer), override_dir, fallback_filename);

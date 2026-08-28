@@ -175,9 +175,12 @@ AndroidSystem::monodroid_get_system_property (const char *name, dynamic_local_st
 const char*
 AndroidSystem::monodroid_get_system_property (const char *name, char *value, size_t value_size) noexcept
 {
-	if (value == nullptr || value_size < PROPERTY_VALUE_BUFFER_LEN) {
-		return nullptr;
-	}
+	// `__system_property_get` always writes up to `PROPERTY_VALUE_BUFFER_LEN` bytes, so a smaller
+	// buffer would overflow. This is a programming error, not a runtime condition.
+	abort_unless (
+		value != nullptr && value_size >= PROPERTY_VALUE_BUFFER_LEN,
+		"System property value buffer is too small"
+	);
 
 	value [0] = '\0';
 

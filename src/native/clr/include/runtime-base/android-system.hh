@@ -169,6 +169,7 @@ namespace xamarin::android {
 
 		static auto format_primary_override_dir (jstring_wrapper &home, char *buffer, size_t buffer_size) noexcept -> ssize_t
 		{
+			abort_unless (buffer != nullptr, "Primary override directory buffer must not be null");
 			int length = snprintf (
 				buffer,
 				buffer_size,
@@ -182,7 +183,7 @@ namespace xamarin::android {
 			abort_unless (length >= 0, "Failed to format primary override directory path");
 			size_t required_capacity = Helpers::add_with_overflow_check<size_t> (static_cast<size_t>(length), 1uz);
 			abort_unless (required_capacity <= static_cast<size_t>(std::numeric_limits<ssize_t>::max ()), "Primary override directory path is too long");
-			if (buffer == nullptr || buffer_size < required_capacity) {
+			if (buffer_size < required_capacity) {
 				return -static_cast<ssize_t>(required_capacity);
 			}
 			return static_cast<ssize_t>(length);
