@@ -133,11 +133,6 @@ public sealed record JavaPeerInfo
 	public string? InvokerTypeName { get; init; }
 
 	/// <summary>
-	/// Assembly containing <see cref="InvokerTypeName"/>.
-	/// </summary>
-	public string? InvokerAssemblyName { get; init; }
-
-	/// <summary>
 	/// Activation constructor style declared by <see cref="InvokerTypeName"/>.
 	/// Kept separate from <see cref="ActivationCtor"/>, which describes the
 	/// target type or its base types.

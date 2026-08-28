@@ -389,36 +389,6 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Equal ("Android.Views.View+IOnClickListenerInvoker", proxy.InvokerType!.ManagedTypeName);
 		}
 
-		[Fact]
-		public void Build_InvokerInAnotherAssembly_UsesInvokerAssembly ()
-		{
-			var peer = MakeInterfacePeer ("java/util/RandomAccess", "MyApp.IExternalRandomAccess", "Contracts", "ExternalInvokerFixtures.ExternalRandomAccessInvoker") with {
-				InvokerAssemblyName = "ExternalInvokerFixtures",
-			};
-
-			var model = BuildModel (new [] { peer }, "Contracts.TypeMap");
-			var proxy = Assert.Single (model.ProxyTypes);
-			Assert.NotNull (proxy.InvokerType);
-			Assert.Equal ("ExternalInvokerFixtures", proxy.InvokerType!.AssemblyName);
-			Assert.Contains ("ExternalInvokerFixtures", model.IgnoresAccessChecksTo);
-			Assert.Contains (model.Associations,
-				association => association.SourceTypeReference == "ExternalInvokerFixtures.ExternalRandomAccessInvoker, ExternalInvokerFixtures");
-		}
-
-		[Fact]
-		public void Build_AliasWithInvokerInAnotherAssembly_UsesInvokerAssemblyForAssociation ()
-		{
-			var peer = MakeInterfacePeer ("java/util/RandomAccess", "MyApp.IExternalRandomAccess", "Contracts", "ExternalInvokerFixtures.ExternalRandomAccessInvoker") with {
-				InvokerAssemblyName = "ExternalInvokerFixtures",
-			};
-			var alias = MakePeerWithActivation ("java/util/RandomAccess", "MyApp.RandomAccessAlias", "Aliases");
-
-			var model = BuildModel (new [] { peer, alias }, "Contracts.TypeMap");
-
-			Assert.Contains (model.Associations,
-				association => association.SourceTypeReference == "ExternalInvokerFixtures.ExternalRandomAccessInvoker, ExternalInvokerFixtures");
-		}
-
 		[Theory]
 		[InlineData ("MyApp.PlainActivitySubclass")]
 		[InlineData ("MyApp.UnnamedActivity")]

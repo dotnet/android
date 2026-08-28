@@ -97,7 +97,6 @@ static class ModelBuilder
 			if (proxy.ActivationCtor != null && !proxy.ActivationCtor.IsOnLeafType) {
 				AddIfCrossAssembly (referencedAssemblies, proxy.ActivationCtor.DeclaringType.AssemblyName, assemblyName);
 			}
-			AddIfCrossAssembly (referencedAssemblies, proxy.InvokerType?.AssemblyName, assemblyName);
 		}
 
 		// Always include Mono.Android — the emitter calls internal JNIEnv.DeleteRef
@@ -189,7 +188,7 @@ static class ModelBuilder
 				AliasProxyTypeReference = holderRef,
 			});
 			if (proxy != null && peer.InvokerTypeName != null) {
-				AddProxyAssociation (model, peer.InvokerTypeName, peer.InvokerAssemblyName ?? peer.AssemblyName, proxy, assemblyName);
+				AddProxyAssociation (model, peer.InvokerTypeName, peer.AssemblyName, proxy, assemblyName);
 			}
 		}
 
@@ -213,7 +212,7 @@ static class ModelBuilder
 	{
 		AddProxyAssociation (model, peer.ManagedTypeName, peer.AssemblyName, proxy, assemblyName);
 		if (peer.InvokerTypeName != null) {
-			AddProxyAssociation (model, peer.InvokerTypeName, peer.InvokerAssemblyName ?? peer.AssemblyName, proxy, assemblyName);
+			AddProxyAssociation (model, peer.InvokerTypeName, peer.AssemblyName, proxy, assemblyName);
 		}
 	}
 
@@ -307,7 +306,7 @@ static class ModelBuilder
 		if (peer.InvokerTypeName != null) {
 			proxy.InvokerType = new TypeRefData {
 				ManagedTypeName = peer.InvokerTypeName,
-				AssemblyName = peer.InvokerAssemblyName ?? peer.AssemblyName,
+				AssemblyName = peer.AssemblyName,
 			};
 			proxy.InvokerActivationCtorStyle = peer.InvokerActivationCtorStyle ?? ActivationCtorStyle.XamarinAndroid;
 		}

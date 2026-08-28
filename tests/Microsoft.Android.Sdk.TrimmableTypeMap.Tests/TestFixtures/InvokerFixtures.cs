@@ -1,12 +1,6 @@
-using ExternalInvokerFixtures;
 using Java.Interop;
 
 namespace MyApp;
-
-[JniTypeSignature ("java/util/RandomAccess", GenerateJavaPeer = false, InvokerType = typeof (ExternalRandomAccessInvoker))]
-public interface IExternalRandomAccess
-{
-}
 
 [JniTypeSignature ("java/util/Collection", GenerateJavaPeer = false, InvokerType = typeof (ExplicitJavaInteropCollectionProxy))]
 public interface IExplicitJavaInteropCollection

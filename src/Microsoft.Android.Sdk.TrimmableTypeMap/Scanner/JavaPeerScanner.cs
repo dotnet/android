@@ -346,7 +346,6 @@ public sealed class JavaPeerScanner : IDisposable
 			var isUnconditional = attrInfo is not null;
 			var cannotRegisterInStaticConstructor = attrInfo is ApplicationAttributeInfo or InstrumentationAttributeInfo;
 			string? invokerTypeName = null;
-			string? invokerAssemblyName = null;
 			ActivationCtorStyle? invokerActivationCtorStyle = null;
 
 			// Resolve base Java type name
@@ -366,14 +365,14 @@ public sealed class JavaPeerScanner : IDisposable
 
 			// For interfaces/abstract types, try to find invoker type name
 			if (isInterface || isAbstract) {
-				(invokerTypeName, invokerAssemblyName) = TryFindInvokerType (fullName, typeHandle, index);
+				invokerTypeName = TryFindInvokerTypeName (fullName, typeHandle, index);
 			}
 
 			// Interface/abstract peers create their invoker, not the target type.
 			// Keep ActivationCtor scoped to the target/base hierarchy for legacy parity,
 			// and store the invoker ctor style separately for CreateInstance emission.
 			if (invokerTypeName is not null) {
-				invokerActivationCtorStyle = TryResolveActivationCtorOnInvoker (invokerTypeName, invokerAssemblyName)?.Style;
+				invokerActivationCtorStyle = TryResolveActivationCtorOnInvoker (invokerTypeName)?.Style;
 			}
 
 			var peer = new JavaPeerInfo {
@@ -397,7 +396,6 @@ public sealed class JavaPeerScanner : IDisposable
 				JavaFields = exportFields,
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
-				InvokerAssemblyName = invokerAssemblyName,
 				InvokerActivationCtorStyle = invokerActivationCtorStyle,
 				IsGenericDefinition = isGenericDefinition,
 				ComponentAttribute = ToComponentInfo (attrInfo),
@@ -2082,12 +2080,12 @@ public sealed class JavaPeerScanner : IDisposable
 		return typeDef.BaseType.IsNil ? null : ResolveEntityHandle (typeDef.BaseType, index);
 	}
 
-	(string? TypeName, string? AssemblyName) TryFindInvokerType (string typeName, TypeDefinitionHandle typeHandle, AssemblyIndex index)
+	string? TryFindInvokerTypeName (string typeName, TypeDefinitionHandle typeHandle, AssemblyIndex index)
 	{
 		if (index.RegisterInfoByType.TryGetValue (typeHandle, out var registerInfo)) {
 			var explicitInvokerTypeName = registerInfo.InvokerTypeName;
 			if (explicitInvokerTypeName is { Length: > 0 }) {
-				return ParseAssemblyQualifiedTypeName (explicitInvokerTypeName, index.AssemblyName);
+				return NormalizeConnectorManagedTypeName (explicitInvokerTypeName);
 			}
 		}
 
@@ -2096,31 +2094,21 @@ public sealed class JavaPeerScanner : IDisposable
 		// where the connector contains the assembly-qualified invoker type name.
 		if (registerInfo is not null && registerInfo.Connector is not null) {
 			var connector = registerInfo.Connector;
+			var commaIndex = connector.IndexOf (',');
+			if (commaIndex > 0) {
+				return NormalizeConnectorManagedTypeName (connector.Substring (0, commaIndex));
+			}
 			if (connector.Length > 0) {
-				return ParseAssemblyQualifiedTypeName (connector, index.AssemblyName);
+				return NormalizeConnectorManagedTypeName (connector);
 			}
 		}
 
 		// Fallback: convention-based lookup — invoker type is TypeName + "Invoker"
 		var invokerName = $"{typeName}Invoker";
 		if (index.TypesByFullName.ContainsKey (invokerName)) {
-			return (invokerName, index.AssemblyName);
+			return invokerName;
 		}
-		return (null, null);
-	}
-
-	static (string TypeName, string AssemblyName) ParseAssemblyQualifiedTypeName (string value, string defaultAssemblyName)
-	{
-		var commaIndex = value.IndexOf (',');
-		if (commaIndex < 0) {
-			return (NormalizeConnectorManagedTypeName (value), defaultAssemblyName);
-		}
-
-		var typeName = NormalizeConnectorManagedTypeName (value.Substring (0, commaIndex));
-		var remainder = value.Substring (commaIndex + 1).Trim ();
-		var nextCommaIndex = remainder.IndexOf (',');
-		var assemblyName = nextCommaIndex < 0 ? remainder : remainder.Substring (0, nextCommaIndex).Trim ();
-		return (typeName, assemblyName);
+		return null;
 	}
 
 	static string NormalizeConnectorManagedTypeName (string managedTypeName)
@@ -2134,15 +2122,8 @@ public sealed class JavaPeerScanner : IDisposable
 	/// The assemblyCache typically contains 10–30 entries (app + framework assemblies),
 	/// and each lookup is an O(1) dictionary probe, so the linear scan is cheap.
 	/// </summary>
-	ActivationCtorInfo? TryResolveActivationCtorOnInvoker (string invokerTypeName, string? invokerAssemblyName)
+	ActivationCtorInfo? TryResolveActivationCtorOnInvoker (string invokerTypeName)
 	{
-		if (invokerAssemblyName is not null &&
-			assemblyCache.TryGetValue (invokerAssemblyName, out var owningAssembly) &&
-			owningAssembly.TypesByFullName.TryGetValue (invokerTypeName, out var owningInvokerHandle)) {
-			var owningInvokerDef = owningAssembly.Reader.GetTypeDefinition (owningInvokerHandle);
-			return ResolveActivationCtor (invokerTypeName, owningInvokerDef, owningAssembly);
-		}
-
 		foreach (var assembly in assemblyCache.Values) {
 			if (!assembly.TypesByFullName.TryGetValue (invokerTypeName, out var invokerHandle)) {
 				continue;

@@ -12,7 +12,6 @@
 
   <!-- Exclude TestFixtures subdirectory — it's a separate project compiled independently -->
   <ItemGroup>
-    <Compile Remove="ExternalInvokerFixtures\**" />
     <Compile Remove="TestFixtures\**" />
   </ItemGroup>
 
@@ -33,7 +32,6 @@
   <!-- Copy TestFixtures output to our output directory so tests can find it -->
   <Target Name="_CopyTestFixturesOutput" AfterTargets="Build">
     <ItemGroup>
-      <_TestFixtureFiles Include="ExternalInvokerFixtures\bin\$(Configuration)\$(DotNetStableTargetFramework)\ExternalInvokerFixtures.dll" />
       <_TestFixtureFiles Include="TestFixtures\bin\$(Configuration)\$(DotNetStableTargetFramework)\TestFixtures.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_TestFixtureFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />

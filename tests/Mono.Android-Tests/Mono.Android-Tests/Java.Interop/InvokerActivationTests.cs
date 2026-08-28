@@ -4,8 +4,6 @@ using Android.Runtime;
 
 using Java.Interop;
 
-using Mono.Android_Test.Library;
-
 using NUnit.Framework;
 
 namespace Java.InteropTests
@@ -17,7 +15,7 @@ namespace Java.InteropTests
 		[Test]
 		public void XamarinAndroidInterfaceInvoker_ActivatesOnceAndPreservesIdentity ()
 		{
-			XamarinListInvoker.ConstructorInvocations = 0;
+			IXamarinListInvoker.ConstructorInvocations = 0;
 
 			var handle = CreateArrayListHandle ();
 			try {
@@ -26,8 +24,8 @@ namespace Java.InteropTests
 
 				Assert.IsNotNull (first);
 				Assert.AreSame (first, second);
-				Assert.AreEqual (typeof (XamarinListInvoker), first.GetType ());
-				Assert.AreEqual (1, XamarinListInvoker.ConstructorInvocations);
+				Assert.AreEqual (typeof (IXamarinListInvoker), first.GetType ());
+				Assert.AreEqual (1, IXamarinListInvoker.ConstructorInvocations);
 				first.Dispose ();
 			} finally {
 				JNIEnv.DeleteGlobalRef (handle);
@@ -41,8 +39,8 @@ namespace Java.InteropTests
 
 			var handle = CreateArrayListHandle ();
 			try {
-				var first = Java.Lang.Object.GetObject<IJavaInteropCollection> (handle, JniHandleOwnership.DoNotTransfer);
-				var second = Java.Lang.Object.GetObject<IJavaInteropCollection> (handle, JniHandleOwnership.DoNotTransfer);
+				var first = GetValue<IJavaInteropCollection> (handle);
+				var second = GetValue<IJavaInteropCollection> (handle);
 
 				Assert.IsNotNull (first);
 				Assert.AreSame (first, second);
@@ -61,7 +59,7 @@ namespace Java.InteropTests
 
 			var handle = CreateArrayListHandle ();
 			try {
-				var peer = Java.Lang.Object.GetObject<IInheritedJavaInteropList> (handle, JniHandleOwnership.DoNotTransfer);
+				var peer = GetValue<IInheritedJavaInteropList> (handle);
 
 				Assert.IsNotNull (peer);
 				Assert.IsInstanceOf<IJavaInteropCollection> (peer);
@@ -80,7 +78,7 @@ namespace Java.InteropTests
 
 			var handle = CreateArrayListHandle ();
 			try {
-				var peer = Java.Lang.Object.GetObject<JavaInteropAbstractList> (handle, JniHandleOwnership.DoNotTransfer);
+				var peer = GetValue<JavaInteropAbstractList> (handle);
 
 				Assert.IsNotNull (peer);
 				Assert.AreEqual (typeof (JavaInteropAbstractListInvoker), peer.GetType ());
@@ -91,44 +89,30 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
-		public void InvokerInAnotherAssembly_ActivatesAndPreservesIdentity ()
-		{
-			ExternalRandomAccessInvoker.ConstructorInvocations = 0;
-
-			var handle = CreateArrayListHandle ();
-			try {
-				var first = Java.Lang.Object.GetObject<IExternalRandomAccess> (handle, JniHandleOwnership.DoNotTransfer);
-				var second = Java.Lang.Object.GetObject<IExternalRandomAccess> (handle, JniHandleOwnership.DoNotTransfer);
-
-				Assert.IsNotNull (first);
-				Assert.AreSame (first, second);
-				Assert.AreEqual (typeof (ExternalRandomAccessInvoker), first.GetType ());
-				Assert.AreEqual (1, ExternalRandomAccessInvoker.ConstructorInvocations);
-				first.Dispose ();
-			} finally {
-				JNIEnv.DeleteGlobalRef (handle);
-			}
-		}
-
 		static IntPtr CreateArrayListHandle ()
 		{
 			using var list = new Java.Util.ArrayList ();
 			return JNIEnv.NewGlobalRef (list.Handle);
 		}
+
+		static T GetValue<T> (IntPtr handle)
+		{
+			var reference = new JniObjectReference (handle, JniObjectReferenceType.Global);
+			return JniEnvironment.Runtime.ValueManager.GetValue<T> (ref reference, JniObjectReferenceOptions.Copy);
+		}
 	}
 
-	[Register ("java/util/List", "", "Java.InteropTests.XamarinListInvoker")]
-	interface IXamarinList : IJavaPeerable, IDisposable
+	[Register ("java/util/List", "", "Java.InteropTests.IXamarinListInvoker")]
+	interface IXamarinList : IJavaObject, IJavaPeerable, IDisposable
 	{
 	}
 
 	[Register ("java/util/List", DoNotGenerateAcw = true)]
-	sealed class XamarinListInvoker : Java.Lang.Object, IXamarinList
+	sealed class IXamarinListInvoker : Java.Lang.Object, IXamarinList
 	{
 		public static int ConstructorInvocations;
 
-		public XamarinListInvoker (IntPtr handle, JniHandleOwnership transfer)
+		public IXamarinListInvoker (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
 			ConstructorInvocations++;
@@ -141,7 +125,7 @@ namespace Java.InteropTests
 	}
 
 	[JniTypeSignature ("java/util/Collection", GenerateJavaPeer = false)]
-	sealed class JavaInteropCollectionInvoker : JavaObject, IJavaInteropCollection
+	sealed class JavaInteropCollectionInvoker : global::Java.Interop.JavaObject, IJavaInteropCollection
 	{
 		static readonly JniPeerMembers members = new JniPeerMembers ("java/util/Collection", typeof (JavaInteropCollectionInvoker));
 
@@ -162,7 +146,7 @@ namespace Java.InteropTests
 	}
 
 	[JniTypeSignature ("java/util/List", GenerateJavaPeer = false)]
-	sealed class InheritedJavaInteropListInvoker : JavaObject, IInheritedJavaInteropList
+	sealed class InheritedJavaInteropListInvoker : global::Java.Interop.JavaObject, IInheritedJavaInteropList
 	{
 		static readonly JniPeerMembers members = new JniPeerMembers ("java/util/List", typeof (InheritedJavaInteropListInvoker));
 
@@ -178,7 +162,7 @@ namespace Java.InteropTests
 	}
 
 	[JniTypeSignature ("java/util/AbstractList", GenerateJavaPeer = false, InvokerType = typeof (JavaInteropAbstractListInvoker))]
-	abstract class JavaInteropAbstractList : JavaObject
+	abstract class JavaInteropAbstractList : global::Java.Interop.JavaObject
 	{
 		static readonly JniPeerMembers members = new JniPeerMembers ("java/util/AbstractList", typeof (JavaInteropAbstractList));
 
@@ -202,15 +186,4 @@ namespace Java.InteropTests
 		}
 	}
 
-	[Register ("java/util/RandomAccess", DoNotGenerateAcw = true)]
-	sealed class ExternalRandomAccessInvoker : Java.Lang.Object, IExternalRandomAccess
-	{
-		public static int ConstructorInvocations;
-
-		public ExternalRandomAccessInvoker (IntPtr handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
-		{
-			ConstructorInvocations++;
-		}
-	}
 }

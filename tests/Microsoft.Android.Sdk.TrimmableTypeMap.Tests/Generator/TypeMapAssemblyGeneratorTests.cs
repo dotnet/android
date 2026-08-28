@@ -424,24 +424,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_InvokerInAnotherAssembly_ReferencesOwningAssembly ()
-	{
-		var peer = MakeInterfacePeer ("java/util/RandomAccess", "Test.IExternalRandomAccess", "Contracts", "External.Invoker") with {
-			InvokerAssemblyName = "ExternalInvokers",
-		};
-
-		using var stream = GenerateAssembly (new [] { peer }, "ExternalInvokerAssemblyTest");
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-		var invokerReference = reader.TypeReferences
-			.Select (reader.GetTypeReference)
-			.Single (type => reader.GetString (type.Namespace) == "External" && reader.GetString (type.Name) == "Invoker");
-		var assemblyReference = reader.GetAssemblyReference ((AssemblyReferenceHandle) invokerReference.ResolutionScope);
-
-		Assert.Equal ("ExternalInvokers", reader.GetString (assemblyReference.Name));
-	}
-
-	[Fact]
 	public void Generate_UcoConstructor_InvokerUsesXamarinAndroidActivationCtor ()
 	{
 		var peer = MakeAcwPeer ("test/AbstractCtorTarget", "Test.AbstractCtorTarget", "TestAsm") with {

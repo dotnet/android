@@ -10,8 +10,4 @@
     <EnableDefaultItems>true</EnableDefaultItems>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\ExternalInvokerFixtures\ExternalInvokerFixtures.csproj" />
-  </ItemGroup>
-
 </Project>

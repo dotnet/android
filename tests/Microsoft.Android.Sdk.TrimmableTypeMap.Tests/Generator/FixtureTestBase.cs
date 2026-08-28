@@ -22,30 +22,15 @@ public abstract class FixtureTestBase
 		}
 	}
 
-	private protected static string ExternalInvokerFixtureAssemblyPath {
-		get {
-			var testAssemblyDir = Path.GetDirectoryName (typeof (FixtureTestBase).Assembly.Location)
-				?? throw new InvalidOperationException ("Cannot determine test assembly directory");
-			var fixtureAssembly = Path.Combine (testAssemblyDir, "ExternalInvokerFixtures.dll");
-			Assert.True (File.Exists (fixtureAssembly),
-				$"ExternalInvokerFixtures.dll not found at {fixtureAssembly}. Ensure the ExternalInvokerFixtures project builds.");
-			return fixtureAssembly;
-		}
-	}
-
 	static readonly Lazy<(List<JavaPeerInfo> peers, AssemblyManifestInfo manifestInfo)> _cachedScanResult = new (() => {
 		using var scanner = new JavaPeerScanner ();
 		var peReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
-		var invokerPeReader = new PEReader (File.OpenRead (ExternalInvokerFixtureAssemblyPath));
 		var mdReader = peReader.GetMetadataReader ();
-		var invokerMdReader = invokerPeReader.GetMetadataReader ();
 		var assemblyName = mdReader.GetString (mdReader.GetAssemblyDefinition ().Name);
-		var invokerAssemblyName = invokerMdReader.GetString (invokerMdReader.GetAssemblyDefinition ().Name);
-		var assemblies = new [] { (assemblyName, peReader), (invokerAssemblyName, invokerPeReader) };
+		var assemblies = new [] { (assemblyName, peReader) };
 		var peers = scanner.Scan (assemblies);
 		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
 		peReader.Dispose ();
-		invokerPeReader.Dispose ();
 		return (peers, manifestInfo);
 	});
 
