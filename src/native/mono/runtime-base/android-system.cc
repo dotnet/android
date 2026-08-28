@@ -58,7 +58,7 @@ AndroidSystem::lookup_system_property (const char *name, size_t &value_len) noex
 	BundledProperty *p = lookup_system_property (name);
 	if (p != nullptr) {
 		value_len = p->value_len;
-		return p->name;
+		return p->value;
 	}
 #endif // DEBUG || !ANDROID
 
