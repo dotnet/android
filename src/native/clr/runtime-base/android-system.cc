@@ -280,11 +280,19 @@ AndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks
 		AndroidSystem::app_lib_directories = std::span<const char*> (single_app_lib_directory);
 	} else {
 		size_t app_lib_directories_size = runtimeApks.get_length ();
-		auto directories = static_cast<const char**> (std::malloc (app_lib_directories_size * sizeof (const char*)));
-		if (directories == nullptr) [[unlikely]] {
-			Helpers::abort_application (LOG_ASSEMBLY, "Unable to allocate memory for the application library directories");
+		if (app_lib_directories_size == 0uz) [[unlikely]] {
+			// `malloc (0)` is allowed to return `nullptr`, which we would misreport as an allocation
+			// failure. There is nothing to allocate anyway - `setup_apk_directories ()` below aborts
+			// with a more accurate message when no directory ends up being added.
+			AndroidSystem::app_lib_directories = std::span<const char*> ();
+		} else {
+			size_t alloc_size = Helpers::multiply_with_overflow_check<size_t> (app_lib_directories_size, sizeof (const char*));
+			auto directories = static_cast<const char**> (std::malloc (alloc_size));
+			if (directories == nullptr) [[unlikely]] {
+				Helpers::abort_application (LOG_ASSEMBLY, "Unable to allocate memory for the application library directories");
+			}
+			AndroidSystem::app_lib_directories = std::span<const char*> (directories, app_lib_directories_size);
 		}
-		AndroidSystem::app_lib_directories = std::span<const char*> (directories, app_lib_directories_size);
 	}
 
 	uint16_t built_for_cpu = 0, running_on_cpu = 0;
