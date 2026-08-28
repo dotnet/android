@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <functional>
 #include <limits>
 #include <pthread.h>
 #include <string>
@@ -19,9 +18,9 @@ namespace xamarin::android {
 		// Configure the store directly from an in-memory payload pointer (obtained via
 		// dlopen()+dlsym() of the `_assembly_store` dynamic symbol). The payload is mapped
 		// read-only and is never modified, so it (and every pointer derived from it) is `const`.
-		// `get_full_store_path` is invoked only to build diagnostics if the payload turns out
-		// to be invalid.
-		static void configure_from_payload (const void *payload_start, const std::function<std::string()>& get_full_store_path) noexcept;
+		// `store_path` is used only in diagnostic messages and may be `nullptr` - every use of it
+		// goes through `optional_string ()`.
+		static void configure_from_payload (const void *payload_start, const char *store_path) noexcept;
 
 	private:
 		static void set_assembly_data_and_size (uint8_t* source_assembly_data, uint32_t source_assembly_data_size, uint8_t*& dest_assembly_data, uint32_t& dest_assembly_data_size) noexcept;

@@ -2,15 +2,11 @@
 
 #include <atomic>
 #include <cerrno>
-#include <chrono>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <ctime>
-#include <functional>
 #include <limits>
-#include <memory>
-#include <stack>
-#include <string>
 #include <string_view>
 #include <thread>
 
@@ -27,12 +23,34 @@ using namespace xamarin::android::internal;
 #include <runtime-base/monodroid-state.hh>
 #include <runtime-base/util.hh>
 #include <shared/cpp-util.hh>
+#include <shared/helpers.hh>
 #include <shared/log_types.hh>
 
 namespace xamarin::android {
-	namespace chrono = std::chrono;
+	inline constexpr uint64_t NANOSECONDS_PER_MILLISECOND = 1000000ull;
+	inline constexpr uint64_t NANOSECONDS_PER_SECOND = 1000000000ull;
 
-	using time_point = chrono::time_point<chrono::steady_clock, chrono::nanoseconds>;
+	// A monotonic point in time, or an interval between two such points, in nanoseconds.
+	using time_point = uint64_t;
+
+	// Splits an interval into the components used by the timing output format. Note that `seconds`
+	// and `milliseconds` are both totals for the *entire* interval rather than a breakdown of it:
+	// an interval of 1.5s has `seconds == 1` and `milliseconds == 1500`, and both are printed. This
+	// is what `duration_cast<seconds>` and `duration_cast<milliseconds>` used to return and it must
+	// not be "corrected" to milliseconds-within-the-second, because the output format is consumed by
+	// performance measuring utilities. Only `nanoseconds` is a remainder, within the last millisecond.
+	struct time_interval
+	{
+		unsigned long long seconds;
+		unsigned long long milliseconds;
+		unsigned long long nanoseconds;
+
+		explicit constexpr time_interval (time_point interval) noexcept
+			: seconds { interval / NANOSECONDS_PER_SECOND },
+			  milliseconds { interval / NANOSECONDS_PER_MILLISECOND },
+			  nanoseconds { interval % NANOSECONDS_PER_MILLISECOND }
+		{}
+	};
 
 	// Events should never change their assigned values and no values should be reused.
 	// Values are used by the test runner to determine what measurement was taken.
@@ -64,7 +82,7 @@ namespace xamarin::android {
 		time_point                   start;
 		time_point                   end;
 		TimingEventKind              kind;
-		std::string                 *more_info = nullptr;
+		char                        *more_info = nullptr;
 		bool                         complete = false;
 	};
 
@@ -84,6 +102,14 @@ namespace xamarin::android {
 			TimingEventChunk *next = nullptr;
 		};
 
+		// A single entry on the per-thread stack of timing events which have been started but
+		// not yet ended.
+		struct OpenSequence
+		{
+			TimingEvent *event;
+			OpenSequence *next;
+		};
+
 		// defaults
 		static constexpr bool default_fast_timing_enabled = false;
 		static constexpr bool default_log_to_file = false;
@@ -95,10 +121,13 @@ namespace xamarin::android {
 		static constexpr std::string_view OPT_FILE_NAME     { "filename=" };
 		static constexpr std::string_view OPT_TO_FILE       { "to-file" };
 
+		// Enough to hold any value the `debug.mono.timing` property can carry, `PROP_VALUE_MAX` is 92.
+		static constexpr size_t MAX_TIMING_FILE_NAME_SIZE = 128uz;
+
 	protected:
 		void configure_for_use () noexcept
 		{
-			first_event_chunk = new TimingEventChunk;
+			first_event_chunk = allocate_event_chunk ();
 		}
 
 	public:
@@ -111,9 +140,9 @@ namespace xamarin::android {
 			while (chunk != nullptr) {
 				TimingEventChunk *next = chunk->next;
 				for (TimingEvent &event : chunk->events) {
-					delete event.more_info;
+					std::free (event.more_info);
 				}
-				delete chunk;
+				std::free (chunk);
 				chunk = next;
 			}
 		}
@@ -189,15 +218,13 @@ namespace xamarin::android {
 		[[gnu::always_inline]]
 		static auto event_duration_ns (TimingEvent const& event) noexcept -> uint64_t
 		{
-			return static_cast<uint64_t>((event.end - event.start).count ());
+			return event.end - event.start;
 		}
 
 		// Returns the message length excluding NUL, or the negative required capacity including NUL.
 		static auto format_message (TimingEvent const& event, char *buffer, size_t buffer_size, bool indent) noexcept -> ssize_t
 		{
-			using namespace std::literals;
-
-			auto interval = event.end - event.start; // nanoseconds
+			time_interval interval { event.end - event.start };
 			int length = snprintf (
 				buffer,
 				buffer_size,
@@ -206,10 +233,10 @@ namespace xamarin::android {
 				event.before_managed ? "[0/" : "[1/",
 				static_cast<unsigned int>(event.kind),
 				event_kind_description (event.kind),
-				event.more_info == nullptr ? "" : event.more_info->c_str (),
-				static_cast<unsigned long long>(chrono::duration_cast<chrono::seconds>(interval).count ()),
-				static_cast<unsigned long long>(chrono::duration_cast<chrono::milliseconds>(interval).count ()),
-				static_cast<unsigned long long>((interval % 1ms).count ())
+				event.more_info == nullptr ? "" : event.more_info,
+				interval.seconds,
+				interval.milliseconds,
+				interval.nanoseconds
 			);
 			if (length < 0) {
 				if (buffer != nullptr && buffer_size > 0uz) {
@@ -267,7 +294,7 @@ namespace xamarin::android {
 				return;
 			}
 
-			if (skip_log_if_more_info_missing && (event.more_info == nullptr || event.more_info->empty ())) {
+			if (skip_log_if_more_info_missing && (event.more_info == nullptr || event.more_info[0] == '\0')) {
 				return;
 			}
 
@@ -282,7 +309,7 @@ namespace xamarin::android {
 			ev.start = get_time ();
 			ev.kind = kind;
 			ev.before_managed = MonodroidState::is_startup_in_progress ();
-			open_sequences.push (&ev);
+			push_sequence_event (&ev);
 		}
 
 		// If `uses_more_info` is `true`, the caller **MUST** call `add_more_info`, since the
@@ -308,7 +335,7 @@ namespace xamarin::android {
 		[[gnu::always_inline]]
 		void add_more_info (const char *str, size_t length) noexcept
 		{
-			store_more_info (new std::string (str, length));
+			store_more_info (duplicate_more_info (std::string_view { str, length }, {}));
 		}
 
 		// Builds the message from two parts, so that its exact length is known up front and the
@@ -316,9 +343,7 @@ namespace xamarin::android {
 		[[gnu::always_inline]]
 		void add_more_info (std::string_view const& first, std::string_view const& second) noexcept
 		{
-			auto *more_info = new std::string (first.data (), first.length ());
-			more_info->append (second);
-			store_more_info (more_info);
+			store_more_info (duplicate_more_info (first, second));
 		}
 
 		[[gnu::always_inline]]
@@ -375,26 +400,57 @@ namespace xamarin::android {
 		static auto get_time () noexcept -> time_point
 		{
 			struct timespec t;
-			if (clock_gettime (CLOCK_MONOTONIC_RAW, &t) != 0) [[unlikely]] {
-				log_warnf (LOG_TIMING, "clock_gettime failed for CLOCK_MONOTONIC_RAW: %s", optional_string (strerror (errno)));
+			if (clock_gettime (CLOCK_MONOTONIC, &t) != 0) [[unlikely]] {
+				log_warnf (LOG_TIMING, "clock_gettime failed for CLOCK_MONOTONIC: %s", optional_string (strerror (errno)));
 				return {}; // Results will be nonsensical, but no point in aborting the app
 			}
-			return time_point (chrono::seconds (t.tv_sec) + chrono::nanoseconds (t.tv_nsec));
+			return (static_cast<time_point>(t.tv_sec) * NANOSECONDS_PER_SECOND) + static_cast<time_point>(t.tv_nsec);
 		}
 
 	private:
+		// Writes a single output line.  `output` is the file passed to `dump`, or `nullptr` when
+		// the caller doesn't write to a file.
+		using LineWriter = void (*) (FILE *output, std::string_view const& line);
+
 		bool no_events_logged (size_t entries) noexcept;
 		void dump_to_logcat (size_t entries) noexcept;
 		void dump_to_file (size_t entries) noexcept;
-		void dump (size_t entries, bool indent, std::function<void(std::string_view const&)> line_writer) noexcept;
+		void dump (size_t entries, bool indent, LineWriter line_writer, FILE *output) noexcept;
+
+		// Returns a NUL-terminated copy of `first` and `second` concatenated, or `nullptr` if it
+		// cannot be allocated. Timing is a diagnostic facility, so a failure here only costs us the
+		// extra information attached to a single event and must not bring the application down.
+		[[gnu::always_inline]]
+		static auto duplicate_more_info (std::string_view const& first, std::string_view const& second) noexcept -> char*
+		{
+			size_t length = Helpers::add_with_overflow_check<size_t> (first.length (), second.length ());
+			auto *more_info = static_cast<char*> (std::malloc (Helpers::add_with_overflow_check<size_t> (length, 1uz)));
+			if (more_info == nullptr) [[unlikely]] {
+				return nullptr;
+			}
+
+			// `memcpy` must not be called with a `nullptr` source, not even for a zero length, and an
+			// empty `std::string_view` is allowed to have a `nullptr` data pointer.
+			if (!first.empty ()) {
+				std::memcpy (more_info, first.data (), first.length ());
+			}
+
+			if (!second.empty ()) {
+				std::memcpy (more_info + first.length (), second.data (), second.length ());
+			}
+
+			more_info[length] = '\0';
+
+			return more_info;
+		}
 
 		// Takes ownership of `more_info`.
 		[[gnu::always_inline]]
-		void store_more_info (std::string *more_info) noexcept
+		void store_more_info (char *more_info) noexcept
 		{
 			TimingEvent *event = pop_sequence_event ();
 			if (event == nullptr) [[unlikely]] {
-				delete more_info;
+				std::free (more_info);
 				log_warnf (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called");
 				return;
 			}
@@ -405,22 +461,40 @@ namespace xamarin::android {
 		}
 
 		[[gnu::always_inline]]
-		auto get_sequence_event () noexcept -> TimingEvent*
+		static void push_sequence_event (TimingEvent *event) noexcept
 		{
-			if (open_sequences.empty ()) [[unlikely]] {
-				return nullptr;
+			auto *entry = static_cast<OpenSequence*> (std::malloc (sizeof (OpenSequence)));
+			if (entry == nullptr) [[unlikely]] {
+				Helpers::abort_application (LOG_TIMING, "Unable to allocate memory for an open timing sequence");
 			}
 
-			return open_sequences.top ();
+			entry->event = event;
+			entry->next = open_sequences;
+			open_sequences = entry;
 		}
 
 		[[gnu::always_inline]]
-		auto pop_sequence_event () noexcept -> TimingEvent*
+		static auto get_sequence_event () noexcept -> TimingEvent*
 		{
-			TimingEvent *event = get_sequence_event ();
-			if (event != nullptr) [[likely]] {
-				open_sequences.pop ();
+			OpenSequence *entry = open_sequences;
+			if (entry == nullptr) [[unlikely]] {
+				return nullptr;
 			}
+
+			return entry->event;
+		}
+
+		[[gnu::always_inline]]
+		static auto pop_sequence_event () noexcept -> TimingEvent*
+		{
+			OpenSequence *entry = open_sequences;
+			if (entry == nullptr) [[unlikely]] {
+				return nullptr;
+			}
+
+			TimingEvent *event = entry->event;
+			open_sequences = entry->next;
+			std::free (entry);
 
 			return event;
 		}
@@ -487,6 +561,20 @@ namespace xamarin::android {
 		}
 
 	private:
+		// Event chunks are chained together and the events in them are handed out as references that
+		// stay valid until the process exits, so a chunk must never move. Allocating them with
+		// `calloc` avoids `operator new` and, with it, a dependency on `libc++`; zero-filling matches
+		// the default member initializers of `TimingEvent`.
+		static auto allocate_event_chunk () noexcept -> TimingEventChunk*
+		{
+			auto *chunk = static_cast<TimingEventChunk*> (std::calloc (1uz, sizeof (TimingEventChunk)));
+			if (chunk == nullptr) [[unlikely]] {
+				Helpers::abort_application (LOG_TIMING, "Unable to allocate memory for timing events");
+			}
+
+			return chunk;
+		}
+
 		void parse_options (const char *options) noexcept;
 		static void really_initialize (bool log_immediately) noexcept;
 
@@ -504,7 +592,7 @@ namespace xamarin::android {
 			for (size_t i = current_chunk_index; i < chunk_index; ++i) {
 				TimingEventChunk *next = __atomic_load_n (&chunk->next, __ATOMIC_ACQUIRE);
 				if (next == nullptr) [[unlikely]] {
-					TimingEventChunk *new_chunk = new TimingEventChunk;
+					TimingEventChunk *new_chunk = allocate_event_chunk ();
 					if (__atomic_compare_exchange_n (
 							&chunk->next,
 							&next,
@@ -521,7 +609,7 @@ namespace xamarin::android {
 							(i + 2uz) * EVENT_CHUNK_SIZE
 						);
 					} else {
-						delete new_chunk;
+						std::free (new_chunk);
 					}
 				}
 				chunk = next;
@@ -535,9 +623,12 @@ namespace xamarin::android {
 	private:
 		std::atomic_size_t next_event_index = 0uz;
 		TimingEventChunk *first_event_chunk = nullptr;
-		std::unique_ptr<std::string> output_file_name{};
+		// The name is read from the `debug.mono.timing` system property, whose whole value is limited
+		// to `PROP_VALUE_MAX` (92) bytes, so a fixed buffer is always large enough. Keeping it inline
+		// also keeps `FastTiming` constant-initialized, so the global instance needs no guard variable.
+		char output_file_name[MAX_TIMING_FILE_NAME_SIZE] = {};
 
-		static inline thread_local std::stack<TimingEvent*> open_sequences;
+		static inline thread_local OpenSequence *open_sequences = nullptr;
 		static inline thread_local TimingEventChunk *cached_event_chunk = nullptr;
 		static inline thread_local size_t cached_event_chunk_index = 0uz;
 		static inline bool is_enabled = false;
