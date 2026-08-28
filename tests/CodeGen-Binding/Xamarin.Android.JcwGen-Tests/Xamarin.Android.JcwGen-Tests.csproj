@@ -13,6 +13,7 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <RootNamespace>Xamarin.Android.JcwGenTests</RootNamespace>
     <OutputPath>$(XamarinAndroidSourcePath)bin\Test$(Configuration)</OutputPath>
+    <AndroidManifest Condition=" '$(_AndroidHelixInstrumentationManifest)' != '' ">$(_AndroidHelixInstrumentationManifest)</AndroidManifest>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">

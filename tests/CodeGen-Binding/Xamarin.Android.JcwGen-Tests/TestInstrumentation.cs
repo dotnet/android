@@ -3,11 +3,6 @@ using Android.App;
 using Android.Runtime;
 using Xamarin.Android.UnitTests;
 
-[assembly: Instrumentation (
-	Name = "xamarin.android.jcwgentests.TestInstrumentation",
-	TargetPackage = "Xamarin.Android.JcwGen_Tests"
-)]
-
 namespace Xamarin.Android.JcwGenTests
 {
 	[Instrumentation (Name = "xamarin.android.jcwgentests.TestInstrumentation")]

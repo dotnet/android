@@ -8,48 +8,64 @@ parameters:
     configuration: Debug
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/TestDebug/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+    packageName: Mono.Android.NET_Tests
+    instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: ''
   - name: release
     displayName: Mono.Android.NET_Tests-Release
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+    packageName: Mono.Android.NET_Tests
+    instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: ''
   - name: no-aab
     displayName: Mono.Android.NET_Tests-NoAab
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+    packageName: Mono.Android.NET_Tests
+    instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:TestsFlavor=NoAab'
   - name: coreclr
     displayName: Mono.Android.NET_Tests-CoreCLR
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+    packageName: Mono.Android.NET_Tests
+    instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:TestsFlavor=CoreCLR -p:UseMonoRuntime=false'
   - name: mono
     displayName: Mono.Android.NET_Tests-Mono
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+    packageName: Mono.Android.NET_Tests
+    instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:UseMonoRuntime=true -p:_DisableCheckForUnsupportedMonoMobileRuntime=true'
   - name: coreclr-trimmable
     displayName: Mono.Android.NET_Tests-CoreCLRTrimmable
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+    packageName: Mono.Android.NET_Tests
+    instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:TestsFlavor=CoreCLRTrimmable -p:AndroidTypeMapImplementation=trimmable -p:UseMonoRuntime=false'
   - name: nativeaot
     displayName: Mono.Android.NET_Tests-NativeAOT
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+    packageName: Mono.Android.NET_Tests
+    instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:TestsFlavor=NativeAOT -p:PublishAot=true'
   - name: jcwgen
     displayName: Xamarin.Android.JcwGen_Tests
     configuration: $(XA.Build.Configuration)
     project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.JcwGen_Tests-Signed.apk
+    packageName: Xamarin.Android.JcwGen_Tests
+    instrumentation: xamarin.android.jcwgentests.TestInstrumentation
     extraBuildArguments: ''
 
 steps:
@@ -116,6 +132,15 @@ steps:
   - pwsh: |
       $apk = '$(System.DefaultWorkingDirectory)\${{ testCase.artifactSource }}'
       Remove-Item -LiteralPath $apk -Force -ErrorAction Ignore
+      $projectDirectory = Split-Path -Parent '$(System.DefaultWorkingDirectory)\${{ testCase.project }}'
+      $manifest = Join-Path $projectDirectory 'obj\Helix\${{ testCase.name }}\AndroidManifest.xml'
+      New-Item -ItemType Directory -Force -Path (Split-Path -Parent $manifest) | Out-Null
+      @'
+      <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${{ testCase.packageName }}">
+        <application />
+        <instrumentation android:name="${{ testCase.instrumentation }}" android:targetPackage="${{ testCase.packageName }}" />
+      </manifest>
+      '@ | Set-Content -LiteralPath $manifest -Encoding utf8NoBOM
     displayName: Remove stale APK - ${{ testCase.displayName }}
 
   - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
@@ -126,10 +151,11 @@ steps:
         -t:SignAndroidPackage
         -c ${{ testCase.configuration }}
         -p:AndroidPackageFormat=apk
+        -p:_AndroidHelixInstrumentationManifest="obj/Helix/${{ testCase.name }}/AndroidManifest.xml"
         -p:AndroidSdkDirectory="$(ApkTestsAndroidSdkDirectory)"
         -p:JavaSdkDirectory="$(JAVA_HOME)"
         ${{ testCase.extraBuildArguments }}
-        -bl:$(Build.StagingDirectory)/apk-tests-helix/build-${{ testCase.name }}.binlog
+        -bl:$(Build.StagingDirectory)/apk-tests-helix/results/build-${{ testCase.name }}.binlog
       displayName: Build APK payload - ${{ testCase.displayName }}
       continueOnError: false
 
@@ -150,6 +176,14 @@ steps:
         throw 'Could not locate aapt.exe to inspect the APK manifest.'
       }
       $badging = @(& $aapt.FullName dump badging $apk)
+      $diagnosticsDirectory = '$(Build.StagingDirectory)/apk-tests-helix/results/${{ testCase.name }}'
+      New-Item -ItemType Directory -Force -Path $diagnosticsDirectory | Out-Null
+      $badging | Set-Content -LiteralPath (Join-Path $diagnosticsDirectory 'aapt-badging.txt') -Encoding utf8NoBOM
+      $projectDirectory = Split-Path -Parent '$(System.DefaultWorkingDirectory)\${{ testCase.project }}'
+      $generatedManifest = Join-Path $projectDirectory 'obj\${{ testCase.configuration }}\$(DotNetTargetFramework)-android\android\AndroidManifest.xml'
+      if (Test-Path -LiteralPath $generatedManifest -PathType Leaf) {
+        Copy-Item -LiteralPath $generatedManifest -Destination (Join-Path $diagnosticsDirectory 'AndroidManifest.xml')
+      }
       if ($LASTEXITCODE -ne 0) {
         throw "aapt dump badging failed with exit code $LASTEXITCODE."
       }

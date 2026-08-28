@@ -6,11 +6,6 @@ using Android.OS;
 using Android.Runtime;
 using Xamarin.Android.UnitTests;
 
-[assembly: Instrumentation (
-	Name = "xamarin.android.runtimetests.TestInstrumentation",
-	TargetPackage = "Mono.Android.NET_Tests"
-)]
-
 namespace Xamarin.Android.RuntimeTests
 {
 	[Instrumentation (Name = "xamarin.android.runtimetests.TestInstrumentation")]
