@@ -180,6 +180,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 					new JavaConstructorInfo {
 						JniSignature = "(Lcom/example/Outer$for;)V",
 						ConstructorIndex = 0,
+						ThrownNames = ["com/example/Outer$permits"],
 					},
 				],
 				MarshalMethods = [
@@ -188,7 +189,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 						JniSignature = "([Lcom/example/Outer$record;)Lcom/example/Outer$yield;",
 						ManagedMethodName = "Method",
 						NativeCallbackName = "n_method",
-						ThrownNames = ["com.example.Outer.permits"],
+						ThrownNames = ["com/example/Outer$sealed"],
 					},
 				],
 				JavaFields = [
@@ -206,7 +207,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$for' contains reserved Java identifier 'for'."));
 		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$record' contains reserved Java identifier 'record'."));
 		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$yield' contains reserved Java identifier 'yield'."));
-		Assert.Contains (logMessages, message => message.Contains ("Java name 'com.example.Outer.permits' contains reserved Java identifier 'permits'."));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$permits' contains reserved Java identifier 'permits'."));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$sealed' contains reserved Java identifier 'sealed'."));
 		Assert.Contains (logMessages, message => message.Contains ("Java name 'com.example.Outer.sealed' contains reserved Java identifier 'sealed'."));
 	}
 

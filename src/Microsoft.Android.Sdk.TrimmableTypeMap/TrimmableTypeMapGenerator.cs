@@ -100,7 +100,8 @@ public class TrimmableTypeMapGenerator
 				ValidateJniSignature (constructor.JniSignature);
 				if (constructor.ThrownNames is not null) {
 					foreach (var thrownName in constructor.ThrownNames) {
-						if (JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (thrownName, out invalidIdentifier)) {
+						var javaThrownName = JniSignatureHelper.JniNameToJavaName (thrownName);
+						if (JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (javaThrownName, out invalidIdentifier)) {
 							ReportInvalidName (thrownName, invalidIdentifier);
 						}
 					}
@@ -112,7 +113,8 @@ public class TrimmableTypeMapGenerator
 				}
 				if (method.ThrownNames is not null) {
 					foreach (var thrownName in method.ThrownNames) {
-						if (JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (thrownName, out invalidIdentifier)) {
+						var javaThrownName = JniSignatureHelper.JniNameToJavaName (thrownName);
+						if (JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (javaThrownName, out invalidIdentifier)) {
 							ReportInvalidName (thrownName, invalidIdentifier);
 						}
 					}
