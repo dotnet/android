@@ -101,9 +101,9 @@ namespace Xamarin.Installer.AndroidSDK.Manager
                 return true;
             }
 #else
-            // Release: only allow https://, plus the in-box file:// fallback manifest that
-            // ships alongside this assembly (XamarinRepository.GetFallbackManifestUrl), or a
-            // local manifest path explicitly supplied by InstallAndroidDependencies.
+            // Release: allow https:// and loopback http://, plus the in-box file:// fallback
+            // manifest that ships alongside this assembly (XamarinRepository.GetFallbackManifestUrl),
+            // or a local manifest path explicitly supplied by InstallAndroidDependencies.
             if (url.Scheme == "file") {
                 var assemblyDir = Path.GetDirectoryName (typeof (Helper).Assembly.Location);
                 var requestedDir = Path.GetDirectoryName (url.LocalPath);
@@ -116,8 +116,8 @@ namespace Xamarin.Installer.AndroidSDK.Manager
                 output = null;
                 return false;
             }
-            if (url.Scheme != "https") {
-                Logger.Warning ($"Ignoring manifest URL '{url}': only https:// URLs are honored in shipped builds.");
+            if (url.Scheme != "https" && (url.Scheme != "http" || !url.IsLoopback)) {
+                Logger.Warning ($"Ignoring manifest URL '{url}': only https:// or loopback http:// URLs are honored in shipped builds.");
                 output = null;
                 return false;
             }

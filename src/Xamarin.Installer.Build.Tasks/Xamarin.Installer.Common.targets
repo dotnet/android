@@ -24,6 +24,7 @@
 				AcceptAndroidSDKLicenses="$(AcceptAndroidSDKLicenses)"
 				ManifestType="$(AndroidManifestType)"
 				ManifestSource="$(AndroidManifestSource)"
+				GoogleAddonsListSource="$(_AndroidGoogleAddonsListSource)"
 				TimeoutInMinutes="$(AndroidDependencyInstallationTimeout)"
 				InstallJavaDependencies="$(AndroidInstallJavaDependencies)"
 			>
