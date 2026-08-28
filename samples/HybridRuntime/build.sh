@@ -31,13 +31,35 @@ mkdir -p "${script_dir}/bin" "${work_dir}/payload"
 cp "${shell_apk}" "${unaligned_apk}"
 (
 	cd "${work_dir}/payload"
-	unzip -q "${payload_apk}" 'lib/*' 'assemblies/*' || true
+	unzip -q "${payload_apk}" 'lib/*' 'assemblies/*' 'assets/*' 'res/*' 'resources.arsc' 'classes*.dex' || true
+	chmod -R u+rwX .
 	if [[ -d lib ]]; then
 		zip -q -0 -r "${unaligned_apk}" lib
 	fi
 	if [[ -d assemblies ]]; then
 		zip -q -r "${unaligned_apk}" assemblies
 	fi
+	zip -q -d "${unaligned_apk}" 'assets/*' 'res/*' resources.arsc || true
+	if [[ -d assets ]]; then
+		zip -q -r "${unaligned_apk}" assets
+	fi
+	if [[ -d res ]]; then
+		zip -q -r "${unaligned_apk}" res
+	fi
+	if [[ -f resources.arsc ]]; then
+		zip -q -0 "${unaligned_apk}" resources.arsc
+	fi
+
+	mkdir payload-dex
+	find . -maxdepth 1 -type f -name 'classes*.dex' -exec mv {} payload-dex/ \;
+	dex_index=2
+	for payload_dex in payload-dex/classes.dex payload-dex/classes2.dex payload-dex/classes3.dex payload-dex/classes4.dex; do
+		[[ -f "${payload_dex}" ]] || continue
+		merged_dex="classes${dex_index}.dex"
+		cp "${payload_dex}" "${merged_dex}"
+		zip -q -0 "${unaligned_apk}" "${merged_dex}"
+		dex_index=$((dex_index + 1))
+	done
 )
 zip -q -d "${unaligned_apk}" 'META-INF/*' || true
 

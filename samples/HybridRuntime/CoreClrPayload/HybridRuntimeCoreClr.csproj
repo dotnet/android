@@ -7,7 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseMaui>true</UseMaui>
     <SingleProject>true</SingleProject>
-    <ApplicationId>net.dot.hybridruntime.coreclr</ApplicationId>
+    <ApplicationId>net.dot.hybridruntime</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
@@ -16,10 +16,13 @@
     <PublishAot>false</PublishAot>
     <PublishReadyToRun>false</PublishReadyToRun>
     <AndroidLinkMode>None</AndroidLinkMode>
+    <AndroidTypeMapImplementation>trimmable</AndroidTypeMapImplementation>
   </PropertyGroup>
 
   <ItemGroup>
+    <AndroidJavaSource Include="..\Shell\java\**\*.java" />
     <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-    <ProjectReference Include="..\LargeMauiApp\LargeMauiApp.csproj" />
+    <ProguardConfiguration Include="..\Shell\proguard.cfg" />
+    <ProjectReference Include="..\HybridTodoApp\HybridTodoApp.csproj" />
   </ItemGroup>
 </Project>

@@ -567,6 +567,23 @@ void Host::Java_mono_android_Runtime_invokeStaticVoidMethod (
 	method ();
 }
 
+void Host::Java_mono_android_Runtime_invokeStaticVoidMethodWithObject (
+	JNIEnv *env, jstring assemblyName, jstring typeName, jstring methodName, jobject argument) noexcept
+{
+	jstring_wrapper assembly_name (env, assemblyName);
+	jstring_wrapper type_name (env, typeName);
+	jstring_wrapper method_name (env, methodName);
+
+	using managed_method = void (*) (void*);
+	auto method = reinterpret_cast<managed_method> (create_delegate (
+		assembly_name.get_cstr (),
+		type_name.get_cstr (),
+		method_name.get_cstr ()
+	));
+	abort_unless (method != nullptr, "Failed to create a managed static method delegate.");
+	method (argument);
+}
+
 void Host::Java_mono_android_Runtime_registerNatives ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass nativeClass) noexcept
 {
 	// In the trimmable typemap path, registerNatives is handled entirely in managed code

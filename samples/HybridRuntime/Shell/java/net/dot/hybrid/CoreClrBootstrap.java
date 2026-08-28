@@ -2,12 +2,14 @@ package net.dot.hybrid;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.app.Activity;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.SystemClock;
 import android.util.Log;
 import java.time.OffsetDateTime;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Calendar;
 import java.util.Locale;
@@ -68,8 +70,33 @@ final class CoreClrBootstrap {
 		return initializationDurationMilliseconds;
 	}
 
+	static void showTodoApp(Activity activity) throws Exception {
+		Class<?> runtimeClass = Class.forName("mono.android.Runtime", true, activity.getClassLoader());
+		Method showTodoApp = runtimeClass.getDeclaredMethod(
+			"invokeStaticVoidMethodWithObject",
+			String.class,
+			String.class,
+			String.class,
+			Object.class
+		);
+		showTodoApp.invoke(
+			null,
+			"HybridRuntimeCoreClr",
+			"HybridRuntime.CoreClrPayload.CoreClrPayload",
+			"ShowTodoApp",
+			activity
+		);
+	}
+
 	private static void initialize(Context context) throws Exception {
 		ApplicationInfo applicationInfo = context.getApplicationInfo();
+		Class<?> applicationRegistration = Class.forName(
+			"net.dot.android.ApplicationRegistration",
+			true,
+			context.getClassLoader()
+		);
+		Field applicationContext = applicationRegistration.getDeclaredField("Context");
+		applicationContext.set(null, context.getApplicationContext());
 		String[] apks;
 		if (applicationInfo.splitSourceDirs != null && applicationInfo.splitSourceDirs.length > 0) {
 			apks = new String[applicationInfo.splitSourceDirs.length + 1];

@@ -32,6 +32,13 @@ JNICALL Java_mono_android_Runtime_invokeStaticVoidMethod (
 	Host::Java_mono_android_Runtime_invokeStaticVoidMethod (env, assemblyName, typeName, methodName);
 }
 
+JNIEXPORT void
+JNICALL Java_mono_android_Runtime_invokeStaticVoidMethodWithObject (
+	JNIEnv *env, [[maybe_unused]] jclass klass, jstring assemblyName, jstring typeName, jstring methodName, jobject argument)
+{
+	Host::Java_mono_android_Runtime_invokeStaticVoidMethodWithObject (env, assemblyName, typeName, methodName, argument);
+}
+
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
 	jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,

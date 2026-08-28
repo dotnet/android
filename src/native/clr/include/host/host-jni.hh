@@ -33,6 +33,13 @@ extern "C" {
 
 	/*
 	 * Class:     mono_android_Runtime
+	 * Method:    invokeStaticVoidMethodWithObject
+	 * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V
+	 */
+	JNIEXPORT void JNICALL Java_mono_android_Runtime_invokeStaticVoidMethodWithObject (JNIEnv *, jclass, jstring, jstring, jstring, jobject);
+
+	/*
+	 * Class:     mono_android_Runtime
 	 * Method:    propagateUncaughtException
 	 * Signature: (Ljava/lang/Thread;Ljava/lang/Throwable;)V
 	 */

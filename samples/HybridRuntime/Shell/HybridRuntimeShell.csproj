@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AndroidJavaSource Include="java/**/*.java" />
+    <AndroidJavaSource Remove="java/**/*.java" />
     <ProguardConfiguration Include="proguard.cfg" />
   </ItemGroup>
 
