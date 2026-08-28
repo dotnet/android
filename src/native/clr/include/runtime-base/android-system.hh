@@ -10,7 +10,6 @@
 #include <shared/log_types.hh>
 #include "../runtime-base/cpu-arch.hh"
 #include <runtime-base/jni-wrappers.hh>
-#include "path-buffer.hh"
 #include "util.hh"
 
 namespace xamarin::android {
@@ -75,7 +74,7 @@ namespace xamarin::android {
 
 		static auto get_primary_override_dir () noexcept -> const char*
 		{
-			return primary_override_dir.get ();
+			return primary_override_dir;
 		}
 
 		static void set_primary_override_dir (jstring_wrapper& home) noexcept
@@ -91,7 +90,7 @@ namespace xamarin::android {
 			}
 			abort_unless (result >= 0, "Failed to format primary override directory path using the required capacity");
 
-			primary_override_dir.assign (std::string_view { path, static_cast<size_t>(result) });
+			primary_override_dir = Util::duplicate_string (std::string_view { path, static_cast<size_t>(result) });
 			if (path != stack_buffer) {
 				std::free (path);
 			}
@@ -100,17 +99,17 @@ namespace xamarin::android {
 #if !defined (XA_HOST_NATIVEAOT)
 		static auto get_app_code_cache_dir () noexcept -> const char*
 		{
-			return app_code_cache_dir.get ();
+			return app_code_cache_dir;
 		}
 
 		static void set_app_code_cache_dir (jstring_wrapper& code_cache_dir) noexcept
 		{
-			app_code_cache_dir.assign (code_cache_dir.get_cstr ());
+			app_code_cache_dir = Util::duplicate_string (code_cache_dir.get_cstr ());
 		}
 
 		static auto get_native_libraries_dir () noexcept -> const char*
 		{
-			return native_libraries_dir.get ();
+			return native_libraries_dir;
 		}
 
 		static void create_update_dir (const char *override_dir) noexcept
@@ -219,10 +218,14 @@ namespace xamarin::android {
 		static inline long max_gref_count = 0;
 		static inline bool running_in_emulator = false;
 		static inline bool embedded_dso_mode_enabled = false;
-		static inline path_buffer<Constants::SENSIBLE_PATH_MAX> primary_override_dir {};
+		// These are set once, early during startup, and are read for as long as the process lives.
+		// They are plain pointers so that they are constant-initialized: a `std::string` here would
+		// make the compiler emit a guard variable and an `atexit` registration in every translation
+		// unit which includes this header.
+		static inline const char *primary_override_dir = "";
 #if !defined (XA_HOST_NATIVEAOT)
-		static inline path_buffer<Constants::SENSIBLE_PATH_MAX> native_libraries_dir {};
-		static inline path_buffer<Constants::SENSIBLE_PATH_MAX> app_code_cache_dir {};
+		static inline const char *native_libraries_dir = "";
+		static inline const char *app_code_cache_dir = "";
 
 #if defined (DEBUG)
 		static inline BundledProperty *bundled_properties = nullptr;
