@@ -175,9 +175,10 @@ public sealed class JcwJavaSourceGenerator
 			string parameters = FormatParameterList (ctorParams);
 			string superArgs = ctor.SuperArgumentsString ?? FormatArgumentList (ctorParams);
 			string args = FormatArgumentList (ctorParams);
+			string throwsClause = FormatThrowsClause (ctor.ThrownNames);
 
 			writer.Write ($$"""
-	public {{simpleClassName}} ({{parameters}})
+	public {{simpleClassName}} ({{parameters}}){{throwsClause}}
 	{
 		super ({{superArgs}});
 
@@ -251,10 +252,7 @@ public sealed class JcwJavaSourceGenerator
 			string returnPrefix = isVoid ? "" : "return ";
 
 			// throws clause for [Export] methods
-			string throwsClause = "";
-			if (method.ThrownNames != null && method.ThrownNames.Count > 0) {
-				throwsClause = $"\n\t\tthrows {string.Join (", ", method.ThrownNames)}";
-			}
+			string throwsClause = FormatThrowsClause (method.ThrownNames);
 
 			if (method.Connector != null && !method.IsExport) {
 				writer.Write ($$"""
@@ -307,6 +305,19 @@ public sealed class JcwJavaSourceGenerator
 	static void WriteClassClose (TextWriter writer)
 	{
 		writer.WriteLine ('}');
+	}
+
+	static string FormatThrowsClause (IReadOnlyList<string>? thrownNames)
+	{
+		if (thrownNames == null || thrownNames.Count == 0) {
+			return "";
+		}
+
+		var javaNames = new string [thrownNames.Count];
+		for (int i = 0; i < thrownNames.Count; i++) {
+			javaNames [i] = JniSignatureHelper.JniNameToJavaName (thrownNames [i]);
+		}
+		return $"\n\t\tthrows {string.Join (", ", javaNames)}";
 	}
 
 	static string FormatParameterList (IReadOnlyList<JniParameterInfo> parameters)

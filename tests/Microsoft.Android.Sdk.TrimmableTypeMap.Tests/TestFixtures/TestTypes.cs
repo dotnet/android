@@ -1244,6 +1244,9 @@ namespace MyApp.Generic
 	{
 		protected ExportWithThrows (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
+		[Java.Interop.Export (SuperArgumentsString = "", ThrownNames = new [] { "java.io.IOException", "java.lang.IllegalStateException" })]
+		public ExportWithThrows () { }
+
 		[Java.Interop.Export ("riskyMethod", ThrownNames = new [] { "java.io.IOException", "java.lang.IllegalStateException" })]
 		public void RiskyMethod () { }
 	}

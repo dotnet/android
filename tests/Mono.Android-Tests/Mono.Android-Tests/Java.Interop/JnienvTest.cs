@@ -147,6 +147,25 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("ConstructorParity")]
+		public void ExistingJavaObjectWrapsAsKnownClosedGenericType ()
+		{
+			GenericHolder<int>.ActivationConstructorInvocations = 0;
+
+			IntPtr handle = JNIEnv.CreateInstance (typeof (GenericHolder<int>), "()V");
+			try {
+				using var first = Java.Lang.Object.GetObject<GenericHolder<int>> (handle, JniHandleOwnership.DoNotTransfer);
+				var second = Java.Lang.Object.GetObject<GenericHolder<int>> (handle, JniHandleOwnership.DoNotTransfer);
+
+				Assert.IsNotNull (first);
+				Assert.AreSame (first, second);
+				Assert.AreEqual (1, GenericHolder<int>.ActivationConstructorInvocations);
+			} finally {
+				JNIEnv.DeleteLocalRef (handle);
+			}
+		}
+
+		[Test]
 		public void NewObjectArrayWithNullArray ()
 		{
 			Assert.AreEqual (IntPtr.Zero, JNIEnv.NewObjectArray<Java.Lang.Object> (null), "#1");
@@ -685,6 +704,18 @@ namespace Java.InteropTests
 	}
 
 	class GenericHolder<T> : Java.Lang.Object {
+
+		public static int ActivationConstructorInvocations;
+
+		public GenericHolder ()
+		{
+		}
+
+		protected GenericHolder (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+			ActivationConstructorInvocations++;
+		}
 
 		public T Value {get; set;}
 

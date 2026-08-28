@@ -98,6 +98,13 @@ public class TrimmableTypeMapGenerator
 			}
 			foreach (var constructor in peer.JavaConstructors) {
 				ValidateJniSignature (constructor.JniSignature);
+				if (constructor.ThrownNames is not null) {
+					foreach (var thrownName in constructor.ThrownNames) {
+						if (JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (thrownName, out invalidIdentifier)) {
+							ReportInvalidName (thrownName, invalidIdentifier);
+						}
+					}
+				}
 			}
 			foreach (var method in peer.MarshalMethods) {
 				if (!method.IsConstructor) {
