@@ -7,30 +7,31 @@ using namespace xamarin::android;
 
 using std::operator""sv;
 
-auto AndroidSystem::monodroid_get_system_property (std::string_view const& name, char *value, size_t value_size) noexcept -> std::string_view
+auto AndroidSystem::monodroid_get_system_property (std::string_view const& name, char *value, size_t value_size) noexcept -> const char*
 {
 	if (value == nullptr || value_size < Constants::PROPERTY_VALUE_BUFFER_LEN) {
-		return {};
+		return nullptr;
 	}
 
 	value [0] = '\0';
 
 	int len = monodroid__system_property_get (name, value, value_size);
 	if (len > 0) {
-		return { value, static_cast<size_t>(len) };
+		// `__system_property_get` NUL-terminates the value it writes.
+		return value;
 	}
 
 	size_t property_length;
 	const char *property_value = lookup_system_property (name, property_length);
 	if (property_value == nullptr) {
-		return {};
+		return nullptr;
 	}
 
 	// Bundled properties are NUL-terminated strings in static application data which live for as
 	// long as the process does, so we can return them directly instead of copying them into
 	// `value`. This also means that, unlike Android system properties, their length is not limited
 	// by `Constants::PROPERTY_VALUE_BUFFER_LEN`.
-	return { property_value, property_length };
+	return property_value;
 }
 
 auto
@@ -69,10 +70,10 @@ AndroidSystem::get_max_gref_count_from_system () noexcept -> long
 	}
 
 	char override[Constants::PROPERTY_VALUE_BUFFER_LEN];
-	std::string_view grefc = monodroid_get_system_property (Constants::DEBUG_MONO_MAX_GREFC, override, sizeof (override));
-	if (!grefc.empty ()) {
+	const char *grefc = monodroid_get_system_property (Constants::DEBUG_MONO_MAX_GREFC, override, sizeof (override));
+	if (grefc != nullptr) {
 		char *e;
-		max = strtol (grefc.data (), &e, 10);
+		max = strtol (grefc, &e, 10);
 		switch (*e) {
 			case 'k':
 				e++;
@@ -94,7 +95,7 @@ AndroidSystem::get_max_gref_count_from_system () noexcept -> long
 				"Unsupported '%.*s' value '%s'.",
 				static_cast<int>(Constants::DEBUG_MONO_MAX_GREFC.length ()),
 				Constants::DEBUG_MONO_MAX_GREFC.data (),
-				grefc.data ()
+				grefc
 			);
 		}
 

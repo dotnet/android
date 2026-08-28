@@ -30,9 +30,9 @@ void FastTiming::really_initialize (bool log_immediately) noexcept
 	}
 
 	char value [Constants::PROPERTY_VALUE_BUFFER_LEN];
-	std::string_view options = AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_TIMING, value, sizeof (value));
-	if (!options.empty ()) {
-		internal_timing.parse_options (options);
+	const char *options = AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_TIMING, value, sizeof (value));
+	if (options != nullptr) {
+		internal_timing.parse_options (std::string_view { options });
 	}
 
 	log_write (

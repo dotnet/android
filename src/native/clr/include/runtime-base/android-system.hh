@@ -113,7 +113,7 @@ namespace xamarin::android {
 				 * pre-loaded apps!), we need the .__override__ directory...
 				 */
 				char value[Constants::PROPERTY_VALUE_BUFFER_LEN];
-				if (log_categories == 0 && monodroid_get_system_property (Constants::DEBUG_MONO_PROFILE_PROPERTY, value, sizeof (value)).empty ()) [[likely]] {
+				if (log_categories == 0 && monodroid_get_system_property (Constants::DEBUG_MONO_PROFILE_PROPERTY, value, sizeof (value)) == nullptr) [[likely]] {
 					return;
 				}
 			}
@@ -128,13 +128,15 @@ namespace xamarin::android {
 			return embedded_dso_mode_enabled;
 		}
 
-		// Returns a view of the property's value, or an empty view if the property is not set.
+		// Returns the property's NUL-terminated value, or `nullptr` if the property is not set.
 		//
 		// `value` is a scratch buffer of at least `Constants::PROPERTY_VALUE_BUFFER_LEN` bytes,
 		// used to receive Android system properties. Build-time (bundled) properties are not
-		// copied into it - the returned view points at static application data instead, so their
-		// length is not limited by `value_size`. The returned value is always NUL-terminated.
-		static auto monodroid_get_system_property (std::string_view const& name, char *value, size_t value_size) noexcept -> std::string_view;
+		// copied into it - the returned pointer refers to static application data instead, so
+		// their length is not limited by `value_size`.
+		//
+		// The result is valid for at least as long as `value` is.
+		static auto monodroid_get_system_property (std::string_view const& name, char *value, size_t value_size) noexcept -> const char*;
 		static void detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept;
 		static void setup_environment () noexcept;
 		static void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks) noexcept;
