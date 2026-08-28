@@ -22,9 +22,10 @@ steps:
   inputs:
     forceReinstallCredentialProvider: true
 
-# Always checkout a second resource to ensure we are using multi-repo checkout behavior
+# This small repository is intentionally unused; its checkout keeps the
+# primary repository at s/android under Azure's multi-repo layout.
 #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
-- checkout: maui
+- checkout: macios-devtools
 
 - task: CodeQL3000Init@0
   displayName: CodeQL 3000 Init

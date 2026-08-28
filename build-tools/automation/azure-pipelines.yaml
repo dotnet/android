@@ -21,6 +21,11 @@ resources:
     type: git
     name: DevDiv/Xamarin.yaml-templates
     ref: refs/heads/main
+  - repository: macios-devtools
+    type: github
+    name: dotnet/macios-devtools
+    ref: refs/heads/main
+    endpoint: xamarin
   - repository: maui
     type: github
     name: dotnet/maui
@@ -75,6 +80,7 @@ extends:
       sourceRepositoriesToScan:
         exclude:
         - repository: yaml-templates
+        - repository: macios-devtools
         - repository: maui
       suppression:
         suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
