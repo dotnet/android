@@ -153,9 +153,9 @@ namespace xamarin::android {
 		static auto load_dso_from_any_directories (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
 
 	private:
-		static auto format_full_dso_path (std::string_view const& base_dir, std::string_view const& dso_path, char *buffer, size_t buffer_size) noexcept -> ssize_t;
+		static auto format_full_dso_path (const char *base_dir, std::string_view const& dso_path, char *buffer, size_t buffer_size) noexcept -> ssize_t;
 
-		static auto get_full_dso_path (std::string_view const& base_dir, std::string_view const& dso_path, char *stack_buffer, size_t stack_buffer_size) noexcept -> char*
+		static auto get_full_dso_path (const char *base_dir, std::string_view const& dso_path, char *stack_buffer, size_t stack_buffer_size) noexcept -> char*
 		{
 			ssize_t result = format_full_dso_path (base_dir, dso_path, stack_buffer, stack_buffer_size);
 			if (result >= 0) {

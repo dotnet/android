@@ -385,14 +385,16 @@ AndroidSystem::lookup_system_property (const char *name, size_t &value_len) noex
 	);
 }
 
-auto AndroidSystem::format_full_dso_path (std::string_view const& base_dir, std::string_view const& dso_path, char *buffer, size_t buffer_size) noexcept -> ssize_t
+auto AndroidSystem::format_full_dso_path (const char *base_dir, std::string_view const& dso_path, char *buffer, size_t buffer_size) noexcept -> ssize_t
 {
 	bool is_rooted = Util::is_path_rooted (dso_path);
-	bool add_lib_prefix = !base_dir.empty () && !is_rooted && !Util::path_has_directory_components (dso_path);
+	size_t base_dir_length = base_dir == nullptr ? 0uz : strlen (base_dir);
+	bool prepend_base_dir = base_dir_length > 0 && !is_rooted;
+	bool add_lib_prefix = prepend_base_dir && !Util::path_has_directory_components (dso_path);
 	size_t dso_name_length = Util::get_dso_name_length (dso_path, add_lib_prefix);
 	size_t path_length = dso_name_length;
-	if (!base_dir.empty () && !is_rooted) {
-		path_length = Helpers::add_with_overflow_check<size_t> (base_dir.length (), dso_name_length);
+	if (prepend_base_dir) {
+		path_length = Helpers::add_with_overflow_check<size_t> (base_dir_length, dso_name_length);
 		path_length = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
 	}
 
@@ -403,9 +405,9 @@ auto AndroidSystem::format_full_dso_path (std::string_view const& base_dir, std:
 	}
 
 	char *destination = buffer;
-	if (!base_dir.empty () && !is_rooted) {
-		memcpy (destination, base_dir.data (), base_dir.length ());
-		destination += base_dir.length ();
+	if (prepend_base_dir) {
+		memcpy (destination, base_dir, base_dir_length);
+		destination += base_dir_length;
 		*destination++ = Constants::DIR_SEP [0];
 	}
 
@@ -423,7 +425,7 @@ auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, std::s
 
 	for (const char *dir : directories) {
 		char stack_buffer [Util::LocalPathBufferSize];
-		char *full_path = get_full_dso_path (std::string_view { dir }, dso_name, stack_buffer, sizeof (stack_buffer));
+		char *full_path = get_full_dso_path (dir, dso_name, stack_buffer, sizeof (stack_buffer));
 
 		std::string_view full_path_view { full_path };
 		void *handle = DsoLoader::load (full_path_view, dl_flags, is_jni);
