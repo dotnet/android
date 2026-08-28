@@ -73,17 +73,6 @@ namespace xamarin::android
 			return cstr;
 		}
 
-		[[gnu::always_inline]]
-		const std::string_view get_string_view () noexcept
-		{
-			if (jstr == nullptr) {
-				return {};
-			}
-
-			ensure_cstr ();
-			return {cstr};
-		}
-
 		jstring_wrapper& operator= (const jobject new_jo) noexcept
 		{
 			assign (reinterpret_cast<jstring> (new_jo));

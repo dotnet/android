@@ -228,16 +228,16 @@ AndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstring_arr
 	std::string_view const& abi = android_abi_names [running_on_cpu];
 	size_t number_of_added_directories = 0uz;
 
-	std::string_view base_apk{};
+	const char *base_apk = nullptr;
 	for (size_t i = 0uz; i < runtimeApks.get_length (); ++i) {
 		jstring_wrapper &e = runtimeApks [i];
-		std::string_view apk = e.get_string_view ();
+		const char *apk = e.get_cstr ();
 
 		if (have_split_apks) {
-			if (apk.ends_with (Constants::split_config_abi_apk_name.data ())) {
+			if (Util::ends_with (apk, Constants::split_config_abi_apk_name.data ())) {
 				add_apk_libdir (apk, number_of_added_directories, abi);
 				break;
-			} else if (base_apk.empty () && apk.ends_with (Constants::base_apk_name)) {
+			} else if (base_apk == nullptr && Util::ends_with (apk, Constants::base_apk_name.data ())) {
 				base_apk = apk;
 			}
 		} else {
@@ -248,7 +248,7 @@ AndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstring_arr
 	// This apparently can happen now... It seems that sometimes (when and why? No idea) when AAB format is used, bundletool
 	// won't put the native libraries in a separate split config file, but it will instead put **all** of the ABIs
 	// in base.apk
-	if (have_split_apks && number_of_added_directories == 0 && !base_apk.empty ()) {
+	if (have_split_apks && number_of_added_directories == 0 && base_apk != nullptr) {
 		add_apk_libdir (base_apk, number_of_added_directories, abi);
 	}
 
@@ -342,7 +342,7 @@ void
 AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept
 {
 	// appDirs[Constants::APP_DIRS_DATA_DIR_INDEX] points to the native library directory
-	std::string_view app_data_dir = appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_string_view ();
+	const char *app_data_dir = appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ();
 	char stack_buffer [Util::LocalPathBufferSize];
 	char *libmonodroid_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), app_data_dir, "libmonodroid.so"sv);
 
@@ -351,9 +351,9 @@ AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcep
 		log_debugf (LOG_ASSEMBLY, "%s not found, assuming application/android:extractNativeLibs == false", libmonodroid_path);
 		set_embedded_dso_mode_enabled (true);
 	} else {
-		log_debugf (LOG_ASSEMBLY, "Native libs extracted to %s, assuming application/android:extractNativeLibs == true", appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
+		log_debugf (LOG_ASSEMBLY, "Native libs extracted to %s, assuming application/android:extractNativeLibs == true", app_data_dir);
 		set_embedded_dso_mode_enabled (false);
-		native_libraries_dir = Util::duplicate_string (appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
+		native_libraries_dir = Util::duplicate_string (app_data_dir);
 	}
 	if (libmonodroid_path != stack_buffer) {
 		std::free (libmonodroid_path);
