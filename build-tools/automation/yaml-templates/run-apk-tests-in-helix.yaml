@@ -151,9 +151,7 @@ steps:
         -t:SignAndroidPackage
         -c ${{ testCase.configuration }}
         -p:AndroidPackageFormat=apk
-        -p:CustomAfterMicrosoftCommonTargets="$(System.DefaultWorkingDirectory)/build-tools/automation/apk-tests-helix/HelixInstrumentationManifest.targets"
-        -p:HelixInstrumentationProject="$(System.DefaultWorkingDirectory)/${{ testCase.project }}"
-        -p:HelixInstrumentationManifest="obj/Helix/${{ testCase.name }}/AndroidManifest.xml"
+        -p:_AndroidHelixInstrumentationManifest="obj/Helix/${{ testCase.name }}/AndroidManifest.xml"
         -p:AndroidSdkDirectory="$(ApkTestsAndroidSdkDirectory)"
         -p:JavaSdkDirectory="$(JAVA_HOME)"
         ${{ testCase.extraBuildArguments }}

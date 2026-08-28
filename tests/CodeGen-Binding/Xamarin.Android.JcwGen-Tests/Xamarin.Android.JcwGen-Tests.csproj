@@ -52,6 +52,7 @@
     <AndroidInstrumentation>xamarin.android.jcwgentests.TestInstrumentation</AndroidInstrumentation>
     <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <AndroidManifest Condition=" '$(_AndroidHelixInstrumentationManifest)' != '' ">$(_AndroidHelixInstrumentationManifest)</AndroidManifest>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
