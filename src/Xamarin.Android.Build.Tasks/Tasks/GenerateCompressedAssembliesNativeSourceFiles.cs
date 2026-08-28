@@ -16,6 +16,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] ResolvedAssemblies { get; set; } = [];
 
+		public ITaskItem []? SizeSourceAssemblies { get; set; }
+
 		[Required]
 		public string [] SupportedAbis { get; set; } = [];
 
@@ -48,6 +50,11 @@ namespace Xamarin.Android.Tasks
 		{
 			if (Debug || !EnableCompression) {
 				Generate (null);
+				return;
+			}
+
+			if (SizeSourceAssemblies != null) {
+				Generate (CreateUpdatedCompressionInfo (SizeSourceAssemblies));
 				return;
 			}
 
@@ -122,8 +129,68 @@ namespace Xamarin.Android.Tasks
 							Log.LogDebugMessage ($"File {llvmIrFilePath} was regenerated");
 						}
 					}
+
 				}
 			}
+		}
+
+		Dictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> CreateUpdatedCompressionInfo (ITaskItem [] sizeSourceAssemblies)
+		{
+			string registrationKey = CompressedAssemblyInfo.GetKey (ProjectFullPath);
+			var registered = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<Dictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>> (
+				registrationKey,
+				RegisteredTaskObjectLifetime.Build
+			);
+			if (registered == null) {
+				throw new InvalidOperationException ($"Compression assembly information with key '{registrationKey}' has not been generated.");
+			}
+
+			var sources = new Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> ();
+			foreach (ITaskItem source in sizeSourceAssemblies) {
+				if (bool.TryParse (source.GetMetadata ("AndroidSkipAddToPackage"), out bool skip) && skip) {
+					continue;
+				}
+
+				AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (source);
+				if (!sources.TryGetValue (arch, out Dictionary<string, ITaskItem>? archSources)) {
+					archSources = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
+					sources.Add (arch, archSources);
+				}
+
+				string assemblyKey = CompressedAssemblyInfo.GetDictionaryKey (source);
+				if (!archSources.TryGetValue (assemblyKey, out ITaskItem? existing)) {
+					archSources.Add (assemblyKey, source);
+					continue;
+				}
+
+				if (new FileInfo (existing.ItemSpec).Length != new FileInfo (source.ItemSpec).Length) {
+					throw new InvalidOperationException ($"Size-source assemblies '{existing.ItemSpec}' and '{source.ItemSpec}' have the same package key but different sizes.");
+				}
+			}
+
+			var updated = new Dictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> ();
+			foreach (var archEntry in registered) {
+				if (!sources.TryGetValue (archEntry.Key, out Dictionary<string, ITaskItem>? archSources)) {
+					throw new InvalidOperationException ($"Could not find size-source assemblies for architecture '{archEntry.Key}'.");
+				}
+
+				var archAssemblies = new Dictionary<string, CompressedAssemblyInfo> (StringComparer.OrdinalIgnoreCase);
+				foreach (var assemblyEntry in archEntry.Value) {
+					if (!archSources.TryGetValue (assemblyEntry.Key, out ITaskItem? source)) {
+						throw new InvalidOperationException ($"Could not find a size-source assembly matching package key '{assemblyEntry.Key}' for architecture '{archEntry.Key}'.");
+					}
+
+					var fi = new FileInfo (source.ItemSpec);
+					if (!fi.Exists) {
+						throw new FileNotFoundException ($"Size-source assembly '{source.ItemSpec}' does not exist.", source.ItemSpec);
+					}
+
+					CompressedAssemblyInfo info = assemblyEntry.Value;
+					archAssemblies.Add (assemblyEntry.Key, new CompressedAssemblyInfo (checked((uint)fi.Length), info.DescriptorIndex, info.TargetArch, info.AssemblyName));
+				}
+				updated.Add (archEntry.Key, archAssemblies);
+			}
+			return updated;
 		}
 	}
 }
