@@ -91,16 +91,16 @@ bool Host::clr_external_assembly_probe (const char *path, void **data_start, int
 [[gnu::always_inline]]
 void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
 {
-	std::string const& native_lib_dir = AndroidSystem::get_native_libraries_dir ();
-	log_debugf (LOG_ASSEMBLY, "Looking for assemblies in '%s'", native_lib_dir.c_str ());
+	const char *native_lib_dir = AndroidSystem::get_native_libraries_dir ();
+	log_debugf (LOG_ASSEMBLY, "Looking for assemblies in '%s'", native_lib_dir);
 
-	DIR *lib_dir = opendir (native_lib_dir.c_str ());
+	DIR *lib_dir = opendir (native_lib_dir);
 	if (lib_dir == nullptr) [[unlikely]] {
 		Helpers::abort_applicationf (
 			LOG_ASSEMBLY,
 			std::source_location::current (),
 			"Unable to open native library directory '%s'. %s",
-			native_lib_dir.c_str (),
+			native_lib_dir,
 			std::strerror (errno)
 		);
 	}
@@ -111,7 +111,7 @@ void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
 			LOG_ASSEMBLY,
 			std::source_location::current (),
 			"Unable to obtain file descriptor for opened directory '%s'. %s",
-			native_lib_dir.c_str (),
+			native_lib_dir,
 			std::strerror (errno)
 		);
 	}
@@ -121,7 +121,7 @@ void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
 		dirent *cur = readdir (lib_dir);
 		if (cur == nullptr) {
 			if (errno != 0) {
-				log_warnf (LOG_ASSEMBLY, "Failed to open a directory entry from '%s': %s", native_lib_dir.c_str (), std::strerror (errno));
+				log_warnf (LOG_ASSEMBLY, "Failed to open a directory entry from '%s': %s", native_lib_dir, std::strerror (errno));
 				continue; // No harm, keep going
 			}
 			break; // we're done
@@ -138,7 +138,7 @@ void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
 				continue;
 			}
 
-			log_debugf (LOG_ASSEMBLY, "Found assembly store in '%s/%s'", native_lib_dir.c_str (), Constants::assembly_store_file_name.data ());
+			log_debugf (LOG_ASSEMBLY, "Found assembly store in '%s/%s'", native_lib_dir, Constants::assembly_store_file_name.data ());
 
 			std::string store_path = native_lib_dir;
 			store_path.append ("/"sv);
@@ -338,7 +338,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	AndroidSystem::set_app_code_cache_dir (applicationDirs[Constants::APP_DIRS_CODE_CACHE_DIR_INDEX]);
 	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 	AndroidSystem::setup_environment ();
-	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ().c_str ());
+	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
 
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
 	AndroidSystem::setup_app_library_directories (runtimeApks, applicationDirs, haveSplitApks);

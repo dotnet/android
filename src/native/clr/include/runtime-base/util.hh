@@ -41,6 +41,19 @@ namespace xamarin::android {
 	public:
 		static constexpr size_t LocalPathBufferSize = Constants::SENSIBLE_PATH_MAX;
 
+		// Returns a copy of `str` allocated with `malloc`, aborting the application if the
+		// allocation fails. Used for values which are set once, early during startup, and which
+		// then live for as long as the process does - the copies are never freed.
+		static auto duplicate_string (const char *str) noexcept -> char*
+		{
+			char *ret = strdup (str);
+			if (ret == nullptr) [[unlikely]] {
+				Helpers::abort_application (LOG_DEFAULT, "Unable to allocate memory for a string copy");
+			}
+
+			return ret;
+		}
+
 		static int create_directory (const char *pathname, mode_t mode);
 
 		static auto create_directory (std::string_view const& dir, mode_t mode) noexcept -> int
@@ -308,6 +321,22 @@ namespace xamarin::android {
 		static auto path_has_directory_components (std::string_view const& path) noexcept -> bool
 		{
 			return !path.empty () && path.contains ('/');
+		}
+
+		[[gnu::flatten, gnu::always_inline]]
+		static auto ends_with (const char *value, const char *suffix) noexcept -> bool
+		{
+			if (value == nullptr || suffix == nullptr) {
+				return false;
+			}
+
+			size_t value_length = strlen (value);
+			size_t suffix_length = strlen (suffix);
+			if (suffix_length > value_length) {
+				return false;
+			}
+
+			return memcmp (value + value_length - suffix_length, suffix, suffix_length) == 0;
 		}
 
 		// Returns the path length excluding NUL, or the negative required capacity including NUL.
