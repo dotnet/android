@@ -10,7 +10,7 @@ parameters:
     artifactSource: bin/TestDebug/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
     packageName: Mono.Android.NET_Tests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
-    extraBuildArguments: ''
+    extraBuildArguments: '-p:EmbedAssembliesIntoApk=true'
   - name: release
     displayName: Mono.Android.NET_Tests-Release
     configuration: $(XA.Build.Configuration)
@@ -132,15 +132,6 @@ steps:
   - pwsh: |
       $apk = '$(System.DefaultWorkingDirectory)\${{ testCase.artifactSource }}'
       Remove-Item -LiteralPath $apk -Force -ErrorAction Ignore
-      $projectDirectory = Split-Path -Parent '$(System.DefaultWorkingDirectory)\${{ testCase.project }}'
-      $manifest = Join-Path $projectDirectory 'obj\Helix\${{ testCase.name }}\AndroidManifest.xml'
-      New-Item -ItemType Directory -Force -Path (Split-Path -Parent $manifest) | Out-Null
-      @'
-      <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${{ testCase.packageName }}">
-        <application />
-        <instrumentation android:name="${{ testCase.instrumentation }}" android:targetPackage="${{ testCase.packageName }}" />
-      </manifest>
-      '@ | Set-Content -LiteralPath $manifest -Encoding utf8NoBOM
     displayName: Remove stale APK - ${{ testCase.displayName }}
 
   - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
@@ -151,7 +142,10 @@ steps:
         -t:SignAndroidPackage
         -c ${{ testCase.configuration }}
         -p:AndroidPackageFormat=apk
-        -p:_AndroidHelixInstrumentationManifest="obj/Helix/${{ testCase.name }}/AndroidManifest.xml"
+        -p:CustomAfterMicrosoftCommonTargets="$(System.DefaultWorkingDirectory)/build-tools/automation/apk-tests-helix/ApkTestsHelix.Manifest.targets"
+        -p:ApkTestsHelixManifestScript="$(System.DefaultWorkingDirectory)/build-tools/automation/apk-tests-helix/inject-apk-test-manifest.ps1"
+        -p:_AndroidHelixPackageName="${{ testCase.packageName }}"
+        -p:_AndroidHelixInstrumentation="${{ testCase.instrumentation }}"
         -p:AndroidSdkDirectory="$(ApkTestsAndroidSdkDirectory)"
         -p:JavaSdkDirectory="$(JAVA_HOME)"
         ${{ testCase.extraBuildArguments }}

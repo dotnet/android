@@ -13,6 +13,14 @@ The runner installs the APK, invokes `am instrument`, pulls the test-generated T
 captures logcat/device state, and returns failure when instrumentation or any test
 fails.
 
+Preparation preserves the application's normal generated manifest and injects only
+the test instrumentation plus Android 16/17 local-network permissions. The work-item
+runner grants the API-appropriate runtime permission so socket-based tests keep their
+existing semantics on current physical devices. Debug embeds managed assemblies
+because direct APK installation cannot reproduce the existing fast-deployment step;
+that deployment coverage remains in the original lane.
+
 The prototype uses `windows.11.amd64.android.open`, following the MAUI R2R Android
-Helix implementation. The existing macOS emulator lanes remain enabled for same-build
-inventory and outcome comparison.
+Helix implementation, and retries a failed work item once to tolerate unhealthy
+physical-device assignments. The existing macOS emulator lanes remain enabled for
+same-build inventory and outcome comparison.

@@ -45,7 +45,7 @@ try {
 	[xml] $props = Get-Content -LiteralPath $propsPath -Raw
 	$item = $props.Project.ItemGroup._ApkTestHelixWorkItem
 	Assert-Equal 'apk-tests-sample' ([string] $item.Include) 'Work item name should be deterministic.'
-	Assert-Equal 'results.trx;console.log;logcat.log;device-state.log;case.json;work-item-error.log' ([string] $item.DownloadFilesFromResults) 'Result files should be downloaded.'
+	Assert-Equal 'results.trx;console.log;logcat.log;device-state.log;getprop.log;package-state.log;case.json;work-item-error.log' ([string] $item.DownloadFilesFromResults) 'Result files should be downloaded.'
 
 	$script = Get-Content -LiteralPath (Join-Path $workItem 'run-apk-tests.ps1') -Raw
 	if (-not $script.Contains('$packageName = ''example.tests''') -or
@@ -62,6 +62,29 @@ try {
 	if ($errors.Count -gt 0) {
 		throw ($errors | ForEach-Object Message | Out-String)
 	}
+
+	$manifestPath = Join-Path $root 'AndroidManifest.xml'
+	@'
+	<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="example.tests">
+	  <uses-permission android:name="android.permission.INTERNET" />
+	  <application android:name="example.tests.App">
+	    <activity android:name="example.tests.Activity" android:configChanges="keyboardHidden" />
+	  </application>
+	</manifest>
+'@ | Set-Content -LiteralPath $manifestPath
+	& (Join-Path $PSScriptRoot 'inject-apk-test-manifest.ps1') `
+		-ManifestPath $manifestPath `
+		-PackageName 'example.tests' `
+		-Instrumentation 'example.tests.TestInstrumentation'
+
+	[xml] $manifest = Get-Content -LiteralPath $manifestPath -Raw
+	$manager = [Xml.XmlNamespaceManager]::new($manifest.NameTable)
+	$manager.AddNamespace('android', 'http://schemas.android.com/apk/res/android')
+	Assert-Equal 'example.tests.App' $manifest.manifest.application.name 'Manifest injection should preserve the application.'
+	Assert-Equal 'keyboardHidden' $manifest.manifest.application.activity.configChanges 'Manifest injection should preserve activity metadata.'
+	Assert-Equal 1 @($manifest.SelectNodes("/manifest/instrumentation[@android:name='example.tests.TestInstrumentation']", $manager)).Count 'Instrumentation should be added once.'
+	Assert-Equal 1 @($manifest.SelectNodes("/manifest/uses-permission[@android:name='android.permission.ACCESS_LOCAL_NETWORK']", $manager)).Count 'Android 17 local-network permission should be added.'
+	Assert-Equal 1 @($manifest.SelectNodes("/manifest/uses-permission[@android:name='android.permission.NEARBY_WIFI_DEVICES']", $manager)).Count 'Android 16 local-network permission should be added.'
 
 	Write-Host 'ApkTestsHelix tests passed.'
 } finally {

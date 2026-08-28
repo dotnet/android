@@ -106,6 +106,25 @@ try {
 		throw "adb install failed with exit code $LASTEXITCODE."
 	}
 
+	$deviceSdk = [int] ((& $adb shell getprop ro.build.version.sdk).Trim())
+	if ($LASTEXITCODE -ne 0) {
+		throw "Could not read the device SDK level (exit code $LASTEXITCODE)."
+	}
+	$localNetworkPermission = if ($deviceSdk -ge 37) {
+		'android.permission.ACCESS_LOCAL_NETWORK'
+	} elseif ($deviceSdk -eq 36) {
+		'android.permission.NEARBY_WIFI_DEVICES'
+	}
+	if ($localNetworkPermission) {
+		& $adb shell pm grant $packageName $localNetworkPermission
+		if ($LASTEXITCODE -ne 0) {
+			throw "Could not grant $localNetworkPermission on API $deviceSdk (exit code $LASTEXITCODE)."
+		}
+	}
+
+	& $adb shell getprop | Set-Content -LiteralPath (Join-Path $upload 'getprop.log')
+	& $adb shell dumpsys package $packageName | Set-Content -LiteralPath (Join-Path $upload 'package-state.log')
+
 	& $adb logcat -c
 	$instrumentationOutput = @(& $adb shell am instrument -w -r "$packageName/$instrumentation" 2>&1)
 	$instrumentationOutput | Tee-Object -FilePath (Join-Path $upload 'console.log')
@@ -179,7 +198,7 @@ try {
 		$writer.WriteAttributeString('Include', "apk-tests-$($case.Name)")
 		$writer.WriteElementString('PayloadDirectory', $case.PayloadDirectory)
 		$writer.WriteElementString('Command', 'powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File run-apk-tests.ps1')
-		$writer.WriteElementString('DownloadFilesFromResults', 'results.trx;console.log;logcat.log;device-state.log;case.json;work-item-error.log')
+		$writer.WriteElementString('DownloadFilesFromResults', 'results.trx;console.log;logcat.log;device-state.log;getprop.log;package-state.log;case.json;work-item-error.log')
 		$writer.WriteEndElement()
 	}
 	$writer.WriteEndElement()
