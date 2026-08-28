@@ -105,6 +105,15 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Scan_JniTypeSignatureCrossAssemblyInvoker_IsIgnored ()
+	{
+		var peer = FindFixtureByManagedName ("MyApp.IUnsupportedExternalInvoker");
+
+		Assert.Null (peer.InvokerTypeName);
+		Assert.Null (peer.InvokerActivationCtorStyle);
+	}
+
+	[Fact]
 	public void Scan_AllTypes_HaveAssemblyName ()
 	{
 		var peers = ScanFixtures ();

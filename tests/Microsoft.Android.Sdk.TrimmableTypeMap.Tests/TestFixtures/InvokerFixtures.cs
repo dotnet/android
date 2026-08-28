@@ -44,3 +44,8 @@ public sealed class AbstractJavaInteropListProxy : AbstractJavaInteropList
 	{
 	}
 }
+
+[JniTypeSignature ("java/lang/UnsupportedExternalInvoker", GenerateJavaPeer = false, InvokerType = typeof (string))]
+public interface IUnsupportedExternalInvoker
+{
+}
