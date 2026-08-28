@@ -397,12 +397,46 @@ public partial class ScannerComparisonTests
 			"android/view/View$OnClickListener",
 			"android/view/View$OnLongClickListener",
 		}, model.Interfaces);
-		Assert.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|<init>|()V|final=False|synchronized=False|varargs=False|strict=False|throws=", model.Constructors);
-		Assert.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|<init>|(I)V|final=False|synchronized=False|varargs=False|strict=False|throws=", model.Constructors);
-		Assert.Contains (model.Methods, method => method.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|getValue|()Ljava/lang/String;", StringComparison.Ordinal));
-		Assert.Contains (model.Methods, method => method.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|onClick|(Landroid/view/View;)V", StringComparison.Ordinal));
-		Assert.Contains (model.Methods, method => method.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|onLongClick|(Landroid/view/View;)Z", StringComparison.Ordinal));
-		Assert.Contains (model.Methods, method => method.Contains ("protected|static=False|abstract=False|bridge=False|synthetic=False|checkedExport|(Ljava/lang/String;)I|final=False|synchronized=False|varargs=False|strict=False|throws=java/io/IOException", StringComparison.Ordinal));
+		const string publicInstanceMethod = "public|static=False|abstract=False|bridge=False|synthetic=False|";
+		const string protectedInstanceMethod = "protected|static=False|abstract=False|bridge=False|synthetic=False|";
+		const string ordinaryMethodModifiers = "final=False|synchronized=False|varargs=False|strict=False|";
+		Assert.Contains (
+			publicInstanceMethod + "<init>|()V|" + ordinaryMethodModifiers + "throws=",
+			model.Constructors
+		);
+		Assert.Contains (
+			publicInstanceMethod + "<init>|(I)V|" + ordinaryMethodModifiers + "throws=",
+			model.Constructors
+		);
+		Assert.Contains (
+			model.Methods,
+			method => method.Contains (
+				publicInstanceMethod + "getValue|()Ljava/lang/String;",
+				StringComparison.Ordinal
+			)
+		);
+		Assert.Contains (
+			model.Methods,
+			method => method.Contains (
+				publicInstanceMethod + "onClick|(Landroid/view/View;)V",
+				StringComparison.Ordinal
+			)
+		);
+		Assert.Contains (
+			model.Methods,
+			method => method.Contains (
+				publicInstanceMethod + "onLongClick|(Landroid/view/View;)Z",
+				StringComparison.Ordinal
+			)
+		);
+		Assert.Contains (
+			model.Methods,
+			method => method.Contains (
+				protectedInstanceMethod + "checkedExport|(Ljava/lang/String;)I|" +
+					ordinaryMethodModifiers + "throws=java/io/IOException",
+				StringComparison.Ordinal
+			)
+		);
 		Assert.Contains (model.Fields, field => field.Contains ("public|static=True|final=False|STATIC_LABEL|Ljava/lang/String;", StringComparison.Ordinal));
 		Assert.Contains (model.Fields, field => field.Contains ("public|static=False|final=False|LABEL|Ljava/lang/String;", StringComparison.Ordinal));
 	}
