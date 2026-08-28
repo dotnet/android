@@ -20,6 +20,7 @@ namespace Java.InteropTests
 		public void ManagedFirstConstructionUsesFinalPeerThroughoutCallback ()
 		{
 			VirtualCallbackConstructorDerived.Reset ();
+			VirtualCallbackConstructorDerived.RunConcurrentLookup = true;
 
 			using var javaClass = VirtualCallbackConstructorDerived.GetJavaClass ();
 			using (var instance = new VirtualCallbackConstructorDerived (42)) {
@@ -30,6 +31,7 @@ namespace Java.InteropTests
 				Assert.AreSame (instance, VirtualCallbackConstructorDerived.CallbackPeer);
 				Assert.AreSame (instance, VirtualCallbackConstructorDerived.ReentrantPeer);
 				Assert.AreSame (instance, VirtualCallbackConstructorDerived.ConstructorPeer);
+				AssertConcurrentPeers (instance);
 				AssertRegisteredSame (instance);
 			}
 
@@ -51,11 +53,7 @@ namespace Java.InteropTests
 				Assert.AreSame (instance, VirtualCallbackConstructorDerived.CallbackPeer);
 				Assert.AreSame (instance, VirtualCallbackConstructorDerived.ReentrantPeer);
 				Assert.AreSame (instance, VirtualCallbackConstructorDerived.ConstructorPeer);
-				Assert.IsNull (VirtualCallbackConstructorDerived.ConcurrentLookupException);
-				Assert.IsNotNull (VirtualCallbackConstructorDerived.ConcurrentPeers);
-				foreach (var peer in VirtualCallbackConstructorDerived.ConcurrentPeers) {
-					Assert.AreSame (instance, peer);
-				}
+				AssertConcurrentPeers (instance);
 				AssertRegisteredSame (instance);
 			}
 
@@ -118,6 +116,15 @@ namespace Java.InteropTests
 				instance.Handle,
 				JniHandleOwnership.DoNotTransfer);
 			Assert.AreSame (instance, registered);
+		}
+
+		static void AssertConcurrentPeers (VirtualCallbackConstructorDerived instance)
+		{
+			Assert.IsNull (VirtualCallbackConstructorDerived.ConcurrentLookupException);
+			Assert.IsNotNull (VirtualCallbackConstructorDerived.ConcurrentPeers);
+			foreach (var peer in VirtualCallbackConstructorDerived.ConcurrentPeers) {
+				Assert.AreSame (instance, peer);
+			}
 		}
 	}
 
@@ -188,34 +195,56 @@ namespace Java.InteropTests
 		static void RunConcurrentLookups ()
 		{
 			const int threadCount = 2;
+			var timeout = TimeSpan.FromSeconds (10);
 			var peers = new VirtualCallbackConstructorDerived? [threadCount];
-			using var ready = new CountdownEvent (threadCount);
-			using var start = new ManualResetEventSlim ();
+			var exceptions = new Exception? [threadCount];
+			var ready = new CountdownEvent (threadCount);
+			var start = new ManualResetEventSlim ();
 			var threads = new Thread [threadCount];
 
 			for (int i = 0; i < threads.Length; i++) {
 				int index = i;
 				threads [i] = new Thread (() => {
-					ready.Signal ();
-					start.Wait ();
 					try {
+						ready.Signal ();
+						start.Wait ();
 						peers [index] = Java.Lang.Object.GetObject<VirtualCallbackConstructorDerived> (
 							CallbackPeer?.Handle ?? IntPtr.Zero,
 							JniHandleOwnership.DoNotTransfer);
 					} catch (Exception e) {
-						ConcurrentLookupException = e;
+						exceptions [index] = e;
 					}
-				});
+				}) {
+					IsBackground = true,
+				};
 				threads [i].Start ();
 			}
 
-			ready.Wait ();
+			bool allReady = ready.Wait (timeout);
 			start.Set ();
+			bool allJoined = true;
 			foreach (var thread in threads) {
-				thread.Join ();
+				allJoined &= thread.Join (timeout);
+			}
+
+			if (allJoined) {
+				ready.Dispose ();
+				start.Dispose ();
+			}
+			if (!allReady) {
+				Assert.Fail ($"Concurrent constructor lookup workers did not become ready within {timeout}.");
+			}
+			if (!allJoined) {
+				Assert.Fail ($"Concurrent constructor lookup workers did not complete within {timeout}.");
 			}
 
 			ConcurrentPeers = peers;
+			foreach (var exception in exceptions) {
+				if (exception != null) {
+					ConcurrentLookupException = exception;
+					break;
+				}
+			}
 		}
 
 		public static void Reset ()
