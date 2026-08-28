@@ -179,24 +179,28 @@ steps:
       $diagnosticsDirectory = '$(Build.StagingDirectory)/apk-tests-helix/results/${{ testCase.name }}'
       New-Item -ItemType Directory -Force -Path $diagnosticsDirectory | Out-Null
       $badging | Set-Content -LiteralPath (Join-Path $diagnosticsDirectory 'aapt-badging.txt') -Encoding utf8NoBOM
+      if ($LASTEXITCODE -ne 0) {
+        throw "aapt dump badging failed with exit code $LASTEXITCODE."
+      }
+      $manifestTree = @(& $aapt.FullName dump xmltree $apk AndroidManifest.xml)
+      $manifestTree | Set-Content -LiteralPath (Join-Path $diagnosticsDirectory 'aapt-manifest.txt') -Encoding utf8NoBOM
+      if ($LASTEXITCODE -ne 0) {
+        throw "aapt dump xmltree failed with exit code $LASTEXITCODE."
+      }
       $projectDirectory = Split-Path -Parent '$(System.DefaultWorkingDirectory)\${{ testCase.project }}'
       $generatedManifest = Join-Path $projectDirectory 'obj\${{ testCase.configuration }}\$(DotNetTargetFramework)-android\android\AndroidManifest.xml'
       if (Test-Path -LiteralPath $generatedManifest -PathType Leaf) {
         Copy-Item -LiteralPath $generatedManifest -Destination (Join-Path $diagnosticsDirectory 'AndroidManifest.xml')
       }
-      if ($LASTEXITCODE -ne 0) {
-        throw "aapt dump badging failed with exit code $LASTEXITCODE."
+      $manifestText = $manifestTree -join "`n"
+      if ($manifestText -notmatch '(?m)^\s*E: instrumentation\b' -or
+          -not $manifestText.Contains('"${{ testCase.instrumentation }}"') -or
+          -not $manifestText.Contains('"${{ testCase.packageName }}"')) {
+        $manifestTree | Write-Host
+        throw "APK '$apk' does not contain the expected instrumentation entry."
       }
-      $instrumentationMatch = [regex]::Match(
-        ($badging -join "`n"),
-        "(?m)^instrumentation:.*name='(?<name>[^']+)'.*targetPackage='(?<package>[^']+)'"
-      )
-      if (-not $instrumentationMatch.Success) {
-        $badging | Write-Host
-        throw "APK '$apk' does not contain an instrumentation entry."
-      }
-      $packageName = $instrumentationMatch.Groups['package'].Value
-      $instrumentation = $instrumentationMatch.Groups['name'].Value
+      $packageName = '${{ testCase.packageName }}'
+      $instrumentation = '${{ testCase.instrumentation }}'
       Write-Host "APK instrumentation: $packageName/$instrumentation"
 
       [pscustomobject]@{
