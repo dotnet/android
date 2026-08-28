@@ -44,16 +44,13 @@ namespace xamarin::android {
 		// Returns a copy of `str` allocated with `malloc`, aborting the application if the
 		// allocation fails. Used for values which are set once, early during startup, and which
 		// then live for as long as the process does - the copies are never freed.
-		static auto duplicate_string (std::string_view const& str) noexcept -> char*
+		static auto duplicate_string (const char *str) noexcept -> char*
 		{
-			size_t capacity = Helpers::add_with_overflow_check<size_t> (str.length (), 1uz);
-			char *ret = static_cast<char*> (std::malloc (capacity));
+			char *ret = strdup (str);
 			if (ret == nullptr) [[unlikely]] {
 				Helpers::abort_application (LOG_DEFAULT, "Unable to allocate memory for a string copy");
 			}
 
-			memcpy (ret, str.data (), str.length ());
-			ret [str.length ()] = '\0';
 			return ret;
 		}
 
