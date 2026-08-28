@@ -20,9 +20,9 @@ auto AndroidSystem::monodroid_get_system_property (const char *name, char *value
 		return value;
 	}
 
-	// Bundled properties are NUL-terminated strings in static application data which live as long
-	// as the process, so return them directly rather than copying them into `value`. Their length
-	// is therefore not limited by `Constants::PROPERTY_VALUE_BUFFER_LEN`.
+	// Bundled properties are NUL-terminated strings owned by the application, so return them
+	// directly rather than copying them into `value`. Their length is therefore not limited by
+	// `Constants::PROPERTY_VALUE_BUFFER_LEN`. See the header for the exact lifetime guarantee.
 	//
 	// A bundled property may be present but empty. `__system_property_get` cannot distinguish an
 	// empty value from a missing one either, so report both as unset and let callers keep their

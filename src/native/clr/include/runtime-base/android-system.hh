@@ -136,8 +136,10 @@ namespace xamarin::android {
 		// to receive Android system properties. Bundled properties are returned without copying, so
 		// their length is not limited by `value_size`.
 		//
-		// Nothing is ever allocated: the result is either `value` or a pointer to application data
-		// which lives as long as the process. The caller must not free it.
+		// Nothing is ever allocated and the caller must not free the result: it is either `value` or
+		// a pointer to bundled property data. The latter is only guaranteed to stay valid until the
+		// next `setup_environment()` call, because in Debug builds bundled properties are stored in
+		// a mutable map. Copy the value if you need to retain it.
 		static auto monodroid_get_system_property (const char *name, char *value, size_t value_size) noexcept -> const char*;
 		static void detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept;
 		static void setup_environment () noexcept;
