@@ -2,6 +2,8 @@
 
 #include <cerrno>
 #include <cstring>
+#include <ctime>
+#include <semaphore.h>
 #include <unistd.h>
 
 #include <array>
@@ -12,7 +14,6 @@
 #include <runtime-base/logger.hh>
 #include <runtime-base/runtime-environment.hh>
 #include <runtime-base/system-loadlibrary-wrapper.hh>
-#include <shared/binary-semaphore.hh>
 #include <shared/helpers.hh>
 
 namespace xamarin::android {
@@ -23,6 +24,17 @@ namespace xamarin::android {
 	public:
 		explicit MainThreadDsoLoader () noexcept
 		{
+			// Not shared between processes, initially unsignalled. Can only fail if the initial value
+			// exceeds `SEM_VALUE_MAX`, which 0 clearly does not.
+			if (sem_init (&load_complete_sem, 0, 0) != 0) {
+				Helpers::abort_applicationf (
+					LOG_ASSEMBLY,
+					std::source_location::current (),
+					"Failed to initialize the DSO load semaphore. %s",
+					strerror (errno)
+				);
+			}
+
 			if (pipe (pipe_fds) != 0) {
 				Helpers::abort_applicationf (
 					LOG_ASSEMBLY,
@@ -63,6 +75,8 @@ namespace xamarin::android {
 				close (pipe_fds[1]);
 			}
 
+			sem_destroy (&load_complete_sem);
+
 			// No need to release the looper, it needs to stay acquired.
 		}
 
@@ -94,10 +108,33 @@ namespace xamarin::android {
 			}
 
 			// Wait for the callback to complete. 3s should be more than enough time for the library to load.
-			constexpr unsigned int LoadTimeoutMilliseconds = 3000u;
+			constexpr time_t LoadTimeoutSeconds = 3;
 
-			if (!load_complete_sem.try_acquire_for (LoadTimeoutMilliseconds)) {
-				log_warnf (LOG_ASSEMBLY, "Timeout while waiting for shared library '%.*s' to load.", static_cast<int>(full_name.length ()), full_name.data ());
+			// `sem_timedwait` takes an absolute deadline and, until API 28, only supports
+			// `CLOCK_REALTIME`. A wall clock adjustment inside the timeout window could cut the wait
+			// short or stretch it, which is harmless for a sanity timeout like this one.
+			timespec deadline {};
+			clock_gettime (CLOCK_REALTIME, &deadline);
+			deadline.tv_sec += LoadTimeoutSeconds;
+
+			// The deadline is absolute, so retrying after a signal cannot extend the total wait.
+			int ret;
+			do {
+				ret = sem_timedwait (&load_complete_sem, &deadline);
+			} while (ret == -1 && errno == EINTR);
+
+			if (ret != 0) {
+				if (errno == ETIMEDOUT) {
+					log_warnf (LOG_ASSEMBLY, "Timeout while waiting for shared library '%.*s' to load.", static_cast<int>(full_name.length ()), full_name.data ());
+				} else {
+					log_warnf (
+						LOG_ASSEMBLY,
+						"Failed to wait for shared library '%.*s' to load. %s",
+						static_cast<int>(full_name.length ()),
+						full_name.data (),
+						strerror (errno)
+					);
+				}
 				return false;
 			}
 
@@ -127,7 +164,7 @@ namespace xamarin::android {
 
 			auto over_and_out = [&self]() -> int {
 				// We're one-shot, 0 means just that
-				self->load_complete_sem.release ();
+				sem_post (&self->load_complete_sem);
 				return 0;
 			};
 
@@ -150,7 +187,7 @@ namespace xamarin::android {
 
 	private:
 		int pipe_fds[2] = {-1, -1};
-		BinarySemaphore load_complete_sem {};
+		sem_t load_complete_sem {};
 		std::string_view undecorated_library_name {};
 		bool load_success = false;
 
