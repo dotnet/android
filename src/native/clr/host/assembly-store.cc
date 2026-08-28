@@ -296,11 +296,12 @@ namespace {
 				return;
 			}
 			{
-				dynamic_local_property_string prop_value;
-				if (AndroidSystem::monodroid_get_system_property ("debug.net.asmcache"sv, prop_value) > 0 && prop_value.get () != nullptr) {
-					if (prop_value.get ()[0] == '0') {
+				char prop_value[Constants::PROPERTY_VALUE_BUFFER_LEN];
+				const char *cache_prop = AndroidSystem::monodroid_get_system_property ("debug.net.asmcache", prop_value, sizeof (prop_value));
+				if (cache_prop != nullptr) {
+					if (cache_prop [0] == '0') {
 						cache_requested = false;
-					} else if (prop_value.get ()[0] == '1') {
+					} else if (cache_prop [0] == '1') {
 						cache_requested = true;
 					}
 				}

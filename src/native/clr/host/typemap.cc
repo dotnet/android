@@ -1,6 +1,9 @@
 #include <array>
 #include <cstdint>
+#include <cstdlib>
+#include <cstdio>
 #include <cstring>
+#include <limits>
 
 #include <host/typemap.hh>
 #include <runtime-base/crc32.hh>
@@ -17,6 +20,24 @@ namespace {
 	{
 		return value_length == key_length && strncmp (value, key, key_length) == 0;
 	}
+
+#if defined (DEBUG)
+	// Returns the length of the formatted name, or the negative capacity the caller must provide
+	// when `buffer` is too small.
+	auto format_managed_type_name (const char *type_name, const char *assembly_name, char *buffer, size_t buffer_size) noexcept -> ssize_t
+	{
+		int full_name_length = snprintf (buffer, buffer_size, "%s, %s", type_name, assembly_name);
+		abort_unless (full_name_length >= 0, "Failed to format the managed type name");
+
+		size_t length = static_cast<size_t>(full_name_length);
+		abort_unless (length < static_cast<size_t>(std::numeric_limits<ssize_t>::max ()), "Managed type name is too long");
+		if (length >= buffer_size) {
+			return -static_cast<ssize_t>(length + 1uz);
+		}
+
+		return static_cast<ssize_t>(length);
+	}
+#endif // def DEBUG
 
 	class MonoGuidString
 	{
@@ -152,14 +173,24 @@ auto TypeMapper::index_to_name (ssize_t idx, const char* typeName, const TypeMap
 [[gnu::always_inline, gnu::flatten]]
 auto TypeMapper::managed_to_java_debug (const char *typeName, const char *assemblyFullName) noexcept -> const char*
 {
-	dynamic_local_path_string full_type_name;
-	full_type_name.append (typeName);
-	full_type_name.append (", "sv);
-	full_type_name.append (assemblyFullName);
+	char stack_buffer [Constants::SENSIBLE_PATH_MAX];
+	char *full_type_name = stack_buffer;
+	ssize_t result = format_managed_type_name (typeName, assemblyFullName, full_type_name, sizeof (stack_buffer));
+	if (result < 0) {
+		size_t required_capacity = static_cast<size_t>(-result);
+		full_type_name = static_cast<char*> (std::malloc (required_capacity));
+		abort_unless (full_type_name != nullptr, "Failed to allocate managed type name");
+		result = format_managed_type_name (typeName, assemblyFullName, full_type_name, required_capacity);
+	}
+	abort_unless (result >= 0, "Failed to format managed type name using the required capacity");
 
-	ssize_t idx = find_index_by_hash (full_type_name.get (), type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
+	ssize_t idx = find_index_by_hash (full_type_name, type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
+	const char *mapped_name = index_to_name (idx, full_type_name, type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);
+	if (full_type_name != stack_buffer) {
+		std::free (full_type_name);
+	}
 
-	return index_to_name (idx, full_type_name.get (), type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);
+	return mapped_name;
 }
 #endif // def DEBUG
 

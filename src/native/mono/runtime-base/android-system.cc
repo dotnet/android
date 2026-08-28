@@ -58,7 +58,7 @@ AndroidSystem::lookup_system_property (const char *name, size_t &value_len) noex
 	BundledProperty *p = lookup_system_property (name);
 	if (p != nullptr) {
 		value_len = p->value_len;
-		return p->name;
+		return p->value;
 	}
 #endif // DEBUG || !ANDROID
 
@@ -170,6 +170,39 @@ AndroidSystem::monodroid_get_system_property (const char *name, dynamic_local_st
 
 	value.assign (v, plen);
 	return Helpers::add_with_overflow_check<int> (plen, 0);
+}
+
+const char*
+AndroidSystem::monodroid_get_system_property (const char *name, char *value, size_t value_size) noexcept
+{
+	// `__system_property_get` always writes up to `PROPERTY_VALUE_BUFFER_LEN` bytes, so a smaller
+	// buffer would overflow. This is a programming error, not a runtime condition.
+	abort_unless (
+		value != nullptr && value_size >= PROPERTY_VALUE_BUFFER_LEN,
+		"System property value buffer is too small"
+	);
+
+	value [0] = '\0';
+
+	// `__system_property_get` NUL-terminates what it writes.
+	if (_monodroid__system_property_get (name, value, value_size) > 0) {
+		return value;
+	}
+
+	// Bundled properties are NUL-terminated strings owned by the application, so return them
+	// directly rather than copying them into `value`. Their length is therefore not limited by
+	// `PROPERTY_VALUE_BUFFER_LEN`. See the header for the exact lifetime guarantee.
+	//
+	// A bundled property may be present but empty. `__system_property_get` cannot distinguish an
+	// empty value from a missing one either, so report both as unset and let callers keep their
+	// defaults.
+	size_t property_length;
+	const char *bundled_value = lookup_system_property (name, property_length);
+	if (bundled_value == nullptr || property_length == 0) {
+		return nullptr;
+	}
+
+	return bundled_value;
 }
 
 int

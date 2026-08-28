@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 
 #include <shared/log_types.hh>
+#include <runtime-base/strings.hh>
 #include <runtime-base/util.hh>
 
 using namespace xamarin::android;
@@ -49,63 +50,45 @@ Util::create_directory (const char *pathname, mode_t mode)
 }
 
 void
-Util::create_public_directory (std::string_view const& dir)
+Util::create_public_directory (const char *dir)
 {
 	mode_t m = umask (0);
-	int ret = create_directory (dir.data (), 0777);
+	int ret = create_directory (dir, 0777);
 	if (ret < 0) {
 		if (errno == EEXIST) {
 			// Try to change the mode, just in case
-			chmod (dir.data (), 0777);
+			chmod (dir, 0777);
 		} else {
-			log_warnf (
-				LOG_DEFAULT,
-				"Failed to create directory '%.*s'. %s",
-				static_cast<int>(dir.length ()),
-				dir.data (),
-				std::strerror (errno)
-			);
+			log_warnf (LOG_DEFAULT, "Failed to create directory '%s'. %s", dir, std::strerror (errno));
 		}
 	}
 	umask (m);
 }
 
 auto
-Util::monodroid_fopen (std::string_view const& filename, std::string_view const& mode) noexcept -> FILE*
+Util::monodroid_fopen (const char *filename, const char *mode) noexcept -> FILE*
 {
 	/* On Unix, both path and system calls are all assumed
 	 * to be UTF-8 compliant.
 	 */
-	FILE *ret = fopen (filename.data (), mode.data ());
+	FILE *ret = fopen (filename, mode);
 	if (ret == nullptr) {
-		log_errorf (
-			LOG_DEFAULT,
-			"fopen failed for file %.*s: %s",
-			static_cast<int>(filename.length ()),
-			filename.data (),
-			strerror (errno)
-		);
+		log_errorf (LOG_DEFAULT, "fopen failed for file %s: %s", filename, strerror (errno));
 		return nullptr;
 	}
 
 	return ret;
 }
 
-void Util::set_world_accessable (std::string_view const& path)
+void Util::set_world_accessable (const char *path)
 {
 	int r;
 	do {
-		r = chmod (path.data (), 0664);
+		r = chmod (path, 0664);
 	} while (r == -1 && errno == EINTR);
 
 	if (r == -1) {
-		log_errorf (
-			LOG_DEFAULT,
-			"chmod(\"%.*s\", 0664) failed: %s",
-			static_cast<int>(path.length ()),
-			path.data (),
-			strerror (errno)
-		);
+		log_errorf (LOG_DEFAULT, "chmod(\"%s\", 0664) failed: %s", path, strerror (errno));
 	}
 }
 
