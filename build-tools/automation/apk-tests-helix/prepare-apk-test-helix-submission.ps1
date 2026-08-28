@@ -271,7 +271,27 @@ cleanup() {
 }
 trap cleanup EXIT
 
+if [[ -z "$adb" ]]; then
+	for candidate in \
+		"${ANDROID_HOME:-}/platform-tools/adb" \
+		"${ANDROID_SDK_ROOT:-}/platform-tools/adb" \
+		"/usr/local/lib/android/sdk/platform-tools/adb" \
+		"/usr/local/android-sdk/platform-tools/adb" \
+		"/opt/android-sdk/platform-tools/adb" \
+		"/opt/android/sdk/platform-tools/adb" \
+		"${HOME:-}/android-sdk/platform-tools/adb" \
+		"${HOME:-}/android-sdk-linux/platform-tools/adb"; do
+		if [[ -x "$candidate" ]]; then
+			adb="$candidate"
+			break
+		fi
+	done
+fi
+if [[ -z "$adb" ]]; then
+	adb=$(find / -path '*/platform-tools/adb' -type f -perm -111 -print -quit 2>/dev/null || true)
+fi
 [[ -n "$adb" ]] || fail 'adb was not found on PATH.'
+echo "Using adb: $adb"
 
 device_ready=false
 for attempt in $(seq 1 12); do
