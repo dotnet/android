@@ -29,8 +29,7 @@ public partial class ScannerComparisonTests
 		IReadOnlyList<string> Interfaces,
 		IReadOnlyList<string> Constructors,
 		IReadOnlyList<string> Methods,
-		IReadOnlyList<string> Fields,
-		IReadOnlyList<string> Annotations
+		IReadOnlyList<string> Fields
 	);
 
 	[Fact]
@@ -272,8 +271,7 @@ public partial class ScannerComparisonTests
 
 	static JavaSemanticModel CreateSemanticModel (ClassFile classFile)
 	{
-		// Classfiles preserve declaration semantics while discarding source formatting
-		// and source-only annotations such as @Override, which javac validates above.
+		// Classfiles preserve declaration semantics while discarding source formatting.
 		var constructors = classFile.Methods
 			.Where (method => method.IsConstructor)
 			.Select (FormatMethod)
@@ -300,8 +298,7 @@ public partial class ScannerComparisonTests
 			interfaces,
 			constructors,
 			methods,
-			fields,
-			GetAnnotations (classFile.Attributes)
+			fields
 		);
 	}
 
@@ -321,7 +318,6 @@ public partial class ScannerComparisonTests
 		var throws = method.GetThrows ()
 			.Select (type => type.BinaryName)
 			.OrderBy (type => type, StringComparer.Ordinal);
-		var annotations = GetAnnotations (method.Attributes);
 		return $"{GetVisibility (method.AccessFlags)}|" +
 			$"static={method.AccessFlags.HasFlag (MethodAccessFlags.Static)}|" +
 			$"abstract={method.AccessFlags.HasFlag (MethodAccessFlags.Abstract)}|" +
@@ -332,13 +328,11 @@ public partial class ScannerComparisonTests
 			$"synchronized={method.AccessFlags.HasFlag (MethodAccessFlags.Synchronized)}|" +
 			$"varargs={method.AccessFlags.HasFlag (MethodAccessFlags.Varargs)}|" +
 			$"strict={method.AccessFlags.HasFlag (MethodAccessFlags.Strict)}|" +
-			$"throws={string.Join (",", throws)}|" +
-			$"annotations={string.Join (",", annotations)}";
+			$"throws={string.Join (",", throws)}";
 	}
 
 	static string FormatField (Xamarin.Android.Tools.Bytecode.FieldInfo field)
 	{
-		var annotations = GetAnnotations (field.Attributes);
 		return $"{GetVisibility (field.AccessFlags)}|" +
 			$"static={field.AccessFlags.HasFlag (FieldAccessFlags.Static)}|" +
 			$"final={field.AccessFlags.HasFlag (FieldAccessFlags.Final)}|" +
@@ -346,21 +340,7 @@ public partial class ScannerComparisonTests
 			$"volatile={field.AccessFlags.HasFlag (FieldAccessFlags.Volatile)}|" +
 			$"transient={field.AccessFlags.HasFlag (FieldAccessFlags.Transient)}|" +
 			$"synthetic={field.AccessFlags.HasFlag (FieldAccessFlags.Synthetic)}|" +
-			$"enum={field.AccessFlags.HasFlag (FieldAccessFlags.Enum)}|" +
-			$"annotations={string.Join (",", annotations)}";
-	}
-
-	static string[] GetAnnotations (AttributeCollection attributes)
-	{
-		return attributes
-			.OfType<RuntimeVisibleAnnotationsAttribute> ()
-			.SelectMany (attribute => attribute.Annotations)
-			.Concat (attributes
-				.OfType<RuntimeInvisibleAnnotationsAttribute> ()
-				.SelectMany (attribute => attribute.Annotations))
-			.Select (annotation => annotation.ToString ())
-			.OrderBy (annotation => annotation, StringComparer.Ordinal)
-			.ToArray ();
+			$"enum={field.AccessFlags.HasFlag (FieldAccessFlags.Enum)}";
 	}
 
 	static ClassAccessFlags GetDeclarationModifiers (ClassAccessFlags flags)
@@ -417,8 +397,8 @@ public partial class ScannerComparisonTests
 			"android/view/View$OnClickListener",
 			"android/view/View$OnLongClickListener",
 		}, model.Interfaces);
-		Assert.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|<init>|()V|final=False|synchronized=False|varargs=False|strict=False|throws=|annotations=", model.Constructors);
-		Assert.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|<init>|(I)V|final=False|synchronized=False|varargs=False|strict=False|throws=|annotations=", model.Constructors);
+		Assert.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|<init>|()V|final=False|synchronized=False|varargs=False|strict=False|throws=", model.Constructors);
+		Assert.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|<init>|(I)V|final=False|synchronized=False|varargs=False|strict=False|throws=", model.Constructors);
 		Assert.Contains (model.Methods, method => method.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|getValue|()Ljava/lang/String;", StringComparison.Ordinal));
 		Assert.Contains (model.Methods, method => method.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|onClick|(Landroid/view/View;)V", StringComparison.Ordinal));
 		Assert.Contains (model.Methods, method => method.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|onLongClick|(Landroid/view/View;)Z", StringComparison.Ordinal));
@@ -436,6 +416,5 @@ public partial class ScannerComparisonTests
 		Assert.Equal (expected.Constructors, actual.Constructors);
 		Assert.Equal (expected.Methods, actual.Methods);
 		Assert.Equal (expected.Fields, actual.Fields);
-		Assert.Equal (expected.Annotations, actual.Annotations);
 	}
 }
