@@ -4,7 +4,6 @@
 #include <cstring>
 #include <deque>
 #include <memory>
-#include <mutex>
 #include <string>
 
 #include <dirent.h>
@@ -79,7 +78,7 @@ namespace {
 			Failed,
 		};
 
-		std::mutex                        state_lock;
+		pthread_mutex_t                   state_lock = PTHREAD_MUTEX_INITIALIZER;
 		std::deque<WriteRequest>          write_queue;
 		std::string                       cache_dir;
 		std::unique_ptr<uint8_t*[]>       tracking;
@@ -177,14 +176,16 @@ namespace {
 			while (true) {
 				WriteRequest request;
 				{
-					std::lock_guard lock (state_lock);
+					pthread_mutex_lock (&state_lock);
 					if (write_queue.empty ()) {
 						writer_running = false;
+						pthread_mutex_unlock (&state_lock);
 						return nullptr;
 					}
 
 					request = std::move (write_queue.front ());
 					write_queue.pop_front ();
+					pthread_mutex_unlock (&state_lock);
 				}
 
 				size_t request_size = request.size;
@@ -192,15 +193,17 @@ namespace {
 				request.data.reset ();
 
 				{
-					std::lock_guard lock (state_lock);
+					pthread_mutex_lock (&state_lock);
 					queued_bytes -= request_size;
 					if (write_result == WriteResult::Failed) {
 						writes_enabled = false;
 						clear_write_queue_locked ();
 						writer_running = false;
 						log_debugf (LOG_ASSEMBLY, "Disabling decompressed-assembly cache writes after a persistence failure");
+						pthread_mutex_unlock (&state_lock);
 						return nullptr;
 					}
+					pthread_mutex_unlock (&state_lock);
 				}
 			}
 		}
@@ -345,8 +348,9 @@ namespace {
 			}
 
 			{
-				std::lock_guard lock (state_lock);
+				pthread_mutex_lock (&state_lock);
 				writes_enabled = true;
+				pthread_mutex_unlock (&state_lock);
 			}
 
 			log_debugf (
@@ -426,8 +430,9 @@ namespace {
 			size_t bytes_queued = 0;
 			bool queue_full = false;
 			{
-				std::lock_guard lock (state_lock);
+				pthread_mutex_lock (&state_lock);
 				if (!writes_enabled) {
+					pthread_mutex_unlock (&state_lock);
 					return;
 				}
 				if (total > MAX_QUEUED_BYTES || queued_bytes > MAX_QUEUED_BYTES - total) {
@@ -436,6 +441,7 @@ namespace {
 				} else {
 					queued_bytes += total;
 				}
+				pthread_mutex_unlock (&state_lock);
 			}
 
 			if (queue_full) {
@@ -463,8 +469,9 @@ namespace {
 
 			auto snapshot = std::unique_ptr<uint8_t[]> (new (std::nothrow) uint8_t[total]);
 			if (snapshot == nullptr) {
-				std::lock_guard lock (state_lock);
+				pthread_mutex_lock (&state_lock);
 				queued_bytes -= total;
+				pthread_mutex_unlock (&state_lock);
 				return;
 			}
 			// The runtime can modify the shared decompression buffer after this
@@ -488,9 +495,10 @@ namespace {
 			};
 
 			{
-				std::lock_guard lock (state_lock);
+				pthread_mutex_lock (&state_lock);
 				if (!writes_enabled) {
 					queued_bytes -= total;
+					pthread_mutex_unlock (&state_lock);
 					return;
 				}
 
@@ -503,6 +511,7 @@ namespace {
 						clear_write_queue_locked ();
 					}
 				}
+				pthread_mutex_unlock (&state_lock);
 			}
 		}
 	} // namespace asm_cache

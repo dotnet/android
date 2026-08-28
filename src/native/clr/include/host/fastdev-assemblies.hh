@@ -1,9 +1,9 @@
 #pragma once
 
 #include <dirent.h>
+#include <pthread.h>
 
 #include <cstdint>
-#include <mutex>
 #include <string>
 #include <string_view>
 
@@ -30,7 +30,7 @@ namespace xamarin::android {
 #if defined(DEBUG)
 		static inline DIR *override_dir = nullptr;
 		static inline int override_dir_fd = -1;
-		static inline std::mutex override_dir_lock {};
+		static inline pthread_mutex_t override_dir_lock = PTHREAD_MUTEX_INITIALIZER;
 		// Set by `build_tpa_list` when assemblies in the override directory are
 		// passed to CoreCLR via `TRUSTED_PLATFORM_ASSEMBLIES`. When true, the
 		// external assembly probe yields to TPA-based loading so that
