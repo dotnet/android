@@ -2,4 +2,9 @@
   <PropertyGroup Condition="'$(MSBuildProjectFullPath)' == '$(HelixInstrumentationProject)'">
     <AndroidManifest>$(HelixInstrumentationManifest)</AndroidManifest>
   </PropertyGroup>
+  <Target Name="_LogHelixInstrumentationManifest"
+          BeforeTargets="_ValidateAndroidPackageProperties"
+          Condition="'$(MSBuildProjectFullPath)' == '$(HelixInstrumentationProject)'">
+    <Message Text="Helix APK instrumentation manifest: $(AndroidManifest)" Importance="High" />
+  </Target>
 </Project>
