@@ -110,31 +110,8 @@ namespace xamarin::android {
 			// Wait for the callback to complete. 3s should be more than enough time for the library to load.
 			constexpr time_t LoadTimeoutSeconds = 3;
 
-			// `sem_timedwait` takes an absolute deadline and, until API 28, only supports
-			// `CLOCK_REALTIME`. A wall clock adjustment inside the timeout window could cut the wait
-			// short or stretch it, which is harmless for a sanity timeout like this one.
-			timespec deadline {};
-			clock_gettime (CLOCK_REALTIME, &deadline);
-			deadline.tv_sec += LoadTimeoutSeconds;
-
-			// The deadline is absolute, so retrying after a signal cannot extend the total wait.
-			int ret;
-			do {
-				ret = sem_timedwait (&load_complete_sem, &deadline);
-			} while (ret == -1 && errno == EINTR);
-
-			if (ret != 0) {
-				if (errno == ETIMEDOUT) {
-					log_warnf (LOG_ASSEMBLY, "Timeout while waiting for shared library '%.*s' to load.", static_cast<int>(full_name.length ()), full_name.data ());
-				} else {
-					log_warnf (
-						LOG_ASSEMBLY,
-						"Failed to wait for shared library '%.*s' to load. %s",
-						static_cast<int>(full_name.length ()),
-						full_name.data (),
-						strerror (errno)
-					);
-				}
+			if (!try_acquire_for (LoadTimeoutSeconds)) {
+				log_warnf (LOG_ASSEMBLY, "Timeout while waiting for shared library '%.*s' to load.", static_cast<int>(full_name.length ()), full_name.data ());
 				return false;
 			}
 
@@ -154,6 +131,30 @@ namespace xamarin::android {
 		}
 
 	private:
+
+		// Waits up to `timeout_seconds` for the main thread callback to signal that it is done.
+		// Returns `false` if it didn't within that time.
+		[[nodiscard]] auto try_acquire_for (time_t timeout_seconds) noexcept -> bool
+		{
+			// `sem_timedwait` takes an absolute deadline and, until API 28, only supports
+			// `CLOCK_REALTIME`. A wall clock adjustment inside the timeout window could cut the wait
+			// short or stretch it, which is harmless for a sanity timeout like this one.
+			timespec deadline {};
+			clock_gettime (CLOCK_REALTIME, &deadline);
+			deadline.tv_sec += timeout_seconds;
+
+			// The deadline is absolute, so retrying after a signal cannot extend the total wait.
+			int ret;
+			do {
+				ret = sem_timedwait (&load_complete_sem, &deadline);
+			} while (ret == -1 && errno == EINTR);
+
+			if (ret != 0 && errno != ETIMEDOUT) [[unlikely]] {
+				log_warnf (LOG_ASSEMBLY, "Failed to wait for the DSO load to complete. %s", strerror (errno));
+			}
+
+			return ret == 0;
+		}
 
 		static auto load_cb ([[maybe_unused]] int fd, [[maybe_unused]] int events, void *data) noexcept -> int
 		{
