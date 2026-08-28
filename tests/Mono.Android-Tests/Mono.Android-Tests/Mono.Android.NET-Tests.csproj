@@ -20,8 +20,11 @@
     <WarningsAsErrors>IL2037</WarningsAsErrors>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
     <AndroidNdkDirectory></AndroidNdkDirectory>
-    <AndroidManifest Condition=" '$(_AndroidHelixInstrumentationManifest)' != '' ">$(_AndroidHelixInstrumentationManifest)</AndroidManifest>
   </PropertyGroup>
+
+  <ItemGroup Condition=" '$(_AndroidHelixInstrumentationManifest)' != '' ">
+    <AndroidManifestOverlay Include="$(_AndroidHelixInstrumentationManifest)" />
+  </ItemGroup>
 
   <!--
     These category exclusions used to flow through `am instrument -e` via the
