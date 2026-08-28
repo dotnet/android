@@ -2,16 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
-using System.Xml;
 using System.Xml.Linq;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
+using Xamarin.Installer.AndroidSDK;
+using Xamarin.Installer.AndroidSDK.Common;
+using Xamarin.Installer.AndroidSDK.Manager;
+using Xamarin.Installer.Common;
 using Xamarin.ProjectTools;
 using Microsoft.Build.Framework;
 using Xamarin.Tools.Zip;
@@ -36,6 +37,10 @@ namespace Xamarin.Android.Build.Tests
 			if (manifestType == "GoogleV2" && runtime == AndroidRuntime.NativeAOT) {
 				Assert.Ignore ("GoogleV2 manifest does not have an ndk-bundle component for NativeAOT");
 			}
+			if (manifestType == "GoogleV2") {
+				InstallGoogleV2Dependencies ();
+				return;
+			}
 
 			// Set to true when we are marking a new Android API level as stable, but it has not
 			// been added to the Xamarin manifest yet.
@@ -44,13 +49,9 @@ namespace Xamarin.Android.Build.Tests
 			var oldSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
 			var oldJdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_JDK_PATH");
 			var outdatedCommandLineToolsRevision = new Version (19, 0);
-			GoogleV2Fixture googleV2Fixture = null;
 			try {
 				string sdkPath = Path.Combine (Root, "temp", TestName, "android-sdk");
-				bool useGoogleV2Fixture = manifestType == "GoogleV2";
-				string jdkPath = useGoogleV2Fixture
-					? AndroidSdkResolver.GetJavaSdkPath ()
-					: Path.Combine (Root, "temp", TestName, "android-jdk");
+				string jdkPath = Path.Combine (Root, "temp", TestName, "android-jdk");
 				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", sdkPath);
 				Environment.SetEnvironmentVariable ("TEST_ANDROID_JDK_PATH", jdkPath);
 
@@ -62,18 +63,9 @@ namespace Xamarin.Android.Build.Tests
 					"AcceptAndroidSDKLicenses=true",
 					$"AndroidManifestType={manifestType}",
 				};
-				// When using the default Xamarin manifest, this test should fail if we can't install any of the defaults in Xamarin.Installer.Common.props
-				// When using the Google manifest, override the platform tools version to the one in their manifest as it only ever contains one version
-				if (useGoogleV2Fixture) {
-					googleV2Fixture = new GoogleV2Fixture ();
-					buildArgs.Add ($"AndroidManifestSource={googleV2Fixture.ManifestUrl}");
-					buildArgs.Add ($"AndroidSdkPlatformToolsVersion={GetCurrentPlatformToolsVersion (googleV2Fixture.ManifestUrl)}");
-					buildArgs.Add ("AndroidInstallJavaDependencies=false");
-				} else {
-					var manifestPath = Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Installer.AndroidSDK", "Feeds", "AndroidManifestFeed_d18.0.xml");
-					Assert.IsTrue (File.Exists (manifestPath), $"Xamarin manifest does not exist at '{manifestPath}'.");
-					buildArgs.Add ($"AndroidManifestSource={manifestPath}");
-				}
+				var manifestPath = Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Installer.AndroidSDK", "Feeds", "AndroidManifestFeed_d18.0.xml");
+				Assert.IsTrue (File.Exists (manifestPath), $"Xamarin manifest does not exist at '{manifestPath}'.");
+				buildArgs.Add ($"AndroidManifestSource={manifestPath}");
 
 				using (var b = CreateApkBuilder ()) {
 					b.Verbosity = LoggerVerbosity.Detailed;
@@ -83,25 +75,22 @@ namespace Xamarin.Android.Build.Tests
 					b.Target = "InstallAndroidDependencies";
 					b.BuildLogFile = "install-deps.log";
 
-					// The Xamarin variant downloads the Android SDK and JDK over the network, which
+					// InstallAndroidDependencies downloads the Android SDK and JDK over the network, which
 					// can fail intermittently in CI. Retry a few times before giving up, starting from a
 					// clean SDK/JDK directory each attempt so a partial download does not affect the next.
 					// See https://github.com/dotnet/android/issues/11973
-					int maxInstallAttempts = useGoogleV2Fixture ? 1 : 3;
+					const int maxInstallAttempts = 3;
 					bool installSucceeded = false;
 					for (int attempt = 1; attempt <= maxInstallAttempts; attempt++) {
-						var pathsToReset = useGoogleV2Fixture ? new [] { sdkPath } : new [] { sdkPath, jdkPath };
-						foreach (var path in pathsToReset) {
+						foreach (var path in new [] { sdkPath, jdkPath }) {
 							if (Directory.Exists (path))
 								Directory.Delete (path, recursive: true);
 							Directory.CreateDirectory (path);
 						}
 
-						if (!useGoogleV2Fixture) {
-							var commandLineToolsPath = Path.Combine (sdkPath, "cmdline-tools", "latest");
-							Directory.CreateDirectory (commandLineToolsPath);
-							File.WriteAllText (Path.Combine (commandLineToolsPath, "source.properties"), $"Pkg.Revision={outdatedCommandLineToolsRevision}");
-						}
+						var commandLineToolsPath = Path.Combine (sdkPath, "cmdline-tools", "latest");
+						Directory.CreateDirectory (commandLineToolsPath);
+						File.WriteAllText (Path.Combine (commandLineToolsPath, "source.properties"), $"Pkg.Revision={outdatedCommandLineToolsRevision}");
 
 						if (b.Build (proj, parameters: buildArgs.ToArray ())) {
 							installSucceeded = true;
@@ -112,20 +101,15 @@ namespace Xamarin.Android.Build.Tests
 						if (attempt < maxInstallAttempts)
 							Thread.Sleep (TimeSpan.FromSeconds (10));
 					}
-					googleV2Fixture?.AssertServerSucceeded ();
 					Assert.IsTrue (installSucceeded, $"InstallAndroidDependencies should have succeeded within {maxInstallAttempts} attempts.");
 
-					if (useGoogleV2Fixture) {
-						googleV2Fixture.AssertInstallation (sdkPath, b.LastBuildOutput);
-					} else {
-						var sourceProperties = Path.Combine (sdkPath, "cmdline-tools", "latest", "source.properties");
-						var revisionProperty = File.ReadLines (sourceProperties)
-							.First (line => line.StartsWith ("Pkg.Revision", StringComparison.Ordinal));
-						int separator = revisionProperty.IndexOf ('=');
-						Assert.GreaterOrEqual (separator, 0, "The command-line tools revision property should contain a value.");
-						var installedRevision = Version.Parse (revisionProperty.Substring (separator + 1).Trim ());
-						Assert.Greater (installedRevision.CompareTo (outdatedCommandLineToolsRevision), 0, "The outdated command-line tools installation should have been updated.");
-					}
+					var sourceProperties = Path.Combine (sdkPath, "cmdline-tools", "latest", "source.properties");
+					var revisionProperty = File.ReadLines (sourceProperties)
+						.First (line => line.StartsWith ("Pkg.Revision", StringComparison.Ordinal));
+					int separator = revisionProperty.IndexOf ('=');
+					Assert.GreaterOrEqual (separator, 0, "The command-line tools revision property should contain a value.");
+					var installedRevision = Version.Parse (revisionProperty.Substring (separator + 1).Trim ());
+					Assert.Greater (installedRevision.CompareTo (outdatedCommandLineToolsRevision), 0, "The outdated command-line tools installation should have been updated.");
 
 					// When dependencies can not be resolved/installed a warning will be present in build output:
 					//    Dependency `platform-tools` should have been installed but could not be resolved.
@@ -152,9 +136,6 @@ namespace Xamarin.Android.Build.Tests
 						Assert.Fail ($"A required dependency was not installed, warnings are listed below. Please check the task output in 'install-deps.log'.\n{sb.ToString ()}");
 					}
 
-					if (useGoogleV2Fixture)
-						return;
-
 					b.Target = defaultTarget;
 					b.BuildLogFile = "build.log";
 					Assert.IsTrue (b.Build (proj, true), "build should have succeeded.");
@@ -166,22 +147,78 @@ namespace Xamarin.Android.Build.Tests
 						$"JavaPlatformJarPath did not contain new SDK path `{sdkPath}`. Please check the task output in 'install-deps.log'");
 				}
 			} finally {
-				googleV2Fixture?.Dispose ();
 				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", oldSdkPath);
 				Environment.SetEnvironmentVariable ("TEST_ANDROID_JDK_PATH", oldJdkPath);
 			}
 		}
 
-		static string GetCurrentPlatformToolsVersion (Uri manifestUrl)
+		void InstallGoogleV2Dependencies ()
 		{
-			var s = new XmlReaderSettings {
-				XmlResolver = null,
-			};
-			XDocument d;
-			using (var r = XmlReader.Create (manifestUrl.ToString (), s))
-				d = XDocument.Load (r);
+			string sdkPath = Path.Combine (Root, "temp", TestName, "android-sdk");
+			if (Directory.Exists (sdkPath))
+				Directory.Delete (sdkPath, recursive: true);
+			Directory.CreateDirectory (sdkPath);
 
-			var platformToolsPackage    = d.Root.Elements ("remotePackage")
+			var fixture = new GoogleV2Fixture ();
+			string platformToolsVersion = GetCurrentPlatformToolsVersion (fixture.RepositoryManifest);
+			var installer = new AndroidSDKInstaller (
+				fixture.Helpers,
+				AndroidManifestType.GoogleV2,
+				fixture.ManifestUrl,
+				fixture.AddonsListUrl,
+				fixture.RepositoryBaseUrl);
+			installer.Discover (new List<string> { sdkPath });
+
+			var sdk = installer.FindInstance (sdkPath);
+			Assert.IsNotNull (sdk, $"The synthetic Android SDK should be discovered at '{sdkPath}'.");
+
+			var requested = new [] {
+				(path: $"platforms;android-{GoogleV2Fixture.PlatformVersion}", version: (string) null),
+				(path: $"build-tools;{GoogleV2Fixture.BuildToolsVersion}", version: GoogleV2Fixture.BuildToolsVersion),
+				(path: "platform-tools", version: platformToolsVersion),
+				(path: $"cmdline-tools;{GoogleV2Fixture.CommandLineToolsVersion}", version: GoogleV2Fixture.CommandLineToolsVersion),
+			};
+			var components = new List<IAndroidComponent> ();
+			foreach (var dependency in requested) {
+				var version = dependency.version == null ? null : new AndroidRevision (dependency.version);
+				var component = sdk.Components.FirstOrDefault (c => c.Path == dependency.path && (version == null || c.Revision == version));
+				Assert.IsNotNull (component, $"The synthetic repository should contain '{dependency.path}/{dependency.version}'.");
+				components.Add (component);
+			}
+
+			var installationSet = installer.GetInstallationSet (sdk, components);
+			CollectionAssert.AreEquivalent (
+				requested.Select (dependency => dependency.path).Append (GoogleV2Fixture.FixtureDependencyPath),
+				installationSet.Select (component => component.Path),
+				"The installation set should contain direct and transitive GoogleV2 dependencies.");
+
+			var downloads = installer.GetDownloadItems (installationSet);
+			fixture.PrepareDownloads (downloads, Path.Combine (Root, "temp", TestName, "downloads"));
+			foreach (var download in downloads)
+				Assert.IsTrue (download.IsDownloadValid (), $"Checksum validation should succeed for '{download.Url}'.");
+
+			var licenses = installationSet
+				.Select (component => component.License)
+				.Where (license => license != null)
+				.Distinct ()
+				.ToList ();
+			Assert.AreEqual (1, licenses.Count, "The synthetic GoogleV2 license should be parsed.");
+			Assert.AreEqual ("android-sdk-license", licenses [0].ID);
+			installer.Install (sdk, installationSet);
+
+			string javaSdkPath = AndroidSdkResolver.GetJavaSdkPath ();
+			Assert.IsTrue (Directory.Exists (javaSdkPath), $"The configured local JDK should exist at '{javaSdkPath}'.");
+			installer.AcceptLicensesAsync (sdk, licenses, CancellationToken.None, javaSdkPath, throwsErrorIfValidationFailed: true)
+				.GetAwaiter ().GetResult ();
+			Assert.IsTrue (File.Exists (Path.Combine (sdkPath, "cmdline-tools", GoogleV2Fixture.CommandLineToolsVersion, "bin", "sdkmanager-invoked.txt")),
+				"The synthetic sdkmanager should be invoked to accept licenses.");
+			Assert.IsTrue (installer.IsLicenseAccepted (sdk, licenses [0]), "The synthetic GoogleV2 license should be accepted.");
+			fixture.AssertInstallation (sdkPath);
+		}
+
+		static string GetCurrentPlatformToolsVersion (XDocument manifest)
+		{
+			var platformToolsPackage = manifest.Root.Elements ("remotePackage")
 				.Where (e => "platform-tools" == (string) e.Attribute("path") &&
 					"android-sdk-preview-license" != (string) e.Element ("uses-license")?.Attribute ("ref"))
 				.FirstOrDefault ();
@@ -193,17 +230,17 @@ namespace Xamarin.Android.Build.Tests
 			return $"{revision.Element ("major")?.Value}.{revision.Element ("minor")?.Value}.{revision.Element ("micro")?.Value}";
 		}
 
-		sealed class GoogleV2Fixture : IDisposable
+		sealed class GoogleV2Fixture
 		{
-			const string PlatformToolsVersion = "99.0.1";
-			const string BuildToolsVersion = "37.0.0";
-			const string CommandLineToolsVersion = "22.0";
-			const string PlatformVersion = "37.0";
-			const string FixtureDependencyPath = "extras;googlev2-fixture";
+			public const string PlatformToolsVersion = "99.0.1";
+			public const string BuildToolsVersion = "37.0.0";
+			public const string CommandLineToolsVersion = "22.0";
+			public const string PlatformVersion = "37.0";
+			public const string FixtureDependencyPath = "extras;googlev2-fixture";
 
-			readonly LocalHttpFixtureServer server = new LocalHttpFixtureServer ();
+			readonly Dictionary<Uri, byte []> archives = new Dictionary<Uri, byte []> ();
+			readonly List<string> requests = new List<string> ();
 			readonly List<string> expectedRequests = new List<string> {
-				"/repository2-3.xml",
 				"/repository2-3.xml",
 				"/addons_list-5.xml",
 				"/addon.xml",
@@ -214,10 +251,15 @@ namespace Xamarin.Android.Build.Tests
 				"/fixture-dependency.zip",
 			};
 
-			public Uri ManifestUrl => server.GetUri ("repository2-3.xml");
+			public FixtureHelpers Helpers { get; }
+			public Uri RepositoryBaseUrl { get; } = new Uri ("https://googlev2-fixture.test/");
+			public Uri ManifestUrl => new Uri (RepositoryBaseUrl, "repository2-3.xml");
+			public Uri AddonsListUrl => new Uri (RepositoryBaseUrl, "addons_list-5.xml");
+			public XDocument RepositoryManifest { get; }
 
 			public GoogleV2Fixture ()
 			{
+				Helpers = new FixtureHelpers (requests);
 				var platformToolsArchive = CreateArchive (
 					("platform-tools/source.properties", $"Pkg.Revision={PlatformToolsVersion}"),
 					("platform-tools/fixture-marker.txt", "synthetic platform-tools"));
@@ -232,52 +274,59 @@ namespace Xamarin.Android.Build.Tests
 					("googlev2-fixture/nested/fixture-marker.txt", "synthetic transitive dependency"));
 				var sdkManagerName = TestEnvironment.IsWindows ? "sdkmanager.bat" : "sdkmanager";
 				var sdkManagerContents = TestEnvironment.IsWindows
-					? "@echo off\r\necho Accepted\r\nexit /b 0\r\n"
-					: "#!/bin/sh\necho Accepted\nexit 0\n";
+					? "@echo off\r\necho invoked>sdkmanager-invoked.txt\r\necho Accepted\r\nexit /b 0\r\n"
+					: "#!/bin/sh\necho invoked > sdkmanager-invoked.txt\necho Accepted\nexit 0\n";
 				var commandLineToolsArchive = CreateCommandLineToolsArchive (
 					("cmdline-tools/source.properties", $"Pkg.Revision={CommandLineToolsVersion}"),
 					($"cmdline-tools/bin/{sdkManagerName}", sdkManagerContents));
 
-				server.AddResponse ("platform-tools.zip", platformToolsArchive);
-				server.AddResponse ("build-tools.zip", buildToolsArchive);
-				server.AddResponse ("platform.zip", platformArchive);
-				server.AddResponse ("fixture-dependency.zip", fixtureDependencyArchive);
-				server.AddResponse ("command-line-tools.zip", commandLineToolsArchive);
-				server.AddResponse ("repository2-3.xml", Encoding.UTF8.GetBytes (CreateRepositoryManifest (
+				AddArchive ("platform-tools.zip", platformToolsArchive);
+				AddArchive ("build-tools.zip", buildToolsArchive);
+				AddArchive ("platform.zip", platformArchive);
+				AddArchive ("fixture-dependency.zip", fixtureDependencyArchive);
+				AddArchive ("command-line-tools.zip", commandLineToolsArchive);
+				RepositoryManifest = CreateRepositoryManifest (
 					platformToolsArchive,
 					buildToolsArchive,
 					platformArchive,
 					fixtureDependencyArchive,
-					commandLineToolsArchive)));
-				server.AddResponse ("addons_list-5.xml", Encoding.UTF8.GetBytes (CreateAddonsListManifest ()));
-				server.AddResponse ("addon.xml", Encoding.UTF8.GetBytes ("<repository />"));
+					commandLineToolsArchive);
+				Helpers.AddResponse (ManifestUrl, RepositoryManifest.ToString (SaveOptions.DisableFormatting));
+				Helpers.AddResponse (AddonsListUrl, CreateAddonsListManifest ());
+				Helpers.AddResponse (new Uri (RepositoryBaseUrl, "addon.xml"), "<repository />");
 			}
 
-			public void AssertInstallation (string sdkPath, IEnumerable<string> buildOutput)
+			public void PrepareDownloads (IEnumerable<Archive> downloads, string directory)
 			{
-				AssertServerSucceeded ();
+				if (Directory.Exists (directory))
+					Directory.Delete (directory, recursive: true);
+				Directory.CreateDirectory (directory);
+
+				foreach (var download in downloads) {
+					requests.Add (download.Url.AbsolutePath);
+					Assert.IsTrue (archives.TryGetValue (download.Url, out byte [] contents),
+						$"Unexpected GoogleV2 fixture archive '{download.Url}'.");
+					string path = Path.Combine (directory, Path.GetFileName (download.Url.LocalPath));
+					File.WriteAllBytes (path, contents);
+					download.DownloadedFilePath = path;
+				}
+			}
+
+			public void AssertInstallation (string sdkPath)
+			{
 				AssertFixtureFile (sdkPath, "platform-tools", "fixture-marker.txt");
 				AssertFixtureFile (sdkPath, "build-tools", BuildToolsVersion, "fixture-marker.txt");
 				AssertFixtureFile (sdkPath, "cmdline-tools", CommandLineToolsVersion, "source.properties");
 				AssertFixtureFile (sdkPath, "platforms", $"android-{PlatformVersion}", "android.jar");
 				AssertFixtureFile (sdkPath, "extras", "googlev2-fixture", "nested", "fixture-marker.txt");
 
-				var output = string.Join ("\n", buildOutput);
-				StringAssert.Contains ("Skipping Java SDK installation.", output);
-				StringAssert.DoesNotContain ("dl.google.com", output);
-				StringAssert.DoesNotContain ("dl-ssl.google.com", output);
-				CollectionAssert.AreEquivalent (expectedRequests, server.Requests,
-					$"GoogleV2 should only request the expected loopback fixtures from {server.BaseUri}.");
+				CollectionAssert.AreEquivalent (expectedRequests, requests,
+					"GoogleV2 should only access the expected in-memory fixture resources.");
 			}
 
-			public void AssertServerSucceeded ()
+			void AddArchive (string name, byte [] contents)
 			{
-				Assert.IsNull (server.ServerException, $"The local fixture server failed: {server.ServerException}");
-			}
-
-			public void Dispose ()
-			{
-				server.Dispose ();
+				archives.Add (new Uri (RepositoryBaseUrl, name), contents);
 			}
 
 			static void AssertFixtureFile (string sdkPath, params string [] parts)
@@ -289,7 +338,7 @@ namespace Xamarin.Android.Build.Tests
 					$"Expected a package.xml next to the installed GoogleV2 fixture '{path}'.");
 			}
 
-			string CreateRepositoryManifest (
+			XDocument CreateRepositoryManifest (
 				byte [] platformToolsArchive,
 				byte [] buildToolsArchive,
 				byte [] platformArchive,
@@ -315,7 +364,7 @@ namespace Xamarin.Android.Build.Tests
 									new XAttribute ("path", FixtureDependencyPath)))),
 						CreatePackage (FixtureDependencyPath, "1.0.0", "fixture-dependency.zip", fixtureDependencyArchive)
 					)
-				).ToString (SaveOptions.DisableFormatting);
+				);
 			}
 
 			XElement CreatePackage (string path, string version, string archiveName, byte [] archive, XElement dependencies = null)
@@ -334,7 +383,7 @@ namespace Xamarin.Android.Build.Tests
 							new XElement ("complete",
 								new XElement ("size", archive.Length),
 								new XElement ("checksum", new XAttribute ("type", "sha256"), GetSha256 (archive)),
-								new XElement ("url", new Uri (server.BaseUri, archiveName))))));
+								new XElement ("url", new Uri (RepositoryBaseUrl, archiveName))))));
 			}
 
 			static XElement CreateRevision (string version)
@@ -356,7 +405,7 @@ namespace Xamarin.Android.Build.Tests
 						new XElement ("site",
 							new XAttribute (xsi + "type", "sdk:addonSiteType"),
 							new XElement ("displayName", "Synthetic add-on repository"),
-							new XElement ("url", new Uri (server.BaseUri, "addon.xml"))))
+							new XElement ("url", new Uri (RepositoryBaseUrl, "addon.xml"))))
 				).ToString (SaveOptions.DisableFormatting);
 			}
 
@@ -396,93 +445,27 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		sealed class LocalHttpFixtureServer : IDisposable
+		sealed class FixtureHelpers : Helper, IHelpers
 		{
-			readonly TcpListener listener;
-			readonly Dictionary<string, byte []> responses = new Dictionary<string, byte []> (StringComparer.Ordinal);
-			readonly List<string> requests = new List<string> ();
-			readonly System.Threading.Tasks.Task acceptLoop;
-			volatile bool disposed;
+			readonly Dictionary<Uri, string> responses = new Dictionary<Uri, string> ();
+			readonly List<string> requests;
 
-			public Uri BaseUri { get; }
-			public IEnumerable<string> Requests => requests;
-			public Exception ServerException { get; private set; }
-
-			public LocalHttpFixtureServer ()
+			public FixtureHelpers (List<string> requests)
 			{
-				listener = new TcpListener (IPAddress.Loopback, 0);
-				listener.Start ();
-				var endpoint = (IPEndPoint) listener.LocalEndpoint;
-				BaseUri = new Uri ($"http://127.0.0.1:{endpoint.Port}/");
-				acceptLoop = System.Threading.Tasks.Task.Run (AcceptLoop);
+				this.requests = requests;
 			}
 
-			public Uri GetUri (string path)
+			public void AddResponse (Uri uri, string contents)
 			{
-				return new Uri (BaseUri, path);
+				responses.Add (uri, contents);
 			}
 
-			public void AddResponse (string path, byte [] contents)
+			bool IHelpers.DownloadToString (Uri url, out string output)
 			{
-				responses ["/" + path.TrimStart ('/')] = contents;
-			}
-
-			public void Dispose ()
-			{
-				disposed = true;
-				listener.Stop ();
-				acceptLoop.GetAwaiter ().GetResult ();
-			}
-
-			void AcceptLoop ()
-			{
-				while (!disposed) {
-					try {
-						using (var client = listener.AcceptTcpClient ())
-							HandleRequest (client);
-					} catch (SocketException) when (disposed) {
-						return;
-					} catch (ObjectDisposedException) when (disposed) {
-						return;
-					} catch (Exception ex) {
-						ServerException = ex;
-						listener.Stop ();
-						return;
-					}
-				}
-			}
-
-			void HandleRequest (TcpClient client)
-			{
-				client.ReceiveTimeout = 5000;
-				client.SendTimeout = 5000;
-				using (var stream = client.GetStream ())
-				using (var reader = new StreamReader (stream, Encoding.ASCII, false, 1024, leaveOpen: true)) {
-					stream.ReadTimeout = 5000;
-					stream.WriteTimeout = 5000;
-					var requestLine = reader.ReadLine ();
-					if (string.IsNullOrEmpty (requestLine))
-						throw new InvalidDataException ("The local fixture server received an empty HTTP request.");
-
-					var requestParts = requestLine.Split (' ');
-					if (requestParts.Length < 2)
-						throw new InvalidDataException ($"The local fixture server received an invalid HTTP request line: '{requestLine}'.");
-
-					string line;
-					do {
-						line = reader.ReadLine ();
-					} while (!string.IsNullOrEmpty (line));
-
-					var path = new Uri (BaseUri, requestParts [1]).AbsolutePath;
-					requests.Add (path);
-					bool found = responses.TryGetValue (path, out byte [] response);
-					response = response ?? [];
-					var status = found ? "200 OK" : "404 Not Found";
-					var header = Encoding.ASCII.GetBytes (
-						$"HTTP/1.1 {status}\r\nContent-Length: {response.Length}\r\nConnection: close\r\n\r\n");
-					stream.Write (header, 0, header.Length);
-					stream.Write (response, 0, response.Length);
-				}
+				requests.Add (url.AbsolutePath);
+				if (!responses.TryGetValue (url, out output))
+					throw new InvalidOperationException ($"Unexpected GoogleV2 fixture manifest '{url}'.");
+				return true;
 			}
 		}
 
