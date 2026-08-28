@@ -25,9 +25,11 @@
         Text="Could not find the commit that last changed AndroidPackVersion." />
     <PropertyGroup>
       <_AndroidPackVersionCommit>%(_AndroidPackVersionBlameLine.CommitHash)</_AndroidPackVersionCommit>
+      <PackVersionCommitCount Condition="$(_AndroidPackVersionCommit.StartsWith('^'))">0</PackVersionCommitCount>
     </PropertyGroup>
     <Exec
         Command="git rev-list --count $(_AndroidPackVersionCommit)..HEAD"
+        Condition=" '$(PackVersionCommitCount)' == '' "
         ConsoleToMSBuild="true"
         StandardOutputImportance="Low"
         WorkingDirectory="$(XamarinAndroidSourcePath)">
