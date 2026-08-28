@@ -1,7 +1,8 @@
 parameters:
   targetMinutes: 15
   workItemTimeout: '00:30:00'
-  helixQueue: windows.11.amd64.android.open
+  helixQueue: Ubuntu.2204.Amd64.Android.29.Open
+  workItemOS: linux
   testCases:
   - name: debug
     displayName: Mono.Android.NET_Tests-Debug
@@ -222,6 +223,7 @@ steps:
       -ItemsPropsPath '$(Build.StagingDirectory)/apk-tests-helix/work-items.props' `
       -ResultsDirectory '$(Build.StagingDirectory)/apk-tests-helix/results' `
       -PlatformToolsDirectory $platformTools `
+      -WorkItemOS ${{ parameters.workItemOS }} `
       -TargetMinutes ${{ parameters.targetMinutes }}
   displayName: Prepare APK test Helix submission
 
@@ -246,6 +248,7 @@ steps:
       HelixBuild: $(Build.BuildNumber)
       HelixConfiguration: apk-tests
       HelixTargetQueueForItem: ${{ parameters.helixQueue }}
+      ApkTestsHelixWorkItemOS: ${{ parameters.workItemOS }}
       HelixTestRunName: Android APK Tests - Helix Prototype
       HelixAccessToken: ''
       WaitForWorkItemCompletion: 'true'

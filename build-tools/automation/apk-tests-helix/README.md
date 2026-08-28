@@ -20,7 +20,10 @@ existing semantics on current physical devices. Debug embeds managed assemblies
 because direct APK installation cannot reproduce the existing fast-deployment step;
 that deployment coverage remains in the original lane.
 
-The prototype uses `windows.11.amd64.android.open`, following the MAUI R2R Android
-Helix implementation. The runner waits for a delayed device assignment and retries
-instrumentation once while retaining both attempt TRXs. The existing macOS emulator
-lanes remain enabled for same-build inventory and outcome comparison.
+The prototype uses `Ubuntu.2204.Amd64.Android.29.Open`, the public Android emulator
+queue used by dotnet/runtime for x86/x64 Android tests. This matches the existing
+dotnet/android APK lanes' default API 29 emulator instead of distributing the suite
+across heterogeneous physical devices. The runner waits for a delayed device
+assignment and retries instrumentation once while retaining both attempt TRXs. The
+existing macOS emulator lanes remain enabled for same-build inventory and outcome
+comparison.

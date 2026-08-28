@@ -45,11 +45,13 @@ try {
 	[xml] $props = Get-Content -LiteralPath $propsPath -Raw
 	$item = $props.Project.ItemGroup._ApkTestHelixWorkItem
 	Assert-Equal 'apk-tests-sample' ([string] $item.Include) 'Work item name should be deterministic.'
+	Assert-Equal 'powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File run-apk-tests.ps1' ([string] $item.Command) 'Windows preparation should emit a Windows work-item command.'
 	Assert-Equal 'results.trx;console.log;logcat.log;device-state.log;getprop.log;package-state.log;case.json;work-item-error.log' ([string] $item.DownloadFilesFromResults) 'Result files should be downloaded.'
 
 	$script = Get-Content -LiteralPath (Join-Path $workItem 'run-apk-tests.ps1') -Raw
 	if (-not $script.Contains('$packageName = ''example.tests''') -or
 		-not $script.Contains('$instrumentation = ''example.tests.TestInstrumentation''') -or
+		-not $script.Contains("Join-Path `$PSScriptRoot 'platform-tools/adb'") -or
 		-not $script.Contains('INSTRUMENTATION_RESULT: resultsPath=') -or
 		-not $script.Contains('$attempt -le 12') -or
 		-not $script.Contains('$attempt -le 2')) {
@@ -63,6 +65,41 @@ try {
 	[Management.Automation.Language.Parser]::ParseFile((Join-Path $workItem 'run-apk-tests.ps1'), [ref] $tokens, [ref] $errors) | Out-Null
 	if ($errors.Count -gt 0) {
 		throw ($errors | ForEach-Object Message | Out-String)
+	}
+	$bashScriptPath = Join-Path $workItem 'run-apk-tests.sh'
+	$bashScript = Get-Content -LiteralPath $bashScriptPath -Raw
+	if (-not $bashScript.Contains('command -v adb') -or
+		-not $bashScript.Contains('INSTRUMENTATION_RESULT: resultsPath=')) {
+		throw 'Generated Linux APK test script is missing required commands.'
+	}
+	$git = Get-Command git -ErrorAction Ignore
+	$gitBash = if ($git) {
+		Join-Path (Split-Path (Split-Path $git.Source -Parent) -Parent) 'bin\bash.exe'
+	}
+	if ($gitBash -and (Test-Path -LiteralPath $gitBash -PathType Leaf)) {
+		& $gitBash -n $bashScriptPath
+		if ($LASTEXITCODE -ne 0) {
+			throw "Generated Linux APK test script failed bash syntax validation with exit code $LASTEXITCODE."
+		}
+	}
+
+	$linuxRoot = Join-Path $root 'linux'
+	$linuxWorkItem = Join-Path $linuxRoot 'work-items\sample'
+	New-Item -ItemType Directory -Force -Path $linuxWorkItem | Out-Null
+	Copy-Item -LiteralPath (Join-Path $workItem 'app.apk') -Destination $linuxWorkItem
+	Copy-Item -LiteralPath (Join-Path $workItem 'case.json') -Destination $linuxWorkItem
+	$linuxPropsPath = Join-Path $linuxRoot 'items.props'
+	& (Join-Path $PSScriptRoot 'prepare-apk-test-helix-submission.ps1') `
+		-WorkItemsDirectory (Join-Path $linuxRoot 'work-items') `
+		-ItemsPropsPath $linuxPropsPath `
+		-ResultsDirectory (Join-Path $linuxRoot 'results') `
+		-PlatformToolsDirectory (Join-Path $linuxRoot 'unused-platform-tools') `
+		-WorkItemOS linux `
+		-TargetMinutes 15
+	[xml] $linuxProps = Get-Content -LiteralPath $linuxPropsPath -Raw
+	Assert-Equal 'bash run-apk-tests.sh' ([string] $linuxProps.Project.ItemGroup._ApkTestHelixWorkItem.Command) 'Linux preparation should emit a bash work-item command.'
+	if (Test-Path -LiteralPath (Join-Path $linuxWorkItem 'platform-tools')) {
+		throw 'Linux work items should use the Android queue adb instead of copying Windows platform-tools.'
 	}
 
 	$manifestPath = Join-Path $root 'AndroidManifest.xml'
