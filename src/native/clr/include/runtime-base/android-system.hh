@@ -90,7 +90,7 @@ namespace xamarin::android {
 			}
 			abort_unless (result >= 0, "Failed to format primary override directory path using the required capacity");
 
-			primary_override_dir = Util::duplicate_string (std::string_view { path, static_cast<size_t>(result) });
+			primary_override_dir = Util::duplicate_string (path);
 			if (path != stack_buffer) {
 				std::free (path);
 			}
