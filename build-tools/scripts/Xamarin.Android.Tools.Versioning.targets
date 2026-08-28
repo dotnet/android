@@ -3,29 +3,44 @@
   <PropertyGroup>
     <PackageOutputPath>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\</PackageOutputPath>
     <TreatWarningsAsErrors Condition=" '$(Configuration)' == 'Release' ">true</TreatWarningsAsErrors>
-    <GitThisAssembly>false</GitThisAssembly>
-    <GitDefaultBranch>main</GitDefaultBranch>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="GitInfo" Version="3.6.1" PrivateAssets="all" />
-  </ItemGroup>
-
-  <Target Name="_GetXAVersionInfo"
-      Condition=" '$(IsPacking)' == 'true' "
-      BeforeTargets="SetVersion"
-      DependsOnTargets="GetXAVersionInfo">
+  <Target Name="_AndroidGetToolsVersion" Condition=" '$(PackVersionCommitCount)' == '' ">
+    <Exec
+        Command="git blame -- eng/Versions.props"
+        ConsoleToMSBuild="true"
+        StandardOutputImportance="Low"
+        WorkingDirectory="$(XamarinAndroidSourcePath)">
+      <Output TaskParameter="ConsoleOutput" ItemName="_AndroidVersionBlameLines" />
+    </Exec>
+    <ItemGroup>
+      <_AndroidPackVersionBlameLine
+          Include="@(_AndroidVersionBlameLines)"
+          Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', '&lt;AndroidPackVersion&gt;'))">
+        <CommitHash>$([System.Text.RegularExpressions.Regex]::Match('%(Identity)', '^\S+'))</CommitHash>
+      </_AndroidPackVersionBlameLine>
+    </ItemGroup>
+    <Error
+        Condition=" '@(_AndroidPackVersionBlameLine->Count())' != '1' "
+        Text="Could not find the commit that last changed AndroidPackVersion." />
     <PropertyGroup>
-      <PackageVersionSuffix Condition="$(XAVersionBranch.StartsWith('release/'))">-preview.$(PackVersionCommitCount)</PackageVersionSuffix>
-      <PackageVersionSuffix Condition="!$(XAVersionBranch.StartsWith('release/'))">-ci.$(_AndroidPackBranch).$(PackVersionCommitCount)</PackageVersionSuffix>
+      <_AndroidPackVersionCommit>%(_AndroidPackVersionBlameLine.CommitHash)</_AndroidPackVersionCommit>
     </PropertyGroup>
+    <Exec
+        Command="git rev-list --count $(_AndroidPackVersionCommit)..HEAD"
+        ConsoleToMSBuild="true"
+        StandardOutputImportance="Low"
+        WorkingDirectory="$(XamarinAndroidSourcePath)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="PackVersionCommitCount" />
+    </Exec>
   </Target>
 
-  <Target Name="SetVersion" BeforeTargets="GetAssemblyVersion;GetPackageVersion;GenerateNuspec" DependsOnTargets="GitVersion">
+  <Target Name="SetVersion"
+      BeforeTargets="GetAssemblyVersion;GetPackageVersion;GenerateNuspec"
+      DependsOnTargets="_AndroidGetToolsVersion">
     <PropertyGroup>
-      <Version>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)</Version>
-      <PackageVersion>$(Version)$(PackageVersionSuffix)</PackageVersion>
-      <InformationalVersion>$(Version); git-rev-head:$(GitCommit); git-branch:$(GitBranch)</InformationalVersion>
+      <Version>$([System.Text.RegularExpressions.Regex]::Match('$(AndroidPackVersion)', '^\d+\.\d+')).$(PackVersionCommitCount)</Version>
+      <PackageVersion>$(Version)</PackageVersion>
     </PropertyGroup>
   </Target>
 
