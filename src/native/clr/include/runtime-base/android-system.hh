@@ -172,11 +172,17 @@ namespace xamarin::android {
 		static auto format_primary_override_dir (jstring_wrapper &home, char *buffer, size_t buffer_size) noexcept -> ssize_t
 		{
 			abort_unless (buffer != nullptr, "Primary override directory buffer must not be null");
+
+			// `jstring_wrapper::get_cstr()` returns `nullptr` for a null `jstring`, and passing that
+			// to `%s` is undefined behaviour. An app without a files directory cannot work anyway.
+			const char *home_path = home.get_cstr ();
+			abort_unless (home_path != nullptr, "Application home directory must not be null");
+
 			int length = snprintf (
 				buffer,
 				buffer_size,
 				"%s/%.*s/%.*s",
-				home.get_cstr (),
+				home_path,
 				static_cast<int>(Constants::OVERRIDE_DIRECTORY_NAME.length ()),
 				Constants::OVERRIDE_DIRECTORY_NAME.data (),
 				static_cast<int>(Constants::android_lib_abi.length ()),

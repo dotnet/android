@@ -56,6 +56,7 @@ namespace xamarin::android {
 			uint32_t const count, AppEnvironmentVariable const (&entries)[],
 			const char (&contents)[]) noexcept -> const char*
 		{
+			value_len = 0;
 			if (count == 0) {
 				return nullptr;
 			}
