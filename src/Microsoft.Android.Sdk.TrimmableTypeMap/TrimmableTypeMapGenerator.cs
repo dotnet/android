@@ -77,6 +77,24 @@ public class TrimmableTypeMapGenerator
 	{
 		bool valid = true;
 		var reportedNames = new HashSet<string> (StringComparer.Ordinal);
+		foreach (var group in peers
+				.Where (ShouldGenerateJcw)
+				.GroupBy (peer => peer.JavaName, StringComparer.Ordinal)
+				.OrderBy (group => group.Key, StringComparer.Ordinal)) {
+			var firstAssemblyName = group.First ().AssemblyName;
+			if (group.All (peer => string.Equals (peer.AssemblyName, firstAssemblyName, StringComparison.Ordinal))) {
+				continue;
+			}
+
+			var javaName = JniSignatureHelper.JniNameToJavaBinaryName (group.Key);
+			logger.LogDuplicateJavaTypeError (javaName);
+			foreach (var peer in group
+					.OrderBy (peer => peer.ManagedTypeName, StringComparer.Ordinal)
+					.ThenBy (peer => peer.AssemblyName, StringComparer.Ordinal)) {
+				logger.LogDuplicateJavaTypeDetailsError (javaName, $"{peer.ManagedTypeName}, {peer.AssemblyName}");
+			}
+			valid = false;
+		}
 		if (applicationJavaClass is not null &&
 				JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (applicationJavaClass, out var invalidApplicationIdentifier)) {
 			ReportInvalidName (applicationJavaClass, invalidApplicationIdentifier);
