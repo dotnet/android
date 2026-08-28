@@ -347,6 +347,7 @@ for attempt in 1 2; do
 done
 '@
 	$bashScript = $bashScript.Replace('__PACKAGE_NAME__', $packageName).Replace('__INSTRUMENTATION__', $instrumentation)
+	$bashScript = $bashScript.Replace("`r`n", "`n")
 	[IO.File]::WriteAllText((Join-Path $payloadDirectory 'run-apk-tests.sh'), $bashScript, [Text.UTF8Encoding]::new($false))
 
 	$cases.Add([pscustomobject] @{

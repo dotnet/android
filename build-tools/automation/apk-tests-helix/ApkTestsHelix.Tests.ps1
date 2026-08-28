@@ -72,6 +72,9 @@ try {
 		-not $bashScript.Contains('INSTRUMENTATION_RESULT: resultsPath=')) {
 		throw 'Generated Linux APK test script is missing required commands.'
 	}
+	if ($bashScript.Contains("`r")) {
+		throw 'Generated Linux APK test script must use LF line endings.'
+	}
 	$git = Get-Command git -ErrorAction Ignore
 	$gitBash = if ($git) {
 		Join-Path (Split-Path (Split-Path $git.Source -Parent) -Parent) 'bin\bash.exe'
