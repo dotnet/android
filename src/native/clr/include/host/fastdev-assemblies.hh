@@ -4,7 +4,6 @@
 
 #include <cstdint>
 #include <mutex>
-#include <string>
 #include <string_view>
 
 namespace xamarin::android {
@@ -13,16 +12,20 @@ namespace xamarin::android {
 	public:
 #if defined(DEBUG)
 		static auto open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*;
-		static auto build_tpa_list (std::string &tpa_list) noexcept -> bool;
+
+		// Builds the `TRUSTED_PLATFORM_ASSEMBLIES` list from the override directory. Returns a
+		// `malloc`ed, NUL-terminated, `:`-separated list of absolute paths which the caller owns,
+		// or `nullptr` when no usable list could be built.
+		static auto build_tpa_list () noexcept -> char*;
 #else
 		static auto open_assembly ([[maybe_unused]] std::string_view const& name, [[maybe_unused]]  int64_t &size) noexcept -> void*
 		{
 			return nullptr;
 		}
 
-		static auto build_tpa_list ([[maybe_unused]] std::string &tpa_list) noexcept -> bool
+		static auto build_tpa_list () noexcept -> char*
 		{
-			return false;
+			return nullptr;
 		}
 #endif
 
