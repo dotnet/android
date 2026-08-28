@@ -33,8 +33,12 @@ namespace xamarin::android {
 	// A monotonic point in time, or an interval between two such points, in nanoseconds.
 	using time_point = uint64_t;
 
-	// Splits an interval into the components used by the timing output format: whole seconds,
-	// whole milliseconds and the nanoseconds left over within the last millisecond.
+	// Splits an interval into the components used by the timing output format. Note that `seconds`
+	// and `milliseconds` are both totals for the *entire* interval rather than a breakdown of it:
+	// an interval of 1.5s has `seconds == 1` and `milliseconds == 1500`, and both are printed. This
+	// is what `duration_cast<seconds>` and `duration_cast<milliseconds>` used to return and it must
+	// not be "corrected" to milliseconds-within-the-second, because the output format is consumed by
+	// performance measuring utilities. Only `nanoseconds` is a remainder, within the last millisecond.
 	struct time_interval
 	{
 		unsigned long long seconds;
