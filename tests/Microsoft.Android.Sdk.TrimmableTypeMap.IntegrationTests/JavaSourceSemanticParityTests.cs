@@ -25,8 +25,7 @@ public partial class ScannerComparisonTests
 	sealed record JavaSemanticModel (
 		string Name,
 		string BaseName,
-		string Visibility,
-		bool IsAbstract,
+		ClassAccessFlags Modifiers,
 		IReadOnlyList<string> Interfaces,
 		IReadOnlyList<string> Constructors,
 		IReadOnlyList<string> Methods,
@@ -238,7 +237,13 @@ public partial class ScannerComparisonTests
 		var standardError = process.StandardError.ReadToEndAsync ();
 		if (!process.WaitForExit ((int) TimeSpan.FromMinutes (1).TotalMilliseconds)) {
 			process.Kill (entireProcessTree: true);
-			throw new TimeoutException ($"javac timed out compiling the {name} Java source set.");
+			process.WaitForExit ();
+			var timeoutOutput = standardOutput.GetAwaiter ().GetResult ();
+			var timeoutError = standardError.GetAwaiter ().GetResult ();
+			throw new TimeoutException (
+				$"javac timed out compiling the {name} Java source set.{Environment.NewLine}" +
+				$"stdout:{Environment.NewLine}{timeoutOutput}{Environment.NewLine}" +
+				$"stderr:{Environment.NewLine}{timeoutError}");
 		}
 
 		var output = standardOutput.GetAwaiter ().GetResult ();
@@ -288,8 +293,7 @@ public partial class ScannerComparisonTests
 		return new JavaSemanticModel (
 			classFile.ThisClass.Name.Value,
 			classFile.SuperClass.Name.Value,
-			GetVisibility (classFile.AccessFlags),
-			classFile.AccessFlags.HasFlag (ClassAccessFlags.Abstract),
+			GetDeclarationModifiers (classFile.AccessFlags),
 			interfaces,
 			constructors,
 			methods,
@@ -321,6 +325,10 @@ public partial class ScannerComparisonTests
 			$"bridge={method.AccessFlags.HasFlag (MethodAccessFlags.Bridge)}|" +
 			$"synthetic={method.AccessFlags.HasFlag (MethodAccessFlags.Synthetic)}|" +
 			$"{method.Name}|{method.Descriptor}|" +
+			$"final={method.AccessFlags.HasFlag (MethodAccessFlags.Final)}|" +
+			$"synchronized={method.AccessFlags.HasFlag (MethodAccessFlags.Synchronized)}|" +
+			$"varargs={method.AccessFlags.HasFlag (MethodAccessFlags.Varargs)}|" +
+			$"strict={method.AccessFlags.HasFlag (MethodAccessFlags.Strict)}|" +
 			$"throws={string.Join (",", throws)}|" +
 			$"annotations={string.Join (",", annotations)}";
 	}
@@ -332,6 +340,10 @@ public partial class ScannerComparisonTests
 			$"static={field.AccessFlags.HasFlag (FieldAccessFlags.Static)}|" +
 			$"final={field.AccessFlags.HasFlag (FieldAccessFlags.Final)}|" +
 			$"{field.Name}|{field.Descriptor}|" +
+			$"volatile={field.AccessFlags.HasFlag (FieldAccessFlags.Volatile)}|" +
+			$"transient={field.AccessFlags.HasFlag (FieldAccessFlags.Transient)}|" +
+			$"synthetic={field.AccessFlags.HasFlag (FieldAccessFlags.Synthetic)}|" +
+			$"enum={field.AccessFlags.HasFlag (FieldAccessFlags.Enum)}|" +
 			$"annotations={string.Join (",", annotations)}";
 	}
 
@@ -348,18 +360,20 @@ public partial class ScannerComparisonTests
 			.ToArray ();
 	}
 
-	static string GetVisibility (ClassAccessFlags flags)
+	static ClassAccessFlags GetDeclarationModifiers (ClassAccessFlags flags)
 	{
-		if (flags.HasFlag (ClassAccessFlags.Public)) {
-			return "public";
-		}
-		if (flags.HasFlag (ClassAccessFlags.Protected)) {
-			return "protected";
-		}
-		if (flags.HasFlag (ClassAccessFlags.Private)) {
-			return "private";
-		}
-		return "package";
+		return flags & (
+			ClassAccessFlags.Public |
+			ClassAccessFlags.Private |
+			ClassAccessFlags.Protected |
+			ClassAccessFlags.Static |
+			ClassAccessFlags.Final |
+			ClassAccessFlags.Interface |
+			ClassAccessFlags.Abstract |
+			ClassAccessFlags.Synthetic |
+			ClassAccessFlags.Annotation |
+			ClassAccessFlags.Enum
+		);
 	}
 
 	static string GetVisibility (MethodAccessFlags flags)
@@ -394,16 +408,16 @@ public partial class ScannerComparisonTests
 	{
 		Assert.Equal (SemanticPeerJavaName, model.Name);
 		Assert.Equal ("com/example/parity/Base", model.BaseName);
-		Assert.Equal ("public", model.Visibility);
-		Assert.False (model.IsAbstract);
+		Assert.Equal (ClassAccessFlags.Public, model.Modifiers);
 		Assert.Equal (new [] {
 			"android/view/View$OnClickListener",
 			"mono/android/IGCUserPeer",
 		}, model.Interfaces);
-		Assert.Contains (model.Constructors, constructor => constructor.Contains ("<init>|()V", StringComparison.Ordinal));
-		Assert.Contains (model.Constructors, constructor => constructor.Contains ("<init>|(I)V", StringComparison.Ordinal));
+		Assert.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|<init>|()V|final=False|synchronized=False|varargs=False|strict=False|throws=|annotations=", model.Constructors);
+		Assert.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|<init>|(I)V|final=False|synchronized=False|varargs=False|strict=False|throws=|annotations=", model.Constructors);
 		Assert.Contains (model.Methods, method => method.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|getValue|()Ljava/lang/String;", StringComparison.Ordinal));
-		Assert.Contains (model.Methods, method => method.Contains ("protected|static=False|abstract=False|bridge=False|synthetic=False|checkedExport|(Ljava/lang/String;)I|throws=java/io/IOException", StringComparison.Ordinal));
+		Assert.Contains (model.Methods, method => method.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|onClick|(Landroid/view/View;)V", StringComparison.Ordinal));
+		Assert.Contains (model.Methods, method => method.Contains ("protected|static=False|abstract=False|bridge=False|synthetic=False|checkedExport|(Ljava/lang/String;)I|final=False|synchronized=False|varargs=False|strict=False|throws=java/io/IOException", StringComparison.Ordinal));
 		Assert.Contains (model.Fields, field => field.Contains ("public|static=True|final=False|STATIC_LABEL|Ljava/lang/String;", StringComparison.Ordinal));
 		Assert.Contains (model.Fields, field => field.Contains ("public|static=False|final=False|LABEL|Ljava/lang/String;", StringComparison.Ordinal));
 	}
@@ -412,8 +426,7 @@ public partial class ScannerComparisonTests
 	{
 		Assert.Equal (expected.Name, actual.Name);
 		Assert.Equal (expected.BaseName, actual.BaseName);
-		Assert.Equal (expected.Visibility, actual.Visibility);
-		Assert.Equal (expected.IsAbstract, actual.IsAbstract);
+		Assert.Equal (expected.Modifiers, actual.Modifiers);
 		Assert.Equal (expected.Interfaces, actual.Interfaces);
 		Assert.Equal (expected.Constructors, actual.Constructors);
 		Assert.Equal (expected.Methods, actual.Methods);
