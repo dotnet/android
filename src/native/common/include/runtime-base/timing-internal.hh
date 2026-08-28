@@ -27,6 +27,7 @@ using namespace xamarin::android::internal;
 #include <runtime-base/monodroid-state.hh>
 #include <runtime-base/util.hh>
 #include <shared/cpp-util.hh>
+#include <shared/helpers.hh>
 #include <shared/log_types.hh>
 
 namespace xamarin::android {
@@ -98,7 +99,7 @@ namespace xamarin::android {
 	protected:
 		void configure_for_use () noexcept
 		{
-			first_event_chunk = new TimingEventChunk;
+			first_event_chunk = allocate_event_chunk ();
 		}
 
 	public:
@@ -113,7 +114,7 @@ namespace xamarin::android {
 				for (TimingEvent &event : chunk->events) {
 					delete event.more_info;
 				}
-				delete chunk;
+				std::free (chunk);
 				chunk = next;
 			}
 		}
@@ -487,6 +488,20 @@ namespace xamarin::android {
 		}
 
 	private:
+		// Event chunks are chained together and the events in them are handed out as references that
+		// stay valid until the process exits, so a chunk must never move. Allocating them with
+		// `calloc` avoids `operator new` and, with it, a dependency on `libc++`; zero-filling matches
+		// the default member initializers of `TimingEvent`.
+		static auto allocate_event_chunk () noexcept -> TimingEventChunk*
+		{
+			auto *chunk = static_cast<TimingEventChunk*> (std::calloc (1uz, sizeof (TimingEventChunk)));
+			if (chunk == nullptr) [[unlikely]] {
+				Helpers::abort_application (LOG_TIMING, "Unable to allocate memory for timing events");
+			}
+
+			return chunk;
+		}
+
 		void parse_options (const char *options) noexcept;
 		static void really_initialize (bool log_immediately) noexcept;
 
@@ -504,7 +519,7 @@ namespace xamarin::android {
 			for (size_t i = current_chunk_index; i < chunk_index; ++i) {
 				TimingEventChunk *next = __atomic_load_n (&chunk->next, __ATOMIC_ACQUIRE);
 				if (next == nullptr) [[unlikely]] {
-					TimingEventChunk *new_chunk = new TimingEventChunk;
+					TimingEventChunk *new_chunk = allocate_event_chunk ();
 					if (__atomic_compare_exchange_n (
 							&chunk->next,
 							&next,
@@ -521,7 +536,7 @@ namespace xamarin::android {
 							(i + 2uz) * EVENT_CHUNK_SIZE
 						);
 					} else {
-						delete new_chunk;
+						std::free (new_chunk);
 					}
 				}
 				chunk = next;
