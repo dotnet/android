@@ -61,7 +61,12 @@ namespace xamarin::android {
 			constexpr unsigned int MillisecondsPerSecond = 1000u;
 
 			timespec deadline {};
-			clock_gettime (CLOCK_MONOTONIC, &deadline);
+			if (clock_gettime (CLOCK_MONOTONIC, &deadline) != 0) [[unlikely]] {
+				// Leaving `deadline` at zero would make `pthread_cond_timedwait` return `ETIMEDOUT`
+				// immediately, turning this into a silent spurious timeout.
+				Helpers::abort_application ("Failed to read the monotonic clock.");
+			}
+
 			deadline.tv_sec += static_cast<time_t>(timeout_ms / MillisecondsPerSecond);
 			deadline.tv_nsec += static_cast<long>(timeout_ms % MillisecondsPerSecond) * NanosecondsPerMillisecond;
 			if (deadline.tv_nsec >= NanosecondsPerSecond) {
