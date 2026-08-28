@@ -297,7 +297,7 @@ namespace {
 			}
 			{
 				char prop_value[Constants::PROPERTY_VALUE_BUFFER_LEN];
-				const char *cache_prop = AndroidSystem::monodroid_get_system_property ("debug.net.asmcache"sv, prop_value, sizeof (prop_value));
+				const char *cache_prop = AndroidSystem::monodroid_get_system_property ("debug.net.asmcache", prop_value, sizeof (prop_value));
 				if (cache_prop != nullptr) {
 					if (cache_prop [0] == '0') {
 						cache_requested = false;

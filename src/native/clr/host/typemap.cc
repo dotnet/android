@@ -21,24 +21,23 @@ namespace {
 		return value_length == key_length && strncmp (value, key, key_length) == 0;
 	}
 
+#if defined (DEBUG)
+	// Returns the length of the formatted name, or the negative capacity the caller must provide
+	// when `buffer` is too small.
 	auto format_managed_type_name (const char *type_name, const char *assembly_name, char *buffer, size_t buffer_size) noexcept -> ssize_t
 	{
-		size_t type_name_length = strlen (type_name);
-		size_t assembly_name_length = strlen (assembly_name);
-		size_t full_name_length = Helpers::add_with_overflow_check<size_t> (type_name_length, assembly_name_length);
-		full_name_length = Helpers::add_with_overflow_check<size_t> (full_name_length, 2uz);
-		size_t required_capacity = Helpers::add_with_overflow_check<size_t> (full_name_length, 1uz);
-		abort_unless (required_capacity <= static_cast<size_t>(std::numeric_limits<ssize_t>::max ()), "Managed type name is too long");
-		if (buffer == nullptr || buffer_size < required_capacity) {
-			return -static_cast<ssize_t>(required_capacity);
+		int full_name_length = snprintf (buffer, buffer_size, "%s, %s", type_name, assembly_name);
+		abort_unless (full_name_length >= 0, "Failed to format the managed type name");
+
+		size_t length = static_cast<size_t>(full_name_length);
+		abort_unless (length < static_cast<size_t>(std::numeric_limits<ssize_t>::max ()), "Managed type name is too long");
+		if (length >= buffer_size) {
+			return -static_cast<ssize_t>(length + 1uz);
 		}
 
-		memcpy (buffer, type_name, type_name_length);
-		memcpy (buffer + type_name_length, ", ", 2uz);
-		memcpy (buffer + type_name_length + 2uz, assembly_name, assembly_name_length);
-		buffer [full_name_length] = '\0';
-		return static_cast<ssize_t>(full_name_length);
+		return static_cast<ssize_t>(length);
 	}
+#endif // def DEBUG
 
 	class MonoGuidString
 	{

@@ -1,13 +1,10 @@
 #include <limits>
-#include <string_view>
 
 #include <runtime-base/android-system.hh>
 
 using namespace xamarin::android;
 
-using std::operator""sv;
-
-auto AndroidSystem::monodroid_get_system_property (std::string_view const& name, char *value, size_t value_size) noexcept -> const char*
+auto AndroidSystem::monodroid_get_system_property (const char *name, char *value, size_t value_size) noexcept -> const char*
 {
 	if (value == nullptr || value_size < Constants::PROPERTY_VALUE_BUFFER_LEN) {
 		return nullptr;
@@ -15,29 +12,22 @@ auto AndroidSystem::monodroid_get_system_property (std::string_view const& name,
 
 	value [0] = '\0';
 
-	int len = monodroid__system_property_get (name, value, value_size);
-	if (len > 0) {
-		// `__system_property_get` NUL-terminates the value it writes.
+	// `__system_property_get` NUL-terminates what it writes.
+	if (monodroid__system_property_get (name, value, value_size) > 0) {
 		return value;
 	}
 
+	// Bundled properties are NUL-terminated strings in static application data which live as long
+	// as the process, so return them directly rather than copying them into `value`. Their length
+	// is therefore not limited by `Constants::PROPERTY_VALUE_BUFFER_LEN`.
 	size_t property_length;
-	const char *property_value = lookup_system_property (name, property_length);
-	if (property_value == nullptr) {
-		return nullptr;
-	}
-
-	// Bundled properties are NUL-terminated strings in static application data which live for as
-	// long as the process does, so we can return them directly instead of copying them into
-	// `value`. This also means that, unlike Android system properties, their length is not limited
-	// by `Constants::PROPERTY_VALUE_BUFFER_LEN`.
-	return property_value;
+	return lookup_system_property (name, property_length);
 }
 
 auto
-AndroidSystem::monodroid__system_property_get (std::string_view const& name, char *sp_value, size_t sp_value_len) noexcept -> int
+AndroidSystem::monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len) noexcept -> int
 {
-	if (name.empty () || sp_value == nullptr) {
+	if (name == nullptr || *name == '\0' || sp_value == nullptr) {
 		return -1;
 	}
 
@@ -48,7 +38,7 @@ AndroidSystem::monodroid__system_property_get (std::string_view const& name, cha
 		buf = new char [alloc_size];
 	}
 
-	int len = __system_property_get (name.data (), buf ? buf : sp_value);
+	int len = __system_property_get (name, buf ? buf : sp_value);
 	if (buf != nullptr) {
 		strncpy (sp_value, buf, sp_value_len);
 		sp_value [sp_value_len] = '\0';
@@ -70,7 +60,7 @@ AndroidSystem::get_max_gref_count_from_system () noexcept -> long
 	}
 
 	char override[Constants::PROPERTY_VALUE_BUFFER_LEN];
-	const char *grefc = monodroid_get_system_property (Constants::DEBUG_MONO_MAX_GREFC, override, sizeof (override));
+	const char *grefc = monodroid_get_system_property (Constants::DEBUG_MONO_MAX_GREFC.data (), override, sizeof (override));
 	if (grefc != nullptr) {
 		char *e;
 		max = strtol (grefc, &e, 10);
@@ -92,8 +82,7 @@ AndroidSystem::get_max_gref_count_from_system () noexcept -> long
 		if (*e) {
 			log_warnf (
 				LOG_GC,
-				"Unsupported '%.*s' value '%s'.",
-				static_cast<int>(Constants::DEBUG_MONO_MAX_GREFC.length ()),
+				"Unsupported '%s' value '%s'.",
 				Constants::DEBUG_MONO_MAX_GREFC.data (),
 				grefc
 			);

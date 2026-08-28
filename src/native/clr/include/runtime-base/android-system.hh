@@ -113,7 +113,7 @@ namespace xamarin::android {
 				 * pre-loaded apps!), we need the .__override__ directory...
 				 */
 				char value[Constants::PROPERTY_VALUE_BUFFER_LEN];
-				if (log_categories == 0 && monodroid_get_system_property (Constants::DEBUG_MONO_PROFILE_PROPERTY, value, sizeof (value)) == nullptr) [[likely]] {
+				if (log_categories == 0 && monodroid_get_system_property (Constants::DEBUG_MONO_PROFILE_PROPERTY.data (), value, sizeof (value)) == nullptr) [[likely]] {
 					return;
 				}
 			}
@@ -128,15 +128,13 @@ namespace xamarin::android {
 			return embedded_dso_mode_enabled;
 		}
 
-		// Returns the property's NUL-terminated value, or `nullptr` if the property is not set.
+		// Returns the property's NUL-terminated value, or `nullptr` if it is not set. The result is
+		// valid for at least as long as `value` is.
 		//
-		// `value` is a scratch buffer of at least `Constants::PROPERTY_VALUE_BUFFER_LEN` bytes,
-		// used to receive Android system properties. Build-time (bundled) properties are not
-		// copied into it - the returned pointer refers to static application data instead, so
+		// `value` is a scratch buffer of at least `Constants::PROPERTY_VALUE_BUFFER_LEN` bytes, used
+		// to receive Android system properties. Bundled properties are returned without copying, so
 		// their length is not limited by `value_size`.
-		//
-		// The result is valid for at least as long as `value` is.
-		static auto monodroid_get_system_property (std::string_view const& name, char *value, size_t value_size) noexcept -> const char*;
+		static auto monodroid_get_system_property (const char *name, char *value, size_t value_size) noexcept -> const char*;
 		static void detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept;
 		static void setup_environment () noexcept;
 		static void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks) noexcept;
@@ -149,8 +147,8 @@ namespace xamarin::android {
 		static auto load_dso_from_specified_dirs (TContainer directories, std::string_view const& dso_name, int dl_flags, bool is_jni) noexcept -> void*;
 		static auto load_dso_from_app_lib_dirs (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
 		static auto load_dso_from_override_dirs (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
-		static auto lookup_system_property (std::string_view const &name, size_t &value_len) noexcept -> const char*;
-		static auto monodroid__system_property_get (std::string_view const&, char *sp_value, size_t sp_value_len) noexcept -> int;
+		static auto lookup_system_property (const char *name, size_t &value_len) noexcept -> const char*;
+		static auto monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len) noexcept -> int;
 		static auto get_max_gref_count_from_system () noexcept -> long;
 		static void add_apk_libdir (std::string_view const& apk, size_t &index, std::string_view const& abi) noexcept;
         static void setup_apk_directories (unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks, bool have_split_apks) noexcept;

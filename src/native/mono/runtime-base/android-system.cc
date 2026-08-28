@@ -173,7 +173,7 @@ AndroidSystem::monodroid_get_system_property (const char *name, dynamic_local_st
 }
 
 const char*
-AndroidSystem::monodroid_get_system_property (std::string_view const& name, char *value, size_t value_size) noexcept
+AndroidSystem::monodroid_get_system_property (const char *name, char *value, size_t value_size) noexcept
 {
 	if (value == nullptr || value_size < PROPERTY_VALUE_BUFFER_LEN) {
 		return nullptr;
@@ -181,23 +181,16 @@ AndroidSystem::monodroid_get_system_property (std::string_view const& name, char
 
 	value [0] = '\0';
 
-	int len = _monodroid__system_property_get (name.data (), value, value_size);
-	if (len > 0) {
-		// `__system_property_get` NUL-terminates the value it writes.
+	// `__system_property_get` NUL-terminates what it writes.
+	if (_monodroid__system_property_get (name, value, value_size) > 0) {
 		return value;
 	}
 
+	// Bundled properties are NUL-terminated strings in static application data which live as long
+	// as the process, so return them directly rather than copying them into `value`. Their length
+	// is therefore not limited by `PROPERTY_VALUE_BUFFER_LEN`.
 	size_t property_length;
-	const char *property_value = lookup_system_property (name.data (), property_length);
-	if (property_value == nullptr) {
-		return nullptr;
-	}
-
-	// Bundled properties are NUL-terminated strings in static application data which live for as
-	// long as the process does, so we can return them directly instead of copying them into
-	// `value`. This also means that, unlike Android system properties, their length is not limited
-	// by `PROPERTY_VALUE_BUFFER_LEN`.
-	return property_value;
+	return lookup_system_property (name, property_length);
 }
 
 int

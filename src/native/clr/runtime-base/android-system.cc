@@ -294,12 +294,12 @@ AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcep
 }
 
 auto
-AndroidSystem::lookup_system_property (std::string_view const& name, size_t &value_len) noexcept -> const char*
+AndroidSystem::lookup_system_property (const char *name, size_t &value_len) noexcept -> const char*
 {
 	value_len = 0;
 #if defined (DEBUG)
 	if (!bundled_properties.empty ()) {
-		auto prop_iter = bundled_properties.find (name.data ());
+		auto prop_iter = bundled_properties.find (name);
 		if (prop_iter != bundled_properties.end ()) {
 			value_len = prop_iter->second.length ();
 			return prop_iter->first.c_str ();

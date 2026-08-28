@@ -52,7 +52,7 @@ namespace xamarin::android {
 		}
 
 		[[gnu::flatten, gnu::always_inline]]
-		static auto lookup_system_property (std::string_view const& name, size_t &value_len,
+		static auto lookup_system_property (const char *name, size_t &value_len,
 			uint32_t const count, AppEnvironmentVariable const (&entries)[],
 			const char (&contents)[]) noexcept -> const char*
 		{
@@ -63,7 +63,7 @@ namespace xamarin::android {
 			for (size_t i = 0; i < count; i++) {
 				AppEnvironmentVariable const& sys_prop = entries[i];
 				const char *prop_name = &contents[sys_prop.name_index];
-				if (name.compare (prop_name) != 0) {
+				if (strcmp (name, prop_name) != 0) {
 					continue;
 				}
 
