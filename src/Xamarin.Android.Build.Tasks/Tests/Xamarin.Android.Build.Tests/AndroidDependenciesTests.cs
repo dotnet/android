@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Xml.Linq;
 using NUnit.Framework;
+using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.Installer.AndroidSDK;
@@ -382,7 +383,7 @@ namespace Xamarin.Android.Build.Tests
 						new XElement ("archive",
 							new XElement ("complete",
 								new XElement ("size", archive.Length),
-								new XElement ("checksum", new XAttribute ("type", "sha256"), GetSha256 (archive)),
+								new XElement ("checksum", new XAttribute ("type", "sha256"), Files.ToHexString (SHA256.HashData (archive)).ToLowerInvariant ()),
 								new XElement ("url", new Uri (RepositoryBaseUrl, archiveName))))));
 			}
 
@@ -438,11 +439,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 
-			static string GetSha256 (byte [] contents)
-			{
-				using (var sha256 = SHA256.Create ())
-					return string.Concat (sha256.ComputeHash (contents).Select (value => value.ToString ("x2")));
-			}
 		}
 
 		sealed class FixtureHelpers : Helper, IHelpers
