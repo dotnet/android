@@ -88,6 +88,25 @@ final class CoreClrBootstrap {
 		);
 	}
 
+	static void hideTodoApp() throws Exception {
+		if (state != State.READY) {
+			return;
+		}
+		Class<?> runtimeClass = Class.forName("mono.android.Runtime", true, CoreClrBootstrap.class.getClassLoader());
+		Method hideTodoApp = runtimeClass.getDeclaredMethod(
+			"invokeStaticVoidMethod",
+			String.class,
+			String.class,
+			String.class
+		);
+		hideTodoApp.invoke(
+			null,
+			"HybridRuntimeCoreClr",
+			"HybridRuntime.CoreClrPayload.CoreClrPayload",
+			"HideTodoApp"
+		);
+	}
+
 	private static void initialize(Context context) throws Exception {
 		ApplicationInfo applicationInfo = context.getApplicationInfo();
 		Class<?> applicationRegistration = Class.forName(

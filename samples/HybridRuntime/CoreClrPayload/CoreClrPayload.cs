@@ -47,9 +47,15 @@ public static class CoreClrPayload
 			window = application.Windows [application.Windows.Count - 1];
 			window.Page = shell;
 			platformView = shell.ToPlatform (windowContext);
-			activity.SetContentView (platformView);
-			NavigateToRequestedRoute (activity, shell);
-			Android.Util.Log.Info ("HybridRuntime", "CoreCLR MAUI TODO UI attached to the secondary-process Activity.");
+			platformView.Alpha = 0;
+			activity.AddContentView (
+				platformView,
+				new Android.Views.ViewGroup.LayoutParams (
+					Android.Views.ViewGroup.LayoutParams.MatchParent,
+					Android.Views.ViewGroup.LayoutParams.MatchParent
+				)
+			);
+			NavigateToRequestedRoute (activity, shell, platformView);
 		} catch (Exception error) {
 			Android.Util.Log.Error ("HybridRuntime", error.ToString ());
 			var errorView = new TextView (activity) {
@@ -62,15 +68,29 @@ public static class CoreClrPayload
 		}
 	}
 
-	static void NavigateToRequestedRoute (Activity activity, Microsoft.Maui.Controls.Shell todoShell)
+	[System.Runtime.InteropServices.UnmanagedCallersOnly]
+	public static void HideTodoApp ()
+	{
+		Microsoft.Maui.Controls.Window? currentWindow = window;
+		if (currentWindow is not null) {
+			Microsoft.Maui.Controls.Application.Current?.CloseWindow (currentWindow);
+		}
+		platformView?.Dispose ();
+		platformView = null;
+		window = null;
+		shell = null;
+	}
+
+	static void NavigateToRequestedRoute (
+		Activity activity,
+		Microsoft.Maui.Controls.Shell todoShell,
+		Android.Views.View todoView
+	)
 	{
 		string? route = activity.Intent?.GetStringExtra ("hybrid-route");
-		if (string.IsNullOrEmpty (route) || route == "main") {
-			return;
-		}
-
 		int id = activity.Intent?.GetIntExtra ("hybrid-id", 0) ?? 0;
 		string destination = route switch {
+			null or "" or "main" => "",
 			"projects" => "//projects",
 			"manage" => "//manage",
 			"project" when id > 0 => $"project?id={id}",
@@ -80,9 +100,20 @@ public static class CoreClrPayload
 		};
 		todoShell.Dispatcher.Dispatch (async () => {
 			try {
-				await todoShell.GoToAsync (destination);
+				if (destination.Length > 0) {
+					await todoShell.GoToAsync (destination);
+				}
+				todoView.Animate ()?.Alpha (1)?.SetDuration (120)?.Start ();
+				Android.Util.Log.Info ("HybridRuntime", "CoreCLR MAUI TODO UI attached to the secondary-process Activity.");
 			} catch (Exception error) {
 				Android.Util.Log.Error ("HybridRuntime", $"Could not navigate to '{destination}': {error}");
+				var errorView = new TextView (activity) {
+					Text = $"Could not navigate the CoreCLR MAUI UI:\n\n{error}",
+					TextSize = 14,
+				};
+				errorView.SetPadding (32, 64, 32, 32);
+				errorView.SetTextColor (Android.Graphics.Color.White);
+				activity.SetContentView (errorView);
 			}
 		});
 	}

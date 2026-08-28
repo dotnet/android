@@ -37,6 +37,7 @@ static class HybridRuntimeNavigation
 		if (id.HasValue) {
 			intent.PutExtra ("hybrid-id", id.Value);
 		}
+		Android.Util.Log.Info ("HybridRuntime", $"Opening CoreCLR route '{route}'.");
 		activity.StartActivity (intent);
 		return true;
 #else

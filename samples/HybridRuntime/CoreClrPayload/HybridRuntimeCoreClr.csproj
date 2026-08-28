@@ -15,7 +15,6 @@
     <UseMonoRuntime>false</UseMonoRuntime>
     <PublishAot>false</PublishAot>
     <PublishReadyToRun>false</PublishReadyToRun>
-    <AndroidLinkMode>None</AndroidLinkMode>
     <AndroidTypeMapImplementation>trimmable</AndroidTypeMapImplementation>
   </PropertyGroup>
 

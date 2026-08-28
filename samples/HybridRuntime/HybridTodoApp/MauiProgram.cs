@@ -10,6 +10,18 @@ public static class MauiProgram
 	public static MauiApp CreateMauiApp(bool embedded = false)
 	{
 		var builder = MauiApp.CreateBuilder();
+#if ANDROID
+		if (embedded)
+		{
+			// The manually initialized CoreCLR host currently wraps InputMethodManager as
+			// Java.Lang.Object, so the stock Entry handler cannot restart input on attach.
+			Microsoft.Maui.Handlers.EntryHandler.Mapper.ModifyMapping(
+				nameof(IEntry.ReturnType),
+				(handler, entry, _) =>
+					handler.PlatformView.ImeOptions = Microsoft.Maui.Platform.ImeActionExtensions.ToPlatform(entry.ReturnType)
+			);
+		}
+#endif
 		if (embedded)
 		{
 			builder.UseMauiEmbeddedApp<App>();
@@ -24,6 +36,12 @@ public static class MauiProgram
 			.ConfigureSyncfusionToolkit()
 			.ConfigureMauiHandlers(handlers =>
 			{
+#if ANDROID
+				if (embedded)
+				{
+					handlers.AddHandler<Entry, Platforms.Android.EmbeddedEntryHandler>();
+				}
+#endif
 #if WINDOWS
 				Microsoft.Maui.Controls.Handlers.Items.CollectionViewHandler.Mapper.AppendToMapping("KeyboardAccessibleCollectionView", (handler, view) =>
 				{

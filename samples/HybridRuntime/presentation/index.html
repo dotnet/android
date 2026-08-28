@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="A two-process Android prototype combining a fast NativeAOT shell with a progressively warmed CoreCLR MAUI application.">
+	<meta name="description" content="A two-process Android prototype combining a NativeAOT MAUI dashboard with progressively warmed CoreCLR editors.">
 	<title>Progressive .NET for Android — Two runtimes, two processes</title>
 	<style>
 		:root {
@@ -360,7 +360,7 @@
 		<div class="content">
 			<p class="kicker">Prototype findings · August 2026</p>
 			<h1>Fast first.<br><span class="aot">Full later.</span></h1>
-			<p class="lede">A NativeAOT Android shell renders immediately while a large CoreCLR MAUI application warms in a second process—inside the same APK and Android task.</p>
+			<p class="lede">NativeAOT renders login and the complete MAUI dashboard while CoreCLR warms the deeper editors in a second process—inside the same APK and Android task.</p>
 			<span class="pill">Working on Android 35 arm64</span>
 		</div>
 	</section>
@@ -371,19 +371,19 @@
 			<h2>Do not make the first pixel pay for the entire application.</h2>
 			<div class="grid three">
 				<article class="card core-card">
-					<span class="metric core">100+</span>
+					<span class="metric core">4</span>
 					<h3>Deep application routes</h3>
-					<p class="muted">XAML, handlers, dependency injection, services, runtime startup, and JIT work are valuable—but not all of them are needed for login.</p>
+					<p class="muted">Project, task, list, and metadata editors use the full CoreCLR MAUI graph—but none are needed for login or the dashboard.</p>
 				</article>
 				<article class="card aot-card">
 					<span class="metric aot">2</span>
 					<h3>Latency-sensitive surfaces</h3>
-					<p class="muted">Login/onboarding and the first dashboard can be deliberately tiny, ahead-of-time compiled, and independent of the full app graph.</p>
+					<p class="muted">Login/onboarding and the full sample-content TODO dashboard are ahead-of-time compiled and independent of the editing graph.</p>
 				</article>
 				<article class="card bridge-card">
-					<span class="metric bridge">≈387 ms</span>
+					<span class="metric bridge">29–78 ms</span>
 					<h3>Work hidden behind attention</h3>
-					<p class="muted">CoreCLR initialization overlaps with the time a user spends reading and interacting with the first useful screen.</p>
+					<p class="muted">After warmup, repeated editor routes are prepared offscreen and revealed directly without flashing a second dashboard.</p>
 				</article>
 			</div>
 		</div>
@@ -425,25 +425,25 @@
 			<h2>One package. Two Linux processes. No shared runtime fate.</h2>
 			<svg class="architecture" viewBox="0 0 1180 590" role="img" aria-labelledby="arch-title arch-desc">
 				<title id="arch-title">Two-process hybrid runtime architecture</title>
-				<desc id="arch-desc">A NativeAOT shell in the default process binds a service that initializes CoreCLR in a secondary process. Both runtime payloads are delivered in one APK.</desc>
+				<desc id="arch-desc">A NativeAOT MAUI application in the default process binds a service that initializes CoreCLR in a secondary process. Both runtime payloads are delivered in one APK.</desc>
 				<defs>
 					<marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#ffbd66"/></marker>
 					<linearGradient id="apk-fill" x1="0" x2="1"><stop stop-color="#111820"/><stop offset="1" stop-color="#12101c"/></linearGradient>
 				</defs>
 				<rect x="24" y="22" width="1132" height="542" rx="26" fill="url(#apk-fill)" stroke="rgba(255,255,255,.14)" stroke-width="2"/>
-				<text x="54" y="62" fill="#a5adbd" font-size="14" font-weight="750" letter-spacing="2">SIGNED APK · 47.91 MiB</text>
+				<text x="54" y="62" fill="#a5adbd" font-size="14" font-weight="750" letter-spacing="2">SIGNED APK · 31.55 MiB</text>
 
 				<rect x="58" y="94" width="472" height="386" rx="22" fill="#0d1b17" stroke="#5ee6a8" stroke-width="2"/>
-				<text x="88" y="136" fill="#5ee6a8" font-size="25" font-weight="800">NativeAOT shell</text>
+				<text x="88" y="136" fill="#5ee6a8" font-size="25" font-weight="800">NativeAOT application</text>
 				<text class="mono" x="88" y="166" fill="#8da79c" font-size="13">net.dot.hybridruntime · PID A</text>
 				<rect x="88" y="198" width="412" height="72" rx="12" fill="#10151d" stroke="rgba(255,255,255,.1)"/>
 				<text x="110" y="227" fill="#f7f7fb" font-size="16" font-weight="700">Main Activity</text>
-				<text x="110" y="251" fill="#a5adbd" font-size="14">login · persistent auth · first dashboard</text>
+				<text x="110" y="251" fill="#a5adbd" font-size="14">login · persistent auth · full TODO dashboard</text>
 				<rect x="88" y="288" width="412" height="72" rx="12" fill="#10151d" stroke="rgba(255,255,255,.1)"/>
 				<text x="110" y="317" fill="#f7f7fb" font-size="16" font-weight="700">Warmup receiver</text>
 				<text x="110" y="341" fill="#a5adbd" font-size="14">holds cross-process ServiceConnection</text>
 				<text x="88" y="405" fill="#5ee6a8" font-size="14" font-weight="700">Maps</text>
-				<text class="mono" x="142" y="405" fill="#dce1ea" font-size="13">libHybridRuntimeShell.so</text>
+				<text class="mono" x="142" y="405" fill="#dce1ea" font-size="13">libHybridTodoApp.so</text>
 				<text x="88" y="443" fill="#a5adbd" font-size="13">Own heap · signal table · exception machinery</text>
 
 				<rect x="650" y="94" width="472" height="386" rx="22" fill="#171329" stroke="#b094ff" stroke-width="2"/>
@@ -454,7 +454,7 @@
 				<text x="702" y="251" fill="#a5adbd" font-size="14">runtime lifetime · warmup · automatic rebind</text>
 				<rect x="680" y="288" width="412" height="72" rx="12" fill="#10151d" stroke="rgba(255,255,255,.1)"/>
 				<text x="702" y="317" fill="#f7f7fb" font-size="16" font-weight="700">CoreCLR Activity + MAUI payload</text>
-				<text x="702" y="341" fill="#a5adbd" font-size="14">100 XAML pages · deep navigation surface</text>
+				<text x="702" y="341" fill="#a5adbd" font-size="14">project · task · list · metadata editors</text>
 				<text x="680" y="405" fill="#b094ff" font-size="14" font-weight="700">Maps</text>
 				<text class="mono" x="734" y="405" fill="#dce1ea" font-size="13">libcoreclr · clrjit · monodroid · store</text>
 				<text x="680" y="443" fill="#a5adbd" font-size="13">Own heap · signal table · exception machinery</text>
@@ -540,22 +540,22 @@ bound = applicationContext.bindService (
 	<section class="slide" id="payload" data-index="08 / 16">
 		<div class="content">
 			<p class="kicker">Payload boundaries</p>
-			<h2>The shell does not contain the hundred-page MAUI graph.</h2>
+			<h2>Each runtime contains only the MAUI pages it can present.</h2>
 			<div class="grid three">
 				<div class="card aot-card">
-					<span class="metric aot">Shell</span>
-					<h3>Cherry-picked surface</h3>
-					<p class="muted">NativeAOT compiles only login, dashboard, persistent auth, warmup trigger, and navigation handoff code.</p>
+					<span class="metric aot">Dashboard</span>
+					<h3>Focused NativeAOT closure</h3>
+					<p class="muted">NativeAOT compiles login, the complete dashboard, persistent auth, warmup, and handoff code.</p>
 				</div>
 				<div class="card core-card">
 					<span class="metric core">Store</span>
-					<h3>Large app corpus</h3>
-					<p class="muted">The 100 real XAML <code>ContentPage</code> types live only in the CoreCLR assembly store merged into the APK.</p>
+					<h3>Editing surface</h3>
+					<p class="muted">Project, task, list, and metadata pages live only in the CoreCLR assembly store merged into the APK.</p>
 				</div>
 				<div class="card blue-card">
 					<span class="metric blue">Control</span>
 					<h3>Honest comparison</h3>
-					<p class="muted">The standalone NativeAOT benchmark intentionally includes all pages; the hybrid shell intentionally does not.</p>
+					<p class="muted">The standalone apps contain the entire TODO app; the hybrid partitions its real pages by runtime ownership.</p>
 				</div>
 			</div>
 			<blockquote class="quote" style="margin-top:42px">Package together. <em>Reference selectively.</em></blockquote>
@@ -585,8 +585,8 @@ handler.post (() -&gt; {
 					<ul class="checks">
 						<li>CoreCLR host creation and Android runtime initialization</li>
 						<li>Assembly-store discovery and managed delegate creation</li>
-						<li>100 XAML-generated page types and route registration</li>
-						<li><code>RuntimeHelpers.PrepareMethod</code> across route methods</li>
+						<li>MAUI dependency injection, repositories, and route registration</li>
+						<li>Project, task, list, and metadata editing pages</li>
 					</ul>
 				</div>
 			</div>
@@ -596,21 +596,21 @@ handler.post (() -&gt; {
 	<section class="slide" id="startup-results" data-index="10 / 16">
 		<div class="content">
 			<p class="kicker">Measured startup</p>
-			<h2>The shell still wins the first-frame race.</h2>
+			<h2>NativeAOT wins startup; eager warmup can erase the hybrid gain.</h2>
 			<table aria-label="Android startup benchmark medians">
 				<thead>
 					<tr><th>Variant</th><th>Signed APK</th><th>Logged out · login</th><th>Logged in · dashboard</th></tr>
 				</thead>
 				<tbody>
-					<tr><td><span class="core">●</span> CoreCLR MAUI</td><td>17.66 MiB</td><td>915 ms</td><td>903 ms</td></tr>
-					<tr><td><span class="aot">●</span> NativeAOT MAUI</td><td>14.30 MiB</td><td>483 ms</td><td>570 ms</td></tr>
-					<tr class="highlight"><td><span class="bridge">●</span> Hybrid · two processes</td><td>47.91 MiB</td><td>259 ms</td><td>226 ms</td></tr>
+					<tr><td><span class="core">●</span> CoreCLR MAUI</td><td>19.99 MiB</td><td>865 ms</td><td>630 ms</td></tr>
+					<tr><td><span class="aot">●</span> NativeAOT MAUI</td><td>17.51 MiB</td><td>318 ms</td><td>457 ms</td></tr>
+					<tr class="highlight"><td><span class="bridge">●</span> Hybrid · two processes</td><td>31.55 MiB</td><td>523 ms</td><td>919 ms</td></tr>
 				</tbody>
 			</table>
 			<div class="grid three" style="margin-top:22px">
-				<div class="card"><span class="metric aot">72%</span><h3>Earlier than CoreCLR login</h3><p class="muted">Difference between median hybrid and CoreCLR-only logged-out startup.</p></div>
-				<div class="card"><span class="metric aot">75%</span><h3>Earlier returning dashboard</h3><p class="muted">Persistent shell-owned auth avoids both login and CoreCLR on the first-frame path.</p></div>
-				<div class="card"><span class="metric bridge">≈387 ms</span><h3>CoreCLR warmup duration</h3><p class="muted">Median runtime initialization plus preparation after the service starts.</p></div>
+				<div class="card"><span class="metric aot">40%</span><h3>Earlier than CoreCLR login</h3><p class="muted">The hybrid still reaches logged-out MAUI UI substantially earlier than CoreCLR-only.</p></div>
+				<div class="card"><span class="metric danger">+46%</span><h3>Slower returning dashboard</h3><p class="muted">Immediate CoreCLR warmup competes with NativeAOT. Warmup policy must become adaptive.</p></div>
+				<div class="card"><span class="metric bridge">29–78 ms</span><h3>Warmed editor reveal</h3><p class="muted">Four of five repeated handoffs after lifecycle cleanup; the first measured 205 ms.</p></div>
 			</div>
 			<p class="small" style="margin-top:16px">Android 35 arm64 emulator; eight paced process launches per state; <code>am start -W</code> TotalTime median. Directional prototype data, not a product performance claim.</p>
 		</div>
@@ -624,7 +624,7 @@ handler.post (() -&gt; {
 				<div class="card aot-card">
 					<p class="small">PID 10316 · DEFAULT PROCESS</p>
 					<span class="metric aot">NativeAOT</span>
-					<pre><code>libHybridRuntimeShell.so
+					<pre><code>libHybridTodoApp.so
 
 <span class="cm"># absent</span>
 libcoreclr.so
@@ -641,7 +641,7 @@ libmonodroid.so
 libxamarin-app.so
 libassembly-store.so
 
-<span class="cm"># absent: libHybridRuntimeShell.so</span></code></pre>
+<span class="cm"># absent: libHybridTodoApp.so</span></code></pre>
 				</div>
 			</div>
 			<div class="callout">Evidence comes from <code>/proc/&lt;pid&gt;/maps</code> on a rooted emulator and is enforced by <code>verify-process-isolation.sh</code>.</div>
@@ -707,8 +707,8 @@ libassembly-store.so
 			<div class="grid two">
 				<div>
 					<div class="grid two">
-						<div class="card aot-card"><span class="metric aot">20.3 MiB</span><h3>NativeAOT total PSS</h3><p class="muted">Shell after the CoreCLR service is warm.</p></div>
-						<div class="card core-card"><span class="metric core">123.6 MiB</span><h3>CoreCLR total PSS</h3><p class="muted">Runtime plus prepared 100-page payload.</p></div>
+						<div class="card aot-card"><span class="metric aot">101.0 MiB</span><h3>NativeAOT total PSS</h3><p class="muted">Full dashboard after five editor handoffs.</p></div>
+						<div class="card core-card"><span class="metric core">134.5 MiB</span><h3>CoreCLR total PSS</h3><p class="muted">Warm runtime after closing five embedded windows.</p></div>
 					</div>
 					<p class="small" style="margin-top:14px">Single emulator snapshot. Memory needs repeated physical-device measurement and a representative production graph.</p>
 				</div>
@@ -717,7 +717,7 @@ libassembly-store.so
 					<li><strong>Lifecycle:</strong> Android can reclaim or restart the heavy process independently.</li>
 					<li><strong>UX:</strong> task stack, transitions, themes, accessibility, and deep links must remain coherent.</li>
 					<li><strong>Operations:</strong> logs, traces, health, and crashes must correlate two PIDs.</li>
-					<li><strong>Distribution:</strong> the prototype mechanically duplicates runtime payloads and is 47.91 MiB.</li>
+					<li><strong>Distribution:</strong> linking and normal ZIP compression reduce the dual-runtime APK to 31.55 MiB.</li>
 				</ul>
 			</div>
 		</div>
@@ -742,11 +742,11 @@ libassembly-store.so
 				<div class="card core-card">
 					<h3 class="core">Next decisive experiments</h3>
 					<ul class="checks risks">
-						<li><strong>Render real MAUI UI</strong> in the CoreCLR Activity and navigate back.</li>
+						<li><strong>Remove the input-service workaround</strong> by fixing typed service activation in the manually initialized host.</li>
 						<li><strong>Define the IPC contract</strong> for auth, routes, state, cancellation, and errors.</li>
 						<li><strong>Exercise lifecycle pressure</strong> across suspend, low memory, configuration, and upgrades.</li>
 						<li><strong>Measure physical devices</strong> across cold install, warm caches, and representative app graphs.</li>
-						<li><strong>Productize packaging</strong> with explicit process/runtime ownership and asset deduplication.</li>
+						<li><strong>Tune warmup policy</strong> so CoreCLR does not compete with a returning NativeAOT dashboard.</li>
 					</ul>
 				</div>
 			</div>
@@ -759,7 +759,7 @@ libassembly-store.so
 			<blockquote class="quote">Make the runtime a <em>progressively loaded capability</em>, not a prerequisite for useful pixels.</blockquote>
 			<p class="lede" style="margin-top:36px">The two-process prototype preserves the startup advantage while replacing signal-handler coexistence with a stronger, testable isolation boundary.</p>
 			<div class="grid three" style="margin-top:32px">
-				<div class="card"><h3 class="aot">Fast edge</h3><p class="muted">A deliberately tiny NativeAOT surface owns latency-sensitive experiences.</p></div>
+				<div class="card"><h3 class="aot">Fast edge</h3><p class="muted">A focused NativeAOT surface owns login and the complete latency-sensitive dashboard.</p></div>
 				<div class="card"><h3 class="core">Full capability</h3><p class="muted">CoreCLR and MAUI arrive before the user asks for the deep application.</p></div>
 				<div class="card"><h3 class="bridge">Explicit boundary</h3><p class="muted">Android services, processes, and lifecycle become part of the architecture.</p></div>
 			</div>

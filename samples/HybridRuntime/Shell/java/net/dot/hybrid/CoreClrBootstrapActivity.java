@@ -33,6 +33,7 @@ public final class CoreClrBootstrapActivity extends AppCompatActivity {
 		}
 		setTheme(mauiTheme);
 		super.onCreate(savedInstanceState);
+		overridePendingTransition(0, 0);
 
 		getWindow().setStatusBarColor(Color.rgb(23, 23, 26));
 		getWindow().setNavigationBarColor(Color.rgb(23, 23, 26));
@@ -72,6 +73,17 @@ public final class CoreClrBootstrapActivity extends AppCompatActivity {
 	@Override
 	public void onBackPressed() {
 		finish();
+		overridePendingTransition(0, 0);
+	}
+
+	@Override
+	protected void onDestroy() {
+		try {
+			CoreClrBootstrap.hideTodoApp();
+		} catch (Throwable error) {
+			Log.e(TAG, "Could not detach the CoreCLR MAUI UI", error);
+		}
+		super.onDestroy();
 	}
 
 	private void updateStatus() {

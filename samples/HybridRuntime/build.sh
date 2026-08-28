@@ -69,7 +69,7 @@ cp "${shell_apk}" "${unaligned_apk}"
 	mkdir payload-dex
 	find . -maxdepth 1 -type f -name 'classes*.dex' -exec mv {} payload-dex/ \;
 	if [[ -d lib ]]; then
-		zip -q -0 -r "${unaligned_apk}" lib
+		zip -q -r "${unaligned_apk}" lib
 	fi
 	if [[ -d assemblies ]]; then
 		zip -q -r "${unaligned_apk}" assemblies
@@ -86,13 +86,13 @@ cp "${shell_apk}" "${unaligned_apk}"
 	fi
 
 	cp "${work_dir}/application-dex/classes.dex" classes2.dex
-	zip -q -0 "${unaligned_apk}" classes2.dex
+	zip -q "${unaligned_apk}" classes2.dex
 	dex_index=3
 	for payload_dex in payload-dex/classes.dex payload-dex/classes2.dex payload-dex/classes3.dex payload-dex/classes4.dex; do
 		[[ -f "${payload_dex}" ]] || continue
 		merged_dex="classes${dex_index}.dex"
 		cp "${payload_dex}" "${merged_dex}"
-		zip -q -0 "${unaligned_apk}" "${merged_dex}"
+		zip -q "${unaligned_apk}" "${merged_dex}"
 		dex_index=$((dex_index + 1))
 	done
 )
