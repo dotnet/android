@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
-namespace HybridTodoApp;
+﻿namespace HybridTodoApp;
 
 public partial class App : Application
 {
@@ -11,6 +9,9 @@ public partial class App : Application
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		return new Window(new AppShell());
+		Page rootPage = Preferences.Default.Get (DemoAuthentication.PreferenceKey, false)
+			? new AppShell ()
+			: new LoginPage ();
+		return new Window (rootPage);
 	}
 }

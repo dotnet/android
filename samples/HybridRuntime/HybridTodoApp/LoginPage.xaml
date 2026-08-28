@@ -1,0 +1,121 @@
+<ContentPage
+    x:Class="HybridTodoApp.LoginPage"
+    BackgroundColor="{StaticResource DarkBackground}"
+    Shell.NavBarIsVisible="False">
+    <ScrollView>
+        <Grid Padding="24,32">
+            <Border
+                Padding="28,30"
+                BackgroundColor="{StaticResource DarkSecondaryBackground}"
+                Stroke="#404040"
+                StrokeShape="RoundRectangle 22"
+                VerticalOptions="Center">
+                <VerticalStackLayout>
+                    <HorizontalStackLayout Spacing="14">
+                        <Border
+                            BackgroundColor="{StaticResource Primary}"
+                            HeightRequest="56"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 18"
+                            WidthRequest="56">
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="24"
+                                HorizontalTextAlignment="Center"
+                                Text="T"
+                                TextColor="White"
+                                VerticalTextAlignment="Center" />
+                        </Border>
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="22"
+                            Text="Tasks"
+                            TextColor="White"
+                            VerticalTextAlignment="Center" />
+                    </HorizontalStackLayout>
+
+                    <Label
+                        Margin="0,36,0,0"
+                        FontAttributes="Bold"
+                        FontSize="30"
+                        Text="Welcome back"
+                        TextColor="White" />
+                    <Label
+                        Margin="0,8,0,28"
+                        FontSize="16"
+                        Text="Sign in to continue to your projects and tasks."
+                        TextColor="{StaticResource LightOnDarkBackground}" />
+
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="14"
+                        Text="Email"
+                        TextColor="{StaticResource Gray100}" />
+                    <Border
+                        Margin="0,8,0,0"
+                        BackgroundColor="{StaticResource OffBlack}"
+                        Stroke="#404040"
+                        StrokeShape="RoundRectangle 12">
+                        <Entry
+                            x:Name="Email"
+                            AutomationId="Email"
+                            BackgroundColor="Transparent"
+                            Keyboard="Email"
+                            Placeholder="you@example.com"
+                            Text="benchmark@example.com"
+                            TextColor="White" />
+                    </Border>
+
+                    <Label
+                        Margin="0,18,0,0"
+                        FontAttributes="Bold"
+                        FontSize="14"
+                        Text="Password"
+                        TextColor="{StaticResource Gray100}" />
+                    <Border
+                        Margin="0,8,0,0"
+                        BackgroundColor="{StaticResource OffBlack}"
+                        Stroke="#404040"
+                        StrokeShape="RoundRectangle 12">
+                        <Entry
+                            x:Name="Password"
+                            AutomationId="Password"
+                            BackgroundColor="Transparent"
+                            IsPassword="True"
+                            Placeholder="Password"
+                            Text="password"
+                            TextColor="White" />
+                    </Border>
+
+                    <Label
+                        x:Name="ErrorMessage"
+                        Margin="0,12,0,0"
+                        FontSize="14"
+                        IsVisible="False"
+                        Text="Use the demo email and password shown below."
+                        TextColor="#FF9F9F" />
+
+                    <Button
+                        x:Name="SignIn"
+                        Margin="0,24,0,0"
+                        AutomationId="SignIn"
+                        BackgroundColor="{StaticResource Primary}"
+                        Clicked="OnSignInClicked"
+                        CornerRadius="12"
+                        FontAttributes="Bold"
+                        FontSize="17"
+                        HeightRequest="56"
+                        Text="Sign in"
+                        TextColor="White" />
+
+                    <Label
+                        Margin="0,22,0,0"
+                        FontSize="13"
+                        HorizontalTextAlignment="Center"
+                        Text="Demo access&#10;benchmark@example.com  /  password"
+                        TextColor="{StaticResource PrimaryDark}" />
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+    </ScrollView>
+</ContentPage>
