@@ -649,7 +649,6 @@ else()
   add_subdirectory(common/java-interop)
 
   if (IS_MONO_RUNTIME OR IS_CLR_RUNTIME)
-    add_subdirectory(common/libunwind)
     add_subdirectory(common/runtime-base)
 
     add_subdirectory(${SOURCES_PREFIX}/runtime-base)
@@ -658,6 +657,9 @@ else()
   endif()
 
   if (IS_MONO_RUNTIME)
+    # Only `mono/tracing` links `xa::unwind`; the CoreCLR host has no unwinder of its own.
+    add_subdirectory(common/libunwind)
+
     add_subdirectory(mono/tracing)
     add_subdirectory(mono/pinvoke-override)
 
