@@ -173,6 +173,10 @@ public partial class ScannerComparisonTests
 					public interface OnClickListener {
 						void onClick (View view);
 					}
+					public interface OnLongClickListener {
+						boolean onLongClick (View view);
+						boolean onLongClickUseDefaultHapticFeedback (View view);
+					}
 				}
 				""",
 			["mono/android/IGCUserPeer.java"] = """
@@ -287,7 +291,6 @@ public partial class ScannerComparisonTests
 			.ToArray ();
 		var interfaces = classFile.Interfaces
 			.Select (iface => iface.Name.Value)
-			.OrderBy (iface => iface, StringComparer.Ordinal)
 			.ToArray ();
 
 		return new JavaSemanticModel (
@@ -410,13 +413,15 @@ public partial class ScannerComparisonTests
 		Assert.Equal ("com/example/parity/Base", model.BaseName);
 		Assert.Equal (ClassAccessFlags.Public, model.Modifiers);
 		Assert.Equal (new [] {
-			"android/view/View$OnClickListener",
 			"mono/android/IGCUserPeer",
+			"android/view/View$OnClickListener",
+			"android/view/View$OnLongClickListener",
 		}, model.Interfaces);
 		Assert.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|<init>|()V|final=False|synchronized=False|varargs=False|strict=False|throws=|annotations=", model.Constructors);
 		Assert.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|<init>|(I)V|final=False|synchronized=False|varargs=False|strict=False|throws=|annotations=", model.Constructors);
 		Assert.Contains (model.Methods, method => method.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|getValue|()Ljava/lang/String;", StringComparison.Ordinal));
 		Assert.Contains (model.Methods, method => method.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|onClick|(Landroid/view/View;)V", StringComparison.Ordinal));
+		Assert.Contains (model.Methods, method => method.Contains ("public|static=False|abstract=False|bridge=False|synthetic=False|onLongClick|(Landroid/view/View;)Z", StringComparison.Ordinal));
 		Assert.Contains (model.Methods, method => method.Contains ("protected|static=False|abstract=False|bridge=False|synthetic=False|checkedExport|(Ljava/lang/String;)I|final=False|synchronized=False|varargs=False|strict=False|throws=java/io/IOException", StringComparison.Ordinal));
 		Assert.Contains (model.Fields, field => field.Contains ("public|static=True|final=False|STATIC_LABEL|Ljava/lang/String;", StringComparison.Ordinal));
 		Assert.Contains (model.Fields, field => field.Contains ("public|static=False|final=False|LABEL|Ljava/lang/String;", StringComparison.Ordinal));

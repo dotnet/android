@@ -37,9 +37,12 @@ namespace Xamarin.Android.Build.Tests {
 			AssertTrimmableTypeMapOutputs (intermediateDir);
 		}
 
-		[Test]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
 		public void Build_JavaSourceSemanticParityFixture_Compiles (
-			[Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+			string typeMapImplementation,
+			AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -56,15 +59,11 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = isRelease,
 				References = {
 					new BuildItem.ProjectReference (fixtureProject, "JavaSourceParityFixture"),
+					new BuildItem.Reference ("Mono.Android.Export"),
 				},
 			};
 			proj.SetRuntime (runtime);
-			if (runtime == AndroidRuntime.MonoVM) {
-				proj.SetProperty ("_DisableCheckForUnsupportedMonoMobileRuntime", "true");
-				proj.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
-			} else {
-				proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
-			}
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
 			proj.MainActivity = proj.DefaultMainActivity.Replace (
 				"//${AFTER_ONCREATE}",
 				"System.GC.KeepAlive (new UserApp.JavaSourceParity.SemanticPeer ());");
@@ -81,11 +80,11 @@ namespace Xamarin.Android.Build.Tests {
 					""",
 			});
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), $"{runtime} should compile the shared semantic parity fixture.");
+			Assert.IsTrue (builder.Build (proj), $"{runtime}/{typeMapImplementation} should compile the shared semantic parity fixture.");
 
 			var compiledClass = builder.Output.GetIntermediaryPath (
 				Path.Combine ("android", "bin", "classes", "com", "example", "parity", "SemanticPeer.class"));
-			FileAssert.Exists (compiledClass, $"{runtime} should compile the generated SemanticPeer Java source.");
+			FileAssert.Exists (compiledClass, $"{runtime}/{typeMapImplementation} should compile the generated SemanticPeer Java source.");
 		}
 
 		[Test]

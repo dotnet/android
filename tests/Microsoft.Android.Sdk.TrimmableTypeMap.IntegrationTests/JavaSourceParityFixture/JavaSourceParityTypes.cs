@@ -23,7 +23,7 @@ public class Base : Java.Lang.Object
 }
 
 [Register ("com/example/parity/SemanticPeer")]
-public class SemanticPeer : Base, Android.Views.View.IOnClickListener
+public class SemanticPeer : Base, Android.Views.View.IOnClickListener, Android.Views.View.IOnLongClickListener
 {
 	public SemanticPeer () { }
 
@@ -32,6 +32,8 @@ public class SemanticPeer : Base, Android.Views.View.IOnClickListener
 	public override string GetValue () => "derived";
 
 	public void OnClick (Android.Views.View? view) { }
+
+	public bool OnLongClick (Android.Views.View? view) => true;
 
 	[Export ("checkedExport", Throws = new [] { typeof (Java.IO.IOException) })]
 	protected int CheckedExport (string value) => value.Length;
