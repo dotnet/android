@@ -619,26 +619,44 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void DuplicateJCWNames ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
+		public void DuplicateJCWNames (string typemapImplementation, AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
-			// TODO: NativeAOT should fail the application build
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT doesn't fail the application build");
-			}
+			var source1 = """
+				namespace Library1;
 
-			var source = @"[Android.Runtime.Register (""examplelib.EmptyClass"")] public class EmptyClass : Java.Lang.Object { }";
+				[Android.Runtime.Register ("examplelib.DuplicatePeer")]
+				public class FirstPeer : Java.Lang.Object
+				{
+					public FirstPeer (int value)
+					{
+					}
+				}
+				""";
+			var source2 = """
+				namespace Library2;
+
+				[Android.Runtime.Register ("examplelib.DuplicatePeer")]
+				public class SecondPeer : Java.Lang.Object
+				{
+					public SecondPeer (string value)
+					{
+					}
+				}
+				""";
 			var library1 = new XamarinAndroidLibraryProject () {
 				IsRelease = isRelease,
 				ProjectName = "Library1",
 				Sources = {
-					new BuildItem.Source ("EmptyClass.cs") {
-						TextContent = () => source
+					new BuildItem.Source ("FirstPeer.cs") {
+						TextContent = () => source1
 					}
 				}
 			};
@@ -647,8 +665,8 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 				ProjectName = "Library2",
 				Sources = {
-					new BuildItem.Source ("EmptyClass.cs") {
-						TextContent = () => source
+					new BuildItem.Source ("SecondPeer.cs") {
+						TextContent = () => source2
 					}
 				}
 			};
@@ -662,21 +680,40 @@ namespace Xamarin.Android.Build.Tests
 				},
 			};
 			app.SetRuntime (runtime);
-			var projectPath = Path.Combine ("temp", TestName);
+			app.SetProperty ("AndroidTypeMapImplementation", typemapImplementation);
+			var projectPath = Path.Combine ("temp", $"{TestName}_{Guid.NewGuid ():N}");
 			using var lib1b = CreateDllBuilder (Path.Combine (projectPath, library1.ProjectName), cleanupAfterSuccessfulBuild: false);
 			using var lib2b = CreateDllBuilder (Path.Combine (projectPath, library2.ProjectName), cleanupAfterSuccessfulBuild: false);
 
 			Assert.IsTrue (lib1b.Build (library1), "Build of Library1 should have succeeded");
 			Assert.IsTrue (lib2b.Build (library2), "Build of Library2 should have succeeded");
 
-			using var appb = CreateApkBuilder (Path.Combine (projectPath, app.ProjectName));
+			using var appb = CreateApkBuilder (Path.Combine (projectPath, app.ProjectName), cleanupAfterSuccessfulBuild: false);
 			appb.ThrowOnBuildFailure = false;
 			Assert.IsFalse (appb.Build (app), "Build of App1 should have failed");
 			IEnumerable<string> errors = appb.LastBuildOutput.Where (x => x.Contains ("error XA4215"));
 			Assert.NotNull (errors, "Error should be XA4215");
-			StringAssertEx.Contains ("EmptyClass", errors, "Error should mention the conflicting type name");
-			StringAssertEx.Contains ("Library1", errors, "Error should mention all of the assemblies with conflicts");
-			StringAssertEx.Contains ("Library2", errors, "Error should mention all of the assemblies with conflicts");
+			StringAssertEx.Contains ("examplelib.DuplicatePeer", errors, "Error should mention the conflicting Java type name");
+			StringAssertEx.Contains ("Library1.FirstPeer", errors, "Error should mention the first conflicting managed type");
+			StringAssertEx.Contains ("Library2.SecondPeer", errors, "Error should mention the second conflicting managed type");
+			Assert.IsFalse (appb.LastBuildOutput.Any (x => x.Contains ("warning XA4214")),
+				"Distinct managed type names should not produce XA4214.");
+
+			var acwMapFile = appb.Output.GetIntermediaryPath ("acw-map.txt");
+			if (typemapImplementation == "llvm-ir") {
+				var javaFile = appb.Output.GetIntermediaryPath (Path.Combine ("android", "src", "examplelib", "DuplicatePeer.java"));
+				FileAssert.Exists (javaFile, "llvm-ir generates JCW sources before XA4215 is detected.");
+				FileAssert.DoesNotExist (acwMapFile, "llvm-ir should not write an ambiguous acw-map.");
+			} else {
+				var typemapDirectory = appb.Output.GetIntermediaryPath ("typemap");
+				var javaFile = Path.Combine (typemapDirectory, "java", "examplelib", "DuplicatePeer.java");
+				FileAssert.DoesNotExist (javaFile, "A failed trimmable typemap build should not write an ambiguous JCW source.");
+				FileAssert.DoesNotExist (acwMapFile, "A failed trimmable typemap build should not write an ambiguous acw-map.");
+				if (Directory.Exists (typemapDirectory)) {
+					Assert.IsEmpty (Directory.GetFiles (typemapDirectory, "*.dll"),
+						"A failed trimmable typemap build should not write typemap assemblies.");
+				}
+			}
 		}
 
 		[Test]
