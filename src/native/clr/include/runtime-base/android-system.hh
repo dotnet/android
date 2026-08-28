@@ -128,12 +128,14 @@ namespace xamarin::android {
 			return embedded_dso_mode_enabled;
 		}
 
-		// Returns the property's NUL-terminated value, or `nullptr` if it is not set. The result is
-		// valid for at least as long as `value` is.
+		// Returns the property's NUL-terminated value, or `nullptr` if it is not set.
 		//
 		// `value` is a scratch buffer of at least `Constants::PROPERTY_VALUE_BUFFER_LEN` bytes, used
 		// to receive Android system properties. Bundled properties are returned without copying, so
 		// their length is not limited by `value_size`.
+		//
+		// Nothing is ever allocated: the result is either `value` or a pointer to application data
+		// which lives as long as the process. The caller must not free it.
 		static auto monodroid_get_system_property (const char *name, char *value, size_t value_size) noexcept -> const char*;
 		static void detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept;
 		static void setup_environment () noexcept;
