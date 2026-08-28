@@ -47,7 +47,8 @@ namespace Xamarin.Installer.AndroidSDK.GoogleV2
 			else
 				RepositoryBaseURL = Helpers.GetBaseURL (manifestURL);
 
-			AddonsListURL = addonsListURL ?? DefaultAddonsListURL;
+			AddonsListURL = addonsListURL ??
+				(RepositoryBaseURL.IsLoopback ? new Uri (RepositoryBaseURL, "addons_list-5.xml") : DefaultAddonsListURL);
 
 			if (cacheManifest)
 				ManifestCacher = LocalManifestProvider.CreateGoogleManifestProvider ();

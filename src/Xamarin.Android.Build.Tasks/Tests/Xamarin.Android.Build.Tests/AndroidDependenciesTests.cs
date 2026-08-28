@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -68,7 +67,6 @@ namespace Xamarin.Android.Build.Tests
 				if (useGoogleV2Fixture) {
 					googleV2Fixture = new GoogleV2Fixture ();
 					buildArgs.Add ($"AndroidManifestSource={googleV2Fixture.ManifestUrl}");
-					buildArgs.Add ($"_AndroidGoogleAddonsListSource={googleV2Fixture.AddonsListUrl}");
 					buildArgs.Add ($"AndroidSdkPlatformToolsVersion={GetCurrentPlatformToolsVersion (googleV2Fixture.ManifestUrl)}");
 					buildArgs.Add ("AndroidInstallJavaDependencies=false");
 				} else {
@@ -179,15 +177,18 @@ namespace Xamarin.Android.Build.Tests
 			var s = new XmlReaderSettings {
 				XmlResolver = null,
 			};
-			var r = XmlReader.Create (manifestUrl.ToString (), s);
-			var d = XDocument.Load (r);
+			XDocument d;
+			using (var r = XmlReader.Create (manifestUrl.ToString (), s))
+				d = XDocument.Load (r);
 
 			var platformToolsPackage    = d.Root.Elements ("remotePackage")
 				.Where (e => "platform-tools" == (string) e.Attribute("path") &&
 					"android-sdk-preview-license" != (string) e.Element ("uses-license")?.Attribute ("ref"))
 				.FirstOrDefault ();
+			Assert.IsNotNull (platformToolsPackage, "The GoogleV2 manifest should contain a stable platform-tools package.");
 
 			var revision    = platformToolsPackage.Element ("revision");
+			Assert.IsNotNull (revision, "The stable platform-tools package should contain a revision.");
 
 			return $"{revision.Element ("major")?.Value}.{revision.Element ("minor")?.Value}.{revision.Element ("micro")?.Value}";
 		}
@@ -214,7 +215,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			public Uri ManifestUrl => server.GetUri ("repository2-3.xml");
-			public Uri AddonsListUrl => server.GetUri ("addons_list-5.xml");
 
 			public GoogleV2Fixture ()
 			{
@@ -400,15 +400,13 @@ namespace Xamarin.Android.Build.Tests
 		{
 			readonly TcpListener listener;
 			readonly Dictionary<string, byte []> responses = new Dictionary<string, byte []> (StringComparer.Ordinal);
-			readonly ConcurrentQueue<string> requests = new ConcurrentQueue<string> ();
-			readonly ConcurrentBag<System.Threading.Tasks.Task> requestTasks = new ConcurrentBag<System.Threading.Tasks.Task> ();
+			readonly List<string> requests = new List<string> ();
 			readonly System.Threading.Tasks.Task acceptLoop;
-			Exception serverException;
 			volatile bool disposed;
 
 			public Uri BaseUri { get; }
 			public IEnumerable<string> Requests => requests;
-			public Exception ServerException => serverException;
+			public Exception ServerException { get; private set; }
 
 			public LocalHttpFixtureServer ()
 			{
@@ -434,29 +432,21 @@ namespace Xamarin.Android.Build.Tests
 				disposed = true;
 				listener.Stop ();
 				acceptLoop.GetAwaiter ().GetResult ();
-				System.Threading.Tasks.Task.WaitAll (requestTasks.ToArray ());
 			}
 
 			void AcceptLoop ()
 			{
 				while (!disposed) {
 					try {
-						var client = listener.AcceptTcpClient ();
-						requestTasks.Add (System.Threading.Tasks.Task.Run (() => {
-							using (client) {
-								try {
-									HandleRequest (client);
-								} catch (Exception ex) {
-									Interlocked.CompareExchange (ref serverException, ex, null);
-								}
-							}
-						}));
+						using (var client = listener.AcceptTcpClient ())
+							HandleRequest (client);
 					} catch (SocketException) when (disposed) {
 						return;
 					} catch (ObjectDisposedException) when (disposed) {
 						return;
 					} catch (Exception ex) {
-						Interlocked.CompareExchange (ref serverException, ex, null);
+						ServerException = ex;
+						listener.Stop ();
 						return;
 					}
 				}
@@ -484,7 +474,7 @@ namespace Xamarin.Android.Build.Tests
 					} while (!string.IsNullOrEmpty (line));
 
 					var path = new Uri (BaseUri, requestParts [1]).AbsolutePath;
-					requests.Enqueue (path);
+					requests.Add (path);
 					bool found = responses.TryGetValue (path, out byte [] response);
 					response = response ?? [];
 					var status = found ? "200 OK" : "404 Not Found";

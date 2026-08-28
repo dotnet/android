@@ -44,8 +44,6 @@ namespace Xamarin.Installer.Build.Tasks
 
 		public string ManifestSource { get; set; }
 
-		public string GoogleAddonsListSource { get; set; }
-
 		public async override Task RunTaskAsync ()
 		{
 			if (Dependencies?.Length == 0 && JavaDependencies?.Length == 0) {
@@ -154,14 +152,7 @@ namespace Xamarin.Installer.Build.Tasks
 				manifestUrl = new Uri (ManifestSource, UriKind.Absolute);
 			}
 
-			Uri googleAddonsListUrl = null;
-			if (File.Exists (GoogleAddonsListSource)) {
-				googleAddonsListUrl = new Uri (Path.GetFullPath (GoogleAddonsListSource));
-			} else if (!string.IsNullOrEmpty (GoogleAddonsListSource)) {
-				googleAddonsListUrl = new Uri (GoogleAddonsListSource, UriKind.Absolute);
-			}
-
-			var installer = new AndroidSDKInstaller(new Helper(manifestFilePath: manifestFilePath), manifestType, manifestURL: manifestUrl, googleAddonsListURL: googleAddonsListUrl);
+			var installer = new AndroidSDKInstaller(new Helper(manifestFilePath: manifestFilePath), manifestType, manifestURL: manifestUrl);
 			installer.Discover(new List<string> { path });
 
 			var sdkInstance = installer.FindInstance(path);
