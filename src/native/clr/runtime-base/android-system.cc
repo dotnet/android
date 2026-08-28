@@ -302,7 +302,7 @@ AndroidSystem::lookup_system_property (const char *name, size_t &value_len) noex
 		auto prop_iter = bundled_properties.find (name);
 		if (prop_iter != bundled_properties.end ()) {
 			value_len = prop_iter->second.length ();
-			return prop_iter->first.c_str ();
+			return prop_iter->second.c_str ();
 		}
 	}
 #endif // DEBUG

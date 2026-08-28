@@ -171,7 +171,7 @@ Logger::init_logging_categories () noexcept
 		}
 
 		auto set_log_file_from_param = [param, param_length](char *&log_file, const char *file_kind) {
-			constexpr size_t OFFSET = 5uz; // The length of the "gref=" and "lref=" prefixes.
+			constexpr size_t OFFSET = sizeof ("gref=") - 1; // Both the "gref=" and "lref=" prefixes are this long.
 			if (OFFSET >= param_length) {
 				log_warnf (LOG_DEFAULT, "Unable to set path to %s log file: no file name specified", file_kind);
 				set_log_file (log_file, nullptr, 0uz);

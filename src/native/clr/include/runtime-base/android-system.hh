@@ -150,7 +150,7 @@ namespace xamarin::android {
 		static auto load_dso_from_app_lib_dirs (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
 		static auto load_dso_from_override_dirs (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
 		static auto lookup_system_property (const char *name, size_t &value_len) noexcept -> const char*;
-		static auto monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len) noexcept -> int;
+		static auto monodroid__system_property_get (const char *name, char *sp_value) noexcept -> int;
 		static auto get_max_gref_count_from_system () noexcept -> long;
 		static void add_apk_libdir (std::string_view const& apk, size_t &index, std::string_view const& abi) noexcept;
         static void setup_apk_directories (unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks, bool have_split_apks) noexcept;

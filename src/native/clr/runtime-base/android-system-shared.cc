@@ -6,14 +6,17 @@ using namespace xamarin::android;
 
 auto AndroidSystem::monodroid_get_system_property (const char *name, char *value, size_t value_size) noexcept -> const char*
 {
-	if (value == nullptr || value_size < Constants::PROPERTY_VALUE_BUFFER_LEN) {
-		return nullptr;
-	}
+	// `__system_property_get` always writes up to `PROPERTY_VALUE_BUFFER_LEN` bytes, so a smaller
+	// buffer would overflow. This is a programming error, not a runtime condition.
+	abort_unless (
+		value != nullptr && value_size >= Constants::PROPERTY_VALUE_BUFFER_LEN,
+		"System property value buffer is too small"
+	);
 
 	value [0] = '\0';
 
 	// `__system_property_get` NUL-terminates what it writes.
-	if (monodroid__system_property_get (name, value, value_size) > 0) {
+	if (monodroid__system_property_get (name, value) > 0) {
 		return value;
 	}
 
@@ -25,27 +28,14 @@ auto AndroidSystem::monodroid_get_system_property (const char *name, char *value
 }
 
 auto
-AndroidSystem::monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len) noexcept -> int
+AndroidSystem::monodroid__system_property_get (const char *name, char *sp_value) noexcept -> int
 {
 	if (name == nullptr || *name == '\0' || sp_value == nullptr) {
 		return -1;
 	}
 
-	char *buf = nullptr;
-	if (sp_value_len < Constants::PROPERTY_VALUE_BUFFER_LEN) {
-		size_t alloc_size = Helpers::add_with_overflow_check<size_t> (Constants::PROPERTY_VALUE_BUFFER_LEN, 1uz);
-		log_warnf (LOG_DEFAULT, "Buffer to store system property may be too small, will copy only %zu bytes", sp_value_len);
-		buf = new char [alloc_size];
-	}
-
-	int len = __system_property_get (name, buf ? buf : sp_value);
-	if (buf != nullptr) {
-		strncpy (sp_value, buf, sp_value_len);
-		sp_value [sp_value_len] = '\0';
-		delete[] buf;
-	}
-
-	return len;
+	// The caller guarantees that `sp_value` is at least `PROPERTY_VALUE_BUFFER_LEN` bytes long.
+	return __system_property_get (name, sp_value);
 }
 
 auto
