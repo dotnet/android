@@ -22,10 +22,6 @@
     <AndroidNdkDirectory></AndroidNdkDirectory>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(_AndroidHelixInstrumentationSource)' != '' ">
-    <Compile Include="$(_AndroidHelixInstrumentationSource)" />
-  </ItemGroup>
-
   <!--
     These category exclusions used to flow through `am instrument -e` via the
     legacy APK runner. With the migration to `dotnet test` + MTP,

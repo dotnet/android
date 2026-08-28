@@ -8,64 +8,48 @@ parameters:
     configuration: Debug
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/TestDebug/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-    packageName: Mono.Android.NET_Tests
-    instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: ''
   - name: release
     displayName: Mono.Android.NET_Tests-Release
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-    packageName: Mono.Android.NET_Tests
-    instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: ''
   - name: no-aab
     displayName: Mono.Android.NET_Tests-NoAab
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-    packageName: Mono.Android.NET_Tests
-    instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:TestsFlavor=NoAab'
   - name: coreclr
     displayName: Mono.Android.NET_Tests-CoreCLR
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-    packageName: Mono.Android.NET_Tests
-    instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:TestsFlavor=CoreCLR -p:UseMonoRuntime=false'
   - name: mono
     displayName: Mono.Android.NET_Tests-Mono
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-    packageName: Mono.Android.NET_Tests
-    instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:UseMonoRuntime=true -p:_DisableCheckForUnsupportedMonoMobileRuntime=true'
   - name: coreclr-trimmable
     displayName: Mono.Android.NET_Tests-CoreCLRTrimmable
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-    packageName: Mono.Android.NET_Tests
-    instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:TestsFlavor=CoreCLRTrimmable -p:AndroidTypeMapImplementation=trimmable -p:UseMonoRuntime=false'
   - name: nativeaot
     displayName: Mono.Android.NET_Tests-NativeAOT
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-    packageName: Mono.Android.NET_Tests
-    instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:TestsFlavor=NativeAOT -p:PublishAot=true'
   - name: jcwgen
     displayName: Xamarin.Android.JcwGen_Tests
     configuration: $(XA.Build.Configuration)
     project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.JcwGen_Tests-Signed.apk
-    packageName: Xamarin.Android.JcwGen_Tests
-    instrumentation: xamarin.android.jcwgentests.TestInstrumentation
     extraBuildArguments: ''
 
 steps:
@@ -132,15 +116,6 @@ steps:
   - pwsh: |
       $apk = '$(System.DefaultWorkingDirectory)\${{ testCase.artifactSource }}'
       Remove-Item -LiteralPath $apk -Force -ErrorAction Ignore
-      $projectDirectory = Split-Path -Parent '$(System.DefaultWorkingDirectory)\${{ testCase.project }}'
-      $instrumentationSource = Join-Path $projectDirectory 'obj\Helix\${{ testCase.name }}\HelixInstrumentation.cs'
-      New-Item -ItemType Directory -Force -Path (Split-Path -Parent $instrumentationSource) | Out-Null
-      @'
-      [assembly: Android.App.Instrumentation (
-        Name = "${{ testCase.instrumentation }}",
-        TargetPackage = "${{ testCase.packageName }}"
-      )]
-      '@ | Set-Content -LiteralPath $instrumentationSource -Encoding utf8NoBOM
     displayName: Remove stale APK - ${{ testCase.displayName }}
 
   - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
@@ -151,7 +126,6 @@ steps:
         -t:SignAndroidPackage
         -c ${{ testCase.configuration }}
         -p:AndroidPackageFormat=apk
-        -p:_AndroidHelixInstrumentationSource="obj/Helix/${{ testCase.name }}/HelixInstrumentation.cs"
         -p:AndroidSdkDirectory="$(ApkTestsAndroidSdkDirectory)"
         -p:JavaSdkDirectory="$(JAVA_HOME)"
         ${{ testCase.extraBuildArguments }}

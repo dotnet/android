@@ -54,10 +54,6 @@
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(_AndroidHelixInstrumentationSource)' != '' ">
-    <Compile Include="$(_AndroidHelixInstrumentationSource)" />
-  </ItemGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
   </PropertyGroup>
