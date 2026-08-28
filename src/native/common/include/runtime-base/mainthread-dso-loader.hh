@@ -5,7 +5,6 @@
 #include <unistd.h>
 
 #include <array>
-#include <semaphore>
 #include <string_view>
 
 #include <android/looper.h>
@@ -13,6 +12,7 @@
 #include <runtime-base/logger.hh>
 #include <runtime-base/runtime-environment.hh>
 #include <runtime-base/system-loadlibrary-wrapper.hh>
+#include <shared/binary-semaphore.hh>
 #include <shared/helpers.hh>
 
 namespace xamarin::android {
@@ -49,7 +49,10 @@ namespace xamarin::android {
 		MainThreadDsoLoader (const MainThreadDsoLoader&) = delete;
 		MainThreadDsoLoader (MainThreadDsoLoader&&) = delete;
 
-		virtual ~MainThreadDsoLoader () noexcept
+		// Not `virtual` on purpose. The class is never derived from nor destroyed through a base class
+		// pointer and a virtual destructor would make the compiler emit the deleting destructor, which
+		// pulls in `operator delete` and, with it, a dependency on `libc++`.
+		~MainThreadDsoLoader () noexcept
 		{
 			if (pipe_fds[0] != -1) {
 				ALooper_removeFd (main_thread_looper, pipe_fds[0]);
@@ -90,12 +93,10 @@ namespace xamarin::android {
 				return false;
 			}
 
-			// Wait for the callback to complete
-			using namespace std::literals;
+			// Wait for the callback to complete. 3s should be more than enough time for the library to load.
+			constexpr unsigned int LoadTimeoutMilliseconds = 3000u;
 
-			// We'll wait for up to 3s, it should be more than enough time for the library to load
-			bool success = load_complete_sem.try_acquire_for (3s);
-			if (!success) {
+			if (!load_complete_sem.try_acquire_for (LoadTimeoutMilliseconds)) {
 				log_warnf (LOG_ASSEMBLY, "Timeout while waiting for shared library '%.*s' to load.", static_cast<int>(full_name.length ()), full_name.data ());
 				return false;
 			}
@@ -149,7 +150,7 @@ namespace xamarin::android {
 
 	private:
 		int pipe_fds[2] = {-1, -1};
-		std::binary_semaphore load_complete_sem {0};
+		BinarySemaphore load_complete_sem {};
 		std::string_view undecorated_library_name {};
 		bool load_success = false;
 
