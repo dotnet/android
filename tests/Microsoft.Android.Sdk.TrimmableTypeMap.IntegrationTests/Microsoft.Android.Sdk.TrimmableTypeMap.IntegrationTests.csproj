@@ -22,11 +22,13 @@
   <!-- Exclude the fixture assembly source files from this project -->
   <ItemGroup>
     <Compile Remove="UserTypesFixture\**" />
+    <Compile Remove="JavaSourceParityFixture\**" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" />
+    <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj" />
     <!-- Mono.Android is built as a dependency so the ref assembly is available on disk.
          ReferenceOutputAssembly=false because we read it with SRM/Cecil, not compile against it directly.
          Instead, we reference the ref assembly below so we can use typeof(Java.Lang.Object). -->
@@ -35,6 +37,8 @@
     <!-- User-type fixture assembly: built as a dependency, scanned via SRM/Cecil in tests.
          ReferenceOutputAssembly=false because we don't compile against it — we just need the DLL on disk. -->
     <ProjectReference Include="UserTypesFixture\UserTypesFixture.csproj"
+                      ReferenceOutputAssembly="false" />
+    <ProjectReference Include="JavaSourceParityFixture\JavaSourceParityFixture.csproj"
                       ReferenceOutputAssembly="false" />
   </ItemGroup>
 
@@ -57,5 +61,12 @@
       </Reference>
     </ItemGroup>
   </Target>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>JavaCPath</_Parameter1>
+      <_Parameter2>$(JavaCPath)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
 
 </Project>

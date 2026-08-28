@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
@@ -34,6 +35,57 @@ namespace Xamarin.Android.Build.Tests {
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
 			AssertTrimmableTypeMapOutputs (intermediateDir);
+		}
+
+		[Test]
+		public void Build_JavaSourceSemanticParityFixture_Compiles (
+			[Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var fixtureProject = Path.Combine (
+				XABuildPaths.TopDirectory,
+				"tests",
+				"Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests",
+				"JavaSourceParityFixture",
+				"JavaSourceParityFixture.csproj");
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				References = {
+					new BuildItem.ProjectReference (fixtureProject, "JavaSourceParityFixture"),
+				},
+			};
+			proj.SetRuntime (runtime);
+			if (runtime == AndroidRuntime.MonoVM) {
+				proj.SetProperty ("_DisableCheckForUnsupportedMonoMobileRuntime", "true");
+				proj.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
+			} else {
+				proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			}
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				"System.GC.KeepAlive (new UserApp.JavaSourceParity.SemanticPeer ());");
+			proj.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("com\\example\\parity\\Base.java") {
+				Encoding = Encoding.ASCII,
+				TextContent = () => """
+					package com.example.parity;
+
+					public class Base {
+						public Base () {}
+						public Base (int value) {}
+						public java.lang.String getValue () { return ""; }
+					}
+					""",
+			});
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), $"{runtime} should compile the shared semantic parity fixture.");
+
+			var compiledClass = builder.Output.GetIntermediaryPath (
+				Path.Combine ("android", "bin", "classes", "com", "example", "parity", "SemanticPeer.class"));
+			FileAssert.Exists (compiledClass, $"{runtime} should compile the generated SemanticPeer Java source.");
 		}
 
 		[Test]
