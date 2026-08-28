@@ -33,6 +33,11 @@ parameters:
 # Repository resources
 resources:
   repositories:
+  - repository: macios-devtools
+    type: github
+    name: dotnet/macios-devtools
+    endpoint: public
+    ref: refs/heads/main
   - repository: maui
     type: github
     name: dotnet/maui
@@ -81,10 +86,11 @@ stages:
       submodules: recursive
       persistCredentials: false
 
-    # Checkout a second repo to force multi-repo checkout behavior
+    # This small repository is intentionally unused; its checkout keeps the
+    # primary repository at s/android under Azure's multi-repo layout.
     # https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
-    - checkout: maui
-      path: s/maui
+    - checkout: macios-devtools
+      path: s/macios-devtools
 
     - template: /build-tools/automation/yaml-templates/build-macos-steps.yaml
       parameters:
@@ -141,9 +147,10 @@ stages:
       submodules: recursive
       persistCredentials: false
 
-    # Checkout a second repo to force multi-repo checkout behavior
-    - checkout: maui
-      path: s/maui
+    # This small repository is intentionally unused; its checkout keeps the
+    # primary repository at s/android under Azure's multi-repo layout.
+    - checkout: macios-devtools
+      path: s/macios-devtools
 
     - script: |
         sudo apt-get update

@@ -26,7 +26,6 @@ trigger:
 # Azure Repos PR validation is configured through branch policies, not YAML.
 pr: none
 
-# Repository resources - checkout MAUI to force multi-repo checkout behavior
 # NOTE: `endpoint` values below are GitHub service connections in the
 # dnceng/internal project. Confirm the connection name(s) available there.
 resources:
@@ -35,6 +34,11 @@ resources:
     type: git
     name: 1ESPipelineTemplates/1ESPipelineTemplates
     ref: refs/tags/release
+  - repository: macios-devtools
+    type: github
+    name: dotnet/macios-devtools
+    endpoint: internal
+    ref: refs/heads/main
   - repository: maui
     type: github
     name: dotnet/maui
@@ -93,6 +97,7 @@ extends:
     sdl:
       sourceRepositoriesToScan:
         exclude:
+        - repository: macios-devtools
         - repository: maui
     stages:
     # macOS Build Stage
@@ -140,10 +145,11 @@ extends:
           path: s/android
           persistCredentials: false
 
-        # Checkout a second repo to force multi-repo checkout behavior
+        # This small repository is intentionally unused; its checkout keeps the
+        # primary repository at s/android under Azure's multi-repo layout.
         # https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
-        - checkout: maui
-          path: s/maui
+        - checkout: macios-devtools
+          path: s/macios-devtools
 
         - template: /build-tools/automation/yaml-templates/build-macos-steps.yaml@self
           parameters:
@@ -198,9 +204,10 @@ extends:
           path: s/android
           persistCredentials: false
 
-        # Checkout a second repo to force multi-repo checkout behavior
-        - checkout: maui
-          path: s/maui
+        # This small repository is intentionally unused; its checkout keeps the
+        # primary repository at s/android under Azure's multi-repo layout.
+        - checkout: macios-devtools
+          path: s/macios-devtools
 
         - script: |
             sudo apt-get update
@@ -354,8 +361,10 @@ extends:
               fetchTags: false
               path: s/android
 
-            - checkout: maui
-              path: s/maui
+            # This small repository is intentionally unused; its checkout keeps the
+            # primary repository at s/android under Azure's multi-repo layout.
+            - checkout: macios-devtools
+              path: s/macios-devtools
 
             - task: DownloadPipelineArtifact@2
               displayName: Download unsigned macOS and Windows packages
