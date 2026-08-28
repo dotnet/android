@@ -17,7 +17,6 @@
 #include <shared/log_level.hh>
 
 using namespace xamarin::android;
-using std::operator""sv;
 
 namespace {
 	char *gref_file = nullptr;
@@ -64,7 +63,7 @@ auto Logger::open_file (const char *path) noexcept -> FILE*
 	unlink (path);
 
 	// `monodroid_fopen` will log any errors
-	FILE *ret = Util::monodroid_fopen (path, "a"sv);
+	FILE *ret = Util::monodroid_fopen (path, "a");
 	if (ret != nullptr) {
 		Util::set_world_accessable (path);
 	}
@@ -73,7 +72,7 @@ auto Logger::open_file (const char *path) noexcept -> FILE*
 }
 
 [[gnu::flatten, gnu::always_inline]]
-auto Logger::open_file (LogCategories category, const char *custom_path, std::string_view const& override_dir, std::string_view const& fallback_filename) noexcept -> FILE*
+auto Logger::open_file (LogCategories category, const char *custom_path, const char *override_dir, const char *fallback_filename) noexcept -> FILE*
 {
 	auto log_and_return = [&category](FILE *f, const char *path) -> FILE* {
 		if (f != nullptr) {
@@ -98,10 +97,10 @@ auto Logger::open_file (LogCategories category, const char *custom_path, std::st
 }
 
 void
-Logger::init_reference_logging (std::string_view const& override_dir) noexcept
+Logger::init_reference_logging (const char *override_dir) noexcept
 {
 	if ((log_categories & LOG_GREF) != 0 && !light_gref) {
-		_gref_log = open_file (LOG_GREF, gref_file, override_dir, "grefs.txt"sv);
+		_gref_log = open_file (LOG_GREF, gref_file, override_dir, "grefs.txt");
 	}
 
 	if ((log_categories & LOG_LREF) != 0 && !light_lref) {
@@ -109,7 +108,7 @@ Logger::init_reference_logging (std::string_view const& override_dir) noexcept
 		if (lref_file != nullptr && strcmp (lref_file, gref_file != nullptr ? gref_file : "") == 0) {
 			_lref_log = _gref_log;
 		} else {
-			_lref_log = open_file (LOG_LREF, lref_file, override_dir, "lrefs.txt"sv);
+			_lref_log = open_file (LOG_LREF, lref_file, override_dir, "lrefs.txt");
 		}
 	}
 

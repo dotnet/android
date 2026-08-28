@@ -48,9 +48,9 @@ namespace xamarin::android {
 			return create_directory (dir.data (), mode);
 		}
 
-		static void create_public_directory (std::string_view const& dir);
-		static auto monodroid_fopen (std::string_view const& filename, std::string_view const& mode) noexcept -> FILE*;
-		static void set_world_accessable (std::string_view const& path);
+		static void create_public_directory (const char *dir);
+		static auto monodroid_fopen (const char *filename, const char *mode) noexcept -> FILE*;
+		static void set_world_accessable (const char *path);
 		static auto set_world_accessible (int fd) noexcept -> bool;
 
 		// Puts higher half of the `value` byte as a hexadecimal character in `high_half` and
