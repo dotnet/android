@@ -546,12 +546,6 @@ $@"<Project>
 						Directory.CreateDirectory (filedir);
 				}
 
-				// LastWriteTime is inaccurate without milliseconds, but neither mono FileSystemInfo nor UnixFileSystemInfo (in Mono.Posix)
-				// handles this precisely. And that causes comparison problem.
-				// To avoid this issue, we compare time after removing milliseconds field here.
-				//
-				// Mono.Posix after mono 367d417 will handle file time precisely.
-				// 
 				/*
 				// The code below debug prints time comparison. Current code could still result in unwanted comparison,
 				// so in case of doubtful results, use this to get comparison results.
