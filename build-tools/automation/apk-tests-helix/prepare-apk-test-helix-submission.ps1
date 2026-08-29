@@ -308,7 +308,10 @@ for attempt in $(seq 1 12); do
 		echo "===== attempt $attempt ====="
 		printf '%s\n' "$device_output"
 	} | tee -a "$upload/adb-devices.log"
-	device_serial=$(printf '%s\n' "$device_output" | awk '$2 == "device" { print $1; exit }')
+	device_serial=$(printf '%s\n' "$device_output" | awk '$2 == "device" && /x86_64/ { print $1; exit }')
+	if [[ -z "$device_serial" ]]; then
+		device_serial=$(printf '%s\n' "$device_output" | awk '$2 == "device" { print $1; exit }')
+	fi
 	if [[ -n "$device_serial" ]]; then
 		device_ready=true
 		break
