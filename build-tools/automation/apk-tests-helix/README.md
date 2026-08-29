@@ -25,5 +25,7 @@ queue used by dotnet/runtime for x86/x64 Android tests. This matches the existin
 dotnet/android APK lanes' default API 29 emulator instead of distributing the suite
 across heterogeneous physical devices. The runner waits for a delayed device
 assignment and retries instrumentation once while retaining both attempt TRXs. The
-existing macOS emulator lanes remain enabled for same-build inventory and outcome
-comparison.
+known process-global JNI count checks tracked by dotnet/android#12031 run first in a
+fresh process, while the remainder runs in a second process; the TRXs are merged back
+into the original inventory. The existing macOS emulator lanes remain enabled for
+same-build inventory and outcome comparison.

@@ -32,6 +32,7 @@ try {
 		displayName = 'Sample APK Tests'
 		packageName = 'example.tests'
 		instrumentation = 'example.tests.TestInstrumentation'
+		isolatedTest = 'example.tests.FlakyTest'
 	} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $workItem 'case.json')
 
 	$propsPath = Join-Path $root 'items.props'
@@ -69,7 +70,8 @@ try {
 	$bashScriptPath = Join-Path $workItem 'run-apk-tests.sh'
 	$bashScript = Get-Content -LiteralPath $bashScriptPath -Raw
 	if (-not $bashScript.Contains('command -v adb') -or
-		-not $bashScript.Contains('INSTRUMENTATION_RESULT: resultsPath=')) {
+		-not $bashScript.Contains('INSTRUMENTATION_RESULT: resultsPath=') -or
+		-not $bashScript.Contains("isolated_test='example.tests.FlakyTest'")) {
 		throw 'Generated Linux APK test script is missing required commands.'
 	}
 	if ($bashScript.Contains("`r")) {

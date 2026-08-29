@@ -11,6 +11,7 @@ parameters:
     artifactSource: bin/TestDebug/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
     packageName: Mono.Android.NET_Tests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
+    isolatedTest: Java.InteropTests.JniTypeUtf8Test.TryFindClass_String_DoesNotLeakGlobalRefs
     extraBuildArguments: '-p:EmbedAssembliesIntoApk=true'
   - name: release
     displayName: Mono.Android.NET_Tests-Release
@@ -19,6 +20,7 @@ parameters:
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
     packageName: Mono.Android.NET_Tests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
+    isolatedTest: Java.InteropTests.JniTypeUtf8Test.TryFindClass_String_DoesNotLeakGlobalRefs
     extraBuildArguments: ''
   - name: no-aab
     displayName: Mono.Android.NET_Tests-NoAab
@@ -27,6 +29,7 @@ parameters:
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
     packageName: Mono.Android.NET_Tests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
+    isolatedTest: Java.InteropTests.JniTypeUtf8Test.TryFindClass_String_DoesNotLeakGlobalRefs
     extraBuildArguments: '-p:TestsFlavor=NoAab'
   - name: coreclr
     displayName: Mono.Android.NET_Tests-CoreCLR
@@ -35,6 +38,7 @@ parameters:
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
     packageName: Mono.Android.NET_Tests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
+    isolatedTest: Java.InteropTests.JniTypeUtf8Test.TryFindClass_String_DoesNotLeakGlobalRefs
     extraBuildArguments: '-p:TestsFlavor=CoreCLR -p:UseMonoRuntime=false'
   - name: mono
     displayName: Mono.Android.NET_Tests-Mono
@@ -43,6 +47,7 @@ parameters:
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
     packageName: Mono.Android.NET_Tests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
+    isolatedTest: Java.InteropTests.JniTypeUtf8Test.TryFindClass_String_DoesNotLeakGlobalRefs
     extraBuildArguments: '-p:UseMonoRuntime=true -p:_DisableCheckForUnsupportedMonoMobileRuntime=true'
   - name: coreclr-trimmable
     displayName: Mono.Android.NET_Tests-CoreCLRTrimmable
@@ -51,6 +56,7 @@ parameters:
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
     packageName: Mono.Android.NET_Tests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
+    isolatedTest: Java.InteropTests.JniTypeUtf8Test.TryFindClass_String_DoesNotLeakGlobalRefs
     extraBuildArguments: '-p:TestsFlavor=CoreCLRTrimmable -p:AndroidTypeMapImplementation=trimmable -p:UseMonoRuntime=false'
   - name: nativeaot
     displayName: Mono.Android.NET_Tests-NativeAOT
@@ -59,6 +65,7 @@ parameters:
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
     packageName: Mono.Android.NET_Tests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
+    isolatedTest: Java.InteropTests.JniTypeUtf8Test.TryFindClass_String_DoesNotLeakGlobalRefs
     extraBuildArguments: '-p:TestsFlavor=NativeAOT -p:PublishAot=true'
   - name: jcwgen
     displayName: Xamarin.Android.JcwGen_Tests
@@ -67,6 +74,7 @@ parameters:
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.JcwGen_Tests-Signed.apk
     packageName: Xamarin.Android.JcwGen_Tests
     instrumentation: xamarin.android.jcwgentests.TestInstrumentation
+    isolatedTest: Xamarin.Android.JcwGenTests.BindingTests.JavaSideActivation
     extraBuildArguments: ''
 
 steps:
@@ -203,6 +211,7 @@ steps:
         displayName = '${{ testCase.displayName }}'
         packageName = $packageName
         instrumentation = $instrumentation
+        isolatedTest = '${{ testCase.isolatedTest }}'
       } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $payloadDirectory 'case.json') -Encoding utf8NoBOM
     displayName: Stage APK payload - ${{ testCase.displayName }}
 

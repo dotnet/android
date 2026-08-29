@@ -84,6 +84,7 @@ foreach ($caseFile in Get-ChildItem -LiteralPath $workItemsFullPath -Filter 'cas
 
 	$packageName = Escape-PowerShellSingleQuotedString ([string] $case.packageName)
 	$instrumentation = Escape-PowerShellSingleQuotedString ([string] $case.instrumentation)
+	$isolatedTest = Escape-PowerShellSingleQuotedString ([string] $case.isolatedTest)
 	$script = @'
 $ErrorActionPreference = 'Stop'
 $upload = $env:HELIX_WORKITEM_UPLOAD_ROOT
@@ -240,6 +241,7 @@ adb="$(command -v adb || true)"
 apk="$PWD/app.apk"
 package_name='__PACKAGE_NAME__'
 instrumentation='__INSTRUMENTATION__'
+isolated_test='__ISOLATED_TEST__'
 exit_code=1
 device_serial=''
 
@@ -321,8 +323,28 @@ done
 [[ "$device_ready" == true ]] || fail 'No Android device became available within two minutes.'
 echo "Using device: $device_serial"
 
+package_ready=false
+for attempt in $(seq 1 60); do
+	boot_completed=$(adb_cmd shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
+	package_service=$(adb_cmd shell service check package 2>/dev/null || true)
+	if [[ "$boot_completed" == 1 && "$package_service" == *"found"* ]]; then
+		package_ready=true
+		break
+	fi
+	sleep 2
+done
+[[ "$package_ready" == true ]] || fail 'Android package service did not become ready within two minutes.'
+
 adb_cmd uninstall "$package_name" >/dev/null 2>&1
-adb_cmd install -r "$apk" || fail 'adb install failed.'
+installed=false
+for attempt in 1 2 3; do
+	if adb_cmd install -r "$apk"; then
+		installed=true
+		break
+	fi
+	sleep 5
+done
+[[ "$installed" == true ]] || fail 'adb install failed after three attempts.'
 
 device_sdk=$(adb_cmd shell getprop ro.build.version.sdk | tr -d '\r')
 if [[ "$device_sdk" -ge 37 ]]; then
@@ -336,48 +358,77 @@ fi
 adb_cmd shell getprop > "$upload/getprop.log"
 adb_cmd shell dumpsys package "$package_name" > "$upload/package-state.log"
 
-for attempt in 1 2; do
-	adb_cmd logcat -c
-	set +e
-	instrumentation_output=$(adb_cmd shell am instrument -w -r "$package_name/$instrumentation" 2>&1)
-	adb_exit_code=$?
-	set -e
-	{
-		echo "===== instrumentation attempt $attempt ====="
-		printf '%s\n' "$instrumentation_output"
-	} | tee -a "$upload/console.log"
-	if [[ "$adb_exit_code" -ne 0 ]]; then
-		[[ "$attempt" -lt 2 ]] && continue
-		fail "adb instrument failed with exit code $adb_exit_code."
-	fi
+python="${HELIX_PYTHONPATH:-python3}"
+run_results_path=''
+run_instrumentation() {
+	local label="$1"
+	shift
+	for attempt in 1 2; do
+		adb_cmd logcat -c
+		set +e
+		instrumentation_output=$(adb_cmd shell am instrument "$@" -w -r "$package_name/$instrumentation" 2>&1)
+		adb_exit_code=$?
+		set -e
+		{
+			echo "===== $label instrumentation attempt $attempt ====="
+			printf '%s\n' "$instrumentation_output"
+		} | tee -a "$upload/console.log"
+		if [[ "$adb_exit_code" -ne 0 ]]; then
+			[[ "$attempt" -lt 2 ]] && continue
+			return 1
+		fi
 
-	device_results_path=$(printf '%s\n' "$instrumentation_output" |
-		sed -n 's/^INSTRUMENTATION_RESULT: resultsPath=//p' | tail -1 | tr -d '\r')
-	if [[ -z "$device_results_path" ]]; then
-		[[ "$attempt" -lt 2 ]] && continue
-		fail 'Instrumentation did not report a TRX result path.'
-	fi
+		device_results_path=$(printf '%s\n' "$instrumentation_output" |
+			sed -n 's/^INSTRUMENTATION_RESULT: resultsPath=//p' | tail -1 | tr -d '\r')
+		if [[ -z "$device_results_path" ]]; then
+			[[ "$attempt" -lt 2 ]] && continue
+			return 1
+		fi
 
-	attempt_results="$upload/attempt-$attempt.trx"
-	if ! adb_cmd pull "$device_results_path" "$attempt_results"; then
-		[[ "$attempt" -lt 2 ]] && continue
-		fail "Failed to pull TRX from '$device_results_path'."
-	fi
+		attempt_results="$upload/$label-attempt-$attempt.trx"
+		if ! adb_cmd pull "$device_results_path" "$attempt_results"; then
+			[[ "$attempt" -lt 2 ]] && continue
+			return 1
+		fi
 
-	python="${HELIX_PYTHONPATH:-python3}"
-	failed=$("$python" -c 'import sys, xml.etree.ElementTree as E; print(sum(1 for n in E.parse(sys.argv[1]).iter() if n.tag.endswith("UnitTestResult") and n.attrib.get("outcome") == "Failed"))' "$attempt_results")
-	if [[ "$failed" -eq 0 ]]; then
-		cp "$attempt_results" "$upload/results.trx"
-		exit_code=0
-		exit 0
-	fi
-	if [[ "$attempt" -eq 2 ]]; then
-		cp "$attempt_results" "$upload/results.trx"
-		fail "$failed on-device test(s) failed after two attempts."
-	fi
-done
+		failed=$("$python" -c 'import sys, xml.etree.ElementTree as E; print(sum(1 for n in E.parse(sys.argv[1]).iter() if n.tag.endswith("UnitTestResult") and n.attrib.get("outcome") == "Failed"))' "$attempt_results")
+		if [[ "$failed" -eq 0 ]]; then
+			run_results_path="$attempt_results"
+			return 0
+		fi
+	done
+	run_results_path="$attempt_results"
+	return 1
+}
+
+if [[ -n "$isolated_test" ]]; then
+	run_instrumentation isolated -e test "$isolated_test" ||
+		fail "Isolated test '$isolated_test' failed after two attempts."
+	isolated_results="$run_results_path"
+	adb_cmd shell am force-stop "$package_name"
+	run_instrumentation remaining -e exclude-test "$isolated_test" ||
+		fail 'Remaining on-device tests failed after two attempts.'
+	remaining_results="$run_results_path"
+	"$python" -c 'import sys, xml.etree.ElementTree as E
+base, extra, output = sys.argv[1:]
+tree = E.parse(base)
+root = tree.getroot()
+other = E.parse(extra).getroot()
+local = lambda tag: tag.rsplit("}", 1)[-1]
+for section_name in ("Results", "TestDefinitions"):
+    section = next(node for node in root if local(node.tag) == section_name)
+    other_section = next(node for node in other if local(node.tag) == section_name)
+    section.extend(list(other_section))
+tree.write(output, encoding="utf-8", xml_declaration=True)' \
+		"$remaining_results" "$isolated_results" "$upload/results.trx"
+else
+	run_instrumentation all || fail 'On-device tests failed after two attempts.'
+	cp "$run_results_path" "$upload/results.trx"
+fi
+exit_code=0
+exit 0
 '@
-	$bashScript = $bashScript.Replace('__PACKAGE_NAME__', $packageName).Replace('__INSTRUMENTATION__', $instrumentation)
+	$bashScript = $bashScript.Replace('__PACKAGE_NAME__', $packageName).Replace('__INSTRUMENTATION__', $instrumentation).Replace('__ISOLATED_TEST__', $isolatedTest)
 	$bashScript = $bashScript.Replace("`r`n", "`n")
 	[IO.File]::WriteAllText((Join-Path $payloadDirectory 'run-apk-tests.sh'), $bashScript, [Text.UTF8Encoding]::new($false))
 
