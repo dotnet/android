@@ -25,7 +25,7 @@ parameters:
 - name: skipTests                      # Skip all test stages (builds only). Default 'false' so PRs run the full test matrix.
   displayName: Skip Tests
   type: string
-  default: 'true'
+  default: 'false'
   values:
   - 'true'
   - 'false'
@@ -40,7 +40,7 @@ parameters:
 - name: apkTestsHelixOnly
   displayName: Run only the APK test Helix prototype after builds
   type: boolean
-  default: true
+  default: false
 
 # Repository resources
 resources:
