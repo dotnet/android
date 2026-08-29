@@ -241,6 +241,7 @@ apk="$PWD/app.apk"
 package_name='__PACKAGE_NAME__'
 instrumentation='__INSTRUMENTATION__'
 exit_code=1
+device_serial=''
 
 mkdir -p "$upload"
 cp "$PWD/case.json" "$upload/case.json"
@@ -253,20 +254,23 @@ fail() {
 cleanup() {
 	trap - EXIT
 	set +e
+	if [[ -z "$adb" || -z "$device_serial" ]]; then
+		exit "$exit_code"
+	fi
 	{
 		echo '===== get-state ====='
-		"$adb" get-state 2>&1
+		adb_cmd get-state 2>&1
 		echo '===== boot completion ====='
-		"$adb" shell getprop sys.boot_completed 2>&1
+		adb_cmd shell getprop sys.boot_completed 2>&1
 		echo '===== disk ====='
-		"$adb" shell df /data 2>&1
+		adb_cmd shell df /data 2>&1
 		echo '===== packages ====='
-		"$adb" shell pm list packages -3 2>&1
+		adb_cmd shell pm list packages -3 2>&1
 		echo '===== instrumentation ====='
-		"$adb" shell pm list instrumentation 2>&1
+		adb_cmd shell pm list instrumentation 2>&1
 	} > "$upload/device-state.log"
-	"$adb" logcat -d -b all > "$upload/logcat.log" 2>&1
-	"$adb" uninstall "$package_name" >/dev/null 2>&1
+	adb_cmd logcat -d -b all > "$upload/logcat.log" 2>&1
+	adb_cmd uninstall "$package_name" >/dev/null 2>&1
 	exit "$exit_code"
 }
 trap cleanup EXIT
@@ -293,42 +297,46 @@ fi
 [[ -n "$adb" ]] || fail 'adb was not found on PATH.'
 echo "Using adb: $adb"
 
+adb_cmd() {
+	"$adb" -s "$device_serial" "$@"
+}
+
 device_ready=false
 for attempt in $(seq 1 12); do
+	device_output=$("$adb" devices -l 2>&1)
 	{
 		echo "===== attempt $attempt ====="
-		"$adb" devices -l 2>&1
+		printf '%s\n' "$device_output"
 	} | tee -a "$upload/adb-devices.log"
-	device_count=$("$adb" devices | awk '$2 == "device" { count++ } END { print count + 0 }')
-	if [[ "$device_count" -eq 1 ]]; then
+	device_serial=$(printf '%s\n' "$device_output" | awk '$2 == "device" { print $1; exit }')
+	if [[ -n "$device_serial" ]]; then
 		device_ready=true
 		break
 	fi
-	[[ "$device_count" -lt 2 ]] || fail "Expected one Android device, found $device_count."
-	"$adb" kill-server >/dev/null 2>&1
 	sleep 10
 done
 [[ "$device_ready" == true ]] || fail 'No Android device became available within two minutes.'
+echo "Using device: $device_serial"
 
-"$adb" uninstall "$package_name" >/dev/null 2>&1
-"$adb" install -r "$apk" || fail 'adb install failed.'
+adb_cmd uninstall "$package_name" >/dev/null 2>&1
+adb_cmd install -r "$apk" || fail 'adb install failed.'
 
-device_sdk=$("$adb" shell getprop ro.build.version.sdk | tr -d '\r')
+device_sdk=$(adb_cmd shell getprop ro.build.version.sdk | tr -d '\r')
 if [[ "$device_sdk" -ge 37 ]]; then
-	"$adb" shell pm grant "$package_name" android.permission.ACCESS_LOCAL_NETWORK ||
+	adb_cmd shell pm grant "$package_name" android.permission.ACCESS_LOCAL_NETWORK ||
 		fail "Could not grant ACCESS_LOCAL_NETWORK on API $device_sdk."
 elif [[ "$device_sdk" -eq 36 ]]; then
-	"$adb" shell pm grant "$package_name" android.permission.NEARBY_WIFI_DEVICES ||
+	adb_cmd shell pm grant "$package_name" android.permission.NEARBY_WIFI_DEVICES ||
 		fail "Could not grant NEARBY_WIFI_DEVICES on API $device_sdk."
 fi
 
-"$adb" shell getprop > "$upload/getprop.log"
-"$adb" shell dumpsys package "$package_name" > "$upload/package-state.log"
+adb_cmd shell getprop > "$upload/getprop.log"
+adb_cmd shell dumpsys package "$package_name" > "$upload/package-state.log"
 
 for attempt in 1 2; do
-	"$adb" logcat -c
+	adb_cmd logcat -c
 	set +e
-	instrumentation_output=$("$adb" shell am instrument -w -r "$package_name/$instrumentation" 2>&1)
+	instrumentation_output=$(adb_cmd shell am instrument -w -r "$package_name/$instrumentation" 2>&1)
 	adb_exit_code=$?
 	set -e
 	{
@@ -348,7 +356,7 @@ for attempt in 1 2; do
 	fi
 
 	attempt_results="$upload/attempt-$attempt.trx"
-	if ! "$adb" pull "$device_results_path" "$attempt_results"; then
+	if ! adb_cmd pull "$device_results_path" "$attempt_results"; then
 		[[ "$attempt" -lt 2 ]] && continue
 		fail "Failed to pull TRX from '$device_results_path'."
 	fi
