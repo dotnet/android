@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -345,6 +346,53 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 			AssertContainsLine ("public void onCreate (android.os.Bundle p0)\n", java);
 			AssertContainsLine ("n_OnCreate_Landroid_os_Bundle_ (p0);\n", java);
 			AssertContainsLine ("public native void n_OnCreate_Landroid_os_Bundle_ (android.os.Bundle p0);\n", java);
+		}
+
+		[Fact]
+		public void Generate_MarshalMethod_ForwardsJavaAnnotation ()
+		{
+			var peer = FindFixtureByManagedName ("MyApp.MyWebViewHandler");
+			var java = GenerateToString (peer);
+
+			AssertContainsLine ("@android.webkit.JavascriptInterface\n\t@Override\n\tpublic void postMessage (java.lang.String p0)\n", java);
+		}
+
+		[Fact]
+		public void Generate_ForwardsAnnotationsOnJcwMembers ()
+		{
+			var typeJava = GenerateFixture ("my/app/MyHelper");
+			AssertContainsLine ("@com.example.Custom (text = \"say \\\"hi\\\"\\\\path\\n\", Enabled = true, Number = 1.5)\npublic class MyHelper\n", typeJava);
+
+			var constructorJava = GenerateFixture ("my/app/CustomView");
+			AssertContainsLine ("@com.example.Custom\n\tpublic CustomView ()\n", constructorJava);
+
+			var fieldJava = GenerateFixture ("my/app/ExportFieldExample");
+			AssertContainsLine ("@com.example.Custom\n\tpublic java.lang.String VALUE = GetValue ();\n", fieldJava);
+			Assert.Equal (1, fieldJava.Split ("@com.example.Custom").Length - 1);
+		}
+
+		[Fact]
+		public void Generate_AnnotationValues_UseInvariantCulture ()
+		{
+			var originalCulture = CultureInfo.CurrentCulture;
+			try {
+				CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo ("fr-FR");
+				var peer = FindFixtureByManagedName ("MyApp.MyHelper", "Crc64");
+				var java = GenerateToString (peer);
+
+				AssertContainsLine ("Number = 1.5", java);
+			} finally {
+				CultureInfo.CurrentCulture = originalCulture;
+			}
+		}
+
+		[Fact]
+		public void Generate_PropertyOverride_ForwardsGetterAnnotation ()
+		{
+			var peer = FindFixtureByManagedName ("MyApp.AnnotatedPropertyDerived");
+			var java = GenerateToString (peer);
+
+			AssertContainsLine ("@com.example.Custom\n\t@Override\n\tpublic int getValue ()\n", java);
 		}
 
 		[Fact]

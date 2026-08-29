@@ -63,6 +63,12 @@ public sealed record JavaPeerInfo
 	/// </summary>
 	public IReadOnlyList<string> ImplementedInterfaceJavaNames { get; init; } = Array.Empty<string> ();
 
+	/// <summary>
+	/// Java annotations forwarded from managed custom attributes decorated with
+	/// <c>Android.Runtime.AnnotationAttribute</c>.
+	/// </summary>
+	public IReadOnlyList<JavaAnnotationInfo> Annotations { get; init; } = [];
+
 	public bool IsInterface { get; init; }
 	public bool IsAbstract { get; init; }
 
@@ -296,6 +302,20 @@ public sealed record MarshalMethodInfo
 	/// <c>new virtual</c> while reusing the same JNI name and signature.
 	/// </summary>
 	public bool CallManagedMethodDirectly { get; init; }
+
+	/// <summary>
+	/// Java annotations forwarded from the managed method or constructor.
+	/// </summary>
+	public IReadOnlyList<JavaAnnotationInfo> Annotations { get; init; } = [];
+}
+
+/// <summary>
+/// Describes a Java annotation forwarded from a managed custom attribute.
+/// </summary>
+public sealed record JavaAnnotationInfo
+{
+	public required string Name { get; init; }
+	public IReadOnlyList<KeyValuePair<string, string>> Properties { get; init; } = [];
 }
 
 /// <summary>
@@ -344,6 +364,11 @@ public sealed record JavaConstructorInfo
 	/// True when this Java constructor has a matching public managed constructor on the target type.
 	/// </summary>
 	public bool HasMatchingManagedCtor { get; init; }
+
+	/// <summary>
+	/// Java annotations forwarded from the managed constructor.
+	/// </summary>
+	public IReadOnlyList<JavaAnnotationInfo> Annotations { get; init; } = [];
 }
 
 /// <summary>
@@ -376,6 +401,11 @@ public sealed record JavaFieldInfo
 	/// Whether the field is static.
 	/// </summary>
 	public bool IsStatic { get; init; }
+
+	/// <summary>
+	/// Java annotations forwarded from the managed field initializer method.
+	/// </summary>
+	public IReadOnlyList<JavaAnnotationInfo> Annotations { get; init; } = [];
 }
 
 /// <summary>

@@ -33,6 +33,7 @@ public sealed class JavaPeerScanner : IDisposable
 	readonly HashedPackageNamingPolicy packageNamingPolicy;
 	readonly HashSet<string> frameworkAssemblyNames;
 	readonly bool errorOnCustomJavaObject;
+	readonly JavaAnnotationParser annotationParser;
 
 	public JavaPeerScanner (string? packageNamingPolicy = null, ITrimmableTypeMapLogger? logger = null, HashSet<string>? frameworkAssemblyNames = null, bool errorOnCustomJavaObject = true)
 	{
@@ -40,6 +41,7 @@ public sealed class JavaPeerScanner : IDisposable
 		this.logger = logger;
 		this.frameworkAssemblyNames = frameworkAssemblyNames ?? new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 		this.errorOnCustomJavaObject = errorOnCustomJavaObject;
+		annotationParser = new JavaAnnotationParser (assemblyCache, ResolveTypeOfArgumentToJniName);
 	}
 
 	/// <summary>
@@ -385,6 +387,7 @@ public sealed class JavaPeerScanner : IDisposable
 				IsFrameworkAssembly = frameworkAssemblyNames.Contains (index.AssemblyName),
 				BaseJavaName = baseJavaName,
 				ImplementedInterfaceJavaNames = implementedInterfaces,
+				Annotations = annotationParser.Parse (typeDef.GetCustomAttributes (), index),
 				IsInterface = isInterface,
 				IsAbstract = isAbstract,
 				DoNotGenerateAcw = doNotGenerateAcw,
@@ -818,7 +821,7 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
-			var baseRegistration = FindBaseRegisteredProperty (typeDef, index, getterName, getterDef);
+			var baseRegistration = FindBaseRegisteredProperty (typeDef, index, getterName, getterDef, index);
 			if (baseRegistration is not null) {
 				methods.Add (baseRegistration);
 				alreadyRegistered.Add (sigKey);
@@ -961,6 +964,7 @@ public sealed class JavaPeerScanner : IDisposable
 					ManagedMethodName = ".ctor",
 					NativeCallbackName = "n_ctor",
 					IsConstructor = true,
+					Annotations = annotationParser.Parse (baseCtor.Method.GetCustomAttributes (), baseCtor.Index),
 				});
 				alreadyRegisteredSignatures.Add (signature);
 			}
@@ -1394,6 +1398,7 @@ public sealed class JavaPeerScanner : IDisposable
 			DeclaringTypeName = result.Value.DeclaringType.ManagedTypeName,
 			DeclaringAssemblyName = result.Value.DeclaringType.AssemblyName,
 			DeclaringType = result.Value.DeclaringType,
+			Annotations = annotationParser.Parse (derivedMethod.GetCustomAttributes (), index),
 		};
 	}
 
@@ -1402,7 +1407,7 @@ public sealed class JavaPeerScanner : IDisposable
 	/// matches the given getter name and has a compatible signature.
 	/// </summary>
 	MarshalMethodInfo? FindBaseRegisteredProperty (TypeDefinition typeDef, AssemblyIndex index,
-		string getterName, MethodDefinition derivedGetter, TypeRefData? currentTypeRef = null)
+		string getterName, MethodDefinition derivedGetter, AssemblyIndex derivedIndex, TypeRefData? currentTypeRef = null)
 	{
 		if (!TryResolveBaseType (typeDef, index, currentTypeRef, out var baseTypeDef, out _, out var baseIndex, out _, out _, out var baseTypeRef)) {
 			return null;
@@ -1446,13 +1451,14 @@ public sealed class JavaPeerScanner : IDisposable
 					DeclaringTypeName = baseTypeRef.ManagedTypeName,
 					DeclaringAssemblyName = baseTypeRef.AssemblyName,
 					DeclaringType = baseTypeRef,
+					Annotations = annotationParser.Parse (derivedGetter.GetCustomAttributes (), derivedIndex),
 				};
 			}
 		}
 
 		// Keep walking the full base hierarchy so property overrides can inherit
 		// [Register] metadata declared above an intermediate MCW base type.
-		return FindBaseRegisteredProperty (baseTypeDef, baseIndex, getterName, derivedGetter, baseTypeRef);
+		return FindBaseRegisteredProperty (baseTypeDef, baseIndex, getterName, derivedGetter, derivedIndex, baseTypeRef);
 	}
 
 	/// <summary>
@@ -1554,6 +1560,7 @@ public sealed class JavaPeerScanner : IDisposable
 			ThrownNames = exportInfo?.ThrownNames,
 			SuperArgumentsString = exportInfo?.SuperArgumentsString,
 			CallManagedMethodDirectly = callManagedMethodDirectly,
+			Annotations = exportInfo?.IsField == true ? [] : annotationParser.Parse (methodDef.GetCustomAttributes (), index),
 		});
 	}
 
@@ -1878,7 +1885,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 		return (
 			new RegisterInfo { JniName = managedName, Signature = jniSig, Connector = "__export__", DoNotGenerateAcw = false },
-			new ExportInfo { ThrownNames = null, SuperArgumentsString = null }
+			new ExportInfo { ThrownNames = null, SuperArgumentsString = null, IsField = true }
 		);
 	}
 
@@ -2481,6 +2488,7 @@ public sealed class JavaPeerScanner : IDisposable
 				SuperArgumentsString = mm.SuperArgumentsString,
 				HasMatchingManagedCtor = managedParams != null,
 				ManagedParameterTypes = managedParams ?? [],
+				Annotations = mm.Annotations,
 			});
 			ctorIndex++;
 		}
@@ -2592,6 +2600,7 @@ public sealed class JavaPeerScanner : IDisposable
 				InitializerMethodName = managedName,
 				Visibility = access,
 				IsStatic = isStatic,
+				Annotations = annotationParser.Parse (methodDef.GetCustomAttributes (), index),
 			});
 		}
 	}
