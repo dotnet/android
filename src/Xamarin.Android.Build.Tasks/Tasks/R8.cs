@@ -42,6 +42,7 @@ namespace Xamarin.Android.Tasks
 		public bool EnableObfuscation { get; set; }
 		public bool ValidateProguardMappingFileInput { get; set; }
 		public string? ProguardMappingRequiredEntriesFile { get; set; }
+		public string? ProguardMappingRequiredReachabilityEntriesFile { get; set; }
 
 		// User-authored AndroidJavaSource (Bind != true) .java files. These have no managed peer and are
 		// therefore absent from the acw-map, so they must be kept explicitly when shrinking is enabled.
@@ -82,20 +83,36 @@ namespace Xamarin.Android.Tasks
 						$"The R8 JNI rewrite manifest '{ProguardMappingRequiredEntriesFile}' was not found.");
 					return;
 				}
+				if (ProguardMappingRequiredReachabilityEntriesFile.IsNullOrEmpty () || !File.Exists (ProguardMappingRequiredReachabilityEntriesFile)) {
+					Log.LogCodedError ("XA4307", Properties.Resources.XA4307,
+						$"The post-link R8 JNI reachability manifest '{ProguardMappingRequiredReachabilityEntriesFile}' was not found.");
+					return;
+				}
 
 				R8Mapping seedMapping = R8Mapping.Load (ProguardMappingFileInput);
 				R8Mapping finalMapping = R8Mapping.Load (ProguardMappingFileOutput);
+				LogMappingConflicts (
+					seedMapping.GetCompatibilityConflicts (finalMapping, File.ReadLines (ProguardMappingRequiredEntriesFile)),
+					"The final R8 mapping did not preserve the JNI seed mapping for ",
+					"additional conflicts with managed JNI names");
+				LogMappingConflicts (
+					seedMapping.GetReachabilityConflicts (finalMapping, File.ReadLines (ProguardMappingRequiredReachabilityEntriesFile)),
+					"Final R8 removed a post-link reachable JNI ",
+					"additional post-link reachable JNI entries removed by final R8");
+			}
+
+			void LogMappingConflicts (IEnumerable<string> conflicts, string prefix, string overflowDescription)
+			{
 				int conflictCount = 0;
-				foreach (string conflict in seedMapping.GetCompatibilityConflicts (finalMapping, File.ReadLines (ProguardMappingRequiredEntriesFile))) {
+				foreach (string conflict in conflicts) {
 					conflictCount++;
 					if (conflictCount <= 20) {
-						Log.LogCodedError ("XA4307", Properties.Resources.XA4307,
-							$"The final R8 mapping did not preserve the JNI seed mapping for {conflict}.");
+						Log.LogCodedError ("XA4307", Properties.Resources.XA4307, prefix + conflict + ".");
 					}
 				}
 				if (conflictCount > 20) {
 					Log.LogCodedError ("XA4307", Properties.Resources.XA4307,
-						$"The final R8 mapping contains {conflictCount - 20} additional conflicts with managed JNI names.");
+						$"The final R8 mapping contains {conflictCount - 20} {overflowDescription}.");
 				}
 			}
 		}

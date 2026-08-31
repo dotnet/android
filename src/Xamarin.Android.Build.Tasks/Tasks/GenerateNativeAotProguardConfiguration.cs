@@ -6,6 +6,7 @@ using System.IO;
 using System.Xml;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks.JniRemapping;
 
 namespace Xamarin.Android.Tasks;
 
@@ -22,6 +23,10 @@ public class GenerateNativeAotProguardConfiguration : AndroidTask
 
 	[Required]
 	public string OutputFile { get; set; } = "";
+
+	public string? R8MappingFile { get; set; }
+
+	public string? R8ReachabilityManifestFile { get; set; }
 
 	// When false, the ILC DGML is not consulted (it may not have been generated at all) and a
 	// -keep rule is emitted for every Java type in the ACW map, so R8 keeps them all instead of
@@ -58,13 +63,26 @@ public class GenerateNativeAotProguardConfiguration : AndroidTask
 
 		// A null retainedTypeKeys means "keep every Java type in the ACW map" (Java trimming disabled).
 		var javaTypes = LoadJavaTypesFromAcwMap (retainedTypeKeys);
+		var reachableR8Entries = new HashSet<string> (StringComparer.Ordinal);
+		if (!R8MappingFile.IsNullOrEmpty ()) {
+			R8Mapping mapping = R8Mapping.Load (R8MappingFile);
+			foreach (string javaTypeName in javaTypes) {
+				string jniTypeName = javaTypeName.Replace ('.', '/');
+				if (mapping.TryGetRenamedClass (jniTypeName, out _)) {
+					reachableR8Entries.Add (R8Mapping.BuildClassEntry (jniTypeName));
+				}
+			}
+		}
 
 		using var writer = new StringWriter ();
 		writer.WriteLine ("# ACWs retained by NativeAOT ILC");
 		foreach (var javaTypeName in javaTypes) {
 			writer.WriteLine ($"-keep class {javaTypeName} {{ *; }}");
 		}
-		Files.CopyIfStringChanged (writer.ToString (), OutputFile);
+		File.WriteAllText (OutputFile, writer.ToString ());
+		if (!R8ReachabilityManifestFile.IsNullOrEmpty ()) {
+			WriteReachabilityManifest (R8ReachabilityManifestFile, reachableR8Entries);
+		}
 
 		if (TrimJavaCallableWrappers) {
 			Log.LogMessage (MessageImportance.Low, "Generated {0} NativeAOT trimmable typemap ProGuard rules from {1} DGML file(s).", javaTypes.Count, NativeAotDgmlFiles.Length);
@@ -72,6 +90,15 @@ public class GenerateNativeAotProguardConfiguration : AndroidTask
 			Log.LogMessage (MessageImportance.Low, "Generated {0} NativeAOT ProGuard rules keeping every Java type in the ACW map (Java trimming is disabled).", javaTypes.Count);
 		}
 		return !Log.HasLoggedErrors;
+	}
+
+	static void WriteReachabilityManifest (string path, IEnumerable<string> entries)
+	{
+		string? directory = Path.GetDirectoryName (path);
+		if (!directory.IsNullOrEmpty ()) {
+			Directory.CreateDirectory (directory);
+		}
+		File.WriteAllText (path, R8Mapping.CreateManifestContent (entries));
 	}
 
 	List<string> LoadJavaTypesFromAcwMap (HashSet<string>? retainedTypeKeys)

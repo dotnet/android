@@ -314,5 +314,59 @@ namespace Xamarin.Android.Build.Tests
 				"M\tacme/orig/MyView\tonClick(android.view.View)",
 			}, mapping.AccessedEntries);
 		}
+
+		[Test]
+		public void ReportsPostLinkEntriesRemovedByFinalR8 ()
+		{
+			R8Mapping seed = R8Mapping.Parse (new StringReader ("""
+				acme.orig.Missing -> a.b.A:
+				acme.orig.Removed -> a.b.B:
+				acme.orig.Members -> a.b.C:
+				    int keptField -> a
+				    int missingField -> b
+				    void kept() -> a
+				    void missing() -> b
+
+				"""));
+			R8Mapping final = R8Mapping.Parse (new StringReader ("""
+				acme.orig.Removed -> R8$$REMOVED$$CLASS$$0:
+				acme.orig.Members -> a.b.C:
+				    int keptField -> a
+				    void kept() -> a
+
+				"""));
+
+			CollectionAssert.AreEqual (new [] {
+				"class 'acme/orig/Missing'",
+				"class 'acme/orig/Removed'",
+				"field 'acme/orig/Members.missingField'",
+				"method 'acme/orig/Members.missing()'",
+			}, seed.GetReachabilityConflicts (final, new [] {
+				"C\tacme/orig/Missing",
+				"C\tacme/orig/Removed",
+				"C\tacme/orig/Members",
+				"F\tacme/orig/Members\tkeptField",
+				"F\tacme/orig/Members\tmissingField",
+				"M\tacme/orig/Members\tkept()",
+				"M\tacme/orig/Members\tmissing()",
+			}));
+		}
+
+		[Test]
+		public void LooksUpOriginalFieldNameOnlyWhenUnambiguous ()
+		{
+			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
+				acme.orig.MyView -> a.b.C:
+				    int first -> a
+				    int second -> b
+				    int ambiguous1 -> c
+				    int ambiguous2 -> c
+
+				"""));
+
+			Assert.IsTrue (mapping.TryGetOriginalFieldName ("acme/orig/MyView", "a", out string original));
+			Assert.AreEqual ("first", original);
+			Assert.IsFalse (mapping.TryGetOriginalFieldName ("acme/orig/MyView", "c", out _));
+		}
 	}
 }

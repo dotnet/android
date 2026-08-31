@@ -85,17 +85,7 @@ namespace Xamarin.Android.Tasks
 			if (!directory.IsNullOrEmpty ()) {
 				Directory.CreateDirectory (directory);
 			}
-
-			var sortedEntries = new List<string> (entries);
-			sortedEntries.Sort (StringComparer.Ordinal);
-			using var content = new MemoryStream ();
-			using (var writer = new StreamWriter (content, new System.Text.UTF8Encoding (encoderShouldEmitUTF8Identifier: false), 1024, leaveOpen: true)) {
-				foreach (string entry in sortedEntries) {
-					writer.WriteLine (entry);
-				}
-			}
-			content.Position = 0;
-			Files.CopyIfStreamChanged (content, path);
+			Files.CopyIfStringChanged (R8Mapping.CreateManifestContent (entries), path);
 		}
 
 		void RewriteAssembly (string sourcePath, string destinationPath, R8Mapping mapping)

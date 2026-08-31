@@ -84,6 +84,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         EnableObfuscation="$(_AndroidEnableR8JniNameRewriting)"
         ValidateProguardMappingFileInput="$(_AndroidEnableR8JniNameRewriting)"
         ProguardMappingRequiredEntriesFile="$(_AndroidR8JniRewriteManifest)"
+        ProguardMappingRequiredReachabilityEntriesFile="$(_AndroidR8JniReachabilityManifest)"
         EnableShrinking="$(_R8EnableShrinking)"
         EnableMultiDex="$(AndroidEnableMultiDex)"
         MultiDexMainDexListFile="$(_AndroidMainDexListFile)"

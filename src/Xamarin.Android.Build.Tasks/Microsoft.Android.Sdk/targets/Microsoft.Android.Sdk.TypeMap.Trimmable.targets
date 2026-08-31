@@ -54,6 +54,7 @@
     <_AndroidR8JniSeedDirectory Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_TypeMapBaseOutputDir)r8-jni-seed/</_AndroidR8JniSeedDirectory>
     <_AndroidR8JniSeedMapping Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_AndroidR8JniSeedDirectory)mapping.txt</_AndroidR8JniSeedMapping>
     <_AndroidR8JniRewriteManifest Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(IntermediateOutputPath)r8-jni-rewrite-manifest.txt</_AndroidR8JniRewriteManifest>
+    <_AndroidR8JniReachabilityManifest Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(IntermediateOutputPath)r8-jni-reachability-manifest.txt</_AndroidR8JniReachabilityManifest>
     <_AndroidR8JniSeedApplicationConfiguration Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_AndroidR8JniSeedDirectory)acw-keep.cfg</_AndroidR8JniSeedApplicationConfiguration>
     <_AndroidR8JniSeedXamarinConfiguration Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_AndroidR8JniSeedDirectory)xamarin.cfg</_AndroidR8JniSeedXamarinConfiguration>
     <_AndroidR8JniSeedAaptConfiguration Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(IntermediateOutputPath)aapt_rules.txt</_AndroidR8JniSeedAaptConfiguration>

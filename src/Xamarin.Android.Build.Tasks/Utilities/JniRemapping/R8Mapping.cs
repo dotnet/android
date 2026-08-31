@@ -191,6 +191,25 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			return originalMethodName.Length != 0;
 		}
 
+		public bool TryGetOriginalFieldName (string originalJniClassName, string obfuscatedFieldName, out string originalFieldName)
+		{
+			originalFieldName = "";
+			if (!fields.TryGetValue (originalJniClassName, out var classFields)) {
+				return false;
+			}
+			foreach (var entry in classFields) {
+				if (!String.Equals (entry.Value, obfuscatedFieldName, StringComparison.Ordinal)) {
+					continue;
+				}
+				if (originalFieldName.Length != 0 && !String.Equals (originalFieldName, entry.Key, StringComparison.Ordinal)) {
+					originalFieldName = "";
+					return false;
+				}
+				originalFieldName = entry.Key;
+			}
+			return originalFieldName.Length != 0;
+		}
+
 		public bool TryGetRenamedField (string owningJniClassName, string originalFieldName, out string obfuscatedFieldName)
 		{
 			obfuscatedFieldName = "";
@@ -303,15 +322,76 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			}
 		}
 
-		static string BuildClassEntry (string className) => $"C\t{className}";
-		static string BuildFieldEntry (string className, string fieldName) => $"F\t{className}\t{fieldName}";
-		static string BuildMethodEntry (string className, string methodKey) => $"M\t{className}\t{methodKey}";
+		/// <summary>
+		/// Reports entries that post-link analysis says must remain reachable but which final R8
+		/// removed. A required member is only reported separately when its declaring class survived.
+		/// </summary>
+		public IEnumerable<string> GetReachabilityConflicts (R8Mapping finalMapping, IEnumerable<string> requiredEntries)
+		{
+			foreach (string requiredEntry in requiredEntries) {
+				string [] parts = requiredEntry.Split ('\t');
+				switch (parts.Length > 0 ? parts [0] : "") {
+				case "C" when parts.Length == 2:
+					if (!classes.ContainsKey (parts [1])) {
+						throw new FormatException ($"R8 reachability manifest class '{parts [1]}' is absent from the seed mapping.");
+					}
+					if (!finalMapping.classes.TryGetValue (parts [1], out string? finalClassName) || IsRemovedClassName (finalClassName)) {
+						yield return $"class '{parts [1]}'";
+					}
+					break;
+				case "F" when parts.Length == 3:
+					if (!fields.TryGetValue (parts [1], out var seedFields) || !seedFields.ContainsKey (parts [2])) {
+						throw new FormatException ($"R8 reachability manifest field '{parts [1]}.{parts [2]}' is absent from the seed mapping.");
+					}
+					if (!finalMapping.IsLiveClass (parts [1])) {
+						continue;
+					}
+					if (!finalMapping.fields.TryGetValue (parts [1], out var finalFields) || !finalFields.ContainsKey (parts [2])) {
+						yield return $"field '{parts [1]}.{parts [2]}'";
+					}
+					break;
+				case "M" when parts.Length == 3:
+					if (!methods.TryGetValue (parts [1], out var seedMethods) || !seedMethods.ContainsKey (parts [2])) {
+						throw new FormatException ($"R8 reachability manifest method '{parts [1]}.{parts [2]}' is absent from the seed mapping.");
+					}
+					if (!finalMapping.IsLiveClass (parts [1])) {
+						continue;
+					}
+					if (!finalMapping.methods.TryGetValue (parts [1], out var finalMethods) ||
+							!finalMethods.TryGetValue (parts [2], out string? finalMethodName) ||
+							finalMethodName.Length == 0) {
+						yield return $"method '{parts [1]}.{parts [2]}'";
+					}
+					break;
+				default:
+					throw new FormatException ($"Invalid R8 JNI reachability manifest entry '{requiredEntry}'.");
+				}
+			}
+		}
+
+		internal static string BuildClassEntry (string className) => $"C\t{className}";
+		internal static string BuildFieldEntry (string className, string fieldName) => $"F\t{className}\t{fieldName}";
+		internal static string BuildMethodEntry (string className, string methodKey) => $"M\t{className}\t{methodKey}";
+
+		internal static string CreateManifestContent (IEnumerable<string> entries)
+		{
+			var sortedEntries = new List<string> (entries);
+			sortedEntries.Sort (StringComparer.Ordinal);
+			using var writer = new StringWriter ();
+			foreach (string entry in sortedEntries) {
+				writer.WriteLine (entry);
+			}
+			return writer.ToString ();
+		}
 
 		static bool IsRemovedClassName (string className)
 			=> className.StartsWith ("R8$$REMOVED$$CLASS$$", StringComparison.Ordinal);
 
 		bool IsRemovedClass (string originalClassName)
 			=> classes.TryGetValue (originalClassName, out string? className) && IsRemovedClassName (className);
+
+		bool IsLiveClass (string originalClassName)
+			=> classes.TryGetValue (originalClassName, out string? className) && !IsRemovedClassName (className);
 
 		static string JavaNameToJni (string javaBinaryName) => javaBinaryName.Replace ('.', '/');
 

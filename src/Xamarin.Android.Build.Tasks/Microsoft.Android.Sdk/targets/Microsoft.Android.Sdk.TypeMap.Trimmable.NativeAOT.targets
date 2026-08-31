@@ -266,15 +266,18 @@
   <Target Name="_GenerateTrimmableTypeMapProguardConfiguration"
       DependsOnTargets="_WriteTrimmableNativeAotProguardConfigurationInputs;_CollectTrimmableNativeAotDgmlFiles"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
-      Inputs="$(_TrimmableNativeAotProguardConfigurationInputsStamp);@(_TrimmableNativeAotDgmlFiles);$(IntermediateOutputPath)acw-map.txt"
-      Outputs="$(_ProguardProjectConfiguration)">
+      Inputs="$(_TrimmableNativeAotProguardConfigurationInputsStamp);@(_TrimmableNativeAotDgmlFiles);$(IntermediateOutputPath)acw-map.txt;$(_AndroidR8JniSeedMapping)"
+      Outputs="$(_ProguardProjectConfiguration);$(_AndroidR8JniReachabilityManifest)">
     <GenerateNativeAotProguardConfiguration
         NativeAotDgmlFiles="@(_TrimmableNativeAotDgmlFiles)"
         AcwMapFile="$(IntermediateOutputPath)acw-map.txt"
         TrimJavaCallableWrappers="$(_AndroidTrimmableTypemapTrimJavaCode)"
-        OutputFile="$(_ProguardProjectConfiguration)" />
+        OutputFile="$(_ProguardProjectConfiguration)"
+        R8MappingFile="$(_AndroidR8JniSeedMapping)"
+        R8ReachabilityManifestFile="$(_AndroidR8JniReachabilityManifest)" />
     <ItemGroup>
       <FileWrites Include="$(_ProguardProjectConfiguration)" />
+      <FileWrites Include="$(_AndroidR8JniReachabilityManifest)" Condition=" '$(_AndroidR8JniReachabilityManifest)' != '' " />
     </ItemGroup>
   </Target>
 

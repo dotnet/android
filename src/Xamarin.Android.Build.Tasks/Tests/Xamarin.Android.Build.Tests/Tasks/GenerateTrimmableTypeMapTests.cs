@@ -284,6 +284,8 @@ namespace Xamarin.Android.Build.Tests {
 			var path = Path.Combine (Root, "temp", TestName);
 			var dgmlFile = Path.Combine (path, "app.scan.dgml.xml");
 			var acwMapFile = Path.Combine (path, "acw-map.txt");
+			var mappingFile = Path.Combine (path, "mapping.txt");
+			var reachabilityManifestFile = Path.Combine (path, "r8-jni-reachability-manifest.txt");
 			var outputFile = Path.Combine (path, "proguard", "proguard_project_references.cfg");
 			Directory.CreateDirectory (path);
 			File.WriteAllText (dgmlFile, """
@@ -309,12 +311,20 @@ namespace Xamarin.Android.Build.Tests {
 				Duplicate.Type;wrong.Duplicate
 				Other.Type;other.Type
 				""");
+			File.WriteAllText (mappingFile, """
+				crc64a1.MainActivity -> a.a:
+				my.app.Duplicate -> a.b:
+				androidx.activity.result.contract.ActivityResultContracts$TakePicture -> a.c:
+
+				""");
 
 			var task = new GenerateNativeAotProguardConfiguration {
 				BuildEngine = new MockBuildEngine (TestContext.Out),
 				NativeAotDgmlFiles = new [] { new TaskItem (dgmlFile) },
 				AcwMapFile = acwMapFile,
 				OutputFile = outputFile,
+				R8MappingFile = mappingFile,
+				R8ReachabilityManifestFile = reachabilityManifestFile,
 				TrimJavaCallableWrappers = true,
 			};
 
@@ -326,6 +336,11 @@ namespace Xamarin.Android.Build.Tests {
 			StringAssert.Contains ("-keep class androidx.activity.result.contract.ActivityResultContracts$TakePicture { *; }", proguard);
 			StringAssert.DoesNotContain ("wrong.Duplicate", proguard);
 			StringAssert.DoesNotContain ("other.Type", proguard);
+			CollectionAssert.AreEqual (new [] {
+				"C\tandroidx/activity/result/contract/ActivityResultContracts$TakePicture",
+				"C\tcrc64a1/MainActivity",
+				"C\tmy/app/Duplicate",
+			}, File.ReadAllLines (reachabilityManifestFile));
 		}
 
 		[Test]
