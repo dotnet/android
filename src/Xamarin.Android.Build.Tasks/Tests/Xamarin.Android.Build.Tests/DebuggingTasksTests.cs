@@ -7,6 +7,7 @@ using System.Linq;
 using Xamarin.Android.Build;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
+using AT = Xamarin.AndroidTools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -24,53 +25,79 @@ namespace Xamarin.Android.Build.Tests
 		[Repeat (10)]
 		public void TestResolveToolsExists ()
 		{
-			List<BuildErrorEventArgs> errors = new List<BuildErrorEventArgs>();
-			List<BuildMessageEventArgs> messages = new List<BuildMessageEventArgs>();
-
-			var path = Path.Combine ("temp", TestName);
-			if (Directory.Exists (Path.Combine (Root, path)))
-				Directory.Delete (Path.Combine (Root, path), recursive: true);
-
-			var engine = new MockBuildEngine (TestContext.Out, errors: errors, messages: messages);
+			var javaHome = Environment.GetEnvironmentVariable ("JAVA_HOME");
+			var environmentPath = Environment.GetEnvironmentVariable ("PATH");
+			var androidSdkPath = AT.AndroidSdk.AndroidSdkPath ?? AndroidSdkPath;
+			var androidNdkPath = AT.AndroidSdk.AndroidNdkPath;
+			var javaSdkPath = AT.AndroidSdk.JavaSdkPath ?? AndroidSdkResolver.GetJavaSdkPath ();
+			var monoAndroidToolsPath = AT.MonoDroidSdk.RuntimePath ?? TestEnvironment.AndroidMSBuildDirectory;
+			var monoAndroidBinPath = AT.MonoDroidSdk.BinPath ?? TestEnvironment.OSBinDirectory;
 			var frameworksRoot = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "packs", "Microsoft.NETCore.App.Ref");
 			var mscorlibDll = Directory.GetFiles (frameworksRoot, "mscorlib.dll", SearchOption.AllDirectories).LastOrDefault ();
 			var frameworksPath = Path.GetDirectoryName (mscorlibDll);
-			var androidSdk = CreateFauxAndroidSdkDirectory (Path.Combine (path, "Sdk"), "24.0.1", new[]
-			{
-				new ApiInfo { Id = "23", Level = 23, Name = "Marshmallow", FrameworkVersion = "v6.0", Stable = true },
-				new ApiInfo { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
-				new ApiInfo { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1", Stable = true },
-				new ApiInfo { Id = "28", Level = 28, Name = "Pie", FrameworkVersion = "v9.0", Stable = true },
-			});
-			//var androidNdk = CreateFauxAndroidNdkDirectory (Path.Combine (path, "Ndk"));
-			var javaSdk = CreateFauxJavaSdkDirectory (Path.Combine(path, "Java"), "1.8.0", out string javaExe, out string javacExe);
-			var task = new ResolveXamarinAndroidTools () {
-				BuildEngine = engine,
-				AndroidNdkPath = null,
-				AndroidSdkPath = androidSdk,
-				JavaSdkPath = javaSdk,
-				MonoAndroidToolsPath = TestEnvironment.AndroidMSBuildDirectory,
-				ReferenceAssemblyPaths = new string[] {
-					frameworksPath,
-					TestEnvironment.MonoAndroidFrameworkDirectory,
-				},
-			};
-			Assert.True (task.Execute (), "Task should have completed successfully.");
-			Assert.AreEqual (0, errors.Count, "No Errors should have been raised");
-			var expected = $"  Found FrameworkPath at {Path.GetFullPath (frameworksPath)}";
-			var firstTaskExecMessages = messages.Select (x => x.Message)?.ToList ();
-			Assert.IsNotNull (firstTaskExecMessages, "First execution did not contain any messages!");
-			CollectionAssert.Contains (firstTaskExecMessages, expected);
-			CollectionAssert.DoesNotContain (firstTaskExecMessages, "  Using cached AndroidSdk values");
-			CollectionAssert.DoesNotContain (firstTaskExecMessages, "  Using cached MonoDroidSdk values");
+			var monoAndroidFrameworkPath = AT.MonoDroidSdk.FrameworkPath ?? frameworksPath;
 
-			Assert.True (task.Execute (), "Task should have completed successfully.");
-			Assert.AreEqual (0, errors.Count, "No Errors should have been raised");
-			var secondTaskExecMessages = messages.Select (x => x.Message)?.ToList ();
-			Assert.IsNotNull (secondTaskExecMessages, "Second execution did not contain any messages!");
-			CollectionAssert.Contains (secondTaskExecMessages, expected);
-			CollectionAssert.Contains (secondTaskExecMessages, "  Using cached AndroidSdk values");
-			CollectionAssert.Contains (secondTaskExecMessages, "  Using cached MonoDroidSdk values");
+			try {
+				List<BuildErrorEventArgs> errors = new List<BuildErrorEventArgs>();
+				List<BuildMessageEventArgs> messages = new List<BuildMessageEventArgs>();
+
+				var path = Path.Combine ("temp", TestName);
+				if (Directory.Exists (Path.Combine (Root, path)))
+					Directory.Delete (Path.Combine (Root, path), recursive: true);
+
+				var engine = new MockBuildEngine (TestContext.Out, errors: errors, messages: messages);
+				var androidSdk = CreateFauxAndroidSdkDirectory (Path.Combine (path, "Sdk"), "24.0.1", new[]
+				{
+					new ApiInfo { Id = "23", Level = 23, Name = "Marshmallow", FrameworkVersion = "v6.0", Stable = true },
+					new ApiInfo { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
+					new ApiInfo { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1", Stable = true },
+					new ApiInfo { Id = "28", Level = 28, Name = "Pie", FrameworkVersion = "v9.0", Stable = true },
+				});
+				//var androidNdk = CreateFauxAndroidNdkDirectory (Path.Combine (path, "Ndk"));
+				var javaSdk = CreateFauxJavaSdkDirectory (Path.Combine(path, "Java"), "1.8.0", out string javaExe, out string javacExe);
+				var task = new ResolveXamarinAndroidTools () {
+					BuildEngine = engine,
+					AndroidNdkPath = null,
+					AndroidSdkPath = androidSdk,
+					JavaSdkPath = javaSdk,
+					MonoAndroidToolsPath = monoAndroidToolsPath,
+					MonoAndroidBinDirectory = monoAndroidBinPath,
+					ReferenceAssemblyPaths = new string[] {
+						frameworksPath,
+						monoAndroidFrameworkPath,
+					},
+				};
+				Assert.True (task.Execute (), "Task should have completed successfully.");
+				Assert.AreEqual (0, errors.Count, "No Errors should have been raised");
+				var expected = $"  Found FrameworkPath at {Path.GetFullPath (frameworksPath)}";
+				var firstTaskExecMessages = messages.Select (x => x.Message)?.ToList ();
+				Assert.IsNotNull (firstTaskExecMessages, "First execution did not contain any messages!");
+				CollectionAssert.Contains (firstTaskExecMessages, expected);
+				CollectionAssert.DoesNotContain (firstTaskExecMessages, "  Using cached AndroidSdk values");
+				CollectionAssert.DoesNotContain (firstTaskExecMessages, "  Using cached MonoDroidSdk values");
+
+				Assert.True (task.Execute (), "Task should have completed successfully.");
+				Assert.AreEqual (0, errors.Count, "No Errors should have been raised");
+				var secondTaskExecMessages = messages.Select (x => x.Message)?.ToList ();
+				Assert.IsNotNull (secondTaskExecMessages, "Second execution did not contain any messages!");
+				CollectionAssert.Contains (secondTaskExecMessages, expected);
+				CollectionAssert.Contains (secondTaskExecMessages, "  Using cached AndroidSdk values");
+				CollectionAssert.Contains (secondTaskExecMessages, "  Using cached MonoDroidSdk values");
+			} finally {
+				AT.AndroidSdk.Refresh (androidSdkPath, androidNdkPath, javaSdkPath);
+				AT.MonoDroidSdk.Refresh (monoAndroidToolsPath, monoAndroidBinPath, monoAndroidFrameworkPath);
+				Environment.SetEnvironmentVariable ("JAVA_HOME", javaHome);
+				Environment.SetEnvironmentVariable ("PATH", environmentPath);
+			}
+
+			Assert.AreEqual (javaHome, Environment.GetEnvironmentVariable ("JAVA_HOME"));
+			Assert.AreEqual (environmentPath, Environment.GetEnvironmentVariable ("PATH"));
+			Assert.AreEqual (androidSdkPath, AT.AndroidSdk.AndroidSdkPath);
+			Assert.AreEqual (androidNdkPath, AT.AndroidSdk.AndroidNdkPath);
+			Assert.AreEqual (javaSdkPath, AT.AndroidSdk.JavaSdkPath);
+			Assert.AreEqual (monoAndroidToolsPath, AT.MonoDroidSdk.RuntimePath);
+			Assert.AreEqual (monoAndroidBinPath, AT.MonoDroidSdk.BinPath);
+			Assert.AreEqual (monoAndroidFrameworkPath, AT.MonoDroidSdk.FrameworkPath);
 		}
 
 		[Test]
