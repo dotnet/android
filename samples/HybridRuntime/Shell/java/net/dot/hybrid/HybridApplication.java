@@ -1,8 +1,10 @@
 package net.dot.hybrid;
 
 import android.app.ActivityManager;
+import android.app.Application;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Process;
 
 public final class HybridApplication extends ManagedMauiApplication {
@@ -38,6 +40,11 @@ public final class HybridApplication extends ManagedMauiApplication {
 
 	private boolean isCoreClrProcess() {
 		if (coreClrProcess != null) {
+			return coreClrProcess;
+		}
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+			coreClrProcess = Application.getProcessName().endsWith(":coreclr");
 			return coreClrProcess;
 		}
 
