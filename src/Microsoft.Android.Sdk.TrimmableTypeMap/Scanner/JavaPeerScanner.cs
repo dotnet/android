@@ -61,12 +61,33 @@ public sealed class JavaPeerScanner : IDisposable
 	/// </summary>
 	bool TryResolveType (string typeName, string assemblyName, out TypeDefinitionHandle handle, [NotNullWhen (true)] out AssemblyIndex? resolvedIndex)
 	{
-		if (assemblyCache.TryGetValue (assemblyName, out resolvedIndex) &&
-		    resolvedIndex.TypesByFullName.TryGetValue (typeName, out handle)) {
-			return true;
+		var visitedAssemblies = new HashSet<string> (StringComparer.Ordinal);
+		while (visitedAssemblies.Add (assemblyName) &&
+		       TryGetAssemblyIndex (assemblyName, out resolvedIndex)) {
+			if (resolvedIndex.TypesByFullName.TryGetValue (typeName, out handle)) {
+				return true;
+			}
+			if (!resolvedIndex.ForwardedTypeAssemblies.TryGetValue (typeName, out assemblyName)) {
+				break;
+			}
 		}
 		handle = default;
 		resolvedIndex = null;
+		return false;
+	}
+
+	bool TryGetAssemblyIndex (string assemblyName, [NotNullWhen (true)] out AssemblyIndex? index)
+	{
+		if (assemblyCache.TryGetValue (assemblyName, out index)) {
+			return true;
+		}
+		foreach (var candidate in assemblyCache.Values) {
+			if (string.Equals (candidate.MetadataAssemblyName, assemblyName, StringComparison.Ordinal)) {
+				index = candidate;
+				return true;
+			}
+		}
+		index = null;
 		return false;
 	}
 
@@ -808,9 +829,7 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		var sig = methodDef.DecodeSignature (TypeRefSignatureTypeProvider.Instance, index);
-		var (parameterKinds, returnKind) = isExport
-			? GetExportParameterKinds (methodDef, index, sig.ParameterTypes.Length)
-			: (CreateDefaultExportKinds (sig.ParameterTypes.Length), ExportParameterKindInfo.Unspecified);
+		var (parameterKinds, returnKind) = GetExportParameterKinds (methodDef, index, sig.ParameterTypes.Length);
 		var declaringType = index.Reader.GetTypeDefinition (methodDef.GetDeclaringType ());
 		string declaringTypeName = MetadataTypeNameResolver.GetFullName (declaringType, index.Reader);
 		string memberName = $"{declaringTypeName}.{methodName}";
@@ -1202,28 +1221,43 @@ public sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
-	/// Looks up a managed type name across loaded assemblies. If the type has
+	/// Looks up a managed type in its referenced assembly. If the type has
 	/// [Register], returns "L&lt;jniName&gt;;". Otherwise returns null.
+	/// </summary>
+	string? TryResolveJniObjectDescriptor (TypeRefData managedType)
+	{
+		if (!TryResolveType (managedType.ManagedTypeName, managedType.AssemblyName, out var handle, out var index)) {
+			return null;
+		}
+		return GetJniObjectDescriptor (handle, index);
+	}
+
+	/// <summary>
+	/// Looks up an unqualified managed type name across loaded assemblies.
+	/// Used only by legacy-compatible constructor signature discovery.
 	/// </summary>
 	string? TryResolveJniObjectDescriptor (string managedType)
 	{
 		foreach (var index in assemblyCache.Values) {
 			if (index.TypesByFullName.TryGetValue (managedType, out var handle)) {
-				if (index.RegisterInfoByType.TryGetValue (handle, out var registerInfo)) {
-					return $"L{registerInfo.JniName};";
-				}
-
-				// User peer types (extend a Java peer but lack [Register])
-				// get a CRC64-based JNI name in ScanAssembly. Mirror that here
-				// so [Export]/[ExportField] signatures referring to such types
-				// emit the correct peer descriptor instead of falling back to
-				// java/lang/Object.
-				var typeDef = index.Reader.GetTypeDefinition (handle);
-				if (ExtendsJavaPeer (handle, typeDef, index)) {
-					var (jniName, _) = ComputeAutoJniNames (typeDef, index);
-					return $"L{jniName};";
-				}
+				return GetJniObjectDescriptor (handle, index);
 			}
+		}
+		return null;
+	}
+
+	string? GetJniObjectDescriptor (TypeDefinitionHandle handle, AssemblyIndex index)
+	{
+		if (index.RegisterInfoByType.TryGetValue (handle, out var registerInfo)) {
+			return $"L{registerInfo.JniName};";
+		}
+
+		// User peer types (extend a Java peer but lack [Register]) get a CRC64-based
+		// JNI name in ScanAssembly. Mirror that for exported signatures.
+		var typeDef = index.Reader.GetTypeDefinition (handle);
+		if (ExtendsJavaPeer (typeDef, index)) {
+			var (jniName, _) = ComputeAutoJniNames (typeDef, index);
+			return $"L{jniName};";
 		}
 		return null;
 	}
@@ -2018,11 +2052,18 @@ public sealed class JavaPeerScanner : IDisposable
 	{
 		var managedName = index.Reader.GetString (methodDef.Name);
 		var sig = methodDef.DecodeSignature (index.TypeRefSignatureProvider, index);
-		var jniSig = BuildJniSignatureFromManaged (sig, GetDefaultExportKinds (sig.ParameterTypes.Length), ExportParameterKindInfo.Unspecified);
+		var (parameterKinds, returnKind) = GetExportParameterKinds (methodDef, index, sig.ParameterTypes.Length);
+		var jniSig = BuildJniSignatureFromManaged (sig, parameterKinds, returnKind);
 
 		return (
 			new RegisterInfo { JniName = managedName, Signature = jniSig, Connector = "__export__", DoNotGenerateAcw = false },
-			new ExportInfo { ThrownNames = null, SuperArgumentsString = null, IsField = true }
+			new ExportInfo {
+				ThrownNames = null,
+				SuperArgumentsString = null,
+				IsField = true,
+				ParameterKinds = parameterKinds,
+				ReturnKind = returnKind,
+			}
 		);
 	}
 
@@ -2043,23 +2084,6 @@ public sealed class JavaPeerScanner : IDisposable
 		ExportParameterKindInfo exportKind,
 		out string descriptor)
 	{
-		if (exportKind != ExportParameterKindInfo.Unspecified) {
-			descriptor = exportKind switch {
-				ExportParameterKindInfo.InputStream => "Ljava/io/InputStream;",
-				ExportParameterKindInfo.OutputStream => "Ljava/io/OutputStream;",
-				ExportParameterKindInfo.XmlPullParser => "Lorg/xmlpull/v1/XmlPullParser;",
-				ExportParameterKindInfo.XmlResourceParser => "Landroid/content/res/XmlResourceParser;",
-				_ => "Ljava/lang/Object;",
-			};
-			return true;
-		}
-
-		var primitive = TryGetPrimitiveJniDescriptor (managedType.ManagedTypeName);
-		if (primitive is not null) {
-			descriptor = primitive;
-			return true;
-		}
-
 		if (managedType.ManagedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
 			var elementType = managedType with {
 				ManagedTypeName = managedType.ManagedTypeName.Substring (0, managedType.ManagedTypeName.Length - 2),
@@ -2072,8 +2096,18 @@ public sealed class JavaPeerScanner : IDisposable
 			return false;
 		}
 
+		if (exportKind != ExportParameterKindInfo.Unspecified) {
+			return TryGetExportParameterDescriptor (managedType.ManagedTypeName, exportKind, out descriptor);
+		}
+
+		var primitive = TryGetPrimitiveJniDescriptor (managedType.ManagedTypeName);
+		if (primitive is not null) {
+			descriptor = primitive;
+			return true;
+		}
+
 		// Try to resolve as a Java peer type with [Register]
-		var resolved = TryResolveJniObjectDescriptor (managedType.ManagedTypeName);
+		var resolved = TryResolveJniObjectDescriptor (managedType);
 		if (resolved is not null) {
 			descriptor = resolved;
 			return true;
@@ -2106,6 +2140,21 @@ public sealed class JavaPeerScanner : IDisposable
 
 		descriptor = "";
 		return false;
+	}
+
+	static bool TryGetExportParameterDescriptor (
+		string managedTypeName,
+		ExportParameterKindInfo exportKind,
+		out string descriptor)
+	{
+		descriptor = exportKind switch {
+			ExportParameterKindInfo.InputStream when managedTypeName == "System.IO.Stream" => "Ljava/io/InputStream;",
+			ExportParameterKindInfo.OutputStream when managedTypeName == "System.IO.Stream" => "Ljava/io/OutputStream;",
+			ExportParameterKindInfo.XmlPullParser when managedTypeName == "System.Xml.XmlReader" => "Lorg/xmlpull/v1/XmlPullParser;",
+			ExportParameterKindInfo.XmlResourceParser when managedTypeName == "System.Xml.XmlReader" => "Landroid/content/res/XmlResourceParser;",
+			_ => "",
+		};
+		return descriptor.Length > 0;
 	}
 
 	/// <summary>
@@ -2771,7 +2820,8 @@ public sealed class JavaPeerScanner : IDisposable
 
 			var managedName = index.Reader.GetString (methodDef.Name);
 			var sig = methodDef.DecodeSignature (index.TypeRefSignatureProvider, index);
-			var jniSig = BuildJniSignatureFromManaged (sig, GetDefaultExportKinds (sig.ParameterTypes.Length), ExportParameterKindInfo.Unspecified);
+			var (parameterKinds, returnKind) = GetExportParameterKinds (methodDef, index, sig.ParameterTypes.Length);
+			var jniSig = BuildJniSignatureFromManaged (sig, parameterKinds, returnKind);
 			var jniReturnType = JniSignatureHelper.ParseReturnTypeString (jniSig);
 			var javaReturnType = JniSignatureHelper.JniTypeToJava (jniReturnType);
 			var access = GetJavaAccess (methodDef.Attributes & MethodAttributes.MemberAccessMask);

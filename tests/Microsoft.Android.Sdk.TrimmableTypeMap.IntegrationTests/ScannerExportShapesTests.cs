@@ -32,12 +32,14 @@ public class ScannerExportShapesTests
 		return GetPeer (javaName).MarshalMethods.ToArray ();
 	}
 
-	static JavaPeerInfo GetPeer (string javaName)
+	static JavaPeerInfo GetPeer (string javaName) => GetPeer (javaName, UserTypesFixturePath);
+
+	static JavaPeerInfo GetPeer (string javaName, params string [] fixturePaths)
 	{
-		var fixturePath = UserTypesFixturePath;
+		var fixturePath = fixturePaths [0];
 		var dir = AssertNotNull (Path.GetDirectoryName (fixturePath));
 
-		var paths = new System.Collections.Generic.List<string> { fixturePath };
+		var paths = new System.Collections.Generic.List<string> (fixturePaths);
 		var monoAndroid = Path.Combine (dir, "Mono.Android.dll");
 		var javaInterop = Path.Combine (dir, "Java.Interop.dll");
 		if (File.Exists (monoAndroid))
@@ -104,6 +106,23 @@ public class ScannerExportShapesTests
 
 		AssertHasExport (methods, "GetValue", "()Ljava/lang/String;");
 		AssertHasExport (methods, "GetCount", "()I");
+		AssertHasExport (methods, "GetOutputStream", "()Ljava/io/OutputStream;");
+		AssertHasExport (methods, "GetXmlParser", "()Lorg/xmlpull/v1/XmlPullParser;");
+
+		var peer = GetPeer ("ExportFieldShapes");
+		Assert.Contains (peer.JavaFields, field => field.FieldName == "OUTPUT_STREAM" && field.JavaTypeName == "java.io.OutputStream");
+		Assert.Contains (peer.JavaFields, field => field.FieldName == "XML_PARSER" && field.JavaTypeName == "org.xmlpull.v1.XmlPullParser");
+	}
+
+	[Fact]
+	public void Export_CrossAssemblySameManagedName_DoesNotBorrowPeerDescriptor ()
+	{
+		var directory = AssertNotNull (Path.GetDirectoryName (UserTypesFixturePath));
+		var javaSourceFixturePath = Path.Combine (directory, "JavaSourceParityFixture.dll");
+		Assert.True (File.Exists (javaSourceFixturePath), $"JavaSourceParityFixture.dll not found at '{javaSourceFixturePath}'.");
+
+		var peer = GetPeer ("ExportAssemblyCollisionShape", javaSourceFixturePath, UserTypesFixturePath);
+		Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "UnsupportedCollision");
 	}
 
 	// === Phase A: dispatch & declaration shapes ===

@@ -11,6 +11,9 @@ public class ExportSignatureTests : FixtureTestBase
 	[InlineData ("my/app/ExportFieldWithUnsupportedManagedReturn")]
 	[InlineData ("my/app/ExportWithGenericMethodParameter")]
 	[InlineData ("my/app/ExportWithGenericInstantiation")]
+	[InlineData ("my/app/ExportWithInvalidExportParameterType")]
+	[InlineData ("my/app/ExportWithGenericExportParameter")]
+	[InlineData ("my/app/ExportFieldWithInvalidExportParameterType")]
 	[InlineData ("my/app/GenericExportType")]
 	public void ScannerAndGenerator_UnsupportedExportSignatureProducesNoMember (string javaName)
 	{

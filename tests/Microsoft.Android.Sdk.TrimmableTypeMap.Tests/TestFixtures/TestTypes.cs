@@ -619,6 +619,32 @@ namespace MyApp
 		public System.Collections.Generic.List<string> UnsupportedMember (System.Collections.Generic.List<string> value) => value;
 	}
 
+	[Register ("my/app/ExportWithInvalidExportParameterType")]
+	public class ExportWithInvalidExportParameterType : Java.Lang.Object
+	{
+		[Java.Interop.Export ("unsupported")]
+		public UnsupportedExportValue UnsupportedMember (
+			[Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.InputStream)] UnsupportedExportValue value)
+			=> value;
+	}
+
+	[Register ("my/app/ExportWithGenericExportParameter")]
+	public class ExportWithGenericExportParameter : Java.Lang.Object
+	{
+		[Java.Interop.Export ("unsupported")]
+		public T UnsupportedMember<T> (
+			[Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.InputStream)] T value)
+			=> value;
+	}
+
+	[Register ("my/app/ExportFieldWithInvalidExportParameterType")]
+	public class ExportFieldWithInvalidExportParameterType : Java.Lang.Object
+	{
+		[return: Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.OutputStream)]
+		[Java.Interop.ExportField ("UNSUPPORTED_FIELD")]
+		public UnsupportedExportValue UnsupportedMember () => new ();
+	}
+
 	[Register ("my/app/GenericExportType")]
 	public class GenericExportType<T> : Java.Lang.Object
 	{
@@ -662,6 +688,14 @@ namespace MyApp
 		[Java.Interop.ExportField ("VALUE")]
 		[JavaAnnotation]
 		public string GetValue () => "";
+
+		[return: Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.OutputStream)]
+		[Java.Interop.ExportField ("OUTPUT_STREAM")]
+		public Stream? GetOutputStream () => null;
+
+		[return: Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.XmlPullParser)]
+		[Java.Interop.ExportField ("XML_PARSER")]
+		public XmlReader? GetXmlParser () => null;
 	}
 
 	[Register ("my/app/BaseInstrumentation")]

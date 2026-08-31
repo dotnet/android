@@ -356,7 +356,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		using var peReader = CreateTestFixturePEReader ();
 		var result = CreateGenerator ().Execute ([Input ("TestFixtures", peReader)], new Version (11, 0), new HashSet<string> ());
 
-		Assert.Equal (5, logMessages.Count (message => message.StartsWith ("XA4263:", StringComparison.Ordinal)));
+		Assert.Equal (8, logMessages.Count (message => message.StartsWith ("XA4263:", StringComparison.Ordinal)));
 		Assert.Equal (1, logMessages.Count (message => message.StartsWith ("XA4206:", StringComparison.Ordinal)));
 		foreach (var javaName in new [] {
 			"my/app/ExportWithUnsupportedManagedParameter",
@@ -364,6 +364,9 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			"my/app/ExportFieldWithUnsupportedManagedReturn",
 			"my/app/ExportWithGenericMethodParameter",
 			"my/app/ExportWithGenericInstantiation",
+			"my/app/ExportWithInvalidExportParameterType",
+			"my/app/ExportWithGenericExportParameter",
+			"my/app/ExportFieldWithInvalidExportParameterType",
 			"my/app/GenericExportType",
 		}) {
 			var peer = result.AllPeers.Single (candidate => candidate.JavaName == javaName);

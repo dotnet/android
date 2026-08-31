@@ -209,6 +209,14 @@ namespace UserApp
 
 		[ExportField ("COUNT")]
 		public int GetCount () => 0;
+
+		[return: ExportParameter (ExportParameterKind.OutputStream)]
+		[ExportField ("OUTPUT_STREAM")]
+		public System.IO.Stream? GetOutputStream () => null;
+
+		[return: ExportParameter (ExportParameterKind.XmlPullParser)]
+		[ExportField ("XML_PARSER")]
+		public System.Xml.XmlReader? GetXmlParser () => null;
 	}
 
 	// [ExportParameter] overrides a Stream / XmlReader's Java type without
@@ -392,5 +400,22 @@ namespace UserApp
 	{
 		[Export ("onClickRenamed")]
 		public void OnClick (Android.Views.View? v) { }
+	}
+}
+
+namespace UserApp.JavaSourceParity
+{
+	public class SignatureCollision
+	{
+	}
+}
+
+namespace UserApp
+{
+	[Register ("com/example/userapp/ExportAssemblyCollisionShape")]
+	public class ExportAssemblyCollisionShape : Java.Lang.Object
+	{
+		[Export ("unsupportedCollision")]
+		public void UnsupportedCollision (JavaSourceParity.SignatureCollision value) { }
 	}
 }

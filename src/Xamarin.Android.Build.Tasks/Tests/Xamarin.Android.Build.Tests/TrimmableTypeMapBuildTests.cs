@@ -116,6 +116,18 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic-declaring-type", "XA4206")]
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic-declaring-type", "XA4206")]
 		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic-declaring-type", "XA4206")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "mismatched-export-parameter", "XALNS7004")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "mismatched-export-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "mismatched-export-parameter", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic-export-parameter", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic-export-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic-export-parameter", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "function-pointer-export-parameter", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "function-pointer-export-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "function-pointer-export-parameter", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "mismatched-field-export-parameter", "XALNS7004")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "mismatched-field-export-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "mismatched-field-export-parameter", "XA4263")]
 		public void Build_UnsupportedExportSignature_ReportsCodedDiagnosticWithoutPartialOutputs (
 			string typeMapImplementation,
 			AndroidRuntime runtime,
@@ -163,6 +175,45 @@ namespace Xamarin.Android.Build.Tests {
 					"""[Export ("unsupported")] public int UnsupportedMember () => 0;""",
 					"unsupported",
 					"<T>"),
+				"mismatched-export-parameter" => (
+					"public sealed class ManagedOnly { }",
+					"""
+					[Export ("unsupported")]
+					public ManagedOnly UnsupportedMember (
+						[ExportParameter (ExportParameterKind.InputStream)] ManagedOnly value)
+						=> value;
+					""",
+					"unsupported",
+					""),
+				"generic-export-parameter" => (
+					"",
+					"""
+					[Export ("unsupported")]
+					public T UnsupportedMember<T> (
+						[ExportParameter (ExportParameterKind.InputStream)] T value)
+						=> value;
+					""",
+					"unsupported",
+					""),
+				"function-pointer-export-parameter" => (
+					"",
+					"""
+					[Export ("unsupported")]
+					public unsafe delegate* unmanaged<void> UnsupportedMember (
+						[ExportParameter (ExportParameterKind.InputStream)] delegate* unmanaged<void> value)
+						=> value;
+					""",
+					"unsupported",
+					""),
+				"mismatched-field-export-parameter" => (
+					"public sealed class ManagedOnly { }",
+					"""
+					[return: ExportParameter (ExportParameterKind.OutputStream)]
+					[ExportField ("UNSUPPORTED_FIELD")]
+					public ManagedOnly UnsupportedMember () => new ();
+					""",
+					"UNSUPPORTED_FIELD",
+					""),
 				_ => throw new InvalidOperationException ($"Unknown unsupported [Export] shape '{invalidShape}'."),
 			};
 			var proj = new XamarinAndroidApplicationProject {
