@@ -604,12 +604,12 @@ handler.post (() -&gt; {
 				<tbody>
 					<tr><td><span class="core">●</span> CoreCLR MAUI</td><td>19.99 MiB</td><td>865 ms</td><td>630 ms</td></tr>
 					<tr><td><span class="aot">●</span> NativeAOT MAUI</td><td>17.51 MiB</td><td>318 ms</td><td>457 ms</td></tr>
-					<tr class="highlight"><td><span class="bridge">●</span> Hybrid · two processes</td><td>31.55 MiB</td><td>523 ms</td><td>919 ms</td></tr>
+					<tr class="highlight"><td><span class="bridge">●</span> Hybrid · two processes</td><td>31.55 MiB</td><td>523 ms</td><td>478 ms</td></tr>
 				</tbody>
 			</table>
 			<div class="grid three" style="margin-top:22px">
 				<div class="card"><span class="metric aot">40%</span><h3>Earlier than CoreCLR login</h3><p class="muted">The hybrid still reaches logged-out MAUI UI substantially earlier than CoreCLR-only.</p></div>
-				<div class="card"><span class="metric danger">+46%</span><h3>Slower returning dashboard</h3><p class="muted">Immediate CoreCLR warmup competes with NativeAOT. Warmup policy must become adaptive.</p></div>
+				<div class="card"><span class="metric bridge">+5%</span><h3>Near-NativeAOT dashboard</h3><p class="muted">Deferring CoreCLR warmup until 1.5 seconds after resume removes it from the first-frame path.</p></div>
 				<div class="card"><span class="metric bridge">29–78 ms</span><h3>Warmed editor reveal</h3><p class="muted">Four of five repeated handoffs after lifecycle cleanup; the first measured 205 ms.</p></div>
 			</div>
 			<p class="small" style="margin-top:16px">Android 35 arm64 emulator; eight paced process launches per state; <code>am start -W</code> TotalTime median. Directional prototype data, not a product performance claim.</p>
@@ -746,7 +746,7 @@ libassembly-store.so
 						<li><strong>Define the IPC contract</strong> for auth, routes, state, cancellation, and errors.</li>
 						<li><strong>Exercise lifecycle pressure</strong> across suspend, low memory, configuration, and upgrades.</li>
 						<li><strong>Measure physical devices</strong> across cold install, warm caches, and representative app graphs.</li>
-						<li><strong>Tune warmup policy</strong> so CoreCLR does not compete with a returning NativeAOT dashboard.</li>
+						<li><strong>Adapt warmup timing</strong> to device class, navigation intent, and memory pressure instead of using a fixed delay.</li>
 					</ul>
 				</div>
 			</div>
