@@ -101,13 +101,16 @@ namespace Xamarin.Android.Build.Tests {
 				.First (p => p.Contains ("_Mono.Android.TypeMap.dll"));
 			var firstWriteTime = File.GetLastWriteTimeUtc (typeMapPath);
 
-			// Second run: same inputs — outputs should not be rewritten (CopyIfStreamChanged)
-			var task2 = CreateTask (assemblies, outputDir, javaDir);
+			// Second run: the persisted model fingerprint should avoid PE emission entirely.
+			var messages = new List<BuildMessageEventArgs> ();
+			var task2 = CreateTask (assemblies, outputDir, javaDir, messages: messages);
 			Assert.IsTrue (task2.Execute (), "Second run should succeed.");
 
 			var secondWriteTime = File.GetLastWriteTimeUtc (typeMapPath);
 			Assert.AreEqual (firstWriteTime, secondWriteTime,
 				"Typemap assembly should NOT be rewritten when content hasn't changed.");
+			Assert.IsTrue (messages.Any (message => message.Message?.Contains ("_Mono.Android.TypeMap: unchanged, skipping emission", StringComparison.Ordinal) == true),
+				"Second run should skip typemap PE emission based on the persisted model fingerprint.");
 		}
 
 		[Test]
@@ -407,6 +410,7 @@ namespace Xamarin.Android.Build.Tests {
 				OutputDirectory = outputDir,
 				JavaSourceOutputDirectory = javaDir,
 				TargetFrameworkVersion = tfv,
+				TypeMapFingerprintsFile = Path.Combine (outputDir, "typemap-fingerprints.txt"),
 			};
 		}
 
