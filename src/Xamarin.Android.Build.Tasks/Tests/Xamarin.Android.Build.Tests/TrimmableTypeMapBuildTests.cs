@@ -401,6 +401,79 @@ namespace Xamarin.Android.Build.Tests {
 			AssertNoExportOutputs (builder, marker);
 		}
 
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
+		public void Build_SpecialMappingLookalikeTypes_ReportXA4263WithoutPartialOutputs (AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				References = {
+					new BuildItem.Reference ("Mono.Android.Export"),
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.Sources.Add (new BuildItem.Source ("SpecialMappingLookalikes.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+					using Java.Interop;
+
+					namespace System.IO {
+						public class Stream {
+						}
+					}
+
+					namespace System.Xml {
+						public class XmlReader {
+						}
+					}
+
+					namespace SpecialMappingLookalikes {
+						[Register ("com/example/exports/SpecialMappingLookalikePeer")]
+						public class SpecialMappingLookalikePeer : Java.Lang.Object {
+							[return: ExportParameter (ExportParameterKind.OutputStream)]
+							[Export ("invalidStream")]
+							public System.IO.Stream InvalidStream (
+								[ExportParameter (ExportParameterKind.InputStream)] System.IO.Stream value)
+								=> value;
+
+							[return: ExportParameter (ExportParameterKind.XmlPullParser)]
+							[ExportField ("INVALID_XML_FIELD")]
+							public System.Xml.XmlReader InvalidXmlField () => new ();
+
+							[Export ("notAConstructor", SuperArgumentsString = "")]
+							public SpecialMappingLookalikePeer (
+								[ExportParameter (ExportParameterKind.InputStream)] System.IO.Stream value)
+							{
+							}
+						}
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), $"{runtime}/trimmable should reject special-mapping lookalike types.");
+			foreach (var memberName in new [] {
+				"SpecialMappingLookalikes.SpecialMappingLookalikePeer.InvalidStream",
+				"SpecialMappingLookalikes.SpecialMappingLookalikePeer.InvalidXmlField",
+				"SpecialMappingLookalikes.SpecialMappingLookalikePeer.ctor",
+			}) {
+				Assert.IsTrue (
+					builder.LastBuildOutput.Any (line =>
+						line.Contains ("error XA4263", StringComparison.Ordinal) &&
+						line.Contains (memberName, StringComparison.Ordinal)),
+					$"The build should report XA4263 for '{memberName}'."
+				);
+			}
+			AssertNoExportOutputs (builder, "invalidStream");
+		}
+
 		static XamarinAndroidApplicationProject CreateExportFieldValidationProject (
 			AndroidRuntime runtime,
 			string typeMapImplementation,

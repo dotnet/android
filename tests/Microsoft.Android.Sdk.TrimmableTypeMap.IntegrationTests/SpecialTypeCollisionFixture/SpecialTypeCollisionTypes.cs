@@ -1,0 +1,39 @@
+using Android.Runtime;
+using Java.Interop;
+
+namespace System.IO
+{
+	public class Stream
+	{
+	}
+}
+
+namespace System.Xml
+{
+	public class XmlReader
+	{
+	}
+}
+
+namespace SpecialTypeCollision
+{
+	[Register ("com/example/collision/SpecialTypeCollisionPeer")]
+	public class SpecialTypeCollisionPeer : Java.Lang.Object
+	{
+		[return: ExportParameter (ExportParameterKind.OutputStream)]
+		[Export ("invalidStream")]
+		public System.IO.Stream InvalidStream (
+			[ExportParameter (ExportParameterKind.InputStream)] System.IO.Stream value)
+			=> value;
+
+		[return: ExportParameter (ExportParameterKind.XmlPullParser)]
+		[ExportField ("INVALID_XML_FIELD")]
+		public System.Xml.XmlReader InvalidXmlField () => new ();
+
+		[Export ("notAConstructor", SuperArgumentsString = "")]
+		public SpecialTypeCollisionPeer (
+			[ExportParameter (ExportParameterKind.InputStream)] System.IO.Stream value)
+		{
+		}
+	}
+}

@@ -148,6 +148,9 @@ public partial class JavaPeerScannerTests
 
 		var xmlMethod = FindFixtureByJavaName ("my/app/ExportMarshallingShapes")
 			.MarshalMethods.First (m => m.JniName == "readXml");
+		var streamMethod = FindFixtureByJavaName ("my/app/ExportMarshallingShapes")
+			.MarshalMethods.First (m => m.JniName == "wrapStream");
+		Assert.Equal ("System.Runtime", streamMethod.ManagedReturnType.AssemblyName);
 		Assert.Equal (ExportParameterKindInfo.XmlPullParser, xmlMethod.ManagedParameterExportKinds [0]);
 		Assert.Equal (ExportParameterKindInfo.XmlPullParser, xmlMethod.ManagedReturnExportKind);
 		Assert.Equal ("System.Xml.ReaderWriter", xmlMethod.ManagedReturnType.AssemblyName);

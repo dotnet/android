@@ -2129,7 +2129,7 @@ public sealed class JavaPeerScanner : IDisposable
 		out string descriptor)
 	{
 		if (exportKind != ExportParameterKindInfo.Unspecified) {
-			return TryGetExportParameterDescriptor (managedType.ManagedTypeName, exportKind, out descriptor);
+			return TryGetExportParameterDescriptor (managedType, exportKind, out descriptor);
 		}
 
 		if (managedType.ManagedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
@@ -2186,19 +2186,35 @@ public sealed class JavaPeerScanner : IDisposable
 		return false;
 	}
 
-	static bool TryGetExportParameterDescriptor (
-		string managedTypeName,
+	bool TryGetExportParameterDescriptor (
+		TypeRefData managedType,
 		ExportParameterKindInfo exportKind,
 		out string descriptor)
 	{
 		descriptor = exportKind switch {
-			ExportParameterKindInfo.InputStream when managedTypeName == "System.IO.Stream" => "Ljava/io/InputStream;",
-			ExportParameterKindInfo.OutputStream when managedTypeName == "System.IO.Stream" => "Ljava/io/OutputStream;",
-			ExportParameterKindInfo.XmlPullParser when managedTypeName == "System.Xml.XmlReader" => "Lorg/xmlpull/v1/XmlPullParser;",
-			ExportParameterKindInfo.XmlResourceParser when managedTypeName == "System.Xml.XmlReader" => "Landroid/content/res/XmlResourceParser;",
+			ExportParameterKindInfo.InputStream when IsSpecialManagedType (managedType, "System.IO.Stream", "System.Runtime", "System.Private.CoreLib") =>
+				"Ljava/io/InputStream;",
+			ExportParameterKindInfo.OutputStream when IsSpecialManagedType (managedType, "System.IO.Stream", "System.Runtime", "System.Private.CoreLib") =>
+				"Ljava/io/OutputStream;",
+			ExportParameterKindInfo.XmlPullParser when IsSpecialManagedType (managedType, "System.Xml.XmlReader", "System.Xml.ReaderWriter") =>
+				"Lorg/xmlpull/v1/XmlPullParser;",
+			ExportParameterKindInfo.XmlResourceParser when IsSpecialManagedType (managedType, "System.Xml.XmlReader", "System.Xml.ReaderWriter") =>
+				"Landroid/content/res/XmlResourceParser;",
 			_ => "",
 		};
 		return descriptor.Length > 0;
+	}
+
+	bool IsSpecialManagedType (TypeRefData managedType, string managedTypeName, params string [] assemblyNames)
+	{
+		if (!string.Equals (managedType.ManagedTypeName, managedTypeName, StringComparison.Ordinal)) {
+			return false;
+		}
+		if (assemblyNames.Contains (managedType.AssemblyName, StringComparer.Ordinal)) {
+			return true;
+		}
+		return TryResolveType (managedTypeName, managedType.AssemblyName, out _, out var resolvedIndex) &&
+			assemblyNames.Contains (resolvedIndex.MetadataAssemblyName, StringComparer.Ordinal);
 	}
 
 	/// <summary>

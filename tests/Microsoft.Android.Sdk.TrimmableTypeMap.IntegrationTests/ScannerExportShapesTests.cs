@@ -128,6 +128,20 @@ public class ScannerExportShapesTests
 		Assert.DoesNotContain (peer.JavaFields, field => field.FieldName == "UNSUPPORTED_ENUM_FIELD");
 	}
 
+	[Fact]
+	public void Export_SpecialMappingSameManagedName_DoesNotBorrowFrameworkAdapter ()
+	{
+		var directory = AssertNotNull (Path.GetDirectoryName (UserTypesFixturePath));
+		var fixturePath = Path.Combine (directory, "SpecialTypeCollisionFixture.dll");
+		Assert.True (File.Exists (fixturePath), $"SpecialTypeCollisionFixture.dll not found at '{fixturePath}'.");
+
+		var peer = GetPeer ("SpecialTypeCollisionPeer", fixturePath);
+		Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "InvalidStream");
+		Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "InvalidXmlField");
+		Assert.DoesNotContain (peer.MarshalMethods, method => method.IsConstructor && method.IsExport);
+		Assert.DoesNotContain (peer.JavaFields, field => field.FieldName == "INVALID_XML_FIELD");
+	}
+
 	// === Phase A: dispatch & declaration shapes ===
 
 	[Fact]
