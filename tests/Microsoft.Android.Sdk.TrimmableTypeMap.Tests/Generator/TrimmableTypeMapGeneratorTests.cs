@@ -339,6 +339,128 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void GenerateTypeMapAssemblies_UnchangedFingerprintsSkipAllEmission ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			CreatePeer ("MyApp", "MyApp.MainActivity", "my/app/MainActivity"),
+			CreatePeer ("MyLibrary", "MyLibrary.Widget", "my/library/Widget"),
+		};
+		var fingerprints = new Dictionary<string, byte []> (StringComparer.Ordinal);
+		var generator = CreateGenerator ();
+		var first = generator.GenerateTypeMapAssemblies (
+			peers,
+			new Version (11, 0),
+			useSharedTypemapUniverse: true,
+			(name, fingerprint) => {
+				fingerprints.Add (name, fingerprint);
+				return true;
+			});
+		DisposeGeneratedAssemblies (first);
+
+		var second = generator.GenerateTypeMapAssemblies (
+			peers,
+			new Version (11, 0),
+			useSharedTypemapUniverse: true,
+			(name, fingerprint) => !fingerprints [name].SequenceEqual (fingerprint));
+
+		Assert.Empty (second);
+	}
+
+	[Fact]
+	public void Execute_IncrementalCallbackPreservesGeneratedBytes ()
+	{
+		using var fullReader = CreateTestFixturePEReader ();
+		using var incrementalReader = CreateTestFixturePEReader ();
+		var generator = CreateGenerator ();
+		var full = generator.Execute (
+			[Input ("TestFixtures", fullReader)],
+			new Version (11, 0),
+			new HashSet<string> ());
+		var incremental = generator.Execute (
+			[Input ("TestFixtures", incrementalReader)],
+			new Version (11, 0),
+			new HashSet<string> (),
+			shouldGenerateTypeMapAssembly: (_, _) => true);
+
+		Assert.Equal (full.GeneratedAssemblies.Count, incremental.GeneratedAssemblies.Count);
+		for (int i = 0; i < full.GeneratedAssemblies.Count; i++) {
+			Assert.Equal (full.GeneratedAssemblies [i].Name, incremental.GeneratedAssemblies [i].Name);
+			Assert.Equal (full.GeneratedAssemblies [i].Content.ToArray (), incremental.GeneratedAssemblies [i].Content.ToArray ());
+		}
+		DisposeGeneratedAssemblies (full.GeneratedAssemblies);
+		DisposeGeneratedAssemblies (incremental.GeneratedAssemblies);
+	}
+
+	[Fact]
+	public void GenerateTypeMapAssemblies_ChangedCrossAssemblyAliasRegeneratesOwner ()
+	{
+		var owner = CreatePeer ("Owner", "Owner.JavaObject", "java/lang/Object");
+		var alias = CreatePeer ("Alias", "Alias.JavaObject", "java/lang/Object") with {
+			IsFromJniTypeSignature = true,
+		};
+		var unrelatedAliasPeer = CreatePeer ("Alias", "Alias.Widget", "alias/Widget");
+		var peers = new List<JavaPeerInfo> { owner, alias, unrelatedAliasPeer };
+		var fingerprints = new Dictionary<string, byte []> (StringComparer.Ordinal);
+		var generator = CreateGenerator ();
+		var first = generator.GenerateTypeMapAssemblies (
+			peers,
+			new Version (11, 0),
+			useSharedTypemapUniverse: true,
+			(name, fingerprint) => {
+				fingerprints.Add (name, fingerprint);
+				return true;
+			});
+		DisposeGeneratedAssemblies (first);
+
+		peers [1] = alias with {
+			ManagedTypeName = "Alias.ChangedJavaObject",
+			ManagedTypeShortName = "ChangedJavaObject",
+		};
+		var regenerated = generator.GenerateTypeMapAssemblies (
+			peers,
+			new Version (11, 0),
+			useSharedTypemapUniverse: true,
+			(name, fingerprint) => !fingerprints [name].SequenceEqual (fingerprint));
+
+		var assembly = Assert.Single (regenerated);
+		Assert.Equal ("_Owner.TypeMap", assembly.Name);
+		DisposeGeneratedAssemblies (regenerated);
+	}
+
+	[Fact]
+	public void GenerateTypeMapAssemblies_ChangedAssemblySetRegeneratesRoot ()
+	{
+		var initialPeers = new List<JavaPeerInfo> {
+			CreatePeer ("MyApp", "MyApp.MainActivity", "my/app/MainActivity"),
+		};
+		var fingerprints = new Dictionary<string, byte []> (StringComparer.Ordinal);
+		var generator = CreateGenerator ();
+		var first = generator.GenerateTypeMapAssemblies (
+			initialPeers,
+			new Version (11, 0),
+			useSharedTypemapUniverse: true,
+			(name, fingerprint) => {
+				fingerprints.Add (name, fingerprint);
+				return true;
+			});
+		DisposeGeneratedAssemblies (first);
+
+		var peersWithLibrary = new List<JavaPeerInfo> (initialPeers) {
+			CreatePeer ("MyLibrary", "MyLibrary.Widget", "my/library/Widget"),
+		};
+		var regenerated = generator.GenerateTypeMapAssemblies (
+			peersWithLibrary,
+			new Version (11, 0),
+			useSharedTypemapUniverse: true,
+			(name, fingerprint) => !fingerprints.TryGetValue (name, out var prior) || !prior.SequenceEqual (fingerprint));
+
+		Assert.Equal (
+			["_MyLibrary.TypeMap", "_Microsoft.Android.TypeMaps"],
+			regenerated.Select (assembly => assembly.Name));
+		DisposeGeneratedAssemblies (regenerated);
+	}
+
+	[Fact]
 	public void Execute_CollectsDeferredRegistrationTypes_ForAllApplicationAndInstrumentationSubtypes ()
 	{
 		using var peReader = CreateTestFixturePEReader ();
@@ -352,6 +474,27 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Contains ("my.app.BaseApplication", result.ApplicationRegistrationTypes);
 		Assert.Contains ("my.app.BaseInstrumentation", result.ApplicationRegistrationTypes);
 		Assert.Contains ("my.app.IntermediateInstrumentation", result.ApplicationRegistrationTypes);
+	}
+
+	static JavaPeerInfo CreatePeer (string assemblyName, string managedTypeName, string javaName)
+	{
+		int separator = managedTypeName.LastIndexOf ('.');
+		return new JavaPeerInfo {
+			JavaName = javaName,
+			CompatJniName = javaName,
+			ManagedTypeName = managedTypeName,
+			ManagedTypeNamespace = separator < 0 ? "" : managedTypeName.Substring (0, separator),
+			ManagedTypeShortName = separator < 0 ? managedTypeName : managedTypeName.Substring (separator + 1),
+			AssemblyName = assemblyName,
+			DoNotGenerateAcw = true,
+		};
+	}
+
+	static void DisposeGeneratedAssemblies (IEnumerable<GeneratedAssembly> assemblies)
+	{
+		foreach (var assembly in assemblies) {
+			assembly.Content.Dispose ();
+		}
 	}
 
 	[Fact]
