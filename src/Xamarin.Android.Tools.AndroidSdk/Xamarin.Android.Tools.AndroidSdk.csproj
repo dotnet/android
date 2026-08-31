@@ -25,6 +25,7 @@
     <Copyright>Copyright © Xamarin 2011-2016</Copyright>
     <PackageTags>Xamarin;Xamarin.Android</PackageTags>
     <AssemblyName>$(VendorPrefix)Xamarin.Android.Tools.AndroidSdk$(VendorSuffix)</AssemblyName>
+    <_AndroidToolsPackageVersionSuffix>preview</_AndroidToolsPackageVersionSuffix>
   </PropertyGroup>
 
   <PropertyGroup>

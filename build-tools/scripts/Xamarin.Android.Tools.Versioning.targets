@@ -43,6 +43,7 @@
     <PropertyGroup>
       <Version>$([System.Text.RegularExpressions.Regex]::Match('$(AndroidPackVersion)', '^\d+\.\d+')).$(PackVersionCommitCount)</Version>
       <PackageVersion>$(Version)</PackageVersion>
+      <PackageVersion Condition=" '$(_AndroidToolsPackageVersionSuffix)' != '' ">$(AndroidPackVersion)-$(_AndroidToolsPackageVersionSuffix).$(PackVersionCommitCount)</PackageVersion>
     </PropertyGroup>
   </Target>
 
