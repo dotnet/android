@@ -6,7 +6,7 @@
 
 using namespace xamarin::android;
 
-auto AndroidSystem::lookup_system_property (std::string_view const& name, size_t &value_len) noexcept -> const char*
+auto AndroidSystem::lookup_system_property (const char *name, size_t &value_len) noexcept -> const char*
 {
 	return HostEnvironment::lookup_system_property (
 		name,

@@ -2531,6 +2531,7 @@ public sealed class JavaPeerScanner : IDisposable
 				JniSignature = mm.JniSignature,
 				ConstructorIndex = ctorIndex,
 				SuperArgumentsString = mm.SuperArgumentsString,
+				ThrownNames = mm.ThrownNames,
 				HasMatchingManagedCtor = managedParams != null,
 				ManagedParameterTypes = managedParams ?? [],
 				Annotations = mm.Annotations,

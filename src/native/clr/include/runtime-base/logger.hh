@@ -2,17 +2,14 @@
 
 #include <cstdio>
 
-#include <string_view>
-
 #include <shared/log_types.hh>
-#include <runtime-base/strings.hh>
 
 namespace xamarin::android {
 	class Logger
 	{
 	public:
 		static void init_logging_categories () noexcept;
-		static void init_reference_logging (std::string_view const& override_dir) noexcept;
+		static void init_reference_logging (const char *override_dir) noexcept;
 
 		static auto log_timing_categories () noexcept -> LogTimingCategories
 		{
@@ -50,11 +47,11 @@ namespace xamarin::android {
 		}
 
 	private:
-		static auto open_file (std::string_view const& path) noexcept -> FILE*;
-		static auto open_file (LogCategories category, std::string_view const& custom_path, std::string_view const& override_dir, std::string_view const& fallback_filename) noexcept -> FILE*;
+		static auto open_file (const char *path) noexcept -> FILE*;
+		static auto open_file (LogCategories category, const char *custom_path, const char *override_dir, const char *fallback_filename) noexcept -> FILE*;
 
 	private:
-		static bool set_category (std::string_view const& name, string_segment& arg, unsigned int entry, bool arg_starts_with_name = false) noexcept;
+		static bool set_category (const char *name, const char *arg, size_t arg_length, unsigned int entry, bool arg_starts_with_name = false) noexcept;
 
 	private:
 		static inline LogTimingCategories _log_timing_categories;

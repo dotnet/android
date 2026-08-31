@@ -358,6 +358,12 @@ public sealed record JavaConstructorInfo
 	public string? SuperArgumentsString { get; init; }
 
 	/// <summary>
+	/// For [Export] constructors: Java exception types that the constructor declares it can throw.
+	/// Null for [Register] constructors.
+	/// </summary>
+	public IReadOnlyList<string>? ThrownNames { get; init; }
+
+	/// <summary>
 	/// Managed constructor parameter types, in declaration order.
 	/// </summary>
 	internal IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];

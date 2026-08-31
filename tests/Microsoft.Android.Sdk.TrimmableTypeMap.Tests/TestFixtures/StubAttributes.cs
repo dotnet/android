@@ -148,11 +148,12 @@ namespace Android.Content
 
 namespace Java.Interop
 {
-	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
+	[AttributeUsage (AttributeTargets.Method | AttributeTargets.Constructor, AllowMultiple = false)]
 	public sealed class ExportAttribute : Attribute
 	{
 		public string? Name { get; set; }
 		public string[]? ThrownNames { get; set; }
+		public string? SuperArgumentsString { get; set; }
 
 		public ExportAttribute () { }
 		public ExportAttribute (string name) => Name = name;

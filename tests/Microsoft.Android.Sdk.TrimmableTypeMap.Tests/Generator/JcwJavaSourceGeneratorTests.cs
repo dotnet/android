@@ -512,6 +512,13 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 			AssertContainsLine ("throws java.io.IOException, java.lang.IllegalStateException\n", java);
 		}
 
+		[Fact]
+		public void Generate_ExportConstructorWithThrows_HasThrowsClause ()
+		{
+			var java = GenerateFixture ("my/app/ExportWithThrows");
+			AssertContainsLine ("public ExportWithThrows ()\n\t\tthrows java.io.IOException, java.lang.IllegalStateException\n", java);
+		}
+
 	}
 
 	public class StaticExportMethods
