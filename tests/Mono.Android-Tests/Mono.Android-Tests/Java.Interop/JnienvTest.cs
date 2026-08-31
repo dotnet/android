@@ -156,10 +156,14 @@ namespace Java.InteropTests
 			try {
 				using var first = Java.Lang.Object.GetObject<GenericHolder<int>> (handle, JniHandleOwnership.DoNotTransfer);
 				var second = Java.Lang.Object.GetObject<GenericHolder<int>> (handle, JniHandleOwnership.DoNotTransfer);
-
-				Assert.IsNotNull (first);
-				Assert.AreSame (first, second);
-				Assert.AreEqual (1, GenericHolder<int>.ActivationConstructorInvocations);
+				try {
+					Assert.IsNotNull (first);
+					Assert.AreSame (first, second);
+					Assert.AreEqual (1, GenericHolder<int>.ActivationConstructorInvocations);
+				} finally {
+					if (!ReferenceEquals (first, second))
+						second?.Dispose ();
+				}
 			} finally {
 				JNIEnv.DeleteLocalRef (handle);
 			}
