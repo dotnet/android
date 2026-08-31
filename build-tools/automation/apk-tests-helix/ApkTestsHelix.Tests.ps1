@@ -75,6 +75,9 @@ try {
 		-not $bashScript.Contains('E.register_namespace("", "http://microsoft.com/schemas/VisualStudio/TeamTest/2010")')) {
 		throw 'Generated Linux APK test script is missing required commands.'
 	}
+	if ($bashScript -match '(?m)^\s+(?:E\.register_namespace|tree = E\.parse)') {
+		throw 'Generated TRX merge Python has unexpected top-level indentation.'
+	}
 	if ($bashScript.Contains("`r")) {
 		throw 'Generated Linux APK test script must use LF line endings.'
 	}

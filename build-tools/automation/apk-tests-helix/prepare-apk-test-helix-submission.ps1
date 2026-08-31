@@ -409,18 +409,7 @@ if [[ -n "$isolated_test" ]]; then
 	run_instrumentation remaining -e exclude-test "$isolated_test" ||
 		fail 'Remaining on-device tests failed after two attempts.'
 	remaining_results="$run_results_path"
-	"$python" -c 'import sys, xml.etree.ElementTree as E
-base, extra, output = sys.argv[1:]
-	E.register_namespace("", "http://microsoft.com/schemas/VisualStudio/TeamTest/2010")
-	tree = E.parse(base)
-root = tree.getroot()
-other = E.parse(extra).getroot()
-local = lambda tag: tag.rsplit("}", 1)[-1]
-for section_name in ("Results", "TestDefinitions"):
-    section = next(node for node in root if local(node.tag) == section_name)
-    other_section = next(node for node in other if local(node.tag) == section_name)
-    section.extend(list(other_section))
-tree.write(output, encoding="utf-8", xml_declaration=True)' \
+	"$python" -c 'import sys, xml.etree.ElementTree as E; base, extra, output = sys.argv[1:]; E.register_namespace("", "http://microsoft.com/schemas/VisualStudio/TeamTest/2010"); tree = E.parse(base); root = tree.getroot(); other = E.parse(extra).getroot(); local = lambda tag: tag.rsplit("}", 1)[-1]; next(node for node in root if local(node.tag) == "Results").extend(list(next(node for node in other if local(node.tag) == "Results"))); next(node for node in root if local(node.tag) == "TestDefinitions").extend(list(next(node for node in other if local(node.tag) == "TestDefinitions"))); tree.write(output, encoding="utf-8", xml_declaration=True)' \
 		"$remaining_results" "$isolated_results" "$upload/results.trx"
 else
 	run_instrumentation all || fail 'On-device tests failed after two attempts.'
