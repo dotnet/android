@@ -83,7 +83,6 @@ stages:
     steps:
     - checkout: self
       path: s/android
-      fetchDepth: 0
       submodules: recursive
       persistCredentials: false
 
@@ -117,7 +116,6 @@ stages:
     timeoutInMinutes: 240
     steps:
     - checkout: self
-      fetchDepth: 0
       submodules: recursive
       persistCredentials: false
 
