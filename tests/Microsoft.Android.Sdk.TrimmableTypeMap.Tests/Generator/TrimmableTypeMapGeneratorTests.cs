@@ -57,6 +57,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			logMessages.Add ("XA4205: [ExportField] can only be used on methods with 0 parameters.");
 		public void LogExportFieldReturnsVoidError () =>
 			logMessages.Add ("XA4208: [ExportField] cannot be used on a method returning 'void'.");
+		public void LogExportFieldOnGenericTypeError () =>
+			logMessages.Add ("XA4207: [ExportField] cannot be used on a generic type.");
 		public void LogCustomJavaObjectError (string managedTypeName) =>
 			logMessages.Add ($"XA4212: Type `{managedTypeName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
 		public void LogCustomJavaObjectWarning (string managedTypeName) =>
@@ -352,10 +354,12 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 
 		Assert.Equal (2, logMessages.Count (message => message.StartsWith ("XA4205:", StringComparison.Ordinal)));
 		Assert.Equal (1, logMessages.Count (message => message.StartsWith ("XA4208:", StringComparison.Ordinal)));
+		Assert.Equal (1, logMessages.Count (message => message.StartsWith ("XA4207:", StringComparison.Ordinal)));
 		foreach (var javaName in new [] {
 			"my/app/ExportFieldWithParameter",
 			"my/app/ExportFieldWithVoidReturn",
 			"my/app/ExportFieldWithParameterAndVoidReturn",
+			"my/app/GenericExportField",
 		}) {
 			var peer = result.AllPeers.Single (candidate => candidate.JavaName == javaName);
 			Assert.Empty (peer.JavaFields);

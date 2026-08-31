@@ -667,12 +667,13 @@ public sealed class JavaPeerScanner : IDisposable
 		var methods = new List<MarshalMethodInfo> ();
 		var fields = new List<JavaFieldInfo> ();
 		HashSet<string>? registeredMethodKeys = detectBaseOverrides ? new (StringComparer.Ordinal) : null;
+		bool isGenericType = typeDef.GetGenericParameters ().Count > 0;
 
 		// Pass 1: collect methods with [Register], [Export], or [ExportField] directly on them
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
 
-			if (!ValidateExportField (methodDef, index)) {
+			if (!ValidateExportField (methodDef, index, isGenericType)) {
 				continue;
 			}
 
@@ -739,12 +740,17 @@ public sealed class JavaPeerScanner : IDisposable
 		return (methods, fields);
 	}
 
-	bool ValidateExportField (MethodDefinition methodDef, AssemblyIndex index)
+	bool ValidateExportField (MethodDefinition methodDef, AssemblyIndex index, bool isGenericType)
 	{
 		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
 			var ca = index.Reader.GetCustomAttribute (caHandle);
 			if (AssemblyIndex.GetCustomAttributeName (ca, index.Reader) != "ExportFieldAttribute") {
 				continue;
+			}
+
+			if (isGenericType) {
+				logger?.LogExportFieldOnGenericTypeError ();
+				return false;
 			}
 
 			var sig = methodDef.DecodeSignature (TypeRefSignatureTypeProvider.Instance, index);

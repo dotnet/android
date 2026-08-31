@@ -56,6 +56,7 @@ public class ExportFieldTests : FixtureTestBase
 	[InlineData ("my/app/ExportFieldWithParameter")]
 	[InlineData ("my/app/ExportFieldWithVoidReturn")]
 	[InlineData ("my/app/ExportFieldWithParameterAndVoidReturn")]
+	[InlineData ("my/app/GenericExportField")]
 	public void ScannerAndGenerator_InvalidExportFieldProducesNoFieldOrMethod (string javaName)
 	{
 		var peer = FindFixtureByJavaName (javaName);

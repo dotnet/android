@@ -42,6 +42,9 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "void", "XA4208")]
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "void", "XA4208")]
 		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "void", "XA4208")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic", "XA4207")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic", "XA4207")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic", "XA4207")]
 		public void Build_InvalidExportField_ReportsLegacyDiagnostic (
 			string typeMapImplementation,
 			AndroidRuntime runtime,
@@ -56,12 +59,13 @@ namespace Xamarin.Android.Build.Tests {
 			var initializer = invalidShape switch {
 				"parameters" => "public int InitialValue (int value) => value;",
 				"void" => "public void InitialValue () { }",
+				"generic" => "public int InitialValue () => 42;",
 				_ => throw new InvalidOperationException ($"Unknown invalid [ExportField] shape '{invalidShape}'."),
 			};
 			var proj = CreateExportFieldValidationProject (runtime, typeMapImplementation, $"""
 						[ExportField ("VALUE")]
 						{initializer}
-				""");
+				""", genericType: invalidShape == "generic");
 
 			using var builder = CreateApkBuilder ();
 			builder.ThrowOnBuildFailure = false;
@@ -72,8 +76,10 @@ namespace Xamarin.Android.Build.Tests {
 		static XamarinAndroidApplicationProject CreateExportFieldValidationProject (
 			AndroidRuntime runtime,
 			string typeMapImplementation,
-			string members)
+			string members,
+			bool genericType = false)
 		{
+			var typeParameters = genericType ? "<T>" : "";
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = runtime == AndroidRuntime.NativeAOT,
 				References = {
@@ -89,7 +95,7 @@ namespace Xamarin.Android.Build.Tests {
 
 					namespace ExportFieldValidation {
 						[Register ("com/example/exportfields/ValidationPeer")]
-						class ValidationPeer : Java.Lang.Object {
+						class ValidationPeer{{typeParameters}} : Java.Lang.Object {
 							public ValidationPeer () {
 							}
 

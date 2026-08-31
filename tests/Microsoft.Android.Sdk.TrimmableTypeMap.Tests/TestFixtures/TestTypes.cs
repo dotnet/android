@@ -639,6 +639,13 @@ namespace MyApp
 		public void GetValue (int value) { }
 	}
 
+	[Register ("my/app/GenericExportField")]
+	public class GenericExportField<T> : Java.Lang.Object
+	{
+		[Java.Interop.ExportField ("VALUE")]
+		public int GetValue () => 42;
+	}
+
 	[Register ("my/app/BaseInstrumentation")]
 	public abstract class BaseInstrumentation : Android.App.Instrumentation { }
 
