@@ -127,7 +127,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 
-				""", File.ReadAllText (proguard));
+				""".ReplaceLineEndings (), File.ReadAllText (proguard));
 			Assert.AreEqual ("""
 				C	acme/orig/DirectTarget
 				C	acme/orig/ICallback
@@ -142,7 +142,7 @@ namespace Xamarin.Android.Build.Tests
 				M	acme/orig/MyView	onClick(android.view.View)
 				M	acme/orig/MyView	onClick(android.view.View,int)
 
-				""", File.ReadAllText (manifest));
+				""".ReplaceLineEndings (), File.ReadAllText (manifest));
 		}
 	}
 }
