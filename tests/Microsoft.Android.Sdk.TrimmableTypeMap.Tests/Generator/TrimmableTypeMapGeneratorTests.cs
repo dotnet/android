@@ -350,9 +350,13 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		using var peReader = CreateTestFixturePEReader ();
 		var result = CreateGenerator ().Execute ([Input ("TestFixtures", peReader)], new Version (11, 0), new HashSet<string> ());
 
-		Assert.Contains (logMessages, message => message.StartsWith ("XA4205:", StringComparison.Ordinal));
-		Assert.Contains (logMessages, message => message.StartsWith ("XA4208:", StringComparison.Ordinal));
-		foreach (var javaName in new [] { "my/app/ExportFieldWithParameter", "my/app/ExportFieldWithVoidReturn" }) {
+		Assert.Equal (2, logMessages.Count (message => message.StartsWith ("XA4205:", StringComparison.Ordinal)));
+		Assert.Equal (1, logMessages.Count (message => message.StartsWith ("XA4208:", StringComparison.Ordinal)));
+		foreach (var javaName in new [] {
+			"my/app/ExportFieldWithParameter",
+			"my/app/ExportFieldWithVoidReturn",
+			"my/app/ExportFieldWithParameterAndVoidReturn",
+		}) {
 			var peer = result.AllPeers.Single (candidate => candidate.JavaName == javaName);
 			Assert.Empty (peer.JavaFields);
 			Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "GetValue");

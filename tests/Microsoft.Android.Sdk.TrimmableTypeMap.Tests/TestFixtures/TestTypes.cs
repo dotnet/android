@@ -632,6 +632,13 @@ namespace MyApp
 		public void GetValue () { }
 	}
 
+	[Register ("my/app/ExportFieldWithParameterAndVoidReturn")]
+	public class ExportFieldWithParameterAndVoidReturn : Java.Lang.Object
+	{
+		[Java.Interop.ExportField ("VALUE")]
+		public void GetValue (int value) { }
+	}
+
 	[Register ("my/app/BaseInstrumentation")]
 	public abstract class BaseInstrumentation : Android.App.Instrumentation { }
 
