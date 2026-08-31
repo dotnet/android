@@ -93,7 +93,8 @@
     <RewriteJniNamesForR8
         SourceFiles="@(_AndroidR8JniIlcAssembly)"
         DestinationDirectory="$(_AndroidR8JniRewrittenAssemblyDirectory)"
-        MappingFile="$(_AndroidR8JniSeedMapping)">
+        MappingFile="$(_AndroidR8JniSeedMapping)"
+        RewriteManifestFile="$(_AndroidR8JniRewriteManifest)">
       <Output TaskParameter="RewrittenFiles" ItemName="_AndroidR8JniRewrittenIlcAssembly" />
     </RewriteJniNamesForR8>
     <ItemGroup>

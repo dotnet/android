@@ -6,6 +6,7 @@ using Microsoft.Build.Utilities;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks.JniRemapping;
 
 namespace Xamarin.Android.Tasks
 {
@@ -39,6 +40,8 @@ namespace Xamarin.Android.Tasks
 		public bool UseTrimmableNativeAotProguardConfiguration { get; set; }
 		public bool GenerateSeedMapping { get; set; }
 		public bool EnableObfuscation { get; set; }
+		public bool ValidateProguardMappingFileInput { get; set; }
+		public string? ProguardMappingRequiredEntriesFile { get; set; }
 
 		// User-authored AndroidJavaSource (Bind != true) .java files. These have no managed peer and are
 		// therefore absent from the acw-map, so they must be kept explicitly when shrinking is enabled.
@@ -51,10 +54,48 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			try {
-				return base.RunTask ();
+				bool result = base.RunTask ();
+				if (result && ValidateProguardMappingFileInput) {
+					ValidateAppliedMapping ();
+				}
+				return result && !Log.HasLoggedErrors;
 			} finally {
 				foreach (var temp in tempFiles) {
 					File.Delete (temp);
+				}
+			}
+
+			void ValidateAppliedMapping ()
+			{
+				if (ProguardMappingFileInput.IsNullOrEmpty () || !File.Exists (ProguardMappingFileInput)) {
+					Log.LogCodedError ("XA4307", Properties.Resources.XA4307,
+						$"The R8 JNI seed mapping file '{ProguardMappingFileInput}' was not found.");
+					return;
+				}
+				if (ProguardMappingFileOutput.IsNullOrEmpty () || !File.Exists (ProguardMappingFileOutput)) {
+					Log.LogCodedError ("XA4307", Properties.Resources.XA4307,
+						$"The final R8 mapping file '{ProguardMappingFileOutput}' was not generated, so the applied JNI names could not be validated.");
+					return;
+				}
+				if (ProguardMappingRequiredEntriesFile.IsNullOrEmpty () || !File.Exists (ProguardMappingRequiredEntriesFile)) {
+					Log.LogCodedError ("XA4307", Properties.Resources.XA4307,
+						$"The R8 JNI rewrite manifest '{ProguardMappingRequiredEntriesFile}' was not found.");
+					return;
+				}
+
+				R8Mapping seedMapping = R8Mapping.Load (ProguardMappingFileInput);
+				R8Mapping finalMapping = R8Mapping.Load (ProguardMappingFileOutput);
+				int conflictCount = 0;
+				foreach (string conflict in seedMapping.GetCompatibilityConflicts (finalMapping, File.ReadLines (ProguardMappingRequiredEntriesFile))) {
+					conflictCount++;
+					if (conflictCount <= 20) {
+						Log.LogCodedError ("XA4307", Properties.Resources.XA4307,
+							$"The final R8 mapping did not preserve the JNI seed mapping for {conflict}.");
+					}
+				}
+				if (conflictCount > 20) {
+					Log.LogCodedError ("XA4307", Properties.Resources.XA4307,
+						$"The final R8 mapping contains {conflictCount - 20} additional conflicts with managed JNI names.");
 				}
 			}
 		}

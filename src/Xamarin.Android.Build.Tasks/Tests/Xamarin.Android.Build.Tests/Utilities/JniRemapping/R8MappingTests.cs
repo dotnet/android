@@ -235,5 +235,84 @@ namespace Xamarin.Android.Build.Tests
 		{
 			Assert.Throws<FormatException> (() => R8Mapping.Parse (new StringReader ("    int someField -> x\n")));
 		}
+
+		[Test]
+		public void ReportsNamesThatDifferBetweenSeedAndFinalMappings ()
+		{
+			R8Mapping seed = R8Mapping.Parse (new StringReader ("""
+				acme.orig.MyView -> a.b.C:
+				    int count -> a
+				    void onClick(android.view.View) -> b
+				    void removed() -> c
+
+				"""));
+			R8Mapping final = R8Mapping.Parse (new StringReader ("""
+				acme.orig.MyView -> x.y.Z:
+				    int count -> d
+				    void onClick(android.view.View) -> e
+				acme.final.Only -> q.r.S:
+
+				"""));
+
+			CollectionAssert.AreEqual (new [] {
+				"class 'acme/orig/MyView': seed name 'a/b/C', final name 'x/y/Z'",
+				"field 'acme/orig/MyView.count': seed name 'a', final name 'd'",
+				"method 'acme/orig/MyView.onClick(android.view.View)': seed name 'b', final name 'e'",
+			}, seed.GetCompatibilityConflicts (final, new [] {
+				"C\tacme/orig/MyView",
+				"F\tacme/orig/MyView\tcount",
+				"M\tacme/orig/MyView\tonClick(android.view.View)",
+			}));
+		}
+
+		[Test]
+		public void IgnoresMappingsRemovedByFinalShrinking ()
+		{
+			R8Mapping seed = R8Mapping.Parse (new StringReader ("""
+				acme.orig.Kept -> a.b.C:
+				    void kept() -> a
+				    void removed() -> b
+				acme.orig.Removed -> a.b.D:
+				    int value -> a
+				    void removed() -> b
+
+				"""));
+			R8Mapping final = R8Mapping.Parse (new StringReader ("""
+				acme.orig.Kept -> a.b.C:
+				    void kept() -> a
+				acme.orig.Removed -> R8$$REMOVED$$CLASS$$0:
+				    int value -> z
+				    void removed() -> z
+
+				"""));
+
+			CollectionAssert.IsEmpty (seed.GetCompatibilityConflicts (final, new [] {
+				"C\tacme/orig/Removed",
+				"F\tacme/orig/Removed\tvalue",
+				"M\tacme/orig/Removed\tremoved()",
+				"M\tacme/orig/Kept\tremoved()",
+			}));
+		}
+
+		[Test]
+		public void TracksMappingsUsedByManagedRewriting ()
+		{
+			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
+				acme.orig.MyView -> a.b.C:
+				    int count -> a
+				    void onClick(android.view.View) -> b
+
+				"""));
+
+			Assert.IsTrue (mapping.TryGetRenamedClass ("acme/orig/MyView", out _));
+			Assert.IsTrue (mapping.TryGetRenamedField ("acme/orig/MyView", "count", out _));
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "onClick", new [] { "android.view.View" }, out _));
+
+			CollectionAssert.AreEquivalent (new [] {
+				"C\tacme/orig/MyView",
+				"F\tacme/orig/MyView\tcount",
+				"M\tacme/orig/MyView\tonClick(android.view.View)",
+			}, mapping.AccessedEntries);
+		}
 	}
 }

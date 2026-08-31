@@ -2031,7 +2031,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_SetProguardMappingFileProperty">
 	<PropertyGroup>
-		<AndroidProguardMappingFile Condition=" '$(AndroidLinkTool)' == 'r8' And '$(AndroidCreateProguardMappingFile)' == 'True' ">$(OutputPath)mapping.txt</AndroidProguardMappingFile>
+		<AndroidProguardMappingFile Condition=" '$(AndroidLinkTool)' == 'r8' And ('$(AndroidCreateProguardMappingFile)' == 'True' Or '$(_AndroidEnableR8JniNameRewriting)' == 'true') ">$(OutputPath)mapping.txt</AndroidProguardMappingFile>
 	</PropertyGroup>
 </Target>
 

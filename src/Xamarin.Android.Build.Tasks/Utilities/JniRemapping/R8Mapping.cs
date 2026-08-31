@@ -23,6 +23,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 		// Original JNI class name -> ("name(javaParam,javaParam,...)" -> obfuscated method name).
 		readonly Dictionary<string, Dictionary<string, string>> methods = new Dictionary<string, Dictionary<string, string>> (StringComparer.Ordinal);
+		readonly HashSet<string> accessedEntries = new HashSet<string> (StringComparer.Ordinal);
+
+		public IEnumerable<string> AccessedEntries => accessedEntries;
 
 		public static R8Mapping Load (string path)
 		{
@@ -129,6 +132,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		{
 			if (classes.TryGetValue (originalJniClassName, out string? renamed)) {
 				obfuscatedJniClassName = renamed;
+				accessedEntries.Add (BuildClassEntry (originalJniClassName));
 				return true;
 			}
 			obfuscatedJniClassName = "";
@@ -195,6 +199,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return false;
 			}
 			obfuscatedFieldName = renamed;
+			accessedEntries.Add (BuildFieldEntry (owningJniClassName, originalFieldName));
 			return true;
 		}
 
@@ -208,6 +213,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return false;
 			}
 			obfuscatedMethodName = renamed;
+			accessedEntries.Add (BuildMethodEntry (owningJniClassName, BuildMethodKey (javaMethodName, javaParameterTypes)));
 			return true;
 		}
 
@@ -241,9 +247,71 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return false;
 			}
 
+			foreach (var kvp in classMethods) {
+				if (kvp.Key.StartsWith (prefix, StringComparison.Ordinal) && kvp.Value == match) {
+					accessedEntries.Add (BuildMethodEntry (owningJniClassName, kvp.Key));
+				}
+			}
 			obfuscatedMethodName = match;
 			return true;
 		}
+
+		/// <summary>
+		/// Reports required mappings that are present in both this seed mapping and
+		/// <paramref name="finalMapping"/>, but whose obfuscated names differ. Entries absent from the
+		/// final mapping are intentionally ignored because ILLink, ILC, or final R8 shrinking may have
+		/// removed them.
+		/// </summary>
+		public IEnumerable<string> GetCompatibilityConflicts (R8Mapping finalMapping, IEnumerable<string> requiredEntries)
+		{
+			foreach (string requiredEntry in requiredEntries) {
+				string [] parts = requiredEntry.Split ('\t');
+				switch (parts.Length > 0 ? parts [0] : "") {
+				case "C" when parts.Length == 2:
+					if (classes.TryGetValue (parts [1], out string? seedClassName) &&
+							finalMapping.classes.TryGetValue (parts [1], out string? finalClassName) &&
+							!IsRemovedClassName (finalClassName) &&
+							!String.Equals (seedClassName, finalClassName, StringComparison.Ordinal)) {
+						yield return $"class '{parts [1]}': seed name '{seedClassName}', final name '{finalClassName}'";
+					}
+					break;
+				case "F" when parts.Length == 3:
+					if (!finalMapping.IsRemovedClass (parts [1]) &&
+							fields.TryGetValue (parts [1], out var seedFields) &&
+							seedFields.TryGetValue (parts [2], out string? seedFieldName) &&
+							finalMapping.fields.TryGetValue (parts [1], out var finalFields) &&
+							finalFields.TryGetValue (parts [2], out string? finalFieldName) &&
+							!String.Equals (seedFieldName, finalFieldName, StringComparison.Ordinal)) {
+						yield return $"field '{parts [1]}.{parts [2]}': seed name '{seedFieldName}', final name '{finalFieldName}'";
+					}
+					break;
+				case "M" when parts.Length == 3:
+					if (!finalMapping.IsRemovedClass (parts [1]) &&
+							methods.TryGetValue (parts [1], out var seedMethods) &&
+							seedMethods.TryGetValue (parts [2], out string? seedMethodName) &&
+							seedMethodName.Length != 0 &&
+							finalMapping.methods.TryGetValue (parts [1], out var finalMethods) &&
+							finalMethods.TryGetValue (parts [2], out string? finalMethodName) &&
+							finalMethodName.Length != 0 &&
+							!String.Equals (seedMethodName, finalMethodName, StringComparison.Ordinal)) {
+						yield return $"method '{parts [1]}.{parts [2]}': seed name '{seedMethodName}', final name '{finalMethodName}'";
+					}
+					break;
+				default:
+					throw new FormatException ($"Invalid R8 JNI rewrite manifest entry '{requiredEntry}'.");
+				}
+			}
+		}
+
+		static string BuildClassEntry (string className) => $"C\t{className}";
+		static string BuildFieldEntry (string className, string fieldName) => $"F\t{className}\t{fieldName}";
+		static string BuildMethodEntry (string className, string methodKey) => $"M\t{className}\t{methodKey}";
+
+		static bool IsRemovedClassName (string className)
+			=> className.StartsWith ("R8$$REMOVED$$CLASS$$", StringComparison.Ordinal);
+
+		bool IsRemovedClass (string originalClassName)
+			=> classes.TryGetValue (originalClassName, out string? className) && IsRemovedClassName (className);
 
 		static string JavaNameToJni (string javaBinaryName) => javaBinaryName.Replace ('.', '/');
 

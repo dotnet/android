@@ -52,18 +52,22 @@ namespace Xamarin.Android.Build.Tests
 
 			string destinationDll = Path.Combine (path, "destination", "nested", "Test.dll");
 			string destinationPdb = Path.ChangeExtension (destinationDll, "pdb");
+			string rewriteManifest = Path.Combine (path, "destination", "rewrite-manifest.txt");
 
 			var task = new RewriteJniNamesForR8 {
 				BuildEngine = new MockBuildEngine (TestContext.Out),
 				SourceFiles = new [] { new Microsoft.Build.Utilities.TaskItem (sourceDll) },
 				DestinationFiles = new [] { new Microsoft.Build.Utilities.TaskItem (destinationDll) },
 				MappingFile = mappingFile,
+				RewriteManifestFile = rewriteManifest,
 			};
 
 			Assert.IsTrue (task.Execute (), "Task should succeed.");
 
 			FileAssert.Exists (destinationDll);
 			FileAssert.Exists (destinationPdb);
+			FileAssert.Exists (rewriteManifest);
+			Assert.AreEqual ("", File.ReadAllText (rewriteManifest));
 			CollectionAssert.AreEqual (File.ReadAllBytes (sourceDll), File.ReadAllBytes (destinationDll), "An assembly with no JNI replacements must remain byte-identical.");
 			CollectionAssert.AreEqual (pdbContent, File.ReadAllBytes (destinationPdb), "The adjacent PDB must be copied unchanged.");
 

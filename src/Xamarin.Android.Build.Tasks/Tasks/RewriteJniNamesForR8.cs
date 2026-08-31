@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -39,6 +40,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string MappingFile { get; set; } = "";
 
+		public string? RewriteManifestFile { get; set; }
+
 		[Output]
 		public ITaskItem [] RewrittenFiles { get; set; } = [];
 
@@ -70,7 +73,29 @@ namespace Xamarin.Android.Tasks
 			}
 
 			RewrittenFiles = rewrittenFiles;
+			if (!Log.HasLoggedErrors && !RewriteManifestFile.IsNullOrEmpty ()) {
+				WriteRewriteManifest (RewriteManifestFile, mapping.AccessedEntries);
+			}
 			return !Log.HasLoggedErrors;
+		}
+
+		static void WriteRewriteManifest (string path, IEnumerable<string> entries)
+		{
+			string? directory = Path.GetDirectoryName (path);
+			if (!directory.IsNullOrEmpty ()) {
+				Directory.CreateDirectory (directory);
+			}
+
+			var sortedEntries = new List<string> (entries);
+			sortedEntries.Sort (StringComparer.Ordinal);
+			using var content = new MemoryStream ();
+			using (var writer = new StreamWriter (content, new System.Text.UTF8Encoding (encoderShouldEmitUTF8Identifier: false), 1024, leaveOpen: true)) {
+				foreach (string entry in sortedEntries) {
+					writer.WriteLine (entry);
+				}
+			}
+			content.Position = 0;
+			Files.CopyIfStreamChanged (content, path);
 		}
 
 		void RewriteAssembly (string sourcePath, string destinationPath, R8Mapping mapping)
