@@ -50,13 +50,24 @@ internal static class JavaNameValidator
 			return false;
 		}
 
-		for (int i = 0; i < identifier.Length; i++) {
-			char value = identifier [i];
-			if (char.IsSurrogate (value)) {
-				// javac accepts supplementary letters, but Android's DEX pipeline omits those classes.
+		int codePointIndex = 0;
+		for (int i = 0; i < identifier.Length; codePointIndex++) {
+			char first = identifier [i];
+			int value;
+			if (char.IsHighSurrogate (first)) {
+				if (i + 1 >= identifier.Length || !char.IsLowSurrogate (identifier [i + 1])) {
+					return false;
+				}
+				// JDK 21 and DEX preserve supplementary identifier characters, but Android's
+				// class loader cannot resolve classes whose simple name contains them.
 				return false;
+			} else if (char.IsLowSurrogate (first)) {
+				return false;
+			} else {
+				value = first;
+				i++;
 			}
-			bool valid = i == 0
+			bool valid = codePointIndex == 0
 				? IsIdentifierStart (value, isPackageSegment)
 				: IsIdentifierPart (value, isPackageSegment);
 			if (!valid) {
@@ -67,14 +78,14 @@ internal static class JavaNameValidator
 		return identifier.IsNormalized (NormalizationForm.FormC);
 	}
 
-	static bool IsIdentifierStart (char value, bool isPackageSegment) =>
+	static bool IsIdentifierStart (int value, bool isPackageSegment) =>
 		isPackageSegment
-			? JavaIdentifierData.IsPackageIdentifierStart (value)
+			? value <= char.MaxValue && JavaIdentifierData.IsPackageIdentifierStart ((char) value)
 			: JavaIdentifierData.IsIdentifierStart (value);
 
-	static bool IsIdentifierPart (char value, bool isPackageSegment) =>
+	static bool IsIdentifierPart (int value, bool isPackageSegment) =>
 		isPackageSegment
-			? JavaIdentifierData.IsPackageIdentifierPart (value)
+			? value <= char.MaxValue && JavaIdentifierData.IsPackageIdentifierPart ((char) value)
 			: JavaIdentifierData.IsSupportedIdentifierPart (value);
 
 	internal static bool TryGetInvalidPackageSegment (string packageName, char separator, out string invalidSegment)

@@ -164,21 +164,35 @@ public class JavaNameValidatorTests
 		Assert.Equal (isPart, JavaIdentifierData.IsIdentifierPart (value));
 	}
 
+	[Theory]
+	[InlineData (0x10400, true, true)]
+	[InlineData (0x10428, true, true)]
+	[InlineData (0x1b132, true, true)]
+	public void FrozenJdk21SupplementaryIdentifierData_MatchesCharacterClassification (
+		int value,
+		bool isStart,
+		bool isPart)
+	{
+		Assert.Equal (isStart, JavaIdentifierData.IsIdentifierStart (value));
+		Assert.Equal (isPart, JavaIdentifierData.IsIdentifierPart (value));
+	}
+
 	[Fact]
 	public void FrozenJdk21IdentifierData_HasExpectedClassificationHash ()
 	{
-		var classification = new byte [char.MaxValue + 1];
-		for (int value = char.MinValue; value <= char.MaxValue; value++) {
-			if (JavaIdentifierData.IsIdentifierStart ((char) value)) {
+		const int maxCodePoint = 0x10ffff;
+		var classification = new byte [maxCodePoint + 1];
+		for (int value = 0; value <= maxCodePoint; value++) {
+			if (JavaIdentifierData.IsIdentifierStart (value)) {
 				classification [value] |= 1;
 			}
-			if (JavaIdentifierData.IsIdentifierPart ((char) value)) {
+			if (JavaIdentifierData.IsIdentifierPart (value)) {
 				classification [value] |= 2;
 			}
 		}
 
 		Assert.Equal (
-			"4f5b4600591fe582079c94a1fbd23de64b382cf770572219acc6df4e3673fcf4",
+			"81b63b25dd80b36fcd964822c76bc18fe9c04319876d26b4ba3983f7d7090319",
 			Convert.ToHexString (SHA256.HashData (classification)).ToLowerInvariant ()
 		);
 	}
@@ -190,7 +204,7 @@ public class JavaNameValidatorTests
 	[InlineData ("com/\u0301example/Peer", "\u0301example")]
 	[InlineData ("com/e\u0301xample/Cafe\u0301", "e\u0301xample")]
 	[InlineData ("com/example/A\u0cf3", "A\u0cf3")]
-	[InlineData ("com/\U00010428xample/Peer\U00010400", "\U00010428xample")]
+	[InlineData ("com/example/\U00010428Peer\U00010400", "\U00010428Peer\U00010400")]
 	[InlineData ("com/example/\u1c89Peer", "\u1c89Peer")]
 	[InlineData ("com/example/\u212bPeer", "\u212bPeer")]
 	public void InvalidOrUnsupportedIdentifier_ReturnsSegment (string jniName, string expected)
@@ -203,6 +217,7 @@ public class JavaNameValidatorTests
 	[InlineData ("com.\u00a2pkg.example", "\u00a2pkg")]
 	[InlineData ("com.\u203fpkg.example", "\u203fpkg")]
 	[InlineData ("com.A\u0660.example", "A\u0660")]
+	[InlineData ("com.\U00010428pkg.example", "\U00010428pkg")]
 	public void JavaTypeOnlyIdentifiers_AreInvalidPackageSegments (string packageName, string expected)
 	{
 		Assert.True (JavaNameValidator.TryGetInvalidPackageSegment (packageName, '.', out var invalidIdentifier));

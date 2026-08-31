@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -76,6 +77,13 @@ namespace Xamarin.Android.Build.Tests {
 					{
 						public ConnectorComponent () { }
 					}
+
+					[Register ("com/example/\U00010428Peer")]
+					[Activity]
+					public class SupplementaryComponent : Activity
+					{
+						public SupplementaryComponent () { }
+					}
 					""",
 			});
 
@@ -89,12 +97,18 @@ namespace Xamarin.Android.Build.Tests {
 			if (expectNoOutputs) {
 				StringAssertEx.Contains ("\u00a2Peer", builder.LastBuildOutput);
 				StringAssertEx.Contains ("\u203fPeer", builder.LastBuildOutput);
-				AssertNoExportOutputs (builder, "\u00a2Peer");
-				AssertNoExportOutputs (builder, "\u203fPeer");
+				StringAssertEx.Contains ("\U00010428Peer", builder.LastBuildOutput);
+				AssertNoUnicodeOutputs (builder, "\u00a2Peer");
+				AssertNoUnicodeOutputs (builder, "\u203fPeer");
+				AssertNoUnicodeOutputs (builder, "\U00010428Peer");
 				return;
 			}
 
-			foreach (var javaName in new [] { "com/example/\u00a2Peer", "com/example/\u203fPeer" }) {
+			foreach (var javaName in new [] {
+				"com/example/\u00a2Peer",
+				"com/example/\u203fPeer",
+				"com/example/\U00010428Peer",
+			}) {
 				var relativePath = (javaName + ".java").Replace ('/', Path.DirectorySeparatorChar);
 				FileAssert.Exists (
 					builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", relativePath)),
@@ -105,12 +119,12 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, true)]
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR, false)]
 		[TestCase ("trimmable", AndroidRuntime.NativeAOT, false)]
-		public void Build_SupplementaryJavaIdentifier_MatchesAndroidToolchainLimitation (
+		public void Build_SupplementaryJavaIdentifier_MatchesRuntimeLimitation (
 			string typeMapImplementation,
 			AndroidRuntime runtime,
 			bool shouldSucceed)
 		{
-			const string javaName = "com/\U00010428xample/Peer\U00010400";
+			const string javaName = "com/example/\U00010428Peer\U00010400";
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -127,7 +141,7 @@ namespace Xamarin.Android.Build.Tests {
 
 					namespace UnnamedProject;
 
-					[Register ("com/\U00010428xample/Peer\U00010400")]
+					[Register ("com/example/\U00010428Peer\U00010400")]
 					public class SupplementaryJavaIdentifier : Java.Lang.Object
 					{
 						public SupplementaryJavaIdentifier () { }
@@ -143,19 +157,22 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (
 				shouldSucceed,
 				builder.Build (proj),
-				$"{runtime}/{typeMapImplementation} should match the Android supplementary-name limitation.");
-
+				$"{runtime}/{typeMapImplementation} should match the supplementary runtime limitation.");
 			if (!shouldSucceed) {
 				StringAssertEx.Contains ("error XA4258", builder.LastBuildOutput);
-				StringAssertEx.Contains ("\U00010428xample", builder.LastBuildOutput);
-				AssertNoExportOutputs (builder, "Peer\U00010400");
+				StringAssertEx.Contains ("\U00010428Peer\U00010400", builder.LastBuildOutput);
+				AssertNoUnicodeOutputs (builder, "\U00010428Peer\U00010400");
 				return;
 			}
 
 			var relativeJavaPath = (javaName + ".java").Replace ('/', Path.DirectorySeparatorChar);
-			var javaPath = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", relativeJavaPath));
-			FileAssert.Exists (javaPath, "llvm-ir should preserve the supplementary name in its Java source path.");
-			StringAssert.Contains ("public class Peer\U00010400", File.ReadAllText (javaPath));
+			var javaPath = new [] {
+				builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", relativeJavaPath)),
+				builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "java", relativeJavaPath)),
+				builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "linked-java", relativeJavaPath)),
+			}.FirstOrDefault (File.Exists);
+			Assert.IsNotNull (javaPath, $"{runtime}/{typeMapImplementation} should preserve the supplementary Java source path.");
+			StringAssert.Contains ("public class \U00010428Peer\U00010400", File.ReadAllText (javaPath));
 
 			var classFile = builder.Output.GetIntermediaryPath (
 				Path.Combine ("android", "bin", "classes", relativeJavaPath.Replace (".java", ".class")));
@@ -163,13 +180,13 @@ namespace Xamarin.Android.Build.Tests {
 
 			var acwMap = builder.Output.GetIntermediaryPath ("acw-map.txt");
 			StringAssert.Contains (
-				"UnnamedProject.SupplementaryJavaIdentifier;com.\U00010428xample.Peer\U00010400",
+				"UnnamedProject.SupplementaryJavaIdentifier;com.example.\U00010428Peer\U00010400",
 				File.ReadAllText (acwMap));
 
 			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
-			Assert.IsFalse (
+			Assert.IsTrue (
 				DexUtils.ContainsClass ($"L{javaName};", dexFile, AndroidSdkPath),
-				"The Android DEX pipeline does not retain supplementary-code-point class identifiers.");
+				"llvm-ir should preserve the exact supplementary descriptor even though Android cannot load it.");
 		}
 
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "JAVAC0000", false)]
@@ -249,12 +266,12 @@ namespace Xamarin.Android.Build.Tests {
 				StringAssertEx.Contains ("A\u0cf3", builder.LastBuildOutput);
 				StringAssertEx.Contains ("\u1c89Peer", builder.LastBuildOutput);
 				StringAssertEx.Contains ("\u212bPeer", builder.LastBuildOutput);
-				AssertNoExportOutputs (builder, "1Peer");
-				AssertNoExportOutputs (builder, "\u0301Peer");
-				AssertNoExportOutputs (builder, "Cafe\u0301");
-				AssertNoExportOutputs (builder, "A\u0cf3");
-				AssertNoExportOutputs (builder, "\u1c89Peer");
-				AssertNoExportOutputs (builder, "\u212bPeer");
+				AssertNoUnicodeOutputs (builder, "1Peer");
+				AssertNoUnicodeOutputs (builder, "\u0301Peer");
+				AssertNoUnicodeOutputs (builder, "Cafe\u0301");
+				AssertNoUnicodeOutputs (builder, "A\u0cf3");
+				AssertNoUnicodeOutputs (builder, "\u1c89Peer");
+				AssertNoUnicodeOutputs (builder, "\u212bPeer");
 				return;
 			}
 
@@ -323,8 +340,8 @@ namespace Xamarin.Android.Build.Tests {
 			if (expectNoOutputs) {
 				StringAssertEx.Contains ("error XA4258", builder.LastBuildOutput);
 				StringAssertEx.Contains ("\u212bPeer", builder.LastBuildOutput);
-				AssertNoExportOutputs (builder, "\u00c5Peer");
-				AssertNoExportOutputs (builder, "\u212bPeer");
+				AssertNoUnicodeOutputs (builder, "\u00c5Peer");
+				AssertNoUnicodeOutputs (builder, "\u212bPeer");
 				return;
 			}
 
@@ -1335,6 +1352,50 @@ namespace UnnamedProject {
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded — abstract types with protected ctors should not cause XAGTT7009.");
+		}
+
+		[Test]
+		public void DexUtils_RejectsDex041Containers ()
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (directory);
+			var dexFile = Path.Combine (directory, "classes.dex");
+			var header = new byte [112];
+			Encoding.ASCII.GetBytes ("dex\n041\0").CopyTo (header, 0);
+			File.WriteAllBytes (dexFile, header);
+
+			Assert.Throws<NotSupportedException> (() => DexUtils.GetClassDescriptors (dexFile));
+		}
+
+		static void AssertNoUnicodeOutputs (ProjectBuilder builder, string memberName)
+		{
+			var typemapDirectory = builder.Output.GetIntermediaryPath ("typemap");
+			var acwMapFile = builder.Output.GetIntermediaryPath ("acw-map.txt");
+			var androidSourceDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src"));
+			var outputs = new List<string> ();
+			if (Directory.Exists (typemapDirectory)) {
+				outputs.AddRange (Directory.GetFiles (typemapDirectory, "*.TypeMap.dll", SearchOption.AllDirectories));
+				outputs.AddRange (Directory.GetFiles (typemapDirectory, "_Microsoft.Android.TypeMaps.dll", SearchOption.AllDirectories));
+			}
+			if (File.Exists (acwMapFile)) {
+				outputs.Add (acwMapFile);
+			}
+
+			foreach (var javaDirectory in new [] { Path.Combine (typemapDirectory, "java"), androidSourceDirectory }) {
+				if (!Directory.Exists (javaDirectory)) {
+					continue;
+				}
+				foreach (var javaFile in Directory.GetFiles (javaDirectory, "*.java", SearchOption.AllDirectories)) {
+					if (File.ReadAllText (javaFile).Contains (memberName, StringComparison.Ordinal)) {
+						outputs.Add (javaFile);
+					}
+				}
+			}
+			Assert.IsEmpty (
+				outputs,
+				"Invalid Unicode Java names should not produce typemap assemblies, ACW maps, or partial Java output:" +
+				Environment.NewLine + string.Join (Environment.NewLine, outputs)
+			);
 		}
 
 		static void AssertTrimmableTypeMapOutputs (string typemapDir)

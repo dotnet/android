@@ -626,7 +626,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			<?xml version="1.0" encoding="utf-8"?>
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${applicationId}">
 			  <application>
-			    <activity android:name=".SimpleActivity" />
+			    <activity android:name="${applicationId}.SimpleActivity" />
 			  </application>
 			</manifest>
 			""");
@@ -640,12 +640,91 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 				PackageName: "my.app",
 				AndroidApiLevel: "35",
 				SupportedOSPlatformVersion: "24",
-				RuntimeProviderJavaName: "mono.MonoRuntimeProvider",
-				ManifestPlaceholders: "applicationId=my.app"),
+				RuntimeProviderJavaName: "mono.MonoRuntimeProvider"),
 			manifestTemplate);
 
 		var peer = result.AllPeers.First (p => p.ManagedTypeName == "MyApp.SimpleActivity");
-		Assert.True (peer.IsUnconditional, "Relative manifest names should root correctly after placeholder substitution.");
+		Assert.True (peer.IsUnconditional, "Built-in applicationId placeholders should resolve before rooting and validation.");
+		Assert.DoesNotContain (logMessages, message => message.StartsWith ("XA4258:", StringComparison.Ordinal));
+	}
+
+	[Fact]
+	public void Execute_ActivityAliasPlaceholdersAreResolvedBeforeValidationAndRooting ()
+	{
+		using var peReader = CreateTestFixturePEReader ();
+		var manifestTemplate = XDocument.Parse ("""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${applicationId}">
+			  <application>
+			    <activity-alias
+			        android:name="${applicationId}.UnnamedAlias"
+			        android:targetActivity="${targetPackage}.UnnamedActivity" />
+			  </application>
+			</manifest>
+			""");
+
+		var result = CreateGenerator ().Execute (
+			[Input ("TestFixtures", peReader)],
+			new Version (11, 0),
+			new HashSet<string> (),
+			manifestConfig: new ManifestConfig (
+				PackageName: "my.app",
+				AndroidApiLevel: "35",
+				SupportedOSPlatformVersion: "24",
+				RuntimeProviderJavaName: "mono.MonoRuntimeProvider",
+				ManifestPlaceholders: "targetPackage=myapp"),
+			manifestTemplate: manifestTemplate);
+
+		var peer = result.AllPeers.First (candidate => candidate.ManagedTypeName == "MyApp.UnnamedActivity");
+		Assert.True (peer.IsUnconditional, "The activity-alias target should root its Java peer.");
+		Assert.NotEmpty (result.GeneratedJavaSources);
+		Assert.DoesNotContain (logMessages, message => message.StartsWith ("XA4258:", StringComparison.Ordinal));
+		var alias = Assert.Single (result.Manifest?.Document.Descendants ("activity-alias") ?? []);
+		XNamespace android = "http://schemas.android.com/apk/res/android";
+		Assert.Equal ("my.app.UnnamedAlias", (string?) alias.Attribute (android + "name"));
+		Assert.Equal (
+			JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName),
+			(string?) alias.Attribute (android + "targetActivity")
+		);
+		Assert.NotEqual ("myapp.UnnamedActivity", (string?) alias.Attribute (android + "targetActivity"));
+	}
+
+	[Theory]
+	[InlineData ("${applicationId}.¢Alias", "${applicationId}.SimpleActivity", "com.example.¢Alias", "¢Alias")]
+	[InlineData ("${applicationId}.SimpleAlias", "${applicationId}.¢Peer", "com.example.¢Peer", "¢Peer")]
+	public void Execute_InvalidActivityAliasNameOrTarget_ReportsBeforeOutputs (
+		string aliasName,
+		string targetActivity,
+		string invalidName,
+		string invalidIdentifier)
+	{
+		using var peReader = CreateTestFixturePEReader ();
+		var manifestTemplate = XDocument.Parse ($$"""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${applicationId}">
+			  <application>
+			    <activity-alias android:name="{{aliasName}}" android:targetActivity="{{targetActivity}}" />
+			  </application>
+			</manifest>
+			""");
+
+		var result = CreateGenerator ().Execute (
+			[Input ("TestFixtures", peReader)],
+			new Version (11, 0),
+			new HashSet<string> (),
+			manifestConfig: new ManifestConfig (
+				PackageName: "com.example",
+				AndroidApiLevel: "35",
+				SupportedOSPlatformVersion: "24",
+				RuntimeProviderJavaName: "mono.MonoRuntimeProvider"),
+			manifestTemplate: manifestTemplate);
+
+		Assert.Empty (result.GeneratedAssemblies);
+		Assert.Empty (result.GeneratedJavaSources);
+		Assert.Contains (logMessages, message =>
+			message.Contains (
+				$"Java name '{invalidName}' contains invalid or unsupported Java identifier '{invalidIdentifier}'.",
+				StringComparison.Ordinal
+			)
+		);
 	}
 
 	[Theory]

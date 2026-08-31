@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -62,18 +63,141 @@ namespace Xamarin.ProjectTools
 		 */
 
 		/// <summary>
-		/// Runs the dexdump command to see if a class exists in a dex file
+		/// Reads the DEX type tables to see if a class exists.
 		/// </summary>
 		/// <param name="className">A Java class name of the form 'Landroid/app/ActivityTracker;'</param>
 		public static bool ContainsClass (string className, string dexFile, string androidSdkDirectory)
 		{
-			bool containsClass = false;
-			DataReceivedEventHandler handler = (s, e) => {
-				if (e.Data != null && e.Data.Contains ("Class descriptor") && e.Data.Contains (className))
-					containsClass = true;
-			};
-			DexDump (handler, dexFile, androidSdkDirectory);			
-			return containsClass;
+			_ = androidSdkDirectory;
+			return GetClassDescriptors (dexFile).Any (descriptor => descriptor.Contains (className, StringComparison.Ordinal));
+		}
+
+		public static IReadOnlyList<string> GetClassDescriptors (string dexFile)
+		{
+			using var stream = File.OpenRead (dexFile);
+			using var reader = new BinaryReader (stream, Encoding.UTF8, leaveOpen: true);
+			if (stream.Length < 112 ||
+					reader.ReadByte () != 'd' ||
+					reader.ReadByte () != 'e' ||
+					reader.ReadByte () != 'x' ||
+					reader.ReadByte () != '\n') {
+				throw new InvalidDataException ($"'{dexFile}' is not a DEX file.");
+			}
+			stream.Position = 4;
+			var version = Encoding.ASCII.GetString (reader.ReadBytes (3));
+			if (version == "041") {
+				throw new NotSupportedException ("DEX 041 containers with multiple logical files are not supported.");
+			}
+			if (version is not ("035" or "037" or "038" or "039" or "040")) {
+				throw new InvalidDataException ($"'{dexFile}' uses unsupported DEX version '{version}'.");
+			}
+
+			uint endianTag = ReadUInt32 (reader, 40);
+			if (endianTag != 0x12345678) {
+				throw new InvalidDataException ($"'{dexFile}' uses unsupported DEX endianness 0x{endianTag:x8}.");
+			}
+
+			var stringOffsets = ReadUInt32Table (reader, ReadUInt32 (reader, 56), ReadUInt32 (reader, 60));
+			var typeDescriptorIndexes = ReadUInt32Table (reader, ReadUInt32 (reader, 64), ReadUInt32 (reader, 68));
+			uint classCount = ReadUInt32 (reader, 96);
+			uint classOffset = ReadUInt32 (reader, 100);
+			ValidateRange (stream, classOffset, checked (classCount * 32), "class definitions");
+
+			var descriptors = new List<string> (checked ((int) classCount));
+			for (uint index = 0; index < classCount; index++) {
+				uint classIndex = ReadUInt32 (reader, checked (classOffset + index * 32));
+				if (classIndex >= typeDescriptorIndexes.Length) {
+					throw new InvalidDataException ($"DEX class index {classIndex} is outside the type table.");
+				}
+				uint descriptorIndex = typeDescriptorIndexes [classIndex];
+				if (descriptorIndex >= stringOffsets.Length) {
+					throw new InvalidDataException ($"DEX descriptor index {descriptorIndex} is outside the string table.");
+				}
+				descriptors.Add (ReadModifiedUtf8 (reader, stringOffsets [descriptorIndex]));
+			}
+			return descriptors;
+		}
+
+		static uint [] ReadUInt32Table (BinaryReader reader, uint count, uint offset)
+		{
+			ValidateRange (reader.BaseStream, offset, checked (count * 4), "table");
+			var values = new uint [checked ((int) count)];
+			reader.BaseStream.Position = offset;
+			for (int index = 0; index < values.Length; index++) {
+				values [index] = reader.ReadUInt32 ();
+			}
+			return values;
+		}
+
+		static uint ReadUInt32 (BinaryReader reader, uint offset)
+		{
+			ValidateRange (reader.BaseStream, offset, 4, "value");
+			reader.BaseStream.Position = offset;
+			return reader.ReadUInt32 ();
+		}
+
+		static void ValidateRange (Stream stream, uint offset, uint size, string description)
+		{
+			ulong end = (ulong) offset + size;
+			if (end > (ulong) stream.Length) {
+				throw new InvalidDataException ($"DEX {description} at 0x{offset:x} extends beyond the file.");
+			}
+		}
+
+		static string ReadModifiedUtf8 (BinaryReader reader, uint offset)
+		{
+			ValidateRange (reader.BaseStream, offset, 1, "string");
+			reader.BaseStream.Position = offset;
+			uint utf16Length = ReadUnsignedLeb128 (reader);
+			var value = new StringBuilder (checked ((int) utf16Length));
+			while (true) {
+				byte first = reader.ReadByte ();
+				if (first == 0) {
+					break;
+				}
+				if ((first & 0x80) == 0) {
+					value.Append ((char) first);
+					continue;
+				}
+				if ((first & 0xe0) == 0xc0) {
+					byte second = ReadContinuationByte (reader);
+					value.Append ((char) (((first & 0x1f) << 6) | (second & 0x3f)));
+					continue;
+				}
+				if ((first & 0xf0) == 0xe0) {
+					byte second = ReadContinuationByte (reader);
+					byte third = ReadContinuationByte (reader);
+					value.Append ((char) (((first & 0x0f) << 12) | ((second & 0x3f) << 6) | (third & 0x3f)));
+					continue;
+				}
+				throw new InvalidDataException ($"Invalid DEX modified UTF-8 lead byte 0x{first:x2}.");
+			}
+			if (value.Length != utf16Length) {
+				throw new InvalidDataException ($"DEX string declared {utf16Length} UTF-16 units but decoded {value.Length}.");
+			}
+			return value.ToString ();
+		}
+
+		static byte ReadContinuationByte (BinaryReader reader)
+		{
+			byte value = reader.ReadByte ();
+			if ((value & 0xc0) != 0x80) {
+				throw new InvalidDataException ($"Invalid DEX modified UTF-8 continuation byte 0x{value:x2}.");
+			}
+			return value;
+		}
+
+		static uint ReadUnsignedLeb128 (BinaryReader reader)
+		{
+			uint value = 0;
+			for (int index = 0; index < 5; index++) {
+				byte next = reader.ReadByte ();
+				value |= (uint) (next & 0x7f) << (index * 7);
+				if ((next & 0x80) == 0) {
+					return value;
+				}
+			}
+			throw new InvalidDataException ("Invalid DEX unsigned LEB128 value.");
 		}
 
 		/// <summary>

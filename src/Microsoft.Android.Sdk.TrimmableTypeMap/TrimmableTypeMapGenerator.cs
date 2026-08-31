@@ -173,24 +173,23 @@ public class TrimmableTypeMapGenerator
 			XName attName = androidNs + "name";
 			string packageName = (string?) root.Attribute ("package") ?? "";
 			foreach (var element in root.Descendants ()) {
-				if (element.Name.LocalName is not (
-						"application" or
-						"activity" or
-						"instrumentation" or
-						"service" or
-						"receiver" or
-						"provider")) {
+				if (!ManifestConstants.ComponentElementNames.Contains (element.Name.LocalName)) {
 					continue;
 				}
 
-				var name = (string?) element.Attribute (attName);
-				if (name is null) {
-					continue;
+				ValidateComponentName ((string?) element.Attribute (attName));
+				if (element.Name.LocalName == "activity-alias") {
+					ValidateComponentName ((string?) element.Attribute (androidNs + "targetActivity"));
 				}
+			}
 
-				string resolvedName = ManifestNameResolver.Resolve (name, packageName);
-				if (JavaNameValidator.TryGetInvalidJavaManifestTypeSegment (resolvedName, out var invalidIdentifier)) {
-					ReportInvalidName (resolvedName, invalidIdentifier);
+			void ValidateComponentName (string? name)
+			{
+				if (name is not null) {
+					string resolvedName = ManifestNameResolver.Resolve (name, packageName);
+					if (JavaNameValidator.TryGetInvalidJavaManifestTypeSegment (resolvedName, out var invalidIdentifier)) {
+						ReportInvalidName (resolvedName, invalidIdentifier);
+					}
 				}
 			}
 		}
@@ -495,6 +494,12 @@ public class TrimmableTypeMapGenerator
 					}
 				}
 				break;
+			case "activity-alias":
+				var targetActivity = (string?) element.Attribute (androidNs + "targetActivity");
+				if (targetActivity is not null) {
+					componentNames.Add (ManifestNameResolver.Resolve (targetActivity, packageName));
+				}
+				break;
 			}
 		}
 
@@ -644,7 +649,7 @@ public class TrimmableTypeMapGenerator
 			root.SetAttributeValue ("package", manifestConfig.PackageName);
 		}
 
-		ManifestGenerator.ApplyPlaceholders (doc, manifestConfig.ManifestPlaceholders);
+		ManifestGenerator.ApplyPlaceholders (doc, manifestConfig.ManifestPlaceholders, manifestConfig.PackageName);
 
 		if (!manifestConfig.ApplicationJavaClass.IsNullOrEmpty ()) {
 			var app = root.Element ("application");

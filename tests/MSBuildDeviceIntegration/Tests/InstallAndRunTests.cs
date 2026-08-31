@@ -110,6 +110,7 @@ namespace Xamarin.Android.Build.Tests
 				"UNICODE_JCW_ACTIVATED=1",
 				"UNICODE_CURRENCY_ACTIVATED",
 				"UNICODE_CONNECTOR_ACTIVATED",
+				"UNICODE_SUPPLEMENTARY_CLASS_NOT_FOUND",
 			};
 			var proj = new XamarinAndroidApplicationProject (
 				packageName: PackageUtils.MakePackageName (runtime, "unicodeidentifier")) {
@@ -147,6 +148,13 @@ namespace Xamarin.Android.Build.Tests
 					using (var connector = Java.Lang.Object.GetObject<ConnectorIdentifierPeer> (
 						connectorHandle, Android.Runtime.JniHandleOwnership.TransferLocalRef)) {
 					}
+					try {
+						var supplementaryClass = Java.Interop.JniEnvironment.Types.FindClass ("com/example/\U00010428Peer\U00010400");
+						Java.Interop.JniObjectReference.Dispose (ref supplementaryClass);
+						Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_SUPPLEMENTARY_UNEXPECTEDLY_LOADED");
+					} catch (Java.Lang.ClassNotFoundException) {
+						Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_SUPPLEMENTARY_CLASS_NOT_FOUND");
+					}
 					""");
 			proj.Sources.Add (new BuildItem.Source ("JavaTypeIdentifierPeers.cs") {
 				TextContent = () => """
@@ -171,11 +179,27 @@ namespace Xamarin.Android.Build.Tests
 							Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_CONNECTOR_ACTIVATED");
 						}
 					}
+
 					""",
+			});
+			proj.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("com\\example\\\U00010428Peer\U00010400.java") {
+				Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+				TextContent = () => """
+					package com.example;
+
+					public class 𐐨Peer𐐀 {}
+					""",
+			});
+			proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "supplementary-name.pro") {
+				TextContent = () => "-keep class com.example.𐐨Peer𐐀 { *; }",
 			});
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), $"{runtime}/{typeMapImplementation} should install.");
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			Assert.IsTrue (
+				DexUtils.ContainsClass ("Lcom/example/\U00010428Peer\U00010400;", dexFile, AndroidSdkPath),
+				"The exact supplementary descriptor should be present in DEX before Android fails to load it.");
 
 			ClearAdbLogcat ();
 			AdbStartActivity ($"{proj.PackageName}/{javaName}");

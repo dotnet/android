@@ -16,14 +16,6 @@ class ManifestGenerator
 	static readonly XNamespace AndroidNs = ManifestConstants.AndroidNs;
 	static readonly XName AttName = ManifestConstants.AttName;
 	static readonly char [] PlaceholderSeparators = [';'];
-	static readonly HashSet<string> ComponentElementNames = new (StringComparer.Ordinal) {
-		"application",
-		"activity",
-		"instrumentation",
-		"service",
-		"receiver",
-		"provider",
-	};
 
 	/// <summary>Warning code for library-manifest merge failures (maps to XA4302).</summary>
 	internal const int LibraryManifestMergeWarningCode = 4302;
@@ -60,6 +52,7 @@ class ManifestGenerator
 	// own package when they are relative (start with '.'). Mirrors ManifestDocument.ManifestAttributeFixups.
 	static readonly Dictionary<string, string []> ManifestAttributeFixups = new (StringComparer.Ordinal) {
 		{ "activity", ["name"] },
+		{ "activity-alias", ["name", "targetActivity"] },
 		{ "application", ["backupAgent"] },
 		{ "instrumentation", ["name"] },
 		{ "provider", ["name"] },
@@ -83,6 +76,9 @@ class ManifestGenerator
 		}
 
 		EnsureManifestAttributes (manifest);
+		// Template component names must be resolved before compat-name rewriting. Apply again
+		// after library-manifest merging so placeholders introduced by libraries are also covered.
+		ApplyPlaceholders (doc, ManifestPlaceholders, PackageName);
 		var app = EnsureApplicationElement (manifest);
 		var targetSdkVersionValue = GetTargetSdkVersionValue (manifest);
 
@@ -320,20 +316,22 @@ class ManifestGenerator
 				continue;
 			}
 
-			var nameAttr = element.Attribute (AttName);
-			if (nameAttr is null) {
+			var classNameAttr = element.Name.LocalName == "activity-alias"
+				? element.Attribute (AndroidNs + "targetActivity")
+				: element.Attribute (AttName);
+			if (classNameAttr is null) {
 				continue;
 			}
-			var resolved = ManifestNameResolver.Resolve (nameAttr.Value, packageName);
+			var resolved = ManifestNameResolver.Resolve (classNameAttr.Value, packageName);
 			if (compatToCrc.TryGetValue (resolved, out var crcName)) {
-				nameAttr.Value = crcName;
+				classNameAttr.Value = crcName;
 			}
 		}
 	}
 
 	static bool IsComponentElement (XElement element)
 	{
-		return element.Name.NamespaceName.Length == 0 && ComponentElementNames.Contains (element.Name.LocalName);
+		return element.Name.NamespaceName.Length == 0 && ManifestConstants.ComponentElementNames.Contains (element.Name.LocalName);
 	}
 
 	void EnsureManifestAttributes (XElement manifest)
