@@ -277,6 +277,7 @@
       <FileWrites Include="$(_PostTrimTypeMapJavaFilesList)" Condition="Exists('$(_PostTrimTypeMapJavaFilesList)')" />
       <FileWrites Include="$(_PostTrimTrimmableTypeMapJavaStamp)" Condition="Exists('$(_PostTrimTrimmableTypeMapJavaStamp)')" />
       <FileWrites Include="$(_TypeMapAssembliesListFile)" />
+      <FileWrites Include="$(_TrimmableTypeMapFingerprintsFile)" Condition="Exists('$(_TrimmableTypeMapFingerprintsFile)')" />
       <FileWrites Include="$(_TypeMapJavaFilesList)" Condition="Exists('$(_TypeMapJavaFilesList)')" />
       <FileWrites Include="$(_TrimmableTypeMapOutputStamp)" Condition="Exists('$(_TrimmableTypeMapOutputStamp)')" />
       <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" Condition="Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml')" />

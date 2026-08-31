@@ -310,18 +310,24 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		}
 	}
 
-	Dictionary<string, string> ReadTypeMapFingerprints ()
+	internal Dictionary<string, string> ReadTypeMapFingerprints ()
 	{
 		var fingerprints = new Dictionary<string, string> (StringComparer.Ordinal);
 		if (TypeMapFingerprintsFile.IsNullOrEmpty () || !File.Exists (TypeMapFingerprintsFile)) {
 			return fingerprints;
 		}
-		foreach (var line in File.ReadLines (TypeMapFingerprintsFile)) {
-			int separator = line.IndexOf ('\t');
-			if (separator <= 0 || separator == line.Length - 1) {
-				continue;
+		try {
+			foreach (var line in File.ReadLines (TypeMapFingerprintsFile)) {
+				int separator = line.IndexOf ('\t');
+				if (separator <= 0 || separator == line.Length - 1) {
+					Log.LogDebugMessage ($"Ignoring invalid trimmable typemap fingerprint cache '{TypeMapFingerprintsFile}'.");
+					return new Dictionary<string, string> (StringComparer.Ordinal);
+				}
+				fingerprints [line.Substring (0, separator)] = line.Substring (separator + 1);
 			}
-			fingerprints [line.Substring (0, separator)] = line.Substring (separator + 1);
+		} catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) {
+			Log.LogDebugMessage ($"Could not read trimmable typemap fingerprint cache '{TypeMapFingerprintsFile}': {ex.Message}");
+			fingerprints.Clear ();
 		}
 		return fingerprints;
 	}

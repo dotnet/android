@@ -114,6 +114,35 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void ReadTypeMapFingerprints_UnreadableCache_Regenerates ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+			var fingerprintsFile = Path.Combine (outputDir, "typemap-fingerprints.txt");
+			Directory.CreateDirectory (outputDir);
+			File.WriteAllText (fingerprintsFile, "_Existing.TypeMap\tfingerprint");
+
+			using var fingerprintsLock = File.Open (fingerprintsFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+			var task = CreateTask ([], outputDir, javaDir);
+
+			Assert.IsEmpty (task.ReadTypeMapFingerprints (), "An unreadable incremental cache should regenerate every typemap assembly.");
+		}
+
+		[Test]
+		public void ReadTypeMapFingerprints_InvalidCache_Regenerates ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+			Directory.CreateDirectory (outputDir);
+			File.WriteAllText (Path.Combine (outputDir, "typemap-fingerprints.txt"), "invalid");
+			var task = CreateTask ([], outputDir, javaDir);
+
+			Assert.IsEmpty (task.ReadTypeMapFingerprints (), "An invalid incremental cache should regenerate every typemap assembly.");
+		}
+
+		[Test]
 		public void Execute_MissingJavaSource_DoesNotPruneExistingOutput ()
 		{
 			var path = Path.Combine ("temp", TestName);
