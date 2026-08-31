@@ -137,6 +137,9 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _jniEnvTypesRegisterNativesRef;
 	MemberReferenceHandle _readOnlySpanOfJniNativeMethodCtorRef;
 
+	BlobHandle _activationCtorSignature;
+	BlobHandle _createInstanceSignature;
+
 	EntityHandle _anchorTypeHandle;
 
 	ExportMethodDispatchEmitter? _exportMethodDispatchEmitter;
@@ -950,12 +953,7 @@ sealed class TypeMapAssemblyEmitter
 	{
 		_pe.EmitBody ("CreateInstance",
 			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-				rt => rt.Type ().Type (_iJavaPeerableRef, false),
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-				}),
+			GetCreateInstanceSignature (),
 			emitIL);
 	}
 
@@ -963,25 +961,45 @@ sealed class TypeMapAssemblyEmitter
 	{
 		_pe.EmitBody ("CreateInstance",
 			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-				rt => rt.Type ().Type (_iJavaPeerableRef, false),
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-				}),
+			GetCreateInstanceSignature (),
 			emitIL,
 			encodeLocals);
 	}
 
 	MemberReferenceHandle AddActivationCtorRef (EntityHandle declaringTypeRef)
 	{
-		return _pe.AddMemberRef (declaringTypeRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-				rt => rt.Void (),
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-				}));
+		return _pe.AddMemberRef (declaringTypeRef, ".ctor", GetActivationCtorSignature ());
+	}
+
+	BlobHandle GetActivationCtorSignature ()
+	{
+		if (_activationCtorSignature.IsNil) {
+			var blob = new BlobBuilder (8);
+			blob.WriteByte ((byte) SignatureAttributes.Instance);
+			blob.WriteCompressedInteger (2);
+			blob.WriteByte ((byte) SignatureTypeCode.Void);
+			blob.WriteByte ((byte) SignatureTypeCode.IntPtr);
+			blob.WriteByte ((byte) SignatureTypeKind.ValueType);
+			blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniHandleOwnershipRef));
+			_activationCtorSignature = _pe.Metadata.GetOrAddBlob (blob);
+		}
+		return _activationCtorSignature;
+	}
+
+	BlobHandle GetCreateInstanceSignature ()
+	{
+		if (_createInstanceSignature.IsNil) {
+			var blob = new BlobBuilder (8);
+			blob.WriteByte ((byte) SignatureAttributes.Instance);
+			blob.WriteCompressedInteger (2);
+			blob.WriteByte ((byte) SignatureTypeKind.Class);
+			blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_iJavaPeerableRef));
+			blob.WriteByte ((byte) SignatureTypeCode.IntPtr);
+			blob.WriteByte ((byte) SignatureTypeKind.ValueType);
+			blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniHandleOwnershipRef));
+			_createInstanceSignature = _pe.Metadata.GetOrAddBlob (blob);
+		}
+		return _createInstanceSignature;
 	}
 
 	MemberReferenceHandle AddManagedCtorRef (EntityHandle declaringTypeRef, IReadOnlyList<TypeRefData> parameterTypes)

@@ -394,6 +394,49 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void EmitBody_PreencodedSignature_PreservesMethodSignature ()
+	{
+		var pe = new PEAssemblyBuilder (new Version (11, 0, 0, 0));
+		pe.EmitPreamble ("PreencodedSigTest", "PreencodedSigTest.dll");
+		var objectRef = pe.Metadata.AddTypeReference (pe.SystemRuntimeRef,
+			pe.Metadata.GetOrAddString ("System"), pe.Metadata.GetOrAddString ("Object"));
+		pe.Metadata.AddTypeDefinition (
+			TypeAttributes.Public | TypeAttributes.Class,
+			pe.Metadata.GetOrAddString ("Test"),
+			pe.Metadata.GetOrAddString ("MyType"),
+			objectRef,
+			MetadataTokens.FieldDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.Field) + 1),
+			MetadataTokens.MethodDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.MethodDef) + 1));
+		var signature = new BlobBuilder ();
+		signature.WriteByte ((byte) SignatureAttributes.Instance);
+		signature.WriteCompressedInteger (1);
+		signature.WriteByte ((byte) SignatureTypeCode.String);
+		signature.WriteByte ((byte) SignatureTypeCode.Int32);
+
+		pe.EmitBody (
+			"PreencodedMethod",
+			MethodAttributes.Public,
+			pe.Metadata.GetOrAddBlob (signature),
+			encoder => {
+				encoder.OpCode (ILOpCode.Ldnull);
+				encoder.Return (returnsValue: true);
+			});
+		using var stream = new MemoryStream ();
+		pe.WritePE (stream);
+		stream.Position = 0;
+		using var peReader = new PEReader (stream);
+		var reader = peReader.GetMetadataReader ();
+		var method = reader.TypeDefinitions
+			.SelectMany (handle => reader.GetTypeDefinition (handle).GetMethods ())
+			.Select (handle => reader.GetMethodDefinition (handle))
+			.Single (method => reader.GetString (method.Name) == "PreencodedMethod");
+		var decoded = method.DecodeSignature (SignatureTypeProvider.Instance, null);
+
+		Assert.Equal ("System.String", decoded.ReturnType);
+		Assert.Equal ("System.Int32", Assert.Single (decoded.ParameterTypes));
+	}
+
+	[Fact]
 	public void Generate_JiStyleInvoker_FirstParamIsByRef ()
 	{
 		var peer = MakeInterfacePeer ("test/IJiInvoker", "Test.IJiInvoker", "TestAsm", "Test.IJiInvokerInvoker") with {
