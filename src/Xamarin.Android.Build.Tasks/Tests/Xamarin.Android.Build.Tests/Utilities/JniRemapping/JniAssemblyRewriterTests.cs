@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -29,6 +30,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		static R8Mapping Mapping (string text) => R8Mapping.Parse (new StringReader (text));
+
+		static void AssertReverseScanMatchesRewrite (byte [] rewrittenImage, R8Mapping rewriteMapping, string mappingText)
+		{
+			R8Mapping scanMapping = Mapping (mappingText);
+			var log = new TaskLoggingHelper (new MockBuildEngine (TestContext.Out), nameof (JniAssemblyRewriterTests));
+			JniAssemblyRewriter.ScanRewrittenAssembly (rewrittenImage, scanMapping, log);
+			CollectionAssert.AreEquivalent (
+				rewriteMapping.AccessedEntries.ToArray (),
+				scanMapping.AccessedEntries.ToArray (),
+				"The reverse post-link scan should recognize every mapping consumed by forward rewriting.");
+		}
 
 		static IReadOnlyList<string> AttributeStringArgs (MetadataReader reader, CustomAttributeHandleCollection attributes, EntityHandle ctor)
 		{
@@ -190,14 +202,17 @@ namespace Xamarin.Android.Build.Tests
 			fixture.Metadata.AddNestedType (nested, myView);
 
 			byte [] source = fixture.Serialize ();
-			JniRewriteResult result = Rewrite (source, Mapping (
+			const string mappingText =
 				"acme.orig.MyView -> a.b.C:\n" +
 				"    void onClick(acme.orig.Callback) -> a\n" +
 				"    int someField -> x\n" +
 				"    void run() -> b\n" +
 				"    void <init>(acme.orig.Callback) -> <init>\n" +
 				"acme.orig.Callback -> a.b.Cb:\n" +
-				"acme.orig.Marker -> a.b.D:\n"));
+				"acme.orig.Marker -> a.b.D:\n";
+			R8Mapping mapping = Mapping (mappingText);
+			JniRewriteResult result = Rewrite (source, mapping);
+			AssertReverseScanMatchesRewrite (result.Image, mapping, mappingText);
 
 			Assert.Greater (result.ReplacementCount, 0);
 
@@ -247,7 +262,10 @@ namespace Xamarin.Android.Build.Tests
 			fixture.Metadata.AddCustomAttribute (aliasHolder, fixture.JavaPeerAliasesCtor1,
 				fixture.StringArrayAttributeBlob ("acme/orig/MyView[0]", "acme/orig/MyView[1]", "unmapped/Type[0]"));
 
-			JniRewriteResult result = Rewrite (fixture.Serialize (), Mapping ("acme.orig.MyView -> a.b.C:\n"));
+			const string mappingText = "acme.orig.MyView -> a.b.C:\n";
+			R8Mapping mapping = Mapping (mappingText);
+			JniRewriteResult result = Rewrite (fixture.Serialize (), mapping);
+			AssertReverseScanMatchesRewrite (result.Image, mapping, mappingText);
 			using var peReader = new PEReader (ImmutableArray.Create (result.Image));
 			MetadataReader reader = peReader.GetMetadataReader ();
 
@@ -349,12 +367,13 @@ namespace Xamarin.Android.Build.Tests
 			var fixture = new JniFixtureBuilder ();
 			FieldDefinitionHandle nameField = fixture.AddUtf8Field ("onClick");
 			FieldDefinitionHandle signatureField = fixture.AddUtf8Field ("(Lacme/orig/Callback;)V");
+			FieldDefinitionHandle embeddedNullField = fixture.AddUtf8Field ("onClick\0not-padding");
 
 			using var peReader = new PEReader (ImmutableArray.Create (fixture.Serialize ()));
 			MetadataReader reader = peReader.GetMetadataReader ();
 			FieldRvaTable table = FieldRvaTable.Read (peReader, reader);
 
-			Assert.AreEqual (2, table.Entries.Count);
+			Assert.AreEqual (3, table.Entries.Count);
 
 			FieldRvaEntry name = table.Get (nameField);
 			Assert.IsNotNull (name);
@@ -365,6 +384,10 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsNotNull (signature);
 			Assert.IsTrue (signature.IsUtf8Datum);
 			Assert.AreEqual ("(Lacme/orig/Callback;)V", signature.Utf8Value);
+
+			FieldRvaEntry embeddedNull = table.Get (embeddedNullField);
+			Assert.IsNotNull (embeddedNull);
+			Assert.IsFalse (embeddedNull.IsUtf8Datum, "Non-zero data after the first NUL is not rewrite padding.");
 		}
 
 		[Test]
@@ -410,11 +433,20 @@ namespace Xamarin.Android.Build.Tests
 				TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class, fixture.JavaPeerProxyReference);
 
 			byte [] source = fixture.Serialize ();
-			JniRewriteResult result = Rewrite (source, Mapping (
+			const string mappingText =
 				"acme.orig.MyView -> a.b.C:\n" +
 				"    void onClick(acme.orig.Callback) -> a\n" +
 				"    void run(acme.orig.Callback) -> aMuchLongerObfuscatedName\n" +
-				"acme.orig.Callback -> a.b.Cb:\n"));
+				"acme.orig.Callback -> a.b.Cb:\n";
+			R8Mapping mapping = Mapping (mappingText);
+			JniRewriteResult result = Rewrite (source, mapping);
+			using (var rewrittenReader = new PEReader (ImmutableArray.Create (result.Image))) {
+				MetadataReader rewrittenMetadata = rewrittenReader.GetMetadataReader ();
+				FieldRvaTable rewrittenFields = FieldRvaTable.Read (rewrittenReader, rewrittenMetadata);
+				Assert.IsTrue (rewrittenFields.Get (nameField)?.IsUtf8Datum, "Rewritten method-name FieldRVA data should remain structurally recognizable.");
+				Assert.IsTrue (rewrittenFields.Get (signatureField)?.IsUtf8Datum, "Rewritten signature FieldRVA data should remain structurally recognizable.");
+			}
+			AssertReverseScanMatchesRewrite (result.Image, mapping, mappingText);
 
 			using var peReader = new PEReader (ImmutableArray.Create (result.Image));
 			MetadataReader reader = peReader.GetMetadataReader ();

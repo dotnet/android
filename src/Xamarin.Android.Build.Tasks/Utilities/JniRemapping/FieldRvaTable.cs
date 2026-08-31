@@ -128,19 +128,22 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return null;
 			}
 
-			// Exactly one NUL, at the very end: a C string that fully occupies the field.
-			if (data.Length == 0 || data [data.Length - 1] != 0) {
+			// Rewriting a JNI value to a shorter string preserves the original field type and
+			// zero-fills its remaining bytes so metadata tokens do not move. Accept that padding,
+			// but reject non-zero data after the first C-string terminator.
+			int terminator = Array.IndexOf (data, (byte) 0);
+			if (terminator < 0) {
 				return null;
 			}
-			for (int i = 0; i < data.Length - 1; i++) {
-				if (data [i] == 0) {
+			for (int i = terminator + 1; i < data.Length; i++) {
+				if (data [i] != 0) {
 					return null;
 				}
 			}
 
 			try {
 				return new UTF8Encoding (encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true)
-					.GetString (data, 0, data.Length - 1);
+					.GetString (data, 0, terminator);
 			} catch (ArgumentException) {
 				return null;
 			}

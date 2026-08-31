@@ -6,11 +6,19 @@ using System.IO;
 
 namespace Xamarin.Android.Tasks.JniRemapping
 {
+	interface IJniNameMapping
+	{
+		bool TryMapClass (string className, out string mappedClassName);
+		bool TryMapField (string owningClassName, string fieldName, out string mappedFieldName);
+		bool TryMapMethod (string owningClassName, string methodName, IReadOnlyList<string> javaParameterTypes, out string mappedMethodName);
+		bool TryMapMethodByNameOnly (string owningClassName, string methodName, out string mappedMethodName);
+	}
+
 	/// <summary>
 	/// A parsed R8/ProGuard <c>mapping.txt</c> file, exposing the class, field, and method
 	/// renames it describes using JNI-style ('/'-separated, '$' for nested classes) names.
 	/// </summary>
-	sealed class R8Mapping
+	sealed class R8Mapping : IJniNameMapping
 	{
 		// Original JNI class name -> obfuscated JNI class name.
 		readonly Dictionary<string, string> classes = new Dictionary<string, string> (StringComparer.Ordinal);
@@ -23,9 +31,28 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 		// Original JNI class name -> ("name(javaParam,javaParam,...)" -> obfuscated method name).
 		readonly Dictionary<string, Dictionary<string, string>> methods = new Dictionary<string, Dictionary<string, string>> (StringComparer.Ordinal);
+
+		// Reverse member indexes are scoped by original class. Fields retain every candidate because
+		// R8 may reuse an obfuscated field name for fields with different JVM descriptors.
+		readonly Dictionary<string, Dictionary<string, List<string>>> originalFields = new Dictionary<string, Dictionary<string, List<string>>> (StringComparer.Ordinal);
+		readonly Dictionary<string, Dictionary<string, string>> originalMethods = new Dictionary<string, Dictionary<string, string>> (StringComparer.Ordinal);
 		readonly HashSet<string> accessedEntries = new HashSet<string> (StringComparer.Ordinal);
 
 		public IEnumerable<string> AccessedEntries => accessedEntries;
+
+		bool IJniNameMapping.TryMapClass (string className, out string mappedClassName)
+			=> TryGetRenamedClass (className, out mappedClassName);
+
+		bool IJniNameMapping.TryMapField (string owningClassName, string fieldName, out string mappedFieldName)
+			=> TryGetRenamedField (owningClassName, fieldName, out mappedFieldName);
+
+		bool IJniNameMapping.TryMapMethod (string owningClassName, string methodName, IReadOnlyList<string> javaParameterTypes, out string mappedMethodName)
+			=> TryGetRenamedMethod (owningClassName, methodName, javaParameterTypes, out mappedMethodName);
+
+		bool IJniNameMapping.TryMapMethodByNameOnly (string owningClassName, string methodName, out string mappedMethodName)
+			=> TryGetRenamedMethodByNameOnly (owningClassName, methodName, out mappedMethodName);
+
+		internal IJniNameMapping CreateReverseMapping () => new ReverseR8Mapping (this);
 
 		public static R8Mapping Load (string path)
 		{
@@ -107,7 +134,45 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				}
 			}
 
+			mapping.BuildReverseMemberIndexes ();
 			return mapping;
+		}
+
+		void BuildReverseMemberIndexes ()
+		{
+			foreach (var classEntry in fields) {
+				var reverse = new Dictionary<string, List<string>> (StringComparer.Ordinal);
+				originalFields [classEntry.Key] = reverse;
+				foreach (var field in classEntry.Value) {
+					if (!reverse.TryGetValue (field.Value, out var originalNames)) {
+						reverse [field.Value] = originalNames = new List<string> ();
+					}
+					originalNames.Add (field.Key);
+				}
+			}
+
+			foreach (var classEntry in methods) {
+				var reverseMethods = new Dictionary<string, string> (StringComparer.Ordinal);
+				originalMethods [classEntry.Key] = reverseMethods;
+				foreach (var method in classEntry.Value) {
+					if (method.Value.Length == 0) {
+						continue;
+					}
+					int parameterStart = method.Key.IndexOf ('(');
+					string originalName = parameterStart < 0 ? method.Key : method.Key.Substring (0, parameterStart);
+					string parameters = parameterStart < 0 ? "()" : method.Key.Substring (parameterStart);
+					AddUnambiguousReverseEntry (reverseMethods, method.Value + parameters, originalName);
+				}
+			}
+		}
+
+		static void AddUnambiguousReverseEntry (Dictionary<string, string> entries, string key, string value)
+		{
+			if (entries.TryGetValue (key, out string? existing) && !String.Equals (existing, value, StringComparison.Ordinal)) {
+				entries [key] = "";
+			} else if (existing == null) {
+				entries [key] = value;
+			}
 		}
 
 		/// <summary>
@@ -170,44 +235,18 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		public bool TryGetOriginalMethodName (string originalJniClassName, string obfuscatedMethodName, IReadOnlyList<string> originalJavaParameterTypes, out string originalMethodName)
 		{
 			originalMethodName = "";
-			if (!methods.TryGetValue (originalJniClassName, out var classMethods)) {
-				return false;
-			}
-
-			string parameters = "(" + string.Join (",", originalJavaParameterTypes) + ")";
-			foreach (var entry in classMethods) {
-				if (!String.Equals (entry.Value, obfuscatedMethodName, StringComparison.Ordinal) ||
-						!entry.Key.EndsWith (parameters, StringComparison.Ordinal)) {
-					continue;
-				}
-				int parameterStart = entry.Key.Length - parameters.Length;
-				string candidate = entry.Key.Substring (0, parameterStart);
-				if (originalMethodName.Length != 0 && !String.Equals (originalMethodName, candidate, StringComparison.Ordinal)) {
-					originalMethodName = "";
-					return false;
-				}
-				originalMethodName = candidate;
-			}
-			return originalMethodName.Length != 0;
+			return originalMethods.TryGetValue (originalJniClassName, out var classMethods) &&
+				classMethods.TryGetValue (BuildMethodKey (obfuscatedMethodName, originalJavaParameterTypes), out originalMethodName) &&
+				originalMethodName.Length != 0;
 		}
 
 		public bool TryGetOriginalFieldName (string originalJniClassName, string obfuscatedFieldName, out string originalFieldName)
 		{
 			originalFieldName = "";
-			if (!fields.TryGetValue (originalJniClassName, out var classFields)) {
-				return false;
-			}
-			foreach (var entry in classFields) {
-				if (!String.Equals (entry.Value, obfuscatedFieldName, StringComparison.Ordinal)) {
-					continue;
-				}
-				if (originalFieldName.Length != 0 && !String.Equals (originalFieldName, entry.Key, StringComparison.Ordinal)) {
-					originalFieldName = "";
-					return false;
-				}
-				originalFieldName = entry.Key;
-			}
-			return originalFieldName.Length != 0;
+			return originalFields.TryGetValue (originalJniClassName, out var classFields) &&
+				classFields.TryGetValue (obfuscatedFieldName, out var originalNames) &&
+				originalNames.Count == 1 &&
+				(originalFieldName = originalNames [0]).Length != 0;
 		}
 
 		public bool TryGetRenamedField (string owningJniClassName, string originalFieldName, out string obfuscatedFieldName)
@@ -382,6 +421,99 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				writer.WriteLine (entry);
 			}
 			return writer.ToString ();
+		}
+
+		sealed class ReverseR8Mapping : IJniNameMapping
+		{
+			readonly R8Mapping mapping;
+
+			public ReverseR8Mapping (R8Mapping mapping)
+			{
+				this.mapping = mapping;
+			}
+
+			public bool TryMapClass (string className, out string mappedClassName)
+			{
+				if (!mapping.TryGetOriginalClass (className, out mappedClassName)) {
+					return false;
+				}
+				mapping.accessedEntries.Add (BuildClassEntry (mappedClassName));
+				return true;
+			}
+
+			public bool TryMapField (string owningClassName, string fieldName, out string mappedFieldName)
+			{
+				mappedFieldName = "";
+				if (!mapping.TryGetOriginalClass (owningClassName, out string originalClassName) ||
+						!mapping.originalFields.TryGetValue (originalClassName, out var classFields) ||
+						!classFields.TryGetValue (fieldName, out var originalNames) ||
+						originalNames.Count == 0) {
+					return false;
+				}
+				mapping.accessedEntries.Add (BuildClassEntry (originalClassName));
+				foreach (string originalName in originalNames) {
+					mapping.accessedEntries.Add (BuildFieldEntry (originalClassName, originalName));
+				}
+				mappedFieldName = originalNames [0];
+				return true;
+			}
+
+			public bool TryMapMethod (string owningClassName, string methodName, IReadOnlyList<string> javaParameterTypes, out string mappedMethodName)
+			{
+				mappedMethodName = "";
+				if (!mapping.TryGetOriginalClass (owningClassName, out string originalClassName)) {
+					return false;
+				}
+
+				var originalParameterTypes = new List<string> (javaParameterTypes.Count);
+				foreach (string parameterType in javaParameterTypes) {
+					originalParameterTypes.Add (GetOriginalJavaType (parameterType));
+				}
+				if (!mapping.TryGetOriginalMethodName (originalClassName, methodName, originalParameterTypes, out mappedMethodName)) {
+					return false;
+				}
+				mapping.accessedEntries.Add (BuildClassEntry (originalClassName));
+				mapping.accessedEntries.Add (BuildMethodEntry (
+					originalClassName,
+					BuildMethodKey (mappedMethodName, originalParameterTypes)));
+				return true;
+			}
+
+			public bool TryMapMethodByNameOnly (string owningClassName, string methodName, out string mappedMethodName)
+			{
+				mappedMethodName = "";
+				if (!mapping.TryGetOriginalClass (owningClassName, out string originalClassName) ||
+						!mapping.methods.TryGetValue (originalClassName, out var classMethods)) {
+					return false;
+				}
+
+				string? firstOriginalName = null;
+				foreach (var entry in classMethods) {
+					if (!String.Equals (entry.Value, methodName, StringComparison.Ordinal)) {
+						continue;
+					}
+					int parameterStart = entry.Key.IndexOf ('(');
+					firstOriginalName ??= parameterStart < 0 ? entry.Key : entry.Key.Substring (0, parameterStart);
+					mapping.accessedEntries.Add (BuildMethodEntry (originalClassName, entry.Key));
+				}
+				if (firstOriginalName == null) {
+					return false;
+				}
+				mapping.accessedEntries.Add (BuildClassEntry (originalClassName));
+				mappedMethodName = firstOriginalName;
+				return true;
+			}
+
+			string GetOriginalJavaType (string javaType)
+			{
+				int suffixStart = javaType.IndexOf ('[');
+				string suffix = suffixStart < 0 ? "" : javaType.Substring (suffixStart);
+				string elementType = suffixStart < 0 ? javaType : javaType.Substring (0, suffixStart);
+				string jniType = JavaNameToJni (elementType);
+				return mapping.TryGetOriginalClass (jniType, out string originalJniType)
+					? originalJniType.Replace ('/', '.') + suffix
+					: javaType;
+			}
 		}
 
 		static bool IsRemovedClassName (string className)

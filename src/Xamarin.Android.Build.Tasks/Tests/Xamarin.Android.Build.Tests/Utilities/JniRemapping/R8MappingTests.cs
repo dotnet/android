@@ -368,5 +368,29 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("first", original);
 			Assert.IsFalse (mapping.TryGetOriginalFieldName ("acme/orig/MyView", "c", out _));
 		}
+
+		[Test]
+		public void ReverseMappingRecordsEveryAmbiguousMemberCandidate ()
+		{
+			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
+				acme.orig.MyView -> a.b.C:
+				    int first -> a
+				    java.lang.String second -> a
+				    void run() -> b
+				    void invoke(int) -> b
+
+				"""));
+			IJniNameMapping reverse = mapping.CreateReverseMapping ();
+
+			Assert.IsTrue (reverse.TryMapField ("a/b/C", "a", out _));
+			Assert.IsTrue (reverse.TryMapMethodByNameOnly ("a/b/C", "b", out _));
+			CollectionAssert.AreEquivalent (new [] {
+				"C\tacme/orig/MyView",
+				"F\tacme/orig/MyView\tfirst",
+				"F\tacme/orig/MyView\tsecond",
+				"M\tacme/orig/MyView\tinvoke(int)",
+				"M\tacme/orig/MyView\trun()",
+			}, mapping.AccessedEntries);
+		}
 	}
 }

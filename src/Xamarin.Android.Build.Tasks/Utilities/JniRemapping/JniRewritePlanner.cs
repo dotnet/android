@@ -50,21 +50,21 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 		readonly PEReader peReader;
 		readonly MetadataReader reader;
-		readonly R8Mapping mapping;
+		readonly IJniNameMapping mapping;
 		readonly FieldRvaTable fieldRvaTable;
 		readonly TaskLoggingHelper log;
 		readonly Func<string, string?> renameClass;
 		readonly Dictionary<TypeDefinitionHandle, string?> ownerJniNameCache = new ();
 		readonly Dictionary<FieldDefinitionHandle, List<Utf8Use>> utf8Uses = new ();
 
-		public JniRewritePlanner (PEReader peReader, MetadataReader reader, R8Mapping mapping, FieldRvaTable fieldRvaTable, TaskLoggingHelper log)
+		public JniRewritePlanner (PEReader peReader, MetadataReader reader, IJniNameMapping mapping, FieldRvaTable fieldRvaTable, TaskLoggingHelper log)
 		{
 			this.peReader = peReader;
 			this.reader = reader;
 			this.mapping = mapping;
 			this.fieldRvaTable = fieldRvaTable;
 			this.log = log;
-			renameClass = className => mapping.TryGetRenamedClass (className, out string renamed) ? renamed : null;
+			renameClass = className => mapping.TryMapClass (className, out string renamed) ? renamed : null;
 		}
 
 		public JniRewritePlan CreatePlan ()
@@ -148,7 +148,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				jniName = value.Substring (0, suffixStart);
 			}
 
-			return mapping.TryGetRenamedClass (jniName, out string renamed) ? renamed + suffix : null;
+			return mapping.TryMapClass (jniName, out string renamed) ? renamed + suffix : null;
 		}
 
 		static bool IsDecimalIndex (string value, int start, int end)
@@ -271,7 +271,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 		void PlanTypeLevelAttributes (JniRewritePlan plan, TypeDefinition typeDef, string? ownerJniName)
 		{
-			if (ownerJniName == null || !mapping.TryGetRenamedClass (ownerJniName, out string renamedClass)) {
+			if (ownerJniName == null || !mapping.TryMapClass (ownerJniName, out string renamedClass)) {
 				return;
 			}
 
@@ -364,7 +364,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					continue;
 				}
 
-				if (!mapping.TryGetRenamedField (ownerJniName, jniFieldName, out string renamedField)) {
+				if (!mapping.TryMapField (ownerJniName, jniFieldName, out string renamedField)) {
 					continue;
 				}
 
@@ -382,10 +382,10 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 			if (jniDescriptor != null && JniDescriptorText.IsValidMethodDescriptor (jniDescriptor)) {
 				var javaParams = JniDescriptorText.MethodDescriptorToJavaParameterTypes (jniDescriptor);
-				return mapping.TryGetRenamedMethod (ownerJniName, mappingName, javaParams, out string renamed) ? renamed : null;
+				return mapping.TryMapMethod (ownerJniName, mappingName, javaParams, out string renamed) ? renamed : null;
 			}
 
-			return mapping.TryGetRenamedMethodByNameOnly (ownerJniName, mappingName, out string renamedByNameOnly)
+			return mapping.TryMapMethodByNameOnly (ownerJniName, mappingName, out string renamedByNameOnly)
 				? renamedByNameOnly
 				: null;
 		}
@@ -419,12 +419,12 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					string value = ReadUserString (il, operandOffset);
 					if (referencedOwnerJniName != null && pendingMemberName != null) {
 						if (JniDescriptorText.IsValidFieldDescriptor (value) &&
-								mapping.TryGetRenamedField (referencedOwnerJniName, pendingMemberName, out string renamedField)) {
+								mapping.TryMapField (referencedOwnerJniName, pendingMemberName, out string renamedField)) {
 							plan.AddUserString (methodHandle, pendingMemberNameOffset, renamedField);
 						} else if (JniDescriptorText.IsValidMethodDescriptor (value)) {
 							var javaParams = JniDescriptorText.MethodDescriptorToJavaParameterTypes (value);
 							string mappingName = R8Mapping.JniMemberNameToMappingName (pendingMemberName);
-							if (mapping.TryGetRenamedMethod (referencedOwnerJniName, mappingName, javaParams, out string renamedMethod)) {
+							if (mapping.TryMapMethod (referencedOwnerJniName, mappingName, javaParams, out string renamedMethod)) {
 								plan.AddUserString (methodHandle, pendingMemberNameOffset, renamedMethod);
 							}
 						}
@@ -486,7 +486,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				}
 
 				string value = ReadUserString (il, operandOffset);
-				if (!mapping.TryGetRenamedClass (value, out _)) {
+				if (!mapping.TryMapClass (value, out _)) {
 					return;
 				}
 				if (referencedClass != null && referencedClass != value) {
@@ -574,14 +574,14 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			if (use.Role == Utf8Role.MethodName && use.OwnerJniName != null && use.PairedSignature != null) {
 				var javaParams = JniDescriptorText.MethodDescriptorToJavaParameterTypes (use.PairedSignature);
 				string mappingName = R8Mapping.JniMemberNameToMappingName (value);
-				return mapping.TryGetRenamedMethod (use.OwnerJniName, mappingName, javaParams, out string renamed) ? renamed : null;
+				return mapping.TryMapMethod (use.OwnerJniName, mappingName, javaParams, out string renamed) ? renamed : null;
 			}
 
 			if (JniDescriptorText.IsValidMethodDescriptor (value) || JniDescriptorText.IsValidFieldDescriptor (value)) {
 				return JniDescriptorText.TryRewriteDescriptor (value, renameClass, out string rewritten) ? rewritten : null;
 			}
 
-			if (use.Role == Utf8Role.Unknown && mapping.TryGetRenamedClass (value, out string renamedClass)) {
+			if (use.Role == Utf8Role.Unknown && mapping.TryMapClass (value, out string renamedClass)) {
 				return renamedClass;
 			}
 

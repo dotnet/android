@@ -23,14 +23,6 @@ namespace Xamarin.Android.Build.Tests
 			string manifest = Path.Combine (path, "reachability.txt");
 
 			var fixture = new JniFixtureBuilder ();
-			fixture.Metadata.AddAssemblyReference (
-				fixture.Metadata.GetOrAddString ("Mono.Android"),
-				new Version (1, 0, 0, 0),
-				default,
-				default,
-				default,
-				default);
-
 			int fieldStart = fixture.NextFieldRid;
 			var field = fixture.Metadata.AddFieldDefinition (
 				FieldAttributes.Public,
@@ -42,6 +34,10 @@ namespace Xamarin.Android.Build.Tests
 				MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName);
 			var firstOverload = fixture.AddVoidMethod ("OnClick", fixture.EmitReturnOnlyBody ());
 			var secondOverload = fixture.AddVoidMethod ("OnClickWithIndex", fixture.EmitReturnOnlyBody ());
+			fixture.AddVoidMethod ("DirectLookup", fixture.EmitLoadStringBody (
+				fixture.String ("a/b/E"),
+				fixture.String ("x"),
+				fixture.String ("()V")));
 
 			var type = fixture.AddType ("Managed", "MyView", fieldStart, methodStart);
 			var property = fixture.Metadata.AddProperty (
@@ -55,6 +51,21 @@ namespace Xamarin.Android.Build.Tests
 				fixture.ValueTypeReference);
 			fixture.Metadata.AddEventMap (type, @event);
 
+			int interfaceMethodStart = fixture.NextMethodRid;
+			var interfaceMethod = fixture.Metadata.AddMethodDefinition (
+				MethodAttributes.Public | MethodAttributes.Abstract | MethodAttributes.Virtual | MethodAttributes.NewSlot,
+				MethodImplAttributes.IL,
+				fixture.Metadata.GetOrAddString ("Invoke"),
+				fixture.Metadata.GetOrAddBlob (new byte [] { 0x20, 0x00, 0x01 }),
+				0,
+				default);
+			var interfaceType = fixture.AddType (
+				"Managed",
+				"ICallback",
+				fixture.NextFieldRid,
+				interfaceMethodStart,
+				TypeAttributes.Public | TypeAttributes.Interface | TypeAttributes.Abstract);
+
 			fixture.Metadata.AddCustomAttribute (type, fixture.RegisterCtor1, fixture.AttributeBlob ("a/b/C"));
 			fixture.Metadata.AddCustomAttribute (constructor, fixture.RegisterCtor3, fixture.AttributeBlob (".ctor", "()V", ""));
 			fixture.Metadata.AddCustomAttribute (firstOverload, fixture.RegisterCtor3, fixture.AttributeBlob ("a", "(La/b/D;)V", ""));
@@ -62,6 +73,8 @@ namespace Xamarin.Android.Build.Tests
 			fixture.Metadata.AddCustomAttribute (field, fixture.RegisterCtor1, fixture.AttributeBlob ("c"));
 			fixture.Metadata.AddCustomAttribute (property, fixture.RegisterCtor1, fixture.AttributeBlob ("d"));
 			fixture.Metadata.AddCustomAttribute (@event, fixture.RegisterCtor1, fixture.AttributeBlob ("e"));
+			fixture.Metadata.AddCustomAttribute (interfaceType, fixture.RegisterCtor1, fixture.AttributeBlob ("a/b/F"));
+			fixture.Metadata.AddCustomAttribute (interfaceMethod, fixture.RegisterCtor3, fixture.AttributeBlob ("y", "()V", ""));
 			File.WriteAllBytes (assembly, fixture.Serialize ());
 
 			File.WriteAllText (mapping, """
@@ -73,6 +86,10 @@ namespace Xamarin.Android.Build.Tests
 				    boolean enabled -> d
 				    java.lang.Object listener -> e
 				android.view.View -> a.b.D:
+				acme.orig.DirectTarget -> a.b.E:
+				    void run() -> x
+				acme.orig.ICallback -> a.b.F:
+				    void invoke() -> y
 
 				""");
 
@@ -86,24 +103,41 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.IsTrue (task.Execute (), "Task should succeed.");
 			Assert.AreEqual ("""
-				# ACW for Fixture
+				-keep,allowobfuscation class acme.orig.DirectTarget
+				-keepclassmembers,allowobfuscation class acme.orig.DirectTarget {
+				   *** run(...);
+				}
+
+				-keep,allowobfuscation class acme.orig.ICallback
+				-keepclassmembers,allowobfuscation class acme.orig.ICallback {
+				   *** invoke(...);
+				}
+
 				-keep,allowobfuscation class acme.orig.MyView
 				-keepclassmembers,allowobfuscation class acme.orig.MyView {
-				   <init>(...);
-				   *** onClick(...);
-				   *** onClick(...);
 				   *** count;
 				   *** enabled;
 				   *** listener;
+				   *** onClick(...);
+				   <init>(...);
+				}
+
+				-keep,allowobfuscation class android.view.View
+				-keepclassmembers,allowobfuscation class android.view.View {
 				}
 
 
 				""", File.ReadAllText (proguard));
 			Assert.AreEqual ("""
+				C	acme/orig/DirectTarget
+				C	acme/orig/ICallback
 				C	acme/orig/MyView
+				C	android/view/View
 				F	acme/orig/MyView	count
 				F	acme/orig/MyView	enabled
 				F	acme/orig/MyView	listener
+				M	acme/orig/DirectTarget	run()
+				M	acme/orig/ICallback	invoke()
 				M	acme/orig/MyView	<init>()
 				M	acme/orig/MyView	onClick(android.view.View)
 				M	acme/orig/MyView	onClick(android.view.View,int)

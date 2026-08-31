@@ -21,9 +21,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 	/// </summary>
 	static class LdstrRewriter
 	{
-		public static bool TryRewrite (string value, string? ownerJniName, R8Mapping mapping, out string rewritten)
+		public static bool TryRewrite (string value, string? ownerJniName, IJniNameMapping mapping, out string rewritten)
 		{
-			Func<string, string?> renameClass = className => mapping.TryGetRenamedClass (className, out string renamed) ? renamed : null;
+			Func<string, string?> renameClass = className => mapping.TryMapClass (className, out string renamed) ? renamed : null;
 
 			if (value.IndexOf ('\n') >= 0) {
 				return TryRewriteMultilineRegisterNatives (value, ownerJniName, mapping, renameClass, out rewritten);
@@ -41,7 +41,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return JniDescriptorText.TryRewriteDescriptor (value, renameClass, out rewritten);
 			}
 
-			if (mapping.TryGetRenamedClass (value, out string renamedWhole)) {
+			if (mapping.TryMapClass (value, out string renamedWhole)) {
 				rewritten = renamedWhole;
 				return true;
 			}
@@ -50,7 +50,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			return false;
 		}
 
-		static bool TryRewriteMultilineRegisterNatives (string value, string? ownerJniName, R8Mapping mapping, Func<string, string?> renameClass, out string rewritten)
+		static bool TryRewriteMultilineRegisterNatives (string value, string? ownerJniName, IJniNameMapping mapping, Func<string, string?> renameClass, out string rewritten)
 		{
 			string [] lines = value.Split ('\n');
 			bool changed = false;
@@ -73,7 +73,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		/// Rewrites a single "name:descriptor:connector[:callbackDeclaringType]" line, as used by
 		/// AndroidRuntime.RegisterNativeMembers / FastRegisterNativeMembers.
 		/// </summary>
-		static bool TryRewriteRegisterNativesLine (string line, string? ownerJniName, R8Mapping mapping, Func<string, string?> renameClass, out string rewritten)
+		static bool TryRewriteRegisterNativesLine (string line, string? ownerJniName, IJniNameMapping mapping, Func<string, string?> renameClass, out string rewritten)
 		{
 			rewritten = line;
 
@@ -99,7 +99,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			if (ownerJniName != null) {
 				var javaParams = JniDescriptorText.MethodDescriptorToJavaParameterTypes (descriptor);
 				string mappingName = R8Mapping.JniMemberNameToMappingName (name);
-				if (mapping.TryGetRenamedMethod (ownerJniName, mappingName, javaParams, out string renamedMethod)) {
+				if (mapping.TryMapMethod (ownerJniName, mappingName, javaParams, out string renamedMethod)) {
 					newName = renamedMethod;
 					changed = true;
 				}
@@ -120,7 +120,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		/// Rewrites a JniPeerMembers encoded member id: "name.descriptor" for a method
 		/// (descriptor starts with '(') or a field (descriptor is a single type token).
 		/// </summary>
-		static bool TryRewriteJniPeerMemberId (string value, string? ownerJniName, R8Mapping mapping, Func<string, string?> renameClass, out string rewritten)
+		static bool TryRewriteJniPeerMemberId (string value, string? ownerJniName, IJniNameMapping mapping, Func<string, string?> renameClass, out string rewritten)
 		{
 			rewritten = value;
 
@@ -144,12 +144,12 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				if (isMethod) {
 					var javaParams = JniDescriptorText.MethodDescriptorToJavaParameterTypes (descriptor);
 					string mappingName = R8Mapping.JniMemberNameToMappingName (name);
-					if (mapping.TryGetRenamedMethod (ownerJniName, mappingName, javaParams, out string renamedMethod)) {
+					if (mapping.TryMapMethod (ownerJniName, mappingName, javaParams, out string renamedMethod)) {
 						newName = renamedMethod;
 						changed = true;
 					}
 				} else {
-					if (mapping.TryGetRenamedField (ownerJniName, name, out string renamedField)) {
+					if (mapping.TryMapField (ownerJniName, name, out string renamedField)) {
 						newName = renamedField;
 						changed = true;
 					}

@@ -55,5 +55,22 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 			return new JniRewriteResult (rebuilt.Image, plan.ReplacementCount, rebuilt.StrongNameSignatureCleared);
 		}
+
+		public static void ScanRewrittenAssembly (byte [] sourceImage, R8Mapping mapping, TaskLoggingHelper log)
+		{
+			using var peReader = new PEReader (ImmutableArray.Create (sourceImage));
+			if (!peReader.HasMetadata) {
+				throw new JniRewriteException ("The file contains no managed metadata.");
+			}
+
+			MetadataReader reader = peReader.GetMetadataReader ();
+			ScanRewrittenAssembly (peReader, reader, mapping, log);
+		}
+
+		public static void ScanRewrittenAssembly (PEReader peReader, MetadataReader reader, R8Mapping mapping, TaskLoggingHelper log)
+		{
+			FieldRvaTable fieldRvaTable = FieldRvaTable.Read (peReader, reader);
+			new JniRewritePlanner (peReader, reader, mapping.CreateReverseMapping (), fieldRvaTable, log).CreatePlan ();
+		}
 	}
 }
