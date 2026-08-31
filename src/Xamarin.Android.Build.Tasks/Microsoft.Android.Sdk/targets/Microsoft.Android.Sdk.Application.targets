@@ -127,25 +127,22 @@ This file contains targets specific for Android application projects.
     </GetAndroidInstrumentationName>
     <PropertyGroup>
       <RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
-    </PropertyGroup>
-    <!-- By default, use `Microsoft.Android.Run` tool to stream logcat and handle Ctrl+C -->
-    <PropertyGroup Condition=" '$(WaitForExit)' != 'false' ">
+      <AndroidSdbTargetPort Condition=" '$(AndroidSdbTargetPort)' == '' ">10000</AndroidSdbTargetPort>
+      <AndroidSdbHostPort Condition=" '$(AndroidSdbHostPort)' == '' ">10000</AndroidSdbHostPort>
+      <AndroidAttachDebugger Condition=" '$(AndroidAttachDebugger)' == '' ">False</AndroidAttachDebugger>
+      <AndroidDebuggerServer Condition=" '$(AndroidDebuggerServer)' == '' ">True</AndroidDebuggerServer>
       <_AndroidRunPath Condition=" '$(_AndroidRunPath)' == '' ">$(MSBuildThisFileDirectory)..\tools\Microsoft.Android.Run.dll</_AndroidRunPath>
       <_AndroidRunLogcatArgs Condition=" '$(_AndroidRunLogcatArgs)' == '' ">monodroid-assembly:S</_AndroidRunLogcatArgs>
       <_AndroidRunAdbTargetArg Condition=" '$(AdbTarget)' != '' ">--adb-target &quot;$(AdbTarget)&quot;</_AndroidRunAdbTargetArg>
       <_AndroidRunUserArg Condition=" '$(AndroidDeviceUserId)' != '' ">--user &quot;$(AndroidDeviceUserId)&quot;</_AndroidRunUserArg>
       <_AndroidRunInstrumentArg Condition=" '$(AndroidInstrumentation)' != '' ">--instrument &quot;$(AndroidInstrumentation)&quot;</_AndroidRunInstrumentArg>
       <_AndroidRunActivityArg Condition=" '$(AndroidInstrumentation)' == '' ">--activity &quot;$(AndroidLaunchActivity)&quot;</_AndroidRunActivityArg>
+      <_AndroidRunNoWaitArg Condition=" '$(WaitForExit)' == 'false' ">--no-wait</_AndroidRunNoWaitArg>
+      <_AndroidRunNoWakeDeviceArg Condition=" '$(WaitForExit)' == 'false' ">--no-wake-device</_AndroidRunNoWakeDeviceArg>
+      <!-- Preserve the legacy _Run argument order: target port is the host-side forward. -->
+      <_AndroidRunForwardPortArg Condition=" '$(AndroidAttachDebugger)' == 'true' and '$(AndroidDebuggerServer)' == 'true' ">--forward-port &quot;$(AndroidSdbTargetPort):$(AndroidSdbHostPort)&quot;</_AndroidRunForwardPortArg>
       <RunCommand>dotnet</RunCommand>
-      <RunArguments>exec &quot;$(_AndroidRunPath)&quot; --adb &quot;$(_AdbToolPath)&quot; $(_AndroidRunAdbTargetArg) --package &quot;$(_AndroidPackage)&quot; $(_AndroidRunActivityArg) $(_AndroidRunInstrumentArg) --logcat-args &quot;$(_AndroidRunLogcatArgs)&quot; $(_AndroidRunUserArg) $(_AndroidRunExtraArgs)</RunArguments>
-    </PropertyGroup>
-    <!-- When WaitForExit is false, use direct adb command (no logcat streaming) -->
-    <PropertyGroup Condition=" '$(WaitForExit)' == 'false' ">
-      <_AmStartUserArg Condition=" '$(AndroidDeviceUserId)' != '' "> --user $(AndroidDeviceUserId)</_AmStartUserArg>
-      <RunCommand>$(_AdbToolPath)</RunCommand>
-      <RunArguments Condition=" '$(AndroidInstrumentation)' == '' ">$(AdbTarget) shell am start -S$(_AmStartUserArg) -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;</RunArguments>
-      <!-- No `-w`, the caller asked not to wait for the instrumentation to finish -->
-      <RunArguments Condition=" '$(AndroidInstrumentation)' != '' ">$(AdbTarget) shell am instrument -r$(_AmStartUserArg) &quot;$(_AndroidPackage)/$(AndroidInstrumentation)&quot;</RunArguments>
+      <RunArguments>exec &quot;$(_AndroidRunPath)&quot; --adb &quot;$(_AdbToolPath)&quot; $(_AndroidRunAdbTargetArg) --package &quot;$(_AndroidPackage)&quot; $(_AndroidRunActivityArg) $(_AndroidRunInstrumentArg) --logcat-args &quot;$(_AndroidRunLogcatArgs)&quot; $(_AndroidRunUserArg) $(_AndroidRunNoWaitArg) $(_AndroidRunNoWakeDeviceArg) $(_AndroidRunForwardPortArg) $(_AndroidRunExtraArgs)</RunArguments>
     </PropertyGroup>
   </Target>
 
