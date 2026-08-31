@@ -261,18 +261,18 @@ cleanup() {
 	fi
 	{
 		echo '===== get-state ====='
-		adb_cmd get-state 2>&1
+		adb_short get-state 2>&1
 		echo '===== boot completion ====='
-		adb_cmd shell getprop sys.boot_completed 2>&1
+		adb_short shell getprop sys.boot_completed 2>&1
 		echo '===== disk ====='
-		adb_cmd shell df /data 2>&1
+		adb_short shell df /data 2>&1
 		echo '===== packages ====='
-		adb_cmd shell pm list packages -3 2>&1
+		adb_short shell pm list packages -3 2>&1
 		echo '===== instrumentation ====='
-		adb_cmd shell pm list instrumentation 2>&1
+		adb_short shell pm list instrumentation 2>&1
 	} > "$upload/device-state.log"
-	adb_cmd logcat -d -b all > "$upload/logcat.log" 2>&1
-	adb_cmd uninstall "$package_name" >/dev/null 2>&1
+	adb_medium logcat -d -b all > "$upload/logcat.log" 2>&1
+	adb_medium uninstall "$package_name" >/dev/null 2>&1
 	exit "$exit_code"
 }
 trap cleanup EXIT
@@ -299,13 +299,17 @@ fi
 [[ -n "$adb" ]] || fail 'adb was not found on PATH.'
 echo "Using adb: $adb"
 
-adb_cmd() {
-	"$adb" -s "$device_serial" "$@"
+adb_short() {
+	timeout --signal=KILL 20s "$adb" -s "$device_serial" "$@"
+}
+
+adb_medium() {
+	timeout --signal=KILL 60s "$adb" -s "$device_serial" "$@"
 }
 
 device_ready=false
 for attempt in $(seq 1 12); do
-	device_output=$("$adb" devices -l 2>&1)
+	device_output=$(timeout --signal=KILL 20s "$adb" devices -l 2>&1 || true)
 	{
 		echo "===== attempt $attempt ====="
 		printf '%s\n' "$device_output"
@@ -321,9 +325,10 @@ done
 echo "Using device: $device_serial"
 
 package_ready=false
-for attempt in $(seq 1 60); do
-	boot_completed=$(adb_cmd shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
-	package_service=$(adb_cmd shell service check package 2>/dev/null || true)
+package_deadline=$((SECONDS + 120))
+while [[ "$SECONDS" -lt "$package_deadline" ]]; do
+	boot_completed=$(adb_short shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)
+	package_service=$(adb_short shell service check package 2>/dev/null || true)
 	if [[ "$boot_completed" == 1 && "$package_service" == *"found"* ]]; then
 		package_ready=true
 		break
@@ -332,10 +337,10 @@ for attempt in $(seq 1 60); do
 done
 [[ "$package_ready" == true ]] || fail 'Android package service did not become ready within two minutes.'
 
-adb_cmd uninstall "$package_name" >/dev/null 2>&1
+adb_medium uninstall "$package_name" >/dev/null 2>&1
 installed=false
 for attempt in 1 2 3; do
-	if adb_cmd install -r "$apk"; then
+	if adb_medium install -r "$apk"; then
 		installed=true
 		break
 	fi
@@ -343,17 +348,17 @@ for attempt in 1 2 3; do
 done
 [[ "$installed" == true ]] || fail 'adb install failed after three attempts.'
 
-device_sdk=$(adb_cmd shell getprop ro.build.version.sdk | tr -d '\r')
+device_sdk=$(adb_short shell getprop ro.build.version.sdk | tr -d '\r')
 if [[ "$device_sdk" -ge 37 ]]; then
-	adb_cmd shell pm grant "$package_name" android.permission.ACCESS_LOCAL_NETWORK ||
+	adb_short shell pm grant "$package_name" android.permission.ACCESS_LOCAL_NETWORK ||
 		fail "Could not grant ACCESS_LOCAL_NETWORK on API $device_sdk."
 elif [[ "$device_sdk" -eq 36 ]]; then
-	adb_cmd shell pm grant "$package_name" android.permission.NEARBY_WIFI_DEVICES ||
+	adb_short shell pm grant "$package_name" android.permission.NEARBY_WIFI_DEVICES ||
 		fail "Could not grant NEARBY_WIFI_DEVICES on API $device_sdk."
 fi
 
-adb_cmd shell getprop > "$upload/getprop.log"
-adb_cmd shell dumpsys package "$package_name" > "$upload/package-state.log"
+adb_short shell getprop > "$upload/getprop.log"
+adb_medium shell dumpsys package "$package_name" > "$upload/package-state.log"
 
 python="${HELIX_PYTHONPATH:-python3}"
 run_results_path=''
@@ -361,9 +366,9 @@ run_instrumentation() {
 	local label="$1"
 	shift
 	for attempt in 1 2; do
-		adb_cmd logcat -c
+		adb_short logcat -c
 		set +e
-		instrumentation_output=$(adb_cmd shell am instrument "$@" -w -r "$package_name/$instrumentation" 2>&1)
+		instrumentation_output=$(timeout --signal=KILL 20m "$adb" -s "$device_serial" shell am instrument "$@" -w -r "$package_name/$instrumentation" 2>&1)
 		adb_exit_code=$?
 		set -e
 		{
@@ -383,7 +388,7 @@ run_instrumentation() {
 		fi
 
 		attempt_results="$upload/$label-attempt-$attempt.trx"
-		if ! adb_cmd pull "$device_results_path" "$attempt_results"; then
+		if ! adb_medium pull "$device_results_path" "$attempt_results"; then
 			[[ "$attempt" -lt 2 ]] && continue
 			return 1
 		fi
@@ -402,7 +407,7 @@ if [[ -n "$isolated_test" ]]; then
 	run_instrumentation isolated -e test "$isolated_test" ||
 		fail "Isolated test '$isolated_test' failed after two attempts."
 	isolated_results="$run_results_path"
-	adb_cmd shell am force-stop "$package_name"
+	adb_short shell am force-stop "$package_name"
 	run_instrumentation remaining -e exclude-test "$isolated_test" ||
 		fail 'Remaining on-device tests failed after two attempts.'
 	remaining_results="$run_results_path"
