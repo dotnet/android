@@ -162,8 +162,11 @@ sealed class PEAssemblyBuilder
 	{
 		_sigBlob.Clear ();
 		encodeSig (new BlobEncoder (_sigBlob));
-		return Metadata.AddMemberReference (parent, Metadata.GetOrAddString (name), Metadata.GetOrAddBlob (_sigBlob));
+		return AddMemberRef (parent, name, Metadata.GetOrAddBlob (_sigBlob));
 	}
+
+	public MemberReferenceHandle AddMemberRef (EntityHandle parent, string name, BlobHandle signature)
+		=> Metadata.AddMemberReference (parent, Metadata.GetOrAddString (name), signature);
 
 	/// <summary>
 	/// Resolves a <see cref="TypeRefData"/> to a TypeReference/TypeSpecification handle, with caching.
@@ -382,6 +385,15 @@ sealed class PEAssemblyBuilder
 		Action<BlobEncoder> encodeSig, Action<TrackedInstructionEncoder> emitIL)
 		=> EmitBody (name, attrs, encodeSig, emitIL, encodeLocals: null, useBranches: false);
 
+	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
+		BlobHandle signature, Action<TrackedInstructionEncoder> emitIL)
+		=> EmitBody (name, attrs, signature, emitIL, encodeLocals: null, useBranches: false);
+
+	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
+		BlobHandle signature, Action<TrackedInstructionEncoder> emitIL,
+		Action<BlobBuilder>? encodeLocals)
+		=> EmitBody (name, attrs, signature, emitIL, encodeLocals, useBranches: false);
+
 	/// <summary>
 	/// Emits a method body and definition with optional local variable declarations.
 	/// </summary>
@@ -408,7 +420,13 @@ sealed class PEAssemblyBuilder
 		encodeSig (new BlobEncoder (_sigBlob));
 		// Capture the sig blob handle before emitIL, because emitIL callbacks
 		// may call AddMemberRef which clears and repopulates _sigBlob.
-		var sigBlobHandle = Metadata.GetOrAddBlob (_sigBlob);
+		return EmitBody (name, attrs, Metadata.GetOrAddBlob (_sigBlob), emitIL, encodeLocals, useBranches);
+	}
+
+	MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
+		BlobHandle signature, Action<TrackedInstructionEncoder> emitIL,
+		Action<BlobBuilder>? encodeLocals, bool useBranches)
+	{
 
 		StandaloneSignatureHandle localSigHandle = default;
 		if (encodeLocals != null) {
@@ -433,7 +451,7 @@ sealed class PEAssemblyBuilder
 		return Metadata.AddMethodDefinition (
 			attrs, MethodImplAttributes.IL,
 			Metadata.GetOrAddString (name),
-			sigBlobHandle,
+			signature,
 			bodyOffset, MetadataTokens.ParameterHandle (Metadata.GetRowCount (TableIndex.Param) + 1));
 	}
 
