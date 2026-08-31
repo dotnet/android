@@ -2,7 +2,6 @@
 
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\LongBranchNames.props" />
-  <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
   <Import Project="..\..\build-tools\scripts\Xamarin.Android.Tools.Versioning.targets" />
 
   <PropertyGroup>
