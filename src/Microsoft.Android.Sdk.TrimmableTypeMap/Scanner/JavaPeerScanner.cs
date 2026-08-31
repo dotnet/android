@@ -876,6 +876,11 @@ public sealed class JavaPeerScanner : IDisposable
 	internal static bool IsOwnedByConstructorDiagnostics (TypeRefData parameterType)
 	{
 		string managedTypeName = parameterType.ManagedTypeName;
+		if (managedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
+			return IsOwnedByConstructorDiagnostics (parameterType with {
+				ManagedTypeName = managedTypeName.Substring (0, managedTypeName.Length - 2),
+			});
+		}
 		return parameterType.GenericArguments.Count > 0 ||
 			managedTypeName.StartsWith ("!", StringComparison.Ordinal) ||
 			managedTypeName == "delegate*" ||
@@ -1932,6 +1937,7 @@ public sealed class JavaPeerScanner : IDisposable
 	(RegisterInfo registerInfo, ExportInfo exportInfo) ParseExportAttribute (CustomAttribute ca, MethodDefinition methodDef, AssemblyIndex index)
 	{
 		var value = index.DecodeAttribute (ca);
+		var managedName = index.Reader.GetString (methodDef.Name);
 
 		// [Export("name")] or [Export] (uses method name)
 		string? exportName = null;
@@ -1974,7 +1980,10 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		if (string.IsNullOrEmpty (exportName)) {
-			exportName = index.Reader.GetString (methodDef.Name);
+			exportName = managedName;
+		}
+		if (managedName == ".ctor") {
+			exportName = ".ctor";
 		}
 		string resolvedExportName = exportName ?? throw new InvalidOperationException ("Export name should not be null at this point.");
 

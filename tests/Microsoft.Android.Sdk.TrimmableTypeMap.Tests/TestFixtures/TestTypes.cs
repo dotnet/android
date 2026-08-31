@@ -670,7 +670,7 @@ namespace MyApp
 	[Register ("my/app/ExportConstructorUnsupportedManagedParameter")]
 	public class ExportConstructorUnsupportedManagedParameter : Android.App.Activity
 	{
-		[Java.Interop.Export (".ctor", SuperArgumentsString = "")]
+		[Java.Interop.Export ("notAConstructor", SuperArgumentsString = "")]
 		public ExportConstructorUnsupportedManagedParameter (UnsupportedExportValue value) { }
 	}
 
@@ -687,7 +687,7 @@ namespace MyApp
 	[Register ("my/app/ExportConstructorMappedParameter")]
 	public class ExportConstructorMappedParameter : Android.App.Activity
 	{
-		[Java.Interop.Export (".ctor", SuperArgumentsString = "")]
+		[Java.Interop.Export ("notAConstructor", SuperArgumentsString = "")]
 		public ExportConstructorMappedParameter (
 			[Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.InputStream)] Stream value)
 		{

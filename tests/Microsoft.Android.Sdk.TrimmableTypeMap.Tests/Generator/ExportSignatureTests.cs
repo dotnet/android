@@ -58,7 +58,9 @@ public class ExportSignatureTests : FixtureTestBase
 
 		var mappedPeer = FindFixtureByJavaName ("my/app/ExportConstructorMappedParameter");
 		var mappedMethod = Assert.Single (mappedPeer.MarshalMethods, method => method.IsConstructor && method.IsExport);
+		Assert.Equal (".ctor", mappedMethod.JniName);
 		Assert.Equal ("(Ljava/io/InputStream;)V", mappedMethod.JniSignature);
+		Assert.DoesNotContain (mappedPeer.MarshalMethods, method => method.JniName == "notAConstructor");
 		Assert.Equal ([ExportParameterKindInfo.InputStream], mappedMethod.ManagedParameterExportKinds);
 		var mappedConstructor = Assert.Single (
 			mappedPeer.JavaConstructors,
@@ -77,6 +79,9 @@ public class ExportSignatureTests : FixtureTestBase
 	[InlineData ("System.Int32*")]
 	[InlineData ("delegate*")]
 	[InlineData ("System.String[,]")]
+	[InlineData ("System.String[,][]")]
+	[InlineData ("System.Int32*[]")]
+	[InlineData ("delegate*[]")]
 	public void ConstructorDiagnostics_OwnUnsupportedSignatureShapes (string managedTypeName)
 	{
 		Assert.True (JavaPeerScanner.IsOwnedByConstructorDiagnostics (new TypeRefData {

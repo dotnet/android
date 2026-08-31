@@ -1405,15 +1405,29 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 				var parent = reader.GetTypeReference ((TypeReferenceHandle) member.Reference.Parent);
 				return reader.GetString (parent.Name) == "InputStreamInvoker";
 			});
-		var nctorHandle = reader.MethodDefinitions.Single (handle =>
-			reader.GetString (reader.GetMethodDefinition (handle).Name) == "nctor_0_uco");
-		var nctor = reader.GetMethodDefinition (nctorHandle);
-		var ilBytes = pe.GetMethodBody (nctor.RelativeVirtualAddress).GetILBytes ();
+		var managedConstructor = reader.MemberReferences
+			.Select (handle => (Handle: handle, Reference: reader.GetMemberReference (handle)))
+			.Single (member => {
+				if (reader.GetString (member.Reference.Name) != ".ctor" ||
+				    member.Reference.Parent.Kind != HandleKind.TypeReference) {
+					return false;
+				}
+				var parent = reader.GetTypeReference ((TypeReferenceHandle) member.Reference.Parent);
+				return reader.GetString (parent.Name) == "ExportConstructorMappedParameter";
+			});
+		var ilBytes = reader.MethodDefinitions
+			.Select (handle => reader.GetMethodDefinition (handle))
+			.Where (method => reader.GetString (method.Name).StartsWith ("nctor_", StringComparison.Ordinal))
+			.Select (method => pe.GetMethodBody (method.RelativeVirtualAddress).GetILBytes ())
+			.FirstOrDefault (bytes => bytes is not null &&
+				ILContainsCallToken (bytes, MetadataTokens.GetToken (managedConstructor.Handle)));
 		Assert.NotNull (ilBytes);
-		if (ilBytes is null) {
+		if (ilBytes is null)
 			throw new InvalidOperationException ("Expected exported constructor UCO IL.");
-		}
 		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (adapterMethod.Handle)));
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (managedConstructor.Handle)));
+		Assert.False (ILContainsCallvirtToken (ilBytes, MetadataTokens.GetToken (managedConstructor.Handle)));
+		Assert.False (ILContainsNewobjToken (ilBytes, MetadataTokens.GetToken (managedConstructor.Handle)));
 	}
 
 	[Fact]

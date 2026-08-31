@@ -152,6 +152,12 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "export-constructor-valid-kind", "success")]
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "export-constructor-valid-kind", "success")]
 		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "export-constructor-valid-kind", "success")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "export-named-constructor-arbitrary", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "export-named-constructor-arbitrary", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "export-named-constructor-arbitrary", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "export-named-constructor-valid-kind", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "export-named-constructor-valid-kind", "success")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "export-named-constructor-valid-kind", "success")]
 		public void Build_ExportSignature_MatchesRuntimeClassification (
 			string typeMapImplementation,
 			AndroidRuntime runtime,
@@ -318,6 +324,27 @@ namespace Xamarin.Android.Build.Tests {
 					""",
 					"java.io.InputStream",
 					""),
+				"export-named-constructor-arbitrary" => (
+					"public sealed class ManagedOnly { }",
+					"""
+					[Export ("notAConstructor", SuperArgumentsString = "")]
+					public SignaturePeer (ManagedOnly value)
+					{
+					}
+					""",
+					"SignaturePeer",
+					""),
+				"export-named-constructor-valid-kind" => (
+					"",
+					"""
+					[Export ("notAConstructor", SuperArgumentsString = "")]
+					public SignaturePeer (
+						[ExportParameter (ExportParameterKind.InputStream)] Stream value)
+					{
+					}
+					""",
+					"java.io.InputStream",
+					""),
 				_ => throw new InvalidOperationException ($"Unknown unsupported [Export] shape '{invalidShape}'."),
 			};
 			var proj = new XamarinAndroidApplicationProject {
@@ -362,7 +389,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsFalse (succeeded, $"{runtime}/{typeMapImplementation} should reject {invalidShape}.");
 			StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput, $"The build should report {expectedCode}.");
 			if (expectedCode == "XA4263") {
-				var expectedMemberName = invalidShape.StartsWith ("export-constructor", StringComparison.Ordinal)
+				var expectedMemberName = invalidShape.Contains ("constructor", StringComparison.Ordinal)
 					? "ExportSignatureValidation.SignaturePeer.ctor"
 					: "ExportSignatureValidation.SignaturePeer.UnsupportedMember";
 				StringAssertEx.Contains (
