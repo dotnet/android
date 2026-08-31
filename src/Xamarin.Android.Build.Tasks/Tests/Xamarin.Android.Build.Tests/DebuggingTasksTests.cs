@@ -62,29 +62,31 @@ namespace Xamarin.Android.Build.Tests
 			var actualAndroidSdk = AndroidSdkPath;
 			var actualAndroidNdk = AndroidNdkPath;
 			var actualJavaSdk = AndroidSdkResolver.GetJavaSdkPath ();
+			List<string> firstTaskExecMessages;
 
 			try {
 				Assert.True (task.Execute (), "Task should have completed successfully.");
 				Assert.AreEqual (0, errors.Count, "No Errors should have been raised");
-				var expected = $"  Found FrameworkPath at {Path.GetFullPath (frameworksPath)}";
-				var firstTaskExecMessages = messages.Select (x => x.Message)?.ToList ();
-				Assert.IsNotNull (firstTaskExecMessages, "First execution did not contain any messages!");
-				CollectionAssert.Contains (firstTaskExecMessages, expected);
-				CollectionAssert.DoesNotContain (firstTaskExecMessages, "  Using cached AndroidSdk values");
-				CollectionAssert.DoesNotContain (firstTaskExecMessages, "  Using cached MonoDroidSdk values");
-
+				firstTaskExecMessages = messages.Select (x => x.Message)?.ToList ();
 				Assert.True (task.Execute (), "Task should have completed successfully.");
-				Assert.AreEqual (0, errors.Count, "No Errors should have been raised");
-				var secondTaskExecMessages = messages.Select (x => x.Message)?.ToList ();
-				Assert.IsNotNull (secondTaskExecMessages, "Second execution did not contain any messages!");
-				CollectionAssert.Contains (secondTaskExecMessages, expected);
-				CollectionAssert.Contains (secondTaskExecMessages, "  Using cached AndroidSdk values");
-				CollectionAssert.Contains (secondTaskExecMessages, "  Using cached MonoDroidSdk values");
 			} finally {
 				AT.AndroidSdk.Refresh (actualAndroidSdk, actualAndroidNdk, actualJavaSdk);
 				Environment.SetEnvironmentVariable ("JAVA_HOME", javaHome);
 				Environment.SetEnvironmentVariable ("PATH", environmentPath);
 			}
+
+			var expected = $"  Found FrameworkPath at {Path.GetFullPath (frameworksPath)}";
+			Assert.IsNotNull (firstTaskExecMessages, "First execution did not contain any messages!");
+			CollectionAssert.Contains (firstTaskExecMessages, expected);
+			CollectionAssert.DoesNotContain (firstTaskExecMessages, "  Using cached AndroidSdk values");
+			CollectionAssert.DoesNotContain (firstTaskExecMessages, "  Using cached MonoDroidSdk values");
+
+			Assert.AreEqual (0, errors.Count, "No Errors should have been raised");
+			var secondTaskExecMessages = messages.Select (x => x.Message)?.ToList ();
+			Assert.IsNotNull (secondTaskExecMessages, "Second execution did not contain any messages!");
+			CollectionAssert.Contains (secondTaskExecMessages, expected);
+			CollectionAssert.Contains (secondTaskExecMessages, "  Using cached AndroidSdk values");
+			CollectionAssert.Contains (secondTaskExecMessages, "  Using cached MonoDroidSdk values");
 		}
 
 		[Test]
