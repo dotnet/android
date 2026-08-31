@@ -1387,6 +1387,36 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_ExportConstructor_UsesParameterAdapter ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/ExportConstructorMappedParameter");
+
+		using var stream = GenerateAssembly (new [] { peer }, "ExportConstructorMapping");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var adapterMethod = reader.MemberReferences
+			.Select (handle => (Handle: handle, Reference: reader.GetMemberReference (handle)))
+			.Single (member => {
+				if (reader.GetString (member.Reference.Name) != "FromJniHandle" ||
+				    member.Reference.Parent.Kind != HandleKind.TypeReference) {
+					return false;
+				}
+				var parent = reader.GetTypeReference ((TypeReferenceHandle) member.Reference.Parent);
+				return reader.GetString (parent.Name) == "InputStreamInvoker";
+			});
+		var nctorHandle = reader.MethodDefinitions.Single (handle =>
+			reader.GetString (reader.GetMethodDefinition (handle).Name) == "nctor_0_uco");
+		var nctor = reader.GetMethodDefinition (nctorHandle);
+		var ilBytes = pe.GetMethodBody (nctor.RelativeVirtualAddress).GetILBytes ();
+		Assert.NotNull (ilBytes);
+		if (ilBytes is null) {
+			throw new InvalidOperationException ("Expected exported constructor UCO IL.");
+		}
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (adapterMethod.Handle)));
+	}
+
+	[Fact]
 	public void Generate_ExportProxy_UsesExactCrossAssemblyTypeReferences ()
 	{
 		var peer = MakePeerWithActivation ("my/app/CrossAssemblyExport", "MyApp.CrossAssemblyExport", "App") with {

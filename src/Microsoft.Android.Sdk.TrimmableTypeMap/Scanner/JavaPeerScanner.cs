@@ -698,6 +698,10 @@ public sealed class JavaPeerScanner : IDisposable
 		// Pass 1: collect methods with [Register], [Export], or [ExportField] directly on them
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+			var methodName = index.Reader.GetString (methodDef.Name);
+			if (methodName == ".cctor" && (methodDef.Attributes & MethodAttributes.Static) != 0) {
+				continue;
+			}
 
 			if (!ValidateExportField (methodDef, index, isGenericType)) {
 				continue;
@@ -829,10 +833,11 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		var methodName = index.Reader.GetString (methodDef.Name);
-		if (methodName is ".ctor" or ".cctor") {
+		bool isConstructor = methodName == ".ctor";
+		if (isConstructor && !isExport) {
 			return true;
 		}
-		if (isExport && isGenericType) {
+		if (!isConstructor && isExport && isGenericType) {
 			logger?.LogExportOnGenericTypeError ();
 			return false;
 		}
@@ -841,19 +846,43 @@ public sealed class JavaPeerScanner : IDisposable
 		var (parameterKinds, returnKind) = GetExportParameterKinds (methodDef, index, sig.ParameterTypes.Length);
 		var declaringType = index.Reader.GetTypeDefinition (methodDef.GetDeclaringType ());
 		string declaringTypeName = MetadataTypeNameResolver.GetFullName (declaringType, index.Reader);
-		string memberName = $"{declaringTypeName}.{methodName}";
+		string memberName = methodName [0] == '.'
+			? declaringTypeName + methodName
+			: $"{declaringTypeName}.{methodName}";
 
 		for (int i = 0; i < sig.ParameterTypes.Length; i++) {
+			if (isConstructor && IsOwnedByConstructorDiagnostics (sig.ParameterTypes [i])) {
+				continue;
+			}
 			if (!HasExportSignatureMapping (sig.ParameterTypes [i], parameterKinds [i])) {
 				logger?.LogUnsupportedExportSignatureError (memberName, sig.ParameterTypes [i].DisplayName);
 				return false;
 			}
+		}
+		if (isConstructor) {
+			return true;
 		}
 		if (!HasExportSignatureMapping (sig.ReturnType, returnKind)) {
 			logger?.LogUnsupportedExportSignatureError (memberName, sig.ReturnType.DisplayName);
 			return false;
 		}
 		return true;
+	}
+
+	/// <summary>
+	/// PR #12567 owns XA4260 for signature shapes that no Java constructor can represent.
+	/// This layer only adds XA4263 for unresolved types and invalid [ExportParameter] pairs.
+	/// </summary>
+	internal static bool IsOwnedByConstructorDiagnostics (TypeRefData parameterType)
+	{
+		string managedTypeName = parameterType.ManagedTypeName;
+		return parameterType.GenericArguments.Count > 0 ||
+			managedTypeName.StartsWith ("!", StringComparison.Ordinal) ||
+			managedTypeName == "delegate*" ||
+			managedTypeName.EndsWith ("&", StringComparison.Ordinal) ||
+			managedTypeName.EndsWith ("*", StringComparison.Ordinal) ||
+			(managedTypeName.EndsWith ("]", StringComparison.Ordinal) &&
+			 !managedTypeName.EndsWith ("[]", StringComparison.Ordinal));
 	}
 
 	bool HasExportSignatureMapping (TypeRefData managedType, ExportParameterKindInfo exportKind)
@@ -1324,17 +1353,12 @@ public sealed class JavaPeerScanner : IDisposable
 
 	(TypeDefinition typeDef, AssemblyIndex index)? TryFindEnumTypeDefinition (string managedType, string? assemblyName = null)
 	{
-		// Prefer the typed assembly hint so two assemblies with same-named types
-		// (one enum, one not) resolve deterministically — assemblyCache
-		// enumeration order is non-deterministic.
-		if (assemblyName is { Length: > 0 } &&
-		    assemblyCache.TryGetValue (assemblyName, out var hintedIndex) &&
-		    hintedIndex.TypesByFullName.TryGetValue (managedType, out var hintedHandle)) {
-			var hintedDef = hintedIndex.Reader.GetTypeDefinition (hintedHandle);
-			if (IsEnumType (hintedDef, hintedIndex)) {
-				return (hintedDef, hintedIndex);
+		if (assemblyName is { Length: > 0 }) {
+			if (!TryResolveType (managedType, assemblyName, out var resolvedHandle, out var resolvedIndex)) {
+				return null;
 			}
-			// Hinted assembly had a same-named non-enum; keep scanning.
+			var resolvedType = resolvedIndex.Reader.GetTypeDefinition (resolvedHandle);
+			return IsEnumType (resolvedType, resolvedIndex) ? (resolvedType, resolvedIndex) : null;
 		}
 
 		foreach (var index in assemblyCache.Values) {
@@ -2729,7 +2753,10 @@ public sealed class JavaPeerScanner : IDisposable
 			// Unsupported managed parameter shapes fail in model building for [Export]
 			// constructors; non-[Export] registrations keep the legacy activation fallback.
 			publicConstructors ??= GetSupportedPublicConstructors (typeDef, index);
-			var managedParams = TryGetMatchingPublicConstructorParameterTypes (publicConstructors, mm.JniSignature);
+			var managedParams = TryGetMatchingPublicConstructorParameterTypes (
+				publicConstructors,
+				mm.JniSignature,
+				mm.ManagedParameterExportKinds);
 			ctors.Add (new JavaConstructorInfo {
 				JniSignature = mm.JniSignature,
 				ConstructorIndex = ctorIndex,
@@ -2738,6 +2765,7 @@ public sealed class JavaPeerScanner : IDisposable
 				HasMatchingManagedCtor = managedParams != null,
 				ManagedParameterTypes = managedParams ?? [],
 				Annotations = mm.Annotations,
+				ManagedParameterExportKinds = mm.ManagedParameterExportKinds,
 			});
 			ctorIndex++;
 		}
@@ -2758,10 +2786,7 @@ public sealed class JavaPeerScanner : IDisposable
 			var sig = methodDef.DecodeSignature (index.TypeRefSignatureProvider, genericContext: index);
 			bool unsupported = false;
 			foreach (var parameter in sig.ParameterTypes) {
-				var typeName = parameter.ManagedTypeName;
-				if (parameter.GenericArguments.Count > 0 ||
-				    typeName.EndsWith ("&", StringComparison.Ordinal) ||
-				    typeName.EndsWith ("*", StringComparison.Ordinal)) {
+				if (IsOwnedByConstructorDiagnostics (parameter)) {
 					unsupported = true;
 					break;
 				}
@@ -2785,25 +2810,53 @@ public sealed class JavaPeerScanner : IDisposable
 	/// parameter types. Returns <see langword="null"/> when no compatible
 	/// constructor exists.
 	/// </summary>
-	static IReadOnlyList<TypeRefData>? TryGetMatchingPublicConstructorParameterTypes (
+	IReadOnlyList<TypeRefData>? TryGetMatchingPublicConstructorParameterTypes (
 		List<PublicConstructorInfo> publicConstructors,
-		string jniSignature)
+		string jniSignature,
+		IReadOnlyList<ExportParameterKindInfo> parameterKinds)
 	{
 		int closeParen = jniSignature.IndexOf (')');
 		if (closeParen < 0) {
 			throw new ArgumentException ($"Malformed JNI signature '{jniSignature}': missing ')'");
 		}
 		int parameterSignatureLength = closeParen + 1;
+		var jniParams = parameterKinds.Any (kind => kind != ExportParameterKindInfo.Unspecified)
+			? JniSignatureHelper.ParseParameters (jniSignature)
+			: null;
 		foreach (var constructor in publicConstructors) {
-			if (constructor.JniParameterSignature.Length != parameterSignatureLength ||
-			    string.CompareOrdinal (jniSignature, 0, constructor.JniParameterSignature, 0, parameterSignatureLength) != 0) {
+			if (jniParams is null) {
+				if (constructor.JniParameterSignature.Length != parameterSignatureLength ||
+				    string.CompareOrdinal (jniSignature, 0, constructor.JniParameterSignature, 0, parameterSignatureLength) != 0) {
+					continue;
+				}
+			} else if (!ManagedConstructorParametersMatchJniSignature (constructor.ParameterTypes, parameterKinds, jniParams)) {
 				continue;
 			}
 			// If multiple overloads with the same JNI-compatible signature exist, match
 			// the first public constructor in metadata order, like TypeManager.Activate.
-			return [.. constructor.ParameterTypes];
+			return constructor.ParameterTypes;
 		}
 		return null;
+	}
+
+	bool ManagedConstructorParametersMatchJniSignature (
+		IReadOnlyList<TypeRefData> managedParams,
+		IReadOnlyList<ExportParameterKindInfo> parameterKinds,
+		IReadOnlyList<JniParameterInfo> jniParams)
+	{
+		if (managedParams.Count != jniParams.Count) {
+			return false;
+		}
+
+		for (int i = 0; i < managedParams.Count; i++) {
+			var parameterKind = i < parameterKinds.Count ? parameterKinds [i] : ExportParameterKindInfo.Unspecified;
+			var managedDescriptor = ManagedTypeToJniDescriptor (managedParams [i], parameterKind);
+			if (!string.Equals (managedDescriptor, jniParams [i].JniType, StringComparison.Ordinal)) {
+				return false;
+			}
+		}
+		return true;
+	}
 	}
 
 	/// <summary>

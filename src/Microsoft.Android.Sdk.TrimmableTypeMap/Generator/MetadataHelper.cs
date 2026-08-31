@@ -118,6 +118,10 @@ static class MetadataHelper
 		foreach (var parameterType in constructor.ManagedParameterTypes) {
 			writer.WriteTypeRef (parameterType);
 		}
+		writer.Write (constructor.ParameterKinds.Count);
+		foreach (var parameterKind in constructor.ParameterKinds) {
+			writer.Write ((int) parameterKind);
+		}
 	}
 
 	static void WriteNativeRegistration (this BinaryWriter writer, NativeRegistrationData registration)

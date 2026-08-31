@@ -140,6 +140,18 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "special-xml-array-return", "success")]
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "special-xml-array-return", "XA4263")]
 		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "special-xml-array-return", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "export-static-constructor", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "export-static-constructor", "success")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "export-static-constructor", "success")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "export-constructor-arbitrary", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "export-constructor-arbitrary", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "export-constructor-arbitrary", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "export-constructor-invalid-kind", "XALNS7004")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "export-constructor-invalid-kind", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "export-constructor-invalid-kind", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "export-constructor-valid-kind", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "export-constructor-valid-kind", "success")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "export-constructor-valid-kind", "success")]
 		public void Build_ExportSignature_MatchesRuntimeClassification (
 			string typeMapImplementation,
 			AndroidRuntime runtime,
@@ -264,6 +276,48 @@ namespace Xamarin.Android.Build.Tests {
 					""",
 					"unsupported",
 					""),
+				"export-static-constructor" => (
+					"",
+					"""
+					[Export]
+					static SignaturePeer ()
+					{
+					}
+					""",
+					".cctor",
+					""),
+				"export-constructor-arbitrary" => (
+					"public sealed class ManagedOnly { }",
+					"""
+					[Export (".ctor", SuperArgumentsString = "")]
+					public SignaturePeer (ManagedOnly value)
+					{
+					}
+					""",
+					"SignaturePeer",
+					""),
+				"export-constructor-invalid-kind" => (
+					"public sealed class ManagedOnly { }",
+					"""
+					[Export (".ctor", SuperArgumentsString = "")]
+					public SignaturePeer (
+						[ExportParameter (ExportParameterKind.InputStream)] ManagedOnly value)
+					{
+					}
+					""",
+					"SignaturePeer",
+					""),
+				"export-constructor-valid-kind" => (
+					"",
+					"""
+					[Export (".ctor", SuperArgumentsString = "")]
+					public SignaturePeer (
+						[ExportParameter (ExportParameterKind.InputStream)] Stream value)
+					{
+					}
+					""",
+					"java.io.InputStream",
+					""),
 				_ => throw new InvalidOperationException ($"Unknown unsupported [Export] shape '{invalidShape}'."),
 			};
 			var proj = new XamarinAndroidApplicationProject {
@@ -308,8 +362,11 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsFalse (succeeded, $"{runtime}/{typeMapImplementation} should reject {invalidShape}.");
 			StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput, $"The build should report {expectedCode}.");
 			if (expectedCode == "XA4263") {
+				var expectedMemberName = invalidShape.StartsWith ("export-constructor", StringComparison.Ordinal)
+					? "ExportSignatureValidation.SignaturePeer.ctor"
+					: "ExportSignatureValidation.SignaturePeer.UnsupportedMember";
 				StringAssertEx.Contains (
-					"ExportSignatureValidation.SignaturePeer.UnsupportedMember",
+					expectedMemberName,
 					builder.LastBuildOutput,
 					"The diagnostic should identify the unsupported managed member."
 				);

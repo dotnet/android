@@ -667,6 +667,40 @@ namespace MyApp
 			=> value;
 	}
 
+	[Register ("my/app/ExportConstructorUnsupportedManagedParameter")]
+	public class ExportConstructorUnsupportedManagedParameter : Android.App.Activity
+	{
+		[Java.Interop.Export (".ctor", SuperArgumentsString = "")]
+		public ExportConstructorUnsupportedManagedParameter (UnsupportedExportValue value) { }
+	}
+
+	[Register ("my/app/ExportConstructorInvalidExportParameter")]
+	public class ExportConstructorInvalidExportParameter : Android.App.Activity
+	{
+		[Java.Interop.Export (".ctor", SuperArgumentsString = "")]
+		public ExportConstructorInvalidExportParameter (
+			[Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.InputStream)] UnsupportedExportValue value)
+		{
+		}
+	}
+
+	[Register ("my/app/ExportConstructorMappedParameter")]
+	public class ExportConstructorMappedParameter : Android.App.Activity
+	{
+		[Java.Interop.Export (".ctor", SuperArgumentsString = "")]
+		public ExportConstructorMappedParameter (
+			[Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.InputStream)] Stream value)
+		{
+		}
+	}
+
+	[Register ("my/app/ExportStaticConstructor")]
+	public class ExportStaticConstructor : Java.Lang.Object
+	{
+		[Java.Interop.Export]
+		static ExportStaticConstructor () { }
+	}
+
 	/// <summary>
 	/// Has [Export] methods with different access modifiers.
 	/// The JCW should respect the C# visibility for [Export] methods.

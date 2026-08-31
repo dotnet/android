@@ -408,6 +408,10 @@ namespace UserApp.JavaSourceParity
 	public class SignatureCollision
 	{
 	}
+
+	public class EnumCollision
+	{
+	}
 }
 
 namespace UserApp
@@ -417,5 +421,11 @@ namespace UserApp
 	{
 		[Export ("unsupportedCollision")]
 		public void UnsupportedCollision (JavaSourceParity.SignatureCollision value) { }
+
+		[Export ("unsupportedEnumCollision")]
+		public JavaSourceParity.EnumCollision UnsupportedEnumCollision (JavaSourceParity.EnumCollision value) => value;
+
+		[ExportField ("UNSUPPORTED_ENUM_FIELD")]
+		public JavaSourceParity.EnumCollision UnsupportedEnumField () => new ();
 	}
 }

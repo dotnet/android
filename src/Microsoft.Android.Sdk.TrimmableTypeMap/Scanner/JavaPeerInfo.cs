@@ -369,6 +369,11 @@ public sealed record JavaConstructorInfo
 	internal IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
 
 	/// <summary>
+	/// Per-parameter [ExportParameter] kinds for constructor argument marshalling.
+	/// </summary>
+	internal IReadOnlyList<ExportParameterKindInfo> ManagedParameterExportKinds { get; init; } = [];
+
+	/// <summary>
 	/// True when this Java constructor has a matching public managed constructor on the target type.
 	/// </summary>
 	public bool HasMatchingManagedCtor { get; init; }

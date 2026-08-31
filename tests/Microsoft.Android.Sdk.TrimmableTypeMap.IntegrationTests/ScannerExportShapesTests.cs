@@ -123,6 +123,9 @@ public class ScannerExportShapesTests
 
 		var peer = GetPeer ("ExportAssemblyCollisionShape", javaSourceFixturePath, UserTypesFixturePath);
 		Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "UnsupportedCollision");
+		Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "UnsupportedEnumCollision");
+		Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "UnsupportedEnumField");
+		Assert.DoesNotContain (peer.JavaFields, field => field.FieldName == "UNSUPPORTED_ENUM_FIELD");
 	}
 
 	// === Phase A: dispatch & declaration shapes ===
