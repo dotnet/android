@@ -35,6 +35,10 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (mapping.TryGetOriginalClass ("a/b/C", out string originalClass));
 			Assert.AreEqual ("acme/orig/MyView", originalClass);
 			CollectionAssert.AreEquivalent (new [] { "first", "second" }, mapping.GetOriginalMethodNames (originalClass, "x"));
+			Assert.IsTrue (mapping.TryGetOriginalMethodName (originalClass, "x", new [] { "int" }, out string first));
+			Assert.AreEqual ("first", first);
+			Assert.IsTrue (mapping.TryGetOriginalMethodName (originalClass, "x", Array.Empty<string> (), out string second));
+			Assert.AreEqual ("second", second);
 			Assert.IsFalse (mapping.TryGetOriginalClass ("a/b/Missing", out _));
 		}
 
@@ -42,9 +46,12 @@ namespace Xamarin.Android.Build.Tests
 		public void ParsesMethodMappingWithParameters ()
 		{
 			var mapping = R8Mapping.Parse (new StringReader (
-				"acme.orig.MyView -> a.b.C:\n" +
-				"    void onClick(android.view.View) -> a\n" +
-				"    void onClick(android.view.View,int) -> b\n"));
+				"""
+				acme.orig.MyView -> a.b.C:
+				    void onClick(android.view.View) -> a
+				    void onClick(android.view.View,int) -> b
+
+				"""));
 
 			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "onClick", new [] { "android.view.View" }, out string renamed1));
 			Assert.AreEqual ("a", renamed1);

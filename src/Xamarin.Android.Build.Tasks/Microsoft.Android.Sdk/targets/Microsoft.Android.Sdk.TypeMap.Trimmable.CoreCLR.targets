@@ -80,7 +80,7 @@
   </Target>
 
   <Target Name="_ComputePostTrimTrimmableTypeMapInputs"
-      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and '$(_AndroidEnableR8JniNameRewriting)' != 'true' "
+      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
       AfterTargets="_ResolveAssemblies">
     <ItemGroup>
       <_PostTrimTrimmableTypeMapInputAssemblies Remove="@(_PostTrimTrimmableTypeMapInputAssemblies)" />
@@ -99,7 +99,7 @@
        a real output but leaves the stamp, invalidate the stamp so the producer restores the complete
        post-trim output set instead of letting _GenerateJavaStubs create an empty acw-map placeholder. -->
   <Target Name="_InvalidatePostTrimTrimmableTypeMapStampIfOutputsMissing"
-      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and '$(_AndroidEnableR8JniNameRewriting)' != 'true' ">
+      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
     <ItemGroup>
       <_ExpectedPostTrimJavaFile Remove="@(_ExpectedPostTrimJavaFile)" />
       <_ActualPostTrimJavaFile Remove="@(_ActualPostTrimJavaFile)" />
@@ -128,7 +128,7 @@
   </Target>
 
   <Target Name="_GeneratePostTrimTrimmableTypeMapJavaSources"
-      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and '$(_AndroidEnableR8JniNameRewriting)' != 'true' "
+      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
       DependsOnTargets="_ComputePostTrimTrimmableTypeMapInputs;_InvalidatePostTrimTrimmableTypeMapStampIfOutputsMissing"
       AfterTargets="_ResolveAssemblies"
       BeforeTargets="_GenerateJavaStubs;_CompileJava;_CompileToDalvik"

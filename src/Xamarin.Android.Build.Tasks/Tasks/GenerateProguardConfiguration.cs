@@ -134,16 +134,15 @@ namespace Xamarin.Android.Tasks
 					var args = attr.GetCustomAttributeArguments ();
 					if (args.FixedArguments.Length >= 2 &&
 					    args.FixedArguments[0].Value is string jname &&
-					    args.FixedArguments[1].Value is string) {
+					    args.FixedArguments[1].Value is string jniDescriptor) {
 						if (jname == ".ctor" || jname == "<init>") {
 							writer.WriteLine ("   <init>(...);");
 						} else {
 							bool wroteOriginalName = false;
-							if (r8Mapping != null) {
-								foreach (string originalName in r8Mapping.GetOriginalMethodNames (originalJniClassName, jname)) {
-									writer.WriteLine ($"   *** {originalName}(...);");
-									wroteOriginalName = true;
-								}
+							if (r8Mapping != null &&
+									TryGetOriginalMethodName (originalJniClassName, jname, jniDescriptor, out string originalName)) {
+								writer.WriteLine ($"   *** {originalName}(...);");
+								wroteOriginalName = true;
 							}
 							if (!wroteOriginalName) {
 								writer.WriteLine ($"   *** {jname}(...);");
@@ -153,6 +152,23 @@ namespace Xamarin.Android.Tasks
 					break;
 				}
 			}
+		}
+
+		string? GetOriginalClassName (string rewrittenJniName)
+			=> r8Mapping?.TryGetOriginalClass (rewrittenJniName, out string originalJniName) == true ? originalJniName : null;
+
+		bool TryGetOriginalMethodName (string originalJniClassName, string rewrittenMethodName, string rewrittenDescriptor, out string originalMethodName)
+		{
+			JniDescriptorText.TryRewriteDescriptor (rewrittenDescriptor, GetOriginalClassName, out string originalDescriptor);
+			if (r8Mapping != null && JniDescriptorText.TryParseMethodDescriptor (originalDescriptor, out var originalParameterTypes, out _)) {
+				return r8Mapping.TryGetOriginalMethodName (
+					originalJniClassName,
+					rewrittenMethodName,
+					originalParameterTypes.ConvertAll (JniDescriptorText.JniTypeTokenToJavaSource),
+					out originalMethodName);
+			}
+			originalMethodName = "";
+			return false;
 		}
 	}
 }

@@ -163,6 +163,30 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			}
 		}
 
+		public bool TryGetOriginalMethodName (string originalJniClassName, string obfuscatedMethodName, IReadOnlyList<string> originalJavaParameterTypes, out string originalMethodName)
+		{
+			originalMethodName = "";
+			if (!methods.TryGetValue (originalJniClassName, out var classMethods)) {
+				return false;
+			}
+
+			string parameters = "(" + string.Join (",", originalJavaParameterTypes) + ")";
+			foreach (var entry in classMethods) {
+				if (!String.Equals (entry.Value, obfuscatedMethodName, StringComparison.Ordinal) ||
+						!entry.Key.EndsWith (parameters, StringComparison.Ordinal)) {
+					continue;
+				}
+				int parameterStart = entry.Key.Length - parameters.Length;
+				string candidate = entry.Key.Substring (0, parameterStart);
+				if (originalMethodName.Length != 0 && !String.Equals (originalMethodName, candidate, StringComparison.Ordinal)) {
+					originalMethodName = "";
+					return false;
+				}
+				originalMethodName = candidate;
+			}
+			return originalMethodName.Length != 0;
+		}
+
 		public bool TryGetRenamedField (string owningJniClassName, string originalFieldName, out string obfuscatedFieldName)
 		{
 			obfuscatedFieldName = "";
