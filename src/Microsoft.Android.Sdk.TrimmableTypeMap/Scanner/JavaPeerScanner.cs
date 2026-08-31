@@ -681,6 +681,9 @@ public sealed class JavaPeerScanner : IDisposable
 			if (!ValidateExportField (methodDef, index, isGenericType)) {
 				continue;
 			}
+			if (!ValidateExportSignature (methodDef, index, isGenericType)) {
+				continue;
+			}
 
 			// Check for [ExportField] — produces both a marshal method AND a field
 			CollectExportField (methodDef, index, fields);
@@ -776,6 +779,79 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		return true;
+	}
+
+	bool ValidateExportSignature (MethodDefinition methodDef, AssemblyIndex index, bool isGenericType)
+	{
+		bool isExport = false;
+		bool isExportField = false;
+		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
+			var ca = index.Reader.GetCustomAttribute (caHandle);
+			var attrName = AssemblyIndex.GetCustomAttributeName (ca, index.Reader);
+			if (attrName == "ExportAttribute") {
+				isExport = true;
+			} else if (IsExportFieldAttribute (ca, index)) {
+				isExportField = true;
+			}
+		}
+		if (!isExport && !isExportField) {
+			return true;
+		}
+
+		var methodName = index.Reader.GetString (methodDef.Name);
+		if (methodName is ".ctor" or ".cctor") {
+			return true;
+		}
+		if (isExport && isGenericType) {
+			logger?.LogExportOnGenericTypeError ();
+			return false;
+		}
+
+		var sig = methodDef.DecodeSignature (TypeRefSignatureTypeProvider.Instance, index);
+		var (parameterKinds, returnKind) = isExport
+			? GetExportParameterKinds (methodDef, index, sig.ParameterTypes.Length)
+			: (CreateDefaultExportKinds (sig.ParameterTypes.Length), ExportParameterKindInfo.Unspecified);
+		var declaringType = index.Reader.GetTypeDefinition (methodDef.GetDeclaringType ());
+		string declaringTypeName = MetadataTypeNameResolver.GetFullName (declaringType, index.Reader);
+		string memberName = $"{declaringTypeName}.{methodName}";
+
+		for (int i = 0; i < sig.ParameterTypes.Length; i++) {
+			if (!HasExportSignatureMapping (sig.ParameterTypes [i], parameterKinds [i])) {
+				logger?.LogUnsupportedExportSignatureError (memberName, sig.ParameterTypes [i].DisplayName);
+				return false;
+			}
+		}
+		if (!HasExportSignatureMapping (sig.ReturnType, returnKind)) {
+			logger?.LogUnsupportedExportSignatureError (memberName, sig.ReturnType.DisplayName);
+			return false;
+		}
+		return true;
+	}
+
+	bool HasExportSignatureMapping (TypeRefData managedType, ExportParameterKindInfo exportKind)
+	{
+		if (TryManagedTypeToJniDescriptor (managedType, exportKind, out _)) {
+			return true;
+		}
+
+		// Legacy maps by-ref, pointer, and rectangular-array signatures through their
+		// element type. Their trimmable dispatch parity is tracked separately; do not
+		// turn llvm-ir-supported signatures into trimmable-only diagnostics here.
+		string managedTypeName = managedType.ManagedTypeName;
+		if (managedTypeName.EndsWith ("&", StringComparison.Ordinal) ||
+		    managedTypeName.EndsWith ("*", StringComparison.Ordinal)) {
+			return TryManagedTypeToJniDescriptor (managedType with {
+				ManagedTypeName = managedTypeName.Substring (0, managedTypeName.Length - 1),
+			}, exportKind, out _);
+		}
+
+		int arrayStart = managedTypeName.LastIndexOf ('[');
+		if (arrayStart >= 0 && managedTypeName.EndsWith ("]", StringComparison.Ordinal)) {
+			return TryManagedTypeToJniDescriptor (managedType with {
+				ManagedTypeName = managedTypeName.Substring (0, arrayStart),
+			}, exportKind, out _);
+		}
+		return false;
 	}
 
 	static bool HasJniAddNativeMethodRegistrationAttribute (TypeDefinition typeDef, AssemblyIndex index)
@@ -1957,29 +2033,50 @@ public sealed class JavaPeerScanner : IDisposable
 	/// </summary>
 	string ManagedTypeToJniDescriptor (TypeRefData managedType, ExportParameterKindInfo exportKind = ExportParameterKindInfo.Unspecified)
 	{
+		return TryManagedTypeToJniDescriptor (managedType, exportKind, out var descriptor)
+			? descriptor
+			: "Ljava/lang/Object;";
+	}
+
+	bool TryManagedTypeToJniDescriptor (
+		TypeRefData managedType,
+		ExportParameterKindInfo exportKind,
+		out string descriptor)
+	{
 		if (exportKind != ExportParameterKindInfo.Unspecified) {
-			return exportKind switch {
+			descriptor = exportKind switch {
 				ExportParameterKindInfo.InputStream => "Ljava/io/InputStream;",
 				ExportParameterKindInfo.OutputStream => "Ljava/io/OutputStream;",
 				ExportParameterKindInfo.XmlPullParser => "Lorg/xmlpull/v1/XmlPullParser;",
 				ExportParameterKindInfo.XmlResourceParser => "Landroid/content/res/XmlResourceParser;",
 				_ => "Ljava/lang/Object;",
 			};
+			return true;
 		}
 
 		var primitive = TryGetPrimitiveJniDescriptor (managedType.ManagedTypeName);
 		if (primitive is not null) {
-			return primitive;
+			descriptor = primitive;
+			return true;
 		}
 
 		if (managedType.ManagedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
-			return $"[{ManagedTypeToJniDescriptor (managedType with { ManagedTypeName = managedType.ManagedTypeName.Substring (0, managedType.ManagedTypeName.Length - 2) })}";
+			var elementType = managedType with {
+				ManagedTypeName = managedType.ManagedTypeName.Substring (0, managedType.ManagedTypeName.Length - 2),
+			};
+			if (TryManagedTypeToJniDescriptor (elementType, exportKind, out var elementDescriptor)) {
+				descriptor = $"[{elementDescriptor}";
+				return true;
+			}
+			descriptor = "";
+			return false;
 		}
 
 		// Try to resolve as a Java peer type with [Register]
 		var resolved = TryResolveJniObjectDescriptor (managedType.ManagedTypeName);
 		if (resolved is not null) {
-			return resolved;
+			descriptor = resolved;
+			return true;
 		}
 
 		// Well-known interface types that legacy CallbackCode mapped explicitly
@@ -1995,17 +2092,20 @@ public sealed class JavaPeerScanner : IDisposable
 			_ => null,
 		};
 		if (wellKnown is not null) {
-			return wellKnown;
+			descriptor = wellKnown;
+			return true;
 		}
 
 		// Enum parameters use their underlying primitive JNI ABI (matches legacy
 		// CallbackCode behavior).
 		var enumDescriptor = TryResolveEnumUnderlyingDescriptor (managedType.ManagedTypeName, managedType.AssemblyName);
 		if (enumDescriptor is not null) {
-			return enumDescriptor;
+			descriptor = enumDescriptor;
+			return true;
 		}
 
-		return "Ljava/lang/Object;";
+		descriptor = "";
+		return false;
 	}
 
 	/// <summary>

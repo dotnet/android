@@ -580,6 +580,52 @@ namespace MyApp
 		public System.Collections.ICollection? EchoCollection (System.Collections.ICollection? value) => value;
 	}
 
+	public class UnsupportedExportValue
+	{
+	}
+
+	[Register ("my/app/ExportWithUnsupportedManagedParameter")]
+	public class ExportWithUnsupportedManagedParameter : Java.Lang.Object
+	{
+		[Java.Interop.Export ("unsupported")]
+		public void UnsupportedMember (UnsupportedExportValue value) { }
+	}
+
+	[Register ("my/app/ExportWithUnsupportedManagedReturn")]
+	public class ExportWithUnsupportedManagedReturn : Java.Lang.Object
+	{
+		[Java.Interop.Export ("unsupported")]
+		public UnsupportedExportValue UnsupportedMember () => new ();
+	}
+
+	[Register ("my/app/ExportFieldWithUnsupportedManagedReturn")]
+	public class ExportFieldWithUnsupportedManagedReturn : Java.Lang.Object
+	{
+		[Java.Interop.ExportField ("UNSUPPORTED_FIELD")]
+		public UnsupportedExportValue UnsupportedMember () => new ();
+	}
+
+	[Register ("my/app/ExportWithGenericMethodParameter")]
+	public class ExportWithGenericMethodParameter : Java.Lang.Object
+	{
+		[Java.Interop.Export ("unsupported")]
+		public T UnsupportedMember<T> (T value) => value;
+	}
+
+	[Register ("my/app/ExportWithGenericInstantiation")]
+	public class ExportWithGenericInstantiation : Java.Lang.Object
+	{
+		[Java.Interop.Export ("unsupported")]
+		public System.Collections.Generic.List<string> UnsupportedMember (System.Collections.Generic.List<string> value) => value;
+	}
+
+	[Register ("my/app/GenericExportType")]
+	public class GenericExportType<T> : Java.Lang.Object
+	{
+		[Java.Interop.Export ("unsupported")]
+		public int UnsupportedMember () => 0;
+	}
+
 	/// <summary>
 	/// Has [Export] methods with different access modifiers.
 	/// The JCW should respect the C# visibility for [Export] methods.

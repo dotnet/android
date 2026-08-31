@@ -55,10 +55,14 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			logMessages.Add ($"XA4258: Java name '{javaName}' contains reserved Java identifier '{invalidIdentifier}'.");
 		public void LogExportFieldWithParametersError () =>
 			logMessages.Add ("XA4205: [ExportField] can only be used on methods with 0 parameters.");
+		public void LogExportOnGenericTypeError () =>
+			logMessages.Add ("XA4206: [Export] cannot be used on a generic type.");
 		public void LogExportFieldReturnsVoidError () =>
 			logMessages.Add ("XA4208: [ExportField] cannot be used on a method returning 'void'.");
 		public void LogExportFieldOnGenericTypeError () =>
 			logMessages.Add ("XA4207: [ExportField] cannot be used on a generic type.");
+		public void LogUnsupportedExportSignatureError (string memberName, string managedTypeName) =>
+			logMessages.Add ($"XA4263: The exported member '{memberName}' has unsupported signature type '{managedTypeName}'.");
 		public void LogCustomJavaObjectError (string managedTypeName) =>
 			logMessages.Add ($"XA4212: Type `{managedTypeName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
 		public void LogCustomJavaObjectWarning (string managedTypeName) =>
@@ -343,6 +347,31 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		for (int i = 0; i < full.GeneratedAssemblies.Count; i++) {
 			Assert.Equal (full.GeneratedAssemblies [i].Name, optimized.GeneratedAssemblies [i].Name);
 			Assert.Equal (full.GeneratedAssemblies [i].Content.ToArray (), optimized.GeneratedAssemblies [i].Content.ToArray ());
+		}
+	}
+
+	[Fact]
+	public void Execute_UnsupportedExportSignatures_ReportCodedDiagnosticsWithoutPartialMembers ()
+	{
+		using var peReader = CreateTestFixturePEReader ();
+		var result = CreateGenerator ().Execute ([Input ("TestFixtures", peReader)], new Version (11, 0), new HashSet<string> ());
+
+		Assert.Equal (5, logMessages.Count (message => message.StartsWith ("XA4263:", StringComparison.Ordinal)));
+		Assert.Equal (1, logMessages.Count (message => message.StartsWith ("XA4206:", StringComparison.Ordinal)));
+		foreach (var javaName in new [] {
+			"my/app/ExportWithUnsupportedManagedParameter",
+			"my/app/ExportWithUnsupportedManagedReturn",
+			"my/app/ExportFieldWithUnsupportedManagedReturn",
+			"my/app/ExportWithGenericMethodParameter",
+			"my/app/ExportWithGenericInstantiation",
+			"my/app/GenericExportType",
+		}) {
+			var peer = result.AllPeers.Single (candidate => candidate.JavaName == javaName);
+			Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "UnsupportedMember");
+			Assert.Empty (peer.JavaFields);
+			var source = result.GeneratedJavaSources.Single (candidate => candidate.RelativePath == javaName + ".java");
+			Assert.DoesNotContain (" unsupported (", source.Content, StringComparison.Ordinal);
+			Assert.DoesNotContain ("UNSUPPORTED_FIELD", source.Content, StringComparison.Ordinal);
 		}
 	}
 

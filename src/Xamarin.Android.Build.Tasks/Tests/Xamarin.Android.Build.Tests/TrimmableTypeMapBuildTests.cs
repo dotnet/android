@@ -95,6 +95,119 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "arbitrary-parameter", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "arbitrary-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "arbitrary-parameter", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "arbitrary-return", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "arbitrary-return", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "arbitrary-return", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "arbitrary-field", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "arbitrary-field", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "arbitrary-field", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic-parameter", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic-parameter", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic-instantiation", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic-instantiation", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic-instantiation", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "function-pointer", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "function-pointer", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "function-pointer", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic-declaring-type", "XA4206")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic-declaring-type", "XA4206")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic-declaring-type", "XA4206")]
+		public void Build_UnsupportedExportSignature_ReportsCodedDiagnosticWithoutPartialOutputs (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			string invalidShape,
+			string expectedCode)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var (additionalTypes, member, marker, typeParameters) = invalidShape switch {
+				"arbitrary-parameter" => (
+					"public sealed class ManagedOnly { }",
+					"""[Export ("unsupported")] public void UnsupportedMember (ManagedOnly value) { }""",
+					"unsupported",
+					""),
+				"arbitrary-return" => (
+					"public sealed class ManagedOnly { }",
+					"""[Export ("unsupported")] public ManagedOnly UnsupportedMember () => new ();""",
+					"unsupported",
+					""),
+				"arbitrary-field" => (
+					"public sealed class ManagedOnly { }",
+					"""[ExportField ("UNSUPPORTED_FIELD")] public ManagedOnly UnsupportedMember () => new ();""",
+					"UNSUPPORTED_FIELD",
+					""),
+				"generic-parameter" => (
+					"",
+					"""[Export ("unsupported")] public T UnsupportedMember<T> (T value) => value;""",
+					"unsupported",
+					""),
+				"generic-instantiation" => (
+					"",
+					"""[Export ("unsupported")] public List<string> UnsupportedMember (List<string> value) => value;""",
+					"unsupported",
+					""),
+				"function-pointer" => (
+					"",
+					"""[Export ("unsupported")] public unsafe delegate* unmanaged<void> UnsupportedMember (delegate* unmanaged<void> value) => value;""",
+					"unsupported",
+					""),
+				"generic-declaring-type" => (
+					"",
+					"""[Export ("unsupported")] public int UnsupportedMember () => 0;""",
+					"unsupported",
+					"<T>"),
+				_ => throw new InvalidOperationException ($"Unknown unsupported [Export] shape '{invalidShape}'."),
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				References = {
+					new BuildItem.Reference ("Mono.Android.Export"),
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.SetProperty ("AllowUnsafeBlocks", "true");
+			proj.Sources.Add (new BuildItem.Source ("ExportSignatureValidation.cs") {
+				TextContent = () => $$"""
+					using System.Collections.Generic;
+					using Android.Runtime;
+					using Java.Interop;
+
+					namespace ExportSignatureValidation {
+						{{additionalTypes}}
+
+						[Register ("com/example/exports/SignaturePeer")]
+						public class SignaturePeer{{typeParameters}} : Java.Lang.Object {
+							public SignaturePeer () {
+							}
+
+							{{member}}
+						}
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), $"{runtime}/{typeMapImplementation} should reject {invalidShape}.");
+			StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput, $"The build should report {expectedCode}.");
+			if (expectedCode == "XA4263") {
+				StringAssertEx.Contains (
+					"ExportSignatureValidation.SignaturePeer.UnsupportedMember",
+					builder.LastBuildOutput,
+					"The diagnostic should identify the unsupported managed member."
+				);
+			}
+			AssertNoExportOutputs (builder, marker);
+		}
+
 		static XamarinAndroidApplicationProject CreateExportFieldValidationProject (
 			AndroidRuntime runtime,
 			string typeMapImplementation,
@@ -127,6 +240,73 @@ namespace Xamarin.Android.Build.Tests {
 					""",
 			});
 			return proj;
+		}
+
+		[Test]
+		public void FindExportOutputs_FindsEveryArtifactKind ()
+		{
+			var root = Path.Combine (Root, "temp", TestName);
+			var typemapDirectory = Path.Combine (root, "typemap");
+			var acwMapFile = Path.Combine (root, "acw-map.txt");
+			var trimmableJavaDirectory = Path.Combine (typemapDirectory, "java", "com", "example");
+			var llvmIrJavaDirectory = Path.Combine (root, "android", "src", "com", "example");
+			Directory.CreateDirectory (trimmableJavaDirectory);
+			Directory.CreateDirectory (llvmIrJavaDirectory);
+
+			var expected = new [] {
+				Path.Combine (typemapDirectory, "_Example.TypeMap.dll"),
+				Path.Combine (typemapDirectory, "_Microsoft.Android.TypeMaps.dll"),
+				acwMapFile,
+				Path.Combine (trimmableJavaDirectory, "TrimmablePeer.java"),
+				Path.Combine (llvmIrJavaDirectory, "LlvmIrPeer.java"),
+			};
+			File.WriteAllBytes (expected [0], []);
+			File.WriteAllBytes (expected [1], []);
+			File.WriteAllText (expected [2], "Managed, Assembly;com/example/Peer");
+			File.WriteAllText (expected [3], "public int VALUE = InitialValue ();");
+			File.WriteAllText (expected [4], "public int VALUE = InitialValue ();");
+
+			CollectionAssert.AreEquivalent (
+				expected,
+				FindExportOutputs (typemapDirectory, acwMapFile, Path.Combine (root, "android", "src"), "VALUE")
+			);
+		}
+
+		static void AssertNoExportOutputs (ProjectBuilder builder, string memberName)
+		{
+			var typemapDirectory = builder.Output.GetIntermediaryPath ("typemap");
+			var acwMapFile = builder.Output.GetIntermediaryPath ("acw-map.txt");
+			var androidSourceDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src"));
+			var outputs = FindExportOutputs (typemapDirectory, acwMapFile, androidSourceDirectory, memberName);
+			Assert.IsEmpty (
+				outputs,
+				"Invalid exported metadata should not produce typemap assemblies, ACW maps, or partial Java output:" +
+				Environment.NewLine + string.Join (Environment.NewLine, outputs)
+			);
+		}
+
+		static string [] FindExportOutputs (string typemapDirectory, string acwMapFile, string androidSourceDirectory, string memberName)
+		{
+			var outputs = new List<string> ();
+			if (Directory.Exists (typemapDirectory)) {
+				outputs.AddRange (Directory.GetFiles (typemapDirectory, "*.TypeMap.dll", SearchOption.AllDirectories));
+				outputs.AddRange (Directory.GetFiles (typemapDirectory, "_Microsoft.Android.TypeMaps.dll", SearchOption.AllDirectories));
+			}
+			if (File.Exists (acwMapFile)) {
+				outputs.Add (acwMapFile);
+			}
+
+			foreach (var javaDirectory in new [] { Path.Combine (typemapDirectory, "java"), androidSourceDirectory }) {
+				if (!Directory.Exists (javaDirectory)) {
+					continue;
+				}
+				foreach (var javaFile in Directory.GetFiles (javaDirectory, "*.java", SearchOption.AllDirectories)) {
+					if (File.ReadAllText (javaFile).Contains (memberName, StringComparison.Ordinal)) {
+						outputs.Add (javaFile);
+					}
+				}
+			}
+			return outputs.ToArray ();
 		}
 
 		[Test]

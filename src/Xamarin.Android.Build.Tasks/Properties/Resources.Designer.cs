@@ -1669,6 +1669,16 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The exported member &apos;{0}&apos; has unsupported signature type &apos;{1}&apos;.
+        ///   Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter]..
+        /// </summary>
+        public static string XA4263 {
+            get {
+                return ResourceManager.GetString("XA4263", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
         /// </summary>
         public static string XA4300 {
