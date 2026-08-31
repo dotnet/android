@@ -30,11 +30,11 @@ namespace Xamarin.Android.Build.Tests
 
 		static R8Mapping Mapping (string text) => R8Mapping.Parse (new StringReader (text));
 
-		static IReadOnlyList<string> AttributeStringArgs (MetadataReader reader, CustomAttributeHandleCollection attributes, MethodDefinitionHandle ctor)
+		static IReadOnlyList<string> AttributeStringArgs (MetadataReader reader, CustomAttributeHandleCollection attributes, EntityHandle ctor)
 		{
 			foreach (CustomAttributeHandle handle in attributes) {
 				CustomAttribute attribute = reader.GetCustomAttribute (handle);
-				if (attribute.Constructor.Kind != HandleKind.MethodDefinition || (MethodDefinitionHandle) attribute.Constructor != ctor) {
+				if (attribute.Constructor != ctor) {
 					continue;
 				}
 
@@ -48,10 +48,28 @@ namespace Xamarin.Android.Build.Tests
 			return Array.Empty<string> ();
 		}
 
-		static string FirstAttributeStringArg (MetadataReader reader, CustomAttributeHandleCollection attributes, MethodDefinitionHandle ctor)
+		static string FirstAttributeStringArg (MetadataReader reader, CustomAttributeHandleCollection attributes, EntityHandle ctor)
 		{
 			var args = AttributeStringArgs (reader, attributes, ctor);
 			return args.Count > 0 ? args [0] : null;
+		}
+
+		static IReadOnlyList<string> AttributeStringArrayArg (MetadataReader reader, CustomAttributeHandleCollection attributes, EntityHandle ctor)
+		{
+			foreach (CustomAttributeHandle handle in attributes) {
+				CustomAttribute attribute = reader.GetCustomAttribute (handle);
+				if (attribute.Constructor != ctor) {
+					continue;
+				}
+
+				var decoded = attribute.DecodeValue (Xamarin.Android.Tasks.DummyCustomAttributeProvider.Instance);
+				var result = new List<string> ();
+				foreach (var element in (ImmutableArray<CustomAttributeTypedArgument<object>>) decoded.FixedArguments [0].Value) {
+					result.Add ((string) element.Value);
+				}
+				return result;
+			}
+			return [];
 		}
 
 		/// <summary>
@@ -214,6 +232,29 @@ namespace Xamarin.Android.Build.Tests
 			// The nested type resolves its owner from the enclosing MyView type.
 			MethodDefinitionHandle run = FirstMethodOf (reader, nested);
 			CollectionAssert.AreEqual (new [] { "b:()V:n_Run" }, ValuesOf (LoadedStrings (peReader, reader, run)));
+		}
+
+		[Test]
+		public void RewritesTrimmableTypeMapKeysAndAliases ()
+		{
+			var fixture = new JniFixtureBuilder ();
+			fixture.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, fixture.TypeMapCtor3,
+				fixture.AttributeBlob ("acme/orig/MyView[1]", "Acme.Proxy, Fixture", "Acme.Target, Fixture"));
+
+			int fieldStart = fixture.NextFieldRid;
+			int methodStart = fixture.NextMethodRid;
+			TypeDefinitionHandle aliasHolder = fixture.AddType ("Acme", "AliasHolder", fieldStart, methodStart);
+			fixture.Metadata.AddCustomAttribute (aliasHolder, fixture.JavaPeerAliasesCtor1,
+				fixture.StringArrayAttributeBlob ("acme/orig/MyView[0]", "acme/orig/MyView[1]", "unmapped/Type[0]"));
+
+			JniRewriteResult result = Rewrite (fixture.Serialize (), Mapping ("acme.orig.MyView -> a.b.C:\n"));
+			using var peReader = new PEReader (ImmutableArray.Create (result.Image));
+			MetadataReader reader = peReader.GetMetadataReader ();
+
+			CollectionAssert.AreEqual (new [] { "a/b/C[1]", "Acme.Proxy, Fixture", "Acme.Target, Fixture" },
+				AttributeStringArgs (reader, reader.GetAssemblyDefinition ().GetCustomAttributes (), fixture.TypeMapCtor3));
+			CollectionAssert.AreEqual (new [] { "a/b/C[0]", "a/b/C[1]", "unmapped/Type[0]" },
+				AttributeStringArrayArg (reader, reader.GetTypeDefinition (aliasHolder).GetCustomAttributes (), fixture.JavaPeerAliasesCtor1));
 		}
 
 		static List<string> ValuesOf (List<KeyValuePair<int, string>> pairs)

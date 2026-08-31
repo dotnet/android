@@ -18,6 +18,7 @@ namespace Xamarin.Android.Build.Tests
 		public const string RegisterAttributeNamespace = "Android.Runtime";
 		public const string RegisterAttributeName = "RegisterAttribute";
 		public const string JavaInteropNamespace = "Java.Interop";
+		public const string RuntimeInteropServicesNamespace = "System.Runtime.InteropServices";
 		public const string PrivateImplementationDetails = "<PrivateImplementationDetails>";
 
 		public MetadataBuilder Metadata { get; } = new MetadataBuilder ();
@@ -42,6 +43,8 @@ namespace Xamarin.Android.Build.Tests
 		public MethodDefinitionHandle JniTypeSignatureCtor1 { get; }
 		public MethodDefinitionHandle JniMethodSignatureCtor2 { get; }
 		public MethodDefinitionHandle JniConstructorSignatureCtor1 { get; }
+		public MethodDefinitionHandle JavaPeerAliasesCtor1 { get; }
+		public MemberReferenceHandle TypeMapCtor3 { get; }
 
 		readonly MethodBodyStreamEncoder bodyEncoder;
 		TypeDefinitionHandle privateImplementationDetails;
@@ -86,6 +89,13 @@ namespace Xamarin.Android.Build.Tests
 			methodStart = NextMethodRid;
 			JniConstructorSignatureCtor1 = AddAttributeCtor (1);
 			AddType (JavaInteropNamespace, "JniConstructorSignatureAttribute", fieldStart, methodStart);
+
+			fieldStart = NextFieldRid;
+			methodStart = NextMethodRid;
+			JavaPeerAliasesCtor1 = AddStringArrayAttributeCtor ();
+			AddType (JavaInteropNamespace, "JavaPeerAliasesAttribute", fieldStart, methodStart);
+
+			TypeMapCtor3 = AddGenericStringAttributeCtor (RuntimeInteropServicesNamespace, "TypeMapAttribute`1", 3);
 		}
 
 		public int NextFieldRid => Metadata.GetRowCount (TableIndex.Field) + 1;
@@ -132,6 +142,46 @@ namespace Xamarin.Android.Build.Tests
 				MetadataTokens.ParameterHandle (Metadata.GetRowCount (TableIndex.Param) + 1));
 		}
 
+		MethodDefinitionHandle AddStringArrayAttributeCtor ()
+		{
+			var signature = new BlobBuilder ();
+			new BlobEncoder (signature).MethodSignature (isInstanceMethod: true)
+				.Parameters (1, out ReturnTypeEncoder returnType, out ParametersEncoder parameters);
+			returnType.Void ();
+			parameters.AddParameter ().Type ().SZArray ().String ();
+
+			return Metadata.AddMethodDefinition (
+				MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+				MethodImplAttributes.IL,
+				Metadata.GetOrAddString (".ctor"),
+				Metadata.GetOrAddBlob (signature),
+				EmitReturnOnlyBody (),
+				MetadataTokens.ParameterHandle (Metadata.GetRowCount (TableIndex.Param) + 1));
+		}
+
+		MemberReferenceHandle AddGenericStringAttributeCtor (string ns, string name, int argCount)
+		{
+			TypeReferenceHandle openType = Metadata.AddTypeReference (CoreLibraryReference,
+				Metadata.GetOrAddString (ns), Metadata.GetOrAddString (name));
+			var typeSpec = new BlobBuilder ();
+			typeSpec.WriteByte ((byte) SignatureTypeCode.GenericTypeInstance);
+			typeSpec.WriteByte ((byte) SignatureTypeKind.Class);
+			typeSpec.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (openType));
+			typeSpec.WriteCompressedInteger (1);
+			typeSpec.WriteByte ((byte) SignatureTypeKind.Class);
+			typeSpec.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (ValueTypeReference));
+			TypeSpecificationHandle closedType = Metadata.AddTypeSpecification (Metadata.GetOrAddBlob (typeSpec));
+
+			var signature = new BlobBuilder ();
+			new BlobEncoder (signature).MethodSignature (isInstanceMethod: true)
+				.Parameters (argCount, out ReturnTypeEncoder returnType, out ParametersEncoder parameters);
+			returnType.Void ();
+			for (int i = 0; i < argCount; i++) {
+				parameters.AddParameter ().Type ().String ();
+			}
+			return Metadata.AddMemberReference (closedType, Metadata.GetOrAddString (".ctor"), Metadata.GetOrAddBlob (signature));
+		}
+
 		static BlobBuilder BuildVoidNoArgsSignature ()
 		{
 			var signature = new BlobBuilder ();
@@ -171,6 +221,18 @@ namespace Xamarin.Android.Build.Tests
 				blob.WriteSerializedString (arg);
 			}
 			blob.WriteUInt16 (0x0000); // NumNamed
+			return Metadata.GetOrAddBlob (blob);
+		}
+
+		public BlobHandle StringArrayAttributeBlob (params string [] values)
+		{
+			var blob = new BlobBuilder ();
+			blob.WriteUInt16 (0x0001);
+			blob.WriteInt32 (values.Length);
+			foreach (string value in values) {
+				blob.WriteSerializedString (value);
+			}
+			blob.WriteUInt16 (0x0000);
 			return Metadata.GetOrAddBlob (blob);
 		}
 

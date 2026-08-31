@@ -21,6 +21,8 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		const string JniTypeSignatureAttributeFullName = "Java.Interop.JniTypeSignatureAttribute";
 		const string JniMethodSignatureAttributeFullName = "Java.Interop.JniMethodSignatureAttribute";
 		const string JniConstructorSignatureAttributeFullName = "Java.Interop.JniConstructorSignatureAttribute";
+		const string JavaPeerAliasesAttributeFullName = "Java.Interop.JavaPeerAliasesAttribute";
+		const string TypeMapAttributeFullName = "System.Runtime.InteropServices.TypeMapAttribute`1";
 
 		const string JavaPeerProxyNamespace = "Java.Interop";
 		const string JavaPeerProxyName = "JavaPeerProxy";
@@ -69,6 +71,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		{
 			var plan = new JniRewritePlan ();
 
+			PlanAssemblyAttributes (plan);
 			foreach (TypeDefinitionHandle typeHandle in reader.TypeDefinitions) {
 				PlanType (plan, typeHandle);
 			}
@@ -82,6 +85,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			TypeDefinition typeDef = reader.GetTypeDefinition (typeHandle);
 			string? ownerJniName = ResolveOwnerJniName (typeHandle);
 
+			PlanJavaPeerAliasesAttributes (plan, typeDef.GetCustomAttributes ());
 			PlanTypeLevelAttributes (plan, typeDef, ownerJniName);
 
 			foreach (MethodDefinitionHandle methodHandle in typeDef.GetMethods ()) {
@@ -100,6 +104,64 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			foreach (EventDefinitionHandle eventHandle in typeDef.GetEvents ()) {
 				PlanMemberNameAttributes (plan, reader.GetEventDefinition (eventHandle).GetCustomAttributes (), ownerJniName);
 			}
+		}
+
+		void PlanAssemblyAttributes (JniRewritePlan plan)
+		{
+			foreach (CustomAttributeHandle caHandle in reader.GetAssemblyDefinition ().GetCustomAttributes ()) {
+				CustomAttribute ca = reader.GetCustomAttribute (caHandle);
+				if (reader.GetCustomAttributeFullName (ca, log) != TypeMapAttributeFullName) {
+					continue;
+				}
+
+				// TypeMapAttribute<T>'s first argument is the JNI map key. Its following
+				// System.Type arguments are also SerStrings, but must remain unchanged.
+				PlanCustomAttributeRewrite (plan, caHandle, ca, fixedArgCount: 1,
+					(i, value) => value != null ? TryRewriteTypeMapKey (value) : null);
+			}
+		}
+
+		void PlanJavaPeerAliasesAttributes (JniRewritePlan plan, CustomAttributeHandleCollection attributes)
+		{
+			foreach (CustomAttributeHandle caHandle in attributes) {
+				CustomAttribute ca = reader.GetCustomAttribute (caHandle);
+				if (reader.GetCustomAttributeFullName (ca, log) != JavaPeerAliasesAttributeFullName) {
+					continue;
+				}
+
+				BlobReader blobReader = reader.GetBlobReader (ca.Value);
+				byte [] originalContent = blobReader.ReadBytes (blobReader.Length);
+				byte []? newContent = CustomAttributeStringRewriter.TryRewriteStringArray (originalContent, TryRewriteTypeMapKey);
+				if (newContent != null) {
+					plan.AddCustomAttributeBlob (caHandle, newContent);
+				}
+			}
+		}
+
+		string? TryRewriteTypeMapKey (string value)
+		{
+			int suffixStart = value.LastIndexOf ('[');
+			string suffix = "";
+			string jniName = value;
+			if (suffixStart > 0 && value [value.Length - 1] == ']' && IsDecimalIndex (value, suffixStart + 1, value.Length - 1)) {
+				suffix = value.Substring (suffixStart);
+				jniName = value.Substring (0, suffixStart);
+			}
+
+			return mapping.TryGetRenamedClass (jniName, out string renamed) ? renamed + suffix : null;
+		}
+
+		static bool IsDecimalIndex (string value, int start, int end)
+		{
+			if (start == end) {
+				return false;
+			}
+			for (int i = start; i < end; i++) {
+				if (value [i] < '0' || value [i] > '9') {
+					return false;
+				}
+			}
+			return true;
 		}
 
 		/// <summary>
