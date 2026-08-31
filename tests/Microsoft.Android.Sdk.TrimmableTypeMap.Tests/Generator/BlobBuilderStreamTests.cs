@@ -128,6 +128,18 @@ public class BlobBuilderStreamTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void ValidatesReadArguments ()
+	{
+		using var stream = new BlobBuilderStream (MultiChunkBuilder (Sequence (32), 8));
+		var buffer = new byte [16];
+
+		Assert.Throws<ArgumentOutOfRangeException> (() => stream.Read (buffer, -1, 1));
+		Assert.Throws<ArgumentOutOfRangeException> (() => stream.Read (buffer, 0, -1));
+		// Range overflows the buffer: ArgumentException, matching Stream.Read conventions.
+		Assert.Throws<ArgumentException> (() => stream.Read (buffer, 8, 16));
+	}
+
+	[Fact]
 	public void GeneratedAssemblyStreamIsAReadableImage ()
 	{
 		var generator = new TrimmableTypeMapGenerator (new CollectingLogger ());

@@ -74,8 +74,14 @@ sealed class BlobBuilderStream : Stream
 		if (buffer is null) {
 			throw new ArgumentNullException (nameof (buffer));
 		}
-		if (offset < 0 || count < 0 || buffer.Length - offset < count) {
+		if (offset < 0) {
+			throw new ArgumentOutOfRangeException (nameof (offset));
+		}
+		if (count < 0) {
 			throw new ArgumentOutOfRangeException (nameof (count));
+		}
+		if (buffer.Length - offset < count) {
+			throw new ArgumentException ("The buffer is too small for the requested range.");
 		}
 
 		int copied = 0;

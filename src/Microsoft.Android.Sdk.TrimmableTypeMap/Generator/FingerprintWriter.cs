@@ -101,13 +101,10 @@ sealed class FingerprintWriter : IDisposable
 
 	public byte [] GetIncrementalFingerprint ()
 	{
-		if (incrementalHash is null || incrementalBuffer is null) {
+		if (incrementalHash is null) {
 			throw new InvalidOperationException ("The incremental fingerprint was not requested.");
 		}
-		if (incrementalPosition > 0) {
-			incrementalHash.AppendData (incrementalBuffer, 0, incrementalPosition);
-			incrementalPosition = 0;
-		}
+		FlushIncremental ();
 		return incrementalHash.GetHashAndReset ();
 	}
 
@@ -137,19 +134,23 @@ sealed class FingerprintWriter : IDisposable
 				contentPosition += count;
 			}
 		}
-		if ((sink & Sink.Incremental) != 0 && incrementalHash is not null && incrementalBuffer is not null) {
-			if (count > incrementalBuffer.Length - incrementalPosition) {
-				if (incrementalPosition > 0) {
-					incrementalHash.AppendData (incrementalBuffer, 0, incrementalPosition);
-					incrementalPosition = 0;
-				}
-			}
-			if (count > incrementalBuffer.Length) {
-				incrementalHash.AppendData (data, offset, count);
-			} else {
-				Buffer.BlockCopy (data, offset, incrementalBuffer, incrementalPosition, count);
-				incrementalPosition += count;
-			}
+		if ((sink & Sink.Incremental) == 0) {
+			return;
+		}
+		if (incrementalHash is null || incrementalBuffer is null) {
+			// Silently dropping the write would produce a fingerprint that looks valid but
+			// covers less than it claims to, so fail fast on the caller's mistake instead.
+			throw new InvalidOperationException (
+				$"Cannot write to {nameof (Sink.Incremental)} because the incremental fingerprint was not requested.");
+		}
+		if (count > incrementalBuffer.Length - incrementalPosition) {
+			FlushIncremental ();
+		}
+		if (count > incrementalBuffer.Length) {
+			incrementalHash.AppendData (data, offset, count);
+		} else {
+			Buffer.BlockCopy (data, offset, incrementalBuffer, incrementalPosition, count);
+			incrementalPosition += count;
 		}
 	}
 
@@ -158,6 +159,14 @@ sealed class FingerprintWriter : IDisposable
 		if (contentPosition > 0) {
 			contentHash.AppendData (contentBuffer, 0, contentPosition);
 			contentPosition = 0;
+		}
+	}
+
+	void FlushIncremental ()
+	{
+		if (incrementalPosition > 0 && incrementalHash is not null && incrementalBuffer is not null) {
+			incrementalHash.AppendData (incrementalBuffer, 0, incrementalPosition);
+			incrementalPosition = 0;
 		}
 	}
 

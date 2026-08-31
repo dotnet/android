@@ -24,6 +24,16 @@ public record TrimmableTypeMapResult (
 /// A generated typemap assembly. <paramref name="Content"/> is a read-only, seekable stream
 /// positioned at the start of the serialised PE image; callers own it and should dispose it.
 /// </summary>
+/// <remarks>
+/// <paramref name="Content"/> is deliberately typed as <see cref="Stream"/> rather than
+/// <see cref="MemoryStream"/>: the emitter hands back a view over the buffers the PE serialiser
+/// already produced, so the image is never copied into a second contiguous buffer. Consumers
+/// should treat it as a forward-reading stream — hash it, rewind, and copy it — rather than
+/// reaching for <see cref="MemoryStream"/> members such as <c>ToArray</c> or <c>GetBuffer</c>.
+/// This assembly is build-time SDK infrastructure rather than a library third parties compile
+/// against, and the in-tree consumer (<c>GenerateTrimmableTypeMap</c>) only ever streams the
+/// content to disk, so the narrowed member surface is an intentional trade for the removed copy.
+/// </remarks>
 public record GeneratedAssembly (string Name, Stream Content);
 
 public record GeneratedJavaSource (string RelativePath, string Content);

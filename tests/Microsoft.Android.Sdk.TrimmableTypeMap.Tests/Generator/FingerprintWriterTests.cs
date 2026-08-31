@@ -74,6 +74,44 @@ public class FingerprintWriterTests : FixtureTestBase
 		Assert.Throws<InvalidOperationException> (() => writer.GetIncrementalFingerprint ());
 	}
 
+	[Fact]
+	public void WritingToIncrementalSink_WhenNotRequested_Throws ()
+	{
+		// Silently dropping the write would yield a fingerprint that looks valid but covers
+		// less than it claims to, so the writer must fail fast instead.
+		foreach (var sink in new [] { Sink.Incremental, Sink.Both }) {
+			using var writer = new FingerprintWriter (includeIncremental: false);
+			Assert.Throws<InvalidOperationException> (() => writer.WriteString (sink, "value"));
+			Assert.Throws<InvalidOperationException> (() => writer.WriteBoolean (sink, true));
+			Assert.Throws<InvalidOperationException> (() => writer.WriteInt32 (sink, 1));
+			Assert.Throws<InvalidOperationException> (() => writer.WriteRaw (sink, [1, 2, 3]));
+		}
+	}
+
+	[Fact]
+	public void IncrementalSink_FlushesBufferedDataSpanningMultipleFlushes ()
+	{
+		// Exercises the incremental sink's buffer-flush path across the 8 KB boundary, both for
+		// values that fit in the buffer and for one larger than it.
+		using var writer = new FingerprintWriter (includeIncremental: true);
+		var chunk = new string ('y', 3000);
+		var oversized = new string ('z', 20000);
+		writer.WriteString (Sink.Incremental, chunk);
+		writer.WriteString (Sink.Incremental, chunk);
+		writer.WriteString (Sink.Incremental, chunk);
+		writer.WriteString (Sink.Incremental, oversized);
+		writer.WriteString (Sink.Incremental, chunk);
+
+		var expected = Sha256 (BinaryWriterBytes (w => {
+			w.Write (chunk);
+			w.Write (chunk);
+			w.Write (chunk);
+			w.Write (oversized);
+			w.Write (chunk);
+		}));
+		Assert.Equal (expected, writer.GetIncrementalFingerprint ());
+	}
+
 	[Theory]
 	[InlineData (true)]
 	[InlineData (false)]
