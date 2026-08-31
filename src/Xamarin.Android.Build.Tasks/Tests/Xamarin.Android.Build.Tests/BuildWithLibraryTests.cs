@@ -691,8 +691,8 @@ namespace Xamarin.Android.Build.Tests
 			using var appb = CreateApkBuilder (Path.Combine (projectPath, app.ProjectName), cleanupAfterSuccessfulBuild: false);
 			appb.ThrowOnBuildFailure = false;
 			Assert.IsFalse (appb.Build (app), "Build of App1 should have failed");
-			IEnumerable<string> errors = appb.LastBuildOutput.Where (x => x.Contains ("error XA4215"));
-			Assert.NotNull (errors, "Error should be XA4215");
+var errors = appb.LastBuildOutput.Where (x => x.Contains ("error XA4215")).ToList ();
+Assert.IsNotEmpty (errors, "Error should be XA4215");
 			StringAssertEx.Contains ("examplelib.DuplicatePeer", errors, "Error should mention the conflicting Java type name");
 			StringAssertEx.Contains ("Library1.FirstPeer", errors, "Error should mention the first conflicting managed type");
 			StringAssertEx.Contains ("Library2.SecondPeer", errors, "Error should mention the second conflicting managed type");
