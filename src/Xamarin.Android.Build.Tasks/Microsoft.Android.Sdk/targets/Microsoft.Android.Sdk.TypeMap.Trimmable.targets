@@ -5,6 +5,8 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateEmptyTypemapStub" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotBootstrapSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.RewriteJniNamesForR8" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.R8" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets"
       Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
@@ -33,6 +35,7 @@
     <_PostTrimTypeMapFirstRuntimeIdentifier Condition=" '$(RuntimeIdentifiers)' != '' ">$([System.String]::Copy('$(RuntimeIdentifiers)').Split(';')[0])</_PostTrimTypeMapFirstRuntimeIdentifier>
     <_PostTrimTypeMapFirstRuntimeIdentifier Condition=" '$(_PostTrimTypeMapFirstRuntimeIdentifier)' == '' ">$(RuntimeIdentifier)</_PostTrimTypeMapFirstRuntimeIdentifier>
     <_TypeMapJavaStubsSourceDirectory Condition=" '$(_TypeMapJavaStubsSourceDirectory)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' ">$(_PostTrimTypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
+    <_TypeMapJavaStubsSourceDirectory Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_TypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
     <_TypeMapJavaStubsSourceDirectory Condition=" '$(_TypeMapJavaStubsSourceDirectory)' == '' ">$(_TypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
     <_PostTrimTrimmableTypeMapJavaStamp>$(_PostTrimTypeMapJavaBaseOutputDir)stamp/_GeneratePostTrimTrimmableTypeMapJavaSources.stamp</_PostTrimTrimmableTypeMapJavaStamp>
     <!-- CoreCLR trimmed builds regenerate these files from the linked assemblies. Keep the
@@ -40,12 +43,21 @@
          generator input (for example AndroidManifest.xml) changes. -->
     <_PreTrimTypeMapAcwMapOutputFile Condition=" '$(_AndroidRuntime)' != 'CoreCLR' or '$(PublishTrimmed)' != 'true' ">$(IntermediateOutputPath)acw-map.txt</_PreTrimTypeMapAcwMapOutputFile>
     <_PreTrimTypeMapApplicationRegistrationOutputFile Condition=" '$(_AndroidRuntime)' != 'CoreCLR' or '$(PublishTrimmed)' != 'true' ">$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java</_PreTrimTypeMapApplicationRegistrationOutputFile>
+    <_PreTrimTypeMapAcwMapOutputFile Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(IntermediateOutputPath)acw-map.txt</_PreTrimTypeMapAcwMapOutputFile>
+    <_PreTrimTypeMapApplicationRegistrationOutputFile Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java</_PreTrimTypeMapApplicationRegistrationOutputFile>
     <!-- Stamp file touched on every _GenerateTrimmableTypeMap run. It is a stable
          incremental sentinel: the generated TypeMap DLLs are only rewritten when their
          content changes (CopyIfStreamChanged), so their timestamps cannot be used as
          Outputs without making the target run on every build. The stamp is always
          touched, so the target is correctly skipped when none of its Inputs changed. -->
     <_TrimmableTypeMapOutputStamp>$(_TypeMapOutputDirectory)_GenerateTrimmableTypeMap.stamp</_TrimmableTypeMapOutputStamp>
+    <_AndroidR8JniSeedDirectory Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_TypeMapBaseOutputDir)r8-jni-seed/</_AndroidR8JniSeedDirectory>
+    <_AndroidR8JniSeedMapping Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_AndroidR8JniSeedDirectory)mapping.txt</_AndroidR8JniSeedMapping>
+    <_AndroidR8JniSeedApplicationConfiguration Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_AndroidR8JniSeedDirectory)acw-keep.cfg</_AndroidR8JniSeedApplicationConfiguration>
+    <_AndroidR8JniSeedXamarinConfiguration Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_AndroidR8JniSeedDirectory)xamarin.cfg</_AndroidR8JniSeedXamarinConfiguration>
+    <_AndroidR8JniSeedAaptConfiguration Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(IntermediateOutputPath)aapt_rules.txt</_AndroidR8JniSeedAaptConfiguration>
+    <_AndroidR8JniSeedJavaClassDirectory Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_AndroidR8JniSeedDirectory)classes/</_AndroidR8JniSeedJavaClassDirectory>
+    <_AndroidR8JniSeedJavaStamp Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_AndroidR8JniSeedDirectory)compile-java.stamp</_AndroidR8JniSeedJavaStamp>
     <_TrimmableRemoveRegisterFlag>$(_AndroidStampDirectory)_RemoveRegisterAttribute.stamp</_TrimmableRemoveRegisterFlag>
     <_TrimmableRemoveRegisterTarget Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">_RemoveRegisterAttributeCoreClr</_TrimmableRemoveRegisterTarget>
     <_TrimmableRemoveRegisterTarget Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">_RemoveRegisterAttributeNativeAot</_TrimmableRemoveRegisterTarget>
@@ -54,6 +66,7 @@
          Both are touched only when their producing target actually runs, so _GenerateJavaStubs
          stays incremental while still reacting to post-trim JCW regeneration. -->
     <_TrimmableJavaSourceStamp Condition=" '$(_TrimmableJavaSourceStamp)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' ">$(_PostTrimTrimmableTypeMapJavaStamp)</_TrimmableJavaSourceStamp>
+    <_TrimmableJavaSourceStamp Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_TrimmableTypeMapOutputStamp)</_TrimmableJavaSourceStamp>
     <_TrimmableJavaSourceStamp Condition=" '$(_TrimmableJavaSourceStamp)' == '' ">$(_TrimmableTypeMapOutputStamp)</_TrimmableJavaSourceStamp>
     <!-- On NativeAOT, ensure ILC's dynamic build properties (e.g. RuntimeIdentifier-derived
          paths) are computed before the typemap is generated. -->
@@ -66,6 +79,93 @@
       $(IncrementalCleanDependsOn);
     </IncrementalCleanDependsOn>
   </PropertyGroup>
+
+  <Target Name="_AndroidCompileR8JniSeedJavaInputs"
+      Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' "
+      DependsOnTargets="_GenerateTrimmableTypeMap;$(_OnResolveMonoAndroidSdks);_AdjustJavacVersionArguments;_CollectRuntimeJarFilenames;_GetLibraryImports;_DetermineJavaLibrariesToCompile">
+    <ItemGroup>
+      <_AndroidR8JniSeedJavaSource Include="$(_TypeMapJavaOutputDirectory)/**/*.java" />
+      <_AndroidR8JniSeedJavaSource Include="$(IntermediateOutputPath)android/src/**/*.java" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidCompileR8JniSeedJava"
+      Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' "
+      DependsOnTargets="_AndroidCompileR8JniSeedJavaInputs"
+      Inputs="@(_AndroidR8JniSeedJavaSource);@(_JavaLibrariesToCompile);@(_ReferenceJavaLibs)"
+      Outputs="$(_AndroidR8JniSeedJavaStamp)">
+    <RemoveDirFixed Directories="$(_AndroidR8JniSeedJavaClassDirectory)" />
+    <Javac
+        JavaPlatformJarPath="$(JavaPlatformJarPath)"
+        ClassesOutputDirectory="$(_AndroidR8JniSeedJavaClassDirectory)"
+        StubSourceDirectory="$(_TypeMapJavaOutputDirectory)"
+        AdditionalStubSourceDirectories="$(IntermediateOutputPath)android/src"
+        ToolPath="$(JavacToolPath)"
+        ToolExe="$(JavacToolExe)"
+        Jars="@(_JavaLibrariesToCompile);@(_ReferenceJavaLibs)"
+        JavacTargetVersion="$(JavacTargetVersion)"
+        JavacSourceVersion="$(JavacSourceVersion)"
+        JdkVersion="$(_JdkVersion)"
+        IntermediateOutputPath="$(IntermediateOutputPath)"
+        AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)" />
+    <Touch Files="$(_AndroidR8JniSeedJavaStamp)" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidR8JniSeedJavaClassDirectory)**\*.class" />
+      <FileWrites Include="$(_AndroidR8JniSeedJavaStamp)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidGenerateR8JniSeedMappingInputs"
+      Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' "
+      DependsOnTargets="_AndroidCompileR8JniSeedJava;_CalculateProguardConfigurationFiles">
+    <ItemGroup>
+      <_AndroidR8JniSeedClassFile Include="$(_AndroidR8JniSeedJavaClassDirectory)**\*.class" />
+      <_AndroidR8JniSeedProguardConfiguration Include="@(_ProguardConfiguration)" />
+      <_AndroidR8JniSeedProguardConfiguration Remove="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg;$(_ProguardProjectConfiguration);$(IntermediateOutputPath)proguard\proguard_project_primary.cfg" />
+      <_AndroidR8JniSeedProguardConfiguration Include="$(_AndroidR8JniSeedAaptConfiguration)" Condition="Exists('$(_AndroidR8JniSeedAaptConfiguration)')" />
+      <_AndroidR8JniSeedMapDiagnostics Condition=" '$(AndroidR8IgnoreWarnings)' == 'true' " Include="warning" To="info" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidGenerateR8JniSeedMapping"
+      Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' "
+      DependsOnTargets="_AndroidGenerateR8JniSeedMappingInputs"
+      Inputs="@(_AndroidR8JniSeedClassFile);@(_JavaLibrariesToCompileForApp);@(AndroidExternalJavaLibrary);@(_AndroidR8JniSeedProguardConfiguration);$(AndroidR8JarPath);$(_AcwMapFile)"
+      Outputs="$(_AndroidR8JniSeedMapping)">
+    <MakeDir Directories="$(_AndroidR8JniSeedDirectory);$(_AndroidR8JniSeedDirectory)dex" />
+    <R8
+        ToolPath="$(JavaToolPath)"
+        JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
+        JavaOptions="$(JavaOptions)"
+        JarPath="$(AndroidR8JarPath)"
+        AndroidManifestFile="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
+        OutputDirectory="$(_AndroidR8JniSeedDirectory)dex"
+        Debug="$(AndroidIncludeDebugSymbols)"
+        JavaPlatformJarPath="$(JavaPlatformJarPath)"
+        ClassFiles="@(_AndroidR8JniSeedClassFile)"
+        JavaLibrariesToEmbed="@(_JavaLibrariesToCompileForApp)"
+        JavaLibrariesToReference="@(AndroidExternalJavaLibrary)"
+        EnableDesugar="$(AndroidEnableDesugar)"
+        AndroidSdkBuildToolsPath="$(AndroidSdkBuildToolsPath)"
+        AcwMapFile="$(_AcwMapFile)"
+        ProguardGeneratedApplicationConfiguration="$(_AndroidR8JniSeedApplicationConfiguration)"
+        ProguardCommonXamarinConfiguration="$(_AndroidR8JniSeedXamarinConfiguration)"
+        ProguardMappingFileOutput="$(_AndroidR8JniSeedMapping)"
+        ProguardConfigurationFiles="@(_AndroidR8JniSeedProguardConfiguration)"
+        UseTrimmableNativeAotProguardConfiguration="$(_UseTrimmableNativeAotProguardConfiguration)"
+        GenerateSeedMapping="true"
+        EnableObfuscation="true"
+        IgnoreWarnings="true"
+        IntermediateOutputPath="$(IntermediateOutputPath)"
+        AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
+        MapDiagnostics="@(_AndroidR8JniSeedMapDiagnostics)" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidR8JniSeedMapping)" />
+      <FileWrites Include="$(_AndroidR8JniSeedApplicationConfiguration)" />
+      <FileWrites Include="$(_AndroidR8JniSeedXamarinConfiguration)" />
+      <FileWrites Include="$(_AndroidR8JniSeedDirectory)dex\*.dex" />
+    </ItemGroup>
+  </Target>
 
   <!-- Compile the generator's Java Callable Wrappers in place from their output directory
        instead of copying every .java into android/src (which was hundreds of per-file copies).

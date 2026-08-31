@@ -6,6 +6,7 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks.JniRemapping;
 
 namespace Xamarin.Android.Tasks
 {
@@ -19,8 +20,15 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string OutputFile { get; set; } = "";
 
+		public string? R8MappingFile { get; set; }
+
+		R8Mapping? r8Mapping;
+
 		public override bool RunTask ()
 		{
+			if (!R8MappingFile.IsNullOrEmpty ()) {
+				r8Mapping = R8Mapping.Load (R8MappingFile);
+			}
 			var dir = Path.GetDirectoryName (OutputFile);
 			if (!dir.IsNullOrEmpty () && !Directory.Exists (dir)) {
 				Directory.CreateDirectory (dir);
@@ -100,18 +108,22 @@ namespace Xamarin.Android.Tasks
 			if (javaTypeName == null)
 				return;
 
-			writer.WriteLine ($"-keep class {javaTypeName}");
-			writer.WriteLine ($"-keepclassmembers class {javaTypeName} {{");
+			string rewrittenJniName = javaTypeName.Replace ('.', '/');
+			string originalJniName = r8Mapping?.TryGetOriginalClass (rewrittenJniName, out string original) == true ? original : rewrittenJniName;
+			string ruleTypeName = originalJniName.Replace ('/', '.');
+			string allowObfuscation = r8Mapping == null ? "" : ",allowobfuscation";
+			writer.WriteLine ($"-keep{allowObfuscation} class {ruleTypeName}");
+			writer.WriteLine ($"-keepclassmembers{allowObfuscation} class {ruleTypeName} {{");
 
 			foreach (var methodHandle in type.GetMethods ()) {
-				ProcessMethod (reader, methodHandle, writer);
+				ProcessMethod (reader, methodHandle, originalJniName, writer);
 			}
 
 			writer.WriteLine ("}");
 			writer.WriteLine ();
 		}
 
-		void ProcessMethod (MetadataReader reader, MethodDefinitionHandle methodHandle, TextWriter writer)
+		void ProcessMethod (MetadataReader reader, MethodDefinitionHandle methodHandle, string originalJniClassName, TextWriter writer)
 		{
 			var method = reader.GetMethodDefinition (methodHandle);
 
@@ -123,10 +135,19 @@ namespace Xamarin.Android.Tasks
 					if (args.FixedArguments.Length >= 2 &&
 					    args.FixedArguments[0].Value is string jname &&
 					    args.FixedArguments[1].Value is string) {
-						if (jname == ".ctor") {
+						if (jname == ".ctor" || jname == "<init>") {
 							writer.WriteLine ("   <init>(...);");
 						} else {
-							writer.WriteLine ($"   *** {jname}(...);");
+							bool wroteOriginalName = false;
+							if (r8Mapping != null) {
+								foreach (string originalName in r8Mapping.GetOriginalMethodNames (originalJniClassName, jname)) {
+									writer.WriteLine ($"   *** {originalName}(...);");
+									wroteOriginalName = true;
+								}
+							}
+							if (!wroteOriginalName) {
+								writer.WriteLine ($"   *** {jname}(...);");
+							}
 						}
 					}
 					break;

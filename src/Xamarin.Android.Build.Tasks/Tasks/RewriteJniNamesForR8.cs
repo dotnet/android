@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks.JniRemapping;
 
 namespace Xamarin.Android.Tasks
@@ -31,30 +32,44 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem [] SourceFiles { get; set; } = [];
 
-		[Required]
 		public ITaskItem [] DestinationFiles { get; set; } = [];
+
+		public string? DestinationDirectory { get; set; }
 
 		[Required]
 		public string MappingFile { get; set; } = "";
 
+		[Output]
+		public ITaskItem [] RewrittenFiles { get; set; } = [];
+
 		public override bool RunTask ()
 		{
-			if (SourceFiles.Length != DestinationFiles.Length) {
+			if (DestinationDirectory.IsNullOrEmpty () && SourceFiles.Length != DestinationFiles.Length) {
 				Log.LogCodedError ("RJN0000", "SourceFiles and DestinationFiles must contain the same number of items.");
 				return !Log.HasLoggedErrors;
 			}
 
 			R8Mapping mapping = R8Mapping.Load (MappingFile);
+			var rewrittenFiles = new ITaskItem [SourceFiles.Length];
 
 			for (int i = 0; i < SourceFiles.Length; i++) {
 				string source = SourceFiles [i].ItemSpec;
+				string destination = DestinationDirectory.IsNullOrEmpty ()
+					? DestinationFiles [i].ItemSpec
+					: Path.Combine (DestinationDirectory, Path.GetFileName (source));
 				try {
-					RewriteAssembly (source, DestinationFiles [i].ItemSpec, mapping);
+					RewriteAssembly (source, destination, mapping);
+					var rewritten = new TaskItem (SourceFiles [i]) {
+						ItemSpec = destination,
+					};
+					rewritten.SetMetadata ("OriginalItemSpec", source);
+					rewrittenFiles [i] = rewritten;
 				} catch (JniRewriteException e) {
 					Log.LogCodedError ("RJN0001", $"Could not rewrite the JNI names in '{source}': {e.Message}");
 				}
 			}
 
+			RewrittenFiles = rewrittenFiles;
 			return !Log.HasLoggedErrors;
 		}
 
@@ -74,7 +89,8 @@ namespace Xamarin.Android.Tasks
 
 			bool inPlace = String.Equals (Path.GetFullPath (sourcePath), Path.GetFullPath (destinationPath), StringComparison.Ordinal);
 			if (!inPlace || result.ReplacementCount != 0) {
-				File.WriteAllBytes (destinationPath, result.Image);
+				using var output = new MemoryStream (result.Image, writable: false);
+				Files.CopyIfStreamChanged (output, destinationPath);
 			}
 			if (!inPlace) {
 				CopyAdjacentPdbUnchanged (sourcePath, destinationPath);

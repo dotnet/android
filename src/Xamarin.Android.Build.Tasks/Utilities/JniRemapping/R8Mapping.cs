@@ -15,6 +15,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		// Original JNI class name -> obfuscated JNI class name.
 		readonly Dictionary<string, string> classes = new Dictionary<string, string> (StringComparer.Ordinal);
 
+		// Obfuscated JNI class name -> original JNI class name.
+		readonly Dictionary<string, string> originalClasses = new Dictionary<string, string> (StringComparer.Ordinal);
+
 		// Original JNI class name -> (original field name -> obfuscated field name).
 		readonly Dictionary<string, Dictionary<string, string>> fields = new Dictionary<string, Dictionary<string, string>> (StringComparer.Ordinal);
 
@@ -55,7 +58,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					}
 
 					currentOriginalClass = JavaNameToJni (originalClass);
-					mapping.classes [currentOriginalClass] = JavaNameToJni (obfuscatedClass);
+					string currentObfuscatedClass = JavaNameToJni (obfuscatedClass);
+					mapping.classes [currentOriginalClass] = currentObfuscatedClass;
+					mapping.originalClasses [currentObfuscatedClass] = currentOriginalClass;
 					continue;
 				}
 
@@ -128,6 +133,34 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			}
 			obfuscatedJniClassName = "";
 			return false;
+		}
+
+		public bool TryGetOriginalClass (string obfuscatedJniClassName, out string originalJniClassName)
+		{
+			if (originalClasses.TryGetValue (obfuscatedJniClassName, out string? original)) {
+				originalJniClassName = original;
+				return true;
+			}
+			originalJniClassName = "";
+			return false;
+		}
+
+		public IEnumerable<string> GetOriginalMethodNames (string originalJniClassName, string obfuscatedMethodName)
+		{
+			if (!methods.TryGetValue (originalJniClassName, out var classMethods)) {
+				yield break;
+			}
+			var seen = new HashSet<string> (StringComparer.Ordinal);
+			foreach (var entry in classMethods) {
+				if (!String.Equals (entry.Value, obfuscatedMethodName, StringComparison.Ordinal)) {
+					continue;
+				}
+				int parameters = entry.Key.IndexOf ('(');
+				string name = parameters < 0 ? entry.Key : entry.Key.Substring (0, parameters);
+				if (seen.Add (name)) {
+					yield return name;
+				}
+			}
 		}
 
 		public bool TryGetRenamedField (string owningJniClassName, string originalFieldName, out string obfuscatedFieldName)

@@ -24,6 +24,21 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void LooksUpOriginalClassAndMethodNames ()
+		{
+			var mapping = R8Mapping.Parse (new StringReader (
+				"acme.orig.MyView -> a.b.C:\n" +
+				"    void first(int) -> x\n" +
+				"    void first(java.lang.String) -> x\n" +
+				"    void second() -> x\n"));
+
+			Assert.IsTrue (mapping.TryGetOriginalClass ("a/b/C", out string originalClass));
+			Assert.AreEqual ("acme/orig/MyView", originalClass);
+			CollectionAssert.AreEquivalent (new [] { "first", "second" }, mapping.GetOriginalMethodNames (originalClass, "x"));
+			Assert.IsFalse (mapping.TryGetOriginalClass ("a/b/Missing", out _));
+		}
+
+		[Test]
 		public void ParsesMethodMappingWithParameters ()
 		{
 			var mapping = R8Mapping.Parse (new StringReader (

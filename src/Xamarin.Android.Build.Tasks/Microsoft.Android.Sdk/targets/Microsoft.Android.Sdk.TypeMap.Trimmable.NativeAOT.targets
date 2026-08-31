@@ -26,6 +26,7 @@
     <_UseTrimmableNativeAotProguardConfiguration Condition=" '$(_UseTrimmableNativeAotProguardConfiguration)' == '' ">true</_UseTrimmableNativeAotProguardConfiguration>
     <_TrimmableNativeAotProguardConfigurationInputsStamp>$(_AndroidStampDirectory)_GenerateTrimmableTypeMapProguardConfiguration.inputs</_TrimmableNativeAotProguardConfigurationInputsStamp>
     <_CompileToDalvikDependsOnTargets>$(_CompileToDalvikDependsOnTargets);_GenerateTrimmableTypeMapProguardConfiguration</_CompileToDalvikDependsOnTargets>
+    <_AndroidBuildRuntimeIdentifiersInParallel Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">false</_AndroidBuildRuntimeIdentifiersInParallel>
   </PropertyGroup>
 
   <!-- Before ILC input computation, add generated assemblies to ILC inputs.
@@ -70,6 +71,39 @@
           Condition=" '$(_AndroidTrimmableTypemapTrimJavaCode)' == 'true' and '$(AndroidLinkTool)' != '' and '$(IlcGenerateDgmlFile)' != 'true' and '$(Optimize)' != 'true' "
           Include="--dgmllog:$(NativeIntermediateOutputPath)$(TargetName).codegen.dgml.xml" />
       <UnmanagedEntryPointsAssembly Include="@(_TrimmableTypeMapUnmanagedEntryPointAssemblyNames)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidRewriteJniNamesBeforeIlc"
+      Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' "
+      BeforeTargets="WriteIlcRspFileForCompilation"
+      DependsOnTargets="_AndroidGenerateR8JniSeedMapping">
+    <PropertyGroup>
+      <_AndroidR8JniRewrittenAssemblyDirectory>$(IntermediateOutputPath)r8-jni-rewritten/</_AndroidR8JniRewrittenAssemblyDirectory>
+    </PropertyGroup>
+    <ItemGroup>
+      <_AndroidR8JniIlcAssembly Include="@(ManagedBinary)">
+        <R8JniInputKind>ManagedBinary</R8JniInputKind>
+      </_AndroidR8JniIlcAssembly>
+      <_AndroidR8JniIlcAssembly Include="@(IlcReference)">
+        <R8JniInputKind>IlcReference</R8JniInputKind>
+      </_AndroidR8JniIlcAssembly>
+      <_AndroidR8JniIlcAssembly Remove="@(_AndroidR8JniIlcAssembly)" Condition=" '%(Extension)' != '.dll' " />
+    </ItemGroup>
+    <RewriteJniNamesForR8
+        SourceFiles="@(_AndroidR8JniIlcAssembly)"
+        DestinationDirectory="$(_AndroidR8JniRewrittenAssemblyDirectory)"
+        MappingFile="$(_AndroidR8JniSeedMapping)">
+      <Output TaskParameter="RewrittenFiles" ItemName="_AndroidR8JniRewrittenIlcAssembly" />
+    </RewriteJniNamesForR8>
+    <ItemGroup>
+      <ManagedBinary Remove="@(ManagedBinary)" />
+      <ManagedBinary Include="@(_AndroidR8JniRewrittenIlcAssembly)" Condition=" '%(R8JniInputKind)' == 'ManagedBinary' " />
+      <IlcCompileInput Remove="@(IlcCompileInput)" />
+      <IlcCompileInput Include="@(ManagedBinary)" />
+      <IlcReference Remove="@(IlcReference)" />
+      <IlcReference Include="@(_AndroidR8JniRewrittenIlcAssembly)" Condition=" '%(R8JniInputKind)' == 'IlcReference' " />
+      <FileWrites Include="@(_AndroidR8JniRewrittenIlcAssembly)" />
     </ItemGroup>
   </Target>
 

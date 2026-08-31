@@ -5,10 +5,11 @@
 
   <PropertyGroup>
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">mono.MonoRuntimeProvider</_TrimmableRuntimeProviderJavaName>
+    <_CompileToDalvikDependsOnTargets>$(_CompileToDalvikDependsOnTargets);_GenerateProguardConfiguration</_CompileToDalvikDependsOnTargets>
   </PropertyGroup>
 
   <PropertyGroup>
-    <_GenerateProguardAfterTargets Condition=" '$(_GenerateProguardAfterTargets)' == '' ">ILLink</_GenerateProguardAfterTargets>
+    <_GenerateProguardAfterTargets Condition=" '$(_GenerateProguardAfterTargets)' == '' ">_RunILLink</_GenerateProguardAfterTargets>
   </PropertyGroup>
 
   <!-- Add TypeMap DLLs to ILLink input. ILLink natively understands TypeMapAttribute<T>. -->
@@ -20,6 +21,32 @@
         <DestinationSubPath>%(Filename)%(Extension)</DestinationSubPath>
         <IsTrimmable>true</IsTrimmable>
       </ManagedAssemblyToLink>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidRewriteJniNamesBeforeILLink"
+      Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' "
+      AfterTargets="PrepareForILLink"
+      BeforeTargets="_RunILLink"
+      DependsOnTargets="_AddTrimmableTypeMapToLinker;_AndroidGenerateR8JniSeedMapping">
+    <PropertyGroup>
+      <_AndroidR8JniRewrittenAssemblyDirectory>$(IntermediateOutputPath)r8-jni-rewritten/</_AndroidR8JniRewrittenAssemblyDirectory>
+    </PropertyGroup>
+    <ItemGroup>
+      <_AndroidR8JniOriginalManagedAssembly Include="@(ManagedAssemblyToLink)" />
+    </ItemGroup>
+    <RewriteJniNamesForR8
+        SourceFiles="@(_AndroidR8JniOriginalManagedAssembly)"
+        DestinationDirectory="$(_AndroidR8JniRewrittenAssemblyDirectory)"
+        MappingFile="$(_AndroidR8JniSeedMapping)">
+      <Output TaskParameter="RewrittenFiles" ItemName="_AndroidR8JniRewrittenManagedAssembly" />
+    </RewriteJniNamesForR8>
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(_AndroidR8JniOriginalManagedAssembly)" />
+      <ResolvedFileToPublish Include="@(_AndroidR8JniRewrittenManagedAssembly)" />
+      <ManagedAssemblyToLink Remove="@(ManagedAssemblyToLink)" />
+      <ManagedAssemblyToLink Include="@(_AndroidR8JniRewrittenManagedAssembly)" />
+      <FileWrites Include="@(_AndroidR8JniRewrittenManagedAssembly)" />
     </ItemGroup>
   </Target>
 
@@ -42,16 +69,18 @@
 
   <Target Name="_GenerateProguardConfiguration"
       AfterTargets="_PrepareLinkedAssembliesForProguard"
+      DependsOnTargets="_PrepareLinkedAssembliesForProguard"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
       Inputs="@(_LinkedAssemblyForProguard)"
       Outputs="$(_ProguardProjectConfiguration)">
     <GenerateProguardConfiguration
         LinkedAssemblies="@(_LinkedAssemblyForProguard)"
-        OutputFile="$(_ProguardProjectConfiguration)" />
+        OutputFile="$(_ProguardProjectConfiguration)"
+        R8MappingFile="$(_AndroidR8JniSeedMapping)" />
   </Target>
 
   <Target Name="_ComputePostTrimTrimmableTypeMapInputs"
-      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
+      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and '$(_AndroidEnableR8JniNameRewriting)' != 'true' "
       AfterTargets="_ResolveAssemblies">
     <ItemGroup>
       <_PostTrimTrimmableTypeMapInputAssemblies Remove="@(_PostTrimTrimmableTypeMapInputAssemblies)" />
@@ -70,7 +99,7 @@
        a real output but leaves the stamp, invalidate the stamp so the producer restores the complete
        post-trim output set instead of letting _GenerateJavaStubs create an empty acw-map placeholder. -->
   <Target Name="_InvalidatePostTrimTrimmableTypeMapStampIfOutputsMissing"
-      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
+      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and '$(_AndroidEnableR8JniNameRewriting)' != 'true' ">
     <ItemGroup>
       <_ExpectedPostTrimJavaFile Remove="@(_ExpectedPostTrimJavaFile)" />
       <_ActualPostTrimJavaFile Remove="@(_ActualPostTrimJavaFile)" />
@@ -99,7 +128,7 @@
   </Target>
 
   <Target Name="_GeneratePostTrimTrimmableTypeMapJavaSources"
-      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
+      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and '$(_AndroidEnableR8JniNameRewriting)' != 'true' "
       DependsOnTargets="_ComputePostTrimTrimmableTypeMapInputs;_InvalidatePostTrimTrimmableTypeMapStampIfOutputsMissing"
       AfterTargets="_ResolveAssemblies"
       BeforeTargets="_GenerateJavaStubs;_CompileJava;_CompileToDalvik"
