@@ -168,6 +168,14 @@ sealed class TypeMapAssemblyEmitter
 	/// share a single typemap universe. When false, emits a per-assembly <c>__TypeMapAnchor</c>.
 	/// </param>
 	public void Emit (TypeMapAssemblyData model, Stream stream, bool useSharedTypemapUniverse = false)
+		=> Emit (model, stream, useSharedTypemapUniverse, contentFingerprint: null);
+
+	/// <param name="contentFingerprint">
+	/// Pre-computed content fingerprint seeding the deterministic MVID. When <see langword="null"/>
+	/// it is computed here; callers that already walked the model should pass it in to avoid a
+	/// second walk.
+	/// </param>
+	internal void Emit (TypeMapAssemblyData model, Stream stream, bool useSharedTypemapUniverse, byte []? contentFingerprint)
 	{
 		if (model is null) {
 			throw new ArgumentNullException (nameof (model));
@@ -176,13 +184,16 @@ sealed class TypeMapAssemblyEmitter
 			throw new ArgumentNullException (nameof (stream));
 		}
 
-		EmitCore (model, useSharedTypemapUniverse);
+		EmitCore (model, useSharedTypemapUniverse, contentFingerprint);
 		_pe.WritePE (stream);
 	}
 
-	void EmitCore (TypeMapAssemblyData model, bool useSharedTypemapUniverse)
+	void EmitCore (TypeMapAssemblyData model, bool useSharedTypemapUniverse, byte []? contentFingerprint)
 	{
-		_pe.EmitPreamble (model.AssemblyName, model.ModuleName, MetadataHelper.ComputeContentFingerprint (model));
+		contentFingerprint ??= MetadataHelper
+			.ComputeFingerprints (model, _systemRuntimeVersion, useSharedTypemapUniverse, includeIncremental: false)
+			.Content;
+		_pe.EmitPreamble (model.AssemblyName, model.ModuleName, contentFingerprint);
 
 		_javaInteropRef = _pe.AddAssemblyRef ("Java.Interop", new Version (0, 0, 0, 0));
 

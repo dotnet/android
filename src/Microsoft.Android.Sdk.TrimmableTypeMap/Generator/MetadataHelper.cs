@@ -1,10 +1,21 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using Sink = Microsoft.Android.Sdk.TrimmableTypeMap.FingerprintWriter.Sink;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
+
+/// <summary>
+/// Fingerprints computed from a <see cref="TypeMapAssemblyData"/> model in a single walk.
+/// </summary>
+/// <param name="Content">
+/// Content fingerprint that seeds the deterministic MVID of the emitted assembly.
+/// </param>
+/// <param name="Incremental">
+/// Incremental-build fingerprint, or <see langword="null"/> when it was not requested.
+/// </param>
+readonly record struct ModelFingerprints (byte [] Content, byte []? Incremental);
 
 static class MetadataHelper
 {
@@ -28,116 +39,119 @@ static class MetadataHelper
 	}
 
 	/// <summary>
-	/// Computes a content fingerprint for the given <see cref="TypeMapAssemblyData"/>.
+	/// Computes the content fingerprint — and optionally the incremental-build fingerprint — for
+	/// <paramref name="data"/> in a single walk over the model.
 	/// </summary>
-	public static byte [] ComputeContentFingerprint (TypeMapAssemblyData data)
+	/// <remarks>
+	/// The content fingerprint covers only the model data that changes the emitted assembly's
+	/// contents. The incremental fingerprint is an incremental-build contract, so it additionally
+	/// covers the generator binary identity, the emitter configuration, and every model field the
+	/// emitter consumes. Both are serialised from the same walk: fields shared by the two
+	/// fingerprints are UTF-8 encoded once and appended to both hashes.
+	/// </remarks>
+	public static ModelFingerprints ComputeFingerprints (
+		TypeMapAssemblyData data,
+		Version systemRuntimeVersion,
+		bool useSharedTypemapUniverse,
+		bool includeIncremental)
 	{
-		using var sha = SHA256.Create ();
-		using var stream = new MemoryStream ();
-		using var writer = new BinaryWriter (stream, Encoding.UTF8);
-		foreach (var entry in data.Entries) {
-			writer.Write (entry.MapKey);
-			writer.Write (entry.ProxyTypeReference);
-			writer.Write (entry.TargetTypeReference ?? "");
-		}
-		foreach (var proxy in data.ProxyTypes) {
-			writer.Write (proxy.TypeName);
-			writer.WriteTypeRef (proxy.TargetType);
-			writer.Write ((byte)(proxy.ActivationCtor?.Style ?? 0));
-			if (proxy.ActivationCtor is not null) {
-				writer.WriteTypeRef (proxy.ActivationCtor.DeclaringType);
-			}
-			writer.Write ((byte)(proxy.InvokerActivationCtorStyle ?? 0));
-			writer.Write (proxy.UcoMethods.Count);
-			foreach (var method in proxy.UcoMethods) {
-				writer.WriteUcoMethod (method);
-			}
-			writer.Write (proxy.UcoConstructors.Count);
-			foreach (var constructor in proxy.UcoConstructors) {
-				writer.WriteUcoConstructor (constructor);
-			}
-			writer.Write (proxy.NativeRegistrations.Count);
-			foreach (var registration in proxy.NativeRegistrations) {
-				writer.WriteNativeRegistration (registration);
-			}
-		}
-		foreach (var assoc in data.Associations) {
-			writer.Write (assoc.SourceTypeReference);
-			writer.Write (assoc.AliasProxyTypeReference);
-		}
-		writer.Flush ();
-		return sha.ComputeHash (stream.GetBuffer (), 0, checked ((int) stream.Length));
-	}
+		using var writer = new FingerprintWriter (includeIncremental);
+		var incremental = Sink.Incremental;
+		var both = includeIncremental ? Sink.Both : Sink.Content;
 
-	/// <summary>
-	/// Computes a fingerprint of every input that affects a generated per-assembly typemap.
-	/// Unlike <see cref="ComputeContentFingerprint"/>, this is an incremental-build contract,
-	/// so it includes the generator binary identity and all model fields consumed by the emitter.
-	/// </summary>
-	public static byte [] ComputeIncrementalFingerprint (TypeMapAssemblyData data, Version systemRuntimeVersion, bool useSharedTypemapUniverse)
-	{
-		using var sha = SHA256.Create ();
-		using var stream = new MemoryStream ();
-		using var writer = new BinaryWriter (stream, Encoding.UTF8);
-		writer.Write (GeneratorModuleVersionId.ToByteArray ());
-		writer.Write (systemRuntimeVersion.ToString ());
-		writer.Write (useSharedTypemapUniverse);
-		writer.Write (data.AssemblyName);
-		writer.Write (data.ModuleName);
-		writer.Write (data.Entries.Count);
+		if (includeIncremental) {
+			writer.WriteRaw (incremental, GeneratorModuleVersionId.ToByteArray ());
+			writer.WriteString (incremental, systemRuntimeVersion.ToString ());
+			writer.WriteBoolean (incremental, useSharedTypemapUniverse);
+			writer.WriteString (incremental, data.AssemblyName);
+			writer.WriteString (incremental, data.ModuleName);
+			writer.WriteInt32 (incremental, data.Entries.Count);
+		}
+
 		foreach (var entry in data.Entries) {
-			writer.Write (entry.MapKey);
-			writer.Write (entry.ProxyTypeReference);
-			writer.WriteOptionalString (entry.TargetTypeReference);
+			writer.WriteString (both, entry.MapKey);
+			writer.WriteString (both, entry.ProxyTypeReference);
+			writer.WriteString (Sink.Content, entry.TargetTypeReference ?? "");
+			if (includeIncremental) {
+				writer.WriteOptionalString (incremental, entry.TargetTypeReference);
+			}
 		}
-		writer.Write (data.ProxyTypes.Count);
+
+		if (includeIncremental) {
+			writer.WriteInt32 (incremental, data.ProxyTypes.Count);
+		}
 		foreach (var proxy in data.ProxyTypes) {
-			writer.Write (proxy.TypeName);
-			writer.Write (proxy.JniName);
-			writer.Write (proxy.Namespace);
-			writer.WriteTypeRef (proxy.TargetType);
-			writer.WriteOptionalTypeRef (proxy.InvokerType);
-			writer.Write (proxy.InvokerActivationCtorStyle.HasValue);
-			if (proxy.InvokerActivationCtorStyle.HasValue) {
-				writer.Write ((byte) proxy.InvokerActivationCtorStyle.Value);
+			writer.WriteString (both, proxy.TypeName);
+			if (includeIncremental) {
+				writer.WriteString (incremental, proxy.JniName);
+				writer.WriteString (incremental, proxy.Namespace);
 			}
-			writer.WriteOptionalActivationCtor (proxy.ActivationCtor);
-			writer.Write (proxy.IsGenericDefinition);
-			writer.Write (proxy.CannotRegisterInStaticConstructor);
-			writer.Write (proxy.IsAcw);
-			writer.Write (proxy.UcoMethods.Count);
+			WriteTypeRef (writer, both, proxy.TargetType);
+			if (includeIncremental) {
+				WriteOptionalTypeRef (writer, incremental, proxy.InvokerType);
+			}
+			writer.WriteByte (Sink.Content, (byte) (proxy.ActivationCtor?.Style ?? 0));
+			if (includeIncremental) {
+				writer.WriteBoolean (incremental, proxy.InvokerActivationCtorStyle.HasValue);
+				if (proxy.InvokerActivationCtorStyle.HasValue) {
+					writer.WriteByte (incremental, (byte) proxy.InvokerActivationCtorStyle.Value);
+				}
+				writer.WriteBoolean (incremental, proxy.ActivationCtor is not null);
+			}
+			if (proxy.ActivationCtor is not null) {
+				WriteTypeRef (writer, both, proxy.ActivationCtor.DeclaringType);
+				if (includeIncremental) {
+					writer.WriteBoolean (incremental, proxy.ActivationCtor.IsOnLeafType);
+					writer.WriteByte (incremental, (byte) proxy.ActivationCtor.Style);
+				}
+			}
+			writer.WriteByte (Sink.Content, (byte) (proxy.InvokerActivationCtorStyle ?? 0));
+			if (includeIncremental) {
+				writer.WriteBoolean (incremental, proxy.IsGenericDefinition);
+				writer.WriteBoolean (incremental, proxy.CannotRegisterInStaticConstructor);
+				writer.WriteBoolean (incremental, proxy.IsAcw);
+			}
+			writer.WriteInt32 (both, proxy.UcoMethods.Count);
 			foreach (var method in proxy.UcoMethods) {
-				writer.WriteUcoMethod (method);
+				WriteUcoMethod (writer, both, method);
 			}
-			writer.Write (proxy.UcoConstructors.Count);
+			writer.WriteInt32 (both, proxy.UcoConstructors.Count);
 			foreach (var constructor in proxy.UcoConstructors) {
-				writer.WriteUcoConstructor (constructor);
+				WriteUcoConstructor (writer, both, constructor);
 			}
-			writer.Write (proxy.NativeRegistrations.Count);
+			writer.WriteInt32 (both, proxy.NativeRegistrations.Count);
 			foreach (var registration in proxy.NativeRegistrations) {
-				writer.WriteNativeRegistration (registration);
+				WriteNativeRegistration (writer, both, registration);
 			}
 		}
-		writer.Write (data.Associations.Count);
+
+		if (includeIncremental) {
+			writer.WriteInt32 (incremental, data.Associations.Count);
+		}
 		foreach (var assoc in data.Associations) {
-			writer.Write (assoc.SourceTypeReference);
-			writer.Write (assoc.AliasProxyTypeReference);
+			writer.WriteString (both, assoc.SourceTypeReference);
+			writer.WriteString (both, assoc.AliasProxyTypeReference);
 		}
-		writer.Write (data.AliasHolders.Count);
-		foreach (var holder in data.AliasHolders) {
-			writer.Write (holder.TypeName);
-			writer.Write (holder.Namespace);
-			writer.Write (holder.AliasKeys.Count);
-			foreach (var aliasKey in holder.AliasKeys) {
-				writer.Write (aliasKey);
+
+		if (includeIncremental) {
+			writer.WriteInt32 (incremental, data.AliasHolders.Count);
+			foreach (var holder in data.AliasHolders) {
+				writer.WriteString (incremental, holder.TypeName);
+				writer.WriteString (incremental, holder.Namespace);
+				writer.WriteInt32 (incremental, holder.AliasKeys.Count);
+				foreach (var aliasKey in holder.AliasKeys) {
+					writer.WriteString (incremental, aliasKey);
+				}
+			}
+			writer.WriteInt32 (incremental, data.IgnoresAccessChecksTo.Count);
+			foreach (var assemblyName in data.IgnoresAccessChecksTo) {
+				writer.WriteString (incremental, assemblyName);
 			}
 		}
-		writer.Write (data.IgnoresAccessChecksTo.Count);
-		foreach (var assemblyName in data.IgnoresAccessChecksTo) {
-			writer.Write (assemblyName);
-		}
-		writer.Flush ();
-		return sha.ComputeHash (stream.GetBuffer (), 0, checked ((int) stream.Length));
+
+		return new ModelFingerprints (
+			writer.GetContentFingerprint (),
+			includeIncremental ? writer.GetIncrementalFingerprint () : null);
 	}
 
 	/// <summary>
@@ -148,121 +162,100 @@ static class MetadataHelper
 		Version systemRuntimeVersion,
 		bool useSharedTypemapUniverse)
 	{
-		using var sha = SHA256.Create ();
-		using var stream = new MemoryStream ();
-		using var writer = new BinaryWriter (stream, Encoding.UTF8);
-		writer.Write (GeneratorModuleVersionId.ToByteArray ());
-		writer.Write (systemRuntimeVersion.ToString ());
-		writer.Write (useSharedTypemapUniverse);
-		writer.Write (perAssemblyTypeMapNames.Count);
+		using var writer = new FingerprintWriter (includeIncremental: false);
+		writer.WriteRaw (Sink.Content, GeneratorModuleVersionId.ToByteArray ());
+		writer.WriteString (Sink.Content, systemRuntimeVersion.ToString ());
+		writer.WriteBoolean (Sink.Content, useSharedTypemapUniverse);
+		writer.WriteInt32 (Sink.Content, perAssemblyTypeMapNames.Count);
 		foreach (var assemblyName in perAssemblyTypeMapNames) {
-			writer.Write (assemblyName);
+			writer.WriteString (Sink.Content, assemblyName);
 		}
-		writer.Flush ();
-		return sha.ComputeHash (stream.GetBuffer (), 0, checked ((int) stream.Length));
+		return writer.GetContentFingerprint ();
 	}
 
-	static void WriteTypeRef (this BinaryWriter writer, TypeRefData type)
+	static void WriteTypeRef (FingerprintWriter writer, Sink sink, TypeRefData type)
 	{
-		writer.Write (type.ManagedTypeName);
-		writer.Write (type.AssemblyName);
-		writer.Write (type.IsValueType ? (byte) 1 : (byte) 0);
-		writer.Write (type.IsEnum ? (byte) 1 : (byte) 0);
-		writer.Write (type.GenericArguments.Count);
+		writer.WriteString (sink, type.ManagedTypeName);
+		writer.WriteString (sink, type.AssemblyName);
+		writer.WriteByte (sink, type.IsValueType ? (byte) 1 : (byte) 0);
+		writer.WriteByte (sink, type.IsEnum ? (byte) 1 : (byte) 0);
+		writer.WriteInt32 (sink, type.GenericArguments.Count);
 		foreach (var argument in type.GenericArguments) {
-			writer.WriteTypeRef (argument);
+			WriteTypeRef (writer, sink, argument);
 		}
 	}
 
-	static void WriteOptionalTypeRef (this BinaryWriter writer, TypeRefData? type)
+	static void WriteOptionalTypeRef (FingerprintWriter writer, Sink sink, TypeRefData? type)
 	{
-		writer.Write (type is not null);
+		writer.WriteBoolean (sink, type is not null);
 		if (type is not null) {
-			writer.WriteTypeRef (type);
+			WriteTypeRef (writer, sink, type);
 		}
 	}
 
-	static void WriteOptionalString (this BinaryWriter writer, string? value)
+	static void WriteUcoMethod (FingerprintWriter writer, Sink sink, UcoMethodData method)
 	{
-		writer.Write (value is not null);
-		if (value is not null) {
-			writer.Write (value);
-		}
+		writer.WriteString (sink, method.WrapperName);
+		writer.WriteString (sink, method.CallbackMethodName);
+		WriteTypeRef (writer, sink, method.CallbackType);
+		writer.WriteString (sink, method.JniSignature);
+		WriteOptionalStrings (writer, sink, method.CallbackParameterTypeNames);
+		writer.WriteOptionalString (sink, method.CallbackReturnTypeName);
+		WriteExportMethodDispatch (writer, sink, method.ExportMethodDispatch);
 	}
 
-	static void WriteOptionalActivationCtor (this BinaryWriter writer, ActivationCtorData? constructor)
+	static void WriteOptionalStrings (FingerprintWriter writer, Sink sink, IReadOnlyList<string>? values)
 	{
-		writer.Write (constructor is not null);
-		if (constructor is not null) {
-			writer.WriteTypeRef (constructor.DeclaringType);
-			writer.Write (constructor.IsOnLeafType);
-			writer.Write ((byte) constructor.Style);
-		}
-	}
-
-	static void WriteUcoMethod (this BinaryWriter writer, UcoMethodData method)
-	{
-		writer.Write (method.WrapperName);
-		writer.Write (method.CallbackMethodName);
-		writer.WriteTypeRef (method.CallbackType);
-		writer.Write (method.JniSignature);
-		writer.WriteOptionalStrings (method.CallbackParameterTypeNames);
-		writer.WriteOptionalString (method.CallbackReturnTypeName);
-		writer.WriteExportMethodDispatch (method.ExportMethodDispatch);
-	}
-
-	static void WriteOptionalStrings (this BinaryWriter writer, IReadOnlyList<string>? values)
-	{
-		writer.Write (values is not null);
+		writer.WriteBoolean (sink, values is not null);
 		if (values is null) {
 			return;
 		}
-		writer.Write (values.Count);
+		writer.WriteInt32 (sink, values.Count);
 		foreach (var value in values) {
-			writer.Write (value);
+			writer.WriteString (sink, value);
 		}
 	}
 
-	static void WriteExportMethodDispatch (this BinaryWriter writer, ExportMethodDispatchData? dispatch)
+	static void WriteExportMethodDispatch (FingerprintWriter writer, Sink sink, ExportMethodDispatchData? dispatch)
 	{
-		writer.Write (dispatch is not null);
+		writer.WriteBoolean (sink, dispatch is not null);
 		if (dispatch is null) {
 			return;
 		}
 
-		writer.Write (dispatch.ManagedMethodName);
-		writer.Write (dispatch.ParameterTypes.Count);
+		writer.WriteString (sink, dispatch.ManagedMethodName);
+		writer.WriteInt32 (sink, dispatch.ParameterTypes.Count);
 		foreach (var parameterType in dispatch.ParameterTypes) {
-			writer.WriteTypeRef (parameterType);
+			WriteTypeRef (writer, sink, parameterType);
 		}
-		writer.Write (dispatch.ParameterKinds.Count);
+		writer.WriteInt32 (sink, dispatch.ParameterKinds.Count);
 		foreach (var parameterKind in dispatch.ParameterKinds) {
-			writer.Write ((int) parameterKind);
+			writer.WriteInt32 (sink, (int) parameterKind);
 		}
-		writer.WriteTypeRef (dispatch.ReturnType);
-		writer.Write ((int) dispatch.ReturnKind);
-		writer.Write (dispatch.IsStatic);
+		WriteTypeRef (writer, sink, dispatch.ReturnType);
+		writer.WriteInt32 (sink, (int) dispatch.ReturnKind);
+		writer.WriteBoolean (sink, dispatch.IsStatic);
 	}
 
-	static void WriteUcoConstructor (this BinaryWriter writer, UcoConstructorData constructor)
+	static void WriteUcoConstructor (FingerprintWriter writer, Sink sink, UcoConstructorData constructor)
 	{
-		writer.Write (constructor.WrapperName);
-		writer.WriteTypeRef (constructor.TargetType);
-		writer.Write (constructor.JniSignature);
-		writer.Write (constructor.HasMatchingManagedCtor);
-		writer.Write (constructor.ManagedParameterTypes.Count);
+		writer.WriteString (sink, constructor.WrapperName);
+		WriteTypeRef (writer, sink, constructor.TargetType);
+		writer.WriteString (sink, constructor.JniSignature);
+		writer.WriteBoolean (sink, constructor.HasMatchingManagedCtor);
+		writer.WriteInt32 (sink, constructor.ManagedParameterTypes.Count);
 		foreach (var parameterType in constructor.ManagedParameterTypes) {
-			writer.WriteTypeRef (parameterType);
+			WriteTypeRef (writer, sink, parameterType);
 		}
 	}
 
-	static void WriteNativeRegistration (this BinaryWriter writer, NativeRegistrationData registration)
+	static void WriteNativeRegistration (FingerprintWriter writer, Sink sink, NativeRegistrationData registration)
 	{
-		writer.Write (registration.JniMethodName);
-		writer.Write (registration.JniSignature);
-		writer.Write (registration.WrapperMethodName);
-		writer.Write (registration.WrapperTarget.TypeNamespace);
-		writer.Write (registration.WrapperTarget.TypeName);
-		writer.Write (registration.WrapperTarget.MethodName);
+		writer.WriteString (sink, registration.JniMethodName);
+		writer.WriteString (sink, registration.JniSignature);
+		writer.WriteString (sink, registration.WrapperMethodName);
+		writer.WriteString (sink, registration.WrapperTarget.TypeNamespace);
+		writer.WriteString (sink, registration.WrapperTarget.TypeName);
+		writer.WriteString (sink, registration.WrapperTarget.MethodName);
 	}
 }

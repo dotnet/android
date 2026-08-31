@@ -325,14 +325,18 @@ public class TrimmableTypeMapGenerator
 			string typeMapAssemblyName = $"_{assemblyName}.TypeMap";
 			perAssemblyNames.Add (typeMapAssemblyName);
 			var model = generator.CreateModel (peers, typeMapAssemblyName);
+			// Both fingerprints come out of a single walk over the model: the incremental one
+			// gates emission, the content one seeds the emitted assembly's deterministic MVID.
+			var fingerprints = generator.ComputeFingerprints (model, useSharedTypemapUniverse,
+				includeIncremental: shouldGenerateTypeMapAssembly is not null);
 			if (shouldGenerateTypeMapAssembly is not null) {
-				var fingerprint = generator.ComputeIncrementalFingerprint (model, useSharedTypemapUniverse);
+				var fingerprint = fingerprints.Incremental ?? throw new InvalidOperationException ("Incremental fingerprint was requested but not produced.");
 				if (!shouldGenerateTypeMapAssembly (typeMapAssemblyName, fingerprint)) {
 					continue;
 				}
 			}
 			var stream = new MemoryStream ();
-			generator.Generate (model, stream, useSharedTypemapUniverse);
+			generator.Generate (model, stream, useSharedTypemapUniverse, fingerprints.Content);
 			stream.Position = 0;
 			generatedAssemblies.Add (new GeneratedAssembly (typeMapAssemblyName, stream));
 			logger.LogGeneratedTypeMapAssemblyInfo (typeMapAssemblyName, peers.Count);

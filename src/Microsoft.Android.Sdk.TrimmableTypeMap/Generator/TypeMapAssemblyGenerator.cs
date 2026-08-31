@@ -38,15 +38,21 @@ public sealed class TypeMapAssemblyGenerator
 		return ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName);
 	}
 
-	internal byte [] ComputeIncrementalFingerprint (TypeMapAssemblyData model, bool useSharedTypemapUniverse)
+	/// <summary>
+	/// Computes the content fingerprint — and, when <paramref name="includeIncremental"/> is
+	/// <see langword="true"/>, the incremental-build fingerprint — in a single walk over the model.
+	/// The content fingerprint should be passed back to
+	/// <see cref="Generate(TypeMapAssemblyData, Stream, bool, byte[])"/> so the model is not walked twice.
+	/// </summary>
+	internal ModelFingerprints ComputeFingerprints (TypeMapAssemblyData model, bool useSharedTypemapUniverse, bool includeIncremental)
 	{
-		return MetadataHelper.ComputeIncrementalFingerprint (model, _systemRuntimeVersion, useSharedTypemapUniverse);
+		return MetadataHelper.ComputeFingerprints (model, _systemRuntimeVersion, useSharedTypemapUniverse, includeIncremental);
 	}
 
-	internal void Generate (TypeMapAssemblyData model, Stream stream, bool useSharedTypemapUniverse)
+	internal void Generate (TypeMapAssemblyData model, Stream stream, bool useSharedTypemapUniverse, byte []? contentFingerprint = null)
 	{
 		var emitter = new TypeMapAssemblyEmitter (_systemRuntimeVersion);
-		emitter.Emit (model, stream, useSharedTypemapUniverse);
+		emitter.Emit (model, stream, useSharedTypemapUniverse, contentFingerprint);
 	}
 
 	/// <summary>
