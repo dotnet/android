@@ -308,6 +308,37 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Execute_CanSkipUnusedNonAcwMarshalMethods ()
+	{
+		using var fullReader = CreateTestFixturePEReader ();
+		using var optimizedReader = CreateTestFixturePEReader ();
+		var generator = CreateGenerator ();
+		var full = generator.Execute ([Input ("TestFixtures", fullReader)], new Version (11, 0), new HashSet<string> ());
+		var optimized = generator.Execute (
+			[Input ("TestFixtures", optimizedReader)],
+			new Version (11, 0),
+			new HashSet<string> (),
+			collectMarshalMethodsForNonAcw: false);
+
+		var fullActivity = Assert.Single (full.AllPeers, peer => peer.JavaName == "android/app/Activity");
+		var optimizedActivity = Assert.Single (optimized.AllPeers, peer => peer.JavaName == "android/app/Activity");
+		Assert.NotEmpty (fullActivity.MarshalMethods);
+		Assert.Empty (optimizedActivity.MarshalMethods);
+
+		var fullAcw = Assert.Single (full.AllPeers, peer => peer.JavaName == "my/app/MyHelper");
+		var optimizedAcw = Assert.Single (optimized.AllPeers, peer => peer.JavaName == "my/app/MyHelper");
+		Assert.Equal (
+			fullAcw.MarshalMethods.Select (method => (method.JniName, method.JniSignature, method.ManagedMethodName, method.CallManagedMethodDirectly)),
+			optimizedAcw.MarshalMethods.Select (method => (method.JniName, method.JniSignature, method.ManagedMethodName, method.CallManagedMethodDirectly)));
+		Assert.Equal (full.GeneratedJavaSources, optimized.GeneratedJavaSources);
+		Assert.Equal (full.GeneratedAssemblies.Count, optimized.GeneratedAssemblies.Count);
+		for (int i = 0; i < full.GeneratedAssemblies.Count; i++) {
+			Assert.Equal (full.GeneratedAssemblies [i].Name, optimized.GeneratedAssemblies [i].Name);
+			Assert.Equal (full.GeneratedAssemblies [i].Content.ToArray (), optimized.GeneratedAssemblies [i].Content.ToArray ());
+		}
+	}
+
+	[Fact]
 	public void Execute_CollectsDeferredRegistrationTypes_ForAllApplicationAndInstrumentationSubtypes ()
 	{
 		using var peReader = CreateTestFixturePEReader ();
