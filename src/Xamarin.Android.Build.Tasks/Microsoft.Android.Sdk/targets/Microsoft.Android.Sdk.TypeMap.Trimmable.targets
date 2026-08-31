@@ -38,26 +38,27 @@
     <_TypeMapJavaStubsSourceDirectory Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_TypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
     <_TypeMapJavaStubsSourceDirectory Condition=" '$(_TypeMapJavaStubsSourceDirectory)' == '' ">$(_TypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
     <_PostTrimTrimmableTypeMapJavaStamp>$(_PostTrimTypeMapJavaBaseOutputDir)stamp/_GeneratePostTrimTrimmableTypeMapJavaSources.stamp</_PostTrimTrimmableTypeMapJavaStamp>
+    <_AndroidR8JniSeedDirectory Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_TypeMapBaseOutputDir)r8-jni-seed/</_AndroidR8JniSeedDirectory>
+    <_AndroidR8JniSeedAcwMap Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_AndroidR8JniSeedDirectory)acw-map.txt</_AndroidR8JniSeedAcwMap>
+    <_AndroidR8JniSeedApplicationRegistration Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_AndroidR8JniSeedDirectory)java/net/dot/android/ApplicationRegistration.java</_AndroidR8JniSeedApplicationRegistration>
     <!-- CoreCLR trimmed builds regenerate these files from the linked assemblies. Keep the
          pre-trim pass from overwriting those final post-trim outputs when only an unrelated
          generator input (for example AndroidManifest.xml) changes. -->
-    <_PreTrimTypeMapAcwMapOutputFile Condition=" '$(_AndroidRuntime)' != 'CoreCLR' or '$(PublishTrimmed)' != 'true' ">$(IntermediateOutputPath)acw-map.txt</_PreTrimTypeMapAcwMapOutputFile>
-    <_PreTrimTypeMapApplicationRegistrationOutputFile Condition=" '$(_AndroidRuntime)' != 'CoreCLR' or '$(PublishTrimmed)' != 'true' ">$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java</_PreTrimTypeMapApplicationRegistrationOutputFile>
-    <_PreTrimTypeMapAcwMapOutputFile Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(IntermediateOutputPath)acw-map.txt</_PreTrimTypeMapAcwMapOutputFile>
-    <_PreTrimTypeMapApplicationRegistrationOutputFile Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java</_PreTrimTypeMapApplicationRegistrationOutputFile>
+    <_PreTrimTypeMapAcwMapOutputFile Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_AndroidR8JniSeedAcwMap)</_PreTrimTypeMapAcwMapOutputFile>
+    <_PreTrimTypeMapApplicationRegistrationOutputFile Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_AndroidR8JniSeedApplicationRegistration)</_PreTrimTypeMapApplicationRegistrationOutputFile>
+    <_PreTrimTypeMapAcwMapOutputFile Condition=" '$(_PreTrimTypeMapAcwMapOutputFile)' == '' and ('$(_AndroidRuntime)' != 'CoreCLR' or '$(PublishTrimmed)' != 'true') ">$(IntermediateOutputPath)acw-map.txt</_PreTrimTypeMapAcwMapOutputFile>
+    <_PreTrimTypeMapApplicationRegistrationOutputFile Condition=" '$(_PreTrimTypeMapApplicationRegistrationOutputFile)' == '' and ('$(_AndroidRuntime)' != 'CoreCLR' or '$(PublishTrimmed)' != 'true') ">$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java</_PreTrimTypeMapApplicationRegistrationOutputFile>
     <!-- Stamp file touched on every _GenerateTrimmableTypeMap run. It is a stable
          incremental sentinel: the generated TypeMap DLLs are only rewritten when their
          content changes (CopyIfStreamChanged), so their timestamps cannot be used as
          Outputs without making the target run on every build. The stamp is always
          touched, so the target is correctly skipped when none of its Inputs changed. -->
     <_TrimmableTypeMapOutputStamp>$(_TypeMapOutputDirectory)_GenerateTrimmableTypeMap.stamp</_TrimmableTypeMapOutputStamp>
-    <_AndroidR8JniSeedDirectory Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_TypeMapBaseOutputDir)r8-jni-seed/</_AndroidR8JniSeedDirectory>
     <_AndroidR8JniSeedMapping Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_AndroidR8JniSeedDirectory)mapping.txt</_AndroidR8JniSeedMapping>
     <_AndroidR8JniRewriteManifest Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(IntermediateOutputPath)r8-jni-rewrite-manifest.txt</_AndroidR8JniRewriteManifest>
     <_AndroidR8JniReachabilityManifest Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(IntermediateOutputPath)r8-jni-reachability-manifest.txt</_AndroidR8JniReachabilityManifest>
     <_AndroidR8JniSeedApplicationConfiguration Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_AndroidR8JniSeedDirectory)acw-keep.cfg</_AndroidR8JniSeedApplicationConfiguration>
     <_AndroidR8JniSeedXamarinConfiguration Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_AndroidR8JniSeedDirectory)xamarin.cfg</_AndroidR8JniSeedXamarinConfiguration>
-    <_AndroidR8JniSeedAaptConfiguration Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(IntermediateOutputPath)aapt_rules.txt</_AndroidR8JniSeedAaptConfiguration>
     <_AndroidR8JniSeedJavaClassDirectory Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_AndroidR8JniSeedDirectory)classes/</_AndroidR8JniSeedJavaClassDirectory>
     <_AndroidR8JniSeedJavaStamp Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_AndroidR8JniSeedDirectory)compile-java.stamp</_AndroidR8JniSeedJavaStamp>
     <_TrimmableRemoveRegisterFlag>$(_AndroidStampDirectory)_RemoveRegisterAttribute.stamp</_TrimmableRemoveRegisterFlag>
@@ -87,7 +88,7 @@
       DependsOnTargets="_GenerateTrimmableTypeMap;$(_OnResolveMonoAndroidSdks);_AdjustJavacVersionArguments;_CollectRuntimeJarFilenames;_GetLibraryImports;_DetermineJavaLibrariesToCompile">
     <ItemGroup>
       <_AndroidR8JniSeedJavaSource Include="$(_TypeMapJavaOutputDirectory)/**/*.java" />
-      <_AndroidR8JniSeedJavaSource Include="$(IntermediateOutputPath)android/src/**/*.java" />
+      <_AndroidR8JniSeedJavaSource Include="$(_AndroidR8JniSeedApplicationRegistration)" />
     </ItemGroup>
   </Target>
 
@@ -100,8 +101,7 @@
     <Javac
         JavaPlatformJarPath="$(JavaPlatformJarPath)"
         ClassesOutputDirectory="$(_AndroidR8JniSeedJavaClassDirectory)"
-        StubSourceDirectory="$(_TypeMapJavaOutputDirectory)"
-        AdditionalStubSourceDirectories="$(IntermediateOutputPath)android/src"
+        JavaSourceFiles="@(_AndroidR8JniSeedJavaSource)"
         ToolPath="$(JavacToolPath)"
         ToolExe="$(JavacToolExe)"
         Jars="@(_JavaLibrariesToCompile);@(_ReferenceJavaLibs)"
@@ -123,8 +123,7 @@
     <ItemGroup>
       <_AndroidR8JniSeedClassFile Include="$(_AndroidR8JniSeedJavaClassDirectory)**\*.class" />
       <_AndroidR8JniSeedProguardConfiguration Include="@(_ProguardConfiguration)" />
-      <_AndroidR8JniSeedProguardConfiguration Remove="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg;$(_ProguardProjectConfiguration);$(IntermediateOutputPath)proguard\proguard_project_primary.cfg" />
-      <_AndroidR8JniSeedProguardConfiguration Include="$(_AndroidR8JniSeedAaptConfiguration)" Condition="Exists('$(_AndroidR8JniSeedAaptConfiguration)')" />
+      <_AndroidR8JniSeedProguardConfiguration Remove="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg;$(_ProguardProjectConfiguration);$(IntermediateOutputPath)proguard\proguard_project_primary.cfg;$(IntermediateOutputPath)aapt_rules.txt" />
       <_AndroidR8JniSeedMapDiagnostics Condition=" '$(AndroidR8IgnoreWarnings)' == 'true' " Include="warning" To="info" />
     </ItemGroup>
   </Target>
@@ -132,7 +131,7 @@
   <Target Name="_AndroidGenerateR8JniSeedMapping"
       Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' "
       DependsOnTargets="_AndroidGenerateR8JniSeedMappingInputs"
-      Inputs="@(_AndroidR8JniSeedClassFile);@(_JavaLibrariesToCompileForApp);@(AndroidExternalJavaLibrary);@(_AndroidR8JniSeedProguardConfiguration);$(AndroidR8JarPath);$(_AcwMapFile)"
+      Inputs="@(_AndroidR8JniSeedClassFile);@(_JavaLibrariesToCompileForApp);@(AndroidExternalJavaLibrary);@(_AndroidR8JniSeedProguardConfiguration);$(AndroidR8JarPath);$(_AndroidR8JniSeedAcwMap)"
       Outputs="$(_AndroidR8JniSeedMapping)">
     <MakeDir Directories="$(_AndroidR8JniSeedDirectory);$(_AndroidR8JniSeedDirectory)dex" />
     <R8
@@ -149,7 +148,7 @@
         JavaLibrariesToReference="@(AndroidExternalJavaLibrary)"
         EnableDesugar="$(AndroidEnableDesugar)"
         AndroidSdkBuildToolsPath="$(AndroidSdkBuildToolsPath)"
-        AcwMapFile="$(_AcwMapFile)"
+        AcwMapFile="$(_AndroidR8JniSeedAcwMap)"
         ProguardGeneratedApplicationConfiguration="$(_AndroidR8JniSeedApplicationConfiguration)"
         ProguardCommonXamarinConfiguration="$(_AndroidR8JniSeedXamarinConfiguration)"
         ProguardMappingFileOutput="$(_AndroidR8JniSeedMapping)"
@@ -166,6 +165,21 @@
       <FileWrites Include="$(_AndroidR8JniSeedApplicationConfiguration)" />
       <FileWrites Include="$(_AndroidR8JniSeedXamarinConfiguration)" />
       <FileWrites Include="$(_AndroidR8JniSeedDirectory)dex\*.dex" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidCopyR8JniSeedRegistrationForPackaging"
+      Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' and ('$(_AndroidRuntime)' != 'CoreCLR' or '$(PublishTrimmed)' != 'true') "
+      BeforeTargets="_CompileJava;_CompileToDalvik"
+      Inputs="$(_AndroidR8JniSeedAcwMap);$(_AndroidR8JniSeedApplicationRegistration)"
+      Outputs="$(IntermediateOutputPath)acw-map.txt;$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java">
+    <Copy
+        SourceFiles="$(_AndroidR8JniSeedAcwMap);$(_AndroidR8JniSeedApplicationRegistration)"
+        DestinationFiles="$(IntermediateOutputPath)acw-map.txt;$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java"
+        SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" />
+      <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" />
     </ItemGroup>
   </Target>
 
@@ -382,6 +396,8 @@
       <FileWrites Include="$(IntermediateOutputPath)AndroidManifest.xml" Condition="Exists('$(IntermediateOutputPath)AndroidManifest.xml')" />
       <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" Condition="Exists('$(IntermediateOutputPath)acw-map.txt')" />
       <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" Condition="Exists('$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java')" />
+      <FileWrites Include="$(_AndroidR8JniSeedAcwMap)" Condition="Exists('$(_AndroidR8JniSeedAcwMap)')" />
+      <FileWrites Include="$(_AndroidR8JniSeedApplicationRegistration)" Condition="Exists('$(_AndroidR8JniSeedApplicationRegistration)')" />
     </ItemGroup>
   </Target>
 
