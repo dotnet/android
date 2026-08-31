@@ -652,6 +652,21 @@ namespace MyApp
 		public int UnsupportedMember () => 0;
 	}
 
+	[Register ("my/app/ExportAttributeLookalikes")]
+	public class ExportAttributeLookalikes : Java.Lang.Object
+	{
+		[Lookalike.Export ("NOT_AN_EXPORT")]
+		public void LookalikeExport (
+			[Lookalike.ExportParameter (Java.Interop.ExportParameterKind.InputStream)] UnsupportedExportValue value)
+		{
+		}
+
+		[Java.Interop.Export ("realExport")]
+		public string RealExport (
+			[Lookalike.ExportParameter (Java.Interop.ExportParameterKind.InputStream)] string value)
+			=> value;
+	}
+
 	/// <summary>
 	/// Has [Export] methods with different access modifiers.
 	/// The JCW should respect the C# visibility for [Export] methods.

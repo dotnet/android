@@ -774,6 +774,16 @@ public sealed class JavaPeerScanner : IDisposable
 		return AssemblyIndex.IsCustomAttributeMatch (attribute, index.Reader, "Java.Interop", "ExportFieldAttribute");
 	}
 
+	static bool IsExportAttribute (CustomAttribute attribute, AssemblyIndex index)
+	{
+		return AssemblyIndex.IsCustomAttributeMatch (attribute, index.Reader, "Java.Interop", "ExportAttribute");
+	}
+
+	static bool IsExportParameterAttribute (CustomAttribute attribute, AssemblyIndex index)
+	{
+		return AssemblyIndex.IsCustomAttributeMatch (attribute, index.Reader, "Java.Interop", "ExportParameterAttribute");
+	}
+
 	bool ValidateExportField (MethodDefinition methodDef, AssemblyIndex index, bool isGenericType)
 	{
 		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
@@ -808,8 +818,7 @@ public sealed class JavaPeerScanner : IDisposable
 		bool isExportField = false;
 		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
 			var ca = index.Reader.GetCustomAttribute (caHandle);
-			var attrName = AssemblyIndex.GetCustomAttributeName (ca, index.Reader);
-			if (attrName == "ExportAttribute") {
+			if (IsExportAttribute (ca, index)) {
 				isExport = true;
 			} else if (IsExportFieldAttribute (ca, index)) {
 				isExportField = true;
@@ -851,6 +860,9 @@ public sealed class JavaPeerScanner : IDisposable
 	{
 		if (TryManagedTypeToJniDescriptor (managedType, exportKind, out _)) {
 			return true;
+		}
+		if (exportKind != ExportParameterKindInfo.Unspecified) {
+			return false;
 		}
 
 		// Legacy maps by-ref, pointer, and rectangular-array signatures through their
@@ -1855,7 +1867,7 @@ public sealed class JavaPeerScanner : IDisposable
 				return true;
 			}
 
-			if (attrName == "ExportAttribute") {
+			if (IsExportAttribute (ca, index)) {
 				(registerInfo, exportInfo) = ParseExportAttribute (ca, methodDef, index);
 				return true;
 			}
@@ -1999,8 +2011,7 @@ public sealed class JavaPeerScanner : IDisposable
 	{
 		foreach (var caHandle in parameter.GetCustomAttributes ()) {
 			var ca = index.Reader.GetCustomAttribute (caHandle);
-			var attrName = index.GetCustomAttributeName (ca);
-			if (attrName != "ExportParameterAttribute") {
+			if (!IsExportParameterAttribute (ca, index)) {
 				continue;
 			}
 
@@ -2084,20 +2095,20 @@ public sealed class JavaPeerScanner : IDisposable
 		ExportParameterKindInfo exportKind,
 		out string descriptor)
 	{
+		if (exportKind != ExportParameterKindInfo.Unspecified) {
+			return TryGetExportParameterDescriptor (managedType.ManagedTypeName, exportKind, out descriptor);
+		}
+
 		if (managedType.ManagedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
 			var elementType = managedType with {
 				ManagedTypeName = managedType.ManagedTypeName.Substring (0, managedType.ManagedTypeName.Length - 2),
 			};
-			if (TryManagedTypeToJniDescriptor (elementType, exportKind, out var elementDescriptor)) {
+			if (TryManagedTypeToJniDescriptor (elementType, ExportParameterKindInfo.Unspecified, out var elementDescriptor)) {
 				descriptor = $"[{elementDescriptor}";
 				return true;
 			}
 			descriptor = "";
 			return false;
-		}
-
-		if (exportKind != ExportParameterKindInfo.Unspecified) {
-			return TryGetExportParameterDescriptor (managedType.ManagedTypeName, exportKind, out descriptor);
 		}
 
 		var primitive = TryGetPrimitiveJniDescriptor (managedType.ManagedTypeName);

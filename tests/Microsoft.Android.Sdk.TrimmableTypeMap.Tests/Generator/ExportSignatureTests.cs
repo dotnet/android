@@ -26,4 +26,22 @@ public class ExportSignatureTests : FixtureTestBase
 		new JcwJavaSourceGenerator ().Generate (peer, writer);
 		Assert.DoesNotContain (" unsupported (", writer.ToString (), System.StringComparison.Ordinal);
 	}
+
+	[Fact]
+	public void ScannerAndGenerator_IgnoreExportAttributeLookalikes ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/ExportAttributeLookalikes");
+
+		Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "LookalikeExport");
+		Assert.Contains (peer.MarshalMethods, method =>
+			method.ManagedMethodName == "RealExport" &&
+			method.JniName == "realExport" &&
+			method.JniSignature == "(Ljava/lang/String;)Ljava/lang/String;");
+
+		using var writer = new StringWriter ();
+		new JcwJavaSourceGenerator ().Generate (peer, writer);
+		var java = writer.ToString ();
+		Assert.DoesNotContain ("NOT_AN_EXPORT", java, System.StringComparison.Ordinal);
+		Assert.Contains ("realExport (java.lang.String", java, System.StringComparison.Ordinal);
+	}
 }

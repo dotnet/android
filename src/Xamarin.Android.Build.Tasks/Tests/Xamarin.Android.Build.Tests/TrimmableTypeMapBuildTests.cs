@@ -128,7 +128,19 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "mismatched-field-export-parameter", "XALNS7004")]
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "mismatched-field-export-parameter", "XA4263")]
 		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "mismatched-field-export-parameter", "XA4263")]
-		public void Build_UnsupportedExportSignature_ReportsCodedDiagnosticWithoutPartialOutputs (
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "special-array-parameter", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "special-array-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "special-array-parameter", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "special-array-return", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "special-array-return", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "special-array-return", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "special-array-field", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "special-array-field", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "special-array-field", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "special-xml-array-return", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "special-xml-array-return", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "special-xml-array-return", "XA4263")]
+		public void Build_ExportSignature_MatchesRuntimeClassification (
 			string typeMapImplementation,
 			AndroidRuntime runtime,
 			string invalidShape,
@@ -214,6 +226,44 @@ namespace Xamarin.Android.Build.Tests {
 					""",
 					"UNSUPPORTED_FIELD",
 					""),
+				"special-array-parameter" => (
+					"",
+					"""
+					[Export ("unsupported")]
+					public void UnsupportedMember (
+						[ExportParameter (ExportParameterKind.InputStream)] Stream [] value)
+					{
+					}
+					""",
+					"unsupported",
+					""),
+				"special-array-return" => (
+					"",
+					"""
+					[return: ExportParameter (ExportParameterKind.OutputStream)]
+					[Export ("unsupported")]
+					public Stream [] UnsupportedMember () => [];
+					""",
+					"unsupported",
+					""),
+				"special-array-field" => (
+					"",
+					"""
+					[return: ExportParameter (ExportParameterKind.OutputStream)]
+					[ExportField ("UNSUPPORTED_FIELD")]
+					public Stream [] UnsupportedMember () => [];
+					""",
+					"UNSUPPORTED_FIELD",
+					""),
+				"special-xml-array-return" => (
+					"",
+					"""
+					[return: ExportParameter (ExportParameterKind.XmlPullParser)]
+					[Export ("unsupported")]
+					public XmlReader [] UnsupportedMember () => [];
+					""",
+					"unsupported",
+					""),
 				_ => throw new InvalidOperationException ($"Unknown unsupported [Export] shape '{invalidShape}'."),
 			};
 			var proj = new XamarinAndroidApplicationProject {
@@ -228,6 +278,8 @@ namespace Xamarin.Android.Build.Tests {
 			proj.Sources.Add (new BuildItem.Source ("ExportSignatureValidation.cs") {
 				TextContent = () => $$"""
 					using System.Collections.Generic;
+					using System.IO;
+					using System.Xml;
 					using Android.Runtime;
 					using Java.Interop;
 
@@ -247,7 +299,13 @@ namespace Xamarin.Android.Build.Tests {
 
 			using var builder = CreateApkBuilder ();
 			builder.ThrowOnBuildFailure = false;
-			Assert.IsFalse (builder.Build (proj), $"{runtime}/{typeMapImplementation} should reject {invalidShape}.");
+			var succeeded = builder.Build (proj);
+			if (expectedCode == "success") {
+				Assert.IsTrue (succeeded, $"{runtime}/{typeMapImplementation} should retain legacy build support for {invalidShape}.");
+				return;
+			}
+
+			Assert.IsFalse (succeeded, $"{runtime}/{typeMapImplementation} should reject {invalidShape}.");
 			StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput, $"The build should report {expectedCode}.");
 			if (expectedCode == "XA4263") {
 				StringAssertEx.Contains (

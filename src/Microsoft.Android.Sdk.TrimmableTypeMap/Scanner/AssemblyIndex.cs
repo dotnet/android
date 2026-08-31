@@ -197,8 +197,6 @@ sealed class AssemblyIndex : IDisposable
 				registerInfo = registerInfo with { JniName = registerInfo.JniName.Replace ('.', '/') };
 			} else if (attrName == "JniTypeSignatureAttribute") {
 				registerInfo = ParseJniTypeSignatureAttribute (ca);
-			} else if (attrName == "ExportAttribute") {
-				// [Export] is a method-level attribute; it is parsed at scan time by JavaPeerScanner
 			} else if (IsKnownComponentAttribute (attrName)) {
 				attrInfo ??= CreateTypeAttributeInfo (attrName);
 				var value = DecodeAttribute (ca);
