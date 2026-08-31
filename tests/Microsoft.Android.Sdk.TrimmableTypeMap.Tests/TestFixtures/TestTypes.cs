@@ -646,6 +646,13 @@ namespace MyApp
 		public int GetValue () => 42;
 	}
 
+	[Register ("my/app/ExportFieldLookalike")]
+	public class ExportFieldLookalike : Java.Lang.Object
+	{
+		[Lookalike.ExportField ("NOT_A_FIELD")]
+		public void GetValue (int value) { }
+	}
+
 	[Register ("my/app/BaseInstrumentation")]
 	public abstract class BaseInstrumentation : Android.App.Instrumentation { }
 

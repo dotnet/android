@@ -740,11 +740,16 @@ public sealed class JavaPeerScanner : IDisposable
 		return (methods, fields);
 	}
 
+	static bool IsExportFieldAttribute (CustomAttribute attribute, AssemblyIndex index)
+	{
+		return AssemblyIndex.IsCustomAttributeMatch (attribute, index.Reader, "Java.Interop", "ExportFieldAttribute");
+	}
+
 	bool ValidateExportField (MethodDefinition methodDef, AssemblyIndex index, bool isGenericType)
 	{
 		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
 			var ca = index.Reader.GetCustomAttribute (caHandle);
-			if (AssemblyIndex.GetCustomAttributeName (ca, index.Reader) != "ExportFieldAttribute") {
+			if (!IsExportFieldAttribute (ca, index)) {
 				continue;
 			}
 
@@ -1740,7 +1745,7 @@ public sealed class JavaPeerScanner : IDisposable
 				return true;
 			}
 
-			if (attrName == "ExportFieldAttribute") {
+			if (IsExportFieldAttribute (ca, index)) {
 				(registerInfo, exportInfo) = ParseExportFieldAsMethod (ca, methodDef, index);
 				return true;
 			}
@@ -2644,9 +2649,8 @@ public sealed class JavaPeerScanner : IDisposable
 	{
 		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
 			var ca = index.Reader.GetCustomAttribute (caHandle);
-			var attrName = index.GetCustomAttributeName (ca);
 
-			if (attrName != "ExportFieldAttribute") {
+			if (!IsExportFieldAttribute (ca, index)) {
 				continue;
 			}
 

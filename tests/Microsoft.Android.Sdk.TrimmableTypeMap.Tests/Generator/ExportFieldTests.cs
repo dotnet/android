@@ -68,4 +68,21 @@ public class ExportFieldTests : FixtureTestBase
 		new JcwJavaSourceGenerator ().Generate (peer, writer);
 		Assert.DoesNotContain ("VALUE", writer.ToString ());
 	}
+
+	[Fact]
+	public void ScannerAndGenerator_IgnoreLookalikeExportFieldAttribute ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/ExportFieldLookalike");
+
+		Assert.Empty (peer.JavaFields);
+		Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "GetValue");
+
+		using var writer = new StringWriter ();
+		new JcwJavaSourceGenerator ().Generate (peer, writer);
+		Assert.DoesNotContain ("NOT_A_FIELD", writer.ToString ());
+
+		var realPeer = FindFixtureByJavaName ("my/app/ExportFieldExample");
+		Assert.Contains (realPeer.JavaFields, field => field.FieldName == "VALUE");
+		Assert.Contains (realPeer.MarshalMethods, method => method.ManagedMethodName == "GetValue");
+	}
 }

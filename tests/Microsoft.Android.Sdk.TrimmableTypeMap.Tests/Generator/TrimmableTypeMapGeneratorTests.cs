@@ -367,6 +367,12 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			var source = result.GeneratedJavaSources.Single (candidate => candidate.RelativePath == javaName + ".java");
 			Assert.DoesNotContain ("VALUE", source.Content);
 		}
+
+		var lookalikePeer = result.AllPeers.Single (candidate => candidate.JavaName == "my/app/ExportFieldLookalike");
+		Assert.Empty (lookalikePeer.JavaFields);
+		Assert.DoesNotContain (lookalikePeer.MarshalMethods, method => method.ManagedMethodName == "GetValue");
+		var lookalikeSource = result.GeneratedJavaSources.Single (candidate => candidate.RelativePath == "my/app/ExportFieldLookalike.java");
+		Assert.DoesNotContain ("NOT_A_FIELD", lookalikeSource.Content);
 	}
 
 	[Fact]
