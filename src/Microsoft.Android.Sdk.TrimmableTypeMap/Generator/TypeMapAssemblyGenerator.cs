@@ -56,6 +56,16 @@ public sealed class TypeMapAssemblyGenerator
 	}
 
 	/// <summary>
+	/// Generates the PE assembly and returns a read-only stream over the serialised image without
+	/// copying it into a second buffer.
+	/// </summary>
+	internal Stream GenerateToStream (TypeMapAssemblyData model, bool useSharedTypemapUniverse, byte []? contentFingerprint = null)
+	{
+		var emitter = new TypeMapAssemblyEmitter (_systemRuntimeVersion);
+		return emitter.EmitToStream (model, useSharedTypemapUniverse, contentFingerprint);
+	}
+
+	/// <summary>
 	/// Emits an empty typemap assembly (containing no type map entries) with the given
 	/// <paramref name="assemblyName"/>, writing it to <paramref name="stream"/>. Used to satisfy
 	/// <c>[assembly: TypeMapAssemblyTarget&lt;T&gt;("name")]</c> references to per-assembly typemaps

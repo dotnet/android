@@ -336,7 +336,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Equal (full.GeneratedAssemblies.Count, optimized.GeneratedAssemblies.Count);
 		for (int i = 0; i < full.GeneratedAssemblies.Count; i++) {
 			Assert.Equal (full.GeneratedAssemblies [i].Name, optimized.GeneratedAssemblies [i].Name);
-			Assert.Equal (full.GeneratedAssemblies [i].Content.ToArray (), optimized.GeneratedAssemblies [i].Content.ToArray ());
+			Assert.Equal (ReadAllBytes (full.GeneratedAssemblies [i].Content), ReadAllBytes (optimized.GeneratedAssemblies [i].Content));
 		}
 	}
 
@@ -387,7 +387,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Equal (full.GeneratedAssemblies.Count, incremental.GeneratedAssemblies.Count);
 		for (int i = 0; i < full.GeneratedAssemblies.Count; i++) {
 			Assert.Equal (full.GeneratedAssemblies [i].Name, incremental.GeneratedAssemblies [i].Name);
-			Assert.Equal (full.GeneratedAssemblies [i].Content.ToArray (), incremental.GeneratedAssemblies [i].Content.ToArray ());
+			Assert.Equal (ReadAllBytes (full.GeneratedAssemblies [i].Content), ReadAllBytes (incremental.GeneratedAssemblies [i].Content));
 		}
 		DisposeGeneratedAssemblies (full.GeneratedAssemblies);
 		DisposeGeneratedAssemblies (incremental.GeneratedAssemblies);
@@ -490,6 +490,14 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			AssemblyName = assemblyName,
 			DoNotGenerateAcw = true,
 		};
+	}
+
+	static byte [] ReadAllBytes (Stream stream)
+	{
+		stream.Position = 0;
+		using var buffer = new MemoryStream ();
+		stream.CopyTo (buffer);
+		return buffer.ToArray ();
 	}
 
 	static void DisposeGeneratedAssemblies (IEnumerable<GeneratedAssembly> assemblies)

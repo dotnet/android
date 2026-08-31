@@ -20,7 +20,11 @@ public record TrimmableTypeMapResult (
 		ApplicationRegistrationTypes ?? [];
 }
 
-public record GeneratedAssembly (string Name, MemoryStream Content);
+/// <summary>
+/// A generated typemap assembly. <paramref name="Content"/> is a read-only, seekable stream
+/// positioned at the start of the serialised PE image; callers own it and should dispose it.
+/// </summary>
+public record GeneratedAssembly (string Name, Stream Content);
 
 public record GeneratedJavaSource (string RelativePath, string Content);
 

@@ -105,6 +105,22 @@ sealed class PEAssemblyBuilder
 	/// </summary>
 	public void WritePE (Stream stream)
 	{
+		var peBlob = SerializePE ();
+		if (stream is MemoryStream memoryStream && memoryStream.Length == 0 && memoryStream.Capacity < peBlob.Count) {
+			memoryStream.Capacity = peBlob.Count;
+		}
+		peBlob.WriteContentTo (stream);
+	}
+
+	/// <summary>
+	/// Serialises the metadata + IL into a PE DLL and returns a read-only stream over the
+	/// serialised bytes. Unlike <see cref="WritePE(Stream)"/> the image is not copied into a
+	/// second contiguous buffer.
+	/// </summary>
+	public Stream CreatePEStream () => new BlobBuilderStream (SerializePE ());
+
+	BlobBuilder SerializePE ()
+	{
 		var peBuilder = new ManagedPEBuilder (
 			new PEHeaderBuilder (imageCharacteristics: Characteristics.Dll),
 			new MetadataRootBuilder (Metadata),
@@ -114,10 +130,7 @@ sealed class PEAssemblyBuilder
 			deterministicIdProvider: DeterministicContentId);
 		var peBlob = new BlobBuilder ();
 		peBuilder.Serialize (peBlob);
-		if (stream is MemoryStream memoryStream && memoryStream.Length == 0 && memoryStream.Capacity < peBlob.Count) {
-			memoryStream.Capacity = peBlob.Count;
-		}
-		peBlob.WriteContentTo (stream);
+		return peBlob;
 	}
 
 	static BlobContentId DeterministicContentId (IEnumerable<Blob> content)

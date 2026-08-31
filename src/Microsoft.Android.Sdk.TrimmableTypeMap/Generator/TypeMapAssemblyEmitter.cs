@@ -188,6 +188,21 @@ sealed class TypeMapAssemblyEmitter
 		_pe.WritePE (stream);
 	}
 
+	/// <summary>
+	/// Emits a PE assembly from the given model and returns a read-only stream over the serialised
+	/// image, avoiding the copy into a second buffer that <see cref="Emit(TypeMapAssemblyData, Stream, bool, byte[])"/>
+	/// performs.
+	/// </summary>
+	internal Stream EmitToStream (TypeMapAssemblyData model, bool useSharedTypemapUniverse, byte []? contentFingerprint)
+	{
+		if (model is null) {
+			throw new ArgumentNullException (nameof (model));
+		}
+
+		EmitCore (model, useSharedTypemapUniverse, contentFingerprint);
+		return _pe.CreatePEStream ();
+	}
+
 	void EmitCore (TypeMapAssemblyData model, bool useSharedTypemapUniverse, byte []? contentFingerprint)
 	{
 		contentFingerprint ??= MetadataHelper

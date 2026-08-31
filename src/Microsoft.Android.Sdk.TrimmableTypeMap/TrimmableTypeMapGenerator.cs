@@ -335,9 +335,7 @@ public class TrimmableTypeMapGenerator
 					continue;
 				}
 			}
-			var stream = new MemoryStream ();
-			generator.Generate (model, stream, useSharedTypemapUniverse, fingerprints.Content);
-			stream.Position = 0;
+			var stream = generator.GenerateToStream (model, useSharedTypemapUniverse, fingerprints.Content);
 			generatedAssemblies.Add (new GeneratedAssembly (typeMapAssemblyName, stream));
 			logger.LogGeneratedTypeMapAssemblyInfo (typeMapAssemblyName, peers.Count);
 		}
