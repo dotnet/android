@@ -1234,10 +1234,10 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
   </data>
   <data name="XA4258" xml:space="preserve">
-    <value>Java name '{0}' contains reserved Java identifier '{1}'. Change the package or type name.</value>
+    <value>Java name '{0}' contains invalid or unsupported Java identifier '{1}'. Change the package or type name.</value>
     <comment>The following are literal names and should not be translated: Java.
 {0} - Java package or type name
-{1} - Java reserved keyword or restricted identifier</comment>
+{1} - Invalid, unsupported, reserved, or restricted Java identifier</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Command '{0}' failed.\n{1}</value>

@@ -121,6 +121,38 @@ public class JavaNameValidatorTests
 	}
 
 	[Theory]
+	[InlineData ("com/\u00e9xample/\u0394elta")]
+	public void UnicodeIdentifiers_AreValid (string jniName)
+	{
+		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment (jniName, out var invalidIdentifier));
+		Assert.Equal ("", invalidIdentifier);
+	}
+
+	[Theory]
+	[InlineData ("com/example/1Peer", "1Peer")]
+	[InlineData ("com/example/\u0301Peer", "\u0301Peer")]
+	[InlineData ("com/1example/Peer", "1example")]
+	[InlineData ("com/\u0301example/Peer", "\u0301example")]
+	[InlineData ("com/e\u0301xample/Cafe\u0301", "e\u0301xample")]
+	[InlineData ("com/\U00010428xample/Peer\U00010400", "\U00010428xample")]
+	public void InvalidOrUnsupportedIdentifier_ReturnsSegment (string jniName, string expected)
+	{
+		Assert.True (JavaNameValidator.TryGetInvalidJniNameSegment (jniName, out var invalidIdentifier));
+		Assert.Equal (expected, invalidIdentifier);
+	}
+
+	[Fact]
+	public void ComposedAndDecomposedIdentifiers_AreNotNormalized ()
+	{
+		const string composed = "com/\u00e9xample/Peer";
+		const string decomposed = "com/e\u0301xample/Peer";
+
+		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment (composed, out _));
+		Assert.True (JavaNameValidator.TryGetInvalidJniNameSegment (decomposed, out _));
+		Assert.NotEqual (composed, decomposed);
+	}
+
+	[Theory]
 	[InlineData ("Lcom/example/Outer$for;", "com/example/Outer$for", "for")]
 	[InlineData ("[[Lcom/example/Outer$record;", "com/example/Outer$record", "record")]
 	public void TryGetInvalidJniTypeSegment_ReservedTypeIdentifier_ReturnsTrue (string jniType, string expectedTypeName, string expectedIdentifier)

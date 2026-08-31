@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using NUnit.Framework;
 using Xamarin.Android.AssemblyStore;
 using Xamarin.Android.Tasks;
@@ -34,6 +35,151 @@ namespace Xamarin.Android.Build.Tests {
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
 			AssertTrimmableTypeMapOutputs (intermediateDir);
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, true)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, false)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, false)]
+		public void Build_SupplementaryJavaIdentifier_MatchesAndroidToolchainLimitation (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			bool shouldSucceed)
+		{
+			const string javaName = "com/\U00010428xample/Peer\U00010400";
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("SupplementaryJavaIdentifier.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Register ("com/\U00010428xample/Peer\U00010400")]
+					public class SupplementaryJavaIdentifier : Java.Lang.Object
+					{
+						public SupplementaryJavaIdentifier () { }
+					}
+					""",
+			});
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				"System.GC.KeepAlive (new UnnamedProject.SupplementaryJavaIdentifier ());");
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.AreEqual (
+				shouldSucceed,
+				builder.Build (proj),
+				$"{runtime}/{typeMapImplementation} should match the Android supplementary-name limitation.");
+
+			if (!shouldSucceed) {
+				StringAssertEx.Contains ("error XA4258", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\U00010428xample", builder.LastBuildOutput);
+				AssertNoExportOutputs (builder, "Peer\U00010400");
+				return;
+			}
+
+			var relativeJavaPath = (javaName + ".java").Replace ('/', Path.DirectorySeparatorChar);
+			var javaPath = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", relativeJavaPath));
+			FileAssert.Exists (javaPath, "llvm-ir should preserve the supplementary name in its Java source path.");
+			StringAssert.Contains ("public class Peer\U00010400", File.ReadAllText (javaPath));
+
+			var classFile = builder.Output.GetIntermediaryPath (
+				Path.Combine ("android", "bin", "classes", relativeJavaPath.Replace (".java", ".class")));
+			FileAssert.Exists (classFile, "javac should accept the supplementary Java identifier.");
+
+			var acwMap = builder.Output.GetIntermediaryPath ("acw-map.txt");
+			StringAssert.Contains (
+				"UnnamedProject.SupplementaryJavaIdentifier;com.\U00010428xample.Peer\U00010400",
+				File.ReadAllText (acwMap));
+
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			Assert.IsFalse (
+				DexUtils.ContainsClass ($"L{javaName};", dexFile, AndroidSdkPath),
+				"The Android DEX pipeline does not retain supplementary-code-point class identifiers.");
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "JAVAC0000", false)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "XA4258", true)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "XA4258", true)]
+		public void Build_InvalidOrUnsupportedUnicodeIdentifiers_ReportDiagnosticWithoutTrimmableOutputs (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			string expectedCode,
+			bool expectNoOutputs)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("InvalidUnicodeIdentifiers.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Register ("com/example/1Peer")]
+					public class InvalidDigitStart : Java.Lang.Object
+					{
+						public InvalidDigitStart () { }
+					}
+
+					[Register ("com/example/\u0301Peer")]
+					public class InvalidCombiningStart : Java.Lang.Object
+					{
+						public InvalidCombiningStart () { }
+					}
+
+					[Register ("com/e\u0301xample/Cafe\u0301")]
+					public class UnsupportedCombiningMark : Java.Lang.Object
+					{
+						public UnsupportedCombiningMark () { }
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (
+				builder.Build (proj),
+				$"{runtime}/{typeMapImplementation} should reject invalid Java identifier starts.");
+			StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput);
+
+			if (expectNoOutputs) {
+				StringAssertEx.Contains ("1Peer", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\u0301Peer", builder.LastBuildOutput);
+				StringAssertEx.Contains ("e\u0301xample", builder.LastBuildOutput);
+				AssertNoExportOutputs (builder, "1Peer");
+				AssertNoExportOutputs (builder, "\u0301Peer");
+				AssertNoExportOutputs (builder, "Cafe\u0301");
+				return;
+			}
+
+			foreach (var javaName in new [] {
+				"com/example/1Peer",
+				"com/example/\u0301Peer",
+				"com/e\u0301xample/Cafe\u0301",
+			}) {
+				var relativePath = (javaName + ".java").Replace ('/', Path.DirectorySeparatorChar);
+				var javaPath = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", relativePath));
+				FileAssert.Exists (javaPath, $"llvm-ir should reach javac with '{javaName}'.");
+				var source = File.ReadAllText (javaPath);
+				StringAssert.Contains ($"public class {javaName.Substring (javaName.LastIndexOf ('/') + 1)}", source);
+			}
 		}
 
 		[Test]

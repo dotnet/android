@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -33,12 +34,51 @@ internal static class JavaNameValidator
 	};
 
 	internal static bool IsInvalidIdentifier (string identifier, bool isTypeName) =>
-		JavaKeywords.Contains (identifier) || isTypeName && RestrictedTypeIdentifiers.Contains (identifier);
+		!IsSupportedIdentifier (identifier) ||
+		JavaKeywords.Contains (identifier) ||
+		isTypeName && RestrictedTypeIdentifiers.Contains (identifier);
+
+	// JLS 3.8 permits additional identifier parts, but generated JCWs also need stable source paths
+	// and class names throughout javac, AAPT, DEX, and the Android runtime.
+	static bool IsSupportedIdentifier (string identifier)
+	{
+		if (identifier.Length == 0) {
+			return false;
+		}
+
+		for (int i = 0; i < identifier.Length; i++) {
+			char value = identifier [i];
+			if (char.IsSurrogate (value)) {
+				// javac accepts supplementary letters, but Android's DEX pipeline omits those classes.
+				return false;
+			}
+
+			var category = char.GetUnicodeCategory (value);
+			bool valid = i == 0
+				? IsSupportedJavaIdentifierStart (value, category)
+				: IsSupportedJavaIdentifierStart (value, category) || value is >= '0' and <= '9';
+			if (!valid) {
+				// Combining and format characters can change source/file-name identity on normalizing file systems.
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	static bool IsSupportedJavaIdentifierStart (char value, UnicodeCategory category) =>
+		value is '_' or '$' ||
+		category is UnicodeCategory.UppercaseLetter or
+			UnicodeCategory.LowercaseLetter or
+			UnicodeCategory.TitlecaseLetter or
+			UnicodeCategory.ModifierLetter or
+			UnicodeCategory.OtherLetter or
+			UnicodeCategory.LetterNumber;
 
 	internal static bool TryGetInvalidPackageSegment (string packageName, char separator, out string invalidSegment)
 	{
 		foreach (var segment in packageName.Split (separator)) {
-			if (JavaKeywords.Contains (segment)) {
+			if (IsInvalidIdentifier (segment, isTypeName: false)) {
 				invalidSegment = segment;
 				return true;
 			}
@@ -52,7 +92,7 @@ internal static class JavaNameValidator
 	{
 		var segments = jniName.Split ('/');
 		for (int i = 0; i < segments.Length - 1; i++) {
-			if (JavaKeywords.Contains (segments [i])) {
+			if (IsInvalidIdentifier (segments [i], isTypeName: false)) {
 				invalidSegment = segments [i];
 				return true;
 			}

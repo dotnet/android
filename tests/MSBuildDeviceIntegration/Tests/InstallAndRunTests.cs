@@ -95,6 +95,59 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
 
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
+		public void UnicodeJavaIdentifierActivityActivates (string typeMapImplementation, AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			const string javaName = "com.\u00e9xample.\u0394elta";
+			const string expectedLogcatOutput = "UNICODE_JCW_ACTIVATED=1";
+			var proj = new XamarinAndroidApplicationProject (
+				packageName: PackageUtils.MakePackageName (runtime, "unicodeidentifier")) {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			proj.SetDefaultTargetDevice ();
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace (
+					"[Android.Runtime.Register (\"${JAVA_PACKAGENAME}.MainActivity\"),",
+					$"[Android.Runtime.Register (\"{javaName}\"),")
+				.Replace (
+					"//${FIELDS}",
+					"""
+					static int constructorInvocations;
+
+					public MainActivity ()
+					{
+						constructorInvocations++;
+					}
+					""")
+				.Replace (
+					"//${AFTER_ONCREATE}",
+					"Android.Util.Log.Info (\"UnicodeJavaIdentifiers\", $\"UNICODE_JCW_ACTIVATED={constructorInvocations}\");");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), $"{runtime}/{typeMapImplementation} should install.");
+
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{proj.PackageName}/{javaName}");
+			Assert.IsTrue (
+				MonitorAdbLogcat (
+					line => line.Contains (expectedLogcatOutput, StringComparison.Ordinal),
+					Path.Combine (Root, builder.ProjectDirectory, "unicode-identifier-logcat.log"),
+					ActivityStartTimeoutInSeconds
+				),
+				$"{runtime}/{typeMapImplementation} should activate the managed constructor for '{javaName}'."
+			);
+		}
+
 		[Test]
 		public void PublishReadyToRunPartial ([Values] bool isComposite)
 		{

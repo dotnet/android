@@ -68,6 +68,18 @@ public class ManifestGeneratorTests
 	}
 
 	[Fact]
+	public void ComponentName_PreservesUnicodeCodePoints ()
+	{
+		const string javaName = "com/\u00e9xample/Peer\u0394";
+		var peer = CreatePeer (javaName, new ComponentInfo { Kind = ComponentKind.Activity });
+
+		var manifest = GenerateAndLoad (CreateDefaultGenerator (), [peer]);
+		var activity = Assert.Single (manifest.Descendants ("activity"));
+
+		Assert.Equal ("com.\u00e9xample.Peer\u0394", (string?) activity.Attribute (AttName));
+	}
+
+	[Fact]
 	public void Placeholders_InvalidEntryWithoutValue_WarnsXA1010 ()
 	{
 		var gen = CreateDefaultGenerator ();
