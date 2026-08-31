@@ -36,6 +36,71 @@ namespace Xamarin.Android.Build.Tests {
 			AssertTrimmableTypeMapOutputs (intermediateDir);
 		}
 
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "parameters", "XA4205")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "parameters", "XA4205")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "parameters", "XA4205")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "void", "XA4208")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "void", "XA4208")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "void", "XA4208")]
+		public void Build_InvalidExportField_ReportsLegacyDiagnostic (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			string invalidShape,
+			string expectedCode)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var initializer = invalidShape switch {
+				"parameters" => "public int InitialValue (int value) => value;",
+				"void" => "public void InitialValue () { }",
+				_ => throw new InvalidOperationException ($"Unknown invalid [ExportField] shape '{invalidShape}'."),
+			};
+			var proj = CreateExportFieldValidationProject (runtime, typeMapImplementation, $"""
+						[ExportField ("VALUE")]
+						{initializer}
+				""");
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), $"{runtime}/{typeMapImplementation} should reject {invalidShape} [ExportField] initializers.");
+			StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput, $"The build should report {expectedCode}.");
+		}
+
+		static XamarinAndroidApplicationProject CreateExportFieldValidationProject (
+			AndroidRuntime runtime,
+			string typeMapImplementation,
+			string members)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = runtime == AndroidRuntime.NativeAOT,
+				References = {
+					new BuildItem.Reference ("Mono.Android.Export"),
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("ExportFieldValidation.cs") {
+				TextContent = () => $$"""
+					using Android.Runtime;
+					using Java.Interop;
+
+					namespace ExportFieldValidation {
+						[Register ("com/example/exportfields/ValidationPeer")]
+						class ValidationPeer : Java.Lang.Object {
+							public ValidationPeer () {
+							}
+
+					{{members}}
+						}
+					}
+					""",
+			});
+			return proj;
+		}
+
 		[Test]
 		public void Build_PublishAotProject_UsesTrimmableTypeMapForCoreClrDebug ()
 		{

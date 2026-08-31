@@ -59,6 +59,10 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogCodedError ("XA4251", Properties.Resources.XA4251, managedTypeName);
 		public void LogInvalidJavaNameError (string javaName, string invalidIdentifier) =>
 			log.LogCodedError ("XA4258", Properties.Resources.XA4258, javaName, invalidIdentifier);
+		public void LogExportFieldWithParametersError () =>
+			log.LogCodedError ("XA4205", Java.Interop.Localization.Resources.JavaCallableWrappers_XA4205);
+		public void LogExportFieldReturnsVoidError () =>
+			log.LogCodedError ("XA4208", Java.Interop.Localization.Resources.JavaCallableWrappers_XA4208);
 		public void LogCustomJavaObjectError (string managedTypeName) =>
 			log.LogError ("{0}", $"XA4212: {string.Format (Properties.Resources.XA4212, managedTypeName)}");
 		public void LogCustomJavaObjectWarning (string managedTypeName) =>

@@ -672,6 +672,10 @@ public sealed class JavaPeerScanner : IDisposable
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
 
+			if (!ValidateExportField (methodDef, index)) {
+				continue;
+			}
+
 			// Check for [ExportField] — produces both a marshal method AND a field
 			CollectExportField (methodDef, index, fields);
 
@@ -733,6 +737,29 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		return (methods, fields);
+	}
+
+	bool ValidateExportField (MethodDefinition methodDef, AssemblyIndex index)
+	{
+		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
+			var ca = index.Reader.GetCustomAttribute (caHandle);
+			if (AssemblyIndex.GetCustomAttributeName (ca, index.Reader) != "ExportFieldAttribute") {
+				continue;
+			}
+
+			var sig = methodDef.DecodeSignature (TypeRefSignatureTypeProvider.Instance, index);
+			if (sig.ParameterTypes.Length != 0) {
+				logger?.LogExportFieldWithParametersError ();
+				return false;
+			}
+			if (sig.ReturnType.ManagedTypeName == "System.Void") {
+				logger?.LogExportFieldReturnsVoidError ();
+				return false;
+			}
+			return true;
+		}
+
+		return true;
 	}
 
 	static bool HasJniAddNativeMethodRegistrationAttribute (TypeDefinition typeDef, AssemblyIndex index)

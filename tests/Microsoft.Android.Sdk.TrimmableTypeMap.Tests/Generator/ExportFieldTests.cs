@@ -51,4 +51,19 @@ public class ExportFieldTests : FixtureTestBase
 		Assert.Contains ("GetValue ()", java);
 		Assert.Contains ("n_GetValue", java);
 	}
+
+	[Theory]
+	[InlineData ("my/app/ExportFieldWithParameter")]
+	[InlineData ("my/app/ExportFieldWithVoidReturn")]
+	public void ScannerAndGenerator_InvalidExportFieldProducesNoFieldOrMethod (string javaName)
+	{
+		var peer = FindFixtureByJavaName (javaName);
+
+		Assert.Empty (peer.JavaFields);
+		Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "GetValue");
+
+		using var writer = new StringWriter ();
+		new JcwJavaSourceGenerator ().Generate (peer, writer);
+		Assert.DoesNotContain ("VALUE", writer.ToString ());
+	}
 }

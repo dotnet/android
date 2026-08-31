@@ -53,6 +53,10 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			logMessages.Add ($"XA4251: Type '{managedTypeName}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map.");
 		public void LogInvalidJavaNameError (string javaName, string invalidIdentifier) =>
 			logMessages.Add ($"XA4258: Java name '{javaName}' contains reserved Java identifier '{invalidIdentifier}'.");
+		public void LogExportFieldWithParametersError () =>
+			logMessages.Add ("XA4205: [ExportField] can only be used on methods with 0 parameters.");
+		public void LogExportFieldReturnsVoidError () =>
+			logMessages.Add ("XA4208: [ExportField] cannot be used on a method returning 'void'.");
 		public void LogCustomJavaObjectError (string managedTypeName) =>
 			logMessages.Add ($"XA4212: Type `{managedTypeName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
 		public void LogCustomJavaObjectWarning (string managedTypeName) =>
@@ -337,6 +341,23 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		for (int i = 0; i < full.GeneratedAssemblies.Count; i++) {
 			Assert.Equal (full.GeneratedAssemblies [i].Name, optimized.GeneratedAssemblies [i].Name);
 			Assert.Equal (full.GeneratedAssemblies [i].Content.ToArray (), optimized.GeneratedAssemblies [i].Content.ToArray ());
+		}
+	}
+
+	[Fact]
+	public void Execute_InvalidExportFields_ReportLegacyDiagnosticsWithoutPartialMembers ()
+	{
+		using var peReader = CreateTestFixturePEReader ();
+		var result = CreateGenerator ().Execute ([Input ("TestFixtures", peReader)], new Version (11, 0), new HashSet<string> ());
+
+		Assert.Contains (logMessages, message => message.StartsWith ("XA4205:", StringComparison.Ordinal));
+		Assert.Contains (logMessages, message => message.StartsWith ("XA4208:", StringComparison.Ordinal));
+		foreach (var javaName in new [] { "my/app/ExportFieldWithParameter", "my/app/ExportFieldWithVoidReturn" }) {
+			var peer = result.AllPeers.Single (candidate => candidate.JavaName == javaName);
+			Assert.Empty (peer.JavaFields);
+			Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "GetValue");
+			var source = result.GeneratedJavaSources.Single (candidate => candidate.RelativePath == javaName + ".java");
+			Assert.DoesNotContain ("VALUE", source.Content);
 		}
 	}
 
