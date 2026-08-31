@@ -23,7 +23,7 @@ namespace Xamarin.AndroidTools.Debugging
 		// Twenty retries at 250 ms intervals allow up to five seconds for the process to appear.
 		const int GET_PID_RETRY_COUNT = 20;
 		const int WAIT_BEFORE_RETRY_GET_PID = 250;
-		static readonly TimeSpan waitForDebuggerReadinessTimeout = TimeSpan.FromSeconds (10);
+		internal static readonly TimeSpan WaitForDebuggerReadinessTimeout = TimeSpan.FromSeconds (30);
 
 		/// <summary>
 		/// Starts the process debugging using the given execution configuration
@@ -181,7 +181,7 @@ namespace Xamarin.AndroidTools.Debugging
 					await AdbServer.Default.ForwardPort (androidDevice, "tcp", jdwpClient.Port, "jdwp", pid, token).ConfigureAwait (false);
 					try {
 						await jdwpClient.ConnectAsync (token).ConfigureAwait (false);
-						await jdwpClient.WaitForDebuggerReadinessAsync (waitForDebuggerReadinessTimeout, token).ConfigureAwait (false);
+						await jdwpClient.WaitForDebuggerReadinessAsync (WaitForDebuggerReadinessTimeout, config.LogWiter, token).ConfigureAwait (false);
 
 						await jdwpClient.DisconnectAsync ().ConfigureAwait (false);
 					} finally {

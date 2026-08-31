@@ -1,6 +1,7 @@
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
@@ -95,6 +96,20 @@ namespace Xamarin.AndroidTools.Debugging.Java
 			return WaitForDebuggerReadinessAsync (
 				timeout,
 				(delay, token) => Task.Delay (delay, token),
+				logWriter: null,
+				cancellationToken
+			);
+		}
+
+		internal Task WaitForDebuggerReadinessAsync (
+			TimeSpan timeout,
+			Action<string> logWriter,
+			CancellationToken cancellationToken = default)
+		{
+			return WaitForDebuggerReadinessAsync (
+				timeout,
+				(delay, token) => Task.Delay (delay, token),
+				logWriter,
 				cancellationToken
 			);
 		}
@@ -102,6 +117,7 @@ namespace Xamarin.AndroidTools.Debugging.Java
 		internal async Task WaitForDebuggerReadinessAsync (
 			TimeSpan timeout,
 			Func<TimeSpan, CancellationToken, Task> delayAsync,
+			Action<string> logWriter,
 			CancellationToken cancellationToken = default)
 		{
 			if (stream == null)
@@ -111,19 +127,28 @@ namespace Xamarin.AndroidTools.Debugging.Java
 			if (delayAsync == null)
 				throw new ArgumentNullException (nameof (delayAsync));
 
+			var stopwatch = Stopwatch.StartNew ();
+			LogReadiness (logWriter, stopwatch, $"Waiting for FEAT and HELO; timeout={timeout.TotalMilliseconds:0} ms.");
+
 			using (var timeoutSource = new CancellationTokenSource ())
 			using (var linkedSource = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken, timeoutSource.Token)) {
 				timeoutSource.CancelAfter (timeout);
 				using (linkedSource.Token.Register (() => stream.Dispose ())) {
 					try {
-						await WaitForDebuggerReadinessCoreAsync (delayAsync, linkedSource.Token).ConfigureAwait (false);
+						await WaitForDebuggerReadinessCoreAsync (delayAsync, logWriter, stopwatch, linkedSource.Token).ConfigureAwait (false);
 					} catch (Exception e) when (linkedSource.IsCancellationRequested) {
-						if (cancellationToken.IsCancellationRequested)
+						if (cancellationToken.IsCancellationRequested) {
+							LogReadiness (logWriter, stopwatch, "Canceled while waiting for A_GO.");
 							throw new OperationCanceledException ("Waiting for Android JDWP readiness was canceled.", e, cancellationToken);
+						}
+						LogReadiness (logWriter, stopwatch, $"Timed out waiting for A_GO; timeout={timeout.TotalMilliseconds:0} ms.");
 						throw new TimeoutException (
 							$"Timed out after {timeout.TotalMilliseconds:0} ms waiting for Android to reach JDWP stage A_GO.",
 							e
 						);
+					} catch (InvalidDataException) {
+						LogReadiness (logWriter, stopwatch, "Protocol error while waiting for readiness.");
+						throw;
 					}
 				}
 			}
@@ -131,6 +156,8 @@ namespace Xamarin.AndroidTools.Debugging.Java
 
 		async Task WaitForDebuggerReadinessCoreAsync (
 			Func<TimeSpan, CancellationToken, Task> delayAsync,
+			Action<string> logWriter,
+			Stopwatch stopwatch,
 			CancellationToken cancellationToken)
 		{
 			var heloData = new byte [4];
@@ -155,17 +182,28 @@ namespace Xamarin.AndroidTools.Debugging.Java
 					if (packet.ErrorCode != 0)
 						throw new InvalidDataException ($"DDM HELO request failed with error {packet.ErrorCode}.");
 					heloReceived = true;
-					applicationRunningSeen |= ReadHeloStage (packet.Data) == stageApplicationRunning;
+					var heloStage = ReadHeloStage (packet.Data);
+					LogReadiness (logWriter, stopwatch, $"HELO stage observed: {FormatStage (heloStage)}.");
+					applicationRunningSeen |= heloStage == stageApplicationRunning;
 				} else if (packet.IsReply && packet.Id == featCommand.Id) {
 					if (packet.ErrorCode != 0)
 						throw new InvalidDataException ($"DDM FEAT request failed with error {packet.ErrorCode}.");
 					featReceived = true;
 					supportsBootStages = ReadFeatures (packet.Data).Contains (bootStagesFeature);
+					LogReadiness (
+						logWriter,
+						stopwatch,
+						supportsBootStages
+							? "FEAT boot-stage support: available."
+							: $"FEAT boot-stage support: unavailable; using {legacyDebuggerIdleDelayMilliseconds} ms legacy fallback."
+					);
 				} else if (!packet.IsReply && packet.CommandSet == 0xc7 && packet.Command == 0x01) {
 					if (TryReadChunk (packet.Data, out var chunkType, out var chunkData) &&
 						chunkType == chunkStag &&
 						chunkData.Length == 4) {
-						applicationRunningSeen |= BinaryPrimitives.ReadUInt32BigEndian (chunkData.Span) == stageApplicationRunning;
+						var stagStage = BinaryPrimitives.ReadUInt32BigEndian (chunkData.Span);
+						LogReadiness (logWriter, stopwatch, $"STAG stage observed: {FormatStage (stagStage)}.");
+						applicationRunningSeen |= stagStage == stageApplicationRunning;
 					}
 				}
 
@@ -174,12 +212,36 @@ namespace Xamarin.AndroidTools.Debugging.Java
 
 				if (!supportsBootStages) {
 					await delayAsync (TimeSpan.FromMilliseconds (legacyDebuggerIdleDelayMilliseconds), cancellationToken).ConfigureAwait (false);
+					LogReadiness (logWriter, stopwatch, "Legacy fallback complete.");
 					return;
 				}
 
-				if (heloReceived && applicationRunningSeen)
+				if (heloReceived && applicationRunningSeen) {
+					LogReadiness (logWriter, stopwatch, "A_GO readiness complete.");
 					return;
+				}
 			}
+		}
+
+		static void LogReadiness (Action<string> logWriter, Stopwatch stopwatch, string message)
+		{
+			logWriter?.Invoke ($"JDWP readiness ({stopwatch.ElapsedMilliseconds} ms): {message}");
+		}
+
+		static string FormatStage (uint? stage)
+		{
+			if (!stage.HasValue)
+				return "not reported";
+
+			var value = stage.Value;
+			var characters = new char [4];
+			for (int i = 0; i < characters.Length; i++) {
+				var character = (byte) (value >> (24 - (i * 8)));
+				if ((character < 'A' || character > 'Z') && character != '_')
+					return $"0x{value:x8}";
+				characters [i] = (char) character;
+			}
+			return new string (characters);
 		}
 
 		async Task<ReceivedPacket> ReadPacketAsync (CancellationToken cancellationToken)

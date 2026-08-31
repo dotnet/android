@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Xamarin.AndroidTools.Debugging;
 using Xamarin.AndroidTools.Debugging.Java;
 
 namespace Xamarin.Android.Tools.Tests;
@@ -14,8 +15,16 @@ namespace Xamarin.Android.Tools.Tests;
 public class JdwpClientTests
 {
 	[Test]
+	public void DebuggerReadinessTimeoutMatchesDebuggerLaunchTimeout ()
+	{
+		Assert.AreEqual (TimeSpan.FromSeconds (30), DebuggingExtensions.WaitForDebuggerReadinessTimeout);
+		Assert.AreEqual (new DebuggerOptions ().Timeout, DebuggingExtensions.WaitForDebuggerReadinessTimeout);
+	}
+
+	[Test]
 	public void WaitForDebuggerReadinessDoesNotTreatDebgAsReady ()
 	{
+		var diagnostics = new List<string> ();
 		using (var stream = new DdmStream (
 			includeBootStagesFeature: true,
 			heloStage: "DEBG",
@@ -23,48 +32,76 @@ public class JdwpClientTests
 		using (var client = new JdwpClient (stream)) {
 			Assert.ThrowsAsync<TimeoutException> (() => client.WaitForDebuggerReadinessAsync (
 				TimeSpan.FromMilliseconds (50),
+				diagnostics.Add,
 				CancellationToken.None
 			));
+			Assert.IsTrue (stream.IsDisposed);
 		}
+
+		AssertDiagnostic (diagnostics, 0, "Waiting for FEAT and HELO; timeout=50 ms.");
+		AssertDiagnostic (diagnostics, 1, "HELO stage observed: DEBG.");
+		AssertDiagnostic (diagnostics, 2, "FEAT boot-stage support: available.");
+		AssertDiagnostic (diagnostics, 3, "Timed out waiting for A_GO; timeout=50 ms.");
 	}
 
 	[Test]
 	public void WaitForDebuggerReadinessDoesNotTreatFeatErrorAsLegacy ()
 	{
+		var diagnostics = new List<string> ();
 		using (var stream = new DdmStream (includeBootStagesFeature: false, featErrorCode: 99))
 		using (var client = new JdwpClient (stream)) {
 			Assert.ThrowsAsync<InvalidDataException> (() => client.WaitForDebuggerReadinessAsync (
 				TimeSpan.FromSeconds (1),
+				diagnostics.Add,
 				CancellationToken.None
 			));
 		}
+
+		AssertDiagnostic (diagnostics, 0, "Waiting for FEAT and HELO; timeout=1000 ms.");
+		AssertDiagnostic (diagnostics, 1, "HELO stage observed: not reported.");
+		AssertDiagnostic (diagnostics, 2, "Protocol error while waiting for readiness.");
 	}
 
 	[Test]
 	public async Task WaitForDebuggerReadinessCompletesAfterAgo ()
 	{
+		var diagnostics = new List<string> ();
 		using (var stream = new DdmStream (includeBootStagesFeature: true, heloStage: "DEBG", stagStage: "A_GO"))
 		using (var client = new JdwpClient (stream)) {
-			await client.WaitForDebuggerReadinessAsync (TimeSpan.FromSeconds (1), CancellationToken.None);
+			await client.WaitForDebuggerReadinessAsync (TimeSpan.FromSeconds (1), diagnostics.Add, CancellationToken.None);
 		}
+
+		AssertDiagnostic (diagnostics, 0, "Waiting for FEAT and HELO; timeout=1000 ms.");
+		AssertDiagnostic (diagnostics, 1, "HELO stage observed: DEBG.");
+		AssertDiagnostic (diagnostics, 2, "FEAT boot-stage support: available.");
+		AssertDiagnostic (diagnostics, 3, "STAG stage observed: A_GO.");
+		AssertDiagnostic (diagnostics, 4, "A_GO readiness complete.");
 	}
 
 	[Test]
 	public async Task WaitForDebuggerReadinessKeepsEarlyAgoObservation ()
 	{
+		var diagnostics = new List<string> ();
 		using (var stream = new DdmStream (
 			includeBootStagesFeature: true,
 			heloStage: "DEBG",
 			stagStage: "A_GO",
 			stagBeforeHelo: true))
 		using (var client = new JdwpClient (stream)) {
-			await client.WaitForDebuggerReadinessAsync (TimeSpan.FromSeconds (1), CancellationToken.None);
+			await client.WaitForDebuggerReadinessAsync (TimeSpan.FromSeconds (1), diagnostics.Add, CancellationToken.None);
 		}
+
+		AssertDiagnostic (diagnostics, 0, "Waiting for FEAT and HELO; timeout=1000 ms.");
+		AssertDiagnostic (diagnostics, 1, "STAG stage observed: A_GO.");
+		AssertDiagnostic (diagnostics, 2, "HELO stage observed: DEBG.");
+		AssertDiagnostic (diagnostics, 3, "FEAT boot-stage support: available.");
+		AssertDiagnostic (diagnostics, 4, "A_GO readiness complete.");
 	}
 
 	[Test]
 	public void WaitForDebuggerReadinessHonorsCancellation ()
 	{
+		var diagnostics = new List<string> ();
 		using (var cancellationSource = new CancellationTokenSource ())
 		using (var stream = new DdmStream (
 			includeBootStagesFeature: true,
@@ -73,15 +110,23 @@ public class JdwpClientTests
 		using (var client = new JdwpClient (stream)) {
 			Assert.CatchAsync<OperationCanceledException> (() => client.WaitForDebuggerReadinessAsync (
 				TimeSpan.FromSeconds (1),
+				diagnostics.Add,
 				cancellationSource.Token
 			));
+			Assert.IsTrue (stream.IsDisposed);
 		}
+
+		AssertDiagnostic (diagnostics, 0, "Waiting for FEAT and HELO; timeout=1000 ms.");
+		AssertDiagnostic (diagnostics, 1, "HELO stage observed: DEBG.");
+		AssertDiagnostic (diagnostics, 2, "FEAT boot-stage support: available.");
+		AssertDiagnostic (diagnostics, 3, "Canceled while waiting for A_GO.");
 	}
 
 	[Test]
 	public async Task WaitForDebuggerReadinessUsesLegacyDelayWithoutBootStages ()
 	{
 		TimeSpan? observedDelay = null;
+		var diagnostics = new List<string> ();
 		using (var stream = new DdmStream (includeBootStagesFeature: false))
 		using (var client = new JdwpClient (stream)) {
 			await client.WaitForDebuggerReadinessAsync (
@@ -90,11 +135,23 @@ public class JdwpClientTests
 					observedDelay = delay;
 					return Task.CompletedTask;
 				},
+				diagnostics.Add,
 				CancellationToken.None
 			);
 		}
 
 		Assert.AreEqual (TimeSpan.FromMilliseconds (1400), observedDelay);
+		AssertDiagnostic (diagnostics, 0, "Waiting for FEAT and HELO; timeout=1000 ms.");
+		AssertDiagnostic (diagnostics, 1, "HELO stage observed: not reported.");
+		AssertDiagnostic (diagnostics, 2, "FEAT boot-stage support: unavailable; using 1400 ms legacy fallback.");
+		AssertDiagnostic (diagnostics, 3, "Legacy fallback complete.");
+	}
+
+	static void AssertDiagnostic (IReadOnlyList<string> diagnostics, int index, string message)
+	{
+		Assert.Greater (diagnostics.Count, index);
+		StringAssert.StartsWith ("JDWP readiness (", diagnostics [index]);
+		StringAssert.EndsWith ($" ms): {message}", diagnostics [index]);
 	}
 
 	sealed class DdmStream : Stream
@@ -134,6 +191,7 @@ public class JdwpClientTests
 		public override bool CanRead => true;
 		public override bool CanSeek => false;
 		public override bool CanWrite => true;
+		public bool IsDisposed { get; private set; }
 		public override long Length => throw new NotSupportedException ();
 		public override long Position {
 			get => throw new NotSupportedException ();
@@ -285,8 +343,10 @@ public class JdwpClientTests
 
 		protected override void Dispose (bool disposing)
 		{
-			if (disposing)
+			if (disposing) {
+				IsDisposed = true;
 				blockedRead?.TrySetException (new IOException ("The stream was closed."));
+			}
 			base.Dispose (disposing);
 		}
 	}
