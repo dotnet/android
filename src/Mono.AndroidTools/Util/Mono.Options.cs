@@ -217,7 +217,6 @@ namespace Mono.Options
 			}
 		}
 
-
 		public List<string> ToList ()
 		{
 			return new List<string> (values);
@@ -1080,3 +1079,4 @@ namespace Mono.Options
 		}
 	}
 }
+
