@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
@@ -12,12 +13,25 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 sealed class AssemblyIndex : IDisposable
 {
+	const byte ElementTypeValueType = 0x11;
+
 	readonly PEReader peReader;
 	readonly CustomAttributeTypeProvider customAttributeTypeProvider;
+	readonly string? [] typeFullNames;
+	readonly string? [] typeReferenceFullNames;
+	readonly string? [] typeReferenceAssemblyNames;
+	readonly string? [] assemblyReferenceNames;
+	readonly TypeRefData? [] classTypeDefinitions;
+	readonly TypeRefData? [] valueTypeDefinitions;
+	readonly TypeRefData? [] classTypeReferences;
+	readonly TypeRefData? [] valueTypeReferences;
+	readonly Dictionary<EntityHandle, string?> customAttributeNames = new ();
+	readonly Dictionary<EntityHandle, int> constructorParameterCounts = new ();
 
 	public MetadataReader Reader { get; }
 	public string AssemblyName { get; }
 	public string AssemblyPath { get; }
+	internal TypeRefSignatureTypeProvider TypeRefSignatureProvider { get; }
 
 	/// <summary>
 	/// Maps full managed type name (e.g., "Android.App.Activity") to its TypeDefinitionHandle.
@@ -53,9 +67,18 @@ sealed class AssemblyIndex : IDisposable
 	{
 		this.peReader = peReader;
 		this.customAttributeTypeProvider = new CustomAttributeTypeProvider (reader);
+		typeFullNames = new string? [reader.TypeDefinitions.Count + 1];
+		typeReferenceFullNames = new string? [reader.TypeReferences.Count + 1];
+		typeReferenceAssemblyNames = new string? [reader.TypeReferences.Count + 1];
+		assemblyReferenceNames = new string? [reader.AssemblyReferences.Count + 1];
+		classTypeDefinitions = new TypeRefData? [reader.TypeDefinitions.Count + 1];
+		valueTypeDefinitions = new TypeRefData? [reader.TypeDefinitions.Count + 1];
+		classTypeReferences = new TypeRefData? [reader.TypeReferences.Count + 1];
+		valueTypeReferences = new TypeRefData? [reader.TypeReferences.Count + 1];
 		Reader = reader;
 		AssemblyName = assemblyName;
 		AssemblyPath = assemblyPath;
+		TypeRefSignatureProvider = new TypeRefSignatureTypeProvider (this);
 	}
 
 	public static AssemblyIndex Create (PEReader peReader, string assemblyName, string assemblyPath = "")
@@ -95,7 +118,7 @@ sealed class AssemblyIndex : IDisposable
 				MayUseJniAddNativeMethodRegistrationAttribute = true;
 			}
 
-			var fullName = MetadataTypeNameResolver.GetFullName (typeDef, Reader);
+			var fullName = GetTypeFullName (typeHandle);
 			if (fullName.Length == 0) {
 				continue;
 			}
@@ -139,7 +162,7 @@ sealed class AssemblyIndex : IDisposable
 
 		foreach (var caHandle in typeDef.GetCustomAttributes ()) {
 			var ca = Reader.GetCustomAttribute (caHandle);
-			var attrName = GetCustomAttributeName (ca, Reader);
+			var attrName = GetCustomAttributeName (ca);
 
 			if (attrName is null) {
 				continue;
@@ -214,6 +237,116 @@ sealed class AssemblyIndex : IDisposable
 		return (registerInfo, attrInfo);
 	}
 
+	internal string GetTypeFullName (TypeDefinitionHandle handle)
+	{
+		int row = MetadataTokens.GetRowNumber (handle);
+		var fullName = typeFullNames [row];
+		if (fullName is not null) {
+			return fullName;
+		}
+
+		var typeDef = Reader.GetTypeDefinition (handle);
+		var name = Reader.GetString (typeDef.Name);
+		if (typeDef.IsNested) {
+			fullName = MetadataTypeNameResolver.JoinNestedTypeName (GetTypeFullName (typeDef.GetDeclaringType ()), name);
+		} else {
+			fullName = MetadataTypeNameResolver.JoinNamespaceAndName (Reader.GetString (typeDef.Namespace), name);
+		}
+		typeFullNames [row] = fullName;
+		return fullName;
+	}
+
+	internal TypeRefData GetTypeRef (TypeDefinitionHandle handle, byte rawTypeKind)
+	{
+		var cache = rawTypeKind == ElementTypeValueType ? valueTypeDefinitions : classTypeDefinitions;
+		int row = MetadataTokens.GetRowNumber (handle);
+		var type = cache [row];
+		if (type is not null) {
+			return type;
+		}
+
+		type = new TypeRefData {
+			ManagedTypeName = GetTypeFullName (handle),
+			AssemblyName = AssemblyName,
+			IsValueType = rawTypeKind == ElementTypeValueType,
+		};
+		cache [row] = type;
+		return type;
+	}
+
+	internal TypeRefData GetTypeRef (TypeReferenceHandle handle, byte rawTypeKind)
+	{
+		var cache = rawTypeKind == ElementTypeValueType ? valueTypeReferences : classTypeReferences;
+		int row = MetadataTokens.GetRowNumber (handle);
+		var type = cache [row];
+		if (type is not null) {
+			return type;
+		}
+
+		type = new TypeRefData {
+			ManagedTypeName = GetTypeReferenceFullName (handle),
+			AssemblyName = GetTypeReferenceAssemblyName (handle),
+			IsValueType = rawTypeKind == ElementTypeValueType,
+		};
+		cache [row] = type;
+		return type;
+	}
+
+	string GetTypeReferenceFullName (TypeReferenceHandle handle)
+	{
+		int row = MetadataTokens.GetRowNumber (handle);
+		var fullName = typeReferenceFullNames [row];
+		if (fullName is not null) {
+			return fullName;
+		}
+
+		var typeRef = Reader.GetTypeReference (handle);
+		var name = Reader.GetString (typeRef.Name);
+		fullName = typeRef.ResolutionScope.Kind == HandleKind.TypeReference
+			? MetadataTypeNameResolver.JoinNestedTypeName (GetTypeReferenceFullName ((TypeReferenceHandle) typeRef.ResolutionScope), name)
+			: MetadataTypeNameResolver.JoinNamespaceAndName (Reader.GetString (typeRef.Namespace), name);
+		typeReferenceFullNames [row] = fullName;
+		return fullName;
+	}
+
+	string GetTypeReferenceAssemblyName (TypeReferenceHandle handle)
+	{
+		int row = MetadataTokens.GetRowNumber (handle);
+		var assemblyName = typeReferenceAssemblyNames [row];
+		if (assemblyName is not null) {
+			return assemblyName;
+		}
+
+		var typeRef = Reader.GetTypeReference (handle);
+		if (typeRef.ResolutionScope.Kind == HandleKind.TypeReference) {
+			assemblyName = GetTypeReferenceAssemblyName ((TypeReferenceHandle) typeRef.ResolutionScope);
+		} else if (typeRef.ResolutionScope.Kind == HandleKind.AssemblyReference) {
+			var assemblyHandle = (AssemblyReferenceHandle) typeRef.ResolutionScope;
+			int assemblyRow = MetadataTokens.GetRowNumber (assemblyHandle);
+			assemblyName = assemblyReferenceNames [assemblyRow];
+			if (assemblyName is null) {
+				assemblyName = Reader.GetString (Reader.GetAssemblyReference (assemblyHandle).Name);
+				assemblyReferenceNames [assemblyRow] = assemblyName;
+			}
+		} else {
+			assemblyName = AssemblyName;
+		}
+
+		typeReferenceAssemblyNames [row] = assemblyName;
+		return assemblyName;
+	}
+
+	internal string? GetCustomAttributeName (CustomAttribute ca)
+	{
+		if (customAttributeNames.TryGetValue (ca.Constructor, out var name)) {
+			return name;
+		}
+
+		name = GetCustomAttributeName (ca, Reader);
+		customAttributeNames.Add (ca.Constructor, name);
+		return name;
+	}
+
 	static readonly HashSet<string> KnownComponentAttributes = new (StringComparer.Ordinal) {
 		"ActivityAttribute",
 		"ServiceAttribute",
@@ -246,14 +379,14 @@ sealed class AssemblyIndex : IDisposable
 			var impl = Reader.GetInterfaceImplementation (implHandle);
 			if (impl.Interface.Kind == HandleKind.TypeReference) {
 				var typeRef = Reader.GetTypeReference ((TypeReferenceHandle)impl.Interface);
-				if (Reader.GetString (typeRef.Name) == "IJniNameProviderAttribute" &&
-				    Reader.GetString (typeRef.Namespace) == "Java.Interop") {
+				if (Reader.StringComparer.Equals (typeRef.Name, "IJniNameProviderAttribute") &&
+				    Reader.StringComparer.Equals (typeRef.Namespace, "Java.Interop")) {
 					return true;
 				}
 			} else if (impl.Interface.Kind == HandleKind.TypeDefinition) {
 				var ifaceDef = Reader.GetTypeDefinition ((TypeDefinitionHandle)impl.Interface);
-				if (Reader.GetString (ifaceDef.Name) == "IJniNameProviderAttribute" &&
-				    Reader.GetString (ifaceDef.Namespace) == "Java.Interop") {
+				if (Reader.StringComparer.Equals (ifaceDef.Name, "IJniNameProviderAttribute") &&
+				    Reader.StringComparer.Equals (ifaceDef.Namespace, "Java.Interop")) {
 					return true;
 				}
 			}
@@ -296,16 +429,86 @@ sealed class AssemblyIndex : IDisposable
 	}
 
 	static bool IsTypeReferenceMatch (TypeReference typeRef, MetadataReader reader, string typeNamespace, string typeName) =>
-		reader.GetString (typeRef.Name) == typeName &&
-		reader.GetString (typeRef.Namespace) == typeNamespace;
+		reader.StringComparer.Equals (typeRef.Name, typeName) &&
+		reader.StringComparer.Equals (typeRef.Namespace, typeNamespace);
 
 	static bool IsTypeDefinitionMatch (TypeDefinition typeDef, MetadataReader reader, string typeNamespace, string typeName) =>
-		reader.GetString (typeDef.Name) == typeName &&
-		reader.GetString (typeDef.Namespace) == typeNamespace;
+		reader.StringComparer.Equals (typeDef.Name, typeName) &&
+		reader.StringComparer.Equals (typeDef.Namespace, typeNamespace);
 
 	internal RegisterInfo ParseRegisterAttribute (CustomAttribute ca)
 	{
-		return ParseRegisterInfo (DecodeAttribute (ca));
+		// RegisterAttribute has only string constructor arguments and bool/int/string
+		// named properties. Reading that stable shape directly avoids the generic
+		// custom-attribute decoder's arrays and boxed values for every Java method.
+		var reader = Reader.GetBlobReader (ca.Value);
+		if (reader.ReadUInt16 () != 1) {
+			throw new BadImageFormatException ("Invalid custom attribute prolog.");
+		}
+
+		int parameterCount = GetConstructorParameterCount (ca.Constructor);
+		if (parameterCount > 3) {
+			return ParseRegisterInfo (DecodeAttribute (ca));
+		}
+		string jniName = parameterCount > 0 ? reader.ReadSerializedString () ?? "" : "";
+		string? signature = parameterCount > 1 ? reader.ReadSerializedString () : null;
+		string? connector = parameterCount > 2 ? reader.ReadSerializedString () : null;
+
+		bool doNotGenerateAcw = false;
+		int namedArgumentCount = reader.ReadUInt16 ();
+		for (int i = 0; i < namedArgumentCount; i++) {
+			reader.ReadByte ();
+			var typeCode = (SerializationTypeCode) reader.ReadByte ();
+			var name = reader.ReadSerializedString ();
+			switch (typeCode) {
+			case SerializationTypeCode.Boolean:
+				bool value = reader.ReadByte () != 0;
+				if (name == "DoNotGenerateAcw") {
+					doNotGenerateAcw = value;
+				}
+				break;
+			case SerializationTypeCode.Int32:
+				reader.ReadInt32 ();
+				break;
+			case SerializationTypeCode.String:
+				reader.ReadSerializedString ();
+				break;
+			default:
+				return ParseRegisterInfo (DecodeAttribute (ca));
+			}
+		}
+
+		return new RegisterInfo {
+			JniName = jniName,
+			Signature = signature,
+			Connector = connector,
+			DoNotGenerateAcw = doNotGenerateAcw,
+		};
+	}
+
+	int GetConstructorParameterCount (EntityHandle constructor)
+	{
+		if (constructorParameterCounts.TryGetValue (constructor, out int count)) {
+			return count;
+		}
+
+		BlobHandle signature = constructor.Kind switch {
+			HandleKind.MemberReference => Reader.GetMemberReference ((MemberReferenceHandle) constructor).Signature,
+			HandleKind.MethodDefinition => Reader.GetMethodDefinition ((MethodDefinitionHandle) constructor).Signature,
+			_ => default,
+		};
+		if (signature.IsNil) {
+			return 0;
+		}
+
+		var reader = Reader.GetBlobReader (signature);
+		var header = reader.ReadSignatureHeader ();
+		if (header.IsGeneric) {
+			reader.ReadCompressedInteger ();
+		}
+		count = reader.ReadCompressedInteger ();
+		constructorParameterCounts.Add (constructor, count);
+		return count;
 	}
 
 	internal RegisterInfo ParseJniTypeSignatureAttribute (CustomAttribute ca)
@@ -525,7 +728,7 @@ sealed class AssemblyIndex : IDisposable
 		var asmDef = Reader.GetAssemblyDefinition ();
 		foreach (var caHandle in asmDef.GetCustomAttributes ()) {
 			var ca = Reader.GetCustomAttribute (caHandle);
-			var attrName = GetCustomAttributeName (ca, Reader);
+			var attrName = GetCustomAttributeName (ca);
 			if (attrName is null || !KnownAssemblyAttributes.Contains (attrName)) {
 				continue;
 			}

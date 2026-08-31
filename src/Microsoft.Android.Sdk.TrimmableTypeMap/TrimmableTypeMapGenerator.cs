@@ -26,6 +26,10 @@ public class TrimmableTypeMapGenerator
 	/// assemblies, generate JCW Java sources, and optionally generate a merged manifest.
 	/// No file IO is performed — all results are returned in memory.
 	/// </summary>
+	/// <param name="collectMarshalMethodsForNonAcw">
+	/// Set to <see langword="false"/> when callers do not consume method metadata for types
+	/// that cannot generate Java callable wrappers.
+	/// </param>
 	public TrimmableTypeMapResult Execute (
 		IReadOnlyList<AssemblyInput> assemblies,
 		Version systemRuntimeVersion,
@@ -35,12 +39,18 @@ public class TrimmableTypeMapGenerator
 		XDocument? manifestTemplate = null,
 		string? packageNamingPolicy = null,
 		bool generateTypeMapAssemblies = true,
-		bool errorOnCustomJavaObject = true)
+		bool errorOnCustomJavaObject = true,
+		bool collectMarshalMethodsForNonAcw = true)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
 		_ = frameworkAssemblyNames ?? throw new ArgumentNullException (nameof (frameworkAssemblyNames));
-		var (allPeers, assemblyManifestInfo) = ScanAssemblies (assemblies, packageNamingPolicy, frameworkAssemblyNames, errorOnCustomJavaObject);
+		var (allPeers, assemblyManifestInfo) = ScanAssemblies (
+			assemblies,
+			packageNamingPolicy,
+			frameworkAssemblyNames,
+			errorOnCustomJavaObject,
+			collectMarshalMethodsForNonAcw);
 		if (allPeers.Count == 0) {
 			logger.LogNoJavaPeerTypesFound ();
 			return new TrimmableTypeMapResult ([], [], allPeers);
@@ -259,9 +269,15 @@ public class TrimmableTypeMapGenerator
 		IReadOnlyList<AssemblyInput> assemblies,
 		string? packageNamingPolicy,
 		HashSet<string> frameworkAssemblyNames,
-		bool errorOnCustomJavaObject = true)
+		bool errorOnCustomJavaObject,
+		bool collectMarshalMethodsForNonAcw)
 	{
-		using var scanner = new JavaPeerScanner (packageNamingPolicy, logger, frameworkAssemblyNames, errorOnCustomJavaObject);
+		using var scanner = new JavaPeerScanner (
+			packageNamingPolicy,
+			logger,
+			frameworkAssemblyNames,
+			errorOnCustomJavaObject,
+			collectMarshalMethodsForNonAcw);
 		var peers = scanner.Scan (assemblies);
 		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
 		logger.LogJavaPeerScanInfo (assemblies.Count, peers.Count);

@@ -165,6 +165,11 @@ public sealed record JavaPeerInfo
 /// </summary>
 public sealed record MarshalMethodInfo
 {
+	internal static readonly TypeRefData DefaultReturnType = new () {
+		ManagedTypeName = "System.Void",
+		AssemblyName = "System.Runtime",
+	};
+
 	/// <summary>
 	/// JNI method name, e.g., "onCreate".
 	/// This is the Java method name (without n_ prefix).
@@ -273,10 +278,7 @@ public sealed record MarshalMethodInfo
 	/// <summary>
 	/// Managed return type, including the defining assembly.
 	/// </summary>
-	internal TypeRefData ManagedReturnType { get; init; } = new () {
-		ManagedTypeName = "System.Void",
-		AssemblyName = "System.Runtime",
-	};
+	internal TypeRefData ManagedReturnType { get; init; } = DefaultReturnType;
 
 	/// <summary>
 	/// [ExportParameter] kind applied to the return value, if any.
