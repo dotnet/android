@@ -974,14 +974,13 @@ sealed class TypeMapAssemblyEmitter
 	BlobHandle GetActivationCtorSignature ()
 	{
 		if (_activationCtorSignature.IsNil) {
-			var blob = new BlobBuilder (8);
-			blob.WriteByte ((byte) SignatureAttributes.Instance);
-			blob.WriteCompressedInteger (2);
-			blob.WriteByte ((byte) SignatureTypeCode.Void);
-			blob.WriteByte ((byte) SignatureTypeCode.IntPtr);
-			blob.WriteByte ((byte) SignatureTypeKind.ValueType);
-			blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniHandleOwnershipRef));
-			_activationCtorSignature = _pe.Metadata.GetOrAddBlob (blob);
+			_activationCtorSignature = _pe.GetOrAddSignature (
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+					rt => rt.Void (),
+					p => {
+						p.AddParameter ().Type ().IntPtr ();
+						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+					}));
 		}
 		return _activationCtorSignature;
 	}
@@ -989,15 +988,13 @@ sealed class TypeMapAssemblyEmitter
 	BlobHandle GetCreateInstanceSignature ()
 	{
 		if (_createInstanceSignature.IsNil) {
-			var blob = new BlobBuilder (8);
-			blob.WriteByte ((byte) SignatureAttributes.Instance);
-			blob.WriteCompressedInteger (2);
-			blob.WriteByte ((byte) SignatureTypeKind.Class);
-			blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_iJavaPeerableRef));
-			blob.WriteByte ((byte) SignatureTypeCode.IntPtr);
-			blob.WriteByte ((byte) SignatureTypeKind.ValueType);
-			blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniHandleOwnershipRef));
-			_createInstanceSignature = _pe.Metadata.GetOrAddBlob (blob);
+			_createInstanceSignature = _pe.GetOrAddSignature (
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+					rt => rt.Type ().Type (_iJavaPeerableRef, false),
+					p => {
+						p.AddParameter ().Type ().IntPtr ();
+						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+					}));
 		}
 		return _createInstanceSignature;
 	}

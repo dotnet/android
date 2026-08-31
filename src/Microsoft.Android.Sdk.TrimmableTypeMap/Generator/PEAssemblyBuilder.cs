@@ -159,14 +159,17 @@ sealed class PEAssemblyBuilder
 	/// Adds a member reference using the reusable signature blob builder.
 	/// </summary>
 	public MemberReferenceHandle AddMemberRef (EntityHandle parent, string name, Action<BlobEncoder> encodeSig)
-	{
-		_sigBlob.Clear ();
-		encodeSig (new BlobEncoder (_sigBlob));
-		return AddMemberRef (parent, name, Metadata.GetOrAddBlob (_sigBlob));
-	}
+		=> AddMemberRef (parent, name, GetOrAddSignature (encodeSig));
 
 	public MemberReferenceHandle AddMemberRef (EntityHandle parent, string name, BlobHandle signature)
 		=> Metadata.AddMemberReference (parent, Metadata.GetOrAddString (name), signature);
+
+	public BlobHandle GetOrAddSignature (Action<BlobEncoder> encodeSig)
+	{
+		_sigBlob.Clear ();
+		encodeSig (new BlobEncoder (_sigBlob));
+		return Metadata.GetOrAddBlob (_sigBlob);
+	}
 
 	/// <summary>
 	/// Resolves a <see cref="TypeRefData"/> to a TypeReference/TypeSpecification handle, with caching.
@@ -416,11 +419,9 @@ sealed class PEAssemblyBuilder
 		Action<BlobEncoder> encodeSig, Action<TrackedInstructionEncoder> emitIL,
 		Action<BlobBuilder>? encodeLocals, bool useBranches)
 	{
-		_sigBlob.Clear ();
-		encodeSig (new BlobEncoder (_sigBlob));
 		// Capture the sig blob handle before emitIL, because emitIL callbacks
 		// may call AddMemberRef which clears and repopulates _sigBlob.
-		return EmitBody (name, attrs, Metadata.GetOrAddBlob (_sigBlob), emitIL, encodeLocals, useBranches);
+		return EmitBody (name, attrs, GetOrAddSignature (encodeSig), emitIL, encodeLocals, useBranches);
 	}
 
 	MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
