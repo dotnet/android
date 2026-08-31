@@ -37,6 +37,71 @@ namespace Xamarin.Android.Build.Tests {
 			AssertTrimmableTypeMapOutputs (intermediateDir);
 		}
 
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "APT2008", false)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "XA4258", true)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "XA4258", true)]
+		public void Build_JavaTypeOnlyIdentifierStarts_MatchManifestLimitation (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			string expectedCode,
+			bool expectNoOutputs)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("ManifestIdentifierStarts.cs") {
+				TextContent = () => """
+					using Android.App;
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Register ("com/example/\u00a2Peer")]
+					[Activity]
+					public class CurrencyComponent : Activity
+					{
+						public CurrencyComponent () { }
+					}
+
+					[Register ("com/example/\u203fPeer")]
+					[Activity]
+					public class ConnectorComponent : Activity
+					{
+						public ConnectorComponent () { }
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (
+				builder.Build (proj),
+				$"{runtime}/{typeMapImplementation} should reject Java-only starts in manifest component names.");
+			StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput);
+
+			if (expectNoOutputs) {
+				StringAssertEx.Contains ("\u00a2Peer", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\u203fPeer", builder.LastBuildOutput);
+				AssertNoExportOutputs (builder, "\u00a2Peer");
+				AssertNoExportOutputs (builder, "\u203fPeer");
+				return;
+			}
+
+			foreach (var javaName in new [] { "com/example/\u00a2Peer", "com/example/\u203fPeer" }) {
+				var relativePath = (javaName + ".java").Replace ('/', Path.DirectorySeparatorChar);
+				FileAssert.Exists (
+					builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", relativePath)),
+					$"llvm-ir should generate '{javaName}.java' before AAPT rejects the manifest name.");
+			}
+		}
+
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, true)]
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR, false)]
 		[TestCase ("trimmable", AndroidRuntime.NativeAOT, false)]
@@ -149,6 +214,24 @@ namespace Xamarin.Android.Build.Tests {
 					{
 						public UnsupportedCombiningMark () { }
 					}
+
+					[Register ("com/example/A\u0cf3")]
+					public class Unicode15CombiningMark : Java.Lang.Object
+					{
+						public Unicode15CombiningMark () { }
+					}
+
+					[Register ("com/example/\u1c89Peer")]
+					public class NewerUnicodeLetter : Java.Lang.Object
+					{
+						public NewerUnicodeLetter () { }
+					}
+
+					[Register ("com/example/\u212bPeer")]
+					public class NonNfcIdentifier : Java.Lang.Object
+					{
+						public NonNfcIdentifier () { }
+					}
 					""",
 			});
 
@@ -163,9 +246,15 @@ namespace Xamarin.Android.Build.Tests {
 				StringAssertEx.Contains ("1Peer", builder.LastBuildOutput);
 				StringAssertEx.Contains ("\u0301Peer", builder.LastBuildOutput);
 				StringAssertEx.Contains ("e\u0301xample", builder.LastBuildOutput);
+				StringAssertEx.Contains ("A\u0cf3", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\u1c89Peer", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\u212bPeer", builder.LastBuildOutput);
 				AssertNoExportOutputs (builder, "1Peer");
 				AssertNoExportOutputs (builder, "\u0301Peer");
 				AssertNoExportOutputs (builder, "Cafe\u0301");
+				AssertNoExportOutputs (builder, "A\u0cf3");
+				AssertNoExportOutputs (builder, "\u1c89Peer");
+				AssertNoExportOutputs (builder, "\u212bPeer");
 				return;
 			}
 
@@ -173,12 +262,116 @@ namespace Xamarin.Android.Build.Tests {
 				"com/example/1Peer",
 				"com/example/\u0301Peer",
 				"com/e\u0301xample/Cafe\u0301",
+				"com/example/A\u0cf3",
+				"com/example/\u1c89Peer",
+				"com/example/\u212bPeer",
 			}) {
 				var relativePath = (javaName + ".java").Replace ('/', Path.DirectorySeparatorChar);
 				var javaPath = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", relativePath));
 				FileAssert.Exists (javaPath, $"llvm-ir should reach javac with '{javaName}'.");
 				var source = File.ReadAllText (javaPath);
 				StringAssert.Contains ($"public class {javaName.Substring (javaName.LastIndexOf ('/') + 1)}", source);
+			}
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, true, false)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, false, true)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, false, true)]
+		public void Build_CanonicallyEquivalentJavaNames_DoNotOverwriteOutputs (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			bool shouldSucceed,
+			bool expectNoOutputs)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("CanonicalJavaIdentifiers.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Register ("com/example/\u00c5Peer")]
+					public class ComposedIdentifier : Java.Lang.Object
+					{
+						public ComposedIdentifier () { }
+					}
+
+					[Register ("com/example/\u212bPeer")]
+					public class CanonicalEquivalentIdentifier : Java.Lang.Object
+					{
+						public CanonicalEquivalentIdentifier () { }
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.AreEqual (
+				shouldSucceed,
+				builder.Build (proj),
+				$"{runtime}/{typeMapImplementation} should match canonical-equivalent Java output behavior.");
+
+			if (expectNoOutputs) {
+				StringAssertEx.Contains ("error XA4258", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\u212bPeer", builder.LastBuildOutput);
+				AssertNoExportOutputs (builder, "\u00c5Peer");
+				AssertNoExportOutputs (builder, "\u212bPeer");
+				return;
+			}
+
+			var javaDirectory = builder.Output.GetIntermediaryPath (
+				Path.Combine ("android", "src", "com", "example"));
+			if (!CanonicalEquivalentPathsAlias (javaDirectory)) {
+				return;
+			}
+			var javaFile = AssertSingleFile (javaDirectory, "*Peer.java");
+			StringAssert.Contains ("public class \u212bPeer", File.ReadAllText (javaFile));
+
+			var classDirectory = builder.Output.GetIntermediaryPath (
+				Path.Combine ("android", "bin", "classes", "com", "example"));
+			AssertSingleFile (classDirectory, "*Peer.class");
+
+			var acwMap = File.ReadAllText (builder.Output.GetIntermediaryPath ("acw-map.txt"));
+			StringAssert.Contains ("UnnamedProject.ComposedIdentifier;com.example.\u00c5Peer", acwMap);
+			StringAssert.Contains ("UnnamedProject.CanonicalEquivalentIdentifier;com.example.\u212bPeer", acwMap);
+
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			Assert.IsFalse (DexUtils.ContainsClass ("Lcom/example/\u00c5Peer;", dexFile, AndroidSdkPath));
+			Assert.IsTrue (DexUtils.ContainsClass ("Lcom/example/\u212bPeer;", dexFile, AndroidSdkPath));
+
+			static string AssertSingleFile (string directory, string pattern)
+			{
+				var files = Directory.GetFiles (directory, pattern, SearchOption.TopDirectoryOnly);
+				Assert.AreEqual (
+					1,
+					files.Length,
+					"APFS should expose the canonical-equivalent llvm-ir paths as one overwritten file.");
+				return files [0];
+			}
+
+			static bool CanonicalEquivalentPathsAlias (string directory)
+			{
+				var probeDirectory = Path.Combine (directory, "canonical-path-probe-" + Guid.NewGuid ().ToString ("N"));
+				Directory.CreateDirectory (probeDirectory);
+				try {
+					File.WriteAllText (Path.Combine (probeDirectory, "\u00c5"), "composed");
+					File.WriteAllText (Path.Combine (probeDirectory, "\u212b"), "equivalent");
+					return Directory.GetFiles (probeDirectory).Length == 1;
+				} finally {
+					foreach (var file in Directory.GetFiles (probeDirectory)) {
+						File.Delete (file);
+					}
+					Directory.Delete (probeDirectory);
+				}
 			}
 		}
 

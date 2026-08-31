@@ -113,6 +113,9 @@
     <Compile Include="..\Microsoft.Android.Sdk.TrimmableTypeMap\JavaNameValidator.cs">
       <Link>Utilities\JavaNameValidator.cs</Link>
     </Compile>
+    <Compile Include="..\Microsoft.Android.Sdk.TrimmableTypeMap\JavaIdentifierData.cs">
+      <Link>Utilities\JavaIdentifierData.cs</Link>
+    </Compile>
     <Compile Include="..\Mono.Android\\Android.App\UsesLibraryAttribute.cs">
       <Link>Mono.Android\UsesLibraryAttribute.cs</Link>
     </Compile>

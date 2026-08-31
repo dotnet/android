@@ -106,7 +106,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			const string javaName = "com.\u00e9xample.\u0394elta";
-			const string expectedLogcatOutput = "UNICODE_JCW_ACTIVATED=1";
+			var expectedLogcatOutput = new HashSet<string> (StringComparer.Ordinal) {
+				"UNICODE_JCW_ACTIVATED=1",
+				"UNICODE_CURRENCY_ACTIVATED",
+				"UNICODE_CONNECTOR_ACTIVATED",
+			};
 			var proj = new XamarinAndroidApplicationProject (
 				packageName: PackageUtils.MakePackageName (runtime, "unicodeidentifier")) {
 				IsRelease = isRelease,
@@ -131,7 +135,44 @@ namespace Xamarin.Android.Build.Tests
 					""")
 				.Replace (
 					"//${AFTER_ONCREATE}",
-					"Android.Util.Log.Info (\"UnicodeJavaIdentifiers\", $\"UNICODE_JCW_ACTIVATED={constructorInvocations}\");");
+					"""
+					Android.Util.Log.Info ("UnicodeJavaIdentifiers", $"UNICODE_JCW_ACTIVATED={constructorInvocations}");
+					var currencyHandle = Android.Runtime.JNIEnv.StartCreateInstance (typeof (CurrencyIdentifierPeer), "()V");
+					Android.Runtime.JNIEnv.FinishCreateInstance (currencyHandle, "()V");
+					using (var currency = Java.Lang.Object.GetObject<CurrencyIdentifierPeer> (
+						currencyHandle, Android.Runtime.JniHandleOwnership.TransferLocalRef)) {
+					}
+					var connectorHandle = Android.Runtime.JNIEnv.StartCreateInstance (typeof (ConnectorIdentifierPeer), "()V");
+					Android.Runtime.JNIEnv.FinishCreateInstance (connectorHandle, "()V");
+					using (var connector = Java.Lang.Object.GetObject<ConnectorIdentifierPeer> (
+						connectorHandle, Android.Runtime.JniHandleOwnership.TransferLocalRef)) {
+					}
+					""");
+			proj.Sources.Add (new BuildItem.Source ("JavaTypeIdentifierPeers.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Register ("com/example/\u00a2Peer")]
+					public class CurrencyIdentifierPeer : Java.Lang.Object
+					{
+						public CurrencyIdentifierPeer ()
+						{
+							Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_CURRENCY_ACTIVATED");
+						}
+					}
+
+					[Register ("com/example/\u203fPeer")]
+					public class ConnectorIdentifierPeer : Java.Lang.Object
+					{
+						public ConnectorIdentifierPeer ()
+						{
+							Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_CONNECTOR_ACTIVATED");
+						}
+					}
+					""",
+			});
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), $"{runtime}/{typeMapImplementation} should install.");
@@ -140,11 +181,15 @@ namespace Xamarin.Android.Build.Tests
 			AdbStartActivity ($"{proj.PackageName}/{javaName}");
 			Assert.IsTrue (
 				MonitorAdbLogcat (
-					line => line.Contains (expectedLogcatOutput, StringComparison.Ordinal),
+					line => {
+						expectedLogcatOutput.RemoveWhere (expected => line.Contains (expected, StringComparison.Ordinal));
+						return expectedLogcatOutput.Count == 0;
+					},
 					Path.Combine (Root, builder.ProjectDirectory, "unicode-identifier-logcat.log"),
 					ActivityStartTimeoutInSeconds
 				),
-				$"{runtime}/{typeMapImplementation} should activate the managed constructor for '{javaName}'."
+				$"{runtime}/{typeMapImplementation} should activate every supported Unicode peer. " +
+					$"Missing: {string.Join (", ", expectedLogcatOutput)}"
 			);
 		}
 

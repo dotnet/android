@@ -84,7 +84,7 @@ public sealed class JcwJavaSourceGenerator
 
 	/// <summary>
 	/// Validates that the JNI name is well-formed: non-empty, each segment separated by '/'
-	/// is a supported Java identifier, and no segment is reserved.
+	/// is a supported NFC Java 21 identifier, and no segment is reserved.
 	/// This also prevents path traversal (e.g., ".." segments, rooted paths, backslashes).
 	/// </summary>
 	static void WritePackageDeclaration (JavaPeerInfo type, TextWriter writer)

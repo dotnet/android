@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
+using System.Text;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -34,13 +34,17 @@ internal static class JavaNameValidator
 	};
 
 	internal static bool IsInvalidIdentifier (string identifier, bool isTypeName) =>
-		!IsSupportedIdentifier (identifier) ||
+		!IsSupportedIdentifier (identifier, isPackageSegment: false) ||
 		JavaKeywords.Contains (identifier) ||
 		isTypeName && RestrictedTypeIdentifiers.Contains (identifier);
 
-	// JLS 3.8 permits additional identifier parts, but generated JCWs also need stable source paths
-	// and class names throughout javac, AAPT, DEX, and the Android runtime.
-	static bool IsSupportedIdentifier (string identifier)
+	static bool IsInvalidPackageIdentifier (string identifier) =>
+		!IsSupportedIdentifier (identifier, isPackageSegment: true) ||
+		JavaKeywords.Contains (identifier);
+
+	// JLS 3.8 permits combining, format, and supplementary characters, but generated JCWs also need
+	// stable source paths and class names throughout javac, AAPT, DEX, and the Android runtime.
+	static bool IsSupportedIdentifier (string identifier, bool isPackageSegment)
 	{
 		if (identifier.Length == 0) {
 			return false;
@@ -52,33 +56,31 @@ internal static class JavaNameValidator
 				// javac accepts supplementary letters, but Android's DEX pipeline omits those classes.
 				return false;
 			}
-
-			var category = char.GetUnicodeCategory (value);
 			bool valid = i == 0
-				? IsSupportedJavaIdentifierStart (value, category)
-				: IsSupportedJavaIdentifierStart (value, category) || value is >= '0' and <= '9';
+				? IsIdentifierStart (value, isPackageSegment)
+				: IsIdentifierPart (value, isPackageSegment);
 			if (!valid) {
-				// Combining and format characters can change source/file-name identity on normalizing file systems.
 				return false;
 			}
 		}
 
-		return true;
+		return identifier.IsNormalized (NormalizationForm.FormC);
 	}
 
-	static bool IsSupportedJavaIdentifierStart (char value, UnicodeCategory category) =>
-		value is '_' or '$' ||
-		category is UnicodeCategory.UppercaseLetter or
-			UnicodeCategory.LowercaseLetter or
-			UnicodeCategory.TitlecaseLetter or
-			UnicodeCategory.ModifierLetter or
-			UnicodeCategory.OtherLetter or
-			UnicodeCategory.LetterNumber;
+	static bool IsIdentifierStart (char value, bool isPackageSegment) =>
+		isPackageSegment
+			? JavaIdentifierData.IsPackageIdentifierStart (value)
+			: JavaIdentifierData.IsIdentifierStart (value);
+
+	static bool IsIdentifierPart (char value, bool isPackageSegment) =>
+		isPackageSegment
+			? JavaIdentifierData.IsPackageIdentifierPart (value)
+			: JavaIdentifierData.IsSupportedIdentifierPart (value);
 
 	internal static bool TryGetInvalidPackageSegment (string packageName, char separator, out string invalidSegment)
 	{
 		foreach (var segment in packageName.Split (separator)) {
-			if (IsInvalidIdentifier (segment, isTypeName: false)) {
+			if (IsInvalidPackageIdentifier (segment)) {
 				invalidSegment = segment;
 				return true;
 			}
@@ -92,7 +94,7 @@ internal static class JavaNameValidator
 	{
 		var segments = jniName.Split ('/');
 		for (int i = 0; i < segments.Length - 1; i++) {
-			if (IsInvalidIdentifier (segments [i], isTypeName: false)) {
+			if (IsInvalidPackageIdentifier (segments [i])) {
 				invalidSegment = segments [i];
 				return true;
 			}
@@ -102,6 +104,22 @@ internal static class JavaNameValidator
 		if (IsInvalidIdentifier (typeName, isTypeName: true)) {
 			invalidSegment = typeName;
 			return true;
+		}
+
+		invalidSegment = "";
+		return false;
+	}
+
+	internal static bool TryGetInvalidJniManifestNameSegment (string jniName, out string invalidSegment)
+	{
+		var segments = jniName.Split ('/');
+		for (int i = 0; i < segments.Length; i++) {
+			bool isTypeName = i == segments.Length - 1;
+			if (IsInvalidPackageIdentifier (segments [i]) ||
+					isTypeName && RestrictedTypeIdentifiers.Contains (segments [i])) {
+				invalidSegment = segments [i];
+				return true;
+			}
 		}
 
 		invalidSegment = "";
@@ -156,8 +174,27 @@ internal static class JavaNameValidator
 
 		var segments = typeName.Split ('.');
 		for (int i = 0; i < segments.Length; i++) {
+			var nestedSegments = segments [i].Split ('$');
+			for (int nestedIndex = 0; nestedIndex < nestedSegments.Length; nestedIndex++) {
+				bool isTypeName = i == segments.Length - 1 || nestedIndex > 0;
+				if (IsInvalidIdentifier (nestedSegments [nestedIndex], isTypeName)) {
+					invalidSegment = nestedSegments [nestedIndex];
+					return true;
+				}
+			}
+		}
+
+		invalidSegment = "";
+		return false;
+	}
+
+	internal static bool TryGetInvalidJavaManifestTypeSegment (string javaType, out string invalidSegment)
+	{
+		var segments = javaType.Split ('.');
+		for (int i = 0; i < segments.Length; i++) {
 			bool isTypeName = i == segments.Length - 1;
-			if (IsInvalidIdentifier (segments [i], isTypeName)) {
+			if (IsInvalidPackageIdentifier (segments [i]) ||
+					isTypeName && RestrictedTypeIdentifiers.Contains (segments [i])) {
 				invalidSegment = segments [i];
 				return true;
 			}

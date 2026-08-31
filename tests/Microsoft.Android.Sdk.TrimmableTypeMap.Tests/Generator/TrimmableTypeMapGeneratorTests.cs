@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using System.Xml.Linq;
 using Xunit;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
@@ -105,6 +106,135 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 
 		Assert.True (CreateGenerator ().ValidateJavaNames (peers));
 		Assert.DoesNotContain (logMessages, message => message.Contains ("XA4258"));
+	}
+
+	[Theory]
+	[InlineData ("com/example/\u00a2Peer")]
+	[InlineData ("com/example/\u203fPeer")]
+	public void ValidateJavaNames_JavaTypeOnlyStartWithoutComponent_IsValid (string javaName)
+	{
+		var peer = new JavaPeerInfo {
+			JavaName = javaName,
+			CompatJniName = javaName,
+			ManagedTypeName = "Example.Type",
+			ManagedTypeNamespace = "Example",
+			ManagedTypeShortName = "Type",
+			AssemblyName = "Example",
+		};
+
+		Assert.True (CreateGenerator ().ValidateJavaNames ([peer]));
+		Assert.DoesNotContain (logMessages, message => message.Contains ("XA4258"));
+	}
+
+	[Fact]
+	public void ValidateJavaNames_JavaTypeOnlyNestedReferences_AreValid ()
+	{
+		const string nestedName = "com/example/\u00a2Outer$Inner";
+		var peer = new JavaPeerInfo {
+			JavaName = "com/example/Peer",
+			CompatJniName = "com/example/Peer",
+			ManagedTypeName = "Example.Type",
+			ManagedTypeNamespace = "Example",
+			ManagedTypeShortName = "Type",
+			AssemblyName = "Example",
+			JavaConstructors = [
+				new JavaConstructorInfo {
+					JniSignature = "()V",
+					ConstructorIndex = 0,
+					ThrownNames = [nestedName],
+				},
+			],
+			JavaFields = [
+				new JavaFieldInfo {
+					FieldName = "VALUE",
+					JavaTypeName = "com.example.\u00a2Outer.Inner",
+					JniTypeName = $"L{nestedName};",
+					InitializerMethodName = "GetValue",
+					Visibility = "public",
+				},
+			],
+		};
+
+		Assert.True (CreateGenerator ().ValidateJavaNames ([peer]));
+		Assert.DoesNotContain (logMessages, message => message.Contains ("XA4258"));
+	}
+
+	[Theory]
+	[InlineData ("com/example/\u00a2Peer", "\u00a2Peer")]
+	[InlineData ("com/example/\u203fPeer", "\u203fPeer")]
+	public void ValidateJavaNames_JavaTypeOnlyStartOnComponent_LogsError (string javaName, string invalidIdentifier)
+	{
+		var peer = new JavaPeerInfo {
+			JavaName = javaName,
+			CompatJniName = javaName,
+			ManagedTypeName = "Example.Type",
+			ManagedTypeNamespace = "Example",
+			ManagedTypeShortName = "Type",
+			AssemblyName = "Example",
+			ComponentAttribute = new ComponentInfo { Kind = ComponentKind.Activity },
+		};
+
+		Assert.False (CreateGenerator ().ValidateJavaNames ([peer]));
+		Assert.Contains (logMessages, message =>
+			message.Contains ($"Java name '{javaName}' contains invalid or unsupported Java identifier '{invalidIdentifier}'."));
+	}
+
+	[Fact]
+	public void ValidateJavaNames_JavaTypeOnlyStartOnAbstractComponent_IsValid ()
+	{
+		var peer = new JavaPeerInfo {
+			JavaName = "com/example/\u00a2Peer",
+			CompatJniName = "com/example/\u00a2Peer",
+			ManagedTypeName = "Example.Type",
+			ManagedTypeNamespace = "Example",
+			ManagedTypeShortName = "Type",
+			AssemblyName = "Example",
+			IsAbstract = true,
+			ComponentAttribute = new ComponentInfo { Kind = ComponentKind.Activity },
+		};
+
+		Assert.True (CreateGenerator ().ValidateJavaNames ([peer]));
+		Assert.DoesNotContain (logMessages, message => message.Contains ("XA4258"));
+	}
+
+	[Fact]
+	public void ValidateJavaNames_JavaTypeOnlyStartInManifestTemplate_LogsError ()
+	{
+		var manifest = XDocument.Parse ("""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+			  <application>
+			    <activity android:name=".¢Peer" />
+			  </application>
+			</manifest>
+			""");
+
+		Assert.False (CreateGenerator ().ValidateJavaNames ([], manifest: manifest));
+		Assert.Contains (logMessages, message =>
+			message.Contains ("Java name 'com.example.¢Peer' contains invalid or unsupported Java identifier '¢Peer'."));
+	}
+
+	[Fact]
+	public void ValidateJavaNames_DefaultPackageNestedThrownKeyword_LogsError ()
+	{
+		var peer = new JavaPeerInfo {
+			JavaName = "com/example/Peer",
+			CompatJniName = "com/example/Peer",
+			ManagedTypeName = "Example.Type",
+			ManagedTypeNamespace = "Example",
+			ManagedTypeShortName = "Type",
+			AssemblyName = "Example",
+			JavaConstructors = [
+				new JavaConstructorInfo {
+					JniSignature = "()V",
+					ConstructorIndex = 0,
+					ThrownNames = ["Outer$record"],
+				},
+			],
+		};
+
+		Assert.False (CreateGenerator ().ValidateJavaNames ([peer]));
+		Assert.Contains (logMessages, message =>
+			message.Contains ("Java name 'Outer$record' contains invalid or unsupported Java identifier 'record'."));
 	}
 
 	[Theory]
@@ -298,6 +428,29 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Empty (result.GeneratedJavaSources);
 		Assert.Empty (result.AllPeers);
 		Assert.Contains (logMessages, m => m.Contains ("No Java peer types found"));
+	}
+
+	[Fact]
+	public void Execute_InvalidManifestComponentWithoutPeers_ReportsError ()
+	{
+		var manifest = XDocument.Parse ("""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+			  <application>
+			    <activity android:name=".¢Peer" />
+			  </application>
+			</manifest>
+			""");
+
+		var result = CreateGenerator ().Execute (
+			[],
+			new Version (11, 0),
+			new HashSet<string> (),
+			manifestTemplate: manifest);
+
+		Assert.Empty (result.GeneratedAssemblies);
+		Assert.Empty (result.GeneratedJavaSources);
+		Assert.Contains (logMessages, message => message.StartsWith ("XA4258:", StringComparison.Ordinal));
+		Assert.DoesNotContain (logMessages, message => message.Contains ("No Java peer types found"));
 	}
 
 	[Fact]

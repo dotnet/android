@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using Xunit;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
@@ -122,10 +124,63 @@ public class JavaNameValidatorTests
 
 	[Theory]
 	[InlineData ("com/\u00e9xample/\u0394elta")]
+	[InlineData ("com/example/\u00a2Peer")]
+	[InlineData ("com/example/\u203fPeer")]
+	[InlineData ("com/example/A\u0660")]
 	public void UnicodeIdentifiers_AreValid (string jniName)
 	{
 		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment (jniName, out var invalidIdentifier));
 		Assert.Equal ("", invalidIdentifier);
+	}
+
+	[Theory]
+	[InlineData ("com/example/\u00a2Outer$Inner")]
+	[InlineData ("com/example/\u203fOuter$Inner")]
+	public void JavaTypeOnlyStart_OnNestedType_IsValid (string jniName)
+	{
+		Assert.False (JavaNameValidator.TryGetInvalidJniSourceTypeSegment (jniName, out _));
+		Assert.False (JavaNameValidator.TryGetInvalidJniTypeSegment ($"L{jniName};", out _, out _));
+		Assert.False (
+			JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (
+				JniSignatureHelper.JniNameToJavaName (jniName),
+				out _
+			)
+		);
+	}
+
+	[Theory]
+	[InlineData ('\u00a2', true, true)]
+	[InlineData ('\u203f', true, true)]
+	[InlineData ('\u0cf3', false, true)]
+	[InlineData ('\u0301', false, true)]
+	[InlineData ('\u0660', false, true)]
+	[InlineData ('\u1c89', false, false)]
+	public void FrozenJdk21IdentifierData_MatchesCharacterClassification (
+		char value,
+		bool isStart,
+		bool isPart)
+	{
+		Assert.Equal (isStart, JavaIdentifierData.IsIdentifierStart (value));
+		Assert.Equal (isPart, JavaIdentifierData.IsIdentifierPart (value));
+	}
+
+	[Fact]
+	public void FrozenJdk21IdentifierData_HasExpectedClassificationHash ()
+	{
+		var classification = new byte [char.MaxValue + 1];
+		for (int value = char.MinValue; value <= char.MaxValue; value++) {
+			if (JavaIdentifierData.IsIdentifierStart ((char) value)) {
+				classification [value] |= 1;
+			}
+			if (JavaIdentifierData.IsIdentifierPart ((char) value)) {
+				classification [value] |= 2;
+			}
+		}
+
+		Assert.Equal (
+			"4f5b4600591fe582079c94a1fbd23de64b382cf770572219acc6df4e3673fcf4",
+			Convert.ToHexString (SHA256.HashData (classification)).ToLowerInvariant ()
+		);
 	}
 
 	[Theory]
@@ -134,10 +189,30 @@ public class JavaNameValidatorTests
 	[InlineData ("com/1example/Peer", "1example")]
 	[InlineData ("com/\u0301example/Peer", "\u0301example")]
 	[InlineData ("com/e\u0301xample/Cafe\u0301", "e\u0301xample")]
+	[InlineData ("com/example/A\u0cf3", "A\u0cf3")]
 	[InlineData ("com/\U00010428xample/Peer\U00010400", "\U00010428xample")]
+	[InlineData ("com/example/\u1c89Peer", "\u1c89Peer")]
+	[InlineData ("com/example/\u212bPeer", "\u212bPeer")]
 	public void InvalidOrUnsupportedIdentifier_ReturnsSegment (string jniName, string expected)
 	{
 		Assert.True (JavaNameValidator.TryGetInvalidJniNameSegment (jniName, out var invalidIdentifier));
+		Assert.Equal (expected, invalidIdentifier);
+	}
+
+	[Theory]
+	[InlineData ("com.\u00a2pkg.example", "\u00a2pkg")]
+	[InlineData ("com.\u203fpkg.example", "\u203fpkg")]
+	[InlineData ("com.A\u0660.example", "A\u0660")]
+	public void JavaTypeOnlyIdentifiers_AreInvalidPackageSegments (string packageName, string expected)
+	{
+		Assert.True (JavaNameValidator.TryGetInvalidPackageSegment (packageName, '.', out var invalidIdentifier));
+		Assert.Equal (expected, invalidIdentifier);
+		Assert.True (
+			JavaNameValidator.TryGetInvalidJniNameSegment (
+				packageName.Replace ('.', '/') + "/Peer",
+				out invalidIdentifier
+			)
+		);
 		Assert.Equal (expected, invalidIdentifier);
 	}
 
@@ -146,10 +221,14 @@ public class JavaNameValidatorTests
 	{
 		const string composed = "com/\u00e9xample/Peer";
 		const string decomposed = "com/e\u0301xample/Peer";
+		const string canonicalComposed = "com/example/\u00c5Peer";
+		const string canonicalEquivalent = "com/example/\u212bPeer";
 
 		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment (composed, out _));
 		Assert.True (JavaNameValidator.TryGetInvalidJniNameSegment (decomposed, out _));
 		Assert.NotEqual (composed, decomposed);
+		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment (canonicalComposed, out _));
+		Assert.True (JavaNameValidator.TryGetInvalidJniNameSegment (canonicalEquivalent, out _));
 	}
 
 	[Theory]
@@ -164,6 +243,7 @@ public class JavaNameValidatorTests
 
 	[Theory]
 	[InlineData ("com.example.Outer.for", "for")]
+	[InlineData ("Outer$record", "record")]
 	[InlineData ("com.example.record", "record")]
 	[InlineData ("com.record.Example", null)]
 	[InlineData ("int[]", null)]
