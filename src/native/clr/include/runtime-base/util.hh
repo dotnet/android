@@ -48,9 +48,9 @@ namespace xamarin::android {
 			return create_directory (dir.data (), mode);
 		}
 
-		static void create_public_directory (std::string_view const& dir);
-		static auto monodroid_fopen (std::string_view const& filename, std::string_view const& mode) noexcept -> FILE*;
-		static void set_world_accessable (std::string_view const& path);
+		static void create_public_directory (const char *dir);
+		static auto monodroid_fopen (const char *filename, const char *mode) noexcept -> FILE*;
+		static void set_world_accessable (const char *path);
 		static auto set_world_accessible (int fd) noexcept -> bool;
 
 		// Puts higher half of the `value` byte as a hexadecimal character in `high_half` and
@@ -344,19 +344,46 @@ namespace xamarin::android {
 			return static_cast<ssize_t>(path_length);
 		}
 
-		static auto join_paths (char *stack_buffer, size_t stack_buffer_size, std::string_view first, std::string_view second) noexcept -> char*
+		// Formats a string that usually fits in a stack buffer, falling back to the heap when it
+		// does not. `formatter` must write into the buffer it is given and return the formatted
+		// length excluding the terminating NUL, or the negative required capacity including it —
+		// the protocol implemented by `format_joined_path()` and friends.
+		//
+		// Returns `stack_buffer`, or a heap block the caller must `std::free ()`. Compare the
+		// result against `stack_buffer` to tell the two apart. When `length` is not `nullptr`, it
+		// receives the formatted length excluding the terminating NUL.
+		template<typename TFormatter>
+		static auto format_with_retry (char *stack_buffer, size_t stack_buffer_size, TFormatter formatter, size_t *length = nullptr) noexcept -> char*
 		{
-			ssize_t result = format_joined_path (stack_buffer, stack_buffer_size, first, second);
-			if (result >= 0) {
-				return stack_buffer;
+			ssize_t result = formatter (stack_buffer, stack_buffer_size);
+			if (result < 0) {
+				size_t required_capacity = static_cast<size_t>(-result);
+				char *heap_buffer = static_cast<char*> (std::malloc (required_capacity));
+				abort_unless (heap_buffer != nullptr, "Failed to allocate formatted string");
+
+				result = formatter (heap_buffer, required_capacity);
+				abort_unless (result >= 0, "Failed to format string using the required capacity");
+				if (length != nullptr) {
+					*length = static_cast<size_t>(result);
+				}
+				return heap_buffer;
 			}
 
-			size_t required_capacity = static_cast<size_t>(-result);
-			char *heap_buffer = static_cast<char*> (std::malloc (required_capacity));
-			abort_unless (heap_buffer != nullptr, "Failed to allocate joined path");
-			result = format_joined_path (heap_buffer, required_capacity, first, second);
-			abort_unless (result >= 0, "Failed to join path using the required capacity");
-			return heap_buffer;
+			if (length != nullptr) {
+				*length = static_cast<size_t>(result);
+			}
+			return stack_buffer;
+		}
+
+		static auto join_paths (char *stack_buffer, size_t stack_buffer_size, std::string_view first, std::string_view second) noexcept -> char*
+		{
+			return format_with_retry (
+				stack_buffer,
+				stack_buffer_size,
+				[first, second](char *buffer, size_t buffer_size) noexcept {
+					return format_joined_path (buffer, buffer_size, first, second);
+				}
+			);
 		}
 
 	private:

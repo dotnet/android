@@ -30,9 +30,9 @@ void FastTiming::really_initialize (bool log_immediately) noexcept
 	}
 
 	char value [Constants::PROPERTY_VALUE_BUFFER_LEN];
-	int value_length = AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_TIMING, value);
-	if (value_length > 0) {
-		internal_timing.parse_options (value);
+	const char *options = AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_TIMING.data (), value, sizeof (value));
+	if (options != nullptr) {
+		internal_timing.parse_options (options);
 	}
 
 	log_write (
@@ -42,26 +42,26 @@ void FastTiming::really_initialize (bool log_immediately) noexcept
 	);
 }
 
-void FastTiming::parse_options (char *value) noexcept
+void FastTiming::parse_options (const char *options) noexcept
 {
-	char *param = value;
+	const char *param = options;
 	while (param != nullptr && *param != '\0') {
-		char *separator = strchr (param, ',');
-		if (separator != nullptr) {
-			*separator = '\0';
-		}
+		// The value may point at immortal bundled property data, so the parameters cannot be
+		// NUL-terminated in place. Bound every comparison by `param_length` instead.
+		const char *separator = strchr (param, ',');
+		size_t param_length = separator != nullptr ? static_cast<size_t>(separator - param) : strlen (param);
 
-		if (strcmp (param, OPT_TO_FILE.data ()) == 0) {
+		if (param_length == OPT_TO_FILE.length () && strncmp (param, OPT_TO_FILE.data (), param_length) == 0) {
 			log_to_file = true;
-		} else if (strncmp (param, OPT_FILE_NAME.data (), OPT_FILE_NAME.length ()) == 0) {
-			output_file_name = std::make_unique<std::string> (param + OPT_FILE_NAME.length ());
-		} else if (strncmp (param, OPT_DURATION.data (), OPT_DURATION.length ()) == 0) {
+		} else if (param_length >= OPT_FILE_NAME.length () && strncmp (param, OPT_FILE_NAME.data (), OPT_FILE_NAME.length ()) == 0) {
+			output_file_name = std::make_unique<std::string> (param + OPT_FILE_NAME.length (), param_length - OPT_FILE_NAME.length ());
+		} else if (param_length >= OPT_DURATION.length () && strncmp (param, OPT_DURATION.data (), OPT_DURATION.length ()) == 0) {
 			const char *duration = param + OPT_DURATION.length ();
 			char *end;
 			errno = 0;
 			unsigned long long parsed_duration = strtoull (duration, &end, 10);
-			if (end == duration || *end != '\0' || errno == ERANGE || parsed_duration > std::numeric_limits<size_t>::max ()) {
-				log_warn (LOG_TIMING, "Failed to parse duration in milliseconds from '%s'"sv, param);
+			if (end == duration || end != param + param_length || errno == ERANGE || parsed_duration > std::numeric_limits<size_t>::max ()) {
+				log_warnf (LOG_TIMING, "Failed to parse duration in milliseconds from '%.*s'", static_cast<int>(param_length), param);
 				duration_ms = default_duration_milliseconds;
 			} else {
 				duration_ms = static_cast<size_t>(parsed_duration);
