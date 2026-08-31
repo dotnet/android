@@ -132,14 +132,17 @@ public class ExportSignatureTests : FixtureTestBase
 			"System.Xml",
 			"XmlReader",
 			"System.Xml.ReaderWriter");
+		using var userStream = CreateTypeAssembly ("User.Xml", "System.Xml", "XmlReader");
 		using var canonicalReader = new PEReader (canonicalStream, PEStreamOptions.LeaveOpen);
 		using var readerWriterReader = new PEReader (readerWriterStream, PEStreamOptions.LeaveOpen);
 		using var netstandardReader = new PEReader (netstandardStream, PEStreamOptions.LeaveOpen);
+		using var userReader = new PEReader (userStream, PEStreamOptions.LeaveOpen);
 		using var scanner = new JavaPeerScanner ();
 		scanner.Scan (new [] {
 			("System.Private.Xml", canonicalReader),
 			("System.Xml.ReaderWriter", readerWriterReader),
 			("netstandard", netstandardReader),
+			("User.Xml", userReader),
 		});
 
 		Assert.True (scanner.HasExportSignatureMapping (new TypeRefData {
