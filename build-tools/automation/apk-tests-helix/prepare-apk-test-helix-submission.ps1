@@ -411,7 +411,8 @@ if [[ -n "$isolated_test" ]]; then
 	remaining_results="$run_results_path"
 	"$python" -c 'import sys, xml.etree.ElementTree as E
 base, extra, output = sys.argv[1:]
-tree = E.parse(base)
+	E.register_namespace("", "http://microsoft.com/schemas/VisualStudio/TeamTest/2010")
+	tree = E.parse(base)
 root = tree.getroot()
 other = E.parse(extra).getroot()
 local = lambda tag: tag.rsplit("}", 1)[-1]

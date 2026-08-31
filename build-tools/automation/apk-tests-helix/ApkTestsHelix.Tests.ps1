@@ -71,7 +71,8 @@ try {
 	$bashScript = Get-Content -LiteralPath $bashScriptPath -Raw
 	if (-not $bashScript.Contains('command -v adb') -or
 		-not $bashScript.Contains('INSTRUMENTATION_RESULT: resultsPath=') -or
-		-not $bashScript.Contains("isolated_test='example.tests.FlakyTest'")) {
+		-not $bashScript.Contains("isolated_test='example.tests.FlakyTest'") -or
+		-not $bashScript.Contains('E.register_namespace("", "http://microsoft.com/schemas/VisualStudio/TeamTest/2010")')) {
 		throw 'Generated Linux APK test script is missing required commands.'
 	}
 	if ($bashScript.Contains("`r")) {
