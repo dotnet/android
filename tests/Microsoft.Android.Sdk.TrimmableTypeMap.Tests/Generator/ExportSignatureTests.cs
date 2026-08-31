@@ -1,4 +1,9 @@
+using System;
 using System.IO;
+using System.Reflection;
+using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
+using System.Reflection.PortableExecutable;
 using Xunit;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
@@ -111,5 +116,81 @@ public class ExportSignatureTests : FixtureTestBase
 			ManagedTypeName = "System.String[]",
 			AssemblyName = "System.Runtime",
 		}));
+	}
+
+	[Fact]
+	public void SpecialXmlMapping_AcceptsCanonicalAndForwardedFrameworkIdentity ()
+	{
+		using var canonicalStream = CreateTypeAssembly ("System.Private.Xml", "System.Xml", "XmlReader");
+		using var readerWriterStream = CreateTypeForwarderAssembly (
+			"System.Xml.ReaderWriter",
+			"System.Xml",
+			"XmlReader",
+			"System.Private.Xml");
+		using var netstandardStream = CreateTypeForwarderAssembly (
+			"netstandard",
+			"System.Xml",
+			"XmlReader",
+			"System.Xml.ReaderWriter");
+		using var canonicalReader = new PEReader (canonicalStream, PEStreamOptions.LeaveOpen);
+		using var readerWriterReader = new PEReader (readerWriterStream, PEStreamOptions.LeaveOpen);
+		using var netstandardReader = new PEReader (netstandardStream, PEStreamOptions.LeaveOpen);
+		using var scanner = new JavaPeerScanner ();
+		scanner.Scan (new [] {
+			("System.Private.Xml", canonicalReader),
+			("System.Xml.ReaderWriter", readerWriterReader),
+			("netstandard", netstandardReader),
+		});
+
+		Assert.True (scanner.HasExportSignatureMapping (new TypeRefData {
+			ManagedTypeName = "System.Xml.XmlReader",
+			AssemblyName = "System.Private.Xml",
+		}, ExportParameterKindInfo.XmlPullParser));
+		Assert.True (scanner.HasExportSignatureMapping (new TypeRefData {
+			ManagedTypeName = "System.Xml.XmlReader",
+			AssemblyName = "netstandard",
+		}, ExportParameterKindInfo.XmlResourceParser));
+		Assert.False (scanner.HasExportSignatureMapping (new TypeRefData {
+			ManagedTypeName = "System.Xml.XmlReader",
+			AssemblyName = "User.Xml",
+		}, ExportParameterKindInfo.XmlPullParser));
+	}
+
+	static MemoryStream CreateTypeAssembly (string assemblyName, string ns, string typeName)
+	{
+		var stream = new MemoryStream ();
+		var pe = new PEAssemblyBuilder (new Version (11, 0, 0, 0));
+		pe.EmitPreamble (assemblyName, assemblyName + ".dll");
+		pe.Metadata.AddTypeDefinition (
+			TypeAttributes.Public,
+			pe.Metadata.GetOrAddString (ns),
+			pe.Metadata.GetOrAddString (typeName),
+			default,
+			MetadataTokens.FieldDefinitionHandle (1),
+			MetadataTokens.MethodDefinitionHandle (1));
+		pe.WritePE (stream);
+		stream.Position = 0;
+		return stream;
+	}
+
+	static MemoryStream CreateTypeForwarderAssembly (
+		string assemblyName,
+		string ns,
+		string typeName,
+		string targetAssemblyName)
+	{
+		var stream = new MemoryStream ();
+		var pe = new PEAssemblyBuilder (new Version (11, 0, 0, 0));
+		pe.EmitPreamble (assemblyName, assemblyName + ".dll");
+		var target = pe.FindOrAddAssemblyRef (targetAssemblyName);
+		pe.Metadata.AddExportedType (
+			(TypeAttributes) 0x00200000,
+			pe.Metadata.GetOrAddString (ns),
+			pe.Metadata.GetOrAddString (typeName),
+			target,
+			typeDefinitionId: 0);
+		pe.WritePE (stream);
+		stream.Position = 0;
+		return stream;
 	}
 }

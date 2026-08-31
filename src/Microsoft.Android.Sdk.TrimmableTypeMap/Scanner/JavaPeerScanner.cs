@@ -890,7 +890,7 @@ public sealed class JavaPeerScanner : IDisposable
 			 !managedTypeName.EndsWith ("[]", StringComparison.Ordinal));
 	}
 
-	bool HasExportSignatureMapping (TypeRefData managedType, ExportParameterKindInfo exportKind)
+	internal bool HasExportSignatureMapping (TypeRefData managedType, ExportParameterKindInfo exportKind)
 	{
 		if (TryManagedTypeToJniDescriptor (managedType, exportKind, out _)) {
 			return true;
@@ -2196,9 +2196,17 @@ public sealed class JavaPeerScanner : IDisposable
 				"Ljava/io/InputStream;",
 			ExportParameterKindInfo.OutputStream when IsSpecialManagedType (managedType, "System.IO.Stream", "System.Runtime", "System.Private.CoreLib") =>
 				"Ljava/io/OutputStream;",
-			ExportParameterKindInfo.XmlPullParser when IsSpecialManagedType (managedType, "System.Xml.XmlReader", "System.Xml.ReaderWriter") =>
+			ExportParameterKindInfo.XmlPullParser when IsSpecialManagedType (
+				managedType,
+				"System.Xml.XmlReader",
+				"System.Xml.ReaderWriter",
+				"System.Private.Xml") =>
 				"Lorg/xmlpull/v1/XmlPullParser;",
-			ExportParameterKindInfo.XmlResourceParser when IsSpecialManagedType (managedType, "System.Xml.XmlReader", "System.Xml.ReaderWriter") =>
+			ExportParameterKindInfo.XmlResourceParser when IsSpecialManagedType (
+				managedType,
+				"System.Xml.XmlReader",
+				"System.Xml.ReaderWriter",
+				"System.Private.Xml") =>
 				"Landroid/content/res/XmlResourceParser;",
 			_ => "",
 		};
