@@ -270,6 +270,8 @@
         href: messages/xa1043.md
       - name: XA1048
         href: messages/xa1048.md
+      - name: XA1049
+        href: messages/xa1049.md
     - name: "XA2xxx: Linker"
       items:
       - name: "XA2xxx: Linker"

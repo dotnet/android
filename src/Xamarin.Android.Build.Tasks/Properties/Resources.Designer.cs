@@ -1015,6 +1015,15 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA1048", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;AndroidEnableMarshalMethods&apos; and &apos;PublishReadyToRun&apos; MSBuild properties cannot both be set to &apos;true&apos;. Set one property to &apos;false&apos;..
+        /// </summary>
+        public static string XA1049 {
+            get {
+                return ResourceManager.GetString("XA1049", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released..
