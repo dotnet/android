@@ -152,8 +152,8 @@ namespace ${ROOT_NAMESPACE}
 				AssertWrapperType (dictionary, typeof (JavaDictionary<,>), typeof (IValueProvider), typeof (string));
 				AssertEqual (3, dictionary.Count, "key dictionary count");
 
-				var first = FindPeer (dictionary.Keys, 11);
-				var second = FindPeer (dictionary.Keys, 22);
+				var first = holder.GetFirst ();
+				var second = holder.GetSecond ();
 				AssertBaseInterfacePeer (first, 11);
 				AssertBaseInterfacePeer (second, 22);
 				AssertDistinctJavaObjects (first, second);
@@ -161,7 +161,8 @@ namespace ${ROOT_NAMESPACE}
 				AssertTrue (dictionary.ContainsKey (null), "dictionary contains null key");
 				AssertEqual ("first", dictionary [first], "first key value");
 				AssertEqual ("null", dictionary [null], "null key value");
-				AssertSame (first, FindPeer (dictionary.Keys, 11), "repeated key lookup");
+				AssertSame (first, holder.GetFirst (), "repeated key lookup");
+				AssertKeyDictionaryEnumeration (dictionary, first, second);
 
 				var roundTrip = holder.RoundTripKeyDictionary (dictionary);
 				try {
@@ -196,7 +197,7 @@ namespace ${ROOT_NAMESPACE}
 				AssertSame (first, dictionary ["first"], "repeated value lookup");
 				AssertDistinctJavaObjects (first, second);
 				AssertNull (dictionary ["null"], "null dictionary value");
-				AssertSequence ([11, 11, 22], GetValues (dictionary.Values), "dictionary value enumeration");
+				AssertSequence ([11, 11, 22], GetRawDictionaryValues (dictionary), "dictionary value enumeration");
 
 				dictionary.Add ("added", second);
 				AssertSame (second, dictionary ["added"], "added dictionary value");
@@ -225,15 +226,15 @@ namespace ${ROOT_NAMESPACE}
 				AssertWrapperType (dictionary, typeof (JavaDictionary<,>), typeof (IValueProvider), typeof (IValueProvider));
 				AssertEqual (3, dictionary.Count, "interface dictionary count");
 
-				var first = FindPeer (dictionary.Keys, 11);
-				var second = FindPeer (dictionary.Keys, 22);
+				var first = holder.GetFirst ();
+				var second = holder.GetSecond ();
 				AssertBaseInterfacePeer (first, 11);
 				AssertBaseInterfacePeer (second, 22);
 				AssertSame (second, dictionary [first], "interface dictionary first value");
 				AssertSame (first, dictionary [second], "interface dictionary second value");
 				AssertNull (dictionary [null], "interface dictionary null value");
 				AssertTrue (dictionary.ContainsKey (first), "interface dictionary contains first");
-				AssertTrue (ContainsPair (dictionary, first, second), "interface dictionary enumeration");
+				AssertTrue (ContainsRawPair (dictionary, first, second), "interface dictionary enumeration");
 
 				var roundTrip = holder.RoundTripInterfaceDictionary (dictionary);
 				try {
@@ -278,13 +279,13 @@ namespace ${ROOT_NAMESPACE}
 			}
 		}
 
-		static T ConvertCollection<T> (IntPtr handle)
+		static T ConvertJavaValue<T> (IntPtr handle, JniHandleOwnership transfer = JniHandleOwnership.TransferLocalRef)
 		{
-			return (T) InvokeJavaConvertFromJniHandle (typeof (T), handle);
+			return (T) InvokeJavaConvertFromJniHandle (typeof (T), handle, transfer);
 		}
 
 		[DynamicDependency ("FromJniHandle", "Java.Interop.JavaConvert", "Mono.Android")]
-		static object InvokeJavaConvertFromJniHandle (Type targetType, IntPtr handle)
+		static object InvokeJavaConvertFromJniHandle (Type targetType, IntPtr handle, JniHandleOwnership transfer)
 		{
 			var javaConvert = typeof (Java.Lang.Object).Assembly.GetType ("Java.Interop.JavaConvert");
 			if (javaConvert == null) {
@@ -301,21 +302,47 @@ namespace ${ROOT_NAMESPACE}
 				throw new InvalidOperationException ("JavaConvert.FromJniHandle method was not found.");
 			}
 
-			var value = method.Invoke (null, [handle, JniHandleOwnership.TransferLocalRef, targetType]);
+			var value = method.Invoke (null, [handle, transfer, targetType]);
 			if (value == null) {
 				throw new InvalidOperationException ($"JavaConvert returned null for target type '{targetType}'.");
 			}
 			return value;
 		}
 
-		static IValueProvider FindPeer (ICollection<IValueProvider> peers, int value)
+		static void AssertKeyDictionaryEnumeration (
+			IDictionary<IValueProvider, string> dictionary,
+			IValueProvider first,
+			IValueProvider second)
 		{
-			foreach (var peer in peers) {
-				if (peer != null && peer.Value == value) {
-					return peer;
+			int count = 0;
+			bool foundFirst = false;
+			bool foundSecond = false;
+			bool foundNull = false;
+			VisitDictionaryEntries (dictionary, (keyHandle, valueHandle) => {
+				var key = keyHandle == IntPtr.Zero
+					? null
+					: ConvertJavaValue<IValueProvider> (keyHandle, JniHandleOwnership.DoNotTransfer);
+				var value = valueHandle == IntPtr.Zero
+					? null
+					: JNIEnv.GetString (valueHandle, JniHandleOwnership.DoNotTransfer);
+				count++;
+				if (key == null) {
+					AssertEqual ("null", value, "raw null key value");
+					foundNull = true;
+				} else if (ReferenceEquals (key, first)) {
+					AssertEqual ("first", value, "raw first key value");
+					foundFirst = true;
+				} else if (ReferenceEquals (key, second)) {
+					AssertEqual ("second", value, "raw second key value");
+					foundSecond = true;
+				} else {
+					throw new InvalidOperationException ($"Unexpected raw dictionary key value '{key.Value}'.");
 				}
-			}
-			throw new InvalidOperationException ($"Peer with value {value} was not found.");
+			});
+			AssertEqual (3, count, "raw key dictionary entry count");
+			AssertTrue (foundFirst, "raw first key entry");
+			AssertTrue (foundSecond, "raw second key entry");
+			AssertTrue (foundNull, "raw null key entry");
 		}
 
 		static IValueProvider GetElement (ICollection<IValueProvider> values, int index)
@@ -341,17 +368,97 @@ namespace ${ROOT_NAMESPACE}
 			return values.ToArray ();
 		}
 
-		static bool ContainsPair (
-			IEnumerable<KeyValuePair<IValueProvider, IValueProvider>> pairs,
-			IValueProvider key,
-			IValueProvider value)
+		static int [] GetRawDictionaryValues (IDictionary<string, IValueProvider> dictionary)
 		{
-			foreach (var pair in pairs) {
-				if (ReferenceEquals (pair.Key, key) && ReferenceEquals (pair.Value, value)) {
-					return true;
+			var values = new List<int> ();
+			bool foundNull = false;
+			VisitDictionaryEntries (dictionary, (keyHandle, valueHandle) => {
+				var value = valueHandle == IntPtr.Zero
+					? null
+					: ConvertJavaValue<IValueProvider> (valueHandle, JniHandleOwnership.DoNotTransfer);
+				if (value == null) {
+					foundNull = true;
+				} else {
+					values.Add (value.Value);
 				}
+			});
+			AssertTrue (foundNull, "raw null dictionary value");
+			return values.ToArray ();
+		}
+
+		static bool ContainsRawPair (
+			IDictionary<IValueProvider, IValueProvider> dictionary,
+			IValueProvider expectedKey,
+			IValueProvider expectedValue)
+		{
+			int count = 0;
+			bool found = false;
+			VisitDictionaryEntries (dictionary, (keyHandle, valueHandle) => {
+				var key = keyHandle == IntPtr.Zero
+					? null
+					: ConvertJavaValue<IValueProvider> (keyHandle, JniHandleOwnership.DoNotTransfer);
+				var value = valueHandle == IntPtr.Zero
+					? null
+					: ConvertJavaValue<IValueProvider> (valueHandle, JniHandleOwnership.DoNotTransfer);
+				count++;
+				if (ReferenceEquals (key, expectedKey) && ReferenceEquals (value, expectedValue)) {
+					found = true;
+				}
+			});
+			AssertEqual (3, count, "raw interface dictionary entry count");
+			return found;
+		}
+
+		static void VisitDictionaryEntries (object dictionary, Action<IntPtr, IntPtr> visitor)
+		{
+			var mapClass = JniEnvironment.Types.FindClass ("java/util/Map");
+			var setClass = JniEnvironment.Types.FindClass ("java/util/Set");
+			var iteratorClass = JniEnvironment.Types.FindClass ("java/util/Iterator");
+			var entryClass = JniEnvironment.Types.FindClass ("java/util/Map$Entry");
+			IntPtr entrySet = IntPtr.Zero;
+			IntPtr iterator = IntPtr.Zero;
+			try {
+				var entrySetMethod = JNIEnv.GetMethodID (mapClass.Handle, "entrySet", "()Ljava/util/Set;");
+				var iteratorMethod = JNIEnv.GetMethodID (setClass.Handle, "iterator", "()Ljava/util/Iterator;");
+				var hasNextMethod = JNIEnv.GetMethodID (iteratorClass.Handle, "hasNext", "()Z");
+				var nextMethod = JNIEnv.GetMethodID (iteratorClass.Handle, "next", "()Ljava/lang/Object;");
+				var getKeyMethod = JNIEnv.GetMethodID (entryClass.Handle, "getKey", "()Ljava/lang/Object;");
+				var getValueMethod = JNIEnv.GetMethodID (entryClass.Handle, "getValue", "()Ljava/lang/Object;");
+				var dictionaryPeer = (IJavaObject) dictionary;
+
+				entrySet = JNIEnv.CallObjectMethod (dictionaryPeer.Handle, entrySetMethod);
+				iterator = JNIEnv.CallObjectMethod (entrySet, iteratorMethod);
+				while (JNIEnv.CallBooleanMethod (iterator, hasNextMethod)) {
+					var entry = JNIEnv.CallObjectMethod (iterator, nextMethod);
+					var key = IntPtr.Zero;
+					var value = IntPtr.Zero;
+					try {
+						key = JNIEnv.CallObjectMethod (entry, getKeyMethod);
+						value = JNIEnv.CallObjectMethod (entry, getValueMethod);
+						visitor (key, value);
+					} finally {
+						DeleteLocalRef (ref value);
+						DeleteLocalRef (ref key);
+						DeleteLocalRef (ref entry);
+					}
+				}
+				GC.KeepAlive (dictionary);
+			} finally {
+				DeleteLocalRef (ref iterator);
+				DeleteLocalRef (ref entrySet);
+				JniObjectReference.Dispose (ref entryClass);
+				JniObjectReference.Dispose (ref iteratorClass);
+				JniObjectReference.Dispose (ref setClass);
+				JniObjectReference.Dispose (ref mapClass);
 			}
-			return false;
+		}
+
+		static void DeleteLocalRef (ref IntPtr handle)
+		{
+			if (handle != IntPtr.Zero) {
+				JNIEnv.DeleteLocalRef (handle);
+				handle = IntPtr.Zero;
+			}
 		}
 
 		static void AssertSequence (int [] expected, int [] actual, string message)
@@ -456,60 +563,70 @@ namespace ${ROOT_NAMESPACE}
 
 			public IList<IValueProvider> CreateList ()
 			{
-				return ConvertCollection<IList<IValueProvider>> (Call ("createList", ListSignature));
+				return ConvertJavaValue<IList<IValueProvider>> (Call ("createList", ListSignature));
 			}
 
 			public IList<IExtendedValueProvider> CreateInheritedList ()
 			{
-				return ConvertCollection<IList<IExtendedValueProvider>> (Call ("createInheritedList", ListSignature));
+				return ConvertJavaValue<IList<IExtendedValueProvider>> (Call ("createInheritedList", ListSignature));
 			}
 
 			public ICollection<IValueProvider> CreateCollection ()
 			{
-				return ConvertCollection<ICollection<IValueProvider>> (Call ("createCollection", CollectionSignature));
+				return ConvertJavaValue<ICollection<IValueProvider>> (Call ("createCollection", CollectionSignature));
+			}
+
+			public IValueProvider GetFirst ()
+			{
+				return ConvertJavaValue<IValueProvider> (Call ("getFirst", "()Lnet/dot/android/test/ValueProvider;"));
+			}
+
+			public IValueProvider GetSecond ()
+			{
+				return ConvertJavaValue<IValueProvider> (Call ("getSecond", "()Lnet/dot/android/test/ValueProvider;"));
 			}
 
 			public IDictionary<IValueProvider, string> CreateKeyDictionary ()
 			{
-				return ConvertCollection<IDictionary<IValueProvider, string>> (Call ("createKeyDictionary", DictionarySignature));
+				return ConvertJavaValue<IDictionary<IValueProvider, string>> (Call ("createKeyDictionary", DictionarySignature));
 			}
 
 			public IDictionary<string, IValueProvider> CreateValueDictionary ()
 			{
-				return ConvertCollection<IDictionary<string, IValueProvider>> (Call ("createValueDictionary", DictionarySignature));
+				return ConvertJavaValue<IDictionary<string, IValueProvider>> (Call ("createValueDictionary", DictionarySignature));
 			}
 
 			public IDictionary<IValueProvider, IValueProvider> CreateInterfaceDictionary ()
 			{
-				return ConvertCollection<IDictionary<IValueProvider, IValueProvider>> (Call ("createInterfaceDictionary", DictionarySignature));
+				return ConvertJavaValue<IDictionary<IValueProvider, IValueProvider>> (Call ("createInterfaceDictionary", DictionarySignature));
 			}
 
 			public IList<IValueProvider> RoundTripList (IList<IValueProvider> value)
 			{
-				return ConvertCollection<IList<IValueProvider>> (Call ("roundTripList", RoundTripListSignature, value));
+				return ConvertJavaValue<IList<IValueProvider>> (Call ("roundTripList", RoundTripListSignature, value));
 			}
 
 			public ICollection<IValueProvider> RoundTripCollection (ICollection<IValueProvider> value)
 			{
-				return ConvertCollection<ICollection<IValueProvider>> (Call ("roundTripCollection", RoundTripCollectionSignature, value));
+				return ConvertJavaValue<ICollection<IValueProvider>> (Call ("roundTripCollection", RoundTripCollectionSignature, value));
 			}
 
 			public IDictionary<IValueProvider, string> RoundTripKeyDictionary (IDictionary<IValueProvider, string> value)
 			{
-				return ConvertCollection<IDictionary<IValueProvider, string>> (
+				return ConvertJavaValue<IDictionary<IValueProvider, string>> (
 					Call ("roundTripKeyDictionary", RoundTripDictionarySignature, value));
 			}
 
 			public IDictionary<string, IValueProvider> RoundTripValueDictionary (IDictionary<string, IValueProvider> value)
 			{
-				return ConvertCollection<IDictionary<string, IValueProvider>> (
+				return ConvertJavaValue<IDictionary<string, IValueProvider>> (
 					Call ("roundTripValueDictionary", RoundTripDictionarySignature, value));
 			}
 
 			public IDictionary<IValueProvider, IValueProvider> RoundTripInterfaceDictionary (
 				IDictionary<IValueProvider, IValueProvider> value)
 			{
-				return ConvertCollection<IDictionary<IValueProvider, IValueProvider>> (
+				return ConvertJavaValue<IDictionary<IValueProvider, IValueProvider>> (
 					Call ("roundTripInterfaceDictionary", RoundTripDictionarySignature, value));
 			}
 

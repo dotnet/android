@@ -76,6 +76,14 @@ final class InterfaceCollectionHolder {
 		return result;
 	}
 
+	public ValueProvider getFirst() {
+		return first;
+	}
+
+	public ValueProvider getSecond() {
+		return second;
+	}
+
 	public Map<ValueProvider, String> createKeyDictionary() {
 		Map<ValueProvider, String> result = new LinkedHashMap<>();
 		result.put(first, "first");

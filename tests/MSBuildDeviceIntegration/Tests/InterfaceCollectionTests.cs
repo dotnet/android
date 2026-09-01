@@ -50,21 +50,17 @@ namespace Xamarin.Android.Build.Tests
 				AssertGeneratedBindingsAreIsolated (builder, proj);
 
 				ClearAdbLogcat ();
-				string resultLine = "";
 				var logcatPath = Path.Combine (Root, builder.ProjectDirectory, "interface-collections-logcat.log");
-				Assert.IsTrue (
-					MonitorAdbLogcat (
-						line => {
-							if (!line.Contains (ResultPrefix, StringComparison.Ordinal)) {
-								return false;
-							}
-							resultLine = line;
-							return true;
-						},
-						logcatPath,
-						timeout: 60,
-						onMonitoringStarted: () => StartActivityAndAssert (proj)),
-					$"The focused app did not report a result. See '{logcatPath}'.");
+				StartActivityAndAssert (proj);
+				string logcatOutput = "";
+				string resultLine = "";
+				WaitFor (TimeSpan.FromSeconds (60), () => {
+					logcatOutput = RunAdbCommand ("logcat -d");
+					resultLine = FindResultLine (logcatOutput);
+					return resultLine.Length > 0;
+				}, intervalInMS: 250);
+				File.WriteAllText (logcatPath, logcatOutput);
+				Assert.IsNotEmpty (resultLine, $"The focused app did not report a result. See '{logcatPath}'.");
 				StringAssert.Contains ($"{ResultPrefix} PASS 6/6", resultLine);
 
 				if (runtime == AndroidRuntime.NativeAOT) {
@@ -77,6 +73,16 @@ namespace Xamarin.Android.Build.Tests
 			} finally {
 				RunAdbCommand ($"uninstall {proj.PackageName}");
 			}
+		}
+
+		static string FindResultLine (string logcatOutput)
+		{
+			foreach (var line in logcatOutput.Split (['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)) {
+				if (line.Contains (ResultPrefix, StringComparison.Ordinal)) {
+					return line;
+				}
+			}
+			return "";
 		}
 
 		static AndroidItem.AndroidJavaSource CreateJavaSource (string fileName, bool bind)
@@ -111,6 +117,7 @@ namespace Xamarin.Android.Build.Tests
 					"Label=\"__GenericDict_Mono_Android_Android_Runtime_JavaList_1&lt;Java_Interop_Java_Interop_IJavaPeerable&gt;\"",
 					"(__GenericDict_Mono_Android_Android_Runtime_JavaList_1&lt;Java_Interop_Java_Interop_IJavaPeerable&gt;, " +
 						"Mono_Android_Android_Runtime_JavaList_1&lt;System___Canon&gt;___ctor_0)",
+					"Label=\"Mono_Android_Android_Runtime_JavaList_1&lt;System___Canon&gt;___ctor_0\"",
 					"JavaList`1&lt;Java.Interop.IJavaPeerable&gt;..ctor(native int,JniHandleOwnership)"),
 				new RootingChain (
 					"JavaCollection",
@@ -119,6 +126,7 @@ namespace Xamarin.Android.Build.Tests
 					"Label=\"__GenericDict_Mono_Android_Android_Runtime_JavaCollection_1&lt;Java_Interop_Java_Interop_IJavaPeerable&gt;\"",
 					"(__GenericDict_Mono_Android_Android_Runtime_JavaCollection_1&lt;Java_Interop_Java_Interop_IJavaPeerable&gt;, " +
 						"Mono_Android_Android_Runtime_JavaCollection_1&lt;System___Canon&gt;___ctor)",
+					"Label=\"Mono_Android_Android_Runtime_JavaCollection_1&lt;System___Canon&gt;___ctor\"",
 					"JavaCollection`1&lt;Java.Interop.IJavaPeerable&gt;..ctor(native int,JniHandleOwnership)"),
 				new RootingChain (
 					"JavaDictionary",
@@ -128,6 +136,7 @@ namespace Xamarin.Android.Build.Tests
 					"(__GenericDict_Mono_Android_Android_Runtime_JavaDictionary_2&lt;Java_Interop_Java_Interop_IJavaPeerable__" +
 						"Java_Interop_Java_Interop_IJavaPeerable&gt;, " +
 						"Mono_Android_Android_Runtime_JavaDictionary_2&lt;System___Canon__System___Canon&gt;___ctor_0)",
+					"Label=\"Mono_Android_Android_Runtime_JavaDictionary_2&lt;System___Canon__System___Canon&gt;___ctor_0\"",
 					"JavaDictionary`2&lt;Java.Interop.IJavaPeerable,Java.Interop.IJavaPeerable&gt;..ctor(native int,JniHandleOwnership)"),
 			};
 			var unexpectedCanonicalRoots = new List<string> ();
@@ -197,16 +206,20 @@ namespace Xamarin.Android.Build.Tests
 		sealed class RootingChain
 		{
 			readonly string constructorPattern;
+			readonly string canonicalConstructorPattern;
 			readonly string constructedTypePattern;
 			readonly string genericDictionaryPattern;
 			readonly string genericDictionaryDependencyPattern;
 			readonly string sourcePattern;
+			readonly List<string> unexpectedIncomingLinks = new ();
 
+			string canonicalConstructorId = "";
 			string constructedTypeId = "";
 			string constructorId = "";
 			string genericDictionaryId = "";
 			string genericDictionaryDependencyId = "";
 			string sourceId = "";
+			bool canonicalConstructorToDependency;
 			bool constructedTypeToGenericDictionary;
 			bool genericDictionaryToDependency;
 			bool genericDictionaryToConstructor;
@@ -218,6 +231,7 @@ namespace Xamarin.Android.Build.Tests
 				string constructedTypePattern,
 				string genericDictionaryPattern,
 				string genericDictionaryDependencyPattern,
+				string canonicalConstructorPattern,
 				string constructorPattern)
 			{
 				Name = name;
@@ -225,6 +239,7 @@ namespace Xamarin.Android.Build.Tests
 				this.constructedTypePattern = constructedTypePattern;
 				this.genericDictionaryPattern = genericDictionaryPattern;
 				this.genericDictionaryDependencyPattern = genericDictionaryDependencyPattern;
+				this.canonicalConstructorPattern = canonicalConstructorPattern;
 				this.constructorPattern = constructorPattern;
 			}
 
@@ -240,6 +255,8 @@ namespace Xamarin.Android.Build.Tests
 					genericDictionaryId = GetAttribute (line, "Id");
 				} else if (line.Contains (genericDictionaryDependencyPattern, StringComparison.Ordinal)) {
 					genericDictionaryDependencyId = GetAttribute (line, "Id");
+				} else if (line.Contains (canonicalConstructorPattern, StringComparison.Ordinal)) {
+					canonicalConstructorId = GetAttribute (line, "Id");
 				} else if (line.Contains (constructorPattern, StringComparison.Ordinal)) {
 					constructorId = GetAttribute (line, "Id");
 				}
@@ -250,10 +267,28 @@ namespace Xamarin.Android.Build.Tests
 				sourceToConstructedType |= IsLink (line, sourceId, constructedTypeId, "newobj");
 				constructedTypeToGenericDictionary |= IsLink (line, constructedTypeId, genericDictionaryId, "reloc");
 				genericDictionaryToDependency |= IsLink (line, genericDictionaryId, genericDictionaryDependencyId, "Primary");
+				canonicalConstructorToDependency |= IsLink (
+					line,
+					canonicalConstructorId,
+					genericDictionaryDependencyId,
+					"Secondary");
 				genericDictionaryToConstructor |= IsLink (
 					line,
 					genericDictionaryDependencyId,
 					constructorId,
+					"Generic dictionary dependency");
+
+				RejectUnexpectedIncoming (line, constructedTypeId, sourceId, "newobj");
+				RejectUnexpectedIncoming (line, genericDictionaryId, constructedTypeId, "reloc");
+				if (IsIncomingLink (line, genericDictionaryDependencyId) &&
+						!IsLink (line, genericDictionaryId, genericDictionaryDependencyId, "Primary") &&
+						!IsLink (line, canonicalConstructorId, genericDictionaryDependencyId, "Secondary")) {
+					unexpectedIncomingLinks.Add (line.Trim ());
+				}
+				RejectUnexpectedIncoming (
+					line,
+					constructorId,
+					genericDictionaryDependencyId,
 					"Generic dictionary dependency");
 			}
 
@@ -263,11 +298,26 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsNotEmpty (constructedTypeId, $"{Name} IJavaPeerable constructed-type node was not found.");
 				Assert.IsNotEmpty (genericDictionaryId, $"{Name} IJavaPeerable generic dictionary node was not found.");
 				Assert.IsNotEmpty (genericDictionaryDependencyId, $"{Name} IJavaPeerable constructor dictionary dependency was not found.");
+				Assert.IsNotEmpty (canonicalConstructorId, $"{Name} canonical compiled constructor node was not found.");
 				Assert.IsNotEmpty (constructorId, $"{Name} IJavaPeerable activation constructor node was not found.");
 				Assert.IsTrue (sourceToConstructedType, $"{Name} SafeJavaCollectionFactory newobj dependency was not found.");
 				Assert.IsTrue (constructedTypeToGenericDictionary, $"{Name} constructed-type relocation dependency was not found.");
 				Assert.IsTrue (genericDictionaryToDependency, $"{Name} generic dictionary primary dependency was not found.");
+				Assert.IsTrue (canonicalConstructorToDependency, $"{Name} canonical constructor secondary dependency was not found.");
 				Assert.IsTrue (genericDictionaryToConstructor, $"{Name} generic dictionary constructor dependency was not found.");
+				Assert.IsEmpty (unexpectedIncomingLinks, $"{Name} canonical constructor path had an unexpected incoming dependency.");
+			}
+
+			void RejectUnexpectedIncoming (string line, string target, string expectedSource, string expectedReason)
+			{
+				if (IsIncomingLink (line, target) && !IsLink (line, expectedSource, target, expectedReason)) {
+					unexpectedIncomingLinks.Add (line.Trim ());
+				}
+			}
+
+			static bool IsIncomingLink (string line, string target)
+			{
+				return target.Length > 0 && line.Contains ($"Target=\"{target}\"", StringComparison.Ordinal);
 			}
 
 			static bool IsLink (string line, string source, string target, string reason)
