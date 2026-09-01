@@ -1882,33 +1882,45 @@ namespace Styleable.Library {
 							using var untypedImage = new Java.Lang.Object (
 								imageView.Handle,
 								JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister);
-							using var alias = JavaObjectExtensions.JavaCast<AppCompatImageButtonAlias> (untypedImage);
-							using var aliasAs = JavaPeerableExtensions.JavaAs<AppCompatImageButtonAlias> (untypedImage);
-							Require (alias != null, "JavaCast did not select the concrete AppCompatImageButton alias.");
-							Require (aliasAs != null, "JavaAs did not select the concrete AppCompatImageButton alias.");
-							Require (
-								JNIEnv.IsSameObject (imageView.Handle, alias.Handle),
-								"Concrete alias did not retain the inflated Java object.");
-							Require (
-								JNIEnv.IsSameObject (imageView.Handle, aliasAs.Handle),
-								"Concrete alias JavaAs did not retain the inflated Java object.");
-							if (imageView is AppCompatImageButtonAlias) {
-								Require (ReferenceEquals (imageView, alias), "JavaCast did not preserve the inflated alias peer.");
-							}
-							Require (
-								AppCompatImageButtonAlias.HandleConstructorCalls == 2,
-								"Inflation and concrete alias casts did not use the expected handle constructors.");
+							var alias = JavaObjectExtensions.JavaCast<AppCompatImageButtonAlias> (untypedImage);
+							try {
+								using var aliasAs = JavaPeerableExtensions.JavaAs<AppCompatImageButtonAlias> (untypedImage);
+								Require (alias != null, "JavaCast did not select the concrete AppCompatImageButton alias.");
+								Require (aliasAs != null, "JavaAs did not select the concrete AppCompatImageButton alias.");
+								Require (
+									JNIEnv.IsSameObject (imageView.Handle, alias.Handle),
+									"Concrete alias did not retain the inflated Java object.");
+								Require (
+									JNIEnv.IsSameObject (imageView.Handle, aliasAs.Handle),
+									"Concrete alias JavaAs did not retain the inflated Java object.");
+								if (imageView is AppCompatImageButtonAlias) {
+									Require (ReferenceEquals (imageView, alias), "JavaCast did not preserve the inflated alias peer.");
+								}
+								Require (
+									AppCompatImageButtonAlias.HandleConstructorCalls == 2,
+									"Inflation and concrete alias casts did not use the expected handle constructors.");
 
-							using var tintable = JavaObjectExtensions.JavaCast<ITintableBackgroundView> (untypedImage);
-							using var tintableAs = JavaPeerableExtensions.JavaAs<ITintableBackgroundView> (untypedImage);
-							Require (tintable != null, "JavaCast did not resolve the AppCompat interface.");
-							Require (tintableAs != null, "JavaAs did not resolve the AppCompat interface.");
-							Require (
-								JNIEnv.IsSameObject (imageView.Handle, tintable.Handle),
-								"Interface cast did not retain the inflated Java object.");
-							Require (
-								JNIEnv.IsSameObject (imageView.Handle, tintableAs.PeerReference.Handle),
-								"Interface JavaAs did not retain the inflated Java object.");
+								var tintable = JavaObjectExtensions.JavaCast<ITintableBackgroundView> (untypedImage);
+								try {
+									using var tintableAs = JavaPeerableExtensions.JavaAs<ITintableBackgroundView> (untypedImage);
+									Require (tintable != null, "JavaCast did not resolve the AppCompat interface.");
+									Require (tintableAs != null, "JavaAs did not resolve the AppCompat interface.");
+									Require (
+										JNIEnv.IsSameObject (imageView.Handle, tintable.Handle),
+										"Interface cast did not retain the inflated Java object.");
+									Require (
+										JNIEnv.IsSameObject (imageView.Handle, tintableAs.PeerReference.Handle),
+										"Interface JavaAs did not retain the inflated Java object.");
+								} finally {
+									if (tintable != null && !ReferenceEquals (tintable, imageView)) {
+										tintable.Dispose ();
+									}
+								}
+							} finally {
+								if (alias != null && !ReferenceEquals (alias, imageView)) {
+									alias.Dispose ();
+								}
+							}
 						}
 
 						void VerifyManagedCreatedViews ()
@@ -2000,7 +2012,7 @@ namespace Styleable.Library {
 					Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45), $"Output did not contain {expectedLogcatOutput}.");
 			} finally {
 				RunAdbCommand ($"shell am force-stop --user all {proj.PackageName}");
-				builder.Uninstall (proj);
+				RunAdbCommand ($"uninstall {proj.PackageName}");
 			}
 		}
 
