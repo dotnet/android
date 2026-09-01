@@ -118,8 +118,24 @@ namespace Xamarin.Android.Build.Tests
 			return signature;
 		}
 
+		static BlobHandle AddLegacyJniMethodSignature (JniFixtureBuilder fixture, bool findClass)
+		{
+			var signature = new BlobBuilder ();
+			new BlobEncoder (signature).MethodSignature ()
+				.Parameters (findClass ? 1 : 3, out ReturnTypeEncoder returnType, out ParametersEncoder parameters);
+			returnType.Type ().Int32 ();
+			if (findClass) {
+				parameters.AddParameter ().Type ().String ();
+			} else {
+				parameters.AddParameter ().Type ().Int32 ();
+				parameters.AddParameter ().Type ().String ();
+				parameters.AddParameter ().Type ().String ();
+			}
+			return fixture.Metadata.GetOrAddBlob (signature);
+		}
+
 		[Test]
-		public void RewritesBareMemberAndDescriptorForAReferencedJniClass ()
+		public void DoesNotRewriteUnrelatedBareMemberAndDescriptorStrings ()
 		{
 			var fixture = new JniFixtureBuilder ();
 			UserStringHandle className = fixture.String ("net/dot/android/ApplicationRegistration");
@@ -139,9 +155,145 @@ namespace Xamarin.Android.Build.Tests
 			MetadataReader reader = peReader.GetMetadataReader ();
 			CollectionAssert.AreEqual (new [] {
 				"c4",
-				"a",
+				"Context",
 				"Landroid/content/Context;",
 			}, LoadedStrings (peReader, reader, method).ConvertAll (entry => entry.Value));
+		}
+
+		[Test]
+		public void RewritesLegacyJniLookupsForTwoClassesAndBothMethodHandleKinds ()
+		{
+			var fixture = new JniFixtureBuilder ();
+			BlobHandle findClassSignature = AddLegacyJniMethodSignature (fixture, findClass: true);
+			BlobHandle memberLookupSignature = AddLegacyJniMethodSignature (fixture, findClass: false);
+
+			int fieldStart = fixture.NextFieldRid;
+			int methodStart = fixture.NextMethodRid;
+			MethodDefinitionHandle findClassDefinition = fixture.Metadata.AddMethodDefinition (
+				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+				MethodImplAttributes.Runtime,
+				fixture.Metadata.GetOrAddString ("FindClass"),
+				findClassSignature,
+				0,
+				MetadataTokens.ParameterHandle (fixture.Metadata.GetRowCount (TableIndex.Param) + 1));
+			MethodDefinitionHandle getStaticFieldDefinition = fixture.Metadata.AddMethodDefinition (
+				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+				MethodImplAttributes.Runtime,
+				fixture.Metadata.GetOrAddString ("GetStaticFieldID"),
+				memberLookupSignature,
+				0,
+				MetadataTokens.ParameterHandle (fixture.Metadata.GetRowCount (TableIndex.Param) + 1));
+			fixture.AddType ("Android.Runtime", "JNIEnv", fieldStart, methodStart);
+
+			TypeReferenceHandle jniEnvironmentReference = fixture.Metadata.AddTypeReference (
+				fixture.CoreLibraryReference,
+				fixture.Metadata.GetOrAddString ("Android.Runtime"),
+				fixture.Metadata.GetOrAddString ("JNIEnv"));
+			MemberReferenceHandle findClassReference = fixture.Metadata.AddMemberReference (
+				jniEnvironmentReference,
+				fixture.Metadata.GetOrAddString ("FindClass"),
+				findClassSignature);
+			MemberReferenceHandle getMethodReference = fixture.Metadata.AddMemberReference (
+				jniEnvironmentReference,
+				fixture.Metadata.GetOrAddString ("GetMethodID"),
+				memberLookupSignature);
+
+			UserStringHandle firstClass = fixture.String ("acme/one/First");
+			UserStringHandle firstField = fixture.String ("count");
+			UserStringHandle firstDescriptor = fixture.String ("I");
+			UserStringHandle firstOtherField = fixture.String ("enabled");
+			UserStringHandle firstOtherDescriptor = fixture.String ("Z");
+			UserStringHandle secondClass = fixture.String ("acme/two/Second");
+			UserStringHandle secondMethod = fixture.String ("run");
+			UserStringHandle secondDescriptor = fixture.String ("()V");
+			UserStringHandle ambiguousField = fixture.String ("state");
+
+			var localSignature = new BlobBuilder ();
+			var localEncoder = new BlobEncoder (localSignature).LocalVariableSignature (2);
+			localEncoder.AddVariable ().Type ().Int32 ();
+			localEncoder.AddVariable ().Type ().Int32 ();
+			StandaloneSignatureHandle locals = fixture.Metadata.AddStandaloneSignature (fixture.Metadata.GetOrAddBlob (localSignature));
+			var controlFlow = new ControlFlowBuilder ();
+
+			fieldStart = fixture.NextFieldRid;
+			methodStart = fixture.NextMethodRid;
+			MethodDefinitionHandle method = fixture.AddVoidMethod ("LookUpBoth", fixture.EmitBody (encoder => {
+				LabelHandle ambiguousLookup = encoder.DefineLabel ();
+
+				encoder.LoadString (firstClass);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (findClassDefinition);
+				encoder.StoreLocal (0);
+				encoder.LoadLocal (0);
+				encoder.LoadString (firstField);
+				encoder.LoadString (firstDescriptor);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (getStaticFieldDefinition);
+				encoder.OpCode (ILOpCode.Pop);
+
+				encoder.LoadLocal (0);
+				encoder.LoadString (firstOtherField);
+				encoder.LoadString (firstOtherDescriptor);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (getStaticFieldDefinition);
+				encoder.OpCode (ILOpCode.Pop);
+
+				encoder.LoadString (secondClass);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (findClassReference);
+				encoder.StoreLocal (1);
+				encoder.LoadLocal (1);
+				encoder.LoadString (secondMethod);
+				encoder.LoadString (secondDescriptor);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (getMethodReference);
+				encoder.OpCode (ILOpCode.Pop);
+
+				encoder.LoadString (firstClass);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (findClassDefinition);
+				encoder.StoreLocal (0);
+				encoder.Branch (ILOpCode.Br_s, ambiguousLookup);
+				encoder.LoadString (secondClass);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (findClassReference);
+				encoder.StoreLocal (0);
+				encoder.MarkLabel (ambiguousLookup);
+				encoder.LoadLocal (0);
+				encoder.LoadString (ambiguousField);
+				encoder.LoadString (firstDescriptor);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (getStaticFieldDefinition);
+				encoder.OpCode (ILOpCode.Pop);
+				encoder.OpCode (ILOpCode.Ret);
+			}, locals, controlFlow));
+			fixture.AddType ("Acme", "LegacyLookups", fieldStart, methodStart);
+
+			JniRewriteResult result = Rewrite (fixture.Serialize (), Mapping (
+				"acme.one.First -> a.b.F:\n" +
+				"    int count -> x\n" +
+				"    boolean enabled -> q\n" +
+				"    int state -> f\n" +
+				"acme.two.Second -> a.b.S:\n" +
+				"    int state -> s\n" +
+				"    void run() -> y\n"));
+
+			using var peReader = new PEReader (ImmutableArray.Create (result.Image));
+			MetadataReader reader = peReader.GetMetadataReader ();
+			CollectionAssert.AreEqual (new [] {
+				"a/b/F",
+				"x",
+				"I",
+				"q",
+				"Z",
+				"a/b/S",
+				"y",
+				"()V",
+				"a/b/F",
+				"a/b/S",
+				"state",
+				"I",
+			}, ValuesOf (LoadedStrings (peReader, reader, method)));
 		}
 
 		[Test]

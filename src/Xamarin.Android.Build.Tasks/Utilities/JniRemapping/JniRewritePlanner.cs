@@ -20,6 +20,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		const string JniTypeSignatureAttributeFullName = "Java.Interop.JniTypeSignatureAttribute";
 		const string JniMethodSignatureAttributeFullName = "Java.Interop.JniMethodSignatureAttribute";
 		const string JniConstructorSignatureAttributeFullName = "Java.Interop.JniConstructorSignatureAttribute";
+		const string JniEnvironmentFullName = "Android.Runtime.JNIEnv";
 
 		readonly PEReader peReader;
 		readonly MetadataReader reader;
@@ -249,60 +250,291 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return;
 			}
 
-			byte [] il = GetILBytes (method);
-			string? referencedOwnerJniName = FindSingleReferencedJniClass (il);
-			string? pendingMemberName = null;
-			int pendingMemberNameOffset = 0;
+			MethodBodyBlock body = peReader.GetMethodBody (method.RelativeVirtualAddress);
+			byte [] il = body.GetILBytes () ?? [];
+			var instructions = new List<IlInstruction> ();
+			IlInstructionScanner.Walk (il, (code, instructionOffset, operandOffset, operandSize) =>
+				instructions.Add (new IlInstruction (code, instructionOffset, operandOffset, operandSize)));
+			HashSet<int> controlFlowEntries = GetControlFlowEntryOffsets (body, il, instructions);
 
-			IlInstructionScanner.Walk (il, (code, _, operandOffset, _) => {
-				if (code == (ushort) ILOpCode.Ldstr) {
-					string value = ReadUserString (il, operandOffset);
-					if (referencedOwnerJniName != null && pendingMemberName != null) {
-						if (JniDescriptorText.IsValidFieldDescriptor (value) &&
-								mapping.TryMapField (referencedOwnerJniName, pendingMemberName, out string renamedField)) {
-							plan.AddUserString (methodHandle, pendingMemberNameOffset, renamedField);
-						} else if (JniDescriptorText.IsValidMethodDescriptor (value)) {
-							JniDescriptorText.MethodDescriptorToJavaTypes (value, out var javaParams, out string javaReturnType);
-							string mappingName = R8Mapping.JniMemberNameToMappingName (pendingMemberName);
-							if (mapping.TryMapMethod (referencedOwnerJniName, mappingName, javaParams, javaReturnType, out string renamedMethod)) {
-								plan.AddUserString (methodHandle, pendingMemberNameOffset, renamedMethod);
-							}
-						}
-					}
+			for (int i = 0; i < instructions.Count; i++) {
+				IlInstruction instruction = instructions [i];
+				if (instruction.Code == (ushort) ILOpCode.Ldstr) {
+					string value = ReadUserString (il, instruction.OperandOffset);
 					if (LdstrRewriter.TryRewrite (value, ownerJniName, mapping, out string rewritten)) {
-						plan.AddUserString (methodHandle, operandOffset, rewritten);
+						plan.AddUserString (methodHandle, instruction.OperandOffset, rewritten);
 					}
-					pendingMemberName = IsBareMemberName (value) ? value : null;
-					pendingMemberNameOffset = operandOffset;
-					return;
+				} else if (TryGetJniLookupKind (il, instruction, out bool isField)) {
+					PlanLegacyJniLookup (plan, methodHandle, il, instructions, controlFlowEntries, i, isField);
 				}
-
-				if (code != (ushort) ILOpCode.Pop) {
-					pendingMemberName = null;
-				}
-			});
+			}
 		}
 
-		string? FindSingleReferencedJniClass (byte [] il)
+		void PlanLegacyJniLookup (JniRewritePlan plan, MethodDefinitionHandle methodHandle, byte [] il,
+			List<IlInstruction> instructions, HashSet<int> controlFlowEntries, int callIndex, bool isField)
 		{
-			string? referencedClass = null;
-			bool ambiguous = false;
-			IlInstructionScanner.Walk (il, (code, _, operandOffset, _) => {
-				if (ambiguous || code != (ushort) ILOpCode.Ldstr) {
-					return;
+			int descriptorIndex = PreviousNonNop (instructions, callIndex - 1);
+			int memberNameIndex = PreviousNonNop (instructions, descriptorIndex - 1);
+			int classIndex = PreviousNonNop (instructions, memberNameIndex - 1);
+			if (classIndex < 0 ||
+					instructions [descriptorIndex].Code != (ushort) ILOpCode.Ldstr ||
+					instructions [memberNameIndex].Code != (ushort) ILOpCode.Ldstr ||
+					HasControlFlowEntry (instructions, controlFlowEntries, classIndex, callIndex) ||
+					!TryResolveLegacyLookupClass (il, instructions, controlFlowEntries, classIndex, out string className)) {
+				return;
+			}
+
+			string memberName = ReadUserString (il, instructions [memberNameIndex].OperandOffset);
+			if (!IsBareMemberName (memberName)) {
+				return;
+			}
+			string descriptor = ReadUserString (il, instructions [descriptorIndex].OperandOffset);
+
+			if (isField) {
+				if (JniDescriptorText.IsValidFieldDescriptor (descriptor) &&
+						mapping.TryMapField (className, memberName, out string renamedField)) {
+					plan.AddUserString (methodHandle, instructions [memberNameIndex].OperandOffset, renamedField);
+				}
+			} else if (JniDescriptorText.IsValidMethodDescriptor (descriptor)) {
+				JniDescriptorText.MethodDescriptorToJavaTypes (descriptor, out var javaParams, out string javaReturnType);
+				string mappingName = R8Mapping.JniMemberNameToMappingName (memberName);
+				if (mapping.TryMapMethod (className, mappingName, javaParams, javaReturnType, out string renamedMethod)) {
+					plan.AddUserString (methodHandle, instructions [memberNameIndex].OperandOffset, renamedMethod);
+				}
+			}
+		}
+
+		bool TryResolveLegacyLookupClass (byte [] il, List<IlInstruction> instructions,
+			HashSet<int> controlFlowEntries, int classIndex, out string className)
+		{
+			className = "";
+			IlInstruction classInstruction = instructions [classIndex];
+			if (IsJniEnvironmentMethod (il, classInstruction, "FindClass")) {
+				return TryReadFindClassName (il, instructions, controlFlowEntries, classIndex, classIndex, out className);
+			}
+
+			if (!TryGetLocalIndex (il, classInstruction, load: true, out int localIndex)) {
+				return false;
+			}
+
+			for (int storeIndex = classIndex - 1; storeIndex >= 0; storeIndex--) {
+				IlInstruction candidate = instructions [storeIndex];
+				if (controlFlowEntries.Contains (candidate.InstructionOffset) || IsControlFlowBarrier (candidate.Code)) {
+					return false;
+				}
+				if (!TryGetLocalIndex (il, candidate, load: false, out int storedLocalIndex) || storedLocalIndex != localIndex) {
+					continue;
 				}
 
-				string value = ReadUserString (il, operandOffset);
-				if (!mapping.TryMapClass (value, out _)) {
-					return;
+				int findClassIndex = PreviousNonNop (instructions, storeIndex - 1);
+				return findClassIndex >= 0 &&
+					IsJniEnvironmentMethod (il, instructions [findClassIndex], "FindClass") &&
+					TryReadFindClassName (il, instructions, controlFlowEntries, findClassIndex, classIndex, out className);
+			}
+			return false;
+		}
+
+		bool TryReadFindClassName (byte [] il, List<IlInstruction> instructions, HashSet<int> controlFlowEntries,
+			int findClassIndex, int sequenceEndIndex, out string className)
+		{
+			className = "";
+			int classNameIndex = PreviousNonNop (instructions, findClassIndex - 1);
+			if (classNameIndex < 0 ||
+					instructions [classNameIndex].Code != (ushort) ILOpCode.Ldstr ||
+					HasControlFlowEntry (instructions, controlFlowEntries, classNameIndex, sequenceEndIndex)) {
+				return false;
+			}
+			className = ReadUserString (il, instructions [classNameIndex].OperandOffset);
+			return true;
+		}
+
+		static bool HasControlFlowEntry (List<IlInstruction> instructions, HashSet<int> controlFlowEntries,
+			int startIndex, int endIndex)
+		{
+			for (int i = startIndex; i <= endIndex; i++) {
+				if (controlFlowEntries.Contains (instructions [i].InstructionOffset)) {
+					return true;
 				}
-				if (referencedClass != null && referencedClass != value) {
-					ambiguous = true;
-					return;
+			}
+			return false;
+		}
+
+		static HashSet<int> GetControlFlowEntryOffsets (MethodBodyBlock body, byte [] il, List<IlInstruction> instructions)
+		{
+			var entries = new HashSet<int> ();
+			foreach (ExceptionRegion region in body.ExceptionRegions) {
+				entries.Add (region.HandlerOffset);
+				if (region.Kind == ExceptionRegionKind.Filter) {
+					entries.Add (region.FilterOffset);
 				}
-				referencedClass = value;
-			});
-			return ambiguous ? null : referencedClass;
+			}
+
+			foreach (IlInstruction instruction in instructions) {
+				int nextOffset = instruction.OperandOffset + instruction.OperandSize;
+				if (IsShortBranch (instruction.Code)) {
+					entries.Add (nextOffset + unchecked ((sbyte) il [instruction.OperandOffset]));
+				} else if (IsLongBranch (instruction.Code)) {
+					entries.Add (nextOffset + unchecked ((int) IlInstructionScanner.ReadUInt32 (il, instruction.OperandOffset)));
+				} else if (instruction.Code == (ushort) ILOpCode.Switch) {
+					int branchCount = unchecked ((int) IlInstructionScanner.ReadUInt32 (il, instruction.OperandOffset));
+					for (int i = 0; i < branchCount; i++) {
+						int deltaOffset = instruction.OperandOffset + sizeof (uint) + i * sizeof (uint);
+						entries.Add (nextOffset + unchecked ((int) IlInstructionScanner.ReadUInt32 (il, deltaOffset)));
+					}
+				}
+			}
+			return entries;
+		}
+
+		static bool IsShortBranch (ushort code)
+			=> code >= (ushort) ILOpCode.Br_s && code <= (ushort) ILOpCode.Blt_un_s ||
+				code == (ushort) ILOpCode.Leave_s;
+
+		static bool IsLongBranch (ushort code)
+			=> code >= (ushort) ILOpCode.Br && code <= (ushort) ILOpCode.Blt_un ||
+				code == (ushort) ILOpCode.Leave;
+
+		bool TryGetJniLookupKind (byte [] il, IlInstruction instruction, out bool isField)
+		{
+			isField = false;
+			if (!TryGetMethodIdentity (il, instruction, out string declaringType, out string methodName) ||
+					declaringType != JniEnvironmentFullName) {
+				return false;
+			}
+
+			switch (methodName) {
+			case "GetFieldID":
+			case "GetStaticFieldID":
+				isField = true;
+				return true;
+			case "GetMethodID":
+			case "GetStaticMethodID":
+				return true;
+			default:
+				return false;
+			}
+		}
+
+		bool IsJniEnvironmentMethod (byte [] il, IlInstruction instruction, string methodName)
+			=> TryGetMethodIdentity (il, instruction, out string declaringType, out string actualMethodName) &&
+				declaringType == JniEnvironmentFullName &&
+				actualMethodName == methodName;
+
+		bool TryGetMethodIdentity (byte [] il, IlInstruction instruction, out string declaringType, out string methodName)
+		{
+			declaringType = "";
+			methodName = "";
+			if (instruction.Code != (ushort) ILOpCode.Call || instruction.OperandSize != sizeof (uint)) {
+				return false;
+			}
+
+			EntityHandle methodHandle = MetadataTokens.EntityHandle ((int) IlInstructionScanner.ReadUInt32 (il, instruction.OperandOffset));
+			if (methodHandle.Kind == HandleKind.MethodSpecification) {
+				methodHandle = reader.GetMethodSpecification ((MethodSpecificationHandle) methodHandle).Method;
+			}
+
+			EntityHandle declaringTypeHandle;
+			if (methodHandle.Kind == HandleKind.MethodDefinition) {
+				MethodDefinition method = reader.GetMethodDefinition ((MethodDefinitionHandle) methodHandle);
+				methodName = reader.GetString (method.Name);
+				declaringTypeHandle = method.GetDeclaringType ();
+			} else if (methodHandle.Kind == HandleKind.MemberReference) {
+				MemberReference method = reader.GetMemberReference ((MemberReferenceHandle) methodHandle);
+				methodName = reader.GetString (method.Name);
+				declaringTypeHandle = method.Parent;
+			} else {
+				return false;
+			}
+
+			switch (declaringTypeHandle.Kind) {
+			case HandleKind.TypeDefinition:
+				TypeDefinition typeDefinition = reader.GetTypeDefinition ((TypeDefinitionHandle) declaringTypeHandle);
+				declaringType = reader.GetString (typeDefinition.Namespace) + "." + reader.GetString (typeDefinition.Name);
+				return true;
+			case HandleKind.TypeReference:
+				TypeReference typeReference = reader.GetTypeReference ((TypeReferenceHandle) declaringTypeHandle);
+				declaringType = reader.GetString (typeReference.Namespace) + "." + reader.GetString (typeReference.Name);
+				return true;
+			default:
+				return false;
+			}
+		}
+
+		static int PreviousNonNop (List<IlInstruction> instructions, int index)
+		{
+			while (index >= 0 && instructions [index].Code == (ushort) ILOpCode.Nop) {
+				index--;
+			}
+			return index;
+		}
+
+		static bool IsControlFlowBarrier (ushort code)
+		{
+			switch ((ILOpCode) code) {
+			case ILOpCode.Jmp:
+			case ILOpCode.Br_s:
+			case ILOpCode.Brfalse_s:
+			case ILOpCode.Brtrue_s:
+			case ILOpCode.Beq_s:
+			case ILOpCode.Bge_s:
+			case ILOpCode.Bgt_s:
+			case ILOpCode.Ble_s:
+			case ILOpCode.Blt_s:
+			case ILOpCode.Bne_un_s:
+			case ILOpCode.Bge_un_s:
+			case ILOpCode.Bgt_un_s:
+			case ILOpCode.Ble_un_s:
+			case ILOpCode.Blt_un_s:
+			case ILOpCode.Br:
+			case ILOpCode.Brfalse:
+			case ILOpCode.Brtrue:
+			case ILOpCode.Beq:
+			case ILOpCode.Bge:
+			case ILOpCode.Bgt:
+			case ILOpCode.Ble:
+			case ILOpCode.Blt:
+			case ILOpCode.Bne_un:
+			case ILOpCode.Bge_un:
+			case ILOpCode.Bgt_un:
+			case ILOpCode.Ble_un:
+			case ILOpCode.Blt_un:
+			case ILOpCode.Switch:
+			case ILOpCode.Ret:
+			case ILOpCode.Throw:
+			case ILOpCode.Endfinally:
+			case ILOpCode.Leave:
+			case ILOpCode.Leave_s:
+			case ILOpCode.Endfilter:
+			case ILOpCode.Rethrow:
+				return true;
+			default:
+				return false;
+			}
+		}
+
+		static bool TryGetLocalIndex (byte [] il, IlInstruction instruction, bool load, out int index)
+		{
+			index = 0;
+			ushort code = instruction.Code;
+			ushort first = load ? (ushort) ILOpCode.Ldloc_0 : (ushort) ILOpCode.Stloc_0;
+			ushort last = load ? (ushort) ILOpCode.Ldloc_3 : (ushort) ILOpCode.Stloc_3;
+			if (code >= first && code <= last) {
+				index = code - first;
+				return true;
+			}
+
+			ushort shortForm = load ? (ushort) ILOpCode.Ldloc_s : (ushort) ILOpCode.Stloc_s;
+			if (code == shortForm) {
+				index = il [instruction.OperandOffset];
+				return true;
+			}
+
+			ushort longForm = load ? (ushort) ILOpCode.Ldloc : (ushort) ILOpCode.Stloc;
+			if (code == longForm) {
+				index = il [instruction.OperandOffset] | (il [instruction.OperandOffset + 1] << 8);
+				return true;
+			}
+			return false;
 		}
 
 		static bool IsBareMemberName (string value)
@@ -318,12 +550,6 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			return true;
 		}
 
-		byte [] GetILBytes (MethodDefinition method)
-		{
-			MethodBodyBlock body = peReader.GetMethodBody (method.RelativeVirtualAddress);
-			return body.GetILBytes () ?? [];
-		}
-
 		string ReadUserString (byte [] il, int operandOffset)
 		{
 			uint token = IlInstructionScanner.ReadUInt32 (il, operandOffset);
@@ -331,6 +557,22 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				throw new JniRewriteException ($"Malformed IL: ldstr operand 0x{token:X8} is not a #US token.");
 			}
 			return reader.GetUserString (MetadataTokens.UserStringHandle ((int) (token & 0x00FFFFFF)));
+		}
+
+		readonly struct IlInstruction
+		{
+			public ushort Code { get; }
+			public int InstructionOffset { get; }
+			public int OperandOffset { get; }
+			public int OperandSize { get; }
+
+			public IlInstruction (ushort code, int instructionOffset, int operandOffset, int operandSize)
+			{
+				Code = code;
+				InstructionOffset = instructionOffset;
+				OperandOffset = operandOffset;
+				OperandSize = operandSize;
+			}
 		}
 	}
 }

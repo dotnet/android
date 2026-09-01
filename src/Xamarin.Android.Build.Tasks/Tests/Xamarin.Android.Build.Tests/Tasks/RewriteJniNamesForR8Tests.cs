@@ -36,6 +36,46 @@ namespace Xamarin.Android.Build.Tests
 			return stream.ToArray ();
 		}
 
+		static byte [] BuildAssemblyWithMalformedLdstrOperand ()
+		{
+			var fixture = new JniFixtureBuilder ();
+			UserStringHandle value = fixture.String ("malformed");
+			int fieldStart = fixture.NextFieldRid;
+			int methodStart = fixture.NextMethodRid;
+			fixture.AddVoidMethod ("Malformed", fixture.EmitLoadStringBody (value));
+			fixture.AddType ("Acme", "Malformed", fieldStart, methodStart);
+
+			byte [] image = fixture.Serialize ();
+			uint token = (uint) MetadataTokens.GetToken (value);
+			byte [] pattern = {
+				(byte) ILOpCode.Ldstr,
+				(byte) token,
+				(byte) (token >> 8),
+				(byte) (token >> 16),
+				(byte) (token >> 24),
+				(byte) ILOpCode.Pop,
+				(byte) ILOpCode.Ret,
+			};
+			int match = -1;
+			for (int i = 0; i <= image.Length - pattern.Length; i++) {
+				bool matches = true;
+				for (int j = 0; j < pattern.Length; j++) {
+					if (image [i + j] != pattern [j]) {
+						matches = false;
+						break;
+					}
+				}
+				if (!matches) {
+					continue;
+				}
+				Assert.AreEqual (-1, match, "The fixture should contain exactly one matching ldstr sequence.");
+				match = i;
+			}
+			Assert.AreNotEqual (-1, match, "The fixture's ldstr sequence was not found.");
+			image [match + sizeof (uint)] = 0x71;
+			return image;
+		}
+
 		[Test]
 		public void CopiesSourceToDestinationAndAdjacentPdbUnchanged ()
 		{
@@ -81,6 +121,35 @@ namespace Xamarin.Android.Build.Tests
 			MetadataReader after = peReader.GetMetadataReader ();
 			Assert.AreEqual (before.GetGuid (before.GetModuleDefinition ().Mvid), after.GetGuid (after.GetModuleDefinition ().Mvid));
 			Assert.AreEqual ("Fixture", after.GetString (after.GetAssemblyDefinition ().Name));
+		}
+
+		[Test]
+		public void RemovesStaleDestinationPdbWhenSourceHasNoPdb ()
+		{
+			string path = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (path);
+
+			string sourceDll = Path.Combine (path, "source", "Test.dll");
+			Directory.CreateDirectory (Path.GetDirectoryName (sourceDll));
+			File.WriteAllBytes (sourceDll, BuildTrivialAssembly ());
+
+			string destinationDll = Path.Combine (path, "destination", "Test.dll");
+			string destinationPdb = Path.ChangeExtension (destinationDll, "pdb");
+			Directory.CreateDirectory (Path.GetDirectoryName (destinationDll));
+			File.WriteAllBytes (destinationPdb, new byte [] { 1, 2, 3, 4 });
+
+			string mappingFile = Path.Combine (path, "mapping.txt");
+			File.WriteAllText (mappingFile, "");
+			var task = new RewriteJniNamesForR8 {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				SourceFiles = new [] { new Microsoft.Build.Utilities.TaskItem (sourceDll) },
+				DestinationFiles = new [] { new Microsoft.Build.Utilities.TaskItem (destinationDll) },
+				MappingFile = mappingFile,
+			};
+
+			Assert.IsTrue (task.Execute (), "Task should succeed.");
+			FileAssert.Exists (destinationDll);
+			FileAssert.DoesNotExist (destinationPdb, "A PDB from a previous copy must not survive when the source PDB is absent.");
 		}
 
 		[Test]
@@ -130,6 +199,33 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, errors.Count, "Exactly one error should have been logged.");
 			Assert.AreEqual ("XA4325", errors [0].Code, "The error should use the documented XA4325 code.");
 			StringAssert.Contains ("SourceFiles", errors [0].Message, "The error should name the mismatched item groups.");
+		}
+
+		[Test]
+		public void LeavesRewrittenFilesEmptyWhenAnAssemblyCannotBeRewritten ()
+		{
+			string path = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (path);
+			string source = Path.Combine (path, "Malformed.dll");
+			string destination = Path.Combine (path, "out", "Malformed.dll");
+			File.WriteAllBytes (source, BuildAssemblyWithMalformedLdstrOperand ());
+
+			string mappingFile = Path.Combine (path, "mapping.txt");
+			File.WriteAllText (mappingFile, "");
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new RewriteJniNamesForR8 {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+				SourceFiles = new [] { new Microsoft.Build.Utilities.TaskItem (source) },
+				DestinationFiles = new [] { new Microsoft.Build.Utilities.TaskItem (destination) },
+				MappingFile = mappingFile,
+			};
+
+			Assert.IsFalse (task.Execute (), "Task should fail for malformed IL.");
+			Assert.AreEqual (1, errors.Count, "Exactly one error should have been logged.");
+			Assert.AreEqual ("XA4325", errors [0].Code);
+			StringAssert.Contains ("Malformed IL", errors [0].Message);
+			CollectionAssert.IsEmpty (task.RewrittenFiles, "A failed invocation must not publish partial or null output items.");
+			FileAssert.DoesNotExist (destination);
 		}
 
 		[Test]

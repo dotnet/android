@@ -45,13 +45,14 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
+			RewrittenFiles = [];
 			if (DestinationDirectory.IsNullOrEmpty () && SourceFiles.Length != DestinationFiles.Length) {
 				Log.LogCodedError ("XA4325", Properties.Resources.XA4325, Properties.Resources.XA4325_SourceDestinationCount);
 				return !Log.HasLoggedErrors;
 			}
 
 			R8Mapping mapping = R8Mapping.Load (MappingFile);
-			var rewrittenFiles = new ITaskItem [SourceFiles.Length];
+			var rewrittenFiles = new List<ITaskItem> (SourceFiles.Length);
 
 			for (int i = 0; i < SourceFiles.Length; i++) {
 				string source = SourceFiles [i].ItemSpec;
@@ -64,16 +65,18 @@ namespace Xamarin.Android.Tasks
 						ItemSpec = destination,
 					};
 					rewritten.SetMetadata ("OriginalItemSpec", source);
-					rewrittenFiles [i] = rewritten;
+					rewrittenFiles.Add (rewritten);
 				} catch (JniRewriteException e) {
 					Log.LogCodedError ("XA4325", Properties.Resources.XA4325,
 						string.Format (Properties.Resources.XA4325_AssemblyFailure, source, e.Message));
 				}
 			}
 
-			RewrittenFiles = rewrittenFiles;
-			if (!Log.HasLoggedErrors && !RewriteManifestFile.IsNullOrEmpty ()) {
-				WriteRewriteManifest (RewriteManifestFile, mapping.AccessedEntries);
+			if (!Log.HasLoggedErrors) {
+				RewrittenFiles = rewrittenFiles.ToArray ();
+				if (!RewriteManifestFile.IsNullOrEmpty ()) {
+					WriteRewriteManifest (RewriteManifestFile, mapping.AccessedEntries);
+				}
 			}
 			return !Log.HasLoggedErrors;
 		}
@@ -114,9 +117,12 @@ namespace Xamarin.Android.Tasks
 		static void CopyAdjacentPdbUnchanged (string sourcePath, string destinationPath)
 		{
 			string pdbSource = Path.ChangeExtension (sourcePath, "pdb");
+			string pdbDestination = Path.ChangeExtension (destinationPath, "pdb");
 			if (File.Exists (pdbSource)) {
-				string pdbDestination = Path.ChangeExtension (destinationPath, "pdb");
 				Files.CopyIfChanged (pdbSource, pdbDestination);
+			} else if (File.Exists (pdbDestination)) {
+				Files.SetWriteable (pdbDestination);
+				File.Delete (pdbDestination);
 			}
 		}
 	}
