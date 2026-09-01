@@ -6,6 +6,7 @@ using Microsoft.Build.Utilities;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks.JniRemapping;
 
 namespace Xamarin.Android.Tasks
 {
@@ -34,8 +35,14 @@ namespace Xamarin.Android.Tasks
 		public string? ProguardGeneratedApplicationConfiguration { get; set; }
 		public string? ProguardCommonXamarinConfiguration { get; set; }
 		public string? ProguardMappingFileOutput { get; set; }
+		public string? ProguardMappingFileInput { get; set; }
 		public ITaskItem []? ProguardConfigurationFiles { get; set; }
 		public bool UseTrimmableNativeAotProguardConfiguration { get; set; }
+		public bool GenerateSeedMapping { get; set; }
+		public bool EnableObfuscation { get; set; }
+		public bool ValidateProguardMappingFileInput { get; set; }
+		public string? ProguardMappingRequiredEntriesFile { get; set; }
+		public string? ProguardMappingRequiredReachabilityEntriesFile { get; set; }
 
 		// User-authored AndroidJavaSource (Bind != true) .java files. These have no managed peer and are
 		// therefore absent from the acw-map, so they must be kept explicitly when shrinking is enabled.
@@ -48,13 +55,79 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			try {
-				return base.RunTask ();
+				if (GenerateSeedMapping && ProguardMappingFileOutput.IsNullOrEmpty ()) {
+					LogR8JniMappingError (Properties.Resources.XA4327_SeedMappingOutputRequired);
+					return false;
+				}
+				bool result = base.RunTask ();
+				if (result && ValidateProguardMappingFileInput) {
+					result = ValidateAppliedMapping ();
+				}
+				return result && !Log.HasLoggedErrors;
 			} finally {
 				foreach (var temp in tempFiles) {
 					File.Delete (temp);
 				}
 			}
 		}
+
+		internal bool ValidateAppliedMapping ()
+		{
+			if (ProguardMappingFileInput.IsNullOrEmpty () || !File.Exists (ProguardMappingFileInput)) {
+				LogR8JniMappingError (string.Format (Properties.Resources.XA4327_SeedMappingNotFound, ProguardMappingFileInput));
+				return false;
+			}
+			if (ProguardMappingFileOutput.IsNullOrEmpty () || !File.Exists (ProguardMappingFileOutput)) {
+				LogR8JniMappingError (string.Format (Properties.Resources.XA4327_FinalMappingNotFound, ProguardMappingFileOutput));
+				return false;
+			}
+			if (ProguardMappingRequiredEntriesFile.IsNullOrEmpty () || !File.Exists (ProguardMappingRequiredEntriesFile)) {
+				LogR8JniMappingError (string.Format (Properties.Resources.XA4327_RewriteManifestNotFound, ProguardMappingRequiredEntriesFile));
+				return false;
+			}
+			if (ProguardMappingRequiredReachabilityEntriesFile.IsNullOrEmpty () || !File.Exists (ProguardMappingRequiredReachabilityEntriesFile)) {
+				LogR8JniMappingError (string.Format (Properties.Resources.XA4327_ReachabilityManifestNotFound, ProguardMappingRequiredReachabilityEntriesFile));
+				return false;
+			}
+
+			try {
+				R8Mapping seedMapping = R8Mapping.Load (ProguardMappingFileInput);
+				R8Mapping finalMapping = R8Mapping.Load (ProguardMappingFileOutput);
+				LogMappingConflicts (
+					seedMapping.GetCompatibilityConflicts (finalMapping, File.ReadLines (ProguardMappingRequiredEntriesFile)),
+					Properties.Resources.XA4327_SeedMappingConflict,
+					Properties.Resources.XA4327_AdditionalSeedMappingConflicts);
+				LogMappingConflicts (
+					seedMapping.GetReachabilityConflicts (finalMapping, File.ReadLines (ProguardMappingRequiredReachabilityEntriesFile)),
+					Properties.Resources.XA4327_ReachabilityConflict,
+					Properties.Resources.XA4327_AdditionalReachabilityConflicts);
+			} catch (FormatException ex) {
+				LogR8JniMappingError (string.Format (Properties.Resources.XA4327_MappingDataFailure, ex.Message));
+			} catch (IOException ex) {
+				LogR8JniMappingError (string.Format (Properties.Resources.XA4327_MappingDataFailure, ex.Message));
+			} catch (UnauthorizedAccessException ex) {
+				LogR8JniMappingError (string.Format (Properties.Resources.XA4327_MappingDataFailure, ex.Message));
+			}
+
+			return !Log.HasLoggedErrors;
+		}
+
+		void LogMappingConflicts (IEnumerable<string> conflicts, string conflictFormat, string overflowFormat)
+		{
+			int conflictCount = 0;
+			foreach (string conflict in conflicts) {
+				conflictCount++;
+				if (conflictCount <= 20) {
+					LogR8JniMappingError (string.Format (conflictFormat, conflict));
+				}
+			}
+			if (conflictCount > 20) {
+				LogR8JniMappingError (string.Format (overflowFormat, conflictCount - 20));
+			}
+		}
+
+		void LogR8JniMappingError (string detail)
+			=> Log.LogCodedError ("XA4327", Properties.Resources.XA4327, detail);
 
 		// Derive the fully-qualified Java type name from each user .java source file. Java requires the
 		// public top-level type name to match the file name, so '<package>.<FileNameWithoutExtension>' is
@@ -153,7 +226,29 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			if (EnableShrinking) {
+			if (GenerateSeedMapping) {
+				WriteArg (response, "--no-tree-shaking");
+				var seedConfiguration = new List<string> {
+					"-dontoptimize",
+					"-dontpreverify",
+					"-keepattributes **",
+					$"-printmapping \"{Path.GetFullPath (GetRequiredSeedMappingOutput ())}\"",
+				};
+				if (IgnoreWarnings) {
+					seedConfiguration.Add ("-ignorewarnings");
+				}
+				WriteConfiguration (response, seedConfiguration);
+				GenerateApplicationConfiguration ();
+				if (!ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
+					WriteArg (response, "--pg-conf");
+					WriteArg (response, ProguardGeneratedApplicationConfiguration);
+				}
+				GenerateCommonXamarinConfiguration ();
+				if (!ProguardCommonXamarinConfiguration.IsNullOrEmpty ()) {
+					WriteArg (response, "--pg-conf");
+					WriteArg (response, ProguardCommonXamarinConfiguration);
+				}
+			} else if (EnableShrinking) {
 				if (UseTrimmableNativeAotProguardConfiguration && !ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
 					// ACW keep rules come from the DGML/acw-map-driven proguard_project_references.cfg on
 					// the trimmable path. User-authored AndroidJavaSource (Bind != true) has no managed peer
@@ -167,10 +262,7 @@ namespace Xamarin.Android.Tasks
 					}
 				} else if (!AcwMapFile.IsNullOrEmpty ()) {
 					var acwMap      = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (AcwMapFile), StringComparer.OrdinalIgnoreCase);
-					var javaTypes   = new List<string> (acwMap.Values.Count);
-					foreach (var v in acwMap.Values) {
-						javaTypes.Add (v);
-					}
+					var javaTypes = new List<string> (new HashSet<string> (acwMap.Values, StringComparer.Ordinal));
 					javaTypes.Sort (StringComparer.Ordinal);
 					using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration)) {
 						foreach (var java in javaTypes) {
@@ -183,25 +275,7 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 				}
-				if (!ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
-					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
-						if (UseTrimmableNativeAotProguardConfiguration) {
-							using var stream = GetEmbeddedResourceStream ("proguard_trimmable_nativeaot.cfg");
-							stream.CopyTo (xamcfg.BaseStream);
-						} else {
-							using var stream = GetEmbeddedResourceStream ("proguard_xamarin.cfg");
-							stream.CopyTo (xamcfg.BaseStream);
-						}
-						if (IgnoreWarnings) {
-							xamcfg.WriteLine ("-ignorewarnings");
-						}
-						if (!ProguardMappingFileOutput.IsNullOrEmpty ()) {
-							xamcfg.WriteLine ("-keepattributes SourceFile");
-							xamcfg.WriteLine ("-keepattributes LineNumberTable");
-							xamcfg.WriteLine ($"-printmapping \"{Path.GetFullPath (ProguardMappingFileOutput)}\"");
-						}
-					}
-				}
+				GenerateCommonXamarinConfiguration ();
 			} else {
 				//NOTE: we may be calling r8 *only* for multi-dex, and all shrinking is disabled
 				WriteArg (response, "--no-tree-shaking");
@@ -226,6 +300,11 @@ namespace Xamarin.Android.Tasks
 				WriteArg (response, "--pg-conf");
 				WriteArg (response, temp);
 			}
+			if (!ProguardMappingFileInput.IsNullOrEmpty ()) {
+				WriteConfiguration (response, new [] {
+					$"-applymapping \"{Path.GetFullPath (ProguardMappingFileInput)}\"",
+				});
+			}
 			if (ProguardConfigurationFiles != null) {
 				foreach (var item in ProguardConfigurationFiles) {
 					var file = item.ItemSpec;
@@ -244,6 +323,66 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return responseFile;
+		}
+
+		string GetRequiredSeedMappingOutput ()
+		{
+			string? output = ProguardMappingFileOutput;
+			if (output.IsNullOrEmpty ()) {
+				throw new InvalidOperationException (Properties.Resources.XA4327_SeedMappingOutputRequired);
+			}
+			return output;
+		}
+
+		void GenerateApplicationConfiguration ()
+		{
+			if (AcwMapFile.IsNullOrEmpty () || ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
+				return;
+			}
+
+			var acwMap = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (AcwMapFile), StringComparer.OrdinalIgnoreCase);
+			var javaTypes = new List<string> (new HashSet<string> (acwMap.Values, StringComparer.Ordinal));
+			javaTypes.Sort (StringComparer.Ordinal);
+			using var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration);
+			foreach (var java in javaTypes) {
+				appcfg.WriteLine ($"-keep class {java} {{ *; }}");
+			}
+		}
+
+		void GenerateCommonXamarinConfiguration ()
+		{
+			if (ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
+				return;
+			}
+
+			using var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration);
+			string resourceName = UseTrimmableNativeAotProguardConfiguration ? "proguard_trimmable_nativeaot.cfg" : "proguard_xamarin.cfg";
+			using (Stream resource = GetEmbeddedResourceStream (resourceName))
+			using (var reader = new StreamReader (resource)) {
+				while (reader.ReadLine () is string line) {
+					if (EnableObfuscation && String.Equals (line.Trim (), "-dontobfuscate", StringComparison.OrdinalIgnoreCase)) {
+						continue;
+					}
+					xamcfg.WriteLine (line);
+				}
+			}
+			if (IgnoreWarnings) {
+				xamcfg.WriteLine ("-ignorewarnings");
+			}
+			if (!ProguardMappingFileOutput.IsNullOrEmpty ()) {
+				xamcfg.WriteLine ("-keepattributes SourceFile");
+				xamcfg.WriteLine ("-keepattributes LineNumberTable");
+				xamcfg.WriteLine ($"-printmapping \"{Path.GetFullPath (ProguardMappingFileOutput)}\"");
+			}
+		}
+
+		void WriteConfiguration (StreamWriter response, IEnumerable<string> lines)
+		{
+			var temp = Path.GetTempFileName ();
+			File.WriteAllLines (temp, lines);
+			tempFiles.Add (temp);
+			WriteArg (response, "--pg-conf");
+			WriteArg (response, temp);
 		}
 
 		// ProGuard "global" options that affect the whole build and are not allowed inside

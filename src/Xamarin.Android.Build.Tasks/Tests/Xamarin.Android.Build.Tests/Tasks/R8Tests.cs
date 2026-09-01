@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
+using Microsoft.Build.Framework;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 
@@ -48,6 +51,37 @@ namespace Xamarin.Android.Build.Tests
 				File.Delete (path);
 			}
 		}
+
+		[Test]
+		public void ValidateAppliedMappingUsesXA4327 ()
+		{
+			string path = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
+			Directory.CreateDirectory (path);
+			try {
+				string seedMapping = Path.Combine (path, "seed-mapping.txt");
+				string finalMapping = Path.Combine (path, "final-mapping.txt");
+				string rewriteManifest = Path.Combine (path, "rewrite-manifest.txt");
+				string reachabilityManifest = Path.Combine (path, "reachability-manifest.txt");
+				File.WriteAllText (seedMapping, "acme.orig.MyView -> a.b.C:\n");
+				File.WriteAllText (finalMapping, "acme.orig.MyView -> a.b.D:\n");
+				File.WriteAllText (rewriteManifest, "C\tacme/orig/MyView\n");
+				File.WriteAllText (reachabilityManifest, "");
+
+				var errors = new List<BuildErrorEventArgs> ();
+				var task = new R8 {
+					BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+					ProguardMappingFileInput = seedMapping,
+					ProguardMappingFileOutput = finalMapping,
+					ProguardMappingRequiredEntriesFile = rewriteManifest,
+					ProguardMappingRequiredReachabilityEntriesFile = reachabilityManifest,
+				};
+
+				Assert.IsFalse (task.ValidateAppliedMapping (), "A conflicting final mapping should fail validation.");
+				Assert.That (errors, Has.Count.EqualTo (1));
+				Assert.AreEqual ("XA4327", errors [0].Code);
+			} finally {
+				Directory.Delete (path, recursive: true);
+			}
+		}
 	}
 }
-

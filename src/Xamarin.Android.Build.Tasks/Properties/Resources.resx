@@ -901,6 +901,70 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
     <value>Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous JNIEnv.FindClass source.</value>
     <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
   </data>
+  <data name="XA4327" xml:space="preserve">
+    <value>Failed to validate R8 JNI mapping data. {0}</value>
+    <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4327_* resources.</comment>
+  </data>
+  <data name="XA4327_AdditionalReachabilityConflicts" xml:space="preserve">
+    <value>The final R8 mapping contains {0} additional post-link reachable JNI entries removed by final R8.</value>
+    <comment>The following are literal names and should not be translated: R8, JNI
+{0} - The number of additional post-link reachable JNI entries that final R8 removed.</comment>
+  </data>
+  <data name="XA4327_AdditionalSeedMappingConflicts" xml:space="preserve">
+    <value>The final R8 mapping contains {0} additional conflicts with managed JNI names.</value>
+    <comment>The following are literal names and should not be translated: R8, JNI
+{0} - The number of additional conflicts with managed JNI names.</comment>
+  </data>
+  <data name="XA4327_FinalMappingNotFound" xml:space="preserve">
+    <value>The final R8 mapping file '{0}' was not generated, so the applied JNI names could not be validated.</value>
+    <comment>The following are literal names and should not be translated: R8, JNI
+{0} - The path to the final R8 mapping file.</comment>
+  </data>
+  <data name="XA4327_LinkedAssemblyScanFailure" xml:space="preserve">
+    <value>Could not scan the linked assembly '{0}' for rewritten JNI references: {1}</value>
+    <comment>The following literal name should not be translated: JNI
+{0} - The path to the linked assembly.
+{1} - The underlying message describing why the assembly could not be scanned. It is not localized.</comment>
+  </data>
+  <data name="XA4327_LinkedAssemblyReadFailure" xml:space="preserve">
+    <value>Could not read assembly '{0}': {1}</value>
+    <comment>{0} - The path to the linked assembly.
+{1} - The underlying message describing why the assembly could not be read. It is not localized.</comment>
+  </data>
+  <data name="XA4327_MappingDataFailure" xml:space="preserve">
+    <value>Could not read R8 JNI mapping data: {0}</value>
+    <comment>The following are literal names and should not be translated: R8, JNI
+{0} - The underlying message describing why the mapping data could not be read. It is not localized.</comment>
+  </data>
+  <data name="XA4327_ReachabilityConflict" xml:space="preserve">
+    <value>Final R8 removed a post-link reachable JNI {0}.</value>
+    <comment>The following are literal names and should not be translated: R8, JNI
+{0} - A description of the post-link reachable JNI entry that final R8 removed.</comment>
+  </data>
+  <data name="XA4327_ReachabilityManifestNotFound" xml:space="preserve">
+    <value>The post-link R8 JNI reachability manifest '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: R8, JNI
+{0} - The path to the post-link R8 JNI reachability manifest.</comment>
+  </data>
+  <data name="XA4327_RewriteManifestNotFound" xml:space="preserve">
+    <value>The R8 JNI rewrite manifest '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: R8, JNI
+{0} - The path to the R8 JNI rewrite manifest.</comment>
+  </data>
+  <data name="XA4327_SeedMappingConflict" xml:space="preserve">
+    <value>The final R8 mapping did not preserve the JNI seed mapping for {0}.</value>
+    <comment>The following are literal names and should not be translated: R8, JNI
+{0} - A description of the managed JNI entry whose seed mapping was not preserved.</comment>
+  </data>
+  <data name="XA4327_SeedMappingNotFound" xml:space="preserve">
+    <value>The R8 JNI seed mapping file '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: R8, JNI
+{0} - The path to the R8 JNI seed mapping file.</comment>
+  </data>
+  <data name="XA4327_SeedMappingOutputRequired" xml:space="preserve">
+    <value>The 'ProguardMappingFileOutput' property is required when 'GenerateSeedMapping' is enabled.</value>
+    <comment>The following are literal task property names and should not be translated: 'ProguardMappingFileOutput', 'GenerateSeedMapping'.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>

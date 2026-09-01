@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Mono.Cecil;
@@ -199,6 +200,247 @@ namespace Xamarin.Android.Build.Tests {
 			foreach (var typemapDll in typemapDlls) {
 				FileAssert.Exists (typemapDll, $"No-op builds should preserve generated typemap assembly {typemapDll} when _GenerateTrimmableTypeMap is skipped.");
 			}
+		}
+
+		[Test]
+		public void Build_WithR8JniNameRewriting_IsIncremental ()
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			const string originalJavaName = "com/example/R8JniPeer";
+			const string changedJavaName = "com/example/R8JniPeerChanged";
+			const string userJavaName = "com.example.UserJavaType";
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			string javaName = originalJavaName;
+			var peerSource = new BuildItem.Source ("R8JniPeer.cs") {
+				TextContent = () => $$"""
+using Android.Runtime;
+
+namespace UnnamedProject;
+
+[Register ("{{javaName}}")]
+public class R8JniPeer : Java.Lang.Object
+{
+	public R8JniPeer () { }
+}
+""",
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				Sources = {
+					peerSource,
+				},
+			};
+			if (runtime == AndroidRuntime.CoreCLR) {
+				proj.LinkTool = "r8";
+			}
+			proj.AndroidJavaSources.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "UserJavaType.java") {
+				TextContent = () => "package com.example; public class UserJavaType { }",
+				Encoding = Encoding.ASCII,
+				Metadata = { { "Bind", "False" } },
+			});
+			proj.SetRuntime (runtime);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			proj.SetProperty ("AndroidPackageFormat", "apk");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidEnableR8JniNameObfuscation", "true");
+
+			using var builder = CreateApkBuilder (Path.Combine ("temp", $"R8JniNameRewriting_{runtime}_{Guid.NewGuid ():N}"));
+			Assert.IsTrue (builder.Build (proj), "Clean R8 JNI name-rewriting build should have succeeded.");
+
+			var projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
+			var seedMapping = FindSingleFile (projectDirectory, "mapping.txt", path => path.Contains ("r8-jni-seed", StringComparison.Ordinal));
+			var finalMapping = FindSingleFile (projectDirectory, "mapping.txt", path => !path.Contains ("r8-jni-seed", StringComparison.Ordinal));
+			var rewriteManifest = FindSingleFile (projectDirectory, "r8-jni-rewrite-manifest.txt");
+			var reachabilityManifest = FindSingleFile (projectDirectory, "r8-jni-reachability-manifest.txt");
+			var rewrittenAssemblies = Directory.GetFiles (projectDirectory, "*.dll", SearchOption.AllDirectories)
+				.Where (path => path.Contains ("r8-jni-rewritten", StringComparison.Ordinal))
+				.ToArray ();
+
+			Assert.IsNotEmpty (rewrittenAssemblies, "The clean build should rewrite managed assemblies before trimming or AOT.");
+			foreach (var rewrittenAssembly in rewrittenAssemblies) {
+				var hashDirectory = Path.GetFileName (Path.GetDirectoryName (rewrittenAssembly));
+				Assert.That (hashDirectory, Does.Match ("^[0-9a-fA-F]{16}$"), $"Rewritten assembly staging should include a source-path hash: {rewrittenAssembly}");
+			}
+			StringAssert.Contains ($"{originalJavaName.Replace ('/', '.')} ->", File.ReadAllText (seedMapping));
+			StringAssert.DoesNotContain ($"{userJavaName} ->", File.ReadAllText (seedMapping), "User Java sources are kept by final R8 and should not receive seed-only names.");
+			StringAssert.Contains ($"C\t{originalJavaName}", File.ReadAllText (rewriteManifest));
+			Assert.That (new FileInfo (reachabilityManifest).Length, Is.GreaterThan (0), "The clean build should record post-link JNI reachability.");
+			Assert.That (new FileInfo (finalMapping).Length, Is.GreaterThan (0), "The final R8 pass should emit its applied mapping.");
+
+			var outputTimestamps = rewrittenAssemblies
+				.Append (seedMapping)
+				.Append (rewriteManifest)
+				.Append (reachabilityManifest)
+				.Append (finalMapping)
+				.ToDictionary (path => path, File.GetLastWriteTimeUtc, StringComparer.Ordinal);
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "No-op R8 JNI name-rewriting build should have succeeded.");
+			builder.Output.AssertTargetIsSkipped ("_AndroidCompileR8JniSeedJava");
+			builder.Output.AssertTargetIsSkipped ("_AndroidGenerateR8JniSeedMapping");
+			builder.Output.AssertTargetIsSkipped (runtime == AndroidRuntime.CoreCLR
+				? "_AndroidRewriteJniNamesBeforeILLink"
+				: "_AndroidRewriteJniNamesBeforeIlc");
+			builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
+			foreach (var pair in outputTimestamps) {
+				Assert.AreEqual (pair.Value, File.GetLastWriteTimeUtc (pair.Key), $"No-op build should preserve {pair.Key}.");
+			}
+
+			var missingRewrittenAssembly = rewrittenAssemblies [0];
+			File.Delete (missingRewrittenAssembly);
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Missing rewritten assembly rebuild should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped (runtime == AndroidRuntime.CoreCLR
+				? "_AndroidRewriteJniNamesBeforeILLink"
+				: "_AndroidRewriteJniNamesBeforeIlc");
+			FileAssert.Exists (missingRewrittenAssembly, "The managed rewrite target should recover a missing output.");
+
+			javaName = changedJavaName;
+			proj.Touch ("R8JniPeer.cs");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "JNI-name change rebuild should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_AndroidCompileR8JniSeedJava");
+			builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateR8JniSeedMapping");
+			builder.Output.AssertTargetIsNotSkipped (runtime == AndroidRuntime.CoreCLR
+				? "_AndroidRewriteJniNamesBeforeILLink"
+				: "_AndroidRewriteJniNamesBeforeIlc");
+			builder.Output.AssertTargetIsNotSkipped ("_CompileToDalvik");
+			StringAssert.DoesNotContain ($"{originalJavaName.Replace ('/', '.')} ->", File.ReadAllText (seedMapping));
+			StringAssert.Contains ($"{changedJavaName.Replace ('/', '.')} ->", File.ReadAllText (seedMapping));
+			StringAssert.Contains ($"C\t{changedJavaName}", File.ReadAllText (rewriteManifest));
+
+			proj.SetProperty ("AndroidEnableR8JniNameObfuscation", "false");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Disabling R8 JNI name rewriting should invalidate the existing build outputs.");
+			builder.Output.AssertTargetIsNotSkipped ("_CleanIntermediateIfNeeded");
+
+			proj.SetProperty ("AndroidEnableR8JniNameObfuscation", "true");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Re-enabling R8 JNI name rewriting should regenerate the pipeline outputs.");
+			builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateR8JniSeedMapping");
+			FileAssert.Exists (seedMapping);
+		}
+
+		[Test]
+		public void Build_WithR8JniNameRewriting_SupportsMultipleRuntimeIdentifiers ()
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			const string javaName = "com/example/R8JniMultiAbiPeer";
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				LinkTool = "r8",
+				Sources = {
+					new BuildItem.Source ("R8JniMultiAbiPeer.cs") {
+						TextContent = () => $$"""
+using Android.Runtime;
+
+namespace UnnamedProject;
+
+[Register ("{{javaName}}")]
+public class R8JniMultiAbiPeer : Java.Lang.Object
+{
+	public R8JniMultiAbiPeer () { }
+}
+""",
+					},
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
+			proj.SetProperty ("AndroidPackageFormat", "apk");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidEnableR8JniNameObfuscation", "true");
+
+			using var builder = CreateApkBuilder (Path.Combine ("temp", $"R8JniNameRewritingMultiAbi_{runtime}_{Guid.NewGuid ():N}"));
+			Assert.IsTrue (builder.Build (proj), "Multi-ABI R8 JNI name-rewriting build should have succeeded.");
+
+			var projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
+			var seedMapping = FindSingleFile (projectDirectory, "mapping.txt", path => path.Contains ("r8-jni-seed", StringComparison.Ordinal));
+			var rewriteManifests = Directory.GetFiles (projectDirectory, "r8-jni-rewrite-manifest.txt", SearchOption.AllDirectories);
+			var reachabilityManifests = Directory.GetFiles (projectDirectory, "r8-jni-reachability-manifest.txt", SearchOption.AllDirectories);
+			var rewrittenAssemblies = Directory.GetFiles (projectDirectory, "*.dll", SearchOption.AllDirectories)
+				.Where (path => path.Contains ("r8-jni-rewritten", StringComparison.Ordinal))
+				.ToArray ();
+
+			StringAssert.Contains ($"{javaName.Replace ('/', '.')} ->", File.ReadAllText (seedMapping));
+			foreach (var runtimeIdentifier in new [] { "android-arm64", "android-x64" }) {
+				Assert.That (rewrittenAssemblies, Has.Some.Contains (runtimeIdentifier), $"The {runtimeIdentifier} inner build should have isolated rewritten assemblies.");
+				Assert.That (rewriteManifests, Has.Some.Contains (runtimeIdentifier), $"The {runtimeIdentifier} inner build should have a rewrite manifest.");
+			}
+			Assert.That (reachabilityManifests, Has.Exactly (1).Contains ("android-arm64"), "Final R8 should consume the shared first-RID reachability manifest.");
+			Assert.That (new FileInfo (reachabilityManifests [0]).Length, Is.GreaterThan (0), "The shared reachability manifest should contain retained JNI entries.");
+			foreach (var manifest in rewriteManifests) {
+				StringAssert.Contains ($"C\t{javaName}", File.ReadAllText (manifest));
+			}
+		}
+
+		[Test]
+		public void Build_WithR8JniNameRewriting_SupportsProjectReferencesAndCustomRules ()
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			const string libraryJavaName = "com/example/R8JniLibraryPeer";
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			string proguardRule = "-dontwarn com.example.UnusedOne";
+			var library = new XamarinAndroidLibraryProject {
+				IsRelease = true,
+				ProjectName = "R8JniLibrary",
+				Sources = {
+					new BuildItem.Source ("R8JniLibraryPeer.cs") {
+						TextContent = () => $$"""
+using Android.Runtime;
+
+namespace R8JniLibrary;
+
+[Register ("{{libraryJavaName}}")]
+public class R8JniLibraryPeer : Java.Lang.Object
+{
+	public R8JniLibraryPeer () { }
+}
+""",
+					},
+				},
+			};
+			library.SetRuntime (runtime);
+
+			var app = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				LinkTool = "r8",
+			};
+			app.SetRuntime (runtime);
+			app.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			app.SetProperty ("AndroidPackageFormat", "apk");
+			app.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			app.SetProperty ("AndroidEnableR8JniNameObfuscation", "true");
+			app.References.Add (new BuildItem.ProjectReference (Path.Combine ("..", library.ProjectName, $"{library.ProjectName}.csproj"), library.ProjectName, library.ProjectGuid));
+			app.OtherBuildItems.Add (new AndroidItem.ProguardConfiguration ("r8-jni-rules.pro") {
+				TextContent = () => proguardRule,
+			});
+
+			string testDirectory = Path.Combine ("temp", $"R8JniNameRewritingReferences_{runtime}_{Guid.NewGuid ():N}");
+			using var libraryBuilder = CreateDllBuilder (Path.Combine (testDirectory, library.ProjectName));
+			using var appBuilder = CreateApkBuilder (Path.Combine (testDirectory, "App"));
+			Assert.IsTrue (libraryBuilder.Build (library), "Referenced library build should have succeeded.");
+			Assert.IsTrue (appBuilder.Build (app), "R8 JNI name-rewriting build with a project reference and custom rules should have succeeded.");
+
+			var projectDirectory = Path.Combine (Root, appBuilder.ProjectDirectory);
+			var seedMapping = FindSingleFile (projectDirectory, "mapping.txt", path => path.Contains ("r8-jni-seed", StringComparison.Ordinal));
+			var rewriteManifest = FindSingleFile (projectDirectory, "r8-jni-rewrite-manifest.txt");
+			StringAssert.Contains ($"{libraryJavaName.Replace ('/', '.')} ->", File.ReadAllText (seedMapping));
+			StringAssert.Contains ($"C\t{libraryJavaName}", File.ReadAllText (rewriteManifest));
+
+			proguardRule = "-dontwarn com.example.UnusedTwo";
+			app.Touch ("r8-jni-rules.pro");
+			Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "Custom-rule incremental build should have succeeded.");
+			appBuilder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateR8JniSeedMapping");
+			appBuilder.Output.AssertTargetIsNotSkipped (runtime == AndroidRuntime.CoreCLR
+				? "_AndroidRewriteJniNamesBeforeILLink"
+				: "_AndroidRewriteJniNamesBeforeIlc");
+			appBuilder.Output.AssertTargetIsNotSkipped ("_CompileToDalvik");
 		}
 
 		[Test]
@@ -1316,6 +1558,15 @@ namespace UnnamedProject {
 				expected,
 				contents.Contains (value, StringComparison.Ordinal),
 				$"{description} should {(expected ? "contain" : "exclude")} '{value}'.");
+		}
+
+		static string FindSingleFile (string directory, string fileName, Func<string, bool>? predicate = null)
+		{
+			var files = Directory.GetFiles (directory, fileName, SearchOption.AllDirectories)
+				.Where (path => predicate?.Invoke (path) != false)
+				.ToArray ();
+			Assert.AreEqual (1, files.Length, $"Expected exactly one {fileName} under {directory}, but found:\n{string.Join ("\n", files)}");
+			return files [0];
 		}
 
 		DynamicCodeSupportProfile BuildDynamicCodeSupportProfile (string typemapImplementation, bool? dynamicCodeSupport)

@@ -998,6 +998,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="ProjectFullPath=$(MSBuildProjectFullPath)" />
 		<_PropertyCacheItems Include="AndroidUseDesignerAssembly=$(AndroidUseDesignerAssembly)" />
 		<_PropertyCacheItems Include="AndroidTypeMapImplementation=$(AndroidTypeMapImplementation)" />
+		<_PropertyCacheItems Include="AndroidEnableR8JniNameObfuscation=$(AndroidEnableR8JniNameObfuscation)" />
 		<_PropertyCacheItems Include="_AndroidUseMarshalMethods=$(_AndroidUseMarshalMethods)" />
 		<_PropertyCacheItems Include="_AndroidJcwCodegenTarget=$(_AndroidJcwCodegenTarget)" />
 		<_PropertyCacheItems Include="_AndroidAssemblyStoreCompressionLevel=$(_AndroidAssemblyStoreCompressionLevel)" />
@@ -2012,7 +2013,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_SetProguardMappingFileProperty">
 	<PropertyGroup>
-		<AndroidProguardMappingFile Condition=" '$(AndroidLinkTool)' == 'r8' And '$(AndroidCreateProguardMappingFile)' == 'True' ">$(OutputPath)mapping.txt</AndroidProguardMappingFile>
+		<AndroidProguardMappingFile Condition=" '$(AndroidLinkTool)' == 'r8' And ('$(AndroidCreateProguardMappingFile)' == 'True' Or '$(_AndroidEnableR8JniNameRewriting)' == 'true') ">$(OutputPath)mapping.txt</AndroidProguardMappingFile>
 	</PropertyGroup>
 </Target>
 
@@ -3082,6 +3083,11 @@ because xbuild doesn't support framework reference assemblies.
     <Error Condition=" '$(AndroidTypeMapImplementation)' != '' and '$(AndroidTypeMapImplementation)' != 'llvm-ir' and '$(AndroidTypeMapImplementation)' != 'trimmable' "
            Text="Invalid value for AndroidTypeMapImplementation: '$(AndroidTypeMapImplementation)'. Valid values are: llvm-ir, trimmable." />
   </Target>
+  <PropertyGroup>
+    <_AndroidEnableR8JniNameRewriting
+        Condition=" '$(_AndroidEnableR8JniNameRewriting)' == '' and '$(AndroidLinkTool)' == 'r8' and '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' and '$(AndroidEnableR8JniNameObfuscation)' == 'true' ">true</_AndroidEnableR8JniNameRewriting>
+    <_AndroidEnableR8JniNameRewriting Condition=" '$(_AndroidEnableR8JniNameRewriting)' == '' ">false</_AndroidEnableR8JniNameRewriting>
+  </PropertyGroup>
 
   <Target Name="_LinkAssemblies"
       DependsOnTargets="_ResolveAssemblies;_CreatePackageWorkspace;$(_BeforeLinkAssemblies);_LinkAssembliesNoShrink"
