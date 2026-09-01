@@ -22,9 +22,10 @@ namespace Xamarin.Android.Tasks.JniRemapping
 	}
 
 	/// <summary>
-	/// Rewrites JNI names embedded in <c>Android.Runtime.RegisterAttribute</c>,
-	/// the <c>Java.Interop.Jni*SignatureAttribute</c> family, and generated
-	/// JniPeerMembers/RegisterNatives <c>ldstr</c> strings according to an R8 mapping.
+	/// Rewrites the JNI names embedded in an assembly - <c>Android.Runtime.RegisterAttribute</c>,
+	/// the <c>Java.Interop.Jni*SignatureAttribute</c> family, the JniPeerMembers/RegisterNatives
+	/// <c>ldstr</c> strings, and the generated null-terminated UTF-8 JNI data stored in
+	/// <c>FieldRVA</c> - according to an R8 mapping.
 	///
 	/// The rewrite runs in two passes. The first scans the source into an exact plan; the second
 	/// reconstructs the whole assembly with <c>MetadataBuilder</c>, cloning every table row in its
@@ -42,13 +43,15 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			}
 
 			MetadataReader reader = peReader.GetMetadataReader ();
-			JniRewritePlan plan = new JniRewritePlanner (peReader, reader, mapping, log).CreatePlan ();
+			FieldRvaTable fieldRvaTable = FieldRvaTable.Read (peReader, reader);
+
+			JniRewritePlan plan = new JniRewritePlanner (peReader, reader, mapping, fieldRvaTable, log).CreatePlan ();
 			if (plan.ReplacementCount == 0) {
 				return new JniRewriteResult (sourceImage, 0, strongNameSignatureCleared: false);
 			}
 
-			FieldRvaTable fieldRvaTable = FieldRvaTable.Read (peReader, reader);
 			AssemblyRebuildResult rebuilt = new AssemblyRebuilder (peReader, reader, plan, fieldRvaTable).Build ();
+
 			return new JniRewriteResult (rebuilt.Image, plan.ReplacementCount, rebuilt.StrongNameSignatureCleared);
 		}
 
@@ -64,6 +67,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		}
 
 		public static void ScanRewrittenAssembly (PEReader peReader, MetadataReader reader, R8Mapping mapping, TaskLoggingHelper log)
-			=> new JniRewritePlanner (peReader, reader, mapping.CreateReverseMapping (), log).CreatePlan ();
+		{
+			FieldRvaTable fieldRvaTable = FieldRvaTable.Read (peReader, reader);
+			new JniRewritePlanner (peReader, reader, mapping.CreateReverseMapping (), fieldRvaTable, log).CreatePlan ();
+		}
 	}
 }
