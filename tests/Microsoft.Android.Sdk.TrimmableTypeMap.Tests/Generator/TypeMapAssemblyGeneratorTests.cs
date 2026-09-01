@@ -1219,6 +1219,11 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		return ReadInlineMethodTokens (ilBytes, 0x28);
 	}
 
+	static List<int> ReadLoadStaticFieldAddressTokens (byte [] ilBytes)
+	{
+		return ReadInlineMethodTokens (ilBytes, 0x7F);
+	}
+
 	static List<int> ReadInlineMethodTokens (byte [] ilBytes, byte opcode)
 	{
 		var tokens = new List<int> ();
@@ -1499,19 +1504,17 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_MultipleAcwProxies_DeduplicatesUtf8Strings ()
+	public void Generate_MultipleAcwProxies_DeduplicatesSignaturesButNotMethodNames ()
 	{
 		var peers = ScanFixtures ();
-		// Get all ACW peers — they likely share signatures like "()V"
 		var acwPeers = peers.Where (p => !p.DoNotGenerateAcw && p.MarshalMethods.Count > 0).ToList ();
 		Assert.True (acwPeers.Count >= 2, "Need at least 2 ACW peers to test deduplication");
+		var model = ModelBuilder.Build (acwPeers, "DedupTest.dll", "DedupTest");
 
 		using var stream = GenerateAssembly (acwPeers, "DedupTest");
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
-		// Count fields with HasFieldRVA — these are our UTF-8 RVA fields.
-		// With deduplication, common strings like "()V" should appear only once.
 		var rvaFields = reader.FieldDefinitions
 			.Select (h => reader.GetFieldDefinition (h))
 			.Where (f => (f.Attributes & FieldAttributes.HasFieldRVA) != 0)
@@ -1522,24 +1525,94 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			Assert.StartsWith ("__utf8_", reader.GetString (declaringType.Name));
 		});
 
-		// Collect all JNI method names and signatures from the ACW peers
-		var allStrings = acwPeers
-			.SelectMany (p => p.MarshalMethods)
-			.SelectMany (m => new [] { m.JniName, m.JniSignature })
-			.ToList ();
-		var uniqueStrings = allStrings.Distinct ().Count ();
+		var registrations = model.ProxyTypes.SelectMany (proxy => proxy.NativeRegistrations).ToList ();
+		int expectedFieldCount = registrations.Count +
+			registrations.Select (registration => registration.JniSignature).Distinct (StringComparer.Ordinal).Count ();
+		Assert.Equal (expectedFieldCount, rvaFields.Count);
+	}
 
-		// With dedup, RVA field count should equal unique string count, not total string count.
-		// Also include constructor registrations (nctor_*), so use <= for a safe assertion.
-		Assert.True (rvaFields.Count <= uniqueStrings + acwPeers.Count * 2,
-			$"Expected at most {uniqueStrings + acwPeers.Count * 2} RVA fields (unique strings + ctor names/sigs), " +
-			$"but found {rvaFields.Count}. Deduplication may not be working.");
+	[Fact]
+	public void Generate_SharedMethodNameUsesDistinctFieldsWhileSignatureRemainsShared ()
+	{
+		var first = MakeAcwPeer ("test/First", "Test.First", "TestAsm") with {
+			JavaConstructors = [],
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "run",
+					NativeCallbackName = "n_Run",
+					JniSignature = "()V",
+					ManagedMethodName = "Run",
+				},
+			],
+		};
+		var second = MakeAcwPeer ("test/Second", "Test.Second", "TestAsm") with {
+			JavaConstructors = [],
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "run",
+					NativeCallbackName = "n_Run",
+					JniSignature = "()V",
+					ManagedMethodName = "Run",
+				},
+			],
+		};
 
-		// The key assertion: fewer RVA fields than total strings means dedup is working
-		if (allStrings.Count > uniqueStrings) {
-			Assert.True (rvaFields.Count < allStrings.Count,
-				$"Expected fewer RVA fields ({rvaFields.Count}) than total strings ({allStrings.Count}) due to deduplication");
-		}
+		using var stream = GenerateAssembly ([first, second], "OwnerSpecificNames");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var firstFields = ReadRegisterNativesFieldTokens (pe, reader, "Test_First_Proxy");
+		var secondFields = ReadRegisterNativesFieldTokens (pe, reader, "Test_Second_Proxy");
+
+		Assert.Equal (2, firstFields.Count);
+		Assert.Equal (2, secondFields.Count);
+		Assert.NotEqual (firstFields [0], secondFields [0]);
+		Assert.Equal (firstFields [1], secondFields [1]);
+	}
+
+	[Fact]
+	public void Generate_RegistrationWithoutWrapperDoesNotConsumeUtf8Field ()
+	{
+		var peer = MakeAcwPeer ("test/Valid", "Test.Valid", "TestAsm") with {
+			JavaConstructors = [],
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "run",
+					NativeCallbackName = "n_Run",
+					JniSignature = "()V",
+					ManagedMethodName = "Run",
+				},
+			],
+		};
+		var model = ModelBuilder.Build ([peer], "MissingWrapper.dll", "MissingWrapper");
+		model.ProxyTypes.Single ().NativeRegistrations.Add (new NativeRegistrationData {
+			JniMethodName = "n_Missing",
+			JniSignature = "(I)V",
+			WrapperMethodName = "missing_uco",
+			WrapperTarget = new UcoWrapperTargetData {
+				TypeNamespace = "_TypeMap.Proxies",
+				TypeName = "Missing_Proxy",
+				MethodName = "missing_uco",
+			},
+		});
+
+		using var stream = new MemoryStream ();
+		new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0)).Emit (model, stream);
+		stream.Position = 0;
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		Assert.Equal (2, reader.GetTableRowCount (TableIndex.FieldRva));
+		Assert.Equal (2, ReadRegisterNativesFieldTokens (pe, reader, "Test_Valid_Proxy").Count);
+	}
+
+	static List<int> ReadRegisterNativesFieldTokens (PEReader pe, MetadataReader reader, string proxyTypeName)
+	{
+		var proxy = FindProxyType (reader, proxyTypeName);
+		var method = reader.GetMethodDefinition (FindMethodDefinition (reader, proxy, "RegisterNatives"));
+		var ilBytes = pe.GetMethodBody (method.RelativeVirtualAddress).GetILBytes ();
+		Assert.NotNull (ilBytes);
+		return ReadLoadStaticFieldAddressTokens (ilBytes);
 	}
 
 	[Fact]
