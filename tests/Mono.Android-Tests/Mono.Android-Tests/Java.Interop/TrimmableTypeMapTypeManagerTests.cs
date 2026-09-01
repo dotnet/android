@@ -53,8 +53,11 @@ namespace Java.InteropTests
 			const string jniName = "android/view/View";
 			const int iterationCount = 1_000;
 			var typeMap = TrimmableTypeMap.Instance;
-			Assert.IsTrue (typeMap.TryGetTargetTypes (jniName, out var targetTypes));
-			Assert.AreEqual (1, targetTypes.Length, "The allocation test requires a non-alias typemap entry.");
+			int targetTypeCount = 0;
+			foreach (var targetType in typeMap.GetTargetTypes (jniName)) {
+				targetTypeCount++;
+			}
+			Assert.AreEqual (1, targetTypeCount, "The allocation test requires a non-alias typemap entry.");
 
 			var signature = new JniTypeSignature (jniName);
 			var manager = JniEnvironment.Runtime.TypeManager;
@@ -108,8 +111,11 @@ namespace Java.InteropTests
 			var cache = GetJniProxyCache (instance);
 			cache.TryRemove (jniName, out _);
 
-			Assert.IsTrue (instance.TryGetTargetTypes (jniName, out var targetTypes));
-			Assert.Greater (targetTypes.Length, 1);
+			int targetTypeCount = 0;
+			foreach (var targetType in instance.GetTargetTypes (jniName)) {
+				targetTypeCount++;
+			}
+			Assert.Greater (targetTypeCount, 1);
 			Assert.IsTrue (cache.TryGetValue (jniName, out var cacheEntry));
 			Assert.IsInstanceOf<JavaPeerProxy[]> (cacheEntry);
 		}

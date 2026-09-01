@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 using Android.Text;
 using Android.Runtime;
@@ -120,11 +121,11 @@ namespace Java.InteropTests
 		{
 			AssumeTrimmableTypeMapEnabled ();
 
-			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetTargetTypes ("java/util/ArrayList", out var targetTypes));
-			if (targetTypes is null) {
-				Assert.Fail ("The java/util/ArrayList alias group was not generated.");
-				return;
+			var targetTypes = new List<Type> ();
+			foreach (var targetType in TrimmableTypeMap.Instance.GetTargetTypes ("java/util/ArrayList")) {
+				targetTypes.Add (targetType);
 			}
+			Assert.IsNotEmpty (targetTypes, "The java/util/ArrayList alias group was not generated.");
 			CollectionAssert.Contains (targetTypes, typeof (JavaList));
 			CollectionAssert.Contains (targetTypes, typeof (JavaList<>));
 			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetTargetType ("java/util/ArrayList", out var firstTargetType));

@@ -107,31 +107,8 @@ public class TrimmableTypeMap
 		}
 	}
 
-	/// <summary>
-	/// Returns all target types mapped to a JNI name. For non-alias entries, returns a
-	/// single-element array. For alias groups, returns the surviving target types from
-	/// each alias key. Returns false when no mapping exists or all aliases were trimmed.
-	/// </summary>
-	internal bool TryGetTargetTypes (string jniName, [NotNullWhen (true)] out Type[]? types)
-	{
-		var cacheEntry = GetProxyCacheEntryForJniName (jniName);
-		if (cacheEntry is JavaPeerProxy proxy) {
-			types = [proxy.TargetType];
-			return true;
-		}
-
-		var proxies = (JavaPeerProxy[]) cacheEntry;
-		if (proxies.Length == 0) {
-			types = null;
-			return false;
-		}
-
-		types = new Type [proxies.Length];
-		for (int i = 0; i < proxies.Length; i++) {
-			types [i] = proxies [i].TargetType;
-		}
-		return true;
-	}
+	internal JniProxyTargetTypeEnumerable GetTargetTypes (string jniName)
+		=> new (GetProxyCacheEntryForJniName (jniName));
 
 	/// <summary>
 	/// Returns the first target type mapped to a JNI name without materializing all target types.
@@ -564,5 +541,56 @@ struct JniProxyCacheBuilder
 		}
 
 		return first is JavaPeerProxy proxy ? proxy : Empty;
+	}
+}
+
+readonly struct JniProxyTargetTypeEnumerable
+{
+	readonly object cacheEntry;
+
+	public JniProxyTargetTypeEnumerable (object cacheEntry)
+	{
+		this.cacheEntry = cacheEntry;
+	}
+
+	public Enumerator GetEnumerator () => new (cacheEntry);
+
+	public struct Enumerator
+	{
+		readonly object cacheEntry;
+		int index;
+		Type current;
+
+		public Enumerator (object cacheEntry)
+		{
+			this.cacheEntry = cacheEntry;
+			index = -1;
+			current = typeof (void);
+		}
+
+		public readonly Type Current => current;
+
+		public bool MoveNext ()
+		{
+			int next = index + 1;
+			if (cacheEntry is JavaPeerProxy proxy) {
+				if (next != 0) {
+					return false;
+				}
+
+				index = next;
+				current = proxy.TargetType;
+				return true;
+			}
+
+			var proxies = (JavaPeerProxy[]) cacheEntry;
+			if ((uint) next >= (uint) proxies.Length) {
+				return false;
+			}
+
+			index = next;
+			current = proxies [next].TargetType;
+			return true;
+		}
 	}
 }
