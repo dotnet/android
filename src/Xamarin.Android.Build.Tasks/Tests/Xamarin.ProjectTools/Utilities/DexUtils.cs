@@ -92,35 +92,47 @@ namespace Xamarin.ProjectTools
 			bool inClass = false;
 			bool hasName = false;
 			foreach (var line in dexDump) {
-				if (line.Contains ("Class descriptor")) {
-					inClass = line.Contains (className);
+				if (HasDexDumpName (line, "Class descriptor")) {
+					inClass = ContainsDexDumpValue (line, "Class descriptor", className);
 					hasName = false;
-				} else if (inClass && line.Contains ("name") && line.Contains (method)) {
-					hasName = true;
-				} else if (hasName && line.Contains ("type") && line.Contains (type)) {
-					return true;
+				} else if (inClass && HasDexDumpName (line, "name")) {
+					hasName = ContainsDexDumpValue (line, "name", method);
+				} else if (hasName && HasDexDumpName (line, "type")) {
+					if (ContainsDexDumpValue (line, "type", type)) {
+						return true;
+					}
+					hasName = false;
 				}
 			}
 			return false;
 		}
 
+		static bool ContainsDexDumpValue (string line, string name, string value)
+		{
+			var separator = line.IndexOf (':');
+			return separator >= 0 && HasDexDumpName (line, name, separator) &&
+				line.Substring (separator + 1).Trim () == $"'{value}'";
+		}
+
+		static bool HasDexDumpName (string line, string name)
+		{
+			return HasDexDumpName (line, name, line.IndexOf (':'));
+		}
+
+		static bool HasDexDumpName (string line, string name, int separator)
+		{
+			return separator >= 0 && line.Substring (0, separator).Trim () == name;
+		}
+
 		public static IReadOnlyList<string> GetDexDump (string dexFile, string androidSdkDirectory)
+		{
+			return DexDump (dexFile, androidSdkDirectory);
+		}
+
+		static IReadOnlyList<string> DexDump (string dexFile, string androidSdkDirectory)
 		{
 			var lines = new List<string> ();
 			var linesLock = new object ();
-			DataReceivedEventHandler handler = (s, e) => {
-				if (e.Data != null) {
-					lock (linesLock) {
-						lines.Add (e.Data);
-					}
-				}
-			};
-			DexDump (handler, dexFile, androidSdkDirectory);
-			return lines;
-		}
-
-		static void DexDump (DataReceivedEventHandler handler, string dexFile, string androidSdkDirectory)
-		{
 			var androidSdk = new AndroidSdkInfo ((l, m) => {
 				Console.WriteLine ($"{l}: {m}");
 				if (l == TraceLevel.Error) {
@@ -143,8 +155,19 @@ namespace Xamarin.ProjectTools
 				WorkingDirectory = Path.GetDirectoryName (dexFile),
 			};
 			using (var p = new Process { StartInfo = psi }) {
-				p.ErrorDataReceived += handler;
-				p.OutputDataReceived += handler;
+				var errors = new List<string> ();
+				p.ErrorDataReceived += (s, e) => {
+					if (e.Data != null) {
+						errors.Add (e.Data);
+					}
+				};
+				p.OutputDataReceived += (s, e) => {
+					if (e.Data != null) {
+						lock (linesLock) {
+							lines.Add (e.Data);
+						}
+					}
+				};
 
 				p.Start ();
 				p.BeginErrorReadLine ();
@@ -152,8 +175,12 @@ namespace Xamarin.ProjectTools
 				p.WaitForExit ();
 
 				if (p.ExitCode != 0)
-					throw new Exception ($"'{psi.FileName} {psi.Arguments}' exited with code: {p.ExitCode}");
+					throw new Exception (
+						$"'{psi.FileName} {psi.Arguments}' exited with code: {p.ExitCode}" +
+						$"{Environment.NewLine}stdout:{Environment.NewLine}{string.Join (Environment.NewLine, lines)}" +
+						$"{Environment.NewLine}stderr:{Environment.NewLine}{string.Join (Environment.NewLine, errors)}");
 			}
+			return lines;
 		}
 	}
 }
