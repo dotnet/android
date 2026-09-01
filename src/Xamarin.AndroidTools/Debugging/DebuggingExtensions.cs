@@ -21,7 +21,7 @@ namespace Xamarin.AndroidTools.Debugging
 	public static class DebuggingExtensions
 	{
 		const int WAIT_BEFORE_RETRY_GET_PID = 250;
-		const int WAIT_FOR_DEBUGGER_TO_ATTACH_MS = 1400;
+		static readonly TimeSpan waitForDebuggerReadinessTimeout = TimeSpan.FromSeconds (10);
 
 		/// <summary>
 		/// Starts the process debugging using the given execution configuration
@@ -189,9 +189,7 @@ namespace Xamarin.AndroidTools.Debugging
 				try {
 					await jdwpClient.ConnectAsync (token);
 
-					// Keep the Connection for 1300 milliseconds, otherwise the Android OS ignores the connection!
-					// https://github.com/aosp-mirror/platform_frameworks_base/blob/6b28a227400749f4f8ad1f56799370e7c2cab149/core/java/android/os/Debug.java#L101C50-L101C54
-					await Task.Delay (WAIT_FOR_DEBUGGER_TO_ATTACH_MS);
+					await jdwpClient.WaitForDebuggerReadinessAsync (waitForDebuggerReadinessTimeout, token).ConfigureAwait (false);
 
 					await jdwpClient.DisconnectAsync ();
 				} finally {
