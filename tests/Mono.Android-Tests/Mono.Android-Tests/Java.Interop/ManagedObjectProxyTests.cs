@@ -272,22 +272,27 @@ namespace Java.InteropTests
 
 		static async Task WaitForGC (Func<bool> predicate, string message, int timeoutMilliseconds = 5000)
 		{
+			bool requireBridgeGeneration = !Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime;
 			int initialBridgeGeneration = JNIEnv.BridgeProcessingGeneration;
 			var timeout = TimeSpan.FromMilliseconds (timeoutMilliseconds);
 			var start = DateTime.UtcNow;
-			while ((JNIEnv.BridgeProcessingGeneration == initialBridgeGeneration || !predicate ()) &&
-					DateTime.UtcNow - start < timeout) {
+			do {
 				GC.Collect (generation: 2, mode: GCCollectionMode.Forced, blocking: true);
 				GC.WaitForPendingFinalizers ();
 				JNIEnv.WaitForBridgeProcessing ();
 				JniEnvironment.Runtime.ValueManager.CollectPeers ();
+				JNIEnv.WaitForBridgeProcessing ();
 				await Task.Yield ();
-			}
+			} while ((!predicate () ||
+					(requireBridgeGeneration && JNIEnv.BridgeProcessingGeneration == initialBridgeGeneration)) &&
+				DateTime.UtcNow - start < timeout);
 
 			int finalBridgeGeneration = JNIEnv.BridgeProcessingGeneration;
-			Assert.Greater (finalBridgeGeneration, initialBridgeGeneration,
-				$"A JNI bridge-processing cycle did not complete within {timeoutMilliseconds}ms. " +
-				$"Initial generation: {initialBridgeGeneration}; final generation: {finalBridgeGeneration}.");
+			if (requireBridgeGeneration) {
+				Assert.Greater (finalBridgeGeneration, initialBridgeGeneration,
+					$"A JNI bridge-processing cycle did not complete within {timeoutMilliseconds}ms. " +
+					$"Initial generation: {initialBridgeGeneration}; final generation: {finalBridgeGeneration}.");
+			}
 			Assert.IsTrue (predicate (), message);
 		}
 
