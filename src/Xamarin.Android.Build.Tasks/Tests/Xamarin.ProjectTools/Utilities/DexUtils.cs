@@ -103,7 +103,25 @@ namespace Xamarin.ProjectTools
 			return hasType;
 		}
 
-		static void DexDump (DataReceivedEventHandler handler, string dexFile, string androidSdkDirectory)
+		public static bool ContainsRuntimeMethodAnnotation (string method, string annotationType, string dexFile, string androidSdkDirectory)
+		{
+			bool inMethodAnnotations = false;
+			bool containsAnnotation = false;
+			DataReceivedEventHandler handler = (s, e) => {
+				if (e.Data == null) {
+					return;
+				}
+				if (e.Data.StartsWith ("Annotations on ", StringComparison.Ordinal)) {
+					inMethodAnnotations = e.Data.Contains ($"method ") && e.Data.Contains ($"'{method}'");
+				} else if (inMethodAnnotations && e.Data.Contains ($"VISIBILITY_RUNTIME {annotationType}")) {
+					containsAnnotation = true;
+				}
+			};
+			DexDump (handler, dexFile, androidSdkDirectory, "-a");
+			return containsAnnotation;
+		}
+
+		static void DexDump (DataReceivedEventHandler handler, string dexFile, string androidSdkDirectory, string options = "")
 		{
 			var androidSdk = new AndroidSdkInfo ((l, m) => {
 				Console.WriteLine ($"{l}: {m}");
@@ -118,7 +136,7 @@ namespace Xamarin.ProjectTools
 
 			var psi = new ProcessStartInfo {
 				FileName = Path.Combine (buildToolsPath, "dexdump"),
-				Arguments = Path.GetFileName (dexFile),
+				Arguments = $"{options} {Path.GetFileName (dexFile)}".Trim (),
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 				UseShellExecute = false,
