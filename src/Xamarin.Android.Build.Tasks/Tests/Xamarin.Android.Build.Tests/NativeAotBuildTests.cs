@@ -158,6 +158,32 @@ namespace Xamarin.Android.Build.Tests
 				Directory.Delete (outputDirectory, recursive: true);
 			}
 			Directory.CreateDirectory (outputDirectory);
+			Version apiLevel = XABuildConfig.AndroidLatestStableApiLevel;
+			string apiLevelName = apiLevel.Minor == 0 ? $"{apiLevel.Major}" : $"{apiLevel.Major}.{apiLevel.Minor}";
+			string installedRuntimePack = Path.Combine (
+				TestEnvironment.DotNetPreviewPacksDirectory,
+				$"Microsoft.Android.Runtime.NativeAOT.{apiLevelName}.android-arm64"
+			);
+			string runtimeAssembly = Directory.GetFiles (
+				installedRuntimePack,
+				"Microsoft.Android.Runtime.NativeAOT.dll",
+				SearchOption.AllDirectories
+			).Single ();
+			string installedReferencePack = Path.Combine (
+				TestEnvironment.DotNetPreviewPacksDirectory,
+				$"Microsoft.Android.Ref.{apiLevelName}"
+			);
+			string runtimeSymbols = Directory.GetFiles (
+				installedReferencePack,
+				"Microsoft.Android.Runtime.NativeAOT.pdb",
+				SearchOption.AllDirectories
+			).Single ();
+			string managedOutputRoot = Path.Combine (outputDirectory, "xbuild-frameworks", "Microsoft.Android");
+			string managedOutputDirectory = Path.Combine (managedOutputRoot, apiLevelName);
+			Directory.CreateDirectory (managedOutputDirectory);
+			File.Copy (runtimeAssembly, Path.Combine (managedOutputDirectory, Path.GetFileName (runtimeAssembly)));
+			File.Copy (runtimeSymbols, Path.Combine (managedOutputDirectory, Path.GetFileName (runtimeSymbols)));
+
 			string runtimePackProject = Path.Combine (XABuildPaths.TopDirectory, "build-tools", "create-packs", "Microsoft.Android.Runtime.proj");
 			var dotnet = new DotNetCLI (runtimePackProject) {
 				ProjectDirectory = outputDirectory,
@@ -167,8 +193,10 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (
 				dotnet.Pack (parameters: [
 					$"Configuration={XABuildPaths.Configuration}",
+					$"AndroidApiLevel={apiLevelName}",
 					$"AndroidRuntime={runtime}",
 					"AndroidRID=android-arm64",
+					$"_MonoAndroidNETOutputRoot={managedOutputRoot}{Path.DirectorySeparatorChar}",
 					$"BaseIntermediateOutputPath={Path.Combine (outputDirectory, "obj")}{Path.DirectorySeparatorChar}",
 					$"PackageOutputPath={outputDirectory}",
 				]),
