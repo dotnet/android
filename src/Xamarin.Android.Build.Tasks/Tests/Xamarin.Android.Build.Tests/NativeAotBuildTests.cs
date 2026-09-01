@@ -76,6 +76,23 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BuildNativeAot_AndroidArm_WithoutNdk ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			proj.SetRuntimeIdentifiers (["armeabi-v7a"]);
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (
+				builder.Build (proj),
+				"android-arm build should succeed without NDK."
+			);
+			AssertArmEhabiSymbolsPromoted (builder, proj);
+		}
+
+		[Test]
 		public void BuildNativeAot_AndroidArm_WithNdkLinker ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -92,6 +109,19 @@ namespace Xamarin.Android.Build.Tests
 				]),
 				"android-arm build should succeed with NDK linker."
 			);
+			AssertArmEhabiSymbolsPromoted (builder, proj);
+		}
+
+		void AssertArmEhabiSymbolsPromoted (ProjectBuilder builder, XamarinAndroidApplicationProject proj)
+		{
+			string nativeDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android-arm", "native");
+			FileAssert.Exists (Path.Combine (nativeDirectory, "libRuntime.WorkstationGC.arm-ehabi.a"));
+
+			string [] linkerResponseFiles = Directory.GetFiles (nativeDirectory, "ld.*.rsp");
+			Assert.AreEqual (1, linkerResponseFiles.Length, "One native linker response file should be generated.");
+			string linkerResponse = File.ReadAllText (linkerResponseFiles [0]);
+			StringAssert.Contains ("libRuntime.WorkstationGC.arm-ehabi.a", linkerResponse);
+			StringAssert.DoesNotContain ("libunwind.a", linkerResponse);
 		}
 
 		[Test]
