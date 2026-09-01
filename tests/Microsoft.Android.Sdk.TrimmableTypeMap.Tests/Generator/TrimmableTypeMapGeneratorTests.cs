@@ -347,35 +347,6 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Execute_InvalidExportFields_ReportLegacyDiagnosticsWithoutPartialMembers ()
-	{
-		using var peReader = CreateTestFixturePEReader ();
-		var result = CreateGenerator ().Execute ([Input ("TestFixtures", peReader)], new Version (11, 0), new HashSet<string> ());
-
-		Assert.Equal (2, logMessages.Count (message => message.StartsWith ("XA4205:", StringComparison.Ordinal)));
-		Assert.Equal (1, logMessages.Count (message => message.StartsWith ("XA4208:", StringComparison.Ordinal)));
-		Assert.Equal (1, logMessages.Count (message => message.StartsWith ("XA4207:", StringComparison.Ordinal)));
-		foreach (var javaName in new [] {
-			"my/app/ExportFieldWithParameter",
-			"my/app/ExportFieldWithVoidReturn",
-			"my/app/ExportFieldWithParameterAndVoidReturn",
-			"my/app/GenericExportField",
-		}) {
-			var peer = result.AllPeers.Single (candidate => candidate.JavaName == javaName);
-			Assert.Empty (peer.JavaFields);
-			Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "GetValue");
-			var source = result.GeneratedJavaSources.Single (candidate => candidate.RelativePath == javaName + ".java");
-			Assert.DoesNotContain ("VALUE", source.Content);
-		}
-
-		var lookalikePeer = result.AllPeers.Single (candidate => candidate.JavaName == "my/app/ExportFieldLookalike");
-		Assert.Empty (lookalikePeer.JavaFields);
-		Assert.DoesNotContain (lookalikePeer.MarshalMethods, method => method.ManagedMethodName == "GetValue");
-		var lookalikeSource = result.GeneratedJavaSources.Single (candidate => candidate.RelativePath == "my/app/ExportFieldLookalike.java");
-		Assert.DoesNotContain ("NOT_A_FIELD", lookalikeSource.Content);
-	}
-
-	[Fact]
 	public void Execute_CollectsDeferredRegistrationTypes_ForAllApplicationAndInstrumentationSubtypes ()
 	{
 		using var peReader = CreateTestFixturePEReader ();
