@@ -92,7 +92,7 @@ public class AssemblyModifierPipeline : AndroidTask
 			AndroidTargetArch destinationArch = MonoAndroidHelper.GetRequiredValidArchitecture (destination);
 
 			if (sourceArch != destinationArch) {
-				throw new InvalidOperationException ($"Internal error: assembly '{sourceArch}' targets architecture '{sourceArch}', while destination assembly '{destination}' targets '{destinationArch}' instead");
+				throw new InvalidOperationException ($"Internal error: assembly '{source.ItemSpec}' targets architecture '{sourceArch}', while destination assembly '{destination.ItemSpec}' targets '{destinationArch}' instead");
 			}
 
 			// Each architecture must have a different set of context classes, or otherwise only the first instance of the assembly may be rewritten.
