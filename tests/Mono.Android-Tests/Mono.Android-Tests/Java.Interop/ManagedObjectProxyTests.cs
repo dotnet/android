@@ -2,6 +2,8 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Android.Runtime;
@@ -15,6 +17,8 @@ namespace Java.InteropTests
 	[Category ("ManagedObjectProxy")]
 	public class ManagedObjectProxyTests
 	{
+		static IntPtr noPinActionPointer;
+
 		// Managed reference identity is the common round-trip contract. Java-visible equality,
 		// hashing, and string conversion are asserted separately because they vary by typemap.
 		[Test]
@@ -74,18 +78,25 @@ namespace Java.InteropTests
 			var reference = JniEnvironment.Runtime.ValueManager.CreateLocalObjectReferenceArgument (typeof (object), value);
 			try {
 				var viewReference = reference.NewLocalRef ();
-				using var view = new Java.Lang.Object (
-					viewReference.Handle,
-					JniHandleOwnership.TransferLocalRef | JniHandleOwnership.DoNotRegister);
-				viewReference = default;
+				try {
+					using var view = new Java.Lang.Object (
+						viewReference.Handle,
+						JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister);
 
-				Assert.IsTrue (JniEnvironment.Types.IsSameObject (reference, view.PeerReference));
+					Assert.IsTrue (JniEnvironment.Types.IsSameObject (reference, view.PeerReference));
 
-				var roundTripReference = view.PeerReference.NewLocalRef ();
-				var roundTrip = JniEnvironment.Runtime.ValueManager.GetValue<object> (
-					ref roundTripReference, JniObjectReferenceOptions.CopyAndDispose);
+					var roundTripReference = view.PeerReference.NewLocalRef ();
+					try {
+						var roundTrip = JniEnvironment.Runtime.ValueManager.GetValue<object> (
+							ref roundTripReference, JniObjectReferenceOptions.CopyAndDispose);
 
-				Assert.AreSame (value, roundTrip);
+						Assert.AreSame (value, roundTrip);
+					} finally {
+						JniObjectReference.Dispose (ref roundTripReference);
+					}
+				} finally {
+					JniObjectReference.Dispose (ref viewReference);
+				}
 			} finally {
 				JniObjectReference.Dispose (ref reference);
 			}
@@ -192,9 +203,16 @@ namespace Java.InteropTests
 					Assert.IsTrue (JNIEnv.CallBooleanMethod (reference.Handle, equals, new JValue (reference.Handle)));
 
 					int actualHashCode = JNIEnv.CallIntMethod (reference.Handle, hashCode);
-					string actualString = JNIEnv.GetString (
+					var actualStringReference = new JniObjectReference (
 						JNIEnv.CallObjectMethod (reference.Handle, toString),
-						JniHandleOwnership.TransferLocalRef);
+						JniObjectReferenceType.Local);
+					string actualString;
+					try {
+						actualString = JniEnvironment.Strings.ToString (
+							ref actualStringReference, JniObjectReferenceOptions.CopyAndDispose);
+					} finally {
+						JniObjectReference.Dispose (ref actualStringReference);
+					}
 
 					if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
 						Assert.IsFalse (JNIEnv.CallBooleanMethod (reference.Handle, equals, new JValue (equalReference.Handle)),
@@ -258,11 +276,24 @@ namespace Java.InteropTests
 		[MethodImpl (MethodImplOptions.NoInlining)]
 		static JavaObjectArray<object> CreateJavaRootedValue (out WeakReference<ManagedValue> weakValue)
 		{
-			var value = new ManagedValue (42);
 			var values = new JavaObjectArray<object> (1);
-			values [0] = value;
-			weakValue = new WeakReference<ManagedValue> (value);
-			return values;
+			bool initialized = false;
+			try {
+				WeakReference<ManagedValue> createdWeakValue = null;
+				// A short-lived stack avoids false pinning when Mono conservatively scans the test thread.
+				PerformNoPinAction (() => {
+					var value = new ManagedValue (42);
+					values [0] = value;
+					createdWeakValue = new WeakReference<ManagedValue> (value);
+				});
+				weakValue = createdWeakValue;
+				initialized = true;
+				return values;
+			} finally {
+				if (!initialized) {
+					values.Dispose ();
+				}
+			}
 		}
 
 		[MethodImpl (MethodImplOptions.NoInlining)]
@@ -306,6 +337,37 @@ namespace Java.InteropTests
 		static bool IsAlive (WeakReference<ManagedValue> weakValue)
 		{
 			return weakValue.TryGetTarget (out _);
+		}
+
+		static unsafe void NoPinActionHelper (int depth, Action action)
+		{
+			int* values = stackalloc int [20];
+			noPinActionPointer = new IntPtr (values);
+
+			if (depth <= 0) {
+				new object ();
+				action ();
+			} else {
+				NoPinActionHelper (depth - 1, action);
+			}
+		}
+
+		static void PerformNoPinAction (Action action)
+		{
+			Exception exception = null;
+			var thread = new Thread (() => {
+				try {
+					NoPinActionHelper (128, action);
+				} catch (Exception e) {
+					exception = e;
+				}
+			});
+			thread.Start ();
+			thread.Join ();
+
+			if (exception != null) {
+				ExceptionDispatchInfo.Capture (exception).Throw ();
+			}
 		}
 
 		sealed class ManagedValue
