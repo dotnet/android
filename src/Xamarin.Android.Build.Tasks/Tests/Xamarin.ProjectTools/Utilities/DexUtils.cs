@@ -103,17 +103,32 @@ namespace Xamarin.ProjectTools
 			return hasType;
 		}
 
-		public static bool ContainsRuntimeMethodAnnotation (string method, string annotationType, string dexFile, string androidSdkDirectory)
+		/// <summary>
+		/// Runs the dexdump command to see if a method has a runtime-visible annotation
+		/// </summary>
+		/// <param name="className">A Java class name of the form 'Landroid/app/ActivityTracker;'</param>
+		/// <param name="method">A Java method name of the form 'foo'</param>
+		/// <param name="annotationType">A Java annotation type of the form 'Landroid/webkit/JavascriptInterface;'</param>
+		public static bool ContainsRuntimeMethodAnnotation (string className, string method, string annotationType, string dexFile, string androidSdkDirectory)
 		{
+			const string classDescriptorPrefix = "Class descriptor  : '";
+			const string methodAnnotationPrefix = "Annotations on method ";
+			bool inClass = false;
 			bool inMethodAnnotations = false;
 			bool containsAnnotation = false;
 			DataReceivedEventHandler handler = (s, e) => {
 				if (e.Data == null) {
 					return;
 				}
-				if (e.Data.StartsWith ("Annotations on ", StringComparison.Ordinal)) {
-					inMethodAnnotations = e.Data.Contains ($"method ") && e.Data.Contains ($"'{method}'");
-				} else if (inMethodAnnotations && e.Data.Contains ($"VISIBILITY_RUNTIME {annotationType}")) {
+				string line = e.Data.Trim ();
+				if (line.StartsWith (classDescriptorPrefix, StringComparison.Ordinal)) {
+					inClass = line.Equals ($"{classDescriptorPrefix}{className}'", StringComparison.Ordinal);
+					inMethodAnnotations = false;
+				} else if (line.StartsWith ("Annotations on ", StringComparison.Ordinal)) {
+					inMethodAnnotations = inClass &&
+						line.StartsWith (methodAnnotationPrefix, StringComparison.Ordinal) &&
+						line.EndsWith ($"'{method}'", StringComparison.Ordinal);
+				} else if (inMethodAnnotations && line.Equals ($"VISIBILITY_RUNTIME {annotationType}", StringComparison.Ordinal)) {
 					containsAnnotation = true;
 				}
 			};

@@ -58,6 +58,7 @@ public abstract class WebViewJavascriptBridgeBase {
 	}
 
 	public abstract void reportResultForIssue12542 (String value);
+	public abstract void completeTestForIssue12542 ();
 }
 """,
 						Metadata = {
@@ -82,6 +83,7 @@ namespace UnnamedProject
 	{
 		readonly TaskCompletionSource<string> result = new TaskCompletionSource<string> (TaskCreationOptions.RunContinuationsAsynchronously);
 		int invocationCount;
+		string resultValue = "missing";
 
 		public WebViewJavascriptBridge ()
 		{
@@ -95,7 +97,16 @@ namespace UnnamedProject
 		[JavascriptInterface]
 		public override void ReportResultForIssue12542 (string value)
 		{
-			int count = Interlocked.Increment (ref invocationCount);
+			Interlocked.Exchange (ref resultValue, value);
+			Interlocked.Increment (ref invocationCount);
+		}
+
+		[JavascriptInterface]
+		public override void CompleteTestForIssue12542 ()
+		{
+			// JavaScript calls this after the synchronous report call, so the count includes duplicate dispatches.
+			string value = Volatile.Read (ref resultValue);
+			int count = Volatile.Read (ref invocationCount);
 			result.TrySetResult ($"{Identity}:{value}:{count}");
 		}
 	}
@@ -133,6 +144,7 @@ namespace UnnamedProject
 <body>
 <script>
 managedBridge.reportResultForIssue12542("payload-12542");
+managedBridge.completeTestForIssue12542();
 </script>
 </body>
 </html>
@@ -195,7 +207,7 @@ managedBridge.reportResultForIssue12542("payload-12542");
 			FileAssert.Exists (dexFile);
 			Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, JavaMethodName, "(Ljava/lang/String;)V", dexFile, AndroidSdkPath),
 				$"`{dexFile}` should contain `{className}.{JavaMethodName}`.");
-			Assert.IsTrue (DexUtils.ContainsRuntimeMethodAnnotation (JavaMethodName, JavascriptInterfaceAnnotation, dexFile, AndroidSdkPath),
+			Assert.IsTrue (DexUtils.ContainsRuntimeMethodAnnotation (className, JavaMethodName, JavascriptInterfaceAnnotation, dexFile, AndroidSdkPath),
 				$"`{dexFile}` should retain `{JavascriptInterfaceAnnotation}` on `{JavaMethodName}`.");
 
 			ClearAdbLogcat ();
@@ -209,7 +221,7 @@ managedBridge.reportResultForIssue12542("payload-12542");
 				resultLog,
 				timeout: 30), "WebView did not report a JavaScript interface result.");
 			var logcat = File.ReadAllText (resultLog);
-			StringAssert.Contains (SuccessMarker + SuccessResult, logcat, "Local JavaScript should invoke the exact managed bridge instance once.");
+			StringAssert.Contains (SuccessMarker + SuccessResult, logcat, "The JavaScript report callback should invoke the exact managed bridge instance once.");
 			StringAssert.DoesNotContain (FailureMarker, logcat, "WebView reported a JavaScript interface failure.");
 			Assert.IsTrue (builder.Uninstall (proj), "Project should have uninstalled.");
 		}
