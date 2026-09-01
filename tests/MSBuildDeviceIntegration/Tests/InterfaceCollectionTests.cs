@@ -130,7 +130,7 @@ namespace Xamarin.Android.Build.Tests
 					"JavaCollection`1&lt;Java.Interop.IJavaPeerable&gt;..ctor(native int,JniHandleOwnership)"),
 				new RootingChain (
 					"JavaDictionary",
-					"Label=\"Mono_Android_Java_Interop_SafeJavaCollectionFactory__CreateReferenceDictionaryFromJniHandle\"",
+					"SafeJavaCollectionFactory__CreateReferenceDictionaryFromJniHandle, Type metadata: [Java.Interop]Java.Interop.IJavaPeerable)",
 					"Android_Runtime_JavaDictionary_2&lt;Java_Interop_Java_Interop_IJavaPeerable__Java_Interop_Java_Interop_IJavaPeerable&gt; constructed\"",
 					"Label=\"__GenericDict_Mono_Android_Android_Runtime_JavaDictionary_2&lt;Java_Interop_Java_Interop_IJavaPeerable__Java_Interop_Java_Interop_IJavaPeerable&gt;\"",
 					"(__GenericDict_Mono_Android_Android_Runtime_JavaDictionary_2&lt;Java_Interop_Java_Interop_IJavaPeerable__" +
