@@ -45,6 +45,12 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic", "XA4207")]
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic", "XA4207")]
 		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic", "XA4207")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "parameters-and-void", "XA4205")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "parameters-and-void", "XA4205")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "parameters-and-void", "XA4205")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic-parameters-and-void", "XA4207")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic-parameters-and-void", "XA4207")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic-parameters-and-void", "XA4207")]
 		public void Build_InvalidExportField_ReportsLegacyDiagnostic (
 			string typeMapImplementation,
 			AndroidRuntime runtime,
@@ -60,17 +66,32 @@ namespace Xamarin.Android.Build.Tests {
 				"parameters" => "public int InitialValue (int value) => value;",
 				"void" => "public void InitialValue () { }",
 				"generic" => "public int InitialValue () => 42;",
+				"parameters-and-void" => "public void InitialValue (int value) { }",
+				"generic-parameters-and-void" => "public void InitialValue (int value) { }",
 				_ => throw new InvalidOperationException ($"Unknown invalid [ExportField] shape '{invalidShape}'."),
 			};
 			var proj = CreateExportFieldValidationProject (runtime, typeMapImplementation, $"""
 						[ExportField ("VALUE")]
 						{initializer}
-				""", genericType: invalidShape == "generic");
+				""", genericType: invalidShape.StartsWith ("generic", StringComparison.Ordinal));
 
 			using var builder = CreateApkBuilder ();
 			builder.ThrowOnBuildFailure = false;
 			Assert.IsFalse (builder.Build (proj), $"{runtime}/{typeMapImplementation} should reject {invalidShape} [ExportField] initializers.");
 			StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput, $"The build should report {expectedCode}.");
+			if (invalidShape == "parameters-and-void") {
+				Assert.IsFalse (
+					builder.LastBuildOutput.Any (line => line.Contains ("error XA4208", StringComparison.Ordinal)),
+					"XA4205 should take precedence over XA4208, matching LLVM-IR."
+				);
+			} else if (invalidShape == "generic-parameters-and-void") {
+				Assert.IsFalse (
+					builder.LastBuildOutput.Any (line =>
+						line.Contains ("error XA4205", StringComparison.Ordinal) ||
+						line.Contains ("error XA4208", StringComparison.Ordinal)),
+					"XA4207 should take precedence over initializer signature diagnostics, matching LLVM-IR."
+				);
+			}
 		}
 
 		static XamarinAndroidApplicationProject CreateExportFieldValidationProject (
