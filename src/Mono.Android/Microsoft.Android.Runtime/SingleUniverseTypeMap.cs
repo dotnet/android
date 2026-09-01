@@ -34,7 +34,9 @@ sealed class SingleUniverseTypeMap : ITypeMap
 		}
 
 		// Fast path: non-alias entry
-		if (builder.TryAdd (mappedType)) {
+		var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+		if (proxy is not null) {
+			builder.Add (proxy);
 			return;
 		}
 
@@ -46,7 +48,10 @@ sealed class SingleUniverseTypeMap : ITypeMap
 
 		foreach (var key in aliases.Aliases) {
 			if (_typeMap.TryGetValue (key, out var aliasEntryType)) {
-				builder.TryAdd (aliasEntryType);
+				var aliasProxy = aliasEntryType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+				if (aliasProxy is not null) {
+					builder.Add (aliasProxy);
+				}
 			}
 		}
 	}

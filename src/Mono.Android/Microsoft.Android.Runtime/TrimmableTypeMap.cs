@@ -545,22 +545,16 @@ struct JniProxyCacheBuilder
 	JavaPeerProxy? first;
 	List<JavaPeerProxy>? multiple;
 
-	public bool TryAdd (Type proxyType)
+	public void Add (JavaPeerProxy proxy)
 	{
-		var proxy = proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-		if (proxy is null) {
-			return false;
-		}
-
 		var firstProxy = first;
 		if (firstProxy is null) {
 			first = proxy;
-			return true;
+			return;
 		}
 
 		multiple ??= new List<JavaPeerProxy> (2) { firstProxy };
 		multiple.Add (proxy);
-		return true;
 	}
 
 	public object Build ()
