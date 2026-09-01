@@ -102,6 +102,24 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void AndroidEnableMarshalMethodsWithReadyToRunFailsBuild ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				EnableMarshalMethods = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("PublishReadyToRun", "true");
+
+			using var b = CreateApkBuilder ();
+			b.ThrowOnBuildFailure = false;
+			Assert.IsFalse (b.Build (proj), "Build should have failed.");
+			StringAssertEx.Contains ("error XA1049", b.LastBuildOutput);
+			StringAssertEx.Contains ("AndroidEnableMarshalMethods", b.LastBuildOutput);
+			StringAssertEx.Contains ("PublishReadyToRun", b.LastBuildOutput);
+		}
+
+		[Test]
 		public void BasicApplicationPublishReadyToRunCustomConfiguration ([Values] bool isComposite, [Values ("android-x64", "android-arm64")] string rid)
 		{
 			// Use a non-standard release configuration name to validate PublishReadyToRun

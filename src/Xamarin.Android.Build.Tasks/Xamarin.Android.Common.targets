@@ -532,6 +532,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA0119_ReadyToRunWithoutTrimming"
       Condition=" '$(_AndroidReadyToRunWithoutTrimming)' == 'true' "
   />
+  <AndroidError Code="XA1049"
+      ResourceName="XA1049"
+      Condition=" '$(AndroidEnableMarshalMethods)' == 'true' and '$(PublishReadyToRun)' == 'true' "
+  />
   <AndroidWarning Code="XA1027"
       ResourceName="XA1027"
       Condition=" $(_AndroidXA1027) == 'true' "
