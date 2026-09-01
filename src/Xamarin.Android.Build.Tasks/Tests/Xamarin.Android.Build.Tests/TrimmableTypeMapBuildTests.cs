@@ -135,11 +135,13 @@ public class R8JniPeer : Java.Lang.Object
 			};
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
-				LinkTool = "r8",
 				Sources = {
 					peerSource,
 				},
 			};
+			if (runtime == AndroidRuntime.CoreCLR) {
+				proj.LinkTool = "r8";
+			}
 			proj.AndroidJavaSources.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "UserJavaType.java") {
 				TextContent = () => "package com.example; public class UserJavaType { }",
 				Encoding = Encoding.ASCII,
