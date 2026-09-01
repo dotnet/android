@@ -23,6 +23,8 @@ namespace Xamarin.Android.Tasks
 
 		public string? R8MappingFile { get; set; }
 
+		public string? R8RewriteManifestFile { get; set; }
+
 		public string? R8ReachabilityManifestFile { get; set; }
 
 		R8Mapping? r8Mapping;
@@ -31,6 +33,14 @@ namespace Xamarin.Android.Tasks
 		{
 			if (!R8MappingFile.IsNullOrEmpty ()) {
 				r8Mapping = R8Mapping.Load (R8MappingFile);
+				if (!R8RewriteManifestFile.IsNullOrEmpty ()) {
+					if (!File.Exists (R8RewriteManifestFile)) {
+						Log.LogCodedError ("XA4307", Properties.Resources.XA4307,
+							$"The R8 JNI rewrite manifest '{R8RewriteManifestFile}' was not found.");
+						return false;
+					}
+					r8Mapping.RestrictReverseLookupsTo (File.ReadLines (R8RewriteManifestFile));
+				}
 			}
 			var dir = Path.GetDirectoryName (OutputFile);
 			if (!dir.IsNullOrEmpty () && !Directory.Exists (dir)) {

@@ -37,6 +37,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		readonly Dictionary<string, Dictionary<string, List<string>>> originalFields = new Dictionary<string, Dictionary<string, List<string>>> (StringComparer.Ordinal);
 		readonly Dictionary<string, Dictionary<string, string>> originalMethods = new Dictionary<string, Dictionary<string, string>> (StringComparer.Ordinal);
 		readonly HashSet<string> accessedEntries = new HashSet<string> (StringComparer.Ordinal);
+		HashSet<string>? allowedReverseEntries;
 
 		public IEnumerable<string> AccessedEntries => accessedEntries;
 
@@ -53,6 +54,12 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			=> TryGetRenamedMethodByNameOnly (owningClassName, methodName, out mappedMethodName);
 
 		internal IJniNameMapping CreateReverseMapping () => new ReverseR8Mapping (this);
+
+		internal void RestrictReverseLookupsTo (IEnumerable<string> manifestEntries)
+			=> allowedReverseEntries = new HashSet<string> (manifestEntries, StringComparer.Ordinal);
+
+		bool IsReverseEntryAllowed (string entry)
+			=> allowedReverseEntries == null || allowedReverseEntries.Contains (entry);
 
 		public static R8Mapping Load (string path)
 		{
@@ -435,7 +442,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 			public bool TryMapClass (string className, out string mappedClassName)
 			{
-				if (!mapping.TryGetOriginalClass (className, out mappedClassName)) {
+				if (!TryGetAllowedOriginalClass (className, out mappedClassName)) {
 					return false;
 				}
 				mapping.accessedEntries.Add (BuildClassEntry (mappedClassName));
@@ -445,24 +452,33 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			public bool TryMapField (string owningClassName, string fieldName, out string mappedFieldName)
 			{
 				mappedFieldName = "";
-				if (!mapping.TryGetOriginalClass (owningClassName, out string originalClassName) ||
+				if (!TryGetAllowedOriginalClass (owningClassName, out string originalClassName) ||
 						!mapping.originalFields.TryGetValue (originalClassName, out var classFields) ||
 						!classFields.TryGetValue (fieldName, out var originalNames) ||
 						originalNames.Count == 0) {
 					return false;
 				}
-				mapping.accessedEntries.Add (BuildClassEntry (originalClassName));
+				string? firstOriginalName = null;
 				foreach (string originalName in originalNames) {
-					mapping.accessedEntries.Add (BuildFieldEntry (originalClassName, originalName));
+					string entry = BuildFieldEntry (originalClassName, originalName);
+					if (!mapping.IsReverseEntryAllowed (entry)) {
+						continue;
+					}
+					firstOriginalName ??= originalName;
+					mapping.accessedEntries.Add (entry);
 				}
-				mappedFieldName = originalNames [0];
+				if (firstOriginalName == null) {
+					return false;
+				}
+				mapping.accessedEntries.Add (BuildClassEntry (originalClassName));
+				mappedFieldName = firstOriginalName;
 				return true;
 			}
 
 			public bool TryMapMethod (string owningClassName, string methodName, IReadOnlyList<string> javaParameterTypes, string javaReturnType, out string mappedMethodName)
 			{
 				mappedMethodName = "";
-				if (!mapping.TryGetOriginalClass (owningClassName, out string originalClassName)) {
+				if (!TryGetAllowedOriginalClass (owningClassName, out string originalClassName)) {
 					return false;
 				}
 
@@ -474,17 +490,22 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				if (!mapping.TryGetOriginalMethodName (originalClassName, methodName, originalParameterTypes, originalReturnType, out mappedMethodName)) {
 					return false;
 				}
-				mapping.accessedEntries.Add (BuildClassEntry (originalClassName));
-				mapping.accessedEntries.Add (BuildMethodEntry (
+				string entry = BuildMethodEntry (
 					originalClassName,
-					BuildMethodKey (mappedMethodName, originalParameterTypes, originalReturnType)));
+					BuildMethodKey (mappedMethodName, originalParameterTypes, originalReturnType));
+				if (!mapping.IsReverseEntryAllowed (entry)) {
+					mappedMethodName = "";
+					return false;
+				}
+				mapping.accessedEntries.Add (BuildClassEntry (originalClassName));
+				mapping.accessedEntries.Add (entry);
 				return true;
 			}
 
 			public bool TryMapMethodByNameOnly (string owningClassName, string methodName, out string mappedMethodName)
 			{
 				mappedMethodName = "";
-				if (!mapping.TryGetOriginalClass (owningClassName, out string originalClassName) ||
+				if (!TryGetAllowedOriginalClass (owningClassName, out string originalClassName) ||
 						!mapping.methods.TryGetValue (originalClassName, out var classMethods)) {
 					return false;
 				}
@@ -494,9 +515,13 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					if (!String.Equals (entry.Value, methodName, StringComparison.Ordinal)) {
 						continue;
 					}
+					string manifestEntry = BuildMethodEntry (originalClassName, entry.Key);
+					if (!mapping.IsReverseEntryAllowed (manifestEntry)) {
+						continue;
+					}
 					int parameterStart = entry.Key.IndexOf ('(');
 					firstOriginalName ??= parameterStart < 0 ? entry.Key : entry.Key.Substring (0, parameterStart);
-					mapping.accessedEntries.Add (BuildMethodEntry (originalClassName, entry.Key));
+					mapping.accessedEntries.Add (manifestEntry);
 				}
 				if (firstOriginalName == null) {
 					return false;
@@ -512,9 +537,19 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				string suffix = suffixStart < 0 ? "" : javaType.Substring (suffixStart);
 				string elementType = suffixStart < 0 ? javaType : javaType.Substring (0, suffixStart);
 				string jniType = JavaNameToJni (elementType);
-				return mapping.TryGetOriginalClass (jniType, out string originalJniType)
+				return TryGetAllowedOriginalClass (jniType, out string originalJniType)
 					? originalJniType.Replace ('/', '.') + suffix
 					: javaType;
+			}
+
+			bool TryGetAllowedOriginalClass (string obfuscatedJniClassName, out string originalJniClassName)
+			{
+				if (!mapping.TryGetOriginalClass (obfuscatedJniClassName, out originalJniClassName) ||
+						!mapping.IsReverseEntryAllowed (BuildClassEntry (originalJniClassName))) {
+					originalJniClassName = "";
+					return false;
+				}
+				return true;
 			}
 		}
 

@@ -96,12 +96,13 @@
       AfterTargets="_PrepareLinkedAssembliesForProguard"
       DependsOnTargets="_PrepareLinkedAssembliesForProguard"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
-      Inputs="@(_LinkedAssemblyForProguard);$(_AndroidR8JniSeedMapping)"
+      Inputs="@(_LinkedAssemblyForProguard);$(_AndroidR8JniSeedMapping);$(_AndroidR8JniRewriteManifest)"
       Outputs="$(_ProguardProjectConfiguration);$(_AndroidR8JniReachabilityManifest)">
     <GenerateProguardConfiguration
         LinkedAssemblies="@(_LinkedAssemblyForProguard)"
         OutputFile="$(_ProguardProjectConfiguration)"
         R8MappingFile="$(_AndroidR8JniSeedMapping)"
+        R8RewriteManifestFile="$(_AndroidR8JniRewriteManifest)"
         R8ReachabilityManifestFile="$(_AndroidR8JniReachabilityManifest)" />
     <ItemGroup>
       <FileWrites Include="$(_AndroidR8JniReachabilityManifest)" Condition=" '$(_AndroidR8JniReachabilityManifest)' != '' " />

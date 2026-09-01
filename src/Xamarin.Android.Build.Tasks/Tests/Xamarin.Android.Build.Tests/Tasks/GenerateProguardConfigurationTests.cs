@@ -20,6 +20,7 @@ namespace Xamarin.Android.Build.Tests
 			string assembly = Path.Combine (path, "Linked.dll");
 			string mapping = Path.Combine (path, "mapping.txt");
 			string proguard = Path.Combine (path, "proguard.cfg");
+			string rewriteManifest = Path.Combine (path, "rewrite.txt");
 			string manifest = Path.Combine (path, "reachability.txt");
 
 			var fixture = new JniFixtureBuilder ();
@@ -37,7 +38,8 @@ namespace Xamarin.Android.Build.Tests
 			fixture.AddVoidMethod ("DirectLookup", fixture.EmitLoadStringBody (
 				fixture.String ("a/b/E"),
 				fixture.String ("x"),
-				fixture.String ("()V")));
+				fixture.String ("()V"),
+				fixture.String ("g")));
 
 			var type = fixture.AddType ("Managed", "MyView", fieldStart, methodStart);
 			var property = fixture.Metadata.AddProperty (
@@ -90,14 +92,32 @@ namespace Xamarin.Android.Build.Tests
 				    void run() -> x
 				acme.orig.ICallback -> a.b.F:
 				    void invoke() -> y
+				acme.orig.Synthetic -> g:
 
 				""");
+			string expectedManifest = """
+				C	acme/orig/DirectTarget
+				C	acme/orig/ICallback
+				C	acme/orig/MyView
+				C	android/view/View
+				F	acme/orig/MyView	count
+				F	acme/orig/MyView	enabled
+				F	acme/orig/MyView	listener
+				M	acme/orig/DirectTarget	run():void
+				M	acme/orig/ICallback	invoke():void
+				M	acme/orig/MyView	<init>():void
+				M	acme/orig/MyView	onClick(android.view.View):void
+				M	acme/orig/MyView	onClick(android.view.View,int):void
+
+				""".ReplaceLineEndings ();
+			File.WriteAllText (rewriteManifest, expectedManifest);
 
 			var task = new GenerateProguardConfiguration {
 				BuildEngine = new MockBuildEngine (TestContext.Out),
 				LinkedAssemblies = new [] { new TaskItem (assembly) },
 				OutputFile = proguard,
 				R8MappingFile = mapping,
+				R8RewriteManifestFile = rewriteManifest,
 				R8ReachabilityManifestFile = manifest,
 			};
 
@@ -128,21 +148,7 @@ namespace Xamarin.Android.Build.Tests
 
 
 				""".ReplaceLineEndings (), File.ReadAllText (proguard));
-			Assert.AreEqual ("""
-				C	acme/orig/DirectTarget
-				C	acme/orig/ICallback
-				C	acme/orig/MyView
-				C	android/view/View
-				F	acme/orig/MyView	count
-				F	acme/orig/MyView	enabled
-				F	acme/orig/MyView	listener
-				M	acme/orig/DirectTarget	run():void
-				M	acme/orig/ICallback	invoke():void
-				M	acme/orig/MyView	<init>():void
-				M	acme/orig/MyView	onClick(android.view.View):void
-				M	acme/orig/MyView	onClick(android.view.View,int):void
-
-				""".ReplaceLineEndings (), File.ReadAllText (manifest));
+			Assert.AreEqual (expectedManifest, File.ReadAllText (manifest));
 		}
 	}
 }
