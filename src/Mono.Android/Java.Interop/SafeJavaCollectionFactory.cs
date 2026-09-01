@@ -29,14 +29,16 @@ namespace Java.Interop;
 /// <item><description>reference element arguments ride the <c>__Canon</c> template: the wrapper definition is
 /// reflectively closed and its activation constructor invoked, kept alive by a concrete-literal
 /// <c>IJavaPeerable</c> rooting branch in the same method;</description></item>
-/// <item><description>primitive/nullable value-type arguments go through <see cref="ValueTypeFactory"/>,
-/// which roots the exact instantiation with a direct <c>new</c>;</description></item>
-/// <item><description>other value types use the corresponding untyped collection wrapper because
-/// their exact generic instantiations are not rooted.</description></item>
+/// <item><description>closed value-type container uses discovered in application assemblies are registered
+/// by the generated root typemap assembly, which roots and constructs only those exact instantiations;</description></item>
+/// <item><description>unregistered value-type shapes use the corresponding untyped collection wrapper because
+/// NativeAOT cannot construct an exact instantiation that was not present at build time.</description></item>
 /// </list>
 /// </remarks>
 static class SafeJavaCollectionFactory
 {
+	static readonly Dictionary<Type, Func<IntPtr, JniHandleOwnership, object?>> RegisteredValueTypeConverters = new ();
+
 	internal const DynamicallyAccessedMemberTypes Constructors =
 		DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
@@ -57,6 +59,10 @@ static class SafeJavaCollectionFactory
 			return false;
 		}
 
+		if (RegisteredValueTypeConverters.TryGetValue (targetType, out converter)) {
+			return true;
+		}
+
 		if (targetType.IsGenericType && !targetType.IsGenericTypeDefinition) {
 			var genericDefinition = targetType.GetGenericTypeDefinition ();
 			if (IsKnownContainerDefinition (genericDefinition)) {
@@ -66,11 +72,7 @@ static class SafeJavaCollectionFactory
 				if (genericDefinition == typeof (IList<>) || genericDefinition == typeof (JavaList<>)) {
 					var elementType = arguments [0];
 					if (elementType.IsValueType) {
-						if (!ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (elementType, out var listFactory)) {
-							converter = GetUntypedFromJniHandleConverter (genericDefinition);
-							return true;
-						}
-						converter = (handle, transfer) => handle == IntPtr.Zero ? null : listFactory.CreateList (handle, transfer);
+						converter = GetUntypedFromJniHandleConverter (genericDefinition);
 						return true;
 					}
 					converter = (handle, transfer) => CreateReferenceListFromJniHandle (elementType, handle, transfer);
@@ -80,11 +82,7 @@ static class SafeJavaCollectionFactory
 				if (genericDefinition == typeof (ICollection<>) || genericDefinition == typeof (JavaCollection<>)) {
 					var elementType = arguments [0];
 					if (elementType.IsValueType) {
-						if (!ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (elementType, out var collectionFactory)) {
-							converter = GetUntypedFromJniHandleConverter (genericDefinition);
-							return true;
-						}
-						converter = (handle, transfer) => handle == IntPtr.Zero ? null : collectionFactory.CreateCollection (handle, transfer);
+						converter = GetUntypedFromJniHandleConverter (genericDefinition);
 						return true;
 					}
 					converter = (handle, transfer) => CreateReferenceCollectionFromJniHandle (elementType, handle, transfer);
@@ -93,21 +91,8 @@ static class SafeJavaCollectionFactory
 
 				var keyType = arguments [0];
 				var valueType = arguments [1];
-				ValueTypeFactory? keyFactory = null;
-				ValueTypeFactory? valueFactory = null;
-				if ((keyType.IsValueType && !ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (keyType, out keyFactory))
-						|| (valueType.IsValueType && !ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (valueType, out valueFactory))) {
+				if (keyType.IsValueType || valueType.IsValueType) {
 					converter = GetUntypedFromJniHandleConverter (genericDefinition);
-					return true;
-				}
-				if (keyFactory != null) {
-					converter = valueFactory != null
-						? (handle, transfer) => handle == IntPtr.Zero ? null : keyFactory.CreateDictionary (valueFactory, handle, transfer)
-						: (handle, transfer) => handle == IntPtr.Zero ? null : keyFactory.CreateDictionaryWithReferenceValue (valueType, handle, transfer);
-					return true;
-				}
-				if (valueFactory != null) {
-					converter = (handle, transfer) => handle == IntPtr.Zero ? null : valueFactory.CreateDictionaryWithReferenceKey (keyType, handle, transfer);
 					return true;
 				}
 				converter = (handle, transfer) => CreateReferenceDictionaryFromJniHandle (keyType, valueType, handle, transfer);
@@ -118,6 +103,37 @@ static class SafeJavaCollectionFactory
 		converter = null;
 		return false;
 	}
+
+	internal static void RegisterValueTypeList<[DynamicallyAccessedMembers (Constructors)] T> ()
+	{
+		RegisteredValueTypeConverters [typeof (IList<T>)] = CreateValueTypeList<T>;
+		RegisteredValueTypeConverters [typeof (JavaList<T>)] = CreateValueTypeList<T>;
+	}
+
+	internal static void RegisterValueTypeCollection<[DynamicallyAccessedMembers (Constructors)] T> ()
+	{
+		RegisteredValueTypeConverters [typeof (ICollection<T>)] = CreateValueTypeCollection<T>;
+		RegisteredValueTypeConverters [typeof (JavaCollection<T>)] = CreateValueTypeCollection<T>;
+	}
+
+	internal static void RegisterValueTypeDictionary<
+		[DynamicallyAccessedMembers (Constructors)] TKey,
+		[DynamicallyAccessedMembers (Constructors)] TValue> ()
+	{
+		RegisteredValueTypeConverters [typeof (IDictionary<TKey, TValue>)] = CreateValueTypeDictionary<TKey, TValue>;
+		RegisteredValueTypeConverters [typeof (JavaDictionary<TKey, TValue>)] = CreateValueTypeDictionary<TKey, TValue>;
+	}
+
+	static object? CreateValueTypeList<[DynamicallyAccessedMembers (Constructors)] T> (IntPtr handle, JniHandleOwnership transfer)
+		=> handle == IntPtr.Zero ? null : new JavaList<T> (handle, transfer);
+
+	static object? CreateValueTypeCollection<[DynamicallyAccessedMembers (Constructors)] T> (IntPtr handle, JniHandleOwnership transfer)
+		=> handle == IntPtr.Zero ? null : new JavaCollection<T> (handle, transfer);
+
+	static object? CreateValueTypeDictionary<
+		[DynamicallyAccessedMembers (Constructors)] TKey,
+		[DynamicallyAccessedMembers (Constructors)] TValue> (IntPtr handle, JniHandleOwnership transfer)
+		=> handle == IntPtr.Zero ? null : new JavaDictionary<TKey, TValue> (handle, transfer);
 
 	static bool IsKnownContainerDefinition (Type genericDefinition)
 		=> genericDefinition == typeof (IList<>) || genericDefinition == typeof (JavaList<>)
@@ -209,7 +225,8 @@ static class SafeJavaCollectionFactory
 		Justification = "IL2071 fires because MakeGenericType () cannot statically prove the runtime keyType/valueType satisfy the DynamicallyAccessedMembers(Constructors) " +
 			"requirement that JavaDictionary<[DAM(Constructors)] TKey, [DAM(Constructors)] TValue> places on its element parameters. That requirement exists only for the " +
 			"dynamic-code path, where the wrapper reflectively activates key/value peers from their constructors. On the trimmable typemap path the wrapper never activates its " +
-			"elements — element peer creation goes through JavaConvert and the typemap's registered activation constructors — so the unsatisfied element requirement is never exercised.")]
+			"elements — element peer creation goes through JavaConvert and the typemap's registered activation constructors — so the unsatisfied element requirement is never " +
+			"exercised.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
 		Justification = "The dynamically constructed JavaDictionary<keyType,valueType> rides the JavaDictionary<IJavaPeerable,IJavaPeerable> canonical template whose activation " +
 			"constructor is rooted by the concrete-literal branch. Only the known JavaDictionary<TKey,TValue> activation constructor is invoked here.")]

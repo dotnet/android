@@ -51,6 +51,7 @@ public class TrimmableTypeMapGenerator
 			frameworkAssemblyNames,
 			errorOnCustomJavaObject,
 			collectMarshalMethodsForNonAcw);
+		var valueTypeContainerRoots = ValueTypeContainerScanner.Scan (assemblies, frameworkAssemblyNames);
 		if (allPeers.Count == 0) {
 			logger.LogNoJavaPeerTypesFound ();
 			return new TrimmableTypeMapResult ([], [], allPeers);
@@ -65,7 +66,7 @@ public class TrimmableTypeMapGenerator
 		}
 
 		var generatedAssemblies = generateTypeMapAssemblies
-			? GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse)
+			? GenerateTypeMapAssemblies (allPeers, valueTypeContainerRoots, systemRuntimeVersion, useSharedTypemapUniverse)
 			: [];
 		var jcwPeers = allPeers.Where (ShouldGenerateJcw).ToList ();
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
@@ -286,6 +287,7 @@ public class TrimmableTypeMapGenerator
 
 	List<GeneratedAssembly> GenerateTypeMapAssemblies (
 		List<JavaPeerInfo> allPeers,
+		IReadOnlyList<ValueTypeContainerRoot> valueTypeContainerRoots,
 		Version systemRuntimeVersion,
 		bool useSharedTypemapUniverse)
 	{
@@ -323,7 +325,7 @@ public class TrimmableTypeMapGenerator
 		}
 		var rootStream = new MemoryStream ();
 		var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
-		rootGenerator.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream);
+		rootGenerator.Generate (perAssemblyNames, valueTypeContainerRoots, useSharedTypemapUniverse, rootStream);
 		rootStream.Position = 0;
 		generatedAssemblies.Add (new GeneratedAssembly ("_Microsoft.Android.TypeMaps", rootStream));
 		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);

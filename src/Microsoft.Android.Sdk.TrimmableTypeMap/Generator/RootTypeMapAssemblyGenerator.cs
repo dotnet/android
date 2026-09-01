@@ -75,12 +75,24 @@ public sealed class RootTypeMapAssemblyGenerator
 	/// <param name="assemblyName">Optional assembly name (defaults to _Microsoft.Android.TypeMaps).</param>
 	/// <param name="moduleName">Optional module name for the PE metadata.</param>
 	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, Stream stream, string? assemblyName = null, string? moduleName = null)
+		=> Generate (perAssemblyTypeMapNames, [], useSharedTypemapUniverse, stream, assemblyName, moduleName);
+
+	internal void Generate (
+		IReadOnlyList<string> perAssemblyTypeMapNames,
+		IReadOnlyList<ValueTypeContainerRoot> valueTypeContainerRoots,
+		bool useSharedTypemapUniverse,
+		Stream stream,
+		string? assemblyName = null,
+		string? moduleName = null)
 	{
 		if (perAssemblyTypeMapNames is null) {
 			throw new ArgumentNullException (nameof (perAssemblyTypeMapNames));
 		}
 		if (stream is null) {
 			throw new ArgumentNullException (nameof (stream));
+		}
+		if (valueTypeContainerRoots is null) {
+			throw new ArgumentNullException (nameof (valueTypeContainerRoots));
 		}
 
 		assemblyName ??= DefaultAssemblyName;
@@ -125,10 +137,15 @@ public sealed class RootTypeMapAssemblyGenerator
 		if (!useSharedTypemapUniverse) {
 			accessTargets.AddRange (perAssemblyTypeMapNames);
 		}
+		foreach (var root in valueTypeContainerRoots) {
+			foreach (var argument in root.TypeArguments) {
+				AddTypeAssemblyAccessTargets (argument, accessTargets);
+			}
+		}
 		pe.EmitIgnoresAccessChecksToAttribute (accessTargets);
 
 		// Emit TypeMapLoader class with Initialize() method
-		EmitTypeMapLoader (pe, anchorTypeHandle, perAssemblyTypeMapNames, useSharedTypemapUniverse, assemblyName);
+		EmitTypeMapLoader (pe, anchorTypeHandle, perAssemblyTypeMapNames, valueTypeContainerRoots, useSharedTypemapUniverse, assemblyName);
 
 		pe.WritePE (stream);
 	}
@@ -176,7 +193,13 @@ public sealed class RootTypeMapAssemblyGenerator
 		pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, blobHandle);
 	}
 
-	static void EmitTypeMapLoader (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, string assemblyName)
+	static void EmitTypeMapLoader (
+		PEAssemblyBuilder pe,
+		EntityHandle anchorTypeHandle,
+		IReadOnlyList<string> perAssemblyTypeMapNames,
+		IReadOnlyList<ValueTypeContainerRoot> valueTypeContainerRoots,
+		bool useSharedTypemapUniverse,
+		string assemblyName)
 	{
 		var metadata = pe.Metadata;
 
@@ -212,15 +235,23 @@ public sealed class RootTypeMapAssemblyGenerator
 			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
 
 		var externalDictTypeSpec = MakeIReadOnlyDictTypeSpec (pe, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
+		var valueTypeRegistrationSpecs = MakeValueTypeRegistrationSpecs (pe, valueTypeContainerRoots);
 
 		if (useSharedTypemapUniverse) {
 			var initializeRef = AddInitializeSingleNoArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
-			EmitInitializeWithSingleTypeMapNoArrays (pe, anchorTypeHandle, getExternalMemberRef, getProxyMemberRef, initializeRef, assemblyName);
+			EmitInitializeWithSingleTypeMapNoArrays (
+				pe,
+				anchorTypeHandle,
+				getExternalMemberRef,
+				getProxyMemberRef,
+				initializeRef,
+				valueTypeRegistrationSpecs,
+				assemblyName);
 		} else {
 			var proxyDictTypeSpec = MakeIReadOnlyDictTypeSpec (pe, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
 			var initializeRef = AddInitializeAggregateNoArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
 			EmitInitializeWithAggregateTypeMapNoArrays (pe, perAssemblyTypeMapNames, getExternalMemberRef, getProxyMemberRef,
-				initializeRef, externalDictTypeSpec, proxyDictTypeSpec, iReadOnlyDictOpenRef, systemTypeRef, assemblyName);
+				initializeRef, valueTypeRegistrationSpecs, externalDictTypeSpec, proxyDictTypeSpec, iReadOnlyDictOpenRef, systemTypeRef, assemblyName);
 		}
 	}
 
@@ -249,6 +280,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		IReadOnlyList<string> perAssemblyTypeMapNames,
 		MemberReferenceHandle getExternalMemberRef, MemberReferenceHandle getProxyMemberRef,
 		MemberReferenceHandle initializeRef,
+		IReadOnlyList<MethodSpecificationHandle> valueTypeRegistrationSpecs,
 		TypeSpecificationHandle externalDictTypeSpec, TypeSpecificationHandle proxyDictTypeSpec,
 		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef,
 		string assemblyName)
@@ -270,6 +302,7 @@ public sealed class RootTypeMapAssemblyGenerator
 			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
 				EmitSetTypeMappingEntryAssembly (pe, encoder, assemblyName);
+				EmitValueTypeContainerRegistrations (encoder, valueTypeRegistrationSpecs);
 				EmitNewArrayLocal (encoder, count, externalDictTypeSpec, slot: 0);
 				EmitFillArrayLocal (encoder, count, getExternalSpecs, slot: 0);
 
@@ -314,6 +347,7 @@ public sealed class RootTypeMapAssemblyGenerator
 	static void EmitInitializeWithSingleTypeMapNoArrays (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle,
 		MemberReferenceHandle getExternalMemberRef, MemberReferenceHandle getProxyMemberRef,
 		MemberReferenceHandle initializeRef,
+		IReadOnlyList<MethodSpecificationHandle> valueTypeRegistrationSpecs,
 		string assemblyName)
 	{
 		var getExternalSpec = MakeGenericMethodSpec (pe, getExternalMemberRef, anchorTypeHandle);
@@ -324,6 +358,7 @@ public sealed class RootTypeMapAssemblyGenerator
 			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
 				EmitSetTypeMappingEntryAssembly (pe, encoder, assemblyName);
+				EmitValueTypeContainerRegistrations (encoder, valueTypeRegistrationSpecs);
 				encoder.Call (getExternalSpec, parameterCount: 0, returnsValue: true);
 				encoder.Call (getProxySpec, parameterCount: 0, returnsValue: true);
 				encoder.Call (initializeRef, parameterCount: 2);
@@ -372,6 +407,83 @@ public sealed class RootTypeMapAssemblyGenerator
 		blob.WriteByte ((byte) SignatureTypeKind.Class);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (typeArg));
 		return pe.Metadata.AddMethodSpecification (openMethodRef, pe.Metadata.GetOrAddBlob (blob));
+	}
+
+	static List<MethodSpecificationHandle> MakeValueTypeRegistrationSpecs (
+		PEAssemblyBuilder pe,
+		IReadOnlyList<ValueTypeContainerRoot> roots)
+	{
+		var factoryRef = pe.Metadata.AddTypeReference (
+			pe.MonoAndroidRef,
+			pe.Metadata.GetOrAddString ("Java.Interop"),
+			pe.Metadata.GetOrAddString ("SafeJavaCollectionFactory"));
+		var memberRefs = new Dictionary<ValueTypeContainerKind, MemberReferenceHandle> ();
+		var specs = new List<MethodSpecificationHandle> (roots.Count);
+		foreach (var root in roots) {
+			if (!memberRefs.TryGetValue (root.Kind, out var memberRef)) {
+				string methodName = root.Kind switch {
+					ValueTypeContainerKind.List => "RegisterValueTypeList",
+					ValueTypeContainerKind.Collection => "RegisterValueTypeCollection",
+					ValueTypeContainerKind.Dictionary => "RegisterValueTypeDictionary",
+					_ => throw new InvalidOperationException ($"Unsupported value-type container kind '{root.Kind}'."),
+				};
+				memberRef = AddGenericRegistrationMethodRef (pe, factoryRef, methodName, root.TypeArguments.Count);
+				memberRefs.Add (root.Kind, memberRef);
+			}
+			specs.Add (MakeGenericMethodSpec (pe, memberRef, root.TypeArguments));
+		}
+		return specs;
+	}
+
+	static MemberReferenceHandle AddGenericRegistrationMethodRef (
+		PEAssemblyBuilder pe,
+		EntityHandle factoryRef,
+		string methodName,
+		int genericArity)
+	{
+		var blob = new BlobBuilder (8);
+		blob.WriteByte ((byte) SignatureAttributes.Generic);
+		blob.WriteCompressedInteger (genericArity);
+		blob.WriteCompressedInteger (0);
+		blob.WriteByte ((byte) SignatureTypeCode.Void);
+		return pe.Metadata.AddMemberReference (
+			factoryRef,
+			pe.Metadata.GetOrAddString (methodName),
+			pe.Metadata.GetOrAddBlob (blob));
+	}
+
+	static MethodSpecificationHandle MakeGenericMethodSpec (
+		PEAssemblyBuilder pe,
+		MemberReferenceHandle openMethodRef,
+		IReadOnlyList<TypeRefData> typeArguments)
+	{
+		var blob = new BlobBuilder (32);
+		blob.WriteByte ((byte) SignatureKind.MethodSpecification);
+		blob.WriteCompressedInteger (typeArguments.Count);
+		foreach (var argument in typeArguments) {
+			pe.WriteTypeSignature (blob, argument);
+		}
+		return pe.Metadata.AddMethodSpecification (openMethodRef, pe.Metadata.GetOrAddBlob (blob));
+	}
+
+	static void EmitValueTypeContainerRegistrations (
+		TrackedInstructionEncoder encoder,
+		IReadOnlyList<MethodSpecificationHandle> registrationSpecs)
+	{
+		foreach (var registrationSpec in registrationSpecs) {
+			encoder.Call (registrationSpec, parameterCount: 0);
+		}
+	}
+
+	static void AddTypeAssemblyAccessTargets (TypeRefData type, List<string> accessTargets)
+	{
+		if (!string.Equals (type.AssemblyName, "System.Runtime", StringComparison.Ordinal) &&
+				!accessTargets.Exists (name => string.Equals (name, type.AssemblyName, StringComparison.Ordinal))) {
+			accessTargets.Add (type.AssemblyName);
+		}
+		foreach (var argument in type.GenericArguments) {
+			AddTypeAssemblyAccessTargets (argument, accessTargets);
+		}
 	}
 
 	/// <summary>

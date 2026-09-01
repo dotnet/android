@@ -11,13 +11,107 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 {
-	static MemoryStream GenerateRootAssembly (IReadOnlyList<string> perAssemblyNames, bool useSharedTypemapUniverse = false, string? assemblyName = null)
+	static MemoryStream GenerateRootAssembly (
+		IReadOnlyList<string> perAssemblyNames,
+		bool useSharedTypemapUniverse = false,
+		string? assemblyName = null,
+		IReadOnlyList<ValueTypeContainerRoot>? valueTypeContainerRoots = null)
 	{
 		var stream = new MemoryStream ();
 		var generator = new RootTypeMapAssemblyGenerator (new Version (11, 0, 0, 0));
-		generator.Generate (perAssemblyNames, useSharedTypemapUniverse, stream, assemblyName);
+		generator.Generate (perAssemblyNames, valueTypeContainerRoots ?? [], useSharedTypemapUniverse, stream, assemblyName);
 		stream.Position = 0;
 		return stream;
+	}
+
+	[Fact]
+	public void Generate_InitializeRegistersExactValueTypeContainerShapes ()
+	{
+		var userValue = new TypeRefData {
+			ManagedTypeName = "ValueTypeContainerFixtures.UserValue",
+			AssemblyName = "TestFixtures",
+			IsValueType = true,
+		};
+		var userState = new TypeRefData {
+			ManagedTypeName = "ValueTypeContainerFixtures.UserState",
+			AssemblyName = "TestFixtures",
+			IsValueType = true,
+		};
+		var nullableState = new TypeRefData {
+			ManagedTypeName = "System.Nullable`1",
+			AssemblyName = "System.Runtime",
+			IsValueType = true,
+			GenericArguments = [userState],
+		};
+		var unsignedPointer = new TypeRefData {
+			ManagedTypeName = "System.UIntPtr",
+			AssemblyName = "System.Runtime",
+		};
+		var rectangularUserValue = userValue with {
+			ManagedTypeName = userValue.ManagedTypeName + "[,]",
+		};
+		var int32 = new TypeRefData {
+			ManagedTypeName = "System.Int32",
+			AssemblyName = "System.Runtime",
+		};
+		ValueTypeContainerRoot[] roots = [
+			new () {
+				Kind = ValueTypeContainerKind.List,
+				TypeArguments = [userValue],
+			},
+			new () {
+				Kind = ValueTypeContainerKind.Collection,
+				TypeArguments = [nullableState],
+			},
+			new () {
+				Kind = ValueTypeContainerKind.Dictionary,
+				TypeArguments = [userValue, userState],
+			},
+			new () {
+				Kind = ValueTypeContainerKind.List,
+				TypeArguments = [unsignedPointer],
+			},
+			new () {
+				Kind = ValueTypeContainerKind.Dictionary,
+				TypeArguments = [rectangularUserValue, int32],
+			},
+		];
+
+		using var stream = GenerateRootAssembly (["_App.TypeMap"], valueTypeContainerRoots: roots);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		using var index = AssemblyIndex.Create (pe, "_Microsoft.Android.TypeMaps");
+		var registrations = new List<string> ();
+		var registrationTokens = new List<int> ();
+		int methodSpecificationCount = reader.GetTableRowCount (TableIndex.MethodSpec);
+		for (int row = 1; row <= methodSpecificationCount; row++) {
+			var handle = MetadataTokens.MethodSpecificationHandle (row);
+			var specification = reader.GetMethodSpecification (handle);
+			if (specification.Method.Kind != HandleKind.MemberReference) {
+				continue;
+			}
+			var memberReference = reader.GetMemberReference ((MemberReferenceHandle) specification.Method);
+			var methodName = reader.GetString (memberReference.Name);
+			if (!methodName.StartsWith ("RegisterValueType", StringComparison.Ordinal)) {
+				continue;
+			}
+			var arguments = specification.DecodeSignature (index.TypeRefSignatureProvider, index);
+			registrations.Add ($"{methodName}<{string.Join (",", arguments.Select (a => a.DisplayName))}>");
+			registrationTokens.Add (MetadataTokens.GetToken (handle));
+		}
+
+		Assert.Equal (new [] {
+			"RegisterValueTypeList<ValueTypeContainerFixtures.UserValue>",
+			"RegisterValueTypeCollection<System.Nullable`1<ValueTypeContainerFixtures.UserState>>",
+			"RegisterValueTypeDictionary<ValueTypeContainerFixtures.UserValue,ValueTypeContainerFixtures.UserState>",
+			"RegisterValueTypeList<System.UIntPtr>",
+			"RegisterValueTypeDictionary<ValueTypeContainerFixtures.UserValue[,],System.Int32>",
+		}, registrations);
+		var initialize = reader.GetMethodDefinition (FindMethodDefinition (reader, "Initialize"));
+		var il = pe.GetMethodBody (initialize.RelativeVirtualAddress).GetILBytes ();
+		Assert.NotNull (il);
+		Assert.All (registrationTokens, token => Assert.True (ILContainsCallToken (il, token)));
+		Assert.Contains ("TestFixtures", GetIgnoresAccessChecksToValues (reader));
 	}
 
 	static MethodDefinitionHandle FindMethodDefinition (MetadataReader reader, string methodName) =>

@@ -210,11 +210,18 @@ sealed class PEAssemblyBuilder
 
 	public void WriteTypeSignature (BlobBuilder blob, TypeRefData typeRef)
 	{
-		if (typeRef.ManagedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
-			blob.WriteByte ((byte) SignatureTypeCode.SZArray);
-			WriteTypeSignature (blob, typeRef with {
-				ManagedTypeName = typeRef.ManagedTypeName.Substring (0, typeRef.ManagedTypeName.Length - 2),
-			});
+		if (TryGetArraySuffix (typeRef.ManagedTypeName, out var elementTypeName, out var rank)) {
+			if (rank == 1) {
+				blob.WriteByte ((byte) SignatureTypeCode.SZArray);
+			} else {
+				blob.WriteByte ((byte) SignatureTypeCode.Array);
+			}
+			WriteTypeSignature (blob, typeRef with { ManagedTypeName = elementTypeName });
+			if (rank > 1) {
+				blob.WriteCompressedInteger (rank);
+				blob.WriteCompressedInteger (0);
+				blob.WriteCompressedInteger (0);
+			}
 			return;
 		}
 
@@ -234,6 +241,7 @@ sealed class PEAssemblyBuilder
 		case "System.String":  blob.WriteByte ((byte) SignatureTypeCode.String);  return;
 		case "System.Object":  blob.WriteByte ((byte) SignatureTypeCode.Object);  return;
 		case "System.IntPtr":  blob.WriteByte ((byte) SignatureTypeCode.IntPtr);  return;
+		case "System.UIntPtr": blob.WriteByte ((byte) SignatureTypeCode.UIntPtr);  return;
 		}
 
 		if (typeRef.GenericArguments.Count > 0) {
@@ -257,6 +265,31 @@ sealed class PEAssemblyBuilder
 		var typeHandle = ResolveTypeRef (typeRef);
 		blob.WriteByte ((byte) (typeRef.EncodeAsValueType ? SignatureTypeKind.ValueType : SignatureTypeKind.Class));
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (typeHandle));
+	}
+
+	static bool TryGetArraySuffix (string typeName, out string elementTypeName, out int rank)
+	{
+		if (!typeName.EndsWith ("]", StringComparison.Ordinal)) {
+			elementTypeName = "";
+			rank = 0;
+			return false;
+		}
+		int openBracket = typeName.LastIndexOf ('[');
+		if (openBracket < 0) {
+			elementTypeName = "";
+			rank = 0;
+			return false;
+		}
+		for (int i = openBracket + 1; i < typeName.Length - 1; i++) {
+			if (typeName [i] != ',') {
+				elementTypeName = "";
+				rank = 0;
+				return false;
+			}
+		}
+		elementTypeName = typeName.Substring (0, openBracket);
+		rank = typeName.Length - openBracket - 1;
+		return true;
 	}
 
 	TypeReferenceHandle MakeTypeRefForManagedName (EntityHandle scope, string managedTypeName)

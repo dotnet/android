@@ -12,8 +12,8 @@ static class SafeArrayFactory
 	// and StandardCanonicalizationAlgorithm canonicalizes reference DefTypes and arrays to __Canon.
 	//
 	// Value-type element arrays are different: value types do not collapse to __Canon, so an exact
-	// vector EEType/template must be available. ValueTypeFactory roots typeof(T[]), new T[length],
-	// and the matching Java collection wrapper instantiations in one shared primitive map.
+	// vector EEType/template must be available. ValueTypeFactory roots typeof(T[]) and new T[length]
+	// for the fixed primitive array set. Collection wrappers use generated exact-shape registrations.
 
 	internal static bool TryGetArrayType (Type elementType, int rank, [NotNullWhen (true)] out Type? arrayType)
 	{
@@ -54,7 +54,7 @@ static class SafeArrayFactory
 		if (elementType == null)
 			throw new ArgumentNullException (nameof (elementType));
 
-		if (rank == 1 && ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (elementType, out var factory)) {
+		if (rank == 1 && ValueTypeFactory.PrimitiveArrayFactories.TryGetValue (elementType, out var factory)) {
 			array = factory.CreateArray (length);
 			return true;
 		}
@@ -76,7 +76,7 @@ static class SafeArrayFactory
 	static bool TryGetVectorType (Type elementType, [NotNullWhen (true)] out Type? vectorType)
 	{
 		if (elementType.IsValueType) {
-			if (ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (elementType, out var factory)) {
+			if (ValueTypeFactory.PrimitiveArrayFactories.TryGetValue (elementType, out var factory)) {
 				vectorType = factory.ArrayType;
 				return true;
 			}

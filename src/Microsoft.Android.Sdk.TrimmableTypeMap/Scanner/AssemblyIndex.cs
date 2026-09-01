@@ -33,6 +33,8 @@ sealed class AssemblyIndex : IDisposable
 	public string AssemblyPath { get; }
 	internal TypeRefSignatureTypeProvider TypeRefSignatureProvider { get; }
 
+	internal MethodBodyBlock GetMethodBody (int relativeVirtualAddress) => peReader.GetMethodBody (relativeVirtualAddress);
+
 	/// <summary>
 	/// Maps full managed type name (e.g., "Android.App.Activity") to its TypeDefinitionHandle.
 	/// </summary>
