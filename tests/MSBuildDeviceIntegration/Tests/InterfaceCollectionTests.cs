@@ -16,6 +16,7 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("UsesDevice")]
 	public class InterfaceCollectionTests : DeviceTest
 	{
+		const string DgmlNamespace = "http://schemas.microsoft.com/vs/2009/dgml";
 		const string ResultPrefix = "INTERFACE_COLLECTION_RESULT";
 
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
@@ -36,7 +37,9 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("JavaCPath", Path.Combine (javaSdkDirectory, "bin", "javac"));
 			proj.SetProperty ("JarPath", Path.Combine (javaSdkDirectory, "bin", "jar"));
 			proj.SetDefaultTargetDevice ();
-			proj.MainActivity = proj.ProcessSourceTemplate (ReadFixture ("MainActivity.cs"));
+			var resultToken = Guid.NewGuid ().ToString ("N");
+			proj.MainActivity = proj.ProcessSourceTemplate (
+				ReadFixture ("MainActivity.cs").Replace ("${RESULT_TOKEN}", resultToken, StringComparison.Ordinal));
 			proj.AndroidJavaSources.Add (CreateJavaSource ("ValueProvider.java", bind: true));
 			proj.AndroidJavaSources.Add (CreateJavaSource ("ExtendedValueProvider.java", bind: true));
 			proj.AndroidJavaSources.Add (CreateJavaSource ("InterfaceCollectionFixture.java", bind: false));
@@ -57,7 +60,7 @@ namespace Xamarin.Android.Build.Tests
 				string resultLine = "";
 				WaitFor (TimeSpan.FromSeconds (60), () => {
 					logcatOutput = RunAdbCommand ("logcat -d");
-					resultLine = FindResultLine (logcatOutput);
+					resultLine = FindResultLine (logcatOutput, resultToken);
 					return resultLine.Length > 0;
 				}, intervalInMS: 250);
 				File.WriteAllText (logcatPath, logcatOutput);
@@ -76,10 +79,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		static string FindResultLine (string logcatOutput)
+		static string FindResultLine (string logcatOutput, string resultToken)
 		{
 			foreach (var line in logcatOutput.Split (['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)) {
-				if (line.Contains (ResultPrefix, StringComparison.Ordinal)) {
+				if (line.Contains (ResultPrefix, StringComparison.Ordinal) &&
+						line.Contains (resultToken, StringComparison.Ordinal)) {
 					return line;
 				}
 			}
@@ -145,15 +149,25 @@ namespace Xamarin.Android.Build.Tests
 					"Mono_Android_Android_Runtime_JavaDictionary_2<System___Canon__System___Canon>___ctor_0",
 					"JavaDictionary`2<Java.Interop.IJavaPeerable,Java.Interop.IJavaPeerable>..ctor(native int,JniHandleOwnership)"),
 			};
+			var duplicateNodeIds = new List<string> ();
+			var missingNodeIds = new List<string> ();
+			var nodeIds = new HashSet<string> (StringComparer.Ordinal);
 			var unexpectedCanonicalRoots = new List<string> ();
 
 			using (var reader = CreateDgmlReader (dgmlFile)) {
 				while (reader.Read ()) {
-					if (reader.NodeType != XmlNodeType.Element || reader.LocalName != "Node") {
+					if (reader.NodeType != XmlNodeType.Element ||
+							reader.LocalName != "Node" ||
+							reader.NamespaceURI != DgmlNamespace) {
 						continue;
 					}
 					var id = reader.GetAttribute ("Id") ?? "";
 					var label = reader.GetAttribute ("Label") ?? "";
+					if (id.Length == 0) {
+						missingNodeIds.Add (label);
+					} else if (!nodeIds.Add (id)) {
+						duplicateNodeIds.Add ($"Id=\"{id}\" Label=\"{label}\"");
+					}
 					foreach (var chain in chains) {
 						chain.ObserveNode (id, label);
 					}
@@ -165,7 +179,9 @@ namespace Xamarin.Android.Build.Tests
 
 			using (var reader = CreateDgmlReader (dgmlFile)) {
 				while (reader.Read ()) {
-					if (reader.NodeType != XmlNodeType.Element || reader.LocalName != "Link") {
+					if (reader.NodeType != XmlNodeType.Element ||
+							reader.LocalName != "Link" ||
+							reader.NamespaceURI != DgmlNamespace) {
 						continue;
 					}
 					var source = reader.GetAttribute ("Source") ?? "";
@@ -177,6 +193,8 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 
+			Assert.IsEmpty (missingNodeIds, "The NativeAOT dependency graph contained nodes without IDs.");
+			Assert.IsEmpty (duplicateNodeIds, "The NativeAOT dependency graph contained duplicate node IDs.");
 			Assert.IsEmpty (
 				unexpectedCanonicalRoots,
 				"Only SafeJavaCollectionFactory's IJavaPeerable instantiations should root the reference-wrapper canonical constructors.");
@@ -207,16 +225,20 @@ namespace Xamarin.Android.Build.Tests
 				return false;
 			}
 			bool isExpectedRoot =
-				label.Contains ("JavaList`1<Java.Interop.IJavaPeerable>..ctor(native int,JniHandleOwnership)", StringComparison.Ordinal) ||
-				label.Contains ("JavaList`1<System.__Canon>..ctor(native int,JniHandleOwnership)", StringComparison.Ordinal) ||
-				label.Contains ("JavaCollection`1<Java.Interop.IJavaPeerable>..ctor(native int,JniHandleOwnership)", StringComparison.Ordinal) ||
-				label.Contains ("JavaCollection`1<System.__Canon>..ctor(native int,JniHandleOwnership)", StringComparison.Ordinal) ||
-				label.Contains (
-					"JavaDictionary`2<Java.Interop.IJavaPeerable,Java.Interop.IJavaPeerable>..ctor(native int,JniHandleOwnership)",
-					StringComparison.Ordinal) ||
-				label.Contains (
-					"JavaDictionary`2<System.__Canon,System.__Canon>..ctor(native int,JniHandleOwnership)",
-					StringComparison.Ordinal);
+				label == "[Mono.Android]Android.Runtime.JavaList`1<Java.Interop.IJavaPeerable>..ctor(native int,JniHandleOwnership) " +
+					"backed by Mono_Android_Android_Runtime_JavaList_1<System___Canon>___ctor_0" ||
+				label == "[Mono.Android]Android.Runtime.JavaList`1<System.__Canon>..ctor(native int,JniHandleOwnership) " +
+					"backed by Mono_Android_Android_Runtime_JavaList_1<System___Canon>___ctor_0" ||
+				label == "[Mono.Android]Android.Runtime.JavaCollection`1<Java.Interop.IJavaPeerable>..ctor(native int,JniHandleOwnership) " +
+					"backed by Mono_Android_Android_Runtime_JavaCollection_1<System___Canon>___ctor" ||
+				label == "[Mono.Android]Android.Runtime.JavaCollection`1<System.__Canon>..ctor(native int,JniHandleOwnership) " +
+					"backed by Mono_Android_Android_Runtime_JavaCollection_1<System___Canon>___ctor" ||
+				label == "[Mono.Android]Android.Runtime.JavaDictionary`2<Java.Interop.IJavaPeerable,Java.Interop.IJavaPeerable>" +
+					"..ctor(native int,JniHandleOwnership) backed by " +
+					"Mono_Android_Android_Runtime_JavaDictionary_2<System___Canon__System___Canon>___ctor_0" ||
+				label == "[Mono.Android]Android.Runtime.JavaDictionary`2<System.__Canon,System.__Canon>" +
+					"..ctor(native int,JniHandleOwnership) backed by " +
+					"Mono_Android_Android_Runtime_JavaDictionary_2<System___Canon__System___Canon>___ctor_0";
 			return !isExpectedRoot;
 		}
 
@@ -241,6 +263,7 @@ namespace Xamarin.Android.Build.Tests
 			readonly string genericDictionaryDependencyPattern;
 			readonly string sourcePattern;
 			readonly List<string> ambiguousNodeMatches = new ();
+			readonly HashSet<string> observedNodeRoles = new (StringComparer.Ordinal);
 			readonly List<string> unexpectedIncomingLinks = new ();
 
 			string canonicalConstructorId = "";
@@ -277,32 +300,46 @@ namespace Xamarin.Android.Build.Tests
 
 			public void ObserveNode (string id, string label)
 			{
-				ObserveNode (
-					label.EndsWith (sourcePattern, StringComparison.Ordinal),
+				int matchedRoles = 0;
+				matchedRoles += ObserveNode (
+					label == $"(Mono_Android_Java_Interop_{sourcePattern}",
 					id,
 					label,
 					"SafeJavaCollectionFactory source",
-					ref sourceId);
-				ObserveNode (
-					label.EndsWith (constructedTypePattern, StringComparison.Ordinal),
+					ref sourceId) ? 1 : 0;
+				matchedRoles += ObserveNode (
+					IsConstructedTypeLabel (label, constructedTypePattern),
 					id,
 					label,
 					"IJavaPeerable constructed type",
-					ref constructedTypeId);
-				ObserveNode (label == genericDictionaryPattern, id, label, "IJavaPeerable generic dictionary", ref genericDictionaryId);
-				ObserveNode (
+					ref constructedTypeId) ? 1 : 0;
+				matchedRoles += ObserveNode (
+					label == genericDictionaryPattern,
+					id,
+					label,
+					"IJavaPeerable generic dictionary",
+					ref genericDictionaryId) ? 1 : 0;
+				matchedRoles += ObserveNode (
 					label == genericDictionaryDependencyPattern,
 					id,
 					label,
 					"IJavaPeerable constructor dictionary dependency",
-					ref genericDictionaryDependencyId);
-				ObserveNode (label == canonicalConstructorPattern, id, label, "canonical compiled constructor", ref canonicalConstructorId);
-				ObserveNode (
-					label.Contains (constructorPattern, StringComparison.Ordinal),
+					ref genericDictionaryDependencyId) ? 1 : 0;
+				matchedRoles += ObserveNode (
+					label == canonicalConstructorPattern,
+					id,
+					label,
+					"canonical compiled constructor",
+					ref canonicalConstructorId) ? 1 : 0;
+				matchedRoles += ObserveNode (
+					label == $"[Mono.Android]Android.Runtime.{constructorPattern} backed by {canonicalConstructorPattern}",
 					id,
 					label,
 					"IJavaPeerable activation constructor",
-					ref constructorId);
+					ref constructorId) ? 1 : 0;
+				if (matchedRoles > 1) {
+					ambiguousNodeMatches.Add ($"multiple roles: Id=\"{id}\" Label=\"{label}\"");
+				}
 			}
 
 			public void ObserveLink (string source, string target, string reason)
@@ -364,16 +401,17 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsEmpty (unexpectedIncomingLinks, $"{Name} canonical constructor path had an unexpected incoming dependency.");
 			}
 
-			void ObserveNode (bool matches, string id, string label, string role, ref string observedId)
+			bool ObserveNode (bool matches, string id, string label, string role, ref string observedId)
 			{
 				if (!matches) {
-					return;
+					return false;
 				}
-				if (observedId.Length > 0) {
+				if (!observedNodeRoles.Add (role)) {
 					ambiguousNodeMatches.Add ($"{role}: Id=\"{id}\" Label=\"{label}\"");
-					return;
+					return true;
 				}
 				observedId = id;
+				return true;
 			}
 
 			void RejectUnexpectedIncoming (
@@ -413,6 +451,25 @@ namespace Xamarin.Android.Build.Tests
 			static string FormatLink (string source, string target, string reason)
 			{
 				return $"Source=\"{source}\" Target=\"{target}\" Reason=\"{reason}\"";
+			}
+
+			static bool IsConstructedTypeLabel (string label, string constructedTypePattern)
+			{
+				if (!label.EndsWith (constructedTypePattern, StringComparison.Ordinal)) {
+					return false;
+				}
+
+				int prefixLength = label.Length - constructedTypePattern.Length;
+				if (prefixLength <= "_ZTV".Length ||
+						!label.StartsWith ("_ZTV", StringComparison.Ordinal)) {
+					return false;
+				}
+				for (int i = "_ZTV".Length; i < prefixLength; i++) {
+					if (label [i] < '0' || label [i] > '9') {
+						return false;
+					}
+				}
+				return true;
 			}
 		}
 	}

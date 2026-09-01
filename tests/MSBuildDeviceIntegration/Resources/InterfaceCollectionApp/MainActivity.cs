@@ -18,6 +18,7 @@ namespace ${ROOT_NAMESPACE}
 	public class MainActivity : Activity
 	{
 		const string ResultPrefix = "INTERFACE_COLLECTION_RESULT";
+		const string ResultToken = "${RESULT_TOKEN}";
 		const string Tag = "InterfaceCollections";
 
 		protected override void OnCreate (Bundle savedInstanceState)
@@ -38,9 +39,9 @@ namespace ${ROOT_NAMESPACE}
 				passed++;
 				JavaDictionary_InterfaceKeysAndValuesPreserveIdentityAndRoundTrip ();
 				passed++;
-				Log.Info (Tag, $"{ResultPrefix} PASS {passed}/6");
+				Log.Info (Tag, $"{ResultPrefix} PASS {passed}/6 {ResultToken}");
 			} catch (Exception e) {
-				Log.Error (Tag, $"{ResultPrefix} FAIL {passed}/6: {e}");
+				Log.Error (Tag, $"{ResultPrefix} FAIL {passed}/6 {ResultToken}: {e}");
 			} finally {
 				Finish ();
 			}
