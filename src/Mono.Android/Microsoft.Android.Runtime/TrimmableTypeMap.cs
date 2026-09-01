@@ -195,25 +195,20 @@ public class TrimmableTypeMap
 		return null;
 	}
 
-	bool TryGetAndroidCallableWrapperProxy (
-		string className,
-		[NotNullWhen (true)] out IAndroidCallableWrapper? acw)
+	internal static void RegisterNativeMethods (object cacheEntry, JniType jniType)
 	{
-		var cacheEntry = GetProxyCacheEntryForJniName (className);
 		if (cacheEntry is JavaPeerProxy singleProxy) {
-			acw = singleProxy as IAndroidCallableWrapper;
-			return acw is not null;
+			if (singleProxy is IAndroidCallableWrapper acw) {
+				acw.RegisterNatives (jniType);
+			}
+			return;
 		}
 
 		foreach (var proxy in GetProxyArrayCacheEntry (cacheEntry)) {
-			if (proxy is IAndroidCallableWrapper wrapper) {
-				acw = wrapper;
-				return true;
+			if (proxy is IAndroidCallableWrapper acw) {
+				acw.RegisterNatives (jniType);
 			}
 		}
-
-		acw = null;
-		return false;
 	}
 
 	JavaPeerProxy? GetProxyForManagedType (Type managedType)
@@ -511,7 +506,8 @@ public class TrimmableTypeMap
 				return;
 			}
 
-			if (!s_instance.TryGetAndroidCallableWrapperProxy (className, out var acw)) {
+			var cacheEntry = s_instance.GetProxyCacheEntryForJniName (className);
+			if (cacheEntry is JavaPeerProxy[] proxies && proxies.Length == 0) {
 				return;
 			}
 
@@ -519,7 +515,7 @@ public class TrimmableTypeMap
 			// which resolves via FindClass and may get a different class from a different ClassLoader.
 			// Registering natives on that other instance is silently wrong.
 			using var jniType = new JniType (ref classRef, JniObjectReferenceOptions.Copy);
-			acw.RegisterNatives (jniType);
+			RegisterNativeMethods (cacheEntry, jniType);
 		} catch (Exception ex) {
 			Environment.FailFast ($"TrimmableTypeMap: Failed to register natives for class '{className}'.", ex);
 		}

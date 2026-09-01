@@ -158,6 +158,19 @@ namespace Java.InteropTests
 			}
 		}
 
+		[Test]
+		public void RegisterNativeMethods_AliasGroupRegistersEveryCallableWrapper ()
+		{
+			using var jniType = new JniType ("java/lang/Object");
+			var first = new RecordingCallableWrapperProxy ();
+			var second = new RecordingCallableWrapperProxy ();
+
+			TrimmableTypeMap.RegisterNativeMethods (new JavaPeerProxy [] { first, second }, jniType);
+
+			Assert.AreEqual (1, first.RegistrationCount);
+			Assert.AreEqual (1, second.RegistrationCount);
+		}
+
 		// Verifies the generic-type-definition fallback in GetProxyForManagedType:
 		// the generator emits one TypeMapAssociation per open generic peer, so a
 		// closed instantiation like JavaList<string> must resolve through its GTD.
@@ -577,6 +590,23 @@ namespace Java.InteropTests
 		public void TargetTypeMatches_UnrelatedNonGeneric_ReturnsFalse ()
 		{
 			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (string), typeof (int)));
+		}
+	}
+
+	sealed class RecordingCallableWrapperProxy : JavaPeerProxy, IAndroidCallableWrapper
+	{
+		public RecordingCallableWrapperProxy ()
+			: base ("java/lang/Object", typeof (Java.Lang.Object))
+		{
+		}
+
+		public int RegistrationCount { get; private set; }
+
+		public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
+
+		public void RegisterNatives (JniType nativeClass)
+		{
+			RegistrationCount++;
 		}
 	}
 
