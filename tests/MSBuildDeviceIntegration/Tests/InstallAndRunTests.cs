@@ -1870,8 +1870,9 @@ namespace Styleable.Library {
 							var imageView = FindViewById (Resource.Id.image_button);
 							Require (imageView != null, "Inflated AppCompatImageButton was not found.");
 							Require (
-								imageView.GetType () == typeof (AppCompatImageButton),
-								$"Expected most-derived AppCompatImageButton binding; {Describe (imageView)}.");
+								imageView.GetType () == typeof (AppCompatImageButton) ||
+									imageView.GetType () == typeof (AppCompatImageButtonAlias),
+								$"Expected an AppCompatImageButton binding or its registered alias; {Describe (imageView)}.");
 							Require (
 								ReferenceEquals (imageView, FindViewById (Resource.Id.image_button)),
 								"Repeated AppCompatImageButton lookup did not preserve peer identity.");
@@ -1889,9 +1890,12 @@ namespace Styleable.Library {
 							Require (
 								JNIEnv.IsSameObject (imageView.Handle, aliasAs.Handle),
 								"Concrete alias JavaAs did not retain the inflated Java object.");
+							if (imageView is AppCompatImageButtonAlias) {
+								Require (ReferenceEquals (imageView, alias), "JavaCast did not preserve the inflated alias peer.");
+							}
 							Require (
 								AppCompatImageButtonAlias.HandleConstructorCalls == 2,
-								"Concrete alias casts did not use the explicit handle constructor.");
+								"Inflation and concrete alias casts did not use the expected handle constructors.");
 
 							using var tintable = JavaObjectExtensions.JavaCast<ITintableBackgroundView> (untypedImage);
 							using var tintableAs = JavaPeerableExtensions.JavaAs<ITintableBackgroundView> (untypedImage);
