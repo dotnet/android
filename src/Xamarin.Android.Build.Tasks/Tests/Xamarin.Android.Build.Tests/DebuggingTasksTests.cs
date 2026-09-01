@@ -7,6 +7,7 @@ using System.Linq;
 using Xamarin.Android.Build;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
+using AT = Xamarin.AndroidTools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -55,16 +56,31 @@ namespace Xamarin.Android.Build.Tests
 					TestEnvironment.MonoAndroidFrameworkDirectory,
 				},
 			};
-			Assert.True (task.Execute (), "Task should have completed successfully.");
-			Assert.AreEqual (0, errors.Count, "No Errors should have been raised");
+			// ResolveXamarinAndroidTools replaces process-wide AndroidSdk state and updates JAVA_HOME/PATH on Windows.
+			var javaHome = Environment.GetEnvironmentVariable ("JAVA_HOME");
+			var environmentPath = Environment.GetEnvironmentVariable ("PATH");
+			var actualAndroidSdk = AndroidSdkPath;
+			var actualAndroidNdk = AndroidNdkPath;
+			var actualJavaSdk = AndroidSdkResolver.GetJavaSdkPath ();
+			List<string> firstTaskExecMessages;
+
+			try {
+				Assert.True (task.Execute (), "Task should have completed successfully.");
+				Assert.AreEqual (0, errors.Count, "No Errors should have been raised");
+				firstTaskExecMessages = messages.Select (x => x.Message)?.ToList ();
+				Assert.True (task.Execute (), "Task should have completed successfully.");
+			} finally {
+				AT.AndroidSdk.Refresh (actualAndroidSdk, actualAndroidNdk, actualJavaSdk);
+				Environment.SetEnvironmentVariable ("JAVA_HOME", javaHome);
+				Environment.SetEnvironmentVariable ("PATH", environmentPath);
+			}
+
 			var expected = $"  Found FrameworkPath at {Path.GetFullPath (frameworksPath)}";
-			var firstTaskExecMessages = messages.Select (x => x.Message)?.ToList ();
 			Assert.IsNotNull (firstTaskExecMessages, "First execution did not contain any messages!");
 			CollectionAssert.Contains (firstTaskExecMessages, expected);
 			CollectionAssert.DoesNotContain (firstTaskExecMessages, "  Using cached AndroidSdk values");
 			CollectionAssert.DoesNotContain (firstTaskExecMessages, "  Using cached MonoDroidSdk values");
 
-			Assert.True (task.Execute (), "Task should have completed successfully.");
 			Assert.AreEqual (0, errors.Count, "No Errors should have been raised");
 			var secondTaskExecMessages = messages.Select (x => x.Message)?.ToList ();
 			Assert.IsNotNull (secondTaskExecMessages, "Second execution did not contain any messages!");
