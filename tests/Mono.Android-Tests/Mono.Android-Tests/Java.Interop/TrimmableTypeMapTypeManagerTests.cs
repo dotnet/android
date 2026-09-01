@@ -141,6 +141,23 @@ namespace Java.InteropTests
 			Assert.Fail ("A missing JNI mapping should be cached as an empty proxy array.");
 		}
 
+		[Test]
+		public void JniProxyCache_UnexpectedEntryTypeThrows ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			const string jniName = "net/dot/android/test/InvalidProxyCacheEntry";
+			var instance = TrimmableTypeMap.Instance;
+			var cache = GetJniProxyCache (instance);
+			cache [jniName] = new object ();
+			try {
+				var exception = Assert.Throws<InvalidOperationException> (() => instance.TryGetTargetType (jniName, out _));
+				StringAssert.Contains ("Unexpected JNI proxy cache entry type", exception?.Message);
+			} finally {
+				cache.TryRemove (jniName, out _);
+			}
+		}
+
 		// Verifies the generic-type-definition fallback in GetProxyForManagedType:
 		// the generator emits one TypeMapAssociation per open generic peer, so a
 		// closed instantiation like JavaList<string> must resolve through its GTD.

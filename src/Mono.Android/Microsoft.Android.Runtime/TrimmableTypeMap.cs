@@ -121,7 +121,7 @@ public class TrimmableTypeMap
 			return true;
 		}
 
-		var proxies = (JavaPeerProxy[]) cacheEntry;
+		var proxies = GetProxyArrayCacheEntry (cacheEntry);
 		if (proxies.Length == 0) {
 			type = null;
 			return false;
@@ -145,6 +145,17 @@ public class TrimmableTypeMap
 		}, this);
 	}
 
+	internal static JavaPeerProxy[] GetProxyArrayCacheEntry (object cacheEntry)
+	{
+		if (cacheEntry is JavaPeerProxy[] proxies) {
+			return proxies;
+		}
+
+		throw new InvalidOperationException (
+			$"Unexpected JNI proxy cache entry type '{cacheEntry.GetType ().FullName}'. " +
+			$"Expected {nameof (JavaPeerProxy)} or {nameof (JavaPeerProxy)}[].");
+	}
+
 	/// <summary>
 	/// Resolves the best proxy for a JNI class name, handling both direct entries and alias groups.
 	/// When targetType is available, finds the proxy whose TargetType matches.
@@ -159,7 +170,7 @@ public class TrimmableTypeMap
 				: null;
 		}
 
-		var proxies = (JavaPeerProxy[]) cacheEntry;
+		var proxies = GetProxyArrayCacheEntry (cacheEntry);
 		if (proxies.Length == 0) {
 			return null;
 		}
@@ -184,7 +195,7 @@ public class TrimmableTypeMap
 			return acw is not null;
 		}
 
-		foreach (var proxy in (JavaPeerProxy[]) cacheEntry) {
+		foreach (var proxy in GetProxyArrayCacheEntry (cacheEntry)) {
 			if (proxy is IAndroidCallableWrapper wrapper) {
 				acw = wrapper;
 				return true;
@@ -583,7 +594,7 @@ readonly struct JniProxyTargetTypeEnumerable
 				return true;
 			}
 
-			var proxies = (JavaPeerProxy[]) cacheEntry;
+			var proxies = TrimmableTypeMap.GetProxyArrayCacheEntry (cacheEntry);
 			if ((uint) next >= (uint) proxies.Length) {
 				return false;
 			}
