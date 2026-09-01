@@ -3102,6 +3102,12 @@ because xbuild doesn't support framework reference assemblies.
            Text="Invalid value for AndroidTypeMapImplementation: '$(AndroidTypeMapImplementation)'. Valid values are: llvm-ir, trimmable." />
   </Target>
 
+  <PropertyGroup>
+    <_AndroidEnableR8JniNameRewriting
+        Condition=" '$(_AndroidEnableR8JniNameRewriting)' == '' and '$(AndroidLinkTool)' == 'r8' and '$(AndroidTypeMapImplementation)' == 'trimmable' and ('$(_AndroidRuntime)' == 'CoreCLR' or '$(_AndroidRuntime)' == 'NativeAOT') ">$(AndroidEnableR8JniNameObfuscation)</_AndroidEnableR8JniNameRewriting>
+    <_AndroidEnableR8JniNameRewriting Condition=" '$(_AndroidEnableR8JniNameRewriting)' == '' ">false</_AndroidEnableR8JniNameRewriting>
+  </PropertyGroup>
+
   <Target Name="_LinkAssemblies"
       DependsOnTargets="_ResolveAssemblies;_CreatePackageWorkspace;$(_BeforeLinkAssemblies);_LinkAssembliesNoShrink"
   />

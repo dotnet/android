@@ -26,7 +26,6 @@
     <_UseTrimmableNativeAotProguardConfiguration Condition=" '$(_UseTrimmableNativeAotProguardConfiguration)' == '' ">true</_UseTrimmableNativeAotProguardConfiguration>
     <_TrimmableNativeAotProguardConfigurationInputsStamp>$(_AndroidStampDirectory)_GenerateTrimmableTypeMapProguardConfiguration.inputs</_TrimmableNativeAotProguardConfigurationInputsStamp>
     <_CompileToDalvikDependsOnTargets>$(_CompileToDalvikDependsOnTargets);_GenerateTrimmableTypeMapProguardConfiguration</_CompileToDalvikDependsOnTargets>
-    <_AndroidBuildRuntimeIdentifiersInParallel Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">false</_AndroidBuildRuntimeIdentifiersInParallel>
   </PropertyGroup>
 
   <!-- Before ILC input computation, add generated assemblies to ILC inputs.
@@ -83,6 +82,7 @@
     </PropertyGroup>
     <ItemGroup>
       <_AndroidR8JniIlcAssembly Remove="@(_AndroidR8JniIlcAssembly)" />
+      <_AndroidR8JniHashedIlcAssembly Remove="@(_AndroidR8JniHashedIlcAssembly)" />
       <_AndroidR8JniRewrittenIlcAssembly Remove="@(_AndroidR8JniRewrittenIlcAssembly)" />
       <_AndroidR8JniExpectedRewriteOutput Remove="@(_AndroidR8JniExpectedRewriteOutput)" />
       <_AndroidR8JniMissingRewriteOutput Remove="@(_AndroidR8JniMissingRewriteOutput)" />
@@ -93,7 +93,12 @@
         <R8JniInputKind>IlcReference</R8JniInputKind>
       </_AndroidR8JniIlcAssembly>
       <_AndroidR8JniIlcAssembly Remove="@(_AndroidR8JniIlcAssembly)" Condition=" '%(Extension)' != '.dll' " />
-      <_AndroidR8JniRewrittenIlcAssembly Include="@(_AndroidR8JniIlcAssembly->'$(_AndroidR8JniRewrittenAssemblyDirectory)%(Filename)%(Extension)')" />
+    </ItemGroup>
+    <ComputeHash Source="@(_AndroidR8JniIlcAssembly)">
+      <Output TaskParameter="Output" ItemName="_AndroidR8JniHashedIlcAssembly" />
+    </ComputeHash>
+    <ItemGroup>
+      <_AndroidR8JniRewrittenIlcAssembly Include="@(_AndroidR8JniHashedIlcAssembly->'$(_AndroidR8JniRewrittenAssemblyDirectory)%(Hash)/%(Filename)%(Extension)')" />
       <_AndroidR8JniExpectedRewriteOutput Include="@(_AndroidR8JniRewrittenIlcAssembly);$(_AndroidR8JniRewriteManifest)" />
       <_AndroidR8JniMissingRewriteOutput Include="@(_AndroidR8JniExpectedRewriteOutput)" Condition="!Exists('%(Identity)')" />
     </ItemGroup>
@@ -104,10 +109,10 @@
       Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' "
       BeforeTargets="WriteIlcRspFileForCompilation"
       DependsOnTargets="_AndroidRewriteJniNamesBeforeIlcInputs"
-      Inputs="@(_AndroidR8JniIlcAssembly);$(_AndroidR8JniSeedMapping)"
+      Inputs="@(_AndroidR8JniHashedIlcAssembly);$(_AndroidR8JniSeedMapping)"
       Outputs="$(_AndroidR8JniRewriteStamp)">
     <RewriteJniNamesForR8
-        SourceFiles="@(_AndroidR8JniIlcAssembly)"
+        SourceFiles="@(_AndroidR8JniHashedIlcAssembly)"
         DestinationFiles="@(_AndroidR8JniRewrittenIlcAssembly)"
         MappingFile="$(_AndroidR8JniSeedMapping)"
         RewriteManifestFile="$(_AndroidR8JniRewriteManifest)" />

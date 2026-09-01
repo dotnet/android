@@ -250,10 +250,7 @@ namespace Xamarin.Android.Tasks
 					}
 				} else if (!AcwMapFile.IsNullOrEmpty ()) {
 					var acwMap      = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (AcwMapFile), StringComparer.OrdinalIgnoreCase);
-					var javaTypes   = new List<string> (acwMap.Values.Count);
-					foreach (var v in acwMap.Values) {
-						javaTypes.Add (v);
-					}
+					var javaTypes = new List<string> (new HashSet<string> (acwMap.Values, StringComparer.Ordinal));
 					javaTypes.Sort (StringComparer.Ordinal);
 					using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration)) {
 						foreach (var java in javaTypes) {
@@ -323,7 +320,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var acwMap = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (AcwMapFile), StringComparer.OrdinalIgnoreCase);
-			var javaTypes = new List<string> (acwMap.Values);
+			var javaTypes = new List<string> (new HashSet<string> (acwMap.Values, StringComparer.Ordinal));
 			javaTypes.Sort (StringComparer.Ordinal);
 			using var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration);
 			foreach (var java in javaTypes) {

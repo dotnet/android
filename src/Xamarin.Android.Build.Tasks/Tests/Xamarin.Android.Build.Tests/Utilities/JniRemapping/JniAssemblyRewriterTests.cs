@@ -843,7 +843,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			const int OriginalStrongNameSignatureSize = 128;
 
-			var fixture = new JniFixtureBuilder {
+			var fixture = new JniFixtureBuilder (hasPublicKey: true) {
 				Flags = CorFlags.ILOnly | CorFlags.StrongNameSigned,
 				StrongNameSignatureSize = OriginalStrongNameSignatureSize,
 			};
@@ -866,6 +866,16 @@ namespace Xamarin.Android.Build.Tests
 			using var rewrittenPe = new PEReader (ImmutableArray.Create (result.Image));
 			CorHeader corHeader = rewrittenPe.PEHeaders.CorHeader;
 			Assert.AreEqual (CorFlags.ILOnly, corHeader.Flags, "The StrongNameSigned flag must be cleared, not left stale.");
+			using var sourceIdentityPe = new PEReader (ImmutableArray.Create (source));
+			MetadataReader sourceMetadata = sourceIdentityPe.GetMetadataReader ();
+			MetadataReader rewrittenMetadata = rewrittenPe.GetMetadataReader ();
+			AssemblyDefinition sourceAssembly = sourceMetadata.GetAssemblyDefinition ();
+			AssemblyDefinition rewrittenAssembly = rewrittenMetadata.GetAssemblyDefinition ();
+			Assert.AreEqual (sourceAssembly.Flags, rewrittenAssembly.Flags, "The assembly's public-key identity flag must be preserved.");
+			CollectionAssert.AreEqual (
+				sourceMetadata.GetBlobBytes (sourceAssembly.PublicKey),
+				rewrittenMetadata.GetBlobBytes (rewrittenAssembly.PublicKey),
+				"The assembly public key must be preserved so references continue to resolve to the same identity.");
 
 			// The output must be genuinely delay-signed / re-signable: the original signature
 			// directory's size (and a real, non-zero RVA reserving that space in the image) must

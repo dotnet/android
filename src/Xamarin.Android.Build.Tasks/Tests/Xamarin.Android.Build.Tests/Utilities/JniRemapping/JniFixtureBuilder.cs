@@ -51,12 +51,14 @@ namespace Xamarin.Android.Build.Tests
 		readonly Dictionary<int, TypeDefinitionHandle> sizedTypes = new Dictionary<int, TypeDefinitionHandle> ();
 		int utf8FieldCounter;
 
-		public JniFixtureBuilder ()
+		public JniFixtureBuilder (bool hasPublicKey = false)
 		{
 			bodyEncoder = new MethodBodyStreamEncoder (Il);
 
 			Metadata.AddModule (0, Metadata.GetOrAddString ("Fixture.dll"), Metadata.GetOrAddGuid (Mvid), default, default);
-			Metadata.AddAssembly (Metadata.GetOrAddString ("Fixture"), new Version (1, 0, 0, 0), default, default, 0, AssemblyHashAlgorithm.Sha1);
+			BlobHandle publicKey = hasPublicKey ? Metadata.GetOrAddBlob (new byte [] { 1, 2, 3, 4, 5, 6, 7, 8 }) : default;
+			AssemblyFlags assemblyFlags = hasPublicKey ? AssemblyFlags.PublicKey : 0;
+			Metadata.AddAssembly (Metadata.GetOrAddString ("Fixture"), new Version (1, 0, 0, 0), default, publicKey, assemblyFlags, AssemblyHashAlgorithm.Sha1);
 			Metadata.AddTypeDefinition (default, default, Metadata.GetOrAddString ("<Module>"), default,
 				MetadataTokens.FieldDefinitionHandle (1), MetadataTokens.MethodDefinitionHandle (1));
 

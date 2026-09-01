@@ -99,7 +99,10 @@ namespace Xamarin.Android.Tasks
 
 			Log.LogDebugMessage ($"RewriteJniNamesForR8: rewrote {result.ReplacementCount} JNI name(s) in '{Path.GetFileName (sourcePath)}'.");
 			if (result.StrongNameSignatureCleared) {
-				Log.LogCodedWarning ("RJN0002", $"'{Path.GetFileName (sourcePath)}' was strong-name signed; the rewritten assembly is left delay-signed (its signature directory space is preserved so it can be re-signed) because no signing key is available here.");
+				// These are private ILLink/ILC inputs. The original public key remains in the
+				// assembly identity, while the unverifiable signature flag is cleared just as it
+				// is for other linker-modified framework assemblies.
+				Log.LogDebugMessage ($"RewriteJniNamesForR8: '{Path.GetFileName (sourcePath)}' is strong-named; preserved its public-key identity and emitted a delay-signed linker input.");
 			}
 
 			bool inPlace = String.Equals (Path.GetFullPath (sourcePath), Path.GetFullPath (destinationPath), StringComparison.Ordinal);

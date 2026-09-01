@@ -33,11 +33,17 @@
     </PropertyGroup>
     <ItemGroup>
       <_AndroidR8JniOriginalManagedAssembly Remove="@(_AndroidR8JniOriginalManagedAssembly)" />
+      <_AndroidR8JniHashedManagedAssembly Remove="@(_AndroidR8JniHashedManagedAssembly)" />
       <_AndroidR8JniRewrittenManagedAssembly Remove="@(_AndroidR8JniRewrittenManagedAssembly)" />
       <_AndroidR8JniExpectedRewriteOutput Remove="@(_AndroidR8JniExpectedRewriteOutput)" />
       <_AndroidR8JniMissingRewriteOutput Remove="@(_AndroidR8JniMissingRewriteOutput)" />
       <_AndroidR8JniOriginalManagedAssembly Include="@(ManagedAssemblyToLink)" />
-      <_AndroidR8JniRewrittenManagedAssembly Include="@(_AndroidR8JniOriginalManagedAssembly->'$(_AndroidR8JniRewrittenAssemblyDirectory)%(Filename)%(Extension)')" />
+    </ItemGroup>
+    <ComputeHash Source="@(_AndroidR8JniOriginalManagedAssembly)">
+      <Output TaskParameter="Output" ItemName="_AndroidR8JniHashedManagedAssembly" />
+    </ComputeHash>
+    <ItemGroup>
+      <_AndroidR8JniRewrittenManagedAssembly Include="@(_AndroidR8JniHashedManagedAssembly->'$(_AndroidR8JniRewrittenAssemblyDirectory)%(Hash)/%(Filename)%(Extension)')" />
       <_AndroidR8JniExpectedRewriteOutput Include="@(_AndroidR8JniRewrittenManagedAssembly);$(_AndroidR8JniRewriteManifest)" />
       <_AndroidR8JniMissingRewriteOutput Include="@(_AndroidR8JniExpectedRewriteOutput)" Condition="!Exists('%(Identity)')" />
     </ItemGroup>
@@ -49,16 +55,16 @@
       AfterTargets="PrepareForILLink"
       BeforeTargets="_RunILLink"
       DependsOnTargets="_AndroidRewriteJniNamesBeforeILLinkInputs"
-      Inputs="@(_AndroidR8JniOriginalManagedAssembly);$(_AndroidR8JniSeedMapping)"
+      Inputs="@(_AndroidR8JniHashedManagedAssembly);$(_AndroidR8JniSeedMapping)"
       Outputs="$(_AndroidR8JniRewriteStamp)">
     <RewriteJniNamesForR8
-        SourceFiles="@(_AndroidR8JniOriginalManagedAssembly)"
+        SourceFiles="@(_AndroidR8JniHashedManagedAssembly)"
         DestinationFiles="@(_AndroidR8JniRewrittenManagedAssembly)"
         MappingFile="$(_AndroidR8JniSeedMapping)"
         RewriteManifestFile="$(_AndroidR8JniRewriteManifest)" />
     <Touch Files="$(_AndroidR8JniRewriteStamp)" AlwaysCreate="true" />
     <ItemGroup>
-      <ResolvedFileToPublish Remove="@(_AndroidR8JniOriginalManagedAssembly)" />
+      <ResolvedFileToPublish Remove="@(_AndroidR8JniHashedManagedAssembly)" />
       <ResolvedFileToPublish Include="@(_AndroidR8JniRewrittenManagedAssembly)" />
       <ManagedAssemblyToLink Remove="@(ManagedAssemblyToLink)" />
       <ManagedAssemblyToLink Include="@(_AndroidR8JniRewrittenManagedAssembly)" />

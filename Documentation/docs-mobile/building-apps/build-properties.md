@@ -465,6 +465,16 @@ removing the existing one(s) and adding your own AOT profiles.
 
 This property is `False` by default.
 
+## AndroidEnableR8JniNameObfuscation
+
+A boolean property that enables R8 obfuscation of Java type, method, and field names
+referenced by managed JNI metadata. The build uses an R8-generated mapping to rewrite
+managed assemblies before trimming or NativeAOT compilation, then applies the same
+mapping during the final R8 invocation.
+
+This property requires `AndroidLinkTool=r8`,
+`AndroidTypeMapImplementation=trimmable`, and either the CoreCLR or NativeAOT runtime.
+The default value is `False`.
 
 ## AndroidEnableRestrictToAttributes
 
