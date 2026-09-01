@@ -132,7 +132,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					break;
 				case '.':
 				case '[':
-				return false;
+					return false;
 				default:
 					segmentHasCharacters = true;
 					break;
@@ -210,6 +210,11 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				arrayDepth++;
 			}
 
+			return JniTypeTokenToJavaSource (token, arrayDepth);
+		}
+
+		static string JniTypeTokenToJavaSource (string token, int arrayDepth)
+		{
 			string elementJavaName = token [arrayDepth] switch {
 				'V' => "void",
 				'Z' => "boolean",
@@ -254,9 +259,17 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 			parameterTypes = new List<string> (jniParameterTypes.Count);
 			foreach (string parameterType in jniParameterTypes) {
-				parameterTypes.Add (JniTypeTokenToJavaSource (parameterType));
+				int arrayDepth = 0;
+				while (parameterType [arrayDepth] == '[') {
+					arrayDepth++;
+				}
+				parameterTypes.Add (JniTypeTokenToJavaSource (parameterType, arrayDepth));
 			}
-			returnType = JniTypeTokenToJavaSource (jniReturnType);
+			int returnArrayDepth = 0;
+			while (jniReturnType [returnArrayDepth] == '[') {
+				returnArrayDepth++;
+			}
+			returnType = JniTypeTokenToJavaSource (jniReturnType, returnArrayDepth);
 		}
 	}
 }

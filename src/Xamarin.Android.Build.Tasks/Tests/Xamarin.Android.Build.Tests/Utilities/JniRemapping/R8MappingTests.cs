@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Xamarin.Android.Tasks.JniRemapping;
 
@@ -34,7 +35,6 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.IsTrue (mapping.TryGetOriginalClass ("a/b/C", out string originalClass));
 			Assert.AreEqual ("acme/orig/MyView", originalClass);
-			CollectionAssert.AreEquivalent (new [] { "first", "second" }, mapping.GetOriginalMethodNames (originalClass, "x"));
 			Assert.IsTrue (mapping.TryGetOriginalMethodName (originalClass, "x", new [] { "int" }, "void", out string first));
 			Assert.AreEqual ("first", first);
 			Assert.IsTrue (mapping.TryGetOriginalMethodName (originalClass, "x", Array.Empty<string> (), "void", out string second));
@@ -237,6 +237,19 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void LoadReportsSourcePathInFormatError ()
+		{
+			string directory = Path.Combine (Root, "temp", TestName);
+			string path = Path.Combine (directory, "seed.map");
+			Directory.CreateDirectory (directory);
+			File.WriteAllText (path, "not a mapping");
+
+			FormatException error = Assert.Throws<FormatException> (() => R8Mapping.Load (path));
+
+			Assert.That (error.Message, Does.StartWith ($"{path}:1:"));
+		}
+
+		[Test]
 		public void ReportsNamesThatDifferBetweenSeedAndFinalMappings ()
 		{
 			R8Mapping seed = R8Mapping.Parse (new StringReader ("""
@@ -316,6 +329,31 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void AccessedEntriesIsAThreadSafeSnapshot ()
+		{
+			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
+				acme.orig.MyView -> a.b.C:
+				    int count -> a
+				    void onClick(android.view.View) -> b
+
+				"""));
+			var emptySnapshot = mapping.AccessedEntries;
+
+			Parallel.For (0, 100, iteration => {
+				mapping.TryGetRenamedClass ("acme/orig/MyView", out _);
+				mapping.TryGetRenamedField ("acme/orig/MyView", "count", out _);
+				mapping.TryGetRenamedMethod ("acme/orig/MyView", "onClick", new [] { "android.view.View" }, "void", out _);
+			});
+
+			CollectionAssert.IsEmpty (emptySnapshot);
+			CollectionAssert.AreEquivalent (new [] {
+				"C\tacme/orig/MyView",
+				"F\tacme/orig/MyView\tcount",
+				"M\tacme/orig/MyView\tonClick(android.view.View):void",
+			}, mapping.AccessedEntries);
+		}
+
+		[Test]
 		public void ReportsPostLinkEntriesRemovedByFinalR8 ()
 		{
 			R8Mapping seed = R8Mapping.Parse (new StringReader ("""
@@ -350,23 +388,6 @@ namespace Xamarin.Android.Build.Tests
 				"M\tacme/orig/Members\tkept():void",
 				"M\tacme/orig/Members\tmissing():void",
 			}));
-		}
-
-		[Test]
-		public void LooksUpOriginalFieldNameOnlyWhenUnambiguous ()
-		{
-			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
-				acme.orig.MyView -> a.b.C:
-				    int first -> a
-				    int second -> b
-				    int ambiguous1 -> c
-				    int ambiguous2 -> c
-
-				"""));
-
-			Assert.IsTrue (mapping.TryGetOriginalFieldName ("acme/orig/MyView", "a", out string original));
-			Assert.AreEqual ("first", original);
-			Assert.IsFalse (mapping.TryGetOriginalFieldName ("acme/orig/MyView", "c", out _));
 		}
 
 		[Test]

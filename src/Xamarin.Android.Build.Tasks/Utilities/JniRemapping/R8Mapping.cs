@@ -32,14 +32,21 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		// Original JNI class name -> ("name(javaParam,javaParam,...):javaReturn" -> obfuscated method name).
 		readonly Dictionary<string, Dictionary<string, string>> methods = new Dictionary<string, Dictionary<string, string>> (StringComparer.Ordinal);
 
-		// Reverse member indexes are scoped by original class. Fields retain every candidate because
-		// R8 may reuse an obfuscated field name for fields with different JVM descriptors.
+		// Reverse member indexes are scoped by original class. Fields retain every candidate so
+		// reverse lookup can fail closed unless manifest filtering leaves exactly one candidate.
 		readonly Dictionary<string, Dictionary<string, List<string>>> originalFields = new Dictionary<string, Dictionary<string, List<string>>> (StringComparer.Ordinal);
 		readonly Dictionary<string, Dictionary<string, string>> originalMethods = new Dictionary<string, Dictionary<string, string>> (StringComparer.Ordinal);
 		readonly HashSet<string> accessedEntries = new HashSet<string> (StringComparer.Ordinal);
+		readonly object accessedEntriesLock = new object ();
 		HashSet<string>? allowedReverseEntries;
 
-		public IEnumerable<string> AccessedEntries => accessedEntries;
+		public IReadOnlyCollection<string> AccessedEntries {
+			get {
+				lock (accessedEntriesLock) {
+					return new List<string> (accessedEntries);
+				}
+			}
+		}
 
 		bool IJniNameMapping.TryMapClass (string className, out string mappedClassName)
 			=> TryGetRenamedClass (className, out mappedClassName);
@@ -64,10 +71,13 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		public static R8Mapping Load (string path)
 		{
 			using var reader = new StreamReader (path);
-			return Parse (reader);
+			return Parse (reader, path);
 		}
 
 		public static R8Mapping Parse (TextReader reader)
+			=> Parse (reader, "mapping.txt");
+
+		static R8Mapping Parse (TextReader reader, string sourceName)
 		{
 			var mapping = new R8Mapping ();
 			string? currentOriginalClass = null;
@@ -91,7 +101,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 				if (!indented) {
 					if (!TryParseClassLine (trimmed, out string originalClass, out string obfuscatedClass)) {
-						throw new FormatException ($"mapping.txt:{lineNumber}: expected a class mapping line ('original -> obfuscated:'), got '{line}'.");
+						throw new FormatException ($"{sourceName}:{lineNumber}: expected a class mapping line ('original -> obfuscated:'), got '{line}'.");
 					}
 
 					currentOriginalClass = JavaNameToJni (originalClass);
@@ -102,11 +112,11 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				}
 
 				if (currentOriginalClass == null) {
-					throw new FormatException ($"mapping.txt:{lineNumber}: member mapping line found before any class mapping line: '{line}'.");
+					throw new FormatException ($"{sourceName}:{lineNumber}: member mapping line found before any class mapping line: '{line}'.");
 				}
 
 				if (!TryParseMemberLine (trimmed, out string memberName, out string []? javaParameterTypes, out string? javaReturnType, out string obfuscatedName)) {
-					throw new FormatException ($"mapping.txt:{lineNumber}: could not parse member mapping line: '{line}'.");
+					throw new FormatException ($"{sourceName}:{lineNumber}: could not parse member mapping line: '{line}'.");
 				}
 
 				if (javaParameterTypes == null) {
@@ -166,8 +176,8 @@ namespace Xamarin.Android.Tasks.JniRemapping
 						continue;
 					}
 					int parameterStart = method.Key.IndexOf ('(');
-					string originalName = parameterStart < 0 ? method.Key : method.Key.Substring (0, parameterStart);
-					string signature = parameterStart < 0 ? "()" : method.Key.Substring (parameterStart);
+					string originalName = method.Key.Substring (0, parameterStart);
+					string signature = method.Key.Substring (parameterStart);
 					AddUnambiguousReverseEntry (reverseMethods, method.Value + signature, originalName);
 				}
 			}
@@ -204,7 +214,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		{
 			if (classes.TryGetValue (originalJniClassName, out string? renamed)) {
 				obfuscatedJniClassName = renamed;
-				accessedEntries.Add (BuildClassEntry (originalJniClassName));
+				RecordAccess (BuildClassEntry (originalJniClassName));
 				return true;
 			}
 			obfuscatedJniClassName = "";
@@ -221,39 +231,12 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			return false;
 		}
 
-		public IEnumerable<string> GetOriginalMethodNames (string originalJniClassName, string obfuscatedMethodName)
-		{
-			if (!methods.TryGetValue (originalJniClassName, out var classMethods)) {
-				yield break;
-			}
-			var seen = new HashSet<string> (StringComparer.Ordinal);
-			foreach (var entry in classMethods) {
-				if (!String.Equals (entry.Value, obfuscatedMethodName, StringComparison.Ordinal)) {
-					continue;
-				}
-				int parameters = entry.Key.IndexOf ('(');
-				string name = parameters < 0 ? entry.Key : entry.Key.Substring (0, parameters);
-				if (seen.Add (name)) {
-					yield return name;
-				}
-			}
-		}
-
 		public bool TryGetOriginalMethodName (string originalJniClassName, string obfuscatedMethodName, IReadOnlyList<string> originalJavaParameterTypes, string originalJavaReturnType, out string originalMethodName)
 		{
 			originalMethodName = "";
 			return originalMethods.TryGetValue (originalJniClassName, out var classMethods) &&
 				classMethods.TryGetValue (BuildMethodKey (obfuscatedMethodName, originalJavaParameterTypes, originalJavaReturnType), out originalMethodName) &&
 				originalMethodName.Length != 0;
-		}
-
-		public bool TryGetOriginalFieldName (string originalJniClassName, string obfuscatedFieldName, out string originalFieldName)
-		{
-			originalFieldName = "";
-			return originalFields.TryGetValue (originalJniClassName, out var classFields) &&
-				classFields.TryGetValue (obfuscatedFieldName, out var originalNames) &&
-				originalNames.Count == 1 &&
-				(originalFieldName = originalNames [0]).Length != 0;
 		}
 
 		public bool TryGetRenamedField (string owningJniClassName, string originalFieldName, out string obfuscatedFieldName)
@@ -264,7 +247,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return false;
 			}
 			obfuscatedFieldName = renamed;
-			accessedEntries.Add (BuildFieldEntry (owningJniClassName, originalFieldName));
+			RecordAccess (BuildFieldEntry (owningJniClassName, originalFieldName));
 			return true;
 		}
 
@@ -279,7 +262,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return false;
 			}
 			obfuscatedMethodName = renamed;
-			accessedEntries.Add (BuildMethodEntry (owningJniClassName, methodKey));
+			RecordAccess (BuildMethodEntry (owningJniClassName, methodKey));
 			return true;
 		}
 
@@ -313,11 +296,13 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return false;
 			}
 
+			var accessedMethods = new List<string> ();
 			foreach (var kvp in classMethods) {
 				if (kvp.Key.StartsWith (prefix, StringComparison.Ordinal) && kvp.Value == match) {
-					accessedEntries.Add (BuildMethodEntry (owningJniClassName, kvp.Key));
+					accessedMethods.Add (BuildMethodEntry (owningJniClassName, kvp.Key));
 				}
 			}
+			RecordAccess (accessedMethods);
 			obfuscatedMethodName = match;
 			return true;
 		}
@@ -433,6 +418,40 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			return writer.ToString ();
 		}
 
+		void RecordAccess (string entry)
+		{
+			lock (accessedEntriesLock) {
+				accessedEntries.Add (entry);
+			}
+		}
+
+		void RecordAccess (IEnumerable<string> entries)
+		{
+			lock (accessedEntriesLock) {
+				foreach (string entry in entries) {
+					accessedEntries.Add (entry);
+				}
+			}
+		}
+
+		void RecordAccess (string classEntry, string memberEntry)
+		{
+			lock (accessedEntriesLock) {
+				accessedEntries.Add (classEntry);
+				accessedEntries.Add (memberEntry);
+			}
+		}
+
+		void RecordAccess (string classEntry, IEnumerable<string> memberEntries)
+		{
+			lock (accessedEntriesLock) {
+				accessedEntries.Add (classEntry);
+				foreach (string entry in memberEntries) {
+					accessedEntries.Add (entry);
+				}
+			}
+		}
+
 		sealed class ReverseR8Mapping : IJniNameMapping
 		{
 			readonly R8Mapping mapping;
@@ -447,7 +466,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				if (!TryGetAllowedOriginalClass (className, out mappedClassName)) {
 					return false;
 				}
-				mapping.accessedEntries.Add (BuildClassEntry (mappedClassName));
+				mapping.RecordAccess (BuildClassEntry (mappedClassName));
 				return true;
 			}
 
@@ -476,8 +495,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				if (firstOriginalName == null || allowedEntry == null) {
 					return false;
 				}
-				mapping.accessedEntries.Add (BuildClassEntry (originalClassName));
-				mapping.accessedEntries.Add (allowedEntry);
+				mapping.RecordAccess (BuildClassEntry (originalClassName), allowedEntry);
 				mappedFieldName = firstOriginalName;
 				return true;
 			}
@@ -504,8 +522,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					mappedMethodName = "";
 					return false;
 				}
-				mapping.accessedEntries.Add (BuildClassEntry (originalClassName));
-				mapping.accessedEntries.Add (entry);
+				mapping.RecordAccess (BuildClassEntry (originalClassName), entry);
 				return true;
 			}
 
@@ -528,7 +545,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 						continue;
 					}
 					int parameterStart = entry.Key.IndexOf ('(');
-					string originalName = parameterStart < 0 ? entry.Key : entry.Key.Substring (0, parameterStart);
+					string originalName = entry.Key.Substring (0, parameterStart);
 					if (firstOriginalName != null && !String.Equals (firstOriginalName, originalName, StringComparison.Ordinal)) {
 						return false;
 					}
@@ -538,10 +555,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				if (firstOriginalName == null) {
 					return false;
 				}
-				mapping.accessedEntries.Add (BuildClassEntry (originalClassName));
-				foreach (string entry in allowedEntries) {
-					mapping.accessedEntries.Add (entry);
-				}
+				mapping.RecordAccess (BuildClassEntry (originalClassName), allowedEntries);
 				mappedMethodName = firstOriginalName;
 				return true;
 			}
