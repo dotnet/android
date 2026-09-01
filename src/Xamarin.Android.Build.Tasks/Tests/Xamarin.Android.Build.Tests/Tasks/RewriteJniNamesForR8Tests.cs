@@ -76,6 +76,17 @@ namespace Xamarin.Android.Build.Tests
 			return image;
 		}
 
+		static byte [] BuildAssemblyWithLoadedString (string value)
+		{
+			var fixture = new JniFixtureBuilder ();
+			UserStringHandle loadedValue = fixture.String (value);
+			int fieldStart = fixture.NextFieldRid;
+			int methodStart = fixture.NextMethodRid;
+			fixture.AddVoidMethod ("LoadString", fixture.EmitLoadStringBody (loadedValue));
+			fixture.AddType ("Acme", "StringLoader", fieldStart, methodStart);
+			return fixture.Serialize ();
+		}
+
 		[Test]
 		public void CopiesSourceToDestinationAndAdjacentPdbUnchanged ()
 		{
@@ -177,6 +188,33 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (task.Execute (), "Task should succeed.");
 			CollectionAssert.AreEqual (content, File.ReadAllBytes (assembly));
 			Assert.AreEqual (originalWriteTime, File.GetLastWriteTimeUtc (assembly), "An in-place no-op must not write the assembly.");
+		}
+
+		[Test]
+		public void LeavesInPlaceAssemblyWithIdentityMappingUntouched ()
+		{
+			string path = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (path);
+
+			string assembly = Path.Combine (path, "Test.dll");
+			byte [] content = BuildAssemblyWithLoadedString ("acme/orig/Identity");
+			File.WriteAllBytes (assembly, content);
+			DateTime originalWriteTime = new DateTime (2020, 1, 2, 3, 4, 5, DateTimeKind.Utc);
+			File.SetLastWriteTimeUtc (assembly, originalWriteTime);
+
+			string mappingFile = Path.Combine (path, "mapping.txt");
+			File.WriteAllText (mappingFile, "acme.orig.Identity -> acme.orig.Identity:\n");
+
+			var task = new RewriteJniNamesForR8 {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				SourceFiles = new [] { new Microsoft.Build.Utilities.TaskItem (assembly) },
+				DestinationFiles = new [] { new Microsoft.Build.Utilities.TaskItem (assembly) },
+				MappingFile = mappingFile,
+			};
+
+			Assert.IsTrue (task.Execute (), "Task should succeed.");
+			CollectionAssert.AreEqual (content, File.ReadAllBytes (assembly));
+			Assert.AreEqual (originalWriteTime, File.GetLastWriteTimeUtc (assembly), "An in-place identity mapping must not write the assembly.");
 		}
 
 		[Test]

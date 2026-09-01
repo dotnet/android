@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks.JniRemapping
@@ -28,6 +29,8 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		readonly TaskLoggingHelper log;
 		readonly Func<string, string?> renameClass;
 		readonly Dictionary<TypeDefinitionHandle, string?> ownerJniNameCache = new ();
+		readonly Dictionary<string, List<StaticJniClassAssignment>> staticJniClassAssignments = new (StringComparer.Ordinal);
+		readonly HashSet<string> warnedUnsafeLookupSources = new (StringComparer.Ordinal);
 
 		public JniRewritePlanner (PEReader peReader, MetadataReader reader, IJniNameMapping mapping, TaskLoggingHelper log)
 		{
@@ -40,6 +43,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 		public JniRewritePlan CreatePlan ()
 		{
+			IndexStaticJniClassAssignments ();
 			var plan = new JniRewritePlan ();
 			foreach (TypeDefinitionHandle typeHandle in reader.TypeDefinitions) {
 				PlanType (plan, typeHandle);
@@ -172,6 +176,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 			string? jniDescriptor = args [descriptorIndex].Value as string;
 			string? newName = TryFindRenamedMethodName (ownerJniName, jniMemberName, jniDescriptor);
+			if (jniMemberName == ".ctor" || jniMemberName == ".cctor") {
+				newName = null;
+			}
 			string? newDescriptor = jniDescriptor != null && JniDescriptorText.TryRewriteDescriptor (jniDescriptor, renameClass, out string rewrittenDescriptor)
 				? rewrittenDescriptor
 				: null;
@@ -261,7 +268,8 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				IlInstruction instruction = instructions [i];
 				if (instruction.Code == (ushort) ILOpCode.Ldstr) {
 					string value = ReadUserString (il, instruction.OperandOffset);
-					if (LdstrRewriter.TryRewrite (value, ownerJniName, mapping, out string rewritten)) {
+					if (LdstrRewriter.TryRewrite (value, ownerJniName, mapping, out string rewritten) &&
+							!String.Equals (value, rewritten, StringComparison.Ordinal)) {
 						plan.AddUserString (methodHandle, instruction.OperandOffset, rewritten);
 					}
 				} else if (TryGetJniLookupKind (il, instruction, out bool isField)) {
@@ -278,9 +286,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			int classIndex = PreviousNonNop (instructions, memberNameIndex - 1);
 			if (classIndex < 0 ||
 					instructions [descriptorIndex].Code != (ushort) ILOpCode.Ldstr ||
-					instructions [memberNameIndex].Code != (ushort) ILOpCode.Ldstr ||
-					HasControlFlowEntry (instructions, controlFlowEntries, classIndex, callIndex) ||
-					!TryResolveLegacyLookupClass (il, instructions, controlFlowEntries, classIndex, out string className)) {
+					instructions [memberNameIndex].Code != (ushort) ILOpCode.Ldstr) {
 				return;
 			}
 
@@ -289,16 +295,26 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return;
 			}
 			string descriptor = ReadUserString (il, instructions [descriptorIndex].OperandOffset);
+			if (isField ? !JniDescriptorText.IsValidFieldDescriptor (descriptor) : !JniDescriptorText.IsValidMethodDescriptor (descriptor)) {
+				return;
+			}
+
+			if (HasControlFlowEntry (instructions, controlFlowEntries, classIndex, callIndex) ||
+					!TryResolveLegacyLookupClass (il, instructions, controlFlowEntries, classIndex, out string className)) {
+				WarnForUnsafeRenamedLookup (methodHandle, il, instructions, classIndex);
+				return;
+			}
 
 			if (isField) {
-				if (JniDescriptorText.IsValidFieldDescriptor (descriptor) &&
-						mapping.TryMapField (className, memberName, out string renamedField)) {
+				if (mapping.TryMapField (className, memberName, out string renamedField) &&
+						!String.Equals (memberName, renamedField, StringComparison.Ordinal)) {
 					plan.AddUserString (methodHandle, instructions [memberNameIndex].OperandOffset, renamedField);
 				}
-			} else if (JniDescriptorText.IsValidMethodDescriptor (descriptor)) {
+			} else {
 				JniDescriptorText.MethodDescriptorToJavaTypes (descriptor, out var javaParams, out string javaReturnType);
 				string mappingName = R8Mapping.JniMemberNameToMappingName (memberName);
-				if (mapping.TryMapMethod (className, mappingName, javaParams, javaReturnType, out string renamedMethod)) {
+				if (mapping.TryMapMethod (className, mappingName, javaParams, javaReturnType, out string renamedMethod) &&
+						!String.Equals (memberName, renamedMethod, StringComparison.Ordinal)) {
 					plan.AddUserString (methodHandle, instructions [memberNameIndex].OperandOffset, renamedMethod);
 				}
 			}
@@ -311,6 +327,18 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			IlInstruction classInstruction = instructions [classIndex];
 			if (IsJniEnvironmentMethod (il, classInstruction, "FindClass")) {
 				return TryReadFindClassName (il, instructions, controlFlowEntries, classIndex, classIndex, out className);
+			}
+
+			if (TryGetStaticField (il, classInstruction, load: true, out string fieldKey)) {
+				if (staticJniClassAssignments.TryGetValue (fieldKey, out var assignments) &&
+						assignments.Count == 1) {
+					string? assignedClassName = assignments [0].ClassName;
+					if (assignedClassName != null) {
+						className = assignedClassName;
+						return true;
+					}
+				}
+				return false;
 			}
 
 			if (!TryGetLocalIndex (il, classInstruction, load: true, out int localIndex)) {
@@ -332,6 +360,181 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					TryReadFindClassName (il, instructions, controlFlowEntries, findClassIndex, classIndex, out className);
 			}
 			return false;
+		}
+
+		void IndexStaticJniClassAssignments ()
+		{
+			foreach (MethodDefinitionHandle methodHandle in reader.MethodDefinitions) {
+				MethodDefinition method = reader.GetMethodDefinition (methodHandle);
+				if (method.RelativeVirtualAddress == 0) {
+					continue;
+				}
+
+				MethodBodyBlock body = peReader.GetMethodBody (method.RelativeVirtualAddress);
+				byte [] il = body.GetILBytes () ?? [];
+				var instructions = new List<IlInstruction> ();
+				IlInstructionScanner.Walk (il, (code, instructionOffset, operandOffset, operandSize) =>
+					instructions.Add (new IlInstruction (code, instructionOffset, operandOffset, operandSize)));
+				HashSet<int> controlFlowEntries = GetControlFlowEntryOffsets (body, il, instructions);
+
+				for (int i = 0; i < instructions.Count; i++) {
+					if (!TryGetStaticField (il, instructions [i], load: false, out string fieldKey)) {
+						continue;
+					}
+
+					string? className = null;
+					string? candidateClassName = null;
+					int findClassIndex = PreviousNonNop (instructions, i - 1);
+					if (findClassIndex >= 0 && IsJniEnvironmentMethod (il, instructions [findClassIndex], "FindClass")) {
+						int classNameIndex = PreviousNonNop (instructions, findClassIndex - 1);
+						if (classNameIndex >= 0 && instructions [classNameIndex].Code == (ushort) ILOpCode.Ldstr) {
+							candidateClassName = ReadUserString (il, instructions [classNameIndex].OperandOffset);
+							if (!HasControlFlowEntry (instructions, controlFlowEntries, classNameIndex, i)) {
+								className = candidateClassName;
+							}
+						}
+					}
+
+					if (!staticJniClassAssignments.TryGetValue (fieldKey, out var assignments)) {
+						staticJniClassAssignments [fieldKey] = assignments = new List<StaticJniClassAssignment> ();
+					}
+					assignments.Add (new StaticJniClassAssignment (className, candidateClassName));
+				}
+			}
+		}
+
+		void WarnForUnsafeRenamedLookup (MethodDefinitionHandle methodHandle, byte [] il,
+			List<IlInstruction> instructions, int classIndex)
+		{
+			IlInstruction classInstruction = instructions [classIndex];
+			if (IsJniEnvironmentMethod (il, classInstruction, "FindClass")) {
+				int classNameIndex = PreviousNonNop (instructions, classIndex - 1);
+				if (classNameIndex >= 0 &&
+						instructions [classNameIndex].Code == (ushort) ILOpCode.Ldstr &&
+						IsRenamedClass (ReadUserString (il, instructions [classNameIndex].OperandOffset))) {
+					LogUnsafeLookupWarning ("D:" + MetadataTokens.GetToken (methodHandle) + ":" + classInstruction.InstructionOffset);
+				}
+				return;
+			}
+
+			if (TryGetStaticField (il, classInstruction, load: true, out string fieldKey)) {
+				if (!staticJniClassAssignments.TryGetValue (fieldKey, out var assignments)) {
+					return;
+				}
+				foreach (StaticJniClassAssignment assignment in assignments) {
+					if (assignment.CandidateClassName != null && IsRenamedClass (assignment.CandidateClassName)) {
+						LogUnsafeLookupWarning ("F:" + fieldKey);
+						return;
+					}
+				}
+				return;
+			}
+
+			if (!TryGetLocalIndex (il, classInstruction, load: true, out int localIndex)) {
+				return;
+			}
+			for (int storeIndex = 0; storeIndex < instructions.Count; storeIndex++) {
+				IlInstruction instruction = instructions [storeIndex];
+				if (!TryGetLocalIndex (il, instruction, load: false, out int storedLocalIndex) || storedLocalIndex != localIndex) {
+					continue;
+				}
+				int findClassIndex = PreviousNonNop (instructions, storeIndex - 1);
+				if (findClassIndex < 0 || !IsJniEnvironmentMethod (il, instructions [findClassIndex], "FindClass")) {
+					continue;
+				}
+				int classNameIndex = PreviousNonNop (instructions, findClassIndex - 1);
+				if (classNameIndex >= 0 &&
+						instructions [classNameIndex].Code == (ushort) ILOpCode.Ldstr &&
+						IsRenamedClass (ReadUserString (il, instructions [classNameIndex].OperandOffset))) {
+					LogUnsafeLookupWarning ("L:" + MetadataTokens.GetToken (methodHandle) + ":" + localIndex);
+					return;
+				}
+			}
+		}
+
+		bool IsRenamedClass (string className)
+			=> mapping.TryMapClass (className, out string renamedClass) &&
+				!String.Equals (className, renamedClass, StringComparison.Ordinal);
+
+		void LogUnsafeLookupWarning (string sourceKey)
+		{
+			if (warnedUnsafeLookupSources.Add (sourceKey)) {
+				log.LogCodedWarning ("XA4326", Properties.Resources.XA4326);
+			}
+		}
+
+		bool TryGetStaticField (byte [] il, IlInstruction instruction, bool load, out string fieldKey)
+		{
+			fieldKey = "";
+			ushort expectedCode = load ? (ushort) ILOpCode.Ldsfld : (ushort) ILOpCode.Stsfld;
+			if (instruction.Code != expectedCode || instruction.OperandSize != sizeof (uint)) {
+				return false;
+			}
+
+			EntityHandle fieldHandle = MetadataTokens.EntityHandle ((int) IlInstructionScanner.ReadUInt32 (il, instruction.OperandOffset));
+			EntityHandle declaringTypeHandle;
+			BlobHandle signature;
+			switch (fieldHandle.Kind) {
+			case HandleKind.FieldDefinition:
+				FieldDefinition field = reader.GetFieldDefinition ((FieldDefinitionHandle) fieldHandle);
+				string fieldName = reader.GetString (field.Name);
+				signature = field.Signature;
+				declaringTypeHandle = field.GetDeclaringType ();
+				fieldKey = fieldName;
+				break;
+			case HandleKind.MemberReference:
+				MemberReference member = reader.GetMemberReference ((MemberReferenceHandle) fieldHandle);
+				string memberName = reader.GetString (member.Name);
+				signature = member.Signature;
+				declaringTypeHandle = member.Parent;
+				fieldKey = memberName;
+				break;
+			default:
+				return false;
+			}
+
+			if (!TryGetTypeIdentity (declaringTypeHandle, out string declaringType)) {
+				fieldKey = "";
+				return false;
+			}
+			fieldKey = declaringType + "\0" + fieldKey + "\0" + Convert.ToBase64String (reader.GetBlobBytes (signature));
+			return true;
+		}
+
+		bool TryGetTypeIdentity (EntityHandle typeHandle, out string identity)
+		{
+			switch (typeHandle.Kind) {
+			case HandleKind.TypeDefinition:
+				TypeDefinition definition = reader.GetTypeDefinition ((TypeDefinitionHandle) typeHandle);
+				string definitionName = reader.GetString (definition.Name);
+				TypeDefinitionHandle declaringType = definition.GetDeclaringType ();
+				if (!declaringType.IsNil) {
+					if (!TryGetTypeIdentity (declaringType, out string declaringIdentity)) {
+						identity = "";
+						return false;
+					}
+					identity = declaringIdentity + "$" + definitionName;
+					return true;
+				}
+				identity = reader.GetString (definition.Namespace) + "." + definitionName;
+				return true;
+			case HandleKind.TypeReference:
+				TypeReference reference = reader.GetTypeReference ((TypeReferenceHandle) typeHandle);
+				string referenceName = reader.GetString (reference.Name);
+				if (reference.ResolutionScope.Kind == HandleKind.TypeReference) {
+					if (!TryGetTypeIdentity (reference.ResolutionScope, out string declaringIdentity)) {
+						identity = "";
+						return false;
+					}
+					identity = declaringIdentity + "$" + referenceName;
+					return true;
+				}
+				identity = reader.GetString (reference.Namespace) + "." + referenceName;
+				return true;
+			default:
+				identity = "";
+				return false;
+			}
 		}
 
 		bool TryReadFindClassName (byte [] il, List<IlInstruction> instructions, HashSet<int> controlFlowEntries,
@@ -572,6 +775,18 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				InstructionOffset = instructionOffset;
 				OperandOffset = operandOffset;
 				OperandSize = operandSize;
+			}
+		}
+
+		readonly struct StaticJniClassAssignment
+		{
+			public string? ClassName { get; }
+			public string? CandidateClassName { get; }
+
+			public StaticJniClassAssignment (string? className, string? candidateClassName)
+			{
+				ClassName = className;
+				CandidateClassName = candidateClassName;
 			}
 		}
 	}

@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks.JniRemapping;
@@ -24,6 +25,13 @@ namespace Xamarin.Android.Build.Tests
 		static JniRewriteResult Rewrite (byte [] sourceImage, R8Mapping mapping)
 		{
 			var log = new TaskLoggingHelper (new MockBuildEngine (TestContext.Out), nameof (JniAssemblyRewriterTests));
+			return JniAssemblyRewriter.Rewrite (sourceImage, mapping, log);
+		}
+
+		static JniRewriteResult Rewrite (byte [] sourceImage, R8Mapping mapping, IList<BuildWarningEventArgs> warnings)
+		{
+			var engine = new MockBuildEngine (TestContext.Out, warnings: warnings);
+			var log = new TaskLoggingHelper (engine, nameof (JniAssemblyRewriterTests));
 			return JniAssemblyRewriter.Rewrite (sourceImage, mapping, log);
 		}
 
@@ -269,6 +277,7 @@ namespace Xamarin.Android.Build.Tests
 			}, locals, controlFlow));
 			fixture.AddType ("Acme", "LegacyLookups", fieldStart, methodStart);
 
+			var warnings = new List<BuildWarningEventArgs> ();
 			JniRewriteResult result = Rewrite (fixture.Serialize (), Mapping (
 				"acme.one.First -> a.b.F:\n" +
 				"    int count -> x\n" +
@@ -276,7 +285,7 @@ namespace Xamarin.Android.Build.Tests
 				"    int state -> f\n" +
 				"acme.two.Second -> a.b.S:\n" +
 				"    int state -> s\n" +
-				"    void run() -> y\n"));
+				"    void run() -> y\n"), warnings);
 
 			using var peReader = new PEReader (ImmutableArray.Create (result.Image));
 			MetadataReader reader = peReader.GetMetadataReader ();
@@ -294,6 +303,220 @@ namespace Xamarin.Android.Build.Tests
 				"state",
 				"I",
 			}, ValuesOf (LoadedStrings (peReader, reader, method)));
+			Assert.AreEqual (1, warnings.Count, "The ambiguous local class source should produce one warning.");
+			Assert.AreEqual ("XA4326", warnings [0].Code);
+		}
+
+		[Test]
+		public void RewritesLegacyJniLookupsUsingAUniqueCachedStaticClassHandle ()
+		{
+			var fixture = new JniFixtureBuilder ();
+			BlobHandle findClassSignature = AddLegacyJniMethodSignature (fixture, findClass: true);
+			BlobHandle memberLookupSignature = AddLegacyJniMethodSignature (fixture, findClass: false);
+
+			int fieldStart = fixture.NextFieldRid;
+			int methodStart = fixture.NextMethodRid;
+			MethodDefinitionHandle findClass = fixture.Metadata.AddMethodDefinition (
+				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+				MethodImplAttributes.Runtime,
+				fixture.Metadata.GetOrAddString ("FindClass"),
+				findClassSignature,
+				0,
+				MetadataTokens.ParameterHandle (fixture.Metadata.GetRowCount (TableIndex.Param) + 1));
+			MethodDefinitionHandle getField = fixture.Metadata.AddMethodDefinition (
+				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+				MethodImplAttributes.Runtime,
+				fixture.Metadata.GetOrAddString ("GetFieldID"),
+				memberLookupSignature,
+				0,
+				MetadataTokens.ParameterHandle (fixture.Metadata.GetRowCount (TableIndex.Param) + 1));
+			fixture.AddType ("Android.Runtime", "JNIEnv", fieldStart, methodStart);
+
+			TypeReferenceHandle jniEnvironmentReference = fixture.Metadata.AddTypeReference (
+				fixture.CoreLibraryReference,
+				fixture.Metadata.GetOrAddString ("Android.Runtime"),
+				fixture.Metadata.GetOrAddString ("JNIEnv"));
+			MemberReferenceHandle findClassReference = fixture.Metadata.AddMemberReference (
+				jniEnvironmentReference,
+				fixture.Metadata.GetOrAddString ("FindClass"),
+				findClassSignature);
+			MemberReferenceHandle getMethod = fixture.Metadata.AddMemberReference (
+				jniEnvironmentReference,
+				fixture.Metadata.GetOrAddString ("GetMethodID"),
+				memberLookupSignature);
+
+			fieldStart = fixture.NextFieldRid;
+			FieldDefinitionHandle classRef = fixture.Metadata.AddFieldDefinition (
+				FieldAttributes.Private | FieldAttributes.Static,
+				fixture.Metadata.GetOrAddString ("class_ref"),
+				fixture.Metadata.GetOrAddBlob (IntFieldSignature ()));
+			FieldDefinitionHandle ambiguousClassRef = fixture.Metadata.AddFieldDefinition (
+				FieldAttributes.Private | FieldAttributes.Static,
+				fixture.Metadata.GetOrAddString ("ambiguous_class_ref"),
+				fixture.Metadata.GetOrAddBlob (IntFieldSignature ()));
+			FieldDefinitionHandle branchTargetClassRef = fixture.Metadata.AddFieldDefinition (
+				FieldAttributes.Private | FieldAttributes.Static,
+				fixture.Metadata.GetOrAddString ("branch_target_class_ref"),
+				fixture.Metadata.GetOrAddBlob (IntFieldSignature ()));
+			FieldDefinitionHandle frameworkClassRef = fixture.Metadata.AddFieldDefinition (
+				FieldAttributes.Private | FieldAttributes.Static,
+				fixture.Metadata.GetOrAddString ("framework_class_ref"),
+				fixture.Metadata.GetOrAddBlob (IntFieldSignature ()));
+			TypeReferenceHandle contentValuesReference = fixture.Metadata.AddTypeReference (
+				fixture.CoreLibraryReference,
+				fixture.Metadata.GetOrAddString ("Acme"),
+				fixture.Metadata.GetOrAddString ("ContentValues"));
+			MemberReferenceHandle classRefReference = fixture.Metadata.AddMemberReference (
+				contentValuesReference,
+				fixture.Metadata.GetOrAddString ("class_ref"),
+				fixture.Metadata.GetOrAddBlob (IntFieldSignature ()));
+
+			UserStringHandle contentValuesClass = fixture.String ("acme/orig/ContentValues");
+			UserStringHandle otherClass = fixture.String ("acme/orig/Other");
+			UserStringHandle fieldName = fixture.String ("size");
+			UserStringHandle fieldDescriptor = fixture.String ("I");
+			UserStringHandle methodName = fixture.String ("clear");
+			UserStringHandle methodDescriptor = fixture.String ("()V");
+			UserStringHandle ambiguousName = fixture.String ("value");
+			UserStringHandle frameworkClass = fixture.String ("android/content/Context");
+			UserStringHandle otherFrameworkClass = fixture.String ("android/view/View");
+
+			methodStart = fixture.NextMethodRid;
+			var initializerControlFlow = new ControlFlowBuilder ();
+			MethodDefinitionHandle initializer = fixture.AddVoidMethod (".cctor", fixture.EmitBody (encoder => {
+				LabelHandle branchTargetAssignment = encoder.DefineLabel ();
+
+				encoder.LoadString (contentValuesClass);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (findClass);
+				encoder.OpCode (ILOpCode.Stsfld);
+				encoder.Token (classRef);
+
+				encoder.LoadString (contentValuesClass);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (findClass);
+				encoder.OpCode (ILOpCode.Stsfld);
+				encoder.Token (ambiguousClassRef);
+				encoder.LoadString (otherClass);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (findClassReference);
+				encoder.OpCode (ILOpCode.Stsfld);
+				encoder.Token (ambiguousClassRef);
+
+				encoder.Branch (ILOpCode.Br_s, branchTargetAssignment);
+				encoder.MarkLabel (branchTargetAssignment);
+				encoder.LoadString (contentValuesClass);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (findClass);
+				encoder.OpCode (ILOpCode.Stsfld);
+				encoder.Token (branchTargetClassRef);
+
+				encoder.LoadString (frameworkClass);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (findClass);
+				encoder.OpCode (ILOpCode.Stsfld);
+				encoder.Token (frameworkClassRef);
+				encoder.LoadString (otherFrameworkClass);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (findClassReference);
+				encoder.OpCode (ILOpCode.Stsfld);
+				encoder.Token (frameworkClassRef);
+				encoder.OpCode (ILOpCode.Ret);
+			}, controlFlow: initializerControlFlow), MethodAttributes.Private | MethodAttributes.Static | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName);
+			MethodDefinitionHandle lookup = fixture.AddVoidMethod ("LookupMembers", fixture.EmitBody (encoder => {
+				encoder.OpCode (ILOpCode.Ldsfld);
+				encoder.Token (classRef);
+				encoder.LoadString (fieldName);
+				encoder.LoadString (fieldDescriptor);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (getField);
+				encoder.OpCode (ILOpCode.Pop);
+
+				encoder.OpCode (ILOpCode.Ldsfld);
+				encoder.Token (classRefReference);
+				encoder.LoadString (methodName);
+				encoder.LoadString (methodDescriptor);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (getMethod);
+				encoder.OpCode (ILOpCode.Pop);
+
+				encoder.OpCode (ILOpCode.Ldsfld);
+				encoder.Token (ambiguousClassRef);
+				encoder.LoadString (ambiguousName);
+				encoder.LoadString (fieldDescriptor);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (getField);
+				encoder.OpCode (ILOpCode.Pop);
+
+				encoder.OpCode (ILOpCode.Ldsfld);
+				encoder.Token (branchTargetClassRef);
+				encoder.LoadString (ambiguousName);
+				encoder.LoadString (fieldDescriptor);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (getField);
+				encoder.OpCode (ILOpCode.Pop);
+
+				encoder.OpCode (ILOpCode.Ldsfld);
+				encoder.Token (frameworkClassRef);
+				encoder.LoadString (ambiguousName);
+				encoder.LoadString (fieldDescriptor);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (getField);
+				encoder.OpCode (ILOpCode.Pop);
+				encoder.OpCode (ILOpCode.Ret);
+			}));
+			fixture.AddType ("Acme", "ContentValues", fieldStart, methodStart);
+
+			var warnings = new List<BuildWarningEventArgs> ();
+			JniRewriteResult result = Rewrite (fixture.Serialize (), Mapping (
+				"acme.orig.ContentValues -> a.b.C:\n" +
+				"    int size -> x\n" +
+				"    void clear() -> y\n" +
+				"    int value -> z\n" +
+				"acme.orig.Other -> a.b.O:\n" +
+				"    int value -> q\n"), warnings);
+
+			using var peReader = new PEReader (ImmutableArray.Create (result.Image));
+			MetadataReader reader = peReader.GetMetadataReader ();
+			CollectionAssert.AreEqual (new [] {
+				"a/b/C",
+				"a/b/C",
+				"a/b/O",
+				"a/b/C",
+				"android/content/Context",
+				"android/view/View",
+			}, ValuesOf (LoadedStrings (peReader, reader, initializer)));
+			CollectionAssert.AreEqual (new [] {
+				"x",
+				"I",
+				"y",
+				"()V",
+				"value",
+				"I",
+				"value",
+				"I",
+				"value",
+				"I",
+			}, ValuesOf (LoadedStrings (peReader, reader, lookup)));
+			Assert.AreEqual (2, warnings.Count, "Each unsafe renamed cached class handle should produce one warning.");
+			Assert.IsTrue (warnings.All (warning => warning.Code == "XA4326"));
+		}
+
+		[Test]
+		public void IdentityMappedLoadedStringDoesNotRequireARewrite ()
+		{
+			var fixture = new JniFixtureBuilder ();
+			UserStringHandle className = fixture.String ("acme/orig/Identity");
+			int fieldStart = fixture.NextFieldRid;
+			int methodStart = fixture.NextMethodRid;
+			fixture.AddVoidMethod ("LoadClass", fixture.EmitLoadStringBody (className));
+			fixture.AddType ("Acme", "Identity", fieldStart, methodStart);
+			byte [] image = fixture.Serialize ();
+
+			JniRewriteResult result = Rewrite (image, Mapping ("acme.orig.Identity -> acme.orig.Identity:\n"));
+
+			Assert.AreEqual (0, result.ReplacementCount);
+			Assert.AreSame (image, result.Image, "An identity mapping should not invoke the assembly rebuilder.");
 		}
 
 		[Test]
@@ -330,6 +553,8 @@ namespace Xamarin.Android.Build.Tests
 
 			MethodDefinitionHandle ctor = fixture.AddVoidMethod (".ctor", fixture.EmitReturnOnlyBody (),
 				MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName);
+			fixture.Metadata.AddCustomAttribute (ctor, fixture.RegisterCtor3,
+				fixture.AttributeBlob (".ctor", callbackDescriptor, "n_ctor_Lacme_orig_Callback_Handler"));
 			fixture.Metadata.AddCustomAttribute (ctor, fixture.JniConstructorSignatureCtor1, fixture.AttributeBlob (callbackDescriptor));
 
 			TypeDefinitionHandle myView = fixture.AddType ("Acme.Orig", "MyView", fieldStart, methodStart);
@@ -374,6 +599,8 @@ namespace Xamarin.Android.Build.Tests
 				AttributeStringArgs (reader, onClickAttributes, fixture.JniMethodSignatureCtor2));
 			CollectionAssert.AreEqual (new [] { rewrittenCallbackDescriptor },
 				AttributeStringArgs (reader, reader.GetMethodDefinition (ctor).GetCustomAttributes (), fixture.JniConstructorSignatureCtor1));
+			CollectionAssert.AreEqual (new [] { ".ctor", rewrittenCallbackDescriptor, "n_ctor_Lacme_orig_Callback_Handler" },
+				AttributeStringArgs (reader, reader.GetMethodDefinition (ctor).GetCustomAttributes (), fixture.RegisterCtor3));
 
 			CollectionAssert.AreEqual (new [] {
 				"a." + rewrittenCallbackDescriptor,

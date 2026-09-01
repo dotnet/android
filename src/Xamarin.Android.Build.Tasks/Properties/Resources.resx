@@ -897,6 +897,10 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
     <value>The 'SourceFiles' and 'DestinationFiles' item groups must contain the same number of items.</value>
     <comment>The following are literal MSBuild item group names and should not be translated: 'SourceFiles', 'DestinationFiles'.</comment>
   </data>
+  <data name="XA4326" xml:space="preserve">
+    <value>Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous JNIEnv.FindClass source.</value>
+    <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
