@@ -359,6 +359,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <FileWrites Include="$(_AndroidNativeAotSharedLibrary)" />
       <FileWrites Include="$(_AndroidNativeAotSharedLibrary)$(NativeSymbolExt)" Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' " />
       <FileWrites Include="$(NativeIntermediateOutputPath)sections.ld" />
+      <FileWrites Include="$(NativeIntermediateOutputPath)libRuntime.WorkstationGC.arm-ehabi.a" Condition=" '$(RuntimeIdentifier)' == 'android-arm' " />
     </ItemGroup>
   </Target>
 
