@@ -196,6 +196,28 @@ public class TrimmableTypeMap
 		}
 		return null;
 	}
+
+	bool TryGetAndroidCallableWrapperProxy (
+		string className,
+		[NotNullWhen (true)] out IAndroidCallableWrapper? acw)
+	{
+		var cacheEntry = GetProxyCacheEntryForJniName (className);
+		if (cacheEntry is JavaPeerProxy singleProxy) {
+			acw = singleProxy as IAndroidCallableWrapper;
+			return acw is not null;
+		}
+
+		foreach (var proxy in (JavaPeerProxy[]) cacheEntry) {
+			if (proxy is IAndroidCallableWrapper wrapper) {
+				acw = wrapper;
+				return true;
+			}
+		}
+
+		acw = null;
+		return false;
+	}
+
 	JavaPeerProxy? GetProxyForManagedType (Type managedType)
 	{
 		if (managedType.IsGenericType && !managedType.IsGenericTypeDefinition) {
@@ -491,22 +513,7 @@ public class TrimmableTypeMap
 				return;
 			}
 
-			var cacheEntry = s_instance.GetProxyCacheEntryForJniName (className);
-			if (cacheEntry is JavaPeerProxy singleProxy) {
-				if (singleProxy is not IAndroidCallableWrapper acw) {
-					return;
-				}
-
-				// Use the class reference passed from Java (via C++) — not JniType(className)
-				// which resolves via FindClass and may get a different class from a different ClassLoader.
-				// Registering natives on that other instance is silently wrong.
-				using var singleJniType = new JniType (ref classRef, JniObjectReferenceOptions.Copy);
-				acw.RegisterNatives (singleJniType);
-				return;
-			}
-
-			var proxies = (JavaPeerProxy[]) cacheEntry;
-			if (proxies.Length == 0) {
+			if (!s_instance.TryGetAndroidCallableWrapperProxy (className, out var acw)) {
 				return;
 			}
 
@@ -514,11 +521,7 @@ public class TrimmableTypeMap
 			// which resolves via FindClass and may get a different class from a different ClassLoader.
 			// Registering natives on that other instance is silently wrong.
 			using var jniType = new JniType (ref classRef, JniObjectReferenceOptions.Copy);
-			foreach (var proxy in proxies) {
-				if (proxy is IAndroidCallableWrapper acw) {
-					acw.RegisterNatives (jniType);
-				}
-			}
+			acw.RegisterNatives (jniType);
 		} catch (Exception ex) {
 			Environment.FailFast ($"TrimmableTypeMap: Failed to register natives for class '{className}'.", ex);
 		}
