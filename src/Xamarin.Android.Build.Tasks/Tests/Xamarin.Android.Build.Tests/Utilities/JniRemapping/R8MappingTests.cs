@@ -281,7 +281,7 @@ namespace Xamarin.Android.Build.Tests
 
 				"""));
 
-			CollectionAssert.AreEqual (new [] {
+			CollectionAssert.AreEquivalent (new [] {
 				"class 'acme/orig/MyView': seed name 'a/b/C', final name 'x/y/Z'",
 				"field 'acme/orig/MyView.count': seed name 'a', final name 'd'",
 				"method 'acme/orig/MyView.onClick(android.view.View):void': seed name 'b', final name 'e'",
@@ -339,6 +339,33 @@ namespace Xamarin.Android.Build.Tests
 				"C\tacme/orig/MyView",
 				"F\tacme/orig/MyView\tcount",
 				"M\tacme/orig/MyView\tonClick(android.view.View):void",
+			}, mapping.AccessedEntries);
+		}
+
+		[TestCase ("field", "F\tacme/orig/MyView\tcount")]
+		[TestCase ("method", "M\tacme/orig/MyView\tonClick(android.view.View):void")]
+		[TestCase ("name-only method", "M\tacme/orig/MyView\tonStart():void")]
+		public void MemberOnlyLookupTracksOwningClass (string lookupKind, string expectedMemberEntry)
+		{
+			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
+				acme.orig.MyView -> a.b.C:
+				    int count -> a
+				    void onClick(android.view.View) -> b
+				    void onStart() -> c
+
+				"""));
+
+			bool found = lookupKind switch {
+				"field" => mapping.TryGetRenamedField ("acme/orig/MyView", "count", out _),
+				"method" => mapping.TryGetRenamedMethod ("acme/orig/MyView", "onClick", new [] { "android.view.View" }, "void", out _),
+				"name-only method" => mapping.TryGetRenamedMethodByNameOnly ("acme/orig/MyView", "onStart", out _),
+				_ => throw new InvalidOperationException ($"Unknown lookup kind '{lookupKind}'."),
+			};
+
+			Assert.IsTrue (found);
+			CollectionAssert.AreEqual (new [] {
+				"C\tacme/orig/MyView",
+				expectedMemberEntry,
 			}, mapping.AccessedEntries);
 		}
 
@@ -402,6 +429,21 @@ namespace Xamarin.Android.Build.Tests
 				"M\tacme/orig/Members\tkept():void",
 				"M\tacme/orig/Members\tmissing():void",
 			}));
+		}
+
+		[TestCase ("F\tacme/orig/MyView\tcount")]
+		[TestCase ("M\tacme/orig/MyView\tonClick():void")]
+		public void MemberOnlyManifestReportsRemovedDeclaringClass (string requiredEntry)
+		{
+			R8Mapping seed = R8Mapping.Parse (new StringReader ("""
+				acme.orig.MyView -> a.b.C:
+				    int count -> a
+				    void onClick() -> b
+
+				"""));
+			R8Mapping final = R8Mapping.Parse (new StringReader (""));
+
+			CollectionAssert.AreEqual (new [] { "class 'acme/orig/MyView'" }, seed.GetReachabilityConflicts (final, new [] { requiredEntry }));
 		}
 
 		[Test]
@@ -519,6 +561,21 @@ namespace Xamarin.Android.Build.Tests
 				"C\tacme/orig/B",
 				"C\tacme/orig/A",
 			}));
+		}
+
+		[Test]
+		public void NestedDescriptorTypeMatchesMappingKey ()
+		{
+			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
+				acme.orig.MyView -> a.b.C:
+				    void m(acme.Outer$Inner) -> a
+
+				"""));
+			var parameterTypes = JniDescriptorText.MethodDescriptorToJavaParameterTypes ("(Lacme/Outer$Inner;)V");
+
+			CollectionAssert.AreEqual (new [] { "acme.Outer$Inner" }, parameterTypes);
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "m", parameterTypes, "void", out string renamed));
+			Assert.AreEqual ("a", renamed);
 		}
 
 		[Test]

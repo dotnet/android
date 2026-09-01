@@ -282,7 +282,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return false;
 			}
 			obfuscatedFieldName = renamed;
-			RecordAccess (BuildFieldEntry (owningJniClassName, originalFieldName));
+			RecordAccess (
+				BuildClassEntry (owningJniClassName),
+				BuildFieldEntry (owningJniClassName, originalFieldName));
 			return true;
 		}
 
@@ -297,7 +299,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return false;
 			}
 			obfuscatedMethodName = renamed;
-			RecordAccess (BuildMethodEntry (owningJniClassName, methodKey));
+			RecordAccess (
+				BuildClassEntry (owningJniClassName),
+				BuildMethodEntry (owningJniClassName, methodKey));
 			return true;
 		}
 
@@ -337,7 +341,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					accessedMethods.Add (BuildMethodEntry (owningJniClassName, kvp.Key));
 				}
 			}
-			RecordAccess (accessedMethods);
+			RecordAccess (BuildClassEntry (owningJniClassName), accessedMethods);
 			obfuscatedMethodName = match;
 			return true;
 		}
@@ -395,6 +399,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		/// </summary>
 		public IEnumerable<string> GetReachabilityConflicts (R8Mapping finalMapping, IEnumerable<string> requiredEntries)
 		{
+			var reportedRemovedClasses = new HashSet<string> (StringComparer.Ordinal);
 			foreach (string requiredEntry in requiredEntries) {
 				string [] parts = requiredEntry.Split ('\t');
 				switch (parts.Length > 0 ? parts [0] : "") {
@@ -402,7 +407,8 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					if (!classes.ContainsKey (parts [1])) {
 						throw new FormatException ($"R8 reachability manifest class '{parts [1]}' is absent from the seed mapping.");
 					}
-					if (!finalMapping.classes.TryGetValue (parts [1], out string? finalClassName) || IsRemovedClassName (finalClassName)) {
+					if ((!finalMapping.classes.TryGetValue (parts [1], out string? finalClassName) || IsRemovedClassName (finalClassName)) &&
+							reportedRemovedClasses.Add (parts [1])) {
 						yield return $"class '{parts [1]}'";
 					}
 					break;
@@ -411,6 +417,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 						throw new FormatException ($"R8 reachability manifest field '{parts [1]}.{parts [2]}' is absent from the seed mapping.");
 					}
 					if (!finalMapping.IsLiveClass (parts [1])) {
+						if (reportedRemovedClasses.Add (parts [1])) {
+							yield return $"class '{parts [1]}'";
+						}
 						continue;
 					}
 					if (!finalMapping.fields.TryGetValue (parts [1], out var finalFields) || !finalFields.ContainsKey (parts [2])) {
@@ -422,6 +431,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 						throw new FormatException ($"R8 reachability manifest method '{parts [1]}.{parts [2]}' is absent from the seed mapping.");
 					}
 					if (!finalMapping.IsLiveClass (parts [1])) {
+						if (reportedRemovedClasses.Add (parts [1])) {
+							yield return $"class '{parts [1]}'";
+						}
 						continue;
 					}
 					if (!finalMapping.methods.TryGetValue (parts [1], out var finalMethods) ||

@@ -33,6 +33,19 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void RewrittenFieldIdRoundTripsThroughAccessManifest ()
+		{
+			R8Mapping mapping = BuildMapping ();
+			Assert.IsTrue (LdstrRewriter.TryRewrite ("someField.I", "acme/orig/MyView", mapping, out string rewritten));
+			mapping.RestrictReverseLookupsTo (mapping.AccessedEntries);
+			IJniNameMapping reverse = mapping.CreateReverseMapping ();
+
+			Assert.AreEqual ("x.I", rewritten);
+			Assert.IsTrue (reverse.TryMapField ("a/b/C", "x", out string originalField));
+			Assert.AreEqual ("someField", originalField);
+		}
+
+		[Test]
 		public void RewritesBareConstructorDescriptorEmbeddedTypesOnly ()
 		{
 			bool changed = LdstrRewriter.TryRewrite ("(Lacme/orig/Marker;)V", "acme/orig/MyView", BuildMapping (), out string rewritten);
