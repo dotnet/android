@@ -758,7 +758,7 @@ public sealed class JavaPeerScanner : IDisposable
 				return false;
 			}
 
-			var sig = methodDef.DecodeSignature (TypeRefSignatureTypeProvider.Instance, index);
+			var sig = methodDef.DecodeSignature (index.TypeRefSignatureProvider, index);
 			if (sig.ParameterTypes.Length != 0) {
 				logger?.LogExportFieldWithParametersError ();
 				return false;
