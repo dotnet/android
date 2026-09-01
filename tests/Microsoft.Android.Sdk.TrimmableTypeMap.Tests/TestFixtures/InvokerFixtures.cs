@@ -7,7 +7,7 @@ public interface IExplicitJavaInteropCollection
 {
 }
 
-public sealed class ExplicitJavaInteropCollectionProxy : Java.Lang.Object
+public sealed class ExplicitJavaInteropCollectionProxy : Java.Lang.Object, IExplicitJavaInteropCollection
 {
 	public ExplicitJavaInteropCollectionProxy (ref JniObjectReference reference, JniObjectReferenceOptions options)
 		: base ((System.IntPtr) 0, Android.Runtime.JniHandleOwnership.DoNotTransfer)
@@ -20,7 +20,7 @@ public interface IInheritedJavaInteropList : IExplicitJavaInteropCollection
 {
 }
 
-public sealed class InheritedJavaInteropListProxy : Java.Lang.Object
+public sealed class InheritedJavaInteropListProxy : Java.Lang.Object, IInheritedJavaInteropList
 {
 	public InheritedJavaInteropListProxy (ref JniObjectReference reference, JniObjectReferenceOptions options)
 		: base ((System.IntPtr) 0, Android.Runtime.JniHandleOwnership.DoNotTransfer)
