@@ -1,7 +1,10 @@
+using System;
 using System.IO;
+using System.Linq;
 
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -13,6 +16,18 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("Node-2")]
 	public class NativeAotBuildTests : BaseTest
 	{
+		static readonly string [] ArmEhabiPersonalitySymbols = [
+			"__aeabi_unwind_cpp_pr0",
+			"__aeabi_unwind_cpp_pr1",
+			"__aeabi_unwind_cpp_pr2",
+		];
+
+		static readonly string [] CPlusPlusArchiveNames = [
+			"libc++_static.a",
+			"libc++abi.a",
+			"libunwind.a",
+		];
+
 		[Test]
 		public void RestoreNativeAot_AndroidArmRuntimePack ()
 		{
@@ -115,13 +130,62 @@ namespace Xamarin.Android.Build.Tests
 		void AssertArmEhabiSymbolsPromoted (ProjectBuilder builder, XamarinAndroidApplicationProject proj)
 		{
 			string nativeDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android-arm", "native");
-			FileAssert.Exists (Path.Combine (nativeDirectory, "libRuntime.WorkstationGC.arm-ehabi.a"));
+			string runtimeArchive = Path.Combine (nativeDirectory, "libRuntime.WorkstationGC.arm-ehabi.a");
+			FileAssert.Exists (runtimeArchive);
 
 			string [] linkerResponseFiles = Directory.GetFiles (nativeDirectory, "ld.*.rsp");
 			Assert.AreEqual (1, linkerResponseFiles.Length, "One native linker response file should be generated.");
 			string linkerResponse = File.ReadAllText (linkerResponseFiles [0]);
 			StringAssert.Contains ("libRuntime.WorkstationGC.arm-ehabi.a", linkerResponse);
 			StringAssert.DoesNotContain ("libunwind.a", linkerResponse);
+
+			NdkTools ndk = NdkTools.Create (AndroidNdkPath);
+			ndk.OSBinPath = TestEnvironment.OSBinDirectory;
+			string llvmNm = ndk.GetToolPath ("llvm-nm", AndroidTargetArch.Arm, 0);
+			var (exitCode, standardOutput, standardError) = RunProcessWithExitCode (llvmNm, $"--defined-only \"{runtimeArchive}\"");
+			Assert.AreEqual (0, exitCode, $"llvm-nm failed:{Environment.NewLine}{standardError}");
+			foreach (string symbol in ArmEhabiPersonalitySymbols) {
+				StringAssert.Contains ($" W {symbol}", standardOutput, $"{symbol} should be a weak global symbol.");
+			}
+		}
+
+		[TestCase (AndroidRuntime.NativeAOT, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true)]
+		public void RuntimePackCPlusPlusArchives (AndroidRuntime runtime, bool shouldContain)
+		{
+			string outputDirectory = Path.Combine (Root, TestName);
+			if (Directory.Exists (outputDirectory)) {
+				Directory.Delete (outputDirectory, recursive: true);
+			}
+			Directory.CreateDirectory (outputDirectory);
+			string runtimePackProject = Path.Combine (XABuildPaths.TopDirectory, "build-tools", "create-packs", "Microsoft.Android.Runtime.proj");
+			var dotnet = new DotNetCLI (runtimePackProject) {
+				ProjectDirectory = outputDirectory,
+				BuildLogFile = Path.Combine (outputDirectory, "build.log"),
+				ProcessLogFile = Path.Combine (outputDirectory, "process.log"),
+			};
+			Assert.IsTrue (
+				dotnet.Pack (parameters: [
+					$"Configuration={XABuildPaths.Configuration}",
+					$"AndroidRuntime={runtime}",
+					"AndroidRID=android-arm64",
+					$"BaseIntermediateOutputPath={Path.Combine (outputDirectory, "obj")}{Path.DirectorySeparatorChar}",
+					$"PackageOutputPath={outputDirectory}",
+				]),
+				$"Packing the {runtime} runtime pack should succeed. See {dotnet.ProcessLogFile}."
+			);
+
+			string packagePath = Directory.GetFiles (outputDirectory, "*.nupkg")
+				.Single (path => !path.EndsWith (".symbols.nupkg", StringComparison.OrdinalIgnoreCase));
+			using var package = ZipHelper.OpenZip (packagePath);
+			foreach (string archiveName in CPlusPlusArchiveNames) {
+				string archivePath = $"runtimes/android-arm64/native/{archiveName}";
+				if (shouldContain) {
+					package.AssertContainsEntry (packagePath, archivePath);
+				} else {
+					package.AssertDoesNotContainEntry (packagePath, archivePath);
+				}
+			}
 		}
 
 		[Test]
