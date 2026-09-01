@@ -645,10 +645,7 @@ public class TrimmableTypeMapGenerator
 			return doc;
 		}
 
-		if (((string?) root.Attribute ("package")).IsNullOrEmpty () && !manifestConfig.PackageName.IsNullOrEmpty ()) {
-			root.SetAttributeValue ("package", manifestConfig.PackageName);
-		}
-
+		ManifestGenerator.ResolvePackageName (root, manifestConfig.PackageName);
 		ManifestGenerator.ApplyPlaceholders (doc, manifestConfig.ManifestPlaceholders, manifestConfig.PackageName);
 
 		if (!manifestConfig.ApplicationJavaClass.IsNullOrEmpty ()) {

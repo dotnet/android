@@ -201,6 +201,7 @@ class ManifestGenerator
 				continue;
 			}
 
+			ApplyPlaceholders (libDoc, ManifestPlaceholders, PackageName);
 			var package = (string?) libRoot.Attribute ("package") ?? "";
 			foreach (var top in libRoot.Elements ().ToList ()) {
 				var name = (string?) top.Attribute (AndroidNs + "name");
@@ -343,10 +344,7 @@ class ManifestGenerator
 		// produced by GetAndroidPackageName, which substitutes placeholders and canonicalizes the
 		// package). This matches the legacy GenerateMainAndroidManifest; a valid explicit package is
 		// preserved so compat-name resolution keeps using it.
-		var packageAttr = (string?) manifest.Attribute ("package") ?? "";
-		if ((packageAttr.Length == 0 || packageAttr.Contains ("${")) && !PackageName.IsNullOrEmpty ()) {
-			manifest.SetAttributeValue ("package", PackageName);
-		}
+		ResolvePackageName (manifest, PackageName);
 
 		if (manifest.Attribute (AndroidNs + "versionCode") is null) {
 			manifest.SetAttributeValue (AndroidNs + "versionCode",
@@ -375,6 +373,14 @@ class ManifestGenerator
 				throw new InvalidOperationException ("MinSdkVersion must be provided by MSBuild.");
 			}
 			usesSdk.SetAttributeValue (AndroidNs + "minSdkVersion", MinSdkVersion);
+		}
+	}
+
+	internal static void ResolvePackageName (XElement manifest, string? packageName)
+	{
+		var packageAttr = (string?) manifest.Attribute ("package") ?? "";
+		if ((packageAttr.Length == 0 || packageAttr.Contains ("${")) && !packageName.IsNullOrEmpty ()) {
+			manifest.SetAttributeValue ("package", packageName);
 		}
 	}
 

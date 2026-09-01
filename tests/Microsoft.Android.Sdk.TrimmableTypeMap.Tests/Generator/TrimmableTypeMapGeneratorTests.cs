@@ -624,9 +624,9 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		using var peReader = CreateTestFixturePEReader ();
 		var manifestTemplate = System.Xml.Linq.XDocument.Parse ("""
 			<?xml version="1.0" encoding="utf-8"?>
-			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${applicationId}">
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${PACKAGENAME}">
 			  <application>
-			    <activity android:name="${applicationId}.SimpleActivity" />
+			    <activity android:name=".SimpleActivity" />
 			  </application>
 			</manifest>
 			""");
@@ -644,8 +644,37 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			manifestTemplate);
 
 		var peer = result.AllPeers.First (p => p.ManagedTypeName == "MyApp.SimpleActivity");
-		Assert.True (peer.IsUnconditional, "Built-in applicationId placeholders should resolve before rooting and validation.");
+		Assert.True (peer.IsUnconditional, "Unresolved template packages should use PackageName before expanding relative components.");
 		Assert.DoesNotContain (logMessages, message => message.StartsWith ("XA4258:", StringComparison.Ordinal));
+	}
+
+	[Fact]
+	public void Execute_InvalidResolvedPackageBeforeRelativeComponent_ReportsBeforeOutputs ()
+	{
+		using var peReader = CreateTestFixturePEReader ();
+		var manifestTemplate = XDocument.Parse ("""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${PACKAGENAME}">
+			  <application>
+			    <activity android:name=".SimpleActivity" />
+			  </application>
+			</manifest>
+			""");
+
+		var result = CreateGenerator ().Execute (
+			[Input ("TestFixtures", peReader)],
+			new Version (11, 0),
+			new HashSet<string> (),
+			manifestConfig: new ManifestConfig (
+				PackageName: "com.¢pkg",
+				AndroidApiLevel: "35",
+				SupportedOSPlatformVersion: "24",
+				RuntimeProviderJavaName: "mono.MonoRuntimeProvider"),
+			manifestTemplate: manifestTemplate);
+
+		Assert.Empty (result.GeneratedAssemblies);
+		Assert.Empty (result.GeneratedJavaSources);
+		Assert.Contains (logMessages, message =>
+			message.Contains ("Java name 'com.¢pkg.SimpleActivity' contains invalid or unsupported Java identifier '¢pkg'."));
 	}
 
 	[Fact]

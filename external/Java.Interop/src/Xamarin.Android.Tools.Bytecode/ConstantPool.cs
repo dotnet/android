@@ -390,18 +390,26 @@ namespace Xamarin.Android.Tools.Bytecode {
 			for (int i = 0; i < data.Length; ++i) {
 				byte first = data [i];
 				if ((first & 0x80) == 0) {
+					if (first == 0)
+						throw new InvalidDataException ("Modified UTF-8 contains a raw null byte.");
 					decoded.Append ((char) first);
 					continue;
 				}
 				if ((first & 0xe0) == 0xc0 && i + 1 < data.Length) {
 					byte second = ReadContinuationByte (data [++i]);
-					decoded.Append ((char) (((first & 0x1f) << 6) | (second & 0x3f)));
+					char value = (char) (((first & 0x1f) << 6) | (second & 0x3f));
+					if (value < '\u0080' && (first != 0xc0 || second != 0x80))
+						throw new InvalidDataException ("Modified UTF-8 contains an invalid two-byte overlong encoding.");
+					decoded.Append (value);
 					continue;
 				}
 				if ((first & 0xf0) == 0xe0 && i + 2 < data.Length) {
 					byte second = ReadContinuationByte (data [++i]);
 					byte third = ReadContinuationByte (data [++i]);
-					decoded.Append ((char) (((first & 0x0f) << 12) | ((second & 0x3f) << 6) | (third & 0x3f)));
+					char value = (char) (((first & 0x0f) << 12) | ((second & 0x3f) << 6) | (third & 0x3f));
+					if (value < '\u0800')
+						throw new InvalidDataException ("Modified UTF-8 contains an invalid three-byte overlong encoding.");
+					decoded.Append (value);
 					continue;
 				}
 				throw new InvalidDataException ($"Invalid modified UTF-8 lead byte 0x{first:x2}.");

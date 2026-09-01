@@ -76,15 +76,19 @@ namespace Xamarin.ProjectTools
 		{
 			using var stream = File.OpenRead (dexFile);
 			using var reader = new BinaryReader (stream, Encoding.UTF8, leaveOpen: true);
-			if (stream.Length < 112 ||
-					reader.ReadByte () != 'd' ||
-					reader.ReadByte () != 'e' ||
-					reader.ReadByte () != 'x' ||
-					reader.ReadByte () != '\n') {
+			if (stream.Length < 112 || stream.Length > uint.MaxValue) {
 				throw new InvalidDataException ($"'{dexFile}' is not a DEX file.");
 			}
-			stream.Position = 4;
-			var version = Encoding.ASCII.GetString (reader.ReadBytes (3));
+			var magic = reader.ReadBytes (8);
+			if (magic.Length != 8 ||
+					magic [0] != 'd' ||
+					magic [1] != 'e' ||
+					magic [2] != 'x' ||
+					magic [3] != '\n' ||
+					magic [7] != 0) {
+				throw new InvalidDataException ($"'{dexFile}' has invalid DEX magic.");
+			}
+			var version = Encoding.ASCII.GetString (magic, 4, 3);
 			if (version == "041") {
 				throw new NotSupportedException ("DEX 041 containers with multiple logical files are not supported.");
 			}
@@ -92,17 +96,54 @@ namespace Xamarin.ProjectTools
 				throw new InvalidDataException ($"'{dexFile}' uses unsupported DEX version '{version}'.");
 			}
 
+			uint fileSize = ReadUInt32 (reader, 32);
+			if (fileSize != stream.Length) {
+				throw new InvalidDataException ($"'{dexFile}' declares size {fileSize} but contains {stream.Length} bytes.");
+			}
+			uint headerSize = ReadUInt32 (reader, 36);
+			if (headerSize != 112) {
+				throw new InvalidDataException ($"'{dexFile}' declares unsupported DEX header size {headerSize}.");
+			}
 			uint endianTag = ReadUInt32 (reader, 40);
 			if (endianTag != 0x12345678) {
 				throw new InvalidDataException ($"'{dexFile}' uses unsupported DEX endianness 0x{endianTag:x8}.");
 			}
 
-			var stringOffsets = ReadUInt32Table (reader, ReadUInt32 (reader, 56), ReadUInt32 (reader, 60));
-			var typeDescriptorIndexes = ReadUInt32Table (reader, ReadUInt32 (reader, 64), ReadUInt32 (reader, 68));
+			ValidateSection (stream, ReadUInt32 (reader, 44), ReadUInt32 (reader, 48), 1, "link");
+			uint dataSize = ReadUInt32 (reader, 104);
+			uint dataOffset = ReadUInt32 (reader, 108);
+			ValidateSection (stream, dataSize, dataOffset, 1, "data");
+			uint mapOffset = ReadUInt32 (reader, 52);
+			if (mapOffset == 0) {
+				throw new InvalidDataException ("DEX file has no map list.");
+			}
+			ValidateRange (stream, mapOffset, 4, "map");
+			uint mapCount = ReadUInt32 (reader, mapOffset);
+			if (mapCount == 0) {
+				throw new InvalidDataException ("DEX map list is empty.");
+			}
+			ulong mapSize = 4 + (ulong) mapCount * 12;
+			ValidateRange (stream, mapOffset, mapSize, "map");
+			ulong dataEnd = (ulong) dataOffset + dataSize;
+			if (mapOffset < dataOffset || (ulong) mapOffset + mapSize > dataEnd) {
+				throw new InvalidDataException ("DEX map list is outside the data section.");
+			}
+
+			uint stringCount = ReadUInt32 (reader, 56);
+			uint stringOffset = ReadUInt32 (reader, 60);
+			uint typeCount = ReadUInt32 (reader, 64);
+			uint typeOffset = ReadUInt32 (reader, 68);
+			ValidateSection (stream, stringCount, stringOffset, 4, "string identifiers");
+			ValidateSection (stream, typeCount, typeOffset, 4, "type identifiers");
+			ValidateSection (stream, ReadUInt32 (reader, 72), ReadUInt32 (reader, 76), 12, "prototype identifiers");
+			ValidateSection (stream, ReadUInt32 (reader, 80), ReadUInt32 (reader, 84), 8, "field identifiers");
+			ValidateSection (stream, ReadUInt32 (reader, 88), ReadUInt32 (reader, 92), 8, "method identifiers");
 			uint classCount = ReadUInt32 (reader, 96);
 			uint classOffset = ReadUInt32 (reader, 100);
-			ValidateRange (stream, classOffset, checked (classCount * 32), "class definitions");
+			ValidateSection (stream, classCount, classOffset, 32, "class definitions");
 
+			var stringOffsets = ReadUInt32Table (reader, stringCount, stringOffset);
+			var typeDescriptorIndexes = ReadUInt32Table (reader, typeCount, typeOffset);
 			var descriptors = new List<string> (checked ((int) classCount));
 			for (uint index = 0; index < classCount; index++) {
 				uint classIndex = ReadUInt32 (reader, checked (classOffset + index * 32));
@@ -120,7 +161,9 @@ namespace Xamarin.ProjectTools
 
 		static uint [] ReadUInt32Table (BinaryReader reader, uint count, uint offset)
 		{
-			ValidateRange (reader.BaseStream, offset, checked (count * 4), "table");
+			if (count > int.MaxValue) {
+				throw new InvalidDataException ($"DEX table contains too many entries: {count}.");
+			}
 			var values = new uint [checked ((int) count)];
 			reader.BaseStream.Position = offset;
 			for (int index = 0; index < values.Length; index++) {
@@ -136,7 +179,18 @@ namespace Xamarin.ProjectTools
 			return reader.ReadUInt32 ();
 		}
 
-		static void ValidateRange (Stream stream, uint offset, uint size, string description)
+		static void ValidateSection (Stream stream, uint count, uint offset, uint itemSize, string description)
+		{
+			if (count == 0) {
+				return;
+			}
+			if (offset == 0) {
+				throw new InvalidDataException ($"DEX {description} has entries but no offset.");
+			}
+			ValidateRange (stream, offset, (ulong) count * itemSize, description);
+		}
+
+		static void ValidateRange (Stream stream, uint offset, ulong size, string description)
 		{
 			ulong end = (ulong) offset + size;
 			if (end > (ulong) stream.Length) {
@@ -149,49 +203,95 @@ namespace Xamarin.ProjectTools
 			ValidateRange (reader.BaseStream, offset, 1, "string");
 			reader.BaseStream.Position = offset;
 			uint utf16Length = ReadUnsignedLeb128 (reader);
-			var value = new StringBuilder (checked ((int) utf16Length));
+			long remainingBytes = reader.BaseStream.Length - reader.BaseStream.Position;
+			if (remainingBytes < 1 || utf16Length > (ulong) (remainingBytes - 1)) {
+				throw new InvalidDataException (
+					$"DEX string declares {utf16Length} UTF-16 units with only {remainingBytes} bytes remaining.");
+			}
+			var value = new StringBuilder ();
+			bool pendingHighSurrogate = false;
 			while (true) {
-				byte first = reader.ReadByte ();
+				byte first = ReadStringByte (reader);
 				if (first == 0) {
 					break;
 				}
 				if ((first & 0x80) == 0) {
-					value.Append ((char) first);
+					AppendCodeUnit ((char) first);
 					continue;
 				}
 				if ((first & 0xe0) == 0xc0) {
 					byte second = ReadContinuationByte (reader);
-					value.Append ((char) (((first & 0x1f) << 6) | (second & 0x3f)));
+					char decoded = (char) (((first & 0x1f) << 6) | (second & 0x3f));
+					if (decoded < '\u0080' && (first != 0xc0 || second != 0x80)) {
+						throw new InvalidDataException ("DEX modified UTF-8 contains an invalid two-byte overlong encoding.");
+					}
+					AppendCodeUnit (decoded);
 					continue;
 				}
 				if ((first & 0xf0) == 0xe0) {
 					byte second = ReadContinuationByte (reader);
 					byte third = ReadContinuationByte (reader);
-					value.Append ((char) (((first & 0x0f) << 12) | ((second & 0x3f) << 6) | (third & 0x3f)));
+					char decoded = (char) (((first & 0x0f) << 12) | ((second & 0x3f) << 6) | (third & 0x3f));
+					if (decoded < '\u0800') {
+						throw new InvalidDataException ("DEX modified UTF-8 contains an invalid three-byte overlong encoding.");
+					}
+					AppendCodeUnit (decoded);
 					continue;
 				}
 				throw new InvalidDataException ($"Invalid DEX modified UTF-8 lead byte 0x{first:x2}.");
+			}
+			if (pendingHighSurrogate) {
+				throw new InvalidDataException ("DEX modified UTF-8 string ends with an unmatched high surrogate.");
 			}
 			if (value.Length != utf16Length) {
 				throw new InvalidDataException ($"DEX string declared {utf16Length} UTF-16 units but decoded {value.Length}.");
 			}
 			return value.ToString ();
+
+			void AppendCodeUnit (char decoded)
+			{
+				if (pendingHighSurrogate) {
+					if (!char.IsLowSurrogate (decoded)) {
+						throw new InvalidDataException ("DEX modified UTF-8 high surrogate is not followed by a low surrogate.");
+					}
+					pendingHighSurrogate = false;
+				} else if (char.IsLowSurrogate (decoded)) {
+					throw new InvalidDataException ("DEX modified UTF-8 contains an unmatched low surrogate.");
+				} else if (char.IsHighSurrogate (decoded)) {
+					pendingHighSurrogate = true;
+				}
+				if (value.Length >= utf16Length) {
+					throw new InvalidDataException ($"DEX string decodes to more than its declared {utf16Length} UTF-16 units.");
+				}
+				value.Append (decoded);
+			}
 		}
 
 		static byte ReadContinuationByte (BinaryReader reader)
 		{
-			byte value = reader.ReadByte ();
+			byte value = ReadStringByte (reader);
 			if ((value & 0xc0) != 0x80) {
 				throw new InvalidDataException ($"Invalid DEX modified UTF-8 continuation byte 0x{value:x2}.");
 			}
 			return value;
 		}
 
+		static byte ReadStringByte (BinaryReader reader)
+		{
+			if (reader.BaseStream.Position >= reader.BaseStream.Length) {
+				throw new InvalidDataException ("DEX modified UTF-8 string is not null-terminated.");
+			}
+			return reader.ReadByte ();
+		}
+
 		static uint ReadUnsignedLeb128 (BinaryReader reader)
 		{
 			uint value = 0;
 			for (int index = 0; index < 5; index++) {
-				byte next = reader.ReadByte ();
+				byte next = ReadStringByte (reader);
+				if (index == 4 && (next & 0xf0) != 0) {
+					throw new InvalidDataException ("DEX unsigned LEB128 value exceeds 32 bits.");
+				}
 				value |= (uint) (next & 0x7f) << (index * 7);
 				if ((next & 0x80) == 0) {
 					return value;

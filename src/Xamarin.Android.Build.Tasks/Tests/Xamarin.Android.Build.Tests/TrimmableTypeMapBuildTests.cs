@@ -1367,6 +1367,160 @@ namespace UnnamedProject {
 			Assert.Throws<NotSupportedException> (() => DexUtils.GetClassDescriptors (dexFile));
 		}
 
+		[TestCase ("magic-terminator")]
+		[TestCase ("header-size")]
+		[TestCase ("file-size")]
+		[TestCase ("map-missing")]
+		[TestCase ("map-section")]
+		[TestCase ("string-section")]
+		[TestCase ("data-section")]
+		public void DexUtils_RejectsMalformedHeaders (string malformedField)
+		{
+			var dex = CreateMinimalDex ([(byte) 'L', (byte) 'x', (byte) ';'], utf16Length: 3);
+			switch (malformedField) {
+				case "magic-terminator":
+					dex [7] = 1;
+					break;
+				case "header-size":
+					WriteUInt32 (dex, 36, 111);
+					break;
+				case "file-size":
+					WriteUInt32 (dex, 32, checked ((uint) dex.Length - 1));
+					break;
+				case "map-missing":
+					WriteUInt32 (dex, 52, 0);
+					break;
+				case "map-section":
+					WriteUInt32 (dex, checked ((int) ReadUInt32 (dex, 52)), uint.MaxValue);
+					break;
+				case "string-section":
+					WriteUInt32 (dex, 56, uint.MaxValue);
+					break;
+				case "data-section":
+					WriteUInt32 (dex, 104, uint.MaxValue);
+					break;
+				default:
+					throw new InvalidOperationException ($"Unknown malformed DEX field '{malformedField}'.");
+			}
+
+			var dexFile = WriteDexFile (dex, malformedField);
+			Assert.Throws<InvalidDataException> (() => DexUtils.GetClassDescriptors (dexFile));
+		}
+
+		[Test]
+		public void DexUtils_DecodesModifiedUtf8 ()
+		{
+			var bmpDex = CreateMinimalDex (
+				[(byte) 'L', 0xc2, 0x80, 0xe0, 0xa0, 0x80, (byte) ';'],
+				utf16Length: 4);
+			var nullDex = CreateMinimalDex (
+				[(byte) 'L', 0xc0, 0x80, (byte) ';'],
+				utf16Length: 3);
+			var supplementaryDex = CreateMinimalDex (
+				[(byte) 'L', (byte) 'x', (byte) '/', 0xed, 0xa0, 0x81, 0xed, 0xb0, 0x80, (byte) ';'],
+				utf16Length: 6);
+
+			Assert.AreEqual ("L\u0080\u0800;", DexUtils.GetClassDescriptors (WriteDexFile (bmpDex, "bmp")).Single ());
+			Assert.AreEqual ("L\0;", DexUtils.GetClassDescriptors (WriteDexFile (nullDex, "null")).Single ());
+			Assert.AreEqual ("Lx/\U00010400;", DexUtils.GetClassDescriptors (WriteDexFile (supplementaryDex, "supplementary")).Single ());
+		}
+
+		[Test]
+		public void DexUtils_RejectsMalformedModifiedUtf8 ()
+		{
+			foreach (var (name, bytes, length) in new [] {
+				("raw-null", new byte [] { (byte) 'L', 0, (byte) 'x', (byte) ';' }, 4u),
+				("two-byte-overlong", new byte [] { (byte) 'L', 0xc0, 0x81, (byte) ';' }, 3u),
+				("two-byte-overlong-c1", new byte [] { (byte) 'L', 0xc1, 0xbf, (byte) ';' }, 3u),
+				("three-byte-overlong", new byte [] { (byte) 'L', 0xe0, 0x81, 0x81, (byte) ';' }, 3u),
+				("unmatched-high", new byte [] { (byte) 'L', 0xed, 0xa0, 0x81, (byte) ';' }, 3u),
+				("unmatched-low", new byte [] { (byte) 'L', 0xed, 0xb0, 0x80, (byte) ';' }, 3u),
+			}) {
+				var dexFile = WriteDexFile (CreateMinimalDex (bytes, length), name);
+				Assert.Throws<InvalidDataException> (() => DexUtils.GetClassDescriptors (dexFile));
+			}
+		}
+
+		[Test]
+		public void DexUtils_RejectsUnboundedDeclaredStringLength ()
+		{
+			var dex = CreateMinimalDex ([], uint.MaxValue);
+			var dexFile = WriteDexFile (dex, "huge-string");
+
+			Assert.Throws<InvalidDataException> (() => DexUtils.GetClassDescriptors (dexFile));
+		}
+
+		string WriteDexFile (byte [] dex, string name)
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (directory);
+			var path = Path.Combine (directory, name + ".dex");
+			File.WriteAllBytes (path, dex);
+			return path;
+		}
+
+		static byte [] CreateMinimalDex (byte [] modifiedUtf8, uint utf16Length)
+		{
+			var length = EncodeUnsignedLeb128 (utf16Length);
+			const int stringIdsOffset = 112;
+			const int typeIdsOffset = 116;
+			const int classDefsOffset = 120;
+			const int stringDataOffset = 152;
+			int mapOffset = stringDataOffset + length.Length + modifiedUtf8.Length + 1;
+			var dex = new byte [mapOffset + 16];
+			Encoding.ASCII.GetBytes ("dex\n039\0").CopyTo (dex, 0);
+			WriteUInt32 (dex, 32, checked ((uint) dex.Length));
+			WriteUInt32 (dex, 36, 112);
+			WriteUInt32 (dex, 40, 0x12345678);
+			WriteUInt32 (dex, 52, checked ((uint) mapOffset));
+			WriteUInt32 (dex, 56, 1);
+			WriteUInt32 (dex, 60, stringIdsOffset);
+			WriteUInt32 (dex, 64, 1);
+			WriteUInt32 (dex, 68, typeIdsOffset);
+			WriteUInt32 (dex, 96, 1);
+			WriteUInt32 (dex, 100, classDefsOffset);
+			WriteUInt32 (dex, 104, checked ((uint) (dex.Length - stringDataOffset)));
+			WriteUInt32 (dex, 108, stringDataOffset);
+			WriteUInt32 (dex, stringIdsOffset, stringDataOffset);
+			length.CopyTo (dex, stringDataOffset);
+			modifiedUtf8.CopyTo (dex, stringDataOffset + length.Length);
+			WriteUInt32 (dex, mapOffset, 1);
+			dex [mapOffset + 4] = 0x00;
+			dex [mapOffset + 5] = 0x10;
+			WriteUInt32 (dex, mapOffset + 8, 1);
+			WriteUInt32 (dex, mapOffset + 12, checked ((uint) mapOffset));
+			return dex;
+		}
+
+		static byte [] EncodeUnsignedLeb128 (uint value)
+		{
+			var bytes = new List<byte> ();
+			do {
+				byte next = (byte) (value & 0x7f);
+				value >>= 7;
+				if (value != 0) {
+					next |= 0x80;
+				}
+				bytes.Add (next);
+			} while (value != 0);
+			return bytes.ToArray ();
+		}
+
+		static void WriteUInt32 (byte [] data, int offset, uint value)
+		{
+			data [offset] = (byte) value;
+			data [offset + 1] = (byte) (value >> 8);
+			data [offset + 2] = (byte) (value >> 16);
+			data [offset + 3] = (byte) (value >> 24);
+		}
+
+		static uint ReadUInt32 (byte [] data, int offset) =>
+			(uint) (
+				data [offset] |
+				data [offset + 1] << 8 |
+				data [offset + 2] << 16 |
+				data [offset + 3] << 24);
+
 		static void AssertNoUnicodeOutputs (ProjectBuilder builder, string memberName)
 		{
 			var typemapDirectory = builder.Output.GetIntermediaryPath ("typemap");
