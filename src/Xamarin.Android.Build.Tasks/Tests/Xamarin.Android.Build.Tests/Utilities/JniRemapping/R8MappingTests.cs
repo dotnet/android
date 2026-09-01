@@ -370,7 +370,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ReverseMappingRecordsEveryAmbiguousMemberCandidate ()
+		public void ReverseMappingRejectsAmbiguousMemberCandidates ()
 		{
 			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
 				acme.orig.MyView -> a.b.C:
@@ -382,15 +382,47 @@ namespace Xamarin.Android.Build.Tests
 				"""));
 			IJniNameMapping reverse = mapping.CreateReverseMapping ();
 
-			Assert.IsTrue (reverse.TryMapField ("a/b/C", "a", out _));
-			Assert.IsTrue (reverse.TryMapMethodByNameOnly ("a/b/C", "b", out _));
-			CollectionAssert.AreEquivalent (new [] {
+			Assert.IsFalse (reverse.TryMapField ("a/b/C", "a", out _));
+			Assert.IsFalse (reverse.TryMapMethodByNameOnly ("a/b/C", "b", out _));
+			CollectionAssert.IsEmpty (mapping.AccessedEntries);
+		}
+
+		[Test]
+		public void ReverseMappingUsesSingleAllowedMemberCandidate ()
+		{
+			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
+				acme.orig.MyView -> a.b.C:
+				    int first -> a
+				    java.lang.String second -> a
+				    void run() -> b
+				    void invoke(int) -> b
+
+				"""));
+			mapping.RestrictReverseLookupsTo (new [] {
 				"C\tacme/orig/MyView",
-				"F\tacme/orig/MyView\tfirst",
 				"F\tacme/orig/MyView\tsecond",
 				"M\tacme/orig/MyView\tinvoke(int):void",
-				"M\tacme/orig/MyView\trun():void",
+			});
+			IJniNameMapping reverse = mapping.CreateReverseMapping ();
+
+			Assert.IsTrue (reverse.TryMapField ("a/b/C", "a", out string originalField));
+			Assert.AreEqual ("second", originalField);
+			Assert.IsTrue (reverse.TryMapMethodByNameOnly ("a/b/C", "b", out string originalMethod));
+			Assert.AreEqual ("invoke", originalMethod);
+			CollectionAssert.AreEquivalent (new [] {
+				"C\tacme/orig/MyView",
+				"F\tacme/orig/MyView\tsecond",
+				"M\tacme/orig/MyView\tinvoke(int):void",
 			}, mapping.AccessedEntries);
+		}
+
+		[Test]
+		public void CreatesDeterministicManifestContent ()
+		{
+			Assert.AreEqual ("C\tacme/orig/A\nC\tacme/orig/B\n", R8Mapping.CreateManifestContent (new [] {
+				"C\tacme/orig/B",
+				"C\tacme/orig/A",
+			}));
 		}
 
 		[Test]

@@ -424,7 +424,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		{
 			var sortedEntries = new List<string> (entries);
 			sortedEntries.Sort (StringComparer.Ordinal);
-			using var writer = new StringWriter ();
+			using var writer = new StringWriter {
+				NewLine = "\n",
+			};
 			foreach (string entry in sortedEntries) {
 				writer.WriteLine (entry);
 			}
@@ -459,18 +461,23 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					return false;
 				}
 				string? firstOriginalName = null;
+				string? allowedEntry = null;
 				foreach (string originalName in originalNames) {
 					string entry = BuildFieldEntry (originalClassName, originalName);
 					if (!mapping.IsReverseEntryAllowed (entry)) {
 						continue;
 					}
-					firstOriginalName ??= originalName;
-					mapping.accessedEntries.Add (entry);
+					if (firstOriginalName != null) {
+						return false;
+					}
+					firstOriginalName = originalName;
+					allowedEntry = entry;
 				}
-				if (firstOriginalName == null) {
+				if (firstOriginalName == null || allowedEntry == null) {
 					return false;
 				}
 				mapping.accessedEntries.Add (BuildClassEntry (originalClassName));
+				mapping.accessedEntries.Add (allowedEntry);
 				mappedFieldName = firstOriginalName;
 				return true;
 			}
@@ -511,6 +518,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				}
 
 				string? firstOriginalName = null;
+				var allowedEntries = new List<string> ();
 				foreach (var entry in classMethods) {
 					if (!String.Equals (entry.Value, methodName, StringComparison.Ordinal)) {
 						continue;
@@ -520,13 +528,20 @@ namespace Xamarin.Android.Tasks.JniRemapping
 						continue;
 					}
 					int parameterStart = entry.Key.IndexOf ('(');
-					firstOriginalName ??= parameterStart < 0 ? entry.Key : entry.Key.Substring (0, parameterStart);
-					mapping.accessedEntries.Add (manifestEntry);
+					string originalName = parameterStart < 0 ? entry.Key : entry.Key.Substring (0, parameterStart);
+					if (firstOriginalName != null && !String.Equals (firstOriginalName, originalName, StringComparison.Ordinal)) {
+						return false;
+					}
+					firstOriginalName = originalName;
+					allowedEntries.Add (manifestEntry);
 				}
 				if (firstOriginalName == null) {
 					return false;
 				}
 				mapping.accessedEntries.Add (BuildClassEntry (originalClassName));
+				foreach (string entry in allowedEntries) {
+					mapping.accessedEntries.Add (entry);
+				}
 				mappedMethodName = firstOriginalName;
 				return true;
 			}

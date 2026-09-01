@@ -224,7 +224,16 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				_ => throw new ArgumentException ($"Malformed JNI type token '{token}'.", nameof (token)),
 			};
 
-			return elementJavaName + string.Concat (System.Linq.Enumerable.Repeat ("[]", arrayDepth));
+			if (arrayDepth == 0) {
+				return elementJavaName;
+			}
+
+			var result = new StringBuilder (elementJavaName.Length + arrayDepth * 2);
+			result.Append (elementJavaName);
+			for (int i = 0; i < arrayDepth; i++) {
+				result.Append ("[]");
+			}
+			return result.ToString ();
 		}
 
 		/// <summary>
