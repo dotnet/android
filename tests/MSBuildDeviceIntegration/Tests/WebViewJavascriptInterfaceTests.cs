@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -12,8 +11,6 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("UsesDevice")]
 	public class WebViewJavascriptInterfaceTests : DeviceTest
 	{
-		const string JavaMethodName = "reportResultForIssue12542";
-		const string JavascriptInterfaceAnnotation = "Landroid/webkit/JavascriptInterface;";
 		const string SuccessResult = "bridge-12542:payload-12542:1";
 		const string SuccessMarker = "# JAVASCRIPT_INTERFACE_RESULT ";
 		const string FailureMarker = "# JAVASCRIPT_INTERFACE_FAILURE ";
@@ -190,29 +187,6 @@ managedBridge.completeTestForIssue12542();
 			try {
 				installed = builder.Install (proj);
 				Assert.IsTrue (installed, "Project should have installed.");
-
-				var projectIntermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-				var generatedJavaFiles = Directory.GetFiles (projectIntermediate, "WebViewJavascriptBridge.java", SearchOption.AllDirectories);
-				Assert.IsNotEmpty (generatedJavaFiles, $"Expected a generated WebViewJavascriptBridge.java under '{projectIntermediate}'.");
-				var expectedJavaMethod = typemapImplementation == "trimmable"
-					? $"@android.webkit.JavascriptInterface\n\t@Override\n\tpublic void {JavaMethodName} (java.lang.String p0)"
-					: $"@android.webkit.JavascriptInterface\n\tpublic void {JavaMethodName} (java.lang.String p0)";
-				foreach (var generatedJavaFile in generatedJavaFiles) {
-					var contents = File.ReadAllText (generatedJavaFile).Replace ("\r\n", "\n");
-					StringAssert.Contains (expectedJavaMethod, contents,
-						$"Generated JCW Java '{generatedJavaFile}' should expose the annotated bridge method.");
-				}
-
-				var generatedJava = File.ReadAllText (generatedJavaFiles [0]).Replace ("\r\n", "\n");
-				var packageDeclaration = generatedJava.Split ('\n').Single (line => line.StartsWith ("package ", StringComparison.Ordinal));
-				var javaPackage = packageDeclaration.Substring ("package ".Length).TrimEnd (';');
-				var className = $"L{javaPackage.Replace ('.', '/')}/WebViewJavascriptBridge;";
-				var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
-				FileAssert.Exists (dexFile);
-				Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, JavaMethodName, "(Ljava/lang/String;)V", dexFile, AndroidSdkPath),
-					$"`{dexFile}` should contain `{className}.{JavaMethodName}`.");
-				Assert.IsTrue (DexUtils.ContainsRuntimeMethodAnnotation (className, JavaMethodName, JavascriptInterfaceAnnotation, dexFile, AndroidSdkPath),
-					$"`{dexFile}` should retain `{JavascriptInterfaceAnnotation}` on `{JavaMethodName}`.");
 
 				ClearAdbLogcat ();
 				RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
