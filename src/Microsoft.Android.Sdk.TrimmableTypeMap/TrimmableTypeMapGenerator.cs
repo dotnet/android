@@ -103,7 +103,7 @@ public class TrimmableTypeMapGenerator
 			if (peer.BaseJavaName is not null) {
 				ReportInvalidJniSourceType (peer.BaseJavaName);
 			}
-			foreach (var interfaceName in peer.ImplementedInterfaceJavaNames) {
+			foreach (var interfaceName in peer.JavaCallableWrapperInterfaceJavaNames ?? peer.ImplementedInterfaceJavaNames) {
 				ReportInvalidJniSourceType (interfaceName);
 			}
 			foreach (var constructor in peer.JavaConstructors) {
