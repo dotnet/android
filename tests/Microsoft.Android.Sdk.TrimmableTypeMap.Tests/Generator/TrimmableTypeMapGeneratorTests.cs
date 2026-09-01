@@ -734,12 +734,22 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void RootCustomViewTypes_RootsOnlyReferencedManagedTypes ()
+	public void RootCustomViewTypes_RootsReferencedManagedJavaAndCompatNames ()
 	{
 		var peers = new List<JavaPeerInfo> {
 			new JavaPeerInfo {
 				JavaName = "crc64123456789abc/CustomView", CompatJniName = "my.app.CustomView",
 				ManagedTypeName = "MyApp.CustomView", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "CustomView",
+				AssemblyName = "MyApp",
+			},
+			new JavaPeerInfo {
+				JavaName = "com/example/RegisteredView", CompatJniName = "com/example/RegisteredView",
+				ManagedTypeName = "MyApp.RegisteredView", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "RegisteredView",
+				AssemblyName = "MyApp",
+			},
+			new JavaPeerInfo {
+				JavaName = "crc64123456789abc/CompatView", CompatJniName = "my/app/CompatView",
+				ManagedTypeName = "MyApp.CompatView", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "CompatView",
 				AssemblyName = "MyApp",
 			},
 			new JavaPeerInfo {
@@ -749,10 +759,16 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			},
 		};
 
-		TrimmableTypeMapGenerator.RootCustomViewTypes (peers, ["MyApp.CustomView"]);
+		TrimmableTypeMapGenerator.RootCustomViewTypes (peers, [
+			"MyApp.CustomView",
+			"com.example.RegisteredView",
+			"my.app.CompatView",
+		]);
 
 		Assert.True (peers [0].IsUnconditional);
-		Assert.False (peers [1].IsUnconditional);
+		Assert.True (peers [1].IsUnconditional);
+		Assert.True (peers [2].IsUnconditional);
+		Assert.False (peers [3].IsUnconditional);
 	}
 
 	[Fact]

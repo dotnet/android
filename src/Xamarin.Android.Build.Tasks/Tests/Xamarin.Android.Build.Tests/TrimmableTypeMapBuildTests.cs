@@ -892,6 +892,7 @@ namespace Xamarin.Android.Build.Tests {
 			app.Sources.Add (new BuildItem.Source ("Views.cs") {
 				TextContent = () => """
 					using Android.Content;
+					using Android.Runtime;
 					using Android.Util;
 					using Android.Views;
 
@@ -900,6 +901,14 @@ namespace Xamarin.Android.Build.Tests {
 					public class LayoutOnlyView : View
 					{
 						public LayoutOnlyView (Context context, IAttributeSet attributes) : base (context, attributes)
+						{
+						}
+					}
+
+					[Register ("com.example.RegisteredLayoutOnlyView")]
+					public class RegisteredLayoutOnlyView : View
+					{
+						public RegisteredLayoutOnlyView (Context context, IAttributeSet attributes) : base (context, attributes)
 						{
 						}
 					}
@@ -921,16 +930,27 @@ namespace Xamarin.Android.Build.Tests {
 						android:layout_height="match_parent" />
 					""",
 			});
+			app.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\registered_layout_only.xml") {
+				TextContent = () => """
+					<?xml version="1.0" encoding="utf-8"?>
+					<com.example.RegisteredLayoutOnlyView
+						xmlns:android="http://schemas.android.com/apk/res/android"
+						android:layout_width="match_parent"
+						android:layout_height="match_parent" />
+					""",
+			});
 
 			using var builder = CreateApkBuilder (Path.Combine ("temp", $"{TestName}_{Guid.NewGuid ():N}"));
 			Assert.IsTrue (builder.Build (app), "External Java roots build should have succeeded.");
 
 			var linkedApp = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked", $"{app.ProjectName}.dll"));
 			Assert.IsTrue (AssemblyContainsType (linkedApp, "ExternalJavaRoots.LayoutOnlyView"), "The XML-only custom view should survive linking.");
+			Assert.IsTrue (AssemblyContainsType (linkedApp, "ExternalJavaRoots.RegisteredLayoutOnlyView"), "The XML-only custom view referenced by its explicit Java name should survive linking.");
 			Assert.IsFalse (AssemblyContainsType (linkedApp, "ExternalJavaRoots.UnusedView"), "An unreferenced ACW should be trimmed.");
 
 			var javaDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "typemap", "linked-java"));
 			Assert.IsNotEmpty (Directory.GetFiles (javaDirectory, "LayoutOnlyView.java", SearchOption.AllDirectories));
+			Assert.IsNotEmpty (Directory.GetFiles (javaDirectory, "RegisteredLayoutOnlyView.java", SearchOption.AllDirectories));
 			Assert.IsEmpty (Directory.GetFiles (javaDirectory, "UnusedView.java", SearchOption.AllDirectories));
 		}
 

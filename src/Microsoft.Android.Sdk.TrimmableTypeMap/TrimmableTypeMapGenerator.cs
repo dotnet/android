@@ -93,7 +93,9 @@ public class TrimmableTypeMapGenerator
 
 		var names = new HashSet<string> (customViewTypeNames, StringComparer.Ordinal);
 		foreach (var peer in allPeers) {
-			if (names.Contains (peer.ManagedTypeName)) {
+			if (names.Contains (peer.ManagedTypeName) ||
+					names.Contains (JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName)) ||
+					names.Contains (JniSignatureHelper.JniNameToJavaBinaryName (peer.CompatJniName))) {
 				peer.IsUnconditional = true;
 			}
 		}
