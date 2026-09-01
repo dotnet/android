@@ -49,19 +49,9 @@ namespace xamarin::android {
 		static constexpr std::string_view RUNTIME_CONFIG_BLOB_NAME            { RUNTIME_CONFIG_BLOB_NAME_ARRAY.data () };
 		static constexpr std::string_view OVERRIDE_DIRECTORY_NAME             { ".__override__" };
 
-		static inline constexpr std::string_view DEBUG_DOTNET_CONNECT_PROPERTY      { "debug.dotnet.connect" };
-		static inline constexpr std::string_view DEBUG_DOTNET_DEBUG_PROPERTY        { "debug.dotnet.debug" };
-		static inline constexpr std::string_view DEBUG_DOTNET_ENV_PROPERTY          { "debug.dotnet.env" };
-		static inline constexpr std::string_view DEBUG_DOTNET_EXTRA_PROPERTY        { "debug.dotnet.extra" };
-		static inline constexpr std::string_view DEBUG_DOTNET_GC_PROPERTY           { "debug.dotnet.gc" };
-		static inline constexpr std::string_view DEBUG_DOTNET_GDB_PROPERTY          { "debug.dotnet.gdb" };
 		static inline constexpr std::string_view DEBUG_DOTNET_LOG_PROPERTY          { "debug.dotnet.log" };
 		static inline constexpr std::string_view DEBUG_DOTNET_MAX_GREFC             { "debug.dotnet.max_grefc" };
 		static inline constexpr std::string_view DEBUG_DOTNET_PROFILE_PROPERTY      { "debug.dotnet.profile" };
-		static inline constexpr std::string_view DEBUG_DOTNET_RUNTIME_ARGS_PROPERTY { "debug.dotnet.runtime_args" };
-		static inline constexpr std::string_view DEBUG_DOTNET_SOFT_BREAKPOINTS      { "debug.dotnet.soft_breakpoints" };
-		static inline constexpr std::string_view DEBUG_DOTNET_TRACE_PROPERTY        { "debug.dotnet.trace" };
-		static inline constexpr std::string_view DEBUG_DOTNET_WREF_PROPERTY         { "debug.dotnet.wref" };
 		static constexpr std::string_view DEBUG_DOTNET_TIMING                       { "debug.dotnet.timing" };
 
 		static inline constexpr std::string_view LEGACY_DEBUG_MONO_LOG_PROPERTY     { "debug.mono.log" };
