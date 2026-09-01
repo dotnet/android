@@ -1675,6 +1675,7 @@ public sealed class JavaPeerScanner : IDisposable
 		AssemblyIndex index)
 	{
 		var interfaces = new List<ImplementedInterfaceInfo> ();
+		var implementedInterfaces = new List<string> ();
 		foreach (var implHandle in typeDef.GetInterfaceImplementations ()) {
 			var impl = index.Reader.GetInterfaceImplementation (implHandle);
 			var resolved = ResolveEntityHandle (impl.Interface, index);
@@ -1685,16 +1686,28 @@ public sealed class JavaPeerScanner : IDisposable
 			var javaName = ResolveRegisterJniName (resolved.ManagedTypeName, resolved.AssemblyName);
 			if (javaName is not null) {
 				interfaces.Add (new ImplementedInterfaceInfo (resolved, javaName));
+				implementedInterfaces.Add (javaName);
 			}
 		}
 
-		var implementedInterfaces = interfaces.Select (iface => iface.JavaName).ToList ();
 		var javaCallableWrapperInterfaces = new List<string> ();
 		var addedJavaNames = new HashSet<string> (StringComparer.Ordinal);
+		var assignabilityVisited = new HashSet<(string ManagedTypeName, string AssemblyName)> ();
 		foreach (var iface in interfaces) {
-			if (interfaces.Any (other =>
-				!IsSameTypeDefinition (iface.Type, other.Type) &&
-				IsInterfaceAssignableFrom (iface.Type, other.Type))) {
+			var isRedundant = false;
+			foreach (var other in interfaces) {
+				if (IsSameTypeDefinition (iface.Type, other.Type)) {
+					continue;
+				}
+
+				assignabilityVisited.Clear ();
+				if (IsInterfaceAssignableFrom (iface.Type, other.Type, assignabilityVisited)) {
+					isRedundant = true;
+					break;
+				}
+			}
+
+			if (isRedundant) {
 				continue;
 			}
 
@@ -1704,12 +1717,6 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		return (implementedInterfaces, javaCallableWrapperInterfaces);
-	}
-
-	bool IsInterfaceAssignableFrom (TypeRefData target, TypeRefData candidate)
-	{
-		var visited = new HashSet<(string ManagedTypeName, string AssemblyName)> ();
-		return IsInterfaceAssignableFrom (target, candidate, visited);
 	}
 
 	bool IsInterfaceAssignableFrom (
