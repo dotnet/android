@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -16,10 +17,6 @@ namespace Java.InteropTests
 	{
 		// Managed reference identity is the common round-trip contract. Java-visible equality,
 		// hashing, and string conversion are asserted separately because they vary by typemap.
-		public ManagedObjectProxyTests ()
-		{
-		}
-
 		[Test]
 		public void JavaObjectArray_RoundTripPreservesManagedReferences ()
 		{
@@ -48,9 +45,12 @@ namespace Java.InteropTests
 			using var values = new JavaObjectArray<object> (1);
 			values [0] = value;
 
-			var firstReference = JniEnvironment.Arrays.GetObjectArrayElement (values.PeerReference, 0);
-			var secondReference = JniEnvironment.Arrays.GetObjectArrayElement (values.PeerReference, 0);
+			JniObjectReference firstReference = default;
+			JniObjectReference secondReference = default;
 			try {
+				firstReference = JniEnvironment.Arrays.GetObjectArrayElement (values.PeerReference, 0);
+				secondReference = JniEnvironment.Arrays.GetObjectArrayElement (values.PeerReference, 0);
+
 				Assert.IsTrue (JniEnvironment.Types.IsSameObject (firstReference, secondReference),
 					"Repeated Java array lookups should refer to the same Java proxy.");
 
@@ -174,10 +174,13 @@ namespace Java.InteropTests
 		{
 			var value = new ManagedValue (42);
 			var equalValue = new ManagedValue (42);
-			var reference = JniEnvironment.Runtime.ValueManager.CreateLocalObjectReferenceArgument (typeof (object), value);
-			var equalReference = JniEnvironment.Runtime.ValueManager.CreateLocalObjectReferenceArgument (typeof (object), equalValue);
+			JniObjectReference reference = default;
+			JniObjectReference equalReference = default;
 
 			try {
+				reference = JniEnvironment.Runtime.ValueManager.CreateLocalObjectReferenceArgument (typeof (object), value);
+				equalReference = JniEnvironment.Runtime.ValueManager.CreateLocalObjectReferenceArgument (typeof (object), equalValue);
+
 				IntPtr proxyClass = JNIEnv.GetObjectClass (reference.Handle);
 				try {
 					IntPtr equals = JNIEnv.GetMethodID (proxyClass, "equals", "(Ljava/lang/Object;)Z");
@@ -228,8 +231,11 @@ namespace Java.InteropTests
 					"A Java array reference should retain its managed value.");
 				AssertJavaRootRetainsValue (values, weakValue);
 			} finally {
-				values.Clear ();
-				values.Dispose ();
+				try {
+					values.Clear ();
+				} finally {
+					values.Dispose ();
+				}
 				values = null;
 			}
 
@@ -275,7 +281,7 @@ namespace Java.InteropTests
 			bool requireBridgeGeneration = !Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime;
 			int initialBridgeGeneration = JNIEnv.BridgeProcessingGeneration;
 			var timeout = TimeSpan.FromMilliseconds (timeoutMilliseconds);
-			var start = DateTime.UtcNow;
+			var stopwatch = Stopwatch.StartNew ();
 			do {
 				GC.Collect (generation: 2, mode: GCCollectionMode.Forced, blocking: true);
 				GC.WaitForPendingFinalizers ();
@@ -285,7 +291,7 @@ namespace Java.InteropTests
 				await Task.Yield ();
 			} while ((!predicate () ||
 					(requireBridgeGeneration && JNIEnv.BridgeProcessingGeneration == initialBridgeGeneration)) &&
-				DateTime.UtcNow - start < timeout);
+				stopwatch.Elapsed < timeout);
 
 			int finalBridgeGeneration = JNIEnv.BridgeProcessingGeneration;
 			if (requireBridgeGeneration) {
