@@ -1,6 +1,7 @@
 using System;
+using System.Globalization;
 using System.Runtime.CompilerServices;
-using System.Threading;
+using System.Threading.Tasks;
 
 using Android.Runtime;
 using Java.Interop;
@@ -15,8 +16,6 @@ namespace Java.InteropTests
 	{
 		// Managed reference identity is the common round-trip contract. Java-visible equality,
 		// hashing, and string conversion are asserted separately because they vary by typemap.
-		const int MaxGcAttempts = 20;
-
 		public ManagedObjectProxyTests ()
 		{
 		}
@@ -199,9 +198,10 @@ namespace Java.InteropTests
 							"Trimmable proxies intentionally use Java reference identity instead of managed Equals.");
 						Assert.AreEqual (GetJavaIdentityHashCode (reference), actualHashCode,
 							"Trimmable proxies intentionally use Java identity hash codes.");
-						Assert.IsTrue (
-							actualString.StartsWith ("net.dot.jni.internal.TrimmableJavaProxyObject@", StringComparison.Ordinal),
-							actualString);
+						string runtimeClassName = JNIEnv.GetClassNameFromInstance (reference.Handle).Replace ('/', '.');
+						string expectedString = $"{runtimeClassName}@{unchecked ((uint) actualHashCode).ToString ("x", CultureInfo.InvariantCulture)}";
+						Assert.AreEqual (expectedString, actualString,
+							"Trimmable proxies should use the exact default java.lang.Object.toString format.");
 					} else {
 						Assert.IsTrue (JNIEnv.CallBooleanMethod (reference.Handle, equals, new JValue (equalReference.Handle)),
 							"The llvm-ir proxy forwards Java equals to the managed override.");
@@ -218,13 +218,14 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void JavaObjectArrayRetainsManagedValueUntilReleased ()
+		public async Task JavaObjectArrayRetainsManagedValueUntilReleased ()
 		{
 			WeakReference<ManagedValue> weakValue;
 			var values = CreateJavaRootedValue (out weakValue);
 
 			try {
-				ForceGc (3);
+				await WaitForGC (() => IsAlive (weakValue),
+					"A Java array reference should retain its managed value.");
 				AssertJavaRootRetainsValue (values, weakValue);
 			} finally {
 				values.Clear ();
@@ -232,7 +233,7 @@ namespace Java.InteropTests
 				values = null;
 			}
 
-			AssertEventuallyCollected (weakValue,
+			await WaitForGC (() => !IsAlive (weakValue),
 				"The managed value should be collectible after its Java collection reference is cleared and disposed.");
 		}
 
@@ -269,25 +270,25 @@ namespace Java.InteropTests
 			GC.KeepAlive (value);
 		}
 
-		static void ForceGc (int attempts)
+		static async Task WaitForGC (Func<bool> predicate, string message, int timeoutMilliseconds = 5000)
 		{
-			for (int i = 0; i < attempts; i++) {
+			int initialBridgeGeneration = JNIEnv.BridgeProcessingGeneration;
+			var timeout = TimeSpan.FromMilliseconds (timeoutMilliseconds);
+			var start = DateTime.UtcNow;
+			while ((JNIEnv.BridgeProcessingGeneration == initialBridgeGeneration || !predicate ()) &&
+					DateTime.UtcNow - start < timeout) {
 				GC.Collect (generation: 2, mode: GCCollectionMode.Forced, blocking: true);
 				GC.WaitForPendingFinalizers ();
+				JNIEnv.WaitForBridgeProcessing ();
 				JniEnvironment.Runtime.ValueManager.CollectPeers ();
+				await Task.Yield ();
 			}
-		}
 
-		static void AssertEventuallyCollected (WeakReference<ManagedValue> weakValue, string message)
-		{
-			for (int i = 0; i < MaxGcAttempts; i++) {
-				ForceGc (1);
-				if (!IsAlive (weakValue)) {
-					return;
-				}
-				Thread.Yield ();
-			}
-			Assert.Fail (message);
+			int finalBridgeGeneration = JNIEnv.BridgeProcessingGeneration;
+			Assert.Greater (finalBridgeGeneration, initialBridgeGeneration,
+				$"A JNI bridge-processing cycle did not complete within {timeoutMilliseconds}ms. " +
+				$"Initial generation: {initialBridgeGeneration}; final generation: {finalBridgeGeneration}.");
+			Assert.IsTrue (predicate (), message);
 		}
 
 		[MethodImpl (MethodImplOptions.NoInlining)]
