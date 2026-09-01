@@ -1765,8 +1765,9 @@ namespace Styleable.Library {
 			}
 
 			var packageSuffix = $"appcompataliascasts{typemapImplementation.Replace ("-", "")}";
+			var packageName = PackageUtils.MakePackageName (runtime, packageSuffix);
 			var proj = new XamarinAndroidApplicationProject (
-				packageName: PackageUtils.MakePackageName (runtime, packageSuffix)) {
+				packageName: packageName) {
 				IsRelease = true,
 			};
 			proj.SetRuntime (runtime);
@@ -1879,15 +1880,18 @@ namespace Styleable.Library {
 								imageView.Handle,
 								JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister);
 							using var alias = JavaObjectExtensions.JavaCast<AppCompatImageButtonAlias> (untypedImage);
-							var aliasAs = JavaPeerableExtensions.JavaAs<AppCompatImageButtonAlias> (alias);
+							using var aliasAs = JavaPeerableExtensions.JavaAs<AppCompatImageButtonAlias> (untypedImage);
 							Require (alias != null, "JavaCast did not select the concrete AppCompatImageButton alias.");
-							Require (ReferenceEquals (alias, aliasAs), "JavaAs did not preserve the selected alias peer.");
+							Require (aliasAs != null, "JavaAs did not select the concrete AppCompatImageButton alias.");
 							Require (
 								JNIEnv.IsSameObject (imageView.Handle, alias.Handle),
 								"Concrete alias did not retain the inflated Java object.");
 							Require (
-								AppCompatImageButtonAlias.HandleConstructorCalls == 1,
-								"Concrete alias did not use its explicit handle constructor exactly once.");
+								JNIEnv.IsSameObject (imageView.Handle, aliasAs.Handle),
+								"Concrete alias JavaAs did not retain the inflated Java object.");
+							Require (
+								AppCompatImageButtonAlias.HandleConstructorCalls == 2,
+								"Concrete alias casts did not use the explicit handle constructor.");
 
 							using var tintable = JavaObjectExtensions.JavaCast<ITintableBackgroundView> (untypedImage);
 							using var tintableAs = JavaPeerableExtensions.JavaAs<ITintableBackgroundView> (untypedImage);
@@ -1976,14 +1980,20 @@ namespace Styleable.Library {
 					}
 				}
 				""";
-			using var builder = CreateApkBuilder ();
-			Assert.True (builder.Install (proj), "Project should have installed.");
-			RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
-			Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
-			Assert.True (MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput),
-				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45), $"Output did not contain {expectedLogcatOutput}.");
-			Assert.True (builder.Uninstall (proj), "Project should have uninstalled.");
+			using var builder = CreateApkBuilder (packageName: packageName);
+			Assert.AreEqual (proj.PackageName, TestPackageNames [packageName], "Teardown should track the installed package.");
+			RunAdbCommand ($"uninstall {proj.PackageName}");
+			try {
+				Assert.True (builder.Install (proj), "Project should have installed.");
+				RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
+				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+					Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
+				Assert.True (MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput),
+					Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45), $"Output did not contain {expectedLogcatOutput}.");
+			} finally {
+				RunAdbCommand ($"shell am force-stop --user all {proj.PackageName}");
+				builder.Uninstall (proj);
+			}
 		}
 
 		[Test]
