@@ -6,13 +6,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public final class InterfaceCollectionHolder {
-	private final InterfaceCollectionPeer first;
-	private final InterfaceCollectionPeer second;
+final class InterfaceCollectionHolder {
+	private final InterfaceCollectionBasePeer first;
+	private final InterfaceCollectionBasePeer second;
+	private final InterfaceCollectionPeer inheritedFirst;
+	private final InterfaceCollectionPeer inheritedSecond;
 
 	public InterfaceCollectionHolder() {
-		first = new InterfaceCollectionPeer(11, 111);
-		second = new InterfaceCollectionPeer(22, 222);
+		first = new InterfaceCollectionBasePeer(11);
+		second = new InterfaceCollectionBasePeer(22);
+		inheritedFirst = new InterfaceCollectionPeer(33, 333);
+		inheritedSecond = new InterfaceCollectionPeer(44, 444);
 	}
 
 	public List<ValueProvider> createList() {
@@ -26,8 +30,8 @@ public final class InterfaceCollectionHolder {
 
 	public List<ExtendedValueProvider> createInheritedList() {
 		List<ExtendedValueProvider> result = new ArrayList<>();
-		result.add(first);
-		result.add(second);
+		result.add(inheritedFirst);
+		result.add(inheritedSecond);
 		return result;
 	}
 

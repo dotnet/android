@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 using Android.Runtime;
 
@@ -14,21 +15,29 @@ namespace Java.InteropTests
 	[Category ("InterfaceCollections")]
 	public class InterfaceCollectionMarshallingTests
 	{
+		const string CollectionSignature = "()Ljava/util/Collection;";
+		const string DictionarySignature = "()Ljava/util/Map;";
+		const string ListSignature = "()Ljava/util/List;";
+		const string RoundTripCollectionSignature = "(Ljava/util/Collection;)Ljava/util/Collection;";
+		const string RoundTripDictionarySignature = "(Ljava/util/Map;)Ljava/util/Map;";
+		const string RoundTripListSignature = "(Ljava/util/List;)Ljava/util/List;";
+
 		[Test]
 		public void JavaList_InterfaceElementsPreserveIdentityAndRoundTrip ()
 		{
-			using var holder = new global::Net.Dot.Android.Test.InterfaceCollectionHolder ();
-			var list = holder.CreateList ();
+			using var holder = new RawInterfaceCollectionHolder ();
+			var targetType = typeof (IList<global::Net.Dot.Android.Test.IValueProvider>);
+			var list = holder.Create<IList<global::Net.Dot.Android.Test.IValueProvider>> ("createList", ListSignature, targetType);
 			try {
-				Assert.AreEqual (typeof (JavaList<global::Net.Dot.Android.Test.IValueProvider>), list.GetType ());
+				AssertWrapperType (list, typeof (JavaList<>), typeof (global::Net.Dot.Android.Test.IValueProvider));
 				Assert.AreEqual (4, list.Count);
 
 				var first = list [0];
 				var duplicate = list [1];
 				var second = list [2];
 
-				AssertInterfacePeer (first, 11);
-				AssertInterfacePeer (second, 22);
+				AssertBaseInterfacePeer (first, 11);
+				AssertBaseInterfacePeer (second, 22);
 				Assert.AreSame (first, duplicate);
 				Assert.AreSame (first, list [0]);
 				AssertSameJavaObject (first, duplicate);
@@ -42,9 +51,13 @@ namespace Java.InteropTests
 				Assert.AreSame (second, list [4]);
 				CollectionAssert.AreEqual (new [] { 11, 11, 22, 22 }, list.Where (value => value != null).Select (value => value.Value));
 
-				var roundTrip = holder.RoundTripList (list);
+				var roundTrip = holder.RoundTrip<IList<global::Net.Dot.Android.Test.IValueProvider>> (
+					"roundTripList",
+					RoundTripListSignature,
+					list,
+					targetType);
 				try {
-					Assert.AreEqual (typeof (JavaList<global::Net.Dot.Android.Test.IValueProvider>), roundTrip.GetType ());
+					AssertWrapperType (roundTrip, typeof (JavaList<>), typeof (global::Net.Dot.Android.Test.IValueProvider));
 					AssertSameJavaObject (list, roundTrip);
 					Assert.AreSame (first, roundTrip [0]);
 				} finally {
@@ -63,16 +76,17 @@ namespace Java.InteropTests
 		[Test]
 		public void JavaList_InheritedInterfaceUsesExplicitInvoker ()
 		{
-			using var holder = new global::Net.Dot.Android.Test.InterfaceCollectionHolder ();
-			var list = holder.CreateInheritedList ();
+			using var holder = new RawInterfaceCollectionHolder ();
+			var targetType = typeof (IList<global::Net.Dot.Android.Test.IExtendedValueProvider>);
+			var list = holder.Create<IList<global::Net.Dot.Android.Test.IExtendedValueProvider>> (
+				"createInheritedList",
+				ListSignature,
+				targetType);
 			try {
-				Assert.AreEqual (typeof (JavaList<global::Net.Dot.Android.Test.IExtendedValueProvider>), list.GetType ());
+				AssertWrapperType (list, typeof (JavaList<>), typeof (global::Net.Dot.Android.Test.IExtendedValueProvider));
 				Assert.AreEqual (2, list.Count);
-				AssertInterfacePeer (list [0], 11);
-				AssertInterfacePeer (list [1], 22);
-				Assert.AreEqual (111, list [0].OtherValue);
-				Assert.AreEqual (222, list [1].OtherValue);
-				StringAssert.EndsWith ("IExtendedValueProviderInvoker", list [0].GetType ().FullName);
+				AssertExtendedInterfacePeer (list [0], 33, 333);
+				AssertExtendedInterfacePeer (list [1], 44, 444);
 			} finally {
 				DisposeJavaObject (list);
 			}
@@ -81,17 +95,21 @@ namespace Java.InteropTests
 		[Test]
 		public void JavaCollection_InterfaceElementsSupportOperationsAndRoundTrip ()
 		{
-			using var holder = new global::Net.Dot.Android.Test.InterfaceCollectionHolder ();
-			var collection = holder.CreateCollection ();
+			using var holder = new RawInterfaceCollectionHolder ();
+			var targetType = typeof (ICollection<global::Net.Dot.Android.Test.IValueProvider>);
+			var collection = holder.Create<ICollection<global::Net.Dot.Android.Test.IValueProvider>> (
+				"createCollection",
+				CollectionSignature,
+				targetType);
 			try {
-				Assert.AreEqual (typeof (JavaCollection<global::Net.Dot.Android.Test.IValueProvider>), collection.GetType ());
+				AssertWrapperType (collection, typeof (JavaCollection<>), typeof (global::Net.Dot.Android.Test.IValueProvider));
 				Assert.AreEqual (3, collection.Count);
 
 				var values = collection.ToArray ();
 				var first = values [0];
 				var second = values [1];
-				AssertInterfacePeer (first, 11);
-				AssertInterfacePeer (second, 22);
+				AssertBaseInterfacePeer (first, 11);
+				AssertBaseInterfacePeer (second, 22);
 				AssertDistinctJavaObjects (first, second);
 				Assert.IsNull (values [2]);
 
@@ -101,9 +119,13 @@ namespace Java.InteropTests
 				Assert.IsTrue (collection.Contains (null));
 				Assert.AreSame (first, collection.ToArray () [3]);
 
-				var roundTrip = holder.RoundTripCollection (collection);
+				var roundTrip = holder.RoundTrip<ICollection<global::Net.Dot.Android.Test.IValueProvider>> (
+					"roundTripCollection",
+					RoundTripCollectionSignature,
+					collection,
+					targetType);
 				try {
-					Assert.AreEqual (typeof (JavaCollection<global::Net.Dot.Android.Test.IValueProvider>), roundTrip.GetType ());
+					AssertWrapperType (roundTrip, typeof (JavaCollection<>), typeof (global::Net.Dot.Android.Test.IValueProvider));
 					AssertSameJavaObject (collection, roundTrip);
 					Assert.AreSame (first, roundTrip.First ());
 				} finally {
@@ -120,18 +142,24 @@ namespace Java.InteropTests
 		[Test]
 		public void JavaDictionary_InterfaceKeysSupportOperationsAndRoundTrip ()
 		{
-			using var holder = new global::Net.Dot.Android.Test.InterfaceCollectionHolder ();
-			var dictionary = holder.CreateKeyDictionary ();
+			using var holder = new RawInterfaceCollectionHolder ();
+			var targetType = typeof (IDictionary<global::Net.Dot.Android.Test.IValueProvider, string>);
+			var dictionary = holder.Create<IDictionary<global::Net.Dot.Android.Test.IValueProvider, string>> (
+				"createKeyDictionary",
+				DictionarySignature,
+				targetType);
 			try {
-				Assert.AreEqual (
-					typeof (JavaDictionary<global::Net.Dot.Android.Test.IValueProvider, string>),
-					dictionary.GetType ());
+				AssertWrapperType (
+					dictionary,
+					typeof (JavaDictionary<,>),
+					typeof (global::Net.Dot.Android.Test.IValueProvider),
+					typeof (string));
 				Assert.AreEqual (3, dictionary.Count);
 
 				var first = dictionary.Keys.Single (key => key != null && key.Value == 11);
 				var second = dictionary.Keys.Single (key => key != null && key.Value == 22);
-				AssertInterfacePeer (first, 11);
-				AssertInterfacePeer (second, 22);
+				AssertBaseInterfacePeer (first, 11);
+				AssertBaseInterfacePeer (second, 22);
 				AssertDistinctJavaObjects (first, second);
 				Assert.IsTrue (dictionary.ContainsKey (first));
 				Assert.IsTrue (dictionary.ContainsKey (null));
@@ -139,8 +167,17 @@ namespace Java.InteropTests
 				Assert.AreEqual ("null", dictionary [null]);
 				Assert.AreSame (first, dictionary.Keys.Single (key => key != null && key.Value == 11));
 
-				var roundTrip = holder.RoundTripKeyDictionary (dictionary);
+				var roundTrip = holder.RoundTrip<IDictionary<global::Net.Dot.Android.Test.IValueProvider, string>> (
+					"roundTripKeyDictionary",
+					RoundTripDictionarySignature,
+					dictionary,
+					targetType);
 				try {
+					AssertWrapperType (
+						roundTrip,
+						typeof (JavaDictionary<,>),
+						typeof (global::Net.Dot.Android.Test.IValueProvider),
+						typeof (string));
 					AssertSameJavaObject (dictionary, roundTrip);
 					Assert.AreEqual ("second", roundTrip [second]);
 				} finally {
@@ -157,19 +194,25 @@ namespace Java.InteropTests
 		[Test]
 		public void JavaDictionary_InterfaceValuesPreserveDuplicatesAndRoundTrip ()
 		{
-			using var holder = new global::Net.Dot.Android.Test.InterfaceCollectionHolder ();
-			var dictionary = holder.CreateValueDictionary ();
+			using var holder = new RawInterfaceCollectionHolder ();
+			var targetType = typeof (IDictionary<string, global::Net.Dot.Android.Test.IValueProvider>);
+			var dictionary = holder.Create<IDictionary<string, global::Net.Dot.Android.Test.IValueProvider>> (
+				"createValueDictionary",
+				DictionarySignature,
+				targetType);
 			try {
-				Assert.AreEqual (
-					typeof (JavaDictionary<string, global::Net.Dot.Android.Test.IValueProvider>),
-					dictionary.GetType ());
+				AssertWrapperType (
+					dictionary,
+					typeof (JavaDictionary<,>),
+					typeof (string),
+					typeof (global::Net.Dot.Android.Test.IValueProvider));
 				Assert.AreEqual (4, dictionary.Count);
 
 				var first = dictionary ["first"];
 				var duplicate = dictionary ["duplicate"];
 				var second = dictionary ["second"];
-				AssertInterfacePeer (first, 11);
-				AssertInterfacePeer (second, 22);
+				AssertBaseInterfacePeer (first, 11);
+				AssertBaseInterfacePeer (second, 22);
 				Assert.AreSame (first, duplicate);
 				Assert.AreSame (first, dictionary ["first"]);
 				AssertDistinctJavaObjects (first, second);
@@ -179,8 +222,17 @@ namespace Java.InteropTests
 				dictionary.Add ("added", second);
 				Assert.AreSame (second, dictionary ["added"]);
 
-				var roundTrip = holder.RoundTripValueDictionary (dictionary);
+				var roundTrip = holder.RoundTrip<IDictionary<string, global::Net.Dot.Android.Test.IValueProvider>> (
+					"roundTripValueDictionary",
+					RoundTripDictionarySignature,
+					dictionary,
+					targetType);
 				try {
+					AssertWrapperType (
+						roundTrip,
+						typeof (JavaDictionary<,>),
+						typeof (string),
+						typeof (global::Net.Dot.Android.Test.IValueProvider));
 					AssertSameJavaObject (dictionary, roundTrip);
 					Assert.AreSame (first, roundTrip ["duplicate"]);
 				} finally {
@@ -197,26 +249,47 @@ namespace Java.InteropTests
 		[Test]
 		public void JavaDictionary_InterfaceKeysAndValuesPreserveIdentityAndRoundTrip ()
 		{
-			using var holder = new global::Net.Dot.Android.Test.InterfaceCollectionHolder ();
-			var dictionary = holder.CreateInterfaceDictionary ();
+			using var holder = new RawInterfaceCollectionHolder ();
+			var targetType = typeof (IDictionary<
+				global::Net.Dot.Android.Test.IValueProvider,
+				global::Net.Dot.Android.Test.IValueProvider>);
+			var dictionary = holder.Create<IDictionary<
+				global::Net.Dot.Android.Test.IValueProvider,
+				global::Net.Dot.Android.Test.IValueProvider>> (
+					"createInterfaceDictionary",
+					DictionarySignature,
+					targetType);
 			try {
-				Assert.AreEqual (
-					typeof (JavaDictionary<
-						global::Net.Dot.Android.Test.IValueProvider,
-						global::Net.Dot.Android.Test.IValueProvider>),
-					dictionary.GetType ());
+				AssertWrapperType (
+					dictionary,
+					typeof (JavaDictionary<,>),
+					typeof (global::Net.Dot.Android.Test.IValueProvider),
+					typeof (global::Net.Dot.Android.Test.IValueProvider));
 				Assert.AreEqual (3, dictionary.Count);
 
 				var first = dictionary.Keys.Single (key => key != null && key.Value == 11);
 				var second = dictionary.Keys.Single (key => key != null && key.Value == 22);
+				AssertBaseInterfacePeer (first, 11);
+				AssertBaseInterfacePeer (second, 22);
 				Assert.AreSame (second, dictionary [first]);
 				Assert.AreSame (first, dictionary [second]);
 				Assert.IsNull (dictionary [null]);
 				Assert.IsTrue (dictionary.ContainsKey (first));
 				Assert.IsTrue (dictionary.Any (pair => ReferenceEquals (pair.Key, first) && ReferenceEquals (pair.Value, second)));
 
-				var roundTrip = holder.RoundTripInterfaceDictionary (dictionary);
+				var roundTrip = holder.RoundTrip<IDictionary<
+					global::Net.Dot.Android.Test.IValueProvider,
+					global::Net.Dot.Android.Test.IValueProvider>> (
+						"roundTripInterfaceDictionary",
+						RoundTripDictionarySignature,
+						dictionary,
+						targetType);
 				try {
+					AssertWrapperType (
+						roundTrip,
+						typeof (JavaDictionary<,>),
+						typeof (global::Net.Dot.Android.Test.IValueProvider),
+						typeof (global::Net.Dot.Android.Test.IValueProvider));
 					AssertSameJavaObject (dictionary, roundTrip);
 					Assert.AreSame (second, roundTrip [first]);
 				} finally {
@@ -230,11 +303,49 @@ namespace Java.InteropTests
 			}
 		}
 
-		static void AssertInterfacePeer (global::Net.Dot.Android.Test.IValueProvider peer, int expectedValue)
+		static void AssertBaseInterfacePeer (global::Net.Dot.Android.Test.IValueProvider peer, int expectedValue)
 		{
 			Assert.IsNotNull (peer);
 			Assert.AreEqual (expectedValue, peer.Value);
-			StringAssert.EndsWith ("Invoker", peer.GetType ().Name);
+			Assert.AreEqual (typeof (global::Net.Dot.Android.Test.IValueProviderInvoker), peer.GetType ());
+			Assert.IsFalse (peer is global::Net.Dot.Android.Test.IExtendedValueProvider);
+		}
+
+		static void AssertExtendedInterfacePeer (
+			global::Net.Dot.Android.Test.IExtendedValueProvider peer,
+			int expectedValue,
+			int expectedOtherValue)
+		{
+			Assert.IsNotNull (peer);
+			Assert.AreEqual (expectedValue, peer.Value);
+			Assert.AreEqual (expectedOtherValue, peer.OtherValue);
+			Assert.AreEqual (typeof (global::Net.Dot.Android.Test.IExtendedValueProviderInvoker), peer.GetType ());
+		}
+
+		static void AssertWrapperType (object wrapper, Type expectedGenericDefinition, params Type [] expectedArguments)
+		{
+			var wrapperType = wrapper.GetType ();
+			Assert.IsTrue (wrapperType.IsGenericType);
+			Assert.AreEqual (expectedGenericDefinition, wrapperType.GetGenericTypeDefinition ());
+			CollectionAssert.AreEqual (expectedArguments, wrapperType.GenericTypeArguments);
+		}
+
+		static object InvokeJavaConvertFromJniHandle (Type targetType, IntPtr handle)
+		{
+			var javaConvert = typeof (Java.Lang.Object).Assembly.GetType ("Java.Interop.JavaConvert");
+			Assert.IsNotNull (javaConvert);
+
+			var method = javaConvert.GetMethod (
+				"FromJniHandle",
+				BindingFlags.Public | BindingFlags.Static,
+				binder: null,
+				types: new [] { typeof (IntPtr), typeof (JniHandleOwnership), typeof (Type) },
+				modifiers: null);
+			Assert.IsNotNull (method);
+
+			var value = method.Invoke (null, new object [] { handle, JniHandleOwnership.TransferLocalRef, targetType });
+			Assert.IsNotNull (value);
+			return value;
 		}
 
 		static void AssertSameJavaObject (object expected, object actual)
@@ -262,6 +373,56 @@ namespace Java.InteropTests
 		{
 			if (value is IDisposable disposable) {
 				disposable.Dispose ();
+			}
+		}
+
+		sealed class RawInterfaceCollectionHolder : IDisposable
+		{
+			const string JniName = "net/dot/android/test/InterfaceCollectionHolder";
+
+			readonly Java.Lang.Object holder;
+
+			public RawInterfaceCollectionHolder ()
+			{
+				var holderClass = JniEnvironment.Types.FindClass (JniName);
+				try {
+					var constructor = JNIEnv.GetMethodID (holderClass.Handle, "<init>", "()V");
+					var handle = JNIEnv.NewObject (holderClass.Handle, constructor);
+					holder = new Java.Lang.Object (handle, JniHandleOwnership.TransferLocalRef);
+				} finally {
+					JniObjectReference.Dispose (ref holderClass);
+				}
+			}
+
+			public T Create<T> (string methodName, string signature, Type targetType)
+			{
+				var method = GetMethod (methodName, signature);
+				var handle = JNIEnv.CallObjectMethod (holder.Handle, method);
+				return (T) InvokeJavaConvertFromJniHandle (targetType, handle);
+			}
+
+			public T RoundTrip<T> (string methodName, string signature, object value, Type targetType)
+			{
+				var method = GetMethod (methodName, signature);
+				var peer = (IJavaObject) value;
+				var handle = JNIEnv.CallObjectMethod (holder.Handle, method, new JValue (peer.Handle));
+				GC.KeepAlive (value);
+				return (T) InvokeJavaConvertFromJniHandle (targetType, handle);
+			}
+
+			public void Dispose ()
+			{
+				holder.Dispose ();
+			}
+
+			IntPtr GetMethod (string methodName, string signature)
+			{
+				var holderClass = JNIEnv.GetObjectClass (holder.Handle);
+				try {
+					return JNIEnv.GetMethodID (holderClass, methodName, signature);
+				} finally {
+					JNIEnv.DeleteLocalRef (holderClass);
+				}
 			}
 		}
 	}
