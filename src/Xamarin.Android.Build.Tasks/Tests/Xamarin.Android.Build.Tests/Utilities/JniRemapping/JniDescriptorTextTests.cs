@@ -42,6 +42,10 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("(I)I", true)]
 		[TestCase ("(V)V", false)]
 		[TestCase ("()[V", false)]
+		[TestCase ("(L;)V", false)]
+		[TestCase ("(Ljava.lang.Object;)V", false)]
+		[TestCase ("(Lfoo[Bar;)V", false)]
+		[TestCase ("(Lfoo//Bar;)V", false)]
 		[TestCase ("I", false)]
 		[TestCase ("Ljava/lang/Object;", false)]
 		[TestCase ("not a descriptor", false)]
@@ -55,6 +59,11 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("Ljava/lang/Object;", true)]
 		[TestCase ("V", false)]
 		[TestCase ("[V", false)]
+		[TestCase ("L;", false)]
+		[TestCase ("[L;", false)]
+		[TestCase ("Ljava.lang.Object;", false)]
+		[TestCase ("Lfoo[Bar;", false)]
+		[TestCase ("Lfoo//Bar;", false)]
 		[TestCase ("()V", false)]
 		[TestCase ("", false)]
 		public void ValidatesFieldDescriptors (string descriptor, bool expected)
@@ -76,6 +85,16 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("boolean", JniDescriptorText.JniTypeTokenToJavaSource ("Z"));
 			Assert.AreEqual ("int[]", JniDescriptorText.JniTypeTokenToJavaSource ("[I"));
 			Assert.AreEqual ("java.lang.Object", JniDescriptorText.JniTypeTokenToJavaSource ("Ljava/lang/Object;"));
+		}
+
+		[TestCase ("")]
+		[TestCase ("[")]
+		[TestCase ("L;")]
+		[TestCase ("Ljava.lang.Object;")]
+		[TestCase ("Lfoo[Bar;")]
+		public void RejectsMalformedSingleTypeToken (string token)
+		{
+			Assert.Throws<ArgumentException> (() => JniDescriptorText.JniTypeTokenToJavaSource (token));
 		}
 	}
 }

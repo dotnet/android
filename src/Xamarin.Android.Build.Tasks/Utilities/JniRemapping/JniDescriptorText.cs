@@ -105,7 +105,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return true;
 			case 'L':
 				int end = s.IndexOf (';', j + 1);
-				if (end < 0) {
+				if (end < 0 || !IsValidJniClassName (s, j + 1, end)) {
 					return false;
 				}
 				i = end + 1;
@@ -113,6 +113,32 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			default:
 				return false;
 			}
+		}
+
+		static bool IsValidJniClassName (string value, int start, int end)
+		{
+			if (start == end) {
+				return false;
+			}
+
+			bool segmentHasCharacters = false;
+			for (int i = start; i < end; i++) {
+				switch (value [i]) {
+				case '/':
+					if (!segmentHasCharacters) {
+						return false;
+					}
+					segmentHasCharacters = false;
+					break;
+				case '.':
+				case '[':
+				return false;
+				default:
+					segmentHasCharacters = true;
+					break;
+				}
+			}
+			return segmentHasCharacters;
 		}
 
 		/// <summary>
@@ -174,6 +200,11 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		/// </summary>
 		public static string JniTypeTokenToJavaSource (string token)
 		{
+			int tokenEnd = 0;
+			if (!TryScanSingleToken (token, ref tokenEnd, allowVoid: true) || tokenEnd != token.Length) {
+				throw new ArgumentException ($"Malformed JNI type token '{token}'.", nameof (token));
+			}
+
 			int arrayDepth = 0;
 			while (arrayDepth < token.Length && token [arrayDepth] == '[') {
 				arrayDepth++;
