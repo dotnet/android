@@ -1951,10 +1951,17 @@ namespace Styleable.Library {
 								list.Handle,
 								JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister);
 							using var generic = JavaObjectExtensions.JavaCast<JavaList<string>> (untyped);
-							var genericAs = JavaPeerableExtensions.JavaAs<JavaList<string>> (generic);
+							using var genericAs = JavaPeerableExtensions.JavaAs<JavaList<string>> (untyped);
+							Require (generic != null, "JavaCast did not create the caller-directed generic wrapper.");
+							Require (genericAs != null, "JavaAs did not create the caller-directed generic wrapper.");
+							Require (
+								JNIEnv.IsSameObject (generic.Handle, genericAs.Handle),
+								"Caller-directed generic wrappers did not retain the same Java object.");
 							generic.Add ("alias");
-							Require (generic [0] == "alias", "Caller-directed generic wrapper did not round trip its value.");
-							Require (ReferenceEquals (generic, genericAs), "Generic JavaAs did not preserve peer identity.");
+							Require (genericAs [0] == "alias", "Caller-directed generic wrappers did not round trip their value.");
+							Require (
+								ReferenceEquals (generic, JavaPeerableExtensions.JavaAs<JavaList<string>> (generic)),
+								"Generic JavaAs did not preserve the typed peer.");
 						}
 
 						static string Describe (Java.Lang.Object value)
@@ -2005,6 +2012,7 @@ namespace Styleable.Library {
 			RunAdbCommand ($"uninstall {proj.PackageName}");
 			try {
 				Assert.True (builder.Install (proj), "Project should have installed.");
+				ClearAdbLogcat ();
 				RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
