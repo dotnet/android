@@ -237,6 +237,10 @@
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
+      <_RuntimeSources Include="clr\include\constants.hh" />
+      <_RuntimeSources Include="clr\include\runtime-base\android-system.hh" />
+      <_RuntimeSources Include="clr\runtime-base\android-system-shared.cc" />
+      <_RuntimeSources Include="clr\runtime-base\logger.cc" />
       <_RuntimeSources Include="nativeaot\include\**\*.hh" />
       <_RuntimeSources Include="nativeaot\host\*.cc" />
     </ItemGroup>
