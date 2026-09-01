@@ -40,6 +40,7 @@ public class TrimmableTypeMapGenerator
 		string? packageNamingPolicy = null,
 		bool generateTypeMapAssemblies = true,
 		bool errorOnCustomJavaObject = true,
+		IReadOnlyCollection<string>? customViewTypeNames = null,
 		bool collectMarshalMethodsForNonAcw = true)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
@@ -57,6 +58,7 @@ public class TrimmableTypeMapGenerator
 		}
 		MarkFrameworkAssemblyPeers (allPeers, frameworkAssemblyNames);
 
+		RootCustomViewTypes (allPeers, customViewTypeNames);
 		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig), manifestConfig?.ApplicationJavaClass);
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
@@ -81,6 +83,22 @@ public class TrimmableTypeMapGenerator
 			: null;
 
 		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest, appRegTypes);
+	}
+
+	internal static void RootCustomViewTypes (List<JavaPeerInfo> allPeers, IReadOnlyCollection<string>? customViewTypeNames)
+	{
+		if (customViewTypeNames is null || customViewTypeNames.Count == 0) {
+			return;
+		}
+
+		var names = new HashSet<string> (customViewTypeNames, StringComparer.Ordinal);
+		foreach (var peer in allPeers) {
+			if (names.Contains (peer.ManagedTypeName) ||
+					names.Contains (JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName)) ||
+					names.Contains (JniSignatureHelper.JniNameToJavaBinaryName (peer.CompatJniName))) {
+				peer.IsUnconditional = true;
+			}
+		}
 	}
 
 	internal bool ValidateJavaNames (IReadOnlyList<JavaPeerInfo> peers, string? applicationJavaClass = null)

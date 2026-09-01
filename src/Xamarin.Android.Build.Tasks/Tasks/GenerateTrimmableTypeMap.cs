@@ -87,6 +87,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 	public string? ManifestTemplate { get; set; }
 
+	public string? CustomViewMapFile { get; set; }
+
 	public string? MergedAndroidManifestOutput { get; set; }
 
 	/// <summary>
@@ -211,6 +213,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			if (!ManifestTemplate.IsNullOrEmpty () && File.Exists (ManifestTemplate)) {
 				manifestTemplate = XDocument.Load (ManifestTemplate);
 			}
+			IReadOnlyCollection<string>? customViewTypeNames = CustomViewMapFile.IsNullOrEmpty ()
+				? null
+				: MonoAndroidHelper.LoadCustomViewMapFile (BuildEngine4, CustomViewMapFile).Keys;
 
 			result = generator.Execute (
 				assemblies,
@@ -222,6 +227,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				packageNamingPolicy: PackageNamingPolicy,
 				generateTypeMapAssemblies: GenerateTypeMapAssemblies,
 				errorOnCustomJavaObject: ErrorOnCustomJavaObject,
+				customViewTypeNames: customViewTypeNames,
 				collectMarshalMethodsForNonAcw: false);
 			if (Log.HasLoggedErrors) {
 				return false;
