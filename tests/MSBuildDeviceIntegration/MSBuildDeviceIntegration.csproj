@@ -33,7 +33,7 @@
     <EmbeddedResource Include="Resources\RemapActivity*">
       <LogicalName>%(FileName)%(Extension)</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\StaticMethodsInterface*">
+    <EmbeddedResource Include="Resources\*InterfaceMethod*.java">
       <LogicalName>%(FileName)%(Extension)</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
