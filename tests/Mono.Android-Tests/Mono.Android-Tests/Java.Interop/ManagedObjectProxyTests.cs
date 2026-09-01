@@ -301,10 +301,12 @@ namespace Java.InteropTests
 			JavaObjectArray<object> values,
 			WeakReference<ManagedValue> weakValue)
 		{
-			Assert.IsTrue (weakValue.TryGetTarget (out var value),
-				"A Java collection reference should retain its managed value.");
-			Assert.AreSame (value, values [0]);
-			GC.KeepAlive (value);
+			PerformNoPinAction (() => {
+				Assert.IsTrue (weakValue.TryGetTarget (out var value),
+					"A Java collection reference should retain its managed value.");
+				Assert.AreSame (value, values [0]);
+				GC.KeepAlive (value);
+			});
 		}
 
 		static async Task WaitForGC (Func<bool> predicate, string message, int timeoutMilliseconds = 5000)
@@ -336,7 +338,9 @@ namespace Java.InteropTests
 		[MethodImpl (MethodImplOptions.NoInlining)]
 		static bool IsAlive (WeakReference<ManagedValue> weakValue)
 		{
-			return weakValue.TryGetTarget (out _);
+			bool isAlive = false;
+			PerformNoPinAction (() => isAlive = weakValue.TryGetTarget (out _));
+			return isAlive;
 		}
 
 		static unsafe void NoPinActionHelper (int depth, Action action)
