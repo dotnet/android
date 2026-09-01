@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using Microsoft.Build.Framework;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 
@@ -116,14 +118,18 @@ namespace Xamarin.Android.Build.Tests
 			string mappingFile = Path.Combine (path, "mapping.txt");
 			File.WriteAllText (mappingFile, "");
 
+			var errors = new List<BuildErrorEventArgs> ();
 			var task = new RewriteJniNamesForR8 {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
 				SourceFiles = new [] { new Microsoft.Build.Utilities.TaskItem ("a.dll"), new Microsoft.Build.Utilities.TaskItem ("b.dll") },
 				DestinationFiles = new [] { new Microsoft.Build.Utilities.TaskItem ("a.dll") },
 				MappingFile = mappingFile,
 			};
 
 			Assert.IsFalse (task.Execute (), "Task should fail when SourceFiles/DestinationFiles counts differ.");
+			Assert.AreEqual (1, errors.Count, "Exactly one error should have been logged.");
+			Assert.AreEqual ("XA4325", errors [0].Code, "The error should use the documented XA4325 code.");
+			StringAssert.Contains ("SourceFiles", errors [0].Message, "The error should name the mismatched item groups.");
 		}
 
 		[Test]

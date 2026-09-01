@@ -46,7 +46,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			if (DestinationDirectory.IsNullOrEmpty () && SourceFiles.Length != DestinationFiles.Length) {
-				Log.LogCodedError ("RJN0000", "SourceFiles and DestinationFiles must contain the same number of items.");
+				Log.LogCodedError ("XA4325", Properties.Resources.XA4325, Properties.Resources.XA4325_SourceDestinationCount);
 				return !Log.HasLoggedErrors;
 			}
 
@@ -66,7 +66,8 @@ namespace Xamarin.Android.Tasks
 					rewritten.SetMetadata ("OriginalItemSpec", source);
 					rewrittenFiles [i] = rewritten;
 				} catch (JniRewriteException e) {
-					Log.LogCodedError ("RJN0001", $"Could not rewrite the JNI names in '{source}': {e.Message}");
+					Log.LogCodedError ("XA4325", Properties.Resources.XA4325,
+						string.Format (Properties.Resources.XA4325_AssemblyFailure, source, e.Message));
 				}
 			}
 

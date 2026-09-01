@@ -1932,6 +1932,33 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to rewrite managed JNI names for R8. {0}.
+        /// </summary>
+        public static string XA4325 {
+            get {
+                return ResourceManager.GetString("XA4325", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not rewrite the JNI names in the assembly &apos;{0}&apos;: {1}.
+        /// </summary>
+        public static string XA4325_AssemblyFailure {
+            get {
+                return ResourceManager.GetString("XA4325_AssemblyFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;SourceFiles&apos; and &apos;DestinationFiles&apos; item groups must contain the same number of items..
+        /// </summary>
+        public static string XA4325_SourceDestinationCount {
+            get {
+                return ResourceManager.GetString("XA4325_SourceDestinationCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>
         public static string XA5101 {
