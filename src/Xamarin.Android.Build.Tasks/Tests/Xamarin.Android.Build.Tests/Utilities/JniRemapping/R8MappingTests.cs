@@ -214,6 +214,20 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void IgnoresSameClassInlineCallFrameMappings ()
+		{
+			var mapping = R8Mapping.Parse (new StringReader (
+				"acme.orig.MyView -> a.b.C:\n" +
+				"    4:4:void inlined():23:23 -> a\n" +
+				"    4:4:void caller():42:42 -> a\n" +
+				"    # {'id':'com.android.tools.r8.synthesized'}\n"));
+
+			Assert.IsFalse (mapping.TryGetRenamedMethod ("acme/orig/MyView", "inlined", [], "void", out _));
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "caller", [], "void", out string caller));
+			Assert.AreEqual ("a", caller);
+		}
+
+		[Test]
 		public void TreatsMethodInlinedIntoMultipleDestinationsAsAmbiguous ()
 		{
 			var mapping = R8Mapping.Parse (new StringReader (
@@ -435,6 +449,67 @@ namespace Xamarin.Android.Build.Tests
 				"F\tacme/orig/MyView\tsecond",
 				"M\tacme/orig/MyView\tinvoke(int):void",
 			}, mapping.AccessedEntries);
+		}
+
+		[Test]
+		public void ReverseMappingRejectsAmbiguousMergedClassCandidates ()
+		{
+			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
+				acme.orig.First -> a.b.C:
+				    int first -> a
+				acme.orig.Second -> a.b.C:
+				    int second -> a
+
+				"""));
+			IJniNameMapping reverse = mapping.CreateReverseMapping ();
+
+			Assert.IsFalse (mapping.TryGetOriginalClass ("a/b/C", out _));
+			Assert.IsFalse (reverse.TryMapClass ("a/b/C", out _));
+			Assert.IsFalse (reverse.TryMapField ("a/b/C", "a", out _));
+			CollectionAssert.IsEmpty (mapping.AccessedEntries);
+		}
+
+		[Test]
+		public void ReverseMappingUsesSingleAllowedMergedClassCandidate ()
+		{
+			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
+				acme.orig.First -> a.b.C:
+				    int first -> a
+				acme.orig.Second -> a.b.C:
+				    int second -> a
+
+				"""));
+			mapping.RestrictReverseLookupsTo (new [] {
+				"C\tacme/orig/Second",
+				"F\tacme/orig/Second\tsecond",
+			});
+			IJniNameMapping reverse = mapping.CreateReverseMapping ();
+
+			Assert.IsTrue (reverse.TryMapClass ("a/b/C", out string originalClass));
+			Assert.AreEqual ("acme/orig/Second", originalClass);
+			Assert.IsTrue (reverse.TryMapField ("a/b/C", "a", out string originalField));
+			Assert.AreEqual ("second", originalField);
+			CollectionAssert.AreEquivalent (new [] {
+				"C\tacme/orig/Second",
+				"F\tacme/orig/Second\tsecond",
+			}, mapping.AccessedEntries);
+		}
+
+		[Test]
+		public void ReverseMappingRejectsMergedClassWithNoAllowedCandidate ()
+		{
+			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
+				acme.orig.First -> a.b.C:
+				acme.orig.Second -> a.b.C:
+
+				"""));
+			mapping.RestrictReverseLookupsTo (new [] {
+				"C\tacme/orig/Unrelated",
+			});
+			IJniNameMapping reverse = mapping.CreateReverseMapping ();
+
+			Assert.IsFalse (reverse.TryMapClass ("a/b/C", out _));
+			CollectionAssert.IsEmpty (mapping.AccessedEntries);
 		}
 
 		[Test]

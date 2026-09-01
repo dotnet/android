@@ -23,8 +23,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		// Original JNI class name -> obfuscated JNI class name.
 		readonly Dictionary<string, string> classes = new Dictionary<string, string> (StringComparer.Ordinal);
 
-		// Obfuscated JNI class name -> original JNI class name.
-		readonly Dictionary<string, string> originalClasses = new Dictionary<string, string> (StringComparer.Ordinal);
+		// Obfuscated JNI class name -> original JNI class names. R8 class merging can map several
+		// original classes to one residual class, so reverse lookup must disambiguate this list.
+		readonly Dictionary<string, List<string>> originalClasses = new Dictionary<string, List<string>> (StringComparer.Ordinal);
 
 		// Original JNI class name -> (original field name -> obfuscated field name).
 		readonly Dictionary<string, Dictionary<string, string>> fields = new Dictionary<string, Dictionary<string, string>> (StringComparer.Ordinal);
@@ -81,6 +82,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		{
 			var mapping = new R8Mapping ();
 			string? currentOriginalClass = null;
+			string? pendingPositionRange = null;
+			string? pendingObfuscatedName = null;
+			string? pendingMethodKey = null;
 			int lineNumber = 0;
 			string? line;
 
@@ -100,6 +104,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				}
 
 				if (!indented) {
+					FlushPendingMethodMapping (mapping, currentOriginalClass, ref pendingPositionRange, ref pendingObfuscatedName, ref pendingMethodKey);
 					if (!TryParseClassLine (trimmed, out string originalClass, out string obfuscatedClass)) {
 						throw new FormatException ($"{sourceName}:{lineNumber}: expected a class mapping line ('original -> obfuscated:'), got '{line}'.");
 					}
@@ -107,7 +112,12 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					currentOriginalClass = JavaNameToJni (originalClass);
 					string currentObfuscatedClass = JavaNameToJni (obfuscatedClass);
 					mapping.classes [currentOriginalClass] = currentObfuscatedClass;
-					mapping.originalClasses [currentObfuscatedClass] = currentOriginalClass;
+					if (!mapping.originalClasses.TryGetValue (currentObfuscatedClass, out var originalClassNames)) {
+						mapping.originalClasses [currentObfuscatedClass] = originalClassNames = new List<string> ();
+					}
+					if (!originalClassNames.Contains (currentOriginalClass)) {
+						originalClassNames.Add (currentOriginalClass);
+					}
 					continue;
 				}
 
@@ -115,44 +125,69 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					throw new FormatException ($"{sourceName}:{lineNumber}: member mapping line found before any class mapping line: '{line}'.");
 				}
 
-				if (!TryParseMemberLine (trimmed, out string memberName, out string []? javaParameterTypes, out string? javaReturnType, out string obfuscatedName)) {
+				if (!TryParseMemberLine (trimmed, out string memberName, out string []? javaParameterTypes, out string? javaReturnType, out string obfuscatedName, out string? positionRange)) {
 					throw new FormatException ($"{sourceName}:{lineNumber}: could not parse member mapping line: '{line}'.");
 				}
 
 				if (javaParameterTypes == null) {
+					FlushPendingMethodMapping (mapping, currentOriginalClass, ref pendingPositionRange, ref pendingObfuscatedName, ref pendingMethodKey);
 					// Field.
 					if (!mapping.fields.TryGetValue (currentOriginalClass, out var classFields)) {
 						mapping.fields [currentOriginalClass] = classFields = new Dictionary<string, string> (StringComparer.Ordinal);
 					}
 					classFields [memberName] = obfuscatedName;
 				} else {
-					// R8 emits fully-qualified source methods as inline call-frame records beneath
-					// the destination method. They are retrace metadata, not member mappings for
-					// the current class, and one source method may appear under many destinations.
-					if (memberName.IndexOf ('.') >= 0) {
-						continue;
-					}
-
-					// Method.
 					string key = BuildMethodKey (memberName, javaParameterTypes, javaReturnType ?? "");
-					if (!mapping.methods.TryGetValue (currentOriginalClass, out var classMethods)) {
-						mapping.methods [currentOriginalClass] = classMethods = new Dictionary<string, string> (StringComparer.Ordinal);
-					}
-					if (classMethods.TryGetValue (key, out string? existing) && existing != obfuscatedName) {
-						// An optimized method can be inlined into several surviving methods. R8
-						// then emits one retrace record per destination, so there is no single
-						// runtime name to use for this source member.
-						classMethods [key] = "";
-						continue;
-					}
-					if (existing == null) {
-						classMethods [key] = obfuscatedName;
+					if (positionRange == null) {
+						FlushPendingMethodMapping (mapping, currentOriginalClass, ref pendingPositionRange, ref pendingObfuscatedName, ref pendingMethodKey);
+						if (memberName.IndexOf ('.') < 0) {
+							mapping.AddMethodMapping (currentOriginalClass, key, obfuscatedName);
+						}
+					} else {
+						bool continuesPositionGroup =
+							String.Equals (pendingPositionRange, positionRange, StringComparison.Ordinal) &&
+							String.Equals (pendingObfuscatedName, obfuscatedName, StringComparison.Ordinal);
+						if (!continuesPositionGroup) {
+							FlushPendingMethodMapping (mapping, currentOriginalClass, ref pendingPositionRange, ref pendingObfuscatedName, ref pendingMethodKey);
+							pendingPositionRange = positionRange;
+							pendingObfuscatedName = obfuscatedName;
+						}
+
+						// Positional records with the same residual range and name form an inline
+						// stack. Only the final, unqualified record names the callable residual
+						// method; preceding records exist solely for retrace.
+						pendingMethodKey = memberName.IndexOf ('.') < 0 ? key : null;
 					}
 				}
 			}
 
+			FlushPendingMethodMapping (mapping, currentOriginalClass, ref pendingPositionRange, ref pendingObfuscatedName, ref pendingMethodKey);
 			mapping.BuildReverseMemberIndexes ();
 			return mapping;
+		}
+
+		void AddMethodMapping (string originalClass, string key, string obfuscatedName)
+		{
+			if (!methods.TryGetValue (originalClass, out var classMethods)) {
+				methods [originalClass] = classMethods = new Dictionary<string, string> (StringComparer.Ordinal);
+			}
+			if (classMethods.TryGetValue (key, out string? existing) && existing != obfuscatedName) {
+				// An optimized method can be inlined into several surviving methods. R8 then
+				// emits one retrace record per destination, so there is no single runtime name.
+				classMethods [key] = "";
+			} else if (existing == null) {
+				classMethods [key] = obfuscatedName;
+			}
+		}
+
+		static void FlushPendingMethodMapping (R8Mapping mapping, string? originalClass, ref string? positionRange, ref string? obfuscatedName, ref string? methodKey)
+		{
+			if (originalClass != null && obfuscatedName != null && methodKey != null) {
+				mapping.AddMethodMapping (originalClass, methodKey, obfuscatedName);
+			}
+			positionRange = null;
+			obfuscatedName = null;
+			methodKey = null;
 		}
 
 		void BuildReverseMemberIndexes ()
@@ -223,8 +258,8 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 		public bool TryGetOriginalClass (string obfuscatedJniClassName, out string originalJniClassName)
 		{
-			if (originalClasses.TryGetValue (obfuscatedJniClassName, out string? original)) {
-				originalJniClassName = original;
+			if (originalClasses.TryGetValue (obfuscatedJniClassName, out var originalClassNames) && originalClassNames.Count == 1) {
+				originalJniClassName = originalClassNames [0];
 				return true;
 			}
 			originalJniClassName = "";
@@ -573,12 +608,22 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 			bool TryGetAllowedOriginalClass (string obfuscatedJniClassName, out string originalJniClassName)
 			{
-				if (!mapping.TryGetOriginalClass (obfuscatedJniClassName, out originalJniClassName) ||
-						!mapping.IsReverseEntryAllowed (BuildClassEntry (originalJniClassName))) {
-					originalJniClassName = "";
+				originalJniClassName = "";
+				if (!mapping.originalClasses.TryGetValue (obfuscatedJniClassName, out var originalClassNames)) {
 					return false;
 				}
-				return true;
+
+				foreach (string candidate in originalClassNames) {
+					if (!mapping.IsReverseEntryAllowed (BuildClassEntry (candidate))) {
+						continue;
+					}
+					if (originalJniClassName.Length != 0) {
+						originalJniClassName = "";
+						return false;
+					}
+					originalJniClassName = candidate;
+				}
+				return originalJniClassName.Length != 0;
 			}
 		}
 
@@ -613,12 +658,13 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			return originalClass.Length > 0 && obfuscatedClass.Length > 0;
 		}
 
-		static bool TryParseMemberLine (string trimmed, out string name, out string []? javaParameterTypes, out string? javaReturnType, out string obfuscatedName)
+		static bool TryParseMemberLine (string trimmed, out string name, out string []? javaParameterTypes, out string? javaReturnType, out string obfuscatedName, out string? positionRange)
 		{
 			name = "";
 			javaParameterTypes = null;
 			javaReturnType = null;
 			obfuscatedName = "";
+			positionRange = null;
 
 			const string arrow = " -> ";
 			int arrowIndex = trimmed.LastIndexOf (arrow, StringComparison.Ordinal);
@@ -632,7 +678,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return false;
 			}
 
-			left = StripLeadingLineRange (left);
+			left = StripLeadingLineRange (left, out positionRange);
 			left = StripTrailingLineRange (left);
 
 			int parenOpen = left.IndexOf ('(');
@@ -668,8 +714,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		/// Strips a leading "startLine:endLine:" prefix used on some method mapping lines, e.g.
 		/// "4:10:void onCreate(...)" -&gt; "void onCreate(...)".
 		/// </summary>
-		static string StripLeadingLineRange (string s)
+		static string StripLeadingLineRange (string s, out string? positionRange)
 		{
+			positionRange = null;
 			int i = 0;
 			while (i < s.Length && char.IsDigit (s [i])) {
 				i++;
@@ -687,6 +734,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return s;
 			}
 
+			positionRange = s.Substring (0, j);
 			return s.Substring (j + 1);
 		}
 
