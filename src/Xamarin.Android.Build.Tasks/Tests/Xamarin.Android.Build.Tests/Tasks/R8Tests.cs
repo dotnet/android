@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 
@@ -53,6 +55,67 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void GenerateSeedMappingAllowsAcwObfuscation ()
+		{
+			string path = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
+			Directory.CreateDirectory (path);
+			string responseFile = "";
+			try {
+				string acwMap = Path.Combine (path, "acw-map.txt");
+				string applicationConfiguration = Path.Combine (path, "acw-keep.cfg");
+				string commonConfiguration = Path.Combine (path, "xamarin.cfg");
+				string customConfiguration = Path.Combine (path, "custom.cfg");
+				File.WriteAllText (acwMap, "Managed.Peer;com.example.Peer");
+				File.WriteAllText (customConfiguration, "-dontwarn com.example.**");
+
+				var task = new R8TestTask {
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+					JarPath = "r8.jar",
+					JavaPlatformJarPath = "android.jar",
+					OutputDirectory = path,
+					AcwMapFile = acwMap,
+					ProguardGeneratedApplicationConfiguration = applicationConfiguration,
+					ProguardCommonXamarinConfiguration = commonConfiguration,
+					ProguardMappingFileOutput = Path.Combine (path, "mapping.txt"),
+					ProguardConfigurationFiles = new ITaskItem [] { new TaskItem (customConfiguration) },
+					GenerateSeedMapping = true,
+					EnableObfuscation = true,
+					IgnoreWarnings = true,
+				};
+
+				task.TestGenerateCommandLineCommands ();
+				responseFile = task.ResponseFilePath;
+				string [] response = File.ReadAllLines (responseFile);
+				var configurationFiles = response
+					.Select ((argument, index) => (argument, index))
+					.Where (entry => entry.argument == "--pg-conf")
+					.Select (entry => response [entry.index + 1])
+					.ToArray ();
+				string configuration = string.Join (Environment.NewLine, configurationFiles.Select (File.ReadAllText));
+
+				Assert.That (configurationFiles, Does.Contain (customConfiguration), "Seed R8 should honor user ProGuard rules.");
+				Assert.That (configurationFiles, Does.Contain (commonConfiguration), "Seed R8 should honor runtime keep rules.");
+				Assert.That (configurationFiles, Does.Not.Contain (applicationConfiguration), "Seed R8 must not pass the ACW keep configuration.");
+				FileAssert.DoesNotExist (applicationConfiguration, "Seed R8 must not generate obfuscation-blocking ACW keep rules.");
+				StringAssert.Contains ("-keep class mono.MonoRuntimeProvider", configuration);
+				StringAssert.DoesNotContain ("-keep class com.example.Peer", configuration);
+				StringAssert.DoesNotContain ("-dontobfuscate", configuration);
+				Assert.That (response, Does.Not.Contain ("--no-minification"));
+
+				foreach (string configurationFile in configurationFiles) {
+					if (configurationFile != customConfiguration && configurationFile != commonConfiguration) {
+						File.Delete (configurationFile);
+					}
+				}
+			} finally {
+				if (File.Exists (responseFile)) {
+					File.Delete (responseFile);
+				}
+				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		[Test]
 		public void ValidateAppliedMappingUsesXA4327 ()
 		{
 			string path = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
@@ -82,6 +145,20 @@ namespace Xamarin.Android.Build.Tests
 			} finally {
 				Directory.Delete (path, recursive: true);
 			}
+		}
+
+		internal class R8TestTask : R8
+		{
+			public string ResponseFilePath { get; private set; } = "";
+
+			protected override string CreateResponseFile ()
+			{
+				ResponseFilePath = base.CreateResponseFile ();
+				return ResponseFilePath;
+			}
+
+			public string TestGenerateCommandLineCommands ()
+				=> GetCommandLineBuilder ().ToString ();
 		}
 	}
 }

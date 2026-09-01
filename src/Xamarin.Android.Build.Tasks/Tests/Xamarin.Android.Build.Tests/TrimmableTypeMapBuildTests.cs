@@ -243,16 +243,17 @@ public class R8JniPeer : Java.Lang.Object
 			});
 			proj.SetRuntime (runtime);
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
-			proj.SetProperty ("AndroidPackageFormat", "apk");
+			proj.SetProperty ("AndroidPackageFormat", "aab");
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("AndroidEnableR8JniNameObfuscation", "true");
+			proj.SetProperty ("AndroidCreateProguardMappingFile", "false");
 
 			using var builder = CreateApkBuilder (Path.Combine ("temp", $"R8JniNameRewriting_{runtime}_{Guid.NewGuid ():N}"));
 			Assert.IsTrue (builder.Build (proj), "Clean R8 JNI name-rewriting build should have succeeded.");
 
 			var projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
 			var seedMapping = FindSingleFile (projectDirectory, "mapping.txt", path => path.Contains ("r8-jni-seed", StringComparison.Ordinal));
-			var finalMapping = FindSingleFile (projectDirectory, "mapping.txt", path => !path.Contains ("r8-jni-seed", StringComparison.Ordinal));
+			var finalMapping = FindSingleFile (projectDirectory, "r8-jni-final-mapping.txt");
 			var rewriteManifest = FindSingleFile (projectDirectory, "r8-jni-rewrite-manifest.txt");
 			var reachabilityManifest = FindSingleFile (projectDirectory, "r8-jni-reachability-manifest.txt");
 			var rewrittenAssemblies = Directory.GetFiles (projectDirectory, "*.dll", SearchOption.AllDirectories)
@@ -264,11 +265,18 @@ public class R8JniPeer : Java.Lang.Object
 				var hashDirectory = Path.GetFileName (Path.GetDirectoryName (rewrittenAssembly));
 				Assert.That (hashDirectory, Does.Match ("^[0-9a-fA-F]{16}$"), $"Rewritten assembly staging should include a source-path hash: {rewrittenAssembly}");
 			}
-			StringAssert.Contains ($"{originalJavaName.Replace ('/', '.')} ->", File.ReadAllText (seedMapping));
+			AssertR8MappingRenamesClass (seedMapping, originalJavaName);
 			StringAssert.DoesNotContain ($"{userJavaName} ->", File.ReadAllText (seedMapping), "User Java sources are kept by final R8 and should not receive seed-only names.");
 			StringAssert.Contains ($"C\t{originalJavaName}", File.ReadAllText (rewriteManifest));
 			Assert.That (new FileInfo (reachabilityManifest).Length, Is.GreaterThan (0), "The clean build should record post-link JNI reachability.");
 			Assert.That (new FileInfo (finalMapping).Length, Is.GreaterThan (0), "The final R8 pass should emit its applied mapping.");
+			Assert.That (Directory.GetFiles (Path.Combine (projectDirectory, proj.OutputPath), "mapping.txt", SearchOption.AllDirectories), Is.Empty,
+				"Disabling public mapping output should not write mapping.txt under bin.");
+			var appBundle = FindSingleFile (Path.Combine (projectDirectory, proj.OutputPath), $"{proj.PackageName}-Signed.aab");
+			using (var archive = Xamarin.Tools.Zip.ZipArchive.Open (appBundle, FileMode.Open)) {
+				Assert.IsFalse (archive.Any (entry => entry.FullName == "BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map"),
+					"Disabling public mapping output should omit the ProGuard mapping from app-bundle metadata.");
+			}
 
 			var outputTimestamps = rewrittenAssemblies
 				.Append (seedMapping)
@@ -287,6 +295,16 @@ public class R8JniPeer : Java.Lang.Object
 			foreach (var pair in outputTimestamps) {
 				Assert.AreEqual (pair.Value, File.GetLastWriteTimeUtc (pair.Key), $"No-op build should preserve {pair.Key}.");
 			}
+
+			System.Threading.Thread.Sleep (1100);
+			File.AppendAllText (reachabilityManifest, Environment.NewLine);
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Reachability-manifest change rebuild should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_CompileToDalvik");
+
+			System.Threading.Thread.Sleep (1100);
+			File.AppendAllText (seedMapping, Environment.NewLine);
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Seed-mapping change rebuild should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_CompileToDalvik");
 
 			var missingRewrittenAssembly = rewrittenAssemblies [0];
 			File.Delete (missingRewrittenAssembly);
@@ -307,6 +325,7 @@ public class R8JniPeer : Java.Lang.Object
 			builder.Output.AssertTargetIsNotSkipped ("_CompileToDalvik");
 			StringAssert.DoesNotContain ($"{originalJavaName.Replace ('/', '.')} ->", File.ReadAllText (seedMapping));
 			StringAssert.Contains ($"{changedJavaName.Replace ('/', '.')} ->", File.ReadAllText (seedMapping));
+			AssertR8MappingRenamesClass (seedMapping, changedJavaName);
 			StringAssert.Contains ($"C\t{changedJavaName}", File.ReadAllText (rewriteManifest));
 
 			proj.SetProperty ("AndroidEnableR8JniNameObfuscation", "false");
@@ -370,7 +389,8 @@ public class R8JniMultiAbiPeer : Java.Lang.Object
 				Assert.That (rewriteManifests, Has.Some.Contains (runtimeIdentifier), $"The {runtimeIdentifier} inner build should have a rewrite manifest.");
 			}
 			Assert.That (reachabilityManifests, Has.Exactly (1).Contains ("android-arm64"), "Final R8 should consume the shared first-RID reachability manifest.");
-			Assert.That (new FileInfo (reachabilityManifests [0]).Length, Is.GreaterThan (0), "The shared reachability manifest should contain retained JNI entries.");
+			var firstRuntimeIdentifierReachabilityManifest = reachabilityManifests.Single (path => path.Contains ("android-arm64", StringComparison.Ordinal));
+			Assert.That (new FileInfo (firstRuntimeIdentifierReachabilityManifest).Length, Is.GreaterThan (0), "The shared reachability manifest should contain retained JNI entries.");
 			foreach (var manifest in rewriteManifests) {
 				StringAssert.Contains ($"C\t{javaName}", File.ReadAllText (manifest));
 			}
@@ -1567,6 +1587,17 @@ namespace UnnamedProject {
 				.ToArray ();
 			Assert.AreEqual (1, files.Length, $"Expected exactly one {fileName} under {directory}, but found:\n{string.Join ("\n", files)}");
 			return files [0];
+		}
+
+		static void AssertR8MappingRenamesClass (string mappingFile, string originalJniName)
+		{
+			string originalName = originalJniName.Replace ('/', '.');
+			var match = Regex.Match (
+				File.ReadAllText (mappingFile),
+				$"^{Regex.Escape (originalName)} -> (?<renamed>[^:]+):$",
+				RegexOptions.Multiline);
+			Assert.IsTrue (match.Success, $"Expected {mappingFile} to contain a mapping for {originalName}.");
+			Assert.AreNotEqual (originalName, match.Groups ["renamed"].Value, $"Seed R8 should rename {originalName}.");
 		}
 
 		DynamicCodeSupportProfile BuildDynamicCodeSupportProfile (string typemapImplementation, bool? dynamicCodeSupport)

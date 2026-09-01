@@ -238,11 +238,6 @@ namespace Xamarin.Android.Tasks
 					seedConfiguration.Add ("-ignorewarnings");
 				}
 				WriteConfiguration (response, seedConfiguration);
-				GenerateApplicationConfiguration ();
-				if (!ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
-					WriteArg (response, "--pg-conf");
-					WriteArg (response, ProguardGeneratedApplicationConfiguration);
-				}
 				GenerateCommonXamarinConfiguration ();
 				if (!ProguardCommonXamarinConfiguration.IsNullOrEmpty ()) {
 					WriteArg (response, "--pg-conf");
@@ -332,21 +327,6 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException (Properties.Resources.XA4327_SeedMappingOutputRequired);
 			}
 			return output;
-		}
-
-		void GenerateApplicationConfiguration ()
-		{
-			if (AcwMapFile.IsNullOrEmpty () || ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
-				return;
-			}
-
-			var acwMap = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (AcwMapFile), StringComparer.OrdinalIgnoreCase);
-			var javaTypes = new List<string> (new HashSet<string> (acwMap.Values, StringComparer.Ordinal));
-			javaTypes.Sort (StringComparer.Ordinal);
-			using var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration);
-			foreach (var java in javaTypes) {
-				appcfg.WriteLine ($"-keep class {java} {{ *; }}");
-			}
 		}
 
 		void GenerateCommonXamarinConfiguration ()
@@ -455,7 +435,7 @@ namespace Xamarin.Android.Tasks
 
 		Stream GetEmbeddedResourceStream (string resourceName)
 		{
-			var stream = GetType ().Assembly.GetManifestResourceStream (resourceName);
+			var stream = typeof (R8).Assembly.GetManifestResourceStream (resourceName);
 			if (stream == null) {
 				throw new InvalidOperationException ($"Missing embedded resource '{resourceName}'.");
 			}

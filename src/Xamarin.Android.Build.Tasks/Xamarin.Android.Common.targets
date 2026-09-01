@@ -1993,6 +1993,7 @@ because xbuild doesn't support framework reference assemblies.
 		_GetLibraryImports;
 		_SetProguardMappingFileProperty;
 		_CalculateProguardConfigurationFiles;
+		_AndroidPrepareR8JniCompileToDalvikInputs;
 	</_CompileToDalvikDependsOnTargets>
 	<_CompileToDalvikInputs>
 		@(_AndroidMSBuildAllProjects)
@@ -2013,7 +2014,24 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_SetProguardMappingFileProperty">
 	<PropertyGroup>
-		<AndroidProguardMappingFile Condition=" '$(AndroidLinkTool)' == 'r8' And ('$(AndroidCreateProguardMappingFile)' == 'True' Or '$(_AndroidEnableR8JniNameRewriting)' == 'true') ">$(OutputPath)mapping.txt</AndroidProguardMappingFile>
+		<AndroidProguardMappingFile Condition=" '$(AndroidLinkTool)' == 'r8' And '$(AndroidCreateProguardMappingFile)' == 'True' And '$(AndroidProguardMappingFile)' == '' ">$(OutputPath)mapping.txt</AndroidProguardMappingFile>
+		<AndroidProguardMappingFile Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' And '$(AndroidCreateProguardMappingFile)' != 'True' " />
+		<_AndroidR8ProguardMappingFileOutput Condition=" '$(AndroidLinkTool)' == 'r8' And '$(AndroidCreateProguardMappingFile)' == 'True' ">$(AndroidProguardMappingFile)</_AndroidR8ProguardMappingFileOutput>
+		<_AndroidR8ProguardMappingFileOutput Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' And '$(AndroidCreateProguardMappingFile)' != 'True' ">$(IntermediateOutputPath)r8-jni-final-mapping.txt</_AndroidR8ProguardMappingFileOutput>
+	</PropertyGroup>
+</Target>
+
+<Target Name="_AndroidPrepareR8JniCompileToDalvikInputs"
+		Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">
+	<PropertyGroup>
+		<_CompileToDalvikInputs>
+			$(_CompileToDalvikInputs)
+			;$(_AndroidR8JniSeedMapping)
+			;$(_AndroidR8JniRewriteManifest)
+			;$(_AndroidR8JniReachabilityManifest)
+			;$(_ProguardProjectConfiguration)
+			;$(AndroidR8JarPath)
+		</_CompileToDalvikInputs>
 	</PropertyGroup>
 </Target>
 

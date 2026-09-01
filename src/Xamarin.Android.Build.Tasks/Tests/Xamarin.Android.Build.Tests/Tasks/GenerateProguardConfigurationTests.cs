@@ -156,7 +156,7 @@ namespace Xamarin.Android.Build.Tests
 				M	acme/orig/MyView	onClick(android.view.View):void
 				M	acme/orig/MyView	onClick(android.view.View,int):void
 
-				""".ReplaceLineEndings ();
+				""".ReplaceLineEndings ("\n");
 			File.WriteAllText (rewriteManifest, expectedManifest);
 
 			var task = new GenerateProguardConfiguration {
@@ -195,7 +195,9 @@ namespace Xamarin.Android.Build.Tests
 
 
 				""".ReplaceLineEndings (), File.ReadAllText (proguard));
-			Assert.AreEqual (expectedManifest, File.ReadAllText (manifest));
+			string actualManifest = File.ReadAllText (manifest);
+			Assert.AreEqual (expectedManifest, actualManifest);
+			StringAssert.DoesNotContain ("\r", actualManifest, "R8 JNI manifests should use deterministic LF line endings.");
 		}
 
 		[Test]
