@@ -27,6 +27,7 @@ namespace Android.WidgetTests {
 			IntPtr grefAdapterView_class  = JNIEnv.FindClass ("android/widget/AdapterView");
 			IntPtr AdapterView_getAdapter = JNIEnv.GetMethodID (grefAdapterView_class, "getAdapter", "()Landroid/widget/Adapter;");
 			IntPtr AdapterView_setAdapter = JNIEnv.GetMethodID (grefAdapterView_class, "setAdapter", "(Landroid/widget/Adapter;)V");
+			IntPtr AdapterView_setSelection = JNIEnv.GetMethodID (grefAdapterView_class, "setSelection", "(I)V");
 
 			JNIEnv.DeleteGlobalRef (grefAbsListView_class);
 			JNIEnv.DeleteGlobalRef (grefAdapterView_class);
@@ -45,6 +46,9 @@ namespace Android.WidgetTests {
 				adapter.AdapterSetterInvoked = false;
 				JNIEnv.CallVoidMethod (adapter.Handle, AdapterView_setAdapter, new JValue (IntPtr.Zero));
 				Assert.IsTrue (adapter.AdapterSetterInvoked);
+
+				JNIEnv.CallVoidMethod (adapter.Handle, AdapterView_setSelection, new JValue (23));
+				Assert.AreEqual (23, adapter.SelectionPosition);
 			}
 		}
 
@@ -77,6 +81,8 @@ namespace Android.WidgetTests {
 
 		public bool         AdapterSetterInvoked;
 
+		public int SelectionPosition;
+
 		public override IListAdapter Adapter {
 			get {return AdapterValue;}
 			set {
@@ -86,7 +92,7 @@ namespace Android.WidgetTests {
 
 		public override void SetSelection (int position)
 		{
-			throw new NotImplementedException();
+			SelectionPosition = position;
 		}
 
 

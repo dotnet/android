@@ -65,6 +65,7 @@ public sealed class JcwJavaSourceGenerator
 	{
 		writer.NewLine = "\n";
 		WritePackageDeclaration (type, writer);
+		WriteAnnotations (type.Annotations, writer);
 		WriteClassDeclaration (type, writer, applicationJavaClass);
 		WriteStaticInitializer (type, writer);
 		WriteConstructors (type, writer);
@@ -175,9 +176,11 @@ public sealed class JcwJavaSourceGenerator
 			string parameters = FormatParameterList (ctorParams);
 			string superArgs = ctor.SuperArgumentsString ?? FormatArgumentList (ctorParams);
 			string args = FormatArgumentList (ctorParams);
+			string throwsClause = FormatThrowsClause (ctor.ThrownNames);
 
+			WriteAnnotations (ctor.Annotations, writer);
 			writer.Write ($$"""
-	public {{simpleClassName}} ({{parameters}})
+	public {{simpleClassName}} ({{parameters}}){{throwsClause}}
 	{
 		super ({{superArgs}});
 
@@ -212,6 +215,7 @@ public sealed class JcwJavaSourceGenerator
 	static void WriteFields (JavaPeerInfo type, TextWriter writer)
 	{
 		foreach (var field in type.JavaFields) {
+			WriteAnnotations (field.Annotations, writer);
 			writer.Write ('\t');
 			writer.Write (field.Visibility);
 			writer.Write (' ');
@@ -251,14 +255,12 @@ public sealed class JcwJavaSourceGenerator
 			string returnPrefix = isVoid ? "" : "return ";
 
 			// throws clause for [Export] methods
-			string throwsClause = "";
-			if (method.ThrownNames != null && method.ThrownNames.Count > 0) {
-				throwsClause = $"\n\t\tthrows {string.Join (", ", method.ThrownNames)}";
-			}
+			string throwsClause = FormatThrowsClause (method.ThrownNames);
 
 			if (method.Connector != null && !method.IsExport) {
+				writer.WriteLine ();
+				WriteAnnotations (method.Annotations, writer);
 				writer.Write ($$"""
-
 	@Override
 	public {{javaReturnType}} {{method.JniName}} ({{parameters}}){{throwsClause}}
 	{
@@ -270,8 +272,9 @@ public sealed class JcwJavaSourceGenerator
 			} else {
 				string access = method.IsExport && method.JavaAccess != null ? method.JavaAccess : "public";
 				string staticKeyword = method.IsStatic ? "static " : "";
+				writer.WriteLine ();
+				WriteAnnotations (method.Annotations, writer);
 				writer.Write ($$"""
-
 	{{access}} {{staticKeyword}}{{javaReturnType}} {{method.JniName}} ({{parameters}}){{throwsClause}}
 	{
 {{registerNativesLine}}		{{returnPrefix}}{{method.NativeCallbackName}} ({{args}});
@@ -280,6 +283,29 @@ public sealed class JcwJavaSourceGenerator
 
 """);
 			}
+		}
+	}
+
+	static void WriteAnnotations (IReadOnlyList<JavaAnnotationInfo> annotations, TextWriter writer)
+	{
+		foreach (var annotation in annotations) {
+			writer.Write ('@');
+			writer.Write (annotation.Name);
+			if (annotation.Properties.Count > 0) {
+				writer.Write (" (");
+				bool first = true;
+				foreach (var property in annotation.Properties) {
+					if (!first) {
+						writer.Write (", ");
+					}
+					writer.Write (property.Key);
+					writer.Write (" = ");
+					writer.Write (property.Value);
+					first = false;
+				}
+				writer.Write (')');
+			}
+			writer.WriteLine ();
 		}
 	}
 
@@ -307,6 +333,19 @@ public sealed class JcwJavaSourceGenerator
 	static void WriteClassClose (TextWriter writer)
 	{
 		writer.WriteLine ('}');
+	}
+
+	static string FormatThrowsClause (IReadOnlyList<string>? thrownNames)
+	{
+		if (thrownNames == null || thrownNames.Count == 0) {
+			return "";
+		}
+
+		var javaNames = new string [thrownNames.Count];
+		for (int i = 0; i < thrownNames.Count; i++) {
+			javaNames [i] = JniSignatureHelper.JniNameToJavaName (thrownNames [i]);
+		}
+		return $"\n\t\tthrows {string.Join (", ", javaNames)}";
 	}
 
 	static string FormatParameterList (IReadOnlyList<JniParameterInfo> parameters)

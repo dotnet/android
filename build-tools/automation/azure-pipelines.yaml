@@ -21,6 +21,11 @@ resources:
     type: git
     name: DevDiv/Xamarin.yaml-templates
     ref: refs/heads/main
+  - repository: macios-devtools
+    type: github
+    name: dotnet/macios-devtools
+    ref: refs/heads/main
+    endpoint: xamarin
   - repository: maui
     type: github
     name: dotnet/maui
@@ -75,6 +80,7 @@ extends:
       sourceRepositoriesToScan:
         exclude:
         - repository: yaml-templates
+        - repository: macios-devtools
         - repository: maui
       suppression:
         suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
@@ -235,6 +241,18 @@ extends:
               -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Release.binlog
             xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Build MAUI template - Release
+
+        - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+          parameters:
+            project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
+            arguments: >-
+              -f $(DotNetTargetFramework)-android -c Release
+              -p:UseMonoRuntime=true
+              -p:_DisableCheckForUnsupportedMonoMobileRuntime=true
+              --configfile $(Build.SourcesDirectory)/maui/NuGet.config
+              -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Mono.binlog
+            xaSourcePath: $(Build.SourcesDirectory)/android
+            displayName: Build MAUI template - Mono
 
         - template: /build-tools/automation/yaml-templates/run-maui-r2r-helix-matrix.yaml@self
           parameters:

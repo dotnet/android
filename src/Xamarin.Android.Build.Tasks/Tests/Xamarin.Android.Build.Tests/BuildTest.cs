@@ -2219,8 +2219,11 @@ public class ToolbarEx {
 				var ext = b.IsUnix ? "" : ".exe";
 				var text = $"TestMe.java(1,8): javac{ext} error JAVAC0000:  error: class, interface, or enum expected";
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, text), "TestMe.java(1,8) expected");
-				text = $"TestMe2.java(1,41): javac{ext} error JAVAC0000:  error: ';' expected";
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, text), "TestMe2.java(1,41) expected");
+				var expectedErrors = new [] {
+					$"TestMe2.java(1,41): javac{ext} error JAVAC0000:  error: ';' expected",
+					$"TestMe2.java(1,41): javac{ext} error JAVAC0000:  error: '{{' or ';' expected",
+				};
+				Assert.IsTrue (expectedErrors.Any (error => StringAssertEx.ContainsText (b.LastBuildOutput, error)), "TestMe2.java(1,41) expected");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
@@ -2300,8 +2303,9 @@ public class ToolbarEx {
 			}
 		}
 
-		[Test]
-		public void BuildDoesNotModifyNuGetPackageCache ()
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.MonoVM)]
+		public void BuildDoesNotModifyNuGetPackageCache (AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
@@ -2328,7 +2332,10 @@ public class ToolbarEx {
 					new Package { Id = "Humanizer.Core.es", Version = "2.14.1" },
 				},
 			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntime (runtime);
+			if (runtime == AndroidRuntime.MonoVM) {
+				proj.SetProperty ("_DisableCheckForUnsupportedMonoMobileRuntime", "true");
+			}
 			proj.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
 			proj.SetProperty (KnownProperties.PublishTrimmed, true.ToString ());
 			proj.MainActivity = proj.DefaultMainActivity

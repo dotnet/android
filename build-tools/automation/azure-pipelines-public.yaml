@@ -17,9 +17,7 @@ schedules:
 pr:
   branches:
     include:
-    - main
-    - release/*
-    - feature/*
+    - '*'
 
 parameters:
 - name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
@@ -35,6 +33,11 @@ parameters:
 # Repository resources
 resources:
   repositories:
+  - repository: macios-devtools
+    type: github
+    name: dotnet/macios-devtools
+    endpoint: public
+    ref: refs/heads/main
   - repository: maui
     type: github
     name: dotnet/maui
@@ -44,9 +47,6 @@ resources:
 # Global variables
 variables:
 - template: /build-tools/automation/yaml-templates/variables.yaml@self
-# Override for public pipeline
-- name: DefaultJavaSdkMajorVersion
-  value: 21
 # Override pool images for public Microsoft-hosted agents
 - name: LinuxPoolImage
   value: ubuntu-22.04
@@ -86,10 +86,11 @@ stages:
       submodules: recursive
       persistCredentials: false
 
-    # Checkout a second repo to force multi-repo checkout behavior
+    # This small repository is intentionally unused; its checkout keeps the
+    # primary repository at s/android under Azure's multi-repo layout.
     # https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
-    - checkout: maui
-      path: s/maui
+    - checkout: macios-devtools
+      path: s/macios-devtools
 
     - template: /build-tools/automation/yaml-templates/build-macos-steps.yaml
       parameters:
@@ -146,9 +147,10 @@ stages:
       submodules: recursive
       persistCredentials: false
 
-    # Checkout a second repo to force multi-repo checkout behavior
-    - checkout: maui
-      path: s/maui
+    # This small repository is intentionally unused; its checkout keeps the
+    # primary repository at s/android under Azure's multi-repo layout.
+    - checkout: macios-devtools
+      path: s/macios-devtools
 
     - script: |
         sudo apt-get update
@@ -393,6 +395,8 @@ stages:
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
       parameters:
+        jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
+        useAgentJdkPath: true
         installTestSlicer: true
         installApkDiff: false
         use1ESTemplate: false
@@ -507,7 +511,8 @@ stages:
         androidSdkPlatforms: $(DefaultTestSdkPlatforms)
         dotnetVersion: $(DotNetSdkVersion)
         dotnetQuality: $(DotNetSdkQuality)
-        useAgentJdkPath: false
+        jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
+        useAgentJdkPath: true
         use1ESTemplate: false
 
     - task: DownloadPipelineArtifact@2
@@ -619,6 +624,18 @@ stages:
           -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Release.binlog
         xaSourcePath: $(Build.SourcesDirectory)/android
         displayName: Build MAUI template - Release
+
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
+        arguments: >-
+          -f $(DotNetTargetFramework)-android -c Release
+          -p:UseMonoRuntime=true
+          -p:_DisableCheckForUnsupportedMonoMobileRuntime=true
+          --configfile $(Build.SourcesDirectory)/maui/NuGet.config
+          -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Mono.binlog
+        xaSourcePath: $(Build.SourcesDirectory)/android
+        displayName: Build MAUI template - Mono
 
     - template: /build-tools/automation/yaml-templates/run-maui-r2r-helix-matrix.yaml
       parameters:

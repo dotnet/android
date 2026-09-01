@@ -6,8 +6,10 @@
 #include <unistd.h>
 
 #include <cerrno>
-#include <concepts>
+#include <cstdlib>
 #include <cstdio>
+#include <cstring>
+#include <limits>
 #include <optional>
 #include <string_view>
 
@@ -15,7 +17,6 @@
 #include <shared/helpers.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include "logger.hh"
-#include <runtime-base/strings.hh>
 
 #if !defined(XA_HOST_NATIVEAOT)
 #include "archive-dso-stub-config.hh"
@@ -23,19 +24,6 @@
 
 namespace xamarin::android {
 	namespace detail {
-		template<typename T>
-		concept PathComponentString = requires {
-			std::same_as<std::remove_cvref_t<T>, char*> ||
-			std::same_as<std::remove_cvref_t<T>, std::string_view> ||
-			std::same_as<std::remove_cvref_t<T>, std::string>;
-		};
-
-		template<class T, size_t MaxBufferStorage>
-		concept PathBuffer = requires {
-			std::derived_from<std::remove_cvref<T>, dynamic_local_storage<MaxBufferStorage>> ||
-			std::derived_from<std::remove_cvref<T>, static_local_storage<MaxBufferStorage>>;
-		};
-
 		struct mmap_info
 		{
 			void   *area;
@@ -45,12 +33,14 @@ namespace xamarin::android {
 
 	class Util
 	{
-		static constexpr inline std::array<char, 16> hex_map {
+		static constexpr inline char hex_map [16] {
 			'0', '1', '2', '3', '4', '5', '6', '7',
 			'8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
 		};
 
 	public:
+		static constexpr size_t LocalPathBufferSize = Constants::SENSIBLE_PATH_MAX;
+
 		static int create_directory (const char *pathname, mode_t mode);
 
 		static auto create_directory (std::string_view const& dir, mode_t mode) noexcept -> int
@@ -58,9 +48,9 @@ namespace xamarin::android {
 			return create_directory (dir.data (), mode);
 		}
 
-		static void create_public_directory (std::string_view const& dir);
-		static auto monodroid_fopen (std::string_view const& filename, std::string_view const& mode) noexcept -> FILE*;
-		static void set_world_accessable (std::string_view const& path);
+		static void create_public_directory (const char *dir);
+		static auto monodroid_fopen (const char *filename, const char *mode) noexcept -> FILE*;
+		static void set_world_accessable (const char *path);
 		static auto set_world_accessible (int fd) noexcept -> bool;
 
 		// Puts higher half of the `value` byte as a hexadecimal character in `high_half` and
@@ -117,16 +107,6 @@ namespace xamarin::android {
 			}
 
 			return file_exists_no_null_check (file);
-		}
-
-		template<size_t MaxStackSize>
-		static auto file_exists (dynamic_local_string<MaxStackSize> const& file) noexcept -> bool
-		{
-			if (file.empty ()) {
-				return false;
-			}
-
-			return file_exists_no_null_check (file.get ());
 		}
 
 		static auto file_exists (int dirfd, std::string_view const& file) noexcept -> bool
@@ -330,39 +310,134 @@ namespace xamarin::android {
 			return !path.empty () && path.contains ('/');
 		}
 
-	private:
-		// TODO: needs some work to accept mixed params of different accepted types
-		template<size_t MaxStackSpace, detail::PathBuffer<MaxStackSpace> TBuffer, detail::PathComponentString ...TPart>
-		static void path_combine_common (TBuffer& buf, TPart&&... parts) noexcept
+		// Returns the path length excluding NUL, or the negative required capacity including NUL.
+		static auto format_joined_path (char *buffer, size_t buffer_size, std::string_view first, std::string_view second) noexcept -> ssize_t
 		{
-			buf.clear ();
-
-			for (auto const& part : {parts...}) {
-				if (!buf.empty ()) {
-					buf.append ("/"sv);
-				}
-
-				if constexpr (std::same_as<std::remove_cvref_t<decltype(part)>, char*>) {
-					if (part != nullptr) {
-						buf.append_c (part);
-					}
-				} else {
-					buf.append (part);
-				}
+			bool remove_duplicate_separator = first.ends_with ('/') && second.starts_with ('/');
+			bool add_separator = !first.empty () && !second.empty () && !first.ends_with ('/') && !second.starts_with ('/');
+			size_t second_offset = remove_duplicate_separator ? 1uz : 0uz;
+			size_t path_length = Helpers::add_with_overflow_check<size_t> (first.length (), second.length () - second_offset);
+			if (add_separator) {
+				path_length = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
 			}
+
+			size_t required_capacity = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
+			abort_unless (required_capacity <= static_cast<size_t>(std::numeric_limits<ssize_t>::max ()), "Joined path is too long");
+			if (buffer == nullptr || buffer_size < required_capacity) {
+				return -static_cast<ssize_t>(required_capacity);
+			}
+
+			char *destination = buffer;
+			if (!first.empty ()) {
+				memcpy (destination, first.data (), first.length ());
+				destination += first.length ();
+			}
+			if (add_separator) {
+				*destination++ = '/';
+			}
+			size_t second_length = second.length () - second_offset;
+			if (second_length > 0) {
+				memcpy (destination, second.data () + second_offset, second_length);
+			}
+			buffer [path_length] = '\0';
+
+			return static_cast<ssize_t>(path_length);
 		}
 
-	public:
-		template<size_t MaxStackSpace, detail::PathComponentString ...TParts>
-		static void path_combine (dynamic_local_string<MaxStackSpace>& buf, TParts&&... parts) noexcept
+		// Formats a string that usually fits in a stack buffer, falling back to the heap when it
+		// does not. `formatter` must write into the buffer it is given and return the formatted
+		// length excluding the terminating NUL, or the negative required capacity including it —
+		// the protocol implemented by `format_joined_path()` and friends.
+		//
+		// Returns `stack_buffer`, or a heap block the caller must `std::free ()`. Compare the
+		// result against `stack_buffer` to tell the two apart. When `length` is not `nullptr`, it
+		// receives the formatted length excluding the terminating NUL.
+		template<typename TFormatter>
+		static auto format_with_retry (char *stack_buffer, size_t stack_buffer_size, TFormatter formatter, size_t *length = nullptr) noexcept -> char*
 		{
-			path_combine_common<MaxStackSpace> (buf, std::forward<TParts>(parts)...);
+			ssize_t result = formatter (stack_buffer, stack_buffer_size);
+			if (result < 0) {
+				size_t required_capacity = static_cast<size_t>(-result);
+				char *heap_buffer = static_cast<char*> (std::malloc (required_capacity));
+				abort_unless (heap_buffer != nullptr, "Failed to allocate formatted string");
+
+				result = formatter (heap_buffer, required_capacity);
+				abort_unless (result >= 0, "Failed to format string using the required capacity");
+				if (length != nullptr) {
+					*length = static_cast<size_t>(result);
+				}
+				return heap_buffer;
+			}
+
+			if (length != nullptr) {
+				*length = static_cast<size_t>(result);
+			}
+			return stack_buffer;
 		}
 
-		template<size_t MaxStackSpace, detail::PathComponentString ...TParts>
-		static void path_combine (static_local_string<MaxStackSpace>& buf, TParts&&... parts) noexcept
+		static auto join_paths (char *stack_buffer, size_t stack_buffer_size, std::string_view first, std::string_view second) noexcept -> char*
 		{
-			path_combine_common<MaxStackSpace> (buf, std::forward<TParts>(parts)...);
+			return format_with_retry (
+				stack_buffer,
+				stack_buffer_size,
+				[first, second](char *buffer, size_t buffer_size) noexcept {
+					return format_joined_path (buffer, buffer_size, first, second);
+				}
+			);
+		}
+
+		static auto get_dso_name_length (std::string_view const& name, bool add_lib_prefix) noexcept -> size_t
+		{
+			std::string_view prefix = add_lib_prefix && !name.starts_with (Constants::DSO_PREFIX) ? Constants::DSO_PREFIX : std::string_view {};
+			std::string_view suffix = name.ends_with (Constants::dso_suffix) ? std::string_view {} : Constants::dso_suffix;
+
+			size_t name_length = Helpers::add_with_overflow_check<size_t> (prefix.length (), name.length ());
+			name_length = Helpers::add_with_overflow_check<size_t> (name_length, suffix.length ());
+			return name_length;
+		}
+
+		// Returns the name length excluding NUL, or the negative required capacity including NUL.
+		static auto format_dso_name (std::string_view const& name, bool add_lib_prefix, char *buffer, size_t buffer_size) noexcept -> ssize_t
+		{
+			size_t name_length = get_dso_name_length (name, add_lib_prefix);
+			size_t required_capacity = Helpers::add_with_overflow_check<size_t> (name_length, 1uz);
+			abort_unless (required_capacity <= static_cast<size_t>(std::numeric_limits<ssize_t>::max ()), "DSO name is too long");
+			if (buffer == nullptr || buffer_size < required_capacity) {
+				return -static_cast<ssize_t>(required_capacity);
+			}
+
+			std::string_view prefix = add_lib_prefix && !name.starts_with (Constants::DSO_PREFIX) ? Constants::DSO_PREFIX : std::string_view {};
+			std::string_view suffix = name.ends_with (Constants::dso_suffix) ? std::string_view {} : Constants::dso_suffix;
+			char *destination = buffer;
+			if (!prefix.empty ()) {
+				memcpy (destination, prefix.data (), prefix.length ());
+				destination += prefix.length ();
+			}
+			if (!name.empty ()) {
+				memcpy (destination, name.data (), name.length ());
+				destination += name.length ();
+			}
+			if (!suffix.empty ()) {
+				memcpy (destination, suffix.data (), suffix.length ());
+			}
+			buffer [name_length] = '\0';
+
+			return static_cast<ssize_t>(name_length);
+		}
+
+		static auto format_dso_name (char *stack_buffer, size_t stack_buffer_size, std::string_view const& name, bool add_lib_prefix) noexcept -> char*
+		{
+			ssize_t result = format_dso_name (name, add_lib_prefix, stack_buffer, stack_buffer_size);
+			if (result >= 0) {
+				return stack_buffer;
+			}
+
+			size_t required_capacity = static_cast<size_t>(-result);
+			char *heap_buffer = static_cast<char*> (std::malloc (required_capacity));
+			abort_unless (heap_buffer != nullptr, "Failed to allocate DSO name");
+			result = format_dso_name (name, add_lib_prefix, heap_buffer, required_capacity);
+			abort_unless (result >= 0, "Failed to format DSO name using the required capacity");
+			return heap_buffer;
 		}
 
 	private:

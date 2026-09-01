@@ -318,7 +318,7 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <comment>The following are literal names and should not be translated: ReadyToRun, Debug, Release.</comment>
   </data>
   <data name="XA0119_ReadyToRunWithoutTrimming" xml:space="preserve">
-    <value>ReadyToRun has been disabled because trimming is disabled. Set the 'PublishTrimmed' MSBuild property to 'true' to use ReadyToRun.</value>
+    <value>ReadyToRun se ha deshabilitado porque el recorte está deshabilitado. Establezca la propiedad "PublishTrimmed" de MSBuild en "true" para usar ReadyToRun.</value>
     <comment>The following are literal names and should not be translated: ReadyToRun, 'PublishTrimmed', 'true'.</comment>
   </data>
   <data name="XA0121" xml:space="preserve">
@@ -1062,6 +1062,11 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
     <value>Repositorio de Maven desconocido: "{0}".</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
+  </data>
+  <data name="XA4240" xml:space="preserve">
+    <value>Ya no se admite el destino de generación de código contenedor invocable de Java ''{0}". La propiedad "_AndroidJcwCodegenTarget" solo admite "XAJavaInterop1"; No se admiten "XamarinAndroid" y "JavaInterop1".</value>
+    <comment>The following are literal names and should not be translated: _AndroidJcwCodegenTarget, XAJavaInterop1, XamarinAndroid, JavaInterop1
+{0} - The name of the current Java callable wrapper code generation target</comment>
   </data>
   <data name="XA1038" xml:space="preserve">
     <value>La propiedad '{0}' de MSBuild tiene un valor no válido de '{1}'. Un valor válido es uno de: {2}.</value>

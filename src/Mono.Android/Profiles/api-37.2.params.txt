@@ -838,6 +838,41 @@ package android.adservices.topics
     get(android.content.Context context)
     getTopics(android.adservices.topics.GetTopicsRequest getTopicsRequest, java.util.concurrent.Executor executor, android.os.OutcomeReceiver<android.adservices.topics.GetTopicsResponse, java.lang.Exception> callback)
 
+package android.agenticon
+;---------------------------------------
+  class AgentTaskEvent
+    writeToParcel(android.os.Parcel dest, int flags)
+  class AgentTaskEvent.Builder
+    #ctor(android.agenticon.AgentTaskEvent.Builder other)
+    #ctor(java.lang.CharSequence text)
+    #ctor(java.util.List<android.graphics.drawable.Icon> leadingIcons, java.util.List<android.graphics.drawable.Icon> trailingIcons)
+    setBackground(android.graphics.drawable.Icon background)
+    setClickAction(android.app.PendingIntent action)
+    setContentDescription(java.lang.CharSequence contentDescription)
+    setLeadingIcons(java.util.List<android.graphics.drawable.Icon> leadingIcons)
+    setText(java.lang.CharSequence text)
+    setTrailingIcons(java.util.List<android.graphics.drawable.Icon> trailingIcons)
+  class AgentTaskOutcome
+    writeToParcel(android.os.Parcel dest, int flags)
+  class AgentTaskOutcome.Builder
+    setEventShown(boolean eventShown)
+    setStateChanged(boolean stateChanged)
+  class AgentTaskState
+    writeToParcel(android.os.Parcel dest, int flags)
+  class AgentTaskState.Builder
+    #ctor(android.agenticon.AgentTaskState.Builder other)
+    #ctor(android.graphics.drawable.Icon icon, java.lang.CharSequence contentDescription)
+    setClickAction(android.app.PendingIntent action)
+    setIconAndContentDescription(android.graphics.drawable.Icon icon, java.lang.CharSequence contentDescription)
+    setShouldInterruptPreviousAnimation(boolean shouldInterruptPreviousAnimation)
+    setShouldLoopAnimation(boolean shouldLoopAnimation)
+  class AgentTaskUpdate
+    writeToParcel(android.os.Parcel dest, int flags)
+  class AgentTaskUpdate.Builder
+    #ctor(android.agenticon.AgentTaskUpdate.Builder other)
+    setAgentTaskEvent(android.agenticon.AgentTaskEvent agentTaskEvent)
+    setAgentTaskState(android.agenticon.AgentTaskState agentTaskState)
+
 package android.animation
 ;---------------------------------------
   class Animator
@@ -1520,6 +1555,28 @@ package android.app
     setInteractionUri(android.net.Uri interactionUri)
   class AppInteractionContract
     getDeviceAssistancePackageNames(android.content.Context context)
+  class AppInteractionDeniedException
+    #ctor(java.lang.String message, int reason)
+    #ctor(java.lang.String message, int reason, android.os.Bundle extras)
+  class AppInteractionException
+  class AppInteractionManager
+    createSession(android.app.AppInteractionSession.CreateParams params, java.util.concurrent.Executor executor, android.os.OutcomeReceiver<android.app.AppInteractionSession, android.app.AppInteractionException> callback)
+  class AppInteractionSession
+    addLifecycleListener(java.util.concurrent.Executor executor, android.app.AppInteractionSession.LifecycleListener listener)
+    removeLifecycleListener(android.app.AppInteractionSession.LifecycleListener listener)
+    update(android.app.AppInteractionSession.UpdateParams params, java.util.concurrent.Executor executor, android.os.OutcomeReceiver<java.lang.Void, android.app.AppInteractionException> callback)
+  class AppInteractionSession.CreateParams
+  class AppInteractionSession.CreateParams.Builder
+    setExtras(android.os.Bundle extras)
+    setOnStartIntentSenderCallback(java.util.concurrent.Executor executor, java.util.function.Consumer<android.content.IntentSender> callback)
+    setTargetPackages(java.util.List<java.lang.String> targetPackages)
+  interface AppInteractionSession.LifecycleListener
+    onAppInteractionSessionClosed(android.app.AppInteractionSession session, int reason)
+  class AppInteractionSession.UpdateParams
+  class AppInteractionSession.UpdateParams.Builder
+    setAdditionalTargetPackages(java.util.List<java.lang.String> additionalTargetPackages)
+    setExtras(android.os.Bundle extras)
+    setOnStartIntentSenderCallback(java.util.concurrent.Executor executor, java.util.function.Consumer<android.content.IntentSender> callback)
   class AppOpsManager
     checkOp(java.lang.String op, int uid, java.lang.String packageName)
     checkOp(java.lang.String op, int uid, java.lang.String packageName, java.lang.String attributionTag)
@@ -2273,6 +2330,7 @@ package android.app
     extend(android.app.Notification.Extender extender)
     recoverBuilder(android.content.Context context, android.app.Notification n)
     setActions(android.app.Notification.Action... actions)
+    setAgentInteractionFlags(int flags)
     setAllowSystemGeneratedContextualActions(boolean allowed)
     setAutoCancel(boolean autoCancel)
     setBadgeIconType(int icon)
@@ -2586,10 +2644,12 @@ package android.app
   class PictureInPictureParams.Builder
     #ctor(android.app.PictureInPictureParams original)
     setActions(java.util.List<android.app.RemoteAction> actions)
+    setActions(java.util.List<android.app.RemoteAction> actions, android.app.RemoteAction primaryAction)
     setAspectRatio(android.util.Rational aspectRatio)
     setAutoEnterEnabled(boolean autoEnterEnabled)
     setCloseAction(android.app.RemoteAction action)
     setExpandedAspectRatio(android.util.Rational expandedAspectRatio)
+    setOverlayActions(java.util.List<android.app.RemoteAction> overlayActions, android.app.RemoteAction primaryOverlayAction)
     setSeamlessResizeEnabled(boolean seamlessResizeEnabled)
     setSourceRectHint(android.graphics.Rect launchBounds)
     setSubtitle(java.lang.CharSequence subtitle)
@@ -2692,7 +2752,9 @@ package android.app
     writeToParcel(android.os.Parcel dest, int flags)
   class StatusBarManager
     canLaunchCaptureContentActivityForNote(android.app.Activity activity)
+    getAgentStateScreenLocation(int displayId)
     requestAddTileService(android.content.ComponentName tileServiceComponentName, java.lang.CharSequence tileLabel, android.graphics.drawable.Icon icon, java.util.concurrent.Executor resultExecutor, java.util.function.Consumer<java.lang.Integer> resultCallback)
+    setAgentTask(android.agenticon.AgentTaskUpdate request, java.util.concurrent.Executor executor, android.os.OutcomeReceiver<android.agenticon.AgentTaskOutcome, java.lang.Throwable> outcomeReceiver)
     showPowerMenu(java.util.concurrent.Executor executor, android.os.OutcomeReceiver<java.lang.Integer, java.lang.Throwable> receiver)
   class SyncNotedAppOp
     #ctor(int opCode, java.lang.String attributionTag)
@@ -3276,6 +3338,7 @@ package android.app.appfunctions
     #ctor(int errorCode, java.lang.String errorMessage, android.os.Bundle extras)
     writeToParcel(android.os.Parcel dest, int flags)
   class AppFunctionManager
+    executeAppFunction(android.app.AppInteractionSession appInteractionSession, android.app.appfunctions.ExecuteAppFunctionRequest request, java.util.concurrent.Executor executor, android.os.CancellationSignal cancellationSignal, android.os.OutcomeReceiver<android.app.appfunctions.ExecuteAppFunctionResponse, android.app.appfunctions.AppFunctionException> callback)
     executeAppFunction(android.app.appfunctions.ExecuteAppFunctionRequest request, java.util.concurrent.Executor executor, android.os.CancellationSignal cancellationSignal, android.os.OutcomeReceiver<android.app.appfunctions.ExecuteAppFunctionResponse, android.app.appfunctions.AppFunctionException> callback)
     getAppFunctionActivityStates(java.util.Set<android.app.appfunctions.AppFunctionActivityId> activityIds, java.util.concurrent.Executor executor, android.os.OutcomeReceiver<java.util.List<android.app.appfunctions.AppFunctionActivityState>, java.lang.Exception> callback)
     getAppFunctionStates(java.util.List<android.app.appfunctions.AppFunctionName> appFunctionNames, java.util.concurrent.Executor executor, android.os.OutcomeReceiver<java.util.List<android.app.appfunctions.AppFunctionState>, java.lang.Exception> callback)
@@ -4031,6 +4094,242 @@ package android.app.permissionui
     setTextColor(int color)
     setTextType(int textType)
 
+package android.app.personalcontext
+;---------------------------------------
+  class PersonalContextManager
+    isPersonalContextModeEnabled(java.lang.String packageName)
+    registerOnPersonalContextEnabledChangedListener(java.util.concurrent.Executor executor, java.lang.Runnable listener)
+    registerOnPersonalContextModeChangedListener(java.lang.String packageName, java.util.concurrent.Executor executor, android.app.personalcontext.PersonalContextManager.OnPersonalContextModeChangedListener listener)
+    registerOnPersonalContextModeChangedListener(java.util.concurrent.Executor executor, android.app.personalcontext.PersonalContextManager.OnPersonalContextModeChangedListener listener)
+    registerUnderstanderCallback(java.util.concurrent.Executor executor, java.lang.Runnable callback)
+    respondToPrompt(android.app.personalcontext.insight.PromptResponse promptResponse)
+    respondToUnderstanderRegistrationRequest(android.app.personalcontext.understander.RegistrationResponse response)
+    unregisterOnPersonalContextEnabledChangedListener(java.lang.Runnable listener)
+    unregisterOnPersonalContextModeChangedListener(android.app.personalcontext.PersonalContextManager.OnPersonalContextModeChangedListener listener)
+    unregisterUnderstanderCallback(java.lang.Runnable callback)
+  interface PersonalContextManager.OnPersonalContextModeChangedListener
+    onPersonalContextModeChanged(java.lang.String packageName)
+
+package android.app.personalcontext.hint
+;---------------------------------------
+  class AttributionHint
+    #ctor(android.app.personalcontext.insight.ContextInsight insight)
+  class AutofillInlineRequestHint
+    equals(java.lang.Object o)
+  class CallHint
+    #ctor(int modality, java.util.Set<android.app.Person> participants)
+    equals(java.lang.Object o)
+  class CapturedText
+    equals(java.lang.Object o)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class CapturedText.Builder
+    setResourceId(java.lang.String resourceId)
+    setViewId(java.lang.String viewId)
+    setViewNodeBoundingBox(android.graphics.Rect viewNodeBoundingBox)
+    setViewNodeDescription(java.lang.String viewNodeDescription)
+    setViewNodeText(java.lang.String viewNodeText)
+  class ChatMessageContextData
+    equals(java.lang.Object o)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class ChatMessageContextData.Builder
+    setAutofillId(android.view.autofill.AutofillId autofillId)
+    setRawDateString(java.lang.String rawDateString)
+    setRawTimeString(java.lang.String rawTimeString)
+  class ChatMessageData
+    equals(java.lang.Object o)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class ChatMessageData.Builder
+    setAuthor(java.lang.String author)
+    setContextData(android.app.personalcontext.hint.ChatMessageContextData contextData)
+    setOutgoingMessage(boolean isOutgoingMessage)
+    setReferenceTimeMillis(long referenceTimeMillis)
+    setText(java.lang.String text)
+  class ContextHint
+    equals(java.lang.Object o)
+  class ConversationData
+    equals(java.lang.Object o)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class ConversationData.Builder
+    setChatMessages(java.util.List<android.app.personalcontext.hint.ChatMessageData> chatMessages)
+    setComponentName(android.content.ComponentName componentName)
+    setConversationTitle(java.lang.String conversationTitle)
+    setHasNewMessage(boolean hasNewMessage)
+    setInputBoxAutofillId(android.view.autofill.AutofillId inputBoxAutofillId)
+    setInputBoxText(java.lang.String inputBoxText)
+    setKeyboardShown(boolean isKeyboardShown)
+    setLastMessageFromTheUser(boolean isLastMessageFromTheUser)
+    setProcessingEndTimestampMillis(long processingEndTimestampMillis)
+    setProcessingStartTimestampMillis(long processingStartTimestampMillis)
+  class ConversationEvent
+  class ConversationEvent.ConversationEnterEvent
+    #ctor(java.lang.String conversationSessionId, long clientEventTimestampMillis, long timestampMillis)
+    equals(java.lang.Object o)
+  class ConversationEvent.ConversationExitEvent
+    #ctor(java.lang.String conversationSessionId, long clientEventTimestampMillis, long timestampMillis)
+    equals(java.lang.Object o)
+  class ConversationEvent.ConversationProcessingEvent
+    #ctor(java.lang.String conversationSessionId, long clientEventTimestampMillis, long timestampMillis, android.view.autofill.AutofillId messageAutofillId)
+    equals(java.lang.Object o)
+  class ConversationEvent.ConversationUpdateEvent
+    #ctor(java.lang.String conversationSessionId, long clientEventTimestampMillis, long timestampMillis, android.app.personalcontext.hint.ConversationData conversationData)
+    equals(java.lang.Object o)
+  class ConversationHint
+    #ctor(android.app.personalcontext.hint.ConversationEvent conversationEvent)
+    equals(java.lang.Object o)
+  class HintFilter
+    getHintTypes(int filter)
+    getPackages(int filter)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class HintFilter.Builder
+    addHintType(java.lang.Class<? extends android.app.personalcontext.hint.ContextHint> hintClass, int filterType)
+    addPackage(java.lang.String packageName, int filterType)
+  class InsightReferenceHint
+  class MessagesHint
+    equals(java.lang.Object o)
+  class MessagesHint.Builder
+    #ctor(java.lang.String packageName)
+    setChatMessages(java.util.List<android.app.personalcontext.hint.ChatMessageData> chatMessages)
+  class NotificationDetails
+    equals(java.lang.Object o)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class NotificationDetails.Builder
+    setKey(java.lang.String key)
+    setNotification(android.app.Notification notification)
+    setPackageName(java.lang.String packageName)
+    setPostTimeMillis(long postTimeMillis)
+    setUser(android.os.UserHandle user)
+  class NotificationEvent
+  class NotificationEvent.NotificationEnqueuedEvent
+  class NotificationEvent.NotificationRemovedEvent
+  class NotificationHint
+  class RecentViewHint
+    equals(java.lang.Object o)
+  class RecentViewHint.Builder
+    addCapturedText(android.app.personalcontext.hint.CapturedText capturedText)
+    setLocusId(java.lang.String locusId)
+    setSourceAppActivityComponentName(android.content.ComponentName sourceAppActivityComponentName)
+  class TextClassificationHint
+    #ctor(android.view.textclassifier.TextClassification.Request textClassificationRequest, java.lang.String textClassificationSessionId)
+    equals(java.lang.Object o)
+  class UserInputHint
+    equals(java.lang.Object o)
+  class UserInputHint.Builder
+    #ctor(android.app.personalcontext.hint.UserInputText userInputText)
+    setSourceAppActivityComponentName(android.content.ComponentName sourceAppActivityComponentName)
+  class UserInputText
+    equals(java.lang.Object o)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class UserInputText.Builder
+    setFieldType(int fieldType)
+    setText(java.lang.String text)
+    setUserInputTextSource(int userInputTextSource)
+    setViewNodeBoundingBox(android.graphics.Rect viewNodeBoundingBox)
+
+package android.app.personalcontext.insight
+;---------------------------------------
+  class ActionableInsight
+    #ctor(android.app.personalcontext.insight.InsightActionDetails actionDetails, android.app.personalcontext.insight.InsightDisplayDetails displayDetails, android.app.personalcontext.insight.InsightBranding branding)
+    equals(java.lang.Object o)
+  class AugmentedAutofillInsight
+    #ctor(java.util.List<android.app.personalcontext.insight.AugmentedAutofillOptionInsight> insights)
+    equals(java.lang.Object o)
+  class AugmentedAutofillOptionInsight
+    equals(java.lang.Object o)
+  class AugmentedAutofillOptionInsight.Builder
+    #ctor(android.app.personalcontext.insight.InsightDisplayDetails displayDetails)
+    addInlineSuggestionHint(java.lang.String suggestionHint)
+  class ContextInsight
+    equals(java.lang.Object o)
+  class DisplayInsight
+    #ctor(android.app.personalcontext.insight.InsightDisplayDetails displayDetails, android.app.personalcontext.insight.InsightBranding branding)
+    equals(java.lang.Object o)
+  class HintInvalidationInsight
+  class InsightActionDetails
+    equals(java.lang.Object o)
+    hasActionType(int actionType)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class InsightActionDetails.Builder
+    setPendingIntent(android.app.PendingIntent pendingIntent)
+    setRemoteAction(android.app.RemoteAction remoteAction)
+    setRemoteAppFunctionAction(android.app.personalcontext.insight.RemoteAppFunctionAction remoteAppFunctionAction)
+  class InsightBranding
+    getColor(int type)
+    getIcons(int type)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class InsightBranding.Builder
+    setColor(int type, int color)
+    setIcon(int type, int position, android.graphics.drawable.Icon icon)
+    setIcon(int type, android.graphics.drawable.Icon icon)
+  class InsightDisplayDetails
+    equals(java.lang.Object o)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class InsightDisplayDetails.Builder
+    #ctor(android.graphics.drawable.Icon icon)
+    #ctor(java.lang.CharSequence title)
+    #ctor(java.lang.CharSequence title, android.graphics.drawable.Icon icon)
+    setContentDescription(java.lang.CharSequence contentDescription)
+    setSubtitle(java.lang.CharSequence subtitle)
+  class InsightFilter
+    writeToParcel(android.os.Parcel dest, int flags)
+  class InsightFilter.Builder
+    addInsightType(java.lang.Class<? extends android.app.personalcontext.insight.ContextInsight> insightClass)
+    addInsightType(java.lang.String insightType)
+  class NotificationInsight
+    equals(java.lang.Object o)
+  class NotificationInsight.Builder
+    addChildInsight(android.app.personalcontext.insight.ActionableInsight insight)
+    addChildInsight(android.app.personalcontext.insight.DisplayInsight insight)
+    setBranding(android.app.personalcontext.insight.InsightBranding branding)
+  class PromptInsight
+    equals(java.lang.Object o)
+  class PromptInsight.Builder
+    #ctor(android.app.personalcontext.insight.InsightDisplayDetails displayDetails)
+    setBranding(android.app.personalcontext.insight.InsightBranding branding)
+    setCount(int count)
+    setPromptIntent(android.app.PendingIntent promptIntent)
+  class PromptRequest
+    equals(java.lang.Object o)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class PromptResponse
+    #ctor(android.app.personalcontext.insight.PromptRequest promptRequest, android.app.personalcontext.insight.ContextInsight contextInsight)
+    equals(java.lang.Object o)
+  class RemoteAppFunctionAction
+    equals(java.lang.Object o)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class RemoteAppFunctionAction.Builder
+    #ctor(android.app.appfunctions.ExecuteAppFunctionRequest request)
+  class ScreenWhisperAutofillInsight
+    equals(java.lang.Object o)
+  class ScreenWhisperAutofillInsight.Builder
+    #ctor(android.app.personalcontext.insight.ActionableInsight actionableInsight)
+    #ctor(android.app.personalcontext.insight.DisplayInsight displayInsight)
+    #ctor(android.app.personalcontext.insight.PromptInsight promptInsight)
+    setBranding(android.app.personalcontext.insight.InsightBranding branding)
+  class ScreenWhisperInsight
+    equals(java.lang.Object o)
+  class ScreenWhisperInsight.Builder
+    #ctor(android.app.personalcontext.insight.ActionableInsight actionableInsight)
+    #ctor(android.app.personalcontext.insight.PromptInsight promptInsight)
+    setBranding(android.app.personalcontext.insight.InsightBranding branding)
+  class TextClassificationInsight
+    #ctor(android.app.personalcontext.insight.InsightActionDetails actionDetails, android.app.personalcontext.insight.InsightDisplayDetails displayDetails)
+    equals(java.lang.Object o)
+
+package android.app.personalcontext.insight.interaction
+;---------------------------------------
+  class InsightEvent
+    writeToParcel(android.os.Parcel dest, int flags)
+
+package android.app.personalcontext.understander
+;---------------------------------------
+  class FeedbackRequest
+    #ctor(android.app.personalcontext.insight.ContextInsight source, int properties)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class RegistrationRequest
+    writeToParcel(android.os.Parcel dest, int flags)
+  class RegistrationResponse
+    #ctor(android.app.personalcontext.understander.RegistrationRequest request, int response)
+
 package android.app.privatecompute
 ;---------------------------------------
   class AssistantQueryRequest
@@ -4195,6 +4494,10 @@ package android.app.slice
     canRender(android.app.slice.SliceSpec candidate)
     equals(java.lang.Object obj)
     writeToParcel(android.os.Parcel dest, int flags)
+
+package android.app.time
+;---------------------------------------
+  class TimeManager
 
 package android.app.usage
 ;---------------------------------------
@@ -4471,6 +4774,7 @@ package android.bluetooth
     onCharacteristicRead(android.bluetooth.BluetoothGatt gatt, android.bluetooth.BluetoothGattCharacteristic characteristic, byte[] value, int status)
     onCharacteristicWrite(android.bluetooth.BluetoothGatt gatt, android.bluetooth.BluetoothGattCharacteristic characteristic, int status)
     onConnectionStateChange(android.bluetooth.BluetoothGatt gatt, int status, int newState)
+    onConnectionUpdated(android.bluetooth.BluetoothGatt gatt, int interval, int latency, int supervisionTimeout, int status)
     onDescriptorRead(android.bluetooth.BluetoothGatt gatt, android.bluetooth.BluetoothGattDescriptor descriptor, int status)
     onDescriptorRead(android.bluetooth.BluetoothGatt gatt, android.bluetooth.BluetoothGattDescriptor descriptor, int status, byte[] value)
     onDescriptorWrite(android.bluetooth.BluetoothGatt gatt, android.bluetooth.BluetoothGattDescriptor descriptor, int status)
@@ -4524,6 +4828,7 @@ package android.bluetooth
     onCharacteristicReadRequest(android.bluetooth.BluetoothDevice device, int requestId, int offset, android.bluetooth.BluetoothGattCharacteristic characteristic)
     onCharacteristicWriteRequest(android.bluetooth.BluetoothDevice device, int requestId, android.bluetooth.BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value)
     onConnectionStateChange(android.bluetooth.BluetoothDevice device, int status, int newState)
+    onConnectionUpdated(android.bluetooth.BluetoothDevice device, int interval, int latency, int supervisionTimeout, int status)
     onDescriptorReadRequest(android.bluetooth.BluetoothDevice device, int requestId, int offset, android.bluetooth.BluetoothGattDescriptor descriptor)
     onDescriptorWriteRequest(android.bluetooth.BluetoothDevice device, int requestId, android.bluetooth.BluetoothGattDescriptor descriptor, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value)
     onExecuteWrite(android.bluetooth.BluetoothDevice device, int requestId, boolean execute)
@@ -4835,6 +5140,7 @@ package android.companion
     isSystemDataTransportAttached(int associationId)
     notifyActionResult(int associationId, android.companion.ActionResult result)
     removeBond(int associationId)
+    requestDeviceTrustPairing(int associationId, android.companion.OutOfBandPairingRequest requestOobPairing, int[] trustTypes, java.util.concurrent.Executor executor, android.companion.CompanionDeviceManager.TrustPairingCallback callback)
     requestNotificationAccess(android.content.ComponentName component)
     setDeviceId(int associationId, android.companion.DeviceId deviceId)
     startObservingDevicePresence(android.companion.ObservingDevicePresenceRequest request)
@@ -4848,6 +5154,11 @@ package android.companion
     onDeviceFound(android.content.IntentSender intentSender)
     onFailure(int errorCode, java.lang.CharSequence error)
     onFailure(java.lang.CharSequence error)
+  class CompanionDeviceManager.TrustPairingCallback
+    onDeviceTrusted(android.companion.AssociationInfo associationInfo)
+    onFailure(int errorCode)
+    onTrustPairingCanceledFromRemote(android.companion.AssociationInfo associationInfo, android.content.IntentSender cancelIntentSender)
+    onTrustPairingPending(android.content.IntentSender intentSender)
   class CompanionDeviceService
     attachSystemDataTransport(int associationId, java.io.InputStream in, java.io.OutputStream out)
     detachSystemDataTransport(int associationId)
@@ -4858,6 +5169,10 @@ package android.companion
     onDeviceDisappeared(android.companion.AssociationInfo associationInfo)
     onDeviceDisappeared(java.lang.String address)
     onDevicePresenceEvent(android.companion.DevicePresenceEvent event)
+    onDeviceTrustFailure(android.companion.AssociationInfo associationInfo, int errorCode)
+    onDeviceTrusted(android.companion.AssociationInfo associationInfo)
+    onTrustPairingCanceledFromRemote(android.companion.AssociationInfo associationInfo, android.content.IntentSender cancelIntentSender)
+    onTrustPairingResponsePending(android.companion.AssociationInfo associationInfo, android.content.IntentSender intentSender)
   class CompanionException
   interface DeviceFilter<D>
   class DeviceId
@@ -4877,6 +5192,11 @@ package android.companion
   class ObservingDevicePresenceRequest.Builder
     setAssociationId(int associationId)
     setUuid(android.os.ParcelUuid uuid)
+  class OutOfBandPairingRequest
+    equals(java.lang.Object o)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class OutOfBandPairingRequest.Builder
+    setBluetoothLe(boolean bluetoothLe)
   class WifiDeviceFilter
     equals(java.lang.Object o)
     writeToParcel(android.os.Parcel dest, int flags)
@@ -5993,7 +6313,7 @@ package android.content.pm
     setShortcutIds(java.util.List<java.lang.String> shortcutIds)
   class LauncherUserInfo
     writeToParcel(android.os.Parcel dest, int flags)
-  class MemoryBudget
+  class MemoryBudgetInfo
     equals(java.lang.Object o)
     writeToParcel(android.os.Parcel dest, int flags)
   class ModuleInfo
@@ -6157,6 +6477,7 @@ package android.content.pm
     getLaunchIntentForPackage(java.lang.String packageName)
     getLaunchIntentSenderForPackage(java.lang.String packageName)
     getLeanbackLaunchIntentForPackage(java.lang.String packageName)
+    getMemoryBudgets(android.content.pm.ApplicationInfo info)
     getMimeGroup(java.lang.String mimeGroup)
     getModuleInfo(java.lang.String packageName, int flags)
     getNameForUid(int uid)
@@ -9361,6 +9682,39 @@ package android.hardware.biometrics
     #ctor(javax.crypto.Cipher cipher)
     #ctor(javax.crypto.KeyAgreement keyAgreement)
     #ctor(javax.crypto.Mac mac)
+  class BiometricPromptStyleSpec
+    #ctor(int backgroundColor, int width, int height, int cornerRadius)
+    equals(java.lang.Object o)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class EmbeddedBiometricPrompt
+    setNextTranslationOffset(int offset)
+    startAuthenticationSession(android.os.CancellationSignal cancel, int startMode, java.util.concurrent.Executor executor, android.hardware.biometrics.EmbeddedBiometricPrompt.AuthenticationCallback callback)
+  class EmbeddedBiometricPrompt.AuthenticationCallback
+    onAuthenticationError(int errorCode, java.lang.CharSequence errString)
+    onAuthenticationHelp(int helpCode, java.lang.CharSequence helpString)
+    onAuthenticationSucceeded(android.hardware.biometrics.BiometricPrompt.AuthenticationResult result)
+    onSessionStarted(long sessionId)
+  class EmbeddedBiometricPrompt.Builder
+    #ctor(android.content.Context context)
+    addFallbackOption(java.lang.CharSequence text, int iconType, java.util.concurrent.Executor executor, android.content.DialogInterface.OnClickListener listener)
+    setAllowedAuthenticators(int authenticators)
+    setAuthenticationCallback(java.util.concurrent.Executor executor, android.hardware.biometrics.EmbeddedBiometricPrompt.AuthenticationCallback callback)
+    setAuthenticationPurpose(int purpose)
+    setConfirmationRequired(boolean requireConfirmation)
+    setContentView(android.hardware.biometrics.PromptContentView view)
+    setDescription(java.lang.CharSequence description)
+    setEmbeddedContentFactory(android.hardware.biometrics.EmbeddedBiometricPrompt.EmbeddedContentFactory contentFactory)
+    setExistingAuthSessionId(long authSessionId)
+    setLogoBitmap(android.graphics.Bitmap logoBitmap)
+    setLogoDescription(java.lang.String logoDescription)
+    setLogoRes(int logoRes)
+    setNegativeButton(java.lang.CharSequence text, java.util.concurrent.Executor executor, android.content.DialogInterface.OnClickListener listener)
+    setNextTranslationOffset(int nextTranslationOffset)
+    setPreviousTranslationOffset(int previousTranslationOffset)
+    setSubtitle(java.lang.CharSequence subtitle)
+    setTitle(java.lang.CharSequence title)
+  interface EmbeddedBiometricPrompt.EmbeddedContentFactory
+    createView(android.content.Context context)
   class FallbackOption
     #ctor(java.lang.CharSequence text, int iconType)
     writeToParcel(android.os.Parcel dest, int flags)
@@ -9792,11 +10146,16 @@ package android.hardware.hid
     equals(java.lang.Object o)
     getFeatureReport(int reportId, java.util.concurrent.Executor executor, android.os.OutcomeReceiver<android.hardware.hid.Report, java.lang.Exception> callback)
     open(java.util.concurrent.Executor executor, android.os.OutcomeReceiver<android.hardware.hid.HidDevice, java.lang.Exception> callback)
+    registerEventListener(java.util.concurrent.Executor executor, android.hardware.hid.HidEventListener listener)
     sendFeatureReport(android.hardware.hid.Report report, java.util.concurrent.Executor executor, android.os.OutcomeReceiver<java.lang.Void, java.lang.Exception> callback)
     sendOutputReport(android.hardware.hid.Report report, java.util.concurrent.Executor executor, android.os.OutcomeReceiver<java.lang.Void, java.lang.Exception> callback)
+    unregisterEventListener(android.hardware.hid.HidEventListener listener)
   interface HidDeviceListener
     onHidDeviceAdded(android.hardware.hid.HidDevice device)
     onHidDeviceRemoved(android.hardware.hid.HidDevice device)
+  interface HidEventListener
+    onError(java.lang.Exception cause)
+    onInputReport(android.hardware.hid.Report report)
   class HidManager
     registerListener(android.hardware.hid.HidDeviceListener listener, java.util.concurrent.Executor executor)
     unregisterListener(android.hardware.hid.HidDeviceListener listener)
@@ -19313,10 +19672,6 @@ package android.os
   class VibrationEffect.Envelope
     create(android.os.VibrationEffect.BasicEnvelopeBuilder builder)
     create(android.os.VibrationEffect.WaveformEnvelopeBuilder builder)
-  class VibrationEffect.Envelope.BeatingEnvelopeBuilder
-    #ctor(float sharpness, float beatsPerSecond)
-    addControlPoint(float amplitudeScale, long durationMillis)
-  class VibrationEffect.Envelope.BeatingEnvelopeBuilder.ControlPoint
   class VibrationEffect.Event
     equals(java.lang.Object o)
   class VibrationEffect.Preset
@@ -20627,6 +20982,7 @@ package android.ranging
     equals(java.lang.Object o)
     writeToParcel(android.os.Parcel dest, int flags)
   class RangingCapabilities
+    equals(java.lang.Object o)
     writeToParcel(android.os.Parcel dest, int flags)
   class RangingConfig
   class RangingData
@@ -20691,6 +21047,7 @@ package android.ranging.ble
 package android.ranging.ble.cs
 ;---------------------------------------
   class BleCsRangingCapabilities
+    equals(java.lang.Object o)
     writeToParcel(android.os.Parcel dest, int flags)
   class BleCsRangingParams
     equals(java.lang.Object o)
@@ -20792,6 +21149,7 @@ package android.ranging.uwb
     setChannel(int channel)
     setPreambleIndex(int preambleIndex)
   class UwbRangingCapabilities
+    equals(java.lang.Object o)
     writeToParcel(android.os.Parcel dest, int flags)
   class UwbRangingParams
     equals(java.lang.Object o)
@@ -20811,6 +21169,7 @@ package android.ranging.uwb
 package android.ranging.wifi.pd
 ;---------------------------------------
   class WifiPdRangingCapabilities
+    equals(java.lang.Object o)
     writeToParcel(android.os.Parcel dest, int flags)
   class WifiPdRangingParams
     writeToParcel(android.os.Parcel dest, int flags)
@@ -20828,6 +21187,7 @@ package android.ranging.wifi.pd
 package android.ranging.wifi.rtt
 ;---------------------------------------
   class RttRangingCapabilities
+    equals(java.lang.Object o)
     writeToParcel(android.os.Parcel dest, int flags)
   class RttRangingParams
     equals(java.lang.Object o)
@@ -21590,6 +21950,11 @@ package android.security.advancedprotection
 package android.security.authenticationpolicy
 ;---------------------------------------
   class AuthenticationPolicyManager
+    createCrossDeviceAuthenticationRequest(java.util.UUID associationToken, java.util.concurrent.Executor callbackExecutor, android.os.OutcomeReceiver<byte[], android.security.authenticationpolicy.CrossDeviceAuthenticationException> callback)
+  class CrossDeviceAuthenticationException
+    #ctor(int errorCode)
+    #ctor(int errorCode, java.lang.String message)
+    #ctor(int errorCode, java.lang.String message, java.lang.Throwable cause)
 
 package android.security.identity
 ;---------------------------------------
@@ -22353,6 +22718,48 @@ package android.service.notification
 package android.service.persistentdata
 ;---------------------------------------
   class PersistentDataBlockManager
+
+package android.service.personalcontext.embedded
+;---------------------------------------
+  class InsightVisualizerClientConfig
+  interface InsightVisualizerSession
+    close(int reason)
+    createRemoteViewsForHints(java.util.Set<android.app.personalcontext.hint.ContextHint> hints, android.service.personalcontext.embedded.InsightVisualizerClientConfig config)
+  class VisualizerViewAction
+    attach(android.content.Context context, android.widget.RemoteViews remoteViews, int viewId, android.service.personalcontext.embedded.VisualizerViewAction onClickAction, android.service.personalcontext.embedded.VisualizerViewAction onLongClickAction)
+    createIntent(android.service.personalcontext.embedded.VisualizerViewAction onClickAction, android.service.personalcontext.embedded.VisualizerViewAction onLongClickAction)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class VisualizerViewAction.Builder
+    setAttributionInsight(android.service.personalcontext.insight.ContextInsight insight)
+    setEgressInsight(android.service.personalcontext.insight.ContextInsight insight)
+    setFeedbackRequest(android.app.personalcontext.understander.FeedbackRequest feedbackRequest)
+    setShouldCloseSessionOnTriggered(boolean shouldCloseSessionOnTriggered)
+
+package android.service.personalcontext.insight
+;---------------------------------------
+  class ContextInsight
+    equals(java.lang.Object o)
+
+package android.service.personalcontext.insight.interaction
+;---------------------------------------
+  class InsightEvent
+    writeToParcel(android.os.Parcel dest, int flags)
+
+package android.service.personalcontext.understander
+;---------------------------------------
+  class ContextUnderstanderService
+    onBind(android.content.Intent intent)
+    onHandleEvent(java.lang.String packageName, android.service.personalcontext.insight.interaction.InsightEvent event)
+    onUnderstand(android.service.personalcontext.understander.UnderstandRequest request)
+    setExecutor(java.util.concurrent.Executor executor)
+  class UnderstandRequest
+  class UnderstandResult
+    getResponseForDestination(int destination)
+  class UnderstandResult.Builder
+    #ctor(android.service.personalcontext.understander.UnderstandRequest request)
+    setFeedbackActivity(android.app.PendingIntent feedbackActivity)
+    setResponseForDestination(int destination, android.app.personalcontext.insight.ContextInsight insight)
+    setVisualizerSession(android.service.personalcontext.embedded.InsightVisualizerSession session)
 
 package android.service.quickaccesswallet
 ;---------------------------------------
@@ -25387,7 +25794,6 @@ package android.util
   class ArrayMap<K,V>
     #ctor(int capacity)
     #ctor(android.util.ArrayMap<K, V> map)
-    compute(K key, java.util.function.BiFunction<? super K, ? super V, ? extends V> function)
     containsAll(java.util.Collection<?> collection)
     containsKey(java.lang.Object key)
     containsValue(java.lang.Object value)
@@ -25838,6 +26244,7 @@ package android.view
     setSubtitle(int resId)
     setSubtitle(java.lang.CharSequence subtitle)
     setTag(java.lang.Object tag)
+    setTextSelection(java.lang.CharSequence text, int start, int end, android.os.LocaleList locales)
     setTitle(int resId)
     setTitle(java.lang.CharSequence title)
     setTitleOptionalHint(boolean titleOptional)
@@ -26300,7 +26707,6 @@ package android.view
     writeToParcel(android.os.Parcel out, int flags)
   class RoundedRectBlurRegion
     #ctor(android.graphics.RectF rect, float[] cornerRadii, float alpha, float blurRadius)
-    equals(java.lang.Object o)
     setBounds(android.graphics.RectF rect)
     setCornerRadii(float cornerRadius)
     setCornerRadii(float[] cornerRadii)
@@ -27837,6 +28243,11 @@ package android.view.accessibility
     #ctor(android.view.accessibility.AccessibilityNodeInfo node, int offset)
     equals(java.lang.Object other)
     writeToParcel(android.os.Parcel dest, int flags)
+  class AccessibilityNodeInfo.SelectionPosition.Builder
+    #ctor(android.view.View view, int offset)
+    #ctor(android.view.View view, int virtualDescendantId, int offset)
+    #ctor(android.view.accessibility.AccessibilityNodeInfo node, int offset)
+    setOffsetType(int offsetType)
   class AccessibilityNodeInfo.StructuredDataInfo
     equals(java.lang.Object o)
     getAttribute(java.lang.String attributeKey)
@@ -27888,6 +28299,7 @@ package android.view.accessibility
     equals(java.lang.Object obj)
     getBoundsInScreen(android.graphics.Rect outBounds)
     getChild(int index)
+    getControlledWindow(int index)
     getRegionInScreen(android.graphics.Region outRegion)
     getRoot(int prefetchingStrategy)
     obtain(android.view.accessibility.AccessibilityWindowInfo info)
@@ -31511,6 +31923,7 @@ package android.window
     moveTaskToBackCallback(android.app.Activity activity)
   class TrustedPresentationThresholds
     #ctor(float minAlpha, float minFractionRendered, int stabilityRequirementMs)
+    #ctor(float minAlpha, float minFractionRendered, int stabilityRequirementMs, int signalMode)
     equals(java.lang.Object o)
     writeToParcel(android.os.Parcel dest, int flags)
 

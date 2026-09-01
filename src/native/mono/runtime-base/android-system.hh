@@ -95,6 +95,19 @@ namespace xamarin::android::internal {
 		static void create_update_dir (char *override_dir) noexcept;
 		static int monodroid_get_system_property (const char *name, char **value) noexcept;
 		static int monodroid_get_system_property (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> &value) noexcept;
+		// Returns the property's NUL-terminated value, or `nullptr` if it is not set. A property
+		// that is set to an empty value is reported as not set, matching `__system_property_get`,
+		// which cannot tell the two apart.
+		//
+		// `value` is a scratch buffer of at least `PROPERTY_VALUE_BUFFER_LEN` bytes, used to receive
+		// Android system properties. Bundled properties are returned without copying, so their
+		// length is not limited by `value_size`.
+		//
+		// Nothing is ever allocated and the caller must not free the result: it is either `value` or
+		// a pointer to bundled property data. The latter is only guaranteed to stay valid until the
+		// next `add_system_property()` call, which frees the value it replaces. Copy the value if
+		// you need to retain it.
+		static const char* monodroid_get_system_property (const char *name, char *value, size_t value_size) noexcept;
 
 		static int monodroid_get_system_property (std::string_view const& name, char **value) noexcept
 		{
@@ -104,6 +117,24 @@ namespace xamarin::android::internal {
 		static int monodroid_get_system_property (std::string_view const& name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value) noexcept
 		{
 			return monodroid_get_system_property (name.data (), value);
+		}
+
+		template<size_t Size>
+		static int monodroid_get_system_property (std::string_view const& name, char (&value)[Size]) noexcept
+		{
+			dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> property_value;
+			int result = monodroid_get_system_property (name.data (), property_value);
+			if (result > 0) {
+				if (property_value.length () >= Size) {
+					value [0] = '\0';
+					return -1;
+				}
+				memcpy (value, property_value.get (), property_value.length ());
+				value [property_value.length ()] = '\0';
+			} else {
+				value [0] = '\0';
+			}
+			return result;
 		}
 
 		static void set_override_dir (uint32_t index, const char* dir) noexcept

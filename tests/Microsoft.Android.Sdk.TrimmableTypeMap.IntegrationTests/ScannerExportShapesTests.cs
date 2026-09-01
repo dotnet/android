@@ -29,6 +29,11 @@ public class ScannerExportShapesTests
 
 	static MarshalMethodInfo[] GetMarshalMethods (string javaName)
 	{
+		return GetPeer (javaName).MarshalMethods.ToArray ();
+	}
+
+	static JavaPeerInfo GetPeer (string javaName)
+	{
 		var fixturePath = UserTypesFixturePath;
 		var dir = AssertNotNull (Path.GetDirectoryName (fixturePath));
 
@@ -53,7 +58,7 @@ public class ScannerExportShapesTests
 
 			var peers = scanner.Scan (assemblies);
 			var peer = peers.FirstOrDefault (p => p.ManagedTypeName.EndsWith (javaName));
-			return AssertNotNull (peer).MarshalMethods.ToArray ();
+			return AssertNotNull (peer);
 		} finally {
 			foreach (var pe in peReaders)
 				pe.Dispose ();
@@ -118,6 +123,16 @@ public class ScannerExportShapesTests
 		var multiThrownNames = AssertNotNull (multiThrow.ThrownNames);
 		Assert.Contains ("java/io/IOException", multiThrownNames);
 		Assert.Contains ("java/lang/IllegalStateException", multiThrownNames);
+	}
+
+	[Fact]
+	public void ExportConstructor_WithThrowsClause_SurfacesDeclaredExceptions ()
+	{
+		var peer = GetPeer ("ExportThrowsShapes");
+		var constructor = Assert.Single (peer.JavaConstructors);
+		var thrownNames = AssertNotNull (constructor.ThrownNames);
+
+		Assert.Equal (["java/io/IOException", "java/lang/IllegalStateException"], thrownNames);
 	}
 
 	[Fact]

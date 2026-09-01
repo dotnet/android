@@ -180,6 +180,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 					new JavaConstructorInfo {
 						JniSignature = "(Lcom/example/Outer$for;)V",
 						ConstructorIndex = 0,
+						ThrownNames = ["com/example/Outer$permits"],
 					},
 				],
 				MarshalMethods = [
@@ -188,7 +189,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 						JniSignature = "([Lcom/example/Outer$record;)Lcom/example/Outer$yield;",
 						ManagedMethodName = "Method",
 						NativeCallbackName = "n_method",
-						ThrownNames = ["com.example.Outer.permits"],
+						ThrownNames = ["com/example/Outer$sealed"],
 					},
 				],
 				JavaFields = [
@@ -206,7 +207,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$for' contains reserved Java identifier 'for'."));
 		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$record' contains reserved Java identifier 'record'."));
 		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$yield' contains reserved Java identifier 'yield'."));
-		Assert.Contains (logMessages, message => message.Contains ("Java name 'com.example.Outer.permits' contains reserved Java identifier 'permits'."));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$permits' contains reserved Java identifier 'permits'."));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$sealed' contains reserved Java identifier 'sealed'."));
 		Assert.Contains (logMessages, message => message.Contains ("Java name 'com.example.Outer.sealed' contains reserved Java identifier 'sealed'."));
 	}
 
@@ -305,6 +307,37 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.NotEmpty (result.GeneratedJavaSources);
 		Assert.Contains (result.GeneratedAssemblies, a => a.Name == "_Microsoft.Android.TypeMaps");
 		Assert.Contains (result.GeneratedAssemblies, a => a.Name == "_TestFixtures.TypeMap");
+	}
+
+	[Fact]
+	public void Execute_CanSkipUnusedNonAcwMarshalMethods ()
+	{
+		using var fullReader = CreateTestFixturePEReader ();
+		using var optimizedReader = CreateTestFixturePEReader ();
+		var generator = CreateGenerator ();
+		var full = generator.Execute ([Input ("TestFixtures", fullReader)], new Version (11, 0), new HashSet<string> ());
+		var optimized = generator.Execute (
+			[Input ("TestFixtures", optimizedReader)],
+			new Version (11, 0),
+			new HashSet<string> (),
+			collectMarshalMethodsForNonAcw: false);
+
+		var fullActivity = Assert.Single (full.AllPeers, peer => peer.JavaName == "android/app/Activity");
+		var optimizedActivity = Assert.Single (optimized.AllPeers, peer => peer.JavaName == "android/app/Activity");
+		Assert.NotEmpty (fullActivity.MarshalMethods);
+		Assert.Empty (optimizedActivity.MarshalMethods);
+
+		var fullAcw = Assert.Single (full.AllPeers, peer => peer.JavaName == "my/app/MyHelper");
+		var optimizedAcw = Assert.Single (optimized.AllPeers, peer => peer.JavaName == "my/app/MyHelper");
+		Assert.Equal (
+			fullAcw.MarshalMethods.Select (method => (method.JniName, method.JniSignature, method.ManagedMethodName, method.CallManagedMethodDirectly)),
+			optimizedAcw.MarshalMethods.Select (method => (method.JniName, method.JniSignature, method.ManagedMethodName, method.CallManagedMethodDirectly)));
+		Assert.Equal (full.GeneratedJavaSources, optimized.GeneratedJavaSources);
+		Assert.Equal (full.GeneratedAssemblies.Count, optimized.GeneratedAssemblies.Count);
+		for (int i = 0; i < full.GeneratedAssemblies.Count; i++) {
+			Assert.Equal (full.GeneratedAssemblies [i].Name, optimized.GeneratedAssemblies [i].Name);
+			Assert.Equal (full.GeneratedAssemblies [i].Content.ToArray (), optimized.GeneratedAssemblies [i].Content.ToArray ());
+		}
 	}
 
 	[Fact]

@@ -163,6 +163,18 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("ConstructorParity")]
+		public void JavaSideExportConstructorWithThrowsRunsOnce ()
+		{
+			ConstructorActivationWithThrows.Reset ();
+
+			using (var instance = CreateFromJava<ConstructorActivationWithThrows> ("()V")) {
+				Assert.AreEqual (1, ConstructorActivationWithThrows.ConstructorInvocations);
+				AssertRegisteredSame (instance);
+			}
+		}
+
+		[Test]
 		public void JavaSideContextConstructorForwardsArgument ()
 		{
 			ConstructorActivationContextView.Reset ();
@@ -788,6 +800,23 @@ namespace Java.InteropTests
 		{
 			ConstructorInvocations++;
 			throw new InvalidOperationException (ExceptionMessage);
+		}
+
+		public static void Reset ()
+		{
+			ConstructorInvocations = 0;
+		}
+	}
+
+	[Register ("net/dot/android/test/ConstructorActivationWithThrows")]
+	public class ConstructorActivationWithThrows : Java.Lang.Object
+	{
+		public static int ConstructorInvocations;
+
+		[Export (SuperArgumentsString = "", Throws = new [] { typeof (Java.IO.IOException) })]
+		public ConstructorActivationWithThrows ()
+		{
+			ConstructorInvocations++;
 		}
 
 		public static void Reset ()

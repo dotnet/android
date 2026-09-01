@@ -655,20 +655,19 @@ Android P introduced no documented XML artifact.
 
 ### Update Android Tooling Versions
 
-[`Xamarin.Android.Common.props.in`](../../src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.props.in)
-contains multiple MSBuild properties which provide default versions for various Android SDK packages.
-These properties in turn come from properties defined within
+[`Xamarin.Installer.Common.props`](../../src/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Common.props)
+contains MSBuild properties which provide the shipped default versions for various Android SDK packages.
+The bootstrap versions used to build and test the repository are defined separately in
 [`Configuration.props`](../../Configuration.props).
 
   * `$(AndroidSdkBuildToolsVersion)`: Android SDK `build-tools` version.
-    Defaults to `$(XABuildToolsFolder)` within `Configuration.props`.
   * `$(AndroidSdkPlatformToolsVersion)`:  Android SDK `platform-tools` version
-    Defaults to `$(XAPlatformToolsVersion)` within `Configuration.props`.
 
 The major version should generally match the new API level. For Android P this will be 28.x.x . If a version which exactly matches the API Level is not available then the latest version should be used.
 
-A separate PR should be created which bumps the values within `Configuration.props`
-to ensure that all unit tests pass.
+A separate PR should be created which coordinates the shipped defaults in
+`Xamarin.Installer.Common.props` with the bootstrap values in `Configuration.props`
+and ensures that all unit tests pass.
 
 ## Bindings Finalization
 

@@ -402,14 +402,14 @@ static class ModelBuilder
 		}
 
 		foreach (var proxy in model.ProxyTypes) {
-			var reusedUcoMethods = new HashSet<UcoMethodData> ();
+			HashSet<UcoMethodData>? reusedUcoMethods = null;
 
 			foreach (var uco in proxy.UcoMethods) {
 				var wrapperTarget = UcoWrapperTargetData.From (proxy, uco.WrapperName);
 				if (CanReuseUcoWrapper (proxy, uco) &&
 				    sharedWrapperTargets.TryGetValue (CreateUcoWrapperReuseKey (uco), out var sharedWrapperTarget)) {
 					wrapperTarget = sharedWrapperTarget;
-					reusedUcoMethods.Add (uco);
+					(reusedUcoMethods ??= new ()).Add (uco);
 				}
 				proxy.NativeRegistrations.Add (new NativeRegistrationData {
 					JniMethodName = uco.CallbackMethodName,
@@ -419,7 +419,7 @@ static class ModelBuilder
 				});
 			}
 
-			if (reusedUcoMethods.Count > 0) {
+			if (reusedUcoMethods is not null) {
 				proxy.UcoMethods.RemoveAll (uco => reusedUcoMethods.Contains (uco));
 			}
 

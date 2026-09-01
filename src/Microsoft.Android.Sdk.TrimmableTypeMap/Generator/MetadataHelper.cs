@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -29,8 +30,8 @@ static class MetadataHelper
 	public static byte [] ComputeContentFingerprint (TypeMapAssemblyData data)
 	{
 		using var sha = SHA256.Create ();
-		using var stream = new System.IO.MemoryStream ();
-		using var writer = new System.IO.BinaryWriter (stream, Encoding.UTF8);
+		using var stream = new MemoryStream ();
+		using var writer = new BinaryWriter (stream, Encoding.UTF8);
 		foreach (var entry in data.Entries) {
 			writer.Write (entry.MapKey);
 			writer.Write (entry.ProxyTypeReference);
@@ -62,10 +63,10 @@ static class MetadataHelper
 			writer.Write (assoc.AliasProxyTypeReference);
 		}
 		writer.Flush ();
-		return sha.ComputeHash (stream.ToArray ());
+		return sha.ComputeHash (stream.GetBuffer (), 0, checked ((int) stream.Length));
 	}
 
-	static void WriteTypeRef (this System.IO.BinaryWriter writer, TypeRefData type)
+	static void WriteTypeRef (this BinaryWriter writer, TypeRefData type)
 	{
 		writer.Write (type.ManagedTypeName);
 		writer.Write (type.AssemblyName);
@@ -77,7 +78,7 @@ static class MetadataHelper
 		}
 	}
 
-	static void WriteUcoMethod (this System.IO.BinaryWriter writer, UcoMethodData method)
+	static void WriteUcoMethod (this BinaryWriter writer, UcoMethodData method)
 	{
 		writer.Write (method.WrapperName);
 		writer.Write (method.CallbackMethodName);
@@ -86,7 +87,7 @@ static class MetadataHelper
 		writer.WriteExportMethodDispatch (method.ExportMethodDispatch);
 	}
 
-	static void WriteExportMethodDispatch (this System.IO.BinaryWriter writer, ExportMethodDispatchData? dispatch)
+	static void WriteExportMethodDispatch (this BinaryWriter writer, ExportMethodDispatchData? dispatch)
 	{
 		writer.Write (dispatch is not null);
 		if (dispatch is null) {
@@ -107,7 +108,7 @@ static class MetadataHelper
 		writer.Write (dispatch.IsStatic);
 	}
 
-	static void WriteUcoConstructor (this System.IO.BinaryWriter writer, UcoConstructorData constructor)
+	static void WriteUcoConstructor (this BinaryWriter writer, UcoConstructorData constructor)
 	{
 		writer.Write (constructor.WrapperName);
 		writer.WriteTypeRef (constructor.TargetType);
@@ -119,7 +120,7 @@ static class MetadataHelper
 		}
 	}
 
-	static void WriteNativeRegistration (this System.IO.BinaryWriter writer, NativeRegistrationData registration)
+	static void WriteNativeRegistration (this BinaryWriter writer, NativeRegistrationData registration)
 	{
 		writer.Write (registration.JniMethodName);
 		writer.Write (registration.JniSignature);

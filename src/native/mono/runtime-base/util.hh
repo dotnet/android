@@ -24,6 +24,7 @@ static inline constexpr int FALSE = 0;
 #include <cstring>
 #include <ctime>
 #include <fcntl.h>
+#include <limits>
 #include <optional>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -42,6 +43,7 @@ static inline constexpr int FALSE = 0;
 #include <mono/utils/mono-publib.h>
 
 #include <runtime-base/jni-wrappers.hh>
+#include <shared/helpers.hh>
 #include "java-interop-util.h"
 #include "logger.hh"
 #include <runtime-base/strings.hh>
@@ -52,6 +54,8 @@ namespace xamarin::android
 	class Util
 	{
 	public:
+		static constexpr size_t LocalPathBufferSize = SENSIBLE_PATH_MAX;
+
 		static void initialize () noexcept;
 
 		static int monodroid_getpagesize () noexcept
@@ -105,6 +109,55 @@ namespace xamarin::android
 			}
 
 			return fd;
+		}
+
+		// Returns the path length excluding NUL, or the negative required capacity including NUL.
+		static auto format_joined_path (char *buffer, size_t buffer_size, std::string_view first, std::string_view second) noexcept -> ssize_t
+		{
+			bool remove_duplicate_separator = first.ends_with ('/') && second.starts_with ('/');
+			bool add_separator = !first.empty () && !second.empty () && !first.ends_with ('/') && !second.starts_with ('/');
+			size_t second_offset = remove_duplicate_separator ? 1uz : 0uz;
+			size_t path_length = Helpers::add_with_overflow_check<size_t> (first.length (), second.length () - second_offset);
+			if (add_separator) {
+				path_length = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
+			}
+
+			size_t required_capacity = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
+			abort_unless (required_capacity <= static_cast<size_t>(std::numeric_limits<ssize_t>::max ()), "Joined path is too long");
+			if (buffer == nullptr || buffer_size < required_capacity) {
+				return -static_cast<ssize_t>(required_capacity);
+			}
+
+			char *destination = buffer;
+			if (!first.empty ()) {
+				memcpy (destination, first.data (), first.length ());
+				destination += first.length ();
+			}
+			if (add_separator) {
+				*destination++ = '/';
+			}
+			size_t second_length = second.length () - second_offset;
+			if (second_length > 0) {
+				memcpy (destination, second.data () + second_offset, second_length);
+			}
+			buffer [path_length] = '\0';
+
+			return static_cast<ssize_t>(path_length);
+		}
+
+		static auto join_paths (char *stack_buffer, size_t stack_buffer_size, std::string_view first, std::string_view second) noexcept -> char*
+		{
+			ssize_t result = format_joined_path (stack_buffer, stack_buffer_size, first, second);
+			if (result >= 0) {
+				return stack_buffer;
+			}
+
+			size_t required_capacity = static_cast<size_t>(-result);
+			char *heap_buffer = static_cast<char*> (std::malloc (required_capacity));
+			abort_unless (heap_buffer != nullptr, "Failed to allocate joined path");
+			result = format_joined_path (heap_buffer, required_capacity, first, second);
+			abort_unless (result >= 0, "Failed to join path using the required capacity");
+			return heap_buffer;
 		}
 
 		// Make sure that `buf` has enough space! This is by design, the methods are supposed to be fast.

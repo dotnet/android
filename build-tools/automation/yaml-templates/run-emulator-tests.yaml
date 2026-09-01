@@ -5,7 +5,7 @@ parameters:
   jobName: CheckTimeZoneInfoIsCorrectNode1
   jobTimeout: 360
   jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
-  useAgentJdkPath: false
+  useAgentJdkPath: true
   testSteps: []
   use1ESTemplate: true
 

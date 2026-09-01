@@ -1,5 +1,5 @@
 parameters:
-  jdkMajorVersion: $(DefaultJavaSdkMajorVersion)   # Generally 11|17|21
+  jdkMajorVersion: $(DefaultJavaSdkMajorVersion)   # Supported: 21|25
   useAgentJdkPath: true                            # true to use preinstalled agent JDK, false to use 'android-toolchain/jdk-NN'
 
 steps:
@@ -16,6 +16,7 @@ steps:
       $jdkHomeVarName="JAVA_HOME_${jdkMajorVersion}_${agentArch}"
       $jdkHomePath=(Get-Item -Path "env:$jdkHomeVarName").Value
     }
-    Write-Host "Setting variable 'JAVA_HOME' to '$jdkHomePath'"
+    Write-Host "Setting variables 'JAVA_HOME' and 'JavaSdkDirectory' to '$jdkHomePath'"
     Write-Host "##vso[task.setvariable variable=JAVA_HOME]$jdkHomePath"
-  displayName: set JAVA_HOME
+    Write-Host "##vso[task.setvariable variable=JavaSdkDirectory]$jdkHomePath"
+  displayName: set JDK variables

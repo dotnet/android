@@ -318,7 +318,7 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <comment>The following are literal names and should not be translated: ReadyToRun, Debug, Release.</comment>
   </data>
   <data name="XA0119_ReadyToRunWithoutTrimming" xml:space="preserve">
-    <value>ReadyToRun has been disabled because trimming is disabled. Set the 'PublishTrimmed' MSBuild property to 'true' to use ReadyToRun.</value>
+    <value>Funkce ReadyToRun byla zakázána, protože je zakázáno oříznutí. Pokud chcete použít ReadyToRun, nastavte vlastnost PublishTrimmed pro MSBuild na true.</value>
     <comment>The following are literal names and should not be translated: ReadyToRun, 'PublishTrimmed', 'true'.</comment>
   </data>
   <data name="XA0121" xml:space="preserve">
@@ -1062,6 +1062,11 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
     <value>Neznámé úložiště Maven: {0}</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
+  </data>
+  <data name="XA4240" xml:space="preserve">
+    <value>Cíl generování kódu volatelné obálky Java s názvem „{0}“ už není podporovaný. Vlastnost _AndroidJcwCodegenTarget podporuje pouze XAJavaInterop1; XamarinAndroid a JavaInterop1 se nepodporují.</value>
+    <comment>The following are literal names and should not be translated: _AndroidJcwCodegenTarget, XAJavaInterop1, XamarinAndroid, JavaInterop1
+{0} - The name of the current Java callable wrapper code generation target</comment>
   </data>
   <data name="XA1038" xml:space="preserve">
     <value>Vlastnost MSBuild {0} má neplatnou hodnotu {1}. Platná hodnota je jedna z těchto: {2}.</value>

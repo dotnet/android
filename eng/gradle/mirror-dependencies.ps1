@@ -65,8 +65,7 @@
 .EXAMPLE
     pwsh ./eng/gradle/mirror-dependencies.ps1 `
         -ProjectDir external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle `
-        -Task classes `
-        -GradleWrapper external/Java.Interop/build-tools/gradle/gradlew.bat
+        -Task classes
 
 .EXAMPLE
     pwsh ./eng/gradle/mirror-dependencies.ps1 `

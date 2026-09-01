@@ -4,12 +4,12 @@
 
 #include <cerrno>
 #include <cstdlib>
+#include <cstdlib>
 #include <cstring>
 #include <string_view>
 
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
-#include <runtime-base/strings.hh>
 #include <runtime-base/util.hh>
 
 struct AppEnvironmentVariable;
@@ -52,10 +52,11 @@ namespace xamarin::android {
 		}
 
 		[[gnu::flatten, gnu::always_inline]]
-		static auto lookup_system_property (std::string_view const& name, size_t &value_len,
+		static auto lookup_system_property (const char *name, size_t &value_len,
 			uint32_t const count, AppEnvironmentVariable const (&entries)[],
 			const char (&contents)[]) noexcept -> const char*
 		{
+			value_len = 0;
 			if (count == 0) {
 				return nullptr;
 			}
@@ -63,7 +64,7 @@ namespace xamarin::android {
 			for (size_t i = 0; i < count; i++) {
 				AppEnvironmentVariable const& sys_prop = entries[i];
 				const char *prop_name = &contents[sys_prop.name_index];
-				if (name.compare (prop_name) != 0) {
+				if (strcmp (name, prop_name) != 0) {
 					continue;
 				}
 
@@ -89,34 +90,34 @@ namespace xamarin::android {
 
 	private:
 		[[gnu::flatten, gnu::always_inline]]
-		static void create_xdg_directory (jstring_wrapper &home, size_t home_len, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept
+		static void create_xdg_directory (jstring_wrapper &home, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept
 		{
-			static_local_string<SENSIBLE_PATH_MAX> dir (home_len + relative_path.length ());
-			Util::path_combine (dir, home.get_string_view (), relative_path);
+			std::string_view home_path = home.get_string_view ();
+			char stack_buffer [Util::LocalPathBufferSize];
+			ssize_t result = Util::format_joined_path (stack_buffer, sizeof (stack_buffer), home_path, relative_path);
+			abort_unless (result >= 0, "XDG directory path is too long");
 
-			log_debugf (LOG_DEFAULT, "Creating XDG directory: %s", optional_string (dir.get ()));
-			int rv = Util::create_directory (dir.get (), Constants::DEFAULT_DIRECTORY_MODE);
+			log_debugf (LOG_DEFAULT, "Creating XDG directory: %s", stack_buffer);
+			int rv = Util::create_directory (stack_buffer, Constants::DEFAULT_DIRECTORY_MODE);
 			if (rv < 0 && errno != EEXIST) {
-				log_warnf (LOG_DEFAULT, "Failed to create XDG directory %s. %s", optional_string (dir.get ()), strerror (errno));
+				log_warnf (LOG_DEFAULT, "Failed to create XDG directory %s. %s", stack_buffer, strerror (errno));
 			}
 
 			if (!environment_variable_name.empty ()) {
-				set_variable (environment_variable_name.data (), dir.get ());
+				set_variable (environment_variable_name.data (), stack_buffer);
 			}
 		}
 
 		[[gnu::flatten, gnu::always_inline]]
 		static void create_xdg_directories_and_environment (jstring_wrapper &homeDir) noexcept
 		{
-			size_t home_len = strlen (homeDir.get_cstr ());
-
 			constexpr auto XDG_DATA_HOME = "XDG_DATA_HOME"sv;
 			constexpr auto HOME_PATH = ".local/share"sv;
-			create_xdg_directory (homeDir, home_len, HOME_PATH, XDG_DATA_HOME);
+			create_xdg_directory (homeDir, HOME_PATH, XDG_DATA_HOME);
 
 			constexpr auto XDG_CONFIG_HOME = "XDG_CONFIG_HOME"sv;
 			constexpr auto CONFIG_PATH = ".config"sv;
-			create_xdg_directory (homeDir, home_len, CONFIG_PATH, XDG_CONFIG_HOME);
+			create_xdg_directory (homeDir, CONFIG_PATH, XDG_CONFIG_HOME);
 		}
 
 	public:

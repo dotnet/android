@@ -296,11 +296,12 @@ namespace {
 				return;
 			}
 			{
-				dynamic_local_property_string prop_value;
-				if (AndroidSystem::monodroid_get_system_property ("debug.net.asmcache"sv, prop_value) > 0 && prop_value.get () != nullptr) {
-					if (prop_value.get ()[0] == '0') {
+				char prop_value[Constants::PROPERTY_VALUE_BUFFER_LEN];
+				const char *cache_prop = AndroidSystem::monodroid_get_system_property ("debug.net.asmcache", prop_value, sizeof (prop_value));
+				if (cache_prop != nullptr) {
+					if (cache_prop [0] == '0') {
 						cache_requested = false;
-					} else if (prop_value.get ()[0] == '1') {
+					} else if (cache_prop [0] == '1') {
 						cache_requested = true;
 					}
 				}
@@ -589,11 +590,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 
 				if (FastTiming::enabled ()) [[unlikely]] {
 					internal_timing.end_event (true /* uses_more_info */);
-
-					dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> msg;
-					msg.append (name);
-					msg.append (" (decompressed in another thread)"sv);
-					internal_timing.add_more_info (msg);
+					internal_timing.add_more_info (name, " (decompressed in another thread)"sv);
 				}
 				return {assembly_data, assembly_data_size};
 			}
@@ -660,13 +657,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			__atomic_store_n (&cad.loaded, true, __ATOMIC_RELEASE);
 			if (FastTiming::enabled ()) [[unlikely]] {
 				internal_timing.end_event (true /* uses_more_info */);
-
-				dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> msg;
-				msg.append (name);
-				if (loaded_from_cache) {
-					msg.append (" (decompressed cache hit)"sv);
-				}
-				internal_timing.add_more_info (msg);
+				internal_timing.add_more_info (name, loaded_from_cache ? " (decompressed cache hit)"sv : ""sv);
 			}
 		}
 
@@ -690,11 +681,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 
 		if (FastTiming::enabled ()) [[unlikely]] {
 			internal_timing.end_event (true /* uses more info */);
-
-			dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> msg;
-			msg.append (name);
-			msg.append (" (memcpy to r/w area, part of assembly load time)"sv);
-			internal_timing.add_more_info (msg);
+			internal_timing.add_more_info (name, " (memcpy to r/w area, part of assembly load time)"sv);
 		}
 
 		set_assembly_data_and_size (rw_pointer, e.descriptor->data_size, assembly_data, assembly_data_size);

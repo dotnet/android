@@ -227,7 +227,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				packageNamingPolicy: PackageNamingPolicy,
 				generateTypeMapAssemblies: GenerateTypeMapAssemblies,
 				errorOnCustomJavaObject: ErrorOnCustomJavaObject,
-				customViewTypeNames: customViewTypeNames);
+				customViewTypeNames: customViewTypeNames,
+				collectMarshalMethodsForNonAcw: false);
 			if (Log.HasLoggedErrors) {
 				return false;
 			}

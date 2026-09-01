@@ -252,6 +252,9 @@ namespace UserApp
 	// A.2: [Export(Throws = ...)] — declared exceptions in JNI signature.
 	public class ExportThrowsShapes : Java.Lang.Object
 	{
+		[Export (Throws = new [] { typeof (Java.IO.IOException), typeof (Java.Lang.IllegalStateException) }, SuperArgumentsString = "")]
+		public ExportThrowsShapes () { }
+
 		[Export ("ioCall", Throws = new [] { typeof (Java.IO.IOException) })]
 		public void IoCall () { }
 

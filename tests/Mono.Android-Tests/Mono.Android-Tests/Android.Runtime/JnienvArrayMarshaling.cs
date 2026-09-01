@@ -176,6 +176,109 @@ namespace Android.RuntimeTests {
 			}
 		}
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public void NewAndGetArray_SByteJaggedArrays (bool generic)
+		{
+			AssertArrayRoundTrip (
+				new sbyte[]{sbyte.MinValue, -1, 0, sbyte.MaxValue},
+				new sbyte[]{1, 2, -2, -3},
+				generic);
+			AssertArrayRoundTrip (new [] {
+				new sbyte[]{sbyte.MinValue, -1},
+				new sbyte[]{0, sbyte.MaxValue},
+			}, new [] {
+				new sbyte[]{1, -2},
+				new sbyte[]{3, -4},
+			}, generic);
+			AssertArrayRoundTrip (new [] {
+				new [] {
+					new sbyte[]{sbyte.MinValue, -1},
+					new sbyte[]{0, sbyte.MaxValue},
+				},
+				new [] {
+					new sbyte[]{sbyte.MaxValue, 0},
+					new sbyte[]{-1, sbyte.MinValue},
+				},
+			}, new [] {
+				new [] {
+					new sbyte[]{1, -2},
+					new sbyte[]{3, -4},
+				},
+				new [] {
+					new sbyte[]{5, -6},
+					new sbyte[]{7, -8},
+				},
+			}, generic);
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void NewAndGetArray_ByteJaggedArraysPreserveHighBits (bool generic)
+		{
+			AssertArrayRoundTrip (
+				new byte[]{0, 127, 128, byte.MaxValue},
+				new byte[]{1, 126, 129, 254},
+				generic);
+			AssertArrayRoundTrip (new [] {
+				new byte[]{0, 127},
+				new byte[]{128, byte.MaxValue},
+			}, new [] {
+				new byte[]{1, 126},
+				new byte[]{129, 254},
+			}, generic);
+			AssertArrayRoundTrip (new [] {
+				new [] {
+					new byte[]{0, 127},
+					new byte[]{128, byte.MaxValue},
+				},
+				new [] {
+					new byte[]{byte.MaxValue, 128},
+					new byte[]{127, 0},
+				},
+			}, new [] {
+				new [] {
+					new byte[]{1, 126},
+					new byte[]{129, 254},
+				},
+				new [] {
+					new byte[]{253, 130},
+					new byte[]{125, 2},
+				},
+			}, generic);
+		}
+
+		static void AssertArrayRoundTrip<T> (T[] created, T[] copied, bool generic)
+		{
+			int rank = 1;
+			Type elementType = typeof (T);
+			while (elementType.IsArray) {
+				rank++;
+				elementType = elementType.GetElementType ();
+			}
+
+			IntPtr array = generic ? JNIEnv.NewArray<T> (created) : JNIEnv.NewArray ((Array) created);
+
+			try {
+				Assert.AreEqual (new string ('[', rank) + "B", JNIEnv.GetClassNameFromInstance (array));
+				Array actual = generic
+					? JNIEnv.GetArray<T> (array)
+					: JNIEnv.GetArray (array, JniHandleOwnership.DoNotTransfer, typeof (T));
+				Assert.AreEqual (created, actual);
+
+				if (generic)
+					JNIEnv.CopyArray<T> (copied, array);
+				else
+					JNIEnv.CopyArray (copied, typeof (T), array);
+				actual = generic
+					? JNIEnv.GetArray<T> (array)
+					: JNIEnv.GetArray (array, JniHandleOwnership.DoNotTransfer, typeof (T));
+				Assert.AreEqual (copied, actual);
+			} finally {
+				JNIEnv.DeleteLocalRef (array);
+			}
+		}
+
 		[Test]
 		public void GetArray_JavaLangByteArrayToSystemByteArray ()
 		{
