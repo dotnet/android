@@ -27,28 +27,26 @@ sealed class SingleUniverseTypeMap : ITypeMap
 		_proxyTypeMap = proxyTypeMap;
 	}
 
-	public IEnumerable<Type> GetProxyTypes (string jniName)
+	public void CollectProxyTypes (string jniName, ref JniProxyCacheBuilder builder)
 	{
 		if (!_typeMap.TryGetValue (jniName, out var mappedType)) {
-			yield break;
+			return;
 		}
 
 		// Fast path: non-alias entry
-		if (mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false) is not null) {
-			yield return mappedType;
-			yield break;
+		if (builder.TryAdd (mappedType)) {
+			return;
 		}
 
 		// Slow path: alias holder — follow each alias key
 		var aliases = mappedType.GetCustomAttribute<JavaPeerAliasesAttribute> (inherit: false);
 		if (aliases is null) {
-			yield break;
+			return;
 		}
 
 		foreach (var key in aliases.Aliases) {
-			if (_typeMap.TryGetValue (key, out var aliasEntryType) &&
-				aliasEntryType.GetCustomAttribute<JavaPeerProxy> (inherit: false) is not null) {
-				yield return aliasEntryType;
+			if (_typeMap.TryGetValue (key, out var aliasEntryType)) {
+				builder.TryAdd (aliasEntryType);
 			}
 		}
 	}

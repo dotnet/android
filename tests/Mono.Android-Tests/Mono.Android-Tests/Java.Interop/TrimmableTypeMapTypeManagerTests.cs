@@ -82,6 +82,59 @@ namespace Java.InteropTests
 			Assert.IsNull (targetType);
 		}
 
+		[Test]
+		public void JniProxyCache_SingleMappingStoresProxyDirectly ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			const string jniName = "android/view/View";
+			var instance = TrimmableTypeMap.Instance;
+			var cache = GetJniProxyCache (instance);
+			cache.TryRemove (jniName, out _);
+
+			Assert.IsTrue (instance.TryGetTargetType (jniName, out var targetType));
+			Assert.AreEqual (typeof (Android.Views.View), targetType);
+			Assert.IsTrue (cache.TryGetValue (jniName, out var cacheEntry));
+			Assert.IsInstanceOf<JavaPeerProxy> (cacheEntry);
+		}
+
+		[Test]
+		public void JniProxyCache_AliasMappingStoresProxyArray ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			const string jniName = "java/util/ArrayList";
+			var instance = TrimmableTypeMap.Instance;
+			var cache = GetJniProxyCache (instance);
+			cache.TryRemove (jniName, out _);
+
+			Assert.IsTrue (instance.TryGetTargetTypes (jniName, out var targetTypes));
+			Assert.Greater (targetTypes.Length, 1);
+			Assert.IsTrue (cache.TryGetValue (jniName, out var cacheEntry));
+			Assert.IsInstanceOf<JavaPeerProxy[]> (cacheEntry);
+		}
+
+		[Test]
+		public void JniProxyCache_MissingMappingStoresEmptyProxyArray ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			const string jniName = "net/dot/android/test/MissingProxyCacheEntry";
+			var instance = TrimmableTypeMap.Instance;
+			var cache = GetJniProxyCache (instance);
+			cache.TryRemove (jniName, out _);
+
+			Assert.IsFalse (instance.TryGetTargetType (jniName, out var targetType));
+			Assert.IsNull (targetType);
+			Assert.IsTrue (cache.TryGetValue (jniName, out var cacheEntry));
+			if (cacheEntry is JavaPeerProxy[] proxies) {
+				Assert.AreEqual (0, proxies.Length);
+				return;
+			}
+
+			Assert.Fail ("A missing JNI mapping should be cached as an empty proxy array.");
+		}
+
 		// Verifies the generic-type-definition fallback in GetProxyForManagedType:
 		// the generator emits one TypeMapAssociation per open generic peer, so a
 		// closed instantiation like JavaList<string> must resolve through its GTD.
@@ -385,6 +438,22 @@ namespace Java.InteropTests
 
 			Assert.Fail ("Unable to access TrimmableTypeMap proxy cache.");
 			throw new InvalidOperationException ("Unable to access TrimmableTypeMap proxy cache.");
+		}
+
+		static ConcurrentDictionary<string, object> GetJniProxyCache (TrimmableTypeMap instance)
+		{
+			var field = typeof (TrimmableTypeMap).GetField ("_jniProxyCache", BindingFlags.Instance | BindingFlags.NonPublic);
+			Assert.IsNotNull (field);
+
+			var value = field.GetValue (instance);
+			Assert.IsNotNull (value);
+
+			if (value is ConcurrentDictionary<string, object> cache) {
+				return cache;
+			}
+
+			Assert.Fail ("Unable to access TrimmableTypeMap JNI proxy cache.");
+			throw new InvalidOperationException ("Unable to access TrimmableTypeMap JNI proxy cache.");
 		}
 
 		static IReadOnlyList<string> GetStaticMethodFallbackTypes (TestableTrimmableTypeMapTypeManager manager, string jniSimpleReference)

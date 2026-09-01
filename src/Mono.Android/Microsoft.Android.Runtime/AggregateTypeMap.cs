@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.Android.Runtime;
@@ -21,12 +20,10 @@ sealed class AggregateTypeMap : ITypeMap
 		_universes = universes;
 	}
 
-	public IEnumerable<Type> GetProxyTypes (string jniName)
+	public void CollectProxyTypes (string jniName, ref JniProxyCacheBuilder builder)
 	{
 		foreach (var universe in _universes) {
-			foreach (var type in universe.GetProxyTypes (jniName)) {
-				yield return type;
-			}
+			universe.CollectProxyTypes (jniName, ref builder);
 		}
 	}
 
