@@ -9,7 +9,8 @@
 
   <Target Name="SetVersion" BeforeTargets="GetAssemblyVersion;GetPackageVersion;GenerateNuspec" DependsOnTargets="GitVersion">
     <PropertyGroup>
-      <Version>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)</Version>
+      <Version Condition=" '$(AndroidToolsVersion)' == '' ">$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)</Version>
+      <Version Condition=" '$(AndroidToolsVersion)' != '' ">$(AndroidToolsVersion)</Version>
       <PackageVersion>$(Version)$(PackageVersionSuffix)</PackageVersion>
       <InformationalVersion>$(Version); git-rev-head:$(GitCommit); git-branch:$(GitBranch)</InformationalVersion>
     </PropertyGroup>
