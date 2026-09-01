@@ -65,8 +65,12 @@ namespace Xamarin.Android.Build.Tests
 				string applicationConfiguration = Path.Combine (path, "acw-keep.cfg");
 				string commonConfiguration = Path.Combine (path, "xamarin.cfg");
 				string customConfiguration = Path.Combine (path, "custom.cfg");
+				string aarConfiguration = Path.Combine (path, "aar-proguard.txt");
 				File.WriteAllText (acwMap, "Managed.Peer;com.example.Peer");
 				File.WriteAllText (customConfiguration, "-dontwarn com.example.**");
+				File.WriteAllText (aarConfiguration, "-dontwarn com.example.library.**");
+				var aarConfigurationItem = new TaskItem (aarConfiguration);
+				aarConfigurationItem.SetMetadata ("OriginalFile", Path.Combine (path, "library.aar"));
 
 				var task = new R8TestTask {
 					BuildEngine = new MockBuildEngine (TestContext.Out),
@@ -77,7 +81,7 @@ namespace Xamarin.Android.Build.Tests
 					ProguardGeneratedApplicationConfiguration = applicationConfiguration,
 					ProguardCommonXamarinConfiguration = commonConfiguration,
 					ProguardMappingFileOutput = Path.Combine (path, "mapping.txt"),
-					ProguardConfigurationFiles = new ITaskItem [] { new TaskItem (customConfiguration) },
+					ProguardConfigurationFiles = new ITaskItem [] { new TaskItem (customConfiguration), aarConfigurationItem },
 					GenerateSeedMapping = true,
 					EnableObfuscation = true,
 					IgnoreWarnings = true,
@@ -94,6 +98,7 @@ namespace Xamarin.Android.Build.Tests
 				string configuration = string.Join (Environment.NewLine, configurationFiles.Select (File.ReadAllText));
 
 				Assert.That (configurationFiles, Does.Contain (customConfiguration), "Seed R8 should honor user ProGuard rules.");
+				Assert.That (configurationFiles, Does.Contain (aarConfiguration), "Seed R8 should honor AAR consumer rules.");
 				Assert.That (configurationFiles, Does.Contain (commonConfiguration), "Seed R8 should honor runtime keep rules.");
 				Assert.That (configurationFiles, Does.Not.Contain (applicationConfiguration), "Seed R8 must not pass the ACW keep configuration.");
 				FileAssert.DoesNotExist (applicationConfiguration, "Seed R8 must not generate obfuscation-blocking ACW keep rules.");

@@ -122,11 +122,16 @@
 
   <Target Name="_AndroidGenerateR8JniSeedMappingInputs"
       Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' "
-      DependsOnTargets="_AndroidCompileR8JniSeedJava;_CalculateProguardConfigurationFiles">
+      DependsOnTargets="_AndroidCompileR8JniSeedJava">
     <ItemGroup>
       <_AndroidR8JniSeedClassFile Include="$(_AndroidR8JniSeedJavaClassDirectory)**\*.class" />
-      <_AndroidR8JniSeedProguardConfiguration Include="@(_ProguardConfiguration)" />
-      <_AndroidR8JniSeedProguardConfiguration Remove="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg;$(_ProguardProjectConfiguration);$(IntermediateOutputPath)proguard\proguard_project_primary.cfg;$(IntermediateOutputPath)aapt_rules.txt" />
+      <!-- Seed R8 already disables tree shaking and optimization. Do not use proguard-android.txt:
+           its native-method rule preserves ACW names. Start from source items so generated ACW,
+           reachability, primary, Xamarin, and aapt configurations cannot leak into this pass. -->
+      <_AndroidR8JniSeedProguardConfiguration Include="$(ProguardConfigFiles)" Condition=" '$(ProguardConfigFiles)' != '' " />
+      <_AndroidR8JniSeedProguardConfiguration
+          Include="@(ProguardConfiguration)"
+          Condition=" '$(ProguardConfigFiles)' == '' and '%(ProguardConfiguration.AndroidGeneratedProguardConfiguration)' != 'true' " />
       <_AndroidR8JniSeedMapDiagnostics Condition=" '$(AndroidR8IgnoreWarnings)' == 'true' " Include="warning" To="info" />
     </ItemGroup>
   </Target>

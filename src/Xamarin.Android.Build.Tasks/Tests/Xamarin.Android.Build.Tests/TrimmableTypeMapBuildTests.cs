@@ -426,6 +426,9 @@ public class R8JniLibraryPeer : Java.Lang.Object
 				},
 			};
 			library.SetRuntime (runtime);
+			library.OtherBuildItems.Add (new AndroidItem.ProguardConfiguration ("proguard.txt") {
+				TextContent = () => "-dontwarn com.example.library.**",
+			});
 
 			var app = new XamarinAndroidApplicationProject {
 				IsRelease = true,
@@ -440,6 +443,28 @@ public class R8JniLibraryPeer : Java.Lang.Object
 			app.OtherBuildItems.Add (new AndroidItem.ProguardConfiguration ("r8-jni-rules.pro") {
 				TextContent = () => proguardRule,
 			});
+			app.OtherBuildItems.Add (new AndroidItem.ProguardConfiguration ("generated-acw-keep.cfg") {
+				TextContent = () => $"-keep class {libraryJavaName.Replace ('/', '.')} {{ *; }}",
+				Metadata = {
+					{ "AndroidGeneratedProguardConfiguration", "true" },
+				},
+			});
+			app.Imports.Add (new Import ("CaptureR8JniSeedConfiguration.targets") {
+				TextContent = () => """
+					<Project>
+					  <Target Name="_CaptureR8JniSeedConfiguration"
+					      AfterTargets="_AndroidGenerateR8JniSeedMappingInputs"
+					      BeforeTargets="_AndroidGenerateR8JniSeedMapping">
+					    <MakeDir Directories="$(_AndroidR8JniSeedDirectory)" />
+					    <WriteLinesToFile
+					        File="$(_AndroidR8JniSeedDirectory)configuration-items.txt"
+					        Lines="@(_AndroidR8JniSeedProguardConfiguration)"
+					        Overwrite="true"
+					        WriteOnlyWhenDifferent="true" />
+					  </Target>
+					</Project>
+					""",
+			});
 
 			string testDirectory = Path.Combine ("temp", $"R8JniNameRewritingReferences_{runtime}_{Guid.NewGuid ():N}");
 			using var libraryBuilder = CreateDllBuilder (Path.Combine (testDirectory, library.ProjectName));
@@ -450,8 +475,14 @@ public class R8JniLibraryPeer : Java.Lang.Object
 			var projectDirectory = Path.Combine (Root, appBuilder.ProjectDirectory);
 			var seedMapping = FindSingleFile (projectDirectory, "mapping.txt", path => path.Contains ("r8-jni-seed", StringComparison.Ordinal));
 			var rewriteManifest = FindSingleFile (projectDirectory, "r8-jni-rewrite-manifest.txt");
-			StringAssert.Contains ($"{libraryJavaName.Replace ('/', '.')} ->", File.ReadAllText (seedMapping));
+			var seedConfigurationItems = File.ReadAllLines (FindSingleFile (projectDirectory, "configuration-items.txt"));
+			AssertR8MappingRenamesClass (seedMapping, libraryJavaName);
 			StringAssert.Contains ($"C\t{libraryJavaName}", File.ReadAllText (rewriteManifest));
+			Assert.That (seedConfigurationItems, Has.Some.EndsWith ("r8-jni-rules.pro"), "Seed R8 should receive user-authored rules.");
+			Assert.That (seedConfigurationItems, Has.Some.EndsWith ("proguard.txt"), "Seed R8 should receive AAR consumer rules.");
+			Assert.IsFalse (seedConfigurationItems.Any (path =>
+				new [] { "proguard-android.txt", "proguard_xamarin.cfg", "proguard_project_references.cfg", "proguard_project_primary.cfg", "aapt_rules.txt", "generated-acw-keep.cfg" }.Contains (Path.GetFileName (path), StringComparer.Ordinal)),
+				"Seed R8 should not receive generated or baseline configurations that pin managed peers.");
 
 			proguardRule = "-dontwarn com.example.UnusedTwo";
 			app.Touch ("r8-jni-rules.pro");
