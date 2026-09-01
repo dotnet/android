@@ -112,31 +112,39 @@ namespace Xamarin.ProjectTools
 		public static bool ContainsRuntimeMethodAnnotation (string className, string method, string annotationType, string dexFile, string androidSdkDirectory)
 		{
 			const string classDescriptorPrefix = "Class descriptor  : '";
+			const string classAnnotationsPrefix = "Class #";
+			const string classAnnotationsSuffix = " annotations:";
 			const string methodAnnotationPrefix = "Annotations on method ";
-			bool inClass = false;
 			bool inMethodAnnotations = false;
+			bool classContainsAnnotation = false;
 			bool containsAnnotation = false;
 			DataReceivedEventHandler handler = (s, e) => {
 				if (e.Data == null) {
 					return;
 				}
 				string line = e.Data.Trim ();
-				if (line.StartsWith (classDescriptorPrefix, StringComparison.Ordinal)) {
-					inClass = line.Equals ($"{classDescriptorPrefix}{className}'", StringComparison.Ordinal);
+				if (line.StartsWith (classAnnotationsPrefix, StringComparison.Ordinal) &&
+						line.EndsWith (classAnnotationsSuffix, StringComparison.Ordinal)) {
 					inMethodAnnotations = false;
+					classContainsAnnotation = false;
 				} else if (line.StartsWith ("Annotations on ", StringComparison.Ordinal)) {
-					inMethodAnnotations = inClass &&
-						line.StartsWith (methodAnnotationPrefix, StringComparison.Ordinal) &&
+					inMethodAnnotations = line.StartsWith (methodAnnotationPrefix, StringComparison.Ordinal) &&
 						line.EndsWith ($"'{method}'", StringComparison.Ordinal);
 				} else if (inMethodAnnotations && line.Equals ($"VISIBILITY_RUNTIME {annotationType}", StringComparison.Ordinal)) {
-					containsAnnotation = true;
+					classContainsAnnotation = true;
+				} else if (line.StartsWith (classDescriptorPrefix, StringComparison.Ordinal)) {
+					// dexdump -a emits each class's annotation block before its descriptor.
+					containsAnnotation |= classContainsAnnotation &&
+						line.Equals ($"{classDescriptorPrefix}{className}'", StringComparison.Ordinal);
+					inMethodAnnotations = false;
+					classContainsAnnotation = false;
 				}
 			};
-			DexDump (handler, dexFile, androidSdkDirectory, "-a");
+			DexDump (handler, dexFile, androidSdkDirectory, showAnnotations: true);
 			return containsAnnotation;
 		}
 
-		static void DexDump (DataReceivedEventHandler handler, string dexFile, string androidSdkDirectory, string options = "")
+		static void DexDump (DataReceivedEventHandler handler, string dexFile, string androidSdkDirectory, bool showAnnotations = false)
 		{
 			var androidSdk = new AndroidSdkInfo ((l, m) => {
 				Console.WriteLine ($"{l}: {m}");
@@ -151,7 +159,6 @@ namespace Xamarin.ProjectTools
 
 			var psi = new ProcessStartInfo {
 				FileName = Path.Combine (buildToolsPath, "dexdump"),
-				Arguments = $"{options} {Path.GetFileName (dexFile)}".Trim (),
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 				UseShellExecute = false,
@@ -159,6 +166,10 @@ namespace Xamarin.ProjectTools
 				RedirectStandardOutput = true,
 				WorkingDirectory = Path.GetDirectoryName (dexFile),
 			};
+			if (showAnnotations) {
+				psi.ArgumentList.Add ("-a");
+			}
+			psi.ArgumentList.Add (Path.GetFileName (dexFile));
 			using (var p = new Process { StartInfo = psi }) {
 				p.ErrorDataReceived += handler;
 				p.OutputDataReceived += handler;
@@ -169,7 +180,7 @@ namespace Xamarin.ProjectTools
 				p.WaitForExit ();
 
 				if (p.ExitCode != 0)
-					throw new Exception ($"'{psi.FileName} {psi.Arguments}' exited with code: {p.ExitCode}");
+					throw new Exception ($"'{psi.FileName} {string.Join (" ", psi.ArgumentList)}' exited with code: {p.ExitCode}");
 			}
 		}
 	}

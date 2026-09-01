@@ -191,12 +191,13 @@ managedBridge.completeTestForIssue12542();
 			var projectIntermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			var generatedJavaFiles = Directory.GetFiles (projectIntermediate, "WebViewJavascriptBridge.java", SearchOption.AllDirectories);
 			Assert.IsNotEmpty (generatedJavaFiles, $"Expected a generated WebViewJavascriptBridge.java under '{projectIntermediate}'.");
+			var expectedJavaMethod = typemapImplementation == "trimmable"
+				? $"@android.webkit.JavascriptInterface\n\t@Override\n\tpublic void {JavaMethodName} (java.lang.String p0)"
+				: $"@android.webkit.JavascriptInterface\n\tpublic void {JavaMethodName} (java.lang.String p0)";
 			foreach (var generatedJavaFile in generatedJavaFiles) {
 				var contents = File.ReadAllText (generatedJavaFile).Replace ("\r\n", "\n");
-				StringAssert.Contains ("@android.webkit.JavascriptInterface", contents,
-					$"Generated JCW Java '{generatedJavaFile}' should forward [JavascriptInterface].");
-				StringAssert.Contains ($"public void {JavaMethodName} (java.lang.String p0)", contents,
-					$"Generated JCW Java '{generatedJavaFile}' should expose the bridge method.");
+				StringAssert.Contains (expectedJavaMethod, contents,
+					$"Generated JCW Java '{generatedJavaFile}' should expose the annotated bridge method.");
 			}
 
 			var generatedJava = File.ReadAllText (generatedJavaFiles [0]).Replace ("\r\n", "\n");
