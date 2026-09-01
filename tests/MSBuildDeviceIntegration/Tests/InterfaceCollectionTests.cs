@@ -58,7 +58,7 @@ namespace Xamarin.Android.Build.Tests
 				StartActivityAndAssert (proj);
 				string logcatOutput = "";
 				string resultLine = "";
-				WaitFor (TimeSpan.FromSeconds (60), () => {
+				WaitFor (TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds), () => {
 					logcatOutput = RunAdbCommand ("logcat -d");
 					resultLine = FindResultLine (logcatOutput, resultToken);
 					return resultLine.Length > 0;
