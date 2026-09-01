@@ -281,17 +281,20 @@ public class R8JniPeer : Java.Lang.Object
 					"Disabling public mapping output should omit the ProGuard mapping from app-bundle metadata.");
 			}
 
-			var outputTimestamps = rewrittenAssemblies
+			IEnumerable<string> outputFiles = rewrittenAssemblies
 				.Append (seedMapping)
 				.Append (rewriteManifest)
 				.Append (reachabilityManifest)
-				.Append (finalMapping)
-				.ToDictionary (path => path, File.GetLastWriteTimeUtc, StringComparer.Ordinal);
+				.Append (finalMapping);
 			string? ilcRspFile = null;
+			string? ilcRspContent = null;
 			if (runtime == AndroidRuntime.NativeAOT) {
 				ilcRspFile = FindSingleFile (projectDirectory, $"{proj.ProjectName}.ilc.rsp");
-				StringAssert.Contains ("r8-jni-rewritten", File.ReadAllText (ilcRspFile), "ILC should compile the rewritten managed inputs.");
+				ilcRspContent = File.ReadAllText (ilcRspFile);
+				StringAssert.Contains ("r8-jni-rewritten", ilcRspContent, "ILC should compile the rewritten managed inputs.");
+				outputFiles = outputFiles.Append (ilcRspFile);
 			}
+			var outputTimestamps = outputFiles.ToDictionary (path => path, File.GetLastWriteTimeUtc, StringComparer.Ordinal);
 
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "No-op R8 JNI name-rewriting build should have succeeded.");
 			builder.Output.AssertTargetIsSkipped ("_AndroidCompileR8JniSeedJava");
@@ -299,18 +302,17 @@ public class R8JniPeer : Java.Lang.Object
 			builder.Output.AssertTargetIsSkipped (runtime == AndroidRuntime.CoreCLR
 				? "_AndroidRewriteJniNamesBeforeILLink"
 				: "_AndroidRewriteJniNamesBeforeIlc");
+			if (runtime == AndroidRuntime.NativeAOT) {
+				builder.Output.AssertTargetIsNotSkipped ("WriteIlcRspFileForCompilation");
+				FileAssert.Exists (ilcRspFile);
+				string actualIlcRspContent = File.ReadAllText (ilcRspFile);
+				StringAssert.Contains ("r8-jni-rewritten", actualIlcRspContent, "ILC response-file recomputation should retain rewritten managed inputs when the rewrite target is skipped.");
+				Assert.AreEqual (ilcRspContent, actualIlcRspContent, "ILC response-file recomputation should preserve rewritten managed inputs when the rewrite target is skipped.");
+				Assert.AreEqual (outputTimestamps [ilcRspFile], File.GetLastWriteTimeUtc (ilcRspFile), "An unchanged ILC response file should preserve its timestamp.");
+			}
 			builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
 			foreach (var pair in outputTimestamps) {
 				Assert.AreEqual (pair.Value, File.GetLastWriteTimeUtc (pair.Key), $"No-op build should preserve {pair.Key}.");
-			}
-
-			if (runtime == AndroidRuntime.NativeAOT) {
-				File.Delete (ilcRspFile);
-				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "ILC response-file regeneration build should have succeeded.");
-				builder.Output.AssertTargetIsSkipped ("_AndroidRewriteJniNamesBeforeIlc");
-				builder.Output.AssertTargetIsNotSkipped ("WriteIlcRspFileForCompilation");
-				FileAssert.Exists (ilcRspFile);
-				StringAssert.Contains ("r8-jni-rewritten", File.ReadAllText (ilcRspFile), "A regenerated ILC response file should retain rewritten managed inputs when the rewrite target is skipped.");
 			}
 
 			System.Threading.Thread.Sleep (1100);
