@@ -13,6 +13,8 @@ namespace Java.InteropTests
 	[Category ("ManagedObjectProxy")]
 	public class ManagedObjectProxyTests
 	{
+		// Managed reference identity is the common round-trip contract. Java-visible equality,
+		// hashing, and string conversion are asserted separately because they vary by typemap.
 		const int MaxGcAttempts = 20;
 
 		public ManagedObjectProxyTests ()
