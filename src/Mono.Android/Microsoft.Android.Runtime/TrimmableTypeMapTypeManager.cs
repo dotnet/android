@@ -212,9 +212,8 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			return builtInType;
 		}
 
-		// TryGetTargetTypes returns a non-empty array when it succeeds.
-		if (TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types)) {
-			return types [0];
+		if (TrimmableTypeMap.Instance.TryGetTargetType (jniSimpleReference, out var type)) {
+			return type;
 		}
 
 		return null;

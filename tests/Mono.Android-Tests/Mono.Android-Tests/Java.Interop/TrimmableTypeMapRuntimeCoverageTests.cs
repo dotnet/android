@@ -127,6 +127,8 @@ namespace Java.InteropTests
 			}
 			CollectionAssert.Contains (targetTypes, typeof (JavaList));
 			CollectionAssert.Contains (targetTypes, typeof (JavaList<>));
+			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetTargetType ("java/util/ArrayList", out var firstTargetType));
+			Assert.AreEqual (targetTypes [0], firstTargetType);
 
 			var arrayListClass = JniEnvironment.Types.FindClass ("java/util/ArrayList");
 			try {

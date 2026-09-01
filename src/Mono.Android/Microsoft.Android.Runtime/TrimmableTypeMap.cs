@@ -128,6 +128,21 @@ public class TrimmableTypeMap
 	}
 
 	/// <summary>
+	/// Returns the first target type mapped to a JNI name without materializing all target types.
+	/// </summary>
+	internal bool TryGetTargetType (string jniName, [NotNullWhen (true)] out Type? type)
+	{
+		var proxies = GetProxiesForJniName (jniName);
+		if (proxies.Length == 0) {
+			type = null;
+			return false;
+		}
+
+		type = proxies [0].TargetType;
+		return true;
+	}
+
+	/// <summary>
 	/// Resolves and caches all proxies for a JNI name. For non-alias entries, returns a
 	/// single-element array. For alias groups, resolves each alias key and returns the
 	/// surviving proxies. Returns an empty array when no mapping exists or all aliases were trimmed.

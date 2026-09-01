@@ -45,6 +45,43 @@ namespace Java.InteropTests
 			Assert.AreEqual (expected, signature.Name);
 		}
 
+		[Test]
+		public void GetType_RepeatedJavaToManagedLookup_DoesNotAllocate ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			const string jniName = "android/view/View";
+			const int iterationCount = 1_000;
+			var typeMap = TrimmableTypeMap.Instance;
+			Assert.IsTrue (typeMap.TryGetTargetTypes (jniName, out var targetTypes));
+			Assert.AreEqual (1, targetTypes.Length, "The allocation test requires a non-alias typemap entry.");
+
+			var signature = new JniTypeSignature (jniName);
+			var manager = JniEnvironment.Runtime.TypeManager;
+			Type result = typeof (void);
+			for (int i = 0; i < iterationCount; i++) {
+				result = manager.GetType (signature);
+			}
+
+			long before = GC.GetAllocatedBytesForCurrentThread ();
+			for (int i = 0; i < iterationCount; i++) {
+				result = manager.GetType (signature);
+			}
+			long allocatedBytes = GC.GetAllocatedBytesForCurrentThread () - before;
+
+			Assert.AreEqual (typeof (Android.Views.View), result);
+			Assert.AreEqual (0L, allocatedBytes, $"Expected {iterationCount} cached lookups to allocate no managed memory.");
+		}
+
+		[Test]
+		public void TryGetTargetType_MissingEntry_ReturnsFalse ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			Assert.IsFalse (TrimmableTypeMap.Instance.TryGetTargetType ("net/dot/android/test/MissingType", out var targetType));
+			Assert.IsNull (targetType);
+		}
+
 		// Verifies the generic-type-definition fallback in GetProxyForManagedType:
 		// the generator emits one TypeMapAssociation per open generic peer, so a
 		// closed instantiation like JavaList<string> must resolve through its GTD.
