@@ -32,7 +32,7 @@ parameters:
 - name: enableApkTestsHelixPrototype
   displayName: Enable APK tests in Helix prototype
   type: boolean
-  default: true
+  default: false
 - name: apkTestsHelixTargetMinutes
   displayName: APK test Helix target minutes
   type: number
