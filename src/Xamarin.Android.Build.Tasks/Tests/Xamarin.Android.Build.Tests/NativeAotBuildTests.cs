@@ -169,20 +169,12 @@ namespace Xamarin.Android.Build.Tests
 				"Microsoft.Android.Runtime.NativeAOT.dll",
 				SearchOption.AllDirectories
 			).Single ();
-			string installedReferencePack = Path.Combine (
-				TestEnvironment.DotNetPreviewPacksDirectory,
-				$"Microsoft.Android.Ref.{apiLevelName}"
-			);
-			string runtimeSymbols = Directory.GetFiles (
-				installedReferencePack,
-				"Microsoft.Android.Runtime.NativeAOT.pdb",
-				SearchOption.AllDirectories
-			).Single ();
 			string managedOutputRoot = Path.Combine (outputDirectory, "xbuild-frameworks", "Microsoft.Android");
 			string managedOutputDirectory = Path.Combine (managedOutputRoot, apiLevelName);
 			Directory.CreateDirectory (managedOutputDirectory);
 			File.Copy (runtimeAssembly, Path.Combine (managedOutputDirectory, Path.GetFileName (runtimeAssembly)));
-			File.Copy (runtimeSymbols, Path.Combine (managedOutputDirectory, Path.GetFileName (runtimeSymbols)));
+			// The pack target requires a PDB, but its contents are unrelated to native asset composition.
+			File.Create (Path.Combine (managedOutputDirectory, "Microsoft.Android.Runtime.NativeAOT.pdb")).Dispose ();
 
 			string runtimePackProject = Path.Combine (XABuildPaths.TopDirectory, "build-tools", "create-packs", "Microsoft.Android.Runtime.proj");
 			var dotnet = new DotNetCLI (runtimePackProject) {
@@ -213,6 +205,56 @@ namespace Xamarin.Android.Build.Tests
 				} else {
 					package.AssertDoesNotContainEntry (packagePath, archivePath);
 				}
+			}
+		}
+
+		[Test]
+		public void CopyNativeAotRuntimePackRemovesStaleCPlusPlusArchives ()
+		{
+			string outputDirectory = Path.Combine (Root, TestName);
+			if (Directory.Exists (outputDirectory)) {
+				Directory.Delete (outputDirectory, recursive: true);
+			}
+			Directory.CreateDirectory (outputDirectory);
+
+			Version apiLevel = XABuildConfig.AndroidLatestStableApiLevel;
+			string apiLevelName = apiLevel.Minor == 0 ? $"{apiLevel.Major}" : $"{apiLevel.Major}.{apiLevel.Minor}";
+			string packVersion = "1.0.0-test";
+			string packsRoot = Path.Combine (outputDirectory, "packs");
+			string nativeDirectory = Path.Combine (
+				packsRoot,
+				$"Microsoft.Android.Runtime.NativeAOT.{apiLevelName}.android-arm64",
+				packVersion,
+				"runtimes",
+				"android-arm64",
+				"native"
+			);
+			Directory.CreateDirectory (nativeDirectory);
+			foreach (string archiveName in CPlusPlusArchiveNames) {
+				File.Create (Path.Combine (nativeDirectory, archiveName)).Dispose ();
+			}
+
+			string nativeProject = Path.Combine (XABuildPaths.TopDirectory, "src", "native", "native-nativeaot.csproj");
+			var dotnet = new DotNetCLI (nativeProject) {
+				ProjectDirectory = outputDirectory,
+				BuildLogFile = Path.Combine (outputDirectory, "build.log"),
+				ProcessLogFile = Path.Combine (outputDirectory, "process.log"),
+			};
+			Assert.IsTrue (
+				dotnet.Build (
+					target: "_CopyToPackDirs",
+					parameters: [
+						$"Configuration={XABuildPaths.Configuration}",
+						$"AndroidApiLevel={apiLevelName}",
+						$"AndroidPackVersion={packVersion}",
+						$"MicrosoftAndroidPacksRootDir={packsRoot}{Path.DirectorySeparatorChar}",
+					]
+				),
+				$"Copying the NativeAOT runtime pack should succeed. See {dotnet.ProcessLogFile}."
+			);
+
+			foreach (string archiveName in CPlusPlusArchiveNames) {
+				FileAssert.DoesNotExist (Path.Combine (nativeDirectory, archiveName));
 			}
 		}
 

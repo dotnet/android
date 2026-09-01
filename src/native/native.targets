@@ -381,6 +381,15 @@
                          RuntimePackName="$(_RuntimePackName)" />
     </ItemGroup>
 
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
+      <_NativeAotObsoleteRuntimePackFile Include="@(_AndroidNdkRedistributable)"
+                                         Condition=" '%(_AndroidNdkRedistributable.Kind)' == 'CplusPlus' ">
+        <DestinationFile>$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.$(_RuntimePackName).$(AndroidApiLevel).%(_AndroidNdkRedistributable.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_AndroidNdkRedistributable.AndroidRID)\native\%(_AndroidNdkRedistributable.Filename)%(_AndroidNdkRedistributable.Extension)</DestinationFile>
+      </_NativeAotObsoleteRuntimePackFile>
+    </ItemGroup>
+
+    <Delete Files="@(_NativeAotObsoleteRuntimePackFile->'%(DestinationFile)')" />
+
     <Copy
         SourceFiles="%(_RuntimePackFiles.Identity)"
         DestinationFolder="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.%(_RuntimePackFiles.RuntimePackName).$(AndroidApiLevel).%(_RuntimePackFiles.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_RuntimePackFiles.AndroidRID)\native"
