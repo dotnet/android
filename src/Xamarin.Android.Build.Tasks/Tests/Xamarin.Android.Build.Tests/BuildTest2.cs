@@ -117,6 +117,7 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.Contains ("error XA1049", b.LastBuildOutput);
 			StringAssertEx.Contains ("AndroidEnableMarshalMethods", b.LastBuildOutput);
 			StringAssertEx.Contains ("PublishReadyToRun", b.LastBuildOutput);
+			StringAssertEx.DoesNotContain ("XARMM7015", b.LastBuildOutput, "Build should fail before rewriting ReadyToRun assemblies.");
 		}
 
 		[Test]
