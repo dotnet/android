@@ -186,45 +186,59 @@ managedBridge.completeTestForIssue12542();
 """";
 
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Install (proj), "Project should have installed.");
+			bool installed = false;
+			try {
+				installed = builder.Install (proj);
+				Assert.IsTrue (installed, "Project should have installed.");
 
-			var projectIntermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-			var generatedJavaFiles = Directory.GetFiles (projectIntermediate, "WebViewJavascriptBridge.java", SearchOption.AllDirectories);
-			Assert.IsNotEmpty (generatedJavaFiles, $"Expected a generated WebViewJavascriptBridge.java under '{projectIntermediate}'.");
-			var expectedJavaMethod = typemapImplementation == "trimmable"
-				? $"@android.webkit.JavascriptInterface\n\t@Override\n\tpublic void {JavaMethodName} (java.lang.String p0)"
-				: $"@android.webkit.JavascriptInterface\n\tpublic void {JavaMethodName} (java.lang.String p0)";
-			foreach (var generatedJavaFile in generatedJavaFiles) {
-				var contents = File.ReadAllText (generatedJavaFile).Replace ("\r\n", "\n");
-				StringAssert.Contains (expectedJavaMethod, contents,
-					$"Generated JCW Java '{generatedJavaFile}' should expose the annotated bridge method.");
+				var projectIntermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+				var generatedJavaFiles = Directory.GetFiles (projectIntermediate, "WebViewJavascriptBridge.java", SearchOption.AllDirectories);
+				Assert.IsNotEmpty (generatedJavaFiles, $"Expected a generated WebViewJavascriptBridge.java under '{projectIntermediate}'.");
+				var expectedJavaMethod = typemapImplementation == "trimmable"
+					? $"@android.webkit.JavascriptInterface\n\t@Override\n\tpublic void {JavaMethodName} (java.lang.String p0)"
+					: $"@android.webkit.JavascriptInterface\n\tpublic void {JavaMethodName} (java.lang.String p0)";
+				foreach (var generatedJavaFile in generatedJavaFiles) {
+					var contents = File.ReadAllText (generatedJavaFile).Replace ("\r\n", "\n");
+					StringAssert.Contains (expectedJavaMethod, contents,
+						$"Generated JCW Java '{generatedJavaFile}' should expose the annotated bridge method.");
+				}
+
+				var generatedJava = File.ReadAllText (generatedJavaFiles [0]).Replace ("\r\n", "\n");
+				var packageDeclaration = generatedJava.Split ('\n').Single (line => line.StartsWith ("package ", StringComparison.Ordinal));
+				var javaPackage = packageDeclaration.Substring ("package ".Length).TrimEnd (';');
+				var className = $"L{javaPackage.Replace ('.', '/')}/WebViewJavascriptBridge;";
+				var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+				FileAssert.Exists (dexFile);
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, JavaMethodName, "(Ljava/lang/String;)V", dexFile, AndroidSdkPath),
+					$"`{dexFile}` should contain `{className}.{JavaMethodName}`.");
+				Assert.IsTrue (DexUtils.ContainsRuntimeMethodAnnotation (className, JavaMethodName, JavascriptInterfaceAnnotation, dexFile, AndroidSdkPath),
+					$"`{dexFile}` should retain `{JavascriptInterfaceAnnotation}` on `{JavaMethodName}`.");
+
+				ClearAdbLogcat ();
+				RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
+				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
+					Path.Combine (Root, builder.ProjectDirectory, "activity-logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
+
+				var resultLog = Path.Combine (Root, builder.ProjectDirectory, "javascript-interface-logcat.log");
+				Assert.IsTrue (MonitorAdbLogcat (
+					line => line.Contains (SuccessMarker, StringComparison.Ordinal) || line.Contains (FailureMarker, StringComparison.Ordinal),
+					resultLog,
+					timeout: 30), "WebView did not report a JavaScript interface result.");
+				var logcat = File.ReadAllText (resultLog);
+				StringAssert.Contains (SuccessMarker + SuccessResult, logcat, "The JavaScript report callback should invoke the exact managed bridge instance once.");
+				StringAssert.DoesNotContain (FailureMarker, logcat, "WebView reported a JavaScript interface failure.");
+			} finally {
+				if (installed) {
+					try {
+						builder.ThrowOnBuildFailure = false;
+						if (!builder.Uninstall (proj)) {
+							TestContext.Error.WriteLine ($"Failed to uninstall '{proj.PackageName}' during test cleanup.");
+						}
+					} catch (Exception ex) {
+						TestContext.Error.WriteLine ($"Failed to uninstall '{proj.PackageName}' during test cleanup: {ex}");
+					}
+				}
 			}
-
-			var generatedJava = File.ReadAllText (generatedJavaFiles [0]).Replace ("\r\n", "\n");
-			var packageDeclaration = generatedJava.Split ('\n').Single (line => line.StartsWith ("package ", StringComparison.Ordinal));
-			var javaPackage = packageDeclaration.Substring ("package ".Length).TrimEnd (';');
-			var className = $"L{javaPackage.Replace ('.', '/')}/WebViewJavascriptBridge;";
-			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
-			FileAssert.Exists (dexFile);
-			Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, JavaMethodName, "(Ljava/lang/String;)V", dexFile, AndroidSdkPath),
-				$"`{dexFile}` should contain `{className}.{JavaMethodName}`.");
-			Assert.IsTrue (DexUtils.ContainsRuntimeMethodAnnotation (className, JavaMethodName, JavascriptInterfaceAnnotation, dexFile, AndroidSdkPath),
-				$"`{dexFile}` should retain `{JavascriptInterfaceAnnotation}` on `{JavaMethodName}`.");
-
-			ClearAdbLogcat ();
-			RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
-			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "activity-logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
-
-			var resultLog = Path.Combine (Root, builder.ProjectDirectory, "javascript-interface-logcat.log");
-			Assert.IsTrue (MonitorAdbLogcat (
-				line => line.Contains (SuccessMarker, StringComparison.Ordinal) || line.Contains (FailureMarker, StringComparison.Ordinal),
-				resultLog,
-				timeout: 30), "WebView did not report a JavaScript interface result.");
-			var logcat = File.ReadAllText (resultLog);
-			StringAssert.Contains (SuccessMarker + SuccessResult, logcat, "The JavaScript report callback should invoke the exact managed bridge instance once.");
-			StringAssert.DoesNotContain (FailureMarker, logcat, "WebView reported a JavaScript interface failure.");
-			Assert.IsTrue (builder.Uninstall (proj), "Project should have uninstalled.");
 		}
 	}
 }
