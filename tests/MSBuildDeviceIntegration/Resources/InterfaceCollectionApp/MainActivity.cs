@@ -411,13 +411,17 @@ namespace ${ROOT_NAMESPACE}
 
 		static void VisitDictionaryEntries (object dictionary, Action<IntPtr, IntPtr> visitor)
 		{
-			var mapClass = JniEnvironment.Types.FindClass ("java/util/Map");
-			var setClass = JniEnvironment.Types.FindClass ("java/util/Set");
-			var iteratorClass = JniEnvironment.Types.FindClass ("java/util/Iterator");
-			var entryClass = JniEnvironment.Types.FindClass ("java/util/Map$Entry");
+			JniObjectReference mapClass = default;
+			JniObjectReference setClass = default;
+			JniObjectReference iteratorClass = default;
+			JniObjectReference entryClass = default;
 			IntPtr entrySet = IntPtr.Zero;
 			IntPtr iterator = IntPtr.Zero;
 			try {
+				mapClass = JniEnvironment.Types.FindClass ("java/util/Map");
+				setClass = JniEnvironment.Types.FindClass ("java/util/Set");
+				iteratorClass = JniEnvironment.Types.FindClass ("java/util/Iterator");
+				entryClass = JniEnvironment.Types.FindClass ("java/util/Map$Entry");
 				var entrySetMethod = JNIEnv.GetMethodID (mapClass.Handle, "entrySet", "()Ljava/util/Set;");
 				var iteratorMethod = JNIEnv.GetMethodID (setClass.Handle, "iterator", "()Ljava/util/Iterator;");
 				var hasNextMethod = JNIEnv.GetMethodID (iteratorClass.Handle, "hasNext", "()Z");
@@ -473,14 +477,20 @@ namespace ${ROOT_NAMESPACE}
 		{
 			var expectedPeer = (IJavaObject) expected;
 			var actualPeer = (IJavaObject) actual;
-			AssertTrue (JNIEnv.IsSameObject (expectedPeer.Handle, actualPeer.Handle), "expected identical Java peers");
+			AssertTrue (
+				JNIEnv.IsSameObject (expectedPeer.Handle, actualPeer.Handle),
+				$"expected identical Java peers; expected '{expected.GetType ()}' at '{expectedPeer.Handle}', " +
+					$"actual '{actual.GetType ()}' at '{actualPeer.Handle}'");
 		}
 
 		static void AssertDistinctJavaObjects (object first, object second)
 		{
 			var firstPeer = (IJavaObject) first;
 			var secondPeer = (IJavaObject) second;
-			AssertFalse (JNIEnv.IsSameObject (firstPeer.Handle, secondPeer.Handle), "expected distinct Java peers");
+			AssertFalse (
+				JNIEnv.IsSameObject (firstPeer.Handle, secondPeer.Handle),
+				$"expected distinct Java peers; first '{first.GetType ()}' at '{firstPeer.Handle}', " +
+					$"second '{second.GetType ()}' at '{secondPeer.Handle}'");
 		}
 
 		static void AssertTrue (bool value, string message)
