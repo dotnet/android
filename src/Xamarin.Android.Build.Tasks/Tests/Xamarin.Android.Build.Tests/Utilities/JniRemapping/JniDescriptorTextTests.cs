@@ -40,6 +40,8 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("()V", true)]
 		[TestCase ("(Ljava/lang/Object;)Z", true)]
 		[TestCase ("(I)I", true)]
+		[TestCase ("(V)V", false)]
+		[TestCase ("()[V", false)]
 		[TestCase ("I", false)]
 		[TestCase ("Ljava/lang/Object;", false)]
 		[TestCase ("not a descriptor", false)]
@@ -51,6 +53,8 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("I", true)]
 		[TestCase ("[I", true)]
 		[TestCase ("Ljava/lang/Object;", true)]
+		[TestCase ("V", false)]
+		[TestCase ("[V", false)]
 		[TestCase ("()V", false)]
 		[TestCase ("", false)]
 		public void ValidatesFieldDescriptors (string descriptor, bool expected)

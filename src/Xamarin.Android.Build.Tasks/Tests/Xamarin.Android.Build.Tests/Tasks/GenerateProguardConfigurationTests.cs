@@ -136,11 +136,11 @@ namespace Xamarin.Android.Build.Tests
 				F	acme/orig/MyView	count
 				F	acme/orig/MyView	enabled
 				F	acme/orig/MyView	listener
-				M	acme/orig/DirectTarget	run()
-				M	acme/orig/ICallback	invoke()
-				M	acme/orig/MyView	<init>()
-				M	acme/orig/MyView	onClick(android.view.View)
-				M	acme/orig/MyView	onClick(android.view.View,int)
+				M	acme/orig/DirectTarget	run():void
+				M	acme/orig/ICallback	invoke():void
+				M	acme/orig/MyView	<init>():void
+				M	acme/orig/MyView	onClick(android.view.View):void
+				M	acme/orig/MyView	onClick(android.view.View,int):void
 
 				""".ReplaceLineEndings (), File.ReadAllText (manifest));
 		}

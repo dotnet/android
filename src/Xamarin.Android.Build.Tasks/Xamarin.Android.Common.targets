@@ -994,6 +994,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="ProjectFullPath=$(MSBuildProjectFullPath)" />
 		<_PropertyCacheItems Include="AndroidUseDesignerAssembly=$(AndroidUseDesignerAssembly)" />
 		<_PropertyCacheItems Include="AndroidTypeMapImplementation=$(AndroidTypeMapImplementation)" />
+		<_PropertyCacheItems Include="AndroidEnableR8JniNameObfuscation=$(AndroidEnableR8JniNameObfuscation)" />
 		<_PropertyCacheItems Include="_AndroidUseMarshalMethods=$(_AndroidUseMarshalMethods)" />
 		<_PropertyCacheItems Include="_AndroidJcwCodegenTarget=$(_AndroidJcwCodegenTarget)" />
 		<_PropertyCacheItems Include="_AndroidAssemblyStoreCompressionLevel=$(_AndroidAssemblyStoreCompressionLevel)" />
@@ -3104,7 +3105,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <PropertyGroup>
     <_AndroidEnableR8JniNameRewriting
-        Condition=" '$(_AndroidEnableR8JniNameRewriting)' == '' and '$(AndroidLinkTool)' == 'r8' and '$(AndroidTypeMapImplementation)' == 'trimmable' and ('$(_AndroidRuntime)' == 'CoreCLR' or '$(_AndroidRuntime)' == 'NativeAOT') ">$(AndroidEnableR8JniNameObfuscation)</_AndroidEnableR8JniNameRewriting>
+        Condition=" '$(_AndroidEnableR8JniNameRewriting)' == '' and '$(AndroidLinkTool)' == 'r8' and '$(AndroidTypeMapImplementation)' == 'trimmable' and ('$(_AndroidRuntime)' == 'NativeAOT' or ('$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true')) ">$(AndroidEnableR8JniNameObfuscation)</_AndroidEnableR8JniNameRewriting>
     <_AndroidEnableR8JniNameRewriting Condition=" '$(_AndroidEnableR8JniNameRewriting)' == '' ">false</_AndroidEnableR8JniNameRewriting>
   </PropertyGroup>
 

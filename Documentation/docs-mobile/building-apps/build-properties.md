@@ -473,7 +473,8 @@ managed assemblies before trimming or NativeAOT compilation, then applies the sa
 mapping during the final R8 invocation.
 
 This property requires `AndroidLinkTool=r8`,
-`AndroidTypeMapImplementation=trimmable`, and either the CoreCLR or NativeAOT runtime.
+`AndroidTypeMapImplementation=trimmable`, and either NativeAOT or CoreCLR with
+`PublishTrimmed=true`.
 The default value is `False`.
 
 ## AndroidEnableRestrictToAttributes

@@ -381,8 +381,8 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			string mappingName = R8Mapping.JniMemberNameToMappingName (jniMemberName);
 
 			if (jniDescriptor != null && JniDescriptorText.IsValidMethodDescriptor (jniDescriptor)) {
-				var javaParams = JniDescriptorText.MethodDescriptorToJavaParameterTypes (jniDescriptor);
-				return mapping.TryMapMethod (ownerJniName, mappingName, javaParams, out string renamed) ? renamed : null;
+				JniDescriptorText.MethodDescriptorToJavaTypes (jniDescriptor, out var javaParams, out string javaReturnType);
+				return mapping.TryMapMethod (ownerJniName, mappingName, javaParams, javaReturnType, out string renamed) ? renamed : null;
 			}
 
 			return mapping.TryMapMethodByNameOnly (ownerJniName, mappingName, out string renamedByNameOnly)
@@ -422,9 +422,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 								mapping.TryMapField (referencedOwnerJniName, pendingMemberName, out string renamedField)) {
 							plan.AddUserString (methodHandle, pendingMemberNameOffset, renamedField);
 						} else if (JniDescriptorText.IsValidMethodDescriptor (value)) {
-							var javaParams = JniDescriptorText.MethodDescriptorToJavaParameterTypes (value);
+							JniDescriptorText.MethodDescriptorToJavaTypes (value, out var javaParams, out string javaReturnType);
 							string mappingName = R8Mapping.JniMemberNameToMappingName (pendingMemberName);
-							if (mapping.TryMapMethod (referencedOwnerJniName, mappingName, javaParams, out string renamedMethod)) {
+							if (mapping.TryMapMethod (referencedOwnerJniName, mappingName, javaParams, javaReturnType, out string renamedMethod)) {
 								plan.AddUserString (methodHandle, pendingMemberNameOffset, renamedMethod);
 							}
 						}
@@ -572,9 +572,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		string? ComputeNewUtf8Value (string value, Utf8Use use)
 		{
 			if (use.Role == Utf8Role.MethodName && use.OwnerJniName != null && use.PairedSignature != null) {
-				var javaParams = JniDescriptorText.MethodDescriptorToJavaParameterTypes (use.PairedSignature);
+				JniDescriptorText.MethodDescriptorToJavaTypes (use.PairedSignature, out var javaParams, out string javaReturnType);
 				string mappingName = R8Mapping.JniMemberNameToMappingName (value);
-				return mapping.TryMapMethod (use.OwnerJniName, mappingName, javaParams, out string renamed) ? renamed : null;
+				return mapping.TryMapMethod (use.OwnerJniName, mappingName, javaParams, javaReturnType, out string renamed) ? renamed : null;
 			}
 
 			if (JniDescriptorText.IsValidMethodDescriptor (value) || JniDescriptorText.IsValidFieldDescriptor (value)) {

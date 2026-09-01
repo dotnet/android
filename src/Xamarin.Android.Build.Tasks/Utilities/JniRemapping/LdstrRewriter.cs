@@ -97,9 +97,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			bool changed = false;
 			string newName = name;
 			if (ownerJniName != null) {
-				var javaParams = JniDescriptorText.MethodDescriptorToJavaParameterTypes (descriptor);
+				JniDescriptorText.MethodDescriptorToJavaTypes (descriptor, out var javaParams, out string javaReturnType);
 				string mappingName = R8Mapping.JniMemberNameToMappingName (name);
-				if (mapping.TryMapMethod (ownerJniName, mappingName, javaParams, out string renamedMethod)) {
+				if (mapping.TryMapMethod (ownerJniName, mappingName, javaParams, javaReturnType, out string renamedMethod)) {
 					newName = renamedMethod;
 					changed = true;
 				}
@@ -142,9 +142,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 			if (ownerJniName != null) {
 				if (isMethod) {
-					var javaParams = JniDescriptorText.MethodDescriptorToJavaParameterTypes (descriptor);
+					JniDescriptorText.MethodDescriptorToJavaTypes (descriptor, out var javaParams, out string javaReturnType);
 					string mappingName = R8Mapping.JniMemberNameToMappingName (name);
-					if (mapping.TryMapMethod (ownerJniName, mappingName, javaParams, out string renamedMethod)) {
+					if (mapping.TryMapMethod (ownerJniName, mappingName, javaParams, javaReturnType, out string renamedMethod)) {
 						newName = renamedMethod;
 						changed = true;
 					}

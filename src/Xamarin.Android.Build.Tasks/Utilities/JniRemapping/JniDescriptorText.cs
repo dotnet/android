@@ -29,7 +29,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			int i = 0;
 			while (i < descriptor.Length) {
 				int start = i;
-				if (!TryScanSingleToken (descriptor, ref i, allowParens: true)) {
+				if (!TryScanSingleToken (descriptor, ref i, allowVoid: true)) {
 					// Not a type token (e.g. '(' or ')' bracket of a method descriptor) - copy verbatim.
 					sb.Append (descriptor [start]);
 					i = start + 1;
@@ -81,7 +81,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		/// <paramref name="i"/>, advancing <paramref name="i"/> past it. Returns false (without
 		/// advancing) if the character at <paramref name="i"/> cannot start a type token.
 		/// </summary>
-		static bool TryScanSingleToken (string s, ref int i, bool allowParens)
+		static bool TryScanSingleToken (string s, ref int i, bool allowVoid)
 		{
 			int start = i;
 			int j = i;
@@ -94,7 +94,13 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			}
 
 			switch (s [j]) {
-			case 'V': case 'Z': case 'B': case 'C': case 'S': case 'I': case 'J': case 'F': case 'D':
+			case 'V':
+				if (!allowVoid || j != start) {
+					return false;
+				}
+				i = j + 1;
+				return true;
+			case 'Z': case 'B': case 'C': case 'S': case 'I': case 'J': case 'F': case 'D':
 				i = j + 1;
 				return true;
 			case 'L':
@@ -125,7 +131,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			int i = 1;
 			while (i < descriptor.Length && descriptor [i] != ')') {
 				int start = i;
-				if (!TryScanSingleToken (descriptor, ref i, allowParens: false)) {
+				if (!TryScanSingleToken (descriptor, ref i, allowVoid: false)) {
 					return false;
 				}
 				parameterTypes.Add (descriptor.Substring (start, i - start));
@@ -137,7 +143,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			i++;
 
 			int retStart = i;
-			if (!TryScanSingleToken (descriptor, ref i, allowParens: false) || i != descriptor.Length) {
+			if (!TryScanSingleToken (descriptor, ref i, allowVoid: true) || i != descriptor.Length) {
 				return false;
 			}
 
@@ -159,7 +165,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		public static bool IsValidFieldDescriptor (string descriptor)
 		{
 			int i = 0;
-			return descriptor.Length > 0 && TryScanSingleToken (descriptor, ref i, allowParens: false) && i == descriptor.Length;
+			return descriptor.Length > 0 && TryScanSingleToken (descriptor, ref i, allowVoid: false) && i == descriptor.Length;
 		}
 
 		/// <summary>
@@ -196,15 +202,21 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		/// </summary>
 		public static List<string> MethodDescriptorToJavaParameterTypes (string descriptor)
 		{
-			if (!TryParseMethodDescriptor (descriptor, out var parameterTypes, out _)) {
+			MethodDescriptorToJavaTypes (descriptor, out var parameterTypes, out _);
+			return parameterTypes;
+		}
+
+		public static void MethodDescriptorToJavaTypes (string descriptor, out List<string> parameterTypes, out string returnType)
+		{
+			if (!TryParseMethodDescriptor (descriptor, out var jniParameterTypes, out string jniReturnType)) {
 				throw new ArgumentException ($"Malformed JNI method descriptor '{descriptor}'.", nameof (descriptor));
 			}
 
-			var result = new List<string> (parameterTypes.Count);
-			foreach (string p in parameterTypes) {
-				result.Add (JniTypeTokenToJavaSource (p));
+			parameterTypes = new List<string> (jniParameterTypes.Count);
+			foreach (string parameterType in jniParameterTypes) {
+				parameterTypes.Add (JniTypeTokenToJavaSource (parameterType));
 			}
-			return result;
+			returnType = JniTypeTokenToJavaSource (jniReturnType);
 		}
 	}
 }

@@ -212,6 +212,15 @@ public class R8JniPeer : Java.Lang.Object
 			StringAssert.DoesNotContain ($"{originalJavaName.Replace ('/', '.')} ->", File.ReadAllText (seedMapping));
 			StringAssert.Contains ($"{changedJavaName.Replace ('/', '.')} ->", File.ReadAllText (seedMapping));
 			StringAssert.Contains ($"C\t{changedJavaName}", File.ReadAllText (rewriteManifest));
+
+			proj.SetProperty ("AndroidEnableR8JniNameObfuscation", "false");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Disabling R8 JNI name rewriting should invalidate the existing build outputs.");
+			builder.Output.AssertTargetIsNotSkipped ("_CleanIntermediateIfNeeded");
+
+			proj.SetProperty ("AndroidEnableR8JniNameObfuscation", "true");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Re-enabling R8 JNI name rewriting should regenerate the pipeline outputs.");
+			builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateR8JniSeedMapping");
+			FileAssert.Exists (seedMapping);
 		}
 
 		[Test]

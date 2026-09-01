@@ -64,6 +64,38 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		sealed class SharedEntryResourceSectionBuilder : ResourceSectionBuilder
+		{
+			readonly byte [] data;
+
+			public SharedEntryResourceSectionBuilder (byte [] data)
+			{
+				this.data = data;
+			}
+
+			protected override void Serialize (BlobBuilder builder, SectionLocation location)
+			{
+				int dataEntryOffset = ResourceDirectoryHeaderSize + 2 * ResourceDirectoryEntrySize;
+				int dataOffset = dataEntryOffset + ResourceDataEntrySize;
+
+				builder.WriteUInt32 (0);
+				builder.WriteUInt32 (0);
+				builder.WriteUInt16 (0);
+				builder.WriteUInt16 (0);
+				builder.WriteUInt16 (0);
+				builder.WriteUInt16 (2);
+				for (uint id = 1; id <= 2; id++) {
+					builder.WriteUInt32 (id);
+					builder.WriteUInt32 ((uint) dataEntryOffset);
+				}
+				builder.WriteUInt32 ((uint) (location.RelativeVirtualAddress + dataOffset));
+				builder.WriteUInt32 ((uint) data.Length);
+				builder.WriteUInt32 (0);
+				builder.WriteUInt32 (0);
+				builder.WriteBytes (data);
+			}
+		}
+
 		static byte [] BuildAndReadBack (ResourceSectionBuilder nativeResources)
 		{
 			var fixture = new JniFixtureBuilder {
@@ -119,6 +151,29 @@ namespace Xamarin.Android.Build.Tests
 					.GetReader (directory.Size - payload.Length, payload.Length)
 					.ReadBytes (payload.Length),
 				"The payload bytes following the data entry should be exactly what was written.");
+		}
+
+		[Test]
+		public void RelocatesASharedDataEntryOnlyOnce ()
+		{
+			byte [] payload = { 0x11, 0x22, 0x33, 0x44 };
+			var sourceFixture = new JniFixtureBuilder {
+				NativeResources = new SharedEntryResourceSectionBuilder (payload),
+			};
+			sourceFixture.AddEmbeddedResource ("padding", new byte [8192]);
+			byte [] source = sourceFixture.Serialize ();
+			using var sourceReader = new PEReader (ImmutableArray.Create (source));
+			NativeResourceSectionCopier copier = NativeResourceSectionCopier.TryCreate (sourceReader);
+			Assert.IsNotNull (copier);
+
+			byte [] rewritten = BuildAndReadBack (copier);
+			using var rewrittenReader = new PEReader (ImmutableArray.Create (rewritten));
+			DirectoryEntry directory = rewrittenReader.PEHeaders.PEHeader.ResourceTableDirectory;
+			int dataEntryOffset = ResourceDirectoryHeaderSize + 2 * ResourceDirectoryEntrySize;
+			int dataRva = rewrittenReader.GetSectionData (directory.RelativeVirtualAddress).GetReader (dataEntryOffset, sizeof (int)).ReadInt32 ();
+
+			CollectionAssert.AreEqual (payload,
+				rewrittenReader.GetSectionData (dataRva).GetReader (0, payload.Length).ReadBytes (payload.Length));
 		}
 	}
 }

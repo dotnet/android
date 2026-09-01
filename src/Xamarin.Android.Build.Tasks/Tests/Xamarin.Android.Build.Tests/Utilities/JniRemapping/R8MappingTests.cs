@@ -35,9 +35,9 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (mapping.TryGetOriginalClass ("a/b/C", out string originalClass));
 			Assert.AreEqual ("acme/orig/MyView", originalClass);
 			CollectionAssert.AreEquivalent (new [] { "first", "second" }, mapping.GetOriginalMethodNames (originalClass, "x"));
-			Assert.IsTrue (mapping.TryGetOriginalMethodName (originalClass, "x", new [] { "int" }, out string first));
+			Assert.IsTrue (mapping.TryGetOriginalMethodName (originalClass, "x", new [] { "int" }, "void", out string first));
 			Assert.AreEqual ("first", first);
-			Assert.IsTrue (mapping.TryGetOriginalMethodName (originalClass, "x", Array.Empty<string> (), out string second));
+			Assert.IsTrue (mapping.TryGetOriginalMethodName (originalClass, "x", Array.Empty<string> (), "void", out string second));
 			Assert.AreEqual ("second", second);
 			Assert.IsFalse (mapping.TryGetOriginalClass ("a/b/Missing", out _));
 		}
@@ -53,10 +53,10 @@ namespace Xamarin.Android.Build.Tests
 
 				"""));
 
-			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "onClick", new [] { "android.view.View" }, out string renamed1));
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "onClick", new [] { "android.view.View" }, "void", out string renamed1));
 			Assert.AreEqual ("a", renamed1);
 
-			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "onClick", new [] { "android.view.View", "int" }, out string renamed2));
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "onClick", new [] { "android.view.View", "int" }, "void", out string renamed2));
 			Assert.AreEqual ("b", renamed2);
 		}
 
@@ -68,7 +68,7 @@ namespace Xamarin.Android.Build.Tests
 				"acme.orig.MyView -> a.b.C:\n" +
 				"    4:10:void onCreate(android.os.Bundle):23:29 -> a\n"));
 
-			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "onCreate", new [] { "android.os.Bundle" }, out string renamed));
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "onCreate", new [] { "android.os.Bundle" }, "void", out string renamed));
 			Assert.AreEqual ("a", renamed);
 		}
 
@@ -82,7 +82,7 @@ namespace Xamarin.Android.Build.Tests
 				"acme.orig.MyView -> a.b.D:\n" +
 				"    4:4:void run(example.Foo):2 -> a\n"));
 
-			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "run", new [] { "example.Foo" }, out string renamed));
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "run", new [] { "example.Foo" }, "void", out string renamed));
 			Assert.AreEqual ("a", renamed);
 		}
 
@@ -94,7 +94,7 @@ namespace Xamarin.Android.Build.Tests
 				"acme.orig.MyView -> a.b.C:\n" +
 				"    void onPause():23:29 -> a\n"));
 
-			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "onPause", Array.Empty<string> (), out string renamed));
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "onPause", Array.Empty<string> (), "void", out string renamed));
 			Assert.AreEqual ("a", renamed);
 		}
 
@@ -105,7 +105,7 @@ namespace Xamarin.Android.Build.Tests
 				"acme.orig.MyView -> a.b.C:\n" +
 				"    void onStart() -> a\n"));
 
-			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "onStart", Array.Empty<string> (), out string renamed));
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "onStart", Array.Empty<string> (), "void", out string renamed));
 			Assert.AreEqual ("a", renamed);
 		}
 
@@ -127,7 +127,7 @@ namespace Xamarin.Android.Build.Tests
 				"    void <init>(int) -> <init>\n"));
 
 			// JVM never renames <init>, but the lookup key must still translate ".ctor" -> "<init>".
-			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", R8Mapping.JniMemberNameToMappingName (".ctor"), new [] { "int" }, out string renamed));
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", R8Mapping.JniMemberNameToMappingName (".ctor"), new [] { "int" }, "void", out string renamed));
 			Assert.AreEqual ("<init>", renamed);
 		}
 
@@ -161,7 +161,7 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.IsFalse (mapping.TryGetRenamedClass ("acme/orig/Other", out _));
 			Assert.IsFalse (mapping.TryGetRenamedField ("acme/orig/MyView", "missing", out _));
-			Assert.IsFalse (mapping.TryGetRenamedMethod ("acme/orig/MyView", "missing", Array.Empty<string> (), out _));
+			Assert.IsFalse (mapping.TryGetRenamedMethod ("acme/orig/MyView", "missing", Array.Empty<string> (), "void", out _));
 		}
 
 		[Test]
@@ -189,7 +189,7 @@ namespace Xamarin.Android.Build.Tests
 				"    # {'id':'com.android.tools.r8.synthesized'}\n" +
 				"    int someField -> x\n"));
 
-			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "onCreate", new [] { "android.os.Bundle" }, out string renamedMethod));
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "onCreate", new [] { "android.os.Bundle" }, "void", out string renamedMethod));
 			Assert.AreEqual ("a", renamedMethod);
 
 			Assert.IsTrue (mapping.TryGetRenamedField ("acme/orig/MyView", "someField", out string renamedField));
@@ -206,11 +206,11 @@ namespace Xamarin.Android.Build.Tests
 				"    307:307:void androidx.collection.LongSparseArrayKt.commonGc(androidx.collection.LongSparseArray) -> indexOfKey\n" +
 				"    307:307:int indexOfKey(long):209 -> indexOfKey\n"));
 
-			Assert.IsTrue (mapping.TryGetRenamedMethod ("androidx/collection/LongSparseArray", "keyAt", new [] { "int" }, out string keyAt));
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("androidx/collection/LongSparseArray", "keyAt", new [] { "int" }, "long", out string keyAt));
 			Assert.AreEqual ("keyAt", keyAt);
-			Assert.IsTrue (mapping.TryGetRenamedMethod ("androidx/collection/LongSparseArray", "indexOfKey", new [] { "long" }, out string indexOfKey));
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("androidx/collection/LongSparseArray", "indexOfKey", new [] { "long" }, "int", out string indexOfKey));
 			Assert.AreEqual ("indexOfKey", indexOfKey);
-			Assert.IsFalse (mapping.TryGetRenamedMethod ("androidx/collection/LongSparseArray", "androidx.collection.LongSparseArrayKt.commonGc", new [] { "androidx.collection.LongSparseArray" }, out _));
+			Assert.IsFalse (mapping.TryGetRenamedMethod ("androidx/collection/LongSparseArray", "androidx.collection.LongSparseArrayKt.commonGc", new [] { "androidx.collection.LongSparseArray" }, "void", out _));
 		}
 
 		[Test]
@@ -223,10 +223,10 @@ namespace Xamarin.Android.Build.Tests
 				"    299:299:java.lang.Object getOrDefaultInternal(java.lang.Object,java.lang.Object) -> getOrDefault\n" +
 				"    299:299:java.lang.Object getOrDefault(java.lang.Object,java.lang.Object):294 -> getOrDefault\n"));
 
-			Assert.IsFalse (mapping.TryGetRenamedMethod ("androidx/collection/SimpleArrayMap", "getOrDefaultInternal", new [] { "java.lang.Object", "java.lang.Object" }, out _));
-			Assert.IsTrue (mapping.TryGetRenamedMethod ("androidx/collection/SimpleArrayMap", "get", new [] { "java.lang.Object" }, out string get));
+			Assert.IsFalse (mapping.TryGetRenamedMethod ("androidx/collection/SimpleArrayMap", "getOrDefaultInternal", new [] { "java.lang.Object", "java.lang.Object" }, "java.lang.Object", out _));
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("androidx/collection/SimpleArrayMap", "get", new [] { "java.lang.Object" }, "java.lang.Object", out string get));
 			Assert.AreEqual ("get", get);
-			Assert.IsTrue (mapping.TryGetRenamedMethod ("androidx/collection/SimpleArrayMap", "getOrDefault", new [] { "java.lang.Object", "java.lang.Object" }, out string getOrDefault));
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("androidx/collection/SimpleArrayMap", "getOrDefault", new [] { "java.lang.Object", "java.lang.Object" }, "java.lang.Object", out string getOrDefault));
 			Assert.AreEqual ("getOrDefault", getOrDefault);
 		}
 
@@ -257,11 +257,11 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.AreEqual (new [] {
 				"class 'acme/orig/MyView': seed name 'a/b/C', final name 'x/y/Z'",
 				"field 'acme/orig/MyView.count': seed name 'a', final name 'd'",
-				"method 'acme/orig/MyView.onClick(android.view.View)': seed name 'b', final name 'e'",
+				"method 'acme/orig/MyView.onClick(android.view.View):void': seed name 'b', final name 'e'",
 			}, seed.GetCompatibilityConflicts (final, new [] {
 				"C\tacme/orig/MyView",
 				"F\tacme/orig/MyView\tcount",
-				"M\tacme/orig/MyView\tonClick(android.view.View)",
+				"M\tacme/orig/MyView\tonClick(android.view.View):void",
 			}));
 		}
 
@@ -289,8 +289,8 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.IsEmpty (seed.GetCompatibilityConflicts (final, new [] {
 				"C\tacme/orig/Removed",
 				"F\tacme/orig/Removed\tvalue",
-				"M\tacme/orig/Removed\tremoved()",
-				"M\tacme/orig/Kept\tremoved()",
+				"M\tacme/orig/Removed\tremoved():void",
+				"M\tacme/orig/Kept\tremoved():void",
 			}));
 		}
 
@@ -306,12 +306,12 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.IsTrue (mapping.TryGetRenamedClass ("acme/orig/MyView", out _));
 			Assert.IsTrue (mapping.TryGetRenamedField ("acme/orig/MyView", "count", out _));
-			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "onClick", new [] { "android.view.View" }, out _));
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "onClick", new [] { "android.view.View" }, "void", out _));
 
 			CollectionAssert.AreEquivalent (new [] {
 				"C\tacme/orig/MyView",
 				"F\tacme/orig/MyView\tcount",
-				"M\tacme/orig/MyView\tonClick(android.view.View)",
+				"M\tacme/orig/MyView\tonClick(android.view.View):void",
 			}, mapping.AccessedEntries);
 		}
 
@@ -340,15 +340,15 @@ namespace Xamarin.Android.Build.Tests
 				"class 'acme/orig/Missing'",
 				"class 'acme/orig/Removed'",
 				"field 'acme/orig/Members.missingField'",
-				"method 'acme/orig/Members.missing()'",
+				"method 'acme/orig/Members.missing():void'",
 			}, seed.GetReachabilityConflicts (final, new [] {
 				"C\tacme/orig/Missing",
 				"C\tacme/orig/Removed",
 				"C\tacme/orig/Members",
 				"F\tacme/orig/Members\tkeptField",
 				"F\tacme/orig/Members\tmissingField",
-				"M\tacme/orig/Members\tkept()",
-				"M\tacme/orig/Members\tmissing()",
+				"M\tacme/orig/Members\tkept():void",
+				"M\tacme/orig/Members\tmissing():void",
 			}));
 		}
 
@@ -388,9 +388,25 @@ namespace Xamarin.Android.Build.Tests
 				"C\tacme/orig/MyView",
 				"F\tacme/orig/MyView\tfirst",
 				"F\tacme/orig/MyView\tsecond",
-				"M\tacme/orig/MyView\tinvoke(int)",
-				"M\tacme/orig/MyView\trun()",
+				"M\tacme/orig/MyView\tinvoke(int):void",
+				"M\tacme/orig/MyView\trun():void",
 			}, mapping.AccessedEntries);
+		}
+
+		[Test]
+		public void DistinguishesMethodsByReturnType ()
+		{
+			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
+				acme.orig.MyView -> a.b.C:
+				    java.lang.Object value() -> a
+				    java.lang.String value() -> b
+
+				"""));
+
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "value", [], "java.lang.Object", out string objectMethod));
+			Assert.AreEqual ("a", objectMethod);
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "value", [], "java.lang.String", out string stringMethod));
+			Assert.AreEqual ("b", stringMethod);
 		}
 	}
 }

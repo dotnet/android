@@ -22,9 +22,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 		readonly byte [] section;
 		readonly int originalRva;
-		readonly List<int> dataEntryRvaOffsets;
+		readonly HashSet<int> dataEntryRvaOffsets;
 
-		NativeResourceSectionCopier (byte [] section, int originalRva, List<int> dataEntryRvaOffsets)
+		NativeResourceSectionCopier (byte [] section, int originalRva, HashSet<int> dataEntryRvaOffsets)
 		{
 			this.section = section;
 			this.originalRva = originalRva;
@@ -52,7 +52,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			}
 
 			byte [] section = block.GetReader (0, directory.Size).ReadBytes (directory.Size);
-			var offsets = new List<int> ();
+			var offsets = new HashSet<int> ();
 			CollectDataEntryOffsets (section, directory.RelativeVirtualAddress, directoryOffset: 0, depth: 0, offsets, new HashSet<int> ());
 			return new NativeResourceSectionCopier (section, directory.RelativeVirtualAddress, offsets);
 		}
@@ -70,7 +70,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			builder.WriteBytes (relocated);
 		}
 
-		static void CollectDataEntryOffsets (byte [] section, int originalRva, int directoryOffset, int depth, List<int> offsets, HashSet<int> visited)
+		static void CollectDataEntryOffsets (byte [] section, int originalRva, int directoryOffset, int depth, HashSet<int> offsets, HashSet<int> visited)
 		{
 			if (depth > 8) {
 				throw new JniRewriteException ("The Win32 resource directory nests more deeply than the PE format allows.");

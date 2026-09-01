@@ -36,7 +36,8 @@
     <_PostTrimTypeMapFirstRuntimeIdentifier Condition=" '$(RuntimeIdentifiers)' != '' ">$([System.String]::Copy('$(RuntimeIdentifiers)').Split(';')[0])</_PostTrimTypeMapFirstRuntimeIdentifier>
     <_PostTrimTypeMapFirstRuntimeIdentifier Condition=" '$(_PostTrimTypeMapFirstRuntimeIdentifier)' == '' ">$(RuntimeIdentifier)</_PostTrimTypeMapFirstRuntimeIdentifier>
     <_AndroidR8JniManifestBaseOutputDir>$(IntermediateOutputPath)</_AndroidR8JniManifestBaseOutputDir>
-    <_AndroidR8JniManifestBaseOutputDir Condition=" '$(RuntimeIdentifiers)' != '' and '$(_OuterIntermediateOutputPath)' == '' ">$(IntermediateOutputPath)$(_PostTrimTypeMapFirstRuntimeIdentifier)/</_AndroidR8JniManifestBaseOutputDir>
+    <_AndroidR8JniManifestBaseOutputDir Condition=" '$(RuntimeIdentifiers)' != '' and '$(_OuterIntermediateOutputPath)' == '' and '$(RuntimeIdentifier)' == '' ">$(IntermediateOutputPath)$(_PostTrimTypeMapFirstRuntimeIdentifier)/</_AndroidR8JniManifestBaseOutputDir>
+    <_AndroidR8JniManifestBaseOutputDir Condition=" '$(RuntimeIdentifiers)' != '' and '$(_OuterIntermediateOutputPath)' == '' and '$(RuntimeIdentifier)' != '' and '$(RuntimeIdentifier)' != '$(_PostTrimTypeMapFirstRuntimeIdentifier)' ">$(IntermediateOutputPath)../$(_PostTrimTypeMapFirstRuntimeIdentifier)/</_AndroidR8JniManifestBaseOutputDir>
     <_TypeMapJavaStubsSourceDirectory Condition=" '$(_TypeMapJavaStubsSourceDirectory)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' ">$(_PostTrimTypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
     <_TypeMapJavaStubsSourceDirectory Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' ">$(_TypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
     <_TypeMapJavaStubsSourceDirectory Condition=" '$(_TypeMapJavaStubsSourceDirectory)' == '' ">$(_TypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
@@ -169,6 +170,20 @@
       <FileWrites Include="$(_AndroidR8JniSeedXamarinConfiguration)" />
       <FileWrites Include="$(_AndroidR8JniSeedDirectory)dex\*.dex" />
     </ItemGroup>
+  </Target>
+
+  <!-- Produce the shared naming map before _ResolveAssemblies starts parallel per-RID builds.
+       Use an isolated project evaluation so seed-only _ProguardConfiguration items do not
+       leak into the outer build's final R8 configuration. Inner builds still evaluate the
+       incremental target, but consume this completed output instead of racing while deleting
+       and regenerating the shared seed directories. -->
+  <Target Name="_AndroidEnsureR8JniSeedMappingForInnerBuilds"
+      Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' and '$(_OuterIntermediateOutputPath)' == '' and '$(RuntimeIdentifiers)' != '' and '$(_AndroidGeneratingR8JniSeedMapping)' != 'true' "
+      BeforeTargets="_ResolveAssemblies">
+    <MSBuild
+        Projects="$(MSBuildProjectFullPath)"
+        Targets="_AndroidGenerateR8JniSeedMapping"
+        Properties="_AndroidGeneratingR8JniSeedMapping=true" />
   </Target>
 
   <Target Name="_AndroidCopyR8JniSeedRegistrationForPackaging"

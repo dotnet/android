@@ -10,7 +10,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 	{
 		bool TryMapClass (string className, out string mappedClassName);
 		bool TryMapField (string owningClassName, string fieldName, out string mappedFieldName);
-		bool TryMapMethod (string owningClassName, string methodName, IReadOnlyList<string> javaParameterTypes, out string mappedMethodName);
+		bool TryMapMethod (string owningClassName, string methodName, IReadOnlyList<string> javaParameterTypes, string javaReturnType, out string mappedMethodName);
 		bool TryMapMethodByNameOnly (string owningClassName, string methodName, out string mappedMethodName);
 	}
 
@@ -29,7 +29,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		// Original JNI class name -> (original field name -> obfuscated field name).
 		readonly Dictionary<string, Dictionary<string, string>> fields = new Dictionary<string, Dictionary<string, string>> (StringComparer.Ordinal);
 
-		// Original JNI class name -> ("name(javaParam,javaParam,...)" -> obfuscated method name).
+		// Original JNI class name -> ("name(javaParam,javaParam,...):javaReturn" -> obfuscated method name).
 		readonly Dictionary<string, Dictionary<string, string>> methods = new Dictionary<string, Dictionary<string, string>> (StringComparer.Ordinal);
 
 		// Reverse member indexes are scoped by original class. Fields retain every candidate because
@@ -46,8 +46,8 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		bool IJniNameMapping.TryMapField (string owningClassName, string fieldName, out string mappedFieldName)
 			=> TryGetRenamedField (owningClassName, fieldName, out mappedFieldName);
 
-		bool IJniNameMapping.TryMapMethod (string owningClassName, string methodName, IReadOnlyList<string> javaParameterTypes, out string mappedMethodName)
-			=> TryGetRenamedMethod (owningClassName, methodName, javaParameterTypes, out mappedMethodName);
+		bool IJniNameMapping.TryMapMethod (string owningClassName, string methodName, IReadOnlyList<string> javaParameterTypes, string javaReturnType, out string mappedMethodName)
+			=> TryGetRenamedMethod (owningClassName, methodName, javaParameterTypes, javaReturnType, out mappedMethodName);
 
 		bool IJniNameMapping.TryMapMethodByNameOnly (string owningClassName, string methodName, out string mappedMethodName)
 			=> TryGetRenamedMethodByNameOnly (owningClassName, methodName, out mappedMethodName);
@@ -98,7 +98,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					throw new FormatException ($"mapping.txt:{lineNumber}: member mapping line found before any class mapping line: '{line}'.");
 				}
 
-				if (!TryParseMemberLine (trimmed, out string memberName, out string []? javaParameterTypes, out string obfuscatedName)) {
+				if (!TryParseMemberLine (trimmed, out string memberName, out string []? javaParameterTypes, out string? javaReturnType, out string obfuscatedName)) {
 					throw new FormatException ($"mapping.txt:{lineNumber}: could not parse member mapping line: '{line}'.");
 				}
 
@@ -117,7 +117,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					}
 
 					// Method.
-					string key = BuildMethodKey (memberName, javaParameterTypes);
+					string key = BuildMethodKey (memberName, javaParameterTypes, javaReturnType ?? "");
 					if (!mapping.methods.TryGetValue (currentOriginalClass, out var classMethods)) {
 						mapping.methods [currentOriginalClass] = classMethods = new Dictionary<string, string> (StringComparer.Ordinal);
 					}
@@ -160,8 +160,8 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					}
 					int parameterStart = method.Key.IndexOf ('(');
 					string originalName = parameterStart < 0 ? method.Key : method.Key.Substring (0, parameterStart);
-					string parameters = parameterStart < 0 ? "()" : method.Key.Substring (parameterStart);
-					AddUnambiguousReverseEntry (reverseMethods, method.Value + parameters, originalName);
+					string signature = parameterStart < 0 ? "()" : method.Key.Substring (parameterStart);
+					AddUnambiguousReverseEntry (reverseMethods, method.Value + signature, originalName);
 				}
 			}
 		}
@@ -179,8 +179,8 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		/// Builds the lookup key used for methods: the JNI/Java member name plus its
 		/// parameter types (in Java source form, e.g. "int", "android.os.Bundle", "java.lang.String[]").
 		/// </summary>
-		internal static string BuildMethodKey (string javaMethodName, IReadOnlyList<string> javaParameterTypes)
-			=> javaMethodName + "(" + string.Join (",", javaParameterTypes) + ")";
+		internal static string BuildMethodKey (string javaMethodName, IReadOnlyList<string> javaParameterTypes, string javaReturnType)
+			=> javaMethodName + "(" + string.Join (",", javaParameterTypes) + "):" + javaReturnType;
 
 		/// <summary>
 		/// Translates a JNI member name (as it appears in a RegisterAttribute / encoded JniPeerMembers
@@ -232,11 +232,11 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			}
 		}
 
-		public bool TryGetOriginalMethodName (string originalJniClassName, string obfuscatedMethodName, IReadOnlyList<string> originalJavaParameterTypes, out string originalMethodName)
+		public bool TryGetOriginalMethodName (string originalJniClassName, string obfuscatedMethodName, IReadOnlyList<string> originalJavaParameterTypes, string originalJavaReturnType, out string originalMethodName)
 		{
 			originalMethodName = "";
 			return originalMethods.TryGetValue (originalJniClassName, out var classMethods) &&
-				classMethods.TryGetValue (BuildMethodKey (obfuscatedMethodName, originalJavaParameterTypes), out originalMethodName) &&
+				classMethods.TryGetValue (BuildMethodKey (obfuscatedMethodName, originalJavaParameterTypes, originalJavaReturnType), out originalMethodName) &&
 				originalMethodName.Length != 0;
 		}
 
@@ -261,17 +261,18 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			return true;
 		}
 
-		public bool TryGetRenamedMethod (string owningJniClassName, string javaMethodName, IReadOnlyList<string> javaParameterTypes, out string obfuscatedMethodName)
+		public bool TryGetRenamedMethod (string owningJniClassName, string javaMethodName, IReadOnlyList<string> javaParameterTypes, string javaReturnType, out string obfuscatedMethodName)
 		{
 			obfuscatedMethodName = "";
 			if (!methods.TryGetValue (owningJniClassName, out var classMethods)) {
 				return false;
 			}
-			if (!classMethods.TryGetValue (BuildMethodKey (javaMethodName, javaParameterTypes), out string? renamed) || renamed.Length == 0) {
+			string methodKey = BuildMethodKey (javaMethodName, javaParameterTypes, javaReturnType);
+			if (!classMethods.TryGetValue (methodKey, out string? renamed) || renamed.Length == 0) {
 				return false;
 			}
 			obfuscatedMethodName = renamed;
-			accessedEntries.Add (BuildMethodEntry (owningJniClassName, BuildMethodKey (javaMethodName, javaParameterTypes)));
+			accessedEntries.Add (BuildMethodEntry (owningJniClassName, methodKey));
 			return true;
 		}
 
@@ -458,7 +459,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return true;
 			}
 
-			public bool TryMapMethod (string owningClassName, string methodName, IReadOnlyList<string> javaParameterTypes, out string mappedMethodName)
+			public bool TryMapMethod (string owningClassName, string methodName, IReadOnlyList<string> javaParameterTypes, string javaReturnType, out string mappedMethodName)
 			{
 				mappedMethodName = "";
 				if (!mapping.TryGetOriginalClass (owningClassName, out string originalClassName)) {
@@ -469,13 +470,14 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				foreach (string parameterType in javaParameterTypes) {
 					originalParameterTypes.Add (GetOriginalJavaType (parameterType));
 				}
-				if (!mapping.TryGetOriginalMethodName (originalClassName, methodName, originalParameterTypes, out mappedMethodName)) {
+				string originalReturnType = GetOriginalJavaType (javaReturnType);
+				if (!mapping.TryGetOriginalMethodName (originalClassName, methodName, originalParameterTypes, originalReturnType, out mappedMethodName)) {
 					return false;
 				}
 				mapping.accessedEntries.Add (BuildClassEntry (originalClassName));
 				mapping.accessedEntries.Add (BuildMethodEntry (
 					originalClassName,
-					BuildMethodKey (mappedMethodName, originalParameterTypes)));
+					BuildMethodKey (mappedMethodName, originalParameterTypes, originalReturnType)));
 				return true;
 			}
 
@@ -547,10 +549,11 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			return originalClass.Length > 0 && obfuscatedClass.Length > 0;
 		}
 
-		static bool TryParseMemberLine (string trimmed, out string name, out string []? javaParameterTypes, out string obfuscatedName)
+		static bool TryParseMemberLine (string trimmed, out string name, out string []? javaParameterTypes, out string? javaReturnType, out string obfuscatedName)
 		{
 			name = "";
 			javaParameterTypes = null;
+			javaReturnType = null;
 			obfuscatedName = "";
 
 			const string arrow = " -> ";
@@ -579,6 +582,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				}
 
 				name = beforeParen.Substring (lastSpace + 1);
+				javaReturnType = beforeParen.Substring (0, lastSpace);
 				javaParameterTypes = paramList.Length == 0
 					? Array.Empty<string> ()
 					: paramList.Split (',');
@@ -591,6 +595,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 				name = left.Substring (lastSpace + 1);
 				javaParameterTypes = null;
+				javaReturnType = null;
 				return name.Length > 0;
 			}
 		}
