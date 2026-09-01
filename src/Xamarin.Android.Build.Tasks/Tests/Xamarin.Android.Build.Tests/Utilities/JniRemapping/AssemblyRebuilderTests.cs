@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using System.Text;
 using NUnit.Framework;
 using Xamarin.Android.Tasks.JniRemapping;
 
@@ -136,6 +137,159 @@ namespace Xamarin.Android.Build.Tests
 
 			CollectionAssert.AreEqual (sourceFieldRvas.Get (firstField).Data, rebuiltFieldRvas.Get (firstField).Data);
 			CollectionAssert.AreEqual (sourceFieldRvas.Get (secondField).Data, rebuiltFieldRvas.Get (secondField).Data);
+		}
+
+		[Test]
+		public void LongerUtf8FieldReplacementAddsCorrectlySizedNestedType ()
+		{
+			const string replacement = "aMuchLongerReplacement";
+			int replacementSize = Encoding.UTF8.GetByteCount (replacement) + 1;
+			var fixture = new JniFixtureBuilder ();
+			FieldDefinitionHandle field = fixture.AddUtf8Field ("x");
+
+			byte [] source = fixture.Serialize ();
+			using var sourcePe = new PEReader (ImmutableArray.Create (source));
+			MetadataReader before = sourcePe.GetMetadataReader ();
+			var plan = new JniRewritePlan ();
+			plan.AddUtf8FieldValue (field, replacement);
+
+			var result = new AssemblyRebuilder (sourcePe, before, plan, FieldRvaTable.Read (sourcePe, before)).Build ();
+
+			using var rebuiltPe = new PEReader (ImmutableArray.Create (result.Image));
+			MetadataReader after = rebuiltPe.GetMetadataReader ();
+			FieldRvaEntry rebuiltField = GetRequiredFieldRva (rebuiltPe, after, field);
+			TypeDefinitionHandle sizedType = GetFieldValueType (after, field);
+			TypeDefinition type = after.GetTypeDefinition (sizedType);
+			TypeDefinitionHandle enclosing = type.GetDeclaringType ();
+			TypeLayout layout = type.GetLayout ();
+
+			Assert.AreEqual (replacement, rebuiltField.Utf8Value);
+			Assert.AreEqual (before.GetTableRowCount (TableIndex.TypeDef) + 1, after.GetTableRowCount (TableIndex.TypeDef));
+			Assert.AreEqual (before.GetTableRowCount (TableIndex.ClassLayout) + 1, after.GetTableRowCount (TableIndex.ClassLayout));
+			Assert.AreEqual (before.GetTableRowCount (TableIndex.NestedClass) + 1, after.GetTableRowCount (TableIndex.NestedClass));
+			Assert.AreEqual (FieldRvaTable.Utf8FieldNamePrefix + replacementSize, after.GetString (type.Name));
+			Assert.AreEqual (JniFixtureBuilder.PrivateImplementationDetails, after.GetString (after.GetTypeDefinition (enclosing).Name));
+			Assert.AreEqual (replacementSize, layout.Size);
+			Assert.AreEqual (1, layout.PackingSize);
+
+			AssertTableRowCountsMatchExcept (before, after, TableIndex.TypeDef, TableIndex.ClassLayout, TableIndex.NestedClass);
+		}
+
+		[Test]
+		public void ShorterUtf8FieldReplacementPreservesTypeAndZeroFillsSlot ()
+		{
+			var fixture = new JniFixtureBuilder ();
+			FieldDefinitionHandle field = fixture.AddUtf8Field ("longOriginalValue");
+
+			byte [] source = fixture.Serialize ();
+			using var sourcePe = new PEReader (ImmutableArray.Create (source));
+			MetadataReader before = sourcePe.GetMetadataReader ();
+			TypeDefinitionHandle originalType = GetFieldValueType (before, field);
+			int originalSize = GetRequiredFieldRva (sourcePe, before, field).Data.Length;
+			var plan = new JniRewritePlan ();
+			plan.AddUtf8FieldValue (field, "x");
+
+			var result = new AssemblyRebuilder (sourcePe, before, plan, FieldRvaTable.Read (sourcePe, before)).Build ();
+
+			using var rebuiltPe = new PEReader (ImmutableArray.Create (result.Image));
+			MetadataReader after = rebuiltPe.GetMetadataReader ();
+			FieldRvaEntry rebuiltField = GetRequiredFieldRva (rebuiltPe, after, field);
+
+			Assert.AreEqual (originalType, GetFieldValueType (after, field));
+			Assert.AreEqual ("x", rebuiltField.Utf8Value);
+			Assert.AreEqual (originalSize, rebuiltField.Data.Length);
+			Assert.AreEqual ((byte) 'x', rebuiltField.Data [0]);
+			for (int i = 1; i < rebuiltField.Data.Length; i++) {
+				Assert.AreEqual (0, rebuiltField.Data [i], $"Mapped field byte {i} was not zero-filled.");
+			}
+			AssertTableRowCountsMatchExcept (before, after);
+		}
+
+		[Test]
+		public void SharedUserStringCanBeReplacedAtOneUseSite ()
+		{
+			var fixture = new JniFixtureBuilder ();
+			UserStringHandle shared = fixture.String ("shared");
+			MethodDefinitionHandle method = fixture.AddVoidMethod ("LoadShared", fixture.EmitLoadStringBody (shared, shared));
+			fixture.AddType ("Acme", "StringUser", fixture.NextFieldRid, MetadataTokens.GetRowNumber (method));
+
+			byte [] source = fixture.Serialize ();
+			using var sourcePe = new PEReader (ImmutableArray.Create (source));
+			MetadataReader before = sourcePe.GetMetadataReader ();
+			var plan = new JniRewritePlan ();
+			plan.AddUserString (method, operandOffset: 1, "changed");
+
+			var result = new AssemblyRebuilder (sourcePe, before, plan, FieldRvaTable.Read (sourcePe, before)).Build ();
+
+			using var rebuiltPe = new PEReader (ImmutableArray.Create (result.Image));
+			MetadataReader after = rebuiltPe.GetMetadataReader ();
+			byte [] il = rebuiltPe.GetMethodBody (after.GetMethodDefinition (method).RelativeVirtualAddress).GetILBytes ();
+			var tokens = new System.Collections.Generic.List<int> ();
+			var values = new System.Collections.Generic.List<string> ();
+			IlInstructionScanner.Walk (il, (code, _, operandOffset, _) => {
+				if (code != (ushort) ILOpCode.Ldstr) {
+					return;
+				}
+				int token = checked ((int) IlInstructionScanner.ReadUInt32 (il, operandOffset));
+				tokens.Add (token);
+				values.Add (after.GetUserString (MetadataTokens.UserStringHandle (token & 0x00FFFFFF)));
+			});
+
+			CollectionAssert.AreEqual (new [] { "changed", "shared" }, values);
+			Assert.AreEqual (2, tokens.Count);
+			Assert.AreNotEqual (tokens [0], tokens [1], "The two use sites should resolve through distinct #US tokens.");
+		}
+
+		[Test]
+		public void StrongNameFlagIsClearedButSignatureSpaceIsPreserved ()
+		{
+			var fixture = new JniFixtureBuilder (hasPublicKey: true) {
+				Flags = CorFlags.ILOnly | CorFlags.StrongNameSigned,
+				StrongNameSignatureSize = 128,
+			};
+
+			byte [] source = fixture.Serialize ();
+			using var sourcePe = new PEReader (ImmutableArray.Create (source));
+			MetadataReader reader = sourcePe.GetMetadataReader ();
+
+			var result = new AssemblyRebuilder (sourcePe, reader, new JniRewritePlan (), FieldRvaTable.Read (sourcePe, reader)).Build ();
+
+			using var rebuiltPe = new PEReader (ImmutableArray.Create (result.Image));
+			CorHeader corHeader = rebuiltPe.PEHeaders.CorHeader;
+			Assert.IsTrue (result.StrongNameSignatureCleared);
+			Assert.AreEqual ((CorFlags) 0, corHeader.Flags & CorFlags.StrongNameSigned);
+			Assert.AreEqual (128, corHeader.StrongNameSignatureDirectory.Size);
+			Assert.AreNotEqual (0, corHeader.StrongNameSignatureDirectory.RelativeVirtualAddress);
+		}
+
+		static FieldRvaEntry GetRequiredFieldRva (PEReader peReader, MetadataReader reader, FieldDefinitionHandle field)
+		{
+			FieldRvaEntry? entry = FieldRvaTable.Read (peReader, reader).Get (field);
+			if (entry == null) {
+				throw new AssertionException ($"Field 0x{MetadataTokens.GetToken (field):X8} has no FieldRVA row.");
+			}
+			return entry;
+		}
+
+		static TypeDefinitionHandle GetFieldValueType (MetadataReader reader, FieldDefinitionHandle field)
+		{
+			BlobReader signature = reader.GetBlobReader (reader.GetFieldDefinition (field).Signature);
+			Assert.AreEqual (SignatureKind.Field, signature.ReadSignatureHeader ().Kind);
+			Assert.AreEqual ((int) SignatureTypeKind.ValueType, signature.ReadCompressedInteger ());
+			EntityHandle type = signature.ReadTypeHandle ();
+			Assert.AreEqual (HandleKind.TypeDefinition, type.Kind);
+			return (TypeDefinitionHandle) type;
+		}
+
+		static void AssertTableRowCountsMatchExcept (MetadataReader expected, MetadataReader actual, params TableIndex [] except)
+		{
+			for (int i = 0; i < MetadataTokens.TableCount; i++) {
+				var table = (TableIndex) i;
+				if (Array.IndexOf (except, table) >= 0) {
+					continue;
+				}
+				Assert.AreEqual (expected.GetTableRowCount (table), actual.GetTableRowCount (table), $"Row count of table '{table}' changed.");
+			}
 		}
 
 		static FieldDefinitionHandle AddMappedInt32Field (JniFixtureBuilder fixture, BlobHandle signature, string name, int value)

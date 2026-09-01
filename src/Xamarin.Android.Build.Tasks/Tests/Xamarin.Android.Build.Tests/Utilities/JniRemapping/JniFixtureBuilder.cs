@@ -62,8 +62,12 @@ namespace Xamarin.Android.Build.Tests
 			Metadata.AddTypeDefinition (default, default, Metadata.GetOrAddString ("<Module>"), default,
 				MetadataTokens.FieldDefinitionHandle (1), MetadataTokens.MethodDefinitionHandle (1));
 
+			Version? coreLibraryVersion = typeof (object).Assembly.GetName ().Version;
+			if (coreLibraryVersion == null) {
+				throw new InvalidOperationException ("The executing runtime's core assembly has no version.");
+			}
 			CoreLibraryReference = Metadata.AddAssemblyReference (
-				Metadata.GetOrAddString ("System.Runtime"), new Version (11, 0, 0, 0), default, default, default, default);
+				Metadata.GetOrAddString ("System.Runtime"), coreLibraryVersion, default, default, default, default);
 			ValueTypeReference = Metadata.AddTypeReference (CoreLibraryReference,
 				Metadata.GetOrAddString ("System"), Metadata.GetOrAddString ("ValueType"));
 			ExceptionReference = Metadata.AddTypeReference (CoreLibraryReference,
