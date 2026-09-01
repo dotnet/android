@@ -107,8 +107,18 @@ public class TrimmableTypeMap
 		}
 	}
 
-	internal JniProxyTargetTypeEnumerable GetTargetTypes (string jniName)
-		=> new (GetProxyCacheEntryForJniName (jniName));
+	internal IEnumerable<Type> GetTargetTypes (string jniName)
+	{
+		var cacheEntry = GetProxyCacheEntryForJniName (jniName);
+		if (cacheEntry is JavaPeerProxy proxy) {
+			yield return proxy.TargetType;
+			yield break;
+		}
+
+		foreach (var aliasProxy in GetProxyArrayCacheEntry (cacheEntry)) {
+			yield return aliasProxy.TargetType;
+		}
+	}
 
 	/// <summary>
 	/// Returns the first target type mapped to a JNI name without materializing all target types.
@@ -552,56 +562,5 @@ struct JniProxyCacheBuilder
 		}
 
 		return first is JavaPeerProxy proxy ? proxy : Empty;
-	}
-}
-
-readonly struct JniProxyTargetTypeEnumerable
-{
-	readonly object cacheEntry;
-
-	public JniProxyTargetTypeEnumerable (object cacheEntry)
-	{
-		this.cacheEntry = cacheEntry;
-	}
-
-	public Enumerator GetEnumerator () => new (cacheEntry);
-
-	public struct Enumerator
-	{
-		readonly object cacheEntry;
-		int index;
-		Type current;
-
-		public Enumerator (object cacheEntry)
-		{
-			this.cacheEntry = cacheEntry;
-			index = -1;
-			current = typeof (void);
-		}
-
-		public readonly Type Current => current;
-
-		public bool MoveNext ()
-		{
-			int next = index + 1;
-			if (cacheEntry is JavaPeerProxy proxy) {
-				if (next != 0) {
-					return false;
-				}
-
-				index = next;
-				current = proxy.TargetType;
-				return true;
-			}
-
-			var proxies = TrimmableTypeMap.GetProxyArrayCacheEntry (cacheEntry);
-			if ((uint) next >= (uint) proxies.Length) {
-				return false;
-			}
-
-			index = next;
-			current = proxies [next].TargetType;
-			return true;
-		}
 	}
 }
