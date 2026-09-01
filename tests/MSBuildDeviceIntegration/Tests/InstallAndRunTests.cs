@@ -2299,7 +2299,8 @@ namespace UnnamedProject
 			}
 
 			var packageSuffix = $"interfacemethods_{typemapImplementation.Replace ("-", "")}_{apiNative}_{useR8}";
-			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, packageSuffix)) {
+			var packageName = PackageUtils.MakePackageName (runtime, packageSuffix).ToLowerInvariant ();
+			var proj = new XamarinAndroidApplicationProject (packageName: packageName) {
 				IsRelease = true,
 				OtherBuildItems = {
 					new AndroidItem.AndroidJavaSource ("InterfaceMethods.java") {
@@ -2384,24 +2385,52 @@ namespace UnnamedProject
 						$"{nestedPeer.NestedDefaultValue}:" +
 						$"{bridgeValue}");
 				""");
-			var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+			using var builder = CreateApkBuilder (packageName: packageName);
+			try {
+				CleanupInterfaceMethodPackage (proj.PackageName);
+				Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 
-			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
-			FileAssert.Exists (dexFile);
-			AssertInterfaceMethodDexShape (dexFile, apiNative);
+				var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+				FileAssert.Exists (dexFile);
+				AssertInterfaceMethodDexShape (dexFile, apiNative);
 
-			RunProjectAndAssert (proj, builder);
-			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
-			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity", appStartupLogcatFile, ActivityStartTimeoutInSeconds);
-			Assert.IsTrue (didLaunch, "MainActivity should have launched!");
-			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
+				RunProjectAndAssert (proj, builder);
+				var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
+				bool didLaunch = WaitForActivityToStart (
+					proj.PackageName,
+					"MainActivity",
+					appStartupLogcatFile,
+					ActivityStartTimeoutInSeconds);
+				Assert.IsTrue (didLaunch, "MainActivity should have launched!");
+				var logcatOutput = File.ReadAllText (appStartupLogcatFile);
 
-			StringAssert.Contains (
+				StringAssert.Contains (
 					"INTERFACE_METHOD_RESULTS 11:22:23:33:44:bridge",
 					logcatOutput,
 					"Static, default, nested, and covariant bridge interface methods should all execute."
-			);
+				);
+			} finally {
+				CleanupInterfaceMethodPackage (proj.PackageName);
+			}
+		}
+
+		static void CleanupInterfaceMethodPackage (string packageName)
+		{
+			RunAdbCommand ($"shell am force-stop {packageName}");
+			RunAdbCommand ($"uninstall {packageName}");
+			var adb = Path.Combine (AndroidSdkPath, "platform-tools", OperatingSystem.IsWindows () ? "adb.exe" : "adb");
+			var adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
+			var (exitCode, standardOutput, standardError) = RunProcessWithExitCode (
+				adb,
+				$"{adbTarget} shell pm list packages {packageName}");
+			Assert.AreEqual (0, exitCode, $"Failed to query installed packages: {standardError}");
+			var installedPackages = standardOutput.Split (
+				new [] { '\r', '\n' },
+				StringSplitOptions.RemoveEmptyEntries);
+			CollectionAssert.DoesNotContain (
+				installedPackages,
+				$"package:{packageName}",
+				$"{packageName} should not remain installed.");
 		}
 
 		void AssertInterfaceMethodDexShape (string dexFile, bool apiNative)
