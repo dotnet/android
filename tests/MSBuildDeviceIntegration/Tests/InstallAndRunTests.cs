@@ -2405,9 +2405,9 @@ namespace UnnamedProject
 				var logcatOutput = File.ReadAllText (appStartupLogcatFile);
 
 				StringAssert.Contains (
-					"INTERFACE_METHOD_RESULTS 11:22:23:33:44:bridge",
+					"INTERFACE_METHOD_RESULTS 11:22:23:33:44:bridge:44",
 					logcatOutput,
-					"Static, default, nested, and covariant bridge interface methods should all execute."
+					"Managed and Java static, default, nested, and covariant bridge interface methods should all execute."
 				);
 			} finally {
 				CleanupInterfaceMethodPackage (proj.PackageName);
@@ -2438,32 +2438,33 @@ namespace UnnamedProject
 			const string interfaceClass = "Lexample/InterfaceMethods;";
 			const string nestedInterfaceClass = "Lexample/InterfaceMethods$Nested;";
 			const string covariantInterfaceClass = "Lexample/CovariantInterfaceMethods$Derived;";
+			var dexDump = DexUtils.GetDexDump (dexFile, AndroidSdkPath);
 
 			if (apiNative) {
-				Assert.IsTrue (DexUtils.ContainsClassWithMethod (interfaceClass, "getStaticValue", "()I", dexFile, AndroidSdkPath));
-				Assert.IsTrue (DexUtils.ContainsClassWithMethod (interfaceClass, "getDefaultValue", "()I", dexFile, AndroidSdkPath));
-				Assert.IsTrue (DexUtils.ContainsClassWithMethod (nestedInterfaceClass, "getNestedStaticValue", "()I", dexFile, AndroidSdkPath));
-				Assert.IsTrue (DexUtils.ContainsClassWithMethod (nestedInterfaceClass, "getNestedDefaultValue", "()I", dexFile, AndroidSdkPath));
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod (interfaceClass, "getStaticValue", "()I", dexDump));
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod (interfaceClass, "getDefaultValue", "()I", dexDump));
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod (nestedInterfaceClass, "getNestedStaticValue", "()I", dexDump));
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod (nestedInterfaceClass, "getNestedDefaultValue", "()I", dexDump));
 				Assert.IsTrue (DexUtils.ContainsClassWithMethod (covariantInterfaceClass, "getCovariantValue",
-					"()Ljava/lang/Object;", dexFile, AndroidSdkPath));
+					"()Ljava/lang/Object;", dexDump));
 				Assert.IsTrue (DexUtils.ContainsClassWithMethod (covariantInterfaceClass, "getCovariantValue",
-					"()Ljava/lang/String;", dexFile, AndroidSdkPath));
-				Assert.IsFalse (DexUtils.ContainsClass ("Lexample/InterfaceMethods$-CC;", dexFile, AndroidSdkPath));
-				Assert.IsFalse (DexUtils.ContainsClass ("Lexample/InterfaceMethods$Nested$-CC;", dexFile, AndroidSdkPath));
-				Assert.IsFalse (DexUtils.ContainsClass ("Lexample/CovariantInterfaceMethods$Derived$-CC;", dexFile, AndroidSdkPath));
+					"()Ljava/lang/String;", dexDump));
+				Assert.IsFalse (DexUtils.ContainsClass ("Lexample/InterfaceMethods$-CC;", dexDump));
+				Assert.IsFalse (DexUtils.ContainsClass ("Lexample/InterfaceMethods$Nested$-CC;", dexDump));
+				Assert.IsFalse (DexUtils.ContainsClass ("Lexample/CovariantInterfaceMethods$Derived$-CC;", dexDump));
 			} else {
-				Assert.IsFalse (DexUtils.ContainsClassWithMethod (interfaceClass, "getStaticValue", "()I", dexFile, AndroidSdkPath));
+				Assert.IsFalse (DexUtils.ContainsClassWithMethod (interfaceClass, "getStaticValue", "()I", dexDump));
 				Assert.IsTrue (DexUtils.ContainsClassWithMethod ("Lexample/InterfaceMethods$-CC;", "getStaticValue",
-					"()I", dexFile, AndroidSdkPath));
+					"()I", dexDump));
 				Assert.IsTrue (DexUtils.ContainsClassWithMethod ("Lexample/InterfaceMethods$-CC;", "$default$getDefaultValue",
-					"(Lexample/InterfaceMethods;)I", dexFile, AndroidSdkPath));
+					"(Lexample/InterfaceMethods;)I", dexDump));
 				Assert.IsTrue (DexUtils.ContainsClassWithMethod ("Lexample/InterfaceMethods$Nested$-CC;", "getNestedStaticValue",
-					"()I", dexFile, AndroidSdkPath));
+					"()I", dexDump));
 				Assert.IsTrue (DexUtils.ContainsClassWithMethod ("Lexample/InterfaceMethods$Nested$-CC;", "$default$getNestedDefaultValue",
-					"(Lexample/InterfaceMethods$Nested;)I", dexFile, AndroidSdkPath));
+					"(Lexample/InterfaceMethods$Nested;)I", dexDump));
 				Assert.IsTrue (DexUtils.ContainsClassWithMethod ("Lexample/CovariantInterfaceMethods$Derived$-CC;",
 					"$default$getCovariantValue",
-					"(Lexample/CovariantInterfaceMethods$Derived;)Ljava/lang/Object;", dexFile, AndroidSdkPath));
+					"(Lexample/CovariantInterfaceMethods$Derived;)Ljava/lang/Object;", dexDump));
 			}
 		}
 

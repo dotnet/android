@@ -9,7 +9,7 @@ public final class InterfaceMethodBridgeInvoker {
 
     public static String invokeCovariantBridge() {
         CovariantInterfaceMethods.Base peer = new CovariantPeer();
-        return (String) peer.getCovariantValue();
+        return (String) peer.getCovariantValue() + ":" + invokeStaticMethods();
     }
 
     // Keep Java call sites so the R8 retention gap tracked by dotnet/android#11774

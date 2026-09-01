@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -67,13 +68,12 @@ namespace Xamarin.ProjectTools
 		/// <param name="className">A Java class name of the form 'Landroid/app/ActivityTracker;'</param>
 		public static bool ContainsClass (string className, string dexFile, string androidSdkDirectory)
 		{
-			bool containsClass = false;
-			DataReceivedEventHandler handler = (s, e) => {
-				if (e.Data != null && e.Data.Contains ("Class descriptor") && e.Data.Contains (className))
-					containsClass = true;
-			};
-			DexDump (handler, dexFile, androidSdkDirectory);			
-			return containsClass;
+			return ContainsClass (className, GetDexDump (dexFile, androidSdkDirectory));
+		}
+
+		public static bool ContainsClass (string className, IEnumerable<string> dexDump)
+		{
+			return dexDump.Any (line => line.Contains ("Class descriptor") && line.Contains (className));
 		}
 
 		/// <summary>
@@ -84,23 +84,39 @@ namespace Xamarin.ProjectTools
 		/// <param name="type">A Java method signature of the form '()V'</param>
 		public static bool ContainsClassWithMethod (string className, string method, string type, string dexFile, string androidSdkDirectory)
 		{
+			return ContainsClassWithMethod (className, method, type, GetDexDump (dexFile, androidSdkDirectory));
+		}
+
+		public static bool ContainsClassWithMethod (string className, string method, string type, IEnumerable<string> dexDump)
+		{
 			bool inClass = false;
 			bool hasName = false;
-			bool hasType = false;
+			foreach (var line in dexDump) {
+				if (line.Contains ("Class descriptor")) {
+					inClass = line.Contains (className);
+					hasName = false;
+				} else if (inClass && line.Contains ("name") && line.Contains (method)) {
+					hasName = true;
+				} else if (hasName && line.Contains ("type") && line.Contains (type)) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		public static IReadOnlyList<string> GetDexDump (string dexFile, string androidSdkDirectory)
+		{
+			var lines = new List<string> ();
+			var linesLock = new object ();
 			DataReceivedEventHandler handler = (s, e) => {
 				if (e.Data != null) {
-					if (e.Data.Contains ("Class descriptor")) {
-						inClass = e.Data.Contains (className);
-						hasName = false;
-					} else if (inClass && e.Data.Contains ("name") && e.Data.Contains (method)) {
-						hasName = true;
-					} else if (hasName && e.Data.Contains ("type") && e.Data.Contains (type)) {
-						hasType = true;
+					lock (linesLock) {
+						lines.Add (e.Data);
 					}
 				}
 			};
 			DexDump (handler, dexFile, androidSdkDirectory);
-			return hasType;
+			return lines;
 		}
 
 		static void DexDump (DataReceivedEventHandler handler, string dexFile, string androidSdkDirectory)
