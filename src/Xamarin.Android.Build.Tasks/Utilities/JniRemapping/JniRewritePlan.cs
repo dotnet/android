@@ -34,18 +34,22 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				}
 
 				int operandOffset = i;
+				int remaining = il.Length - operandOffset;
 				int operandSize;
 				if (code == (ushort) ILOpCode.Switch) {
-					if (i + 4 > il.Length) {
+					if (remaining < sizeof (uint)) {
 						throw new JniRewriteException ("Malformed IL: truncated switch operand.");
 					}
 					uint caseCount = ReadUInt32 (il, i);
-					operandSize = checked (4 + (int) caseCount * 4);
+					if (caseCount > (uint) ((remaining - sizeof (uint)) / sizeof (int))) {
+						throw new JniRewriteException ($"Malformed IL: operand of opcode 0x{code:X} at offset {instructionOffset} extends past the end of the method body.");
+					}
+					operandSize = sizeof (uint) + (int) caseCount * sizeof (int);
 				} else if (!IlOpcodeTable.OperandSizes.TryGetValue (code, out operandSize)) {
 					throw new JniRewriteException ($"Unrecognized IL opcode 0x{code:X} while scanning a method body.");
 				}
 
-				if (operandOffset + operandSize > il.Length) {
+				if (operandSize > remaining) {
 					throw new JniRewriteException ($"Malformed IL: operand of opcode 0x{code:X} at offset {instructionOffset} extends past the end of the method body.");
 				}
 

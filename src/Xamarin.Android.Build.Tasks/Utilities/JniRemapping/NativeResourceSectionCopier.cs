@@ -119,7 +119,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 		static void RequireRange (byte [] section, int offset, int length)
 		{
-			if (offset < 0 || length < 0 || offset + length > section.Length) {
+			if (offset < 0 || length < 0 || offset > section.Length - length) {
 				throw new JniRewriteException ("The Win32 resource directory references data outside of the resource section.");
 			}
 		}

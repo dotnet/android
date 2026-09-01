@@ -128,6 +128,13 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				}
 			}
 
+			int implMapCount = reader.GetTableRowCount (TableIndex.ImplMap);
+			for (int rid = 1; rid <= implMapCount; rid++) {
+				if (MetadataRawColumns.GetImplMapMemberForwarded (reader, rid).Kind == HandleKind.FieldDefinition) {
+					throw new JniRewriteException ("The assembly has a field-backed ImplMap row, which this rewriter cannot reproduce.");
+				}
+			}
+
 			CorHeader? corHeader = peReader.PEHeaders.CorHeader;
 			if (corHeader == null) {
 				throw new JniRewriteException ("The file has no CLI header and is not a managed assembly.");
@@ -183,11 +190,11 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		}
 
 		/// <summary>
-		/// Re-lays out the <c>FieldRVA</c> data. The original block is copied verbatim, keeping
-		/// every field's relative offset (and therefore its alignment), and rewritten UTF-8 JNI
-		/// data is written back over its own slot when it still fits. Longer replacements are
-		/// appended after the original block and the field is re-typed to a wider
-		/// <c>__utf8_N</c> value type.
+		/// Re-lays out the <c>FieldRVA</c> data. Overlapping and adjacent source ranges are copied
+		/// together so aliases and their relative offsets survive, while ranges from separate PE
+		/// sections are emitted as independently aligned blocks. Rewritten UTF-8 JNI data is
+		/// written back over its own slot when it still fits. Longer replacements are appended
+		/// and the field is re-typed to a wider <c>__utf8_N</c> value type.
 		/// </summary>
 		void PlanMappedFieldData ()
 		{
@@ -196,50 +203,75 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return;
 			}
 
-			int baseRva = int.MaxValue;
-			int endRva = 0;
+			var sortedEntries = new List<FieldRvaEntry> (entries.Count);
 			foreach (FieldRvaEntry entry in entries) {
-				baseRva = Math.Min (baseRva, entry.RelativeVirtualAddress);
-				endRva = Math.Max (endRva, entry.RelativeVirtualAddress + entry.Data.Length);
+				sortedEntries.Add (entry);
 			}
+			sortedEntries.Sort (static (left, right) => {
+				int result = left.RelativeVirtualAddress.CompareTo (right.RelativeVirtualAddress);
+				return result != 0 ? result : MetadataTokens.GetRowNumber (left.Field).CompareTo (MetadataTokens.GetRowNumber (right.Field));
+			});
 
-			PEMemoryBlock block = peReader.GetSectionData (baseRva);
-			int length = endRva - baseRva;
-			if (block.Length < length) {
-				throw new JniRewriteException ("The mapped field data block extends past the end of its PE section.");
-			}
-
-			byte [] data = block.GetReader (0, length).ReadBytes (length);
 			var appended = new List<KeyValuePair<FieldDefinitionHandle, byte []>> ();
-
-			foreach (FieldRvaEntry entry in entries) {
-				int offset = entry.RelativeVirtualAddress - baseRva;
-				string? newValue = plan.GetUtf8FieldValue (entry.Field);
-				if (newValue == null) {
-					newFieldRvaOffsets [entry.Field] = offset;
-					continue;
+			int first = 0;
+			while (first < sortedEntries.Count) {
+				int groupStartRva = sortedEntries [first].RelativeVirtualAddress;
+				int groupEndRva = GetFieldDataEnd (sortedEntries [first]);
+				int end = first + 1;
+				while (end < sortedEntries.Count && sortedEntries [end].RelativeVirtualAddress <= groupEndRva) {
+					groupEndRva = Math.Max (groupEndRva, GetFieldDataEnd (sortedEntries [end]));
+					end++;
 				}
 
-				byte [] replacement = EncodeNullTerminatedUtf8 (newValue);
-				if (replacement.Length <= entry.Data.Length) {
-					// Shorter or equal: write the NUL-terminated bytes over the original slot and
-					// zero the tail. The field keeps its declared size, so no new type is needed.
-					Array.Clear (data, offset, entry.Data.Length);
-					Array.Copy (replacement, 0, data, offset, replacement.Length);
-					newFieldRvaOffsets [entry.Field] = offset;
-					continue;
+				var data = new byte [groupEndRva - groupStartRva];
+				for (int i = first; i < end; i++) {
+					FieldRvaEntry entry = sortedEntries [i];
+					Array.Copy (entry.Data, 0, data, entry.RelativeVirtualAddress - groupStartRva, entry.Data.Length);
 				}
 
-				appended.Add (new KeyValuePair<FieldDefinitionHandle, byte []> (entry.Field, replacement));
-				resizedFieldTypes [entry.Field] = GetOrCreateSizedType (entry, replacement.Length);
+				mappedFieldData.Align (ManagedPEBuilder.MappedFieldDataAlignment);
+				int outputGroupOffset = mappedFieldData.Count;
+
+				for (int i = first; i < end; i++) {
+					FieldRvaEntry entry = sortedEntries [i];
+					int offset = entry.RelativeVirtualAddress - groupStartRva;
+					string? newValue = plan.GetUtf8FieldValue (entry.Field);
+					if (newValue == null) {
+						newFieldRvaOffsets [entry.Field] = outputGroupOffset + offset;
+						continue;
+					}
+
+					byte [] replacement = EncodeNullTerminatedUtf8 (newValue);
+					if (replacement.Length <= entry.Data.Length) {
+						// Shorter or equal: write the NUL-terminated bytes over the original slot
+						// and zero the tail. The field keeps its declared size.
+						Array.Clear (data, offset, entry.Data.Length);
+						Array.Copy (replacement, 0, data, offset, replacement.Length);
+						newFieldRvaOffsets [entry.Field] = outputGroupOffset + offset;
+						continue;
+					}
+
+					appended.Add (new KeyValuePair<FieldDefinitionHandle, byte []> (entry.Field, replacement));
+					resizedFieldTypes [entry.Field] = GetOrCreateSizedType (entry, replacement.Length);
+				}
+
+				mappedFieldData.WriteBytes (data);
+				first = end;
 			}
 
-			mappedFieldData.WriteBytes (data);
 			foreach (KeyValuePair<FieldDefinitionHandle, byte []> extra in appended) {
 				mappedFieldData.Align (ManagedPEBuilder.MappedFieldDataAlignment);
 				newFieldRvaOffsets [extra.Key] = mappedFieldData.Count;
 				mappedFieldData.WriteBytes (extra.Value);
 			}
+		}
+
+		static int GetFieldDataEnd (FieldRvaEntry entry)
+		{
+			if (entry.RelativeVirtualAddress < 0 || entry.Data.Length > int.MaxValue - entry.RelativeVirtualAddress) {
+				throw new JniRewriteException ("A FieldRVA data range cannot be represented safely.");
+			}
+			return entry.RelativeVirtualAddress + entry.Data.Length;
 		}
 
 		static byte [] EncodeNullTerminatedUtf8 (string value)

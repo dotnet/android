@@ -96,6 +96,21 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		sealed class InvalidSubdirectoryOffsetResourceSectionBuilder : ResourceSectionBuilder
+		{
+			protected override void Serialize (BlobBuilder builder, SectionLocation location)
+			{
+				builder.WriteUInt32 (0);
+				builder.WriteUInt32 (0);
+				builder.WriteUInt16 (0);
+				builder.WriteUInt16 (0);
+				builder.WriteUInt16 (0);
+				builder.WriteUInt16 (1);
+				builder.WriteUInt32 (1);
+				builder.WriteUInt32 (uint.MaxValue);
+			}
+		}
+
 		static byte [] BuildAndReadBack (ResourceSectionBuilder nativeResources)
 		{
 			var fixture = new JniFixtureBuilder {
@@ -131,6 +146,16 @@ namespace Xamarin.Android.Build.Tests
 
 			var ex = Assert.Throws<JniRewriteException> (() => NativeResourceSectionCopier.TryCreate (peReader));
 			StringAssert.Contains ("outside of the copied resource section", ex.Message);
+		}
+
+		[Test]
+		public void ThrowsWhenASubdirectoryOffsetOverflowsItsRange ()
+		{
+			byte [] image = BuildAndReadBack (new InvalidSubdirectoryOffsetResourceSectionBuilder ());
+			using var peReader = new PEReader (ImmutableArray.Create (image));
+
+			var ex = Assert.Throws<JniRewriteException> (() => NativeResourceSectionCopier.TryCreate (peReader));
+			StringAssert.Contains ("outside of the resource section", ex.Message);
 		}
 
 		[Test]
