@@ -1853,6 +1853,8 @@ namespace Styleable.Library {
 
 						void VerifyInflatedViews ()
 						{
+							const bool allowRegisteredAliasInflation = __ALLOW_REGISTERED_ALIAS_INFLATION__;
+
 							var toolbarView = FindViewById (Resource.Id.toolbar);
 							Require (toolbarView != null, "Inflated Toolbar was not found.");
 							Require (
@@ -1871,8 +1873,8 @@ namespace Styleable.Library {
 							Require (imageView != null, "Inflated AppCompatImageButton was not found.");
 							Require (
 								imageView.GetType () == typeof (AppCompatImageButton) ||
-									imageView.GetType () == typeof (AppCompatImageButtonAlias),
-								$"Expected an AppCompatImageButton binding or its registered alias; {Describe (imageView)}.");
+									(allowRegisteredAliasInflation && imageView.GetType () == typeof (AppCompatImageButtonAlias)),
+								$"Expected the canonical AppCompatImageButton binding; {Describe (imageView)}.");
 							Require (
 								ReferenceEquals (imageView, FindViewById (Resource.Id.image_button)),
 								"Repeated AppCompatImageButton lookup did not preserve peer identity.");
@@ -1983,7 +1985,9 @@ namespace Styleable.Library {
 						}
 					}
 				}
-				""";
+				""".Replace (
+					"__ALLOW_REGISTERED_ALIAS_INFLATION__",
+					typemapImplementation == "llvm-ir" ? "true" : "false");
 			using var builder = CreateApkBuilder (packageName: packageName);
 			Assert.AreEqual (proj.PackageName, TestPackageNames [packageName], "Teardown should track the installed package.");
 			RunAdbCommand ($"uninstall {proj.PackageName}");
