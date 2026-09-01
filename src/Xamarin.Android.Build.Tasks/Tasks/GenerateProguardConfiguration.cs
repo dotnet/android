@@ -67,7 +67,7 @@ namespace Xamarin.Android.Tasks
 				foreach (var assembly in LinkedAssemblies) {
 					ScanRewrittenAssembly (assembly.ItemSpec, mapping);
 				}
-				WriteMappedRules (writer, mapping);
+				WriteMappedRules (writer, mapping.AccessedEntries);
 			} else {
 				foreach (var assembly in LinkedAssemblies) {
 					ProcessAssembly (assembly.ItemSpec, writer);
@@ -110,18 +110,25 @@ namespace Xamarin.Android.Tasks
 		void LogR8JniMappingError (string detail)
 			=> Log.LogCodedError ("XA4327", Properties.Resources.XA4327, detail);
 
-		void WriteMappedRules (TextWriter writer, R8Mapping mapping)
+		internal static void WriteMappedRules (TextWriter writer, IEnumerable<string> entries)
 		{
 			var rules = new SortedDictionary<string, SortedSet<string>> (StringComparer.Ordinal);
-			foreach (string entry in mapping.AccessedEntries) {
+			foreach (string entry in entries) {
 				string [] parts = entry.Split ('\t');
-				if (parts.Length < 2) {
-					continue;
+				switch (parts.Length > 0 ? parts [0] : "") {
+				case "C" when parts.Length == 2:
+				break;
+				case "F" when parts.Length == 3:
+				break;
+				case "M" when parts.Length == 3:
+				break;
+				default:
+					throw new FormatException ($"Invalid R8 JNI reachability manifest entry '{entry}'.");
 				}
 				if (!rules.TryGetValue (parts [1], out var members)) {
 					rules [parts [1]] = members = new SortedSet<string> (StringComparer.Ordinal);
 				}
-				if (parts.Length != 3) {
+				if (parts [0] == "C") {
 					continue;
 				}
 

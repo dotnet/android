@@ -472,11 +472,11 @@ This property is `False` by default.
 
 A boolean property that enables R8 obfuscation of Java type, method, and field names
 referenced by managed JNI metadata. The build uses an R8-generated mapping to rewrite
-managed assemblies before trimming, then applies the same
+managed assemblies before trimming or NativeAOT compilation, then applies the same
 mapping during the final R8 invocation.
 
 This property requires `AndroidLinkTool=r8`,
-`AndroidTypeMapImplementation=trimmable`, the CoreCLR runtime, and
+`AndroidTypeMapImplementation=trimmable`, and either NativeAOT or CoreCLR with
 `PublishTrimmed=true`.
 The default value is `False`.
 
