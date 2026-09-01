@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Xml;
 
 using NUnit.Framework;
 
@@ -112,46 +113,66 @@ namespace Xamarin.Android.Build.Tests
 			var chains = new [] {
 				new RootingChain (
 					"JavaList",
-					"SafeJavaCollectionFactory__CreateReferenceListFromJniHandle, Type metadata: [Java.Interop]Java.Interop.IJavaPeerable)",
-					"Android_Runtime_JavaList_1&lt;Java_Interop_Java_Interop_IJavaPeerable&gt; constructed\"",
-					"Label=\"__GenericDict_Mono_Android_Android_Runtime_JavaList_1&lt;Java_Interop_Java_Interop_IJavaPeerable&gt;\"",
-					"(__GenericDict_Mono_Android_Android_Runtime_JavaList_1&lt;Java_Interop_Java_Interop_IJavaPeerable&gt;, " +
-						"Mono_Android_Android_Runtime_JavaList_1&lt;System___Canon&gt;___ctor_0)",
-					"Label=\"Mono_Android_Android_Runtime_JavaList_1&lt;System___Canon&gt;___ctor_0\"",
-					"JavaList`1&lt;Java.Interop.IJavaPeerable&gt;..ctor(native int,JniHandleOwnership)"),
+					"SafeJavaCollectionFactory__CreateReferenceListFromJniHandle, " +
+						"Type metadata: [Java.Interop]Java.Interop.IJavaPeerable)",
+					"Mono_Android_Android_Runtime_JavaList_1<Java_Interop_Java_Interop_IJavaPeerable> constructed",
+					"__GenericDict_Mono_Android_Android_Runtime_JavaList_1<Java_Interop_Java_Interop_IJavaPeerable>",
+					"(__GenericDict_Mono_Android_Android_Runtime_JavaList_1<Java_Interop_Java_Interop_IJavaPeerable>, " +
+						"Mono_Android_Android_Runtime_JavaList_1<System___Canon>___ctor_0)",
+					"Mono_Android_Android_Runtime_JavaList_1<System___Canon>___ctor_0",
+					"JavaList`1<Java.Interop.IJavaPeerable>..ctor(native int,JniHandleOwnership)"),
 				new RootingChain (
 					"JavaCollection",
-					"SafeJavaCollectionFactory__CreateReferenceCollectionFromJniHandle, Type metadata: [Java.Interop]Java.Interop.IJavaPeerable)",
-					"Android_Runtime_JavaCollection_1&lt;Java_Interop_Java_Interop_IJavaPeerable&gt; constructed\"",
-					"Label=\"__GenericDict_Mono_Android_Android_Runtime_JavaCollection_1&lt;Java_Interop_Java_Interop_IJavaPeerable&gt;\"",
-					"(__GenericDict_Mono_Android_Android_Runtime_JavaCollection_1&lt;Java_Interop_Java_Interop_IJavaPeerable&gt;, " +
-						"Mono_Android_Android_Runtime_JavaCollection_1&lt;System___Canon&gt;___ctor)",
-					"Label=\"Mono_Android_Android_Runtime_JavaCollection_1&lt;System___Canon&gt;___ctor\"",
-					"JavaCollection`1&lt;Java.Interop.IJavaPeerable&gt;..ctor(native int,JniHandleOwnership)"),
+					"SafeJavaCollectionFactory__CreateReferenceCollectionFromJniHandle, " +
+						"Type metadata: [Java.Interop]Java.Interop.IJavaPeerable)",
+					"Mono_Android_Android_Runtime_JavaCollection_1<Java_Interop_Java_Interop_IJavaPeerable> constructed",
+					"__GenericDict_Mono_Android_Android_Runtime_JavaCollection_1<Java_Interop_Java_Interop_IJavaPeerable>",
+					"(__GenericDict_Mono_Android_Android_Runtime_JavaCollection_1<Java_Interop_Java_Interop_IJavaPeerable>, " +
+						"Mono_Android_Android_Runtime_JavaCollection_1<System___Canon>___ctor)",
+					"Mono_Android_Android_Runtime_JavaCollection_1<System___Canon>___ctor",
+					"JavaCollection`1<Java.Interop.IJavaPeerable>..ctor(native int,JniHandleOwnership)"),
 				new RootingChain (
 					"JavaDictionary",
-					"SafeJavaCollectionFactory__CreateReferenceDictionaryFromJniHandle, Type metadata: [Java.Interop]Java.Interop.IJavaPeerable)",
-					"Android_Runtime_JavaDictionary_2&lt;Java_Interop_Java_Interop_IJavaPeerable__Java_Interop_Java_Interop_IJavaPeerable&gt; constructed\"",
-					"Label=\"__GenericDict_Mono_Android_Android_Runtime_JavaDictionary_2&lt;Java_Interop_Java_Interop_IJavaPeerable__Java_Interop_Java_Interop_IJavaPeerable&gt;\"",
-					"(__GenericDict_Mono_Android_Android_Runtime_JavaDictionary_2&lt;Java_Interop_Java_Interop_IJavaPeerable__" +
-						"Java_Interop_Java_Interop_IJavaPeerable&gt;, " +
-						"Mono_Android_Android_Runtime_JavaDictionary_2&lt;System___Canon__System___Canon&gt;___ctor_0)",
-					"Label=\"Mono_Android_Android_Runtime_JavaDictionary_2&lt;System___Canon__System___Canon&gt;___ctor_0\"",
-					"JavaDictionary`2&lt;Java.Interop.IJavaPeerable,Java.Interop.IJavaPeerable&gt;..ctor(native int,JniHandleOwnership)"),
+					"SafeJavaCollectionFactory__CreateReferenceDictionaryFromJniHandle, " +
+						"Type metadata: [Java.Interop]Java.Interop.IJavaPeerable)",
+					"Mono_Android_Android_Runtime_JavaDictionary_2<Java_Interop_Java_Interop_IJavaPeerable__" +
+						"Java_Interop_Java_Interop_IJavaPeerable> constructed",
+					"__GenericDict_Mono_Android_Android_Runtime_JavaDictionary_2<Java_Interop_Java_Interop_IJavaPeerable__" +
+						"Java_Interop_Java_Interop_IJavaPeerable>",
+					"(__GenericDict_Mono_Android_Android_Runtime_JavaDictionary_2<Java_Interop_Java_Interop_IJavaPeerable__" +
+						"Java_Interop_Java_Interop_IJavaPeerable>, " +
+						"Mono_Android_Android_Runtime_JavaDictionary_2<System___Canon__System___Canon>___ctor_0)",
+					"Mono_Android_Android_Runtime_JavaDictionary_2<System___Canon__System___Canon>___ctor_0",
+					"JavaDictionary`2<Java.Interop.IJavaPeerable,Java.Interop.IJavaPeerable>..ctor(native int,JniHandleOwnership)"),
 			};
 			var unexpectedCanonicalRoots = new List<string> ();
 
-			foreach (var line in File.ReadLines (dgmlFile)) {
-				if (line.Contains ("<Node ", StringComparison.Ordinal)) {
-					foreach (var chain in chains) {
-						chain.ObserveNode (line);
+			using (var reader = CreateDgmlReader (dgmlFile)) {
+				while (reader.Read ()) {
+					if (reader.NodeType != XmlNodeType.Element || reader.LocalName != "Node") {
+						continue;
 					}
-					if (IsUnexpectedCanonicalReferenceConstructor (line)) {
-						unexpectedCanonicalRoots.Add (line.Trim ());
-					}
-				} else if (line.Contains ("<Link ", StringComparison.Ordinal)) {
+					var id = reader.GetAttribute ("Id") ?? "";
+					var label = reader.GetAttribute ("Label") ?? "";
 					foreach (var chain in chains) {
-						chain.ObserveLink (line);
+						chain.ObserveNode (id, label);
+					}
+					if (IsUnexpectedCanonicalReferenceConstructor (label)) {
+						unexpectedCanonicalRoots.Add (label);
+					}
+				}
+			}
+
+			using (var reader = CreateDgmlReader (dgmlFile)) {
+				while (reader.Read ()) {
+					if (reader.NodeType != XmlNodeType.Element || reader.LocalName != "Link") {
+						continue;
+					}
+					var source = reader.GetAttribute ("Source") ?? "";
+					var target = reader.GetAttribute ("Target") ?? "";
+					var reason = reader.GetAttribute ("Reason") ?? "";
+					foreach (var chain in chains) {
+						chain.ObserveLink (source, target, reason);
 					}
 				}
 			}
@@ -165,28 +186,36 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		static bool IsUnexpectedCanonicalReferenceConstructor (string line)
+		static XmlReader CreateDgmlReader (string dgmlFile)
 		{
-			if (!line.Contains ("..ctor(native int,JniHandleOwnership) backed by ", StringComparison.Ordinal)) {
+			return XmlReader.Create (dgmlFile, new XmlReaderSettings {
+				DtdProcessing = DtdProcessing.Prohibit,
+				XmlResolver = null,
+			});
+		}
+
+		static bool IsUnexpectedCanonicalReferenceConstructor (string label)
+		{
+			if (!label.Contains ("..ctor(native int,JniHandleOwnership) backed by ", StringComparison.Ordinal)) {
 				return false;
 			}
 			bool usesReferenceCanonicalCode =
-				line.Contains ("JavaList_1&lt;System___Canon&gt;___ctor_0", StringComparison.Ordinal) ||
-				line.Contains ("JavaCollection_1&lt;System___Canon&gt;___ctor", StringComparison.Ordinal) ||
-				line.Contains ("JavaDictionary_2&lt;System___Canon__System___Canon&gt;___ctor_0", StringComparison.Ordinal);
+				label.Contains ("JavaList_1<System___Canon>___ctor_0", StringComparison.Ordinal) ||
+				label.Contains ("JavaCollection_1<System___Canon>___ctor", StringComparison.Ordinal) ||
+				label.Contains ("JavaDictionary_2<System___Canon__System___Canon>___ctor_0", StringComparison.Ordinal);
 			if (!usesReferenceCanonicalCode) {
 				return false;
 			}
 			bool isExpectedRoot =
-				line.Contains ("JavaList`1&lt;Java.Interop.IJavaPeerable&gt;..ctor(native int,JniHandleOwnership)", StringComparison.Ordinal) ||
-				line.Contains ("JavaList`1&lt;System.__Canon&gt;..ctor(native int,JniHandleOwnership)", StringComparison.Ordinal) ||
-				line.Contains ("JavaCollection`1&lt;Java.Interop.IJavaPeerable&gt;..ctor(native int,JniHandleOwnership)", StringComparison.Ordinal) ||
-				line.Contains ("JavaCollection`1&lt;System.__Canon&gt;..ctor(native int,JniHandleOwnership)", StringComparison.Ordinal) ||
-				line.Contains (
-					"JavaDictionary`2&lt;Java.Interop.IJavaPeerable,Java.Interop.IJavaPeerable&gt;..ctor(native int,JniHandleOwnership)",
+				label.Contains ("JavaList`1<Java.Interop.IJavaPeerable>..ctor(native int,JniHandleOwnership)", StringComparison.Ordinal) ||
+				label.Contains ("JavaList`1<System.__Canon>..ctor(native int,JniHandleOwnership)", StringComparison.Ordinal) ||
+				label.Contains ("JavaCollection`1<Java.Interop.IJavaPeerable>..ctor(native int,JniHandleOwnership)", StringComparison.Ordinal) ||
+				label.Contains ("JavaCollection`1<System.__Canon>..ctor(native int,JniHandleOwnership)", StringComparison.Ordinal) ||
+				label.Contains (
+					"JavaDictionary`2<Java.Interop.IJavaPeerable,Java.Interop.IJavaPeerable>..ctor(native int,JniHandleOwnership)",
 					StringComparison.Ordinal) ||
-				line.Contains (
-					"JavaDictionary`2&lt;System.__Canon,System.__Canon&gt;..ctor(native int,JniHandleOwnership)",
+				label.Contains (
+					"JavaDictionary`2<System.__Canon,System.__Canon>..ctor(native int,JniHandleOwnership)",
 					StringComparison.Ordinal);
 			return !isExpectedRoot;
 		}
@@ -211,6 +240,7 @@ namespace Xamarin.Android.Build.Tests
 			readonly string genericDictionaryPattern;
 			readonly string genericDictionaryDependencyPattern;
 			readonly string sourcePattern;
+			readonly List<string> ambiguousNodeMatches = new ();
 			readonly List<string> unexpectedIncomingLinks = new ();
 
 			string canonicalConstructorId = "";
@@ -245,48 +275,73 @@ namespace Xamarin.Android.Build.Tests
 
 			public string Name { get; }
 
-			public void ObserveNode (string line)
+			public void ObserveNode (string id, string label)
 			{
-				if (line.Contains (sourcePattern, StringComparison.Ordinal)) {
-					sourceId = GetAttribute (line, "Id");
-				} else if (line.Contains (constructedTypePattern, StringComparison.Ordinal)) {
-					constructedTypeId = GetAttribute (line, "Id");
-				} else if (line.Contains (genericDictionaryPattern, StringComparison.Ordinal)) {
-					genericDictionaryId = GetAttribute (line, "Id");
-				} else if (line.Contains (genericDictionaryDependencyPattern, StringComparison.Ordinal)) {
-					genericDictionaryDependencyId = GetAttribute (line, "Id");
-				} else if (line.Contains (canonicalConstructorPattern, StringComparison.Ordinal)) {
-					canonicalConstructorId = GetAttribute (line, "Id");
-				} else if (line.Contains (constructorPattern, StringComparison.Ordinal)) {
-					constructorId = GetAttribute (line, "Id");
-				}
+				ObserveNode (
+					label.EndsWith (sourcePattern, StringComparison.Ordinal),
+					id,
+					label,
+					"SafeJavaCollectionFactory source",
+					ref sourceId);
+				ObserveNode (
+					label.EndsWith (constructedTypePattern, StringComparison.Ordinal),
+					id,
+					label,
+					"IJavaPeerable constructed type",
+					ref constructedTypeId);
+				ObserveNode (label == genericDictionaryPattern, id, label, "IJavaPeerable generic dictionary", ref genericDictionaryId);
+				ObserveNode (
+					label == genericDictionaryDependencyPattern,
+					id,
+					label,
+					"IJavaPeerable constructor dictionary dependency",
+					ref genericDictionaryDependencyId);
+				ObserveNode (label == canonicalConstructorPattern, id, label, "canonical compiled constructor", ref canonicalConstructorId);
+				ObserveNode (
+					label.Contains (constructorPattern, StringComparison.Ordinal),
+					id,
+					label,
+					"IJavaPeerable activation constructor",
+					ref constructorId);
 			}
 
-			public void ObserveLink (string line)
+			public void ObserveLink (string source, string target, string reason)
 			{
-				sourceToConstructedType |= IsLink (line, sourceId, constructedTypeId, "newobj");
-				constructedTypeToGenericDictionary |= IsLink (line, constructedTypeId, genericDictionaryId, "reloc");
-				genericDictionaryToDependency |= IsLink (line, genericDictionaryId, genericDictionaryDependencyId, "Primary");
+				sourceToConstructedType |= IsLink (source, target, reason, sourceId, constructedTypeId, "newobj");
+				constructedTypeToGenericDictionary |= IsLink (source, target, reason, constructedTypeId, genericDictionaryId, "reloc");
+				genericDictionaryToDependency |= IsLink (
+					source,
+					target,
+					reason,
+					genericDictionaryId,
+					genericDictionaryDependencyId,
+					"Primary");
 				canonicalConstructorToDependency |= IsLink (
-					line,
+					source,
+					target,
+					reason,
 					canonicalConstructorId,
 					genericDictionaryDependencyId,
 					"Secondary");
 				genericDictionaryToConstructor |= IsLink (
-					line,
+					source,
+					target,
+					reason,
 					genericDictionaryDependencyId,
 					constructorId,
 					"Generic dictionary dependency");
 
-				RejectUnexpectedIncoming (line, constructedTypeId, sourceId, "newobj");
-				RejectUnexpectedIncoming (line, genericDictionaryId, constructedTypeId, "reloc");
-				if (IsIncomingLink (line, genericDictionaryDependencyId) &&
-						!IsLink (line, genericDictionaryId, genericDictionaryDependencyId, "Primary") &&
-						!IsLink (line, canonicalConstructorId, genericDictionaryDependencyId, "Secondary")) {
-					unexpectedIncomingLinks.Add (line.Trim ());
+				RejectUnexpectedIncoming (source, target, reason, constructedTypeId, sourceId, "newobj");
+				RejectUnexpectedIncoming (source, target, reason, genericDictionaryId, constructedTypeId, "reloc");
+				if (IsIncomingLink (target, genericDictionaryDependencyId) &&
+						!IsLink (source, target, reason, genericDictionaryId, genericDictionaryDependencyId, "Primary") &&
+						!IsLink (source, target, reason, canonicalConstructorId, genericDictionaryDependencyId, "Secondary")) {
+					unexpectedIncomingLinks.Add (FormatLink (source, target, reason));
 				}
 				RejectUnexpectedIncoming (
-					line,
+					source,
+					target,
+					reason,
 					constructorId,
 					genericDictionaryDependencyId,
 					"Generic dictionary dependency");
@@ -294,6 +349,7 @@ namespace Xamarin.Android.Build.Tests
 
 			public void AssertComplete ()
 			{
+				Assert.IsEmpty (ambiguousNodeMatches, $"{Name} canonical constructor path had ambiguous node matches.");
 				Assert.IsNotEmpty (sourceId, $"{Name} SafeJavaCollectionFactory source node was not found.");
 				Assert.IsNotEmpty (constructedTypeId, $"{Name} IJavaPeerable constructed-type node was not found.");
 				Assert.IsNotEmpty (genericDictionaryId, $"{Name} IJavaPeerable generic dictionary node was not found.");
@@ -308,37 +364,55 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsEmpty (unexpectedIncomingLinks, $"{Name} canonical constructor path had an unexpected incoming dependency.");
 			}
 
-			void RejectUnexpectedIncoming (string line, string target, string expectedSource, string expectedReason)
+			void ObserveNode (bool matches, string id, string label, string role, ref string observedId)
 			{
-				if (IsIncomingLink (line, target) && !IsLink (line, expectedSource, target, expectedReason)) {
-					unexpectedIncomingLinks.Add (line.Trim ());
+				if (!matches) {
+					return;
+				}
+				if (observedId.Length > 0) {
+					ambiguousNodeMatches.Add ($"{role}: Id=\"{id}\" Label=\"{label}\"");
+					return;
+				}
+				observedId = id;
+			}
+
+			void RejectUnexpectedIncoming (
+				string source,
+				string target,
+				string reason,
+				string expectedTarget,
+				string expectedSource,
+				string expectedReason)
+			{
+				if (IsIncomingLink (target, expectedTarget) &&
+						!IsLink (source, target, reason, expectedSource, expectedTarget, expectedReason)) {
+					unexpectedIncomingLinks.Add (FormatLink (source, target, reason));
 				}
 			}
 
-			static bool IsIncomingLink (string line, string target)
+			static bool IsIncomingLink (string actualTarget, string expectedTarget)
 			{
-				return target.Length > 0 && line.Contains ($"Target=\"{target}\"", StringComparison.Ordinal);
+				return expectedTarget.Length > 0 && actualTarget == expectedTarget;
 			}
 
-			static bool IsLink (string line, string source, string target, string reason)
+			static bool IsLink (
+				string actualSource,
+				string actualTarget,
+				string actualReason,
+				string expectedSource,
+				string expectedTarget,
+				string expectedReason)
 			{
-				return source.Length > 0 &&
-					target.Length > 0 &&
-					line.Contains ($"Source=\"{source}\"", StringComparison.Ordinal) &&
-					line.Contains ($"Target=\"{target}\"", StringComparison.Ordinal) &&
-					line.Contains ($"Reason=\"{reason}\"", StringComparison.Ordinal);
+				return expectedSource.Length > 0 &&
+					expectedTarget.Length > 0 &&
+					actualSource == expectedSource &&
+					actualTarget == expectedTarget &&
+					actualReason == expectedReason;
 			}
 
-			static string GetAttribute (string line, string name)
+			static string FormatLink (string source, string target, string reason)
 			{
-				var prefix = $"{name}=\"";
-				int start = line.IndexOf (prefix, StringComparison.Ordinal);
-				if (start < 0) {
-					return "";
-				}
-				start += prefix.Length;
-				int end = line.IndexOf ('"', start);
-				return end < 0 ? "" : line.Substring (start, end - start);
+				return $"Source=\"{source}\" Target=\"{target}\" Reason=\"{reason}\"";
 			}
 		}
 	}
