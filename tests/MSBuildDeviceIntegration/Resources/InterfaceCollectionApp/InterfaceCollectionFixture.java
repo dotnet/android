@@ -6,17 +6,50 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+final class InterfaceCollectionBasePeer implements ValueProvider {
+	private final int value;
+
+	public InterfaceCollectionBasePeer(int value) {
+		this.value = value;
+	}
+
+	@Override
+	public int getValue() {
+		return value;
+	}
+}
+
+final class InterfaceCollectionExtendedPeer implements ExtendedValueProvider {
+	private final int value;
+	private final int otherValue;
+
+	public InterfaceCollectionExtendedPeer(int value, int otherValue) {
+		this.value = value;
+		this.otherValue = otherValue;
+	}
+
+	@Override
+	public int getValue() {
+		return value;
+	}
+
+	@Override
+	public int getOtherValue() {
+		return otherValue;
+	}
+}
+
 final class InterfaceCollectionHolder {
 	private final InterfaceCollectionBasePeer first;
 	private final InterfaceCollectionBasePeer second;
-	private final InterfaceCollectionPeer inheritedFirst;
-	private final InterfaceCollectionPeer inheritedSecond;
+	private final InterfaceCollectionExtendedPeer inheritedFirst;
+	private final InterfaceCollectionExtendedPeer inheritedSecond;
 
 	public InterfaceCollectionHolder() {
 		first = new InterfaceCollectionBasePeer(11);
 		second = new InterfaceCollectionBasePeer(22);
-		inheritedFirst = new InterfaceCollectionPeer(33, 333);
-		inheritedSecond = new InterfaceCollectionPeer(44, 444);
+		inheritedFirst = new InterfaceCollectionExtendedPeer(33, 333);
+		inheritedSecond = new InterfaceCollectionExtendedPeer(44, 444);
 	}
 
 	public List<ValueProvider> createList() {
