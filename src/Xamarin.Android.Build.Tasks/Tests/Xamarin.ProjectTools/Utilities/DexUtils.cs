@@ -97,7 +97,7 @@ namespace Xamarin.ProjectTools
 					hasName = false;
 				} else if (inClass && HasDexDumpName (line, "name")) {
 					hasName = ContainsDexDumpValue (line, "name", method);
-				} else if (hasName && HasDexDumpName (line, "type")) {
+				} else if (hasName) {
 					if (ContainsDexDumpValue (line, "type", type)) {
 						return true;
 					}
@@ -144,9 +144,9 @@ namespace Xamarin.ProjectTools
 				throw new Exception ($"Unable to find build-tools in `{androidSdkDirectory}`!");
 			}
 
+			var dexFileName = Path.GetFileName (dexFile);
 			var psi = new ProcessStartInfo {
 				FileName = Path.Combine (buildToolsPath, "dexdump"),
-				Arguments = Path.GetFileName (dexFile),
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 				UseShellExecute = false,
@@ -154,6 +154,7 @@ namespace Xamarin.ProjectTools
 				RedirectStandardOutput = true,
 				WorkingDirectory = Path.GetDirectoryName (dexFile),
 			};
+			psi.ArgumentList.Add (dexFileName);
 			using (var p = new Process { StartInfo = psi }) {
 				var errors = new List<string> ();
 				p.ErrorDataReceived += (s, e) => {
@@ -176,7 +177,7 @@ namespace Xamarin.ProjectTools
 
 				if (p.ExitCode != 0)
 					throw new Exception (
-						$"'{psi.FileName} {psi.Arguments}' exited with code: {p.ExitCode}" +
+						$"'{psi.FileName} {dexFileName}' exited with code: {p.ExitCode}" +
 						$"{Environment.NewLine}stdout:{Environment.NewLine}{string.Join (Environment.NewLine, lines)}" +
 						$"{Environment.NewLine}stderr:{Environment.NewLine}{string.Join (Environment.NewLine, errors)}");
 			}
