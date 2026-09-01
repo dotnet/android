@@ -149,7 +149,6 @@
   <element path="activity.minAspectRatio" visible="false" />
   <element path="activity.playHomeTransitionSound" visible="false" />
   <element path="activity.preferMinimalPostProcessing" visible="false" />
-  <element path="activity.primaryUserOnly" visible="false" />
   <element path="activity.privateComputeCore" visible="false" />
   <element path="activity.requiredDisplayCategory" visible="false" />
   <element path="activity.splitName" visible="false" />
@@ -227,7 +226,6 @@
   <element path="application.minAspectRatio" visible="false" />
   <element path="application.multiArch" visible="false" />
   <element path="application.nativeHeapZeroInitialized" visible="false" />
-  <element path="application.neverEncrypt" visible="false" />
   <element path="application.persistentWhenFeatureAvailable" visible="false" />
   <element path="application.preserveLegacyExternalStorage" visible="false" />
   <element path="application.requestForegroundServiceExemption" visible="false" />
@@ -289,8 +287,6 @@
   <element path="layout.minWidth" visible="true" />
 
   <!-- Undocumented attributes -->
-  <element path="layout.minimalHeight" visible="false" />
-  <element path="layout.minimalWidth" visible="false" />
   <element path="layout.windowLayoutAffinity" visible="false" />
 
   <!-- <meta-data> - https://developer.android.com/guide/topics/manifest/meta-data-element -->

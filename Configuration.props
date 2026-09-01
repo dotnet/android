@@ -56,7 +56,7 @@
     <AndroidBuildApiLevel Include="37.2">
       <PlatformId>37.2</PlatformId>
       <FrameworkVersion>v17.2</FrameworkVersion>
-      <Unstable>true</Unstable>
+      <Unstable>false</Unstable>
     </AndroidBuildApiLevel>
   </ItemGroup>
   <PropertyGroup Condition=" '$(HostOS)' == '' ">
