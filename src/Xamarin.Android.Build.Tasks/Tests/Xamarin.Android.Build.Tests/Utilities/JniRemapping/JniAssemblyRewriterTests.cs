@@ -783,7 +783,6 @@ namespace Xamarin.Android.Build.Tests
 
 			FieldDefinitionHandle nameField = fixture.AddUtf8Field ("onClick");
 			FieldDefinitionHandle signatureField = fixture.AddUtf8Field ("(Lacme/orig/Callback;)V");
-			FieldDefinitionHandle classNameField = fixture.AddUtf8Field ("acme/orig/Callback");
 			FieldDefinitionHandle longNameField = fixture.AddUtf8Field ("run");
 
 			int fieldStart = fixture.NextFieldRid;
@@ -839,7 +838,6 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.AreEqual ("a", ReadUtf8Field (peReader, reader, nameField), "The method name is renamed using the owning proxy's JNI class.");
 			Assert.AreEqual ("(La/b/Cb;)V", ReadUtf8Field (peReader, reader, signatureField));
-			Assert.AreEqual ("a/b/Cb", ReadUtf8Field (peReader, reader, classNameField), "An unreferenced datum that is a known class name is still renamed.");
 			Assert.AreEqual ("aMuchLongerObfuscatedName", ReadUtf8Field (peReader, reader, longNameField), "A longer datum is relocated into a wider __utf8_N slot.");
 
 			// Growing a datum appends exactly one new sized type; no existing token moves.
@@ -883,6 +881,62 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.Contains ("shared", exception.Message.ToLowerInvariant ());
 		}
 
+		[Test]
+		public void FailsWhenASharedUtf8DatumMustRemainUnmappedForOneProxy ()
+		{
+			var fixture = new JniFixtureBuilder ();
+
+			FieldDefinitionHandle shared = fixture.AddUtf8Field ("go");
+			FieldDefinitionHandle signature = fixture.AddUtf8Field ("()V");
+
+			AddProxy (fixture, "acme/orig/P1", shared, signature);
+			AddProxy (fixture, "acme/orig/P2", shared, signature);
+
+			var exception = Assert.Throws<JniRewriteException> (() => Rewrite (fixture.Serialize (), Mapping (
+				"acme.orig.P1 -> a.b.P1:\n" +
+				"    void go() -> z\n" +
+				"acme.orig.P2 -> a.b.P2:\n")));
+			StringAssert.Contains ("shared", exception.Message.ToLowerInvariant ());
+			StringAssert.Contains ("original value", exception.Message);
+			StringAssert.Contains ("'go'", exception.Message);
+			StringAssert.Contains ("'z'", exception.Message);
+		}
+
+		[Test]
+		public void FailsWhenASharedUtf8DatumHasAnUnresolvedOwner ()
+		{
+			var fixture = new JniFixtureBuilder ();
+
+			FieldDefinitionHandle shared = fixture.AddUtf8Field ("go");
+			FieldDefinitionHandle signature = fixture.AddUtf8Field ("()V");
+
+			AddProxy (fixture, "acme/orig/P1", shared, signature);
+			AddRegistrationTypeWithoutJniOwner (fixture, shared, signature);
+
+			var exception = Assert.Throws<JniRewriteException> (() => Rewrite (fixture.Serialize (), Mapping (
+				"acme.orig.P1 -> a.b.P1:\n" +
+				"    void go() -> z\n")));
+			StringAssert.Contains ("shared", exception.Message.ToLowerInvariant ());
+			StringAssert.Contains ("original value", exception.Message);
+		}
+
+		[Test]
+		public void PreservesUnreferencedUtf8DatumThatMatchesAMappedClass ()
+		{
+			var fixture = new JniFixtureBuilder ();
+			FieldDefinitionHandle field = fixture.AddUtf8Field ("acme/orig/Callback");
+			byte [] image = fixture.Serialize ();
+			R8Mapping mapping = Mapping ("acme.orig.Callback -> a.b.Cb:\n");
+
+			JniRewriteResult result = Rewrite (image, mapping);
+
+			Assert.AreSame (image, result.Image);
+			Assert.AreEqual (0, result.ReplacementCount);
+			CollectionAssert.IsEmpty (mapping.AccessedEntries);
+			using var peReader = new PEReader (ImmutableArray.Create (result.Image));
+			Assert.AreEqual ("acme/orig/Callback", ReadUtf8Field (peReader, peReader.GetMetadataReader (), field));
+		}
+
 		static void AddProxy (JniFixtureBuilder fixture, string jniName, FieldDefinitionHandle nameField, FieldDefinitionHandle signatureField)
 		{
 			int fieldStart = fixture.NextFieldRid;
@@ -907,6 +961,24 @@ namespace Xamarin.Android.Build.Tests
 
 			fixture.AddType ("Acme.Orig", jniName.Replace ('/', '_'), fieldStart, methodStart,
 				TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class, fixture.JavaPeerProxyReference);
+		}
+
+		static void AddRegistrationTypeWithoutJniOwner (JniFixtureBuilder fixture, FieldDefinitionHandle nameField, FieldDefinitionHandle signatureField)
+		{
+			int fieldStart = fixture.NextFieldRid;
+			int methodStart = fixture.NextMethodRid;
+
+			fixture.AddVoidMethod ("RegisterNatives", fixture.EmitBody (encoder => {
+				encoder.OpCode (ILOpCode.Ldsflda);
+				encoder.Token (nameField);
+				encoder.OpCode (ILOpCode.Ldsflda);
+				encoder.Token (signatureField);
+				encoder.OpCode (ILOpCode.Pop);
+				encoder.OpCode (ILOpCode.Pop);
+				encoder.OpCode (ILOpCode.Ret);
+			}));
+
+			fixture.AddType ("Acme.Orig", "UnknownOwner", fieldStart, methodStart);
 		}
 
 		[Test]

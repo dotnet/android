@@ -995,8 +995,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					}
 					if (resolved != null && resolved != candidate) {
 						throw new JniRewriteException (
-							$"The mapped UTF-8 JNI datum '{value}' is shared by more than one Java class, but the mapping renames it to both " +
-							$"'{resolved}' and '{candidate}'. Splitting a shared '{FieldRvaTable.Utf8FieldNamePrefix}' field would move metadata tokens, which this rewriter does not do.");
+							$"The UTF-8 JNI datum '{value}' is shared by uses that require incompatible values '{resolved}' and '{candidate}'. " +
+							$"At least one use may require the original value because its owning Java class or member mapping could not be resolved. " +
+							$"Splitting a shared '{FieldRvaTable.Utf8FieldNamePrefix}' field would move metadata tokens, which this rewriter does not do.");
 					}
 					resolved ??= candidate;
 				}
@@ -1017,18 +1018,19 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 		string? ComputeNewUtf8Value (string value, Utf8Use use)
 		{
-			if (use.Role == Utf8Role.MethodName && use.OwnerJniName != null && use.PairedSignature != null) {
-				JniDescriptorText.MethodDescriptorToJavaTypes (use.PairedSignature, out var javaParams, out string javaReturnType);
-				string mappingName = R8Mapping.JniMemberNameToMappingName (value);
-				return mapping.TryMapMethod (use.OwnerJniName, mappingName, javaParams, javaReturnType, out string renamed) ? renamed : null;
+			if (use.Role == Utf8Role.MethodName) {
+				if (use.OwnerJniName != null && use.PairedSignature != null) {
+					JniDescriptorText.MethodDescriptorToJavaTypes (use.PairedSignature, out var javaParams, out string javaReturnType);
+					string mappingName = R8Mapping.JniMemberNameToMappingName (value);
+					if (mapping.TryMapMethod (use.OwnerJniName, mappingName, javaParams, javaReturnType, out string renamed)) {
+						return renamed;
+					}
+				}
+				return value;
 			}
 
 			if (JniDescriptorText.IsValidMethodDescriptor (value) || JniDescriptorText.IsValidFieldDescriptor (value)) {
 				return JniDescriptorText.TryRewriteDescriptor (value, renameClass, out string rewritten) ? rewritten : null;
-			}
-
-			if (use.Role == Utf8Role.Unknown && mapping.TryMapClass (value, out string renamedClass)) {
-				return renamedClass;
 			}
 
 			return null;
