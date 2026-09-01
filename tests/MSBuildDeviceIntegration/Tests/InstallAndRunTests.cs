@@ -2410,19 +2410,20 @@ namespace UnnamedProject
 					"Managed and Java static, default, nested, and covariant bridge interface methods should all execute."
 				);
 			} finally {
-				CleanupInterfaceMethodPackage (proj.PackageName);
+				TryCleanupInterfaceMethodPackage (proj.PackageName);
 			}
 		}
 
 		static void CleanupInterfaceMethodPackage (string packageName)
 		{
-			RunAdbCommand ($"shell am force-stop {packageName}");
-			RunAdbCommand ($"uninstall {packageName}");
-			var adb = Path.Combine (AndroidSdkPath, "platform-tools", OperatingSystem.IsWindows () ? "adb.exe" : "adb");
-			var adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
-			var (exitCode, standardOutput, standardError) = RunProcessWithExitCode (
-				adb,
-				$"{adbTarget} shell pm list packages {packageName}");
+			RunAdbCommandWithExitCode ("shell", "am", "force-stop", packageName);
+			RunAdbCommandWithExitCode ("uninstall", packageName);
+			var (exitCode, standardOutput, standardError) = RunAdbCommandWithExitCode (
+				"shell",
+				"pm",
+				"list",
+				"packages",
+				packageName);
 			Assert.AreEqual (0, exitCode, $"Failed to query installed packages: {standardError}");
 			var installedPackages = standardOutput.Split (
 				new [] { '\r', '\n' },
@@ -2431,6 +2432,15 @@ namespace UnnamedProject
 				installedPackages,
 				$"package:{packageName}",
 				$"{packageName} should not remain installed.");
+		}
+
+		static void TryCleanupInterfaceMethodPackage (string packageName)
+		{
+			try {
+				CleanupInterfaceMethodPackage (packageName);
+			} catch (Exception ex) {
+				TestContext.WriteLine ($"Final cleanup for '{packageName}' failed: {ex}");
+			}
 		}
 
 		void AssertInterfaceMethodDexShape (string dexFile, bool apiNative)
