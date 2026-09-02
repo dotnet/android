@@ -158,6 +158,19 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.Contains ("outside of the resource section", ex.Message);
 		}
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public void ThrowsWhenResourceDirectoryHasOnlyRvaOrSize (bool clearRva)
+		{
+			byte [] image = BuildAndReadBack (new OneEntryResourceSectionBuilder (
+				new byte [] { 1 }, dataEntryRvaDelta: 0, dataEntrySize: 1));
+			PatchResourceDirectory (image, clearRva);
+			using var peReader = new PEReader (ImmutableArray.Create (image));
+
+			var ex = Assert.Throws<JniRewriteException> (() => NativeResourceSectionCopier.TryCreate (peReader));
+			StringAssert.Contains ("invalid RVA or size", ex.Message);
+		}
+
 		[Test]
 		public void AcceptsAndRelocatesAWellFormedDataEntry ()
 		{
@@ -199,6 +212,26 @@ namespace Xamarin.Android.Build.Tests
 
 			CollectionAssert.AreEqual (payload,
 				rewrittenReader.GetSectionData (dataRva).GetReader (0, payload.Length).ReadBytes (payload.Length));
+		}
+
+		static void PatchResourceDirectory (byte [] image, bool clearRva)
+		{
+			int directoryOffset;
+			using (var peReader = new PEReader (ImmutableArray.Create (image))) {
+				const int Pe32DataDirectoriesOffset = 96;
+				const int Pe32PlusDataDirectoriesOffset = 112;
+				const int ResourceDirectoryIndex = 2;
+				int dataDirectoriesOffset = peReader.PEHeaders.PEHeader.Magic == PEMagic.PE32Plus
+					? Pe32PlusDataDirectoriesOffset
+					: Pe32DataDirectoriesOffset;
+				directoryOffset = peReader.PEHeaders.PEHeaderStartOffset +
+					dataDirectoriesOffset + ResourceDirectoryIndex * 2 * sizeof (uint);
+			}
+
+			int valueOffset = directoryOffset + (clearRva ? 0 : sizeof (uint));
+			for (int i = 0; i < sizeof (uint); i++) {
+				image [valueOffset + i] = 0;
+			}
 		}
 	}
 }

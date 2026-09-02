@@ -42,8 +42,11 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			}
 
 			DirectoryEntry directory = peHeader.ResourceTableDirectory;
-			if (directory.RelativeVirtualAddress == 0 || directory.Size == 0) {
+			if (directory.RelativeVirtualAddress == 0 && directory.Size == 0) {
 				return null;
+			}
+			if (directory.RelativeVirtualAddress == 0 || directory.Size == 0) {
+				throw new JniRewriteException ("The Win32 resource directory has an invalid RVA or size.");
 			}
 
 			PEMemoryBlock block = peReader.GetSectionData (directory.RelativeVirtualAddress);

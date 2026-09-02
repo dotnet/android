@@ -347,6 +347,11 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			foreach (TypeDefinitionHandle candidate in reader.TypeDefinitions) {
 				TypeDefinition typeDef = reader.GetTypeDefinition (candidate);
 				if (reader.GetString (typeDef.Name) == wantedName && typeDef.GetDeclaringType ().Equals (enclosing)) {
+					TypeLayout layout = typeDef.GetLayout ();
+					if ((typeDef.Attributes & TypeAttributes.ExplicitLayout) == 0 ||
+							layout.IsDefault || layout.Size != size) {
+						throw new JniRewriteException ($"The assembly already contains '{wantedName}' with an incompatible layout.");
+					}
 					return candidate;
 				}
 			}

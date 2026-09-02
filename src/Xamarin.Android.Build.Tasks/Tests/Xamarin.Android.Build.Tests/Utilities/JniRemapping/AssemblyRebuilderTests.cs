@@ -206,6 +206,32 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void RejectsIncompatibleExistingUtf8SizedType ()
+		{
+			const string replacement = "longer";
+			int replacementSize = Encoding.UTF8.GetByteCount (replacement) + 1;
+			var fixture = new JniFixtureBuilder ();
+			FieldDefinitionHandle field = fixture.AddUtf8Field ("x");
+			TypeDefinitionHandle enclosing = fixture.EnsurePrivateImplementationDetails ();
+			TypeDefinitionHandle incompatible = fixture.AddType (null, FieldRvaTable.Utf8FieldNamePrefix + replacementSize,
+				fixture.NextFieldRid, fixture.NextMethodRid,
+				TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed | TypeAttributes.AnsiClass,
+				fixture.ValueTypeReference);
+			fixture.Metadata.AddTypeLayout (incompatible, packingSize: 1, size: (uint) replacementSize + 1);
+			fixture.Metadata.AddNestedType (incompatible, enclosing);
+
+			byte [] source = fixture.Serialize ();
+			using var sourcePe = new PEReader (ImmutableArray.Create (source));
+			MetadataReader reader = sourcePe.GetMetadataReader ();
+			var plan = new JniRewritePlan ();
+			plan.AddUtf8FieldValue (field, replacement);
+
+			var ex = Assert.Throws<JniRewriteException> (() =>
+				new AssemblyRebuilder (sourcePe, reader, plan, FieldRvaTable.Read (sourcePe, reader)).Build ());
+			StringAssert.Contains ("incompatible layout", ex.Message);
+		}
+
+		[Test]
 		public void ShorterUtf8FieldReplacementPreservesTypeAndZeroFillsSlot ()
 		{
 			var fixture = new JniFixtureBuilder ();
