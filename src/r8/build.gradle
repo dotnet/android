@@ -10,7 +10,7 @@ java {
 }
 
 dependencies {
-    implementation 'com.android.tools:r8:8.11.18'
+    implementation 'com.android.tools:r8:9.4.17'
 }
 
 jar {
