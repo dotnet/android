@@ -538,6 +538,32 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void ReverseMethodMappingPreservesPrimitiveTypesThatCollideWithClassNames ()
+		{
+			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
+				acme.orig.MyView -> a.b.C:
+				    void consume(int) -> a
+				acme.orig.IntCollision -> int:
+				acme.orig.VoidCollision -> void:
+
+				"""));
+			mapping.RestrictReverseLookupsTo (new [] {
+				"C\tacme/orig/MyView",
+				"C\tacme/orig/IntCollision",
+				"C\tacme/orig/VoidCollision",
+				"M\tacme/orig/MyView\tconsume(int):void",
+			});
+			IJniNameMapping reverse = mapping.CreateReverseMapping ();
+
+			Assert.IsTrue (reverse.TryMapMethod ("a/b/C", "a", new [] { "int" }, "void", out string originalMethod));
+			Assert.AreEqual ("consume", originalMethod);
+			CollectionAssert.AreEquivalent (new [] {
+				"C\tacme/orig/MyView",
+				"M\tacme/orig/MyView\tconsume(int):void",
+			}, mapping.AccessedEntries);
+		}
+
+		[Test]
 		public void ReverseMappingRejectsMergedClassWithNoAllowedCandidate ()
 		{
 			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""

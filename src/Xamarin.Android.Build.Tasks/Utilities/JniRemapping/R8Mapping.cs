@@ -612,11 +612,19 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				int suffixStart = javaType.IndexOf ('[');
 				string suffix = suffixStart < 0 ? "" : javaType.Substring (suffixStart);
 				string elementType = suffixStart < 0 ? javaType : javaType.Substring (0, suffixStart);
+				if (IsPrimitiveJavaType (elementType)) {
+					return javaType;
+				}
 				string jniType = JavaNameToJni (elementType);
 				return TryGetAllowedOriginalClass (jniType, out string originalJniType)
 					? originalJniType.Replace ('/', '.') + suffix
 					: javaType;
 			}
+
+			static bool IsPrimitiveJavaType (string javaType) => javaType switch {
+				"boolean" or "byte" or "char" or "short" or "int" or "long" or "float" or "double" or "void" => true,
+				_ => false,
+			};
 
 			bool TryGetAllowedOriginalClass (string obfuscatedJniClassName, out string originalJniClassName)
 			{
