@@ -925,6 +925,17 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
     <comment>The following literal names should not be translated: JNI, Java
 {0} - The obfuscated JNI class name whose original Java source path could not be determined.</comment>
   </data>
+  <data name="XA4327_ManifestPackageMissing" xml:space="preserve">
+    <value>The merged Android manifest '{0}' does not contain a package name.</value>
+    <comment>The following literal name should not be translated: Android
+{0} - The path to the merged Android manifest.</comment>
+  </data>
+  <data name="XA4327_ManifestReadFailure" xml:space="preserve">
+    <value>Could not read the merged Android manifest '{0}': {1}</value>
+    <comment>The following literal name should not be translated: Android
+{0} - The path to the merged Android manifest.
+{1} - The underlying message describing why the manifest could not be read. It is not localized.</comment>
+  </data>
   <data name="XA4327_LinkedAssemblyScanFailure" xml:space="preserve">
     <value>Could not scan the linked assembly '{0}' for rewritten JNI references: {1}</value>
     <comment>The following literal name should not be translated: JNI

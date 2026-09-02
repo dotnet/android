@@ -453,6 +453,26 @@ public class R8JniLibraryPeer : Java.Lang.Object
 					{ "AndroidGeneratedProguardConfiguration", "true" },
 				},
 			});
+			app.AndroidJavaSources.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "R8JniLayoutView.java") {
+				TextContent = () => """
+					package com.example;
+					public class R8JniLayoutView extends android.view.View {
+						public R8JniLayoutView (android.content.Context context, android.util.AttributeSet attrs) {
+							super (context, attrs);
+						}
+					}
+					""",
+				Encoding = Encoding.ASCII,
+				Metadata = { { "Bind", "False" } },
+			});
+			app.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\r8_jni_layout_view.axml") {
+				TextContent = () => """
+					<?xml version="1.0" encoding="utf-8"?>
+					<com.example.R8JniLayoutView xmlns:android="http://schemas.android.com/apk/res/android"
+						android:layout_width="match_parent"
+						android:layout_height="match_parent" />
+					""",
+			});
 			app.Imports.Add (new Import ("CaptureR8JniSeedConfiguration.targets") {
 				TextContent = () => """
 					<Project>
@@ -462,7 +482,7 @@ public class R8JniLibraryPeer : Java.Lang.Object
 					    <MakeDir Directories="$(_AndroidR8JniSeedDirectory)" />
 					    <WriteLinesToFile
 					        File="$(_AndroidR8JniSeedDirectory)configuration-items.txt"
-					        Lines="@(_AndroidR8JniSeedProguardConfiguration->'%(Identity)|%(AndroidGeneratedProguardConfiguration)|%(AndroidAaptProguardConfiguration)')"
+					        Lines="@(_AndroidR8JniSeedProguardConfiguration->'%(Identity)|%(AndroidGeneratedProguardConfiguration)|%(AndroidAaptProguardConfiguration)|%(AndroidManifestProguardConfiguration)')"
 					        Overwrite="true"
 					        WriteOnlyWhenDifferent="true" />
 					  </Target>
@@ -491,12 +511,19 @@ public class R8JniLibraryPeer : Java.Lang.Object
 			var seedConfigurationItems = File.ReadAllLines (FindSingleFile (projectDirectory, "configuration-items.txt"));
 			var seedConfigurationPaths = seedConfigurationItems.Select (item => item.Split ('|') [0]).ToArray ();
 			var finalConfigurationItems = File.ReadAllLines (FindSingleFile (projectDirectory, "final-configuration-items.txt"));
+			var manifestRules = FindSingleFile (projectDirectory, "manifest_rules.txt");
+			var finalAaptRules = FindSingleFile (projectDirectory, "aapt_rules.txt", path => !path.Contains ("r8-jni-seed", StringComparison.Ordinal));
 			AssertR8MappingRenamesClass (seedMapping, libraryJavaName);
 			StringAssert.Contains ($"C\t{libraryJavaName}", File.ReadAllText (rewriteManifest));
 			Assert.That (seedConfigurationPaths, Has.Some.EndsWith ("r8-jni-rules.pro"), "Seed R8 should receive user-authored rules.");
 			Assert.That (seedConfigurationPaths, Has.Some.EndsWith ("proguard.txt"), "Seed R8 should receive AAR consumer rules.");
-			Assert.That (seedConfigurationItems, Has.Some.EndsWith ("aapt_rules.txt|true|true"),
-				"Seed R8 should receive AAPT keep rules with explicit generated and AAPT provenance.");
+			Assert.That (seedConfigurationItems, Has.Some.EndsWith ("manifest_rules.txt|true||true"),
+				"Seed R8 should receive manifest-only keep rules with explicit generated and manifest provenance.");
+			StringAssert.Contains ($"-keep class {app.PackageName}.MainActivity", File.ReadAllText (manifestRules));
+			StringAssert.DoesNotContain ("com.example.R8JniLayoutView", File.ReadAllText (manifestRules),
+				"Seed manifest rules must not include resource custom views.");
+			StringAssert.Contains ("-keep class com.example.R8JniLayoutView", File.ReadAllText (finalAaptRules),
+				"Final AAPT rules should retain resource custom-view rules.");
 			Assert.IsFalse (seedConfigurationPaths.Any (path =>
 				new [] { "proguard-android.txt", "proguard_xamarin.cfg", "proguard_project_references.cfg", "proguard_project_primary.cfg", "generated-acw-keep.cfg" }.Contains (Path.GetFileName (path), StringComparer.Ordinal)),
 				"Seed R8 should not receive generated or baseline configurations that pin managed peers.");

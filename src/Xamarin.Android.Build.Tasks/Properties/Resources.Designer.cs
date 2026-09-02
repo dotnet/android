@@ -2013,6 +2013,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The merged Android manifest &apos;{0}&apos; does not contain a package name..
+        /// </summary>
+        public static string XA4327_ManifestPackageMissing {
+            get {
+                return ResourceManager.GetString("XA4327_ManifestPackageMissing", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Could not read the merged Android manifest &apos;{0}&apos;: {1}.
+        /// </summary>
+        public static string XA4327_ManifestReadFailure {
+            get {
+                return ResourceManager.GetString("XA4327_ManifestReadFailure", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Could not scan the linked assembly &apos;{0}&apos; for rewritten JNI references: {1}.
         /// </summary>
         public static string XA4327_LinkedAssemblyScanFailure {

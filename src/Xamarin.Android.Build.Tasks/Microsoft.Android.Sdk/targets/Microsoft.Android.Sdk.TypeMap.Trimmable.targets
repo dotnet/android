@@ -5,6 +5,7 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateEmptyTypemapStub" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotBootstrapSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateR8JniManifestProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ComputeHash" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.RewriteJniNamesForR8" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.R8" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
@@ -120,83 +121,54 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="_AndroidGenerateR8JniAaptProguardConfigurationInputs"
+  <Target Name="_AndroidGenerateR8JniManifestProguardConfigurationInputs"
       Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' "
-      DependsOnTargets="UpdateAndroidResources;_AndroidCompileR8JniSeedJava;_ManifestMerger">
+      DependsOnTargets="_AndroidCompileR8JniSeedJava;_ManifestMerger">
     <PropertyGroup>
-      <_AndroidR8JniAaptManifest>$(_TypeMapBaseOutputDir)AndroidManifest.xml</_AndroidR8JniAaptManifest>
-      <_AndroidR8JniAaptManifest Condition=" '$(AndroidManifestMerger)' == 'manifestmerger.jar' ">$(IntermediateOutputPath)android/AndroidManifest.xml</_AndroidR8JniAaptManifest>
-      <_AndroidR8JniAaptProguardConfiguration>$(_AndroidR8JniSeedDirectory)aapt_rules.txt</_AndroidR8JniAaptProguardConfiguration>
-      <_AndroidR8JniAaptResourcePackage>$(_AndroidR8JniSeedDirectory)aapt-resources.apk</_AndroidR8JniAaptResourcePackage>
-      <_AndroidR8JniAaptProtobufFormat Condition=" '$(AndroidPackageFormat)' == 'aab' ">true</_AndroidR8JniAaptProtobufFormat>
-      <_AndroidR8JniAaptProtobufFormat Condition=" '$(_AndroidR8JniAaptProtobufFormat)' == '' ">false</_AndroidR8JniAaptProtobufFormat>
+      <_AndroidR8JniMergedManifest>$(_TypeMapBaseOutputDir)AndroidManifest.xml</_AndroidR8JniMergedManifest>
+      <_AndroidR8JniMergedManifest Condition=" '$(AndroidManifestMerger)' == 'manifestmerger.jar' ">$(IntermediateOutputPath)android/AndroidManifest.xml</_AndroidR8JniMergedManifest>
+      <_AndroidR8JniManifestProguardConfiguration>$(_AndroidR8JniSeedDirectory)manifest_rules.txt</_AndroidR8JniManifestProguardConfiguration>
     </PropertyGroup>
-    <ItemGroup>
-      <_AndroidR8JniAaptProguardConfigurationInput Include="@(_AndroidMSBuildAllProjects)" />
-      <_AndroidR8JniAaptProguardConfigurationInput Include="$(_AndroidBuildPropertiesCache)" />
-      <_AndroidR8JniAaptProguardConfigurationInput Include="$(_AndroidR8JniAaptManifest)" />
-      <_AndroidR8JniAaptProguardConfigurationInput Include="@(_CompiledFlatFiles)" />
-      <_AndroidR8JniAaptProguardConfigurationInput Include="@(_LibraryResourceDirectoryStamps)" />
-      <_AndroidR8JniAaptProguardConfigurationInput Include="$(JavaPlatformJarPath)" />
-      <_AndroidR8JniAaptProguardConfigurationInput Include="$(_AndroidAapt2VersionFile)" />
-    </ItemGroup>
   </Target>
 
-  <!-- Generate the manifest/resource keep rules before seed R8 so classes referenced by binary
-       Android resources receive the same identity mapping in both R8 passes. -->
-  <Target Name="_AndroidGenerateR8JniAaptProguardConfiguration"
+  <!-- Generate only manifest-entry keep rules before seed R8. Final resource and custom-view
+       rules remain the responsibility of the normal AAPT link after resource fixup. -->
+  <Target Name="_AndroidGenerateR8JniManifestProguardConfiguration"
       Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' "
-      DependsOnTargets="_AndroidGenerateR8JniAaptProguardConfigurationInputs"
-      Inputs="@(_AndroidR8JniAaptProguardConfigurationInput)"
-      Outputs="$(_AndroidR8JniAaptProguardConfiguration);$(_AndroidR8JniAaptResourcePackage)">
+      DependsOnTargets="_AndroidGenerateR8JniManifestProguardConfigurationInputs"
+      Inputs="$(_AndroidR8JniMergedManifest)"
+      Outputs="$(_AndroidR8JniManifestProguardConfiguration)">
     <MakeDir Directories="$(_AndroidR8JniSeedDirectory)" />
-    <Aapt2Link
-        SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
-        AndroidManifestFile="$(_AndroidR8JniAaptManifest)"
-        CompiledResourceFlatFiles="@(_CompiledFlatFiles)"
-        DaemonMaxInstanceCount="$(Aapt2DaemonMaxInstanceCount)"
-        DaemonKeepInDomain="$(_Aapt2DaemonKeepInDomain)"
-        ResourceDirectories="$(MonoAndroidResDirIntermediate)"
-        AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
-        ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
-        OutputFile="$(_AndroidR8JniAaptResourcePackage)"
-        AdditionalAndroidResourcePaths="@(_LibraryResourceDirectories)"
-        PackageName="$(_AndroidPackage)"
-        JavaPlatformJarPath="$(JavaPlatformJarPath)"
-        AndroidApiLevel="$(_AndroidApiLevel)"
-        ManifestFiles="$(_AndroidR8JniAaptManifest)"
-        ProtobufFormat="$(_AndroidR8JniAaptProtobufFormat)"
-        ExtraArgs="$(AndroidAapt2LinkExtraArgs)"
-        ToolPath="$(Aapt2ToolPath)"
-        ToolExe="$(Aapt2ToolExe)"
-        ProguardRuleOutput="$(_AndroidR8JniAaptProguardConfiguration)" />
+    <GenerateR8JniManifestProguardConfiguration
+        AndroidManifestFile="$(_AndroidR8JniMergedManifest)"
+        OutputFile="$(_AndroidR8JniManifestProguardConfiguration)" />
     <ItemGroup>
-      <FileWrites Include="$(_AndroidR8JniAaptProguardConfiguration)" />
-      <FileWrites Include="$(_AndroidR8JniAaptResourcePackage)" />
+      <FileWrites Include="$(_AndroidR8JniManifestProguardConfiguration)" />
     </ItemGroup>
   </Target>
 
   <Target Name="_AndroidGenerateR8JniSeedMappingInputs"
       Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' "
-      DependsOnTargets="_AndroidGenerateR8JniAaptProguardConfiguration">
+      DependsOnTargets="_AndroidGenerateR8JniManifestProguardConfiguration">
     <ItemGroup>
       <_AndroidR8JniSeedClassFile Include="$(_AndroidR8JniSeedJavaClassDirectory)**\*.class" />
-      <_AndroidR8JniSeedAaptProguardConfiguration
-          Include="$(_AndroidR8JniAaptProguardConfiguration)"
-          Condition=" '$(ProguardConfigFiles)' == '' and Exists('$(_AndroidR8JniAaptProguardConfiguration)') ">
+      <_AndroidR8JniSeedManifestProguardConfiguration
+          Include="$(_AndroidR8JniManifestProguardConfiguration)"
+          Condition=" '$(ProguardConfigFiles)' == '' and Exists('$(_AndroidR8JniManifestProguardConfiguration)') ">
         <AndroidGeneratedProguardConfiguration>true</AndroidGeneratedProguardConfiguration>
-        <AndroidAaptProguardConfiguration>true</AndroidAaptProguardConfiguration>
-      </_AndroidR8JniSeedAaptProguardConfiguration>
+        <AndroidManifestProguardConfiguration>true</AndroidManifestProguardConfiguration>
+      </_AndroidR8JniSeedManifestProguardConfiguration>
       <!-- Seed R8 already disables tree shaking and optimization. Do not use proguard-android.txt:
            its native-method rule preserves ACW names. Start from source items so generated ACW,
-           reachability, primary, and Xamarin configurations cannot leak into this pass. AAPT
-           rules are retained because final R8 must preserve names referenced by binary resources. -->
+           reachability, primary, and Xamarin configurations cannot leak into this pass. Manifest
+           entry rules are retained because final R8 must preserve names referenced by the binary
+           manifest. -->
       <_AndroidR8JniSeedProguardConfiguration Include="$(ProguardConfigFiles)" Condition=" '$(ProguardConfigFiles)' != '' " />
       <_AndroidR8JniSeedProguardConfiguration
           Include="@(ProguardConfiguration)"
           Condition=" '$(ProguardConfigFiles)' == '' and '%(ProguardConfiguration.AndroidGeneratedProguardConfiguration)' != 'true' " />
       <_AndroidR8JniSeedProguardConfiguration
-          Include="@(_AndroidR8JniSeedAaptProguardConfiguration)"
+          Include="@(_AndroidR8JniSeedManifestProguardConfiguration)"
           Condition=" '$(ProguardConfigFiles)' == '' " />
       <_AndroidR8JniSeedMapDiagnostics Condition=" '$(AndroidR8IgnoreWarnings)' == 'true' " Include="warning" To="info" />
     </ItemGroup>

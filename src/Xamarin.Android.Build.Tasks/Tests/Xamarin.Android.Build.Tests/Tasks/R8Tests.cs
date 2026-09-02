@@ -66,22 +66,18 @@ namespace Xamarin.Android.Build.Tests
 				string commonConfiguration = Path.Combine (path, "xamarin.cfg");
 				string customConfiguration = Path.Combine (path, "custom.cfg");
 				string aarConfiguration = Path.Combine (path, "aar-proguard.txt");
-				string aaptConfiguration = Path.Combine (path, "aapt-rules.txt");
+				string manifestConfiguration = Path.Combine (path, "manifest-rules.txt");
 				File.WriteAllText (acwMap, "Managed.Peer;com.example.Peer");
 				File.WriteAllText (customConfiguration, "-dontwarn com.example.**");
 				File.WriteAllText (aarConfiguration, "-dontwarn com.example.library.**");
-				File.WriteAllText (aaptConfiguration, """
-					#Auto Generated file. Do not Edit.
-					# Referenced at obj/manifest/AndroidManifest.xml:10
+				File.WriteAllText (manifestConfiguration, """
 					-keep class com.example.MainActivity { <init>(); }
-					# Referenced at res/layout/main.xml:1
-					-keep class com.example.CustomView { <init>(...); }
 					""");
 				var aarConfigurationItem = new TaskItem (aarConfiguration);
 				aarConfigurationItem.SetMetadata ("OriginalFile", Path.Combine (path, "library.aar"));
-				var aaptConfigurationItem = new TaskItem (aaptConfiguration);
-				aaptConfigurationItem.SetMetadata ("AndroidGeneratedProguardConfiguration", "true");
-				aaptConfigurationItem.SetMetadata ("AndroidAaptProguardConfiguration", "true");
+				var manifestConfigurationItem = new TaskItem (manifestConfiguration);
+				manifestConfigurationItem.SetMetadata ("AndroidGeneratedProguardConfiguration", "true");
+				manifestConfigurationItem.SetMetadata ("AndroidManifestProguardConfiguration", "true");
 
 				var task = new R8TestTask {
 					BuildEngine = new MockBuildEngine (TestContext.Out),
@@ -92,7 +88,7 @@ namespace Xamarin.Android.Build.Tests
 					ProguardGeneratedApplicationConfiguration = applicationConfiguration,
 					ProguardCommonXamarinConfiguration = commonConfiguration,
 					ProguardMappingFileOutput = Path.Combine (path, "mapping.txt"),
-					ProguardConfigurationFiles = new ITaskItem [] { new TaskItem (customConfiguration), aarConfigurationItem, aaptConfigurationItem },
+					ProguardConfigurationFiles = new ITaskItem [] { new TaskItem (customConfiguration), aarConfigurationItem, manifestConfigurationItem },
 					GenerateSeedMapping = true,
 					EnableObfuscation = true,
 					IgnoreWarnings = true,
@@ -111,11 +107,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.That (configurationFiles, Does.Contain (customConfiguration), "Seed R8 should honor user ProGuard rules.");
 				Assert.That (configurationFiles, Does.Contain (aarConfiguration), "Seed R8 should honor AAR consumer rules.");
 				Assert.That (configurationFiles, Does.Contain (commonConfiguration), "Seed R8 should honor runtime keep rules.");
+				Assert.That (configurationFiles, Does.Contain (manifestConfiguration), "Seed R8 should preserve manifest entry names.");
 				Assert.That (configurationFiles, Does.Not.Contain (applicationConfiguration), "Seed R8 must not pass the ACW keep configuration.");
 				FileAssert.DoesNotExist (applicationConfiguration, "Seed R8 must not generate obfuscation-blocking ACW keep rules.");
 				StringAssert.Contains ("-keep class mono.MonoRuntimeProvider", configuration);
 				StringAssert.Contains ("-keep class com.example.MainActivity", configuration);
-				StringAssert.DoesNotContain ("-keep class com.example.CustomView", configuration);
 				StringAssert.DoesNotContain ("-keep class com.example.Peer", configuration);
 				StringAssert.DoesNotContain ("-dontobfuscate", configuration);
 				Assert.That (response, Does.Not.Contain ("--no-minification"));
@@ -163,28 +159,6 @@ namespace Xamarin.Android.Build.Tests
 			} finally {
 				Directory.Delete (path, recursive: true);
 			}
-		}
-
-		[Test]
-		public void KeepAaptManifestRulesPreservesOnlyManifestSections ()
-		{
-			const string input = """
-				#Auto Generated file. Do not Edit.
-				# Data from obj/manifest/aapt_rules.txt
-				# Referenced at C:\project\obj\manifest\AndroidManifest.xml:10
-				-keep class com.example.MainActivity { <init>(); }
-				# Referenced at C:\project\res\layout\main.xml:1
-				-keep class com.example.CustomView { <init>(...); }
-				""";
-
-			Assert.AreEqual ("""
-				#Auto Generated file. Do not Edit.
-				# Data from obj/manifest/aapt_rules.txt
-				# Referenced at C:\project\obj\manifest\AndroidManifest.xml:10
-				-keep class com.example.MainActivity { <init>(); }
-				""", R8.KeepAaptManifestRules (input));
-			Assert.AreEqual ("-keep class com.example.Fallback\n", R8.KeepAaptManifestRules ("-keep class com.example.Fallback\n"),
-				"AAPT format changes should preserve the original configuration rather than silently dropping all rules.");
 		}
 
 		[Test]
