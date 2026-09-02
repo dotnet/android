@@ -6,6 +6,8 @@
 
 #include <jni.h>
 
+#include <shared/cpp-util.hh>
+
 #include "../runtime-base/logger.hh"
 
 namespace xamarin::android {

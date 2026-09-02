@@ -114,6 +114,9 @@ sealed class PEAssemblyBuilder
 			deterministicIdProvider: DeterministicContentId);
 		var peBlob = new BlobBuilder ();
 		peBuilder.Serialize (peBlob);
+		if (stream is MemoryStream memoryStream && memoryStream.Length == 0 && memoryStream.Capacity < peBlob.Count) {
+			memoryStream.Capacity = peBlob.Count;
+		}
 		peBlob.WriteContentTo (stream);
 	}
 
@@ -289,24 +292,20 @@ sealed class PEAssemblyBuilder
 		foreach (var group in valuesBySize) {
 			var sizedType = GetOrCreateSizedType (group.Key);
 			foreach (string value in group.Value) {
-				AddUtf8Field (value, group.Key, sizedType);
+				AddUtf8Field (value, sizedType);
 			}
 		}
 	}
 
-	void AddUtf8Field (string value, int size, TypeDefinitionHandle sizedType)
+	void AddUtf8Field (string value, TypeDefinitionHandle sizedType)
 	{
 		// Encode to null-terminated UTF-8 (all JNI names/signatures are ASCII).
-		int byteCount = size - 1;
-		var bytes = new byte [size];
-		System.Text.Encoding.UTF8.GetBytes (value, 0, value.Length, bytes, 0);
-		// bytes[byteCount] is already 0 (null terminator)
-
 		_sigBlob.Clear ();
 		new BlobEncoder (_sigBlob).FieldSignature ().Type (sizedType, true);
 
 		int rva = _mappedFieldData.Count;
-		_mappedFieldData.WriteBytes (bytes);
+		_mappedFieldData.WriteUTF8 (value);
+		_mappedFieldData.WriteByte (0);
 
 		var fieldHandle = Metadata.AddFieldDefinition (
 			FieldAttributes.Static | FieldAttributes.Assembly | FieldAttributes.HasFieldRVA | FieldAttributes.InitOnly,
@@ -510,6 +509,27 @@ sealed class PEAssemblyBuilder
 		_attrBlob.WriteUInt16 (0x0001); // Prolog
 		writePayload (_attrBlob);
 		_attrBlob.WriteUInt16 (0x0000); // NumNamed
+		return Metadata.GetOrAddBlob (_attrBlob);
+	}
+
+	public BlobHandle BuildAttributeBlob (string first, string second)
+	{
+		_attrBlob.Clear ();
+		_attrBlob.WriteUInt16 (0x0001);
+		_attrBlob.WriteSerializedString (first);
+		_attrBlob.WriteSerializedString (second);
+		_attrBlob.WriteUInt16 (0x0000);
+		return Metadata.GetOrAddBlob (_attrBlob);
+	}
+
+	public BlobHandle BuildAttributeBlob (string first, string second, string third)
+	{
+		_attrBlob.Clear ();
+		_attrBlob.WriteUInt16 (0x0001);
+		_attrBlob.WriteSerializedString (first);
+		_attrBlob.WriteSerializedString (second);
+		_attrBlob.WriteSerializedString (third);
+		_attrBlob.WriteUInt16 (0x0000);
 		return Metadata.GetOrAddBlob (_attrBlob);
 	}
 

@@ -90,7 +90,7 @@ namespace xamarin::android {
 		static constexpr size_t default_duration_milliseconds = 1500;
 		static constexpr std::string_view default_timing_file_name { "timing.txt" };
 
-		// Parameters for the `debug.mono.timing` property
+		// Parameters for the runtime timing property
 		static constexpr std::string_view OPT_DURATION      { "duration=" };
 		static constexpr std::string_view OPT_FILE_NAME     { "filename=" };
 		static constexpr std::string_view OPT_TO_FILE       { "to-file" };
@@ -487,7 +487,7 @@ namespace xamarin::android {
 		}
 
 	private:
-		void parse_options (char *value) noexcept;
+		void parse_options (const char *options) noexcept;
 		static void really_initialize (bool log_immediately) noexcept;
 
 		[[gnu::always_inline]]

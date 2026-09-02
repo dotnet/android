@@ -333,7 +333,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	AndroidSystem::set_app_code_cache_dir (applicationDirs[Constants::APP_DIRS_CODE_CACHE_DIR_INDEX]);
 	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 	AndroidSystem::setup_environment ();
-	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
+	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ().c_str ());
 
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
 	AndroidSystem::setup_app_library_directories (runtimeApks, applicationDirs, haveSplitApks);

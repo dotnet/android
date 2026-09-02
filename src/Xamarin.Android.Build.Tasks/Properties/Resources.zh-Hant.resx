@@ -318,7 +318,7 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <comment>The following are literal names and should not be translated: ReadyToRun, Debug, Release.</comment>
   </data>
   <data name="XA0119_ReadyToRunWithoutTrimming" xml:space="preserve">
-    <value>ReadyToRun has been disabled because trimming is disabled. Set the 'PublishTrimmed' MSBuild property to 'true' to use ReadyToRun.</value>
+    <value>已停用 ReadyToRun，因為已停用修剪。將 'PublishTrimmed' MSBuild 屬性設定為 'true'，即可使用 ReadyToRun。</value>
     <comment>The following are literal names and should not be translated: ReadyToRun, 'PublishTrimmed', 'true'.</comment>
   </data>
   <data name="XA0121" xml:space="preserve">
@@ -1064,7 +1064,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - User supplied Maven repository type</comment>
   </data>
   <data name="XA4240" xml:space="preserve">
-    <value>The Java callable wrapper code generation target '{0}' is no longer supported. The '_AndroidJcwCodegenTarget' property only supports 'XAJavaInterop1'; 'XamarinAndroid' and 'JavaInterop1' are not supported.</value>
+    <value>Java 可呼叫包裝函式程式碼產生目標 '{0}' 已不再支援。'_AndroidJcwCodegenTarget' 屬性只支援 'XAJavaInterop1'；不支援 'XamarinAndroid' 和 'JavaInterop1'。</value>
     <comment>The following are literal names and should not be translated: _AndroidJcwCodegenTarget, XAJavaInterop1, XamarinAndroid, JavaInterop1
 {0} - The name of the current Java callable wrapper code generation target</comment>
   </data>
@@ -1127,6 +1127,10 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
 {0} - The path to the AndroidManifest.xml file.
 </comment>
+  </data>
+  <data name="XA1049" xml:space="preserve">
+    <value>The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'. Set one property to 'false'.</value>
+    <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>無法滿足 JAVA 相依性 '{0}'。</value>

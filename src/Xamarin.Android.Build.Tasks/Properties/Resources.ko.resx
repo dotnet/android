@@ -318,7 +318,7 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <comment>The following are literal names and should not be translated: ReadyToRun, Debug, Release.</comment>
   </data>
   <data name="XA0119_ReadyToRunWithoutTrimming" xml:space="preserve">
-    <value>ReadyToRun has been disabled because trimming is disabled. Set the 'PublishTrimmed' MSBuild property to 'true' to use ReadyToRun.</value>
+    <value>트리밍이 비활성화되어 있으므로 ReadyToRun을 사용할 수 없습니다. ReadyToRun을 사용하려면 'PublishTrimmed' MSBuild 속성을 'true'로 설정하세요.</value>
     <comment>The following are literal names and should not be translated: ReadyToRun, 'PublishTrimmed', 'true'.</comment>
   </data>
   <data name="XA0121" xml:space="preserve">
@@ -1064,7 +1064,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - User supplied Maven repository type</comment>
   </data>
   <data name="XA4240" xml:space="preserve">
-    <value>The Java callable wrapper code generation target '{0}' is no longer supported. The '_AndroidJcwCodegenTarget' property only supports 'XAJavaInterop1'; 'XamarinAndroid' and 'JavaInterop1' are not supported.</value>
+    <value>Java 호출 가능 래퍼 코드 생성 대상 '{0}'은(는) 더 이상 지원되지 않습니다. '_AndroidJcwCodegenTarget' 속성은 'XAJavaInterop1'만 지원하며, 'XamarinAndroid'와 'JavaInterop1'은 지원되지 않습니다.</value>
     <comment>The following are literal names and should not be translated: _AndroidJcwCodegenTarget, XAJavaInterop1, XamarinAndroid, JavaInterop1
 {0} - The name of the current Java callable wrapper code generation target</comment>
   </data>
@@ -1127,6 +1127,10 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
 {0} - The path to the AndroidManifest.xml file.
 </comment>
+  </data>
+  <data name="XA1049" xml:space="preserve">
+    <value>The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'. Set one property to 'false'.</value>
+    <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>Java 종속성 '{0}'이(가) 충족되지 않습니다.</value>

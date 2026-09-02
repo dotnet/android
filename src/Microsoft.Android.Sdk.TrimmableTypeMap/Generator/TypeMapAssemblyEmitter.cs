@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -196,10 +195,7 @@ sealed class TypeMapAssemblyEmitter
 		}
 		EmitMemberReferences ();
 
-		_pe.PrepareUtf8Fields (model.ProxyTypes
-			.Where (proxy => proxy.IsAcw)
-			.SelectMany (proxy => proxy.NativeRegistrations)
-			.SelectMany (registration => new [] { registration.JniMethodName, registration.JniSignature }));
+		_pe.PrepareUtf8Fields (EnumerateNativeRegistrationStrings (model.ProxyTypes));
 
 		// Track wrapper targets → handles for RegisterNatives.
 		var wrapperHandles = new Dictionary<UcoWrapperTargetData, MethodDefinitionHandle> ();
@@ -221,6 +217,19 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		_pe.EmitIgnoresAccessChecksToAttribute (model.IgnoresAccessChecksTo);
+	}
+
+	static IEnumerable<string> EnumerateNativeRegistrationStrings (IReadOnlyList<JavaPeerProxyData> proxies)
+	{
+		foreach (var proxy in proxies) {
+			if (!proxy.IsAcw) {
+				continue;
+			}
+			foreach (var registration in proxy.NativeRegistrations) {
+				yield return registration.JniMethodName;
+				yield return registration.JniSignature;
+			}
+		}
 	}
 
 	static List<JavaPeerProxyData> OrderProxiesForWrapperTargets (IReadOnlyList<JavaPeerProxyData> proxies)
@@ -1717,16 +1726,15 @@ sealed class TypeMapAssemblyEmitter
 	{
 		var ctorRef = entry.IsUnconditional ? _typeMapAttrCtorRef2Arg : _typeMapAttrCtorRef3Arg;
 
-		var blob = _pe.BuildAttributeBlob (b => {
-			b.WriteSerializedString (entry.MapKey);
-			b.WriteSerializedString (entry.ProxyTypeReference);
-			if (!entry.IsUnconditional) {
-				if (entry.TargetTypeReference is null) {
-					throw new InvalidOperationException ($"TargetTypeReference must not be null for conditional entry '{entry.MapKey}'");
-				}
-				b.WriteSerializedString (entry.TargetTypeReference);
+		BlobHandle blob;
+		if (entry.IsUnconditional) {
+			blob = _pe.BuildAttributeBlob (entry.MapKey, entry.ProxyTypeReference);
+		} else {
+			if (entry.TargetTypeReference is null) {
+				throw new InvalidOperationException ($"TargetTypeReference must not be null for conditional entry '{entry.MapKey}'");
 			}
-		});
+			blob = _pe.BuildAttributeBlob (entry.MapKey, entry.ProxyTypeReference, entry.TargetTypeReference);
+		}
 		_pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, blob);
 	}
 
@@ -1734,10 +1742,7 @@ sealed class TypeMapAssemblyEmitter
 	{
 		var ctorRef = _typeMapAssociationAttrCtorRef;
 
-		var blob = _pe.BuildAttributeBlob (b => {
-			b.WriteSerializedString (assoc.SourceTypeReference);
-			b.WriteSerializedString (assoc.AliasProxyTypeReference);
-		});
+		var blob = _pe.BuildAttributeBlob (assoc.SourceTypeReference, assoc.AliasProxyTypeReference);
 		_pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, blob);
 	}
 

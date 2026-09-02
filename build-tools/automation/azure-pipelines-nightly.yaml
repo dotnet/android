@@ -15,10 +15,10 @@ resources:
     type: git
     name: DevDiv/Xamarin.yaml-templates
     ref: refs/heads/main
-  - repository: maui
+  - repository: macios-devtools
     type: github
-    name: dotnet/maui
-    ref: net11.0
+    name: dotnet/macios-devtools
+    ref: refs/heads/main
     endpoint: xamarin
 
 parameters:

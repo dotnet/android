@@ -26,6 +26,10 @@ public class TrimmableTypeMapGenerator
 	/// assemblies, generate JCW Java sources, and optionally generate a merged manifest.
 	/// No file IO is performed — all results are returned in memory.
 	/// </summary>
+	/// <param name="collectMarshalMethodsForNonAcw">
+	/// Set to <see langword="false"/> when callers do not consume method metadata for types
+	/// that cannot generate Java callable wrappers.
+	/// </param>
 	public TrimmableTypeMapResult Execute (
 		IReadOnlyList<AssemblyInput> assemblies,
 		Version systemRuntimeVersion,
@@ -35,18 +39,26 @@ public class TrimmableTypeMapGenerator
 		XDocument? manifestTemplate = null,
 		string? packageNamingPolicy = null,
 		bool generateTypeMapAssemblies = true,
-		bool errorOnCustomJavaObject = true)
+		bool errorOnCustomJavaObject = true,
+		IReadOnlyCollection<string>? customViewTypeNames = null,
+		bool collectMarshalMethodsForNonAcw = true)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
 		_ = frameworkAssemblyNames ?? throw new ArgumentNullException (nameof (frameworkAssemblyNames));
-		var (allPeers, assemblyManifestInfo) = ScanAssemblies (assemblies, packageNamingPolicy, frameworkAssemblyNames, errorOnCustomJavaObject);
+		var (allPeers, assemblyManifestInfo) = ScanAssemblies (
+			assemblies,
+			packageNamingPolicy,
+			frameworkAssemblyNames,
+			errorOnCustomJavaObject,
+			collectMarshalMethodsForNonAcw);
 		if (allPeers.Count == 0) {
 			logger.LogNoJavaPeerTypesFound ();
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 		MarkFrameworkAssemblyPeers (allPeers, frameworkAssemblyNames);
 
+		RootCustomViewTypes (allPeers, customViewTypeNames);
 		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig), manifestConfig?.ApplicationJavaClass);
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
@@ -71,6 +83,22 @@ public class TrimmableTypeMapGenerator
 			: null;
 
 		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest, appRegTypes);
+	}
+
+	internal static void RootCustomViewTypes (List<JavaPeerInfo> allPeers, IReadOnlyCollection<string>? customViewTypeNames)
+	{
+		if (customViewTypeNames is null || customViewTypeNames.Count == 0) {
+			return;
+		}
+
+		var names = new HashSet<string> (customViewTypeNames, StringComparer.Ordinal);
+		foreach (var peer in allPeers) {
+			if (names.Contains (peer.ManagedTypeName) ||
+					names.Contains (JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName)) ||
+					names.Contains (JniSignatureHelper.JniNameToJavaBinaryName (peer.CompatJniName))) {
+				peer.IsUnconditional = true;
+			}
+		}
 	}
 
 	internal bool ValidateJavaNames (IReadOnlyList<JavaPeerInfo> peers, string? applicationJavaClass = null)
@@ -116,6 +144,14 @@ public class TrimmableTypeMapGenerator
 			}
 			foreach (var constructor in peer.JavaConstructors) {
 				ValidateJniSignature (constructor.JniSignature);
+				if (constructor.ThrownNames is not null) {
+					foreach (var thrownName in constructor.ThrownNames) {
+						var javaThrownName = JniSignatureHelper.JniNameToJavaName (thrownName);
+						if (JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (javaThrownName, out invalidIdentifier)) {
+							ReportInvalidName (thrownName, invalidIdentifier);
+						}
+					}
+				}
 			}
 			foreach (var method in peer.MarshalMethods) {
 				if (!method.IsConstructor) {
@@ -123,7 +159,8 @@ public class TrimmableTypeMapGenerator
 				}
 				if (method.ThrownNames is not null) {
 					foreach (var thrownName in method.ThrownNames) {
-						if (JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (thrownName, out invalidIdentifier)) {
+						var javaThrownName = JniSignatureHelper.JniNameToJavaName (thrownName);
+						if (JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (javaThrownName, out invalidIdentifier)) {
 							ReportInvalidName (thrownName, invalidIdentifier);
 						}
 					}
@@ -268,9 +305,15 @@ public class TrimmableTypeMapGenerator
 		IReadOnlyList<AssemblyInput> assemblies,
 		string? packageNamingPolicy,
 		HashSet<string> frameworkAssemblyNames,
-		bool errorOnCustomJavaObject = true)
+		bool errorOnCustomJavaObject,
+		bool collectMarshalMethodsForNonAcw)
 	{
-		using var scanner = new JavaPeerScanner (packageNamingPolicy, logger, frameworkAssemblyNames, errorOnCustomJavaObject);
+		using var scanner = new JavaPeerScanner (
+			packageNamingPolicy,
+			logger,
+			frameworkAssemblyNames,
+			errorOnCustomJavaObject,
+			collectMarshalMethodsForNonAcw);
 		var peers = scanner.Scan (assemblies);
 		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
 		logger.LogJavaPeerScanInfo (assemblies.Count, peers.Count);
