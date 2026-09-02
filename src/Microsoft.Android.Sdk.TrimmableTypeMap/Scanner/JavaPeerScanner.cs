@@ -892,31 +892,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 	internal bool HasExportSignatureMapping (TypeRefData managedType, ExportParameterKindInfo exportKind)
 	{
-		if (TryManagedTypeToJniDescriptor (managedType, exportKind, out _)) {
-			return true;
-		}
-		if (exportKind != ExportParameterKindInfo.Unspecified) {
-			return false;
-		}
-
-		// Legacy maps by-ref, pointer, and rectangular-array signatures through their
-		// element type. Their trimmable dispatch parity is tracked separately; do not
-		// turn llvm-ir-supported signatures into trimmable-only diagnostics here.
-		string managedTypeName = managedType.ManagedTypeName;
-		if (managedTypeName.EndsWith ("&", StringComparison.Ordinal) ||
-		    managedTypeName.EndsWith ("*", StringComparison.Ordinal)) {
-			return TryManagedTypeToJniDescriptor (managedType with {
-				ManagedTypeName = managedTypeName.Substring (0, managedTypeName.Length - 1),
-			}, exportKind, out _);
-		}
-
-		int arrayStart = managedTypeName.LastIndexOf ('[');
-		if (arrayStart >= 0 && managedTypeName.EndsWith ("]", StringComparison.Ordinal)) {
-			return TryManagedTypeToJniDescriptor (managedType with {
-				ManagedTypeName = managedTypeName.Substring (0, arrayStart),
-			}, exportKind, out _);
-		}
-		return false;
+		return TryManagedTypeToJniDescriptor (managedType, exportKind, out _);
 	}
 
 	static bool HasJniAddNativeMethodRegistrationAttribute (TypeDefinition typeDef, AssemblyIndex index)

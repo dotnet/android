@@ -118,6 +118,20 @@ public class ExportSignatureTests : FixtureTestBase
 		}));
 	}
 
+	[Theory]
+	[InlineData ("System.Int32&")]
+	[InlineData ("System.Int32*")]
+	[InlineData ("System.String[,]")]
+	public void ExportMethods_DoNotMapConstructorOnlySignatureShapes (string managedTypeName)
+	{
+		using var scanner = new JavaPeerScanner ();
+
+		Assert.False (scanner.HasExportSignatureMapping (new TypeRefData {
+			ManagedTypeName = managedTypeName,
+			AssemblyName = "System.Runtime",
+		}, ExportParameterKindInfo.Unspecified));
+	}
+
 	[Fact]
 	public void SpecialXmlMapping_AcceptsCanonicalAndForwardedFrameworkIdentity ()
 	{

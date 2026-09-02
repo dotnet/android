@@ -113,6 +113,12 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "function-pointer", "XALNS7003")]
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "function-pointer", "XA4263")]
 		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "function-pointer", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "by-ref-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "by-ref-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "pointer-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "pointer-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "rectangular-array-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "rectangular-array-parameter", "XA4263")]
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic-declaring-type", "XA4206")]
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic-declaring-type", "XA4206")]
 		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic-declaring-type", "XA4206")]
@@ -198,6 +204,21 @@ namespace Xamarin.Android.Build.Tests {
 				"function-pointer" => (
 					"",
 					"""[Export ("unsupported")] public unsafe delegate* unmanaged<void> UnsupportedMember (delegate* unmanaged<void> value) => value;""",
+					"unsupported",
+					""),
+				"by-ref-parameter" => (
+					"",
+					"""[Export ("unsupported")] public void UnsupportedMember (ref int value) { }""",
+					"unsupported",
+					""),
+				"pointer-parameter" => (
+					"",
+					"""[Export ("unsupported")] public unsafe void UnsupportedMember (int* value) { }""",
+					"unsupported",
+					""),
+				"rectangular-array-parameter" => (
+					"",
+					"""[Export ("unsupported")] public void UnsupportedMember (string [,] value) { }""",
 					"unsupported",
 					""),
 				"generic-declaring-type" => (
