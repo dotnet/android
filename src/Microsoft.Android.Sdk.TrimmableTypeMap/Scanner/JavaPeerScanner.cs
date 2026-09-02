@@ -842,7 +842,7 @@ public sealed class JavaPeerScanner : IDisposable
 			return false;
 		}
 
-		var sig = methodDef.DecodeSignature (TypeRefSignatureTypeProvider.Instance, index);
+		var sig = methodDef.DecodeSignature (index.TypeRefSignatureProvider, index);
 		var (parameterKinds, returnKind) = GetExportParameterKinds (methodDef, index, sig.ParameterTypes.Length);
 		var declaringType = index.Reader.GetTypeDefinition (methodDef.GetDeclaringType ());
 		string declaringTypeName = MetadataTypeNameResolver.GetFullName (declaringType, index.Reader);
@@ -1301,7 +1301,7 @@ public sealed class JavaPeerScanner : IDisposable
 		// User peer types (extend a Java peer but lack [Register]) get a CRC64-based
 		// JNI name in ScanAssembly. Mirror that for exported signatures.
 		var typeDef = index.Reader.GetTypeDefinition (handle);
-		if (ExtendsJavaPeer (typeDef, index)) {
+		if (ExtendsJavaPeer (handle, typeDef, index)) {
 			var (jniName, _) = ComputeAutoJniNames (typeDef, index);
 			return $"L{jniName};";
 		}
@@ -2889,7 +2889,6 @@ public sealed class JavaPeerScanner : IDisposable
 			}
 		}
 		return true;
-	}
 	}
 
 	/// <summary>
