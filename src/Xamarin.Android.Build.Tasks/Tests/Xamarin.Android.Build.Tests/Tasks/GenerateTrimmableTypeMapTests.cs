@@ -114,6 +114,37 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void Execute_MissingTypeMapAssembly_RegeneratesWithMatchingFingerprint ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			var assemblies = new [] { monoAndroidItem };
+			var task1 = CreateTask (assemblies, outputDir, javaDir);
+			Assert.IsTrue (task1.Execute (), "First run should succeed.");
+
+			var typeMapPath = task1.GeneratedAssemblies
+				.Select (i => i.ItemSpec)
+				.First (p => p.Contains ("_Mono.Android.TypeMap.dll"));
+			File.Delete (typeMapPath);
+
+			var messages = new List<BuildMessageEventArgs> ();
+			var task2 = CreateTask (assemblies, outputDir, javaDir, messages: messages);
+			Assert.IsTrue (task2.Execute (), "Second run should recover the missing typemap assembly.");
+
+			FileAssert.Exists (typeMapPath, "A missing typemap assembly should be regenerated even when its persisted fingerprint matches.");
+			Assert.IsTrue (messages.Any (message => message.Message?.Contains ("_Mono.Android.TypeMap: changed, generating", StringComparison.Ordinal) == true),
+				"A missing typemap assembly should be reported as changed rather than unchanged.");
+		}
+
+		[Test]
 		public void ReadTypeMapFingerprints_UnreadableCache_Regenerates ()
 		{
 			var path = Path.Combine ("temp", TestName);
