@@ -253,7 +253,9 @@ auto TypeMapper::managed_to_java_release (const char *typeName, const uint8_t *m
 		return nullptr;
 	}
 
-	log_debugf (LOG_ASSEMBLY, "typemap: found module matching MVID [%s]", MonoGuidString (mvid).c_str ());
+	if (Util::should_log (LOG_ASSEMBLY)) {
+		log_debugf (LOG_ASSEMBLY, "typemap: found module matching MVID [%s]", MonoGuidString (mvid).c_str ());
+	}
 	size_t type_name_length = strlen (typeName);
 	hash_t name_hash = crc32_hash (typeName, type_name_length);
 
@@ -263,13 +265,15 @@ auto TypeMapper::managed_to_java_release (const char *typeName, const uint8_t *m
 	const TypeMapModuleEntry *entry = find_managed_to_java_map_entry (name_hash, typeName, type_name_length, map, match->entry_count);
 	if (entry == nullptr) [[unlikely]] {
 		if (match->duplicate_count > 0 && match->duplicate_map_index < std::numeric_limits<decltype (match->duplicate_map_index)>::max ()) {
-			log_debugf (
-				LOG_ASSEMBLY,
-				"typemap: searching module [%s] duplicate map for type '%s' (hash %x)",
-				MonoGuidString (mvid).c_str (),
-				optional_string (typeName),
-				name_hash
-			);
+			if (Util::should_log (LOG_ASSEMBLY)) {
+				log_debugf (
+					LOG_ASSEMBLY,
+					"typemap: searching module [%s] duplicate map for type '%s' (hash %x)",
+					MonoGuidString (mvid).c_str (),
+					optional_string (typeName),
+					name_hash
+				);
+			}
 
 			const TypeMapModuleEntry *const duplicate_map = &modules_duplicates_data[match->duplicate_map_index];
 			entry = find_managed_to_java_map_entry (name_hash, typeName, type_name_length, duplicate_map, match->duplicate_count);
@@ -325,16 +329,18 @@ auto TypeMapper::managed_to_java_release (const char *typeName, const uint8_t *m
 		log_warnf (LOG_ASSEMBLY, "typemap: empty Java type name returned for entry at index %u", entry->java_map_index);
 	}
 
-	log_debugf (
-		LOG_ASSEMBLY,
-		"typemap: managed type '%s' (hash %x) in module [%s] (%.*s) corresponds to Java type '%s'",
-		optional_string (typeName),
-		name_hash,
-		MonoGuidString (mvid).c_str (),
-		static_cast<int>(match->assembly_name_length),
-		&managed_assembly_names[match->assembly_name_index],
-		ret
-	);
+	if (Util::should_log (LOG_ASSEMBLY)) {
+		log_debugf (
+			LOG_ASSEMBLY,
+			"typemap: managed type '%s' (hash %x) in module [%s] (%.*s) corresponds to Java type '%s'",
+			optional_string (typeName),
+			name_hash,
+			MonoGuidString (mvid).c_str (),
+			static_cast<int>(match->assembly_name_length),
+			&managed_assembly_names[match->assembly_name_index],
+			ret
+		);
+	}
 
 	return ret;
 }
