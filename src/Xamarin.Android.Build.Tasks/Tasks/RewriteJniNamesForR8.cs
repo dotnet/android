@@ -26,6 +26,10 @@ namespace Xamarin.Android.Tasks
 	/// </summary>
 	public class RewriteJniNamesForR8 : AndroidTask
 	{
+		static readonly StringComparison PathComparison = Path.DirectorySeparatorChar == '\\'
+			? StringComparison.OrdinalIgnoreCase
+			: StringComparison.Ordinal;
+
 		public override string TaskPrefix => "RJN";
 
 		[Required]
@@ -104,7 +108,7 @@ namespace Xamarin.Android.Tasks
 				Log.LogDebugMessage ($"RewriteJniNamesForR8: '{Path.GetFileName (sourcePath)}' is strong-named; preserved its public-key identity and emitted a delay-signed linker input.");
 			}
 
-			bool inPlace = String.Equals (Path.GetFullPath (sourcePath), Path.GetFullPath (destinationPath), StringComparison.Ordinal);
+			bool inPlace = AreSamePath (sourcePath, destinationPath);
 			if (!inPlace || result.ReplacementCount != 0) {
 				using var output = new MemoryStream (result.Image, writable: false);
 				Files.CopyIfStreamChanged (output, destinationPath);
@@ -113,6 +117,9 @@ namespace Xamarin.Android.Tasks
 				CopyAdjacentPdbUnchanged (sourcePath, destinationPath);
 			}
 		}
+
+		internal static bool AreSamePath (string firstPath, string secondPath)
+			=> String.Equals (Path.GetFullPath (firstPath), Path.GetFullPath (secondPath), PathComparison);
 
 		static void CopyAdjacentPdbUnchanged (string sourcePath, string destinationPath)
 		{

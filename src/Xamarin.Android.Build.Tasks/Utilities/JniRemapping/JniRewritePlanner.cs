@@ -26,6 +26,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		readonly PEReader peReader;
 		readonly MetadataReader reader;
 		readonly IJniNameMapping mapping;
+		readonly R8Mapping? forwardMapping;
 		readonly TaskLoggingHelper log;
 		readonly Func<string, string?> renameClass;
 		readonly Dictionary<TypeDefinitionHandle, string?> ownerJniNameCache = new ();
@@ -37,6 +38,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			this.peReader = peReader;
 			this.reader = reader;
 			this.mapping = mapping;
+			forwardMapping = mapping as R8Mapping;
 			this.log = log;
 			renameClass = className => mapping.TryMapClass (className, out string renamed) ? renamed : null;
 		}
@@ -301,7 +303,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 			if (HasControlFlowEntry (instructions, controlFlowEntries, classIndex, callIndex) ||
 					!TryResolveLegacyLookupClass (il, instructions, controlFlowEntries, classIndex, out string className)) {
-				WarnForUnsafeRenamedLookup (methodHandle, il, instructions, classIndex);
+				WarnForUnsafeRenamedLookup (methodHandle, il, instructions, classIndex, memberName, descriptor, isField);
 				return;
 			}
 
@@ -404,14 +406,14 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		}
 
 		void WarnForUnsafeRenamedLookup (MethodDefinitionHandle methodHandle, byte [] il,
-			List<IlInstruction> instructions, int classIndex)
+			List<IlInstruction> instructions, int classIndex, string memberName, string descriptor, bool isField)
 		{
 			IlInstruction classInstruction = instructions [classIndex];
 			if (IsJniEnvironmentMethod (il, classInstruction, "FindClass")) {
 				int classNameIndex = PreviousNonNop (instructions, classIndex - 1);
 				if (classNameIndex >= 0 &&
 						instructions [classNameIndex].Code == (ushort) ILOpCode.Ldstr &&
-						IsRenamedClass (ReadUserString (il, instructions [classNameIndex].OperandOffset))) {
+						WouldRenameLookupMember (ReadUserString (il, instructions [classNameIndex].OperandOffset), memberName, descriptor, isField)) {
 					LogUnsafeLookupWarning ("D:" + MetadataTokens.GetToken (methodHandle) + ":" + classInstruction.InstructionOffset);
 				}
 				return;
@@ -422,7 +424,8 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					return;
 				}
 				foreach (StaticJniClassAssignment assignment in assignments) {
-					if (assignment.CandidateClassName != null && IsRenamedClass (assignment.CandidateClassName)) {
+					if (assignment.CandidateClassName != null &&
+							WouldRenameLookupMember (assignment.CandidateClassName, memberName, descriptor, isField)) {
 						LogUnsafeLookupWarning ("F:" + fieldKey);
 						return;
 					}
@@ -445,16 +448,28 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				int classNameIndex = PreviousNonNop (instructions, findClassIndex - 1);
 				if (classNameIndex >= 0 &&
 						instructions [classNameIndex].Code == (ushort) ILOpCode.Ldstr &&
-						IsRenamedClass (ReadUserString (il, instructions [classNameIndex].OperandOffset))) {
+						WouldRenameLookupMember (ReadUserString (il, instructions [classNameIndex].OperandOffset), memberName, descriptor, isField)) {
 					LogUnsafeLookupWarning ("L:" + MetadataTokens.GetToken (methodHandle) + ":" + localIndex);
 					return;
 				}
 			}
 		}
 
-		bool IsRenamedClass (string className)
-			=> mapping.TryMapClass (className, out string renamedClass) &&
-				!String.Equals (className, renamedClass, StringComparison.Ordinal);
+		bool WouldRenameLookupMember (string className, string memberName, string descriptor, bool isField)
+		{
+			if (forwardMapping == null) {
+				return false;
+			}
+			if (isField) {
+				return forwardMapping.TryPeekRenamedField (className, memberName, out string renamedField) &&
+					!String.Equals (memberName, renamedField, StringComparison.Ordinal);
+			}
+
+			JniDescriptorText.MethodDescriptorToJavaTypes (descriptor, out var javaParams, out string javaReturnType);
+			string mappingName = R8Mapping.JniMemberNameToMappingName (memberName);
+			return forwardMapping.TryPeekRenamedMethod (className, mappingName, javaParams, javaReturnType, out string renamedMethod) &&
+				!String.Equals (memberName, renamedMethod, StringComparison.Ordinal);
+		}
 
 		void LogUnsafeLookupWarning (string sourceKey)
 		{

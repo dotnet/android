@@ -191,6 +191,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void DetectsInPlacePathsUsingPlatformCaseRules ()
+		{
+			string upperCasePath = Path.Combine (Root, "temp", TestName, "Test.dll");
+			string lowerCasePath = Path.Combine (Root, "temp", TestName, "test.dll");
+
+			Assert.AreEqual (Path.DirectorySeparatorChar == '\\',
+				RewriteJniNamesForR8.AreSamePath (upperCasePath, lowerCasePath));
+		}
+
+		[Test]
 		public void LeavesInPlaceAssemblyWithIdentityMappingUntouched ()
 		{
 			string path = Path.Combine (Root, "temp", TestName);

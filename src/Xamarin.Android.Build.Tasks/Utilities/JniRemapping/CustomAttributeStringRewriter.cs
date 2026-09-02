@@ -31,6 +31,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			if (originalContent.Length < 2) {
 				throw new JniRewriteException ("Malformed custom attribute value blob: missing 2-byte prolog.");
 			}
+			if (originalContent [0] != 0x01 || originalContent [1] != 0x00) {
+				throw new JniRewriteException ("Malformed custom attribute value blob: expected 0x0001 prolog.");
+			}
 
 			using var ms = new MemoryStream (originalContent.Length);
 			ms.Write (originalContent, 0, 2);

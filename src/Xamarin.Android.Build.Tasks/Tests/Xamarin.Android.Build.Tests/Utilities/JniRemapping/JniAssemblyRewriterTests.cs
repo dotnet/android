@@ -143,6 +143,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void RejectsInvalidCustomAttributeProlog ()
+		{
+			var exception = Assert.Throws<JniRewriteException> (() =>
+				CustomAttributeStringRewriter.TryRewrite (new byte [] { 0x00, 0x00 }, 0, (_, _) => null));
+
+			StringAssert.Contains ("expected 0x0001 prolog", exception.Message);
+		}
+
+		[Test]
 		public void DoesNotRewriteUnrelatedBareMemberAndDescriptorStrings ()
 		{
 			var fixture = new JniFixtureBuilder ();
@@ -305,6 +314,81 @@ namespace Xamarin.Android.Build.Tests
 			}, ValuesOf (LoadedStrings (peReader, reader, method)));
 			Assert.AreEqual (1, warnings.Count, "The ambiguous local class source should produce one warning.");
 			Assert.AreEqual ("XA4326", warnings [0].Code);
+		}
+
+		[TestCase (true)]
+		[TestCase (false)]
+		public void WarnsForUnsafeMemberOnlyRename (bool isField)
+		{
+			var fixture = new JniFixtureBuilder ();
+			BlobHandle findClassSignature = AddLegacyJniMethodSignature (fixture, findClass: true);
+			BlobHandle memberLookupSignature = AddLegacyJniMethodSignature (fixture, findClass: false);
+
+			int fieldStart = fixture.NextFieldRid;
+			int methodStart = fixture.NextMethodRid;
+			MethodDefinitionHandle findClass = fixture.Metadata.AddMethodDefinition (
+				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+				MethodImplAttributes.Runtime,
+				fixture.Metadata.GetOrAddString ("FindClass"),
+				findClassSignature,
+				0,
+				MetadataTokens.ParameterHandle (fixture.Metadata.GetRowCount (TableIndex.Param) + 1));
+			MethodDefinitionHandle getMember = fixture.Metadata.AddMethodDefinition (
+				MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+				MethodImplAttributes.Runtime,
+				fixture.Metadata.GetOrAddString (isField ? "GetFieldID" : "GetMethodID"),
+				memberLookupSignature,
+				0,
+				MetadataTokens.ParameterHandle (fixture.Metadata.GetRowCount (TableIndex.Param) + 1));
+			fixture.AddType ("Android.Runtime", "JNIEnv", fieldStart, methodStart);
+
+			UserStringHandle className = fixture.String ("acme/orig/Identity");
+			UserStringHandle memberName = fixture.String ("value");
+			string descriptorValue = isField ? "I" : "()V";
+			UserStringHandle descriptor = fixture.String (descriptorValue);
+			var localSignature = new BlobBuilder ();
+			new BlobEncoder (localSignature).LocalVariableSignature (1).AddVariable ().Type ().Int32 ();
+			StandaloneSignatureHandle locals = fixture.Metadata.AddStandaloneSignature (fixture.Metadata.GetOrAddBlob (localSignature));
+			var controlFlow = new ControlFlowBuilder ();
+
+			fieldStart = fixture.NextFieldRid;
+			methodStart = fixture.NextMethodRid;
+			MethodDefinitionHandle lookup = fixture.AddVoidMethod ("Lookup", fixture.EmitBody (encoder => {
+				LabelHandle memberLookup = encoder.DefineLabel ();
+				encoder.LoadString (className);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (findClass);
+				encoder.StoreLocal (0);
+				encoder.Branch (ILOpCode.Br_s, memberLookup);
+				encoder.LoadString (className);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (findClass);
+				encoder.StoreLocal (0);
+				encoder.MarkLabel (memberLookup);
+				encoder.LoadLocal (0);
+				encoder.LoadString (memberName);
+				encoder.LoadString (descriptor);
+				encoder.OpCode (ILOpCode.Call);
+				encoder.Token (getMember);
+				encoder.OpCode (ILOpCode.Pop);
+				encoder.OpCode (ILOpCode.Ret);
+			}, locals, controlFlow));
+			fixture.AddType ("Acme", "MemberOnlyRename", fieldStart, methodStart);
+
+			var warnings = new List<BuildWarningEventArgs> ();
+			R8Mapping mapping = Mapping (
+				"acme.orig.Identity -> acme.orig.Identity:\n" +
+				(isField ? "    int value -> x\n" : "    void value() -> x\n"));
+			JniRewriteResult result = Rewrite (fixture.Serialize (), mapping, warnings);
+
+			using var peReader = new PEReader (ImmutableArray.Create (result.Image));
+			MetadataReader reader = peReader.GetMetadataReader ();
+			CollectionAssert.AreEqual (new [] { "acme/orig/Identity", "acme/orig/Identity", "value", descriptorValue },
+				ValuesOf (LoadedStrings (peReader, reader, lookup)));
+			Assert.AreEqual (1, warnings.Count, "An unsafe lookup must warn when only its member name is renamed.");
+			Assert.AreEqual ("XA4326", warnings [0].Code);
+			CollectionAssert.AreEqual (new [] { "C\tacme/orig/Identity" }, mapping.AccessedEntries,
+				"A warning-only lookup must not publish a member mapping that was not used for a rewrite.");
 		}
 
 		[Test]
