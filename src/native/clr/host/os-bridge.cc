@@ -180,7 +180,7 @@ void OSBridge::log_it (LogCategories category, std::string_view const& line, FIL
 		log_writef (category, LogLevel::Info, "%.*s", static_cast<int>(line.length ()), line.data ());
 	}
 
-	// We skip logcat here when logging to file is enabled because _write_stack_trace will output to logcat as well, if enabled
+	// Without a file, only full reference logging (gref+/lref+) writes the stack trace to logcat.
 	if (to == nullptr) {
 		if (logcat_enabled) {
 			_write_stack_trace (nullptr, from, category);
