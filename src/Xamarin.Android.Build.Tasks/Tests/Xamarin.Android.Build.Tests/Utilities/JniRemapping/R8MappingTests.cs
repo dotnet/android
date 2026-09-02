@@ -431,6 +431,18 @@ namespace Xamarin.Android.Build.Tests
 			}));
 		}
 
+		[Test]
+		public void ReachabilityManifestIgnoresEmptyLines ()
+		{
+			R8Mapping seed = R8Mapping.Parse (new StringReader ("acme.orig.MyView -> a.b.C:\n"));
+			R8Mapping final = R8Mapping.Parse (new StringReader ("acme.orig.MyView -> a.b.C:\n"));
+
+			CollectionAssert.IsEmpty (seed.GetReachabilityConflicts (final, new [] {
+				"C\tacme/orig/MyView",
+				"",
+			}));
+		}
+
 		[TestCase ("F\tacme/orig/MyView\tcount")]
 		[TestCase ("M\tacme/orig/MyView\tonClick():void")]
 		public void MemberOnlyManifestReportsRemovedDeclaringClass (string requiredEntry)

@@ -493,7 +493,7 @@ public class R8JniLibraryPeer : Java.Lang.Object
 					      BeforeTargets="_CompileToDalvik">
 					    <WriteLinesToFile
 					        File="$(_AndroidR8JniSeedDirectory)final-configuration-items.txt"
-					        Lines="@(_ProguardConfiguration->'%(Filename)%(Extension)|%(AndroidSdkBaselineProguardConfiguration)|%(AndroidGeneratedProguardConfiguration)|%(AndroidAaptProguardConfiguration)|%(AndroidR8JniMappedProguardConfiguration)')"
+					        Lines="@(_ProguardConfiguration->'%(Identity)|%(AndroidSdkBaselineProguardConfiguration)|%(AndroidGeneratedProguardConfiguration)|%(AndroidAaptProguardConfiguration)|%(AndroidR8JniMappedProguardConfiguration)')"
 					        Overwrite="true"
 					        WriteOnlyWhenDifferent="true" />
 					  </Target>
@@ -514,10 +514,16 @@ public class R8JniLibraryPeer : Java.Lang.Object
 			var seedConfigurationItems = File.ReadAllLines (FindSingleFile (projectDirectory, "configuration-items.txt"));
 			var seedConfigurationPaths = seedConfigurationItems.Select (item => item.Split ('|') [0]).ToArray ();
 			var finalConfigurationItems = File.ReadAllLines (FindSingleFile (projectDirectory, "final-configuration-items.txt"));
+			var finalAaptConfiguration = finalConfigurationItems
+				.Select (item => item.Split ('|'))
+				.Single (metadata => metadata.Length == 5 && metadata [2] == "true" && metadata [3] == "true");
 			var manifestRules = FindSingleFile (projectDirectory, "manifest_rules.txt");
-			var finalAaptRules = FindSingleFile (projectDirectory, "aapt_rules.txt", path => !path.Contains ("r8-jni-seed", StringComparison.Ordinal));
+			var finalAaptRules = Path.IsPathRooted (finalAaptConfiguration [0])
+				? finalAaptConfiguration [0]
+				: Path.Combine (projectDirectory, finalAaptConfiguration [0]);
 			var mappedProjectRules = FindSingleFile (projectDirectory, "proguard_project_references.cfg");
 			var primaryRules = FindSingleFile (projectDirectory, "proguard_project_primary.cfg");
+			FileAssert.Exists (finalAaptRules, "The final configured AAPT rules should exist.");
 			AssertR8MappingRenamesClass (seedMapping, libraryJavaName);
 			AssertR8MappingRenamesClass (finalMapping, libraryJavaName);
 			AssertR8MappingContainsMember (finalMapping, libraryJavaName, "nctor_0");
@@ -532,16 +538,18 @@ public class R8JniLibraryPeer : Java.Lang.Object
 				"Seed manifest rules must not include resource custom views.");
 			StringAssert.Contains ("-keep class com.example.R8JniLayoutView", File.ReadAllText (finalAaptRules),
 				"Final AAPT rules should retain resource custom-view rules.");
+			StringAssert.Contains ("#Auto Generated file", File.ReadAllText (finalAaptRules),
+				"The final configured AAPT file should wrap the generated manifest and resource rules.");
 			Assert.IsFalse (seedConfigurationPaths.Any (path =>
 				new [] { "proguard-android.txt", "proguard_xamarin.cfg", "proguard_project_references.cfg", "proguard_project_primary.cfg", "generated-acw-keep.cfg" }.Contains (Path.GetFileName (path), StringComparer.Ordinal)),
 				"Seed R8 should not receive generated or baseline configurations that pin managed peers.");
-			Assert.That (finalConfigurationItems, Does.Contain ("proguard-android.txt|true|||"),
+			Assert.That (finalConfigurationItems, Has.Some.EndsWith ("proguard-android.txt|true|||"),
 				"Final R8 should identify only the SDK baseline by explicit provenance metadata.");
-			Assert.That (finalConfigurationItems, Has.Some.EqualTo ("generated-acw-keep.cfg||true||"),
+			Assert.That (finalConfigurationItems, Has.Some.EndsWith ("generated-acw-keep.cfg||true||"),
 				"Generated ACW keep rules should carry semantic provenance so R8 can exclude them.");
-			Assert.That (finalConfigurationItems, Has.Some.EqualTo ("aapt_rules.txt||true|true|"),
+			Assert.That (finalConfigurationItems, Has.Some.EndsWith ("aapt_rules.txt||true|true|"),
 				"Final AAPT rules should carry specific provenance so R8 retains them.");
-			Assert.That (finalConfigurationItems, Has.Some.EqualTo ("proguard_project_references.cfg||true||true"),
+			Assert.That (finalConfigurationItems, Has.Some.EndsWith ("proguard_project_references.cfg||true||true"),
 				"Mapped linked-assembly rules should carry specific provenance so R8 retains them.");
 			StringAssert.Contains ($"-keep,allowobfuscation class {libraryJavaName.Replace ('/', '.')}", File.ReadAllText (mappedProjectRules));
 			StringAssert.Contains ("-keepclassmembers,allowobfuscation", File.ReadAllText (mappedProjectRules));

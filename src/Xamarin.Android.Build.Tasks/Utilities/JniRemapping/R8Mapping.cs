@@ -421,6 +421,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		{
 			var reportedRemovedClasses = new HashSet<string> (StringComparer.Ordinal);
 			foreach (string requiredEntry in requiredEntries) {
+				if (requiredEntry.Length == 0) {
+					continue;
+				}
 				string [] parts = requiredEntry.Split ('\t');
 				switch (parts.Length > 0 ? parts [0] : "") {
 				case "C" when parts.Length == 2:
