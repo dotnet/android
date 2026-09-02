@@ -223,9 +223,12 @@ public sealed class JavaPeerScanner : IDisposable
 	/// [Application(ManageSpaceActivity = typeof(X))] must be unconditional,
 	/// because the manifest will reference them even if nothing else does.
 	/// </summary>
-	static void ForceUnconditionalCrossReferences (Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> results, Dictionary<string, AssemblyIndex> assemblyCache)
+	void ForceUnconditionalCrossReferences (Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> results, Dictionary<string, AssemblyIndex> assemblyCache)
 	{
 		foreach (var index in assemblyCache.Values) {
+			if (frameworkAssemblyNames.Contains (index.AssemblyName)) {
+				continue;
+			}
 			foreach (var attrInfo in index.AttributesByType.Values) {
 				if (attrInfo is ApplicationAttributeInfo applicationAttributeInfo) {
 					ForceUnconditionalIfPresent (results, applicationAttributeInfo.BackupAgent);
@@ -357,7 +360,9 @@ public sealed class JavaPeerScanner : IDisposable
 			var isInterface = (typeDef.Attributes & TypeAttributes.Interface) != 0;
 			var isAbstract = (typeDef.Attributes & TypeAttributes.Abstract) != 0;
 
-			var isUnconditional = attrInfo is not null;
+			var isFrameworkAssembly = frameworkAssemblyNames.Contains (index.AssemblyName);
+			var isUnconditional = !isFrameworkAssembly &&
+				(attrInfo is not null || registerInfo?.IsFromJniTypeSignature == true);
 			var cannotRegisterInStaticConstructor = attrInfo is ApplicationAttributeInfo or InstrumentationAttributeInfo;
 			string? invokerTypeName = null;
 			ActivationCtorStyle? invokerActivationCtorStyle = null;
@@ -400,7 +405,7 @@ public sealed class JavaPeerScanner : IDisposable
 				ManagedTypeNamespace = ExtractNamespace (fullName),
 				ManagedTypeShortName = ExtractShortName (fullName),
 				AssemblyName = index.AssemblyName,
-				IsFrameworkAssembly = frameworkAssemblyNames.Contains (index.AssemblyName),
+				IsFrameworkAssembly = isFrameworkAssembly,
 				BaseJavaName = baseJavaName,
 				ImplementedInterfaceJavaNames = implementedInterfaces,
 				Annotations = annotationParser.Parse (typeDef.GetCustomAttributes (), index),
@@ -667,10 +672,15 @@ public sealed class JavaPeerScanner : IDisposable
 		var methods = new List<MarshalMethodInfo> ();
 		var fields = new List<JavaFieldInfo> ();
 		HashSet<string>? registeredMethodKeys = detectBaseOverrides ? new (StringComparer.Ordinal) : null;
+		bool isGenericType = typeDef.GetGenericParameters ().Count > 0;
 
 		// Pass 1: collect methods with [Register], [Export], or [ExportField] directly on them
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+
+			if (!ValidateExportField (methodDef, index, isGenericType)) {
+				continue;
+			}
 
 			// Check for [ExportField] — produces both a marshal method AND a field
 			CollectExportField (methodDef, index, fields);
@@ -733,6 +743,39 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		return (methods, fields);
+	}
+
+	static bool IsExportFieldAttribute (CustomAttribute attribute, AssemblyIndex index)
+	{
+		return AssemblyIndex.IsCustomAttributeMatch (attribute, index.Reader, "Java.Interop", "ExportFieldAttribute");
+	}
+
+	bool ValidateExportField (MethodDefinition methodDef, AssemblyIndex index, bool isGenericType)
+	{
+		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
+			var ca = index.Reader.GetCustomAttribute (caHandle);
+			if (!IsExportFieldAttribute (ca, index)) {
+				continue;
+			}
+
+			if (isGenericType) {
+				logger?.LogExportFieldOnGenericTypeError ();
+				return false;
+			}
+
+			var sig = methodDef.DecodeSignature (index.TypeRefSignatureProvider, index);
+			if (sig.ParameterTypes.Length != 0) {
+				logger?.LogExportFieldWithParametersError ();
+				return false;
+			}
+			if (sig.ReturnType.ManagedTypeName == "System.Void") {
+				logger?.LogExportFieldReturnsVoidError ();
+				return false;
+			}
+			return true;
+		}
+
+		return true;
 	}
 
 	static bool HasJniAddNativeMethodRegistrationAttribute (TypeDefinition typeDef, AssemblyIndex index)
@@ -1707,7 +1750,7 @@ public sealed class JavaPeerScanner : IDisposable
 				return true;
 			}
 
-			if (attrName == "ExportFieldAttribute") {
+			if (IsExportFieldAttribute (ca, index)) {
 				(registerInfo, exportInfo) = ParseExportFieldAsMethod (ca, methodDef, index);
 				return true;
 			}
@@ -2611,9 +2654,8 @@ public sealed class JavaPeerScanner : IDisposable
 	{
 		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
 			var ca = index.Reader.GetCustomAttribute (caHandle);
-			var attrName = index.GetCustomAttributeName (ca);
 
-			if (attrName != "ExportFieldAttribute") {
+			if (!IsExportFieldAttribute (ca, index)) {
 				continue;
 			}
 

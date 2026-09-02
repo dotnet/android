@@ -53,6 +53,12 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			logMessages.Add ($"XA4251: Type '{managedTypeName}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map.");
 		public void LogInvalidJavaNameError (string javaName, string invalidIdentifier) =>
 			logMessages.Add ($"XA4258: Java name '{javaName}' contains reserved Java identifier '{invalidIdentifier}'.");
+		public void LogExportFieldWithParametersError () =>
+			logMessages.Add ("XA4205: [ExportField] can only be used on methods with 0 parameters.");
+		public void LogExportFieldReturnsVoidError () =>
+			logMessages.Add ("XA4208: [ExportField] cannot be used on a method returning 'void'.");
+		public void LogExportFieldOnGenericTypeError () =>
+			logMessages.Add ("XA4207: [ExportField] cannot be used on a generic type.");
 		public void LogCustomJavaObjectError (string managedTypeName) =>
 			logMessages.Add ($"XA4212: Type `{managedTypeName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
 		public void LogCustomJavaObjectWarning (string managedTypeName) =>
@@ -874,6 +880,44 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.True (peers [0].IsUnconditional, "The manifest-referenced type should be rooted as unconditional.");
 		Assert.False (peers [1].IsUnconditional, "Non-matching peers should remain conditional.");
 		Assert.Contains (logMessages, m => m.Contains ("Rooting manifest-referenced type"));
+	}
+
+	[Fact]
+	public void RootCustomViewTypes_RootsReferencedManagedJavaAndCompatNames ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "crc64123456789abc/CustomView", CompatJniName = "my.app.CustomView",
+				ManagedTypeName = "MyApp.CustomView", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "CustomView",
+				AssemblyName = "MyApp",
+			},
+			new JavaPeerInfo {
+				JavaName = "com/example/RegisteredView", CompatJniName = "com/example/RegisteredView",
+				ManagedTypeName = "MyApp.RegisteredView", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "RegisteredView",
+				AssemblyName = "MyApp",
+			},
+			new JavaPeerInfo {
+				JavaName = "crc64123456789abc/CompatView", CompatJniName = "my/app/CompatView",
+				ManagedTypeName = "MyApp.CompatView", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "CompatView",
+				AssemblyName = "MyApp",
+			},
+			new JavaPeerInfo {
+				JavaName = "crc64123456789abc/UnusedView", CompatJniName = "my.app.UnusedView",
+				ManagedTypeName = "MyApp.UnusedView", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "UnusedView",
+				AssemblyName = "MyApp",
+			},
+		};
+
+		TrimmableTypeMapGenerator.RootCustomViewTypes (peers, [
+			"MyApp.CustomView",
+			"com.example.RegisteredView",
+			"my.app.CompatView",
+		]);
+
+		Assert.True (peers [0].IsUnconditional);
+		Assert.True (peers [1].IsUnconditional);
+		Assert.True (peers [2].IsUnconditional);
+		Assert.False (peers [3].IsUnconditional);
 	}
 
 	[Fact]

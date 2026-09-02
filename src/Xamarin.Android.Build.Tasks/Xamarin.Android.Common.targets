@@ -532,6 +532,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA0119_ReadyToRunWithoutTrimming"
       Condition=" '$(_AndroidReadyToRunWithoutTrimming)' == 'true' "
   />
+  <AndroidError Code="XA1049"
+      ResourceName="XA1049"
+      Condition=" '$(AndroidEnableMarshalMethods)' == 'True' And '$(PublishReadyToRun)' == 'True' "
+  />
   <AndroidWarning Code="XA1027"
       ResourceName="XA1027"
       Condition=" $(_AndroidXA1027) == 'true' "
@@ -1437,37 +1441,14 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <!-- We need this in its own item group so it isn't lost during a partial build -->
     <_AllResolvedAssemblies Include="@(ResolvedAssemblies)" />
-    <!-- Non-Android framework assemblies are packaged directly from their runtime packs.
-         A zero-byte marker replaces both scanner sidecars without staging the DLL. -->
     <ResolvedAssemblies>
-      <_AndroidLinkNoShrinkOutput
-          Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' "
-      >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</_AndroidLinkNoShrinkOutput>
-      <_AndroidLinkNoShrinkOutput
-          Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' != 'True' "
-      >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)</_AndroidLinkNoShrinkOutput>
       <JavaObjectsXmlFile
-          Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' Or ('$(PublishTrimmed)' == 'true' And '$(AndroidTypeMapImplementation)' != 'trimmable' And $([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources'))) "
+          Condition=" '$(PublishTrimmed)' == 'true' And '$(AndroidTypeMapImplementation)' != 'trimmable' And $([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources')) "
       >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</JavaObjectsXmlFile>
       <TypeMapObjectsXmlFile
-          Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' Or ('$(PublishTrimmed)' == 'true' And '$(AndroidTypeMapImplementation)' != 'trimmable' And $([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources'))) "
+          Condition=" '$(PublishTrimmed)' == 'true' And '$(AndroidTypeMapImplementation)' != 'trimmable' And $([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources')) "
       >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</TypeMapObjectsXmlFile>
     </ResolvedAssemblies>
-    <_AndroidAssembliesToLinkNoShrink
-        Include="@(ResolvedAssemblies)"
-        Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' != 'True' " />
-    <_AndroidAssembliesToPackageWithoutLinkNoShrink
-        Include="@(ResolvedAssemblies)"
-        Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' ">
-      <JavaObjectsXmlFile>$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</JavaObjectsXmlFile>
-      <TypeMapObjectsXmlFile>$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</TypeMapObjectsXmlFile>
-    </_AndroidAssembliesToPackageWithoutLinkNoShrink>
-    <_AndroidSymbolsToLinkNoShrink
-        Include="@(ResolvedSymbols)"
-        Condition=" '%(ResolvedSymbols.AndroidSkipAssemblyModification)' != 'True' " />
-    <_AndroidSymbolsToPackageWithoutLinkNoShrink
-        Include="@(ResolvedSymbols)"
-        Condition=" '%(ResolvedSymbols.AndroidSkipAssemblyModification)' == 'True' " />
   </ItemGroup>
 </Target>
 
@@ -1475,7 +1456,7 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_LinkAssembliesNoShrinkInputs"
     Condition="'$(PublishTrimmed)' != 'true'"
     Inputs="@(ResolvedAssemblies);$(_AndroidBuildPropertiesCache)"
-    Outputs="@(ResolvedAssemblies->'%(_AndroidLinkNoShrinkOutput)')">
+    Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')">
   <LinkAssembliesNoShrink
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(AndroidCodegenTarget)"
