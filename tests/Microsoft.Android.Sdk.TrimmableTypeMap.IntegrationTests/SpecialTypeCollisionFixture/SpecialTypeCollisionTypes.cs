@@ -1,5 +1,8 @@
+using System.Runtime.Versioning;
 using Android.Runtime;
 using Java.Interop;
+
+[assembly: SupportedOSPlatform ("android24.0")]
 
 namespace System.IO
 {

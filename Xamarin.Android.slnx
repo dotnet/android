@@ -60,6 +60,7 @@
     <Project Path="src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj" />
     <Project Path="src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Xamarin.ProjectTools.csproj" />
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests.csproj" />
+    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests/SpecialTypeCollisionFixture/SpecialTypeCollisionFixture.csproj" />
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests/UserTypesFixture/UserTypesFixture.csproj" />
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests.csproj" />
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/TestAttributeFixtures/TestAttributeFixtures.csproj" />
