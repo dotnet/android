@@ -146,6 +146,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			RequireEmptyDirectory (corHeader.ManagedNativeHeaderDirectory, "ReadyToRun/NGen native header");
 			RequireEmptyDirectory (corHeader.VtableFixupsDirectory, "CLI vtable fixups (C++/CLI)");
 			RequireEmptyDirectory (corHeader.ExportAddressTableJumpsDirectory, "CLI export address table jumps");
+			ValidateStrongNameSignatureDirectory (corHeader.StrongNameSignatureDirectory);
 
 			PEHeader? peHeader = peReader.PEHeaders.PEHeader;
 			if (peHeader == null) {
@@ -164,6 +165,21 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			int entryPointToken = corHeader.EntryPointTokenOrRelativeVirtualAddress;
 			if (entryPointToken != 0 && (entryPointToken & 0xFF000000) != 0x06000000) {
 				throw new JniRewriteException ($"The assembly's entry point token 0x{entryPointToken:X8} is not a MethodDef token; multi-module entry points are not supported.");
+			}
+		}
+
+		void ValidateStrongNameSignatureDirectory (DirectoryEntry directory)
+		{
+			if (directory.RelativeVirtualAddress == 0 && directory.Size == 0) {
+				return;
+			}
+			if (directory.RelativeVirtualAddress <= 0 || directory.Size <= 0) {
+				throw new JniRewriteException ("The assembly has an invalid strong-name signature directory.");
+			}
+
+			PEMemoryBlock block = peReader.GetSectionData (directory.RelativeVirtualAddress);
+			if (block.Length < directory.Size) {
+				throw new JniRewriteException ("The strong-name signature directory extends past the end of its PE section.");
 			}
 		}
 
@@ -495,17 +511,18 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					throw new JniRewriteException ("The resources directory extends past the end of its PE section.");
 				}
 
-				int offset = checked ((int) resource.Offset);
 				// Use long arithmetic throughout: offset and size both come from the file (an
-				// attacker- or corruption-controlled int32), and offset + sizeof(int) + size can
+				// attacker- or corruption-controlled uint32), and offset + sizeof(int) + size can
 				// overflow a 32-bit sum and wrap around to a small or negative value, which would
 				// defeat the bounds check below instead of catching it.
-				long headerEnd = (long) offset + sizeof (int);
+				long offset = resource.Offset;
+				long headerEnd = offset + sizeof (int);
 				if (offset < 0 || headerEnd > directory.Size) {
 					throw new JniRewriteException ($"Embedded resource '{reader.GetString (resource.Name)}' starts outside of the resources directory.");
 				}
 
-				int size = block.GetReader (offset, sizeof (int)).ReadInt32 ();
+				int resourceOffset = (int) offset;
+				int size = block.GetReader (resourceOffset, sizeof (int)).ReadInt32 ();
 				if (size < 0 || headerEnd + (long) size > directory.Size) {
 					throw new JniRewriteException ($"Embedded resource '{reader.GetString (resource.Name)}' extends past the end of the resources directory.");
 				}
@@ -513,7 +530,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				managedResources.Align (ManagedPEBuilder.ManagedResourcesDataAlignment);
 				resourceOffsets [MetadataTokens.ManifestResourceHandle (rid)] = managedResources.Count;
 				managedResources.WriteInt32 (size);
-				managedResources.WriteBytes (block.GetReader (offset + sizeof (int), size).ReadBytes (size));
+				managedResources.WriteBytes (block.GetReader (resourceOffset + sizeof (int), size).ReadBytes (size));
 			}
 		}
 
@@ -798,24 +815,29 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				}
 			}
 
-			for (int rid = 1; rid <= eventCount; rid++) {
-				var handle = MetadataTokens.EventDefinitionHandle (rid);
-				EventAccessors accessors = reader.GetEventDefinition (handle).GetAccessors ();
-				AddSemantics (handle, MethodSemanticsAttributes.Adder, accessors.Adder);
-				AddSemantics (handle, MethodSemanticsAttributes.Remover, accessors.Remover);
-				AddSemantics (handle, MethodSemanticsAttributes.Raiser, accessors.Raiser);
-				foreach (MethodDefinitionHandle other in accessors.Others) {
-					AddSemantics (handle, MethodSemanticsAttributes.Other, other);
+			int associationCount = Math.Max (eventCount, propertyCount);
+			for (int rid = 1; rid <= associationCount; rid++) {
+				// HasSemantics uses Event tag 0 and Property tag 1, so associations are sorted
+				// Event 1, Property 1, Event 2, Property 2, and so on.
+				if (rid <= eventCount) {
+					var handle = MetadataTokens.EventDefinitionHandle (rid);
+					EventAccessors accessors = reader.GetEventDefinition (handle).GetAccessors ();
+					AddSemantics (handle, MethodSemanticsAttributes.Adder, accessors.Adder);
+					AddSemantics (handle, MethodSemanticsAttributes.Remover, accessors.Remover);
+					AddSemantics (handle, MethodSemanticsAttributes.Raiser, accessors.Raiser);
+					foreach (MethodDefinitionHandle other in accessors.Others) {
+						AddSemantics (handle, MethodSemanticsAttributes.Other, other);
+					}
 				}
-			}
 
-			for (int rid = 1; rid <= propertyCount; rid++) {
-				var handle = MetadataTokens.PropertyDefinitionHandle (rid);
-				PropertyAccessors accessors = reader.GetPropertyDefinition (handle).GetAccessors ();
-				AddSemantics (handle, MethodSemanticsAttributes.Getter, accessors.Getter);
-				AddSemantics (handle, MethodSemanticsAttributes.Setter, accessors.Setter);
-				foreach (MethodDefinitionHandle other in accessors.Others) {
-					AddSemantics (handle, MethodSemanticsAttributes.Other, other);
+				if (rid <= propertyCount) {
+					var handle = MetadataTokens.PropertyDefinitionHandle (rid);
+					PropertyAccessors accessors = reader.GetPropertyDefinition (handle).GetAccessors ();
+					AddSemantics (handle, MethodSemanticsAttributes.Getter, accessors.Getter);
+					AddSemantics (handle, MethodSemanticsAttributes.Setter, accessors.Setter);
+					foreach (MethodDefinitionHandle other in accessors.Others) {
+						AddSemantics (handle, MethodSemanticsAttributes.Other, other);
+					}
 				}
 			}
 		}

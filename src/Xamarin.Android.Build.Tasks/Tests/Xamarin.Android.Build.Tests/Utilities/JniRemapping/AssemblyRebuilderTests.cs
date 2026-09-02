@@ -118,6 +118,28 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void RejectsEmbeddedResourceOffsetOutsideInt32Range ()
+		{
+			var fixture = new JniFixtureBuilder ();
+			fixture.AddEmbeddedResource ("Fixture.resources", new byte [] { 1 });
+			byte [] source = fixture.Serialize ();
+
+			int resourceOffset;
+			using (var sourcePe = new PEReader (ImmutableArray.Create (source))) {
+				MetadataReader reader = sourcePe.GetMetadataReader ();
+				resourceOffset = sourcePe.PEHeaders.MetadataStartOffset +
+					reader.GetTableMetadataOffset (TableIndex.ManifestResource);
+			}
+			WriteUInt32 (source, resourceOffset, uint.MaxValue);
+
+			using var peReader = new PEReader (ImmutableArray.Create (source));
+			MetadataReader metadata = peReader.GetMetadataReader ();
+			var ex = Assert.Throws<JniRewriteException> (() =>
+				new AssemblyRebuilder (peReader, metadata, new JniRewritePlan (), FieldRvaTable.Read (peReader, metadata)).Build ());
+			StringAssert.Contains ("starts outside of the resources directory", ex.Message);
+		}
+
+		[Test]
 		public void EmptyPlanPreservesFieldRvasFromDifferentSections ()
 		{
 			var fixture = new JniFixtureBuilder ();
@@ -299,6 +321,77 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreNotEqual (0, corHeader.StrongNameSignatureDirectory.RelativeVirtualAddress);
 		}
 
+		[Test]
+		public void RejectsInvalidStrongNameSignatureDirectorySize ()
+		{
+			var fixture = new JniFixtureBuilder (hasPublicKey: true) {
+				Flags = CorFlags.ILOnly | CorFlags.StrongNameSigned,
+				StrongNameSignatureSize = 128,
+			};
+			byte [] source = fixture.Serialize ();
+
+			int strongNameSizeOffset;
+			using (var sourcePe = new PEReader (ImmutableArray.Create (source))) {
+				const int StrongNameSignatureDirectoryOffset = 32;
+				strongNameSizeOffset = sourcePe.PEHeaders.CorHeaderStartOffset +
+					StrongNameSignatureDirectoryOffset + sizeof (uint);
+			}
+			WriteUInt32 (source, strongNameSizeOffset, uint.MaxValue);
+
+			using var peReader = new PEReader (ImmutableArray.Create (source));
+			MetadataReader metadata = peReader.GetMetadataReader ();
+			var ex = Assert.Throws<JniRewriteException> (() =>
+				new AssemblyRebuilder (peReader, metadata, new JniRewritePlan (), FieldRvaTable.Read (peReader, metadata)).Build ());
+			StringAssert.Contains ("invalid strong-name signature directory", ex.Message);
+		}
+
+		[Test]
+		public void EmptyPlanPreservesEventAndPropertyAccessors ()
+		{
+			var fixture = new JniFixtureBuilder ();
+			int methodStart = fixture.NextMethodRid;
+			MethodDefinitionHandle event1Adder = fixture.AddVoidMethod ("add_Event1", fixture.EmitReturnOnlyBody ());
+			MethodDefinitionHandle event1Remover = fixture.AddVoidMethod ("remove_Event1", fixture.EmitReturnOnlyBody ());
+			MethodDefinitionHandle propertyGetter = fixture.AddVoidMethod ("get_Value", fixture.EmitReturnOnlyBody ());
+			MethodDefinitionHandle event2Adder = fixture.AddVoidMethod ("add_Event2", fixture.EmitReturnOnlyBody ());
+			MethodDefinitionHandle event2Remover = fixture.AddVoidMethod ("remove_Event2", fixture.EmitReturnOnlyBody ());
+			TypeDefinitionHandle type = fixture.AddType ("Acme", "Members", fixture.NextFieldRid, methodStart);
+
+			EventDefinitionHandle event1 = fixture.Metadata.AddEvent (
+				EventAttributes.None, fixture.Metadata.GetOrAddString ("Event1"), fixture.ExceptionReference);
+			EventDefinitionHandle event2 = fixture.Metadata.AddEvent (
+				EventAttributes.None, fixture.Metadata.GetOrAddString ("Event2"), fixture.ExceptionReference);
+			var propertySignature = new BlobBuilder ();
+			new BlobEncoder (propertySignature).PropertySignature (isInstanceProperty: true)
+				.Parameters (0, out ReturnTypeEncoder returnType, out ParametersEncoder _);
+			returnType.Type ().Int32 ();
+			PropertyDefinitionHandle property = fixture.Metadata.AddProperty (
+				PropertyAttributes.None, fixture.Metadata.GetOrAddString ("Value"), fixture.Metadata.GetOrAddBlob (propertySignature));
+
+			fixture.Metadata.AddEventMap (type, event1);
+			fixture.Metadata.AddPropertyMap (type, property);
+			fixture.Metadata.AddMethodSemantics (event1, MethodSemanticsAttributes.Adder, event1Adder);
+			fixture.Metadata.AddMethodSemantics (event1, MethodSemanticsAttributes.Remover, event1Remover);
+			fixture.Metadata.AddMethodSemantics (property, MethodSemanticsAttributes.Getter, propertyGetter);
+			fixture.Metadata.AddMethodSemantics (event2, MethodSemanticsAttributes.Adder, event2Adder);
+			fixture.Metadata.AddMethodSemantics (event2, MethodSemanticsAttributes.Remover, event2Remover);
+
+			byte [] source = fixture.Serialize ();
+			using var sourcePe = new PEReader (ImmutableArray.Create (source));
+			MetadataReader before = sourcePe.GetMetadataReader ();
+			var result = new AssemblyRebuilder (
+				sourcePe, before, new JniRewritePlan (), FieldRvaTable.Read (sourcePe, before)).Build ();
+
+			using var rebuiltPe = new PEReader (ImmutableArray.Create (result.Image));
+			MetadataReader after = rebuiltPe.GetMetadataReader ();
+			Assert.AreEqual (before.GetEventDefinition (event1).GetAccessors ().Adder, after.GetEventDefinition (event1).GetAccessors ().Adder);
+			Assert.AreEqual (before.GetEventDefinition (event1).GetAccessors ().Remover, after.GetEventDefinition (event1).GetAccessors ().Remover);
+			Assert.AreEqual (before.GetPropertyDefinition (property).GetAccessors ().Getter, after.GetPropertyDefinition (property).GetAccessors ().Getter);
+			Assert.AreEqual (before.GetEventDefinition (event2).GetAccessors ().Adder, after.GetEventDefinition (event2).GetAccessors ().Adder);
+			Assert.AreEqual (before.GetEventDefinition (event2).GetAccessors ().Remover, after.GetEventDefinition (event2).GetAccessors ().Remover);
+			AssertTableRowCountsMatchExcept (before, after);
+		}
+
 		static FieldRvaEntry GetRequiredFieldRva (PEReader peReader, MetadataReader reader, FieldDefinitionHandle field)
 		{
 			FieldRvaEntry? entry = FieldRvaTable.Read (peReader, reader).Get (field);
@@ -383,6 +476,14 @@ namespace Xamarin.Android.Build.Tests
 			ushort codedIndex = checked ((ushort) (MetadataTokens.GetRowNumber (field) << 1));
 			image [memberOffset] = (byte) codedIndex;
 			image [memberOffset + 1] = (byte) (codedIndex >> 8);
+		}
+
+		static void WriteUInt32 (byte [] image, int offset, uint value)
+		{
+			image [offset] = (byte) value;
+			image [offset + 1] = (byte) (value >> 8);
+			image [offset + 2] = (byte) (value >> 16);
+			image [offset + 3] = (byte) (value >> 24);
 		}
 
 		static void MoveFieldRvaToAnotherSection (
