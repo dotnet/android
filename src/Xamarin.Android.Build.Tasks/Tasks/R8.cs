@@ -244,13 +244,13 @@ namespace Xamarin.Android.Tasks
 					WriteArg (response, ProguardCommonXamarinConfiguration);
 				}
 			} else if (EnableShrinking) {
-				if (UseTrimmableNativeAotProguardConfiguration && !ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
-					// ACW keep rules come from the DGML/acw-map-driven proguard_project_references.cfg on
-					// the trimmable path. User-authored AndroidJavaSource (Bind != true) has no managed peer
-					// and is absent from that map, so keep it here explicitly; otherwise R8 shrinks it away
-					// (e.g. dropping large unreferenced sources so an app that needs multidex no longer does).
+				if ((UseTrimmableNativeAotProguardConfiguration || EnableObfuscation) &&
+						!ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
+					// Managed ACW keep rules come from the mapped proguard_project_references.cfg on
+					// trimmable JNI-rewriting paths. User-authored AndroidJavaSource (Bind != true) has no
+					// managed peer and is absent from that map, so keep it here explicitly.
 					using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration)) {
-						appcfg.WriteLine ("# ACW keep rules are generated from NativeAOT ILC metadata.");
+						appcfg.WriteLine ("# Managed ACW keep rules are generated separately.");
 						foreach (var java in GetUserJavaTypes ()) {
 							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
 						}
@@ -302,6 +302,9 @@ namespace Xamarin.Android.Tasks
 			}
 			if (ProguardConfigurationFiles != null) {
 				foreach (var item in ProguardConfigurationFiles) {
+					if (!GenerateSeedMapping && EnableObfuscation && IsGeneratedAcwKeepConfiguration (item)) {
+						continue;
+					}
 					var file = item.ItemSpec;
 					if (!File.Exists (file)) {
 						Log.LogCodedWarning ("XA4304", file, 0, Properties.Resources.XA4304, file);
@@ -322,6 +325,15 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return responseFile;
+		}
+
+		static bool IsGeneratedAcwKeepConfiguration (ITaskItem item)
+		{
+			if (!string.Equals (item.GetMetadata ("AndroidGeneratedProguardConfiguration"), bool.TrueString, StringComparison.OrdinalIgnoreCase)) {
+				return false;
+			}
+			return !string.Equals (item.GetMetadata ("AndroidAaptProguardConfiguration"), bool.TrueString, StringComparison.OrdinalIgnoreCase) &&
+				!string.Equals (item.GetMetadata ("AndroidR8JniMappedProguardConfiguration"), bool.TrueString, StringComparison.OrdinalIgnoreCase);
 		}
 
 		string CreateR8JniBaselineConfiguration (string path)

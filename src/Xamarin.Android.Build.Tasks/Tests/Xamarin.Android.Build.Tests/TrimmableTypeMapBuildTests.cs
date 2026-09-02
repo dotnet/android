@@ -247,6 +247,7 @@ public class R8JniPeer : Java.Lang.Object
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("AndroidEnableR8JniNameObfuscation", "true");
 			proj.SetProperty ("AndroidCreateProguardMappingFile", "false");
+			proj.Imports.Add (CreateR8JniManifestMergerDirectoryAssertionImport ());
 
 			using var builder = CreateApkBuilder (Path.Combine ("temp", $"R8JniNameRewriting_{runtime}_{Guid.NewGuid ():N}"));
 			Assert.IsTrue (builder.Build (proj), "Clean R8 JNI name-rewriting build should have succeeded.");
@@ -374,6 +375,7 @@ public class R8JniMultiAbiPeer : Java.Lang.Object
 			proj.SetProperty ("AndroidPackageFormat", "apk");
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("AndroidEnableR8JniNameObfuscation", "true");
+			proj.Imports.Add (CreateR8JniManifestMergerDirectoryAssertionImport ());
 
 			using var builder = CreateApkBuilder (Path.Combine ("temp", $"R8JniNameRewritingMultiAbi_{runtime}_{Guid.NewGuid ():N}"));
 			Assert.IsTrue (builder.Build (proj), "Multi-ABI R8 JNI name-rewriting build should have succeeded.");
@@ -491,7 +493,7 @@ public class R8JniLibraryPeer : Java.Lang.Object
 					      BeforeTargets="_CompileToDalvik">
 					    <WriteLinesToFile
 					        File="$(_AndroidR8JniSeedDirectory)final-configuration-items.txt"
-					        Lines="@(_ProguardConfiguration->'%(Filename)%(Extension)|%(AndroidSdkBaselineProguardConfiguration)')"
+					        Lines="@(_ProguardConfiguration->'%(Filename)%(Extension)|%(AndroidSdkBaselineProguardConfiguration)|%(AndroidGeneratedProguardConfiguration)|%(AndroidAaptProguardConfiguration)|%(AndroidR8JniMappedProguardConfiguration)')"
 					        Overwrite="true"
 					        WriteOnlyWhenDifferent="true" />
 					  </Target>
@@ -507,13 +509,19 @@ public class R8JniLibraryPeer : Java.Lang.Object
 
 			var projectDirectory = Path.Combine (Root, appBuilder.ProjectDirectory);
 			var seedMapping = FindSingleFile (projectDirectory, "mapping.txt", path => path.Contains ("r8-jni-seed", StringComparison.Ordinal));
+			var finalMapping = FindSingleFile (projectDirectory, "r8-jni-final-mapping.txt");
 			var rewriteManifest = FindSingleFile (projectDirectory, "r8-jni-rewrite-manifest.txt");
 			var seedConfigurationItems = File.ReadAllLines (FindSingleFile (projectDirectory, "configuration-items.txt"));
 			var seedConfigurationPaths = seedConfigurationItems.Select (item => item.Split ('|') [0]).ToArray ();
 			var finalConfigurationItems = File.ReadAllLines (FindSingleFile (projectDirectory, "final-configuration-items.txt"));
 			var manifestRules = FindSingleFile (projectDirectory, "manifest_rules.txt");
 			var finalAaptRules = FindSingleFile (projectDirectory, "aapt_rules.txt", path => !path.Contains ("r8-jni-seed", StringComparison.Ordinal));
+			var mappedProjectRules = FindSingleFile (projectDirectory, "proguard_project_references.cfg");
+			var primaryRules = FindSingleFile (projectDirectory, "proguard_project_primary.cfg");
 			AssertR8MappingRenamesClass (seedMapping, libraryJavaName);
+			AssertR8MappingRenamesClass (finalMapping, libraryJavaName);
+			AssertR8MappingContainsMember (finalMapping, libraryJavaName, "nctor");
+			AssertR8MappingContainsMember (finalMapping, $"{app.PackageName}/MainActivity", "n_OnCreate");
 			StringAssert.Contains ($"C\t{libraryJavaName}", File.ReadAllText (rewriteManifest));
 			Assert.That (seedConfigurationPaths, Has.Some.EndsWith ("r8-jni-rules.pro"), "Seed R8 should receive user-authored rules.");
 			Assert.That (seedConfigurationPaths, Has.Some.EndsWith ("proguard.txt"), "Seed R8 should receive AAR consumer rules.");
@@ -527,8 +535,20 @@ public class R8JniLibraryPeer : Java.Lang.Object
 			Assert.IsFalse (seedConfigurationPaths.Any (path =>
 				new [] { "proguard-android.txt", "proguard_xamarin.cfg", "proguard_project_references.cfg", "proguard_project_primary.cfg", "generated-acw-keep.cfg" }.Contains (Path.GetFileName (path), StringComparer.Ordinal)),
 				"Seed R8 should not receive generated or baseline configurations that pin managed peers.");
-			Assert.That (finalConfigurationItems, Does.Contain ("proguard-android.txt|true"),
+			Assert.That (finalConfigurationItems, Does.Contain ("proguard-android.txt|true|||"),
 				"Final R8 should identify only the SDK baseline by explicit provenance metadata.");
+			Assert.That (finalConfigurationItems, Has.Some.EqualTo ("generated-acw-keep.cfg||true||"),
+				"Generated ACW keep rules should carry semantic provenance so R8 can exclude them.");
+			Assert.That (finalConfigurationItems, Has.Some.EqualTo ("aapt_rules.txt||true|true|"),
+				"Final AAPT rules should carry specific provenance so R8 retains them.");
+			Assert.That (finalConfigurationItems, Has.Some.EqualTo ("proguard_project_references.cfg||true||true"),
+				"Mapped linked-assembly rules should carry specific provenance so R8 retains them.");
+			StringAssert.Contains ($"-keep,allowobfuscation class {libraryJavaName.Replace ('/', '.')}", File.ReadAllText (mappedProjectRules));
+			StringAssert.Contains ("-keepclassmembers,allowobfuscation", File.ReadAllText (mappedProjectRules));
+			Assert.That (
+				File.ReadAllLines (primaryRules).Where (line => line.StartsWith ("-keep class ", StringComparison.Ordinal)),
+				Is.EqualTo (new [] { "-keep class com.example.R8JniLayoutView { *; }" }),
+				"The final primary configuration must pin only user-authored Java without a managed peer.");
 
 			proguardRule = "-dontwarn com.example.UnusedTwo";
 			app.Touch ("r8-jni-rules.pro");
@@ -1685,6 +1705,35 @@ namespace UnnamedProject {
 				File.ReadAllText (mappingFile),
 				$"R8 should preserve the binary Android resource entry point {originalName}.");
 		}
+
+		static void AssertR8MappingContainsMember (string mappingFile, string originalJniName, string memberName)
+		{
+			string originalName = originalJniName.Replace ('/', '.');
+			var classMapping = Regex.Match (
+				File.ReadAllText (mappingFile),
+				$"^{Regex.Escape (originalName)} -> [^:]+:\\r?\\n(?<members>(?:    .*\\r?\\n)*)",
+				RegexOptions.Multiline);
+			Assert.IsTrue (classMapping.Success, $"Expected {mappingFile} to contain a mapping for {originalName}.");
+			Assert.That (
+				classMapping.Groups ["members"].Value,
+				Does.Match ($@"\b{Regex.Escape (memberName)}\([^)]*\) -> "),
+				$"Expected {mappingFile} to retain and map {originalName}.{memberName}.");
+		}
+
+		static Import CreateR8JniManifestMergerDirectoryAssertionImport ()
+			=> new Import ("AssertR8JniManifestMergerDirectory.targets") {
+				TextContent = () => """
+					<Project>
+					  <Target Name="_AssertR8JniManifestMergerDirectory"
+					      BeforeTargets="_ManifestMerger"
+					      Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' and '$(AndroidManifestMerger)' == 'manifestmerger.jar' ">
+					    <Error
+					        Condition=" !Exists('$(IntermediateOutputPath)android') "
+					        Text="The R8 JNI manifest dependency chain must prepare the manifest merger output directory." />
+					  </Target>
+					</Project>
+					""",
+			};
 
 		DynamicCodeSupportProfile BuildDynamicCodeSupportProfile (string typemapImplementation, bool? dynamicCodeSupport)
 		{

@@ -2045,7 +2045,10 @@ because xbuild doesn't support framework reference assemblies.
       <AndroidSdkBaselineProguardConfiguration>true</AndroidSdkBaselineProguardConfiguration>
     </_ProguardConfiguration>
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"         Condition=" '$(AndroidLinkTool)' != '' " />
-    <_ProguardConfiguration Include="$(_ProguardProjectConfiguration)"                               Condition=" '$(AndroidLinkTool)' != '' " />
+    <_ProguardConfiguration Include="$(_ProguardProjectConfiguration)"                               Condition=" '$(AndroidLinkTool)' != '' ">
+      <AndroidGeneratedProguardConfiguration>true</AndroidGeneratedProguardConfiguration>
+      <AndroidR8JniMappedProguardConfiguration>true</AndroidR8JniMappedProguardConfiguration>
+    </_ProguardConfiguration>
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg" Condition=" '$(AndroidLinkTool)' != '' " />
     <!-- @(ProguardConfiguration) should be listed last -->
     <_ProguardConfiguration Include="@(ProguardConfiguration)" />
