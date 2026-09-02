@@ -80,6 +80,9 @@ variables:
   value: true
 - name: DOTNET_GENERATE_ASPNET_CERTIFICATE
   value: false
+# XBD Google Maven mirror support: https://github.com/dotnet/android-libraries/commit/4fe06d57f3ef7905fab0257d7246c97464d29e74
+- name: XamarinBuildDownloadGoogleMavenRepository
+  value: https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1
 # Fix network isolation requirements
 # See https://devdiv.visualstudio.com/DevDiv/_git/Xamarin.yaml-templates/pullrequest/750402
 - name: DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE
