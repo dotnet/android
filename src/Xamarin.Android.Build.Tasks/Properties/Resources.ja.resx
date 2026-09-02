@@ -1128,6 +1128,10 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - The path to the AndroidManifest.xml file.
 </comment>
   </data>
+  <data name="XA1049" xml:space="preserve">
+    <value>The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'. Set one property to 'false'.</value>
+    <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>Java 依存関係 '{0}' が満たされていません。</value>
     <comment>The following are literal names and should not be translated: Java.
