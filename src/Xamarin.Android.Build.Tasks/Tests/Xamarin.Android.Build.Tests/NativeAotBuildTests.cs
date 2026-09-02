@@ -137,7 +137,9 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, linkerResponseFiles.Length, "One native linker response file should be generated.");
 			string linkerResponse = File.ReadAllText (linkerResponseFiles [0]);
 			StringAssert.Contains ("libRuntime.WorkstationGC.arm-ehabi.a", linkerResponse);
-			StringAssert.DoesNotContain ("libunwind.a", linkerResponse);
+			foreach (string archiveName in CPlusPlusArchiveNames) {
+				StringAssert.DoesNotContain (archiveName, linkerResponse);
+			}
 
 			NdkTools ndk = NdkTools.Create (AndroidNdkPath);
 			ndk.OSBinPath = TestEnvironment.OSBinDirectory;
