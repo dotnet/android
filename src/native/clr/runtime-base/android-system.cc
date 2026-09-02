@@ -417,7 +417,7 @@ auto AndroidSystem::format_full_dso_path (const char *base_dir, std::string_view
 }
 
 template<class TContainer> [[gnu::always_inline]]
-auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, std::string_view const& dso_name, int dl_flags, bool is_jni) noexcept -> void*
+auto AndroidSystem::load_dso_from_specified_dirs (TContainer const& directories, std::string_view const& dso_name, int dl_flags, bool is_jni) noexcept -> void*
 {
 	if (dso_name.empty ()) {
 		return nullptr;
