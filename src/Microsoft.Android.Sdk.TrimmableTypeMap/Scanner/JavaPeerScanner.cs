@@ -2121,7 +2121,13 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		var primitive = TryGetPrimitiveJniDescriptor (managedType.ManagedTypeName);
-		if (primitive is not null) {
+		if (primitive is not null &&
+		    IsSpecialManagedType (
+			    managedType,
+			    managedType.ManagedTypeName,
+			    "System.Runtime",
+			    "System.Private.CoreLib",
+			    "mscorlib")) {
 			descriptor = primitive;
 			return true;
 		}
@@ -2139,10 +2145,35 @@ public sealed class JavaPeerScanner : IDisposable
 		// live in System.Collections (no Java peer at all) and are wrapped at
 		// runtime by JavaList/JavaDictionary/JavaCollection.
 		var wellKnown = managedType.ManagedTypeName switch {
-			"Java.Lang.ICharSequence"          => "Ljava/lang/CharSequence;",
-			"System.Collections.IList"         => "Ljava/util/List;",
-			"System.Collections.IDictionary"   => "Ljava/util/Map;",
-			"System.Collections.ICollection"   => "Ljava/util/Collection;",
+			"Java.Lang.ICharSequence" when IsSpecialManagedType (
+				managedType,
+				"Java.Lang.ICharSequence",
+				"Mono.Android") =>
+				"Ljava/lang/CharSequence;",
+			"System.Collections.IList" when IsSpecialManagedType (
+				managedType,
+				"System.Collections.IList",
+				"System.Runtime",
+				"System.Collections.NonGeneric",
+				"System.Private.CoreLib",
+				"mscorlib") =>
+				"Ljava/util/List;",
+			"System.Collections.IDictionary" when IsSpecialManagedType (
+				managedType,
+				"System.Collections.IDictionary",
+				"System.Runtime",
+				"System.Collections.NonGeneric",
+				"System.Private.CoreLib",
+				"mscorlib") =>
+				"Ljava/util/Map;",
+			"System.Collections.ICollection" when IsSpecialManagedType (
+				managedType,
+				"System.Collections.ICollection",
+				"System.Runtime",
+				"System.Collections.NonGeneric",
+				"System.Private.CoreLib",
+				"mscorlib") =>
+				"Ljava/util/Collection;",
 			_ => null,
 		};
 		if (wellKnown is not null) {

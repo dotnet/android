@@ -29,12 +29,6 @@ namespace Java.Lang
 	{
 		protected Exception (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 	}
-
-	// Mirrors Mono.Android's Java.Lang.ICharSequence: an interface without a
-	// [Register] attribute. The trimmable typemap scanner / emitter must
-	// special-case it to map onto java/lang/CharSequence and dispatch via
-	// Android.Runtime.CharSequence.ToLocalJniHandle.
-	public interface ICharSequence { }
 }
 
 namespace Android.App

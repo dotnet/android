@@ -454,6 +454,22 @@ namespace Xamarin.Android.Build.Tests {
 						}
 					}
 
+					namespace Java.Lang {
+						public interface ICharSequence {
+						}
+					}
+
+					namespace System.Collections {
+						public interface IList {
+						}
+
+						public interface IDictionary {
+						}
+
+						public interface ICollection {
+						}
+					}
+
 					namespace SpecialMappingLookalikes {
 						[Register ("com/example/exports/SpecialMappingLookalikePeer")]
 						public class SpecialMappingLookalikePeer : Java.Lang.Object {
@@ -466,6 +482,18 @@ namespace Xamarin.Android.Build.Tests {
 							[return: ExportParameter (ExportParameterKind.XmlPullParser)]
 							[ExportField ("INVALID_XML_FIELD")]
 							public System.Xml.XmlReader InvalidXmlField () => new ();
+
+							[Export ("invalidCharSequence")]
+							public Java.Lang.ICharSequence InvalidCharSequence (Java.Lang.ICharSequence value) => value;
+
+							[Export ("invalidList")]
+							public System.Collections.IList InvalidList (System.Collections.IList value) => value;
+
+							[Export ("invalidDictionary")]
+							public System.Collections.IDictionary InvalidDictionary (System.Collections.IDictionary value) => value;
+
+							[Export ("invalidCollection")]
+							public System.Collections.ICollection InvalidCollection (System.Collections.ICollection value) => value;
 
 							[Export ("notAConstructor", SuperArgumentsString = "")]
 							public SpecialMappingLookalikePeer (
@@ -483,6 +511,10 @@ namespace Xamarin.Android.Build.Tests {
 			foreach (var memberName in new [] {
 				"SpecialMappingLookalikes.SpecialMappingLookalikePeer.InvalidStream",
 				"SpecialMappingLookalikes.SpecialMappingLookalikePeer.InvalidXmlField",
+				"SpecialMappingLookalikes.SpecialMappingLookalikePeer.InvalidCharSequence",
+				"SpecialMappingLookalikes.SpecialMappingLookalikePeer.InvalidList",
+				"SpecialMappingLookalikes.SpecialMappingLookalikePeer.InvalidDictionary",
+				"SpecialMappingLookalikes.SpecialMappingLookalikePeer.InvalidCollection",
 				"SpecialMappingLookalikes.SpecialMappingLookalikePeer.ctor",
 			}) {
 				Assert.IsTrue (

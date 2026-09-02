@@ -132,6 +132,40 @@ public class ExportSignatureTests : FixtureTestBase
 		}, ExportParameterKindInfo.Unspecified));
 	}
 
+	[Theory]
+	[InlineData ("System.Void", "System.Runtime")]
+	[InlineData ("System.Boolean", "System.Runtime")]
+	[InlineData ("System.Byte", "System.Runtime")]
+	[InlineData ("System.SByte", "System.Runtime")]
+	[InlineData ("System.Char", "System.Runtime")]
+	[InlineData ("System.Int16", "System.Runtime")]
+	[InlineData ("System.UInt16", "System.Runtime")]
+	[InlineData ("System.Int32", "System.Runtime")]
+	[InlineData ("System.UInt32", "System.Runtime")]
+	[InlineData ("System.Int64", "System.Runtime")]
+	[InlineData ("System.UInt64", "System.Runtime")]
+	[InlineData ("System.Single", "System.Runtime")]
+	[InlineData ("System.Double", "System.Runtime")]
+	[InlineData ("System.String", "System.Runtime")]
+	[InlineData ("System.String[]", "System.Runtime")]
+	[InlineData ("Java.Lang.ICharSequence", "Mono.Android")]
+	[InlineData ("System.Collections.IList", "System.Runtime")]
+	[InlineData ("System.Collections.IDictionary", "System.Runtime")]
+	[InlineData ("System.Collections.ICollection", "System.Runtime")]
+	public void NameBasedMappings_RequireCanonicalAssemblyIdentity (string managedTypeName, string canonicalAssemblyName)
+	{
+		using var scanner = new JavaPeerScanner ();
+
+		Assert.True (scanner.HasExportSignatureMapping (new TypeRefData {
+			ManagedTypeName = managedTypeName,
+			AssemblyName = canonicalAssemblyName,
+		}, ExportParameterKindInfo.Unspecified));
+		Assert.False (scanner.HasExportSignatureMapping (new TypeRefData {
+			ManagedTypeName = managedTypeName,
+			AssemblyName = "User.Types",
+		}, ExportParameterKindInfo.Unspecified));
+	}
+
 	[Fact]
 	public void SpecialXmlMapping_AcceptsCanonicalAndForwardedFrameworkIdentity ()
 	{

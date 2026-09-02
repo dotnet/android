@@ -138,6 +138,10 @@ public class ScannerExportShapesTests
 		var peer = GetPeer ("SpecialTypeCollisionPeer", fixturePath);
 		Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "InvalidStream");
 		Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "InvalidXmlField");
+		Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "InvalidCharSequence");
+		Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "InvalidList");
+		Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "InvalidDictionary");
+		Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "InvalidCollection");
 		Assert.DoesNotContain (peer.MarshalMethods, method => method.IsConstructor && method.IsExport);
 		Assert.DoesNotContain (peer.JavaFields, field => field.FieldName == "INVALID_XML_FIELD");
 	}
