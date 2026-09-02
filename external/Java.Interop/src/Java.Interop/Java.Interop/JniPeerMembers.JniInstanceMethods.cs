@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Text;
 
 namespace Java.Interop
 {
@@ -40,11 +41,13 @@ namespace Java.Interop
 		readonly Type                                       DeclaringType;
 
 		readonly ConcurrentDictionary<string, JniMethodInfo>    InstanceMethods      = new ConcurrentDictionary<string, JniMethodInfo> (1, 3, StringComparer.Ordinal);
+		readonly Utf8ValueCache<JniMethodInfo>                   Utf8InstanceMethods  = new Utf8ValueCache<JniMethodInfo> ();
 		readonly ConcurrentDictionary<Type, JniInstanceMethods> SubclassConstructors = new ConcurrentDictionary<Type, JniInstanceMethods> (1, 1);
 
 		internal void Dispose ()
 		{
 			InstanceMethods.Clear ();
+			Utf8InstanceMethods.Clear ();
 			foreach (var p in SubclassConstructors.Values)
 				p.Dispose ();
 			SubclassConstructors.Clear ();
@@ -60,6 +63,14 @@ namespace Java.Interop
 				throw new ArgumentNullException (nameof (signature));
 			return InstanceMethods.GetOrAdd (signature, static (member, methods) =>
 					methods.JniPeerType.GetConstructor (member), this);
+		}
+
+		public JniMethodInfo GetConstructor (ReadOnlySpan<byte> signature)
+		{
+			return Utf8InstanceMethods.GetOrAdd (signature, static (member, methods) => {
+				var terminatedSignature = JniPeerMembers.GetNullTerminatedUtf8 (member);
+				return methods.JniPeerType.GetConstructor (terminatedSignature);
+			}, this);
 		}
 
 		internal JniInstanceMethods GetConstructorsForType (Type declaringType)
@@ -99,6 +110,41 @@ namespace Java.Interop
 				JniPeerMembers.GetNameAndSignature (member, out method, out signature);
 				return methods.GetMethodInfo (method, signature);
 			}, this);
+		}
+
+		public JniMethodInfo GetMethodInfo (ReadOnlySpan<byte> encodedMember)
+		{
+			return Utf8InstanceMethods.GetOrAdd (encodedMember, static (member, methods) => {
+				int separator = JniPeerMembers.GetSignatureSeparatorIndex (member);
+				return methods.GetMethodInfo (member.Slice (0, separator), member.Slice (separator + 1));
+			}, this);
+		}
+
+		JniMethodInfo GetMethodInfo (ReadOnlySpan<byte> method, ReadOnlySpan<byte> signature)
+		{
+			var methodName          = Encoding.UTF8.GetString (method);
+			var methodSig           = Encoding.UTF8.GetString (signature);
+			var terminatedMethod    = JniPeerMembers.GetNullTerminatedUtf8 (method);
+			var terminatedSignature = JniPeerMembers.GetNullTerminatedUtf8 (signature);
+			var m                   = (JniMethodInfo?) null;
+			var newMethod           = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (Members.JniPeerTypeName, methodName, methodSig);
+			if (newMethod.HasValue) {
+				var typeName        = newMethod.Value.TargetJniType ?? Members.JniPeerTypeName;
+				var replacementName = newMethod.Value.TargetJniMethodName ?? methodName;
+				var replacementSig  = newMethod.Value.TargetJniMethodSignature ?? methodSig;
+
+				using var t = new JniType (typeName);
+				if (newMethod.Value.TargetJniMethodInstanceToStatic &&
+						t.TryGetStaticMethod (replacementName, replacementSig, out m)) {
+					m.ParameterCount = newMethod.Value.TargetJniMethodParameterCount;
+					m.StaticRedirect = new JniType (typeName);
+					return m;
+				}
+				if (t.TryGetInstanceMethod (replacementName, replacementSig, out m))
+					return m;
+				Console.Error.WriteLine ($"warning: For declared method `{Members.JniPeerTypeName}.{methodName}.{methodSig}`, could not find requested method `{typeName}.{replacementName}.{replacementSig}`!");
+			}
+			return JniPeerType.GetInstanceMethod (terminatedMethod, terminatedSignature);
 		}
 
 		JniMethodInfo GetMethodInfo (string method, string signature)
@@ -143,6 +189,18 @@ namespace Java.Interop
 			return r;
 		}
 
+		public unsafe JniObjectReference StartCreateInstance (ReadOnlySpan<byte> constructorSignature, Type declaringType, JniArgumentValue* parameters)
+		{
+			if (declaringType == null)
+				throw new ArgumentNullException (nameof (declaringType));
+
+			var r   = GetConstructorsForType (declaringType)
+				.JniPeerType
+				.AllocObject ();
+			r.Flags = JniObjectReferenceFlags.Alloc;
+			return r;
+		}
+
 		internal JniObjectReference AllocObject (Type declaringType)
 		{
 			var r   = GetConstructorsForType (declaringType)
@@ -163,6 +221,16 @@ namespace Java.Interop
 		{
 			if (constructorSignature == null)
 				throw new ArgumentNullException (nameof (constructorSignature));
+			if (self == null)
+				throw new ArgumentNullException (nameof (self));
+
+			var methods = GetConstructorsForType (self.GetType ());
+			var ctor    = methods.GetConstructor (constructorSignature);
+			JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, parameters);
+		}
+
+		public unsafe void FinishCreateInstance (ReadOnlySpan<byte> constructorSignature, IJavaPeerable self, JniArgumentValue* parameters)
+		{
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 

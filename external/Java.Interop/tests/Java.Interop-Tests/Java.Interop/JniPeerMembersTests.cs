@@ -18,6 +18,42 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public unsafe void Utf8MemberLookupIsCached ()
+		{
+			var members = new Utf8PeerMembers ("java/lang/Object"u8, typeof (JavaLangRemappingTestObject));
+			try {
+				byte [] encodedMethod = "hashCode.()I"u8.ToArray ();
+				var first  = members.InstanceMethods.GetMethodInfo (encodedMethod);
+				var second = members.InstanceMethods.GetMethodInfo (encodedMethod);
+				Assert.AreSame (first, second);
+
+				byte [] constructorSignature = [(byte) '(', (byte) ')', (byte) 'V'];
+				var firstConstructor  = members.InstanceMethods.GetConstructor (constructorSignature);
+				var secondConstructor = members.InstanceMethods.GetConstructor (constructorSignature);
+				Assert.AreSame (firstConstructor, secondConstructor);
+
+				using var value = new JavaLangRemappingTestObject ();
+				Assert.AreEqual (value.remappedToStaticHashCode (), members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I"u8, value, null));
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
+		}
+
+		[Test]
+		public void Utf8FieldLookupIsCached ()
+		{
+			var members = new Utf8PeerMembers ("java/lang/System"u8, typeof (JavaLangSystem));
+			try {
+				byte [] encodedField = "out.Ljava/io/PrintStream;"u8.ToArray ();
+				var first  = members.StaticFields.GetFieldInfo (encodedField);
+				var second = members.StaticFields.GetFieldInfo (encodedField);
+				Assert.AreSame (first, second);
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
+		}
+
+		[Test]
 		[Category ("TrimmableTypeMapUnsupported")]
 		public void VirtualInvokeOnBaseInvokesMostDerivedJavaMethod ()
 		{
@@ -200,19 +236,19 @@ namespace Java.InteropTests
 
 		public unsafe void doesNotExist ()
 		{
-			const string id = "doesNotExist.()V";
+			ReadOnlySpan<byte> id = "doesNotExist.()V"u8;
 			_members.InstanceMethods.InvokeNonvirtualVoidMethod (id, this, null);
 		}
 
 		public unsafe JniObjectReference remappedToToString ()
 		{
-			const string id = "remappedToToString.()Ljava/lang/String;";
+			ReadOnlySpan<byte> id = "remappedToToString.()Ljava/lang/String;"u8;
 			return _members.InstanceMethods.InvokeNonvirtualObjectMethod (id, this, null);
 		}
 
 		public unsafe int remappedToStaticHashCode ()
 		{
-			const string id = "remappedToStaticHashCode.()I";
+			ReadOnlySpan<byte> id = "remappedToStaticHashCode.()I"u8;
 			return _members.InstanceMethods.InvokeVirtualInt32Method (id, this, null);
 		}
 	}
@@ -224,14 +260,26 @@ namespace Java.InteropTests
 
 		public static unsafe JniObjectReference remappedToGetRuntime()
 		{
-			const string id = "remappedToGetRuntime.()Ljava/lang/Runtime;";
+			ReadOnlySpan<byte> id = "remappedToGetRuntime.()Ljava/lang/Runtime;"u8;
 			return _members.StaticMethods.InvokeObjectMethod (id, null);
 		}
 
 		public static unsafe void doesNotExist ()
 		{
-			const string id = "doesNotExist.()V";
+			ReadOnlySpan<byte> id = "doesNotExist.()V"u8;
 			_members.StaticMethods.InvokeVoidMethod (id, null);
+		}
+	}
+
+	[JniTypeSignature ("java/lang/System", GenerateJavaPeer=false)]
+	internal class JavaLangSystem : JavaObject {
+	}
+
+	internal class Utf8PeerMembers : JniPeerMembers {
+
+		public Utf8PeerMembers (ReadOnlySpan<byte> jniPeerTypeName, Type managedPeerType)
+			: base (jniPeerTypeName, managedPeerType)
+		{
 		}
 	}
 
@@ -248,7 +296,7 @@ namespace Java.InteropTests
 
 		public virtual unsafe int hashCode ()
 		{
-			const string id = "hashCode.()I";
+			ReadOnlySpan<byte> id = "hashCode.()I"u8;
 			return _members.InstanceMethods.InvokeVirtualInt32Method (id, this, null);
 		}
 	}

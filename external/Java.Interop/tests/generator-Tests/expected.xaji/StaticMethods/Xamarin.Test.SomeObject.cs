@@ -18,7 +18,7 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']"
 	[global::Android.Runtime.Register ("xamarin/test/SomeObject", DoNotGenerateAcw=true)]
 	public partial class SomeObject : global::Java.Lang.Object {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/SomeObject", typeof (SomeObject));
+		static readonly JniPeerMembers _members = new XAPeerMembers (global::__JavaInteropUtf8StringPool.Get0 (17, 23), typeof (SomeObject));
 
 		internal static new IntPtr class_ref {
 			get { return _members.JniPeerType.PeerReference.Handle; }
@@ -50,7 +50,7 @@ namespace Xamarin.Test {
 		[Register ("methodAsInt", "()I", "")]
 		public static unsafe int MethodAsInt ()
 		{
-			const string __id = "methodAsInt.()I";
+			ReadOnlySpan<byte> __id = global::__JavaInteropUtf8StringPool.Get0 (41, 15);
 			try {
 				var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
 				return __rm;
@@ -62,7 +62,7 @@ namespace Xamarin.Test {
 		[Register ("methodAsString", "()Ljava/lang/String;", "")]
 		public static unsafe string MethodAsString ()
 		{
-			const string __id = "methodAsString.()Ljava/lang/String;";
+			ReadOnlySpan<byte> __id = global::__JavaInteropUtf8StringPool.Get0 (57, 35);
 			try {
 				var __rm = _members.StaticMethods.InvokeObjectMethod (__id, null);
 				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
@@ -75,7 +75,7 @@ namespace Xamarin.Test {
 		[Register ("Obsoletemethod", "()Ljava/lang/String;", "")]
 		public static unsafe string Obsoletemethod ()
 		{
-			const string __id = "Obsoletemethod.()Ljava/lang/String;";
+			ReadOnlySpan<byte> __id = global::__JavaInteropUtf8StringPool.Get0 (93, 35);
 			try {
 				var __rm = _members.StaticMethods.InvokeObjectMethod (__id, null);
 				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);

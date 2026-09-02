@@ -21,8 +21,11 @@ namespace generator.SourceWriters
 			IsReadonly = true;
 
 			var peer = opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1 ? "XAPeerMembers" : "JniPeerMembers";
+			var jniType = opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1 && opt.UseUtf8MemberNames
+				? opt.GetUtf8SpanExpression (rawJniType)
+				: $"\"{rawJniType}\"";
 
-			Value = $"new {peer} (\"{rawJniType}\", typeof ({declaringType}){(isInterface ? ", isInterface: true" : string.Empty)})";
+			Value = $"new {peer} ({jniType}, typeof ({declaringType}){(isInterface ? ", isInterface: true" : string.Empty)})";
 		}		
 	}
 }

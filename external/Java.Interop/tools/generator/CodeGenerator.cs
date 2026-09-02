@@ -84,6 +84,7 @@ namespace Xamarin.Android.Binder
 				UseObsoletedOSPlatformAttributes = options.UseObsoletedOSPlatformAttributes,
 				UseRestrictToAttributes = options.UseRestrictToAttributes,
 				FixObsoleteOverrides = options.FixObsoleteOverrides,
+				UseUtf8MemberNames = options.UseUtf8MemberNames,
 			};
 			var resolverCache       = new TypeDefinitionCache ();
 
@@ -240,6 +241,7 @@ namespace Xamarin.Android.Binder
 				if (gen.IsGeneratable)
 					gen.Generate (opt, gen_info);
 
+			opt.WriteUtf8StringPool (gen_info);
 			new NamespaceMapping (gens).Generate (opt, gen_info);
 
 			ClassGen.GenerateEnumList (gen_info);

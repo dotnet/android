@@ -82,7 +82,7 @@ namespace generator.SourceWriters
 
 		protected override void WriteGetterBody (CodeWriter writer)
 		{
-			writer.WriteLine ($"const string __id = \"{field.JavaName}.{field.Symbol.JniName}\";");
+			writer.WriteLine (SourceWriterExtensions.GetEncodedMemberDeclaration (field.JavaName, field.Symbol.JniName, opt));
 			writer.WriteLine ();
 
 			var invokeType = SourceWriterExtensions.GetInvokeType (field.GetMethodPrefix);
@@ -116,7 +116,7 @@ namespace generator.SourceWriters
 
 		protected override void WriteSetterBody (CodeWriter writer)
 		{
-			writer.WriteLine ($"const string __id = \"{field.JavaName}.{field.Symbol.JniName}\";");
+			writer.WriteLine (SourceWriterExtensions.GetEncodedMemberDeclaration (field.JavaName, field.Symbol.JniName, opt));
 			writer.WriteLine ();
 
 			var invokeType = SourceWriterExtensions.GetInvokeType (field.GetMethodPrefix);

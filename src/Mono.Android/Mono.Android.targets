@@ -125,7 +125,7 @@
     </ItemGroup>
     <PropertyGroup>
       <Generator>"$(MicrosoftAndroidSdkOutDir)generator.dll"</Generator>
-      <_GenFlags>--public --product-version=7</_GenFlags>
+      <_GenFlags>--public --product-version=7 --utf8-member-names</_GenFlags>
       <_ApiLevel>--api-level=$(AndroidApiLevel)</_ApiLevel>
       <_Out>-o "$(IntermediateOutputPath)mcw"</_Out>
       <_Codegen>--codegen-target=XAJavaInterop1</_Codegen>

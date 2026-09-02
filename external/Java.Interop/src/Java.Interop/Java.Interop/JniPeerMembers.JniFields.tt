@@ -29,8 +29,9 @@ namespace Java.Interop {
 	foreach (var info in jniReturnTypes) {
 #>
 
+<# foreach (var memberType in new [] { "string", "ReadOnlySpan<byte>" }) { #>
 		public <#= info.ReturnType #> Get<#= info.ManagedType #>Value (
-			string encodedMember,
+			<#= memberType #> encodedMember,
 			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
@@ -41,7 +42,7 @@ namespace Java.Interop {
 			return r;
 		}
 
-		public void SetValue (string encodedMember, IJavaPeerable self, <#= info.ParameterType #> value)
+		public void SetValue (<#= memberType #> encodedMember, IJavaPeerable self, <#= info.ParameterType #> value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -49,6 +50,7 @@ namespace Java.Interop {
 			JniEnvironment.InstanceFields.Set<#= info.JniCallType #>Field (self.PeerReference, f, value);
 			GC.KeepAlive (self);
 		}
+<# } #>
 <#
 	}
 #>
@@ -59,17 +61,19 @@ namespace Java.Interop {
 	foreach (var info in jniReturnTypes) {
 #>
 
-		public <#= info.ReturnType #> Get<#= info.ManagedType #>Value (string encodedMember)
+<# foreach (var memberType in new [] { "string", "ReadOnlySpan<byte>" }) { #>
+		public <#= info.ReturnType #> Get<#= info.ManagedType #>Value (<#= memberType #> encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			return JniEnvironment.StaticFields.GetStatic<#= info.JniCallType #>Field (Members.JniPeerType.PeerReference, f);
 		}
 
-		public void SetValue (string encodedMember, <#= info.ParameterType #> value)
+		public void SetValue (<#= memberType #> encodedMember, <#= info.ParameterType #> value)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStatic<#= info.JniCallType #>Field (Members.JniPeerType.PeerReference, f, value);
 		}
+<# } #>
 <#
 	}
 #>

@@ -56,11 +56,15 @@ namespace generator.SourceWriters
 
 		protected override void WriteBody (CodeWriter writer)
 		{
-			writer.WriteLine ("{0}string __id = \"{1}\";",
-						constructor.IsNonStaticNestedType ? "" : "const ",
-						constructor.IsNonStaticNestedType
-						? "(" + constructor.Parameters.GetJniNestedDerivedSignature (opt) + ")V"
-						: constructor.JniSignature);
+			if (!constructor.IsNonStaticNestedType && opt.CodeGenerationTarget == CodeGenerationTarget.XAJavaInterop1 && opt.UseUtf8MemberNames) {
+				writer.WriteLine ($"ReadOnlySpan<byte> __id = {opt.GetUtf8SpanExpression (constructor.JniSignature)};");
+			} else {
+				writer.WriteLine ("{0}string __id = \"{1}\";",
+							constructor.IsNonStaticNestedType ? "" : "const ",
+							constructor.IsNonStaticNestedType
+							? "(" + constructor.Parameters.GetJniNestedDerivedSignature (opt) + ")V"
+							: constructor.JniSignature);
+			}
 			writer.WriteLine ();
 			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
 				writer.WriteLine ($"if (PeerReference.IsValid)");

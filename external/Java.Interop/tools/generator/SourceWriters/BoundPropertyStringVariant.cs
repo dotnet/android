@@ -64,7 +64,7 @@ namespace generator.SourceWriters
 					var method = property.Setter;
 					var parameter = method.Parameters [0];
 
-					SetBody.Add ($"const string __id = \"{method.JavaName}.{method.JniSignature}\";");
+					SetBody.Add (SourceWriterExtensions.GetEncodedMemberDeclaration (method.JavaName, method.JniSignature, opt));
 					SetBody.Add ($"global::Java.Interop.JniObjectReference {parameter.ToNative (opt)} = global::Java.Interop.JniEnvironment.Strings.NewString (value);");
 
 					SetBody.Add ("try {");

@@ -41,9 +41,6 @@ namespace Java.Interop {
 			static unsafe bool TryInvoke<#= returnType.ManagedType #>StaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters<#= byRefParamDecl #>)
 			{
 				<#= setByRefToDefault #>
-#if !NET
-				return false;
-#else  // NET
 				if (method.StaticRedirect == null || !method.ParameterCount.HasValue) {
 					return false;
 				}
@@ -58,11 +55,11 @@ namespace Java.Interop {
 
 				<#= setByRefParam #>JniEnvironment.StaticMethods.CallStatic<#= returnType.JniCallType #>Method (method.StaticRedirect.PeerReference, method, p);
 				return true;
-#endif   // NET
 			}
 #pragma warning restore CA1801
 
-			public unsafe <#= returnType.ReturnType #> InvokeAbstract<#= returnType.ManagedType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+<# foreach (var memberType in new [] { "string", "ReadOnlySpan<byte>" }) { #>
+			public unsafe <#= returnType.ReturnType #> InvokeAbstract<#= returnType.ManagedType #>Method (<#= memberType #> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -80,7 +77,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe <#= returnType.ReturnType #> InvokeVirtual<#= returnType.ManagedType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe <#= returnType.ReturnType #> InvokeVirtual<#= returnType.ManagedType #>Method (<#= memberType #> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -109,7 +106,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe <#= returnType.ReturnType #> InvokeNonvirtual<#= returnType.ManagedType #>Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe <#= returnType.ReturnType #> InvokeNonvirtual<#= returnType.ManagedType #>Method (<#= memberType #> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -125,6 +122,7 @@ namespace Java.Interop {
 					GC.KeepAlive (self);
 				}
 			}
+<# } #>
 <#
 	}
 #>

@@ -29,11 +29,11 @@ namespace generator.SourceWriters
 			}
 			Attributes.Add (new RegisterAttr (jni_class, additionalProperties: iface.AdditionalAttributeString ()) { UseGlobal = true });
 
-			AddConstructor (iface);
+			AddConstructor (iface, opt);
 			AddMethods (iface, opt);
 		}
 
-		void AddConstructor (InterfaceGen iface)
+		void AddConstructor (InterfaceGen iface, CodeGenerationOptions opt)
 		{
 			var ctor = new ConstructorWriter {
 				Name = iface.Name + "Implementor",
@@ -46,7 +46,9 @@ namespace generator.SourceWriters
 			ctor.IsUnsafe = true;
 			ctor.BaseCall = "base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)";
 
-			ctor.Body.Add ("const string __id = \"()V\";");
+			ctor.Body.Add (opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1 && opt.UseUtf8MemberNames
+				? $"ReadOnlySpan<byte> __id = {opt.GetUtf8SpanExpression ("()V")};"
+				: "const string __id = \"()V\";");
 			ctor.Body.Add ("if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)");
 			ctor.Body.Add ("\treturn;");
 			ctor.Body.Add ("var h = JniPeerMembers.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);");

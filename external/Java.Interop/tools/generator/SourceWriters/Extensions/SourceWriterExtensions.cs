@@ -233,7 +233,7 @@ namespace generator.SourceWriters
 
 		public static void AddMethodBody (List<string> body, Method method, CodeGenerationOptions opt, string members = "_members")
 		{
-			body.Add ($"const string __id = \"{method.JavaName}.{method.JniSignature}\";");
+			body.Add (GetEncodedMemberDeclaration (method.JavaName, method.JniSignature, opt, method.IsCompatVirtualMethod));
 
 			foreach (string prep in method.Parameters.GetCallPrep (opt))
 				body.Add (prep);
@@ -257,6 +257,13 @@ namespace generator.SourceWriters
 				body.Add ($"\tglobal::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
 
 			body.Add ("}");
+		}
+
+		public static string GetEncodedMemberDeclaration (string name, string signature, CodeGenerationOptions opt, bool requireString = false)
+		{
+			if (opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1 && opt.UseUtf8MemberNames && !requireString)
+				return $"ReadOnlySpan<byte> __id = {opt.GetUtf8SpanExpression ($"{name}.{signature}")};";
+			return $"const string __id = \"{name}.{signature}\";";
 		}
 
 		public static void AddMethodBodyTryBlock (List<string> body, Method method, CodeGenerationOptions opt, string members = "_members")

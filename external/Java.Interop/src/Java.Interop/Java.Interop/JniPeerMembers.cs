@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 
 namespace Java.Interop {
 
@@ -18,6 +19,16 @@ namespace Java.Interop {
 
 		public JniPeerMembers (string jniPeerTypeName, Type managedPeerType)
 			: this (jniPeerTypeName = GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: true, isInterface: false)
+		{
+		}
+
+		protected JniPeerMembers (ReadOnlySpan<byte> jniPeerTypeName, Type managedPeerType, bool isInterface)
+			: this (GetReplacementType (Encoding.UTF8.GetString (jniPeerTypeName)), managedPeerType, checkManagedPeerType: true, isInterface: isInterface)
+		{
+		}
+
+		protected JniPeerMembers (ReadOnlySpan<byte> jniPeerTypeName, Type managedPeerType)
+			: this (GetReplacementType (Encoding.UTF8.GetString (jniPeerTypeName)), managedPeerType, checkManagedPeerType: true, isInterface: false)
 		{
 		}
 

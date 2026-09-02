@@ -458,6 +458,29 @@ namespace Java.Interop {
 			return JniEnvironment.StaticMethods.GetStaticMethodID (PeerReference, name, signature);
 		}
 
+		internal unsafe bool TryGetStaticMethod (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature, [NotNullWhen(true)] out JniMethodInfo? method)
+		{
+			AssertValid ();
+
+			method = null;
+			var env = JniEnvironment.EnvironmentPointer;
+			fixed (byte* namePtr = name)
+			fixed (byte* signaturePtr = signature) {
+				var id     = JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, (IntPtr) namePtr, (IntPtr) signaturePtr);
+				var thrown = JniNativeMethods.ExceptionOccurred (env);
+				if (thrown != IntPtr.Zero) {
+					JniEnvironment.Exceptions.ExceptionClear ();
+					JniEnvironment.References.RawDeleteLocalRef (env, thrown);
+					return false;
+				}
+				Debug.Assert (id != IntPtr.Zero);
+				if (id == IntPtr.Zero)
+					return false;
+				method = new JniMethodInfo (id, isStatic: true);
+				return true;
+			}
+		}
+
 		public JniMethodInfo GetCachedStaticMethod ([NotNull] ref JniMethodInfo? cachedMethod, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 		{
 			AssertValid ();

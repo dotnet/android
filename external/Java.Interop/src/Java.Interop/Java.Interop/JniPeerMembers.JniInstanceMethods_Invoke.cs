@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 using System.Diagnostics;
@@ -78,6 +78,69 @@ namespace Java.Interop {
 			}
 
 			public unsafe void InvokeNonvirtualVoidMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				var m   = GetMethodInfo (encodedMember);
+				try {
+					if (TryInvokeVoidStaticRedirect (m, self, parameters)) {
+						return;
+					}
+					JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
+					return;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+			public unsafe void InvokeAbstractVoidMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var m   = GetMethodInfo (encodedMember);
+					if (TryInvokeVoidStaticRedirect (m, self, parameters)) {
+						return;
+					}
+
+					JniEnvironment.InstanceMethods.CallVoidMethod (self.PeerReference, m, parameters);
+					return;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe void InvokeVirtualVoidMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var declaringType   = DeclaringType;
+					if (Members.UsesVirtualDispatch (self, declaringType)) {
+						var m   = GetMethodInfo (encodedMember);
+						if (TryInvokeVoidStaticRedirect (m, self, parameters)) {
+							return;
+						}
+						JniEnvironment.InstanceMethods.CallVoidMethod (self.PeerReference, m, parameters);
+						return;
+					}
+					var j = Members.GetPeerMembers (self);
+					var n = j.InstanceMethods.GetMethodInfo (encodedMember);
+					do {
+						if (TryInvokeVoidStaticRedirect (n, self, parameters)) {
+							return;
+						}
+						JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
+						return;
+					} while (false);
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe void InvokeNonvirtualVoidMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -178,6 +241,69 @@ namespace Java.Interop {
 					GC.KeepAlive (self);
 				}
 			}
+			public unsafe bool InvokeAbstractBooleanMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var m   = GetMethodInfo (encodedMember);
+					if (TryInvokeBooleanStaticRedirect (m, self, parameters, out bool r)) {
+						return r;
+					}
+
+					r = JniEnvironment.InstanceMethods.CallBooleanMethod (self.PeerReference, m, parameters);
+					return r;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe bool InvokeVirtualBooleanMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var declaringType   = DeclaringType;
+					if (Members.UsesVirtualDispatch (self, declaringType)) {
+						var m   = GetMethodInfo (encodedMember);
+						if (TryInvokeBooleanStaticRedirect (m, self, parameters, out bool r)) {
+							return r;
+						}
+						r = JniEnvironment.InstanceMethods.CallBooleanMethod (self.PeerReference, m, parameters);
+						return r;
+					}
+					var j = Members.GetPeerMembers (self);
+					var n = j.InstanceMethods.GetMethodInfo (encodedMember);
+					do {
+						if (TryInvokeBooleanStaticRedirect (n, self, parameters, out bool r)) {
+							return r;
+						}
+						r = JniEnvironment.InstanceMethods.CallNonvirtualBooleanMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
+						return r;
+					} while (false);
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe bool InvokeNonvirtualBooleanMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				var m   = GetMethodInfo (encodedMember);
+				try {
+					if (TryInvokeBooleanStaticRedirect (m, self, parameters, out bool r)) {
+						return r;
+					}
+					r = JniEnvironment.InstanceMethods.CallNonvirtualBooleanMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
+					return r;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
 
 #pragma warning disable CA1801
 			static unsafe bool TryInvokeSByteStaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out sbyte r)
@@ -248,6 +374,69 @@ namespace Java.Interop {
 			}
 
 			public unsafe sbyte InvokeNonvirtualSByteMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				var m   = GetMethodInfo (encodedMember);
+				try {
+					if (TryInvokeSByteStaticRedirect (m, self, parameters, out sbyte r)) {
+						return r;
+					}
+					r = JniEnvironment.InstanceMethods.CallNonvirtualByteMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
+					return r;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+			public unsafe sbyte InvokeAbstractSByteMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var m   = GetMethodInfo (encodedMember);
+					if (TryInvokeSByteStaticRedirect (m, self, parameters, out sbyte r)) {
+						return r;
+					}
+
+					r = JniEnvironment.InstanceMethods.CallByteMethod (self.PeerReference, m, parameters);
+					return r;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe sbyte InvokeVirtualSByteMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var declaringType   = DeclaringType;
+					if (Members.UsesVirtualDispatch (self, declaringType)) {
+						var m   = GetMethodInfo (encodedMember);
+						if (TryInvokeSByteStaticRedirect (m, self, parameters, out sbyte r)) {
+							return r;
+						}
+						r = JniEnvironment.InstanceMethods.CallByteMethod (self.PeerReference, m, parameters);
+						return r;
+					}
+					var j = Members.GetPeerMembers (self);
+					var n = j.InstanceMethods.GetMethodInfo (encodedMember);
+					do {
+						if (TryInvokeSByteStaticRedirect (n, self, parameters, out sbyte r)) {
+							return r;
+						}
+						r = JniEnvironment.InstanceMethods.CallNonvirtualByteMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
+						return r;
+					} while (false);
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe sbyte InvokeNonvirtualSByteMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -348,6 +537,69 @@ namespace Java.Interop {
 					GC.KeepAlive (self);
 				}
 			}
+			public unsafe char InvokeAbstractCharMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var m   = GetMethodInfo (encodedMember);
+					if (TryInvokeCharStaticRedirect (m, self, parameters, out char r)) {
+						return r;
+					}
+
+					r = JniEnvironment.InstanceMethods.CallCharMethod (self.PeerReference, m, parameters);
+					return r;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe char InvokeVirtualCharMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var declaringType   = DeclaringType;
+					if (Members.UsesVirtualDispatch (self, declaringType)) {
+						var m   = GetMethodInfo (encodedMember);
+						if (TryInvokeCharStaticRedirect (m, self, parameters, out char r)) {
+							return r;
+						}
+						r = JniEnvironment.InstanceMethods.CallCharMethod (self.PeerReference, m, parameters);
+						return r;
+					}
+					var j = Members.GetPeerMembers (self);
+					var n = j.InstanceMethods.GetMethodInfo (encodedMember);
+					do {
+						if (TryInvokeCharStaticRedirect (n, self, parameters, out char r)) {
+							return r;
+						}
+						r = JniEnvironment.InstanceMethods.CallNonvirtualCharMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
+						return r;
+					} while (false);
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe char InvokeNonvirtualCharMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				var m   = GetMethodInfo (encodedMember);
+				try {
+					if (TryInvokeCharStaticRedirect (m, self, parameters, out char r)) {
+						return r;
+					}
+					r = JniEnvironment.InstanceMethods.CallNonvirtualCharMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
+					return r;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
 
 #pragma warning disable CA1801
 			static unsafe bool TryInvokeInt16StaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out short r)
@@ -418,6 +670,69 @@ namespace Java.Interop {
 			}
 
 			public unsafe short InvokeNonvirtualInt16Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				var m   = GetMethodInfo (encodedMember);
+				try {
+					if (TryInvokeInt16StaticRedirect (m, self, parameters, out short r)) {
+						return r;
+					}
+					r = JniEnvironment.InstanceMethods.CallNonvirtualShortMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
+					return r;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+			public unsafe short InvokeAbstractInt16Method (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var m   = GetMethodInfo (encodedMember);
+					if (TryInvokeInt16StaticRedirect (m, self, parameters, out short r)) {
+						return r;
+					}
+
+					r = JniEnvironment.InstanceMethods.CallShortMethod (self.PeerReference, m, parameters);
+					return r;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe short InvokeVirtualInt16Method (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var declaringType   = DeclaringType;
+					if (Members.UsesVirtualDispatch (self, declaringType)) {
+						var m   = GetMethodInfo (encodedMember);
+						if (TryInvokeInt16StaticRedirect (m, self, parameters, out short r)) {
+							return r;
+						}
+						r = JniEnvironment.InstanceMethods.CallShortMethod (self.PeerReference, m, parameters);
+						return r;
+					}
+					var j = Members.GetPeerMembers (self);
+					var n = j.InstanceMethods.GetMethodInfo (encodedMember);
+					do {
+						if (TryInvokeInt16StaticRedirect (n, self, parameters, out short r)) {
+							return r;
+						}
+						r = JniEnvironment.InstanceMethods.CallNonvirtualShortMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
+						return r;
+					} while (false);
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe short InvokeNonvirtualInt16Method (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -518,6 +833,69 @@ namespace Java.Interop {
 					GC.KeepAlive (self);
 				}
 			}
+			public unsafe int InvokeAbstractInt32Method (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var m   = GetMethodInfo (encodedMember);
+					if (TryInvokeInt32StaticRedirect (m, self, parameters, out int r)) {
+						return r;
+					}
+
+					r = JniEnvironment.InstanceMethods.CallIntMethod (self.PeerReference, m, parameters);
+					return r;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe int InvokeVirtualInt32Method (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var declaringType   = DeclaringType;
+					if (Members.UsesVirtualDispatch (self, declaringType)) {
+						var m   = GetMethodInfo (encodedMember);
+						if (TryInvokeInt32StaticRedirect (m, self, parameters, out int r)) {
+							return r;
+						}
+						r = JniEnvironment.InstanceMethods.CallIntMethod (self.PeerReference, m, parameters);
+						return r;
+					}
+					var j = Members.GetPeerMembers (self);
+					var n = j.InstanceMethods.GetMethodInfo (encodedMember);
+					do {
+						if (TryInvokeInt32StaticRedirect (n, self, parameters, out int r)) {
+							return r;
+						}
+						r = JniEnvironment.InstanceMethods.CallNonvirtualIntMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
+						return r;
+					} while (false);
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe int InvokeNonvirtualInt32Method (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				var m   = GetMethodInfo (encodedMember);
+				try {
+					if (TryInvokeInt32StaticRedirect (m, self, parameters, out int r)) {
+						return r;
+					}
+					r = JniEnvironment.InstanceMethods.CallNonvirtualIntMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
+					return r;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
 
 #pragma warning disable CA1801
 			static unsafe bool TryInvokeInt64StaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out long r)
@@ -588,6 +966,69 @@ namespace Java.Interop {
 			}
 
 			public unsafe long InvokeNonvirtualInt64Method (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				var m   = GetMethodInfo (encodedMember);
+				try {
+					if (TryInvokeInt64StaticRedirect (m, self, parameters, out long r)) {
+						return r;
+					}
+					r = JniEnvironment.InstanceMethods.CallNonvirtualLongMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
+					return r;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+			public unsafe long InvokeAbstractInt64Method (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var m   = GetMethodInfo (encodedMember);
+					if (TryInvokeInt64StaticRedirect (m, self, parameters, out long r)) {
+						return r;
+					}
+
+					r = JniEnvironment.InstanceMethods.CallLongMethod (self.PeerReference, m, parameters);
+					return r;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe long InvokeVirtualInt64Method (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var declaringType   = DeclaringType;
+					if (Members.UsesVirtualDispatch (self, declaringType)) {
+						var m   = GetMethodInfo (encodedMember);
+						if (TryInvokeInt64StaticRedirect (m, self, parameters, out long r)) {
+							return r;
+						}
+						r = JniEnvironment.InstanceMethods.CallLongMethod (self.PeerReference, m, parameters);
+						return r;
+					}
+					var j = Members.GetPeerMembers (self);
+					var n = j.InstanceMethods.GetMethodInfo (encodedMember);
+					do {
+						if (TryInvokeInt64StaticRedirect (n, self, parameters, out long r)) {
+							return r;
+						}
+						r = JniEnvironment.InstanceMethods.CallNonvirtualLongMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
+						return r;
+					} while (false);
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe long InvokeNonvirtualInt64Method (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -688,6 +1129,69 @@ namespace Java.Interop {
 					GC.KeepAlive (self);
 				}
 			}
+			public unsafe float InvokeAbstractSingleMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var m   = GetMethodInfo (encodedMember);
+					if (TryInvokeSingleStaticRedirect (m, self, parameters, out float r)) {
+						return r;
+					}
+
+					r = JniEnvironment.InstanceMethods.CallFloatMethod (self.PeerReference, m, parameters);
+					return r;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe float InvokeVirtualSingleMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var declaringType   = DeclaringType;
+					if (Members.UsesVirtualDispatch (self, declaringType)) {
+						var m   = GetMethodInfo (encodedMember);
+						if (TryInvokeSingleStaticRedirect (m, self, parameters, out float r)) {
+							return r;
+						}
+						r = JniEnvironment.InstanceMethods.CallFloatMethod (self.PeerReference, m, parameters);
+						return r;
+					}
+					var j = Members.GetPeerMembers (self);
+					var n = j.InstanceMethods.GetMethodInfo (encodedMember);
+					do {
+						if (TryInvokeSingleStaticRedirect (n, self, parameters, out float r)) {
+							return r;
+						}
+						r = JniEnvironment.InstanceMethods.CallNonvirtualFloatMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
+						return r;
+					} while (false);
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe float InvokeNonvirtualSingleMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				var m   = GetMethodInfo (encodedMember);
+				try {
+					if (TryInvokeSingleStaticRedirect (m, self, parameters, out float r)) {
+						return r;
+					}
+					r = JniEnvironment.InstanceMethods.CallNonvirtualFloatMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
+					return r;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
 
 #pragma warning disable CA1801
 			static unsafe bool TryInvokeDoubleStaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out double r)
@@ -773,6 +1277,69 @@ namespace Java.Interop {
 					GC.KeepAlive (self);
 				}
 			}
+			public unsafe double InvokeAbstractDoubleMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var m   = GetMethodInfo (encodedMember);
+					if (TryInvokeDoubleStaticRedirect (m, self, parameters, out double r)) {
+						return r;
+					}
+
+					r = JniEnvironment.InstanceMethods.CallDoubleMethod (self.PeerReference, m, parameters);
+					return r;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe double InvokeVirtualDoubleMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var declaringType   = DeclaringType;
+					if (Members.UsesVirtualDispatch (self, declaringType)) {
+						var m   = GetMethodInfo (encodedMember);
+						if (TryInvokeDoubleStaticRedirect (m, self, parameters, out double r)) {
+							return r;
+						}
+						r = JniEnvironment.InstanceMethods.CallDoubleMethod (self.PeerReference, m, parameters);
+						return r;
+					}
+					var j = Members.GetPeerMembers (self);
+					var n = j.InstanceMethods.GetMethodInfo (encodedMember);
+					do {
+						if (TryInvokeDoubleStaticRedirect (n, self, parameters, out double r)) {
+							return r;
+						}
+						r = JniEnvironment.InstanceMethods.CallNonvirtualDoubleMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
+						return r;
+					} while (false);
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe double InvokeNonvirtualDoubleMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				var m   = GetMethodInfo (encodedMember);
+				try {
+					if (TryInvokeDoubleStaticRedirect (m, self, parameters, out double r)) {
+						return r;
+					}
+					r = JniEnvironment.InstanceMethods.CallNonvirtualDoubleMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
+					return r;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
 
 #pragma warning disable CA1801
 			static unsafe bool TryInvokeObjectStaticRedirect (JniMethodInfo method, IJavaPeerable self, JniArgumentValue* parameters, out JniObjectReference r)
@@ -843,6 +1410,69 @@ namespace Java.Interop {
 			}
 
 			public unsafe JniObjectReference InvokeNonvirtualObjectMethod (string encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				var m   = GetMethodInfo (encodedMember);
+				try {
+					if (TryInvokeObjectStaticRedirect (m, self, parameters, out JniObjectReference r)) {
+						return r;
+					}
+					r = JniEnvironment.InstanceMethods.CallNonvirtualObjectMethod (self.PeerReference, JniPeerType.PeerReference, m, parameters);
+					return r;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+			public unsafe JniObjectReference InvokeAbstractObjectMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var m   = GetMethodInfo (encodedMember);
+					if (TryInvokeObjectStaticRedirect (m, self, parameters, out JniObjectReference r)) {
+						return r;
+					}
+
+					r = JniEnvironment.InstanceMethods.CallObjectMethod (self.PeerReference, m, parameters);
+					return r;
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe JniObjectReference InvokeVirtualObjectMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			{
+				JniPeerMembers.AssertSelf (self);
+
+				try {
+					var declaringType   = DeclaringType;
+					if (Members.UsesVirtualDispatch (self, declaringType)) {
+						var m   = GetMethodInfo (encodedMember);
+						if (TryInvokeObjectStaticRedirect (m, self, parameters, out JniObjectReference r)) {
+							return r;
+						}
+						r = JniEnvironment.InstanceMethods.CallObjectMethod (self.PeerReference, m, parameters);
+						return r;
+					}
+					var j = Members.GetPeerMembers (self);
+					var n = j.InstanceMethods.GetMethodInfo (encodedMember);
+					do {
+						if (TryInvokeObjectStaticRedirect (n, self, parameters, out JniObjectReference r)) {
+							return r;
+						}
+						r = JniEnvironment.InstanceMethods.CallNonvirtualObjectMethod (self.PeerReference, j.JniPeerType.PeerReference, n, parameters);
+						return r;
+					} while (false);
+				}
+				finally {
+					GC.KeepAlive (self);
+				}
+			}
+
+			public unsafe JniObjectReference InvokeNonvirtualObjectMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 

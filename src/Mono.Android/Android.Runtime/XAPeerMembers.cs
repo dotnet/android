@@ -19,6 +19,16 @@ namespace Android.Runtime {
 		{
 		}
 
+		internal XAPeerMembers (ReadOnlySpan<byte> jniPeerTypeName, Type managedPeerType)
+			: base (jniPeerTypeName, managedPeerType)
+		{
+		}
+
+		internal XAPeerMembers (ReadOnlySpan<byte> jniPeerTypeName, Type managedPeerType, bool isInterface)
+			: base (jniPeerTypeName, managedPeerType, isInterface)
+		{
+		}
+
 		protected override bool UsesVirtualDispatch (IJavaPeerable value, Type? declaringType)
 		{
 			var peerType  = GetThresholdType (value);

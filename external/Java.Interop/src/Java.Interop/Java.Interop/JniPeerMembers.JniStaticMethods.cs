@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Text;
 
 namespace Java.Interop
 {
@@ -16,10 +17,12 @@ namespace Java.Interop
 		internal    readonly    JniPeerMembers              Members;
 
 		readonly ConcurrentDictionary<string, JniMethodInfo> StaticMethods = new ConcurrentDictionary<string, JniMethodInfo> (1, 3, StringComparer.Ordinal);
+		readonly Utf8ValueCache<JniMethodInfo>                Utf8StaticMethods = new Utf8ValueCache<JniMethodInfo> ();
 
 		internal void Dispose ()
 		{
 			StaticMethods.Clear ();
+			Utf8StaticMethods.Clear ();
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
@@ -29,6 +32,39 @@ namespace Java.Interop
 				JniPeerMembers.GetNameAndSignature (member, out method, out signature);
 				return methods.GetMethodInfo (method, signature);
 			}, this);
+		}
+
+		public JniMethodInfo GetMethodInfo (ReadOnlySpan<byte> encodedMember)
+		{
+			return Utf8StaticMethods.GetOrAdd (encodedMember, static (member, methods) => {
+				int separator = JniPeerMembers.GetSignatureSeparatorIndex (member);
+				return methods.GetMethodInfo (member.Slice (0, separator), member.Slice (separator + 1));
+			}, this);
+		}
+
+		JniMethodInfo GetMethodInfo (ReadOnlySpan<byte> method, ReadOnlySpan<byte> signature)
+		{
+			var methodName          = Encoding.UTF8.GetString (method);
+			var methodSig           = Encoding.UTF8.GetString (signature);
+			var terminatedMethod    = JniPeerMembers.GetNullTerminatedUtf8 (method);
+			var terminatedSignature = JniPeerMembers.GetNullTerminatedUtf8 (signature);
+			var m                   = (JniMethodInfo?) null;
+			var newMethod           = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (Members.JniPeerTypeName, methodName, methodSig);
+			if (newMethod.HasValue) {
+				using var t = new JniType (newMethod.Value.TargetJniType ?? Members.JniPeerTypeName);
+				if (t.TryGetStaticMethod (
+						newMethod.Value.TargetJniMethodName ?? methodName,
+						newMethod.Value.TargetJniMethodSignature ?? methodSig,
+						out m)) {
+					return m;
+				}
+			}
+			if (Members.JniPeerType.TryGetStaticMethod (terminatedMethod, terminatedSignature, out m))
+				return m;
+			m = FindInFallbackTypes (methodName, methodSig);
+			if (m != null)
+				return m;
+			return Members.JniPeerType.GetStaticMethod (terminatedMethod, terminatedSignature);
 		}
 
 		JniMethodInfo GetMethodInfo (string method, string signature)
@@ -95,7 +131,19 @@ namespace Java.Interop
 			JniEnvironment.StaticMethods.CallStaticVoidMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 		}
 
+		public unsafe void InvokeVoidMethod (ReadOnlySpan<byte> encodedMember, JniArgumentValue* parameters)
+		{
+			var m = GetMethodInfo (encodedMember);
+			JniEnvironment.StaticMethods.CallStaticVoidMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
+		}
+
 		public unsafe bool InvokeBooleanMethod (string encodedMember, JniArgumentValue* parameters)
+		{
+			var m = GetMethodInfo (encodedMember);
+			return JniEnvironment.StaticMethods.CallStaticBooleanMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
+		}
+
+		public unsafe bool InvokeBooleanMethod (ReadOnlySpan<byte> encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
 			return JniEnvironment.StaticMethods.CallStaticBooleanMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
@@ -107,7 +155,19 @@ namespace Java.Interop
 			return JniEnvironment.StaticMethods.CallStaticByteMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 		}
 
+		public unsafe sbyte InvokeSByteMethod (ReadOnlySpan<byte> encodedMember, JniArgumentValue* parameters)
+		{
+			var m = GetMethodInfo (encodedMember);
+			return JniEnvironment.StaticMethods.CallStaticByteMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
+		}
+
 		public unsafe char InvokeCharMethod (string encodedMember, JniArgumentValue* parameters)
+		{
+			var m = GetMethodInfo (encodedMember);
+			return JniEnvironment.StaticMethods.CallStaticCharMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
+		}
+
+		public unsafe char InvokeCharMethod (ReadOnlySpan<byte> encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
 			return JniEnvironment.StaticMethods.CallStaticCharMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
@@ -119,7 +179,19 @@ namespace Java.Interop
 			return JniEnvironment.StaticMethods.CallStaticShortMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 		}
 
+		public unsafe short InvokeInt16Method (ReadOnlySpan<byte> encodedMember, JniArgumentValue* parameters)
+		{
+			var m = GetMethodInfo (encodedMember);
+			return JniEnvironment.StaticMethods.CallStaticShortMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
+		}
+
 		public unsafe int InvokeInt32Method (string encodedMember, JniArgumentValue* parameters)
+		{
+			var m = GetMethodInfo (encodedMember);
+			return JniEnvironment.StaticMethods.CallStaticIntMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
+		}
+
+		public unsafe int InvokeInt32Method (ReadOnlySpan<byte> encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
 			return JniEnvironment.StaticMethods.CallStaticIntMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
@@ -131,7 +203,19 @@ namespace Java.Interop
 			return JniEnvironment.StaticMethods.CallStaticLongMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 		}
 
+		public unsafe long InvokeInt64Method (ReadOnlySpan<byte> encodedMember, JniArgumentValue* parameters)
+		{
+			var m = GetMethodInfo (encodedMember);
+			return JniEnvironment.StaticMethods.CallStaticLongMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
+		}
+
 		public unsafe float InvokeSingleMethod (string encodedMember, JniArgumentValue* parameters)
+		{
+			var m = GetMethodInfo (encodedMember);
+			return JniEnvironment.StaticMethods.CallStaticFloatMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
+		}
+
+		public unsafe float InvokeSingleMethod (ReadOnlySpan<byte> encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
 			return JniEnvironment.StaticMethods.CallStaticFloatMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
@@ -143,7 +227,19 @@ namespace Java.Interop
 			return JniEnvironment.StaticMethods.CallStaticDoubleMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
 		}
 
+		public unsafe double InvokeDoubleMethod (ReadOnlySpan<byte> encodedMember, JniArgumentValue* parameters)
+		{
+			var m = GetMethodInfo (encodedMember);
+			return JniEnvironment.StaticMethods.CallStaticDoubleMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
+		}
+
 		public unsafe JniObjectReference InvokeObjectMethod (string encodedMember, JniArgumentValue* parameters)
+		{
+			var m = GetMethodInfo (encodedMember);
+			return JniEnvironment.StaticMethods.CallStaticObjectMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);
+		}
+
+		public unsafe JniObjectReference InvokeObjectMethod (ReadOnlySpan<byte> encodedMember, JniArgumentValue* parameters)
 		{
 			var m = GetMethodInfo (encodedMember);
 			return JniEnvironment.StaticMethods.CallStaticObjectMethod (GetMethodDeclaringType (m).PeerReference, m, parameters);

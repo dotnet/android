@@ -57,6 +57,7 @@ namespace Xamarin.Android.Binder
 		public bool		    UseRestrictToAttributes { get; set; }
 		public bool		    FixObsoleteOverrides { get; set;} = true;
 		public bool			UseObsoletedOSPlatformAttributes { get; set; }
+		public bool			UseUtf8MemberNames { get; set; }
 
 		public XmldocStyle		    XmldocStyle { get; set; } = XmldocStyle.IntelliSense;
 
@@ -87,6 +88,9 @@ namespace Xamarin.Android.Binder
 				{ "global",
 					"Prefix type names with `global::`.",
 					v => opts.GlobalTypeNames = v != null },
+				{ "utf8-member-names",
+					"Generate UTF-8 JNI peer type and member names.",
+					v => opts.UseUtf8MemberNames = v != null },
 				{ "javadir=",
 					"Ignored; for compatibility.",
 					v => {} },
