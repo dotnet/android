@@ -253,6 +253,11 @@ steps:
     $payloadRootDirectory = '${{ parameters.payloadDirectory }}'
     New-Item -ItemType Directory -Force -Path $logsDirectory | Out-Null
 
+    if ($env:SYSTEM_PULLREQUEST_ISFORK -eq 'True') {
+      Write-Host 'Disabling Azure Pipelines test reporting for anonymous fork PR Helix submissions.'
+      $env:SYSTEM_ACCESSTOKEN = ''
+    }
+
     if ([Environment]::OSVersion.Platform -eq "Unix") {
       $dotnetRoot = Join-Path $xaSourcePath 'bin/$(XA.Build.Configuration)/dotnet'
       $dotnetPath = Join-Path $dotnetRoot 'dotnet'
@@ -366,3 +371,4 @@ steps:
   continueOnError: false
   env:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+    SYSTEM_PULLREQUEST_ISFORK: $(System.PullRequest.IsFork)
