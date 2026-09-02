@@ -85,6 +85,7 @@ extends:
       suppression:
         suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
     settings:
+      networkIsolationPolicy: Permissive,CFSClean
       skipBuildTagsForGitHubPullRequests: true
     stages:
     - template: /build-tools/automation/yaml-templates/build-macos.yaml@self
