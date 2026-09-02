@@ -177,7 +177,7 @@ namespace xamarin::android {
 		}
 
 		template<class TContainer> // TODO: replace with a concept
-		static auto load_dso_from_specified_dirs (TContainer const& directories, std::string_view const& dso_name, int dl_flags, bool is_jni) noexcept -> void*;
+		static auto load_dso_from_specified_dirs (TContainer directories, std::string_view const& dso_name, int dl_flags, bool is_jni) noexcept -> void*;
 		static auto load_dso_from_app_lib_dirs (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
 		static auto load_dso_from_override_dirs (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
 		static auto lookup_system_property (const char *name, size_t &value_len) noexcept -> const char*;
