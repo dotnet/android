@@ -57,6 +57,7 @@ public class GenerateR8JniManifestProguardConfigurationTests : BaseTest
 
 		var task = CreateTask ();
 		Assert.IsTrue (task.Execute (), "Task should succeed without resolving @drawable/icon.");
+		string rules = File.ReadAllText (output);
 		Assert.AreEqual ("""
 			-keep class com.example.App { <init>(); }
 			-keep class com.example.AppProcess { <init>(); }
@@ -68,8 +69,9 @@ public class GenerateR8JniManifestProguardConfigurationTests : BaseTest
 			-keep class com.example.Zygote { <init>(); }
 			-keep class other.Factory { <init>(); }
 			-keep class other.Provider { <init>(); }
-			""" + "\n", File.ReadAllText (output));
-		StringAssert.DoesNotContain ("\r", File.ReadAllText (output), "Manifest rules should use deterministic LF line endings.");
+			""" + "\n", rules);
+		StringAssert.DoesNotContain ("com.example.Alias", rules, "An activity alias name is not a Java class.");
+		StringAssert.DoesNotContain ("\r", rules, "Manifest rules should use deterministic LF line endings.");
 	}
 
 	[TestCase (".Relative", "com.example.Relative")]
