@@ -17,7 +17,7 @@ namespace Xamarin.Android.Build.Tests
 	public class PackagingTest : BaseTest
 	{
 		[Test]
-		public void CheckProguardMappingFileExists ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void CheckR8MetadataFilesExist ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -31,11 +31,22 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
 			// Projects must set $(AndroidCreateProguardMappingFile) to true to opt in
 			proj.SetProperty (proj.ReleaseProperties, "AndroidCreateProguardMappingFile", true);
+			proj.SetProperty ("AndroidPackageFormat", "aab");
 
 			using (var b = CreateApkBuilder ()) {
 				string mappingFile = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "mapping.txt");
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				FileAssert.Exists (mappingFile, $"'{mappingFile}' should have been generated.");
+				var aab = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.aab");
+				using (var zip = ZipHelper.OpenZip (aab)) {
+					Assert.IsTrue (zip.Any (e => e.FullName == "BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map"), $"AAB file `{aab}` should contain the ProGuard mapping.");
+					Assert.IsTrue (zip.Any (e => e.FullName == "BUNDLE-METADATA/com.android.tools/r8.json"), $"AAB file `{aab}` should contain the R8 build metadata.");
+				}
+
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				foreach (var target in new [] { "_CompileToDalvik", "_BuildApkEmbed" }) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+				}
 			}
 		}
 

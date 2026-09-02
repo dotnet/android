@@ -230,6 +230,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidLibraryFlatArchivesDirectory>$(IntermediateOutputPath)flata\</_AndroidLibraryFlatArchivesDirectory>
 	<_AndroidLibraryFlatFilesDirectory>$(IntermediateOutputPath)flat\</_AndroidLibraryFlatFilesDirectory>
 	<_AndroidStampDirectory>$(IntermediateOutputPath)stamp\</_AndroidStampDirectory>
+	<_AndroidR8BuildMetadataFile>$(IntermediateOutputPath)r8.json</_AndroidR8BuildMetadataFile>
         <_AndroidApplicationSharedLibraryPath>$(IntermediateOutputPath)app_shared_libraries\</_AndroidApplicationSharedLibraryPath>
 	<_ResolvedUserAssembliesHashFile>$(IntermediateOutputPath)resolvedassemblies.hash</_ResolvedUserAssembliesHashFile>
   <_AndroidResolvedResourcesHashFile>$(IntermediateOutputPath)_AndroidResolvedResources.hash</_AndroidResolvedResourcesHashFile>
@@ -2166,6 +2167,10 @@ because xbuild doesn't support framework reference assemblies.
     <AndroidAppBundleMetaDataFile
         Condition=" Exists('$(AndroidProguardMappingFile)') "
         Include="com.android.tools.build.obfuscation/proguard.map:$(AndroidProguardMappingFile)"
+    />
+    <AndroidAppBundleMetaDataFile
+        Condition=" Exists('$(_AndroidR8BuildMetadataFile)') "
+        Include="com.android.tools/r8.json:$(_AndroidR8BuildMetadataFile)"
     />
   </ItemGroup>
 </Target>
