@@ -312,12 +312,54 @@ namespace Xamarin.Android.Tasks
 							option, file, DescribeProguardSource (item));
 						continue;
 					}
+					if (EnableObfuscation &&
+							string.Equals (item.GetMetadata ("AndroidSdkBaselineProguardConfiguration"), bool.TrueString, StringComparison.OrdinalIgnoreCase)) {
+						file = CreateR8JniBaselineConfiguration (file);
+					}
 					WriteArg (response, "--pg-conf");
 					WriteArg (response, file);
 				}
 			}
 
 			return responseFile;
+		}
+
+		string CreateR8JniBaselineConfiguration (string path)
+		{
+			string content = File.ReadAllText (path);
+			string filtered = RemoveNativeMethodKeepRule (content);
+			if (string.Equals (content, filtered, StringComparison.Ordinal)) {
+				return path;
+			}
+			string temp = Path.GetTempFileName ();
+			tempFiles.Add (temp);
+			File.WriteAllText (temp, filtered, Files.UTF8withoutBOM);
+			return temp;
+		}
+
+		internal static string RemoveNativeMethodKeepRule (string content)
+		{
+			bool endsWithNewLine = content.EndsWith ("\n", StringComparison.Ordinal) || content.EndsWith ("\r", StringComparison.Ordinal);
+			string [] lines = content.Replace ("\r\n", "\n").Replace ('\r', '\n').Split ('\n');
+			var filtered = new List<string> (lines.Length);
+			for (int i = 0; i < lines.Length; i++) {
+				if (i + 2 < lines.Length &&
+						string.Equals (lines [i].Trim (), "-keepclasseswithmembernames,includedescriptorclasses class * {", StringComparison.Ordinal) &&
+						string.Equals (lines [i + 1].Trim (), "native <methods>;", StringComparison.Ordinal) &&
+						string.Equals (lines [i + 2].Trim (), "}", StringComparison.Ordinal)) {
+					if (filtered.Count > 0 && filtered [filtered.Count - 1].TrimStart ().StartsWith ("# For native methods,", StringComparison.Ordinal)) {
+						filtered.RemoveAt (filtered.Count - 1);
+					}
+					i += 2;
+					continue;
+				}
+				filtered.Add (lines [i]);
+			}
+			if (endsWithNewLine && filtered.Count > 0 && filtered [filtered.Count - 1].Length == 0) {
+				filtered.RemoveAt (filtered.Count - 1);
+			}
+			string result = string.Join ("\n", filtered);
+			return endsWithNewLine ? result + "\n" : result;
 		}
 
 		string GetRequiredSeedMappingOutput ()

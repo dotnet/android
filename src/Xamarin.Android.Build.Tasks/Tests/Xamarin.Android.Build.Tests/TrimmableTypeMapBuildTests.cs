@@ -462,6 +462,15 @@ public class R8JniLibraryPeer : Java.Lang.Object
 					        Overwrite="true"
 					        WriteOnlyWhenDifferent="true" />
 					  </Target>
+					  <Target Name="_CaptureR8JniFinalConfiguration"
+					      AfterTargets="_CalculateProguardConfigurationFiles"
+					      BeforeTargets="_CompileToDalvik">
+					    <WriteLinesToFile
+					        File="$(_AndroidR8JniSeedDirectory)final-configuration-items.txt"
+					        Lines="@(_ProguardConfiguration->'%(Filename)%(Extension)|%(AndroidSdkBaselineProguardConfiguration)')"
+					        Overwrite="true"
+					        WriteOnlyWhenDifferent="true" />
+					  </Target>
 					</Project>
 					""",
 			});
@@ -476,6 +485,7 @@ public class R8JniLibraryPeer : Java.Lang.Object
 			var seedMapping = FindSingleFile (projectDirectory, "mapping.txt", path => path.Contains ("r8-jni-seed", StringComparison.Ordinal));
 			var rewriteManifest = FindSingleFile (projectDirectory, "r8-jni-rewrite-manifest.txt");
 			var seedConfigurationItems = File.ReadAllLines (FindSingleFile (projectDirectory, "configuration-items.txt"));
+			var finalConfigurationItems = File.ReadAllLines (FindSingleFile (projectDirectory, "final-configuration-items.txt"));
 			AssertR8MappingRenamesClass (seedMapping, libraryJavaName);
 			StringAssert.Contains ($"C\t{libraryJavaName}", File.ReadAllText (rewriteManifest));
 			Assert.That (seedConfigurationItems, Has.Some.EndsWith ("r8-jni-rules.pro"), "Seed R8 should receive user-authored rules.");
@@ -483,6 +493,8 @@ public class R8JniLibraryPeer : Java.Lang.Object
 			Assert.IsFalse (seedConfigurationItems.Any (path =>
 				new [] { "proguard-android.txt", "proguard_xamarin.cfg", "proguard_project_references.cfg", "proguard_project_primary.cfg", "aapt_rules.txt", "generated-acw-keep.cfg" }.Contains (Path.GetFileName (path), StringComparer.Ordinal)),
 				"Seed R8 should not receive generated or baseline configurations that pin managed peers.");
+			Assert.That (finalConfigurationItems, Does.Contain ("proguard-android.txt|true"),
+				"Final R8 should identify only the SDK baseline by explicit provenance metadata.");
 
 			proguardRule = "-dontwarn com.example.UnusedTwo";
 			app.Touch ("r8-jni-rules.pro");

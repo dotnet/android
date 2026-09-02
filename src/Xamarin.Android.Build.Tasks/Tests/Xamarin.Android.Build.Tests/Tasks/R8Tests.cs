@@ -152,6 +152,116 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test]
+		public void R8JniObfuscationFiltersOnlySdkBaselineNativeKeepRule ()
+		{
+			string path = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
+			Directory.CreateDirectory (path);
+			string responseFile = "";
+			try {
+				string seedMapping = Path.Combine (path, "mapping.txt");
+				string baseline = Path.Combine (path, "proguard-android.txt");
+				string user = Path.Combine (path, "user.pro");
+				string generated = Path.Combine (path, "proguard_project_references.cfg");
+				File.WriteAllText (seedMapping, "com.example.Peer -> a:\n");
+				string nativeKeepRule = """
+					-keepclasseswithmembernames,includedescriptorclasses class * {
+					    native <methods>;
+					}
+					""";
+				File.WriteAllText (baseline, $"-dontwarn before\n{nativeKeepRule}\n-dontwarn after\n");
+				File.WriteAllText (user, nativeKeepRule + "\n");
+				File.WriteAllText (generated, "-keep,allowobfuscation class com.example.Peer\n");
+				var baselineItem = new TaskItem (baseline);
+				baselineItem.SetMetadata ("AndroidSdkBaselineProguardConfiguration", "true");
+				var task = CreateR8TestTask (
+					path,
+					new ITaskItem [] { baselineItem, new TaskItem (user), new TaskItem (generated) },
+					enableObfuscation: true,
+					seedMapping);
+
+				task.TestGenerateCommandLineCommands ();
+				responseFile = task.ResponseFilePath;
+				string [] configurationFiles = GetConfigurationFiles (responseFile);
+				string filteredBaseline = configurationFiles.Single (file => file != user && file != generated && File.ReadAllText (file).Contains ("-dontwarn before"));
+				string allConfiguration = string.Join ("\n", configurationFiles.Select (File.ReadAllText));
+
+				Assert.AreNotEqual (baseline, filteredBaseline);
+				Assert.AreEqual ("-dontwarn before\n-dontwarn after\n", File.ReadAllText (filteredBaseline));
+				Assert.That (configurationFiles, Does.Contain (user), "User rules with identical text must remain untouched.");
+				StringAssert.Contains ("-applymapping", allConfiguration);
+				StringAssert.Contains ("-keep,allowobfuscation class com.example.Peer", allConfiguration);
+				Assert.AreEqual (1, allConfiguration.Split (new [] { "native <methods>;" }, StringSplitOptions.None).Length - 1,
+					"Only the user-authored native rule should remain.");
+
+				DeleteTemporaryConfigurations (configurationFiles, user, generated);
+			} finally {
+				if (File.Exists (responseFile)) {
+					File.Delete (responseFile);
+				}
+				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		[Test]
+		public void R8WithoutJniObfuscationPassesSdkBaselineUnchanged ()
+		{
+			string path = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
+			Directory.CreateDirectory (path);
+			string responseFile = "";
+			try {
+				string baseline = Path.Combine (path, "proguard-android.txt");
+				string content = "-keepclasseswithmembernames,includedescriptorclasses class * {\n    native <methods>;\n}\n";
+				File.WriteAllText (baseline, content);
+				var baselineItem = new TaskItem (baseline);
+				baselineItem.SetMetadata ("AndroidSdkBaselineProguardConfiguration", "true");
+				var task = CreateR8TestTask (path, new ITaskItem [] { baselineItem }, enableObfuscation: false);
+
+				task.TestGenerateCommandLineCommands ();
+				responseFile = task.ResponseFilePath;
+				string [] configurationFiles = GetConfigurationFiles (responseFile);
+
+				Assert.That (configurationFiles, Does.Contain (baseline));
+				Assert.AreEqual (content, File.ReadAllText (baseline));
+			} finally {
+				if (File.Exists (responseFile)) {
+					File.Delete (responseFile);
+				}
+				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		static R8TestTask CreateR8TestTask (string path, ITaskItem [] configurations, bool enableObfuscation, string? seedMapping = null)
+			=> new R8TestTask {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				JarPath = "r8.jar",
+				JavaPlatformJarPath = "android.jar",
+				OutputDirectory = path,
+				ProguardMappingFileInput = seedMapping,
+				ProguardConfigurationFiles = configurations,
+				EnableShrinking = true,
+				EnableObfuscation = enableObfuscation,
+			};
+
+		static string [] GetConfigurationFiles (string responseFile)
+		{
+			string [] response = File.ReadAllLines (responseFile);
+			return response
+				.Select ((argument, index) => (argument, index))
+				.Where (entry => entry.argument == "--pg-conf")
+				.Select (entry => response [entry.index + 1])
+				.ToArray ();
+		}
+
+		static void DeleteTemporaryConfigurations (IEnumerable<string> configurationFiles, params string [] retainedFiles)
+		{
+			foreach (string configurationFile in configurationFiles) {
+				if (!retainedFiles.Contains (configurationFile, StringComparer.Ordinal)) {
+					File.Delete (configurationFile);
+				}
+			}
+		}
+
 		internal class R8TestTask : R8
 		{
 			public string ResponseFilePath { get; private set; } = "";
