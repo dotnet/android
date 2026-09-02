@@ -366,6 +366,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			if (relativePath == null) {
 				continue;
 			}
+			relativePath = NormalizeJavaSourceRelativePath (relativePath, Path.DirectorySeparatorChar);
 			string inputPath = Path.Combine (JavaSourceInputDirectory ?? "", relativePath);
 			if (!File.Exists (inputPath)) {
 				Log.LogCodedError ("XA4255", Properties.Resources.XA4255, inputPath);
@@ -384,6 +385,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		}
 		return items.ToArray ();
 	}
+
+	internal static string NormalizeJavaSourceRelativePath (string relativePath, char directorySeparator)
+		=> relativePath.Replace ('/', directorySeparator);
 
 	string? GetOriginalJavaSourceRelativePath (string generatedRelativePath)
 	{

@@ -178,6 +178,15 @@ namespace Xamarin.Android.Build.Tests {
 			FileAssert.DoesNotExist (Path.Combine (outputDir, "g.java"));
 		}
 
+		[TestCase ('/', "com/example/Outer$Inner.java")]
+		[TestCase ('\\', "com\\example\\Outer$Inner.java")]
+		public void NormalizeJavaSourceRelativePath_UsesDirectorySeparator (char directorySeparator, string expected)
+		{
+			Assert.AreEqual (
+				expected,
+				GenerateTrimmableTypeMap.NormalizeJavaSourceRelativePath ("com/example/Outer$Inner.java", directorySeparator));
+		}
+
 		[TestCase ("C\tcom/example/First\nC\tcom/example/Second\n", TestName = "CopyJavaSources_MergedClassIsAmbiguous")]
 		[TestCase ("C\tcom/example/Unrelated\n", TestName = "CopyJavaSources_MissingRequiredReverseEntry")]
 		public void CopyJavaSources_InvalidReverseMappingUsesXA4327 (string manifest)
