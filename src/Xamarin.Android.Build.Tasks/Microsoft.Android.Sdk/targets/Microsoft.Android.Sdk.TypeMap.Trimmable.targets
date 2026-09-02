@@ -121,14 +121,19 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="_AndroidPrepareR8JniManifestMergerDirectory"
+  <Target Name="_AndroidPrepareR8JniManifestMergerInputs"
       Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' and '$(AndroidManifestMerger)' == 'manifestmerger.jar' ">
     <MakeDir Directories="$(IntermediateOutputPath)android" />
+    <Copy
+        SourceFiles="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
+        DestinationFiles="$(IntermediateOutputPath)AndroidManifest.xml"
+        SkipUnchangedFiles="true"
+        Condition=" '$(_OuterIntermediateOutputPath)' != '' and Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml') " />
   </Target>
 
   <Target Name="_AndroidGenerateR8JniManifestProguardConfigurationInputs"
       Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' "
-      DependsOnTargets="_AndroidCompileR8JniSeedJava;_AndroidPrepareR8JniManifestMergerDirectory;_ManifestMerger">
+      DependsOnTargets="_AndroidCompileR8JniSeedJava;_AndroidPrepareR8JniManifestMergerInputs;_ManifestMerger">
     <PropertyGroup>
       <_AndroidR8JniMergedManifest>$(_TypeMapBaseOutputDir)AndroidManifest.xml</_AndroidR8JniMergedManifest>
       <_AndroidR8JniMergedManifest Condition=" '$(AndroidManifestMerger)' == 'manifestmerger.jar' ">$(IntermediateOutputPath)android/AndroidManifest.xml</_AndroidR8JniMergedManifest>
