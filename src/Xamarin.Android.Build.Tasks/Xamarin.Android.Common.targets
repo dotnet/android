@@ -2169,7 +2169,7 @@ because xbuild doesn't support framework reference assemblies.
         Include="com.android.tools.build.obfuscation/proguard.map:$(AndroidProguardMappingFile)"
     />
     <AndroidAppBundleMetaDataFile
-        Condition=" Exists('$(_AndroidR8BuildMetadataFile)') "
+        Condition=" (('$(AndroidLinkTool)' == 'r8' And '$(_ProguardProjectConfiguration)' != '') Or '$(AndroidEnableMultiDex)' == 'True') And Exists('$(_AndroidR8BuildMetadataFile)') "
         Include="com.android.tools/r8.json:$(_AndroidR8BuildMetadataFile)"
     />
   </ItemGroup>

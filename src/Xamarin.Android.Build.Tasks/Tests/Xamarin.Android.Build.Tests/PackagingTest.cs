@@ -38,6 +38,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				FileAssert.Exists (mappingFile, $"'{mappingFile}' should have been generated.");
 				var aab = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.aab");
+				FileAssert.Exists (aab, $"'{aab}' should have been generated.");
 				using (var zip = ZipHelper.OpenZip (aab)) {
 					Assert.IsTrue (zip.Any (e => e.FullName == "BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map"), $"AAB file `{aab}` should contain the ProGuard mapping.");
 					Assert.IsTrue (zip.Any (e => e.FullName == "BUNDLE-METADATA/com.android.tools/r8.json"), $"AAB file `{aab}` should contain the R8 build metadata.");
