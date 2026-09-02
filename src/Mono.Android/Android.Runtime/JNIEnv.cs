@@ -313,6 +313,14 @@ namespace Android.Runtime {
 			return global_ref;
 		}
 
+		static IntPtr FindClass (ReadOnlySpan<byte> classname)
+		{
+			JniObjectReference local_ref = JniEnvironment.Types.FindClass (classname);
+			IntPtr global_ref = NewGlobalRef (local_ref.Handle);
+			JniObjectReference.Dispose (ref local_ref);
+			return global_ref;
+		}
+
 		public static IntPtr FindClass (string className, ref IntPtr cachedJniClassHandle)
 		{
 			if (cachedJniClassHandle != IntPtr.Zero)
@@ -564,58 +572,92 @@ namespace Android.Runtime {
 
 		static void AssertCompatibleArrayTypes (Type srcElementType, IntPtr destArray)
 		{
-			IntPtr grefSource = FindArrayClassByElementType (srcElementType);
-			IntPtr lrefDest   = GetObjectClass (destArray);
+			JniObjectReference sourceClass = FindArrayClassByElementType (srcElementType);
+			JniObjectReference destClass   = JniEnvironment.Types.GetObjectClass (new JniObjectReference (destArray));
 			try {
-				if (!IsAssignableFrom (grefSource, lrefDest)) {
+				if (!JniEnvironment.Types.IsAssignableFrom (sourceClass, destClass)) {
 					throw new InvalidCastException (FormattableString.Invariant (
-						$"Unable to cast from '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (grefSource))}' to '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (lrefDest))}'."));
+						$"Unable to cast from '{JniEnvironment.Types.GetJniTypeNameFromClass (sourceClass)}' to '{JniEnvironment.Types.GetJniTypeNameFromClass (destClass)}'."));
 				}
 			} finally {
-				DeleteGlobalRef (grefSource);
-				DeleteLocalRef (lrefDest);
+				JniObjectReference.Dispose (ref sourceClass);
+				JniObjectReference.Dispose (ref destClass);
 			}
 		}
 
 		static void AssertCompatibleArrayTypes (IntPtr sourceArray, Type destElementType)
 		{
-			IntPtr grefDest   = FindArrayClassByElementType (destElementType);
-			IntPtr lrefSource = GetObjectClass (sourceArray);
+			JniObjectReference destClass = FindArrayClassByElementType (destElementType);
 			try {
-				if (!IsAssignableFrom (lrefSource, grefDest)) {
+				var sourceReference = new JniObjectReference (sourceArray);
+				if (JniEnvironment.Types.IsInstanceOf (sourceReference, destClass))
+					return;
+
+				JniObjectReference sourceClass = JniEnvironment.Types.GetObjectClass (sourceReference);
+				try {
 					throw new InvalidCastException (FormattableString.Invariant (
-						$"Unable to cast from '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (lrefSource))}' to '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (grefDest))}'."));
+						$"Unable to cast from '{JniEnvironment.Types.GetJniTypeNameFromClass (sourceClass)}' to '{JniEnvironment.Types.GetJniTypeNameFromClass (destClass)}'."));
+				} finally {
+					JniObjectReference.Dispose (ref sourceClass);
 				}
 			} finally {
-				DeleteGlobalRef (grefDest);
-				DeleteLocalRef (lrefSource);
+				JniObjectReference.Dispose (ref destClass);
 			}
 		}
 
-		static IntPtr FindArrayClassByElementType (Type elementType)
+		static JniObjectReference FindArrayClassByElementType (Type elementType)
 		{
-			var boxedPrimitiveJniClassName = GetBoxedPrimitiveJniClassName (elementType);
-			if (boxedPrimitiveJniClassName != null) {
-				return FindClass ("[L" + boxedPrimitiveJniClassName + ";");
-			}
+			var builtInArrayJniClassName = GetBuiltInArrayJniClassNameUtf8 (elementType);
+			if (!builtInArrayJniClassName.IsEmpty)
+				return JniEnvironment.Types.FindClass (builtInArrayJniClassName);
 
 			int rank = JavaNativeTypeManager.GetArrayInfo (elementType, out elementType) + 1;
 			var typeSignature = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (elementType).AddArrayRank (rank);
-			return FindClass (typeSignature.Name);
+			return JniEnvironment.Types.FindClass (typeSignature.Name);
 		}
 
-		static string? GetBoxedPrimitiveJniClassName (Type type)
+		static ReadOnlySpan<byte> GetBuiltInArrayJniClassNameUtf8 (Type type)
 		{
-			if (type == typeof (bool?))   return "java/lang/Boolean";
-			if (type == typeof (byte?))   return "java/lang/Byte";
-			if (type == typeof (sbyte?))  return "java/lang/Byte";
-			if (type == typeof (char?))   return "java/lang/Character";
-			if (type == typeof (short?))  return "java/lang/Short";
-			if (type == typeof (int?))    return "java/lang/Integer";
-			if (type == typeof (long?))   return "java/lang/Long";
-			if (type == typeof (float?))  return "java/lang/Float";
-			if (type == typeof (double?)) return "java/lang/Double";
-			return null;
+			// Formatting JniTypeSignature.Name allocates for array ranks; use static UTF-8 data for hot built-in cases.
+			if (type.IsEnum)
+				type = Enum.GetUnderlyingType (type);
+
+			if (type == typeof (bool))    return "[Z"u8;
+			if (type == typeof (byte))    return "[B"u8;
+			if (type == typeof (sbyte))   return "[B"u8;
+			if (type == typeof (char))    return "[C"u8;
+			if (type == typeof (short))   return "[S"u8;
+			if (type == typeof (ushort))  return "[S"u8;
+			if (type == typeof (int))     return "[I"u8;
+			if (type == typeof (uint))    return "[I"u8;
+			if (type == typeof (long))    return "[J"u8;
+			if (type == typeof (ulong))   return "[J"u8;
+			if (type == typeof (float))   return "[F"u8;
+			if (type == typeof (double))  return "[D"u8;
+			if (type == typeof (bool?))   return "[Ljava/lang/Boolean;"u8;
+			if (type == typeof (byte?))   return "[Ljava/lang/Byte;"u8;
+			if (type == typeof (sbyte?))  return "[Ljava/lang/Byte;"u8;
+			if (type == typeof (char?))   return "[Ljava/lang/Character;"u8;
+			if (type == typeof (short?))  return "[Ljava/lang/Short;"u8;
+			if (type == typeof (int?))    return "[Ljava/lang/Integer;"u8;
+			if (type == typeof (long?))   return "[Ljava/lang/Long;"u8;
+			if (type == typeof (float?))  return "[Ljava/lang/Float;"u8;
+			if (type == typeof (double?)) return "[Ljava/lang/Double;"u8;
+			return [];
+		}
+
+		static ReadOnlySpan<byte> GetBoxedPrimitiveJniClassNameUtf8 (Type type)
+		{
+			if (type == typeof (bool?))   return "java/lang/Boolean"u8;
+			if (type == typeof (byte?))   return "java/lang/Byte"u8;
+			if (type == typeof (sbyte?))  return "java/lang/Byte"u8;
+			if (type == typeof (char?))   return "java/lang/Character"u8;
+			if (type == typeof (short?))  return "java/lang/Short"u8;
+			if (type == typeof (int?))    return "java/lang/Integer"u8;
+			if (type == typeof (long?))   return "java/lang/Long"u8;
+			if (type == typeof (float?))  return "java/lang/Float"u8;
+			if (type == typeof (double?)) return "java/lang/Double"u8;
+			return [];
 		}
 
 		public static void CopyArray (IntPtr src, bool[] dest)
@@ -746,6 +788,8 @@ namespace Android.Runtime {
 					elementType = Enum.GetUnderlyingType (elementType);
 				if (dict.TryGetValue (elementType, out converter))
 					return converter;
+				if (elementType.IsArray)
+					return dict [typeof (Array)];
 			}
 
 			if (array != IntPtr.Zero) {
@@ -771,9 +815,6 @@ namespace Android.Runtime {
 				if (type == "[Ljava/lang/String;")
 					return dict [typeof (string)];
 			}
-
-			if (elementType != null && elementType.IsArray)
-				return dict [typeof (Array)];
 
 			AssertIsJavaObject (elementType);
 			return dict [typeof (IJavaObject)];
@@ -1437,8 +1478,8 @@ namespace Android.Runtime {
 
 		static IntPtr FindObjectArrayElementClass (Type elementType)
 		{
-			var boxedPrimitiveJniClassName = GetBoxedPrimitiveJniClassName (elementType);
-			if (boxedPrimitiveJniClassName != null) {
+			var boxedPrimitiveJniClassName = GetBoxedPrimitiveJniClassNameUtf8 (elementType);
+			if (!boxedPrimitiveJniClassName.IsEmpty) {
 				return FindClass (boxedPrimitiveJniClassName);
 			}
 
