@@ -232,6 +232,9 @@ public class R8JniPeer : Java.Lang.Object
 					peerSource,
 				},
 			};
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				"_ = new R8JniPeer ();");
 			if (runtime == AndroidRuntime.CoreCLR) {
 				proj.LinkTool = "r8";
 			}
@@ -270,7 +273,7 @@ public class R8JniPeer : Java.Lang.Object
 			AssertR8MappingKeepsClassName (finalMapping, $"{proj.PackageName}/MainActivity");
 			StringAssert.DoesNotContain ($"{userJavaName} ->", File.ReadAllText (seedMapping), "User Java sources are kept by final R8 and should not receive seed-only names.");
 			StringAssert.Contains ($"C\t{originalJavaName}", File.ReadAllText (rewriteManifest));
-			Assert.That (new FileInfo (reachabilityManifest).Length, Is.GreaterThan (0), "The clean build should record post-link JNI reachability.");
+			StringAssert.Contains ($"C\t{originalJavaName}", File.ReadAllText (reachabilityManifest), "The clean build should record the peer as reachable before asserting its final R8 mapping.");
 			Assert.That (new FileInfo (finalMapping).Length, Is.GreaterThan (0), "The final R8 pass should emit its applied mapping.");
 			AssertR8MappingRenamesClass (finalMapping, originalJavaName);
 			Assert.That (Directory.GetFiles (Path.Combine (projectDirectory, proj.OutputPath), "mapping.txt", SearchOption.AllDirectories), Is.Empty,
@@ -348,6 +351,7 @@ public class R8JniPeer : Java.Lang.Object
 			AssertR8MappingKeepsClassName (seedMapping, $"{proj.PackageName}/MainActivity");
 			AssertR8MappingRenamesClass (finalMapping, changedJavaName);
 			StringAssert.Contains ($"C\t{changedJavaName}", File.ReadAllText (rewriteManifest));
+			StringAssert.Contains ($"C\t{changedJavaName}", File.ReadAllText (reachabilityManifest), "The JNI-name change rebuild should preserve the peer's NativeAOT reachability.");
 
 			proj.SetProperty ("AndroidEnableR8JniNameObfuscation", "false");
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Disabling R8 JNI name rewriting should invalidate the existing build outputs.");
