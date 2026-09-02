@@ -24,13 +24,20 @@ void FastTiming::really_initialize (bool log_immediately) noexcept
 	open_sequences.push (0);
 	open_sequences.pop ();
 
-	// Options in `debug.mono.timing` are relevant only when immediate logging is disabled
+	// Timing property options are relevant only when immediate logging is disabled
 	if (immediate_logging) {
 		return;
 	}
 
 	char value [Constants::PROPERTY_VALUE_BUFFER_LEN];
+#if defined(XA_HOST_MONOVM)
 	const char *options = AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_TIMING.data (), value, sizeof (value));
+#else
+	const char *options = AndroidSystem::monodroid_get_system_property (Constants::DEBUG_DOTNET_TIMING.data (), value, sizeof (value));
+	if (options == nullptr) {
+		options = AndroidSystem::monodroid_get_system_property (Constants::LEGACY_DEBUG_MONO_TIMING.data (), value, sizeof (value));
+	}
+#endif
 	if (options != nullptr) {
 		internal_timing.parse_options (options);
 	}

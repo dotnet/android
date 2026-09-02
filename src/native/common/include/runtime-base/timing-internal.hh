@@ -90,7 +90,7 @@ namespace xamarin::android {
 		static constexpr size_t default_duration_milliseconds = 1500;
 		static constexpr std::string_view default_timing_file_name { "timing.txt" };
 
-		// Parameters for the `debug.mono.timing` property
+		// Parameters for the runtime timing property
 		static constexpr std::string_view OPT_DURATION      { "duration=" };
 		static constexpr std::string_view OPT_FILE_NAME     { "filename=" };
 		static constexpr std::string_view OPT_TO_FILE       { "to-file" };
