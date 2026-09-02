@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Android.App;
 using Android.Content;
@@ -468,6 +470,159 @@ namespace Android.RuntimeTests {
 				Assert.AreEqual (42, (int)values [1]);
 				Assert.AreEqual ("string", values [2].ToString ());
 			}
+		}
+
+		[Test]
+		[Category ("JNIObjectArray")]
+		public void GetObjectArray_AfterStalePeerLookup ()
+		{
+			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
+				Assert.Ignore ("This test exercises trimmable type map peer creation.");
+
+			var manager = Java.Interop.JniRuntime.CurrentRuntime.ValueManager;
+			IntPtr constructor = JNIEnv.GetMethodID (Java.Lang.Class.Object, "<init>", "()V");
+			IntPtr handle = JNIEnv.NewObject (Java.Lang.Class.Object, constructor);
+			Java.Lang.Object first = null;
+			Java.Lang.Object second = null;
+			try {
+				var firstReference = new Java.Interop.JniObjectReference (handle);
+				if (manager.CreatePeer (ref firstReference, Java.Interop.JniObjectReferenceOptions.Copy, typeof (Java.Lang.Object)) is not Java.Lang.Object firstPeer)
+					throw new InvalidOperationException ("Could not create the first Java.Lang.Object peer.");
+				first = firstPeer;
+
+				// A concurrent GetPeer() caller can observe the same initial registry miss,
+				// then enter CreatePeer() after the first caller has registered its result.
+				var staleReference = new Java.Interop.JniObjectReference (handle);
+				if (manager.CreatePeer (ref staleReference, Java.Interop.JniObjectReferenceOptions.Copy, typeof (Java.Lang.Object)) is not Java.Lang.Object secondPeer)
+					throw new InvalidOperationException ("Could not create the second Java.Lang.Object peer.");
+				second = secondPeer;
+
+				Assert.AreNotSame (first, second, "CreatePeer() should create a distinct replaceable peer.");
+
+				using (var objectArray = new Java.Lang.Object (
+						JNIEnv.NewArray (new [] { first }, typeof (Java.Lang.Object)),
+						JniHandleOwnership.TransferLocalRef)) {
+					object[] values = JNIEnv.GetObjectArray (objectArray.Handle, new [] { typeof (Java.Lang.Object) });
+					Assert.AreSame (first, values [0],
+						"GetObjectArray() should return the first peer which a caller may have cached.");
+				}
+			} finally {
+				second?.Dispose ();
+				first?.Dispose ();
+				JNIEnv.DeleteLocalRef (handle);
+			}
+		}
+
+		[Test]
+		[Category ("JNIObjectArray")]
+		public async Task GetObjectArray_AfterConcurrentPeerLookup ()
+		{
+			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
+				Assert.Ignore ("This test exercises trimmable type map peer creation.");
+
+			var manager = Java.Interop.JniRuntime.CurrentRuntime.ValueManager;
+			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.Reset ();
+			var reference = CreateTrimmableRuntimeJavaInteropPeerReference ();
+
+			Java.InteropTests.TrimmableRuntimeJavaInteropPeer first = null;
+			Java.InteropTests.TrimmableRuntimeJavaInteropPeer second = null;
+			using var activationBarrier = new Barrier (2);
+			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ActivationBarrier = activationBarrier;
+			try {
+				var firstTask = Task.Factory.StartNew (
+					() => manager.GetPeer (reference, typeof (Java.InteropTests.TrimmableRuntimeJavaInteropPeer)),
+					CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+				var secondTask = Task.Factory.StartNew (
+					() => manager.GetPeer (reference, typeof (Java.InteropTests.TrimmableRuntimeJavaInteropPeer)),
+					CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+				var peers = await Task.WhenAll (firstTask, secondTask);
+				if (peers [0] is not Java.InteropTests.TrimmableRuntimeJavaInteropPeer firstPeer ||
+						peers [1] is not Java.InteropTests.TrimmableRuntimeJavaInteropPeer secondPeer)
+					throw new InvalidOperationException ("Could not create concurrent Java.Interop-style peers.");
+				first = firstPeer;
+				second = secondPeer;
+
+				Assert.AreSame (first, second, "Concurrent GetPeer() callers should receive the registered peer.");
+				Assert.AreEqual (1, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.DisposeInvocations,
+					"The peer which lost registration should be fully disposed.");
+
+				using (var objectArray = new Java.Lang.Object (
+						JNIEnv.NewArray (new [] { first }, typeof (Java.Lang.Object)),
+						JniHandleOwnership.TransferLocalRef)) {
+					object[] values = JNIEnv.GetObjectArray (objectArray.Handle, new [] { typeof (Java.InteropTests.TrimmableRuntimeJavaInteropPeer) });
+					Assert.AreSame (first, values [0],
+						"GetObjectArray() should return the peer shared by both GetPeer() callers.");
+				}
+			} finally {
+				Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ActivationBarrier = null;
+				if (!ReferenceEquals (first, second))
+					second?.Dispose ();
+				first?.Dispose ();
+				Java.Interop.JniObjectReference.Dispose (ref reference);
+			}
+		}
+
+		[Test]
+		[Category ("JNIObjectArray")]
+		public async Task GetObjectArray_DuringConcurrentPeerLookup ()
+		{
+			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
+				Assert.Ignore ("This test exercises trimmable type map peer creation.");
+
+			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.Reset ();
+			var reference = CreateTrimmableRuntimeJavaInteropPeerReference ();
+			var arrayReference = CreateObjectArrayReference (reference);
+
+			Java.InteropTests.TrimmableRuntimeJavaInteropPeer first = null;
+			Java.InteropTests.TrimmableRuntimeJavaInteropPeer second = null;
+			using var activationBarrier = new Barrier (2);
+			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ActivationBarrier = activationBarrier;
+			try {
+				var firstTask = Task.Factory.StartNew (
+					() => JNIEnv.GetObjectArray (arrayReference.Handle, new [] { typeof (Java.InteropTests.TrimmableRuntimeJavaInteropPeer) }) [0],
+					CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+				var secondTask = Task.Factory.StartNew (
+					() => JNIEnv.GetObjectArray (arrayReference.Handle, new [] { typeof (Java.InteropTests.TrimmableRuntimeJavaInteropPeer) }) [0],
+					CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+				var peers = await Task.WhenAll (firstTask, secondTask);
+				if (peers [0] is not Java.InteropTests.TrimmableRuntimeJavaInteropPeer firstPeer ||
+						peers [1] is not Java.InteropTests.TrimmableRuntimeJavaInteropPeer secondPeer)
+					throw new InvalidOperationException ("Could not convert concurrent Java object array elements.");
+				first = firstPeer;
+				second = secondPeer;
+
+				Assert.AreSame (first, second, "Concurrent GetObjectArray() callers should receive the registered peer.");
+				Assert.AreSame (first, Java.Interop.JniRuntime.CurrentRuntime.ValueManager.PeekPeer (reference),
+					"GetObjectArray() should return the peer which won registration.");
+				Assert.AreEqual (1, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.DisposeInvocations,
+					"The peer which lost registration should be fully disposed.");
+			} finally {
+				Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ActivationBarrier = null;
+				if (!ReferenceEquals (first, second))
+					second?.Dispose ();
+				first?.Dispose ();
+				Java.Interop.JniObjectReference.Dispose (ref arrayReference);
+				Java.Interop.JniObjectReference.Dispose (ref reference);
+			}
+		}
+
+		static unsafe Java.Interop.JniObjectReference CreateTrimmableRuntimeJavaInteropPeerReference ()
+		{
+			using var type = new Java.Interop.JniType ("net/dot/android/test/TrimmableRuntimeJavaInteropPeer");
+			var constructor = type.GetConstructor ("()V");
+			var localReference = type.NewObject (constructor, null);
+			var reference = localReference.NewGlobalRef ();
+			Java.Interop.JniObjectReference.Dispose (ref localReference);
+			return reference;
+		}
+
+		static Java.Interop.JniObjectReference CreateObjectArrayReference (Java.Interop.JniObjectReference element)
+		{
+			var localReference = new Java.Interop.JniObjectReference (
+				JNIEnv.NewObjectArray (1, Java.Lang.Class.Object, element.Handle));
+			var reference = localReference.NewGlobalRef ();
+			Java.Interop.JniObjectReference.Dispose (ref localReference);
+			return reference;
 		}
 
 		[Test]

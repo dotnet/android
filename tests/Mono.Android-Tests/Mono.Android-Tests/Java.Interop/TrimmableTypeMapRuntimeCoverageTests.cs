@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 
 using Android.Text;
 using Android.Runtime;
@@ -164,7 +165,7 @@ namespace Java.InteropTests
 				Assert.IsNotNull (peer);
 				Assert.AreEqual (typeof (TrimmableRuntimeJavaInteropPeer), peer.GetType ());
 				Assert.AreEqual (1, TrimmableRuntimeJavaInteropPeer.ConstructorInvocations);
-				Assert.AreEqual (JniObjectReferenceOptions.Copy, TrimmableRuntimeJavaInteropPeer.Options);
+				Assert.AreEqual (JniObjectReferenceOptions.CopyAndDoNotRegister, TrimmableRuntimeJavaInteropPeer.Options);
 				Assert.IsTrue (peer.PeerReference.IsValid);
 			}
 		}
@@ -397,7 +398,9 @@ namespace Java.InteropTests
 	sealed class TrimmableRuntimeJavaInteropPeer : Java.Lang.Object
 	{
 		public static int ConstructorInvocations;
+		public static int DisposeInvocations;
 		public static JniObjectReferenceOptions Options;
+		public static Barrier ActivationBarrier;
 
 		public TrimmableRuntimeJavaInteropPeer (ref JniObjectReference reference, JniObjectReferenceOptions options)
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
@@ -405,12 +408,26 @@ namespace Java.InteropTests
 			ConstructorInvocations++;
 			Options = options;
 			Construct (ref reference, options);
+			var barrier = ActivationBarrier;
+			if (barrier != null && !barrier.SignalAndWait (TimeSpan.FromSeconds (10))) {
+				throw new TimeoutException ("Timed out waiting for concurrent peer activation.");
+			}
+		}
+
+		protected override void Dispose (bool disposing)
+		{
+			if (disposing) {
+				Interlocked.Increment (ref DisposeInvocations);
+			}
+			base.Dispose (disposing);
 		}
 
 		public static void Reset ()
 		{
 			ConstructorInvocations = 0;
+			DisposeInvocations = 0;
 			Options = JniObjectReferenceOptions.None;
+			ActivationBarrier = null;
 		}
 	}
 }

@@ -775,8 +775,11 @@ sealed class PEAssemblyBuilder
 			Encoder.OpCode (code);
 			switch (code) {
 			case ILOpCode.Add:
+			case ILOpCode.And:
 			case ILOpCode.Cgt_un:
 			case ILOpCode.Mul:
+			case ILOpCode.Or:
+			case ILOpCode.Shr_un:
 				Pop (1);
 				break;
 			case ILOpCode.Conv_u1:

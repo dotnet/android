@@ -485,6 +485,30 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_JiStyleCtor_PropagatesDoNotRegister ()
+	{
+		var peers = ScanFixtures ();
+		var jiPeer = peers.First (p => p.JavaName == "my/app/JiStylePeer");
+
+		using var stream = GenerateAssembly (new [] { jiPeer }, "JiDoNotRegisterTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var proxy = reader.TypeDefinitions
+			.Select (reader.GetTypeDefinition)
+			.Single (t => reader.GetString (t.Name).EndsWith ("JiStylePeer_Proxy", StringComparison.Ordinal));
+		var createInstance = proxy.GetMethods ()
+			.Select (reader.GetMethodDefinition)
+			.Single (m => reader.GetString (m.Name) == "CreateInstance");
+		var il = pe.GetMethodBody (createInstance.RelativeVirtualAddress).GetILBytes ();
+
+		// Copy | ((ownership & JniHandleOwnership.DoNotRegister) >> 2)
+		byte [] expected = [0x17, 0x04, 0x1f, 0x10, 0x5f, 0x18, 0x64, 0x60];
+		Assert.True (il.AsSpan ().IndexOf (expected) >= 0,
+			"Java.Interop-style activation should propagate DoNotRegister into JniObjectReferenceOptions.");
+	}
+
+	[Fact]
 	public void Generate_DifferentContent_ProducesDifferentMVIDs ()
 	{
 		var peer1 = MakePeerWithActivation ("test/TypeA", "Test.TypeA", "TestAsm");

@@ -837,7 +837,8 @@ sealed class TypeMapAssemblyEmitter
 	/// <summary>
 	/// Emits CreateInstance for JavaInterop-style activation (leaf type):
 	///   var jniRef = new JniObjectReference(handle);
-	///   var result = new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
+	///   var options = Copy | ((ownership & DoNotRegister) >> 2);
+	///   var result = new TargetType(ref jniRef, options);
 	///   JNIEnv.DeleteRef(handle, ownership);
 	///   return result;
 	/// </summary>
@@ -853,9 +854,9 @@ sealed class TypeMapAssemblyEmitter
 				encoder.LoadConstantI4 (0); // JniObjectReferenceType.Invalid
 				encoder.Call (_jniObjectReferenceCtorRef, parameterCount: 2, isInstance: true);
 
-				// var result = new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
+				// var result = new TargetType(ref jniRef, Copy | ((ownership & DoNotRegister) >> 2));
 				encoder.LoadLocalAddress (0);
-				encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
+				EmitJniObjectReferenceOptions (encoder);
 				encoder.NewObject (ctorRef, parameterCount: 2);
 				encoder.StoreLocal (1); // save result
 
@@ -873,7 +874,8 @@ sealed class TypeMapAssemblyEmitter
 	/// Emits CreateInstance for JavaInterop-style activation (inherited ctor):
 	///   var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
 	///   var jniRef = new JniObjectReference(handle);
-	///   obj.BaseCtor(ref jniRef, JniObjectReferenceOptions.Copy);
+	///   var options = Copy | ((ownership & DoNotRegister) >> 2);
+	///   obj.BaseCtor(ref jniRef, options);
 	///   JNIEnv.DeleteRef(handle, ownership);
 	///   return obj;
 	/// </summary>
@@ -898,9 +900,9 @@ sealed class TypeMapAssemblyEmitter
 				encoder.LoadConstantI4 (0); // JniObjectReferenceType.Invalid
 				encoder.Call (_jniObjectReferenceCtorRef, parameterCount: 2, isInstance: true);
 
-				// obj.BaseCtor(ref jniRef, JniObjectReferenceOptions.Copy);
+				// obj.BaseCtor(ref jniRef, Copy | ((ownership & DoNotRegister) >> 2));
 				encoder.LoadLocalAddress (0);
-				encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
+				EmitJniObjectReferenceOptions (encoder);
 				encoder.Call (baseCtorRef, parameterCount: 2, isInstance: true);
 
 				// JNIEnv.DeleteRef(handle, ownership);
@@ -910,6 +912,17 @@ sealed class TypeMapAssemblyEmitter
 
 				encoder.Return (returnsValue: true);
 			});
+	}
+
+	static void EmitJniObjectReferenceOptions (PEAssemblyBuilder.TrackedInstructionEncoder encoder)
+	{
+		encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
+		encoder.OpCode (ILOpCode.Ldarg_2);
+		encoder.LoadConstantI4 (0x10); // JniHandleOwnership.DoNotRegister
+		encoder.OpCode (ILOpCode.And);
+		encoder.LoadConstantI4 (2);
+		encoder.OpCode (ILOpCode.Shr_un);
+		encoder.OpCode (ILOpCode.Or);
 	}
 
 	void EncodeJniObjectReferenceLocal (BlobBuilder blob)
