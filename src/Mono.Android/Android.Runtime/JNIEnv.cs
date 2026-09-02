@@ -768,7 +768,7 @@ namespace Android.Runtime {
 				} },
 				{ typeof (Array), (type, source, index) => {
 					IntPtr  elem      = GetObjectArrayElement (source, index);
-					return GetArray (elem, JniHandleOwnership.TransferLocalRef, type);
+					return GetArray (elem, JniHandleOwnership.TransferLocalRef, type?.GetElementType ());
 				} },
 			};
 		}
