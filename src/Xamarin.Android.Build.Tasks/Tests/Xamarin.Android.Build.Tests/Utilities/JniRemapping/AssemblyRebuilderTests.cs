@@ -206,6 +206,35 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void ShorterUtf8FieldReplacementDoesNotModifyAliasedField ()
+		{
+			const string original = "longOriginalValue";
+			var fixture = new JniFixtureBuilder ();
+			(FieldDefinitionHandle field, FieldDefinitionHandle alias) = AddAliasedUtf8Fields (fixture, original);
+
+			byte [] source = fixture.Serialize ();
+			using var sourcePe = new PEReader (ImmutableArray.Create (source));
+			MetadataReader before = sourcePe.GetMetadataReader ();
+			TypeDefinitionHandle originalType = GetFieldValueType (before, field);
+			byte [] aliasData = GetRequiredFieldRva (sourcePe, before, alias).Data;
+			var plan = new JniRewritePlan ();
+			plan.AddUtf8FieldValue (field, "x");
+
+			var result = new AssemblyRebuilder (sourcePe, before, plan, FieldRvaTable.Read (sourcePe, before)).Build ();
+
+			using var rebuiltPe = new PEReader (ImmutableArray.Create (result.Image));
+			MetadataReader after = rebuiltPe.GetMetadataReader ();
+			FieldRvaEntry rebuiltField = GetRequiredFieldRva (rebuiltPe, after, field);
+			FieldRvaEntry rebuiltAlias = GetRequiredFieldRva (rebuiltPe, after, alias);
+
+			Assert.AreEqual (originalType, GetFieldValueType (after, field));
+			Assert.AreEqual ("x", rebuiltField.Utf8Value);
+			CollectionAssert.AreEqual (aliasData, rebuiltAlias.Data);
+			Assert.AreNotEqual (rebuiltField.RelativeVirtualAddress, rebuiltAlias.RelativeVirtualAddress);
+			AssertTableRowCountsMatchExcept (before, after);
+		}
+
+		[Test]
 		public void SharedUserStringCanBeReplacedAtOneUseSite ()
 		{
 			var fixture = new JniFixtureBuilder ();
@@ -302,6 +331,35 @@ namespace Xamarin.Android.Build.Tests
 				signature);
 			fixture.Metadata.AddFieldRelativeVirtualAddress (field, rva);
 			return field;
+		}
+
+		static (FieldDefinitionHandle Field, FieldDefinitionHandle Alias) AddAliasedUtf8Fields (JniFixtureBuilder fixture, string value)
+		{
+			int size = Encoding.UTF8.GetByteCount (value) + 1;
+			TypeDefinitionHandle enclosing = fixture.EnsurePrivateImplementationDetails ();
+			TypeDefinitionHandle dataType = fixture.AddType (null, FieldRvaTable.Utf8FieldNamePrefix + size,
+				fixture.NextFieldRid, fixture.NextMethodRid,
+				TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed | TypeAttributes.AnsiClass,
+				fixture.ValueTypeReference);
+			fixture.Metadata.AddTypeLayout (dataType, packingSize: 1, size: (uint) size);
+			fixture.Metadata.AddNestedType (dataType, enclosing);
+
+			var signature = new BlobBuilder ();
+			new BlobEncoder (signature).FieldSignature ().Type (dataType, isValueType: true);
+			BlobHandle signatureHandle = fixture.Metadata.GetOrAddBlob (signature);
+			int rva = fixture.MappedFieldData.Count;
+			fixture.MappedFieldData.WriteUTF8 (value);
+			fixture.MappedFieldData.WriteByte (0);
+
+			FieldDefinitionHandle field = fixture.Metadata.AddFieldDefinition (
+				FieldAttributes.Static | FieldAttributes.Assembly | FieldAttributes.HasFieldRVA | FieldAttributes.InitOnly,
+				fixture.Metadata.GetOrAddString (FieldRvaTable.Utf8FieldNamePrefix + "0"), signatureHandle);
+			fixture.Metadata.AddFieldRelativeVirtualAddress (field, rva);
+			FieldDefinitionHandle alias = fixture.Metadata.AddFieldDefinition (
+				FieldAttributes.Static | FieldAttributes.Assembly | FieldAttributes.HasFieldRVA | FieldAttributes.InitOnly,
+				fixture.Metadata.GetOrAddString ("Alias"), signatureHandle);
+			fixture.Metadata.AddFieldRelativeVirtualAddress (alias, rva);
+			return (field, alias);
 		}
 
 		static void PatchImplMapMemberForwarded (byte [] image, FieldDefinitionHandle field)

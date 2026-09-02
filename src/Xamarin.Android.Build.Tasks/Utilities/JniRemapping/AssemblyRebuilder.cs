@@ -212,6 +212,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return result != 0 ? result : MetadataTokens.GetRowNumber (left.Field).CompareTo (MetadataTokens.GetRowNumber (right.Field));
 			});
 
+			HashSet<FieldDefinitionHandle> overlappingFields = FindOverlappingFields (sortedEntries);
 			var appended = new List<KeyValuePair<FieldDefinitionHandle, byte []>> ();
 			int first = 0;
 			while (first < sortedEntries.Count) {
@@ -242,7 +243,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					}
 
 					byte [] replacement = EncodeNullTerminatedUtf8 (newValue);
-					if (replacement.Length <= entry.Data.Length) {
+					if (replacement.Length <= entry.Data.Length && !overlappingFields.Contains (entry.Field)) {
 						// Shorter or equal: write the NUL-terminated bytes over the original slot
 						// and zero the tail. The field keeps its declared size.
 						Array.Clear (data, offset, entry.Data.Length);
@@ -251,8 +252,17 @@ namespace Xamarin.Android.Tasks.JniRemapping
 						continue;
 					}
 
+					if (replacement.Length <= entry.Data.Length) {
+						// The source slot overlaps another field, so changing it in place would
+						// silently change that alias as well. Preserve this field's declared size
+						// while moving only its replacement to independent storage.
+						var detached = new byte [entry.Data.Length];
+						Array.Copy (replacement, detached, replacement.Length);
+						replacement = detached;
+					} else {
+						resizedFieldTypes [entry.Field] = GetOrCreateSizedType (entry, replacement.Length);
+					}
 					appended.Add (new KeyValuePair<FieldDefinitionHandle, byte []> (entry.Field, replacement));
-					resizedFieldTypes [entry.Field] = GetOrCreateSizedType (entry, replacement.Length);
 				}
 
 				mappedFieldData.WriteBytes (data);
@@ -264,6 +274,27 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				newFieldRvaOffsets [extra.Key] = mappedFieldData.Count;
 				mappedFieldData.WriteBytes (extra.Value);
 			}
+		}
+
+		static HashSet<FieldDefinitionHandle> FindOverlappingFields (IReadOnlyList<FieldRvaEntry> sortedEntries)
+		{
+			var overlapping = new HashSet<FieldDefinitionHandle> ();
+			FieldDefinitionHandle furthestField = default;
+			int furthestEnd = 0;
+
+			foreach (FieldRvaEntry entry in sortedEntries) {
+				int end = GetFieldDataEnd (entry);
+				if (!furthestField.IsNil && entry.RelativeVirtualAddress < furthestEnd) {
+					overlapping.Add (furthestField);
+					overlapping.Add (entry.Field);
+				}
+				if (furthestField.IsNil || end > furthestEnd) {
+					furthestField = entry.Field;
+					furthestEnd = end;
+				}
+			}
+
+			return overlapping;
 		}
 
 		static int GetFieldDataEnd (FieldRvaEntry entry)
