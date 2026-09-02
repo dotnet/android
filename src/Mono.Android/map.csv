@@ -13540,8 +13540,8 @@ E,30,android/security/identity/ResultData.STATUS_NOT_REQUESTED,2,Android.Securit
 E,30,android/security/identity/ResultData.STATUS_OK,0,Android.Security.Identity.ResultDataStatus,Ok,remove,
 E,30,android/security/identity/ResultData.STATUS_READER_AUTHENTICATION_FAILED,5,Android.Security.Identity.ResultDataStatus,ReaderAuthenticationFailed,remove,
 E,30,android/security/identity/ResultData.STATUS_USER_AUTHENTICATION_FAILED,4,Android.Security.Identity.ResultDataStatus,UserAuthenticationFailed,remove,
-E,37.2,android/security/KeyChainManager.KEYPAIR_SCOPE_DEVICE,1,Android.Security.KeyChainManagerKeypairScope,Device,remove,
-E,37.2,android/security/KeyChainManager.KEYPAIR_SCOPE_USER,2,Android.Security.KeyChainManagerKeypairScope,User,remove,
+E,37.2,android/security/KeyChainManager.KEYPAIR_SCOPE_DEVICE,1,Android.Security.KeyChainManagerKeyPairScope,Device,remove,
+E,37.2,android/security/KeyChainManager.KEYPAIR_SCOPE_USER,2,Android.Security.KeyChainManagerKeyPairScope,User,remove,
 A,0,,0,Android.Security.Keystore.KeyPropertiesAuthType,None,remove,
 E,30,android/security/keystore/KeyProperties.AUTH_BIOMETRIC_STRONG,2,Android.Security.Keystore.KeyPropertiesAuthType,BiometricStrong,remove,flags
 E,30,android/security/keystore/KeyProperties.AUTH_DEVICE_CREDENTIAL,1,Android.Security.Keystore.KeyPropertiesAuthType,DeviceCredential,remove,flags
