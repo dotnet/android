@@ -118,7 +118,10 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 	auto     file_size = static_cast<size_t>(sbuf.st_size);
 	size_t   nread = 0uz;
 	ssize_t  r;
-	auto     buf = std::make_unique<char[]> (file_size);
+	c_unique_ptr<char> buf { static_cast<char*> (std::malloc (file_size)) };
+	if (buf == nullptr) [[unlikely]] {
+		Helpers::abort_application (LOG_DEFAULT, "Unable to allocate memory for the environment override file");
+	}
 
 	do {
 		auto read_count = static_cast<read_count_type>(file_size - nread);
@@ -156,13 +159,13 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 
 	char *endptr;
 	unsigned long name_width = strtoul (buf.get (), &endptr, 16);
-	if ((name_width == std::numeric_limits<unsigned long>::max () && errno == ERANGE) || (buf[0] != '\0' && *endptr != '\0')) {
+	if ((name_width == std::numeric_limits<unsigned long>::max () && errno == ERANGE) || (buf.get () [0] != '\0' && *endptr != '\0')) {
 		log_warnf (LOG_DEFAULT, "Malformed header of the environment override file %s: name width has invalid format", path);
 		return;
 	}
 
 	unsigned long value_width = strtoul (buf.get () + 11, &endptr, 16);
-	if ((value_width == std::numeric_limits<unsigned long>::max () && errno == ERANGE) || (buf[0] != '\0' && *endptr != '\0')) {
+	if ((value_width == std::numeric_limits<unsigned long>::max () && errno == ERANGE) || (buf.get () [0] != '\0' && *endptr != '\0')) {
 		log_warnf (LOG_DEFAULT, "Malformed header of the environment override file %s: value width has invalid format", path);
 		return;
 	}
