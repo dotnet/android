@@ -9,6 +9,18 @@
 
 using namespace xamarin::android;
 
+namespace {
+	constexpr auto should_log_message_to_logcat (bool file_logging_enabled, bool logcat_enabled) noexcept -> bool
+	{
+		return !file_logging_enabled || logcat_enabled;
+	}
+
+	static_assert (should_log_message_to_logcat (false, false));
+	static_assert (should_log_message_to_logcat (false, true));
+	static_assert (!should_log_message_to_logcat (true, false));
+	static_assert (should_log_message_to_logcat (true, true));
+}
+
 void OSBridge::initialize_on_onload (JavaVM *vm, JNIEnv *env) noexcept
 {
 	abort_if_invalid_pointer_argument (env, "env");
@@ -164,7 +176,7 @@ void OSBridge::_monodroid_gref_logf (const char *format, ...) noexcept
 [[gnu::always_inline, gnu::flatten]]
 void OSBridge::log_it (LogCategories category, std::string_view const& line, FILE *to, const char *const from, bool logcat_enabled) noexcept
 {
-	if (to == nullptr || logcat_enabled) {
+	if (should_log_message_to_logcat (to != nullptr, logcat_enabled)) {
 		log_writef (category, LogLevel::Info, "%.*s", static_cast<int>(line.length ()), line.data ());
 	}
 
