@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
 
+  <PropertyGroup Condition=" '$(_BuildingMonoAndroidReferenceAssembly)' == 'true' ">
+    <BaseIntermediateOutputPath>$(_AndroidReferenceOnlyBaseIntermediateOutputPath)</BaseIntermediateOutputPath>
+  </PropertyGroup>
+
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="..\..\Configuration.props" />
   <Import Project="$(XamarinAndroidSourcePath)\build-tools\trim-analyzers\trim-analyzers.props" />
@@ -16,7 +20,7 @@
     <DefineConstants>$(DefineConstants);JAVA_INTEROP</DefineConstants>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\android-$(AndroidPlatformId)\</IntermediateOutputPath>
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
-    <JavaCallableWrapperAfterTargets>CoreBuild</JavaCallableWrapperAfterTargets>
+    <JavaCallableWrapperAfterTargets Condition=" '$(_BuildingMonoAndroidReferenceAssembly)' != 'true' ">CoreBuild</JavaCallableWrapperAfterTargets>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <!-- @(Compile) ordering matters! See https://github.com/dotnet/java-interop/commit/d7dfa0bb7b03261d5eceb51ac22cd33aa15fa865 -->
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
@@ -33,6 +37,8 @@
     >true</IsUnstableVersion>
     <DefineConstants Condition=" '$(IsUnstableVersion)' == 'True' ">$(DefineConstants);ANDROID_UNSTABLE</DefineConstants>
     <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
+    <OutputPath Condition=" '$(_BuildingMonoAndroidReferenceAssembly)' == 'true' ">$(_AndroidReferenceOnlyOutputPath)</OutputPath>
+    <ProjectAssetsFile Condition=" '$(_BuildingMonoAndroidReferenceAssembly)' == 'true' ">$(_AndroidReferenceOnlyProjectAssetsFile)</ProjectAssetsFile>
 
     <!-- Allow PublicApiAnalyzers to be turned off -->
     <RunAnalyzers Condition=" '$(DisableApiCompatibilityCheck)' == 'True' ">false</RunAnalyzers>
@@ -418,12 +424,43 @@
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
+  <!-- /refout retains RVA-backed UTF-8 literals from the implementation emit.
+       Build the reference assembly separately with /refonly so method bodies and
+       their &lt;PrivateImplementationDetails&gt; data are never created. -->
+  <PropertyGroup>
+    <_AndroidReferenceOnlyBaseIntermediateOutputPath>$(BaseIntermediateOutputPath)refonly\</_AndroidReferenceOnlyBaseIntermediateOutputPath>
+    <_AndroidReferenceOnlyOutputPath>$(_AndroidReferenceOnlyBaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\android-$(AndroidPlatformId)\out\</_AndroidReferenceOnlyOutputPath>
+  </PropertyGroup>
+
+  <Target Name="_AndroidCreateReferenceOnlyAssembly"
+      AfterTargets="CoreCompile"
+      Inputs="@(IntermediateAssembly)"
+      Outputs="$(_AndroidReferenceOnlyOutputPath)$(TargetFileName);@(IntermediateRefAssembly)"
+      Condition=" '$(ProduceReferenceAssembly)' == 'true' And '$(_BuildingMonoAndroidReferenceAssembly)' != 'true' ">
+    <MSBuild
+        Projects="$(MSBuildProjectFullPath)"
+        Targets="Build"
+        BuildInParallel="false"
+        Properties="ProduceReferenceAssembly=false;ProduceOnlyReferenceAssembly=true;_BuildingMonoAndroidReferenceAssembly=true;BuildProjectReferences=false;_AndroidReferenceOnlyBaseIntermediateOutputPath=$(_AndroidReferenceOnlyBaseIntermediateOutputPath);_AndroidReferenceOnlyOutputPath=$(_AndroidReferenceOnlyOutputPath);_AndroidReferenceOnlyProjectAssetsFile=$(ProjectAssetsFile);DisableApiCompatibilityCheck=true"
+    />
+    <CopyRefAssembly
+        SourcePath="$(_AndroidReferenceOnlyOutputPath)$(TargetFileName)"
+        DestinationPath="@(IntermediateRefAssembly)"
+    />
+  </Target>
+
+  <Target Name="_AndroidCleanReferenceOnlyAssembly"
+      AfterTargets="Clean"
+      Condition=" '$(_BuildingMonoAndroidReferenceAssembly)' != 'true' ">
+    <RemoveDir Directories="$(BaseIntermediateOutputPath)refonly" />
+  </Target>
+
   <!-- Only build the .NET 6+ version of 'Mono.Android.dll' for the default API level that is supported or higher. -->
   <PropertyGroup Condition=" '$(AndroidApiLevel)' &lt; '$(AndroidDefaultTargetDotnetApiLevel)' ">
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(AndroidApiLevel)' &gt;= '$(AndroidDefaultTargetDotnetApiLevel)' ">
+  <PropertyGroup Condition=" '$(AndroidApiLevel)' &gt;= '$(AndroidDefaultTargetDotnetApiLevel)' And '$(_BuildingMonoAndroidReferenceAssembly)' != 'true' ">
     <BuildDependsOn>
       $(BuildDependsOn);
       _ExportMsxDoc;
