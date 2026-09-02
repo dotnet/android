@@ -7,6 +7,7 @@
 #include <host/runtime-util.hh>
 #include <runtime-base/logger.hh>
 #include <shared/helpers.hh>
+#include <shared/runtime-jni-names.hh>
 
 using namespace xamarin::android;
 
@@ -74,7 +75,7 @@ void TemporaryPeerMap::initialize_on_runtime_init (JNIEnv *env, jclass runtimeCl
 	abort_if_invalid_pointer_argument (env, "env");
 	abort_if_invalid_pointer_argument (runtimeClass, "runtimeClass");
 
-	GCUserPeer_class = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_GCUserPeer", true);
+	GCUserPeer_class = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, RuntimeJniNames::GCUserPeerRuntimeField, true);
 	abort_unless (GCUserPeer_class != nullptr, "Failed to load mono.android.GCUserPeer!");
 
 	GCUserPeer_ctor = env->GetMethodID (GCUserPeer_class, "<init>", "()V");
@@ -139,11 +140,11 @@ void BridgeProcessing::initialize_on_runtime_init (JNIEnv *env, jclass runtimeCl
 	TemporaryPeerMap::initialize_on_runtime_init (env, runtimeClass);
 
 	// Cache the IGCUserPeer interface method IDs once, instead of resolving them per reference edge.
-	IGCUserPeer_class = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer", true);
+	IGCUserPeer_class = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, RuntimeJniNames::IGCUserPeerRuntimeField, true);
 	abort_unless (IGCUserPeer_class != nullptr, "Failed to load mono.android.IGCUserPeer!");
 
-	IGCUserPeer_monodroidAddReference = env->GetMethodID (IGCUserPeer_class, "monodroidAddReference", "(Ljava/lang/Object;)V");
-	IGCUserPeer_monodroidClearReferences = env->GetMethodID (IGCUserPeer_class, "monodroidClearReferences", "()V");
+	IGCUserPeer_monodroidAddReference = env->GetMethodID (IGCUserPeer_class, RuntimeJniNames::IGCUserPeerAddReferenceMethod.data (), "(Ljava/lang/Object;)V");
+	IGCUserPeer_monodroidClearReferences = env->GetMethodID (IGCUserPeer_class, RuntimeJniNames::IGCUserPeerClearReferencesMethod.data (), "()V");
 
 	abort_unless (
 		IGCUserPeer_monodroidAddReference != nullptr && IGCUserPeer_monodroidClearReferences != nullptr,
