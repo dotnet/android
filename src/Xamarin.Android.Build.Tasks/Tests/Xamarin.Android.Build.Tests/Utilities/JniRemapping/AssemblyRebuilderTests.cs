@@ -110,6 +110,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void RejectsNegativeCompressedIntegerOffset ()
+		{
+			var ex = Assert.Throws<JniRewriteException> (() =>
+				MetadataEncoding.ReadCompressedInteger (new byte [1], -1, out int _));
+			StringAssert.Contains ("truncated compressed integer", ex.Message);
+		}
+
+		[Test]
 		public void EmptyPlanPreservesFieldRvasFromDifferentSections ()
 		{
 			var fixture = new JniFixtureBuilder ();

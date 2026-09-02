@@ -41,7 +41,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		/// </summary>
 		public static int ReadCompressedInteger (byte [] data, int offset, out int value)
 		{
-			if (offset >= data.Length) {
+			if (offset < 0 || offset >= data.Length) {
 				throw new JniRewriteException ("Malformed metadata blob: truncated compressed integer.");
 			}
 

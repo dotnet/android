@@ -393,7 +393,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				}
 
 				MethodBodyBlock body = peReader.GetMethodBody (method.RelativeVirtualAddress);
-				byte [] il = RewriteIL (handle, body.GetILBytes () ?? Array.Empty<byte> (), out bool hasDynamicStackAllocation);
+				byte [] il = RewriteIL (handle, body.GetILBytes () ?? [], out bool hasDynamicStackAllocation);
 				ImmutableArray<ExceptionRegion> regions = body.ExceptionRegions;
 
 				MethodBodyStreamEncoder.MethodBody emitted = encoder.AddMethodBody (
