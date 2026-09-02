@@ -234,8 +234,8 @@ namespace Xamarin.Android.Build.Tests
 
 		IEnumerable<string> GetNativeRuntimeJniTypeNames ()
 		{
-			string sourceRoot = GetAssemblyMetadataValue ("XamarinAndroidSourcePath");
-			string headerPath = Path.Combine (sourceRoot, "src", "native", "common", "include", "shared", "runtime-jni-names.hh");
+			string auditRoot = Path.Combine (TestContext.CurrentContext.TestDirectory, "RuntimeJniAudit");
+			string headerPath = Path.Combine (auditRoot, "runtime-jni-names.hh");
 			string header = File.ReadAllText (headerPath);
 			string [] names = Regex.Matches (header, @"std::string_view \w+ \{ ""(?<value>[^""]+)"" \};")
 				.Cast<Match> ()
@@ -245,7 +245,7 @@ namespace Xamarin.Android.Build.Tests
 				.Where (name => name.Contains ('/'))
 				.ToHashSet (StringComparer.Ordinal);
 
-			string runtimeJavaPath = Path.Combine (sourceRoot, "src", "java-runtime", "java", "mono", "android", "Runtime.java");
+			string runtimeJavaPath = Path.Combine (auditRoot, "Runtime.java");
 			string runtimeJava = File.ReadAllText (runtimeJavaPath);
 			foreach (string fieldName in names.Where (name => name.StartsWith ("mono_android_", StringComparison.Ordinal) || name.StartsWith ("net_dot_jni_", StringComparison.Ordinal))) {
 				Match field = Regex.Match (runtimeJava, $@"static java\.lang\.Class {Regex.Escape (fieldName)} = (?<type>[\w.]+)\.class;");
@@ -254,8 +254,8 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			foreach (string directory in new [] {
-				Path.Combine (sourceRoot, "src", "native", "clr"),
-				Path.Combine (sourceRoot, "src", "native", "nativeaot"),
+				Path.Combine (auditRoot, "Native", "CoreCLR"),
+				Path.Combine (auditRoot, "Native", "NativeAOT"),
 			}) {
 				foreach (string file in Directory.EnumerateFiles (directory, "*.cc", SearchOption.AllDirectories)) {
 					string source = File.ReadAllText (file);
@@ -266,7 +266,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 
-			string javaInteropPath = Path.Combine (sourceRoot, "external", "Java.Interop", "src", "Java.Interop", "Java.Interop");
+			string javaInteropPath = Path.Combine (auditRoot, "Java.Interop");
 			foreach (string file in Directory.EnumerateFiles (javaInteropPath, "*.cs", SearchOption.TopDirectoryOnly)) {
 				string source = File.ReadAllText (file);
 				foreach (Match match in Regex.Matches (source, @"JniTypeName\s*=\s*""(?<name>net/dot/jni/(?:ManagedPeer|internal/JavaProxy(?:Object|Throwable)))""")) {
