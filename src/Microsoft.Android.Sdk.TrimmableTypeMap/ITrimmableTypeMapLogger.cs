@@ -22,6 +22,9 @@ public interface ITrimmableTypeMapLogger
 		string unresolvedAssemblyPath);
 	void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName);
 	void LogInvalidJavaNameError (string javaName, string invalidIdentifier);
+	void LogExportFieldWithParametersError ();
+	void LogExportFieldOnGenericTypeError ();
+	void LogExportFieldReturnsVoidError ();
 	void LogCustomJavaObjectError (string managedTypeName);
 	void LogCustomJavaObjectWarning (string managedTypeName);
 }

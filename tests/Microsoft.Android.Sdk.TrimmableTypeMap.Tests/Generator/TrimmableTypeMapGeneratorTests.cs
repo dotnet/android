@@ -53,6 +53,12 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			logMessages.Add ($"XA4251: Type '{managedTypeName}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map.");
 		public void LogInvalidJavaNameError (string javaName, string invalidIdentifier) =>
 			logMessages.Add ($"XA4258: Java name '{javaName}' contains reserved Java identifier '{invalidIdentifier}'.");
+		public void LogExportFieldWithParametersError () =>
+			logMessages.Add ("XA4205: [ExportField] can only be used on methods with 0 parameters.");
+		public void LogExportFieldReturnsVoidError () =>
+			logMessages.Add ("XA4208: [ExportField] cannot be used on a method returning 'void'.");
+		public void LogExportFieldOnGenericTypeError () =>
+			logMessages.Add ("XA4207: [ExportField] cannot be used on a generic type.");
 		public void LogCustomJavaObjectError (string managedTypeName) =>
 			logMessages.Add ($"XA4212: Type `{managedTypeName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
 		public void LogCustomJavaObjectWarning (string managedTypeName) =>

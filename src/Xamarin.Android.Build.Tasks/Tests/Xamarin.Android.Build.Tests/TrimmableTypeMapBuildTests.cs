@@ -37,6 +37,98 @@ namespace Xamarin.Android.Build.Tests {
 			AssertTrimmableTypeMapOutputs (intermediateDir);
 		}
 
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "parameters", "XA4205")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "parameters", "XA4205")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "parameters", "XA4205")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "void", "XA4208")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "void", "XA4208")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "void", "XA4208")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic", "XA4207")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic", "XA4207")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic", "XA4207")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "parameters-and-void", "XA4205")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "parameters-and-void", "XA4205")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "parameters-and-void", "XA4205")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic-parameters-and-void", "XA4207")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic-parameters-and-void", "XA4207")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic-parameters-and-void", "XA4207")]
+		public void Build_InvalidExportField_ReportsLegacyDiagnostic (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			string invalidShape,
+			string expectedCode)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var initializer = invalidShape switch {
+				"parameters" => "public int InitialValue (int value) => value;",
+				"void" => "public void InitialValue () { }",
+				"generic" => "public int InitialValue () => 42;",
+				"parameters-and-void" => "public void InitialValue (int value) { }",
+				"generic-parameters-and-void" => "public void InitialValue (int value) { }",
+				_ => throw new InvalidOperationException ($"Unknown invalid [ExportField] shape '{invalidShape}'."),
+			};
+			var proj = CreateExportFieldValidationProject (runtime, typeMapImplementation, $"""
+						[ExportField ("VALUE")]
+						{initializer}
+				""", genericType: invalidShape.StartsWith ("generic", StringComparison.Ordinal));
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), $"{runtime}/{typeMapImplementation} should reject {invalidShape} [ExportField] initializers.");
+			StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput, $"The build should report {expectedCode}.");
+			if (invalidShape == "parameters-and-void") {
+				Assert.IsFalse (
+					builder.LastBuildOutput.Any (line => line.Contains ("error XA4208", StringComparison.Ordinal)),
+					"XA4205 should take precedence over XA4208, matching LLVM-IR."
+				);
+			} else if (invalidShape == "generic-parameters-and-void") {
+				Assert.IsFalse (
+					builder.LastBuildOutput.Any (line =>
+						line.Contains ("error XA4205", StringComparison.Ordinal) ||
+						line.Contains ("error XA4208", StringComparison.Ordinal)),
+					"XA4207 should take precedence over initializer signature diagnostics, matching LLVM-IR."
+				);
+			}
+		}
+
+		static XamarinAndroidApplicationProject CreateExportFieldValidationProject (
+			AndroidRuntime runtime,
+			string typeMapImplementation,
+			string members,
+			bool genericType = false)
+		{
+			var typeParameters = genericType ? "<T>" : "";
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = runtime == AndroidRuntime.NativeAOT,
+				References = {
+					new BuildItem.Reference ("Mono.Android.Export"),
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("ExportFieldValidation.cs") {
+				TextContent = () => $$"""
+					using Android.Runtime;
+					using Java.Interop;
+
+					namespace ExportFieldValidation {
+						[Register ("com/example/exportfields/ValidationPeer")]
+						class ValidationPeer{{typeParameters}} : Java.Lang.Object {
+							public ValidationPeer () {
+							}
+
+					{{members}}
+						}
+					}
+					""",
+			});
+			return proj;
+		}
+
 		[Test]
 		public void Build_PublishAotProject_UsesTrimmableTypeMapForCoreClrDebug ()
 		{
