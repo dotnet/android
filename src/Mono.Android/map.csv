@@ -943,9 +943,9 @@ E,37.2,android/app/personalcontext/hint/UserInputText.USER_INPUT_TEXT_SOURCE_CLI
 E,37.2,android/app/personalcontext/hint/UserInputText.USER_INPUT_TEXT_SOURCE_INFERRED,2,Android.App.PersonalContext.Hint.UserInputTextSource,Inferred,remove,
 E,37.2,android/app/personalcontext/hint/UserInputText.USER_INPUT_TEXT_SOURCE_TYPED,1,Android.App.PersonalContext.Hint.UserInputTextSource,Typed,remove,
 E,37.2,android/app/personalcontext/hint/UserInputText.USER_INPUT_TEXT_SOURCE_UNKNOWN,0,Android.App.PersonalContext.Hint.UserInputTextSource,Unknown,remove,
-E,37.2,android/app/personalcontext/insight/InsightActionDetails.ACTION_HAS_APP_FUNCTION,4,Android.App.PersonalContext.Insight.InsightActionDetailsActionType,HasAppFunction,remove,
-E,37.2,android/app/personalcontext/insight/InsightActionDetails.ACTION_HAS_PENDING_INTENT,1,Android.App.PersonalContext.Insight.InsightActionDetailsActionType,HasPendingIntent,remove,
-E,37.2,android/app/personalcontext/insight/InsightActionDetails.ACTION_HAS_REMOTE_ACTION,2,Android.App.PersonalContext.Insight.InsightActionDetailsActionType,HasRemoteAction,remove,
+E,37.2,android/app/personalcontext/insight/InsightActionDetails.ACTION_HAS_APP_FUNCTION,4,Android.App.PersonalContext.Insight.InsightActionDetailsActionType,HasAppFunction,remove,flags
+E,37.2,android/app/personalcontext/insight/InsightActionDetails.ACTION_HAS_PENDING_INTENT,1,Android.App.PersonalContext.Insight.InsightActionDetailsActionType,HasPendingIntent,remove,flags
+E,37.2,android/app/personalcontext/insight/InsightActionDetails.ACTION_HAS_REMOTE_ACTION,2,Android.App.PersonalContext.Insight.InsightActionDetailsActionType,HasRemoteAction,remove,flags
 I,37.2,android/app/personalcontext/insight/InsightActionDetails.ACTION_TYPE_APP_FUNCTION,4,,,,
 I,37.2,android/app/personalcontext/insight/InsightActionDetails.ACTION_TYPE_PENDING_INTENT,1,,,,
 I,37.2,android/app/personalcontext/insight/InsightActionDetails.ACTION_TYPE_REMOTE_ACTION,2,,,,
