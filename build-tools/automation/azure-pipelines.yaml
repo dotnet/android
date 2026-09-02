@@ -58,8 +58,6 @@ extends:
   ${{ else }}:
     template: azure-pipelines/MicroBuild.1ES.Unofficial.yml@1esPipelines
   parameters:
-    settings:
-      networkIsolationPolicy: Permissive,CFSClean,CFSClean2,CFSClean3
     sdl:
       ${{ if eq('${{ parameters.Skip1ESComplianceTasks }}', 'true') }}:
         enableAllTools: false
@@ -87,6 +85,7 @@ extends:
       suppression:
         suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
     settings:
+      networkIsolationPolicy: Permissive,CFSClean,CFSClean2,CFSClean3
       skipBuildTagsForGitHubPullRequests: true
     stages:
     - template: /build-tools/automation/yaml-templates/build-macos.yaml@self
