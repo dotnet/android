@@ -53,6 +53,17 @@ public class PeerActivationComponentBenchmarks
 	}
 
 	[Benchmark]
+	public bool ValidateKnownSealedType ()
+	{
+		JniObjectReference targetClass = JniEnvironment.Types.FindClass ("java/lang/String");
+		try {
+			return JniEnvironment.Types.IsInstanceOf (new JniObjectReference (reference), targetClass);
+		} finally {
+			JniObjectReference.Dispose (ref targetClass);
+		}
+	}
+
+	[Benchmark]
 	public int GetIdentityHashCode ()
 	{
 		return JniEnvironment.References.GetIdentityHashCode (new JniObjectReference (reference));
