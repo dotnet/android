@@ -66,11 +66,22 @@ namespace Xamarin.Android.Build.Tests
 				string commonConfiguration = Path.Combine (path, "xamarin.cfg");
 				string customConfiguration = Path.Combine (path, "custom.cfg");
 				string aarConfiguration = Path.Combine (path, "aar-proguard.txt");
+				string aaptConfiguration = Path.Combine (path, "aapt-rules.txt");
 				File.WriteAllText (acwMap, "Managed.Peer;com.example.Peer");
 				File.WriteAllText (customConfiguration, "-dontwarn com.example.**");
 				File.WriteAllText (aarConfiguration, "-dontwarn com.example.library.**");
+				File.WriteAllText (aaptConfiguration, """
+					#Auto Generated file. Do not Edit.
+					# Referenced at obj/manifest/AndroidManifest.xml:10
+					-keep class com.example.MainActivity { <init>(); }
+					# Referenced at res/layout/main.xml:1
+					-keep class com.example.CustomView { <init>(...); }
+					""");
 				var aarConfigurationItem = new TaskItem (aarConfiguration);
 				aarConfigurationItem.SetMetadata ("OriginalFile", Path.Combine (path, "library.aar"));
+				var aaptConfigurationItem = new TaskItem (aaptConfiguration);
+				aaptConfigurationItem.SetMetadata ("AndroidGeneratedProguardConfiguration", "true");
+				aaptConfigurationItem.SetMetadata ("AndroidAaptProguardConfiguration", "true");
 
 				var task = new R8TestTask {
 					BuildEngine = new MockBuildEngine (TestContext.Out),
@@ -81,7 +92,7 @@ namespace Xamarin.Android.Build.Tests
 					ProguardGeneratedApplicationConfiguration = applicationConfiguration,
 					ProguardCommonXamarinConfiguration = commonConfiguration,
 					ProguardMappingFileOutput = Path.Combine (path, "mapping.txt"),
-					ProguardConfigurationFiles = new ITaskItem [] { new TaskItem (customConfiguration), aarConfigurationItem },
+					ProguardConfigurationFiles = new ITaskItem [] { new TaskItem (customConfiguration), aarConfigurationItem, aaptConfigurationItem },
 					GenerateSeedMapping = true,
 					EnableObfuscation = true,
 					IgnoreWarnings = true,
@@ -103,6 +114,8 @@ namespace Xamarin.Android.Build.Tests
 				Assert.That (configurationFiles, Does.Not.Contain (applicationConfiguration), "Seed R8 must not pass the ACW keep configuration.");
 				FileAssert.DoesNotExist (applicationConfiguration, "Seed R8 must not generate obfuscation-blocking ACW keep rules.");
 				StringAssert.Contains ("-keep class mono.MonoRuntimeProvider", configuration);
+				StringAssert.Contains ("-keep class com.example.MainActivity", configuration);
+				StringAssert.DoesNotContain ("-keep class com.example.CustomView", configuration);
 				StringAssert.DoesNotContain ("-keep class com.example.Peer", configuration);
 				StringAssert.DoesNotContain ("-dontobfuscate", configuration);
 				Assert.That (response, Does.Not.Contain ("--no-minification"));
@@ -147,6 +160,63 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsFalse (task.ValidateAppliedMapping (), "A conflicting final mapping should fail validation.");
 				Assert.That (errors, Has.Count.EqualTo (1));
 				Assert.AreEqual ("XA4327", errors [0].Code);
+			} finally {
+				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		[Test]
+		public void KeepAaptManifestRulesPreservesOnlyManifestSections ()
+		{
+			const string input = """
+				#Auto Generated file. Do not Edit.
+				# Data from obj/manifest/aapt_rules.txt
+				# Referenced at C:\project\obj\manifest\AndroidManifest.xml:10
+				-keep class com.example.MainActivity { <init>(); }
+				# Referenced at C:\project\res\layout\main.xml:1
+				-keep class com.example.CustomView { <init>(...); }
+				""";
+
+			Assert.AreEqual ("""
+				#Auto Generated file. Do not Edit.
+				# Data from obj/manifest/aapt_rules.txt
+				# Referenced at C:\project\obj\manifest\AndroidManifest.xml:10
+				-keep class com.example.MainActivity { <init>(); }
+				""", R8.KeepAaptManifestRules (input));
+			Assert.AreEqual ("-keep class com.example.Fallback\n", R8.KeepAaptManifestRules ("-keep class com.example.Fallback\n"),
+				"AAPT format changes should preserve the original configuration rather than silently dropping all rules.");
+		}
+
+		[Test]
+		public void ValidateAppliedMappingAllowsIdentityManifestEntry ()
+		{
+			string path = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
+			Directory.CreateDirectory (path);
+			try {
+				string seedMapping = Path.Combine (path, "seed-mapping.txt");
+				string finalMapping = Path.Combine (path, "final-mapping.txt");
+				string rewriteManifest = Path.Combine (path, "rewrite-manifest.txt");
+				string reachabilityManifest = Path.Combine (path, "reachability-manifest.txt");
+				const string mapping = """
+					com.example.MainActivity -> com.example.MainActivity:
+					com.example.Peer -> a:
+					""";
+				File.WriteAllText (seedMapping, mapping);
+				File.WriteAllText (finalMapping, mapping);
+				File.WriteAllText (rewriteManifest, "C\tcom/example/MainActivity\nC\tcom/example/Peer\n");
+				File.WriteAllText (reachabilityManifest, "");
+
+				var errors = new List<BuildErrorEventArgs> ();
+				var task = new R8 {
+					BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+					ProguardMappingFileInput = seedMapping,
+					ProguardMappingFileOutput = finalMapping,
+					ProguardMappingRequiredEntriesFile = rewriteManifest,
+					ProguardMappingRequiredReachabilityEntriesFile = reachabilityManifest,
+				};
+
+				Assert.IsTrue (task.ValidateAppliedMapping (), "Matching identity and obfuscated mappings should pass validation.");
+				Assert.IsEmpty (errors);
 			} finally {
 				Directory.Delete (path, recursive: true);
 			}

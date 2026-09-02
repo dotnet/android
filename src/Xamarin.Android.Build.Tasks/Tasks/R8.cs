@@ -312,6 +312,10 @@ namespace Xamarin.Android.Tasks
 							option, file, DescribeProguardSource (item));
 						continue;
 					}
+					if (GenerateSeedMapping &&
+							string.Equals (item.GetMetadata ("AndroidAaptProguardConfiguration"), bool.TrueString, StringComparison.OrdinalIgnoreCase)) {
+						file = CreateR8JniSeedAaptConfiguration (file);
+					}
 					if (EnableObfuscation &&
 							string.Equals (item.GetMetadata ("AndroidSdkBaselineProguardConfiguration"), bool.TrueString, StringComparison.OrdinalIgnoreCase)) {
 						file = CreateR8JniBaselineConfiguration (file);
@@ -322,6 +326,53 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return responseFile;
+		}
+
+		string CreateR8JniSeedAaptConfiguration (string path)
+		{
+			string content = KeepAaptManifestRules (File.ReadAllText (path));
+			string temp = Path.GetTempFileName ();
+			tempFiles.Add (temp);
+			File.WriteAllText (temp, content, Files.UTF8withoutBOM);
+			return temp;
+		}
+
+		internal static string KeepAaptManifestRules (string content)
+		{
+			bool endsWithNewLine = content.EndsWith ("\n", StringComparison.Ordinal) || content.EndsWith ("\r", StringComparison.Ordinal);
+			string [] lines = content.Replace ("\r\n", "\n").Replace ('\r', '\n').Split ('\n');
+			var filtered = new List<string> (lines.Length);
+			bool keepSection = true;
+			bool foundReference = false;
+			foreach (string line in lines) {
+				if (line.StartsWith ("# Referenced at ", StringComparison.Ordinal)) {
+					foundReference = true;
+					keepSection = IsAaptManifestReference (line);
+				}
+				if (keepSection) {
+					filtered.Add (line);
+				}
+			}
+			if (!foundReference) {
+				return content;
+			}
+			if (endsWithNewLine && filtered.Count > 0 && filtered [filtered.Count - 1].Length == 0) {
+				filtered.RemoveAt (filtered.Count - 1);
+			}
+			string result = string.Join ("\n", filtered);
+			return endsWithNewLine ? result + "\n" : result;
+		}
+
+		static bool IsAaptManifestReference (string line)
+		{
+			const string prefix = "# Referenced at ";
+			string path = line.Substring (prefix.Length);
+			int lineNumberSeparator = path.LastIndexOf (':');
+			if (lineNumberSeparator >= 0 && Int32.TryParse (path.Substring (lineNumberSeparator + 1), out _)) {
+				path = path.Substring (0, lineNumberSeparator);
+			}
+			path = path.Replace ('\\', Path.DirectorySeparatorChar).Replace ('/', Path.DirectorySeparatorChar);
+			return string.Equals (Path.GetFileName (path), "AndroidManifest.xml", StringComparison.OrdinalIgnoreCase);
 		}
 
 		string CreateR8JniBaselineConfiguration (string path)
