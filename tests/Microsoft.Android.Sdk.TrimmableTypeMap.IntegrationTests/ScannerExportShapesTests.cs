@@ -118,10 +118,10 @@ public class ScannerExportShapesTests
 	public void Export_CrossAssemblySameManagedName_DoesNotBorrowPeerDescriptor ()
 	{
 		var directory = AssertNotNull (Path.GetDirectoryName (UserTypesFixturePath));
-		var javaSourceFixturePath = Path.Combine (directory, "JavaSourceParityFixture.dll");
-		Assert.True (File.Exists (javaSourceFixturePath), $"JavaSourceParityFixture.dll not found at '{javaSourceFixturePath}'.");
+		var collisionFixturePath = Path.Combine (directory, "SpecialTypeCollisionFixture.dll");
+		Assert.True (File.Exists (collisionFixturePath), $"SpecialTypeCollisionFixture.dll not found at '{collisionFixturePath}'.");
 
-		var peer = GetPeer ("ExportAssemblyCollisionShape", javaSourceFixturePath, UserTypesFixturePath);
+		var peer = GetPeer ("ExportAssemblyCollisionShape", collisionFixturePath, UserTypesFixturePath);
 		Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "UnsupportedCollision");
 		Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "UnsupportedEnumCollision");
 		Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "UnsupportedEnumField");

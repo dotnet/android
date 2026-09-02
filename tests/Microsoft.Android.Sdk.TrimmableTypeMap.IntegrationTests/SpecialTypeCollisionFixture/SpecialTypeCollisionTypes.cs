@@ -18,6 +18,19 @@ namespace System.Xml
 	}
 }
 
+namespace UserApp.JavaSourceParity
+{
+	[Register ("com/example/collision/SignatureCollision")]
+	public class SignatureCollision : Java.Lang.Object
+	{
+	}
+
+	public enum EnumCollision
+	{
+		None,
+	}
+}
+
 namespace SpecialTypeCollision
 {
 	[Register ("com/example/collision/SpecialTypeCollisionPeer")]
