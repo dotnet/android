@@ -569,6 +569,23 @@ public class R8JniLibraryPeer : Java.Lang.Object
 		}
 
 		[Test]
+		public void R8MappingMemberAssertion_AllowsSourceFileMetadata ()
+		{
+			var mappingFile = Path.GetTempFileName ();
+			try {
+				File.WriteAllText (mappingFile, """
+					com.example.R8JniLibraryPeer -> f:
+					# {"id":"sourceFile","fileName":"R8JniLibraryPeer.java"}
+					    void nctor_0() -> a
+					""");
+
+				AssertR8MappingContainsMember (mappingFile, "com/example/R8JniLibraryPeer", "nctor_0");
+			} finally {
+				File.Delete (mappingFile);
+			}
+		}
+
+		[Test]
 		public void Build_WithTrimmableTypeMap_MissingJavaListPreservesGeneratedJava ()
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
@@ -1717,15 +1734,20 @@ namespace UnnamedProject {
 		static void AssertR8MappingContainsMember (string mappingFile, string originalJniName, string memberName)
 		{
 			string originalName = originalJniName.Replace ('/', '.');
-			var classMapping = Regex.Match (
-				File.ReadAllText (mappingFile),
-				$"^{Regex.Escape (originalName)} -> [^:]+:\\r?\\n(?<members>(?:    .*\\r?\\n)*)",
-				RegexOptions.Multiline);
-			Assert.IsTrue (classMapping.Success, $"Expected {mappingFile} to contain a mapping for {originalName}.");
-			Assert.That (
-				classMapping.Groups ["members"].Value,
-				Does.Match ($@"\b{Regex.Escape (memberName)}\([^)]*\) -> "),
-				$"Expected {mappingFile} to retain and map {originalName}.{memberName}.");
+			var lines = File.ReadAllLines (mappingFile);
+			string classHeader = $"{originalName} -> ";
+			int classIndex = Array.FindIndex (lines, line =>
+				line.StartsWith (classHeader, StringComparison.Ordinal) &&
+				line.EndsWith (":", StringComparison.Ordinal));
+			Assert.That (classIndex, Is.GreaterThanOrEqualTo (0), $"Expected {mappingFile} to contain a mapping for {originalName}.");
+
+			var classMapping = lines
+				.Skip (classIndex + 1)
+				.TakeWhile (line => line.StartsWith ("    ", StringComparison.Ordinal) || line.StartsWith ("#", StringComparison.Ordinal))
+				.ToArray ();
+			Assert.IsTrue (
+				classMapping.Any (line => Regex.IsMatch (line, $@"\b{Regex.Escape (memberName)}\([^)]*\) -> ")),
+				$"Expected {mappingFile} to retain and map {originalName}.{memberName}. Matching class section:\n{string.Join ("\n", classMapping)}");
 		}
 
 		static Import CreateR8JniManifestMergerInputsAssertionImport ()
