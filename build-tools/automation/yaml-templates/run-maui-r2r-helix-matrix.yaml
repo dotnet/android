@@ -247,16 +247,17 @@ steps:
     continueOnError: false
 
 - powershell: |
+    & '${{ parameters.xaSourcePath }}/build-tools/automation/scripts/ConfigureMauiR2RHelixEnvironment.Tests.ps1'
+  displayName: Test MAUI R2R Helix environment
+
+- powershell: |
     $ErrorActionPreference = 'Stop'
     $xaSourcePath = '${{ parameters.xaSourcePath }}'
     $logsDirectory = '${{ parameters.logsDirectory }}'
     $payloadRootDirectory = '${{ parameters.payloadDirectory }}'
     New-Item -ItemType Directory -Force -Path $logsDirectory | Out-Null
 
-    if ($env:SYSTEM_PULLREQUEST_ISFORK -eq 'True') {
-      Write-Host 'Disabling Azure Pipelines test reporting for anonymous fork PR Helix submissions.'
-      Remove-Item Env:SYSTEM_ACCESSTOKEN -ErrorAction Ignore
-    }
+    . (Join-Path $xaSourcePath 'build-tools/automation/scripts/ConfigureMauiR2RHelixEnvironment.ps1')
 
     if ([Environment]::OSVersion.Platform -eq "Unix") {
       $dotnetRoot = Join-Path $xaSourcePath 'bin/$(XA.Build.Configuration)/dotnet'
