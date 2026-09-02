@@ -459,6 +459,9 @@ public class R8JniLibraryPeer : Java.Lang.Object
 				IsRelease = true,
 				LinkTool = "r8",
 			};
+			app.MainActivity = app.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				"_ = new R8JniLibrary.R8JniLibraryPeer ();");
 			app.SetRuntime (runtime);
 			app.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
 			app.SetProperty ("AndroidPackageFormat", "apk");
@@ -530,6 +533,7 @@ public class R8JniLibraryPeer : Java.Lang.Object
 			var seedMapping = FindSingleFile (projectDirectory, "mapping.txt", path => path.Contains ("r8-jni-seed", StringComparison.Ordinal));
 			var finalMapping = FindSingleFile (projectDirectory, "mapping.txt", path => !path.Contains ("r8-jni-seed", StringComparison.Ordinal));
 			var rewriteManifest = FindSingleFile (projectDirectory, "r8-jni-rewrite-manifest.txt");
+			var reachabilityManifest = FindSingleFile (projectDirectory, "r8-jni-reachability-manifest.txt");
 			var seedConfigurationItems = File.ReadAllLines (FindSingleFile (projectDirectory, "configuration-items.txt"));
 			var seedConfigurationPaths = seedConfigurationItems.Select (item => item.Split ('|') [0]).ToArray ();
 			var finalConfigurationItems = File.ReadAllLines (FindSingleFile (projectDirectory, "final-configuration-items.txt"));
@@ -548,6 +552,7 @@ public class R8JniLibraryPeer : Java.Lang.Object
 			AssertR8MappingContainsMember (finalMapping, libraryJavaName, "nctor_0");
 			AssertR8MappingContainsMember (finalMapping, $"{app.PackageName}/MainActivity", "n_OnCreate_Landroid_os_Bundle_");
 			StringAssert.Contains ($"C\t{libraryJavaName}", File.ReadAllText (rewriteManifest));
+			StringAssert.Contains ($"C\t{libraryJavaName}", File.ReadAllText (reachabilityManifest), "The build should record the referenced library peer as reachable before asserting its final R8 mapping.");
 			Assert.That (seedConfigurationPaths, Has.Some.EndsWith ("r8-jni-rules.pro"), "Seed R8 should receive user-authored rules.");
 			Assert.That (seedConfigurationPaths, Has.Some.EndsWith ("proguard.txt"), "Seed R8 should receive AAR consumer rules.");
 			Assert.That (seedConfigurationItems, Has.Some.EndsWith ("manifest_rules.txt|true||true"),
