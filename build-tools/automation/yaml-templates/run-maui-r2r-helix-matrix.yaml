@@ -255,7 +255,7 @@ steps:
 
     if ($env:SYSTEM_PULLREQUEST_ISFORK -eq 'True') {
       Write-Host 'Disabling Azure Pipelines test reporting for anonymous fork PR Helix submissions.'
-      $env:SYSTEM_ACCESSTOKEN = ''
+      Remove-Item Env:SYSTEM_ACCESSTOKEN -ErrorAction Ignore
     }
 
     if ([Environment]::OSVersion.Platform -eq "Unix") {
