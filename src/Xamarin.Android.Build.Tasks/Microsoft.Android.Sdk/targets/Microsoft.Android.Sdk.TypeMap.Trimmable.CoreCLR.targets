@@ -162,7 +162,7 @@
       DependsOnTargets="_ComputePostTrimTrimmableTypeMapInputs;_InvalidatePostTrimTrimmableTypeMapStampIfOutputsMissing"
       AfterTargets="_ResolveAssemblies"
       BeforeTargets="_GenerateJavaStubs;_CompileJava;_CompileToDalvik"
-      Inputs="@(_PostTrimTrimmableTypeMapInputAssemblies);$(_ResolvedUserAssembliesHashFile);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
+      Inputs="@(_PostTrimTrimmableTypeMapInputAssemblies);$(_ResolvedUserAssembliesHashFile);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects);$(_AndroidR8JniSeedMapping);$(_AndroidR8JniRewriteManifest)"
       Outputs="$(_PostTrimTrimmableTypeMapJavaStamp)">
 
     <GenerateTrimmableTypeMap
@@ -171,6 +171,8 @@
         OutputDirectory="$(_TypeMapOutputDirectory)"
         JavaSourceOutputDirectory="$(_PostTrimTypeMapJavaOutputDirectory)"
         JavaSourceInputDirectory="$(_TypeMapJavaOutputDirectory)"
+        R8MappingFile="$(_AndroidR8JniSeedMapping)"
+        R8RewriteManifestFile="$(_AndroidR8JniRewriteManifest)"
         TargetFrameworkVersion="$(TargetFrameworkVersion)"
         PackageNamingPolicy="$(_TrimmableTypeMapPackageNamingPolicy)"
         GenerateTypeMapAssemblies="false"

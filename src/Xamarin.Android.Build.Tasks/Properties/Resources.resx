@@ -920,6 +920,11 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
     <comment>The following are literal names and should not be translated: R8, JNI
 {0} - The path to the final R8 mapping file.</comment>
   </data>
+  <data name="XA4327_JavaSourcePathMappingConflict" xml:space="preserve">
+    <value>Could not uniquely reverse-map generated JNI class '{0}' to its original Java source path.</value>
+    <comment>The following literal names should not be translated: JNI, Java
+{0} - The obfuscated JNI class name whose original Java source path could not be determined.</comment>
+  </data>
   <data name="XA4327_LinkedAssemblyScanFailure" xml:space="preserve">
     <value>Could not scan the linked assembly '{0}' for rewritten JNI references: {1}</value>
     <comment>The following literal name should not be translated: JNI

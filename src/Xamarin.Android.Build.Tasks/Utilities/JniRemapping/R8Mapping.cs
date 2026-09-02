@@ -266,6 +266,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			return false;
 		}
 
+		internal bool ContainsObfuscatedClass (string obfuscatedJniClassName)
+			=> originalClasses.ContainsKey (obfuscatedJniClassName);
+
 		public bool TryGetOriginalMethodName (string originalJniClassName, string obfuscatedMethodName, IReadOnlyList<string> originalJavaParameterTypes, string originalJavaReturnType, out string originalMethodName)
 		{
 			originalMethodName = "";

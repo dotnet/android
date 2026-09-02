@@ -2004,6 +2004,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not uniquely reverse-map generated JNI class &apos;{0}&apos; to its original Java source path..
+        /// </summary>
+        public static string XA4327_JavaSourcePathMappingConflict {
+            get {
+                return ResourceManager.GetString("XA4327_JavaSourcePathMappingConflict", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Could not scan the linked assembly &apos;{0}&apos; for rewritten JNI references: {1}.
         /// </summary>
         public static string XA4327_LinkedAssemblyScanFailure {
