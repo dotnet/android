@@ -503,29 +503,30 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var il = pe.GetMethodBody (createInstance.RelativeVirtualAddress).GetILBytes ();
 
 		// The ownership -> options mapping lives in JNIEnv.ToJniObjectReferenceOptions, so the
-		// activation stub should load its `ownership` argument and call that helper. Resolving
-		// the call target by name checks the emitted *meaning*, not just a byte pattern.
-		var callTargets = new List<string> ();
-		for (int i = 0; i + 4 < il.Length; i++) {
-			if (il [i] != 0x28) // call
-				continue;
-			var token = BitConverter.ToInt32 (il, i + 1);
-			var handle = MetadataTokens.EntityHandle (token);
-			if (handle.Kind != HandleKind.MemberReference)
-				continue;
-			var memberRef = reader.GetMemberReference ((MemberReferenceHandle) handle);
-			var parent = memberRef.Parent;
-			if (parent.Kind != HandleKind.TypeReference)
-				continue;
-			var parentType = reader.GetTypeReference ((TypeReferenceHandle) parent);
-			callTargets.Add ($"{reader.GetString (parentType.Name)}.{reader.GetString (memberRef.Name)}");
+		// activation stub must call that helper rather than hard-coding a constant. Resolving
+		// the member reference checks the emitted *meaning* rather than a raw byte pattern.
+		var toOptions = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (MetadataTokens.MemberReferenceHandle)
+			.FirstOrDefault (h => reader.GetString (reader.GetMemberReference (h).Name) == "ToJniObjectReferenceOptions");
+		Assert.False (toOptions.IsNil,
+			"JI-style activation must reference JNIEnv.ToJniObjectReferenceOptions.");
 
-			// ldarg.2 (the `ownership` parameter) must be what feeds the helper.
-			if (reader.GetString (memberRef.Name) == "ToJniObjectReferenceOptions")
-				Assert.Equal (0x04, il [i - 1]);
-		}
+		var parentTypeRef = reader.GetTypeReference ((TypeReferenceHandle) reader.GetMemberReference (toOptions).Parent);
+		Assert.Equal ("JNIEnv", reader.GetString (parentTypeRef.Name));
+		Assert.Equal ("Android.Runtime", reader.GetString (parentTypeRef.Namespace));
 
-		Assert.Contains ("JNIEnv.ToJniObjectReferenceOptions", callTargets);
+		// ...and must feed it this method's `ownership` argument.
+		int token = MetadataTokens.GetToken (toOptions);
+		byte [] expected = [
+			0x04,               // ldarg.2 — the `ownership` argument
+			0x28,               // call
+			(byte) token,
+			(byte) (token >> 8),
+			(byte) (token >> 16),
+			(byte) (token >> 24),
+		];
+		Assert.True (il.AsSpan ().IndexOf (expected) >= 0,
+			"CreateInstance should pass its `ownership` argument to JNIEnv.ToJniObjectReferenceOptions.");
 	}
 
 	[Fact]

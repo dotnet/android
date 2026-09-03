@@ -415,6 +415,7 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().IntPtr ();
 					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
 				}));
+
 		_jniEnvGetArrayRef = _pe.AddMemberRef (_jniEnvRef, "GetArray",
 			sig => sig.MethodSignature ().Parameters (3,
 				rt => rt.Type ().Type (_systemArrayRef, false),
