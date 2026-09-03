@@ -115,7 +115,15 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 		return;
 	}
 
-	auto     file_size = static_cast<size_t>(sbuf.st_size);
+	auto file_size = static_cast<size_t>(sbuf.st_size);
+	if (file_size == 0) {
+		log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: file is empty", path);
+		if (close (fd) < 0) {
+			log_warnf (LOG_DEFAULT, "Failed to close the environment override file %s: %s", path, strerror (errno));
+		}
+		return;
+	}
+
 	size_t   nread = 0uz;
 	ssize_t  r;
 	char    *buf = static_cast<char*> (std::malloc (file_size));
@@ -131,8 +139,17 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 		}
 	} while (r < 0 && errno == EINTR);
 
+	int read_errno = errno;
+	if (close (fd) < 0) {
+		log_warnf (LOG_DEFAULT, "Failed to close the environment override file %s: %s", path, strerror (errno));
+	}
+
 	if (nread == 0) {
-		log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: %s", path, strerror (errno));
+		if (r < 0) {
+			log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: %s", path, strerror (read_errno));
+		} else {
+			log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: unexpected end of file", path);
+		}
 		std::free (buf);
 		return;
 	}

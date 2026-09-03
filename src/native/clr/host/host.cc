@@ -395,7 +395,8 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// with a directory separator, so we do too.
 	// Storage must outlive `coreclr_initialize`, hence the function-local static. A plain pointer is
 	// constant-initialized, so it needs no guard variable. Assign on every call rather than relying
-	// on the initializer, which would only ever see the first `files_dir`.
+	// on the initializer, which would only ever see the first `files_dir`. Runtime initialization is
+	// process-global, so no live CLR instance can retain the previous value when it is replaced.
 	static char *app_context_base_directory = nullptr;
 	std::free (app_context_base_directory);
 	app_context_base_directory = duplicate_with_trailing_separator (files_dir.get_cstr ());
