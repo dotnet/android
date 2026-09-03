@@ -26,6 +26,7 @@ namespace xamarin::android
 	class Timing
 	{
 	public:
+		Timing () noexcept = default;
 		Timing (Timing const&) = delete;
 		Timing (Timing&&) = delete;
 		Timing& operator= (Timing const&) = delete;
