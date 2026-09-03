@@ -1,10 +1,10 @@
 #include <cerrno>
 #include <cinttypes>
+#include <cstddef>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <deque>
-#include <memory>
-#include <string>
+#include <string_view>
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -65,12 +65,27 @@ namespace {
 
 		static_assert (sizeof (CacheFileFooter) == 32uz);
 
-		struct WriteRequest final
+		// A queued cache write. The payload is stored immediately after the structure so that a
+		// request and the assembly bytes it carries are a single allocation, and `next` links the
+		// request into the intrusive FIFO drained by the writer thread. The destination path is
+		// not stored: `cache_dir` is immutable once the cache is enabled, so the writer thread can
+		// rebuild the path from `descriptor_index` alone.
+		//
+		// The over-alignment keeps `sizeof (WriteRequest)` a multiple of the maximum fundamental
+		// alignment, so that the payload is as aligned as the `malloc` block it lives in.
+		struct alignas (16) WriteRequest final
 		{
-			std::string                path;
-			std::unique_ptr<uint8_t[]> data;
-			size_t                     size;
+			WriteRequest *next;
+			size_t        size;
+			uint32_t      descriptor_index;
+
+			auto payload () noexcept -> uint8_t*
+			{
+				return reinterpret_cast<uint8_t*>(this) + sizeof (WriteRequest);
+			}
 		};
+
+		static_assert (sizeof (WriteRequest) % alignof (std::max_align_t) == 0uz);
 
 		enum class WriteResult
 		{
@@ -79,15 +94,30 @@ namespace {
 		};
 
 		pthread_mutex_t                   state_lock = PTHREAD_MUTEX_INITIALIZER;
-		std::deque<WriteRequest>          write_queue;
-		std::string                       cache_dir;
-		std::unique_ptr<uint8_t*[]>       tracking;
+		WriteRequest                     *write_queue_head = nullptr;
+		WriteRequest                     *write_queue_tail = nullptr;
+		char                             *cache_dir = nullptr;
+		uint8_t                         **tracking = nullptr;
 		size_t                            queued_bytes = 0;
 		uint64_t                          store_id = 0;
 		bool                              initialized = false;
 		bool                              enabled = false;
 		bool                              writes_enabled = false;
 		bool                              writer_running = false;
+
+		auto allocate_write_request (size_t payload_size) noexcept -> WriteRequest*
+		{
+			if (payload_size > SIZE_MAX - sizeof (WriteRequest)) [[unlikely]] {
+				return nullptr;
+			}
+
+			auto *request = static_cast<WriteRequest*>(std::malloc (sizeof (WriteRequest) + payload_size));
+			if (request != nullptr) {
+				request->next = nullptr;
+			}
+
+			return request;
+		}
 
 		auto hash_payload (const uint8_t *data, size_t size) noexcept -> uint64_t
 		{
@@ -114,27 +144,43 @@ namespace {
 			return true;
 		}
 
-		void log_file_error (std::string_view operation, std::string const& path, int error) noexcept
+		void log_file_error (const char *operation, const char *path, int error) noexcept
 		{
-			log_debugf (LOG_ASSEMBLY, "Decompressed-assembly cache %.*s failed for '%s': %s", static_cast<int>(operation.length ()), operation.data (), path.c_str (), std::strerror (error));
+			log_debugf (LOG_ASSEMBLY, "Decompressed-assembly cache %s failed for '%s': %s", operation, path, std::strerror (error));
 		}
 
-		auto write_cache_file (WriteRequest const& req) noexcept -> WriteResult
+		// Formats the cache file path for `descriptor_index` into `buffer`, returning `false` if the
+		// path does not fit. `cache_dir` is only assigned once, before the cache is enabled, so this
+		// is safe to call from the writer thread without holding `state_lock`.
+		auto format_cache_path (char *buffer, size_t buffer_size, uint32_t descriptor_index) noexcept -> bool
 		{
-			std::string tmp_path = req.path;
-			tmp_path.append (".tmp."sv);
-			tmp_path.append (std::to_string (getpid ()));
+			int length = snprintf (buffer, buffer_size, "%s/%u.bin", cache_dir, descriptor_index);
+			return length > 0 && static_cast<size_t>(length) < buffer_size;
+		}
 
-			int fd;
-			do {
-				fd = open (tmp_path.c_str (), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0600);
-			} while (fd < 0 && errno == EINTR);
-			if (fd < 0) {
-				log_file_error ("temporary-file creation"sv, req.path, errno);
+		auto write_cache_file (WriteRequest *req) noexcept -> WriteResult
+		{
+			char path[Util::LocalPathBufferSize];
+			if (!format_cache_path (path, sizeof (path), req->descriptor_index)) [[unlikely]] {
 				return WriteResult::Failed;
 			}
 
-			bool ok = write_fully (fd, req.data.get (), req.size);
+			char tmp_path[Util::LocalPathBufferSize];
+			int tmp_path_length = snprintf (tmp_path, sizeof (tmp_path), "%s.tmp.%d", path, getpid ());
+			if (tmp_path_length <= 0 || static_cast<size_t>(tmp_path_length) >= sizeof (tmp_path)) [[unlikely]] {
+				return WriteResult::Failed;
+			}
+
+			int fd;
+			do {
+				fd = open (tmp_path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0600);
+			} while (fd < 0 && errno == EINTR);
+			if (fd < 0) {
+				log_file_error ("temporary-file creation", path, errno);
+				return WriteResult::Failed;
+			}
+
+			bool ok = write_fully (fd, req->payload (), req->size);
 			int error = ok ? 0 : errno;
 			if (close (fd) != 0 && ok) {
 				ok = false;
@@ -142,55 +188,65 @@ namespace {
 			}
 
 			if (!ok) {
-				log_file_error ("write"sv, req.path, error);
-				unlink (tmp_path.c_str ());
+				log_file_error ("write", path, error);
+				unlink (tmp_path);
 				return WriteResult::Failed;
 			}
 
 			int rename_result;
 			do {
-				rename_result = rename (tmp_path.c_str (), req.path.c_str ());
+				rename_result = rename (tmp_path, path);
 			} while (rename_result != 0 && errno == EINTR);
 
 			if (rename_result != 0) {
 				error = errno;
-				log_file_error ("publish"sv, req.path, error);
-				unlink (tmp_path.c_str ());
+				log_file_error ("publish", path, error);
+				unlink (tmp_path);
 				return WriteResult::Failed;
 			}
 
 			return WriteResult::Succeeded;
 		}
 
+		// Discards every queued request without writing it. Must be called with `state_lock` held.
 		void clear_write_queue_locked () noexcept
 		{
-			for (WriteRequest const& request : write_queue) {
-				queued_bytes -= request.size;
+			WriteRequest *request = write_queue_head;
+			write_queue_head = nullptr;
+			write_queue_tail = nullptr;
+
+			while (request != nullptr) {
+				WriteRequest *next = request->next;
+				queued_bytes -= request->size;
+				std::free (request);
+				request = next;
 			}
-			write_queue.clear ();
 		}
 
 		[[gnu::cold]]
 		auto writer_loop ([[maybe_unused]] void *arg) noexcept -> void*
 		{
 			while (true) {
-				WriteRequest request;
+				WriteRequest *request;
 				{
 					pthread_mutex_lock (&state_lock);
-					if (write_queue.empty ()) {
+					request = write_queue_head;
+					if (request == nullptr) {
 						writer_running = false;
 						pthread_mutex_unlock (&state_lock);
 						return nullptr;
 					}
 
-					request = std::move (write_queue.front ());
-					write_queue.pop_front ();
+					write_queue_head = request->next;
+					if (write_queue_head == nullptr) {
+						write_queue_tail = nullptr;
+					}
 					pthread_mutex_unlock (&state_lock);
 				}
 
-				size_t request_size = request.size;
+				size_t request_size = request->size;
 				WriteResult write_result = write_cache_file (request);
-				request.data.reset ();
+				std::free (request);
 
 				{
 					pthread_mutex_lock (&state_lock);
@@ -233,25 +289,25 @@ namespace {
 			return true;
 		}
 
-		bool ensure_directory (std::string const& path) noexcept
+		bool ensure_directory (const char *path) noexcept
 		{
-			if (mkdir (path.c_str (), 0700) == 0) {
+			if (mkdir (path, 0700) == 0) {
 				return true;
 			}
 
 			int error = errno;
 			if (error != EEXIST) {
-				log_file_error ("directory creation"sv, path, error);
+				log_file_error ("directory creation", path, error);
 				return false;
 			}
 
 			struct stat st {};
-			if (lstat (path.c_str (), &st) != 0) {
-				log_file_error ("directory validation"sv, path, errno);
+			if (lstat (path, &st) != 0) {
+				log_file_error ("directory validation", path, errno);
 				return false;
 			}
 			if (!S_ISDIR (st.st_mode)) {
-				log_file_error ("directory validation"sv, path, ENOTDIR);
+				log_file_error ("directory validation", path, ENOTDIR);
 				return false;
 			}
 
@@ -261,24 +317,23 @@ namespace {
 		// Best-effort removal of staging files left behind by a previous process whose writer was
 		// killed (e.g. by Android) between creating a `.tmp.<pid>` file and renaming it into place.
 		// Such files are never reclaimed otherwise and would accumulate outside the queue bound.
-		void remove_stale_temp_files (std::string const& dir) noexcept
+		void remove_stale_temp_files (const char *dir) noexcept
 		{
-			DIR *handle = opendir (dir.c_str ());
+			DIR *handle = opendir (dir);
 			if (handle == nullptr) {
 				return;
 			}
 
-			std::string prefix = dir;
-			prefix.append ("/");
 			for (dirent *entry = readdir (handle); entry != nullptr; entry = readdir (handle)) {
-				std::string_view name { entry->d_name };
-				if (name.find (".tmp."sv) == std::string_view::npos) {
+				if (strstr (entry->d_name, ".tmp.") == nullptr) {
 					continue;
 				}
 
-				std::string path = prefix;
-				path.append (name);
-				unlink (path.c_str ());
+				char path[Util::LocalPathBufferSize];
+				int length = snprintf (path, sizeof (path), "%s/%s", dir, entry->d_name);
+				if (length > 0 && static_cast<size_t>(length) < sizeof (path)) {
+					unlink (path);
+				}
 			}
 
 			closedir (handle);
@@ -320,32 +375,50 @@ namespace {
 				return;
 			}
 
-			cache_dir.assign (code_cache_dir);
-			cache_dir.append ("/");
-			cache_dir.append (CACHE_DIR_NAME);
-			if (!ensure_directory (cache_dir)) {
+			// The cache lives at `<code cache>/<CACHE_DIR_NAME>/<store id>`, with both levels
+			// created in turn. The path is built up in place: the store ID is appended after the
+			// first directory has been validated.
+			char path[Util::LocalPathBufferSize];
+			int length = snprintf (path, sizeof (path), "%s/%.*s", code_cache_dir, static_cast<int>(CACHE_DIR_NAME.length ()), CACHE_DIR_NAME.data ());
+			if (length <= 0 || static_cast<size_t>(length) >= sizeof (path)) [[unlikely]] {
+				log_debugf (LOG_ASSEMBLY, "Decompressed-assembly cache path is too long for '%s'", code_cache_dir);
+				return;
+			}
+
+			if (!ensure_directory (path)) {
 				return;
 			}
 
 			store_id = assembly_store_id;
-			cache_dir.append ("/");
-			char store_id_text[(sizeof (store_id) * 2) + 1];
-			snprintf (store_id_text, sizeof (store_id_text), "%" PRIx64, store_id);
-			cache_dir.append (store_id_text);
-			if (!ensure_directory (cache_dir)) {
+			int store_id_length = snprintf (path + length, sizeof (path) - static_cast<size_t>(length), "/%" PRIx64, store_id);
+			if (store_id_length <= 0 || static_cast<size_t>(length + store_id_length) >= sizeof (path)) [[unlikely]] {
 				return;
 			}
 
-			remove_stale_temp_files (cache_dir);
-
-			if (compressed_assembly_count > 0) {
-				tracking.reset (new (std::nothrow) uint8_t*[compressed_assembly_count]());
-			}
-
-			enabled = (tracking != nullptr);
-			if (!enabled) {
+			if (!ensure_directory (path)) {
 				return;
 			}
+
+			remove_stale_temp_files (path);
+
+			if (compressed_assembly_count == 0) {
+				return;
+			}
+
+			// Neither allocation is ever freed: both live for as long as the process does.
+			cache_dir = strdup (path);
+			if (cache_dir == nullptr) [[unlikely]] {
+				return;
+			}
+
+			tracking = static_cast<uint8_t**>(std::calloc (compressed_assembly_count, sizeof (uint8_t*)));
+			if (tracking == nullptr) [[unlikely]] {
+				std::free (cache_dir);
+				cache_dir = nullptr;
+				return;
+			}
+
+			enabled = true;
 
 			{
 				pthread_mutex_lock (&state_lock);
@@ -356,19 +429,10 @@ namespace {
 			log_debugf (
 				LOG_ASSEMBLY,
 				"Enabled decompressed-assembly cache at '%s'; store ID 0x%" PRIx64 "; write queue limit %zu bytes",
-				cache_dir.c_str (),
+				cache_dir,
 				store_id,
 				MAX_QUEUED_BYTES
 			);
-		}
-
-		auto build_path (uint32_t descriptor_index) noexcept -> std::string
-		{
-			std::string path = cache_dir;
-			path.append ("/");
-			path.append (std::to_string (descriptor_index));
-			path.append (".bin"sv);
-			return path;
 		}
 
 		auto try_load (uint32_t descriptor_index, std::string_view name, uint32_t expected_size) noexcept -> uint8_t*
@@ -377,8 +441,12 @@ namespace {
 				return nullptr;
 			}
 
-			std::string path = build_path (descriptor_index);
-			int fd = open (path.c_str (), O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+			char path[Util::LocalPathBufferSize];
+			if (!format_cache_path (path, sizeof (path), descriptor_index)) [[unlikely]] {
+				return nullptr;
+			}
+
+			int fd = open (path, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
 			if (fd < 0) {
 				return nullptr;
 			}
@@ -467,42 +535,47 @@ namespace {
 				return;
 			}
 
-			auto snapshot = std::unique_ptr<uint8_t[]> (new (std::nothrow) uint8_t[total]);
-			if (snapshot == nullptr) {
+			WriteRequest *req = allocate_write_request (total);
+			if (req == nullptr) [[unlikely]] {
 				pthread_mutex_lock (&state_lock);
 				queued_bytes -= total;
 				pthread_mutex_unlock (&state_lock);
 				return;
 			}
+
+			req->size = total;
+			req->descriptor_index = descriptor_index;
+
 			// The runtime can modify the shared decompression buffer after this
 			// method returns, so the background writer needs an immutable copy.
-			memcpy (snapshot.get (), data, size);
+			memcpy (req->payload (), data, size);
 
 			CacheFileFooter footer {
 				.magic = CACHE_FILE_MAGIC,
 				.version = CACHE_FILE_FORMAT_VERSION,
 				.store_id = store_id,
-				.payload_hash = hash_payload (snapshot.get (), size),
+				.payload_hash = hash_payload (req->payload (), size),
 				.descriptor_index = descriptor_index,
 				.payload_size = static_cast<uint32_t>(size),
 			};
-			memcpy (snapshot.get () + size, &footer, sizeof (footer));
-
-			WriteRequest req {
-				.path = build_path (descriptor_index),
-				.data = std::move (snapshot),
-				.size = total,
-			};
+			memcpy (req->payload () + size, &footer, sizeof (footer));
 
 			{
 				pthread_mutex_lock (&state_lock);
 				if (!writes_enabled) {
 					queued_bytes -= total;
 					pthread_mutex_unlock (&state_lock);
+					std::free (req);
 					return;
 				}
 
-				write_queue.push_back (std::move (req));
+				if (write_queue_tail == nullptr) {
+					write_queue_head = req;
+				} else {
+					write_queue_tail->next = req;
+				}
+				write_queue_tail = req;
+
 				if (!writer_running) {
 					writer_running = true;
 					if (!start_writer_locked ()) {
@@ -827,12 +900,16 @@ void AssemblyStore::configure_from_payload (const void *payload_start, const cha
 	// Build a lookup of assembly names indexed by descriptor index, used to disambiguate CRC32 hash
 	// collisions during lookup. The names section follows the descriptor table and consists of
 	// `entry_count` length-prefixed (uint32 length followed by the UTF-8 bytes) records, stored in
-	// descriptor-index order. `delete[]` guards against a leak should the (single) store ever be
+	// descriptor-index order. The `free` guards against a leak should the (single) store ever be
 	// re-mapped; `assembly_store_names` is nullptr on first call, for which it is a no-op.
 	const uint8_t *names_cursor = assembly_store.data_start + header_size + header->index_size +
 		(static_cast<size_t>(header->entry_count) * sizeof (AssemblyStoreEntryDescriptor));
-	delete[] assembly_store_names;
-	assembly_store_names = new std::string_view[header->entry_count];
+	std::free (assembly_store_names);
+	assembly_store_names = static_cast<std::string_view*>(std::calloc (header->entry_count, sizeof (std::string_view)));
+	if (assembly_store_names == nullptr) [[unlikely]] {
+		Helpers::abort_application (LOG_ASSEMBLY, "Unable to allocate memory for the assembly store name table");
+	}
+
 	for (uint32_t i = 0; i < header->entry_count; i++) {
 		uint32_t name_length;
 		memcpy (&name_length, names_cursor, sizeof (name_length));
