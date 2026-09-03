@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
+using System.Text;
 using System.Threading;
 
 namespace Java.Interop {
@@ -250,6 +251,20 @@ namespace Java.Interop {
 
 			protected virtual string? GetReplacementTypeCore (string jniSimpleReference) => null;
 
+			internal string? GetReplacementType (ReadOnlySpan<byte> jniSimpleReference)
+			{
+				AssertValid ();
+				if (jniSimpleReference.Length == 0)
+					throw new ArgumentException ("'jniSimpleReference' cannot be a zero-length span.", nameof (jniSimpleReference));
+				if (jniSimpleReference.IndexOf ((byte) '.') >= 0)
+					throw new ArgumentException ("JNI type names do not contain '.', they use '/'. Are you sure you're using a JNI type name?", nameof (jniSimpleReference));
+
+				return GetReplacementTypeCore (jniSimpleReference);
+			}
+
+			protected virtual string? GetReplacementTypeCore (ReadOnlySpan<byte> jniSimpleReference) =>
+				GetReplacementTypeCore (Encoding.UTF8.GetString (jniSimpleReference));
+
 			public IReadOnlyList<string>? GetStaticMethodFallbackTypes (string jniSimpleReference)
 			{
 				AssertValid ();
@@ -273,6 +288,27 @@ namespace Java.Interop {
 			}
 
 			protected virtual ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSimpleReference, string jniMethodName, string jniMethodSignature) => null;
+
+			internal ReplacementMethodInfo? GetReplacementMethodInfo (ReadOnlySpan<byte> jniSimpleReference, ReadOnlySpan<byte> jniMethodName, ReadOnlySpan<byte> jniMethodSignature)
+			{
+				AssertValid ();
+				if (jniSimpleReference.Length == 0)
+					throw new ArgumentException ("'jniSimpleReference' cannot be a zero-length span.", nameof (jniSimpleReference));
+				if (jniSimpleReference.IndexOf ((byte) '.') >= 0)
+					throw new ArgumentException ("JNI type names do not contain '.', they use '/'. Are you sure you're using a JNI type name?", nameof (jniSimpleReference));
+				if (jniMethodName.Length == 0)
+					throw new ArgumentException ("'jniMethodName' cannot be a zero-length span.", nameof (jniMethodName));
+				if (jniMethodSignature.Length == 0)
+					throw new ArgumentException ("'jniMethodSignature' cannot be a zero-length span.", nameof (jniMethodSignature));
+
+				return GetReplacementMethodInfoCore (jniSimpleReference, jniMethodName, jniMethodSignature);
+			}
+
+			protected virtual ReplacementMethodInfo? GetReplacementMethodInfoCore (ReadOnlySpan<byte> jniSimpleReference, ReadOnlySpan<byte> jniMethodName, ReadOnlySpan<byte> jniMethodSignature) =>
+				GetReplacementMethodInfoCore (
+						Encoding.UTF8.GetString (jniSimpleReference),
+						Encoding.UTF8.GetString (jniMethodName),
+						Encoding.UTF8.GetString (jniMethodSignature));
 
 			// Default implementation is a no-op. Derived classes (e.g. `ReflectionJniTypeManager`)
 			// provide reflection-based registration. Override to provide custom registration.

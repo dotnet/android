@@ -84,6 +84,8 @@ namespace MonoDroid.Generation
 
 		public string GetUtf8SpanExpression (string value) => utf8StringPool.GetSpanExpression (value);
 
+		public string GetUtf8MemoryExpression (string value) => utf8StringPool.GetMemoryExpression (value);
+
 		public void WriteUtf8StringPool (GenerationInfo generationInfo)
 		{
 			if (UseUtf8MemberNames)
@@ -326,13 +328,25 @@ namespace MonoDroid.Generation
 	sealed class Utf8StringPool
 	{
 		readonly StringBuilder value = new StringBuilder ();
-		readonly Dictionary<string, string> expressions = new Dictionary<string, string> (StringComparer.Ordinal);
+		readonly Dictionary<string, (int Offset, int Length)> entries = new Dictionary<string, (int Offset, int Length)> (StringComparer.Ordinal);
 		int byteCount;
 
 		public string GetSpanExpression (string text)
 		{
-			if (expressions.TryGetValue (text, out var expression))
-				return expression;
+			var entry = GetEntry (text);
+			return $"global::__U8.S ({entry.Offset}, {entry.Length})";
+		}
+
+		public string GetMemoryExpression (string text)
+		{
+			var entry = GetEntry (text);
+			return $"global::__U8.R ({entry.Offset}, {entry.Length})";
+		}
+
+		(int Offset, int Length) GetEntry (string text)
+		{
+			if (entries.TryGetValue (text, out var entry))
+				return entry;
 
 			int length = Encoding.UTF8.GetByteCount (text);
 			int offset = byteCount;
@@ -340,9 +354,9 @@ namespace MonoDroid.Generation
 			value.Append ('\0');
 			byteCount += length + 1;
 
-			expression = $"global::__U8.S ({offset}, {length})";
-			expressions.Add (text, expression);
-			return expression;
+			entry = (offset, length);
+			entries.Add (text, entry);
+			return entry;
 		}
 
 		public void Write (GenerationInfo generationInfo)
@@ -356,8 +370,18 @@ namespace MonoDroid.Generation
 			writer.WriteLine ();
 			writer.WriteLine ("internal static class __U8");
 			writer.WriteLine ("{");
+			writer.WriteLine ("\tinternal static readonly global::System.ReadOnlyMemory<byte> M = new B ().Memory;");
+			writer.WriteLine ("\tinternal static global::System.ReadOnlyMemory<byte> R (int offset, int length) => M.Slice (offset, length);");
 			writer.WriteLine ("\tinternal static global::System.ReadOnlySpan<byte> S (int offset, int length) => D.Slice (offset, length);");
 			writer.WriteLine ($"\tstatic global::System.ReadOnlySpan<byte> D => \"{Escape (value)}\"u8;");
+			writer.WriteLine ();
+			writer.WriteLine ("\tsealed unsafe class B : global::System.Buffers.MemoryManager<byte>");
+			writer.WriteLine ("\t{");
+			writer.WriteLine ("\t\tpublic override global::System.Span<byte> GetSpan () => new global::System.Span<byte> (global::System.Runtime.CompilerServices.Unsafe.AsPointer (ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference (D)), D.Length);");
+			writer.WriteLine ("\t\tpublic override global::System.Buffers.MemoryHandle Pin (int elementIndex = 0) => new global::System.Buffers.MemoryHandle ((byte*) global::System.Runtime.CompilerServices.Unsafe.AsPointer (ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference (D)) + elementIndex);");
+			writer.WriteLine ("\t\tpublic override void Unpin () { }");
+			writer.WriteLine ("\t\tprotected override void Dispose (bool disposing) { }");
+			writer.WriteLine ("\t}");
 			writer.WriteLine ("}");
 		}
 

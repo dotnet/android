@@ -52,8 +52,8 @@ Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualSByteMethod(System.R
 Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualSingleMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> float
 Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualVoidMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
 Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(System.ReadOnlySpan<byte> constructorSignature, System.Type! declaringType, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
-Java.Interop.JniPeerMembers.JniPeerMembers(System.ReadOnlySpan<byte> jniPeerTypeName, System.Type! managedPeerType) -> void
-Java.Interop.JniPeerMembers.JniPeerMembers(System.ReadOnlySpan<byte> jniPeerTypeName, System.Type! managedPeerType, bool isInterface) -> void
+Java.Interop.JniPeerMembers.JniPeerMembers(System.ReadOnlyMemory<byte> jniPeerTypeName, System.Type! managedPeerType) -> void
+Java.Interop.JniPeerMembers.JniPeerMembers(System.ReadOnlyMemory<byte> jniPeerTypeName, System.Type! managedPeerType, bool isInterface) -> void
 Java.Interop.JniPeerMembers.JniStaticFields.GetBooleanValue(System.ReadOnlySpan<byte> encodedMember) -> bool
 Java.Interop.JniPeerMembers.JniStaticFields.GetCharValue(System.ReadOnlySpan<byte> encodedMember) -> char
 Java.Interop.JniPeerMembers.JniStaticFields.GetDoubleValue(System.ReadOnlySpan<byte> encodedMember) -> double
@@ -89,6 +89,8 @@ static Java.Interop.JniEnvironment.EndMarshalMethod(ref Java.Interop.JniTransiti
 virtual Java.Interop.JniRuntime.OnEnterMarshalMethod() -> void
 virtual Java.Interop.JniRuntime.OnUserUnhandledException(ref Java.Interop.JniTransition transition, System.Exception! e) -> void
 virtual Java.Interop.JniRuntime.JniTypeManager.GetInvokerTypeCore(System.Type! type) -> System.Type?
+virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementMethodInfoCore(System.ReadOnlySpan<byte> jniSimpleReference, System.ReadOnlySpan<byte> jniMethodName, System.ReadOnlySpan<byte> jniMethodSignature) -> Java.Interop.JniRuntime.ReplacementMethodInfo?
+virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementTypeCore(System.ReadOnlySpan<byte> jniSimpleReference) -> string?
 virtual Java.Interop.JniRuntime.JniTypeManager.GetTypeForSimpleReference(string! jniSimpleReference) -> System.Type?
 virtual Java.Interop.JniRuntime.JniTypeManager.GetTypeSignatureCore(System.Type! type) -> Java.Interop.JniTypeSignature
 virtual Java.Interop.JniRuntime.JniTypeManager.GetTypeSignaturesCore(System.Type! type) -> System.Collections.Generic.IEnumerable<Java.Interop.JniTypeSignature>!

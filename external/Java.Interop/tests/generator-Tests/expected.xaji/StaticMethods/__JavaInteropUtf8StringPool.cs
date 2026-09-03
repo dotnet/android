@@ -3,6 +3,16 @@
 
 internal static class __U8
 {
+	internal static readonly global::System.ReadOnlyMemory<byte> M = new B ().Memory;
+	internal static global::System.ReadOnlyMemory<byte> R (int offset, int length) => M.Slice (offset, length);
 	internal static global::System.ReadOnlySpan<byte> S (int offset, int length) => D.Slice (offset, length);
 	static global::System.ReadOnlySpan<byte> D => "java/lang/Object\u0000xamarin/test/SomeObject\u0000methodAsInt.()I\u0000methodAsString.()Ljava/lang/String;\u0000Obsoletemethod.()Ljava/lang/String;\u0000"u8;
+
+	sealed unsafe class B : global::System.Buffers.MemoryManager<byte>
+	{
+		public override global::System.Span<byte> GetSpan () => new global::System.Span<byte> (global::System.Runtime.CompilerServices.Unsafe.AsPointer (ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference (D)), D.Length);
+		public override global::System.Buffers.MemoryHandle Pin (int elementIndex = 0) => new global::System.Buffers.MemoryHandle ((byte*) global::System.Runtime.CompilerServices.Unsafe.AsPointer (ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference (D)) + elementIndex);
+		public override void Unpin () { }
+		protected override void Dispose (bool disposing) { }
+	}
 }

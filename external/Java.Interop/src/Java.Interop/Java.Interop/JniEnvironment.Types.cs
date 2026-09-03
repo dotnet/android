@@ -358,6 +358,14 @@ namespace Java.Interop
 				// before calling FindClass, because ART's CheckJNI aborts the process on dot-separated names.
 				bool hasDots = classname.Slice (0, nameLength).IndexOf ((byte) '.') >= 0;
 				if (!hasDots) {
+					if (terminator < 0) {
+						Span<byte> terminatedClassname = nameLength + 1 <= 512
+							? stackalloc byte [nameLength + 1]
+							: new byte [nameLength + 1];
+						classname.CopyTo (terminatedClassname);
+						terminatedClassname [nameLength] = 0;
+						return TryFindClassFromPtr (info, classname, terminatedClassname, nameLength, throwOnError);
+					}
 					return TryFindClassFromPtr (info, classname, classname, terminator, throwOnError);
 				}
 

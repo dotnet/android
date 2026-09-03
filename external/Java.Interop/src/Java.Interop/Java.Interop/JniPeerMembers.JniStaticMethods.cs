@@ -44,23 +44,32 @@ namespace Java.Interop
 
 		JniMethodInfo GetMethodInfo (ReadOnlySpan<byte> method, ReadOnlySpan<byte> signature)
 		{
-			var methodName          = Encoding.UTF8.GetString (method);
-			var methodSig           = Encoding.UTF8.GetString (signature);
-			var terminatedMethod    = JniPeerMembers.GetNullTerminatedUtf8 (method);
-			var terminatedSignature = JniPeerMembers.GetNullTerminatedUtf8 (signature);
+			Span<byte> terminatedMethod = method.Length + 1 <= 256
+				? stackalloc byte [method.Length + 1]
+				: new byte [method.Length + 1];
+			Span<byte> terminatedSignature = signature.Length + 1 <= 512
+				? stackalloc byte [signature.Length + 1]
+				: new byte [signature.Length + 1];
+			method.CopyTo (terminatedMethod);
+			signature.CopyTo (terminatedSignature);
+			terminatedMethod [method.Length]       = 0;
+			terminatedSignature [signature.Length] = 0;
 			var m                   = (JniMethodInfo?) null;
-			var newMethod           = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (Members.JniPeerTypeName, methodName, methodSig);
+			var newMethod           = Members.GetReplacementMethodInfo (method, signature);
 			if (newMethod.HasValue) {
-				using var t = new JniType (newMethod.Value.TargetJniType ?? Members.JniPeerTypeName);
-				if (t.TryGetStaticMethod (
-						newMethod.Value.TargetJniMethodName ?? methodName,
-						newMethod.Value.TargetJniMethodSignature ?? methodSig,
-						out m)) {
+				var typeName        = newMethod.Value.TargetJniType ?? Members.JniPeerTypeName;
+				var replacementName = newMethod.Value.TargetJniMethodName ?? Encoding.UTF8.GetString (method);
+				var replacementSig  = newMethod.Value.TargetJniMethodSignature ?? Encoding.UTF8.GetString (signature);
+
+				using var t = new JniType (typeName);
+				if (t.TryGetStaticMethod (replacementName, replacementSig, out m)) {
 					return m;
 				}
 			}
 			if (Members.JniPeerType.TryGetStaticMethod (terminatedMethod, terminatedSignature, out m))
 				return m;
+			var methodName = Encoding.UTF8.GetString (method);
+			var methodSig  = Encoding.UTF8.GetString (signature);
 			m = FindInFallbackTypes (methodName, methodSig);
 			if (m != null)
 				return m;

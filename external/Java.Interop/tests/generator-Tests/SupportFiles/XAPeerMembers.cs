@@ -21,12 +21,12 @@ namespace Android.Runtime {
 		{
 		}
 
-		internal XAPeerMembers (ReadOnlySpan<byte> jniPeerTypeName, Type managedPeerType)
+		internal XAPeerMembers (ReadOnlyMemory<byte> jniPeerTypeName, Type managedPeerType)
 			: base (jniPeerTypeName, managedPeerType)
 		{
 		}
 
-		internal XAPeerMembers (ReadOnlySpan<byte> jniPeerTypeName, Type managedPeerType, bool isInterface)
+		internal XAPeerMembers (ReadOnlyMemory<byte> jniPeerTypeName, Type managedPeerType, bool isInterface)
 			: base (jniPeerTypeName, managedPeerType, isInterface)
 		{
 		}

@@ -64,9 +64,17 @@ namespace Android.Runtime
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial IntPtr _monodroid_lookup_replacement_type (string jniSimpleReference);
 
+		[LibraryImport (RuntimeConstants.InternalDllName, EntryPoint = "_monodroid_lookup_replacement_type")]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static unsafe partial IntPtr _monodroid_lookup_replacement_type (byte* jniSimpleReference);
+
 		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial IntPtr _monodroid_lookup_replacement_method_info (string jniSourceType, string jniMethodName, string jniMethodSignature);
+
+		[LibraryImport (RuntimeConstants.InternalDllName, EntryPoint = "_monodroid_lookup_replacement_method_info")]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static unsafe partial IntPtr _monodroid_lookup_replacement_method_info (byte* jniSourceType, byte* jniMethodName, byte* jniMethodSignature);
 
 
 		[LibraryImport (RuntimeConstants.InternalDllName)]

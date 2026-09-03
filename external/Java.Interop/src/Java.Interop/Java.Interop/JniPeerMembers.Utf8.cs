@@ -94,11 +94,5 @@ namespace Java.Interop {
 			return n;
 		}
 
-		internal static byte [] GetNullTerminatedUtf8 (ReadOnlySpan<byte> value)
-		{
-			var terminated = new byte [value.Length + 1];
-			value.CopyTo (terminated);
-			return terminated;
-		}
 	}
 }

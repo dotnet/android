@@ -22,13 +22,51 @@ namespace Java.Interop {
 		{
 		}
 
-		protected JniPeerMembers (ReadOnlySpan<byte> jniPeerTypeName, Type managedPeerType, bool isInterface)
-			: this (GetReplacementType (Encoding.UTF8.GetString (jniPeerTypeName)), managedPeerType, checkManagedPeerType: true, isInterface: isInterface)
+		protected JniPeerMembers (ReadOnlyMemory<byte> jniPeerTypeName, Type managedPeerType, bool isInterface)
 		{
+			if (jniPeerTypeName.IsEmpty)
+				throw new ArgumentException ("'jniPeerTypeName' cannot be empty.", nameof (jniPeerTypeName));
+			if (managedPeerType == null)
+				throw new ArgumentNullException (nameof (managedPeerType));
+			if (!typeof (IJavaPeerable).IsAssignableFrom (managedPeerType))
+				throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", nameof (managedPeerType));
+
+			jniPeerTypeNameUtf8 = jniPeerTypeName;
+
+			var utf8Name    = jniPeerTypeName.Span;
+			var replacement = JniEnvironment.Runtime.TypeManager.GetReplacementType (utf8Name);
+			if (replacement != null)
+				this.jniPeerTypeName = replacement;
+
+#if DEBUG
+			var signatureFromType = JniEnvironment.Runtime.TypeManager.GetTypeSignature (managedPeerType);
+			var typeNamesMatch    = replacement != null
+				? signatureFromType.SimpleReference == replacement
+				: Utf8Equals (signatureFromType.SimpleReference, utf8Name);
+			if (!typeNamesMatch) {
+				var actualTypeName = replacement ?? Encoding.UTF8.GetString (utf8Name);
+				Debug.WriteLine ("WARNING-Java.Interop: ManagedPeerType <=> JniTypeName Mismatch! javaVM.GetJniTypeInfoForType(typeof({0})).JniTypeName=\"{1}\" != \"{2}\"",
+						managedPeerType.FullName,
+						signatureFromType.SimpleReference,
+						actualTypeName);
+				Debug.WriteLine (new System.Diagnostics.StackTrace (true));
+			}
+#endif  // DEBUG
+			if (replacement != null)
+				jniPeerTypeNameUtf8 = default;
+
+			ManagedPeerType = managedPeerType;
+
+			this.isInterface = isInterface;
+
+			instanceMethods = new JniInstanceMethods (this);
+			instanceFields  = new JniInstanceFields (this);
+			staticMethods   = new JniStaticMethods (this);
+			staticFields    = new JniStaticFields (this);
 		}
 
-		protected JniPeerMembers (ReadOnlySpan<byte> jniPeerTypeName, Type managedPeerType)
-			: this (GetReplacementType (Encoding.UTF8.GetString (jniPeerTypeName)), managedPeerType, checkManagedPeerType: true, isInterface: false)
+		protected JniPeerMembers (ReadOnlyMemory<byte> jniPeerTypeName, Type managedPeerType)
+			: this (jniPeerTypeName, managedPeerType, isInterface: false)
 		{
 		}
 
@@ -84,15 +122,66 @@ namespace Java.Interop {
 		JniInstanceFields   instanceFields;
 		JniStaticMethods    staticMethods;
 		JniStaticFields     staticFields;
+		string?             jniPeerTypeName;
+		ReadOnlyMemory<byte> jniPeerTypeNameUtf8;
 
 		public      Type        ManagedPeerType {get; private set;}
-		public      string      JniPeerTypeName {get; private set;}
+		public      string      JniPeerTypeName {
+			get {
+				if (jniPeerTypeName != null)
+					return jniPeerTypeName;
+				return jniPeerTypeName = Encoding.UTF8.GetString (GetJniPeerTypeNameUtf8 ());
+			}
+			private set {
+				jniPeerTypeName = value;
+			}
+		}
 		public      JniType     JniPeerType {
 			get {
-				var t = JniType.GetCachedJniType (ref jniPeerType, JniPeerTypeName);
+				if (jniPeerType != null && jniPeerType.PeerReference.IsValid) {
+					jniPeerType.RegisterWithRuntime ();
+					return jniPeerType;
+				}
+				var t = jniPeerTypeName != null
+					? JniType.GetCachedJniType (ref jniPeerType, jniPeerTypeName)
+					: JniType.GetCachedJniType (ref jniPeerType, GetJniPeerTypeNameUtf8 ());
 				t.RegisterWithRuntime ();
 				return t;
 			}
+		}
+
+		ReadOnlySpan<byte> GetJniPeerTypeNameUtf8 ()
+		{
+			if (!jniPeerTypeNameUtf8.IsEmpty)
+				return jniPeerTypeNameUtf8.Span;
+			throw new ObjectDisposedException (nameof (JniPeerMembers));
+		}
+
+		internal JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (ReadOnlySpan<byte> method, ReadOnlySpan<byte> signature)
+		{
+			if (!jniPeerTypeNameUtf8.IsEmpty)
+				return JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (GetJniPeerTypeNameUtf8 (), method, signature);
+
+			return JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (
+					JniPeerTypeName,
+					Encoding.UTF8.GetString (method),
+					Encoding.UTF8.GetString (signature));
+		}
+
+		static bool Utf8Equals (string? value, ReadOnlySpan<byte> utf8)
+		{
+			if (value == null)
+				return false;
+
+			int byteCount = Encoding.UTF8.GetByteCount (value);
+			if (byteCount != utf8.Length)
+				return false;
+
+			Span<byte> encoded = byteCount <= 512
+				? stackalloc byte [byteCount]
+				: new byte [byteCount];
+			Encoding.UTF8.GetBytes (value, encoded);
+			return encoded.SequenceEqual (utf8);
 		}
 
 		public  JniInstanceMethods  InstanceMethods {

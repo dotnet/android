@@ -18,9 +18,16 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void Utf8Ctor_CanReferenceNonexistentType ()
+		{
+			var members = new Utf8PeerMembers ("does/not/Exist"u8.ToArray (), typeof(JavaObjectWithMissingJavaPeer));
+			JniPeerMembers.Dispose (members);
+		}
+
+		[Test]
 		public unsafe void Utf8MemberLookupIsCached ()
 		{
-			var members = new Utf8PeerMembers ("java/lang/Object"u8, typeof (JavaLangRemappingTestObject));
+			var members = new Utf8PeerMembers ("java/lang/Object"u8.ToArray (), typeof (JavaLangRemappingTestObject));
 			try {
 				byte [] encodedMethod = "hashCode.()I"u8.ToArray ();
 				var first  = members.InstanceMethods.GetMethodInfo (encodedMethod);
@@ -42,7 +49,7 @@ namespace Java.InteropTests
 		[Test]
 		public void Utf8FieldLookupIsCached ()
 		{
-			var members = new Utf8PeerMembers ("java/lang/System"u8, typeof (JavaLangSystem));
+			var members = new Utf8PeerMembers ("java/lang/System"u8.ToArray (), typeof (JavaLangSystem));
 			try {
 				byte [] encodedField = "out.Ljava/io/PrintStream;"u8.ToArray ();
 				var first  = members.StaticFields.GetFieldInfo (encodedField);
@@ -277,7 +284,7 @@ namespace Java.InteropTests
 
 	internal class Utf8PeerMembers : JniPeerMembers {
 
-		public Utf8PeerMembers (ReadOnlySpan<byte> jniPeerTypeName, Type managedPeerType)
+		public Utf8PeerMembers (ReadOnlyMemory<byte> jniPeerTypeName, Type managedPeerType)
 			: base (jniPeerTypeName, managedPeerType)
 		{
 		}

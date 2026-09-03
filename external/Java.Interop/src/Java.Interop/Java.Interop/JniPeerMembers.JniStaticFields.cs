@@ -31,8 +31,18 @@ namespace Java.Interop
 		{
 			return Utf8StaticFields.GetOrAdd (encodedMember, static (member, fields) => {
 				int separator = JniPeerMembers.GetSignatureSeparatorIndex (member);
-				var field     = JniPeerMembers.GetNullTerminatedUtf8 (member.Slice (0, separator));
-				var signature = JniPeerMembers.GetNullTerminatedUtf8 (member.Slice (separator + 1));
+				var fieldName = member.Slice (0, separator);
+				var fieldType = member.Slice (separator + 1);
+				Span<byte> field = fieldName.Length + 1 <= 256
+					? stackalloc byte [fieldName.Length + 1]
+					: new byte [fieldName.Length + 1];
+				Span<byte> signature = fieldType.Length + 1 <= 512
+					? stackalloc byte [fieldType.Length + 1]
+					: new byte [fieldType.Length + 1];
+				fieldName.CopyTo (field);
+				fieldType.CopyTo (signature);
+				field [fieldName.Length]     = 0;
+				signature [fieldType.Length] = 0;
 				return fields.Members.JniPeerType.GetStaticField (field, signature);
 			}, this);
 		}

@@ -68,7 +68,11 @@ namespace Java.Interop
 		public JniMethodInfo GetConstructor (ReadOnlySpan<byte> signature)
 		{
 			return Utf8InstanceMethods.GetOrAdd (signature, static (member, methods) => {
-				var terminatedSignature = JniPeerMembers.GetNullTerminatedUtf8 (member);
+				Span<byte> terminatedSignature = member.Length + 1 <= 512
+					? stackalloc byte [member.Length + 1]
+					: new byte [member.Length + 1];
+				member.CopyTo (terminatedSignature);
+				terminatedSignature [member.Length] = 0;
 				return methods.JniPeerType.GetConstructor (terminatedSignature);
 			}, this);
 		}
@@ -122,16 +126,22 @@ namespace Java.Interop
 
 		JniMethodInfo GetMethodInfo (ReadOnlySpan<byte> method, ReadOnlySpan<byte> signature)
 		{
-			var methodName          = Encoding.UTF8.GetString (method);
-			var methodSig           = Encoding.UTF8.GetString (signature);
-			var terminatedMethod    = JniPeerMembers.GetNullTerminatedUtf8 (method);
-			var terminatedSignature = JniPeerMembers.GetNullTerminatedUtf8 (signature);
+			Span<byte> terminatedMethod = method.Length + 1 <= 256
+				? stackalloc byte [method.Length + 1]
+				: new byte [method.Length + 1];
+			Span<byte> terminatedSignature = signature.Length + 1 <= 512
+				? stackalloc byte [signature.Length + 1]
+				: new byte [signature.Length + 1];
+			method.CopyTo (terminatedMethod);
+			signature.CopyTo (terminatedSignature);
+			terminatedMethod [method.Length]       = 0;
+			terminatedSignature [signature.Length] = 0;
 			var m                   = (JniMethodInfo?) null;
-			var newMethod           = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (Members.JniPeerTypeName, methodName, methodSig);
+			var newMethod           = Members.GetReplacementMethodInfo (method, signature);
 			if (newMethod.HasValue) {
 				var typeName        = newMethod.Value.TargetJniType ?? Members.JniPeerTypeName;
-				var replacementName = newMethod.Value.TargetJniMethodName ?? methodName;
-				var replacementSig  = newMethod.Value.TargetJniMethodSignature ?? methodSig;
+				var replacementName = newMethod.Value.TargetJniMethodName ?? Encoding.UTF8.GetString (method);
+				var replacementSig  = newMethod.Value.TargetJniMethodSignature ?? Encoding.UTF8.GetString (signature);
 
 				using var t = new JniType (typeName);
 				if (newMethod.Value.TargetJniMethodInstanceToStatic &&
@@ -142,7 +152,7 @@ namespace Java.Interop
 				}
 				if (t.TryGetInstanceMethod (replacementName, replacementSig, out m))
 					return m;
-				Console.Error.WriteLine ($"warning: For declared method `{Members.JniPeerTypeName}.{methodName}.{methodSig}`, could not find requested method `{typeName}.{replacementName}.{replacementSig}`!");
+				Console.Error.WriteLine ($"warning: For declared method `{Members.JniPeerTypeName}.{Encoding.UTF8.GetString (method)}.{Encoding.UTF8.GetString (signature)}`, could not find requested method `{typeName}.{replacementName}.{replacementSig}`!");
 			}
 			return JniPeerType.GetInstanceMethod (terminatedMethod, terminatedSignature);
 		}

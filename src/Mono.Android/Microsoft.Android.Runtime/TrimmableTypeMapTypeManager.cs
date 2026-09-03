@@ -381,7 +381,13 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 	protected override string? GetReplacementTypeCore (string jniSimpleReference)
 		=> JniRemappingLookup.GetReplacementType (jniSimpleReference);
 
+	protected override string? GetReplacementTypeCore (ReadOnlySpan<byte> jniSimpleReference)
+		=> JniRemappingLookup.GetReplacementType (jniSimpleReference);
+
 	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
+		=> JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
+
+	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (ReadOnlySpan<byte> jniSourceType, ReadOnlySpan<byte> jniMethodName, ReadOnlySpan<byte> jniMethodSignature)
 		=> JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
 
 	// The rest of the APIs are unsupported - they are not needed internally anywhere anyway

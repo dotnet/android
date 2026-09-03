@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text;
 using Android.Runtime;
 using Java.Interop;
 
@@ -56,6 +57,26 @@ static class JniRemappingLookup
 		return Marshal.PtrToStringAnsi (ret);
 	}
 
+	internal static string? GetReplacementType (ReadOnlySpan<byte> jniSimpleReference)
+	{
+		if (!JNIEnvInit.jniRemappingInUse)
+			return null;
+
+		Span<byte> terminated = jniSimpleReference.Length + 1 <= 512
+			? stackalloc byte [jniSimpleReference.Length + 1]
+			: new byte [jniSimpleReference.Length + 1];
+		jniSimpleReference.CopyTo (terminated);
+		terminated [jniSimpleReference.Length] = 0;
+		unsafe {
+			fixed (byte* name = terminated) {
+				IntPtr ret = RuntimeNativeMethods._monodroid_lookup_replacement_type (name);
+				if (ret == IntPtr.Zero)
+					return null;
+				return Marshal.PtrToStringAnsi (ret);
+			}
+		}
+	}
+
 	internal static JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (string jniSourceType, string jniMethodName, string jniMethodSignature)
 	{
 		if (!JNIEnvInit.jniRemappingInUse) {
@@ -67,6 +88,49 @@ static class JniRemappingLookup
 			return null;
 		}
 
+		return CreateReplacementMethodInfo (retInfo, jniSourceType, jniMethodName, jniMethodSignature);
+	}
+
+	internal static JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (ReadOnlySpan<byte> jniSourceType, ReadOnlySpan<byte> jniMethodName, ReadOnlySpan<byte> jniMethodSignature)
+	{
+		if (!JNIEnvInit.jniRemappingInUse)
+			return null;
+
+		Span<byte> terminatedType = jniSourceType.Length + 1 <= 512
+			? stackalloc byte [jniSourceType.Length + 1]
+			: new byte [jniSourceType.Length + 1];
+		Span<byte> terminatedName = jniMethodName.Length + 1 <= 256
+			? stackalloc byte [jniMethodName.Length + 1]
+			: new byte [jniMethodName.Length + 1];
+		Span<byte> terminatedSignature = jniMethodSignature.Length + 1 <= 512
+			? stackalloc byte [jniMethodSignature.Length + 1]
+			: new byte [jniMethodSignature.Length + 1];
+		jniSourceType.CopyTo (terminatedType);
+		jniMethodName.CopyTo (terminatedName);
+		jniMethodSignature.CopyTo (terminatedSignature);
+		terminatedType [jniSourceType.Length]           = 0;
+		terminatedName [jniMethodName.Length]           = 0;
+		terminatedSignature [jniMethodSignature.Length] = 0;
+
+		IntPtr retInfo;
+		unsafe {
+			fixed (byte* type = terminatedType)
+			fixed (byte* name = terminatedName)
+			fixed (byte* signature = terminatedSignature)
+				retInfo = RuntimeNativeMethods._monodroid_lookup_replacement_method_info (type, name, signature);
+		}
+		if (retInfo == IntPtr.Zero)
+			return null;
+
+		return CreateReplacementMethodInfo (
+				retInfo,
+				Encoding.UTF8.GetString (jniSourceType),
+				Encoding.UTF8.GetString (jniMethodName),
+				Encoding.UTF8.GetString (jniMethodSignature));
+	}
+
+	static JniRuntime.ReplacementMethodInfo CreateReplacementMethodInfo (IntPtr retInfo, string jniSourceType, string jniMethodName, string jniMethodSignature)
+	{
 		var method = Marshal.PtrToStructure<JniRemappingReplacementMethod> (retInfo);
 		var targetType = method.target_type ?? throw new InvalidOperationException (
 			$"JNI remapping entry for `{jniSourceType}.{jniMethodName}{jniMethodSignature}` is missing a target type.");

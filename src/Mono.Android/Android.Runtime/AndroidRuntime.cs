@@ -381,7 +381,17 @@ namespace Android.Runtime {
 			return JniRemappingLookup.GetReplacementType (jniSimpleReference);
 		}
 
+		protected override string? GetReplacementTypeCore (ReadOnlySpan<byte> jniSimpleReference)
+		{
+			return JniRemappingLookup.GetReplacementType (jniSimpleReference);
+		}
+
 		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
+		{
+			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
+		}
+
+		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (ReadOnlySpan<byte> jniSourceType, ReadOnlySpan<byte> jniMethodName, ReadOnlySpan<byte> jniMethodSignature)
 		{
 			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
 		}
