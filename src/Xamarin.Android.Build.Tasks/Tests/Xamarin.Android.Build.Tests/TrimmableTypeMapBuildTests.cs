@@ -101,7 +101,7 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		public void TrimmedDebugSymbolsDoesNotUsePreGeneratedTypeMap ()
+		public void TrimmedDebugSymbolsCannotForcePreGeneratedTypeMap ()
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
 				return;
@@ -114,6 +114,7 @@ namespace Xamarin.Android.Build.Tests {
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("AndroidIncludeDebugSymbols", "true");
 			proj.SetProperty ("PublishTrimmed", "true");
+			proj.SetProperty ("_AndroidUsePreGeneratedMonoAndroidTypeMap", "true");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");

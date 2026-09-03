@@ -82,6 +82,7 @@
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' and '$(AndroidIncludeDebugSymbols)' == 'true' and '$(PublishTrimmed)' != 'true' and '$(_TrimmableTypeMapPackageNamingPolicy.ToLowerInvariant())' == 'crc64' and Exists('$(_PreGeneratedMonoAndroidTypeMapAssembly)') and Exists('$(_PreGeneratedJavaInteropTypeMapAssembly)') and Exists('$(_PreGeneratedMonoAndroidTypeMapJar)') and Exists('$(_PreGeneratedMonoAndroidTypeMapAcwMap)') ">true</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
+    <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(PublishTrimmed)' == 'true' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <_PreGeneratedJcwValidationInput Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">$(_PreGeneratedMonoAndroidTypeMapJar)</_PreGeneratedJcwValidationInput>
     <_UseTrimmableCoreClrProguardConfiguration Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">true</_UseTrimmableCoreClrProguardConfiguration>
     <_TrimmableTypeMapKeepRulesAcwMapFile>$(_AcwMapFile)</_TrimmableTypeMapKeepRulesAcwMapFile>
