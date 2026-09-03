@@ -916,11 +916,15 @@ sealed class TypeMapAssemblyEmitter
 
 	static void EmitJniObjectReferenceOptions (PEAssemblyBuilder.TrackedInstructionEncoder encoder)
 	{
-		encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
+		const int jniObjectReferenceOptionsCopy = 1;
+		const int jniHandleOwnershipDoNotRegister = 0x10;
+		const int ownershipToOptionsShift = 2;
+
+		encoder.LoadConstantI4 (jniObjectReferenceOptionsCopy);
 		encoder.OpCode (ILOpCode.Ldarg_2);
-		encoder.LoadConstantI4 (0x10); // JniHandleOwnership.DoNotRegister
+		encoder.LoadConstantI4 (jniHandleOwnershipDoNotRegister);
 		encoder.OpCode (ILOpCode.And);
-		encoder.LoadConstantI4 (2);
+		encoder.LoadConstantI4 (ownershipToOptionsShift);
 		encoder.OpCode (ILOpCode.Shr_un);
 		encoder.OpCode (ILOpCode.Or);
 	}

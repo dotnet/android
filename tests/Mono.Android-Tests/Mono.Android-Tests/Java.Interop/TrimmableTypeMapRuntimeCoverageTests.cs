@@ -400,7 +400,7 @@ namespace Java.InteropTests
 		public static int ConstructorInvocations;
 		public static int DisposeInvocations;
 		public static JniObjectReferenceOptions Options;
-		public static Barrier ActivationBarrier;
+		public static volatile Barrier ActivationBarrier;
 
 		public TrimmableRuntimeJavaInteropPeer (ref JniObjectReference reference, JniObjectReferenceOptions options)
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
