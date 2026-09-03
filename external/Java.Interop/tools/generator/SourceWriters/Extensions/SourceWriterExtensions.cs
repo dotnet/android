@@ -246,7 +246,7 @@ namespace generator.SourceWriters
 				body.Add ("}");
 				body.Add ("catch (Java.Lang.NoSuchMethodError) {");
 				if (opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1 && opt.UseUtf8MemberNames)
-					body.Add ("	throw new Java.Lang.AbstractMethodError (global::System.Text.Encoding.UTF8.GetString (__id));");
+					body.Add ("	throw new Java.Lang.AbstractMethodError (__id.ToString ());");
 				else
 					body.Add ("	throw new Java.Lang.AbstractMethodError (__id);");
 			}
@@ -265,7 +265,7 @@ namespace generator.SourceWriters
 		public static string GetEncodedMemberDeclaration (string name, string signature, CodeGenerationOptions opt)
 		{
 			if (opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1 && opt.UseUtf8MemberNames)
-				return $"ReadOnlySpan<byte> __id = {opt.GetUtf8SpanExpression ($"{name}.{signature}")};";
+				return $"var __id = {opt.GetUtf8MemberExpression (name, signature)};";
 			return $"const string __id = \"{name}.{signature}\";";
 		}
 

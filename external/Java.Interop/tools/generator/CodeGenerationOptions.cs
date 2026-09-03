@@ -86,6 +86,8 @@ namespace MonoDroid.Generation
 
 		public string GetUtf8MemoryExpression (string value) => utf8StringPool.GetMemoryExpression (value);
 
+		public string GetUtf8MemberExpression (string name, string signature) => utf8StringPool.GetMemberExpression (name, signature);
+
 		public void WriteUtf8StringPool (GenerationInfo generationInfo)
 		{
 			if (UseUtf8MemberNames)
@@ -347,13 +349,25 @@ namespace MonoDroid.Generation
 			return GetExpression ("R", entry);
 		}
 
+		public string GetMemberExpression (string name, string signature)
+		{
+			uint nameValue      = (uint) GetPackedValue (GetEntry (name));
+			uint signatureValue = (uint) GetPackedValue (GetEntry (signature));
+			long value          = unchecked ((long) (nameValue | ((ulong) signatureValue << 32)));
+			return $"global::__U8.E ({value}L)";
+		}
+
 		static string GetExpression (string method, (int Offset, int Length) entry)
+		{
+			return $"global::__U8.{method} ({GetPackedValue (entry)})";
+		}
+
+		static int GetPackedValue ((int Offset, int Length) entry)
 		{
 			if (entry.Offset > OffsetMask || entry.Length > LengthMask)
 				throw new InvalidOperationException ("The UTF-8 string pool exceeds its packed offset or length limit.");
 
-			int packed = unchecked (entry.Offset | (entry.Length << OffsetBits));
-			return $"global::__U8.{method} ({packed})";
+			return unchecked (entry.Offset | (entry.Length << OffsetBits));
 		}
 
 		(int Offset, int Length) GetEntry (string text)
@@ -385,6 +399,7 @@ namespace MonoDroid.Generation
 			writer.WriteLine ("\tinternal static readonly global::System.ReadOnlyMemory<byte> M = new B ().Memory;");
 			writer.WriteLine ($"\tinternal static global::System.ReadOnlyMemory<byte> R (int value) => M.Slice (value & {OffsetMask}, (int) ((uint) value >> {OffsetBits}));");
 			writer.WriteLine ($"\tinternal static global::System.ReadOnlySpan<byte> S (int value) => D.Slice (value & {OffsetMask}, (int) ((uint) value >> {OffsetBits}));");
+			writer.WriteLine ("\tinternal static global::Java.Interop.JniUtf8EncodedMember E (long value) => new (S ((int) value), S ((int) (value >> 32)));");
 			writer.WriteLine ($"\tstatic global::System.ReadOnlySpan<byte> D => \"{Escape (value)}\"u8;");
 			writer.WriteLine ();
 			writer.WriteLine ("\tsealed unsafe class B : global::System.Buffers.MemoryManager<byte>");

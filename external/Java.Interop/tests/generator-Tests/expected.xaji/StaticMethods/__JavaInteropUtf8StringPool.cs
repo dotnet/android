@@ -6,7 +6,8 @@ internal static class __U8
 	internal static readonly global::System.ReadOnlyMemory<byte> M = new B ().Memory;
 	internal static global::System.ReadOnlyMemory<byte> R (int value) => M.Slice (value & 4194303, (int) ((uint) value >> 22));
 	internal static global::System.ReadOnlySpan<byte> S (int value) => D.Slice (value & 4194303, (int) ((uint) value >> 22));
-	static global::System.ReadOnlySpan<byte> D => "java/lang/Objectxamarin/test/SomeObjectmethodAsInt.()ImethodAsString.()Ljava/lang/String;Obsoletemethod.()Ljava/lang/String;"u8;
+	internal static global::Java.Interop.JniUtf8EncodedMember E (long value) => new (S ((int) value), S ((int) (value >> 32)));
+	static global::System.ReadOnlySpan<byte> D => "java/lang/Objectxamarin/test/SomeObjectmethodAsInt()ImethodAsString()Ljava/lang/String;Obsoletemethod"u8;
 
 	sealed unsafe class B : global::System.Buffers.MemoryManager<byte>
 	{

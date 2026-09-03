@@ -50,7 +50,7 @@ namespace Xamarin.Test {
 		[Register ("methodAsInt", "()I", "")]
 		public static unsafe int MethodAsInt ()
 		{
-			ReadOnlySpan<byte> __id = global::__U8.S (62914599);
+			var __id = global::__U8.E (54043410322948135L);
 			try {
 				var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
 				return __rm;
@@ -62,7 +62,7 @@ namespace Xamarin.Test {
 		[Register ("methodAsString", "()Ljava/lang/String;", "")]
 		public static unsafe string MethodAsString ()
 		{
-			ReadOnlySpan<byte> __id = global::__U8.S (146800694);
+			var __id = global::__U8.E (360288258011168821L);
 			try {
 				var __rm = _members.StaticMethods.InvokeObjectMethod (__id, null);
 				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
@@ -75,7 +75,7 @@ namespace Xamarin.Test {
 		[Register ("Obsoletemethod", "()Ljava/lang/String;", "")]
 		public static unsafe string Obsoletemethod ()
 		{
-			ReadOnlySpan<byte> __id = global::__U8.S (146800729);
+			var __id = global::__U8.E (360288258011168855L);
 			try {
 				var __rm = _members.StaticMethods.InvokeObjectMethod (__id, null);
 				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);

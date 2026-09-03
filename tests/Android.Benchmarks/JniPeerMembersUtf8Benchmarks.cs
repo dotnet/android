@@ -19,15 +19,24 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	static readonly ReadOnlyMemory<byte> StringPeerType = "java/lang/String"u8.ToArray ();
 	static ReadOnlySpan<byte> MemberPool => "()VhashCode.()IcurrentTimeMillis.()JdetailMessage.Ljava/lang/String;out.Ljava/io/PrintStream;"u8;
 	static ReadOnlySpan<byte> GetMember (int value) => MemberPool.Slice (value & 4194303, (int) ((uint) value >> 22));
+	static ReadOnlySpan<byte> SplitMemberPool => "()VhashCode()IcurrentTimeMillis()JdetailMessageLjava/lang/String;outLjava/io/PrintStream;"u8;
+	static ReadOnlySpan<byte> GetSplitMember (int value) => SplitMemberPool.Slice (value & 4194303, (int) ((uint) value >> 22));
 	static ReadOnlySpan<byte> ConstructorUtf8 => GetMember (12582912);
 	static ReadOnlySpan<byte> InstanceMethodUtf8 => GetMember (50331651);
 	static ReadOnlySpan<byte> StaticMethodUtf8 => GetMember (88080399);
 	static ReadOnlySpan<byte> InstanceFieldUtf8 => GetMember (134217764);
 	static ReadOnlySpan<byte> StaticFieldUtf8 => GetMember (104857668);
+	static JniUtf8EncodedMember InstanceMethodSplit => new (GetSplitMember (33554435), GetSplitMember (12582923));
+	static JniUtf8EncodedMember StaticMethodSplit => new (GetSplitMember (71303182), GetSplitMember (12582943));
+	static JniUtf8EncodedMember InstanceFieldSplit => new (GetSplitMember (54525986), GetSplitMember (75497519));
+	static JniUtf8EncodedMember StaticFieldSplit => new (GetSplitMember (12582977), GetSplitMember (88080452));
 
 	BenchmarkPeerMembers? stringMembers;
 	BenchmarkPeerMembers? throwableMembers;
 	BenchmarkPeerMembers? systemMembers;
+	BenchmarkPeerMembers? splitStringMembers;
+	BenchmarkPeerMembers? splitThrowableMembers;
+	BenchmarkPeerMembers? splitSystemMembers;
 	Java.Lang.String? peer;
 	Java.Lang.Throwable? throwable;
 	JniMethodInfo? instanceMethodInfo;
@@ -36,6 +45,9 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	BenchmarkPeerMembers StringMembers => stringMembers ?? throw new InvalidOperationException ();
 	BenchmarkPeerMembers ThrowableMembers => throwableMembers ?? throw new InvalidOperationException ();
 	BenchmarkPeerMembers SystemMembers => systemMembers ?? throw new InvalidOperationException ();
+	BenchmarkPeerMembers SplitStringMembers => splitStringMembers ?? throw new InvalidOperationException ();
+	BenchmarkPeerMembers SplitThrowableMembers => splitThrowableMembers ?? throw new InvalidOperationException ();
+	BenchmarkPeerMembers SplitSystemMembers => splitSystemMembers ?? throw new InvalidOperationException ();
 	Java.Lang.String Peer => peer ?? throw new InvalidOperationException ();
 	Java.Lang.Throwable Throwable => throwable ?? throw new InvalidOperationException ();
 	JniMethodInfo InstanceMethodInfo => instanceMethodInfo ?? throw new InvalidOperationException ();
@@ -47,6 +59,9 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 		stringMembers = new BenchmarkPeerMembers ("java/lang/String", typeof (Java.Lang.String));
 		throwableMembers = new BenchmarkPeerMembers ("java/lang/Throwable", typeof (Java.Lang.Throwable));
 		systemMembers = new BenchmarkPeerMembers ("java/lang/System", typeof (Java.Lang.String));
+		splitStringMembers = new BenchmarkPeerMembers ("java/lang/String", typeof (Java.Lang.String));
+		splitThrowableMembers = new BenchmarkPeerMembers ("java/lang/Throwable", typeof (Java.Lang.Throwable));
+		splitSystemMembers = new BenchmarkPeerMembers ("java/lang/System", typeof (Java.Lang.String));
 		peer = new Java.Lang.String ("benchmark");
 		throwable = new Java.Lang.Throwable ("benchmark");
 
@@ -54,12 +69,16 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 		_ = StringMembers.InstanceMethods.GetConstructor (ConstructorUtf8);
 		instanceMethodInfo = StringMembers.InstanceMethods.GetMethodInfo (InstanceMethod);
 		_ = StringMembers.InstanceMethods.GetMethodInfo (InstanceMethodUtf8);
+		_ = SplitStringMembers.InstanceMethods.GetMethodInfo (InstanceMethodSplit);
 		staticMethodInfo = SystemMembers.StaticMethods.GetMethodInfo (StaticMethod);
 		_ = SystemMembers.StaticMethods.GetMethodInfo (StaticMethodUtf8);
+		_ = SplitSystemMembers.StaticMethods.GetMethodInfo (StaticMethodSplit);
 		_ = ThrowableMembers.InstanceFields.GetFieldInfo (InstanceField);
 		_ = ThrowableMembers.InstanceFields.GetFieldInfo (InstanceFieldUtf8);
+		_ = SplitThrowableMembers.InstanceFields.GetFieldInfo (InstanceFieldSplit);
 		_ = SystemMembers.StaticFields.GetFieldInfo (StaticField);
 		_ = SystemMembers.StaticFields.GetFieldInfo (StaticFieldUtf8);
+		_ = SplitSystemMembers.StaticFields.GetFieldInfo (StaticFieldSplit);
 	}
 
 	[GlobalCleanup]
@@ -73,6 +92,12 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 			JniPeerMembers.Dispose (throwableMembers);
 		if (systemMembers is not null)
 			JniPeerMembers.Dispose (systemMembers);
+		if (splitStringMembers is not null)
+			JniPeerMembers.Dispose (splitStringMembers);
+		if (splitThrowableMembers is not null)
+			JniPeerMembers.Dispose (splitThrowableMembers);
+		if (splitSystemMembers is not null)
+			JniPeerMembers.Dispose (splitSystemMembers);
 	}
 
 	[Benchmark (Baseline = true)]
@@ -129,6 +154,11 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	public JniMethodInfo GetInstanceMethodUtf8 () =>
 		StringMembers.InstanceMethods.GetMethodInfo (InstanceMethodUtf8);
 
+	[Benchmark]
+	[BenchmarkCategory ("InstanceMethodLookup")]
+	public JniMethodInfo GetInstanceMethodSplitUtf8 () =>
+		SplitStringMembers.InstanceMethods.GetMethodInfo (InstanceMethodSplit);
+
 	[Benchmark (Baseline = true)]
 	[BenchmarkCategory ("InstanceMethodInvoke")]
 	public int InvokeInstanceMethodString () =>
@@ -138,6 +168,11 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	[BenchmarkCategory ("InstanceMethodInvoke")]
 	public int InvokeInstanceMethodUtf8 () =>
 		StringMembers.InstanceMethods.InvokeVirtualInt32Method (InstanceMethodUtf8, Peer, null);
+
+	[Benchmark]
+	[BenchmarkCategory ("InstanceMethodInvoke")]
+	public int InvokeInstanceMethodSplitUtf8 () =>
+		SplitStringMembers.InstanceMethods.InvokeVirtualInt32Method (InstanceMethodSplit, Peer, null);
 
 	[Benchmark]
 	[BenchmarkCategory ("InstanceMethodInvoke")]
@@ -154,6 +189,11 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	public JniMethodInfo GetStaticMethodUtf8 () =>
 		SystemMembers.StaticMethods.GetMethodInfo (StaticMethodUtf8);
 
+	[Benchmark]
+	[BenchmarkCategory ("StaticMethodLookup")]
+	public JniMethodInfo GetStaticMethodSplitUtf8 () =>
+		SplitSystemMembers.StaticMethods.GetMethodInfo (StaticMethodSplit);
+
 	[Benchmark (Baseline = true)]
 	[BenchmarkCategory ("StaticMethodInvoke")]
 	public long InvokeStaticMethodString () =>
@@ -163,6 +203,11 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	[BenchmarkCategory ("StaticMethodInvoke")]
 	public long InvokeStaticMethodUtf8 () =>
 		SystemMembers.StaticMethods.InvokeInt64Method (StaticMethodUtf8, null);
+
+	[Benchmark]
+	[BenchmarkCategory ("StaticMethodInvoke")]
+	public long InvokeStaticMethodSplitUtf8 () =>
+		SplitSystemMembers.StaticMethods.InvokeInt64Method (StaticMethodSplit, null);
 
 	[Benchmark]
 	[BenchmarkCategory ("StaticMethodInvoke")]
@@ -178,6 +223,11 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	[BenchmarkCategory ("InstanceFieldLookup")]
 	public JniFieldInfo GetInstanceFieldInfoUtf8 () =>
 		ThrowableMembers.InstanceFields.GetFieldInfo (InstanceFieldUtf8);
+
+	[Benchmark]
+	[BenchmarkCategory ("InstanceFieldLookup")]
+	public JniFieldInfo GetInstanceFieldInfoSplitUtf8 () =>
+		SplitThrowableMembers.InstanceFields.GetFieldInfo (InstanceFieldSplit);
 
 	[Benchmark (Baseline = true)]
 	[BenchmarkCategory ("InstanceFieldGet")]
@@ -203,6 +253,18 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 		}
 	}
 
+	[Benchmark]
+	[BenchmarkCategory ("InstanceFieldGet")]
+	public bool GetInstanceFieldValueSplitUtf8 ()
+	{
+		var value = SplitThrowableMembers.InstanceFields.GetObjectValue (InstanceFieldSplit, Throwable);
+		try {
+			return value.IsValid;
+		} finally {
+			JniObjectReference.Dispose (ref value);
+		}
+	}
+
 	[Benchmark (Baseline = true)]
 	[BenchmarkCategory ("StaticFieldLookup")]
 	public JniFieldInfo GetStaticFieldInfoString () =>
@@ -212,6 +274,11 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	[BenchmarkCategory ("StaticFieldLookup")]
 	public JniFieldInfo GetStaticFieldInfoUtf8 () =>
 		SystemMembers.StaticFields.GetFieldInfo (StaticFieldUtf8);
+
+	[Benchmark]
+	[BenchmarkCategory ("StaticFieldLookup")]
+	public JniFieldInfo GetStaticFieldInfoSplitUtf8 () =>
+		SplitSystemMembers.StaticFields.GetFieldInfo (StaticFieldSplit);
 
 	[Benchmark (Baseline = true)]
 	[BenchmarkCategory ("StaticFieldGet")]
@@ -230,6 +297,18 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	public bool GetStaticFieldValueUtf8 ()
 	{
 		var value = SystemMembers.StaticFields.GetObjectValue (StaticFieldUtf8);
+		try {
+			return value.IsValid;
+		} finally {
+			JniObjectReference.Dispose (ref value);
+		}
+	}
+
+	[Benchmark]
+	[BenchmarkCategory ("StaticFieldGet")]
+	public bool GetStaticFieldValueSplitUtf8 ()
+	{
+		var value = SplitSystemMembers.StaticFields.GetObjectValue (StaticFieldSplit);
 		try {
 			return value.IsValid;
 		} finally {

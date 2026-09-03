@@ -67,7 +67,7 @@ namespace Java.Interop
 
 		public JniMethodInfo GetConstructor (ReadOnlySpan<byte> signature)
 		{
-			return Utf8InstanceMethods.GetOrAdd (signature, static (member, methods) => {
+			return Utf8InstanceMethods.GetOrAdd (signature, default, static (member, _, methods) => {
 				Span<byte> terminatedSignature = member.Length + 1 <= 512
 					? stackalloc byte [member.Length + 1]
 					: new byte [member.Length + 1];
@@ -118,13 +118,16 @@ namespace Java.Interop
 
 		public JniMethodInfo GetMethodInfo (ReadOnlySpan<byte> encodedMember)
 		{
-			return Utf8InstanceMethods.GetOrAdd (encodedMember, static (member, methods) => {
-				int separator = JniPeerMembers.GetSignatureSeparatorIndex (member);
-				return methods.GetMethodInfo (member.Slice (0, separator), member.Slice (separator + 1));
-			}, this);
+			return GetMethodInfo (new JniUtf8EncodedMember (encodedMember));
 		}
 
-		JniMethodInfo GetMethodInfo (ReadOnlySpan<byte> method, ReadOnlySpan<byte> signature)
+		public JniMethodInfo GetMethodInfo (JniUtf8EncodedMember encodedMember)
+		{
+			return Utf8InstanceMethods.GetOrAdd (encodedMember.Name, encodedMember.Signature, static (method, signature, methods) =>
+					methods.ResolveMethodInfo (method, signature), this);
+		}
+
+		JniMethodInfo ResolveMethodInfo (ReadOnlySpan<byte> method, ReadOnlySpan<byte> signature)
 		{
 			Span<byte> terminatedMethod = method.Length + 1 <= 256
 				? stackalloc byte [method.Length + 1]

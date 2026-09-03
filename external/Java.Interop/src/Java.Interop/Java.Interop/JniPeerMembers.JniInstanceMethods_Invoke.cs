@@ -93,7 +93,7 @@ namespace Java.Interop {
 					GC.KeepAlive (self);
 				}
 			}
-			public unsafe void InvokeAbstractVoidMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe void InvokeAbstractVoidMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -111,7 +111,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe void InvokeVirtualVoidMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe void InvokeVirtualVoidMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -140,7 +140,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe void InvokeNonvirtualVoidMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe void InvokeNonvirtualVoidMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -241,7 +241,7 @@ namespace Java.Interop {
 					GC.KeepAlive (self);
 				}
 			}
-			public unsafe bool InvokeAbstractBooleanMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe bool InvokeAbstractBooleanMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -259,7 +259,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe bool InvokeVirtualBooleanMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe bool InvokeVirtualBooleanMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -288,7 +288,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe bool InvokeNonvirtualBooleanMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe bool InvokeNonvirtualBooleanMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -389,7 +389,7 @@ namespace Java.Interop {
 					GC.KeepAlive (self);
 				}
 			}
-			public unsafe sbyte InvokeAbstractSByteMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe sbyte InvokeAbstractSByteMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -407,7 +407,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe sbyte InvokeVirtualSByteMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe sbyte InvokeVirtualSByteMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -436,7 +436,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe sbyte InvokeNonvirtualSByteMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe sbyte InvokeNonvirtualSByteMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -537,7 +537,7 @@ namespace Java.Interop {
 					GC.KeepAlive (self);
 				}
 			}
-			public unsafe char InvokeAbstractCharMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe char InvokeAbstractCharMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -555,7 +555,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe char InvokeVirtualCharMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe char InvokeVirtualCharMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -584,7 +584,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe char InvokeNonvirtualCharMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe char InvokeNonvirtualCharMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -685,7 +685,7 @@ namespace Java.Interop {
 					GC.KeepAlive (self);
 				}
 			}
-			public unsafe short InvokeAbstractInt16Method (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe short InvokeAbstractInt16Method (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -703,7 +703,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe short InvokeVirtualInt16Method (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe short InvokeVirtualInt16Method (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -732,7 +732,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe short InvokeNonvirtualInt16Method (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe short InvokeNonvirtualInt16Method (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -833,7 +833,7 @@ namespace Java.Interop {
 					GC.KeepAlive (self);
 				}
 			}
-			public unsafe int InvokeAbstractInt32Method (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe int InvokeAbstractInt32Method (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -851,7 +851,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe int InvokeVirtualInt32Method (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe int InvokeVirtualInt32Method (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -880,7 +880,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe int InvokeNonvirtualInt32Method (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe int InvokeNonvirtualInt32Method (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -981,7 +981,7 @@ namespace Java.Interop {
 					GC.KeepAlive (self);
 				}
 			}
-			public unsafe long InvokeAbstractInt64Method (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe long InvokeAbstractInt64Method (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -999,7 +999,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe long InvokeVirtualInt64Method (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe long InvokeVirtualInt64Method (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -1028,7 +1028,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe long InvokeNonvirtualInt64Method (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe long InvokeNonvirtualInt64Method (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -1129,7 +1129,7 @@ namespace Java.Interop {
 					GC.KeepAlive (self);
 				}
 			}
-			public unsafe float InvokeAbstractSingleMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe float InvokeAbstractSingleMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -1147,7 +1147,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe float InvokeVirtualSingleMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe float InvokeVirtualSingleMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -1176,7 +1176,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe float InvokeNonvirtualSingleMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe float InvokeNonvirtualSingleMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -1277,7 +1277,7 @@ namespace Java.Interop {
 					GC.KeepAlive (self);
 				}
 			}
-			public unsafe double InvokeAbstractDoubleMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe double InvokeAbstractDoubleMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -1295,7 +1295,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe double InvokeVirtualDoubleMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe double InvokeVirtualDoubleMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -1324,7 +1324,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe double InvokeNonvirtualDoubleMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe double InvokeNonvirtualDoubleMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -1425,7 +1425,7 @@ namespace Java.Interop {
 					GC.KeepAlive (self);
 				}
 			}
-			public unsafe JniObjectReference InvokeAbstractObjectMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe JniObjectReference InvokeAbstractObjectMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -1443,7 +1443,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe JniObjectReference InvokeVirtualObjectMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe JniObjectReference InvokeVirtualObjectMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 
@@ -1472,7 +1472,7 @@ namespace Java.Interop {
 				}
 			}
 
-			public unsafe JniObjectReference InvokeNonvirtualObjectMethod (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
+			public unsafe JniObjectReference InvokeNonvirtualObjectMethod (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniArgumentValue* parameters)
 			{
 				JniPeerMembers.AssertSelf (self);
 

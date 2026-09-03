@@ -35,10 +35,12 @@ namespace Java.Interop
 
 		public JniFieldInfo GetFieldInfo (ReadOnlySpan<byte> encodedMember)
 		{
-			return Utf8InstanceFields.GetOrAdd (encodedMember, static (member, fields) => {
-				int separator = JniPeerMembers.GetSignatureSeparatorIndex (member);
-				var fieldName = member.Slice (0, separator);
-				var fieldType = member.Slice (separator + 1);
+			return GetFieldInfo (new JniUtf8EncodedMember (encodedMember));
+		}
+
+		public JniFieldInfo GetFieldInfo (JniUtf8EncodedMember encodedMember)
+		{
+			return Utf8InstanceFields.GetOrAdd (encodedMember.Name, encodedMember.Signature, static (fieldName, fieldType, fields) => {
 				Span<byte> field = fieldName.Length + 1 <= 256
 					? stackalloc byte [fieldName.Length + 1]
 					: new byte [fieldName.Length + 1];

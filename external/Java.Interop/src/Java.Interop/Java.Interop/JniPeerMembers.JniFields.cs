@@ -28,7 +28,7 @@ namespace Java.Interop {
 			GC.KeepAlive (self);
 		}
 		public bool GetBooleanValue (
-			ReadOnlySpan<byte> encodedMember,
+			JniUtf8EncodedMember encodedMember,
 			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
@@ -39,7 +39,7 @@ namespace Java.Interop {
 			return r;
 		}
 
-		public void SetValue (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, bool value)
+		public void SetValue (JniUtf8EncodedMember encodedMember, IJavaPeerable self, bool value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -69,7 +69,7 @@ namespace Java.Interop {
 			GC.KeepAlive (self);
 		}
 		public sbyte GetSByteValue (
-			ReadOnlySpan<byte> encodedMember,
+			JniUtf8EncodedMember encodedMember,
 			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
@@ -80,7 +80,7 @@ namespace Java.Interop {
 			return r;
 		}
 
-		public void SetValue (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, sbyte value)
+		public void SetValue (JniUtf8EncodedMember encodedMember, IJavaPeerable self, sbyte value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -110,7 +110,7 @@ namespace Java.Interop {
 			GC.KeepAlive (self);
 		}
 		public char GetCharValue (
-			ReadOnlySpan<byte> encodedMember,
+			JniUtf8EncodedMember encodedMember,
 			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
@@ -121,7 +121,7 @@ namespace Java.Interop {
 			return r;
 		}
 
-		public void SetValue (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, char value)
+		public void SetValue (JniUtf8EncodedMember encodedMember, IJavaPeerable self, char value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -151,7 +151,7 @@ namespace Java.Interop {
 			GC.KeepAlive (self);
 		}
 		public short GetInt16Value (
-			ReadOnlySpan<byte> encodedMember,
+			JniUtf8EncodedMember encodedMember,
 			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
@@ -162,7 +162,7 @@ namespace Java.Interop {
 			return r;
 		}
 
-		public void SetValue (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, short value)
+		public void SetValue (JniUtf8EncodedMember encodedMember, IJavaPeerable self, short value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -192,7 +192,7 @@ namespace Java.Interop {
 			GC.KeepAlive (self);
 		}
 		public int GetInt32Value (
-			ReadOnlySpan<byte> encodedMember,
+			JniUtf8EncodedMember encodedMember,
 			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
@@ -203,7 +203,7 @@ namespace Java.Interop {
 			return r;
 		}
 
-		public void SetValue (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, int value)
+		public void SetValue (JniUtf8EncodedMember encodedMember, IJavaPeerable self, int value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -233,7 +233,7 @@ namespace Java.Interop {
 			GC.KeepAlive (self);
 		}
 		public long GetInt64Value (
-			ReadOnlySpan<byte> encodedMember,
+			JniUtf8EncodedMember encodedMember,
 			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
@@ -244,7 +244,7 @@ namespace Java.Interop {
 			return r;
 		}
 
-		public void SetValue (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, long value)
+		public void SetValue (JniUtf8EncodedMember encodedMember, IJavaPeerable self, long value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -274,7 +274,7 @@ namespace Java.Interop {
 			GC.KeepAlive (self);
 		}
 		public float GetSingleValue (
-			ReadOnlySpan<byte> encodedMember,
+			JniUtf8EncodedMember encodedMember,
 			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
@@ -285,7 +285,7 @@ namespace Java.Interop {
 			return r;
 		}
 
-		public void SetValue (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, float value)
+		public void SetValue (JniUtf8EncodedMember encodedMember, IJavaPeerable self, float value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -315,7 +315,7 @@ namespace Java.Interop {
 			GC.KeepAlive (self);
 		}
 		public double GetDoubleValue (
-			ReadOnlySpan<byte> encodedMember,
+			JniUtf8EncodedMember encodedMember,
 			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
@@ -326,7 +326,7 @@ namespace Java.Interop {
 			return r;
 		}
 
-		public void SetValue (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, double value)
+		public void SetValue (JniUtf8EncodedMember encodedMember, IJavaPeerable self, double value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -356,7 +356,7 @@ namespace Java.Interop {
 			GC.KeepAlive (self);
 		}
 		public JniObjectReference GetObjectValue (
-			ReadOnlySpan<byte> encodedMember,
+			JniUtf8EncodedMember encodedMember,
 			IJavaPeerable   self)
 		{
 			JniPeerMembers.AssertSelf (self);
@@ -367,7 +367,7 @@ namespace Java.Interop {
 			return r;
 		}
 
-		public void SetValue (ReadOnlySpan<byte> encodedMember, IJavaPeerable self, JniObjectReference value)
+		public void SetValue (JniUtf8EncodedMember encodedMember, IJavaPeerable self, JniObjectReference value)
 		{
 			JniPeerMembers.AssertSelf (self);
 
@@ -390,13 +390,13 @@ namespace Java.Interop {
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStaticBooleanField (Members.JniPeerType.PeerReference, f, value);
 		}
-		public bool GetBooleanValue (ReadOnlySpan<byte> encodedMember)
+		public bool GetBooleanValue (JniUtf8EncodedMember encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			return JniEnvironment.StaticFields.GetStaticBooleanField (Members.JniPeerType.PeerReference, f);
 		}
 
-		public void SetValue (ReadOnlySpan<byte> encodedMember, bool value)
+		public void SetValue (JniUtf8EncodedMember encodedMember, bool value)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStaticBooleanField (Members.JniPeerType.PeerReference, f, value);
@@ -413,13 +413,13 @@ namespace Java.Interop {
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStaticByteField (Members.JniPeerType.PeerReference, f, value);
 		}
-		public sbyte GetSByteValue (ReadOnlySpan<byte> encodedMember)
+		public sbyte GetSByteValue (JniUtf8EncodedMember encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			return JniEnvironment.StaticFields.GetStaticByteField (Members.JniPeerType.PeerReference, f);
 		}
 
-		public void SetValue (ReadOnlySpan<byte> encodedMember, sbyte value)
+		public void SetValue (JniUtf8EncodedMember encodedMember, sbyte value)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStaticByteField (Members.JniPeerType.PeerReference, f, value);
@@ -436,13 +436,13 @@ namespace Java.Interop {
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStaticCharField (Members.JniPeerType.PeerReference, f, value);
 		}
-		public char GetCharValue (ReadOnlySpan<byte> encodedMember)
+		public char GetCharValue (JniUtf8EncodedMember encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			return JniEnvironment.StaticFields.GetStaticCharField (Members.JniPeerType.PeerReference, f);
 		}
 
-		public void SetValue (ReadOnlySpan<byte> encodedMember, char value)
+		public void SetValue (JniUtf8EncodedMember encodedMember, char value)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStaticCharField (Members.JniPeerType.PeerReference, f, value);
@@ -459,13 +459,13 @@ namespace Java.Interop {
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStaticShortField (Members.JniPeerType.PeerReference, f, value);
 		}
-		public short GetInt16Value (ReadOnlySpan<byte> encodedMember)
+		public short GetInt16Value (JniUtf8EncodedMember encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			return JniEnvironment.StaticFields.GetStaticShortField (Members.JniPeerType.PeerReference, f);
 		}
 
-		public void SetValue (ReadOnlySpan<byte> encodedMember, short value)
+		public void SetValue (JniUtf8EncodedMember encodedMember, short value)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStaticShortField (Members.JniPeerType.PeerReference, f, value);
@@ -482,13 +482,13 @@ namespace Java.Interop {
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStaticIntField (Members.JniPeerType.PeerReference, f, value);
 		}
-		public int GetInt32Value (ReadOnlySpan<byte> encodedMember)
+		public int GetInt32Value (JniUtf8EncodedMember encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			return JniEnvironment.StaticFields.GetStaticIntField (Members.JniPeerType.PeerReference, f);
 		}
 
-		public void SetValue (ReadOnlySpan<byte> encodedMember, int value)
+		public void SetValue (JniUtf8EncodedMember encodedMember, int value)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStaticIntField (Members.JniPeerType.PeerReference, f, value);
@@ -505,13 +505,13 @@ namespace Java.Interop {
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStaticLongField (Members.JniPeerType.PeerReference, f, value);
 		}
-		public long GetInt64Value (ReadOnlySpan<byte> encodedMember)
+		public long GetInt64Value (JniUtf8EncodedMember encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			return JniEnvironment.StaticFields.GetStaticLongField (Members.JniPeerType.PeerReference, f);
 		}
 
-		public void SetValue (ReadOnlySpan<byte> encodedMember, long value)
+		public void SetValue (JniUtf8EncodedMember encodedMember, long value)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStaticLongField (Members.JniPeerType.PeerReference, f, value);
@@ -528,13 +528,13 @@ namespace Java.Interop {
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStaticFloatField (Members.JniPeerType.PeerReference, f, value);
 		}
-		public float GetSingleValue (ReadOnlySpan<byte> encodedMember)
+		public float GetSingleValue (JniUtf8EncodedMember encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			return JniEnvironment.StaticFields.GetStaticFloatField (Members.JniPeerType.PeerReference, f);
 		}
 
-		public void SetValue (ReadOnlySpan<byte> encodedMember, float value)
+		public void SetValue (JniUtf8EncodedMember encodedMember, float value)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStaticFloatField (Members.JniPeerType.PeerReference, f, value);
@@ -551,13 +551,13 @@ namespace Java.Interop {
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStaticDoubleField (Members.JniPeerType.PeerReference, f, value);
 		}
-		public double GetDoubleValue (ReadOnlySpan<byte> encodedMember)
+		public double GetDoubleValue (JniUtf8EncodedMember encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			return JniEnvironment.StaticFields.GetStaticDoubleField (Members.JniPeerType.PeerReference, f);
 		}
 
-		public void SetValue (ReadOnlySpan<byte> encodedMember, double value)
+		public void SetValue (JniUtf8EncodedMember encodedMember, double value)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStaticDoubleField (Members.JniPeerType.PeerReference, f, value);
@@ -574,13 +574,13 @@ namespace Java.Interop {
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStaticObjectField (Members.JniPeerType.PeerReference, f, value);
 		}
-		public JniObjectReference GetObjectValue (ReadOnlySpan<byte> encodedMember)
+		public JniObjectReference GetObjectValue (JniUtf8EncodedMember encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			return JniEnvironment.StaticFields.GetStaticObjectField (Members.JniPeerType.PeerReference, f);
 		}
 
-		public void SetValue (ReadOnlySpan<byte> encodedMember, JniObjectReference value)
+		public void SetValue (JniUtf8EncodedMember encodedMember, JniObjectReference value)
 		{
 			var f   = GetFieldInfo (encodedMember);
 			JniEnvironment.StaticFields.SetStaticObjectField (Members.JniPeerType.PeerReference, f, value);

@@ -33,6 +33,8 @@ namespace Java.InteropTests
 				var first  = members.InstanceMethods.GetMethodInfo (encodedMethod);
 				var second = members.InstanceMethods.GetMethodInfo (encodedMethod);
 				Assert.AreSame (first, second);
+				var split = new JniUtf8EncodedMember ("hashCode"u8, "()I"u8);
+				Assert.AreSame (first, members.InstanceMethods.GetMethodInfo (split));
 
 				byte [] constructorSignature = [(byte) '(', (byte) ')', (byte) 'V'];
 				var firstConstructor  = members.InstanceMethods.GetConstructor (constructorSignature);
@@ -41,6 +43,7 @@ namespace Java.InteropTests
 
 				using var value = new JavaLangRemappingTestObject ();
 				Assert.AreEqual (value.remappedToStaticHashCode (), members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I"u8, value, null));
+				Assert.AreEqual (value.remappedToStaticHashCode (), members.InstanceMethods.InvokeVirtualInt32Method (split, value, null));
 			} finally {
 				JniPeerMembers.Dispose (members);
 			}
@@ -55,6 +58,8 @@ namespace Java.InteropTests
 				var first  = members.StaticFields.GetFieldInfo (encodedField);
 				var second = members.StaticFields.GetFieldInfo (encodedField);
 				Assert.AreSame (first, second);
+				var split = new JniUtf8EncodedMember ("out"u8, "Ljava/io/PrintStream;"u8);
+				Assert.AreSame (first, members.StaticFields.GetFieldInfo (split));
 			} finally {
 				JniPeerMembers.Dispose (members);
 			}

@@ -1,89 +1,102 @@
 #nullable enable
-Java.Interop.JniPeerMembers.JniInstanceFields.GetBooleanValue(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self) -> bool
-Java.Interop.JniPeerMembers.JniInstanceFields.GetCharValue(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self) -> char
-Java.Interop.JniPeerMembers.JniInstanceFields.GetDoubleValue(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self) -> double
+Java.Interop.JniUtf8EncodedMember
+Java.Interop.JniUtf8EncodedMember.JniUtf8EncodedMember() -> void
+Java.Interop.JniUtf8EncodedMember.JniUtf8EncodedMember(System.ReadOnlySpan<byte> encodedMember) -> void
+Java.Interop.JniUtf8EncodedMember.JniUtf8EncodedMember(System.ReadOnlySpan<byte> name, System.ReadOnlySpan<byte> signature) -> void
+Java.Interop.JniUtf8EncodedMember.Name.get -> System.ReadOnlySpan<byte>
+Java.Interop.JniUtf8EncodedMember.Signature.get -> System.ReadOnlySpan<byte>
+override Java.Interop.JniUtf8EncodedMember.ToString() -> string!
+static Java.Interop.JniUtf8EncodedMember.FromReadOnlySpan(System.ReadOnlySpan<byte> encodedMember) -> Java.Interop.JniUtf8EncodedMember
+static Java.Interop.JniUtf8EncodedMember.implicit operator Java.Interop.JniUtf8EncodedMember(System.ReadOnlySpan<byte> encodedMember) -> Java.Interop.JniUtf8EncodedMember
+Java.Interop.JniPeerMembers.JniInstanceFields.GetBooleanValue(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self) -> bool
+Java.Interop.JniPeerMembers.JniInstanceFields.GetCharValue(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self) -> char
+Java.Interop.JniPeerMembers.JniInstanceFields.GetDoubleValue(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self) -> double
+Java.Interop.JniPeerMembers.JniInstanceFields.GetFieldInfo(Java.Interop.JniUtf8EncodedMember encodedMember) -> Java.Interop.JniFieldInfo!
 Java.Interop.JniPeerMembers.JniInstanceFields.GetFieldInfo(System.ReadOnlySpan<byte> encodedMember) -> Java.Interop.JniFieldInfo!
-Java.Interop.JniPeerMembers.JniInstanceFields.GetInt16Value(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self) -> short
-Java.Interop.JniPeerMembers.JniInstanceFields.GetInt32Value(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self) -> int
-Java.Interop.JniPeerMembers.JniInstanceFields.GetInt64Value(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self) -> long
-Java.Interop.JniPeerMembers.JniInstanceFields.GetObjectValue(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self) -> Java.Interop.JniObjectReference
-Java.Interop.JniPeerMembers.JniInstanceFields.GetSByteValue(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self) -> sbyte
-Java.Interop.JniPeerMembers.JniInstanceFields.GetSingleValue(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self) -> float
-Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniObjectReference value) -> void
-Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, bool value) -> void
-Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, char value) -> void
-Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, double value) -> void
-Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, float value) -> void
-Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, int value) -> void
-Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, long value) -> void
-Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, sbyte value) -> void
-Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, short value) -> void
+Java.Interop.JniPeerMembers.JniInstanceFields.GetInt16Value(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self) -> short
+Java.Interop.JniPeerMembers.JniInstanceFields.GetInt32Value(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self) -> int
+Java.Interop.JniPeerMembers.JniInstanceFields.GetInt64Value(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self) -> long
+Java.Interop.JniPeerMembers.JniInstanceFields.GetObjectValue(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self) -> Java.Interop.JniObjectReference
+Java.Interop.JniPeerMembers.JniInstanceFields.GetSByteValue(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self) -> sbyte
+Java.Interop.JniPeerMembers.JniInstanceFields.GetSingleValue(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self) -> float
+Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniObjectReference value) -> void
+Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, bool value) -> void
+Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, char value) -> void
+Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, double value) -> void
+Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, float value) -> void
+Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, int value) -> void
+Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, long value) -> void
+Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, sbyte value) -> void
+Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, short value) -> void
 Java.Interop.JniPeerMembers.JniInstanceMethods.FinishCreateInstance(System.ReadOnlySpan<byte> constructorSignature, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
 Java.Interop.JniPeerMembers.JniInstanceMethods.GetConstructor(System.ReadOnlySpan<byte> signature) -> Java.Interop.JniMethodInfo!
+Java.Interop.JniPeerMembers.JniInstanceMethods.GetMethodInfo(Java.Interop.JniUtf8EncodedMember encodedMember) -> Java.Interop.JniMethodInfo!
 Java.Interop.JniPeerMembers.JniInstanceMethods.GetMethodInfo(System.ReadOnlySpan<byte> encodedMember) -> Java.Interop.JniMethodInfo!
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractBooleanMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> bool
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractCharMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> char
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractDoubleMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> double
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractInt16Method(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> short
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractInt32Method(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> int
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractInt64Method(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> long
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractObjectMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractSByteMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> sbyte
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractSingleMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> float
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractVoidMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualBooleanMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> bool
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualCharMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> char
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualDoubleMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> double
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualInt16Method(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> short
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualInt32Method(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> int
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualInt64Method(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> long
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualObjectMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualSByteMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> sbyte
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualSingleMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> float
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualVoidMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualBooleanMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> bool
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualCharMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> char
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualDoubleMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> double
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualInt16Method(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> short
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualInt32Method(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> int
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualInt64Method(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> long
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualObjectMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualSByteMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> sbyte
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualSingleMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> float
-Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualVoidMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractBooleanMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> bool
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractCharMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> char
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractDoubleMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> double
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractInt16Method(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> short
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractInt32Method(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> int
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractInt64Method(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> long
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractObjectMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractSByteMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> sbyte
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractSingleMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> float
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractVoidMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualBooleanMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> bool
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualCharMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> char
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualDoubleMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> double
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualInt16Method(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> short
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualInt32Method(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> int
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualInt64Method(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> long
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualObjectMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualSByteMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> sbyte
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualSingleMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> float
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualVoidMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualBooleanMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> bool
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualCharMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> char
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualDoubleMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> double
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualInt16Method(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> short
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualInt32Method(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> int
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualInt64Method(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> long
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualObjectMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualSByteMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> sbyte
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualSingleMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> float
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualVoidMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
 Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(System.ReadOnlySpan<byte> constructorSignature, System.Type! declaringType, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
 Java.Interop.JniPeerMembers.JniPeerMembers(System.ReadOnlyMemory<byte> jniPeerTypeName, System.Type! managedPeerType) -> void
 Java.Interop.JniPeerMembers.JniPeerMembers(System.ReadOnlyMemory<byte> jniPeerTypeName, System.Type! managedPeerType, bool isInterface) -> void
-Java.Interop.JniPeerMembers.JniStaticFields.GetBooleanValue(System.ReadOnlySpan<byte> encodedMember) -> bool
-Java.Interop.JniPeerMembers.JniStaticFields.GetCharValue(System.ReadOnlySpan<byte> encodedMember) -> char
-Java.Interop.JniPeerMembers.JniStaticFields.GetDoubleValue(System.ReadOnlySpan<byte> encodedMember) -> double
+Java.Interop.JniPeerMembers.JniStaticFields.GetBooleanValue(Java.Interop.JniUtf8EncodedMember encodedMember) -> bool
+Java.Interop.JniPeerMembers.JniStaticFields.GetCharValue(Java.Interop.JniUtf8EncodedMember encodedMember) -> char
+Java.Interop.JniPeerMembers.JniStaticFields.GetDoubleValue(Java.Interop.JniUtf8EncodedMember encodedMember) -> double
+Java.Interop.JniPeerMembers.JniStaticFields.GetFieldInfo(Java.Interop.JniUtf8EncodedMember encodedMember) -> Java.Interop.JniFieldInfo!
 Java.Interop.JniPeerMembers.JniStaticFields.GetFieldInfo(System.ReadOnlySpan<byte> encodedMember) -> Java.Interop.JniFieldInfo!
-Java.Interop.JniPeerMembers.JniStaticFields.GetInt16Value(System.ReadOnlySpan<byte> encodedMember) -> short
-Java.Interop.JniPeerMembers.JniStaticFields.GetInt32Value(System.ReadOnlySpan<byte> encodedMember) -> int
-Java.Interop.JniPeerMembers.JniStaticFields.GetInt64Value(System.ReadOnlySpan<byte> encodedMember) -> long
-Java.Interop.JniPeerMembers.JniStaticFields.GetObjectValue(System.ReadOnlySpan<byte> encodedMember) -> Java.Interop.JniObjectReference
-Java.Interop.JniPeerMembers.JniStaticFields.GetSByteValue(System.ReadOnlySpan<byte> encodedMember) -> sbyte
-Java.Interop.JniPeerMembers.JniStaticFields.GetSingleValue(System.ReadOnlySpan<byte> encodedMember) -> float
-Java.Interop.JniPeerMembers.JniStaticFields.SetValue(System.ReadOnlySpan<byte> encodedMember, Java.Interop.JniObjectReference value) -> void
-Java.Interop.JniPeerMembers.JniStaticFields.SetValue(System.ReadOnlySpan<byte> encodedMember, bool value) -> void
-Java.Interop.JniPeerMembers.JniStaticFields.SetValue(System.ReadOnlySpan<byte> encodedMember, char value) -> void
-Java.Interop.JniPeerMembers.JniStaticFields.SetValue(System.ReadOnlySpan<byte> encodedMember, double value) -> void
-Java.Interop.JniPeerMembers.JniStaticFields.SetValue(System.ReadOnlySpan<byte> encodedMember, float value) -> void
-Java.Interop.JniPeerMembers.JniStaticFields.SetValue(System.ReadOnlySpan<byte> encodedMember, int value) -> void
-Java.Interop.JniPeerMembers.JniStaticFields.SetValue(System.ReadOnlySpan<byte> encodedMember, long value) -> void
-Java.Interop.JniPeerMembers.JniStaticFields.SetValue(System.ReadOnlySpan<byte> encodedMember, sbyte value) -> void
-Java.Interop.JniPeerMembers.JniStaticFields.SetValue(System.ReadOnlySpan<byte> encodedMember, short value) -> void
+Java.Interop.JniPeerMembers.JniStaticFields.GetInt16Value(Java.Interop.JniUtf8EncodedMember encodedMember) -> short
+Java.Interop.JniPeerMembers.JniStaticFields.GetInt32Value(Java.Interop.JniUtf8EncodedMember encodedMember) -> int
+Java.Interop.JniPeerMembers.JniStaticFields.GetInt64Value(Java.Interop.JniUtf8EncodedMember encodedMember) -> long
+Java.Interop.JniPeerMembers.JniStaticFields.GetObjectValue(Java.Interop.JniUtf8EncodedMember encodedMember) -> Java.Interop.JniObjectReference
+Java.Interop.JniPeerMembers.JniStaticFields.GetSByteValue(Java.Interop.JniUtf8EncodedMember encodedMember) -> sbyte
+Java.Interop.JniPeerMembers.JniStaticFields.GetSingleValue(Java.Interop.JniUtf8EncodedMember encodedMember) -> float
+Java.Interop.JniPeerMembers.JniStaticFields.SetValue(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.JniObjectReference value) -> void
+Java.Interop.JniPeerMembers.JniStaticFields.SetValue(Java.Interop.JniUtf8EncodedMember encodedMember, bool value) -> void
+Java.Interop.JniPeerMembers.JniStaticFields.SetValue(Java.Interop.JniUtf8EncodedMember encodedMember, char value) -> void
+Java.Interop.JniPeerMembers.JniStaticFields.SetValue(Java.Interop.JniUtf8EncodedMember encodedMember, double value) -> void
+Java.Interop.JniPeerMembers.JniStaticFields.SetValue(Java.Interop.JniUtf8EncodedMember encodedMember, float value) -> void
+Java.Interop.JniPeerMembers.JniStaticFields.SetValue(Java.Interop.JniUtf8EncodedMember encodedMember, int value) -> void
+Java.Interop.JniPeerMembers.JniStaticFields.SetValue(Java.Interop.JniUtf8EncodedMember encodedMember, long value) -> void
+Java.Interop.JniPeerMembers.JniStaticFields.SetValue(Java.Interop.JniUtf8EncodedMember encodedMember, sbyte value) -> void
+Java.Interop.JniPeerMembers.JniStaticFields.SetValue(Java.Interop.JniUtf8EncodedMember encodedMember, short value) -> void
+Java.Interop.JniPeerMembers.JniStaticMethods.GetMethodInfo(Java.Interop.JniUtf8EncodedMember encodedMember) -> Java.Interop.JniMethodInfo!
 Java.Interop.JniPeerMembers.JniStaticMethods.GetMethodInfo(System.ReadOnlySpan<byte> encodedMember) -> Java.Interop.JniMethodInfo!
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeBooleanMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.JniArgumentValue* parameters) -> bool
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeCharMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.JniArgumentValue* parameters) -> char
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeDoubleMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.JniArgumentValue* parameters) -> double
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeInt16Method(System.ReadOnlySpan<byte> encodedMember, Java.Interop.JniArgumentValue* parameters) -> short
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeInt32Method(System.ReadOnlySpan<byte> encodedMember, Java.Interop.JniArgumentValue* parameters) -> int
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeInt64Method(System.ReadOnlySpan<byte> encodedMember, Java.Interop.JniArgumentValue* parameters) -> long
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeObjectMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeSByteMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.JniArgumentValue* parameters) -> sbyte
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeSingleMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.JniArgumentValue* parameters) -> float
-Java.Interop.JniPeerMembers.JniStaticMethods.InvokeVoidMethod(System.ReadOnlySpan<byte> encodedMember, Java.Interop.JniArgumentValue* parameters) -> void
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeBooleanMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.JniArgumentValue* parameters) -> bool
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeCharMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.JniArgumentValue* parameters) -> char
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeDoubleMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.JniArgumentValue* parameters) -> double
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeInt16Method(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.JniArgumentValue* parameters) -> short
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeInt32Method(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.JniArgumentValue* parameters) -> int
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeInt64Method(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.JniArgumentValue* parameters) -> long
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeObjectMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeSByteMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.JniArgumentValue* parameters) -> sbyte
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeSingleMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.JniArgumentValue* parameters) -> float
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeVoidMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.JniArgumentValue* parameters) -> void
 static Java.Interop.JniEnvironment.BeginMarshalMethod(nint jnienv, out Java.Interop.JniTransition transition, out Java.Interop.JniRuntime? runtime) -> bool
 static Java.Interop.JniEnvironment.EndMarshalMethod(ref Java.Interop.JniTransition transition) -> void
 virtual Java.Interop.JniRuntime.OnEnterMarshalMethod() -> void
