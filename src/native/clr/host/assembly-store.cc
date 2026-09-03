@@ -176,7 +176,7 @@ namespace {
 			while (true) {
 				WriteRequest request;
 				{
-					MutexGuard lock (state_lock);
+					pthread_mutex_guard lock (state_lock);
 					if (write_queue.empty ()) {
 						writer_running = false;
 						return nullptr;
@@ -191,7 +191,7 @@ namespace {
 				request.data.reset ();
 
 				{
-					MutexGuard lock (state_lock);
+					pthread_mutex_guard lock (state_lock);
 					queued_bytes -= request_size;
 					if (write_result == WriteResult::Failed) {
 						writes_enabled = false;
@@ -344,7 +344,7 @@ namespace {
 			}
 
 			{
-				MutexGuard lock (state_lock);
+				pthread_mutex_guard lock (state_lock);
 				writes_enabled = true;
 			}
 
@@ -425,7 +425,7 @@ namespace {
 			size_t bytes_queued = 0;
 			bool queue_full = false;
 			{
-				MutexGuard lock (state_lock);
+				pthread_mutex_guard lock (state_lock);
 				if (!writes_enabled) {
 					return;
 				}
@@ -462,7 +462,7 @@ namespace {
 
 			auto snapshot = std::unique_ptr<uint8_t[]> (new (std::nothrow) uint8_t[total]);
 			if (snapshot == nullptr) {
-				MutexGuard lock (state_lock);
+				pthread_mutex_guard lock (state_lock);
 				queued_bytes -= total;
 				return;
 			}
@@ -487,7 +487,7 @@ namespace {
 			};
 
 			{
-				MutexGuard lock (state_lock);
+				pthread_mutex_guard lock (state_lock);
 				if (!writes_enabled) {
 					queued_bytes -= total;
 					return;

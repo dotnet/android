@@ -50,7 +50,7 @@ namespace xamarin::android
 
 		auto get_available_sequence () noexcept -> managed_timing_sequence*
 		{
-			MutexGuard lock (sequence_lock);
+			pthread_mutex_guard lock (sequence_lock);
 
 			managed_timing_sequence *ret;
 			for (size_t i = 0uz; i < sequence_pool.size (); i++) {
@@ -75,7 +75,7 @@ namespace xamarin::android
 				return;
 			}
 
-			MutexGuard lock (sequence_lock);
+			pthread_mutex_guard lock (sequence_lock);
 			sequence->start = time_point::min ();
 			sequence->end = time_point::min ();
 			sequence->in_use = false;
