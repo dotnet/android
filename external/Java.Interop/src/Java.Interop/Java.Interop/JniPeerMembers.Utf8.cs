@@ -38,12 +38,21 @@ namespace Java.Interop {
 
 	partial class JniPeerMembers {
 
+		internal delegate TValue Utf8SingleValueFactory<TState, TValue> (ReadOnlySpan<byte> key, TState state);
 		internal delegate TValue Utf8ValueFactory<TState, TValue> (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature, TState state);
 
 		internal sealed class Utf8ValueCache<TValue>
 		{
 			sealed class Entry
 			{
+				public Entry (nint identity, byte [] key, TValue value)
+				{
+					NameIdentity = identity;
+					Name         = key;
+					Signature    = [];
+					Value        = value;
+				}
+
 				public Entry (nint nameIdentity, nint signatureIdentity, byte [] name, byte [] signature, TValue value)
 				{
 					NameIdentity      = nameIdentity;
@@ -51,6 +60,7 @@ namespace Java.Interop {
 					Name              = name;
 					Signature         = signature;
 					Value             = value;
+					HasSignature      = true;
 				}
 
 				public nint NameIdentity { get; }
@@ -58,11 +68,48 @@ namespace Java.Interop {
 				public byte [] Name { get; }
 				public byte [] Signature { get; }
 				public TValue Value { get; }
+				public bool HasSignature { get; }
 			}
 
 			readonly Dictionary<int, List<Entry>> values = new Dictionary<int, List<Entry>> ();
 			Entry? []? identityEntries;
 			int identityCount;
+
+			public unsafe TValue GetOrAdd<TState> (ReadOnlySpan<byte> key, Utf8SingleValueFactory<TState, TValue> valueFactory, TState state)
+			{
+				nint identity;
+				fixed (byte* pointer = key)
+					identity = (nint) pointer;
+
+				var identityEntry = GetIdentityEntry (identity, key);
+				if (identityEntry != null)
+					return identityEntry.Value;
+
+				var hash = GetHashCode (key);
+				lock (values) {
+					var entry = GetEntry (hash, key);
+					if (entry != null)
+						return entry.Value;
+				}
+
+				var newValue = valueFactory (key, state);
+				var newKey   = key.ToArray ();
+
+				lock (values) {
+					var entry = GetEntry (hash, key);
+					if (entry != null)
+						return entry.Value;
+
+					if (!values.TryGetValue (hash, out var entries)) {
+						entries = new List<Entry> ();
+						values.Add (hash, entries);
+					}
+					var newEntry = new Entry (identity, newKey, newValue);
+					entries.Add (newEntry);
+					AddIdentityEntry (newEntry);
+					return newValue;
+				}
+			}
 
 			public unsafe TValue GetOrAdd<TState> (ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature, Utf8ValueFactory<TState, TValue> valueFactory, TState state)
 			{
@@ -134,6 +181,24 @@ namespace Java.Interop {
 				return null;
 			}
 
+			Entry? GetIdentityEntry (nint identity, ReadOnlySpan<byte> key)
+			{
+				var entries = Volatile.Read (ref identityEntries);
+				if (entries != null) {
+					var index = GetIdentityHashCode (identity) & (entries.Length - 1);
+					for (var i = 0; i < entries.Length; i++) {
+						var candidate = Volatile.Read (ref entries [index]);
+						if (candidate == null)
+							break;
+						if (!candidate.HasSignature && candidate.NameIdentity == identity && key.SequenceEqual (candidate.Name))
+							return candidate;
+						index = (index + 1) & (entries.Length - 1);
+					}
+				}
+
+				return null;
+			}
+
 			void AddIdentityEntry (Entry entry)
 			{
 				var entries = identityEntries;
@@ -155,18 +220,24 @@ namespace Java.Interop {
 
 			static bool AddIdentityEntry (Entry? [] entries, Entry entry)
 			{
-				var index = GetIdentityHashCode (entry.NameIdentity, entry.SignatureIdentity) & (entries.Length - 1);
+				var hash = entry.HasSignature
+					? GetIdentityHashCode (entry.NameIdentity, entry.SignatureIdentity)
+					: GetIdentityHashCode (entry.NameIdentity);
+				var index = hash & (entries.Length - 1);
 				for (var i = 0; i < entries.Length; i++) {
 					var existingEntry = entries [index];
 					if (existingEntry == null) {
 						Volatile.Write (ref entries [index], entry);
 						return true;
 					}
-					if (existingEntry.NameIdentity == entry.NameIdentity &&
-							existingEntry.SignatureIdentity == entry.SignatureIdentity &&
-							existingEntry.Name.AsSpan ().SequenceEqual (entry.Name) &&
-							existingEntry.Signature.AsSpan ().SequenceEqual (entry.Signature))
-						return false;
+					if (existingEntry.HasSignature == entry.HasSignature &&
+							existingEntry.NameIdentity == entry.NameIdentity &&
+							existingEntry.Name.AsSpan ().SequenceEqual (entry.Name)) {
+						if (!entry.HasSignature ||
+								(existingEntry.SignatureIdentity == entry.SignatureIdentity &&
+								existingEntry.Signature.AsSpan ().SequenceEqual (entry.Signature)))
+							return false;
+					}
 					index = (index + 1) & (entries.Length - 1);
 				}
 
@@ -177,7 +248,19 @@ namespace Java.Interop {
 			{
 				if (values.TryGetValue (hash, out var entries)) {
 					foreach (var entry in entries) {
-						if (name.SequenceEqual (entry.Name) && signature.SequenceEqual (entry.Signature))
+						if (entry.HasSignature && name.SequenceEqual (entry.Name) && signature.SequenceEqual (entry.Signature))
+							return entry;
+					}
+				}
+
+				return null;
+			}
+
+			Entry? GetEntry (int hash, ReadOnlySpan<byte> key)
+			{
+				if (values.TryGetValue (hash, out var entries)) {
+					foreach (var entry in entries) {
+						if (!entry.HasSignature && key.SequenceEqual (entry.Name))
 							return entry;
 					}
 				}
@@ -204,6 +287,22 @@ namespace Java.Interop {
 				var signatureValue = (long) signatureIdentity;
 				var hash           = (int) nameValue ^ (int) (nameValue >> 32);
 				return (hash * 16777619) ^ (int) signatureValue ^ (int) (signatureValue >> 32);
+			}
+
+			static int GetIdentityHashCode (nint identity)
+			{
+				var value = (long) identity;
+				return (int) value ^ (int) (value >> 32);
+			}
+
+			static int GetHashCode (ReadOnlySpan<byte> key)
+			{
+				unchecked {
+					var hash = (int) 2166136261;
+					foreach (var value in key)
+						hash = (hash ^ value) * 16777619;
+					return hash;
+				}
 			}
 		}
 

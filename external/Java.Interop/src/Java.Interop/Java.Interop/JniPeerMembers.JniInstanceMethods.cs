@@ -67,7 +67,7 @@ namespace Java.Interop
 
 		public JniMethodInfo GetConstructor (ReadOnlySpan<byte> signature)
 		{
-			return Utf8InstanceMethods.GetOrAdd (signature, default, static (member, _, methods) => {
+			return Utf8InstanceMethods.GetOrAdd (signature, static (member, methods) => {
 				Span<byte> terminatedSignature = member.Length + 1 <= 512
 					? stackalloc byte [member.Length + 1]
 					: new byte [member.Length + 1];
