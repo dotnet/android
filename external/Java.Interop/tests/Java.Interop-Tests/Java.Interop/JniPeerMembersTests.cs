@@ -25,6 +25,13 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void StaticUtf8Ctor_CanReferenceNonexistentType ()
+		{
+			var members = new Utf8PeerMembers (JniStaticUtf8String.CreateStatic ("does/not/Exist"u8), typeof(JavaObjectWithMissingJavaPeer));
+			JniPeerMembers.Dispose (members);
+		}
+
+		[Test]
 		public unsafe void Utf8MemberLookupIsCached ()
 		{
 			var members = new Utf8PeerMembers ("java/lang/Object"u8.ToArray (), typeof (JavaLangRemappingTestObject));
@@ -47,6 +54,20 @@ namespace Java.InteropTests
 			} finally {
 				JniPeerMembers.Dispose (members);
 			}
+		}
+
+		[Test]
+		public void StaticUtf8MemberIdentityIncludesLengths ()
+		{
+			var cache     = new JniPeerMembers.Utf8ValueCache<int> ();
+			var data      = "foobar()VI"u8;
+			var shortName = JniUtf8EncodedMember.CreateStatic (data.Slice (0, 3), data.Slice (6, 3));
+			var longName  = JniUtf8EncodedMember.CreateStatic (data.Slice (0, 6), data.Slice (6, 4));
+
+			Assert.AreEqual (1, cache.GetOrAdd (shortName, static (name, signature, value) => value, 1));
+			Assert.AreEqual (2, cache.GetOrAdd (longName, static (name, signature, value) => value, 2));
+			Assert.AreEqual (1, cache.GetOrAdd (shortName, static (name, signature, value) => value, 3));
+			Assert.AreEqual (2, cache.GetOrAdd (longName, static (name, signature, value) => value, 4));
 		}
 
 		[Test]
@@ -290,6 +311,11 @@ namespace Java.InteropTests
 	internal class Utf8PeerMembers : JniPeerMembers {
 
 		public Utf8PeerMembers (ReadOnlyMemory<byte> jniPeerTypeName, Type managedPeerType)
+			: base (jniPeerTypeName, managedPeerType)
+		{
+		}
+
+		public Utf8PeerMembers (JniStaticUtf8String jniPeerTypeName, Type managedPeerType)
 			: base (jniPeerTypeName, managedPeerType)
 		{
 		}

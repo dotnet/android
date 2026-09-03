@@ -3,17 +3,9 @@
 
 internal static class __U8
 {
-	internal static readonly global::System.ReadOnlyMemory<byte> M = new B ().Memory;
-	internal static global::System.ReadOnlyMemory<byte> R (int value) => M.Slice (value & 4194303, (int) ((uint) value >> 22));
-	internal static global::System.ReadOnlySpan<byte> S (int value) => D.Slice (value & 4194303, (int) ((uint) value >> 22));
-	internal static global::Java.Interop.JniUtf8EncodedMember E (long value) => new (S ((int) value), S ((int) (value >> 32)));
-	static global::System.ReadOnlySpan<byte> D => "java/lang/Objectxamarin/test/SomeObjectmethodAsInt()ImethodAsString()Ljava/lang/String;Obsoletemethod"u8;
-
-	sealed unsafe class B : global::System.Buffers.MemoryManager<byte>
-	{
-		public override global::System.Span<byte> GetSpan () => new global::System.Span<byte> (global::System.Runtime.CompilerServices.Unsafe.AsPointer (ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference (D)), D.Length);
-		public override global::System.Buffers.MemoryHandle Pin (int elementIndex = 0) => new global::System.Buffers.MemoryHandle ((byte*) global::System.Runtime.CompilerServices.Unsafe.AsPointer (ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference (D)) + elementIndex);
-		public override void Unpin () { }
-		protected override void Dispose (bool disposing) { }
-	}
+	internal static global::System.ReadOnlySpan<byte> D0 => "java/lang/Object"u8;
+	internal static global::System.ReadOnlySpan<byte> D1 => "xamarin/test/SomeObjectmethodAsInt()ImethodAsString()Ljava/lang/String;Obsoletemethod"u8;
+	internal static global::Java.Interop.JniStaticUtf8String R (global::System.ReadOnlySpan<byte> data, int value) => global::Java.Interop.JniStaticUtf8String.CreateStatic (data.Slice (value & 4194303, (int) ((uint) value >> 22)));
+	internal static global::System.ReadOnlySpan<byte> S (global::System.ReadOnlySpan<byte> data, int value) => data.Slice (value & 4194303, (int) ((uint) value >> 22));
+	internal static global::Java.Interop.JniUtf8EncodedMember E (global::System.ReadOnlySpan<byte> data, long value) => global::Java.Interop.JniUtf8EncodedMember.CreateStatic (S (data, (int) value), S (data, (int) (value >> 32)));
 }

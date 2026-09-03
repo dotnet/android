@@ -238,8 +238,10 @@ namespace Xamarin.Android.Binder
 				GenerateMappingReportFile (gens, mapping_file);
 
 			foreach (IGeneratable gen in gens)
-				if (gen.IsGeneratable)
+				if (gen.IsGeneratable) {
+					opt.SetUtf8StringPoolScope (gen.FullName);
 					gen.Generate (opt, gen_info);
+				}
 
 			opt.WriteUtf8StringPool (gen_info);
 			new NamespaceMapping (gens).Generate (opt, gen_info);

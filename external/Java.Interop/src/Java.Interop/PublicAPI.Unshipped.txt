@@ -1,10 +1,14 @@
 #nullable enable
+Java.Interop.JniStaticUtf8String
+Java.Interop.JniStaticUtf8String.JniStaticUtf8String() -> void
+static Java.Interop.JniStaticUtf8String.CreateStatic(System.ReadOnlySpan<byte> value) -> Java.Interop.JniStaticUtf8String
 Java.Interop.JniUtf8EncodedMember
 Java.Interop.JniUtf8EncodedMember.JniUtf8EncodedMember() -> void
 Java.Interop.JniUtf8EncodedMember.JniUtf8EncodedMember(System.ReadOnlySpan<byte> encodedMember) -> void
 Java.Interop.JniUtf8EncodedMember.JniUtf8EncodedMember(System.ReadOnlySpan<byte> name, System.ReadOnlySpan<byte> signature) -> void
 Java.Interop.JniUtf8EncodedMember.Name.get -> System.ReadOnlySpan<byte>
 Java.Interop.JniUtf8EncodedMember.Signature.get -> System.ReadOnlySpan<byte>
+static Java.Interop.JniUtf8EncodedMember.CreateStatic(System.ReadOnlySpan<byte> name, System.ReadOnlySpan<byte> signature) -> Java.Interop.JniUtf8EncodedMember
 override Java.Interop.JniUtf8EncodedMember.ToString() -> string!
 static Java.Interop.JniUtf8EncodedMember.FromReadOnlySpan(System.ReadOnlySpan<byte> encodedMember) -> Java.Interop.JniUtf8EncodedMember
 static Java.Interop.JniUtf8EncodedMember.implicit operator Java.Interop.JniUtf8EncodedMember(System.ReadOnlySpan<byte> encodedMember) -> Java.Interop.JniUtf8EncodedMember
@@ -63,6 +67,8 @@ Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualSByteMethod(Java.Int
 Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualSingleMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> float
 Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualVoidMethod(Java.Interop.JniUtf8EncodedMember encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
 Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(System.ReadOnlySpan<byte> constructorSignature, System.Type! declaringType, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
+Java.Interop.JniPeerMembers.JniPeerMembers(Java.Interop.JniStaticUtf8String jniPeerTypeName, System.Type! managedPeerType) -> void
+Java.Interop.JniPeerMembers.JniPeerMembers(Java.Interop.JniStaticUtf8String jniPeerTypeName, System.Type! managedPeerType, bool isInterface) -> void
 Java.Interop.JniPeerMembers.JniPeerMembers(System.ReadOnlyMemory<byte> jniPeerTypeName, System.Type! managedPeerType) -> void
 Java.Interop.JniPeerMembers.JniPeerMembers(System.ReadOnlyMemory<byte> jniPeerTypeName, System.Type! managedPeerType, bool isInterface) -> void
 Java.Interop.JniPeerMembers.JniStaticFields.GetBooleanValue(Java.Interop.JniUtf8EncodedMember encodedMember) -> bool

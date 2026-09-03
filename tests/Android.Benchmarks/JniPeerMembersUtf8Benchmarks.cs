@@ -26,10 +26,10 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	static ReadOnlySpan<byte> StaticMethodUtf8 => GetMember (88080399);
 	static ReadOnlySpan<byte> InstanceFieldUtf8 => GetMember (134217764);
 	static ReadOnlySpan<byte> StaticFieldUtf8 => GetMember (104857668);
-	static JniUtf8EncodedMember InstanceMethodSplit => new (GetSplitMember (33554435), GetSplitMember (12582923));
-	static JniUtf8EncodedMember StaticMethodSplit => new (GetSplitMember (71303182), GetSplitMember (12582943));
-	static JniUtf8EncodedMember InstanceFieldSplit => new (GetSplitMember (54525986), GetSplitMember (75497519));
-	static JniUtf8EncodedMember StaticFieldSplit => new (GetSplitMember (12582977), GetSplitMember (88080452));
+	static JniUtf8EncodedMember InstanceMethodSplit => JniUtf8EncodedMember.CreateStatic (GetSplitMember (33554435), GetSplitMember (12582923));
+	static JniUtf8EncodedMember StaticMethodSplit => JniUtf8EncodedMember.CreateStatic (GetSplitMember (71303182), GetSplitMember (12582943));
+	static JniUtf8EncodedMember InstanceFieldSplit => JniUtf8EncodedMember.CreateStatic (GetSplitMember (54525986), GetSplitMember (75497519));
+	static JniUtf8EncodedMember StaticFieldSplit => JniUtf8EncodedMember.CreateStatic (GetSplitMember (12582977), GetSplitMember (88080452));
 
 	BenchmarkPeerMembers? stringMembers;
 	BenchmarkPeerMembers? throwableMembers;
@@ -109,6 +109,11 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	[BenchmarkCategory ("CreatePeerMembers")]
 	public JniPeerMembers CreatePeerMembersUtf8 () =>
 		new BenchmarkPeerMembers (StringPeerType, typeof (Java.Lang.String));
+
+	[Benchmark]
+	[BenchmarkCategory ("CreatePeerMembers")]
+	public JniPeerMembers CreatePeerMembersStaticUtf8 () =>
+		new BenchmarkPeerMembers (JniStaticUtf8String.CreateStatic ("java/lang/String"u8), typeof (Java.Lang.String));
 
 	[Benchmark (Baseline = true)]
 	[BenchmarkCategory ("ResolvePeerType")]
@@ -329,6 +334,11 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 		}
 
 		public BenchmarkPeerMembers (ReadOnlyMemory<byte> jniPeerTypeName, Type managedPeerType)
+			: base (jniPeerTypeName, managedPeerType)
+		{
+		}
+
+		public BenchmarkPeerMembers (JniStaticUtf8String jniPeerTypeName, Type managedPeerType)
 			: base (jniPeerTypeName, managedPeerType)
 		{
 		}

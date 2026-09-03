@@ -88,6 +88,8 @@ namespace MonoDroid.Generation
 
 		public string GetUtf8MemberExpression (string name, string signature) => utf8StringPool.GetMemberExpression (name, signature);
 
+		internal void SetUtf8StringPoolScope (string scope) => utf8StringPool.SetScope (scope);
+
 		public void WriteUtf8StringPool (GenerationInfo generationInfo)
 		{
 			if (UseUtf8MemberNames)
@@ -329,37 +331,63 @@ namespace MonoDroid.Generation
 
 	sealed class Utf8StringPool
 	{
+		sealed class Partition
+		{
+			public Partition (int index)
+			{
+				Index = index;
+			}
+
+			public int Index { get; }
+			public StringBuilder Value { get; } = new StringBuilder ();
+			public Dictionary<string, (int Offset, int Length)> Entries { get; } = new Dictionary<string, (int Offset, int Length)> (StringComparer.Ordinal);
+			public int ByteCount { get; set; }
+			public bool UsesMemory { get; set; }
+			public bool UsesSpan { get; set; }
+			public bool UsesMember { get; set; }
+		}
+
 		const int OffsetBits = 22;
 		const int OffsetMask = (1 << OffsetBits) - 1;
 		const int LengthMask = (1 << (32 - OffsetBits)) - 1;
 
-		readonly StringBuilder value = new StringBuilder ();
-		readonly Dictionary<string, (int Offset, int Length)> entries = new Dictionary<string, (int Offset, int Length)> (StringComparer.Ordinal);
-		int byteCount;
+		readonly Dictionary<string, Partition> partitions = new Dictionary<string, Partition> (StringComparer.Ordinal);
+		Partition current;
+
+		public void SetScope (string scope)
+		{
+			if (!partitions.TryGetValue (scope, out current)) {
+				current = new Partition (partitions.Count);
+				partitions.Add (scope, current);
+			}
+		}
 
 		public string GetSpanExpression (string text)
 		{
+			current.UsesSpan = true;
 			var entry = GetEntry (text);
 			return GetExpression ("S", entry);
 		}
 
 		public string GetMemoryExpression (string text)
 		{
+			current.UsesMemory = true;
 			var entry = GetEntry (text);
 			return GetExpression ("R", entry);
 		}
 
 		public string GetMemberExpression (string name, string signature)
 		{
+			current.UsesMember = true;
 			uint nameValue      = (uint) GetPackedValue (GetEntry (name));
 			uint signatureValue = (uint) GetPackedValue (GetEntry (signature));
 			long value          = unchecked ((long) (nameValue | ((ulong) signatureValue << 32)));
-			return $"global::__U8.E ({value}L)";
+			return $"global::__U8.E (global::__U8.D{current.Index}, {value}L)";
 		}
 
-		static string GetExpression (string method, (int Offset, int Length) entry)
+		string GetExpression (string method, (int Offset, int Length) entry)
 		{
-			return $"global::__U8.{method} ({GetPackedValue (entry)})";
+			return $"global::__U8.{method} (global::__U8.D{current.Index}, {GetPackedValue (entry)})";
 		}
 
 		static int GetPackedValue ((int Offset, int Length) entry)
@@ -372,22 +400,23 @@ namespace MonoDroid.Generation
 
 		(int Offset, int Length) GetEntry (string text)
 		{
-			if (entries.TryGetValue (text, out var entry))
+			if (current.Entries.TryGetValue (text, out var entry))
 				return entry;
 
 			int length = Encoding.UTF8.GetByteCount (text);
-			int offset = byteCount;
-			value.Append (text);
-			byteCount += length;
+			int offset = current.ByteCount;
+			current.Value.Append (text);
+			current.ByteCount += length;
 
 			entry = (offset, length);
-			entries.Add (text, entry);
+			current.Entries.Add (text, entry);
 			return entry;
 		}
 
 		public void Write (GenerationInfo generationInfo)
 		{
-			if (byteCount == 0)
+			var values = partitions.Values.Where (p => p.ByteCount != 0).OrderBy (p => p.Index).ToArray ();
+			if (values.Length == 0)
 				return;
 
 			using var writer = generationInfo.OpenStream ("__JavaInteropUtf8StringPool");
@@ -396,20 +425,20 @@ namespace MonoDroid.Generation
 			writer.WriteLine ();
 			writer.WriteLine ("internal static class __U8");
 			writer.WriteLine ("{");
-			writer.WriteLine ("\tinternal static readonly global::System.ReadOnlyMemory<byte> M = new B ().Memory;");
-			writer.WriteLine ($"\tinternal static global::System.ReadOnlyMemory<byte> R (int value) => M.Slice (value & {OffsetMask}, (int) ((uint) value >> {OffsetBits}));");
-			writer.WriteLine ($"\tinternal static global::System.ReadOnlySpan<byte> S (int value) => D.Slice (value & {OffsetMask}, (int) ((uint) value >> {OffsetBits}));");
-			writer.WriteLine ("\tinternal static global::Java.Interop.JniUtf8EncodedMember E (long value) => new (S ((int) value), S ((int) (value >> 32)));");
-			writer.WriteLine ($"\tstatic global::System.ReadOnlySpan<byte> D => \"{Escape (value)}\"u8;");
-			writer.WriteLine ();
-			writer.WriteLine ("\tsealed unsafe class B : global::System.Buffers.MemoryManager<byte>");
-			writer.WriteLine ("\t{");
-			writer.WriteLine ("\t\tpublic override global::System.Span<byte> GetSpan () => new global::System.Span<byte> (global::System.Runtime.CompilerServices.Unsafe.AsPointer (ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference (D)), D.Length);");
-			writer.WriteLine ("\t\tpublic override global::System.Buffers.MemoryHandle Pin (int elementIndex = 0) => new global::System.Buffers.MemoryHandle ((byte*) global::System.Runtime.CompilerServices.Unsafe.AsPointer (ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference (D)) + elementIndex);");
-			writer.WriteLine ("\t\tpublic override void Unpin () { }");
-			writer.WriteLine ("\t\tprotected override void Dispose (bool disposing) { }");
-			writer.WriteLine ("\t}");
+			foreach (var partition in values)
+				WritePartition (writer, partition);
+			if (values.Any (p => p.UsesMemory))
+				writer.WriteLine ($"\tinternal static global::Java.Interop.JniStaticUtf8String R (global::System.ReadOnlySpan<byte> data, int value) => global::Java.Interop.JniStaticUtf8String.CreateStatic (data.Slice (value & {OffsetMask}, (int) ((uint) value >> {OffsetBits})));");
+			if (values.Any (p => p.UsesSpan || p.UsesMember))
+				writer.WriteLine ($"\tinternal static global::System.ReadOnlySpan<byte> S (global::System.ReadOnlySpan<byte> data, int value) => data.Slice (value & {OffsetMask}, (int) ((uint) value >> {OffsetBits}));");
+			if (values.Any (p => p.UsesMember))
+				writer.WriteLine ("\tinternal static global::Java.Interop.JniUtf8EncodedMember E (global::System.ReadOnlySpan<byte> data, long value) => global::Java.Interop.JniUtf8EncodedMember.CreateStatic (S (data, (int) value), S (data, (int) (value >> 32)));");
 			writer.WriteLine ("}");
+		}
+
+		static void WritePartition (TextWriter writer, Partition partition)
+		{
+			writer.WriteLine ($"\tinternal static global::System.ReadOnlySpan<byte> D{partition.Index} => \"{Escape (partition.Value)}\"u8;");
 		}
 
 		static string Escape (StringBuilder value)

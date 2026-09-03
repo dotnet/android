@@ -34,7 +34,7 @@ namespace Java.Interop
 
 		public JniFieldInfo GetFieldInfo (JniUtf8EncodedMember encodedMember)
 		{
-			return Utf8StaticFields.GetOrAdd (encodedMember.Name, encodedMember.Signature, static (fieldName, fieldType, fields) => {
+			return Utf8StaticFields.GetOrAdd (encodedMember, static (fieldName, fieldType, fields) => {
 				Span<byte> field = fieldName.Length + 1 <= 256
 					? stackalloc byte [fieldName.Length + 1]
 					: new byte [fieldName.Length + 1];

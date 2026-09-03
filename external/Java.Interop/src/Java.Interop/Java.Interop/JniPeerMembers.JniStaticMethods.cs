@@ -41,7 +41,7 @@ namespace Java.Interop
 
 		public JniMethodInfo GetMethodInfo (JniUtf8EncodedMember encodedMember)
 		{
-			return Utf8StaticMethods.GetOrAdd (encodedMember.Name, encodedMember.Signature, static (method, signature, methods) =>
+			return Utf8StaticMethods.GetOrAdd (encodedMember, static (method, signature, methods) =>
 					methods.ResolveMethodInfo (method, signature), this);
 		}
 

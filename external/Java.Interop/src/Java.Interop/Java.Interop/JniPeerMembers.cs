@@ -2,6 +2,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
@@ -26,14 +27,30 @@ namespace Java.Interop {
 		{
 			if (jniPeerTypeName.IsEmpty)
 				throw new ArgumentException ("'jniPeerTypeName' cannot be empty.", nameof (jniPeerTypeName));
+
+			jniPeerTypeNameUtf8 = jniPeerTypeName;
+			InitializeUtf8 (managedPeerType, isInterface);
+		}
+
+		protected unsafe JniPeerMembers (JniStaticUtf8String jniPeerTypeName, Type managedPeerType, bool isInterface)
+		{
+			if (jniPeerTypeName.Length == 0)
+				throw new ArgumentException ("'jniPeerTypeName' cannot be empty.", nameof (jniPeerTypeName));
+
+			jniPeerTypeNameUtf8Pointer = jniPeerTypeName.Pointer;
+			jniPeerTypeNameUtf8Length  = jniPeerTypeName.Length;
+			InitializeUtf8 (managedPeerType, isInterface);
+		}
+
+		[MemberNotNull (nameof (ManagedPeerType), nameof (instanceMethods), nameof (instanceFields), nameof (staticMethods), nameof (staticFields))]
+		unsafe void InitializeUtf8 (Type managedPeerType, bool isInterface)
+		{
 			if (managedPeerType == null)
 				throw new ArgumentNullException (nameof (managedPeerType));
 			if (!typeof (IJavaPeerable).IsAssignableFrom (managedPeerType))
 				throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", nameof (managedPeerType));
 
-			jniPeerTypeNameUtf8 = jniPeerTypeName;
-
-			var utf8Name    = jniPeerTypeName.Span;
+			var utf8Name    = GetJniPeerTypeNameUtf8 ();
 			var replacement = JniEnvironment.Runtime.TypeManager.GetReplacementType (utf8Name);
 			if (replacement != null)
 				this.jniPeerTypeName = replacement;
@@ -52,8 +69,11 @@ namespace Java.Interop {
 				Debug.WriteLine (new System.Diagnostics.StackTrace (true));
 			}
 #endif  // DEBUG
-			if (replacement != null)
-				jniPeerTypeNameUtf8 = default;
+			if (replacement != null) {
+				jniPeerTypeNameUtf8        = default;
+				jniPeerTypeNameUtf8Pointer = null;
+				jniPeerTypeNameUtf8Length  = 0;
+			}
 
 			ManagedPeerType = managedPeerType;
 
@@ -66,6 +86,11 @@ namespace Java.Interop {
 		}
 
 		protected JniPeerMembers (ReadOnlyMemory<byte> jniPeerTypeName, Type managedPeerType)
+			: this (jniPeerTypeName, managedPeerType, isInterface: false)
+		{
+		}
+
+		protected JniPeerMembers (JniStaticUtf8String jniPeerTypeName, Type managedPeerType)
 			: this (jniPeerTypeName, managedPeerType, isInterface: false)
 		{
 		}
@@ -124,6 +149,8 @@ namespace Java.Interop {
 		JniStaticFields     staticFields;
 		string?             jniPeerTypeName;
 		ReadOnlyMemory<byte> jniPeerTypeNameUtf8;
+		unsafe byte*        jniPeerTypeNameUtf8Pointer;
+		int                 jniPeerTypeNameUtf8Length;
 
 		public      Type        ManagedPeerType {get; private set;}
 		public      string      JniPeerTypeName {
@@ -150,16 +177,18 @@ namespace Java.Interop {
 			}
 		}
 
-		ReadOnlySpan<byte> GetJniPeerTypeNameUtf8 ()
+		unsafe ReadOnlySpan<byte> GetJniPeerTypeNameUtf8 ()
 		{
 			if (!jniPeerTypeNameUtf8.IsEmpty)
 				return jniPeerTypeNameUtf8.Span;
+			if (jniPeerTypeNameUtf8Pointer != null)
+				return new ReadOnlySpan<byte> (jniPeerTypeNameUtf8Pointer, jniPeerTypeNameUtf8Length);
 			throw new ObjectDisposedException (nameof (JniPeerMembers));
 		}
 
 		internal JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (ReadOnlySpan<byte> method, ReadOnlySpan<byte> signature)
 		{
-			if (!jniPeerTypeNameUtf8.IsEmpty)
+			if (!jniPeerTypeNameUtf8.IsEmpty || jniPeerTypeNameUtf8Length != 0)
 				return JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (GetJniPeerTypeNameUtf8 (), method, signature);
 
 			return JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (
