@@ -233,7 +233,7 @@ namespace generator.SourceWriters
 
 		public static void AddMethodBody (List<string> body, Method method, CodeGenerationOptions opt, string members = "_members")
 		{
-			body.Add (GetEncodedMemberDeclaration (method.JavaName, method.JniSignature, opt, method.IsCompatVirtualMethod));
+			body.Add (GetEncodedMemberDeclaration (method.JavaName, method.JniSignature, opt));
 
 			foreach (string prep in method.Parameters.GetCallPrep (opt))
 				body.Add (prep);
@@ -245,7 +245,10 @@ namespace generator.SourceWriters
 			if (method.IsCompatVirtualMethod) {
 				body.Add ("}");
 				body.Add ("catch (Java.Lang.NoSuchMethodError) {");
-				body.Add ("	throw new Java.Lang.AbstractMethodError (__id);");
+				if (opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1 && opt.UseUtf8MemberNames)
+					body.Add ("	throw new Java.Lang.AbstractMethodError (global::System.Text.Encoding.UTF8.GetString (__id));");
+				else
+					body.Add ("	throw new Java.Lang.AbstractMethodError (__id);");
 			}
 
 			body.Add ("} finally {");
@@ -259,9 +262,9 @@ namespace generator.SourceWriters
 			body.Add ("}");
 		}
 
-		public static string GetEncodedMemberDeclaration (string name, string signature, CodeGenerationOptions opt, bool requireString = false)
+		public static string GetEncodedMemberDeclaration (string name, string signature, CodeGenerationOptions opt)
 		{
-			if (opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1 && opt.UseUtf8MemberNames && !requireString)
+			if (opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1 && opt.UseUtf8MemberNames)
 				return $"ReadOnlySpan<byte> __id = {opt.GetUtf8SpanExpression ($"{name}.{signature}")};";
 			return $"const string __id = \"{name}.{signature}\";";
 		}

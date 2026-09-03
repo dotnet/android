@@ -17,12 +17,13 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	const string StaticField = "out.Ljava/io/PrintStream;";
 
 	static readonly ReadOnlyMemory<byte> StringPeerType = "java/lang/String"u8.ToArray ();
-	static ReadOnlySpan<byte> MemberPool => "()V\u0000hashCode.()I\u0000currentTimeMillis.()J\u0000detailMessage.Ljava/lang/String;\u0000out.Ljava/io/PrintStream;\u0000"u8;
-	static ReadOnlySpan<byte> ConstructorUtf8 => MemberPool.Slice (0, 3);
-	static ReadOnlySpan<byte> InstanceMethodUtf8 => MemberPool.Slice (4, 12);
-	static ReadOnlySpan<byte> StaticMethodUtf8 => MemberPool.Slice (17, 21);
-	static ReadOnlySpan<byte> InstanceFieldUtf8 => MemberPool.Slice (39, 32);
-	static ReadOnlySpan<byte> StaticFieldUtf8 => MemberPool.Slice (72, 25);
+	static ReadOnlySpan<byte> MemberPool => "()VhashCode.()IcurrentTimeMillis.()JdetailMessage.Ljava/lang/String;out.Ljava/io/PrintStream;"u8;
+	static ReadOnlySpan<byte> GetMember (int value) => MemberPool.Slice (value & 4194303, (int) ((uint) value >> 22));
+	static ReadOnlySpan<byte> ConstructorUtf8 => GetMember (12582912);
+	static ReadOnlySpan<byte> InstanceMethodUtf8 => GetMember (50331651);
+	static ReadOnlySpan<byte> StaticMethodUtf8 => GetMember (88080399);
+	static ReadOnlySpan<byte> InstanceFieldUtf8 => GetMember (134217764);
+	static ReadOnlySpan<byte> StaticFieldUtf8 => GetMember (104857668);
 
 	BenchmarkPeerMembers? stringMembers;
 	BenchmarkPeerMembers? throwableMembers;

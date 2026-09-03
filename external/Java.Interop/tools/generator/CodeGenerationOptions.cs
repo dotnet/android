@@ -327,6 +327,10 @@ namespace MonoDroid.Generation
 
 	sealed class Utf8StringPool
 	{
+		const int OffsetBits = 22;
+		const int OffsetMask = (1 << OffsetBits) - 1;
+		const int LengthMask = (1 << (32 - OffsetBits)) - 1;
+
 		readonly StringBuilder value = new StringBuilder ();
 		readonly Dictionary<string, (int Offset, int Length)> entries = new Dictionary<string, (int Offset, int Length)> (StringComparer.Ordinal);
 		int byteCount;
@@ -334,13 +338,22 @@ namespace MonoDroid.Generation
 		public string GetSpanExpression (string text)
 		{
 			var entry = GetEntry (text);
-			return $"global::__U8.S ({entry.Offset}, {entry.Length})";
+			return GetExpression ("S", entry);
 		}
 
 		public string GetMemoryExpression (string text)
 		{
 			var entry = GetEntry (text);
-			return $"global::__U8.R ({entry.Offset}, {entry.Length})";
+			return GetExpression ("R", entry);
+		}
+
+		static string GetExpression (string method, (int Offset, int Length) entry)
+		{
+			if (entry.Offset > OffsetMask || entry.Length > LengthMask)
+				throw new InvalidOperationException ("The UTF-8 string pool exceeds its packed offset or length limit.");
+
+			int packed = unchecked (entry.Offset | (entry.Length << OffsetBits));
+			return $"global::__U8.{method} ({packed})";
 		}
 
 		(int Offset, int Length) GetEntry (string text)
@@ -351,8 +364,7 @@ namespace MonoDroid.Generation
 			int length = Encoding.UTF8.GetByteCount (text);
 			int offset = byteCount;
 			value.Append (text);
-			value.Append ('\0');
-			byteCount += length + 1;
+			byteCount += length;
 
 			entry = (offset, length);
 			entries.Add (text, entry);
@@ -371,8 +383,8 @@ namespace MonoDroid.Generation
 			writer.WriteLine ("internal static class __U8");
 			writer.WriteLine ("{");
 			writer.WriteLine ("\tinternal static readonly global::System.ReadOnlyMemory<byte> M = new B ().Memory;");
-			writer.WriteLine ("\tinternal static global::System.ReadOnlyMemory<byte> R (int offset, int length) => M.Slice (offset, length);");
-			writer.WriteLine ("\tinternal static global::System.ReadOnlySpan<byte> S (int offset, int length) => D.Slice (offset, length);");
+			writer.WriteLine ($"\tinternal static global::System.ReadOnlyMemory<byte> R (int value) => M.Slice (value & {OffsetMask}, (int) ((uint) value >> {OffsetBits}));");
+			writer.WriteLine ($"\tinternal static global::System.ReadOnlySpan<byte> S (int value) => D.Slice (value & {OffsetMask}, (int) ((uint) value >> {OffsetBits}));");
 			writer.WriteLine ($"\tstatic global::System.ReadOnlySpan<byte> D => \"{Escape (value)}\"u8;");
 			writer.WriteLine ();
 			writer.WriteLine ("\tsealed unsafe class B : global::System.Buffers.MemoryManager<byte>");

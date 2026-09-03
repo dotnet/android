@@ -4,9 +4,9 @@
 internal static class __U8
 {
 	internal static readonly global::System.ReadOnlyMemory<byte> M = new B ().Memory;
-	internal static global::System.ReadOnlyMemory<byte> R (int offset, int length) => M.Slice (offset, length);
-	internal static global::System.ReadOnlySpan<byte> S (int offset, int length) => D.Slice (offset, length);
-	static global::System.ReadOnlySpan<byte> D => "java/lang/Object\u0000xamarin/test/SomeObject\u0000methodAsInt.()I\u0000methodAsString.()Ljava/lang/String;\u0000Obsoletemethod.()Ljava/lang/String;\u0000"u8;
+	internal static global::System.ReadOnlyMemory<byte> R (int value) => M.Slice (value & 4194303, (int) ((uint) value >> 22));
+	internal static global::System.ReadOnlySpan<byte> S (int value) => D.Slice (value & 4194303, (int) ((uint) value >> 22));
+	static global::System.ReadOnlySpan<byte> D => "java/lang/Objectxamarin/test/SomeObjectmethodAsInt.()ImethodAsString.()Ljava/lang/String;Obsoletemethod.()Ljava/lang/String;"u8;
 
 	sealed unsafe class B : global::System.Buffers.MemoryManager<byte>
 	{
