@@ -622,6 +622,16 @@ namespace MyApp
 			=> value;
 	}
 
+	[Register ("my/app/ExportWithInvalidExportParameterKind")]
+	public class ExportWithInvalidExportParameterKind : Java.Lang.Object
+	{
+		[Java.Interop.Export ("unsupported")]
+		public void UnsupportedMember (
+			[Java.Interop.ExportParameter ((Java.Interop.ExportParameterKind) 999)] int value)
+		{
+		}
+	}
+
 	[Register ("my/app/ExportWithGenericExportParameter")]
 	public class ExportWithGenericExportParameter : Java.Lang.Object
 	{

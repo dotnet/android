@@ -2025,30 +2025,24 @@ public sealed class JavaPeerScanner : IDisposable
 			}
 
 			var value = index.DecodeAttribute (ca);
-			if (value.FixedArguments.Length > 0 && TryConvertExportParameterKind (value.FixedArguments [0].Value, out var ctorKind)) {
-				return ctorKind;
+			if (value.FixedArguments.Length > 0) {
+				return ConvertExportParameterKind (value.FixedArguments [0].Value);
 			}
 
 			foreach (var named in value.NamedArguments) {
-				if (named.Name == "Kind" && TryConvertExportParameterKind (named.Value, out var namedKind)) {
-					return namedKind;
+				if (named.Name == "Kind") {
+					return ConvertExportParameterKind (named.Value);
 				}
 			}
+
+			return ExportParameterKindInfo.Invalid;
 		}
 
 		return ExportParameterKindInfo.Unspecified;
 	}
 
-	static bool TryConvertExportParameterKind (object? value, out ExportParameterKindInfo kind)
-	{
-		if (value is int i && Enum.IsDefined (typeof (ExportParameterKindInfo), i)) {
-			kind = (ExportParameterKindInfo) i;
-			return true;
-		}
-
-		kind = ExportParameterKindInfo.Unspecified;
-		return false;
-	}
+	static ExportParameterKindInfo ConvertExportParameterKind (object? value) =>
+		value is int i ? (ExportParameterKindInfo) i : ExportParameterKindInfo.Invalid;
 
 	string BuildJniSignatureFromManaged (MethodSignature<TypeRefData> sig, IReadOnlyList<ExportParameterKindInfo> parameterKinds, ExportParameterKindInfo returnKind)
 	{

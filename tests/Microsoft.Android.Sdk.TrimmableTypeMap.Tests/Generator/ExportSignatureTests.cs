@@ -17,6 +17,7 @@ public class ExportSignatureTests : FixtureTestBase
 	[InlineData ("my/app/ExportWithGenericMethodParameter")]
 	[InlineData ("my/app/ExportWithGenericInstantiation")]
 	[InlineData ("my/app/ExportWithInvalidExportParameterType")]
+	[InlineData ("my/app/ExportWithInvalidExportParameterKind")]
 	[InlineData ("my/app/ExportWithGenericExportParameter")]
 	[InlineData ("my/app/ExportFieldWithInvalidExportParameterType")]
 	[InlineData ("my/app/GenericExportType")]
