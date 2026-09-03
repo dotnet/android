@@ -271,3 +271,9 @@ auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 	std::free (tpa_list.data);
 	return nullptr;
 }
+
+void FastDevAssemblies::discard_tpa_list (char *tpa_list) noexcept
+{
+	std::free (tpa_list);
+	tpa_in_use = false;
+}
