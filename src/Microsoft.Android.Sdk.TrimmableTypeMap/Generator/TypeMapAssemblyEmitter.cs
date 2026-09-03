@@ -915,21 +915,39 @@ sealed class TypeMapAssemblyEmitter
 	}
 
 	/// <summary>
-	/// Emits <c>Copy | ((ownership &amp; DoNotRegister) >> 2)</c>, which converts the
-	/// <c>JniHandleOwnership</c> argument into the <c>JniObjectReferenceOptions</c> value
-	/// expected by a Java.Interop-style activation constructor.
+	/// Emits the conversion from this method's <c>JniHandleOwnership</c> argument to the
+	/// <c>JniObjectReferenceOptions</c> value a Java.Interop-style activation constructor
+	/// expects, as <c>Copy | ((ownership &amp; DoNotRegister) >> 2)</c>.
 	/// </summary>
 	/// <remarks>
-	/// This relies on two enums in different assemblies staying aligned:
-	/// <c>Android.Runtime.JniHandleOwnership.DoNotRegister</c> is <c>0x10</c>, while the
-	/// matching "do not register" bit of <c>Java.Interop.JniObjectReferenceOptions</c>
-	/// (<c>JniRuntime.ReflectionJniValueManager.DoNotRegisterTarget</c>) is <c>1 &lt;&lt; 2</c>,
-	/// so shifting right by two maps one onto the other. The result is
-	/// <c>JniObjectReferenceOptions.CopyAndDoNotRegister</c> (5) when the caller passes
-	/// <c>DoNotRegister</c>, and <c>JniObjectReferenceOptions.Copy</c> (1) otherwise.
-	/// If either bit ever moves, the on-device activation-options assertion in
-	/// <c>TrimmableTypeMapRuntimeCoverageTests</c> is what catches it — the generator test
-	/// only pins the emitted byte sequence.
+	/// <para>
+	/// The two enums live in different assemblies and only one flag has to survive the
+	/// conversion — "do not register this peer" — but it sits at a different bit in each:
+	/// <c>Android.Runtime.JniHandleOwnership.DoNotRegister</c> is <c>0x10</c> (bit 4),
+	/// while the matching bit of <c>Java.Interop.JniObjectReferenceOptions</c>
+	/// (<c>JniRuntime.ReflectionJniValueManager.DoNotRegisterTarget</c>) is <c>1 &lt;&lt; 2</c>.
+	/// Two positions apart, hence the shift:
+	/// </para>
+	/// <list type="bullet">
+	///   <item><c>ownership &amp; 0x10</c> isolates the flag, yielding <c>0x10</c> or <c>0</c>.</item>
+	///   <item><c>&gt;&gt; 2</c> moves bit 4 down to bit 2, yielding <c>0x04</c> or <c>0</c>.</item>
+	///   <item><c>Copy |</c> adds the copy bit, yielding <c>CopyAndDoNotRegister</c> (5) or <c>Copy</c> (1).</item>
+	/// </list>
+	/// <para>
+	/// Masking also discards <c>TransferLocalRef</c>/<c>TransferGlobalRef</c>, which are not
+	/// the constructor's concern: the generated method retains the incoming handle and
+	/// releases it itself via <c>JNIEnv.DeleteRef (handle, ownership)</c> once construction
+	/// finishes. That is also why <c>Copy</c> is always set — the peer must take its own
+	/// reference rather than assume ownership of the caller's handle.
+	/// </para>
+	/// <para>
+	/// The arithmetic is used in preference to a branch purely because this is emitted IL:
+	/// it needs no labels or branch targets. It is correct only because <c>0x10 >> 2</c>
+	/// happens to equal <c>0x04</c>; if either bit ever moves, the generator test below
+	/// keeps passing (it pins the emitted bytes, not the meaning) and the on-device
+	/// activation-options assertion in <c>TrimmableTypeMapRuntimeCoverageTests</c> is what
+	/// catches it.
+	/// </para>
 	/// </remarks>
 	static void EmitJniObjectReferenceOptions (PEAssemblyBuilder.TrackedInstructionEncoder encoder)
 	{
