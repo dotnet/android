@@ -369,6 +369,9 @@ namespace Xamarin.Android.Build.Tests {
 			var path = Path.Combine (Root, "temp", TestName);
 			var dgmlFile = Path.Combine (path, "app.scan.dgml.xml");
 			var acwMapFile = Path.Combine (path, "acw-map.txt");
+			var mappingFile = Path.Combine (path, "mapping.txt");
+			var rewriteManifestFile = Path.Combine (path, "r8-jni-rewrite-manifest.txt");
+			var reachabilityManifestFile = Path.Combine (path, "r8-jni-reachability-manifest.txt");
 			var outputFile = Path.Combine (path, "proguard", "proguard_project_references.cfg");
 			Directory.CreateDirectory (path);
 			File.WriteAllText (dgmlFile, """
@@ -394,23 +397,96 @@ namespace Xamarin.Android.Build.Tests {
 				Duplicate.Type;wrong.Duplicate
 				Other.Type;other.Type
 				""");
+			File.WriteAllText (mappingFile, """
+				crc64a1.MainActivity -> a.a:
+				my.app.Duplicate -> a.b:
+				androidx.activity.result.contract.ActivityResultContracts$TakePicture -> a.c:
+				non.acw.Helper -> a.d:
+				    int value -> e
+				    void run() -> f
+				other.Type -> a.g:
+				    void removed() -> h:
+
+				""");
+			File.WriteAllText (rewriteManifestFile, """
+				C	crc64a1/MainActivity
+				C	non/acw/Helper
+				C	other/Type
+				F	non/acw/Helper	value
+				M	non/acw/Helper	run():void
+				M	other/Type	removed():void
+
+				""".ReplaceLineEndings ("\n"));
 
 			var task = new GenerateNativeAotProguardConfiguration {
 				BuildEngine = new MockBuildEngine (TestContext.Out),
 				NativeAotDgmlFiles = new [] { new TaskItem (dgmlFile) },
 				AcwMapFile = acwMapFile,
 				OutputFile = outputFile,
+				R8MappingFile = mappingFile,
+				R8RewriteManifestFile = rewriteManifestFile,
+				R8ReachabilityManifestFile = reachabilityManifestFile,
 				TrimJavaCallableWrappers = true,
 			};
 
 			Assert.IsTrue (task.Execute (), "Task should succeed.");
 			var proguard = File.ReadAllText (outputFile);
-			StringAssert.Contains ("-keep class crc64a1.MainActivity { *; }", proguard);
-			StringAssert.Contains ("-keep class android.app.Activity { *; }", proguard);
-			StringAssert.Contains ("-keep class my.app.Duplicate { *; }", proguard);
-			StringAssert.Contains ("-keep class androidx.activity.result.contract.ActivityResultContracts$TakePicture { *; }", proguard);
-			StringAssert.DoesNotContain ("wrong.Duplicate", proguard);
+			StringAssert.Contains ("-keep,allowobfuscation class crc64a1.MainActivity", proguard);
+			StringAssert.Contains ("-keep,allowobfuscation class my.app.Duplicate", proguard);
+			StringAssert.Contains ("-keep,allowobfuscation class androidx.activity.result.contract.ActivityResultContracts$TakePicture", proguard);
+			StringAssert.Contains ("-keep,allowobfuscation class non.acw.Helper", proguard);
+			StringAssert.Contains ("-keepclassmembers,allowobfuscation class non.acw.Helper", proguard);
+			StringAssert.Contains ("*** value;", proguard);
+			StringAssert.Contains ("*** run(...);", proguard);
+			StringAssert.DoesNotContain ("-keep class crc64a1.MainActivity", proguard);
 			StringAssert.DoesNotContain ("other.Type", proguard);
+			StringAssert.DoesNotContain ("wrong.Duplicate", proguard);
+			CollectionAssert.AreEqual (new [] {
+				"C\tandroidx/activity/result/contract/ActivityResultContracts$TakePicture",
+				"C\tcrc64a1/MainActivity",
+				"C\tmy/app/Duplicate",
+				"C\tnon/acw/Helper",
+				"F\tnon/acw/Helper\tvalue",
+				"M\tnon/acw/Helper\trun():void",
+			}, File.ReadAllLines (reachabilityManifestFile));
+			StringAssert.DoesNotContain ("\r", File.ReadAllText (reachabilityManifestFile), "R8 JNI manifests should use deterministic LF line endings.");
+		}
+
+		[TestCase ("missing-mapping")]
+		[TestCase ("malformed-mapping")]
+		[TestCase ("missing-rewrite-manifest")]
+		[TestCase ("malformed-rewrite-manifest")]
+		public void Execute_GenerateNativeAotProguardConfiguration_InvalidR8InputUsesXA4327 (string invalidInput)
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var acwMapFile = Path.Combine (path, "acw-map.txt");
+			var mappingFile = Path.Combine (path, "mapping.txt");
+			var rewriteManifestFile = Path.Combine (path, "r8-jni-rewrite-manifest.txt");
+			Directory.CreateDirectory (path);
+			File.WriteAllText (acwMapFile, "Managed.Type;managed.Type\n");
+			if (invalidInput != "missing-mapping") {
+				File.WriteAllText (mappingFile, invalidInput == "malformed-mapping"
+					? "not a mapping\n"
+					: "managed.Type -> a:\n");
+			}
+			if (invalidInput != "missing-rewrite-manifest") {
+				File.WriteAllText (rewriteManifestFile, invalidInput == "malformed-rewrite-manifest"
+					? "not a manifest entry\n"
+					: "C\tmanaged/Type\n");
+			}
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new GenerateNativeAotProguardConfiguration {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+				AcwMapFile = acwMapFile,
+				OutputFile = Path.Combine (path, "proguard.cfg"),
+				R8MappingFile = mappingFile,
+				R8RewriteManifestFile = rewriteManifestFile,
+				TrimJavaCallableWrappers = false,
+			};
+
+			Assert.IsFalse (task.Execute (), "Invalid R8 input should fail the task.");
+			Assert.That (errors, Has.Count.EqualTo (1));
+			Assert.AreEqual ("XA4327", errors [0].Code);
 		}
 
 		[Test]

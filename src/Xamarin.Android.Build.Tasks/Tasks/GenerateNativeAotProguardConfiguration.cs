@@ -6,6 +6,7 @@ using System.IO;
 using System.Xml;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks.JniRemapping;
 
 namespace Xamarin.Android.Tasks;
 
@@ -22,6 +23,12 @@ public class GenerateNativeAotProguardConfiguration : AndroidTask
 
 	[Required]
 	public string OutputFile { get; set; } = "";
+
+	public string? R8MappingFile { get; set; }
+
+	public string? R8RewriteManifestFile { get; set; }
+
+	public string? R8ReachabilityManifestFile { get; set; }
 
 	// When false, the ILC DGML is not consulted (it may not have been generated at all) and a
 	// -keep rule is emitted for every Java type in the ACW map, so R8 keeps them all instead of
@@ -56,15 +63,73 @@ public class GenerateNativeAotProguardConfiguration : AndroidTask
 			retainedTypeKeys = LoadRetainedTypeKeysFromDgml ();
 		}
 
+		var allJavaTypes = LoadJavaTypesFromAcwMap (null);
 		// A null retainedTypeKeys means "keep every Java type in the ACW map" (Java trimming disabled).
-		var javaTypes = LoadJavaTypesFromAcwMap (retainedTypeKeys);
+		var javaTypes = retainedTypeKeys == null ? allJavaTypes : LoadJavaTypesFromAcwMap (retainedTypeKeys);
+		var reachableR8Entries = new HashSet<string> (StringComparer.Ordinal);
+		R8Mapping? mapping = null;
+		if (!R8MappingFile.IsNullOrEmpty ()) {
+			if (!File.Exists (R8MappingFile)) {
+				LogR8JniMappingError (string.Format (Properties.Resources.XA4327_SeedMappingNotFound, R8MappingFile));
+				return false;
+			}
+			if (R8RewriteManifestFile.IsNullOrEmpty () || !File.Exists (R8RewriteManifestFile)) {
+				LogR8JniMappingError (string.Format (Properties.Resources.XA4327_RewriteManifestNotFound, R8RewriteManifestFile));
+				return false;
+			}
+			try {
+				mapping = R8Mapping.Load (R8MappingFile);
+				var rewriteEntries = File.ReadAllLines (R8RewriteManifestFile);
+				// Comparing the seed mapping to itself validates every manifest entry and verifies
+				// that it identifies an entry in the seed mapping.
+				foreach (string conflict in mapping.GetReachabilityConflicts (mapping, rewriteEntries)) {
+					throw new FormatException (conflict);
+				}
+
+				var allAcwTypes = new HashSet<string> (StringComparer.Ordinal);
+				foreach (string javaTypeName in allJavaTypes) {
+					allAcwTypes.Add (javaTypeName.Replace ('.', '/'));
+				}
+				var retainedAcwTypes = new HashSet<string> (StringComparer.Ordinal);
+				foreach (string javaTypeName in javaTypes) {
+					string jniTypeName = javaTypeName.Replace ('.', '/');
+					retainedAcwTypes.Add (jniTypeName);
+					if (mapping.TryGetRenamedClass (jniTypeName, out _)) {
+						reachableR8Entries.Add (R8Mapping.BuildClassEntry (jniTypeName));
+					}
+				}
+				foreach (string entry in rewriteEntries) {
+					string [] parts = entry.Split ('\t');
+					string owningType = parts [1];
+					if (!allAcwTypes.Contains (owningType) || retainedAcwTypes.Contains (owningType)) {
+						reachableR8Entries.Add (entry);
+					}
+				}
+			} catch (FormatException ex) {
+				LogR8JniMappingError (string.Format (Properties.Resources.XA4327_MappingDataFailure, ex.Message));
+				return false;
+			} catch (IOException ex) {
+				LogR8JniMappingError (string.Format (Properties.Resources.XA4327_MappingDataFailure, ex.Message));
+				return false;
+			} catch (UnauthorizedAccessException ex) {
+				LogR8JniMappingError (string.Format (Properties.Resources.XA4327_MappingDataFailure, ex.Message));
+				return false;
+			}
+		}
 
 		using var writer = new StringWriter ();
 		writer.WriteLine ("# ACWs retained by NativeAOT ILC");
-		foreach (var javaTypeName in javaTypes) {
-			writer.WriteLine ($"-keep class {javaTypeName} {{ *; }}");
+		if (mapping == null) {
+			foreach (var javaTypeName in javaTypes) {
+				writer.WriteLine ($"-keep class {javaTypeName} {{ *; }}");
+			}
+		} else {
+			GenerateProguardConfiguration.WriteMappedRules (writer, reachableR8Entries);
 		}
-		Files.CopyIfStringChanged (writer.ToString (), OutputFile);
+		File.WriteAllText (OutputFile, writer.ToString ());
+		if (!R8ReachabilityManifestFile.IsNullOrEmpty ()) {
+			WriteReachabilityManifest (R8ReachabilityManifestFile, reachableR8Entries);
+		}
 
 		if (TrimJavaCallableWrappers) {
 			Log.LogMessage (MessageImportance.Low, "Generated {0} NativeAOT trimmable typemap ProGuard rules from {1} DGML file(s).", javaTypes.Count, NativeAotDgmlFiles.Length);
@@ -72,6 +137,18 @@ public class GenerateNativeAotProguardConfiguration : AndroidTask
 			Log.LogMessage (MessageImportance.Low, "Generated {0} NativeAOT ProGuard rules keeping every Java type in the ACW map (Java trimming is disabled).", javaTypes.Count);
 		}
 		return !Log.HasLoggedErrors;
+	}
+
+	void LogR8JniMappingError (string detail)
+		=> Log.LogCodedError ("XA4327", Properties.Resources.XA4327, detail);
+
+	static void WriteReachabilityManifest (string path, IEnumerable<string> entries)
+	{
+		string? directory = Path.GetDirectoryName (path);
+		if (!directory.IsNullOrEmpty ()) {
+			Directory.CreateDirectory (directory);
+		}
+		File.WriteAllText (path, R8Mapping.CreateManifestContent (entries));
 	}
 
 	List<string> LoadJavaTypesFromAcwMap (HashSet<string>? retainedTypeKeys)

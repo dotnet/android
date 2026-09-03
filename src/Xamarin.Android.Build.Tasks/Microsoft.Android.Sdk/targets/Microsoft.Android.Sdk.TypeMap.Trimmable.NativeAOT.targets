@@ -19,7 +19,6 @@
     <_AndroidBuildRuntimeIdentifiersInParallel
         Condition=" ('$(_AndroidTrimmableTypemapTrimJavaCode)' == 'true' or '$(IlcGenerateDgmlFile)' == 'true') and '$(_AndroidBuildRuntimeIdentifiersInParallel)' == '' ">false</_AndroidBuildRuntimeIdentifiersInParallel>
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">net.dot.jni.nativeaot.NativeAotRuntimeProvider</_TrimmableRuntimeProviderJavaName>
-    <AndroidLinkTool Condition=" '$(AndroidLinkTool)' == '' ">r8</AndroidLinkTool>
     <AndroidDexTool Condition=" '$(AndroidLinkTool)' == 'r8' ">d8</AndroidDexTool>
     <AndroidEnableProguard Condition=" '$(AndroidLinkTool)' != '' ">True</AndroidEnableProguard>
     <AndroidCreateProguardMappingFile Condition=" '$(AndroidCreateProguardMappingFile)' == '' and '$(AndroidLinkTool)' == 'r8' ">True</AndroidCreateProguardMappingFile>
@@ -70,6 +69,64 @@
           Condition=" '$(_AndroidTrimmableTypemapTrimJavaCode)' == 'true' and '$(AndroidLinkTool)' != '' and '$(IlcGenerateDgmlFile)' != 'true' and '$(Optimize)' != 'true' "
           Include="--dgmllog:$(NativeIntermediateOutputPath)$(TargetName).codegen.dgml.xml" />
       <UnmanagedEntryPointsAssembly Include="@(_TrimmableTypeMapUnmanagedEntryPointAssemblyNames)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidRewriteJniNamesBeforeIlcInputs"
+      Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' "
+      DependsOnTargets="_AndroidGenerateR8JniSeedMapping">
+    <PropertyGroup>
+      <_AndroidR8JniRewrittenAssemblyDirectory>$(IntermediateOutputPath)r8-jni-rewritten/</_AndroidR8JniRewrittenAssemblyDirectory>
+      <_AndroidR8JniRewriteStamp>$(_AndroidStampDirectory)_AndroidRewriteJniNamesBeforeIlc.stamp</_AndroidR8JniRewriteStamp>
+    </PropertyGroup>
+    <ItemGroup>
+      <_AndroidR8JniIlcAssembly Remove="@(_AndroidR8JniIlcAssembly)" />
+      <_AndroidR8JniHashedIlcAssembly Remove="@(_AndroidR8JniHashedIlcAssembly)" />
+      <_AndroidR8JniRewrittenIlcAssembly Remove="@(_AndroidR8JniRewrittenIlcAssembly)" />
+      <_AndroidR8JniExpectedRewriteOutput Remove="@(_AndroidR8JniExpectedRewriteOutput)" />
+      <_AndroidR8JniMissingRewriteOutput Remove="@(_AndroidR8JniMissingRewriteOutput)" />
+      <_AndroidR8JniIlcAssembly Include="@(ManagedBinary)">
+        <R8JniInputKind>ManagedBinary</R8JniInputKind>
+      </_AndroidR8JniIlcAssembly>
+      <_AndroidR8JniIlcAssembly Include="@(IlcReference)">
+        <R8JniInputKind>IlcReference</R8JniInputKind>
+      </_AndroidR8JniIlcAssembly>
+      <_AndroidR8JniIlcAssembly Remove="@(_AndroidR8JniIlcAssembly)" Condition=" '%(Extension)' != '.dll' " />
+    </ItemGroup>
+    <ComputeHash Source="@(_AndroidR8JniIlcAssembly)">
+      <Output TaskParameter="Output" ItemName="_AndroidR8JniHashedIlcAssembly" />
+    </ComputeHash>
+    <ItemGroup>
+      <_AndroidR8JniRewrittenIlcAssembly Include="@(_AndroidR8JniHashedIlcAssembly->'$(_AndroidR8JniRewrittenAssemblyDirectory)%(Hash)/%(Filename)%(Extension)')" />
+      <_AndroidR8JniExpectedRewriteOutput Include="@(_AndroidR8JniRewrittenIlcAssembly);$(_AndroidR8JniRewriteManifest)" />
+      <_AndroidR8JniMissingRewriteOutput Include="@(_AndroidR8JniExpectedRewriteOutput)" Condition="!Exists('%(Identity)')" />
+    </ItemGroup>
+    <Delete Files="$(_AndroidR8JniRewriteStamp)" Condition=" '@(_AndroidR8JniMissingRewriteOutput->Count())' != '0' " />
+  </Target>
+
+  <Target Name="_AndroidRewriteJniNamesBeforeIlc"
+      Condition=" '$(_AndroidEnableR8JniNameRewriting)' == 'true' "
+      BeforeTargets="WriteIlcRspFileForCompilation"
+      DependsOnTargets="_AndroidRewriteJniNamesBeforeIlcInputs"
+      Inputs="@(_AndroidR8JniHashedIlcAssembly);$(_AndroidR8JniSeedMapping)"
+      Outputs="$(_AndroidR8JniRewriteStamp)">
+    <RewriteJniNamesForR8
+        SourceFiles="@(_AndroidR8JniHashedIlcAssembly)"
+        DestinationFiles="@(_AndroidR8JniRewrittenIlcAssembly)"
+        MappingFile="$(_AndroidR8JniSeedMapping)"
+        RewriteManifestFile="$(_AndroidR8JniRewriteManifest)" />
+    <Touch Files="$(_AndroidR8JniRewriteStamp)" AlwaysCreate="true" />
+    <ItemGroup>
+      <ManagedBinary Remove="@(ManagedBinary)" />
+      <ManagedBinary Include="@(_AndroidR8JniRewrittenIlcAssembly)" Condition=" '%(R8JniInputKind)' == 'ManagedBinary' " />
+      <IlcCompileInput Remove="@(IlcCompileInput)" />
+      <IlcCompileInput Include="@(ManagedBinary)" />
+      <IlcReference Remove="@(IlcReference)" />
+      <IlcReference Include="@(_AndroidR8JniRewrittenIlcAssembly)" Condition=" '%(R8JniInputKind)' == 'IlcReference' " />
+      <FileWrites Include="@(_AndroidR8JniRewrittenIlcAssembly)" />
+      <FileWrites Include="$(_AndroidR8JniRewriteStamp)" />
+      <_AndroidR8JniExpectedRewriteOutput Remove="@(_AndroidR8JniExpectedRewriteOutput)" />
+      <_AndroidR8JniMissingRewriteOutput Remove="@(_AndroidR8JniMissingRewriteOutput)" />
     </ItemGroup>
   </Target>
 
@@ -231,15 +288,19 @@
   <Target Name="_GenerateTrimmableTypeMapProguardConfiguration"
       DependsOnTargets="_WriteTrimmableNativeAotProguardConfigurationInputs;_CollectTrimmableNativeAotDgmlFiles"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
-      Inputs="$(_TrimmableNativeAotProguardConfigurationInputsStamp);@(_TrimmableNativeAotDgmlFiles);$(IntermediateOutputPath)acw-map.txt"
-      Outputs="$(_ProguardProjectConfiguration)">
+      Inputs="$(_TrimmableNativeAotProguardConfigurationInputsStamp);@(_TrimmableNativeAotDgmlFiles);$(IntermediateOutputPath)acw-map.txt;$(_AndroidR8JniSeedMapping);$(_AndroidR8JniRewriteManifest)"
+      Outputs="$(_ProguardProjectConfiguration);$(_AndroidR8JniReachabilityManifest)">
     <GenerateNativeAotProguardConfiguration
         NativeAotDgmlFiles="@(_TrimmableNativeAotDgmlFiles)"
         AcwMapFile="$(IntermediateOutputPath)acw-map.txt"
         TrimJavaCallableWrappers="$(_AndroidTrimmableTypemapTrimJavaCode)"
-        OutputFile="$(_ProguardProjectConfiguration)" />
+        OutputFile="$(_ProguardProjectConfiguration)"
+        R8MappingFile="$(_AndroidR8JniSeedMapping)"
+        R8RewriteManifestFile="$(_AndroidR8JniRewriteManifest)"
+        R8ReachabilityManifestFile="$(_AndroidR8JniReachabilityManifest)" />
     <ItemGroup>
       <FileWrites Include="$(_ProguardProjectConfiguration)" />
+      <FileWrites Include="$(_AndroidR8JniReachabilityManifest)" Condition=" '$(_AndroidR8JniReachabilityManifest)' != '' " />
     </ItemGroup>
   </Target>
 
