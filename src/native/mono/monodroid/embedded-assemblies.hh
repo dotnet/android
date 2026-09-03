@@ -24,7 +24,7 @@
 #include <runtime-base/strings.hh>
 #include "xamarin-app.hh"
 #include <shared/cpp-util.hh>
-#include <runtime-base/mutex.hh>
+#include "cppcompat.hh"
 #include "shared-constants.hh"
 #include <shared/xxhash.hh>
 #include "util.hh"
@@ -462,7 +462,7 @@ namespace xamarin::android::internal {
 		static inline bool          need_to_scan_more_apks = true;
 
 		static inline AssemblyStoreIndexEntry *assembly_store_hashes = nullptr;
-		static inline pthread_mutex_t assembly_decompress_mutex = PTHREAD_MUTEX_INITIALIZER;
+		static inline xamarin::android::mutex  assembly_decompress_mutex {};
 	};
 }
 

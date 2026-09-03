@@ -3,4 +3,4 @@
 using namespace xamarin::android;
 
 PinvokeOverride::pinvoke_library_map PinvokeOverride::other_pinvoke_map (PinvokeOverride::LIBRARY_MAP_INITIAL_BUCKET_COUNT);
-pthread_mutex_t PinvokeOverride::pinvoke_map_write_lock = PTHREAD_MUTEX_INITIALIZER;
+xamarin::android::mutex PinvokeOverride::pinvoke_map_write_lock;

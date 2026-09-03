@@ -9,7 +9,7 @@
 
 #include "native-tracing.hh"
 #include "shared-constants.hh"
-#include <runtime-base/mutex.hh>
+#include "cppcompat.hh"
 
 constexpr int PRIORITY = ANDROID_LOG_INFO;
 
@@ -26,7 +26,7 @@ static jmethodID java_lang_Thread_getStackTrace;
 static jclass java_lang_StackTraceElement;
 static jmethodID java_lang_StackTraceElement_toString;
 
-static pthread_mutex_t java_init_lock = PTHREAD_MUTEX_INITIALIZER;
+static xamarin::android::mutex java_init_lock;
 
 const char* xa_get_managed_backtrace () noexcept
 {

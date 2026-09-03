@@ -11,7 +11,6 @@
 #include "android-system.hh"
 #include "monodroid-state.hh"
 #include <runtime-base/dso-loader.hh>
-#include <runtime-base/mutex.hh>
 #include <runtime-base/search-xxhash.hh>
 #include "shared-constants.hh"
 #include "startup-aware-lock.hh"
@@ -30,7 +29,7 @@ namespace xamarin::android::internal
 			DSO,
 		};
 
-		static inline pthread_mutex_t dso_handle_write_lock = PTHREAD_MUTEX_INITIALIZER;
+		static inline xamarin::android::mutex   dso_handle_write_lock;
 
 		constexpr static int convert_dl_flags (int flags) noexcept
 		{

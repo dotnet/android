@@ -1,5 +1,6 @@
 #pragma once
 
+#include <pthread.h>
 #include <sys/time.h>
 
 #include <chrono>
@@ -7,8 +8,6 @@
 #include <string_view>
 
 #include <android/log.h>
-
-#include <runtime-base/mutex.hh>
 
 #include "timing-internal.hh"
 
@@ -50,7 +49,7 @@ namespace xamarin::android
 
 		auto get_available_sequence () noexcept -> managed_timing_sequence*
 		{
-			lock_guard lock (sequence_lock);
+			pthread_mutex_lock (&sequence_lock);
 
 			managed_timing_sequence *ret;
 			for (size_t i = 0uz; i < sequence_pool.size (); i++) {
@@ -61,11 +60,13 @@ namespace xamarin::android
 				ret = &sequence_pool[i];
 				ret->in_use = true;
 
+				pthread_mutex_unlock (&sequence_lock);
 				return ret;
 			}
 			ret = &sequence_pool.emplace_back ();
 			ret->in_use = true;
 
+			pthread_mutex_unlock (&sequence_lock);
 			return ret;
 		}
 
@@ -75,10 +76,11 @@ namespace xamarin::android
 				return;
 			}
 
-			lock_guard lock (sequence_lock);
+			pthread_mutex_lock (&sequence_lock);
 			sequence->start = time_point::min ();
 			sequence->end = time_point::min ();
 			sequence->in_use = false;
+			pthread_mutex_unlock (&sequence_lock);
 		}
 
 	private:
@@ -104,6 +106,6 @@ namespace xamarin::android
 
 	private:
 		std::vector<managed_timing_sequence> sequence_pool;
-		pthread_mutex_t sequence_lock = PTHREAD_MUTEX_INITIALIZER;
+		pthread_mutex_t           sequence_lock = PTHREAD_MUTEX_INITIALIZER;
 	};
 }
