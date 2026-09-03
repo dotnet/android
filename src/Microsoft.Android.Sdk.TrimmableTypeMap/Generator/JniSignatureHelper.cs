@@ -174,15 +174,17 @@ static class JniSignatureHelper
 	/// </summary>
 	public static bool HasAmbiguousCallbackType (string jniSignature)
 	{
-		if (IsAmbiguousCallbackKind (ParseReturnType (jniSignature))) {
-			return true;
-		}
-		foreach (var kind in ParseParameterTypes (jniSignature)) {
-			if (IsAmbiguousCallbackKind (kind)) {
+		int i = 1;
+		while (i < jniSignature.Length && jniSignature [i] != ')') {
+			if (IsAmbiguousCallbackKind (ParseSingleType (jniSignature, ref i))) {
 				return true;
 			}
 		}
-		return false;
+		if (i >= jniSignature.Length) {
+			throw new ArgumentException ($"Malformed JNI signature '{jniSignature}': missing ')'");
+		}
+		i++;
+		return IsAmbiguousCallbackKind (ParseSingleType (jniSignature, ref i));
 	}
 
 	/// <summary>

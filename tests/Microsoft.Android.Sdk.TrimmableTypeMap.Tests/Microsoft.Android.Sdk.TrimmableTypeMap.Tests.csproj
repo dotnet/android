@@ -13,6 +13,7 @@
   <!-- Exclude TestFixtures subdirectory — it's a separate project compiled independently -->
   <ItemGroup>
     <Compile Remove="TestFixtures\**" />
+    <Compile Remove="TestAttributeFixtures\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +24,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
+    <ProjectReference Include="TestAttributeFixtures\TestAttributeFixtures.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
     <ProjectReference Include="TestFixtures\TestFixtures.csproj">
       <!-- Don't add as a compile-time reference — we only need the built DLL as scanner test input -->
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
@@ -33,6 +37,7 @@
   <Target Name="_CopyTestFixturesOutput" AfterTargets="Build">
     <ItemGroup>
       <_TestFixtureFiles Include="TestFixtures\bin\$(Configuration)\$(DotNetStableTargetFramework)\TestFixtures.dll" />
+      <_TestFixtureFiles Include="TestAttributeFixtures\bin\$(Configuration)\$(DotNetStableTargetFramework)\TestAttributeFixtures.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_TestFixtureFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
   </Target>

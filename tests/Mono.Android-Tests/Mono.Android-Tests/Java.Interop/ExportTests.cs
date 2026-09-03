@@ -260,16 +260,61 @@ namespace Java.InteropTests
 		}
 
 		// ---------------------------------------------------------------
+		// Group C — static [Export] dispatch
+		// ---------------------------------------------------------------
+
+		[Test, Category ("Export")]
+		public void Export_StaticMethod_Primitive_RoundTrip ()
+		{
+			using var klass = Java.Lang.Class.FromType (typeof (ExportStatic));
+			var m = JNIEnv.GetStaticMethodID (klass.Handle, "Add", "(II)I");
+			Assert.AreNotEqual (IntPtr.Zero, m, "JNI static method id for Add not found");
+			int result = JNIEnv.CallStaticIntMethod (klass.Handle, m, new JValue (20), new JValue (22));
+			Assert.AreEqual (42, result);
+		}
+
+		// ---------------------------------------------------------------
 		// Group D — [ExportField] runtime visibility from Java
 		// ---------------------------------------------------------------
-		// NOTE: device-level [ExportField] tests are deferred. The JCW
-		// generator (legacy and trimmable) currently emits a static field
-		// initializer that calls the [ExportField] method as a non-static
-		// member (`public static int FOO = InitialFoo();`), which fails
-		// javac when the C# method is `static`, and is unreachable at
-		// runtime when the C# method is an instance member because there
-		// is no peer instance during class init. Add runtime [ExportField]
-		// coverage once the JCW emitter handles both shapes correctly.
+
+		[Test, Category ("Export")]
+		public void ExportField_StaticPrimitive_InitializerVisibleFromJava ()
+		{
+			using var klass = Java.Lang.Class.FromType (typeof (ExportStaticField));
+			var field = JNIEnv.GetStaticFieldID (klass.Handle, "ANSWER", "I");
+			Assert.AreNotEqual (IntPtr.Zero, field, "JNI static field id for ANSWER not found");
+			Assert.AreEqual (42, JNIEnv.GetStaticIntField (klass.Handle, field));
+		}
+
+		[Test, Category ("Export")]
+		public void ExportField_StaticObject_InitializerVisibleFromJava ()
+		{
+			using var klass = Java.Lang.Class.FromType (typeof (ExportStaticField));
+			var field = JNIEnv.GetStaticFieldID (klass.Handle, "OBJECT_ANSWER", "Ljava/lang/Integer;");
+			Assert.AreNotEqual (IntPtr.Zero, field, "JNI static field id for OBJECT_ANSWER not found");
+
+			IntPtr valueHandle = JNIEnv.GetStaticObjectField (klass.Handle, field);
+			Assert.AreNotEqual (IntPtr.Zero, valueHandle, "OBJECT_ANSWER should contain a Java peer");
+			var value = Java.Lang.Object.GetObject<Java.Lang.Integer> (valueHandle, JniHandleOwnership.TransferLocalRef);
+			Assert.IsNotNull (value, "OBJECT_ANSWER should wrap as java.lang.Integer");
+			if (value is null) {
+				Assert.Fail ("OBJECT_ANSWER should wrap as java.lang.Integer");
+				return;
+			}
+			using (value) {
+				Assert.AreEqual (43, value.IntValue ());
+			}
+		}
+
+		[Test, Category ("Export")]
+		public void ExportField_InstancePrimitive_InitializerVisibleFromJava ()
+		{
+			using var value = new ExportInstanceField ();
+			using var klass = Java.Lang.Class.FromType (typeof (ExportInstanceField));
+			var field = JNIEnv.GetFieldID (klass.Handle, "ANSWER", "I");
+			Assert.AreNotEqual (IntPtr.Zero, field, "JNI field id for ANSWER not found");
+			Assert.AreEqual (42, JNIEnv.GetIntField (value.Handle, field));
+		}
 	}
 
 	// ---------------------------------------------------------------
@@ -289,6 +334,27 @@ namespace Java.InteropTests
 	{
 		[Export]
 		public bool EchoBool (bool x) => !x;
+	}
+
+	class ExportStatic : Java.Lang.Object
+	{
+		[Export]
+		public static int Add (int x, int y) => x + y;
+	}
+
+	class ExportStaticField : Java.Lang.Object
+	{
+		[ExportField ("ANSWER")]
+		public static int GetAnswer () => 42;
+
+		[ExportField ("OBJECT_ANSWER")]
+		public static Java.Lang.Integer GetObjectAnswer () => new Java.Lang.Integer (43);
+	}
+
+	class ExportInstanceField : Java.Lang.Object
+	{
+		[ExportField ("ANSWER")]
+		public int GetAnswer () => 42;
 	}
 
 	class ExportString : Java.Lang.Object

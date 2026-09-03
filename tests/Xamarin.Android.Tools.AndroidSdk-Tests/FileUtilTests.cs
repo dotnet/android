@@ -93,7 +93,7 @@ namespace Xamarin.Android.Tools.Tests
 		[Test]
 		public void IsUnderDirectory_ChildPath_ReturnsTrue ()
 		{
-			var parent = Path.Combine ($"{Path.DirectorySeparatorChar}opt", "programs");
+			var parent = Path.Combine (tempDir, "programs");
 			var child = Path.Combine (parent, "java", "jdk-21");
 			Assert.IsTrue (FileUtil.IsUnderDirectory (child, parent));
 		}
@@ -101,24 +101,32 @@ namespace Xamarin.Android.Tools.Tests
 		[Test]
 		public void IsUnderDirectory_ExactMatch_ReturnsTrue ()
 		{
-			var dir = Path.Combine ($"{Path.DirectorySeparatorChar}opt", "programs");
-			Assert.IsTrue (FileUtil.IsUnderDirectory (dir, dir));
+			var directory = Path.Combine (tempDir, "programs");
+			Assert.IsTrue (FileUtil.IsUnderDirectory (directory, directory));
 		}
 
 		[Test]
 		public void IsUnderDirectory_SiblingPath_ReturnsFalse ()
 		{
 			Assert.IsFalse (FileUtil.IsUnderDirectory (
-				Path.Combine ($"{Path.DirectorySeparatorChar}opt", "data", "java"),
-				Path.Combine ($"{Path.DirectorySeparatorChar}opt", "programs")));
+				Path.Combine (tempDir, "data", "java"),
+				Path.Combine (tempDir, "programs")));
 		}
 
 		[Test]
 		public void IsUnderDirectory_DifferentRoot_ReturnsFalse ()
 		{
 			Assert.IsFalse (FileUtil.IsUnderDirectory (
-				Path.Combine ($"{Path.DirectorySeparatorChar}other", "java"),
-				Path.Combine ($"{Path.DirectorySeparatorChar}opt", "programs")));
+				Path.Combine (Path.GetPathRoot (tempDir), "other", "java"),
+				Path.Combine (tempDir, "programs")));
+		}
+
+		[Test]
+		public void IsUnderDirectory_PartialDirNameMatch_ReturnsFalse ()
+		{
+			var parent = Path.Combine (tempDir, "programs");
+			var sibling = Path.Combine (tempDir, "programs-extra", "java");
+			Assert.IsFalse (FileUtil.IsUnderDirectory (sibling, parent));
 		}
 
 		[TestCase (null, "/dir")]
@@ -128,24 +136,24 @@ namespace Xamarin.Android.Tools.Tests
 		[TestCase (null, null)]
 		public void IsUnderDirectory_NullOrEmpty_ReturnsFalse (string path, string directory)
 		{
-			Assert.IsFalse (FileUtil.IsUnderDirectory (path!, directory!));
+			Assert.IsFalse (FileUtil.IsUnderDirectory (path, directory));
 		}
 
 		[Test]
-		public void IsUnderDirectory_CaseInsensitive ()
+		public void IsUnderDirectory_CaseSensitive ()
 		{
-			var parent = Path.Combine ($"{Path.DirectorySeparatorChar}opt", "Programs");
-			var child = Path.Combine ($"{Path.DirectorySeparatorChar}opt", "PROGRAMS", "java");
-			Assert.IsTrue (FileUtil.IsUnderDirectory (child, parent));
+			var parent = Path.Combine (tempDir, "Programs");
+			var child = Path.Combine (tempDir, "PROGRAMS", "java");
+			Assert.IsFalse (FileUtil.IsUnderDirectory (child, parent));
 		}
 
 		[Test]
-		public void IsUnderDirectory_PartialDirNameMatch_ReturnsFalse ()
+		public void IsUnderDirectory_CanonicalCaseMismatch_ReturnsFalse ()
 		{
-			var parent = Path.Combine ($"{Path.DirectorySeparatorChar}opt", "programs");
-			Assert.IsFalse (FileUtil.IsUnderDirectory (
-				Path.Combine ($"{Path.DirectorySeparatorChar}opt", "programs-extra", "java"),
-				parent));
+			var parent = Path.Combine (tempDir, "programs");
+			var sibling = Path.Combine (parent, "..", "PROGRAMS", "java");
+			Assert.IsFalse (FileUtil.IsUnderDirectory (sibling, parent));
 		}
+
 	}
 }

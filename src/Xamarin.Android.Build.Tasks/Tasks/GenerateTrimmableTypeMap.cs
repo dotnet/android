@@ -59,6 +59,16 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogCodedError ("XA4251", Properties.Resources.XA4251, managedTypeName);
 		public void LogInvalidJavaNameError (string javaName, string invalidIdentifier) =>
 			log.LogCodedError ("XA4258", Properties.Resources.XA4258, javaName, invalidIdentifier);
+		public void LogDuplicateJavaTypeError (string javaName) =>
+			log.LogCodedError ("XA4215", Properties.Resources.XA4215, javaName);
+		public void LogDuplicateJavaTypeDetailsError (string javaName, string managedTypeName) =>
+			log.LogCodedError ("XA4215", Properties.Resources.XA4215_Details, javaName, managedTypeName);
+		public void LogExportFieldWithParametersError () =>
+			log.LogCodedError ("XA4205", Java.Interop.Localization.Resources.JavaCallableWrappers_XA4205);
+		public void LogExportFieldOnGenericTypeError () =>
+			log.LogCodedError ("XA4207", Java.Interop.Localization.Resources.JavaCallableWrappers_XA4207);
+		public void LogExportFieldReturnsVoidError () =>
+			log.LogCodedError ("XA4208", Java.Interop.Localization.Resources.JavaCallableWrappers_XA4208);
 		public void LogCustomJavaObjectError (string managedTypeName) =>
 			log.LogError ("{0}", $"XA4212: {string.Format (Properties.Resources.XA4212, managedTypeName)}");
 		public void LogCustomJavaObjectWarning (string managedTypeName) =>
@@ -86,6 +96,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public string? GeneratedAssembliesListFile { get; set; }
 
 	public string? ManifestTemplate { get; set; }
+
+	public string? CustomViewMapFile { get; set; }
 
 	public string? MergedAndroidManifestOutput { get; set; }
 
@@ -240,6 +252,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			if (!ManifestTemplate.IsNullOrEmpty () && File.Exists (ManifestTemplate)) {
 				manifestTemplate = XDocument.Load (ManifestTemplate);
 			}
+			IReadOnlyCollection<string>? customViewTypeNames = CustomViewMapFile.IsNullOrEmpty ()
+				? null
+				: MonoAndroidHelper.LoadCustomViewMapFile (BuildEngine4, CustomViewMapFile).Keys;
 
 			result = generator.Execute (
 				assemblies,
@@ -252,7 +267,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				generateTypeMapAssemblies: GenerateTypeMapAssemblies,
 				generateRootAssembly: GenerateRootAssembly,
 				sharedFrameworkTypeMapNames: sharedFrameworkTypeMapNames,
-				errorOnCustomJavaObject: ErrorOnCustomJavaObject);
+				errorOnCustomJavaObject: ErrorOnCustomJavaObject,
+				customViewTypeNames: customViewTypeNames,
+				collectMarshalMethodsForNonAcw: false);
 			if (Log.HasLoggedErrors) {
 				return false;
 			}

@@ -23,14 +23,6 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 	static MethodDefinitionHandle FindMethodDefinition (MetadataReader reader, string methodName) =>
 		reader.MethodDefinitions.First (h => reader.GetString (reader.GetMethodDefinition (h).Name) == methodName);
 
-	[Fact]
-	public void Generate_ProducesValidPEAssembly ()
-	{
-		using var stream = GenerateRootAssembly (new [] { "_App.TypeMap", "_Mono.Android.TypeMap" });
-		using var pe = new PEReader (stream);
-		Assert.True (pe.HasMetadata);
-	}
-
 	[Theory]
 	[InlineData (false)]
 	[InlineData (true)]

@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <limits>
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -1111,6 +1112,43 @@ MonodroidRuntime::set_profile_options () noexcept
 	debug.monodroid_profiler_load (AndroidSystem::get_runtime_libdir (), value.get (), output_path.get ());
 }
 
+inline auto
+format_assembly_load_timing_info (std::string_view prefix, const char *assembly_name, char *buffer, size_t buffer_size) noexcept -> ssize_t
+{
+	size_t assembly_name_length = strlen (assembly_name);
+	size_t more_info_length = Helpers::add_with_overflow_check<size_t> (prefix.length (), assembly_name_length);
+	size_t required_capacity = Helpers::add_with_overflow_check<size_t> (more_info_length, 1uz);
+	abort_unless (required_capacity <= static_cast<size_t>(std::numeric_limits<ssize_t>::max ()), "Assembly timing information is too long");
+	if (buffer == nullptr || buffer_size < required_capacity) {
+		return -static_cast<ssize_t>(required_capacity);
+	}
+
+	memcpy (buffer, prefix.data (), prefix.length ());
+	memcpy (buffer + prefix.length (), assembly_name, assembly_name_length);
+	buffer [more_info_length] = '\0';
+	return static_cast<ssize_t>(more_info_length);
+}
+
+inline void
+add_assembly_load_timing_info (std::string_view prefix, const char *assembly_name) noexcept
+{
+	char stack_buffer [SENSIBLE_PATH_MAX];
+	char *more_info = stack_buffer;
+	ssize_t result = format_assembly_load_timing_info (prefix, assembly_name, more_info, sizeof (stack_buffer));
+	if (result < 0) {
+		size_t required_capacity = static_cast<size_t>(-result);
+		more_info = static_cast<char*> (std::malloc (required_capacity));
+		abort_unless (more_info != nullptr, "Failed to allocate assembly load timing information");
+		result = format_assembly_load_timing_info (prefix, assembly_name, more_info, required_capacity);
+	}
+
+	abort_unless (result >= 0, "Failed to format assembly load timing information using the required capacity");
+	internal_timing.add_more_info (more_info, static_cast<size_t>(result));
+	if (more_info != stack_buffer) {
+		std::free (more_info);
+	}
+}
+
 inline void
 MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jstring_wrapper &assembly) noexcept
 {
@@ -1133,12 +1171,7 @@ MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jst
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (true /* uses_more_info */);
-
-		constexpr std::string_view PREFIX { " (ALC): " };
-
-		dynamic_local_string<SENSIBLE_PATH_MAX + PREFIX.length ()> more_info { PREFIX };
-		more_info.append_c (assm_name);
-		internal_timing.add_more_info (more_info);
+		add_assembly_load_timing_info (" (ALC): "sv, assm_name);
 	}
 }
 
@@ -1169,13 +1202,7 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly) 
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (true /* uses_more_info */);
-
-		constexpr std::string_view PREFIX { " (domain): " };
-		constexpr size_t PREFIX_SIZE = sizeof(PREFIX) - 1uz;
-
-		dynamic_local_string<SENSIBLE_PATH_MAX + PREFIX_SIZE> more_info { PREFIX };
-		more_info.append_c (assm_name);
-		internal_timing.add_more_info (more_info);
+		add_assembly_load_timing_info (" (domain): "sv, assm_name);
 	}
 }
 
@@ -1198,9 +1225,13 @@ MonodroidRuntime::load_assemblies (load_assemblies_context_type ctx, bool preloa
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (true /* uses-more_info */);
 
-		static_local_string<SharedConstants::INTEGER_BASE10_BUFFER_SIZE> more_info;
-		more_info.append (static_cast<uint64_t>(i + 1u));
-		internal_timing.add_more_info (more_info);
+		char more_info [SharedConstants::INTEGER_BASE10_BUFFER_SIZE];
+		int more_info_length = snprintf (more_info, sizeof (more_info), "%zu", i + 1uz);
+		abort_unless (
+			more_info_length >= 0 && static_cast<size_t>(more_info_length) < sizeof (more_info),
+			"Failed to format the assembly count"
+		);
+		internal_timing.add_more_info (more_info, static_cast<size_t>(more_info_length));
 	}
 }
 
@@ -1639,12 +1670,9 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (true /* uses_more_info */);
 
-		dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> type;
 		const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
-		type.assign (mt_ptr, strlen (mt_ptr));
+		internal_timing.add_more_info (mt_ptr);
 		env->ReleaseStringUTFChars (managedType, mt_ptr);
-
-		internal_timing.add_more_info (type);
 	}
 }
 

@@ -68,18 +68,64 @@ sealed class SignatureTypeProvider : ISignatureTypeProvider<string, object?>
 
 sealed class TypeRefSignatureTypeProvider : ISignatureTypeProvider<TypeRefData, AssemblyIndex>
 {
-	public static readonly TypeRefSignatureTypeProvider Instance = new ();
+	static readonly TypeRefData VoidType = CreatePrimitiveType ("System.Void");
+	static readonly TypeRefData BooleanType = CreatePrimitiveType ("System.Boolean");
+	static readonly TypeRefData CharType = CreatePrimitiveType ("System.Char");
+	static readonly TypeRefData SByteType = CreatePrimitiveType ("System.SByte");
+	static readonly TypeRefData ByteType = CreatePrimitiveType ("System.Byte");
+	static readonly TypeRefData Int16Type = CreatePrimitiveType ("System.Int16");
+	static readonly TypeRefData UInt16Type = CreatePrimitiveType ("System.UInt16");
+	static readonly TypeRefData Int32Type = CreatePrimitiveType ("System.Int32");
+	static readonly TypeRefData UInt32Type = CreatePrimitiveType ("System.UInt32");
+	static readonly TypeRefData Int64Type = CreatePrimitiveType ("System.Int64");
+	static readonly TypeRefData UInt64Type = CreatePrimitiveType ("System.UInt64");
+	static readonly TypeRefData SingleType = CreatePrimitiveType ("System.Single");
+	static readonly TypeRefData DoubleType = CreatePrimitiveType ("System.Double");
+	static readonly TypeRefData StringType = CreatePrimitiveType ("System.String");
+	static readonly TypeRefData ObjectType = CreatePrimitiveType ("System.Object");
+	static readonly TypeRefData IntPtrType = CreatePrimitiveType ("System.IntPtr");
+	static readonly TypeRefData UIntPtrType = CreatePrimitiveType ("System.UIntPtr");
+	static readonly TypeRefData TypedReferenceType = CreatePrimitiveType ("System.TypedReference");
+	readonly AssemblyIndex index;
 
-	public TypeRefData GetPrimitiveType (PrimitiveTypeCode typeCode) => new () {
-		ManagedTypeName = SignatureTypeProvider.Instance.GetPrimitiveType (typeCode),
+	internal TypeRefSignatureTypeProvider (AssemblyIndex index)
+	{
+		this.index = index;
+	}
+
+	public TypeRefData GetPrimitiveType (PrimitiveTypeCode typeCode) => typeCode switch {
+		PrimitiveTypeCode.Void => VoidType,
+		PrimitiveTypeCode.Boolean => BooleanType,
+		PrimitiveTypeCode.Char => CharType,
+		PrimitiveTypeCode.SByte => SByteType,
+		PrimitiveTypeCode.Byte => ByteType,
+		PrimitiveTypeCode.Int16 => Int16Type,
+		PrimitiveTypeCode.UInt16 => UInt16Type,
+		PrimitiveTypeCode.Int32 => Int32Type,
+		PrimitiveTypeCode.UInt32 => UInt32Type,
+		PrimitiveTypeCode.Int64 => Int64Type,
+		PrimitiveTypeCode.UInt64 => UInt64Type,
+		PrimitiveTypeCode.Single => SingleType,
+		PrimitiveTypeCode.Double => DoubleType,
+		PrimitiveTypeCode.String => StringType,
+		PrimitiveTypeCode.Object => ObjectType,
+		PrimitiveTypeCode.IntPtr => IntPtrType,
+		PrimitiveTypeCode.UIntPtr => UIntPtrType,
+		PrimitiveTypeCode.TypedReference => TypedReferenceType,
+		_ => CreatePrimitiveType (typeCode.ToString ()),
+	};
+
+	static TypeRefData CreatePrimitiveType (string managedTypeName) => new () {
+		ManagedTypeName = managedTypeName,
 		AssemblyName = "System.Runtime",
 	};
 
+	// Each provider is owned by the AssemblyIndex for the MetadataReader being decoded.
 	public TypeRefData GetTypeFromDefinition (MetadataReader reader, TypeDefinitionHandle handle, byte rawTypeKind)
-		=> MetadataTypeNameResolver.GetTypeRefFromDefinition (reader, handle, reader.GetString (reader.GetAssemblyDefinition ().Name), rawTypeKind);
+		=> index.GetTypeRef (handle, rawTypeKind);
 
 	public TypeRefData GetTypeFromReference (MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind)
-		=> MetadataTypeNameResolver.GetTypeRefFromReference (reader, handle, reader.GetString (reader.GetAssemblyDefinition ().Name), rawTypeKind);
+		=> index.GetTypeRef (handle, rawTypeKind);
 
 	public TypeRefData GetTypeFromSpecification (MetadataReader reader, AssemblyIndex genericContext, TypeSpecificationHandle handle, byte rawTypeKind)
 	{

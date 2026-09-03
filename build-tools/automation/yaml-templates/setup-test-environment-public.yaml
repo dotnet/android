@@ -4,7 +4,7 @@
 parameters:
   configuration: $(XA.Build.Configuration)
   xaSourcePath: $(System.DefaultWorkingDirectory)
-  jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
+  jdkMajorVersion: $(LatestJavaSdkMajorVersion)
   useAgentJdkPath: false
   remove_dotnet: false
   dotnetVersion: $(DotNetSdkVersion)
@@ -35,4 +35,4 @@ steps:
     installTestSlicer: ${{ parameters.installTestSlicer }}
     installApkDiff: ${{ parameters.installApkDiff }}
     androidSdkPlatforms: ${{ parameters.androidSdkPlatforms }}
-    use1ESTemplate: false
+    use1ESTemplate: ${{ parameters.use1ESTemplate }}

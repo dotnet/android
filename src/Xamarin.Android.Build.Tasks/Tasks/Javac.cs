@@ -29,8 +29,6 @@ namespace Xamarin.Android.Tasks
 		public string? JavacTargetVersion { get; set; }
 		public string? JavacSourceVersion { get; set; }
 
-		public string? JdkVersion { get; set; }
-
 		public override string DefaultErrorCode => "JAVAC0000";
 
 		public override bool RunTask ()

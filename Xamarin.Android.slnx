@@ -62,6 +62,7 @@
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests.csproj" />
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests/UserTypesFixture/UserTypesFixture.csproj" />
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests.csproj" />
+    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/TestAttributeFixtures/TestAttributeFixtures.csproj" />
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/TestFixtures/TestFixtures.csproj" />
     <Project Path="tests/MSBuildDeviceIntegration/MSBuildDeviceIntegration.csproj" />
     <Project Path="tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj" />

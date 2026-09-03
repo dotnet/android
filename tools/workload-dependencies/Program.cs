@@ -165,7 +165,7 @@ JProperty CreateJdkProperty (XDocument doc)
 	var v               = new Version (JdkVersion ?? "17.0");
 	var start           = new Version (v.Major, v.Minor);
 	var end             = GetMaxJdkVersion (v);
-	var latestRevision  = JdkVersion ?? GetLatestRevision (doc, "jdk");
+	var latestRevision  = GetLatestRevision (doc, "jdk", start, new Version (end));
 	var contents        = new JObject (
 		new JProperty ("version", $"[{start},{end})"));
 	if (!string.IsNullOrEmpty (latestRevision))
@@ -196,15 +196,19 @@ IEnumerable<XElement> GetSupportedElements (XDocument doc, string element)
 		;
 }
 
-IEnumerable<(XElement Element, string Revision)> GetByRevisions (XDocument doc, string element)
+IEnumerable<(XElement Element, string Revision, Version Version)> GetByRevisions (XDocument doc, string element)
 {
 	return GetSupportedElements (doc, element)
 		.OrderByRevision ();
 }
 
-string? GetLatestRevision (XDocument doc, string element)
+string? GetLatestRevision (XDocument doc, string element, Version minimumVersion, Version maximumVersion)
 {
 	return GetByRevisions (doc, element)
+		.Where (item => {
+			var version = item.Version;
+			return version >= minimumVersion && version < maximumVersion;
+		})
 		.LastOrDefault ()
 		.Revision;
 }
@@ -373,12 +377,12 @@ static class Extensions
 		return v;
 	}
 
-	public static IEnumerable<(XElement Element, string Revision)> OrderByRevision (this IEnumerable<XElement> elements)
+	public static IEnumerable<(XElement Element, string Revision, Version Version)> OrderByRevision (this IEnumerable<XElement> elements)
 	{
 		return from e in elements
 			let     revision    = e.ReqAttr ("revision")
 			let     version     = new Version (revision.Contains (".") ? revision : revision + ".0")
 			orderby version
-			select (e, revision);
+			select (e, revision, version);
 	}
 }

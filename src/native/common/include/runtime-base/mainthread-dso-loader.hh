@@ -6,7 +6,6 @@
 
 #include <array>
 #include <chrono>
-#include <format>
 #include <semaphore>
 #include <string_view>
 
@@ -26,12 +25,11 @@ namespace xamarin::android {
 		explicit MainThreadDsoLoader () noexcept
 		{
 			if (pipe (pipe_fds) != 0) {
-				Helpers::abort_application (
+				Helpers::abort_applicationf (
 					LOG_ASSEMBLY,
-					std::format (
-						"Failed to create a pipe for main thread DSO loader. {}"sv,
-						strerror (errno)
-					)
+					std::source_location::current (),
+					"Failed to create a pipe for main thread DSO loader. %s",
+					strerror (errno)
 				);
 			}
 
@@ -74,17 +72,21 @@ namespace xamarin::android {
 			if (!undecorated_library_name.empty ()) [[unlikely]] {
 				Helpers::abort_application ("Main thread DSO loader object reused! DO NOT DO THAT!"sv);
 			}
-			log_debug (LOG_ASSEMBLY, "Running DSO loader on thread {}, dispatching to main thread"sv, gettid ());
+			log_debugf (LOG_ASSEMBLY, "Running DSO loader on thread %d, dispatching to main thread", static_cast<int>(gettid ()));
 
 			undecorated_library_name = undecorated_name;
 			load_success = false;
 			constexpr std::array<uint8_t, 1> payload { 0xFF };
-			ssize_t nbytes = write (pipe_fds[1], payload.data (), payload.size ());
-			if (nbytes == -1) {
-				log_warn (
+			ssize_t nbytes;
+			do {
+				nbytes = write (pipe_fds[1], payload.data (), payload.size ());
+			} while (nbytes == -1 && errno == EINTR);
+
+			if (nbytes != static_cast<ssize_t>(payload.size ())) {
+				log_warnf (
 					LOG_ASSEMBLY,
-					"Write failure when posting a DSO load event to main thread. {}"sv,
-					strerror (errno)
+					"Write failure when posting a DSO load event to main thread. %s",
+					nbytes == -1 ? strerror (errno) : "incomplete write"
 				);
 				return false;
 			}
@@ -95,7 +97,7 @@ namespace xamarin::android {
 			// We'll wait for up to 3s, it should be more than enough time for the library to load
 			bool success = load_complete_sem.try_acquire_for (3s);
 			if (!success) {
-				log_warn (LOG_ASSEMBLY, "Timeout while waiting for shared library '{}' to load."sv, full_name);
+				log_warnf (LOG_ASSEMBLY, "Timeout while waiting for shared library '%.*s' to load.", static_cast<int>(full_name.length ()), full_name.data ());
 				return false;
 			}
 
@@ -130,15 +132,16 @@ namespace xamarin::android {
 			};
 
 			if (self->undecorated_library_name.empty ()) {
-				log_warn (LOG_ASSEMBLY, "Library name not specified in main thread looper callback."sv);
+				log_warnf (LOG_ASSEMBLY, "Library name not specified in main thread looper callback.");
 				return over_and_out ();
 			}
 
-			log_debug (
+			log_debugf (
 				LOG_ASSEMBLY,
-				"Looper CB called on thread {}. Will attempt to load DSO '{}'"sv,
-				gettid (),
-				self->undecorated_library_name
+				"Looper CB called on thread %d. Will attempt to load DSO '%.*s'",
+				static_cast<int>(gettid ()),
+				static_cast<int>(self->undecorated_library_name.length ()),
+				self->undecorated_library_name.data ()
 			);
 
 			self->load_success = SystemLoadLibraryWrapper::load (main_thread_jni_env /* RuntimeEnvironment::get_jnienv () */, self->undecorated_library_name);

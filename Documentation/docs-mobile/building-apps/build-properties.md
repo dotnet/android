@@ -399,6 +399,9 @@ for Java `native` method registration.
 
 This property is False by default.
 
+This property cannot be set to `true` when
+[`$(PublishReadyToRun)`](#publishreadytorun) is `true`.
+
 Added in .NET 8.
 
 ## AndroidEnableMultiDex

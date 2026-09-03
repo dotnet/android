@@ -9,7 +9,6 @@
 #include <tuple>
 
 #include <xamarin-app.hh>
-#include <runtime-base/strings.hh>
 
 namespace xamarin::android {
 	class AssemblyStore
