@@ -40,6 +40,8 @@ namespace Xamarin.Android.Tasks
 					addKeepAliveStep.Initialize (context);
 					pipeline.Steps.Add (addKeepAliveStep);
 				}
+			} else {
+				Log.LogDebugMessage ("Skipping legacy compatibility assembly fixups. Set `AndroidEnableLegacyCompatibilityAssemblyFixups` to `true` to enable them.");
 			}
 
 			// Ensure the <AssemblyModifierPipeline> task's steps are added
