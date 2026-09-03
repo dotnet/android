@@ -10,6 +10,7 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tasks.JniRemapping;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
@@ -82,6 +83,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	[Required]
 	public string JavaSourceOutputDirectory { get; set; } = "";
 	public string? JavaSourceInputDirectory { get; set; }
+	public string? R8MappingFile { get; set; }
+	public string? R8RewriteManifestFile { get; set; }
 	[Required]
 	public string TargetFrameworkVersion { get; set; } = "";
 
@@ -138,6 +141,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	[Output]
 	public string[]? AdditionalProviderSources { get; set; }
 
+	R8Mapping? r8Mapping;
+	IJniNameMapping? reverseR8Mapping;
+
 	public override bool RunTask ()
 	{
 		var systemRuntimeVersion = ParseTargetFrameworkVersion (TargetFrameworkVersion);
@@ -161,6 +167,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				Log.LogCodedError ("XA4254", Properties.Resources.XA4254, inputDirectory, outputDirectory);
 				return false;
 			}
+		}
+		if (!LoadR8JavaSourcePathMapping ()) {
+			return false;
 		}
 
 		Directory.CreateDirectory (OutputDirectory);
@@ -321,17 +330,50 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		Files.CopyIfStringChanged (text, GeneratedAssembliesListFile);
 	}
 
-	ITaskItem [] CopyJavaSourcesFromInputDirectory (IReadOnlyList<GeneratedJavaSource> javaSources)
+	internal bool LoadR8JavaSourcePathMapping ()
+	{
+		if (R8MappingFile.IsNullOrEmpty ()) {
+			return true;
+		}
+		if (!File.Exists (R8MappingFile)) {
+			LogR8JniMappingError (string.Format (Properties.Resources.XA4327_SeedMappingNotFound, R8MappingFile));
+			return false;
+		}
+		if (R8RewriteManifestFile.IsNullOrEmpty () || !File.Exists (R8RewriteManifestFile)) {
+			LogR8JniMappingError (string.Format (Properties.Resources.XA4327_RewriteManifestNotFound, R8RewriteManifestFile));
+			return false;
+		}
+		try {
+			r8Mapping = R8Mapping.Load (R8MappingFile);
+			r8Mapping.RestrictReverseLookupsTo (File.ReadLines (R8RewriteManifestFile));
+			reverseR8Mapping = r8Mapping.CreateReverseMapping ();
+			return true;
+		} catch (FormatException ex) {
+			LogR8JniMappingError (string.Format (Properties.Resources.XA4327_MappingDataFailure, ex.Message));
+		} catch (IOException ex) {
+			LogR8JniMappingError (string.Format (Properties.Resources.XA4327_MappingDataFailure, ex.Message));
+		} catch (UnauthorizedAccessException ex) {
+			LogR8JniMappingError (string.Format (Properties.Resources.XA4327_MappingDataFailure, ex.Message));
+		}
+		return false;
+	}
+
+	internal ITaskItem [] CopyJavaSourcesFromInputDirectory (IReadOnlyList<GeneratedJavaSource> javaSources)
 	{
 		var items = new List<ITaskItem> ();
 		foreach (var source in javaSources) {
-			string inputPath = Path.Combine (JavaSourceInputDirectory ?? "", source.RelativePath);
+			string? relativePath = GetOriginalJavaSourceRelativePath (source.RelativePath);
+			if (relativePath == null) {
+				continue;
+			}
+			relativePath = NormalizeJavaSourceRelativePath (relativePath, Path.DirectorySeparatorChar);
+			string inputPath = Path.Combine (JavaSourceInputDirectory ?? "", relativePath);
 			if (!File.Exists (inputPath)) {
 				Log.LogCodedError ("XA4255", Properties.Resources.XA4255, inputPath);
 				continue;
 			}
 
-			string outputPath = Path.Combine (JavaSourceOutputDirectory, source.RelativePath);
+			string outputPath = Path.Combine (JavaSourceOutputDirectory, relativePath);
 			string? dir = Path.GetDirectoryName (outputPath);
 			if (!string.IsNullOrEmpty (dir)) {
 				Directory.CreateDirectory (dir);
@@ -343,6 +385,30 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		}
 		return items.ToArray ();
 	}
+
+	internal static string NormalizeJavaSourceRelativePath (string relativePath, char directorySeparator)
+		=> relativePath.Replace ('/', directorySeparator);
+
+	string? GetOriginalJavaSourceRelativePath (string generatedRelativePath)
+	{
+		if (r8Mapping == null || reverseR8Mapping == null || !generatedRelativePath.EndsWith (".java", StringComparison.OrdinalIgnoreCase)) {
+			return generatedRelativePath;
+		}
+		string generatedJniName = generatedRelativePath.Substring (0, generatedRelativePath.Length - ".java".Length)
+			.Replace (Path.DirectorySeparatorChar, '/')
+			.Replace (Path.AltDirectorySeparatorChar, '/');
+		if (reverseR8Mapping.TryMapClass (generatedJniName, out string originalJniName)) {
+			return originalJniName + ".java";
+		}
+		if (r8Mapping.ContainsObfuscatedClass (generatedJniName)) {
+			LogR8JniMappingError (string.Format (Properties.Resources.XA4327_JavaSourcePathMappingConflict, generatedJniName));
+			return null;
+		}
+		return generatedRelativePath;
+	}
+
+	void LogR8JniMappingError (string detail)
+		=> Log.LogCodedError ("XA4327", Properties.Resources.XA4327, detail);
 
 	ITaskItem [] WriteAssembliesToDisk (IReadOnlyList<GeneratedAssembly> assemblies, IReadOnlyList<string> assemblyPaths)
 	{

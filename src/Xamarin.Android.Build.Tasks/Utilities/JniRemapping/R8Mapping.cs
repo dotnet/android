@@ -266,6 +266,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			return false;
 		}
 
+		internal bool ContainsObfuscatedClass (string obfuscatedJniClassName)
+			=> originalClasses.ContainsKey (obfuscatedJniClassName);
+
 		public bool TryGetOriginalMethodName (string originalJniClassName, string obfuscatedMethodName, IReadOnlyList<string> originalJavaParameterTypes, string originalJavaReturnType, out string originalMethodName)
 		{
 			originalMethodName = "";
@@ -418,6 +421,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		{
 			var reportedRemovedClasses = new HashSet<string> (StringComparer.Ordinal);
 			foreach (string requiredEntry in requiredEntries) {
+				if (requiredEntry.Length == 0) {
+					continue;
+				}
 				string [] parts = requiredEntry.Split ('\t');
 				switch (parts.Length > 0 ? parts [0] : "") {
 				case "C" when parts.Length == 2:

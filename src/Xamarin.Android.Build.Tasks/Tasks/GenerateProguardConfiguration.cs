@@ -1,11 +1,13 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks.JniRemapping;
 
 namespace Xamarin.Android.Tasks
 {
@@ -14,24 +16,140 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "GPC";
 
 		[Required]
-		public ITaskItem[] LinkedAssemblies { get; set; } = [];
+		public ITaskItem [] LinkedAssemblies { get; set; } = [];
 
 		[Required]
 		public string OutputFile { get; set; } = "";
 
+		public string? R8MappingFile { get; set; }
+
+		public string? R8RewriteManifestFile { get; set; }
+
+		public string? R8ReachabilityManifestFile { get; set; }
+
+		R8Mapping? r8Mapping;
+
 		public override bool RunTask ()
 		{
+			if (!R8MappingFile.IsNullOrEmpty ()) {
+				if (!File.Exists (R8MappingFile)) {
+					LogR8JniMappingError (string.Format (Properties.Resources.XA4327_SeedMappingNotFound, R8MappingFile));
+					return false;
+				}
+				try {
+					r8Mapping = R8Mapping.Load (R8MappingFile);
+					if (!R8RewriteManifestFile.IsNullOrEmpty ()) {
+						if (!File.Exists (R8RewriteManifestFile)) {
+							LogR8JniMappingError (string.Format (Properties.Resources.XA4327_RewriteManifestNotFound, R8RewriteManifestFile));
+							return false;
+						}
+						r8Mapping.RestrictReverseLookupsTo (File.ReadLines (R8RewriteManifestFile));
+					}
+				} catch (FormatException ex) {
+					LogR8JniMappingError (string.Format (Properties.Resources.XA4327_MappingDataFailure, ex.Message));
+					return false;
+				} catch (IOException ex) {
+					LogR8JniMappingError (string.Format (Properties.Resources.XA4327_MappingDataFailure, ex.Message));
+					return false;
+				} catch (UnauthorizedAccessException ex) {
+					LogR8JniMappingError (string.Format (Properties.Resources.XA4327_MappingDataFailure, ex.Message));
+					return false;
+				}
+			}
 			var dir = Path.GetDirectoryName (OutputFile);
 			if (!dir.IsNullOrEmpty () && !Directory.Exists (dir)) {
 				Directory.CreateDirectory (dir);
 			}
-			using var writer = File.CreateText (OutputFile);
+			using var writer = new StringWriter ();
 
-			foreach (var assembly in LinkedAssemblies) {
-				ProcessAssembly (assembly.ItemSpec, writer);
+			R8Mapping? mapping = r8Mapping;
+			if (mapping != null) {
+				foreach (var assembly in LinkedAssemblies) {
+					ScanRewrittenAssembly (assembly.ItemSpec, mapping);
+				}
+				WriteMappedRules (writer, mapping);
+			} else {
+				foreach (var assembly in LinkedAssemblies) {
+					ProcessAssembly (assembly.ItemSpec, writer);
+				}
+			}
+			File.WriteAllText (OutputFile, writer.ToString ());
+			if (!R8ReachabilityManifestFile.IsNullOrEmpty ()) {
+				WriteReachabilityManifest (R8ReachabilityManifestFile);
 			}
 
 			return !Log.HasLoggedErrors;
+		}
+
+		void WriteReachabilityManifest (string path)
+		{
+			string? directory = Path.GetDirectoryName (path);
+			if (!directory.IsNullOrEmpty ()) {
+				Directory.CreateDirectory (directory);
+			}
+			File.WriteAllText (path, R8Mapping.CreateManifestContent (r8Mapping?.AccessedEntries ?? []));
+		}
+
+		void ScanRewrittenAssembly (string assemblyPath, R8Mapping mapping)
+		{
+			try {
+				using var stream = File.OpenRead (assemblyPath);
+				using var pe = new PEReader (stream);
+				if (!pe.HasMetadata) {
+					return;
+				}
+				MetadataReader reader = pe.GetMetadataReader ();
+				JniAssemblyRewriter.ScanRewrittenAssembly (pe, reader, mapping, Log);
+			} catch (BadImageFormatException ex) {
+				Log.LogDebugMessage (string.Format (Properties.Resources.XA4327_LinkedAssemblyReadFailure, assemblyPath, ex.Message));
+			} catch (JniRewriteException ex) {
+				LogR8JniMappingError (string.Format (Properties.Resources.XA4327_LinkedAssemblyScanFailure, assemblyPath, ex.Message));
+			}
+		}
+
+		void LogR8JniMappingError (string detail)
+			=> Log.LogCodedError ("XA4327", Properties.Resources.XA4327, detail);
+
+		void WriteMappedRules (TextWriter writer, R8Mapping mapping)
+		{
+			var rules = new SortedDictionary<string, SortedSet<string>> (StringComparer.Ordinal);
+			foreach (string entry in mapping.AccessedEntries) {
+				string [] parts = entry.Split ('\t');
+				if (parts.Length < 2) {
+					continue;
+				}
+				if (!rules.TryGetValue (parts [1], out var members)) {
+					rules [parts [1]] = members = new SortedSet<string> (StringComparer.Ordinal);
+				}
+				if (parts.Length != 3) {
+					continue;
+				}
+
+				if (parts [0] == "F") {
+					members.Add ($"   *** {parts [2]};");
+				} else if (parts [0] == "M") {
+					int parameterStart = parts [2].IndexOf ('(');
+					string methodName = parameterStart < 0 ? parts [2] : parts [2].Substring (0, parameterStart);
+					if (methodName == "<init>") {
+						members.Add ("   <init>(...);");
+					} else if (methodName == "<clinit>") {
+						members.Add ("   <methods>;");
+					} else {
+						members.Add ($"   *** {methodName}(...);");
+					}
+				}
+			}
+
+			foreach (var rule in rules) {
+				string javaClassName = rule.Key.Replace ('/', '.');
+				writer.WriteLine ($"-keep,allowobfuscation class {javaClassName}");
+				writer.WriteLine ($"-keepclassmembers,allowobfuscation class {javaClassName} {{");
+				foreach (string member in rule.Value) {
+					writer.WriteLine (member);
+				}
+				writer.WriteLine ("}");
+				writer.WriteLine ();
+			}
 		}
 
 		void ProcessAssembly (string assemblyPath, TextWriter writer)
@@ -106,6 +224,15 @@ namespace Xamarin.Android.Tasks
 			foreach (var methodHandle in type.GetMethods ()) {
 				ProcessMethod (reader, methodHandle, writer);
 			}
+			foreach (var fieldHandle in type.GetFields ()) {
+				ProcessFieldLikeMember (reader, reader.GetFieldDefinition (fieldHandle).GetCustomAttributes (), writer);
+			}
+			foreach (var propertyHandle in type.GetProperties ()) {
+				ProcessFieldLikeMember (reader, reader.GetPropertyDefinition (propertyHandle).GetCustomAttributes (), writer);
+			}
+			foreach (var eventHandle in type.GetEvents ()) {
+				ProcessFieldLikeMember (reader, reader.GetEventDefinition (eventHandle).GetCustomAttributes (), writer);
+			}
 
 			writer.WriteLine ("}");
 			writer.WriteLine ();
@@ -123,14 +250,32 @@ namespace Xamarin.Android.Tasks
 					if (args.FixedArguments.Length >= 2 &&
 					    args.FixedArguments[0].Value is string jname &&
 					    args.FixedArguments[1].Value is string) {
-						if (jname == ".ctor") {
+						if (jname == ".ctor" || jname == "<init>") {
 							writer.WriteLine ("   <init>(...);");
 						} else {
 							writer.WriteLine ($"   *** {jname}(...);");
 						}
+
 					}
 					break;
 				}
+			}
+		}
+
+		void ProcessFieldLikeMember (MetadataReader reader, CustomAttributeHandleCollection attributes, TextWriter writer)
+		{
+			foreach (var attrHandle in attributes) {
+				var attr = reader.GetCustomAttribute (attrHandle);
+				if (reader.GetCustomAttributeFullName (attr, Log) != "Android.Runtime.RegisterAttribute") {
+					continue;
+				}
+				var args = attr.GetCustomAttributeArguments ();
+				if (args.FixedArguments.Length == 0 || args.FixedArguments [0].Value is not string rewrittenFieldName) {
+					break;
+				}
+
+				writer.WriteLine ($"   *** {rewrittenFieldName};");
+				break;
 			}
 		}
 	}

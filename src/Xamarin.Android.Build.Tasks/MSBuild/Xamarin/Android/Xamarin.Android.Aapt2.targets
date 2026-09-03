@@ -245,7 +245,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ProguardRuleOutput="$(_Aapt2ProguardRules)"
   />
   <ItemGroup Condition=" '$(_Aapt2ProguardRules)' != '' And Exists('$(_Aapt2ProguardRules)') ">
-    <ProguardConfiguration Include="$(_Aapt2ProguardRules)" />
+    <ProguardConfiguration Include="$(_Aapt2ProguardRules)">
+      <AndroidGeneratedProguardConfiguration>true</AndroidGeneratedProguardConfiguration>
+      <AndroidAaptProguardConfiguration>true</AndroidAaptProguardConfiguration>
+    </ProguardConfiguration>
     <FileWrites Include="$(_Aapt2ProguardRules)" />
     <FileWrites Include="$(IntermediateOutputPath)android\*\aapt_rules.txt" />
   </ItemGroup>

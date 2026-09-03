@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
@@ -147,6 +148,90 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsFalse (secondTask.Execute (), "The missing pre-trim Java source should fail with XA4255.");
 			Assert.IsTrue (errors.Any (e => e.Code == "XA4255"), "The task should report the missing Java source.");
 			FileAssert.Exists (existingOutput, "A failing in-place update should preserve the last known-good linked Java source.");
+		}
+
+		[Test]
+		public void CopyJavaSources_ReverseMapsObfuscatedNestedClassPath ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var inputDir = Path.Combine (path, "java");
+			var outputDir = Path.Combine (path, "linked-java");
+			var originalRelativePath = Path.Combine ("com", "example", "Outer$Inner.java");
+			var inputPath = Path.Combine (inputDir, originalRelativePath);
+			var inputPathDirectory = Path.GetDirectoryName (inputPath);
+			if (inputPathDirectory is null) {
+				throw new InvalidOperationException ("Could not determine the Java input directory.");
+			}
+			Directory.CreateDirectory (inputPathDirectory);
+			File.WriteAllText (inputPath, "original");
+			var task = CreateJavaSourceCopyTask (
+				inputDir,
+				outputDir,
+				"com.example.Outer$Inner -> g:\n",
+				"C\tcom/example/Outer$Inner\n");
+
+			Assert.IsTrue (task.LoadR8JavaSourcePathMapping ());
+			var outputs = task.CopyJavaSourcesFromInputDirectory (new [] { new GeneratedJavaSource ("g.java", "") });
+
+			Assert.That (outputs, Has.Exactly (1).Property ("ItemSpec").EqualTo (Path.Combine (outputDir, originalRelativePath)));
+			Assert.AreEqual ("original", File.ReadAllText (Path.Combine (outputDir, originalRelativePath)));
+			FileAssert.DoesNotExist (Path.Combine (outputDir, "g.java"));
+		}
+
+		[TestCase ('/', "com/example/Outer$Inner.java")]
+		[TestCase ('\\', "com\\example\\Outer$Inner.java")]
+		public void NormalizeJavaSourceRelativePath_UsesDirectorySeparator (char directorySeparator, string expected)
+		{
+			Assert.AreEqual (
+				expected,
+				GenerateTrimmableTypeMap.NormalizeJavaSourceRelativePath ("com/example/Outer$Inner.java", directorySeparator));
+		}
+
+		[TestCase ("C\tcom/example/First\nC\tcom/example/Second\n", TestName = "CopyJavaSources_MergedClassIsAmbiguous")]
+		[TestCase ("C\tcom/example/Unrelated\n", TestName = "CopyJavaSources_MissingRequiredReverseEntry")]
+		public void CopyJavaSources_InvalidReverseMappingUsesXA4327 (string manifest)
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = CreateJavaSourceCopyTask (
+				Path.Combine (path, "java"),
+				Path.Combine (path, "linked-java"),
+				"com.example.First -> g:\ncom.example.Second -> g:\n",
+				manifest,
+				errors);
+
+			Assert.IsTrue (task.LoadR8JavaSourcePathMapping ());
+			var outputs = task.CopyJavaSourcesFromInputDirectory (new [] { new GeneratedJavaSource ("g.java", "") });
+
+			Assert.IsEmpty (outputs);
+			Assert.That (errors, Has.Exactly (1).Property ("Code").EqualTo ("XA4327"));
+		}
+
+		[Test]
+		public void CopyJavaSources_PreservesUnmappedPath ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var inputDir = Path.Combine (path, "java");
+			var outputDir = Path.Combine (path, "linked-java");
+			var relativePath = Path.Combine ("android", "runtime", "FrameworkPeer.java");
+			var inputPath = Path.Combine (inputDir, relativePath);
+			var inputPathDirectory = Path.GetDirectoryName (inputPath);
+			if (inputPathDirectory is null) {
+				throw new InvalidOperationException ("Could not determine the Java input directory.");
+			}
+			Directory.CreateDirectory (inputPathDirectory);
+			File.WriteAllText (inputPath, "framework");
+			var task = CreateJavaSourceCopyTask (
+				inputDir,
+				outputDir,
+				"com.example.Other -> h:\n",
+				"C\tcom/example/Other\n");
+
+			Assert.IsTrue (task.LoadR8JavaSourcePathMapping ());
+			var outputs = task.CopyJavaSourcesFromInputDirectory (new [] { new GeneratedJavaSource (relativePath, "") });
+
+			Assert.That (outputs, Has.Exactly (1).Property ("ItemSpec").EqualTo (Path.Combine (outputDir, relativePath)));
+			Assert.AreEqual ("framework", File.ReadAllText (Path.Combine (outputDir, relativePath)));
 		}
 
 		[Test]
@@ -407,6 +492,34 @@ namespace Xamarin.Android.Build.Tests {
 				OutputDirectory = outputDir,
 				JavaSourceOutputDirectory = javaDir,
 				TargetFrameworkVersion = tfv,
+			};
+		}
+
+		GenerateTrimmableTypeMap CreateJavaSourceCopyTask (
+			string inputDir,
+			string outputDir,
+			string mapping,
+			string manifest,
+			IList<BuildErrorEventArgs>? errors = null)
+		{
+			string? root = Path.GetDirectoryName (inputDir);
+			if (root is null) {
+				throw new InvalidOperationException ("Could not determine the test root directory.");
+			}
+			string mappingFile = Path.Combine (root, "mapping.txt");
+			string manifestFile = Path.Combine (root, "rewrite-manifest.txt");
+			Directory.CreateDirectory (root);
+			File.WriteAllText (mappingFile, mapping);
+			File.WriteAllText (manifestFile, manifest);
+			return new GenerateTrimmableTypeMap {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors: errors),
+				ResolvedAssemblies = [],
+				OutputDirectory = Path.Combine (root, "typemap"),
+				JavaSourceInputDirectory = inputDir,
+				JavaSourceOutputDirectory = outputDir,
+				R8MappingFile = mappingFile,
+				R8RewriteManifestFile = manifestFile,
+				TargetFrameworkVersion = "v11.0",
 			};
 		}
 

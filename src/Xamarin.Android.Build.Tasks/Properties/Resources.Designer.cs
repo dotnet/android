@@ -1968,6 +1968,150 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Failed to validate R8 JNI mapping data. {0}.
+        /// </summary>
+        public static string XA4327 {
+            get {
+                return ResourceManager.GetString("XA4327", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The final R8 mapping contains {0} additional post-link reachable JNI entries removed by final R8..
+        /// </summary>
+        public static string XA4327_AdditionalReachabilityConflicts {
+            get {
+                return ResourceManager.GetString("XA4327_AdditionalReachabilityConflicts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The final R8 mapping contains {0} additional conflicts with managed JNI names..
+        /// </summary>
+        public static string XA4327_AdditionalSeedMappingConflicts {
+            get {
+                return ResourceManager.GetString("XA4327_AdditionalSeedMappingConflicts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The final R8 mapping file &apos;{0}&apos; was not generated, so the applied JNI names could not be validated..
+        /// </summary>
+        public static string XA4327_FinalMappingNotFound {
+            get {
+                return ResourceManager.GetString("XA4327_FinalMappingNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not uniquely reverse-map generated JNI class &apos;{0}&apos; to its original Java source path..
+        /// </summary>
+        public static string XA4327_JavaSourcePathMappingConflict {
+            get {
+                return ResourceManager.GetString("XA4327_JavaSourcePathMappingConflict", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The merged Android manifest &apos;{0}&apos; does not contain a package name..
+        /// </summary>
+        public static string XA4327_ManifestPackageMissing {
+            get {
+                return ResourceManager.GetString("XA4327_ManifestPackageMissing", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Could not read the merged Android manifest &apos;{0}&apos;: {1}.
+        /// </summary>
+        public static string XA4327_ManifestReadFailure {
+            get {
+                return ResourceManager.GetString("XA4327_ManifestReadFailure", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Could not scan the linked assembly &apos;{0}&apos; for rewritten JNI references: {1}.
+        /// </summary>
+        public static string XA4327_LinkedAssemblyScanFailure {
+            get {
+                return ResourceManager.GetString("XA4327_LinkedAssemblyScanFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not read assembly &apos;{0}&apos;: {1}.
+        /// </summary>
+        public static string XA4327_LinkedAssemblyReadFailure {
+            get {
+                return ResourceManager.GetString("XA4327_LinkedAssemblyReadFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not read R8 JNI mapping data: {0}.
+        /// </summary>
+        public static string XA4327_MappingDataFailure {
+            get {
+                return ResourceManager.GetString("XA4327_MappingDataFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Final R8 removed a post-link reachable JNI {0}..
+        /// </summary>
+        public static string XA4327_ReachabilityConflict {
+            get {
+                return ResourceManager.GetString("XA4327_ReachabilityConflict", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The post-link R8 JNI reachability manifest &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4327_ReachabilityManifestNotFound {
+            get {
+                return ResourceManager.GetString("XA4327_ReachabilityManifestNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The R8 JNI rewrite manifest &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4327_RewriteManifestNotFound {
+            get {
+                return ResourceManager.GetString("XA4327_RewriteManifestNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The final R8 mapping did not preserve the JNI seed mapping for {0}..
+        /// </summary>
+        public static string XA4327_SeedMappingConflict {
+            get {
+                return ResourceManager.GetString("XA4327_SeedMappingConflict", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The R8 JNI seed mapping file &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4327_SeedMappingNotFound {
+            get {
+                return ResourceManager.GetString("XA4327_SeedMappingNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;ProguardMappingFileOutput&apos; property is required when &apos;GenerateSeedMapping&apos; is enabled..
+        /// </summary>
+        public static string XA4327_SeedMappingOutputRequired {
+            get {
+                return ResourceManager.GetString("XA4327_SeedMappingOutputRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>
         public static string XA5101 {

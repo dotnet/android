@@ -1,4 +1,9 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 
@@ -48,6 +53,338 @@ namespace Xamarin.Android.Build.Tests
 				File.Delete (path);
 			}
 		}
+
+		[Test]
+		public void GenerateSeedMappingAllowsAcwObfuscation ()
+		{
+			string path = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
+			Directory.CreateDirectory (path);
+			string responseFile = "";
+			try {
+				string acwMap = Path.Combine (path, "acw-map.txt");
+				string applicationConfiguration = Path.Combine (path, "acw-keep.cfg");
+				string commonConfiguration = Path.Combine (path, "xamarin.cfg");
+				string customConfiguration = Path.Combine (path, "custom.cfg");
+				string aarConfiguration = Path.Combine (path, "aar-proguard.txt");
+				string manifestConfiguration = Path.Combine (path, "manifest-rules.txt");
+				File.WriteAllText (acwMap, "Managed.Peer;com.example.Peer");
+				File.WriteAllText (customConfiguration, "-dontwarn com.example.**");
+				File.WriteAllText (aarConfiguration, "-dontwarn com.example.library.**");
+				File.WriteAllText (manifestConfiguration, """
+					-keep class com.example.MainActivity { <init>(); }
+					""");
+				var aarConfigurationItem = new TaskItem (aarConfiguration);
+				aarConfigurationItem.SetMetadata ("OriginalFile", Path.Combine (path, "library.aar"));
+				var manifestConfigurationItem = new TaskItem (manifestConfiguration);
+				manifestConfigurationItem.SetMetadata ("AndroidGeneratedProguardConfiguration", "true");
+				manifestConfigurationItem.SetMetadata ("AndroidManifestProguardConfiguration", "true");
+
+				var task = new R8TestTask {
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+					JarPath = "r8.jar",
+					JavaPlatformJarPath = "android.jar",
+					OutputDirectory = path,
+					AcwMapFile = acwMap,
+					ProguardGeneratedApplicationConfiguration = applicationConfiguration,
+					ProguardCommonXamarinConfiguration = commonConfiguration,
+					ProguardMappingFileOutput = Path.Combine (path, "mapping.txt"),
+					ProguardConfigurationFiles = new ITaskItem [] { new TaskItem (customConfiguration), aarConfigurationItem, manifestConfigurationItem },
+					GenerateSeedMapping = true,
+					EnableObfuscation = true,
+					IgnoreWarnings = true,
+				};
+
+				task.TestGenerateCommandLineCommands ();
+				responseFile = task.ResponseFilePath;
+				string [] response = File.ReadAllLines (responseFile);
+				var configurationFiles = response
+					.Select ((argument, index) => (argument, index))
+					.Where (entry => entry.argument == "--pg-conf")
+					.Select (entry => response [entry.index + 1])
+					.ToArray ();
+				string configuration = string.Join (Environment.NewLine, configurationFiles.Select (File.ReadAllText));
+
+				Assert.That (configurationFiles, Does.Contain (customConfiguration), "Seed R8 should honor user ProGuard rules.");
+				Assert.That (configurationFiles, Does.Contain (aarConfiguration), "Seed R8 should honor AAR consumer rules.");
+				Assert.That (configurationFiles, Does.Contain (commonConfiguration), "Seed R8 should honor runtime keep rules.");
+				Assert.That (configurationFiles, Does.Contain (manifestConfiguration), "Seed R8 should preserve manifest entry names.");
+				Assert.That (configurationFiles, Does.Not.Contain (applicationConfiguration), "Seed R8 must not pass the ACW keep configuration.");
+				FileAssert.DoesNotExist (applicationConfiguration, "Seed R8 must not generate obfuscation-blocking ACW keep rules.");
+				StringAssert.Contains ("-keep class mono.MonoRuntimeProvider", configuration);
+				StringAssert.Contains ("-keep class com.example.MainActivity", configuration);
+				StringAssert.DoesNotContain ("-keep class com.example.Peer", configuration);
+				StringAssert.DoesNotContain ("-dontobfuscate", configuration);
+				Assert.That (response, Does.Not.Contain ("--no-minification"));
+
+				foreach (string configurationFile in configurationFiles) {
+					if (configurationFile != customConfiguration && configurationFile != commonConfiguration) {
+						File.Delete (configurationFile);
+					}
+				}
+			} finally {
+				if (File.Exists (responseFile)) {
+					File.Delete (responseFile);
+				}
+				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		[Test]
+		public void ValidateAppliedMappingUsesXA4327 ()
+		{
+			string path = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
+			Directory.CreateDirectory (path);
+			try {
+				string seedMapping = Path.Combine (path, "seed-mapping.txt");
+				string finalMapping = Path.Combine (path, "final-mapping.txt");
+				string rewriteManifest = Path.Combine (path, "rewrite-manifest.txt");
+				string reachabilityManifest = Path.Combine (path, "reachability-manifest.txt");
+				File.WriteAllText (seedMapping, "acme.orig.MyView -> a.b.C:\n");
+				File.WriteAllText (finalMapping, "acme.orig.MyView -> a.b.D:\n");
+				File.WriteAllText (rewriteManifest, "C\tacme/orig/MyView\n");
+				File.WriteAllText (reachabilityManifest, "");
+
+				var errors = new List<BuildErrorEventArgs> ();
+				var task = new R8 {
+					BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+					ProguardMappingFileInput = seedMapping,
+					ProguardMappingFileOutput = finalMapping,
+					ProguardMappingRequiredEntriesFile = rewriteManifest,
+					ProguardMappingRequiredReachabilityEntriesFile = reachabilityManifest,
+				};
+
+				Assert.IsFalse (task.ValidateAppliedMapping (), "A conflicting final mapping should fail validation.");
+				Assert.That (errors, Has.Count.EqualTo (1));
+				Assert.AreEqual ("XA4327", errors [0].Code);
+			} finally {
+				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		[Test]
+		public void ValidateAppliedMappingAllowsIdentityManifestEntry ()
+		{
+			string path = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
+			Directory.CreateDirectory (path);
+			try {
+				string seedMapping = Path.Combine (path, "seed-mapping.txt");
+				string finalMapping = Path.Combine (path, "final-mapping.txt");
+				string rewriteManifest = Path.Combine (path, "rewrite-manifest.txt");
+				string reachabilityManifest = Path.Combine (path, "reachability-manifest.txt");
+				const string mapping = """
+					com.example.MainActivity -> com.example.MainActivity:
+					com.example.Peer -> a:
+					""";
+				File.WriteAllText (seedMapping, mapping);
+				File.WriteAllText (finalMapping, mapping);
+				File.WriteAllText (rewriteManifest, "C\tcom/example/MainActivity\nC\tcom/example/Peer\n");
+				File.WriteAllText (reachabilityManifest, "");
+
+				var errors = new List<BuildErrorEventArgs> ();
+				var task = new R8 {
+					BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+					ProguardMappingFileInput = seedMapping,
+					ProguardMappingFileOutput = finalMapping,
+					ProguardMappingRequiredEntriesFile = rewriteManifest,
+					ProguardMappingRequiredReachabilityEntriesFile = reachabilityManifest,
+				};
+
+				Assert.IsTrue (task.ValidateAppliedMapping (), "Matching identity and obfuscated mappings should pass validation.");
+				Assert.IsEmpty (errors);
+			} finally {
+				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		[Test]
+		public void R8JniObfuscationFiltersOnlySdkBaselineNativeKeepRule ()
+		{
+			string path = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
+			Directory.CreateDirectory (path);
+			string responseFile = "";
+			try {
+				string seedMapping = Path.Combine (path, "mapping.txt");
+				string baseline = Path.Combine (path, "proguard-android.txt");
+				string user = Path.Combine (path, "user.pro");
+				string aar = Path.Combine (path, "aar-consumer.pro");
+				string generated = Path.Combine (path, "proguard_project_references.cfg");
+				string generatedAcwKeep = Path.Combine (path, "generated-acw-keep.cfg");
+				string aapt = Path.Combine (path, "aapt_rules.txt");
+				File.WriteAllText (seedMapping, "com.example.Peer -> a:\n");
+				string nativeKeepRule = """
+					-keepclasseswithmembernames,includedescriptorclasses class * {
+					    native <methods>;
+					}
+					""";
+				File.WriteAllText (baseline, $"-dontwarn before\n{nativeKeepRule}\n-dontwarn after\n");
+				File.WriteAllText (user, nativeKeepRule + "\n");
+				File.WriteAllText (aar, "-dontwarn com.example.library.**\n");
+				File.WriteAllText (generated, "-keep,allowobfuscation class com.example.Peer\n");
+				File.WriteAllText (generatedAcwKeep, "-keep class com.example.Peer { *; }\n");
+				File.WriteAllText (aapt, "-keep class com.example.MainActivity { <init>(); }\n");
+				var baselineItem = new TaskItem (baseline);
+				baselineItem.SetMetadata ("AndroidSdkBaselineProguardConfiguration", "true");
+				var aarItem = new TaskItem (aar);
+				aarItem.SetMetadata ("OriginalFile", Path.Combine (path, "library.aar"));
+				var generatedItem = new TaskItem (generated);
+				generatedItem.SetMetadata ("AndroidGeneratedProguardConfiguration", "true");
+				generatedItem.SetMetadata ("AndroidR8JniMappedProguardConfiguration", "true");
+				var generatedAcwKeepItem = new TaskItem (generatedAcwKeep);
+				generatedAcwKeepItem.SetMetadata ("AndroidGeneratedProguardConfiguration", "true");
+				var aaptItem = new TaskItem (aapt);
+				aaptItem.SetMetadata ("AndroidGeneratedProguardConfiguration", "true");
+				aaptItem.SetMetadata ("AndroidAaptProguardConfiguration", "true");
+				var task = CreateR8TestTask (
+					path,
+					new ITaskItem [] { baselineItem, new TaskItem (user), aarItem, generatedItem, generatedAcwKeepItem, aaptItem },
+					enableObfuscation: true,
+					seedMapping);
+
+				task.TestGenerateCommandLineCommands ();
+				responseFile = task.ResponseFilePath;
+				string [] configurationFiles = GetConfigurationFiles (responseFile);
+				string filteredBaseline = configurationFiles.Single (file =>
+					file != user && file != aar && file != generated && file != aapt &&
+					File.ReadAllText (file).Contains ("-dontwarn before"));
+				string allConfiguration = string.Join ("\n", configurationFiles.Select (File.ReadAllText));
+
+				Assert.AreNotEqual (baseline, filteredBaseline);
+				Assert.AreEqual ("-dontwarn before\n-dontwarn after\n", File.ReadAllText (filteredBaseline));
+				Assert.That (configurationFiles, Does.Contain (user), "User rules with identical text must remain untouched.");
+				Assert.That (configurationFiles, Does.Contain (aar), "AAR consumer rules must remain untouched.");
+				Assert.That (configurationFiles, Does.Contain (generated), "Mapped linked-assembly rules must reach final R8.");
+				Assert.That (configurationFiles, Does.Contain (aapt), "Final AAPT manifest and resource rules must reach final R8.");
+				Assert.That (configurationFiles, Does.Not.Contain (generatedAcwKeep), "Generated legacy ACW keep rules must not reach final R8.");
+				StringAssert.Contains ("-applymapping", allConfiguration);
+				StringAssert.Contains ("-keep,allowobfuscation class com.example.Peer", allConfiguration);
+				StringAssert.Contains ("-keep class com.example.MainActivity", allConfiguration);
+				Assert.AreEqual (1, allConfiguration.Split (new [] { "native <methods>;" }, StringSplitOptions.None).Length - 1,
+					"Only the user-authored native rule should remain.");
+
+				DeleteTemporaryConfigurations (configurationFiles, user, aar, generated, aapt);
+			} finally {
+				if (File.Exists (responseFile)) {
+					File.Delete (responseFile);
+				}
+				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		[TestCase (false, true)]
+		[TestCase (true, false)]
+		public void GeneratedApplicationConfigurationOmitsManagedAcwsOnlyForJniObfuscation (bool enableObfuscation, bool expectManagedAcw)
+		{
+			string path = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
+			Directory.CreateDirectory (path);
+			string responseFile = "";
+			try {
+				string acwMap = Path.Combine (path, "acw-map.txt");
+				string javaSource = Path.Combine (path, "UserJava.java");
+				string applicationConfiguration = Path.Combine (path, "proguard_project_primary.cfg");
+				File.WriteAllText (acwMap, "Managed.Peer;com.example.ManagedPeer\n");
+				File.WriteAllText (javaSource, "package com.example; public class UserJava {}\n");
+				var task = new R8TestTask {
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+					AcwMapFile = acwMap,
+					EnableObfuscation = enableObfuscation,
+					EnableShrinking = true,
+					JarPath = "r8.jar",
+					JavaSourceFiles = new ITaskItem [] { new TaskItem (javaSource) },
+					JavaPlatformJarPath = "android.jar",
+					OutputDirectory = path,
+					ProguardGeneratedApplicationConfiguration = applicationConfiguration,
+				};
+
+				task.TestGenerateCommandLineCommands ();
+				responseFile = task.ResponseFilePath;
+				string configuration = File.ReadAllText (applicationConfiguration);
+
+				Assert.AreEqual (expectManagedAcw, configuration.Contains ("-keep class com.example.ManagedPeer", StringComparison.Ordinal));
+				StringAssert.Contains ("-keep class com.example.UserJava { *; }", configuration);
+			} finally {
+				if (File.Exists (responseFile)) {
+					File.Delete (responseFile);
+				}
+				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		[Test]
+		public void R8WithoutJniObfuscationPassesSdkBaselineUnchanged ()
+		{
+			string path = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
+			Directory.CreateDirectory (path);
+			string responseFile = "";
+			try {
+				string baseline = Path.Combine (path, "proguard-android.txt");
+				string generatedAcwKeep = Path.Combine (path, "generated-acw-keep.cfg");
+				string content = "-keepclasseswithmembernames,includedescriptorclasses class * {\n    native <methods>;\n}\n";
+				File.WriteAllText (baseline, content);
+				File.WriteAllText (generatedAcwKeep, "-keep class com.example.Peer { *; }\n");
+				var baselineItem = new TaskItem (baseline);
+				baselineItem.SetMetadata ("AndroidSdkBaselineProguardConfiguration", "true");
+				var generatedAcwKeepItem = new TaskItem (generatedAcwKeep);
+				generatedAcwKeepItem.SetMetadata ("AndroidGeneratedProguardConfiguration", "true");
+				var task = CreateR8TestTask (path, new ITaskItem [] { baselineItem, generatedAcwKeepItem }, enableObfuscation: false);
+
+				task.TestGenerateCommandLineCommands ();
+				responseFile = task.ResponseFilePath;
+				string [] configurationFiles = GetConfigurationFiles (responseFile);
+
+				Assert.That (configurationFiles, Does.Contain (baseline));
+				Assert.That (configurationFiles, Does.Contain (generatedAcwKeep), "Feature-off builds must retain generated ACW keep rules.");
+				Assert.AreEqual (content, File.ReadAllText (baseline));
+			} finally {
+				if (File.Exists (responseFile)) {
+					File.Delete (responseFile);
+				}
+				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		static R8TestTask CreateR8TestTask (string path, ITaskItem [] configurations, bool enableObfuscation, string? seedMapping = null)
+			=> new R8TestTask {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				JarPath = "r8.jar",
+				JavaPlatformJarPath = "android.jar",
+				OutputDirectory = path,
+				ProguardMappingFileInput = seedMapping,
+				ProguardConfigurationFiles = configurations,
+				EnableShrinking = true,
+				EnableObfuscation = enableObfuscation,
+			};
+
+		static string [] GetConfigurationFiles (string responseFile)
+		{
+			string [] response = File.ReadAllLines (responseFile);
+			return response
+				.Select ((argument, index) => (argument, index))
+				.Where (entry => entry.argument == "--pg-conf")
+				.Select (entry => response [entry.index + 1])
+				.ToArray ();
+		}
+
+		static void DeleteTemporaryConfigurations (IEnumerable<string> configurationFiles, params string [] retainedFiles)
+		{
+			foreach (string configurationFile in configurationFiles) {
+				if (!retainedFiles.Contains (configurationFile, StringComparer.Ordinal)) {
+					File.Delete (configurationFile);
+				}
+			}
+		}
+
+		internal class R8TestTask : R8
+		{
+			public string ResponseFilePath { get; private set; } = "";
+
+			protected override string CreateResponseFile ()
+			{
+				ResponseFilePath = base.CreateResponseFile ();
+				return ResponseFilePath;
+			}
+
+			public string TestGenerateCommandLineCommands ()
+				=> GetCommandLineBuilder ().ToString ();
+		}
 	}
 }
-
