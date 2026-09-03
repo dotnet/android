@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 using Android.Runtime;
 
@@ -40,7 +41,7 @@ namespace Java.InteropTests
 			AssumeTrimmableTypeMapEnabled ();
 			JavaInteropCollectionInvoker.ConstructorInvocations = 0;
 
-			var handle = CreateArrayListHandle ();
+			var handle = CreateHashSetHandle ();
 			try {
 				var first = GetValue<IJavaInteropCollection> (handle);
 				var second = GetValue<IJavaInteropCollection> (handle);
@@ -50,6 +51,25 @@ namespace Java.InteropTests
 				Assert.AreEqual (typeof (JavaInteropCollectionInvoker), first.GetType ());
 				Assert.AreEqual (1, JavaInteropCollectionInvoker.ConstructorInvocations);
 				first.Dispose ();
+			} finally {
+				JNIEnv.DeleteGlobalRef (handle);
+			}
+		}
+
+		[Test]
+		public void CompatibleInterfaceThenConcrete_PreservesIdentity ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			var handle = CreateArrayListHandle ();
+			try {
+				var asInterface = GetValue<Java.Util.IList> (handle);
+				var asConcrete = GetValue<Java.Util.ArrayList> (handle);
+
+				Assert.IsNotNull (asInterface);
+				Assert.AreSame (asInterface, asConcrete);
+				Assert.AreEqual (typeof (Java.Util.ArrayList), asInterface.GetType ());
+				asInterface.Dispose ();
 			} finally {
 				JNIEnv.DeleteGlobalRef (handle);
 			}
@@ -107,7 +127,13 @@ namespace Java.InteropTests
 			return JNIEnv.NewGlobalRef (list.Handle);
 		}
 
-		static T GetValue<T> (IntPtr handle)
+		static IntPtr CreateHashSetHandle ()
+		{
+			using var set = new Java.Util.HashSet ();
+			return JNIEnv.NewGlobalRef (set.Handle);
+		}
+
+		static T GetValue<[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] T> (IntPtr handle)
 		{
 			var reference = new JniObjectReference (handle, JniObjectReferenceType.Global);
 			return JniEnvironment.Runtime.ValueManager.GetValue<T> (ref reference, JniObjectReferenceOptions.Copy);

@@ -195,11 +195,6 @@ public class TrimmableTypeMap
 			return null;
 		}
 
-		if (targetType is { IsInterface: true } || targetType is { IsAbstract: true }) {
-			return TryGetProxyFromTargetType (handle, targetType) ??
-				TryGetProxyFromHierarchy (handle, targetType);
-		}
-
 		return TryGetProxyFromHierarchy (handle, targetType) ??
 			TryGetProxyFromTargetType (handle, targetType);
 	}
