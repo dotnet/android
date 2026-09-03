@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdlib>
+#include <iterator>
+#include <new>
 
 #include <jni.h>
 
@@ -10,6 +12,7 @@ namespace xamarin::android
 {
 	class jstring_array_wrapper;
 
+	// Owns each non-null JNI reference it receives until reassignment or destruction.
 	class jstring_wrapper
 	{
 	public:
@@ -96,10 +99,18 @@ namespace xamarin::android
 	protected:
 		void release () noexcept
 		{
-			if (jstr == nullptr || cstr == nullptr || env == nullptr) {
+			if (jstr == nullptr) {
 				return;
 			}
-			env->ReleaseStringUTFChars (jstr, cstr);
+			abort_unless (env != nullptr, "Cannot release a JNI string reference without a JNIEnv");
+
+			// The UTF characters are fetched lazily, so there may be nothing to release here even
+			// though we still own the reference itself.
+			if (cstr != nullptr) {
+				env->ReleaseStringUTFChars (jstr, cstr);
+				cstr = nullptr;
+			}
+
 			jobjectRefType type = env->GetObjectRefType (jstr);
 			switch (type) {
 				case JNILocalRefType:
@@ -119,7 +130,6 @@ namespace xamarin::android
 			}
 
 			jstr = nullptr;
-			cstr = nullptr;
 		}
 
 		void assign (const jstring new_js) noexcept
@@ -130,7 +140,6 @@ namespace xamarin::android
 			}
 
 			jstr = new_js;
-			cstr = nullptr;
 		}
 
 		friend class jstring_array_wrapper;
@@ -159,24 +168,38 @@ namespace xamarin::android
 			  arr (_arr)
 		{
 			abort_if_invalid_pointer_argument (_env, "_env");
-			if (_arr != nullptr) {
-				len = static_cast<size_t>(_env->GetArrayLength (_arr));
-				if (len > sizeof (static_wrappers) / sizeof (jstring_wrapper)) {
-					wrappers = new jstring_wrapper [len];
-				} else {
-					wrappers = static_wrappers;
-				}
-			} else {
+			if (_arr == nullptr) {
 				len = 0;
 				wrappers = nullptr;
+				return;
+			}
+
+			jsize array_length = _env->GetArrayLength (_arr);
+			abort_unless (array_length >= 0, "Failed to obtain the JNI string array length");
+			len = static_cast<size_t>(array_length);
+			if (len <= std::size (static_wrappers)) {
+				wrappers = static_wrappers;
+				return;
+			}
+
+			size_t alloc_size = Helpers::multiply_with_overflow_check<size_t> (len, sizeof (jstring_wrapper));
+			wrappers = static_cast<jstring_wrapper*> (std::malloc (alloc_size));
+			abort_unless (wrappers != nullptr, "Failed to allocate the JNI string array wrapper");
+			for (size_t i = 0; i < len; i++) {
+				new (&wrappers [i]) jstring_wrapper ();
 			}
 		}
 
 		~jstring_array_wrapper () noexcept
 		{
-			if (wrappers != nullptr && wrappers != static_wrappers) {
-				delete[] wrappers;
+			if (wrappers == nullptr || wrappers == static_wrappers) {
+				return;
 			}
+
+			for (size_t i = 0; i < len; i++) {
+				wrappers [i].~jstring_wrapper ();
+			}
+			std::free (wrappers);
 		}
 
 		size_t get_length () const noexcept
@@ -186,9 +209,7 @@ namespace xamarin::android
 
 		jstring_wrapper& operator[] (size_t index) noexcept
 		{
-			if (index >= len) {
-				return invalid_wrapper;
-			}
+			abort_unless (index < len, "JNI string array index out of range");
 
 			if (wrappers [index].env == nullptr) {
 				wrappers [index].env = env;
@@ -202,8 +223,8 @@ namespace xamarin::android
 		JNIEnv *env;
 		jobjectArray arr;
 		size_t len;
+		// Points to static_wrappers or storage allocated with malloc().
 		jstring_wrapper *wrappers;
 		jstring_wrapper  static_wrappers[5];
-		jstring_wrapper  invalid_wrapper;
 	};
 }
