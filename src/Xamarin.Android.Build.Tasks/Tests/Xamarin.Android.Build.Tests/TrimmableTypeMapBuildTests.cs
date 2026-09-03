@@ -65,6 +65,7 @@ namespace Xamarin.Android.Build.Tests {
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
+			proj.MainActivity = proj.DefaultMainActivity;
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			bool trimNativeAotJavaCode = isRelease && runtime == AndroidRuntime.NativeAOT;
@@ -132,6 +133,7 @@ namespace Xamarin.Android.Build.Tests {
 			}
 
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.MainActivity = proj.DefaultMainActivity;
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
