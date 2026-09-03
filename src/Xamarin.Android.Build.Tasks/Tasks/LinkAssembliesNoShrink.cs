@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using Microsoft.Android.Build.Tasks;
 using MonoDroid.Tuner;
 
 namespace Xamarin.Android.Tasks
@@ -15,6 +16,7 @@ namespace Xamarin.Android.Tasks
 
 		public bool AddKeepAlives { get; set; }
 
+		// MSBuild supplies the typemap-specific default. Keep direct task callers backward compatible.
 		public bool EnableLegacyCompatibilityAssemblyFixups { get; set; } = true;
 
 		public bool UseDesignerAssembly { get; set; }
