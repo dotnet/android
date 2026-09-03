@@ -2,11 +2,11 @@
 
 #include <cerrno>
 #include <cstring>
+#include <ctime>
+#include <semaphore.h>
 #include <unistd.h>
 
 #include <array>
-#include <chrono>
-#include <semaphore>
 #include <string_view>
 
 #include <android/looper.h>
@@ -24,6 +24,17 @@ namespace xamarin::android {
 	public:
 		explicit MainThreadDsoLoader () noexcept
 		{
+			// Not shared between processes, initially unsignalled. Can only fail if the initial value
+			// exceeds `SEM_VALUE_MAX`, which 0 clearly does not.
+			if (sem_init (&load_complete_sem, 0, 0) != 0) {
+				Helpers::abort_applicationf (
+					LOG_ASSEMBLY,
+					std::source_location::current (),
+					"Failed to initialize the DSO load semaphore. %s",
+					strerror (errno)
+				);
+			}
+
 			if (pipe (pipe_fds) != 0) {
 				Helpers::abort_applicationf (
 					LOG_ASSEMBLY,
@@ -50,7 +61,10 @@ namespace xamarin::android {
 		MainThreadDsoLoader (const MainThreadDsoLoader&) = delete;
 		MainThreadDsoLoader (MainThreadDsoLoader&&) = delete;
 
-		virtual ~MainThreadDsoLoader () noexcept
+		// Not `virtual` on purpose. The class is never derived from nor destroyed through a base class
+		// pointer and a virtual destructor would make the compiler emit the deleting destructor, which
+		// pulls in `operator delete` and, with it, a dependency on `libc++`.
+		~MainThreadDsoLoader () noexcept
 		{
 			if (pipe_fds[0] != -1) {
 				ALooper_removeFd (main_thread_looper, pipe_fds[0]);
@@ -60,6 +74,8 @@ namespace xamarin::android {
 			if (pipe_fds[1] != -1) {
 				close (pipe_fds[1]);
 			}
+
+			sem_destroy (&load_complete_sem);
 
 			// No need to release the looper, it needs to stay acquired.
 		}
@@ -91,12 +107,10 @@ namespace xamarin::android {
 				return false;
 			}
 
-			// Wait for the callback to complete
-			using namespace std::literals;
+			// Wait for the callback to complete. 3s should be more than enough time for the library to load.
+			constexpr time_t LoadTimeoutSeconds = 3;
 
-			// We'll wait for up to 3s, it should be more than enough time for the library to load
-			bool success = load_complete_sem.try_acquire_for (3s);
-			if (!success) {
+			if (!try_acquire_for (LoadTimeoutSeconds)) {
 				log_warnf (LOG_ASSEMBLY, "Timeout while waiting for shared library '%.*s' to load.", static_cast<int>(full_name.length ()), full_name.data ());
 				return false;
 			}
@@ -118,6 +132,30 @@ namespace xamarin::android {
 
 	private:
 
+		// Waits up to `timeout_seconds` for the main thread callback to signal that it is done.
+		// Returns `false` if it didn't within that time.
+		[[nodiscard]] auto try_acquire_for (time_t timeout_seconds) noexcept -> bool
+		{
+			// `sem_timedwait` takes an absolute deadline and, until API 28, only supports
+			// `CLOCK_REALTIME`. A wall clock adjustment inside the timeout window could cut the wait
+			// short or stretch it, which is harmless for a sanity timeout like this one.
+			timespec deadline {};
+			clock_gettime (CLOCK_REALTIME, &deadline);
+			deadline.tv_sec += timeout_seconds;
+
+			// The deadline is absolute, so retrying after a signal cannot extend the total wait.
+			int ret;
+			do {
+				ret = sem_timedwait (&load_complete_sem, &deadline);
+			} while (ret == -1 && errno == EINTR);
+
+			if (ret != 0 && errno != ETIMEDOUT) [[unlikely]] {
+				log_warnf (LOG_ASSEMBLY, "Failed to wait for the DSO load to complete. %s", strerror (errno));
+			}
+
+			return ret == 0;
+		}
+
 		static auto load_cb ([[maybe_unused]] int fd, [[maybe_unused]] int events, void *data) noexcept -> int
 		{
 			auto self = reinterpret_cast<MainThreadDsoLoader*> (data);
@@ -127,7 +165,7 @@ namespace xamarin::android {
 
 			auto over_and_out = [&self]() -> int {
 				// We're one-shot, 0 means just that
-				self->load_complete_sem.release ();
+				sem_post (&self->load_complete_sem);
 				return 0;
 			};
 
@@ -150,7 +188,7 @@ namespace xamarin::android {
 
 	private:
 		int pipe_fds[2] = {-1, -1};
-		std::binary_semaphore load_complete_sem {0};
+		sem_t load_complete_sem {};
 		std::string_view undecorated_library_name {};
 		bool load_success = false;
 
