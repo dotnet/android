@@ -132,6 +132,23 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Generate_RedundantInterfaceView_OmitsParentsAndDuplicateJavaNames ()
+		{
+			var java = GenerateFixture ("my/app/RedundantInterfaceView");
+
+			AssertContainsLine (
+				"""
+					implements
+						mono.android.IGCUserPeer,
+						android.view.View.INamedClickListener,
+						android.view.View.OnLongClickListener
+				{
+				""",
+				java
+			);
+		}
+
+		[Fact]
 		public void Generate_DeclaredDollarKeyword_PreservesDollar ()
 		{
 			var type = new JavaPeerInfo {

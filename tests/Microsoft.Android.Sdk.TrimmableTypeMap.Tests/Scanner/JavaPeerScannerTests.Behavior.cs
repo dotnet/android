@@ -197,6 +197,23 @@ public partial class JavaPeerScannerTests
 		Assert.Empty (FindFixtureByJavaName ("my/app/MyHelper").ImplementedInterfaceJavaNames);
 	}
 
+	[Fact]
+	public void Scan_JavaCallableWrapperInterfaces_OmitsParentsAndDuplicateJavaNames ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/RedundantInterfaceView");
+
+		Assert.Equal ([
+			"android/view/View$OnClickListener",
+			"android/view/View$INamedClickListener",
+			"android/view/View$INamedClickListener",
+			"android/view/View$OnLongClickListener",
+		], peer.ImplementedInterfaceJavaNames);
+		Assert.Equal ([
+			"android/view/View$INamedClickListener",
+			"android/view/View$OnLongClickListener",
+		], peer.JavaCallableWrapperInterfaceJavaNames);
+	}
+
 	[Theory]
 	[InlineData ("android/app/Activity", "android/app/Activity")]
 	[InlineData ("my/app/MainActivity", "my/app/MainActivity")]

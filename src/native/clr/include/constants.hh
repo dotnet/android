@@ -49,21 +49,15 @@ namespace xamarin::android {
 		static constexpr std::string_view RUNTIME_CONFIG_BLOB_NAME            { RUNTIME_CONFIG_BLOB_NAME_ARRAY.data () };
 		static constexpr std::string_view OVERRIDE_DIRECTORY_NAME             { ".__override__" };
 
-		/* Android property containing connection information, set by XS */
-		static inline constexpr std::string_view DEBUG_MONO_CONNECT_PROPERTY      { "debug.mono.connect" };
-		static inline constexpr std::string_view DEBUG_MONO_DEBUG_PROPERTY        { "debug.mono.debug" };
-		static inline constexpr std::string_view DEBUG_MONO_ENV_PROPERTY          { "debug.mono.env" };
-		static inline constexpr std::string_view DEBUG_MONO_EXTRA_PROPERTY        { "debug.mono.extra" };
-		static inline constexpr std::string_view DEBUG_MONO_GC_PROPERTY           { "debug.mono.gc" };
-		static inline constexpr std::string_view DEBUG_MONO_GDB_PROPERTY          { "debug.mono.gdb" };
-		static inline constexpr std::string_view DEBUG_MONO_LOG_PROPERTY          { "debug.mono.log" };
-		static inline constexpr std::string_view DEBUG_MONO_MAX_GREFC             { "debug.mono.max_grefc" };
-		static inline constexpr std::string_view DEBUG_MONO_PROFILE_PROPERTY      { "debug.mono.profile" };
-		static inline constexpr std::string_view DEBUG_MONO_RUNTIME_ARGS_PROPERTY { "debug.mono.runtime_args" };
-		static inline constexpr std::string_view DEBUG_MONO_SOFT_BREAKPOINTS      { "debug.mono.soft_breakpoints" };
-		static inline constexpr std::string_view DEBUG_MONO_TRACE_PROPERTY        { "debug.mono.trace" };
-		static inline constexpr std::string_view DEBUG_MONO_WREF_PROPERTY         { "debug.mono.wref" };
-		static constexpr std::string_view DEBUG_MONO_TIMING                       { "debug.mono.timing" };
+		static inline constexpr std::string_view DEBUG_DOTNET_LOG_PROPERTY          { "debug.dotnet.log" };
+		static inline constexpr std::string_view DEBUG_DOTNET_MAX_GREFC             { "debug.dotnet.max_grefc" };
+		static inline constexpr std::string_view DEBUG_DOTNET_PROFILE_PROPERTY      { "debug.dotnet.profile" };
+		static constexpr std::string_view DEBUG_DOTNET_TIMING                       { "debug.dotnet.timing" };
+
+		static inline constexpr std::string_view LEGACY_DEBUG_MONO_LOG_PROPERTY     { "debug.mono.log" };
+		static inline constexpr std::string_view LEGACY_DEBUG_MONO_MAX_GREFC         { "debug.mono.max_grefc" };
+		static inline constexpr std::string_view LEGACY_DEBUG_MONO_PROFILE_PROPERTY { "debug.mono.profile" };
+		static constexpr std::string_view LEGACY_DEBUG_MONO_TIMING                  { "debug.mono.timing" };
 
 		static constexpr std::string_view LOG_CATEGORY_NAME_NONE                  { "*none*" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID             { "monodroid" };

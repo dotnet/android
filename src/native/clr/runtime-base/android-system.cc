@@ -18,12 +18,24 @@ using namespace xamarin::android;
 using std::operator""sv;
 
 #if defined(DEBUG)
+auto
+AndroidSystem::find_bundled_property (const char *name) noexcept -> BundledProperty*
+{
+	for (BundledProperty *p = bundled_properties; p != nullptr; p = p->next) {
+		if (strcmp (name, p->name) == 0) {
+			return p;
+		}
+	}
+
+	return nullptr;
+}
+
 [[gnu::always_inline]]
 void
 AndroidSystem::add_system_property (const char *name, const char *value) noexcept
 {
 	if (name == nullptr || *name == '\0') {
-		log_warn (LOG_DEFAULT, "Attempt to add a bundled system property without a valid name");
+		log_warnf (LOG_DEFAULT, "Attempt to add a bundled system property without a valid name");
 		return;
 	}
 
@@ -31,7 +43,37 @@ AndroidSystem::add_system_property (const char *name, const char *value) noexcep
 		value = "";
 	}
 
-	bundled_properties[name] = value;
+	size_t value_len = strlen (value);
+	char *new_value = strdup (value);
+	if (new_value == nullptr) [[unlikely]] {
+		Helpers::abort_application (LOG_DEFAULT, "Unable to allocate memory for a bundled system property value");
+	}
+
+	// Setting the same property again replaces its value, the name is kept.
+	BundledProperty *p = find_bundled_property (name);
+	if (p != nullptr) {
+		std::free (p->value);
+		p->value = new_value;
+		p->value_len = value_len;
+		return;
+	}
+
+	// The name is stored right after the structure, so that a single allocation covers both.
+	// Bundled properties are never removed, they live for as long as the process does.
+	size_t name_len = strlen (name);
+	size_t alloc_size = Helpers::add_with_overflow_check<size_t> (sizeof (BundledProperty), name_len + 1uz);
+	p = static_cast<BundledProperty*> (std::malloc (alloc_size));
+	if (p == nullptr) [[unlikely]] {
+		Helpers::abort_application (LOG_DEFAULT, "Unable to allocate memory for a bundled system property");
+	}
+
+	p->name = reinterpret_cast<char*>(p) + sizeof (BundledProperty);
+	memcpy (p->name, name, name_len);
+	p->name [name_len] = '\0';
+	p->value = new_value;
+	p->value_len = value_len;
+	p->next = bundled_properties;
+	bundled_properties = p;
 }
 
 void
@@ -48,7 +90,7 @@ AndroidSystem::setup_environment (const char *name, const char *value) noexcept
 
 	if (isupper (name [0]) || name [0] == '_') {
 		if (setenv (name, v, 1) < 0) {
-			log_warn (LOG_DEFAULT, "(Debug) Failed to set environment variable: {}", strerror (errno));
+			log_warnf (LOG_DEFAULT, "(Debug) Failed to set environment variable: %s", strerror (errno));
 		}
 		return;
 	}
@@ -63,13 +105,13 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 
 	struct stat sbuf;
 	if (::stat (path, &sbuf) < 0) {
-		log_warn (LOG_DEFAULT, "Failed to stat the environment override file {}: {}", path, strerror (errno));
+		log_warnf (LOG_DEFAULT, "Failed to stat the environment override file %s: %s", path, strerror (errno));
 		return;
 	}
 
 	int fd = open (path, O_RDONLY);
 	if (fd < 0) {
-		log_warn (LOG_DEFAULT, "Failed to open the environment override file {}: {}", path, strerror (errno));
+		log_warnf (LOG_DEFAULT, "Failed to open the environment override file %s: %s", path, strerror (errno));
 		return;
 	}
 
@@ -87,7 +129,7 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 	} while (r < 0 && errno == EINTR);
 
 	if (nread == 0) {
-		log_warn (LOG_DEFAULT, "Failed to read the environment override file {}: {}", path, strerror (errno));
+		log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: %s", path, strerror (errno));
 		return;
 	}
 
@@ -108,26 +150,26 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 	// # Variable value, terminated with NUL and padded to [value width] with NUL characters
 	// value\0
 	if (nread < Constants::OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE) {
-		log_warn (LOG_DEFAULT, "Invalid format of the environment override file {}: malformatted header", path);
+		log_warnf (LOG_DEFAULT, "Invalid format of the environment override file %s: malformatted header", path);
 		return;
 	}
 
 	char *endptr;
 	unsigned long name_width = strtoul (buf.get (), &endptr, 16);
 	if ((name_width == std::numeric_limits<unsigned long>::max () && errno == ERANGE) || (buf[0] != '\0' && *endptr != '\0')) {
-		log_warn (LOG_DEFAULT, "Malformed header of the environment override file {}: name width has invalid format", path);
+		log_warnf (LOG_DEFAULT, "Malformed header of the environment override file %s: name width has invalid format", path);
 		return;
 	}
 
 	unsigned long value_width = strtoul (buf.get () + 11, &endptr, 16);
 	if ((value_width == std::numeric_limits<unsigned long>::max () && errno == ERANGE) || (buf[0] != '\0' && *endptr != '\0')) {
-		log_warn (LOG_DEFAULT, "Malformed header of the environment override file {}: value width has invalid format", path);
+		log_warnf (LOG_DEFAULT, "Malformed header of the environment override file %s: value width has invalid format", path);
 		return;
 	}
 
 	uint64_t data_width = name_width + value_width;
 	if (data_width > file_size - Constants::OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE || (file_size - Constants::OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE) % data_width != 0) {
-		log_warn (LOG_DEFAULT, "Malformed environment override file {}: invalid data size", path);
+		log_warnf (LOG_DEFAULT, "Malformed environment override file %s: invalid data size", path);
 		return;
 	}
 
@@ -135,11 +177,11 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 	char *name = buf.get () + Constants::OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE;
 	while (data_size > 0 && data_size >= data_width) {
 		if (*name == '\0') {
-			log_warn (LOG_DEFAULT, "Malformed environment override file {}: name at offset {} is empty", path, name - buf.get ());
+			log_warnf (LOG_DEFAULT, "Malformed environment override file %s: name at offset %td is empty", path, name - buf.get ());
 			return;
 		}
 
-		log_debug (LOG_DEFAULT, "Setting environment variable from the override file {}: '{}' = '{}'", path, name, name + name_width);
+		log_debugf (LOG_DEFAULT, "Setting environment variable from the override file %s: '%s' = '%s'", path, name, name + name_width);
 		setup_environment (name, name + name_width);
 		name += data_width;
 		data_size -= data_width;
@@ -160,7 +202,7 @@ AndroidSystem::add_apk_libdir (std::string_view const& apk, size_t &index, std::
 	dir.append (lib_prefix);
 	dir.append (abi);
 	app_lib_directories [index] = dir;
-	log_debug (LOG_ASSEMBLY, "Added APK DSO lookup location: {}", dir);
+	log_debugf (LOG_ASSEMBLY, "Added APK DSO lookup location: %s", dir.c_str ());
 	index++;
 }
 
@@ -195,7 +237,7 @@ AndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstring_arr
 		add_apk_libdir (base_apk, number_of_added_directories, abi);
 	}
 
-	log_debug (LOG_DEFAULT, "Number of added dirs: {}", number_of_added_directories);
+	log_debugf (LOG_DEFAULT, "Number of added dirs: %zu", number_of_added_directories);
 	if (app_lib_directories.size () == number_of_added_directories) [[likely]] {
 		return;
 	}
@@ -208,15 +250,15 @@ void
 AndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks) noexcept
 {
 	if (!is_embedded_dso_mode_enabled ()) {
-		log_debug (LOG_DEFAULT, "Setting up for DSO lookup in app data directories"sv);
+		log_debugf (LOG_DEFAULT, "Setting up for DSO lookup in app data directories");
 
 		app_lib_directories = std::span<std::string> (single_app_lib_directory);
 		app_lib_directories [0] = std::string (appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
-		log_debug (LOG_ASSEMBLY, "Added filesystem DSO lookup location: {}", app_lib_directories [0]);
+		log_debugf (LOG_ASSEMBLY, "Added filesystem DSO lookup location: %s", app_lib_directories [0].c_str ());
 		return;
 	}
 
-	log_debug (LOG_DEFAULT, "Setting up for DSO lookup directly in the APK"sv);
+	log_debugf (LOG_DEFAULT, "Setting up for DSO lookup directly in the APK");
 	if (have_split_apks) {
 		// If split apks are used, then we will have just a single app library directory. Don't allocate any memory
 		// dynamically in this case
@@ -236,7 +278,7 @@ void
 AndroidSystem::setup_environment () noexcept
 {
 	if (application_config.environment_variable_count > 0) {
-		log_debug (LOG_DEFAULT, "Setting environment variables ({})", application_config.environment_variable_count);
+		log_debugf (LOG_DEFAULT, "Setting environment variables (%u)", application_config.environment_variable_count);
 		HostEnvironment::set_values<HostEnvironment::set_variable> (
             application_config.environment_variable_count,
             app_environment_variables,
@@ -245,7 +287,7 @@ AndroidSystem::setup_environment () noexcept
 	}
 
 	if (application_config.system_property_count > 0) {
-		log_debug (LOG_DEFAULT, "Setting system properties ({})", application_config.system_property_count);
+		log_debugf (LOG_DEFAULT, "Setting system properties (%u)", application_config.system_property_count);
 		HostEnvironment::set_values<HostEnvironment::set_system_property> (
             application_config.system_property_count,
             app_system_properties,
@@ -254,13 +296,13 @@ AndroidSystem::setup_environment () noexcept
 	}
 
 #if defined(DEBUG)
-	log_debug (LOG_DEFAULT, "Loading environment from the override directory."sv);
+	log_debugf (LOG_DEFAULT, "Loading environment from the override directory.");
 
 	char stack_buffer [Util::LocalPathBufferSize];
 	char *env_override_file = Util::join_paths (stack_buffer, sizeof (stack_buffer), primary_override_dir, Constants::OVERRIDE_ENVIRONMENT_FILE_NAME);
 
 	if (Util::file_exists (env_override_file)) {
-		log_debug (LOG_DEFAULT, "Loading {}"sv, env_override_file);
+		log_debugf (LOG_DEFAULT, "Loading %s", env_override_file);
 		setup_environment_from_override_file (env_override_file);
 	}
 	if (env_override_file != stack_buffer) {
@@ -277,12 +319,12 @@ AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcep
 	char stack_buffer [Util::LocalPathBufferSize];
 	char *libmonodroid_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), app_data_dir, "libmonodroid.so"sv);
 
-	log_debug (LOG_ASSEMBLY, "Checking if libmonodroid was unpacked to {}", libmonodroid_path);
+	log_debugf (LOG_ASSEMBLY, "Checking if libmonodroid was unpacked to %s", libmonodroid_path);
 	if (!Util::file_exists (libmonodroid_path)) {
-		log_debug (LOG_ASSEMBLY, "{} not found, assuming application/android:extractNativeLibs == false", libmonodroid_path);
+		log_debugf (LOG_ASSEMBLY, "%s not found, assuming application/android:extractNativeLibs == false", libmonodroid_path);
 		set_embedded_dso_mode_enabled (true);
 	} else {
-		log_debug (LOG_ASSEMBLY, "Native libs extracted to {}, assuming application/android:extractNativeLibs == true", appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
+		log_debugf (LOG_ASSEMBLY, "Native libs extracted to %s, assuming application/android:extractNativeLibs == true", appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
 		set_embedded_dso_mode_enabled (false);
 		native_libraries_dir.assign (appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
 	}
@@ -296,12 +338,10 @@ AndroidSystem::lookup_system_property (const char *name, size_t &value_len) noex
 {
 	value_len = 0;
 #if defined (DEBUG)
-	if (!bundled_properties.empty ()) {
-		auto prop_iter = bundled_properties.find (name);
-		if (prop_iter != bundled_properties.end ()) {
-			value_len = prop_iter->second.length ();
-			return prop_iter->second.c_str ();
-		}
+	BundledProperty *p = find_bundled_property (name);
+	if (p != nullptr) {
+		value_len = p->value_len;
+		return p->value;
 	}
 #endif // DEBUG
 

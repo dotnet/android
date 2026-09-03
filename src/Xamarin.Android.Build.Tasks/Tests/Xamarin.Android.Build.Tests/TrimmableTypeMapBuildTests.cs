@@ -668,6 +668,10 @@ namespace Xamarin.Android.Build.Tests {
 			AssertTrimmableTypeMapOutputs (intermediateDir);
 			var typemapDlls = Directory.GetFiles (intermediateDir, "*.dll");
 			Assert.IsNotEmpty (typemapDlls, "First build should have generated typemap DLL(s).");
+			var typemapFingerprints = Path.Combine (intermediateDir, "typemap-fingerprints.txt");
+			FileAssert.Exists (typemapFingerprints, "First build should persist typemap fingerprints.");
+			var typemapFingerprintContent = File.ReadAllText (typemapFingerprints);
+			var typemapWriteTimes = typemapDlls.ToDictionary (path => path, File.GetLastWriteTimeUtc);
 
 			string scanDgml = "";
 			DateTime scanDgmlTimestamp = default;
@@ -697,6 +701,18 @@ namespace Xamarin.Android.Build.Tests {
 			}
 			foreach (var typemapDll in typemapDlls) {
 				FileAssert.Exists (typemapDll, $"No-op builds should preserve generated typemap assembly {typemapDll} when _GenerateTrimmableTypeMap is skipped.");
+			}
+
+			FileAssert.Exists (typemapFingerprints, "IncrementalClean should preserve typemap fingerprints on a no-op build.");
+			Assert.AreEqual (typemapFingerprintContent, File.ReadAllText (typemapFingerprints), "A no-op build should not change typemap fingerprints.");
+
+			proj.MainActivity = proj.DefaultMainActivity + Environment.NewLine + "// Force trimmable typemap regeneration.";
+			proj.Touch ("MainActivity.cs");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Changed-input build should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
+			foreach (var typemapDll in typemapDlls) {
+				Assert.AreEqual (typemapWriteTimes [typemapDll], File.GetLastWriteTimeUtc (typemapDll),
+					$"A source change that does not affect the typemap model should skip PE emission for {typemapDll}.");
 			}
 		}
 
