@@ -3,11 +3,11 @@
 #include <cstdint>
 #include <functional>
 #include <limits>
-#include <pthread.h>
 #include <string>
 #include <string_view>
 #include <tuple>
 
+#include <runtime-base/mutex.hh>
 #include <xamarin-app.hh>
 
 namespace xamarin::android {
@@ -36,6 +36,6 @@ namespace xamarin::android {
 		// CRC32 hash collisions in the store index. Built once when the store is mapped.
 		static inline std::string_view *assembly_store_names = nullptr;
 		static inline uint64_t assembly_store_content_id = 0;
-		static inline pthread_mutex_t assembly_decompress_mutex = PTHREAD_MUTEX_INITIALIZER;
+		static inline Mutex  assembly_decompress_mutex {};
 	};
 }
