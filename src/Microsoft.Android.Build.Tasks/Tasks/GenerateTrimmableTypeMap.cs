@@ -13,6 +13,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
 using Properties = Xamarin.Android.Tasks.Properties;
+using Xamarin.Tools.Zip;
 
 namespace Microsoft.Android.Tasks;
 
@@ -159,6 +160,15 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	// generated root assembly under the Java.Lang.Object universe.
 	public ITaskItem [] PreGeneratedTypeMapAssemblies { get; set; } = [];
 
+	// Assemblies that are indexed for type resolution but are not scanned for Java peers.
+	public ITaskItem [] ReferenceOnlyAssemblies { get; set; } = [];
+
+	// Pre-compiled framework JCWs whose Java names must not collide with app-generated JCWs.
+	public string? PreGeneratedJcwJar { get; set; }
+
+	// SDK-time framework typemaps cannot be rooted from an individual app's manifest or resources.
+	public bool ForceFrameworkPeersUnconditional { get; set; }
+
 	public bool CleanJavaSourceOutputDirectory { get; set; }
 
 	/// <summary>
@@ -188,6 +198,10 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		var preGeneratedAssemblyPaths = new HashSet<string> (
 			PreGeneratedTypeMapAssemblies.Select (i => Path.GetFullPath (i.ItemSpec)),
 			StringComparer.OrdinalIgnoreCase);
+		var referenceOnlyAssemblyPaths = new HashSet<string> (
+			ReferenceOnlyAssemblies.Select (i => Path.GetFullPath (i.ItemSpec)),
+			StringComparer.OrdinalIgnoreCase);
+		referenceOnlyAssemblyPaths.UnionWith (preGeneratedAssemblyPaths);
 		var sharedFrameworkTypeMapNames = PreGeneratedTypeMapAssemblies
 			.Select (i => $"_{Path.GetFileNameWithoutExtension (i.ItemSpec)}.TypeMap")
 			.Distinct (StringComparer.Ordinal)
@@ -197,7 +211,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			.Select (g => (
 				Path: g.Key,
 				IsFrameworkAssembly: frameworkAssemblyPaths.Contains (g.Key) || g.Any (IsFrameworkAssemblyItem),
-				ScanForPeers: !preGeneratedAssemblyPaths.Contains (g.Key)))
+				ScanForPeers: !referenceOnlyAssemblyPaths.Contains (g.Key)))
 			.ToList ();
 		var frameworkAssemblyNames = new HashSet<string> (DefaultFrameworkAssemblyNames, StringComparer.OrdinalIgnoreCase);
 		foreach (var assemblyName in FrameworkAssemblyNames) {
@@ -274,6 +288,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			IReadOnlyCollection<string>? customViewTypeNames = CustomViewMapFile.IsNullOrEmpty ()
 				? null
 				: LoadCustomViewTypeNames (CustomViewMapFile);
+			IReadOnlyCollection<string>? preGeneratedJcwNames = LoadPreGeneratedJcwNames ();
 
 			result = generator.Execute (
 				assemblies,
@@ -287,6 +302,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				generateRootAssembly: GenerateRootAssembly,
 				errorOnCustomJavaObject: ErrorOnCustomJavaObject,
 				customViewTypeNames: customViewTypeNames,
+				preGeneratedJcwNames: preGeneratedJcwNames,
+				forceFrameworkPeersUnconditional: ForceFrameworkPeersUnconditional,
 				collectMarshalMethodsForNonAcw: false,
 				includeBuiltInValueTypeUniverses: IncludeBuiltInValueTypeUniverses,
 				shouldGenerateTypeMapAssembly: TypeMapFingerprintsFile.IsNullOrEmpty () ? null : ShouldGenerateTypeMapAssembly,
@@ -595,5 +612,22 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		sb.AppendLine ("\t}");
 		sb.AppendLine ("}");
 		return sb.ToString ();
+	}
+
+	IReadOnlyCollection<string>? LoadPreGeneratedJcwNames ()
+	{
+		if (PreGeneratedTypeMapAssemblies.Length == 0 || PreGeneratedJcwJar.IsNullOrEmpty ()) {
+			return null;
+		}
+
+		var names = new HashSet<string> (StringComparer.Ordinal);
+		using var stream = File.OpenRead (PreGeneratedJcwJar);
+		using var jar = ZipArchive.Open (stream);
+		foreach (var entry in jar) {
+			if (!entry.IsDirectory && entry.FullName.EndsWith (".class", StringComparison.Ordinal)) {
+				names.Add (entry.FullName.Substring (0, entry.FullName.Length - ".class".Length));
+			}
+		}
+		return names;
 	}
 }
