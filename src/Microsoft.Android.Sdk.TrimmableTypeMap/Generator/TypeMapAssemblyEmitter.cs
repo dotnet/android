@@ -847,7 +847,7 @@ sealed class TypeMapAssemblyEmitter
 	/// <summary>
 	/// Emits CreateInstance for JavaInterop-style activation (leaf type):
 	///   var jniRef = new JniObjectReference(handle);
-	///   var options = Copy | ((ownership & DoNotRegister) >> 2);
+	///   var options = JNIEnv.ToJniObjectReferenceOptions(ownership);
 	///   var result = new TargetType(ref jniRef, options);
 	///   JNIEnv.DeleteRef(handle, ownership);
 	///   return result;
@@ -864,7 +864,7 @@ sealed class TypeMapAssemblyEmitter
 				encoder.LoadConstantI4 (0); // JniObjectReferenceType.Invalid
 				encoder.Call (_jniObjectReferenceCtorRef, parameterCount: 2, isInstance: true);
 
-				// var result = new TargetType(ref jniRef, Copy | ((ownership & DoNotRegister) >> 2));
+				// var result = new TargetType(ref jniRef, JNIEnv.ToJniObjectReferenceOptions(ownership));
 				encoder.LoadLocalAddress (0);
 				EmitJniObjectReferenceOptions (encoder);
 				encoder.NewObject (ctorRef, parameterCount: 2);
@@ -884,7 +884,7 @@ sealed class TypeMapAssemblyEmitter
 	/// Emits CreateInstance for JavaInterop-style activation (inherited ctor):
 	///   var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
 	///   var jniRef = new JniObjectReference(handle);
-	///   var options = Copy | ((ownership & DoNotRegister) >> 2);
+	///   var options = JNIEnv.ToJniObjectReferenceOptions(ownership);
 	///   obj.BaseCtor(ref jniRef, options);
 	///   JNIEnv.DeleteRef(handle, ownership);
 	///   return obj;
@@ -910,7 +910,7 @@ sealed class TypeMapAssemblyEmitter
 				encoder.LoadConstantI4 (0); // JniObjectReferenceType.Invalid
 				encoder.Call (_jniObjectReferenceCtorRef, parameterCount: 2, isInstance: true);
 
-				// obj.BaseCtor(ref jniRef, Copy | ((ownership & DoNotRegister) >> 2));
+				// obj.BaseCtor(ref jniRef, JNIEnv.ToJniObjectReferenceOptions(ownership));
 				encoder.LoadLocalAddress (0);
 				EmitJniObjectReferenceOptions (encoder);
 				encoder.Call (baseCtorRef, parameterCount: 2, isInstance: true);
