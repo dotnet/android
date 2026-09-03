@@ -178,7 +178,8 @@ namespace xamarin::android
 				return;
 			}
 
-			wrappers = static_cast<jstring_wrapper*> (std::malloc (len * sizeof (jstring_wrapper)));
+			size_t alloc_size = Helpers::multiply_with_overflow_check<size_t> (len, sizeof (jstring_wrapper));
+			wrappers = static_cast<jstring_wrapper*> (std::malloc (alloc_size));
 			abort_unless (wrappers != nullptr, "Failed to allocate the JNI string array wrapper");
 			for (size_t i = 0; i < len; i++) {
 				new (&wrappers [i]) jstring_wrapper ();
