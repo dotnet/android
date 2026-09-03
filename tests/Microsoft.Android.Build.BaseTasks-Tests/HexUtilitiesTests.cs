@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.Android.Build.Tasks;
 using NUnit.Framework;
 
@@ -103,6 +104,21 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		public void WriteHex_TextWriter_NullThrows ()
 		{
 			Assert.Throws<ArgumentNullException> (() => HexUtilities.WriteHex (writer: null, value: 0x00));
+		}
+
+		[Test]
+		public void WriteHex_StringBuilder_UInt16 ()
+		{
+			var builder = new StringBuilder ("_");
+			HexUtilities.WriteHex (builder, 0xabcd);
+			HexUtilities.WriteHex (builder, 0x012f, upperCase: false);
+			Assert.AreEqual ("_ABCD012f", builder.ToString ());
+		}
+
+		[Test]
+		public void WriteHex_StringBuilder_NullThrows ()
+		{
+			Assert.Throws<ArgumentNullException> (() => HexUtilities.WriteHex (builder: null, value: 0x0000));
 		}
 
 		[TestCase (0)]

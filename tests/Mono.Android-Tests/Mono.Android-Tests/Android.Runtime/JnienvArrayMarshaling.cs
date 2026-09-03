@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Android.App;
 using Android.Content;
@@ -176,6 +178,109 @@ namespace Android.RuntimeTests {
 			}
 		}
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public void NewAndGetArray_SByteJaggedArrays (bool generic)
+		{
+			AssertArrayRoundTrip (
+				new sbyte[]{sbyte.MinValue, -1, 0, sbyte.MaxValue},
+				new sbyte[]{1, 2, -2, -3},
+				generic);
+			AssertArrayRoundTrip (new [] {
+				new sbyte[]{sbyte.MinValue, -1},
+				new sbyte[]{0, sbyte.MaxValue},
+			}, new [] {
+				new sbyte[]{1, -2},
+				new sbyte[]{3, -4},
+			}, generic);
+			AssertArrayRoundTrip (new [] {
+				new [] {
+					new sbyte[]{sbyte.MinValue, -1},
+					new sbyte[]{0, sbyte.MaxValue},
+				},
+				new [] {
+					new sbyte[]{sbyte.MaxValue, 0},
+					new sbyte[]{-1, sbyte.MinValue},
+				},
+			}, new [] {
+				new [] {
+					new sbyte[]{1, -2},
+					new sbyte[]{3, -4},
+				},
+				new [] {
+					new sbyte[]{5, -6},
+					new sbyte[]{7, -8},
+				},
+			}, generic);
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void NewAndGetArray_ByteJaggedArraysPreserveHighBits (bool generic)
+		{
+			AssertArrayRoundTrip (
+				new byte[]{0, 127, 128, byte.MaxValue},
+				new byte[]{1, 126, 129, 254},
+				generic);
+			AssertArrayRoundTrip (new [] {
+				new byte[]{0, 127},
+				new byte[]{128, byte.MaxValue},
+			}, new [] {
+				new byte[]{1, 126},
+				new byte[]{129, 254},
+			}, generic);
+			AssertArrayRoundTrip (new [] {
+				new [] {
+					new byte[]{0, 127},
+					new byte[]{128, byte.MaxValue},
+				},
+				new [] {
+					new byte[]{byte.MaxValue, 128},
+					new byte[]{127, 0},
+				},
+			}, new [] {
+				new [] {
+					new byte[]{1, 126},
+					new byte[]{129, 254},
+				},
+				new [] {
+					new byte[]{253, 130},
+					new byte[]{125, 2},
+				},
+			}, generic);
+		}
+
+		static void AssertArrayRoundTrip<T> (T[] created, T[] copied, bool generic)
+		{
+			int rank = 1;
+			Type elementType = typeof (T);
+			while (elementType.IsArray) {
+				rank++;
+				elementType = elementType.GetElementType ();
+			}
+
+			IntPtr array = generic ? JNIEnv.NewArray<T> (created) : JNIEnv.NewArray ((Array) created);
+
+			try {
+				Assert.AreEqual (new string ('[', rank) + "B", JNIEnv.GetClassNameFromInstance (array));
+				Array actual = generic
+					? JNIEnv.GetArray<T> (array)
+					: JNIEnv.GetArray (array, JniHandleOwnership.DoNotTransfer, typeof (T));
+				Assert.AreEqual (created, actual);
+
+				if (generic)
+					JNIEnv.CopyArray<T> (copied, array);
+				else
+					JNIEnv.CopyArray (copied, typeof (T), array);
+				actual = generic
+					? JNIEnv.GetArray<T> (array)
+					: JNIEnv.GetArray (array, JniHandleOwnership.DoNotTransfer, typeof (T));
+				Assert.AreEqual (copied, actual);
+			} finally {
+				JNIEnv.DeleteLocalRef (array);
+			}
+		}
+
 		[Test]
 		public void GetArray_JavaLangByteArrayToSystemByteArray ()
 		{
@@ -243,13 +348,8 @@ namespace Android.RuntimeTests {
 		}
 
 		[Test]
-		[Category ("NativeAOTTrimmable")]
 		public void GetArray_NullableByteArrayArray ()
 		{
-			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("Test only relevant for the trimmable typemap path.");
-			}
-
 			var values = new [] {
 				new byte? [] { 1, null, 200 },
 				new byte? [] { 255, 128 },
@@ -261,6 +361,32 @@ namespace Android.RuntimeTests {
 				Assert.AreEqual (values.Length, copy.Length);
 				for (int i = 0; i < values.Length; i++) {
 					AssertArrays ($"GetArray<byte?[]>[{i}]", copy [i], values [i]);
+				}
+			}
+		}
+
+		[Test]
+		public void GetArray_NullableByteArrayArrayArray ()
+		{
+			var values = new [] {
+				new [] {
+					new byte? [] { 1, null, 200 },
+					new byte? [] { 255, 128 },
+				},
+				new [] {
+					new byte? [] { null, 42 },
+				},
+			};
+			using (var array = new Java.Lang.Object (JNIEnv.NewArray (values), JniHandleOwnership.TransferLocalRef)) {
+				Assert.AreEqual ("[[[Ljava/lang/Byte;", JNIEnv.GetClassNameFromInstance (array.Handle));
+
+				var copy = JNIEnv.GetArray<byte?[][]> (array.Handle);
+				Assert.AreEqual (values.Length, copy.Length);
+				for (int i = 0; i < values.Length; i++) {
+					Assert.AreEqual (values [i].Length, copy [i].Length);
+					for (int j = 0; j < values [i].Length; j++) {
+						AssertArrays ($"GetArray<byte?[][]>[{i}][{j}]", copy [i][j], values [i][j]);
+					}
 				}
 			}
 		}
@@ -344,6 +470,184 @@ namespace Android.RuntimeTests {
 				Assert.AreEqual (42, (int)values [1]);
 				Assert.AreEqual ("string", values [2].ToString ());
 			}
+		}
+
+		[Test]
+		[Category ("JNIObjectArray")]
+		public void GetObjectArray_AfterStalePeerLookup ()
+		{
+			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
+				Assert.Ignore ("This test exercises trimmable type map peer creation.");
+
+			var manager = Java.Interop.JniRuntime.CurrentRuntime.ValueManager;
+			IntPtr constructor = JNIEnv.GetMethodID (Java.Lang.Class.Object, "<init>", "()V");
+			IntPtr handle = JNIEnv.NewObject (Java.Lang.Class.Object, constructor);
+			Java.Lang.Object first = null;
+			Java.Lang.Object second = null;
+			try {
+				var firstReference = new Java.Interop.JniObjectReference (handle);
+				if (manager.CreatePeer (ref firstReference, Java.Interop.JniObjectReferenceOptions.Copy, typeof (Java.Lang.Object)) is not Java.Lang.Object firstPeer)
+					throw new InvalidOperationException ("Could not create the first Java.Lang.Object peer.");
+				first = firstPeer;
+
+				// A concurrent GetPeer() caller can observe the same initial registry miss,
+				// then enter CreatePeer() after the first caller has registered its result.
+				var staleReference = new Java.Interop.JniObjectReference (handle);
+				if (manager.CreatePeer (ref staleReference, Java.Interop.JniObjectReferenceOptions.Copy, typeof (Java.Lang.Object)) is not Java.Lang.Object secondPeer)
+					throw new InvalidOperationException ("Could not create the second Java.Lang.Object peer.");
+				second = secondPeer;
+
+				Assert.AreNotSame (first, second, "CreatePeer() should create a distinct replaceable peer.");
+
+				using (var objectArray = new Java.Lang.Object (
+						JNIEnv.NewArray (new [] { first }, typeof (Java.Lang.Object)),
+						JniHandleOwnership.TransferLocalRef)) {
+					object[] values = JNIEnv.GetObjectArray (objectArray.Handle, new [] { typeof (Java.Lang.Object) });
+					Assert.AreSame (first, values [0],
+						"GetObjectArray() should return the first peer which a caller may have cached.");
+				}
+			} finally {
+				second?.Dispose ();
+				first?.Dispose ();
+				JNIEnv.DeleteLocalRef (handle);
+			}
+		}
+
+		[Test]
+		[Category ("JNIObjectArray")]
+		public async Task GetObjectArray_AfterConcurrentPeerLookup ()
+		{
+			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
+				Assert.Ignore ("This test exercises trimmable type map peer creation.");
+
+			var manager = Java.Interop.JniRuntime.CurrentRuntime.ValueManager;
+			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.Reset ();
+			var reference = CreateTrimmableRuntimeJavaInteropPeerReference ();
+
+			Java.InteropTests.TrimmableRuntimeJavaInteropPeer first = null;
+			Java.InteropTests.TrimmableRuntimeJavaInteropPeer second = null;
+			using var activationBarrier = new Barrier (2);
+			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ActivationBarrier = activationBarrier;
+			try {
+				var firstTask = Task.Factory.StartNew (
+					() => manager.GetPeer (reference, typeof (Java.InteropTests.TrimmableRuntimeJavaInteropPeer)),
+					CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+				var secondTask = Task.Factory.StartNew (
+					() => manager.GetPeer (reference, typeof (Java.InteropTests.TrimmableRuntimeJavaInteropPeer)),
+					CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+				var peers = await Task.WhenAll (firstTask, secondTask);
+				if (peers [0] is not Java.InteropTests.TrimmableRuntimeJavaInteropPeer firstPeer ||
+						peers [1] is not Java.InteropTests.TrimmableRuntimeJavaInteropPeer secondPeer)
+					throw new InvalidOperationException ("Could not create concurrent Java.Interop-style peers.");
+				first = firstPeer;
+				second = secondPeer;
+
+				// GetPeer() creates via CreatePeer(), which is contractually required to
+				// return a new peer even when a compatible one is already registered, so
+				// the caller which loses the race receives an unregistered alias.
+				Assert.AreNotSame (first, second, "Each CreatePeer() caller should receive its own peer.");
+				Assert.AreEqual (2, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ConstructorInvocations,
+					"Both callers should have raced through peer activation.");
+				Assert.AreEqual (0, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.DisposeInvocations,
+					"A peer handed back to a caller should not be disposed.");
+
+				// The race must not corrupt the registry: exactly one peer keeps the Java
+				// instance's identity. Before the fix the peer created second registered
+				// itself before it was marked Replaceable, so it evicted the first,
+				// leaving the first caller holding a peer the runtime no longer knew about.
+				var registered = Java.Interop.JniRuntime.CurrentRuntime.ValueManager.PeekPeer (reference);
+				Assert.IsNotNull (registered, "One of the racing peers should have won registration.");
+				Assert.IsTrue (ReferenceEquals (registered, first) || ReferenceEquals (registered, second),
+					$"The registered peer should be one of the racing peers, but was {registered.GetType ()}.");
+
+				using (var objectArray = new Java.Lang.Object (
+						JNIEnv.NewArray (new [] { first }, typeof (Java.Lang.Object)),
+						JniHandleOwnership.TransferLocalRef)) {
+					object[] values = JNIEnv.GetObjectArray (objectArray.Handle, new [] { typeof (Java.InteropTests.TrimmableRuntimeJavaInteropPeer) });
+					Assert.AreSame (registered, values [0],
+						"GetObjectArray() should return the peer which won registration.");
+				}
+			} finally {
+				Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ActivationBarrier = null;
+				if (!ReferenceEquals (first, second))
+					second?.Dispose ();
+				first?.Dispose ();
+				Java.Interop.JniObjectReference.Dispose (ref reference);
+			}
+		}
+
+		[Test]
+		[Category ("JNIObjectArray")]
+		public async Task GetObjectArray_DuringConcurrentPeerLookup ()
+		{
+			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
+				Assert.Ignore ("This test exercises trimmable type map peer creation.");
+
+			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.Reset ();
+			var reference = CreateTrimmableRuntimeJavaInteropPeerReference ();
+			var arrayReference = CreateObjectArrayReference (reference);
+
+			Java.InteropTests.TrimmableRuntimeJavaInteropPeer first = null;
+			Java.InteropTests.TrimmableRuntimeJavaInteropPeer second = null;
+			using var activationBarrier = new Barrier (2);
+			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ActivationBarrier = activationBarrier;
+			try {
+				var firstTask = Task.Factory.StartNew (
+					() => JNIEnv.GetObjectArray (arrayReference.Handle, new [] { typeof (Java.InteropTests.TrimmableRuntimeJavaInteropPeer) }) [0],
+					CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+				var secondTask = Task.Factory.StartNew (
+					() => JNIEnv.GetObjectArray (arrayReference.Handle, new [] { typeof (Java.InteropTests.TrimmableRuntimeJavaInteropPeer) }) [0],
+					CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+				var peers = await Task.WhenAll (firstTask, secondTask);
+				if (peers [0] is not Java.InteropTests.TrimmableRuntimeJavaInteropPeer firstPeer ||
+						peers [1] is not Java.InteropTests.TrimmableRuntimeJavaInteropPeer secondPeer)
+					throw new InvalidOperationException ("Could not convert concurrent Java object array elements.");
+				first = firstPeer;
+				second = secondPeer;
+
+				// Each GetObjectArray() caller converts through CreatePeer(), which is
+				// contractually required to return a new peer even when a compatible one is
+				// already registered, so the caller which loses the race gets an alias.
+				Assert.AreNotSame (first, second, "Each converting caller should receive its own peer.");
+				Assert.AreEqual (2, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ConstructorInvocations,
+					"Both callers should have raced through peer activation.");
+				Assert.AreEqual (0, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.DisposeInvocations,
+					"A peer handed back to a caller should not be disposed.");
+
+				// The race must not corrupt the registry: exactly one peer keeps the Java
+				// instance's identity. Before the fix the peer created second registered
+				// itself before it was marked Replaceable, so it evicted the first.
+				var registered = Java.Interop.JniRuntime.CurrentRuntime.ValueManager.PeekPeer (reference);
+				Assert.IsNotNull (registered, "One of the racing peers should have won registration.");
+				Assert.IsTrue (ReferenceEquals (registered, first) || ReferenceEquals (registered, second),
+					$"The registered peer should be one of the racing peers, but was {registered.GetType ()}.");
+			} finally {
+				Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ActivationBarrier = null;
+				if (!ReferenceEquals (first, second))
+					second?.Dispose ();
+				first?.Dispose ();
+				Java.Interop.JniObjectReference.Dispose (ref arrayReference);
+				Java.Interop.JniObjectReference.Dispose (ref reference);
+			}
+		}
+
+		static unsafe Java.Interop.JniObjectReference CreateTrimmableRuntimeJavaInteropPeerReference ()
+		{
+			using var type = new Java.Interop.JniType ("net/dot/android/test/TrimmableRuntimeJavaInteropPeer");
+			var constructor = type.GetConstructor ("()V");
+			var localReference = type.NewObject (constructor, null);
+			var reference = localReference.NewGlobalRef ();
+			Java.Interop.JniObjectReference.Dispose (ref localReference);
+			return reference;
+		}
+
+		static Java.Interop.JniObjectReference CreateObjectArrayReference (Java.Interop.JniObjectReference element)
+		{
+			var localReference = new Java.Interop.JniObjectReference (
+				JNIEnv.NewObjectArray (1, Java.Lang.Class.Object, element.Handle));
+			var reference = localReference.NewGlobalRef ();
+			Java.Interop.JniObjectReference.Dispose (ref localReference);
+			return reference;
 		}
 
 		[Test]

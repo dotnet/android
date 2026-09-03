@@ -59,11 +59,11 @@ variables:
 - name: IsRelOrTargetingRel
   value: $[or(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), startsWith(variables['System.PullRequest.TargetBranch'], 'release/'))]
 - name: DefaultTestSdkPlatforms  # Comma-separated SDK Platform(s) to install on test agents (no spaces)
-  value: 35,36,36.1,37.0,37.1
+  value: 35,36,36.1,37.0,37.1,37.2
 - name: DefaultJavaSdkMajorVersion
-  value: 17
-- name: LatestJavaSdkMajorVersion
   value: 21
+- name: LatestJavaSdkMajorVersion
+  value: 25
 - name: ExcludedNightlyNUnitCategories
   value: 'cat != SystemApplication & cat != TimeZoneInfo & cat != Localization'
 - name: RunMAUITestJob
@@ -76,6 +76,9 @@ variables:
   value: true
 - name: DOTNET_GENERATE_ASPNET_CERTIFICATE
   value: false
+# XBD Google Maven mirror support: https://github.com/dotnet/android-libraries/commit/4fe06d57f3ef7905fab0257d7246c97464d29e74
+- name: XamarinBuildDownloadGoogleMavenRepository
+  value: https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1
 # Fix network isolation requirements
 # See https://devdiv.visualstudio.com/DevDiv/_git/Xamarin.yaml-templates/pullrequest/750402
 - name: DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE

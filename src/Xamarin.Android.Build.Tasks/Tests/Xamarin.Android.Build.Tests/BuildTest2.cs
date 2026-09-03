@@ -102,6 +102,25 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void AndroidEnableMarshalMethodsWithReadyToRunFailsBuild ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				EnableMarshalMethods = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("PublishReadyToRun", "true");
+
+			using var b = CreateApkBuilder ();
+			b.ThrowOnBuildFailure = false;
+			Assert.IsFalse (b.Build (proj), "Build should have failed.");
+			StringAssertEx.Contains ("error XA1049", b.LastBuildOutput);
+			StringAssertEx.Contains ("AndroidEnableMarshalMethods", b.LastBuildOutput);
+			StringAssertEx.Contains ("PublishReadyToRun", b.LastBuildOutput);
+			StringAssertEx.DoesNotContain ("XARMM7015", b.LastBuildOutput, "Build should fail before rewriting ReadyToRun assemblies.");
+		}
+
+		[Test]
 		public void BasicApplicationPublishReadyToRunCustomConfiguration ([Values] bool isComposite, [Values ("android-x64", "android-arm64")] string rid)
 		{
 			// Use a non-standard release configuration name to validate PublishReadyToRun
@@ -115,6 +134,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
 			proj.SetProperty ("Optimize", "true");
 			proj.SetProperty ("DebugType", "None");
+			proj.SetProperty ("PublishTrimmed", "true");
 			proj.SetProperty ("PublishReadyToRunComposite", isComposite.ToString ());
 
 			// Use `dotnet publish` rather than `msbuild /t:Publish`: only the `dotnet publish` CLI
@@ -815,6 +835,7 @@ class MemTest {
 					new Package { Id = "Xamarin.GooglePlayServices.Base", Version = "118.2.0.5" },
 					new Package { Id = "Xamarin.GooglePlayServices.Basement", Version = "118.2.0.5" },
 					new Package { Id = "Xamarin.GooglePlayServices.Tasks", Version = "118.0.2.6" },
+					KnownPackages.Xamarin_Build_Download,
 				}
 			};
 			proj.SetRuntime (runtime);
@@ -1456,35 +1477,30 @@ namespace UnamedProject
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
-				var classesZipPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes.zip");
-				FileAssert.Exists (classesZipPath);
-				var expectedBuilder = new StringBuilder ();
-				using (var zip = ZipHelper.OpenZip (classesZipPath)) {
-					foreach (var file in zip) {
-						expectedBuilder.AppendLine (file.FullName);
-					}
-				}
-				var expectedZip = expectedBuilder.ToString ();
+				var classesDirectory = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes");
+				DirectoryAssert.Exists (classesDirectory);
+				var expectedClasses = Directory.GetFiles (classesDirectory, "*.class", SearchOption.AllDirectories)
+					.Select (path => Path.GetRelativePath (classesDirectory, path))
+					.OrderBy (path => path)
+					.ToArray ();
+				Assert.IsNotEmpty (expectedClasses);
 
 				source.Timestamp = null; //Force the file to re-save w/ new Timestamp
 				Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
 
-				var actualBuilder = new StringBuilder ();
-				using (var zip = ZipHelper.OpenZip (classesZipPath)) {
-					foreach (var file in zip) {
-						actualBuilder.AppendLine (file.FullName);
-					}
-				}
-				var actualZip = actualBuilder.ToString ();
-				Assert.AreNotEqual (expectedZip, actualZip);
+				var actualClasses = Directory.GetFiles (classesDirectory, "*.class", SearchOption.AllDirectories)
+					.Select (path => Path.GetRelativePath (classesDirectory, path))
+					.OrderBy (path => path)
+					.ToArray ();
+				CollectionAssert.AreNotEqual (expectedClasses, actualClasses);
 
 				//Build with no changes
 				Assert.IsTrue (b.Build (proj), "Third build should have succeeded.");
-				FileAssert.Exists (classesZipPath);
+				DirectoryAssert.Exists (classesDirectory);
 
 				//Clean
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
-				FileAssert.DoesNotExist (classesZipPath);
+				DirectoryAssert.DoesNotExist (classesDirectory);
 			}
 		}
 

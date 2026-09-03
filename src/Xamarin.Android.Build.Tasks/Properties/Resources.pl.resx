@@ -317,6 +317,10 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>W tym samym czasie nie zaleca się korzystania z funkcji szybkiego wdrażania i ReadyToRun. Użyj funkcji szybkiego wdrażania do konfiguracji debugowania oraz funkcji ReadyToRun do konfiguracji wydania.</value>
     <comment>The following are literal names and should not be translated: ReadyToRun, Debug, Release.</comment>
   </data>
+  <data name="XA0119_ReadyToRunWithoutTrimming" xml:space="preserve">
+    <value>Funkcja ReadyToRun została wyłączona, ponieważ przycinanie jest wyłączone. Ustaw właściwość MSBuild „PublishTrimmed” na wartość „true”, aby użyć funkcji ReadyToRun.</value>
+    <comment>The following are literal names and should not be translated: ReadyToRun, 'PublishTrimmed', 'true'.</comment>
+  </data>
   <data name="XA0121" xml:space="preserve">
     <value>Zestaw „{0}” korzysta z atrybutu „[assembly: {1}]”, który nie jest już obsługiwany. Użyj nowszej wersji tego pakietu NuGet lub powiadom autora biblioteki.</value>
     <comment>The following are literal names and should not be translated: [assembly: {1}], NuGet
@@ -1059,6 +1063,11 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
   </data>
+  <data name="XA4240" xml:space="preserve">
+    <value>Obiekt docelowy „{0}” generowania kodu otoki wywoływalnej Java nie jest już obsługiwany. Właściwość „_AndroidJcwCodegenTarget” obsługuje tylko właściwość „XAJavaInterop1”; elementy „XamarinAndroid” i „JavaInterop1” nie są obsługiwane.</value>
+    <comment>The following are literal names and should not be translated: _AndroidJcwCodegenTarget, XAJavaInterop1, XamarinAndroid, JavaInterop1
+{0} - The name of the current Java callable wrapper code generation target</comment>
+  </data>
   <data name="XA1038" xml:space="preserve">
     <value>Właściwość MSBuild „{0}” ma nieprawidłową wartość „{1}”. Prawidłowa wartość to jedna z następujących: {2}.</value>
     <comment>The following are literal names and should not be translated: MSBuild.
@@ -1118,6 +1127,10 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
     <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
 {0} - The path to the AndroidManifest.xml file.
 </comment>
+  </data>
+  <data name="XA1049" xml:space="preserve">
+    <value>The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'. Set one property to 'false'.</value>
+    <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>Zależność Java „{0}” nie jest spełniona.</value>

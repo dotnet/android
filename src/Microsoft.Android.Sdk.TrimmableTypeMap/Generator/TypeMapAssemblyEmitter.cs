@@ -101,6 +101,7 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
+	MemberReferenceHandle _jniEnvToJniObjectReferenceOptionsRef;
 	MemberReferenceHandle _jniEnvGetStringRef;
 	MemberReferenceHandle _jniEnvGetArrayRef;
 	MemberReferenceHandle _javaLangObjectGetObjectRef;
@@ -195,6 +196,8 @@ sealed class TypeMapAssemblyEmitter
 		}
 		EmitMemberReferences ();
 
+		_pe.PrepareUtf8Fields (EnumerateNativeRegistrationStrings (model.ProxyTypes));
+
 		// Track wrapper targets → handles for RegisterNatives.
 		var wrapperHandles = new Dictionary<UcoWrapperTargetData, MethodDefinitionHandle> ();
 
@@ -215,6 +218,19 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		_pe.EmitIgnoresAccessChecksToAttribute (model.IgnoresAccessChecksTo);
+	}
+
+	static IEnumerable<string> EnumerateNativeRegistrationStrings (IReadOnlyList<JavaPeerProxyData> proxies)
+	{
+		foreach (var proxy in proxies) {
+			if (!proxy.IsAcw) {
+				continue;
+			}
+			foreach (var registration in proxy.NativeRegistrations) {
+				yield return registration.JniMethodName;
+				yield return registration.JniSignature;
+			}
+		}
 	}
 
 	static List<JavaPeerProxyData> OrderProxiesForWrapperTargets (IReadOnlyList<JavaPeerProxyData> proxies)
@@ -379,6 +395,16 @@ sealed class TypeMapAssemblyEmitter
 				rt => rt.Void (),
 				p => {
 					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+				}));
+
+		// JNIEnv.ToJniObjectReferenceOptions(JniHandleOwnership) — static, internal
+		// Maps the activation ctor's ownership argument onto the JniObjectReferenceOptions
+		// a Java.Interop-style ctor takes. Kept in Mono.Android so the mapping is plain C#.
+		_jniEnvToJniObjectReferenceOptionsRef = _pe.AddMemberRef (_jniEnvRef, "ToJniObjectReferenceOptions",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Type ().Type (_jniObjectReferenceOptionsRef, true),
+				p => {
 					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
 				}));
 
@@ -600,16 +626,6 @@ sealed class TypeMapAssemblyEmitter
 
 	void EmitProxyType (JavaPeerProxyData proxy, Dictionary<UcoWrapperTargetData, MethodDefinitionHandle> wrapperHandles)
 	{
-		if (proxy.IsAcw) {
-			// RegisterNatives uses RVA-backed UTF-8 fields under <PrivateImplementationDetails>.
-			// Materialize those helper types before adding the proxy TypeDef, otherwise the
-			// later RegisterNatives method can be attached to the helper type instead.
-			foreach (var reg in proxy.NativeRegistrations) {
-				_pe.GetOrAddUtf8Field (reg.JniMethodName);
-				_pe.GetOrAddUtf8Field (reg.JniSignature);
-			}
-		}
-
 		var metadata = _pe.Metadata;
 		var targetTypeRef = _pe.ResolveTypeRef (proxy.TargetType);
 
@@ -832,7 +848,8 @@ sealed class TypeMapAssemblyEmitter
 	/// <summary>
 	/// Emits CreateInstance for JavaInterop-style activation (leaf type):
 	///   var jniRef = new JniObjectReference(handle);
-	///   var result = new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
+	///   var options = JNIEnv.ToJniObjectReferenceOptions(ownership);
+	///   var result = new TargetType(ref jniRef, options);
 	///   JNIEnv.DeleteRef(handle, ownership);
 	///   return result;
 	/// </summary>
@@ -848,9 +865,9 @@ sealed class TypeMapAssemblyEmitter
 				encoder.LoadConstantI4 (0); // JniObjectReferenceType.Invalid
 				encoder.Call (_jniObjectReferenceCtorRef, parameterCount: 2, isInstance: true);
 
-				// var result = new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
+				// var result = new TargetType(ref jniRef, JNIEnv.ToJniObjectReferenceOptions(ownership));
 				encoder.LoadLocalAddress (0);
-				encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
+				EmitJniObjectReferenceOptions (encoder);
 				encoder.NewObject (ctorRef, parameterCount: 2);
 				encoder.StoreLocal (1); // save result
 
@@ -868,7 +885,8 @@ sealed class TypeMapAssemblyEmitter
 	/// Emits CreateInstance for JavaInterop-style activation (inherited ctor):
 	///   var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
 	///   var jniRef = new JniObjectReference(handle);
-	///   obj.BaseCtor(ref jniRef, JniObjectReferenceOptions.Copy);
+	///   var options = JNIEnv.ToJniObjectReferenceOptions(ownership);
+	///   obj.BaseCtor(ref jniRef, options);
 	///   JNIEnv.DeleteRef(handle, ownership);
 	///   return obj;
 	/// </summary>
@@ -893,9 +911,9 @@ sealed class TypeMapAssemblyEmitter
 				encoder.LoadConstantI4 (0); // JniObjectReferenceType.Invalid
 				encoder.Call (_jniObjectReferenceCtorRef, parameterCount: 2, isInstance: true);
 
-				// obj.BaseCtor(ref jniRef, JniObjectReferenceOptions.Copy);
+				// obj.BaseCtor(ref jniRef, JNIEnv.ToJniObjectReferenceOptions(ownership));
 				encoder.LoadLocalAddress (0);
-				encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
+				EmitJniObjectReferenceOptions (encoder);
 				encoder.Call (baseCtorRef, parameterCount: 2, isInstance: true);
 
 				// JNIEnv.DeleteRef(handle, ownership);
@@ -905,6 +923,18 @@ sealed class TypeMapAssemblyEmitter
 
 				encoder.Return (returnsValue: true);
 			});
+	}
+
+	/// <summary>
+	/// Emits the conversion of this method's <c>JniHandleOwnership</c> argument into the
+	/// <c>JniObjectReferenceOptions</c> a Java.Interop-style activation constructor expects,
+	/// by calling <c>JNIEnv.ToJniObjectReferenceOptions (ownership)</c>. The mapping itself
+	/// lives in Mono.Android so it is expressed in readable C# rather than raw IL.
+	/// </summary>
+	void EmitJniObjectReferenceOptions (PEAssemblyBuilder.TrackedInstructionEncoder encoder)
+	{
+		encoder.OpCode (ILOpCode.Ldarg_2);
+		encoder.Call (_jniEnvToJniObjectReferenceOptionsRef, parameterCount: 1, returnsValue: true);
 	}
 
 	void EncodeJniObjectReferenceLocal (BlobBuilder blob)
@@ -1626,12 +1656,12 @@ sealed class TypeMapAssemblyEmitter
 			return;
 		}
 
-		// Get or create deduplicated RVA fields for each unique name/signature string.
+		// Get the prepared, deduplicated RVA fields for each unique name/signature string.
 		var nameFields = new FieldDefinitionHandle [validRegs.Count];
 		var sigFields = new FieldDefinitionHandle [validRegs.Count];
 		for (int i = 0; i < validRegs.Count; i++) {
-			nameFields [i] = _pe.GetOrAddUtf8Field (validRegs [i].Reg.JniMethodName);
-			sigFields [i] = _pe.GetOrAddUtf8Field (validRegs [i].Reg.JniSignature);
+			nameFields [i] = _pe.GetUtf8Field (validRegs [i].Reg.JniMethodName);
+			sigFields [i] = _pe.GetUtf8Field (validRegs [i].Reg.JniSignature);
 		}
 
 		int methodCount = validRegs.Count;
@@ -1721,16 +1751,15 @@ sealed class TypeMapAssemblyEmitter
 	{
 		var ctorRef = entry.IsUnconditional ? _typeMapAttrCtorRef2Arg : _typeMapAttrCtorRef3Arg;
 
-		var blob = _pe.BuildAttributeBlob (b => {
-			b.WriteSerializedString (entry.MapKey);
-			b.WriteSerializedString (entry.ProxyTypeReference);
-			if (!entry.IsUnconditional) {
-				if (entry.TargetTypeReference is null) {
-					throw new InvalidOperationException ($"TargetTypeReference must not be null for conditional entry '{entry.MapKey}'");
-				}
-				b.WriteSerializedString (entry.TargetTypeReference);
+		BlobHandle blob;
+		if (entry.IsUnconditional) {
+			blob = _pe.BuildAttributeBlob (entry.MapKey, entry.ProxyTypeReference);
+		} else {
+			if (entry.TargetTypeReference is null) {
+				throw new InvalidOperationException ($"TargetTypeReference must not be null for conditional entry '{entry.MapKey}'");
 			}
-		});
+			blob = _pe.BuildAttributeBlob (entry.MapKey, entry.ProxyTypeReference, entry.TargetTypeReference);
+		}
 		_pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, blob);
 	}
 
@@ -1738,10 +1767,7 @@ sealed class TypeMapAssemblyEmitter
 	{
 		var ctorRef = _typeMapAssociationAttrCtorRef;
 
-		var blob = _pe.BuildAttributeBlob (b => {
-			b.WriteSerializedString (assoc.SourceTypeReference);
-			b.WriteSerializedString (assoc.AliasProxyTypeReference);
-		});
+		var blob = _pe.BuildAttributeBlob (assoc.SourceTypeReference, assoc.AliasProxyTypeReference);
 		_pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, blob);
 	}
 

@@ -317,6 +317,10 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>Não é recomendável usar ao mesmo tempo implantação rápida e ReadyToRun. Use implantação rápida para configurações de Depuração e ReadyToRun para configurações de Liberação.</value>
     <comment>The following are literal names and should not be translated: ReadyToRun, Debug, Release.</comment>
   </data>
+  <data name="XA0119_ReadyToRunWithoutTrimming" xml:space="preserve">
+    <value>ReadyToRun foi desabilitado porque o corte está desabilitado. Defina a propriedade MSBuild 'PublishTrimmed' como 'true' para usar ReadyToRun.</value>
+    <comment>The following are literal names and should not be translated: ReadyToRun, 'PublishTrimmed', 'true'.</comment>
+  </data>
   <data name="XA0121" xml:space="preserve">
     <value>O assembly '{0}' está usando '[assembly: {1}]', que não tem mais suporte. Use uma versão mais recente deste pacote NuGet ou notifique o autor da biblioteca.</value>
     <comment>The following are literal names and should not be translated: [assembly: {1}], NuGet
@@ -1059,6 +1063,11 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
   </data>
+  <data name="XA4240" xml:space="preserve">
+    <value>O destino de geração de código do wrapper chamável do Java ''{0}'' não tem mais suporte. A propriedade ''_AndroidJcwCodegenTarget'' dá suporte apenas a ''XAJavaInterop1''; ''XamarinAndroid'' e ''JavaInterop1'' não têm suporte.</value>
+    <comment>The following are literal names and should not be translated: _AndroidJcwCodegenTarget, XAJavaInterop1, XamarinAndroid, JavaInterop1
+{0} - The name of the current Java callable wrapper code generation target</comment>
+  </data>
   <data name="XA1038" xml:space="preserve">
     <value>A propriedade '{0}' MSBuild tem um valor inválido de '{1}'. Um valor válido é um dos seguintes: {2}.</value>
     <comment>The following are literal names and should not be translated: MSBuild.
@@ -1118,6 +1127,10 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
     <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
 {0} - The path to the AndroidManifest.xml file.
 </comment>
+  </data>
+  <data name="XA1049" xml:space="preserve">
+    <value>The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'. Set one property to 'false'.</value>
+    <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>A dependência de Java "{0}" não foi atendida.</value>

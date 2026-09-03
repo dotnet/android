@@ -158,6 +158,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA1046](xa1046.md): Attribute '{0}' in element '{1}' has value '{2}' that cannot be parsed as boolean; {3} line {4}.
 + [XA1047](xa1047.md): Required attribute '{0}' missing from element '{1}'; {2} line {3}.
 + [XA1048](xa1048.md): '{0}' does not contain an &lt;instrumentation&gt; element.
++ [XA1049](xa1049.md): The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'.
 
 ## XA2xxx: Linker
 
@@ -211,6 +212,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4236](xa4236.md): Cannot download Maven artifact '{group}:{artifact}'. - {jar}: {exception} - {aar}: {exception}
 + [XA4237](xa4237.md): Cannot download POM file for Maven artifact '{artifact}'. - Failed to resolve POM for Maven artifact '{dependency}' from '{url}'. - {exception}
 + [XA4239](xa4239.md): Unknown Maven repository: '{repository}'.
++ [XA4240](xa4240.md): The Java callable wrapper code generation target '{0}' is no longer supported. The '_AndroidJcwCodegenTarget' property only supports 'XAJavaInterop1'; 'XamarinAndroid' and 'JavaInterop1' are not supported.
 + [XA4241](xa4241.md): Java dependency '{artifact}' is not satisfied.
 + [XA4242](xa4242.md): Java dependency '{artifact}' is not satisfied. Microsoft maintains the NuGet package '{nugetId}' that could fulfill this dependency.
 + [XA4243](xa4243.md): Attribute '{name}' is required when using '{name}' for '{element}' item '{itemspec}'.

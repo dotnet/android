@@ -26,13 +26,6 @@ extern "C" {
 
 	/*
 	 * Class:     mono_android_Runtime
-	 * Method:    notifyTimeZoneChanged
-	 * Signature: ()V
-	 */
-	JNIEXPORT void JNICALL Java_mono_android_Runtime_notifyTimeZoneChanged (JNIEnv *, jclass);
-
-	/*
-	 * Class:     mono_android_Runtime
 	 * Method:    propagateUncaughtException
 	 * Signature: (Ljava/lang/Thread;Ljava/lang/Throwable;)V
 	 */

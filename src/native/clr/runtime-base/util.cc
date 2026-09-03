@@ -20,92 +20,87 @@ Util::create_directory (const char *pathname, mode_t mode)
 	 	mode = Constants::DEFAULT_DIRECTORY_MODE;
 	}
 
-	mode_t oldumask = umask (022);
-	dynamic_local_string<Constants::SENSIBLE_PATH_MAX> path { pathname };
-	int rv, ret = 0;
+	size_t path_length = strlen (pathname);
+	size_t allocation_size = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
+	char stack_buffer [Constants::SENSIBLE_PATH_MAX];
+	char *path = stack_buffer;
+	if (allocation_size > sizeof (stack_buffer)) {
+		path = static_cast<char*> (std::malloc (allocation_size));
+		abort_unless (path != nullptr, "Failed to allocate directory path");
+	}
+	memcpy (path, pathname, path_length + 1);
 
-	for (char *d = path.get (); d != nullptr && *d != '\0'; d++) {
+	mode_t oldumask = umask (022);
+	int ret = 0;
+
+	for (char *d = path; *d != '\0'; d++) {
 		if (*d != '/') {
 			continue;
 		}
 
 		*d = '\0';
-		if (*path.get () != '\0') {
-			rv = ::mkdir (path.get (), mode);
-			if (rv == -1 && errno != EEXIST) {
-				ret = -1;
-				break;
-			}
-		}
+		int rv = *path == '\0' ? 0 : ::mkdir (path, mode);
 		*d = '/';
+
+		if (rv == -1 && errno != EEXIST) {
+			ret = -1;
+			break;
+		}
 	}
 
 	if (ret == 0) {
-		ret = ::mkdir (pathname, mode);
+		ret = ::mkdir (path, mode);
 	}
+	int saved_errno = errno;
 	umask (oldumask);
+	if (path != stack_buffer) {
+		std::free (path);
+	}
+	errno = saved_errno;
 
 	return ret;
 }
 
 void
-Util::create_public_directory (std::string_view const& dir)
+Util::create_public_directory (const char *dir)
 {
 	mode_t m = umask (0);
-	int ret = create_directory (dir.data (), 0777);
+	int ret = create_directory (dir, 0777);
 	if (ret < 0) {
 		if (errno == EEXIST) {
 			// Try to change the mode, just in case
-			chmod (dir.data (), 0777);
+			chmod (dir, 0777);
 		} else {
-			log_warnf (
-				LOG_DEFAULT,
-				"Failed to create directory '%.*s'. %s",
-				static_cast<int>(dir.length ()),
-				dir.data (),
-				std::strerror (errno)
-			);
+			log_warnf (LOG_DEFAULT, "Failed to create directory '%s'. %s", dir, std::strerror (errno));
 		}
 	}
 	umask (m);
 }
 
 auto
-Util::monodroid_fopen (std::string_view const& filename, std::string_view const& mode) noexcept -> FILE*
+Util::monodroid_fopen (const char *filename, const char *mode) noexcept -> FILE*
 {
 	/* On Unix, both path and system calls are all assumed
 	 * to be UTF-8 compliant.
 	 */
-	FILE *ret = fopen (filename.data (), mode.data ());
+	FILE *ret = fopen (filename, mode);
 	if (ret == nullptr) {
-		log_errorf (
-			LOG_DEFAULT,
-			"fopen failed for file %.*s: %s",
-			static_cast<int>(filename.length ()),
-			filename.data (),
-			strerror (errno)
-		);
+		log_errorf (LOG_DEFAULT, "fopen failed for file %s: %s", filename, strerror (errno));
 		return nullptr;
 	}
 
 	return ret;
 }
 
-void Util::set_world_accessable (std::string_view const& path)
+void Util::set_world_accessable (const char *path)
 {
 	int r;
 	do {
-		r = chmod (path.data (), 0664);
+		r = chmod (path, 0664);
 	} while (r == -1 && errno == EINTR);
 
 	if (r == -1) {
-		log_errorf (
-			LOG_DEFAULT,
-			"chmod(\"%.*s\", 0664) failed: %s",
-			static_cast<int>(path.length ()),
-			path.data (),
-			strerror (errno)
-		);
+		log_errorf (LOG_DEFAULT, "chmod(\"%s\", 0664) failed: %s", path, strerror (errno));
 	}
 }
 

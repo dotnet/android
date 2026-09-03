@@ -114,6 +114,9 @@ sealed class PEAssemblyBuilder
 			deterministicIdProvider: DeterministicContentId);
 		var peBlob = new BlobBuilder ();
 		peBuilder.Serialize (peBlob);
+		if (stream is MemoryStream memoryStream && memoryStream.Length == 0 && memoryStream.Capacity < peBlob.Count) {
+			memoryStream.Capacity = peBlob.Count;
+		}
 		peBlob.WriteContentTo (stream);
 	}
 
@@ -270,33 +273,39 @@ sealed class PEAssemblyBuilder
 	}
 
 	/// <summary>
-	/// Returns a deduplicated RVA field containing the null-terminated UTF-8 encoding of
-	/// <paramref name="value"/>. Strings like <c>"()V"</c> that appear across many proxy
-	/// types are stored once and share the same <see cref="FieldDefinitionHandle"/>.
-	/// The field is declared on an internal sized helper type (e.g. <c>__utf8_10</c>)
-	/// nested under <c>&lt;PrivateImplementationDetails&gt;</c>.
+	/// Emits deduplicated RVA fields containing the supplied null-terminated UTF-8 strings.
+	/// Fields are grouped by size so each group is emitted contiguously on its sized helper
+	/// type before any consuming types are emitted.
 	/// </summary>
-	public FieldDefinitionHandle GetOrAddUtf8Field (string value)
+	public void PrepareUtf8Fields (IEnumerable<string> values)
 	{
-		if (_utf8FieldCache.TryGetValue (value, out var existing)) {
-			return existing;
+		var valuesBySize = new SortedDictionary<int, SortedSet<string>> ();
+		foreach (string value in values) {
+			int size = System.Text.Encoding.UTF8.GetByteCount (value) + 1;
+			if (!valuesBySize.TryGetValue (size, out var valuesForSize)) {
+				valuesForSize = new SortedSet<string> (StringComparer.Ordinal);
+				valuesBySize.Add (size, valuesForSize);
+			}
+			valuesForSize.Add (value);
 		}
 
-		EnsurePrivateImplDetailsType ();
+		foreach (var group in valuesBySize) {
+			var sizedType = GetOrCreateSizedType (group.Key);
+			foreach (string value in group.Value) {
+				AddUtf8Field (value, sizedType);
+			}
+		}
+	}
 
+	void AddUtf8Field (string value, TypeDefinitionHandle sizedType)
+	{
 		// Encode to null-terminated UTF-8 (all JNI names/signatures are ASCII).
-		int byteCount = System.Text.Encoding.UTF8.GetByteCount (value);
-		var bytes = new byte [byteCount + 1];
-		System.Text.Encoding.UTF8.GetBytes (value, 0, value.Length, bytes, 0);
-		// bytes[byteCount] is already 0 (null terminator)
-
-		var sizedType = GetOrCreateSizedType (bytes.Length);
-
 		_sigBlob.Clear ();
 		new BlobEncoder (_sigBlob).FieldSignature ().Type (sizedType, true);
 
 		int rva = _mappedFieldData.Count;
-		_mappedFieldData.WriteBytes (bytes);
+		_mappedFieldData.WriteUTF8 (value);
+		_mappedFieldData.WriteByte (0);
 
 		var fieldHandle = Metadata.AddFieldDefinition (
 			FieldAttributes.Static | FieldAttributes.Assembly | FieldAttributes.HasFieldRVA | FieldAttributes.InitOnly,
@@ -306,7 +315,18 @@ sealed class PEAssemblyBuilder
 		Metadata.AddFieldRelativeVirtualAddress (fieldHandle, rva);
 
 		_utf8FieldCache [value] = fieldHandle;
-		return fieldHandle;
+	}
+
+	/// <summary>
+	/// Returns a previously prepared UTF-8 RVA field.
+	/// </summary>
+	public FieldDefinitionHandle GetUtf8Field (string value)
+	{
+		if (_utf8FieldCache.TryGetValue (value, out var existing)) {
+			return existing;
+		}
+
+		throw new InvalidOperationException ($"UTF-8 field '{value}' was not prepared before type emission.");
 	}
 
 	void EnsurePrivateImplDetailsType ()
@@ -489,6 +509,27 @@ sealed class PEAssemblyBuilder
 		_attrBlob.WriteUInt16 (0x0001); // Prolog
 		writePayload (_attrBlob);
 		_attrBlob.WriteUInt16 (0x0000); // NumNamed
+		return Metadata.GetOrAddBlob (_attrBlob);
+	}
+
+	public BlobHandle BuildAttributeBlob (string first, string second)
+	{
+		_attrBlob.Clear ();
+		_attrBlob.WriteUInt16 (0x0001);
+		_attrBlob.WriteSerializedString (first);
+		_attrBlob.WriteSerializedString (second);
+		_attrBlob.WriteUInt16 (0x0000);
+		return Metadata.GetOrAddBlob (_attrBlob);
+	}
+
+	public BlobHandle BuildAttributeBlob (string first, string second, string third)
+	{
+		_attrBlob.Clear ();
+		_attrBlob.WriteUInt16 (0x0001);
+		_attrBlob.WriteSerializedString (first);
+		_attrBlob.WriteSerializedString (second);
+		_attrBlob.WriteSerializedString (third);
+		_attrBlob.WriteUInt16 (0x0000);
 		return Metadata.GetOrAddBlob (_attrBlob);
 	}
 

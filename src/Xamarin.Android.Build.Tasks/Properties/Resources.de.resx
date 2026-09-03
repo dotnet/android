@@ -317,6 +317,10 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>Von der gleichzeitigen Verwendung der schnellen Bereitstellung und ReadyToRun wird abgeraten. Verwenden Sie die schnelle Bereitstellung für Debugkonfigurationen und ReadyToRun für Releasekonfigurationen.</value>
     <comment>The following are literal names and should not be translated: ReadyToRun, Debug, Release.</comment>
   </data>
+  <data name="XA0119_ReadyToRunWithoutTrimming" xml:space="preserve">
+    <value>ReadyToRun wurde deaktiviert, weil das Trimmen deaktiviert ist. Legen Sie die MSBuild-Eigenschaft „PublishTrimmed“ auf „wahr“ fest, um ReadyToRun zu verwenden.</value>
+    <comment>The following are literal names and should not be translated: ReadyToRun, 'PublishTrimmed', 'true'.</comment>
+  </data>
   <data name="XA0121" xml:space="preserve">
     <value>Die Assembly "{0}" verwendet das Attribut "[assembly: {1}]", dieses wird nicht mehr unterstützt. Verwenden Sie eine neuere Version dieses NuGet-Pakets, oder benachrichtigen Sie den Bibliotheksautor.</value>
     <comment>The following are literal names and should not be translated: [assembly: {1}], NuGet
@@ -1059,6 +1063,11 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
   </data>
+  <data name="XA4240" xml:space="preserve">
+    <value>Das Codegenerierungsziel für den Java-Aufrufwrapper „{0}“ wird nicht mehr unterstützt. Die Eigenschaft „_AndroidJcwCodegenTarget“ unterstützt nur „XAJavaInterop1“; „XamarinAndroid“ und „JavaInterop1“ werden nicht unterstützt.</value>
+    <comment>The following are literal names and should not be translated: _AndroidJcwCodegenTarget, XAJavaInterop1, XamarinAndroid, JavaInterop1
+{0} - The name of the current Java callable wrapper code generation target</comment>
+  </data>
   <data name="XA1038" xml:space="preserve">
     <value>Die MSBuild-Eigenschaft "{0}" weist einen ungültigen Wert "{1}" auf. Ein gültiger Wert ist: {2}.</value>
     <comment>The following are literal names and should not be translated: MSBuild.
@@ -1118,6 +1127,10 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
     <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
 {0} - The path to the AndroidManifest.xml file.
 </comment>
+  </data>
+  <data name="XA1049" xml:space="preserve">
+    <value>The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'. Set one property to 'false'.</value>
+    <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>Java-Abhängigkeit „{0}“ wurde nicht erfüllt.</value>

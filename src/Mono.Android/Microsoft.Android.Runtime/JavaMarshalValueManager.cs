@@ -45,9 +45,10 @@ sealed class JavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 
 		var requestedType = targetType ?? typeof (T);
 		if (JavaConvert.IsGenericDictionary (requestedType)) {
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-			return (T) JavaConvert.FromObjectReference (ref reference, options, requestedType);
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+			var value = JavaConvert.FromObjectReference (ref reference, options, requestedType);
+			if (value is null)
+				return default;
+			return (T) value;
 		}
 
 		return base.GetValueCore<T> (ref reference, options, targetType);
@@ -91,6 +92,14 @@ sealed class JavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
 		return JavaMarshalRegisteredPeers.GetSurfacedPeers ();
+	}
+
+	protected override object? CreateNonArrayListValue (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions options,
+			Type targetType)
+	{
+		return JavaConvert.FromObjectReference (ref reference, options, targetType);
 	}
 
 	protected override bool TryConstructPeer (

@@ -57,6 +57,7 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 
 		Assert.NotEmpty (peers);
 		Assert.All (peers, p => Assert.True (p.IsFrameworkAssembly, $"{p.ManagedTypeName} should be marked as a framework peer."));
+		Assert.All (peers, p => Assert.False (p.IsUnconditional, $"{p.ManagedTypeName} should not be rooted by framework assembly attributes."));
 	}
 
 	[Fact]
@@ -130,6 +131,7 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 		var peer = FindFixtureByJavaName ("net/dot/jni/test/JavaDisposedObject");
 		Assert.Equal ("Java.Interop.TestTypes.JavaDisposedObject", peer.ManagedTypeName);
 		Assert.False (peer.DoNotGenerateAcw, "GenerateJavaPeer=true should map to DoNotGenerateAcw=false");
+		Assert.True (peer.IsUnconditional, "Non-framework JniTypeSignature peers should match the legacy IJniNameProviderAttribute root.");
 	}
 
 	[Fact]

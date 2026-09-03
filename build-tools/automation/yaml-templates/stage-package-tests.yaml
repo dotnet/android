@@ -2,6 +2,7 @@
 
 parameters:
   macTestAgentsUseCleanImages: 
+  usePublicSetupTemplate: false
   use1ESTemplate: true
 
 stages:
@@ -21,9 +22,16 @@ stages:
     workspace:
       clean: all
     steps:
-    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
-      parameters:
-        use1ESTemplate: ${{ parameters.use1ESTemplate }}
+    - ${{ if eq(parameters.usePublicSetupTemplate, true) }}:
+      - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
+        parameters:
+          jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
+          useAgentJdkPath: true
+          use1ESTemplate: ${{ parameters.use1ESTemplate }}
+    - ${{ else }}:
+      - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
+        parameters:
+          use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -108,9 +116,16 @@ stages:
     workspace:
       clean: all
     steps:
-    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
-      parameters:
-        use1ESTemplate: ${{ parameters.use1ESTemplate }}
+    - ${{ if eq(parameters.usePublicSetupTemplate, true) }}:
+      - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
+        parameters:
+          jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
+          useAgentJdkPath: true
+          use1ESTemplate: ${{ parameters.use1ESTemplate }}
+    - ${{ else }}:
+      - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
+        parameters:
+          use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -139,15 +154,6 @@ stages:
         continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
-
-    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(XA.Build.Configuration)
-        testName: Mono.Android.NET_Tests-CoreCLR
-        project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
-        extraBuildArgs: -p:TestsFlavor=CoreCLR -p:UseMonoRuntime=false
-        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
-        artifactFolder: $(DotNetTargetFramework)-CoreCLR
 
     # Smoke coverage that the test app still builds and runs under Mono.
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml

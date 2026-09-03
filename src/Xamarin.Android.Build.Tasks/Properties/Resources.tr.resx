@@ -317,6 +317,10 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>Hızlı dağıtım ile ReadyToRun'ın aynı anda kullanılması önerilmez. Hızlı dağıtımı Hata ayıklama yapılandırmaları için ve ReadyToRun'ı da Yayın yapılandırmaları için kullanın.</value>
     <comment>The following are literal names and should not be translated: ReadyToRun, Debug, Release.</comment>
   </data>
+  <data name="XA0119_ReadyToRunWithoutTrimming" xml:space="preserve">
+    <value>Kırpma devre dışı bırakıldığı için ReadyToRun da devre dışı bırakıldı. ReadyToRun' öğesini kullanmak için 'PublishTrimmed' MSBuild özelliğini 'true' olarak ayarlayın.</value>
+    <comment>The following are literal names and should not be translated: ReadyToRun, 'PublishTrimmed', 'true'.</comment>
+  </data>
   <data name="XA0121" xml:space="preserve">
     <value>'{0}' bütünleştirilmiş kodu artık desteklenmeyen '[assembly: {1}]' kullanıyor. Bu NuGet paketinin daha yeni bir sürümünü kullanın veya bu durumu kitaplık yazarına bildirin.</value>
     <comment>The following are literal names and should not be translated: [assembly: {1}], NuGet
@@ -1059,6 +1063,11 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
   </data>
+  <data name="XA4240" xml:space="preserve">
+    <value>Java çağrılabilir sarmalayıcı kodu oluşturma '{0}' hedefi artık desteklenmiyor. '_AndroidJcwCodegenTarget' özelliği yalnızca 'XAJavaInterop1' için destek sağlar; 'XamarinAndroid' ve 'JavaInterop1' desteklenmez.</value>
+    <comment>The following are literal names and should not be translated: _AndroidJcwCodegenTarget, XAJavaInterop1, XamarinAndroid, JavaInterop1
+{0} - The name of the current Java callable wrapper code generation target</comment>
+  </data>
   <data name="XA1038" xml:space="preserve">
     <value>'{0}' MSBuild özelliğinin geçersiz '{1}' değeri var. Geçerli bir değer şunlardan biri: {2}.</value>
     <comment>The following are literal names and should not be translated: MSBuild.
@@ -1118,6 +1127,10 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
     <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
 {0} - The path to the AndroidManifest.xml file.
 </comment>
+  </data>
+  <data name="XA1049" xml:space="preserve">
+    <value>The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'. Set one property to 'false'.</value>
+    <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>'{0}' Java bağımlılığı karşılanmadı.</value>

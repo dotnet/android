@@ -282,6 +282,8 @@ namespace Java.InteropTests {
 			switch (type.Name) {
 			case "Boolean":
 				return "bool";
+			case "Byte":
+				return "byte";
 			case "Char":
 				return "char";
 			case "Double":
@@ -420,6 +422,12 @@ namespace Java.InteropTests {
 	[Category("LLVMIgnore")] //FIXME: https://github.com/dotnet/runtime/issues/89190
 	public class JniValueMarshaler_NullableSByte_ContractTests : JniValueMarshalerContractTests<sbyte?> {
 		protected   override    sbyte?  Value           {get {return (sbyte) 2;}}
+	}
+
+	[TestFixture]
+	[Category("LLVMIgnore")] //FIXME: https://github.com/dotnet/runtime/issues/89190
+	public class JniValueMarshaler_NullableByte_ContractTests : JniValueMarshalerContractTests<byte?> {
+		protected   override    byte?   Value           {get {return (byte) 200;}}
 	}
 
 	[TestFixture]

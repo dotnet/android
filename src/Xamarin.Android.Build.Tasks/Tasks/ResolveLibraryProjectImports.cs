@@ -71,8 +71,6 @@ namespace Xamarin.Android.Tasks
 		internal const string OriginalFile = "OriginalFile";
 		internal const string AndroidSkipResourceProcessing = "AndroidSkipResourceProcessing";
 
-		internal const string ResourceDirectoryArchive = "ResourceDirectoryArchive";
-
 		internal const string NuGetPackageVersion = "NuGetPackageVersion";
 
 		internal const string NuGetPackageId = "NuGetPackageId";
@@ -80,7 +78,6 @@ namespace Xamarin.Android.Tasks
 		internal static readonly string [] KnownMetadata = new [] {
 			OriginalFile,
 			AndroidSkipResourceProcessing,
-			ResourceDirectoryArchive,
 			NuGetPackageId,
 			NuGetPackageVersion,
 		};
@@ -121,12 +118,14 @@ namespace Xamarin.Android.Tasks
 				.Select (s => new TaskItem (Path.GetFullPath (Path.Combine (s.ItemSpec, "../..")) + ".stamp"))
 				.ToArray ();
 
-			foreach (var directory in ResolvedResourceDirectories) {
-				Files.SetDirectoryWriteable (directory.ItemSpec);
-			}
+			if (OS.IsWindows) {
+				foreach (var directory in ResolvedResourceDirectories) {
+					Files.SetDirectoryWriteable (directory.ItemSpec);
+				}
 
-			foreach (var directory in ResolvedAssetDirectories) {
-				Files.SetDirectoryWriteable (directory.ItemSpec);
+				foreach (var directory in ResolvedAssetDirectories) {
+					Files.SetDirectoryWriteable (directory.ItemSpec);
+				}
 			}
 
 			if (!CacheFile.IsNullOrEmpty ()) {
@@ -204,7 +203,6 @@ namespace Xamarin.Android.Tasks
 				string importsDir = Path.Combine (outDirForDll, ImportsDirectory);
 				string nativeimportsDir = Path.Combine (outDirForDll, NativeImportsDirectory);
 				string resDir = Path.Combine (importsDir, "res");
-				string resDirArchive = Path.Combine (resDir, "..", "res.zip");
 				string assetsDir = Path.Combine (importsDir, "assets");
 				string nuGetPackageId = assemblyItem.GetMetadata (NuGetPackageId) ?? "";
 				string nuGetPackageVersion = assemblyItem.GetMetadata (NuGetPackageVersion) ?? "";
@@ -229,7 +227,6 @@ namespace Xamarin.Android.Tasks
 					if (Directory.Exists (resDir)) {
 						var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 							[OriginalFile] = assemblyPath,
-							[ResourceDirectoryArchive] = Path.GetFullPath (resDirArchive),
 							[NuGetPackageId] = nuGetPackageId,
 							[NuGetPackageVersion] = nuGetPackageVersion,
 						});
@@ -327,10 +324,8 @@ namespace Xamarin.Android.Tasks
 							// which resulted in missing resource issue.
 							// Here we replaced copy with use of '-S' option and made it to work.
 							if (Directory.Exists (resDir)) {
-								CreateResourceArchive (resDir, resDirArchive);
 								var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 									[OriginalFile] = assemblyPath,
-									[ResourceDirectoryArchive] = Path.GetFullPath (resDirArchive),
 									[NuGetPackageId] = nuGetPackageId,
 									[NuGetPackageVersion] = nuGetPackageVersion,
 								});
@@ -378,7 +373,6 @@ namespace Xamarin.Android.Tasks
 				string outDirForDll = Path.Combine (OutputImportDirectory, aarIdentityName);
 				string importsDir = Path.Combine (outDirForDll, ImportsDirectory);
 				string resDir = Path.Combine (importsDir, "res");
-				string resDirArchive = Path.Combine (resDir, "..", "res.zip");
 				string rTxt = Path.Combine (importsDir, "R.txt");
 				string assetsDir = Path.Combine (importsDir, "assets");
 				string proguardFile = Path.Combine (importsDir, "proguard.txt");
@@ -410,7 +404,6 @@ namespace Xamarin.Android.Tasks
 						resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 							[OriginalFile] = Path.GetFullPath (aarFile.ItemSpec),
 							[AndroidSkipResourceProcessing] = skipProcessing,
-							[ResourceDirectoryArchive] = Path.GetFullPath (resDirArchive),
 							[NuGetPackageId] = nuGetPackageId,
 							[NuGetPackageVersion] = nuGetPackageVersion,
 						}));
@@ -466,8 +459,6 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 				if (Directory.Exists (resDir) || File.Exists (rTxt)) {
-					if (Directory.Exists (resDir))
-						CreateResourceArchive (resDir, resDirArchive);
 					var skipProcessing = aarFile.GetMetadata (AndroidSkipResourceProcessing);
 					if (skipProcessing.IsNullOrEmpty ()) {
 						skipProcessing = "True";
@@ -475,7 +466,6 @@ namespace Xamarin.Android.Tasks
 					resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 						[OriginalFile] = aarFullPath,
 						[AndroidSkipResourceProcessing] = skipProcessing,
-						[ResourceDirectoryArchive] = Path.GetFullPath (resDirArchive),
 						[NuGetPackageId] = nuGetPackageId,
 						[NuGetPackageVersion] = nuGetPackageVersion,
 					}));
@@ -494,16 +484,6 @@ namespace Xamarin.Android.Tasks
 					}));
 				}
 			}
-		}
-
-		void CreateResourceArchive (string resDir, string outputFile)
-		{
-			var fileMode = File.Exists (outputFile) ? FileMode.Open : FileMode.CreateNew;
-			Files.ArchiveZipUpdate (outputFile, f => {
-				using (var zip = new ZipArchiveEx (f, fileMode)) {
-					zip.AddDirectory (resDir, "res");
-				}
-			});
 		}
 
 		static void AddJar (IDictionary<string, ITaskItem> jars, string destination, string path, string? originalFile = null, string? nuGetPackageId = null, string? nuGetPackageVersion = null)

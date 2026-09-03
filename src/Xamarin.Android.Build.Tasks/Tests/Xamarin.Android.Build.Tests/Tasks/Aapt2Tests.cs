@@ -185,10 +185,11 @@ namespace Xamarin.Android.Build.Tests
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
-		public void Aapt2Compile ()
+		[TestCase ("Aapt2Compile")]
+		[TestCase ("Aapt2CompileÜmläüt")]
+		public void Aapt2Compile (string directoryName)
 		{
-			var path = Path.Combine (Root, "temp", "Aapt2Compile");
+			var path = Path.Combine (Root, "temp", directoryName);
 			Directory.CreateDirectory (path);
 			var resPath = Path.Combine (path, "res");
 			var archivePath = Path.Combine(path, "flata");
@@ -220,6 +221,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var apk = ZipHelper.OpenZip (flatArchive)) {
 				Assert.AreEqual (2, apk.EntryCount, $"{flatArchive} should have 2 entries.");
 			}
+			Assert.AreEqual (0, Directory.GetFiles (path, "*.zip", SearchOption.AllDirectories).Length, "Temporary resource archives should have been deleted.");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 

@@ -399,6 +399,9 @@ for Java `native` method registration.
 
 This property is False by default.
 
+This property cannot be set to `true` when
+[`$(PublishReadyToRun)`](#publishreadytorun) is `true`.
+
 Added in .NET 8.
 
 ## AndroidEnableMultiDex
@@ -1869,6 +1872,11 @@ For Android applications that use CoreCLR, this property defaults to
 `Debug` configuration. ReadyToRun does not apply when using Mono or
 NativeAOT.
 
+ReadyToRun requires trimming. If `$(PublishTrimmed)` is not `true`,
+.NET for Android disables `PublishReadyToRun` and
+[`$(PublishReadyToRunComposite)`](#publishreadytoruncomposite) and emits
+warning XA0119.
+
 ReadyToRun compilation is composite by default. See
 [`$(PublishReadyToRunComposite)`](#publishreadytoruncomposite).
 .NET MAUI also uses partial ReadyToRun with default MIBC profiles. See
@@ -1889,6 +1897,8 @@ time.
 
 For Android applications that use CoreCLR, this property defaults to
 `true` when [`$(PublishReadyToRun)`](#publishreadytorun) is `true`.
+ReadyToRun, including composite ReadyToRun, requires
+`$(PublishTrimmed)` to be `true`.
 
 ## RunAOTCompilation
 

@@ -45,8 +45,17 @@ about the various Microsoft.Android workloads.
     </ReplaceFileContents>
 
     <ItemGroup>
+      <_AndroidPreviewPlatformId
+          Include="@(AndroidBuildApiLevel)"
+          Condition=" '%(AndroidBuildApiLevel.Unstable)' == 'true' "
+      />
+    </ItemGroup>
+    <PropertyGroup>
+      <_AndroidPreviewPlatformIds>@(_AndroidPreviewPlatformId->'%(PlatformId)', ',')</_AndroidPreviewPlatformIds>
+    </PropertyGroup>
+    <ItemGroup>
       <_WorkloadDepProp Include="AndroidLatestStablePlatformId=$(AndroidLatestStablePlatformId)" />
-      <_WorkloadDepProp Include="AndroidLatestUnstablePlatformId=$(AndroidLatestUnstablePlatformId)" />
+      <_WorkloadDepProp Include="AndroidPreviewPlatformIds=$(_AndroidPreviewPlatformIds)" />
       <_WorkloadDepProp Include="DotNetStableTargetFramework=$(DotNetStableTargetFramework)" />
       <_WorkloadDepProp Include="MicrosoftAndroidSdkOutDir=$(MicrosoftAndroidSdkOutDir)" />
       <_WorkloadDepProp Include="MonoOptionsVersion=$(MonoOptionsVersion)" />

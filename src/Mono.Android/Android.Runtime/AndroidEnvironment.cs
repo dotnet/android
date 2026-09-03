@@ -219,24 +219,6 @@ namespace Android.Runtime {
 				.JavaCast<Java.Security.Cert.X509Certificate>()!;
 		}
 
-		// This is invoked by libmonodroid.so.
-		// DO NOT REMOVE
-		static void NotifyTimeZoneChanged ()
-		{
-			var thread            = Thread.CurrentThread;
-			var timeZoneClearInfo = new[]{
-				new { Description = "Thread.CurrentCulture.ClearCachedData()",    Method = (Action) thread.CurrentCulture.ClearCachedData },
-				new { Description = "Thread.CurrentUICulture.ClearCachedData()",  Method = (Action) thread.CurrentUICulture.ClearCachedData },
-			};
-			foreach (var clearInfo in timeZoneClearInfo) {
-				try {
-					clearInfo.Method ();
-				} catch (Exception e) {
-					Logger.Log (LogLevel.Warn, "MonoAndroid", FormattableString.Invariant ($"Ignoring exception from {clearInfo.Description}: {e}"));
-				}
-			}
-		}
-
 		static void DetectCPUAndArchitecture (out ushort builtForCPU, out ushort runningOnCPU, out bool is64bit)
 		{
 			ushort built_for_cpu = 0;

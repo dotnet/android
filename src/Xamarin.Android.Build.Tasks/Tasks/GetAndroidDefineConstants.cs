@@ -41,12 +41,19 @@ namespace Xamarin.Android.Tasks
 			for (int i = 1; i <= apiLevel.Major; ++i) {
 				constants.Add (new TaskItem ($"__ANDROID_{i}__"));
 			}
-			// TODO: We're just going to assume that there is a minor release for every major release from API-36.1 onward…
-			for (int i = 36; i < apiLevel.Major; ++i) {
-				constants.Add (new TaskItem ($"__ANDROID_{i}_1__"));
+			// API-36 had only one minor release
+			if (36 < apiLevel.Major) {
+				constants.Add (new TaskItem ($"__ANDROID_36_1__"));
 			}
-			if (apiLevel.Minor != 0) {
-				constants.Add (new TaskItem ($"__ANDROID_{apiLevel.Major}_{apiLevel.Minor}__"));
+			// Assume no more than 4 "quarterly platform releases" per API level
+			for (int api = 37; api < apiLevel.Major; ++api) {
+				for (int minor = 1; minor <= 4; ++minor) {
+					constants.Add (new TaskItem ($"__ANDROID_{api}_{minor}__"));
+				}
+			}
+			// For current API level, minor releases from 1 through apiLevel.Minor
+			for (int minor = 1; minor <= apiLevel.Minor; ++minor) {
+				constants.Add (new TaskItem ($"__ANDROID_{apiLevel.Major}_{minor}__"));
 			}
 
 			AndroidDefineConstants = constants.ToArray ();

@@ -2219,8 +2219,11 @@ public class ToolbarEx {
 				var ext = b.IsUnix ? "" : ".exe";
 				var text = $"TestMe.java(1,8): javac{ext} error JAVAC0000:  error: class, interface, or enum expected";
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, text), "TestMe.java(1,8) expected");
-				text = $"TestMe2.java(1,41): javac{ext} error JAVAC0000:  error: ';' expected";
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, text), "TestMe2.java(1,41) expected");
+				var expectedErrors = new [] {
+					$"TestMe2.java(1,41): javac{ext} error JAVAC0000:  error: ';' expected",
+					$"TestMe2.java(1,41): javac{ext} error JAVAC0000:  error: '{{' or ';' expected",
+				};
+				Assert.IsTrue (expectedErrors.Any (error => StringAssertEx.ContainsText (b.LastBuildOutput, error)), "TestMe2.java(1,41) expected");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
@@ -2300,8 +2303,9 @@ public class ToolbarEx {
 			}
 		}
 
-		[Test]
-		public void BuildDoesNotModifyNuGetPackageCache ()
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.MonoVM)]
+		public void BuildDoesNotModifyNuGetPackageCache (AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
@@ -2328,7 +2332,10 @@ public class ToolbarEx {
 					new Package { Id = "Humanizer.Core.es", Version = "2.14.1" },
 				},
 			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntime (runtime);
+			if (runtime == AndroidRuntime.MonoVM) {
+				proj.SetProperty ("_DisableCheckForUnsupportedMonoMobileRuntime", "true");
+			}
 			proj.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
 			proj.SetProperty (KnownProperties.PublishTrimmed, true.ToString ());
 			proj.MainActivity = proj.DefaultMainActivity
@@ -2379,21 +2386,6 @@ public class ToolbarEx {
 		// TODO: [TestCase (false, AndroidRuntime.NativeAOT)]
 		public void SimilarAndroidXAssemblyNames (bool publishTrimmed, AndroidRuntime runtime)
 		{
-			if (!publishTrimmed && runtime == AndroidRuntime.CoreCLR) {
-				// This currently fails with the following exception:
-				//
-				// error XALNS7015: System.NotSupportedException: Writing mixed-mode assemblies is not supported
-				//  at Mono.Cecil.ModuleWriter.Write(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
-				//  at Mono.Cecil.ModuleWriter.WriteModule(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
-				//  at Mono.Cecil.ModuleDefinition.Write(String fileName, WriterParameters parameters)
-				//  at Mono.Cecil.AssemblyDefinition.Write(String fileName, WriterParameters parameters)
-				//  at Xamarin.Android.Tasks.SaveChangedAssemblyStep.ProcessAssembly(AssemblyDefinition assembly, StepContext context) in src/Xamarin.Android.Build.Tasks/Tasks/AssemblyModifierPipeline.cs:line 197
-				//  at Xamarin.Android.Tasks.AssemblyPipeline.Run(AssemblyDefinition assembly, StepContext context) in src/Xamarin.Android.Build.Tasks/Utilities/AssemblyPipeline.cs:line 26
-				//  at Xamarin.Android.Tasks.AssemblyModifierPipeline.RunPipeline(AssemblyPipeline pipeline, ITaskItem source, ITaskItem destination) in src/Xamarin.Android.Build.Tasks/Tasks/AssemblyModifierPipeline.cs:line 175
-				Assert.Ignore ("CoreCLR: fails because of a Mono.Cecil lack of support");
-				return;
-			}
-
 			bool aotAssemblies = runtime == AndroidRuntime.MonoVM && publishTrimmed;
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
@@ -2408,6 +2400,24 @@ public class ToolbarEx {
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "AndroidX.CustomView.PoolingContainer.PoolingContainer.IsPoolingContainer (null);");
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+		}
+
+		[Test]
+		public void FixAbstractMethodsOnReadyToRunAssembly ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				PackageReferences = {
+					new Package { Id = "Xamarin.AndroidX.CustomView", Version = "1.1.0.17" },
+					new Package { Id = "Xamarin.AndroidX.CustomView.PoolingContainer", Version = "1.0.0.4" },
+				}
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty (KnownProperties.PublishTrimmed, false.ToString ());
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "AndroidX.CustomView.PoolingContainer.PoolingContainer.IsPoolingContainer (null);");
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			StringAssertEx.Contains ("warning XA0119: ReadyToRun has been disabled because trimming is disabled.", builder.LastBuildOutput);
 		}
 
 		[Test]

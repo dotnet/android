@@ -13,14 +13,15 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
     <MicrosoftNETCoreAppRefPackageVersion>@MICROSOFT_NETCORE_APP_REF_PACKAGE_VERSION@</MicrosoftNETCoreAppRefPackageVersion>
     <_AndroidLatestStableApiLevel>@ANDROID_LATEST_STABLE_API_LEVEL@</_AndroidLatestStableApiLevel>
     <_AndroidLatestUnstableApiLevel>@ANDROID_LATEST_UNSTABLE_API_LEVEL@</_AndroidLatestUnstableApiLevel>
+    <_AndroidSupportedApiLevels>,@ANDROID_API_LEVELS@,</_AndroidSupportedApiLevels>
   </PropertyGroup>
   <PropertyGroup>
     <_AndroidTargetingPackId Condition="$(TargetPlatformVersion.EndsWith('.0'))">$(TargetPlatformVersion.Substring(0, $(TargetPlatformVersion.LastIndexOf('.0'))))</_AndroidTargetingPackId>
     <_AndroidTargetingPackId Condition="'$(_AndroidTargetingPackId)' == ''">$(TargetPlatformVersion)</_AndroidTargetingPackId>
-    <_AndroidErrorOnTargetPlatformVersion Condition=" '$(_AndroidTargetingPackId)' != '$(_AndroidLatestStableApiLevel)' and '$(_AndroidTargetingPackId)' != '$(_AndroidLatestUnstableApiLevel)' ">$(_AndroidTargetingPackId)</_AndroidErrorOnTargetPlatformVersion>
-    <_AndroidTargetingPackId Condition=" '$(_AndroidTargetingPackId)' != '$(_AndroidLatestStableApiLevel)' and '$(_AndroidTargetingPackId)' != '$(_AndroidLatestUnstableApiLevel)' ">$(_AndroidLatestStableApiLevel)</_AndroidTargetingPackId>
+    <_AndroidErrorOnTargetPlatformVersion Condition="!$(_AndroidSupportedApiLevels.Contains(',$(_AndroidTargetingPackId),'))">$(_AndroidTargetingPackId)</_AndroidErrorOnTargetPlatformVersion>
+    <_AndroidTargetingPackId Condition="!$(_AndroidSupportedApiLevels.Contains(',$(_AndroidTargetingPackId),'))">$(_AndroidLatestStableApiLevel)</_AndroidTargetingPackId>
     <_AndroidManagedRuntimePackId Condition=" '$(_AndroidManagedRuntimePackId)' == '' ">$(_AndroidTargetingPackId)</_AndroidManagedRuntimePackId>
-    <_AndroidManagedRuntimePackId Condition=" '$(_AndroidManagedRuntimePackId)' != '$(_AndroidLatestStableApiLevel)' and '$(_AndroidManagedRuntimePackId)' != '$(_AndroidLatestUnstableApiLevel)' ">$(_AndroidLatestStableApiLevel)</_AndroidManagedRuntimePackId>
+    <_AndroidManagedRuntimePackId Condition="!$(_AndroidSupportedApiLevels.Contains(',$(_AndroidManagedRuntimePackId),'))">$(_AndroidLatestStableApiLevel)</_AndroidManagedRuntimePackId>
     <_AndroidRuntimePackId Condition=" '$(_AndroidRuntimePackId)' == '' ">$(_AndroidLatestStableApiLevel)</_AndroidRuntimePackId>
     <_AndroidRuntimePackRuntime Condition=" '$(_AndroidRuntimePackRuntime)' == '' ">Mono</_AndroidRuntimePackRuntime>
   </PropertyGroup>

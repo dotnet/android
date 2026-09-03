@@ -633,9 +633,10 @@ namespace Android.Runtime {
 
 			var requestedType = targetType ?? typeof (T);
 			if (JavaConvert.IsGenericDictionary (requestedType)) {
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-				return (T) JavaConvert.FromObjectReference (ref reference, options, requestedType);
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+				var value = JavaConvert.FromObjectReference (ref reference, options, requestedType);
+				if (value is null)
+					return default;
+				return (T) value;
 			}
 
 			return base.GetValueCore<T> (ref reference, options, targetType);
@@ -660,6 +661,14 @@ namespace Android.Runtime {
 			var peer        = Java.Interop.TypeManager.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer, targetType) as IJavaPeerable;
 			JniObjectReference.Dispose (ref reference, options);
 			return peer;
+		}
+
+		protected override object? CreateNonArrayListValue (
+				ref JniObjectReference reference,
+				JniObjectReferenceOptions options,
+				Type targetType)
+		{
+			return JavaConvert.FromObjectReference (ref reference, options, targetType);
 		}
 
 		public override void AddPeer (IJavaPeerable value)

@@ -62,6 +62,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool DiagnosticLogging { get; set; } = false;
 
+		public bool FastDeploySkipCleanup { get; set; } = false;
+
 		public string UserID { get; set; }
 
 		public bool IsTestOnly { get; set; }
@@ -210,12 +212,11 @@ namespace Xamarin.Android.Tasks
 				await RemoveOverrideDirectory ();
 			}
 
+			bool packageFileOutOfDate = !string.IsNullOrEmpty (PackageFile) &&
+				(packageInfo.InternalPath.IndexOf ("unknown", StringComparison.OrdinalIgnoreCase) >= 0 || ReInstall || IsPackageFileOutOfDate ());
 			if (ReInstall && !string.IsNullOrEmpty (PackageFile)) {
 				await UninstallPackage (PackageName, preserveData: PreserveUserData, user: UserID);
 			}
-
-			bool packageFileOutOfDate = !string.IsNullOrEmpty (PackageFile) &&
-				(packageInfo.InternalPath.IndexOf ("unknown", StringComparison.OrdinalIgnoreCase) >= 0 || ReInstall || IsPackageFileOutOfDate ());
 
 			if (packageFileOutOfDate) {
 				try {
@@ -223,6 +224,9 @@ namespace Xamarin.Android.Tasks
 				} catch (Exception ex) {
 					LogFastDeploy2Error (GetErrorCode (ex), ex.ToString ());
 					return;
+				}
+				if (!FastDeploySkipCleanup) {
+					await CleanupRemoteStagingDirectories ();
 				}
 				if (!EmbedAssembliesIntoApk && packageInfo.InternalPath.IndexOf ("unknown", StringComparison.OrdinalIgnoreCase) >= 0) {
 					packageInfo.InternalPath = null;

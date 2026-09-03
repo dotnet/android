@@ -8,6 +8,8 @@ public static partial class CSharpCodeRefactoringVerifier<TCodeRefactoring>
 	{
 		public Test ()
 		{
+			ReferenceAssemblies = CSharpVerifierHelper.DefaultReferenceAssemblies;
+
 			SolutionTransforms.Add ((solution, projectId) => {
 				var compilationOptions = solution.GetProject (projectId).CompilationOptions;
 				compilationOptions = compilationOptions.WithSpecificDiagnosticOptions (

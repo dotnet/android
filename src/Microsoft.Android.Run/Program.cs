@@ -24,6 +24,9 @@ int ctrlCRequested = 0;
 string? logcatArgs = null;
 bool isDotnetTestMode = false;
 string? dotnetTestPipe = null;
+bool waitForExit = true;
+List<PortMapping> forwardPorts = [];
+List<PortMapping> reversePorts = [];
 
 try {
 	return await RunAsync (args);
@@ -82,6 +85,15 @@ async Task<int> RunAsync (string[] args)
 		{ "logcat-args=",
 			"Extra {ARGUMENTS} to pass to 'adb logcat' (e.g., 'monodroid-assembly:S' to silence a tag).",
 			v => logcatArgs = v },
+		{ "no-wait",
+			"Launch the application without waiting for it to exit or streaming logcat.",
+			v => waitForExit = v == null },
+		{ "forward-port=",
+			"Forward a TCP port from the host to the device in {MAPPING} format (HOST_PORT:DEVICE_PORT). May be repeated.",
+			v => forwardPorts.Add (ParsePortMapping (v, "--forward-port")) },
+		{ "reverse-port=",
+			"Reverse a TCP port from the device to the host in {MAPPING} format (DEVICE_PORT:HOST_PORT). May be repeated.",
+			v => reversePorts.Add (ParsePortMapping (v, "--reverse-port")) },
 		{ "version",
 			"Show version information and exit.",
 			v => showVersion = v != null },
@@ -189,6 +201,9 @@ async Task<int> RunAsync (string[] args)
 			Console.WriteLine ($"dotnet test mode (pipe: {dotnetTestPipe})");
 	}
 
+	if (!await ConfigurePortMappingsAsync ())
+		return 1;
+
 	// Set up Ctrl+C handler
 	Console.CancelKeyPress += OnCancelKeyPress;
 
@@ -226,7 +241,10 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 {
 	// '-w' waits for the run to complete; '-r' prints raw INSTRUMENTATION_STATUS
 	// blocks as they arrive instead of buffering everything until the end.
-	var cmdArgs = new List<string> { "shell", "am", "instrument", "-w", "-r" };
+	var cmdArgs = new List<string> { "shell", "am", "instrument" };
+	if (waitForExit)
+		cmdArgs.Add ("-w");
+	cmdArgs.Add ("-r");
 	if (!string.IsNullOrEmpty (deviceUserId)) {
 		cmdArgs.Add ("--user");
 		cmdArgs.Add (deviceUserId);
@@ -263,6 +281,10 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 	instrumentProcess.Start ();
 	instrumentProcess.BeginOutputReadLine ();
 	instrumentProcess.BeginErrorReadLine ();
+	if (!waitForExit) {
+		await instrumentProcess.WaitForExitAsync (cts.Token);
+		return instrumentProcess.ExitCode == 0 ? 0 : 1;
+	}
 
 	// Also stream logcat in the background, which is where Console output from the
 	// app ends up. The app process does not exist yet when `am instrument` starts,
@@ -493,6 +515,8 @@ async Task<int> RunAppAsync ()
 	// 1. Start the app
 	if (!await StartAppAsync ())
 		return 1;
+	if (!waitForExit)
+		return 0;
 
 	// 2. Get the PID
 	logcatPid = await GetAppPidAsync ();
@@ -518,7 +542,8 @@ async Task<bool> StartAppAsync ()
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
 	// Device preparation is best effort; am start must run and determine the shell exit code.
 	var wakeDeviceCommand = wakeDevice ? "input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard; " : "";
-	var cmdArgs = $"shell {wakeDeviceCommand}am start -S -W{userArg} -n \"{package}/{activity}\"";
+	var waitArg = waitForExit ? " -W" : "";
+	var cmdArgs = $"shell {wakeDeviceCommand}am start -S{waitArg}{userArg} -n \"{package}/{activity}\"";
 	var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget, cmdArgs, cts.Token, verbose);
 	if (exitCode != 0) {
 		Console.Error.WriteLine ($"Error: Failed to start app: {error}");
@@ -529,6 +554,43 @@ async Task<bool> StartAppAsync ()
 		Console.WriteLine (output);
 
 	return true;
+}
+
+async Task<bool> ConfigurePortMappingsAsync ()
+{
+	foreach (var port in forwardPorts) {
+		var (forwardExitCode, _, forwardError) = await AdbHelper.RunAsync (
+			adbPath, adbTarget, $"forward tcp:{port.Source} tcp:{port.Destination}", cts.Token, verbose);
+		if (forwardExitCode != 0) {
+			Console.Error.WriteLine ($"Error: Failed to forward port {port.Source}:{port.Destination}: {forwardError}");
+			return false;
+		}
+	}
+
+	foreach (var port in reversePorts) {
+		var (reverseExitCode, _, reverseError) = await AdbHelper.RunAsync (
+			adbPath, adbTarget, $"reverse tcp:{port.Source} tcp:{port.Destination}", cts.Token, verbose);
+		if (reverseExitCode != 0) {
+			Console.Error.WriteLine ($"Error: Failed to reverse port {port.Source}:{port.Destination}: {reverseError}");
+			return false;
+		}
+	}
+
+	return true;
+}
+
+PortMapping ParsePortMapping (string value, string option)
+{
+	var ports = value.Split (':');
+	if (ports.Length != 2 ||
+			!int.TryParse (ports [0], out int source) ||
+			!int.TryParse (ports [1], out int destination) ||
+			source is < 1 or > 65535 ||
+			destination is < 1 or > 65535) {
+		throw new OptionException ("Expected two TCP ports between 1 and 65535 in SOURCE:DESTINATION format.", option);
+	}
+
+	return new PortMapping (source, destination);
 }
 
 async Task<int?> GetAppPidAsync ()
@@ -691,3 +753,5 @@ string? FindAdbPath ()
 		return (null, null);
 	}
 }
+
+readonly record struct PortMapping (int Source, int Destination);

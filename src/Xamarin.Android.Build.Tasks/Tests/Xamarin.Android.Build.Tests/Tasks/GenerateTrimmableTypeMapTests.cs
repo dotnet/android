@@ -101,13 +101,76 @@ namespace Xamarin.Android.Build.Tests {
 				.First (p => p.Contains ("_Mono.Android.TypeMap.dll"));
 			var firstWriteTime = File.GetLastWriteTimeUtc (typeMapPath);
 
-			// Second run: same inputs — outputs should not be rewritten (CopyIfStreamChanged)
-			var task2 = CreateTask (assemblies, outputDir, javaDir);
+			// Second run: the persisted model fingerprint should avoid PE emission entirely.
+			var messages = new List<BuildMessageEventArgs> ();
+			var task2 = CreateTask (assemblies, outputDir, javaDir, messages: messages);
 			Assert.IsTrue (task2.Execute (), "Second run should succeed.");
 
 			var secondWriteTime = File.GetLastWriteTimeUtc (typeMapPath);
 			Assert.AreEqual (firstWriteTime, secondWriteTime,
 				"Typemap assembly should NOT be rewritten when content hasn't changed.");
+			Assert.IsTrue (messages.Any (message => message.Message?.Contains ("_Mono.Android.TypeMap: unchanged, skipping emission", StringComparison.Ordinal) == true),
+				"Second run should skip typemap PE emission based on the persisted model fingerprint.");
+		}
+
+		[Test]
+		public void Execute_MissingTypeMapAssembly_RegeneratesWithMatchingFingerprint ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			var assemblies = new [] { monoAndroidItem };
+			var task1 = CreateTask (assemblies, outputDir, javaDir);
+			Assert.IsTrue (task1.Execute (), "First run should succeed.");
+
+			var typeMapPath = task1.GeneratedAssemblies
+				.Select (i => i.ItemSpec)
+				.First (p => p.Contains ("_Mono.Android.TypeMap.dll"));
+			File.Delete (typeMapPath);
+
+			var messages = new List<BuildMessageEventArgs> ();
+			var task2 = CreateTask (assemblies, outputDir, javaDir, messages: messages);
+			Assert.IsTrue (task2.Execute (), "Second run should recover the missing typemap assembly.");
+
+			FileAssert.Exists (typeMapPath, "A missing typemap assembly should be regenerated even when its persisted fingerprint matches.");
+			Assert.IsTrue (messages.Any (message => message.Message?.Contains ("_Mono.Android.TypeMap: changed, generating", StringComparison.Ordinal) == true),
+				"A missing typemap assembly should be reported as changed rather than unchanged.");
+		}
+
+		[Test]
+		public void ReadTypeMapFingerprints_UnreadableCache_Regenerates ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+			var fingerprintsFile = Path.Combine (outputDir, "typemap-fingerprints.txt");
+			Directory.CreateDirectory (outputDir);
+			File.WriteAllText (fingerprintsFile, "_Existing.TypeMap\tfingerprint");
+
+			using var fingerprintsLock = File.Open (fingerprintsFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+			var task = CreateTask ([], outputDir, javaDir);
+
+			Assert.IsEmpty (task.ReadTypeMapFingerprints (), "An unreadable incremental cache should regenerate every typemap assembly.");
+		}
+
+		[Test]
+		public void ReadTypeMapFingerprints_InvalidCache_Regenerates ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+			Directory.CreateDirectory (outputDir);
+			File.WriteAllText (Path.Combine (outputDir, "typemap-fingerprints.txt"), "invalid");
+			var task = CreateTask ([], outputDir, javaDir);
+
+			Assert.IsEmpty (task.ReadTypeMapFingerprints (), "An invalid incremental cache should regenerate every typemap assembly.");
 		}
 
 		[Test]
@@ -296,6 +359,9 @@ namespace Xamarin.Android.Build.Tests {
 				    <Node Id="4" Label="Type metadata: [Xamarin.AndroidX.Activity]AndroidX.Activity.Result.Contract.ActivityResultContracts+TakePicture" />
 				    <Node Id="5" Label="Unrelated node" />
 				  </Nodes>
+				  <Links>
+				    <Node Id="6" Label="Type metadata: [Other.Assembly]Other.Type" />
+				  </Links>
 				</DirectedGraph>
 				""");
 			File.WriteAllText (acwMapFile, """
@@ -404,6 +470,7 @@ namespace Xamarin.Android.Build.Tests {
 				OutputDirectory = outputDir,
 				JavaSourceOutputDirectory = javaDir,
 				TargetFrameworkVersion = tfv,
+				TypeMapFingerprintsFile = Path.Combine (outputDir, "typemap-fingerprints.txt"),
 			};
 		}
 

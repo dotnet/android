@@ -1015,6 +1015,15 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA1048", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;AndroidEnableMarshalMethods&apos; and &apos;PublishReadyToRun&apos; MSBuild properties cannot both be set to &apos;true&apos;. Set one property to &apos;false&apos;..
+        /// </summary>
+        public static string XA1049 {
+            get {
+                return ResourceManager.GetString("XA1049", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released..
@@ -1487,6 +1496,15 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The Java callable wrapper code generation target &apos;{0}&apos; is no longer supported. The &apos;_AndroidJcwCodegenTarget&apos; property only supports &apos;XAJavaInterop1&apos;; &apos;XamarinAndroid&apos; and &apos;JavaInterop1&apos; are not supported..
+        /// </summary>
+        public static string XA4240 {
+            get {
+                return ResourceManager.GetString("XA4240", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Java dependency &apos;{0}&apos; is not satisfied..
         /// </summary>

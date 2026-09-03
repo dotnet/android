@@ -24,13 +24,12 @@
     <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">37</AndroidLatestStableApiLevel>
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">37.0</AndroidLatestStablePlatformId>
     <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v17.0</AndroidLatestStableFrameworkVersion>
-    <!-- If there is a second *stable* API level (e.g. 38.1 alongside 38), set it here:
-    <AndroidLatestStableApiLevel2 Condition="'$(AndroidLatestStableApiLevel2)' == ''">38.1</AndroidLatestStableApiLevel2>
-    -->
+    <!-- If there is a second *stable* API level (e.g. 38.1 alongside 38), set it here: -->
+    <AndroidLatestStableApiLevel2 Condition="'$(AndroidLatestStableApiLevel2)' == ''">37.1</AndroidLatestStableApiLevel2>
     <!-- *Latest* *unstable* API level binding that we support; this can be the same as *stable* -->
-    <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">37.1</AndroidLatestUnstableApiLevel>
-    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">37.1</AndroidLatestUnstablePlatformId>
-    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v17.1</AndroidLatestUnstableFrameworkVersion>
+    <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">37.2</AndroidLatestUnstableApiLevel>
+    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">37.2</AndroidLatestUnstablePlatformId>
+    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v17.2</AndroidLatestUnstableFrameworkVersion>
     <!-- The default API level used for $(TargetPlatformVersion) -->
     <AndroidDefaultTargetDotnetApiLevel Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' == '' ">$(AndroidLatestStableApiLevel)</AndroidDefaultTargetDotnetApiLevel>
     <!-- The API level and TargetFrameworkVersion for the default Mono.Android.dll build -->
@@ -43,6 +42,23 @@
     <Deterministic Condition=" '$(Deterministic)' == '' ">True</Deterministic>
     <LangVersion Condition=" '$(LangVersion)' == '' ">latest</LangVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <AndroidBuildApiLevel Include="37">
+      <PlatformId>37.0</PlatformId>
+      <FrameworkVersion>v17.0</FrameworkVersion>
+      <Unstable>false</Unstable>
+    </AndroidBuildApiLevel>
+    <AndroidBuildApiLevel Include="37.1">
+      <PlatformId>37.1</PlatformId>
+      <FrameworkVersion>v17.1</FrameworkVersion>
+      <Unstable>false</Unstable>
+    </AndroidBuildApiLevel>
+    <AndroidBuildApiLevel Include="37.2">
+      <PlatformId>37.2</PlatformId>
+      <FrameworkVersion>v17.2</FrameworkVersion>
+      <Unstable>true</Unstable>
+    </AndroidBuildApiLevel>
+  </ItemGroup>
   <PropertyGroup Condition=" '$(HostOS)' == '' ">
     <HostOS Condition="$([MSBuild]::IsOSPlatform('windows'))">Windows</HostOS>
     <HostOS Condition="$([MSBuild]::IsOSPlatform('linux'))">Linux</HostOS>
@@ -106,17 +122,18 @@
     <XAPlatformToolsHashMacOS>EE39AD5967E95C2A07F04DBCBDE96B1A0C916BA376096DB5D2F498B7727A5D1D</XAPlatformToolsHashMacOS>
     <XAPlatformToolsHashLinux>D230F13842F60F782A8645F9C813F8F845BF36089EA7289F28C48F17979313F1</XAPlatformToolsHashLinux>
     <XAPlatformToolsHashWindows>45F4D63113E895EBDE0C90F194099A4676B6AC653BD28D54314A9E022BBC1A99</XAPlatformToolsHashWindows>
-    <XACmdlineToolsHashMacOS>5673201E6F3869F418EEED3B5CB6C4BE7401502BD0AAE1B12A29D164D647A54E</XACmdlineToolsHashMacOS>
-    <XACmdlineToolsHashLinux>7EC965280A073311C339E571CD5DE778B9975026CFCBE79F2B1CDCB1E15317EE</XACmdlineToolsHashLinux>
-    <XACmdlineToolsHashWindows>98B565CB657B012DAE6794CEFC0F66AE1EFB4690C699B78A614B4A6A3505B003</XACmdlineToolsHashWindows>
+    <XACmdlineToolsHashMacOS>7E601C04E7173754B3D051A87BB4C3A8243C65A9D7BFA9356ED6499FB8953FA3</XACmdlineToolsHashMacOS>
+    <XACmdlineToolsHashMacOSArm64>58DA8F215781CC0208743E88B65AE259780C55E7EB40E50373D377CF369232D6</XACmdlineToolsHashMacOSArm64>
+    <XACmdlineToolsHashLinux>0877A1D048FE4A24EFE2EFF536CA4223F7ADEB58648BB81909D33C446918CFA8</XACmdlineToolsHashLinux>
+    <XACmdlineToolsHashWindows>E5885E2E59038C0778A85FC19F01DE7CE7C567C105553F7617B936B1E0E87B2B</XACmdlineToolsHashWindows>
     <XACmakeHashMacOS>130B80221ABDA282B96E3669CEF5DCCF0D916E988E08051F5DACCDD03360A1AC</XACmakeHashMacOS>
     <XACmakeHashLinux>46BDA18F0F3C28A55F88DA4BA05FEC21ABE3D9BCA0A78A8B18D444987B3DC817</XACmakeHashLinux>
     <XACmakeHashWindows>3A78AD82A3F3E9E613E255618D2ACF1B3C4BDB24EF6E1F9341227CF6FC492A89</XACmakeHashWindows>
     <!-- Android emulator: per-host zips (and per-arch on macOS). -->
-    <XAEmulatorHashMacOSx64>3029489D4B2F868DC5347AA27B1E52FB48D6D28ABD51278E3FBEC2EE73201EDF</XAEmulatorHashMacOSx64>
-    <XAEmulatorHashMacOSArm64>EDA85B9BFFD0926B7A01EA334A30AB41827F573CBDE8F7F97FCD8C5B38F039F6</XAEmulatorHashMacOSArm64>
-    <XAEmulatorHashLinux>58BFDF0572F06EC007A7287154CDC6B2EBFEA947D07A1E26A0F6B5E1A39E9191</XAEmulatorHashLinux>
-    <XAEmulatorHashWindows>9F2855BFE98E80728E61D45B0EA72BA22F64952C9330559FA4E2CD3698A32231</XAEmulatorHashWindows>
+    <XAEmulatorHashMacOSx64>C1A3890F95B8868198918FAD05FFCA16FA20404D93547BA545FF5A5867EE7005</XAEmulatorHashMacOSx64>
+    <XAEmulatorHashMacOSArm64>22530DE9363F34EA945ECB5CAD74523ABD4B615F27F3C1A9899EFB183EA9E144</XAEmulatorHashMacOSArm64>
+    <XAEmulatorHashLinux>95771E0AE431897B2A4BD2D97FA095F29A8B0624A7B216BAF529F9306161C266</XAEmulatorHashLinux>
+    <XAEmulatorHashWindows>5FF441F3B12ACE9B13E9CF96FB0007D233967718652A8110705E995AC47BFEB7</XAEmulatorHashWindows>
     <!-- API 29 system image used by the emulator: per-host (x86_64) and macOS arm64 (arm64-v8a). -->
     <XASystemImageHashMacOSx64>B5C3FDA1F4B4931C30518D342E4AD5F7464945E0CDCED3538D4FF2E12F7BF201</XASystemImageHashMacOSx64>
     <XASystemImageHashMacOSArm64>7FD1610E16A69AC2E202278E82077DE134CE404FE099D872019F69F3A340ACDD</XASystemImageHashMacOSArm64>
@@ -125,9 +142,12 @@
     <!-- SDK build dependencies (host-agnostic single zip each). -->
     <XAAndroidM2RepositoryHash>A3F91808DCE50C1717737DE90C18479ED3A78B147E06985247D138E7AB5123D0</XAAndroidM2RepositoryHash>
     <XAAndroidDocsHash>68DB2690CB92E4EE5373AC9B792642C90717D8F417D83ECCEA48781171B3182A</XAAndroidDocsHash>
-    <XAAndroidSourcesHash>A853F452B8BA94933EB56ED4E0F622991F9D6DE6E0AC19923AA47414D79B9129</XAAndroidSourcesHash>
+    <XAAndroidSourcesHash37_0>A853F452B8BA94933EB56ED4E0F622991F9D6DE6E0AC19923AA47414D79B9129</XAAndroidSourcesHash37_0>
+    <XAAndroidSourcesHash37_1>F63736E27B0D283298116DA8BCE2C024DE28C7E4081044B30716FCB6E0FA13F1</XAAndroidSourcesHash37_1>
+    <XAAndroidSourcesHash37_2>9D637C3AF6654A2F1B696B3D19C54BB77E38DF2B0106116934703F314B3D4E84</XAAndroidSourcesHash37_2>
+    <XAAndroidSdkLicenseHash>24333f8a63b6825ea9c5514f83c2829b004d1fee</XAAndroidSdkLicenseHash>
     <!-- Android NDK: per-host zips. Use a private property name; the public
-         $(AndroidNdkVersion) is set to the pkg revision in Common.props.in. -->
+         $(AndroidNdkVersion) is set in Xamarin.Installer.Common.props. -->
     <_XAAndroidNdkRelease>28c</_XAAndroidNdkRelease>
     <_XAAndroidNdkPkgRevision>28.2.13676358</_XAAndroidNdkPkgRevision>
     <XAAndroidNdkHashMacOS>0D4599E8BBF1A1668A0D51A541729B2246360F350018A2081D0B302DBB594F2A</XAAndroidNdkHashMacOS>
@@ -138,11 +158,11 @@
     <XABinutilsVersion Condition="'$(XABinutilsVersion)' == ''">L_18.1.6-8.0.0-1</XABinutilsVersion>
     <XABinutilsHash Condition="'$(XABinutilsHash)' == ''">5394EA6C411DA3A08BF0E6A87E1DD1B98BD2562B896C0CACD18E29E2FD4C0660</XABinutilsHash>
     <!-- Microsoft OpenJDK: https://learn.microsoft.com/en-us/java/openjdk/download -->
-    <MicrosoftOpenJDKVersion Condition="'$(MicrosoftOpenJDKVersion)' == ''">21.0.8</MicrosoftOpenJDKVersion>
-    <MicrosoftOpenJDKFolder Condition="'$(MicrosoftOpenJDKFolder)' == ''">jdk-21</MicrosoftOpenJDKFolder>
-    <MicrosoftOpenJDKRootDirName Condition="'$(MicrosoftOpenJDKRootDirName)' == ''">jdk-21.0.8+9</MicrosoftOpenJDKRootDirName>
+    <MicrosoftOpenJDKVersion Condition="'$(MicrosoftOpenJDKVersion)' == ''">25.0.4.1</MicrosoftOpenJDKVersion>
+    <MicrosoftOpenJDKFolder Condition="'$(MicrosoftOpenJDKFolder)' == ''">jdk-25</MicrosoftOpenJDKFolder>
+    <MicrosoftOpenJDKRootDirName Condition="'$(MicrosoftOpenJDKRootDirName)' == ''">jdk-25.0.4.1+1</MicrosoftOpenJDKRootDirName>
     <JavaSdkVersion Condition=" '$(JavaSdkVersion)' == '' ">$(MicrosoftOpenJDKVersion)</JavaSdkVersion>
-    <MinimumSupportedJavaSdkVersion Condition=" '$(MinimumSupportedJavaSdkVersion)' == '' ">17.0</MinimumSupportedJavaSdkVersion>
+    <MinimumSupportedJavaSdkVersion Condition=" '$(MinimumSupportedJavaSdkVersion)' == '' ">21.0</MinimumSupportedJavaSdkVersion>
     <JavaSdkDirectory Condition=" '$(JavaSdkDirectory)' == '' ">$(AndroidToolchainDirectory)\$(MicrosoftOpenJDKFolder)</JavaSdkDirectory>
     <_JdkExeExtension Condition=" '$(_JdkExeExtension)' == '' And '$(HostOS)' == 'Windows' ">.exe</_JdkExeExtension>
     <JavaPath Condition=" '$(JavaPath)' == '' ">$(JavaSdkDirectory)\bin\java$(_JdkExeExtension)</JavaPath>
@@ -180,12 +200,12 @@
     <AvdManagerToolExe Condition=" '$(AvdManagerToolExe)' == '' and '$(HostOS)' == 'Windows' ">avdmanager.bat</AvdManagerToolExe>
     <AndroidToolPath Condition=" '$(AndroidToolPath)' == '' ">$(AndroidSdkFullPath)\tools</AndroidToolPath>
     <AndroidToolsBinPath Condition=" '$(AndroidToolsBinPath)' == '' ">$(AndroidToolPath)\bin</AndroidToolsBinPath>
-    <CommandLineToolsFolder Condition=" '$(CommandLineToolsFolder)' == '' ">19.0</CommandLineToolsFolder>
-    <CommandLineToolsVersion Condition=" '$(CommandLineToolsVersion)' == '' ">13114758_latest</CommandLineToolsVersion>
+    <CommandLineToolsFolder Condition=" '$(CommandLineToolsFolder)' == '' ">23.0</CommandLineToolsFolder>
+    <CommandLineToolsVersion Condition=" '$(CommandLineToolsVersion)' == '' ">16111833_latest</CommandLineToolsVersion>
     <CommandLineToolsBinPath Condition=" '$(CommandLineToolsBinPath)' == '' ">$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)\bin</CommandLineToolsBinPath>
     <!-- Version numbers and PkgVersion are found in https://dl-ssl.google.com/android/repository/repository2-3.xml -->
-    <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">15004761</EmulatorVersion>
-    <EmulatorPkgRevision Condition=" '$(EmulatorPkgRevision)' == '' ">36.4.10</EmulatorPkgRevision>
+    <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">15917651</EmulatorVersion>
+    <EmulatorPkgRevision Condition=" '$(EmulatorPkgRevision)' == '' ">37.1.11</EmulatorPkgRevision>
     <EmulatorToolPath Condition=" '$(EmulatorToolPath)' == '' ">$(AndroidSdkFullPath)\emulator</EmulatorToolPath>
     <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' and '$(HostOS)' != 'Windows'  ">emulator</EmulatorToolExe>
     <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' and '$(HostOS)' == 'Windows'  ">emulator.exe</EmulatorToolExe>
@@ -261,7 +281,6 @@
     <_MonoRuntimeFlavorDirName>mono</_MonoRuntimeFlavorDirName>
     <_CLRRuntimeFlavorDirName>clr</_CLRRuntimeFlavorDirName>
     <_NativeAotRuntimeFlavorDirName>nativeaot</_NativeAotRuntimeFlavorDirName>
-    <_RuntimeRedistDirName>redist</_RuntimeRedistDirName>
   </PropertyGroup>
 
   <!-- Whenever there's a need to use a locally built CoreCLR, both .NET for Android and the

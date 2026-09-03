@@ -22,15 +22,27 @@ public abstract class FixtureTestBase
 		}
 	}
 
+	static string TestAttributeFixtureAssemblyPath {
+		get {
+			var testAssemblyDir = Path.GetDirectoryName (typeof (FixtureTestBase).Assembly.Location)
+				?? throw new InvalidOperationException ("Cannot determine test assembly directory");
+			var fixtureAssembly = Path.Combine (testAssemblyDir, "TestAttributeFixtures.dll");
+			Assert.True (File.Exists (fixtureAssembly),
+				$"TestAttributeFixtures.dll not found at {fixtureAssembly}. Ensure the TestAttributeFixtures project builds.");
+			return fixtureAssembly;
+		}
+	}
+
 	static readonly Lazy<(List<JavaPeerInfo> peers, AssemblyManifestInfo manifestInfo)> _cachedScanResult = new (() => {
 		using var scanner = new JavaPeerScanner ();
-		var peReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
-		var mdReader = peReader.GetMetadataReader ();
-		var assemblyName = mdReader.GetString (mdReader.GetAssemblyDefinition ().Name);
-		var assemblies = new [] { (assemblyName, peReader) };
+		using var peReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
+		using var attributePeReader = new PEReader (File.OpenRead (TestAttributeFixtureAssemblyPath));
+		var assemblies = new [] {
+			GetAssemblyInput (peReader),
+			GetAssemblyInput (attributePeReader),
+		};
 		var peers = scanner.Scan (assemblies);
 		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
-		peReader.Dispose ();
 		return (peers, manifestInfo);
 	});
 
@@ -40,10 +52,18 @@ public abstract class FixtureTestBase
 	{
 		using var scanner = new JavaPeerScanner (packageNamingPolicy);
 		using var peReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
-		var mdReader = peReader.GetMetadataReader ();
-		var assemblyName = mdReader.GetString (mdReader.GetAssemblyDefinition ().Name);
-		var assemblies = new [] { (assemblyName, peReader) };
+		using var attributePeReader = new PEReader (File.OpenRead (TestAttributeFixtureAssemblyPath));
+		var assemblies = new [] {
+			GetAssemblyInput (peReader),
+			GetAssemblyInput (attributePeReader),
+		};
 		return scanner.Scan (assemblies);
+	}
+
+	static (string Name, PEReader Reader) GetAssemblyInput (PEReader peReader)
+	{
+		var reader = peReader.GetMetadataReader ();
+		return (reader.GetString (reader.GetAssemblyDefinition ().Name), peReader);
 	}
 
 	private protected static AssemblyManifestInfo ScanAssemblyManifestInfo () => _cachedScanResult.Value.manifestInfo;

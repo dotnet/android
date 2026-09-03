@@ -1,7 +1,7 @@
 #include <chrono>
+#include <cstdlib>
 
 #include <runtime-base/android-system.hh>
-#include <runtime-base/strings.hh>
 #include <runtime-base/timing-internal.hh>
 #include <runtime-base/util.hh>
 
@@ -24,48 +24,58 @@ void FastTiming::really_initialize (bool log_immediately) noexcept
 	open_sequences.push (0);
 	open_sequences.pop ();
 
-	// Options in `debug.mono.timing` are relevant only when immediate logging is disabled
+	// Timing property options are relevant only when immediate logging is disabled
 	if (immediate_logging) {
 		return;
 	}
 
-	dynamic_local_property_string value;
-	if (AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_TIMING, value) != 0) {
-		internal_timing.parse_options (value);
+	char value [Constants::PROPERTY_VALUE_BUFFER_LEN];
+#if defined(XA_HOST_MONOVM)
+	const char *options = AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_TIMING.data (), value, sizeof (value));
+#else
+	const char *options = AndroidSystem::monodroid_get_system_property (Constants::DEBUG_DOTNET_TIMING.data (), value, sizeof (value));
+	if (options == nullptr) {
+		options = AndroidSystem::monodroid_get_system_property (Constants::LEGACY_DEBUG_MONO_TIMING.data (), value, sizeof (value));
+	}
+#endif
+	if (options != nullptr) {
+		internal_timing.parse_options (options);
 	}
 
 	log_write (
 		LOG_TIMING,
 		LogLevel::Info,
-		"[2/1] To get timing results, send the mono.android.app.DUMP_TIMING_DATA intent to the application"sv
+		"[2/1] To get timing results, send the mono.android.app.DUMP_TIMING_DATA intent to the application"
 	);
 }
 
-void FastTiming::parse_options (dynamic_local_property_string const& value) noexcept
+void FastTiming::parse_options (const char *options) noexcept
 {
-	if (value.length () == 0) {
-		return;
-	}
+	const char *param = options;
+	while (param != nullptr && *param != '\0') {
+		// The value may point at immortal bundled property data, so the parameters cannot be
+		// NUL-terminated in place. Bound every comparison by `param_length` instead.
+		const char *separator = strchr (param, ',');
+		size_t param_length = separator != nullptr ? static_cast<size_t>(separator - param) : strlen (param);
 
-	string_segment param;
-	while (value.next_token (',', param)) {
-		if (param.equal (OPT_TO_FILE)) {
+		if (param_length == OPT_TO_FILE.length () && strncmp (param, OPT_TO_FILE.data (), param_length) == 0) {
 			log_to_file = true;
-			continue;
-		}
-
-		if (param.starts_with (OPT_FILE_NAME)) {
-			output_file_name = std::make_unique<std::string> (param.start () + OPT_FILE_NAME.length (), param.length () - OPT_FILE_NAME.length ());
-			continue;
-		}
-
-		if (param.starts_with (OPT_DURATION)) {
-			if (!param.to_integer (duration_ms, OPT_DURATION.length ())) {
-				log_warn (LOG_TIMING, "Failed to parse duration in milliseconds from '%s'"sv, param.start ());
+		} else if (param_length >= OPT_FILE_NAME.length () && strncmp (param, OPT_FILE_NAME.data (), OPT_FILE_NAME.length ()) == 0) {
+			output_file_name = std::make_unique<std::string> (param + OPT_FILE_NAME.length (), param_length - OPT_FILE_NAME.length ());
+		} else if (param_length >= OPT_DURATION.length () && strncmp (param, OPT_DURATION.data (), OPT_DURATION.length ()) == 0) {
+			const char *duration = param + OPT_DURATION.length ();
+			char *end;
+			errno = 0;
+			unsigned long long parsed_duration = strtoull (duration, &end, 10);
+			if (end == duration || end != param + param_length || errno == ERANGE || parsed_duration > std::numeric_limits<size_t>::max ()) {
+				log_warnf (LOG_TIMING, "Failed to parse duration in milliseconds from '%.*s'", static_cast<int>(param_length), param);
 				duration_ms = default_duration_milliseconds;
+			} else {
+				duration_ms = static_cast<size_t>(parsed_duration);
 			}
-			continue;
 		}
+
+		param = separator == nullptr ? nullptr : separator + 1;
 	}
 
 	if (output_file_name) {
@@ -84,19 +94,23 @@ bool FastTiming::no_events_logged (size_t entries) noexcept
 		return false;
 	}
 
-	log_write (LOG_TIMING, LogLevel::Info, "[2/3] No events logged"sv);
+	log_write (LOG_TIMING, LogLevel::Info, "[2/3] No events logged");
 	return true;
 }
 
 void FastTiming::dump (size_t entries, bool indent, std::function<void(std::string_view const&)> line_writer) noexcept
 {
-	dynamic_local_string<Constants::MAX_LOGCAT_MESSAGE_LENGTH, char> message;
+	char stack_buffer [Constants::MAX_LOGCAT_MESSAGE_LENGTH];
 
 	line_writer ("Startup costs:"sv);
 	auto log = [&] (TimingEvent const& event) -> uint64_t {
-		uint64_t ret = format_message (event, message, indent);
-		line_writer (message.as_string_view ());
-		return ret;
+		size_t message_length;
+		char *message = build_message (event, stack_buffer, sizeof (stack_buffer), &message_length, indent);
+		line_writer (std::string_view { message, message_length });
+		if (message != stack_buffer) {
+			std::free (message);
+		}
+		return event_duration_ns (event);
 	};
 	log (start_end_event_time);
 	log (get_time_overhead);
@@ -148,15 +162,41 @@ void FastTiming::dump (size_t entries, bool indent, std::function<void(std::stri
 		chrono::nanoseconds time_ns (ns);
 		// Do not change the string format after the first colon, its format is required by performance measuring
 		// utilities.
-		// TODO: it's a bit wasteful... if dynamic_local_string is made an output iterator, we can use std::format_to
-		std::string s = std::format (
-			"  {}: {}:{}::{}",
-			msg,
-			chrono::duration_cast<chrono::seconds> (time_ns).count (),
-			chrono::duration_cast<chrono::milliseconds> (time_ns).count (),
-			(time_ns % 1ms).count ()
-		);
-		line_writer (s);
+		auto format_time = [&] (char *buffer, size_t buffer_size) noexcept -> int {
+			return snprintf (
+				buffer,
+				buffer_size,
+				"  %.*s: %lld:%lld::%lld",
+				static_cast<int>(msg.length ()),
+				msg.data (),
+				static_cast<long long>(chrono::duration_cast<chrono::seconds> (time_ns).count ()),
+				static_cast<long long>(chrono::duration_cast<chrono::milliseconds> (time_ns).count ()),
+				static_cast<long long>((time_ns % 1ms).count ())
+			);
+		};
+
+		// Formatted into `stack_buffer`, falling back to a heap buffer when the message doesn't fit.
+		char stack_buffer [Constants::MAX_LOGCAT_MESSAGE_LENGTH];
+		char *buffer = stack_buffer;
+		int result = format_time (stack_buffer, sizeof (stack_buffer));
+		abort_unless (result >= 0, "Failed to format the accumulated timing results");
+
+		size_t length = static_cast<size_t>(result);
+		if (length >= sizeof (stack_buffer)) {
+			size_t required_capacity = length + 1uz;
+			buffer = static_cast<char*> (std::malloc (required_capacity));
+			abort_unless (buffer != nullptr, "Failed to allocate the accumulated timing results message");
+			result = format_time (buffer, required_capacity);
+			abort_unless (
+				result >= 0 && static_cast<size_t>(result) == length,
+				"Failed to format the accumulated timing results using the required capacity"
+			);
+		}
+
+		line_writer (std::string_view { buffer, length });
+		if (buffer != stack_buffer) {
+			std::free (buffer);
+		}
 	};
 
 	// Do not change the sequence numbers. If a measurement is removed, its sequence number must not be reused.
@@ -169,7 +209,7 @@ void FastTiming::dump (size_t entries, bool indent, std::function<void(std::stri
 
 void FastTiming::dump_to_logcat (size_t entries) noexcept
 {
-	log_write (LOG_TIMING, LogLevel::Info, "[2/2] Performance measurement results"sv);
+	log_write (LOG_TIMING, LogLevel::Info, "[2/2] Performance measurement results");
 	if (no_events_logged (entries)) {
 		return;
 	}
@@ -179,7 +219,7 @@ void FastTiming::dump_to_logcat (size_t entries) noexcept
 		if (msg.empty ()) {
 			return;
 		}
-		log_write (LOG_TIMING, LogLevel::Info, msg);
+		log_writef (LOG_TIMING, LogLevel::Info, "%.*s", static_cast<int>(msg.length ()), msg.data ());
 	};
 	dump (entries, true /* indent */, line_writer);
 }
@@ -190,27 +230,38 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 		return;
 	}
 
-	dynamic_local_path_string timing_log_path;
-
-	// We can count on the envvar being there, since we set it ourselves at startup
+	// TMPDIR is normally set by us at startup.
 	// Note that to access the file for a release app, the app must be made debuggable
 	// and `run-as` must be used.
-	timing_log_path.assign_c (getenv("TMPDIR"));
-	timing_log_path.append ("/"sv);
-	timing_log_path.append (output_file_name == nullptr ? default_timing_file_name : *output_file_name);
+	const char *temporary_directory = getenv ("TMPDIR");
+	if (temporary_directory == nullptr || *temporary_directory == '\0') {
+		log_errorf (LOG_TIMING, "[2/2] Unable to create the performance measurements file: TMPDIR is not set");
+		return;
+	}
 
-	FILE *timing_log = Util::monodroid_fopen (timing_log_path.get (), "w");
+	std::string_view file_name = output_file_name == nullptr ? default_timing_file_name : *output_file_name;
+	char stack_buffer [Util::LocalPathBufferSize];
+	char *timing_log_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), temporary_directory, file_name);
+
+	FILE *timing_log = Util::monodroid_fopen (timing_log_path, "w");
 	if (timing_log == nullptr) {
-		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file '{}'"sv, timing_log_path.get ());
+		log_errorf (LOG_TIMING, "[2/2] Unable to create the performance measurements file '%s'", timing_log_path);
+		if (timing_log_path != stack_buffer) {
+			std::free (timing_log_path);
+		}
 		return;
 	}
 
 	if (!Util::set_world_accessible (fileno (timing_log))) {
-		log_warn (LOG_TIMING, "[2/2] Failed to make performance measurements file '{}' world-readable"sv, timing_log_path.get ());
+		log_warnf (LOG_TIMING, "[2/2] Failed to make performance measurements file '%s' world-readable", timing_log_path);
+		fclose (timing_log);
+		if (timing_log_path != stack_buffer) {
+			std::free (timing_log_path);
+		}
 		return;
 	}
 
-	log_info (LOG_TIMING, "[2/2] Performance measurement results logged to file: {}"sv, timing_log_path.get ());
+	log_infof (LOG_TIMING, "[2/2] Performance measurement results logged to file: %s", timing_log_path);
 
 	auto line_writer = [=](std::string_view const& msg) {
 		if (!msg.empty ()) {
@@ -222,6 +273,9 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 	dump (entries, true /* indent */, line_writer);
 	fflush (timing_log);
 	fclose (timing_log);
+	if (timing_log_path != stack_buffer) {
+		std::free (timing_log_path);
+	}
 }
 
 void FastTiming::dump () noexcept

@@ -60,7 +60,7 @@ namespace Xamarin.Android.Tasks
 		{
 			using (var fs = File.OpenRead (path)) {
 				using JsonDocument doc = JsonDocument.Parse (fs, new JsonDocumentOptions { AllowTrailingCommas = true });
-				return doc.RootElement.ToNode () ?? JsonNode.Parse ("{}")!;
+				return doc.RootElement.ToNode () ?? new JsonObject ();
 			}
 		}
 

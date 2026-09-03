@@ -114,8 +114,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 *******************************************
 -->
 
-<Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.props"
-	Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Installer.Common.props') And '$(DesignTimeBuild)' != 'true'"/>
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.props" />
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Common.props"
 	Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Android.Common.props')" />
@@ -529,6 +528,14 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA0119_ReadyToRun"
       Condition=" '$(AndroidEnableFastDeployment)' == 'True' And '$(PublishReadyToRun)' == 'True' "
   />
+  <AndroidWarning Code="XA0119"
+      ResourceName="XA0119_ReadyToRunWithoutTrimming"
+      Condition=" '$(_AndroidReadyToRunWithoutTrimming)' == 'true' "
+  />
+  <AndroidError Code="XA1049"
+      ResourceName="XA1049"
+      Condition=" '$(AndroidEnableMarshalMethods)' == 'True' And '$(PublishReadyToRun)' == 'True' "
+  />
   <AndroidWarning Code="XA1027"
       ResourceName="XA1027"
       Condition=" $(_AndroidXA1027) == 'true' "
@@ -905,6 +912,7 @@ because xbuild doesn't support framework reference assemblies.
 		ToolPath="$(LintToolPath)"
 		ToolExe="$(LintToolExe)"
 		JavaSdkPath="$(_JavaSdkDirectory)"
+		JdkVersion="$(_JdkVersion)"
 	/>
 </Target>
 
@@ -922,7 +930,6 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidIntermediateJavaSourceDirectory>$(IntermediateOutputPath)android\src\</_AndroidIntermediateJavaSourceDirectory>
 	<_AndroidIntermediateDexOutputDirectory>$(IntermediateOutputPath)android\bin\</_AndroidIntermediateDexOutputDirectory>
 	<_AndroidIntermediateJavaClassDirectory>$(IntermediateOutputPath)android\bin\classes\</_AndroidIntermediateJavaClassDirectory>
-	<_AndroidIntermediateClassesZip>$(IntermediateOutputPath)android\bin\classes.zip</_AndroidIntermediateClassesZip>
 	<_AndroidAotBinDirectory>$(IntermediateOutputPath)aot</_AndroidAotBinDirectory>
 	<_AndroidResgenFlagFile>$(IntermediateOutputPath)R.cs.flag</_AndroidResgenFlagFile>
 	<_AndroidResFlagFile>$(IntermediateOutputPath)res.flag</_AndroidResFlagFile>
@@ -1434,6 +1441,14 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <!-- We need this in its own item group so it isn't lost during a partial build -->
     <_AllResolvedAssemblies Include="@(ResolvedAssemblies)" />
+    <ResolvedAssemblies>
+      <JavaObjectsXmlFile
+          Condition=" '$(PublishTrimmed)' == 'true' And '$(AndroidTypeMapImplementation)' != 'trimmable' And $([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources')) "
+      >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</JavaObjectsXmlFile>
+      <TypeMapObjectsXmlFile
+          Condition=" '$(PublishTrimmed)' == 'true' And '$(AndroidTypeMapImplementation)' != 'trimmable' And $([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources')) "
+      >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</TypeMapObjectsXmlFile>
+    </ResolvedAssemblies>
   </ItemGroup>
 </Target>
 
@@ -1481,6 +1496,7 @@ because xbuild doesn't support framework reference assemblies.
         Condition=" '$(_AndroidUseMarshalMethods)' != 'True' or !$([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources')) " />
     <_AfterILLinkDestFiles Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " Include="@(_AfterILLinkSourceFiles->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
     <_AfterILLinkDestFiles Condition=" '$(_AndroidUseMarshalMethods)' == 'True' " Include="@(_AfterILLinkSourceFiles)" />
+    <_AndroidScanMarkerFiles Include="@(ResolvedAssemblies->'%(JavaObjectsXmlFile)')" Condition=" '%(ResolvedAssemblies.JavaObjectsXmlFile)' != '' " />
   </ItemGroup>
   <AssemblyModifierPipeline
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
@@ -1497,10 +1513,14 @@ because xbuild doesn't support framework reference assemblies.
       SourceFiles="@(_AfterILLinkSourceFiles)"
       TargetName="$(TargetName)">
   </AssemblyModifierPipeline>
+  <MakeDir Directories="@(_AndroidScanMarkerFiles->'%(RootDir)%(Directory)')" />
+  <Touch Files="@(_AndroidScanMarkerFiles)" AlwaysCreate="true" />
   <Touch Files="$(_AdditionalPostLinkerStepsFlag)" AlwaysCreate="true" />
   <ItemGroup>
+    <FileWrites Include="@(_AndroidScanMarkerFiles)" />
     <_AfterILLinkSourceFiles Remove="@(_AfterILLinkSourceFiles)" />
     <_AfterILLinkDestFiles Remove="@(_AfterILLinkDestFiles)" />
+    <_AndroidScanMarkerFiles Remove="@(_AndroidScanMarkerFiles)" />
   </ItemGroup>
   <ItemGroup Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">
     <FileWrites Include="$(_AfterILLinkOutputDir)**" />
@@ -1977,7 +1997,7 @@ because xbuild doesn't support framework reference assemblies.
 		@(_AndroidMSBuildAllProjects)
 		;@(_JavaLibrariesToCompileForApp)
 		;@(AndroidExternalJavaLibrary)
-		;$(_AndroidIntermediateClassesZip)
+		;$(_AndroidCompileJavaStampFile)
 		;@(ProguardConfiguration)
 		;@(MultiDexMainDexList)
 		;$(_AndroidBuildPropertiesCache)
@@ -2345,6 +2365,7 @@ because xbuild doesn't support framework reference assemblies.
       ToolPath="$(JavaToolPath)"
       JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
       JavaOptions="$(JavaOptions)"
+      JdkVersion="$(_JdkVersion)"
       JarPath="$(AndroidBundleToolJarPath)"
       BaseZip="$(_BaseZipIntermediate)"
       Modules="@(AndroidAppBundleModules)"
@@ -2461,6 +2482,7 @@ because xbuild doesn't support framework reference assemblies.
 			ToolPath="$(JavaToolPath)"
 			JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
 			JavaOptions="$(JavaOptions)"
+			JdkVersion="$(_JdkVersion)"
 			JarPath="$(AndroidBundleToolJarPath)"
 			BaseZip="$(_BaseZipIntermediate)"
 			Modules="@(AndroidAppBundleModules)"
@@ -2661,6 +2683,8 @@ because xbuild doesn't support framework reference assemblies.
 		ToolExe="$(JavaToolExe)"
 		ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
 		AdditionalArguments="$(AndroidApkSignerAdditionalArguments)"
+		JavaOptions="$(JavaOptions)"
+		JdkVersion="$(_JdkVersion)"
 	/>
 	<Message Text="Signed android package '%(ApkAbiFilesAligned.Identity)'" />
 	<ItemGroup>
@@ -2708,6 +2732,7 @@ because xbuild doesn't support framework reference assemblies.
       ToolPath="$(JavaToolPath)"
       JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
       JavaOptions="$(JavaOptions)"
+      JdkVersion="$(_JdkVersion)"
       JarPath="$(AndroidBundleToolJarPath)"
       AdbToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
@@ -2929,6 +2954,7 @@ because xbuild doesn't support framework reference assemblies.
       ToolPath="$(JavaToolPath)"
       JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
       JavaOptions="$(JavaOptions)"
+      JdkVersion="$(_JdkVersion)"
       JarPath="$(AndroidBundleToolJarPath)"
       AdbToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
@@ -2972,6 +2998,7 @@ because xbuild doesn't support framework reference assemblies.
       ToolPath="$(JavaToolPath)"
       JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
       JavaOptions="$(JavaOptions)"
+      JdkVersion="$(_JdkVersion)"
       JarPath="$(AndroidBundleToolJarPath)"
       AdbToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
@@ -3042,6 +3069,14 @@ because xbuild doesn't support framework reference assemblies.
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets"
         Condition=" '$(DesignTimeBuild)' != 'true' "/>
+  <Target Name="_ValidateAndroidJcwCodegenTarget"
+      BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
+    <AndroidError Code="XA4240"
+        ResourceName="XA4240"
+        FormatArguments="$(_AndroidJcwCodegenTarget)"
+        Condition=" '$(_AndroidJcwCodegenTarget)' == 'XamarinAndroid' or '$(_AndroidJcwCodegenTarget)' == 'JavaInterop1' " />
+  </Target>
+
   <Target Name="_ValidateAndroidTypeMapImplementation"
       BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
     <Error Condition=" '$(AndroidTypeMapImplementation)' != '' and '$(AndroidTypeMapImplementation)' != 'llvm-ir' and '$(AndroidTypeMapImplementation)' != 'trimmable' "

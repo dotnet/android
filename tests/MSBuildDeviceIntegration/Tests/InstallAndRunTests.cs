@@ -1387,9 +1387,6 @@ namespace Library1 {
 					new BuildItem.Source ("LocalTestServers.cs") {
 						TextContent = () => File.ReadAllText (Path.Combine (XABuildPaths.TopDirectory, "tests", "Mono.Android-Tests", "Mono.Android-Tests", "Xamarin.Android.Net", "LocalTestServers.cs"))
 					},
-					new BuildItem.Source ("PreserveTest.cs") {
-						TextContent = () => getResource("PreserveTest")
-					},
 				},
 			};
 			lib2.SetRuntime (runtime);
@@ -2060,9 +2057,12 @@ namespace UnnamedProject
 		[Test]
 		public void DotNetInstallAndRunPreviewAPILevels (
 				[Values (false, true)] bool isRelease,
-				[Values ("net11.0-android37.1")] string targetFramework,
-				[Values (true)] bool enablePreviewFeatures)
+				[Values ("net11.0-android37.1", "net11.0-android37.2")] string targetFramework)
 		{
+			var apiLevel = targetFramework.EndsWith ("37.1", StringComparison.Ordinal) ? "37.1" : "37.2";
+			var apiMinorVersion = apiLevel == "37.1" ? "1" : "2";
+			var permission = apiLevel == "37.1" ? "AccessHid" : "BindContentSafetyService";
+			var enablePreviewFeatures = apiLevel == "37.2";
 			var proj = new XamarinAndroidApplicationProject () {
 				TargetFramework = targetFramework,
 				IsRelease = isRelease,
@@ -2075,16 +2075,33 @@ namespace UnnamedProject
 				proj.SetProperty ("EnablePreviewFeatures", "true");
 			}
 
+			proj.Imports.Add (new Import (() => "Directory.Build.targets") {
+				TextContent = () => $"""
+<Project>
+	<Target Name="_AssertAndroidTargetingPack" BeforeTargets="ResolveFrameworkReferences">
+		<ItemGroup>
+			<_AndroidKnownFrameworkReference Include="@(KnownFrameworkReference)" Condition=" '%(Identity)' == 'Microsoft.Android' " />
+		</ItemGroup>
+		<Error
+			Condition=" '%(_AndroidKnownFrameworkReference.TargetingPackName)' != 'Microsoft.Android.Ref.{apiLevel}' "
+			Text="Expected Microsoft.Android.Ref.{apiLevel}, but selected '%(_AndroidKnownFrameworkReference.TargetingPackName)'." />
+	</Target>
+</Project>
+"""
+			});
+
 			// TODO: update on new minor API levels to use an introduced minor API
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${AFTER_ONCREATE}", """
 				// The value `ignore` is not used.
 				#pragma warning disable 0219
-					if (OperatingSystem.IsAndroidVersionAtLeast (37, 1)) {
-						var ignore = global::Android.Manifest.Permission.AccessHid;
+					if (OperatingSystem.IsAndroidVersionAtLeast (37, ${ANDROID_API_MINOR_VERSION})) {
+						var ignore = global::Android.Manifest.Permission.${ANDROID_PERMISSION};
 					}
 				#pragma warning restore 0219
-				""");
+				""")
+				.Replace ("${ANDROID_API_MINOR_VERSION}", apiMinorVersion)
+				.Replace ("${ANDROID_PERMISSION}", permission);
 
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
@@ -2752,6 +2769,44 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj));
 			RunProjectAndAssert (proj, builder);
+		}
+
+		[Test]
+		public void NativeAOTCustomReleaseConfiguration ([Values] bool publish)
+		{
+			const string configuration = "AppStore";
+			var proj = new XamarinAndroidApplicationProject (releaseConfigurationName: configuration) {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			var rid = MonoAndroidHelper.AbiToRid (DeviceAbi);
+			proj.SetProperty ("RuntimeIdentifier", rid);
+			proj.SetProperty (proj.ReleaseProperties, "Optimize", "true");
+			proj.SetProperty (proj.ReleaseProperties, "DebugType", "None");
+
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			var arguments = new [] { "-c", configuration };
+			var succeeded = publish
+				? dotnet.Publish (runtimeIdentifier: rid, msbuildArguments: arguments)
+				: dotnet.Build (runtimeIdentifier: rid, msbuildArguments: arguments);
+			Assert.IsTrue (succeeded, $"`dotnet {(publish ? "publish" : "build")} -c {configuration}` should succeed");
+
+			var outputDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, rid);
+			if (publish) {
+				outputDirectory = Path.Combine (outputDirectory, "publish");
+			}
+			var apk = Path.Combine (outputDirectory, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk);
+			Assert.That (RunAdbCommand ($"install -r \"{apk}\"").Trim (), Does.EndWith ("Success"), "APK should install.");
+
+			ClearAdbLogcat ();
+			StartActivityAndAssert (proj);
+			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds),
+				"Activity should have started.");
 		}
 
 		[Test]
