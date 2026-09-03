@@ -99,12 +99,18 @@ namespace generator.SourceWriters
 			if (opt.CodeGenerationTarget != CodeGenerationTarget.XAJavaInterop1)
 				return false;
 
-			// [UnmanagedCallersOnly] cannot be applied to a method of a generic type, nor to a
-			// generic method.  Generic declaring types therefore keep the legacy shape.
+			// [UnmanagedCallersOnly] cannot be applied to a method of a generic type, because the
+			// generated entry point would need a type argument that JNI cannot supply.  Generic
+			// declaring types therefore keep the legacy shape.
 			if (type == null || type.IsGeneric || type.FullName.IndexOf ('<') >= 0)
 				return false;
 
-			if (method.IsGeneric || method.Parameters.HasGeneric || method.IsStatic)
+			// Neither `method.IsGeneric` nor `method.Parameters.HasGeneric` is consulted here.  Both
+			// report *Java* generics, which are erased to plain object references at the JNI
+			// boundary, so the emitted `n_*` entry point is non-generic either way and can carry
+			// [UnmanagedCallersOnly].  Such methods do fall out of the typed shape below, because
+			// the shared helper cannot know the erased type; they use the raw fallback instead.
+			if (method.IsStatic)
 				return false;
 
 			// Every value crossing the boundary must be blittable.
