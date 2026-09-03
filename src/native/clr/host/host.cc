@@ -420,28 +420,38 @@ void Host::Java_mono_android_Runtime_initInternal (
 		static const char **fastdev_prop_values = nullptr;
 
 		std::free (fastdev_tpa_list);
+		std::free (fastdev_prop_names);
+		std::free (fastdev_prop_values);
+		fastdev_tpa_list = nullptr;
+		fastdev_prop_names = nullptr;
+		fastdev_prop_values = nullptr;
+
 		fastdev_tpa_list = FastDevAssemblies::build_tpa_list ();
 		if (fastdev_tpa_list != nullptr) {
 			size_t old_count = static_cast<size_t>(prop_count);
 			size_t new_count = Helpers::add_with_overflow_check<size_t> (old_count, 1uz);
 
-			std::free (fastdev_prop_names);
-			std::free (fastdev_prop_values);
 			fastdev_prop_names = static_cast<const char**> (std::calloc (new_count, sizeof (const char*)));
 			fastdev_prop_values = static_cast<const char**> (std::calloc (new_count, sizeof (const char*)));
-			abort_unless (
-				fastdev_prop_names != nullptr && fastdev_prop_values != nullptr,
-				"Unable to allocate memory for the FastDev runtime properties"
-			);
+			if (fastdev_prop_names == nullptr || fastdev_prop_values == nullptr) [[unlikely]] {
+				log_warn (LOG_ASSEMBLY, "FastDev: unable to allocate memory for the runtime properties; falling back to assembly probing");
+				std::free (fastdev_prop_names);
+				std::free (fastdev_prop_values);
+				std::free (fastdev_tpa_list);
+				fastdev_prop_names = nullptr;
+				fastdev_prop_values = nullptr;
+				fastdev_tpa_list = nullptr;
+				FastDevAssemblies::tpa_in_use = false;
+			} else {
+				memcpy (fastdev_prop_names, prop_names, old_count * sizeof (const char*));
+				memcpy (fastdev_prop_values, prop_values, old_count * sizeof (const char*));
+				fastdev_prop_names [old_count] = HOST_PROPERTY_TRUSTED_PLATFORM_ASSEMBLIES;
+				fastdev_prop_values [old_count] = fastdev_tpa_list;
 
-			memcpy (fastdev_prop_names, prop_names, old_count * sizeof (const char*));
-			memcpy (fastdev_prop_values, prop_values, old_count * sizeof (const char*));
-			fastdev_prop_names [old_count] = HOST_PROPERTY_TRUSTED_PLATFORM_ASSEMBLIES;
-			fastdev_prop_values [old_count] = fastdev_tpa_list;
-
-			prop_names = fastdev_prop_names;
-			prop_values = fastdev_prop_values;
-			prop_count = static_cast<int>(new_count);
+				prop_names = fastdev_prop_names;
+				prop_values = fastdev_prop_values;
+				prop_count = static_cast<int>(new_count);
+			}
 		}
 	}
 

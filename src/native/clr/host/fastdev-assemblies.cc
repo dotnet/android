@@ -186,6 +186,8 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 
 auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 {
+	tpa_in_use = false;
+
 	const char *override_dir_path = AndroidSystem::get_primary_override_dir ();
 	if (!Util::dir_exists (override_dir_path)) {
 		return nullptr;
