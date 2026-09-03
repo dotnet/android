@@ -98,39 +98,53 @@ namespace Xamarin.Android.Build.Tests
 				""");
 
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Install (proj), "Project should have installed.");
+			bool installed = false;
+			try {
+				installed = builder.Install (proj);
+				Assert.IsTrue (installed, "Project should have installed.");
 
-			var projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
-			var mappingFiles = Directory.GetFiles (
-				Path.Combine (projectDirectory, proj.OutputPath),
-				"mapping.txt",
-				SearchOption.AllDirectories);
-			Assert.AreEqual (1, mappingFiles.Length, "The R8 build should produce one mapping file.");
-			var mapping = R8Mapping.Load (mappingFiles [0]);
+				var projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
+				var mappingFiles = Directory.GetFiles (
+					Path.Combine (projectDirectory, proj.OutputPath),
+					"mapping.txt",
+					SearchOption.AllDirectories);
+				Assert.AreEqual (1, mappingFiles.Length, "The R8 build should produce one mapping file.");
+				var mapping = R8Mapping.Load (mappingFiles [0]);
 
-			Assert.IsTrue (mapping.TryGetRenamedClass (JavaClassName, out string mappedClassName));
-			Assert.AreEqual (JavaClassName, mappedClassName, "Java class names should remain unchanged.");
-			string mappedPackagePrivateMethod = GetRenamedMethod (mapping, "packagePrivateEntry");
-			string mappedPrivateMethod = GetRenamedMethod (mapping, "privateEntry");
+				Assert.IsTrue (mapping.TryGetRenamedClass (JavaClassName, out string mappedClassName));
+				Assert.AreEqual (JavaClassName, mappedClassName, "Java class names should remain unchanged.");
+				string mappedPackagePrivateMethod = GetRenamedMethod (mapping, "packagePrivateEntry");
+				string mappedPrivateMethod = GetRenamedMethod (mapping, "privateEntry");
 
-			var dexFiles = Directory.GetFiles (
-				Path.Combine (projectDirectory, proj.IntermediateOutputPath),
-				"classes*.dex",
-				SearchOption.AllDirectories);
-			Assert.IsNotEmpty (dexFiles, "R8 should produce at least one DEX file.");
-			AssertDexContainsMethod (dexFiles, "publicEntry");
-			AssertDexContainsMethod (dexFiles, "protectedEntry");
-			AssertDexContainsMethod (dexFiles, mappedPackagePrivateMethod);
-			AssertDexContainsMethod (dexFiles, mappedPrivateMethod);
-			AssertDexDoesNotContainMethod (dexFiles, "packagePrivateEntry");
-			AssertDexDoesNotContainMethod (dexFiles, "privateEntry");
+				var dexFiles = Directory.GetFiles (
+					Path.Combine (projectDirectory, proj.IntermediateOutputPath),
+					"classes*.dex",
+					SearchOption.AllDirectories);
+				Assert.IsNotEmpty (dexFiles, "R8 should produce at least one DEX file.");
+				AssertDexContainsMethod (dexFiles, "publicEntry");
+				AssertDexContainsMethod (dexFiles, "protectedEntry");
+				AssertDexContainsMethod (dexFiles, mappedPackagePrivateMethod);
+				AssertDexContainsMethod (dexFiles, mappedPrivateMethod);
+				AssertDexDoesNotContainMethod (dexFiles, "packagePrivateEntry");
+				AssertDexDoesNotContainMethod (dexFiles, "privateEntry");
 
-			RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
-			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (projectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
-			Assert.IsTrue (MonitorAdbLogcat (line => line.Contains (SuccessMarker),
-				Path.Combine (projectDirectory, "startup-logcat.log"), 45), $"Output did not contain {SuccessMarker}.");
-			Assert.IsTrue (builder.Uninstall (proj), "Project should have uninstalled.");
+				RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
+				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
+					Path.Combine (projectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
+				Assert.IsTrue (MonitorAdbLogcat (line => line.Contains (SuccessMarker),
+					Path.Combine (projectDirectory, "startup-logcat.log"), 45), $"Output did not contain {SuccessMarker}.");
+			} finally {
+				if (installed) {
+					try {
+						builder.ThrowOnBuildFailure = false;
+						if (!builder.Uninstall (proj)) {
+							TestContext.Error.WriteLine ($"Failed to uninstall '{proj.PackageName}' during test cleanup.");
+						}
+					} catch (Exception ex) {
+						TestContext.Error.WriteLine ($"Failed to uninstall '{proj.PackageName}' during test cleanup: {ex}");
+					}
+				}
+			}
 		}
 
 		static string GetRenamedMethod (R8Mapping mapping, string methodName)
