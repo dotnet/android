@@ -125,6 +125,48 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void GetProxyForJavaObject_SealedTarget_ReturnsProxy ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			using var value = new Java.Lang.String ("value");
+			var proxy = TrimmableTypeMap.Instance.GetProxyForJavaObject (value.Handle, typeof (Java.Lang.String));
+
+			if (proxy is null) {
+				Assert.Fail ("Expected a proxy for Java.Lang.String.");
+				return;
+			}
+			Assert.AreEqual (typeof (Java.Lang.String), proxy.TargetType);
+		}
+
+		[Test]
+		public void GetProxyForJavaObject_IncompatibleSealedTarget_ReturnsNull ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			using var value = new Java.Lang.Integer (42);
+			var proxy = TrimmableTypeMap.Instance.GetProxyForJavaObject (value.Handle, typeof (Java.Lang.String));
+
+			Assert.IsNull (proxy);
+		}
+
+		[Test]
+		public void CreateInstance_SealedClosedGenericTarget_ReturnsClosedPeer ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			using var value = new Java.Util.ArrayList ();
+			var peer = TrimmableTypeMap.Instance.CreateInstance (value.Handle, typeof (JavaCollection<int>));
+			if (peer is not JavaCollection<int> collection) {
+				peer?.Dispose ();
+				Assert.Fail ($"Expected {typeof (JavaCollection<int>)}, got {peer?.GetType ()}.");
+				return;
+			}
+
+			collection.Dispose ();
+		}
+
+		[Test]
 		public void RegisteredPeer_Dispose_InvokesDisposing ()
 		{
 			AssumeTrimmableTypeMapEnabled ();
