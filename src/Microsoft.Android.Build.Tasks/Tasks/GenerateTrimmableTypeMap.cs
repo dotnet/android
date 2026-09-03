@@ -303,6 +303,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				errorOnCustomJavaObject: ErrorOnCustomJavaObject,
 				customViewTypeNames: customViewTypeNames,
 				preGeneratedJcwNames: preGeneratedJcwNames,
+				preGeneratedJcwSource: PreGeneratedJcwJar,
 				forceFrameworkPeersUnconditional: ForceFrameworkPeersUnconditional,
 				collectMarshalMethodsForNonAcw: false,
 				includeBuiltInValueTypeUniverses: IncludeBuiltInValueTypeUniverses,

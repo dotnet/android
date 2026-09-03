@@ -99,6 +99,7 @@
          https://github.com/dotnet/android/issues/12128. -->
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' and '$(AndroidIncludeDebugSymbols)' == 'true' and '$(_AndroidTrimmableTypeMapMaxArrayRank)' != '0' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
+    <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(PublishTrimmed)' == 'true' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <_PreGeneratedJcwValidationInput Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">$(_PreGeneratedMonoAndroidTypeMapJar)</_PreGeneratedJcwValidationInput>
     <_UseTrimmableCoreClrProguardConfiguration Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">true</_UseTrimmableCoreClrProguardConfiguration>
     <_TrimmableTypeMapKeepRulesAcwMapFile>$(_AcwMapFile)</_TrimmableTypeMapKeepRulesAcwMapFile>
