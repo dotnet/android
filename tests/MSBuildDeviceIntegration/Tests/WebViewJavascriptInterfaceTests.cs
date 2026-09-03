@@ -15,25 +15,10 @@ namespace Xamarin.Android.Build.Tests
 		const string SuccessMarker = "# JAVASCRIPT_INTERFACE_RESULT ";
 		const string FailureMarker = "# JAVASCRIPT_INTERFACE_FAILURE ";
 
-		[Test]
-		public void LocalJavascriptInvokesManagedBridge_LlvmIrCoreClr ()
-		{
-			LocalJavascriptInvokesManagedBridge ("llvm-ir", AndroidRuntime.CoreCLR);
-		}
-
-		[Test]
-		public void LocalJavascriptInvokesManagedBridge_TrimmableCoreClr ()
-		{
-			LocalJavascriptInvokesManagedBridge ("trimmable", AndroidRuntime.CoreCLR);
-		}
-
-		[Test]
-		public void LocalJavascriptInvokesManagedBridge_TrimmableNativeAot ()
-		{
-			LocalJavascriptInvokesManagedBridge ("trimmable", AndroidRuntime.NativeAOT);
-		}
-
-		void LocalJavascriptInvokesManagedBridge (string typemapImplementation, AndroidRuntime runtime)
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
+		public void LocalJavascriptInvokesManagedBridge (string typemapImplementation, AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
