@@ -26,6 +26,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 	readonly record struct ResolvabilityResult (bool IsResolvable, string? UnresolvedTypeName, string? UnresolvedAssemblyName);
 	readonly record struct PublicConstructorInfo (ImmutableArray<TypeRefData> ParameterTypes, string JniParameterSignature);
+	readonly record struct ImplementedInterfaceInfo (TypeRefData Type, string JavaName);
 
 	readonly Dictionary<string, AssemblyIndex> assemblyCache = new (StringComparer.Ordinal);
 	readonly Dictionary<(string typeName, string assemblyName), ActivationCtorInfo> activationCtorCache = new ();
@@ -371,7 +372,7 @@ public sealed class JavaPeerScanner : IDisposable
 			var baseJavaName = ResolveBaseJavaName (typeDef, index, results);
 
 			// Resolve implemented Java interface names
-			var implementedInterfaces = ResolveImplementedInterfaceJavaNames (typeDef, index);
+			var (implementedInterfaces, javaCallableWrapperInterfaces) = ResolveImplementedInterfaceJavaNames (typeDef, index);
 
 			// Collect marshal methods (including constructors).
 			// Override and interface detection is only for user ACW class types:
@@ -408,6 +409,7 @@ public sealed class JavaPeerScanner : IDisposable
 				IsFrameworkAssembly = isFrameworkAssembly,
 				BaseJavaName = baseJavaName,
 				ImplementedInterfaceJavaNames = implementedInterfaces,
+				JavaCallableWrapperInterfaceJavaNames = javaCallableWrapperInterfaces,
 				Annotations = annotationParser.Parse (typeDef.GetCustomAttributes (), index),
 				IsInterface = isInterface,
 				IsAbstract = isAbstract,
@@ -1711,26 +1713,86 @@ public sealed class JavaPeerScanner : IDisposable
 		return null;
 	}
 
-	List<string> ResolveImplementedInterfaceJavaNames (TypeDefinition typeDef, AssemblyIndex index)
+	(List<string> ImplementedInterfaces, List<string> JavaCallableWrapperInterfaces) ResolveImplementedInterfaceJavaNames (
+		TypeDefinition typeDef,
+		AssemblyIndex index)
 	{
-		var result = new List<string> ();
-		var interfaceImpls = typeDef.GetInterfaceImplementations ();
-
-		foreach (var implHandle in interfaceImpls) {
+		var interfaces = new List<ImplementedInterfaceInfo> ();
+		var implementedInterfaces = new List<string> ();
+		foreach (var implHandle in typeDef.GetInterfaceImplementations ()) {
 			var impl = index.Reader.GetInterfaceImplementation (implHandle);
-			var ifaceJniName = ResolveInterfaceJniName (impl.Interface, index);
-			if (ifaceJniName is not null) {
-				result.Add (ifaceJniName);
+			var resolved = ResolveEntityHandle (impl.Interface, index);
+			if (resolved is null) {
+				continue;
+			}
+
+			var javaName = ResolveRegisterJniName (resolved.ManagedTypeName, resolved.AssemblyName);
+			if (javaName is not null) {
+				interfaces.Add (new ImplementedInterfaceInfo (resolved, javaName));
+				implementedInterfaces.Add (javaName);
 			}
 		}
 
-		return result;
+		var javaCallableWrapperInterfaces = new List<string> ();
+		var addedJavaNames = new HashSet<string> (StringComparer.Ordinal);
+		var assignabilityVisited = new HashSet<(string ManagedTypeName, string AssemblyName)> ();
+		foreach (var iface in interfaces) {
+			var isRedundant = false;
+			foreach (var other in interfaces) {
+				if (IsSameTypeDefinition (iface.Type, other.Type)) {
+					continue;
+				}
+
+				assignabilityVisited.Clear ();
+				if (IsInterfaceAssignableFrom (iface.Type, other.Type, assignabilityVisited)) {
+					isRedundant = true;
+					break;
+				}
+			}
+
+			if (isRedundant) {
+				continue;
+			}
+
+			if (addedJavaNames.Add (iface.JavaName)) {
+				javaCallableWrapperInterfaces.Add (iface.JavaName);
+			}
+		}
+
+		return (implementedInterfaces, javaCallableWrapperInterfaces);
 	}
 
-	string? ResolveInterfaceJniName (EntityHandle interfaceHandle, AssemblyIndex index)
+	bool IsInterfaceAssignableFrom (
+		TypeRefData target,
+		TypeRefData candidate,
+		HashSet<(string ManagedTypeName, string AssemblyName)> visited)
 	{
-		var resolved = ResolveEntityHandle (interfaceHandle, index);
-		return resolved is not null ? ResolveRegisterJniName (resolved.ManagedTypeName, resolved.AssemblyName) : null;
+		if (IsSameTypeDefinition (target, candidate)) {
+			return true;
+		}
+
+		var candidateKey = (candidate.ManagedTypeName, candidate.AssemblyName);
+		if (!visited.Add (candidateKey) ||
+		    !TryResolveType (candidate.ManagedTypeName, candidate.AssemblyName, out var candidateHandle, out var candidateIndex)) {
+			return false;
+		}
+
+		var candidateDefinition = candidateIndex.Reader.GetTypeDefinition (candidateHandle);
+		foreach (var implHandle in candidateDefinition.GetInterfaceImplementations ()) {
+			var impl = candidateIndex.Reader.GetInterfaceImplementation (implHandle);
+			var parent = ResolveEntityHandle (impl.Interface, candidateIndex);
+			if (parent is not null && IsInterfaceAssignableFrom (target, parent, visited)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	static bool IsSameTypeDefinition (TypeRefData left, TypeRefData right)
+	{
+		return string.Equals (left.ManagedTypeName, right.ManagedTypeName, StringComparison.Ordinal) &&
+			string.Equals (left.AssemblyName, right.AssemblyName, StringComparison.Ordinal);
 	}
 
 	bool TryGetMethodRegisterInfo (MethodDefinition methodDef, AssemblyIndex index, out RegisterInfo? registerInfo, out ExportInfo? exportInfo)
