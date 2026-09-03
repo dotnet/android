@@ -94,6 +94,13 @@ static class ModelBuilder
 			foreach (var uco in proxy.UcoMethods) {
 				AddIfCrossAssembly (referencedAssemblies, uco.CallbackType.AssemblyName, assemblyName);
 			}
+			// Directly-registered [UnmanagedCallersOnly] callbacks have no wrapper in UcoMethods,
+			// but ldftn still needs access to the (usually private) n_* method.
+			foreach (var registration in proxy.NativeRegistrations) {
+				if (registration.DirectCallback is not null) {
+					AddIfCrossAssembly (referencedAssemblies, registration.DirectCallback.CallbackType.AssemblyName, assemblyName);
+				}
+			}
 			if (proxy.ActivationCtor != null && !proxy.ActivationCtor.IsOnLeafType) {
 				AddIfCrossAssembly (referencedAssemblies, proxy.ActivationCtor.DeclaringType.AssemblyName, assemblyName);
 			}
@@ -341,6 +348,9 @@ static class ModelBuilder
 				JniSignature = mm.JniSignature,
 				CallbackParameterTypeNames = mm.NativeCallbackParameterTypeNames,
 				CallbackReturnTypeName = mm.NativeCallbackReturnTypeName,
+				// A callback which is already [UnmanagedCallersOnly] is registered directly; a
+				// generated wrapper would have to managed-call it, which is illegal.
+				IsDirectUnmanagedCallersOnlyCallback = mm.IsUnmanagedCallersOnlyCallback && !mm.IsExport && !mm.CallManagedMethodDirectly,
 				ExportMethodDispatch = (mm.IsExport || mm.CallManagedMethodDirectly) ? new ExportMethodDispatchData {
 					ManagedMethodName = mm.ManagedMethodName,
 					ParameterTypes = mm.ManagedParameterTypes,
@@ -390,7 +400,7 @@ static class ModelBuilder
 		var sharedWrapperTargets = new Dictionary<UcoWrapperReuseKey, UcoWrapperTargetData> ();
 		foreach (var proxy in model.ProxyTypes) {
 			foreach (var uco in proxy.UcoMethods) {
-				if (!CanShareUcoWrapper (proxy, uco)) {
+				if (uco.IsDirectUnmanagedCallersOnlyCallback || !CanShareUcoWrapper (proxy, uco)) {
 					continue;
 				}
 
@@ -404,8 +414,23 @@ static class ModelBuilder
 		foreach (var proxy in model.ProxyTypes) {
 			HashSet<UcoMethodData>? reusedUcoMethods = null;
 
+			HashSet<UcoMethodData>? directUcoMethods = null;
+
 			foreach (var uco in proxy.UcoMethods) {
 				var wrapperTarget = UcoWrapperTargetData.From (proxy, uco.WrapperName);
+
+				if (uco.IsDirectUnmanagedCallersOnlyCallback) {
+					(directUcoMethods ??= new ()).Add (uco);
+					proxy.NativeRegistrations.Add (new NativeRegistrationData {
+						JniMethodName = uco.CallbackMethodName,
+						JniSignature = uco.JniSignature,
+						WrapperMethodName = wrapperTarget.MethodName,
+						WrapperTarget = wrapperTarget,
+						DirectCallback = uco,
+					});
+					continue;
+				}
+
 				if (CanReuseUcoWrapper (proxy, uco) &&
 				    sharedWrapperTargets.TryGetValue (CreateUcoWrapperReuseKey (uco), out var sharedWrapperTarget)) {
 					wrapperTarget = sharedWrapperTarget;
@@ -417,6 +442,10 @@ static class ModelBuilder
 					WrapperMethodName = wrapperTarget.MethodName,
 					WrapperTarget = wrapperTarget,
 				});
+			}
+
+			if (directUcoMethods is not null) {
+				proxy.UcoMethods.RemoveAll (uco => directUcoMethods.Contains (uco));
 			}
 
 			if (reusedUcoMethods is not null) {

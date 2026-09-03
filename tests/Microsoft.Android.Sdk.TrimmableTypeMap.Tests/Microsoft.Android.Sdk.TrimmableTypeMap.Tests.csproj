@@ -14,6 +14,7 @@
   <ItemGroup>
     <Compile Remove="TestFixtures\**" />
     <Compile Remove="TestAttributeFixtures\**" />
+    <Compile Remove="TestUcoFixtures\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,6 +32,9 @@
       <!-- Don't add as a compile-time reference — we only need the built DLL as scanner test input -->
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="TestUcoFixtures\TestUcoFixtures.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 
   <!-- Copy TestFixtures output to our output directory so tests can find it -->
@@ -38,6 +42,7 @@
     <ItemGroup>
       <_TestFixtureFiles Include="TestFixtures\bin\$(Configuration)\$(DotNetStableTargetFramework)\TestFixtures.dll" />
       <_TestFixtureFiles Include="TestAttributeFixtures\bin\$(Configuration)\$(DotNetStableTargetFramework)\TestAttributeFixtures.dll" />
+      <_TestFixtureFiles Include="TestUcoFixtures\bin\$(Configuration)\$(DotNetStableTargetFramework)\TestUcoFixtures.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_TestFixtureFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
   </Target>

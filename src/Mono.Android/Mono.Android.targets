@@ -142,6 +142,11 @@
       <_LangFeatures>--lang-features=nullable-reference-types</_LangFeatures>
       <_LangFeatures Condition="$(AndroidApiLevel) &gt;= 30">$(_LangFeatures),default-interface-methods,nested-interface-types,interface-constants</_LangFeatures>
       <_LangFeatures Condition=" $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '7.0')) ">$(_LangFeatures),obsoleted-platform-attributes</_LangFeatures>
+      <!--
+        Internal, off-by-default switch for the experimental [UnmanagedCallersOnly] binding
+        callback format. It requires the trimmable typemap, so it must never be enabled by default.
+      -->
+      <_LangFeatures Condition=" '$(_MonoAndroidEnableUnmanagedCallersOnlyCallbacks)' == 'true' ">$(_LangFeatures),unmanaged-callers-only-callbacks</_LangFeatures>
     </PropertyGroup>
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; $(Generator) $(_GenFlags) $(_ApiLevel) $(_Out) $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_LangFeatures) $(_Dirs) $(_Api) $(_WithJavadocXml)"

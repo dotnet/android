@@ -66,6 +66,11 @@ namespace MonoDroid.Generation
 		public bool UseObsoletedOSPlatformAttributes { get; set; }
 		public bool UseRestrictToAttributes { get; set; }
 		public bool FixObsoleteOverrides { get; set; }
+
+		// Experimental: emit each supported non-generic `n_*` binding callback as an
+		// [UnmanagedCallersOnly] method which forwards to a shared typed marshaling helper,
+		// and omit the `cb_*` delegate cache field and the `Get*Handler ()` connector method.
+		public bool UseUnmanagedCallersOnlyCallbacks { get; set; }
 		public bool RemoveConstSugar => BuildingCoreAssembly;
 
 		bool? buildingCoreAssembly;

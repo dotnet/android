@@ -54,6 +54,21 @@ sealed class AssemblyIndex : IDisposable
 	public HashSet<string> ExportedTypeNames { get; } = new (StringComparer.Ordinal);
 
 	/// <summary>
+	/// The version declared by the assembly's <c>[assembly: Java.Interop.JavaPeerCallbackFormat]</c>
+	/// attribute, or <see cref="JavaPeerCallbackFormat.ConnectorDelegates" /> when the attribute is
+	/// absent — an unmarked assembly uses the legacy <c>cb_*</c>/<c>Get*Handler ()</c> shape.
+	/// </summary>
+	public int CallbackFormatVersion { get; private set; } = JavaPeerCallbackFormat.ConnectorDelegates;
+
+	/// <summary>
+	/// True when the assembly's <c>n_*</c> binding callbacks are <c>[UnmanagedCallersOnly]</c> and
+	/// therefore have no <c>Get*Handler ()</c> connector method to bind through. RegisterNatives
+	/// must point at those callbacks directly rather than at a generated managed-calling wrapper.
+	/// </summary>
+	public bool UsesUnmanagedCallersOnlyCallbacks =>
+		CallbackFormatVersion == JavaPeerCallbackFormat.UnmanagedCallersOnlyCallbacks;
+
+	/// <summary>
 	/// True iff the assembly's metadata mentions
 	/// <c>Java.Interop.JniAddNativeMethodRegistrationAttribute</c> (as a
 	/// TypeReference or TypeDefinition). The trimmable typemap forbids that
@@ -109,6 +124,8 @@ sealed class AssemblyIndex : IDisposable
 			var exportedType = Reader.GetExportedType (exportedTypeHandle);
 			ExportedTypeNames.Add (GetExportedTypeFullName (exportedType));
 		}
+
+		ReadCallbackFormatVersion ();
 
 		foreach (var typeHandle in Reader.TypeDefinitions) {
 			var typeDef = Reader.GetTypeDefinition (typeHandle);
@@ -392,6 +409,30 @@ sealed class AssemblyIndex : IDisposable
 			}
 		}
 		return false;
+	}
+
+	/// <summary>
+	/// Reads <c>[assembly: Java.Interop.JavaPeerCallbackFormat (version)]</c>, which declares the
+	/// shape of the assembly's generated binding callbacks.
+	/// </summary>
+	void ReadCallbackFormatVersion ()
+	{
+		if (!Reader.IsAssembly) {
+			return;
+		}
+
+		foreach (var caHandle in Reader.GetAssemblyDefinition ().GetCustomAttributes ()) {
+			var ca = Reader.GetCustomAttribute (caHandle);
+			if (!IsCustomAttributeMatch (ca, Reader, "Java.Interop", "JavaPeerCallbackFormatAttribute")) {
+				continue;
+			}
+
+			var value = ca.DecodeValue (customAttributeTypeProvider);
+			if (value.FixedArguments.Length == 1 && value.FixedArguments [0].Value is int version) {
+				CallbackFormatVersion = version;
+			}
+			return;
+		}
 	}
 
 	internal static string? GetCustomAttributeName (CustomAttribute ca, MetadataReader reader)

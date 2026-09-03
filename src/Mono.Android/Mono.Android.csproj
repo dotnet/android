@@ -320,8 +320,10 @@
     <Compile Include="Java.Interop\JavaLibraryReferenceAttribute.cs" />
     <Compile Include="Java.Interop\JavaLocationException.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensions.cs" />
+    <Compile Include="Java.Interop\JavaPeerCallbackFormatAttribute.cs" />
     <Compile Include="Java.Interop\JavaPeerProxy.cs" />
     <Compile Include="Java.Interop\JavaTypeParametersAttribute.cs" />
+    <Compile Include="Java.Interop\JniMarshalTyped.cs" />
     <Compile Include="Java.Interop\Runtime.cs" />
     <Compile Include="Java.Interop\SafeArrayFactory.cs" />
     <Compile Include="Java.Interop\SafeJavaCollectionFactory.cs" />
