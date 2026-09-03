@@ -291,7 +291,7 @@ void init_jni (JNIEnv *env) noexcept
 		return;
 	}
 
-	xamarin::android::pthread_mutex_guard lock (java_init_lock);
+	xamarin::android::lock_guard lock (java_init_lock);
 
 	java_lang_Thread = to_gref (env, env->FindClass ("java/lang/Thread"));
 	java_lang_Thread_currentThread = env->GetStaticMethodID (java_lang_Thread, "currentThread", "()Ljava/lang/Thread;");
