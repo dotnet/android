@@ -46,6 +46,8 @@ namespace xamarin::android {
 		// then live for as long as the process does - the copies are never freed.
 		static auto duplicate_string (const char *str) noexcept -> char*
 		{
+			abort_unless (str != nullptr, "String to duplicate must not be null");
+
 			char *ret = strdup (str);
 			if (ret == nullptr) [[unlikely]] {
 				Helpers::abort_application (LOG_DEFAULT, "Unable to allocate memory for a string copy");
