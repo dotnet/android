@@ -15,27 +15,31 @@ namespace Xamarin.Android.Tasks
 
 		public bool AddKeepAlives { get; set; }
 
+		public bool EnableLegacyCompatibilityAssemblyFixups { get; set; } = true;
+
 		public bool UseDesignerAssembly { get; set; }
 
 		protected override void BuildPipeline (AssemblyPipeline pipeline, MSBuildLinkContext context)
 		{
-			// FixAbstractMethodsStep
-			var fixAbstractMethodsStep = new FixAbstractMethodsStep ();
-			fixAbstractMethodsStep.Initialize (context);
-			pipeline.Steps.Add (fixAbstractMethodsStep);
+			if (EnableLegacyCompatibilityAssemblyFixups) {
+				// FixAbstractMethodsStep
+				var fixAbstractMethodsStep = new FixAbstractMethodsStep ();
+				fixAbstractMethodsStep.Initialize (context);
+				pipeline.Steps.Add (fixAbstractMethodsStep);
 
-			// FixLegacyResourceDesignerStep
-			if (UseDesignerAssembly) {
-				var fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep ();
-				fixLegacyResourceDesignerStep.Initialize (context);
-				pipeline.Steps.Add (fixLegacyResourceDesignerStep);
-			}
+				// FixLegacyResourceDesignerStep
+				if (UseDesignerAssembly) {
+					var fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep ();
+					fixLegacyResourceDesignerStep.Initialize (context);
+					pipeline.Steps.Add (fixLegacyResourceDesignerStep);
+				}
 
-			// AddKeepAlivesStep
-			if (AddKeepAlives) {
-				var addKeepAliveStep = new AddKeepAlivesStep ();
-				addKeepAliveStep.Initialize (context);
-				pipeline.Steps.Add (addKeepAliveStep);
+				// AddKeepAlivesStep
+				if (AddKeepAlives) {
+					var addKeepAliveStep = new AddKeepAlivesStep ();
+					addKeepAliveStep.Initialize (context);
+					pipeline.Steps.Add (addKeepAliveStep);
+				}
 			}
 
 			// Ensure the <AssemblyModifierPipeline> task's steps are added

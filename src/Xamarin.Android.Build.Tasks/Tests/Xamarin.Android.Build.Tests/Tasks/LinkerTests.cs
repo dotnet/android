@@ -22,6 +22,33 @@ namespace Xamarin.Android.Build.Tests
 		void Logger (TraceLevel level, string message) =>
 			TestContext.WriteLine ($"{level}: {message}");
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public void LinkAssembliesNoShrinkLegacyCompatibilityFixups (bool enabled)
+		{
+			var task = new TestableLinkAssembliesNoShrink {
+				AddKeepAlives = true,
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				EnableLegacyCompatibilityAssemblyFixups = enabled,
+				UseDesignerAssembly = true,
+			};
+			var resolver = new DirectoryAssemblyResolver (Logger, false);
+			using var pipeline = new AssemblyPipeline (resolver);
+			var context = new MSBuildLinkContext (resolver, task.Log);
+
+			task.BuildPipelineForTest (pipeline, context);
+
+			Assert.AreEqual (enabled, pipeline.Steps.Any (step => step is FixAbstractMethodsStep));
+			Assert.AreEqual (enabled, pipeline.Steps.Any (step => step is FixLegacyResourceDesignerStep));
+			Assert.AreEqual (enabled, pipeline.Steps.Any (step => step is AddKeepAlivesStep));
+		}
+
+		sealed class TestableLinkAssembliesNoShrink : LinkAssembliesNoShrink
+		{
+			public void BuildPipelineForTest (AssemblyPipeline pipeline, MSBuildLinkContext context) =>
+				BuildPipeline (pipeline, context);
+		}
+
 		[Test]
 		public void FixAbstractMethodsStep_SkipDimMembers ()
 		{

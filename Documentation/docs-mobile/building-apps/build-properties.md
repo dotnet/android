@@ -391,6 +391,19 @@ Store checks: XA1004, XA1005 and XA1006. Disabling these checks is useful for
 developers who are not targeting the Google Play Store and do
 not wish to run those checks.
 
+## AndroidEnableLegacyCompatibilityAssemblyFixups
+
+A boolean property that controls whether untrimmed builds modify referenced
+assemblies to support legacy binding and resource designer behavior. These
+modifications include adding missing abstract interface methods, updating
+legacy resource designer references, and inserting `GC.KeepAlive()` calls into
+older Xamarin.Android binding assemblies. Trimmed builds using the `trimmable`
+type map do not run these compatibility fixups.
+
+The default value is `False` when
+[`$(AndroidTypeMapImplementation)`](#androidtypemapimplementation) is
+`trimmable`, and `True` otherwise.
+
 ## AndroidEnableMarshalMethods
 
 A bool property, that determines whether or not LLVM marshal methods are enabled.
