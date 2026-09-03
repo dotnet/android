@@ -363,6 +363,27 @@ namespace Android.Runtime {
 			}
 		}
 
+		/// <summary>
+		/// Converts the <see cref="JniHandleOwnership"/> given to an
+		/// <c>(IntPtr, JniHandleOwnership)</c> activation constructor into the
+		/// <see cref="JniObjectReferenceOptions"/> that the Java.Interop-style
+		/// <c>(ref JniObjectReference, JniObjectReferenceOptions)</c> constructor expects.
+		/// </summary>
+		/// <remarks>
+		/// Only <see cref="JniHandleOwnership.DoNotRegister"/> survives the conversion. The
+		/// handle-transfer bits intentionally do not: the caller keeps the incoming handle and
+		/// releases it with <see cref="DeleteRef"/> once construction finishes, so the peer must
+		/// always take a reference of its own — which is why
+		/// <see cref="JniObjectReferenceOptions.Copy"/> is always set.
+		/// </remarks>
+		[MethodImpl (MethodImplOptions.AggressiveInlining)]
+		internal static JniObjectReferenceOptions ToJniObjectReferenceOptions (JniHandleOwnership transfer)
+		{
+			return (transfer & JniHandleOwnership.DoNotRegister) != 0
+				? JniObjectReferenceOptions.CopyAndDoNotRegister
+				: JniObjectReferenceOptions.Copy;
+		}
+
 		public static IntPtr NewGlobalRef (IntPtr jobject)
 		{
 			var r = new JniObjectReference (jobject);
