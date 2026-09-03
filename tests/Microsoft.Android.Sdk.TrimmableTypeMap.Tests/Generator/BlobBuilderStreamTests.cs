@@ -178,6 +178,11 @@ public class BlobBuilderStreamTests : FixtureTestBase
 			string unresolvedTypeName, string unresolvedAssemblyName, string unresolvedAssemblyPath) { }
 		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) { }
 		public void LogInvalidJavaNameError (string javaName, string invalidIdentifier) { }
+		public void LogDuplicateJavaTypeError (string javaName) { }
+		public void LogDuplicateJavaTypeDetailsError (string javaName, string managedTypeName) { }
+		public void LogExportFieldWithParametersError () { }
+		public void LogExportFieldOnGenericTypeError () { }
+		public void LogExportFieldReturnsVoidError () { }
 		public void LogCustomJavaObjectError (string managedTypeName) { }
 		public void LogCustomJavaObjectWarning (string managedTypeName) { }
 	}
