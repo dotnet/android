@@ -45,6 +45,92 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void CoreClrR8WithPreGeneratedTypeMapKeepsFrameworkJcws ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
+			proj.SetProperty ("PublishTrimmed", "false");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var mergedAcwMap = builder.Output.GetIntermediaryPath ("acw-map.prebuilt-merged.txt");
+			var proguardPrimary = builder.Output.GetIntermediaryPath (Path.Combine ("proguard", "proguard_project_primary.cfg"));
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			const string frameworkJcw = "mono.android.view.View_OnClickListenerImplementor";
+
+			AssertFileContains (mergedAcwMap, frameworkJcw, expected: true, "merged framework ACW map");
+			AssertFileContains (proguardPrimary, frameworkJcw, expected: true, "R8 primary configuration");
+			Assert.IsTrue (
+				DexUtils.ContainsClassWithMethod ($"L{frameworkJcw.Replace ('.', '/')};", "<init>", "()V", dexFile, AndroidSdkPath),
+				$"`{dexFile}` should retain the pre-generated framework listener implementor when R8 shrinking is enabled.");
+
+			Assert.IsTrue (builder.Build (proj), "Incremental build should have succeeded.");
+			Assert.IsTrue (builder.Output.IsTargetSkipped ("_CompileToDalvik"), "_CompileToDalvik should be up to date.");
+			FileAssert.Exists (mergedAcwMap, "IncrementalClean must preserve the merged framework ACW map.");
+		}
+
+		[Test]
+		public void LowercaseCrc64DoesNotUseCrc64PreGeneratedTypeMap ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidPackageNamingPolicy", "LowercaseCrc64");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var typemapDir = builder.Output.GetIntermediaryPath ("typemap");
+			FileAssert.Exists (
+				Path.Combine (typemapDir, "_Mono.Android.TypeMap.dll"),
+				"LowercaseCrc64 must generate a matching framework typemap instead of consuming the SDK's Crc64 artifact.");
+			FileAssert.Exists (
+				Path.Combine (typemapDir, "_Java.Interop.TypeMap.dll"),
+				"LowercaseCrc64 must generate a matching Java.Interop typemap instead of consuming the SDK's Crc64 artifact.");
+		}
+
+		[Test]
+		public void TrimmedDebugSymbolsDoesNotUsePreGeneratedTypeMap ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidIncludeDebugSymbols", "true");
+			proj.SetProperty ("PublishTrimmed", "true");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var typemapDir = builder.Output.GetIntermediaryPath ("typemap");
+			FileAssert.Exists (
+				Path.Combine (typemapDir, "_Mono.Android.TypeMap.dll"),
+				"Trimmed builds must generate a framework typemap with app-specific roots.");
+			FileAssert.Exists (
+				Path.Combine (typemapDir, "_Java.Interop.TypeMap.dll"),
+				"Trimmed builds must generate a Java.Interop typemap with app-specific roots.");
+			FileAssert.DoesNotExist (
+				builder.Output.GetIntermediaryPath ("acw-map.prebuilt-merged.txt"),
+				"Trimmed builds must not consume pre-generated framework artifacts.");
+		}
+
+		[Test]
 		public void DebugTrimmableTypeMapLibrary_DoesNotPackageFrameworkJavaWrappers ()
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
