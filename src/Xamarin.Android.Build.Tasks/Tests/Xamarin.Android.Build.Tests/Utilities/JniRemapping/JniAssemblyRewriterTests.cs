@@ -174,6 +174,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void RejectsInvalidStringArrayCustomAttributeProlog ()
+		{
+			var exception = Assert.Throws<JniRewriteException> (() =>
+				CustomAttributeStringRewriter.TryRewriteStringArray (new byte [] { 0x00, 0x00, 0x01, 0x00, 0x00, 0x00 }, _ => null));
+
+			StringAssert.Contains ("expected 0x0001 prolog", exception.Message);
+		}
+
+		[Test]
 		public void DoesNotRewriteUnrelatedBareMemberAndDescriptorStrings ()
 		{
 			var fixture = new JniFixtureBuilder ();

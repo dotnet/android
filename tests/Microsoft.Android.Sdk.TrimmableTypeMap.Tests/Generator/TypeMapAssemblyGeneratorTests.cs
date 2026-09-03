@@ -1256,20 +1256,20 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 	static List<int> ReadLdftnTokens (byte [] ilBytes)
 	{
-		return ReadInlineMethodTokens (ilBytes, 0xFE, 0x06);
+		return ReadInlineMetadataTokens (ilBytes, 0xFE, 0x06);
 	}
 
 	static List<int> ReadCallTokens (byte [] ilBytes)
 	{
-		return ReadInlineMethodTokens (ilBytes, 0x28);
+		return ReadInlineMetadataTokens (ilBytes, 0x28);
 	}
 
 	static List<int> ReadLoadStaticFieldAddressTokens (byte [] ilBytes)
 	{
-		return ReadInlineMethodTokens (ilBytes, 0x7F);
+		return ReadInlineMetadataTokens (ilBytes, 0x7F);
 	}
 
-	static List<int> ReadInlineMethodTokens (byte [] ilBytes, byte opcode)
+	static List<int> ReadInlineMetadataTokens (byte [] ilBytes, byte opcode)
 	{
 		var tokens = new List<int> ();
 		for (int i = 0; i < ilBytes.Length - 4; i++) {
@@ -1285,7 +1285,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		return tokens;
 	}
 
-	static List<int> ReadInlineMethodTokens (byte [] ilBytes, byte opcodePrefix, byte opcode)
+	static List<int> ReadInlineMetadataTokens (byte [] ilBytes, byte opcodePrefix, byte opcode)
 	{
 		var tokens = new List<int> ();
 		for (int i = 0; i < ilBytes.Length - 5; i++) {

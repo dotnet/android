@@ -30,12 +30,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		/// </summary>
 		public static byte []? TryRewrite (byte [] originalContent, int fixedArgCount, Func<int, string?, string?> rewriteArg)
 		{
-			if (originalContent.Length < 2) {
-				throw new JniRewriteException ("Malformed custom attribute value blob: missing 2-byte prolog.");
-			}
-			if (originalContent [0] != 0x01 || originalContent [1] != 0x00) {
-				throw new JniRewriteException ("Malformed custom attribute value blob: expected 0x0001 prolog.");
-			}
+			ValidateProlog (originalContent);
 
 			using var ms = new MemoryStream (originalContent.Length);
 			ms.Write (originalContent, 0, 2); // Prolog (0x0001), verbatim.
@@ -86,13 +81,17 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		/// </summary>
 		public static byte []? TryRewriteStringArray (byte [] originalContent, Func<string, string?> rewriteElement)
 		{
+			ValidateProlog (originalContent);
 			if (originalContent.Length < 6) {
 				throw new JniRewriteException ("Malformed custom attribute value blob: missing string array length.");
 			}
 
 			using var ms = new MemoryStream (originalContent.Length);
 			ms.Write (originalContent, 0, 6); // Prolog (uint16) and array length (int32), verbatim.
-			int count = BitConverter.ToInt32 (originalContent, 2);
+			int count = originalContent [2] |
+				(originalContent [3] << 8) |
+				(originalContent [4] << 16) |
+				(originalContent [5] << 24);
 			if (count < -1) {
 				throw new JniRewriteException ($"Malformed custom attribute value blob: invalid string array length {count}.");
 			}
@@ -135,6 +134,16 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 			ms.Write (originalContent, pos, originalContent.Length - pos);
 			return changed ? ms.ToArray () : null;
+		}
+
+		static void ValidateProlog (byte [] originalContent)
+		{
+			if (originalContent.Length < 2) {
+				throw new JniRewriteException ("Malformed custom attribute value blob: missing 2-byte prolog.");
+			}
+			if (originalContent [0] != 0x01 || originalContent [1] != 0x00) {
+				throw new JniRewriteException ("Malformed custom attribute value blob: expected 0x0001 prolog.");
+			}
 		}
 	}
 }
