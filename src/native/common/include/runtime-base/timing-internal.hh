@@ -52,6 +52,13 @@ namespace xamarin::android {
 		{}
 	};
 
+	static_assert (
+		time_interval { 1500000123ull }.seconds == 1ull &&
+		time_interval { 1500000123ull }.milliseconds == 1500ull &&
+		time_interval { 1500000123ull }.nanoseconds == 123ull,
+		"The timing output for 1500000123ns must remain 1:1500::123"
+	);
+
 	// Events should never change their assigned values and no values should be reused.
 	// Values are used by the test runner to determine what measurement was taken.
 	//
@@ -78,11 +85,12 @@ namespace xamarin::android {
 
 	struct TimingEvent
 	{
-		bool                         before_managed;
 		time_point                   start;
 		time_point                   end;
-		TimingEventKind              kind;
 		char                        *more_info = nullptr;
+		TimingEvent                 *previous_open_event = nullptr;
+		TimingEventKind              kind;
+		bool                         before_managed;
 		bool                         complete = false;
 	};
 
@@ -100,14 +108,6 @@ namespace xamarin::android {
 		{
 			TimingEvent events [EVENT_CHUNK_SIZE];
 			TimingEventChunk *next = nullptr;
-		};
-
-		// A single entry on the per-thread stack of timing events which have been started but
-		// not yet ended.
-		struct OpenSequence
-		{
-			TimingEvent *event;
-			OpenSequence *next;
 		};
 
 		// defaults
@@ -463,38 +463,26 @@ namespace xamarin::android {
 		[[gnu::always_inline]]
 		static void push_sequence_event (TimingEvent *event) noexcept
 		{
-			auto *entry = static_cast<OpenSequence*> (std::malloc (sizeof (OpenSequence)));
-			if (entry == nullptr) [[unlikely]] {
-				Helpers::abort_application (LOG_TIMING, "Unable to allocate memory for an open timing sequence");
-			}
-
-			entry->event = event;
-			entry->next = open_sequences;
-			open_sequences = entry;
+			event->previous_open_event = open_sequence;
+			open_sequence = event;
 		}
 
 		[[gnu::always_inline]]
 		static auto get_sequence_event () noexcept -> TimingEvent*
 		{
-			OpenSequence *entry = open_sequences;
-			if (entry == nullptr) [[unlikely]] {
-				return nullptr;
-			}
-
-			return entry->event;
+			return open_sequence;
 		}
 
 		[[gnu::always_inline]]
 		static auto pop_sequence_event () noexcept -> TimingEvent*
 		{
-			OpenSequence *entry = open_sequences;
-			if (entry == nullptr) [[unlikely]] {
+			TimingEvent *event = open_sequence;
+			if (event == nullptr) [[unlikely]] {
 				return nullptr;
 			}
 
-			TimingEvent *event = entry->event;
-			open_sequences = entry->next;
-			std::free (entry);
+			open_sequence = event->previous_open_event;
+			event->previous_open_event = nullptr;
 
 			return event;
 		}
@@ -628,7 +616,7 @@ namespace xamarin::android {
 		// also keeps `FastTiming` constant-initialized, so the global instance needs no guard variable.
 		char output_file_name[MAX_TIMING_FILE_NAME_SIZE] = {};
 
-		static inline thread_local OpenSequence *open_sequences = nullptr;
+		static inline thread_local TimingEvent *open_sequence = nullptr;
 		static inline thread_local TimingEventChunk *cached_event_chunk = nullptr;
 		static inline thread_local size_t cached_event_chunk_index = 0uz;
 		static inline bool is_enabled = false;
