@@ -22,7 +22,7 @@ resources:
   - repository: maui
     type: github
     name: dotnet/maui
-    ref: net10.0
+    ref: refs/tags/10.0.100
     endpoint: xamarin
 
 parameters:
