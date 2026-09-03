@@ -31,6 +31,7 @@
 #include <runtime-base/monodroid-state.hh>
 #include <runtime-base/timing-internal.hh>
 #include <shared/log_types.hh>
+#include <shared/runtime-jni-names.hh>
 
 using namespace xamarin::android;
 
@@ -468,8 +469,8 @@ void Host::Java_mono_android_Runtime_initInternal (
 	env->DeleteLocalRef (lrefLoaderClass);
 
 	init.grefLoader                                     = env->NewGlobalRef (loader);
-	init.grefIGCUserPeer                                = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer"sv, true);
-	init.grefGCUserPeerable                             = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "net_dot_jni_GCUserPeerable"sv, true);
+	init.grefIGCUserPeer                                = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, RuntimeJniNames::IGCUserPeerRuntimeField, true);
+	init.grefGCUserPeerable                             = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, RuntimeJniNames::GCUserPeerableRuntimeField, true);
 
 	log_info (LOG_GC, "GREF GC Threshold: {}"sv, init.grefGcThreshold);
 

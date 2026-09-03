@@ -4,6 +4,7 @@
 #include <host/os-bridge.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/logger.hh>
+#include <shared/runtime-jni-names.hh>
 
 using namespace xamarin::android;
 
@@ -52,7 +53,7 @@ void Host::OnInit (jstring language, jstring filesDir, jstring cacheDir, JnienvI
 	abort_if_invalid_pointer_argument (initArgs, "initArgs");
 
 	JNIEnv *env = OSBridge::ensure_jnienv ();
-	jclass runtimeClass = env->FindClass ("mono/android/Runtime");
+	jclass runtimeClass = env->FindClass (RuntimeJniNames::RuntimeClass.data ());
 
 	jstring_wrapper language_js (env, language);
 	jstring_wrapper files_dir (env, filesDir);
@@ -69,14 +70,14 @@ void Host::OnInit (jstring language, jstring filesDir, jstring cacheDir, JnienvI
 	// NativeAOT initializes Mono.Android's common JNI state before creating the JniRuntime,
 	// so the Java peer marker classes must be provided by the host instead of being looked
 	// up later from mono.android.Runtime static fields like MonoVM/CoreCLR.
-	jclass lrefIGCUserPeer = env->FindClass ("mono/android/IGCUserPeer");
+	jclass lrefIGCUserPeer = env->FindClass (RuntimeJniNames::IGCUserPeerClass.data ());
 	if (lrefIGCUserPeer == nullptr) [[unlikely]] {
 		env->ExceptionDescribe ();
 		env->ExceptionClear ();
 		abort_unless (false, "Failed to load mono/android/IGCUserPeer class");
 	}
 
-	jclass lrefGCUserPeerable = env->FindClass ("net/dot/jni/GCUserPeerable");
+	jclass lrefGCUserPeerable = env->FindClass (RuntimeJniNames::GCUserPeerableClass.data ());
 	if (lrefGCUserPeerable == nullptr) [[unlikely]] {
 		env->ExceptionDescribe ();
 		env->ExceptionClear ();

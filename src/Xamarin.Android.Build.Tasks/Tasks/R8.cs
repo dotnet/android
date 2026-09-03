@@ -391,15 +391,8 @@ namespace Xamarin.Android.Tasks
 
 			using var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration);
 			string resourceName = UseTrimmableNativeAotProguardConfiguration ? "proguard_trimmable_nativeaot.cfg" : "proguard_xamarin.cfg";
-			using (Stream resource = GetEmbeddedResourceStream (resourceName))
-			using (var reader = new StreamReader (resource)) {
-				while (reader.ReadLine () is string line) {
-					if (EnableObfuscation && String.Equals (line.Trim (), "-dontobfuscate", StringComparison.OrdinalIgnoreCase)) {
-						continue;
-					}
-					xamcfg.WriteLine (line);
-				}
-			}
+			WriteEmbeddedConfiguration (xamcfg, resourceName, filterLegacyObfuscationRules: EnableObfuscation);
+			WriteEmbeddedConfiguration (xamcfg, "proguard_r8_jni_runtime.cfg", filterLegacyObfuscationRules: false);
 			if (IgnoreWarnings) {
 				xamcfg.WriteLine ("-ignorewarnings");
 			}
@@ -407,6 +400,22 @@ namespace Xamarin.Android.Tasks
 				xamcfg.WriteLine ("-keepattributes SourceFile");
 				xamcfg.WriteLine ("-keepattributes LineNumberTable");
 				xamcfg.WriteLine ($"-printmapping \"{Path.GetFullPath (ProguardMappingFileOutput)}\"");
+			}
+		}
+
+		void WriteEmbeddedConfiguration (StreamWriter writer, string resourceName, bool filterLegacyObfuscationRules)
+		{
+			using Stream resource = GetEmbeddedResourceStream (resourceName);
+			using var reader = new StreamReader (resource);
+			while (reader.ReadLine () is string line) {
+				string trimmed = line.Trim ();
+				if (filterLegacyObfuscationRules &&
+						(String.Equals (trimmed, "-dontobfuscate", StringComparison.OrdinalIgnoreCase) ||
+						 trimmed.StartsWith ("-keep class net.dot.jni.** ", StringComparison.Ordinal) ||
+						 trimmed.StartsWith ("-keep class mono.android.** ", StringComparison.Ordinal))) {
+					continue;
+				}
+				writer.WriteLine (line);
 			}
 		}
 
