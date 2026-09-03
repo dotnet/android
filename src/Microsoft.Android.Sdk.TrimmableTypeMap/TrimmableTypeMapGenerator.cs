@@ -49,6 +49,7 @@ public class TrimmableTypeMapGenerator
 		bool errorOnCustomJavaObject = true,
 		IReadOnlyCollection<string>? customViewTypeNames = null,
 		IReadOnlyCollection<string>? preGeneratedJcwNames = null,
+		string? preGeneratedJcwSource = null,
 		bool forceFrameworkPeersUnconditional = false,
 		bool collectMarshalMethodsForNonAcw = true,
 		bool includeBuiltInValueTypeUniverses = false,
@@ -66,7 +67,7 @@ public class TrimmableTypeMapGenerator
 			collectMarshalMethodsForNonAcw);
 		var manifestForRooting = PrepareManifestForRooting (manifestTemplate, manifestConfig);
 		if (allPeers.Count == 0) {
-			if (!ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass, manifestForRooting, preGeneratedJcwNames)) {
+			if (!ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass, manifestForRooting, preGeneratedJcwNames, preGeneratedJcwSource)) {
 				return new TrimmableTypeMapResult ([], [], allPeers);
 			}
 			logger.LogNoJavaPeerTypesFound ();
@@ -95,7 +96,7 @@ public class TrimmableTypeMapGenerator
 		RootManifestReferencedTypes (allPeers, manifestForRooting, manifestConfig?.ApplicationJavaClass);
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
-		bool validJavaNames = ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass, manifestForRooting, preGeneratedJcwNames);
+		bool validJavaNames = ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass, manifestForRooting, preGeneratedJcwNames, preGeneratedJcwSource);
 		if (!validConstructors || !validJavaNames) {
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
@@ -176,7 +177,8 @@ public class TrimmableTypeMapGenerator
 		IReadOnlyList<JavaPeerInfo> peers,
 		string? applicationJavaClass = null,
 		XDocument? manifest = null,
-		IReadOnlyCollection<string>? preGeneratedJcwNames = null)
+		IReadOnlyCollection<string>? preGeneratedJcwNames = null,
+		string? preGeneratedJcwSource = null)
 	{
 		bool valid = true;
 		var reportedNames = new HashSet<string> (StringComparer.Ordinal);
@@ -199,8 +201,8 @@ public class TrimmableTypeMapGenerator
 					.ThenBy (peer => peer.AssemblyName, StringComparer.Ordinal)) {
 				logger.LogDuplicateJavaTypeDetailsError (javaName, $"{peer.ManagedTypeName}, {peer.AssemblyName}");
 			}
-			if (conflictsWithPreGeneratedJcw) {
-				logger.LogDuplicateJavaTypeDetailsError (javaName, "pre-generated framework JCW");
+			if (conflictsWithPreGeneratedJcw && preGeneratedJcwSource is { Length: > 0 }) {
+				logger.LogDuplicateJavaTypeDetailsError (javaName, preGeneratedJcwSource);
 			}
 			valid = false;
 		}
