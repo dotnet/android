@@ -4,6 +4,8 @@ using Android.Runtime;
 
 using Java.Interop;
 
+using Microsoft.Android.Runtime;
+
 using NUnit.Framework;
 
 namespace Java.InteropTests
@@ -35,6 +37,7 @@ namespace Java.InteropTests
 		[Test]
 		public void JavaInteropInterfaceInvoker_ActivatesOnceAndPreservesIdentity ()
 		{
+			AssumeTrimmableTypeMapEnabled ();
 			JavaInteropCollectionInvoker.ConstructorInvocations = 0;
 
 			var handle = CreateArrayListHandle ();
@@ -55,6 +58,7 @@ namespace Java.InteropTests
 		[Test]
 		public void InheritedJavaInteropInterface_UsesExplicitInvoker ()
 		{
+			AssumeTrimmableTypeMapEnabled ();
 			InheritedJavaInteropListInvoker.ConstructorInvocations = 0;
 
 			var handle = CreateArrayListHandle ();
@@ -74,6 +78,7 @@ namespace Java.InteropTests
 		[Test]
 		public void AbstractJavaInteropType_UsesExplicitInvoker ()
 		{
+			AssumeTrimmableTypeMapEnabled ();
 			JavaInteropAbstractListInvoker.ConstructorInvocations = 0;
 
 			var handle = CreateArrayListHandle ();
@@ -86,6 +91,13 @@ namespace Java.InteropTests
 				peer.Dispose ();
 			} finally {
 				JNIEnv.DeleteGlobalRef (handle);
+			}
+		}
+
+		static void AssumeTrimmableTypeMapEnabled ()
+		{
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
 			}
 		}
 
