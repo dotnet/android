@@ -189,11 +189,17 @@ steps:
     continueOnError: false
 
 - powershell: |
+    & '${{ parameters.xaSourcePath }}/build-tools/automation/scripts/ConfigureMauiR2RHelixEnvironment.Tests.ps1'
+  displayName: Test MAUI R2R Helix environment
+
+- powershell: |
     $ErrorActionPreference = 'Stop'
     $xaSourcePath = '${{ parameters.xaSourcePath }}'
     $logsDirectory = '${{ parameters.logsDirectory }}'
     $payloadRootDirectory = '${{ parameters.payloadDirectory }}'
     New-Item -ItemType Directory -Force -Path $logsDirectory | Out-Null
+
+    . (Join-Path $xaSourcePath 'build-tools/automation/scripts/ConfigureMauiR2RHelixEnvironment.ps1')
 
     if ([Environment]::OSVersion.Platform -eq "Unix") {
       $dotnetRoot = Join-Path $xaSourcePath 'bin/$(XA.Build.Configuration)/dotnet'
@@ -309,3 +315,4 @@ steps:
   continueOnError: false
   env:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+    SYSTEM_PULLREQUEST_ISFORK: $(System.PullRequest.IsFork)

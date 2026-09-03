@@ -276,19 +276,39 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 		public bool TryGetRenamedField (string owningJniClassName, string originalFieldName, out string obfuscatedFieldName)
 		{
-			obfuscatedFieldName = "";
-			if (!fields.TryGetValue (owningJniClassName, out var classFields) ||
-					!classFields.TryGetValue (originalFieldName, out string? renamed)) {
+			if (!TryPeekRenamedField (owningJniClassName, originalFieldName, out obfuscatedFieldName)) {
 				return false;
 			}
-			obfuscatedFieldName = renamed;
 			RecordAccess (
 				BuildClassEntry (owningJniClassName),
 				BuildFieldEntry (owningJniClassName, originalFieldName));
 			return true;
 		}
 
+		internal bool TryPeekRenamedField (string owningJniClassName, string originalFieldName, out string obfuscatedFieldName)
+		{
+			obfuscatedFieldName = "";
+			if (!fields.TryGetValue (owningJniClassName, out var classFields) ||
+					!classFields.TryGetValue (originalFieldName, out string? renamed)) {
+				return false;
+			}
+			obfuscatedFieldName = renamed;
+			return true;
+		}
+
 		public bool TryGetRenamedMethod (string owningJniClassName, string javaMethodName, IReadOnlyList<string> javaParameterTypes, string javaReturnType, out string obfuscatedMethodName)
+		{
+			if (!TryPeekRenamedMethod (owningJniClassName, javaMethodName, javaParameterTypes, javaReturnType, out obfuscatedMethodName)) {
+				return false;
+			}
+			string methodKey = BuildMethodKey (javaMethodName, javaParameterTypes, javaReturnType);
+			RecordAccess (
+				BuildClassEntry (owningJniClassName),
+				BuildMethodEntry (owningJniClassName, methodKey));
+			return true;
+		}
+
+		internal bool TryPeekRenamedMethod (string owningJniClassName, string javaMethodName, IReadOnlyList<string> javaParameterTypes, string javaReturnType, out string obfuscatedMethodName)
 		{
 			obfuscatedMethodName = "";
 			if (!methods.TryGetValue (owningJniClassName, out var classMethods)) {
@@ -299,9 +319,6 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return false;
 			}
 			obfuscatedMethodName = renamed;
-			RecordAccess (
-				BuildClassEntry (owningJniClassName),
-				BuildMethodEntry (owningJniClassName, methodKey));
 			return true;
 		}
 

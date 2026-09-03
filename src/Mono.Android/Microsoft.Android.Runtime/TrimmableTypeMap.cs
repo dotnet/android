@@ -195,8 +195,45 @@ public class TrimmableTypeMap
 			return null;
 		}
 
+		if (TryResolveProxyFromSealedTargetType (handle, targetType, out var proxy)) {
+			return proxy;
+		}
+
 		return TryGetProxyFromHierarchy (handle, targetType) ??
 			TryGetProxyFromTargetType (handle, targetType);
+	}
+
+	bool TryResolveProxyFromSealedTargetType (
+		IntPtr handle,
+		Type? targetType,
+		out JavaPeerProxy? proxy)
+	{
+		proxy = null;
+		// App peers can use class loaders which differ from the runtime fallback loader.
+		if (targetType is null ||
+				!targetType.IsSealed ||
+				targetType.Assembly != typeof (Java.Lang.Object).Assembly) {
+			return false;
+		}
+
+		var targetProxy = GetProxyForManagedType (targetType);
+		if (targetProxy is null) {
+			return false;
+		}
+
+		var targetClass = default (JniObjectReference);
+		try {
+			targetClass = JniEnvironment.Types.FindClass (targetProxy.JniName);
+			var reference = new JniObjectReference (handle);
+			if (JniEnvironment.Types.IsInstanceOf (reference, targetClass)) {
+				proxy = targetProxy;
+			}
+			return true;
+		} catch (Java.Lang.ClassNotFoundException) {
+			return false;
+		} finally {
+			JniObjectReference.Dispose (ref targetClass);
+		}
 	}
 
 	JavaPeerProxy? TryGetProxyFromHierarchy (IntPtr handle, Type? targetType)
