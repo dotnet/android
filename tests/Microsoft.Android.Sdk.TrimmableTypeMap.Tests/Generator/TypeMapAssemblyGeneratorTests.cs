@@ -502,10 +502,30 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.Single (m => reader.GetString (m.Name) == "CreateInstance");
 		var il = pe.GetMethodBody (createInstance.RelativeVirtualAddress).GetILBytes ();
 
-		// Copy | ((ownership & JniHandleOwnership.DoNotRegister) >> 2)
-		byte [] expected = [0x17, 0x04, 0x1f, 0x10, 0x5f, 0x18, 0x64, 0x60];
-		Assert.True (il.AsSpan ().IndexOf (expected) >= 0,
-			"Java.Interop-style activation should propagate DoNotRegister into JniObjectReferenceOptions.");
+		// The ownership -> options mapping lives in JNIEnv.ToJniObjectReferenceOptions, so the
+		// activation stub should load its `ownership` argument and call that helper. Resolving
+		// the call target by name checks the emitted *meaning*, not just a byte pattern.
+		var callTargets = new List<string> ();
+		for (int i = 0; i + 4 < il.Length; i++) {
+			if (il [i] != 0x28) // call
+				continue;
+			var token = BitConverter.ToInt32 (il, i + 1);
+			var handle = MetadataTokens.EntityHandle (token);
+			if (handle.Kind != HandleKind.MemberReference)
+				continue;
+			var memberRef = reader.GetMemberReference ((MemberReferenceHandle) handle);
+			var parent = memberRef.Parent;
+			if (parent.Kind != HandleKind.TypeReference)
+				continue;
+			var parentType = reader.GetTypeReference ((TypeReferenceHandle) parent);
+			callTargets.Add ($"{reader.GetString (parentType.Name)}.{reader.GetString (memberRef.Name)}");
+
+			// ldarg.2 (the `ownership` parameter) must be what feeds the helper.
+			if (reader.GetString (memberRef.Name) == "ToJniObjectReferenceOptions")
+				Assert.Equal (0x04, il [i - 1]);
+		}
+
+		Assert.Contains ("JNIEnv.ToJniObjectReferenceOptions", callTargets);
 	}
 
 	[Fact]

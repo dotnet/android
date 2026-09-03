@@ -101,6 +101,7 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
+	MemberReferenceHandle _jniEnvToJniObjectReferenceOptionsRef;
 	MemberReferenceHandle _jniEnvGetStringRef;
 	MemberReferenceHandle _jniEnvGetArrayRef;
 	MemberReferenceHandle _javaLangObjectGetObjectRef;
@@ -397,6 +398,16 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
 				}));
 
+		// JNIEnv.ToJniObjectReferenceOptions(JniHandleOwnership) — static, internal
+		// Maps the activation ctor's ownership argument onto the JniObjectReferenceOptions
+		// a Java.Interop-style ctor takes. Kept in Mono.Android so the mapping is plain C#.
+		_jniEnvToJniObjectReferenceOptionsRef = _pe.AddMemberRef (_jniEnvRef, "ToJniObjectReferenceOptions",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Type ().Type (_jniObjectReferenceOptionsRef, true),
+				p => {
+					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+				}));
+
 		_jniEnvGetStringRef = _pe.AddMemberRef (_jniEnvRef, "GetString",
 			sig => sig.MethodSignature ().Parameters (2,
 				rt => rt.Type ().String (),
@@ -404,7 +415,6 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().IntPtr ();
 					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
 				}));
-
 		_jniEnvGetArrayRef = _pe.AddMemberRef (_jniEnvRef, "GetArray",
 			sig => sig.MethodSignature ().Parameters (3,
 				rt => rt.Type ().Type (_systemArrayRef, false),
@@ -915,53 +925,15 @@ sealed class TypeMapAssemblyEmitter
 	}
 
 	/// <summary>
-	/// Emits the conversion from this method's <c>JniHandleOwnership</c> argument to the
-	/// <c>JniObjectReferenceOptions</c> value a Java.Interop-style activation constructor
-	/// expects, as <c>Copy | ((ownership &amp; DoNotRegister) >> 2)</c>.
+	/// Emits the conversion of this method's <c>JniHandleOwnership</c> argument into the
+	/// <c>JniObjectReferenceOptions</c> a Java.Interop-style activation constructor expects,
+	/// by calling <c>JNIEnv.ToJniObjectReferenceOptions (ownership)</c>. The mapping itself
+	/// lives in Mono.Android so it is expressed in readable C# rather than raw IL.
 	/// </summary>
-	/// <remarks>
-	/// <para>
-	/// The two enums live in different assemblies and only one flag has to survive the
-	/// conversion — "do not register this peer" — but it sits at a different bit in each:
-	/// <c>Android.Runtime.JniHandleOwnership.DoNotRegister</c> is <c>0x10</c> (bit 4),
-	/// while the matching bit of <c>Java.Interop.JniObjectReferenceOptions</c>
-	/// (<c>JniRuntime.ReflectionJniValueManager.DoNotRegisterTarget</c>) is <c>1 &lt;&lt; 2</c>.
-	/// Two positions apart, hence the shift:
-	/// </para>
-	/// <list type="bullet">
-	///   <item><c>ownership &amp; 0x10</c> isolates the flag, yielding <c>0x10</c> or <c>0</c>.</item>
-	///   <item><c>&gt;&gt; 2</c> moves bit 4 down to bit 2, yielding <c>0x04</c> or <c>0</c>.</item>
-	///   <item><c>Copy |</c> adds the copy bit, yielding <c>CopyAndDoNotRegister</c> (5) or <c>Copy</c> (1).</item>
-	/// </list>
-	/// <para>
-	/// Masking also discards <c>TransferLocalRef</c>/<c>TransferGlobalRef</c>, which are not
-	/// the constructor's concern: the generated method retains the incoming handle and
-	/// releases it itself via <c>JNIEnv.DeleteRef (handle, ownership)</c> once construction
-	/// finishes. That is also why <c>Copy</c> is always set — the peer must take its own
-	/// reference rather than assume ownership of the caller's handle.
-	/// </para>
-	/// <para>
-	/// The arithmetic is used in preference to a branch purely because this is emitted IL:
-	/// it needs no labels or branch targets. It is correct only because <c>0x10 >> 2</c>
-	/// happens to equal <c>0x04</c>; if either bit ever moves, the generator test below
-	/// keeps passing (it pins the emitted bytes, not the meaning) and the on-device
-	/// activation-options assertion in <c>TrimmableTypeMapRuntimeCoverageTests</c> is what
-	/// catches it.
-	/// </para>
-	/// </remarks>
-	static void EmitJniObjectReferenceOptions (PEAssemblyBuilder.TrackedInstructionEncoder encoder)
+	void EmitJniObjectReferenceOptions (PEAssemblyBuilder.TrackedInstructionEncoder encoder)
 	{
-		const int jniObjectReferenceOptionsCopy = 1;
-		const int jniHandleOwnershipDoNotRegister = 0x10;
-		const int ownershipToOptionsShift = 2;
-
-		encoder.LoadConstantI4 (jniObjectReferenceOptionsCopy);
 		encoder.OpCode (ILOpCode.Ldarg_2);
-		encoder.LoadConstantI4 (jniHandleOwnershipDoNotRegister);
-		encoder.OpCode (ILOpCode.And);
-		encoder.LoadConstantI4 (ownershipToOptionsShift);
-		encoder.OpCode (ILOpCode.Shr_un);
-		encoder.OpCode (ILOpCode.Or);
+		encoder.Call (_jniEnvToJniObjectReferenceOptionsRef, parameterCount: 1, returnsValue: true);
 	}
 
 	void EncodeJniObjectReferenceLocal (BlobBuilder blob)
