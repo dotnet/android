@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures</RootNamespace>
+    <!-- This assembly is only used as a test input for the scanner — never executed -->
+    <IsPackable>false</IsPackable>
+    <EnableDefaultItems>true</EnableDefaultItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TestFixtures\TestFixtures.csproj" />
+  </ItemGroup>
+
+</Project>

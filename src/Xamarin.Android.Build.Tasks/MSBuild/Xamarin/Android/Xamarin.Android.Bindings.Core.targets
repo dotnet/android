@@ -120,6 +120,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
         EnableBindingInterfaceConstants="$(AndroidBoundInterfacesContainConstants)"
         EnableRestrictToAttributes="$(AndroidEnableRestrictToAttributes)"
         EnableObsoleteOverrideInheritance="$(AndroidEnableObsoleteOverrideInheritance)"
+        EnableUnmanagedCallersOnlyCallbacks="$(_AndroidEnableUnmanagedCallersOnlyCallbacks)"
         Nullable="$(Nullable)"
         NamespaceTransforms="@(AndroidNamespaceReplacement)"
     />

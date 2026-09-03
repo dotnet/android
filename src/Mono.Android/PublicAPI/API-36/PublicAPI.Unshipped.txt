@@ -1,38 +1,4 @@
 #nullable enable
-static Android.Runtime.JNIEnv.BridgeProcessingGeneration.get -> int
-REMOVED Xamarin.Android.Net.AndroidClientHandler
-REMOVED Xamarin.Android.Net.AndroidClientHandler.AndroidClientHandler() -> void
-REMOVED Xamarin.Android.Net.AndroidClientHandler.AssertSelf() -> void
-REMOVED Xamarin.Android.Net.AndroidClientHandler.ConnectTimeout.get -> System.TimeSpan
-REMOVED Xamarin.Android.Net.AndroidClientHandler.ConnectTimeout.set -> void
-REMOVED Xamarin.Android.Net.AndroidClientHandler.PreAuthenticationData.get -> Xamarin.Android.Net.AuthenticationData?
-REMOVED Xamarin.Android.Net.AndroidClientHandler.PreAuthenticationData.set -> void
-REMOVED Xamarin.Android.Net.AndroidClientHandler.ProxyAuthenticationRequested.get -> bool
-REMOVED Xamarin.Android.Net.AndroidClientHandler.ReadTimeout.get -> System.TimeSpan
-REMOVED Xamarin.Android.Net.AndroidClientHandler.ReadTimeout.set -> void
-REMOVED Xamarin.Android.Net.AndroidClientHandler.RequestedAuthentication.get -> System.Collections.Generic.IList<Xamarin.Android.Net.AuthenticationData!>?
-REMOVED Xamarin.Android.Net.AndroidClientHandler.RequestNeedsAuthorization.get -> bool
-REMOVED Xamarin.Android.Net.AndroidClientHandler.TrustedCerts.get -> System.Collections.Generic.IList<Java.Security.Cert.Certificate!>?
-REMOVED Xamarin.Android.Net.AndroidClientHandler.TrustedCerts.set -> void
-REMOVED override Xamarin.Android.Net.AndroidClientHandler.Dispose(bool disposing) -> void
-REMOVED override Xamarin.Android.Net.AndroidClientHandler.SendAsync(System.Net.Http.HttpRequestMessage! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Net.Http.HttpResponseMessage!>!
-REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.ConfigureCustomSSLSocketFactory(Javax.Net.Ssl.HttpsURLConnection! connection) -> Javax.Net.Ssl.SSLSocketFactory?
-REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.ConfigureKeyManagerFactory(Java.Security.KeyStore? keyStore) -> Javax.Net.Ssl.KeyManagerFactory?
-REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.ConfigureKeyStore(Java.Security.KeyStore? keyStore) -> Java.Security.KeyStore?
-REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.ConfigureTrustManagerFactory(Java.Security.KeyStore? keyStore) -> Javax.Net.Ssl.TrustManagerFactory?
-REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.GetJavaProxy(System.Uri! destination, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Java.Net.Proxy?>!
-REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.GetSSLHostnameVerifier(Javax.Net.Ssl.HttpsURLConnection! connection) -> Javax.Net.Ssl.IHostnameVerifier?
-REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.SetupRequest(System.Net.Http.HttpRequestMessage! request, Java.Net.HttpURLConnection! conn) -> System.Threading.Tasks.Task!
-REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.WriteRequestContentToOutput(System.Net.Http.HttpRequestMessage! request, Java.Net.HttpURLConnection! httpConnection, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
-abstract Android.App.AppFunctions.AppFunctionService.OnExecuteFunction(Android.App.AppFunctions.ExecuteAppFunctionRequest! request, string! callingPackage, Android.Content.PM.SigningInfo! callingPackageSigningInfo, Android.OS.CancellationSignal! cancellationSignal, Android.OS.IOutcomeReceiver! callback) -> void
-abstract Android.Media.TV.Ads.TvAdService.OnCreateSession(string! serviceId, string! type) -> Android.Media.TV.Ads.TvAdService.Session?
-abstract Android.Media.TV.Ads.TvAdService.Session.OnRelease() -> void
-abstract Android.Media.TV.Ads.TvAdService.Session.OnSetSurface(Android.Views.Surface? surface) -> bool
-abstract Android.Ranging.RangingConfig.DescribeContents() -> int
-abstract Android.Ranging.RangingConfig.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
-abstract Android.Service.Settings.Preferences.SettingsPreferenceService.OnGetAllPreferenceMetadata(Android.Service.Settings.Preferences.MetadataRequest! request, Android.OS.IOutcomeReceiver! callback) -> void
-abstract Android.Service.Settings.Preferences.SettingsPreferenceService.OnGetPreferenceValue(Android.Service.Settings.Preferences.GetValueRequest! request, Android.OS.IOutcomeReceiver! callback) -> void
-abstract Android.Service.Settings.Preferences.SettingsPreferenceService.OnSetPreferenceValue(Android.Service.Settings.Preferences.SetValueRequest! request, Android.OS.IOutcomeReceiver! callback) -> void
 Android.AccessibilityServices.GlobalAction.MediaPlayPause = 22 -> Android.AccessibilityServices.GlobalAction
 Android.AccessibilityServices.GlobalAction.Menu = 21 -> Android.AccessibilityServices.GlobalAction
 Android.AdServices.AdSelection.AdSelectionOutcome.Builder.SetComponentAdUris(System.Collections.Generic.IList<Android.Net.Uri!>! componentAdUris) -> Android.AdServices.AdSelection.AdSelectionOutcome.Builder!
@@ -199,13 +165,6 @@ Android.App.AppFunctions.ExecuteAppFunctionResponse.Extras.get -> Android.OS.Bun
 Android.App.AppFunctions.ExecuteAppFunctionResponse.InterfaceConsts
 Android.App.AppFunctions.ExecuteAppFunctionResponse.ResultDocument.get -> Android.App.AppSearch.GenericDocument!
 Android.App.AppFunctions.ExecuteAppFunctionResponse.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
-Android.App.ApplicationStartInfo.StartComponent.get -> Android.App.ApplicationStartInfoStartComponent
-Android.App.ApplicationStartInfoStartComponent
-Android.App.ApplicationStartInfoStartComponent.Activity = 1 -> Android.App.ApplicationStartInfoStartComponent
-Android.App.ApplicationStartInfoStartComponent.Broadcast = 2 -> Android.App.ApplicationStartInfoStartComponent
-Android.App.ApplicationStartInfoStartComponent.ContentProvider = 3 -> Android.App.ApplicationStartInfoStartComponent
-Android.App.ApplicationStartInfoStartComponent.Other = 5 -> Android.App.ApplicationStartInfoStartComponent
-Android.App.ApplicationStartInfoStartComponent.Service = 4 -> Android.App.ApplicationStartInfoStartComponent
 Android.App.AppOpsManagerCallbackFlag
 Android.App.AppOpsManagerCallbackFlag.Async = 1 -> Android.App.AppOpsManagerCallbackFlag
 Android.App.AppOpsManagerCallbackFlag.None = 0 -> Android.App.AppOpsManagerCallbackFlag
@@ -275,10 +234,10 @@ Android.App.AppSearch.EmbeddingVector.WriteToParcel(Android.OS.Parcel! dest, And
 Android.App.AppSearch.GetSchemaResponse.Builder.Builder(Android.App.AppSearch.GetSchemaResponse! getSchemaResponse) -> void
 Android.App.AppSearch.GetSchemaResponse.Builder.ClearPubliclyVisibleSchema(string! schemaType) -> Android.App.AppSearch.GetSchemaResponse.Builder!
 Android.App.AppSearch.GetSchemaResponse.Builder.ClearRequiredPermissionsForSchemaTypeVisibility(string! schemaType) -> Android.App.AppSearch.GetSchemaResponse.Builder!
-Android.App.AppSearch.GetSchemaResponse.Builder.ClearSchemas() -> Android.App.AppSearch.GetSchemaResponse.Builder!
 Android.App.AppSearch.GetSchemaResponse.Builder.ClearSchemaTypeNotDisplayedBySystem(string! schemaType) -> Android.App.AppSearch.GetSchemaResponse.Builder!
 Android.App.AppSearch.GetSchemaResponse.Builder.ClearSchemaTypeVisibleToConfigs(string! schemaType) -> Android.App.AppSearch.GetSchemaResponse.Builder!
 Android.App.AppSearch.GetSchemaResponse.Builder.ClearSchemaTypeVisibleToPackages(string! schemaType) -> Android.App.AppSearch.GetSchemaResponse.Builder!
+Android.App.AppSearch.GetSchemaResponse.Builder.ClearSchemas() -> Android.App.AppSearch.GetSchemaResponse.Builder!
 Android.App.AppSearch.JoinSpec.Builder.Builder(Android.App.AppSearch.JoinSpec! joinSpec) -> void
 Android.App.AppSearch.JoinSpec.Builder.SetChildPropertyExpression(string! childPropertyExpression) -> Android.App.AppSearch.JoinSpec.Builder!
 Android.App.AppSearch.OpenBlobForReadResponse
@@ -305,14 +264,14 @@ Android.App.AppSearch.SearchResult.Builder.AddInformationalRankingSignal(double 
 Android.App.AppSearch.SearchResult.Builder.SetParentTypeMap(System.Collections.Generic.IDictionary<string!, System.Collections.Generic.IList<string!>!>! parentTypeMap) -> Android.App.AppSearch.SearchResult.Builder!
 Android.App.AppSearch.SearchResult.InformationalRankingSignals.get -> System.Collections.Generic.IList<Java.Lang.Double!>!
 Android.App.AppSearch.SearchResult.ParentTypeMap.get -> System.Collections.Generic.IDictionary<string!, System.Collections.Generic.IList<string!>!>!
-Android.App.AppSearch.SearchSpec.Builder.AddEmbeddingParameters(params Android.App.AppSearch.EmbeddingVector![]! searchEmbeddings) -> Android.App.AppSearch.SearchSpec.Builder!
 Android.App.AppSearch.SearchSpec.Builder.AddEmbeddingParameters(System.Collections.Generic.ICollection<Android.App.AppSearch.EmbeddingVector!>! searchEmbeddings) -> Android.App.AppSearch.SearchSpec.Builder!
-Android.App.AppSearch.SearchSpec.Builder.AddFilterDocumentIds(params string![]! documentIds) -> Android.App.AppSearch.SearchSpec.Builder!
+Android.App.AppSearch.SearchSpec.Builder.AddEmbeddingParameters(params Android.App.AppSearch.EmbeddingVector![]! searchEmbeddings) -> Android.App.AppSearch.SearchSpec.Builder!
 Android.App.AppSearch.SearchSpec.Builder.AddFilterDocumentIds(System.Collections.Generic.ICollection<string!>! documentIds) -> Android.App.AppSearch.SearchSpec.Builder!
-Android.App.AppSearch.SearchSpec.Builder.AddInformationalRankingExpressions(params string![]! informationalRankingExpressions) -> Android.App.AppSearch.SearchSpec.Builder!
+Android.App.AppSearch.SearchSpec.Builder.AddFilterDocumentIds(params string![]! documentIds) -> Android.App.AppSearch.SearchSpec.Builder!
 Android.App.AppSearch.SearchSpec.Builder.AddInformationalRankingExpressions(System.Collections.Generic.ICollection<string!>! informationalRankingExpressions) -> Android.App.AppSearch.SearchSpec.Builder!
-Android.App.AppSearch.SearchSpec.Builder.AddSearchStringParameters(params string![]! searchStringParameters) -> Android.App.AppSearch.SearchSpec.Builder!
+Android.App.AppSearch.SearchSpec.Builder.AddInformationalRankingExpressions(params string![]! informationalRankingExpressions) -> Android.App.AppSearch.SearchSpec.Builder!
 Android.App.AppSearch.SearchSpec.Builder.AddSearchStringParameters(System.Collections.Generic.IList<string!>! searchStringParameters) -> Android.App.AppSearch.SearchSpec.Builder!
+Android.App.AppSearch.SearchSpec.Builder.AddSearchStringParameters(params string![]! searchStringParameters) -> Android.App.AppSearch.SearchSpec.Builder!
 Android.App.AppSearch.SearchSpec.Builder.Builder(Android.App.AppSearch.SearchSpec! searchSpec) -> void
 Android.App.AppSearch.SearchSpec.Builder.ClearEmbeddingParameters() -> Android.App.AppSearch.SearchSpec.Builder!
 Android.App.AppSearch.SearchSpec.Builder.ClearFilterDocumentIds() -> Android.App.AppSearch.SearchSpec.Builder!
@@ -337,8 +296,8 @@ Android.App.AppSearch.SearchSpec.InformationalRankingExpressions.get -> System.C
 Android.App.AppSearch.SearchSpec.IsListFilterMatchScoreExpressionFunctionEnabled.get -> bool
 Android.App.AppSearch.SearchSpec.IsScorablePropertyRankingEnabled.get -> bool
 Android.App.AppSearch.SearchSpec.SearchStringParameters.get -> System.Collections.Generic.IList<string!>!
-Android.App.AppSearch.SearchSuggestionSpec.Builder.AddSearchStringParameters(params string![]! searchStringParameters) -> Android.App.AppSearch.SearchSuggestionSpec.Builder!
 Android.App.AppSearch.SearchSuggestionSpec.Builder.AddSearchStringParameters(System.Collections.Generic.IList<string!>! searchStringParameters) -> Android.App.AppSearch.SearchSuggestionSpec.Builder!
+Android.App.AppSearch.SearchSuggestionSpec.Builder.AddSearchStringParameters(params string![]! searchStringParameters) -> Android.App.AppSearch.SearchSuggestionSpec.Builder!
 Android.App.AppSearch.SearchSuggestionSpec.SearchStringParameters.get -> System.Collections.Generic.IList<string!>!
 Android.App.AppSearch.SetBlobVisibilityRequest
 Android.App.AppSearch.SetBlobVisibilityRequest.Builder
@@ -353,6 +312,15 @@ Android.App.AppSearch.SetSchemaRequest.Builder.ClearMigrators() -> Android.App.A
 Android.App.AppSearch.SetSchemaRequest.Builder.ClearSchemas() -> Android.App.AppSearch.SetSchemaRequest.Builder!
 Android.App.AppSearch.StorageInfo.Builder.SetBlobsCount(int blobsCount) -> Android.App.AppSearch.StorageInfo.Builder!
 Android.App.AppSearch.StorageInfo.Builder.SetBlobsSizeBytes(long blobsSizeBytes) -> Android.App.AppSearch.StorageInfo.Builder!
+Android.App.ApplicationAttribute.EnableOnBackInvokedCallback.get -> bool
+Android.App.ApplicationAttribute.EnableOnBackInvokedCallback.set -> void
+Android.App.ApplicationStartInfo.StartComponent.get -> Android.App.ApplicationStartInfoStartComponent
+Android.App.ApplicationStartInfoStartComponent
+Android.App.ApplicationStartInfoStartComponent.Activity = 1 -> Android.App.ApplicationStartInfoStartComponent
+Android.App.ApplicationStartInfoStartComponent.Broadcast = 2 -> Android.App.ApplicationStartInfoStartComponent
+Android.App.ApplicationStartInfoStartComponent.ContentProvider = 3 -> Android.App.ApplicationStartInfoStartComponent
+Android.App.ApplicationStartInfoStartComponent.Other = 5 -> Android.App.ApplicationStartInfoStartComponent
+Android.App.ApplicationStartInfoStartComponent.Service = 4 -> Android.App.ApplicationStartInfoStartComponent
 Android.App.BackgroundActivityStartMode.AllowAlways = 3 -> Android.App.BackgroundActivityStartMode
 Android.App.BackgroundActivityStartMode.AllowIfVisible = 4 -> Android.App.BackgroundActivityStartMode
 Android.App.Jank.AppJankStats
@@ -1817,8 +1785,8 @@ Android.Ranging.RangingSession.AddDeviceToRangingSession(Android.Ranging.Ranging
 Android.Ranging.RangingSession.Close() -> void
 Android.Ranging.RangingSession.ICallback
 Android.Ranging.RangingSession.ICallback.OnClosed(int reason) -> void
-Android.Ranging.RangingSession.ICallback.OnOpened() -> void
 Android.Ranging.RangingSession.ICallback.OnOpenFailed(int reason) -> void
+Android.Ranging.RangingSession.ICallback.OnOpened() -> void
 Android.Ranging.RangingSession.ICallback.OnResults(Android.Ranging.RangingDevice! peer, Android.Ranging.RangingData! data) -> void
 Android.Ranging.RangingSession.ICallback.OnStarted(Android.Ranging.RangingDevice! peer, int technology) -> void
 Android.Ranging.RangingSession.ICallback.OnStopped(Android.Ranging.RangingDevice! peer, int technology) -> void
@@ -2052,8 +2020,8 @@ Android.Service.Carrier.SendStatusResultType.ErrorNullPdu = 201 -> Android.Servi
 Android.Service.Carrier.SendStatusResultType.ErrorShortCodeNeverAllowed = 206 -> Android.Service.Carrier.SendStatusResultType
 Android.Service.Carrier.SendStatusResultType.ErrorShortCodeNotAllowed = 205 -> Android.Service.Carrier.SendStatusResultType
 Android.Service.Carrier.SendStatusResultType.InvalidArguments = 208 -> Android.Service.Carrier.SendStatusResultType
-Android.Service.Carrier.SendStatusResultType.InvalidSmscAddress = 213 -> Android.Service.Carrier.SendStatusResultType
 Android.Service.Carrier.SendStatusResultType.InvalidSmsFormat = 210 -> Android.Service.Carrier.SendStatusResultType
+Android.Service.Carrier.SendStatusResultType.InvalidSmscAddress = 213 -> Android.Service.Carrier.SendStatusResultType
 Android.Service.Carrier.SendStatusResultType.InvalidState = 209 -> Android.Service.Carrier.SendStatusResultType
 Android.Service.Carrier.SendStatusResultType.NetworkError = 211 -> Android.Service.Carrier.SendStatusResultType
 Android.Service.Carrier.SendStatusResultType.NetworkReject = 207 -> Android.Service.Carrier.SendStatusResultType
@@ -2112,6 +2080,35 @@ Android.Service.Settings.Preferences.MetadataResultType
 Android.Service.Settings.Preferences.MetadataResultType.InternalError = 2 -> Android.Service.Settings.Preferences.MetadataResultType
 Android.Service.Settings.Preferences.MetadataResultType.Ok = 0 -> Android.Service.Settings.Preferences.MetadataResultType
 Android.Service.Settings.Preferences.MetadataResultType.Unsupported = 1 -> Android.Service.Settings.Preferences.MetadataResultType
+Android.Service.Settings.Preferences.SetValueRequest
+Android.Service.Settings.Preferences.SetValueRequest.Builder
+Android.Service.Settings.Preferences.SetValueRequest.Builder.Build() -> Android.Service.Settings.Preferences.SetValueRequest!
+Android.Service.Settings.Preferences.SetValueRequest.Builder.Builder(string! screenKey, string! preferenceKey, Android.Service.Settings.Preferences.SettingsPreferenceValue! value) -> void
+Android.Service.Settings.Preferences.SetValueRequest.DescribeContents() -> int
+Android.Service.Settings.Preferences.SetValueRequest.InterfaceConsts
+Android.Service.Settings.Preferences.SetValueRequest.PreferenceKey.get -> string!
+Android.Service.Settings.Preferences.SetValueRequest.PreferenceValue.get -> Android.Service.Settings.Preferences.SettingsPreferenceValue!
+Android.Service.Settings.Preferences.SetValueRequest.ScreenKey.get -> string!
+Android.Service.Settings.Preferences.SetValueRequest.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Service.Settings.Preferences.SetValueResult
+Android.Service.Settings.Preferences.SetValueResult.Builder
+Android.Service.Settings.Preferences.SetValueResult.Builder.Build() -> Android.Service.Settings.Preferences.SetValueResult!
+Android.Service.Settings.Preferences.SetValueResult.Builder.Builder(int resultCode) -> void
+Android.Service.Settings.Preferences.SetValueResult.DescribeContents() -> int
+Android.Service.Settings.Preferences.SetValueResult.InterfaceConsts
+Android.Service.Settings.Preferences.SetValueResult.ResultCode.get -> Android.Service.Settings.Preferences.SetValueResultType
+Android.Service.Settings.Preferences.SetValueResult.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Service.Settings.Preferences.SetValueResultType
+Android.Service.Settings.Preferences.SetValueResultType.Disabled = 2 -> Android.Service.Settings.Preferences.SetValueResultType
+Android.Service.Settings.Preferences.SetValueResultType.Disallow = 7 -> Android.Service.Settings.Preferences.SetValueResultType
+Android.Service.Settings.Preferences.SetValueResultType.InternalError = 9 -> Android.Service.Settings.Preferences.SetValueResultType
+Android.Service.Settings.Preferences.SetValueResultType.InvalidRequest = 8 -> Android.Service.Settings.Preferences.SetValueResultType
+Android.Service.Settings.Preferences.SetValueResultType.Ok = 0 -> Android.Service.Settings.Preferences.SetValueResultType
+Android.Service.Settings.Preferences.SetValueResultType.RequireAppPermission = 5 -> Android.Service.Settings.Preferences.SetValueResultType
+Android.Service.Settings.Preferences.SetValueResultType.RequireUserConsent = 6 -> Android.Service.Settings.Preferences.SetValueResultType
+Android.Service.Settings.Preferences.SetValueResultType.Restricted = 3 -> Android.Service.Settings.Preferences.SetValueResultType
+Android.Service.Settings.Preferences.SetValueResultType.Unavailable = 4 -> Android.Service.Settings.Preferences.SetValueResultType
+Android.Service.Settings.Preferences.SetValueResultType.Unsupported = 1 -> Android.Service.Settings.Preferences.SetValueResultType
 Android.Service.Settings.Preferences.SettingsPreferenceMetadata
 Android.Service.Settings.Preferences.SettingsPreferenceMetadata.Builder
 Android.Service.Settings.Preferences.SettingsPreferenceMetadata.Builder.Build() -> Android.Service.Settings.Preferences.SettingsPreferenceMetadata!
@@ -2166,8 +2163,8 @@ Android.Service.Settings.Preferences.SettingsPreferenceValue.Builder.SetLongValu
 Android.Service.Settings.Preferences.SettingsPreferenceValue.Builder.SetStringValue(string? stringValue) -> Android.Service.Settings.Preferences.SettingsPreferenceValue.Builder!
 Android.Service.Settings.Preferences.SettingsPreferenceValue.DescribeContents() -> int
 Android.Service.Settings.Preferences.SettingsPreferenceValue.DoubleValue.get -> double
-Android.Service.Settings.Preferences.SettingsPreferenceValue.InterfaceConsts
 Android.Service.Settings.Preferences.SettingsPreferenceValue.IntValue.get -> int
+Android.Service.Settings.Preferences.SettingsPreferenceValue.InterfaceConsts
 Android.Service.Settings.Preferences.SettingsPreferenceValue.LongValue.get -> long
 Android.Service.Settings.Preferences.SettingsPreferenceValue.StringValue.get -> string?
 Android.Service.Settings.Preferences.SettingsPreferenceValue.Type.get -> Android.Service.Settings.Preferences.SettingsPreferenceValueType
@@ -2178,35 +2175,6 @@ Android.Service.Settings.Preferences.SettingsPreferenceValueType.Double = 2 -> A
 Android.Service.Settings.Preferences.SettingsPreferenceValueType.Int = 4 -> Android.Service.Settings.Preferences.SettingsPreferenceValueType
 Android.Service.Settings.Preferences.SettingsPreferenceValueType.Long = 1 -> Android.Service.Settings.Preferences.SettingsPreferenceValueType
 Android.Service.Settings.Preferences.SettingsPreferenceValueType.String = 3 -> Android.Service.Settings.Preferences.SettingsPreferenceValueType
-Android.Service.Settings.Preferences.SetValueRequest
-Android.Service.Settings.Preferences.SetValueRequest.Builder
-Android.Service.Settings.Preferences.SetValueRequest.Builder.Build() -> Android.Service.Settings.Preferences.SetValueRequest!
-Android.Service.Settings.Preferences.SetValueRequest.Builder.Builder(string! screenKey, string! preferenceKey, Android.Service.Settings.Preferences.SettingsPreferenceValue! value) -> void
-Android.Service.Settings.Preferences.SetValueRequest.DescribeContents() -> int
-Android.Service.Settings.Preferences.SetValueRequest.InterfaceConsts
-Android.Service.Settings.Preferences.SetValueRequest.PreferenceKey.get -> string!
-Android.Service.Settings.Preferences.SetValueRequest.PreferenceValue.get -> Android.Service.Settings.Preferences.SettingsPreferenceValue!
-Android.Service.Settings.Preferences.SetValueRequest.ScreenKey.get -> string!
-Android.Service.Settings.Preferences.SetValueRequest.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
-Android.Service.Settings.Preferences.SetValueResult
-Android.Service.Settings.Preferences.SetValueResult.Builder
-Android.Service.Settings.Preferences.SetValueResult.Builder.Build() -> Android.Service.Settings.Preferences.SetValueResult!
-Android.Service.Settings.Preferences.SetValueResult.Builder.Builder(int resultCode) -> void
-Android.Service.Settings.Preferences.SetValueResult.DescribeContents() -> int
-Android.Service.Settings.Preferences.SetValueResult.InterfaceConsts
-Android.Service.Settings.Preferences.SetValueResult.ResultCode.get -> Android.Service.Settings.Preferences.SetValueResultType
-Android.Service.Settings.Preferences.SetValueResult.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
-Android.Service.Settings.Preferences.SetValueResultType
-Android.Service.Settings.Preferences.SetValueResultType.Disabled = 2 -> Android.Service.Settings.Preferences.SetValueResultType
-Android.Service.Settings.Preferences.SetValueResultType.Disallow = 7 -> Android.Service.Settings.Preferences.SetValueResultType
-Android.Service.Settings.Preferences.SetValueResultType.InternalError = 9 -> Android.Service.Settings.Preferences.SetValueResultType
-Android.Service.Settings.Preferences.SetValueResultType.InvalidRequest = 8 -> Android.Service.Settings.Preferences.SetValueResultType
-Android.Service.Settings.Preferences.SetValueResultType.Ok = 0 -> Android.Service.Settings.Preferences.SetValueResultType
-Android.Service.Settings.Preferences.SetValueResultType.RequireAppPermission = 5 -> Android.Service.Settings.Preferences.SetValueResultType
-Android.Service.Settings.Preferences.SetValueResultType.RequireUserConsent = 6 -> Android.Service.Settings.Preferences.SetValueResultType
-Android.Service.Settings.Preferences.SetValueResultType.Restricted = 3 -> Android.Service.Settings.Preferences.SetValueResultType
-Android.Service.Settings.Preferences.SetValueResultType.Unavailable = 4 -> Android.Service.Settings.Preferences.SetValueResultType
-Android.Service.Settings.Preferences.SetValueResultType.Unsupported = 1 -> Android.Service.Settings.Preferences.SetValueResultType
 Android.Telephony.Data.ApnType.OemPaid = 65536 -> Android.Telephony.Data.ApnType
 Android.Telephony.Data.ApnType.OemPrivate = 131072 -> Android.Telephony.Data.ApnType
 Android.Telephony.Satellite.ISatelliteStateChangeListener
@@ -2353,6 +2321,62 @@ Android.Window.BackEvent.BackEvent(float touchX, float touchY, float progress, A
 Android.Window.BackEvent.FrameTimeMillis.get -> long
 Android.Window.BackEventEdge.None = 2 -> Android.Window.BackEventEdge
 Android.Window.SystemOnBackInvokedCallbacks
+Java.Interop.BaseExportAttribute
+Java.Interop.JavaPeerCallbackFormatAttribute
+Java.Interop.JavaPeerCallbackFormatAttribute.JavaPeerCallbackFormatAttribute(int version) -> void
+Java.Interop.JavaPeerCallbackFormatAttribute.Version.get -> int
+Java.Interop.JniMarshalTyped
+Java.Lang.Invoke.StringConcatException
+Java.Lang.Invoke.StringConcatException.StringConcatException(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Java.Lang.Invoke.StringConcatException.StringConcatException(string? msg) -> void
+Java.Lang.Invoke.StringConcatException.StringConcatException(string? msg, Java.Lang.Throwable? cause) -> void
+Java.Lang.MatchException
+Java.Lang.MatchException.MatchException(string? message, Java.Lang.Throwable? cause) -> void
+Java.Lang.Runtimes.SwitchBootstraps
+Java.Lang.Runtimes.SwitchBootstraps.SwitchBootstraps(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Java.Lang.Thread.IsVirtual.get -> bool
+Java.Lang.Thread.ThreadId() -> long
+Java.Util.Concurrent.ForkJoinTask.QuietlyJoin(long timeout, Java.Util.Concurrent.TimeUnit? unit) -> bool
+Java.Util.Concurrent.ForkJoinTask.QuietlyJoinUninterruptibly(long timeout, Java.Util.Concurrent.TimeUnit? unit) -> bool
+Java.Util.Concurrent.ForkJoinWorkerThread.ForkJoinWorkerThread(Java.Lang.ThreadGroup? group, Java.Util.Concurrent.ForkJoinPool? pool, bool preserveThreadLocals) -> void
+Java.Util.Concurrent.IExecutorService.Close() -> void
+Java.Util.Concurrent.IFuture.ExceptionNow() -> Java.Lang.Throwable?
+Java.Util.Concurrent.IFuture.InvokeState() -> Java.Util.Concurrent.IFuture.State?
+Java.Util.Concurrent.IFuture.ResultNow() -> Java.Lang.Object?
+Java.Util.Concurrent.IFuture.State
+REMOVED Xamarin.Android.Net.AndroidClientHandler
+REMOVED Xamarin.Android.Net.AndroidClientHandler.AndroidClientHandler() -> void
+REMOVED Xamarin.Android.Net.AndroidClientHandler.AssertSelf() -> void
+REMOVED Xamarin.Android.Net.AndroidClientHandler.ConnectTimeout.get -> System.TimeSpan
+REMOVED Xamarin.Android.Net.AndroidClientHandler.ConnectTimeout.set -> void
+REMOVED Xamarin.Android.Net.AndroidClientHandler.PreAuthenticationData.get -> Xamarin.Android.Net.AuthenticationData?
+REMOVED Xamarin.Android.Net.AndroidClientHandler.PreAuthenticationData.set -> void
+REMOVED Xamarin.Android.Net.AndroidClientHandler.ProxyAuthenticationRequested.get -> bool
+REMOVED Xamarin.Android.Net.AndroidClientHandler.ReadTimeout.get -> System.TimeSpan
+REMOVED Xamarin.Android.Net.AndroidClientHandler.ReadTimeout.set -> void
+REMOVED Xamarin.Android.Net.AndroidClientHandler.RequestNeedsAuthorization.get -> bool
+REMOVED Xamarin.Android.Net.AndroidClientHandler.RequestedAuthentication.get -> System.Collections.Generic.IList<Xamarin.Android.Net.AuthenticationData!>?
+REMOVED Xamarin.Android.Net.AndroidClientHandler.TrustedCerts.get -> System.Collections.Generic.IList<Java.Security.Cert.Certificate!>?
+REMOVED Xamarin.Android.Net.AndroidClientHandler.TrustedCerts.set -> void
+REMOVED override Xamarin.Android.Net.AndroidClientHandler.Dispose(bool disposing) -> void
+REMOVED override Xamarin.Android.Net.AndroidClientHandler.SendAsync(System.Net.Http.HttpRequestMessage! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Net.Http.HttpResponseMessage!>!
+REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.ConfigureCustomSSLSocketFactory(Javax.Net.Ssl.HttpsURLConnection! connection) -> Javax.Net.Ssl.SSLSocketFactory?
+REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.ConfigureKeyManagerFactory(Java.Security.KeyStore? keyStore) -> Javax.Net.Ssl.KeyManagerFactory?
+REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.ConfigureKeyStore(Java.Security.KeyStore? keyStore) -> Java.Security.KeyStore?
+REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.ConfigureTrustManagerFactory(Java.Security.KeyStore? keyStore) -> Javax.Net.Ssl.TrustManagerFactory?
+REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.GetJavaProxy(System.Uri! destination, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Java.Net.Proxy?>!
+REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.GetSSLHostnameVerifier(Javax.Net.Ssl.HttpsURLConnection! connection) -> Javax.Net.Ssl.IHostnameVerifier?
+REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.SetupRequest(System.Net.Http.HttpRequestMessage! request, Java.Net.HttpURLConnection! conn) -> System.Threading.Tasks.Task!
+REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.WriteRequestContentToOutput(System.Net.Http.HttpRequestMessage! request, Java.Net.HttpURLConnection! httpConnection, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+abstract Android.App.AppFunctions.AppFunctionService.OnExecuteFunction(Android.App.AppFunctions.ExecuteAppFunctionRequest! request, string! callingPackage, Android.Content.PM.SigningInfo! callingPackageSigningInfo, Android.OS.CancellationSignal! cancellationSignal, Android.OS.IOutcomeReceiver! callback) -> void
+abstract Android.Media.TV.Ads.TvAdService.OnCreateSession(string! serviceId, string! type) -> Android.Media.TV.Ads.TvAdService.Session?
+abstract Android.Media.TV.Ads.TvAdService.Session.OnRelease() -> void
+abstract Android.Media.TV.Ads.TvAdService.Session.OnSetSurface(Android.Views.Surface? surface) -> bool
+abstract Android.Ranging.RangingConfig.DescribeContents() -> int
+abstract Android.Ranging.RangingConfig.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+abstract Android.Service.Settings.Preferences.SettingsPreferenceService.OnGetAllPreferenceMetadata(Android.Service.Settings.Preferences.MetadataRequest! request, Android.OS.IOutcomeReceiver! callback) -> void
+abstract Android.Service.Settings.Preferences.SettingsPreferenceService.OnGetPreferenceValue(Android.Service.Settings.Preferences.GetValueRequest! request, Android.OS.IOutcomeReceiver! callback) -> void
+abstract Android.Service.Settings.Preferences.SettingsPreferenceService.OnSetPreferenceValue(Android.Service.Settings.Preferences.SetValueRequest! request, Android.OS.IOutcomeReceiver! callback) -> void
 const Android.AccessibilityServices.AccessibilityService.GlobalActionMediaPlayPause = Android.AccessibilityServices.GlobalAction.MediaPlayPause -> Android.AccessibilityServices.GlobalAction
 const Android.AccessibilityServices.AccessibilityService.GlobalActionMenu = Android.AccessibilityServices.GlobalAction.Menu -> Android.AccessibilityServices.GlobalAction
 const Android.AdServices.AdSelection.PerBuyerConfiguration.InterfaceConsts.ContentsFileDescriptor = 1 -> int
@@ -2413,11 +2437,6 @@ const Android.App.AppFunctions.ExecuteAppFunctionRequest.InterfaceConsts.Parcela
 const Android.App.AppFunctions.ExecuteAppFunctionResponse.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.App.AppFunctions.ExecuteAppFunctionResponse.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
 const Android.App.AppFunctions.ExecuteAppFunctionResponse.PropertyReturnValue = "androidAppfunctionsReturnValue" -> string!
-const Android.App.ApplicationStartInfo.StartComponentActivity = Android.App.ApplicationStartInfoStartComponent.Activity -> Android.App.ApplicationStartInfoStartComponent
-const Android.App.ApplicationStartInfo.StartComponentBroadcast = Android.App.ApplicationStartInfoStartComponent.Broadcast -> Android.App.ApplicationStartInfoStartComponent
-const Android.App.ApplicationStartInfo.StartComponentContentProvider = Android.App.ApplicationStartInfoStartComponent.ContentProvider -> Android.App.ApplicationStartInfoStartComponent
-const Android.App.ApplicationStartInfo.StartComponentOther = Android.App.ApplicationStartInfoStartComponent.Other -> Android.App.ApplicationStartInfoStartComponent
-const Android.App.ApplicationStartInfo.StartComponentService = Android.App.ApplicationStartInfoStartComponent.Service -> Android.App.ApplicationStartInfoStartComponent
 const Android.App.AppOpsManager.OpNotedCallbackFlagIgnoreAsync = Android.App.AppOpsManagerCallbackFlag.Async -> Android.App.AppOpsManagerCallbackFlag
 const Android.App.AppSearch.AppSearchBlobHandle.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.App.AppSearch.AppSearchBlobHandle.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
@@ -2440,6 +2459,11 @@ const Android.App.AppSearch.SearchSpec.EmbeddingSearchMetricTypeCosine = Android
 const Android.App.AppSearch.SearchSpec.EmbeddingSearchMetricTypeDefault = Android.App.AppSearch.EmbeddingSearchMetricType.Default -> Android.App.AppSearch.EmbeddingSearchMetricType
 const Android.App.AppSearch.SearchSpec.EmbeddingSearchMetricTypeDotProduct = Android.App.AppSearch.EmbeddingSearchMetricType.DotProduct -> Android.App.AppSearch.EmbeddingSearchMetricType
 const Android.App.AppSearch.SearchSpec.EmbeddingSearchMetricTypeEuclidean = Android.App.AppSearch.EmbeddingSearchMetricType.Euclidean -> Android.App.AppSearch.EmbeddingSearchMetricType
+const Android.App.ApplicationStartInfo.StartComponentActivity = Android.App.ApplicationStartInfoStartComponent.Activity -> Android.App.ApplicationStartInfoStartComponent
+const Android.App.ApplicationStartInfo.StartComponentBroadcast = Android.App.ApplicationStartInfoStartComponent.Broadcast -> Android.App.ApplicationStartInfoStartComponent
+const Android.App.ApplicationStartInfo.StartComponentContentProvider = Android.App.ApplicationStartInfoStartComponent.ContentProvider -> Android.App.ApplicationStartInfoStartComponent
+const Android.App.ApplicationStartInfo.StartComponentOther = Android.App.ApplicationStartInfoStartComponent.Other -> Android.App.ApplicationStartInfoStartComponent
+const Android.App.ApplicationStartInfo.StartComponentService = Android.App.ApplicationStartInfoStartComponent.Service -> Android.App.ApplicationStartInfoStartComponent
 const Android.App.Assist.AssistContent.ExtraAppFunctionData = "android.app.assist.extra.APP_FUNCTION_DATA" -> string!
 const Android.App.Jank.AppJankStats.WidgetCategoryAnimation = "animation" -> string!
 const Android.App.Jank.AppJankStats.WidgetCategoryKeyboard = "keyboard" -> string!
@@ -2944,15 +2968,15 @@ const Android.Media.TV.TvInputManager.SessionDataKeyAdResponse = "ad_response" -
 const Android.Media.TV.TvInputManager.SessionDataKeyBroadcastInfoResponse = "broadcast_info_response" -> string!
 const Android.Media.TV.TvInputManager.SessionDataKeyChannelUri = "channel_uri" -> string!
 const Android.Media.TV.TvInputManager.SessionDataKeyTrackId = "track_id" -> string!
-const Android.Media.TV.TvInputManager.SessionDataKeyTracks = "tracks" -> string!
 const Android.Media.TV.TvInputManager.SessionDataKeyTrackType = "track_type" -> string!
+const Android.Media.TV.TvInputManager.SessionDataKeyTracks = "tracks" -> string!
 const Android.Media.TV.TvInputManager.SessionDataKeyTvMessageType = "tv_message_type" -> string!
 const Android.Media.TV.TvInputManager.SessionDataKeyVideoUnavailableReason = "video_unavailable_reason" -> string!
 const Android.Media.TV.TvInputManager.SessionDataTypeAdBufferConsumed = "ad_buffer_consumed" -> string!
 const Android.Media.TV.TvInputManager.SessionDataTypeAdResponse = "ad_response" -> string!
 const Android.Media.TV.TvInputManager.SessionDataTypeBroadcastInfoResponse = "broadcast_info_response" -> string!
-const Android.Media.TV.TvInputManager.SessionDataTypeTracksChanged = "tracks_changed" -> string!
 const Android.Media.TV.TvInputManager.SessionDataTypeTrackSelected = "track_selected" -> string!
+const Android.Media.TV.TvInputManager.SessionDataTypeTracksChanged = "tracks_changed" -> string!
 const Android.Media.TV.TvInputManager.SessionDataTypeTuned = "tuned" -> string!
 const Android.Media.TV.TvInputManager.SessionDataTypeTvMessage = "tv_message" -> string!
 const Android.Media.TV.TvInputManager.SessionDataTypeVideoAvailable = "video_available" -> string!
@@ -3201,12 +3225,12 @@ const Android.Provider.MediaStore.Downloads.InterfaceConsts.OemMetadata = "oem_m
 const Android.Provider.MediaStore.ExtraPickerPreSelectionUris = "android.provider.extra.PICKER_PRE_SELECTION_URIS" -> string!
 const Android.Provider.MediaStore.Files.FileColumns.InferredDate = "inferred_date" -> string!
 const Android.Provider.MediaStore.Files.FileColumns.OemMetadata = "oem_metadata" -> string!
+const Android.Provider.MediaStore.IMediaColumns.InferredDate = "inferred_date" -> string!
+const Android.Provider.MediaStore.IMediaColumns.OemMetadata = "oem_metadata" -> string!
 const Android.Provider.MediaStore.Images.ImageColumns.InferredDate = "inferred_date" -> string!
 const Android.Provider.MediaStore.Images.ImageColumns.OemMetadata = "oem_metadata" -> string!
 const Android.Provider.MediaStore.Images.Media.InterfaceConsts.InferredDate = "inferred_date" -> string!
 const Android.Provider.MediaStore.Images.Media.InterfaceConsts.OemMetadata = "oem_metadata" -> string!
-const Android.Provider.MediaStore.IMediaColumns.InferredDate = "inferred_date" -> string!
-const Android.Provider.MediaStore.IMediaColumns.OemMetadata = "oem_metadata" -> string!
 const Android.Provider.MediaStore.MediaColumns.InferredDate = "inferred_date" -> string!
 const Android.Provider.MediaStore.MediaColumns.OemMetadata = "oem_metadata" -> string!
 const Android.Provider.MediaStore.QueryArgMediaStandardSortOrder = "android:query-arg-media-standard-sort-order" -> string!
@@ -3371,8 +3395,8 @@ const Android.Service.Carrier.CarrierMessagingService.SendStatusResultErrorNullP
 const Android.Service.Carrier.CarrierMessagingService.SendStatusResultErrorShortCodeNeverAllowed = Android.Service.Carrier.SendStatusResultType.ErrorShortCodeNeverAllowed -> Android.Service.Carrier.SendStatusResultType
 const Android.Service.Carrier.CarrierMessagingService.SendStatusResultErrorShortCodeNotAllowed = Android.Service.Carrier.SendStatusResultType.ErrorShortCodeNotAllowed -> Android.Service.Carrier.SendStatusResultType
 const Android.Service.Carrier.CarrierMessagingService.SendStatusResultInvalidArguments = Android.Service.Carrier.SendStatusResultType.InvalidArguments -> Android.Service.Carrier.SendStatusResultType
-const Android.Service.Carrier.CarrierMessagingService.SendStatusResultInvalidSmscAddress = Android.Service.Carrier.SendStatusResultType.InvalidSmscAddress -> Android.Service.Carrier.SendStatusResultType
 const Android.Service.Carrier.CarrierMessagingService.SendStatusResultInvalidSmsFormat = Android.Service.Carrier.SendStatusResultType.InvalidSmsFormat -> Android.Service.Carrier.SendStatusResultType
+const Android.Service.Carrier.CarrierMessagingService.SendStatusResultInvalidSmscAddress = Android.Service.Carrier.SendStatusResultType.InvalidSmscAddress -> Android.Service.Carrier.SendStatusResultType
 const Android.Service.Carrier.CarrierMessagingService.SendStatusResultInvalidState = Android.Service.Carrier.SendStatusResultType.InvalidState -> Android.Service.Carrier.SendStatusResultType
 const Android.Service.Carrier.CarrierMessagingService.SendStatusResultNetworkError = Android.Service.Carrier.SendStatusResultType.NetworkError -> Android.Service.Carrier.SendStatusResultType
 const Android.Service.Carrier.CarrierMessagingService.SendStatusResultNetworkReject = Android.Service.Carrier.SendStatusResultType.NetworkReject -> Android.Service.Carrier.SendStatusResultType
@@ -3398,20 +3422,6 @@ const Android.Service.Settings.Preferences.MetadataResult.InterfaceConsts.Parcel
 const Android.Service.Settings.Preferences.MetadataResult.ResultInternalError = Android.Service.Settings.Preferences.MetadataResultType.InternalError -> Android.Service.Settings.Preferences.MetadataResultType
 const Android.Service.Settings.Preferences.MetadataResult.ResultOk = Android.Service.Settings.Preferences.MetadataResultType.Ok -> Android.Service.Settings.Preferences.MetadataResultType
 const Android.Service.Settings.Preferences.MetadataResult.ResultUnsupported = Android.Service.Settings.Preferences.MetadataResultType.Unsupported -> Android.Service.Settings.Preferences.MetadataResultType
-const Android.Service.Settings.Preferences.SettingsPreferenceMetadata.DeeplinkOnly = Android.Service.Settings.Preferences.SettingsPreferenceMetadataType.DeeplinkOnly -> Android.Service.Settings.Preferences.SettingsPreferenceMetadataType
-const Android.Service.Settings.Preferences.SettingsPreferenceMetadata.ExpectPostConfirmation = Android.Service.Settings.Preferences.SettingsPreferenceMetadataType.ExpectPostConfirmation -> Android.Service.Settings.Preferences.SettingsPreferenceMetadataType
-const Android.Service.Settings.Preferences.SettingsPreferenceMetadata.InterfaceConsts.ContentsFileDescriptor = 1 -> int
-const Android.Service.Settings.Preferences.SettingsPreferenceMetadata.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
-const Android.Service.Settings.Preferences.SettingsPreferenceMetadata.NoDirectAccess = Android.Service.Settings.Preferences.SettingsPreferenceMetadataType.NoDirectAccess -> Android.Service.Settings.Preferences.SettingsPreferenceMetadataType
-const Android.Service.Settings.Preferences.SettingsPreferenceMetadata.NoSensitivity = Android.Service.Settings.Preferences.SettingsPreferenceMetadataType.NoSensitivity -> Android.Service.Settings.Preferences.SettingsPreferenceMetadataType
-const Android.Service.Settings.Preferences.SettingsPreferenceService.ActionPreferenceService = "android.service.settings.preferences.action.PREFERENCE_SERVICE" -> string!
-const Android.Service.Settings.Preferences.SettingsPreferenceValue.InterfaceConsts.ContentsFileDescriptor = 1 -> int
-const Android.Service.Settings.Preferences.SettingsPreferenceValue.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
-const Android.Service.Settings.Preferences.SettingsPreferenceValue.TypeBoolean = Android.Service.Settings.Preferences.SettingsPreferenceValueType.Boolean -> Android.Service.Settings.Preferences.SettingsPreferenceValueType
-const Android.Service.Settings.Preferences.SettingsPreferenceValue.TypeDouble = Android.Service.Settings.Preferences.SettingsPreferenceValueType.Double -> Android.Service.Settings.Preferences.SettingsPreferenceValueType
-const Android.Service.Settings.Preferences.SettingsPreferenceValue.TypeInt = Android.Service.Settings.Preferences.SettingsPreferenceValueType.Int -> Android.Service.Settings.Preferences.SettingsPreferenceValueType
-const Android.Service.Settings.Preferences.SettingsPreferenceValue.TypeLong = Android.Service.Settings.Preferences.SettingsPreferenceValueType.Long -> Android.Service.Settings.Preferences.SettingsPreferenceValueType
-const Android.Service.Settings.Preferences.SettingsPreferenceValue.TypeString = Android.Service.Settings.Preferences.SettingsPreferenceValueType.String -> Android.Service.Settings.Preferences.SettingsPreferenceValueType
 const Android.Service.Settings.Preferences.SetValueRequest.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.Service.Settings.Preferences.SetValueRequest.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
 const Android.Service.Settings.Preferences.SetValueResult.InterfaceConsts.ContentsFileDescriptor = 1 -> int
@@ -3426,6 +3436,20 @@ const Android.Service.Settings.Preferences.SetValueResult.ResultRequireUserConse
 const Android.Service.Settings.Preferences.SetValueResult.ResultRestricted = Android.Service.Settings.Preferences.SetValueResultType.Restricted -> Android.Service.Settings.Preferences.SetValueResultType
 const Android.Service.Settings.Preferences.SetValueResult.ResultUnavailable = Android.Service.Settings.Preferences.SetValueResultType.Unavailable -> Android.Service.Settings.Preferences.SetValueResultType
 const Android.Service.Settings.Preferences.SetValueResult.ResultUnsupported = Android.Service.Settings.Preferences.SetValueResultType.Unsupported -> Android.Service.Settings.Preferences.SetValueResultType
+const Android.Service.Settings.Preferences.SettingsPreferenceMetadata.DeeplinkOnly = Android.Service.Settings.Preferences.SettingsPreferenceMetadataType.DeeplinkOnly -> Android.Service.Settings.Preferences.SettingsPreferenceMetadataType
+const Android.Service.Settings.Preferences.SettingsPreferenceMetadata.ExpectPostConfirmation = Android.Service.Settings.Preferences.SettingsPreferenceMetadataType.ExpectPostConfirmation -> Android.Service.Settings.Preferences.SettingsPreferenceMetadataType
+const Android.Service.Settings.Preferences.SettingsPreferenceMetadata.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Service.Settings.Preferences.SettingsPreferenceMetadata.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Service.Settings.Preferences.SettingsPreferenceMetadata.NoDirectAccess = Android.Service.Settings.Preferences.SettingsPreferenceMetadataType.NoDirectAccess -> Android.Service.Settings.Preferences.SettingsPreferenceMetadataType
+const Android.Service.Settings.Preferences.SettingsPreferenceMetadata.NoSensitivity = Android.Service.Settings.Preferences.SettingsPreferenceMetadataType.NoSensitivity -> Android.Service.Settings.Preferences.SettingsPreferenceMetadataType
+const Android.Service.Settings.Preferences.SettingsPreferenceService.ActionPreferenceService = "android.service.settings.preferences.action.PREFERENCE_SERVICE" -> string!
+const Android.Service.Settings.Preferences.SettingsPreferenceValue.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Service.Settings.Preferences.SettingsPreferenceValue.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Service.Settings.Preferences.SettingsPreferenceValue.TypeBoolean = Android.Service.Settings.Preferences.SettingsPreferenceValueType.Boolean -> Android.Service.Settings.Preferences.SettingsPreferenceValueType
+const Android.Service.Settings.Preferences.SettingsPreferenceValue.TypeDouble = Android.Service.Settings.Preferences.SettingsPreferenceValueType.Double -> Android.Service.Settings.Preferences.SettingsPreferenceValueType
+const Android.Service.Settings.Preferences.SettingsPreferenceValue.TypeInt = Android.Service.Settings.Preferences.SettingsPreferenceValueType.Int -> Android.Service.Settings.Preferences.SettingsPreferenceValueType
+const Android.Service.Settings.Preferences.SettingsPreferenceValue.TypeLong = Android.Service.Settings.Preferences.SettingsPreferenceValueType.Long -> Android.Service.Settings.Preferences.SettingsPreferenceValueType
+const Android.Service.Settings.Preferences.SettingsPreferenceValue.TypeString = Android.Service.Settings.Preferences.SettingsPreferenceValueType.String -> Android.Service.Settings.Preferences.SettingsPreferenceValueType
 const Android.Telephony.CarrierConfigManager.Gps.KeyEnableNiSuplMessageInjectionBool = "gps.enable_ni_supl_message_injection_bool" -> string!
 const Android.Telephony.CarrierConfigManager.KeyCarrierRoamingNtnEmergencyCallToSatelliteHandoverTypeInt = "carrier_roaming_ntn_emergency_call_to_satellite_handover_type_int" -> string!
 const Android.Telephony.CarrierConfigManager.KeySatelliteEsosSupportedBool = "satellite_esos_supported_bool" -> string!
@@ -3496,24 +3520,8 @@ const Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.InterfaceConsts.
 const Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
 const Android.Window.BackEvent.EdgeNone = Android.Window.BackEventEdge.None -> Android.Window.BackEventEdge
 const Android.Window.IOnBackInvokedDispatcher.PrioritySystemNavigationObserver = -2 -> int
-Java.Lang.Invoke.StringConcatException
-Java.Lang.Invoke.StringConcatException.StringConcatException(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
-Java.Lang.Invoke.StringConcatException.StringConcatException(string? msg) -> void
-Java.Lang.Invoke.StringConcatException.StringConcatException(string? msg, Java.Lang.Throwable? cause) -> void
-Java.Lang.MatchException
-Java.Lang.MatchException.MatchException(string? message, Java.Lang.Throwable? cause) -> void
-Java.Lang.Runtimes.SwitchBootstraps
-Java.Lang.Runtimes.SwitchBootstraps.SwitchBootstraps(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
-Java.Lang.Thread.IsVirtual.get -> bool
-Java.Lang.Thread.ThreadId() -> long
-Java.Util.Concurrent.ForkJoinTask.QuietlyJoin(long timeout, Java.Util.Concurrent.TimeUnit? unit) -> bool
-Java.Util.Concurrent.ForkJoinTask.QuietlyJoinUninterruptibly(long timeout, Java.Util.Concurrent.TimeUnit? unit) -> bool
-Java.Util.Concurrent.ForkJoinWorkerThread.ForkJoinWorkerThread(Java.Lang.ThreadGroup? group, Java.Util.Concurrent.ForkJoinPool? pool, bool preserveThreadLocals) -> void
-Java.Util.Concurrent.IExecutorService.Close() -> void
-Java.Util.Concurrent.IFuture.ExceptionNow() -> Java.Lang.Throwable?
-Java.Util.Concurrent.IFuture.InvokeState() -> Java.Util.Concurrent.IFuture.State?
-Java.Util.Concurrent.IFuture.ResultNow() -> Java.Lang.Object?
-Java.Util.Concurrent.IFuture.State
+const Java.Interop.JavaPeerCallbackFormatAttribute.ConnectorDelegates = 1 -> int
+const Java.Interop.JavaPeerCallbackFormatAttribute.UnmanagedCallersOnlyCallbacks = 2 -> int
 override Android.AdServices.AdSelection.PerBuyerConfiguration.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.AdServices.AdSelection.PerBuyerConfiguration.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.AdServices.AdSelection.SellerConfiguration.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
@@ -3777,6 +3785,10 @@ override Android.Service.Settings.Preferences.MetadataRequest.Builder.JniPeerMem
 override Android.Service.Settings.Preferences.MetadataRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Service.Settings.Preferences.MetadataResult.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Service.Settings.Preferences.MetadataResult.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Service.Settings.Preferences.SetValueRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Service.Settings.Preferences.SetValueRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Service.Settings.Preferences.SetValueResult.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Service.Settings.Preferences.SetValueResult.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Service.Settings.Preferences.SettingsPreferenceMetadata.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Service.Settings.Preferences.SettingsPreferenceMetadata.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Service.Settings.Preferences.SettingsPreferenceService.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
@@ -3787,10 +3799,6 @@ override Android.Service.Settings.Preferences.SettingsPreferenceServiceClient.Th
 override Android.Service.Settings.Preferences.SettingsPreferenceServiceClient.ThresholdType.get -> System.Type!
 override Android.Service.Settings.Preferences.SettingsPreferenceValue.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Service.Settings.Preferences.SettingsPreferenceValue.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.Service.Settings.Preferences.SetValueRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.Service.Settings.Preferences.SetValueRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.Service.Settings.Preferences.SetValueResult.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.Service.Settings.Preferences.SetValueResult.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Telephony.Satellite.SatelliteManager.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Text.Style.NoWritingToolsSpan.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Text.Style.TtsSpan.DurationBuilder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
@@ -3955,20 +3963,81 @@ static Android.Ranging.Uwb.UwbRangingCapabilities.Creator.get -> Android.OS.IPar
 static Android.Ranging.Uwb.UwbRangingParams.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Ranging.Wifi.Rtt.RttRangingCapabilities.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Ranging.Wifi.Rtt.RttRangingParams.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Runtime.JNIEnv.BridgeProcessingGeneration.get -> int
 static Android.Service.Settings.Preferences.GetValueRequest.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Service.Settings.Preferences.GetValueResult.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Service.Settings.Preferences.MetadataRequest.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Service.Settings.Preferences.MetadataResult.Creator.get -> Android.OS.IParcelableCreator!
-static Android.Service.Settings.Preferences.SettingsPreferenceMetadata.Creator.get -> Android.OS.IParcelableCreator!
-static Android.Service.Settings.Preferences.SettingsPreferenceValue.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Service.Settings.Preferences.SetValueRequest.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Service.Settings.Preferences.SetValueResult.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Service.Settings.Preferences.SettingsPreferenceMetadata.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Service.Settings.Preferences.SettingsPreferenceValue.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Text.Style.NoWritingToolsSpan.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Views.Accessibility.AccessibilityNodeInfo.RangeInfo.Indeterminate.get -> Android.Views.Accessibility.AccessibilityNodeInfo.RangeInfo!
 static Android.Widget.PhotoPicker.EmbeddedPhotoPickerFeatureInfo.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Widget.PhotoPicker.EmbeddedPhotoPickerProviderFactory.Create(Android.Content.Context! context) -> Android.Widget.PhotoPicker.IEmbeddedPhotoPickerProvider!
 static Android.Window.SystemOnBackInvokedCallbacks.FinishAndRemoveTaskCallback(Android.App.Activity! activity) -> Android.Window.IOnBackInvokedCallback!
 static Android.Window.SystemOnBackInvokedCallbacks.MoveTaskToBackCallback(Android.App.Activity! activity) -> Android.Window.IOnBackInvokedCallback!
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_O<TPeer>(nint jnienv, nint self, delegate*<TPeer!, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OO<TPeer, T0>(nint jnienv, nint self, nint native_p0, delegate*<TPeer!, T0?, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OOO<TPeer, T0, T1>(nint jnienv, nint self, nint native_p0, nint native_p1, delegate*<TPeer!, T0?, T1?, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OOOO<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, nint native_p1, nint native_p2, delegate*<TPeer!, T0?, T1?, T2?, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OOOS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, nint native_p0, nint native_p1, nint native_p2, delegate*<TPeer!, T0?, T1?, T2?, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OOOX<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, nint native_p1, nint native_p2, delegate*<TPeer!, T0?, T1?, T2?, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OOS<TPeer, T0, T1, TResult>(nint jnienv, nint self, nint native_p0, nint native_p1, delegate*<TPeer!, T0?, T1?, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OOSO<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, nint native_p1, T2 p2, delegate*<TPeer!, T0?, T1?, T2, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OOSS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, nint native_p0, nint native_p1, T2 p2, delegate*<TPeer!, T0?, T1?, T2, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OOSX<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, nint native_p1, T2 p2, delegate*<TPeer!, T0?, T1?, T2, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OOX<TPeer, T0, T1>(nint jnienv, nint self, nint native_p0, nint native_p1, delegate*<TPeer!, T0?, T1?, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OS<TPeer, T0, TResult>(nint jnienv, nint self, nint native_p0, delegate*<TPeer!, T0?, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OSO<TPeer, T0, T1>(nint jnienv, nint self, nint native_p0, T1 p1, delegate*<TPeer!, T0?, T1, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OSOO<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, T1 p1, nint native_p2, delegate*<TPeer!, T0?, T1, T2?, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OSOS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, nint native_p0, T1 p1, nint native_p2, delegate*<TPeer!, T0?, T1, T2?, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OSOX<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, T1 p1, nint native_p2, delegate*<TPeer!, T0?, T1, T2?, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OSS<TPeer, T0, T1, TResult>(nint jnienv, nint self, nint native_p0, T1 p1, delegate*<TPeer!, T0?, T1, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OSSO<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, T1 p1, T2 p2, delegate*<TPeer!, T0?, T1, T2, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OSSS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, nint native_p0, T1 p1, T2 p2, delegate*<TPeer!, T0?, T1, T2, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OSSX<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, T1 p1, T2 p2, delegate*<TPeer!, T0?, T1, T2, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OSX<TPeer, T0, T1>(nint jnienv, nint self, nint native_p0, T1 p1, delegate*<TPeer!, T0?, T1, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OX<TPeer, T0>(nint jnienv, nint self, nint native_p0, delegate*<TPeer!, T0?, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_S<TPeer, TResult>(nint jnienv, nint self, delegate*<TPeer!, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SO<TPeer, T0>(nint jnienv, nint self, T0 p0, delegate*<TPeer!, T0, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SOO<TPeer, T0, T1>(nint jnienv, nint self, T0 p0, nint native_p1, delegate*<TPeer!, T0, T1?, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SOOO<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, nint native_p1, nint native_p2, delegate*<TPeer!, T0, T1?, T2?, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SOOS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, T0 p0, nint native_p1, nint native_p2, delegate*<TPeer!, T0, T1?, T2?, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SOOX<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, nint native_p1, nint native_p2, delegate*<TPeer!, T0, T1?, T2?, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SOS<TPeer, T0, T1, TResult>(nint jnienv, nint self, T0 p0, nint native_p1, delegate*<TPeer!, T0, T1?, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SOSO<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, nint native_p1, T2 p2, delegate*<TPeer!, T0, T1?, T2, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SOSS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, T0 p0, nint native_p1, T2 p2, delegate*<TPeer!, T0, T1?, T2, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SOSX<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, nint native_p1, T2 p2, delegate*<TPeer!, T0, T1?, T2, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SOX<TPeer, T0, T1>(nint jnienv, nint self, T0 p0, nint native_p1, delegate*<TPeer!, T0, T1?, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SS<TPeer, T0, TResult>(nint jnienv, nint self, T0 p0, delegate*<TPeer!, T0, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSO<TPeer, T0, T1>(nint jnienv, nint self, T0 p0, T1 p1, delegate*<TPeer!, T0, T1, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSOO<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, T1 p1, nint native_p2, delegate*<TPeer!, T0, T1, T2?, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSOS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, T0 p0, T1 p1, nint native_p2, delegate*<TPeer!, T0, T1, T2?, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSOX<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, T1 p1, nint native_p2, delegate*<TPeer!, T0, T1, T2?, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSS<TPeer, T0, T1, TResult>(nint jnienv, nint self, T0 p0, T1 p1, delegate*<TPeer!, T0, T1, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSO<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, delegate*<TPeer!, T0, T1, T2, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, delegate*<TPeer!, T0, T1, T2, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSO<TPeer, T0, T1, T2, T3>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, delegate*<TPeer!, T0, T1, T2, T3, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSS<TPeer, T0, T1, T2, T3, TResult>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, delegate*<TPeer!, T0, T1, T2, T3, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSO<TPeer, T0, T1, T2, T3, T4>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate*<TPeer!, T0, T1, T2, T3, T4, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSS<TPeer, T0, T1, T2, T3, T4, TResult>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate*<TPeer!, T0, T1, T2, T3, T4, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSSO<TPeer, T0, T1, T2, T3, T4, T5>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSSS<TPeer, T0, T1, T2, T3, T4, T5, TResult>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSSSO<TPeer, T0, T1, T2, T3, T4, T5, T6>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, T6, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSSSS<TPeer, T0, T1, T2, T3, T4, T5, T6, TResult>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, T6, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSSSSO<TPeer, T0, T1, T2, T3, T4, T5, T6, T7>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, T6, T7, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSSSSS<TPeer, T0, T1, T2, T3, T4, T5, T6, T7, TResult>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, T6, T7, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSSSSX<TPeer, T0, T1, T2, T3, T4, T5, T6, T7>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, T6, T7, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSSSX<TPeer, T0, T1, T2, T3, T4, T5, T6>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, T6, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSSX<TPeer, T0, T1, T2, T3, T4, T5>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSX<TPeer, T0, T1, T2, T3, T4>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate*<TPeer!, T0, T1, T2, T3, T4, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSX<TPeer, T0, T1, T2, T3>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, delegate*<TPeer!, T0, T1, T2, T3, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSX<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, delegate*<TPeer!, T0, T1, T2, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSX<TPeer, T0, T1>(nint jnienv, nint self, T0 p0, T1 p1, delegate*<TPeer!, T0, T1, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SX<TPeer, T0>(nint jnienv, nint self, T0 p0, delegate*<TPeer!, T0, void> body) -> void
+static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_X<TPeer>(nint jnienv, nint self, delegate*<TPeer!, void> body) -> void
 static Java.Lang.Character.IsEmoji(int codePoint) -> bool
 static Java.Lang.Character.IsEmojiComponent(int codePoint) -> bool
 static Java.Lang.Character.IsEmojiModifier(int codePoint) -> bool
@@ -4200,8 +4269,8 @@ virtual Android.Media.TV.Ads.TvAdService.Session.OnStartAdService() -> void
 virtual Android.Media.TV.Ads.TvAdService.Session.OnStopAdService() -> void
 virtual Android.Media.TV.Ads.TvAdService.Session.OnSurfaceChanged(int format, int width, int height) -> void
 virtual Android.Media.TV.Ads.TvAdService.Session.OnTouchEvent(Android.Views.MotionEvent! e) -> bool
-virtual Android.Media.TV.Ads.TvAdService.Session.OnTrackballEvent(Android.Views.MotionEvent! e) -> bool
 virtual Android.Media.TV.Ads.TvAdService.Session.OnTrackInfoList(System.Collections.Generic.IList<Android.Media.TV.TvTrackInfo!>! tracks) -> void
+virtual Android.Media.TV.Ads.TvAdService.Session.OnTrackballEvent(Android.Views.MotionEvent! e) -> bool
 virtual Android.Media.TV.Ads.TvAdService.Session.OnTvInputSessionData(string! type, Android.OS.Bundle! data) -> void
 virtual Android.Media.TV.Ads.TvAdService.Session.OnTvMessage(int type, Android.OS.Bundle! data) -> void
 virtual Android.Media.TV.Ads.TvAdService.Session.RequestCurrentChannelUri() -> void
@@ -4400,6 +4469,3 @@ virtual Java.Util.Concurrent.FutureTask.ResultNow() -> Java.Lang.Object?
 virtual Java.Util.Concurrent.FutureTask.State() -> Java.Util.Concurrent.IFuture.State?
 virtual Java.Util.IdentityHashMap.Remove(Java.Lang.Object? key, Java.Lang.Object? value) -> bool
 virtual Java.Util.IdentityHashMap.Replace(Java.Lang.Object? key, Java.Lang.Object? oldValue, Java.Lang.Object? newValue) -> bool
-Android.App.ApplicationAttribute.EnableOnBackInvokedCallback.get -> bool
-Android.App.ApplicationAttribute.EnableOnBackInvokedCallback.set -> void
-Java.Interop.BaseExportAttribute
