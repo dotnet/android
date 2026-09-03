@@ -1,6 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using Java.Interop;
+using System.Text;
 
 namespace Xamarin.Android.Benchmarks;
 
@@ -22,12 +23,16 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	BenchmarkPeerMembers? systemMembers;
 	Java.Lang.String? peer;
 	Java.Lang.Throwable? throwable;
+	JniMethodInfo? instanceMethodInfo;
+	JniMethodInfo? staticMethodInfo;
 
 	BenchmarkPeerMembers StringMembers => stringMembers ?? throw new InvalidOperationException ();
 	BenchmarkPeerMembers ThrowableMembers => throwableMembers ?? throw new InvalidOperationException ();
 	BenchmarkPeerMembers SystemMembers => systemMembers ?? throw new InvalidOperationException ();
 	Java.Lang.String Peer => peer ?? throw new InvalidOperationException ();
 	Java.Lang.Throwable Throwable => throwable ?? throw new InvalidOperationException ();
+	JniMethodInfo InstanceMethodInfo => instanceMethodInfo ?? throw new InvalidOperationException ();
+	JniMethodInfo StaticMethodInfo => staticMethodInfo ?? throw new InvalidOperationException ();
 
 	[GlobalSetup]
 	public void Setup ()
@@ -40,9 +45,9 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 
 		_ = StringMembers.InstanceMethods.GetConstructor (Constructor);
 		_ = StringMembers.InstanceMethods.GetConstructor ("()V"u8);
-		_ = StringMembers.InstanceMethods.GetMethodInfo (InstanceMethod);
+		instanceMethodInfo = StringMembers.InstanceMethods.GetMethodInfo (InstanceMethod);
 		_ = StringMembers.InstanceMethods.GetMethodInfo ("hashCode.()I"u8);
-		_ = SystemMembers.StaticMethods.GetMethodInfo (StaticMethod);
+		staticMethodInfo = SystemMembers.StaticMethods.GetMethodInfo (StaticMethod);
 		_ = SystemMembers.StaticMethods.GetMethodInfo ("currentTimeMillis.()J"u8);
 		_ = ThrowableMembers.InstanceFields.GetFieldInfo (InstanceField);
 		_ = ThrowableMembers.InstanceFields.GetFieldInfo ("detailMessage.Ljava/lang/String;"u8);
@@ -127,6 +132,11 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	public int InvokeInstanceMethodUtf8 () =>
 		StringMembers.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I"u8, Peer, null);
 
+	[Benchmark]
+	[BenchmarkCategory ("InstanceMethodInvoke")]
+	public int InvokeInstanceMethodDirect () =>
+		JniEnvironment.InstanceMethods.CallIntMethod (Peer.PeerReference, InstanceMethodInfo, null);
+
 	[Benchmark (Baseline = true)]
 	[BenchmarkCategory ("StaticMethodLookup")]
 	public JniMethodInfo GetStaticMethodString () =>
@@ -146,6 +156,11 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	[BenchmarkCategory ("StaticMethodInvoke")]
 	public long InvokeStaticMethodUtf8 () =>
 		SystemMembers.StaticMethods.InvokeInt64Method ("currentTimeMillis.()J"u8, null);
+
+	[Benchmark]
+	[BenchmarkCategory ("StaticMethodInvoke")]
+	public long InvokeStaticMethodDirect () =>
+		JniEnvironment.StaticMethods.CallStaticLongMethod (SystemMembers.JniPeerType.PeerReference, StaticMethodInfo, null);
 
 	[Benchmark (Baseline = true)]
 	[BenchmarkCategory ("InstanceFieldLookup")]
@@ -214,6 +229,11 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 			JniObjectReference.Dispose (ref value);
 		}
 	}
+
+	[Benchmark]
+	[BenchmarkCategory ("Utf8DecodeControl")]
+	public string DecodeUtf8Control () =>
+		Encoding.UTF8.GetString ("hashCode.()I"u8);
 
 	sealed class BenchmarkPeerMembers : JniPeerMembers
 	{
