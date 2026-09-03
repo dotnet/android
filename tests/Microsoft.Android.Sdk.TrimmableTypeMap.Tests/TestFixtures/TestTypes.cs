@@ -187,6 +187,11 @@ namespace Android.Views
 		string? Label { get; }
 	}
 
+	[Register ("android/view/View$INamedClickListener")]
+	public interface INamedClickListenerAlias
+	{
+	}
+
 	[Register ("mono/android/view/View_IOnClickListenerImplementor")]
 	public class View_IOnClickListenerImplementor : Java.Lang.Object
 	{
@@ -791,6 +796,17 @@ namespace MyApp
 
 		public void OnClick (Android.Views.View v) { }
 		public string? Label => "test";
+	}
+
+	[Register ("my/app/RedundantInterfaceView")]
+	public class RedundantInterfaceView : Android.Views.View, Android.Views.IOnClickListener,
+		Android.Views.INamedClickListener, Android.Views.INamedClickListenerAlias, Android.Views.IOnLongClickListener
+	{
+		protected RedundantInterfaceView (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public void OnClick (Android.Views.View v) { }
+		public string? Label => "test";
+		public bool OnLongClick (Android.Views.View v) => false;
 	}
 
 	// --- Override detection test types ---

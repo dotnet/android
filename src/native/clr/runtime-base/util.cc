@@ -4,7 +4,6 @@
 #include <sys/stat.h>
 
 #include <shared/log_types.hh>
-#include <runtime-base/strings.hh>
 #include <runtime-base/util.hh>
 
 using namespace xamarin::android;
@@ -21,30 +20,43 @@ Util::create_directory (const char *pathname, mode_t mode)
 	 	mode = Constants::DEFAULT_DIRECTORY_MODE;
 	}
 
-	mode_t oldumask = umask (022);
-	dynamic_local_string<Constants::SENSIBLE_PATH_MAX> path { pathname };
-	int rv, ret = 0;
+	size_t path_length = strlen (pathname);
+	size_t allocation_size = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
+	char stack_buffer [Constants::SENSIBLE_PATH_MAX];
+	char *path = stack_buffer;
+	if (allocation_size > sizeof (stack_buffer)) {
+		path = static_cast<char*> (std::malloc (allocation_size));
+		abort_unless (path != nullptr, "Failed to allocate directory path");
+	}
+	memcpy (path, pathname, path_length + 1);
 
-	for (char *d = path.get (); d != nullptr && *d != '\0'; d++) {
+	mode_t oldumask = umask (022);
+	int ret = 0;
+
+	for (char *d = path; *d != '\0'; d++) {
 		if (*d != '/') {
 			continue;
 		}
 
 		*d = '\0';
-		if (*path.get () != '\0') {
-			rv = ::mkdir (path.get (), mode);
-			if (rv == -1 && errno != EEXIST) {
-				ret = -1;
-				break;
-			}
-		}
+		int rv = *path == '\0' ? 0 : ::mkdir (path, mode);
 		*d = '/';
+
+		if (rv == -1 && errno != EEXIST) {
+			ret = -1;
+			break;
+		}
 	}
 
 	if (ret == 0) {
-		ret = ::mkdir (pathname, mode);
+		ret = ::mkdir (path, mode);
 	}
+	int saved_errno = errno;
 	umask (oldumask);
+	if (path != stack_buffer) {
+		std::free (path);
+	}
+	errno = saved_errno;
 
 	return ret;
 }

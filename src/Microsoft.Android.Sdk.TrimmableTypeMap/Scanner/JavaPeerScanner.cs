@@ -26,6 +26,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 	readonly record struct ResolvabilityResult (bool IsResolvable, string? UnresolvedTypeName, string? UnresolvedAssemblyName);
 	readonly record struct PublicConstructorInfo (ImmutableArray<TypeRefData> ParameterTypes, string JniParameterSignature);
+	readonly record struct ImplementedInterfaceInfo (TypeRefData Type, string JavaName);
 
 	readonly Dictionary<string, AssemblyIndex> assemblyCache = new (StringComparer.Ordinal);
 	readonly Dictionary<(string typeName, string assemblyName), ActivationCtorInfo> activationCtorCache = new ();
@@ -223,9 +224,12 @@ public sealed class JavaPeerScanner : IDisposable
 	/// [Application(ManageSpaceActivity = typeof(X))] must be unconditional,
 	/// because the manifest will reference them even if nothing else does.
 	/// </summary>
-	static void ForceUnconditionalCrossReferences (Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> results, Dictionary<string, AssemblyIndex> assemblyCache)
+	void ForceUnconditionalCrossReferences (Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> results, Dictionary<string, AssemblyIndex> assemblyCache)
 	{
 		foreach (var index in assemblyCache.Values) {
+			if (frameworkAssemblyNames.Contains (index.AssemblyName)) {
+				continue;
+			}
 			foreach (var attrInfo in index.AttributesByType.Values) {
 				if (attrInfo is ApplicationAttributeInfo applicationAttributeInfo) {
 					ForceUnconditionalIfPresent (results, applicationAttributeInfo.BackupAgent);
@@ -357,7 +361,9 @@ public sealed class JavaPeerScanner : IDisposable
 			var isInterface = (typeDef.Attributes & TypeAttributes.Interface) != 0;
 			var isAbstract = (typeDef.Attributes & TypeAttributes.Abstract) != 0;
 
-			var isUnconditional = attrInfo is not null;
+			var isFrameworkAssembly = frameworkAssemblyNames.Contains (index.AssemblyName);
+			var isUnconditional = !isFrameworkAssembly &&
+				(attrInfo is not null || registerInfo?.IsFromJniTypeSignature == true);
 			var cannotRegisterInStaticConstructor = attrInfo is ApplicationAttributeInfo or InstrumentationAttributeInfo;
 			string? invokerTypeName = null;
 			ActivationCtorStyle? invokerActivationCtorStyle = null;
@@ -366,7 +372,7 @@ public sealed class JavaPeerScanner : IDisposable
 			var baseJavaName = ResolveBaseJavaName (typeDef, index, results);
 
 			// Resolve implemented Java interface names
-			var implementedInterfaces = ResolveImplementedInterfaceJavaNames (typeDef, index);
+			var (implementedInterfaces, javaCallableWrapperInterfaces) = ResolveImplementedInterfaceJavaNames (typeDef, index);
 
 			// Collect marshal methods (including constructors).
 			// Override and interface detection is only for user ACW class types:
@@ -400,9 +406,10 @@ public sealed class JavaPeerScanner : IDisposable
 				ManagedTypeNamespace = ExtractNamespace (fullName),
 				ManagedTypeShortName = ExtractShortName (fullName),
 				AssemblyName = index.AssemblyName,
-				IsFrameworkAssembly = frameworkAssemblyNames.Contains (index.AssemblyName),
+				IsFrameworkAssembly = isFrameworkAssembly,
 				BaseJavaName = baseJavaName,
 				ImplementedInterfaceJavaNames = implementedInterfaces,
+				JavaCallableWrapperInterfaceJavaNames = javaCallableWrapperInterfaces,
 				Annotations = annotationParser.Parse (typeDef.GetCustomAttributes (), index),
 				IsInterface = isInterface,
 				IsAbstract = isAbstract,
@@ -667,10 +674,15 @@ public sealed class JavaPeerScanner : IDisposable
 		var methods = new List<MarshalMethodInfo> ();
 		var fields = new List<JavaFieldInfo> ();
 		HashSet<string>? registeredMethodKeys = detectBaseOverrides ? new (StringComparer.Ordinal) : null;
+		bool isGenericType = typeDef.GetGenericParameters ().Count > 0;
 
 		// Pass 1: collect methods with [Register], [Export], or [ExportField] directly on them
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+
+			if (!ValidateExportField (methodDef, index, isGenericType)) {
+				continue;
+			}
 
 			// Check for [ExportField] — produces both a marshal method AND a field
 			CollectExportField (methodDef, index, fields);
@@ -733,6 +745,39 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		return (methods, fields);
+	}
+
+	static bool IsExportFieldAttribute (CustomAttribute attribute, AssemblyIndex index)
+	{
+		return AssemblyIndex.IsCustomAttributeMatch (attribute, index.Reader, "Java.Interop", "ExportFieldAttribute");
+	}
+
+	bool ValidateExportField (MethodDefinition methodDef, AssemblyIndex index, bool isGenericType)
+	{
+		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
+			var ca = index.Reader.GetCustomAttribute (caHandle);
+			if (!IsExportFieldAttribute (ca, index)) {
+				continue;
+			}
+
+			if (isGenericType) {
+				logger?.LogExportFieldOnGenericTypeError ();
+				return false;
+			}
+
+			var sig = methodDef.DecodeSignature (index.TypeRefSignatureProvider, index);
+			if (sig.ParameterTypes.Length != 0) {
+				logger?.LogExportFieldWithParametersError ();
+				return false;
+			}
+			if (sig.ReturnType.ManagedTypeName == "System.Void") {
+				logger?.LogExportFieldReturnsVoidError ();
+				return false;
+			}
+			return true;
+		}
+
+		return true;
 	}
 
 	static bool HasJniAddNativeMethodRegistrationAttribute (TypeDefinition typeDef, AssemblyIndex index)
@@ -1668,26 +1713,86 @@ public sealed class JavaPeerScanner : IDisposable
 		return null;
 	}
 
-	List<string> ResolveImplementedInterfaceJavaNames (TypeDefinition typeDef, AssemblyIndex index)
+	(List<string> ImplementedInterfaces, List<string> JavaCallableWrapperInterfaces) ResolveImplementedInterfaceJavaNames (
+		TypeDefinition typeDef,
+		AssemblyIndex index)
 	{
-		var result = new List<string> ();
-		var interfaceImpls = typeDef.GetInterfaceImplementations ();
-
-		foreach (var implHandle in interfaceImpls) {
+		var interfaces = new List<ImplementedInterfaceInfo> ();
+		var implementedInterfaces = new List<string> ();
+		foreach (var implHandle in typeDef.GetInterfaceImplementations ()) {
 			var impl = index.Reader.GetInterfaceImplementation (implHandle);
-			var ifaceJniName = ResolveInterfaceJniName (impl.Interface, index);
-			if (ifaceJniName is not null) {
-				result.Add (ifaceJniName);
+			var resolved = ResolveEntityHandle (impl.Interface, index);
+			if (resolved is null) {
+				continue;
+			}
+
+			var javaName = ResolveRegisterJniName (resolved.ManagedTypeName, resolved.AssemblyName);
+			if (javaName is not null) {
+				interfaces.Add (new ImplementedInterfaceInfo (resolved, javaName));
+				implementedInterfaces.Add (javaName);
 			}
 		}
 
-		return result;
+		var javaCallableWrapperInterfaces = new List<string> ();
+		var addedJavaNames = new HashSet<string> (StringComparer.Ordinal);
+		var assignabilityVisited = new HashSet<(string ManagedTypeName, string AssemblyName)> ();
+		foreach (var iface in interfaces) {
+			var isRedundant = false;
+			foreach (var other in interfaces) {
+				if (IsSameTypeDefinition (iface.Type, other.Type)) {
+					continue;
+				}
+
+				assignabilityVisited.Clear ();
+				if (IsInterfaceAssignableFrom (iface.Type, other.Type, assignabilityVisited)) {
+					isRedundant = true;
+					break;
+				}
+			}
+
+			if (isRedundant) {
+				continue;
+			}
+
+			if (addedJavaNames.Add (iface.JavaName)) {
+				javaCallableWrapperInterfaces.Add (iface.JavaName);
+			}
+		}
+
+		return (implementedInterfaces, javaCallableWrapperInterfaces);
 	}
 
-	string? ResolveInterfaceJniName (EntityHandle interfaceHandle, AssemblyIndex index)
+	bool IsInterfaceAssignableFrom (
+		TypeRefData target,
+		TypeRefData candidate,
+		HashSet<(string ManagedTypeName, string AssemblyName)> visited)
 	{
-		var resolved = ResolveEntityHandle (interfaceHandle, index);
-		return resolved is not null ? ResolveRegisterJniName (resolved.ManagedTypeName, resolved.AssemblyName) : null;
+		if (IsSameTypeDefinition (target, candidate)) {
+			return true;
+		}
+
+		var candidateKey = (candidate.ManagedTypeName, candidate.AssemblyName);
+		if (!visited.Add (candidateKey) ||
+		    !TryResolveType (candidate.ManagedTypeName, candidate.AssemblyName, out var candidateHandle, out var candidateIndex)) {
+			return false;
+		}
+
+		var candidateDefinition = candidateIndex.Reader.GetTypeDefinition (candidateHandle);
+		foreach (var implHandle in candidateDefinition.GetInterfaceImplementations ()) {
+			var impl = candidateIndex.Reader.GetInterfaceImplementation (implHandle);
+			var parent = ResolveEntityHandle (impl.Interface, candidateIndex);
+			if (parent is not null && IsInterfaceAssignableFrom (target, parent, visited)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	static bool IsSameTypeDefinition (TypeRefData left, TypeRefData right)
+	{
+		return string.Equals (left.ManagedTypeName, right.ManagedTypeName, StringComparison.Ordinal) &&
+			string.Equals (left.AssemblyName, right.AssemblyName, StringComparison.Ordinal);
 	}
 
 	bool TryGetMethodRegisterInfo (MethodDefinition methodDef, AssemblyIndex index, out RegisterInfo? registerInfo, out ExportInfo? exportInfo)
@@ -1707,7 +1812,7 @@ public sealed class JavaPeerScanner : IDisposable
 				return true;
 			}
 
-			if (attrName == "ExportFieldAttribute") {
+			if (IsExportFieldAttribute (ca, index)) {
 				(registerInfo, exportInfo) = ParseExportFieldAsMethod (ca, methodDef, index);
 				return true;
 			}
@@ -2611,9 +2716,8 @@ public sealed class JavaPeerScanner : IDisposable
 	{
 		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
 			var ca = index.Reader.GetCustomAttribute (caHandle);
-			var attrName = index.GetCustomAttributeName (ca);
 
-			if (attrName != "ExportFieldAttribute") {
+			if (!IsExportFieldAttribute (ca, index)) {
 				continue;
 			}
 

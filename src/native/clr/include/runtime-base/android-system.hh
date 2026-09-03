@@ -6,18 +6,27 @@
 #include <span>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 
 #include "../constants.hh"
 #include <shared/log_types.hh>
 #include "../runtime-base/cpu-arch.hh"
 #include <runtime-base/jni-wrappers.hh>
-#include <runtime-base/strings.hh>
 #include "util.hh"
 
-struct BundledProperty;
-
 namespace xamarin::android {
+#if defined (DEBUG)
+	// A system property bundled with the application, read from the environment override files.
+	// `name` is allocated together with the structure and never changes, `value` is allocated
+	// separately so that it can be replaced when the same property is set more than once.
+	struct BundledProperty
+	{
+		BundledProperty *next;
+		char            *name;
+		char            *value;
+		size_t           value_len;
+	};
+#endif
+
 	class AndroidSystem
 	{
 #if !defined (XA_HOST_NATIVEAOT)
@@ -113,12 +122,14 @@ namespace xamarin::android {
 				 * pre-loaded apps!), we need the .__override__ directory...
 				 */
 				char value[Constants::PROPERTY_VALUE_BUFFER_LEN];
-				if (log_categories == 0 && monodroid_get_system_property (Constants::DEBUG_MONO_PROFILE_PROPERTY.data (), value, sizeof (value)) == nullptr) [[likely]] {
+				if (log_categories == 0 &&
+				    monodroid_get_system_property (Constants::DEBUG_DOTNET_PROFILE_PROPERTY.data (), value, sizeof (value)) == nullptr &&
+				    monodroid_get_system_property (Constants::LEGACY_DEBUG_MONO_PROFILE_PROPERTY.data (), value, sizeof (value)) == nullptr) [[likely]] {
 					return;
 				}
 			}
 
-			log_debug (LOG_DEFAULT, "Creating public update directory: `{}`", override_dir);
+			log_debugf (LOG_DEFAULT, "Creating public update directory: `%s`", override_dir.c_str ());
 			Util::create_public_directory (override_dir.c_str ());
 		}
 #endif
@@ -147,13 +158,31 @@ namespace xamarin::android {
 		static auto load_dso_from_any_directories (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
 
 	private:
-		static auto get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept -> bool;
+		static auto format_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, char *buffer, size_t buffer_size) noexcept -> ssize_t;
+
+		static auto get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, char *stack_buffer, size_t stack_buffer_size) noexcept -> char*
+		{
+			ssize_t result = format_full_dso_path (base_dir, dso_path, stack_buffer, stack_buffer_size);
+			if (result >= 0) {
+				return stack_buffer;
+			}
+
+			size_t required_capacity = static_cast<size_t>(-result);
+			char *heap_buffer = static_cast<char*> (std::malloc (required_capacity));
+			abort_unless (heap_buffer != nullptr, "Failed to allocate full DSO path");
+			result = format_full_dso_path (base_dir, dso_path, heap_buffer, required_capacity);
+			abort_unless (result >= 0, "Failed to format full DSO path using the required capacity");
+			return heap_buffer;
+		}
 
 		template<class TContainer> // TODO: replace with a concept
 		static auto load_dso_from_specified_dirs (TContainer directories, std::string_view const& dso_name, int dl_flags, bool is_jni) noexcept -> void*;
 		static auto load_dso_from_app_lib_dirs (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
 		static auto load_dso_from_override_dirs (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
 		static auto lookup_system_property (const char *name, size_t &value_len) noexcept -> const char*;
+#if defined (DEBUG)
+		static auto find_bundled_property (const char *name) noexcept -> BundledProperty*;
+#endif
 		static auto monodroid__system_property_get (const char *name, char *sp_value) noexcept -> int;
 		static auto get_max_gref_count_from_system () noexcept -> long;
 		static void add_apk_libdir (std::string_view const& apk, size_t &index, std::string_view const& abi) noexcept;
@@ -231,7 +260,7 @@ namespace xamarin::android {
 		static inline std::string app_code_cache_dir;
 
 #if defined (DEBUG)
-		static inline std::unordered_map<std::string, std::string> bundled_properties;
+		static inline BundledProperty *bundled_properties = nullptr;
 #endif
 #endif
 	};
