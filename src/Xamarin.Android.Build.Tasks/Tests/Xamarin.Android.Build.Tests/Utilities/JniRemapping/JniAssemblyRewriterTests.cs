@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
@@ -72,6 +73,24 @@ namespace Xamarin.Android.Build.Tests
 			return args.Count > 0 ? args [0] : null;
 		}
 
+		static IReadOnlyList<string> AttributeStringArrayArg (MetadataReader reader, CustomAttributeHandleCollection attributes, EntityHandle ctor)
+		{
+			foreach (CustomAttributeHandle handle in attributes) {
+				CustomAttribute attribute = reader.GetCustomAttribute (handle);
+				if (attribute.Constructor != ctor) {
+					continue;
+				}
+
+				var decoded = attribute.DecodeValue (Xamarin.Android.Tasks.DummyCustomAttributeProvider.Instance);
+				var result = new List<string> ();
+				foreach (var element in (ImmutableArray<CustomAttributeTypedArgument<object>>) decoded.FixedArguments [0].Value) {
+					result.Add ((string) element.Value);
+				}
+				return result;
+			}
+			return [];
+		}
+
 		static List<KeyValuePair<int, string>> LoadedStrings (PEReader peReader, MetadataReader reader, MethodDefinitionHandle method)
 		{
 			var result = new List<KeyValuePair<int, string>> ();
@@ -94,10 +113,13 @@ namespace Xamarin.Android.Build.Tests
 			return result;
 		}
 
-		static void AssertTableRowCountsMatch (MetadataReader expected, MetadataReader actual)
+		static void AssertTableRowCountsMatch (MetadataReader expected, MetadataReader actual, params TableIndex [] except)
 		{
 			for (int i = 0; i < MetadataTokens.TableCount; i++) {
 				var table = (TableIndex) i;
+				if (Array.IndexOf (except, table) >= 0) {
+					continue;
+				}
 				Assert.AreEqual (expected.GetTableRowCount (table), actual.GetTableRowCount (table), $"Row count of table '{table}' changed.");
 			}
 		}
@@ -701,6 +723,345 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void RewritesTrimmableTypeMapKeysAndAliases ()
+		{
+			var fixture = new JniFixtureBuilder ();
+			fixture.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, fixture.TypeMapCtor3,
+				fixture.AttributeBlob ("acme/orig/MyView[1]", "Acme.Proxy, Fixture", "Acme.Target, Fixture"));
+
+			int fieldStart = fixture.NextFieldRid;
+			int methodStart = fixture.NextMethodRid;
+			TypeDefinitionHandle aliasHolder = fixture.AddType ("Acme", "AliasHolder", fieldStart, methodStart);
+			fixture.Metadata.AddCustomAttribute (aliasHolder, fixture.JavaPeerAliasesCtor1,
+				fixture.StringArrayAttributeBlob ("acme/orig/MyView[0]", "acme/orig/MyView[1]", "unmapped/Type[0]"));
+
+			const string mappingText = "acme.orig.MyView -> a.b.C:\n";
+			R8Mapping mapping = Mapping (mappingText);
+			JniRewriteResult result = Rewrite (fixture.Serialize (), mapping);
+			AssertReverseScanMatchesRewrite (result.Image, mapping, mappingText);
+			using var peReader = new PEReader (ImmutableArray.Create (result.Image));
+			MetadataReader reader = peReader.GetMetadataReader ();
+
+			CollectionAssert.AreEqual (new [] { "a/b/C[1]", "Acme.Proxy, Fixture", "Acme.Target, Fixture" },
+				AttributeStringArgs (reader, reader.GetAssemblyDefinition ().GetCustomAttributes (), fixture.TypeMapCtor3));
+			CollectionAssert.AreEqual (new [] { "a/b/C[0]", "a/b/C[1]", "unmapped/Type[0]" },
+				AttributeStringArrayArg (reader, reader.GetTypeDefinition (aliasHolder).GetCustomAttributes (), fixture.JavaPeerAliasesCtor1));
+		}
+
+		[Test]
+		public void IdentifiesUtf8FieldRvaDataStructurally ()
+		{
+			var fixture = new JniFixtureBuilder ();
+			FieldDefinitionHandle nameField = fixture.AddUtf8Field ("onClick");
+			FieldDefinitionHandle signatureField = fixture.AddUtf8Field ("(Lacme/orig/Callback;)V");
+			FieldDefinitionHandle embeddedNullField = fixture.AddUtf8Field ("onClick\0not-padding");
+
+			using var peReader = new PEReader (ImmutableArray.Create (fixture.Serialize ()));
+			MetadataReader reader = peReader.GetMetadataReader ();
+			FieldRvaTable table = FieldRvaTable.Read (peReader, reader);
+
+			Assert.AreEqual (3, table.Entries.Count);
+
+			FieldRvaEntry name = table.Get (nameField);
+			Assert.IsNotNull (name);
+			Assert.IsTrue (name.IsUtf8Datum, "A __utf8_N mapped field must be recognised structurally.");
+			Assert.AreEqual ("onClick", name.Utf8Value);
+
+			FieldRvaEntry signature = table.Get (signatureField);
+			Assert.IsNotNull (signature);
+			Assert.IsTrue (signature.IsUtf8Datum);
+			Assert.AreEqual ("(Lacme/orig/Callback;)V", signature.Utf8Value);
+
+			FieldRvaEntry embeddedNull = table.Get (embeddedNullField);
+			Assert.IsNotNull (embeddedNull);
+			Assert.IsFalse (embeddedNull.IsUtf8Datum, "Non-zero data after the first NUL is not rewrite padding.");
+		}
+
+		[Test]
+		public void RewritesUtf8FieldRvaJniNamesAndSignatures ()
+		{
+			var fixture = new JniFixtureBuilder ();
+
+			FieldDefinitionHandle nameField = fixture.AddUtf8Field ("onClick");
+			FieldDefinitionHandle signatureField = fixture.AddUtf8Field ("(Lacme/orig/Callback;)V");
+			FieldDefinitionHandle longNameField = fixture.AddUtf8Field ("run");
+
+			int fieldStart = fixture.NextFieldRid;
+			int methodStart = fixture.NextMethodRid;
+			int ctorBody = fixture.EmitBody (encoder => {
+				encoder.OpCode (ILOpCode.Ldarg_0);
+				encoder.LoadString (fixture.String ("acme/orig/MyView"));
+				encoder.OpCode (ILOpCode.Pop);
+				encoder.OpCode (ILOpCode.Ret);
+			});
+			fixture.AddVoidMethod (".ctor", ctorBody,
+				MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName);
+
+			int registerBody = fixture.EmitBody (encoder => {
+				encoder.OpCode (ILOpCode.Ldsflda);
+				encoder.Token (nameField);
+				encoder.OpCode (ILOpCode.Ldsflda);
+				encoder.Token (signatureField);
+				encoder.OpCode (ILOpCode.Pop);
+				encoder.OpCode (ILOpCode.Pop);
+				encoder.OpCode (ILOpCode.Ldsflda);
+				encoder.Token (longNameField);
+				encoder.OpCode (ILOpCode.Ldsflda);
+				encoder.Token (signatureField);
+				encoder.OpCode (ILOpCode.Pop);
+				encoder.OpCode (ILOpCode.Pop);
+				encoder.OpCode (ILOpCode.Ret);
+			});
+			fixture.AddVoidMethod ("RegisterNatives", registerBody);
+
+			// A JavaPeerProxy-derived type carries its JNI identity in its .ctor's only ldstr.
+			fixture.AddType ("Acme.Orig", "MyViewProxy", fieldStart, methodStart,
+				TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class, fixture.JavaPeerProxyReference);
+
+			byte [] source = fixture.Serialize ();
+			const string mappingText =
+				"acme.orig.MyView -> a.b.C:\n" +
+				"    void onClick(acme.orig.Callback) -> a\n" +
+				"    void run(acme.orig.Callback) -> aMuchLongerObfuscatedName\n" +
+				"acme.orig.Callback -> a.b.Cb:\n";
+			R8Mapping mapping = Mapping (mappingText);
+			JniRewriteResult result = Rewrite (source, mapping);
+			using (var rewrittenReader = new PEReader (ImmutableArray.Create (result.Image))) {
+				MetadataReader rewrittenMetadata = rewrittenReader.GetMetadataReader ();
+				FieldRvaTable rewrittenFields = FieldRvaTable.Read (rewrittenReader, rewrittenMetadata);
+				Assert.IsTrue (rewrittenFields.Get (nameField)?.IsUtf8Datum, "Rewritten method-name FieldRVA data should remain structurally recognizable.");
+				Assert.IsTrue (rewrittenFields.Get (signatureField)?.IsUtf8Datum, "Rewritten signature FieldRVA data should remain structurally recognizable.");
+			}
+			AssertReverseScanMatchesRewrite (result.Image, mapping, mappingText);
+
+			using var peReader = new PEReader (ImmutableArray.Create (result.Image));
+			MetadataReader reader = peReader.GetMetadataReader ();
+
+			Assert.AreEqual ("a", ReadUtf8Field (peReader, reader, nameField), "The method name is renamed using the owning proxy's JNI class.");
+			Assert.AreEqual ("(La/b/Cb;)V", ReadUtf8Field (peReader, reader, signatureField));
+			Assert.AreEqual ("aMuchLongerObfuscatedName", ReadUtf8Field (peReader, reader, longNameField), "A longer datum is relocated into a wider __utf8_N slot.");
+
+			// Growing a datum appends exactly one new sized type; no existing token moves.
+			using var sourceReader = new PEReader (ImmutableArray.Create (source));
+			MetadataReader before = sourceReader.GetMetadataReader ();
+			Assert.AreEqual (before.GetTableRowCount (TableIndex.TypeDef) + 1, reader.GetTableRowCount (TableIndex.TypeDef));
+			AssertTableRowCountsMatch (before, reader, TableIndex.TypeDef, TableIndex.ClassLayout, TableIndex.NestedClass);
+		}
+
+		static string ReadUtf8Field (PEReader peReader, MetadataReader reader, FieldDefinitionHandle field)
+		{
+			FieldDefinition definition = reader.GetFieldDefinition (field);
+			int rva = definition.GetRelativeVirtualAddress ();
+			Assert.AreNotEqual (0, rva, "Field has no RVA.");
+
+			PEMemoryBlock block = peReader.GetSectionData (rva);
+			var bytes = new List<byte> ();
+			BlobReader blob = block.GetReader (0, Math.Min (block.Length, 256));
+			for (byte b = blob.ReadByte (); b != 0; b = blob.ReadByte ()) {
+				bytes.Add (b);
+			}
+			return System.Text.Encoding.UTF8.GetString (bytes.ToArray ());
+		}
+
+		[Test]
+		public void FailsWhenASharedUtf8DatumNeedsTwoDifferentNames ()
+		{
+			var fixture = new JniFixtureBuilder ();
+
+			FieldDefinitionHandle shared = fixture.AddUtf8Field ("go");
+			FieldDefinitionHandle signature = fixture.AddUtf8Field ("()V");
+
+			AddProxy (fixture, "acme/orig/P1", shared, signature);
+			AddProxy (fixture, "acme/orig/P2", shared, signature);
+
+			var exception = Assert.Throws<JniRewriteException> (() => Rewrite (fixture.Serialize (), Mapping (
+				"acme.orig.P1 -> a.b.P1:\n" +
+				"    void go() -> z\n" +
+				"acme.orig.P2 -> a.b.P2:\n" +
+				"    void go() -> q\n")));
+			StringAssert.Contains ("shared", exception.Message.ToLowerInvariant ());
+		}
+
+		[Test]
+		public void RewritesGeneratedTypeMapWithOwnerSpecificMethodNames ()
+		{
+			byte [] source = GenerateTypeMapWithSharedMethodName ();
+			var warnings = new List<BuildWarningEventArgs> ();
+
+			JniRewriteResult result = Rewrite (source, Mapping (
+				"test.First -> a.b.First:\n" +
+				"    void n_Run() -> a\n" +
+				"test.Second -> a.b.Second:\n" +
+				"    void n_Run() -> b\n"), warnings);
+
+			CollectionAssert.AreEquivalent (new [] { "a", "b", "()V" }, ReadUtf8Values (result.Image));
+			CollectionAssert.DoesNotContain (warnings.Select (warning => warning.Code).ToArray (), "XA4326");
+		}
+
+		[Test]
+		public void RewritesGeneratedTypeMapWithMappedAndUnmappedMethodNames ()
+		{
+			byte [] source = GenerateTypeMapWithSharedMethodName ();
+			var warnings = new List<BuildWarningEventArgs> ();
+
+			JniRewriteResult result = Rewrite (source, Mapping (
+				"test.First -> a.b.First:\n" +
+				"    void n_Run() -> a\n" +
+				"test.Second -> test.Second:\n"), warnings);
+
+			CollectionAssert.AreEquivalent (new [] { "a", "n_Run", "()V" }, ReadUtf8Values (result.Image));
+			CollectionAssert.DoesNotContain (warnings.Select (warning => warning.Code).ToArray (), "XA4326");
+		}
+
+		static byte [] GenerateTypeMapWithSharedMethodName ()
+		{
+			var peers = new [] {
+				CreatePeer ("test/First", "Test.First"),
+				CreatePeer ("test/Second", "Test.Second"),
+			};
+			using var stream = new MemoryStream ();
+			new TypeMapAssemblyGenerator (new Version (11, 0, 0, 0)).Generate (peers, stream, "OwnerSpecificNames");
+			return stream.ToArray ();
+
+			static JavaPeerInfo CreatePeer (string javaName, string managedName)
+			{
+				int separator = managedName.LastIndexOf ('.');
+				return new JavaPeerInfo {
+					JavaName = javaName,
+					CompatJniName = javaName,
+					ManagedTypeName = managedName,
+					ManagedTypeNamespace = managedName.Substring (0, separator),
+					ManagedTypeShortName = managedName.Substring (separator + 1),
+					AssemblyName = "TestAsm",
+					DoNotGenerateAcw = false,
+					ActivationCtor = new ActivationCtorInfo {
+						DeclaringTypeName = managedName,
+						DeclaringAssemblyName = "TestAsm",
+						Style = ActivationCtorStyle.XamarinAndroid,
+					},
+					MarshalMethods = [
+						new MarshalMethodInfo {
+							JniName = "run",
+							NativeCallbackName = "n_Run",
+							JniSignature = "()V",
+							ManagedMethodName = "Run",
+						},
+					],
+				};
+			}
+		}
+
+		static string [] ReadUtf8Values (byte [] image)
+		{
+			using var peReader = new PEReader (ImmutableArray.Create (image));
+			MetadataReader reader = peReader.GetMetadataReader ();
+			return FieldRvaTable.Read (peReader, reader).Entries
+				.Select (entry => entry.Utf8Value)
+				.OfType<string> ()
+				.ToArray ();
+		}
+
+		[Test]
+		public void FailsWhenASharedUtf8DatumMustRemainUnmappedForOneProxy ()
+		{
+			var fixture = new JniFixtureBuilder ();
+
+			FieldDefinitionHandle shared = fixture.AddUtf8Field ("go");
+			FieldDefinitionHandle signature = fixture.AddUtf8Field ("()V");
+
+			AddProxy (fixture, "acme/orig/P1", shared, signature);
+			AddProxy (fixture, "acme/orig/P2", shared, signature);
+
+			var exception = Assert.Throws<JniRewriteException> (() => Rewrite (fixture.Serialize (), Mapping (
+				"acme.orig.P1 -> a.b.P1:\n" +
+				"    void go() -> z\n" +
+				"acme.orig.P2 -> a.b.P2:\n")));
+			StringAssert.Contains ("shared", exception.Message.ToLowerInvariant ());
+			StringAssert.Contains ("original value", exception.Message);
+			StringAssert.Contains ("'go'", exception.Message);
+			StringAssert.Contains ("'z'", exception.Message);
+		}
+
+		[Test]
+		public void FailsWhenASharedUtf8DatumHasAnUnresolvedOwner ()
+		{
+			var fixture = new JniFixtureBuilder ();
+
+			FieldDefinitionHandle shared = fixture.AddUtf8Field ("go");
+			FieldDefinitionHandle signature = fixture.AddUtf8Field ("()V");
+
+			AddProxy (fixture, "acme/orig/P1", shared, signature);
+			AddRegistrationTypeWithoutJniOwner (fixture, shared, signature);
+
+			var exception = Assert.Throws<JniRewriteException> (() => Rewrite (fixture.Serialize (), Mapping (
+				"acme.orig.P1 -> a.b.P1:\n" +
+				"    void go() -> z\n")));
+			StringAssert.Contains ("shared", exception.Message.ToLowerInvariant ());
+			StringAssert.Contains ("original value", exception.Message);
+		}
+
+		[Test]
+		public void PreservesUnreferencedUtf8DatumThatMatchesAMappedClass ()
+		{
+			var fixture = new JniFixtureBuilder ();
+			FieldDefinitionHandle field = fixture.AddUtf8Field ("acme/orig/Callback");
+			byte [] image = fixture.Serialize ();
+			R8Mapping mapping = Mapping ("acme.orig.Callback -> a.b.Cb:\n");
+
+			JniRewriteResult result = Rewrite (image, mapping);
+
+			Assert.AreSame (image, result.Image);
+			Assert.AreEqual (0, result.ReplacementCount);
+			CollectionAssert.IsEmpty (mapping.AccessedEntries);
+			using var peReader = new PEReader (ImmutableArray.Create (result.Image));
+			Assert.AreEqual ("acme/orig/Callback", ReadUtf8Field (peReader, peReader.GetMetadataReader (), field));
+		}
+
+		static void AddProxy (JniFixtureBuilder fixture, string jniName, FieldDefinitionHandle nameField, FieldDefinitionHandle signatureField)
+		{
+			int fieldStart = fixture.NextFieldRid;
+			int methodStart = fixture.NextMethodRid;
+
+			fixture.AddVoidMethod (".ctor", fixture.EmitBody (encoder => {
+				encoder.OpCode (ILOpCode.Ldarg_0);
+				encoder.LoadString (fixture.String (jniName));
+				encoder.OpCode (ILOpCode.Pop);
+				encoder.OpCode (ILOpCode.Ret);
+			}), MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName);
+
+			fixture.AddVoidMethod ("RegisterNatives", fixture.EmitBody (encoder => {
+				encoder.OpCode (ILOpCode.Ldsflda);
+				encoder.Token (nameField);
+				encoder.OpCode (ILOpCode.Ldsflda);
+				encoder.Token (signatureField);
+				encoder.OpCode (ILOpCode.Pop);
+				encoder.OpCode (ILOpCode.Pop);
+				encoder.OpCode (ILOpCode.Ret);
+			}));
+
+			fixture.AddType ("Acme.Orig", jniName.Replace ('/', '_'), fieldStart, methodStart,
+				TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class, fixture.JavaPeerProxyReference);
+		}
+
+		static void AddRegistrationTypeWithoutJniOwner (JniFixtureBuilder fixture, FieldDefinitionHandle nameField, FieldDefinitionHandle signatureField)
+		{
+			int fieldStart = fixture.NextFieldRid;
+			int methodStart = fixture.NextMethodRid;
+
+			fixture.AddVoidMethod ("RegisterNatives", fixture.EmitBody (encoder => {
+				encoder.OpCode (ILOpCode.Ldsflda);
+				encoder.Token (nameField);
+				encoder.OpCode (ILOpCode.Ldsflda);
+				encoder.Token (signatureField);
+				encoder.OpCode (ILOpCode.Pop);
+				encoder.OpCode (ILOpCode.Pop);
+				encoder.OpCode (ILOpCode.Ret);
+			}));
+
+			fixture.AddType ("Acme.Orig", "UnknownOwner", fieldStart, methodStart);
+		}
+
+		[Test]
 		public void SharedLoadedStringGetsOwnerSpecificReplacements ()
 		{
 			var fixture = new JniFixtureBuilder ();
@@ -1078,6 +1439,74 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual ((byte) ILOpCode.Ldstr, il [0]);
 				CollectionAssert.AreEqual (new [] { "z.()V" }, ValuesOf (LoadedStrings (peReader, reader, go)));
 			}
+		}
+
+		[Test]
+		public void PreservesMappedFieldDataThatIsNotAJniDatum ()
+		{
+			var fixture = new JniFixtureBuilder ();
+
+			// A plain C#-style array initializer blob: not a __utf8_N datum, so it must survive
+			// byte-for-byte.
+			var payload = new byte [] { 0xDE, 0xAD, 0xBE, 0xEF, 0x01, 0x02, 0x03, 0x04 };
+			TypeDefinitionHandle enclosing = fixture.EnsurePrivateImplementationDetails ();
+			int fieldStart = fixture.NextFieldRid;
+			int methodStart = fixture.NextMethodRid;
+			TypeDefinitionHandle arrayType = fixture.AddType (null, "__StaticArrayInitTypeSize=8", fieldStart, methodStart,
+				TypeAttributes.NestedPrivate | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed | TypeAttributes.AnsiClass,
+				fixture.ValueTypeReference);
+			fixture.Metadata.AddTypeLayout (arrayType, packingSize: 1, size: (uint) payload.Length);
+			fixture.Metadata.AddNestedType (arrayType, enclosing);
+
+			var signature = new BlobBuilder ();
+			new BlobEncoder (signature).FieldSignature ().Type (arrayType, isValueType: true);
+			int rva = fixture.MappedFieldData.Count;
+			fixture.MappedFieldData.WriteBytes (payload);
+			FieldDefinitionHandle dataField = fixture.Metadata.AddFieldDefinition (
+				FieldAttributes.Static | FieldAttributes.Assembly | FieldAttributes.HasFieldRVA,
+				fixture.Metadata.GetOrAddString ("ArrayData"), fixture.Metadata.GetOrAddBlob (signature));
+			fixture.Metadata.AddFieldRelativeVirtualAddress (dataField, rva);
+
+			JniRewriteResult result = Rewrite (fixture.Serialize (), Mapping ("acme.orig.Nothing -> a.b.N:\n"));
+
+			using var peReader = new PEReader (ImmutableArray.Create (result.Image));
+			MetadataReader reader = peReader.GetMetadataReader ();
+			int newRva = reader.GetFieldDefinition (dataField).GetRelativeVirtualAddress ();
+			Assert.AreNotEqual (0, newRva);
+			CollectionAssert.AreEqual (payload, peReader.GetSectionData (newRva).GetReader (0, payload.Length).ReadBytes (payload.Length));
+		}
+
+		[Test]
+		public void RejectsFieldRvaValueTypeWithoutAnExplicitClassLayoutSize ()
+		{
+			// A mapped value type with no ClassLayout row (or a zero size) cannot be sized safely:
+			// summing its instance fields would be a guess about the CLR's actual layout, and a
+			// wrong guess risks truncating - or reading past the end of - the mapped data. The
+			// rewriter must refuse rather than take that risk.
+			var fixture = new JniFixtureBuilder ();
+
+			TypeDefinitionHandle enclosing = fixture.EnsurePrivateImplementationDetails ();
+			int fieldStart = fixture.NextFieldRid;
+			int methodStart = fixture.NextMethodRid;
+			TypeDefinitionHandle unsizedType = fixture.AddType (null, "__UnsizedBlob", fieldStart, methodStart,
+				TypeAttributes.NestedPrivate | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed | TypeAttributes.AnsiClass,
+				fixture.ValueTypeReference);
+			fixture.Metadata.AddNestedType (unsizedType, enclosing);
+			// Deliberately no fixture.Metadata.AddTypeLayout (...) call: the type has no
+			// ClassLayout row at all.
+
+			var signature = new BlobBuilder ();
+			new BlobEncoder (signature).FieldSignature ().Type (unsizedType, isValueType: true);
+			int rva = fixture.MappedFieldData.Count;
+			fixture.MappedFieldData.WriteBytes (new byte [] { 0x01, 0x02, 0x03, 0x04 });
+			FieldDefinitionHandle dataField = fixture.Metadata.AddFieldDefinition (
+				FieldAttributes.Static | FieldAttributes.Assembly | FieldAttributes.HasFieldRVA,
+				fixture.Metadata.GetOrAddString ("UnsizedData"), fixture.Metadata.GetOrAddBlob (signature));
+			fixture.Metadata.AddFieldRelativeVirtualAddress (dataField, rva);
+
+			byte [] source = fixture.Serialize ();
+			var ex = Assert.Throws<JniRewriteException> (() => Rewrite (source, Mapping ("acme.orig.Nothing -> a.b.N:\n")));
+			StringAssert.Contains ("ClassLayout", ex.Message);
 		}
 
 		[Test]
