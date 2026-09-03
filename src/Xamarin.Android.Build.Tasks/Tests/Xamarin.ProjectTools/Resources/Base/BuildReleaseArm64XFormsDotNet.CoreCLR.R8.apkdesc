@@ -38,7 +38,7 @@
       "Size": 4843864
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 1094848
+      "Size": 564736
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 72432
@@ -2231,5 +2231,5 @@
       "Size": 794696
     }
   },
-  "PackageSize": 16317971
+  "PackageSize": 16133651
 }

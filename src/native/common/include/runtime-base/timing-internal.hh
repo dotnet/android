@@ -292,7 +292,7 @@ namespace xamarin::android {
 		{
 			TimingEvent *event = uses_more_info ? get_sequence_event () : pop_sequence_event ();
 			if (event == nullptr) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::end_event called without prior FastTiming::start_event called"sv);
+				log_warnf (LOG_TIMING, "FastTiming::end_event called without prior FastTiming::start_event called");
 				return;
 			}
 
@@ -395,7 +395,7 @@ namespace xamarin::android {
 			TimingEvent *event = pop_sequence_event ();
 			if (event == nullptr) [[unlikely]] {
 				delete more_info;
-				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
+				log_warnf (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called");
 				return;
 			}
 
