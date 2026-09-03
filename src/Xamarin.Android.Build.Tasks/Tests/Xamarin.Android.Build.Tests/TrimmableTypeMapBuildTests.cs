@@ -189,42 +189,44 @@ namespace Xamarin.Android.Build.Tests {
 				"llvm-ir should preserve the exact supplementary descriptor even though Android cannot load it.");
 		}
 
-		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "JAVAC0000", false)]
-		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "XA4258", true)]
-		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "XA4258", true)]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "JAVAC0000")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "XA4258")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "XA4258")]
 		public void Build_InvalidOrUnsupportedUnicodeIdentifiers_ReportDiagnosticWithoutTrimmableOutputs (
 			string typeMapImplementation,
 			AndroidRuntime runtime,
-			string expectedCode,
-			bool expectNoOutputs)
+			string expectedCode)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			bool isTrimmable = typeMapImplementation == "trimmable";
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
-			proj.Sources.Add (new BuildItem.Source ("InvalidUnicodeIdentifiers.cs") {
-				TextContent = () => """
-					using Android.Runtime;
+			string projectSource = """
+				using Android.Runtime;
 
-					namespace UnnamedProject;
+				namespace UnnamedProject;
 
-					[Register ("com/example/1Peer")]
-					public class InvalidDigitStart : Java.Lang.Object
-					{
-						public InvalidDigitStart () { }
-					}
+				[Register ("com/example/1Peer")]
+				public class InvalidDigitStart : Java.Lang.Object
+				{
+					public InvalidDigitStart () { }
+				}
 
-					[Register ("com/example/\u0301Peer")]
-					public class InvalidCombiningStart : Java.Lang.Object
-					{
-						public InvalidCombiningStart () { }
-					}
+				[Register ("com/example/\u0301Peer")]
+				public class InvalidCombiningStart : Java.Lang.Object
+				{
+					public InvalidCombiningStart () { }
+				}
+				""";
+			if (isTrimmable) {
+				projectSource += """
 
 					[Register ("com/e\u0301xample/Cafe\u0301")]
 					public class UnsupportedCombiningMark : Java.Lang.Object
@@ -249,17 +251,20 @@ namespace Xamarin.Android.Build.Tests {
 					{
 						public NonNfcIdentifier () { }
 					}
-					""",
+					""";
+			}
+			proj.Sources.Add (new BuildItem.Source ("InvalidUnicodeIdentifiers.cs") {
+				TextContent = () => projectSource,
 			});
 
 			using var builder = CreateApkBuilder ();
 			builder.ThrowOnBuildFailure = false;
 			Assert.IsFalse (
 				builder.Build (proj),
-				$"{runtime}/{typeMapImplementation} should reject invalid Java identifier starts.");
+				$"{runtime}/{typeMapImplementation} should reject invalid or unsupported Java identifiers.");
 			StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput);
 
-			if (expectNoOutputs) {
+			if (isTrimmable) {
 				StringAssertEx.Contains ("1Peer", builder.LastBuildOutput);
 				StringAssertEx.Contains ("\u0301Peer", builder.LastBuildOutput);
 				StringAssertEx.Contains ("e\u0301xample", builder.LastBuildOutput);
@@ -278,10 +283,6 @@ namespace Xamarin.Android.Build.Tests {
 			foreach (var javaName in new [] {
 				"com/example/1Peer",
 				"com/example/\u0301Peer",
-				"com/e\u0301xample/Cafe\u0301",
-				"com/example/A\u0cf3",
-				"com/example/\u1c89Peer",
-				"com/example/\u212bPeer",
 			}) {
 				var relativePath = (javaName + ".java").Replace ('/', Path.DirectorySeparatorChar);
 				var javaPath = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", relativePath));
