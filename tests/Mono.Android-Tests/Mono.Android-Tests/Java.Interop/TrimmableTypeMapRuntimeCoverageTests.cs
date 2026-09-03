@@ -405,7 +405,9 @@ namespace Java.InteropTests
 		public TrimmableRuntimeJavaInteropPeer (ref JniObjectReference reference, JniObjectReferenceOptions options)
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			ConstructorInvocations++;
+			// ActivationBarrier deliberately puts two threads inside this constructor
+			// at once, so the counter must be updated atomically.
+			Interlocked.Increment (ref ConstructorInvocations);
 			Options = options;
 			Construct (ref reference, options);
 			var barrier = ActivationBarrier;

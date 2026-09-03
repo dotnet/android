@@ -352,13 +352,13 @@ public class TrimmableTypeMap
 		} else {
 			peer = proxy?.CreateInstance (handle, ImplicitPeerOwnership);
 		}
-		return RegisterCreatedPeer (peer, targetType, returnRegisteredPeer: false);
+		return RegisterCreatedPeer (peer);
 	}
 
 	internal IJavaPeerable? CreateInstanceWithoutReflectionFallback (IntPtr handle, Type? targetType = null)
 	{
 		var peer = GetProxyForJavaObject (handle, targetType)?.CreateInstance (handle, ImplicitPeerOwnership);
-		return RegisterCreatedPeer (peer, targetType, returnRegisteredPeer: true);
+		return RegisterCreatedPeer (peer);
 	}
 
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
@@ -402,38 +402,21 @@ public class TrimmableTypeMap
 		peer.SetJniManagedPeerState (peerState);
 	}
 
-	static IJavaPeerable? RegisterCreatedPeer (IJavaPeerable? peer, Type? targetType, bool returnRegisteredPeer)
+	static IJavaPeerable? RegisterCreatedPeer (IJavaPeerable? peer)
 	{
 		if (peer is null) {
 			return null;
 		}
 
+		// Mark the peer Replaceable *before* registering it. AddPeer() lets a
+		// non-replaceable peer evict an existing replaceable one, so registering during
+		// construction — which is what ConstructPeerCore does unless the activation
+		// constructor is told not to — would let this implicit intermediary evict the
+		// peer an earlier caller is already holding, leaving that caller with a wrapper
+		// the runtime no longer knows about. See dotnet/android#10973.
 		MarkCreatedPeer (peer);
-		var valueManager = JniEnvironment.Runtime.ValueManager;
-		valueManager.AddPeer (peer);
-		if (!returnRegisteredPeer) {
-			return peer;
-		}
-
-		var registered = valueManager.PeekPeer (peer.PeerReference);
-		if (registered is null) {
-			valueManager.AddPeer (peer);
-			registered = valueManager.PeekPeer (peer.PeerReference);
-		}
-		if (registered is null) {
-			throw new InvalidOperationException ("Could not register the newly created Java peer.");
-		}
-		if (ReferenceEquals (registered, peer)) {
-			return peer;
-		}
-		if (targetType is not null && !targetType.IsAssignableFrom (registered.GetType ())) {
-			// A registered alias of an incompatible managed type cannot satisfy
-			// this explicitly typed conversion.
-			return peer;
-		}
-
-		peer.Dispose ();
-		return registered;
+		JniEnvironment.Runtime.ValueManager.AddPeer (peer);
+		return peer;
 	}
 
 	/// <summary>

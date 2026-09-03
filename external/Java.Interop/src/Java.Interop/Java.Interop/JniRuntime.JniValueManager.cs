@@ -206,31 +206,7 @@ namespace Java.Interop
 							targetType.IsAssignableFrom (peeked.GetType ()))) {
 					return peeked;
 				}
-
-				var created = CreatePeer (ref reference, JniObjectReferenceOptions.Copy, targetType);
-				if (created == null) {
-					return null;
-				}
-
-				// Another caller may have registered a peer after the initial lookup
-				// missed. Return the peer which won registration instead of allowing
-				// an unregistered wrapper to escape into a long-lived cache.
-				var registered = PeekPeer (created.PeerReference);
-				if (registered == null) {
-					// The peer which previously won registration may have been
-					// removed before this lookup. Give the strongly-held candidate
-					// another chance to register.
-					AddPeer (created);
-					registered = PeekPeer (created.PeerReference);
-				}
-				if (registered == null ||
-						object.ReferenceEquals (registered, created) ||
-						(targetType != null && !targetType.IsAssignableFrom (registered.GetType ()))) {
-					return created;
-				}
-
-				created.Dispose ();
-				return registered;
+				return CreatePeer (ref reference, JniObjectReferenceOptions.Copy, targetType);
 			}
 
 			public abstract IJavaPeerable? CreatePeer (

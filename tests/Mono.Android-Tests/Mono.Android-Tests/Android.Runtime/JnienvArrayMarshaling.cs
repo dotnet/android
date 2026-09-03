@@ -542,16 +542,30 @@ namespace Android.RuntimeTests {
 				first = firstPeer;
 				second = secondPeer;
 
-				Assert.AreSame (first, second, "Concurrent GetPeer() callers should receive the registered peer.");
-				Assert.AreEqual (1, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.DisposeInvocations,
-					"The peer which lost registration should be fully disposed.");
+				// GetPeer() creates via CreatePeer(), which is contractually required to
+				// return a new peer even when a compatible one is already registered, so
+				// the caller which loses the race receives an unregistered alias.
+				Assert.AreNotSame (first, second, "Each CreatePeer() caller should receive its own peer.");
+				Assert.AreEqual (2, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ConstructorInvocations,
+					"Both callers should have raced through peer activation.");
+				Assert.AreEqual (0, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.DisposeInvocations,
+					"A peer handed back to a caller should not be disposed.");
+
+				// The race must not corrupt the registry: exactly one peer keeps the Java
+				// instance's identity. Before the fix the peer created second registered
+				// itself before it was marked Replaceable, so it evicted the first,
+				// leaving the first caller holding a peer the runtime no longer knew about.
+				var registered = Java.Interop.JniRuntime.CurrentRuntime.ValueManager.PeekPeer (reference);
+				Assert.IsNotNull (registered, "One of the racing peers should have won registration.");
+				Assert.IsTrue (ReferenceEquals (registered, first) || ReferenceEquals (registered, second),
+					$"The registered peer should be one of the racing peers, but was {registered.GetType ()}.");
 
 				using (var objectArray = new Java.Lang.Object (
 						JNIEnv.NewArray (new [] { first }, typeof (Java.Lang.Object)),
 						JniHandleOwnership.TransferLocalRef)) {
 					object[] values = JNIEnv.GetObjectArray (objectArray.Handle, new [] { typeof (Java.InteropTests.TrimmableRuntimeJavaInteropPeer) });
-					Assert.AreSame (first, values [0],
-						"GetObjectArray() should return the peer shared by both GetPeer() callers.");
+					Assert.AreSame (registered, values [0],
+						"GetObjectArray() should return the peer which won registration.");
 				}
 			} finally {
 				Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ActivationBarrier = null;
@@ -591,11 +605,22 @@ namespace Android.RuntimeTests {
 				first = firstPeer;
 				second = secondPeer;
 
-				Assert.AreSame (first, second, "Concurrent GetObjectArray() callers should receive the registered peer.");
-				Assert.AreSame (first, Java.Interop.JniRuntime.CurrentRuntime.ValueManager.PeekPeer (reference),
-					"GetObjectArray() should return the peer which won registration.");
-				Assert.AreEqual (1, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.DisposeInvocations,
-					"The peer which lost registration should be fully disposed.");
+				// Each GetObjectArray() caller converts through CreatePeer(), which is
+				// contractually required to return a new peer even when a compatible one is
+				// already registered, so the caller which loses the race gets an alias.
+				Assert.AreNotSame (first, second, "Each converting caller should receive its own peer.");
+				Assert.AreEqual (2, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ConstructorInvocations,
+					"Both callers should have raced through peer activation.");
+				Assert.AreEqual (0, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.DisposeInvocations,
+					"A peer handed back to a caller should not be disposed.");
+
+				// The race must not corrupt the registry: exactly one peer keeps the Java
+				// instance's identity. Before the fix the peer created second registered
+				// itself before it was marked Replaceable, so it evicted the first.
+				var registered = Java.Interop.JniRuntime.CurrentRuntime.ValueManager.PeekPeer (reference);
+				Assert.IsNotNull (registered, "One of the racing peers should have won registration.");
+				Assert.IsTrue (ReferenceEquals (registered, first) || ReferenceEquals (registered, second),
+					$"The registered peer should be one of the racing peers, but was {registered.GetType ()}.");
 			} finally {
 				Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ActivationBarrier = null;
 				if (!ReferenceEquals (first, second))

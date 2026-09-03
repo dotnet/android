@@ -914,6 +914,23 @@ sealed class TypeMapAssemblyEmitter
 			});
 	}
 
+	/// <summary>
+	/// Emits <c>Copy | ((ownership &amp; DoNotRegister) >> 2)</c>, which converts the
+	/// <c>JniHandleOwnership</c> argument into the <c>JniObjectReferenceOptions</c> value
+	/// expected by a Java.Interop-style activation constructor.
+	/// </summary>
+	/// <remarks>
+	/// This relies on two enums in different assemblies staying aligned:
+	/// <c>Android.Runtime.JniHandleOwnership.DoNotRegister</c> is <c>0x10</c>, while the
+	/// matching "do not register" bit of <c>Java.Interop.JniObjectReferenceOptions</c>
+	/// (<c>JniRuntime.ReflectionJniValueManager.DoNotRegisterTarget</c>) is <c>1 &lt;&lt; 2</c>,
+	/// so shifting right by two maps one onto the other. The result is
+	/// <c>JniObjectReferenceOptions.CopyAndDoNotRegister</c> (5) when the caller passes
+	/// <c>DoNotRegister</c>, and <c>JniObjectReferenceOptions.Copy</c> (1) otherwise.
+	/// If either bit ever moves, the on-device activation-options assertion in
+	/// <c>TrimmableTypeMapRuntimeCoverageTests</c> is what catches it — the generator test
+	/// only pins the emitted byte sequence.
+	/// </remarks>
 	static void EmitJniObjectReferenceOptions (PEAssemblyBuilder.TrackedInstructionEncoder encoder)
 	{
 		const int jniObjectReferenceOptionsCopy = 1;
