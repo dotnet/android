@@ -26,7 +26,7 @@ static jmethodID java_lang_Thread_getStackTrace;
 static jclass java_lang_StackTraceElement;
 static jmethodID java_lang_StackTraceElement_toString;
 
-static xamarin::android::Mutex java_init_lock;
+static pthread_mutex_t java_init_lock = PTHREAD_MUTEX_INITIALIZER;
 
 const char* xa_get_managed_backtrace () noexcept
 {

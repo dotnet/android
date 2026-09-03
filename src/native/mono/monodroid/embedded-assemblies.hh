@@ -462,7 +462,7 @@ namespace xamarin::android::internal {
 		static inline bool          need_to_scan_more_apks = true;
 
 		static inline AssemblyStoreIndexEntry *assembly_store_hashes = nullptr;
-		static inline xamarin::android::Mutex  assembly_decompress_mutex {};
+		static inline pthread_mutex_t assembly_decompress_mutex = PTHREAD_MUTEX_INITIALIZER;
 	};
 }
 

@@ -78,7 +78,7 @@ namespace {
 			Failed,
 		};
 
-		Mutex                             state_lock;
+		pthread_mutex_t                   state_lock = PTHREAD_MUTEX_INITIALIZER;
 		std::deque<WriteRequest>          write_queue;
 		std::string                       cache_dir;
 		std::unique_ptr<uint8_t*[]>       tracking;

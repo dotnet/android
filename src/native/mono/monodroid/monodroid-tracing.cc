@@ -5,6 +5,7 @@
 #include "mono/utils/details/mono-dl-fallback-types.h"
 #include "monodroid-glue-internal.hh"
 #include "native-tracing.hh"
+#include <runtime-base/mutex.hh>
 #include <shared/cpp-util.hh>
 
 using namespace xamarin::android::internal;
@@ -15,7 +16,7 @@ namespace {
 	decltype(xa_get_java_backtrace)* _xa_get_java_backtrace;
 	decltype(xa_get_interesting_signal_handlers)* _xa_get_interesting_signal_handlers;
 	bool tracing_init_done;
-	xamarin::android::Mutex tracing_init_lock {};
+	pthread_mutex_t tracing_init_lock = PTHREAD_MUTEX_INITIALIZER;
 }
 
 void

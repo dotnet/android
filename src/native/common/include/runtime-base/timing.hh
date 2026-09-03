@@ -33,6 +33,11 @@ namespace xamarin::android
 			sequence_pool.resize (initial_pool_size);
 		}
 
+		Timing (Timing const&) = delete;
+		Timing (Timing&&) = delete;
+		Timing& operator= (Timing const&) = delete;
+		Timing& operator= (Timing&&) = delete;
+
 		static void info (managed_timing_sequence const *seq, const char *message)
 		{
 			do_log (LogLevel::Info, seq, message);
@@ -99,6 +104,6 @@ namespace xamarin::android
 
 	private:
 		std::vector<managed_timing_sequence> sequence_pool;
-		Mutex                     sequence_lock;
+		pthread_mutex_t sequence_lock = PTHREAD_MUTEX_INITIALIZER;
 	};
 }

@@ -36,6 +36,6 @@ namespace xamarin::android {
 		// CRC32 hash collisions in the store index. Built once when the store is mapped.
 		static inline std::string_view *assembly_store_names = nullptr;
 		static inline uint64_t assembly_store_content_id = 0;
-		static inline Mutex  assembly_decompress_mutex {};
+		static inline pthread_mutex_t assembly_decompress_mutex = PTHREAD_MUTEX_INITIALIZER;
 	};
 }
