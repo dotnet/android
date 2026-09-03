@@ -35,23 +35,6 @@
 
 using namespace xamarin::android;
 
-namespace {
-	// Returns a `malloc`ed copy of `path` which is guaranteed to end with a directory separator.
-	// Aborts if the allocation fails.
-	auto duplicate_with_trailing_separator (const char *path) noexcept -> char*
-	{
-		size_t length = strlen (path);
-		const char *separator = length == 0 || path [length - 1] != '/' ? "/" : "";
-		size_t required_capacity = Helpers::add_with_overflow_check<size_t> (length, strlen (separator) + 1uz);
-
-		char *result = static_cast<char*> (std::malloc (required_capacity));
-		abort_unless (result != nullptr, "Unable to allocate memory for the application base directory");
-		snprintf (result, required_capacity, "%s%s", path, separator);
-
-		return result;
-	}
-}
-
 void Host::clr_error_writer (const char *message) noexcept
 {
 	log_errorf (LOG_DEFAULT, "CLR error: %s", optional_string (message));
@@ -399,7 +382,8 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// process-global, so no live CLR instance can retain the previous value when it is replaced.
 	static char *app_context_base_directory = nullptr;
 	std::free (app_context_base_directory);
-	app_context_base_directory = duplicate_with_trailing_separator (files_dir.get_cstr ());
+	// A null stack buffer makes `join_paths` return a `malloc`ed result with explicit ownership.
+	app_context_base_directory = Util::join_paths (nullptr, 0uz, files_dir.get_cstr (), "/"sv);
 	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY] = app_context_base_directory;
 
 	const char **prop_names = init_runtime_property_names;
