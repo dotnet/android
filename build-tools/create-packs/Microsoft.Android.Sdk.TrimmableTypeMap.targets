@@ -1,18 +1,19 @@
 <!--
   Pre-generates the trimmable type map for Mono.Android at SDK build time (issue #10792).
 
-  App builds otherwise rescan the ~8000 Mono.Android types on every (Debug) build. Instead we
+  App builds otherwise rescan the ~8000 Mono.Android types on every untrimmed Debug build. Instead we
   scan Mono.Android once here and ship the resulting typemap assemblies and Java Callable Wrappers
   in the SDK pack. The typemap anchors on Java.Lang.Object (ForceSharedTypemapUniverse=true) to
-  coordinate aliases across Mono.Android and Java.Interop. Debug app builds can consume it because
-  their remaining typemaps use separate per-assembly universes. Release builds must instead scan the
-  complete app closure so shared-universe alias ownership includes application types. The root
+  coordinate aliases across Mono.Android and Java.Interop. Untrimmed Debug app builds can consume it
+  because their remaining typemaps use separate per-assembly universes and no app-specific trimming
+  decision needs to be baked into the framework maps. Trimmed and Release builds must instead scan
+  the complete app closure. The root
   _Microsoft.Android.TypeMaps assembly is NOT generated here (GenerateRootAssembly=false) — the
   Debug app build emits it and references this pre-generated typemap under Java.Lang.Object.
 -->
 <Project>
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.dll" TaskFactory="TaskHostFactory" Runtime="NET" />
 
   <PropertyGroup>
     <_PreBuiltTypeMapPackSubDir>data\prebuilt-typemap</_PreBuiltTypeMapPackSubDir>
@@ -30,6 +31,17 @@
     <_PreBuiltTypeMapJavaFilesList>$(_PreBuiltTypeMapIntDir)java-files.txt</_PreBuiltTypeMapJavaFilesList>
     <_PreBuiltTypeMapGenerationStamp>$(_PreBuiltTypeMapIntDir)_GeneratePreBuiltMonoAndroidTypeMap.stamp</_PreBuiltTypeMapGenerationStamp>
   </PropertyGroup>
+
+  <Target Name="_GeneratePreBuiltMonoAndroidTypeMapInputs">
+    <ItemGroup>
+      <_PreBuiltTypeMapInput Remove="@(_PreBuiltTypeMapInput)" />
+      <_PreBuiltTypeMapFramework Remove="@(_PreBuiltTypeMapFramework)" />
+      <_PreBuiltTypeMapInput Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll" />
+      <_PreBuiltTypeMapInput Include="$(_MonoAndroidNETDefaultOutDir)Java.Interop.dll" />
+      <_PreBuiltTypeMapFramework Include="$(_MonoAndroidNETDefaultOutDir)*.dll"
+          Exclude="@(_PreBuiltTypeMapInput)" />
+    </ItemGroup>
+  </Target>
 
   <!-- Generated files use content-based writes and can legitimately be older than the generator
        inputs. Use a stamp for timestamp incrementality, but invalidate it whenever any real output
@@ -66,31 +78,21 @@
 
   <Target Name="_GeneratePreBuiltMonoAndroidTypeMap"
       BeforeTargets="ConfigureLocalWorkload;_GenerateXASdkContent"
-      DependsOnTargets="_InvalidatePreBuiltMonoAndroidTypeMapStampIfOutputsMissing"
-      Inputs="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll;$(_MonoAndroidNETDefaultOutDir)Java.Interop.dll;$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.dll"
+      DependsOnTargets="_GeneratePreBuiltMonoAndroidTypeMapInputs;_InvalidatePreBuiltMonoAndroidTypeMapStampIfOutputsMissing"
+      Inputs="@(_PreBuiltTypeMapInput);@(_PreBuiltTypeMapFramework);$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.dll;$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Sdk.TrimmableTypeMap.dll"
       Outputs="$(_PreBuiltTypeMapGenerationStamp)">
-    <ItemGroup>
-      <!-- Scan Mono.Android and Java.Interop TOGETHER so their cross-assembly aliases (e.g.
-           java/lang/Object mapped by both Java.Lang.Object and Java.Interop.JavaObject) are
-           coordinated into a single primary + aliases, instead of colliding as duplicate keys in
-           the merged Java.Lang.Object universe at runtime. -->
-      <_PreBuiltTypeMapInput Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll" />
-      <_PreBuiltTypeMapInput Include="$(_MonoAndroidNETDefaultOutDir)Java.Interop.dll" />
-      <!-- Reference-only framework assemblies needed to resolve base types.
-           These are NOT scanned for peers; only @(_PreBuiltTypeMapInput) is. -->
-      <_PreBuiltTypeMapFramework Include="$(_MonoAndroidNETDefaultOutDir)*.dll"
-          Exclude="@(_PreBuiltTypeMapInput)" />
-    </ItemGroup>
     <MakeDir Directories="$(_PreBuiltTypeMapOutputDir);$(_PreBuiltTypeMapJavaDir)" />
     <GenerateTrimmableTypeMap
-        ResolvedAssemblies="@(_PreBuiltTypeMapInput)"
+        ResolvedAssemblies="@(_PreBuiltTypeMapInput);@(_PreBuiltTypeMapFramework)"
         ResolvedFrameworkAssemblies="@(_PreBuiltTypeMapFramework)"
+        ReferenceOnlyAssemblies="@(_PreBuiltTypeMapFramework)"
         FrameworkAssemblyNames="@(_PreBuiltTypeMapFramework->'%(Filename)')"
         OutputDirectory="$(_PreBuiltTypeMapOutputDir)"
         JavaSourceOutputDirectory="$(_PreBuiltTypeMapJavaDir)"
         AcwMapOutputFile="$(_PreBuiltTypeMapAcwMap)"
         TargetFrameworkVersion="v$(DotNetTargetFrameworkVersion)"
         ForceSharedTypemapUniverse="true"
+        ForceFrameworkPeersUnconditional="true"
         GenerateRootAssembly="false">
       <Output TaskParameter="GeneratedJavaFiles" ItemName="_GeneratedPreBuiltTypeMapJavaFile" />
     </GenerateTrimmableTypeMap>

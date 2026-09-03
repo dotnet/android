@@ -67,29 +67,25 @@
     </IncrementalCleanDependsOn>
   </PropertyGroup>
 
-  <!-- Pre-generated Mono.Android typemap shipped in the SDK pack (issue #10792). Debug builds use
-       per-assembly typemap universes, so they can skip scanning Mono.Android (its ~8000 types) and
-       reference the pre-built _Mono.Android.TypeMap.dll. Release builds require a shared universe:
-       alias ownership must be computed across the complete app closure and therefore cannot use a
-       framework-only pre-generated map. -->
+  <!-- Pre-generated Mono.Android typemap shipped in the SDK pack (issue #10792). Untrimmed builds
+       with Android debug symbols use per-assembly typemap universes, so they can skip scanning
+       Mono.Android (its ~8000 types) and reference the pre-built _Mono.Android.TypeMap.dll. Trimmed
+       builds must scan the complete app closure to apply app-specific manifest/resource roots;
+       builds without Android debug symbols also require a shared universe whose alias ownership
+       includes application types. -->
   <PropertyGroup>
     <_PreGeneratedTypeMapDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\data\prebuilt-typemap'))</_PreGeneratedTypeMapDir>
     <_PreGeneratedMonoAndroidTypeMapAssembly>$(_PreGeneratedTypeMapDir)_Mono.Android.TypeMap.dll</_PreGeneratedMonoAndroidTypeMapAssembly>
     <_PreGeneratedJavaInteropTypeMapAssembly>$(_PreGeneratedTypeMapDir)_Java.Interop.TypeMap.dll</_PreGeneratedJavaInteropTypeMapAssembly>
     <_PreGeneratedMonoAndroidTypeMapJar>$(_PreGeneratedTypeMapDir)mono.android-typemaps.jar</_PreGeneratedMonoAndroidTypeMapJar>
     <_PreGeneratedMonoAndroidTypeMapAcwMap>$(_PreGeneratedTypeMapDir)mono.android-acw-map.txt</_PreGeneratedMonoAndroidTypeMapAcwMap>
-    <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' and '$(AndroidIncludeDebugSymbols)' == 'true' and Exists('$(_PreGeneratedMonoAndroidTypeMapAssembly)') and Exists('$(_PreGeneratedJavaInteropTypeMapAssembly)') and Exists('$(_PreGeneratedMonoAndroidTypeMapJar)') and Exists('$(_PreGeneratedMonoAndroidTypeMapAcwMap)') ">true</_AndroidUsePreGeneratedMonoAndroidTypeMap>
+    <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' and '$(AndroidIncludeDebugSymbols)' == 'true' and '$(PublishTrimmed)' != 'true' and '$(_TrimmableTypeMapPackageNamingPolicy.ToLowerInvariant())' == 'crc64' and Exists('$(_PreGeneratedMonoAndroidTypeMapAssembly)') and Exists('$(_PreGeneratedJavaInteropTypeMapAssembly)') and Exists('$(_PreGeneratedMonoAndroidTypeMapJar)') and Exists('$(_PreGeneratedMonoAndroidTypeMapAcwMap)') ">true</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
+    <_PreGeneratedJcwValidationInput Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">$(_PreGeneratedMonoAndroidTypeMapJar)</_PreGeneratedJcwValidationInput>
     <_UseTrimmableCoreClrProguardConfiguration Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">true</_UseTrimmableCoreClrProguardConfiguration>
-    <!-- ACW map fed to the R8/proguard keep-rule generation. Normally this is the app's own
-         acw-map.txt. When the pre-generated Mono.Android typemap is used, Mono.Android is excluded
-         from the app scan, so its ACW entries are absent from acw-map.txt; the keep rules must
-         instead read a merge of the app map and the pre-built mono.android-acw-map.txt. We write
-         that merge to a SEPARATE file (rather than appending to acw-map.txt) so the app's acw-map.txt
-         stays byte-stable across builds and its own incremental checks keep working. -->
-    <_TrimmableTypeMapKeepRulesAcwMapFile>$(IntermediateOutputPath)acw-map.txt</_TrimmableTypeMapKeepRulesAcwMapFile>
-    <_TrimmableTypeMapKeepRulesAcwMapFile Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">$(IntermediateOutputPath)acw-map.prebuilt-merged.txt</_TrimmableTypeMapKeepRulesAcwMapFile>
+    <_TrimmableTypeMapKeepRulesAcwMapFile>$(_AcwMapFile)</_TrimmableTypeMapKeepRulesAcwMapFile>
+    <_CompileToDalvikDependsOnTargets>$(_CompileToDalvikDependsOnTargets);_ResolveTrimmableTypeMapKeepRulesAcwMap;_MergePreGeneratedMonoAndroidAcwMapForKeepRules</_CompileToDalvikDependsOnTargets>
   </PropertyGroup>
 
   <!-- Compile the generator's Java Callable Wrappers in place from their output directory
@@ -145,7 +141,7 @@
       Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(DesignTimeBuild)' != 'true' and '@(ReferencePath->Count())' != '0' and '$(_OuterIntermediateOutputPath)' == '' "
       AfterTargets="CoreCompile"
       DependsOnTargets="$(_GenerateTrimmableTypeMapDependsOn)"
-      Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);@(ExtractedManifestDocuments);@(_AndroidTrimmableTypeMapExtraFrameworkAssembly);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_CustomViewMapFile);$(_AndroidBuildPropertiesCache)"
+      Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);@(ExtractedManifestDocuments);@(_AndroidTrimmableTypeMapExtraFrameworkAssembly);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_CustomViewMapFile);$(_AndroidBuildPropertiesCache);$(_PreGeneratedJcwValidationInput)"
       Outputs="$(_TrimmableTypeMapOutputStamp)">
 
     <ItemGroup>
@@ -184,6 +180,7 @@
         ResolvedFrameworkAssemblies="@(_TypeMapFrameworkAssemblies)"
         FrameworkAssemblyNames="@(_TypeMapFrameworkAssemblies->'%(Filename)')"
         PreGeneratedTypeMapAssemblies="@(_PreGeneratedTypeMapAssemblyInput)"
+        PreGeneratedJcwJar="$(_PreGeneratedJcwValidationInput)"
         OutputDirectory="$(_TypeMapOutputDirectory)"
         JavaSourceOutputDirectory="$(_TypeMapJavaOutputDirectory)"
         TargetFrameworkVersion="$(TargetFrameworkVersion)"
@@ -279,6 +276,39 @@
     <AndroidJavaLibrary Include="$(_PreGeneratedMonoAndroidTypeMapJar)" />
   </ItemGroup>
 
+  <Target Name="_ResolveTrimmableTypeMapKeepRulesAcwMap">
+    <PropertyGroup>
+      <_TrimmableTypeMapKeepRulesAcwMapFile Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">$(IntermediateOutputPath)acw-map.prebuilt-merged.txt</_TrimmableTypeMapKeepRulesAcwMapFile>
+    </PropertyGroup>
+  </Target>
+
+  <!-- The app scan excludes the pre-generated framework peers, so its acw-map lacks those JCWs.
+       Keep a separate merged map for consumers that need the complete managed-to-Java mapping.
+       Trimmed CoreCLR builds instead derive precise framework rules from the linked assemblies. -->
+  <Target Name="_MergePreGeneratedMonoAndroidAcwMapForKeepRules"
+      DependsOnTargets="_ResolveTrimmableTypeMapKeepRulesAcwMap"
+      Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' "
+      Inputs="$(IntermediateOutputPath)acw-map.txt;$(_PreGeneratedMonoAndroidTypeMapAcwMap)"
+      Outputs="$(_TrimmableTypeMapKeepRulesAcwMapFile)">
+    <ItemGroup>
+      <_MergedKeepRulesAcwMapLines Remove="@(_MergedKeepRulesAcwMapLines)" />
+    </ItemGroup>
+    <ReadLinesFromFile File="$(IntermediateOutputPath)acw-map.txt">
+      <Output TaskParameter="Lines" ItemName="_MergedKeepRulesAcwMapLines" />
+    </ReadLinesFromFile>
+    <ReadLinesFromFile File="$(_PreGeneratedMonoAndroidTypeMapAcwMap)">
+      <Output TaskParameter="Lines" ItemName="_MergedKeepRulesAcwMapLines" />
+    </ReadLinesFromFile>
+    <WriteLinesToFile
+        File="$(_TrimmableTypeMapKeepRulesAcwMapFile)"
+        Lines="@(_MergedKeepRulesAcwMapLines)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_TrimmableTypeMapKeepRulesAcwMapFile)" />
+    </ItemGroup>
+  </Target>
+
   <!--
     The TypeMap generator has dynamic outputs: the set of generated assemblies
     and Java files comes from scanning references.  FileWrites entries in the
@@ -329,6 +359,7 @@
       <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" Condition="Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml')" />
       <FileWrites Include="$(IntermediateOutputPath)AndroidManifest.xml" Condition="Exists('$(IntermediateOutputPath)AndroidManifest.xml')" />
       <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" Condition="Exists('$(IntermediateOutputPath)acw-map.txt')" />
+      <FileWrites Include="$(IntermediateOutputPath)acw-map.prebuilt-merged.txt" Condition="Exists('$(IntermediateOutputPath)acw-map.prebuilt-merged.txt')" />
       <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" Condition="Exists('$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java')" />
     </ItemGroup>
   </Target>
