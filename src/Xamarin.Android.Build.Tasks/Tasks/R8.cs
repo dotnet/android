@@ -37,6 +37,7 @@ namespace Xamarin.Android.Tasks
 		public string? BuildMetadataFileOutput { get; set; }
 		public ITaskItem []? ProguardConfigurationFiles { get; set; }
 		public bool UseTrimmableNativeAotProguardConfiguration { get; set; }
+		public bool DontObfuscate { get; set; }
 
 		// User-authored AndroidJavaSource (Bind != true) .java files. These have no managed peer and are
 		// therefore absent from the acw-map, so they must be kept explicitly when shrinking is enabled.
@@ -191,6 +192,16 @@ namespace Xamarin.Android.Tasks
 				}
 				if (!ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
 					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
+						if (DontObfuscate) {
+							xamcfg.WriteLine ("-dontobfuscate");
+						} else {
+							xamcfg.WriteLine ("-keep,allowshrinking,allowoptimization class **");
+							xamcfg.WriteLine ("-keepclassmembers,allowshrinking,allowoptimization class ** {");
+							xamcfg.WriteLine ("   public protected *;");
+							xamcfg.WriteLine ("}");
+						}
+						xamcfg.WriteLine ();
+						xamcfg.Flush ();
 						if (UseTrimmableNativeAotProguardConfiguration) {
 							using var stream = GetEmbeddedResourceStream ("proguard_trimmable_nativeaot.cfg");
 							stream.CopyTo (xamcfg.BaseStream);
