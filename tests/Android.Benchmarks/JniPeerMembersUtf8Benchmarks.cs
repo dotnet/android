@@ -17,6 +17,12 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	const string StaticField = "out.Ljava/io/PrintStream;";
 
 	static readonly ReadOnlyMemory<byte> StringPeerType = "java/lang/String"u8.ToArray ();
+	static ReadOnlySpan<byte> MemberPool => "()V\u0000hashCode.()I\u0000currentTimeMillis.()J\u0000detailMessage.Ljava/lang/String;\u0000out.Ljava/io/PrintStream;\u0000"u8;
+	static ReadOnlySpan<byte> ConstructorUtf8 => MemberPool.Slice (0, 3);
+	static ReadOnlySpan<byte> InstanceMethodUtf8 => MemberPool.Slice (4, 12);
+	static ReadOnlySpan<byte> StaticMethodUtf8 => MemberPool.Slice (17, 21);
+	static ReadOnlySpan<byte> InstanceFieldUtf8 => MemberPool.Slice (39, 32);
+	static ReadOnlySpan<byte> StaticFieldUtf8 => MemberPool.Slice (72, 25);
 
 	BenchmarkPeerMembers? stringMembers;
 	BenchmarkPeerMembers? throwableMembers;
@@ -44,15 +50,15 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 		throwable = new Java.Lang.Throwable ("benchmark");
 
 		_ = StringMembers.InstanceMethods.GetConstructor (Constructor);
-		_ = StringMembers.InstanceMethods.GetConstructor ("()V"u8);
+		_ = StringMembers.InstanceMethods.GetConstructor (ConstructorUtf8);
 		instanceMethodInfo = StringMembers.InstanceMethods.GetMethodInfo (InstanceMethod);
-		_ = StringMembers.InstanceMethods.GetMethodInfo ("hashCode.()I"u8);
+		_ = StringMembers.InstanceMethods.GetMethodInfo (InstanceMethodUtf8);
 		staticMethodInfo = SystemMembers.StaticMethods.GetMethodInfo (StaticMethod);
-		_ = SystemMembers.StaticMethods.GetMethodInfo ("currentTimeMillis.()J"u8);
+		_ = SystemMembers.StaticMethods.GetMethodInfo (StaticMethodUtf8);
 		_ = ThrowableMembers.InstanceFields.GetFieldInfo (InstanceField);
-		_ = ThrowableMembers.InstanceFields.GetFieldInfo ("detailMessage.Ljava/lang/String;"u8);
+		_ = ThrowableMembers.InstanceFields.GetFieldInfo (InstanceFieldUtf8);
 		_ = SystemMembers.StaticFields.GetFieldInfo (StaticField);
-		_ = SystemMembers.StaticFields.GetFieldInfo ("out.Ljava/io/PrintStream;"u8);
+		_ = SystemMembers.StaticFields.GetFieldInfo (StaticFieldUtf8);
 	}
 
 	[GlobalCleanup]
@@ -110,7 +116,7 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	[Benchmark]
 	[BenchmarkCategory ("ConstructorLookup")]
 	public JniMethodInfo GetConstructorUtf8 () =>
-		StringMembers.InstanceMethods.GetConstructor ("()V"u8);
+		StringMembers.InstanceMethods.GetConstructor (ConstructorUtf8);
 
 	[Benchmark (Baseline = true)]
 	[BenchmarkCategory ("InstanceMethodLookup")]
@@ -120,7 +126,7 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	[Benchmark]
 	[BenchmarkCategory ("InstanceMethodLookup")]
 	public JniMethodInfo GetInstanceMethodUtf8 () =>
-		StringMembers.InstanceMethods.GetMethodInfo ("hashCode.()I"u8);
+		StringMembers.InstanceMethods.GetMethodInfo (InstanceMethodUtf8);
 
 	[Benchmark (Baseline = true)]
 	[BenchmarkCategory ("InstanceMethodInvoke")]
@@ -130,7 +136,7 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	[Benchmark]
 	[BenchmarkCategory ("InstanceMethodInvoke")]
 	public int InvokeInstanceMethodUtf8 () =>
-		StringMembers.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I"u8, Peer, null);
+		StringMembers.InstanceMethods.InvokeVirtualInt32Method (InstanceMethodUtf8, Peer, null);
 
 	[Benchmark]
 	[BenchmarkCategory ("InstanceMethodInvoke")]
@@ -145,7 +151,7 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	[Benchmark]
 	[BenchmarkCategory ("StaticMethodLookup")]
 	public JniMethodInfo GetStaticMethodUtf8 () =>
-		SystemMembers.StaticMethods.GetMethodInfo ("currentTimeMillis.()J"u8);
+		SystemMembers.StaticMethods.GetMethodInfo (StaticMethodUtf8);
 
 	[Benchmark (Baseline = true)]
 	[BenchmarkCategory ("StaticMethodInvoke")]
@@ -155,7 +161,7 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	[Benchmark]
 	[BenchmarkCategory ("StaticMethodInvoke")]
 	public long InvokeStaticMethodUtf8 () =>
-		SystemMembers.StaticMethods.InvokeInt64Method ("currentTimeMillis.()J"u8, null);
+		SystemMembers.StaticMethods.InvokeInt64Method (StaticMethodUtf8, null);
 
 	[Benchmark]
 	[BenchmarkCategory ("StaticMethodInvoke")]
@@ -170,7 +176,7 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	[Benchmark]
 	[BenchmarkCategory ("InstanceFieldLookup")]
 	public JniFieldInfo GetInstanceFieldInfoUtf8 () =>
-		ThrowableMembers.InstanceFields.GetFieldInfo ("detailMessage.Ljava/lang/String;"u8);
+		ThrowableMembers.InstanceFields.GetFieldInfo (InstanceFieldUtf8);
 
 	[Benchmark (Baseline = true)]
 	[BenchmarkCategory ("InstanceFieldGet")]
@@ -188,7 +194,7 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	[BenchmarkCategory ("InstanceFieldGet")]
 	public bool GetInstanceFieldValueUtf8 ()
 	{
-		var value = ThrowableMembers.InstanceFields.GetObjectValue ("detailMessage.Ljava/lang/String;"u8, Throwable);
+		var value = ThrowableMembers.InstanceFields.GetObjectValue (InstanceFieldUtf8, Throwable);
 		try {
 			return value.IsValid;
 		} finally {
@@ -204,7 +210,7 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	[Benchmark]
 	[BenchmarkCategory ("StaticFieldLookup")]
 	public JniFieldInfo GetStaticFieldInfoUtf8 () =>
-		SystemMembers.StaticFields.GetFieldInfo ("out.Ljava/io/PrintStream;"u8);
+		SystemMembers.StaticFields.GetFieldInfo (StaticFieldUtf8);
 
 	[Benchmark (Baseline = true)]
 	[BenchmarkCategory ("StaticFieldGet")]
@@ -222,7 +228,7 @@ public unsafe class JniPeerMembersUtf8Benchmarks
 	[BenchmarkCategory ("StaticFieldGet")]
 	public bool GetStaticFieldValueUtf8 ()
 	{
-		var value = SystemMembers.StaticFields.GetObjectValue ("out.Ljava/io/PrintStream;"u8);
+		var value = SystemMembers.StaticFields.GetObjectValue (StaticFieldUtf8);
 		try {
 			return value.IsValid;
 		} finally {
