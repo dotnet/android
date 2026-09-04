@@ -85,7 +85,6 @@
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(AndroidLinkMode)' != 'None' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <_PreGeneratedJcwValidationInput Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">$(_PreGeneratedMonoAndroidTypeMapJar)</_PreGeneratedJcwValidationInput>
-    <_UseTrimmableCoreClrProguardConfiguration Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">true</_UseTrimmableCoreClrProguardConfiguration>
     <_TrimmableTypeMapKeepRulesAcwMapFile>$(_AcwMapFile)</_TrimmableTypeMapKeepRulesAcwMapFile>
     <_RootFrameworkTypeMapPeersFromApplication Condition=" '$(AndroidLinkMode)' != 'None' ">true</_RootFrameworkTypeMapPeersFromApplication>
     <_RootFrameworkTypeMapPeersFromApplication Condition=" '$(_RootFrameworkTypeMapPeersFromApplication)' == '' ">false</_RootFrameworkTypeMapPeersFromApplication>

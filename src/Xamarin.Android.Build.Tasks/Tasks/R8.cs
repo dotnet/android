@@ -37,7 +37,6 @@ namespace Xamarin.Android.Tasks
 		public string? BuildMetadataFileOutput { get; set; }
 		public ITaskItem []? ProguardConfigurationFiles { get; set; }
 		public bool UseTrimmableNativeAotProguardConfiguration { get; set; }
-		public bool UseTrimmableCoreClrProguardConfiguration { get; set; }
 
 		// User-authored AndroidJavaSource (Bind != true) .java files. These have no managed peer and are
 		// therefore absent from the acw-map, so they must be kept explicitly when shrinking is enabled.
@@ -194,9 +193,6 @@ namespace Xamarin.Android.Tasks
 					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
 						if (UseTrimmableNativeAotProguardConfiguration) {
 							using var stream = GetEmbeddedResourceStream ("proguard_trimmable_nativeaot.cfg");
-							stream.CopyTo (xamcfg.BaseStream);
-						} else if (UseTrimmableCoreClrProguardConfiguration) {
-							using var stream = GetEmbeddedResourceStream ("proguard_trimmable_coreclr.cfg");
 							stream.CopyTo (xamcfg.BaseStream);
 						} else {
 							using var stream = GetEmbeddedResourceStream ("proguard_xamarin.cfg");
