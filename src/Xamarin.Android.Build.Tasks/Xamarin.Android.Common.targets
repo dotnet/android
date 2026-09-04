@@ -970,6 +970,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidAddKeepAlives=$(AndroidAddKeepAlives)" />
 		<_PropertyCacheItems Include="AndroidAotMode=$(AndroidAotMode)" />
 		<_PropertyCacheItems Include="AndroidEmbedProfilers=$(AndroidEmbedProfilers)" />
+		<_PropertyCacheItems Include="AndroidEnableLegacyCompatibilityAssemblyFixups=$(AndroidEnableLegacyCompatibilityAssemblyFixups)" />
 		<_PropertyCacheItems Include="AndroidEnableProfiledAot=$(AndroidEnableProfiledAot)" />
 		<_PropertyCacheItems Include="AndroidDexTool=$(AndroidDexTool)" />
 		<_PropertyCacheItems Include="AndroidLinkTool=$(AndroidLinkTool)" />
@@ -1469,6 +1470,7 @@ because xbuild doesn't support framework reference assemblies.
       ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
       SourceFiles="@(ResolvedAssemblies)"
       DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"
+      EnableLegacyCompatibilityAssemblyFixups="$(AndroidEnableLegacyCompatibilityAssemblyFixups)"
       TargetName="$(TargetName)"
       AddKeepAlives="$(AndroidAddKeepAlives)"
       UseDesignerAssembly="$(AndroidUseDesignerAssembly)"
