@@ -45,6 +45,132 @@ namespace Java.InteropTests
 			Assert.AreEqual (expected, signature.Name);
 		}
 
+		[Test]
+		public void GetType_RepeatedJavaToManagedLookup_DoesNotAllocate ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			const string jniName = "android/view/View";
+			const int iterationCount = 1_000;
+			var typeMap = TrimmableTypeMap.Instance;
+			int targetTypeCount = 0;
+			foreach (var targetType in typeMap.GetTargetTypes (jniName)) {
+				targetTypeCount++;
+			}
+			Assert.AreEqual (1, targetTypeCount, "The allocation test requires a non-alias typemap entry.");
+
+			var signature = new JniTypeSignature (jniName);
+			var manager = JniEnvironment.Runtime.TypeManager;
+			Type result = typeof (void);
+			for (int i = 0; i < iterationCount; i++) {
+				result = manager.GetType (signature);
+			}
+
+			long before = GC.GetAllocatedBytesForCurrentThread ();
+			for (int i = 0; i < iterationCount; i++) {
+				result = manager.GetType (signature);
+			}
+			long allocatedBytes = GC.GetAllocatedBytesForCurrentThread () - before;
+
+			Assert.AreEqual (typeof (Android.Views.View), result);
+			Assert.AreEqual (0L, allocatedBytes, $"Expected {iterationCount} cached lookups to allocate no managed memory.");
+		}
+
+		[Test]
+		public void TryGetTargetType_MissingEntry_ReturnsFalse ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			Assert.IsFalse (TrimmableTypeMap.Instance.TryGetTargetType ("net/dot/android/test/MissingType", out var targetType));
+			Assert.IsNull (targetType);
+		}
+
+		[Test]
+		public void JniProxyCache_SingleMappingStoresProxyDirectly ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			const string jniName = "android/view/View";
+			var instance = TrimmableTypeMap.Instance;
+			var cache = GetJniProxyCache (instance);
+			cache.TryRemove (jniName, out _);
+
+			Assert.IsTrue (instance.TryGetTargetType (jniName, out var targetType));
+			Assert.AreEqual (typeof (Android.Views.View), targetType);
+			Assert.IsTrue (cache.TryGetValue (jniName, out var cacheEntry));
+			Assert.IsInstanceOf<JavaPeerProxy> (cacheEntry);
+		}
+
+		[Test]
+		public void JniProxyCache_AliasMappingStoresProxyArray ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			const string jniName = "java/util/ArrayList";
+			var instance = TrimmableTypeMap.Instance;
+			var cache = GetJniProxyCache (instance);
+			cache.TryRemove (jniName, out _);
+
+			int targetTypeCount = 0;
+			foreach (var targetType in instance.GetTargetTypes (jniName)) {
+				targetTypeCount++;
+			}
+			Assert.Greater (targetTypeCount, 1);
+			Assert.IsTrue (cache.TryGetValue (jniName, out var cacheEntry));
+			Assert.IsInstanceOf<JavaPeerProxy[]> (cacheEntry);
+		}
+
+		[Test]
+		public void JniProxyCache_MissingMappingStoresEmptyProxyArray ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			const string jniName = "net/dot/android/test/MissingProxyCacheEntry";
+			var instance = TrimmableTypeMap.Instance;
+			var cache = GetJniProxyCache (instance);
+			cache.TryRemove (jniName, out _);
+
+			Assert.IsFalse (instance.TryGetTargetType (jniName, out var targetType));
+			Assert.IsNull (targetType);
+			Assert.IsTrue (cache.TryGetValue (jniName, out var cacheEntry));
+			if (cacheEntry is JavaPeerProxy[] proxies) {
+				Assert.AreEqual (0, proxies.Length);
+				return;
+			}
+
+			Assert.Fail ("A missing JNI mapping should be cached as an empty proxy array.");
+		}
+
+		[Test]
+		public void JniProxyCache_UnexpectedEntryTypeThrows ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			const string jniName = "net/dot/android/test/InvalidProxyCacheEntry";
+			var instance = TrimmableTypeMap.Instance;
+			var cache = GetJniProxyCache (instance);
+			cache [jniName] = new object ();
+			try {
+				var exception = Assert.Throws<InvalidOperationException> (() => instance.TryGetTargetType (jniName, out _));
+				StringAssert.Contains ("Unexpected JNI proxy cache entry type", exception?.Message);
+			} finally {
+				cache.TryRemove (jniName, out _);
+			}
+		}
+
+		[Test]
+		public void RegisterNativeMethods_AliasGroupRegistersEveryCallableWrapper ()
+		{
+			using var jniType = new JniType ("java/lang/Object");
+			var first = new RecordingCallableWrapperProxy ();
+			var second = new RecordingCallableWrapperProxy ();
+
+			TrimmableTypeMap.RegisterNativeMethods (new JavaPeerProxy [] { first, second }, jniType);
+
+			Assert.AreEqual (1, first.RegistrationCount);
+			Assert.AreEqual (1, second.RegistrationCount);
+		}
+
 		// Verifies the generic-type-definition fallback in GetProxyForManagedType:
 		// the generator emits one TypeMapAssociation per open generic peer, so a
 		// closed instantiation like JavaList<string> must resolve through its GTD.
@@ -122,6 +248,48 @@ namespace Java.InteropTests
 			Assert.IsTrue (cache.ContainsKey (typeof (JavaList<>)));
 			Assert.IsFalse (cache.ContainsKey (typeof (JavaList<long>)));
 			Assert.IsFalse (cache.ContainsKey (typeof (JavaList<DateTimeOffset>)));
+		}
+
+		[Test]
+		public void GetProxyForJavaObject_SealedTarget_ReturnsProxy ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			using var value = new Java.Lang.String ("value");
+			var proxy = TrimmableTypeMap.Instance.GetProxyForJavaObject (value.Handle, typeof (Java.Lang.String));
+
+			if (proxy is null) {
+				Assert.Fail ("Expected a proxy for Java.Lang.String.");
+				return;
+			}
+			Assert.AreEqual (typeof (Java.Lang.String), proxy.TargetType);
+		}
+
+		[Test]
+		public void GetProxyForJavaObject_IncompatibleSealedTarget_ReturnsNull ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			using var value = new Java.Lang.Integer (42);
+			var proxy = TrimmableTypeMap.Instance.GetProxyForJavaObject (value.Handle, typeof (Java.Lang.String));
+
+			Assert.IsNull (proxy);
+		}
+
+		[Test]
+		public void CreateInstance_SealedClosedGenericTarget_ReturnsClosedPeer ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			using var value = new Java.Util.ArrayList ();
+			var peer = TrimmableTypeMap.Instance.CreateInstance (value.Handle, typeof (JavaCollection<int>));
+			if (peer is not JavaCollection<int> collection) {
+				peer?.Dispose ();
+				Assert.Fail ($"Expected {typeof (JavaCollection<int>)}, got {peer?.GetType ()}.");
+				return;
+			}
+
+			collection.Dispose ();
 		}
 
 		[Test]
@@ -350,6 +518,22 @@ namespace Java.InteropTests
 			throw new InvalidOperationException ("Unable to access TrimmableTypeMap proxy cache.");
 		}
 
+		static ConcurrentDictionary<string, object> GetJniProxyCache (TrimmableTypeMap instance)
+		{
+			var field = typeof (TrimmableTypeMap).GetField ("_jniProxyCache", BindingFlags.Instance | BindingFlags.NonPublic);
+			Assert.IsNotNull (field);
+
+			var value = field.GetValue (instance);
+			Assert.IsNotNull (value);
+
+			if (value is ConcurrentDictionary<string, object> cache) {
+				return cache;
+			}
+
+			Assert.Fail ("Unable to access TrimmableTypeMap JNI proxy cache.");
+			throw new InvalidOperationException ("Unable to access TrimmableTypeMap JNI proxy cache.");
+		}
+
 		static IReadOnlyList<string> GetStaticMethodFallbackTypes (TestableTrimmableTypeMapTypeManager manager, string jniSimpleReference)
 		{
 			var fallbacks = manager.GetStaticMethodFallbackTypes (jniSimpleReference);
@@ -448,6 +632,23 @@ namespace Java.InteropTests
 		public void TargetTypeMatches_UnrelatedNonGeneric_ReturnsFalse ()
 		{
 			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (string), typeof (int)));
+		}
+	}
+
+	sealed class RecordingCallableWrapperProxy : JavaPeerProxy, IAndroidCallableWrapper
+	{
+		public RecordingCallableWrapperProxy ()
+			: base ("java/lang/Object", typeof (Java.Lang.Object))
+		{
+		}
+
+		public int RegistrationCount { get; private set; }
+
+		public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
+
+		public void RegisterNatives (JniType nativeClass)
+		{
+			RegistrationCount++;
 		}
 	}
 

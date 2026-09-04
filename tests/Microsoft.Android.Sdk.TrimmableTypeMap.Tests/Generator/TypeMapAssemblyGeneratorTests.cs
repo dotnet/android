@@ -485,6 +485,51 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_JiStyleCtor_PropagatesDoNotRegister ()
+	{
+		var peers = ScanFixtures ();
+		var jiPeer = peers.First (p => p.JavaName == "my/app/JiStylePeer");
+
+		using var stream = GenerateAssembly (new [] { jiPeer }, "JiDoNotRegisterTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var proxy = reader.TypeDefinitions
+			.Select (reader.GetTypeDefinition)
+			.Single (t => reader.GetString (t.Name).EndsWith ("JiStylePeer_Proxy", StringComparison.Ordinal));
+		var createInstance = proxy.GetMethods ()
+			.Select (reader.GetMethodDefinition)
+			.Single (m => reader.GetString (m.Name) == "CreateInstance");
+		var il = pe.GetMethodBody (createInstance.RelativeVirtualAddress).GetILBytes ();
+
+		// The ownership -> options mapping lives in JNIEnv.ToJniObjectReferenceOptions, so the
+		// activation stub must call that helper rather than hard-coding a constant. Resolving
+		// the member reference checks the emitted *meaning* rather than a raw byte pattern.
+		var toOptions = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (MetadataTokens.MemberReferenceHandle)
+			.FirstOrDefault (h => reader.GetString (reader.GetMemberReference (h).Name) == "ToJniObjectReferenceOptions");
+		Assert.False (toOptions.IsNil,
+			"JI-style activation must reference JNIEnv.ToJniObjectReferenceOptions.");
+
+		var parentTypeRef = reader.GetTypeReference ((TypeReferenceHandle) reader.GetMemberReference (toOptions).Parent);
+		Assert.Equal ("JNIEnv", reader.GetString (parentTypeRef.Name));
+		Assert.Equal ("Android.Runtime", reader.GetString (parentTypeRef.Namespace));
+
+		// ...and must feed it this method's `ownership` argument.
+		int token = MetadataTokens.GetToken (toOptions);
+		byte [] expected = [
+			0x04,               // ldarg.2 — the `ownership` argument
+			0x28,               // call
+			(byte) token,
+			(byte) (token >> 8),
+			(byte) (token >> 16),
+			(byte) (token >> 24),
+		];
+		Assert.True (il.AsSpan ().IndexOf (expected) >= 0,
+			"CreateInstance should pass its `ownership` argument to JNIEnv.ToJniObjectReferenceOptions.");
+	}
+
+	[Fact]
 	public void Generate_DifferentContent_ProducesDifferentMVIDs ()
 	{
 		var peer1 = MakePeerWithActivation ("test/TypeA", "Test.TypeA", "TestAsm");
@@ -1384,6 +1429,50 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var typeNames = GetTypeRefNames (reader);
 		Assert.Contains ("XmlResourceParserReader", typeNames);
 		Assert.Contains ("XmlReaderResourceParser", typeNames);
+	}
+
+	[Fact]
+	public void Generate_ExportConstructor_UsesParameterAdapter ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/ExportConstructorMappedParameter");
+
+		using var stream = GenerateAssembly (new [] { peer }, "ExportConstructorMapping");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var adapterMethod = reader.MemberReferences
+			.Select (handle => (Handle: handle, Reference: reader.GetMemberReference (handle)))
+			.Single (member => {
+				if (reader.GetString (member.Reference.Name) != "FromJniHandle" ||
+				    member.Reference.Parent.Kind != HandleKind.TypeReference) {
+					return false;
+				}
+				var parent = reader.GetTypeReference ((TypeReferenceHandle) member.Reference.Parent);
+				return reader.GetString (parent.Name) == "InputStreamInvoker";
+			});
+		var managedConstructor = reader.MemberReferences
+			.Select (handle => (Handle: handle, Reference: reader.GetMemberReference (handle)))
+			.Single (member => {
+				if (reader.GetString (member.Reference.Name) != ".ctor" ||
+				    member.Reference.Parent.Kind != HandleKind.TypeReference) {
+					return false;
+				}
+				var parent = reader.GetTypeReference ((TypeReferenceHandle) member.Reference.Parent);
+				return reader.GetString (parent.Name) == "ExportConstructorMappedParameter";
+			});
+		var ilBytes = reader.MethodDefinitions
+			.Select (handle => reader.GetMethodDefinition (handle))
+			.Where (method => reader.GetString (method.Name).StartsWith ("nctor_", StringComparison.Ordinal))
+			.Select (method => pe.GetMethodBody (method.RelativeVirtualAddress).GetILBytes ())
+			.FirstOrDefault (bytes => bytes is not null &&
+				ILContainsCallToken (bytes, MetadataTokens.GetToken (managedConstructor.Handle)));
+		Assert.NotNull (ilBytes);
+		if (ilBytes is null)
+			throw new InvalidOperationException ("Expected exported constructor UCO IL.");
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (adapterMethod.Handle)));
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (managedConstructor.Handle)));
+		Assert.False (ILContainsCallvirtToken (ilBytes, MetadataTokens.GetToken (managedConstructor.Handle)));
+		Assert.False (ILContainsNewobjToken (ilBytes, MetadataTokens.GetToken (managedConstructor.Handle)));
 	}
 
 	[Fact]

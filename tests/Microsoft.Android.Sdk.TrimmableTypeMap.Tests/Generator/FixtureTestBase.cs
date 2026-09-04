@@ -190,6 +190,11 @@ public abstract class FixtureTestBase
 		return ILContainsOpcodeToken (ilBytes, token, (byte) ILOpCode.Call, (byte) ILOpCode.Callvirt);
 	}
 
+	private protected static bool ILContainsCallvirtToken (byte[] ilBytes, int token)
+	{
+		return ILContainsOpcodeToken (ilBytes, token, (byte) ILOpCode.Callvirt);
+	}
+
 	private protected static bool ILContainsNewobjToken (byte[] ilBytes, int token)
 	{
 		return ILContainsOpcodeToken (ilBytes, token, (byte) ILOpCode.Newobj);

@@ -25,6 +25,18 @@ public class ExportFieldTests : FixtureTestBase
 		Assert.False (instanceField.IsStatic);
 		Assert.Equal ("GetValue", instanceField.InitializerMethodName);
 		Assert.Equal ("java.lang.String", instanceField.JavaTypeName);
+
+		var streamField = peer.JavaFields.First (f => f.FieldName == "OUTPUT_STREAM");
+		Assert.Equal ("java.io.OutputStream", streamField.JavaTypeName);
+		var streamMethod = peer.MarshalMethods.First (m => m.ManagedMethodName == "GetOutputStream");
+		Assert.Equal ("()Ljava/io/OutputStream;", streamMethod.JniSignature);
+		Assert.Equal (ExportParameterKindInfo.OutputStream, streamMethod.ManagedReturnExportKind);
+
+		var xmlField = peer.JavaFields.First (f => f.FieldName == "XML_PARSER");
+		Assert.Equal ("org.xmlpull.v1.XmlPullParser", xmlField.JavaTypeName);
+		var xmlMethod = peer.MarshalMethods.First (m => m.ManagedMethodName == "GetXmlParser");
+		Assert.Equal ("()Lorg/xmlpull/v1/XmlPullParser;", xmlMethod.JniSignature);
+		Assert.Equal (ExportParameterKindInfo.XmlPullParser, xmlMethod.ManagedReturnExportKind);
 	}
 
 	[Fact]

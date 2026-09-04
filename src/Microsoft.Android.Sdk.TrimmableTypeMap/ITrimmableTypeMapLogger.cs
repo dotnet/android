@@ -25,8 +25,10 @@ public interface ITrimmableTypeMapLogger
 	void LogDuplicateJavaTypeError (string javaName);
 	void LogDuplicateJavaTypeDetailsError (string javaName, string managedTypeName);
 	void LogExportFieldWithParametersError ();
+	void LogExportOnGenericTypeError ();
 	void LogExportFieldOnGenericTypeError ();
 	void LogExportFieldReturnsVoidError ();
+	void LogUnsupportedExportSignatureError (string memberName, string managedTypeName);
 	void LogCustomJavaObjectError (string managedTypeName);
 	void LogCustomJavaObjectWarning (string managedTypeName);
 }

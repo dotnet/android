@@ -51,6 +51,12 @@ object collection.
 
 The default value is `True` for Release configuration builds.
 
+For untrimmed builds using the `trimmable` type map, `GC.KeepAlive()` calls are
+only inserted when
+[`$(AndroidEnableLegacyCompatibilityAssemblyFixups)`](#androidenablelegacycompatibilityassemblyfixups)
+is also `True`. Trimmed builds using the `trimmable` type map do not insert
+these calls.
+
 ## AndroidAotAdditionalArguments
 
 A string property that allows
@@ -390,6 +396,20 @@ that allows developers to disable the following Google Play
 Store checks: XA1004, XA1005 and XA1006. Disabling these checks is useful for
 developers who are not targeting the Google Play Store and do
 not wish to run those checks.
+
+## AndroidEnableLegacyCompatibilityAssemblyFixups
+
+A boolean property that controls whether untrimmed builds modify referenced
+assemblies to support legacy binding and resource designer behavior. These
+modifications include adding missing abstract interface methods, updating
+legacy resource designer references, and inserting `GC.KeepAlive()` calls into
+older Xamarin.Android binding assemblies. Trimmed builds using the `trimmable`
+type map do not run these compatibility fixups, and setting this property to
+`True` does not enable them for trimmed builds.
+
+The default value is `False` when
+[`$(AndroidTypeMapImplementation)`](#androidtypemapimplementation) is
+`trimmable`, and `True` otherwise.
 
 ## AndroidEnableMarshalMethods
 

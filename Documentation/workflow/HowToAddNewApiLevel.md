@@ -474,15 +474,38 @@ BindingStudio crashes.
 
 The left tree view can be updated by saving and reopening the `map.csv` file.
 
-Once `map.csv` has been updated, run the following command:
+Once `map.csv` has been updated, run the following commands:
 
 ```sh
+# BindingStudio currently produces a slightly different CSV format.
+# "Update" to what's currently in git(1) to reduce diff size.
+tr -d '\r' < src/Mono.Android/map.csv > src/Mono.Android/new-map.csv
+sed 's/,$//' < src/Mono.Android/new-map.csv > src/Mono.Android/map.csv
+
+# Check for two-letter package parts.
 git grep '\.[A-Z][a-z]\.' src/Mono.Android/map.csv
 ```
 
 This checks for any namespace-parts which are two letters long, the first letter is
 upper-case, and the second letter is lower-case, e.g. `.Pm.`. These should be all
 upper-case, e.g. `.PM.`.
+
+See the next section on how to rename Java "package parts".
+
+### PascalCase new namespaces
+
+If you have the "Android API Differences Report", e.g.
+[this one for API-37.2 vs. API-37.1](https://developer.android.com/sdk/api_diff/37.2/changes),
+review the **Added Packages** section for *new* packages, and consider PascalCasing them.
+
+PascalCasing namespaces requires changes to three places:
+
+ 1. Add `<ns-replace/>` elements to [`src/Mono.Android/metadata`](../../src/Mono.Android/metadata).
+ 2. [`src/Mono.Android/map.csv`](../../src/Mono.Android/map.csv) will need to be updated to match (1).
+ 2. [`src/Mono.Android/methodmap.csv`](../../src/Mono.Android/methodmap.csv) will need to be updated to match (1).
+
+As BindingStudio doesn't know about `<ns-replace/>`, it is recommended that namespace renames
+be done after enum creation.
 
 ### Extract methods that possibly need enums
 
@@ -562,12 +585,14 @@ the `csv` variable within `MainForm.FindAPILevelMethodsToolStripMenuItem_Click`.
 Once this process is complete, use `Tools` -> `Export Final Method Map`, and create a *new*
 `.csv` file, e.g. `new-methodmap.csv`.
 
-Note: `new-methodmap.csv` will likely use JNI syntax for package names, e.g. `android/widget`.
-`methodmap.csv` ***must*** use *Java* syntax for package names, e.g. `android.widget`.
-Use **sed**(1) to fix package names and nested class names:
+Note: `new-methodmap.csv` will likely use JNI syntax for package names, e.g. `android/widget`,
+and contain a leading action column. `methodmap.csv` ***must*** contain only the enumified rows,
+without the action column, and use *Java* syntax for package names, e.g. `android.widget`.
+Use **grep**(1) and **sed**(1) to normalize the output:
 
 ```sh
-sed 's,/,.,g;s/\$/./g' < src/Mono.Android/new-methodmap.csv > src/Mono.Android/new-methodmap2.csv
+grep '^E,' src/Mono.Android/new-methodmap.csv |
+    sed 's/^E,//;s,/,.,g;s/\$/./g' > src/Mono.Android/new-methodmap2.csv
 ```
 
 Copy the contents of `new-methodmap2.csv` and *append* to `src/Mono.Android/methodmap.csv`.

@@ -29,12 +29,6 @@ namespace Java.Lang
 	{
 		protected Exception (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 	}
-
-	// Mirrors Mono.Android's Java.Lang.ICharSequence: an interface without a
-	// [Register] attribute. The trimmable typemap scanner / emitter must
-	// special-case it to map onto java/lang/CharSequence and dispatch via
-	// Android.Runtime.CharSequence.ToLocalJniHandle.
-	public interface ICharSequence { }
 }
 
 namespace Android.App
@@ -185,6 +179,11 @@ namespace Android.Views
 	{
 		[Register ("getLabel", "()Ljava/lang/String;", "GetGetLabelHandler:Android.Views.INamedClickListenerInvoker")]
 		string? Label { get; }
+	}
+
+	[Register ("android/view/View$INamedClickListener")]
+	public interface INamedClickListenerAlias
+	{
 	}
 
 	[Register ("mono/android/view/View_IOnClickListenerImplementor")]
@@ -580,6 +579,137 @@ namespace MyApp
 		public System.Collections.ICollection? EchoCollection (System.Collections.ICollection? value) => value;
 	}
 
+	public class UnsupportedExportValue
+	{
+	}
+
+	[Register ("my/app/ExportWithUnsupportedManagedParameter")]
+	public class ExportWithUnsupportedManagedParameter : Java.Lang.Object
+	{
+		[Java.Interop.Export ("unsupported")]
+		public void UnsupportedMember (UnsupportedExportValue value) { }
+	}
+
+	[Register ("my/app/ExportWithUnsupportedManagedReturn")]
+	public class ExportWithUnsupportedManagedReturn : Java.Lang.Object
+	{
+		[Java.Interop.Export ("unsupported")]
+		public UnsupportedExportValue UnsupportedMember () => new ();
+	}
+
+	[Register ("my/app/ExportFieldWithUnsupportedManagedReturn")]
+	public class ExportFieldWithUnsupportedManagedReturn : Java.Lang.Object
+	{
+		[Java.Interop.ExportField ("UNSUPPORTED_FIELD")]
+		public UnsupportedExportValue UnsupportedMember () => new ();
+	}
+
+	[Register ("my/app/ExportWithGenericMethodParameter")]
+	public class ExportWithGenericMethodParameter : Java.Lang.Object
+	{
+		[Java.Interop.Export ("unsupported")]
+		public T UnsupportedMember<T> (T value) => value;
+	}
+
+	[Register ("my/app/ExportWithGenericInstantiation")]
+	public class ExportWithGenericInstantiation : Java.Lang.Object
+	{
+		[Java.Interop.Export ("unsupported")]
+		public System.Collections.Generic.List<string> UnsupportedMember (System.Collections.Generic.List<string> value) => value;
+	}
+
+	[Register ("my/app/ExportWithInvalidExportParameterType")]
+	public class ExportWithInvalidExportParameterType : Java.Lang.Object
+	{
+		[Java.Interop.Export ("unsupported")]
+		public UnsupportedExportValue UnsupportedMember (
+			[Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.InputStream)] UnsupportedExportValue value)
+			=> value;
+	}
+
+	[Register ("my/app/ExportWithInvalidExportParameterKind")]
+	public class ExportWithInvalidExportParameterKind : Java.Lang.Object
+	{
+		[Java.Interop.Export ("unsupported")]
+		public void UnsupportedMember (
+			[Java.Interop.ExportParameter ((Java.Interop.ExportParameterKind) 999)] int value)
+		{
+		}
+	}
+
+	[Register ("my/app/ExportWithGenericExportParameter")]
+	public class ExportWithGenericExportParameter : Java.Lang.Object
+	{
+		[Java.Interop.Export ("unsupported")]
+		public T UnsupportedMember<T> (
+			[Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.InputStream)] T value)
+			=> value;
+	}
+
+	[Register ("my/app/ExportFieldWithInvalidExportParameterType")]
+	public class ExportFieldWithInvalidExportParameterType : Java.Lang.Object
+	{
+		[return: Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.OutputStream)]
+		[Java.Interop.ExportField ("UNSUPPORTED_FIELD")]
+		public UnsupportedExportValue UnsupportedMember () => new ();
+	}
+
+	[Register ("my/app/GenericExportType")]
+	public class GenericExportType<T> : Java.Lang.Object
+	{
+		[Java.Interop.Export ("unsupported")]
+		public int UnsupportedMember () => 0;
+	}
+
+	[Register ("my/app/ExportAttributeLookalikes")]
+	public class ExportAttributeLookalikes : Java.Lang.Object
+	{
+		[Lookalike.Export ("NOT_AN_EXPORT")]
+		public void LookalikeExport (
+			[Lookalike.ExportParameter (Java.Interop.ExportParameterKind.InputStream)] UnsupportedExportValue value)
+		{
+		}
+
+		[Java.Interop.Export ("realExport")]
+		public string RealExport (
+			[Lookalike.ExportParameter (Java.Interop.ExportParameterKind.InputStream)] string value)
+			=> value;
+	}
+
+	[Register ("my/app/ExportConstructorUnsupportedManagedParameter")]
+	public class ExportConstructorUnsupportedManagedParameter : Android.App.Activity
+	{
+		[Java.Interop.Export ("notAConstructor", SuperArgumentsString = "")]
+		public ExportConstructorUnsupportedManagedParameter (UnsupportedExportValue value) { }
+	}
+
+	[Register ("my/app/ExportConstructorInvalidExportParameter")]
+	public class ExportConstructorInvalidExportParameter : Android.App.Activity
+	{
+		[Java.Interop.Export (".ctor", SuperArgumentsString = "")]
+		public ExportConstructorInvalidExportParameter (
+			[Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.InputStream)] UnsupportedExportValue value)
+		{
+		}
+	}
+
+	[Register ("my/app/ExportConstructorMappedParameter")]
+	public class ExportConstructorMappedParameter : Android.App.Activity
+	{
+		[Java.Interop.Export ("notAConstructor", SuperArgumentsString = "")]
+		public ExportConstructorMappedParameter (
+			[Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.InputStream)] Stream value)
+		{
+		}
+	}
+
+	[Register ("my/app/ExportStaticConstructor")]
+	public class ExportStaticConstructor : Java.Lang.Object
+	{
+		[Java.Interop.Export]
+		static ExportStaticConstructor () { }
+	}
+
 	/// <summary>
 	/// Has [Export] methods with different access modifiers.
 	/// The JCW should respect the C# visibility for [Export] methods.
@@ -616,6 +746,14 @@ namespace MyApp
 		[Java.Interop.ExportField ("VALUE")]
 		[JavaAnnotation]
 		public string GetValue () => "";
+
+		[return: Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.OutputStream)]
+		[Java.Interop.ExportField ("OUTPUT_STREAM")]
+		public Stream? GetOutputStream () => null;
+
+		[return: Java.Interop.ExportParameter (Java.Interop.ExportParameterKind.XmlPullParser)]
+		[Java.Interop.ExportField ("XML_PARSER")]
+		public XmlReader? GetXmlParser () => null;
 	}
 
 	[Register ("my/app/BaseInstrumentation")]
@@ -791,6 +929,17 @@ namespace MyApp
 
 		public void OnClick (Android.Views.View v) { }
 		public string? Label => "test";
+	}
+
+	[Register ("my/app/RedundantInterfaceView")]
+	public class RedundantInterfaceView : Android.Views.View, Android.Views.IOnClickListener,
+		Android.Views.INamedClickListener, Android.Views.INamedClickListenerAlias, Android.Views.IOnLongClickListener
+	{
+		protected RedundantInterfaceView (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public void OnClick (Android.Views.View v) { }
+		public string? Label => "test";
+		public bool OnLongClick (Android.Views.View v) => false;
 	}
 
 	// --- Override detection test types ---
