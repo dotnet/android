@@ -36,14 +36,12 @@ namespace Java.Lang {
 		{
 			const string __id = "compareTo.(Ljava/lang/Enum;)I";
 			var native_o = (o?.PeerReference ?? default);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_o);
-				var __rm = _members.InstanceMethods.InvokeNonvirtualInt32Method (__id, this, __args);
-				return __rm;
-			} finally {
-				global::System.GC.KeepAlive (o);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (native_o);
+			var __rm = _members.InstanceMethods.InvokeNonvirtualInt32Method (__id, this, __args);
+			var __result = __rm;
+			global::System.GC.KeepAlive (o);
+			return __result;
 		}
 
 	}

@@ -57,39 +57,32 @@ namespace Test.ME {
 		public unsafe int GetSpanFlags (global::Java.Lang.Object tag)
 		{
 			const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (tag);
-				var __rm = _members_test_me_TestInterface.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
-				return __rm;
-			} finally {
-				global::System.GC.KeepAlive (tag);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (tag);
+			var __rm = _members_test_me_TestInterface.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
+			var __result = __rm;
+			global::System.GC.KeepAlive (tag);
+			return __result;
 		}
 
 		public unsafe void Append (global::Java.Lang.ICharSequence value)
 		{
 			const string __id = "append.(Ljava/lang/CharSequence;)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (value);
-				_members_test_me_TestInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-			} finally {
-				global::System.GC.KeepAlive (value);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (value);
+			_members_test_me_TestInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			global::System.GC.KeepAlive (value);
 		}
 
 		public unsafe global::Java.Lang.ICharSequence IdentityFormatted (global::Java.Lang.ICharSequence value)
 		{
 			const string __id = "identity.(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (value);
-				var __rm = _members_test_me_TestInterface.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
-				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<Java.Lang.ICharSequence>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
-			} finally {
-				global::System.GC.KeepAlive (value);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (value);
+			var __rm = _members_test_me_TestInterface.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
+			var __result = global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<Java.Lang.ICharSequence>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
+			global::System.GC.KeepAlive (value);
+			return __result;
 		}
 
 	}

@@ -34,11 +34,8 @@ namespace Xamarin.Test {
 		public static unsafe int MethodAsInt ()
 		{
 			const string __id = "methodAsInt.()I";
-			try {
-				var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
-				return __rm;
-			} finally {
-			}
+			var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+			return __rm;
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='methodAsString' and count(parameter)=0]"
@@ -46,11 +43,8 @@ namespace Xamarin.Test {
 		public static unsafe string MethodAsString ()
 		{
 			const string __id = "methodAsString.()Ljava/lang/String;";
-			try {
-				var __rm = _members.StaticMethods.InvokeObjectMethod (__id, null);
-				return global::Java.Interop.JniEnvironment.Strings.ToString (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
-			} finally {
-			}
+			var __rm = _members.StaticMethods.InvokeObjectMethod (__id, null);
+			return global::Java.Interop.JniEnvironment.Strings.ToString (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='Obsoletemethod' and count(parameter)=0]"
@@ -59,11 +53,8 @@ namespace Xamarin.Test {
 		public static unsafe string Obsoletemethod ()
 		{
 			const string __id = "Obsoletemethod.()Ljava/lang/String;";
-			try {
-				var __rm = _members.StaticMethods.InvokeObjectMethod (__id, null);
-				return global::Java.Interop.JniEnvironment.Strings.ToString (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
-			} finally {
-			}
+			var __rm = _members.StaticMethods.InvokeObjectMethod (__id, null);
+			return global::Java.Interop.JniEnvironment.Strings.ToString (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 	}

@@ -38,12 +38,9 @@ namespace Java.IO {
 			if (PeerReference.IsValid)
 				return;
 
-			try {
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-				Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
-				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
-			} finally {
-			}
+			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+			Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
+			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='InputStream']/method[@name='available' and count(parameter)=0]"
@@ -51,11 +48,8 @@ namespace Java.IO {
 		public virtual unsafe int Available ()
 		{
 			const string __id = "available.()I";
-			try {
-				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
-				return __rm;
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+			return __rm;
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='InputStream']/method[@name='close' and count(parameter)=0]"
@@ -63,10 +57,7 @@ namespace Java.IO {
 		public virtual unsafe void Close ()
 		{
 			const string __id = "close.()V";
-			try {
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='InputStream']/method[@name='mark' and count(parameter)=1 and parameter[1][@type='int']]"
@@ -74,12 +65,9 @@ namespace Java.IO {
 		public virtual unsafe void Mark (int readlimit)
 		{
 			const string __id = "mark.(I)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (readlimit);
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (readlimit);
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='InputStream']/method[@name='markSupported' and count(parameter)=0]"
@@ -87,11 +75,8 @@ namespace Java.IO {
 		public virtual unsafe bool MarkSupported ()
 		{
 			const string __id = "markSupported.()Z";
-			try {
-				var __rm = _members.InstanceMethods.InvokeVirtualBooleanMethod (__id, this, null);
-				return __rm;
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeVirtualBooleanMethod (__id, this, null);
+			return __rm;
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='InputStream']/method[@name='read' and count(parameter)=0]"
@@ -142,10 +127,7 @@ namespace Java.IO {
 		public virtual unsafe void Reset ()
 		{
 			const string __id = "reset.()V";
-			try {
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='InputStream']/method[@name='skip' and count(parameter)=1 and parameter[1][@type='long']]"
@@ -153,13 +135,10 @@ namespace Java.IO {
 		public virtual unsafe long Skip (long byteCount)
 		{
 			const string __id = "skip.(J)J";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (byteCount);
-				var __rm = _members.InstanceMethods.InvokeVirtualInt64Method (__id, this, __args);
-				return __rm;
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (byteCount);
+			var __rm = _members.InstanceMethods.InvokeVirtualInt64Method (__id, this, __args);
+			return __rm;
 		}
 
 	}
@@ -183,11 +162,8 @@ namespace Java.IO {
 		public override unsafe int Read ()
 		{
 			const string __id = "read.()I";
-			try {
-				var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
-				return __rm;
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
+			return __rm;
 		}
 
 	}
