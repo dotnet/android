@@ -410,14 +410,14 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Execute_ReferenceOnlyAssemblyWithSharedFrameworkTypeMap_EmitsRoot ()
+	public void Execute_ReferenceOnlyAssemblyWithPreGeneratedTypeMap_EmitsRoot ()
 	{
 		using var peReader = CreateTestFixturePEReader ();
 		var result = CreateGenerator ().Execute (
 			[new AssemblyInput ("TestFixtures", "", peReader, ScanForPeers: false)],
 			new Version (11, 0),
 			new HashSet<string> (),
-			sharedFrameworkTypeMapNames: [ "_TestFixtures.TypeMap" ]);
+			preGeneratedTypeMapNames: [ "_TestFixtures.TypeMap" ]);
 
 		var root = Assert.Single (result.GeneratedAssemblies);
 		Assert.Equal ("_Microsoft.Android.TypeMaps", root.Name);
@@ -448,48 +448,6 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		var manifest = result.Manifest;
 		Assert.NotNull (manifest);
 		Assert.Equal ("my.app", manifest.Document.Root?.Attribute ("package")?.Value);
-	}
-
-	[Fact]
-	public void Execute_ForceFrameworkPeersUnconditional_RootsAllFrameworkPeers ()
-	{
-		using var peReader = CreateTestFixturePEReader ();
-		var result = CreateGenerator ().Execute (
-			[Input ("TestFixtures", peReader)],
-			new Version (11, 0),
-			new HashSet<string> (StringComparer.OrdinalIgnoreCase) { "TestFixtures" },
-			forceFrameworkPeersUnconditional: true);
-
-		Assert.NotEmpty (result.AllPeers);
-		Assert.All (result.AllPeers, peer => Assert.True (peer.IsUnconditional));
-	}
-
-	[Fact]
-	public void RootFrameworkAssemblyPeers_DoesNotRootApplicationPeers ()
-	{
-		var frameworkPeer = new JavaPeerInfo {
-			JavaName = "framework/Peer",
-			CompatJniName = "framework/Peer",
-			ManagedTypeName = "Framework.Peer",
-			ManagedTypeNamespace = "Framework",
-			ManagedTypeShortName = "Peer",
-			AssemblyName = "Framework",
-			IsFrameworkAssembly = true,
-		};
-		var applicationPeer = new JavaPeerInfo {
-			JavaName = "application/Peer",
-			CompatJniName = "application/Peer",
-			ManagedTypeName = "Application.Peer",
-			ManagedTypeNamespace = "Application",
-			ManagedTypeShortName = "Peer",
-			AssemblyName = "Application",
-			IsFrameworkAssembly = false,
-		};
-
-		TrimmableTypeMapGenerator.RootFrameworkAssemblyPeers ([frameworkPeer, applicationPeer]);
-
-		Assert.True (frameworkPeer.IsUnconditional);
-		Assert.False (applicationPeer.IsUnconditional);
 	}
 
 	[Fact]
@@ -683,7 +641,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void GenerateTypeMapAssemblies_ChangedSharedFrameworkSetRegeneratesRoot ()
+	public void GenerateTypeMapAssemblies_ChangedPreGeneratedSetRegeneratesRoot ()
 	{
 		var peers = new List<JavaPeerInfo> {
 			CreatePeer ("MyApp", "MyApp.MainActivity", "my/app/MainActivity"),
@@ -698,7 +656,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 				fingerprints.Add (name, fingerprint);
 				return true;
 			},
-			sharedFrameworkTypeMapNames: [ "_Mono.Android.TypeMap" ]);
+			preGeneratedTypeMapNames: [ "_Mono.Android.TypeMap" ]);
 		DisposeGeneratedAssemblies (first);
 
 		var regenerated = generator.GenerateTypeMapAssemblies (
@@ -706,7 +664,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			new Version (11, 0),
 			useSharedTypemapUniverse: false,
 			(name, fingerprint) => !fingerprints.TryGetValue (name, out var prior) || !prior.SequenceEqual (fingerprint),
-			sharedFrameworkTypeMapNames: [ "_Mono.Android.TypeMap", "_Java.Interop.TypeMap" ]);
+			preGeneratedTypeMapNames: [ "_Mono.Android.TypeMap", "_Java.Interop.TypeMap" ]);
 
 		var root = Assert.Single (regenerated);
 		Assert.Equal ("_Microsoft.Android.TypeMaps", root.Name);

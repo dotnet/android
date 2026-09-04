@@ -137,16 +137,10 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	// references the pre-generated per-assembly typemaps alongside the app's own.
 	public bool GenerateRootAssembly { get; set; } = true;
 
-	// When true, forces the shared (Java.Lang.Object) typemap universe regardless of Debug.
-	// Set for SDK-build-time pre-generation of framework typemaps (issue #10792) so aliases
-	// across the pre-generated framework assemblies are coordinated. App builds can consume
-	// the result only in Debug's per-assembly universe mode.
-	public bool ForceSharedTypemapUniverse { get; set; }
-
 	// Framework assemblies whose typemap is pre-generated at SDK build time (issue #10792), e.g.
 	// Mono.Android. On the app build these are indexed for base-type resolution but NOT scanned for
 	// peers; instead their pre-generated per-assembly typemap (_<Name>.TypeMap) is referenced by the
-	// generated root assembly under the Java.Lang.Object universe.
+	// generated root assembly through its private __TypeMapAnchor.
 	public ITaskItem [] PreGeneratedTypeMapAssemblies { get; set; } = [];
 
 	// Assemblies that are indexed for type resolution but are not scanned for Java peers.
@@ -155,8 +149,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	// Pre-compiled framework JCWs whose Java names must not collide with app-generated JCWs.
 	public string? PreGeneratedJcwJar { get; set; }
 
-	// SDK-time framework typemaps cannot be rooted from an individual app's manifest or resources.
-	public bool ForceFrameworkPeersUnconditional { get; set; }
+	// App manifest/layout roots only need to mutate framework maps when managed linking runs.
+	public bool RootFrameworkPeersFromApplication { get; set; } = true;
 
 	public bool CleanJavaSourceOutputDirectory { get; set; }
 
@@ -183,7 +177,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			ResolvedFrameworkAssemblies.Select (i => Path.GetFullPath (i.ItemSpec)),
 			StringComparer.OrdinalIgnoreCase);
 		// Assemblies whose typemap is pre-generated: index them for resolution but don't scan for
-		// peers, and reference their pre-generated _<Name>.TypeMap from the root under Java.Lang.Object.
+		// peers, and reference their pre-generated _<Name>.TypeMap through its private anchor.
 		var preGeneratedAssemblyPaths = new HashSet<string> (
 			PreGeneratedTypeMapAssemblies.Select (i => Path.GetFullPath (i.ItemSpec)),
 			StringComparer.OrdinalIgnoreCase);
@@ -191,7 +185,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			ReferenceOnlyAssemblies.Select (i => Path.GetFullPath (i.ItemSpec)),
 			StringComparer.OrdinalIgnoreCase);
 		referenceOnlyAssemblyPaths.UnionWith (preGeneratedAssemblyPaths);
-		var sharedFrameworkTypeMapNames = PreGeneratedTypeMapAssemblies
+		var preGeneratedTypeMapNames = PreGeneratedTypeMapAssemblies
 			.Select (i => $"_{Path.GetFileNameWithoutExtension (i.ItemSpec)}.TypeMap")
 			.Distinct (StringComparer.Ordinal)
 			.ToList ();
@@ -283,18 +277,18 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				assemblies,
 				systemRuntimeVersion,
 				frameworkAssemblyNames,
-				useSharedTypemapUniverse: ForceSharedTypemapUniverse || !Debug,
+				useSharedTypemapUniverse: !Debug,
 				manifestConfig: manifestConfig,
 				manifestTemplate: manifestTemplate,
 				packageNamingPolicy: PackageNamingPolicy,
 				generateTypeMapAssemblies: GenerateTypeMapAssemblies,
 				generateRootAssembly: GenerateRootAssembly,
-				sharedFrameworkTypeMapNames: sharedFrameworkTypeMapNames,
+				preGeneratedTypeMapNames: preGeneratedTypeMapNames,
 				errorOnCustomJavaObject: ErrorOnCustomJavaObject,
 				customViewTypeNames: customViewTypeNames,
 				preGeneratedJcwNames: preGeneratedJcwNames,
 				preGeneratedJcwSource: PreGeneratedJcwJar,
-				forceFrameworkPeersUnconditional: ForceFrameworkPeersUnconditional,
+				rootFrameworkPeersFromApplication: RootFrameworkPeersFromApplication,
 				collectMarshalMethodsForNonAcw: false,
 				shouldGenerateTypeMapAssembly: TypeMapFingerprintsFile.IsNullOrEmpty () ? null : ShouldGenerateTypeMapAssembly);
 			if (Log.HasLoggedErrors) {

@@ -147,7 +147,7 @@ static class MetadataHelper
 		IReadOnlyList<string> perAssemblyTypeMapNames,
 		Version systemRuntimeVersion,
 		bool useSharedTypemapUniverse,
-		IReadOnlyList<string>? sharedFrameworkTypeMapNames = null)
+		IReadOnlyList<string>? preGeneratedTypeMapNames = null)
 	{
 		using var sha = SHA256.Create ();
 		using var stream = new MemoryStream ();
@@ -155,15 +155,14 @@ static class MetadataHelper
 		writer.Write (GeneratorModuleVersionId.ToByteArray ());
 		writer.Write (systemRuntimeVersion.ToString ());
 		writer.Write (useSharedTypemapUniverse);
-		writer.Write (perAssemblyTypeMapNames.Count);
-		foreach (var assemblyName in perAssemblyTypeMapNames) {
-			writer.Write (assemblyName);
+		var allTypeMapNames = new List<string> (perAssemblyTypeMapNames);
+		if (preGeneratedTypeMapNames is not null) {
+			allTypeMapNames.AddRange (preGeneratedTypeMapNames);
 		}
-		writer.Write (sharedFrameworkTypeMapNames?.Count ?? 0);
-		if (sharedFrameworkTypeMapNames is not null) {
-			foreach (var assemblyName in sharedFrameworkTypeMapNames) {
-				writer.Write (assemblyName);
-			}
+		allTypeMapNames.Sort (StringComparer.Ordinal);
+		writer.Write (allTypeMapNames.Count);
+		foreach (var assemblyName in allTypeMapNames) {
+			writer.Write (assemblyName);
 		}
 		writer.Flush ();
 		return sha.ComputeHash (stream.GetBuffer (), 0, checked ((int) stream.Length));

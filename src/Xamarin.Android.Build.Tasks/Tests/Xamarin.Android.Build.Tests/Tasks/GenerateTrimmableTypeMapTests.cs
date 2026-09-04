@@ -174,7 +174,7 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		public void Execute_SwitchToPreGeneratedFrameworkTypeMap_RewritesRoot ()
+		public void Execute_SwitchToPreGeneratedFrameworkTypeMap_PreservesRoot ()
 		{
 			var path = Path.Combine ("temp", TestName);
 			var outputDir = Path.Combine (Root, path, "typemap");
@@ -188,24 +188,26 @@ namespace Xamarin.Android.Build.Tests {
 
 			var assemblies = new [] { monoAndroidItem };
 			var firstTask = CreateTask (assemblies, outputDir, javaDir);
+			firstTask.Debug = true;
 			Assert.IsTrue (firstTask.Execute (), "Initial local typemap generation should succeed.");
 
 			var rootPath = Path.Combine (outputDir, "_Microsoft.Android.TypeMaps.dll");
 			var initialRoot = File.ReadAllBytes (rootPath);
 
 			var secondTask = CreateTask (assemblies, outputDir, javaDir);
+			secondTask.Debug = true;
 			secondTask.PreGeneratedTypeMapAssemblies = assemblies;
 			Assert.IsTrue (secondTask.Execute (), "Switching to the pre-generated framework typemap should succeed.");
 
 			var preGeneratedRoot = File.ReadAllBytes (rootPath);
-			CollectionAssert.AreNotEqual (
+			CollectionAssert.AreEqual (
 				initialRoot,
 				preGeneratedRoot,
-				"The root assembly should be rewritten when its framework typemap references change.");
+				"The root should reference a per-assembly map identically whether that map was generated locally or pre-generated.");
 			CollectionAssert.AreEqual (
 				new [] { rootPath },
 				secondTask.GeneratedAssemblies.Select (item => item.ItemSpec).ToArray (),
-				"Only the root assembly should be generated when every scanned assembly uses a pre-generated typemap.");
+				"Only the existing root should be reported when every scanned assembly uses a pre-generated typemap.");
 		}
 
 		[Test]
