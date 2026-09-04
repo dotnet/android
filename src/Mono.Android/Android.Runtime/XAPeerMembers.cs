@@ -18,20 +18,14 @@ namespace Android.Runtime {
 
 		protected override bool UsesVirtualDispatch (IJavaPeerable value, Type? declaringType)
 		{
-			// Newly generated bindings use JniPeerMembers directly. XAPeerMembers is
-			// retained for old binaries, but hand-written bindings may have used it
-			// without declaring threshold overrides.
-			if (value.JniPeerMembers is not XAPeerMembers)
-				return base.UsesVirtualDispatch (value, declaringType);
+			if (value.JniPeerMembers is XAPeerMembers) {
+				var peerType = GetThresholdType (value);
+				if (peerType != null) {
+					return peerType == value.GetType ();
+				}
+			}
 
-			var peerType = GetThresholdType (value);
-			// Old generated bindings return the managed type represented by their
-			// JniPeerMembers. A mismatch means either there is no override, or this
-			// is a new binding derived from an old one; both use metadata dispatch.
-			if (peerType != value.JniPeerMembers.ManagedPeerType)
-				return base.UsesVirtualDispatch (value, declaringType);
-
-			return peerType == value.GetType ();
+			return base.UsesVirtualDispatch (value, declaringType);
 		}
 
 		protected override JniPeerMembers GetPeerMembers (IJavaPeerable value)
@@ -43,10 +37,10 @@ namespace Android.Runtime {
 		static Type? GetThresholdType (IJavaPeerable value)
 		{
 			if (value is Java.Lang.Object o) {
-				return o.GetThresholdTypeForLegacyDispatch ();
+				return o.GetThresholdType ();
 			}
 			if (value is Java.Lang.Throwable t) {
-				return t.GetThresholdTypeForLegacyDispatch ();
+				return t.GetThresholdType ();
 			}
 			return null;
 		}
