@@ -376,21 +376,23 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		item.GetMetadata ("NuGetPackageId").StartsWith ("Microsoft.NETCore.App.Runtime.", StringComparison.OrdinalIgnoreCase) ||
 		item.GetMetadata ("NuGetPackageId").StartsWith ("Microsoft.Android.Runtime.", StringComparison.OrdinalIgnoreCase);
 
-	static IReadOnlyCollection<string> LoadCustomViewTypeNames (string mapFile)
+	internal static IReadOnlyCollection<string> LoadCustomViewTypeNames (string mapFile)
 	{
-		var map = new Dictionary<string, HashSet<string>> ();
+		var typeNames = new HashSet<string> (StringComparer.Ordinal);
 		if (!File.Exists (mapFile)) {
-			return map.Keys;
+			return typeNames;
 		}
 		foreach (var line in File.ReadLines (mapFile)) {
-			var items = line.Split (new char [] { ';' }, count: 2);
-			if (!map.TryGetValue (items [0], out var values)) {
-				values = new HashSet<string> ();
-				map.Add (items [0], values);
+			if (line.IsNullOrWhiteSpace ()) {
+				continue;
 			}
-			values.Add (items [1]);
+			int separator = line.IndexOf (';');
+			if (separator <= 0 || separator == line.Length - 1) {
+				throw new InvalidDataException ($"Invalid custom view map entry '{line}' in '{mapFile}'.");
+			}
+			typeNames.Add (line.Substring (0, separator));
 		}
-		return map.Keys;
+		return typeNames;
 	}
 
 	void WriteGeneratedAssembliesListFile (IReadOnlyList<ITaskItem> assemblies)

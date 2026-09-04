@@ -47,6 +47,32 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void LoadCustomViewTypeNames_ParsesKeysAndIgnoresBlankLines ()
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			var mapFile = Path.Combine (directory, "custom-view-map.txt");
+			Directory.CreateDirectory (directory);
+			File.WriteAllText (mapFile, "Example.View;example.View\n\nExample.View;example.OtherView\nOther.View;other.View\n");
+
+			var typeNames = GenerateTrimmableTypeMap.LoadCustomViewTypeNames (mapFile);
+
+			CollectionAssert.AreEquivalent (new [] { "Example.View", "Other.View" }, typeNames);
+		}
+
+		[Test]
+		public void LoadCustomViewTypeNames_InvalidEntryThrows ()
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			var mapFile = Path.Combine (directory, "custom-view-map.txt");
+			Directory.CreateDirectory (directory);
+			File.WriteAllText (mapFile, "invalid");
+
+			var exception = Assert.Throws<InvalidDataException> (() => GenerateTrimmableTypeMap.LoadCustomViewTypeNames (mapFile));
+
+			StringAssert.Contains ("Invalid custom view map entry 'invalid'", exception?.Message);
+		}
+
+		[Test]
 		public void Execute_WithMonoAndroid_ProducesOutputs ()
 		{
 			var path = Path.Combine ("temp", TestName);
