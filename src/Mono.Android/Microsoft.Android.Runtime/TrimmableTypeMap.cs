@@ -195,8 +195,45 @@ public class TrimmableTypeMap
 			return null;
 		}
 
+		if (TryResolveProxyFromSealedTargetType (handle, targetType, out var proxy)) {
+			return proxy;
+		}
+
 		return TryGetProxyFromHierarchy (handle, targetType) ??
 			TryGetProxyFromTargetType (handle, targetType);
+	}
+
+	bool TryResolveProxyFromSealedTargetType (
+		IntPtr handle,
+		Type? targetType,
+		out JavaPeerProxy? proxy)
+	{
+		proxy = null;
+		// App peers can use class loaders which differ from the runtime fallback loader.
+		if (targetType is null ||
+				!targetType.IsSealed ||
+				targetType.Assembly != typeof (Java.Lang.Object).Assembly) {
+			return false;
+		}
+
+		var targetProxy = GetProxyForManagedType (targetType);
+		if (targetProxy is null) {
+			return false;
+		}
+
+		var targetClass = default (JniObjectReference);
+		try {
+			targetClass = JniEnvironment.Types.FindClass (targetProxy.JniName);
+			var reference = new JniObjectReference (handle);
+			if (JniEnvironment.Types.IsInstanceOf (reference, targetClass)) {
+				proxy = targetProxy;
+			}
+			return true;
+		} catch (Java.Lang.ClassNotFoundException) {
+			return false;
+		} finally {
+			JniObjectReference.Dispose (ref targetClass);
+		}
 	}
 
 	JavaPeerProxy? TryGetProxyFromHierarchy (IntPtr handle, Type? targetType)
@@ -348,26 +385,21 @@ public class TrimmableTypeMap
 
 		IJavaPeerable? peer;
 		if (ShouldActivateClosedGenericTarget (proxy, targetType)) {
-			peer = ActivateUsingReflection (targetType, handle, JniHandleOwnership.DoNotTransfer);
+			peer = ActivateUsingReflection (targetType, handle, ImplicitPeerOwnership);
 		} else {
-			peer = proxy?.CreateInstance (handle, JniHandleOwnership.DoNotTransfer);
+			peer = proxy?.CreateInstance (handle, ImplicitPeerOwnership);
 		}
-		if (peer is not null) {
-			MarkCreatedPeer (peer);
-		}
-		return peer;
+		return RegisterCreatedPeer (peer);
 	}
 
 	internal IJavaPeerable? CreateInstanceWithoutReflectionFallback (IntPtr handle, Type? targetType = null)
 	{
-		var peer = GetProxyForJavaObject (handle, targetType)?.CreateInstance (handle, JniHandleOwnership.DoNotTransfer);
-		if (peer is not null) {
-			MarkCreatedPeer (peer);
-		}
-		return peer;
+		var peer = GetProxyForJavaObject (handle, targetType)?.CreateInstance (handle, ImplicitPeerOwnership);
+		return RegisterCreatedPeer (peer);
 	}
 
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+	const JniHandleOwnership ImplicitPeerOwnership = JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister;
 
 	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
@@ -405,6 +437,23 @@ public class TrimmableTypeMap
 			peerState |= JniManagedPeerStates.Activatable;
 		}
 		peer.SetJniManagedPeerState (peerState);
+	}
+
+	static IJavaPeerable? RegisterCreatedPeer (IJavaPeerable? peer)
+	{
+		if (peer is null) {
+			return null;
+		}
+
+		// Mark the peer Replaceable *before* registering it. AddPeer() lets a
+		// non-replaceable peer evict an existing replaceable one, so registering during
+		// construction — which is what ConstructPeerCore does unless the activation
+		// constructor is told not to — would let this implicit intermediary evict the
+		// peer an earlier caller is already holding, leaving that caller with a wrapper
+		// the runtime no longer knows about. See dotnet/android#10973.
+		MarkCreatedPeer (peer);
+		JniEnvironment.Runtime.ValueManager.AddPeer (peer);
+		return peer;
 	}
 
 	/// <summary>

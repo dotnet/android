@@ -47,6 +47,7 @@ public class TrimmableTypeMapGenerator
 		string? packageNamingPolicy = null,
 		bool generateTypeMapAssemblies = true,
 		bool errorOnCustomJavaObject = true,
+		IReadOnlyCollection<string>? customViewTypeNames = null,
 		bool collectMarshalMethodsForNonAcw = true,
 		Func<string, byte [], bool>? shouldGenerateTypeMapAssembly = null)
 	{
@@ -65,6 +66,7 @@ public class TrimmableTypeMapGenerator
 		}
 		MarkFrameworkAssemblyPeers (allPeers, frameworkAssemblyNames);
 
+		RootCustomViewTypes (allPeers, customViewTypeNames);
 		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig), manifestConfig?.ApplicationJavaClass);
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
@@ -91,10 +93,44 @@ public class TrimmableTypeMapGenerator
 		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest, appRegTypes);
 	}
 
+	internal static void RootCustomViewTypes (List<JavaPeerInfo> allPeers, IReadOnlyCollection<string>? customViewTypeNames)
+	{
+		if (customViewTypeNames is null || customViewTypeNames.Count == 0) {
+			return;
+		}
+
+		var names = new HashSet<string> (customViewTypeNames, StringComparer.Ordinal);
+		foreach (var peer in allPeers) {
+			if (names.Contains (peer.ManagedTypeName) ||
+					names.Contains (JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName)) ||
+					names.Contains (JniSignatureHelper.JniNameToJavaBinaryName (peer.CompatJniName))) {
+				peer.IsUnconditional = true;
+			}
+		}
+	}
+
 	internal bool ValidateJavaNames (IReadOnlyList<JavaPeerInfo> peers, string? applicationJavaClass = null)
 	{
 		bool valid = true;
 		var reportedNames = new HashSet<string> (StringComparer.Ordinal);
+		foreach (var group in peers
+				.Where (ShouldGenerateJcw)
+				.GroupBy (peer => peer.JavaName, StringComparer.Ordinal)
+				.OrderBy (group => group.Key, StringComparer.Ordinal)) {
+			var firstAssemblyName = group.First ().AssemblyName;
+			if (group.All (peer => string.Equals (peer.AssemblyName, firstAssemblyName, StringComparison.Ordinal))) {
+				continue;
+			}
+
+			var javaName = JniSignatureHelper.JniNameToJavaBinaryName (group.Key);
+			logger.LogDuplicateJavaTypeError (javaName);
+			foreach (var peer in group
+					.OrderBy (peer => peer.ManagedTypeName, StringComparer.Ordinal)
+					.ThenBy (peer => peer.AssemblyName, StringComparer.Ordinal)) {
+				logger.LogDuplicateJavaTypeDetailsError (javaName, $"{peer.ManagedTypeName}, {peer.AssemblyName}");
+			}
+			valid = false;
+		}
 		if (applicationJavaClass is not null &&
 				JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (applicationJavaClass, out var invalidApplicationIdentifier)) {
 			ReportInvalidName (applicationJavaClass, invalidApplicationIdentifier);
@@ -111,7 +147,7 @@ public class TrimmableTypeMapGenerator
 			if (peer.BaseJavaName is not null) {
 				ReportInvalidJniSourceType (peer.BaseJavaName);
 			}
-			foreach (var interfaceName in peer.ImplementedInterfaceJavaNames) {
+			foreach (var interfaceName in peer.JavaCallableWrapperInterfaceJavaNames ?? peer.ImplementedInterfaceJavaNames) {
 				ReportInvalidJniSourceType (interfaceName);
 			}
 			foreach (var constructor in peer.JavaConstructors) {

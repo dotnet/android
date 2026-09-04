@@ -101,6 +101,7 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
+	MemberReferenceHandle _jniEnvToJniObjectReferenceOptionsRef;
 	MemberReferenceHandle _jniEnvGetStringRef;
 	MemberReferenceHandle _jniEnvGetArrayRef;
 	MemberReferenceHandle _javaLangObjectGetObjectRef;
@@ -423,6 +424,16 @@ sealed class TypeMapAssemblyEmitter
 				rt => rt.Void (),
 				p => {
 					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+				}));
+
+		// JNIEnv.ToJniObjectReferenceOptions(JniHandleOwnership) — static, internal
+		// Maps the activation ctor's ownership argument onto the JniObjectReferenceOptions
+		// a Java.Interop-style ctor takes. Kept in Mono.Android so the mapping is plain C#.
+		_jniEnvToJniObjectReferenceOptionsRef = _pe.AddMemberRef (_jniEnvRef, "ToJniObjectReferenceOptions",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Type ().Type (_jniObjectReferenceOptionsRef, true),
+				p => {
 					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
 				}));
 
@@ -866,7 +877,8 @@ sealed class TypeMapAssemblyEmitter
 	/// <summary>
 	/// Emits CreateInstance for JavaInterop-style activation (leaf type):
 	///   var jniRef = new JniObjectReference(handle);
-	///   var result = new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
+	///   var options = JNIEnv.ToJniObjectReferenceOptions(ownership);
+	///   var result = new TargetType(ref jniRef, options);
 	///   JNIEnv.DeleteRef(handle, ownership);
 	///   return result;
 	/// </summary>
@@ -882,9 +894,9 @@ sealed class TypeMapAssemblyEmitter
 				encoder.LoadConstantI4 (0); // JniObjectReferenceType.Invalid
 				encoder.Call (_jniObjectReferenceCtorRef, parameterCount: 2, isInstance: true);
 
-				// var result = new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
+				// var result = new TargetType(ref jniRef, JNIEnv.ToJniObjectReferenceOptions(ownership));
 				encoder.LoadLocalAddress (0);
-				encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
+				EmitJniObjectReferenceOptions (encoder);
 				encoder.NewObject (ctorRef, parameterCount: 2);
 				encoder.StoreLocal (1); // save result
 
@@ -902,7 +914,8 @@ sealed class TypeMapAssemblyEmitter
 	/// Emits CreateInstance for JavaInterop-style activation (inherited ctor):
 	///   var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
 	///   var jniRef = new JniObjectReference(handle);
-	///   obj.BaseCtor(ref jniRef, JniObjectReferenceOptions.Copy);
+	///   var options = JNIEnv.ToJniObjectReferenceOptions(ownership);
+	///   obj.BaseCtor(ref jniRef, options);
 	///   JNIEnv.DeleteRef(handle, ownership);
 	///   return obj;
 	/// </summary>
@@ -927,9 +940,9 @@ sealed class TypeMapAssemblyEmitter
 				encoder.LoadConstantI4 (0); // JniObjectReferenceType.Invalid
 				encoder.Call (_jniObjectReferenceCtorRef, parameterCount: 2, isInstance: true);
 
-				// obj.BaseCtor(ref jniRef, JniObjectReferenceOptions.Copy);
+				// obj.BaseCtor(ref jniRef, JNIEnv.ToJniObjectReferenceOptions(ownership));
 				encoder.LoadLocalAddress (0);
-				encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
+				EmitJniObjectReferenceOptions (encoder);
 				encoder.Call (baseCtorRef, parameterCount: 2, isInstance: true);
 
 				// JNIEnv.DeleteRef(handle, ownership);
@@ -939,6 +952,18 @@ sealed class TypeMapAssemblyEmitter
 
 				encoder.Return (returnsValue: true);
 			});
+	}
+
+	/// <summary>
+	/// Emits the conversion of this method's <c>JniHandleOwnership</c> argument into the
+	/// <c>JniObjectReferenceOptions</c> a Java.Interop-style activation constructor expects,
+	/// by calling <c>JNIEnv.ToJniObjectReferenceOptions (ownership)</c>. The mapping itself
+	/// lives in Mono.Android so it is expressed in readable C# rather than raw IL.
+	/// </summary>
+	void EmitJniObjectReferenceOptions (PEAssemblyBuilder.TrackedInstructionEncoder encoder)
+	{
+		encoder.OpCode (ILOpCode.Ldarg_2);
+		encoder.Call (_jniEnvToJniObjectReferenceOptionsRef, parameterCount: 1, returnsValue: true);
 	}
 
 	void EncodeJniObjectReferenceLocal (BlobBuilder blob)

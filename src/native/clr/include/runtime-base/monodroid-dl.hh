@@ -1,12 +1,12 @@
 #pragma once
 
-#include <mutex>
 #include <string_view>
 
 #include <dlfcn.h>
 #include <android/dlext.h>
 
 #include <java-interop-dlfcn.h>
+#include <runtime-base/mutex.hh>
 
 #include "../xamarin-app.hh"
 
@@ -20,7 +20,7 @@ namespace xamarin::android
 {
 	class MonodroidDl
 	{
-		static inline std::mutex   dso_handle_write_lock;
+		static inline pthread_mutex_t dso_handle_write_lock = PTHREAD_MUTEX_INITIALIZER;
 
 		[[gnu::always_inline]]
 		static constexpr auto ascii_to_lower (char c) noexcept -> char
@@ -118,7 +118,7 @@ namespace xamarin::android
 		[[gnu::always_inline, gnu::flatten]]
 		static auto find_dso_cache_entry (std::string_view const& name, hash_t hash) noexcept -> DSOCacheEntry*
 		{
-			log_debug (LOG_ASSEMBLY, "Looking for hash {:x} in DSO cache", hash);
+			log_debugf (LOG_ASSEMBLY, "Looking for hash %x in DSO cache", hash);
 
 			auto less_than = [](DSOCacheEntry const& entry, hash_t key) -> bool { return entry.hash < key; };
 			size_t idx = Search::lower_bound<DSOCacheEntry, hash_t, less_than> (hash, dso_cache, application_config.number_of_dso_cache_entries);
@@ -147,19 +147,21 @@ namespace xamarin::android
 
 		static auto monodroid_dlopen (DSOCacheEntry *dso, std::string_view const& name, int flags) noexcept -> void*
 		{
-			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash match {}found, DSO name is '{}'", dso == nullptr ? "not "sv : ""sv, get_dso_name (dso));
+			auto dso_name_for_log = get_dso_name (dso);
+			log_debugf (LOG_ASSEMBLY, "monodroid_dlopen: hash match %sfound, DSO name is '%.*s'", dso == nullptr ? "not " : "", static_cast<int>(dso_name_for_log.length ()), dso_name_for_log.data ());
 
 			if (dso == nullptr) {
 				// DSO not known at build time, try to load it. Since we don't know whether or not the library uses
 				// JNI, we're going to assume it does and thus use System.loadLibrary eventually.
 				return DsoLoader::load (name, flags, true /* is_jni */);
 			} else if (dso->handle != nullptr) {
-				log_debug (LOG_ASSEMBLY, "monodroid_dlopen: library {} already loaded, returning handle {:p}", name, dso->handle);
+				log_debugf (LOG_ASSEMBLY, "monodroid_dlopen: library %.*s already loaded, returning handle %p", static_cast<int>(name.length ()), name.data (), dso->handle);
 				return dso->handle;
 			}
 
 			if (dso->ignore) {
-				log_info (LOG_ASSEMBLY, "Request to load '{}' ignored, it is known not to exist", get_dso_name (dso));
+				auto ignored_dso_name = get_dso_name (dso);
+				log_infof (LOG_ASSEMBLY, "Request to load '%.*s' ignored, it is known not to exist", static_cast<int>(ignored_dso_name.length ()), ignored_dso_name.data ());
 				return nullptr;
 			}
 
@@ -178,12 +180,12 @@ namespace xamarin::android
 		static auto monodroid_dlopen (std::string_view const& name, int flags) noexcept -> void*
 		{
 			if (name.empty ()) [[unlikely]] {
-				log_warn (LOG_ASSEMBLY, "monodroid_dlopen got a null name. This is not supported in NET+"sv);
+				log_warnf (LOG_ASSEMBLY, "monodroid_dlopen got a null name. This is not supported in NET+");
 				return nullptr;
 			}
 
 			hash_t name_hash = crc32_hash (name);
-			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '{}' is {:x}", name, name_hash);
+			log_debugf (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '%.*s' is %x", static_cast<int>(name.length ()), name.data (), name_hash);
 
 			DSOCacheEntry *dso = find_dso_cache_entry (name, name_hash);
 			return monodroid_dlopen (dso, name, flags);
@@ -196,10 +198,11 @@ namespace xamarin::android
 			void *s = microsoft::java_interop::java_interop_lib_symbol (handle, name.data (), &e);
 
 			if (s == nullptr) {
-				log_error (
+				log_errorf (
 					LOG_ASSEMBLY,
-					"Could not find symbol '{}': {}",
-					name,
+					"Could not find symbol '%.*s': %s",
+					static_cast<int>(name.length ()),
+					name.data (),
 					optional_string (e)
 				);
 			}

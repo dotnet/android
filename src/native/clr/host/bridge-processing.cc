@@ -34,7 +34,7 @@ TemporaryPeerMap::TemporaryPeerMap (JNIEnv *jni_env, MarkCrossReferencesArgs *ar
 
 	if (env->EnsureLocalCapacity (requested_capacity) != JNI_OK) [[unlikely]] {
 		env->ExceptionClear ();
-		log_warn (LOG_GC, "Failed to reserve JNI local reference capacity for {} temporary peers", map_capacity);
+		log_warnf (LOG_GC, "Failed to reserve JNI local reference capacity for %zu temporary peers", map_capacity);
 	}
 
 	capacity = map_capacity;
@@ -283,17 +283,17 @@ void BridgeProcessing::add_cross_reference (size_t source_index, size_t dest_ind
 	CrossReferenceTarget from = select_cross_reference_target (source_index, temporary_peers);
 	CrossReferenceTarget to = select_cross_reference_target (dest_index, temporary_peers);
 
-	if (add_reference (from.get_handle(), to.get_handle())) {
+	if (add_reference (from.get_handle(), to.get_handle(), from.is_gc_user_peer_known ())) {
 		from.mark_refs_added_if_needed ();
 	}
 }
 
-bool BridgeProcessing::add_reference (jobject from, jobject to) noexcept
+bool BridgeProcessing::add_reference (jobject from, jobject to, bool known_gc_user_peer) noexcept
 {
 	abort_if_invalid_pointer_argument (from, "from");
 	abort_if_invalid_pointer_argument (to, "to");
 
-	if (!env->IsInstanceOf (from, IGCUserPeer_class)) [[unlikely]] {
+	if (!known_gc_user_peer && !env->IsInstanceOf (from, IGCUserPeer_class)) [[unlikely]] {
 		jclass java_class = env->GetObjectClass (from);
 		log_missing_add_references_method (java_class);
 		env->DeleteLocalRef (java_class);
@@ -329,12 +329,10 @@ void BridgeProcessing::clear_references (jobject handle) noexcept
 {
 	abort_if_invalid_pointer_argument (handle, "handle");
 
-	if (!env->IsInstanceOf (handle, IGCUserPeer_class)) [[unlikely]] {
-		jclass java_class = env->GetObjectClass (handle);
-		log_missing_clear_references_method (java_class);
-		env->DeleteLocalRef (java_class);
-		return;
-	}
+	// refs_added is set only after add_reference verifies that the source implements IGCUserPeer.
+#if DEBUG
+	abort_unless (env->IsInstanceOf (handle, IGCUserPeer_class), "Object with added references must implement IGCUserPeer");
+#endif
 
 	env->CallVoidMethod (handle, IGCUserPeer_monodroidClearReferences);
 	abort_on_pending_java_exception ("A Java exception was thrown by monodroidClearReferences during GC bridge processing"sv);
@@ -449,6 +447,17 @@ jobject CrossReferenceTarget::get_handle () const noexcept
 	return context->control_block->handle;
 }
 
+bool CrossReferenceTarget::is_gc_user_peer_known () const noexcept
+{
+	if (is_temporary_peer) {
+		return true;
+	}
+
+	abort_unless (context != nullptr, "Context must not be null");
+	abort_unless (context->control_block != nullptr, "Control block must not be null");
+	return context->control_block->refs_added != 0;
+}
+
 void CrossReferenceTarget::mark_refs_added_if_needed () noexcept
 {
 	if (is_temporary_peer) {
@@ -472,22 +481,6 @@ void BridgeProcessing::log_missing_add_references_method ([[maybe_unused]] jclas
 
 	char *class_name = HostCommon::get_java_class_name_for_TypeManager (java_class);
 	log_errorf (LOG_GC, "Missing monodroidAddReferences method for object of class %s", optional_string (class_name));
-	free (class_name);
-#endif
-}
-
-[[gnu::always_inline]]
-void BridgeProcessing::log_missing_clear_references_method ([[maybe_unused]] jclass java_class) noexcept
-{
-	log_errorf (LOG_DEFAULT, "Failed to find monodroidClearReferences method");
-#if DEBUG
-	abort_if_invalid_pointer_argument (java_class, "java_class");
-	if (!Logger::gc_spew_enabled ()) [[likely]] {
-		return;
-	}
-
-	char *class_name = HostCommon::get_java_class_name_for_TypeManager (java_class);
-	log_errorf (LOG_GC, "Missing monodroidClearReferences method for object of class %s", optional_string (class_name));
 	free (class_name);
 #endif
 }
@@ -596,5 +589,5 @@ void BridgeProcessing::log_gc_summary () noexcept
 		}
 	}
 
-	log_info (LOG_GC, "GC cleanup summary: {} objects tested - resurrecting {}.", total, alive);
+	log_infof (LOG_GC, "GC cleanup summary: %zu objects tested - resurrecting %zu.", total, alive);
 }

@@ -47,11 +47,11 @@ public class FastTimingTests : DeviceTest
 		using var builder = CreateApkBuilder (packageName: packageName);
 		Assert.IsTrue (builder.Install (proj), "Project should have installed.");
 
-		string previousMonoLog = RunAdbCommand ("shell getprop debug.mono.log").Trim ();
-		string previousMonoTiming = RunAdbCommand ("shell getprop debug.mono.timing").Trim ();
+		string previousDotnetLog = RunAdbCommand ("shell getprop debug.dotnet.log").Trim ();
+		string previousDotnetTiming = RunAdbCommand ("shell getprop debug.dotnet.timing").Trim ();
 		try {
-			RunAdbCommand ("shell setprop debug.mono.log timing=fast-bare");
-			RunAdbCommand ($"shell setprop debug.mono.timing to-file,filename={timingFileName}");
+			RunAdbCommand ("shell setprop debug.dotnet.log timing=fast-bare");
+			RunAdbCommand ($"shell setprop debug.dotnet.timing to-file,filename={timingFileName}");
 			ClearAdbLogcat ();
 
 			bool sawBufferGrowth = false;
@@ -79,10 +79,10 @@ public class FastTimingTests : DeviceTest
 		} finally {
 			RunAdbCommand ($"shell am force-stop {proj.PackageName}");
 			RunAdbCommand ($"shell run-as {proj.PackageName} rm -f cache/{timingFileName}");
-			string monoLogValue = previousMonoLog.Length == 0 ? "\"\"" : $"\"{previousMonoLog}\"";
-			RunAdbCommand ($"shell setprop debug.mono.log {monoLogValue}");
-			string monoTimingValue = previousMonoTiming.Length == 0 ? "\"\"" : $"\"{previousMonoTiming}\"";
-			RunAdbCommand ($"shell setprop debug.mono.timing {monoTimingValue}");
+			string dotnetLogValue = previousDotnetLog.Length == 0 ? "\"\"" : $"\"{previousDotnetLog}\"";
+			RunAdbCommand ($"shell setprop debug.dotnet.log {dotnetLogValue}");
+			string dotnetTimingValue = previousDotnetTiming.Length == 0 ? "\"\"" : $"\"{previousDotnetTiming}\"";
+			RunAdbCommand ($"shell setprop debug.dotnet.timing {dotnetTimingValue}");
 		}
 	}
 }
