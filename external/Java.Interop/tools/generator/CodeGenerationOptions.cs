@@ -71,6 +71,12 @@ namespace MonoDroid.Generation
 		// [UnmanagedCallersOnly] method which forwards to a shared typed marshaling helper,
 		// and omit the `cb_*` delegate cache field and the `Get*Handler ()` connector method.
 		public bool UseUnmanagedCallersOnlyCallbacks { get; set; }
+
+		// Compact, deterministic names for the callback infrastructure emitted for
+		// UseUnmanagedCallersOnlyCallbacks. Shared so that a [Register] connector and the callback
+		// it names agree even when they are emitted by different source writers.
+		public generator.SourceWriters.CallbackNameAllocator CallbackNames { get; } = new generator.SourceWriters.CallbackNameAllocator ();
+
 		public bool RemoveConstSugar => BuildingCoreAssembly;
 
 		bool? buildingCoreAssembly;

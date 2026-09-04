@@ -2484,10 +2484,22 @@ public sealed class JavaPeerScanner : IDisposable
 
 	/// <summary>
 	/// Derives the native callback method name from a <c>[Register]</c> attribute's Connector field.
-	/// The Connector may be a simple name like <c>"GetOnCreate_Landroid_os_Bundle_Handler"</c>
-	/// or a qualified name like <c>"GetOnClick_Landroid_view_View_Handler:Android.Views.View/IOnClickListenerInvoker, Mono.Android, …"</c>.
-	/// In both cases the result is e.g. <c>"n_OnCreate_Landroid_os_Bundle_"</c>.
-	/// Falls back to <c>"n_{managedName}"</c> when the Connector doesn't follow the expected pattern.
+	/// <para>
+	/// A legacy connector names the <c>Get*Handler</c> connector method, either bare
+	/// (<c>"GetOnCreate_Landroid_os_Bundle_Handler"</c>) or with a type qualifier
+	/// (<c>"GetOnClick_Landroid_view_View_Handler:Android.Views.View/IOnClickListenerInvoker, Mono.Android, …"</c>),
+	/// and the callback name is recovered by rewriting <c>Get…Handler</c> to <c>n_…</c>.
+	/// </para>
+	/// <para>
+	/// An assembly using the <see cref="JavaPeerCallbackFormatAttribute" /> version 2 format has no
+	/// connector method for a callback which became <c>[UnmanagedCallersOnly]</c>; there is nothing
+	/// left to derive a name from, because the callback name no longer encodes the Java signature.
+	/// Such a connector therefore stores the callback name itself, keeping any type qualifier:
+	/// <c>"n_OnClick_1:Android.Views.View/IOnClickListenerInvoker, Mono.Android, …"</c>.  The
+	/// leading <c>n_</c> is what distinguishes the two forms — no legacy connector method name can
+	/// begin with it, since they all begin with <c>Get</c>.
+	/// </para>
+	/// Falls back to <c>"n_{managedName}"</c> when the Connector doesn't follow either pattern.
 	/// </summary>
 	static string GetNativeCallbackName (string? connector, string managedName, bool isConstructor)
 	{
@@ -2499,6 +2511,10 @@ public sealed class JavaPeerScanner : IDisposable
 			// Strip the optional type qualifier after ':'
 			int colonIndex = connector.IndexOf (':');
 			string handlerName = colonIndex >= 0 ? connector.Substring (0, colonIndex) : connector;
+
+			if (handlerName.StartsWith ("n_", StringComparison.Ordinal)) {
+				return handlerName;
+			}
 
 			if (handlerName.StartsWith ("Get", StringComparison.Ordinal)
 				&& handlerName.EndsWith ("Handler", StringComparison.Ordinal)) {

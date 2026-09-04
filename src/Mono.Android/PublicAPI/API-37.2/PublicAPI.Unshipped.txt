@@ -7,63 +7,63 @@ Java.Interop.JavaPeerCallbackFormatAttribute.Version.get -> int
 Java.Interop.JniMarshalTyped
 const Java.Interop.JavaPeerCallbackFormatAttribute.ConnectorDelegates = 1 -> int
 const Java.Interop.JavaPeerCallbackFormatAttribute.UnmanagedCallersOnlyCallbacks = 2 -> int
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_O<TPeer>(nint jnienv, nint self, delegate*<TPeer!, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OO<TPeer, T0>(nint jnienv, nint self, nint native_p0, delegate*<TPeer!, T0?, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OOO<TPeer, T0, T1>(nint jnienv, nint self, nint native_p0, nint native_p1, delegate*<TPeer!, T0?, T1?, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OOOO<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, nint native_p1, nint native_p2, delegate*<TPeer!, T0?, T1?, T2?, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OOOS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, nint native_p0, nint native_p1, nint native_p2, delegate*<TPeer!, T0?, T1?, T2?, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OOOX<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, nint native_p1, nint native_p2, delegate*<TPeer!, T0?, T1?, T2?, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OOS<TPeer, T0, T1, TResult>(nint jnienv, nint self, nint native_p0, nint native_p1, delegate*<TPeer!, T0?, T1?, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OOSO<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, nint native_p1, T2 p2, delegate*<TPeer!, T0?, T1?, T2, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OOSS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, nint native_p0, nint native_p1, T2 p2, delegate*<TPeer!, T0?, T1?, T2, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OOSX<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, nint native_p1, T2 p2, delegate*<TPeer!, T0?, T1?, T2, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OOX<TPeer, T0, T1>(nint jnienv, nint self, nint native_p0, nint native_p1, delegate*<TPeer!, T0?, T1?, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OS<TPeer, T0, TResult>(nint jnienv, nint self, nint native_p0, delegate*<TPeer!, T0?, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OSO<TPeer, T0, T1>(nint jnienv, nint self, nint native_p0, T1 p1, delegate*<TPeer!, T0?, T1, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OSOO<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, T1 p1, nint native_p2, delegate*<TPeer!, T0?, T1, T2?, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OSOS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, nint native_p0, T1 p1, nint native_p2, delegate*<TPeer!, T0?, T1, T2?, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OSOX<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, T1 p1, nint native_p2, delegate*<TPeer!, T0?, T1, T2?, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OSS<TPeer, T0, T1, TResult>(nint jnienv, nint self, nint native_p0, T1 p1, delegate*<TPeer!, T0?, T1, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OSSO<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, T1 p1, T2 p2, delegate*<TPeer!, T0?, T1, T2, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OSSS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, nint native_p0, T1 p1, T2 p2, delegate*<TPeer!, T0?, T1, T2, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OSSX<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, T1 p1, T2 p2, delegate*<TPeer!, T0?, T1, T2, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OSX<TPeer, T0, T1>(nint jnienv, nint self, nint native_p0, T1 p1, delegate*<TPeer!, T0?, T1, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_OX<TPeer, T0>(nint jnienv, nint self, nint native_p0, delegate*<TPeer!, T0?, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_S<TPeer, TResult>(nint jnienv, nint self, delegate*<TPeer!, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SO<TPeer, T0>(nint jnienv, nint self, T0 p0, delegate*<TPeer!, T0, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SOO<TPeer, T0, T1>(nint jnienv, nint self, T0 p0, nint native_p1, delegate*<TPeer!, T0, T1?, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SOOO<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, nint native_p1, nint native_p2, delegate*<TPeer!, T0, T1?, T2?, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SOOS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, T0 p0, nint native_p1, nint native_p2, delegate*<TPeer!, T0, T1?, T2?, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SOOX<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, nint native_p1, nint native_p2, delegate*<TPeer!, T0, T1?, T2?, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SOS<TPeer, T0, T1, TResult>(nint jnienv, nint self, T0 p0, nint native_p1, delegate*<TPeer!, T0, T1?, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SOSO<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, nint native_p1, T2 p2, delegate*<TPeer!, T0, T1?, T2, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SOSS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, T0 p0, nint native_p1, T2 p2, delegate*<TPeer!, T0, T1?, T2, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SOSX<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, nint native_p1, T2 p2, delegate*<TPeer!, T0, T1?, T2, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SOX<TPeer, T0, T1>(nint jnienv, nint self, T0 p0, nint native_p1, delegate*<TPeer!, T0, T1?, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SS<TPeer, T0, TResult>(nint jnienv, nint self, T0 p0, delegate*<TPeer!, T0, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSO<TPeer, T0, T1>(nint jnienv, nint self, T0 p0, T1 p1, delegate*<TPeer!, T0, T1, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSOO<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, T1 p1, nint native_p2, delegate*<TPeer!, T0, T1, T2?, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSOS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, T0 p0, T1 p1, nint native_p2, delegate*<TPeer!, T0, T1, T2?, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSOX<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, T1 p1, nint native_p2, delegate*<TPeer!, T0, T1, T2?, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSS<TPeer, T0, T1, TResult>(nint jnienv, nint self, T0 p0, T1 p1, delegate*<TPeer!, T0, T1, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSO<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, delegate*<TPeer!, T0, T1, T2, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, delegate*<TPeer!, T0, T1, T2, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSO<TPeer, T0, T1, T2, T3>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, delegate*<TPeer!, T0, T1, T2, T3, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSS<TPeer, T0, T1, T2, T3, TResult>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, delegate*<TPeer!, T0, T1, T2, T3, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSO<TPeer, T0, T1, T2, T3, T4>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate*<TPeer!, T0, T1, T2, T3, T4, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSS<TPeer, T0, T1, T2, T3, T4, TResult>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate*<TPeer!, T0, T1, T2, T3, T4, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSSO<TPeer, T0, T1, T2, T3, T4, T5>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSSS<TPeer, T0, T1, T2, T3, T4, T5, TResult>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSSSO<TPeer, T0, T1, T2, T3, T4, T5, T6>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, T6, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSSSS<TPeer, T0, T1, T2, T3, T4, T5, T6, TResult>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, T6, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSSSSO<TPeer, T0, T1, T2, T3, T4, T5, T6, T7>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, T6, T7, Android.Runtime.IJavaObject?> body) -> nint
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSSSSS<TPeer, T0, T1, T2, T3, T4, T5, T6, T7, TResult>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, T6, T7, TResult> body) -> TResult
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSSSSX<TPeer, T0, T1, T2, T3, T4, T5, T6, T7>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, T6, T7, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSSSX<TPeer, T0, T1, T2, T3, T4, T5, T6>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, T6, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSSX<TPeer, T0, T1, T2, T3, T4, T5>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSSX<TPeer, T0, T1, T2, T3, T4>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate*<TPeer!, T0, T1, T2, T3, T4, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSSX<TPeer, T0, T1, T2, T3>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, delegate*<TPeer!, T0, T1, T2, T3, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSSX<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, delegate*<TPeer!, T0, T1, T2, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SSX<TPeer, T0, T1>(nint jnienv, nint self, T0 p0, T1 p1, delegate*<TPeer!, T0, T1, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_SX<TPeer, T0>(nint jnienv, nint self, T0 p0, delegate*<TPeer!, T0, void> body) -> void
-static Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_X<TPeer>(nint jnienv, nint self, delegate*<TPeer!, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_O<TPeer>(nint jnienv, nint self, delegate*<TPeer!, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_OO<TPeer, T0>(nint jnienv, nint self, nint native_p0, delegate*<TPeer!, T0?, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_OOO<TPeer, T0, T1>(nint jnienv, nint self, nint native_p0, nint native_p1, delegate*<TPeer!, T0?, T1?, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_OOOO<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, nint native_p1, nint native_p2, delegate*<TPeer!, T0?, T1?, T2?, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_OOOS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, nint native_p0, nint native_p1, nint native_p2, delegate*<TPeer!, T0?, T1?, T2?, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_OOOX<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, nint native_p1, nint native_p2, delegate*<TPeer!, T0?, T1?, T2?, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_OOS<TPeer, T0, T1, TResult>(nint jnienv, nint self, nint native_p0, nint native_p1, delegate*<TPeer!, T0?, T1?, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_OOSO<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, nint native_p1, T2 p2, delegate*<TPeer!, T0?, T1?, T2, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_OOSS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, nint native_p0, nint native_p1, T2 p2, delegate*<TPeer!, T0?, T1?, T2, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_OOSX<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, nint native_p1, T2 p2, delegate*<TPeer!, T0?, T1?, T2, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_OOX<TPeer, T0, T1>(nint jnienv, nint self, nint native_p0, nint native_p1, delegate*<TPeer!, T0?, T1?, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_OS<TPeer, T0, TResult>(nint jnienv, nint self, nint native_p0, delegate*<TPeer!, T0?, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_OSO<TPeer, T0, T1>(nint jnienv, nint self, nint native_p0, T1 p1, delegate*<TPeer!, T0?, T1, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_OSOO<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, T1 p1, nint native_p2, delegate*<TPeer!, T0?, T1, T2?, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_OSOS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, nint native_p0, T1 p1, nint native_p2, delegate*<TPeer!, T0?, T1, T2?, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_OSOX<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, T1 p1, nint native_p2, delegate*<TPeer!, T0?, T1, T2?, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_OSS<TPeer, T0, T1, TResult>(nint jnienv, nint self, nint native_p0, T1 p1, delegate*<TPeer!, T0?, T1, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_OSSO<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, T1 p1, T2 p2, delegate*<TPeer!, T0?, T1, T2, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_OSSS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, nint native_p0, T1 p1, T2 p2, delegate*<TPeer!, T0?, T1, T2, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_OSSX<TPeer, T0, T1, T2>(nint jnienv, nint self, nint native_p0, T1 p1, T2 p2, delegate*<TPeer!, T0?, T1, T2, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_OSX<TPeer, T0, T1>(nint jnienv, nint self, nint native_p0, T1 p1, delegate*<TPeer!, T0?, T1, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_OX<TPeer, T0>(nint jnienv, nint self, nint native_p0, delegate*<TPeer!, T0?, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_S<TPeer, TResult>(nint jnienv, nint self, delegate*<TPeer!, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_SO<TPeer, T0>(nint jnienv, nint self, T0 p0, delegate*<TPeer!, T0, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_SOO<TPeer, T0, T1>(nint jnienv, nint self, T0 p0, nint native_p1, delegate*<TPeer!, T0, T1?, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_SOOO<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, nint native_p1, nint native_p2, delegate*<TPeer!, T0, T1?, T2?, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_SOOS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, T0 p0, nint native_p1, nint native_p2, delegate*<TPeer!, T0, T1?, T2?, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_SOOX<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, nint native_p1, nint native_p2, delegate*<TPeer!, T0, T1?, T2?, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_SOS<TPeer, T0, T1, TResult>(nint jnienv, nint self, T0 p0, nint native_p1, delegate*<TPeer!, T0, T1?, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_SOSO<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, nint native_p1, T2 p2, delegate*<TPeer!, T0, T1?, T2, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_SOSS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, T0 p0, nint native_p1, T2 p2, delegate*<TPeer!, T0, T1?, T2, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_SOSX<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, nint native_p1, T2 p2, delegate*<TPeer!, T0, T1?, T2, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_SOX<TPeer, T0, T1>(nint jnienv, nint self, T0 p0, nint native_p1, delegate*<TPeer!, T0, T1?, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_SS<TPeer, T0, TResult>(nint jnienv, nint self, T0 p0, delegate*<TPeer!, T0, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_SSO<TPeer, T0, T1>(nint jnienv, nint self, T0 p0, T1 p1, delegate*<TPeer!, T0, T1, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_SSOO<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, T1 p1, nint native_p2, delegate*<TPeer!, T0, T1, T2?, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_SSOS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, T0 p0, T1 p1, nint native_p2, delegate*<TPeer!, T0, T1, T2?, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_SSOX<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, T1 p1, nint native_p2, delegate*<TPeer!, T0, T1, T2?, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_SSS<TPeer, T0, T1, TResult>(nint jnienv, nint self, T0 p0, T1 p1, delegate*<TPeer!, T0, T1, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_SSSO<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, delegate*<TPeer!, T0, T1, T2, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_SSSS<TPeer, T0, T1, T2, TResult>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, delegate*<TPeer!, T0, T1, T2, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_SSSSO<TPeer, T0, T1, T2, T3>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, delegate*<TPeer!, T0, T1, T2, T3, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_SSSSS<TPeer, T0, T1, T2, T3, TResult>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, delegate*<TPeer!, T0, T1, T2, T3, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_SSSSSO<TPeer, T0, T1, T2, T3, T4>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate*<TPeer!, T0, T1, T2, T3, T4, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_SSSSSS<TPeer, T0, T1, T2, T3, T4, TResult>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate*<TPeer!, T0, T1, T2, T3, T4, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_SSSSSSO<TPeer, T0, T1, T2, T3, T4, T5>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_SSSSSSS<TPeer, T0, T1, T2, T3, T4, T5, TResult>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_SSSSSSSO<TPeer, T0, T1, T2, T3, T4, T5, T6>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, T6, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_SSSSSSSS<TPeer, T0, T1, T2, T3, T4, T5, T6, TResult>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, T6, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_SSSSSSSSO<TPeer, T0, T1, T2, T3, T4, T5, T6, T7>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, T6, T7, Android.Runtime.IJavaObject?> body) -> nint
+static Java.Interop.JniMarshalTyped.Invoke_SSSSSSSSS<TPeer, T0, T1, T2, T3, T4, T5, T6, T7, TResult>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, T6, T7, TResult> body) -> TResult
+static Java.Interop.JniMarshalTyped.Invoke_SSSSSSSSX<TPeer, T0, T1, T2, T3, T4, T5, T6, T7>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, T6, T7, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_SSSSSSSX<TPeer, T0, T1, T2, T3, T4, T5, T6>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, T6, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_SSSSSSX<TPeer, T0, T1, T2, T3, T4, T5>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate*<TPeer!, T0, T1, T2, T3, T4, T5, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_SSSSSX<TPeer, T0, T1, T2, T3, T4>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate*<TPeer!, T0, T1, T2, T3, T4, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_SSSSX<TPeer, T0, T1, T2, T3>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, T3 p3, delegate*<TPeer!, T0, T1, T2, T3, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_SSSX<TPeer, T0, T1, T2>(nint jnienv, nint self, T0 p0, T1 p1, T2 p2, delegate*<TPeer!, T0, T1, T2, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_SSX<TPeer, T0, T1>(nint jnienv, nint self, T0 p0, T1 p1, delegate*<TPeer!, T0, T1, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_SX<TPeer, T0>(nint jnienv, nint self, T0 p0, delegate*<TPeer!, T0, void> body) -> void
+static Java.Interop.JniMarshalTyped.Invoke_X<TPeer>(nint jnienv, nint self, delegate*<TPeer!, void> body) -> void

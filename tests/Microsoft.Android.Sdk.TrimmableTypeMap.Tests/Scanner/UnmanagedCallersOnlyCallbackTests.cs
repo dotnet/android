@@ -189,6 +189,71 @@ public class UnmanagedCallersOnlyCallbackTests : FixtureTestBase
 		Assert.Equal ("UcoWidget", reader.GetString (reader.GetTypeReference ((TypeReferenceHandle) callbackRef.Parent).Name));
 	}
 
+	const string CompactWidget = "Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures.MyCompactWidget";
+	const string QualifiedWidget = "Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures.MyQualifiedWidget";
+
+	[Fact]
+	public void Scanner_ReadsCompactCallbackNamesFromTheConnector ()
+	{
+		// A compact connector *is* the callback name, so it must be taken verbatim rather than
+		// being rewritten from Get*Handler or guessed as n_{managedName}.  Guessing would collapse
+		// both overloads onto "n_Remove".
+		var peer = FindPeer (CompactWidget);
+
+		Assert.True (FindMarshalMethod (peer, "n_Remove").IsUnmanagedCallersOnlyCallback);
+		Assert.True (FindMarshalMethod (peer, "n_Remove_1").IsUnmanagedCallersOnlyCallback);
+	}
+
+	[Fact]
+	public void Scanner_CompactConnector_KeepsItsOwnerQualifier ()
+	{
+		// Only the segment before ':' is the callback name; the owner qualifier after it is left
+		// untouched so the existing declaring-type resolution keeps working unchanged.
+		var peer = FindPeer (QualifiedWidget);
+		var method = FindMarshalMethod (peer, "n_Handle");
+
+		Assert.Equal ("n_Handle", method.NativeCallbackName);
+		Assert.StartsWith ("n_Handle:", method.Connector);
+		Assert.Contains ("TestUcoFixtures.CallbackHost, TestUcoFixtures", method.Connector);
+	}
+
+	[Fact]
+	public void ModelBuilder_CompactCallbacks_AreRegisteredDirectly ()
+	{
+		var model = ModelBuilder.Build (UcoPeers, "TestUcoTypeMap.dll", "TestUcoTypeMap");
+		var proxy = FindProxy (model, CompactWidget);
+
+		Assert.DoesNotContain (proxy.UcoMethods, u => u.CallbackMethodName == "n_Remove");
+		Assert.DoesNotContain (proxy.UcoMethods, u => u.CallbackMethodName == "n_Remove_1");
+
+		// Two distinct Java overloads of the same name must stay distinct all the way through.
+		var names = proxy.NativeRegistrations
+			.Select (r => r.DirectCallback?.CallbackMethodName)
+			.Where (n => n is not null)
+			.ToList ();
+		Assert.Contains ("n_Remove", names);
+		Assert.Contains ("n_Remove_1", names);
+	}
+
+	[Fact]
+	public void Emitter_CompactCallbacks_AreReferencedByName ()
+	{
+		using var stream = new MemoryStream ();
+		new TypeMapAssemblyGenerator (new Version (11, 0, 0, 0)).Generate (UcoPeers, stream, "TestUcoTypeMap");
+		stream.Position = 0;
+
+		using var peReader = new PEReader (stream);
+		var reader = peReader.GetMetadataReader ();
+
+		var memberRefNames = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (MetadataTokens.MemberReferenceHandle)
+			.Select (h => reader.GetString (reader.GetMemberReference (h).Name))
+			.ToList ();
+
+		Assert.Contains ("n_Remove", memberRefNames);
+		Assert.Contains ("n_Remove_1", memberRefNames);
+	}
+
 	static JavaPeerProxyData FindProxy (TypeMapAssemblyData model, string managedTypeName)
 	{
 		var shortName = managedTypeName.Substring (managedTypeName.LastIndexOf ('.') + 1);

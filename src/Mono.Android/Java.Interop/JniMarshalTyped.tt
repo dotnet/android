@@ -55,7 +55,7 @@ namespace Java.Interop {
 	/// peer return value.
 	/// </para>
 	/// <para>
-	/// Method names encode the shape being marshaled: <c>SafeInvokeMarshaled_</c> followed by one
+	/// Method names encode the shape being marshaled: <c>Invoke_</c> followed by one
 	/// character per argument (<c>O</c> = object reference, <c>S</c> = scalar) followed by one
 	/// character for the return value (<c>X</c> = void, <c>S</c> = scalar, <c>O</c> = object
 	/// reference).  Shapes which are not safely centralizable — strings, arrays and other
@@ -123,7 +123,7 @@ namespace Java.Interop {
 				break;
 			}
 
-			var name         = "SafeInvokeMarshaled_" + pattern + ret;
+			var name         = "Invoke_" + pattern + ret;
 			var fnPtr        = "delegate* managed<TPeer, " + string.Join ("", managedArgs.Select (a => a + ", ")) + managedReturn + ">";
 			var parameters   = "IntPtr jnienv, IntPtr self" +
 				string.Join ("", nativeParams.Select (p => ", " + p)) +

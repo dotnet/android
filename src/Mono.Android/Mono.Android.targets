@@ -209,6 +209,13 @@
   <!-- Runs ApiCompat to prevent API breakage -->
   <PropertyGroup>
     <ApiCompatibilityDir>../../tests/api-compatibility</ApiCompatibilityDir>
+    <!--
+      The experimental [UnmanagedCallersOnly] callback format renames the generated callback
+      infrastructure, which is observable through the Connector value of [Register].  That value is
+      an implementation detail rather than public API, but ApiCompat compares attribute arguments,
+      so the check is skipped while the experiment is enabled.  It still runs for a default build.
+    -->
+    <DisableApiCompatibilityCheck Condition=" '$(_MonoAndroidEnableUnmanagedCallersOnlyCallbacks)' == 'true' ">True</DisableApiCompatibilityCheck>
   </PropertyGroup>
   <ItemGroup>
     <ApiCompatibilityFiles Include="$(ApiCompatibilityDir)/acceptable-breakages-v*.txt" />
