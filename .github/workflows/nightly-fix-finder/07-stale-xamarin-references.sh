@@ -51,7 +51,7 @@ MONO_LINKS=$(grep -rnEi 'github\.com/mono/mono' \
     --exclude-dir=obj --exclude-dir=bin \
     --exclude-dir=Tests --exclude-dir=Test --exclude-dir=tests \
     Documentation/ src/ README.md 2>/dev/null \
-  | grep -v '^Documentation/guides/profiling.md:121:' \
+  | grep -vEi 'github\.com/mono/mono/blob/2019-10/mcs/tools/aprofutil/README\.md' \
   | shuf -n 20)
 if [ -n "$MONO_LINKS" ]; then
     echo "$MONO_LINKS"
