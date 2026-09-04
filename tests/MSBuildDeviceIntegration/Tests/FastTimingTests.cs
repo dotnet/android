@@ -17,7 +17,7 @@ public class FastTimingTests : DeviceTest
 		const string completedMessage = "FAST_TIMING_EVENTS_COMPLETED";
 		const string bufferGrowthMessage = "Allocated timing event buffer from 4096 to 8192";
 		const string dumpCompletedMessage = "[2/8] Assembly decompression";
-		string timingFileName = $"fast-timing-{new string ('x', 128)}.txt";
+		const string timingFileName = "fast-timing-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.txt";
 
 		if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
 			return;
