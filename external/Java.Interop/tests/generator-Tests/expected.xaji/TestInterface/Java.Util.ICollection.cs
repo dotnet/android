@@ -31,7 +31,7 @@ namespace Java.Util {
 			get { return _members_java_util_Collection; }
 		}
 
-		static readonly JniPeerMembers _members_java_util_Collection = new XAPeerMembers ("java/util/Collection", typeof (ICollectionInvoker));
+		static readonly JniPeerMembers _members_java_util_Collection = new JniPeerMembers ("java/util/Collection", typeof (ICollectionInvoker));
 
 		public ICollectionInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

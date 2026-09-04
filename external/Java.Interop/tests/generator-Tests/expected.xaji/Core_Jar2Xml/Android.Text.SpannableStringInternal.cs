@@ -18,7 +18,7 @@ namespace Android.Text {
 	// Metadata.xml XPath class reference: path="/api/package[@name='android.text']/class[@name='SpannableStringInternal']"
 	[global::Android.Runtime.Register ("android/text/SpannableStringInternal", DoNotGenerateAcw=true)]
 	public abstract partial class SpannableStringInternal : global::Java.Lang.Object {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("android/text/SpannableStringInternal", typeof (SpannableStringInternal));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("android/text/SpannableStringInternal", typeof (SpannableStringInternal));
 
 		internal static new IntPtr class_ref {
 			get { return _members.JniPeerType.PeerReference.Handle; }
@@ -80,7 +80,7 @@ namespace Android.Text {
 		{
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("android/text/SpannableStringInternal", typeof (SpannableStringInternalInvoker));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("android/text/SpannableStringInternal", typeof (SpannableStringInternalInvoker));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

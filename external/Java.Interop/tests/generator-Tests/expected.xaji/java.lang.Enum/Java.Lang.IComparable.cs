@@ -27,7 +27,7 @@ namespace Java.Lang {
 			get { return _members_java_lang_Comparable; }
 		}
 
-		static readonly JniPeerMembers _members_java_lang_Comparable = new XAPeerMembers ("java/lang/Comparable", typeof (IComparableInvoker));
+		static readonly JniPeerMembers _members_java_lang_Comparable = new JniPeerMembers ("java/lang/Comparable", typeof (IComparableInvoker));
 
 		public IComparableInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

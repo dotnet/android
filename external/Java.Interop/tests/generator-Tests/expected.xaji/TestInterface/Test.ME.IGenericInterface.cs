@@ -27,7 +27,7 @@ namespace Test.ME {
 			get { return _members_test_me_GenericInterface; }
 		}
 
-		static readonly JniPeerMembers _members_test_me_GenericInterface = new XAPeerMembers ("test/me/GenericInterface", typeof (IGenericInterfaceInvoker));
+		static readonly JniPeerMembers _members_test_me_GenericInterface = new JniPeerMembers ("test/me/GenericInterface", typeof (IGenericInterfaceInvoker));
 
 		public IGenericInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

@@ -18,7 +18,7 @@ namespace Xamarin.Google.Composable {
 	// Metadata.xml XPath class reference: path="/api/package[@name='com.com.google.compose']/class[@name='MyClass']"
 	[global::Android.Runtime.Register ("com/com/google/compose/MyClass", DoNotGenerateAcw=true)]
 	public partial class MyClass : global::Java.Lang.Object {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("com/com/google/compose/MyClass", typeof (MyClass));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("com/com/google/compose/MyClass", typeof (MyClass));
 
 		internal static new IntPtr class_ref {
 			get { return _members.JniPeerType.PeerReference.Handle; }

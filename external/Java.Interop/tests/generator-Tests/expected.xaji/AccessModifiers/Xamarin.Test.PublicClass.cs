@@ -39,7 +39,7 @@ namespace Xamarin.Test {
 				get { return _members_xamarin_test_PublicClass_ProtectedInterface; }
 			}
 
-			static readonly JniPeerMembers _members_xamarin_test_PublicClass_ProtectedInterface = new XAPeerMembers ("xamarin/test/PublicClass$ProtectedInterface", typeof (IProtectedInterfaceInvoker));
+			static readonly JniPeerMembers _members_xamarin_test_PublicClass_ProtectedInterface = new JniPeerMembers ("xamarin/test/PublicClass$ProtectedInterface", typeof (IProtectedInterfaceInvoker));
 
 			public IProtectedInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 			{
@@ -76,7 +76,7 @@ namespace Xamarin.Test {
 
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/PublicClass", typeof (PublicClass));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/PublicClass", typeof (PublicClass));
 
 		internal static new IntPtr class_ref {
 			get { return _members.JniPeerType.PeerReference.Handle; }

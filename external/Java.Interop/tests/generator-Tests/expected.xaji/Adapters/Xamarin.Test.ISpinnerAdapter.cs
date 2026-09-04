@@ -22,9 +22,9 @@ namespace Xamarin.Test {
 			get { return _members_xamarin_test_SpinnerAdapter; }
 		}
 
-		static readonly JniPeerMembers _members_xamarin_test_Adapter = new XAPeerMembers ("xamarin/test/Adapter", typeof (ISpinnerAdapterInvoker));
+		static readonly JniPeerMembers _members_xamarin_test_Adapter = new JniPeerMembers ("xamarin/test/Adapter", typeof (ISpinnerAdapterInvoker));
 
-		static readonly JniPeerMembers _members_xamarin_test_SpinnerAdapter = new XAPeerMembers ("xamarin/test/SpinnerAdapter", typeof (ISpinnerAdapterInvoker));
+		static readonly JniPeerMembers _members_xamarin_test_SpinnerAdapter = new JniPeerMembers ("xamarin/test/SpinnerAdapter", typeof (ISpinnerAdapterInvoker));
 
 		public ISpinnerAdapterInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

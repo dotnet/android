@@ -33,7 +33,7 @@ namespace Test.ME {
 			get { return _members_test_me_GenericPropertyInterface; }
 		}
 
-		static readonly JniPeerMembers _members_test_me_GenericPropertyInterface = new XAPeerMembers ("test/me/GenericPropertyInterface", typeof (IGenericPropertyInterfaceInvoker));
+		static readonly JniPeerMembers _members_test_me_GenericPropertyInterface = new JniPeerMembers ("test/me/GenericPropertyInterface", typeof (IGenericPropertyInterfaceInvoker));
 
 		public IGenericPropertyInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

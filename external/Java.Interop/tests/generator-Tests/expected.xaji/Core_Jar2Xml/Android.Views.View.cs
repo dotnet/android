@@ -39,7 +39,7 @@ namespace Android.Views {
 				get { return _members_android_view_View_OnClickListener; }
 			}
 
-			static readonly JniPeerMembers _members_android_view_View_OnClickListener = new XAPeerMembers ("android/view/View$OnClickListener", typeof (IOnClickListenerInvoker));
+			static readonly JniPeerMembers _members_android_view_View_OnClickListener = new JniPeerMembers ("android/view/View$OnClickListener", typeof (IOnClickListenerInvoker));
 
 			public IOnClickListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 			{
@@ -110,7 +110,7 @@ namespace Android.Views {
 
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("android/view/View", typeof (View));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("android/view/View", typeof (View));
 
 		internal static new IntPtr class_ref {
 			get { return _members.JniPeerType.PeerReference.Handle; }

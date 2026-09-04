@@ -21,7 +21,7 @@ internal partial class IParentChildInvoker : global::Java.Lang.Object, IParentCh
 		get { return _members_com_xamarin_android_Parent_Child; }
 	}
 
-	static readonly JniPeerMembers _members_com_xamarin_android_Parent_Child = new XAPeerMembers ("com/xamarin/android/Parent$Child", typeof (IParentChildInvoker));
+	static readonly JniPeerMembers _members_com_xamarin_android_Parent_Child = new JniPeerMembers ("com/xamarin/android/Parent$Child", typeof (IParentChildInvoker));
 
 	public IParentChildInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{
@@ -83,7 +83,7 @@ internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
 		get { return _members_com_xamarin_android_Parent; }
 	}
 
-	static readonly JniPeerMembers _members_com_xamarin_android_Parent = new XAPeerMembers ("com/xamarin/android/Parent", typeof (IParentInvoker));
+	static readonly JniPeerMembers _members_com_xamarin_android_Parent = new JniPeerMembers ("com/xamarin/android/Parent", typeof (IParentInvoker));
 
 	public IParentInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{

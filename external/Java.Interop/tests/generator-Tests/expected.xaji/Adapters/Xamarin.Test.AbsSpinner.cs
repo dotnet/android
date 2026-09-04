@@ -18,7 +18,7 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='AbsSpinner']"
 	[global::Android.Runtime.Register ("xamarin/test/AbsSpinner", DoNotGenerateAcw=true)]
 	public abstract partial class AbsSpinner : Xamarin.Test.AdapterView<Xamarin.Test.ISpinnerAdapter> {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/AbsSpinner", typeof (AbsSpinner));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/AbsSpinner", typeof (AbsSpinner));
 
 		internal static new IntPtr class_ref {
 			get { return _members.JniPeerType.PeerReference.Handle; }
@@ -108,7 +108,7 @@ namespace Xamarin.Test {
 		{
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/AbsSpinner", typeof (AbsSpinnerInvoker));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/AbsSpinner", typeof (AbsSpinnerInvoker));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

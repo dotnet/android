@@ -19,9 +19,9 @@ internal partial class IMyInterface2Invoker : global::Java.Lang.Object, IMyInter
 		get { return _members_java_code_IMyInterface2; }
 	}
 
-	static readonly JniPeerMembers _members_java_code_IMyInterface = new XAPeerMembers ("java/code/IMyInterface", typeof (IMyInterface2Invoker));
+	static readonly JniPeerMembers _members_java_code_IMyInterface = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterface2Invoker));
 
-	static readonly JniPeerMembers _members_java_code_IMyInterface2 = new XAPeerMembers ("java/code/IMyInterface2", typeof (IMyInterface2Invoker));
+	static readonly JniPeerMembers _members_java_code_IMyInterface2 = new JniPeerMembers ("java/code/IMyInterface2", typeof (IMyInterface2Invoker));
 
 	public IMyInterface2Invoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{

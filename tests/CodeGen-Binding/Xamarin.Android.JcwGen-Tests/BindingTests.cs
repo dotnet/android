@@ -226,6 +226,23 @@ namespace Xamarin.Android.JcwGenTests {
 		}
 
 		[Test]
+		public void XAPeerMembersWithoutThresholdOverride ()
+		{
+			using (var d = new XAPeerMembersWithoutThresholdDerived ()) {
+				d.Method ();
+				Assert.IsFalse (d.MethodInvoked);
+				Assert.IsFalse (d.DerivedMethodInvoked);
+				Assert.IsTrue (d.MethodInvokedWithoutThreshold);
+			}
+			using (var d = new ManagedXAPeerMembersWithoutThresholdDerived ()) {
+				d.Method ();
+				Assert.IsFalse (d.MethodInvoked);
+				Assert.IsFalse (d.DerivedMethodInvoked);
+				Assert.IsTrue (d.MethodInvokedWithoutThreshold);
+			}
+		}
+
+		[Test]
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void JavaAbstractMethodTest ()
 		{
