@@ -33,7 +33,7 @@ public class FastTimingTests : DeviceTest
 		proj.SetDefaultTargetDevice ();
 		if (useBundledLongFileName) {
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidEnvironment", "env.txt") {
-				TextContent = () => $"debug.dotnet.log=timing=fast-bare\ndebug.dotnet.timing=to-file,filename={timingFileName}",
+				TextContent = () => $"debug.dotnet.timing=to-file,filename={timingFileName}",
 			});
 		}
 		proj.MainActivity = proj.DefaultMainActivity
@@ -56,11 +56,10 @@ public class FastTimingTests : DeviceTest
 		string previousDotnetLog = RunAdbCommand ("shell getprop debug.dotnet.log").Trim ();
 		string previousDotnetTiming = RunAdbCommand ("shell getprop debug.dotnet.timing").Trim ();
 		try {
+			RunAdbCommand ("shell setprop debug.dotnet.log timing=fast-bare");
 			if (useBundledLongFileName) {
-				RunAdbCommand ("shell setprop debug.dotnet.log \"\"");
 				RunAdbCommand ("shell setprop debug.dotnet.timing \"\"");
 			} else {
-				RunAdbCommand ("shell setprop debug.dotnet.log timing=fast-bare");
 				RunAdbCommand ($"shell setprop debug.dotnet.timing to-file,filename={timingFileName}");
 			}
 			ClearAdbLogcat ();
