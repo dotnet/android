@@ -31665,12 +31665,6 @@ Android.Runtime.IntDefAttribute.Flag.set -> void
 Android.Runtime.IntDefAttribute.IntDefAttribute() -> void
 Android.Runtime.IntDefAttribute.Type.get -> string?
 Android.Runtime.IntDefAttribute.Type.set -> void
-Android.Runtime.IntDefinitionAttribute
-Android.Runtime.IntDefinitionAttribute.ConstantMember.get -> string?
-Android.Runtime.IntDefinitionAttribute.ConstantMember.set -> void
-Android.Runtime.IntDefinitionAttribute.IntDefinitionAttribute(string? constantMember) -> void
-Android.Runtime.IntDefinitionAttribute.JniField.get -> string?
-Android.Runtime.IntDefinitionAttribute.JniField.set -> void
 Android.Runtime.JavaArray<T>
 Android.Runtime.JavaArray<T>.Add(T item) -> void
 Android.Runtime.JavaArray<T>.Clear() -> void
