@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
@@ -17,7 +18,9 @@ namespace Xamarin.Android.Build.Tests
 	public class PackagingTest : BaseTest
 	{
 		[Test]
-		public void CheckR8MetadataFilesExist ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void CheckR8MetadataFilesExist (
+			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime,
+			[Values] bool dontOptimize)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -29,6 +32,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
+			proj.SetProperty (proj.ReleaseProperties, "_AndroidR8DontOptimize", dontOptimize);
 			// Projects must set $(AndroidCreateProguardMappingFile) to true to opt in
 			proj.SetProperty (proj.ReleaseProperties, "AndroidCreateProguardMappingFile", true);
 			proj.SetProperty ("AndroidPackageFormat", "aab");
@@ -41,7 +45,14 @@ namespace Xamarin.Android.Build.Tests
 				FileAssert.Exists (aab, $"'{aab}' should have been generated.");
 				using (var zip = ZipHelper.OpenZip (aab)) {
 					Assert.IsTrue (zip.Any (e => e.FullName == "BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map"), $"AAB file `{aab}` should contain the ProGuard mapping.");
-					Assert.IsTrue (zip.Any (e => e.FullName == "BUNDLE-METADATA/com.android.tools/r8.json"), $"AAB file `{aab}` should contain the R8 build metadata.");
+					var metadata = zip.SingleOrDefault (e => e.FullName == "BUNDLE-METADATA/com.android.tools/r8.json");
+					Assert.IsNotNull (metadata, $"AAB file `{aab}` should contain the R8 build metadata.");
+					using var stream = new MemoryStream ();
+					metadata.Extract (stream);
+					stream.Position = 0;
+					using var document = JsonDocument.Parse (stream);
+					var options = document.RootElement.GetProperty ("options");
+					Assert.AreEqual (!dontOptimize, options.GetProperty ("isOptimizationsEnabled").GetBoolean ());
 				}
 
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
