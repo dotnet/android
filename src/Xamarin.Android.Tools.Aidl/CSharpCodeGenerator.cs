@@ -121,6 +121,7 @@ namespace Xamarin.Android.Tools.Aidl
 			}
 		}
 
+
 		TextWriter w;
 		BindingDatabase database;
 
@@ -427,7 +428,6 @@ namespace Xamarin.Android.Tools.Aidl
 				return String.Format ("{0} = {1}.ReadInt () != 0;", arg, parcel);
 			case "bool []":
 				return String.Format ("{0} = {1}.CreateBooleanArray ();", arg, parcel);
-			// FIXME: I'm not sure if aidl should support byte...
 			case "sbyte":
 				return String.Format ("{0} = {1}.ReadByte ();", arg, parcel);
 			case "byte []":
@@ -501,7 +501,6 @@ namespace Xamarin.Android.Tools.Aidl
 				return String.Format ("{1}.ReadStringArray ({0});", arg, parcel);
 			case "bool []":
 				return String.Format ("{1}.ReadBooleanArray ({0});", arg, parcel);
-			// FIXME: I'm not sure if aidl should support byte...
 			case "byte []":
 				return String.Format ("{1}.ReadByteArray ({0});", arg, parcel);
 			case "char []":
@@ -565,7 +564,6 @@ namespace Xamarin.Android.Tools.Aidl
 				return parcel + ".WriteInt (" + arg + " ? 1 : 0);";
 			case "bool []":
 				return parcel + ".WriteBooleanArray (" + arg + ");";
-			// FIXME: I'm not sure if aidl should support byte...
 			case "sbyte":
 				return parcel + ".WriteByte (" + arg + ");";
 			case "byte []":
@@ -683,4 +681,3 @@ namespace Xamarin.Android.Tools.Aidl
 		}
 	}
 }
-
