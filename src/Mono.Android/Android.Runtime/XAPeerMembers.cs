@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 
 using Java.Interop;
 
@@ -39,22 +40,21 @@ namespace Android.Runtime {
 			// Throwable's value instead. Comparing the two also identifies a new binding
 			// derived from an old one: it inherits the old ThresholdType but replaces
 			// JniPeerMembers, so it must use the new metadata-based dispatch.
-			var peerType = GetThresholdType (value);
+			Type? peerType = null;
+			if (value is Java.Lang.Object o) {
+				peerType = GetObjectThresholdType (o);
+			} else if (value is Java.Lang.Throwable t) {
+				peerType = GetThrowableThresholdType (t);
+			}
 			return peerType == value.JniPeerMembers.ManagedPeerType ? peerType : null;
 		}
 
-		static Type? GetThresholdType (IJavaPeerable value)
-		{
-			var o = value as Java.Lang.Object;
-			if (o != null) {
-				return o.GetThresholdType ();
-			}
-			var t = value as Java.Lang.Throwable;
-			if (t != null) {
-				return t.GetThresholdType ();
-			}
-			return null;
-		}
+		// UnsafeAccessorKind.Method emits callvirt. These bind to the permanent base
+		// getters below, then dispatch to an override when an old binding declares one.
+		[UnsafeAccessor (UnsafeAccessorKind.Method, Name = "get_ThresholdType")]
+		static extern Type GetObjectThresholdType (Java.Lang.Object value);
 
+		[UnsafeAccessor (UnsafeAccessorKind.Method, Name = "get_ThresholdType")]
+		static extern Type GetThrowableThresholdType (Java.Lang.Throwable value);
 	}
 }

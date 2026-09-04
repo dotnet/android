@@ -87,16 +87,6 @@ namespace Java.Lang {
 			get { return typeof (Java.Lang.Object); }
 		}
 
-		internal IntPtr GetThresholdClass ()
-		{
-			return ThresholdClass;
-		}
-
-		internal System.Type GetThresholdType ()
-		{
-			return ThresholdType;
-		}
-
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		public new void UnregisterFromRuntime () => base.UnregisterFromRuntime ();
 
