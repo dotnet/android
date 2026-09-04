@@ -162,6 +162,8 @@ static class MetadataHelper
 		Version systemRuntimeVersion,
 		bool useSharedTypemapUniverse)
 	{
+		// This method needs only one hash. The content sink is used as the writer's always-present
+		// sink; the returned value is still solely the incremental-build fingerprint for the root.
 		using var writer = new FingerprintWriter (includeIncremental: false);
 		writer.WriteRaw (Sink.Content, GeneratorModuleVersionId.ToByteArray ());
 		writer.WriteString (Sink.Content, systemRuntimeVersion.ToString ());

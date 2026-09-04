@@ -85,6 +85,7 @@ public class FingerprintWriterTests : FixtureTestBase
 			Assert.Throws<InvalidOperationException> (() => writer.WriteBoolean (sink, true));
 			Assert.Throws<InvalidOperationException> (() => writer.WriteInt32 (sink, 1));
 			Assert.Throws<InvalidOperationException> (() => writer.WriteRaw (sink, [1, 2, 3]));
+			Assert.Equal (Sha256 ([]), writer.GetContentFingerprint ());
 		}
 	}
 

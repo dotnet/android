@@ -83,6 +83,23 @@ public sealed class RootTypeMapAssemblyGenerator
 			throw new ArgumentNullException (nameof (stream));
 		}
 
+		CreatePEBuilder (perAssemblyTypeMapNames, useSharedTypemapUniverse, assemblyName, moduleName).WritePE (stream);
+	}
+
+	/// <summary>
+	/// Generates the root typemap assembly and returns a read-only stream over the serialised image.
+	/// </summary>
+	internal Stream GenerateToStream (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, string? assemblyName = null, string? moduleName = null)
+	{
+		return CreatePEBuilder (perAssemblyTypeMapNames, useSharedTypemapUniverse, assemblyName, moduleName).CreatePEStream ();
+	}
+
+	PEAssemblyBuilder CreatePEBuilder (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, string? assemblyName, string? moduleName)
+	{
+		if (perAssemblyTypeMapNames is null) {
+			throw new ArgumentNullException (nameof (perAssemblyTypeMapNames));
+		}
+
 		assemblyName ??= DefaultAssemblyName;
 		moduleName ??= assemblyName + ".dll";
 
@@ -130,7 +147,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		// Emit TypeMapLoader class with Initialize() method
 		EmitTypeMapLoader (pe, anchorTypeHandle, perAssemblyTypeMapNames, useSharedTypemapUniverse, assemblyName);
 
-		pe.WritePE (stream);
+		return pe;
 	}
 
 	static void EmitSharedUniverseAssemblyTargetAttributes (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames)

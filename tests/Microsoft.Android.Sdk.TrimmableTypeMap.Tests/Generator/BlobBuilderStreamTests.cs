@@ -142,7 +142,7 @@ public class BlobBuilderStreamTests : FixtureTestBase
 	[Fact]
 	public void GeneratedAssemblyStreamIsAReadableImage ()
 	{
-		var generator = new TrimmableTypeMapGenerator (new CollectingLogger ());
+		var generator = new TrimmableTypeMapGenerator (new NoOpTrimmableTypeMapLogger ());
 		using var peReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
 		var reader = peReader.GetMetadataReader ();
 		var result = generator.Execute (
@@ -152,6 +152,7 @@ public class BlobBuilderStreamTests : FixtureTestBase
 
 		Assert.NotEmpty (result.GeneratedAssemblies);
 		foreach (var assembly in result.GeneratedAssemblies) {
+			Assert.IsType<BlobBuilderStream> (assembly.Content);
 			Assert.Equal (0, assembly.Content.Position);
 			Assert.True (assembly.Content.Length > 0);
 			using var generatedReader = new PEReader (assembly.Content);
@@ -160,30 +161,4 @@ public class BlobBuilderStreamTests : FixtureTestBase
 		}
 	}
 
-	sealed class CollectingLogger : ITrimmableTypeMapLogger
-	{
-		public void LogNoJavaPeerTypesFound () { }
-		public void LogJavaPeerScanInfo (int assemblyCount, int peerCount) { }
-		public void LogGeneratingJcwFilesInfo (int jcwPeerCount, int totalPeerCount) { }
-		public void LogDeferredRegistrationTypesInfo (int typeCount) { }
-		public void LogGeneratedTypeMapAssemblyInfo (string assemblyName, int typeCount) { }
-		public void LogGeneratedRootTypeMapInfo (int assemblyReferenceCount) { }
-		public void LogGeneratedTypeMapAssembliesInfo (int assemblyCount) { }
-		public void LogGeneratedJcwFilesInfo (int sourceCount) { }
-		public void LogRootingManifestReferencedTypeInfo (string javaTypeName, string managedTypeName) { }
-		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) { }
-		public void LogLibraryManifestMergeWarning (string message) { }
-		public void LogInvalidManifestPlaceholderWarning (string placeholders) { }
-		public void LogUnresolvableJavaPeerSkippedWarning (string managedTypeName, string assemblyName,
-			string unresolvedTypeName, string unresolvedAssemblyName, string unresolvedAssemblyPath) { }
-		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) { }
-		public void LogInvalidJavaNameError (string javaName, string invalidIdentifier) { }
-		public void LogDuplicateJavaTypeError (string javaName) { }
-		public void LogDuplicateJavaTypeDetailsError (string javaName, string managedTypeName) { }
-		public void LogExportFieldWithParametersError () { }
-		public void LogExportFieldOnGenericTypeError () { }
-		public void LogExportFieldReturnsVoidError () { }
-		public void LogCustomJavaObjectError (string managedTypeName) { }
-		public void LogCustomJavaObjectWarning (string managedTypeName) { }
-	}
 }

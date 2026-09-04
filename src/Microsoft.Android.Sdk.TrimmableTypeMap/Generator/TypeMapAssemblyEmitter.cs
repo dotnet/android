@@ -138,6 +138,8 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _jniEnvTypesRegisterNativesRef;
 	MemberReferenceHandle _readOnlySpanOfJniNativeMethodCtorRef;
 
+	// These handles belong to this emitter's readonly PE metadata builder and must not be shared
+	// across emitter instances.
 	BlobHandle _activationCtorSignature;
 	BlobHandle _createInstanceSignature;
 

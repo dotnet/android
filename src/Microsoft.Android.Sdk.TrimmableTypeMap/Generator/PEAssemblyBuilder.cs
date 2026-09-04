@@ -441,7 +441,6 @@ sealed class PEAssemblyBuilder
 		BlobHandle signature, Action<TrackedInstructionEncoder> emitIL,
 		Action<BlobBuilder>? encodeLocals, bool useBranches)
 	{
-
 		StandaloneSignatureHandle localSigHandle = default;
 		if (encodeLocals != null) {
 			var localSigBlob = new BlobBuilder (32);

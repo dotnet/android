@@ -123,34 +123,45 @@ sealed class FingerprintWriter : IDisposable
 
 	void Write (Sink sink, byte [] data, int offset, int count)
 	{
-		if ((sink & Sink.Content) != 0) {
-			if (count > contentBuffer.Length - contentPosition) {
-				FlushContent ();
-			}
-			if (count > contentBuffer.Length) {
-				contentHash.AppendData (data, offset, count);
-			} else {
-				Buffer.BlockCopy (data, offset, contentBuffer, contentPosition, count);
-				contentPosition += count;
-			}
-		}
 		if ((sink & Sink.Incremental) == 0) {
+			if ((sink & Sink.Content) != 0) {
+				WriteContent (data, offset, count);
+			}
 			return;
 		}
-		if (incrementalHash is null || incrementalBuffer is null) {
-			// Silently dropping the write would produce a fingerprint that looks valid but
-			// covers less than it claims to, so fail fast on the caller's mistake instead.
+
+		// Validate before writing either sink so a rejected Sink.Both write cannot leave the
+		// content fingerprint in a partially updated state.
+		if (incrementalHash is not IncrementalHash incrementalHashForWrite ||
+				incrementalBuffer is not byte [] incrementalBufferForWrite) {
 			throw new InvalidOperationException (
 				$"Cannot write to {nameof (Sink.Incremental)} because the incremental fingerprint was not requested.");
 		}
-		if (count > incrementalBuffer.Length - incrementalPosition) {
+
+		if ((sink & Sink.Content) != 0) {
+			WriteContent (data, offset, count);
+		}
+		if (count > incrementalBufferForWrite.Length - incrementalPosition) {
 			FlushIncremental ();
 		}
-		if (count > incrementalBuffer.Length) {
-			incrementalHash.AppendData (data, offset, count);
+		if (count > incrementalBufferForWrite.Length) {
+			incrementalHashForWrite.AppendData (data, offset, count);
 		} else {
-			Buffer.BlockCopy (data, offset, incrementalBuffer, incrementalPosition, count);
+			Buffer.BlockCopy (data, offset, incrementalBufferForWrite, incrementalPosition, count);
 			incrementalPosition += count;
+		}
+	}
+
+	void WriteContent (byte [] data, int offset, int count)
+	{
+		if (count > contentBuffer.Length - contentPosition) {
+			FlushContent ();
+		}
+		if (count > contentBuffer.Length) {
+			contentHash.AppendData (data, offset, count);
+		} else {
+			Buffer.BlockCopy (data, offset, contentBuffer, contentPosition, count);
+			contentPosition += count;
 		}
 	}
 

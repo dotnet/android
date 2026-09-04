@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection.PortableExecutable;
 using System.Xml.Linq;
@@ -382,10 +381,8 @@ public class TrimmableTypeMapGenerator
 			generateRoot = shouldGenerateTypeMapAssembly (rootAssemblyName, rootFingerprint);
 		}
 		if (generateRoot) {
-			var rootStream = new MemoryStream ();
 			var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
-			rootGenerator.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream);
-			rootStream.Position = 0;
+			var rootStream = rootGenerator.GenerateToStream (perAssemblyNames, useSharedTypemapUniverse);
 			generatedAssemblies.Add (new GeneratedAssembly (rootAssemblyName, rootStream));
 			logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
 		}

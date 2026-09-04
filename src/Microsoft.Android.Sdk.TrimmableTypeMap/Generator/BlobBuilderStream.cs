@@ -14,6 +14,8 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// Only the chunk arrays are retained — the <see cref="BlobBuilder"/> itself and the metadata
 /// graph that produced it stay collectible — so the live byte count matches what a
 /// <see cref="MemoryStream"/> copy would have held, without the transient second copy.
+/// The source builder must not be cleared, freed, or reused after this stream is created because
+/// the stream retains references to its chunk arrays.
 /// </remarks>
 sealed class BlobBuilderStream : Stream
 {
@@ -91,9 +93,6 @@ sealed class BlobBuilderStream : Stream
 			int within = (int) (position - segmentStarts [index]);
 			int available = segment.Count - within;
 			int toCopy = Math.Min (available, count);
-			if (segment.Array is null) {
-				break;
-			}
 			Buffer.BlockCopy (segment.Array, segment.Offset + within, buffer, offset, toCopy);
 			position += toCopy;
 			offset += toCopy;
