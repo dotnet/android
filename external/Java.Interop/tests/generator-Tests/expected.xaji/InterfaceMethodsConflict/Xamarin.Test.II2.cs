@@ -26,18 +26,6 @@ namespace Xamarin.Test {
 			get { return _members_xamarin_test_I2; }
 		}
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members_xamarin_test_I2.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members_xamarin_test_I2.ManagedPeerType; }
-		}
-
 		static readonly JniPeerMembers _members_xamarin_test_I2 = new XAPeerMembers ("xamarin/test/I2", typeof (II2Invoker));
 
 		public II2Invoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)

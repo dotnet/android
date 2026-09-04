@@ -9,10 +9,6 @@ internal partial class MyClassInvoker : MyClass {
 		get { return _members; }
 	}
 
-	protected override global::System.Type ThresholdType {
-		get { return _members.ManagedPeerType; }
-	}
-
 	public override unsafe int AbstractCount {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_AbstractCount' and count(parameter)=0]"
 		[Register ("get_AbstractCount", "()I", "Getget_AbstractCountHandler")]
@@ -49,4 +45,3 @@ internal partial class MyClassInvoker : MyClass {
 	}
 
 }
-

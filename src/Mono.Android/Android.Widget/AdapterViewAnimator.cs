@@ -79,43 +79,24 @@ namespace Android.Widget {
 			set { Adapter = JavaConvert.FromJavaObject<Android.Widget.IAdapter>(value); }
 		}
 
-                static IntPtr id_getAdapter;
-                static IntPtr id_setAdapter_Landroid_widget_Adapter_;
-                public Android.Widget.IAdapter? Adapter {
-                        [Register ("getAdapter", "()Landroid/widget/Adapter;", "GetGetAdapterHandler")]
-                        get {
-                                if (id_getAdapter == IntPtr.Zero)
-                                        id_getAdapter = JNIEnv.GetMethodID (class_ref, "getAdapter", "()Landroid/widget/Adapter;");
-                                Android.Widget.IAdapter? result;
-                                if (GetType () == ThresholdType)
-                                        result = Java.Lang.Object.GetObject<Android.Widget.IAdapter> (JNIEnv.CallObjectMethod  (Handle, id_getAdapter), JniHandleOwnership.TransferLocalRef);
-                                else
-                                        result = Java.Lang.Object.GetObject<Android.Widget.IAdapter> (
-                                                JNIEnv.CallNonvirtualObjectMethod  (
-                                                    Handle,
-                                                    ThresholdClass,
-                                                    JNIEnv.GetMethodID (ThresholdClass, "getAdapter", "()Landroid/widget/Adapter;")),
-                                                JniHandleOwnership.TransferLocalRef);
-                                GC.KeepAlive (this);
-                                return result;
-                        }
-                        set {
-                                if (id_setAdapter_Landroid_widget_Adapter_ == IntPtr.Zero)
-                                        id_setAdapter_Landroid_widget_Adapter_ = JNIEnv.GetMethodID (class_ref, "setAdapter", "(Landroid/widget/Adapter;)V");
-
-                                if (GetType () == ThresholdType)
-                                        JNIEnv.CallVoidMethod  (Handle, id_setAdapter_Landroid_widget_Adapter_, new JValue (JNIEnv.ToJniHandle (value)));
-                                else
-                                        JNIEnv.CallNonvirtualVoidMethod  (
-                                                Handle,
-                                                ThresholdClass,
-                                                JNIEnv.GetMethodID (ThresholdClass, "setAdapter", "(Landroid/widget/Adapter;)V"),
-                                                new JValue (JNIEnv.ToJniHandle ((IJavaObject?) value)));
-                               GC.KeepAlive (value);
-                               GC.KeepAlive (this);
-                        }
-
-                }
+		public unsafe Android.Widget.IAdapter? Adapter {
+			[Register ("getAdapter", "()Landroid/widget/Adapter;", "GetGetAdapterHandler")]
+			get {
+				const string id = "getAdapter.()Landroid/widget/Adapter;";
+				var reference = _members.InstanceMethods.InvokeVirtualObjectMethod (id, this, null);
+				return Java.Lang.Object.GetObject<Android.Widget.IAdapter> (reference.Handle, JniHandleOwnership.TransferLocalRef);
+			}
+			set {
+				const string id = "setAdapter.(Landroid/widget/Adapter;)V";
+				try {
+					JniArgumentValue* args = stackalloc JniArgumentValue [1];
+					args [0] = new JniArgumentValue ((value == null) ? IntPtr.Zero : ((Java.Lang.Object) value).Handle);
+					_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
+				} finally {
+					GC.KeepAlive (value);
+				}
+			}
+		}
 	}
 }
 
