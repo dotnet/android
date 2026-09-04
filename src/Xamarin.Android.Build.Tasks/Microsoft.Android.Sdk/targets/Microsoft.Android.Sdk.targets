@@ -5,6 +5,7 @@
     <!-- Normalize casing -->
     <TargetPlatformIdentifier>Android</TargetPlatformIdentifier>
     <_XamarinAndroidBuildTasksAssembly>..\tools\Xamarin.Android.Build.Tasks.dll</_XamarinAndroidBuildTasksAssembly>
+    <_MicrosoftAndroidBuildTasksAssembly>..\tools\Microsoft.Android.Build.Tasks.dll</_MicrosoftAndroidBuildTasksAssembly>
     <UsingAndroidNETSdk>true</UsingAndroidNETSdk>
     <!-- Enable nuget package conflict resolution -->
     <ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>

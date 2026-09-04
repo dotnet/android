@@ -7,7 +7,7 @@ using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 
-namespace Xamarin.Android.Tasks;
+namespace Microsoft.Android.Tasks;
 
 /// <summary>
 /// Emits empty stub assemblies for per-assembly typemaps (<c>_X.TypeMap.dll</c>) that the root

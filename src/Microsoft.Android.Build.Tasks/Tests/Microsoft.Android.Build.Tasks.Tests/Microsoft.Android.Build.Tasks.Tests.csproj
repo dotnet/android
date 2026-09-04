@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\..\..\Configuration.props" />
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <OutputPath>..\..\..\..\bin\Test$(Configuration)</OutputPath>
+    <IsPackable>false</IsPackable>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\..\..\product.snk</AssemblyOriginatorKeyFile>
+    <Nullable>annotations</Nullable>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
+
+  <ItemGroup>
+    <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\MockBuildEngine.cs" Link="MockBuildEngine.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Microsoft.Android.Build.Tasks.csproj" />
+  </ItemGroup>
+
+</Project>

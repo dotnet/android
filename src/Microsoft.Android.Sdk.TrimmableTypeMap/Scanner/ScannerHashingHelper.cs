@@ -27,16 +27,15 @@ internal static class ScannerHashingHelper
 
 	internal static string ToCrc64 (string ns, string assemblyName)
 	{
-		const int stackallocThresholdBytes = 256;
 		int byteCount = GetNamespaceAssemblyUtf8ByteCount (ns, assemblyName);
-		Span<byte> utf8Buffer = byteCount <= stackallocThresholdBytes
-			? stackalloc byte [stackallocThresholdBytes]
-			: new byte [byteCount];
-
-		int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, utf8Buffer.Slice (0, byteCount));
+		var utf8Buffer = new byte [byteCount];
+		int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, utf8Buffer);
+		var hasher = new System.IO.Hashing.Crc64 ();
+		// MSBuild can load the netstandard2.0 hashing assembly first, whose Span signatures
+		// cannot bind from this net11.0 assembly. The array API is compatible in both contexts.
+		hasher.Append (utf8Buffer);
+		ulong hashValue = BinaryPrimitives.ReverseEndianness (hasher.GetCurrentHashAsUInt64 ());
 		Span<byte> hash = stackalloc byte [8];
-		System.IO.Hashing.Crc64.Hash (utf8Buffer.Slice (0, bytesWritten), hash);
-		ulong hashValue = BinaryPrimitives.ReadUInt64LittleEndian (hash);
 		BinaryPrimitives.WriteUInt64LittleEndian (hash, hashValue ^ (ulong) bytesWritten);
 		return HexUtilities.ToHexString (hash, upperCase: false);
 	}
