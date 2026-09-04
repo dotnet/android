@@ -83,8 +83,12 @@ namespace Android.Widget {
 			[Register ("getAdapter", "()Landroid/widget/Adapter;", "GetGetAdapterHandler")]
 			get {
 				const string id = "getAdapter.()Landroid/widget/Adapter;";
-				var reference = _members.InstanceMethods.InvokeVirtualObjectMethod (id, this, null);
-				return Java.Lang.Object.GetObject<Android.Widget.IAdapter> (reference.Handle, JniHandleOwnership.TransferLocalRef);
+				try {
+					var reference = _members.InstanceMethods.InvokeVirtualObjectMethod (id, this, null);
+					return Java.Lang.Object.GetObject<Android.Widget.IAdapter> (reference.Handle, JniHandleOwnership.TransferLocalRef);
+				} finally {
+					GC.KeepAlive (this);
+				}
 			}
 			set {
 				const string id = "setAdapter.(Landroid/widget/Adapter;)V";
@@ -94,6 +98,7 @@ namespace Android.Widget {
 					_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
 				} finally {
 					GC.KeepAlive (value);
+					GC.KeepAlive (this);
 				}
 			}
 		}
