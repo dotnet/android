@@ -22,7 +22,7 @@ namespace Xamarin.Test {
 			get { return _members_xamarin_test_Adapter; }
 		}
 
-		static readonly JniPeerMembers _members_xamarin_test_Adapter = new XAPeerMembers ("xamarin/test/Adapter", typeof (IAdapterInvoker));
+		static readonly JniPeerMembers _members_xamarin_test_Adapter = new JniPeerMembers ("xamarin/test/Adapter", typeof (IAdapterInvoker));
 
 		public IAdapterInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

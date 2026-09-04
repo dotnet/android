@@ -1,7 +1,7 @@
 // Metadata.xml XPath class reference: path="/api/package[@name='com.example']/class[@name='MyClass']"
 [global::Android.Runtime.Register ("com/example/MyClass", DoNotGenerateAcw=true)]
 public partial class MyClass : Java.Lang.Object {
-	static readonly JniPeerMembers _members = new XAPeerMembers ("com/example/MyClass", typeof (MyClass));
+	static readonly JniPeerMembers _members = new JniPeerMembers ("com/example/MyClass", typeof (MyClass));
 
 	internal static new IntPtr class_ref {
 		get { return _members.JniPeerType.PeerReference.Handle; }

@@ -18,7 +18,7 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='BasePublicClass']"
 	[global::Android.Runtime.Register ("xamarin/test/BasePublicClass", DoNotGenerateAcw=true)]
 	public partial class BasePublicClass : global::Java.Lang.Object {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/BasePublicClass", typeof (BasePublicClass));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/BasePublicClass", typeof (BasePublicClass));
 
 		internal static new IntPtr class_ref {
 			get { return _members.JniPeerType.PeerReference.Handle; }

@@ -27,7 +27,7 @@ namespace Test.ME {
 			}
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/TestInterface", typeof (TestInterface));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("test/me/TestInterface", typeof (TestInterface));
 
 	}
 
@@ -88,7 +88,7 @@ namespace Test.ME {
 			get { return _members_test_me_TestInterface; }
 		}
 
-		static readonly JniPeerMembers _members_test_me_TestInterface = new XAPeerMembers ("test/me/TestInterface", typeof (ITestInterfaceInvoker));
+		static readonly JniPeerMembers _members_test_me_TestInterface = new JniPeerMembers ("test/me/TestInterface", typeof (ITestInterfaceInvoker));
 
 		public ITestInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

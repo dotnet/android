@@ -87,6 +87,11 @@ namespace Java.Lang {
 			get { return typeof (Java.Lang.Object); }
 		}
 
+		internal System.Type GetThresholdTypeForLegacyDispatch ()
+		{
+			return ThresholdType;
+		}
+
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		public new void UnregisterFromRuntime () => base.UnregisterFromRuntime ();
 

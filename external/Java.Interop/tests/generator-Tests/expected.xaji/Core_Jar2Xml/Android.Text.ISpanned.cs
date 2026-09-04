@@ -27,7 +27,7 @@ namespace Android.Text {
 			get { return _members_android_text_Spanned; }
 		}
 
-		static readonly JniPeerMembers _members_android_text_Spanned = new XAPeerMembers ("android/text/Spanned", typeof (ISpannedInvoker));
+		static readonly JniPeerMembers _members_android_text_Spanned = new JniPeerMembers ("android/text/Spanned", typeof (ISpannedInvoker));
 
 		public ISpannedInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

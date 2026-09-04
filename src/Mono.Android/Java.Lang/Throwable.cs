@@ -75,6 +75,11 @@ namespace Java.Lang {
 			get { return typeof (Java.Lang.Throwable); }
 		}
 
+		internal System.Type GetThresholdTypeForLegacyDispatch ()
+		{
+			return ThresholdType;
+		}
+
 		public unsafe Java.Lang.Class? Class {
 			[Register ("getClass", "()Ljava/lang/Class;", "GetGetClassHandler")]
 			get {

@@ -90,7 +90,7 @@ namespace Java.Lang {
 			}
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("java/lang/State", typeof (State));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("java/lang/State", typeof (State));
 
 		internal static new IntPtr class_ref {
 			get { return _members.JniPeerType.PeerReference.Handle; }

@@ -19,7 +19,7 @@ namespace Java.Lang {
 	[global::Android.Runtime.Register ("java/lang/Class", DoNotGenerateAcw=true)]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T"})]
 	public partial class Class : global::Java.Lang.Object {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("java/lang/Class", typeof (Class));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("java/lang/Class", typeof (Class));
 
 		internal static new IntPtr class_ref {
 			get { return _members.JniPeerType.PeerReference.Handle; }
