@@ -1260,6 +1260,12 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
 {0} - Java package or type name
 {1} - Java reserved keyword or restricted identifier</comment>
   </data>
+  <data name="XA4263" xml:space="preserve">
+    <value>The exported member '{0}' has unsupported signature type '{1}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter].</value>
+    <comment>The following are literal names and should not be translated: Java, [ExportParameter].
+{0} - Fully-qualified managed member name
+{1} - Managed parameter or return type</comment>
+  </data>
   <data name="XA0142" xml:space="preserve">
     <value>Command '{0}' failed.\n{1}</value>
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>

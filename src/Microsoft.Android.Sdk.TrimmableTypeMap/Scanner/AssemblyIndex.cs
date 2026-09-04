@@ -30,6 +30,7 @@ sealed class AssemblyIndex : IDisposable
 
 	public MetadataReader Reader { get; }
 	public string AssemblyName { get; }
+	public string MetadataAssemblyName { get; }
 	public string AssemblyPath { get; }
 	internal TypeRefSignatureTypeProvider TypeRefSignatureProvider { get; }
 
@@ -52,6 +53,11 @@ sealed class AssemblyIndex : IDisposable
 	/// Type-forwarded or otherwise exported types declared by this assembly.
 	/// </summary>
 	public HashSet<string> ExportedTypeNames { get; } = new (StringComparer.Ordinal);
+
+	/// <summary>
+	/// Maps forwarded managed type names to the target assembly simple name.
+	/// </summary>
+	public Dictionary<string, string> ForwardedTypeAssemblies { get; } = new (StringComparer.Ordinal);
 
 	/// <summary>
 	/// True iff the assembly's metadata mentions
@@ -77,6 +83,7 @@ sealed class AssemblyIndex : IDisposable
 		valueTypeReferences = new TypeRefData? [reader.TypeReferences.Count + 1];
 		Reader = reader;
 		AssemblyName = assemblyName;
+		MetadataAssemblyName = reader.GetString (reader.GetAssemblyDefinition ().Name);
 		AssemblyPath = assemblyPath;
 		TypeRefSignatureProvider = new TypeRefSignatureTypeProvider (this);
 	}
@@ -107,7 +114,12 @@ sealed class AssemblyIndex : IDisposable
 
 		foreach (var exportedTypeHandle in Reader.ExportedTypes) {
 			var exportedType = Reader.GetExportedType (exportedTypeHandle);
-			ExportedTypeNames.Add (GetExportedTypeFullName (exportedType));
+			var fullName = GetExportedTypeFullName (exportedType);
+			ExportedTypeNames.Add (fullName);
+			var forwardedAssemblyName = GetForwardedAssemblyName (exportedType);
+			if (forwardedAssemblyName is not null) {
+				ForwardedTypeAssemblies [fullName] = forwardedAssemblyName;
+			}
 		}
 
 		foreach (var typeHandle in Reader.TypeDefinitions) {
@@ -146,6 +158,18 @@ sealed class AssemblyIndex : IDisposable
 			var ns = Reader.GetString (exportedType.Namespace);
 			return MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
 		}
+
+		string? GetForwardedAssemblyName (ExportedType exportedType)
+		{
+			if (exportedType.Implementation.Kind == HandleKind.AssemblyReference) {
+				var assemblyReference = Reader.GetAssemblyReference ((AssemblyReferenceHandle) exportedType.Implementation);
+				return Reader.GetString (assemblyReference.Name);
+			}
+			if (exportedType.Implementation.Kind == HandleKind.ExportedType) {
+				return GetForwardedAssemblyName (Reader.GetExportedType ((ExportedTypeHandle) exportedType.Implementation));
+			}
+			return null;
+		}
 	}
 
 	(RegisterInfo? register, TypeAttributeInfo? attrs) ParseAttributes (TypeDefinition typeDef)
@@ -173,8 +197,6 @@ sealed class AssemblyIndex : IDisposable
 				registerInfo = registerInfo with { JniName = registerInfo.JniName.Replace ('.', '/') };
 			} else if (attrName == "JniTypeSignatureAttribute") {
 				registerInfo = ParseJniTypeSignatureAttribute (ca);
-			} else if (attrName == "ExportAttribute") {
-				// [Export] is a method-level attribute; it is parsed at scan time by JavaPeerScanner
 			} else if (IsKnownComponentAttribute (attrName)) {
 				attrInfo ??= CreateTypeAttributeInfo (attrName);
 				var value = DecodeAttribute (ca);

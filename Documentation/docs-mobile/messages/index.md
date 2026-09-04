@@ -229,6 +229,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4255](xa4255.md): Generated trimmable type map Java source '{path}' was not found.
 + [XA4256](xa4256.md): Skipping Java peer type '{type}' from assembly '{assembly}' because referenced type '{referencedType}' from assembly '{referencedAssembly}' could not be resolved in '{path}'. This type will not be included in the trimmable type map.
 + [XA4258](xa4258.md): Java name '{name}' contains reserved Java identifier '{identifier}'. Change the package or type name.
++ [XA4263](xa4263.md): The exported member '{member}' has unsupported signature type '{type}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter].
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
