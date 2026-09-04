@@ -269,7 +269,7 @@ public sealed class RootTypeMapAssemblyGenerator
 
 		var getExternalSpecs = new EntityHandle [count];
 		var getProxySpecs = new EntityHandle [count];
-		for (int i = 0; i < perAssemblyTypeMapNames.Count; i++) {
+		for (int i = 0; i < count; i++) {
 			var asmRef = pe.FindOrAddAssemblyRef (perAssemblyTypeMapNames [i]);
 			var perAsmAnchorRef = pe.Metadata.AddTypeReference (asmRef,
 				default, pe.Metadata.GetOrAddString ("__TypeMapAnchor"));

@@ -149,7 +149,10 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	// Pre-compiled framework JCWs whose Java names must not collide with app-generated JCWs.
 	public string? PreGeneratedJcwJar { get; set; }
 
-	// App manifest/layout roots only need to mutate framework maps when managed linking runs.
+	/// <summary>
+	/// When false, application-specific manifest and layout roots do not mutate framework peers,
+	/// allowing maps generated without app inputs to match the SDK's pre-generated framework maps.
+	/// </summary>
 	public bool RootFrameworkPeersFromApplication { get; set; } = true;
 
 	public bool CleanJavaSourceOutputDirectory { get; set; }
