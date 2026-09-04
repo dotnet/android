@@ -311,8 +311,8 @@ namespace {
 				return;
 			}
 
-			std::string const& code_cache_dir = AndroidSystem::get_app_code_cache_dir ();
-			if (code_cache_dir.empty ()) {
+			const char *code_cache_dir = AndroidSystem::get_app_code_cache_dir ();
+			if (*code_cache_dir == '\0') {
 				return;
 			}
 
