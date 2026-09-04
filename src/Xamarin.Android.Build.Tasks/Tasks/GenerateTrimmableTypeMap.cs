@@ -149,6 +149,13 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	// Pre-compiled framework JCWs whose Java names must not collide with app-generated JCWs.
 	public string? PreGeneratedJcwJar { get; set; }
 
+	// ACW map for pre-generated framework peers. Linked builds use this lightweight index to root
+	// framework types referenced only by application manifests or layouts without rescanning them.
+	public string? PreGeneratedFrameworkAcwMap { get; set; }
+
+	// Linker descriptor containing application-specific roots selected from PreGeneratedFrameworkAcwMap.
+	public string? PreGeneratedFrameworkRootDescriptorFile { get; set; }
+
 	/// <summary>
 	/// When false, application-specific manifest and layout roots do not mutate framework peers,
 	/// allowing maps generated without app inputs to match the SDK's pre-generated framework maps.
@@ -275,6 +282,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				? null
 				: MonoAndroidHelper.LoadCustomViewMapFile (BuildEngine4, CustomViewMapFile).Keys;
 			IReadOnlyCollection<string>? preGeneratedJcwNames = LoadPreGeneratedJcwNames ();
+			IReadOnlyList<JavaPeerInfo>? preGeneratedFrameworkPeers = LoadPreGeneratedFrameworkPeers ();
 
 			result = generator.Execute (
 				assemblies,
@@ -287,6 +295,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				generateTypeMapAssemblies: GenerateTypeMapAssemblies,
 				generateRootAssembly: GenerateRootAssembly,
 				preGeneratedTypeMapNames: preGeneratedTypeMapNames,
+				preGeneratedFrameworkPeers: preGeneratedFrameworkPeers,
 				errorOnCustomJavaObject: ErrorOnCustomJavaObject,
 				customViewTypeNames: customViewTypeNames,
 				preGeneratedJcwNames: preGeneratedJcwNames,
@@ -349,6 +358,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				Files.CopyIfStringChanged (GenerateApplicationRegistrationJava (result.ApplicationRegistrationTypes), ApplicationRegistrationOutputFile);
 				Log.LogDebugMessage ($"Generated ApplicationRegistration.java with {result.ApplicationRegistrationTypes.Count} deferred registration(s).");
 			}
+
+			WritePreGeneratedFrameworkRootDescriptor (preGeneratedFrameworkPeers);
 		} finally {
 			if (result is not null) {
 				foreach (var assembly in result.GeneratedAssemblies) {
@@ -593,5 +604,78 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			}
 		}
 		return names;
+	}
+
+	IReadOnlyList<JavaPeerInfo>? LoadPreGeneratedFrameworkPeers ()
+	{
+		if (!RootFrameworkPeersFromApplication || PreGeneratedFrameworkAcwMap.IsNullOrEmpty ()) {
+			return null;
+		}
+
+		var peers = new List<JavaPeerInfo> ();
+		foreach (var line in File.ReadLines (PreGeneratedFrameworkAcwMap)) {
+			if (line.Length == 0) {
+				continue;
+			}
+			int separator = line.IndexOf (';');
+			if (separator <= 0 || separator == line.Length - 1) {
+				throw new InvalidDataException ($"Invalid pre-generated framework ACW map entry: '{line}'.");
+			}
+
+			string managedName = line.Substring (0, separator);
+			int assemblySeparator = managedName.LastIndexOf (", ", StringComparison.Ordinal);
+			if (assemblySeparator <= 0) {
+				continue;
+			}
+
+			string managedTypeName = managedName.Substring (0, assemblySeparator);
+			string assemblyName = managedName.Substring (assemblySeparator + 2);
+			string javaName = line.Substring (separator + 1).Replace ('.', '/');
+			int namespaceSeparator = managedTypeName.LastIndexOf ('.');
+			peers.Add (new JavaPeerInfo {
+				JavaName = javaName,
+				CompatJniName = javaName,
+				ManagedTypeName = managedTypeName,
+				ManagedTypeNamespace = namespaceSeparator < 0 ? "" : managedTypeName.Substring (0, namespaceSeparator),
+				ManagedTypeShortName = managedTypeName.Substring (namespaceSeparator + 1),
+				AssemblyName = assemblyName,
+				IsFrameworkAssembly = true,
+				DoNotGenerateAcw = true,
+			});
+		}
+		return peers;
+	}
+
+	void WritePreGeneratedFrameworkRootDescriptor (IReadOnlyList<JavaPeerInfo>? frameworkPeers)
+	{
+		if (PreGeneratedFrameworkRootDescriptorFile.IsNullOrEmpty ()) {
+			return;
+		}
+
+		var roots = frameworkPeers?
+			.Where (peer => peer.IsUnconditional)
+			.Select (peer => (peer.AssemblyName, peer.ManagedTypeName))
+			.Distinct ()
+			.OrderBy (root => root.AssemblyName, StringComparer.Ordinal)
+			.ThenBy (root => root.ManagedTypeName, StringComparer.Ordinal)
+			.ToList () ?? [];
+		var directory = Path.GetDirectoryName (PreGeneratedFrameworkRootDescriptorFile);
+		if (!directory.IsNullOrEmpty ()) {
+			Directory.CreateDirectory (directory);
+		}
+
+		var document = new XDocument (
+			new XElement ("linker",
+				roots.GroupBy (root => root.AssemblyName, StringComparer.Ordinal)
+					.Select (assembly => new XElement ("assembly",
+						new XAttribute ("fullname", assembly.Key),
+						assembly.Select (root => new XElement ("type",
+							new XAttribute ("fullname", root.ManagedTypeName.Replace ('+', '/')),
+							new XAttribute ("preserve", "nothing")))))));
+		using var stream = new MemoryStream ();
+		document.Save (stream);
+		stream.Position = 0;
+		Files.CopyIfStreamChanged (stream, PreGeneratedFrameworkRootDescriptorFile);
+		Log.LogDebugMessage ($"Generated linker roots for {roots.Count} pre-generated framework type(s).");
 	}
 }

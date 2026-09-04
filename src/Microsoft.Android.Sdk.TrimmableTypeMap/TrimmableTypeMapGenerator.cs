@@ -54,7 +54,8 @@ public class TrimmableTypeMapGenerator
 		string? preGeneratedJcwSource = null,
 		bool rootFrameworkPeersFromApplication = true,
 		bool collectMarshalMethodsForNonAcw = true,
-		Func<string, byte [], bool>? shouldGenerateTypeMapAssembly = null)
+		Func<string, byte [], bool>? shouldGenerateTypeMapAssembly = null,
+		IReadOnlyList<JavaPeerInfo>? preGeneratedFrameworkPeers = null)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
@@ -71,9 +72,15 @@ public class TrimmableTypeMapGenerator
 		}
 		MarkFrameworkAssemblyPeers (allPeers, frameworkAssemblyNames);
 
-		RootCustomViewTypes (allPeers, customViewTypeNames, rootFrameworkPeersFromApplication);
+		var peersForApplicationRooting = allPeers;
+		if (preGeneratedFrameworkPeers is { Count: > 0 }) {
+			peersForApplicationRooting = new List<JavaPeerInfo> (allPeers.Count + preGeneratedFrameworkPeers.Count);
+			peersForApplicationRooting.AddRange (allPeers);
+			peersForApplicationRooting.AddRange (preGeneratedFrameworkPeers);
+		}
+		RootCustomViewTypes (peersForApplicationRooting, customViewTypeNames, rootFrameworkPeersFromApplication);
 		RootManifestReferencedTypes (
-			allPeers,
+			peersForApplicationRooting,
 			PrepareManifestForRooting (manifestTemplate, manifestConfig),
 			manifestConfig?.ApplicationJavaClass,
 			rootFrameworkPeersFromApplication);
@@ -437,7 +444,7 @@ public class TrimmableTypeMapGenerator
 					preGeneratedTypeMapNames: preGeneratedTypeMapNames);
 				rootStream.Position = 0;
 				generatedAssemblies.Add (new GeneratedAssembly (rootAssemblyName, rootStream));
-				logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
+				logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count + (preGeneratedTypeMapNames?.Count ?? 0));
 			}
 		}
 		logger.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);

@@ -153,6 +153,9 @@ namespace Xamarin.Android.Build.Tests {
 			proj.SetProperty ("Optimize", "false");
 			proj.SetProperty ("AndroidLinkMode", "Full");
 			proj.SetProperty ("PublishTrimmed", "true");
+			proj.AndroidManifest = proj.AndroidManifest.Replace (
+				"</application>",
+				"<activity android:name=\"android.app.NativeActivity\" /></application>");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -162,6 +165,23 @@ namespace Xamarin.Android.Build.Tests {
 			FileAssert.Exists (
 				builder.Output.GetIntermediaryPath ("acw-map.prebuilt-merged.txt"),
 				"Per-assembly universes should consume the pre-generated framework artifacts even when trimming.");
+			using var monoAndroid = AssemblyDefinition.ReadAssembly (BuildTest.GetLinkedPath (builder, true, "Mono.Android.dll"));
+			Assert.IsNotNull (
+				monoAndroid.MainModule.GetType ("Android.App.NativeActivity"),
+				"Framework types referenced only from AndroidManifest.xml must remain available to conditional pre-generated typemap entries.");
+			using var monoAndroidTypeMap = AssemblyDefinition.ReadAssembly (BuildTest.GetLinkedPath (builder, true, "_Mono.Android.TypeMap.dll"));
+			Assert.IsTrue (
+				monoAndroidTypeMap.CustomAttributes.Any (attribute =>
+					attribute.AttributeType.Namespace == "System.Runtime.InteropServices" &&
+					attribute.AttributeType.Name.StartsWith ("TypeMapAttribute", StringComparison.Ordinal) &&
+					attribute.ConstructorArguments.Count > 0 &&
+					attribute.ConstructorArguments [0].Value as string == "android/app/NativeActivity"),
+				"The conditional pre-generated typemap entry for the manifest-rooted framework type must survive trimming.");
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "No-op build should have succeeded.");
+			Assert.IsTrue (
+				builder.Output.IsTargetSkipped ("_GenerateTrimmableTypeMap"),
+				"Per-RID inner builds must not invalidate the outer typemap generation stamp.");
 		}
 
 		[Test]
@@ -795,12 +815,19 @@ namespace Xamarin.Android.Build.Tests {
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty (KnownProperties.PublishAot, "true");
+			proj.AndroidManifest = proj.AndroidManifest.Replace (
+				"</application>",
+				"<activity android:name=\"android.app.NativeActivity\" /></application>");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
 			AssertTrimmableTypeMapOutputs (intermediateDir, usePreGeneratedFrameworkTypeMaps: true);
+			StringAssert.Contains (
+				"Android.App.NativeActivity",
+				File.ReadAllText (builder.Output.GetIntermediaryPath ("prebuilt-typemap-roots.xml")),
+				"PublishAot must root manifest-referenced framework types even when AndroidLinkMode is None.");
 		}
 
 		[Test]

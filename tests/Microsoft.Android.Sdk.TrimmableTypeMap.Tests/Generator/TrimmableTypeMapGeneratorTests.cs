@@ -426,6 +426,39 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Execute_PreGeneratedFrameworkManifestPeer_ProducesLinkerRoot ()
+	{
+		using var peReader = CreateTestFixturePEReader ();
+		var manifestTemplate = System.Xml.Linq.XDocument.Parse ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+				<application>
+					<activity android:name="android.app.NativeActivity" />
+				</application>
+			</manifest>
+			""");
+		var frameworkPeer = new JavaPeerInfo {
+			JavaName = "android/app/NativeActivity",
+			CompatJniName = "android/app/NativeActivity",
+			ManagedTypeName = "Android.App.NativeActivity",
+			ManagedTypeNamespace = "Android.App",
+			ManagedTypeShortName = "NativeActivity",
+			AssemblyName = "Mono.Android",
+			IsFrameworkAssembly = true,
+			DoNotGenerateAcw = true,
+		};
+
+		CreateGenerator ().Execute (
+			[new AssemblyInput ("TestFixtures", "", peReader, ScanForPeers: false)],
+			new Version (11, 0),
+			new HashSet<string> (),
+			manifestTemplate: manifestTemplate,
+			preGeneratedFrameworkPeers: [frameworkPeer]);
+
+		Assert.True (frameworkPeer.IsUnconditional);
+	}
+
+	[Fact]
 	public void Execute_AssemblyWithNoPeers_GeneratesManifest ()
 	{
 		var testAssemblyPath = typeof (TrimmableTypeMapGeneratorTests).Assembly.Location;

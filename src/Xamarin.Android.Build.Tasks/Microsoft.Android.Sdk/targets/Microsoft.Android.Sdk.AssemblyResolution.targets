@@ -159,6 +159,7 @@ _ResolveAssemblies MSBuild target.
         ;_OuterOutputPath=$(OutputPath)
         ;_OuterIntermediateOutputPath=$(IntermediateOutputPath)
         ;_OuterCustomViewMapFile=$(_CustomViewMapFile)
+        ;_OuterPreGeneratedFrameworkTypeMapRootDescriptor=$(_PreGeneratedFrameworkTypeMapRootDescriptor)
         ;_AndroidNdkDirectory=$(_AndroidNdkDirectory)
       </_AdditionalProperties>
       <_AndroidBuildRuntimeIdentifiersInParallel Condition=" '$(_AndroidBuildRuntimeIdentifiersInParallel)' == '' ">true</_AndroidBuildRuntimeIdentifiersInParallel>

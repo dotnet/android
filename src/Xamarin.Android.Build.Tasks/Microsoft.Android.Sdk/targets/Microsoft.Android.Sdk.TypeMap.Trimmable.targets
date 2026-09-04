@@ -72,7 +72,8 @@
        Android debug symbols use per-assembly typemap universes, so they can skip scanning
        Mono.Android (its ~8000 types) and reference the pre-built _Mono.Android.TypeMap.dll.
        Builds without Android debug symbols use a single shared universe whose alias ownership
-       must include application types. -->
+       must include application types. AndroidIncludeDebugSymbols is finalized from DebugSymbols,
+       DebugType, and Optimize in Xamarin.Android.Common.targets before this file is imported. -->
   <PropertyGroup>
     <_PreGeneratedTypeMapDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\data\prebuilt-typemap'))</_PreGeneratedTypeMapDir>
     <_PreGeneratedMonoAndroidTypeMapAssembly>$(_PreGeneratedTypeMapDir)_Mono.Android.TypeMap.dll</_PreGeneratedMonoAndroidTypeMapAssembly>
@@ -83,10 +84,23 @@
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <_PreGeneratedJcwValidationInput Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">$(_PreGeneratedMonoAndroidTypeMapJar)</_PreGeneratedJcwValidationInput>
-    <_RootFrameworkTypeMapPeersFromApplication Condition=" '$(AndroidLinkMode)' != 'None' ">true</_RootFrameworkTypeMapPeersFromApplication>
+    <_RootFrameworkTypeMapPeersFromApplication Condition=" '$(AndroidLinkMode)' != 'None' or '$(PublishTrimmed)' == 'true' or '$(PublishAot)' == 'true' ">true</_RootFrameworkTypeMapPeersFromApplication>
     <_RootFrameworkTypeMapPeersFromApplication Condition=" '$(_RootFrameworkTypeMapPeersFromApplication)' == '' ">false</_RootFrameworkTypeMapPeersFromApplication>
     <_CompileToDalvikDependsOnTargets>$(_CompileToDalvikDependsOnTargets);_ResolveTrimmableTypeMapKeepRulesAcwMap;_MergePreGeneratedMonoAndroidAcwMapForKeepRules</_CompileToDalvikDependsOnTargets>
   </PropertyGroup>
+
+  <Target Name="_ResolvePreGeneratedFrameworkTypeMapRoots"
+      Condition=" '$(_OuterIntermediateOutputPath)' == '' ">
+    <PropertyGroup>
+      <_PreGeneratedFrameworkTypeMapRootDescriptor
+          Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' and '$(_RootFrameworkTypeMapPeersFromApplication)' == 'true' ">$(IntermediateOutputPath)prebuilt-typemap-roots.xml</_PreGeneratedFrameworkTypeMapRootDescriptor>
+      <_PreGeneratedFrameworkTypeMapAcwInput
+          Condition=" '$(_PreGeneratedFrameworkTypeMapRootDescriptor)' != '' ">$(_PreGeneratedMonoAndroidTypeMapAcwMap)</_PreGeneratedFrameworkTypeMapAcwInput>
+    </PropertyGroup>
+    <Delete
+        Files="$(_TrimmableTypeMapOutputStamp)"
+        Condition=" '$(_PreGeneratedFrameworkTypeMapRootDescriptor)' != '' and !Exists('$(_PreGeneratedFrameworkTypeMapRootDescriptor)')" />
+  </Target>
 
   <!-- Compile the generator's Java Callable Wrappers in place from their output directory
        instead of copying every .java into android/src (which was hundreds of per-file copies).
@@ -112,6 +126,8 @@
         Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
     <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)../PreserveLists/System.Private.CoreLib.xml"
         Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
+    <TrimmerRootDescriptor Include="$(_OuterPreGeneratedFrameworkTypeMapRootDescriptor)"
+        Condition="Exists('$(_OuterPreGeneratedFrameworkTypeMapRootDescriptor)')" />
   </ItemGroup>
 
   <Target Name="_ValidateTrimmableTypeMapRuntime"
@@ -140,8 +156,8 @@
   <Target Name="_GenerateTrimmableTypeMap"
       Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(DesignTimeBuild)' != 'true' and '@(ReferencePath->Count())' != '0' and '$(_OuterIntermediateOutputPath)' == '' "
       AfterTargets="CoreCompile"
-      DependsOnTargets="$(_GenerateTrimmableTypeMapDependsOn)"
-      Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);@(ExtractedManifestDocuments);@(_AndroidTrimmableTypeMapExtraFrameworkAssembly);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_CustomViewMapFile);$(_AndroidBuildPropertiesCache);$(_PreGeneratedJcwValidationInput)"
+      DependsOnTargets="$(_GenerateTrimmableTypeMapDependsOn);_ResolvePreGeneratedFrameworkTypeMapRoots"
+      Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);@(ExtractedManifestDocuments);@(_AndroidTrimmableTypeMapExtraFrameworkAssembly);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_CustomViewMapFile);$(_AndroidBuildPropertiesCache);$(_PreGeneratedJcwValidationInput);$(_PreGeneratedFrameworkTypeMapAcwInput)"
       Outputs="$(_TrimmableTypeMapOutputStamp)">
 
     <ItemGroup>
@@ -179,6 +195,8 @@
         FrameworkAssemblyNames="@(_TypeMapFrameworkAssemblies->'%(Filename)')"
         PreGeneratedTypeMapAssemblies="@(_PreGeneratedTypeMapAssemblyInput)"
         PreGeneratedJcwJar="$(_PreGeneratedJcwValidationInput)"
+        PreGeneratedFrameworkAcwMap="$(_PreGeneratedFrameworkTypeMapAcwInput)"
+        PreGeneratedFrameworkRootDescriptorFile="$(_PreGeneratedFrameworkTypeMapRootDescriptor)"
         OutputDirectory="$(_TypeMapOutputDirectory)"
         JavaSourceOutputDirectory="$(_TypeMapJavaOutputDirectory)"
         TargetFrameworkVersion="$(TargetFrameworkVersion)"
@@ -240,6 +258,8 @@
       <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" />
       <FileWrites Include="$(_PreTrimTypeMapAcwMapOutputFile)" Condition=" '$(_PreTrimTypeMapAcwMapOutputFile)' != '' " />
       <FileWrites Include="$(_PreTrimTypeMapApplicationRegistrationOutputFile)" Condition=" '$(_PreTrimTypeMapApplicationRegistrationOutputFile)' != '' " />
+      <FileWrites Include="$(_PreGeneratedFrameworkTypeMapRootDescriptor)" Condition=" '$(_PreGeneratedFrameworkTypeMapRootDescriptor)' != '' " />
+      <TrimmerRootDescriptor Include="$(_PreGeneratedFrameworkTypeMapRootDescriptor)" Condition="Exists('$(_PreGeneratedFrameworkTypeMapRootDescriptor)')" />
     </ItemGroup>
   </Target>
 
@@ -320,7 +340,7 @@
   -->
   <Target Name="_RecordTrimmableTypeMapFileWrites"
       Condition=" '$(_OuterIntermediateOutputPath)' == '' and Exists('$(_TypeMapAssembliesListFile)') "
-      DependsOnTargets="_ResolveTrimmableTypeMapKeepRulesAcwMap">
+      DependsOnTargets="_ResolveTrimmableTypeMapKeepRulesAcwMap;_ResolvePreGeneratedFrameworkTypeMapRoots">
     <ItemGroup>
       <_GeneratedTypeMapAssembliesForFileWrites Remove="@(_GeneratedTypeMapAssembliesForFileWrites)" />
       <_TypeMapJavaFilesForFileWrites Remove="@(_TypeMapJavaFilesForFileWrites)" />
@@ -362,6 +382,7 @@
       <FileWrites Include="$(IntermediateOutputPath)AndroidManifest.xml" Condition="Exists('$(IntermediateOutputPath)AndroidManifest.xml')" />
       <FileWrites Include="$(_AcwMapFile)" Condition="Exists('$(_AcwMapFile)')" />
       <FileWrites Include="$(_TrimmableTypeMapKeepRulesAcwMapFile)" Condition=" '$(_TrimmableTypeMapKeepRulesAcwMapFile)' != '$(_AcwMapFile)' and Exists('$(_TrimmableTypeMapKeepRulesAcwMapFile)')" />
+      <FileWrites Include="$(_PreGeneratedFrameworkTypeMapRootDescriptor)" Condition="Exists('$(_PreGeneratedFrameworkTypeMapRootDescriptor)')" />
       <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" Condition="Exists('$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java')" />
     </ItemGroup>
   </Target>
