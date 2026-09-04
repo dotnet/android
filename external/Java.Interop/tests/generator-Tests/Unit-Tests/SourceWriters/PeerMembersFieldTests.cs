@@ -25,7 +25,7 @@ namespace generatortests.SourceWriters
 		}
 
 		[Test]
-		public void WeakImplementorField_Interface ()
+		public void PeerMembersField_XAInterface ()
 		{
 			var field = new PeerMembersField (new CodeGenerationOptions { CodeGenerationTarget = CodeGenerationTarget.XAJavaInterop1 }, "B", "IMyJavaType", true);
 
