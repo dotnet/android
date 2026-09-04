@@ -10,18 +10,21 @@ namespace Android.Runtime {
 	public class XAPeerMembers : JniPeerMembers {
 
 		static  Dictionary<string,  JniPeerMembers>         LegacyPeerMembers = new Dictionary<string, JniPeerMembers> (StringComparer.Ordinal);
-		readonly bool                                        hasThresholdTypeOverride;
+
+		// -1: not yet determined; 0: no override; 1: declares an override.
+		// Computed lazily so that type initialization -- which runs for every bound
+		// type an app touches, on the startup path -- doesn't pay for the reflection
+		// lookup unless a dispatch decision is actually made for this type.
+		volatile int                                        thresholdOverrideState = -1;
 
 		public XAPeerMembers (string jniPeerTypeName, Type managedPeerType)
 			: base (jniPeerTypeName, managedPeerType)
 		{
-			hasThresholdTypeOverride = HasThresholdTypeOverride (managedPeerType);
 		}
 
 		public XAPeerMembers (string jniPeerTypeName, Type managedPeerType, bool isInterface)
 			: base (jniPeerTypeName, managedPeerType, isInterface)
 		{
-			hasThresholdTypeOverride = HasThresholdTypeOverride (managedPeerType);
 		}
 
 		protected override bool UsesVirtualDispatch (IJavaPeerable value, Type? declaringType)
@@ -57,14 +60,36 @@ namespace Android.Runtime {
 			}
 		}
 
+		// Bindings compiled before the generated threshold overrides were removed declare
+		// `ThresholdType`, and must keep the dispatch semantics they were compiled against.
+		// Both sides have to opt in: the type declaring the method *and* the receiver. A new
+		// binding deriving from an old one inherits the old `ThresholdType`, and honoring it
+		// would dispatch nonvirtually to the Java base class, skipping the derived override.
 		bool UsesLegacyVirtualDispatch (IJavaPeerable value)
 		{
+			if (!HasThresholdOverride)
+				return false;
 			var peerMembers = value.JniPeerMembers as XAPeerMembers;
-			return hasThresholdTypeOverride && peerMembers?.hasThresholdTypeOverride == true;
+			return peerMembers?.HasThresholdOverride == true;
 		}
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2070", Justification = "ThresholdType overrides remain reachable through GetThresholdType's virtual call.")]
-		static bool HasThresholdTypeOverride (Type managedPeerType)
+		bool HasThresholdOverride {
+			get {
+				var state = thresholdOverrideState;
+				if (state < 0) {
+					state = DeclaresThresholdTypeOverride (ManagedPeerType) ? 1 : 0;
+					thresholdOverrideState = state;
+				}
+				return state == 1;
+			}
+		}
+
+		// Checking `ThresholdType` alone is sufficient: every generator code path that emitted
+		// threshold overrides (bound classes, class invokers, interface invokers) emitted this
+		// one, and `ThresholdClass` was never emitted without it.
+		[UnconditionalSuppressMessage ("Trimming", "IL2070",
+				Justification = "ThresholdType overrides stay reachable through the virtual call in GetThresholdType(), so the trimmer preserves them on any type it keeps. Were one ever trimmed away, the type would silently fall back to metadata-based dispatch rather than fail.")]
+		static bool DeclaresThresholdTypeOverride (Type managedPeerType)
 		{
 			return managedPeerType.GetMethod ("get_ThresholdType", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly) != null;
 		}

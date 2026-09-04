@@ -78,6 +78,7 @@ namespace Android.Widget {
 				_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
 			} finally {
 				GC.KeepAlive (adapter);
+				GC.KeepAlive (this);
 			}
 		}
 #endif

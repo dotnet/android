@@ -10,8 +10,12 @@ namespace Android.Content
 		public override unsafe Java.Lang.Object? LoadInBackground ()
 		{
 			const string id = "loadInBackground.()Landroid/database/Cursor;";
-			var reference = _members.InstanceMethods.InvokeVirtualObjectMethod (id, this, null);
-			return (Java.Lang.Object?) Java.Lang.Object.GetObject<Android.Database.ICursor> (reference.Handle, JniHandleOwnership.TransferLocalRef);
+			try {
+				var reference = _members.InstanceMethods.InvokeVirtualObjectMethod (id, this, null);
+				return (Java.Lang.Object?) Java.Lang.Object.GetObject<Android.Database.ICursor> (reference.Handle, JniHandleOwnership.TransferLocalRef);
+			} finally {
+				GC.KeepAlive (this);
+			}
 		}
 	}
 }

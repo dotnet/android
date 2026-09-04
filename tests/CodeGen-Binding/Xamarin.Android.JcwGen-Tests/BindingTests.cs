@@ -101,8 +101,11 @@ namespace Xamarin.Android.JcwGenTests {
 				// To ensure that CallMethodFromCtor.class_ref is initialized
 			}
 			using (var c = Java.Lang.Class.FromType (typeof (ConstructorTest))) {
+				// `CallMethodFromCtor`'s peer type and JCW registration each take a one-time
+				// GREF on first instantiation. Construct and release one instance first so
+				// that only the per-instance references are measured below; a real per-instance
+				// leak still shows up.
 				using (Com.Xamarin.Android.CallMethodFromCtor.NewInstance (c)) {
-					// Warm up peer-member caches before measuring object lifetime.
 				}
 				int initGref = Java.Interop.Runtime.GlobalReferenceCount;
 				using (var j = Com.Xamarin.Android.CallMethodFromCtor.NewInstance (c)) {
@@ -200,6 +203,14 @@ namespace Xamarin.Android.JcwGenTests {
 				Assert.IsFalse (d.MethodInvoked);
 				Assert.IsTrue (d.DerivedMethodInvoked);
 			}
+		}
+
+		// A binding generated *after* the threshold overrides were removed, deriving from a
+		// binding generated before. The derived type inherits the base's `ThresholdType`, so
+		// honoring it would dispatch nonvirtually to the Java base and skip `ModernThresholdDerived.method()`.
+		[Test]
+		public void ModernDerivedFromLegacyBinding ()
+		{
 			using (var d = new ModernThresholdDerived ()) {
 				d.Method ();
 				Assert.IsFalse (d.MethodInvoked);
