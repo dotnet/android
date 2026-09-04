@@ -26,6 +26,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 	readonly record struct ResolvabilityResult (bool IsResolvable, string? UnresolvedTypeName, string? UnresolvedAssemblyName);
 	readonly record struct PublicConstructorInfo (ImmutableArray<TypeRefData> ParameterTypes, string JniParameterSignature);
+	readonly record struct ImplementedInterfaceInfo (TypeRefData Type, string JavaName);
 
 	readonly Dictionary<string, AssemblyIndex> assemblyCache = new (StringComparer.Ordinal);
 	readonly Dictionary<(string typeName, string assemblyName), ActivationCtorInfo> activationCtorCache = new ();
@@ -61,12 +62,33 @@ public sealed class JavaPeerScanner : IDisposable
 	/// </summary>
 	bool TryResolveType (string typeName, string assemblyName, out TypeDefinitionHandle handle, [NotNullWhen (true)] out AssemblyIndex? resolvedIndex)
 	{
-		if (assemblyCache.TryGetValue (assemblyName, out resolvedIndex) &&
-		    resolvedIndex.TypesByFullName.TryGetValue (typeName, out handle)) {
-			return true;
+		var visitedAssemblies = new HashSet<string> (StringComparer.Ordinal);
+		while (visitedAssemblies.Add (assemblyName) &&
+		       TryGetAssemblyIndex (assemblyName, out resolvedIndex)) {
+			if (resolvedIndex.TypesByFullName.TryGetValue (typeName, out handle)) {
+				return true;
+			}
+			if (!resolvedIndex.ForwardedTypeAssemblies.TryGetValue (typeName, out assemblyName)) {
+				break;
+			}
 		}
 		handle = default;
 		resolvedIndex = null;
+		return false;
+	}
+
+	bool TryGetAssemblyIndex (string assemblyName, [NotNullWhen (true)] out AssemblyIndex? index)
+	{
+		if (assemblyCache.TryGetValue (assemblyName, out index)) {
+			return true;
+		}
+		foreach (var candidate in assemblyCache.Values) {
+			if (string.Equals (candidate.MetadataAssemblyName, assemblyName, StringComparison.Ordinal)) {
+				index = candidate;
+				return true;
+			}
+		}
+		index = null;
 		return false;
 	}
 
@@ -223,9 +245,12 @@ public sealed class JavaPeerScanner : IDisposable
 	/// [Application(ManageSpaceActivity = typeof(X))] must be unconditional,
 	/// because the manifest will reference them even if nothing else does.
 	/// </summary>
-	static void ForceUnconditionalCrossReferences (Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> results, Dictionary<string, AssemblyIndex> assemblyCache)
+	void ForceUnconditionalCrossReferences (Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> results, Dictionary<string, AssemblyIndex> assemblyCache)
 	{
 		foreach (var index in assemblyCache.Values) {
+			if (frameworkAssemblyNames.Contains (index.AssemblyName)) {
+				continue;
+			}
 			foreach (var attrInfo in index.AttributesByType.Values) {
 				if (attrInfo is ApplicationAttributeInfo applicationAttributeInfo) {
 					ForceUnconditionalIfPresent (results, applicationAttributeInfo.BackupAgent);
@@ -357,7 +382,9 @@ public sealed class JavaPeerScanner : IDisposable
 			var isInterface = (typeDef.Attributes & TypeAttributes.Interface) != 0;
 			var isAbstract = (typeDef.Attributes & TypeAttributes.Abstract) != 0;
 
-			var isUnconditional = attrInfo is not null;
+			var isFrameworkAssembly = frameworkAssemblyNames.Contains (index.AssemblyName);
+			var isUnconditional = !isFrameworkAssembly &&
+				(attrInfo is not null || registerInfo?.IsFromJniTypeSignature == true);
 			var cannotRegisterInStaticConstructor = attrInfo is ApplicationAttributeInfo or InstrumentationAttributeInfo;
 			string? invokerTypeName = null;
 			ActivationCtorStyle? invokerActivationCtorStyle = null;
@@ -366,7 +393,7 @@ public sealed class JavaPeerScanner : IDisposable
 			var baseJavaName = ResolveBaseJavaName (typeDef, index, results);
 
 			// Resolve implemented Java interface names
-			var implementedInterfaces = ResolveImplementedInterfaceJavaNames (typeDef, index);
+			var (implementedInterfaces, javaCallableWrapperInterfaces) = ResolveImplementedInterfaceJavaNames (typeDef, index);
 
 			// Collect marshal methods (including constructors).
 			// Override and interface detection is only for user ACW class types:
@@ -400,9 +427,10 @@ public sealed class JavaPeerScanner : IDisposable
 				ManagedTypeNamespace = ExtractNamespace (fullName),
 				ManagedTypeShortName = ExtractShortName (fullName),
 				AssemblyName = index.AssemblyName,
-				IsFrameworkAssembly = frameworkAssemblyNames.Contains (index.AssemblyName),
+				IsFrameworkAssembly = isFrameworkAssembly,
 				BaseJavaName = baseJavaName,
 				ImplementedInterfaceJavaNames = implementedInterfaces,
+				JavaCallableWrapperInterfaceJavaNames = javaCallableWrapperInterfaces,
 				Annotations = annotationParser.Parse (typeDef.GetCustomAttributes (), index),
 				IsInterface = isInterface,
 				IsAbstract = isAbstract,
@@ -667,10 +695,22 @@ public sealed class JavaPeerScanner : IDisposable
 		var methods = new List<MarshalMethodInfo> ();
 		var fields = new List<JavaFieldInfo> ();
 		HashSet<string>? registeredMethodKeys = detectBaseOverrides ? new (StringComparer.Ordinal) : null;
+		bool isGenericType = typeDef.GetGenericParameters ().Count > 0;
 
 		// Pass 1: collect methods with [Register], [Export], or [ExportField] directly on them
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+			var methodName = index.Reader.GetString (methodDef.Name);
+			if (methodName == ".cctor" && (methodDef.Attributes & MethodAttributes.Static) != 0) {
+				continue;
+			}
+
+			if (!ValidateExportField (methodDef, index, isGenericType)) {
+				continue;
+			}
+			if (!ValidateExportSignature (methodDef, index, isGenericType)) {
+				continue;
+			}
 
 			// Check for [ExportField] — produces both a marshal method AND a field
 			CollectExportField (methodDef, index, fields);
@@ -733,6 +773,128 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		return (methods, fields);
+	}
+
+	static bool IsExportFieldAttribute (CustomAttribute attribute, AssemblyIndex index)
+	{
+		return AssemblyIndex.IsCustomAttributeMatch (attribute, index.Reader, "Java.Interop", "ExportFieldAttribute");
+	}
+
+	static bool IsExportAttribute (CustomAttribute attribute, AssemblyIndex index)
+	{
+		return AssemblyIndex.IsCustomAttributeMatch (attribute, index.Reader, "Java.Interop", "ExportAttribute");
+	}
+
+	static bool IsExportParameterAttribute (CustomAttribute attribute, AssemblyIndex index)
+	{
+		return AssemblyIndex.IsCustomAttributeMatch (attribute, index.Reader, "Java.Interop", "ExportParameterAttribute");
+	}
+
+	bool ValidateExportField (MethodDefinition methodDef, AssemblyIndex index, bool isGenericType)
+	{
+		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
+			var ca = index.Reader.GetCustomAttribute (caHandle);
+			if (!IsExportFieldAttribute (ca, index)) {
+				continue;
+			}
+
+			if (isGenericType) {
+				logger?.LogExportFieldOnGenericTypeError ();
+				return false;
+			}
+
+			var sig = methodDef.DecodeSignature (index.TypeRefSignatureProvider, index);
+			if (sig.ParameterTypes.Length != 0) {
+				logger?.LogExportFieldWithParametersError ();
+				return false;
+			}
+			if (sig.ReturnType.ManagedTypeName == "System.Void") {
+				logger?.LogExportFieldReturnsVoidError ();
+				return false;
+			}
+			return true;
+		}
+
+		return true;
+	}
+
+	bool ValidateExportSignature (MethodDefinition methodDef, AssemblyIndex index, bool isGenericType)
+	{
+		bool isExport = false;
+		bool isExportField = false;
+		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
+			var ca = index.Reader.GetCustomAttribute (caHandle);
+			if (IsExportAttribute (ca, index)) {
+				isExport = true;
+			} else if (IsExportFieldAttribute (ca, index)) {
+				isExportField = true;
+			}
+		}
+		if (!isExport && !isExportField) {
+			return true;
+		}
+
+		var methodName = index.Reader.GetString (methodDef.Name);
+		bool isConstructor = methodName == ".ctor";
+		if (isConstructor && !isExport) {
+			return true;
+		}
+		if (!isConstructor && isExport && isGenericType) {
+			logger?.LogExportOnGenericTypeError ();
+			return false;
+		}
+
+		var sig = methodDef.DecodeSignature (index.TypeRefSignatureProvider, index);
+		var (parameterKinds, returnKind) = GetExportParameterKinds (methodDef, index, sig.ParameterTypes.Length);
+		var declaringType = index.Reader.GetTypeDefinition (methodDef.GetDeclaringType ());
+		string declaringTypeName = MetadataTypeNameResolver.GetFullName (declaringType, index.Reader);
+		string memberName = methodName [0] == '.'
+			? declaringTypeName + methodName
+			: $"{declaringTypeName}.{methodName}";
+
+		for (int i = 0; i < sig.ParameterTypes.Length; i++) {
+			if (isConstructor && IsOwnedByConstructorDiagnostics (sig.ParameterTypes [i])) {
+				continue;
+			}
+			if (!HasExportSignatureMapping (sig.ParameterTypes [i], parameterKinds [i])) {
+				logger?.LogUnsupportedExportSignatureError (memberName, sig.ParameterTypes [i].DisplayName);
+				return false;
+			}
+		}
+		if (isConstructor) {
+			return true;
+		}
+		if (!HasExportSignatureMapping (sig.ReturnType, returnKind)) {
+			logger?.LogUnsupportedExportSignatureError (memberName, sig.ReturnType.DisplayName);
+			return false;
+		}
+		return true;
+	}
+
+	/// <summary>
+	/// PR #12567 owns XA4260 for signature shapes that no Java constructor can represent.
+	/// This layer only adds XA4263 for unresolved types and invalid [ExportParameter] pairs.
+	/// </summary>
+	internal static bool IsOwnedByConstructorDiagnostics (TypeRefData parameterType)
+	{
+		string managedTypeName = parameterType.ManagedTypeName;
+		if (managedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
+			return IsOwnedByConstructorDiagnostics (parameterType with {
+				ManagedTypeName = managedTypeName.Substring (0, managedTypeName.Length - 2),
+			});
+		}
+		return parameterType.GenericArguments.Count > 0 ||
+			managedTypeName.StartsWith ("!", StringComparison.Ordinal) ||
+			managedTypeName == "delegate*" ||
+			managedTypeName.EndsWith ("&", StringComparison.Ordinal) ||
+			managedTypeName.EndsWith ("*", StringComparison.Ordinal) ||
+			(managedTypeName.EndsWith ("]", StringComparison.Ordinal) &&
+			 !managedTypeName.EndsWith ("[]", StringComparison.Ordinal));
+	}
+
+	internal bool HasExportSignatureMapping (TypeRefData managedType, ExportParameterKindInfo exportKind)
+	{
+		return TryManagedTypeToJniDescriptor (managedType, exportKind, out _);
 	}
 
 	static bool HasJniAddNativeMethodRegistrationAttribute (TypeDefinition typeDef, AssemblyIndex index)
@@ -1083,28 +1245,43 @@ public sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
-	/// Looks up a managed type name across loaded assemblies. If the type has
+	/// Looks up a managed type in its referenced assembly. If the type has
 	/// [Register], returns "L&lt;jniName&gt;;". Otherwise returns null.
+	/// </summary>
+	string? TryResolveJniObjectDescriptor (TypeRefData managedType)
+	{
+		if (!TryResolveType (managedType.ManagedTypeName, managedType.AssemblyName, out var handle, out var index)) {
+			return null;
+		}
+		return GetJniObjectDescriptor (handle, index);
+	}
+
+	/// <summary>
+	/// Looks up an unqualified managed type name across loaded assemblies.
+	/// Used only by legacy-compatible constructor signature discovery.
 	/// </summary>
 	string? TryResolveJniObjectDescriptor (string managedType)
 	{
 		foreach (var index in assemblyCache.Values) {
 			if (index.TypesByFullName.TryGetValue (managedType, out var handle)) {
-				if (index.RegisterInfoByType.TryGetValue (handle, out var registerInfo)) {
-					return $"L{registerInfo.JniName};";
-				}
-
-				// User peer types (extend a Java peer but lack [Register])
-				// get a CRC64-based JNI name in ScanAssembly. Mirror that here
-				// so [Export]/[ExportField] signatures referring to such types
-				// emit the correct peer descriptor instead of falling back to
-				// java/lang/Object.
-				var typeDef = index.Reader.GetTypeDefinition (handle);
-				if (ExtendsJavaPeer (handle, typeDef, index)) {
-					var (jniName, _) = ComputeAutoJniNames (typeDef, index);
-					return $"L{jniName};";
-				}
+				return GetJniObjectDescriptor (handle, index);
 			}
+		}
+		return null;
+	}
+
+	string? GetJniObjectDescriptor (TypeDefinitionHandle handle, AssemblyIndex index)
+	{
+		if (index.RegisterInfoByType.TryGetValue (handle, out var registerInfo)) {
+			return $"L{registerInfo.JniName};";
+		}
+
+		// User peer types (extend a Java peer but lack [Register]) get a CRC64-based
+		// JNI name in ScanAssembly. Mirror that for exported signatures.
+		var typeDef = index.Reader.GetTypeDefinition (handle);
+		if (ExtendsJavaPeer (handle, typeDef, index)) {
+			var (jniName, _) = ComputeAutoJniNames (typeDef, index);
+			return $"L{jniName};";
 		}
 		return null;
 	}
@@ -1159,17 +1336,12 @@ public sealed class JavaPeerScanner : IDisposable
 
 	(TypeDefinition typeDef, AssemblyIndex index)? TryFindEnumTypeDefinition (string managedType, string? assemblyName = null)
 	{
-		// Prefer the typed assembly hint so two assemblies with same-named types
-		// (one enum, one not) resolve deterministically — assemblyCache
-		// enumeration order is non-deterministic.
-		if (assemblyName is { Length: > 0 } &&
-		    assemblyCache.TryGetValue (assemblyName, out var hintedIndex) &&
-		    hintedIndex.TypesByFullName.TryGetValue (managedType, out var hintedHandle)) {
-			var hintedDef = hintedIndex.Reader.GetTypeDefinition (hintedHandle);
-			if (IsEnumType (hintedDef, hintedIndex)) {
-				return (hintedDef, hintedIndex);
+		if (assemblyName is { Length: > 0 }) {
+			if (!TryResolveType (managedType, assemblyName, out var resolvedHandle, out var resolvedIndex)) {
+				return null;
 			}
-			// Hinted assembly had a same-named non-enum; keep scanning.
+			var resolvedType = resolvedIndex.Reader.GetTypeDefinition (resolvedHandle);
+			return IsEnumType (resolvedType, resolvedIndex) ? (resolvedType, resolvedIndex) : null;
 		}
 
 		foreach (var index in assemblyCache.Values) {
@@ -1668,26 +1840,86 @@ public sealed class JavaPeerScanner : IDisposable
 		return null;
 	}
 
-	List<string> ResolveImplementedInterfaceJavaNames (TypeDefinition typeDef, AssemblyIndex index)
+	(List<string> ImplementedInterfaces, List<string> JavaCallableWrapperInterfaces) ResolveImplementedInterfaceJavaNames (
+		TypeDefinition typeDef,
+		AssemblyIndex index)
 	{
-		var result = new List<string> ();
-		var interfaceImpls = typeDef.GetInterfaceImplementations ();
-
-		foreach (var implHandle in interfaceImpls) {
+		var interfaces = new List<ImplementedInterfaceInfo> ();
+		var implementedInterfaces = new List<string> ();
+		foreach (var implHandle in typeDef.GetInterfaceImplementations ()) {
 			var impl = index.Reader.GetInterfaceImplementation (implHandle);
-			var ifaceJniName = ResolveInterfaceJniName (impl.Interface, index);
-			if (ifaceJniName is not null) {
-				result.Add (ifaceJniName);
+			var resolved = ResolveEntityHandle (impl.Interface, index);
+			if (resolved is null) {
+				continue;
+			}
+
+			var javaName = ResolveRegisterJniName (resolved.ManagedTypeName, resolved.AssemblyName);
+			if (javaName is not null) {
+				interfaces.Add (new ImplementedInterfaceInfo (resolved, javaName));
+				implementedInterfaces.Add (javaName);
 			}
 		}
 
-		return result;
+		var javaCallableWrapperInterfaces = new List<string> ();
+		var addedJavaNames = new HashSet<string> (StringComparer.Ordinal);
+		var assignabilityVisited = new HashSet<(string ManagedTypeName, string AssemblyName)> ();
+		foreach (var iface in interfaces) {
+			var isRedundant = false;
+			foreach (var other in interfaces) {
+				if (IsSameTypeDefinition (iface.Type, other.Type)) {
+					continue;
+				}
+
+				assignabilityVisited.Clear ();
+				if (IsInterfaceAssignableFrom (iface.Type, other.Type, assignabilityVisited)) {
+					isRedundant = true;
+					break;
+				}
+			}
+
+			if (isRedundant) {
+				continue;
+			}
+
+			if (addedJavaNames.Add (iface.JavaName)) {
+				javaCallableWrapperInterfaces.Add (iface.JavaName);
+			}
+		}
+
+		return (implementedInterfaces, javaCallableWrapperInterfaces);
 	}
 
-	string? ResolveInterfaceJniName (EntityHandle interfaceHandle, AssemblyIndex index)
+	bool IsInterfaceAssignableFrom (
+		TypeRefData target,
+		TypeRefData candidate,
+		HashSet<(string ManagedTypeName, string AssemblyName)> visited)
 	{
-		var resolved = ResolveEntityHandle (interfaceHandle, index);
-		return resolved is not null ? ResolveRegisterJniName (resolved.ManagedTypeName, resolved.AssemblyName) : null;
+		if (IsSameTypeDefinition (target, candidate)) {
+			return true;
+		}
+
+		var candidateKey = (candidate.ManagedTypeName, candidate.AssemblyName);
+		if (!visited.Add (candidateKey) ||
+		    !TryResolveType (candidate.ManagedTypeName, candidate.AssemblyName, out var candidateHandle, out var candidateIndex)) {
+			return false;
+		}
+
+		var candidateDefinition = candidateIndex.Reader.GetTypeDefinition (candidateHandle);
+		foreach (var implHandle in candidateDefinition.GetInterfaceImplementations ()) {
+			var impl = candidateIndex.Reader.GetInterfaceImplementation (implHandle);
+			var parent = ResolveEntityHandle (impl.Interface, candidateIndex);
+			if (parent is not null && IsInterfaceAssignableFrom (target, parent, visited)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	static bool IsSameTypeDefinition (TypeRefData left, TypeRefData right)
+	{
+		return string.Equals (left.ManagedTypeName, right.ManagedTypeName, StringComparison.Ordinal) &&
+			string.Equals (left.AssemblyName, right.AssemblyName, StringComparison.Ordinal);
 	}
 
 	bool TryGetMethodRegisterInfo (MethodDefinition methodDef, AssemblyIndex index, out RegisterInfo? registerInfo, out ExportInfo? exportInfo)
@@ -1702,12 +1934,12 @@ public sealed class JavaPeerScanner : IDisposable
 				return true;
 			}
 
-			if (attrName == "ExportAttribute") {
+			if (IsExportAttribute (ca, index)) {
 				(registerInfo, exportInfo) = ParseExportAttribute (ca, methodDef, index);
 				return true;
 			}
 
-			if (attrName == "ExportFieldAttribute") {
+			if (IsExportFieldAttribute (ca, index)) {
 				(registerInfo, exportInfo) = ParseExportFieldAsMethod (ca, methodDef, index);
 				return true;
 			}
@@ -1743,6 +1975,7 @@ public sealed class JavaPeerScanner : IDisposable
 	(RegisterInfo registerInfo, ExportInfo exportInfo) ParseExportAttribute (CustomAttribute ca, MethodDefinition methodDef, AssemblyIndex index)
 	{
 		var value = index.DecodeAttribute (ca);
+		var managedName = index.Reader.GetString (methodDef.Name);
 
 		// [Export("name")] or [Export] (uses method name)
 		string? exportName = null;
@@ -1785,7 +2018,10 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		if (string.IsNullOrEmpty (exportName)) {
-			exportName = index.Reader.GetString (methodDef.Name);
+			exportName = managedName;
+		}
+		if (managedName == ".ctor") {
+			exportName = ".ctor";
 		}
 		string resolvedExportName = exportName ?? throw new InvalidOperationException ("Export name should not be null at this point.");
 
@@ -1846,36 +2082,29 @@ public sealed class JavaPeerScanner : IDisposable
 	{
 		foreach (var caHandle in parameter.GetCustomAttributes ()) {
 			var ca = index.Reader.GetCustomAttribute (caHandle);
-			var attrName = index.GetCustomAttributeName (ca);
-			if (attrName != "ExportParameterAttribute") {
+			if (!IsExportParameterAttribute (ca, index)) {
 				continue;
 			}
 
 			var value = index.DecodeAttribute (ca);
-			if (value.FixedArguments.Length > 0 && TryConvertExportParameterKind (value.FixedArguments [0].Value, out var ctorKind)) {
-				return ctorKind;
+			if (value.FixedArguments.Length > 0) {
+				return ConvertExportParameterKind (value.FixedArguments [0].Value);
 			}
 
 			foreach (var named in value.NamedArguments) {
-				if (named.Name == "Kind" && TryConvertExportParameterKind (named.Value, out var namedKind)) {
-					return namedKind;
+				if (named.Name == "Kind") {
+					return ConvertExportParameterKind (named.Value);
 				}
 			}
+
+			return ExportParameterKindInfo.Invalid;
 		}
 
 		return ExportParameterKindInfo.Unspecified;
 	}
 
-	static bool TryConvertExportParameterKind (object? value, out ExportParameterKindInfo kind)
-	{
-		if (value is int i && Enum.IsDefined (typeof (ExportParameterKindInfo), i)) {
-			kind = (ExportParameterKindInfo) i;
-			return true;
-		}
-
-		kind = ExportParameterKindInfo.Unspecified;
-		return false;
-	}
+	static ExportParameterKindInfo ConvertExportParameterKind (object? value) =>
+		value is int i ? (ExportParameterKindInfo) i : ExportParameterKindInfo.Invalid;
 
 	string BuildJniSignatureFromManaged (MethodSignature<TypeRefData> sig, IReadOnlyList<ExportParameterKindInfo> parameterKinds, ExportParameterKindInfo returnKind)
 	{
@@ -1899,11 +2128,18 @@ public sealed class JavaPeerScanner : IDisposable
 	{
 		var managedName = index.Reader.GetString (methodDef.Name);
 		var sig = methodDef.DecodeSignature (index.TypeRefSignatureProvider, index);
-		var jniSig = BuildJniSignatureFromManaged (sig, GetDefaultExportKinds (sig.ParameterTypes.Length), ExportParameterKindInfo.Unspecified);
+		var (parameterKinds, returnKind) = GetExportParameterKinds (methodDef, index, sig.ParameterTypes.Length);
+		var jniSig = BuildJniSignatureFromManaged (sig, parameterKinds, returnKind);
 
 		return (
 			new RegisterInfo { JniName = managedName, Signature = jniSig, Connector = "__export__", DoNotGenerateAcw = false },
-			new ExportInfo { ThrownNames = null, SuperArgumentsString = null, IsField = true }
+			new ExportInfo {
+				ThrownNames = null,
+				SuperArgumentsString = null,
+				IsField = true,
+				ParameterKinds = parameterKinds,
+				ReturnKind = returnKind,
+			}
 		);
 	}
 
@@ -1914,29 +2150,49 @@ public sealed class JavaPeerScanner : IDisposable
 	/// </summary>
 	string ManagedTypeToJniDescriptor (TypeRefData managedType, ExportParameterKindInfo exportKind = ExportParameterKindInfo.Unspecified)
 	{
-		if (exportKind != ExportParameterKindInfo.Unspecified) {
-			return exportKind switch {
-				ExportParameterKindInfo.InputStream => "Ljava/io/InputStream;",
-				ExportParameterKindInfo.OutputStream => "Ljava/io/OutputStream;",
-				ExportParameterKindInfo.XmlPullParser => "Lorg/xmlpull/v1/XmlPullParser;",
-				ExportParameterKindInfo.XmlResourceParser => "Landroid/content/res/XmlResourceParser;",
-				_ => "Ljava/lang/Object;",
-			};
-		}
+		return TryManagedTypeToJniDescriptor (managedType, exportKind, out var descriptor)
+			? descriptor
+			: "Ljava/lang/Object;";
+	}
 
-		var primitive = TryGetPrimitiveJniDescriptor (managedType.ManagedTypeName);
-		if (primitive is not null) {
-			return primitive;
+	bool TryManagedTypeToJniDescriptor (
+		TypeRefData managedType,
+		ExportParameterKindInfo exportKind,
+		out string descriptor)
+	{
+		if (exportKind != ExportParameterKindInfo.Unspecified) {
+			return TryGetExportParameterDescriptor (managedType, exportKind, out descriptor);
 		}
 
 		if (managedType.ManagedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
-			return $"[{ManagedTypeToJniDescriptor (managedType with { ManagedTypeName = managedType.ManagedTypeName.Substring (0, managedType.ManagedTypeName.Length - 2) })}";
+			var elementType = managedType with {
+				ManagedTypeName = managedType.ManagedTypeName.Substring (0, managedType.ManagedTypeName.Length - 2),
+			};
+			if (TryManagedTypeToJniDescriptor (elementType, ExportParameterKindInfo.Unspecified, out var elementDescriptor)) {
+				descriptor = $"[{elementDescriptor}";
+				return true;
+			}
+			descriptor = "";
+			return false;
+		}
+
+		var primitive = TryGetPrimitiveJniDescriptor (managedType.ManagedTypeName);
+		if (primitive is not null &&
+		    IsSpecialManagedType (
+			    managedType,
+			    managedType.ManagedTypeName,
+			    "System.Runtime",
+			    "System.Private.CoreLib",
+			    "mscorlib")) {
+			descriptor = primitive;
+			return true;
 		}
 
 		// Try to resolve as a Java peer type with [Register]
-		var resolved = TryResolveJniObjectDescriptor (managedType.ManagedTypeName);
+		var resolved = TryResolveJniObjectDescriptor (managedType);
 		if (resolved is not null) {
-			return resolved;
+			descriptor = resolved;
+			return true;
 		}
 
 		// Well-known interface types that legacy CallbackCode mapped explicitly
@@ -1945,24 +2201,91 @@ public sealed class JavaPeerScanner : IDisposable
 		// live in System.Collections (no Java peer at all) and are wrapped at
 		// runtime by JavaList/JavaDictionary/JavaCollection.
 		var wellKnown = managedType.ManagedTypeName switch {
-			"Java.Lang.ICharSequence"          => "Ljava/lang/CharSequence;",
-			"System.Collections.IList"         => "Ljava/util/List;",
-			"System.Collections.IDictionary"   => "Ljava/util/Map;",
-			"System.Collections.ICollection"   => "Ljava/util/Collection;",
+			"Java.Lang.ICharSequence" when IsSpecialManagedType (
+				managedType,
+				"Java.Lang.ICharSequence",
+				"Mono.Android") =>
+				"Ljava/lang/CharSequence;",
+			"System.Collections.IList" when IsSpecialManagedType (
+				managedType,
+				"System.Collections.IList",
+				"System.Runtime",
+				"System.Collections.NonGeneric",
+				"System.Private.CoreLib",
+				"mscorlib") =>
+				"Ljava/util/List;",
+			"System.Collections.IDictionary" when IsSpecialManagedType (
+				managedType,
+				"System.Collections.IDictionary",
+				"System.Runtime",
+				"System.Collections.NonGeneric",
+				"System.Private.CoreLib",
+				"mscorlib") =>
+				"Ljava/util/Map;",
+			"System.Collections.ICollection" when IsSpecialManagedType (
+				managedType,
+				"System.Collections.ICollection",
+				"System.Runtime",
+				"System.Collections.NonGeneric",
+				"System.Private.CoreLib",
+				"mscorlib") =>
+				"Ljava/util/Collection;",
 			_ => null,
 		};
 		if (wellKnown is not null) {
-			return wellKnown;
+			descriptor = wellKnown;
+			return true;
 		}
 
 		// Enum parameters use their underlying primitive JNI ABI (matches legacy
 		// CallbackCode behavior).
 		var enumDescriptor = TryResolveEnumUnderlyingDescriptor (managedType.ManagedTypeName, managedType.AssemblyName);
 		if (enumDescriptor is not null) {
-			return enumDescriptor;
+			descriptor = enumDescriptor;
+			return true;
 		}
 
-		return "Ljava/lang/Object;";
+		descriptor = "";
+		return false;
+	}
+
+	bool TryGetExportParameterDescriptor (
+		TypeRefData managedType,
+		ExportParameterKindInfo exportKind,
+		out string descriptor)
+	{
+		descriptor = exportKind switch {
+			ExportParameterKindInfo.InputStream when IsSpecialManagedType (managedType, "System.IO.Stream", "System.Runtime", "System.Private.CoreLib") =>
+				"Ljava/io/InputStream;",
+			ExportParameterKindInfo.OutputStream when IsSpecialManagedType (managedType, "System.IO.Stream", "System.Runtime", "System.Private.CoreLib") =>
+				"Ljava/io/OutputStream;",
+			ExportParameterKindInfo.XmlPullParser when IsSpecialManagedType (
+				managedType,
+				"System.Xml.XmlReader",
+				"System.Xml.ReaderWriter",
+				"System.Private.Xml") =>
+				"Lorg/xmlpull/v1/XmlPullParser;",
+			ExportParameterKindInfo.XmlResourceParser when IsSpecialManagedType (
+				managedType,
+				"System.Xml.XmlReader",
+				"System.Xml.ReaderWriter",
+				"System.Private.Xml") =>
+				"Landroid/content/res/XmlResourceParser;",
+			_ => "",
+		};
+		return descriptor.Length > 0;
+	}
+
+	bool IsSpecialManagedType (TypeRefData managedType, string managedTypeName, params string [] assemblyNames)
+	{
+		if (!string.Equals (managedType.ManagedTypeName, managedTypeName, StringComparison.Ordinal)) {
+			return false;
+		}
+		if (assemblyNames.Contains (managedType.AssemblyName, StringComparer.Ordinal)) {
+			return true;
+		}
+		return TryResolveType (managedTypeName, managedType.AssemblyName, out _, out var resolvedIndex) &&
+			assemblyNames.Contains (resolvedIndex.MetadataAssemblyName, StringComparer.Ordinal);
 	}
 
 	/// <summary>
@@ -2526,7 +2849,10 @@ public sealed class JavaPeerScanner : IDisposable
 			// Unsupported managed parameter shapes fail in model building for [Export]
 			// constructors; non-[Export] registrations keep the legacy activation fallback.
 			publicConstructors ??= GetSupportedPublicConstructors (typeDef, index);
-			var managedParams = TryGetMatchingPublicConstructorParameterTypes (publicConstructors, mm.JniSignature);
+			var managedParams = TryGetMatchingPublicConstructorParameterTypes (
+				publicConstructors,
+				mm.JniSignature,
+				mm.ManagedParameterExportKinds);
 			ctors.Add (new JavaConstructorInfo {
 				JniSignature = mm.JniSignature,
 				ConstructorIndex = ctorIndex,
@@ -2535,6 +2861,7 @@ public sealed class JavaPeerScanner : IDisposable
 				HasMatchingManagedCtor = managedParams != null,
 				ManagedParameterTypes = managedParams ?? [],
 				Annotations = mm.Annotations,
+				ManagedParameterExportKinds = mm.ManagedParameterExportKinds,
 			});
 			ctorIndex++;
 		}
@@ -2555,10 +2882,7 @@ public sealed class JavaPeerScanner : IDisposable
 			var sig = methodDef.DecodeSignature (index.TypeRefSignatureProvider, genericContext: index);
 			bool unsupported = false;
 			foreach (var parameter in sig.ParameterTypes) {
-				var typeName = parameter.ManagedTypeName;
-				if (parameter.GenericArguments.Count > 0 ||
-				    typeName.EndsWith ("&", StringComparison.Ordinal) ||
-				    typeName.EndsWith ("*", StringComparison.Ordinal)) {
+				if (IsOwnedByConstructorDiagnostics (parameter)) {
 					unsupported = true;
 					break;
 				}
@@ -2582,25 +2906,52 @@ public sealed class JavaPeerScanner : IDisposable
 	/// parameter types. Returns <see langword="null"/> when no compatible
 	/// constructor exists.
 	/// </summary>
-	static IReadOnlyList<TypeRefData>? TryGetMatchingPublicConstructorParameterTypes (
+	IReadOnlyList<TypeRefData>? TryGetMatchingPublicConstructorParameterTypes (
 		List<PublicConstructorInfo> publicConstructors,
-		string jniSignature)
+		string jniSignature,
+		IReadOnlyList<ExportParameterKindInfo> parameterKinds)
 	{
 		int closeParen = jniSignature.IndexOf (')');
 		if (closeParen < 0) {
 			throw new ArgumentException ($"Malformed JNI signature '{jniSignature}': missing ')'");
 		}
 		int parameterSignatureLength = closeParen + 1;
+		var jniParams = parameterKinds.Any (kind => kind != ExportParameterKindInfo.Unspecified)
+			? JniSignatureHelper.ParseParameters (jniSignature)
+			: null;
 		foreach (var constructor in publicConstructors) {
-			if (constructor.JniParameterSignature.Length != parameterSignatureLength ||
-			    string.CompareOrdinal (jniSignature, 0, constructor.JniParameterSignature, 0, parameterSignatureLength) != 0) {
+			if (jniParams is null) {
+				if (constructor.JniParameterSignature.Length != parameterSignatureLength ||
+				    string.CompareOrdinal (jniSignature, 0, constructor.JniParameterSignature, 0, parameterSignatureLength) != 0) {
+					continue;
+				}
+			} else if (!ManagedConstructorParametersMatchJniSignature (constructor.ParameterTypes, parameterKinds, jniParams)) {
 				continue;
 			}
 			// If multiple overloads with the same JNI-compatible signature exist, match
 			// the first public constructor in metadata order, like TypeManager.Activate.
-			return [.. constructor.ParameterTypes];
+			return constructor.ParameterTypes;
 		}
 		return null;
+	}
+
+	bool ManagedConstructorParametersMatchJniSignature (
+		IReadOnlyList<TypeRefData> managedParams,
+		IReadOnlyList<ExportParameterKindInfo> parameterKinds,
+		IReadOnlyList<JniParameterInfo> jniParams)
+	{
+		if (managedParams.Count != jniParams.Count) {
+			return false;
+		}
+
+		for (int i = 0; i < managedParams.Count; i++) {
+			var parameterKind = i < parameterKinds.Count ? parameterKinds [i] : ExportParameterKindInfo.Unspecified;
+			var managedDescriptor = ManagedTypeToJniDescriptor (managedParams [i], parameterKind);
+			if (!string.Equals (managedDescriptor, jniParams [i].JniType, StringComparison.Ordinal)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/// <summary>
@@ -2611,9 +2962,8 @@ public sealed class JavaPeerScanner : IDisposable
 	{
 		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
 			var ca = index.Reader.GetCustomAttribute (caHandle);
-			var attrName = index.GetCustomAttributeName (ca);
 
-			if (attrName != "ExportFieldAttribute") {
+			if (!IsExportFieldAttribute (ca, index)) {
 				continue;
 			}
 
@@ -2629,7 +2979,8 @@ public sealed class JavaPeerScanner : IDisposable
 
 			var managedName = index.Reader.GetString (methodDef.Name);
 			var sig = methodDef.DecodeSignature (index.TypeRefSignatureProvider, index);
-			var jniSig = BuildJniSignatureFromManaged (sig, GetDefaultExportKinds (sig.ParameterTypes.Length), ExportParameterKindInfo.Unspecified);
+			var (parameterKinds, returnKind) = GetExportParameterKinds (methodDef, index, sig.ParameterTypes.Length);
+			var jniSig = BuildJniSignatureFromManaged (sig, parameterKinds, returnKind);
 			var jniReturnType = JniSignatureHelper.ParseReturnTypeString (jniSig);
 			var javaReturnType = JniSignatureHelper.JniTypeToJava (jniReturnType);
 			var access = GetJavaAccess (methodDef.Attributes & MethodAttributes.MemberAccessMask);

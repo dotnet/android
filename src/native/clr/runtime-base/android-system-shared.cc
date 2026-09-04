@@ -59,7 +59,12 @@ AndroidSystem::get_max_gref_count_from_system () noexcept -> long
 	}
 
 	char override[Constants::PROPERTY_VALUE_BUFFER_LEN];
-	const char *grefc = monodroid_get_system_property (Constants::DEBUG_MONO_MAX_GREFC.data (), override, sizeof (override));
+	std::string_view property_name = Constants::DEBUG_DOTNET_MAX_GREFC;
+	const char *grefc = monodroid_get_system_property (property_name.data (), override, sizeof (override));
+	if (grefc == nullptr) {
+		property_name = Constants::LEGACY_DEBUG_MONO_MAX_GREFC;
+		grefc = monodroid_get_system_property (property_name.data (), override, sizeof (override));
+	}
 	if (grefc != nullptr) {
 		char *e;
 		max = strtol (grefc, &e, 10);
@@ -82,7 +87,7 @@ AndroidSystem::get_max_gref_count_from_system () noexcept -> long
 			log_warnf (
 				LOG_GC,
 				"Unsupported '%s' value '%s'.",
-				Constants::DEBUG_MONO_MAX_GREFC.data (),
+				property_name.data (),
 				grefc
 			);
 		}

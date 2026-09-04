@@ -120,7 +120,7 @@ public sealed class JcwJavaSourceGenerator
 		// implements clause — always includes IGCUserPeer, plus any implemented interfaces
 		writer.Write ("\timplements\n\t\tmono.android.IGCUserPeer");
 
-		foreach (var iface in type.ImplementedInterfaceJavaNames) {
+		foreach (var iface in type.JavaCallableWrapperInterfaceJavaNames ?? type.ImplementedInterfaceJavaNames) {
 			writer.Write ($",\n\t\t{JniSignatureHelper.JniNameToJavaName (iface)}");
 		}
 

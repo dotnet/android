@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Threading;
 
 using Android.Text;
 using Android.Runtime;
@@ -120,13 +122,15 @@ namespace Java.InteropTests
 		{
 			AssumeTrimmableTypeMapEnabled ();
 
-			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetTargetTypes ("java/util/ArrayList", out var targetTypes));
-			if (targetTypes is null) {
-				Assert.Fail ("The java/util/ArrayList alias group was not generated.");
-				return;
+			var targetTypes = new List<Type> ();
+			foreach (var targetType in TrimmableTypeMap.Instance.GetTargetTypes ("java/util/ArrayList")) {
+				targetTypes.Add (targetType);
 			}
+			Assert.IsNotEmpty (targetTypes, "The java/util/ArrayList alias group was not generated.");
 			CollectionAssert.Contains (targetTypes, typeof (JavaList));
 			CollectionAssert.Contains (targetTypes, typeof (JavaList<>));
+			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetTargetType ("java/util/ArrayList", out var firstTargetType));
+			Assert.AreEqual (targetTypes [0], firstTargetType);
 
 			var arrayListClass = JniEnvironment.Types.FindClass ("java/util/ArrayList");
 			try {
@@ -164,7 +168,7 @@ namespace Java.InteropTests
 				Assert.IsNotNull (peer);
 				Assert.AreEqual (typeof (TrimmableRuntimeJavaInteropPeer), peer.GetType ());
 				Assert.AreEqual (1, TrimmableRuntimeJavaInteropPeer.ConstructorInvocations);
-				Assert.AreEqual (JniObjectReferenceOptions.Copy, TrimmableRuntimeJavaInteropPeer.Options);
+				Assert.AreEqual (JniObjectReferenceOptions.CopyAndDoNotRegister, TrimmableRuntimeJavaInteropPeer.Options);
 				Assert.IsTrue (peer.PeerReference.IsValid);
 			}
 		}
@@ -397,20 +401,38 @@ namespace Java.InteropTests
 	sealed class TrimmableRuntimeJavaInteropPeer : Java.Lang.Object
 	{
 		public static int ConstructorInvocations;
+		public static int DisposeInvocations;
 		public static JniObjectReferenceOptions Options;
+		public static volatile Barrier ActivationBarrier;
 
 		public TrimmableRuntimeJavaInteropPeer (ref JniObjectReference reference, JniObjectReferenceOptions options)
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			ConstructorInvocations++;
+			// ActivationBarrier deliberately puts two threads inside this constructor
+			// at once, so the counter must be updated atomically.
+			Interlocked.Increment (ref ConstructorInvocations);
 			Options = options;
 			Construct (ref reference, options);
+			var barrier = ActivationBarrier;
+			if (barrier != null && !barrier.SignalAndWait (TimeSpan.FromSeconds (10))) {
+				throw new TimeoutException ("Timed out waiting for concurrent peer activation.");
+			}
+		}
+
+		protected override void Dispose (bool disposing)
+		{
+			if (disposing) {
+				Interlocked.Increment (ref DisposeInvocations);
+			}
+			base.Dispose (disposing);
 		}
 
 		public static void Reset ()
 		{
 			ConstructorInvocations = 0;
+			DisposeInvocations = 0;
 			Options = JniObjectReferenceOptions.None;
+			ActivationBarrier = null;
 		}
 	}
 }

@@ -1873,6 +1873,279 @@ namespace Styleable.Library {
 			Assert.IsTrue (didStart, "Activity should have started.");
 		}
 
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
+		public void AppCompatJavaAliasCastsAndInflation (
+			string typemapImplementation,
+			AndroidRuntime runtime)
+		{
+			const string expectedLogcatOutput = "APPCOMPAT_ALIAS_CASTS_PASS";
+
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			var packageSuffix = $"appcompataliascasts{typemapImplementation.Replace ("-", "")}";
+			var packageName = PackageUtils.MakePackageName (runtime, packageSuffix);
+			var proj = new XamarinAndroidApplicationProject (
+				packageName: packageName) {
+				IsRelease = true,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			proj.SetProperty ("AndroidTypeMapImplementation", typemapImplementation);
+			proj.SetDefaultTargetDevice ();
+			proj.PackageReferences.Add (new Package {
+				Id = "Xamarin.AndroidX.AppCompat",
+				Version = "1.7.1.3",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\styles.xml") {
+				TextContent = () => """
+					<?xml version="1.0" encoding="utf-8"?>
+					<resources>
+						<style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar" />
+					</resources>
+					""",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\alias_casts.xml") {
+				TextContent = () => """
+					<?xml version="1.0" encoding="utf-8"?>
+					<LinearLayout
+						xmlns:android="http://schemas.android.com/apk/res/android"
+						android:layout_width="match_parent"
+						android:layout_height="match_parent"
+						android:orientation="vertical">
+						<androidx.appcompat.widget.Toolbar
+							android:id="@+id/toolbar"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content" />
+						<androidx.appcompat.widget.AppCompatImageButton
+							android:id="@+id/image_button"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:src="@android:drawable/ic_menu_add" />
+					</LinearLayout>
+					""",
+			});
+			proj.MainActivity = """
+				using System;
+
+				using Android.App;
+				using Android.Content;
+				using Android.OS;
+				using Android.Runtime;
+				using Android.Util;
+				using Android.Views;
+
+				using AndroidX.AppCompat.App;
+				using AndroidX.AppCompat.Widget;
+				using AndroidX.Core.View;
+
+				using Java.Interop;
+
+				namespace UnnamedProject
+				{
+					[Activity (
+						Label = "AppCompat alias casts",
+						MainLauncher = true,
+						Theme = "@style/AppTheme")]
+					public class MainActivity : AppCompatActivity
+					{
+						public MainActivity ()
+						{
+						}
+
+						protected MainActivity (IntPtr handle, JniHandleOwnership transfer)
+							: base (handle, transfer)
+						{
+						}
+
+						protected override void OnCreate (Bundle savedInstanceState)
+						{
+							base.OnCreate (savedInstanceState);
+							SetContentView (Resource.Layout.alias_casts);
+
+							VerifyInflatedViews ();
+							VerifyManagedCreatedViews ();
+							VerifyCallerDirectedGenericWrapper ();
+
+							Log.Info ("JavaAliasCasts", "APPCOMPAT_ALIAS_CASTS_PASS");
+						}
+
+						void VerifyInflatedViews ()
+						{
+							const bool allowRegisteredAliasInflation = __ALLOW_REGISTERED_ALIAS_INFLATION__;
+
+							var toolbarView = FindViewById (Resource.Id.toolbar);
+							Require (toolbarView != null, "Inflated Toolbar was not found.");
+							Require (
+								toolbarView.GetType () == typeof (AndroidX.AppCompat.Widget.Toolbar),
+								$"Expected most-derived Toolbar binding; {Describe (toolbarView)}.");
+
+							var toolbar = JavaObjectExtensions.JavaCast<AndroidX.AppCompat.Widget.Toolbar> (toolbarView);
+							var toolbarAs = JavaPeerableExtensions.JavaAs<AndroidX.AppCompat.Widget.Toolbar> (toolbarView);
+							Require (ReferenceEquals (toolbarView, toolbar), "JavaCast<Toolbar> did not preserve the existing peer.");
+							Require (ReferenceEquals (toolbarView, toolbarAs), "JavaAs<Toolbar> did not preserve the existing peer.");
+							Require (
+								ReferenceEquals (toolbarView, FindViewById (Resource.Id.toolbar)),
+								"Repeated Toolbar lookup did not preserve peer identity.");
+
+							var imageView = FindViewById (Resource.Id.image_button);
+							Require (imageView != null, "Inflated AppCompatImageButton was not found.");
+							Require (
+								imageView.GetType () == typeof (AppCompatImageButton) ||
+									(allowRegisteredAliasInflation && imageView.GetType () == typeof (AppCompatImageButtonAlias)),
+								$"Expected the canonical AppCompatImageButton binding; {Describe (imageView)}.");
+							Require (
+								ReferenceEquals (imageView, FindViewById (Resource.Id.image_button)),
+								"Repeated AppCompatImageButton lookup did not preserve peer identity.");
+
+							using var untypedImage = new Java.Lang.Object (
+								imageView.Handle,
+								JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister);
+							var alias = JavaObjectExtensions.JavaCast<AppCompatImageButtonAlias> (untypedImage);
+							try {
+								using var aliasAs = JavaPeerableExtensions.JavaAs<AppCompatImageButtonAlias> (untypedImage);
+								Require (alias != null, "JavaCast did not select the concrete AppCompatImageButton alias.");
+								Require (aliasAs != null, "JavaAs did not select the concrete AppCompatImageButton alias.");
+								Require (
+									JNIEnv.IsSameObject (imageView.Handle, alias.Handle),
+									"Concrete alias did not retain the inflated Java object.");
+								Require (
+									JNIEnv.IsSameObject (imageView.Handle, aliasAs.Handle),
+									"Concrete alias JavaAs did not retain the inflated Java object.");
+								if (imageView is AppCompatImageButtonAlias) {
+									Require (ReferenceEquals (imageView, alias), "JavaCast did not preserve the inflated alias peer.");
+								}
+								Require (
+									AppCompatImageButtonAlias.HandleConstructorCalls == 2,
+									"Inflation and concrete alias casts did not use the expected handle constructors.");
+
+								var tintable = JavaObjectExtensions.JavaCast<ITintableBackgroundView> (untypedImage);
+								try {
+									using var tintableAs = JavaPeerableExtensions.JavaAs<ITintableBackgroundView> (untypedImage);
+									Require (tintable != null, "JavaCast did not resolve the AppCompat interface.");
+									Require (tintableAs != null, "JavaAs did not resolve the AppCompat interface.");
+									Require (
+										JNIEnv.IsSameObject (imageView.Handle, tintable.Handle),
+										"Interface cast did not retain the inflated Java object.");
+									Require (
+										JNIEnv.IsSameObject (imageView.Handle, tintableAs.PeerReference.Handle),
+										"Interface JavaAs did not retain the inflated Java object.");
+								} finally {
+									if (tintable != null && !ReferenceEquals (tintable, imageView)) {
+										tintable.Dispose ();
+									}
+								}
+							} finally {
+								if (alias != null && !ReferenceEquals (alias, imageView)) {
+									alias.Dispose ();
+								}
+							}
+						}
+
+						void VerifyManagedCreatedViews ()
+						{
+							using var image = new AppCompatImageButton (this);
+							using var untypedImage = new Java.Lang.Object (
+								image.Handle,
+								JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister);
+							var castImage = JavaObjectExtensions.JavaCast<AppCompatImageButton> (untypedImage);
+							var imageAs = JavaPeerableExtensions.JavaAs<AppCompatImageButton> (image);
+							Require (ReferenceEquals (image, castImage), "Managed-created JavaCast did not preserve peer identity.");
+							Require (ReferenceEquals (image, imageAs), "Managed-created JavaAs did not preserve peer identity.");
+
+							using var alias = new AppCompatImageButtonAlias (this);
+							using var untypedAlias = new Java.Lang.Object (
+								alias.Handle,
+								JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister);
+							var castAlias = JavaObjectExtensions.JavaCast<AppCompatImageButtonAlias> (untypedAlias);
+							var aliasAs = JavaPeerableExtensions.JavaAs<AppCompatImageButtonAlias> (alias);
+							Require (ReferenceEquals (alias, castAlias), "Managed-created alias JavaCast did not preserve peer identity.");
+							Require (ReferenceEquals (alias, aliasAs), "Managed-created alias JavaAs did not preserve peer identity.");
+						}
+
+						static void VerifyCallerDirectedGenericWrapper ()
+						{
+							using var list = new JavaList ();
+							using var untyped = new Java.Lang.Object (
+								list.Handle,
+								JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister);
+							using var generic = JavaObjectExtensions.JavaCast<JavaList<string>> (untyped);
+							using var genericAs = JavaPeerableExtensions.JavaAs<JavaList<string>> (untyped);
+							Require (generic != null, "JavaCast did not create the caller-directed generic wrapper.");
+							Require (genericAs != null, "JavaAs did not create the caller-directed generic wrapper.");
+							Require (
+								JNIEnv.IsSameObject (generic.Handle, genericAs.Handle),
+								"Caller-directed generic wrappers did not retain the same Java object.");
+							generic.Add ("alias");
+							Require (genericAs [0] == "alias", "Caller-directed generic wrappers did not round trip their value.");
+							Require (
+								ReferenceEquals (generic, JavaPeerableExtensions.JavaAs<JavaList<string>> (generic)),
+								"Generic JavaAs did not preserve the typed peer.");
+						}
+
+						static string Describe (Java.Lang.Object value)
+						{
+							return $"managed={value.GetType ().FullName}, java={JNIEnv.GetClassNameFromInstance (value.Handle)}";
+						}
+
+						static void Require (bool condition, string message)
+						{
+							if (!condition) {
+								throw new InvalidOperationException (message);
+							}
+						}
+					}
+
+					[Register ("androidx/appcompat/widget/AppCompatImageButton", DoNotGenerateAcw = true)]
+					public sealed class AppCompatImageButtonAlias : AppCompatImageButton
+					{
+						public static int HandleConstructorCalls;
+
+						public AppCompatImageButtonAlias (Context context)
+							: base (context)
+						{
+						}
+
+						public AppCompatImageButtonAlias (Context context, IAttributeSet attrs)
+							: base (context, attrs)
+						{
+						}
+
+						public AppCompatImageButtonAlias (Context context, IAttributeSet attrs, int style)
+							: base (context, attrs, style)
+						{
+						}
+
+						public AppCompatImageButtonAlias (IntPtr handle, JniHandleOwnership transfer)
+							: base (handle, transfer)
+						{
+							HandleConstructorCalls++;
+						}
+					}
+				}
+				""".Replace (
+					"__ALLOW_REGISTERED_ALIAS_INFLATION__",
+					typemapImplementation == "llvm-ir" ? "true" : "false");
+			using var builder = CreateApkBuilder (packageName: packageName);
+			Assert.AreEqual (proj.PackageName, TestPackageNames [packageName], "Teardown should track the installed package.");
+			RunAdbCommand ($"uninstall {proj.PackageName}");
+			try {
+				Assert.True (builder.Install (proj), "Project should have installed.");
+				ClearAdbLogcat ();
+				RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
+				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+					Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
+				Assert.True (MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput),
+					Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45), $"Output did not contain {expectedLogcatOutput}.");
+			} finally {
+				RunAdbCommand ($"shell am force-stop --user all {proj.PackageName}");
+				RunAdbCommand ($"uninstall {proj.PackageName}");
+			}
+		}
+
 		[Test]
 		public void CheckXamarinFormsAppDeploysAndAButtonWorks ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{

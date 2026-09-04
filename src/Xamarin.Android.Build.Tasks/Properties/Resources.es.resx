@@ -1128,6 +1128,10 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {0} - The path to the AndroidManifest.xml file.
 </comment>
   </data>
+  <data name="XA1049" xml:space="preserve">
+    <value>The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'. Set one property to 'false'.</value>
+    <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>No se cumple la dependencia de Java "{0}".</value>
     <comment>The following are literal names and should not be translated: Java.

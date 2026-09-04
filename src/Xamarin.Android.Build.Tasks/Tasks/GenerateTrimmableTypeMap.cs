@@ -59,6 +59,20 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogCodedError ("XA4251", Properties.Resources.XA4251, managedTypeName);
 		public void LogInvalidJavaNameError (string javaName, string invalidIdentifier) =>
 			log.LogCodedError ("XA4258", Properties.Resources.XA4258, javaName, invalidIdentifier);
+		public void LogDuplicateJavaTypeError (string javaName) =>
+			log.LogCodedError ("XA4215", Properties.Resources.XA4215, javaName);
+		public void LogDuplicateJavaTypeDetailsError (string javaName, string managedTypeName) =>
+			log.LogCodedError ("XA4215", Properties.Resources.XA4215_Details, javaName, managedTypeName);
+		public void LogExportFieldWithParametersError () =>
+			log.LogCodedError ("XA4205", Java.Interop.Localization.Resources.JavaCallableWrappers_XA4205);
+		public void LogExportOnGenericTypeError () =>
+			log.LogCodedError ("XA4206", Java.Interop.Localization.Resources.JavaCallableWrappers_XA4206);
+		public void LogExportFieldOnGenericTypeError () =>
+			log.LogCodedError ("XA4207", Java.Interop.Localization.Resources.JavaCallableWrappers_XA4207);
+		public void LogExportFieldReturnsVoidError () =>
+			log.LogCodedError ("XA4208", Java.Interop.Localization.Resources.JavaCallableWrappers_XA4208);
+		public void LogUnsupportedExportSignatureError (string memberName, string managedTypeName) =>
+			log.LogCodedError ("XA4263", Properties.Resources.XA4263, memberName, managedTypeName);
 		public void LogCustomJavaObjectError (string managedTypeName) =>
 			log.LogError ("{0}", $"XA4212: {string.Format (Properties.Resources.XA4212, managedTypeName)}");
 		public void LogCustomJavaObjectWarning (string managedTypeName) =>
@@ -84,8 +98,11 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public string? ApplicationRegistrationOutputFile { get; set; }
 
 	public string? GeneratedAssembliesListFile { get; set; }
+	public string? TypeMapFingerprintsFile { get; set; }
 
 	public string? ManifestTemplate { get; set; }
+
+	public string? CustomViewMapFile { get; set; }
 
 	public string? MergedAndroidManifestOutput { get; set; }
 
@@ -173,6 +190,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 		var peReaders = new List<PEReader> ();
 		var assemblies = new List<AssemblyInput> ();
+		var typeMapAssemblyNames = new List<string> ();
+		var typeMapFingerprints = new SortedDictionary<string, string> (StringComparer.Ordinal);
+		var priorTypeMapFingerprints = ReadTypeMapFingerprints ();
 		TrimmableTypeMapResult? result = null;
 		try {
 			foreach (var (path, isFrameworkAssembly) in assemblyInputs) {
@@ -211,6 +231,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			if (!ManifestTemplate.IsNullOrEmpty () && File.Exists (ManifestTemplate)) {
 				manifestTemplate = XDocument.Load (ManifestTemplate);
 			}
+			IReadOnlyCollection<string>? customViewTypeNames = CustomViewMapFile.IsNullOrEmpty ()
+				? null
+				: MonoAndroidHelper.LoadCustomViewMapFile (BuildEngine4, CustomViewMapFile).Keys;
 
 			result = generator.Execute (
 				assemblies,
@@ -222,14 +245,20 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				packageNamingPolicy: PackageNamingPolicy,
 				generateTypeMapAssemblies: GenerateTypeMapAssemblies,
 				errorOnCustomJavaObject: ErrorOnCustomJavaObject,
-				collectMarshalMethodsForNonAcw: false);
+				customViewTypeNames: customViewTypeNames,
+				collectMarshalMethodsForNonAcw: false,
+				shouldGenerateTypeMapAssembly: TypeMapFingerprintsFile.IsNullOrEmpty () ? null : ShouldGenerateTypeMapAssembly);
 			if (Log.HasLoggedErrors) {
 				return false;
 			}
 
 			if (GenerateTypeMapAssemblies) {
-				GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyInputs.Select (i => i.Path).ToList ());
+				if (TypeMapFingerprintsFile.IsNullOrEmpty ()) {
+					typeMapAssemblyNames.AddRange (result.GeneratedAssemblies.Select (assembly => assembly.Name));
+				}
+				GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, typeMapAssemblyNames);
 				WriteGeneratedAssembliesListFile (GeneratedAssemblies);
+				WriteTypeMapFingerprints (typeMapFingerprints);
 			}
 			GeneratedJavaFiles = JavaSourceInputDirectory.IsNullOrEmpty ()
 				? WriteJavaSourcesToDisk (result.GeneratedJavaSources)
@@ -286,6 +315,56 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		}
 
 		return !Log.HasLoggedErrors;
+
+		bool ShouldGenerateTypeMapAssembly (string assemblyName, byte [] fingerprint)
+		{
+			typeMapAssemblyNames.Add (assemblyName);
+			string fingerprintText = Files.ToHexString (fingerprint);
+			typeMapFingerprints.Add (assemblyName, fingerprintText);
+			string outputPath = Path.Combine (OutputDirectory, assemblyName + ".dll");
+			bool generate = !File.Exists (outputPath) ||
+				!priorTypeMapFingerprints.TryGetValue (assemblyName, out var priorFingerprint) ||
+				!string.Equals (fingerprintText, priorFingerprint, StringComparison.Ordinal);
+			Log.LogDebugMessage ($"  {assemblyName}: {(generate ? "changed, generating" : "unchanged, skipping emission")}");
+			return generate;
+		}
+	}
+
+	internal Dictionary<string, string> ReadTypeMapFingerprints ()
+	{
+		var fingerprints = new Dictionary<string, string> (StringComparer.Ordinal);
+		if (TypeMapFingerprintsFile.IsNullOrEmpty () || !File.Exists (TypeMapFingerprintsFile)) {
+			return fingerprints;
+		}
+		try {
+			foreach (var line in File.ReadLines (TypeMapFingerprintsFile)) {
+				int separator = line.IndexOf ('\t');
+				if (separator <= 0 || separator == line.Length - 1) {
+					Log.LogDebugMessage ($"Ignoring invalid trimmable typemap fingerprint cache '{TypeMapFingerprintsFile}'.");
+					return new Dictionary<string, string> (StringComparer.Ordinal);
+				}
+				fingerprints [line.Substring (0, separator)] = line.Substring (separator + 1);
+			}
+		} catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) {
+			Log.LogDebugMessage ($"Could not read trimmable typemap fingerprint cache '{TypeMapFingerprintsFile}': {ex.Message}");
+			fingerprints.Clear ();
+		}
+		return fingerprints;
+	}
+
+	void WriteTypeMapFingerprints (IReadOnlyDictionary<string, string> fingerprints)
+	{
+		if (TypeMapFingerprintsFile.IsNullOrEmpty ()) {
+			return;
+		}
+		var directory = Path.GetDirectoryName (TypeMapFingerprintsFile);
+		if (!directory.IsNullOrEmpty ()) {
+			Directory.CreateDirectory (directory);
+		}
+		var text = fingerprints.Count == 0
+			? ""
+			: string.Join (Environment.NewLine, fingerprints.Select (entry => $"{entry.Key}\t{entry.Value}")) + Environment.NewLine;
+		Files.CopyIfStringChanged (text, TypeMapFingerprintsFile);
 	}
 
 	static bool IsFrameworkAssemblyItem (ITaskItem item) =>
@@ -332,66 +411,19 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		return items.ToArray ();
 	}
 
-	ITaskItem [] WriteAssembliesToDisk (IReadOnlyList<GeneratedAssembly> assemblies, IReadOnlyList<string> assemblyPaths)
+	ITaskItem [] WriteAssembliesToDisk (IReadOnlyList<GeneratedAssembly> assemblies, IReadOnlyList<string> assemblyNames)
 	{
-		// Build a map from assembly name -> source path for timestamp comparison
-		var sourcePathByName = new Dictionary<string, string> (StringComparer.Ordinal);
-		foreach (var path in assemblyPaths) {
-			var name = Path.GetFileNameWithoutExtension (path);
-			sourcePathByName [name] = path;
-		}
-
+		var generatedByName = assemblies.ToDictionary (assembly => assembly.Name, StringComparer.Ordinal);
 		var items = new List<ITaskItem> ();
-		bool anyRegenerated = false;
-
-		foreach (var assembly in assemblies) {
-			if (assembly.Name == "_Microsoft.Android.TypeMaps") {
-				continue; // Handle root assembly separately below
-			}
-
-			string outputPath = Path.Combine (OutputDirectory, assembly.Name + ".dll");
-			// Extract the original assembly name from the typemap name (e.g., "_Foo.TypeMap" -> "Foo")
-			string originalName = assembly.Name;
-			if (originalName.StartsWith ("_", StringComparison.Ordinal) && originalName.EndsWith (".TypeMap", StringComparison.Ordinal)) {
-				originalName = originalName.Substring (1, originalName.Length - ".TypeMap".Length - 1);
-			}
-
-			if (IsUpToDate (outputPath, originalName, sourcePathByName)) {
-				Log.LogDebugMessage ($"  {assembly.Name}: up to date, skipping");
-			} else {
+		foreach (var assemblyName in assemblyNames) {
+			string outputPath = Path.Combine (OutputDirectory, assemblyName + ".dll");
+			if (generatedByName.TryGetValue (assemblyName, out var assembly)) {
 				Files.CopyIfStreamChanged (assembly.Content, outputPath);
-				anyRegenerated = true;
-				Log.LogDebugMessage ($"  {assembly.Name}: written");
+				Log.LogDebugMessage ($"  {assemblyName}: written");
 			}
-
 			items.Add (new TaskItem (outputPath));
 		}
-
-		// Root assembly — regenerate if any per-assembly typemap changed
-		var rootAssembly = assemblies.FirstOrDefault (a => a.Name == "_Microsoft.Android.TypeMaps");
-		if (rootAssembly is not null) {
-			string rootOutputPath = Path.Combine (OutputDirectory, rootAssembly.Name + ".dll");
-			if (anyRegenerated || !File.Exists (rootOutputPath)) {
-				Files.CopyIfStreamChanged (rootAssembly.Content, rootOutputPath);
-				Log.LogDebugMessage ($"  Root: written");
-			} else {
-				Log.LogDebugMessage ($"  Root: up to date, skipping");
-			}
-			items.Add (new TaskItem (rootOutputPath));
-		}
-
 		return items.ToArray ();
-	}
-
-	static bool IsUpToDate (string outputPath, string assemblyName, Dictionary<string, string> sourcePathByName)
-	{
-		if (!File.Exists (outputPath)) {
-			return false;
-		}
-		if (!sourcePathByName.TryGetValue (assemblyName, out var sourcePath)) {
-			return false;
-		}
-		return File.GetLastWriteTimeUtc (outputPath) >= File.GetLastWriteTimeUtc (sourcePath);
 	}
 
 	ITaskItem [] WriteJavaSourcesToDisk (IReadOnlyList<GeneratedJavaSource> javaSources)

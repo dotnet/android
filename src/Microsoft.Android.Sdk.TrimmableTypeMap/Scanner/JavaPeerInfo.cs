@@ -58,10 +58,15 @@ public sealed record JavaPeerInfo
 	public string? BaseJavaName { get; init; }
 
 	/// <summary>
-	/// JNI names of Java interfaces this type implements, e.g., ["android/view/View$OnClickListener"].
-	/// Needed by JCW Java source generation ("implements" clause).
+	/// JNI names of direct Java interfaces this type implements, in managed metadata order.
 	/// </summary>
 	public IReadOnlyList<string> ImplementedInterfaceJavaNames { get; init; } = Array.Empty<string> ();
+
+	/// <summary>
+	/// Ordered JNI names to emit in the Java callable wrapper's implements clause.
+	/// Redundant parent interfaces and duplicate Java names are omitted.
+	/// </summary>
+	internal IReadOnlyList<string>? JavaCallableWrapperInterfaceJavaNames { get; init; }
 
 	/// <summary>
 	/// Java annotations forwarded from managed custom attributes decorated with
@@ -367,6 +372,11 @@ public sealed record JavaConstructorInfo
 	/// Managed constructor parameter types, in declaration order.
 	/// </summary>
 	internal IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
+
+	/// <summary>
+	/// Per-parameter [ExportParameter] kinds for constructor argument marshalling.
+	/// </summary>
+	internal IReadOnlyList<ExportParameterKindInfo> ManagedParameterExportKinds { get; init; } = [];
 
 	/// <summary>
 	/// True when this Java constructor has a matching public managed constructor on the target type.

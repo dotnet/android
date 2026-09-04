@@ -10,6 +10,27 @@ namespace Android.Runtime
 	}
 }
 
+namespace Lookalike
+{
+	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
+	public sealed class ExportAttribute : Attribute
+	{
+		public ExportAttribute (string name) { }
+	}
+
+	[AttributeUsage (AttributeTargets.Parameter | AttributeTargets.ReturnValue, AllowMultiple = false)]
+	public sealed class ExportParameterAttribute : Attribute
+	{
+		public ExportParameterAttribute (Java.Interop.ExportParameterKind kind) { }
+	}
+
+	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
+	public sealed class ExportFieldAttribute : Attribute
+	{
+		public ExportFieldAttribute (string name) { }
+	}
+}
+
 namespace Java.Interop
 {
 	public struct JniObjectReference

@@ -158,6 +158,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA1046](xa1046.md): Attribute '{0}' in element '{1}' has value '{2}' that cannot be parsed as boolean; {3} line {4}.
 + [XA1047](xa1047.md): Required attribute '{0}' missing from element '{1}'; {2} line {3}.
 + [XA1048](xa1048.md): '{0}' does not contain an &lt;instrumentation&gt; element.
++ [XA1049](xa1049.md): The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'.
 
 ## XA2xxx: Linker
 
@@ -228,6 +229,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4255](xa4255.md): Generated trimmable type map Java source '{path}' was not found.
 + [XA4256](xa4256.md): Skipping Java peer type '{type}' from assembly '{assembly}' because referenced type '{referencedType}' from assembly '{referencedAssembly}' could not be resolved in '{path}'. This type will not be included in the trimmable type map.
 + [XA4258](xa4258.md): Java name '{name}' contains invalid or unsupported Java identifier '{identifier}'. Change the package or type name.
++ [XA4263](xa4263.md): The exported member '{member}' has unsupported signature type '{type}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter].
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
@@ -253,6 +255,8 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4322](xa4322.md): Skipping library ProGuard configuration file '{file}' (from {source}) because it contains the unsupported global option '{option}'. Global ProGuard options are only allowed in application projects.
 + [XA4323](xa4323.md): Ignoring directory '{directory}' as it does not exist.
 + [XA4324](xa4324.md): [{arch}] Unable to delete source file '{file}'.
++ [XA4325](xa4325.md): Failed to rewrite managed JNI names for R8. {message}
++ [XA4326](xa4326.md): Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous `JNIEnv.FindClass` source.
 
 ## XA5xxx: GCC and toolchain
 

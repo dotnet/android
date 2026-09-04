@@ -230,6 +230,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidLibraryFlatArchivesDirectory>$(IntermediateOutputPath)flata\</_AndroidLibraryFlatArchivesDirectory>
 	<_AndroidLibraryFlatFilesDirectory>$(IntermediateOutputPath)flat\</_AndroidLibraryFlatFilesDirectory>
 	<_AndroidStampDirectory>$(IntermediateOutputPath)stamp\</_AndroidStampDirectory>
+	<_AndroidR8BuildMetadataFile>$(IntermediateOutputPath)r8.json</_AndroidR8BuildMetadataFile>
         <_AndroidApplicationSharedLibraryPath>$(IntermediateOutputPath)app_shared_libraries\</_AndroidApplicationSharedLibraryPath>
 	<_ResolvedUserAssembliesHashFile>$(IntermediateOutputPath)resolvedassemblies.hash</_ResolvedUserAssembliesHashFile>
   <_AndroidResolvedResourcesHashFile>$(IntermediateOutputPath)_AndroidResolvedResources.hash</_AndroidResolvedResourcesHashFile>
@@ -531,6 +532,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidWarning Code="XA0119"
       ResourceName="XA0119_ReadyToRunWithoutTrimming"
       Condition=" '$(_AndroidReadyToRunWithoutTrimming)' == 'true' "
+  />
+  <AndroidError Code="XA1049"
+      ResourceName="XA1049"
+      Condition=" '$(AndroidEnableMarshalMethods)' == 'True' And '$(PublishReadyToRun)' == 'True' "
   />
   <AndroidWarning Code="XA1027"
       ResourceName="XA1027"
@@ -2162,6 +2167,10 @@ because xbuild doesn't support framework reference assemblies.
     <AndroidAppBundleMetaDataFile
         Condition=" Exists('$(AndroidProguardMappingFile)') "
         Include="com.android.tools.build.obfuscation/proguard.map:$(AndroidProguardMappingFile)"
+    />
+    <AndroidAppBundleMetaDataFile
+        Condition=" (('$(AndroidLinkTool)' == 'r8' And '$(_ProguardProjectConfiguration)' != '') Or '$(AndroidEnableMultiDex)' == 'True') And Exists('$(_AndroidR8BuildMetadataFile)') "
+        Include="com.android.tools/r8.json:$(_AndroidR8BuildMetadataFile)"
     />
   </ItemGroup>
 </Target>
