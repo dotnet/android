@@ -34,7 +34,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
-			AssertTrimmableTypeMapOutputs (intermediateDir, isRelease);
+			AssertTrimmableTypeMapOutputs (intermediateDir, usePreGeneratedFrameworkTypeMaps: !isRelease);
 			if (!isRelease) {
 				var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 				FileAssert.Exists (dexFile);
@@ -268,7 +268,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
-			AssertTrimmableTypeMapOutputs (intermediateDir, isRelease: false);
+			AssertTrimmableTypeMapOutputs (intermediateDir, usePreGeneratedFrameworkTypeMaps: false);
 		}
 
 		[Test]
@@ -288,7 +288,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
-			AssertTrimmableTypeMapOutputs (intermediateDir, isRelease);
+			AssertTrimmableTypeMapOutputs (intermediateDir, usePreGeneratedFrameworkTypeMaps: !isRelease);
 			var typemapDlls = Directory.GetFiles (intermediateDir, "*.dll");
 			Assert.IsNotEmpty (typemapDlls, "First build should have generated typemap DLL(s).");
 
@@ -1397,7 +1397,7 @@ namespace UnnamedProject {
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded — abstract types with protected ctors should not cause XAGTT7009.");
 		}
 
-		static void AssertTrimmableTypeMapOutputs (string typemapDir, bool isRelease)
+		static void AssertTrimmableTypeMapOutputs (string typemapDir, bool usePreGeneratedFrameworkTypeMaps)
 		{
 			DirectoryAssert.Exists (typemapDir);
 			FileAssert.Exists (Path.Combine (typemapDir, "_Microsoft.Android.TypeMaps.dll"));
@@ -1405,11 +1405,11 @@ namespace UnnamedProject {
 			var generatedAssemblies = File.ReadAllLines (Path.Combine (typemapDir, "typemap-assemblies.txt"))
 				.Select (Path.GetFileName)
 				.ToArray ();
-			if (isRelease) {
+			if (!usePreGeneratedFrameworkTypeMaps) {
 				FileAssert.Exists (Path.Combine (typemapDir, "_Mono.Android.TypeMap.dll"),
-					"Release builds must generate Mono.Android's typemap with the complete shared universe.");
+					"Builds that cannot use the pre-generated framework maps must generate Mono.Android's typemap.");
 				FileAssert.Exists (Path.Combine (typemapDir, "_Java.Interop.TypeMap.dll"),
-					"Release builds must generate Java.Interop's typemap with the complete shared universe.");
+					"Builds that cannot use the pre-generated framework maps must generate Java.Interop's typemap.");
 				CollectionAssert.Contains (generatedAssemblies, "_Mono.Android.TypeMap.dll");
 				CollectionAssert.Contains (generatedAssemblies, "_Java.Interop.TypeMap.dll");
 			} else {
