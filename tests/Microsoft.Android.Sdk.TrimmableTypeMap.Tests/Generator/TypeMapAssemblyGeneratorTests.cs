@@ -173,6 +173,38 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_ConstructorWithoutMatchingManagedCtor_UsesActivationCtor ()
+	{
+		var peer = MakeAcwPeer ("my/app/MissingCtor", "MyApp.MissingCtor", "App") with {
+			JavaConstructors = [
+				new JavaConstructorInfo {
+					ConstructorIndex = 0,
+					JniSignature = "(IC)V",
+					HasMatchingManagedCtor = false,
+					SuperArgumentsString = "",
+				},
+			],
+		};
+
+		using var stream = GenerateAssembly ([peer], "MissingCtorActivationTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		Assert.NotEmpty (FindCtorMemberRefs (
+			reader,
+			"MyApp",
+			"MissingCtor",
+			"System.IntPtr",
+			"Android.Runtime.JniHandleOwnership"));
+		Assert.Empty (FindCtorMemberRefs (
+			reader,
+			"MyApp",
+			"MissingCtor",
+			"System.Int32",
+			"System.Char"));
+	}
+
+	[Fact]
 	public void Generate_InheritedCtor_CreateInstanceDoesNotActivate ()
 	{
 		var peers = ScanFixtures ();
