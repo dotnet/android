@@ -967,7 +967,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'. Set one property to 'false'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Vlastnosti MSBuildu AndroidEnableMarshalMethods a PublishReadyToRun nelze nastavit na hodnotu true. Nastavte jednu vlastnost na false.]]></Val>
+            <Val><![CDATA[Vlastnosti MSBuildu AndroidEnableMarshalMethods a PublishReadyToRun nelze současně nastavit na hodnotu true. Nastavte jednu vlastnost na false.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
