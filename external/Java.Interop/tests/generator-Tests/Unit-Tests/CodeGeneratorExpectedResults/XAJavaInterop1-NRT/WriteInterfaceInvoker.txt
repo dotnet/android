@@ -11,14 +11,6 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 		get { return _members; }
 	}
 
-	protected override IntPtr ThresholdClass {
-		get { return class_ref; }
-	}
-
-	protected override global::System.Type ThresholdType {
-		get { return _members.ManagedPeerType; }
-	}
-
 	IntPtr class_ref;
 
 	public static IMyInterface? GetObject (IntPtr handle, JniHandleOwnership transfer)
@@ -279,4 +271,3 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	}
 
 }
-

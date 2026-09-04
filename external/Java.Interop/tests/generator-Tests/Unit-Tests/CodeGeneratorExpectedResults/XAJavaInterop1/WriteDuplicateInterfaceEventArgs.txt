@@ -23,18 +23,6 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 		get { return _members_java_code_AnimatorListener; }
 	}
 
-	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-	protected override IntPtr ThresholdClass {
-		get { return _members_java_code_AnimatorListener.JniPeerType.PeerReference.Handle; }
-	}
-
-	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-	protected override global::System.Type ThresholdType {
-		get { return _members_java_code_AnimatorListener.ManagedPeerType; }
-	}
-
 	static readonly JniPeerMembers _members_java_code_AnimatorListener = new XAPeerMembers ("java/code/AnimatorListener", typeof (AnimatorListenerInvoker));
 
 	public AnimatorListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)

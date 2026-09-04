@@ -58,18 +58,6 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 		get { return _members_java_code_IMyInterface; }
 	}
 
-	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-	protected override IntPtr ThresholdClass {
-		get { return _members_java_code_IMyInterface.JniPeerType.PeerReference.Handle; }
-	}
-
-	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-	protected override global::System.Type ThresholdType {
-		get { return _members_java_code_IMyInterface.ManagedPeerType; }
-	}
-
 	static readonly JniPeerMembers _members_java_code_IMyInterface = new XAPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
 
 	public IMyInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)

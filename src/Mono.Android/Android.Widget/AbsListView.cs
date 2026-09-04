@@ -67,20 +67,18 @@ namespace Android.Widget {
 		}
 
 #if ANDROID_12
-		static IntPtr id_setAdapter_Landroid_widget_ListAdapter_;
 		[Obsolete ("Please use the Adapter property setter")]
 		[Register ("setAdapter", "(Landroid/widget/ListAdapter;)V", "GetSetAdapter_Landroid_widget_ListAdapter_Handler")]
-		public virtual void SetAdapter (Android.Widget.IListAdapter adapter)
+		public virtual unsafe void SetAdapter (Android.Widget.IListAdapter adapter)
 		{
-			if (id_setAdapter_Landroid_widget_ListAdapter_ == IntPtr.Zero)
-				id_setAdapter_Landroid_widget_ListAdapter_ = JNIEnv.GetMethodID (class_ref, "setAdapter", "(Landroid/widget/ListAdapter;)V");
-
-			if (GetType () == ThresholdType)
-				JNIEnv.CallVoidMethod  (Handle, id_setAdapter_Landroid_widget_ListAdapter_, new JValue (adapter));
-			else
-				JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, id_setAdapter_Landroid_widget_ListAdapter_, new JValue (adapter));
-			GC.KeepAlive (adapter);
-			GC.KeepAlive (this);
+			const string id = "setAdapter.(Landroid/widget/ListAdapter;)V";
+			try {
+				JniArgumentValue* args = stackalloc JniArgumentValue [1];
+				args [0] = new JniArgumentValue ((adapter == null) ? IntPtr.Zero : ((Java.Lang.Object) adapter).Handle);
+				_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
+			} finally {
+				GC.KeepAlive (adapter);
+			}
 		}
 #endif
 	}
