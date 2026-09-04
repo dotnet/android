@@ -236,7 +236,6 @@
     <Compile Include="Android.Runtime\InputStreamAdapter.cs" />
     <Compile Include="Android.Runtime\InputStreamInvoker.cs" />
     <Compile Include="Android.Runtime\IntDefAttribute.cs" />
-    <Compile Include="Android.Runtime\IntDefinitionAttribute.cs" />
     <Compile Include="Android.Runtime\JavaArray.cs" />
     <Compile Include="Android.Runtime\JavaCollection.cs" />
     <Compile Include="Android.Runtime\JavaDictionary.cs" />

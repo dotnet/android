@@ -2,3 +2,9 @@
 Android.App.ApplicationAttribute.EnableOnBackInvokedCallback.get -> bool
 Android.App.ApplicationAttribute.EnableOnBackInvokedCallback.set -> void
 static Android.Runtime.JNIEnv.BridgeProcessingGeneration.get -> int
+*REMOVED*Android.Runtime.IntDefinitionAttribute
+*REMOVED*Android.Runtime.IntDefinitionAttribute.ConstantMember.get -> string?
+*REMOVED*Android.Runtime.IntDefinitionAttribute.ConstantMember.set -> void
+*REMOVED*Android.Runtime.IntDefinitionAttribute.IntDefinitionAttribute(string? constantMember) -> void
+*REMOVED*Android.Runtime.IntDefinitionAttribute.JniField.get -> string?
+*REMOVED*Android.Runtime.IntDefinitionAttribute.JniField.set -> void
