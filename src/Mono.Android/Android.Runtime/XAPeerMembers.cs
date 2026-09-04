@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.CompilerServices;
 
 using Java.Interop;
 
@@ -19,8 +18,17 @@ namespace Android.Runtime {
 
 		protected override bool UsesVirtualDispatch (IJavaPeerable value, Type? declaringType)
 		{
-			var peerType = GetLegacyThresholdType (value);
-			if (peerType == null)
+			// Newly generated bindings use JniPeerMembers directly. XAPeerMembers is
+			// retained for old binaries, but hand-written bindings may have used it
+			// without declaring threshold overrides.
+			if (value.JniPeerMembers is not XAPeerMembers)
+				return base.UsesVirtualDispatch (value, declaringType);
+
+			var peerType = GetThresholdType (value);
+			// Old generated bindings return the managed type represented by their
+			// JniPeerMembers. A mismatch means either there is no override, or this
+			// is a new binding derived from an old one; both use metadata dispatch.
+			if (peerType != value.JniPeerMembers.ManagedPeerType)
 				return base.UsesVirtualDispatch (value, declaringType);
 
 			return peerType == value.GetType ();
@@ -28,33 +36,19 @@ namespace Android.Runtime {
 
 		protected override JniPeerMembers GetPeerMembers (IJavaPeerable value)
 		{
-			// Keep this shipped override for API compatibility. New dispatch uses the
-			// receiver's peer members, which is the base implementation.
+			// Retained because this protected override is part of the shipped API.
 			return base.GetPeerMembers (value);
 		}
 
-		static Type? GetLegacyThresholdType (IJavaPeerable value)
+		static Type? GetThresholdType (IJavaPeerable value)
 		{
-			// Old generated bindings override ThresholdType to return the managed type
-			// represented by their JniPeerMembers. New bindings inherit Object's or
-			// Throwable's value instead. Comparing the two also identifies a new binding
-			// derived from an old one: it inherits the old ThresholdType but replaces
-			// JniPeerMembers, so it must use the new metadata-based dispatch.
-			Type? peerType = null;
 			if (value is Java.Lang.Object o) {
-				peerType = GetObjectThresholdType (o);
-			} else if (value is Java.Lang.Throwable t) {
-				peerType = GetThrowableThresholdType (t);
+				return o.GetThresholdTypeForLegacyDispatch ();
 			}
-			return peerType == value.JniPeerMembers.ManagedPeerType ? peerType : null;
+			if (value is Java.Lang.Throwable t) {
+				return t.GetThresholdTypeForLegacyDispatch ();
+			}
+			return null;
 		}
-
-		// UnsafeAccessorKind.Method emits callvirt. These bind to the permanent base
-		// getters below, then dispatch to an override when an old binding declares one.
-		[UnsafeAccessor (UnsafeAccessorKind.Method, Name = "get_ThresholdType")]
-		static extern Type GetObjectThresholdType (Java.Lang.Object value);
-
-		[UnsafeAccessor (UnsafeAccessorKind.Method, Name = "get_ThresholdType")]
-		static extern Type GetThrowableThresholdType (Java.Lang.Throwable value);
 	}
 }

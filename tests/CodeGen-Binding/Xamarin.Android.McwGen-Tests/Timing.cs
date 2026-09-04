@@ -89,7 +89,7 @@ namespace Com.Xamarin.Android {
 				JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "VirtualVoidMethod", "()V"));
 		}
 
-		internal     static  readonly    JniPeerMembers  _jonp_members    = new XAPeerMembers ("com/xamarin/android/Timing", typeof (Timing));
+		internal     static  readonly    JniPeerMembers  _jonp_members    = new JniPeerMembers ("com/xamarin/android/Timing", typeof (Timing));
 		public unsafe void VirtualVoidMethod_Timing_JniPeerMembers ()
 		{
 			const string id = "VirtualVoidMethod.()V";

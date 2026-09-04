@@ -9,7 +9,7 @@ namespace Xamarin.Android.JcwGenTests {
 	[Register ("com/xamarin/android/ModernThresholdDerived", DoNotGenerateAcw = true)]
 	public class ModernThresholdDerived : LegacyThresholdBinding.LegacyThresholdDerived {
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("com/xamarin/android/ModernThresholdDerived", typeof (ModernThresholdDerived));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("com/xamarin/android/ModernThresholdDerived", typeof (ModernThresholdDerived));
 
 		public override JniPeerMembers JniPeerMembers => _members;
 
