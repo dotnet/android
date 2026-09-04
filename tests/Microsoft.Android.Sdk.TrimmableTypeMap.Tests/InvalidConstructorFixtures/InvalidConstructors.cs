@@ -332,6 +332,13 @@ public class MissingBaseCtorActivity : NoDefaultBase
 	public MissingBaseCtorActivity (string value) : base (0) { }
 }
 
+[Register ("my/app/RegisteredMissingBaseCtorActivity")]
+public class RegisteredMissingBaseCtorActivity : NoDefaultBase
+{
+	[Register (".ctor", "(Ljava/lang/String;)V", "")]
+	public RegisteredMissingBaseCtorActivity (string value) : base (0) { }
+}
+
 [Register ("my/app/InvalidSuperArgumentsActivity")]
 public class InvalidSuperArgumentsActivity : Android.App.Activity
 {

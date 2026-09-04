@@ -2910,7 +2910,6 @@ public sealed class JavaPeerScanner : IDisposable
 		var signatures = new Dictionary<string, IReadOnlyList<TypeRefData>> (StringComparer.Ordinal);
 		var reportedAmbiguousSignatures = new HashSet<string> (StringComparer.Ordinal);
 		var baseConstructors = CollectBaseRegisteredCtors (typeDef, index);
-		bool hasParameterlessBaseConstructor = baseConstructors.Any (c => c.RegisterInfo.Signature == "()V");
 
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
@@ -2971,8 +2970,9 @@ public sealed class JavaPeerScanner : IDisposable
 				baseCtor.RegisterInfo.Signature is string baseJniSignature
 					? baseJniSignature == forwardedBaseSignature
 					: HaveIdenticalParameterTypes (methodDef, index, baseCtor.Method, baseCtor.Index, baseCtor.DeclaringType));
-			bool canUseParameterlessBaseConstructor = !hasExplicitRegistration && hasParameterlessBaseConstructor;
-			if (baseConstructors.Count > 0 && !hasCompatibleBaseConstructor && !canUseParameterlessBaseConstructor) {
+			if (hasExplicitRegistration &&
+			    baseConstructors.Count > 0 &&
+			    !hasCompatibleBaseConstructor) {
 				diagnostics.Add (new ConstructorDiagnosticInfo {
 					Kind = ConstructorDiagnosticKind.MissingBaseConstructor,
 					Detail = jniSignature,

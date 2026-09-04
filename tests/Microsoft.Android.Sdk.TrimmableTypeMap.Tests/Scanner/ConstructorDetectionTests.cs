@@ -235,18 +235,19 @@ public class ConstructorDetectionTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void MissingBaseConstructor_IsDiagnosed ()
+	public void ImplicitMissingBaseConstructor_IsSkippedWithoutDiagnostic ()
 	{
-		var diagnostic = Assert.Single (ScanConstructorDiagnostics ("MyApp.MissingBaseCtorActivity"));
-		Assert.Equal (ConstructorDiagnosticKind.MissingBaseConstructor, diagnostic.Kind);
-		Assert.Equal ("(Ljava/lang/String;)V", diagnostic.Detail);
+		var peer = ScanPeer ("MyApp.MissingBaseCtorActivity");
+		Assert.Empty (peer.ConstructorDiagnostics);
+		Assert.DoesNotContain (peer.JavaConstructors, constructor => constructor.JniSignature == "(Ljava/lang/String;)V");
 	}
 
 	[Theory]
+	[InlineData ("MyApp.RegisteredMissingBaseCtorActivity")]
 	[InlineData ("MyApp.ExportMissingBaseCtorActivity")]
 	[InlineData ("MyApp.ExportEmptySuperMissingBaseActivity")]
 	[InlineData ("MyApp.NonPublicExportMissingBaseActivity")]
-	public void ExportWithoutSuperArgumentsString_MissingBaseConstructor_IsDiagnosed (string managedTypeName)
+	public void ExplicitConstructor_MissingBaseConstructor_IsDiagnosed (string managedTypeName)
 	{
 		var diagnostic = Assert.Single (ScanConstructorDiagnostics (managedTypeName));
 		Assert.Equal (ConstructorDiagnosticKind.MissingBaseConstructor, diagnostic.Kind);
