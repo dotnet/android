@@ -31,7 +31,7 @@ public class TrimmableTypeMap
 
 	readonly ITypeMap _typeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
-	readonly ConcurrentDictionary<string, JavaPeerProxy[]> _jniProxyCache = new (StringComparer.Ordinal);
+	readonly ConcurrentDictionary<string, object> _jniProxyCache = new (StringComparer.Ordinal);
 	readonly ConcurrentDictionary<(string ClassName, Type TargetType), JavaPeerProxy> _interfaceProxyCache = new ();
 
 	TrimmableTypeMap (ITypeMap typeMap)
@@ -107,43 +107,63 @@ public class TrimmableTypeMap
 		}
 	}
 
-	/// <summary>
-	/// Returns all target types mapped to a JNI name. For non-alias entries, returns a
-	/// single-element array. For alias groups, returns the surviving target types from
-	/// each alias key. Returns false when no mapping exists or all aliases were trimmed.
-	/// </summary>
-	internal bool TryGetTargetTypes (string jniName, [NotNullWhen (true)] out Type[]? types)
+	internal IEnumerable<Type> GetTargetTypes (string jniName)
 	{
-		var proxies = GetProxiesForJniName (jniName);
+		var cacheEntry = GetProxyCacheEntryForJniName (jniName);
+		if (cacheEntry is JavaPeerProxy proxy) {
+			yield return proxy.TargetType;
+			yield break;
+		}
+
+		foreach (var aliasProxy in GetProxyArrayCacheEntry (cacheEntry)) {
+			yield return aliasProxy.TargetType;
+		}
+	}
+
+	/// <summary>
+	/// Returns the first target type mapped to a JNI name without materializing all target types.
+	/// </summary>
+	internal bool TryGetTargetType (string jniName, [NotNullWhen (true)] out Type? type)
+	{
+		var cacheEntry = GetProxyCacheEntryForJniName (jniName);
+		if (cacheEntry is JavaPeerProxy proxy) {
+			type = proxy.TargetType;
+			return true;
+		}
+
+		var proxies = GetProxyArrayCacheEntry (cacheEntry);
 		if (proxies.Length == 0) {
-			types = null;
+			type = null;
 			return false;
 		}
 
-		types = new Type [proxies.Length];
-		for (int i = 0; i < proxies.Length; i++) {
-			types [i] = proxies [i].TargetType;
-		}
+		type = proxies [0].TargetType;
 		return true;
 	}
 
 	/// <summary>
-	/// Resolves and caches all proxies for a JNI name. For non-alias entries, returns a
-	/// single-element array. For alias groups, resolves each alias key and returns the
-	/// surviving proxies. Returns an empty array when no mapping exists or all aliases were trimmed.
+	/// Resolves and caches proxies for a JNI name. Non-alias entries are cached directly as
+	/// <see cref="JavaPeerProxy"/> instances. Alias groups are cached as arrays, and misses as
+	/// an empty array.
 	/// </summary>
-	JavaPeerProxy[] GetProxiesForJniName (string jniName)
+	object GetProxyCacheEntryForJniName (string jniName)
 	{
 		return _jniProxyCache.GetOrAdd (jniName, static (name, self) => {
-			var result = new List<JavaPeerProxy> ();
-			foreach (var type in self._typeMap.GetProxyTypes (name)) {
-				var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-				if (proxy is not null) {
-					result.Add (proxy);
-				}
-			}
-			return result.Count > 0 ? result.ToArray () : [];
+			var builder = new JniProxyCacheBuilder ();
+			self._typeMap.CollectProxyTypes (name, ref builder);
+			return builder.Build ();
 		}, this);
+	}
+
+	internal static JavaPeerProxy[] GetProxyArrayCacheEntry (object cacheEntry)
+	{
+		if (cacheEntry is JavaPeerProxy[] proxies) {
+			return proxies;
+		}
+
+		throw new InvalidOperationException (
+			$"Unexpected JNI proxy cache entry type '{cacheEntry.GetType ().FullName}'. " +
+			$"Expected {nameof (JavaPeerProxy)} or {nameof (JavaPeerProxy)}[].");
 	}
 
 	/// <summary>
@@ -153,7 +173,14 @@ public class TrimmableTypeMap
 	/// </summary>
 	JavaPeerProxy? GetProxyForJniClass (string className, Type? targetType)
 	{
-		var proxies = GetProxiesForJniName (className);
+		var cacheEntry = GetProxyCacheEntryForJniName (className);
+		if (cacheEntry is JavaPeerProxy singleProxy) {
+			return targetType is null || TargetTypeMatches (targetType, singleProxy.TargetType)
+				? singleProxy
+				: null;
+		}
+
+		var proxies = GetProxyArrayCacheEntry (cacheEntry);
 		if (proxies.Length == 0) {
 			return null;
 		}
@@ -167,6 +194,23 @@ public class TrimmableTypeMap
 		}
 		return null;
 	}
+
+	internal static void RegisterNativeMethods (object cacheEntry, JniType jniType)
+	{
+		if (cacheEntry is JavaPeerProxy singleProxy) {
+			if (singleProxy is IAndroidCallableWrapper acw) {
+				acw.RegisterNatives (jniType);
+			}
+			return;
+		}
+
+		foreach (var proxy in GetProxyArrayCacheEntry (cacheEntry)) {
+			if (proxy is IAndroidCallableWrapper acw) {
+				acw.RegisterNatives (jniType);
+			}
+		}
+	}
+
 	JavaPeerProxy? GetProxyForManagedType (Type managedType)
 	{
 		if (managedType.IsGenericType && !managedType.IsGenericTypeDefinition) {
@@ -195,8 +239,45 @@ public class TrimmableTypeMap
 			return null;
 		}
 
+		if (TryResolveProxyFromSealedTargetType (handle, targetType, out var proxy)) {
+			return proxy;
+		}
+
 		return TryGetProxyFromHierarchy (handle, targetType) ??
 			TryGetProxyFromTargetType (handle, targetType);
+	}
+
+	bool TryResolveProxyFromSealedTargetType (
+		IntPtr handle,
+		Type? targetType,
+		out JavaPeerProxy? proxy)
+	{
+		proxy = null;
+		// App peers can use class loaders which differ from the runtime fallback loader.
+		if (targetType is null ||
+				!targetType.IsSealed ||
+				targetType.Assembly != typeof (Java.Lang.Object).Assembly) {
+			return false;
+		}
+
+		var targetProxy = GetProxyForManagedType (targetType);
+		if (targetProxy is null) {
+			return false;
+		}
+
+		var targetClass = default (JniObjectReference);
+		try {
+			targetClass = JniEnvironment.Types.FindClass (targetProxy.JniName);
+			var reference = new JniObjectReference (handle);
+			if (JniEnvironment.Types.IsInstanceOf (reference, targetClass)) {
+				proxy = targetProxy;
+			}
+			return true;
+		} catch (Java.Lang.ClassNotFoundException) {
+			return false;
+		} finally {
+			JniObjectReference.Dispose (ref targetClass);
+		}
 	}
 
 	JavaPeerProxy? TryGetProxyFromHierarchy (IntPtr handle, Type? targetType)
@@ -348,26 +429,21 @@ public class TrimmableTypeMap
 
 		IJavaPeerable? peer;
 		if (ShouldActivateClosedGenericTarget (proxy, targetType)) {
-			peer = ActivateUsingReflection (targetType, handle, JniHandleOwnership.DoNotTransfer);
+			peer = ActivateUsingReflection (targetType, handle, ImplicitPeerOwnership);
 		} else {
-			peer = proxy?.CreateInstance (handle, JniHandleOwnership.DoNotTransfer);
+			peer = proxy?.CreateInstance (handle, ImplicitPeerOwnership);
 		}
-		if (peer is not null) {
-			MarkCreatedPeer (peer);
-		}
-		return peer;
+		return RegisterCreatedPeer (peer);
 	}
 
 	internal IJavaPeerable? CreateInstanceWithoutReflectionFallback (IntPtr handle, Type? targetType = null)
 	{
-		var peer = GetProxyForJavaObject (handle, targetType)?.CreateInstance (handle, JniHandleOwnership.DoNotTransfer);
-		if (peer is not null) {
-			MarkCreatedPeer (peer);
-		}
-		return peer;
+		var peer = GetProxyForJavaObject (handle, targetType)?.CreateInstance (handle, ImplicitPeerOwnership);
+		return RegisterCreatedPeer (peer);
 	}
 
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+	const JniHandleOwnership ImplicitPeerOwnership = JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister;
 
 	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
@@ -405,6 +481,23 @@ public class TrimmableTypeMap
 			peerState |= JniManagedPeerStates.Activatable;
 		}
 		peer.SetJniManagedPeerState (peerState);
+	}
+
+	static IJavaPeerable? RegisterCreatedPeer (IJavaPeerable? peer)
+	{
+		if (peer is null) {
+			return null;
+		}
+
+		// Mark the peer Replaceable *before* registering it. AddPeer() lets a
+		// non-replaceable peer evict an existing replaceable one, so registering during
+		// construction — which is what ConstructPeerCore does unless the activation
+		// constructor is told not to — would let this implicit intermediary evict the
+		// peer an earlier caller is already holding, leaving that caller with a wrapper
+		// the runtime no longer knows about. See dotnet/android#10973.
+		MarkCreatedPeer (peer);
+		JniEnvironment.Runtime.ValueManager.AddPeer (peer);
+		return peer;
 	}
 
 	/// <summary>
@@ -462,8 +555,8 @@ public class TrimmableTypeMap
 				return;
 			}
 
-			var proxies = s_instance.GetProxiesForJniName (className);
-			if (proxies.Length == 0) {
+			var cacheEntry = s_instance.GetProxyCacheEntryForJniName (className);
+			if (cacheEntry is JavaPeerProxy[] proxies && proxies.Length == 0) {
 				return;
 			}
 
@@ -471,11 +564,7 @@ public class TrimmableTypeMap
 			// which resolves via FindClass and may get a different class from a different ClassLoader.
 			// Registering natives on that other instance is silently wrong.
 			using var jniType = new JniType (ref classRef, JniObjectReferenceOptions.Copy);
-			foreach (var proxy in proxies) {
-				if (proxy is IAndroidCallableWrapper acw) {
-					acw.RegisterNatives (jniType);
-				}
-			}
+			RegisterNativeMethods (cacheEntry, jniType);
 		} catch (Exception ex) {
 			Environment.FailFast ($"TrimmableTypeMap: Failed to register natives for class '{className}'.", ex);
 		}
@@ -490,4 +579,33 @@ public class TrimmableTypeMap
 		public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
 	}
 
+}
+
+struct JniProxyCacheBuilder
+{
+	static readonly JavaPeerProxy[] Empty = [];
+
+	JavaPeerProxy? first;
+	List<JavaPeerProxy>? multiple;
+
+	public void Add (JavaPeerProxy proxy)
+	{
+		var firstProxy = first;
+		if (firstProxy is null) {
+			first = proxy;
+			return;
+		}
+
+		multiple ??= new List<JavaPeerProxy> (2) { firstProxy };
+		multiple.Add (proxy);
+	}
+
+	public object Build ()
+	{
+		if (multiple is not null) {
+			return multiple.ToArray ();
+		}
+
+		return first is JavaPeerProxy proxy ? proxy : Empty;
+	}
 }

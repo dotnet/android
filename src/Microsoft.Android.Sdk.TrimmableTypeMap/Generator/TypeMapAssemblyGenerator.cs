@@ -29,7 +29,22 @@ public sealed class TypeMapAssemblyGenerator
 	/// </param>
 	public void Generate (IReadOnlyList<JavaPeerInfo> peers, Stream stream, string assemblyName, bool useSharedTypemapUniverse = false)
 	{
-		var model = ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName);
+		var model = CreateModel (peers, assemblyName);
+		Generate (model, stream, useSharedTypemapUniverse);
+	}
+
+	internal TypeMapAssemblyData CreateModel (IReadOnlyList<JavaPeerInfo> peers, string assemblyName)
+	{
+		return ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName);
+	}
+
+	internal byte [] ComputeIncrementalFingerprint (TypeMapAssemblyData model, bool useSharedTypemapUniverse)
+	{
+		return MetadataHelper.ComputeIncrementalFingerprint (model, _systemRuntimeVersion, useSharedTypemapUniverse);
+	}
+
+	internal void Generate (TypeMapAssemblyData model, Stream stream, bool useSharedTypemapUniverse)
+	{
 		var emitter = new TypeMapAssemblyEmitter (_systemRuntimeVersion);
 		emitter.Emit (model, stream, useSharedTypemapUniverse);
 	}

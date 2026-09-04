@@ -1565,6 +1565,21 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Fixture_ExportConstructor_PropagatesParameterKinds ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportConstructorMappedParameter");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = Assert.Single (model.ProxyTypes);
+			var constructor = Assert.Single (
+				proxy.UcoConstructors,
+				candidate => candidate.JniSignature == "(Ljava/io/InputStream;)V");
+
+			Assert.True (constructor.HasMatchingManagedCtor);
+			Assert.Equal ("System.IO.Stream", constructor.ManagedParameterTypes [0].ManagedTypeName);
+			Assert.Equal ([ExportParameterKindInfo.InputStream], constructor.ParameterKinds);
+		}
+
+		[Fact]
 		public void Fixture_CustomView_HasTwoConstructorWrappers ()
 		{
 			var peer = FindFixtureByJavaName ("my/app/CustomView");

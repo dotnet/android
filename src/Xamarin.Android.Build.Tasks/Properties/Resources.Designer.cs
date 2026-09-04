@@ -1669,6 +1669,16 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The exported member &apos;{0}&apos; has unsupported signature type &apos;{1}&apos;.
+        ///   Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter]..
+        /// </summary>
+        public static string XA4263 {
+            get {
+                return ResourceManager.GetString("XA4263", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
         /// </summary>
         public static string XA4300 {
@@ -1931,6 +1941,42 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to rewrite managed JNI names for R8. {0}.
+        /// </summary>
+        public static string XA4325 {
+            get {
+                return ResourceManager.GetString("XA4325", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not rewrite the JNI names in the assembly &apos;{0}&apos;: {1}.
+        /// </summary>
+        public static string XA4325_AssemblyFailure {
+            get {
+                return ResourceManager.GetString("XA4325_AssemblyFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;SourceFiles&apos; and &apos;DestinationFiles&apos; item groups must contain the same number of items..
+        /// </summary>
+        public static string XA4325_SourceDestinationCount {
+            get {
+                return ResourceManager.GetString("XA4325_SourceDestinationCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous JNIEnv.FindClass source..
+        /// </summary>
+        public static string XA4326 {
+            get {
+                return ResourceManager.GetString("XA4326", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>

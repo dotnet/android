@@ -30,6 +30,13 @@ public class TrimmableTypeMapGenerator
 	/// Set to <see langword="false"/> when callers do not consume method metadata for types
 	/// that cannot generate Java callable wrappers.
 	/// </param>
+	/// <param name="shouldGenerateTypeMapAssembly">
+	/// Optional incremental-build callback. It receives each output assembly name and a
+	/// content-model fingerprint, and returns whether that assembly should be emitted.
+	/// Assemblies skipped by the callback are omitted from
+	/// <see cref="TrimmableTypeMapResult.GeneratedAssemblies"/>. When omitted, all typemap
+	/// assemblies are generated.
+	/// </param>
 	public TrimmableTypeMapResult Execute (
 		IReadOnlyList<AssemblyInput> assemblies,
 		Version systemRuntimeVersion,
@@ -46,7 +53,8 @@ public class TrimmableTypeMapGenerator
 		IReadOnlyCollection<string>? preGeneratedJcwNames = null,
 		string? preGeneratedJcwSource = null,
 		bool forceFrameworkPeersUnconditional = false,
-		bool collectMarshalMethodsForNonAcw = true)
+		bool collectMarshalMethodsForNonAcw = true,
+		Func<string, byte [], bool>? shouldGenerateTypeMapAssembly = null)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
@@ -78,7 +86,13 @@ public class TrimmableTypeMapGenerator
 			generateRootAssembly &&
 			sharedFrameworkTypeMapNames is { Count: > 0 };
 		var generatedAssemblies = generateTypeMapAssemblies && (hasPeers || needsRootForSharedFrameworkTypeMaps)
-			? GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, generateRootAssembly, sharedFrameworkTypeMapNames)
+			? GenerateTypeMapAssemblies (
+				allPeers,
+				systemRuntimeVersion,
+				useSharedTypemapUniverse,
+				shouldGenerateTypeMapAssembly,
+				generateRootAssembly,
+				sharedFrameworkTypeMapNames)
 			: [];
 		var jcwPeers = allPeers.Where (ShouldGenerateJcw).ToList ();
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
@@ -161,7 +175,7 @@ public class TrimmableTypeMapGenerator
 			if (peer.BaseJavaName is not null) {
 				ReportInvalidJniSourceType (peer.BaseJavaName);
 			}
-			foreach (var interfaceName in peer.ImplementedInterfaceJavaNames) {
+			foreach (var interfaceName in peer.JavaCallableWrapperInterfaceJavaNames ?? peer.ImplementedInterfaceJavaNames) {
 				ReportInvalidJniSourceType (interfaceName);
 			}
 			foreach (var constructor in peer.JavaConstructors) {
@@ -351,10 +365,11 @@ public class TrimmableTypeMapGenerator
 		return (peers, manifestInfo);
 	}
 
-	List<GeneratedAssembly> GenerateTypeMapAssemblies (
+	internal List<GeneratedAssembly> GenerateTypeMapAssemblies (
 		List<JavaPeerInfo> allPeers,
 		Version systemRuntimeVersion,
 		bool useSharedTypemapUniverse,
+		Func<string, byte [], bool>? shouldGenerateTypeMapAssembly = null,
 		bool generateRootAssembly = true,
 		IReadOnlyList<string>? sharedFrameworkTypeMapNames = null)
 	{
@@ -384,8 +399,15 @@ public class TrimmableTypeMapGenerator
 		foreach (var (assemblyName, peers) in peersByAssembly) {
 			string typeMapAssemblyName = $"_{assemblyName}.TypeMap";
 			perAssemblyNames.Add (typeMapAssemblyName);
+			var model = generator.CreateModel (peers, typeMapAssemblyName);
+			if (shouldGenerateTypeMapAssembly is not null) {
+				var fingerprint = generator.ComputeIncrementalFingerprint (model, useSharedTypemapUniverse);
+				if (!shouldGenerateTypeMapAssembly (typeMapAssemblyName, fingerprint)) {
+					continue;
+				}
+			}
 			var stream = new MemoryStream ();
-			generator.Generate (peers, stream, typeMapAssemblyName, useSharedTypemapUniverse);
+			generator.Generate (model, stream, useSharedTypemapUniverse);
 			stream.Position = 0;
 			generatedAssemblies.Add (new GeneratedAssembly (typeMapAssemblyName, stream));
 			logger.LogGeneratedTypeMapAssemblyInfo (typeMapAssemblyName, peers.Count);
@@ -397,12 +419,28 @@ public class TrimmableTypeMapGenerator
 		// skipped: it is emitted by the app build, which references the pre-generated per-assembly
 		// typemap alongside the app's own.
 		if (generateRootAssembly) {
-			var rootStream = new MemoryStream ();
-			var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
-			rootGenerator.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream, sharedFrameworkTypeMapNames: sharedFrameworkTypeMapNames);
-			rootStream.Position = 0;
-			generatedAssemblies.Add (new GeneratedAssembly ("_Microsoft.Android.TypeMaps", rootStream));
-			logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
+			const string rootAssemblyName = "_Microsoft.Android.TypeMaps";
+			bool generateRoot = true;
+			if (shouldGenerateTypeMapAssembly is not null) {
+				var rootFingerprint = MetadataHelper.ComputeRootIncrementalFingerprint (
+					perAssemblyNames,
+					systemRuntimeVersion,
+					useSharedTypemapUniverse,
+					sharedFrameworkTypeMapNames);
+				generateRoot = shouldGenerateTypeMapAssembly (rootAssemblyName, rootFingerprint);
+			}
+			if (generateRoot) {
+				var rootStream = new MemoryStream ();
+				var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
+				rootGenerator.Generate (
+					perAssemblyNames,
+					useSharedTypemapUniverse,
+					rootStream,
+					sharedFrameworkTypeMapNames: sharedFrameworkTypeMapNames);
+				rootStream.Position = 0;
+				generatedAssemblies.Add (new GeneratedAssembly (rootAssemblyName, rootStream));
+				logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
+			}
 		}
 		logger.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);
 		return generatedAssemblies;
