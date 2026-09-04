@@ -26,7 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="System.IO.Hashing" HintPath="$(NuGetPackageRoot)system.io.hashing\$(SystemIOHashingPackageVersion)\lib\netstandard2.0\System.IO.Hashing.dll" Private="true" />
     <ProjectReference Include="..\..\src\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" />
     <!-- Mono.Android is built as a dependency so the ref assembly is available on disk.

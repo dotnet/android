@@ -5,7 +5,7 @@
     This assembly hosts MSBuild tasks that require .NET (net11.0) APIs that are not available in
     netstandard2.0, so they cannot live in Xamarin.Android.Build.Tasks.dll (which multi-targets
     netstandard2.0 to run on both .NET Framework and .NET MSBuild). Tasks here are imported with
-    <UsingTask ... Runtime="NET" TaskFactory="TaskHostFactory" /> so they run out-of-process on .NET.
+    <UsingTask ... Runtime="NET" /> so they run on .NET.
     Keep this assembly small and self-contained: link only the minimal helpers it needs.
   -->
   <PropertyGroup>
@@ -13,18 +13,32 @@
     <RootNamespace>Microsoft.Android.Tasks</RootNamespace>
     <Nullable>enable</Nullable>
     <WarningsAsErrors>Nullable</WarningsAsErrors>
-    <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
+    <!--
+      Deliberately *not* the shared tools\ directory. MSBuild probes a task assembly's own
+      directory before anything else, and tools\ holds the netstandard2.0 flavors of packages
+      such as System.IO.Hashing that Xamarin.Android.Build.Tasks.dll deposits. Those bind their
+      Span<T> to System.Memory, so a net11.0 caller resolving them fails with
+      MissingMethodException. Living in our own directory means this assembly and its
+      dependencies always resolve to their .NET flavors.
+    -->
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)net\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <!--
-      We share $(OutputPath) with Xamarin.Android.Build.Tasks.csproj. Letting NuGet copy this
-      project's transitive runtime assets there can overwrite the netstandard2.0 assemblies
-      Build.Tasks already deposited with incompatible framework-specific implementations.
-      Task runtime dependencies are direct project references below; package assets stay isolated.
-    -->
+    <!-- Microsoft.Build.* must never ship next to a task assembly; copy only what we need. -->
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
   </PropertyGroup>
+
+  <!--
+    Package assets are not copied wholesale (see CopyLocalLockFileAssemblies), so deposit the
+    .NET flavor of System.IO.Hashing that Microsoft.Android.Sdk.TrimmableTypeMap.dll compiles
+    against alongside it.
+  -->
+  <Target Name="_CopyDotNetPackageDependencies" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Include="@(ReferencePath)" Condition=" '%(Filename)' == 'System.IO.Hashing' " />
+    </ItemGroup>
+  </Target>
 
   <!-- Microsoft.Build.* references flow transitively from Microsoft.Android.Build.BaseTasks. -->
   <ItemGroup>

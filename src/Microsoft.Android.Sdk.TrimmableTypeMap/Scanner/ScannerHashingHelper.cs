@@ -1,11 +1,8 @@
-extern alias BaseTasks;
-
 using System;
 using System.Buffers;
 using System.Buffers.Binary;
 using Java.Interop.Tools.JavaCallableWrappers;
 using Microsoft.Android.Build.Tasks;
-using SystemCrc64 = BaseTasks::Microsoft.Android.Build.Tasks.SystemCrc64;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -38,18 +35,10 @@ internal static class ScannerHashingHelper
 
 		int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, utf8Buffer.Slice (0, byteCount));
 		Span<byte> hash = stackalloc byte [8];
-		ComputeCrc64 (utf8Buffer.Slice (0, bytesWritten), hash);
+		System.IO.Hashing.Crc64.Hash (utf8Buffer.Slice (0, bytesWritten), hash);
 		ulong hashValue = BinaryPrimitives.ReadUInt64LittleEndian (hash);
 		BinaryPrimitives.WriteUInt64LittleEndian (hash, hashValue ^ (ulong) bytesWritten);
 		return HexUtilities.ToHexString (hash, upperCase: false);
-	}
-
-	static unsafe void ComputeCrc64 (ReadOnlySpan<byte> source, Span<byte> destination)
-	{
-		fixed (byte* sourcePointer = source)
-		fixed (byte* destinationPointer = destination) {
-			SystemCrc64.Hash (sourcePointer, source.Length, destinationPointer, destination.Length);
-		}
 	}
 
 	static int GetNamespaceAssemblyUtf8ByteCount (string ns, string assemblyName)

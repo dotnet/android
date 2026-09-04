@@ -18,7 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="System.IO.Hashing" HintPath="$(NuGetPackageRoot)system.io.hashing\$(SystemIOHashingPackageVersion)\lib\netstandard2.0\System.IO.Hashing.dll" Private="true" />
     <ProjectReference Include="..\..\Microsoft.Android.Build.Tasks.csproj" />
   </ItemGroup>
 
