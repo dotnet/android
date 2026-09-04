@@ -12,9 +12,6 @@ namespace generator.SourceWriters
 {
 	public static class SourceWriterExtensions
 	{
-		// Must match $(AndroidMinimumDotNetApiLevel) in Configuration.props.
-		const int MINIMUM_API_LEVEL = 24;
-
 		public static void AddField (TypeWriter tw, GenBase type, Field field, CodeGenerationOptions opt)
 		{
 			if (field.NeedsProperty)
@@ -314,7 +311,7 @@ namespace generator.SourceWriters
 		{
 			// There's no sense in writing say 'android15' because we do not support older APIs,
 			// so those APIs will be available in all of our versions.
-			if (since > MINIMUM_API_LEVEL && opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1)
+			if (since > opt.MinimumApiLevel && opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1)
 				attributes.Add (new SupportedOSPlatformAttr (since));
 		}
 
@@ -345,7 +342,7 @@ namespace generator.SourceWriters
 				return false;
 
 			// If it was obsoleted in a version earlier than we support (like 15), use a regular [Obsolete] instead
-			if (!deprecatedSince.HasValue || deprecatedSince.Value <= MINIMUM_API_LEVEL)
+			if (!deprecatedSince.HasValue || deprecatedSince.Value <= opt.MinimumApiLevel)
 				return false;
 
 			// This is the default Android message, but it isn't useful so remove it

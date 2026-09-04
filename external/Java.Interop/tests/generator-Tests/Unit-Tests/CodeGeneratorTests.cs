@@ -1454,9 +1454,10 @@ namespace generatortests
 		}
 
 		[Test]
-		// MINIMUM_API_LEVEL is 24 (matches $(AndroidMinimumDotNetApiLevel) in Configuration.props), so
-		// there's no sense writing [SupportedOSPlatform] for an API available at or below that floor:
-		// it's available in every version we support. Only API levels above the floor need it.
+		// CodeGenerationOptions.MinimumApiLevel defaults to 24 (matches $(AndroidMinimumDotNetApiLevel)
+		// in Configuration.props), so there's no sense writing [SupportedOSPlatform] for an API
+		// available at or below that floor: it's available in every version we support. Only API
+		// levels above the floor need it.
 		[TestCase (22, false)]
 		[TestCase (23, false)]
 		[TestCase (24, false)]
@@ -1476,6 +1477,32 @@ namespace generatortests
 				StringAssert.Contains (attribute, builder.ToString (), $"Should contain SupportedOSPlatform for android{apiLevel}!");
 			else
 				StringAssert.DoesNotContain (attribute, builder.ToString (), $"Should NOT contain SupportedOSPlatform for android{apiLevel}!");
+		}
+
+		[Test]
+		// Confirms MinimumApiLevel is actually wired through, not just defaulted: overriding it to a
+		// non-default value moves the floor below which [SupportedOSPlatform] is omitted.
+		[TestCase (21, 22, true)]
+		[TestCase (21, 21, false)]
+		[TestCase (30, 25, false)]
+		[TestCase (30, 31, true)]
+		public void SupportedOSPlatformRespectsMinimumApiLevelOverride (int minimumApiLevel, int apiLevel, bool expectAttribute)
+		{
+			options.MinimumApiLevel = minimumApiLevel;
+
+			var klass = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
+			klass.ApiAvailableSince = new AndroidSdkVersion (apiLevel);
+
+			generator.Context.ContextTypes.Push (klass);
+			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			var attribute = $"[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android{apiLevel}.0\")]";
+
+			if (expectAttribute)
+				StringAssert.Contains (attribute, builder.ToString (), $"Should contain SupportedOSPlatform for android{apiLevel} with MinimumApiLevel={minimumApiLevel}!");
+			else
+				StringAssert.DoesNotContain (attribute, builder.ToString (), $"Should NOT contain SupportedOSPlatform for android{apiLevel} with MinimumApiLevel={minimumApiLevel}!");
 		}
 
 		[Test]

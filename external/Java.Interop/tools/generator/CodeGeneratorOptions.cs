@@ -47,6 +47,7 @@ namespace Xamarin.Android.Binder
 		public bool                 PreserveEnums {get; set;}
 		public bool                 UseShortFileNames {get; set;}
 		public int                  ProductVersion { get; set; }
+		public int                  MinimumApiLevel {get; set;} = 24;
 		public string               MappingReportFile { get; set; }
 		public bool                 OnlyRunApiXmlAdjuster { get; set; }
 		public string               ApiXmlAdjusterOutput { get; set; }
@@ -128,6 +129,9 @@ namespace Xamarin.Android.Binder
 				{ "product-version=",
 					"Xamarin.Android Major Product Version",
 					(int? v) => opts.ProductVersion = v.HasValue ? v.Value : 0 },
+				{ "minimum-api-level=",
+					"Minimum supported Android API {LEVEL}. APIs available at or below this level never need a [SupportedOSPlatform] attribute since they're always present. Defaults to 24.",
+					(int v) => opts.MinimumApiLevel = v },
 				{ "v:",
 					"Logging Verbosity",
 					(int? v) => Report.Verbosity = v.HasValue ? v.Value : (Report.Verbosity ?? 0) + 1 },
