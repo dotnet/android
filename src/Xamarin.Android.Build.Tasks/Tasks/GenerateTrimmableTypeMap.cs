@@ -73,6 +73,14 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogCodedError ("XA4208", Java.Interop.Localization.Resources.JavaCallableWrappers_XA4208);
 		public void LogUnsupportedExportSignatureError (string memberName, string managedTypeName) =>
 			log.LogCodedError ("XA4263", Properties.Resources.XA4263, memberName, managedTypeName);
+		public void LogAmbiguousConstructorSignatureError (string managedTypeName, string jniSignature) =>
+			log.LogCodedError ("XA4259", Properties.Resources.XA4259, managedTypeName, jniSignature);
+		public void LogUnsupportedConstructorParameterTypeError (string managedTypeName, string parameterType) =>
+			log.LogCodedError ("XA4260", Properties.Resources.XA4260, managedTypeName, parameterType);
+		public void LogMissingBaseConstructorError (string managedTypeName, string jniSignature) =>
+			log.LogCodedError ("XA4261", Properties.Resources.XA4261, managedTypeName, jniSignature);
+		public void LogInvalidSuperArgumentsStringError (string managedTypeName, string superArgumentsString) =>
+			log.LogCodedError ("XA4262", Properties.Resources.XA4262, managedTypeName, superArgumentsString);
 		public void LogCustomJavaObjectError (string managedTypeName) =>
 			log.LogError ("{0}", $"XA4212: {string.Format (Properties.Resources.XA4212, managedTypeName)}");
 		public void LogCustomJavaObjectWarning (string managedTypeName) =>

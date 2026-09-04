@@ -188,6 +188,25 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_NoActivationCtor_CreateInstanceDoesNotReferenceLookalikeSignature ()
+	{
+		var peer = MakeMcwPeer ("test/Lookalike", "Test.Lookalike", "TestAsm") with {
+			DoNotGenerateAcw = true,
+		};
+		using var stream = GenerateAssembly ([peer], "LookalikeCreateInstanceTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		AssertCreateInstanceReturnsNull (pe, reader, "Test_Lookalike_Proxy");
+		Assert.Empty (FindCtorMemberRefs (
+			reader,
+			"Test",
+			"Lookalike",
+			"System.IntPtr",
+			"Android.Runtime.JniHandleOwnership"));
+	}
+
+	[Fact]
 	public void Generate_InheritedJavaInteropCtor_CreateInstanceDoesNotActivate ()
 	{
 		var peer = MakeAcwPeer ("test/JiInheritedTarget", "Test.JiInheritedTarget", "TestAsm") with {

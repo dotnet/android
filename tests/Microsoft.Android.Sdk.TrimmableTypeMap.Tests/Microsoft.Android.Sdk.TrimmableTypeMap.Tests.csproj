@@ -15,6 +15,10 @@
     <Compile Remove="MonoAndroidFixture\**" />
     <Compile Remove="TestFixtures\**" />
     <Compile Remove="TestAttributeFixtures\**" />
+    <Compile Remove="InvalidConstructorFixtures\**" />
+    <Compile Remove="LookalikeConstructorTypes\**" />
+    <Compile Remove="ActivationStubs.Java.Interop\**" />
+    <Compile Remove="ActivationStubs.Mono.Android\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,6 +36,12 @@
       <!-- Don't add as a compile-time reference — we only need the built DLL as scanner test input -->
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="InvalidConstructorFixtures\InvalidConstructorFixtures.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="LookalikeConstructorTypes\LookalikeConstructorTypes.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 
   <!-- Copy TestFixtures output to our output directory so tests can find it -->
@@ -39,6 +49,10 @@
     <ItemGroup>
       <_TestFixtureFiles Include="TestFixtures\bin\$(Configuration)\$(DotNetStableTargetFramework)\TestFixtures.dll" />
       <_TestFixtureFiles Include="TestAttributeFixtures\bin\$(Configuration)\$(DotNetStableTargetFramework)\TestAttributeFixtures.dll" />
+      <_TestFixtureFiles Include="InvalidConstructorFixtures\bin\$(Configuration)\$(DotNetStableTargetFramework)\InvalidConstructorFixtures.dll" />
+      <_TestFixtureFiles Include="LookalikeConstructorTypes\bin\$(Configuration)\$(DotNetStableTargetFramework)\LookalikeConstructorTypes.dll" />
+      <_TestFixtureFiles Include="ActivationStubs.Java.Interop\bin\$(Configuration)\$(DotNetStableTargetFramework)\Java.Interop.dll" />
+      <_TestFixtureFiles Include="ActivationStubs.Mono.Android\bin\$(Configuration)\$(DotNetStableTargetFramework)\Mono.Android.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_TestFixtureFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
   </Target>

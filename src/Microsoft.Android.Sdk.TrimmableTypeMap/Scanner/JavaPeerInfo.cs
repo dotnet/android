@@ -126,6 +126,12 @@ public sealed record JavaPeerInfo
 	public IReadOnlyList<JavaConstructorInfo> JavaConstructors { get; init; } = [];
 
 	/// <summary>
+	/// Constructor shapes which cannot be emitted safely by the trimmable type map.
+	/// Generation reports these before producing any Java or type-map output.
+	/// </summary>
+	public IReadOnlyList<ConstructorDiagnosticInfo> ConstructorDiagnostics { get; init; } = [];
+
+	/// <summary>
 	/// Java fields from [ExportField] attributes.
 	/// Each field is initialized by calling the annotated method.
 	/// </summary>
@@ -387,6 +393,20 @@ public sealed record JavaConstructorInfo
 	/// Java annotations forwarded from the managed constructor.
 	/// </summary>
 	public IReadOnlyList<JavaAnnotationInfo> Annotations { get; init; } = [];
+}
+
+public sealed record ConstructorDiagnosticInfo
+{
+	public required ConstructorDiagnosticKind Kind { get; init; }
+	public required string Detail { get; init; }
+}
+
+public enum ConstructorDiagnosticKind
+{
+	AmbiguousJniSignature,
+	UnsupportedParameterType,
+	MissingBaseConstructor,
+	InvalidSuperArgumentsString,
 }
 
 /// <summary>
