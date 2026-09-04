@@ -417,7 +417,7 @@ public sealed class JavaPeerScanner : IDisposable
 			// Keep ActivationCtor scoped to the target/base hierarchy for legacy parity,
 			// and store the invoker ctor style separately for CreateInstance emission.
 			if (invokerTypeName is not null) {
-				invokerActivationCtorStyle = TryResolveActivationCtorOnInvoker (invokerTypeName)?.Style;
+				invokerActivationCtorStyle = TryResolveActivationCtorOnInvoker (invokerTypeName, index)?.Style;
 			}
 
 			var peer = new JavaPeerInfo {
@@ -2457,19 +2457,20 @@ public sealed class JavaPeerScanner : IDisposable
 
 	string? TryFindInvokerTypeName (string typeName, TypeDefinitionHandle typeHandle, AssemblyIndex index)
 	{
+		if (index.RegisterInfoByType.TryGetValue (typeHandle, out var registerInfo)) {
+			var explicitInvokerTypeName = registerInfo.InvokerTypeName;
+			if (explicitInvokerTypeName is { Length: > 0 }) {
+				return TryGetSameAssemblyTypeName (explicitInvokerTypeName, index.AssemblyName);
+			}
+		}
+
 		// First, check the [Register] attribute's connector arg (3rd arg).
 		// In real Mono.Android, interfaces have [Register("jni/name", "", "InvokerTypeName, Assembly")]
 		// where the connector contains the assembly-qualified invoker type name.
-		if (index.RegisterInfoByType.TryGetValue (typeHandle, out var registerInfo) && registerInfo.Connector is not null) {
+		if (registerInfo is not null && registerInfo.Connector is not null) {
 			var connector = registerInfo.Connector;
-			// The connector may be "TypeName" or "TypeName, Assembly, Version=..., Culture=..., PublicKeyToken=..."
-			// We want just the type name (before the first comma, if any)
-			var commaIndex = connector.IndexOf (',');
-			if (commaIndex > 0) {
-				return NormalizeConnectorManagedTypeName (connector.Substring (0, commaIndex));
-			}
 			if (connector.Length > 0) {
-				return NormalizeConnectorManagedTypeName (connector);
+				return TryGetSameAssemblyTypeName (connector, index.AssemblyName);
 			}
 		}
 
@@ -2481,27 +2482,36 @@ public sealed class JavaPeerScanner : IDisposable
 		return null;
 	}
 
+	static string? TryGetSameAssemblyTypeName (string value, string defaultAssemblyName)
+	{
+		var commaIndex = value.IndexOf (',');
+		if (commaIndex < 0) {
+			return NormalizeConnectorManagedTypeName (value);
+		}
+
+		var typeName = NormalizeConnectorManagedTypeName (value.Substring (0, commaIndex));
+		var remainder = value.Substring (commaIndex + 1).Trim ();
+		var nextCommaIndex = remainder.IndexOf (',');
+		var assemblyName = nextCommaIndex < 0 ? remainder : remainder.Substring (0, nextCommaIndex).Trim ();
+		return string.Equals (assemblyName, defaultAssemblyName, StringComparison.Ordinal) ? typeName : null;
+	}
+
 	static string NormalizeConnectorManagedTypeName (string managedTypeName)
 	{
 		return managedTypeName.Trim ().Replace ('/', '+');
 	}
 
 	/// <summary>
-	/// Resolve the activation ctor on a known invoker type (search all loaded assemblies).
+	/// Resolve the activation ctor on a known invoker type in its target assembly.
 	/// Used for interface peers, whose own type definition has no constructors.
-	/// The assemblyCache typically contains 10–30 entries (app + framework assemblies),
-	/// and each lookup is an O(1) dictionary probe, so the linear scan is cheap.
 	/// </summary>
-	ActivationCtorInfo? TryResolveActivationCtorOnInvoker (string invokerTypeName)
+	ActivationCtorInfo? TryResolveActivationCtorOnInvoker (string invokerTypeName, AssemblyIndex index)
 	{
-		foreach (var assembly in assemblyCache.Values) {
-			if (!assembly.TypesByFullName.TryGetValue (invokerTypeName, out var invokerHandle)) {
-				continue;
-			}
-			var invokerDef = assembly.Reader.GetTypeDefinition (invokerHandle);
-			return ResolveActivationCtor (invokerTypeName, invokerDef, assembly);
+		if (!index.TypesByFullName.TryGetValue (invokerTypeName, out var invokerHandle)) {
+			return null;
 		}
-		return null;
+		var invokerDef = index.Reader.GetTypeDefinition (invokerHandle);
+		return ResolveActivationCtor (invokerTypeName, invokerDef, index);
 	}
 
 	public void Dispose ()

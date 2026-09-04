@@ -216,13 +216,14 @@ namespace Java.Interop
 
 namespace Java.Interop
 {
-	[AttributeUsage (AttributeTargets.Class, AllowMultiple = false)]
+	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = false)]
 	public sealed class JniTypeSignatureAttribute : Attribute
 	{
 		public string SimpleReference { get; }
 		public bool GenerateJavaPeer { get; set; } = true;
 		public bool IsKeyword { get; set; }
 		public int ArrayRank { get; set; }
+		public Type? InvokerType { get; set; }
 
 		public JniTypeSignatureAttribute (string simpleReference) => SimpleReference = simpleReference;
 	}
