@@ -121,7 +121,6 @@ namespace Xamarin.Android.Tools.Aidl
 			}
 		}
 
-
 		TextWriter w;
 		BindingDatabase database;
 
