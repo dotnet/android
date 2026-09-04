@@ -87,7 +87,8 @@ namespace Java.Lang {
 			get { return typeof (Java.Lang.Object); }
 		}
 
-		internal System.Type GetThresholdTypeForLegacyDispatch ()
+		// Used only to preserve virtual dispatch for legacy bindings.
+		internal System.Type GetThresholdType ()
 		{
 			return ThresholdType;
 		}

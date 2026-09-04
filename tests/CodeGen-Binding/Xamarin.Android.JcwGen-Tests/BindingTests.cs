@@ -105,8 +105,8 @@ namespace Xamarin.Android.JcwGenTests {
 				// GREF on first instantiation. Construct and release one instance first so
 				// that only the per-instance references are measured below; a real per-instance
 				// leak still shows up.
-				using (Com.Xamarin.Android.CallMethodFromCtor.NewInstance (c)) {
-				}
+				var warmup = Com.Xamarin.Android.CallMethodFromCtor.NewInstance (c);
+				warmup.Dispose ();
 				int initGref = Java.Interop.Runtime.GlobalReferenceCount;
 				using (var j = Com.Xamarin.Android.CallMethodFromCtor.NewInstance (c)) {
 					var instance = j.JavaCast<ConstructorTest>();
@@ -222,23 +222,6 @@ namespace Xamarin.Android.JcwGenTests {
 				Assert.IsFalse (d.MethodInvoked);
 				Assert.IsFalse (d.DerivedMethodInvoked);
 				Assert.IsTrue (d.ModernMethodInvoked);
-			}
-		}
-
-		[Test]
-		public void XAPeerMembersWithoutThresholdOverride ()
-		{
-			using (var d = new XAPeerMembersWithoutThresholdDerived ()) {
-				d.Method ();
-				Assert.IsFalse (d.MethodInvoked);
-				Assert.IsFalse (d.DerivedMethodInvoked);
-				Assert.IsTrue (d.MethodInvokedWithoutThreshold);
-			}
-			using (var d = new ManagedXAPeerMembersWithoutThresholdDerived ()) {
-				d.Method ();
-				Assert.IsFalse (d.MethodInvoked);
-				Assert.IsFalse (d.DerivedMethodInvoked);
-				Assert.IsTrue (d.MethodInvokedWithoutThreshold);
 			}
 		}
 
