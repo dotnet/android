@@ -97,9 +97,14 @@
       <_PreGeneratedFrameworkTypeMapAcwInput
           Condition=" '$(_PreGeneratedFrameworkTypeMapRootDescriptor)' != '' ">$(_PreGeneratedMonoAndroidTypeMapAcwMap)</_PreGeneratedFrameworkTypeMapAcwInput>
     </PropertyGroup>
+  </Target>
+
+  <Target Name="_InvalidateTrimmableTypeMapStampForPreGeneratedFrameworkRoots"
+      Condition=" '$(_OuterIntermediateOutputPath)' == '' "
+      DependsOnTargets="_ResolvePreGeneratedFrameworkTypeMapRoots">
     <Delete
-        Files="$(_TrimmableTypeMapOutputStamp)"
-        Condition=" '$(_PreGeneratedFrameworkTypeMapRootDescriptor)' != '' and !Exists('$(_PreGeneratedFrameworkTypeMapRootDescriptor)')" />
+        Condition=" '$(_PreGeneratedFrameworkTypeMapRootDescriptor)' != '' and !Exists('$(_PreGeneratedFrameworkTypeMapRootDescriptor)')"
+        Files="$(_TrimmableTypeMapOutputStamp)" />
   </Target>
 
   <!-- Compile the generator's Java Callable Wrappers in place from their output directory
@@ -156,7 +161,7 @@
   <Target Name="_GenerateTrimmableTypeMap"
       Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(DesignTimeBuild)' != 'true' and '@(ReferencePath->Count())' != '0' and '$(_OuterIntermediateOutputPath)' == '' "
       AfterTargets="CoreCompile"
-      DependsOnTargets="$(_GenerateTrimmableTypeMapDependsOn);_ResolvePreGeneratedFrameworkTypeMapRoots"
+      DependsOnTargets="$(_GenerateTrimmableTypeMapDependsOn);_InvalidateTrimmableTypeMapStampForPreGeneratedFrameworkRoots"
       Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);@(ExtractedManifestDocuments);@(_AndroidTrimmableTypeMapExtraFrameworkAssembly);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_CustomViewMapFile);$(_AndroidBuildPropertiesCache);$(_PreGeneratedJcwValidationInput);$(_PreGeneratedFrameworkTypeMapAcwInput)"
       Outputs="$(_TrimmableTypeMapOutputStamp)">
 

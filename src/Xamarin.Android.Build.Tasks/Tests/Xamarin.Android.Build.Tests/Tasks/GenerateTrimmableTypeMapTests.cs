@@ -211,6 +211,26 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void Execute_InvalidPreGeneratedFrameworkAcwMap_ReportsFileAndLine ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+			var acwMap = Path.Combine (Root, path, "framework-acw-map.txt");
+			Directory.CreateDirectory (Path.GetDirectoryName (acwMap));
+			File.WriteAllText (acwMap, $"{Environment.NewLine}invalid");
+
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = CreateTask ([], outputDir, javaDir, errors: errors);
+			task.PreGeneratedFrameworkAcwMap = acwMap;
+
+			Assert.IsFalse (task.Execute (), "A malformed pre-generated framework ACW map should fail the task.");
+			Assert.IsTrue (
+				errors.Any (error => error.Message?.Contains ($"'{acwMap}' at line 2: 'invalid'", StringComparison.Ordinal) == true),
+				"The error should identify the malformed ACW map and line number.");
+		}
+
+		[Test]
 		public void Execute_MissingJavaSource_DoesNotPruneExistingOutput ()
 		{
 			var path = Path.Combine ("temp", TestName);

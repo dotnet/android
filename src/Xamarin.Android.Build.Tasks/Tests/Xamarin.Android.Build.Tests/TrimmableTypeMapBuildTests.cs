@@ -46,29 +46,42 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
-		[Test]
-		public void CoreClrR8WithPreGeneratedTypeMapKeepsFrameworkJcws ()
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
+		public void R8WithPreGeneratedTypeMapKeepsFrameworkJcws (AndroidRuntime runtime)
 		{
-			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
-			proj.SetProperty ("PublishTrimmed", "false");
+			if (runtime == AndroidRuntime.CoreCLR) {
+				proj.SetProperty ("PublishTrimmed", "false");
+			} else {
+				proj.SetProperty ("DebugSymbols", "true");
+				proj.SetProperty ("DebugType", "portable");
+				proj.SetProperty ("EmbedAssembliesIntoApk", "false");
+				proj.SetProperty ("_AndroidTrimmableTypemapTrimJavaCode", "false");
+			}
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
 			var mergedAcwMap = builder.Output.GetIntermediaryPath ("acw-map.prebuilt-merged.txt");
-			var proguardPrimary = builder.Output.GetIntermediaryPath (Path.Combine ("proguard", "proguard_project_primary.cfg"));
+			var proguardConfiguration = builder.Output.GetIntermediaryPath (Path.Combine (
+				"proguard",
+				runtime == AndroidRuntime.NativeAOT ? "proguard_project_references.cfg" : "proguard_project_primary.cfg"));
 			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 			const string frameworkJcw = "mono.android.view.View_OnClickListenerImplementor";
 
 			AssertFileContains (mergedAcwMap, frameworkJcw, expected: true, "merged framework ACW map");
-			AssertFileContains (proguardPrimary, frameworkJcw, expected: true, "R8 primary configuration");
+			AssertFileContains (proguardConfiguration, frameworkJcw, expected: true, "R8 configuration");
 			Assert.IsTrue (
 				DexUtils.ContainsClassWithMethod ($"L{frameworkJcw.Replace ('.', '/')};", "<init>", "()V", dexFile, AndroidSdkPath),
 				$"`{dexFile}` should retain the pre-generated framework listener implementor when R8 shrinking is enabled.");

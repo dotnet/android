@@ -613,17 +613,20 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		}
 
 		var peers = new List<JavaPeerInfo> ();
+		int lineNumber = 0;
 		foreach (var line in File.ReadLines (PreGeneratedFrameworkAcwMap)) {
+			lineNumber++;
 			if (line.Length == 0) {
 				continue;
 			}
 			int separator = line.IndexOf (';');
 			if (separator <= 0 || separator == line.Length - 1) {
-				throw new InvalidDataException ($"Invalid pre-generated framework ACW map entry: '{line}'.");
+				throw new InvalidDataException ($"Invalid pre-generated framework ACW map entry in '{PreGeneratedFrameworkAcwMap}' at line {lineNumber}: '{line}'.");
 			}
 
 			string managedName = line.Substring (0, separator);
 			int assemblySeparator = managedName.LastIndexOf (", ", StringComparison.Ordinal);
+			// Each type also has managed-name and Java-name alias lines without an assembly name.
 			if (assemblySeparator <= 0) {
 				continue;
 			}
@@ -634,6 +637,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			int namespaceSeparator = managedTypeName.LastIndexOf ('.');
 			peers.Add (new JavaPeerInfo {
 				JavaName = javaName,
+				// The ACW map does not carry a distinct compatibility JNI name. Framework manifest
+				// and layout references use the actual Java binary name represented here.
 				CompatJniName = javaName,
 				ManagedTypeName = managedTypeName,
 				ManagedTypeNamespace = namespaceSeparator < 0 ? "" : managedTypeName.Substring (0, namespaceSeparator),
