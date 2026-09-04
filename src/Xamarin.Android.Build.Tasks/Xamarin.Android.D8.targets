@@ -20,13 +20,14 @@ Copyright (C) 2018 Xamarin. All rights reserved.
   <Target Name="_SetR8AcwMapFile">
     <PropertyGroup>
       <_R8AcwMapFile>$(_AcwMapFile)</_R8AcwMapFile>
-      <_R8AcwMapFile Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">$(_TrimmableTypeMapKeepRulesAcwMapFile)</_R8AcwMapFile>
+      <_R8AcwMapFile Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">$(_TrimmableTypeMapKeepRulesAcwMapFile)</_R8AcwMapFile>
+      <_R8AcwMapInput Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">$(_R8AcwMapFile)</_R8AcwMapInput>
     </PropertyGroup>
   </Target>
 
   <Target Name="_CompileToDalvik"
       DependsOnTargets="$(_BeforeCompileToDalvik);$(_CompileToDalvikDependsOnTargets);_SetR8AcwMapFile"
-      Inputs="$(_CompileToDalvikInputs);$(_R8AcwMapFile)"
+      Inputs="$(_CompileToDalvikInputs);$(_R8AcwMapInput)"
       Outputs="$(_AndroidStampDirectory)_CompileToDalvik.stamp">
 
     <!-- Target-level properties to simplify conditions-->
