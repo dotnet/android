@@ -51,34 +51,33 @@ fi
 
 echo ""
 echo "### Private declarations whose identifier appears only once in repository C# source"
-TOKEN_COUNTS=$(mktemp)
-trap 'rm -f "$TOKEN_COUNTS"' EXIT
+SINGLETON_TOKENS=$(mktemp)
+PRIVATE_DECLARATIONS=$(mktemp)
+trap 'rm -f "$SINGLETON_TOKENS" "$PRIVATE_DECLARATIONS"' EXIT
 
 grep -rhoP '\b[A-Za-z_][A-Za-z0-9_]*\b' \
     --include='*.cs' \
     --exclude-dir=obj --exclude-dir=bin \
     src/ 2>/dev/null \
-  | sort | uniq -c > "$TOKEN_COUNTS"
+  | sort | uniq -c \
+  | awk '$1 == 1 { print $2 }' > "$SINGLETON_TOKENS"
 
-CANDIDATES=$(
-  grep -rnPo '^\s*private\s+(?:(?:static|readonly|const|async|unsafe|partial|volatile|new|sealed)\s+)*(?:[A-Za-z_][A-Za-z0-9_.<>,?\[\]]*\s+)+\K[A-Za-z_][A-Za-z0-9_]*(?=\s*(?:\(|\{|=>|=|;))' \
-      --include='*.cs' \
-      --exclude-dir=obj --exclude-dir=bin \
-      --exclude-dir=Tests --exclude-dir=Test --exclude-dir=tests \
-      --exclude='*.generated.cs' --exclude='*.Designer.cs' --exclude='*.g.cs' \
-      src/ 2>/dev/null \
-    | while IFS= read -r entry; do
-        name=${entry##*:}
-        if [ "${#name}" -lt 4 ]; then
-            continue
-        fi
-        count=$(awk -v token="$name" '$2 == token { print $1; exit }' "$TOKEN_COUNTS")
-        if [ "$count" = "1" ]; then
-            echo "$entry"
-        fi
-      done \
-    | shuf -n 20
-)
+grep -rnPo '^\s*private\s+(?:(?:static|readonly|const|async|unsafe|partial|volatile|new|sealed)\s+)*(?:[A-Za-z_][A-Za-z0-9_.<>,?\[\]]*\s+)+\K[A-Za-z_][A-Za-z0-9_]*(?=\s*(?:\(|\{|=>|=|;))' \
+    --include='*.cs' \
+    --exclude-dir=obj --exclude-dir=bin \
+    --exclude-dir=Tests --exclude-dir=Test --exclude-dir=tests \
+    --exclude='*.generated.cs' --exclude='*.Designer.cs' --exclude='*.g.cs' \
+    src/ 2>/dev/null > "$PRIVATE_DECLARATIONS"
+
+CANDIDATES=$(awk -F: '
+    NR == FNR {
+        singleton [$1] = 1
+        next
+    }
+    length ($NF) >= 4 && singleton [$NF] {
+        print
+    }
+' "$SINGLETON_TOKENS" "$PRIVATE_DECLARATIONS" | shuf -n 20)
 
 if [ -n "$CANDIDATES" ]; then
     echo "$CANDIDATES"

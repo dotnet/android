@@ -45,8 +45,8 @@ RESOURCE_ROOTS=$(find src -path '*/Properties/Resources.resx' -type f 2>/dev/nul
   | sed 's#/Properties/Resources\.resx$##')
 
 if [ -z "$RESOURCE_ROOTS" ]; then
-    echo "No resource-backed projects found." >&2
-    exit 1
+    echo "None found"
+    exit 0
 fi
 
 MATCHES=$(
