@@ -10,7 +10,7 @@ namespace Android.Widget {
 	public abstract partial class BaseAdapter<T> : BaseAdapter {
 
 		[UnsafeAccessor (UnsafeAccessorKind.StaticField, Name = "_members")]
-		static extern ref JniPeerMembers GetPeerMembers (BaseAdapter? _);
+		static extern ref readonly JniPeerMembers GetPeerMembers (BaseAdapter? _);
 
 		public BaseAdapter (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)

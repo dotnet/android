@@ -20,10 +20,10 @@ namespace Android.OS {
 	> : AsyncTask {
 
 		[UnsafeAccessor (UnsafeAccessorKind.StaticField, Name = "_members")]
-		static extern ref JniPeerMembers GetPeerMembers (AsyncTask? _);
+		static extern ref readonly JniPeerMembers GetPeerMembers (AsyncTask? _);
 
 		protected override IntPtr ThresholdClass {
-		get { return GetPeerMembers (null).JniPeerType.PeerReference.Handle; }
+			get { return GetPeerMembers (null).JniPeerType.PeerReference.Handle; }
 		}
 
 		protected override global::System.Type ThresholdType {

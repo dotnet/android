@@ -57,7 +57,7 @@ namespace Android.Widget {
 	> : AdapterView  where T : IAdapter {
 
 		[UnsafeAccessor (UnsafeAccessorKind.StaticField, Name = "_members")]
-		static extern ref JniPeerMembers GetPeerMembers (AdapterView? _);
+		static extern ref readonly JniPeerMembers GetPeerMembers (AdapterView? _);
 
 		public AdapterView (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)

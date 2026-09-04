@@ -15,7 +15,7 @@ namespace Android.Util
 	> : SparseArray
 	{
 		[UnsafeAccessor (UnsafeAccessorKind.StaticField, Name = "_members")]
-		static extern ref JniPeerMembers GetPeerMembers (SparseArray? _);
+		static extern ref readonly JniPeerMembers GetPeerMembers (SparseArray? _);
 
 		public SparseArray ()
 		{
@@ -40,22 +40,24 @@ namespace Android.Util
 		
 		static IntPtr id_get_I;
 		[Register ("get", "(I)Ljava/lang/Object;", "")]
+		[return: MaybeNull]
 		public new virtual E Get (int key)
 		{
 			if (id_get_I == IntPtr.Zero)
 				id_get_I = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerType.PeerReference.Handle, "get", "(I)Ljava/lang/Object;");
-			return JavaConvert.FromJniHandle<E>(JNIEnv.CallNonvirtualObjectMethod (Handle, GetPeerMembers (null).JniPeerType.PeerReference.Handle, id_get_I, new JValue (key)), JniHandleOwnership.TransferLocalRef)!;
+			return JavaConvert.FromJniHandle<E>(JNIEnv.CallNonvirtualObjectMethod (Handle, GetPeerMembers (null).JniPeerType.PeerReference.Handle, id_get_I, new JValue (key)), JniHandleOwnership.TransferLocalRef);
 		}
 
 		static IntPtr id_get_ILjava_lang_Object_;
 		[Register ("get", "(ILjava/lang/Object;)Ljava/lang/Object;", "")]
+		[return: MaybeNull]
 		public virtual E Get (int key, E valueIfKeyNotFound)
 		{
 			if (id_get_ILjava_lang_Object_ == IntPtr.Zero)
 				id_get_ILjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerType.PeerReference.Handle, "get", "(ILjava/lang/Object;)Ljava/lang/Object;");
 			IntPtr value = JavaConvert.WithLocalJniHandle (valueIfKeyNotFound,
 					lref => JNIEnv.CallNonvirtualObjectMethod (Handle, GetPeerMembers (null).JniPeerType.PeerReference.Handle, id_get_ILjava_lang_Object_, new JValue (key), new JValue (lref)));
-			return JavaConvert.FromJniHandle<E> (value, JniHandleOwnership.TransferLocalRef)!;
+			return JavaConvert.FromJniHandle<E> (value, JniHandleOwnership.TransferLocalRef);
 		}
 
 		static IntPtr id_indexOfValue_Ljava_lang_Object_;
@@ -94,13 +96,14 @@ namespace Android.Util
 		
 		static IntPtr id_valueAt_I;
 		[Register ("valueAt", "(I)Ljava/lang/Object;", "")]
+		[return: MaybeNull]
 		public new virtual E ValueAt (int index)
 		{
 			if (id_valueAt_I == IntPtr.Zero)
 				id_valueAt_I = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerType.PeerReference.Handle, "valueAt", "(I)Ljava/lang/Object;");
 			return JavaConvert.FromJniHandle<E> (
 					JNIEnv.CallNonvirtualObjectMethod (Handle, GetPeerMembers (null).JniPeerType.PeerReference.Handle, id_valueAt_I, new JValue (index)),
-					JniHandleOwnership.TransferLocalRef)!;
+					JniHandleOwnership.TransferLocalRef);
 		}
 	}
 }

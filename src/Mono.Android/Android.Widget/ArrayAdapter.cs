@@ -15,7 +15,7 @@ namespace Android.Widget {
 	> : ArrayAdapter {
 
 		[UnsafeAccessor (UnsafeAccessorKind.StaticField, Name = "_members")]
-		static extern ref JniPeerMembers GetPeerMembers (ArrayAdapter? _);
+		static extern ref readonly JniPeerMembers GetPeerMembers (ArrayAdapter? _);
 
 		public ArrayAdapter (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
