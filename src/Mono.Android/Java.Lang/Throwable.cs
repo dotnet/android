@@ -75,16 +75,6 @@ namespace Java.Lang {
 			get { return typeof (Java.Lang.Throwable); }
 		}
 
-		internal IntPtr GetThresholdClass ()
-		{
-			return ThresholdClass;
-		}
-
-		internal System.Type GetThresholdType ()
-		{
-			return ThresholdType;
-		}
-
 		public unsafe Java.Lang.Class? Class {
 			[Register ("getClass", "()Ljava/lang/Class;", "GetGetClassHandler")]
 			get {
