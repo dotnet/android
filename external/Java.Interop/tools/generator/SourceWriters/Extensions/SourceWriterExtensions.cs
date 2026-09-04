@@ -12,6 +12,12 @@ namespace generator.SourceWriters
 {
 	public static class SourceWriterExtensions
 	{
+		// Deliberately *not* $(AndroidMinimumDotNetApiLevel): raising this would turn
+		// [ObsoletedOSPlatform] into a plain [Obsolete] for anything deprecated between this
+		// level and the current minimum, which downgrades a suppressible CA1422 into CS0618 and
+		// breaks the build of any consumer compiling with warnings-as-errors.
+		const int MINIMUM_OBSOLETED_API_LEVEL = 21;
+
 		public static void AddField (TypeWriter tw, GenBase type, Field field, CodeGenerationOptions opt)
 		{
 			if (field.NeedsProperty)
@@ -342,7 +348,7 @@ namespace generator.SourceWriters
 				return false;
 
 			// If it was obsoleted in a version earlier than we support (like 15), use a regular [Obsolete] instead
-			if (!deprecatedSince.HasValue || deprecatedSince.Value <= opt.MinimumApiLevel)
+			if (!deprecatedSince.HasValue || deprecatedSince.Value <= MINIMUM_OBSOLETED_API_LEVEL)
 				return false;
 
 			// This is the default Android message, but it isn't useful so remove it

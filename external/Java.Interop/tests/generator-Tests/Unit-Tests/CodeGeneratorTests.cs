@@ -804,16 +804,13 @@ namespace generatortests
 			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			// These should use [Obsolete] because they have always been obsolete in all currently supported versions (24+)
+			// These should use [Obsolete] because they have always been obsolete in all currently supported versions (21+)
 			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"This is a field deprecated since 0!\")]"), writer.ToString ());
 			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"This is a constructor deprecated since empty string!\")]"), writer.ToString ());
 
-			// getCount/setCount were deprecated-since 22, which is below MINIMUM_API_LEVEL (24), so they
-			// should use [Obsolete] rather than [ObsoletedOSPlatform] since they have always been obsolete.
-			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"deprecated\")]"), writer.ToString ());
-
 			// This should not have a message because the default "deprecated" message isn't useful
 			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\")]"), writer.ToString ());
+			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android22.0\")]"), writer.ToString ());
 
 			// This should use [Obsolete] because the 'deprecated-since' attribute could not be parsed
 			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"This method has an invalid deprecated-since!\")]"), writer.ToString ());
