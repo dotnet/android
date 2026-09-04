@@ -37,3 +37,4 @@ src/native/clr/pinvoke-override/pinvoke-tables.include.generated
 src/native/mono/pinvoke-override/generate-pinvoke-tables
 src/native/mono/pinvoke-override/pinvoke-tables.include.generated
 dotnet-install.ps1
+*.gdn.sarif

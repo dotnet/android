@@ -7,10 +7,10 @@ parameters:
 steps:
 - powershell: |
     # Run this to log the output for the user
-    git status
+    git status --ignore-submodules
 
     # Run this to error the build if modified/untracked files exist
-    $process= git status --porcelain
+    $process= git status --porcelain --ignore-submodules
 
     if ($process)
     {
