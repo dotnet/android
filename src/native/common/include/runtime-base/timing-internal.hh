@@ -121,8 +121,8 @@ namespace xamarin::android {
 		static constexpr std::string_view OPT_FILE_NAME     { "filename=" };
 		static constexpr std::string_view OPT_TO_FILE       { "to-file" };
 
-		// Enough to hold any value the `debug.mono.timing` property can carry, `PROP_VALUE_MAX` is 92.
-		static constexpr size_t MAX_TIMING_FILE_NAME_SIZE = 128uz;
+		// System property values fit here. Bundled properties can be longer and fall back to the heap.
+		static constexpr size_t TIMING_FILE_NAME_BUFFER_SIZE = Constants::PROPERTY_VALUE_BUFFER_LEN;
 
 	protected:
 		void configure_for_use () noexcept
@@ -136,6 +136,8 @@ namespace xamarin::android {
 
 		~FastTiming ()
 		{
+			std::free (allocated_output_file_name);
+
 			TimingEventChunk *chunk = first_event_chunk;
 			while (chunk != nullptr) {
 				TimingEventChunk *next = chunk->next;
@@ -444,6 +446,29 @@ namespace xamarin::android {
 			return more_info;
 		}
 
+		[[gnu::always_inline]]
+		auto get_output_file_name () const noexcept -> const char*
+		{
+			return allocated_output_file_name == nullptr ? output_file_name_buffer : allocated_output_file_name;
+		}
+
+		void set_output_file_name (const char *name, size_t length) noexcept
+		{
+			size_t required_capacity = Helpers::add_with_overflow_check<size_t> (length, 1uz);
+			char *destination = output_file_name_buffer;
+			if (required_capacity > sizeof (output_file_name_buffer)) [[unlikely]] {
+				destination = static_cast<char*> (std::malloc (required_capacity));
+				abort_unless (destination != nullptr, "Failed to allocate the timing output file name");
+			}
+
+			std::memcpy (destination, name, length);
+			destination[length] = '\0';
+
+			std::free (allocated_output_file_name);
+			allocated_output_file_name = destination == output_file_name_buffer ? nullptr : destination;
+			output_file_name_configured = true;
+		}
+
 		// Takes ownership of `more_info`.
 		[[gnu::always_inline]]
 		void store_more_info (char *more_info) noexcept
@@ -611,10 +636,9 @@ namespace xamarin::android {
 	private:
 		std::atomic_size_t next_event_index = 0uz;
 		TimingEventChunk *first_event_chunk = nullptr;
-		// The name is read from the `debug.mono.timing` system property, whose whole value is limited
-		// to `PROP_VALUE_MAX` (92) bytes, so a fixed buffer is always large enough. Keeping it inline
-		// also keeps `FastTiming` constant-initialized, so the global instance needs no guard variable.
-		char output_file_name[MAX_TIMING_FILE_NAME_SIZE] = {};
+		char output_file_name_buffer[TIMING_FILE_NAME_BUFFER_SIZE] = {};
+		char *allocated_output_file_name = nullptr;
+		bool output_file_name_configured = false;
 
 		static inline thread_local TimingEvent *open_sequence = nullptr;
 		static inline thread_local TimingEventChunk *cached_event_chunk = nullptr;

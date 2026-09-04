@@ -80,12 +80,7 @@ void FastTiming::parse_options (const char *options) noexcept
 		} else if (param_length >= OPT_FILE_NAME.length () && strncmp (param, OPT_FILE_NAME.data (), OPT_FILE_NAME.length ()) == 0) {
 			const char *name = param + OPT_FILE_NAME.length ();
 			size_t name_length = param_length - OPT_FILE_NAME.length ();
-			if (name_length >= sizeof (output_file_name)) [[unlikely]] {
-				log_warnf (LOG_TIMING, "Timing file name '%.*s' is too long, will use the default one", static_cast<int>(name_length), name);
-			} else {
-				memcpy (output_file_name, name, name_length);
-				output_file_name[name_length] = '\0';
-			}
+			set_output_file_name (name, name_length);
 		} else if (param_length >= OPT_DURATION.length () && strncmp (param, OPT_DURATION.data (), OPT_DURATION.length ()) == 0) {
 			const char *duration = param + OPT_DURATION.length ();
 			char *end;
@@ -102,7 +97,7 @@ void FastTiming::parse_options (const char *options) noexcept
 		param = separator == nullptr ? nullptr : separator + 1;
 	}
 
-	if (output_file_name[0] != '\0') {
+	if (output_file_name_configured) {
 		log_to_file = true;
 	}
 
@@ -256,7 +251,7 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 		return;
 	}
 
-	std::string_view file_name = output_file_name[0] == '\0' ? default_timing_file_name : std::string_view { output_file_name };
+	std::string_view file_name = output_file_name_configured ? std::string_view { get_output_file_name () } : default_timing_file_name;
 	char stack_buffer [Util::LocalPathBufferSize];
 	char *timing_log_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), temporary_directory, file_name);
 
