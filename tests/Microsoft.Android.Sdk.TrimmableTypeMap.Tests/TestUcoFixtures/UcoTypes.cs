@@ -79,6 +79,76 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures
 	}
 
 	/// <summary>
+	/// Models the compact callback names a marked assembly emits: the callback is named after the
+	/// managed member instead of its Java signature, and duplicate base names are numbered.  With
+	/// no connector method left to name, the connector stores the callback name itself.
+	/// </summary>
+	[Register ("com/example/uco/CompactWidget", DoNotGenerateAcw = true)]
+	public class CompactWidget : Java.Lang.Object
+	{
+		public CompactWidget (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register ("remove", "(I)V", "n_Remove")]
+		public virtual void Remove (int index) { }
+
+		[UnmanagedCallersOnly]
+		static void n_Remove (IntPtr jnienv, IntPtr native__this, int index) { }
+
+		[Register ("remove", "(J)V", "n_Remove_1")]
+		public virtual void Remove (long id) { }
+
+		[UnmanagedCallersOnly]
+		static void n_Remove_1 (IntPtr jnienv, IntPtr native__this, long id) { }
+	}
+
+	/// <summary>
+	/// A compact connector which also carries the owner qualifier an interface invoker or default
+	/// interface method needs.  Both halves have to survive: the qualifier still resolves the
+	/// declaring type, and the callback name is read verbatim from the segment before it.
+	/// </summary>
+	[Register ("com/example/uco/QualifiedWidget", DoNotGenerateAcw = true)]
+	public class QualifiedWidget : Java.Lang.Object
+	{
+		public QualifiedWidget (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register ("handle", "()V", "n_Handle:Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures.CallbackHost, TestUcoFixtures")]
+		public virtual void Handle () { }
+	}
+
+	/// <summary>
+	/// Stands in for the invoker type an owner-qualified connector points at.
+	/// </summary>
+	[Register ("com/example/uco/CallbackHost", DoNotGenerateAcw = true)]
+	public class CallbackHost : Java.Lang.Object
+	{
+		public CallbackHost (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[UnmanagedCallersOnly]
+		internal static void n_Handle (IntPtr jnienv, IntPtr native__this) { }
+	}
+
+	/// <summary>
+	/// ACW subclasses of the compact-format bindings.
+	/// </summary>
+	[Register ("com/example/uco/MyCompactWidget")]
+	public class MyCompactWidget : CompactWidget
+	{
+		public MyCompactWidget (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override void Remove (int index) { }
+
+		public override void Remove (long id) { }
+	}
+
+	[Register ("com/example/uco/MyQualifiedWidget")]
+	public class MyQualifiedWidget : QualifiedWidget
+	{
+		public MyQualifiedWidget (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override void Handle () { }
+	}
+
+	/// <summary>
 	/// A user (ACW) subclass overriding a legacy connector-style binding method in the same
 	/// marked assembly. It must keep the generated forwarding wrapper.
 	/// </summary>

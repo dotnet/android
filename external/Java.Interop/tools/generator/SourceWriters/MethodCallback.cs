@@ -16,6 +16,7 @@ namespace generator.SourceWriters
 		readonly string property_name;
 		readonly bool is_formatted;
 		readonly CodeGenerationOptions opt;
+		readonly string target_name;
 
 		readonly FieldWriter delegate_field;
 		readonly MethodWriter delegate_getter;
@@ -52,7 +53,8 @@ namespace generator.SourceWriters
 				method.GetDelegateType (options);
 			}
 
-			Name = "n_" + method.Name + method.IDSignature;
+			Name = UnmanagedCallbackSupport.GetCallbackName (type, method, options);
+			target_name = UnmanagedCallbackSupport.GetCallbackTargetName (type, method, options);
 			ReturnType = new TypeReferenceWriter (method.RetVal.NativeType);
 
 			IsStatic = true;
@@ -76,10 +78,10 @@ namespace generator.SourceWriters
 		{
 			string call;
 			if (typed_shape != null) {
-				call = typed_shape.GetHelperInvocation (opt.GetOutputName (type.FullName), "__" + Name, opt.NullableOperator);
+				call = typed_shape.GetHelperInvocation (opt.GetOutputName (type.FullName), target_name, opt.NullableOperator);
 			} else {
 				var paramArgs = string.Join ("", method.Parameters.Select (p => $", {opt.GetSafeIdentifier (p.UnsafeNativeName)}"));
-				call = $"global::Java.Interop.JniMarshal.{(method.IsVoid ? "SafeInvokeAction" : "SafeInvokeFunc")} (jnienv, native__this{paramArgs}, &__{Name})";
+				call = $"global::Java.Interop.JniMarshal.{(method.IsVoid ? "SafeInvokeAction" : "SafeInvokeFunc")} (jnienv, native__this{paramArgs}, &{target_name})";
 			}
 
 			writer.WriteLine ("unsafe {");
@@ -98,9 +100,9 @@ namespace generator.SourceWriters
 				attribute.WriteAttribute (writer);
 
 			if (typed_shape != null)
-				writer.WriteLine (typed_shape.GetTargetSignature (opt.GetOutputName (type.FullName), "__" + Name, opt.NullableOperator));
+				writer.WriteLine (typed_shape.GetTargetSignature (opt.GetOutputName (type.FullName), target_name, opt.NullableOperator));
 			else
-				writer.WriteLine ($"private static {method.RetVal.NativeType} __{Name} (IntPtr jnienv, IntPtr native__this{method.Parameters.GetCallbackSignature (opt)})");
+				writer.WriteLine ($"private static {method.RetVal.NativeType} {target_name} (IntPtr jnienv, IntPtr native__this{method.Parameters.GetCallbackSignature (opt)})");
 			writer.WriteLine ("{");
 
 			writer.Indent ();

@@ -62,7 +62,7 @@ namespace generator.SourceWriters
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
 			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-				Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, method.ConnectorName, additionalProperties: method.AdditionalAttributeString ()));
+				Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, UnmanagedCallbackSupport.GetConnectorName (impl, method, opt), additionalProperties: method.AdditionalAttributeString ()));
 			}
 
 			SourceWriterExtensions.AddMethodCustomAttributes (Attributes, method);

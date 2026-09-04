@@ -29,7 +29,7 @@ namespace generator.SourceWriters
 
 		/// <summary>
 		/// An <c>[UnmanagedCallersOnly]</c> <c>n_*</c> callback which forwards the raw JNI
-		/// arguments to a <c>Java.Interop.JniMarshalTyped.SafeInvokeMarshaled_*</c> helper along
+		/// arguments to a <c>Java.Interop.JniMarshalTyped.Invoke_*</c> helper along
 		/// with a function pointer to a method containing only the managed member invocation.
 		/// </summary>
 		UnmanagedTyped,
@@ -84,6 +84,79 @@ namespace generator.SourceWriters
 				? UnmanagedCallbackKind.UnmanagedTyped
 				: UnmanagedCallbackKind.UnmanagedRaw;
 		}
+
+		/// <summary>
+		/// The CLR name of the <c>n_*</c> callback for <paramref name="method" />, as declared by
+		/// <paramref name="owner" />.
+		/// </summary>
+		/// <remarks>
+		/// Only callbacks which actually become <c>[UnmanagedCallersOnly]</c> are renamed.  A
+		/// callback which keeps the legacy shape also keeps its legacy name and its
+		/// <c>Get*Handler ()</c> connector method, so the reflection-based registration path
+		/// continues to work for it even inside an assembly marked with the new format.
+		/// </remarks>
+		public static string GetCallbackName (GenBase owner, Method method, CodeGenerationOptions opt)
+		{
+			if (!UsesCompactNames (owner, method, opt))
+				return "n_" + method.Name + method.IDSignature;
+
+			return opt.CallbackNames.GetCallbackName (owner, method);
+		}
+
+		/// <summary>
+		/// The CLR name of the method-specific function pointer target invoked by the
+		/// <c>n_*</c> callback for <paramref name="method" />.
+		/// </summary>
+		public static string GetCallbackTargetName (GenBase owner, Method method, CodeGenerationOptions opt)
+		{
+			if (!UsesCompactNames (owner, method, opt))
+				return "__n_" + method.Name + method.IDSignature;
+
+			return opt.CallbackNames.GetTargetName (owner, method);
+		}
+
+		/// <summary>
+		/// The leading segment of a <c>[Register]</c> connector: either the legacy
+		/// <c>Get*Handler</c> connector method name, or — for a callback emitted in the new format
+		/// — the compact <c>n_*</c> callback name itself.
+		/// </summary>
+		/// <remarks>
+		/// A leading <c>n_</c> is what identifies the compact form to a reader, which is why the
+		/// callback name is stored verbatim rather than being re-derived from a mangled connector.
+		/// The optional <c>:Owner, Assembly</c> qualifier that some connectors carry is unaffected
+		/// and is still appended by the caller.
+		/// </remarks>
+		public static string GetConnectorName (GenBase owner, Method method, CodeGenerationOptions opt)
+		{
+			if (!UsesCompactNames (owner, method, opt))
+				return method.ConnectorName;
+
+			return opt.CallbackNames.GetCallbackName (owner, method);
+		}
+
+		/// <summary>
+		/// The full <c>[Register]</c> connector for a member bound on <paramref name="type" />,
+		/// including the owner qualifier a default interface method requires.  Mirrors
+		/// <see cref="Method.GetConnectorNameFull" /> but resolves the compact name against the
+		/// type which actually declares the callback.
+		/// </summary>
+		public static string GetConnectorNameFull (GenBase type, Method method, CodeGenerationOptions opt)
+		{
+			var isDefaultInterfaceMethod = opt.SupportDefaultInterfaceMethods && method.IsInterfaceDefaultMethod;
+
+			// Connectors for a default interface method are defined on the interface, not on the
+			// implementing type, so the callback name must be allocated against the interface.
+			var owner = isDefaultInterfaceMethod ? method.DeclaringType : type;
+			var connector = GetConnectorName (owner, method, opt);
+
+			if (!isDefaultInterfaceMethod)
+				return connector;
+
+			return connector + $":{method.DeclaringType.AssemblyQualifiedName}, " + (method.AssemblyName ?? opt.AssemblyName);
+		}
+
+		static bool UsesCompactNames (GenBase owner, Method method, CodeGenerationOptions opt) =>
+			opt != null && opt.UseUnmanagedCallersOnlyCallbacks && CanUseUnmanagedCallersOnly (owner, method, opt);
 
 		/// <summary>
 		/// Returns whether the <c>n_*</c> callback for <paramref name="method" /> can carry
@@ -194,7 +267,7 @@ namespace generator.SourceWriters
 				return false;
 
 			shape = new TypedCallbackShape (
-				helperName: $"SafeInvokeMarshaled_{pattern}{returnKind}",
+				helperName: $"Invoke_{pattern}{returnKind}",
 				typeArguments: typeArguments,
 				targetParameters: targetParameters,
 				forwardedArguments: forwardedArguments,
@@ -263,7 +336,7 @@ namespace generator.SourceWriters
 			ReturnsPeer = returnsPeer;
 		}
 
-		/// <summary>Name of the <c>JniMarshalTyped</c> helper, e.g. <c>SafeInvokeMarshaled_OSX</c>.</summary>
+		/// <summary>Name of the <c>JniMarshalTyped</c> helper, e.g. <c>Invoke_OSX</c>.</summary>
 		public string HelperName { get; }
 
 		/// <summary>Type arguments to the helper: the peer type, one per argument, then the return type.</summary>

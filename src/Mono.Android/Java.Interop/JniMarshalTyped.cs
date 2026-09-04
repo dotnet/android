@@ -25,7 +25,7 @@ namespace Java.Interop {
 	/// peer return value.
 	/// </para>
 	/// <para>
-	/// Method names encode the shape being marshaled: <c>SafeInvokeMarshaled_</c> followed by one
+	/// Method names encode the shape being marshaled: <c>Invoke_</c> followed by one
 	/// character per argument (<c>O</c> = object reference, <c>S</c> = scalar) followed by one
 	/// character for the return value (<c>X</c> = void, <c>S</c> = scalar, <c>O</c> = object
 	/// reference).  Shapes which are not safely centralizable — strings, arrays and other
@@ -46,7 +46,7 @@ namespace Java.Interop {
 		const string PeerLookupFailed = "Unable to marshal the JNI `this` reference to its managed peer.";
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_X<[DynamicallyAccessedMembers (Constructors)] TPeer> (IntPtr jnienv, IntPtr self, delegate* managed<TPeer, void> body)
+		public static unsafe void Invoke_X<[DynamicallyAccessedMembers (Constructors)] TPeer> (IntPtr jnienv, IntPtr self, delegate* managed<TPeer, void> body)
 			where TPeer : class, IJavaObject
 		{
 			AndroidRuntimeInternal.WaitForBridgeProcessing ();
@@ -68,7 +68,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_S<[DynamicallyAccessedMembers (Constructors)] TPeer, TResult> (IntPtr jnienv, IntPtr self, delegate* managed<TPeer, TResult> body)
+		public static unsafe TResult Invoke_S<[DynamicallyAccessedMembers (Constructors)] TPeer, TResult> (IntPtr jnienv, IntPtr self, delegate* managed<TPeer, TResult> body)
 			where TPeer : class, IJavaObject
 			where TResult : unmanaged
 		{
@@ -91,7 +91,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_O<[DynamicallyAccessedMembers (Constructors)] TPeer> (IntPtr jnienv, IntPtr self, delegate* managed<TPeer, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_O<[DynamicallyAccessedMembers (Constructors)] TPeer> (IntPtr jnienv, IntPtr self, delegate* managed<TPeer, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 		{
 			AndroidRuntimeInternal.WaitForBridgeProcessing ();
@@ -113,7 +113,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_SX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0> (IntPtr jnienv, IntPtr self, T0 p0, delegate* managed<TPeer, T0, void> body)
+		public static unsafe void Invoke_SX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0> (IntPtr jnienv, IntPtr self, T0 p0, delegate* managed<TPeer, T0, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 		{
@@ -136,7 +136,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_SS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, TResult> (IntPtr jnienv, IntPtr self, T0 p0, delegate* managed<TPeer, T0, TResult> body)
+		public static unsafe TResult Invoke_SS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, TResult> (IntPtr jnienv, IntPtr self, T0 p0, delegate* managed<TPeer, T0, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where TResult : unmanaged
@@ -160,7 +160,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_SO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0> (IntPtr jnienv, IntPtr self, T0 p0, delegate* managed<TPeer, T0, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_SO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0> (IntPtr jnienv, IntPtr self, T0 p0, delegate* managed<TPeer, T0, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 		{
@@ -183,7 +183,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_OX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0> (IntPtr jnienv, IntPtr self, IntPtr native_p0, delegate* managed<TPeer, T0?, void> body)
+		public static unsafe void Invoke_OX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0> (IntPtr jnienv, IntPtr self, IntPtr native_p0, delegate* managed<TPeer, T0?, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 		{
@@ -207,7 +207,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_OS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, delegate* managed<TPeer, T0?, TResult> body)
+		public static unsafe TResult Invoke_OS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, delegate* managed<TPeer, T0?, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where TResult : unmanaged
@@ -232,7 +232,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_OO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0> (IntPtr jnienv, IntPtr self, IntPtr native_p0, delegate* managed<TPeer, T0?, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_OO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0> (IntPtr jnienv, IntPtr self, IntPtr native_p0, delegate* managed<TPeer, T0?, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 		{
@@ -256,7 +256,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_SSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, delegate* managed<TPeer, T0, T1, void> body)
+		public static unsafe void Invoke_SSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, delegate* managed<TPeer, T0, T1, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -280,7 +280,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_SSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, delegate* managed<TPeer, T0, T1, TResult> body)
+		public static unsafe TResult Invoke_SSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, delegate* managed<TPeer, T0, T1, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -305,7 +305,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_SSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, delegate* managed<TPeer, T0, T1, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_SSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, delegate* managed<TPeer, T0, T1, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -329,7 +329,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_OSX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, delegate* managed<TPeer, T0?, T1, void> body)
+		public static unsafe void Invoke_OSX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, delegate* managed<TPeer, T0?, T1, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : unmanaged
@@ -354,7 +354,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_OSS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, delegate* managed<TPeer, T0?, T1, TResult> body)
+		public static unsafe TResult Invoke_OSS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, delegate* managed<TPeer, T0?, T1, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : unmanaged
@@ -380,7 +380,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_OSO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, delegate* managed<TPeer, T0?, T1, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_OSO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, delegate* managed<TPeer, T0?, T1, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : unmanaged
@@ -405,7 +405,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_SOX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, delegate* managed<TPeer, T0, T1?, void> body)
+		public static unsafe void Invoke_SOX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, delegate* managed<TPeer, T0, T1?, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : class, IJavaObject
@@ -430,7 +430,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_SOS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, TResult> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, delegate* managed<TPeer, T0, T1?, TResult> body)
+		public static unsafe TResult Invoke_SOS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, TResult> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, delegate* managed<TPeer, T0, T1?, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : class, IJavaObject
@@ -456,7 +456,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_SOO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, delegate* managed<TPeer, T0, T1?, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_SOO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, delegate* managed<TPeer, T0, T1?, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : class, IJavaObject
@@ -481,7 +481,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_OOX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, delegate* managed<TPeer, T0?, T1?, void> body)
+		public static unsafe void Invoke_OOX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, delegate* managed<TPeer, T0?, T1?, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : class, IJavaObject
@@ -507,7 +507,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_OOS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, delegate* managed<TPeer, T0?, T1?, TResult> body)
+		public static unsafe TResult Invoke_OOS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, delegate* managed<TPeer, T0?, T1?, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : class, IJavaObject
@@ -534,7 +534,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_OOO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, delegate* managed<TPeer, T0?, T1?, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_OOO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, delegate* managed<TPeer, T0?, T1?, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : class, IJavaObject
@@ -560,7 +560,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_SSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, delegate* managed<TPeer, T0, T1, T2, void> body)
+		public static unsafe void Invoke_SSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, delegate* managed<TPeer, T0, T1, T2, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -585,7 +585,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_SSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, delegate* managed<TPeer, T0, T1, T2, TResult> body)
+		public static unsafe TResult Invoke_SSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, delegate* managed<TPeer, T0, T1, T2, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -611,7 +611,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_SSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, delegate* managed<TPeer, T0, T1, T2, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_SSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, delegate* managed<TPeer, T0, T1, T2, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -636,7 +636,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_OSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, T2 p2, delegate* managed<TPeer, T0?, T1, T2, void> body)
+		public static unsafe void Invoke_OSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, T2 p2, delegate* managed<TPeer, T0?, T1, T2, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : unmanaged
@@ -662,7 +662,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_OSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, T2, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, T2 p2, delegate* managed<TPeer, T0?, T1, T2, TResult> body)
+		public static unsafe TResult Invoke_OSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, T2, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, T2 p2, delegate* managed<TPeer, T0?, T1, T2, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : unmanaged
@@ -689,7 +689,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_OSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, T2 p2, delegate* managed<TPeer, T0?, T1, T2, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_OSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, T2 p2, delegate* managed<TPeer, T0?, T1, T2, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : unmanaged
@@ -715,7 +715,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_SOSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, T2> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0, T1?, T2, void> body)
+		public static unsafe void Invoke_SOSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, T2> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0, T1?, T2, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : class, IJavaObject
@@ -741,7 +741,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_SOSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, T2, TResult> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0, T1?, T2, TResult> body)
+		public static unsafe TResult Invoke_SOSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, T2, TResult> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0, T1?, T2, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : class, IJavaObject
@@ -768,7 +768,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_SOSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, T2> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0, T1?, T2, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_SOSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, T2> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0, T1?, T2, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : class, IJavaObject
@@ -794,7 +794,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_OOSX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0?, T1?, T2, void> body)
+		public static unsafe void Invoke_OOSX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0?, T1?, T2, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : class, IJavaObject
@@ -821,7 +821,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_OOSS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, T2, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0?, T1?, T2, TResult> body)
+		public static unsafe TResult Invoke_OOSS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, T2, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0?, T1?, T2, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : class, IJavaObject
@@ -849,7 +849,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_OOSO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0?, T1?, T2, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_OOSO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, T2 p2, delegate* managed<TPeer, T0?, T1?, T2, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : class, IJavaObject
@@ -876,7 +876,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_SSOX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1, T2?, void> body)
+		public static unsafe void Invoke_SSOX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1, T2?, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -902,7 +902,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_SSOS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, [DynamicallyAccessedMembers (Constructors)] T2, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1, T2?, TResult> body)
+		public static unsafe TResult Invoke_SSOS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, [DynamicallyAccessedMembers (Constructors)] T2, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1, T2?, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -929,7 +929,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_SSOO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1, T2?, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_SSOO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1, T2?, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -955,7 +955,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_OSOX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1, T2?, void> body)
+		public static unsafe void Invoke_OSOX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1, T2?, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : unmanaged
@@ -982,7 +982,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_OSOS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, [DynamicallyAccessedMembers (Constructors)] T2, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1, T2?, TResult> body)
+		public static unsafe TResult Invoke_OSOS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, [DynamicallyAccessedMembers (Constructors)] T2, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1, T2?, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : unmanaged
@@ -1010,7 +1010,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_OSOO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1, T2?, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_OSOO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, T1 p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1, T2?, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : unmanaged
@@ -1037,7 +1037,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_SOOX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1?, T2?, void> body)
+		public static unsafe void Invoke_SOOX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1?, T2?, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : class, IJavaObject
@@ -1064,7 +1064,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_SOOS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2, TResult> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1?, T2?, TResult> body)
+		public static unsafe TResult Invoke_SOOS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2, TResult> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1?, T2?, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : class, IJavaObject
@@ -1092,7 +1092,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_SOOO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1?, T2?, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_SOOO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, T0 p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0, T1?, T2?, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : class, IJavaObject
@@ -1119,7 +1119,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_OOOX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1?, T2?, void> body)
+		public static unsafe void Invoke_OOOX<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1?, T2?, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : class, IJavaObject
@@ -1147,7 +1147,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_OOOS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1?, T2?, TResult> body)
+		public static unsafe TResult Invoke_OOOS<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2, TResult> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1?, T2?, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : class, IJavaObject
@@ -1176,7 +1176,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_OOOO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1?, T2?, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_OOOO<[DynamicallyAccessedMembers (Constructors)] TPeer, [DynamicallyAccessedMembers (Constructors)] T0, [DynamicallyAccessedMembers (Constructors)] T1, [DynamicallyAccessedMembers (Constructors)] T2> (IntPtr jnienv, IntPtr self, IntPtr native_p0, IntPtr native_p1, IntPtr native_p2, delegate* managed<TPeer, T0?, T1?, T2?, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 			where T1 : class, IJavaObject
@@ -1204,7 +1204,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_SSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, delegate* managed<TPeer, T0, T1, T2, T3, void> body)
+		public static unsafe void Invoke_SSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, delegate* managed<TPeer, T0, T1, T2, T3, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -1230,7 +1230,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_SSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, delegate* managed<TPeer, T0, T1, T2, T3, TResult> body)
+		public static unsafe TResult Invoke_SSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, delegate* managed<TPeer, T0, T1, T2, T3, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -1257,7 +1257,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_SSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, delegate* managed<TPeer, T0, T1, T2, T3, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_SSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, delegate* managed<TPeer, T0, T1, T2, T3, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -1283,7 +1283,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_SSSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate* managed<TPeer, T0, T1, T2, T3, T4, void> body)
+		public static unsafe void Invoke_SSSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate* managed<TPeer, T0, T1, T2, T3, T4, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -1310,7 +1310,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_SSSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate* managed<TPeer, T0, T1, T2, T3, T4, TResult> body)
+		public static unsafe TResult Invoke_SSSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate* managed<TPeer, T0, T1, T2, T3, T4, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -1338,7 +1338,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_SSSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate* managed<TPeer, T0, T1, T2, T3, T4, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_SSSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, delegate* managed<TPeer, T0, T1, T2, T3, T4, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -1365,7 +1365,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_SSSSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, void> body)
+		public static unsafe void Invoke_SSSSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -1393,7 +1393,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_SSSSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, TResult> body)
+		public static unsafe TResult Invoke_SSSSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -1422,7 +1422,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_SSSSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_SSSSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -1450,7 +1450,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_SSSSSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, void> body)
+		public static unsafe void Invoke_SSSSSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -1479,7 +1479,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_SSSSSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, TResult> body)
+		public static unsafe TResult Invoke_SSSSSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -1509,7 +1509,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_SSSSSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_SSSSSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -1538,7 +1538,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe void SafeInvokeMarshaled_SSSSSSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6, T7> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, T7, void> body)
+		public static unsafe void Invoke_SSSSSSSSX<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6, T7> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, T7, void> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -1568,7 +1568,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe TResult SafeInvokeMarshaled_SSSSSSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6, T7, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, T7, TResult> body)
+		public static unsafe TResult Invoke_SSSSSSSSS<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6, T7, TResult> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, T7, TResult> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
@@ -1599,7 +1599,7 @@ namespace Java.Interop {
 		}
 
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe IntPtr SafeInvokeMarshaled_SSSSSSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6, T7> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, T7, IJavaObject?> body)
+		public static unsafe IntPtr Invoke_SSSSSSSSO<[DynamicallyAccessedMembers (Constructors)] TPeer, T0, T1, T2, T3, T4, T5, T6, T7> (IntPtr jnienv, IntPtr self, T0 p0, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, delegate* managed<TPeer, T0, T1, T2, T3, T4, T5, T6, T7, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 			where T1 : unmanaged
