@@ -18,11 +18,7 @@ namespace Java.IO {
 	// Metadata.xml XPath class reference: path="/api/package[@name='java.io']/class[@name='OutputStream']"
 	[global::Android.Runtime.Register ("java/io/OutputStream", DoNotGenerateAcw=true)]
 	public abstract partial class OutputStream : global::Java.Lang.Object {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("java/io/OutputStream", typeof (OutputStream));
-
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
+		private static readonly JniPeerMembers _members = new XAPeerMembers ("java/io/OutputStream", typeof (OutputStream));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -243,7 +239,7 @@ namespace Java.IO {
 		{
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("java/io/OutputStream", typeof (OutputStreamInvoker));
+		private static readonly JniPeerMembers _members = new XAPeerMembers ("java/io/OutputStream", typeof (OutputStreamInvoker));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

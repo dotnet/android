@@ -1,20 +1,16 @@
 using System;
+using System.Runtime.CompilerServices;
 
 using Android.Runtime;
 
 using Java.Interop;
-
 namespace Android.Widget {
 
 	[Register ("android/widget/BaseAdapter", DoNotGenerateAcw=true)]
 	public abstract partial class BaseAdapter<T> : BaseAdapter {
 
-		static IntPtr java_class_handle;
-		static new IntPtr class_ref {
-			get {
-				return JNIEnv.FindClass ("android/widget/BaseAdapter", ref java_class_handle);
-			}
-		}
+		[UnsafeAccessor (UnsafeAccessorKind.StaticField, Name = "_members")]
+		static extern ref JniPeerMembers GetPeerMembers (BaseAdapter? _);
 
 		public BaseAdapter (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
@@ -38,11 +34,11 @@ namespace Android.Widget {
 			}
 
 			if (id_ctor == IntPtr.Zero)
-				id_ctor = JNIEnv.GetMethodID (class_ref, "<init>", "()V");
+				id_ctor = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerType.PeerReference.Handle, "<init>", "()V");
 			SetHandle (
-					JNIEnv.StartCreateInstance (class_ref, id_ctor),
+					JNIEnv.StartCreateInstance (GetPeerMembers (null).JniPeerType.PeerReference.Handle, id_ctor),
 					JniHandleOwnership.TransferLocalRef);
-			JNIEnv.FinishCreateInstance (Handle, class_ref, id_ctor);
+			JNIEnv.FinishCreateInstance (Handle, GetPeerMembers (null).JniPeerType.PeerReference.Handle, id_ctor);
 		}
 
 		public override Java.Lang.Object? GetItem (int position)
@@ -54,4 +50,3 @@ namespace Android.Widget {
 
 	}
 }
-

@@ -105,17 +105,7 @@ namespace generator.SourceWriters
 
 		void AddBindingInfrastructure (ClassGen klass, CodeGenerationOptions opt)
 		{
-			// @class.InheritsObject is true unless @class refers to java.lang.Object or java.lang.Throwable. (see ClassGen constructor)
-			// If @class's base class is defined in the same api.xml file, then it requires the new keyword to overshadow the internal
-			// members of its baseclass since the two classes will be defined in the same assembly. If the base class is not from the
-			// same api.xml file, the new keyword is not needed because the internal access modifier already prevents it from being seen.
-			var baseFromSameAssembly = klass?.BaseGen?.FromXml ?? false;
-			var requireNew = klass.InheritsObject && baseFromSameAssembly;
-
 			Fields.Add (new PeerMembersField (opt, klass.RawJniName, klass.Name, false));
-			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-				Properties.Add (new ClassHandleGetter (requireNew));
-			}
 
 			if (klass.BaseGen != null && klass.InheritsObject) {
 				Properties.Add (new JniPeerMembersGetter ());

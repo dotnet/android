@@ -18,11 +18,7 @@ namespace Test.ME {
 	// Metadata.xml XPath class reference: path="/api/package[@name='test.me']/class[@name='GenericImplementation']"
 	[global::Android.Runtime.Register ("test/me/GenericImplementation", DoNotGenerateAcw=true)]
 	public partial class GenericImplementation : global::Java.Lang.Object, global::Test.ME.IGenericInterface {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/GenericImplementation", typeof (GenericImplementation));
-
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
+		private static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/GenericImplementation", typeof (GenericImplementation));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

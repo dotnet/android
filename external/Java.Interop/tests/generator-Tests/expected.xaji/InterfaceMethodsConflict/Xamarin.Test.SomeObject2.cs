@@ -18,11 +18,7 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject2']"
 	[global::Android.Runtime.Register ("xamarin/test/SomeObject2", DoNotGenerateAcw=true)]
 	public abstract partial class SomeObject2 : global::Java.Lang.Object, global::Xamarin.Test.II1, global::Xamarin.Test.II2 {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/SomeObject2", typeof (SomeObject2));
-
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
+		private static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/SomeObject2", typeof (SomeObject2));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -109,7 +105,7 @@ namespace Xamarin.Test {
 		{
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/SomeObject2", typeof (SomeObject2Invoker));
+		private static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/SomeObject2", typeof (SomeObject2Invoker));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
