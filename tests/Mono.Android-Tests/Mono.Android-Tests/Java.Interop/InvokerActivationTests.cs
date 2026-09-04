@@ -140,7 +140,7 @@ namespace Java.InteropTests
 		}
 	}
 
-	[Register ("java/util/List", "", "Java.InteropTests.IXamarinListInvoker")]
+	[Register ("java/util/List", "", "Java.InteropTests.IXamarinListInvoker", DoNotGenerateAcw = true)]
 	interface IXamarinList : IJavaObject, IJavaPeerable, IDisposable
 	{
 	}
