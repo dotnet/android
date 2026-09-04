@@ -60,8 +60,8 @@
   -->
   <ItemGroup>
     <Compile Include="..\Xamarin.Android.Build.Tasks\Properties\Resources.Designer.cs" Link="Properties\Resources.Designer.cs" />
-    <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Properties\Resources.resx" Link="Properties\Resources.resx">
-      <ManifestResourceName>Xamarin.Android.Tasks.Properties.Resources</ManifestResourceName>
+    <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Properties\Resources*.resx" Link="Properties\%(Filename)%(Extension)">
+      <ManifestResourceName>Xamarin.Android.Tasks.Properties.%(Filename)</ManifestResourceName>
     </EmbeddedResource>
   </ItemGroup>
 
