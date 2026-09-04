@@ -20,7 +20,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
   <Target Name="_SetR8AcwMapFile">
     <PropertyGroup>
       <_R8AcwMapFile>$(_AcwMapFile)</_R8AcwMapFile>
-      <_R8AcwMapFile Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' and '$(PublishTrimmed)' != 'true' ">$(_TrimmableTypeMapKeepRulesAcwMapFile)</_R8AcwMapFile>
+      <_R8AcwMapFile Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' and '$(AndroidLinkMode)' == 'None' ">$(_TrimmableTypeMapKeepRulesAcwMapFile)</_R8AcwMapFile>
     </PropertyGroup>
   </Target>
 
