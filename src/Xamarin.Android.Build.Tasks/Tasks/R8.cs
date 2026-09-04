@@ -34,6 +34,7 @@ namespace Xamarin.Android.Tasks
 		public string? ProguardGeneratedApplicationConfiguration { get; set; }
 		public string? ProguardCommonXamarinConfiguration { get; set; }
 		public string? ProguardMappingFileOutput { get; set; }
+		public string? BuildMetadataFileOutput { get; set; }
 		public string []? ProguardConfigurationFiles { get; set; }
 
 		protected override string MainClass => "com.android.tools.r8.R8";
@@ -62,6 +63,11 @@ namespace Xamarin.Android.Tasks
 
 			// Now append R8-specific arguments to the response file
 			using var response = new StreamWriter (responseFile, append: true, encoding: Files.UTF8withoutBOM);
+
+			if (!BuildMetadataFileOutput.IsNullOrEmpty ()) {
+				WriteArg (response, "--build-metadata-output");
+				WriteArg (response, Path.GetFullPath (BuildMetadataFileOutput));
+			}
 
 			if (EnableMultiDex) {
 				if (MinSdkVersion >= 21) {

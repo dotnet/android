@@ -73,6 +73,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         ProguardGeneratedReferenceConfiguration="$(_ProguardProjectConfiguration)"
         ProguardGeneratedApplicationConfiguration="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg"
         ProguardMappingFileOutput="$(AndroidProguardMappingFile)"
+        BuildMetadataFileOutput="$(_AndroidR8BuildMetadataFile)"
         ProguardConfigurationFiles="@(_ProguardConfiguration)"
         EnableShrinking="$(_R8EnableShrinking)"
         EnableMultiDex="$(AndroidEnableMultiDex)"
@@ -109,6 +110,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
     <ItemGroup>
       <FileWrites Include="$(_AndroidIntermediateDexOutputDirectory)*.dex" />
       <FileWrites Include="$(AndroidProguardMappingFile)" />
+      <FileWrites Include="$(_AndroidR8BuildMetadataFile)" Condition=" Exists('$(_AndroidR8BuildMetadataFile)') " />
     </ItemGroup>
 
   </Target>
