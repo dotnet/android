@@ -11,13 +11,14 @@ namespace Xamarin.Android.Build.Tests;
 [Category ("UsesDevice")]
 public class FastTimingTests : DeviceTest
 {
-	[Test]
-	public void ConcurrentEventsCanGrowAndDump ()
+	[TestCase (false)]
+	[TestCase (true)]
+	public void ConcurrentEventsCanGrowAndDump (bool useBundledLongFileName)
 	{
 		const string completedMessage = "FAST_TIMING_EVENTS_COMPLETED";
 		const string bufferGrowthMessage = "Allocated timing event buffer from 4096 to 8192";
 		const string dumpCompletedMessage = "[2/8] Assembly decompression";
-		string timingFileName = $"fast-timing-{new string ('x', 128)}.txt";
+		string timingFileName = useBundledLongFileName ? $"fast-timing-{new string ('x', 128)}.txt" : "fast-timing.txt";
 
 		if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
 			return;
@@ -30,9 +31,11 @@ public class FastTimingTests : DeviceTest
 		proj.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
 		proj.SetProperty ("_AndroidFastTiming", "True");
 		proj.SetDefaultTargetDevice ();
-		proj.OtherBuildItems.Add (new BuildItem ("AndroidEnvironment", "env.txt") {
-			TextContent = () => $"debug.dotnet.log=timing=fast-bare\ndebug.dotnet.timing=to-file,filename={timingFileName}",
-		});
+		if (useBundledLongFileName) {
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidEnvironment", "env.txt") {
+				TextContent = () => $"debug.dotnet.log=timing=fast-bare\ndebug.dotnet.timing=to-file,filename={timingFileName}",
+			});
+		}
 		proj.MainActivity = proj.DefaultMainActivity
 			.Replace ("//${USINGS}", "using System.Threading.Tasks;")
 			.Replace (
@@ -53,8 +56,13 @@ public class FastTimingTests : DeviceTest
 		string previousDotnetLog = RunAdbCommand ("shell getprop debug.dotnet.log").Trim ();
 		string previousDotnetTiming = RunAdbCommand ("shell getprop debug.dotnet.timing").Trim ();
 		try {
-			RunAdbCommand ("shell setprop debug.dotnet.log \"\"");
-			RunAdbCommand ("shell setprop debug.dotnet.timing \"\"");
+			if (useBundledLongFileName) {
+				RunAdbCommand ("shell setprop debug.dotnet.log \"\"");
+				RunAdbCommand ("shell setprop debug.dotnet.timing \"\"");
+			} else {
+				RunAdbCommand ("shell setprop debug.dotnet.log timing=fast-bare");
+				RunAdbCommand ($"shell setprop debug.dotnet.timing to-file,filename={timingFileName}");
+			}
 			ClearAdbLogcat ();
 
 			bool sawBufferGrowth = false;

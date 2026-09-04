@@ -121,8 +121,9 @@ namespace xamarin::android {
 		static constexpr std::string_view OPT_FILE_NAME     { "filename=" };
 		static constexpr std::string_view OPT_TO_FILE       { "to-file" };
 
-		// System property values fit here. Bundled properties can be longer and fall back to the heap.
-		static constexpr size_t TIMING_FILE_NAME_BUFFER_SIZE = Constants::PROPERTY_VALUE_BUFFER_LEN;
+		// File names normally fit here. Longer bundled property values fall back to the heap.
+		static constexpr size_t TIMING_FILE_NAME_INLINE_BUFFER_SIZE = 128uz;
+		static_assert (default_timing_file_name.length () < TIMING_FILE_NAME_INLINE_BUFFER_SIZE);
 
 	protected:
 		void configure_for_use () noexcept
@@ -458,7 +459,15 @@ namespace xamarin::android {
 			char *destination = output_file_name_buffer;
 			if (required_capacity > sizeof (output_file_name_buffer)) [[unlikely]] {
 				destination = static_cast<char*> (std::malloc (required_capacity));
-				abort_unless (destination != nullptr, "Failed to allocate the timing output file name");
+				if (destination == nullptr) [[unlikely]] {
+					log_warnf (LOG_TIMING, "Failed to allocate the timing output file name, using the default");
+					std::memcpy (output_file_name_buffer, default_timing_file_name.data (), default_timing_file_name.length ());
+					output_file_name_buffer[default_timing_file_name.length ()] = '\0';
+					std::free (allocated_output_file_name);
+					allocated_output_file_name = nullptr;
+					output_file_name_configured = true;
+					return;
+				}
 			}
 
 			std::memcpy (destination, name, length);
@@ -636,7 +645,7 @@ namespace xamarin::android {
 	private:
 		std::atomic_size_t next_event_index = 0uz;
 		TimingEventChunk *first_event_chunk = nullptr;
-		char output_file_name_buffer[TIMING_FILE_NAME_BUFFER_SIZE] = {};
+		char output_file_name_buffer[TIMING_FILE_NAME_INLINE_BUFFER_SIZE] = {};
 		char *allocated_output_file_name = nullptr;
 		bool output_file_name_configured = false;
 
