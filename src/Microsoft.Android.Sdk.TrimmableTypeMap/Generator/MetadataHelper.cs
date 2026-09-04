@@ -249,6 +249,10 @@ static class MetadataHelper
 		foreach (var parameterType in constructor.ManagedParameterTypes) {
 			WriteTypeRef (writer, sink, parameterType);
 		}
+		writer.WriteInt32 (sink, constructor.ParameterKinds.Count);
+		foreach (var parameterKind in constructor.ParameterKinds) {
+			writer.WriteInt32 (sink, (int) parameterKind);
+		}
 	}
 
 	static void WriteNativeRegistration (FingerprintWriter writer, Sink sink, NativeRegistrationData registration)

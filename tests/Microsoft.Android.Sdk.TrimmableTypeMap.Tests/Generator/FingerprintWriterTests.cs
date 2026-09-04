@@ -399,6 +399,10 @@ public class FingerprintWriterTests : FixtureTestBase
 		foreach (var parameterType in constructor.ManagedParameterTypes) {
 			LegacyWriteTypeRef (writer, parameterType);
 		}
+		writer.Write (constructor.ParameterKinds.Count);
+		foreach (var parameterKind in constructor.ParameterKinds) {
+			writer.Write ((int) parameterKind);
+		}
 	}
 
 	static void LegacyWriteNativeRegistration (BinaryWriter writer, NativeRegistrationData registration)
