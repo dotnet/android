@@ -12,7 +12,8 @@ namespace generator.SourceWriters
 {
 	public static class SourceWriterExtensions
 	{
-		const int MINIMUM_API_LEVEL = 21;
+		// Must match $(AndroidMinimumDotNetApiLevel) in Configuration.props.
+		const int MINIMUM_API_LEVEL = 24;
 
 		public static void AddField (TypeWriter tw, GenBase type, Field field, CodeGenerationOptions opt)
 		{

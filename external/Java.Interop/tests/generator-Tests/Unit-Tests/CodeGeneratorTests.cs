@@ -804,13 +804,16 @@ namespace generatortests
 			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			// These should use [Obsolete] because they have always been obsolete in all currently supported versions (21+)
+			// These should use [Obsolete] because they have always been obsolete in all currently supported versions (24+)
 			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"This is a field deprecated since 0!\")]"), writer.ToString ());
 			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"This is a constructor deprecated since empty string!\")]"), writer.ToString ());
 
+			// getCount/setCount were deprecated-since 22, which is below MINIMUM_API_LEVEL (24), so they
+			// should use [Obsolete] rather than [ObsoletedOSPlatform] since they have always been obsolete.
+			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"deprecated\")]"), writer.ToString ());
+
 			// This should not have a message because the default "deprecated" message isn't useful
 			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\")]"), writer.ToString ());
-			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android22.0\")]"), writer.ToString ());
 
 			// This should use [Obsolete] because the 'deprecated-since' attribute could not be parsed
 			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"This method has an invalid deprecated-since!\")]"), writer.ToString ());
@@ -1448,6 +1451,31 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			StringAssert.Contains ("[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android30.0\")]", builder.ToString (), "Should contain SupportedOSPlatform!");
+		}
+
+		[Test]
+		// MINIMUM_API_LEVEL is 24 (matches $(AndroidMinimumDotNetApiLevel) in Configuration.props), so
+		// there's no sense writing [SupportedOSPlatform] for an API available at or below that floor:
+		// it's available in every version we support. Only API levels above the floor need it.
+		[TestCase (22, false)]
+		[TestCase (23, false)]
+		[TestCase (24, false)]
+		[TestCase (25, true)]
+		public void SupportedOSPlatformOmittedAtOrBelowMinimumApiLevel (int apiLevel, bool expectAttribute)
+		{
+			var klass = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
+			klass.ApiAvailableSince = new AndroidSdkVersion (apiLevel);
+
+			generator.Context.ContextTypes.Push (klass);
+			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			var attribute = $"[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android{apiLevel}.0\")]";
+
+			if (expectAttribute)
+				StringAssert.Contains (attribute, builder.ToString (), $"Should contain SupportedOSPlatform for android{apiLevel}!");
+			else
+				StringAssert.DoesNotContain (attribute, builder.ToString (), $"Should NOT contain SupportedOSPlatform for android{apiLevel}!");
 		}
 
 		[Test]
