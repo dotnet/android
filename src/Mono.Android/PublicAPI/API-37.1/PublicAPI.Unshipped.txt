@@ -6,3 +6,9 @@ Android.App.ApplicationAttribute.EnableOnBackInvokedCallback.set -> void
 Xamarin.Android.Net.IAndroidAuthenticationModule.Authenticate(string! challenge, Java.Net.HttpURLConnection! request, System.Net.ICredentials! credentials) -> System.Net.Authorization?
 Xamarin.Android.Net.IAndroidAuthenticationModule.PreAuthenticate(Java.Net.HttpURLConnection! request, System.Net.ICredentials! credentials) -> System.Net.Authorization?
 static Android.Runtime.JNIEnv.BridgeProcessingGeneration.get -> int
+*REMOVED*Android.Runtime.IntDefinitionAttribute
+*REMOVED*Android.Runtime.IntDefinitionAttribute.ConstantMember.get -> string?
+*REMOVED*Android.Runtime.IntDefinitionAttribute.ConstantMember.set -> void
+*REMOVED*Android.Runtime.IntDefinitionAttribute.IntDefinitionAttribute(string? constantMember) -> void
+*REMOVED*Android.Runtime.IntDefinitionAttribute.JniField.get -> string?
+*REMOVED*Android.Runtime.IntDefinitionAttribute.JniField.set -> void
