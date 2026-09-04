@@ -32,6 +32,10 @@ public class FastTimingTests : DeviceTest
 		proj.SetProperty ("_AndroidFastTiming", "True");
 		proj.SetDefaultTargetDevice ();
 		if (useBundledLongFileName) {
+			// Fast Deployment writes AndroidEnvironment items to an override file that the runtime
+			// reads after fast timing is initialized. Embed this case so the value is available in
+			// the application config when FastTiming::initialize reads the bundled property.
+			proj.EmbedAssembliesIntoApk = true;
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidEnvironment", "env.txt") {
 				TextContent = () => $"debug.dotnet.timing=to-file,filename={timingFileName}",
 			});
