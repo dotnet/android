@@ -74,14 +74,18 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
 			var mergedAcwMap = builder.Output.GetIntermediaryPath ("acw-map.prebuilt-merged.txt");
-			var proguardConfiguration = builder.Output.GetIntermediaryPath (Path.Combine (
-				"proguard",
-				runtime == AndroidRuntime.NativeAOT ? "proguard_project_references.cfg" : "proguard_project_primary.cfg"));
+			var intermediateDir = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			var proguardConfigurations = runtime == AndroidRuntime.NativeAOT
+				? Directory.GetFiles (intermediateDir, "proguard_project_references.cfg", SearchOption.AllDirectories)
+				: [builder.Output.GetIntermediaryPath (Path.Combine ("proguard", "proguard_project_primary.cfg"))];
 			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 			const string frameworkJcw = "mono.android.view.View_OnClickListenerImplementor";
 
 			AssertFileContains (mergedAcwMap, frameworkJcw, expected: true, "merged framework ACW map");
-			AssertFileContains (proguardConfiguration, frameworkJcw, expected: true, "R8 configuration");
+			Assert.IsNotEmpty (proguardConfigurations, "R8 configuration should exist.");
+			foreach (var proguardConfiguration in proguardConfigurations) {
+				AssertFileContains (proguardConfiguration, frameworkJcw, expected: true, "R8 configuration");
+			}
 			Assert.IsTrue (
 				DexUtils.ContainsClassWithMethod ($"L{frameworkJcw.Replace ('.', '/')};", "<init>", "()V", dexFile, AndroidSdkPath),
 				$"`{dexFile}` should retain the pre-generated framework listener implementor when R8 shrinking is enabled.");
