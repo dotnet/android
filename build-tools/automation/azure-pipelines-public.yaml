@@ -29,6 +29,18 @@ parameters:
   values:
   - 'true'
   - 'false'
+- name: enableApkTestsHelixPrototype
+  displayName: Enable APK tests in Helix prototype
+  type: boolean
+  default: false
+- name: apkTestsHelixTargetMinutes
+  displayName: APK test Helix target minutes
+  type: number
+  default: 15
+- name: apkTestsHelixOnly
+  displayName: Run only the APK test Helix prototype after builds
+  type: boolean
+  default: false
 
 # Repository resources
 resources:
@@ -163,6 +175,27 @@ stages:
         xaSourcePath: $(System.DefaultWorkingDirectory)/android
         nugetArtifactName: $(LinuxNuGetArtifactName)
         use1ESTemplate: false
+
+- ${{ if eq(parameters.enableApkTestsHelixPrototype, true) }}:
+  - stage: apk_tests_helix
+    displayName: APK Tests Helix Prototype
+    dependsOn:
+    - mac_build
+    condition: and(succeeded(), or(ne(variables['SkipTestStages'], 'true'), eq('${{ parameters.apkTestsHelixOnly }}', 'true')))
+    jobs:
+    - job: apk_tests_helix
+      displayName: Android APK Tests > Helix
+      pool:
+        name: $(NetCorePublicPoolName)
+        demands:
+        - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
+      timeoutInMinutes: 240
+      workspace:
+        clean: all
+      steps:
+      - template: /build-tools/automation/yaml-templates/run-apk-tests-in-helix.yaml
+        parameters:
+          targetMinutes: ${{ parameters.apkTestsHelixTargetMinutes }}
 
 # Package Tests Stage
 - ${{ if ne(variables.SkipTestStages, 'true') }}:

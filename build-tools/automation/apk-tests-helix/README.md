@@ -1,0 +1,31 @@
+# APK tests in Helix prototype
+
+This guarded prototype builds the existing on-device APK test flavors once on a
+Windows Azure Pipelines agent, then submits one deterministic Helix work item per flavor. Existing
+measurements put every device test invocation below the configurable 15-minute target,
+so splitting an APK's NUnit inventory further would add installation overhead without
+improving the tail.
+
+Each small work item contains a signed APK, Android `platform-tools`, its
+package/instrumentation metadata, and a PowerShell runner, matching the proven
+PR #12020 payload layout.
+The runner installs the APK, invokes `am instrument`, pulls the test-generated TRX,
+captures logcat/device state, and returns failure when instrumentation or any test
+fails.
+
+Preparation preserves the application's normal generated manifest and injects only
+the test instrumentation plus Android 16/17 local-network permissions. The work-item
+runner grants the API-appropriate runtime permission so socket-based tests keep their
+existing semantics on current physical devices. Debug embeds managed assemblies
+because direct APK installation cannot reproduce the existing fast-deployment step;
+that deployment coverage remains in the original lane.
+
+The prototype uses `Ubuntu.2204.Amd64.Android.29.Open`, the public Android emulator
+queue used by dotnet/runtime for x86/x64 Android tests. This matches the existing
+dotnet/android APK lanes' default API 29 emulator instead of distributing the suite
+across heterogeneous physical devices. The runner waits for a delayed device
+assignment and retries instrumentation once while retaining both attempt TRXs. The
+known process-global JNI count checks tracked by dotnet/android#12031 run first in a
+fresh process, while the remainder runs in a second process; the TRXs are merged back
+into the original inventory. The existing macOS emulator lanes remain enabled for
+same-build inventory and outcome comparison.

@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup Condition="'$(_AndroidHelixInstrumentation)' != ''">
+    <AfterGenerateAndroidManifest>$(AfterGenerateAndroidManifest);_InjectApkTestsHelixManifest</AfterGenerateAndroidManifest>
+  </PropertyGroup>
+
+  <Target Name="_InjectApkTestsHelixManifest"
+          Condition="'$(_AndroidHelixInstrumentation)' != '' and '$(AndroidApplication)' == 'true'">
+    <Exec Command="pwsh -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(ApkTestsHelixManifestScript)&quot; -ManifestPath &quot;$(IntermediateOutputPath)android\AndroidManifest.xml&quot; -PackageName &quot;$(_AndroidHelixPackageName)&quot; -Instrumentation &quot;$(_AndroidHelixInstrumentation)&quot;" />
+  </Target>
+</Project>
