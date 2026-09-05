@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
@@ -10,9 +11,10 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Xamarin.Android.Tools;
+using Xamarin.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks;
+namespace Microsoft.Android.Tasks;
 
 public class GenerateTrimmableTypeMap : AndroidTask
 {
@@ -74,9 +76,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		public void LogUnsupportedExportSignatureError (string memberName, string managedTypeName) =>
 			log.LogCodedError ("XA4263", Properties.Resources.XA4263, memberName, managedTypeName);
 		public void LogCustomJavaObjectError (string managedTypeName) =>
-			log.LogError ("{0}", $"XA4212: {string.Format (Properties.Resources.XA4212, managedTypeName)}");
+			log.LogError ("{0}", $"XA4212: {string.Format (CultureInfo.CurrentCulture, Properties.Resources.XA4212, managedTypeName)}");
 		public void LogCustomJavaObjectWarning (string managedTypeName) =>
-			log.LogWarning ("{0}", $"XA4212: {string.Format (Properties.Resources.XA4212, managedTypeName)}");
+			log.LogWarning ("{0}", $"XA4212: {string.Format (CultureInfo.CurrentCulture, Properties.Resources.XA4212, managedTypeName)}");
 	}
 
 	public override string TaskPrefix => "GTT";
@@ -233,7 +235,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			}
 			IReadOnlyCollection<string>? customViewTypeNames = CustomViewMapFile.IsNullOrEmpty ()
 				? null
-				: MonoAndroidHelper.LoadCustomViewMapFile (BuildEngine4, CustomViewMapFile).Keys;
+				: LoadCustomViewTypeNames (CustomViewMapFile);
 
 			result = generator.Execute (
 				assemblies,
@@ -369,7 +371,29 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 	static bool IsFrameworkAssemblyItem (ITaskItem item) =>
 		string.Equals (item.GetMetadata ("FrameworkAssembly"), bool.TrueString, StringComparison.OrdinalIgnoreCase) ||
-		MonoAndroidHelper.IsFrameworkAssembly (item);
+		string.Equals (item.GetMetadata ("FrameworkReferenceName"), "Microsoft.Android", StringComparison.Ordinal) ||
+		item.GetMetadata ("FrameworkReferenceName").StartsWith ("Microsoft.NETCore.", StringComparison.OrdinalIgnoreCase) ||
+		item.GetMetadata ("NuGetPackageId").StartsWith ("Microsoft.NETCore.App.Runtime.", StringComparison.OrdinalIgnoreCase) ||
+		item.GetMetadata ("NuGetPackageId").StartsWith ("Microsoft.Android.Runtime.", StringComparison.OrdinalIgnoreCase);
+
+	internal static IReadOnlyCollection<string> LoadCustomViewTypeNames (string mapFile)
+	{
+		var typeNames = new HashSet<string> (StringComparer.Ordinal);
+		if (!File.Exists (mapFile)) {
+			return typeNames;
+		}
+		foreach (var line in File.ReadLines (mapFile)) {
+			if (line.IsNullOrWhiteSpace ()) {
+				continue;
+			}
+			int separator = line.IndexOf (';');
+			if (separator <= 0 || separator == line.Length - 1) {
+				throw new InvalidDataException ($"Invalid custom view map entry '{line}' in '{mapFile}'.");
+			}
+			typeNames.Add (line.Substring (0, separator));
+		}
+		return typeNames;
+	}
 
 	void WriteGeneratedAssembliesListFile (IReadOnlyList<ITaskItem> assemblies)
 	{
@@ -498,7 +522,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	TaskItem CreateDeletedJavaItem (string fullPath)
 	{
 		var item = new TaskItem (fullPath);
-		item.SetMetadata ("RelativePath", PathUtil.GetRelativePath (JavaSourceOutputDirectory, fullPath));
+		item.SetMetadata ("RelativePath", Path.GetRelativePath (JavaSourceOutputDirectory, fullPath));
 		return item;
 	}
 
@@ -525,7 +549,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		sb.AppendLine ("\tpublic static void registerApplications ()");
 		sb.AppendLine ("\t{");
 		foreach (var javaClassName in registrationTypes) {
-			sb.AppendLine ($"\t\tmono.android.Runtime.registerNatives ({javaClassName}.class);");
+			sb.AppendLine (CultureInfo.InvariantCulture, $"\t\tmono.android.Runtime.registerNatives ({javaClassName}.class);");
 		}
 		sb.AppendLine ("\t}");
 		sb.AppendLine ("}");

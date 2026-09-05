@@ -5,7 +5,7 @@
     This assembly hosts MSBuild tasks that require .NET (net11.0) APIs that are not available in
     netstandard2.0, so they cannot live in Xamarin.Android.Build.Tasks.dll (which multi-targets
     netstandard2.0 to run on both .NET Framework and .NET MSBuild). Tasks here are imported with
-    <UsingTask ... Runtime="NET" TaskFactory="TaskHostFactory" /> so they run out-of-process on .NET.
+    <UsingTask ... Runtime="NET" /> so they run on .NET.
     Keep this assembly small and self-contained: link only the minimal helpers it needs.
   -->
   <PropertyGroup>
@@ -13,22 +13,44 @@
     <RootNamespace>Microsoft.Android.Tasks</RootNamespace>
     <Nullable>enable</Nullable>
     <WarningsAsErrors>Nullable</WarningsAsErrors>
-    <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
+    <!--
+      Deliberately *not* the shared tools\ directory. MSBuild probes a task assembly's own
+      directory before anything else, and tools\ holds the netstandard2.0 flavors of packages
+      such as System.IO.Hashing that Xamarin.Android.Build.Tasks.dll deposits. Those bind their
+      Span<T> to System.Memory, so a net11.0 caller resolving them fails with
+      MissingMethodException. Living in our own directory means this assembly and its
+      dependencies always resolve to their .NET flavors.
+    -->
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)net\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <!--
-      We share $(OutputPath) with Xamarin.Android.Build.Tasks.csproj. Letting NuGet copy this
-      project's transitive runtime assets there can overwrite the netstandard2.0 assemblies
-      Build.Tasks already deposited with incompatible framework-specific implementations.
-      Only our compiled assembly needs to land in the SDK pack tools folder.
-    -->
+    <!-- Microsoft.Build.* must never ship next to a task assembly; copy only what we need. -->
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
+  <!--
+    Package assets are not copied wholesale (see CopyLocalLockFileAssemblies), so deposit the
+    .NET flavor of System.IO.Hashing that Microsoft.Android.Sdk.TrimmableTypeMap.dll compiles
+    against alongside it.
+  -->
+  <Target Name="_CopyDotNetPackageDependencies" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Include="@(ReferencePath)" Condition=" '%(Filename)' == 'System.IO.Hashing' " />
+    </ItemGroup>
+  </Target>
+
   <!-- Microsoft.Build.* references flow transitively from Microsoft.Android.Build.BaseTasks. -->
   <ItemGroup>
+    <Compile Remove="Tests\**" />
     <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
+    <ProjectReference Include="..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Localization\Java.Interop.Localization.csproj" />
+    <InternalsVisibleTo Include="Microsoft.Android.Build.Tasks.Tests" Key="0024000004800000940000000602000000240000525341310004000011000000438ac2a5acfbf16cbd2b2b47a62762f273df9cb2795ceccdf77d10bf508e69e7a362ea7a45455bbf3ac955e1f2e2814f144e5d817efc4c6502cc012df310783348304e3ae38573c6d658c234025821fda87a0be8a0d504df564e2c93b2b878925f42503e9d54dfef9f9586d9e6f38a305769587b1de01f6c0410328b2c9733db" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\NullableExtensions.cs" Link="Utilities\NullableExtensions.cs" />
   </ItemGroup>
 
   <!--
@@ -38,8 +60,8 @@
   -->
   <ItemGroup>
     <Compile Include="..\Xamarin.Android.Build.Tasks\Properties\Resources.Designer.cs" Link="Properties\Resources.Designer.cs" />
-    <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Properties\Resources.resx" Link="Properties\Resources.resx">
-      <ManifestResourceName>Xamarin.Android.Tasks.Properties.Resources</ManifestResourceName>
+    <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Properties\Resources*.resx" Link="Properties\%(Filename)%(Extension)">
+      <ManifestResourceName>Xamarin.Android.Tasks.Properties.%(Filename)</ManifestResourceName>
     </EmbeddedResource>
   </ItemGroup>
 

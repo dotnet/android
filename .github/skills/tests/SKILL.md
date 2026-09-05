@@ -41,6 +41,7 @@ Classify the user's request:
 | `src/Mono.Android/Xamarin.Android.Net/` | On-device: networking tests in `Mono.Android.NET-Tests.csproj`. Host: `CheckClientHandlerTypeTests`, `LinkerTests` |
 | `src/Mono.Android/Android.*/**` | On-device: corresponding namespace tests in `Mono.Android.NET-Tests.csproj` |
 | `src/Xamarin.Android.Build.Tasks/Tasks/` | Host: task tests in `Xamarin.Android.Build.Tests.dll` (filter by task name) |
+| `src/Microsoft.Android.Build.Tasks/Tasks/` | Standalone: `Microsoft.Android.Build.Tasks.Tests.csproj` |
 | `src/Xamarin.Android.Build.Tasks/Utilities/` | Host: `Xamarin.Android.Build.Tests.dll` — grep for test classes referencing the utility |
 | `src/Xamarin.Android.Build.Tasks/**/*.targets` | Host: `Xamarin.Android.Build.Tests.dll`. Device: `MSBuildDeviceIntegration.dll` |
 | `src/Microsoft.Android.Sdk.TrimmableTypeMap/` | Standalone: `TrimmableTypeMap.Tests.csproj`. Full-build: `TrimmableTypeMap.IntegrationTests` |
