@@ -22,7 +22,11 @@ namespace Xamarin.Android.Build.Tests
 		static Lazy<byte []> javaSourceTestInterface = new Lazy<byte []> (() => GetResourceData ("JavaSourceTestInterface.java"));
 		static Lazy<byte []> remapActivityJava = new Lazy<byte []> (() => GetResourceData ("RemapActivity.java"));
 		static Lazy<byte []> remapActivityXml = new Lazy<byte []> (() => GetResourceData ("RemapActivity.xml"));
-		static Lazy<byte []> idmStaticMethodsInterface = new Lazy<byte []> (() => GetResourceData ("StaticMethodsInterface.java"));
+		static Lazy<byte []> interfaceMethods = new Lazy<byte []> (() => GetResourceData ("InterfaceMethods.java"));
+		static Lazy<byte []> interfaceMethodPeer = new Lazy<byte []> (() => GetResourceData ("InterfaceMethodPeer.java"));
+		static Lazy<byte []> concreteInterfaceMethodPeer = new Lazy<byte []> (() => GetResourceData ("ConcreteInterfaceMethodPeer.java"));
+		static Lazy<byte []> interfaceMethodBridgeInvoker = new Lazy<byte []> (() => GetResourceData ("InterfaceMethodBridgeInvoker.java"));
+		static Lazy<byte []> covariantInterfaceMethods = new Lazy<byte []> (() => GetResourceData ("CovariantInterfaceMethods.java"));
 
 		static Lazy<byte []> rtxt = new Lazy<byte []> (() => GetResourceData ("R.txt"));
 
@@ -40,7 +44,11 @@ namespace Xamarin.Android.Build.Tests
 		public  static  string RemapActivityXml => Encoding.UTF8.GetString (remapActivityXml.Value);
 		public static  string RemapMamJson => Encoding.UTF8.GetString (GetResourceData ("mam.json"));
 		public static  string RemapMamXml => Encoding.UTF8.GetString (GetResourceData ("mam.xml"));
-		public  static  string IdmStaticMethodsInterface => Encoding.UTF8.GetString (idmStaticMethodsInterface.Value);
+		public static string InterfaceMethods => Encoding.UTF8.GetString (interfaceMethods.Value);
+		public static string InterfaceMethodPeer => Encoding.UTF8.GetString (interfaceMethodPeer.Value);
+		public static string ConcreteInterfaceMethodPeer => Encoding.UTF8.GetString (concreteInterfaceMethodPeer.Value);
+		public static string InterfaceMethodBridgeInvoker => Encoding.UTF8.GetString (interfaceMethodBridgeInvoker.Value);
+		public static string CovariantInterfaceMethods => Encoding.UTF8.GetString (covariantInterfaceMethods.Value);
 
 		public  static  string RTxt => Encoding.UTF8.GetString (rtxt.Value);
 
