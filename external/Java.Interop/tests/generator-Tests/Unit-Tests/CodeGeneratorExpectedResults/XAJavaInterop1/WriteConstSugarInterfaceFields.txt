@@ -42,7 +42,7 @@ public abstract class MyInterface : Java.Lang.Object {
 		}
 	}
 
-	static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/IMyInterface", typeof (MyInterface));
+	private static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/IMyInterface", typeof (MyInterface));
 
 }
 

@@ -98,7 +98,7 @@ namespace Xamarin.Android.JcwGenTests {
 		public void JavaSideActivation ()
 		{
 			using (var i = new ConstructorTest ()) {
-				// To ensure that CallMethodFromCtor.class_ref is initialized
+				// Ensure the Java class handle is initialized.
 			}
 			using (var c = Java.Lang.Class.FromType (typeof (ConstructorTest))) {
 				int initGref = Java.Interop.Runtime.GlobalReferenceCount;
@@ -367,7 +367,7 @@ namespace Xamarin.Android.JcwGenTests {
 		{
 			DefaultConstructorInvoked = true;
 
-			// Ensure that CallMethodFromCtor.class_ref is initialized
+			// Ensure the Java class handle is initialized.
 			var ignore  = ThresholdClass;
 			ignore      = ignore;
 		}
@@ -391,4 +391,3 @@ namespace Xamarin.Android.JcwGenTests {
 		}
 	}
 }
-

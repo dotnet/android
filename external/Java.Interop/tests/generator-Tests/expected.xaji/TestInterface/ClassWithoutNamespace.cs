@@ -16,11 +16,7 @@ using Java.Interop;
 // Metadata.xml XPath class reference: path="/api/package[@name='']/class[@name='ClassWithoutNamespace']"
 [global::Android.Runtime.Register ("ClassWithoutNamespace", DoNotGenerateAcw=true)]
 public abstract partial class ClassWithoutNamespace : global::Java.Lang.Object, IInterfaceWithoutNamespace {
-	static readonly JniPeerMembers _members = new XAPeerMembers ("ClassWithoutNamespace", typeof (ClassWithoutNamespace));
-
-	internal static new IntPtr class_ref {
-		get { return _members.JniPeerType.PeerReference.Handle; }
-	}
+	private static readonly JniPeerMembers _members = new XAPeerMembers ("ClassWithoutNamespace", typeof (ClassWithoutNamespace));
 
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -93,7 +89,7 @@ internal partial class ClassWithoutNamespaceInvoker : ClassWithoutNamespace {
 	{
 	}
 
-	static readonly JniPeerMembers _members = new XAPeerMembers ("ClassWithoutNamespace", typeof (ClassWithoutNamespaceInvoker));
+	private static readonly JniPeerMembers _members = new XAPeerMembers ("ClassWithoutNamespace", typeof (ClassWithoutNamespaceInvoker));
 
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

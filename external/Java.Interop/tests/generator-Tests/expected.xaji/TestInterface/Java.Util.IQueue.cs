@@ -17,10 +17,6 @@ namespace Java.Util {
 
 	[global::Android.Runtime.Register ("java/util/Queue", DoNotGenerateAcw=true)]
 	internal partial class IQueueInvoker : global::Java.Lang.Object, IQueue {
-		static IntPtr java_class_ref {
-			get { return _members_java_util_Queue.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -39,9 +35,9 @@ namespace Java.Util {
 			get { return _members_java_util_Queue.ManagedPeerType; }
 		}
 
-		static readonly JniPeerMembers _members_java_util_Collection = new XAPeerMembers ("java/util/Collection", typeof (IQueueInvoker));
+		private static readonly JniPeerMembers _members_java_util_Collection = new XAPeerMembers ("java/util/Collection", typeof (IQueueInvoker));
 
-		static readonly JniPeerMembers _members_java_util_Queue = new XAPeerMembers ("java/util/Queue", typeof (IQueueInvoker));
+		private static readonly JniPeerMembers _members_java_util_Queue = new XAPeerMembers ("java/util/Queue", typeof (IQueueInvoker));
 
 		public IQueueInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

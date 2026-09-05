@@ -38,10 +38,6 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 
 [global::Android.Runtime.Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
 internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
-	static IntPtr java_class_ref {
-		get { return _members_java_code_IMyInterface.JniPeerType.PeerReference.Handle; }
-	}
-
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -60,7 +56,7 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 		get { return _members_java_code_IMyInterface.ManagedPeerType; }
 	}
 
-	static readonly JniPeerMembers _members_java_code_IMyInterface = new XAPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
+	private static readonly JniPeerMembers _members_java_code_IMyInterface = new XAPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
 
 	public IMyInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{

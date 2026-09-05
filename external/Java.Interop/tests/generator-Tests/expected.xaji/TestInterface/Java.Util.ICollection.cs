@@ -21,10 +21,6 @@ namespace Java.Util {
 
 	[global::Android.Runtime.Register ("java/util/Collection", DoNotGenerateAcw=true)]
 	internal partial class ICollectionInvoker : global::Java.Lang.Object, ICollection {
-		static IntPtr java_class_ref {
-			get { return _members_java_util_Collection.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -43,7 +39,7 @@ namespace Java.Util {
 			get { return _members_java_util_Collection.ManagedPeerType; }
 		}
 
-		static readonly JniPeerMembers _members_java_util_Collection = new XAPeerMembers ("java/util/Collection", typeof (ICollectionInvoker));
+		private static readonly JniPeerMembers _members_java_util_Collection = new XAPeerMembers ("java/util/Collection", typeof (ICollectionInvoker));
 
 		public ICollectionInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

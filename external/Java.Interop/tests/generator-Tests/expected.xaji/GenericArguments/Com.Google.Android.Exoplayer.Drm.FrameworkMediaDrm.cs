@@ -18,11 +18,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 	// Metadata.xml XPath class reference: path="/api/package[@name='com.google.android.exoplayer.drm']/class[@name='FrameworkMediaDrm']"
 	[global::Android.Runtime.Register ("com/google/android/exoplayer/drm/FrameworkMediaDrm", DoNotGenerateAcw=true)]
 	public sealed partial class FrameworkMediaDrm : global::Java.Lang.Object, global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("com/google/android/exoplayer/drm/FrameworkMediaDrm", typeof (FrameworkMediaDrm));
-
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
+		private static readonly JniPeerMembers _members = new XAPeerMembers ("com/google/android/exoplayer/drm/FrameworkMediaDrm", typeof (FrameworkMediaDrm));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

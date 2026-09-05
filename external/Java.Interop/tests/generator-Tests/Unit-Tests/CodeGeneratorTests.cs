@@ -1373,12 +1373,8 @@ namespace generatortests
 		protected override CodeGenerationTarget Target => CodeGenerationTarget.XAJavaInterop1;
 
 		[Test]
-		public void WriteClassExternalBase ()
+		public void WriteClassPeerMembers ()
 		{
-			// Tests the case where a class inherits from a class that is not in the same assembly.
-			// Specifically, the internal class_ref field does NOT need the new modifier.
-			//  - This prevents a CS0109 warning from being generated.
-
 			options.SymbolTable.AddType (new TestClass (null, "Java.Lang.Object"));
 
 			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options, "Java.Lang.Object");
@@ -1389,33 +1385,26 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			var result = writer.ToString ().NormalizeLineEndings ();
-			Assert.True (result.Contains ("internal static IntPtr class_ref".NormalizeLineEndings ()));
-			Assert.False (result.Contains ("internal static new IntPtr class_ref".NormalizeLineEndings ()));
+			Assert.True (result.Contains ("private static readonly JniPeerMembers _members".NormalizeLineEndings ()));
+			Assert.False (result.Contains ("class_ref".NormalizeLineEndings ()));
 		}
 
 		[Test]
-		public void WriteClassInternalBase ()
+		public void WriteFinalClassPeerMembers ()
 		{
-			// Tests the case where a class inherits from Java.Lang.Object and is in the same assembly.
-			// Specifically, the internal class_ref field does need the new modifier.
-			// - This prevents a CS0108 warning from being generated.
-
 			options.SymbolTable.AddType (new TestClass (null, "Java.Lang.Object"));
 
 			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options, "Java.Lang.Object");
+			@class.IsFinal = true;
 			@class.Validate (options, new GenericParameterDefinitionList (), generator.Context);
-
-			// FromXml is set to true when a class is set to true when the api.xml contains an entry for the class.
-			// Therefore, if a class's base has FromXml set to true, the class and its base will be in the same C# assembly.
-			@class.BaseGen.FromXml = true;
 
 			generator.Context.ContextTypes.Push (@class);
 			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
 			var result = writer.ToString ().NormalizeLineEndings ();
-			Assert.True (result.Contains ("internal static new IntPtr class_ref".NormalizeLineEndings ()));
-			Assert.False (result.Contains ("internal static IntPtr class_ref".NormalizeLineEndings ()));
+			Assert.True (result.Contains ("private static readonly JniPeerMembers _members".NormalizeLineEndings ()));
+			Assert.False (result.Contains ("class_ref".NormalizeLineEndings ()));
 		}
 
 		[Test]

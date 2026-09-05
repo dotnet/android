@@ -19,11 +19,7 @@ namespace Xamarin.Test {
 	[global::Android.Runtime.Register ("xamarin/test/AdapterView", DoNotGenerateAcw=true)]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T extends xamarin.test.Adapter"})]
 	public abstract partial class AdapterView : global::Java.Lang.Object {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/AdapterView", typeof (AdapterView));
-
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
+		private static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/AdapterView", typeof (AdapterView));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -106,7 +102,7 @@ namespace Xamarin.Test {
 		{
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/AdapterView", typeof (AdapterViewInvoker));
+		private static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/AdapterView", typeof (AdapterViewInvoker));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

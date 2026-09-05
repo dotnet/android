@@ -26,9 +26,9 @@ namespace Android.Widget {
 		{
 			if (GetType () == typeof (AdapterViewAnimator<T>)) {
 				if (id_ctor_Landroid_content_Context_ == IntPtr.Zero)
-					id_ctor_Landroid_content_Context_ = JNIEnv.GetMethodID (class_ref, "<init>", "(Landroid/content/Context;)V");
+					id_ctor_Landroid_content_Context_ = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "<init>", "(Landroid/content/Context;)V");
 				SetHandle (
-						JNIEnv.NewObject (class_ref, id_ctor_Landroid_content_Context_, new JValue (context)),
+						JNIEnv.NewObject (_members.JniPeerType.PeerReference.Handle, id_ctor_Landroid_content_Context_, new JValue (context)),
 						JniHandleOwnership.TransferLocalRef);
 			} else {
 				SetHandle (
@@ -44,9 +44,9 @@ namespace Android.Widget {
 		{
 			if (GetType () == typeof (AdapterViewAnimator<T>)) {
 				if (id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_ == IntPtr.Zero)
-					id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_ = JNIEnv.GetMethodID (class_ref, "<init>", "(Landroid/content/Context;Landroid/util/AttributeSet;)V");
+					id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_ = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "<init>", "(Landroid/content/Context;Landroid/util/AttributeSet;)V");
 				SetHandle (
-						JNIEnv.NewObject (class_ref, id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_, new JValue (context), new JValue (attrs)),
+						JNIEnv.NewObject (_members.JniPeerType.PeerReference.Handle, id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_, new JValue (context), new JValue (attrs)),
 						JniHandleOwnership.TransferLocalRef);
 			} else {
 				SetHandle (
@@ -62,9 +62,9 @@ namespace Android.Widget {
 		{
 			if (GetType () == typeof (AdapterViewAnimator<T>)) {
 				if (id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I == IntPtr.Zero)
-					id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I = JNIEnv.GetMethodID (class_ref, "<init>", "(Landroid/content/Context;Landroid/util/AttributeSet;I)V");
+					id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "<init>", "(Landroid/content/Context;Landroid/util/AttributeSet;I)V");
 				SetHandle (
-						JNIEnv.NewObject (class_ref, id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I, new JValue (context), new JValue (attrs), new JValue (defStyle)),
+						JNIEnv.NewObject (_members.JniPeerType.PeerReference.Handle, id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I, new JValue (context), new JValue (attrs), new JValue (defStyle)),
 						JniHandleOwnership.TransferLocalRef);
 			} else {
 				SetHandle (
@@ -85,7 +85,7 @@ namespace Android.Widget {
                         [Register ("getAdapter", "()Landroid/widget/Adapter;", "GetGetAdapterHandler")]
                         get {
                                 if (id_getAdapter == IntPtr.Zero)
-                                        id_getAdapter = JNIEnv.GetMethodID (class_ref, "getAdapter", "()Landroid/widget/Adapter;");
+                                        id_getAdapter = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "getAdapter", "()Landroid/widget/Adapter;");
                                 Android.Widget.IAdapter? result;
                                 if (GetType () == ThresholdType)
                                         result = Java.Lang.Object.GetObject<Android.Widget.IAdapter> (JNIEnv.CallObjectMethod  (Handle, id_getAdapter), JniHandleOwnership.TransferLocalRef);
@@ -101,7 +101,7 @@ namespace Android.Widget {
                         }
                         set {
                                 if (id_setAdapter_Landroid_widget_Adapter_ == IntPtr.Zero)
-                                        id_setAdapter_Landroid_widget_Adapter_ = JNIEnv.GetMethodID (class_ref, "setAdapter", "(Landroid/widget/Adapter;)V");
+                                        id_setAdapter_Landroid_widget_Adapter_ = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "setAdapter", "(Landroid/widget/Adapter;)V");
 
                                 if (GetType () == ThresholdType)
                                         JNIEnv.CallVoidMethod  (Handle, id_setAdapter_Landroid_widget_Adapter_, new JValue (JNIEnv.ToJniHandle (value)));
