@@ -17,6 +17,7 @@ namespace generator.SourceWriters
 		readonly bool is_formatted;
 		readonly CodeGenerationOptions opt;
 		readonly string target_name;
+		readonly string declaring_type;
 
 		readonly FieldWriter delegate_field;
 		readonly MethodWriter delegate_getter;
@@ -28,7 +29,7 @@ namespace generator.SourceWriters
 		// 	var __this = global::Java.Lang.Object.GetObject<Android.Icu.Math.BigDecimal> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 		// 	return __this.ByteValueExact ();
 		// }
-		public MethodCallback (GenBase type, Method method, CodeGenerationOptions options, string propertyName, bool isFormatted)
+		public MethodCallback (GenBase type, Method method, CodeGenerationOptions options, string propertyName, bool isFormatted, string declaringType = null)
 		{
 			this.type = type;
 			this.method = method;
@@ -55,6 +56,8 @@ namespace generator.SourceWriters
 
 			Name = UnmanagedCallbackSupport.GetCallbackName (type, method, options);
 			target_name = UnmanagedCallbackSupport.GetCallbackTargetName (type, method, options);
+			// Interface invokers marshal an interface peer but declare the target on the invoker.
+			declaring_type = opt.GetOutputName (declaringType ?? type.FullName);
 			ReturnType = new TypeReferenceWriter (method.RetVal.NativeType);
 
 			IsStatic = true;
@@ -78,10 +81,11 @@ namespace generator.SourceWriters
 		{
 			string call;
 			if (typed_shape != null) {
-				call = typed_shape.GetHelperInvocation (opt.GetOutputName (type.FullName), target_name, opt.NullableOperator);
+				call = typed_shape.GetHelperInvocation (declaring_type, target_name);
 			} else {
 				var paramArgs = string.Join ("", method.Parameters.Select (p => $", {opt.GetSafeIdentifier (p.UnsafeNativeName)}"));
-				call = $"global::Java.Interop.JniMarshal.{(method.IsVoid ? "SafeInvokeAction" : "SafeInvokeFunc")} (jnienv, native__this{paramArgs}, &{target_name})";
+				var target = kind == UnmanagedCallbackKind.Legacy ? target_name : declaring_type + "." + target_name;
+				call = $"global::Java.Interop.JniMarshal.{(method.IsVoid ? "SafeInvokeAction" : "SafeInvokeFunc")} (jnienv, native__this{paramArgs}, &{target})";
 			}
 
 			writer.WriteLine ("unsafe {");

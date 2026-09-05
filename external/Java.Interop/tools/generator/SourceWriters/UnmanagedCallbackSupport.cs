@@ -155,6 +155,38 @@ namespace generator.SourceWriters
 			return connector + $":{method.DeclaringType.AssemblyQualifiedName}, " + (method.AssemblyName ?? opt.AssemblyName);
 		}
 
+		public static string GetPropertyConnectorNameFull (GenBase type, Property property, Method method, CodeGenerationOptions opt)
+		{
+			if (!opt.UseUnmanagedCallersOnlyCallbacks)
+				return GetConnectorNameFull (type, method, opt);
+
+			var owner = type;
+			var callbackProperty = property;
+			// Abstract overrides (including their class invokers) reuse the base callbacks.
+			// Resolve both the name allocation and the format against the emitting declaration.
+			while (callbackProperty.Getter.IsAbstract && owner.BaseSymbol is GenBase baseType) {
+				var baseProperty = baseType.GetPropertyByName (property.Name, true);
+				if (baseProperty == null)
+					break;
+
+				owner = baseType;
+				callbackProperty = baseProperty;
+				// The lookup can skip intermediate classes which do not redeclare the property.
+				while (!owner.Properties.Contains (callbackProperty) &&
+						owner.BaseSymbol?.GetPropertyByName (property.Name, true) == callbackProperty)
+					owner = owner.BaseSymbol;
+			}
+
+			var callbackMethod = method == property.Getter ? callbackProperty.Getter : callbackProperty.Setter;
+			if (callbackMethod == null)
+				return GetConnectorNameFull (type, method, opt);
+
+			var connector = GetConnectorNameFull (owner, callbackMethod, opt);
+			if (owner != type && !(opt.SupportDefaultInterfaceMethods && callbackMethod.IsInterfaceDefaultMethod))
+				connector += $":{owner.AssemblyQualifiedName}, " + (callbackMethod.AssemblyName ?? opt.AssemblyName);
+			return connector;
+		}
+
 		static bool UsesCompactNames (GenBase owner, Method method, CodeGenerationOptions opt) =>
 			opt != null && opt.UseUnmanagedCallersOnlyCallbacks && CanUseUnmanagedCallersOnly (owner, method, opt);
 
@@ -352,13 +384,13 @@ namespace generator.SourceWriters
 
 		public bool ReturnsPeer { get; }
 
-		public string GetHelperInvocation (string thisType, string targetName, string nullableOperator)
+		public string GetHelperInvocation (string declaringType, string targetName)
 		{
 			var typeArgs = string.Join (", ", TypeArguments);
 			var args = new StringBuilder ("jnienv, native__this");
 			foreach (var a in ForwardedArguments)
 				args.Append (", ").Append (a);
-			args.Append (", &").Append (targetName);
+			args.Append (", &").Append (declaringType).Append ('.').Append (targetName);
 			return $"{UnmanagedCallbackSupport.TypedMarshalerType}.{HelperName}<{typeArgs}> ({args})";
 		}
 

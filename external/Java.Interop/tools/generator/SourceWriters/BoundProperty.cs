@@ -97,7 +97,7 @@ namespace generator.SourceWriters
 				GetterComments.Add ($"// Metadata.xml XPath method reference: path=\"{gen.MetadataXPathReference}/method[@name='{property.Getter.JavaName}'{property.Getter.Parameters.GetMethodXPathPredicate ()}]\"");
 
 			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-				GetterAttributes.Add (new RegisterAttr (property.Getter.JavaName, property.Getter.JniSignature, property.Getter.IsVirtual ? UnmanagedCallbackSupport.GetConnectorNameFull (gen, property.Getter, opt) : string.Empty, additionalProperties: property.Getter.AdditionalAttributeString ()));
+				GetterAttributes.Add (new RegisterAttr (property.Getter.JavaName, property.Getter.JniSignature, property.Getter.IsVirtual ? UnmanagedCallbackSupport.GetPropertyConnectorNameFull (gen, property, property.Getter, opt) : string.Empty, additionalProperties: property.Getter.AdditionalAttributeString ()));
 			}
 
 			SourceWriterExtensions.AddMethodBody (GetBody, property.Getter, opt);
@@ -112,7 +112,7 @@ namespace generator.SourceWriters
 
 				SourceWriterExtensions.AddMethodCustomAttributes (SetterAttributes, property.Setter);
 				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-					SetterAttributes.Add (new RegisterAttr (property.Setter.JavaName, property.Setter.JniSignature, property.Setter.IsVirtual ? UnmanagedCallbackSupport.GetConnectorNameFull (gen, property.Setter, opt) : string.Empty, additionalProperties: property.Setter.AdditionalAttributeString ()));
+					SetterAttributes.Add (new RegisterAttr (property.Setter.JavaName, property.Setter.JniSignature, property.Setter.IsVirtual ? UnmanagedCallbackSupport.GetPropertyConnectorNameFull (gen, property, property.Setter, opt) : string.Empty, additionalProperties: property.Setter.AdditionalAttributeString ()));
 				}
 
 				var pname = property.Setter.Parameters [0].Name;

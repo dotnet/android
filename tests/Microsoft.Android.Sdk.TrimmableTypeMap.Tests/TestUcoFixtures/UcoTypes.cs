@@ -113,6 +113,19 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures
 
 		[Register ("handle", "()V", "n_Handle:Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures.CallbackHost, TestUcoFixtures")]
 		public virtual void Handle () { }
+
+		[Register ("handleTypeOnly", "()V", "n_HandleTypeOnly:Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures.CallbackHost")]
+		public virtual void HandleTypeOnly () { }
+
+		[Register ("getCount", "()I", "n_Count:Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures.CallbackHost, TestUcoFixtures")]
+		public virtual int Count => 0;
+
+		public virtual bool Enabled {
+			[Register ("isEnabled", "()Z", "n_IsEnabled:Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures.CallbackHost, TestUcoFixtures")]
+			get => false;
+			[Register ("setEnabled", "(Z)V", "n_SetEnabled:Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures.CallbackHost, TestUcoFixtures")]
+			set { }
+		}
 	}
 
 	/// <summary>
@@ -125,6 +138,18 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures
 
 		[UnmanagedCallersOnly]
 		internal static void n_Handle (IntPtr jnienv, IntPtr native__this) { }
+
+		[UnmanagedCallersOnly]
+		static void n_HandleTypeOnly (IntPtr jnienv, IntPtr native__this) { }
+
+		[UnmanagedCallersOnly]
+		static int n_Count (IntPtr jnienv, IntPtr native__this) => 0;
+
+		[UnmanagedCallersOnly]
+		static sbyte n_IsEnabled (IntPtr jnienv, IntPtr native__this) => 0;
+
+		[UnmanagedCallersOnly]
+		static void n_SetEnabled (IntPtr jnienv, IntPtr native__this, sbyte enabled) { }
 	}
 
 	/// <summary>
@@ -146,6 +171,12 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures
 		public MyQualifiedWidget (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
 		public override void Handle () { }
+
+		public override void HandleTypeOnly () { }
+
+		public override int Count => 1;
+
+		public override bool Enabled { get; set; }
 	}
 
 	/// <summary>
@@ -158,5 +189,45 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures
 		public MyLegacyWidget (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
 		public override int Flags => 2;
+	}
+
+	[Register ("com/example/uco/LegacyOverrideWidget", DoNotGenerateAcw = true)]
+	public abstract class LegacyOverrideWidget : LegacyWidget
+	{
+		public LegacyOverrideWidget (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public abstract override int Flags {
+			[Register ("getFlags", "()I", "GetGetFlagsHandler:Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures.LegacyWidget, TestUcoFixtures")]
+			get;
+		}
+	}
+
+	[Register ("com/example/uco/MyLegacyOverrideWidget")]
+	public class MyLegacyOverrideWidget : LegacyOverrideWidget
+	{
+		public MyLegacyOverrideWidget (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override int Flags => 3;
+	}
+
+	[Register ("com/example/uco/QualifiedLegacyWidget", DoNotGenerateAcw = true)]
+	public class QualifiedLegacyWidget : MyApp.MyHelper
+	{
+		// MyHelper models legacy reference metadata without its private callback.
+		[Register ("doSomething", "()V", "GetDoSomethingHandler:MyApp.MyHelper, TestFixtures")]
+		public override void DoSomething () { }
+	}
+
+	[Register ("com/example/uco/MyQualifiedLegacyWidget")]
+	public class MyQualifiedLegacyWidget : QualifiedLegacyWidget
+	{
+		public override void DoSomething () { }
+	}
+
+	[Register ("com/example/uco/DirectWidget")]
+	public class DirectWidget : Java.Lang.Object
+	{
+		[Register ("direct", "()I", "")]
+		public int Direct () => 42;
 	}
 }

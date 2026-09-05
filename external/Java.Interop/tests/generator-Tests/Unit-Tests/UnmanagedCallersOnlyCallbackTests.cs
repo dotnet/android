@@ -1,4 +1,6 @@
+using System;
 using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using MonoDroid.Generation;
 using Xamarin.Android.Binder;
@@ -78,7 +80,7 @@ namespace generatortests
 
 			// boolean marshals as a blittable `sbyte`, so the shape is 5 scalars returning void.
 			Assert.True (source.Contains (
-				"global::Java.Interop.JniMarshalTyped.Invoke_SSSSSX<global::Com.Example.Widget, sbyte, int, int, int, int> (jnienv, native__this, native_changed, left, top, right, bottom, &m3);"),
+				"global::Java.Interop.JniMarshalTyped.Invoke_SSSSSX<global::Com.Example.Widget, sbyte, int, int, int, int> (jnienv, native__this, native_changed, left, top, right, bottom, &global::Com.Example.Widget.m3);"),
 				source);
 
 			// The function-pointer target contains only the projection of the JNI scalars and the
@@ -98,7 +100,7 @@ namespace generatortests
 			// The peer return is not a type argument: bound methods frequently have covariant
 			// returns, so the target is typed as IJavaObject. That also keeps the MethodSpec smaller.
 			Assert.True (source.Contains (
-				"global::Java.Interop.JniMarshalTyped.Invoke_OSO<global::Com.Example.Widget, global::Com.Example.Peer, int> (jnienv, native__this, native_peer, flags, &m0);"),
+				"global::Java.Interop.JniMarshalTyped.Invoke_OSO<global::Com.Example.Widget, global::Com.Example.Peer, int> (jnienv, native__this, native_peer, flags, &global::Com.Example.Widget.m0);"),
 				source);
 
 			// The helper owns both the argument peer lookup and the JNI conversion of the result,
@@ -118,7 +120,7 @@ namespace generatortests
 			// Strings need JNI string marshaling the shared typed helper cannot own, so the callback
 			// stays [UnmanagedCallersOnly] but forwards to the raw SafeInvoke helper.
 			Assert.True (source.Contains (
-				"global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_label, &m2);"),
+				"global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_label, &global::Com.Example.Widget.m2);"),
 				source);
 			Assert.True (source.Contains (
 				"private static IntPtr m2 (IntPtr jnienv, IntPtr native__this, IntPtr native_label)"),
@@ -132,7 +134,7 @@ namespace generatortests
 			var source = GenerateWidget ();
 
 			Assert.True (source.Contains (
-				"global::Java.Interop.JniMarshalTyped.Invoke_S<global::Com.Example.Widget, int> (jnienv, native__this, &m1);"),
+				"global::Java.Interop.JniMarshalTyped.Invoke_S<global::Com.Example.Widget, int> (jnienv, native__this, &global::Com.Example.Widget.m1);"),
 				source);
 			Assert.True (source.Contains ("private static int m1 (global::Com.Example.Widget __this)"), source);
 		}
@@ -249,10 +251,10 @@ namespace generatortests
 			// Ordinals are assigned in the same deterministic order as the callbacks: Clear first
 			// (group names are ordered), then the three Remove overloads.
 			Assert.True (source.Contains ("private static void m0 (global::Com.Example.Registry __this)"), source);
-			Assert.True (source.Contains ("&m0);"), source);
+			Assert.True (source.Contains ("&global::Com.Example.Registry.m0);"), source);
 
 			foreach (var target in new [] { "m1", "m2", "m3" })
-				Assert.True (source.Contains ($"&{target});"), $"missing &{target}\n{source}");
+				Assert.True (source.Contains ($"&global::Com.Example.Registry.{target});"), $"missing &{target}\n{source}");
 
 			Assert.False (source.Contains ("__n_"), source);
 		}
@@ -314,6 +316,222 @@ namespace generatortests
 			Assert.True (source.Contains ("static Delegate GetRemove_IHandler ()"), source);
 			Assert.False (source.Contains ("n_Remove_1"), source);
 			Assert.False (source.Contains ("&m0)"), source);
+		}
+
+		const string CompilationSupport = """
+			using System;
+			delegate long _JniMarshal_PP_J (IntPtr env, IntPtr self);
+			delegate long _JniMarshal_PPI_J (IntPtr env, IntPtr self, int value);
+			delegate void _JniMarshal_PPJ_V (IntPtr env, IntPtr self, long value);
+			delegate void _JniMarshal_PPI_V (IntPtr env, IntPtr self, int value);
+			namespace Java.Interop {
+				public static unsafe class JniMarshalTyped {
+					public static void Invoke_SX<TSelf, T> (IntPtr env, IntPtr self, T value, delegate*<TSelf, T, void> target)
+						where TSelf : class, Android.Runtime.IJavaObject where T : unmanaged { }
+					public static T Invoke_S<TSelf, T> (IntPtr env, IntPtr self, delegate*<TSelf, T> target)
+						where TSelf : class, Android.Runtime.IJavaObject where T : unmanaged => default;
+					public static TResult Invoke_SS<TSelf, T, TResult> (IntPtr env, IntPtr self, T value, delegate*<TSelf, T, TResult> target)
+						where TSelf : class, Android.Runtime.IJavaObject where T : unmanaged where TResult : unmanaged => default;
+				}
+				public static unsafe class JniMarshal {
+					public static void SafeInvokeAction<T1, T2> (IntPtr env, IntPtr self, T1 a, T2 b, delegate*<IntPtr, IntPtr, T1, T2, void> target) { }
+					public static void SafeInvokeAction<T> (IntPtr env, IntPtr self, T value, delegate*<IntPtr, IntPtr, T, void> target) { }
+					public static T SafeInvokeFunc<T> (IntPtr env, IntPtr self, delegate*<IntPtr, IntPtr, T> target) => default;
+					public static TResult SafeInvokeFunc<T, TResult> (IntPtr env, IntPtr self, T value, delegate*<IntPtr, IntPtr, T, TResult> target) => default;
+				}
+			}
+			""";
+
+		static Assembly CompileCallbacks (string source)
+		{
+			var assembly = Compiler.CompileSources (new [] {
+				"using System; using Android.Runtime; using Java.Interop; namespace Com.Example {\n" + source + "\n}",
+				CompilationSupport,
+			}, out var hasErrors, out var output);
+			Assert.False (hasErrors, output + "\n" + source);
+			return assembly;
+		}
+
+		[TestCase (false, false)]
+		[TestCase (false, true)]
+		[TestCase (true, false)]
+		[TestCase (true, true)]
+		public void PrimitiveParametersDoNotShadowCallbackTargets (bool isInterface, bool raw)
+		{
+			var element = isInterface ? "interface" : "class";
+			var api = $$"""
+				<api>
+				  <package name='java.lang'>
+				    <class name='Object' visibility='public' />
+				  </package>
+				  <package name='com.example'>
+				    <{{element}} name='Widget' extends='java.lang.Object' visibility='public' abstract='{{isInterface.ToString ().ToLowerInvariant ()}}'>
+				      <method name='work' return='void' visibility='public' abstract='{{isInterface.ToString ().ToLowerInvariant ()}}' static='false' final='false'>
+				        <parameter name='m0' type='int' />
+				        {{(raw ? "<parameter name='text' type='java.lang.String' />" : "")}}
+				      </method>
+				    </{{element}}>
+				  </package>
+				</api>
+				""";
+			var gens = ParseApiDefinition (api);
+			var name = isInterface ? "IWidget" : "Widget";
+			var source = GetGeneratedTypeOutput (gens.Single (g => g.Name == name));
+			var owner = name + (isInterface ? "Invoker" : "");
+
+			var assembly = CompileCallbacks (source);
+			Assert.True (source.Contains ($"&global::Com.Example.{owner}.m0)"), source);
+			Assert.True (source.Contains (raw ? "JniMarshal.SafeInvokeAction" : "JniMarshalTyped.Invoke_SX"), source);
+			var callback = assembly.GetType ("Com.Example." + owner)?.GetMethod ("n_Work", BindingFlags.Static | BindingFlags.NonPublic);
+			Assert.IsNotNull (callback);
+		}
+
+		[Test]
+		public void InterfacePropertyTargetsUseInvokerOwner ()
+		{
+			var api = """
+				<api>
+				  <package name='java.lang'><class name='Object' visibility='public' /></package>
+				  <package name='com.example'>
+				    <interface name='Widget' visibility='public' abstract='true'>
+				      <method name='getValue' return='long' visibility='public' abstract='true' final='false' static='false' />
+				      <method name='setValue' return='void' visibility='public' abstract='true' final='false' static='false'>
+				        <parameter name='m1' type='long' />
+				      </method>
+				    </interface>
+				  </package>
+				</api>
+				""";
+			var gens = ParseApiDefinition (api);
+			var source = GetGeneratedTypeOutput (gens.Single (g => g.Name == "IWidget"));
+			CompileCallbacks (source);
+			Assert.True (source.Contains ("&global::Com.Example.IWidgetInvoker.m0)"), source);
+			Assert.True (source.Contains ("&global::Com.Example.IWidgetInvoker.m1)"), source);
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void InheritedInterfaceTargetsUseEmittedInvoker (bool raw)
+		{
+			var api = $$"""
+				<api>
+				  <package name='java.lang'><class name='Object' visibility='public' /></package>
+				  <package name='com.example'>
+				    <interface name='Parent' visibility='public' abstract='true'>
+				      <method name='work' return='void' visibility='public' abstract='true' final='false'>
+				        <parameter name='m0' type='int' />
+				        {{(raw ? "<parameter name='text' type='java.lang.String' />" : "")}}
+				      </method>
+				    </interface>
+				    <interface name='Child' visibility='public' abstract='true'>
+				      <implements name='com.example.Parent' name-generic-aware='com.example.Parent' />
+				    </interface>
+				  </package>
+				</api>
+				""";
+			foreach (var gen in ParseApiDefinition (api).Where (g => g.Namespace == "Com.Example"))
+				GetGeneratedTypeOutput (gen);
+			var source = writer.ToString ();
+			CompileCallbacks (source);
+			Assert.True (source.Contains ("&global::Com.Example.IChildInvoker.m0)"), source);
+			Assert.True (source.Contains ("&global::Com.Example.IParentInvoker.m0)"), source);
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void DefaultInterfaceTargetsUseInterfaceOwner (bool raw)
+		{
+			options.SupportDefaultInterfaceMethods = true;
+			var api = $$"""
+				<api>
+				  <package name='java.lang'><class name='Object' visibility='public' /></package>
+				  <package name='com.example'>
+				    <interface name='Widget' visibility='public' abstract='true'>
+				      <method name='work' return='void' visibility='public' abstract='false' final='false' static='false'>
+				        <parameter name='m0' type='int' />
+				        {{(raw ? "<parameter name='text' type='java.lang.String' />" : "")}}
+				      </method>
+				    </interface>
+				  </package>
+				</api>
+				""";
+			var gens = ParseApiDefinition (api);
+			var source = GetGeneratedTypeOutput (gens.Single (g => g.Name == "IWidget"));
+			CompileCallbacks (source);
+			Assert.True (source.Contains ("&global::Com.Example.IWidget.m0)"), source);
+		}
+
+		[TestCase (true, false, false)]
+		[TestCase (true, true, false)]
+		[TestCase (false, false, false)]
+		[TestCase (true, false, true)]
+		public void AbstractPropertyOverridesReuseEmittingDeclaration (bool abstractBase, bool redeclareMiddle, bool genericBase)
+		{
+			const string property = """
+				<method name='getValue' return='long' visibility='public' abstract='true' final='false' static='false' />
+				<method name='setValue' return='void' visibility='public' abstract='true' final='false' static='false'>
+				  <parameter name='value' type='long' />
+				</method>
+				""";
+			var api = $$"""
+				<api>
+				  <package name='java.lang'><class name='Object' visibility='public' /></package>
+				  <package name='com.example'>
+				    <class name='Base' extends='java.lang.Object' visibility='public' abstract='true'>
+				      {{(genericBase ? "<typeParameters><typeParameter name='T' classBound='java.lang.Object' /></typeParameters>" : "")}}
+				      {{(abstractBase ? property : property.Replace ("abstract='true'", "abstract='false'"))}}
+				      <method name='getValue' return='long' visibility='public' abstract='false' final='false'>
+				        <parameter name='index' type='int' />
+				      </method>
+				      <method name='setValue' return='void' visibility='public' abstract='false' final='false'>
+				        <parameter name='value' type='int' />
+				      </method>
+				    </class>
+				    <class name='Middle' extends='com.example.Base' visibility='public' abstract='true'>
+				      {{(redeclareMiddle ? property : "")}}
+				    </class>
+				    <class name='Derived' extends='com.example.Middle' visibility='public' abstract='true'>
+				      {{property}}
+				    </class>
+				  </package>
+				</api>
+				""";
+			options.AssemblyName = "Callbacks";
+			var gens = ParseApiDefinition (api);
+			foreach (var gen in gens.Where (g => g.Namespace == "Com.Example").Reverse ())
+				GetGeneratedTypeOutput (gen);
+			var source = writer.ToString ();
+			var assembly = CompileCallbacks (source);
+
+			foreach (var typeName in new [] { "Derived", "DerivedInvoker" }) {
+				var type = assembly.GetType ("Com.Example." + typeName);
+				Assert.IsNotNull (type);
+				var value = type.GetProperty ("Value", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+				Assert.IsNotNull (value);
+				Assert.Multiple (() => {
+					AssertInheritedConnector (assembly, value.GetMethod, (genericBase ? "GetGetValueHandler" : "n_GetValue") + ":Com.Example.Base, Callbacks", genericBase);
+					AssertInheritedConnector (assembly, value.SetMethod, (genericBase ? "GetSetValue_JHandler" : "n_SetValue_1") + ":Com.Example.Base, Callbacks", genericBase);
+				});
+				Assert.False (type.GetMethods (BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)
+					.Any (m => m.Name.StartsWith ("n_", StringComparison.Ordinal)), source);
+			}
+		}
+
+		static void AssertInheritedConnector (Assembly assembly, MethodInfo accessor, string expected, bool legacy)
+		{
+			Assert.IsNotNull (accessor);
+			var register = accessor.GetCustomAttributesData ().Single (a => a.AttributeType.Name == "RegisterAttribute");
+			var connector = (string) register.ConstructorArguments [2].Value;
+			Assert.AreEqual (expected, connector);
+			var callbackName = connector.Split (':') [0];
+			var callback = assembly.GetType ("Com.Example.Base")?.GetMethod (callbackName, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+			Assert.IsNotNull (callback, connector);
+			Assert.AreEqual (!legacy, callback.GetCustomAttributesData ().Any (a => a.AttributeType.Name == "UnmanagedCallersOnlyAttribute"), connector);
+			if (!legacy) {
+				Assert.AreEqual (accessor.ReturnType, callback.ReturnType, connector);
+				CollectionAssert.AreEqual (accessor.GetParameters ().Select (p => p.ParameterType),
+					callback.GetParameters ().Skip (2).Select (p => p.ParameterType), connector);
+			}
 		}
 	}
 }

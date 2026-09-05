@@ -46,6 +46,8 @@
       <_TestFixtureFiles Include="TestUcoFixtures\bin\$(Configuration)\$(DotNetStableTargetFramework)\TestUcoFixtures.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_TestFixtureFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="TestUcoFixtures\bin\$(Configuration)\$(DotNetStableTargetFramework)\ref\TestUcoFixtures.dll"
+        DestinationFiles="$(OutputPath)TestUcoFixtures.ref.dll" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>
