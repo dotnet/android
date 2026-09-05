@@ -220,7 +220,7 @@
     <MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
     <WriteLinesToFile
         File="$(_TrimmableNativeAotProguardConfigurationInputsStamp)"
-        Lines="$(_AndroidTrimmableTypemapTrimJavaCode)"
+        Lines="$(_AndroidTrimmableTypemapTrimJavaCode);$(AndroidEnableR8Obfuscation);$(AndroidR8ObfuscationMode)"
         Overwrite="true"
         WriteOnlyWhenDifferent="true" />
     <ItemGroup>
@@ -237,6 +237,7 @@
         NativeAotDgmlFiles="@(_TrimmableNativeAotDgmlFiles)"
         AcwMapFile="$(IntermediateOutputPath)acw-map.txt"
         TrimJavaCallableWrappers="$(_AndroidTrimmableTypemapTrimJavaCode)"
+        EnableObfuscation="$(_AndroidR8RuntimeRemappingEnabled)"
         OutputFile="$(_ProguardProjectConfiguration)" />
     <ItemGroup>
       <FileWrites Include="$(_ProguardProjectConfiguration)" />

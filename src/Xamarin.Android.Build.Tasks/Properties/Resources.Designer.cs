@@ -1978,6 +1978,186 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Failed to generate the R8 JNI remapping data. {0}.
+        /// </summary>
+        public static string XA4327 {
+            get {
+                return ResourceManager.GetString("XA4327", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The seed R8 pass requires a mapping file output..
+        /// </summary>
+        public static string XA4327_SeedMappingOutputRequired {
+            get {
+                return ResourceManager.GetString("XA4327_SeedMappingOutputRequired", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The R8 seed mapping file &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4327_SeedMappingNotFound {
+            get {
+                return ResourceManager.GetString("XA4327_SeedMappingNotFound", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The R8 seed mapping file &apos;{0}&apos; could not be read: {1}.
+        /// </summary>
+        public static string XA4327_MappingDataFailure {
+            get {
+                return ResourceManager.GetString("XA4327_MappingDataFailure", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The Android manifest &apos;{0}&apos; could not be read: {1}.
+        /// </summary>
+        public static string XA4327_ManifestReadFailure {
+            get {
+                return ResourceManager.GetString("XA4327_ManifestReadFailure", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to NativeAOT JNI retention requires an existing post-ILC NativeAotObjectFile; &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4327_NativeAotObjectRequired {
+            get {
+                return ResourceManager.GetString("XA4327_NativeAotObjectRequired", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The NativeAOT retention object &apos;{0}&apos; could not be read: {1}.
+        /// </summary>
+        public static string XA4327_NativeAotObjectReadFailure {
+            get {
+                return ResourceManager.GetString("XA4327_NativeAotObjectReadFailure", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to NativeAotObjectFile requires NativeAot=true..
+        /// </summary>
+        public static string XA4327_NativeAotModeRequired {
+            get {
+                return ResourceManager.GetString("XA4327_NativeAotModeRequired", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Expected a 32-bit or 64-bit little-endian relocatable NativeAOT ELF object..
+        /// </summary>
+        public static string XA4327_NativeAotObjectFormat {
+            get {
+                return ResourceManager.GetString("XA4327_NativeAotObjectFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The NativeAOT ELF object contains an invalid section extent..
+        /// </summary>
+        public static string XA4327_NativeAotInvalidSection {
+            get {
+                return ResourceManager.GetString("XA4327_NativeAotInvalidSection", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The NativeAOT ELF object contains truncated section data..
+        /// </summary>
+        public static string XA4327_NativeAotTruncatedSection {
+            get {
+                return ResourceManager.GetString("XA4327_NativeAotTruncatedSection", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The NativeAOT object must contain allocated __managedcode and initialized data sections..
+        /// </summary>
+        public static string XA4327_NativeAotMissingSections {
+            get {
+                return ResourceManager.GetString("XA4327_NativeAotMissingSections", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The Android manifest &apos;{0}&apos; does not have a &lt;manifest&gt; element with a &apos;package&apos; attribute..
+        /// </summary>
+        public static string XA4327_ManifestPackageMissing {
+            get {
+                return ResourceManager.GetString("XA4327_ManifestPackageMissing", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The R8 JNI remapping data is incomplete. {0}.
+        /// </summary>
+        public static string XA4328 {
+            get {
+                return ResourceManager.GetString("XA4328", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;{0}&apos; entry for &apos;{1}&apos; was not emitted: another JNI remapping input already maps it to &apos;{2}&apos;, which conflicts with &apos;{3}&apos;..
+        /// </summary>
+        public static string XA4328_ConflictingEntry {
+            get {
+                return ResourceManager.GetString("XA4328_ConflictingEntry", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The entry for &apos;{0}&apos; was not emitted: its signature &apos;{1}&apos; could not be converted to a JNI descriptor..
+        /// </summary>
+        public static string XA4328_UnsupportedSignature {
+            get {
+                return ResourceManager.GetString("XA4328_UnsupportedSignature", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid value for {0}: &apos;{1}&apos;. Valid values are: {2}..
+        /// </summary>
+        public static string XA4329 {
+            get {
+                return ResourceManager.GetString("XA4329", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to AndroidR8ObfuscationMode=&apos;experimental-rewriting&apos; is not available in this SDK. Use &apos;runtime-remapping&apos; or set AndroidEnableR8Obfuscation=false..
+        /// </summary>
+        public static string XA4329_RewritingUnavailable {
+            get {
+                return ResourceManager.GetString("XA4329_RewritingUnavailable", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to AndroidEnableR8Obfuscation=true requires $({0}) to be &apos;{1}&apos;, but it is {2}..
+        /// </summary>
+        public static string XA4329_RequiredProperty {
+            get {
+                return ResourceManager.GetString("XA4329_RequiredProperty", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to AndroidEnableR8Obfuscation=true is not supported for runtime &apos;{0}&apos;. Supported runtimes are CoreCLR and NativeAOT..
+        /// </summary>
+        public static string XA4329_UnsupportedRuntime {
+            get {
+                return ResourceManager.GetString("XA4329_UnsupportedRuntime", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>
         public static string XA5101 {

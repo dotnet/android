@@ -19,6 +19,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string OutputFile { get; set; } = "";
 
+		public bool EnableObfuscation { get; set; }
+
 		public override bool RunTask ()
 		{
 			var dir = Path.GetDirectoryName (OutputFile);
@@ -100,8 +102,10 @@ namespace Xamarin.Android.Tasks
 			if (javaTypeName == null)
 				return;
 
-			writer.WriteLine ($"-keep class {javaTypeName}");
-			writer.WriteLine ($"-keepclassmembers class {javaTypeName} {{");
+			string keepOption = EnableObfuscation ? "-keep,allowobfuscation" : "-keep";
+			string keepMembersOption = EnableObfuscation ? "-keepclassmembers,allowobfuscation" : "-keepclassmembers";
+			writer.WriteLine ($"{keepOption} class {javaTypeName}");
+			writer.WriteLine ($"{keepMembersOption} class {javaTypeName} {{");
 
 			foreach (var methodHandle in type.GetMethods ()) {
 				ProcessMethod (reader, methodHandle, writer);

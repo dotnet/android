@@ -65,5 +65,8 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 		public static void ScanRewrittenAssembly (PEReader peReader, MetadataReader reader, R8Mapping mapping, TaskLoggingHelper log)
 			=> new JniRewritePlanner (peReader, reader, mapping.CreateReverseMapping (), log).CreatePlan ();
+
+		public static void ScanAssembly (PEReader peReader, MetadataReader reader, R8Mapping mapping, TaskLoggingHelper log)
+			=> new JniRewritePlanner (peReader, reader, mapping, log).CreatePlan ();
 	}
 }

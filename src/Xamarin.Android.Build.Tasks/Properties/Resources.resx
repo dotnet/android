@@ -901,6 +901,109 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
     <value>Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous JNIEnv.FindClass source.</value>
     <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
   </data>
+  <data name="XA4327" xml:space="preserve">
+    <value>Failed to generate the R8 JNI remapping data. {0}</value>
+    <comment>The following are literal names and should not be translated: R8, JNI.
+{0} - A sentence describing the specific failure. It is supplied by one of the XA4327_* resources.</comment>
+  </data>
+  <data name="XA4327_SeedMappingOutputRequired" xml:space="preserve">
+    <value>The seed R8 pass requires a mapping file output.</value>
+    <comment>The following are literal names and should not be translated: R8.</comment>
+  </data>
+  <data name="XA4327_SeedMappingNotFound" xml:space="preserve">
+    <value>The R8 seed mapping file '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: R8.
+{0} - The path of the missing seed mapping file.</comment>
+  </data>
+  <data name="XA4327_MappingDataFailure" xml:space="preserve">
+    <value>The R8 seed mapping file '{0}' could not be read: {1}</value>
+    <comment>The following are literal names and should not be translated: R8.
+{0} - The path of the seed mapping file.
+{1} - The underlying message describing why the file could not be read. It is not localized.</comment>
+  </data>
+  <data name="XA4327_ManifestReadFailure" xml:space="preserve">
+    <value>The Android manifest '{0}' could not be read: {1}</value>
+    <comment>The following are literal names and should not be translated: Android.
+{0} - The path of the Android manifest.
+{1} - The underlying message describing why the manifest could not be read. It is not localized.</comment>
+  </data>
+  <data name="XA4327_NativeAotObjectRequired" xml:space="preserve">
+    <value>NativeAOT JNI retention requires an existing post-ILC NativeAotObjectFile; '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, JNI, ILC, NativeAotObjectFile.
+{0} - The path of the missing ILC native object, or an empty string if none was supplied.</comment>
+  </data>
+  <data name="XA4327_NativeAotObjectReadFailure" xml:space="preserve">
+    <value>The NativeAOT retention object '{0}' could not be read: {1}</value>
+    <comment>The following is a literal name and should not be translated: NativeAOT.
+{0} - The path of the ILC native object.
+{1} - The underlying message describing why the object could not be read.</comment>
+  </data>
+  <data name="XA4327_NativeAotModeRequired" xml:space="preserve">
+    <value>NativeAotObjectFile requires NativeAot=true.</value>
+    <comment>The following are literal names and should not be translated: NativeAotObjectFile, NativeAot=true.</comment>
+  </data>
+  <data name="XA4327_NativeAotObjectFormat" xml:space="preserve">
+    <value>Expected a 32-bit or 64-bit little-endian relocatable NativeAOT ELF object.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
+  </data>
+  <data name="XA4327_NativeAotInvalidSection" xml:space="preserve">
+    <value>The NativeAOT ELF object contains an invalid section extent.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
+  </data>
+  <data name="XA4327_NativeAotTruncatedSection" xml:space="preserve">
+    <value>The NativeAOT ELF object contains truncated section data.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
+  </data>
+  <data name="XA4327_NativeAotMissingSections" xml:space="preserve">
+    <value>The NativeAOT object must contain allocated __managedcode and initialized data sections.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, __managedcode.</comment>
+  </data>
+  <data name="XA4327_ManifestPackageMissing" xml:space="preserve">
+    <value>The Android manifest '{0}' does not have a &lt;manifest&gt; element with a 'package' attribute.</value>
+    <comment>The following are literal names and should not be translated: Android, &lt;manifest&gt;, 'package'.
+{0} - The path of the Android manifest.</comment>
+  </data>
+  <data name="XA4328" xml:space="preserve">
+    <value>The R8 JNI remapping data is incomplete. {0}</value>
+    <comment>The following are literal names and should not be translated: R8, JNI.
+{0} - A sentence describing the specific omission. It is supplied by one of the XA4328_* resources.</comment>
+  </data>
+  <data name="XA4328_ConflictingEntry" xml:space="preserve">
+    <value>The '{0}' entry for '{1}' was not emitted: another JNI remapping input already maps it to '{2}', which conflicts with '{3}'.</value>
+    <comment>The following are literal names and should not be translated: JNI.
+{0} - The XML element name of the conflicting entry, such as replace-type.
+{1} - The source type or member the entry describes.
+{2} - The target the pre-existing input maps the source to.
+{3} - The target this entry would have mapped the source to.</comment>
+  </data>
+  <data name="XA4328_UnsupportedSignature" xml:space="preserve">
+    <value>The entry for '{0}' was not emitted: its signature '{1}' could not be converted to a JNI descriptor.</value>
+    <comment>The following are literal names and should not be translated: JNI.
+{0} - The member the entry describes.
+{1} - The Java signature which could not be converted.</comment>
+  </data>
+  <data name="XA4329" xml:space="preserve">
+    <value>Invalid value for {0}: '{1}'. Valid values are: {2}.</value>
+    <comment>{0} - The MSBuild property name.
+{1} - The invalid property value.
+{2} - A comma-separated list of valid literal values. Do not translate these values.</comment>
+  </data>
+  <data name="XA4329_RewritingUnavailable" xml:space="preserve">
+    <value>AndroidR8ObfuscationMode='experimental-rewriting' is not available in this SDK. Use 'runtime-remapping' or set AndroidEnableR8Obfuscation=false.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, experimental-rewriting, runtime-remapping, AndroidEnableR8Obfuscation, false, SDK.</comment>
+  </data>
+  <data name="XA4329_RequiredProperty" xml:space="preserve">
+    <value>AndroidEnableR8Obfuscation=true requires $({0}) to be '{1}', but it is {2}.</value>
+    <comment>The following are literal names and should not be translated: AndroidEnableR8Obfuscation, true.
+{0} - The required MSBuild property name.
+{1} - The required literal value.
+{2} - The actual value, including quotes.</comment>
+  </data>
+  <data name="XA4329_UnsupportedRuntime" xml:space="preserve">
+    <value>AndroidEnableR8Obfuscation=true is not supported for runtime '{0}'. Supported runtimes are CoreCLR and NativeAOT.</value>
+    <comment>The following are literal names and should not be translated: AndroidEnableR8Obfuscation, true, CoreCLR, NativeAOT.
+{0} - The runtime name.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>

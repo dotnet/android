@@ -34,7 +34,7 @@ namespace Java.Interop
 		JniMethodInfo GetMethodInfo (string method, string signature)
 		{
 			var m              = (JniMethodInfo?) null;
-			var newMethod      = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (Members.JniPeerTypeName, method, signature);
+			var newMethod      = JniPeerMembers.GetReplacementMethodInfo (Members.JniPeerOriginalTypeName, Members.JniPeerTypeName, Members.ManagedPeerType, method, signature);
 			if (newMethod.HasValue) {
 				using var t = new JniType (newMethod.Value.TargetJniType ?? Members.JniPeerTypeName);
 				if (t.TryGetStaticMethod (
@@ -66,7 +66,7 @@ namespace Java.Interop
 
 		JniMethodInfo? FindInFallbackTypes (string method, string signature)
 		{
-			var fallbackTypes  = JniEnvironment.Runtime.TypeManager.GetStaticMethodFallbackTypes (Members.JniPeerTypeName);
+			var fallbackTypes  = JniEnvironment.Runtime.TypeManager.GetStaticMethodFallbackTypes (Members.JniPeerOriginalTypeName);
 			if (fallbackTypes == null) {
 				return null;
 			}

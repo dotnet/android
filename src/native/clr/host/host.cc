@@ -26,6 +26,7 @@
 #include <host/runtime-util.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/dso-loader.hh>
+#include <runtime-base/jni-remapping.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
 #include <runtime-base/monodroid-dl.hh>
@@ -460,7 +461,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	init.packageNamingPolicy                            = static_cast<int>(application_config.package_naming_policy);
 	init.boundExceptionType                             = 0; // System
 	init.jniAddNativeMethodRegistrationAttributePresent = application_config.jni_add_native_method_registration_attribute_present ? 1 : 0;
-	init.jniRemappingInUse                              = application_config.jni_remapping_replacement_type_count > 0 || application_config.jni_remapping_replacement_method_index_entry_count > 0;
+	init.jniRemappingInUse                              = JniRemapping::is_in_use ();
 	init.marshalMethodsEnabled                          = application_config.marshal_methods_enabled;
 
 	// GC threshold is 90% of the max GREF count

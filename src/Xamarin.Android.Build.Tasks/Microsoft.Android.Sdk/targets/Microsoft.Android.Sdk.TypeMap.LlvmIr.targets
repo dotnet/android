@@ -447,10 +447,11 @@
   <Target Name="_GenerateProguardConfiguration"
       AfterTargets="_PrepareLinkedAssembliesForProguard"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
-      Inputs="@(_LinkedAssemblyForProguard)"
+      Inputs="@(_LinkedAssemblyForProguard);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_ProguardProjectConfiguration)">
     <GenerateProguardConfiguration
         LinkedAssemblies="@(_LinkedAssemblyForProguard)"
+        EnableObfuscation="$(_AndroidR8RuntimeRemappingEnabled)"
         OutputFile="$(_ProguardProjectConfiguration)" />
   </Target>
 

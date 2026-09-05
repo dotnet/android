@@ -130,7 +130,33 @@ namespace Java.InteropTests {
 			// NOTE: key must use *post-renamed* value, not pre-renamed value
 			// NOTE: SourceSignature lacking return type; "closer in spirit" to what `remapping-config.json` allows
 			[("net/dot/jni/test/RenameClassBase2",   "hashCode",                 "()")]                      = ("net/dot/jni/test/RenameClassBase2", "myNewHashCode", null, null, false),
+
+			// Renamed parameter types: the target descriptor is pinned explicitly, which is what
+			// `target-method-signature` carries.
+			[("java/lang/StringBuilder",   "<init>",   "(Lnet/dot/jni/test/RenamedInt;)V")]     = (null, "<init>", "(I)V", null, false),
+			[("java/lang/StringBuilder",   "indexOf",  "(Lnet/dot/jni/test/RenamedString;)I")]  = (null, "indexOf", "(Ljava/lang/String;)I", null, false),
 		};
+
+		Dictionary<(string SourceType, string SourceName, string? SourceSignature), (string? TargetType, string? TargetName, string? TargetSignature)> ReplacementFields = new() {
+			[("java/lang/Math",                 "remappedToPi",         "D")]   = (null, "PI", null),
+			[("java/io/ByteArrayInputStream",   "remappedToPos",        "I")]   = (null, "pos", null),
+		};
+
+		protected override JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSourceType, string jniFieldName, string jniFieldSignature)
+		{
+			if (!ReplacementFields.TryGetValue ((jniSourceType, jniFieldName, jniFieldSignature), out var r) &&
+					!ReplacementFields.TryGetValue ((jniSourceType, jniFieldName, null), out r)) {
+				return null;
+			}
+			return new JniRuntime.ReplacementFieldInfo {
+					SourceJniType           = jniSourceType,
+					SourceJniFieldName      = jniFieldName,
+					SourceJniFieldSignature = jniFieldSignature,
+					TargetJniType           = r.TargetType ?? jniSourceType,
+					TargetJniFieldName      = r.TargetName ?? jniFieldName,
+					TargetJniFieldSignature = r.TargetSignature ?? jniFieldSignature,
+			};
+		}
 
 		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
 		{

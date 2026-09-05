@@ -248,6 +248,7 @@ static const JniRemappingIndexMethodEntry some_java_type_one_methods[] = {
 		.replacement = {
 			.target_type = "some/java/target_type_one",
 			.target_name = "new_method_name",
+			.target_signature = nullptr,
 			.is_static = false,
 		}
 	},
@@ -268,6 +269,7 @@ static const JniRemappingIndexMethodEntry some_java_type_two_methods[] = {
 		.replacement = {
 			.target_type = "some/java/target_type_two",
 			.target_name = "new_method_name",
+			.target_signature = nullptr,
 			.is_static = true,
 		}
 	},

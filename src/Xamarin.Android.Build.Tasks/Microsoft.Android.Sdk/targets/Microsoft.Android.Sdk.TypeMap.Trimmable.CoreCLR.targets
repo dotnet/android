@@ -7,10 +7,6 @@
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">mono.MonoRuntimeProvider</_TrimmableRuntimeProviderJavaName>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <_GenerateProguardAfterTargets Condition=" '$(_GenerateProguardAfterTargets)' == '' ">ILLink</_GenerateProguardAfterTargets>
-  </PropertyGroup>
-
   <!-- Add TypeMap DLLs to ILLink input. ILLink natively understands TypeMapAttribute<T>. -->
   <Target Name="_AddTrimmableTypeMapToLinker"
       BeforeTargets="PrepareForILLink;_RunILLink"
@@ -32,22 +28,35 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="_PrepareLinkedAssembliesForProguard"
-      AfterTargets="$(_GenerateProguardAfterTargets)"
+  <Target Name="_PrepareTrimmableLinkedAssembliesForProguard"
+      AfterTargets="_ResolveAssemblies"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
     <ItemGroup>
+      <_LinkedAssemblyForProguard Remove="@(_LinkedAssemblyForProguard)" />
       <_LinkedAssemblyForProguard Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
     </ItemGroup>
   </Target>
 
-  <Target Name="_GenerateProguardConfiguration"
-      AfterTargets="_PrepareLinkedAssembliesForProguard"
+  <Target Name="_GenerateTrimmableProguardConfiguration"
+      AfterTargets="_PrepareTrimmableLinkedAssembliesForProguard"
+      BeforeTargets="_CompileToDalvik"
+      DependsOnTargets="_PrepareTrimmableLinkedAssembliesForProguard"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
-      Inputs="@(_LinkedAssemblyForProguard)"
+      Inputs="@(_LinkedAssemblyForProguard);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_ProguardProjectConfiguration)">
     <GenerateProguardConfiguration
         LinkedAssemblies="@(_LinkedAssemblyForProguard)"
+        EnableObfuscation="$(_AndroidR8RuntimeRemappingEnabled)"
         OutputFile="$(_ProguardProjectConfiguration)" />
+  </Target>
+
+  <Target Name="_AndroidPrepareR8JniRemappingAssemblies"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' "
+      DependsOnTargets="_ResolveAssemblies;_PrepareTrimmableLinkedAssembliesForProguard">
+    <ItemGroup>
+      <_AndroidR8JniRemappingAssembly Remove="@(_AndroidR8JniRemappingAssembly)" />
+      <_AndroidR8JniRemappingAssembly Include="@(_LinkedAssemblyForProguard)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_ComputePostTrimTrimmableTypeMapInputs"

@@ -209,6 +209,58 @@ namespace Java.Interop {
 			return JniEnvironment.InstanceFields.GetFieldID (PeerReference, name, signature);
 		}
 
+		internal bool TryGetInstanceField (string name, string signature, [NotNullWhen(true)] out JniFieldInfo? field)
+		{
+			AssertValid ();
+
+			var env = JniEnvironment.EnvironmentPointer;
+			var id  = RawGetFieldID (env, name, signature, isStatic: false, out var thrown);
+			return TryCreateFieldInfo (env, name, signature, id, thrown, isStatic: false, out field);
+		}
+
+		internal bool TryGetStaticField (string name, string signature, [NotNullWhen(true)] out JniFieldInfo? field)
+		{
+			AssertValid ();
+
+			var env = JniEnvironment.EnvironmentPointer;
+			var id  = RawGetFieldID (env, name, signature, isStatic: true, out var thrown);
+			return TryCreateFieldInfo (env, name, signature, id, thrown, isStatic: true, out field);
+		}
+
+		IntPtr RawGetFieldID (IntPtr env, string name, string signature, bool isStatic, out IntPtr thrown)
+		{
+			var _name = Marshal.StringToCoTaskMemUTF8 (name);
+			var _sig  = Marshal.StringToCoTaskMemUTF8 (signature);
+			try {
+				var id  = isStatic
+					? JniNativeMethods.GetStaticFieldID (env, PeerReference.Handle, _name, _sig)
+					: JniNativeMethods.GetFieldID (env, PeerReference.Handle, _name, _sig);
+				thrown  = JniNativeMethods.ExceptionOccurred (env);
+				return id;
+			}
+			finally {
+				Marshal.ZeroFreeCoTaskMemUTF8 (_name);
+				Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
+			}
+		}
+
+		static bool TryCreateFieldInfo (IntPtr env, string name, string signature, IntPtr id, IntPtr thrown, bool isStatic, [NotNullWhen(true)] out JniFieldInfo? field)
+		{
+			field   = null;
+			if (thrown != IntPtr.Zero) {
+				JniEnvironment.Exceptions.ExceptionClear ();
+				JniEnvironment.References.RawDeleteLocalRef (env, thrown);
+				return false;
+			}
+			Debug.Assert (id != IntPtr.Zero);
+			if (id == IntPtr.Zero) {
+				// …huh?  Should only happen if `thrown != IntPtr.Zero`, handled above.
+				return false;
+			}
+			field   = new JniFieldInfo (name, signature, id, isStatic);
+			return true;
+		}
+
 		public JniFieldInfo GetCachedInstanceField ([NotNull] ref JniFieldInfo? cachedField, string name, string signature)
 		{
 			AssertValid ();

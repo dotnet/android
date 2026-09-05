@@ -289,3 +289,22 @@ _monodroid_lookup_replacement_method_info (const char *jniSourceType, const char
 	return JniRemapping::lookup_replacement_method_info (jniSourceType, jniMethodName, jniMethodSignature);
 }
 
+//
+// Reverse type and field remapping are only produced for the CoreCLR and NativeAOT runtimes; the
+// entry points exist so that managed code shared with them resolves on MonoVM as well.
+//
+const char*
+_monodroid_lookup_reverse_type ([[maybe_unused]] const char *jniSimpleReference)
+{
+	return nullptr;
+}
+
+const JniRemappingReplacementField*
+_monodroid_lookup_replacement_field_info (
+	[[maybe_unused]] const char *jniSourceType,
+	[[maybe_unused]] const char *jniFieldName,
+	[[maybe_unused]] const char *jniFieldSignature)
+{
+	return nullptr;
+}
+

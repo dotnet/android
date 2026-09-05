@@ -285,8 +285,10 @@ struct JniRemappingReplacementMethod
 {
 	const char    *target_type;
 	const char    *target_name;
-	// const char    *target_signature;
-	// const int32_t  param_count;
+	// JNI descriptor to use on the target type, or `nullptr` when the source signature is used
+	// unchanged. MonoVM does not consume it, but the field must be present because the remapping
+	// tables are generated once and shared by every runtime.
+	const char    *target_signature;
 	const bool     is_static;
 };
 
@@ -302,6 +304,13 @@ struct JniRemappingIndexTypeEntry
 	const JniRemappingString            name;
 	const uint32_t             method_count;
 	const JniRemappingIndexMethodEntry *methods;
+};
+
+struct JniRemappingReplacementField
+{
+	const char    *target_type;
+	const char    *target_name;
+	const char    *target_signature;
 };
 
 struct JniRemappingTypeReplacementEntry

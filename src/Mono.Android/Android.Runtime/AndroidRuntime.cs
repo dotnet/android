@@ -381,6 +381,11 @@ namespace Android.Runtime {
 			return JniRemappingLookup.GetReplacementType (jniSimpleReference);
 		}
 
+		protected override string? GetOriginalTypeCore (string jniSimpleReference)
+		{
+			return JniRemappingLookup.GetReverseType (jniSimpleReference);
+		}
+
 		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
 		{
 			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);

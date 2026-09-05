@@ -9,6 +9,30 @@
 
 using namespace xamarin::android;
 
+const char*
+_monodroid_lookup_replacement_type (const char *jniSimpleReference)
+{
+	return JniRemapping::lookup_replacement_type (jniSimpleReference);
+}
+
+const char*
+_monodroid_lookup_reverse_type (const char *jniSimpleReference)
+{
+	return JniRemapping::lookup_reverse_type (jniSimpleReference);
+}
+
+const JniRemappingReplacementMethod*
+_monodroid_lookup_replacement_method_info (const char *jniSourceType, const char *jniMethodName, const char *jniMethodSignature)
+{
+	return JniRemapping::lookup_replacement_method_info (jniSourceType, jniMethodName, jniMethodSignature);
+}
+
+const JniRemappingReplacementField*
+_monodroid_lookup_replacement_field_info (const char *jniSourceType, const char *jniFieldName, const char *jniFieldSignature)
+{
+	return JniRemapping::lookup_replacement_field_info (jniSourceType, jniFieldName, jniFieldSignature);
+}
+
 int _monodroid_gref_get () noexcept
 {
 	return OSBridge::get_gc_gref_count ();
