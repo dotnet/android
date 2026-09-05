@@ -10,6 +10,27 @@ namespace Android.Runtime
 	}
 }
 
+namespace Lookalike
+{
+	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
+	public sealed class ExportAttribute : Attribute
+	{
+		public ExportAttribute (string name) { }
+	}
+
+	[AttributeUsage (AttributeTargets.Parameter | AttributeTargets.ReturnValue, AllowMultiple = false)]
+	public sealed class ExportParameterAttribute : Attribute
+	{
+		public ExportParameterAttribute (Java.Interop.ExportParameterKind kind) { }
+	}
+
+	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
+	public sealed class ExportFieldAttribute : Attribute
+	{
+		public ExportFieldAttribute (string name) { }
+	}
+}
+
 namespace Java.Interop
 {
 	public struct JniObjectReference
@@ -195,13 +216,14 @@ namespace Java.Interop
 
 namespace Java.Interop
 {
-	[AttributeUsage (AttributeTargets.Class, AllowMultiple = false)]
+	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = false)]
 	public sealed class JniTypeSignatureAttribute : Attribute
 	{
 		public string SimpleReference { get; }
 		public bool GenerateJavaPeer { get; set; } = true;
 		public bool IsKeyword { get; set; }
 		public int ArrayRank { get; set; }
+		public Type? InvokerType { get; set; }
 
 		public JniTypeSignatureAttribute (string simpleReference) => SimpleReference = simpleReference;
 	}

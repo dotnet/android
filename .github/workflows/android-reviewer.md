@@ -50,8 +50,10 @@ tools:
     - grep
     - head
     - jq
+    - sed
     - tail
     - wc
+  web-fetch:
   github:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     toolsets: [pull_requests, repos]

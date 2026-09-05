@@ -30,6 +30,7 @@ sealed class AssemblyIndex : IDisposable
 
 	public MetadataReader Reader { get; }
 	public string AssemblyName { get; }
+	public string MetadataAssemblyName { get; }
 	public string AssemblyPath { get; }
 	internal TypeRefSignatureTypeProvider TypeRefSignatureProvider { get; }
 
@@ -69,6 +70,11 @@ sealed class AssemblyIndex : IDisposable
 		CallbackFormatVersion == JavaPeerCallbackFormat.UnmanagedCallersOnlyCallbacks;
 
 	/// <summary>
+	/// Maps forwarded managed type names to the target assembly simple name.
+	/// </summary>
+	public Dictionary<string, string> ForwardedTypeAssemblies { get; } = new (StringComparer.Ordinal);
+
+	/// <summary>
 	/// True iff the assembly's metadata mentions
 	/// <c>Java.Interop.JniAddNativeMethodRegistrationAttribute</c> (as a
 	/// TypeReference or TypeDefinition). The trimmable typemap forbids that
@@ -92,6 +98,7 @@ sealed class AssemblyIndex : IDisposable
 		valueTypeReferences = new TypeRefData? [reader.TypeReferences.Count + 1];
 		Reader = reader;
 		AssemblyName = assemblyName;
+		MetadataAssemblyName = reader.GetString (reader.GetAssemblyDefinition ().Name);
 		AssemblyPath = assemblyPath;
 		TypeRefSignatureProvider = new TypeRefSignatureTypeProvider (this);
 	}
@@ -122,7 +129,12 @@ sealed class AssemblyIndex : IDisposable
 
 		foreach (var exportedTypeHandle in Reader.ExportedTypes) {
 			var exportedType = Reader.GetExportedType (exportedTypeHandle);
-			ExportedTypeNames.Add (GetExportedTypeFullName (exportedType));
+			var fullName = GetExportedTypeFullName (exportedType);
+			ExportedTypeNames.Add (fullName);
+			var forwardedAssemblyName = GetForwardedAssemblyName (exportedType);
+			if (forwardedAssemblyName is not null) {
+				ForwardedTypeAssemblies [fullName] = forwardedAssemblyName;
+			}
 		}
 
 		ReadCallbackFormatVersion ();
@@ -163,6 +175,18 @@ sealed class AssemblyIndex : IDisposable
 			var ns = Reader.GetString (exportedType.Namespace);
 			return MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
 		}
+
+		string? GetForwardedAssemblyName (ExportedType exportedType)
+		{
+			if (exportedType.Implementation.Kind == HandleKind.AssemblyReference) {
+				var assemblyReference = Reader.GetAssemblyReference ((AssemblyReferenceHandle) exportedType.Implementation);
+				return Reader.GetString (assemblyReference.Name);
+			}
+			if (exportedType.Implementation.Kind == HandleKind.ExportedType) {
+				return GetForwardedAssemblyName (Reader.GetExportedType ((ExportedTypeHandle) exportedType.Implementation));
+			}
+			return null;
+		}
 	}
 
 	(RegisterInfo? register, TypeAttributeInfo? attrs) ParseAttributes (TypeDefinition typeDef)
@@ -190,8 +214,6 @@ sealed class AssemblyIndex : IDisposable
 				registerInfo = registerInfo with { JniName = registerInfo.JniName.Replace ('.', '/') };
 			} else if (attrName == "JniTypeSignatureAttribute") {
 				registerInfo = ParseJniTypeSignatureAttribute (ca);
-			} else if (attrName == "ExportAttribute") {
-				// [Export] is a method-level attribute; it is parsed at scan time by JavaPeerScanner
 			} else if (IsKnownComponentAttribute (attrName)) {
 				attrInfo ??= CreateTypeAttributeInfo (attrName);
 				var value = DecodeAttribute (ca);
@@ -568,12 +590,14 @@ sealed class AssemblyIndex : IDisposable
 		}
 
 		var isArrayType = TryGetNamedArgument<int> (value, "ArrayRank", out var rank) && rank > 0;
+		TryGetNamedArgument<string> (value, "InvokerType", out var invokerTypeName);
 
 		return new RegisterInfo {
 			JniName = jniName.Replace ('.', '/'),
 			DoNotGenerateAcw = doNotGenerateAcw,
 			IsFromJniTypeSignature = true,
 			IsArrayType = isArrayType,
+			InvokerTypeName = invokerTypeName,
 		};
 	}
 
@@ -913,6 +937,7 @@ sealed record RegisterInfo
 	public bool DoNotGenerateAcw { get; init; }
 	public bool IsFromJniTypeSignature { get; init; }
 	public bool IsArrayType { get; init; }
+	public string? InvokerTypeName { get; init; }
 }
 
 /// <summary>

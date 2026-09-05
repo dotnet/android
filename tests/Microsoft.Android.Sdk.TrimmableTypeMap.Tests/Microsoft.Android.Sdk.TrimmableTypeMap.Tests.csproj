@@ -10,8 +10,9 @@
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
-  <!-- Exclude TestFixtures subdirectory — it's a separate project compiled independently -->
+  <!-- Exclude fixture subdirectories — they are separate projects compiled independently -->
   <ItemGroup>
+    <Compile Remove="MonoAndroidFixture\**" />
     <Compile Remove="TestFixtures\**" />
     <Compile Remove="TestAttributeFixtures\**" />
     <Compile Remove="TestUcoFixtures\**" />

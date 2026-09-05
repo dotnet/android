@@ -4,7 +4,6 @@
 #include <cstring>
 #include <deque>
 #include <memory>
-#include <mutex>
 #include <string>
 
 #include <dirent.h>
@@ -79,7 +78,7 @@ namespace {
 			Failed,
 		};
 
-		std::mutex                        state_lock;
+		pthread_mutex_t                   state_lock = PTHREAD_MUTEX_INITIALIZER;
 		std::deque<WriteRequest>          write_queue;
 		std::string                       cache_dir;
 		std::unique_ptr<uint8_t*[]>       tracking;
@@ -177,7 +176,7 @@ namespace {
 			while (true) {
 				WriteRequest request;
 				{
-					std::lock_guard lock (state_lock);
+					lock_guard lock (state_lock);
 					if (write_queue.empty ()) {
 						writer_running = false;
 						return nullptr;
@@ -192,7 +191,7 @@ namespace {
 				request.data.reset ();
 
 				{
-					std::lock_guard lock (state_lock);
+					lock_guard lock (state_lock);
 					queued_bytes -= request_size;
 					if (write_result == WriteResult::Failed) {
 						writes_enabled = false;
@@ -312,8 +311,8 @@ namespace {
 				return;
 			}
 
-			std::string const& code_cache_dir = AndroidSystem::get_app_code_cache_dir ();
-			if (code_cache_dir.empty ()) {
+			const char *code_cache_dir = AndroidSystem::get_app_code_cache_dir ();
+			if (*code_cache_dir == '\0') {
 				return;
 			}
 
@@ -345,7 +344,7 @@ namespace {
 			}
 
 			{
-				std::lock_guard lock (state_lock);
+				lock_guard lock (state_lock);
 				writes_enabled = true;
 			}
 
@@ -426,7 +425,7 @@ namespace {
 			size_t bytes_queued = 0;
 			bool queue_full = false;
 			{
-				std::lock_guard lock (state_lock);
+				lock_guard lock (state_lock);
 				if (!writes_enabled) {
 					return;
 				}
@@ -463,7 +462,7 @@ namespace {
 
 			auto snapshot = std::unique_ptr<uint8_t[]> (new (std::nothrow) uint8_t[total]);
 			if (snapshot == nullptr) {
-				std::lock_guard lock (state_lock);
+				lock_guard lock (state_lock);
 				queued_bytes -= total;
 				return;
 			}
@@ -488,7 +487,7 @@ namespace {
 			};
 
 			{
-				std::lock_guard lock (state_lock);
+				lock_guard lock (state_lock);
 				if (!writes_enabled) {
 					queued_bytes -= total;
 					return;

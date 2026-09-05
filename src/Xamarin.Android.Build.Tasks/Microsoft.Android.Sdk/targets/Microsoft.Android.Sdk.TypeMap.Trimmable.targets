@@ -12,6 +12,7 @@
       Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " />
 
   <PropertyGroup>
+    <AndroidEnableLegacyCompatibilityAssemblyFixups Condition=" '$(AndroidEnableLegacyCompatibilityAssemblyFixups)' == '' ">false</AndroidEnableLegacyCompatibilityAssemblyFixups>
     <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>
     <_TrimmableTypeMapPackageNamingPolicy Condition=" '$(_AndroidPackageNamingPolicySetByUser)' == 'true' ">$(AndroidPackageNamingPolicy)</_TrimmableTypeMapPackageNamingPolicy>
     <_TrimmableTypeMapPackageNamingPolicy Condition=" '$(_TrimmableTypeMapPackageNamingPolicy)' == '' ">Crc64</_TrimmableTypeMapPackageNamingPolicy>
@@ -46,6 +47,7 @@
          Outputs without making the target run on every build. The stamp is always
          touched, so the target is correctly skipped when none of its Inputs changed. -->
     <_TrimmableTypeMapOutputStamp>$(_TypeMapOutputDirectory)_GenerateTrimmableTypeMap.stamp</_TrimmableTypeMapOutputStamp>
+    <_TrimmableTypeMapFingerprintsFile>$(_TypeMapOutputDirectory)typemap-fingerprints.txt</_TrimmableTypeMapFingerprintsFile>
     <_TrimmableRemoveRegisterFlag>$(_AndroidStampDirectory)_RemoveRegisterAttribute.stamp</_TrimmableRemoveRegisterFlag>
     <_TrimmableRemoveRegisterTarget Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">_RemoveRegisterAttributeCoreClr</_TrimmableRemoveRegisterTarget>
     <_TrimmableRemoveRegisterTarget Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">_RemoveRegisterAttributeNativeAot</_TrimmableRemoveRegisterTarget>
@@ -171,6 +173,7 @@
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"
         ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
         GeneratedAssembliesListFile="$(_TypeMapAssembliesListFile)"
+        TypeMapFingerprintsFile="$(_TrimmableTypeMapFingerprintsFile)"
         AcwMapOutputFile="$(_PreTrimTypeMapAcwMapOutputFile)"
         ApplicationRegistrationOutputFile="$(_PreTrimTypeMapApplicationRegistrationOutputFile)">
       <Output TaskParameter="GeneratedAssemblies" ItemName="_GeneratedTypeMapAssemblies" />
@@ -201,6 +204,7 @@
       <FileWrites Include="@(_GeneratedTypeMapAssemblies)" />
       <FileWrites Include="@(_GeneratedJavaFiles)" />
       <FileWrites Include="$(_TypeMapAssembliesListFile)" />
+      <FileWrites Include="$(_TrimmableTypeMapFingerprintsFile)" />
       <FileWrites Include="$(_TypeMapJavaFilesList)" />
       <FileWrites Include="$(_TrimmableTypeMapOutputStamp)" />
       <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" />
@@ -275,6 +279,7 @@
       <FileWrites Include="$(_PostTrimTypeMapJavaFilesList)" Condition="Exists('$(_PostTrimTypeMapJavaFilesList)')" />
       <FileWrites Include="$(_PostTrimTrimmableTypeMapJavaStamp)" Condition="Exists('$(_PostTrimTrimmableTypeMapJavaStamp)')" />
       <FileWrites Include="$(_TypeMapAssembliesListFile)" />
+      <FileWrites Include="$(_TrimmableTypeMapFingerprintsFile)" Condition="Exists('$(_TrimmableTypeMapFingerprintsFile)')" />
       <FileWrites Include="$(_TypeMapJavaFilesList)" Condition="Exists('$(_TypeMapJavaFilesList)')" />
       <FileWrites Include="$(_TrimmableTypeMapOutputStamp)" Condition="Exists('$(_TrimmableTypeMapOutputStamp)')" />
       <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" Condition="Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml')" />

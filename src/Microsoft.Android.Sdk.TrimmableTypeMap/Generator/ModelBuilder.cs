@@ -390,6 +390,7 @@ static class ModelBuilder
 					AssemblyName = peer.AssemblyName,
 				},
 				ManagedParameterTypes = ctor.ManagedParameterTypes,
+				ParameterKinds = ctor.ManagedParameterExportKinds,
 				HasMatchingManagedCtor = ctor.HasMatchingManagedCtor,
 			});
 		}

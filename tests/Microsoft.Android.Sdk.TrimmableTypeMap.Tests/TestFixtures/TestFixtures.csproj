@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MonoAndroidFixture\MonoAndroidFixture.csproj" />
     <ProjectReference Include="..\TestAttributeFixtures\TestAttributeFixtures.csproj" />
   </ItemGroup>
 

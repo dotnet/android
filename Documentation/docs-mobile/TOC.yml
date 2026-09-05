@@ -332,6 +332,8 @@
         href: messages/xa4249.md
       - name: XA4258
         href: messages/xa4258.md
+      - name: XA4263
+        href: messages/xa4263.md
       - name: XA4301
         href: messages/xa4301.md
       - name: XA4302
@@ -364,6 +366,10 @@
         href: messages/xa4323.md
       - name: XA4324
         href: messages/xa4324.md
+      - name: XA4325
+        href: messages/xa4325.md
+      - name: XA4326
+        href: messages/xa4326.md
     - name: "XA5xxx: GCC and toolchain"
       items:
       - name: "XA5xxx: GCC and toolchain"
