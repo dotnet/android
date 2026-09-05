@@ -406,6 +406,12 @@ public sealed record JavaFieldInfo
 	public required string JavaTypeName { get; init; }
 
 	/// <summary>
+	/// JNI type descriptor retained for validation where Java source dots cannot distinguish
+	/// package segments from nested type segments.
+	/// </summary>
+	internal string? JniTypeName { get; init; }
+
+	/// <summary>
 	/// Name of the method that initializes this field, e.g., "GetInstance".
 	/// </summary>
 	public required string InitializerMethodName { get; init; }

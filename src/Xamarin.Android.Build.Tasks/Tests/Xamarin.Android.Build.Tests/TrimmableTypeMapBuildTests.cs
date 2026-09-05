@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.AssemblyStore;
@@ -35,6 +37,361 @@ namespace Xamarin.Android.Build.Tests {
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
 			AssertTrimmableTypeMapOutputs (intermediateDir);
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "APT2008", false)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "XA4258", true)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "XA4258", true)]
+		public void Build_JavaTypeOnlyIdentifierStarts_MatchManifestLimitation (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			string expectedCode,
+			bool expectNoOutputs)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("ManifestIdentifierStarts.cs") {
+				TextContent = () => """
+					using Android.App;
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Register ("com/example/\u00a2Peer")]
+					[Activity]
+					public class CurrencyComponent : Activity
+					{
+						public CurrencyComponent () { }
+					}
+
+					[Register ("com/example/\u203fPeer")]
+					[Activity]
+					public class ConnectorComponent : Activity
+					{
+						public ConnectorComponent () { }
+					}
+
+					[Register ("com/example/\U00010428Peer")]
+					[Activity]
+					public class SupplementaryComponent : Activity
+					{
+						public SupplementaryComponent () { }
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (
+				builder.Build (proj),
+				$"{runtime}/{typeMapImplementation} should reject Java-only starts in manifest component names.");
+			StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput);
+
+			if (expectNoOutputs) {
+				StringAssertEx.Contains ("\u00a2Peer", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\u203fPeer", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\U00010428Peer", builder.LastBuildOutput);
+				AssertNoUnicodeOutputs (builder, "\u00a2Peer");
+				AssertNoUnicodeOutputs (builder, "\u203fPeer");
+				AssertNoUnicodeOutputs (builder, "\U00010428Peer");
+				return;
+			}
+
+			foreach (var javaName in new [] {
+				"com/example/\u00a2Peer",
+				"com/example/\u203fPeer",
+				"com/example/\U00010428Peer",
+			}) {
+				var relativePath = (javaName + ".java").Replace ('/', Path.DirectorySeparatorChar);
+				FileAssert.Exists (
+					builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", relativePath)),
+					$"llvm-ir should generate '{javaName}.java' before AAPT rejects the manifest name.");
+			}
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, true)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, false)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, false)]
+		public void Build_SupplementaryJavaIdentifier_MatchesRuntimeLimitation (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			bool shouldSucceed)
+		{
+			const string javaName = "com/example/\U00010428Peer\U00010400";
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("SupplementaryJavaIdentifier.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Register ("com/example/\U00010428Peer\U00010400")]
+					public class SupplementaryJavaIdentifier : Java.Lang.Object
+					{
+						public SupplementaryJavaIdentifier () { }
+					}
+					""",
+			});
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				"System.GC.KeepAlive (new UnnamedProject.SupplementaryJavaIdentifier ());");
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.AreEqual (
+				shouldSucceed,
+				builder.Build (proj),
+				$"{runtime}/{typeMapImplementation} should match the supplementary runtime limitation.");
+			if (!shouldSucceed) {
+				StringAssertEx.Contains ("error XA4258", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\U00010428Peer\U00010400", builder.LastBuildOutput);
+				AssertNoUnicodeOutputs (builder, "\U00010428Peer\U00010400");
+				return;
+			}
+
+			var relativeJavaPath = (javaName + ".java").Replace ('/', Path.DirectorySeparatorChar);
+			var javaPath = new [] {
+				builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", relativeJavaPath)),
+				builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "java", relativeJavaPath)),
+				builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "linked-java", relativeJavaPath)),
+			}.FirstOrDefault (File.Exists);
+			Assert.IsNotNull (javaPath, $"{runtime}/{typeMapImplementation} should preserve the supplementary Java source path.");
+			StringAssert.Contains ("public class \U00010428Peer\U00010400", File.ReadAllText (javaPath));
+
+			var classFile = builder.Output.GetIntermediaryPath (
+				Path.Combine ("android", "bin", "classes", relativeJavaPath.Replace (".java", ".class")));
+			FileAssert.Exists (classFile, "javac should accept the supplementary Java identifier.");
+
+			var acwMap = builder.Output.GetIntermediaryPath ("acw-map.txt");
+			StringAssert.Contains (
+				"UnnamedProject.SupplementaryJavaIdentifier;com.example.\U00010428Peer\U00010400",
+				File.ReadAllText (acwMap));
+
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			Assert.IsTrue (
+				DexUtils.ContainsClass ($"L{javaName};", dexFile, AndroidSdkPath),
+				"llvm-ir should preserve the exact supplementary descriptor even though Android cannot load it.");
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "JAVAC0000")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "XA4258")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "XA4258")]
+		public void Build_InvalidOrUnsupportedUnicodeIdentifiers_ReportDiagnosticWithoutTrimmableOutputs (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			string expectedCode)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			bool isTrimmable = typeMapImplementation == "trimmable";
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			string projectSource = """
+				using Android.Runtime;
+
+				namespace UnnamedProject;
+
+				[Register ("com/example/1Peer")]
+				public class InvalidDigitStart : Java.Lang.Object
+				{
+					public InvalidDigitStart () { }
+				}
+
+				[Register ("com/example/\u0301Peer")]
+				public class InvalidCombiningStart : Java.Lang.Object
+				{
+					public InvalidCombiningStart () { }
+				}
+				""";
+			if (isTrimmable) {
+				projectSource += """
+
+					[Register ("com/e\u0301xample/Cafe\u0301")]
+					public class UnsupportedCombiningMark : Java.Lang.Object
+					{
+						public UnsupportedCombiningMark () { }
+					}
+
+					[Register ("com/example/A\u0cf3")]
+					public class Unicode15CombiningMark : Java.Lang.Object
+					{
+						public Unicode15CombiningMark () { }
+					}
+
+					[Register ("com/example/\u1c89Peer")]
+					public class NewerUnicodeLetter : Java.Lang.Object
+					{
+						public NewerUnicodeLetter () { }
+					}
+
+					[Register ("com/example/\u212bPeer")]
+					public class NonNfcIdentifier : Java.Lang.Object
+					{
+						public NonNfcIdentifier () { }
+					}
+					""";
+			}
+			proj.Sources.Add (new BuildItem.Source ("InvalidUnicodeIdentifiers.cs") {
+				TextContent = () => projectSource,
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (
+				builder.Build (proj),
+				$"{runtime}/{typeMapImplementation} should reject invalid or unsupported Java identifiers.");
+			StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput);
+
+			if (isTrimmable) {
+				StringAssertEx.Contains ("1Peer", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\u0301Peer", builder.LastBuildOutput);
+				StringAssertEx.Contains ("e\u0301xample", builder.LastBuildOutput);
+				StringAssertEx.Contains ("A\u0cf3", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\u1c89Peer", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\u212bPeer", builder.LastBuildOutput);
+				AssertNoUnicodeOutputs (builder, "1Peer");
+				AssertNoUnicodeOutputs (builder, "\u0301Peer");
+				AssertNoUnicodeOutputs (builder, "Cafe\u0301");
+				AssertNoUnicodeOutputs (builder, "A\u0cf3");
+				AssertNoUnicodeOutputs (builder, "\u1c89Peer");
+				AssertNoUnicodeOutputs (builder, "\u212bPeer");
+				return;
+			}
+
+			foreach (var javaName in new [] {
+				"com/example/1Peer",
+				"com/example/\u0301Peer",
+			}) {
+				var relativePath = (javaName + ".java").Replace ('/', Path.DirectorySeparatorChar);
+				var javaPath = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", relativePath));
+				FileAssert.Exists (javaPath, $"llvm-ir should reach javac with '{javaName}'.");
+				var source = File.ReadAllText (javaPath);
+				StringAssert.Contains ($"public class {javaName.Substring (javaName.LastIndexOf ('/') + 1)}", source);
+			}
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, true, false)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, false, true)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, false, true)]
+		public void Build_CanonicallyEquivalentJavaNames_DoNotOverwriteOutputs (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			bool shouldSucceed,
+			bool expectNoOutputs)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("CanonicalJavaIdentifiers.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Register ("com/example/\u00c5Peer")]
+					public class ComposedIdentifier : Java.Lang.Object
+					{
+						public ComposedIdentifier () { }
+					}
+
+					[Register ("com/example/\u212bPeer")]
+					public class CanonicalEquivalentIdentifier : Java.Lang.Object
+					{
+						public CanonicalEquivalentIdentifier () { }
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.AreEqual (
+				shouldSucceed,
+				builder.Build (proj),
+				$"{runtime}/{typeMapImplementation} should match canonical-equivalent Java output behavior.");
+
+			if (expectNoOutputs) {
+				StringAssertEx.Contains ("error XA4258", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\u212bPeer", builder.LastBuildOutput);
+				AssertNoUnicodeOutputs (builder, "\u00c5Peer");
+				AssertNoUnicodeOutputs (builder, "\u212bPeer");
+				return;
+			}
+
+			var javaDirectory = builder.Output.GetIntermediaryPath (
+				Path.Combine ("android", "src", "com", "example"));
+			if (!CanonicalEquivalentPathsAlias (javaDirectory)) {
+				return;
+			}
+			var javaFile = AssertSingleFile (javaDirectory, "*Peer.java");
+			StringAssert.Contains ("public class \u212bPeer", File.ReadAllText (javaFile));
+
+			var classDirectory = builder.Output.GetIntermediaryPath (
+				Path.Combine ("android", "bin", "classes", "com", "example"));
+			AssertSingleFile (classDirectory, "*Peer.class");
+
+			var acwMap = File.ReadAllText (builder.Output.GetIntermediaryPath ("acw-map.txt"));
+			StringAssert.Contains ("UnnamedProject.ComposedIdentifier;com.example.\u00c5Peer", acwMap);
+			StringAssert.Contains ("UnnamedProject.CanonicalEquivalentIdentifier;com.example.\u212bPeer", acwMap);
+
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			Assert.IsFalse (DexUtils.ContainsClass ("Lcom/example/\u00c5Peer;", dexFile, AndroidSdkPath));
+			Assert.IsTrue (DexUtils.ContainsClass ("Lcom/example/\u212bPeer;", dexFile, AndroidSdkPath));
+
+			static string AssertSingleFile (string directory, string pattern)
+			{
+				var files = Directory.GetFiles (directory, pattern, SearchOption.TopDirectoryOnly);
+				Assert.AreEqual (
+					1,
+					files.Length,
+					"APFS should expose the canonical-equivalent llvm-ir paths as one overwritten file.");
+				return files [0];
+			}
+
+			static bool CanonicalEquivalentPathsAlias (string directory)
+			{
+				var probeDirectory = Path.Combine (directory, "canonical-path-probe-" + Guid.NewGuid ().ToString ("N"));
+				Directory.CreateDirectory (probeDirectory);
+				try {
+					File.WriteAllText (Path.Combine (probeDirectory, "\u00c5"), "composed");
+					File.WriteAllText (Path.Combine (probeDirectory, "\u212b"), "equivalent");
+					return Directory.GetFiles (probeDirectory).Length == 1;
+				} finally {
+					foreach (var file in Directory.GetFiles (probeDirectory)) {
+						File.Delete (file);
+					}
+					Directory.Delete (probeDirectory);
+				}
+			}
 		}
 
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "parameters", "XA4205")]
@@ -1787,6 +2144,204 @@ namespace UnnamedProject {
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded — abstract types with protected ctors should not cause XAGTT7009.");
+		}
+
+		[Test]
+		public void DexUtils_RejectsDex041Containers ()
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (directory);
+			var dexFile = Path.Combine (directory, "classes.dex");
+			var header = new byte [112];
+			Encoding.ASCII.GetBytes ("dex\n041\0").CopyTo (header, 0);
+			File.WriteAllBytes (dexFile, header);
+
+			Assert.Throws<NotSupportedException> (() => DexUtils.GetClassDescriptors (dexFile));
+		}
+
+		[TestCase ("magic-terminator")]
+		[TestCase ("header-size")]
+		[TestCase ("file-size")]
+		[TestCase ("map-missing")]
+		[TestCase ("map-section")]
+		[TestCase ("string-section")]
+		[TestCase ("data-section")]
+		public void DexUtils_RejectsMalformedHeaders (string malformedField)
+		{
+			var dex = CreateMinimalDex ([(byte) 'L', (byte) 'x', (byte) ';'], utf16Length: 3);
+			switch (malformedField) {
+				case "magic-terminator":
+					dex [7] = 1;
+					break;
+				case "header-size":
+					WriteUInt32 (dex, 36, 111);
+					break;
+				case "file-size":
+					WriteUInt32 (dex, 32, checked ((uint) dex.Length - 1));
+					break;
+				case "map-missing":
+					WriteUInt32 (dex, 52, 0);
+					break;
+				case "map-section":
+					WriteUInt32 (dex, checked ((int) ReadUInt32 (dex, 52)), uint.MaxValue);
+					break;
+				case "string-section":
+					WriteUInt32 (dex, 56, uint.MaxValue);
+					break;
+				case "data-section":
+					WriteUInt32 (dex, 104, uint.MaxValue);
+					break;
+				default:
+					throw new InvalidOperationException ($"Unknown malformed DEX field '{malformedField}'.");
+			}
+
+			var dexFile = WriteDexFile (dex, malformedField);
+			Assert.Throws<InvalidDataException> (() => DexUtils.GetClassDescriptors (dexFile));
+		}
+
+		[Test]
+		public void DexUtils_DecodesModifiedUtf8 ()
+		{
+			var bmpDex = CreateMinimalDex (
+				[(byte) 'L', 0xc2, 0x80, 0xe0, 0xa0, 0x80, (byte) ';'],
+				utf16Length: 4);
+			var nullDex = CreateMinimalDex (
+				[(byte) 'L', 0xc0, 0x80, (byte) ';'],
+				utf16Length: 3);
+			var supplementaryDex = CreateMinimalDex (
+				[(byte) 'L', (byte) 'x', (byte) '/', 0xed, 0xa0, 0x81, 0xed, 0xb0, 0x80, (byte) ';'],
+				utf16Length: 6);
+
+			Assert.AreEqual ("L\u0080\u0800;", DexUtils.GetClassDescriptors (WriteDexFile (bmpDex, "bmp")).Single ());
+			Assert.AreEqual ("L\0;", DexUtils.GetClassDescriptors (WriteDexFile (nullDex, "null")).Single ());
+			Assert.AreEqual ("Lx/\U00010400;", DexUtils.GetClassDescriptors (WriteDexFile (supplementaryDex, "supplementary")).Single ());
+		}
+
+		[Test]
+		public void DexUtils_RejectsMalformedModifiedUtf8 ()
+		{
+			foreach (var (name, bytes, length) in new [] {
+				("raw-null", new byte [] { (byte) 'L', 0, (byte) 'x', (byte) ';' }, 4u),
+				("two-byte-overlong", new byte [] { (byte) 'L', 0xc0, 0x81, (byte) ';' }, 3u),
+				("two-byte-overlong-c1", new byte [] { (byte) 'L', 0xc1, 0xbf, (byte) ';' }, 3u),
+				("three-byte-overlong", new byte [] { (byte) 'L', 0xe0, 0x81, 0x81, (byte) ';' }, 3u),
+				("unmatched-high", new byte [] { (byte) 'L', 0xed, 0xa0, 0x81, (byte) ';' }, 3u),
+				("unmatched-low", new byte [] { (byte) 'L', 0xed, 0xb0, 0x80, (byte) ';' }, 3u),
+			}) {
+				var dexFile = WriteDexFile (CreateMinimalDex (bytes, length), name);
+				Assert.Throws<InvalidDataException> (() => DexUtils.GetClassDescriptors (dexFile));
+			}
+		}
+
+		[Test]
+		public void DexUtils_RejectsUnboundedDeclaredStringLength ()
+		{
+			var dex = CreateMinimalDex ([], uint.MaxValue);
+			var dexFile = WriteDexFile (dex, "huge-string");
+
+			Assert.Throws<InvalidDataException> (() => DexUtils.GetClassDescriptors (dexFile));
+		}
+
+		string WriteDexFile (byte [] dex, string name)
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (directory);
+			var path = Path.Combine (directory, name + ".dex");
+			File.WriteAllBytes (path, dex);
+			return path;
+		}
+
+		static byte [] CreateMinimalDex (byte [] modifiedUtf8, uint utf16Length)
+		{
+			var length = EncodeUnsignedLeb128 (utf16Length);
+			const int stringIdsOffset = 112;
+			const int typeIdsOffset = 116;
+			const int classDefsOffset = 120;
+			const int stringDataOffset = 152;
+			int mapOffset = stringDataOffset + length.Length + modifiedUtf8.Length + 1;
+			var dex = new byte [mapOffset + 16];
+			Encoding.ASCII.GetBytes ("dex\n039\0").CopyTo (dex, 0);
+			WriteUInt32 (dex, 32, checked ((uint) dex.Length));
+			WriteUInt32 (dex, 36, 112);
+			WriteUInt32 (dex, 40, 0x12345678);
+			WriteUInt32 (dex, 52, checked ((uint) mapOffset));
+			WriteUInt32 (dex, 56, 1);
+			WriteUInt32 (dex, 60, stringIdsOffset);
+			WriteUInt32 (dex, 64, 1);
+			WriteUInt32 (dex, 68, typeIdsOffset);
+			WriteUInt32 (dex, 96, 1);
+			WriteUInt32 (dex, 100, classDefsOffset);
+			WriteUInt32 (dex, 104, checked ((uint) (dex.Length - stringDataOffset)));
+			WriteUInt32 (dex, 108, stringDataOffset);
+			WriteUInt32 (dex, stringIdsOffset, stringDataOffset);
+			length.CopyTo (dex, stringDataOffset);
+			modifiedUtf8.CopyTo (dex, stringDataOffset + length.Length);
+			WriteUInt32 (dex, mapOffset, 1);
+			dex [mapOffset + 4] = 0x00;
+			dex [mapOffset + 5] = 0x10;
+			WriteUInt32 (dex, mapOffset + 8, 1);
+			WriteUInt32 (dex, mapOffset + 12, checked ((uint) mapOffset));
+			return dex;
+		}
+
+		static byte [] EncodeUnsignedLeb128 (uint value)
+		{
+			var bytes = new List<byte> ();
+			do {
+				byte next = (byte) (value & 0x7f);
+				value >>= 7;
+				if (value != 0) {
+					next |= 0x80;
+				}
+				bytes.Add (next);
+			} while (value != 0);
+			return bytes.ToArray ();
+		}
+
+		static void WriteUInt32 (byte [] data, int offset, uint value)
+		{
+			data [offset] = (byte) value;
+			data [offset + 1] = (byte) (value >> 8);
+			data [offset + 2] = (byte) (value >> 16);
+			data [offset + 3] = (byte) (value >> 24);
+		}
+
+		static uint ReadUInt32 (byte [] data, int offset) =>
+			(uint) (
+				data [offset] |
+				data [offset + 1] << 8 |
+				data [offset + 2] << 16 |
+				data [offset + 3] << 24);
+
+		static void AssertNoUnicodeOutputs (ProjectBuilder builder, string memberName)
+		{
+			var typemapDirectory = builder.Output.GetIntermediaryPath ("typemap");
+			var acwMapFile = builder.Output.GetIntermediaryPath ("acw-map.txt");
+			var androidSourceDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src"));
+			var outputs = new List<string> ();
+			if (Directory.Exists (typemapDirectory)) {
+				outputs.AddRange (Directory.GetFiles (typemapDirectory, "*.TypeMap.dll", SearchOption.AllDirectories));
+				outputs.AddRange (Directory.GetFiles (typemapDirectory, "_Microsoft.Android.TypeMaps.dll", SearchOption.AllDirectories));
+			}
+			if (File.Exists (acwMapFile)) {
+				outputs.Add (acwMapFile);
+			}
+
+			foreach (var javaDirectory in new [] { Path.Combine (typemapDirectory, "java"), androidSourceDirectory }) {
+				if (!Directory.Exists (javaDirectory)) {
+					continue;
+				}
+				foreach (var javaFile in Directory.GetFiles (javaDirectory, "*.java", SearchOption.AllDirectories)) {
+					if (File.ReadAllText (javaFile).Contains (memberName, StringComparison.Ordinal)) {
+						outputs.Add (javaFile);
+					}
+				}
+			}
+			Assert.IsEmpty (
+				outputs,
+				"Invalid Unicode Java names should not produce typemap assemblies, ACW maps, or partial Java output:" +
+				Environment.NewLine + string.Join (Environment.NewLine, outputs)
+			);
 		}
 
 		static void AssertTrimmableTypeMapOutputs (string typemapDir)

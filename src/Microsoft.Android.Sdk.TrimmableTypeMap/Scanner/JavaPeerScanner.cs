@@ -2999,6 +2999,7 @@ public sealed class JavaPeerScanner : IDisposable
 			fields.Add (new JavaFieldInfo {
 				FieldName = fieldName,
 				JavaTypeName = javaReturnType,
+				JniTypeName = jniReturnType,
 				InitializerMethodName = managedName,
 				Visibility = access,
 				IsStatic = isStatic,

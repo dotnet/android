@@ -1660,7 +1660,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Java name &apos;{0}&apos; contains reserved Java identifier &apos;{1}&apos;. Change the package or type name..
+        ///   Looks up a localized string similar to Java name &apos;{0}&apos; contains invalid or unsupported Java identifier &apos;{1}&apos;. Change the package or type name..
         /// </summary>
         public static string XA4258 {
             get {

@@ -68,6 +68,18 @@ public class ManifestGeneratorTests
 	}
 
 	[Fact]
+	public void ComponentName_PreservesUnicodeCodePoints ()
+	{
+		const string javaName = "com/\u00e9xample/Peer\u0394";
+		var peer = CreatePeer (javaName, new ComponentInfo { Kind = ComponentKind.Activity });
+
+		var manifest = GenerateAndLoad (CreateDefaultGenerator (), [peer]);
+		var activity = Assert.Single (manifest.Descendants ("activity"));
+
+		Assert.Equal ("com.\u00e9xample.Peer\u0394", (string?) activity.Attribute (AttName));
+	}
+
+	[Fact]
 	public void Placeholders_InvalidEntryWithoutValue_WarnsXA1010 ()
 	{
 		var gen = CreateDefaultGenerator ();
@@ -1172,6 +1184,41 @@ public class ManifestGeneratorTests
 			Assert.NotNull (provider);
 			// Relative name qualified with the library's own package, not the app package.
 			Assert.Equal ("com.lib.test.internal.LibProvider", (string?)provider.Attribute (AndroidNs + "name"));
+		} finally {
+			File.Delete (libManifest);
+		}
+	}
+
+	[Fact]
+	public void LibraryManifest_PlaceholderEquivalentElementIsDeduplicated ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var libManifest = Path.GetTempFileName ();
+		try {
+			File.WriteAllText (libManifest, """
+				<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.lib.test">
+				  <application>
+				    <provider
+				        android:name="${applicationId}.DuplicateProvider"
+				        android:authorities="${applicationId}.duplicate" />
+				  </application>
+				</manifest>
+				""");
+			gen.LibraryManifests = [libManifest];
+			var template = ParseTemplate ("""
+				<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
+				  <application>
+				    <provider
+				        android:name="com.example.app.DuplicateProvider"
+				        android:authorities="com.example.app.duplicate" />
+				  </application>
+				</manifest>
+				""");
+
+			var doc = GenerateAndLoad (gen, template: template);
+			var providers = doc.Root?.Element ("application")?.Elements ("provider")
+				.Where (element => (string?) element.Attribute (AndroidNs + "name") == "com.example.app.DuplicateProvider");
+			Assert.Single (providers ?? []);
 		} finally {
 			File.Delete (libManifest);
 		}

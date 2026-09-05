@@ -95,6 +95,128 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
 
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
+		public void UnicodeJavaIdentifierActivityActivates (string typeMapImplementation, AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			const string javaName = "com.\u00e9xample.\u0394elta";
+			var expectedLogcatOutput = new HashSet<string> (StringComparer.Ordinal) {
+				"UNICODE_JCW_ACTIVATED=1",
+				"UNICODE_CURRENCY_ACTIVATED",
+				"UNICODE_CONNECTOR_ACTIVATED",
+				"UNICODE_SUPPLEMENTARY_CLASS_NOT_FOUND",
+			};
+			var proj = new XamarinAndroidApplicationProject (
+				packageName: PackageUtils.MakePackageName (runtime, "unicodeidentifier")) {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			proj.SetDefaultTargetDevice ();
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace (
+					"[Android.Runtime.Register (\"${JAVA_PACKAGENAME}.MainActivity\"),",
+					$"[Android.Runtime.Register (\"{javaName}\"),")
+				.Replace (
+					"//${FIELDS}",
+					"""
+					static int constructorInvocations;
+
+					public MainActivity ()
+					{
+						constructorInvocations++;
+					}
+					""")
+				.Replace (
+					"//${AFTER_ONCREATE}",
+					"""
+					Android.Util.Log.Info ("UnicodeJavaIdentifiers", $"UNICODE_JCW_ACTIVATED={constructorInvocations}");
+					var currencyHandle = Android.Runtime.JNIEnv.StartCreateInstance (typeof (CurrencyIdentifierPeer), "()V");
+					Android.Runtime.JNIEnv.FinishCreateInstance (currencyHandle, "()V");
+					using (var currency = Java.Lang.Object.GetObject<CurrencyIdentifierPeer> (
+						currencyHandle, Android.Runtime.JniHandleOwnership.TransferLocalRef)) {
+					}
+					var connectorHandle = Android.Runtime.JNIEnv.StartCreateInstance (typeof (ConnectorIdentifierPeer), "()V");
+					Android.Runtime.JNIEnv.FinishCreateInstance (connectorHandle, "()V");
+					using (var connector = Java.Lang.Object.GetObject<ConnectorIdentifierPeer> (
+						connectorHandle, Android.Runtime.JniHandleOwnership.TransferLocalRef)) {
+					}
+					try {
+						var supplementaryClass = Java.Interop.JniEnvironment.Types.FindClass ("com/example/\U00010428Peer\U00010400");
+						Java.Interop.JniObjectReference.Dispose (ref supplementaryClass);
+						Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_SUPPLEMENTARY_UNEXPECTEDLY_LOADED");
+					} catch (Java.Lang.ClassNotFoundException) {
+						Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_SUPPLEMENTARY_CLASS_NOT_FOUND");
+					}
+					""");
+			proj.Sources.Add (new BuildItem.Source ("JavaTypeIdentifierPeers.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Register ("com/example/\u00a2Peer")]
+					public class CurrencyIdentifierPeer : Java.Lang.Object
+					{
+						public CurrencyIdentifierPeer ()
+						{
+							Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_CURRENCY_ACTIVATED");
+						}
+					}
+
+					[Register ("com/example/\u203fPeer")]
+					public class ConnectorIdentifierPeer : Java.Lang.Object
+					{
+						public ConnectorIdentifierPeer ()
+						{
+							Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_CONNECTOR_ACTIVATED");
+						}
+					}
+
+					""",
+			});
+			proj.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("com\\example\\\U00010428Peer\U00010400.java") {
+				Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+				TextContent = () => """
+					package com.example;
+
+					public class 𐐨Peer𐐀 {}
+					""",
+			});
+			proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "supplementary-name.pro") {
+				TextContent = () => "-keep class com.example.𐐨Peer𐐀 { *; }",
+			});
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), $"{runtime}/{typeMapImplementation} should install.");
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			Assert.IsTrue (
+				DexUtils.ContainsClass ("Lcom/example/\U00010428Peer\U00010400;", dexFile, AndroidSdkPath),
+				"The exact supplementary descriptor should be present in DEX before Android fails to load it.");
+
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{proj.PackageName}/{javaName}");
+			Assert.IsTrue (
+				MonitorAdbLogcat (
+					line => {
+						expectedLogcatOutput.RemoveWhere (expected => line.Contains (expected, StringComparison.Ordinal));
+						return expectedLogcatOutput.Count == 0;
+					},
+					Path.Combine (Root, builder.ProjectDirectory, "unicode-identifier-logcat.log"),
+					ActivityStartTimeoutInSeconds
+				),
+				$"{runtime}/{typeMapImplementation} should activate every supported Unicode peer. " +
+					$"Missing: {string.Join (", ", expectedLogcatOutput)}"
+			);
+		}
+
 		[Test]
 		public void PublishReadyToRunPartial ([Values] bool isComposite)
 		{
