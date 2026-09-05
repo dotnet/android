@@ -1146,7 +1146,7 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 </comment>
   </data>
   <data name="XA1049" xml:space="preserve">
-    <value>The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'. Set one property to 'false'.</value>
+    <value>Vlastnosti MSBuildu AndroidEnableMarshalMethods a PublishReadyToRun nelze současně nastavit na hodnotu true. Nastavte jednu vlastnost na false.</value>
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
@@ -1259,6 +1259,12 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
     <comment>The following are literal names and should not be translated: Java.
 {0} - Java package or type name
 {1} - Java reserved keyword or restricted identifier</comment>
+  </data>
+  <data name="XA4263" xml:space="preserve">
+    <value>The exported member '{0}' has unsupported signature type '{1}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter].</value>
+    <comment>The following are literal names and should not be translated: Java, [ExportParameter].
+{0} - Fully-qualified managed member name
+{1} - Managed parameter or return type</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Příkaz {0} selhal.\n{1}</value>
