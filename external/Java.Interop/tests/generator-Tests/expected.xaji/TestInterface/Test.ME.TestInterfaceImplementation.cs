@@ -39,7 +39,7 @@ namespace Test.ME {
 
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementation));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementation));
 
 		internal static new IntPtr class_ref {
 			get { return _members.JniPeerType.PeerReference.Handle; }
@@ -49,18 +49,6 @@ namespace Test.ME {
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
 		}
 
 		protected TestInterfaceImplementation (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
@@ -185,18 +173,12 @@ namespace Test.ME {
 		{
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementationInvoker));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementationInvoker));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/method[@name='getSpanFlags' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"

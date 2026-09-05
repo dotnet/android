@@ -30,21 +30,9 @@ namespace Xamarin.Test {
 			get { return _members_xamarin_test_ExtendedInterface; }
 		}
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members_xamarin_test_ExtendedInterface.JniPeerType.PeerReference.Handle; }
-		}
+		static readonly JniPeerMembers _members_xamarin_test_BaseInterface = new JniPeerMembers ("xamarin/test/BaseInterface", typeof (IExtendedInterfaceInvoker));
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members_xamarin_test_ExtendedInterface.ManagedPeerType; }
-		}
-
-		static readonly JniPeerMembers _members_xamarin_test_BaseInterface = new XAPeerMembers ("xamarin/test/BaseInterface", typeof (IExtendedInterfaceInvoker));
-
-		static readonly JniPeerMembers _members_xamarin_test_ExtendedInterface = new XAPeerMembers ("xamarin/test/ExtendedInterface", typeof (IExtendedInterfaceInvoker));
+		static readonly JniPeerMembers _members_xamarin_test_ExtendedInterface = new JniPeerMembers ("xamarin/test/ExtendedInterface", typeof (IExtendedInterfaceInvoker));
 
 		public IExtendedInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

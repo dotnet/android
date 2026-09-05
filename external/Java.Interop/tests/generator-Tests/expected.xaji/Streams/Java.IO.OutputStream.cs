@@ -18,7 +18,7 @@ namespace Java.IO {
 	// Metadata.xml XPath class reference: path="/api/package[@name='java.io']/class[@name='OutputStream']"
 	[global::Android.Runtime.Register ("java/io/OutputStream", DoNotGenerateAcw=true)]
 	public abstract partial class OutputStream : global::Java.Lang.Object {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("java/io/OutputStream", typeof (OutputStream));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("java/io/OutputStream", typeof (OutputStream));
 
 		internal static new IntPtr class_ref {
 			get { return _members.JniPeerType.PeerReference.Handle; }
@@ -28,18 +28,6 @@ namespace Java.IO {
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
 		}
 
 		protected OutputStream (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
@@ -243,18 +231,12 @@ namespace Java.IO {
 		{
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("java/io/OutputStream", typeof (OutputStreamInvoker));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("java/io/OutputStream", typeof (OutputStreamInvoker));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='OutputStream']/method[@name='write' and count(parameter)=1 and parameter[1][@type='int']]"

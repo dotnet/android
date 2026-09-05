@@ -39,19 +39,7 @@ namespace Android.Views {
 				get { return _members_android_view_View_OnClickListener; }
 			}
 
-			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-			protected override IntPtr ThresholdClass {
-				get { return _members_android_view_View_OnClickListener.JniPeerType.PeerReference.Handle; }
-			}
-
-			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-			protected override global::System.Type ThresholdType {
-				get { return _members_android_view_View_OnClickListener.ManagedPeerType; }
-			}
-
-			static readonly JniPeerMembers _members_android_view_View_OnClickListener = new XAPeerMembers ("android/view/View$OnClickListener", typeof (IOnClickListenerInvoker));
+			static readonly JniPeerMembers _members_android_view_View_OnClickListener = new JniPeerMembers ("android/view/View$OnClickListener", typeof (IOnClickListenerInvoker));
 
 			public IOnClickListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 			{
@@ -122,7 +110,7 @@ namespace Android.Views {
 
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("android/view/View", typeof (View));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("android/view/View", typeof (View));
 
 		internal static new IntPtr class_ref {
 			get { return _members.JniPeerType.PeerReference.Handle; }
@@ -132,18 +120,6 @@ namespace Android.Views {
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
 		}
 
 		protected View (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)

@@ -22,21 +22,9 @@ namespace Xamarin.Test {
 			get { return _members_xamarin_test_SpinnerAdapter; }
 		}
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members_xamarin_test_SpinnerAdapter.JniPeerType.PeerReference.Handle; }
-		}
+		static readonly JniPeerMembers _members_xamarin_test_Adapter = new JniPeerMembers ("xamarin/test/Adapter", typeof (ISpinnerAdapterInvoker));
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members_xamarin_test_SpinnerAdapter.ManagedPeerType; }
-		}
-
-		static readonly JniPeerMembers _members_xamarin_test_Adapter = new XAPeerMembers ("xamarin/test/Adapter", typeof (ISpinnerAdapterInvoker));
-
-		static readonly JniPeerMembers _members_xamarin_test_SpinnerAdapter = new XAPeerMembers ("xamarin/test/SpinnerAdapter", typeof (ISpinnerAdapterInvoker));
+		static readonly JniPeerMembers _members_xamarin_test_SpinnerAdapter = new JniPeerMembers ("xamarin/test/SpinnerAdapter", typeof (ISpinnerAdapterInvoker));
 
 		public ISpinnerAdapterInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

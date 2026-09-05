@@ -122,6 +122,7 @@
   <ItemGroup>
     <Compile Include="Android.App\ApplicationTest.cs" />
     <Compile Include="Android.Content.Res\AssetManagerTest.cs" />
+    <Compile Include="Android.Content\CursorLoaderTest.cs" />
     <Compile Include="Android.Content\IntentTest.cs" />
     <Compile Include="Android.Content\SharedPreferencesTest.cs" />
     <Compile Include="Android.Graphics\NinePatchTests.cs" />
