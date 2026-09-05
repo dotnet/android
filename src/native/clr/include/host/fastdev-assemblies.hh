@@ -3,7 +3,6 @@
 #include <dirent.h>
 
 #include <cstdint>
-#include <string>
 #include <string_view>
 
 #include <runtime-base/mutex.hh>
@@ -14,16 +13,29 @@ namespace xamarin::android {
 	public:
 #if defined(DEBUG)
 		static auto open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*;
-		static auto build_tpa_list (std::string &tpa_list) noexcept -> bool;
+
+		// Builds the `TRUSTED_PLATFORM_ASSEMBLIES` list from the override directory. Returns a
+		// `malloc`ed, NUL-terminated, `:`-separated list of absolute paths which the caller owns,
+		// or `nullptr` when no usable list could be built.
+		static auto build_tpa_list () noexcept -> char*;
+
+		// Frees a list returned by `build_tpa_list ()` and puts assembly loading back on the
+		// probe-only path. Callers use this instead of touching `tpa_in_use` directly, which does
+		// not exist in Release builds.
+		static void discard_tpa_list (char *tpa_list) noexcept;
 #else
 		static auto open_assembly ([[maybe_unused]] std::string_view const& name, [[maybe_unused]]  int64_t &size) noexcept -> void*
 		{
 			return nullptr;
 		}
 
-		static auto build_tpa_list ([[maybe_unused]] std::string &tpa_list) noexcept -> bool
+		static auto build_tpa_list () noexcept -> char*
 		{
-			return false;
+			return nullptr;
+		}
+
+		static void discard_tpa_list ([[maybe_unused]] char *tpa_list) noexcept
+		{
 		}
 #endif
 

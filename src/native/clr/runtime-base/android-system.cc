@@ -115,21 +115,42 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 		return;
 	}
 
-	auto     file_size = static_cast<size_t>(sbuf.st_size);
+	auto file_size = static_cast<size_t>(sbuf.st_size);
+	if (file_size == 0) {
+		log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: file is empty", path);
+		if (close (fd) < 0) {
+			log_warnf (LOG_DEFAULT, "Failed to close the environment override file %s: %s", path, strerror (errno));
+		}
+		return;
+	}
+
 	size_t   nread = 0uz;
 	ssize_t  r;
-	auto     buf = std::make_unique<char[]> (file_size);
+	char    *buf = static_cast<char*> (std::malloc (file_size));
+	if (buf == nullptr) [[unlikely]] {
+		Helpers::abort_application (LOG_DEFAULT, "Unable to allocate memory for the environment override file");
+	}
 
 	do {
 		auto read_count = static_cast<read_count_type>(file_size - nread);
-		r = read (fd, buf.get () + nread, read_count);
+		r = read (fd, buf + nread, read_count);
 		if (r > 0) {
 			nread += static_cast<size_t>(r);
 		}
 	} while (r < 0 && errno == EINTR);
 
+	int read_errno = errno;
+	if (close (fd) < 0) {
+		log_warnf (LOG_DEFAULT, "Failed to close the environment override file %s: %s", path, strerror (errno));
+	}
+
 	if (nread == 0) {
-		log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: %s", path, strerror (errno));
+		if (r < 0) {
+			log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: %s", path, strerror (read_errno));
+		} else {
+			log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: unexpected end of file", path);
+		}
+		std::free (buf);
 		return;
 	}
 
@@ -151,33 +172,38 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 	// value\0
 	if (nread < Constants::OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE) {
 		log_warnf (LOG_DEFAULT, "Invalid format of the environment override file %s: malformatted header", path);
+		std::free (buf);
 		return;
 	}
 
 	char *endptr;
-	unsigned long name_width = strtoul (buf.get (), &endptr, 16);
-	if ((name_width == std::numeric_limits<unsigned long>::max () && errno == ERANGE) || (buf[0] != '\0' && *endptr != '\0')) {
+	unsigned long name_width = strtoul (buf, &endptr, 16);
+	if ((name_width == std::numeric_limits<unsigned long>::max () && errno == ERANGE) || (buf [0] != '\0' && *endptr != '\0')) {
 		log_warnf (LOG_DEFAULT, "Malformed header of the environment override file %s: name width has invalid format", path);
+		std::free (buf);
 		return;
 	}
 
-	unsigned long value_width = strtoul (buf.get () + 11, &endptr, 16);
-	if ((value_width == std::numeric_limits<unsigned long>::max () && errno == ERANGE) || (buf[0] != '\0' && *endptr != '\0')) {
+	unsigned long value_width = strtoul (buf + 11, &endptr, 16);
+	if ((value_width == std::numeric_limits<unsigned long>::max () && errno == ERANGE) || (buf [0] != '\0' && *endptr != '\0')) {
 		log_warnf (LOG_DEFAULT, "Malformed header of the environment override file %s: value width has invalid format", path);
+		std::free (buf);
 		return;
 	}
 
 	uint64_t data_width = name_width + value_width;
 	if (data_width > file_size - Constants::OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE || (file_size - Constants::OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE) % data_width != 0) {
 		log_warnf (LOG_DEFAULT, "Malformed environment override file %s: invalid data size", path);
+		std::free (buf);
 		return;
 	}
 
 	uint64_t data_size = static_cast<uint64_t>(file_size);
-	char *name = buf.get () + Constants::OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE;
+	char *name = buf + Constants::OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE;
 	while (data_size > 0 && data_size >= data_width) {
 		if (*name == '\0') {
-			log_warnf (LOG_DEFAULT, "Malformed environment override file %s: name at offset %td is empty", path, name - buf.get ());
+			log_warnf (LOG_DEFAULT, "Malformed environment override file %s: name at offset %td is empty", path, name - buf);
+			std::free (buf);
 			return;
 		}
 
@@ -186,6 +212,8 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 		name += data_width;
 		data_size -= data_width;
 	}
+
+	std::free (buf);
 }
 #endif
 
