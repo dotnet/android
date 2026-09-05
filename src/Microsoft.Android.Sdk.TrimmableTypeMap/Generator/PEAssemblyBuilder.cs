@@ -691,7 +691,14 @@ sealed class PEAssemblyBuilder
 			Push (1);
 		}
 
-		public void LoadFunction (MethodDefinitionHandle handle)
+		public void LoadFunction (MethodDefinitionHandle handle) => LoadFunction ((EntityHandle) handle);
+
+		/// <summary>
+		/// <c>ldftn</c> against an arbitrary method token. The <see cref="EntityHandle" /> overload
+		/// exists so RegisterNatives can take the address of an external
+		/// <c>[UnmanagedCallersOnly]</c> callback through a MemberRef.
+		/// </summary>
+		public void LoadFunction (EntityHandle handle)
 		{
 			Encoder.OpCode (ILOpCode.Ldftn);
 			Encoder.Token (handle);

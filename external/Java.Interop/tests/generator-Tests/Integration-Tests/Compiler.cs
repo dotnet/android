@@ -51,18 +51,7 @@ namespace generatortests
 				.ToArray ();
 
 			// Set up the assemblies we need to reference
-			var binDir = Path.GetDirectoryName (typeof (BaseGeneratorTest).Assembly.Location);
-			var facDir = GetFacadesPath ();
-
-			var referencePaths = new[]{
-				unitTestFrameworkAssemblyPath,
-				typeof(object).Assembly.Location,
-				typeof(Enumerable).Assembly.Location,
-				typeof(Uri).Assembly.Location,
-				Path.Combine (binDir, "Java.Interop.dll"),
-				Path.Combine (facDir, "netstandard.dll"),
-				Path.Combine (facDir, "System.Runtime.dll"),
-			};
+			var referencePaths = GetReferencePaths ();
 
 			var references = referencePaths.Select (p => MetadataReference.CreateFromFile (p)).ToArray ();
 
@@ -76,10 +65,43 @@ namespace generatortests
 
 			Console.WriteLine ($"# Trying to compile: {testCommandLine}");
 
+			return Compile (Path.GetFileName (assemblyFileName), syntax_trees, references, out hasErrors, out output, allowWarnings);
+		}
+
+		public static Assembly CompileSources (IEnumerable<string> sources, out bool hasErrors, out string output)
+		{
+			var supportFiles = Directory.EnumerateFiles (Path.Combine (Path.GetDirectoryName (supportFilePath), "SupportFiles"),
+				"*.cs", SearchOption.AllDirectories);
+			var parseOptions = new CSharpParseOptions (preprocessorSymbols: new [] { "NET" });
+			var syntaxTrees = sources.Concat (supportFiles.Select (File.ReadAllText))
+				.Select (s => CSharpSyntaxTree.ParseText (s, parseOptions));
+			var references = GetReferencePaths ().Select (p => MetadataReference.CreateFromFile (p));
+
+			return Compile ("GeneratedCallbacks_" + Guid.NewGuid ().ToString ("N"), syntaxTrees, references, out hasErrors, out output, allowWarnings: true);
+		}
+
+		static string [] GetReferencePaths ()
+		{
+			var binDir = Path.GetDirectoryName (typeof (BaseGeneratorTest).Assembly.Location);
+			var facDir = GetFacadesPath ();
+			return new [] {
+				unitTestFrameworkAssemblyPath,
+				typeof (object).Assembly.Location,
+				typeof (Enumerable).Assembly.Location,
+				typeof (Uri).Assembly.Location,
+				Path.Combine (binDir, "Java.Interop.dll"),
+				Path.Combine (facDir, "netstandard.dll"),
+				Path.Combine (facDir, "System.Runtime.dll"),
+			};
+		}
+
+		static Assembly Compile (string assemblyName, IEnumerable<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references,
+			out bool hasErrors, out string output, bool allowWarnings)
+		{
 			// Compile!
 			var compilation = CSharpCompilation.Create (
-			    Path.GetFileName (assemblyFileName),
-			    syntaxTrees: syntax_trees,
+			    assemblyName,
+			    syntaxTrees: syntaxTrees,
 			    references: references,
 			    options: new CSharpCompilationOptions (OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true));
 

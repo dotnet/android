@@ -200,6 +200,22 @@ public abstract class FixtureTestBase
 		return ILContainsOpcodeToken (ilBytes, token, (byte) ILOpCode.Newobj);
 	}
 
+	private protected static List<int> ReadLdftnTokens (byte [] ilBytes)
+	{
+		var tokens = new List<int> ();
+		for (int i = 0; i < ilBytes.Length - 5; i++) {
+			if (ilBytes [i] != 0xFE || ilBytes [i + 1] != 0x06) {
+				continue;
+			}
+
+			tokens.Add (ilBytes [i + 2] |
+				(ilBytes [i + 3] << 8) |
+				(ilBytes [i + 4] << 16) |
+				(ilBytes [i + 5] << 24));
+		}
+		return tokens;
+	}
+
 	static bool ILContainsOpcodeToken (byte[] ilBytes, int token, params byte[] opcodes)
 	{
 		byte t0 = (byte)(token & 0xFF);

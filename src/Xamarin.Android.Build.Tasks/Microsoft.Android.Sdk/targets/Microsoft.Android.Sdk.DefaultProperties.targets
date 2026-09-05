@@ -51,6 +51,15 @@
     <AndroidBoundInterfacesContainTypes Condition=" '$(AndroidBoundInterfacesContainTypes)' == '' ">true</AndroidBoundInterfacesContainTypes>
     <AndroidBoundInterfacesContainConstants Condition=" '$(AndroidBoundInterfacesContainConstants)' == '' ">true</AndroidBoundInterfacesContainConstants>
     <AndroidEnableObsoleteOverrideInheritance Condition=" '$(AndroidEnableObsoleteOverrideInheritance)' == '' ">true</AndroidEnableObsoleteOverrideInheritance>
+
+    <!--
+      Experimental, for internal use only.  When 'true', binding callbacks are emitted as
+      [UnmanagedCallersOnly] methods forwarding to a shared typed marshaling helper, and the
+      cb_* delegate cache fields and Get*Handler () connector methods are omitted.  This shape
+      requires the trimmable typemap, which binds RegisterNatives directly to the callbacks.
+      The default is deliberately unchanged.
+    -->
+    <_AndroidEnableUnmanagedCallersOnlyCallbacks Condition=" '$(_AndroidEnableUnmanagedCallersOnlyCallbacks)' == '' ">false</_AndroidEnableUnmanagedCallersOnlyCallbacks>
     <AndroidEnableRestrictToAttributes Condition=" '$(AndroidEnableRestrictToAttributes)' == '' ">obsolete</AndroidEnableRestrictToAttributes>
     <GenerateDocumentationFile Condition=" '$(GenerateDocumentationFile)' == '' ">true</GenerateDocumentationFile>
 
