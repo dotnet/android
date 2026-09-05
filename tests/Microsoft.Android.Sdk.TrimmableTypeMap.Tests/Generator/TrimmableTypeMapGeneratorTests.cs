@@ -67,6 +67,14 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			logMessages.Add ("XA4207: [ExportField] cannot be used on a generic type.");
 		public void LogUnsupportedExportSignatureError (string memberName, string managedTypeName) =>
 			logMessages.Add ($"XA4263: The exported member '{memberName}' has unsupported signature type '{managedTypeName}'.");
+		public void LogAmbiguousConstructorSignatureError (string managedTypeName, string jniSignature) =>
+			logMessages.Add ($"XA4259: Type '{managedTypeName}' has multiple managed constructors that map to JNI signature '{jniSignature}'.");
+		public void LogUnsupportedConstructorParameterTypeError (string managedTypeName, string parameterType) =>
+			logMessages.Add ($"XA4260: Type '{managedTypeName}' has a constructor parameter type '{parameterType}' that cannot be represented in Java.");
+		public void LogMissingBaseConstructorError (string managedTypeName, string jniSignature) =>
+			logMessages.Add ($"XA4261: Type '{managedTypeName}' has constructor '{jniSignature}' with no callable Java base constructor.");
+		public void LogInvalidSuperArgumentsStringError (string managedTypeName, string superArgumentsString) =>
+			logMessages.Add ($"XA4262: Type '{managedTypeName}' has invalid SuperArgumentsString '{superArgumentsString}'.");
 		public void LogCustomJavaObjectError (string managedTypeName) =>
 			logMessages.Add ($"XA4212: Type `{managedTypeName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
 		public void LogCustomJavaObjectWarning (string managedTypeName) =>
@@ -92,6 +100,60 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 
 		Assert.False (CreateGenerator ().ValidateJavaNames (peers));
 		Assert.Contains (logMessages, message => message.Contains ($"XA4258: Java name '{javaName}' contains reserved Java identifier '{invalidIdentifier}'."));
+	}
+
+	[Theory]
+	[InlineData (ConstructorDiagnosticKind.AmbiguousJniSignature, "(I)V", "XA4259")]
+	[InlineData (ConstructorDiagnosticKind.UnsupportedParameterType, "System.Int32&", "XA4260")]
+	[InlineData (ConstructorDiagnosticKind.MissingBaseConstructor, "(Ljava/lang/String;)V", "XA4261")]
+	[InlineData (ConstructorDiagnosticKind.InvalidSuperArgumentsString, "p1", "XA4262")]
+	public void ValidateConstructors_LogsCodedError (
+		ConstructorDiagnosticKind kind,
+		string detail,
+		string errorCode)
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/Type",
+				CompatJniName = "com/example/Type",
+				ManagedTypeName = "Example.Type",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Type",
+				AssemblyName = "Example",
+				ConstructorDiagnostics = [
+					new ConstructorDiagnosticInfo {
+						Kind = kind,
+						Detail = detail,
+					},
+				],
+			},
+		};
+
+		Assert.False (CreateGenerator ().ValidateConstructors (peers));
+		Assert.Contains (logMessages, message => message.StartsWith ($"{errorCode}:", StringComparison.Ordinal));
+	}
+
+	[Fact]
+	public void ValidateConstructors_IgnoresFrameworkPeers ()
+	{
+		var peer = new JavaPeerInfo {
+			JavaName = "android/example/FrameworkType",
+			CompatJniName = "android/example/FrameworkType",
+			ManagedTypeName = "Android.Example.FrameworkType",
+			ManagedTypeNamespace = "Android.Example",
+			ManagedTypeShortName = "FrameworkType",
+			AssemblyName = "Mono.Android",
+			IsFrameworkAssembly = true,
+			ConstructorDiagnostics = [
+				new ConstructorDiagnosticInfo {
+					Kind = ConstructorDiagnosticKind.UnsupportedParameterType,
+					Detail = "System.Object",
+				},
+			],
+		};
+
+		Assert.True (CreateGenerator ().ValidateConstructors ([peer]));
+		Assert.Empty (logMessages);
 	}
 
 	[Fact]
@@ -539,6 +601,57 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			["_MyLibrary.TypeMap", "_Microsoft.Android.TypeMaps"],
 			regenerated.Select (assembly => assembly.Name));
 		DisposeGeneratedAssemblies (regenerated);
+	}
+
+	[Fact]
+	public void Execute_WithConstructorDiagnostics_ReturnsNoPartialOutputs ()
+	{
+		using var fixtureReader = CreateTestFixturePEReader ();
+		using var invalidReader = CreateFixturePEReader ("InvalidConstructorFixtures.dll");
+		var result = CreateGenerator ().Execute (
+			[
+				Input ("TestFixtures", fixtureReader),
+				Input ("InvalidConstructorFixtures", invalidReader),
+			],
+			new Version (11, 0),
+			new HashSet<string> ());
+
+		Assert.Empty (result.GeneratedAssemblies);
+		Assert.Empty (result.GeneratedJavaSources);
+		Assert.Contains (logMessages, message => message.StartsWith ("XA4259:", StringComparison.Ordinal));
+		Assert.Contains (logMessages, message => message.StartsWith ("XA4260:", StringComparison.Ordinal));
+		Assert.Contains (logMessages, message => message.StartsWith ("XA4261:", StringComparison.Ordinal));
+		Assert.Contains (logMessages, message => message.StartsWith ("XA4262:", StringComparison.Ordinal));
+		Assert.Contains (logMessages, message => message.StartsWith ("XA4258:", StringComparison.Ordinal));
+		Assert.Single (logMessages, message =>
+			message.StartsWith ("XA4259:", StringComparison.Ordinal) &&
+			message.Contains ("MyApp.SignedUnsignedCollisionActivity", StringComparison.Ordinal));
+
+		foreach (var typeName in new [] {
+			"UnsupportedExportConstructorOverloadsActivity",
+			"RegisterBeforeExportActivity",
+			"ExportBeforeRegisterActivity",
+		}) {
+			var messages = logMessages.Where (message => message.Contains ($"MyApp.{typeName}", StringComparison.Ordinal)).ToList ();
+			Assert.Equal (2, messages.Count);
+			Assert.All (messages, message => Assert.StartsWith ("XA4263:", message));
+		}
+
+		foreach (var typeName in new [] {
+			"GenericParameterCtorActivity",
+			"GenericInstantiationCtorActivity",
+			"ByRefCtorActivity",
+			"PointerCtorActivity",
+			"FunctionPointerCtorActivity",
+			"RectangularArrayCtorActivity",
+			"NestedRectangularArrayCtorActivity",
+			"PointerArrayCtorActivity",
+			"FunctionPointerArrayCtorActivity",
+		}) {
+			var messages = logMessages.Where (message => message.Contains ($"MyApp.{typeName}", StringComparison.Ordinal)).ToList ();
+			var message = Assert.Single (messages);
+			Assert.StartsWith ("XA4260:", message);
+		}
 	}
 
 	[Fact]
@@ -1443,9 +1556,12 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 
 
 	static PEReader CreateTestFixturePEReader ()
+		=> CreateFixturePEReader ("TestFixtures.dll");
+
+	static PEReader CreateFixturePEReader (string fileName)
 	{
 		var dir = Path.GetDirectoryName (typeof (FixtureTestBase).Assembly.Location)
 			?? throw new InvalidOperationException ("Cannot determine test assembly directory");
-		return new PEReader (File.OpenRead (Path.Combine (dir, "TestFixtures.dll")));
+		return new PEReader (File.OpenRead (Path.Combine (dir, fileName)));
 	}
 }
