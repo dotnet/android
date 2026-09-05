@@ -20,9 +20,11 @@ namespace Java.Interop {
 	/// <see cref="System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute" /> method and omit
 	/// the <c>cb_*</c> delegate cache field and the <c>Get&lt;Method&gt;Handler()</c> connector
 	/// method.  Such callbacks <em>must not</em> be invoked from managed code: they can only be
-	/// registered with JNI via <c>RegisterNatives</c>.  The <c>Connector</c> string is retained
-	/// unchanged so that the native callback name and the declaring type of a default interface
-	/// method or interface adapter can still be recovered from it.
+	/// registered with JNI via <c>RegisterNatives</c>. The <c>Connector</c> string names the
+	/// native callback directly, retaining any declaring-type qualifier for a default interface
+	/// method or interface adapter. Callbacks using the legacy fallback keep their connector method.
+	/// The typemap generator requires implementation metadata to distinguish the two callback shapes
+	/// and reports an error if a callback it needs to register cannot be resolved.
 	/// </para>
 	/// <para>
 	/// The attribute is deliberately versioned rather than boolean so that a future callback shape

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using System.Text;
 using Xunit;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
@@ -191,6 +192,7 @@ public class UnmanagedCallersOnlyCallbackTests : FixtureTestBase
 
 	const string CompactWidget = "Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures.MyCompactWidget";
 	const string QualifiedWidget = "Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures.MyQualifiedWidget";
+	const string CallbackHost = "Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures.CallbackHost";
 
 	[Fact]
 	public void Scanner_ReadsCompactCallbackNamesFromTheConnector ()
@@ -215,6 +217,144 @@ public class UnmanagedCallersOnlyCallbackTests : FixtureTestBase
 		Assert.Equal ("n_Handle", method.NativeCallbackName);
 		Assert.StartsWith ("n_Handle:", method.Connector);
 		Assert.Contains ("TestUcoFixtures.CallbackHost, TestUcoFixtures", method.Connector);
+		Assert.True (method.IsUnmanagedCallersOnlyCallback);
+		Assert.Equal (CallbackHost, method.DeclaringTypeName);
+		Assert.Equal ("TestUcoFixtures", method.DeclaringAssemblyName);
+	}
+
+	[Theory]
+	[InlineData ("n_Handle")]
+	[InlineData ("n_HandleTypeOnly")]
+	[InlineData ("n_Count")]
+	[InlineData ("n_IsEnabled")]
+	[InlineData ("n_SetEnabled")]
+	public void QualifiedCallbacks_ResolveOwnerThroughRegistration (string callbackName)
+	{
+		var peer = FindPeer (QualifiedWidget);
+		var method = FindMarshalMethod (peer, callbackName);
+		Assert.True (method.IsUnmanagedCallersOnlyCallback);
+		Assert.Equal (CallbackHost, method.DeclaringTypeName);
+		Assert.Equal ("TestUcoFixtures", method.DeclaringAssemblyName);
+		Assert.NotNull (method.DeclaringType);
+		Assert.Equal (CallbackHost, method.DeclaringType.ManagedTypeName);
+
+		var model = ModelBuilder.Build (UcoPeers, "TestUcoTypeMap.dll", "TestUcoTypeMap");
+		var proxy = FindProxy (model, QualifiedWidget);
+		Assert.DoesNotContain (proxy.UcoMethods, u => u.CallbackMethodName == callbackName);
+		var registration = Assert.Single (proxy.NativeRegistrations, r => r.JniMethodName == callbackName);
+		Assert.NotNull (registration.DirectCallback);
+		Assert.Equal (CallbackHost, registration.DirectCallback.CallbackType.ManagedTypeName);
+
+		using var stream = new MemoryStream ();
+		new TypeMapAssemblyGenerator (new Version (11, 0, 0, 0)).Generate (UcoPeers, stream, "TestUcoTypeMap");
+		stream.Position = 0;
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var callbackRefHandle = Assert.Single (reader.MemberReferences,
+			h => reader.GetString (reader.GetMemberReference (h).Name) == callbackName);
+		var callbackRef = reader.GetMemberReference (callbackRefHandle);
+		var owner = reader.GetTypeReference ((TypeReferenceHandle) callbackRef.Parent);
+		Assert.Equal ("CallbackHost", reader.GetString (owner.Name));
+		Assert.Equal ("TestUcoFixtures", reader.GetString (reader.GetAssemblyReference ((AssemblyReferenceHandle) owner.ResolutionScope).Name));
+		var signature = callbackRef.DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal (method.NativeCallbackReturnTypeName, signature.ReturnType);
+		Assert.Equal (method.NativeCallbackParameterTypeNames, signature.ParameterTypes.Skip (2));
+
+		var proxyDef = Assert.Single (reader.TypeDefinitions,
+			h => reader.GetString (reader.GetTypeDefinition (h).Name) == proxy.TypeName);
+		var registerDef = reader.GetMethodDefinition (Assert.Single (reader.GetTypeDefinition (proxyDef).GetMethods (),
+			h => reader.GetString (reader.GetMethodDefinition (h).Name) == "RegisterNatives"));
+		var il = pe.GetMethodBody (registerDef.RelativeVirtualAddress).GetILBytes ();
+		Assert.NotNull (il);
+		Assert.Contains (MetadataTokens.GetToken (callbackRefHandle), ReadLdftnTokens (il));
+	}
+
+	[Fact]
+	public void Scanner_ReferenceAssembly_RejectsUnresolvedUcoCallback ()
+	{
+		var path = Path.ChangeExtension (UcoFixtureAssemblyPath, ".ref.dll");
+		using var pe = new PEReader (File.OpenRead (path));
+		var reader = pe.GetMetadataReader ();
+		Assert.DoesNotContain (reader.MethodDefinitions,
+			h => reader.GetString (reader.GetMethodDefinition (h).Name) == "n_OnLayout_ZIIII");
+
+		using var scanner = new JavaPeerScanner ();
+		using var fixtures = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
+		var error = Assert.Throws<InvalidOperationException> (() => scanner.Scan (new [] { MakeInput (pe), MakeInput (fixtures) }));
+		Assert.Contains ("UcoWidget.n_OnLayout_ZIIII", error.Message);
+		Assert.Contains ("JNI signature '(ZIIII)V'", error.Message);
+		Assert.Contains ("assembly 'TestUcoFixtures'", error.Message);
+		Assert.Contains ("implementation assembly rather than a reference assembly", error.Message);
+	}
+
+	[Fact]
+	public void Scanner_QualifiedLegacyOwner_DoesNotRequireUcoMetadata ()
+	{
+		const string name = "Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures.MyQualifiedLegacyWidget";
+		var method = FindMarshalMethod (FindPeer (name), "n_DoSomething");
+		Assert.False (method.IsUnmanagedCallersOnlyCallback);
+		Assert.Equal ("MyApp.MyHelper", method.DeclaringTypeName);
+		Assert.Equal ("TestFixtures", method.DeclaringAssemblyName);
+		Assert.Null (method.NativeCallbackReturnTypeName);
+
+		var model = ModelBuilder.Build (UcoPeers, "TestUcoTypeMap.dll", "TestUcoTypeMap");
+		var proxy = FindProxy (model, name);
+		var wrapper = Assert.Single (proxy.UcoMethods, u => u.CallbackMethodName == "n_DoSomething");
+		Assert.Equal ("TestFixtures", wrapper.CallbackType.AssemblyName);
+		Assert.Null (Assert.Single (proxy.NativeRegistrations, r => r.JniMethodName == "n_DoSomething").DirectCallback);
+	}
+
+	[Fact]
+	public void Scanner_DirectManagedDispatch_DoesNotRequireCallbackMetadata ()
+	{
+		var peer = FindPeer ("Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures.DirectWidget");
+		var method = FindMarshalMethod (peer, "n_Direct");
+		Assert.True (method.CallManagedMethodDirectly);
+		Assert.False (method.IsUnmanagedCallersOnlyCallback);
+		Assert.Null (method.NativeCallbackReturnTypeName);
+	}
+
+	[Fact]
+	public void AbstractPropertyOverride_ReusesQualifiedLegacyCallback ()
+	{
+		const string name = "Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures.MyLegacyOverrideWidget";
+		var method = FindMarshalMethod (FindPeer (name), "n_GetFlags");
+		Assert.False (method.IsUnmanagedCallersOnlyCallback);
+		Assert.Equal ("Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures.LegacyWidget", method.DeclaringTypeName);
+		Assert.Equal ("System.Int32", method.NativeCallbackReturnTypeName);
+
+		var model = ModelBuilder.Build (UcoPeers, "TestUcoTypeMap.dll", "TestUcoTypeMap");
+		var proxy = FindProxy (model, name);
+		var wrapper = Assert.Single (proxy.UcoMethods, u => u.CallbackMethodName == "n_GetFlags");
+		Assert.False (wrapper.IsDirectUnmanagedCallersOnlyCallback);
+		Assert.Equal (method.DeclaringTypeName, wrapper.CallbackType.ManagedTypeName);
+	}
+
+	[Theory]
+	[InlineData (false)]
+	[InlineData (true)]
+	public void Scanner_UnresolvedQualifiedCallback_FailsWithOwnerDetails (bool missingOwner)
+	{
+		var contents = File.ReadAllBytes (UcoFixtureAssemblyPath);
+		using (var original = new PEReader (new MemoryStream (contents))) {
+			var reader = original.GetMetadataReader ();
+			var name = missingOwner
+				? reader.GetTypeDefinition (Assert.Single (reader.TypeDefinitions,
+					h => reader.GetString (reader.GetTypeDefinition (h).Name) == "CallbackHost")).Name
+				: reader.GetMethodDefinition (Assert.Single (reader.MethodDefinitions,
+					h => reader.GetString (reader.GetMethodDefinition (h).Name) == "n_Handle")).Name;
+			// Change only #Strings: the connector in the custom attribute's #Blob stays intact.
+			var offset = original.PEHeaders.MetadataStartOffset + reader.GetHeapMetadataOffset (HeapIndex.String) + MetadataTokens.GetHeapOffset (name);
+			Encoding.UTF8.GetBytes (missingOwner ? "MissingHostX" : "x_Handle").CopyTo (contents, offset);
+		}
+
+		using var scanner = new JavaPeerScanner ();
+		using var pe = new PEReader (new MemoryStream (contents));
+		using var fixtures = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
+		var error = Assert.Throws<InvalidOperationException> (() => scanner.Scan (new [] { MakeInput (pe), MakeInput (fixtures) }));
+		Assert.Contains ($"{CallbackHost}.n_Handle", error.Message);
+		Assert.Contains ("JNI signature '()V'", error.Message);
+		Assert.Contains ("assembly 'TestUcoFixtures'", error.Message);
 	}
 
 	[Fact]
