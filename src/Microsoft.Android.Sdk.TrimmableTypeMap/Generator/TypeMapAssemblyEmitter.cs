@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -196,7 +197,10 @@ sealed class TypeMapAssemblyEmitter
 		}
 		EmitMemberReferences ();
 
-		_pe.PrepareUtf8Fields (EnumerateNativeRegistrationStrings (model.ProxyTypes));
+		var validRegistrations = EnumerateValidNativeRegistrations (model.ProxyTypes);
+		_pe.PrepareUtf8Fields (
+			validRegistrations.Select (registration => registration.JniSignature),
+			validRegistrations.Select (registration => registration.JniMethodName));
 
 		// Track wrapper targets → handles for RegisterNatives.
 		var wrapperHandles = new Dictionary<UcoWrapperTargetData, MethodDefinitionHandle> ();
@@ -220,17 +224,30 @@ sealed class TypeMapAssemblyEmitter
 		_pe.EmitIgnoresAccessChecksToAttribute (model.IgnoresAccessChecksTo);
 	}
 
-	static IEnumerable<string> EnumerateNativeRegistrationStrings (IReadOnlyList<JavaPeerProxyData> proxies)
+	static List<NativeRegistrationData> EnumerateValidNativeRegistrations (IReadOnlyList<JavaPeerProxyData> proxies)
 	{
+		var wrapperTargets = new HashSet<UcoWrapperTargetData> ();
+		foreach (var proxy in proxies) {
+			foreach (var method in proxy.UcoMethods) {
+				wrapperTargets.Add (UcoWrapperTargetData.From (proxy, method.WrapperName));
+			}
+			foreach (var constructor in proxy.UcoConstructors) {
+				wrapperTargets.Add (UcoWrapperTargetData.From (proxy, constructor.WrapperName));
+			}
+		}
+
+		var registrations = new List<NativeRegistrationData> ();
 		foreach (var proxy in proxies) {
 			if (!proxy.IsAcw) {
 				continue;
 			}
 			foreach (var registration in proxy.NativeRegistrations) {
-				yield return registration.JniMethodName;
-				yield return registration.JniSignature;
+				if (wrapperTargets.Contains (registration.WrapperTarget)) {
+					registrations.Add (registration);
+				}
 			}
 		}
+		return registrations;
 	}
 
 	static List<JavaPeerProxyData> OrderProxiesForWrapperTargets (IReadOnlyList<JavaPeerProxyData> proxies)
@@ -1619,11 +1636,12 @@ sealed class TypeMapAssemblyEmitter
 			return;
 		}
 
-		// Get the prepared, deduplicated RVA fields for each unique name/signature string.
+		// Method names are unique per registration because R8 member mappings are owner-specific.
+		// Signatures remain safely deduplicated because descriptor class mappings are owner-independent.
 		var nameFields = new FieldDefinitionHandle [validRegs.Count];
 		var sigFields = new FieldDefinitionHandle [validRegs.Count];
 		for (int i = 0; i < validRegs.Count; i++) {
-			nameFields [i] = _pe.GetUtf8Field (validRegs [i].Reg.JniMethodName);
+			nameFields [i] = _pe.GetUniqueUtf8Field (validRegs [i].Reg.JniMethodName);
 			sigFields [i] = _pe.GetUtf8Field (validRegs [i].Reg.JniSignature);
 		}
 

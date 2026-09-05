@@ -24,9 +24,21 @@ namespace Xamarin.Android.Tasks
 						var type = reader.GetTypeSpecification ((TypeSpecificationHandle)ctor.Parent);
 						BlobReader blobReader = reader.GetBlobReader (type.Signature);
 						SignatureTypeCode typeCode = blobReader.ReadSignatureTypeCode ();
+						if (typeCode != SignatureTypeCode.GenericTypeInstance) {
+							log.LogDebugMessage ($"Unsupported TypeSpecification signature: {typeCode}");
+							return null;
+						}
+						blobReader.ReadByte (); // SignatureTypeKind.Class or SignatureTypeKind.ValueType.
 						EntityHandle typeHandle = blobReader.ReadTypeHandle ();
-						TypeReference typeRef = reader.GetTypeReference ((TypeReferenceHandle)typeHandle);
-						return reader.GetString (typeRef.Namespace) + "." + reader.GetString (typeRef.Name);
+						if (typeHandle.Kind == HandleKind.TypeReference) {
+							TypeReference typeRef = reader.GetTypeReference ((TypeReferenceHandle)typeHandle);
+							return reader.GetString (typeRef.Namespace) + "." + reader.GetString (typeRef.Name);
+						} else if (typeHandle.Kind == HandleKind.TypeDefinition) {
+							TypeDefinition typeDef = reader.GetTypeDefinition ((TypeDefinitionHandle)typeHandle);
+							return reader.GetString (typeDef.Namespace) + "." + reader.GetString (typeDef.Name);
+						}
+						log.LogDebugMessage ($"Unsupported generic type handle kind: {typeHandle.Kind}");
+						return null;
 					} else {
 						log.LogDebugMessage ($"Unsupported EntityHandle.Kind: {ctor.Parent.Kind}");
 						return null;

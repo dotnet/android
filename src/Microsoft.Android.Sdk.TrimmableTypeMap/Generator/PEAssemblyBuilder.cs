@@ -42,9 +42,10 @@ sealed class PEAssemblyBuilder
 	// Avoids creating duplicate __utf8_N types when multiple fields share the same size.
 	readonly Dictionary<int, TypeDefinitionHandle> _sizedTypeCache = new ();
 
-	// Deduplication cache for UTF-8 string RVA fields. Strings like "()V" that repeat across
-	// many proxy types are stored once and shared via the same FieldDefinitionHandle.
-	readonly Dictionary<string, FieldDefinitionHandle> _utf8FieldCache = new (StringComparer.Ordinal);
+	// JNI signatures are owner-independent and can safely share one RVA field. JNI method names
+	// are owner-specific after R8 rewriting, so each registration receives its own field.
+	readonly Dictionary<string, FieldDefinitionHandle> _sharedUtf8FieldCache = new (StringComparer.Ordinal);
+	readonly Dictionary<string, Queue<FieldDefinitionHandle>> _uniqueUtf8FieldCache = new (StringComparer.Ordinal);
 	TypeDefinitionHandle _privateImplDetailsType;
 	int _utf8FieldCounter;
 
@@ -273,31 +274,57 @@ sealed class PEAssemblyBuilder
 	}
 
 	/// <summary>
-	/// Emits deduplicated RVA fields containing the supplied null-terminated UTF-8 strings.
+	/// Emits RVA fields containing the supplied null-terminated UTF-8 strings.
+	/// <paramref name="sharedValues"/> are deduplicated, while every occurrence in
+	/// <paramref name="uniqueValues"/> receives a separate field.
 	/// Fields are grouped by size so each group is emitted contiguously on its sized helper
 	/// type before any consuming types are emitted.
 	/// </summary>
-	public void PrepareUtf8Fields (IEnumerable<string> values)
+	public void PrepareUtf8Fields (IEnumerable<string> sharedValues, IEnumerable<string> uniqueValues)
 	{
-		var valuesBySize = new SortedDictionary<int, SortedSet<string>> ();
-		foreach (string value in values) {
+		var sharedValuesBySize = new SortedDictionary<int, SortedSet<string>> ();
+		foreach (string value in sharedValues) {
 			int size = System.Text.Encoding.UTF8.GetByteCount (value) + 1;
-			if (!valuesBySize.TryGetValue (size, out var valuesForSize)) {
+			if (!sharedValuesBySize.TryGetValue (size, out var valuesForSize)) {
 				valuesForSize = new SortedSet<string> (StringComparer.Ordinal);
-				valuesBySize.Add (size, valuesForSize);
+				sharedValuesBySize.Add (size, valuesForSize);
 			}
 			valuesForSize.Add (value);
 		}
 
-		foreach (var group in valuesBySize) {
-			var sizedType = GetOrCreateSizedType (group.Key);
-			foreach (string value in group.Value) {
-				AddUtf8Field (value, sizedType);
+		var uniqueValuesBySize = new SortedDictionary<int, SortedDictionary<string, int>> ();
+		foreach (string value in uniqueValues) {
+			int size = System.Text.Encoding.UTF8.GetByteCount (value) + 1;
+			if (!uniqueValuesBySize.TryGetValue (size, out var valuesForSize)) {
+				valuesForSize = new SortedDictionary<string, int> (StringComparer.Ordinal);
+				uniqueValuesBySize.Add (size, valuesForSize);
+			}
+			valuesForSize.TryGetValue (value, out int count);
+			valuesForSize [value] = count + 1;
+		}
+
+		var sizes = new SortedSet<int> (sharedValuesBySize.Keys);
+		sizes.UnionWith (uniqueValuesBySize.Keys);
+		foreach (int size in sizes) {
+			var sizedType = GetOrCreateSizedType (size);
+			if (sharedValuesBySize.TryGetValue (size, out var sharedForSize)) {
+				foreach (string value in sharedForSize) {
+					_sharedUtf8FieldCache.Add (value, AddUtf8Field (value, sizedType));
+				}
+			}
+			if (uniqueValuesBySize.TryGetValue (size, out var uniqueForSize)) {
+				foreach (var pair in uniqueForSize) {
+					var fields = new Queue<FieldDefinitionHandle> (pair.Value);
+					for (int i = 0; i < pair.Value; i++) {
+						fields.Enqueue (AddUtf8Field (pair.Key, sizedType));
+					}
+					_uniqueUtf8FieldCache.Add (pair.Key, fields);
+				}
 			}
 		}
 	}
 
-	void AddUtf8Field (string value, TypeDefinitionHandle sizedType)
+	FieldDefinitionHandle AddUtf8Field (string value, TypeDefinitionHandle sizedType)
 	{
 		// Encode to null-terminated UTF-8 (all JNI names/signatures are ASCII).
 		_sigBlob.Clear ();
@@ -313,8 +340,7 @@ sealed class PEAssemblyBuilder
 			Metadata.GetOrAddBlob (_sigBlob));
 
 		Metadata.AddFieldRelativeVirtualAddress (fieldHandle, rva);
-
-		_utf8FieldCache [value] = fieldHandle;
+		return fieldHandle;
 	}
 
 	/// <summary>
@@ -322,11 +348,23 @@ sealed class PEAssemblyBuilder
 	/// </summary>
 	public FieldDefinitionHandle GetUtf8Field (string value)
 	{
-		if (_utf8FieldCache.TryGetValue (value, out var existing)) {
+		if (_sharedUtf8FieldCache.TryGetValue (value, out var existing)) {
 			return existing;
 		}
 
 		throw new InvalidOperationException ($"UTF-8 field '{value}' was not prepared before type emission.");
+	}
+
+	/// <summary>
+	/// Returns and consumes one previously prepared unique UTF-8 RVA field.
+	/// </summary>
+	public FieldDefinitionHandle GetUniqueUtf8Field (string value)
+	{
+		if (_uniqueUtf8FieldCache.TryGetValue (value, out var fields) && fields.Count > 0) {
+			return fields.Dequeue ();
+		}
+
+		throw new InvalidOperationException ($"Unique UTF-8 field '{value}' was not prepared before type emission.");
 	}
 
 	void EnsurePrivateImplDetailsType ()
