@@ -74,7 +74,11 @@ public sealed class RootTypeMapAssemblyGenerator
 	/// <param name="stream">Stream to write the output PE to.</param>
 	/// <param name="assemblyName">Optional assembly name (defaults to _Microsoft.Android.TypeMaps).</param>
 	/// <param name="moduleName">Optional module name for the PE metadata.</param>
-	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, Stream stream, string? assemblyName = null, string? moduleName = null)
+	/// <param name="preGeneratedTypeMapNames">
+	/// Names of pre-generated maps that use their own per-assembly <c>__TypeMapAnchor</c>, exactly
+	/// like maps generated during an unlinked app build. These maps are valid only in aggregate mode.
+	/// </param>
+	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, Stream stream, string? assemblyName = null, string? moduleName = null, IReadOnlyList<string>? preGeneratedTypeMapNames = null)
 	{
 		if (perAssemblyTypeMapNames is null) {
 			throw new ArgumentNullException (nameof (perAssemblyTypeMapNames));
@@ -85,6 +89,14 @@ public sealed class RootTypeMapAssemblyGenerator
 
 		assemblyName ??= DefaultAssemblyName;
 		moduleName ??= assemblyName + ".dll";
+		if (useSharedTypemapUniverse && preGeneratedTypeMapNames is { Count: > 0 }) {
+			throw new ArgumentException ("Pre-generated per-assembly type maps cannot be used in a shared universe.", nameof (preGeneratedTypeMapNames));
+		}
+		var aggregateTypeMapNames = new List<string> (perAssemblyTypeMapNames);
+		if (preGeneratedTypeMapNames is not null) {
+			aggregateTypeMapNames.AddRange (preGeneratedTypeMapNames);
+		}
+		aggregateTypeMapNames.Sort (StringComparer.Ordinal);
 
 		var pe = new PEAssemblyBuilder (_systemRuntimeVersion);
 		pe.EmitPreamble (assemblyName, moduleName);
@@ -115,20 +127,20 @@ public sealed class RootTypeMapAssemblyGenerator
 		if (useSharedTypemapUniverse) {
 			EmitSharedUniverseAssemblyTargetAttributes (pe, anchorTypeHandle, perAssemblyTypeMapNames);
 		} else {
-			EmitPerAssemblyUniverseAssemblyTargetAttributes (pe, perAssemblyTypeMapNames);
+			EmitPerAssemblyUniverseAssemblyTargetAttributes (pe, aggregateTypeMapNames);
 		}
 
 		// Emit [assembly: IgnoresAccessChecksTo("...")] so TypeMapLoader.Initialize() can access
 		// internal types (TrimmableTypeMap and friends in Mono.Android, and private anchors
-		// in each per-assembly typemap DLL when aggregate universes or array maps are used).
+		// in each per-assembly typemap DLL when aggregate universes are used).
 		var accessTargets = new List<string> { "Mono.Android" };
 		if (!useSharedTypemapUniverse) {
-			accessTargets.AddRange (perAssemblyTypeMapNames);
+			accessTargets.AddRange (aggregateTypeMapNames);
 		}
 		pe.EmitIgnoresAccessChecksToAttribute (accessTargets);
 
 		// Emit TypeMapLoader class with Initialize() method
-		EmitTypeMapLoader (pe, anchorTypeHandle, perAssemblyTypeMapNames, useSharedTypemapUniverse, assemblyName);
+		EmitTypeMapLoader (pe, anchorTypeHandle, aggregateTypeMapNames, useSharedTypemapUniverse, assemblyName);
 
 		pe.WritePE (stream);
 	}

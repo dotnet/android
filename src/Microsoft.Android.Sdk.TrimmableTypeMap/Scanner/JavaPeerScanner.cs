@@ -210,10 +210,16 @@ public sealed class JavaPeerScanner : IDisposable
 
 	public List<JavaPeerInfo> Scan (IEnumerable<AssemblyInput> assemblies)
 	{
+		// Reference-only assemblies (ScanForPeers == false) are indexed so base-type resolution
+		// works, but are not scanned for peer emission (their typemap is pre-generated elsewhere).
+		var referenceOnlyAssemblyNames = new HashSet<string> (StringComparer.Ordinal);
 		foreach (var assembly in assemblies) {
 			var index = AssemblyIndex.Create (assembly.Reader, assembly.Name, assembly.Path);
 			assemblyCache [index.AssemblyName] = index;
 			resolvabilityCache [index.AssemblyName] = new ResolvabilityResult? [index.Reader.TypeDefinitions.Count + 1];
+			if (!assembly.ScanForPeers) {
+				referenceOnlyAssemblyNames.Add (index.AssemblyName);
+			}
 		}
 
 		// Key by (managedTypeName, assemblyName) to avoid collisions when two assemblies
@@ -221,6 +227,9 @@ public sealed class JavaPeerScanner : IDisposable
 		// Java.Interop and Mono.Android).
 		var resultsByQualifiedName = new Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> ();
 		foreach (var index in assemblyCache.Values) {
+			if (referenceOnlyAssemblyNames.Contains (index.AssemblyName)) {
+				continue;
+			}
 			ScanAssembly (index, resultsByQualifiedName);
 		}
 		ForceUnconditionalCrossReferences (resultsByQualifiedName, assemblyCache);

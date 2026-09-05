@@ -12,6 +12,8 @@ core workload SDK packs imported by WorkloadManifest.targets.
   <Sdk Name="Microsoft.DotNet.SharedFramework.Sdk" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersionNet10)" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateUnixFilePermissions" TaskFactory="TaskHostFactory" Runtime="NET" />
 
+  <Import Project="Microsoft.Android.Sdk.TrimmableTypeMap.targets" />
+
   <PropertyGroup>
     <!-- Use stable TFM since CI only has the stable .NET SDK installed -->
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>

@@ -146,7 +146,8 @@ static class MetadataHelper
 	public static byte [] ComputeRootIncrementalFingerprint (
 		IReadOnlyList<string> perAssemblyTypeMapNames,
 		Version systemRuntimeVersion,
-		bool useSharedTypemapUniverse)
+		bool useSharedTypemapUniverse,
+		IReadOnlyList<string>? preGeneratedTypeMapNames = null)
 	{
 		using var sha = SHA256.Create ();
 		using var stream = new MemoryStream ();
@@ -154,8 +155,13 @@ static class MetadataHelper
 		writer.Write (GeneratorModuleVersionId.ToByteArray ());
 		writer.Write (systemRuntimeVersion.ToString ());
 		writer.Write (useSharedTypemapUniverse);
-		writer.Write (perAssemblyTypeMapNames.Count);
-		foreach (var assemblyName in perAssemblyTypeMapNames) {
+		var allTypeMapNames = new List<string> (perAssemblyTypeMapNames);
+		if (preGeneratedTypeMapNames is not null) {
+			allTypeMapNames.AddRange (preGeneratedTypeMapNames);
+		}
+		allTypeMapNames.Sort (StringComparer.Ordinal);
+		writer.Write (allTypeMapNames.Count);
+		foreach (var assemblyName in allTypeMapNames) {
 			writer.Write (assemblyName);
 		}
 		writer.Flush ();
