@@ -7,8 +7,6 @@ using Java.Interop.Tools.Generator.Enumification;
 using Xamarin.SourceWriter;
 using static MonoDroid.Generation.EnumMappings;
 
-using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
-
 namespace MonoDroid.Generation
 {
 	class EnumGenerator
@@ -52,10 +50,6 @@ namespace MonoDroid.Generation
 
 				// Try to find the original field in our model
 				var managedMember = FindManagedMember (enu.Value, member, gens);
-				var managedMemberName = managedMember != null ? $"{managedMember.Value.Cls.FullName}.{managedMember.Value.Field.Name}" : null;
-
-				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1)
-					m.Attributes.Add (new IntDefinitionAttr (managedMemberName, StripExtraInterfaceSpec (member.JavaSignature)));
 
 				SourceWriterExtensions.AddSupportedOSPlatform (m.Attributes, member.ApiLevel, opt);
 
@@ -136,11 +130,6 @@ namespace MonoDroid.Generation
 				type = jniMember.Substring (endPackage + 1).Replace ('$', '.');
 				member = "";
 			}
-		}
-
-		string StripExtraInterfaceSpec (string jniFieldSpec)
-		{
-			return jniFieldSpec.StartsWith ("I:", StringComparison.Ordinal) ? jniFieldSpec.Substring (2) : jniFieldSpec;
 		}
 	}
 }
