@@ -138,6 +138,11 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _jniEnvTypesRegisterNativesRef;
 	MemberReferenceHandle _readOnlySpanOfJniNativeMethodCtorRef;
 
+	// These handles belong to this emitter's readonly PE metadata builder and must not be shared
+	// across emitter instances.
+	BlobHandle _activationCtorSignature;
+	BlobHandle _createInstanceSignature;
+
 	EntityHandle _anchorTypeHandle;
 
 	ExportMethodDispatchEmitter? _exportMethodDispatchEmitter;
@@ -166,6 +171,14 @@ sealed class TypeMapAssemblyEmitter
 	/// share a single typemap universe. When false, emits a per-assembly <c>__TypeMapAnchor</c>.
 	/// </param>
 	public void Emit (TypeMapAssemblyData model, Stream stream, bool useSharedTypemapUniverse = false)
+		=> Emit (model, stream, useSharedTypemapUniverse, contentFingerprint: null);
+
+	/// <param name="contentFingerprint">
+	/// Pre-computed content fingerprint seeding the deterministic MVID. When <see langword="null"/>
+	/// it is computed here; callers that already walked the model should pass it in to avoid a
+	/// second walk.
+	/// </param>
+	internal void Emit (TypeMapAssemblyData model, Stream stream, bool useSharedTypemapUniverse, byte []? contentFingerprint)
 	{
 		if (model is null) {
 			throw new ArgumentNullException (nameof (model));
@@ -174,13 +187,31 @@ sealed class TypeMapAssemblyEmitter
 			throw new ArgumentNullException (nameof (stream));
 		}
 
-		EmitCore (model, useSharedTypemapUniverse);
+		EmitCore (model, useSharedTypemapUniverse, contentFingerprint);
 		_pe.WritePE (stream);
 	}
 
-	void EmitCore (TypeMapAssemblyData model, bool useSharedTypemapUniverse)
+	/// <summary>
+	/// Emits a PE assembly from the given model and returns a read-only stream over the serialised
+	/// image, avoiding the copy into a second buffer that <see cref="Emit(TypeMapAssemblyData, Stream, bool, byte[])"/>
+	/// performs.
+	/// </summary>
+	internal Stream EmitToStream (TypeMapAssemblyData model, bool useSharedTypemapUniverse, byte []? contentFingerprint)
 	{
-		_pe.EmitPreamble (model.AssemblyName, model.ModuleName, MetadataHelper.ComputeContentFingerprint (model));
+		if (model is null) {
+			throw new ArgumentNullException (nameof (model));
+		}
+
+		EmitCore (model, useSharedTypemapUniverse, contentFingerprint);
+		return _pe.CreatePEStream ();
+	}
+
+	void EmitCore (TypeMapAssemblyData model, bool useSharedTypemapUniverse, byte []? contentFingerprint)
+	{
+		contentFingerprint ??= MetadataHelper
+			.ComputeFingerprints (model, _systemRuntimeVersion, useSharedTypemapUniverse, includeIncremental: false)
+			.Content;
+		_pe.EmitPreamble (model.AssemblyName, model.ModuleName, contentFingerprint);
 
 		_javaInteropRef = _pe.AddAssemblyRef ("Java.Interop", new Version (0, 0, 0, 0));
 
@@ -975,12 +1006,7 @@ sealed class TypeMapAssemblyEmitter
 	{
 		_pe.EmitBody ("CreateInstance",
 			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-				rt => rt.Type ().Type (_iJavaPeerableRef, false),
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-				}),
+			GetCreateInstanceSignature (),
 			emitIL);
 	}
 
@@ -988,25 +1014,42 @@ sealed class TypeMapAssemblyEmitter
 	{
 		_pe.EmitBody ("CreateInstance",
 			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-				rt => rt.Type ().Type (_iJavaPeerableRef, false),
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-				}),
+			GetCreateInstanceSignature (),
 			emitIL,
 			encodeLocals);
 	}
 
 	MemberReferenceHandle AddActivationCtorRef (EntityHandle declaringTypeRef)
 	{
-		return _pe.AddMemberRef (declaringTypeRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-				rt => rt.Void (),
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-				}));
+		return _pe.AddMemberRef (declaringTypeRef, ".ctor", GetActivationCtorSignature ());
+	}
+
+	BlobHandle GetActivationCtorSignature ()
+	{
+		if (_activationCtorSignature.IsNil) {
+			_activationCtorSignature = _pe.GetOrAddSignature (
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+					rt => rt.Void (),
+					p => {
+						p.AddParameter ().Type ().IntPtr ();
+						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+					}));
+		}
+		return _activationCtorSignature;
+	}
+
+	BlobHandle GetCreateInstanceSignature ()
+	{
+		if (_createInstanceSignature.IsNil) {
+			_createInstanceSignature = _pe.GetOrAddSignature (
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+					rt => rt.Type ().Type (_iJavaPeerableRef, false),
+					p => {
+						p.AddParameter ().Type ().IntPtr ();
+						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+					}));
+		}
+		return _createInstanceSignature;
 	}
 
 	MemberReferenceHandle AddManagedCtorRef (EntityHandle declaringTypeRef, IReadOnlyList<TypeRefData> parameterTypes)

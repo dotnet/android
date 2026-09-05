@@ -657,6 +657,7 @@ namespace Xamarin.Android.Build.Tests {
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
+			proj.MainActivity = proj.DefaultMainActivity;
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			bool trimNativeAotJavaCode = isRelease && runtime == AndroidRuntime.NativeAOT;
@@ -706,7 +707,7 @@ namespace Xamarin.Android.Build.Tests {
 			FileAssert.Exists (typemapFingerprints, "IncrementalClean should preserve typemap fingerprints on a no-op build.");
 			Assert.AreEqual (typemapFingerprintContent, File.ReadAllText (typemapFingerprints), "A no-op build should not change typemap fingerprints.");
 
-			proj.MainActivity = proj.DefaultMainActivity + Environment.NewLine + "// Force trimmable typemap regeneration.";
+			proj.MainActivity += Environment.NewLine + "// Force trimmable typemap regeneration.";
 			proj.Touch ("MainActivity.cs");
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Changed-input build should have succeeded.");
 			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
@@ -724,6 +725,7 @@ namespace Xamarin.Android.Build.Tests {
 			}
 
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.MainActivity = proj.DefaultMainActivity;
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 

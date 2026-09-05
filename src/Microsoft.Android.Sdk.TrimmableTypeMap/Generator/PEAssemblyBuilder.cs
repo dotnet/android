@@ -105,6 +105,22 @@ sealed class PEAssemblyBuilder
 	/// </summary>
 	public void WritePE (Stream stream)
 	{
+		var peBlob = SerializePE ();
+		if (stream is MemoryStream memoryStream && memoryStream.Length == 0 && memoryStream.Capacity < peBlob.Count) {
+			memoryStream.Capacity = peBlob.Count;
+		}
+		peBlob.WriteContentTo (stream);
+	}
+
+	/// <summary>
+	/// Serialises the metadata + IL into a PE DLL and returns a read-only stream over the
+	/// serialised bytes. Unlike <see cref="WritePE(Stream)"/> the image is not copied into a
+	/// second contiguous buffer.
+	/// </summary>
+	public Stream CreatePEStream () => new BlobBuilderStream (SerializePE ());
+
+	BlobBuilder SerializePE ()
+	{
 		var peBuilder = new ManagedPEBuilder (
 			new PEHeaderBuilder (imageCharacteristics: Characteristics.Dll),
 			new MetadataRootBuilder (Metadata),
@@ -114,10 +130,7 @@ sealed class PEAssemblyBuilder
 			deterministicIdProvider: DeterministicContentId);
 		var peBlob = new BlobBuilder ();
 		peBuilder.Serialize (peBlob);
-		if (stream is MemoryStream memoryStream && memoryStream.Length == 0 && memoryStream.Capacity < peBlob.Count) {
-			memoryStream.Capacity = peBlob.Count;
-		}
-		peBlob.WriteContentTo (stream);
+		return peBlob;
 	}
 
 	static BlobContentId DeterministicContentId (IEnumerable<Blob> content)
@@ -159,10 +172,16 @@ sealed class PEAssemblyBuilder
 	/// Adds a member reference using the reusable signature blob builder.
 	/// </summary>
 	public MemberReferenceHandle AddMemberRef (EntityHandle parent, string name, Action<BlobEncoder> encodeSig)
+		=> AddMemberRef (parent, name, GetOrAddSignature (encodeSig));
+
+	public MemberReferenceHandle AddMemberRef (EntityHandle parent, string name, BlobHandle signature)
+		=> Metadata.AddMemberReference (parent, Metadata.GetOrAddString (name), signature);
+
+	public BlobHandle GetOrAddSignature (Action<BlobEncoder> encodeSig)
 	{
 		_sigBlob.Clear ();
 		encodeSig (new BlobEncoder (_sigBlob));
-		return Metadata.AddMemberReference (parent, Metadata.GetOrAddString (name), Metadata.GetOrAddBlob (_sigBlob));
+		return Metadata.GetOrAddBlob (_sigBlob);
 	}
 
 	/// <summary>
@@ -382,6 +401,15 @@ sealed class PEAssemblyBuilder
 		Action<BlobEncoder> encodeSig, Action<TrackedInstructionEncoder> emitIL)
 		=> EmitBody (name, attrs, encodeSig, emitIL, encodeLocals: null, useBranches: false);
 
+	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
+		BlobHandle signature, Action<TrackedInstructionEncoder> emitIL)
+		=> EmitBody (name, attrs, signature, emitIL, encodeLocals: null, useBranches: false);
+
+	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
+		BlobHandle signature, Action<TrackedInstructionEncoder> emitIL,
+		Action<BlobBuilder>? encodeLocals)
+		=> EmitBody (name, attrs, signature, emitIL, encodeLocals, useBranches: false);
+
 	/// <summary>
 	/// Emits a method body and definition with optional local variable declarations.
 	/// </summary>
@@ -404,12 +432,15 @@ sealed class PEAssemblyBuilder
 		Action<BlobEncoder> encodeSig, Action<TrackedInstructionEncoder> emitIL,
 		Action<BlobBuilder>? encodeLocals, bool useBranches)
 	{
-		_sigBlob.Clear ();
-		encodeSig (new BlobEncoder (_sigBlob));
 		// Capture the sig blob handle before emitIL, because emitIL callbacks
 		// may call AddMemberRef which clears and repopulates _sigBlob.
-		var sigBlobHandle = Metadata.GetOrAddBlob (_sigBlob);
+		return EmitBody (name, attrs, GetOrAddSignature (encodeSig), emitIL, encodeLocals, useBranches);
+	}
 
+	MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
+		BlobHandle signature, Action<TrackedInstructionEncoder> emitIL,
+		Action<BlobBuilder>? encodeLocals, bool useBranches)
+	{
 		StandaloneSignatureHandle localSigHandle = default;
 		if (encodeLocals != null) {
 			var localSigBlob = new BlobBuilder (32);
@@ -433,7 +464,7 @@ sealed class PEAssemblyBuilder
 		return Metadata.AddMethodDefinition (
 			attrs, MethodImplAttributes.IL,
 			Metadata.GetOrAddString (name),
-			sigBlobHandle,
+			signature,
 			bodyOffset, MetadataTokens.ParameterHandle (Metadata.GetRowCount (TableIndex.Param) + 1));
 	}
 

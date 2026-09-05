@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection.PortableExecutable;
 using System.Xml.Linq;
@@ -361,15 +360,17 @@ public class TrimmableTypeMapGenerator
 			string typeMapAssemblyName = $"_{assemblyName}.TypeMap";
 			perAssemblyNames.Add (typeMapAssemblyName);
 			var model = generator.CreateModel (peers, typeMapAssemblyName);
+			// Both fingerprints come out of a single walk over the model: the incremental one
+			// gates emission, the content one seeds the emitted assembly's deterministic MVID.
+			var fingerprints = generator.ComputeFingerprints (model, useSharedTypemapUniverse,
+				includeIncremental: shouldGenerateTypeMapAssembly is not null);
 			if (shouldGenerateTypeMapAssembly is not null) {
-				var fingerprint = generator.ComputeIncrementalFingerprint (model, useSharedTypemapUniverse);
+				var fingerprint = fingerprints.Incremental ?? throw new InvalidOperationException ("Incremental fingerprint was requested but not produced.");
 				if (!shouldGenerateTypeMapAssembly (typeMapAssemblyName, fingerprint)) {
 					continue;
 				}
 			}
-			var stream = new MemoryStream ();
-			generator.Generate (model, stream, useSharedTypemapUniverse);
-			stream.Position = 0;
+			var stream = generator.GenerateToStream (model, useSharedTypemapUniverse, fingerprints.Content);
 			generatedAssemblies.Add (new GeneratedAssembly (typeMapAssemblyName, stream));
 			logger.LogGeneratedTypeMapAssemblyInfo (typeMapAssemblyName, peers.Count);
 		}
@@ -380,10 +381,8 @@ public class TrimmableTypeMapGenerator
 			generateRoot = shouldGenerateTypeMapAssembly (rootAssemblyName, rootFingerprint);
 		}
 		if (generateRoot) {
-			var rootStream = new MemoryStream ();
 			var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
-			rootGenerator.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream);
-			rootStream.Position = 0;
+			var rootStream = rootGenerator.GenerateToStream (perAssemblyNames, useSharedTypemapUniverse);
 			generatedAssemblies.Add (new GeneratedAssembly (rootAssemblyName, rootStream));
 			logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
 		}
