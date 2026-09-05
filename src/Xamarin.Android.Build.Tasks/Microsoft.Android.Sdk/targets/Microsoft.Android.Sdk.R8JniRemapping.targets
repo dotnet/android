@@ -1,0 +1,295 @@
+<!--
+  R8 JNI runtime remapping (prototype).
+
+  When AndroidEnableR8Obfuscation is 'true' and AndroidR8ObfuscationMode is 'runtime-remapping',
+  the build runs a naming-only "seed" R8 pass
+  over the pre-trim Java Callable Wrappers, converts the mapping it produces into the JNI remapping
+  XML the runtime already knows how to consume, and applies the same mapping to the final R8 pass
+  with -applymapping. The managed assemblies are never rewritten: they keep the original JNI names
+  and the runtime translates them through the generated remapping data.
+
+  Everything in this file is gated on the derived $(_AndroidR8RuntimeRemappingEnabled) property.
+  Obfuscation is opt-in; see _ValidateAndroidR8Obfuscation in
+  Xamarin.Android.Common.targets for the supported configuration.
+-->
+<Project>
+
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateR8JniManifestProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateR8JniRemapping" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.R8" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+
+  <PropertyGroup Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' ">
+    <!-- Shared with the inner per-RID builds: $(_TypeMapBaseOutputDir) is the outer
+         IntermediateOutputPath, so every build in the project produces and consumes one seed. -->
+    <_AndroidR8JniSeedDirectory>$(_TypeMapBaseOutputDir)r8-jni-seed/</_AndroidR8JniSeedDirectory>
+    <_AndroidR8JniSeedMapping>$(_AndroidR8JniSeedDirectory)mapping.txt</_AndroidR8JniSeedMapping>
+    <_AndroidR8JniManifestProguardConfiguration>$(_AndroidR8JniSeedDirectory)manifest_rules.txt</_AndroidR8JniManifestProguardConfiguration>
+    <_AndroidR8JniSeedXamarinConfiguration>$(_AndroidR8JniSeedDirectory)xamarin.cfg</_AndroidR8JniSeedXamarinConfiguration>
+    <_AndroidR8JniSeedJavaClassDirectory>$(_AndroidR8JniSeedDirectory)classes/</_AndroidR8JniSeedJavaClassDirectory>
+    <_AndroidR8JniSeedJavaStamp>$(_AndroidR8JniSeedDirectory)compile-java.stamp</_AndroidR8JniSeedJavaStamp>
+    <_AndroidR8JniRemappingXml>$(_TypeMapBaseOutputDir)r8-jni-remap.xml</_AndroidR8JniRemappingXml>
+    <!-- On CoreCLR + PublishTrimmed the pre-trim pass does not write acw-map.txt or
+         ApplicationRegistration.java at all: the post-trim pass regenerates them from the linked
+         assemblies. Redirect the pre-trim copies into the seed directory so the seed pass has the
+         registration source it needs without overwriting those final outputs. -->
+    <_PreTrimTypeMapAcwMapOutputFile Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_PreTrimTypeMapAcwMapOutputFile)' == '' ">$(_AndroidR8JniSeedDirectory)acw-map.txt</_PreTrimTypeMapAcwMapOutputFile>
+    <_PreTrimTypeMapApplicationRegistrationOutputFile Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_PreTrimTypeMapApplicationRegistrationOutputFile)' == '' ">$(_AndroidR8JniSeedDirectory)java/net/dot/android/ApplicationRegistration.java</_PreTrimTypeMapApplicationRegistrationOutputFile>
+    <_AndroidR8JniSeedAcwMap>$(_PreTrimTypeMapAcwMapOutputFile)</_AndroidR8JniSeedAcwMap>
+    <_AndroidR8JniSeedApplicationRegistration>$(_PreTrimTypeMapApplicationRegistrationOutputFile)</_AndroidR8JniSeedApplicationRegistration>
+    <_AndroidR8JniSeedAcwMap Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">$(_TypeMapBaseOutputDir)acw-map.txt</_AndroidR8JniSeedAcwMap>
+    <_AndroidR8JniSeedApplicationRegistration Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">$(_TypeMapBaseOutputDir)android/src/net/dot/android/ApplicationRegistration.java</_AndroidR8JniSeedApplicationRegistration>
+  </PropertyGroup>
+
+  <Target Name="_AndroidCompileR8JniSeedJavaInputs"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' "
+      DependsOnTargets="_CleanIntermediateIfNeeded;_GenerateTrimmableTypeMap;$(_OnResolveMonoAndroidSdks);_AdjustJavacVersionArguments;_CollectRuntimeJarFilenames;_GetLibraryImports;_DetermineJavaLibrariesToCompile">
+    <ItemGroup>
+      <_AndroidR8JniSeedJavaSource Include="$(_TypeMapJavaOutputDirectory)/**/*.java" />
+      <_AndroidR8JniSeedJavaSource Include="$(_AndroidR8JniSeedApplicationRegistration)"
+          Condition=" '$(_AndroidR8JniSeedApplicationRegistration)' != '' " />
+    </ItemGroup>
+  </Target>
+
+  <!-- Compile the *pre-trim* Java Callable Wrappers. The seed pass must see the full set of Java
+       peers, because the names it picks have to be valid for every peer that can survive trimming. -->
+  <Target Name="_AndroidCompileR8JniSeedJava"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' "
+      DependsOnTargets="_AndroidCompileR8JniSeedJavaInputs"
+      Inputs="@(_AndroidR8JniSeedJavaSource);@(_JavaLibrariesToCompile);@(_ReferenceJavaLibs)"
+      Outputs="$(_AndroidR8JniSeedJavaStamp)">
+    <RemoveDirFixed Directories="$(_AndroidR8JniSeedJavaClassDirectory)" />
+    <Javac
+        JavaPlatformJarPath="$(JavaPlatformJarPath)"
+        ClassesOutputDirectory="$(_AndroidR8JniSeedJavaClassDirectory)"
+        JavaSourceFiles="@(_AndroidR8JniSeedJavaSource)"
+        ToolPath="$(JavacToolPath)"
+        ToolExe="$(JavacToolExe)"
+        Jars="@(_JavaLibrariesToCompile);@(_ReferenceJavaLibs)"
+        JavacTargetVersion="$(JavacTargetVersion)"
+        JavacSourceVersion="$(JavacSourceVersion)"
+        JdkVersion="$(_JdkVersion)"
+        IntermediateOutputPath="$(IntermediateOutputPath)"
+        AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)" />
+    <Touch Files="$(_AndroidR8JniSeedJavaStamp)" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidR8JniSeedJavaClassDirectory)**\*.class" />
+      <FileWrites Include="$(_AndroidR8JniSeedJavaStamp)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidPrepareR8JniManifestMergerInputs"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(AndroidManifestMerger)' == 'manifestmerger.jar' ">
+    <MakeDir Directories="$(IntermediateOutputPath)android" />
+    <Copy
+        SourceFiles="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
+        DestinationFiles="$(IntermediateOutputPath)AndroidManifest.xml"
+        SkipUnchangedFiles="true"
+        Condition=" '$(_OuterIntermediateOutputPath)' != '' and Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml') " />
+  </Target>
+
+  <Target Name="_AndroidGenerateR8JniManifestProguardConfigurationInputs"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' "
+      DependsOnTargets="_AndroidCompileR8JniSeedJava;_AndroidPrepareR8JniManifestMergerInputs;_ManifestMerger">
+    <PropertyGroup>
+      <_AndroidR8JniMergedManifest>$(_TypeMapBaseOutputDir)AndroidManifest.xml</_AndroidR8JniMergedManifest>
+      <_AndroidR8JniMergedManifest Condition=" '$(AndroidManifestMerger)' == 'manifestmerger.jar' ">$(IntermediateOutputPath)android/AndroidManifest.xml</_AndroidR8JniMergedManifest>
+    </PropertyGroup>
+  </Target>
+
+  <!-- Only manifest-entry keep rules are generated before the seed pass. The final R8 pass keeps
+       the same names through the AAPT-generated rules, so pinning them here is what makes the seed
+       mapping applicable with -applymapping. -->
+  <Target Name="_AndroidGenerateR8JniManifestProguardConfiguration"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' "
+      DependsOnTargets="_AndroidGenerateR8JniManifestProguardConfigurationInputs"
+      Inputs="$(_AndroidR8JniMergedManifest)"
+      Outputs="$(_AndroidR8JniManifestProguardConfiguration)">
+    <MakeDir Directories="$(_AndroidR8JniSeedDirectory)" />
+    <GenerateR8JniManifestProguardConfiguration
+        AndroidManifestFile="$(_AndroidR8JniMergedManifest)"
+        OutputFile="$(_AndroidR8JniManifestProguardConfiguration)" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidR8JniManifestProguardConfiguration)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidGenerateR8JniSeedMappingInputs"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' "
+      DependsOnTargets="_AndroidGenerateR8JniManifestProguardConfiguration">
+    <PropertyGroup>
+      <_AndroidR8JniTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '$(_XamarinAndroidBuildTasksAssembly)'))</_AndroidR8JniTaskAssembly>
+    </PropertyGroup>
+    <ItemGroup>
+      <_AndroidR8JniSeedClassFile Include="$(_AndroidR8JniSeedJavaClassDirectory)**\*.class" />
+      <_AndroidR8JniSeedManifestProguardConfiguration
+          Include="$(_AndroidR8JniManifestProguardConfiguration)"
+          Condition=" '$(ProguardConfigFiles)' == '' and Exists('$(_AndroidR8JniManifestProguardConfiguration)') " />
+      <!-- The seed pass already disables tree shaking and optimization, so it only needs the rules
+           that pin names. Start from the source items so generated ACW, primary, and Xamarin
+           configurations cannot leak into this pass. -->
+      <_AndroidR8JniSeedProguardConfiguration Include="$(ProguardConfigFiles)" Condition=" '$(ProguardConfigFiles)' != '' " />
+      <!-- Keep the product baseline in the seed pass. In particular, its native-method rule pins
+           JCW classes whose registration names are not runtime-remapped, so seed and final R8 agree. -->
+      <_AndroidR8JniSeedProguardConfiguration
+          Include="$(MSBuildThisFileDirectory)..\tools\proguard-android.txt"
+          Condition=" '$(ProguardConfigFiles)' == '' " />
+      <_AndroidR8JniSeedProguardConfiguration
+          Include="@(ProguardConfiguration)"
+          Condition=" '$(ProguardConfigFiles)' == '' and '%(ProguardConfiguration.AndroidGeneratedProguardConfiguration)' != 'true' " />
+      <_AndroidR8JniSeedProguardConfiguration
+          Include="@(_AndroidR8JniSeedManifestProguardConfiguration)"
+          Condition=" '$(ProguardConfigFiles)' == '' " />
+      <_AndroidR8JniSeedMapDiagnostics Condition=" '$(AndroidR8IgnoreWarnings)' == 'true' " Include="warning" To="info" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Naming-only R8 pass: it picks the obfuscated names and writes nothing but the mapping that
+       the final pass reproduces with -applymapping. Runs before trimming so the names cover every
+       Java peer, and the original managed inputs are left untouched. -->
+  <Target Name="_AndroidGenerateR8JniSeedMapping"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' "
+      BeforeTargets="PrepareForILLink;_RunILLink;_AndroidComputeIlcCompileInputs"
+      DependsOnTargets="_AndroidGenerateR8JniSeedMappingInputs"
+      Inputs="@(_AndroidR8JniSeedClassFile);@(_JavaLibrariesToCompileForApp);@(AndroidExternalJavaLibrary);@(_AndroidR8JniSeedProguardConfiguration);$(AndroidR8JarPath);$(JavaPlatformJarPath);$(_AndroidBuildPropertiesCache);$(_AndroidR8JniTaskAssembly)"
+      Outputs="$(_AndroidR8JniSeedMapping)">
+    <MakeDir Directories="$(_AndroidR8JniSeedDirectory);$(_AndroidR8JniSeedDirectory)dex" />
+    <R8
+        ToolPath="$(JavaToolPath)"
+        JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
+        JavaOptions="$(JavaOptions)"
+        JarPath="$(AndroidR8JarPath)"
+        AndroidManifestFile="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
+        OutputDirectory="$(_AndroidR8JniSeedDirectory)dex"
+        Debug="$(AndroidIncludeDebugSymbols)"
+        JavaPlatformJarPath="$(JavaPlatformJarPath)"
+        ClassFiles="@(_AndroidR8JniSeedClassFile)"
+        JavaLibrariesToEmbed="@(_JavaLibrariesToCompileForApp)"
+        JavaLibrariesToReference="@(AndroidExternalJavaLibrary)"
+        EnableDesugar="$(AndroidEnableDesugar)"
+        AndroidSdkBuildToolsPath="$(AndroidSdkBuildToolsPath)"
+        AcwMapFile="$(_AndroidR8JniSeedAcwMap)"
+        ProguardCommonXamarinConfiguration="$(_AndroidR8JniSeedXamarinConfiguration)"
+        ProguardMappingFileOutput="$(_AndroidR8JniSeedMapping)"
+        ProguardConfigurationFiles="@(_AndroidR8JniSeedProguardConfiguration)"
+        GenerateSeedMapping="true"
+        UseTrimmableNativeAotProguardConfiguration="$(_UseTrimmableNativeAotProguardConfiguration)"
+        EnableObfuscation="true"
+        IgnoreWarnings="true"
+        IntermediateOutputPath="$(IntermediateOutputPath)"
+        AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
+        MapDiagnostics="@(_AndroidR8JniSeedMapDiagnostics)" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidR8JniSeedMapping)" />
+      <FileWrites Include="$(_AndroidR8JniSeedXamarinConfiguration)" />
+      <FileWrites Include="$(_AndroidR8JniSeedDirectory)dex\*.dex" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Produce the shared naming map before _ResolveAssemblies starts the parallel per-RID builds.
+       An isolated project evaluation is used so seed-only proguard items cannot leak into the outer
+       build's final R8 configuration. The inner builds still evaluate the incremental target, but
+       consume this completed output instead of racing to regenerate the shared seed directory. -->
+  <Target Name="_AndroidEnsureR8JniSeedMappingForInnerBuilds"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_OuterIntermediateOutputPath)' == '' and '$(RuntimeIdentifiers)' != '' and '$(_AndroidGeneratingR8JniSeedMapping)' != 'true' "
+      BeforeTargets="_ResolveAssemblies">
+    <MSBuild
+        Projects="$(MSBuildProjectFullPath)"
+        Targets="_AndroidGenerateR8JniSeedMapping"
+        Properties="_AndroidGeneratingR8JniSeedMapping=true" />
+  </Target>
+
+  <Target Name="_AndroidGenerateR8JniRemappingInputs"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' "
+      DependsOnTargets="_AndroidGenerateR8JniSeedMapping;_ConvertAndroidMamMappingFileToXml;_AndroidPrepareR8JniRemappingAssemblies">
+    <ItemGroup>
+      <!-- Remapping data other features already contributed (for example the Intune/MAM mapping).
+           Passing it in lets the generator compose with those inputs instead of overriding them. -->
+      <_AndroidR8JniExistingRemapMembers Include="@(_AndroidRemapMembers)"
+          Condition=" '%(Identity)' != '$(_AndroidR8JniRemappingXml)' " />
+    </ItemGroup>
+  </Target>
+
+  <!-- Convert the seed mapping into the JNI remapping XML that _CollectAndroidRemapMembers merges
+       and GenerateJniRemappingNativeCode turns into the runtime lookup tables. -->
+  <Target Name="_AndroidGenerateR8JniRemapping"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidRuntime)' == 'CoreCLR' "
+      DependsOnTargets="_AndroidGenerateR8JniRemappingInputs"
+      Inputs="$(_AndroidR8JniSeedMapping);@(_AndroidR8JniExistingRemapMembers);@(_AndroidR8JniRemappingAssembly)"
+      Outputs="$(_AndroidR8JniRemappingXml)">
+    <GenerateR8JniRemapping
+        MappingFile="$(_AndroidR8JniSeedMapping)"
+        ExistingRemapXmlFiles="@(_AndroidR8JniExistingRemapMembers)"
+        LinkedAssemblies="@(_AndroidR8JniRemappingAssembly)"
+        OutputFile="$(_AndroidR8JniRemappingXml)" />
+    <!-- Still evaluated when the target is skipped as up to date. -->
+    <ItemGroup Condition=" Exists('$(_AndroidR8JniRemappingXml)') ">
+      <_AndroidRemapMembers Include="$(_AndroidR8JniRemappingXml)" />
+      <FileWrites Include="$(_AndroidR8JniRemappingXml)" />
+    </ItemGroup>
+  </Target>
+
+  <!-- ILC emits external lookup calls, then its surviving JNI literals select the per-RID table.
+       This target does not modify ILC's managed inputs or root entries in its reachability graph. -->
+  <Target Name="_AndroidGenerateNativeAotR8RemappingInputs"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' "
+      DependsOnTargets="_AndroidGenerateR8JniSeedMapping;_ConvertAndroidMamMappingFileToXml;_PrepareNativeAotAndroidAppInputs">
+    <PropertyGroup>
+      <_AndroidNativeAotR8RemappingDirectory>$(NativeIntermediateOutputPath)jni-remap/</_AndroidNativeAotR8RemappingDirectory>
+      <_AndroidNativeAotR8GeneratedRemappingXml>$(_AndroidNativeAotR8RemappingDirectory)r8-jni-generated-remap.xml</_AndroidNativeAotR8GeneratedRemappingXml>
+      <_AndroidNativeAotR8RemappingXml>$(_AndroidNativeAotR8RemappingDirectory)r8-jni-remap.xml</_AndroidNativeAotR8RemappingXml>
+    </PropertyGroup>
+    <PrepareAbiItems
+        BuildTargetAbis="@(_PrivateBuildTargetAbi)"
+        NativeSourcesDir="$(_AndroidNativeAotR8RemappingDirectory)"
+        Debug="$(AndroidIncludeDebugSymbols)"
+        Mode="jniremap">
+      <Output TaskParameter="AssemblySources" ItemName="_AndroidNativeAotR8RemappingSource" />
+    </PrepareAbiItems>
+    <ItemGroup>
+      <_AndroidNativeAotR8RemappingObject Include="@(_AndroidNativeAotR8RemappingSource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
+        <abi>%(_AndroidNativeAotR8RemappingSource.abi)</abi>
+      </_AndroidNativeAotR8RemappingObject>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidGenerateNativeAotR8Remapping"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' "
+      DependsOnTargets="_AndroidGenerateNativeAotR8RemappingInputs"
+      Inputs="$(NativeObject);$(_AndroidR8JniSeedMapping);@(_AndroidRemapMembers);$(_AndroidBuildPropertiesCache);$(_AndroidR8JniTaskAssembly)"
+      Outputs="$(_AndroidNativeAotR8GeneratedRemappingXml);$(_AndroidNativeAotR8RemappingXml)">
+    <GenerateR8JniRemapping
+        MappingFile="$(_AndroidR8JniSeedMapping)"
+        ExistingRemapXmlFiles="@(_AndroidRemapMembers)"
+        NativeAot="true"
+        NativeAotObjectFile="$(NativeObject)"
+        OutputFile="$(_AndroidNativeAotR8GeneratedRemappingXml)" />
+    <MergeRemapXml
+        InputRemapXmlFiles="@(_AndroidRemapMembers);$(_AndroidNativeAotR8GeneratedRemappingXml)"
+        OutputFile="$(_AndroidNativeAotR8RemappingXml)" />
+    <Touch Files="$(_AndroidNativeAotR8RemappingXml)" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidNativeAotR8GeneratedRemappingXml);$(_AndroidNativeAotR8RemappingXml)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidCompileNativeAotR8Remapping"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' "
+      DependsOnTargets="_AndroidGenerateNativeAotR8Remapping"
+      Inputs="$(_AndroidNativeAotR8RemappingXml);$(_AndroidR8JniTaskAssembly);$(_AndroidBuildPropertiesCache)"
+      Outputs="@(_AndroidNativeAotR8RemappingSource);@(_AndroidNativeAotR8RemappingObject)">
+    <GenerateJniRemappingNativeCode
+        RemappingXmlFilePath="$(_AndroidNativeAotR8RemappingXml)"
+        OutputDirectory="$(_AndroidNativeAotR8RemappingDirectory)"
+        SupportedAbis="@(_PrivateBuildTargetAbi)" />
+    <CompileNativeAssembly
+        Sources="@(_AndroidNativeAotR8RemappingSource)"
+        DebugBuild="$(AndroidIncludeDebugSymbols)"
+        WorkingDirectory="$(_AndroidNativeAotR8RemappingDirectory)"
+        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)" />
+    <Touch Files="@(_AndroidNativeAotR8RemappingSource)" />
+    <ItemGroup>
+      <FileWrites Include="@(_AndroidNativeAotR8RemappingSource);@(_AndroidNativeAotR8RemappingObject)" />
+    </ItemGroup>
+  </Target>
+
+</Project>

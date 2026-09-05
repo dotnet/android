@@ -241,6 +241,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
         DebugBuild="$(AndroidIncludeDebugSymbols)"
         WorkingDirectory="$(_NativeAssemblySourceDir)"
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)" />
+    <Touch Files="@(_PrivateJniInitFuncsAssemblySource);@(_PrivateEnvironmentAssemblySource)" />
 
     <ItemGroup>
       <LinkerArg Include="@(_PrivateJniInitFuncsNativeObjectFile)" />
@@ -263,8 +264,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   -->
   <Target Name="_AndroidLinkNativeAotSharedLibrary"
       AfterTargets="LinkNative"
-      DependsOnTargets="_PrepareNativeAotAndroidAppInputs"
-      Inputs="$(NativeObject);@(NativeLibrary)"
+      DependsOnTargets="_PrepareNativeAotAndroidAppInputs;_AndroidCompileNativeAotR8Remapping"
+      Inputs="$(NativeObject);@(NativeLibrary);@(_NdkLibs);@(_PrivateJniInitFuncsNativeObjectFile);@(_PrivateEnvironmentNativeObjectFile);@(_AndroidNativeAotR8RemappingObject);$(_AndroidBuildPropertiesCache)"
       Outputs="$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so">
     <PropertyGroup>
       <_AndroidNativeAotSharedLibrary>$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so</_AndroidNativeAotSharedLibrary>
@@ -319,6 +320,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NativeAotLinkLibraries Include="@(NativeLibrary)" />
       <_NativeAotAdditionalObjects Include="@(_PrivateJniInitFuncsNativeObjectFile)" />
       <_NativeAotAdditionalObjects Include="@(_PrivateEnvironmentNativeObjectFile)" />
+      <_NativeAotAdditionalObjects Include="@(_AndroidNativeAotR8RemappingObject)" />
       <_NativeAotSystemLibraries Include="dl" />
       <_NativeAotSystemLibraries Include="z" />
       <_NativeAotSystemLibraries Include="log" />

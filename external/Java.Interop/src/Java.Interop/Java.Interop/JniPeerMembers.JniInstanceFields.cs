@@ -27,8 +27,24 @@ namespace Java.Interop
 			return InstanceFields.GetOrAdd (encodedMember, static (member, fields) => {
 				string field, signature;
 				JniPeerMembers.GetNameAndSignature (member, out field, out signature);
-				return fields.Members.JniPeerType.GetInstanceField (field, signature);
+				return fields.GetFieldInfo (field, signature);
 			}, this);
+		}
+
+		JniFieldInfo GetFieldInfo (string field, string signature)
+		{
+			var newField = JniPeerMembers.GetReplacementFieldInfo (Members.JniPeerOriginalTypeName, Members.JniPeerTypeName, Members.ManagedPeerType, field, signature);
+			if (newField.HasValue) {
+				var typeName     = newField.Value.TargetJniType ?? Members.JniPeerTypeName;
+				var fieldName    = newField.Value.TargetJniFieldName ?? field;
+				var fieldSig     = newField.Value.TargetJniFieldSignature ?? signature;
+
+				using var t = new JniType (typeName);
+				if (t.TryGetInstanceField (fieldName, fieldSig, out var f)) {
+					return f;
+				}
+			}
+			return Members.JniPeerType.GetInstanceField (field, signature);
 		}
 	}}
 }

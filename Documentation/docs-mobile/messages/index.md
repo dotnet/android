@@ -257,6 +257,9 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4324](xa4324.md): [{arch}] Unable to delete source file '{file}'.
 + [XA4325](xa4325.md): Failed to rewrite managed JNI names for R8. {message}
 + [XA4326](xa4326.md): Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous `JNIEnv.FindClass` source.
++ [XA4327](xa4327.md): Failed to generate the R8 JNI remapping data. {message}
++ [XA4328](xa4328.md): The R8 JNI remapping data is incomplete. {message}
++ [XA4329](xa4329.md): Invalid or unsupported R8 obfuscation configuration.
 
 ## XA5xxx: GCC and toolchain
 

@@ -341,8 +341,9 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsFalse (warnings.Any (w => w.Code == "XA4250"), "Resolved placeholder-based manifest references should not log XA4250.");
 		}
 
-		[Test]
-		public void Execute_GenerateNativeAotProguardConfiguration_UsesDgmlTypeMetadata ()
+		[TestCase (false)]
+		[TestCase (true)]
+		public void Execute_GenerateNativeAotProguardConfiguration_UsesDgmlTypeMetadata (bool enableObfuscation)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
 			var dgmlFile = Path.Combine (path, "app.scan.dgml.xml");
@@ -379,14 +380,16 @@ namespace Xamarin.Android.Build.Tests {
 				AcwMapFile = acwMapFile,
 				OutputFile = outputFile,
 				TrimJavaCallableWrappers = true,
+				EnableObfuscation = enableObfuscation,
 			};
 
 			Assert.IsTrue (task.Execute (), "Task should succeed.");
 			var proguard = File.ReadAllText (outputFile);
-			StringAssert.Contains ("-keep class crc64a1.MainActivity { *; }", proguard);
-			StringAssert.Contains ("-keep class android.app.Activity { *; }", proguard);
-			StringAssert.Contains ("-keep class my.app.Duplicate { *; }", proguard);
-			StringAssert.Contains ("-keep class androidx.activity.result.contract.ActivityResultContracts$TakePicture { *; }", proguard);
+			var keepOption = enableObfuscation ? "-keep,allowobfuscation" : "-keep";
+			StringAssert.Contains ($"{keepOption} class crc64a1.MainActivity {{ *; }}", proguard);
+			StringAssert.Contains ($"{keepOption} class android.app.Activity {{ *; }}", proguard);
+			StringAssert.Contains ($"{keepOption} class my.app.Duplicate {{ *; }}", proguard);
+			StringAssert.Contains ($"{keepOption} class androidx.activity.result.contract.ActivityResultContracts$TakePicture {{ *; }}", proguard);
 			StringAssert.DoesNotContain ("wrong.Duplicate", proguard);
 			StringAssert.DoesNotContain ("other.Type", proguard);
 		}

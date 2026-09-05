@@ -153,6 +153,7 @@ static const JniRemappingIndexMethodEntry some_java_type_one_methods[] = {
 		.replacement = {
 			.target_type = "some/java/target_type_one",
 			.target_name = "new_method_name",
+			.target_signature = nullptr,
 			.is_static = false,
 		}
 	},
@@ -173,6 +174,7 @@ static const JniRemappingIndexMethodEntry some_java_type_two_methods[] = {
 		.replacement = {
 			.target_type = "some/java/target_type_two",
 			.target_name = "new_method_name",
+			.target_signature = "(IILanother/content/Intent;)V",
 			.is_static = true,
 		}
 	},
@@ -215,6 +217,52 @@ const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[] = {
 		.replacement = "another/replacement/java/type",
 	},
 };
+
+static const JniRemappingIndexFieldEntry some_java_type_one_fields[] = {
+	{
+		.name = {
+			.length = 14,
+			.str = "old_field_name",
+		},
+
+		.signature = {
+			.length = 16,
+			.str = "Lsome/java/type;",
+		},
+
+		.replacement = {
+			.target_type = "some/java/target_type_one",
+			.target_name = "new_field_name",
+			.target_signature = "Lanother/java/type;",
+		}
+	},
+};
+
+const JniRemappingIndexFieldTypeEntry jni_remapping_field_replacement_index[] = {
+	{
+		.name = {
+			.length = 18,
+			.str = "some/java/type_one",
+		},
+		.field_count = 1,
+		.fields = some_java_type_one_fields,
+	},
+};
+
+const JniRemappingTypeReplacementEntry jni_remapping_reverse_type_replacements[] = {
+	{
+		.name = {
+			.length = 17,
+			.str = "another/java/type",
+		},
+		.replacement = "some/java/type",
+	},
+};
+
+const uint32_t jni_remapping_type_replacement_count = 2;
+const uint32_t jni_remapping_reverse_type_replacement_count = 1;
+const uint32_t jni_remapping_method_replacement_index_count = 2;
+const uint32_t jni_remapping_field_replacement_index_count = 1;
 
 const char *init_runtime_property_names[] = {
 	"HOST_RUNTIME_CONTRACT",

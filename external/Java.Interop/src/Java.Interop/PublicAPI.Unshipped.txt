@@ -118,3 +118,27 @@ override Java.Interop.JniRuntime.ReflectionJniTypeManager.RegisterNativeMembers(
 override Java.Interop.JniRuntime.ReflectionJniTypeManager.RegisterNativeMembers(Java.Interop.JniType! nativeClass, System.Type! type, System.ReadOnlySpan<char> methods) -> void
 virtual Java.Interop.JniRuntime.ReflectionJniValueManager.TryConstructPeer(Java.Interop.IJavaPeerable! self, ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options, System.Type! type) -> bool
 virtual Java.Interop.JniRuntime.ReflectionJniValueManager.CreateNonArrayListValue(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options, System.Type! targetType) -> object?
+Java.Interop.JniRuntime.JniTypeManager.GetReplacementFieldInfo(string! jniSimpleReference, string! jniFieldName, string! jniFieldSignature) -> Java.Interop.JniRuntime.ReplacementFieldInfo?
+Java.Interop.JniRuntime.ReplacementFieldInfo
+Java.Interop.JniRuntime.ReplacementFieldInfo.Equals(Java.Interop.JniRuntime.ReplacementFieldInfo other) -> bool
+Java.Interop.JniRuntime.ReplacementFieldInfo.ReplacementFieldInfo() -> void
+Java.Interop.JniRuntime.ReplacementFieldInfo.SourceJniFieldName.get -> string?
+Java.Interop.JniRuntime.ReplacementFieldInfo.SourceJniFieldName.set -> void
+Java.Interop.JniRuntime.ReplacementFieldInfo.SourceJniFieldSignature.get -> string?
+Java.Interop.JniRuntime.ReplacementFieldInfo.SourceJniFieldSignature.set -> void
+Java.Interop.JniRuntime.ReplacementFieldInfo.SourceJniType.get -> string?
+Java.Interop.JniRuntime.ReplacementFieldInfo.SourceJniType.set -> void
+Java.Interop.JniRuntime.ReplacementFieldInfo.TargetJniFieldName.get -> string?
+Java.Interop.JniRuntime.ReplacementFieldInfo.TargetJniFieldName.set -> void
+Java.Interop.JniRuntime.ReplacementFieldInfo.TargetJniFieldSignature.get -> string?
+Java.Interop.JniRuntime.ReplacementFieldInfo.TargetJniFieldSignature.set -> void
+Java.Interop.JniRuntime.ReplacementFieldInfo.TargetJniType.get -> string?
+Java.Interop.JniRuntime.ReplacementFieldInfo.TargetJniType.set -> void
+override Java.Interop.JniRuntime.ReflectionJniTypeManager.GetReplacementFieldInfoCore(string! jniSimpleReference, string! jniFieldName, string! jniFieldSignature) -> Java.Interop.JniRuntime.ReplacementFieldInfo?
+override Java.Interop.JniRuntime.ReplacementFieldInfo.Equals(object? obj) -> bool
+override Java.Interop.JniRuntime.ReplacementFieldInfo.GetHashCode() -> int
+override Java.Interop.JniRuntime.ReplacementFieldInfo.ToString() -> string!
+static Java.Interop.JniRuntime.ReplacementFieldInfo.operator !=(Java.Interop.JniRuntime.ReplacementFieldInfo a, Java.Interop.JniRuntime.ReplacementFieldInfo b) -> bool
+static Java.Interop.JniRuntime.ReplacementFieldInfo.operator ==(Java.Interop.JniRuntime.ReplacementFieldInfo a, Java.Interop.JniRuntime.ReplacementFieldInfo b) -> bool
+virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementFieldInfoCore(string! jniSimpleReference, string! jniFieldName, string! jniFieldSignature) -> Java.Interop.JniRuntime.ReplacementFieldInfo?
+virtual Java.Interop.JniRuntime.JniTypeManager.GetOriginalTypeCore(string! jniSimpleReference) -> string?

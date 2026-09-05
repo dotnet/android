@@ -199,6 +199,14 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		foreach (var type in TrimmableTypeMap.Instance.GetTargetTypes (jniSimpleReference)) {
 			yield return type;
 		}
+
+		// The type map is keyed by the JNI names the managed code declares, so a name that was
+		// renamed in the packaged application has to be translated back first.
+		if (GetOriginalSimpleReference (jniSimpleReference) is string originalReference) {
+			foreach (var type in TrimmableTypeMap.Instance.GetTargetTypes (originalReference)) {
+				yield return type;
+			}
+		}
 	}
 
 	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
@@ -214,7 +222,22 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			return type;
 		}
 
+		if (GetOriginalSimpleReference (jniSimpleReference) is string originalReference &&
+				TrimmableTypeMap.Instance.TryGetTargetType (originalReference, out type)) {
+			return type;
+		}
+
 		return null;
+	}
+
+	static string? GetOriginalSimpleReference (string jniSimpleReference)
+	{
+		var original = JniRemappingLookup.GetReverseType (jniSimpleReference);
+		if (original is null || string.Equals (original, jniSimpleReference, StringComparison.Ordinal)) {
+			return null;
+		}
+
+		return original;
 	}
 
 	// Lookup of the built-in managed type for a JNI simple reference, e.g., string, bool?, int?, etc.
@@ -271,7 +294,8 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 			while (currentType is not null) {
 				if (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (currentType, out var jniName)) {
-					return new (jniName, rank, keyword: false);
+					string runtimeJniName = JniRemappingLookup.GetReplacementType (jniName) ?? jniName;
+					return new (runtimeJniName, rank, keyword: false);
 				}
 
 				currentType = currentType.BaseType;
@@ -370,7 +394,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		return signature.IsValid ? [signature] : [];
 	}
 
-	// Remapping APIs for InTune support
+	// Remapping APIs, used by the Intune/MAM mapping and by R8 JNI runtime remapping
 
 	protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
 		=> JniRemappingLookup.GetStaticMethodFallbackTypes (jniSimpleReference, useReplacementTypes: true);
@@ -378,8 +402,14 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 	protected override string? GetReplacementTypeCore (string jniSimpleReference)
 		=> JniRemappingLookup.GetReplacementType (jniSimpleReference);
 
+	protected override string? GetOriginalTypeCore (string jniSimpleReference)
+		=> JniRemappingLookup.GetReverseType (jniSimpleReference);
+
 	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
 		=> JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
+
+	protected override JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSourceType, string jniFieldName, string jniFieldSignature)
+		=> JniRemappingLookup.GetReplacementFieldInfo (jniSourceType, jniFieldName, jniFieldSignature);
 
 	// The rest of the APIs are unsupported - they are not needed internally anywhere anyway
 

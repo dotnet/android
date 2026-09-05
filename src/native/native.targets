@@ -238,8 +238,12 @@
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
       <_RuntimeSources Include="clr\include\constants.hh" />
+      <_RuntimeSources Include="clr\include\xamarin-app.hh" />
       <_RuntimeSources Include="clr\include\runtime-base\android-system.hh" />
+      <_RuntimeSources Include="clr\include\runtime-base\jni-remapping.hh" />
+      <_RuntimeSources Include="clr\host\internal-pinvokes-shared.cc" />
       <_RuntimeSources Include="clr\runtime-base\android-system-shared.cc" />
+      <_RuntimeSources Include="clr\runtime-base\jni-remapping.cc" />
       <_RuntimeSources Include="clr\runtime-base\logger.cc" />
       <_RuntimeSources Include="nativeaot\include\**\*.hh" />
       <_RuntimeSources Include="nativeaot\host\*.cc" />

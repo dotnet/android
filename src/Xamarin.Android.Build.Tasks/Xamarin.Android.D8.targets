@@ -77,7 +77,9 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         ProguardCommonXamarinConfiguration="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"
         ProguardGeneratedReferenceConfiguration="$(_ProguardProjectConfiguration)"
         ProguardGeneratedApplicationConfiguration="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg"
-        ProguardMappingFileOutput="$(AndroidProguardMappingFile)"
+        ProguardMappingFileOutput="$(_AndroidR8ProguardMappingFileOutput)"
+        ProguardMappingFileInput="$(_AndroidR8JniSeedMapping)"
+        EnableObfuscation="$(_AndroidR8RuntimeRemappingEnabled)"
         BuildMetadataFileOutput="$(_AndroidR8BuildMetadataFile)"
         ProguardConfigurationFiles="@(_ProguardConfiguration)"
         UseTrimmableNativeAotProguardConfiguration="$(_UseTrimmableNativeAotProguardConfiguration)"
@@ -115,7 +117,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
     <Touch Files="$(_AndroidStampDirectory)_CompileToDalvik.stamp" AlwaysCreate="true" />
     <ItemGroup>
       <FileWrites Include="$(_AndroidIntermediateDexOutputDirectory)*.dex" />
-      <FileWrites Include="$(AndroidProguardMappingFile)" />
+      <FileWrites Include="$(_AndroidR8ProguardMappingFileOutput)" />
       <FileWrites Include="$(_AndroidR8BuildMetadataFile)" Condition=" Exists('$(_AndroidR8BuildMetadataFile)') " />
     </ItemGroup>
 

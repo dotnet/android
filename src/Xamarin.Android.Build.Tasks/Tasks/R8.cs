@@ -34,6 +34,25 @@ namespace Xamarin.Android.Tasks
 		public string? ProguardGeneratedApplicationConfiguration { get; set; }
 		public string? ProguardCommonXamarinConfiguration { get; set; }
 		public string? ProguardMappingFileOutput { get; set; }
+
+		/// <summary>
+		/// A mapping file applied with <c>-applymapping</c>, so this R8 run reproduces the names an
+		/// earlier (seed) run chose.
+		/// </summary>
+		public string? ProguardMappingFileInput { get; set; }
+
+		/// <summary>
+		/// Runs R8 as a naming-only seed pass: no tree shaking, no optimization, mapping output only.
+		/// </summary>
+		public bool GenerateSeedMapping { get; set; }
+
+		/// <summary>
+		/// Allows R8 to rename types and members by omitting the SDK-generated
+		/// <c>-dontobfuscate</c>, and by letting the generated Java Callable Wrapper keep rules
+		/// retain their types without pinning their names.
+		/// </summary>
+		public bool EnableObfuscation { get; set; }
+
 		public string? BuildMetadataFileOutput { get; set; }
 		public ITaskItem []? ProguardConfigurationFiles { get; set; }
 		public bool UseTrimmableNativeAotProguardConfiguration { get; set; }
@@ -49,6 +68,10 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			try {
+				if (GenerateSeedMapping && ProguardMappingFileOutput.IsNullOrEmpty ()) {
+					Log.LogCodedError ("XA4327", Properties.Resources.XA4327, Properties.Resources.XA4327_SeedMappingOutputRequired);
+					return false;
+				}
 				return base.RunTask ();
 			} finally {
 				foreach (var temp in tempFiles) {
@@ -159,7 +182,26 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			if (EnableShrinking) {
+			if (GenerateSeedMapping) {
+				// Naming-only seed pass: choose the names, keep everything else intact. The mapping
+				// this produces is applied to the final R8 run with -applymapping.
+				WriteArg (response, "--no-tree-shaking");
+				var seedConfiguration = new List<string> {
+					"-dontoptimize",
+					"-dontpreverify",
+					"-keepattributes **",
+					$"-printmapping \"{Path.GetFullPath (GetRequiredSeedMappingOutput ())}\"",
+				};
+				if (IgnoreWarnings) {
+					seedConfiguration.Add ("-ignorewarnings");
+				}
+				WriteConfiguration (response, seedConfiguration);
+				GenerateCommonXamarinConfiguration ();
+				if (!ProguardCommonXamarinConfiguration.IsNullOrEmpty ()) {
+					WriteArg (response, "--pg-conf");
+					WriteArg (response, ProguardCommonXamarinConfiguration);
+				}
+			} else if (EnableShrinking) {
 				if (UseTrimmableNativeAotProguardConfiguration && !ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
 					// ACW keep rules come from the DGML/acw-map-driven proguard_project_references.cfg on
 					// the trimmable path. User-authored AndroidJavaSource (Bind != true) has no managed peer
@@ -168,7 +210,7 @@ namespace Xamarin.Android.Tasks
 					using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration)) {
 						appcfg.WriteLine ("# ACW keep rules are generated from NativeAOT ILC metadata.");
 						foreach (var java in GetUserJavaTypes ()) {
-							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
+							appcfg.WriteLine ($"{KeepOption} class {java} {{ *; }}");
 						}
 					}
 				} else if (!AcwMapFile.IsNullOrEmpty ()) {
@@ -180,34 +222,16 @@ namespace Xamarin.Android.Tasks
 					javaTypes.Sort (StringComparer.Ordinal);
 					using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration)) {
 						foreach (var java in javaTypes) {
-							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
+							appcfg.WriteLine ($"{KeepOption} class {java} {{ *; }}");
 						}
 						// User-authored AndroidJavaSource (Bind != true) has no managed peer and is absent
 						// from the acw-map, so keep it explicitly; otherwise shrinking removes it.
 						foreach (var java in GetUserJavaTypes ()) {
-							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
+							appcfg.WriteLine ($"{KeepOption} class {java} {{ *; }}");
 						}
 					}
 				}
-				if (!ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
-					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
-						if (UseTrimmableNativeAotProguardConfiguration) {
-							using var stream = GetEmbeddedResourceStream ("proguard_trimmable_nativeaot.cfg");
-							stream.CopyTo (xamcfg.BaseStream);
-						} else {
-							using var stream = GetEmbeddedResourceStream ("proguard_xamarin.cfg");
-							stream.CopyTo (xamcfg.BaseStream);
-						}
-						if (IgnoreWarnings) {
-							xamcfg.WriteLine ("-ignorewarnings");
-						}
-						if (!ProguardMappingFileOutput.IsNullOrEmpty ()) {
-							xamcfg.WriteLine ("-keepattributes SourceFile");
-							xamcfg.WriteLine ("-keepattributes LineNumberTable");
-							xamcfg.WriteLine ($"-printmapping \"{Path.GetFullPath (ProguardMappingFileOutput)}\"");
-						}
-					}
-				}
+				GenerateCommonXamarinConfiguration ();
 			} else {
 				//NOTE: we may be calling r8 *only* for multi-dex, and all shrinking is disabled
 				WriteArg (response, "--no-tree-shaking");
@@ -232,6 +256,11 @@ namespace Xamarin.Android.Tasks
 				WriteArg (response, "--pg-conf");
 				WriteArg (response, temp);
 			}
+			if (!ProguardMappingFileInput.IsNullOrEmpty ()) {
+				WriteConfiguration (response, new [] {
+					$"-applymapping \"{Path.GetFullPath (ProguardMappingFileInput)}\"",
+				});
+			}
 			if (ProguardConfigurationFiles != null) {
 				foreach (var item in ProguardConfigurationFiles) {
 					var file = item.ItemSpec;
@@ -250,6 +279,60 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return responseFile;
+		}
+
+		/// <summary>
+		/// The keep option used for the generated Java Callable Wrapper keep rules. When the JNI
+		/// names are remapped at runtime the wrappers must survive shrinking but stay renameable,
+		/// otherwise a plain <c>-keep</c> pins their names and <c>-applymapping</c> has no effect.
+		/// </summary>
+		internal string KeepOption => EnableObfuscation ? "-keep,allowobfuscation" : "-keep";
+
+		string GetRequiredSeedMappingOutput ()
+		{
+			string? output = ProguardMappingFileOutput;
+			if (output.IsNullOrEmpty ()) {
+				throw new InvalidOperationException (Properties.Resources.XA4327_SeedMappingOutputRequired);
+			}
+			return output;
+		}
+
+		internal void GenerateCommonXamarinConfiguration ()
+		{
+			if (ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
+				return;
+			}
+
+			using var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration);
+			string resourceName = UseTrimmableNativeAotProguardConfiguration ? "proguard_trimmable_nativeaot.cfg" : "proguard_xamarin.cfg";
+			using (Stream resource = GetEmbeddedResourceStream (resourceName))
+			using (var reader = new StreamReader (resource)) {
+				while (reader.ReadLine () is string line) {
+					// The only SDK-generated option dropped when obfuscation is enabled. Every
+					// other rule in the configuration still applies.
+					if (EnableObfuscation && string.Equals (line.Trim (), "-dontobfuscate", StringComparison.OrdinalIgnoreCase)) {
+						continue;
+					}
+					xamcfg.WriteLine (line);
+				}
+			}
+			if (IgnoreWarnings) {
+				xamcfg.WriteLine ("-ignorewarnings");
+			}
+			if (!ProguardMappingFileOutput.IsNullOrEmpty ()) {
+				xamcfg.WriteLine ("-keepattributes SourceFile");
+				xamcfg.WriteLine ("-keepattributes LineNumberTable");
+				xamcfg.WriteLine ($"-printmapping \"{Path.GetFullPath (ProguardMappingFileOutput)}\"");
+			}
+		}
+
+		void WriteConfiguration (StreamWriter response, IEnumerable<string> lines)
+		{
+			var temp = Path.GetTempFileName ();
+			File.WriteAllLines (temp, lines);
+			tempFiles.Add (temp);
+			WriteArg (response, "--pg-conf");
+			WriteArg (response, temp);
 		}
 
 		// ProGuard "global" options that affect the whole build and are not allowed inside
