@@ -384,7 +384,7 @@ Generally, the place to put intermediate files during a build is
 `obj\$(Configuration)\` and always has a trailing slash.
 
 MSBuild has a target, named `IncrementalClean`, that might be the bane
-of our existance...
+of our existence...
 
 First, I would read up on the [Clean target][clean] and understand how
 `Clean` really works within MSBuild. `Clean` in short, should delete

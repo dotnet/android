@@ -22,7 +22,7 @@ When binding an existing Android library, it is necessary to keep in mind the fo
   dependencies required by the Android library must be included in the
   .NET for Android project via a NuGet package or as an **AndroidLibrary**.
 
-- **The Android API level that the Android library is targetting**
+- **The Android API level that the Android library is targeting**
   &ndash; It is not possible to "downgrade" the Android API level;
   ensure that the .NET for Android binding project is targeting the same
   API level (or higher) as the Android library.
