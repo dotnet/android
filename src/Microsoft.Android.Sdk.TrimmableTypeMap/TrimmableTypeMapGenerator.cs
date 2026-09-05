@@ -221,9 +221,11 @@ public class TrimmableTypeMapGenerator
 					continue;
 				}
 
-				ValidateComponentName ((string?) element.Attribute (attName));
 				if (element.Name.LocalName == "activity-alias") {
+					// An alias name is an arbitrary component identifier, not a Java type.
 					ValidateComponentName ((string?) element.Attribute (androidNs + "targetActivity"));
+				} else {
+					ValidateComponentName ((string?) element.Attribute (attName));
 				}
 			}
 

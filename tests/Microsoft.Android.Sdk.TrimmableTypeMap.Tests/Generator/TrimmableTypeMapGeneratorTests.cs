@@ -899,15 +899,21 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			message.Contains ("Java name 'com.¢pkg.SimpleActivity' contains invalid or unsupported Java identifier '¢pkg'."));
 	}
 
-	[Fact]
-	public void Execute_ActivityAliasPlaceholdersAreResolvedBeforeValidationAndRooting ()
+	[Theory]
+	[InlineData ("${applicationId}.UnnamedAlias", "my.app.UnnamedAlias")]
+	[InlineData (".legacy-alias", ".legacy-alias")]
+	[InlineData ("my.app.legacy-alias", "my.app.legacy-alias")]
+	[InlineData ("${applicationId}.legacy-alias", "my.app.legacy-alias")]
+	[InlineData ("${applicationId}.\u00a2Alias", "my.app.\u00a2Alias")]
+	[InlineData ("${applicationId}.for", "my.app.for")]
+	public void Execute_ActivityAliasNameIsPreservedWhileTargetIsRootedAndRewritten (string aliasName, string expectedAliasName)
 	{
 		using var peReader = CreateTestFixturePEReader ();
-		var manifestTemplate = XDocument.Parse ("""
+		var manifestTemplate = XDocument.Parse ($$"""
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${applicationId}">
 			  <application>
 			    <activity-alias
-			        android:name="${applicationId}.UnnamedAlias"
+			        android:name="{{aliasName}}"
 			        android:targetActivity="${targetPackage}.UnnamedActivity" />
 			  </application>
 			</manifest>
@@ -927,11 +933,12 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 
 		var peer = result.AllPeers.First (candidate => candidate.ManagedTypeName == "MyApp.UnnamedActivity");
 		Assert.True (peer.IsUnconditional, "The activity-alias target should root its Java peer.");
+		Assert.NotEmpty (result.GeneratedAssemblies);
 		Assert.NotEmpty (result.GeneratedJavaSources);
 		Assert.DoesNotContain (logMessages, message => message.StartsWith ("XA4258:", StringComparison.Ordinal));
 		var alias = Assert.Single (result.Manifest?.Document.Descendants ("activity-alias") ?? []);
 		XNamespace android = "http://schemas.android.com/apk/res/android";
-		Assert.Equal ("my.app.UnnamedAlias", (string?) alias.Attribute (android + "name"));
+		Assert.Equal (expectedAliasName, (string?) alias.Attribute (android + "name"));
 		Assert.Equal (
 			JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName),
 			(string?) alias.Attribute (android + "targetActivity")
@@ -940,10 +947,10 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Theory]
-	[InlineData ("${applicationId}.¢Alias", "${applicationId}.SimpleActivity", "com.example.¢Alias", "¢Alias")]
-	[InlineData ("${applicationId}.SimpleAlias", "${applicationId}.¢Peer", "com.example.¢Peer", "¢Peer")]
-	public void Execute_InvalidActivityAliasNameOrTarget_ReportsBeforeOutputs (
-		string aliasName,
+	[InlineData ("${applicationId}.¢Peer", "com.example.¢Peer", "¢Peer")]
+	[InlineData (".legacy-target", "com.example.legacy-target", "legacy-target")]
+	[InlineData ("com.example.for", "com.example.for", "for")]
+	public void Execute_InvalidActivityAliasTarget_ReportsBeforeOutputs (
 		string targetActivity,
 		string invalidName,
 		string invalidIdentifier)
@@ -952,7 +959,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		var manifestTemplate = XDocument.Parse ($$"""
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${applicationId}">
 			  <application>
-			    <activity-alias android:name="{{aliasName}}" android:targetActivity="{{targetActivity}}" />
+			    <activity-alias android:name=".legacy-alias" android:targetActivity="{{targetActivity}}" />
 			  </application>
 			</manifest>
 			""");
@@ -970,12 +977,50 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 
 		Assert.Empty (result.GeneratedAssemblies);
 		Assert.Empty (result.GeneratedJavaSources);
+		Assert.Null (result.Manifest);
+		Assert.DoesNotContain (logMessages, message =>
+			message.StartsWith ("XA4258:", StringComparison.Ordinal) && message.Contains ("legacy-alias"));
 		Assert.Contains (logMessages, message =>
 			message.Contains (
 				$"Java name '{invalidName}' contains invalid or unsupported Java identifier '{invalidIdentifier}'.",
 				StringComparison.Ordinal
 			)
 		);
+	}
+
+	[Theory]
+	[InlineData (".Target", true)]
+	[InlineData (".legacy-target", false)]
+	[InlineData (".\u00a2Target", false)]
+	public void Execute_ActivityAliasWithoutPeers_ValidatesOnlyTarget (string targetActivity, bool validTarget)
+	{
+		var manifest = XDocument.Parse ($$"""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+			  <application>
+			    <activity-alias android:name=".legacy-alias" android:targetActivity="{{targetActivity}}" />
+			  </application>
+			</manifest>
+			""");
+
+		var result = CreateGenerator ().Execute (
+			[],
+			new Version (11, 0),
+			new HashSet<string> (),
+			manifestTemplate: manifest);
+
+		Assert.Empty (result.AllPeers);
+		Assert.Empty (result.GeneratedAssemblies);
+		Assert.Empty (result.GeneratedJavaSources);
+		Assert.DoesNotContain (logMessages, message =>
+			message.StartsWith ("XA4258:", StringComparison.Ordinal) && message.Contains ("legacy-alias"));
+		if (validTarget) {
+			Assert.DoesNotContain (logMessages, message => message.StartsWith ("XA4258:", StringComparison.Ordinal));
+			Assert.Contains (logMessages, message => message.Contains ("No Java peer types found"));
+		} else {
+			Assert.Contains (logMessages, message =>
+				message.StartsWith ("XA4258:", StringComparison.Ordinal) && message.Contains ($"com.example{targetActivity}"));
+			Assert.DoesNotContain (logMessages, message => message.Contains ("No Java peer types found"));
+		}
 	}
 
 	[Theory]
