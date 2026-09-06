@@ -197,9 +197,9 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				    void run(int) -> j
 				""", null, [], nativeObject);
 
-			StringAssert.Contains (Method ("com/contoso/Peer", "run", "(I)V", "a/b", "c", "(I)V"), xml);
-			StringAssert.Contains (Method ("com/contoso/Peer", "callback", "()V", "a/b", "f", "()V"), xml);
-			StringAssert.Contains (Field ("com/contoso/Peer", "value", "I", "a/b", "g", "I"), xml);
+			StringAssert.Contains (Method ("a/b", "run", "(I)V", "a/b", "c", "(I)V"), xml);
+			StringAssert.Contains (Method ("a/b", "callback", "()V", "a/b", "f", "()V"), xml);
+			StringAssert.Contains (Field ("a/b", "value", "I", "a/b", "g", "I"), xml);
 			StringAssert.DoesNotContain ("removed", xml);
 			StringAssert.DoesNotContain ("unused", xml);
 			StringAssert.DoesNotContain ("Unused", xml);
@@ -221,9 +221,9 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				com.contoso.Result -> a.e:
 				""", null, [], nativeObject);
 
-			StringAssert.Contains (Method ("com/contoso/Peer", "&lt;init&gt;", "([Lcom/contoso/Argument;)V",
+			StringAssert.Contains (Method ("a/b", "&lt;init&gt;", "([Lcom/contoso/Argument;)V",
 				"a/b", "&lt;init&gt;", "([La/d;)V"), xml);
-			StringAssert.Contains (Method ("com/contoso/Peer", "run", "([Lcom/contoso/Argument;)Lcom/contoso/Result;",
+			StringAssert.Contains (Method ("a/b", "run", "([Lcom/contoso/Argument;)Lcom/contoso/Result;",
 				"a/b", "c", "([La/d;)La/e;"), xml);
 			StringAssert.Contains ("""<replace-type from="com/contoso/Argument" to="a/d" />""", xml);
 			StringAssert.Contains ("""<reverse-type from="a/e" to="com/contoso/Result" />""", xml);
@@ -246,9 +246,9 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				    java.lang.Object get(java.lang.Object) -> f
 				""", null, [], nativeObject);
 
-			StringAssert.Contains (Method ("com/contoso/Generic", "get", "(Ljava/lang/Object;)Ljava/lang/Object;",
+			StringAssert.Contains (Method ("a/b", "get", "(Ljava/lang/Object;)Ljava/lang/Object;",
 				"a/b", "c", "(Ljava/lang/Object;)Ljava/lang/Object;"), xml);
-			StringAssert.Contains (Method ("com/contoso/Generic$Nested", "get", "(Ljava/lang/Object;)Ljava/lang/Object;",
+			StringAssert.Contains (Method ("a/e", "get", "(Ljava/lang/Object;)Ljava/lang/Object;",
 				"a/e", "f", "(Ljava/lang/Object;)Ljava/lang/Object;"), xml);
 			StringAssert.DoesNotContain ("(I)I", xml);
 		}
@@ -391,7 +391,7 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				[]);
 
 			StringAssert.Contains ("""<replace-type from="com/contoso/Peer" to="a/b" />""", xml);
-			StringAssert.Contains (Method ("com/contoso/Peer", "onClick", "()V", "a/b", "c", "()V"), xml);
+			StringAssert.Contains (Method ("a/b", "onClick", "()V", "a/b", "c", "()V"), xml);
 			StringAssert.DoesNotContain ("com/contoso/Unused", xml);
 			StringAssert.DoesNotContain ("unused", xml);
 		}
@@ -454,9 +454,9 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				    void doWork() -> e
 				""");
 
-			StringAssert.Contains (Method ("com/contoso/Peer", "doWork", "(I)V", "a/b", "c", "(I)V"), xml);
-			StringAssert.Contains (Method ("com/contoso/Peer", "doWork", "(Ljava/lang/String;)V", "a/b", "d", "(Ljava/lang/String;)V"), xml);
-			StringAssert.Contains (Method ("com/contoso/Peer", "doWork", "()V", "a/b", "e", "()V"), xml);
+			StringAssert.Contains (Method ("a/b", "doWork", "(I)V", "a/b", "c", "(I)V"), xml);
+			StringAssert.Contains (Method ("a/b", "doWork", "(Ljava/lang/String;)V", "a/b", "d", "(Ljava/lang/String;)V"), xml);
+			StringAssert.Contains (Method ("a/b", "doWork", "()V", "a/b", "e", "()V"), xml);
 		}
 
 		[Test]
@@ -471,8 +471,27 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				""");
 
 			StringAssert.Contains (
-				Method ("com/contoso/Peer", "run", "([Lcom/contoso/Argument;I)Lcom/contoso/Result;", "a/b", "c", "([La/d;I)La/e;"),
+				Method ("a/b", "run", "([Lcom/contoso/Argument;I)Lcom/contoso/Result;", "a/b", "c", "([La/d;I)La/e;"),
 				xml);
+		}
+
+		[Test]
+		public void RenamedMembersUseResidualOwnersAndOriginalSignatures ()
+		{
+			var xml = Run (
+				"""
+				com.contoso.Peer -> a.b:
+				    com.contoso.Peer run(com.contoso.Peer[]) -> c
+				    com.contoso.Peer[] peers -> d
+				""");
+
+			StringAssert.Contains ("""<replace-type from="com/contoso/Peer" to="a/b" />""", xml);
+			StringAssert.Contains ("""<reverse-type from="a/b" to="com/contoso/Peer" />""", xml);
+			StringAssert.Contains (Method ("a/b", "run", "([Lcom/contoso/Peer;)Lcom/contoso/Peer;",
+				"a/b", "c", "([La/b;)La/b;"), xml);
+			StringAssert.Contains (Field ("a/b", "peers", "[Lcom/contoso/Peer;", "a/b", "d", "[La/b;"), xml);
+			StringAssert.DoesNotContain ("source-type=\"com/contoso/Peer\"", xml);
+			Assert.AreEqual (0, Warnings.Count);
 		}
 
 		[Test]
@@ -516,9 +535,9 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				com.contoso.Argument -> a.d:
 				""");
 
-			StringAssert.Contains (Field ("com/contoso/Peer", "counter", "I", "a/b", "c", "I"), xml);
-			StringAssert.Contains (Field ("com/contoso/Peer", "argument", "Lcom/contoso/Argument;", "a/b", "d", "La/d;"), xml);
-			StringAssert.Contains (Field ("com/contoso/Peer", "arguments", "[Lcom/contoso/Argument;", "a/b", "e", "[La/d;"), xml);
+			StringAssert.Contains (Field ("a/b", "counter", "I", "a/b", "c", "I"), xml);
+			StringAssert.Contains (Field ("a/b", "argument", "Lcom/contoso/Argument;", "a/b", "d", "La/d;"), xml);
+			StringAssert.Contains (Field ("a/b", "arguments", "[Lcom/contoso/Argument;", "a/b", "e", "[La/d;"), xml);
 		}
 
 		[Test]
@@ -600,12 +619,16 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			var xml = Run (
 				"""
 				com.contoso.MainActivity -> a.b:
+				    void onCreate() -> c
+				    int counter -> d
 				com.contoso.Other -> a.c:
 				""",
 				existing);
 
 			StringAssert.DoesNotContain ("com/contoso/MainActivity", xml,
 				"The pre-existing remapping input must win.");
+			StringAssert.DoesNotContain ("source-type=\"a/b\"", xml,
+				"Members of an externally owned type must not be emitted using the residual owner.");
 			StringAssert.Contains ("""<replace-type from="com/contoso/Other" to="a/c" />""", xml);
 			Assert.AreEqual (1, Warnings.Count, "The conflict should have been reported.");
 			Assert.AreEqual ("XA4328", Warnings [0].Code);
@@ -624,11 +647,16 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			var xml = Run (
 				"""
 				com.contoso.MainActivity -> a.b:
+				    void onCreate() -> c
+				    int counter -> d
 				""",
 				existing);
 
 			StringAssert.DoesNotContain ("replace-type", xml,
 				"A duplicate entry must not be emitted twice.");
+			StringAssert.DoesNotContain ("reverse-type", xml);
+			StringAssert.DoesNotContain ("replace-method", xml);
+			StringAssert.DoesNotContain ("replace-field", xml);
 			Assert.AreEqual (0, Warnings.Count, "An identical entry is not a conflict.");
 		}
 
@@ -638,7 +666,7 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			var existing = WriteRemapXml (
 				"""
 				<replacements>
-				  <replace-method source-type="com/contoso/Peer" source-method-name="doWork" source-method-signature="(I)V" target-type="com/contoso/Mam" target-method-name="doWorkMam" target-method-instance-to-static="true" />
+				  <replace-method source-type="a/b" source-method-name="doWork" source-method-signature="(I)V" target-type="com/contoso/Mam" target-method-name="doWorkMam" target-method-instance-to-static="true" />
 				</replacements>
 				""");
 
@@ -652,10 +680,48 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 
 			StringAssert.DoesNotContain ("(I)V", xml,
 				"The overload owned by another input must not be emitted.");
-			StringAssert.Contains (Method ("com/contoso/Peer", "doWork", "(Ljava/lang/String;)V", "a/b", "d", "(Ljava/lang/String;)V"), xml,
+			StringAssert.Contains (Method ("a/b", "doWork", "(Ljava/lang/String;)V", "a/b", "d", "(Ljava/lang/String;)V"), xml,
 				"A different overload is not a conflict.");
 			Assert.AreEqual (1, Warnings.Count);
 			Assert.AreEqual ("XA4328", Warnings [0].Code);
+		}
+
+		[TestCase ("a/b", false)]
+		[TestCase ("a/b", true)]
+		[TestCase ("com/contoso/Peer", false)]
+		[TestCase ("com/contoso/Peer", true)]
+		public void ExistingMemberEntriesAreMatchedOnResidualOwner (string sourceType, bool identicalTarget)
+		{
+			string targetType = identicalTarget ? "a/b" : "com/contoso/Mam";
+			var existing = WriteRemapXml (
+				$"""
+				<replacements>
+				  {Method (sourceType, "run", "([Lcom/contoso/Peer;)Lcom/contoso/Peer;", targetType, "c", "([La/b;)La/b;")}
+				  {Field (sourceType, "peers", "[Lcom/contoso/Peer;", targetType, "d", "[La/b;")}
+				</replacements>
+				""");
+			var xml = Run (
+				"""
+				com.contoso.Peer -> a.b:
+				    com.contoso.Peer run(com.contoso.Peer[]) -> c
+				    com.contoso.Peer[] peers -> d
+				""", existing);
+
+			StringAssert.Contains ("""<replace-type from="com/contoso/Peer" to="a/b" />""", xml);
+			StringAssert.Contains ("""<reverse-type from="a/b" to="com/contoso/Peer" />""", xml);
+			if (sourceType == "a/b") {
+				StringAssert.DoesNotContain ("replace-method", xml);
+				StringAssert.DoesNotContain ("replace-field", xml);
+				Assert.AreEqual (identicalTarget ? 0 : 2, Warnings.Count);
+			} else {
+				StringAssert.Contains (Method ("a/b", "run", "([Lcom/contoso/Peer;)Lcom/contoso/Peer;",
+					"a/b", "c", "([La/b;)La/b;"), xml);
+				StringAssert.Contains (Field ("a/b", "peers", "[Lcom/contoso/Peer;", "a/b", "d", "[La/b;"), xml);
+				Assert.AreEqual (0, Warnings.Count, "An original owner is a different member lookup key.");
+			}
+			foreach (var warning in Warnings) {
+				Assert.AreEqual ("XA4328", warning.Code);
+			}
 		}
 
 		[Test]

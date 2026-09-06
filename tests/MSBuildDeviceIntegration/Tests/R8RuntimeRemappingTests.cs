@@ -45,7 +45,11 @@ namespace Xamarin.Android.Build.Tests
 								public int unusedMethod () { return -1; }
 							}
 
-							class HiddenPeer extends RuntimePeer {}
+							class HiddenPeer extends RuntimePeer {
+								public int hiddenValue = 23;
+								public HiddenPeer () {}
+								public int hiddenAdd () { return hiddenValue + 2; }
+							}
 							""",
 					},
 				},
@@ -55,6 +59,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetDefaultTargetDevice ();
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("AndroidLinkTool", "r8");
+			proj.SetProperty ("AllowUnsafeBlocks", "true");
 			proj.SetProperty ("TrimMode", "full");
 			proj.SetProperty ("AndroidEnableR8Obfuscation", "true");
 			if (runtime == AndroidRuntime.NativeAOT) {
@@ -65,11 +70,27 @@ namespace Xamarin.Android.Build.Tests
 					using System;
 					using System.Diagnostics.CodeAnalysis;
 					using Android.Runtime;
+					using Java.Interop;
 
 					[Register ("example/HiddenPeer", DoNotGenerateAcw = true)]
 					public class HiddenPeerBinding : Example.RuntimePeer
 					{
+						static readonly JniPeerMembers _members = new XAPeerMembers ("example/HiddenPeer", typeof (HiddenPeerBinding));
+						public override JniPeerMembers JniPeerMembers => _members;
+						protected override IntPtr ThresholdClass => _members.JniPeerType.PeerReference.Handle;
+						protected override Type ThresholdType => _members.ManagedPeerType;
+
+						public HiddenPeerBinding () {}
 						public HiddenPeerBinding (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
+
+						[Register ("hiddenValue")]
+						public int HiddenValue {
+							get => _members.InstanceFields.GetInt32Value ("hiddenValue.I", this);
+							set => _members.InstanceFields.SetValue ("hiddenValue.I", this, value);
+						}
+
+						[Register ("hiddenAdd", "()I", "")]
+						public unsafe int HiddenAdd () => _members.InstanceMethods.InvokeVirtualInt32Method ("hiddenAdd.()I", this, null);
 
 						[DynamicDependency (DynamicallyAccessedMemberTypes.PublicConstructors, typeof (HiddenPeerBinding))]
 						public static Type GetBindingType () => typeof (HiddenPeerBinding);
@@ -83,8 +104,13 @@ namespace Xamarin.Android.Build.Tests
 				using var created = Example.RuntimePeer.Create ();
 				var echoed = peer.Echo (created);
 				using var hidden = Example.RuntimePeer.CreateHidden ();
+				using var constructedHidden = new HiddenPeerBinding ();
+				var boundHidden = (HiddenPeerBinding) hidden;
+				boundHidden.HiddenValue = 29;
 				if (peer.Add (2) != 15 || peer.Add ("abc") != 16 ||
 						Example.RuntimePeer.StaticValue != 17 || echoed.Value != 7 ||
+						boundHidden.HiddenAdd () != 31 || constructedHidden.HiddenValue != 23 ||
+						boundHidden.Add (1) != 8 ||
 						echoed.GetType () != typeof (Example.RuntimePeer) ||
 						hidden.GetType () != HiddenPeerBinding.GetBindingType ())
 					throw new InvalidOperationException ("Obfuscated JNI lookup returned an incorrect value or managed type.");
@@ -116,6 +142,16 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (elements.Any (e => e.Name == "replace-type" &&
 					(string) e.Attribute ("from") == "example/HiddenPeer" &&
 					(string) e.Attribute ("to") != "example/HiddenPeer"), "Java-to-managed activation must exercise a genuinely renamed class.");
+				var hiddenType = (string) elements.First (e => e.Name == "replace-type" &&
+					(string) e.Attribute ("from") == "example/HiddenPeer").Attribute ("to");
+				Assert.IsTrue (elements.Any (e => e.Name == "replace-method" &&
+					(string) e.Attribute ("source-type") == hiddenType &&
+					(string) e.Attribute ("source-method-name") == "hiddenAdd" &&
+					(string) e.Attribute ("target-method-name") != "hiddenAdd"), "Method lookups must use the renamed owner.");
+				Assert.IsTrue (elements.Any (e => e.Name == "replace-field" &&
+					(string) e.Attribute ("source-type") == hiddenType &&
+					(string) e.Attribute ("source-field-name") == "hiddenValue" &&
+					(string) e.Attribute ("target-field-name") != "hiddenValue"), "Field lookups must use the renamed owner.");
 				Assert.IsFalse (elements.Any (e => (string) e.Attribute ("source-method-name") == "unusedMethod"),
 					"An unused method on a retained type must not occupy the runtime table.");
 

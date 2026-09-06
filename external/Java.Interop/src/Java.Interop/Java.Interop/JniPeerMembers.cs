@@ -12,12 +12,12 @@ namespace Java.Interop {
 		private bool isInterface;
 
 		public JniPeerMembers (string jniPeerTypeName, Type managedPeerType, bool isInterface)
-			: this (jniPeerTypeName, GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: true, isInterface: isInterface)
+			: this (GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: true, isInterface: isInterface)
 		{
 		}
 
 		public JniPeerMembers (string jniPeerTypeName, Type managedPeerType)
-			: this (jniPeerTypeName, GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: true, isInterface: false)
+			: this (GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: true, isInterface: false)
 		{
 		}
 
@@ -31,12 +31,10 @@ namespace Java.Interop {
 			return jniPeerTypeName;
 		}
 
-		JniPeerMembers (string originalJniPeerTypeName, string jniPeerTypeName, Type managedPeerType, bool checkManagedPeerType, bool isInterface = false)
+		JniPeerMembers (string jniPeerTypeName, Type managedPeerType, bool checkManagedPeerType, bool isInterface = false)
 		{
 			if (jniPeerTypeName == null)
 				throw new ArgumentNullException (nameof (jniPeerTypeName));
-			if (originalJniPeerTypeName == null)
-				throw new ArgumentNullException (nameof (originalJniPeerTypeName));
 
 			if (checkManagedPeerType) {
 				if (managedPeerType == null)
@@ -45,10 +43,8 @@ namespace Java.Interop {
 					throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", nameof (managedPeerType));
 
 #if DEBUG
-				// The managed type still declares its *original* JNI name, so compare against that
-				// and not against the (possibly remapped) name used to look the type up.
 				var signatureFromType   = JniEnvironment.Runtime.TypeManager.GetTypeSignature (managedPeerType);
-				if (signatureFromType.SimpleReference != originalJniPeerTypeName) {
+				if (signatureFromType.SimpleReference != jniPeerTypeName) {
 					Debug.WriteLine ("WARNING-Java.Interop: ManagedPeerType <=> JniTypeName Mismatch! javaVM.GetJniTypeInfoForType(typeof({0})).JniTypeName=\"{1}\" != \"{2}\"",
 							managedPeerType.FullName,
 							signatureFromType.SimpleReference,
@@ -59,7 +55,6 @@ namespace Java.Interop {
 			}
 
 			JniPeerTypeName = jniPeerTypeName;
-			JniPeerOriginalTypeName = originalJniPeerTypeName;
 			ManagedPeerType = managedPeerType;
 
 			this.isInterface = isInterface;
@@ -72,7 +67,7 @@ namespace Java.Interop {
 
 		static JniPeerMembers CreatePeerMembers (string jniPeerTypeName, Type managedPeerType)
 		{
-			return new JniPeerMembers (jniPeerTypeName, GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: false);
+			return new JniPeerMembers (GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: false);
 		}
 
 		JniType?            jniPeerType;
@@ -87,9 +82,6 @@ namespace Java.Interop {
 		/// remapped name when the type was renamed in the packaged application.</summary>
 		public      string      JniPeerTypeName {get; private set;}
 
-		/// <summary>The JNI type name the managed peer type declares. Member replacements are keyed
-		/// by it, because the mapping describes the original names.</summary>
-		internal    string      JniPeerOriginalTypeName {get; private set;}
 		public      JniType     JniPeerType {
 			get {
 				var t = JniType.GetCachedJniType (ref jniPeerType, JniPeerTypeName);
@@ -155,25 +147,16 @@ namespace Java.Interop {
 			return isInterface ? this : value.JniPeerMembers;
 		}
 
-		//
-		// Member replacements are described in terms of the JNI names the managed code declares, so
-		// `sourceJniTypeName` is the natural key. Remapping inputs which predate type renaming being
-		// applied to member entries - the Intune/MAM mapping - instead key them by the replaced
-		// name, so that is tried as well.
-		//
+		// Member keys use the replaced type name but retain the managed member name and signature.
 		internal static JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (
-			string sourceJniTypeName,
-			string effectiveJniTypeName,
+			string jniTypeName,
 			Type managedPeerType,
 			string method,
 			string signature,
 			bool searchBaseTypes = true)
 		{
 			var typeManager = JniEnvironment.Runtime.TypeManager;
-			var info        = typeManager.GetReplacementMethodInfo (sourceJniTypeName, method, signature);
-			if (info == null && !string.Equals (sourceJniTypeName, effectiveJniTypeName, StringComparison.Ordinal)) {
-				info    = typeManager.GetReplacementMethodInfo (effectiveJniTypeName, method, signature);
-			}
+			var info        = typeManager.GetReplacementMethodInfo (jniTypeName, method, signature);
 			if (info == null && searchBaseTypes) {
 				for (Type? baseType = managedPeerType.BaseType; baseType != null; baseType = baseType.BaseType) {
 					var baseSignature = typeManager.GetTypeSignature (baseType);
@@ -181,11 +164,7 @@ namespace Java.Interop {
 					if (effectiveBaseType == null) {
 						continue;
 					}
-					string sourceBaseType = typeManager.GetOriginalType (effectiveBaseType) ?? effectiveBaseType;
-					info = typeManager.GetReplacementMethodInfo (sourceBaseType, method, signature);
-					if (info == null && !string.Equals (sourceBaseType, effectiveBaseType, StringComparison.Ordinal)) {
-						info = typeManager.GetReplacementMethodInfo (effectiveBaseType, method, signature);
-					}
+					info = typeManager.GetReplacementMethodInfo (effectiveBaseType, method, signature);
 					if (info != null) {
 						break;
 					}
@@ -195,17 +174,13 @@ namespace Java.Interop {
 		}
 
 		internal static JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfo (
-			string sourceJniTypeName,
-			string effectiveJniTypeName,
+			string jniTypeName,
 			Type managedPeerType,
 			string field,
 			string signature)
 		{
 			var typeManager = JniEnvironment.Runtime.TypeManager;
-			var info        = typeManager.GetReplacementFieldInfo (sourceJniTypeName, field, signature);
-			if (info == null && !string.Equals (sourceJniTypeName, effectiveJniTypeName, StringComparison.Ordinal)) {
-				info    = typeManager.GetReplacementFieldInfo (effectiveJniTypeName, field, signature);
-			}
+			var info        = typeManager.GetReplacementFieldInfo (jniTypeName, field, signature);
 			if (info == null) {
 				for (Type? baseType = managedPeerType.BaseType; baseType != null; baseType = baseType.BaseType) {
 					var baseSignature = typeManager.GetTypeSignature (baseType);
@@ -213,11 +188,7 @@ namespace Java.Interop {
 					if (effectiveBaseType == null) {
 						continue;
 					}
-					string sourceBaseType = typeManager.GetOriginalType (effectiveBaseType) ?? effectiveBaseType;
-					info = typeManager.GetReplacementFieldInfo (sourceBaseType, field, signature);
-					if (info == null && !string.Equals (sourceBaseType, effectiveBaseType, StringComparison.Ordinal)) {
-						info = typeManager.GetReplacementFieldInfo (effectiveBaseType, field, signature);
-					}
+					info = typeManager.GetReplacementFieldInfo (effectiveBaseType, field, signature);
 					if (info != null) {
 						break;
 					}

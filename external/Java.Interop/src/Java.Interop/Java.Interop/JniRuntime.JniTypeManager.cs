@@ -305,15 +305,6 @@ namespace Java.Interop {
 
 			protected virtual string? GetReplacementTypeCore (string jniSimpleReference) => null;
 
-			internal string? GetOriginalType (string jniSimpleReference)
-			{
-				AssertValid ();
-				AssertSimpleReference (jniSimpleReference, nameof (jniSimpleReference));
-				return GetOriginalTypeCore (jniSimpleReference);
-			}
-
-			protected virtual string? GetOriginalTypeCore (string jniSimpleReference) => null;
-
 			public IReadOnlyList<string>? GetStaticMethodFallbackTypes (string jniSimpleReference)
 			{
 				AssertValid ();

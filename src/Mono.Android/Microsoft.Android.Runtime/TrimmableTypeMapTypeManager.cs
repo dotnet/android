@@ -402,9 +402,6 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 	protected override string? GetReplacementTypeCore (string jniSimpleReference)
 		=> JniRemappingLookup.GetReplacementType (jniSimpleReference);
 
-	protected override string? GetOriginalTypeCore (string jniSimpleReference)
-		=> JniRemappingLookup.GetReverseType (jniSimpleReference);
-
 	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
 		=> JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
 

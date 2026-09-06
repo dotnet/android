@@ -32,6 +32,10 @@ static class JniRemappingLookup
 
 	internal static IReadOnlyList<string> GetStaticMethodFallbackTypes (string jniSimpleReference, bool useReplacementTypes)
 	{
+		// Desugared companion names are derived before R8 renames the interface and companions.
+		if (useReplacementTypes) {
+			jniSimpleReference = GetReverseType (jniSimpleReference) ?? jniSimpleReference;
+		}
 		int slash = jniSimpleReference.LastIndexOf ('/');
 		var desugarType = slash > 0
 			? $"{jniSimpleReference.Substring (0, slash + 1)}Desugar{jniSimpleReference.Substring (slash + 1)}"

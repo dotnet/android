@@ -24,6 +24,8 @@ namespace Xamarin.Android.Tasks
 	/// The generated document is what teaches the runtime how those original names map onto the
 	/// obfuscated names R8 produced, and how the obfuscated names map back for Java-to-managed
 	/// lookups.
+	/// Member lookups use the remapped owner type, but retain the original member names and
+	/// descriptors from managed code, matching the existing Intune/MAM remapping contract.
 	///
 	/// The document extends the existing schema in a backward-compatible way:
 	///
@@ -294,13 +296,13 @@ namespace Xamarin.Android.Tasks
 
 			if (!TryClaimEntry (
 					"replace-field",
-					BuildFieldKey (classMapping.OriginalJniName, field.OriginalName),
+					BuildFieldKey (classMapping.ObfuscatedJniName, field.OriginalName),
 					$"{classMapping.ObfuscatedJniName}\t{field.ObfuscatedName}\t{targetSignature}")) {
 				return;
 			}
 
 			writer.WriteStartElement ("replace-field");
-			writer.WriteAttributeString ("source-type", classMapping.OriginalJniName);
+			writer.WriteAttributeString ("source-type", classMapping.ObfuscatedJniName);
 			writer.WriteAttributeString ("source-field-name", field.OriginalName);
 			writer.WriteAttributeString ("source-field-signature", sourceSignature);
 			writer.WriteAttributeString ("target-type", classMapping.ObfuscatedJniName);
@@ -331,13 +333,13 @@ namespace Xamarin.Android.Tasks
 			// The source signature is part of the key, so overloads stay distinct entries.
 			if (!TryClaimEntry (
 					"replace-method",
-					BuildMethodKey (classMapping.OriginalJniName, method.OriginalName, sourceSignature),
+					BuildMethodKey (classMapping.ObfuscatedJniName, method.OriginalName, sourceSignature),
 					$"{classMapping.ObfuscatedJniName}\t{method.ObfuscatedName}\t{targetSignature}")) {
 				return;
 			}
 
 			writer.WriteStartElement ("replace-method");
-			writer.WriteAttributeString ("source-type", classMapping.OriginalJniName);
+			writer.WriteAttributeString ("source-type", classMapping.ObfuscatedJniName);
 			writer.WriteAttributeString ("source-method-name", method.OriginalName);
 			writer.WriteAttributeString ("source-method-signature", sourceSignature);
 			writer.WriteAttributeString ("target-type", classMapping.ObfuscatedJniName);

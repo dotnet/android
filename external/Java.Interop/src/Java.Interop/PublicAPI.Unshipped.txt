@@ -141,4 +141,3 @@ override Java.Interop.JniRuntime.ReplacementFieldInfo.ToString() -> string!
 static Java.Interop.JniRuntime.ReplacementFieldInfo.operator !=(Java.Interop.JniRuntime.ReplacementFieldInfo a, Java.Interop.JniRuntime.ReplacementFieldInfo b) -> bool
 static Java.Interop.JniRuntime.ReplacementFieldInfo.operator ==(Java.Interop.JniRuntime.ReplacementFieldInfo a, Java.Interop.JniRuntime.ReplacementFieldInfo b) -> bool
 virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementFieldInfoCore(string! jniSimpleReference, string! jniFieldName, string! jniFieldSignature) -> Java.Interop.JniRuntime.ReplacementFieldInfo?
-virtual Java.Interop.JniRuntime.JniTypeManager.GetOriginalTypeCore(string! jniSimpleReference) -> string?

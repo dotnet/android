@@ -28,7 +28,7 @@ namespace Java.Interop
 
 		JniFieldInfo GetFieldInfo (string field, string signature)
 		{
-			var newField = JniPeerMembers.GetReplacementFieldInfo (Members.JniPeerOriginalTypeName, Members.JniPeerTypeName, Members.ManagedPeerType, field, signature);
+			var newField = JniPeerMembers.GetReplacementFieldInfo (Members.JniPeerTypeName, Members.ManagedPeerType, field, signature);
 			if (newField.HasValue) {
 				var typeName     = newField.Value.TargetJniType ?? Members.JniPeerTypeName;
 				var fieldName    = newField.Value.TargetJniFieldName ?? field;
