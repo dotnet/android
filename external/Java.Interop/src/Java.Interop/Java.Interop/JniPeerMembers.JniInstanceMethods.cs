@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Threading;
 
 namespace Java.Interop
 {
@@ -46,12 +45,7 @@ namespace Java.Interop
 		internal void Dispose ()
 		{
 			Clear (ref InstanceMethods);
-			var constructors = Interlocked.Exchange (ref SubclassConstructors, null);
-			if (constructors != null) {
-				foreach (var p in constructors.Values)
-					p.Dispose ();
-				constructors.Clear ();
-			}
+			Clear (ref SubclassConstructors, static value => value.Dispose ());
 
 			if (jniPeerType != null)
 				jniPeerType.Dispose ();

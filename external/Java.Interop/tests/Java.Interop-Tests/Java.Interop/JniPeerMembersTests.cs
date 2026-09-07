@@ -78,6 +78,10 @@ namespace Java.InteropTests
 			Assert.AreSame (derivedMethods, constructors [typeof (CallVirtualFromConstructorDerived)]);
 
 			methods.Dispose ();
+			Assert.IsNull (GetSubclassConstructors (methods));
+			Assert.Throws<InvalidOperationException> (() => {
+				var type = derivedMethods.JniPeerType;
+			});
 		}
 
 		[Test]
