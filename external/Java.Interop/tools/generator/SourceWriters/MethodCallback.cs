@@ -16,16 +16,20 @@ namespace generator.SourceWriters
 		readonly string property_name;
 		readonly bool is_formatted;
 		readonly CodeGenerationOptions opt;
+		readonly string target_name;
+		readonly string declaring_type;
 
 		readonly FieldWriter delegate_field;
 		readonly MethodWriter delegate_getter;
+		readonly UnmanagedCallbackKind kind;
+		readonly TypedCallbackShape typed_shape;
 
 		// static sbyte n_ByteValueExact (IntPtr jnienv, IntPtr native__this)
 		// {
 		// 	var __this = global::Java.Lang.Object.GetObject<Android.Icu.Math.BigDecimal> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 		// 	return __this.ByteValueExact ();
 		// }
-		public MethodCallback (GenBase type, Method method, CodeGenerationOptions options, string propertyName, bool isFormatted)
+		public MethodCallback (GenBase type, Method method, CodeGenerationOptions options, string propertyName, bool isFormatted, string declaringType = null)
 		{
 			this.type = type;
 			this.method = method;
@@ -34,14 +38,33 @@ namespace generator.SourceWriters
 			is_formatted = isFormatted;
 			opt = options;
 
-			delegate_field = new MethodCallbackDelegateField (method, options);
-			delegate_getter = new GetDelegateHandlerMethod (method, options);
+			kind = UnmanagedCallbackSupport.GetCallbackKind (type, method, options, propertyName, isFormatted);
+			if (kind == UnmanagedCallbackKind.UnmanagedTyped)
+				UnmanagedCallbackSupport.TryGetTypedShape (type, method, options, propertyName, isFormatted, out typed_shape);
 
-			Name = "n_" + method.Name + method.IDSignature;
+			if (kind == UnmanagedCallbackKind.Legacy) {
+				delegate_field = new MethodCallbackDelegateField (method, options);
+				delegate_getter = new GetDelegateHandlerMethod (method, options);
+			} else {
+				// The cb_* field and Get*Handler () connector are gone, but the _JniMarshal_*
+				// delegate *type* is still registered. Mono.Android's hand-written legacy
+				// JNINativeWrapper wraps a fixed set of these signatures, and dropping the type
+				// declarations breaks its compilation. Removing them is a further, separate
+				// saving that requires retiring the reflection-based registration path.
+				method.GetDelegateType (options);
+			}
+
+			Name = UnmanagedCallbackSupport.GetCallbackName (type, method, options);
+			target_name = UnmanagedCallbackSupport.GetCallbackTargetName (type, method, options);
+			// Interface invokers marshal an interface peer but declare the target on the invoker.
+			declaring_type = opt.GetOutputName (declaringType ?? type.FullName);
 			ReturnType = new TypeReferenceWriter (method.RetVal.NativeType);
 
 			IsStatic = true;
 			IsPrivate = method.IsInterfaceDefaultMethod;
+
+			if (kind != UnmanagedCallbackKind.Legacy)
+				Attributes.Add (new CustomAttr ("[global::System.Runtime.InteropServices.UnmanagedCallersOnly]"));
 
 			SourceWriterExtensions.AddObsolete (Attributes, null, opt, forceDeprecate: !string.IsNullOrWhiteSpace (method.Deprecated), deprecatedSince: method.DeprecatedSince);
 
@@ -56,8 +79,14 @@ namespace generator.SourceWriters
 
 		protected override void WriteBody (CodeWriter writer)
 		{
-			var paramArgs = string.Join ("", method.Parameters.Select (p => $", {opt.GetSafeIdentifier (p.UnsafeNativeName)}"));
-			var call = $"global::Java.Interop.JniMarshal.{(method.IsVoid ? "SafeInvokeAction" : "SafeInvokeFunc")} (jnienv, native__this{paramArgs}, &__{Name})";
+			string call;
+			if (typed_shape != null) {
+				call = typed_shape.GetHelperInvocation (declaring_type, target_name);
+			} else {
+				var paramArgs = string.Join ("", method.Parameters.Select (p => $", {opt.GetSafeIdentifier (p.UnsafeNativeName)}"));
+				var target = kind == UnmanagedCallbackKind.Legacy ? target_name : declaring_type + "." + target_name;
+				call = $"global::Java.Interop.JniMarshal.{(method.IsVoid ? "SafeInvokeAction" : "SafeInvokeFunc")} (jnienv, native__this{paramArgs}, &{target})";
+			}
 
 			writer.WriteLine ("unsafe {");
 			writer.Indent ();
@@ -74,46 +103,71 @@ namespace generator.SourceWriters
 			foreach (var attribute in attributes)
 				attribute.WriteAttribute (writer);
 
-			writer.WriteLine ($"private static {method.RetVal.NativeType} __{Name} (IntPtr jnienv, IntPtr native__this{method.Parameters.GetCallbackSignature (opt)})");
+			if (typed_shape != null)
+				writer.WriteLine (typed_shape.GetTargetSignature (opt.GetOutputName (type.FullName), target_name, opt.NullableOperator));
+			else
+				writer.WriteLine ($"private static {method.RetVal.NativeType} {target_name} (IntPtr jnienv, IntPtr native__this{method.Parameters.GetCallbackSignature (opt)})");
 			writer.WriteLine ("{");
 
 			writer.Indent ();
-			writer.WriteLine ($"var __this = global::Java.Lang.Object.GetObject<{opt.GetOutputName (type.FullName)}> (jnienv, native__this, JniHandleOwnership.DoNotTransfer){opt.NullForgivingOperator};");
+			if (typed_shape == null)
+				writer.WriteLine ($"var __this = global::Java.Lang.Object.GetObject<{opt.GetOutputName (type.FullName)}> (jnienv, native__this, JniHandleOwnership.DoNotTransfer){opt.NullForgivingOperator};");
 
-			foreach (var s in method.Parameters.GetCallbackPrep (opt))
+			foreach (var s in typed_shape != null ? GetTypedCallbackPrep () : method.Parameters.GetCallbackPrep (opt).Cast<string> ())
 				writer.WriteLine (s);
+
+			// The typed helper owns the JNI conversion of a peer return value, and no typed shape
+			// has a parameter requiring post-call cleanup, so the `__ret` dance is unnecessary.
+			var useRetTemporary = typed_shape == null && method.Parameters.HasCleanup;
+			string ToReturn (string call) => typed_shape != null && typed_shape.ReturnsPeer ? call : method.RetVal.ToNative (opt, call);
 
 			if (string.IsNullOrEmpty (property_name)) {
 				var call = "__this." + method.Name + (is_formatted ? "Formatted" : string.Empty) + " (" + method.Parameters.GetCall (opt) + ")";
 				if (method.IsVoid)
 					writer.WriteLine (call + ";");
 				else
-					writer.WriteLine ("{0} {1};", method.Parameters.HasCleanup ? method.RetVal.NativeType + " __ret =" : "return", method.RetVal.ToNative (opt, call));
+					writer.WriteLine ("{0} {1};", useRetTemporary ? method.RetVal.NativeType + " __ret =" : "return", ToReturn (call));
 			} else {
 				if (method.IsVoid)
 					writer.WriteLine ("__this.{0} = {1};", property_name, method.Parameters.GetCall (opt));
 				else
-					writer.WriteLine ("{0} {1};", method.Parameters.HasCleanup ? method.RetVal.NativeType + " __ret =" : "return", method.RetVal.ToNative (opt, "__this." + property_name));
+					writer.WriteLine ("{0} {1};", useRetTemporary ? method.RetVal.NativeType + " __ret =" : "return", ToReturn ("__this." + property_name));
 			}
 
-			foreach (var cleanup in method.Parameters.GetCallbackCleanup (opt))
-				writer.WriteLine (cleanup);
+			if (typed_shape == null) {
+				foreach (var cleanup in method.Parameters.GetCallbackCleanup (opt))
+					writer.WriteLine (cleanup);
+			}
 
-			if (!method.IsVoid && method.Parameters.HasCleanup)
+			if (!method.IsVoid && useRetTemporary)
 				writer.WriteLine ("return __ret;");
 
 			writer.Unindent ();
 			writer.WriteLine ("}");
 		}
 
+		// Object parameters are marshaled by the shared typed helper and arrive already converted;
+		// only the pure scalar projections (bool, char, enums) remain for the target method.
+		IEnumerable<string> GetTypedCallbackPrep ()
+		{
+			foreach (var p in method.Parameters) {
+				if (p.NeedsPrep)
+					continue;
+				foreach (var line in p.GetPreCallback (opt))
+					yield return line;
+			}
+		}
+
 		public override void Write (CodeWriter writer)
 		{
-			delegate_field.Write (writer);
+			delegate_field?.Write (writer);
 
 			writer.WriteLineNoIndent ("#pragma warning disable 0169");
 
-			delegate_getter.Write (writer);
-			writer.WriteLine ();
+			if (delegate_getter != null) {
+				delegate_getter.Write (writer);
+				writer.WriteLine ();
+			}
 
 			base.Write (writer);
 			WriteMarshalBody (writer);

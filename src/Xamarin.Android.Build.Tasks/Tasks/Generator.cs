@@ -55,6 +55,14 @@ namespace Xamarin.Android.Tasks
 		public bool EnableBindingInterfaceConstants { get; set; }
 		public string? EnableRestrictToAttributes { get; set; }
 		public bool EnableObsoleteOverrideInheritance { get; set; }
+
+		/// <summary>
+		/// Experimental, for internal use: emit each supported non-generic <c>n_*</c> binding
+		/// callback as an <c>[UnmanagedCallersOnly]</c> method which forwards to a shared typed
+		/// marshaling helper, and omit the <c>cb_*</c> delegate cache fields and
+		/// <c>Get*Handler ()</c> connector methods.  Requires the trimmable typemap.
+		/// </summary>
+		public bool EnableUnmanagedCallersOnlyCallbacks { get; set; }
 		public string? Nullable { get; set; }
 
 		public ITaskItem[]? TransformFiles { get; set; }
@@ -230,6 +238,9 @@ namespace Xamarin.Android.Tasks
 
 					if (string.Equals (Nullable, "enable", StringComparison.OrdinalIgnoreCase))
 						features.Add ("nullable-reference-types");
+
+					if (EnableUnmanagedCallersOnlyCallbacks)
+						features.Add ("unmanaged-callers-only-callbacks");
 
 					if (features.Any ())
 						WriteLine (sw, $"--lang-features={string.Join (",", features)}");

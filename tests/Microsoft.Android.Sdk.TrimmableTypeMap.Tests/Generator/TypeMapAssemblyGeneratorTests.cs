@@ -1254,11 +1254,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.ToList ();
 	}
 
-	static List<int> ReadLdftnTokens (byte [] ilBytes)
-	{
-		return ReadInlineMethodTokens (ilBytes, 0xFE, 0x06);
-	}
-
 	static List<int> ReadCallTokens (byte [] ilBytes)
 	{
 		return ReadInlineMethodTokens (ilBytes, 0x28);
@@ -1276,22 +1271,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 				(ilBytes [i + 2] << 8) |
 				(ilBytes [i + 3] << 16) |
 				(ilBytes [i + 4] << 24));
-		}
-		return tokens;
-	}
-
-	static List<int> ReadInlineMethodTokens (byte [] ilBytes, byte opcodePrefix, byte opcode)
-	{
-		var tokens = new List<int> ();
-		for (int i = 0; i < ilBytes.Length - 5; i++) {
-			if (ilBytes [i] != opcodePrefix || ilBytes [i + 1] != opcode) {
-				continue;
-			}
-
-			tokens.Add (ilBytes [i + 2] |
-				(ilBytes [i + 3] << 8) |
-				(ilBytes [i + 4] << 16) |
-				(ilBytes [i + 5] << 24));
 		}
 		return tokens;
 	}

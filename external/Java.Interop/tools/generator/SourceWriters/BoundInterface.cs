@@ -38,6 +38,11 @@ namespace generator.SourceWriters
 
 			UsePriorityOrder = true;
 
+			// Renaming happens up front, before any member is written, so that every writer -- and
+			// in particular the callback name allocator, which snapshots a type's members the first
+			// time it is asked about one of them -- observes the final managed names.
+			FixupInvokerMethodNames (iface);
+
 			SetVisibility (iface.Visibility);
 
 			iface.JavadocInfo?.AddJavadocs (Comments);
@@ -223,13 +228,20 @@ namespace generator.SourceWriters
 			}
 		}
 
-		void AddMethods (InterfaceGen iface, CodeGenerationOptions opt)
+		// A method whose managed name would collide with the interface itself or with one of its
+		// properties is prefixed with "Invoke".
+		static void FixupInvokerMethodNames (InterfaceGen iface)
 		{
 			foreach (var m in iface.Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod)) {
 				if (m.Name == iface.Name || iface.ContainsProperty (m.Name, true))
 					m.Name = "Invoke" + m.Name;
+			}
+		}
 
-				Methods.Add (new BoundInterfaceMethodDeclaration (m, iface.AssemblyQualifiedName + "Invoker", opt));
+		void AddMethods (InterfaceGen iface, CodeGenerationOptions opt)
+		{
+			foreach (var m in iface.Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod)) {
+				Methods.Add (new BoundInterfaceMethodDeclaration (iface, m, iface.AssemblyQualifiedName + "Invoker", opt));
 			}
 
 			if (!opt.SupportDefaultInterfaceMethods)

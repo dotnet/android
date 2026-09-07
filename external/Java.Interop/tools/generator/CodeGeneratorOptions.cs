@@ -56,6 +56,7 @@ namespace Xamarin.Android.Binder
 		public bool		    SupportNullableReferenceTypes { get; set; }
 		public bool		    UseRestrictToAttributes { get; set; }
 		public bool		    FixObsoleteOverrides { get; set;} = true;
+		public bool		    UseUnmanagedCallersOnlyCallbacks { get; set; }
 		public bool			UseObsoletedOSPlatformAttributes { get; set; }
 
 		public XmldocStyle		    XmldocStyle { get; set; } = XmldocStyle.IntelliSense;
@@ -109,7 +110,7 @@ namespace Xamarin.Android.Binder
 					"SDK Platform {VERSION}/API level.",
 					v => opts.ApiLevel = v },
 				{ "lang-features=",
-					"For internal use. (Flags: interface-constants,default-interface-methods,nested-interface-types,nullable-reference-types,obsoleted-platform-attributes,restrict-to-attributes,do-not-fix-obsolete-overrides)",
+					"For internal use. (Flags: interface-constants,default-interface-methods,nested-interface-types,nullable-reference-types,obsoleted-platform-attributes,restrict-to-attributes,do-not-fix-obsolete-overrides,unmanaged-callers-only-callbacks)",
 					v => {
 						opts.SupportInterfaceConstants = v?.Contains ("interface-constants") == true;
 						opts.SupportDefaultInterfaceMethods = v?.Contains ("default-interface-methods") == true;
@@ -118,6 +119,7 @@ namespace Xamarin.Android.Binder
 						opts.UseObsoletedOSPlatformAttributes = v?.Contains ("obsoleted-platform-attributes") == true;
 						opts.UseRestrictToAttributes = v?.Contains ("restrict-to-attributes") == true;
 						opts.FixObsoleteOverrides = v?.Contains ("do-not-fix-obsolete-overrides") == false;
+						opts.UseUnmanagedCallersOnlyCallbacks = v?.Contains ("unmanaged-callers-only-callbacks") == true;
 						}},
 				{ "preserve-enums",
 					"For internal use.",

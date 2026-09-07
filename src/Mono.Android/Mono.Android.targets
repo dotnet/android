@@ -142,6 +142,11 @@
       <_LangFeatures>--lang-features=nullable-reference-types</_LangFeatures>
       <_LangFeatures Condition="$(AndroidApiLevel) &gt;= 30">$(_LangFeatures),default-interface-methods,nested-interface-types,interface-constants</_LangFeatures>
       <_LangFeatures Condition=" $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '7.0')) ">$(_LangFeatures),obsoleted-platform-attributes</_LangFeatures>
+      <!--
+        Internal, off-by-default switch for the experimental [UnmanagedCallersOnly] binding
+        callback format. It requires the trimmable typemap, so it must never be enabled by default.
+      -->
+      <_LangFeatures Condition=" '$(_MonoAndroidEnableUnmanagedCallersOnlyCallbacks)' == 'true' ">$(_LangFeatures),unmanaged-callers-only-callbacks</_LangFeatures>
     </PropertyGroup>
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; $(Generator) $(_GenFlags) $(_ApiLevel) $(_Out) $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_LangFeatures) $(_Dirs) $(_Api) $(_WithJavadocXml)"
@@ -204,6 +209,13 @@
   <!-- Runs ApiCompat to prevent API breakage -->
   <PropertyGroup>
     <ApiCompatibilityDir>../../tests/api-compatibility</ApiCompatibilityDir>
+    <!--
+      The experimental [UnmanagedCallersOnly] callback format renames the generated callback
+      infrastructure, which is observable through the Connector value of [Register].  That value is
+      an implementation detail rather than public API, but ApiCompat compares attribute arguments,
+      so the check is skipped while the experiment is enabled.  It still runs for a default build.
+    -->
+    <DisableApiCompatibilityCheck Condition=" '$(_MonoAndroidEnableUnmanagedCallersOnlyCallbacks)' == 'true' ">True</DisableApiCompatibilityCheck>
   </PropertyGroup>
   <ItemGroup>
     <ApiCompatibilityFiles Include="$(ApiCompatibilityDir)/acceptable-breakages-v*.txt" />

@@ -16,7 +16,7 @@ namespace generator.SourceWriters
 		readonly Method method;
 		readonly CodeGenerationOptions opt;
 
-		public BoundInterfaceMethodDeclaration (Method method, string adapter, CodeGenerationOptions opt)
+		public BoundInterfaceMethodDeclaration (GenBase iface, Method method, string adapter, CodeGenerationOptions opt)
 		{
 			this.method = method;
 			this.opt = opt;
@@ -44,7 +44,7 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
-			Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, method.ConnectorName + ":" + method.GetAdapterName (opt, adapter), additionalProperties: method.AdditionalAttributeString ()) {
+			Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, UnmanagedCallbackSupport.GetConnectorName (iface, method, opt) + ":" + method.GetAdapterName (opt, adapter), additionalProperties: method.AdditionalAttributeString ()) {
 				MemberType	    = opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 ? null : (MemberTypes?) MemberTypes.Method,
 			});
 

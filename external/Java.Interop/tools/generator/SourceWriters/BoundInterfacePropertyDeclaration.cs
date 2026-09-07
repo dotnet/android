@@ -35,7 +35,7 @@ namespace generator.SourceWriters
 
 				SourceWriterExtensions.AddSupportedOSPlatform (GetterAttributes, property.Getter, opt);
 
-				GetterAttributes.Add (new RegisterAttr (property.Getter.JavaName, property.Getter.JniSignature, property.Getter.ConnectorName + ":" + property.Getter.GetAdapterName (opt, adapter), additionalProperties: property.Getter.AdditionalAttributeString ()) {
+				GetterAttributes.Add (new RegisterAttr (property.Getter.JavaName, property.Getter.JniSignature, UnmanagedCallbackSupport.GetConnectorName (gen, property.Getter, opt) + ":" + property.Getter.GetAdapterName (opt, adapter), additionalProperties: property.Getter.AdditionalAttributeString ()) {
 					MemberType	    = opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 ? null : (MemberTypes?) MemberTypes.Method,
 				});
 			}
@@ -50,7 +50,7 @@ namespace generator.SourceWriters
 
 				SourceWriterExtensions.AddSupportedOSPlatform (SetterAttributes, property.Setter, opt);
 
-				SetterAttributes.Add (new RegisterAttr (property.Setter.JavaName, property.Setter.JniSignature, property.Setter.ConnectorName + ":" + property.Setter.GetAdapterName (opt, adapter), additionalProperties: property.Setter.AdditionalAttributeString ()) {
+				SetterAttributes.Add (new RegisterAttr (property.Setter.JavaName, property.Setter.JniSignature, UnmanagedCallbackSupport.GetConnectorName (gen, property.Setter, opt) + ":" + property.Setter.GetAdapterName (opt, adapter), additionalProperties: property.Setter.AdditionalAttributeString ()) {
 					MemberType	    = opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 ? null : (MemberTypes?) MemberTypes.Method,
 				});
 			}

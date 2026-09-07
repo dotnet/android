@@ -311,6 +311,14 @@ public sealed record MarshalMethodInfo
 	public bool CallManagedMethodDirectly { get; init; }
 
 	/// <summary>
+	/// True when the generated <c>n_*</c> callback carries
+	/// <c>[System.Runtime.InteropServices.UnmanagedCallersOnly]</c>. Such a callback has no
+	/// <c>Get*Handler ()</c> connector method and must never be called from managed code, so
+	/// RegisterNatives binds its address directly instead of going through a generated wrapper.
+	/// </summary>
+	public bool IsUnmanagedCallersOnlyCallback { get; init; }
+
+	/// <summary>
 	/// Java annotations forwarded from the managed method or constructor.
 	/// </summary>
 	public IReadOnlyList<JavaAnnotationInfo> Annotations { get; init; } = [];
