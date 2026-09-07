@@ -76,13 +76,9 @@ namespace {
 		struct alignas (16) WriteRequest final
 		{
 			WriteRequest *next;
+			uint8_t      *payload;
 			size_t        size;
 			uint32_t      descriptor_index;
-
-			auto payload () noexcept -> uint8_t*
-			{
-				return reinterpret_cast<uint8_t*>(this) + sizeof (WriteRequest);
-			}
 		};
 
 		static_assert (sizeof (WriteRequest) % alignof (std::max_align_t) == 0uz);
@@ -111,9 +107,10 @@ namespace {
 				return nullptr;
 			}
 
-			auto *request = static_cast<WriteRequest*>(std::malloc (sizeof (WriteRequest) + payload_size));
+			auto *request = static_cast<WriteRequest*>(std::malloc (sizeof (WriteRequest) + payload_size * sizeof (uint8_t)));
 			if (request != nullptr) {
 				request->next = nullptr;
+				request->payload = reinterpret_cast<uint8_t*>(request + 1);
 			}
 
 			return request;
@@ -180,7 +177,7 @@ namespace {
 				return WriteResult::Failed;
 			}
 
-			bool ok = write_fully (fd, req->payload (), req->size);
+			bool ok = write_fully (fd, req->payload, req->size);
 			int error = ok ? 0 : errno;
 			if (close (fd) != 0 && ok) {
 				ok = false;
@@ -540,17 +537,17 @@ namespace {
 
 			// The runtime can modify the shared decompression buffer after this
 			// method returns, so the background writer needs an immutable copy.
-			memcpy (req->payload (), data, size);
+			memcpy (req->payload, data, size);
 
 			CacheFileFooter footer {
 				.magic = CACHE_FILE_MAGIC,
 				.version = CACHE_FILE_FORMAT_VERSION,
 				.store_id = store_id,
-				.payload_hash = hash_payload (req->payload (), size),
+				.payload_hash = hash_payload (req->payload, size),
 				.descriptor_index = descriptor_index,
 				.payload_size = static_cast<uint32_t>(size),
 			};
-			memcpy (req->payload () + size, &footer, sizeof (footer));
+			memcpy (req->payload + size, &footer, sizeof (footer));
 
 			{
 				lock_guard lock (state_lock);
