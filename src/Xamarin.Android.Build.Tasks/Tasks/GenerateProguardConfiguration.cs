@@ -27,11 +27,13 @@ namespace Xamarin.Android.Tasks
 			if (!dir.IsNullOrEmpty () && !Directory.Exists (dir)) {
 				Directory.CreateDirectory (dir);
 			}
-			using var writer = File.CreateText (OutputFile);
+			using var writer = new StringWriter ();
 
 			foreach (var assembly in LinkedAssemblies) {
 				ProcessAssembly (assembly.ItemSpec, writer);
 			}
+
+			Files.CopyIfStringChanged (writer.ToString (), OutputFile);
 
 			return !Log.HasLoggedErrors;
 		}

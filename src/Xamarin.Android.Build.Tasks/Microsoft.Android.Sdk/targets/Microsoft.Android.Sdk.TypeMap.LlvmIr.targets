@@ -445,13 +445,18 @@
 
   <Target Name="_GenerateProguardConfiguration"
       AfterTargets="_PrepareLinkedAssembliesForProguard"
+      DependsOnTargets="_AndroidInvalidateProguardConfigurationStamp"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
       Inputs="@(_LinkedAssemblyForProguard);$(_AndroidBuildPropertiesCache)"
-      Outputs="$(_ProguardProjectConfiguration)">
+      Outputs="$(_ProguardProjectConfiguration).stamp">
     <GenerateProguardConfiguration
         LinkedAssemblies="@(_LinkedAssemblyForProguard)"
         EnableObfuscation="$(_AndroidR8RuntimeRemappingEnabled)"
         OutputFile="$(_ProguardProjectConfiguration)" />
+    <Touch Files="$(_ProguardProjectConfiguration).stamp" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_ProguardProjectConfiguration);$(_ProguardProjectConfiguration).stamp" />
+    </ItemGroup>
   </Target>
 
 </Project>

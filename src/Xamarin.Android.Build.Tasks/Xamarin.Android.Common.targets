@@ -2058,7 +2058,18 @@ because xbuild doesn't support framework reference assemblies.
 	</PropertyGroup>
 </Target>
 
+<!-- A generation stamp preserves unchanged keep-rule timestamps without rerunning
+     the generator on every build. Recover the rules if only their file was deleted. -->
+<Target Name="_AndroidInvalidateProguardConfigurationStamp"
+		Condition=" '$(_ProguardProjectConfiguration)' != '' and !Exists('$(_ProguardProjectConfiguration)') ">
+	<Delete Files="$(_ProguardProjectConfiguration).stamp" />
+</Target>
+
 <Target Name="_CalculateProguardConfigurationFiles">
+  <!-- Rule generation can run in a per-RID build; also track its outputs in the outer build. -->
+  <ItemGroup Condition=" '$(_ProguardProjectConfiguration)' != '' and Exists('$(_ProguardProjectConfiguration).stamp') ">
+    <FileWrites Include="$(_ProguardProjectConfiguration);$(_ProguardProjectConfiguration).stamp" />
+  </ItemGroup>
   <!-- Support the $(ProguardConfigFiles) property to keep backwards compatibility -->
   <ItemGroup Condition=" '$(ProguardConfigFiles)' != '' ">
     <_ProguardConfiguration Include="$(ProguardConfigFiles)" />
