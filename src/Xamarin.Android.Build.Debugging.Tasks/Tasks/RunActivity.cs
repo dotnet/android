@@ -1,4 +1,5 @@
-﻿//
+#nullable enable
+//
 // RunActivity.cs
 //
 // Author:
@@ -41,12 +42,12 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "RUNA";
 
 		[Required]
-		public string PackageName { get; set; }
+		public string PackageName { get; set; } = "";
 
 		[Required]
-		public string ActivityName { get; set; }
+		public string ActivityName { get; set; } = "";
 
-		public string AdbTarget { get; set; }
+		public string? AdbTarget { get; set; }
 
 		public bool AttachDebugger { get; set; }
 
@@ -63,7 +64,7 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public bool AllowJavaDebugging { get; set; } = true;
 
-		AndroidDevice Device;
+		AndroidDevice? Device;
 
 		public RunActivity ()
 		{
@@ -83,6 +84,10 @@ namespace Xamarin.Android.Tasks
 		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
 			LogDebugMessage ($"  ActivityName: {ActivityName}");
+
+			var device = Device;
+			if (device == null)
+				throw new System.InvalidOperationException ("The Android device must be initialized before running the task.");
 
 			var amStartCommand = new AmStartCommand (PackageName, ActivityName);
 			amStartCommand.ForceStop = ForceStop;
@@ -104,9 +109,9 @@ namespace Xamarin.Android.Tasks
 				startConfiguration.Debugger.StdoutPort = -1;
 				startConfiguration.Debugger.Server = Server;
 				LogMessage (string.Format (Resources.StartDebugger_ipAddress_port, ipAddress, port), MessageImportance.High);
-				await Device.StartWithDebuggingAsync (startConfiguration, CancellationToken);
+				await device.StartWithDebuggingAsync (startConfiguration, CancellationToken);
 			} else {
-				await Device.StartWithoutDebuggingAsync (startConfiguration, CancellationToken);
+				await device.StartWithoutDebuggingAsync (startConfiguration, CancellationToken);
 			}
 		}
 	}
