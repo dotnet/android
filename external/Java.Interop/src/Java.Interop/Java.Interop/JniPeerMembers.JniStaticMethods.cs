@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Java.Interop
 {
@@ -15,20 +16,30 @@ namespace Java.Interop
 
 		internal    readonly    JniPeerMembers              Members;
 
-		readonly ConcurrentDictionary<string, JniMethodInfo> StaticMethods = new ConcurrentDictionary<string, JniMethodInfo> (1, 3, StringComparer.Ordinal);
+		ConcurrentDictionary<string, JniMethodInfo>? StaticMethods;
 
 		internal void Dispose ()
 		{
-			StaticMethods.Clear ();
+			Interlocked.Exchange (ref StaticMethods, null)?.Clear ();
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
-			return StaticMethods.GetOrAdd (encodedMember, static (member, methods) => {
+			return GetStaticMethods ().GetOrAdd (encodedMember, static (member, methods) => {
 				string method, signature;
 				JniPeerMembers.GetNameAndSignature (member, out method, out signature);
 				return methods.GetMethodInfo (method, signature);
 			}, this);
+		}
+
+		ConcurrentDictionary<string, JniMethodInfo> GetStaticMethods ()
+		{
+			var methods = Volatile.Read (ref StaticMethods);
+			if (methods != null)
+				return methods;
+
+			var candidate = new ConcurrentDictionary<string, JniMethodInfo> (1, 3, StringComparer.Ordinal);
+			return Interlocked.CompareExchange (ref StaticMethods, candidate, null) ?? candidate;
 		}
 
 		JniMethodInfo GetMethodInfo (string method, string signature)

@@ -51,10 +51,100 @@ namespace Java.InteropTests
 			JniPeerMembers.Dispose (members);
 		}
 
+		[Test]
+		public void PeerMemberCachesAreInitiallyNull ()
+		{
+			var members = new JniPeerMembers (CallVirtualFromConstructorBase.JniTypeName, typeof (CallVirtualFromConstructorBase));
+
+			Assert.IsNull (GetInstanceFields (members.InstanceFields));
+			Assert.IsNull (GetInstanceMethods (members.InstanceMethods));
+			Assert.IsNull (GetSubclassConstructors (members.InstanceMethods));
+			Assert.IsNull (GetStaticFields (members.StaticFields));
+			Assert.IsNull (GetStaticMethods (members.StaticMethods));
+		}
+
+		[Test]
+		public void ConstructorTypeCacheIsAllocatedOnlyForManagedSubclasses ()
+		{
+			var members = new JniPeerMembers (CallVirtualFromConstructorBase.JniTypeName, typeof (CallVirtualFromConstructorBase));
+			var methods = members.InstanceMethods;
+
+			Assert.AreSame (methods, methods.GetConstructorsForType (typeof (CallVirtualFromConstructorBase)));
+			Assert.IsNull (GetSubclassConstructors (methods));
+
+			var derivedMethods = methods.GetConstructorsForType (typeof (CallVirtualFromConstructorDerived));
+			var constructors = GetSubclassConstructors (methods);
+			Assert.AreEqual (1, constructors.Count);
+			Assert.AreSame (derivedMethods, constructors [typeof (CallVirtualFromConstructorDerived)]);
+
+			methods.Dispose ();
+		}
+
+		[Test]
+		public void ConcurrentFirstUsePublishesSingleFieldAndStaticMethodCaches ()
+		{
+			var instanceMembers = new JniPeerMembers (CallNonvirtualBase.JniTypeName, typeof (CallNonvirtualBase));
+			var instanceFields = new JniFieldInfo [16];
+			Assert.IsNull (GetInstanceFields (instanceMembers.InstanceFields));
+			Parallel.For (0, instanceFields.Length, i => instanceFields [i] = instanceMembers.InstanceFields.GetFieldInfo ("methodInvoked.Z"));
+			AssertSingleCachedValue (GetInstanceFields (instanceMembers.InstanceFields), "methodInvoked.Z", instanceFields);
+			JniPeerMembers.Dispose (instanceMembers);
+
+			var staticMembers = new JniPeerMembers (JavaLangSystemTestObject.JniTypeName, typeof (JavaLangSystemTestObject));
+			var staticFields = new JniFieldInfo [16];
+			Assert.IsNull (GetStaticFields (staticMembers.StaticFields));
+			Parallel.For (0, staticFields.Length, i => staticFields [i] = staticMembers.StaticFields.GetFieldInfo ("in.Ljava/io/InputStream;"));
+			AssertSingleCachedValue (GetStaticFields (staticMembers.StaticFields), "in.Ljava/io/InputStream;", staticFields);
+
+			var staticMethods = new JniMethodInfo [16];
+			Assert.IsNull (GetStaticMethods (staticMembers.StaticMethods));
+			Parallel.For (0, staticMethods.Length, i => staticMethods [i] = staticMembers.StaticMethods.GetMethodInfo ("currentTimeMillis.()J"));
+			AssertSingleCachedValue (GetStaticMethods (staticMembers.StaticMethods), "currentTimeMillis.()J", staticMethods);
+			JniPeerMembers.Dispose (staticMembers);
+		}
+
+		static void AssertSingleCachedValue<T> (ConcurrentDictionary<string, T> cache, string key, T [] values)
+			where T : class
+		{
+			Assert.AreEqual (1, cache.Count);
+			foreach (var value in values)
+				Assert.AreSame (values [0], value);
+			Assert.AreSame (cache [key], values [0]);
+		}
+
+		static ConcurrentDictionary<string, JniFieldInfo> GetInstanceFields (JniPeerMembers.JniInstanceFields fields)
+		{
+			var field = typeof (JniPeerMembers.JniInstanceFields).GetField ("InstanceFields", BindingFlags.NonPublic | BindingFlags.Instance);
+			return GetCache<string, JniFieldInfo> (field, fields);
+		}
+
 		static ConcurrentDictionary<string, JniMethodInfo> GetInstanceMethods (JniPeerMembers.JniInstanceMethods methods)
 		{
-			var f   = typeof (JniPeerMembers.JniInstanceMethods).GetField ("InstanceMethods", BindingFlags.NonPublic | BindingFlags.Instance);
-			return (ConcurrentDictionary<string, JniMethodInfo>) f.GetValue (methods);
+			var field = typeof (JniPeerMembers.JniInstanceMethods).GetField ("InstanceMethods", BindingFlags.NonPublic | BindingFlags.Instance);
+			return GetCache<string, JniMethodInfo> (field, methods);
+		}
+
+		static ConcurrentDictionary<Type, JniPeerMembers.JniInstanceMethods> GetSubclassConstructors (JniPeerMembers.JniInstanceMethods methods)
+		{
+			var field = typeof (JniPeerMembers.JniInstanceMethods).GetField ("SubclassConstructors", BindingFlags.NonPublic | BindingFlags.Instance);
+			return GetCache<Type, JniPeerMembers.JniInstanceMethods> (field, methods);
+		}
+
+		static ConcurrentDictionary<string, JniFieldInfo> GetStaticFields (JniPeerMembers.JniStaticFields fields)
+		{
+			var field = typeof (JniPeerMembers.JniStaticFields).GetField ("StaticFields", BindingFlags.NonPublic | BindingFlags.Instance);
+			return GetCache<string, JniFieldInfo> (field, fields);
+		}
+
+		static ConcurrentDictionary<string, JniMethodInfo> GetStaticMethods (JniPeerMembers.JniStaticMethods methods)
+		{
+			var field = typeof (JniPeerMembers.JniStaticMethods).GetField ("StaticMethods", BindingFlags.NonPublic | BindingFlags.Instance);
+			return GetCache<string, JniMethodInfo> (field, methods);
+		}
+
+		static ConcurrentDictionary<TKey, TValue> GetCache<TKey, TValue> (FieldInfo field, object owner)
+		{
+			return (ConcurrentDictionary<TKey, TValue>) field.GetValue (owner);
 		}
 
 		[Test]
@@ -187,6 +277,11 @@ namespace Java.InteropTests
 			var s = IAndroidInterface.getClassName ();
 			Assert.AreEqual ("DesugarAndroidInterface$-CC", s);
 		}
+	}
+
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
+	abstract class JavaLangSystemTestObject : JavaObject {
+		internal const string JniTypeName = "java/lang/System";
 	}
 
 	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]

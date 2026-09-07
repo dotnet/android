@@ -41,14 +41,17 @@ namespace Java.Interop
 		readonly Type                                       DeclaringType;
 
 		ConcurrentDictionary<string, JniMethodInfo>?             InstanceMethods;
-		readonly ConcurrentDictionary<Type, JniInstanceMethods> SubclassConstructors = new ConcurrentDictionary<Type, JniInstanceMethods> (1, 1);
+		ConcurrentDictionary<Type, JniInstanceMethods>?          SubclassConstructors;
 
 		internal void Dispose ()
 		{
 			Interlocked.Exchange (ref InstanceMethods, null)?.Clear ();
-			foreach (var p in SubclassConstructors.Values)
-				p.Dispose ();
-			SubclassConstructors.Clear ();
+			var constructors = Interlocked.Exchange (ref SubclassConstructors, null);
+			if (constructors != null) {
+				foreach (var p in constructors.Values)
+					p.Dispose ();
+				constructors.Clear ();
+			}
 
 			if (jniPeerType != null)
 				jniPeerType.Dispose ();
@@ -90,7 +93,7 @@ namespace Java.Interop
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods..ctor(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 27
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.GetConstructorsForType(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 77
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(String constructorSignature, Type declaringType, JniArgumentValue* parameters) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 146
-			return SubclassConstructors.GetOrAdd (declaringType, static type => new JniInstanceMethods (type));
+			return GetSubclassConstructors ().GetOrAdd (declaringType, static type => new JniInstanceMethods (type));
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
@@ -110,6 +113,16 @@ namespace Java.Interop
 
 			var candidate = new ConcurrentDictionary<string, JniMethodInfo> (1, 3, StringComparer.Ordinal);
 			return Interlocked.CompareExchange (ref InstanceMethods, candidate, null) ?? candidate;
+		}
+
+		ConcurrentDictionary<Type, JniInstanceMethods> GetSubclassConstructors ()
+		{
+			var constructors = Volatile.Read (ref SubclassConstructors);
+			if (constructors != null)
+				return constructors;
+
+			var candidate = new ConcurrentDictionary<Type, JniInstanceMethods> (1, 1);
+			return Interlocked.CompareExchange (ref SubclassConstructors, candidate, null) ?? candidate;
 		}
 
 		JniMethodInfo GetMethodInfo (string method, string signature)

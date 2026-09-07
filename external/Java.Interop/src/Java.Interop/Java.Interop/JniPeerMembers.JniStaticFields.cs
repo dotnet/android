@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Java.Interop
 {
@@ -15,11 +16,11 @@ namespace Java.Interop
 
 		readonly JniPeerMembers                             Members;
 
-		readonly ConcurrentDictionary<string, JniFieldInfo> StaticFields = new ConcurrentDictionary<string, JniFieldInfo> (1, 3, StringComparer.Ordinal);
+		ConcurrentDictionary<string, JniFieldInfo>? StaticFields;
 
 		public JniFieldInfo GetFieldInfo (string encodedMember)
 		{
-			return StaticFields.GetOrAdd (encodedMember, static (member, fields) => {
+			return GetStaticFields ().GetOrAdd (encodedMember, static (member, fields) => {
 				string field, signature;
 				JniPeerMembers.GetNameAndSignature (member, out field, out signature);
 				return fields.Members.JniPeerType.GetStaticField (field, signature);
@@ -28,7 +29,17 @@ namespace Java.Interop
 
 		internal void Dispose ()
 		{
-			StaticFields.Clear ();
+			Interlocked.Exchange (ref StaticFields, null)?.Clear ();
+		}
+
+		ConcurrentDictionary<string, JniFieldInfo> GetStaticFields ()
+		{
+			var fields = Volatile.Read (ref StaticFields);
+			if (fields != null)
+				return fields;
+
+			var candidate = new ConcurrentDictionary<string, JniFieldInfo> (1, 3, StringComparer.Ordinal);
+			return Interlocked.CompareExchange (ref StaticFields, candidate, null) ?? candidate;
 		}
 	}}
 }
