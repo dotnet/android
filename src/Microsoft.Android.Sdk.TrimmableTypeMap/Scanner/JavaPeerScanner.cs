@@ -401,8 +401,10 @@ public sealed class JavaPeerScanner : IDisposable
 			// - Interface types don't implement other interfaces' methods in JCWs
 			List<MarshalMethodInfo>? marshalMethods = null;
 			List<JavaFieldInfo>? exportFields = null;
+			var rejectedExportConstructors = new HashSet<MethodDefinitionHandle> ();
 			if (!doNotGenerateAcw || collectMarshalMethodsForNonAcw) {
-				(marshalMethods, exportFields) = CollectMarshalMethods (typeDef, index, detectBaseOverrides: !doNotGenerateAcw && !isInterface);
+				(marshalMethods, exportFields, rejectedExportConstructors) =
+					CollectMarshalMethods (typeDef, index, detectBaseOverrides: !doNotGenerateAcw && !isInterface);
 			}
 
 			// Resolve activation constructor
@@ -440,6 +442,9 @@ public sealed class JavaPeerScanner : IDisposable
 				CannotRegisterInStaticConstructor = cannotRegisterInStaticConstructor,
 				MarshalMethods = marshalMethods ?? [],
 				JavaConstructors = marshalMethods is not null ? BuildJavaConstructors (marshalMethods, typeDef, index) : [],
+				ConstructorDiagnostics = doNotGenerateAcw || marshalMethods is null
+					? []
+					: AnalyzeConstructorDiagnostics (typeDef, index, marshalMethods, rejectedExportConstructors),
 				JavaFields = exportFields ?? [],
 				ActivationCtor = activationCtor,
 				InvokerTypeName = invokerTypeName,
@@ -690,11 +695,15 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 	}
 
-	(List<MarshalMethodInfo>, List<JavaFieldInfo>) CollectMarshalMethods (TypeDefinition typeDef, AssemblyIndex index, bool detectBaseOverrides)
+	(List<MarshalMethodInfo>, List<JavaFieldInfo>, HashSet<MethodDefinitionHandle>) CollectMarshalMethods (
+		TypeDefinition typeDef,
+		AssemblyIndex index,
+		bool detectBaseOverrides)
 	{
 		var methods = new List<MarshalMethodInfo> ();
 		var fields = new List<JavaFieldInfo> ();
 		HashSet<string>? registeredMethodKeys = detectBaseOverrides ? new (StringComparer.Ordinal) : null;
+		var rejectedExportConstructors = new HashSet<MethodDefinitionHandle> ();
 		bool isGenericType = typeDef.GetGenericParameters ().Count > 0;
 
 		// Pass 1: collect methods with [Register], [Export], or [ExportField] directly on them
@@ -709,6 +718,9 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 			if (!ValidateExportSignature (methodDef, index, isGenericType)) {
+				if (methodName == ".ctor") {
+					rejectedExportConstructors.Add (methodHandle);
+				}
 				continue;
 			}
 
@@ -772,7 +784,7 @@ public sealed class JavaPeerScanner : IDisposable
 			CollectBaseConstructorChain (typeDef, index, methods);
 		}
 
-		return (methods, fields);
+		return (methods, fields, rejectedExportConstructors);
 	}
 
 	static bool IsExportFieldAttribute (CustomAttribute attribute, AssemblyIndex index)
@@ -852,14 +864,9 @@ public sealed class JavaPeerScanner : IDisposable
 			? declaringTypeName + methodName
 			: $"{declaringTypeName}.{methodName}";
 
-		for (int i = 0; i < sig.ParameterTypes.Length; i++) {
-			if (isConstructor && IsOwnedByConstructorDiagnostics (sig.ParameterTypes [i])) {
-				continue;
-			}
-			if (!HasExportSignatureMapping (sig.ParameterTypes [i], parameterKinds [i])) {
-				logger?.LogUnsupportedExportSignatureError (memberName, sig.ParameterTypes [i].DisplayName);
-				return false;
-			}
+		if (TryGetUnsupportedExportParameterType (sig.ParameterTypes, parameterKinds, isConstructor, out var unsupportedType)) {
+			logger?.LogUnsupportedExportSignatureError (memberName, unsupportedType);
+			return false;
 		}
 		if (isConstructor) {
 			return true;
@@ -869,6 +876,26 @@ public sealed class JavaPeerScanner : IDisposable
 			return false;
 		}
 		return true;
+	}
+
+	bool TryGetUnsupportedExportParameterType (
+		IReadOnlyList<TypeRefData> parameterTypes,
+		IReadOnlyList<ExportParameterKindInfo> parameterKinds,
+		bool isConstructor,
+		out string unsupportedType)
+	{
+		for (int i = 0; i < parameterTypes.Count; i++) {
+			if (isConstructor && IsOwnedByConstructorDiagnostics (parameterTypes [i])) {
+				continue;
+			}
+			if (!HasExportSignatureMapping (parameterTypes [i], parameterKinds [i])) {
+				unsupportedType = parameterTypes [i].DisplayName;
+				return true;
+			}
+		}
+
+		unsupportedType = "";
+		return false;
 	}
 
 	/// <summary>
@@ -1185,7 +1212,7 @@ public sealed class JavaPeerScanner : IDisposable
 			// then delegates to nctor_N(...) which handles the args on the managed side.
 			// This matches legacy CecilImporter behavior (CecilImporter.cs:394-397).
 			if (hasParameterlessBaseCtor) {
-				var sig = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+				var sig = methodDef.DecodeSignature (index.TypeRefSignatureProvider, index);
 				var jniSignature = BuildJniCtorSignature (sig);
 				if (jniSignature is not null && !alreadyRegisteredSignatures.Contains (jniSignature)) {
 					methods.Add (new MarshalMethodInfo {
@@ -1203,7 +1230,7 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 	}
 
-	string? BuildJniCtorSignature (MethodSignature<string> sig)
+	string? BuildJniCtorSignature (MethodSignature<TypeRefData> sig)
 	{
 		var sb = new System.Text.StringBuilder ();
 		sb.Append ('(');
@@ -1212,7 +1239,7 @@ public sealed class JavaPeerScanner : IDisposable
 			// System.Object, System.Action, etc.). ManagedTypeToJniDescriptor maps
 			// these to "Ljava/lang/Object;" by default, but legacy would reject the
 			// whole ctor. Use the nullable variant to match legacy behavior.
-			var jniType = ManagedTypeToJniDescriptorOrNull (param);
+			var jniType = TryGetConstructorJniDescriptor (param);
 			if (jniType is null) {
 				return null;
 			}
@@ -1924,39 +1951,40 @@ public sealed class JavaPeerScanner : IDisposable
 
 	bool TryGetMethodRegisterInfo (MethodDefinition methodDef, AssemblyIndex index, out RegisterInfo? registerInfo, out ExportInfo? exportInfo)
 	{
+		RegisterInfo? explicitRegisterInfo = null;
+		RegisterInfo? exportRegisterInfo = null;
 		exportInfo = null;
 		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
 			var ca = index.Reader.GetCustomAttribute (caHandle);
 			var attrName = index.GetCustomAttributeName (ca);
 
-			if (attrName == "RegisterAttribute") {
-				registerInfo = index.ParseRegisterAttribute (ca);
-				return true;
+			if (attrName == "RegisterAttribute" && explicitRegisterInfo is null) {
+				explicitRegisterInfo = index.ParseRegisterAttribute (ca);
+				continue;
 			}
 
-			if (IsExportAttribute (ca, index)) {
-				(registerInfo, exportInfo) = ParseExportAttribute (ca, methodDef, index);
-				return true;
+			if (IsExportAttribute (ca, index) && exportInfo is null) {
+				(exportRegisterInfo, exportInfo) = ParseExportAttribute (ca, methodDef, index);
+				continue;
 			}
 
-			if (IsExportFieldAttribute (ca, index)) {
-				(registerInfo, exportInfo) = ParseExportFieldAsMethod (ca, methodDef, index);
-				return true;
+			if (IsExportFieldAttribute (ca, index) && exportInfo is null) {
+				(exportRegisterInfo, exportInfo) = ParseExportFieldAsMethod (ca, methodDef, index);
+				continue;
 			}
 
 			// JI-style constructor registration: [JniConstructorSignature("()V")]
 			// Single arg = JNI signature; name is always ".ctor", connector is empty.
-			if (attrName == "JniConstructorSignatureAttribute") {
+			if (attrName == "JniConstructorSignatureAttribute" && explicitRegisterInfo is null) {
 				var value = index.DecodeAttribute (ca);
 				var jniSignature = value.FixedArguments.Length > 0 ? (string?)value.FixedArguments [0].Value : null;
 				if (jniSignature is not null) {
-					registerInfo = new RegisterInfo { JniName = ".ctor", Signature = jniSignature, Connector = "", DoNotGenerateAcw = false };
-					return true;
+					explicitRegisterInfo = new RegisterInfo { JniName = ".ctor", Signature = jniSignature, Connector = "", DoNotGenerateAcw = false };
 				}
 			}
 		}
-		registerInfo = null;
-		return false;
+		registerInfo = explicitRegisterInfo ?? exportRegisterInfo;
+		return registerInfo is not null;
 	}
 
 	static RegisterInfo? TryGetPropertyRegisterInfo (PropertyDefinition propDef, AssemblyIndex index)
@@ -2313,6 +2341,21 @@ public sealed class JavaPeerScanner : IDisposable
 		};
 	}
 
+	string? TryGetPrimitiveJniDescriptor (TypeRefData managedType)
+	{
+		var descriptor = TryGetPrimitiveJniDescriptor (managedType.ManagedTypeName);
+		return descriptor is not null &&
+			IsSpecialManagedType (
+				managedType,
+				managedType.ManagedTypeName,
+				"System.Runtime",
+				"System.Private.CoreLib",
+				"mscorlib",
+				"netstandard")
+			? descriptor
+			: null;
+	}
+
 	ActivationCtorInfo? ResolveActivationCtor (string typeName, TypeDefinition typeDef, AssemblyIndex index, TypeRefData? currentTypeRef = null)
 	{
 		var cacheKey = (currentTypeRef?.DisplayName ?? typeName, index.AssemblyName);
@@ -2360,7 +2403,7 @@ public sealed class JavaPeerScanner : IDisposable
 		return null;
 	}
 
-	static ActivationCtorStyle? FindActivationCtorOnType (TypeDefinition typeDef, AssemblyIndex index)
+	ActivationCtorStyle? FindActivationCtorOnType (TypeDefinition typeDef, AssemblyIndex index)
 	{
 		foreach (var methodHandle in typeDef.GetMethods ()) {
 			var method = index.Reader.GetMethodDefinition (methodHandle);
@@ -2369,57 +2412,14 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
-			var signature = index.Reader.GetBlobReader (method.Signature);
-			var header = signature.ReadSignatureHeader ();
-			if (header.IsGeneric) {
-				signature.ReadCompressedInteger ();
-			}
-			if (signature.ReadCompressedInteger () != 2 ||
-			    (SignatureTypeCode) signature.ReadByte () != SignatureTypeCode.Void) {
-				continue;
-			}
-
-			// XI style: (IntPtr, JniHandleOwnership)
-			var firstParameter = signature;
-			if ((SignatureTypeCode) signature.ReadByte () == SignatureTypeCode.IntPtr &&
-			    IsSignatureType (ref signature, index, "Android.Runtime", "JniHandleOwnership")) {
-				return ActivationCtorStyle.XamarinAndroid;
-			}
-
-			// JI style: (ref JniObjectReference, JniObjectReferenceOptions)
-			signature = firstParameter;
-			if ((SignatureTypeCode) signature.ReadByte () != SignatureTypeCode.ByReference) {
-				signature = firstParameter;
-			}
-			if (IsSignatureType (ref signature, index, "Java.Interop", "JniObjectReference") &&
-			    IsSignatureType (ref signature, index, "Java.Interop", "JniObjectReferenceOptions")) {
-				return ActivationCtorStyle.JavaInterop;
+			var sig = method.DecodeSignature (index.TypeRefSignatureProvider, index);
+			var style = GetActivationConstructorStyle (sig.ParameterTypes);
+			if (style is not null) {
+				return style;
 			}
 		}
 
 		return null;
-	}
-
-	static bool IsSignatureType (ref BlobReader signature, AssemblyIndex index, string typeNamespace, string typeName)
-	{
-		var kind = (SignatureTypeKind) signature.ReadByte ();
-		if (kind is not (SignatureTypeKind.Class or SignatureTypeKind.ValueType)) {
-			return false;
-		}
-
-		var handle = signature.ReadTypeHandle ();
-		switch (handle.Kind) {
-		case HandleKind.TypeReference:
-			var typeRef = index.Reader.GetTypeReference ((TypeReferenceHandle) handle);
-			return index.Reader.StringComparer.Equals (typeRef.Namespace, typeNamespace) &&
-				index.Reader.StringComparer.Equals (typeRef.Name, typeName);
-		case HandleKind.TypeDefinition:
-			var typeDef = index.Reader.GetTypeDefinition ((TypeDefinitionHandle) handle);
-			return index.Reader.StringComparer.Equals (typeDef.Namespace, typeNamespace) &&
-				index.Reader.StringComparer.Equals (typeDef.Name, typeName);
-		default:
-			return false;
-		}
 	}
 
 	/// <summary>
@@ -2909,6 +2909,269 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 		return constructors;
 	}
+
+	IReadOnlyList<ConstructorDiagnosticInfo> AnalyzeConstructorDiagnostics (
+		TypeDefinition typeDef,
+		AssemblyIndex index,
+		IReadOnlyList<MarshalMethodInfo> marshalMethods,
+		HashSet<MethodDefinitionHandle> rejectedExportConstructors)
+	{
+		var diagnostics = new List<ConstructorDiagnosticInfo> ();
+		var signatures = new Dictionary<string, IReadOnlyList<TypeRefData>> (StringComparer.Ordinal);
+		var reportedAmbiguousSignatures = new HashSet<string> (StringComparer.Ordinal);
+		var baseConstructors = CollectBaseRegisteredCtors (typeDef, index);
+
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+			if ((methodDef.Attributes & MethodAttributes.Static) != 0 ||
+			    index.Reader.GetString (methodDef.Name) != ".ctor") {
+				continue;
+			}
+			if (rejectedExportConstructors.Contains (methodHandle)) {
+				continue;
+			}
+
+			bool hasExplicitRegistration = TryGetMethodRegisterInfo (methodDef, index, out var registerInfo, out var exportInfo);
+			if ((methodDef.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public &&
+			    !hasExplicitRegistration) {
+				continue;
+			}
+
+			var signature = methodDef.DecodeSignature (index.TypeRefSignatureProvider, index);
+			if (IsActivationConstructor (signature.ParameterTypes)) {
+				continue;
+			}
+			string jniSignature;
+			string unsupportedParameterType;
+			if (registerInfo?.Signature is string registeredSignature) {
+				if (exportInfo is not null &&
+				    !TryValidateConstructorParameterShapes (signature.ParameterTypes, out unsupportedParameterType)) {
+					diagnostics.Add (new ConstructorDiagnosticInfo {
+						Kind = ConstructorDiagnosticKind.UnsupportedParameterType,
+						Detail = unsupportedParameterType,
+					});
+					continue;
+				}
+				jniSignature = registeredSignature;
+			} else if (!TryBuildConstructorJniSignature (signature.ParameterTypes, out jniSignature, out _)) {
+				// Legacy JCW generation silently skips ordinary constructors whose
+				// managed parameters cannot be represented in Java.
+				continue;
+			}
+
+			if (signatures.TryGetValue (jniSignature, out var existingManagedSignature) &&
+			    !existingManagedSignature.SequenceEqual (signature.ParameterTypes) &&
+			    reportedAmbiguousSignatures.Add (jniSignature)) {
+				diagnostics.Add (new ConstructorDiagnosticInfo {
+					Kind = ConstructorDiagnosticKind.AmbiguousJniSignature,
+					Detail = jniSignature,
+				});
+			} else {
+				signatures [jniSignature] = signature.ParameterTypes;
+			}
+
+			if (exportInfo?.SuperArgumentsString is string superArgumentsString &&
+			    superArgumentsString.Length > 0) {
+				continue;
+			}
+
+			string forwardedBaseSignature = exportInfo?.SuperArgumentsString == "" ? "()V" : jniSignature;
+			bool hasCompatibleBaseConstructor = baseConstructors.Any (baseCtor =>
+				baseCtor.RegisterInfo.Signature is string baseJniSignature
+					? baseJniSignature == forwardedBaseSignature
+					: HaveIdenticalParameterTypes (methodDef, index, baseCtor.Method, baseCtor.Index, baseCtor.DeclaringType));
+			if (hasExplicitRegistration &&
+			    baseConstructors.Count > 0 &&
+			    !hasCompatibleBaseConstructor) {
+				diagnostics.Add (new ConstructorDiagnosticInfo {
+					Kind = ConstructorDiagnosticKind.MissingBaseConstructor,
+					Detail = jniSignature,
+				});
+			}
+		}
+
+		foreach (var constructor in marshalMethods.Where (m => m.IsConstructor && m.SuperArgumentsString is not null)) {
+			if (!HasValidSuperArgumentReferences (constructor.SuperArgumentsString ?? "", JniSignatureHelper.ParseParameters (constructor.JniSignature).Count)) {
+				diagnostics.Add (new ConstructorDiagnosticInfo {
+					Kind = ConstructorDiagnosticKind.InvalidSuperArgumentsString,
+					Detail = constructor.SuperArgumentsString ?? "",
+				});
+			}
+		}
+
+		return diagnostics;
+	}
+
+	bool TryBuildConstructorJniSignature (
+		IReadOnlyList<TypeRefData> parameterTypes,
+		out string jniSignature,
+		out string unsupportedParameterType)
+	{
+		if (!TryValidateConstructorParameterShapes (parameterTypes, out unsupportedParameterType)) {
+			jniSignature = "";
+			return false;
+		}
+
+		var descriptors = new List<string> (parameterTypes.Count);
+		foreach (var parameterType in parameterTypes) {
+			var descriptor = TryGetConstructorJniDescriptor (parameterType);
+			if (descriptor is null) {
+				jniSignature = "";
+				unsupportedParameterType = parameterType.DisplayName;
+				return false;
+			}
+			descriptors.Add (descriptor);
+		}
+
+		jniSignature = $"({string.Join ("", descriptors)})V";
+		unsupportedParameterType = "";
+		return true;
+	}
+
+	static bool TryValidateConstructorParameterShapes (
+		IReadOnlyList<TypeRefData> parameterTypes,
+		out string unsupportedParameterType)
+	{
+		foreach (var parameterType in parameterTypes) {
+			if (IsOwnedByConstructorDiagnostics (parameterType)) {
+				unsupportedParameterType = parameterType.DisplayName;
+				return false;
+			}
+		}
+
+		unsupportedParameterType = "";
+		return true;
+	}
+
+	string? TryGetConstructorJniDescriptor (TypeRefData parameterType)
+	{
+		if (parameterType.ManagedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
+			var elementType = parameterType with {
+				ManagedTypeName = parameterType.ManagedTypeName.Substring (0, parameterType.ManagedTypeName.Length - 2),
+			};
+			var elementDescriptor = TryGetConstructorJniDescriptor (elementType);
+			return elementDescriptor is null ? null : $"[{elementDescriptor}";
+		}
+
+		var primitiveDescriptor = TryGetPrimitiveJniDescriptor (parameterType);
+		if (primitiveDescriptor is not null) {
+			return primitiveDescriptor;
+		}
+
+		var enumDescriptor = TryResolveEnumUnderlyingDescriptor (parameterType.ManagedTypeName, parameterType.AssemblyName);
+		if (enumDescriptor is not null) {
+			return enumDescriptor;
+		}
+
+		return TryResolveJniObjectDescriptor (parameterType);
+	}
+
+	bool IsActivationConstructor (IReadOnlyList<TypeRefData> parameterTypes)
+		=> GetActivationConstructorStyle (parameterTypes) is not null;
+
+	ActivationCtorStyle? GetActivationConstructorStyle (IReadOnlyList<TypeRefData> parameterTypes)
+	{
+		if (parameterTypes.Count != 2) {
+			return null;
+		}
+
+		bool isJniObjectReference = parameterTypes [0].ManagedTypeName is
+			"Java.Interop.JniObjectReference" or "Java.Interop.JniObjectReference&";
+		var jniObjectReference = parameterTypes [0] with {
+			ManagedTypeName = "Java.Interop.JniObjectReference",
+		};
+		if (IsSpecialManagedType (parameterTypes [0], "System.IntPtr", "System.Runtime", "System.Private.CoreLib", "mscorlib") &&
+		    IsActivationFrameworkType (parameterTypes [1], "Android.Runtime.JniHandleOwnership", "Mono.Android")) {
+			return ActivationCtorStyle.XamarinAndroid;
+		}
+		if (isJniObjectReference &&
+		    IsActivationFrameworkType (jniObjectReference, "Java.Interop.JniObjectReference", "Java.Interop") &&
+		    IsActivationFrameworkType (parameterTypes [1], "Java.Interop.JniObjectReferenceOptions", "Java.Interop")) {
+			return ActivationCtorStyle.JavaInterop;
+		}
+		return null;
+	}
+
+	bool IsActivationFrameworkType (TypeRefData type, string managedTypeName, string assemblyName) =>
+		IsSpecialManagedType (type, managedTypeName, assemblyName) ||
+		(string.Equals (type.ManagedTypeName, managedTypeName, StringComparison.Ordinal) &&
+		 frameworkAssemblyNames.Contains (type.AssemblyName));
+
+	static bool HasValidSuperArgumentReferences (string superArgumentsString, int parameterCount)
+	{
+		var tokens = TokenizeJavaExpression (superArgumentsString);
+		if (tokens.Any (token => token.Text is "->" or "::")) {
+			return true;
+		}
+
+		for (int i = 0; i < tokens.Count; i++) {
+			var token = tokens [i];
+			if (!token.IsIdentifier || token.Text.Length < 2 || token.Text [0] != 'p' ||
+			    token.Text.Skip (1).Any (c => !char.IsDigit (c))) {
+				continue;
+			}
+			if (i > 0 && tokens [i - 1].Text == ".") {
+				continue;
+			}
+
+			var parameterToken = token.Text.Substring (1);
+			if ((parameterToken.Length > 1 && parameterToken [0] == '0') ||
+			    !int.TryParse (parameterToken, out int parameterIndex) ||
+			    parameterIndex >= parameterCount) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	readonly record struct JavaLexicalToken (string Text, bool IsIdentifier);
+
+	static List<JavaLexicalToken> TokenizeJavaExpression (string value)
+	{
+		var tokens = new List<JavaLexicalToken> ();
+		for (int i = 0; i < value.Length;) {
+			if (char.IsWhiteSpace (value [i])) {
+				i++;
+				continue;
+			}
+			if (i + 1 < value.Length && value [i] == '/' && (value [i + 1] == '/' || value [i + 1] == '*')) {
+				bool block = value [i + 1] == '*';
+				i += 2;
+				while (i < value.Length && (block ? !(i + 1 < value.Length && value [i] == '*' && value [i + 1] == '/') : value [i] != '\r' && value [i] != '\n')) {
+					i++;
+				}
+				i = block && i < value.Length ? Math.Min (i + 2, value.Length) : i;
+				continue;
+			}
+			if (value [i] == '"' || value [i] == '\'') {
+				char quote = value [i++];
+				while (i < value.Length) {
+					if (value [i] == '\\') {
+						i = Math.Min (i + 2, value.Length);
+					} else if (value [i++] == quote) {
+						break;
+					}
+				}
+				continue;
+			}
+			if (char.IsLetter (value [i]) || value [i] == '_' || value [i] == '$') {
+				int start = i++;
+				while (i < value.Length && IsJavaIdentifierCharacter (value [i])) {
+					i++;
+				}
+				tokens.Add (new JavaLexicalToken (value.Substring (start, i - start), IsIdentifier: true));
+				continue;
+			}
+			int symbolLength = i + 1 < value.Length &&
+				((value [i] == '-' && value [i + 1] == '>') || (value [i] == ':' && value [i + 1] == ':')) ? 2 : 1;
+			tokens.Add (new JavaLexicalToken (value.Substring (i, symbolLength), IsIdentifier: false));
+			i += symbolLength;
+		}
+		return tokens;
+	}
+
+	static bool IsJavaIdentifierCharacter (char value) =>
+		char.IsLetterOrDigit (value) || value == '_' || value == '$';
 
 	/// <summary>
 	/// Attempts to find a managed instance constructor in <paramref name="publicConstructors"/>
