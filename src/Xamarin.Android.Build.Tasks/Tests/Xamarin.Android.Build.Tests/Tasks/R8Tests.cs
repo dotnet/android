@@ -33,7 +33,8 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (expectedOption, option);
 		}
 
-		[TestCase ("package com.example.app;\npublic class Foo {}",            "com.example.app")]		[TestCase ("package com.example.app ;\npublic class Foo {}",           "com.example.app")] // space before ';'
+		[TestCase ("package com.example.app;\npublic class Foo {}",            "com.example.app")]
+		[TestCase ("package com.example.app ;\npublic class Foo {}",           "com.example.app")] // space before ';'
 		[TestCase ("// header\n/* license */\npackage com.example.app;\nclass Foo {}", "com.example.app")] // skip comments
 		[TestCase ("public class Foo {}",                                     null)] // no package
 		[TestCase ("import java.util.List;\npackage com.late;\nclass Foo {}", null)] // package after import is ignored

@@ -35,15 +35,13 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 
 		string TestDirectory {
 			get {
-				Assert.IsNotNull (directory);
-				return directory!;
+				return directory ?? throw new AssertionException ("The test directory must be initialized.");
 			}
 		}
 
 		List<BuildErrorEventArgs> Errors {
 			get {
-				Assert.IsNotNull (errors);
-				return errors!;
+				return errors ?? throw new AssertionException ("The build error collection must be initialized.");
 			}
 		}
 
@@ -69,8 +67,7 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 
 		GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo Info {
 			get {
-				Assert.IsNotNull (LastNativeCodeInfo);
-				return LastNativeCodeInfo!;
+				return LastNativeCodeInfo ?? throw new AssertionException ("The task must provide native code information.");
 			}
 		}
 
@@ -105,9 +102,8 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				StringAssert.Contains ($"@{counter} = dso_local local_unnamed_addr constant i32 0", ll, $"`{counter}` must be zero.");
 			}
 
-			var info = task.NativeCodeInfo;
-			Assert.IsNotNull (info);
-			Assert.AreEqual (0, info!.ReplacementTypeCount);
+			var info = task.NativeCodeInfo ?? throw new AssertionException ("The task must provide native code information.");
+			Assert.AreEqual (0, info.ReplacementTypeCount);
 			Assert.AreEqual (0, info.ReverseTypeCount);
 			Assert.AreEqual (0, info.ReplacementMethodIndexEntryCount);
 			Assert.AreEqual (0, info.ReplacementFieldIndexEntryCount);

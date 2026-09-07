@@ -560,7 +560,8 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			return javaMethodName.Length != 0;
 		}
 
-		internal static string BuildClassEntry (string className) => $"C\t{className}";		internal static string BuildFieldEntry (string className, string fieldName) => $"F\t{className}\t{fieldName}";
+		internal static string BuildClassEntry (string className) => $"C\t{className}";
+		internal static string BuildFieldEntry (string className, string fieldName) => $"F\t{className}\t{fieldName}";
 		internal static string BuildMethodEntry (string className, string methodKey) => $"M\t{className}\t{methodKey}";
 
 		internal static string CreateManifestContent (IEnumerable<string> entries)
