@@ -45,7 +45,7 @@ namespace Java.Interop
 
 		internal void Dispose ()
 		{
-			Interlocked.Exchange (ref InstanceMethods, null)?.Clear ();
+			Clear (ref InstanceMethods);
 			var constructors = Interlocked.Exchange (ref SubclassConstructors, null);
 			if (constructors != null) {
 				foreach (var p in constructors.Values)

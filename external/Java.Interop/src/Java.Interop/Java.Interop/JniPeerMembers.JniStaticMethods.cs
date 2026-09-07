@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Threading;
 
 namespace Java.Interop
 {
@@ -20,7 +19,7 @@ namespace Java.Interop
 
 		internal void Dispose ()
 		{
-			Interlocked.Exchange (ref StaticMethods, null)?.Clear ();
+			Clear (ref StaticMethods);
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)

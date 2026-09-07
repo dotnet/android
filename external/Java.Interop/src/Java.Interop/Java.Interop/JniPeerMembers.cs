@@ -121,6 +121,12 @@ namespace Java.Interop {
 			return Interlocked.CompareExchange (ref dictionary, candidate, null) ?? candidate;
 		}
 
+		static void Clear<TKey, TValue> (ref ConcurrentDictionary<TKey, TValue>? dictionary)
+			where TKey : notnull
+		{
+			Interlocked.Exchange (ref dictionary, null)?.Clear ();
+		}
+
 		protected virtual void Dispose (bool disposing)
 		{
 			if (!disposing || jniPeerType == null)

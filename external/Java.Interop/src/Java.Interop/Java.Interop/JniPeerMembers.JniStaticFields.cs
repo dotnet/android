@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Threading;
 
 namespace Java.Interop
 {
@@ -29,7 +28,7 @@ namespace Java.Interop
 
 		internal void Dispose ()
 		{
-			Interlocked.Exchange (ref StaticFields, null)?.Clear ();
+			Clear (ref StaticFields);
 		}
 	}}
 }
