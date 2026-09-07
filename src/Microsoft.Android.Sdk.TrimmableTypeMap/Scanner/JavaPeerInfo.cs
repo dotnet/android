@@ -126,6 +126,12 @@ public sealed record JavaPeerInfo
 	public IReadOnlyList<JavaConstructorInfo> JavaConstructors { get; init; } = [];
 
 	/// <summary>
+	/// Constructor shapes which cannot be emitted safely by the trimmable type map.
+	/// Generation reports these before producing any Java or type-map output.
+	/// </summary>
+	public IReadOnlyList<ConstructorDiagnosticInfo> ConstructorDiagnostics { get; init; } = [];
+
+	/// <summary>
 	/// Java fields from [ExportField] attributes.
 	/// Each field is initialized by calling the annotated method.
 	/// </summary>
@@ -374,6 +380,11 @@ public sealed record JavaConstructorInfo
 	internal IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
 
 	/// <summary>
+	/// Per-parameter [ExportParameter] kinds for constructor argument marshalling.
+	/// </summary>
+	internal IReadOnlyList<ExportParameterKindInfo> ManagedParameterExportKinds { get; init; } = [];
+
+	/// <summary>
 	/// True when this Java constructor has a matching public managed constructor on the target type.
 	/// </summary>
 	public bool HasMatchingManagedCtor { get; init; }
@@ -382,6 +393,20 @@ public sealed record JavaConstructorInfo
 	/// Java annotations forwarded from the managed constructor.
 	/// </summary>
 	public IReadOnlyList<JavaAnnotationInfo> Annotations { get; init; } = [];
+}
+
+public sealed record ConstructorDiagnosticInfo
+{
+	public required ConstructorDiagnosticKind Kind { get; init; }
+	public required string Detail { get; init; }
+}
+
+public enum ConstructorDiagnosticKind
+{
+	AmbiguousJniSignature,
+	UnsupportedParameterType,
+	MissingBaseConstructor,
+	InvalidSuperArgumentsString,
 }
 
 /// <summary>

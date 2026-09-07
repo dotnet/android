@@ -1405,16 +1405,18 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void Build_ExportConstructorWithoutMatchingManagedCtor_Throws ()
+		public void Build_ConstructorWithoutMatchingManagedCtor_UsesActivationFallback ()
 		{
 			var peer = MakeAcwPeer ("my/app/MissingCtor", "MyApp.MissingCtor", "App") with {
 				JavaConstructors = new List<JavaConstructorInfo> {
-					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V", HasMatchingManagedCtor = false, SuperArgumentsString = "" },
+					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "(IC)V", HasMatchingManagedCtor = false, SuperArgumentsString = "" },
 				},
 			};
-			var ex = Assert.Throws<InvalidOperationException> (() => BuildModel (new [] { peer }));
-			Assert.Contains ("no matching user-visible managed constructor", ex.Message);
-			Assert.Contains ("MyApp.MissingCtor", ex.Message);
+			var model = BuildModel (new [] { peer });
+			var constructor = Assert.Single (model.ProxyTypes [0].UcoConstructors);
+			Assert.Equal ("(IC)V", constructor.JniSignature);
+			Assert.False (constructor.HasMatchingManagedCtor);
+			Assert.Empty (constructor.ManagedParameterTypes);
 		}
 
 		[Fact]
@@ -1562,6 +1564,21 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.NotNull (resourceXmlDispatch);
 			Assert.Equal (ExportParameterKindInfo.XmlResourceParser, resourceXmlDispatch.ParameterKinds [0]);
 			Assert.Equal (ExportParameterKindInfo.XmlResourceParser, resourceXmlDispatch.ReturnKind);
+		}
+
+		[Fact]
+		public void Fixture_ExportConstructor_PropagatesParameterKinds ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportConstructorMappedParameter");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = Assert.Single (model.ProxyTypes);
+			var constructor = Assert.Single (
+				proxy.UcoConstructors,
+				candidate => candidate.JniSignature == "(Ljava/io/InputStream;)V");
+
+			Assert.True (constructor.HasMatchingManagedCtor);
+			Assert.Equal ("System.IO.Stream", constructor.ManagedParameterTypes [0].ManagedTypeName);
+			Assert.Equal ([ExportParameterKindInfo.InputStream], constructor.ParameterKinds);
 		}
 
 		[Fact]

@@ -22,6 +22,7 @@
   <!-- Exclude the fixture assembly source files from this project -->
   <ItemGroup>
     <Compile Remove="UserTypesFixture\**" />
+    <Compile Remove="SpecialTypeCollisionFixture\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,6 +36,8 @@
     <!-- User-type fixture assembly: built as a dependency, scanned via SRM/Cecil in tests.
          ReferenceOutputAssembly=false because we don't compile against it — we just need the DLL on disk. -->
     <ProjectReference Include="UserTypesFixture\UserTypesFixture.csproj"
+                      ReferenceOutputAssembly="false" />
+    <ProjectReference Include="SpecialTypeCollisionFixture\SpecialTypeCollisionFixture.csproj"
                       ReferenceOutputAssembly="false" />
   </ItemGroup>
 

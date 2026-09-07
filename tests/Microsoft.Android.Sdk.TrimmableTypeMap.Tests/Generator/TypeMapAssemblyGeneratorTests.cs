@@ -173,6 +173,38 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_ConstructorWithoutMatchingManagedCtor_UsesActivationCtor ()
+	{
+		var peer = MakeAcwPeer ("my/app/MissingCtor", "MyApp.MissingCtor", "App") with {
+			JavaConstructors = [
+				new JavaConstructorInfo {
+					ConstructorIndex = 0,
+					JniSignature = "(IC)V",
+					HasMatchingManagedCtor = false,
+					SuperArgumentsString = "",
+				},
+			],
+		};
+
+		using var stream = GenerateAssembly ([peer], "MissingCtorActivationTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		Assert.NotEmpty (FindCtorMemberRefs (
+			reader,
+			"MyApp",
+			"MissingCtor",
+			"System.IntPtr",
+			"Android.Runtime.JniHandleOwnership"));
+		Assert.Empty (FindCtorMemberRefs (
+			reader,
+			"MyApp",
+			"MissingCtor",
+			"System.Int32",
+			"System.Char"));
+	}
+
+	[Fact]
 	public void Generate_InheritedCtor_CreateInstanceDoesNotActivate ()
 	{
 		var peers = ScanFixtures ();
@@ -185,6 +217,25 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var reader = pe.GetMetadataReader ();
 
 		AssertCreateInstanceReturnsNull (pe, reader, "MyApp_SimpleActivity_Proxy");
+	}
+
+	[Fact]
+	public void Generate_NoActivationCtor_CreateInstanceDoesNotReferenceLookalikeSignature ()
+	{
+		var peer = MakeMcwPeer ("test/Lookalike", "Test.Lookalike", "TestAsm") with {
+			DoNotGenerateAcw = true,
+		};
+		using var stream = GenerateAssembly ([peer], "LookalikeCreateInstanceTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		AssertCreateInstanceReturnsNull (pe, reader, "Test_Lookalike_Proxy");
+		Assert.Empty (FindCtorMemberRefs (
+			reader,
+			"Test",
+			"Lookalike",
+			"System.IntPtr",
+			"Android.Runtime.JniHandleOwnership"));
 	}
 
 	[Fact]
@@ -1429,6 +1480,50 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var typeNames = GetTypeRefNames (reader);
 		Assert.Contains ("XmlResourceParserReader", typeNames);
 		Assert.Contains ("XmlReaderResourceParser", typeNames);
+	}
+
+	[Fact]
+	public void Generate_ExportConstructor_UsesParameterAdapter ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/ExportConstructorMappedParameter");
+
+		using var stream = GenerateAssembly (new [] { peer }, "ExportConstructorMapping");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var adapterMethod = reader.MemberReferences
+			.Select (handle => (Handle: handle, Reference: reader.GetMemberReference (handle)))
+			.Single (member => {
+				if (reader.GetString (member.Reference.Name) != "FromJniHandle" ||
+				    member.Reference.Parent.Kind != HandleKind.TypeReference) {
+					return false;
+				}
+				var parent = reader.GetTypeReference ((TypeReferenceHandle) member.Reference.Parent);
+				return reader.GetString (parent.Name) == "InputStreamInvoker";
+			});
+		var managedConstructor = reader.MemberReferences
+			.Select (handle => (Handle: handle, Reference: reader.GetMemberReference (handle)))
+			.Single (member => {
+				if (reader.GetString (member.Reference.Name) != ".ctor" ||
+				    member.Reference.Parent.Kind != HandleKind.TypeReference) {
+					return false;
+				}
+				var parent = reader.GetTypeReference ((TypeReferenceHandle) member.Reference.Parent);
+				return reader.GetString (parent.Name) == "ExportConstructorMappedParameter";
+			});
+		var ilBytes = reader.MethodDefinitions
+			.Select (handle => reader.GetMethodDefinition (handle))
+			.Where (method => reader.GetString (method.Name).StartsWith ("nctor_", StringComparison.Ordinal))
+			.Select (method => pe.GetMethodBody (method.RelativeVirtualAddress).GetILBytes ())
+			.FirstOrDefault (bytes => bytes is not null &&
+				ILContainsCallToken (bytes, MetadataTokens.GetToken (managedConstructor.Handle)));
+		Assert.NotNull (ilBytes);
+		if (ilBytes is null)
+			throw new InvalidOperationException ("Expected exported constructor UCO IL.");
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (adapterMethod.Handle)));
+		Assert.True (ILContainsCallToken (ilBytes, MetadataTokens.GetToken (managedConstructor.Handle)));
+		Assert.False (ILContainsCallvirtToken (ilBytes, MetadataTokens.GetToken (managedConstructor.Handle)));
+		Assert.False (ILContainsNewobjToken (ilBytes, MetadataTokens.GetToken (managedConstructor.Handle)));
 	}
 
 	[Fact]

@@ -1,4 +1,8 @@
+using System;
+using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using Xunit;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
@@ -10,6 +14,8 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 /// </summary>
 public class ConstructorDetectionTests : FixtureTestBase
 {
+	static readonly Lazy<System.Collections.Generic.List<JavaPeerInfo>> _cachedScanResult = new (ScanConstructorFixtures);
+
 	[Fact]
 	public void MainActivity_ChainsFromBaseRegisteredCtor ()
 	{
@@ -153,6 +159,197 @@ public class ConstructorDetectionTests : FixtureTestBase
 		var peer = FindFixtureByJavaName ("my/app/UnsignedParamActivity");
 		var ctorSigs = peer.JavaConstructors.Select (c => c.JniSignature).ToList ();
 		Assert.Contains ("(SIJ)V", ctorSigs);
+	}
+
+	[Theory]
+	[InlineData ("MyApp.GenericParameterCtorActivity`1", "!0")]
+	[InlineData ("MyApp.GenericInstantiationCtorActivity", "System.Collections.Generic.List`1<System.String>")]
+	[InlineData ("MyApp.ByRefCtorActivity", "System.Int32&")]
+	[InlineData ("MyApp.PointerCtorActivity", "System.Int32*")]
+	[InlineData ("MyApp.FunctionPointerCtorActivity", "delegate*")]
+	[InlineData ("MyApp.RectangularArrayCtorActivity", "System.String[,]")]
+	[InlineData ("MyApp.NestedRectangularArrayCtorActivity", "System.String[,][]")]
+	[InlineData ("MyApp.PointerArrayCtorActivity", "System.Int32*[]")]
+	[InlineData ("MyApp.FunctionPointerArrayCtorActivity", "delegate*[]")]
+	[InlineData ("MyApp.NonPublicExportUnsupportedActivity`1", "!0")]
+	public void UnsupportedConstructorParameter_IsDiagnosed (string managedTypeName, string parameterType)
+	{
+		var diagnostics = ScanConstructorDiagnostics (managedTypeName);
+		var diagnostic = Assert.Single (diagnostics);
+		Assert.Equal (ConstructorDiagnosticKind.UnsupportedParameterType, diagnostic.Kind);
+		Assert.Equal (parameterType, diagnostic.Detail);
+	}
+
+	[Fact]
+	public void ImplicitUnsupportedConstructor_IsSkippedWithoutDiagnostic ()
+	{
+		var peer = ScanPeer ("MyApp.ManagedOnlyConstructorImplementor");
+		Assert.Empty (peer.ConstructorDiagnostics);
+		var constructor = Assert.Single (peer.JavaConstructors);
+		Assert.Equal ("()V", constructor.JniSignature);
+	}
+
+	[Theory]
+	[InlineData ("MyApp.SignedUnsignedCollisionActivity", "(I)V")]
+	[InlineData ("MyApp.AliasedTypeCollisionActivity", "(Lmy/app/AliasOne;)V")]
+	[InlineData ("MyApp.ExplicitRegisterCollisionActivity", "(I)V")]
+	[InlineData ("MyApp.JniSignatureCollisionActivity", "(I)V")]
+	[InlineData ("MyApp.NonPublicExportCollisionActivity", "(I)V")]
+	[InlineData ("MyApp.CrossAssemblyCollisionActivity", "(Lmy/app/CrossAssemblyParameter;)V")]
+	public void CollapsedConstructorSignatures_AreDiagnosed (string managedTypeName, string jniSignature)
+	{
+		var diagnostics = ScanConstructorDiagnostics (managedTypeName);
+		var diagnostic = Assert.Single (diagnostics);
+		Assert.Equal (ConstructorDiagnosticKind.AmbiguousJniSignature, diagnostic.Kind);
+		Assert.Equal (jniSignature, diagnostic.Detail);
+	}
+
+	[Fact]
+	public void ConstructorDescriptor_DoesNotBorrowSameNamedTypeFromAnotherAssembly ()
+	{
+		var peer = ScanPeer ("MyApp.CrossAssemblyBorrowActivity");
+		Assert.Empty (peer.ConstructorDiagnostics);
+		Assert.DoesNotContain (peer.JavaConstructors, constructor => constructor.JniSignature == "(Lmy/app/CrossAssemblyParameter;)V");
+	}
+
+	[Theory]
+	[InlineData ("MyApp.PrimitiveLookalikeActivity")]
+	[InlineData ("MyApp.XamarinActivationLookalikeActivity")]
+	[InlineData ("MyApp.JniActivationLookalikeActivity")]
+	public void PrimitiveAndActivationLookalikes_UseRegisteredJavaDescriptors (string managedTypeName)
+	{
+		var peer = ScanPeer (managedTypeName);
+		Assert.Empty (peer.ConstructorDiagnostics);
+		Assert.Null (peer.ActivationCtor);
+	}
+
+	[Theory]
+	[InlineData ("my/app/GlobalType", ActivationCtorStyle.XamarinAndroid)]
+	[InlineData ("my/app/JiStylePeer", ActivationCtorStyle.JavaInterop)]
+	public void CanonicalActivationConstructors_AreRecognized (string javaName, ActivationCtorStyle style)
+	{
+		var peer = FindFixtureByJavaName (javaName);
+		Assert.NotNull (peer.ActivationCtor);
+		Assert.Equal (style, peer.ActivationCtor.Style);
+		Assert.Equal (peer.ManagedTypeName, peer.ActivationCtor.DeclaringTypeName);
+	}
+
+	[Fact]
+	public void ImplicitMissingBaseConstructor_IsSkippedWithoutDiagnostic ()
+	{
+		var peer = ScanPeer ("MyApp.MissingBaseCtorActivity");
+		Assert.Empty (peer.ConstructorDiagnostics);
+		Assert.DoesNotContain (peer.JavaConstructors, constructor => constructor.JniSignature == "(Ljava/lang/String;)V");
+	}
+
+	[Theory]
+	[InlineData ("MyApp.RegisteredMissingBaseCtorActivity")]
+	[InlineData ("MyApp.ExportMissingBaseCtorActivity")]
+	[InlineData ("MyApp.ExportEmptySuperMissingBaseActivity")]
+	[InlineData ("MyApp.NonPublicExportMissingBaseActivity")]
+	public void ExplicitConstructor_MissingBaseConstructor_IsDiagnosed (string managedTypeName)
+	{
+		var diagnostic = Assert.Single (ScanConstructorDiagnostics (managedTypeName));
+		Assert.Equal (ConstructorDiagnosticKind.MissingBaseConstructor, diagnostic.Kind);
+		Assert.Equal ("(Ljava/lang/String;)V", diagnostic.Detail);
+	}
+
+	[Theory]
+	[InlineData ("MyApp.InvalidSuperArgumentsActivity", "p1")]
+	[InlineData ("MyApp.NonCanonicalSuperArgumentZeroActivity", "p00")]
+	[InlineData ("MyApp.NonCanonicalSuperArgumentOneActivity", "p01")]
+	public void InvalidSuperArgumentsString_IsDiagnosed (string managedTypeName, string superArgumentsString)
+	{
+		var diagnostic = Assert.Single (ScanConstructorDiagnostics (managedTypeName));
+		Assert.Equal (ConstructorDiagnosticKind.InvalidSuperArgumentsString, diagnostic.Kind);
+		Assert.Equal (superArgumentsString, diagnostic.Detail);
+	}
+
+	[Theory]
+	[InlineData ("MyApp.EnumCtorActivity")]
+	[InlineData ("MyApp.ExplicitPointerCtorActivity")]
+	[InlineData ("MyApp.ExplicitRegisterCompatibleBaseActivity")]
+	[InlineData ("MyApp.JniSignatureCompatibleBaseActivity")]
+	[InlineData ("MyApp.ImplicitJniCompatibleBaseActivity")]
+	[InlineData ("MyApp.RegisterBeforeExportValidActivity")]
+	[InlineData ("MyApp.ExportBeforeRegisterValidActivity")]
+	[InlineData ("MyApp.JniBeforeExportValidActivity")]
+	[InlineData ("MyApp.ExportBeforeJniValidActivity")]
+	[InlineData ("MyApp.BindingPointerCtor")]
+	[InlineData ("MyApp.JaggedArrayCtorActivity")]
+	[InlineData ("MyApp.ValidSuperExpressionActivity")]
+	[InlineData ("MyApp.LexicalSuperArgumentsActivity")]
+	[InlineData ("MyApp.LambdaSuperArgumentsActivity")]
+	[InlineData ("MyApp.ParenthesizedLambdaSuperArgumentsActivity")]
+	[InlineData ("MyApp.TypedLambdaSuperArgumentsActivity")]
+	[InlineData ("MyApp.LiteralCommaLambdaSuperArgumentsActivity")]
+	[InlineData ("MyApp.GenericConstructionLambdaSuperArgumentsActivity")]
+	[InlineData ("MyApp.NestedGenericLambdaSuperArgumentsActivity")]
+	[InlineData ("MyApp.InstanceOfGenericLambdaSuperArgumentsActivity")]
+	[InlineData ("MyApp.ComparisonLambdaSuperArgumentsActivity")]
+	[InlineData ("MyApp.ShiftLambdaSuperArgumentsActivity")]
+	[InlineData ("MyApp.MethodReferenceSuperArgumentsActivity")]
+	[InlineData ("MyApp.GenericMethodReferenceSuperArgumentsActivity")]
+	public void RepresentableOrExplicitConstructor_HasNoDiagnostic (string managedTypeName)
+	{
+		Assert.Empty (ScanConstructorDiagnostics (managedTypeName));
+	}
+
+	[Theory]
+	[InlineData ("MyApp.RegisterBeforeExportValidActivity", null)]
+	[InlineData ("MyApp.ExportBeforeRegisterValidActivity", null)]
+	[InlineData ("MyApp.JniBeforeExportValidActivity", "")]
+	[InlineData ("MyApp.ExportBeforeJniValidActivity", "")]
+	public void ExplicitExportConstructor_PreservesRegistrationAndBaseForwarding (string managedTypeName, string? superArgumentsString)
+	{
+		var constructor = Assert.Single (ScanPeer (managedTypeName).JavaConstructors, c => c.JniSignature == "(I)V");
+		Assert.Equal (superArgumentsString, constructor.SuperArgumentsString);
+	}
+
+	[Fact]
+	public void ExportMappedConstructors_UseEffectiveJniSignaturesWithoutDiagnostics ()
+	{
+		var peer = ScanPeer ("MyApp.ExportMappedCtorActivity");
+		Assert.Empty (peer.ConstructorDiagnostics);
+		var signatures = peer.JavaConstructors.Select (c => c.JniSignature).ToList ();
+		Assert.Contains ("(Ljava/io/InputStream;)V", signatures);
+		Assert.Contains ("(Ljava/lang/CharSequence;)V", signatures);
+		Assert.Contains ("(Ljava/util/List;)V", signatures);
+	}
+
+	[Theory]
+	[InlineData ("MyApp.UnsupportedExportConstructorOverloadsActivity")]
+	[InlineData ("MyApp.RegisterBeforeExportActivity")]
+	[InlineData ("MyApp.ExportBeforeRegisterActivity")]
+	public void UnsupportedExportConstructors_HaveNoSecondaryConstructorDiagnostics (string managedTypeName)
+	{
+		Assert.Empty (ScanConstructorDiagnostics (managedTypeName));
+	}
+
+	static System.Collections.Generic.IReadOnlyList<ConstructorDiagnosticInfo> ScanConstructorDiagnostics (string managedTypeName) =>
+		ScanPeer (managedTypeName).ConstructorDiagnostics;
+
+	static JavaPeerInfo ScanPeer (string managedTypeName) =>
+		Assert.Single (_cachedScanResult.Value, p => p.ManagedTypeName == managedTypeName);
+
+	static System.Collections.Generic.List<JavaPeerInfo> ScanConstructorFixtures ()
+	{
+		using var scanner = new JavaPeerScanner ();
+		var testAssemblyDir = Path.GetDirectoryName (typeof (ConstructorDetectionTests).Assembly.Location)
+			?? throw new InvalidOperationException ("Cannot determine test assembly directory.");
+		using var fixtureReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
+		var invalidFixturePath = Path.Combine (testAssemblyDir, "InvalidConstructorFixtures.dll");
+		var lookalikeFixturePath = Path.Combine (testAssemblyDir, "LookalikeConstructorTypes.dll");
+		using var invalidFixtureReader = new PEReader (File.OpenRead (invalidFixturePath));
+		using var lookalikeFixtureReader = new PEReader (File.OpenRead (lookalikeFixturePath));
+		var fixtureMetadata = fixtureReader.GetMetadataReader ();
+		var invalidFixtureMetadata = invalidFixtureReader.GetMetadataReader ();
+		var assemblies = new [] {
+			(fixtureMetadata.GetString (fixtureMetadata.GetAssemblyDefinition ().Name), fixtureReader),
+			(invalidFixtureMetadata.GetString (invalidFixtureMetadata.GetAssemblyDefinition ().Name), invalidFixtureReader),
+			("LookalikeConstructorTypes", lookalikeFixtureReader),
+		};
+		return scanner.Scan (assemblies);
 	}
 
 	// --- Regression: HasMatchingManagedCtor semantics ---

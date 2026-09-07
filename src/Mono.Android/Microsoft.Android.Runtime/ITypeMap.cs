@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.Android.Runtime;
@@ -15,9 +14,9 @@ namespace Microsoft.Android.Runtime;
 interface ITypeMap
 {
 	/// <summary>
-	/// Returns all proxy types mapped to a JNI name, resolving alias holders.
+	/// Adds all proxy types mapped to a JNI name, resolving alias holders.
 	/// </summary>
-	IEnumerable<Type> GetProxyTypes (string jniName);
+	void CollectProxyTypes (string jniName, ref JniProxyCacheBuilder builder);
 
 	/// <summary>
 	/// Resolves a managed type to its proxy type (the generated type that

@@ -1207,7 +1207,7 @@ sealed class TypeMapAssemblyEmitter
 		if (uco.HasMatchingManagedCtor) {
 			var ctorRef = AddManagedCtorRef (targetTypeRef, uco.ManagedParameterTypes);
 			var managedCtorHandle = EmitUcoConstructorBody (uco.WrapperName, encodeSig,
-				enc => EmitManagedConstructorActivation (enc, targetTypeRef, ctorRef, uco.ManagedParameterTypes, jniParams),
+				enc => EmitManagedConstructorActivation (enc, targetTypeRef, ctorRef, uco.ManagedParameterTypes, uco.ParameterKinds, jniParams),
 				blob => EncodeUcoConstructorLocals_DefaultConstructor (blob, targetTypeRef));
 			AddUnmanagedCallersOnlyAttribute (managedCtorHandle);
 			return managedCtorHandle;
@@ -1303,6 +1303,7 @@ sealed class TypeMapAssemblyEmitter
 		EntityHandle targetTypeRef,
 		MemberReferenceHandle ctorRef,
 		IReadOnlyList<TypeRefData> managedParameterTypes,
+		IReadOnlyList<ExportParameterKindInfo> parameterKinds,
 		IReadOnlyList<JniParamKind> jniParams)
 	{
 		var havePeer = enc.DefineLabel ();
@@ -1328,7 +1329,8 @@ sealed class TypeMapAssemblyEmitter
 		enc.MarkLabel (havePeer);
 		enc.LoadLocal (4);
 		for (int i = 0; i < managedParameterTypes.Count; i++) {
-			EmitManagedConstructorArgument (enc, managedParameterTypes [i], jniParams [i], i + 2);
+			var parameterKind = i < parameterKinds.Count ? parameterKinds [i] : ExportParameterKindInfo.Unspecified;
+			EmitManagedConstructorArgument (enc, managedParameterTypes [i], parameterKind, jniParams [i], i + 2);
 		}
 		enc.Call (ctorRef, managedParameterTypes.Count, isInstance: true);
 
@@ -1408,53 +1410,14 @@ sealed class TypeMapAssemblyEmitter
 		cfb.AddFinallyRegion (tryStart, finallyStart, finallyStart, afterAll);
 	}
 
-	void EmitManagedConstructorArgument (TrackedInstructionEncoder encoder, TypeRefData managedType, JniParamKind jniKind, int argumentIndex)
+	void EmitManagedConstructorArgument (
+		TrackedInstructionEncoder encoder,
+		TypeRefData managedType,
+		ExportParameterKindInfo exportKind,
+		JniParamKind jniKind,
+		int argumentIndex)
 	{
-		if (managedType.ManagedTypeName == "System.Boolean") {
-			encoder.LoadArgument (argumentIndex);
-			encoder.LoadConstantI4 (0);
-			encoder.OpCode (ILOpCode.Cgt_un);
-			return;
-		}
-
-		if (jniKind != JniParamKind.Object) {
-			encoder.LoadArgument (argumentIndex);
-			return;
-		}
-
-		if (managedType.ManagedTypeName == "System.String") {
-			encoder.LoadArgument (argumentIndex);
-			encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
-			encoder.Call (_jniEnvGetStringRef, parameterCount: 2, returnsValue: true);
-			return;
-		}
-
-		if (TryGetSzArrayElementType (managedType.ManagedTypeName, out var elementType)) {
-			var arrayType = ResolveManagedTypeHandle (managedType.ManagedTypeName, managedType.AssemblyName);
-			var elementTypeHandle = ResolveManagedTypeHandle (elementType, managedType.AssemblyName);
-
-			encoder.LoadArgument (argumentIndex);
-			encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
-			encoder.LoadToken (elementTypeHandle);
-			encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-			encoder.Call (_jniEnvGetArrayRef, parameterCount: 3, returnsValue: true);
-			encoder.CastClass (arrayType);
-			return;
-		}
-
-		encoder.LoadArgument (argumentIndex);
-		encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
-		if (managedType.ManagedTypeName == "System.Object") {
-			encoder.OpCode (ILOpCode.Ldnull);
-			encoder.Call (_javaLangObjectGetObjectRef, parameterCount: 3, returnsValue: true);
-			return;
-		}
-
-		var managedTypeHandle = ResolveManagedTypeHandle (managedType.ManagedTypeName, managedType.AssemblyName);
-		encoder.LoadToken (managedTypeHandle);
-		encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-		encoder.Call (_javaLangObjectGetObjectRef, parameterCount: 3, returnsValue: true);
-		encoder.CastClass (managedTypeHandle);
+		GetExportMethodDispatchEmitter ().LoadManagedArgument (encoder, managedType, exportKind, jniKind, argumentIndex);
 	}
 
 	EntityHandle ResolveRuntimeTypeSpec (RuntimeTypeSpec type)

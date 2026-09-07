@@ -11,6 +11,7 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.PreTrimmingFixLegacyDesigner" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
+    <AndroidEnableLegacyCompatibilityAssemblyFixups Condition=" '$(AndroidEnableLegacyCompatibilityAssemblyFixups)' == '' ">true</AndroidEnableLegacyCompatibilityAssemblyFixups>
     <_RemoveRegisterFlag>$(MonoAndroidIntermediateAssemblyDir)shrunk\shrunk.flag</_RemoveRegisterFlag>
     <!-- Inject typemap-specific targets into build dependency chains -->
     <_BeforeAddStaticResources>$(_BeforeAddStaticResources);_GetMonoPlatformJarPath</_BeforeAddStaticResources>
