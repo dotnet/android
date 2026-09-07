@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Java.Interop
 {
@@ -39,12 +40,12 @@ namespace Java.Interop
 
 		readonly Type                                       DeclaringType;
 
-		readonly ConcurrentDictionary<string, JniMethodInfo>    InstanceMethods      = new ConcurrentDictionary<string, JniMethodInfo> (1, 3, StringComparer.Ordinal);
+		ConcurrentDictionary<string, JniMethodInfo>?             InstanceMethods;
 		readonly ConcurrentDictionary<Type, JniInstanceMethods> SubclassConstructors = new ConcurrentDictionary<Type, JniInstanceMethods> (1, 1);
 
 		internal void Dispose ()
 		{
-			InstanceMethods.Clear ();
+			Interlocked.Exchange (ref InstanceMethods, null)?.Clear ();
 			foreach (var p in SubclassConstructors.Values)
 				p.Dispose ();
 			SubclassConstructors.Clear ();
@@ -58,7 +59,7 @@ namespace Java.Interop
 		{
 			if (signature == null)
 				throw new ArgumentNullException (nameof (signature));
-			return InstanceMethods.GetOrAdd (signature, static (member, methods) =>
+			return GetInstanceMethods ().GetOrAdd (signature, static (member, methods) =>
 					methods.JniPeerType.GetConstructor (member), this);
 		}
 
@@ -94,11 +95,21 @@ namespace Java.Interop
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
-			return InstanceMethods.GetOrAdd (encodedMember, static (member, methods) => {
+			return GetInstanceMethods ().GetOrAdd (encodedMember, static (member, methods) => {
 				string method, signature;
 				JniPeerMembers.GetNameAndSignature (member, out method, out signature);
 				return methods.GetMethodInfo (method, signature);
 			}, this);
+		}
+
+		ConcurrentDictionary<string, JniMethodInfo> GetInstanceMethods ()
+		{
+			var methods = Volatile.Read (ref InstanceMethods);
+			if (methods != null)
+				return methods;
+
+			var candidate = new ConcurrentDictionary<string, JniMethodInfo> (1, 3, StringComparer.Ordinal);
+			return Interlocked.CompareExchange (ref InstanceMethods, candidate, null) ?? candidate;
 		}
 
 		JniMethodInfo GetMethodInfo (string method, string signature)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Threading.Tasks;
 
 using Java.Interop;
 using NUnit.Framework;
@@ -21,13 +22,33 @@ namespace Java.InteropTests
 		[Category ("TrimmableTypeMapUnsupported")]
 		public void VirtualInvokeOnBaseInvokesMostDerivedJavaMethod ()
 		{
-			var registered  = GetInstanceMethods (MyString._members.InstanceMethods);
-			Assert.AreEqual (0, registered.Count);
+			Assert.IsNull (GetInstanceMethods (MyString._members.InstanceMethods));
 			using (var s = new MyString ("hello!")) {
+				var registered = GetInstanceMethods (MyString._members.InstanceMethods);
 				Assert.AreEqual (1, registered.Count);  // for the constructor
 				Assert.AreEqual ("hello!", s.ToString ());
 				Assert.AreEqual (1, registered.Count);
 			}
+		}
+
+		[Test]
+		[Category ("TrimmableTypeMapUnsupported")]
+		public void ConcurrentFirstUsePublishesSingleInstanceMethodCache ()
+		{
+			var members = new JniPeerMembers (MyString.JniTypeName, typeof (MyString));
+			var methods = members.InstanceMethods;
+			var constructors = new JniMethodInfo [16];
+
+			Assert.IsNull (GetInstanceMethods (methods));
+			Parallel.For (0, constructors.Length, i => constructors [i] = methods.GetConstructor ("()V"));
+
+			var registered = GetInstanceMethods (methods);
+			Assert.AreEqual (1, registered.Count);
+			foreach (var constructor in constructors)
+				Assert.AreSame (constructors [0], constructor);
+			Assert.AreSame (registered ["()V"], constructors [0]);
+
+			JniPeerMembers.Dispose (members);
 		}
 
 		static ConcurrentDictionary<string, JniMethodInfo> GetInstanceMethods (JniPeerMembers.JniInstanceMethods methods)
