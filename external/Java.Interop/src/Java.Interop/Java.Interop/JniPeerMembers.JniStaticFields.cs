@@ -15,11 +15,13 @@ namespace Java.Interop
 
 		readonly JniPeerMembers                             Members;
 
-		ConcurrentDictionary<string, JniFieldInfo>? StaticFields;
+		ConcurrentDictionary<string, JniFieldInfo>? staticFields;
+
+		ConcurrentDictionary<string, JniFieldInfo> StaticFields => GetOrCreate (ref staticFields, 3);
 
 		public JniFieldInfo GetFieldInfo (string encodedMember)
 		{
-			return GetOrCreate (ref StaticFields, 3).GetOrAdd (encodedMember, static (member, fields) => {
+			return StaticFields.GetOrAdd (encodedMember, static (member, fields) => {
 				string field, signature;
 				JniPeerMembers.GetNameAndSignature (member, out field, out signature);
 				return fields.Members.JniPeerType.GetStaticField (field, signature);
@@ -28,7 +30,7 @@ namespace Java.Interop
 
 		internal void Dispose ()
 		{
-			Clear (ref StaticFields);
+			Clear (ref staticFields);
 		}
 	}}
 }

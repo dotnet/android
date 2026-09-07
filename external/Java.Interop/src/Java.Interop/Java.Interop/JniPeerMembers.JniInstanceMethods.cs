@@ -39,13 +39,16 @@ namespace Java.Interop
 
 		readonly Type                                       DeclaringType;
 
-		ConcurrentDictionary<string, JniMethodInfo>?             InstanceMethods;
-		ConcurrentDictionary<Type, JniInstanceMethods>?          SubclassConstructors;
+		ConcurrentDictionary<string, JniMethodInfo>?             instanceMethods;
+		ConcurrentDictionary<Type, JniInstanceMethods>?          subclassConstructors;
+
+		ConcurrentDictionary<string, JniMethodInfo>               InstanceMethods      => GetOrCreate (ref instanceMethods, 3);
+		ConcurrentDictionary<Type, JniInstanceMethods>            SubclassConstructors => GetOrCreate (ref subclassConstructors, 1);
 
 		internal void Dispose ()
 		{
-			Clear (ref InstanceMethods);
-			Clear (ref SubclassConstructors, static value => value.Dispose ());
+			Clear (ref instanceMethods);
+			Clear (ref subclassConstructors, static value => value.Dispose ());
 
 			if (jniPeerType != null)
 				jniPeerType.Dispose ();
@@ -56,7 +59,7 @@ namespace Java.Interop
 		{
 			if (signature == null)
 				throw new ArgumentNullException (nameof (signature));
-			return GetOrCreate (ref InstanceMethods, 3).GetOrAdd (signature, static (member, methods) =>
+			return InstanceMethods.GetOrAdd (signature, static (member, methods) =>
 					methods.JniPeerType.GetConstructor (member), this);
 		}
 
@@ -87,12 +90,12 @@ namespace Java.Interop
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods..ctor(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 27
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.GetConstructorsForType(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 77
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(String constructorSignature, Type declaringType, JniArgumentValue* parameters) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 146
-			return GetOrCreate (ref SubclassConstructors, 1).GetOrAdd (declaringType, static type => new JniInstanceMethods (type));
+			return SubclassConstructors.GetOrAdd (declaringType, static type => new JniInstanceMethods (type));
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
-			return GetOrCreate (ref InstanceMethods, 3).GetOrAdd (encodedMember, static (member, methods) => {
+			return InstanceMethods.GetOrAdd (encodedMember, static (member, methods) => {
 				string method, signature;
 				JniPeerMembers.GetNameAndSignature (member, out method, out signature);
 				return methods.GetMethodInfo (method, signature);

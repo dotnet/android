@@ -15,16 +15,18 @@ namespace Java.Interop
 
 		internal    readonly    JniPeerMembers              Members;
 
-		ConcurrentDictionary<string, JniMethodInfo>? StaticMethods;
+		ConcurrentDictionary<string, JniMethodInfo>? staticMethods;
+
+		ConcurrentDictionary<string, JniMethodInfo> StaticMethods => GetOrCreate (ref staticMethods, 3);
 
 		internal void Dispose ()
 		{
-			Clear (ref StaticMethods);
+			Clear (ref staticMethods);
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
-			return GetOrCreate (ref StaticMethods, 3).GetOrAdd (encodedMember, static (member, methods) => {
+			return StaticMethods.GetOrAdd (encodedMember, static (member, methods) => {
 				string method, signature;
 				JniPeerMembers.GetNameAndSignature (member, out method, out signature);
 				return methods.GetMethodInfo (method, signature);

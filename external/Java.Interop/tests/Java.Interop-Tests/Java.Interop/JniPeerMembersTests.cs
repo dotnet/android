@@ -118,31 +118,31 @@ namespace Java.InteropTests
 
 		static ConcurrentDictionary<string, JniFieldInfo> GetInstanceFields (JniPeerMembers.JniInstanceFields fields)
 		{
-			var field = typeof (JniPeerMembers.JniInstanceFields).GetField ("InstanceFields", BindingFlags.NonPublic | BindingFlags.Instance);
+			var field = typeof (JniPeerMembers.JniInstanceFields).GetField ("instanceFields", BindingFlags.NonPublic | BindingFlags.Instance);
 			return GetCache<string, JniFieldInfo> (field, fields);
 		}
 
 		static ConcurrentDictionary<string, JniMethodInfo> GetInstanceMethods (JniPeerMembers.JniInstanceMethods methods)
 		{
-			var field = typeof (JniPeerMembers.JniInstanceMethods).GetField ("InstanceMethods", BindingFlags.NonPublic | BindingFlags.Instance);
+			var field = typeof (JniPeerMembers.JniInstanceMethods).GetField ("instanceMethods", BindingFlags.NonPublic | BindingFlags.Instance);
 			return GetCache<string, JniMethodInfo> (field, methods);
 		}
 
 		static ConcurrentDictionary<Type, JniPeerMembers.JniInstanceMethods> GetSubclassConstructors (JniPeerMembers.JniInstanceMethods methods)
 		{
-			var field = typeof (JniPeerMembers.JniInstanceMethods).GetField ("SubclassConstructors", BindingFlags.NonPublic | BindingFlags.Instance);
+			var field = typeof (JniPeerMembers.JniInstanceMethods).GetField ("subclassConstructors", BindingFlags.NonPublic | BindingFlags.Instance);
 			return GetCache<Type, JniPeerMembers.JniInstanceMethods> (field, methods);
 		}
 
 		static ConcurrentDictionary<string, JniFieldInfo> GetStaticFields (JniPeerMembers.JniStaticFields fields)
 		{
-			var field = typeof (JniPeerMembers.JniStaticFields).GetField ("StaticFields", BindingFlags.NonPublic | BindingFlags.Instance);
+			var field = typeof (JniPeerMembers.JniStaticFields).GetField ("staticFields", BindingFlags.NonPublic | BindingFlags.Instance);
 			return GetCache<string, JniFieldInfo> (field, fields);
 		}
 
 		static ConcurrentDictionary<string, JniMethodInfo> GetStaticMethods (JniPeerMembers.JniStaticMethods methods)
 		{
-			var field = typeof (JniPeerMembers.JniStaticMethods).GetField ("StaticMethods", BindingFlags.NonPublic | BindingFlags.Instance);
+			var field = typeof (JniPeerMembers.JniStaticMethods).GetField ("staticMethods", BindingFlags.NonPublic | BindingFlags.Instance);
 			return GetCache<string, JniMethodInfo> (field, methods);
 		}
 
