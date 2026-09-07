@@ -56,7 +56,7 @@ namespace Java.InteropTests
 		[Test]
 		public void PeerMemberCachesAreInitiallyNull ()
 		{
-			var members = new JniPeerMembers (CallVirtualFromConstructorBase.JniTypeName, typeof (CallVirtualFromConstructorBase));
+			var members = new JniPeerMembers (CallNonvirtualBase.JniTypeName, typeof (CallNonvirtualBase));
 			try {
 				Assert.IsNull (GetInstanceFields (members.InstanceFields));
 				Assert.IsNull (GetInstanceMethods (members.InstanceMethods));
@@ -71,17 +71,17 @@ namespace Java.InteropTests
 		[Test]
 		public void ConstructorTypeCacheIsAllocatedOnlyForManagedSubclasses ()
 		{
-			var members = new JniPeerMembers (CallVirtualFromConstructorBase.JniTypeName, typeof (CallVirtualFromConstructorBase));
+			var members = new JniPeerMembers (CallNonvirtualBase.JniTypeName, typeof (CallNonvirtualBase));
 			try {
 				var methods = members.InstanceMethods;
 
-				Assert.AreSame (methods, methods.GetConstructorsForType (typeof (CallVirtualFromConstructorBase)));
+				Assert.AreSame (methods, methods.GetConstructorsForType (typeof (CallNonvirtualBase)));
 				Assert.IsNull (GetSubclassConstructors (methods));
 
-				var derivedMethods = methods.GetConstructorsForType (typeof (CallVirtualFromConstructorDerived));
+				var derivedMethods = methods.GetConstructorsForType (typeof (CallNonvirtualDerived));
 				var constructors = GetSubclassConstructors (methods);
 				Assert.AreEqual (1, constructors.Count);
-				Assert.AreSame (derivedMethods, constructors [typeof (CallVirtualFromConstructorDerived)]);
+				Assert.AreSame (derivedMethods, constructors [typeof (CallNonvirtualDerived)]);
 
 				methods.Dispose ();
 				Assert.IsNull (GetSubclassConstructors (methods));
