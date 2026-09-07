@@ -65,23 +65,13 @@ namespace {
 
 		static_assert (sizeof (CacheFileFooter) == 32uz);
 
-		// A queued cache write. The payload is stored immediately after the structure so that a
-		// request and the assembly bytes it carries are a single allocation, and `next` links the
-		// request into the intrusive FIFO drained by the writer thread. The destination path is
-		// not stored: `cache_dir` is immutable once the cache is enabled, so the writer thread can
-		// rebuild the path from `descriptor_index` alone.
-		//
-		// The over-alignment keeps `sizeof (WriteRequest)` a multiple of the maximum fundamental
-		// alignment, so that the payload is as aligned as the `malloc` block it lives in.
-		struct alignas (16) WriteRequest final
+		struct WriteRequest final
 		{
 			WriteRequest *next;
 			uint8_t      *payload;
 			size_t        size;
 			uint32_t      descriptor_index;
 		};
-
-		static_assert (sizeof (WriteRequest) % alignof (std::max_align_t) == 0uz);
 
 		enum class WriteResult
 		{
@@ -103,16 +93,18 @@ namespace {
 
 		auto allocate_write_request (size_t payload_size) noexcept -> WriteRequest*
 		{
-			if (payload_size > SIZE_MAX - sizeof (WriteRequest)) [[unlikely]] {
+			auto *request = static_cast<WriteRequest*>(std::malloc (sizeof (WriteRequest)));
+			if (request == nullptr) [[unlikely]] {
 				return nullptr;
 			}
 
-			auto *request = static_cast<WriteRequest*>(std::malloc (sizeof (WriteRequest) + payload_size * sizeof (uint8_t)));
-			if (request != nullptr) {
-				request->next = nullptr;
-				request->payload = reinterpret_cast<uint8_t*>(request + 1);
+			request->payload = static_cast<uint8_t*>(std::malloc (payload_size));
+			if (request->payload == nullptr) [[unlikely]] {
+				std::free (request);
+				return nullptr;
 			}
 
+			request->next = nullptr;
 			return request;
 		}
 
@@ -215,6 +207,7 @@ namespace {
 			while (request != nullptr) {
 				WriteRequest *next = request->next;
 				queued_bytes -= request->size;
+				std::free (request->payload);
 				std::free (request);
 				request = next;
 			}
@@ -241,6 +234,7 @@ namespace {
 
 				size_t request_size = request->size;
 				WriteResult write_result = write_cache_file (request);
+				std::free (request->payload);
 				std::free (request);
 
 				{
@@ -527,6 +521,12 @@ namespace {
 
 			WriteRequest *req = allocate_write_request (total);
 			if (req == nullptr) [[unlikely]] {
+				log_debugf (
+					LOG_ASSEMBLY,
+					"Skipping decompressed-assembly cache write for '%.*s': unable to allocate the request or payload",
+					static_cast<int>(name.length ()),
+					name.data ()
+				);
 				lock_guard lock (state_lock);
 				queued_bytes -= total;
 				return;
@@ -553,6 +553,7 @@ namespace {
 				lock_guard lock (state_lock);
 				if (!writes_enabled) {
 					queued_bytes -= total;
+					std::free (req->payload);
 					std::free (req);
 					return;
 				}
