@@ -1885,12 +1885,16 @@ because xbuild doesn't support framework reference assemblies.
       $(_AndroidBuildPropertiesCache);
     </_CreateBaseApkInputs>
   </PropertyGroup>
+  <!-- The packaged resources already track generation time. Invalidate them when rules
+       are missing rather than touching unchanged rules and unnecessarily rerunning R8. -->
+  <Delete Files="$(_PackagedResources)"
+      Condition=" '$(_Aapt2ProguardRules)' != '' and !Exists('$(_Aapt2ProguardRules)') " />
 </Target>
 
 <Target Name="_PrepareCreateBaseApk"
     DependsOnTargets="_CreateBaseApkInputs"
     Inputs="$(_CreateBaseApkInputs)"
-    Outputs="$(_PackagedResources);$(_Aapt2ProguardRules)"
+    Outputs="$(_PackagedResources)"
   >
   <!--
     NOTE: these steps need to be in a separate target, so variables
@@ -1927,11 +1931,11 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_CreateBaseApk"
   DependsOnTargets="$(_CreateBaseApkDependsOnTargets);$(AfterGenerateAndroidManifest);_PrepareCreateBaseApk"
   Inputs="$(_CreateBaseApkInputs)"
-  Outputs="$(_PackagedResources);$(_Aapt2ProguardRules)">
+  Outputs="$(_PackagedResources)">
 
   <!-- Create the base .apk with resources and assets -->
   <CallTarget Targets="_CreateBaseApkWithAapt2" />
-  <Touch Files="$(_PackagedResources);$(_Aapt2ProguardRules)" />
+  <Touch Files="$(_PackagedResources)" />
   <!-- LibraryProjectJars must not be used for aapt in BuildApk*, or it will *bundle* the jar! -->
 
   <!-- Only copy if the file contents changed, so users only get Reload? dialog for real changes -->
