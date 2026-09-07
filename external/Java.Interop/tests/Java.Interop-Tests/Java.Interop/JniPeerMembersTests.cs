@@ -36,75 +36,90 @@ namespace Java.InteropTests
 		public void ConcurrentFirstUsePublishesSingleInstanceMethodCache ()
 		{
 			var members = new JniPeerMembers (MyString.JniTypeName, typeof (MyString));
-			var methods = members.InstanceMethods;
-			var constructors = new JniMethodInfo [16];
+			try {
+				var methods = members.InstanceMethods;
+				var constructors = new JniMethodInfo [16];
 
-			Assert.IsNull (GetInstanceMethods (methods));
-			Parallel.For (0, constructors.Length, i => constructors [i] = methods.GetConstructor ("()V"));
+				Assert.IsNull (GetInstanceMethods (methods));
+				Parallel.For (0, constructors.Length, i => constructors [i] = methods.GetConstructor ("()V"));
 
-			var registered = GetInstanceMethods (methods);
-			Assert.AreEqual (1, registered.Count);
-			foreach (var constructor in constructors)
-				Assert.AreSame (constructors [0], constructor);
-			Assert.AreSame (registered ["()V"], constructors [0]);
-
-			JniPeerMembers.Dispose (members);
+				var registered = GetInstanceMethods (methods);
+				Assert.AreEqual (1, registered.Count);
+				foreach (var constructor in constructors)
+					Assert.AreSame (constructors [0], constructor);
+				Assert.AreSame (registered ["()V"], constructors [0]);
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
 		}
 
 		[Test]
 		public void PeerMemberCachesAreInitiallyNull ()
 		{
 			var members = new JniPeerMembers (CallVirtualFromConstructorBase.JniTypeName, typeof (CallVirtualFromConstructorBase));
-
-			Assert.IsNull (GetInstanceFields (members.InstanceFields));
-			Assert.IsNull (GetInstanceMethods (members.InstanceMethods));
-			Assert.IsNull (GetSubclassConstructors (members.InstanceMethods));
-			Assert.IsNull (GetStaticFields (members.StaticFields));
-			Assert.IsNull (GetStaticMethods (members.StaticMethods));
+			try {
+				Assert.IsNull (GetInstanceFields (members.InstanceFields));
+				Assert.IsNull (GetInstanceMethods (members.InstanceMethods));
+				Assert.IsNull (GetSubclassConstructors (members.InstanceMethods));
+				Assert.IsNull (GetStaticFields (members.StaticFields));
+				Assert.IsNull (GetStaticMethods (members.StaticMethods));
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
 		}
 
 		[Test]
 		public void ConstructorTypeCacheIsAllocatedOnlyForManagedSubclasses ()
 		{
 			var members = new JniPeerMembers (CallVirtualFromConstructorBase.JniTypeName, typeof (CallVirtualFromConstructorBase));
-			var methods = members.InstanceMethods;
+			try {
+				var methods = members.InstanceMethods;
 
-			Assert.AreSame (methods, methods.GetConstructorsForType (typeof (CallVirtualFromConstructorBase)));
-			Assert.IsNull (GetSubclassConstructors (methods));
+				Assert.AreSame (methods, methods.GetConstructorsForType (typeof (CallVirtualFromConstructorBase)));
+				Assert.IsNull (GetSubclassConstructors (methods));
 
-			var derivedMethods = methods.GetConstructorsForType (typeof (CallVirtualFromConstructorDerived));
-			var constructors = GetSubclassConstructors (methods);
-			Assert.AreEqual (1, constructors.Count);
-			Assert.AreSame (derivedMethods, constructors [typeof (CallVirtualFromConstructorDerived)]);
+				var derivedMethods = methods.GetConstructorsForType (typeof (CallVirtualFromConstructorDerived));
+				var constructors = GetSubclassConstructors (methods);
+				Assert.AreEqual (1, constructors.Count);
+				Assert.AreSame (derivedMethods, constructors [typeof (CallVirtualFromConstructorDerived)]);
 
-			methods.Dispose ();
-			Assert.IsNull (GetSubclassConstructors (methods));
-			Assert.Throws<InvalidOperationException> (() => {
-				var type = derivedMethods.JniPeerType;
-			});
+				methods.Dispose ();
+				Assert.IsNull (GetSubclassConstructors (methods));
+				Assert.Throws<InvalidOperationException> (() => {
+					var type = derivedMethods.JniPeerType;
+				});
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
 		}
 
 		[Test]
 		public void ConcurrentFirstUsePublishesSingleFieldAndStaticMethodCaches ()
 		{
 			var instanceMembers = new JniPeerMembers (CallNonvirtualBase.JniTypeName, typeof (CallNonvirtualBase));
-			var instanceFields = new JniFieldInfo [16];
-			Assert.IsNull (GetInstanceFields (instanceMembers.InstanceFields));
-			Parallel.For (0, instanceFields.Length, i => instanceFields [i] = instanceMembers.InstanceFields.GetFieldInfo ("methodInvoked.Z"));
-			AssertSingleCachedValue (GetInstanceFields (instanceMembers.InstanceFields), "methodInvoked.Z", instanceFields);
-			JniPeerMembers.Dispose (instanceMembers);
+			try {
+				var instanceFields = new JniFieldInfo [16];
+				Assert.IsNull (GetInstanceFields (instanceMembers.InstanceFields));
+				Parallel.For (0, instanceFields.Length, i => instanceFields [i] = instanceMembers.InstanceFields.GetFieldInfo ("methodInvoked.Z"));
+				AssertSingleCachedValue (GetInstanceFields (instanceMembers.InstanceFields), "methodInvoked.Z", instanceFields);
+			} finally {
+				JniPeerMembers.Dispose (instanceMembers);
+			}
 
 			var staticMembers = new JniPeerMembers (JavaLangSystemTestObject.JniTypeName, typeof (JavaLangSystemTestObject));
-			var staticFields = new JniFieldInfo [16];
-			Assert.IsNull (GetStaticFields (staticMembers.StaticFields));
-			Parallel.For (0, staticFields.Length, i => staticFields [i] = staticMembers.StaticFields.GetFieldInfo ("in.Ljava/io/InputStream;"));
-			AssertSingleCachedValue (GetStaticFields (staticMembers.StaticFields), "in.Ljava/io/InputStream;", staticFields);
+			try {
+				var staticFields = new JniFieldInfo [16];
+				Assert.IsNull (GetStaticFields (staticMembers.StaticFields));
+				Parallel.For (0, staticFields.Length, i => staticFields [i] = staticMembers.StaticFields.GetFieldInfo ("in.Ljava/io/InputStream;"));
+				AssertSingleCachedValue (GetStaticFields (staticMembers.StaticFields), "in.Ljava/io/InputStream;", staticFields);
 
-			var staticMethods = new JniMethodInfo [16];
-			Assert.IsNull (GetStaticMethods (staticMembers.StaticMethods));
-			Parallel.For (0, staticMethods.Length, i => staticMethods [i] = staticMembers.StaticMethods.GetMethodInfo ("currentTimeMillis.()J"));
-			AssertSingleCachedValue (GetStaticMethods (staticMembers.StaticMethods), "currentTimeMillis.()J", staticMethods);
-			JniPeerMembers.Dispose (staticMembers);
+				var staticMethods = new JniMethodInfo [16];
+				Assert.IsNull (GetStaticMethods (staticMembers.StaticMethods));
+				Parallel.For (0, staticMethods.Length, i => staticMethods [i] = staticMembers.StaticMethods.GetMethodInfo ("currentTimeMillis.()J"));
+				AssertSingleCachedValue (GetStaticMethods (staticMembers.StaticMethods), "currentTimeMillis.()J", staticMethods);
+			} finally {
+				JniPeerMembers.Dispose (staticMembers);
+			}
 		}
 
 		static void AssertSingleCachedValue<T> (ConcurrentDictionary<string, T> cache, string key, T [] values)
