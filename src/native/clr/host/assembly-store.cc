@@ -144,7 +144,11 @@ namespace {
 		auto format_cache_path (char *buffer, size_t buffer_size, uint32_t descriptor_index) noexcept -> bool
 		{
 			int length = snprintf (buffer, buffer_size, "%s/%u.bin", cache_dir, descriptor_index);
-			return length > 0 && static_cast<size_t>(length) < buffer_size;
+			if (length <= 0 || static_cast<size_t>(length) >= buffer_size) [[unlikely]] {
+				log_file_error ("path formatting", cache_dir, length < 0 ? errno : ENAMETOOLONG);
+				return false;
+			}
+			return true;
 		}
 
 		auto write_cache_file (WriteRequest *req) noexcept -> WriteResult
@@ -157,6 +161,7 @@ namespace {
 			char tmp_path[Util::LocalPathBufferSize];
 			int tmp_path_length = snprintf (tmp_path, sizeof (tmp_path), "%s.tmp.%d", path, getpid ());
 			if (tmp_path_length <= 0 || static_cast<size_t>(tmp_path_length) >= sizeof (tmp_path)) [[unlikely]] {
+				log_file_error ("temporary-file path formatting", path, tmp_path_length < 0 ? errno : ENAMETOOLONG);
 				return WriteResult::Failed;
 			}
 
@@ -320,6 +325,8 @@ namespace {
 				int length = snprintf (path, sizeof (path), "%s/%s", dir, entry->d_name);
 				if (length > 0 && static_cast<size_t>(length) < sizeof (path)) {
 					unlink (path);
+				} else {
+					log_file_error ("stale temporary-file path formatting", dir, length < 0 ? errno : ENAMETOOLONG);
 				}
 			}
 
@@ -379,6 +386,7 @@ namespace {
 			store_id = assembly_store_id;
 			int store_id_length = snprintf (path + length, sizeof (path) - static_cast<size_t>(length), "/%" PRIx64, store_id);
 			if (store_id_length <= 0 || static_cast<size_t>(length + store_id_length) >= sizeof (path)) [[unlikely]] {
+				log_file_error ("store-directory path formatting", code_cache_dir, store_id_length < 0 ? errno : ENAMETOOLONG);
 				return;
 			}
 
