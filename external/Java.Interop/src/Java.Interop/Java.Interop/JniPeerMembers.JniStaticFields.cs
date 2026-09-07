@@ -20,7 +20,7 @@ namespace Java.Interop
 
 		public JniFieldInfo GetFieldInfo (string encodedMember)
 		{
-			return GetStaticFields ().GetOrAdd (encodedMember, static (member, fields) => {
+			return GetOrCreate (ref StaticFields, 3).GetOrAdd (encodedMember, static (member, fields) => {
 				string field, signature;
 				JniPeerMembers.GetNameAndSignature (member, out field, out signature);
 				return fields.Members.JniPeerType.GetStaticField (field, signature);
@@ -30,16 +30,6 @@ namespace Java.Interop
 		internal void Dispose ()
 		{
 			Interlocked.Exchange (ref StaticFields, null)?.Clear ();
-		}
-
-		ConcurrentDictionary<string, JniFieldInfo> GetStaticFields ()
-		{
-			var fields = Volatile.Read (ref StaticFields);
-			if (fields != null)
-				return fields;
-
-			var candidate = new ConcurrentDictionary<string, JniFieldInfo> (1, 3, StringComparer.Ordinal);
-			return Interlocked.CompareExchange (ref StaticFields, candidate, null) ?? candidate;
 		}
 	}}
 }

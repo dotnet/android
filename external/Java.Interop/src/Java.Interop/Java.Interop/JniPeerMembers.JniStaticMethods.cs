@@ -25,21 +25,11 @@ namespace Java.Interop
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
-			return GetStaticMethods ().GetOrAdd (encodedMember, static (member, methods) => {
+			return GetOrCreate (ref StaticMethods, 3).GetOrAdd (encodedMember, static (member, methods) => {
 				string method, signature;
 				JniPeerMembers.GetNameAndSignature (member, out method, out signature);
 				return methods.GetMethodInfo (method, signature);
 			}, this);
-		}
-
-		ConcurrentDictionary<string, JniMethodInfo> GetStaticMethods ()
-		{
-			var methods = Volatile.Read (ref StaticMethods);
-			if (methods != null)
-				return methods;
-
-			var candidate = new ConcurrentDictionary<string, JniMethodInfo> (1, 3, StringComparer.Ordinal);
-			return Interlocked.CompareExchange (ref StaticMethods, candidate, null) ?? candidate;
 		}
 
 		JniMethodInfo GetMethodInfo (string method, string signature)
