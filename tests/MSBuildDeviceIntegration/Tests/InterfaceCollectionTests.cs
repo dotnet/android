@@ -106,7 +106,7 @@ namespace Xamarin.Android.Build.Tests
 			var chains = new [] {
 				new RootingChain (
 					"JavaList",
-					"SafeJavaCollectionFactory__CreateReferenceListFromJniHandle, " +
+					"(Mono_Android_Java_Interop_SafeJavaCollectionFactory__CreateReferenceListFromJniHandle, " +
 						"Type metadata: [Java.Interop]Java.Interop.IJavaPeerable)",
 					"Mono_Android_Android_Runtime_JavaList_1<Java_Interop_Java_Interop_IJavaPeerable> constructed",
 					"__GenericDict_Mono_Android_Android_Runtime_JavaList_1<Java_Interop_Java_Interop_IJavaPeerable>",
@@ -116,7 +116,7 @@ namespace Xamarin.Android.Build.Tests
 					"JavaList`1<Java.Interop.IJavaPeerable>..ctor(native int,JniHandleOwnership)"),
 				new RootingChain (
 					"JavaCollection",
-					"SafeJavaCollectionFactory__CreateReferenceCollectionFromJniHandle, " +
+					"(Mono_Android_Java_Interop_SafeJavaCollectionFactory__CreateReferenceCollectionFromJniHandle, " +
 						"Type metadata: [Java.Interop]Java.Interop.IJavaPeerable)",
 					"Mono_Android_Android_Runtime_JavaCollection_1<Java_Interop_Java_Interop_IJavaPeerable> constructed",
 					"__GenericDict_Mono_Android_Android_Runtime_JavaCollection_1<Java_Interop_Java_Interop_IJavaPeerable>",
@@ -126,8 +126,7 @@ namespace Xamarin.Android.Build.Tests
 					"JavaCollection`1<Java.Interop.IJavaPeerable>..ctor(native int,JniHandleOwnership)"),
 				new RootingChain (
 					"JavaDictionary",
-					"SafeJavaCollectionFactory__CreateReferenceDictionaryFromJniHandle, " +
-						"Type metadata: [Java.Interop]Java.Interop.IJavaPeerable)",
+					"Mono_Android_Java_Interop_SafeJavaCollectionFactory__CreateReferenceDictionaryFromJniHandle",
 					"Mono_Android_Android_Runtime_JavaDictionary_2<Java_Interop_Java_Interop_IJavaPeerable__" +
 						"Java_Interop_Java_Interop_IJavaPeerable> constructed",
 					"__GenericDict_Mono_Android_Android_Runtime_JavaDictionary_2<Java_Interop_Java_Interop_IJavaPeerable__" +
@@ -291,7 +290,7 @@ namespace Xamarin.Android.Build.Tests
 			{
 				int matchedRoles = 0;
 				matchedRoles += ObserveNode (
-					label == $"(Mono_Android_Java_Interop_{sourcePattern}",
+					label == sourcePattern,
 					id,
 					label,
 					"SafeJavaCollectionFactory source",
