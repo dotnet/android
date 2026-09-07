@@ -17,20 +17,17 @@ namespace Xamarin.Android.Build.Tests
 	public class InterfaceCollectionTests : DeviceTest
 	{
 		const string DgmlNamespace = "http://schemas.microsoft.com/vs/2009/dgml";
-		const string ResultPrefix = "INTERFACE_COLLECTION_RESULT";
+		const string ResultPrefix = "INTERFACE_COLLECTION_ROOTING_RESULT";
 
-		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
-		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
-		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
-		public void InterfaceValuedJavaCollections (string typemapImplementation, AndroidRuntime runtime)
+		[Test]
+		public void InterfaceCollectionFactoryRootsCanonicalWrappers ()
 		{
-			var suffix = $"interfacecollections{typemapImplementation.Replace ("-", "")}{runtime}".ToLowerInvariant ();
-			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, suffix)) {
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.NativeAOT, "interfacecollectionrooting")) {
 				IsRelease = true,
 			};
-			proj.SetRuntime (runtime);
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
 			proj.SetRuntimeIdentifiers ([DeviceAbi]);
-			proj.SetProperty ("AndroidTypeMapImplementation", typemapImplementation);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("AndroidSdkDirectory", AndroidSdkResolver.GetAndroidSdkPath ());
 			var javaSdkDirectory = AndroidSdkResolver.GetJavaSdkPath ();
 			proj.SetProperty ("JavaSdkDirectory", javaSdkDirectory);
@@ -40,14 +37,17 @@ namespace Xamarin.Android.Build.Tests
 			var resultToken = Guid.NewGuid ().ToString ("N");
 			proj.MainActivity = proj.ProcessSourceTemplate (
 				ReadFixture ("MainActivity.cs").Replace ("${RESULT_TOKEN}", resultToken, StringComparison.Ordinal));
+			proj.Sources.Add (new BuildItem.Source ("RawInterfaceCollectionHolder.cs") {
+				TextContent = () => ReadRuntimeFixture (Path.Combine ("Java.Interop", "RawInterfaceCollectionHolder.cs")),
+			});
 			proj.AndroidJavaSources.Add (CreateJavaSource ("ValueProvider.java", bind: true));
 			proj.AndroidJavaSources.Add (CreateJavaSource ("ExtendedValueProvider.java", bind: true));
 			proj.AndroidJavaSources.Add (CreateJavaSource ("InterfaceCollectionFixture.java", bind: false));
 			proj.OtherBuildItems.Add (new AndroidItem.ProguardConfiguration ("proguard.cfg") {
-				TextContent = () => ReadFixture ("proguard.cfg"),
+				TextContent = () => ReadRuntimeFixture ("InterfaceCollection.proguard.cfg"),
 			});
 
-			var testDirectory = Path.Combine ("temp", $"{nameof (InterfaceValuedJavaCollections)}-{typemapImplementation}-{runtime}");
+			var testDirectory = Path.Combine ("temp", nameof (InterfaceCollectionFactoryRootsCanonicalWrappers));
 			using var builder = CreateApkBuilder (testDirectory);
 			try {
 				Assert.IsTrue (builder.Install (proj), "The focused interface-collection app should install.");
@@ -65,15 +65,13 @@ namespace Xamarin.Android.Build.Tests
 					return true;
 				}, logcatPath, ActivityStartTimeoutInSeconds, onMonitoringStarted: () => StartActivityAndAssert (proj));
 				Assert.IsTrue (resultFound, $"The focused app did not report a result. See '{logcatPath}'.");
-				StringAssert.Contains ($"{ResultPrefix} PASS 6/6", resultLine);
+				StringAssert.Contains ($"{ResultPrefix} PASS {resultToken}", resultLine);
 
-				if (runtime == AndroidRuntime.NativeAOT) {
-					var projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
-					var dgmlFiles = Directory.GetFiles (projectDirectory, $"{proj.ProjectName}.scan.dgml.xml", SearchOption.AllDirectories);
-					Assert.AreEqual (1, dgmlFiles.Length, "The focused NativeAOT app should produce one scan dependency graph.");
-					AssertCanonicalWrapperRooting (dgmlFiles [0]);
-					TestContext.Out.WriteLine ($"Focused NativeAOT dependency graph: {dgmlFiles [0]}");
-				}
+				var projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
+				var dgmlFiles = Directory.GetFiles (projectDirectory, $"{proj.ProjectName}.scan.dgml.xml", SearchOption.AllDirectories);
+				Assert.AreEqual (1, dgmlFiles.Length, "The focused NativeAOT app should produce one scan dependency graph.");
+				AssertCanonicalWrapperRooting (dgmlFiles [0]);
+				TestContext.Out.WriteLine ($"Focused NativeAOT dependency graph: {dgmlFiles [0]}");
 			} finally {
 				RunAdbCommand ($"uninstall {proj.PackageName}");
 			}
@@ -81,9 +79,10 @@ namespace Xamarin.Android.Build.Tests
 
 		static AndroidItem.AndroidJavaSource CreateJavaSource (string fileName, bool bind)
 		{
-			return new AndroidItem.AndroidJavaSource (Path.Combine ("java", "net", "dot", "android", "test", fileName)) {
+			var path = Path.Combine ("java", "net", "dot", "android", "test", fileName);
+			return new AndroidItem.AndroidJavaSource (path) {
 				Encoding = Encoding.ASCII,
-				TextContent = () => ReadFixture (fileName),
+				TextContent = () => ReadRuntimeFixture (path),
 				Metadata = {
 					{ "Bind", bind.ToString () },
 				},
@@ -240,6 +239,12 @@ namespace Xamarin.Android.Build.Tests
 					"Resources",
 					"InterfaceCollectionApp",
 					fileName));
+		}
+
+		static string ReadRuntimeFixture (string fileName)
+		{
+			return File.ReadAllText (
+				Path.Combine (XABuildPaths.TopDirectory, "tests", "Mono.Android-Tests", "Mono.Android-Tests", fileName));
 		}
 
 		sealed class RootingChain

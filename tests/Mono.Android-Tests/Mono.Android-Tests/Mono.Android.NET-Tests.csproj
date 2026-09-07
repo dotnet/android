@@ -98,6 +98,7 @@
     <_AndroidRemapMembers Include="Remaps.xml" />
     <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
     <ProguardConfiguration Include="proguard.cfg" />
+    <ProguardConfiguration Include="InterfaceCollection.proguard.cfg" />
   </ItemGroup>
 
   <!--
@@ -138,10 +139,12 @@
     <Compile Include="Android.Widget\CustomWidgetTests.cs" />
     <Compile Include="Java.Interop\ConstructorActivationTests.cs" />
     <Compile Include="Java.Interop\ExportTests.cs" />
+    <Compile Include="Java.Interop\InterfaceCollectionMarshallingTests.cs" />
     <Compile Include="Java.Interop\JavaConvertTest.cs" />
     <Compile Include="Java.Interop\JavaListTest.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensionsTests.cs" />
     <Compile Include="Java.Interop\JnienvTest.cs" />
+    <Compile Include="Java.Interop\RawInterfaceCollectionHolder.cs" />
     <Compile Include="Java.Interop\TrimmableTypeMapRuntimeCoverageTests.cs" />
     <Compile Include="Java.Interop\TrimmableTypeMapTypeManagerTests.cs" />
     <Compile Include="Java.Lang\ObjectArrayMarshaling.cs" />
@@ -187,6 +190,7 @@
 
   <ItemGroup>
     <AndroidJavaSource Include="java/net/dot/android/test/*.java" />
+    <AndroidJavaSource Update="java/net/dot/android/test/InterfaceCollectionFixture.java" Bind="false" />
   </ItemGroup>
 
   <ItemGroup>
