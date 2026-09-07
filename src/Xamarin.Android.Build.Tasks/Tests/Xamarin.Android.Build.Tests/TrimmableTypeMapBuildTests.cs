@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
+using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -34,7 +36,197 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
-			AssertTrimmableTypeMapOutputs (intermediateDir);
+			AssertTrimmableTypeMapOutputs (intermediateDir, usePreGeneratedFrameworkTypeMaps: !isRelease);
+			if (!isRelease) {
+				var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+				FileAssert.Exists (dexFile);
+				Assert.IsTrue (
+					DexUtils.ContainsClassWithMethod ("Lmono/android/view/View_OnClickListenerImplementor;", "<init>", "()V", dexFile, AndroidSdkPath),
+					$"`{dexFile}` should include the pre-generated framework listener implementors.");
+			}
+		}
+
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
+		public void R8WithPreGeneratedTypeMapKeepsFrameworkJcws (AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
+			if (runtime == AndroidRuntime.CoreCLR) {
+				proj.SetProperty ("PublishTrimmed", "false");
+			} else {
+				proj.SetProperty ("DebugSymbols", "true");
+				proj.SetProperty ("DebugType", "portable");
+				proj.SetProperty ("EmbedAssembliesIntoApk", "false");
+				proj.SetProperty ("_AndroidTrimmableTypemapTrimJavaCode", "false");
+			}
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var mergedAcwMap = builder.Output.GetIntermediaryPath ("acw-map.prebuilt-merged.txt");
+			var intermediateDir = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			var proguardConfigurations = runtime == AndroidRuntime.NativeAOT
+				? Directory.GetFiles (intermediateDir, "proguard_project_references.cfg", SearchOption.AllDirectories)
+				: [builder.Output.GetIntermediaryPath (Path.Combine ("proguard", "proguard_project_primary.cfg"))];
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			const string frameworkJcw = "mono.android.view.View_OnClickListenerImplementor";
+
+			AssertFileContains (mergedAcwMap, frameworkJcw, expected: true, "merged framework ACW map");
+			Assert.IsNotEmpty (proguardConfigurations, "R8 configuration should exist.");
+			foreach (var proguardConfiguration in proguardConfigurations) {
+				AssertFileContains (proguardConfiguration, frameworkJcw, expected: true, "R8 configuration");
+			}
+			Assert.IsTrue (
+				DexUtils.ContainsClassWithMethod ($"L{frameworkJcw.Replace ('.', '/')};", "<init>", "()V", dexFile, AndroidSdkPath),
+				$"`{dexFile}` should retain the pre-generated framework listener implementor when R8 shrinking is enabled.");
+
+			Assert.IsTrue (builder.Build (proj), "Incremental build should have succeeded.");
+			Assert.IsTrue (builder.Output.IsTargetSkipped ("_CompileToDalvik"), "_CompileToDalvik should be up to date.");
+			FileAssert.Exists (mergedAcwMap, "IncrementalClean must preserve the merged framework ACW map.");
+		}
+
+		[Test]
+		public void LowercaseCrc64UsesPreGeneratedFrameworkTypeMaps ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidPackageNamingPolicy", "LowercaseCrc64");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var typemapDir = builder.Output.GetIntermediaryPath ("typemap");
+			FileAssert.DoesNotExist (
+				Path.Combine (typemapDir, "_Mono.Android.TypeMap.dll"),
+				"Mono.Android's pre-generated map has no package-policy-dependent peer names.");
+			FileAssert.DoesNotExist (
+				Path.Combine (typemapDir, "_Java.Interop.TypeMap.dll"),
+				"Java.Interop's pre-generated map has no package-policy-dependent peer names.");
+		}
+
+		[TestCase ("Crc64")]
+		[TestCase ("LowercaseCrc64")]
+		public void PreGeneratedFrameworkTypeMapsMatchAppGeneratedMaps (string packageNamingPolicy)
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
+			proj.SetProperty ("_AndroidUsePreGeneratedMonoAndroidTypeMap", "false");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var generatedTypeMapDir = builder.Output.GetIntermediaryPath ("typemap");
+			var preGeneratedTypeMapDir = Path.Combine (
+				TestEnvironment.DotNetPreviewAndroidSdkDirectory,
+				"data",
+				"prebuilt-typemap");
+			foreach (var fileName in new [] {
+				"_Mono.Android.TypeMap.dll",
+				"_Java.Interop.TypeMap.dll",
+			}) {
+				var preGenerated = Path.Combine (preGeneratedTypeMapDir, fileName);
+				var generated = Path.Combine (generatedTypeMapDir, fileName);
+				FileAssert.Exists (preGenerated);
+				FileAssert.Exists (generated);
+				AssertTypeMapContentsEqual (generated, preGenerated, fileName);
+			}
+		}
+
+		[Test]
+		public void TrimmedBuildWithDebugSymbolsUsesPreGeneratedTypeMap ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("DebugSymbols", "true");
+			proj.SetProperty ("DebugType", "portable");
+			proj.SetProperty ("Optimize", "false");
+			proj.SetProperty ("AndroidLinkMode", "Full");
+			proj.SetProperty ("PublishTrimmed", "true");
+			proj.AndroidManifest = proj.AndroidManifest.Replace (
+				"</application>",
+				"<activity android:name=\"android.app.NativeActivity\" /></application>");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var typemapDir = builder.Output.GetIntermediaryPath ("typemap");
+			AssertTrimmableTypeMapOutputs (typemapDir, usePreGeneratedFrameworkTypeMaps: true);
+			FileAssert.Exists (
+				builder.Output.GetIntermediaryPath ("acw-map.prebuilt-merged.txt"),
+				"Per-assembly universes should consume the pre-generated framework artifacts even when trimming.");
+			using var monoAndroid = AssemblyDefinition.ReadAssembly (BuildTest.GetLinkedPath (builder, true, "Mono.Android.dll"));
+			Assert.IsNotNull (
+				monoAndroid.MainModule.GetType ("Android.App.NativeActivity"),
+				"Framework types referenced only from AndroidManifest.xml must remain available to conditional pre-generated typemap entries.");
+			using var monoAndroidTypeMap = AssemblyDefinition.ReadAssembly (BuildTest.GetLinkedPath (builder, true, "_Mono.Android.TypeMap.dll"));
+			Assert.IsTrue (
+				monoAndroidTypeMap.CustomAttributes.Any (attribute =>
+					attribute.AttributeType.Namespace == "System.Runtime.InteropServices" &&
+					attribute.AttributeType.Name.StartsWith ("TypeMapAttribute", StringComparison.Ordinal) &&
+					attribute.ConstructorArguments.Count > 0 &&
+					attribute.ConstructorArguments [0].Value as string == "android/app/NativeActivity"),
+				"The conditional pre-generated typemap entry for the manifest-rooted framework type must survive trimming.");
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "No-op build should have succeeded.");
+			Assert.IsTrue (
+				builder.Output.IsTargetSkipped ("_GenerateTrimmableTypeMap"),
+				"Per-RID inner builds must not invalidate the outer typemap generation stamp.");
+		}
+
+		[Test]
+		public void DebugTrimmableTypeMapLibrary_DoesNotPackageFrameworkJavaWrappers ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidLibraryProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var aarPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
+			FileAssert.Exists (aarPath);
+			using var aar = ZipHelper.OpenZip (aarPath);
+			foreach (var entry in aar.Where (entry => entry.FullName.StartsWith ("libs/", StringComparison.Ordinal) && entry.FullName.EndsWith (".jar", StringComparison.Ordinal))) {
+				using var stream = new MemoryStream ();
+				entry.Extract (stream);
+				stream.Position = 0;
+				using var jar = Xamarin.Tools.Zip.ZipArchive.Open (stream);
+				Assert.IsFalse (
+					jar.ContainsEntry ("android/runtime/JavaProxyThrowable.class"),
+					$"{aarPath}!/{entry.FullName} should not redistribute the SDK's pre-generated framework wrappers.");
+			}
 		}
 
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "parameters", "XA4205")]
@@ -640,12 +832,19 @@ namespace Xamarin.Android.Build.Tests {
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty (KnownProperties.PublishAot, "true");
+			proj.AndroidManifest = proj.AndroidManifest.Replace (
+				"</application>",
+				"<activity android:name=\"android.app.NativeActivity\" /></application>");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
-			AssertTrimmableTypeMapOutputs (intermediateDir);
+			AssertTrimmableTypeMapOutputs (intermediateDir, usePreGeneratedFrameworkTypeMaps: true);
+			StringAssert.Contains (
+				"Android.App.NativeActivity",
+				File.ReadAllText (builder.Output.GetIntermediaryPath ("prebuilt-typemap-roots.xml")),
+				"PublishAot must root manifest-referenced framework types even when AndroidLinkMode is None.");
 		}
 
 		[Test]
@@ -665,7 +864,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
-			AssertTrimmableTypeMapOutputs (intermediateDir);
+			AssertTrimmableTypeMapOutputs (intermediateDir, usePreGeneratedFrameworkTypeMaps: !isRelease);
 			var typemapDlls = Directory.GetFiles (intermediateDir, "*.dll");
 			Assert.IsNotEmpty (typemapDlls, "First build should have generated typemap DLL(s).");
 			var typemapFingerprints = Path.Combine (intermediateDir, "typemap-fingerprints.txt");
@@ -1198,15 +1397,16 @@ namespace Xamarin.Android.Build.Tests {
 			StringAssert.Contains ($"--generateunmanagedentrypoints:_{proj.ProjectName}.TypeMap", rspText);
 		}
 
-		[Test]
-		public void CoreClrTrimmableTypeMap_PackagesJavaProxyThrowable ()
+		[TestCase (false)]
+		[TestCase (true)]
+		public void CoreClrTrimmableTypeMap_PackagesJavaProxyThrowable (bool isRelease)
 		{
-			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: isRelease)) {
 				return;
 			}
 
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
@@ -1789,11 +1989,29 @@ namespace UnnamedProject {
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded — abstract types with protected ctors should not cause XAGTT7009.");
 		}
 
-		static void AssertTrimmableTypeMapOutputs (string typemapDir)
+		static void AssertTrimmableTypeMapOutputs (string typemapDir, bool usePreGeneratedFrameworkTypeMaps)
 		{
 			DirectoryAssert.Exists (typemapDir);
 			FileAssert.Exists (Path.Combine (typemapDir, "_Microsoft.Android.TypeMaps.dll"));
-			FileAssert.Exists (Path.Combine (typemapDir, "_Mono.Android.TypeMap.dll"));
+
+			var generatedAssemblies = File.ReadAllLines (Path.Combine (typemapDir, "typemap-assemblies.txt"))
+				.Select (Path.GetFileName)
+				.ToArray ();
+			if (!usePreGeneratedFrameworkTypeMaps) {
+				FileAssert.Exists (Path.Combine (typemapDir, "_Mono.Android.TypeMap.dll"),
+					"Builds that cannot use the pre-generated framework maps must generate Mono.Android's typemap.");
+				FileAssert.Exists (Path.Combine (typemapDir, "_Java.Interop.TypeMap.dll"),
+					"Builds that cannot use the pre-generated framework maps must generate Java.Interop's typemap.");
+				CollectionAssert.Contains (generatedAssemblies, "_Mono.Android.TypeMap.dll");
+				CollectionAssert.Contains (generatedAssemblies, "_Java.Interop.TypeMap.dll");
+			} else {
+				FileAssert.DoesNotExist (Path.Combine (typemapDir, "_Mono.Android.TypeMap.dll"),
+					"Per-assembly universe builds should use the typemap pre-generated in the SDK pack.");
+				FileAssert.DoesNotExist (Path.Combine (typemapDir, "_Java.Interop.TypeMap.dll"),
+					"Per-assembly universe builds should use the typemap pre-generated in the SDK pack.");
+				CollectionAssert.DoesNotContain (generatedAssemblies, "_Mono.Android.TypeMap.dll");
+				CollectionAssert.DoesNotContain (generatedAssemblies, "_Java.Interop.TypeMap.dll");
+			}
 
 			var javaDir = Path.Combine (typemapDir, "java");
 			DirectoryAssert.Exists (javaDir, "Trimmable JCW Java output directory should exist.");
@@ -1810,6 +2028,48 @@ namespace UnnamedProject {
 
 			using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
 			return ContainsType (assembly.MainModule.Types, typeFullName);
+		}
+
+		static byte [] NormalizeModuleIdentity (string assemblyPath)
+		{
+			var content = File.ReadAllBytes (assemblyPath);
+			using var pe = new PEReader (new MemoryStream (content, writable: false));
+			var reader = System.Reflection.Metadata.PEReaderExtensions.GetMetadataReader (pe);
+			var mvidIndex = MetadataTokens.GetHeapOffset (reader.GetModuleDefinition ().Mvid);
+			var mvidOffset = pe.PEHeaders.MetadataStartOffset +
+				reader.GetHeapMetadataOffset (HeapIndex.Guid) +
+				(mvidIndex - 1) * 16;
+			Array.Clear (content, mvidOffset, 16);
+			Array.Clear (content, pe.PEHeaders.CoffHeaderStartOffset + 4, 4);
+			return content;
+		}
+
+		static void AssertTypeMapContentsEqual (string generatedPath, string preGeneratedPath, string fileName)
+		{
+			var generated = NormalizeModuleIdentity (generatedPath);
+			var preGenerated = NormalizeModuleIdentity (preGeneratedPath);
+			var commonLength = Math.Min (generated.Length, preGenerated.Length);
+			int firstDifference = 0;
+			while (firstDifference < commonLength && generated [firstDifference] == preGenerated [firstDifference]) {
+				firstDifference++;
+			}
+			if (firstDifference == generated.Length && firstDifference == preGenerated.Length) {
+				return;
+			}
+
+			Assert.Fail (
+				$"{fileName} should have identical metadata and IL whether generated by the SDK or the app build. " +
+				$"First difference at 0x{firstDifference:X}; generated length: {generated.Length}, " +
+				$"pre-generated length: {preGenerated.Length}; generated: {FormatHexWindow (generated, firstDifference)}; " +
+				$"pre-generated: {FormatHexWindow (preGenerated, firstDifference)}.");
+		}
+
+		static string FormatHexWindow (byte [] content, int offset)
+		{
+			const int radius = 8;
+			var start = Math.Max (0, offset - radius);
+			var count = Math.Min (content.Length - start, radius * 2 + 1);
+			return count == 0 ? "<end of file>" : $"{start:X}: {BitConverter.ToString (content, start, count)}";
 		}
 
 		static bool ContainsType (IEnumerable<TypeDefinition> types, string typeFullName)

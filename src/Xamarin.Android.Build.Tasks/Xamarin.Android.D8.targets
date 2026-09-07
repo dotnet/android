@@ -17,9 +17,17 @@ Copyright (C) 2018 Xamarin. All rights reserved.
   <UsingTask TaskName="Xamarin.Android.Tasks.D8" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.R8" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
+  <Target Name="_SetR8AcwMapFile">
+    <PropertyGroup>
+      <_R8AcwMapFile>$(_AcwMapFile)</_R8AcwMapFile>
+      <_R8AcwMapFile Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">$(_TrimmableTypeMapKeepRulesAcwMapFile)</_R8AcwMapFile>
+      <_R8AcwMapInput Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">$(_R8AcwMapFile)</_R8AcwMapInput>
+    </PropertyGroup>
+  </Target>
+
   <Target Name="_CompileToDalvik"
-      DependsOnTargets="$(_BeforeCompileToDalvik);$(_CompileToDalvikDependsOnTargets)"
-      Inputs="$(_CompileToDalvikInputs)"
+      DependsOnTargets="$(_BeforeCompileToDalvik);$(_CompileToDalvikDependsOnTargets);_SetR8AcwMapFile"
+      Inputs="$(_CompileToDalvikInputs);$(_R8AcwMapInput)"
       Outputs="$(_AndroidStampDirectory)_CompileToDalvik.stamp">
 
     <!-- Target-level properties to simplify conditions-->
@@ -72,7 +80,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         JavaLibrariesToReference="@(AndroidExternalJavaLibrary)"
         EnableDesugar="$(AndroidEnableDesugar)"
         AndroidSdkBuildToolsPath="$(AndroidSdkBuildToolsPath)"
-        AcwMapFile="$(_AcwMapFile)"
+        AcwMapFile="$(_R8AcwMapFile)"
         JavaSourceFiles="@(_R8KeepJavaSource)"
         ProguardCommonXamarinConfiguration="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"
         ProguardGeneratedReferenceConfiguration="$(_ProguardProjectConfiguration)"

@@ -62,6 +62,10 @@
            out-of-date and run it on every build. -->
       <_PostTrimTrimmableTypeMapInputAssemblies Include="@(ResolvedFileToPublish)"
           Condition=" '%(Extension)' == '.dll' and Exists('%(FullPath)') and ('%(RuntimeIdentifier)' == '' or '$(_PostTrimTypeMapFirstRuntimeIdentifier)' == '' or '%(RuntimeIdentifier)' == '$(_PostTrimTypeMapFirstRuntimeIdentifier)') " />
+      <_PostTrimPreGeneratedTypeMapAssemblyInput Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' "
+          Include="@(_PostTrimTrimmableTypeMapInputAssemblies)" KeepDuplicates="false" />
+      <_PostTrimPreGeneratedTypeMapAssemblyInput Remove="@(_PostTrimPreGeneratedTypeMapAssemblyInput)"
+          Condition=" '%(Filename)' != 'Mono.Android' and '%(Filename)' != 'Java.Interop' " />
     </ItemGroup>
   </Target>
 
@@ -103,11 +107,13 @@
       DependsOnTargets="_ComputePostTrimTrimmableTypeMapInputs;_InvalidatePostTrimTrimmableTypeMapStampIfOutputsMissing"
       AfterTargets="_ResolveAssemblies"
       BeforeTargets="_GenerateJavaStubs;_CompileJava;_CompileToDalvik"
-      Inputs="@(_PostTrimTrimmableTypeMapInputAssemblies);$(_ResolvedUserAssembliesHashFile);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
+      Inputs="@(_PostTrimTrimmableTypeMapInputAssemblies);$(_ResolvedUserAssembliesHashFile);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects);$(_PreGeneratedJcwValidationInput)"
       Outputs="$(_PostTrimTrimmableTypeMapJavaStamp)">
 
     <GenerateTrimmableTypeMap
         ResolvedAssemblies="@(_PostTrimTrimmableTypeMapInputAssemblies)"
+        PreGeneratedTypeMapAssemblies="@(_PostTrimPreGeneratedTypeMapAssemblyInput)"
+        PreGeneratedJcwJar="$(_PreGeneratedJcwValidationInput)"
         FrameworkAssemblyNames="@(ResolvedFrameworkAssemblies->'%(Filename)')"
         OutputDirectory="$(_TypeMapOutputDirectory)"
         JavaSourceOutputDirectory="$(_PostTrimTypeMapJavaOutputDirectory)"
@@ -144,6 +150,7 @@
       <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" />
       <FileWrites Include="$(_PostTrimTrimmableTypeMapJavaStamp)" />
       <_PostTrimTrimmableTypeMapInputAssemblies Remove="@(_PostTrimTrimmableTypeMapInputAssemblies)" />
+      <_PostTrimPreGeneratedTypeMapAssemblyInput Remove="@(_PostTrimPreGeneratedTypeMapAssemblyInput)" />
       <_PostTrimGeneratedJavaFiles Remove="@(_PostTrimGeneratedJavaFiles)" />
       <_PostTrimDeletedJavaFiles Remove="@(_PostTrimDeletedJavaFiles)" />
     </ItemGroup>

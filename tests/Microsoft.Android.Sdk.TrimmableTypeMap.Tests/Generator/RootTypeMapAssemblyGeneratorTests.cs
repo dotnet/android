@@ -11,11 +11,11 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 {
-	static MemoryStream GenerateRootAssembly (IReadOnlyList<string> perAssemblyNames, bool useSharedTypemapUniverse = false, string? assemblyName = null)
+	static MemoryStream GenerateRootAssembly (IReadOnlyList<string> perAssemblyNames, bool useSharedTypemapUniverse = false, string? assemblyName = null, IReadOnlyList<string>? preGeneratedTypeMapNames = null)
 	{
 		var stream = new MemoryStream ();
 		var generator = new RootTypeMapAssemblyGenerator (new Version (11, 0, 0, 0));
-		generator.Generate (perAssemblyNames, useSharedTypemapUniverse, stream, assemblyName);
+		generator.Generate (perAssemblyNames, useSharedTypemapUniverse, stream, assemblyName, preGeneratedTypeMapNames: preGeneratedTypeMapNames);
 		stream.Position = 0;
 		return stream;
 	}
@@ -171,6 +171,44 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 		}, targetAttributes);
 	}
 
+	[Fact]
+	public void Generate_AggregateMode_PreGeneratedTypeMapsUsePerAssemblyAnchors ()
+	{
+		using var stream = GenerateRootAssembly (
+			[ "_App.TypeMap" ],
+			useSharedTypemapUniverse: false,
+			preGeneratedTypeMapNames: [ "_Mono.Android.TypeMap", "_Java.Interop.TypeMap" ]);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var targetAttributes = GetTypeMapAssemblyTargetAttributeTargets (reader);
+
+		Assert.Equal (new [] {
+			("_App.TypeMap", "_App.TypeMap"),
+			("_Java.Interop.TypeMap", "_Java.Interop.TypeMap"),
+			("_Mono.Android.TypeMap", "_Mono.Android.TypeMap"),
+		}, targetAttributes);
+	}
+
+	[Fact]
+	public void Generate_MergedMode_PreGeneratedTypeMapsAreRejected ()
+	{
+		Assert.Throws<ArgumentException> (() => GenerateRootAssembly (
+			[ "_App.TypeMap" ],
+			useSharedTypemapUniverse: true,
+			preGeneratedTypeMapNames: [ "_Mono.Android.TypeMap" ]));
+	}
+
+	[Fact]
+	public void Generate_WithPreGeneratedTypeMap_ProducesValidPE ()
+	{
+		using var stream = GenerateRootAssembly (
+			[ "_App.TypeMap" ],
+			useSharedTypemapUniverse: false,
+			preGeneratedTypeMapNames: [ "_Mono.Android.TypeMap" ]);
+		using var pe = new PEReader (stream);
+		Assert.True (pe.HasMetadata);
+	}
 
 	static List<CustomAttribute> GetTypeMapAssemblyTargetAttributes (MetadataReader reader)
 	{

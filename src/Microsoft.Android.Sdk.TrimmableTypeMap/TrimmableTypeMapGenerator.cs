@@ -47,9 +47,15 @@ public class TrimmableTypeMapGenerator
 		string? packageNamingPolicy = null,
 		bool generateTypeMapAssemblies = true,
 		bool errorOnCustomJavaObject = true,
+		bool generateRootAssembly = true,
+		IReadOnlyList<string>? preGeneratedTypeMapNames = null,
 		IReadOnlyCollection<string>? customViewTypeNames = null,
+		IReadOnlyCollection<string>? preGeneratedJcwNames = null,
+		string? preGeneratedJcwSource = null,
+		bool rootFrameworkPeersFromApplication = true,
 		bool collectMarshalMethodsForNonAcw = true,
-		Func<string, byte [], bool>? shouldGenerateTypeMapAssembly = null)
+		Func<string, byte [], bool>? shouldGenerateTypeMapAssembly = null,
+		IReadOnlyList<JavaPeerInfo>? preGeneratedFrameworkPeers = null)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
@@ -60,22 +66,41 @@ public class TrimmableTypeMapGenerator
 			frameworkAssemblyNames,
 			errorOnCustomJavaObject,
 			collectMarshalMethodsForNonAcw);
-		if (allPeers.Count == 0) {
+		bool hasPeers = allPeers.Count > 0;
+		if (!hasPeers) {
 			logger.LogNoJavaPeerTypesFound ();
-			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 		MarkFrameworkAssemblyPeers (allPeers, frameworkAssemblyNames);
 
-		RootCustomViewTypes (allPeers, customViewTypeNames);
-		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig), manifestConfig?.ApplicationJavaClass);
+		var peersForApplicationRooting = allPeers;
+		if (preGeneratedFrameworkPeers is { Count: > 0 }) {
+			peersForApplicationRooting = new List<JavaPeerInfo> (allPeers.Count + preGeneratedFrameworkPeers.Count);
+			peersForApplicationRooting.AddRange (allPeers);
+			peersForApplicationRooting.AddRange (preGeneratedFrameworkPeers);
+		}
+		RootCustomViewTypes (peersForApplicationRooting, customViewTypeNames, rootFrameworkPeersFromApplication);
+		RootManifestReferencedTypes (
+			peersForApplicationRooting,
+			PrepareManifestForRooting (manifestTemplate, manifestConfig),
+			manifestConfig?.ApplicationJavaClass,
+			rootFrameworkPeersFromApplication);
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
-		if (!ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass)) {
+		if (!ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass, preGeneratedJcwNames, preGeneratedJcwSource)) {
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 
-		var generatedAssemblies = generateTypeMapAssemblies
-			? GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, shouldGenerateTypeMapAssembly)
+		bool needsRootForPreGeneratedTypeMaps =
+			generateRootAssembly &&
+			preGeneratedTypeMapNames is { Count: > 0 };
+		var generatedAssemblies = generateTypeMapAssemblies && (hasPeers || needsRootForPreGeneratedTypeMaps)
+			? GenerateTypeMapAssemblies (
+				allPeers,
+				systemRuntimeVersion,
+				useSharedTypemapUniverse,
+				shouldGenerateTypeMapAssembly,
+				generateRootAssembly,
+				preGeneratedTypeMapNames)
 			: [];
 		var jcwPeers = allPeers.Where (ShouldGenerateJcw).ToList ();
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
@@ -93,7 +118,10 @@ public class TrimmableTypeMapGenerator
 		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest, appRegTypes);
 	}
 
-	internal static void RootCustomViewTypes (List<JavaPeerInfo> allPeers, IReadOnlyCollection<string>? customViewTypeNames)
+	internal static void RootCustomViewTypes (
+		List<JavaPeerInfo> allPeers,
+		IReadOnlyCollection<string>? customViewTypeNames,
+		bool rootFrameworkPeers = true)
 	{
 		if (customViewTypeNames is null || customViewTypeNames.Count == 0) {
 			return;
@@ -101,6 +129,9 @@ public class TrimmableTypeMapGenerator
 
 		var names = new HashSet<string> (customViewTypeNames, StringComparer.Ordinal);
 		foreach (var peer in allPeers) {
+			if (!rootFrameworkPeers && peer.IsFrameworkAssembly) {
+				continue;
+			}
 			if (names.Contains (peer.ManagedTypeName) ||
 					names.Contains (JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName)) ||
 					names.Contains (JniSignatureHelper.JniNameToJavaBinaryName (peer.CompatJniName))) {
@@ -109,7 +140,11 @@ public class TrimmableTypeMapGenerator
 		}
 	}
 
-	internal bool ValidateJavaNames (IReadOnlyList<JavaPeerInfo> peers, string? applicationJavaClass = null)
+	internal bool ValidateJavaNames (
+		IReadOnlyList<JavaPeerInfo> peers,
+		string? applicationJavaClass = null,
+		IReadOnlyCollection<string>? preGeneratedJcwNames = null,
+		string? preGeneratedJcwSource = null)
 	{
 		bool valid = true;
 		var reportedNames = new HashSet<string> (StringComparer.Ordinal);
@@ -118,7 +153,10 @@ public class TrimmableTypeMapGenerator
 				.GroupBy (peer => peer.JavaName, StringComparer.Ordinal)
 				.OrderBy (group => group.Key, StringComparer.Ordinal)) {
 			var firstAssemblyName = group.First ().AssemblyName;
-			if (group.All (peer => string.Equals (peer.AssemblyName, firstAssemblyName, StringComparison.Ordinal))) {
+			bool generatedByMultipleAssemblies = !group.All (
+				peer => string.Equals (peer.AssemblyName, firstAssemblyName, StringComparison.Ordinal));
+			bool conflictsWithPreGeneratedJcw = preGeneratedJcwNames?.Contains (group.Key) == true;
+			if (!generatedByMultipleAssemblies && !conflictsWithPreGeneratedJcw) {
 				continue;
 			}
 
@@ -129,12 +167,16 @@ public class TrimmableTypeMapGenerator
 					.ThenBy (peer => peer.AssemblyName, StringComparer.Ordinal)) {
 				logger.LogDuplicateJavaTypeDetailsError (javaName, $"{peer.ManagedTypeName}, {peer.AssemblyName}");
 			}
+			if (conflictsWithPreGeneratedJcw && preGeneratedJcwSource is { Length: > 0 }) {
+				logger.LogDuplicateJavaTypeDetailsError (javaName, preGeneratedJcwSource);
+			}
 			valid = false;
 		}
 		if (applicationJavaClass is not null &&
 				JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (applicationJavaClass, out var invalidApplicationIdentifier)) {
 			ReportInvalidName (applicationJavaClass, invalidApplicationIdentifier);
 		}
+
 		foreach (var peer in peers) {
 			if (!ShouldGenerateJcw (peer)) {
 				continue;
@@ -332,7 +374,9 @@ public class TrimmableTypeMapGenerator
 		List<JavaPeerInfo> allPeers,
 		Version systemRuntimeVersion,
 		bool useSharedTypemapUniverse,
-		Func<string, byte [], bool>? shouldGenerateTypeMapAssembly = null)
+		Func<string, byte [], bool>? shouldGenerateTypeMapAssembly = null,
+		bool generateRootAssembly = true,
+		IReadOnlyList<string>? preGeneratedTypeMapNames = null)
 	{
 		List<(string AssemblyName, List<JavaPeerInfo> Peers)> peersByAssembly;
 
@@ -373,19 +417,35 @@ public class TrimmableTypeMapGenerator
 			generatedAssemblies.Add (new GeneratedAssembly (typeMapAssemblyName, stream));
 			logger.LogGeneratedTypeMapAssemblyInfo (typeMapAssemblyName, peers.Count);
 		}
-		const string rootAssemblyName = "_Microsoft.Android.TypeMaps";
-		bool generateRoot = true;
-		if (shouldGenerateTypeMapAssembly is not null) {
-			var rootFingerprint = MetadataHelper.ComputeRootIncrementalFingerprint (perAssemblyNames, systemRuntimeVersion, useSharedTypemapUniverse);
-			generateRoot = shouldGenerateTypeMapAssembly (rootAssemblyName, rootFingerprint);
-		}
-		if (generateRoot) {
-			var rootStream = new MemoryStream ();
-			var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
-			rootGenerator.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream);
-			rootStream.Position = 0;
-			generatedAssemblies.Add (new GeneratedAssembly (rootAssemblyName, rootStream));
-			logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
+		// The root assembly (_Microsoft.Android.TypeMaps) carries the
+		// [assembly: TypeMapAssemblyTarget<T>] attributes and TypeMapLoader.Initialize() that
+		// bind the per-assembly typemaps into universes at runtime. When pre-generating a
+		// framework typemap (e.g. Mono.Android) at SDK build time, the root is intentionally
+		// skipped: it is emitted by the app build, which references the pre-generated per-assembly
+		// typemap alongside the app's own.
+		if (generateRootAssembly) {
+			const string rootAssemblyName = "_Microsoft.Android.TypeMaps";
+			bool generateRoot = true;
+			if (shouldGenerateTypeMapAssembly is not null) {
+				var rootFingerprint = MetadataHelper.ComputeRootIncrementalFingerprint (
+					perAssemblyNames,
+					systemRuntimeVersion,
+					useSharedTypemapUniverse,
+					preGeneratedTypeMapNames);
+				generateRoot = shouldGenerateTypeMapAssembly (rootAssemblyName, rootFingerprint);
+			}
+			if (generateRoot) {
+				var rootStream = new MemoryStream ();
+				var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
+				rootGenerator.Generate (
+					perAssemblyNames,
+					useSharedTypemapUniverse,
+					rootStream,
+					preGeneratedTypeMapNames: preGeneratedTypeMapNames);
+				rootStream.Position = 0;
+				generatedAssemblies.Add (new GeneratedAssembly (rootAssemblyName, rootStream));
+				logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count + (preGeneratedTypeMapNames?.Count ?? 0));
+			}
 		}
 		logger.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);
 		return generatedAssemblies;
@@ -476,7 +536,11 @@ public class TrimmableTypeMapGenerator
 		return sources.ToList ();
 	}
 
-	internal void RootManifestReferencedTypes (List<JavaPeerInfo> allPeers, XDocument? doc, string? applicationJavaClass = null)
+	internal void RootManifestReferencedTypes (
+		List<JavaPeerInfo> allPeers,
+		XDocument? doc,
+		string? applicationJavaClass = null,
+		bool rootFrameworkPeers = true)
 	{
 		if (doc?.Root is not { } root) {
 			return;
@@ -526,6 +590,9 @@ public class TrimmableTypeMapGenerator
 		foreach (var name in componentNames) {
 			if (peersByDotName.TryGetValue (name, out var peers)) {
 				foreach (var peer in peers) {
+					if (!rootFrameworkPeers && peer.IsFrameworkAssembly) {
+						continue;
+					}
 					if (deferredRegistrationNames.Contains (name)) {
 						peer.CannotRegisterInStaticConstructor = true;
 					}
