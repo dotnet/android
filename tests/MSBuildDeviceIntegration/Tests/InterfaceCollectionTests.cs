@@ -55,16 +55,16 @@ namespace Xamarin.Android.Build.Tests
 
 				ClearAdbLogcat ();
 				var logcatPath = Path.Combine (Root, builder.ProjectDirectory, "interface-collections-logcat.log");
-				StartActivityAndAssert (proj);
-				string logcatOutput = "";
 				string resultLine = "";
-				WaitFor (TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds), () => {
-					logcatOutput = RunAdbCommand ("logcat -d");
-					resultLine = FindResultLine (logcatOutput, resultToken);
-					return resultLine.Length > 0;
-				}, intervalInMS: 250);
-				File.WriteAllText (logcatPath, logcatOutput);
-				Assert.IsNotEmpty (resultLine, $"The focused app did not report a result. See '{logcatPath}'.");
+				bool resultFound = MonitorAdbLogcat (line => {
+					if (!line.Contains (ResultPrefix, StringComparison.Ordinal) ||
+							!line.Contains (resultToken, StringComparison.Ordinal)) {
+						return false;
+					}
+					resultLine = line;
+					return true;
+				}, logcatPath, ActivityStartTimeoutInSeconds, onMonitoringStarted: () => StartActivityAndAssert (proj));
+				Assert.IsTrue (resultFound, $"The focused app did not report a result. See '{logcatPath}'.");
 				StringAssert.Contains ($"{ResultPrefix} PASS 6/6", resultLine);
 
 				if (runtime == AndroidRuntime.NativeAOT) {
@@ -77,17 +77,6 @@ namespace Xamarin.Android.Build.Tests
 			} finally {
 				RunAdbCommand ($"uninstall {proj.PackageName}");
 			}
-		}
-
-		static string FindResultLine (string logcatOutput, string resultToken)
-		{
-			foreach (var line in logcatOutput.Split (['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)) {
-				if (line.Contains (ResultPrefix, StringComparison.Ordinal) &&
-						line.Contains (resultToken, StringComparison.Ordinal)) {
-					return line;
-				}
-			}
-			return "";
 		}
 
 		static AndroidItem.AndroidJavaSource CreateJavaSource (string fileName, bool bind)
