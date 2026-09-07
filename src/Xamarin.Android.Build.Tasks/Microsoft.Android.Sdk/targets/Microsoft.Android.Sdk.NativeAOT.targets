@@ -262,15 +262,23 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     libs into a .so.  LinkNative is overridden as a no-op in Microsoft.Android.Sdk.After.targets
     (which is imported after the ILC NuGet targets).
   -->
-  <Target Name="_AndroidLinkNativeAotSharedLibrary"
-      AfterTargets="LinkNative"
-      DependsOnTargets="_PrepareNativeAotAndroidAppInputs;_AndroidCompileNativeAotR8Remapping"
-      Inputs="$(NativeObject);@(NativeLibrary);@(_NdkLibs);@(_PrivateJniInitFuncsNativeObjectFile);@(_PrivateEnvironmentNativeObjectFile);@(_AndroidNativeAotR8RemappingObject);$(_AndroidBuildPropertiesCache)"
-      Outputs="$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so">
+  <Target Name="_AndroidLinkNativeAotSharedLibraryInputs"
+      DependsOnTargets="_PrepareNativeAotAndroidAppInputs;_AndroidCompileNativeAotR8Remapping">
     <PropertyGroup>
       <_AndroidNativeAotSharedLibrary>$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so</_AndroidNativeAotSharedLibrary>
+      <_AndroidNativeAotSharedLibrarySymbols Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).dbg.so</_AndroidNativeAotSharedLibrarySymbols>
     </PropertyGroup>
+    <ItemGroup Condition=" '@(_NdkLibs->Count())' == '0' ">
+      <_NdkLibs Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.release-static-release'))" />
+    </ItemGroup>
+  </Target>
 
+  <Target Name="_AndroidLinkNativeAotSharedLibrary"
+      AfterTargets="LinkNative"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' != 'true' or '$(_AndroidNativeAotLinkAfterR8)' == 'true' "
+      DependsOnTargets="_AndroidLinkNativeAotSharedLibraryInputs"
+      Inputs="$(NativeObject);@(NativeLibrary);@(_NdkLibs);@(_PrivateJniInitFuncsNativeObjectFile);@(_PrivateEnvironmentNativeObjectFile);@(_AndroidNativeAotR8RemappingObject);$(_AndroidBuildPropertiesCache)"
+      Outputs="$(_AndroidNativeAotSharedLibrary);$(_AndroidNativeAotSharedLibrarySymbols)">
     <!-- Resolve the runtime pack native directory for workload-provided linker dependencies.
          _RuntimePackLibraryDirectory is not populated for NativeAOT, so derive the path from
          the libnaot-android RuntimePackAsset item. -->
@@ -359,7 +367,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
     <ItemGroup>
       <FileWrites Include="$(_AndroidNativeAotSharedLibrary)" />
-      <FileWrites Include="$(_AndroidNativeAotSharedLibrary)$(NativeSymbolExt)" Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' " />
+      <FileWrites Include="$(_AndroidNativeAotSharedLibrarySymbols)" />
       <FileWrites Include="$(NativeIntermediateOutputPath)sections.ld" />
       <FileWrites Include="$(NativeIntermediateOutputPath)libRuntime.WorkstationGC.arm-ehabi.a" Condition=" '$(RuntimeIdentifier)' == 'android-arm' " />
     </ItemGroup>
@@ -388,12 +396,33 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <ItemGroup>
       <!-- The linker target is not always scheduled during incremental deployment builds. -->
       <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).a' " />
-      <ResolvedFileToPublish Include="$(_AndroidNativeAotSharedLibrary)" Condition=" Exists('$(_AndroidNativeAotSharedLibrary)') ">
+      <!-- Deferred linking still needs an item for native-library discovery before Java compilation.
+           This advertises the final path, but does not create or copy an initial shared library. -->
+      <ResolvedFileToPublish Include="$(_AndroidNativeAotSharedLibrary)"
+          Condition=" Exists('$(_AndroidNativeAotSharedLibrary)') or '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' ">
         <RelativePath>$(_AndroidNativeAotSharedLibraryName)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <AndroidNativeAotObjectFile>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(NativeObject)'))</AndroidNativeAotObjectFile>
+        <AndroidNativeAotIntermediateOutputPath>$(NativeIntermediateOutputPath)</AndroidNativeAotIntermediateOutputPath>
+        <AndroidNativeAotSymbols Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">$([System.IO.Path]::ChangeExtension('$(_AndroidNativeAotSharedLibrary)', '.dbg.so'))</AndroidNativeAotSymbols>
       </ResolvedFileToPublish>
       <!-- Fix paths to contain lib-prefix -->
       <ResolvedFileToPublish Update="@(ResolvedFileToPublish)" ArchiveFileName="lib%(FileName)%(Extension)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).so' " />
+    </ItemGroup>
+  </Target>
+
+  <!-- Keep the same native outputs in the outer clean list when obfuscation is toggled.
+       Otherwise IncrementalClean could delete the just-linked baseline library or ILC object. -->
+  <Target Name="_AndroidCollectNativeAotFileWrites"
+      AfterTargets="_ResolveAssemblies"
+      Condition=" '$(_OuterIntermediateOutputPath)' == '' and '$(DesignTimeBuild)' != 'true' ">
+    <ItemGroup>
+      <_AndroidNativeAotFileToPublish Include="@(ResolvedFileToPublish)"
+          Condition=" '%(ResolvedFileToPublish.AndroidNativeAotObjectFile)' != '' " />
+      <FileWrites Include="@(_AndroidNativeAotFileToPublish)" />
+      <FileWrites Include="@(_AndroidNativeAotFileToPublish->'%(AndroidNativeAotObjectFile)')" />
+      <FileWrites Include="@(_AndroidNativeAotFileToPublish->'%(AndroidNativeAotSymbols)')" />
+      <FileWrites Include="@(_AndroidNativeAotFileToPublish->'%(AndroidNativeAotIntermediateOutputPath)sections.ld')" />
     </ItemGroup>
   </Target>
 

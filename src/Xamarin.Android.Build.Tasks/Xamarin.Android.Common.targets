@@ -1699,7 +1699,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateEmptyAndroidRemapNativeCode"
         DependsOnTargets="_PrepareAndroidRemapNativeAssemblySources"
-        Condition=" '@(_AndroidRemapMembers->Count())' == '0' "
+        Condition=" '@(_AndroidRemapMembers->Count())' == '0' and '$(_AndroidR8RuntimeRemappingEnabled)' != 'true' "
         Inputs="$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
         Outputs="@(_AndroidRemapAssemblySource)">
   <GenerateJniRemappingNativeCode
@@ -1710,12 +1710,14 @@ because xbuild doesn't support framework reference assemblies.
    <Touch Files="@(_AndroidRemapAssemblySource)" />
 </Target>
 
+<!-- MAM assets still precede resource packaging. R8 XML is only a late native-link input. -->
+<Target Name="_AndroidCollectRemapsBeforeR8"
+    Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' "
+    DependsOnTargets="_ConvertAndroidMamMappingFileToXml;_CollectAndroidRemapMembers" />
+
 <PropertyGroup>
-  <_AndroidGenerateR8JniRemappingDependsOn
-      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' ">_AndroidGenerateR8JniRemapping</_AndroidGenerateR8JniRemappingDependsOn>
   <_GenerateAndroidRemapNativeCodeDependsOn>
     _ConvertAndroidMamMappingFileToXml;
-    $(_AndroidGenerateR8JniRemappingDependsOn);
     _CollectAndroidRemapMembers;
     _PrepareAndroidRemapNativeAssemblySources;
     _GetGeneratePackageManagerJavaInputs
@@ -1724,7 +1726,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateAndroidRemapNativeCode"
         DependsOnTargets="$(_GenerateAndroidRemapNativeCodeDependsOn)"
-        Condition=" '$(_AndroidRuntime)' != 'NativeAOT' and ('@(_AndroidRemapMembers->Count())' != '0' or '$(_AndroidR8RuntimeRemappingEnabled)' == 'true') "
+        Condition=" '$(_AndroidRuntime)' != 'NativeAOT' and '@(_AndroidRemapMembers->Count())' != '0' and '$(_AndroidR8RuntimeRemappingEnabled)' != 'true' "
         Inputs="@(_GeneratePackageManagerJavaInputs);$(_XARemapMembersFilePath)"
         Outputs="$(_AndroidStampDirectory)_GenerateAndroidRemapNativeCode.stamp">
   <GenerateJniRemappingNativeCode
@@ -1758,6 +1760,7 @@ because xbuild doesn't support framework reference assemblies.
     _PrepareAssemblies;
     _PrepareEnvironmentAssemblySources;
     _GenerateEnvironmentFiles;
+    _AndroidCollectRemapsBeforeR8;
     _GenerateAndroidRemapNativeCode;
     UpdateAndroidAssets;
     _GenerateEmptyAndroidRemapNativeCode;
@@ -1999,8 +2002,7 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_CompileToDalvikDependsOnTargets>
 		_CompileJava;
-		_CreateApplicationSharedLibraries;
-		$(_NativeRuntimeLinking);
+		_AndroidLinkBeforeR8;
 		$(_BeforeCompileToDalvik);
 		_GetLibraryImports;
 		_SetProguardMappingFileProperty;
@@ -2021,8 +2023,17 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_CompileDexDependsOn>
 		_CompileToDalvik;
+		_AndroidLinkAfterR8;
 	</_CompileDexDependsOn>
 </PropertyGroup>
+
+<Target Name="_AndroidLinkBeforeR8"
+    Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' != 'true' "
+    DependsOnTargets="_CreateApplicationSharedLibraries;$(_NativeRuntimeLinking)" />
+
+<Target Name="_AndroidLinkAfterR8"
+    Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidRuntime)' == 'CoreCLR' "
+    DependsOnTargets="_AndroidGenerateR8JniRemappingNativeCode;_CreateApplicationSharedLibraries;$(_NativeRuntimeLinking)" />
 
 <Target Name="_SetProguardMappingFileProperty">
 	<PropertyGroup>
@@ -2031,6 +2042,7 @@ because xbuild doesn't support framework reference assemblies.
 		<!-- The JNI runtime remapping always needs the final mapping, so R8 writes one to the
 		     intermediate directory even when the user did not ask for a mapping file. -->
 		<_AndroidR8ProguardMappingFileOutput Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' And '$(_AndroidR8ProguardMappingFileOutput)' == '' ">$(IntermediateOutputPath)r8-jni-final-mapping.txt</_AndroidR8ProguardMappingFileOutput>
+		<_AndroidR8JniMappingFile Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' ">$([System.IO.Path]::GetFullPath('$(_AndroidR8ProguardMappingFileOutput)'))</_AndroidR8JniMappingFile>
 	</PropertyGroup>
 </Target>
 
@@ -2039,16 +2051,11 @@ because xbuild doesn't support framework reference assemblies.
 	<PropertyGroup>
 		<_CompileToDalvikInputs>
 			$(_CompileToDalvikInputs)
-			;$(_AndroidR8JniSeedMapping)
-			;$(_AndroidR8JniManifestProguardConfiguration)
 			;$(_ProguardProjectConfiguration)
 			;@(ProguardConfiguration)
 			;$(AndroidR8JarPath)
 		</_CompileToDalvikInputs>
 	</PropertyGroup>
-	<ItemGroup>
-		<FileWrites Include="$(_AndroidR8JniSeedMapping);$(_AndroidR8JniManifestProguardConfiguration)" />
-	</ItemGroup>
 </Target>
 
 <Target Name="_CalculateProguardConfigurationFiles">
@@ -2061,8 +2068,6 @@ because xbuild doesn't support framework reference assemblies.
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"         Condition=" '$(AndroidLinkTool)' != '' " />
     <_ProguardConfiguration Include="$(_ProguardProjectConfiguration)"                               Condition=" '$(AndroidLinkTool)' != '' " />
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg" Condition=" '$(AndroidLinkTool)' != '' " />
-    <_ProguardConfiguration Include="$(_AndroidR8JniManifestProguardConfiguration)"
-        Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and Exists('$(_AndroidR8JniManifestProguardConfiguration)') " />
     <!-- @(ProguardConfiguration) should be listed last -->
     <_ProguardConfiguration Include="@(ProguardConfiguration)" />
   </ItemGroup>

@@ -1134,8 +1134,9 @@ The default is `runtime-remapping`.
 | `runtime-remapping` | Keeps managed assemblies unchanged and translates JNI type/member lookups using generated native remapping tables. Available for trimmed CoreCLR and NativeAOT applications. |
 | `experimental-rewriting` | Reserved for the separate managed-assembly rewriting implementation. This SDK does not yet include its build pipeline; selecting it reports [XA4329](../messages/xa4329.md). |
 
-The runtime-remapping mode runs a naming-only R8 pass before ILLink or ILC and
-applies that mapping in the final R8 pass. CoreCLR selects remaps from linked
+The runtime-remapping mode leaves managed assemblies unchanged. It runs R8 once,
+after managed trimming or ILC, then uses the resulting R8 mapping to
+generate native runtime remapping tables. CoreCLR selects remaps from linked
 assemblies. NativeAOT selects remaps from retained JNI literals in ILC's native
 object and statically links the table afterward.
 

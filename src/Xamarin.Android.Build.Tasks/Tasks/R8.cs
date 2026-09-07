@@ -36,17 +36,6 @@ namespace Xamarin.Android.Tasks
 		public string? ProguardMappingFileOutput { get; set; }
 
 		/// <summary>
-		/// A mapping file applied with <c>-applymapping</c>, so this R8 run reproduces the names an
-		/// earlier (seed) run chose.
-		/// </summary>
-		public string? ProguardMappingFileInput { get; set; }
-
-		/// <summary>
-		/// Runs R8 as a naming-only seed pass: no tree shaking, no optimization, mapping output only.
-		/// </summary>
-		public bool GenerateSeedMapping { get; set; }
-
-		/// <summary>
 		/// Allows R8 to rename types and members by omitting the SDK-generated
 		/// <c>-dontobfuscate</c>, and by letting the generated Java Callable Wrapper keep rules
 		/// retain their types without pinning their names.
@@ -68,10 +57,6 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			try {
-				if (GenerateSeedMapping && ProguardMappingFileOutput.IsNullOrEmpty ()) {
-					Log.LogCodedError ("XA4327", Properties.Resources.XA4327, Properties.Resources.XA4327_SeedMappingOutputRequired);
-					return false;
-				}
 				return base.RunTask ();
 			} finally {
 				foreach (var temp in tempFiles) {
@@ -182,26 +167,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			if (GenerateSeedMapping) {
-				// Naming-only seed pass: choose the names, keep everything else intact. The mapping
-				// this produces is applied to the final R8 run with -applymapping.
-				WriteArg (response, "--no-tree-shaking");
-				var seedConfiguration = new List<string> {
-					"-dontoptimize",
-					"-dontpreverify",
-					"-keepattributes **",
-					$"-printmapping \"{Path.GetFullPath (GetRequiredSeedMappingOutput ())}\"",
-				};
-				if (IgnoreWarnings) {
-					seedConfiguration.Add ("-ignorewarnings");
-				}
-				WriteConfiguration (response, seedConfiguration);
-				GenerateCommonXamarinConfiguration ();
-				if (!ProguardCommonXamarinConfiguration.IsNullOrEmpty ()) {
-					WriteArg (response, "--pg-conf");
-					WriteArg (response, ProguardCommonXamarinConfiguration);
-				}
-			} else if (EnableShrinking) {
+			if (EnableShrinking) {
 				if (UseTrimmableNativeAotProguardConfiguration && !ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
 					// ACW keep rules come from the DGML/acw-map-driven proguard_project_references.cfg on
 					// the trimmable path. User-authored AndroidJavaSource (Bind != true) has no managed peer
@@ -256,11 +222,6 @@ namespace Xamarin.Android.Tasks
 				WriteArg (response, "--pg-conf");
 				WriteArg (response, temp);
 			}
-			if (!ProguardMappingFileInput.IsNullOrEmpty ()) {
-				WriteConfiguration (response, new [] {
-					$"-applymapping \"{Path.GetFullPath (ProguardMappingFileInput)}\"",
-				});
-			}
 			if (ProguardConfigurationFiles != null) {
 				foreach (var item in ProguardConfigurationFiles) {
 					var file = item.ItemSpec;
@@ -284,18 +245,9 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// The keep option used for the generated Java Callable Wrapper keep rules. When the JNI
 		/// names are remapped at runtime the wrappers must survive shrinking but stay renameable,
-		/// otherwise a plain <c>-keep</c> pins their names and <c>-applymapping</c> has no effect.
+		/// otherwise a plain <c>-keep</c> pins their names and prevents obfuscation.
 		/// </summary>
 		internal string KeepOption => EnableObfuscation ? "-keep,allowobfuscation" : "-keep";
-
-		string GetRequiredSeedMappingOutput ()
-		{
-			string? output = ProguardMappingFileOutput;
-			if (output.IsNullOrEmpty ()) {
-				throw new InvalidOperationException (Properties.Resources.XA4327_SeedMappingOutputRequired);
-			}
-			return output;
-		}
 
 		internal void GenerateCommonXamarinConfiguration ()
 		{
@@ -324,15 +276,6 @@ namespace Xamarin.Android.Tasks
 				xamcfg.WriteLine ("-keepattributes LineNumberTable");
 				xamcfg.WriteLine ($"-printmapping \"{Path.GetFullPath (ProguardMappingFileOutput)}\"");
 			}
-		}
-
-		void WriteConfiguration (StreamWriter response, IEnumerable<string> lines)
-		{
-			var temp = Path.GetTempFileName ();
-			File.WriteAllLines (temp, lines);
-			tempFiles.Add (temp);
-			WriteArg (response, "--pg-conf");
-			WriteArg (response, temp);
 		}
 
 		// ProGuard "global" options that affect the whole build and are not allowed inside

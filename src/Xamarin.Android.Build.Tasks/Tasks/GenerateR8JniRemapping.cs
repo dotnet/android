@@ -16,9 +16,8 @@ using Xamarin.Android.Tasks.JniRemapping;
 namespace Xamarin.Android.Tasks
 {
 	/// <summary>
-	/// Converts the naming-only R8 seed <c>mapping.txt</c> into a JNI remapping XML document that
-	/// the existing <c>@(_AndroidRemapMembers)</c> -&gt; <c>MergeRemapXml</c> -&gt;
-	/// <c>GenerateJniRemappingNativeCode</c> pipeline consumes.
+	/// Converts the final R8 <c>mapping.txt</c> into a JNI remapping XML document that
+	/// the existing <c>MergeRemapXml</c> and <c>GenerateJniRemappingNativeCode</c> tasks consume.
 	///
 	/// Managed assemblies are *not* rewritten on this path, so they keep the original JNI names.
 	/// The generated document is what teaches the runtime how those original names map onto the
@@ -48,7 +47,7 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "GR8JR";
 
-		/// <summary>The naming-only R8 seed mapping file.</summary>
+		/// <summary>The final R8 mapping file.</summary>
 		[Required]
 		public string MappingFile { get; set; } = "";
 
@@ -81,7 +80,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			if (!File.Exists (MappingFile)) {
-				LogR8JniRemappingError (string.Format (Properties.Resources.XA4327_SeedMappingNotFound, MappingFile));
+				LogR8JniRemappingError (string.Format (Properties.Resources.XA4327_MappingNotFound, MappingFile));
 				return false;
 			}
 

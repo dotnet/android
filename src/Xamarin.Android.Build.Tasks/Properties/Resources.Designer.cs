@@ -1987,38 +1987,20 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The seed R8 pass requires a mapping file output..
+        ///   Looks up a localized string similar to The R8 mapping file &apos;{0}&apos; was not found..
         /// </summary>
-        public static string XA4327_SeedMappingOutputRequired {
+        public static string XA4327_MappingNotFound {
             get {
-                return ResourceManager.GetString("XA4327_SeedMappingOutputRequired", resourceCulture);
+                return ResourceManager.GetString("XA4327_MappingNotFound", resourceCulture);
             }
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The R8 seed mapping file &apos;{0}&apos; was not found..
-        /// </summary>
-        public static string XA4327_SeedMappingNotFound {
-            get {
-                return ResourceManager.GetString("XA4327_SeedMappingNotFound", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to The R8 seed mapping file &apos;{0}&apos; could not be read: {1}.
+        ///   Looks up a localized string similar to The R8 mapping file &apos;{0}&apos; could not be read: {1}.
         /// </summary>
         public static string XA4327_MappingDataFailure {
             get {
                 return ResourceManager.GetString("XA4327_MappingDataFailure", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to The Android manifest &apos;{0}&apos; could not be read: {1}.
-        /// </summary>
-        public static string XA4327_ManifestReadFailure {
-            get {
-                return ResourceManager.GetString("XA4327_ManifestReadFailure", resourceCulture);
             }
         }
 
@@ -2082,15 +2064,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4327_NativeAotMissingSections {
             get {
                 return ResourceManager.GetString("XA4327_NativeAotMissingSections", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to The Android manifest &apos;{0}&apos; does not have a &lt;manifest&gt; element with a &apos;package&apos; attribute..
-        /// </summary>
-        public static string XA4327_ManifestPackageMissing {
-            get {
-                return ResourceManager.GetString("XA4327_ManifestPackageMissing", resourceCulture);
             }
         }
 
