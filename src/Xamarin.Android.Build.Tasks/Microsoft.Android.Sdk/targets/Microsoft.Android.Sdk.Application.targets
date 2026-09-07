@@ -166,19 +166,22 @@ This file contains targets specific for Android application projects.
     </GetAndroidActivityName>
 
     <PropertyGroup>
-      <_MonoLog>default,assembly,timing=bare</_MonoLog>
-      <_MonoLog Condition=" '$(RunLogVerbose)' != 'false' ">$(_MonoLog),mono_log_level=debug,mono_log_mask=all</_MonoLog>
+      <_AndroidRuntimeLogProperty Condition=" '$(_AndroidRuntime)' == 'MonoVM' ">debug.mono.log</_AndroidRuntimeLogProperty>
+      <_AndroidRuntimeLogProperty Condition=" '$(_AndroidRuntime)' != 'MonoVM' ">debug.dotnet.log</_AndroidRuntimeLogProperty>
+      <_AndroidRuntimeLog>default,assembly,timing=bare</_AndroidRuntimeLog>
+      <_AndroidRuntimeLog Condition=" '$(RunLogVerbose)' != 'false' and '$(_AndroidRuntime)' == 'MonoVM' ">$(_AndroidRuntimeLog),mono_log_level=debug,mono_log_mask=all</_AndroidRuntimeLog>
+      <_AndroidRuntimeLog Condition=" '$(RunLogVerbose)' != 'false' and '$(_AndroidRuntime)' != 'MonoVM' ">all</_AndroidRuntimeLog>
       <RunLogDelayInMS>1000</RunLogDelayInMS> <!-- milliseconds -->
     </PropertyGroup>
 
     <Message Text="Preparing application to log more information" Importance="High" />
-    <Message Text="Setting the debug.mono.log property to: $(_MonoLog)" Importance="High" />
+    <Message Text="Setting the $(_AndroidRuntimeLogProperty) property to: $(_AndroidRuntimeLog)" Importance="High" />
     <AndroidAdb
       ToolExe="$(AdbToolExe)"
       ToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
       Command="shell"
-      Arguments="setprop debug.mono.log $(_MonoLog)"
+      Arguments="setprop $(_AndroidRuntimeLogProperty) $(_AndroidRuntimeLog)"
     />
     <AndroidAdb
       ToolExe="$(AdbToolExe)"

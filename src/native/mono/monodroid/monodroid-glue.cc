@@ -116,15 +116,15 @@ MonodroidRuntime::log_jit_event (MonoMethod *method, const char *event_name) noe
 
 	char* name = mono_method_full_name (method, 1);
 
-	auto interval = jit_time_end - jit_time_start; // nanoseconds
+	time_interval interval { jit_time_end - jit_time_start };
 	fprintf (
 		jit_log,
 		"JIT method %6s: %s elapsed: %zus:%zu::%zu\n",
 		event_name,
 		name,
-		static_cast<size_t>((chrono::duration_cast<chrono::seconds>(interval).count ())),
-		static_cast<size_t>((chrono::duration_cast<chrono::milliseconds>(interval)).count ()),
-		static_cast<size_t>((interval % 1ms).count ())
+		static_cast<size_t>(interval.seconds),
+		static_cast<size_t>(interval.milliseconds),
+		static_cast<size_t>(interval.nanoseconds)
 	);
 
 	free (name);

@@ -235,12 +235,6 @@ static class ModelBuilder
 			return true;
 		}
 
-		// User-defined ACW types (not MCW bindings, not interfaces) are unconditional
-		// because Android can instantiate them from Java at any time.
-		if (!peer.IsFrameworkAssembly && !peer.DoNotGenerateAcw && !peer.IsInterface) {
-			return true;
-		}
-
 		// Types marked unconditional by the scanner (component attributes: Activity, Service, etc.)
 		if (peer.IsUnconditional) {
 			return true;
@@ -374,10 +368,6 @@ static class ModelBuilder
 		}
 
 		foreach (var ctor in peer.JavaConstructors) {
-			if (ctor.SuperArgumentsString != null && !ctor.HasMatchingManagedCtor) {
-				throw new InvalidOperationException (
-					$"Trimmable typemap cannot generate Java constructor wrapper '{ctor.JniSignature}' for '{peer.ManagedTypeName}' because no matching user-visible managed constructor was found.");
-			}
 			proxy.UcoConstructors.Add (new UcoConstructorData {
 				WrapperName = $"nctor_{ctor.ConstructorIndex}_uco",
 				JniSignature = ctor.JniSignature,
@@ -386,6 +376,7 @@ static class ModelBuilder
 					AssemblyName = peer.AssemblyName,
 				},
 				ManagedParameterTypes = ctor.ManagedParameterTypes,
+				ParameterKinds = ctor.ManagedParameterExportKinds,
 				HasMatchingManagedCtor = ctor.HasMatchingManagedCtor,
 			});
 		}

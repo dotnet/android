@@ -28,10 +28,10 @@
       <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkSysrootLib)\%(ToolchainPrefix)\%(ApiLevel)\libz.so')" Kind="System" />
       <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkSysrootLib)\%(ToolchainPrefix)\%(ApiLevel)\crtbegin_so.o')" Kind="Toolchain" />
       <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkSysrootLib)\%(ToolchainPrefix)\%(ApiLevel)\crtend_so.o')" Kind="Toolchain" />
-      <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkSysrootLib)\%(ToolchainPrefix)\libc++_static.a')" Kind="Toolchain" />
-      <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkSysrootLib)\%(ToolchainPrefix)\libc++abi.a')" Kind="Toolchain" />
+      <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkSysrootLib)\%(ToolchainPrefix)\libc++_static.a')" Kind="CplusPlus" />
+      <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkSysrootLib)\%(ToolchainPrefix)\libc++abi.a')" Kind="CplusPlus" />
       <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkClangLibLinux)\libclang_rt.builtins-%(ClangArch)-android.a')" Kind="Toolchain" />
-      <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkClangLibLinux)\%(UnwindArchDir)\libunwind.a')" Kind="Toolchain" />
+      <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkClangLibLinux)\%(UnwindArchDir)\libunwind.a')" Kind="CplusPlus" />
     </ItemGroup>
   </Target>
 </Project>

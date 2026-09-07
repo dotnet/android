@@ -1,28 +1,28 @@
 using System;
 
-namespace Android.Runtime
+namespace Lookalike
 {
-	public enum JniHandleOwnership
+	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
+	public sealed class ExportAttribute : Attribute
 	{
-		DoNotTransfer = 0,
-		TransferLocalRef = 1,
-		TransferGlobalRef = 2,
+		public ExportAttribute (string name) { }
+	}
+
+	[AttributeUsage (AttributeTargets.Parameter | AttributeTargets.ReturnValue, AllowMultiple = false)]
+	public sealed class ExportParameterAttribute : Attribute
+	{
+		public ExportParameterAttribute (Java.Interop.ExportParameterKind kind) { }
+	}
+
+	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
+	public sealed class ExportFieldAttribute : Attribute
+	{
+		public ExportFieldAttribute (string name) { }
 	}
 }
 
 namespace Java.Interop
 {
-	public struct JniObjectReference
-	{
-		public IntPtr Handle;
-	}
-
-	public enum JniObjectReferenceOptions
-	{
-		None = 0,
-		Copy = 1,
-		CopyAndDispose = 2,
-	}
 }
 
 namespace Android.App
@@ -195,13 +195,14 @@ namespace Java.Interop
 
 namespace Java.Interop
 {
-	[AttributeUsage (AttributeTargets.Class, AllowMultiple = false)]
+	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = false)]
 	public sealed class JniTypeSignatureAttribute : Attribute
 	{
 		public string SimpleReference { get; }
 		public bool GenerateJavaPeer { get; set; } = true;
 		public bool IsKeyword { get; set; }
 		public int ArrayRank { get; set; }
+		public Type? InvokerType { get; set; }
 
 		public JniTypeSignatureAttribute (string simpleReference) => SimpleReference = simpleReference;
 	}

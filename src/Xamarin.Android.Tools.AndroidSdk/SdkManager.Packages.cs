@@ -91,7 +91,7 @@ public partial class SdkManager
 			var trimmed = line.Trim ();
 
 			// Match section headers case-insensitively: the classic sdkmanager emits
-			// "Available Packages:" (capital P) while the newer Android CLI replacement
+			// "Available Packages:" (uppercase P) while the newer Android CLI replacement
 			// (cmdline-tools 23+) emits "Available packages:" (lowercase p).
 			var foundSection = false;
 			foreach (var section in PackageSections) {

@@ -101,6 +101,7 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
+	MemberReferenceHandle _jniEnvToJniObjectReferenceOptionsRef;
 	MemberReferenceHandle _jniEnvGetStringRef;
 	MemberReferenceHandle _jniEnvGetArrayRef;
 	MemberReferenceHandle _javaLangObjectGetObjectRef;
@@ -394,6 +395,16 @@ sealed class TypeMapAssemblyEmitter
 				rt => rt.Void (),
 				p => {
 					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+				}));
+
+		// JNIEnv.ToJniObjectReferenceOptions(JniHandleOwnership) — static, internal
+		// Maps the activation ctor's ownership argument onto the JniObjectReferenceOptions
+		// a Java.Interop-style ctor takes. Kept in Mono.Android so the mapping is plain C#.
+		_jniEnvToJniObjectReferenceOptionsRef = _pe.AddMemberRef (_jniEnvRef, "ToJniObjectReferenceOptions",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Type ().Type (_jniObjectReferenceOptionsRef, true),
+				p => {
 					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
 				}));
 
@@ -837,7 +848,8 @@ sealed class TypeMapAssemblyEmitter
 	/// <summary>
 	/// Emits CreateInstance for JavaInterop-style activation (leaf type):
 	///   var jniRef = new JniObjectReference(handle);
-	///   var result = new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
+	///   var options = JNIEnv.ToJniObjectReferenceOptions(ownership);
+	///   var result = new TargetType(ref jniRef, options);
 	///   JNIEnv.DeleteRef(handle, ownership);
 	///   return result;
 	/// </summary>
@@ -853,9 +865,9 @@ sealed class TypeMapAssemblyEmitter
 				encoder.LoadConstantI4 (0); // JniObjectReferenceType.Invalid
 				encoder.Call (_jniObjectReferenceCtorRef, parameterCount: 2, isInstance: true);
 
-				// var result = new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
+				// var result = new TargetType(ref jniRef, JNIEnv.ToJniObjectReferenceOptions(ownership));
 				encoder.LoadLocalAddress (0);
-				encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
+				EmitJniObjectReferenceOptions (encoder);
 				encoder.NewObject (ctorRef, parameterCount: 2);
 				encoder.StoreLocal (1); // save result
 
@@ -873,7 +885,8 @@ sealed class TypeMapAssemblyEmitter
 	/// Emits CreateInstance for JavaInterop-style activation (inherited ctor):
 	///   var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
 	///   var jniRef = new JniObjectReference(handle);
-	///   obj.BaseCtor(ref jniRef, JniObjectReferenceOptions.Copy);
+	///   var options = JNIEnv.ToJniObjectReferenceOptions(ownership);
+	///   obj.BaseCtor(ref jniRef, options);
 	///   JNIEnv.DeleteRef(handle, ownership);
 	///   return obj;
 	/// </summary>
@@ -898,9 +911,9 @@ sealed class TypeMapAssemblyEmitter
 				encoder.LoadConstantI4 (0); // JniObjectReferenceType.Invalid
 				encoder.Call (_jniObjectReferenceCtorRef, parameterCount: 2, isInstance: true);
 
-				// obj.BaseCtor(ref jniRef, JniObjectReferenceOptions.Copy);
+				// obj.BaseCtor(ref jniRef, JNIEnv.ToJniObjectReferenceOptions(ownership));
 				encoder.LoadLocalAddress (0);
-				encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
+				EmitJniObjectReferenceOptions (encoder);
 				encoder.Call (baseCtorRef, parameterCount: 2, isInstance: true);
 
 				// JNIEnv.DeleteRef(handle, ownership);
@@ -910,6 +923,18 @@ sealed class TypeMapAssemblyEmitter
 
 				encoder.Return (returnsValue: true);
 			});
+	}
+
+	/// <summary>
+	/// Emits the conversion of this method's <c>JniHandleOwnership</c> argument into the
+	/// <c>JniObjectReferenceOptions</c> a Java.Interop-style activation constructor expects,
+	/// by calling <c>JNIEnv.ToJniObjectReferenceOptions (ownership)</c>. The mapping itself
+	/// lives in Mono.Android so it is expressed in readable C# rather than raw IL.
+	/// </summary>
+	void EmitJniObjectReferenceOptions (PEAssemblyBuilder.TrackedInstructionEncoder encoder)
+	{
+		encoder.OpCode (ILOpCode.Ldarg_2);
+		encoder.Call (_jniEnvToJniObjectReferenceOptionsRef, parameterCount: 1, returnsValue: true);
 	}
 
 	void EncodeJniObjectReferenceLocal (BlobBuilder blob)
@@ -1182,7 +1207,7 @@ sealed class TypeMapAssemblyEmitter
 		if (uco.HasMatchingManagedCtor) {
 			var ctorRef = AddManagedCtorRef (targetTypeRef, uco.ManagedParameterTypes);
 			var managedCtorHandle = EmitUcoConstructorBody (uco.WrapperName, encodeSig,
-				enc => EmitManagedConstructorActivation (enc, targetTypeRef, ctorRef, uco.ManagedParameterTypes, jniParams),
+				enc => EmitManagedConstructorActivation (enc, targetTypeRef, ctorRef, uco.ManagedParameterTypes, uco.ParameterKinds, jniParams),
 				blob => EncodeUcoConstructorLocals_DefaultConstructor (blob, targetTypeRef));
 			AddUnmanagedCallersOnlyAttribute (managedCtorHandle);
 			return managedCtorHandle;
@@ -1278,6 +1303,7 @@ sealed class TypeMapAssemblyEmitter
 		EntityHandle targetTypeRef,
 		MemberReferenceHandle ctorRef,
 		IReadOnlyList<TypeRefData> managedParameterTypes,
+		IReadOnlyList<ExportParameterKindInfo> parameterKinds,
 		IReadOnlyList<JniParamKind> jniParams)
 	{
 		var havePeer = enc.DefineLabel ();
@@ -1303,7 +1329,8 @@ sealed class TypeMapAssemblyEmitter
 		enc.MarkLabel (havePeer);
 		enc.LoadLocal (4);
 		for (int i = 0; i < managedParameterTypes.Count; i++) {
-			EmitManagedConstructorArgument (enc, managedParameterTypes [i], jniParams [i], i + 2);
+			var parameterKind = i < parameterKinds.Count ? parameterKinds [i] : ExportParameterKindInfo.Unspecified;
+			EmitManagedConstructorArgument (enc, managedParameterTypes [i], parameterKind, jniParams [i], i + 2);
 		}
 		enc.Call (ctorRef, managedParameterTypes.Count, isInstance: true);
 
@@ -1383,53 +1410,14 @@ sealed class TypeMapAssemblyEmitter
 		cfb.AddFinallyRegion (tryStart, finallyStart, finallyStart, afterAll);
 	}
 
-	void EmitManagedConstructorArgument (TrackedInstructionEncoder encoder, TypeRefData managedType, JniParamKind jniKind, int argumentIndex)
+	void EmitManagedConstructorArgument (
+		TrackedInstructionEncoder encoder,
+		TypeRefData managedType,
+		ExportParameterKindInfo exportKind,
+		JniParamKind jniKind,
+		int argumentIndex)
 	{
-		if (managedType.ManagedTypeName == "System.Boolean") {
-			encoder.LoadArgument (argumentIndex);
-			encoder.LoadConstantI4 (0);
-			encoder.OpCode (ILOpCode.Cgt_un);
-			return;
-		}
-
-		if (jniKind != JniParamKind.Object) {
-			encoder.LoadArgument (argumentIndex);
-			return;
-		}
-
-		if (managedType.ManagedTypeName == "System.String") {
-			encoder.LoadArgument (argumentIndex);
-			encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
-			encoder.Call (_jniEnvGetStringRef, parameterCount: 2, returnsValue: true);
-			return;
-		}
-
-		if (TryGetSzArrayElementType (managedType.ManagedTypeName, out var elementType)) {
-			var arrayType = ResolveManagedTypeHandle (managedType.ManagedTypeName, managedType.AssemblyName);
-			var elementTypeHandle = ResolveManagedTypeHandle (elementType, managedType.AssemblyName);
-
-			encoder.LoadArgument (argumentIndex);
-			encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
-			encoder.LoadToken (elementTypeHandle);
-			encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-			encoder.Call (_jniEnvGetArrayRef, parameterCount: 3, returnsValue: true);
-			encoder.CastClass (arrayType);
-			return;
-		}
-
-		encoder.LoadArgument (argumentIndex);
-		encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
-		if (managedType.ManagedTypeName == "System.Object") {
-			encoder.OpCode (ILOpCode.Ldnull);
-			encoder.Call (_javaLangObjectGetObjectRef, parameterCount: 3, returnsValue: true);
-			return;
-		}
-
-		var managedTypeHandle = ResolveManagedTypeHandle (managedType.ManagedTypeName, managedType.AssemblyName);
-		encoder.LoadToken (managedTypeHandle);
-		encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-		encoder.Call (_javaLangObjectGetObjectRef, parameterCount: 3, returnsValue: true);
-		encoder.CastClass (managedTypeHandle);
+		GetExportMethodDispatchEmitter ().LoadManagedArgument (encoder, managedType, exportKind, jniKind, argumentIndex);
 	}
 
 	EntityHandle ResolveRuntimeTypeSpec (RuntimeTypeSpec type)

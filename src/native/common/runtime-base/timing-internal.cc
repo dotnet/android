@@ -1,4 +1,3 @@
-#include <chrono>
 #include <cstdlib>
 
 #include <runtime-base/android-system.hh>
@@ -12,7 +11,26 @@ namespace xamarin::android {
 using namespace xamarin::android;
 using namespace std::literals;
 
-namespace chrono = std::chrono;
+namespace {
+	void write_line_to_logcat ([[maybe_unused]] FILE *output, std::string_view const& line) noexcept
+	{
+		// Don't add empty messages to the logcat, waste of time
+		if (line.empty ()) {
+			return;
+		}
+
+		log_writef (LOG_TIMING, LogLevel::Info, "%.*s", static_cast<int>(line.length ()), line.data ());
+	}
+
+	void write_line_to_file (FILE *output, std::string_view const& line) noexcept
+	{
+		if (!line.empty ()) {
+			fwrite (line.data (), line.size (), 1, output);
+		}
+
+		fwrite (Constants::NEWLINE.data (), Constants::NEWLINE.size (), 1, output);
+	}
+}
 
 void FastTiming::really_initialize (bool log_immediately) noexcept
 {
@@ -21,16 +39,22 @@ void FastTiming::really_initialize (bool log_immediately) noexcept
 
 	// TLS variables are initialized on first use, do it here so that we can have
 	// the overhead out of mind later, at least for the main thread.
-	open_sequences.push (0);
-	open_sequences.pop ();
+	open_sequence = nullptr;
 
-	// Options in `debug.mono.timing` are relevant only when immediate logging is disabled
+	// Timing property options are relevant only when immediate logging is disabled
 	if (immediate_logging) {
 		return;
 	}
 
 	char value [Constants::PROPERTY_VALUE_BUFFER_LEN];
+#if defined(XA_HOST_MONOVM)
 	const char *options = AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_TIMING.data (), value, sizeof (value));
+#else
+	const char *options = AndroidSystem::monodroid_get_system_property (Constants::DEBUG_DOTNET_TIMING.data (), value, sizeof (value));
+	if (options == nullptr) {
+		options = AndroidSystem::monodroid_get_system_property (Constants::LEGACY_DEBUG_MONO_TIMING.data (), value, sizeof (value));
+	}
+#endif
 	if (options != nullptr) {
 		internal_timing.parse_options (options);
 	}
@@ -38,7 +62,7 @@ void FastTiming::really_initialize (bool log_immediately) noexcept
 	log_write (
 		LOG_TIMING,
 		LogLevel::Info,
-		"[2/1] To get timing results, send the mono.android.app.DUMP_TIMING_DATA intent to the application"sv
+		"[2/1] To get timing results, send the mono.android.app.DUMP_TIMING_DATA intent to the application"
 	);
 }
 
@@ -54,7 +78,9 @@ void FastTiming::parse_options (const char *options) noexcept
 		if (param_length == OPT_TO_FILE.length () && strncmp (param, OPT_TO_FILE.data (), param_length) == 0) {
 			log_to_file = true;
 		} else if (param_length >= OPT_FILE_NAME.length () && strncmp (param, OPT_FILE_NAME.data (), OPT_FILE_NAME.length ()) == 0) {
-			output_file_name = std::make_unique<std::string> (param + OPT_FILE_NAME.length (), param_length - OPT_FILE_NAME.length ());
+			const char *name = param + OPT_FILE_NAME.length ();
+			size_t name_length = param_length - OPT_FILE_NAME.length ();
+			set_output_file_name (name, name_length);
 		} else if (param_length >= OPT_DURATION.length () && strncmp (param, OPT_DURATION.data (), OPT_DURATION.length ()) == 0) {
 			const char *duration = param + OPT_DURATION.length ();
 			char *end;
@@ -71,7 +97,7 @@ void FastTiming::parse_options (const char *options) noexcept
 		param = separator == nullptr ? nullptr : separator + 1;
 	}
 
-	if (output_file_name) {
+	if (output_file_name_configured) {
 		log_to_file = true;
 	}
 
@@ -87,19 +113,19 @@ bool FastTiming::no_events_logged (size_t entries) noexcept
 		return false;
 	}
 
-	log_write (LOG_TIMING, LogLevel::Info, "[2/3] No events logged"sv);
+	log_write (LOG_TIMING, LogLevel::Info, "[2/3] No events logged");
 	return true;
 }
 
-void FastTiming::dump (size_t entries, bool indent, std::function<void(std::string_view const&)> line_writer) noexcept
+void FastTiming::dump (size_t entries, bool indent, LineWriter line_writer, FILE *output) noexcept
 {
 	char stack_buffer [Constants::MAX_LOGCAT_MESSAGE_LENGTH];
 
-	line_writer ("Startup costs:"sv);
+	line_writer (output, "Startup costs:"sv);
 	auto log = [&] (TimingEvent const& event) -> uint64_t {
 		size_t message_length;
 		char *message = build_message (event, stack_buffer, sizeof (stack_buffer), &message_length, indent);
-		line_writer (std::string_view { message, message_length });
+		line_writer (output, std::string_view { message, message_length });
 		if (message != stack_buffer) {
 			std::free (message);
 		}
@@ -108,7 +134,7 @@ void FastTiming::dump (size_t entries, bool indent, std::function<void(std::stri
 	log (start_end_event_time);
 	log (get_time_overhead);
 	log (init_time);
-	line_writer (Constants::EMPTY);
+	line_writer (output, Constants::EMPTY);
 
 	// Values are in nanoseconds
 	uint64_t total_assembly_load_time = 0u;
@@ -116,7 +142,7 @@ void FastTiming::dump (size_t entries, bool indent, std::function<void(std::stri
 	uint64_t total_managed_to_java_time = 0u;
 	uint64_t total_assembly_decompression_time = 0u;
 
-	line_writer ("All logged events:"sv);
+	line_writer (output, "All logged events:"sv);
 	for (size_t i = 0uz; i < entries; i++) {
 		TimingEvent const& event = get_event (i);
 		if (!__atomic_load_n (&event.complete, __ATOMIC_ACQUIRE)) {
@@ -147,22 +173,49 @@ void FastTiming::dump (size_t entries, bool indent, std::function<void(std::stri
 		}
 	}
 
-	line_writer (Constants::EMPTY);
-	line_writer ("[2/4] Accumulated performance results"sv);
+	line_writer (output, Constants::EMPTY);
+	line_writer (output, "[2/4] Accumulated performance results"sv);
 
-	auto log_time = [&line_writer] (std::string_view const& msg, uint64_t ns)
+	auto log_time = [&line_writer, output] (std::string_view const& msg, uint64_t ns)
 	{
-		chrono::nanoseconds time_ns (ns);
+		time_interval interval { ns };
 		// Do not change the string format after the first colon, its format is required by performance measuring
 		// utilities.
-		std::string s = std::format (
-			"  {}: {}:{}::{}",
-			msg,
-			chrono::duration_cast<chrono::seconds> (time_ns).count (),
-			chrono::duration_cast<chrono::milliseconds> (time_ns).count (),
-			(time_ns % 1ms).count ()
-		);
-		line_writer (s);
+		auto format_time = [&] (char *buffer, size_t buffer_size) noexcept -> int {
+			return snprintf (
+				buffer,
+				buffer_size,
+				"  %.*s: %llu:%llu::%llu",
+				static_cast<int>(msg.length ()),
+				msg.data (),
+				interval.seconds,
+				interval.milliseconds,
+				interval.nanoseconds
+			);
+		};
+
+		// Formatted into `stack_buffer`, falling back to a heap buffer when the message doesn't fit.
+		char stack_buffer [Constants::MAX_LOGCAT_MESSAGE_LENGTH];
+		char *buffer = stack_buffer;
+		int result = format_time (stack_buffer, sizeof (stack_buffer));
+		abort_unless (result >= 0, "Failed to format the accumulated timing results");
+
+		size_t length = static_cast<size_t>(result);
+		if (length >= sizeof (stack_buffer)) {
+			size_t required_capacity = length + 1uz;
+			buffer = static_cast<char*> (std::malloc (required_capacity));
+			abort_unless (buffer != nullptr, "Failed to allocate the accumulated timing results message");
+			result = format_time (buffer, required_capacity);
+			abort_unless (
+				result >= 0 && static_cast<size_t>(result) == length,
+				"Failed to format the accumulated timing results using the required capacity"
+			);
+		}
+
+		line_writer (output, std::string_view { buffer, length });
+		if (buffer != stack_buffer) {
+			std::free (buffer);
+		}
 	};
 
 	// Do not change the sequence numbers. If a measurement is removed, its sequence number must not be reused.
@@ -175,19 +228,12 @@ void FastTiming::dump (size_t entries, bool indent, std::function<void(std::stri
 
 void FastTiming::dump_to_logcat (size_t entries) noexcept
 {
-	log_write (LOG_TIMING, LogLevel::Info, "[2/2] Performance measurement results"sv);
+	log_write (LOG_TIMING, LogLevel::Info, "[2/2] Performance measurement results");
 	if (no_events_logged (entries)) {
 		return;
 	}
 
-	auto line_writer = [](std::string_view const& msg) {
-		// Don't add empty messages to the logcat, waste of time
-		if (msg.empty ()) {
-			return;
-		}
-		log_write (LOG_TIMING, LogLevel::Info, msg);
-	};
-	dump (entries, true /* indent */, line_writer);
+	dump (entries, true /* indent */, write_line_to_logcat, nullptr);
 }
 
 void FastTiming::dump_to_file (size_t entries) noexcept
@@ -201,17 +247,17 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 	// and `run-as` must be used.
 	const char *temporary_directory = getenv ("TMPDIR");
 	if (temporary_directory == nullptr || *temporary_directory == '\0') {
-		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file: TMPDIR is not set"sv);
+		log_errorf (LOG_TIMING, "[2/2] Unable to create the performance measurements file: TMPDIR is not set");
 		return;
 	}
 
-	std::string_view file_name = output_file_name == nullptr ? default_timing_file_name : *output_file_name;
+	std::string_view file_name = output_file_name_configured ? std::string_view { get_output_file_name () } : default_timing_file_name;
 	char stack_buffer [Util::LocalPathBufferSize];
 	char *timing_log_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), temporary_directory, file_name);
 
 	FILE *timing_log = Util::monodroid_fopen (timing_log_path, "w");
 	if (timing_log == nullptr) {
-		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file '{}'"sv, timing_log_path);
+		log_errorf (LOG_TIMING, "[2/2] Unable to create the performance measurements file '%s'", timing_log_path);
 		if (timing_log_path != stack_buffer) {
 			std::free (timing_log_path);
 		}
@@ -219,7 +265,7 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 	}
 
 	if (!Util::set_world_accessible (fileno (timing_log))) {
-		log_warn (LOG_TIMING, "[2/2] Failed to make performance measurements file '{}' world-readable"sv, timing_log_path);
+		log_warnf (LOG_TIMING, "[2/2] Failed to make performance measurements file '%s' world-readable", timing_log_path);
 		fclose (timing_log);
 		if (timing_log_path != stack_buffer) {
 			std::free (timing_log_path);
@@ -227,16 +273,9 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 		return;
 	}
 
-	log_info (LOG_TIMING, "[2/2] Performance measurement results logged to file: {}"sv, timing_log_path);
+	log_infof (LOG_TIMING, "[2/2] Performance measurement results logged to file: %s", timing_log_path);
 
-	auto line_writer = [=](std::string_view const& msg) {
-		if (!msg.empty ()) {
-			fwrite (msg.data (), msg.size (), 1, timing_log);
-		}
-		fwrite (Constants::NEWLINE.data (), Constants::NEWLINE.size (), 1, timing_log);
-	};
-
-	dump (entries, true /* indent */, line_writer);
+	dump (entries, true /* indent */, write_line_to_file, timing_log);
 	fflush (timing_log);
 	fclose (timing_log);
 	if (timing_log_path != stack_buffer) {

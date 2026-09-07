@@ -264,13 +264,10 @@ _ResolveAssemblies MSBuild target.
   <Target Name="_PrepareAssemblies"
       DependsOnTargets="$(_PrepareAssembliesDependsOnTargets)">
     <ItemGroup Condition=" '$(PublishTrimmed)' != 'true' ">
-      <_ResolvedAssemblies          Include="@(_AndroidAssembliesToLinkNoShrink->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" Condition=" '%(DestinationSubPath)' != '' " />
-      <_ResolvedAssemblies          Include="@(_AndroidAssembliesToPackageWithoutLinkNoShrink)" Condition=" '%(DestinationSubPath)' != '' " />
-      <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" Condition=" '%(DestinationSubPath)' != '' " />
-      <_ResolvedFrameworkAssemblies Include="@(_AndroidAssembliesToLinkNoShrink->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" Condition=" '%(FrameworkAssembly)' == 'True' And '%(DestinationSubPath)' != '' " />
-      <_ResolvedFrameworkAssemblies Include="@(_AndroidAssembliesToPackageWithoutLinkNoShrink)" Condition=" '%(DestinationSubPath)' != '' " />
-      <_ResolvedSymbols             Include="@(_AndroidSymbolsToLinkNoShrink->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" Condition=" '%(DestinationSubPath)' != '' " />
-      <_ResolvedSymbols             Include="@(_AndroidSymbolsToPackageWithoutLinkNoShrink)" Condition=" '%(DestinationSubPath)' != '' " />
+      <_ResolvedAssemblies          Include="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"          Condition=" '%(DestinationSubPath)' != '' " />
+      <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"      Condition=" '%(DestinationSubPath)' != '' " />
+      <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" Condition=" '%(DestinationSubPath)' != '' " />
+      <_ResolvedSymbols             Include="@(ResolvedSymbols->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"             Condition=" '%(DestinationSubPath)' != '' " />
       <_ShrunkAssemblies            Include="@(_ResolvedAssemblies)" />
       <_ShrunkUserAssemblies        Include="@(_ResolvedUserAssemblies)" />
       <_ShrunkFrameworkAssemblies   Include="@(_ResolvedFrameworkAssemblies)" />

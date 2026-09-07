@@ -34,9 +34,9 @@ public abstract class FixtureTestBase
 	}
 
 	static readonly Lazy<(List<JavaPeerInfo> peers, AssemblyManifestInfo manifestInfo)> _cachedScanResult = new (() => {
-		using var scanner = new JavaPeerScanner ();
 		using var peReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
 		using var attributePeReader = new PEReader (File.OpenRead (TestAttributeFixtureAssemblyPath));
+		using var scanner = new JavaPeerScanner ();
 		var assemblies = new [] {
 			GetAssemblyInput (peReader),
 			GetAssemblyInput (attributePeReader),
@@ -188,6 +188,11 @@ public abstract class FixtureTestBase
 	private protected static bool ILContainsCallToken (byte[] ilBytes, int token)
 	{
 		return ILContainsOpcodeToken (ilBytes, token, (byte) ILOpCode.Call, (byte) ILOpCode.Callvirt);
+	}
+
+	private protected static bool ILContainsCallvirtToken (byte[] ilBytes, int token)
+	{
+		return ILContainsOpcodeToken (ilBytes, token, (byte) ILOpCode.Callvirt);
 	}
 
 	private protected static bool ILContainsNewobjToken (byte[] ilBytes, int token)

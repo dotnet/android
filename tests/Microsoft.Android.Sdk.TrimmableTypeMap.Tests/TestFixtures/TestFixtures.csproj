@@ -12,6 +12,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TestAttributeFixtures\TestAttributeFixtures.csproj" />
+    <ProjectReference Include="..\ActivationStubs.Java.Interop\ActivationStubs.Java.Interop.csproj" />
+    <ProjectReference Include="..\ActivationStubs.Mono.Android\ActivationStubs.Mono.Android.csproj" />
   </ItemGroup>
 
 </Project>

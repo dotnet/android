@@ -110,7 +110,8 @@ namespace Xamarin.Android.Build.Tests
 			};
 			using var stdOutput = new StringWriter ();
 			using var stdError = new StringWriter ();
-			using var cancellationTokenSource = new CancellationTokenSource (TimeSpan.FromSeconds (30));
+			int timeoutInSeconds = TestEnvironment.IsRunningOnCI ? 120 : 30;
+			using var cancellationTokenSource = new CancellationTokenSource (TimeSpan.FromSeconds (timeoutInSeconds));
 			int processId = -1;
 			int exitCode;
 			try {
@@ -123,7 +124,7 @@ namespace Xamarin.Android.Build.Tests
 				).GetAwaiter ().GetResult ();
 			} catch (OperationCanceledException) {
 				exitCode = -1;
-				stdError.WriteLine ($"apkdiff timed out after 30 seconds (PID {processId}).");
+				stdError.WriteLine ($"apkdiff timed out after {timeoutInSeconds} seconds (PID {processId}).");
 			}
 
 			var result = (code: exitCode, stdOutput: stdOutput.ToString ().Trim (), stdError: stdError.ToString ().Trim ());

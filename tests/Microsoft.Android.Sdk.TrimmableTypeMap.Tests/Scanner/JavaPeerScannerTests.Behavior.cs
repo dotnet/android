@@ -148,6 +148,9 @@ public partial class JavaPeerScannerTests
 
 		var xmlMethod = FindFixtureByJavaName ("my/app/ExportMarshallingShapes")
 			.MarshalMethods.First (m => m.JniName == "readXml");
+		var streamMethod = FindFixtureByJavaName ("my/app/ExportMarshallingShapes")
+			.MarshalMethods.First (m => m.JniName == "wrapStream");
+		Assert.Equal ("System.Runtime", streamMethod.ManagedReturnType.AssemblyName);
 		Assert.Equal (ExportParameterKindInfo.XmlPullParser, xmlMethod.ManagedParameterExportKinds [0]);
 		Assert.Equal (ExportParameterKindInfo.XmlPullParser, xmlMethod.ManagedReturnExportKind);
 		Assert.Equal ("System.Xml.ReaderWriter", xmlMethod.ManagedReturnType.AssemblyName);
@@ -192,6 +195,23 @@ public partial class JavaPeerScannerTests
 		Assert.Contains ("android/view/View$OnClickListener",
 			FindFixtureByJavaName ("my/app/ClickableView").ImplementedInterfaceJavaNames);
 		Assert.Empty (FindFixtureByJavaName ("my/app/MyHelper").ImplementedInterfaceJavaNames);
+	}
+
+	[Fact]
+	public void Scan_JavaCallableWrapperInterfaces_OmitsParentsAndDuplicateJavaNames ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/RedundantInterfaceView");
+
+		Assert.Equal ([
+			"android/view/View$OnClickListener",
+			"android/view/View$INamedClickListener",
+			"android/view/View$INamedClickListener",
+			"android/view/View$OnLongClickListener",
+		], peer.ImplementedInterfaceJavaNames);
+		Assert.Equal ([
+			"android/view/View$INamedClickListener",
+			"android/view/View$OnLongClickListener",
+		], peer.JavaCallableWrapperInterfaceJavaNames);
 	}
 
 	[Theory]

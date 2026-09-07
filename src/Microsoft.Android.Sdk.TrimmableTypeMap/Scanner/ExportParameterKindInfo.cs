@@ -6,6 +6,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 enum ExportParameterKindInfo
 {
+	Invalid = -1,
 	Unspecified = 0,
 	InputStream = 1,
 	OutputStream = 2,

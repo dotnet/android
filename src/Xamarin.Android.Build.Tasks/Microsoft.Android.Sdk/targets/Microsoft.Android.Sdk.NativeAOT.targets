@@ -129,13 +129,14 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
           Also, do NOT use `clang++` here because it will link the dynamic libc++ library into the
           application. If, for some reason, `clang++` has to be used, `<LinkerArgs>` need to be
-          added to pass `-nostdlib` to it.
+          added to pass `-nostdlib++` to it.
       -->
       <CppCompilerAndLinker>$(_NdkClangPrefix)$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppCompilerAndLinker>
       <CppLinker>$(_NdkClangPrefix)$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppLinker>
       <ObjCopyName>llvm-objcopy</ObjCopyName>
 
-      <!-- We must ensure this is `false`, as it would interfere with statically linking libc++ -->
+      <!-- We must ensure this is `false`, so that the compiler driver does not add libc++,
+           which NativeAOT applications do not link. -->
       <LinkStandardCPlusPlusLibrary>false</LinkStandardCPlusPlusLibrary>
     </PropertyGroup>
 
@@ -164,15 +165,11 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
       <_NdkLibs Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.release-static-release'))" />
 
-      <!-- Include libc++ -->
-      <_NdkLibs Include="$(_NdkSysrootDir)libc++_static.a" />
-      <_NdkLibs Include="$(_NdkSysrootDir)libc++abi.a" />
-
       <LinkerArg Include="&quot;%(_NdkLibs.Identity)&quot;" />
 
-      <!-- This library conflicts with static libc++ -->
-      <NativeLibrary Remove="$(IlcSdkPath)libstdc++compat.a" />
-      <LinkerArg Remove="$(IlcSdkPath)libstdc++compat.a" />
+      <!-- libstdc++compat.a supplies the C++ allocation ABI (operator new/delete, std::nothrow)
+           that the NativeAOT runtime itself depends on.  It used to be removed here because it
+           conflicts with static libc++, which we no longer link. -->
 
       <!-- Every p/invoke using the `xa-internal-api` "library" will be called directly -->
       <DirectPInvoke Include="xa-internal-api" />
@@ -301,7 +298,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       </_NativeAotCrtEndFiles>
       <_NativeAotLibSearchPaths Include="$(_NativeAotRuntimePackNativeDir)" />
       <_NativeAotCompilerRtLibs Include="$(_NativeAotRuntimePackNativeDir)/libclang_rt.builtins-$(_NdkAbi)-android.a" />
-      <_NativeAotCompilerRtLibs Include="$(_NativeAotRuntimePackNativeDir)/libunwind.a" />
     </ItemGroup>
 
     <!-- CRT and toolchain items from NDK -->
@@ -315,7 +311,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NativeAotLibSearchPaths Include="$(_NdkApiSysrootDir)" />
       <_NativeAotLibSearchPaths Include="$(_NdkSysrootDir)" />
       <_NativeAotCompilerRtLibs Include="$(_NdkClangResourceDir)/**/libclang_rt.builtins-$(_NdkAbi)-android.a" />
-      <_NativeAotCompilerRtLibs Include="$(_NdkClangResourceDir)/**/$(_NdkAbi)/libunwind.a" />
     </ItemGroup>
 
     <!-- Common items (same regardless of linker source) -->
@@ -330,12 +325,10 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NativeAotSystemLibraries Include="m" />
       <_NativeAotSystemLibraries Include="c" />
     </ItemGroup>
-    <!-- When using workload linker, resolve libc++/libnaot from runtime pack dir.
+    <!-- When using workload linker, resolve libnaot from runtime pack dir.
          When using NDK, @(_NdkLibs) already has the right NDK sysroot paths. -->
     <ItemGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' ">
       <_NativeAotLinkLibraries Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.release-static-release'))" />
-      <_NativeAotLinkLibraries Include="$(_NativeAotRuntimePackNativeDir)libc++_static.a" />
-      <_NativeAotLinkLibraries Include="$(_NativeAotRuntimePackNativeDir)libc++abi.a" />
     </ItemGroup>
     <ItemGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' != 'true' ">
       <_NativeAotLinkLibraries Include="@(_NdkLibs)" />
@@ -366,6 +359,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <FileWrites Include="$(_AndroidNativeAotSharedLibrary)" />
       <FileWrites Include="$(_AndroidNativeAotSharedLibrary)$(NativeSymbolExt)" Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' " />
       <FileWrites Include="$(NativeIntermediateOutputPath)sections.ld" />
+      <FileWrites Include="$(NativeIntermediateOutputPath)libRuntime.WorkstationGC.arm-ehabi.a" Condition=" '$(RuntimeIdentifier)' == 'android-arm' " />
     </ItemGroup>
   </Target>
 

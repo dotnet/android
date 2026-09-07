@@ -25,7 +25,7 @@
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">37.0</AndroidLatestStablePlatformId>
     <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v17.0</AndroidLatestStableFrameworkVersion>
     <!-- If there is a second *stable* API level (e.g. 38.1 alongside 38), set it here: -->
-    <AndroidLatestStableApiLevel2 Condition="'$(AndroidLatestStableApiLevel2)' == ''">37.1</AndroidLatestStableApiLevel2>
+    <AndroidLatestStableApiLevel2 Condition="'$(AndroidLatestStableApiLevel2)' == ''">37.2</AndroidLatestStableApiLevel2>
     <!-- *Latest* *unstable* API level binding that we support; this can be the same as *stable* -->
     <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">37.2</AndroidLatestUnstableApiLevel>
     <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">37.2</AndroidLatestUnstablePlatformId>
@@ -56,7 +56,7 @@
     <AndroidBuildApiLevel Include="37.2">
       <PlatformId>37.2</PlatformId>
       <FrameworkVersion>v17.2</FrameworkVersion>
-      <Unstable>true</Unstable>
+      <Unstable>false</Unstable>
     </AndroidBuildApiLevel>
   </ItemGroup>
   <PropertyGroup Condition=" '$(HostOS)' == '' ">
@@ -144,6 +144,7 @@
     <XAAndroidDocsHash>68DB2690CB92E4EE5373AC9B792642C90717D8F417D83ECCEA48781171B3182A</XAAndroidDocsHash>
     <XAAndroidSourcesHash37_0>A853F452B8BA94933EB56ED4E0F622991F9D6DE6E0AC19923AA47414D79B9129</XAAndroidSourcesHash37_0>
     <XAAndroidSourcesHash37_1>F63736E27B0D283298116DA8BCE2C024DE28C7E4081044B30716FCB6E0FA13F1</XAAndroidSourcesHash37_1>
+    <XAAndroidSourcesHash37_2>9D637C3AF6654A2F1B696B3D19C54BB77E38DF2B0106116934703F314B3D4E84</XAAndroidSourcesHash37_2>
     <XAAndroidSdkLicenseHash>24333f8a63b6825ea9c5514f83c2829b004d1fee</XAAndroidSdkLicenseHash>
     <!-- Android NDK: per-host zips. Use a private property name; the public
          $(AndroidNdkVersion) is set in Xamarin.Installer.Common.props. -->

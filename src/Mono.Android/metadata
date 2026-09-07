@@ -1988,6 +1988,10 @@
   <ns-replace source="privatecompute"       replacement="PrivateCompute" />
   <ns-replace source="voiceinteraction"     replacement="VoiceInteractions" />
   <ns-replace source="permissionui"         replacement="PermissionUI" />
+  <ns-replace source="contentsafety"        replacement="ContentSafety" />
+  <ns-replace source="personalcontext"      replacement="PersonalContext" />
+  <ns-replace source="multisensory"         replacement="MultiSensory" />
+  <ns-replace source="authenticationpolicy" replacement="AuthenticationPolicy" />
 
   <!-- Public method cannot override protected base method -->
   <attr api-since="36" path="/api/package[@name='android.media.tv.ad']/class[@name='TvAdView']/method[@name='onLayout' and count(parameter)=5 and parameter[1][@type='boolean'] and parameter[2][@type='int'] and parameter[3][@type='int'] and parameter[4][@type='int'] and parameter[5][@type='int']]" name="visibility">protected</attr>
@@ -2157,6 +2161,12 @@
       /method[starts-with(@name, 'set')]
       /parameter[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
     name="type">Android.Graphics.Color</attr>
+  <!-- `constructor` method parameters with name starting with `color` or ending with `Color` in packages added in API 37.2+ -->
+  <attr api-since="37.2" path="/api/package[@api-since >= 37.2]
+      /*[(local-name()='class' or local-name()='interface')]
+      /constructor
+      /parameter[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
+    name="type">Android.Graphics.Color</attr>
   <!-- methods with name ending with `Tint` in packages added in API 37+ -->
   <attr api-since="37" path="/api/package[@api-since >= 37.0]
       /*[(local-name()='class' or local-name()='interface')]
@@ -2166,6 +2176,12 @@
   <attr api-since="37" path="/api/package[@api-since >= 37.0]
       /*[(local-name()='class' or local-name()='interface')]
       /method[starts-with(@name, 'set')]
+      /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint')]"
+    name="type">Android.Graphics.Color</attr>
+  <!-- `constructor` method parameters with name starting with `tint` or ending with `Tint` in packages added in API 37.2+ -->
+  <attr api-since="37.2" path="/api/package[@api-since >= 37.2]
+      /*[(local-name()='class' or local-name()='interface')]
+      /constructor
       /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint')]"
     name="type">Android.Graphics.Color</attr>
 
@@ -2185,6 +2201,12 @@
       /method[starts-with(@name, 'set')]
       /parameter[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
     name="type">Android.Graphics.Color</attr>
+  <!-- `constructor` method parameters with name starting with `color` or ending with `Color` in packages added in API 37.2+ -->
+  <attr api-since="37.2" path="/api/package
+      /*[@api-since >= 37.2 and (local-name()='class' or local-name()='interface')]
+      /constructor
+      /parameter[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
+    name="type">Android.Graphics.Color</attr>
   <!-- methods with name ending with `Tint` in types added in API 37+ -->
   <attr api-since="37" path="/api/package
       /*[@api-since >= 37.0 and (local-name()='class' or local-name()='interface')]
@@ -2194,6 +2216,12 @@
   <attr api-since="37" path="/api/package
       /*[(local-name()='class' or local-name()='interface') and @api-since >= 37.0]
       /method[starts-with(@name, 'set')]
+      /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint')]"
+    name="type">Android.Graphics.Color</attr>
+  <!-- `constructor` method parameters with name starting with `color` or ending with `Color` in packages added in API 37.2+ -->
+  <attr api-since="37.2" path="/api/package
+      /*[@api-since >= 37.2 and (local-name()='class' or local-name()='interface')]
+      /constructor
       /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint')]"
     name="type">Android.Graphics.Color</attr>
 
@@ -2213,6 +2241,12 @@
       /method[@api-since >= 37.0 and starts-with(@name, 'set')]
       /parameter[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
     name="type">Android.Graphics.Color</attr>
+  <!-- `constructor` method parameters with name starting with `color` or ending with `Color` in packages added in API 37.2+ -->
+  <attr api-since="37.2" path="/api/package
+      /*[(local-name()='class' or local-name()='interface')]
+      /constructor[@api-since >= 37.2]
+      /parameter[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
+    name="type">Android.Graphics.Color</attr>
   <!-- methods added in API-37+ with name ending with `Tint` -->
   <attr api-since="37" path="/api/package
       /*[(local-name()='class' or local-name()='interface')]
@@ -2222,6 +2256,12 @@
   <attr api-since="37" path="/api/package
       /*[(local-name()='class' or local-name()='interface')]
       /method[@api-since >= 37.0 and starts-with(@name, 'set')]
+      /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint')]"
+    name="type">Android.Graphics.Color</attr>
+  <!-- `constructor` method parameters with name starting with `color` or ending with `Color` in packages added in API 37.2+ -->
+  <attr api-since="37.2" path="/api/package
+      /*[(local-name()='class' or local-name()='interface')]
+      /constructor[@api-since >= 37.2]
       /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint')]"
     name="type">Android.Graphics.Color</attr>
 

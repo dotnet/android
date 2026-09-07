@@ -407,6 +407,11 @@ sealed record UcoConstructorData
 	/// to the corresponding managed type before calling the user ctor.
 	/// </summary>
 	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
+
+	/// <summary>
+	/// Per-parameter [ExportParameter] kinds for constructor argument marshalling.
+	/// </summary>
+	public IReadOnlyList<ExportParameterKindInfo> ParameterKinds { get; init; } = [];
 }
 
 /// <summary>
