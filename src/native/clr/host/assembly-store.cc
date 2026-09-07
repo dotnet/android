@@ -138,39 +138,89 @@ namespace {
 			log_debugf (LOG_ASSEMBLY, "Decompressed-assembly cache %s failed for '%s': %s", operation, path, std::strerror (error));
 		}
 
-		// Formats the cache file path for `descriptor_index` into `buffer`, returning `false` if the
-		// path does not fit. `cache_dir` is only assigned once, before the cache is enabled, so this
-		// is safe to call from the writer thread without holding `state_lock`.
-		auto format_cache_path (char *buffer, size_t buffer_size, uint32_t descriptor_index) noexcept -> bool
+		// Unlike Util::format_with_retry, cache path allocation must not abort the application on failure.
+		class CachePath final
 		{
-			int length = snprintf (buffer, buffer_size, "%s/%u.bin", cache_dir, descriptor_index);
-			if (length <= 0 || static_cast<size_t>(length) >= buffer_size) [[unlikely]] {
-				log_file_error ("path formatting", cache_dir, length < 0 ? errno : ENAMETOOLONG);
-				return false;
+		public:
+			template<typename TFormatter>
+			CachePath (const char *operation, const char *source, TFormatter formatter) noexcept
+			{
+				int length = formatter (stack_buffer, sizeof (stack_buffer));
+				if (length < 0) [[unlikely]] {
+					log_file_error (operation, source, errno);
+					return;
+				}
+				if (static_cast<size_t>(length) < sizeof (stack_buffer)) {
+					path = stack_buffer;
+					return;
+				}
+
+				size_t capacity = static_cast<size_t>(length) + 1uz;
+				char *heap_buffer = static_cast<char*>(std::malloc (capacity));
+				if (heap_buffer == nullptr) [[unlikely]] {
+					log_file_error (operation, source, ENOMEM);
+					return;
+				}
+
+				length = formatter (heap_buffer, capacity);
+				if (length < 0 || static_cast<size_t>(length) >= capacity) [[unlikely]] {
+					int error = length < 0 ? errno : ENAMETOOLONG;
+					std::free (heap_buffer);
+					log_file_error (operation, source, error);
+					return;
+				}
+				path = heap_buffer;
 			}
-			return true;
-		}
+
+			// `cache_dir` is immutable once enabled, including on the writer thread.
+			explicit CachePath (uint32_t descriptor_index) noexcept
+				: CachePath ("path formatting", cache_dir, [descriptor_index](char *buffer, size_t size) noexcept {
+					return snprintf (buffer, size, "%s/%u.bin", cache_dir, descriptor_index);
+				})
+			{}
+
+			CachePath (CachePath const&) = delete;
+			CachePath (CachePath&&) = delete;
+			auto operator= (CachePath const&) -> CachePath& = delete;
+			auto operator= (CachePath&&) -> CachePath& = delete;
+
+			~CachePath () noexcept
+			{
+				if (path != stack_buffer) {
+					std::free (path);
+				}
+			}
+
+			auto get () const noexcept -> const char*
+			{
+				return path;
+			}
+
+		private:
+			char stack_buffer[Util::LocalPathBufferSize];
+			char *path = nullptr;
+		};
 
 		auto write_cache_file (WriteRequest *req) noexcept -> WriteResult
 		{
-			char path[Util::LocalPathBufferSize];
-			if (!format_cache_path (path, sizeof (path), req->descriptor_index)) [[unlikely]] {
+			CachePath path { req->descriptor_index };
+			if (path.get () == nullptr) [[unlikely]] {
 				return WriteResult::Failed;
 			}
 
-			char tmp_path[Util::LocalPathBufferSize];
-			int tmp_path_length = snprintf (tmp_path, sizeof (tmp_path), "%s.tmp.%d", path, getpid ());
-			if (tmp_path_length <= 0 || static_cast<size_t>(tmp_path_length) >= sizeof (tmp_path)) [[unlikely]] {
-				log_file_error ("temporary-file path formatting", path, tmp_path_length < 0 ? errno : ENAMETOOLONG);
+			CachePath tmp_path { "temporary-file path formatting", path.get (), [&path](char *buffer, size_t size) noexcept {
+				return snprintf (buffer, size, "%s.tmp.%d", path.get (), getpid ());
+			}};
+			if (tmp_path.get () == nullptr) [[unlikely]] {
 				return WriteResult::Failed;
 			}
 
 			int fd;
 			do {
-				fd = open (tmp_path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0600);
+				fd = open (tmp_path.get (), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0600);
 			} while (fd < 0 && errno == EINTR);
 			if (fd < 0) {
-				log_file_error ("temporary-file creation", path, errno);
+				log_file_error ("temporary-file creation", path.get (), errno);
 				return WriteResult::Failed;
 			}
 
@@ -182,20 +232,20 @@ namespace {
 			}
 
 			if (!ok) {
-				log_file_error ("write", path, error);
-				unlink (tmp_path);
+				log_file_error ("write", path.get (), error);
+				unlink (tmp_path.get ());
 				return WriteResult::Failed;
 			}
 
 			int rename_result;
 			do {
-				rename_result = rename (tmp_path, path);
+				rename_result = rename (tmp_path.get (), path.get ());
 			} while (rename_result != 0 && errno == EINTR);
 
 			if (rename_result != 0) {
 				error = errno;
-				log_file_error ("publish", path, error);
-				unlink (tmp_path);
+				log_file_error ("publish", path.get (), error);
+				unlink (tmp_path.get ());
 				return WriteResult::Failed;
 			}
 
@@ -321,12 +371,11 @@ namespace {
 					continue;
 				}
 
-				char path[Util::LocalPathBufferSize];
-				int length = snprintf (path, sizeof (path), "%s/%s", dir, entry->d_name);
-				if (length > 0 && static_cast<size_t>(length) < sizeof (path)) {
-					unlink (path);
-				} else {
-					log_file_error ("stale temporary-file path formatting", dir, length < 0 ? errno : ENAMETOOLONG);
+				CachePath path { "stale temporary-file path formatting", dir, [dir, entry](char *buffer, size_t size) noexcept {
+					return snprintf (buffer, size, "%s/%s", dir, entry->d_name);
+				}};
+				if (path.get () != nullptr) {
+					unlink (path.get ());
 				}
 			}
 
@@ -369,39 +418,38 @@ namespace {
 				return;
 			}
 
-			// The cache lives at `<code cache>/<CACHE_DIR_NAME>/<store id>`, with both levels
-			// created in turn. The path is built up in place: the store ID is appended after the
-			// first directory has been validated.
-			char path[Util::LocalPathBufferSize];
-			int length = snprintf (path, sizeof (path), "%s/%.*s", code_cache_dir, static_cast<int>(CACHE_DIR_NAME.length ()), CACHE_DIR_NAME.data ());
-			if (length <= 0 || static_cast<size_t>(length) >= sizeof (path)) [[unlikely]] {
-				log_debugf (LOG_ASSEMBLY, "Decompressed-assembly cache path is too long for '%s'", code_cache_dir);
+			// The cache lives at `<code cache>/<CACHE_DIR_NAME>/<store id>`, with both levels created in turn.
+			CachePath root { "cache-directory path formatting", code_cache_dir, [code_cache_dir](char *buffer, size_t size) noexcept {
+				return snprintf (buffer, size, "%s/%.*s", code_cache_dir, static_cast<int>(CACHE_DIR_NAME.length ()), CACHE_DIR_NAME.data ());
+			}};
+			if (root.get () == nullptr) [[unlikely]] {
 				return;
 			}
 
-			if (!ensure_directory (path)) {
+			if (!ensure_directory (root.get ())) {
 				return;
 			}
 
 			store_id = assembly_store_id;
-			int store_id_length = snprintf (path + length, sizeof (path) - static_cast<size_t>(length), "/%" PRIx64, store_id);
-			if (store_id_length <= 0 || static_cast<size_t>(length + store_id_length) >= sizeof (path)) [[unlikely]] {
-				log_file_error ("store-directory path formatting", code_cache_dir, store_id_length < 0 ? errno : ENAMETOOLONG);
+			CachePath path { "store-directory path formatting", root.get (), [&root](char *buffer, size_t size) noexcept {
+				return snprintf (buffer, size, "%s/%" PRIx64, root.get (), store_id);
+			}};
+			if (path.get () == nullptr) [[unlikely]] {
 				return;
 			}
 
-			if (!ensure_directory (path)) {
+			if (!ensure_directory (path.get ())) {
 				return;
 			}
 
-			remove_stale_temp_files (path);
+			remove_stale_temp_files (path.get ());
 
 			if (compressed_assembly_count == 0) {
 				return;
 			}
 
 			// Neither allocation is ever freed: both live for as long as the process does.
-			cache_dir = strdup (path);
+			cache_dir = strdup (path.get ());
 			if (cache_dir == nullptr) [[unlikely]] {
 				return;
 			}
@@ -435,12 +483,12 @@ namespace {
 				return nullptr;
 			}
 
-			char path[Util::LocalPathBufferSize];
-			if (!format_cache_path (path, sizeof (path), descriptor_index)) [[unlikely]] {
+			CachePath path { descriptor_index };
+			if (path.get () == nullptr) [[unlikely]] {
 				return nullptr;
 			}
 
-			int fd = open (path, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+			int fd = open (path.get (), O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
 			if (fd < 0) {
 				return nullptr;
 			}

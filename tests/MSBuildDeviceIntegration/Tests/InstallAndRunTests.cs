@@ -734,19 +734,48 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
-		public void AssemblyStoreDecompressionCacheMapsPersistedAssemblies ()
+		public void AssemblyStoreDecompressionCacheMapsPersistedAssemblies ([Values] bool longCachePath)
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
 				return;
 			}
 
-			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "assemblycache")) {
+			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, longCachePath ? "assemblycachelong" : "assemblycache")) {
 				IsRelease = true,
 			};
 			app.SetRuntime (AndroidRuntime.CoreCLR);
 			app.SetRuntimeIdentifiers (new [] { DeviceAbi });
 			app.SetProperty ("AndroidEnableAssemblyStoreDecompressionCache", "true");
 			app.AndroidManifest = app.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
+
+			string cacheDirectory = "code_cache";
+			if (longCachePath) {
+				// Exceed Util::LocalPathBufferSize (1024), keeping each component below NAME_MAX.
+				string subdirectory = string.Join ("/", Enumerable.Repeat (new string ('a', 128), 9));
+				cacheDirectory += "/" + subdirectory;
+				app.AndroidManifest = app.AndroidManifest.Replace ("<application ", "<application android:name=\"com.test.CachePathApplication\" ");
+				app.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("CachePathApplication.java") {
+					Encoding = Encoding.ASCII,
+					Metadata = {
+						{ "Bind", "False" },
+					},
+					TextContent = () => $$"""
+						package com.test;
+
+						public class CachePathApplication extends android.app.Application {
+							@Override
+							public java.io.File getCodeCacheDir () {
+								java.io.File directory = new java.io.File (super.getCodeCacheDir (), "{{subdirectory}}");
+								if (!directory.isDirectory () && !directory.mkdirs ()) {
+									throw new IllegalStateException ("Unable to create the long code cache directory");
+								}
+								return directory;
+							}
+						}
+						""",
+				});
+			}
+			string cacheRoot = cacheDirectory + "/decompressed-assembly-cache-v1";
 
 			using var appBuilder = CreateApkBuilder ();
 			Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
@@ -767,15 +796,22 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			for (int attempt = 0; attempt < 40 && cacheFiles.Length < 2; attempt++) {
 				Thread.Sleep (250);
 				cacheFiles = RunAdbCommand (
-					$"shell run-as {app.PackageName} find code_cache/decompressed-assembly-cache-v1 -type f -name '*.bin'"
+					$"shell run-as {app.PackageName} find {cacheRoot} -type f -name '*.bin'"
 				)
 					.Split (new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
 					.Where (line => line.EndsWith (".bin", StringComparison.Ordinal))
 					.ToArray ();
 			}
 			Assert.That (cacheFiles.Length, Is.GreaterThanOrEqualTo (2), "The first launch should persist multiple decompressed assemblies.");
+			if (longCachePath) {
+				Assert.IsTrue (cacheFiles.All (path => path.Length > 1024), "Cache paths should exceed the native stack buffer size.");
+			}
 
 			RunAdbCommand ($"shell am force-stop --user all {app.PackageName}");
+			string staleTempFile = cacheFiles.Last () + ".tmp.stale";
+			RunAdbCommand ($"shell run-as {app.PackageName} touch {staleTempFile}");
+			StringAssert.Contains (staleTempFile, RunAdbCommand ($"shell run-as {app.PackageName} ls {staleTempFile}"),
+				"The stale temporary file should exist before restarting.");
 			string cacheFileToCorrupt = cacheFiles.First ();
 			string ValidFileHash () => RunAdbCommand (
 				$"shell run-as {app.PackageName} md5sum {cacheFileToCorrupt}"
@@ -810,6 +846,11 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				rewritten = ValidFileHash () == validHash;
 			}
 			Assert.IsTrue (rewritten, $"The corrupted cache file '{cacheFileToCorrupt}' should be rewritten with valid contents after fallback.");
+			Assert.That (
+				RunAdbCommand ($"shell run-as {app.PackageName} find {cacheRoot} -type f -name '*.tmp.stale'").Trim (),
+				Is.Empty,
+				"The second launch should remove stale temporary files."
+			);
 
 			string [] pids = RunAdbCommand ($"shell pidof {app.PackageName}")
 				.Split (new [] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
@@ -819,7 +860,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				maps.Append (RunAdbCommand ($"shell run-as {app.PackageName} cat /proc/{pid}/maps"));
 			}
 			StringAssert.Contains (
-				"/code_cache/decompressed-assembly-cache-v1/",
+				"/" + cacheRoot + "/",
 				maps.ToString (),
 				"The second launch should map persisted decompressed assemblies."
 			);
