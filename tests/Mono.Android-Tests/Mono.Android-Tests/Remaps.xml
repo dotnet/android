@@ -27,4 +27,32 @@
       source-method-signature="()"
       target-type="net/dot/jni/test/RenameClassBase2"
       target-method-name="myNewHashCode" target-method-instance-to-static="false" />
+  <replace-method
+      source-type="java/lang/StringBuilder"
+      source-method-name="&lt;init&gt;"
+      source-method-signature="(Lnet/dot/jni/test/RenamedInt;)V"
+      target-type="java/lang/StringBuilder"
+      target-method-name="&lt;init&gt;"
+      target-method-signature="(I)V" target-method-instance-to-static="false" />
+  <replace-method
+      source-type="java/lang/StringBuilder"
+      source-method-name="indexOf"
+      source-method-signature="(Lnet/dot/jni/test/RenamedString;)I"
+      target-type="java/lang/StringBuilder"
+      target-method-name="indexOf"
+      target-method-signature="(Ljava/lang/String;)I" target-method-instance-to-static="false" />
+  <replace-field
+      source-type="java/lang/Math"
+      source-field-name="remappedToPi"
+      source-field-signature="D"
+      target-type="java/lang/Math"
+      target-field-name="PI"
+      target-field-signature="D" />
+  <replace-field
+      source-type="java/io/ByteArrayInputStream"
+      source-field-name="remappedToPos"
+      source-field-signature="I"
+      target-type="java/io/ByteArrayInputStream"
+      target-field-name="pos"
+      target-field-signature="I" />
 </replacements>

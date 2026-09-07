@@ -386,6 +386,11 @@ namespace Android.Runtime {
 			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
 		}
 
+		protected override JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSourceType, string jniFieldName, string jniFieldSignature)
+		{
+			return JniRemappingLookup.GetReplacementFieldInfo (jniSourceType, jniFieldName, jniFieldSignature);
+		}
+
 		protected override Type? GetInvokerTypeCore (Type type)
 		{
 			if (type.IsInterface || type.IsAbstract) {

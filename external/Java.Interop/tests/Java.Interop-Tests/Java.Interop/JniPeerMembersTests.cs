@@ -102,7 +102,7 @@ namespace Java.InteropTests
 		[Category ("TrimmableTypeMapUnsupported")]
 		public void ReplacementConstructorUsesTargetSignature ()
 		{
-			// The declared parameter type does not exist; the replacement pins `([C)V` instead.
+			// The declared parameter type does not exist; the replacement pins `(I)V` instead.
 			var ctor = JavaLangRemappingTestStringBuilder._members.InstanceMethods.GetConstructor ("(Lnet/dot/jni/test/RenamedInt;)V");
 			Assert.IsNotNull (ctor);
 		}
