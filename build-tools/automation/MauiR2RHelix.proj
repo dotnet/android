@@ -4,6 +4,7 @@
     <EnableAzurePipelinesReporter Condition="'$(SYSTEM_ACCESSTOKEN)' != ''">true</EnableAzurePipelinesReporter>
     <EnableAzurePipelinesReporter Condition="'$(SYSTEM_ACCESSTOKEN)' == ''">false</EnableAzurePipelinesReporter>
     <FailOnTestFailure>true</FailOnTestFailure>
+    <IncludeXHarnessCli>true</IncludeXHarnessCli>
     <HelixType Condition="'$(HelixType)' == ''">tests/android/maui-r2r/</HelixType>
     <HelixWorkItemName Condition="'$(HelixWorkItemName)' == ''">WorkItem</HelixWorkItemName>
     <HelixTestRunName Condition="'$(HelixTestRunName)' == ''">$(HelixWorkItemName)</HelixTestRunName>
@@ -18,10 +19,53 @@
   </ItemGroup>
 
   <ItemGroup>
-    <HelixWorkItem Include="$(HelixWorkItemName)" Condition="'$(WorkItemDirectory)' != ''">
-      <PayloadDirectory>$(WorkItemDirectory)</PayloadDirectory>
-      <Command>$(WorkItemCommand)</Command>
-      <Timeout Condition="'$(WorkItemTimeout)' != ''">$(WorkItemTimeout)</Timeout>
-    </HelixWorkItem>
+    <XHarnessApkToTest Include="$(HelixWorkItemName)" Condition="'$(WorkItemApk)' != ''">
+      <ApkPath>$(WorkItemApk)</ApkPath>
+      <AndroidPackageName>$(AndroidPackageName)</AndroidPackageName>
+      <WorkItemTimeout Condition="'$(WorkItemTimeout)' != ''">$(WorkItemTimeout)</WorkItemTimeout>
+      <CustomCommands><![CDATA[
+"Scenario: $(HelixTestRunName)" | Set-Content -LiteralPath (Join-Path $output_directory "scenario-$(HelixConfiguration).txt")
+"PackageName: $package_name" | Add-Content -LiteralPath (Join-Path $output_directory "scenario-$(HelixConfiguration).txt")
+"APK: $app" | Add-Content -LiteralPath (Join-Path $output_directory "scenario-$(HelixConfiguration).txt")
+
+xharness android adb -- devices -l |
+    Tee-Object -FilePath (Join-Path $output_directory "adb-devices-$(HelixConfiguration).log")
+
+$deviceId = xharness android device --app "$app" --verbosity Error |
+    Where-Object { $_ -and $_.Trim() } |
+    Select-Object -Last 1
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+}
+
+xharness android install --app "$app" --package-name "$package_name" --device-id "$deviceId" --output-directory "$output_directory" --verbosity Debug
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+}
+
+xharness android adb -- -s "$deviceId" shell getprop | Set-Content -LiteralPath (Join-Path $output_directory "getprop-$(HelixConfiguration).log")
+xharness android adb -- -s "$deviceId" shell getprop ro.product.cpu.abi
+xharness android adb -- -s "$deviceId" shell getprop ro.product.cpu.abilist
+xharness android adb -- -s "$deviceId" shell getprop ro.build.fingerprint
+xharness android adb -- -s "$deviceId" shell pm path "$package_name" | Set-Content -LiteralPath (Join-Path $output_directory "pm-path-$(HelixConfiguration).log")
+xharness android adb -- -s "$deviceId" shell dumpsys package "$package_name" | Set-Content -LiteralPath (Join-Path $output_directory "dumpsys-package-$(HelixConfiguration).log")
+xharness android adb -- -s "$deviceId" logcat -b all -c
+
+xharness android adb -- -s "$deviceId" shell monkey -p "$package_name" -c android.intent.category.LAUNCHER 1
+$launchExitCode = $LASTEXITCODE
+if ($launchExitCode -ne 0) {
+    xharness android adb -- -s "$deviceId" logcat -d -b all | Set-Content -LiteralPath (Join-Path $output_directory "logcat-$(HelixConfiguration).log")
+    xharness android uninstall --package-name "$package_name" --device-id "$deviceId"
+    exit $launchExitCode
+}
+
+Start-Sleep -Seconds 10
+xharness android adb -- -s "$deviceId" shell pidof "$package_name"
+$pidExitCode = $LASTEXITCODE
+xharness android adb -- -s "$deviceId" logcat -d -b all | Set-Content -LiteralPath (Join-Path $output_directory "logcat-$(HelixConfiguration).log")
+xharness android uninstall --package-name "$package_name" --device-id "$deviceId"
+exit $pidExitCode
+      ]]></CustomCommands>
+    </XHarnessApkToTest>
   </ItemGroup>
 </Project>
