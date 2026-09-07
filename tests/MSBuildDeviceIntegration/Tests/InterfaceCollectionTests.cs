@@ -100,13 +100,12 @@ namespace Xamarin.Android.Build.Tests
 				"The raw JNI holder and concrete peers must not produce managed bindings that can root closed collection wrappers.");
 		}
 
-		static void AssertCanonicalWrapperRooting (string dgmlFile)
+		internal static void AssertCanonicalWrapperRooting (string dgmlFile)
 		{
 			var chains = new [] {
 				new RootingChain (
 					"JavaList",
-					"(Mono_Android_Java_Interop_SafeJavaCollectionFactory__CreateReferenceListFromJniHandle, " +
-						"Type metadata: [Java.Interop]Java.Interop.IJavaPeerable)",
+					"Mono_Android_Java_Interop_SafeJavaCollectionFactory__CreateReferenceListFromJniHandle",
 					"Mono_Android_Android_Runtime_JavaList_1<Java_Interop_Java_Interop_IJavaPeerable> constructed",
 					"__GenericDict_Mono_Android_Android_Runtime_JavaList_1<Java_Interop_Java_Interop_IJavaPeerable>",
 					"(__GenericDict_Mono_Android_Android_Runtime_JavaList_1<Java_Interop_Java_Interop_IJavaPeerable>, " +
@@ -115,8 +114,7 @@ namespace Xamarin.Android.Build.Tests
 					"JavaList`1<Java.Interop.IJavaPeerable>..ctor(native int,JniHandleOwnership)"),
 				new RootingChain (
 					"JavaCollection",
-					"(Mono_Android_Java_Interop_SafeJavaCollectionFactory__CreateReferenceCollectionFromJniHandle, " +
-						"Type metadata: [Java.Interop]Java.Interop.IJavaPeerable)",
+					"Mono_Android_Java_Interop_SafeJavaCollectionFactory__CreateReferenceCollectionFromJniHandle",
 					"Mono_Android_Android_Runtime_JavaCollection_1<Java_Interop_Java_Interop_IJavaPeerable> constructed",
 					"__GenericDict_Mono_Android_Android_Runtime_JavaCollection_1<Java_Interop_Java_Interop_IJavaPeerable>",
 					"(__GenericDict_Mono_Android_Android_Runtime_JavaCollection_1<Java_Interop_Java_Interop_IJavaPeerable>, " +
@@ -249,12 +247,15 @@ namespace Xamarin.Android.Build.Tests
 
 		sealed class RootingChain
 		{
+			const string ReferenceTypeMetadata = "Type metadata: [Java.Interop]Java.Interop.IJavaPeerable";
+
 			readonly string constructorPattern;
 			readonly string canonicalConstructorPattern;
 			readonly string constructedTypePattern;
 			readonly string genericDictionaryPattern;
 			readonly string genericDictionaryDependencyPattern;
 			readonly string sourcePattern;
+			readonly string conditionalSourcePattern;
 			readonly List<string> ambiguousNodeMatches = new ();
 			readonly HashSet<string> observedNodeRoles = new (StringComparer.Ordinal);
 			readonly List<string> unexpectedIncomingLinks = new ();
@@ -265,11 +266,16 @@ namespace Xamarin.Android.Build.Tests
 			string genericDictionaryId = "";
 			string genericDictionaryDependencyId = "";
 			string sourceId = "";
+			string conditionalSourceId = "";
+			string referenceTypeMetadataId = "";
 			bool canonicalConstructorToDependency;
 			bool constructedTypeToGenericDictionary;
 			bool genericDictionaryToDependency;
 			bool genericDictionaryToConstructor;
 			bool sourceToConstructedType;
+			bool conditionalSourceToConstructedType;
+			bool sourceToConditionalSource;
+			bool metadataToConditionalSource;
 
 			public RootingChain (
 				string name,
@@ -282,6 +288,7 @@ namespace Xamarin.Android.Build.Tests
 			{
 				Name = name;
 				this.sourcePattern = sourcePattern;
+				conditionalSourcePattern = $"({sourcePattern}, {ReferenceTypeMetadata})";
 				this.constructedTypePattern = constructedTypePattern;
 				this.genericDictionaryPattern = genericDictionaryPattern;
 				this.genericDictionaryDependencyPattern = genericDictionaryDependencyPattern;
@@ -300,6 +307,18 @@ namespace Xamarin.Android.Build.Tests
 					label,
 					"SafeJavaCollectionFactory source",
 					ref sourceId) ? 1 : 0;
+				matchedRoles += ObserveNode (
+					label == conditionalSourcePattern,
+					id,
+					label,
+					"conditional factory dependency",
+					ref conditionalSourceId) ? 1 : 0;
+				matchedRoles += ObserveNode (
+					label == ReferenceTypeMetadata,
+					id,
+					label,
+					"IJavaPeerable type metadata",
+					ref referenceTypeMetadataId) ? 1 : 0;
 				matchedRoles += ObserveNode (
 					IsConstructedTypeLabel (label, constructedTypePattern),
 					id,
@@ -338,6 +357,10 @@ namespace Xamarin.Android.Build.Tests
 			public void ObserveLink (string source, string target, string reason)
 			{
 				sourceToConstructedType |= IsLink (source, target, reason, sourceId, constructedTypeId, "newobj");
+				// ILC may represent the type guard as a conditional dependency instead of a direct newobj edge.
+				conditionalSourceToConstructedType |= IsLink (source, target, reason, conditionalSourceId, constructedTypeId, "newobj");
+				sourceToConditionalSource |= IsLink (source, target, reason, sourceId, conditionalSourceId, "Primary");
+				metadataToConditionalSource |= IsLink (source, target, reason, referenceTypeMetadataId, conditionalSourceId, "Secondary");
 				constructedTypeToGenericDictionary |= IsLink (source, target, reason, constructedTypeId, genericDictionaryId, "reloc");
 				genericDictionaryToDependency |= IsLink (
 					source,
@@ -361,13 +384,12 @@ namespace Xamarin.Android.Build.Tests
 					constructorId,
 					"Generic dictionary dependency");
 
-				RejectUnexpectedIncoming (source, target, reason, constructedTypeId, sourceId, "newobj");
+				RejectUnexpectedIncoming (source, target, reason, constructedTypeId, sourceId, "newobj", conditionalSourceId, "newobj");
+				RejectUnexpectedIncoming (
+					source, target, reason, conditionalSourceId, sourceId, "Primary", referenceTypeMetadataId, "Secondary");
 				RejectUnexpectedIncoming (source, target, reason, genericDictionaryId, constructedTypeId, "reloc");
-				if (IsIncomingLink (target, genericDictionaryDependencyId) &&
-						!IsLink (source, target, reason, genericDictionaryId, genericDictionaryDependencyId, "Primary") &&
-						!IsLink (source, target, reason, canonicalConstructorId, genericDictionaryDependencyId, "Secondary")) {
-					unexpectedIncomingLinks.Add (FormatLink (source, target, reason));
-				}
+				RejectUnexpectedIncoming (
+					source, target, reason, genericDictionaryDependencyId, genericDictionaryId, "Primary", canonicalConstructorId, "Secondary");
 				RejectUnexpectedIncoming (
 					source,
 					target,
@@ -386,7 +408,13 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsNotEmpty (genericDictionaryDependencyId, $"{Name} IJavaPeerable constructor dictionary dependency was not found.");
 				Assert.IsNotEmpty (canonicalConstructorId, $"{Name} canonical compiled constructor node was not found.");
 				Assert.IsNotEmpty (constructorId, $"{Name} IJavaPeerable activation constructor node was not found.");
-				Assert.IsTrue (sourceToConstructedType, $"{Name} SafeJavaCollectionFactory newobj dependency was not found.");
+				Assert.IsTrue (
+					sourceToConstructedType || conditionalSourceToConstructedType,
+					$"{Name} SafeJavaCollectionFactory newobj dependency was not found.");
+				if (conditionalSourceToConstructedType) {
+					Assert.IsTrue (sourceToConditionalSource, $"{Name} conditional factory primary dependency was not found.");
+					Assert.IsTrue (metadataToConditionalSource, $"{Name} conditional factory metadata dependency was not found.");
+				}
 				Assert.IsTrue (constructedTypeToGenericDictionary, $"{Name} constructed-type relocation dependency was not found.");
 				Assert.IsTrue (genericDictionaryToDependency, $"{Name} generic dictionary primary dependency was not found.");
 				Assert.IsTrue (canonicalConstructorToDependency, $"{Name} canonical constructor secondary dependency was not found.");
@@ -413,10 +441,13 @@ namespace Xamarin.Android.Build.Tests
 				string reason,
 				string expectedTarget,
 				string expectedSource,
-				string expectedReason)
+				string expectedReason,
+				string alternativeSource = "",
+				string alternativeReason = "")
 			{
 				if (IsIncomingLink (target, expectedTarget) &&
-						!IsLink (source, target, reason, expectedSource, expectedTarget, expectedReason)) {
+						!IsLink (source, target, reason, expectedSource, expectedTarget, expectedReason) &&
+						!IsLink (source, target, reason, alternativeSource, expectedTarget, alternativeReason)) {
 					unexpectedIncomingLinks.Add (FormatLink (source, target, reason));
 				}
 			}
