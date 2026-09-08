@@ -93,7 +93,8 @@ sealed class BlobBuilderStream : Stream
 			int within = (int) (position - segmentStarts [index]);
 			int available = segment.Count - within;
 			int toCopy = Math.Min (available, count);
-			Buffer.BlockCopy (segment.Array, segment.Offset + within, buffer, offset, toCopy);
+			var source = segment.Array ?? throw new InvalidOperationException ("Blob segment has no backing array.");
+			Buffer.BlockCopy (source, segment.Offset + within, buffer, offset, toCopy);
 			position += toCopy;
 			offset += toCopy;
 			count -= toCopy;

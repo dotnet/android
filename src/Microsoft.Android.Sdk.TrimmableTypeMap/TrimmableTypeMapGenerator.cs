@@ -59,18 +59,21 @@ public class TrimmableTypeMapGenerator
 			frameworkAssemblyNames,
 			errorOnCustomJavaObject,
 			collectMarshalMethodsForNonAcw);
+		var manifestForRooting = PrepareManifestForRooting (manifestTemplate, manifestConfig);
 		if (allPeers.Count == 0) {
-			logger.LogNoJavaPeerTypesFound ();
+			if (ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass, manifestForRooting)) {
+				logger.LogNoJavaPeerTypesFound ();
+			}
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 		MarkFrameworkAssemblyPeers (allPeers, frameworkAssemblyNames);
 		bool validConstructors = ValidateConstructors (allPeers);
 
 		RootCustomViewTypes (allPeers, customViewTypeNames);
-		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig), manifestConfig?.ApplicationJavaClass);
+		RootManifestReferencedTypes (allPeers, manifestForRooting, manifestConfig?.ApplicationJavaClass);
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
-		bool validJavaNames = ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass);
+		bool validJavaNames = ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass, manifestForRooting);
 		if (!validConstructors || !validJavaNames) {
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
@@ -140,7 +143,10 @@ public class TrimmableTypeMapGenerator
 		return valid;
 	}
 
-	internal bool ValidateJavaNames (IReadOnlyList<JavaPeerInfo> peers, string? applicationJavaClass = null)
+	internal bool ValidateJavaNames (
+		IReadOnlyList<JavaPeerInfo> peers,
+		string? applicationJavaClass = null,
+		XDocument? manifest = null)
 	{
 		bool valid = true;
 		var reportedNames = new HashSet<string> (StringComparer.Ordinal);
@@ -163,14 +169,19 @@ public class TrimmableTypeMapGenerator
 			valid = false;
 		}
 		if (applicationJavaClass is not null &&
-				JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (applicationJavaClass, out var invalidApplicationIdentifier)) {
+				JavaNameValidator.TryGetInvalidJavaManifestTypeSegment (applicationJavaClass, out var invalidApplicationIdentifier)) {
 			ReportInvalidName (applicationJavaClass, invalidApplicationIdentifier);
 		}
+		ValidateManifestComponentNames ();
 		foreach (var peer in peers) {
 			if (!ShouldGenerateJcw (peer)) {
 				continue;
 			}
 			ReportInvalidJniName (peer.JavaName);
+			if (!peer.IsAbstract && peer.ComponentAttribute is not null &&
+					JavaNameValidator.TryGetInvalidJniManifestNameSegment (peer.JavaName, out var invalidManifestIdentifier)) {
+				ReportInvalidName (peer.JavaName, invalidManifestIdentifier);
+			}
 			if (peer.CannotRegisterInStaticConstructor &&
 					JavaNameValidator.TryGetInvalidJniSourceTypeSegment (peer.JavaName, out var invalidIdentifier)) {
 				ReportInvalidName (peer.JavaName, invalidIdentifier);
@@ -185,8 +196,7 @@ public class TrimmableTypeMapGenerator
 				ValidateJniSignature (constructor.JniSignature);
 				if (constructor.ThrownNames is not null) {
 					foreach (var thrownName in constructor.ThrownNames) {
-						var javaThrownName = JniSignatureHelper.JniNameToJavaName (thrownName);
-						if (JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (javaThrownName, out invalidIdentifier)) {
+						if (TryGetInvalidThrownNameSegment (thrownName, out invalidIdentifier)) {
 							ReportInvalidName (thrownName, invalidIdentifier);
 						}
 					}
@@ -198,15 +208,17 @@ public class TrimmableTypeMapGenerator
 				}
 				if (method.ThrownNames is not null) {
 					foreach (var thrownName in method.ThrownNames) {
-						var javaThrownName = JniSignatureHelper.JniNameToJavaName (thrownName);
-						if (JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (javaThrownName, out invalidIdentifier)) {
+						if (TryGetInvalidThrownNameSegment (thrownName, out invalidIdentifier)) {
 							ReportInvalidName (thrownName, invalidIdentifier);
 						}
 					}
 				}
 			}
 			foreach (var field in peer.JavaFields) {
-				if (JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (field.JavaTypeName, out invalidIdentifier)) {
+				bool invalid = field.JniTypeName is not null
+					? JavaNameValidator.TryGetInvalidJniTypeSegment (field.JniTypeName, out _, out invalidIdentifier)
+					: JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (field.JavaTypeName, out invalidIdentifier);
+				if (invalid) {
 					ReportInvalidName (field.JavaTypeName, invalidIdentifier);
 				}
 			}
@@ -219,6 +231,44 @@ public class TrimmableTypeMapGenerator
 				ReportInvalidJniType (parameter.JniType);
 			}
 			ReportInvalidJniType (JniSignatureHelper.ParseReturnTypeString (jniSignature));
+		}
+
+		static bool TryGetInvalidThrownNameSegment (string thrownName, out string invalidIdentifier) =>
+			thrownName.IndexOf ('/') >= 0
+				? JavaNameValidator.TryGetInvalidJniSourceTypeSegment (thrownName, out invalidIdentifier)
+				: JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (thrownName, out invalidIdentifier);
+
+		void ValidateManifestComponentNames ()
+		{
+			if (manifest?.Root is not { } root) {
+				return;
+			}
+
+			XNamespace androidNs = "http://schemas.android.com/apk/res/android";
+			XName attName = androidNs + "name";
+			string packageName = (string?) root.Attribute ("package") ?? "";
+			foreach (var element in root.Descendants ()) {
+				if (!ManifestConstants.ComponentElementNames.Contains (element.Name.LocalName)) {
+					continue;
+				}
+
+				if (element.Name.LocalName == "activity-alias") {
+					// An alias name is an arbitrary component identifier, not a Java type.
+					ValidateComponentName ((string?) element.Attribute (androidNs + "targetActivity"));
+				} else {
+					ValidateComponentName ((string?) element.Attribute (attName));
+				}
+			}
+
+			void ValidateComponentName (string? name)
+			{
+				if (name is not null) {
+					string resolvedName = ManifestNameResolver.Resolve (name, packageName);
+					if (JavaNameValidator.TryGetInvalidJavaManifestTypeSegment (resolvedName, out var invalidIdentifier)) {
+						ReportInvalidName (resolvedName, invalidIdentifier);
+					}
+				}
+			}
 		}
 
 		void ReportInvalidJniName (string jniName)
@@ -537,6 +587,12 @@ public class TrimmableTypeMapGenerator
 					}
 				}
 				break;
+			case "activity-alias":
+				var targetActivity = (string?) element.Attribute (androidNs + "targetActivity");
+				if (targetActivity is not null) {
+					componentNames.Add (ManifestNameResolver.Resolve (targetActivity, packageName));
+				}
+				break;
 			}
 		}
 
@@ -682,11 +738,8 @@ public class TrimmableTypeMapGenerator
 			return doc;
 		}
 
-		if (((string?) root.Attribute ("package")).IsNullOrEmpty () && !manifestConfig.PackageName.IsNullOrEmpty ()) {
-			root.SetAttributeValue ("package", manifestConfig.PackageName);
-		}
-
-		ManifestGenerator.ApplyPlaceholders (doc, manifestConfig.ManifestPlaceholders);
+		ManifestGenerator.ResolvePackageName (root, manifestConfig.PackageName);
+		ManifestGenerator.ApplyPlaceholders (doc, manifestConfig.ManifestPlaceholders, manifestConfig.PackageName);
 
 		if (!manifestConfig.ApplicationJavaClass.IsNullOrEmpty ()) {
 			var app = root.Element ("application");
