@@ -38,6 +38,9 @@ steps:
 - task: Cache@2
   displayName: cache Android toolchain archives
   condition: ${{ parameters.condition }}
+  # The cache service is an optimization. If it is unavailable or rate-limited,
+  # continue with the SHA-verified source downloads instead of failing the job.
+  continueOnError: true
   inputs:
     key: '"android-archives" | "v1" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/Configuration.props | ${{ parameters.xaSourcePath }}/src/androidsdk/androidsdk.targets | ${{ parameters.xaSourcePath }}/src/openjdk/openjdk.targets | ${{ parameters.xaSourcePath }}/src/binutils/binutils.targets | ${{ parameters.xaSourcePath }}/src/aapt2/aapt2.targets | ${{ parameters.xaSourcePath }}/src/bundletool/bundletool.targets'
     restoreKeys: |

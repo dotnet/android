@@ -110,7 +110,14 @@ steps:
     project: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
     arguments: -t:ExtractWorkloadPacks -c ${{ parameters.configuration }} -v:n -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog
     continueOnError: false
-    retryCountOnTaskFailure: 2
+    retryCountOnTaskFailure: 1
+    taskTimeoutInMinutes: 20
+    env:
+      NUGET_RETRY_HTTP_429: 'true'
+      NUGET_OBSERVE_RETRY_AFTER: 'true'
+      NUGET_MAX_RETRY_AFTER_DELAY_SECONDS: '60'
+      NUGET_ENHANCED_MAX_NETWORK_TRY_COUNT: '4'
+      NUGET_ENHANCED_NETWORK_RETRY_DELAY_MILLISECONDS: '2000'
 
 - ${{ if eq(parameters.installApkDiff, true) }}:
   - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
