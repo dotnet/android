@@ -140,6 +140,17 @@ namespace System.NetTests {
 			return false;
 		}
 
+		[TestCase (SocketError.HostNotFound, true)]
+		[TestCase (SocketError.NoData, true)]
+		[TestCase (SocketError.NetworkUnreachable, true)]
+		[TestCase (SocketError.HostUnreachable, true)]
+		[TestCase (SocketError.TimedOut, false)]
+		[TestCase (SocketError.ConnectionReset, false)]
+		public void ExternalConnectivityFailureClassification (SocketError socketError, bool expected)
+		{
+			Assert.AreEqual (expected, IsExternalConnectivityFailure (socketError));
+		}
+
 		void RunIgnoringWebException (Action test)
 		{
 			Exception ex = null;
