@@ -1,8 +1,10 @@
 #nullable enable
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text;
 using Android.Runtime;
 using Java.Interop;
 
@@ -57,12 +59,41 @@ static class JniRemappingLookup
 	}
 
 	internal static JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (string jniSourceType, string jniMethodName, string jniMethodSignature)
+		=> GetReplacementMethodInfo (jniSourceType, jniMethodName.AsSpan (), jniMethodSignature.AsSpan ());
+
+	internal static unsafe JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (string jniSourceType, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 	{
 		if (!JNIEnvInit.jniRemappingInUse) {
 			return null;
 		}
 
-		IntPtr retInfo = RuntimeNativeMethods._monodroid_lookup_replacement_method_info (jniSourceType, jniMethodName, jniMethodSignature);
+		int nameLength = checked (Encoding.UTF8.GetByteCount (jniMethodName) + 1);
+		int signatureLength = checked (Encoding.UTF8.GetByteCount (jniMethodSignature) + 1);
+		byte[]? rentedName = null;
+		byte[]? rentedSignature = null;
+		IntPtr retInfo;
+		try {
+			Span<byte> nameBuffer = nameLength <= 512
+				? stackalloc byte [nameLength]
+				: rentedName = ArrayPool<byte>.Shared.Rent (nameLength);
+			Span<byte> signatureBuffer = signatureLength <= 512
+				? stackalloc byte [signatureLength]
+				: rentedSignature = ArrayPool<byte>.Shared.Rent (signatureLength);
+			Encoding.UTF8.GetBytes (jniMethodName, nameBuffer);
+			nameBuffer [nameLength - 1] = 0;
+			Encoding.UTF8.GetBytes (jniMethodSignature, signatureBuffer);
+			signatureBuffer [signatureLength - 1] = 0;
+
+			fixed (byte* name = nameBuffer)
+			fixed (byte* signature = signatureBuffer) {
+				retInfo = RuntimeNativeMethods._monodroid_lookup_replacement_method_info (jniSourceType, name, signature);
+			}
+		} finally {
+			if (rentedName != null)
+				ArrayPool<byte>.Shared.Return (rentedName);
+			if (rentedSignature != null)
+				ArrayPool<byte>.Shared.Return (rentedSignature);
+		}
 		if (retInfo == IntPtr.Zero) {
 			return null;
 		}
@@ -72,12 +103,13 @@ static class JniRemappingLookup
 			$"JNI remapping entry for `{jniSourceType}.{jniMethodName}{jniMethodSignature}` is missing a target type.");
 		var targetName = method.target_name ?? throw new InvalidOperationException (
 			$"JNI remapping entry for `{jniSourceType}.{jniMethodName}{jniMethodSignature}` is missing a target method name.");
-		var newSignature = jniMethodSignature;
+		var sourceSignature = jniMethodSignature.ToString ();
+		var newSignature = sourceSignature;
 
 		int? paramCount = null;
 		if (method.is_static) {
-			paramCount = JniMemberSignature.GetParameterCountFromMethodSignature (jniMethodSignature) + 1;
-			newSignature = $"(L{jniSourceType};" + jniMethodSignature.Substring ("(".Length);
+			paramCount = JniMemberSignature.GetParameterCountFromMethodSignature (sourceSignature) + 1;
+			newSignature = $"(L{jniSourceType};" + sourceSignature.Substring ("(".Length);
 		}
 
 		if (Logger.LogAssembly) {
@@ -89,8 +121,8 @@ static class JniRemappingLookup
 
 		return new JniRuntime.ReplacementMethodInfo {
 				SourceJniType                   = jniSourceType,
-				SourceJniMethodName             = jniMethodName,
-				SourceJniMethodSignature        = jniMethodSignature,
+				SourceJniMethodName             = jniMethodName.ToString (),
+				SourceJniMethodSignature        = sourceSignature,
 				TargetJniType                   = targetType,
 				TargetJniMethodName             = targetName,
 				TargetJniMethodSignature        = newSignature,

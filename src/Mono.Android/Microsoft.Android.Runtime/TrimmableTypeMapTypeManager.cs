@@ -5,7 +5,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using Android.Runtime;
 using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
@@ -383,9 +382,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		=> JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
 
 	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
-		=> JNIEnvInit.jniRemappingInUse
-			? GetReplacementMethodInfoCore (jniSourceType, jniMethodName.ToString (), jniMethodSignature.ToString ())
-			: null;
+		=> JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
 
 	// The rest of the APIs are unsupported - they are not needed internally anywhere anyway
 

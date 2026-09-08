@@ -388,9 +388,7 @@ namespace Android.Runtime {
 
 		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 		{
-			return JNIEnvInit.jniRemappingInUse
-				? GetReplacementMethodInfoCore (jniSourceType, jniMethodName.ToString (), jniMethodSignature.ToString ())
-				: null;
+			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
 		}
 
 		protected override Type? GetInvokerTypeCore (Type type)
