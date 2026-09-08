@@ -13,6 +13,8 @@ param (
 	[string] $RuntimeIdentifier,
 	[int] $DeviceRecoveryTimeoutSeconds = 30,
 	[int] $AndroidReadyTimeoutSeconds = 120,
+	[ValidateRange(1, 540)]
+	[int] $OverallTimeoutSeconds = 540,
 	[int] $PollIntervalMilliseconds = 2000,
 	[int] $RebootInitialDelayMilliseconds = 5000,
 	[int] $LaunchWaitMilliseconds = 10000,
@@ -43,6 +45,8 @@ $selectedSerial = $null
 $applicationInstalled = $false
 $failureDiagnosticsCaptured = $false
 $exitCode = 0
+$workItemDeadline = [DateTime]::UtcNow.AddSeconds($OverallTimeoutSeconds)
+$commandResultCounts = @{}
 
 function ConvertTo-ProcessArgument ([string] $Argument)
 {
@@ -66,9 +70,49 @@ function Test-ContainsIgnoreCase ([string] $Value, [string] $Expected)
 	return $Value.IndexOf($Expected, [StringComparison]::OrdinalIgnoreCase) -ge 0
 }
 
+function Get-RemainingWorkItemMilliseconds
+{
+	$remaining = [Math]::Floor(($workItemDeadline - [DateTime]::UtcNow).TotalMilliseconds)
+	if ($remaining -le 0) {
+		return 0
+	}
+	return [int][Math]::Min($remaining, [int]::MaxValue)
+}
+
+function Throw-WorkItemDeadlineExceeded ([string] $Operation)
+{
+	throw "MAUI R2R Helix work item reached its $OverallTimeoutSeconds-second end-to-end deadline while $Operation. No additional recovery was attempted, leaving time for final error handling before the 10-minute Helix timeout."
+}
+
+function Start-BoundedSleep ([int] $Milliseconds, [string] $Operation)
+{
+	if ($Milliseconds -le 0) {
+		return
+	}
+
+	$remaining = Get-RemainingWorkItemMilliseconds
+	if ($remaining -le 0) {
+		Throw-WorkItemDeadlineExceeded $Operation
+	}
+
+	$sleepMilliseconds = [Math]::Min($Milliseconds, $remaining)
+	Start-Sleep -Milliseconds $sleepMilliseconds
+	if ($sleepMilliseconds -lt $Milliseconds) {
+		Throw-WorkItemDeadlineExceeded $Operation
+	}
+}
+
 function Write-CommandResult ([string] $Name, [string []] $Arguments, $Result)
 {
 	$safeName = $Name -replace '[^A-Za-z0-9_.-]', '-'
+	$count = 1
+	if ($commandResultCounts.ContainsKey($safeName)) {
+		$count = $commandResultCounts[$safeName] + 1
+	}
+	$script:commandResultCounts[$safeName] = $count
+	if ($count -gt 1) {
+		$safeName = "$safeName-attempt-$count"
+	}
 	$path = Join-Path $uploadDirectory "$safeName.log"
 	$content = @(
 		"Command: adb $($Arguments -join ' ')",
@@ -89,6 +133,7 @@ function Invoke-Adb ([string []] $Arguments, [int] $TimeoutSeconds = 30, [switch
 	$stderrPath = Join-Path ([IO.Path]::GetTempPath()) "$([IO.Path]::GetRandomFileName()).stderr"
 	$process = $null
 	$timedOut = $false
+	$deadlineLimited = $false
 
 	if ($AdbPath.EndsWith('.ps1', [StringComparison]::OrdinalIgnoreCase)) {
 		$filePath = $powerShellExe
@@ -104,10 +149,16 @@ function Invoke-Adb ([string []] $Arguments, [int] $TimeoutSeconds = 30, [switch
 	}
 
 	try {
+		if ((Get-RemainingWorkItemMilliseconds) -le 0) {
+			Throw-WorkItemDeadlineExceeded "starting 'adb $($Arguments -join ' ')'"
+		}
 		$process = Start-Process -FilePath $filePath -ArgumentList $argumentList -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath -NoNewWindow -PassThru
 		# Windows PowerShell requires the process handle to be cached before waiting when output is redirected.
 		$null = $process.Handle
-		$timeoutMilliseconds = [Math]::Max(1, $TimeoutSeconds * 1000)
+		$requestedTimeoutMilliseconds = [Math]::Max(1, $TimeoutSeconds * 1000)
+		$remainingMilliseconds = Get-RemainingWorkItemMilliseconds
+		$deadlineLimited = $remainingMilliseconds -lt $requestedTimeoutMilliseconds
+		$timeoutMilliseconds = [Math]::Max(1, [Math]::Min($requestedTimeoutMilliseconds, $remainingMilliseconds))
 		if (-not $process.WaitForExit($timeoutMilliseconds)) {
 			$timedOut = $true
 			try {
@@ -138,13 +189,17 @@ function Invoke-Adb ([string []] $Arguments, [int] $TimeoutSeconds = 30, [switch
 				Write-Host $standardError.TrimEnd()
 			}
 		}
-
-		return [pscustomobject]@{
+		$result = [pscustomobject]@{
 			ExitCode = $commandExitCode
 			StandardOutput = $standardOutput
 			StandardError = $standardError
 			TimedOut = $timedOut
 		}
+		if ($timedOut -and $deadlineLimited) {
+			Write-CommandResult "overall-deadline-$ConfigurationName" $Arguments $result
+			Throw-WorkItemDeadlineExceeded "running 'adb $($Arguments -join ' ')'"
+		}
+		return $result
 	} finally {
 		Remove-Item -LiteralPath $stdoutPath, $stderrPath -Force -ErrorAction Ignore
 		if ($process) {
@@ -266,7 +321,7 @@ function Wait-ForReadyDevice ([int] $TimeoutSeconds, [string] $Name, [string] $E
 		if ([DateTime]::UtcNow -ge $deadline) {
 			return $selection
 		}
-		Start-Sleep -Milliseconds $PollIntervalMilliseconds
+		Start-BoundedSleep $PollIntervalMilliseconds 'waiting for an authorized Android device'
 	} while ($true)
 }
 
@@ -312,7 +367,7 @@ function Wait-ForAndroidReady ([string] $Serial, [string] $Name)
 			Write-CommandResult "android-package-manager-$ConfigurationName-$Name" $packageArguments $packageResult
 			return $false
 		}
-		Start-Sleep -Milliseconds $PollIntervalMilliseconds
+		Start-BoundedSleep $PollIntervalMilliseconds 'waiting for Android and its package manager'
 	} while ($true)
 }
 
@@ -367,7 +422,7 @@ function Restart-AndroidDevice ([string] $Serial)
 		throw "MAUI R2R Helix infrastructure failure: adb reboot failed with exit code $($result.ExitCode)."
 	}
 
-	Start-Sleep -Milliseconds $RebootInitialDelayMilliseconds
+	Start-BoundedSleep $RebootInitialDelayMilliseconds 'waiting for the recovery reboot to begin'
 	$selection = Wait-ForReadyDevice $AndroidReadyTimeoutSeconds 'post-device-reboot' $Serial
 	if (-not $selection.Ready) {
 		throw "MAUI R2R Helix infrastructure failure: Android device '$Serial' did not reconnect after its one recovery reboot. The Helix device-lab owner must repair or quarantine it."
@@ -510,6 +565,7 @@ try {
 		"RuntimeIdentifier: $RuntimeIdentifier",
 		"PackageName: $PackageName",
 		"APK: $ApkPath",
+		"OverallTimeoutSeconds: $OverallTimeoutSeconds",
 		"Machine: $env:COMPUTERNAME"
 	) | Set-Content -LiteralPath $scenarioPath -Encoding ASCII
 
@@ -543,7 +599,7 @@ try {
 		throw "Launching the MAUI R2R APK failed with exit code $($launchResult.ExitCode)."
 	}
 
-	Start-Sleep -Milliseconds $LaunchWaitMilliseconds
+	Start-BoundedSleep $LaunchWaitMilliseconds 'waiting for the launched MAUI R2R application'
 	$pidArguments = @('-s', $selectedSerial, 'shell', 'pidof', $PackageName)
 	$pidResult = Invoke-Adb $pidArguments -TimeoutSeconds 30
 	Write-CommandResult "pidof-$ConfigurationName" $pidArguments $pidResult

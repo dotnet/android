@@ -64,8 +64,12 @@ Add-Content -LiteralPath $transcriptPath -Value $command -Encoding ASCII
 $serverRestarted = [bool]($previousCommands | Where-Object { $_ -eq 'start-server' })
 $deviceRebooted = [bool]($previousCommands | Where-Object { $_ -match '^-s test-device reboot$' })
 $targetUninstalled = [bool]($previousCommands | Where-Object { $_ -match '^-s test-device uninstall com\.xamarin\.mauir2r\.' })
+$deviceQueryCount = @($previousCommands | Where-Object { $_ -eq 'devices -l' }).Count
 
 if ($command -eq 'version') {
+	if ($scenario -eq 'overall-timeout') {
+		Start-Sleep -Seconds 5
+	}
 	Write-Output 'Android Debug Bridge version 1.0.41'
 	exit 0
 }
@@ -75,6 +79,13 @@ if ($command -eq 'devices -l') {
 	switch ($scenario) {
 		'recover-device' {
 			if ($serverRestarted) {
+				Write-Output 'test-device             device product:test model:Test_Device device:test transport_id:1'
+			} else {
+				Write-Output 'test-device             unauthorized transport_id:1'
+			}
+		}
+		'recover-device-after-polls' {
+			if ($serverRestarted -and $deviceQueryCount -ge 3) {
 				Write-Output 'test-device             device product:test model:Test_Device device:test transport_id:1'
 			} else {
 				Write-Output 'test-device             unauthorized transport_id:1'
@@ -212,7 +223,7 @@ if ($command -eq '-s test-device logcat -d -b all') {
 exit 2
 '@ | Set-Content -LiteralPath $fakeAdb -Encoding ASCII
 
-	function Invoke-TestCase ([string] $Name, [int] $ExpectedExitCode, [bool] $SkipDiagnostics = $true)
+	function Invoke-TestCase ([string] $Name, [int] $ExpectedExitCode, [bool] $SkipDiagnostics = $true, [int] $DeviceTimeoutSeconds = 0, [int] $OverallTimeoutSeconds = 540)
 	{
 		$caseDirectory = Join-Path $testRoot $Name
 		New-Item -ItemType Directory -Path $caseDirectory | Out-Null
@@ -235,8 +246,9 @@ exit 2
 			-ScenarioName $Name `
 			-ConfigurationName $Name `
 			-RuntimeIdentifier 'android-arm64' `
-			-DeviceRecoveryTimeoutSeconds 0 `
+			-DeviceRecoveryTimeoutSeconds $DeviceTimeoutSeconds `
 			-AndroidReadyTimeoutSeconds 0 `
+			-OverallTimeoutSeconds $OverallTimeoutSeconds `
 			-PollIntervalMilliseconds 0 `
 			-RebootInitialDelayMilliseconds 0 `
 			-LaunchWaitMilliseconds 0 `
@@ -267,6 +279,10 @@ exit 2
 	Assert-MatchCount $recoveredDevice.Transcript '^kill-server$' 1 'Device enumeration recovery must restart the ADB server only once.'
 	Assert-MatchCount $recoveredDevice.Transcript '^start-server$' 1 'Device enumeration recovery must restart the ADB server only once.'
 	Assert-MatchCount $recoveredDevice.Transcript ' install -r ' 1 'Recovered device flow must install once.'
+
+	$recoveredAfterPolls = Invoke-TestCase 'recover-device-after-polls' 0 $true 5
+	$pollSnapshots = @(Get-ChildItem -LiteralPath $recoveredAfterPolls.Directory -Filter 'adb-devices-recover-device-after-polls-post-adb-restart*.log')
+	Assert-Equal 3 $pollSnapshots.Count 'Each device recovery poll must preserve a separate adb devices snapshot.'
 
 	$unauthorized = Invoke-TestCase 'unauthorized' 1
 	Assert-MatchCount $unauthorized.Transcript '^kill-server$' 1 'Unauthorized device flow must attempt one ADB server restart.'
@@ -307,6 +323,11 @@ exit 2
 	$pidMissing = Invoke-TestCase 'pid-missing' 1
 	Assert-Contains $pidMissing.Output 'did not remain running after launch' "Empty pidof output must report the smoke-test failure instead of a null-reference error. Output: $($pidMissing.Output -join ' | ')"
 	Assert-NotContains $pidMissing.Output 'null-valued expression' 'Empty adb output must remain a non-null string.'
+
+	$overallTimeout = Invoke-TestCase 'overall-timeout' 1 $true 0 1
+	Assert-MatchCount $overallTimeout.Transcript '^version$' 1 'The end-to-end deadline must stop the hanging adb command without starting later operations.'
+	Assert-Contains $overallTimeout.Output 'reached its 1-second end-to-end deadline' 'The end-to-end deadline must fail explicitly before the outer Helix timeout.'
+	Assert-Equal 1 @(Get-ChildItem -LiteralPath $overallTimeout.Directory -Filter 'overall-deadline-overall-timeout.log').Count 'The command that consumes the end-to-end deadline must retain its diagnostic transcript.'
 
 	Write-Host 'MAUI R2R Helix recovery tests passed.'
 	$suitePassed = $true

@@ -193,7 +193,7 @@ steps:
 
       $script = @"
       @echo on
-      powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0RunMauiR2RHelix.ps1" -AdbPath "%~dp0platform-tools\adb.exe" -ApkPath "%~dp0$apkName" -PackageName "$packageName" -ScenarioName "${{ testCase.displayName }}" -ConfigurationName "${{ testCase.name }}" -RuntimeIdentifier "$runtimeIdentifier"
+      powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0RunMauiR2RHelix.ps1" -AdbPath "%~dp0platform-tools\adb.exe" -ApkPath "%~dp0$apkName" -PackageName "$packageName" -ScenarioName "${{ testCase.displayName }}" -ConfigurationName "${{ testCase.name }}" -RuntimeIdentifier "$runtimeIdentifier" -OverallTimeoutSeconds 540
       exit /b %ERRORLEVEL%
       "@
 
