@@ -1911,8 +1911,19 @@ hardware-specific optimizations in the JIT or tiered compilation.
 
 An explicit `--instruction-set` option in
 `$(PublishReadyToRunCrossgen2ExtraArgs)` overrides this default.
-For composite compilation, an instruction-set option in
-`$(PublishReadyToRunCrossgen2CompositeExtraArgs)` is also respected.
+For composite builds, an instruction-set option in
+`$(PublishReadyToRunCrossgen2CompositeExtraArgs)` also opts the entire
+build out of this default, including assemblies in
+`@(PublishReadyToRunCompositeExclusions)`. The .NET SDK concatenates the
+normal and composite arguments for the composite image, and crossgen2
+does not accept multiple `--instruction-set` options.
+
+To apply an instruction-set policy to both the composite image and
+excluded assemblies, set it in
+`$(PublishReadyToRunCrossgen2ExtraArgs)`, not in the composite-only
+arguments. For example, `--instruction-set:-optimistic` in the normal
+arguments keeps both conservative. Do not specify the option in both
+argument properties.
 
 For more information, see
 [Runtimes and compilation in .NET MAUI][maui-runtimes-compilation].

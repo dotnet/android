@@ -75,7 +75,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
 			proj.SetProperty ("PublishReadyToRunComposite", isComposite.ToString ());
 
-			var b = CreateApkBuilder ();
+			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			if (rid == "android-arm64") {
 				StringAssertEx.Contains ("--instruction-set:-optimistic", b.LastBuildOutput);
@@ -111,6 +111,7 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("android-arm64", true, true, "--partial;--instruction-set:armv8-a", "", "--partial;--instruction-set:armv8-a")]
 		[TestCase ("android-arm64", true, true, "--instruction-set armv8-a", "", "--instruction-set armv8-a")]
 		[TestCase ("android-arm64", true, true, "--instruction-set:-optimistic", "", "--instruction-set:-optimistic")]
+		[TestCase ("android-arm64", true, true, "", "--instruction-set:-optimistic", "")]
 		[TestCase ("android-arm64", true, true, "--partial", "--instruction-set:armv8-a", "--partial")]
 		[TestCase ("android-arm64", true, false, "--partial", "--instruction-set:armv8-a", "--partial;--instruction-set:-optimistic")]
 		[TestCase ("android-arm64", false, false, "--map", "", "--map")]
@@ -131,6 +132,9 @@ namespace Xamarin.Android.Build.Tests
 					    <PublishReadyToRunCrossgen2ExtraArgs>{extraArgs}</PublishReadyToRunCrossgen2ExtraArgs>
 					    <PublishReadyToRunCrossgen2CompositeExtraArgs>{compositeArgs}</PublishReadyToRunCrossgen2CompositeExtraArgs>
 					  </PropertyGroup>
+					  <ItemGroup>
+					    <PublishReadyToRunCompositeExclusions Include="Excluded.dll" />
+					  </ItemGroup>
 					  <Target Name="CheckReadyToRunArguments" DependsOnTargets="_AndroidSetReadyToRunInstructionSet">
 					    <Error Condition=" '$(PublishReadyToRunCrossgen2ExtraArgs)' != '{expected}' "
 					        Text="Unexpected crossgen2 arguments: $(PublishReadyToRunCrossgen2ExtraArgs)" />
