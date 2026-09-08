@@ -77,6 +77,11 @@ namespace Xamarin.Android.Build.Tests
 
 			var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			if (rid == "android-arm64") {
+				StringAssertEx.Contains ("--instruction-set:-optimistic", b.LastBuildOutput);
+			} else {
+				StringAssertEx.DoesNotContain ("--instruction-set:-optimistic", b.LastBuildOutput);
+			}
 
 			var assemblyName = proj.ProjectName;
 			var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, rid, $"{proj.PackageName}-Signed.apk");
@@ -99,6 +104,45 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.Contains ("@compressed_assembly_descriptors = dso_local local_unnamed_addr global [0 x %struct.CompressedAssemblyDescriptor] zeroinitializer, align 4", compressedAssembliesSourceText);
 			StringAssert.Contains ("@uncompressed_assemblies_data_size = dso_local local_unnamed_addr constant i32 0, align 4", compressedAssembliesSourceText);
 			StringAssert.Contains ("@uncompressed_assemblies_data_buffer = dso_local local_unnamed_addr global [0 x i8] zeroinitializer, align 1", compressedAssembliesSourceText);
+		}
+
+		[TestCase ("android-arm64", true, true, "", "", ";--instruction-set:-optimistic")]
+		[TestCase ("android-arm64", true, false, "--partial;--map", "", "--partial;--map;--instruction-set:-optimistic")]
+		[TestCase ("android-arm64", true, true, "--partial;--instruction-set:armv8-a", "", "--partial;--instruction-set:armv8-a")]
+		[TestCase ("android-arm64", true, true, "--instruction-set armv8-a", "", "--instruction-set armv8-a")]
+		[TestCase ("android-arm64", true, true, "--instruction-set:-optimistic", "", "--instruction-set:-optimistic")]
+		[TestCase ("android-arm64", true, true, "--partial", "--instruction-set:armv8-a", "--partial")]
+		[TestCase ("android-arm64", true, false, "--partial", "--instruction-set:armv8-a", "--partial;--instruction-set:-optimistic")]
+		[TestCase ("android-arm64", false, false, "--map", "", "--map")]
+		[TestCase ("android-x64", true, true, "--partial", "", "--partial")]
+		public void ReadyToRunInstructionSet (string rid, bool readyToRun, bool composite, string extraArgs, string compositeArgs, string expected)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("RuntimeIdentifier", rid);
+			proj.SetProperty ("PublishReadyToRun", readyToRun.ToString ());
+			proj.SetProperty ("PublishReadyToRunComposite", composite.ToString ());
+			proj.Imports.Add (new Import ("CrossgenArguments.targets") {
+				TextContent = () => $"""
+					<Project>
+					  <PropertyGroup>
+					    <PublishReadyToRunCrossgen2ExtraArgs>{extraArgs}</PublishReadyToRunCrossgen2ExtraArgs>
+					    <PublishReadyToRunCrossgen2CompositeExtraArgs>{compositeArgs}</PublishReadyToRunCrossgen2CompositeExtraArgs>
+					  </PropertyGroup>
+					  <Target Name="CheckReadyToRunArguments" DependsOnTargets="_AndroidSetReadyToRunInstructionSet">
+					    <Error Condition=" '$(PublishReadyToRunCrossgen2ExtraArgs)' != '{expected}' "
+					        Text="Unexpected crossgen2 arguments: $(PublishReadyToRunCrossgen2ExtraArgs)" />
+					    <Error Condition=" '$(PublishReadyToRunCrossgen2CompositeExtraArgs)' != '{compositeArgs}' "
+					        Text="Composite crossgen2 arguments were changed." />
+					  </Target>
+					</Project>
+					""",
+			});
+			using var builder = CreateApkBuilder ();
+			builder.Target = "CheckReadyToRunArguments";
+			Assert.IsTrue (builder.Build (proj), "ReadyToRun arguments should preserve explicit instruction-set choices and other flags.");
 		}
 
 		[Test]
