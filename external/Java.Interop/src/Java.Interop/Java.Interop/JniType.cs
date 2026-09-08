@@ -534,24 +534,28 @@ namespace Java.Interop {
 
 			// Match StringToCoTaskMemUTF8, including unpaired-surrogate replacement
 			// and embedded-NUL termination, rather than changing to JNI modified UTF-8.
-			int nameLength = Encoding.UTF8.GetByteCount (name);
-			int signatureLength = Encoding.UTF8.GetByteCount (signature);
-			int bufferLength = checked (nameLength + signatureLength + 2);
-			byte[]? rented = null;
-			Span<byte> buffer = bufferLength <= 512
-				? stackalloc byte [bufferLength]
-				: rented = ArrayPool<byte>.Shared.Rent (bufferLength);
+			int nameLength = checked (Encoding.UTF8.GetByteCount (name) + 1);
+			int signatureLength = checked (Encoding.UTF8.GetByteCount (signature) + 1);
+			byte[]? rentedName = null;
+			byte[]? rentedSignature = null;
 			try {
-				Encoding.UTF8.GetBytes (name, buffer);
-				buffer [nameLength] = 0;
-				Encoding.UTF8.GetBytes (signature, buffer.Slice (nameLength + 1));
-				buffer [nameLength + 1 + signatureLength] = 0;
+				Span<byte> nameBuffer = nameLength <= 512
+					? stackalloc byte [nameLength]
+					: rentedName = ArrayPool<byte>.Shared.Rent (nameLength);
+				Span<byte> signatureBuffer = signatureLength <= 512
+					? stackalloc byte [signatureLength]
+					: rentedSignature = ArrayPool<byte>.Shared.Rent (signatureLength);
+				Encoding.UTF8.GetBytes (name, nameBuffer);
+				nameBuffer [nameLength - 1] = 0;
+				Encoding.UTF8.GetBytes (signature, signatureBuffer);
+				signatureBuffer [signatureLength - 1] = 0;
 
 				var env = JniEnvironment.EnvironmentPointer;
 				IntPtr id;
-				fixed (byte* start = buffer) {
-					var namePtr = (IntPtr) start;
-					var signaturePtr = (IntPtr) (start + nameLength + 1);
+				fixed (byte* nameStart = nameBuffer)
+				fixed (byte* signatureStart = signatureBuffer) {
+					var namePtr = (IntPtr) nameStart;
+					var signaturePtr = (IntPtr) signatureStart;
 					id = kind switch {
 						MemberKind.InstanceMethod => JniNativeMethods.GetMethodID (env, PeerReference.Handle, namePtr, signaturePtr),
 						MemberKind.StaticMethod => JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, namePtr, signaturePtr),
@@ -577,8 +581,10 @@ namespace Java.Interop {
 					throw new InvalidOperationException ("Should not be reached; JNI member lookup should have thrown!");
 				return id;
 			} finally {
-				if (rented != null)
-					ArrayPool<byte>.Shared.Return (rented);
+				if (rentedName != null)
+					ArrayPool<byte>.Shared.Return (rentedName);
+				if (rentedSignature != null)
+					ArrayPool<byte>.Shared.Return (rentedSignature);
 			}
 		}
 	}
