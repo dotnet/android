@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Serialize all projects that invoke the shared Gradle wrapper. -->
+    <ProjectReference Include="..\..\external\Java.Interop\tools\java-source-utils\java-source-utils.csproj" ReferenceOutputAssembly="False" />
     <ProjectReference Include="..\androidsdk\androidsdk.csproj" ReferenceOutputAssembly="False" />
   </ItemGroup>
   
