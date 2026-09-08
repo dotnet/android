@@ -53,6 +53,7 @@ function Invoke-CaptureTest {
 
 $testDirectory = Join-Path ([IO.Path]::GetTempPath()) "CaptureLogcat.Tests-$([IO.Path]::GetRandomFileName())"
 $fakeAdbScript = Join-Path $testDirectory 'FakeAdb.ps1'
+$descendantPidPath = Join-Path $testDirectory 'descendant.pid'
 New-Item -ItemType Directory -Force -Path $testDirectory | Out-Null
 
 try {
@@ -103,6 +104,26 @@ switch ($args[0]) {
 				[Console]::Out.Flush()
 				[Console]::Error.WriteLine('burst stderr marker')
 				[Console]::Error.Flush()
+				exit 0
+			}
+			'inherited-pipe' {
+				$descendantInfo = [Diagnostics.ProcessStartInfo]::new()
+				$descendantInfo.FileName = (Get-Process -Id $PID).Path
+				$descendantInfo.UseShellExecute = $false
+				$descendantInfo.CreateNoWindow = $true
+				$descendantInfo.ArgumentList.Add('-NoLogo')
+				$descendantInfo.ArgumentList.Add('-NoProfile')
+				$descendantInfo.ArgumentList.Add('-Command')
+				$descendantInfo.ArgumentList.Add('[Console]::Out.WriteLine(''descendant inherited output''); [Console]::Out.Flush(); Start-Sleep -Seconds 30')
+				$descendant = [Diagnostics.Process]::new()
+				$descendant.StartInfo = $descendantInfo
+				if (-not $descendant.Start()) {
+					exit 68
+				}
+				Set-Content -LiteralPath $env:FAKE_ADB_DESCENDANT_PID_PATH -Value $descendant.Id -Encoding ASCII
+				$descendant.Dispose()
+				[Console]::Out.WriteLine('parent output before inherited-pipe exit')
+				[Console]::Out.Flush()
 				exit 0
 			}
 			'fail' {
@@ -168,6 +189,14 @@ exec "__POWERSHELL__" -NoLogo -NoProfile -File "__SCRIPT__" "$@"
 		}
 	}
 
+	$env:FAKE_ADB_DESCENDANT_PID_PATH = $descendantPidPath
+	$result = Invoke-CaptureTest -Name 'inherited-pipe' -DevicesMode 'device' -LogcatMode 'inherited-pipe'
+	Assert-True ($result.ExitCode -eq 0) "Inherited-pipe capture exited with $($result.ExitCode)."
+	Assert-True ($result.Elapsed.TotalSeconds -lt 15) "Inherited-pipe capture took $($result.Elapsed.TotalSeconds) seconds."
+	Assert-True ($result.Output -match '##vso\[task.logissue type=warning\].*logcat capture output was incomplete') "Inherited-pipe capture did not emit the expected warning: $($result.Output)"
+	Assert-True ($result.Output -match 'output did not finish draining within 2 seconds') "Inherited-pipe capture did not exercise the bounded drain timeout: $($result.Output)"
+	Assert-True ((Get-Content -LiteralPath $result.Destination -Raw) -match 'parent output before inherited-pipe exit') 'Inherited-pipe capture did not preserve output written before the parent exited.'
+
 	$result = Invoke-CaptureTest -Name 'no-device' -DevicesMode 'none' -LogcatMode 'success'
 	Assert-True ($result.ExitCode -eq 0) "No-device capture exited with $($result.ExitCode)."
 	Assert-True ($result.Output -match 'logcat capture skipped: no connected device') "No-device capture did not report the skip: $($result.Output)"
@@ -202,5 +231,25 @@ exec "__POWERSHELL__" -NoLogo -NoProfile -File "__SCRIPT__" "$@"
 } finally {
 	Remove-Item Env:FAKE_ADB_DEVICES_MODE -ErrorAction Ignore
 	Remove-Item Env:FAKE_ADB_LOGCAT_MODE -ErrorAction Ignore
+	Remove-Item Env:FAKE_ADB_DESCENDANT_PID_PATH -ErrorAction Ignore
+	if (Test-Path -LiteralPath $descendantPidPath) {
+		$descendantProcessId = [int] (Get-Content -LiteralPath $descendantPidPath -Raw)
+		$descendantProcess = $null
+		try {
+			$descendantProcess = [Diagnostics.Process]::GetProcessById($descendantProcessId)
+			if (-not $descendantProcess.HasExited) {
+				$descendantProcess.Kill($true)
+				$descendantProcess.WaitForExit(5000) | Out-Null
+			}
+		} catch [ArgumentException] {
+			# The descendant already exited after its inherited pipe was closed.
+		} catch [InvalidOperationException] {
+			# The descendant exited between checking its state and terminating it.
+		} finally {
+			if ($null -ne $descendantProcess) {
+				$descendantProcess.Dispose()
+			}
+		}
+	}
 	Remove-Item -LiteralPath $testDirectory -Recurse -Force -ErrorAction Ignore
 }
