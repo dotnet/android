@@ -8,6 +8,8 @@ if (-not $powerShellExe) {
 $testDirectory = Join-Path ([IO.Path]::GetTempPath()) ([IO.Path]::GetRandomFileName())
 $childScript = Join-Path $testDirectory 'Hang.ps1'
 $attemptFile = Join-Path $testDirectory 'attempts.txt'
+$retryChildScript = Join-Path $testDirectory 'FailThenSucceed.ps1'
+$retryAttemptFile = Join-Path $testDirectory 'retry-attempts.txt'
 
 try {
 	New-Item -ItemType Directory -Path $testDirectory | Out-Null
@@ -46,6 +48,40 @@ Start-Sleep -Seconds 30
 
 	if ($stopwatch.Elapsed.TotalSeconds -lt 1.5 -or $stopwatch.Elapsed.TotalSeconds -gt 10) {
 		throw "Expected two bounded one-second attempts, elapsed time was $($stopwatch.Elapsed)."
+	}
+
+	@'
+param (
+	[string] $AttemptFile
+)
+
+$attempt = 0
+if (Test-Path -LiteralPath $AttemptFile) {
+	$attempt = [int] (Get-Content -LiteralPath $AttemptFile -Raw)
+}
+$attempt++
+Set-Content -LiteralPath $AttemptFile -Value $attempt -Encoding ASCII
+if ($attempt -eq 1) {
+	exit 42
+}
+'@ | Set-Content -LiteralPath $retryChildScript -Encoding ASCII
+
+	$retryArguments = "-NoLogo -NoProfile -File `"$retryChildScript`" -AttemptFile `"$retryAttemptFile`""
+	& $powerShellExe -NoLogo -NoProfile -File $scriptUnderTest `
+		-FilePath $powerShellExe `
+		-Arguments $retryArguments `
+		-TimeoutSeconds 10 `
+		-RetryCount 1 `
+		-RetryDelaySeconds 0
+	$retryExitCode = $LASTEXITCODE
+
+	if ($retryExitCode -ne 0) {
+		throw "Expected successful retry exit code 0, got $retryExitCode."
+	}
+
+	$retryAttempts = [int] (Get-Content -LiteralPath $retryAttemptFile -Raw)
+	if ($retryAttempts -ne 2) {
+		throw "Expected two nonzero-exit process attempts, got $retryAttempts."
 	}
 } finally {
 	Remove-Item -LiteralPath $testDirectory -Recurse -Force -ErrorAction Ignore
