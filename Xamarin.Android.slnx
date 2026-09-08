@@ -57,6 +57,7 @@
     <Project Path="tools/fastdev/fastdevtools.csproj" />
   </Folder>
   <Folder Name="/Tests/">
+    <Project Path="src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj" />
     <Project Path="src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj" />
     <Project Path="src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Xamarin.ProjectTools.csproj" />
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests.csproj" />

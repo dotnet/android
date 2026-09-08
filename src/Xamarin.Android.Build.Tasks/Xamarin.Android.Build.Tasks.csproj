@@ -31,6 +31,7 @@
     <PackageReference Include="NuGet.ProjectModel" Version="6.14.3" />
     <PackageReference Include="System.CodeDom" />
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
+    <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataPackageVersion)" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
@@ -237,7 +238,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Xamarin.Android.Tools.Aidl\Xamarin.Android.Tools.Aidl.csproj" />
-    <ProjectReference Include="..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
