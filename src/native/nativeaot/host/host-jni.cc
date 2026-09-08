@@ -37,7 +37,8 @@ void XA_Host_NativeAOT_OnInit (jstring language, jstring filesDir, jstring cache
 {
 	JNIEnv *env = OSBridge::ensure_jnienv ();
 
-	// Host::OnInit takes ownership of its JNI string references.
+	// JNI method arguments are borrowed and must remain valid after Host::OnInit returns.
+	// Pass duplicates because Host::OnInit takes ownership of the references it receives.
 	jstring language_ref = duplicate_local_reference (env, language);
 	jstring files_dir_ref = duplicate_local_reference (env, filesDir);
 	jstring cache_dir_ref = duplicate_local_reference (env, cacheDir);
