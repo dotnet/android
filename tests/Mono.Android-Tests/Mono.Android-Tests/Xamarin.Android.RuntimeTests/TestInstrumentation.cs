@@ -11,6 +11,8 @@ namespace Xamarin.Android.RuntimeTests
 	[Instrumentation (Name = "xamarin.android.runtimetests.TestInstrumentation")]
 	public class TestInstrumentation : Xamarin.Android.UnitTests.TestInstrumentation
 	{
+		const string JniReferenceLeakCategory = "JniReferenceLeak";
+
 		protected TestInstrumentation (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
@@ -54,6 +56,11 @@ namespace Xamarin.Android.RuntimeTests
 					categories.Add ("NetworkInterfaces");
 				}
 
+				// Process-wide reference counts are only stable in the dedicated filtered run.
+				if (!IsCategoryIncluded (JniReferenceLeakCategory)) {
+					categories.Add (JniReferenceLeakCategory);
+				}
+
 				return categories.Count > 0 ? categories : null;
 			}
 		}
@@ -66,11 +73,26 @@ namespace Xamarin.Android.RuntimeTests
 				// `configProperties` section, and we read it back with `AppContext.GetData`.
 				// Used by lanes that want to scope a run to specific categories, e.g.
 				// `-p:IncludeCategories=Intune` in stage-package-tests.yaml.
-				var value = AppContext.GetData ("IncludeCategories") as string;
-				if (string.IsNullOrEmpty (value))
-					return null;
-				return value!.Split (new [] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+				var categories = GetIncludedCategories ();
+				return categories.Length > 0 ? categories : null;
 			}
+		}
+
+		static bool IsCategoryIncluded (string category)
+		{
+			foreach (var includedCategory in GetIncludedCategories ()) {
+				if (string.Equals (includedCategory, category, StringComparison.Ordinal))
+					return true;
+			}
+			return false;
+		}
+
+		static string [] GetIncludedCategories ()
+		{
+			var value = AppContext.GetData ("IncludeCategories") as string;
+			if (string.IsNullOrEmpty (value))
+				return [];
+			return value.Split (new [] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 		}
 
 		static bool HasAppContextSwitch (string key)
