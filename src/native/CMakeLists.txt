@@ -138,6 +138,8 @@ endif()
 
 if(ANDROID_STL STREQUAL none)
   set(USES_LIBSTDCPP False)
+  # Clang otherwise adds libunwind even when the C++ standard library is disabled.
+  add_link_options(--unwindlib=none)
 else()
   set(USES_LIBSTDCPP True)
 endif()

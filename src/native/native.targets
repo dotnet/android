@@ -376,6 +376,20 @@
                          RuntimePackName="$(_RuntimePackName)" />
     </ItemGroup>
 
+    <!-- Remove archives left behind by builds that linked libc++ or the Xamarin unwinder. -->
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' Or '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
+      <_RuntimePackFiles Remove="@(_RuntimePackFiles)"
+                         Condition=" '%(_RuntimePackFiles.Filename)' == 'libunwind_xamarin-debug' Or '%(_RuntimePackFiles.Filename)' == 'libunwind_xamarin-release' " />
+      <_ObsoleteRuntimePackDirectory Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.$(_RuntimePackName).$(AndroidApiLevel).%(AndroidRID)\$(AndroidPackVersion)\runtimes\%(AndroidRID)\native')" />
+      <_ObsoleteRuntimePackFile Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libc++_static.a')" />
+      <_ObsoleteRuntimePackFile Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libc++abi.a')" />
+      <_ObsoleteRuntimePackFile Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libunwind.a')" />
+      <_ObsoleteRuntimePackFile Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libunwind_xamarin-debug.a')" />
+      <_ObsoleteRuntimePackFile Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libunwind_xamarin-release.a')" />
+    </ItemGroup>
+
+    <Delete Files="@(_ObsoleteRuntimePackFile)" />
+
     <Copy
         SourceFiles="%(_RuntimePackFiles.Identity)"
         DestinationFolder="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.%(_RuntimePackFiles.RuntimePackName).$(AndroidApiLevel).%(_RuntimePackFiles.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_RuntimePackFiles.AndroidRID)\native"
