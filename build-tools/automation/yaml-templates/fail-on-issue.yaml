@@ -5,6 +5,7 @@ parameters:
 steps:
 - powershell: |
     & '${{ parameters.xaSourcePath }}/build-tools/automation/scripts/FailOnUnexpectedIssues.ps1'
+  name: failOnUnexpectedIssues
   displayName: fail if any issues occurred
   condition: ${{ parameters.condition }}
   env:
