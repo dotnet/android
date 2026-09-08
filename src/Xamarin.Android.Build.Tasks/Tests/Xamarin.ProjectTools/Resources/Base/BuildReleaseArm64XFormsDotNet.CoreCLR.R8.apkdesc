@@ -5,7 +5,7 @@
       "Size": 6652
     },
     "classes.dex": {
-      "Size": 2344732
+      "Size": 2644680
     },
     "kotlin/annotation/annotation.kotlin_builtins": {
       "Size": 928
@@ -29,16 +29,16 @@
       "Size": 2396
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 9452920
+      "Size": 9449968
     },
     "lib/arm64-v8a/libclrjit.so": {
-      "Size": 2818032
+      "Size": 2818048
     },
     "lib/arm64-v8a/libcoreclr.so": {
-      "Size": 4844000
+      "Size": 4843824
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 520312
+      "Size": 519752
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 72432
@@ -2231,5 +2231,5 @@
       "Size": 794696
     }
   },
-  "PackageSize": 15769107
+  "PackageSize": 15855123
 }
