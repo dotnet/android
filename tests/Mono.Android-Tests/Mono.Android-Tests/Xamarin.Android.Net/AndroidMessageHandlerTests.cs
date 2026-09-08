@@ -6,6 +6,7 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Android.Runtime;
@@ -354,7 +355,7 @@ namespace Xamarin.Android.NetTests
 		[Test]
 		public async Task HttpContentStreamIsRewoundAfterCancellation ()
 		{
-			const int requestContentLength = 8_000_000;
+			const int requestContentLength = 1_000_000;
 			const int requestTimeoutMilliseconds = 10_000;
 
 			int testPort = GetAvailablePort ();
@@ -362,17 +363,17 @@ namespace Xamarin.Android.NetTests
 			listener.Prefixes.Add ($"http://+:{testPort}/");
 			listener.Start ();
 
-			var requestBodyStarted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 			var cancellationObserved = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 			var firstServerTask = HandleCancelledRequest ();
 
-			using var cancellationTokenSource = new System.Threading.CancellationTokenSource ();
-			using var retryCancellationTokenSource = new System.Threading.CancellationTokenSource ();
+			using var cancellationTokenSource = new CancellationTokenSource ();
+			using var retryCancellationTokenSource = new CancellationTokenSource ();
 			using var client = new HttpClient (new AndroidMessageHandler ());
 			var requestBody = new byte [requestContentLength];
 			for (int i = 0; i < requestBody.Length; i++)
 				requestBody [i] = (byte) (i % 251);
-			using var content = new ByteArrayContent (requestBody);
+			var contentStream = new ControlledSeekableStream (requestBody);
+			using var content = new StreamContent (contentStream);
 			using var request = new HttpRequestMessage (HttpMethod.Post, $"http://localhost:{testPort}/") { Content = content };
 			Task firstRequestTask = Task.CompletedTask;
 			Task retryServerTask = Task.CompletedTask;
@@ -384,9 +385,9 @@ namespace Xamarin.Android.NetTests
 
 				var firstResponseTask = client.SendAsync (request, cancellationTokenSource.Token);
 				firstRequestTask = firstResponseTask;
-				await WaitForTask (requestBodyStarted.Task, "The first request body did not start uploading.").ConfigureAwait (false);
-				Assert.Greater (stream.Position, 0, "The content stream did not advance after the server received the request body.");
-				Assert.Less (stream.Position, stream.Length, "The content upload completed before the test could cancel it.");
+				await WaitForTask (contentStream.FirstWriteCompletedTask, "The first request body did not start uploading.").ConfigureAwait (false);
+				Assert.IsTrue (contentStream.IsFirstCopyBlocked, "The first content copy was not blocked after its initial destination write.");
+				Assert.AreEqual (1, contentStream.CopyCount, "The first request should start exactly one content copy.");
 
 				cancellationTokenSource.Cancel ();
 				var completedTask = await Task.WhenAny (firstResponseTask, Task.Delay (requestTimeoutMilliseconds)).ConfigureAwait (false);
@@ -408,6 +409,7 @@ namespace Xamarin.Android.NetTests
 
 				var streamAfterCancellation = await content.ReadAsStreamAsync ();
 				Assert.AreEqual (0, streamAfterCancellation.Position, "Stream position should be 0 after cancellation (stream should be rewound)");
+				Assert.AreEqual (1, contentStream.CopyCount, "Cancellation should finish the first content copy before retry.");
 
 				retryServerTask = HandleRetryRequest ();
 				using var retryRequest = new HttpRequestMessage (HttpMethod.Post, $"http://localhost:{testPort}/") { Content = content };
@@ -418,11 +420,12 @@ namespace Xamarin.Android.NetTests
 
 				using var retryResponse = await retryResponseTask.ConfigureAwait (false);
 				Assert.True (retryResponse.IsSuccessStatusCode, "Second request should succeed with reused content");
+				Assert.AreEqual (2, contentStream.CopyCount, "The retry should perform a second, ungated content copy.");
 
 				var streamAfterRetry = await content.ReadAsStreamAsync ();
 				Assert.AreEqual (0, streamAfterRetry.Position, "Stream position should be 0 after successful request");
 			} finally {
-				bool requestBodyStartedBeforeCleanup = requestBodyStarted.Task.IsCompleted;
+				bool firstWriteCompletedBeforeCleanup = contentStream.FirstWriteCompletedTask.IsCompleted;
 				bool firstRequestCompletedBeforeCleanup = firstRequestTask.IsCompleted;
 				bool firstServerCompletedBeforeCleanup = firstServerTask.IsCompleted;
 				bool retryRequestCompletedBeforeCleanup = retryRequestTask.IsCompleted;
@@ -432,10 +435,11 @@ namespace Xamarin.Android.NetTests
 				cancellationObserved.TrySetResult (true);
 				cancellationTokenSource.Cancel ();
 				retryCancellationTokenSource.Cancel ();
+				contentStream.ReleaseFirstCopy ();
 				listener.Abort ();
 
 				await Task.WhenAll (
-					ObserveTaskAfterCleanup (requestBodyStarted.Task, "request body start signal", requestBodyStartedBeforeCleanup, cancellationExpected: false, listenerAbortExpected: true),
+					ObserveTaskAfterCleanup (contentStream.FirstWriteCompletedTask, "first destination write signal", firstWriteCompletedBeforeCleanup, cancellationExpected: !firstWriteCompletedBeforeCleanup, listenerAbortExpected: false),
 					ObserveTaskAfterCleanup (firstRequestTask, "first request", firstRequestCompletedBeforeCleanup, cancellationExpected: firstRequestCancellationExpected, listenerAbortExpected: false),
 					ObserveTaskAfterCleanup (firstServerTask, "first server handler", firstServerCompletedBeforeCleanup, cancellationExpected: false, listenerAbortExpected: true),
 					ObserveTaskAfterCleanup (retryRequestTask, "retry request", retryRequestCompletedBeforeCleanup, cancellationExpected: !retryRequestCompletedBeforeCleanup, listenerAbortExpected: false),
@@ -445,38 +449,28 @@ namespace Xamarin.Android.NetTests
 
 			async Task HandleCancelledRequest ()
 			{
+				var context = await listener.GetContextAsync ().ConfigureAwait (false);
+				using var response = context.Response;
+				var buffer = new byte [4096];
+				await cancellationObserved.Task.ConfigureAwait (false);
+
 				try {
-					var context = await listener.GetContextAsync ().ConfigureAwait (false);
-					using var response = context.Response;
-					var buffer = new byte [4096];
-					int bytesRead = await context.Request.InputStream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false);
-					if (bytesRead == 0)
-						throw new InvalidOperationException ("The first request ended before its body started uploading.");
-
-					requestBodyStarted.TrySetResult (true);
-					await cancellationObserved.Task.ConfigureAwait (false);
-
-					try {
-						while (await context.Request.InputStream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false) > 0) {
-						}
-					} catch (IOException) {
-						// The canceled client can close the connection while the server drains the request.
-					} catch (HttpListenerException) {
-						// The canceled client can close the connection while the server drains the request.
+					while (await context.Request.InputStream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false) > 0) {
 					}
+				} catch (IOException) {
+					// The canceled client can close the connection while the server drains the request.
+				} catch (HttpListenerException) {
+					// The canceled client can close the connection while the server drains the request.
+				}
 
-					try {
-						response.StatusCode = 204;
-						response.ContentLength64 = 0;
-						response.Close ();
-					} catch (IOException) {
-						// The canceled client can close the connection before the server closes the response.
-					} catch (HttpListenerException) {
-						// The canceled client can close the connection before the server closes the response.
-					}
-				} catch (Exception ex) {
-					requestBodyStarted.TrySetException (ex);
-					throw;
+				try {
+					response.StatusCode = 204;
+					response.ContentLength64 = 0;
+					response.Close ();
+				} catch (IOException) {
+					// The canceled client can close the connection before the server closes the response.
+				} catch (HttpListenerException) {
+					// The canceled client can close the connection before the server closes the response.
 				}
 			}
 
@@ -532,6 +526,56 @@ namespace Xamarin.Android.NetTests
 		}
 
 		[Test]
+		public async Task ControlledSeekableStreamGatesOnlyFirstCopy ()
+		{
+			const int copyTimeoutMilliseconds = 10_000;
+			var content = new byte [32];
+			for (int i = 0; i < content.Length; i++)
+				content [i] = (byte) i;
+
+			using var stream = new ControlledSeekableStream (content);
+			using var firstDestination = new MemoryStream ();
+			using var cancellationTokenSource = new CancellationTokenSource ();
+			Task firstCopyTask = Task.CompletedTask;
+
+			try {
+				firstCopyTask = stream.CopyToAsync (firstDestination, 8, cancellationTokenSource.Token);
+				var firstWriteCompleted = await Task.WhenAny (stream.FirstWriteCompletedTask, Task.Delay (copyTimeoutMilliseconds)).ConfigureAwait (false);
+				Assert.AreSame (stream.FirstWriteCompletedTask, firstWriteCompleted, "The controlled stream did not complete its first destination write.");
+				await stream.FirstWriteCompletedTask.ConfigureAwait (false);
+
+				Assert.IsTrue (stream.IsFirstCopyBlocked, "The first copy should remain blocked after its initial destination write.");
+				Assert.IsFalse (firstCopyTask.IsCompleted, "The first copy completed before cancellation.");
+				Assert.AreEqual (8, stream.FirstWriteLength, "The first destination write should use the requested copy buffer size.");
+				Assert.AreEqual (8, stream.Position, "The controlled stream should advance only by the bytes written before its gate.");
+
+				cancellationTokenSource.Cancel ();
+				try {
+					await firstCopyTask.ConfigureAwait (false);
+					Assert.Fail ("The first controlled copy completed instead of observing cancellation.");
+				} catch (OperationCanceledException) {
+				}
+
+				stream.Seek (0, SeekOrigin.Begin);
+				using var retryDestination = new MemoryStream ();
+				await stream.CopyToAsync (retryDestination, 8, CancellationToken.None).ConfigureAwait (false);
+
+				Assert.AreEqual (2, stream.CopyCount, "The retry should perform a second content copy.");
+				CollectionAssert.AreEqual (content, retryDestination.ToArray (), "The ungated retry should copy the complete stream.");
+			} finally {
+				cancellationTokenSource.Cancel ();
+				stream.ReleaseFirstCopy ();
+
+				var firstCopyCompleted = await Task.WhenAny (firstCopyTask, Task.Delay (copyTimeoutMilliseconds)).ConfigureAwait (false);
+				Assert.AreSame (firstCopyTask, firstCopyCompleted, "The first controlled copy did not finish during cleanup.");
+				try {
+					await firstCopyTask.ConfigureAwait (false);
+				} catch (OperationCanceledException) {
+				}
+			}
+		}
+
+		[Test]
 		public void ConnectionFailureThrowsHttpRequestException ()
 		{
 			// https://github.com/dotnet/android/issues/5761
@@ -575,6 +619,66 @@ namespace Xamarin.Android.NetTests
 			var inner = ex?.InnerException as WebException;
 			Assert.IsNotNull (inner, $"Expected inner WebException but got {ex?.InnerException?.GetType ()}");
 			Assert.AreEqual (WebExceptionStatus.UnknownError, inner.Status, "Inner WebException should preserve UnknownError status");
+		}
+
+		sealed class ControlledSeekableStream : MemoryStream
+		{
+			readonly TaskCompletionSource<bool> firstWriteCompleted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			readonly TaskCompletionSource<bool> releaseFirstCopy = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			int copyCount;
+			int firstWriteLength;
+
+			public ControlledSeekableStream (byte [] content)
+				: base (content, writable: false)
+			{
+			}
+
+			public int CopyCount => Volatile.Read (ref copyCount);
+
+			public int FirstWriteLength => Volatile.Read (ref firstWriteLength);
+
+			public Task FirstWriteCompletedTask => firstWriteCompleted.Task;
+
+			public bool IsFirstCopyBlocked => firstWriteCompleted.Task.Status == TaskStatus.RanToCompletion && !releaseFirstCopy.Task.IsCompleted;
+
+			public void ReleaseFirstCopy ()
+			{
+				releaseFirstCopy.TrySetResult (true);
+				firstWriteCompleted.TrySetCanceled ();
+			}
+
+			public override Task CopyToAsync (Stream destination, int bufferSize, CancellationToken cancellationToken)
+			{
+				ArgumentNullException.ThrowIfNull (destination);
+				if (bufferSize <= 0)
+					throw new ArgumentOutOfRangeException (nameof (bufferSize));
+
+				cancellationToken.ThrowIfCancellationRequested ();
+				bool gateFirstCopy = Interlocked.Increment (ref copyCount) == 1;
+				return CopyToAsyncCore (destination, bufferSize, cancellationToken, gateFirstCopy);
+			}
+
+			async Task CopyToAsyncCore (Stream destination, int bufferSize, CancellationToken cancellationToken, bool gateFirstCopy)
+			{
+				try {
+					var buffer = new byte [bufferSize];
+					int bytesRead;
+					bool firstWrite = true;
+					while ((bytesRead = await ReadAsync (buffer, 0, buffer.Length, cancellationToken).ConfigureAwait (false)) > 0) {
+						await destination.WriteAsync (buffer, 0, bytesRead, cancellationToken).ConfigureAwait (false);
+						if (gateFirstCopy && firstWrite) {
+							firstWrite = false;
+							Volatile.Write (ref firstWriteLength, bytesRead);
+							firstWriteCompleted.TrySetResult (true);
+							await releaseFirstCopy.Task.WaitAsync (cancellationToken).ConfigureAwait (false);
+						}
+					}
+				} catch (Exception ex) {
+					if (gateFirstCopy)
+						firstWriteCompleted.TrySetException (ex);
+					throw;
+				}
+			}
 		}
 	}
 }
