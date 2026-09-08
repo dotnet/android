@@ -1,15 +1,5 @@
 using System;
 
-namespace Android.Runtime
-{
-	public enum JniHandleOwnership
-	{
-		DoNotTransfer = 0,
-		TransferLocalRef = 1,
-		TransferGlobalRef = 2,
-	}
-}
-
 namespace Lookalike
 {
 	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
@@ -33,17 +23,6 @@ namespace Lookalike
 
 namespace Java.Interop
 {
-	public struct JniObjectReference
-	{
-		public IntPtr Handle;
-	}
-
-	public enum JniObjectReferenceOptions
-	{
-		None = 0,
-		Copy = 1,
-		CopyAndDispose = 2,
-	}
 }
 
 namespace Android.App

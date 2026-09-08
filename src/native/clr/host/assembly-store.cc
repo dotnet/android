@@ -781,7 +781,7 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 	return assembly_data;
 }
 
-void AssemblyStore::configure_from_payload (const void *payload_start, const std::function<std::string()>& get_full_store_path) noexcept
+void AssemblyStore::configure_from_payload (const void *payload_start, const char *store_path) noexcept
 {
 	auto header = static_cast<const AssemblyStoreHeader*>(payload_start);
 
@@ -790,7 +790,7 @@ void AssemblyStore::configure_from_payload (const void *payload_start, const std
 			LOG_ASSEMBLY,
 			std::source_location::current (),
 			"Assembly store '%s' is not a valid .NET for Android assembly store file",
-			get_full_store_path ().c_str ()
+			optional_string (store_path)
 		);
 	}
 
@@ -799,7 +799,7 @@ void AssemblyStore::configure_from_payload (const void *payload_start, const std
 			LOG_ASSEMBLY,
 			std::source_location::current (),
 			"Assembly store '%s' uses format version %x, instead of the expected %x",
-			get_full_store_path ().c_str (),
+			optional_string (store_path),
 			header->version,
 			ASSEMBLY_STORE_FORMAT_VERSION
 		);
@@ -831,5 +831,5 @@ void AssemblyStore::configure_from_payload (const void *payload_start, const std
 		names_cursor += name_length;
 	}
 
-	log_debugf (LOG_ASSEMBLY, "Mapped assembly store %s; content ID 0x%" PRIx64, get_full_store_path ().c_str (), assembly_store_content_id);
+	log_debugf (LOG_ASSEMBLY, "Mapped assembly store %s; content ID 0x%" PRIx64, optional_string (store_path), assembly_store_content_id);
 }
