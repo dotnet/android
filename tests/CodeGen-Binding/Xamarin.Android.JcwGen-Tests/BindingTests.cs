@@ -142,6 +142,7 @@ namespace Xamarin.Android.JcwGenTests {
 			}
 
 			Java.Interop.JniEnvironment.Runtime.ValueManager.CollectPeers ();
+			GC.WaitForPendingFinalizers ();
 			Java.Interop.JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
 		}
 
