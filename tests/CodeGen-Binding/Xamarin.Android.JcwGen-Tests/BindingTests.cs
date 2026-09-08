@@ -97,21 +97,52 @@ namespace Xamarin.Android.JcwGenTests {
 		[Test]
 		public void JavaSideActivation ()
 		{
-			using (var i = new ConstructorTest ()) {
-				// To ensure that CallMethodFromCtor.class_ref is initialized
-			}
 			using (var c = Java.Lang.Class.FromType (typeof (ConstructorTest))) {
-				int initGref = Java.Interop.Runtime.GlobalReferenceCount;
-				using (var j = Com.Xamarin.Android.CallMethodFromCtor.NewInstance (c)) {
-					var instance = j.JavaCast<ConstructorTest>();
-					Assert.AreSame (j, instance);
-					Assert.IsTrue (instance.DefaultConstructorInvoked);
-					Assert.IsTrue (instance.ActivationConstructorInvoked);
+				const int iterations = 100;
+				const int allowedGrefIncrease = 10;
+
+				// GlobalReferenceCount is process-wide. Warm the exact activation path before
+				// measuring so one-time runtime caches are not mistaken for per-call leaks.
+				for (int i = 0; i < iterations; i++) {
+					AssertJavaSideActivation (c);
 				}
+				CollectGarbage ();
+
+				int initGref = Java.Interop.Runtime.GlobalReferenceCount;
+				for (int i = 0; i < iterations; i++) {
+					AssertJavaSideActivation (c);
+				}
+				CollectGarbage ();
 				int finiGref = Java.Interop.Runtime.GlobalReferenceCount;
-				Assert.AreEqual (initGref, finiGref,
-						string.Format ("Initial grefc={0}; final gref={1}; No GREFs should be lost!", initGref, finiGref));
+				int delta = finiGref - initGref;
+
+				// A known activation regression leaked three GREFs per call. Repeating the
+				// operation amplifies that to 300 while tolerating the observed ambient drift.
+				Assert.LessOrEqual (delta, allowedGrefIncrease,
+						string.Format ("GREF count increased by {0} after {1} Java-side activations. Initial grefc={2}; final grefc={3}.",
+							delta, iterations, initGref, finiGref));
 			}
+		}
+
+		static void AssertJavaSideActivation (Java.Lang.Class c)
+		{
+			using (var j = Com.Xamarin.Android.CallMethodFromCtor.NewInstance (c)) {
+				var instance = j.JavaCast<ConstructorTest>();
+				Assert.AreSame (j, instance);
+				Assert.IsTrue (instance.DefaultConstructorInvoked);
+				Assert.IsTrue (instance.ActivationConstructorInvoked);
+			}
+		}
+
+		static void CollectGarbage ()
+		{
+			for (int i = 0; i < 3; i++) {
+				GC.Collect ();
+				GC.WaitForPendingFinalizers ();
+			}
+
+			Java.Interop.JniEnvironment.Runtime.ValueManager.CollectPeers ();
+			Java.Interop.JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
 		}
 
 		//
@@ -391,4 +422,3 @@ namespace Xamarin.Android.JcwGenTests {
 		}
 	}
 }
-
