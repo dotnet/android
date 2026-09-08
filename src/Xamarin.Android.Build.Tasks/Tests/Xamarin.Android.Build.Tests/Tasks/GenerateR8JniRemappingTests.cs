@@ -540,6 +540,52 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			StringAssert.Contains (Field ("a/b", "arguments", "[Lcom/contoso/Argument;", "a/b", "e", "[La/d;"), xml);
 		}
 
+		[TestCase ("int", "I", "java.lang.String", "Ljava/lang/String;")]
+		[TestCase ("com.contoso.One", "Lcom/contoso/One;", "com.contoso.Two", "Lcom/contoso/Two;")]
+		public void MergedFieldsKeepDistinctSourceSignatures (string firstType, string firstSignature, string secondType, string secondSignature)
+		{
+			var xml = Run (
+				$"""
+				com.contoso.One -> a.b:
+				    {firstType} value -> c
+				com.contoso.Two -> a.b:
+				    {secondType} value -> d
+				""");
+
+			string firstTargetSignature = firstType == "com.contoso.One" ? "La/b;" : firstSignature;
+			string secondTargetSignature = secondType == "com.contoso.Two" ? "La/b;" : secondSignature;
+			StringAssert.Contains (Field ("a/b", "value", firstSignature, "a/b", "c", firstTargetSignature), xml);
+			StringAssert.Contains (Field ("a/b", "value", secondSignature, "a/b", "d", secondTargetSignature), xml);
+			Assert.AreEqual (0, Warnings.Count, "Different source descriptors must not conflict, even if the target descriptors match.");
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void ExistingFieldEntriesOnlyConflictForTheSameSignature (bool identicalTarget)
+		{
+			var existing = WriteRemapXml (
+				$"""
+				<replacements>
+				  {Field ("a/b", "value", "I", identicalTarget ? "a/b" : "com/contoso/Mam", "c", "I")}
+				</replacements>
+				""");
+			var xml = Run (
+				"""
+				com.contoso.One -> a.b:
+				    int value -> c
+				com.contoso.Two -> a.b:
+				    java.lang.String value -> d
+				""",
+				existing);
+
+			StringAssert.DoesNotContain ("""source-field-signature="I" """, xml, "The existing mapping must win for the same signature.");
+			StringAssert.Contains (Field ("a/b", "value", "Ljava/lang/String;", "a/b", "d", "Ljava/lang/String;"), xml);
+			Assert.AreEqual (identicalTarget ? 0 : 1, Warnings.Count);
+			if (!identicalTarget) {
+				Assert.AreEqual ("XA4328", Warnings [0].Code);
+			}
+		}
+
 		[Test]
 		public void AmbiguousMethodNamesAreSkipped ()
 		{

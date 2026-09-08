@@ -295,7 +295,7 @@ namespace Xamarin.Android.Tasks
 
 			if (!TryClaimEntry (
 					"replace-field",
-					BuildFieldKey (classMapping.ObfuscatedJniName, field.OriginalName),
+					BuildFieldKey (classMapping.ObfuscatedJniName, field.OriginalName, sourceSignature),
 					$"{classMapping.ObfuscatedJniName}\t{field.ObfuscatedName}\t{targetSignature}")) {
 				return;
 			}
@@ -425,7 +425,10 @@ namespace Xamarin.Android.Tasks
 					break;
 				case "replace-field":
 					AddExistingEntry (
-						BuildFieldKey (reader.GetAttribute ("source-type"), reader.GetAttribute ("source-field-name")),
+						BuildFieldKey (
+							reader.GetAttribute ("source-type"),
+							reader.GetAttribute ("source-field-name"),
+							reader.GetAttribute ("source-field-signature")),
 						$"{reader.GetAttribute ("target-type")}\t{reader.GetAttribute ("target-field-name")}\t{reader.GetAttribute ("target-field-signature")}");
 					break;
 				case "replace-method":
@@ -455,8 +458,9 @@ namespace Xamarin.Android.Tasks
 
 		static string BuildReverseTypeKey (string? from) => from.IsNullOrEmpty () ? "" : $"R\t{from}";
 
-		static string BuildFieldKey (string? sourceType, string? fieldName)
-			=> sourceType.IsNullOrEmpty () || fieldName.IsNullOrEmpty () ? "" : $"F\t{sourceType}\t{fieldName}";
+		// Merged classes can have same-named fields with distinct source signatures.
+		static string BuildFieldKey (string? sourceType, string? fieldName, string? signature)
+			=> sourceType.IsNullOrEmpty () || fieldName.IsNullOrEmpty () ? "" : $"F\t{sourceType}\t{fieldName}\t{signature}";
 
 		// A method's source signature is part of its identity: overloads must not collapse.
 		static string BuildMethodKey (string? sourceType, string? methodName, string? signature)
