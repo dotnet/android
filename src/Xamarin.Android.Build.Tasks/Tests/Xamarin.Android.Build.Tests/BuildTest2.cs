@@ -77,11 +77,7 @@ namespace Xamarin.Android.Build.Tests
 
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			if (rid == "android-arm64") {
-				StringAssertEx.Contains ("--instruction-set:-optimistic", b.LastBuildOutput);
-			} else {
-				StringAssertEx.DoesNotContain ("--instruction-set:-optimistic", b.LastBuildOutput);
-			}
+			StringAssertEx.Contains ("--instruction-set:-optimistic", b.LastBuildOutput);
 
 			var assemblyName = proj.ProjectName;
 			var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, rid, $"{proj.PackageName}-Signed.apk");
@@ -106,17 +102,23 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.Contains ("@uncompressed_assemblies_data_buffer = dso_local local_unnamed_addr global [0 x i8] zeroinitializer, align 1", compressedAssembliesSourceText);
 		}
 
-		[TestCase ("android-arm64", true, true, "", "", ";--instruction-set:-optimistic")]
-		[TestCase ("android-arm64", true, false, "--partial;--map", "", "--partial;--map;--instruction-set:-optimistic")]
-		[TestCase ("android-arm64", true, true, "--partial;--instruction-set:armv8-a", "", "--partial;--instruction-set:armv8-a")]
-		[TestCase ("android-arm64", true, true, "--instruction-set armv8-a", "", "--instruction-set armv8-a")]
-		[TestCase ("android-arm64", true, true, "--instruction-set:-optimistic", "", "--instruction-set:-optimistic")]
-		[TestCase ("android-arm64", true, true, "", "--instruction-set:-optimistic", "")]
-		[TestCase ("android-arm64", true, true, "--partial", "--instruction-set:armv8-a", "--partial")]
-		[TestCase ("android-arm64", true, false, "--partial", "--instruction-set:armv8-a", "--partial;--instruction-set:-optimistic")]
-		[TestCase ("android-arm64", false, false, "--map", "", "--map")]
-		[TestCase ("android-x64", true, true, "--partial", "", "--partial")]
-		public void ReadyToRunInstructionSet (string rid, bool readyToRun, bool composite, string extraArgs, string compositeArgs, string expected)
+		[TestCase ("android-arm64", true, true, "", "", ";--instruction-set:-optimistic", "")]
+		[TestCase ("android-arm64", true, false, "--partial;--map", "", "--partial;--map;--instruction-set:-optimistic", "")]
+		[TestCase ("android-arm64", true, true, "--partial;--instruction-set:armv8-a", "", "--partial;--instruction-set:armv8-a", "")]
+		[TestCase ("android-arm64", true, true, "--instruction-set armv8-a", "", "--instruction-set armv8-a", "")]
+		[TestCase ("android-arm64", true, true, "--instruction-set:-optimistic", "", "--instruction-set:-optimistic", "")]
+		[TestCase ("android-arm64", true, true, "", "--instruction-set:-optimistic", "", "")]
+		[TestCase ("android-arm64", true, true, "--partial", "--instruction-set:armv8-a", "--partial", "")]
+		[TestCase ("android-arm64", true, false, "--partial", "--instruction-set:armv8-a", "--partial", "")]
+		[TestCase ("android-arm64", false, false, "--map", "", "--map", "")]
+		[TestCase ("android-x64", true, true, "--partial", "", "--partial;--instruction-set:-optimistic", "")]
+		[TestCase ("android-x64", true, false, "", "", ";--instruction-set:-optimistic", "")]
+		[TestCase ("android-x64", true, true, "--instruction-set:x86-64", "", "--instruction-set:x86-64", "")]
+		[TestCase ("android-arm", true, true, "", "", ";--instruction-set:-optimistic", "")]
+		[TestCase ("android-arm64", true, true, "--map", "", "--map", "false")]
+		[TestCase ("android-arm64", true, true, "--map", "", "--map;--instruction-set:-optimistic", "true")]
+		public void ReadyToRunInstructionSet (string rid, bool readyToRun, bool composite, string extraArgs, string compositeArgs,
+			string expected, string conservativeInstructionSet)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
@@ -125,6 +127,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("RuntimeIdentifier", rid);
 			proj.SetProperty ("PublishReadyToRun", readyToRun.ToString ());
 			proj.SetProperty ("PublishReadyToRunComposite", composite.ToString ());
+			proj.SetProperty ("_AndroidUseConservativeReadyToRunInstructionSet", conservativeInstructionSet);
 			proj.Imports.Add (new Import ("CrossgenArguments.targets") {
 				TextContent = () => $"""
 					<Project>

@@ -1903,7 +1903,7 @@ ReadyToRun compilation is composite by default. See
 [`$(MauiEnableFullReadyToRun)`](#mauienablefullreadytorun) to opt in to
 full ReadyToRun.
 
-On ARM64, .NET for Android defaults crossgen2 to
+.NET for Android defaults crossgen2 to
 `--instruction-set:-optimistic`. This avoids generating precompiled code
 that requires optional CPU instructions and would fall back to JIT
 compilation on devices without those instructions. It does not disable
@@ -1911,12 +1911,13 @@ hardware-specific optimizations in the JIT or tiered compilation.
 
 An explicit `--instruction-set` option in
 `$(PublishReadyToRunCrossgen2ExtraArgs)` overrides this default.
-For composite builds, an instruction-set option in
+An instruction-set option in
 `$(PublishReadyToRunCrossgen2CompositeExtraArgs)` also opts the entire
 build out of this default, including assemblies in
 `@(PublishReadyToRunCompositeExclusions)`. The .NET SDK concatenates the
 normal and composite arguments for the composite image, and crossgen2
-does not accept multiple `--instruction-set` options.
+does not accept multiple `--instruction-set` options. The opt-out applies
+even when `$(PublishReadyToRunComposite)` is `false`.
 
 To apply an instruction-set policy to both the composite image and
 excluded assemblies, set it in

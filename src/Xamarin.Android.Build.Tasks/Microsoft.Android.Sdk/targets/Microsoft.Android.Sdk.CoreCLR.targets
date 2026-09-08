@@ -25,13 +25,13 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
     <AllowReadyToRunWithoutRuntimeIdentifier Condition=" '$(PublishReadyToRun)' == 'true' and '$(RuntimeIdentifiers)' != '' ">true</AllowReadyToRunWithoutRuntimeIdentifier>
   </PropertyGroup>
 
-  <!-- Optional ARM64 instructions can make otherwise precompiled methods fall back to Tier 0
+  <!-- Optional CPU instructions can make otherwise precompiled methods fall back to Tier 0
        on older devices. Keep R2R code conservative; the JIT can optimize for the CPU later.
        Resolve this after project/package imports have supplied their crossgen2 arguments. -->
   <Target Name="_AndroidSetReadyToRunInstructionSet"
       BeforeTargets="_PrepareForReadyToRunCompilation"
-      Condition=" '$(AndroidApplication)' == 'true' and '$(RuntimeIdentifier)' == 'android-arm64' and '$(PublishReadyToRun)' == 'true' ">
-    <PropertyGroup Condition=" !$(PublishReadyToRunCrossgen2ExtraArgs.Contains('--instruction-set')) and ('$(PublishReadyToRunComposite)' != 'true' or !$(PublishReadyToRunCrossgen2CompositeExtraArgs.Contains('--instruction-set'))) ">
+      Condition=" '$(AndroidApplication)' == 'true' and '$(PublishReadyToRun)' == 'true' and '$(_AndroidUseConservativeReadyToRunInstructionSet)' != 'false' ">
+    <PropertyGroup Condition=" !$(PublishReadyToRunCrossgen2ExtraArgs.Contains('--instruction-set')) and !$(PublishReadyToRunCrossgen2CompositeExtraArgs.Contains('--instruction-set')) ">
       <PublishReadyToRunCrossgen2ExtraArgs>$(PublishReadyToRunCrossgen2ExtraArgs);--instruction-set:-optimistic</PublishReadyToRunCrossgen2ExtraArgs>
     </PropertyGroup>
   </Target>
