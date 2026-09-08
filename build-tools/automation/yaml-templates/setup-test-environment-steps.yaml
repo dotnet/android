@@ -110,8 +110,10 @@ steps:
     project: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
     arguments: -t:ExtractWorkloadPacks -c ${{ parameters.configuration }} -v:n -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog
     continueOnError: false
-    retryCountOnTaskFailure: 1
-    taskTimeoutInMinutes: 20
+    taskTimeoutInMinutes: 45
+    processTimeoutInMinutes: 20
+    processRetryCount: 1
+    processRetryDelaySeconds: 5
     env:
       NUGET_RETRY_HTTP_429: 'true'
       NUGET_OBSERVE_RETRY_AFTER: 'true'

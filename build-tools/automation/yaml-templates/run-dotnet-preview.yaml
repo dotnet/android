@@ -10,6 +10,9 @@ parameters:
   continueOnError: true
   retryCountOnTaskFailure: 0
   taskTimeoutInMinutes: 0
+  processTimeoutInMinutes: 0
+  processRetryCount: 0
+  processRetryDelaySeconds: 1
   env: {}
 
 steps:
@@ -23,7 +26,20 @@ steps:
         $env:PATH = "${DOTNET_ROOT};$env:PATH"
         $dotnetPath = "${DOTNET_ROOT}\dotnet.exe"
     }
-    & $dotnetPath ${{ parameters.command }} ${{ parameters.project }} ${{ parameters.arguments }}
+    $processTimeoutInMinutes = [int] "${{ parameters.processTimeoutInMinutes }}"
+    if ($processTimeoutInMinutes -gt 0) {
+        $dotnetArguments = @'
+    ${{ parameters.command }} ${{ parameters.project }} ${{ parameters.arguments }}
+    '@.Trim()
+        & "${{ parameters.xaSourcePath }}/build-tools/automation/scripts/Invoke-ProcessWithRetry.ps1" `
+            -FilePath $dotnetPath `
+            -Arguments $dotnetArguments `
+            -TimeoutSeconds ($processTimeoutInMinutes * 60) `
+            -RetryCount ${{ parameters.processRetryCount }} `
+            -RetryDelaySeconds ${{ parameters.processRetryDelaySeconds }}
+    } else {
+        & $dotnetPath ${{ parameters.command }} ${{ parameters.project }} ${{ parameters.arguments }}
+    }
     if ([System.Convert]::ToBoolean("${{ parameters.useExitCodeForErrors }}") -and $LASTEXITCODE -ne 0) {
         Write-Host "##vso[task.logissue type=error]Test suite had $LASTEXITCODE failure(s)."
         Write-Host "##vso[task.complete result=Failed;]"
