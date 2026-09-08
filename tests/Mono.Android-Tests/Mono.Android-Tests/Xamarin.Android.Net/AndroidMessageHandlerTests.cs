@@ -354,81 +354,181 @@ namespace Xamarin.Android.NetTests
 		[Test]
 		public async Task HttpContentStreamIsRewoundAfterCancellation ()
 		{
+			const int requestContentLength = 8_000_000;
+			const int requestTimeoutMilliseconds = 10_000;
+
 			int testPort = GetAvailablePort ();
 			using var listener = new HttpListener ();
 			listener.Prefixes.Add ($"http://+:{testPort}/");
 			listener.Start ();
-			
-			// Handle the first request - simulate a slow server to allow cancellation
-			listener.BeginGetContext (ar => {
-				var ctx = listener.EndGetContext (ar);
-				// Read the request body slowly to ensure cancellation happens during upload
-				var buffer = new byte[4096];
+
+			var requestBodyStarted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var cancellationObserved = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var firstServerTask = HandleCancelledRequest ();
+
+			using var cancellationTokenSource = new System.Threading.CancellationTokenSource ();
+			using var retryCancellationTokenSource = new System.Threading.CancellationTokenSource ();
+			using var client = new HttpClient (new AndroidMessageHandler ());
+			var requestBody = new byte [requestContentLength];
+			for (int i = 0; i < requestBody.Length; i++)
+				requestBody [i] = (byte) (i % 251);
+			using var content = new ByteArrayContent (requestBody);
+			using var request = new HttpRequestMessage (HttpMethod.Post, $"http://localhost:{testPort}/") { Content = content };
+			Task firstRequestTask = Task.CompletedTask;
+			Task retryServerTask = Task.CompletedTask;
+			Task retryRequestTask = Task.CompletedTask;
+
+			try {
+				var stream = await content.ReadAsStreamAsync ();
+				Assert.AreEqual (0, stream.Position, "Stream position should be 0 before first request");
+
+				var firstResponseTask = client.SendAsync (request, cancellationTokenSource.Token);
+				firstRequestTask = firstResponseTask;
+				await WaitForTask (requestBodyStarted.Task, "The first request body did not start uploading.").ConfigureAwait (false);
+				Assert.Greater (stream.Position, 0, "The content stream did not advance after the server received the request body.");
+				Assert.Less (stream.Position, stream.Length, "The content upload completed before the test could cancel it.");
+
+				cancellationTokenSource.Cancel ();
+				var completedTask = await Task.WhenAny (firstResponseTask, Task.Delay (requestTimeoutMilliseconds)).ConfigureAwait (false);
+				if (completedTask != firstResponseTask) {
+					cancellationObserved.TrySetResult (true);
+					await WaitForTask (firstServerTask, "The first server handler did not finish after releasing the request body.").ConfigureAwait (false);
+					Assert.Fail ($"The first request did not observe cancellation within {requestTimeoutMilliseconds}ms.");
+				}
+
 				try {
-					while (ctx.Request.InputStream.Read (buffer, 0, buffer.Length) > 0) {
-						System.Threading.Thread.Sleep (100); // Slow down to allow cancellation
+					using var firstResponse = await firstResponseTask.ConfigureAwait (false);
+					Assert.Fail ("The first request completed successfully instead of observing cancellation.");
+				} catch (OperationCanceledException) {
+					cancellationObserved.TrySetResult (true);
+				}
+
+				cancellationObserved.TrySetResult (true);
+				await WaitForTask (firstServerTask, "The first server handler did not finish after cancellation.").ConfigureAwait (false);
+
+				var streamAfterCancellation = await content.ReadAsStreamAsync ();
+				Assert.AreEqual (0, streamAfterCancellation.Position, "Stream position should be 0 after cancellation (stream should be rewound)");
+
+				retryServerTask = HandleRetryRequest ();
+				using var retryRequest = new HttpRequestMessage (HttpMethod.Post, $"http://localhost:{testPort}/") { Content = content };
+				var retryResponseTask = client.SendAsync (retryRequest, retryCancellationTokenSource.Token);
+				retryRequestTask = retryResponseTask;
+				var retryTasks = Task.WhenAll (retryResponseTask, retryServerTask);
+				await WaitForTask (retryTasks, "The retry request and server handler did not finish.").ConfigureAwait (false);
+
+				using var retryResponse = await retryResponseTask.ConfigureAwait (false);
+				Assert.True (retryResponse.IsSuccessStatusCode, "Second request should succeed with reused content");
+
+				var streamAfterRetry = await content.ReadAsStreamAsync ();
+				Assert.AreEqual (0, streamAfterRetry.Position, "Stream position should be 0 after successful request");
+			} finally {
+				bool requestBodyStartedBeforeCleanup = requestBodyStarted.Task.IsCompleted;
+				bool firstRequestCompletedBeforeCleanup = firstRequestTask.IsCompleted;
+				bool firstServerCompletedBeforeCleanup = firstServerTask.IsCompleted;
+				bool retryRequestCompletedBeforeCleanup = retryRequestTask.IsCompleted;
+				bool retryServerCompletedBeforeCleanup = retryServerTask.IsCompleted;
+				bool firstRequestCancellationExpected = cancellationTokenSource.IsCancellationRequested || !firstRequestCompletedBeforeCleanup;
+
+				cancellationObserved.TrySetResult (true);
+				cancellationTokenSource.Cancel ();
+				retryCancellationTokenSource.Cancel ();
+				listener.Abort ();
+
+				await Task.WhenAll (
+					ObserveTaskAfterCleanup (requestBodyStarted.Task, "request body start signal", requestBodyStartedBeforeCleanup, cancellationExpected: false, listenerAbortExpected: true),
+					ObserveTaskAfterCleanup (firstRequestTask, "first request", firstRequestCompletedBeforeCleanup, cancellationExpected: firstRequestCancellationExpected, listenerAbortExpected: false),
+					ObserveTaskAfterCleanup (firstServerTask, "first server handler", firstServerCompletedBeforeCleanup, cancellationExpected: false, listenerAbortExpected: true),
+					ObserveTaskAfterCleanup (retryRequestTask, "retry request", retryRequestCompletedBeforeCleanup, cancellationExpected: !retryRequestCompletedBeforeCleanup, listenerAbortExpected: false),
+					ObserveTaskAfterCleanup (retryServerTask, "retry server handler", retryServerCompletedBeforeCleanup, cancellationExpected: false, listenerAbortExpected: true)
+				).ConfigureAwait (false);
+			}
+
+			async Task HandleCancelledRequest ()
+			{
+				try {
+					var context = await listener.GetContextAsync ().ConfigureAwait (false);
+					using var response = context.Response;
+					var buffer = new byte [4096];
+					int bytesRead = await context.Request.InputStream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false);
+					if (bytesRead == 0)
+						throw new InvalidOperationException ("The first request ended before its body started uploading.");
+
+					requestBodyStarted.TrySetResult (true);
+					await cancellationObserved.Task.ConfigureAwait (false);
+
+					try {
+						while (await context.Request.InputStream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false) > 0) {
+						}
+					} catch (IOException) {
+						// The canceled client can close the connection while the server drains the request.
+					} catch (HttpListenerException) {
+						// The canceled client can close the connection while the server drains the request.
+					}
+
+					try {
+						response.StatusCode = 204;
+						response.ContentLength64 = 0;
+						response.Close ();
+					} catch (IOException) {
+						// The canceled client can close the connection before the server closes the response.
+					} catch (HttpListenerException) {
+						// The canceled client can close the connection before the server closes the response.
 					}
 				} catch (Exception ex) {
-					// Expected when connection is cancelled
-					Console.WriteLine ($"Exception while reading request body: {ex}");
+					requestBodyStarted.TrySetException (ex);
+					throw;
 				}
+			}
+
+			async Task HandleRetryRequest ()
+			{
+				var context = await listener.GetContextAsync ().ConfigureAwait (false);
+				using var response = context.Response;
+				Assert.AreEqual (requestBody.Length, context.Request.ContentLength64, "The retry request declared an unexpected content length.");
+				var buffer = new byte [4096];
+				int totalBytesRead = 0;
+				int bytesRead;
+				while ((bytesRead = await context.Request.InputStream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false)) > 0) {
+					if (totalBytesRead + bytesRead > requestBody.Length)
+						Assert.Fail ($"The retry request body exceeded the expected {requestBody.Length} bytes.");
+
+					for (int i = 0; i < bytesRead; i++) {
+						if (buffer [i] != requestBody [totalBytesRead + i])
+							Assert.Fail ($"The retry request body differed at offset {totalBytesRead + i}.");
+					}
+					totalBytesRead += bytesRead;
+				}
+
+				Assert.AreEqual (requestBody.Length, totalBytesRead, "The retry request did not contain the complete rewound body.");
+
+				response.StatusCode = 200;
+				response.ContentLength64 = 0;
+				response.Close ();
+			}
+
+			async Task WaitForTask (Task task, string failureMessage)
+			{
+				var completed = await Task.WhenAny (task, Task.Delay (requestTimeoutMilliseconds)).ConfigureAwait (false);
+				if (completed != task)
+					Assert.Fail ($"{failureMessage} Timeout: {requestTimeoutMilliseconds}ms.");
+
+				await task.ConfigureAwait (false);
+			}
+
+			async Task ObserveTaskAfterCleanup (Task task, string taskName, bool completedBeforeCleanup, bool cancellationExpected, bool listenerAbortExpected)
+			{
+				var completed = await Task.WhenAny (task, Task.Delay (requestTimeoutMilliseconds)).ConfigureAwait (false);
+				if (completed != task)
+					Assert.Fail ($"The {taskName} did not finish during cleanup within {requestTimeoutMilliseconds}ms.");
+
 				try {
-					ctx.Response.StatusCode = 200;
-					ctx.Response.Close ();
-				} catch (Exception ex) {
-					// Connection may already be closed
-					Console.WriteLine ($"Exception while closing response: {ex}");
+					await task.ConfigureAwait (false);
+				} catch (OperationCanceledException) when (cancellationExpected) {
+				} catch (HttpListenerException) when (listenerAbortExpected && !completedBeforeCleanup) {
+				} catch (ObjectDisposedException) when (listenerAbortExpected && !completedBeforeCleanup) {
+				} catch (IOException) when (listenerAbortExpected && !completedBeforeCleanup) {
 				}
-			}, null);
-
-			var tcs = new System.Threading.CancellationTokenSource ();
-			tcs.CancelAfter (500); // Cancel after 500ms
-			var client = new HttpClient (new AndroidMessageHandler ());
-			var byc = new ByteArrayContent (new byte[1_000_000]); // 1 MB of data
-			var request = new HttpRequestMessage (HttpMethod.Post, $"http://localhost:{testPort}/") { Content = byc };
-			
-			var stream = await byc.ReadAsStreamAsync ();
-			var positionBefore = stream.Position;
-			Assert.AreEqual (0, positionBefore, "Stream position should be 0 before first request");
-
-			bool exceptionThrown = false;
-			try {
-				await client.SendAsync (request, tcs.Token).ConfigureAwait (false);
-				// If we get here without exception, that's also OK for this test
-			} catch (Exception ex) when (IsConnectionFailure (ex)) {
-				Assert.Ignore ($"Ignoring transient connection failure: {ex.GetType ()}: {ex.Message}");
-			} catch (Exception ex) {
-				// Expected - cancellation or connection error
-				// We catch all exceptions to ensure the test doesn't fail due to unhandled exceptions
-				Console.WriteLine ($"Exception during first request (expected): {ex}");
-				exceptionThrown = true;
 			}
-
-			// The key assertion: stream should be rewound even after an exception
-			var stream2 = await byc.ReadAsStreamAsync ();
-			var positionAfter = stream2.Position;
-			Assert.AreEqual (0, positionAfter, "Stream position should be 0 after failed request (stream should be rewound)");
-
-			// Only proceed with second request if we actually got an exception (test scenario succeeded)
-			if (exceptionThrown) {
-				var request2 = new HttpRequestMessage (HttpMethod.Post, $"http://localhost:{testPort}/") { Content = byc };
-			
-				// Set up listener for second request
-				listener.BeginGetContext (ar => {
-					var ctx = listener.EndGetContext (ar);
-					ctx.Response.StatusCode = 200;
-					ctx.Response.Close ();
-				}, null);
-
-				var response2 = await client.SendAsync (request2).ConfigureAwait (false);
-				Assert.True (response2.IsSuccessStatusCode, "Second request should succeed with reused content");
-
-				var stream3 = await byc.ReadAsStreamAsync ();
-				var positionFinal = stream3.Position;
-				Assert.AreEqual (0, positionFinal, "Stream position should be 0 after successful request");
-			}
-
-			listener.Close ();
 		}
 
 		[Test]
