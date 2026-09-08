@@ -22,7 +22,7 @@ static class MetadataHelper
 		int byteCount = checked (nameByteCount + contentBytes.Length);
 		byte []? rented = null;
 		Span<byte> input = byteCount <= stackallocThresholdBytes
-			? stackalloc byte [stackallocThresholdBytes]
+			? stackalloc byte [byteCount]
 			: (rented = ArrayPool<byte>.Shared.Rent (byteCount));
 		try {
 			Encoding.UTF8.GetBytes (moduleName.AsSpan (), input [..nameByteCount]);
