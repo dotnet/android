@@ -62,6 +62,10 @@
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests.csproj" />
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests/SpecialTypeCollisionFixture/SpecialTypeCollisionFixture.csproj" />
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests/UserTypesFixture/UserTypesFixture.csproj" />
+    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/ActivationStubs.Java.Interop/ActivationStubs.Java.Interop.csproj" />
+    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/ActivationStubs.Mono.Android/ActivationStubs.Mono.Android.csproj" />
+    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/InvalidConstructorFixtures/InvalidConstructorFixtures.csproj" />
+    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/LookalikeConstructorTypes/LookalikeConstructorTypes.csproj" />
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests.csproj" />
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/MonoAndroidFixture/MonoAndroidFixture.csproj" />
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/TestAttributeFixtures/TestAttributeFixtures.csproj" />

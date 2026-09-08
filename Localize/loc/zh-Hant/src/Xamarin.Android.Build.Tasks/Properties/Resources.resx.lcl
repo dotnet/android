@@ -1908,6 +1908,42 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA4325" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Failed to rewrite managed JNI names for R8. {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[無法重寫 R8 的受管理 JNI 名稱。{0}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4325_AssemblyFailure" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Could not rewrite the JNI names in the assembly '{0}': {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[無法重寫組件 '{0}' 中的 JNI 名稱: {1}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4325_SourceDestinationCount" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'SourceFiles' and 'DestinationFiles' item groups must contain the same number of items.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['SourceFiles' 和 'DestinationFiles' 項目群組必須包含相同數量的項目。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4326" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous JNIEnv.FindClass source.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[無法安全地重寫 JNI 成員查閱，因為其類別控制代碼沒有一個在結構上明確的 JNIEnv.FindClass 來源。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA5101" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.]]></Val>

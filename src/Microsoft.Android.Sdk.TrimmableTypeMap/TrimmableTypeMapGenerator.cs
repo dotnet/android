@@ -68,12 +68,14 @@ public class TrimmableTypeMapGenerator
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 		MarkFrameworkAssemblyPeers (allPeers, frameworkAssemblyNames);
+		bool validConstructors = ValidateConstructors (allPeers);
 
 		RootCustomViewTypes (allPeers, customViewTypeNames);
 		RootManifestReferencedTypes (allPeers, manifestForRooting, manifestConfig?.ApplicationJavaClass);
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
-		if (!ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass, manifestForRooting)) {
+		bool validJavaNames = ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass, manifestForRooting);
+		if (!validConstructors || !validJavaNames) {
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 
@@ -110,6 +112,36 @@ public class TrimmableTypeMapGenerator
 				peer.IsUnconditional = true;
 			}
 		}
+	}
+
+	internal bool ValidateConstructors (IReadOnlyList<JavaPeerInfo> peers)
+	{
+		bool valid = true;
+		foreach (var peer in peers) {
+			if (peer.IsFrameworkAssembly || !ShouldGenerateJcw (peer)) {
+				continue;
+			}
+			foreach (var diagnostic in peer.ConstructorDiagnostics) {
+				valid = false;
+				switch (diagnostic.Kind) {
+					case ConstructorDiagnosticKind.AmbiguousJniSignature:
+						logger.LogAmbiguousConstructorSignatureError (peer.ManagedTypeName, diagnostic.Detail);
+						break;
+					case ConstructorDiagnosticKind.UnsupportedParameterType:
+						logger.LogUnsupportedConstructorParameterTypeError (peer.ManagedTypeName, diagnostic.Detail);
+						break;
+					case ConstructorDiagnosticKind.MissingBaseConstructor:
+						logger.LogMissingBaseConstructorError (peer.ManagedTypeName, diagnostic.Detail);
+						break;
+					case ConstructorDiagnosticKind.InvalidSuperArgumentsString:
+						logger.LogInvalidSuperArgumentsStringError (peer.ManagedTypeName, diagnostic.Detail);
+						break;
+					default:
+						throw new InvalidOperationException ($"Unknown constructor diagnostic kind '{diagnostic.Kind}'.");
+				}
+			}
+		}
+		return valid;
 	}
 
 	internal bool ValidateJavaNames (
