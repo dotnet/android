@@ -98,7 +98,7 @@ namespace Java.InteropTests
 		[Category (JniReferenceLeakCategory)]
 		public void TryFindClass_Utf8_DoesNotLeakGlobalRefs ()
 		{
-			AssertNoGlobalReferenceLeak (() => {
+			AssertNoSustainedGlobalReferenceGrowth (() => {
 				Assert.IsFalse (JniEnvironment.Types.TryFindClass ("does/not/Exist"u8, out var notFound));
 				Assert.IsFalse (notFound.IsValid);
 			});
@@ -108,7 +108,7 @@ namespace Java.InteropTests
 		[Category (JniReferenceLeakCategory)]
 		public void TryFindClass_String_DoesNotLeakGlobalRefs ()
 		{
-			AssertNoGlobalReferenceLeak (() => {
+			AssertNoSustainedGlobalReferenceGrowth (() => {
 				Assert.IsFalse (JniEnvironment.Types.TryFindClass ("does/not/Exist", out var notFound));
 				Assert.IsFalse (notFound.IsValid);
 			});
@@ -116,12 +116,12 @@ namespace Java.InteropTests
 
 		[Test]
 		[Category (JniReferenceLeakCategory)]
-		public void AssertNoGlobalReferenceLeak_DetectsRetainedGlobalReference ()
+		public void AssertNoSustainedGlobalReferenceGrowth_DetectsRetainedGlobalReference ()
 		{
 			var objectClass = JniEnvironment.Types.FindClass ("java/lang/Object");
 			var retainedReferences = new List<JniObjectReference> ();
 			try {
-				Assert.Throws<AssertionException> (() => AssertNoGlobalReferenceLeak (() => {
+				Assert.Throws<AssertionException> (() => AssertNoSustainedGlobalReferenceGrowth (() => {
 					retainedReferences.Add (objectClass.NewGlobalRef ());
 				}));
 			} finally {
@@ -133,7 +133,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		static void AssertNoGlobalReferenceLeak (Action action)
+		static void AssertNoSustainedGlobalReferenceGrowth (Action action)
 		{
 			for (int i = 0; i < LeakCheckIterations; i++) {
 				action ();
