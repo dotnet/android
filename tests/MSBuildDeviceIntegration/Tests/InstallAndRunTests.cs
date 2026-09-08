@@ -3419,7 +3419,10 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		static int ParseInstrumentationResult (string output, string key)
 		{
 			var value = ParseInstrumentationStringResult (output, key);
-			return int.TryParse (value, out int result) ? result : -1;
+			if (!int.TryParse (value, out int result)) {
+				Assert.Fail ($"INSTRUMENTATION_RESULT key '{key}' has invalid integer value '{value}'.");
+			}
+			return result;
 		}
 
 		static string ParseInstrumentationStringResult (string output, string key)
@@ -3432,6 +3435,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 					return line.Substring (prefix.Length).Trim ();
 				}
 			}
+			Assert.Fail ($"INSTRUMENTATION_RESULT key '{key}' was not found.");
 			return "";
 		}
 
