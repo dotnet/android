@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <limits>
 #include <string_view>
 
@@ -115,6 +116,14 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 		return;
 	}
 
+	if (sbuf.st_size < 0 || static_cast<uintmax_t>(sbuf.st_size) > static_cast<uintmax_t>(std::numeric_limits<size_t>::max ())) {
+		log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: invalid file size", path);
+		if (close (fd) < 0) {
+			log_warnf (LOG_DEFAULT, "Failed to close the environment override file %s: %s", path, strerror (errno));
+		}
+		return;
+	}
+
 	auto file_size = static_cast<size_t>(sbuf.st_size);
 	if (file_size == 0) {
 		log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: file is empty", path);
@@ -125,31 +134,47 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 	}
 
 	size_t   nread = 0uz;
-	ssize_t  r;
+	ssize_t  r = 0;
+	int      read_errno = 0;
 	char    *buf = static_cast<char*> (std::malloc (file_size));
 	if (buf == nullptr) [[unlikely]] {
 		Helpers::abort_application (LOG_DEFAULT, "Unable to allocate memory for the environment override file");
 	}
 
-	do {
+	while (nread < file_size) {
 		auto read_count = static_cast<read_count_type>(file_size - nread);
+		if (read_count > static_cast<read_count_type>(std::numeric_limits<ssize_t>::max ())) {
+			read_count = static_cast<read_count_type>(std::numeric_limits<ssize_t>::max ());
+		}
+
 		r = read (fd, buf + nread, read_count);
 		if (r > 0) {
 			nread += static_cast<size_t>(r);
+			continue;
 		}
-	} while (r < 0 && errno == EINTR);
 
-	int read_errno = errno;
+		if (r < 0 && errno == EINTR) {
+			continue;
+		}
+
+		if (r < 0) {
+			read_errno = errno;
+		}
+		break;
+	}
+
 	if (close (fd) < 0) {
 		log_warnf (LOG_DEFAULT, "Failed to close the environment override file %s: %s", path, strerror (errno));
 	}
 
+	if (read_errno != 0) {
+		log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: %s", path, strerror (read_errno));
+		std::free (buf);
+		return;
+	}
+
 	if (nread == 0) {
-		if (r < 0) {
-			log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: %s", path, strerror (read_errno));
-		} else {
-			log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: unexpected end of file", path);
-		}
+		log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: unexpected end of file", path);
 		std::free (buf);
 		return;
 	}
@@ -176,39 +201,104 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 		return;
 	}
 
-	char *endptr;
-	unsigned long name_width = strtoul (buf, &endptr, 16);
-	if ((name_width == std::numeric_limits<unsigned long>::max () && errno == ERANGE) || (buf [0] != '\0' && *endptr != '\0')) {
+	constexpr size_t header_field_size = Constants::OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE / 2uz;
+	constexpr size_t header_value_size = header_field_size - 1uz;
+	auto is_valid_width_field = [] (const char *field) noexcept -> bool {
+		if (field [0] != '0' || (field [1] != 'x' && field [1] != 'X') || field [header_value_size] != '\0') {
+			return false;
+		}
+
+		for (size_t i = 2uz; i < header_value_size; ++i) {
+			char c = field [i];
+			if (!((c >= '0' && c <= '9') ||
+			      (c >= 'a' && c <= 'f') ||
+			      (c >= 'A' && c <= 'F'))) {
+				return false;
+			}
+		}
+
+		return true;
+	};
+
+	char name_width_field [header_field_size];
+	memcpy (name_width_field, buf, header_field_size);
+	if (!is_valid_width_field (name_width_field)) {
 		log_warnf (LOG_DEFAULT, "Malformed header of the environment override file %s: name width has invalid format", path);
 		std::free (buf);
 		return;
 	}
 
-	unsigned long value_width = strtoul (buf + 11, &endptr, 16);
-	if ((value_width == std::numeric_limits<unsigned long>::max () && errno == ERANGE) || (buf [0] != '\0' && *endptr != '\0')) {
+	char value_width_field [header_field_size];
+	memcpy (value_width_field, buf + header_field_size, header_field_size);
+	if (!is_valid_width_field (value_width_field)) {
 		log_warnf (LOG_DEFAULT, "Malformed header of the environment override file %s: value width has invalid format", path);
 		std::free (buf);
 		return;
 	}
 
-	uint64_t data_width = name_width + value_width;
-	if (data_width > file_size - Constants::OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE || (file_size - Constants::OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE) % data_width != 0) {
+	char *endptr;
+	errno = 0;
+	unsigned long name_width_raw = strtoul (name_width_field, &endptr, 16);
+	if (errno == ERANGE || endptr != name_width_field + header_value_size) {
+		log_warnf (LOG_DEFAULT, "Malformed header of the environment override file %s: name width has invalid format", path);
+		std::free (buf);
+		return;
+	}
+
+	errno = 0;
+	unsigned long value_width_raw = strtoul (value_width_field, &endptr, 16);
+	if (errno == ERANGE || endptr != value_width_field + header_value_size) {
+		log_warnf (LOG_DEFAULT, "Malformed header of the environment override file %s: value width has invalid format", path);
+		std::free (buf);
+		return;
+	}
+
+	if (name_width_raw == 0 || value_width_raw == 0 ||
+	    static_cast<uintmax_t>(name_width_raw) > static_cast<uintmax_t>(std::numeric_limits<size_t>::max ()) ||
+	    static_cast<uintmax_t>(value_width_raw) > static_cast<uintmax_t>(std::numeric_limits<size_t>::max ())) {
 		log_warnf (LOG_DEFAULT, "Malformed environment override file %s: invalid data size", path);
 		std::free (buf);
 		return;
 	}
 
-	uint64_t data_size = static_cast<uint64_t>(file_size);
+	size_t name_width = static_cast<size_t>(name_width_raw);
+	size_t value_width = static_cast<size_t>(value_width_raw);
+	if (name_width > std::numeric_limits<size_t>::max () - value_width) {
+		log_warnf (LOG_DEFAULT, "Malformed environment override file %s: invalid data size", path);
+		std::free (buf);
+		return;
+	}
+
+	size_t data_width = name_width + value_width;
+	size_t data_size = nread - Constants::OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE;
+	if (data_width > data_size || data_size % data_width != 0) {
+		log_warnf (LOG_DEFAULT, "Malformed environment override file %s: invalid data size", path);
+		std::free (buf);
+		return;
+	}
+
 	char *name = buf + Constants::OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE;
-	while (data_size > 0 && data_size >= data_width) {
+	while (data_size > 0) {
 		if (*name == '\0') {
 			log_warnf (LOG_DEFAULT, "Malformed environment override file %s: name at offset %td is empty", path, name - buf);
 			std::free (buf);
 			return;
 		}
 
-		log_debugf (LOG_DEFAULT, "Setting environment variable from the override file %s: '%s' = '%s'", path, name, name + name_width);
-		setup_environment (name, name + name_width);
+		char *value = name + name_width;
+		if (memchr (name, '\0', name_width) == nullptr) {
+			log_warnf (LOG_DEFAULT, "Malformed environment override file %s: name at offset %td is not NUL-terminated", path, name - buf);
+			std::free (buf);
+			return;
+		}
+		if (memchr (value, '\0', value_width) == nullptr) {
+			log_warnf (LOG_DEFAULT, "Malformed environment override file %s: value at offset %td is not NUL-terminated", path, value - buf);
+			std::free (buf);
+			return;
+		}
+
+		log_debugf (LOG_DEFAULT, "Setting environment variable from the override file %s: '%s' = '%s'", path, name, value);
+		setup_environment (name, value);
 		name += data_width;
 		data_size -= data_width;
 	}
