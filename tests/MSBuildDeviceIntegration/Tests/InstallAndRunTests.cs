@@ -3424,7 +3424,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 
 		static string ParseInstrumentationStringResult (string output, string key)
 		{
-			// Parses lines like: INSTRUMENTATION_RESULT: passed=1
+			// Parses lines like: INSTRUMENTATION_RESULT: key=value
 			var prefix = $"INSTRUMENTATION_RESULT: {key}=";
 			foreach (var rawLine in output.Split ('\n')) {
 				var line = rawLine.Trim ();
