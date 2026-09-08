@@ -2305,7 +2305,7 @@ public sealed class JavaPeerScanner : IDisposable
 		return descriptor.Length > 0;
 	}
 
-	bool IsSpecialManagedType (TypeRefData managedType, string managedTypeName, params string [] assemblyNames)
+	bool IsSpecialManagedType (TypeRefData managedType, string managedTypeName, params ReadOnlySpan<string> assemblyNames)
 	{
 		if (!string.Equals (managedType.ManagedTypeName, managedTypeName, StringComparison.Ordinal)) {
 			return false;
