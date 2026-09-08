@@ -68,8 +68,8 @@ namespace xamarin::android {
 					nbytes == -1 ? strerror (errno) : "incomplete write"
 				);
 				__atomic_store_n (&state->cancelled, true, __ATOMIC_RELEASE);
-				close (state->pipe_fds[1]);
-				state->pipe_fds[1] = -1;
+				ALooper_removeFd (main_thread_looper, state->pipe_fds[0]);
+				release_state (state); // The callback cannot run without a successful pipe write.
 				return false;
 			}
 
