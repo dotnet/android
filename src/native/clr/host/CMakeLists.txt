@@ -127,7 +127,6 @@ macro(lib_target_options TARGET_NAME)
     ${RUNTIME_INCLUDE_DIR}
     ${TEMP_MONO_RUNTIME_INCLUDE_DIR}
     ${NATIVE_TRACING_INCLUDE_DIRS}
-    ${LIBUNWIND_INCLUDE_DIRS}
   )
 
   target_link_directories(

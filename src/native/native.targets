@@ -34,6 +34,7 @@
     <ItemGroup>
       <_ConfigureRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
       <_ConfigureRuntimesInputs  Include="CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="CMakePresets.json" />
       <_ConfigureRuntimesInputs  Include="common\java-interop\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="common\libunwind\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="common\runtime-base\CMakeLists.txt" />
@@ -68,7 +69,6 @@
       <_ConfigureRuntimesInputs  Include="clr\host\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="clr\runtime-base\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="clr\shared\CMakeLists.txt" />
-      <_ConfigureRuntimesInputs  Include="clr\startup\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="clr\xamarin-app-stub\CMakeLists.txt" />
     </ItemGroup>
 
@@ -80,6 +80,7 @@
   <Target Name="_ConfigureArchiveDSOInputsAndOutputs">
     <ItemGroup>
       <_ArchiveDSOInput Include="common\archive-dso-stub\CMakeLists.txt" />
+      <_ArchiveDSOInput Include="CMakePresets.json" />
 
       <_ArchiveDSOOutput Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-archive-dso-stub\CMakeCache.txt')" />
       <_ArchiveDSOOutput Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libarchive-dso-stub.so')" />
@@ -120,6 +121,7 @@
 
     <ItemGroup>
       <_TestJniLibraryInput Include="common\test-jni-library\CMakeLists.txt" />
+      <_TestJniLibraryInput Include="CMakePresets.json" />
 
       <_TestJniLibraryOutput Include="@(_TestJniLibraryAbi->'$(FlavorIntermediateOutputPath)%(AndroidRID)-test-jni-library\CMakeCache.txt')" />
 
