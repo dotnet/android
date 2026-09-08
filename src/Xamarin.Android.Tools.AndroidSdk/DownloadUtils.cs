@@ -122,7 +122,7 @@ namespace Xamarin.Android.Tools
 				if (string.IsNullOrEmpty (entry.Name))
 					continue;
 
-				var destinationFile = Path.GetFullPath (Path.Combine (fullExtractRoot, entry.FullName));
+				var destinationFile = Path.GetFullPath (Path.Combine (fullExtractRoot, entry.FullName)); // CodeQL [SM02729] IsUnderDirectory canonicalizes both paths and enforces ordinal directory-boundary containment.
 
 				// Zip Slip protection
 				if (!FileUtil.IsUnderDirectory (destinationFile, fullExtractRoot)) {
@@ -133,7 +133,7 @@ namespace Xamarin.Android.Tools
 				if (!string.IsNullOrEmpty (entryDir))
 					Directory.CreateDirectory (entryDir);
 
-				entry.ExtractToFile (destinationFile, overwrite: true); // codeql[SM02729] IsUnderDirectory canonicalizes both paths and enforces ordinal directory-boundary containment.
+				entry.ExtractToFile (destinationFile, overwrite: true);
 			}
 		}
 
