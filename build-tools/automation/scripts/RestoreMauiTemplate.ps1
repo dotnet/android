@@ -123,6 +123,9 @@ function Invoke-MauiTemplateRestore
 		$attemptArguments = @($restoreArguments)
 		if ($BinaryLogPath) {
 			$binaryLogDirectory = Split-Path -Parent $BinaryLogPath
+			if (-not $binaryLogDirectory) {
+				$binaryLogDirectory = (Get-Location).Path
+			}
 			if ($binaryLogDirectory -and -not (Test-Path -LiteralPath $binaryLogDirectory)) {
 				New-Item -ItemType Directory -Path $binaryLogDirectory -Force | Out-Null
 			}

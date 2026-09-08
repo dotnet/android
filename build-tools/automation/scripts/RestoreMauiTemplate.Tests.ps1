@@ -44,7 +44,8 @@ function Invoke-TestRestore
 {
 	param (
 		[object []] $Responses,
-		[int] $MaxAttempts = 4
+		[int] $MaxAttempts = 4,
+		[string] $BinaryLogPath
 	)
 
 	$responseQueue = [Collections.Generic.Queue[object]]::new()
@@ -72,6 +73,7 @@ function Invoke-TestRestore
 		-DotNetPath 'dotnet' `
 		-Project 'MauiTestProj.csproj' `
 		-NuGetConfig 'NuGet.config' `
+		-BinaryLogPath $BinaryLogPath `
 		-MaxAttempts $MaxAttempts `
 		-InitialRetryDelaySeconds 1 `
 		-MaxRetryDelaySeconds 2 `
@@ -95,6 +97,13 @@ Assert-True ($success.Invocations[0] -contains '--no-http-cache') 'Restore must 
 Assert-True ($success.Invocations[0] -contains '--force-evaluate') 'Restore must force dependency reevaluation.'
 Assert-Equal 'nuget locals http-cache --clear' ($success.Invocations[1] -join ' ') 'A successful restore should clear stale metadata for subsequent restores.'
 Assert-Equal 0 $success.Delays.Count 'An immediate restore success should not wait.'
+
+$leafBinaryLog = Invoke-TestRestore -BinaryLogPath 'restore.binlog' -Responses @(
+	(New-CommandResult -ExitCode 0 -Output @('Restore succeeded.'))
+	(New-CommandResult -ExitCode 0 -Output @('Cleared NuGet HTTP cache.'))
+)
+$expectedBinaryLog = "-bl:$(Join-Path (Get-Location).Path 'restore-attempt-1.binlog')"
+Assert-True ($leafBinaryLog.Invocations[0] -contains $expectedBinaryLog) 'A leaf-only binary log path should use the current directory.'
 
 $retryableOutput = @(
 	'MauiTestProj.csproj : error NU1102: Unable to find package Microsoft.Extensions.Logging with version (>= 11.0.0-rc.2.26453.114)'
