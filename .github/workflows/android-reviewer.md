@@ -45,6 +45,7 @@ max-ai-credits: -1
 tools:
   bash:
     - az *
+    - c++ *
     - cat
     - git diff *
     - grep
