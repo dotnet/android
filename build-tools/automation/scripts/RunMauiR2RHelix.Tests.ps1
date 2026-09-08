@@ -1,3 +1,7 @@
+param (
+	[switch] $InjectAssertionFailure
+)
+
 $ErrorActionPreference = 'Stop'
 
 $runnerScript = Join-Path $PSScriptRoot 'RunMauiR2RHelix.ps1'
@@ -36,10 +40,14 @@ function Assert-MatchCount ([string []] $Lines, [string] $Pattern, [int] $Expect
 $testRoot = Join-Path ([IO.Path]::GetTempPath()) "Maui R2R $([IO.Path]::GetRandomFileName())"
 $fakeAdb = Join-Path $testRoot 'FakeAdb.ps1'
 $apk = Join-Path $testRoot 'MauiR2R-Signed.apk'
+$suitePassed = $false
 
 try {
 	New-Item -ItemType Directory -Path $testRoot | Out-Null
 	Set-Content -LiteralPath $apk -Value 'test APK placeholder' -Encoding ASCII
+	if ($InjectAssertionFailure) {
+		Assert-Equal 'expected' 'injected failure' 'Injected process-level assertion failure.'
+	}
 
 	@'
 $ErrorActionPreference = 'Stop'
@@ -301,9 +309,14 @@ exit 2
 	Assert-NotContains $pidMissing.Output 'null-valued expression' 'Empty adb output must remain a non-null string.'
 
 	Write-Host 'MAUI R2R Helix recovery tests passed.'
+	$suitePassed = $true
 } finally {
 	Remove-Item Env:FAKE_ADB_SCENARIO -ErrorAction Ignore
 	Remove-Item Env:FAKE_ADB_TRANSCRIPT -ErrorAction Ignore
 	Remove-Item Env:HELIX_WORKITEM_UPLOAD_ROOT -ErrorAction Ignore
 	Remove-Item -LiteralPath $testRoot -Recurse -Force -ErrorAction Ignore
+}
+
+if ($suitePassed) {
+	exit 0
 }

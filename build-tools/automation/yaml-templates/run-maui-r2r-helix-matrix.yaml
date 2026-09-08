@@ -215,7 +215,7 @@ steps:
     continueOnError: false
 
 - powershell: |
-    & '${{ parameters.xaSourcePath }}/build-tools/automation/scripts/RunMauiR2RHelix.Tests.ps1'
+    & '${{ parameters.xaSourcePath }}/build-tools/automation/scripts/RunMauiR2RHelix.Tests.Process.ps1'
   displayName: Test MAUI R2R Helix device recovery
 
 - powershell: |
