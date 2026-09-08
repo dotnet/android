@@ -534,7 +534,7 @@ namespace Xamarin.Android.NetTests
 				content [i] = (byte) i;
 
 			using var stream = new ControlledSeekableStream (content);
-			using var firstDestination = new MemoryStream ();
+			using var firstDestination = new BufferedDestinationStream ();
 			using var cancellationTokenSource = new CancellationTokenSource ();
 			Task firstCopyTask = Task.CompletedTask;
 
@@ -548,6 +548,9 @@ namespace Xamarin.Android.NetTests
 				Assert.IsFalse (firstCopyTask.IsCompleted, "The first copy completed before cancellation.");
 				Assert.AreEqual (8, stream.FirstWriteLength, "The first destination write should use the requested copy buffer size.");
 				Assert.AreEqual (8, stream.Position, "The controlled stream should advance only by the bytes written before its gate.");
+				Assert.AreEqual (1, firstDestination.FlushCount, "The first destination write should be flushed before the progress gate is signaled.");
+				CollectionAssert.AreEqual (new byte [] { 0, 1, 2, 3, 4, 5, 6, 7 }, firstDestination.ToArray (),
+					"The flushed destination should expose the complete first write.");
 
 				cancellationTokenSource.Cancel ();
 				try {
@@ -667,6 +670,7 @@ namespace Xamarin.Android.NetTests
 					while ((bytesRead = await ReadAsync (buffer, 0, buffer.Length, cancellationToken).ConfigureAwait (false)) > 0) {
 						await destination.WriteAsync (buffer, 0, bytesRead, cancellationToken).ConfigureAwait (false);
 						if (gateFirstCopy && firstWrite) {
+							await destination.FlushAsync (cancellationToken).ConfigureAwait (false);
 							firstWrite = false;
 							Volatile.Write (ref firstWriteLength, bytesRead);
 							firstWriteCompleted.TrySetResult (true);
@@ -678,6 +682,73 @@ namespace Xamarin.Android.NetTests
 						firstWriteCompleted.TrySetException (ex);
 					throw;
 				}
+			}
+		}
+
+		sealed class BufferedDestinationStream : Stream
+		{
+			readonly MemoryStream buffered = new MemoryStream ();
+			readonly MemoryStream committed = new MemoryStream ();
+			int flushCount;
+
+			public int FlushCount => Volatile.Read (ref flushCount);
+
+			public override bool CanRead => false;
+
+			public override bool CanSeek => false;
+
+			public override bool CanWrite => true;
+
+			public override long Length => throw new NotSupportedException ();
+
+			public override long Position {
+				get => throw new NotSupportedException ();
+				set => throw new NotSupportedException ();
+			}
+
+			public byte [] ToArray () => committed.ToArray ();
+
+			public override void Flush ()
+			{
+				buffered.Position = 0;
+				buffered.CopyTo (committed);
+				buffered.SetLength (0);
+				buffered.Position = 0;
+				Interlocked.Increment (ref flushCount);
+			}
+
+			public override Task FlushAsync (CancellationToken cancellationToken)
+			{
+				cancellationToken.ThrowIfCancellationRequested ();
+				Flush ();
+				return Task.CompletedTask;
+			}
+
+			public override int Read (byte [] buffer, int offset, int count) => throw new NotSupportedException ();
+
+			public override long Seek (long offset, SeekOrigin origin) => throw new NotSupportedException ();
+
+			public override void SetLength (long value) => throw new NotSupportedException ();
+
+			public override void Write (byte [] buffer, int offset, int count)
+			{
+				buffered.Write (buffer, offset, count);
+			}
+
+			public override Task WriteAsync (byte [] buffer, int offset, int count, CancellationToken cancellationToken)
+			{
+				cancellationToken.ThrowIfCancellationRequested ();
+				Write (buffer, offset, count);
+				return Task.CompletedTask;
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				if (disposing) {
+					buffered.Dispose ();
+					committed.Dispose ();
+				}
+				base.Dispose (disposing);
 			}
 		}
 	}
