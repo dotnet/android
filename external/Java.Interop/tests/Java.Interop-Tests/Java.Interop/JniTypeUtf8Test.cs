@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 
 using Java.Interop;
 
@@ -113,6 +114,25 @@ namespace Java.InteropTests
 			});
 		}
 
+		[Test]
+		[Category (JniReferenceLeakCategory)]
+		public void AssertNoGlobalReferenceLeak_DetectsRetainedGlobalReference ()
+		{
+			var objectClass = JniEnvironment.Types.FindClass ("java/lang/Object");
+			var retainedReferences = new List<JniObjectReference> ();
+			try {
+				Assert.Throws<AssertionException> (() => AssertNoGlobalReferenceLeak (() => {
+					retainedReferences.Add (objectClass.NewGlobalRef ());
+				}));
+			} finally {
+				foreach (var retainedReference in retainedReferences) {
+					var reference = retainedReference;
+					JniObjectReference.Dispose (ref reference);
+				}
+				JniObjectReference.Dispose (ref objectClass);
+			}
+		}
+
 		static void AssertNoGlobalReferenceLeak (Action action)
 		{
 			for (int i = 0; i < LeakCheckIterations; i++) {
@@ -124,23 +144,28 @@ namespace Java.InteropTests
 			for (int i = 0; i < LeakCheckIterations; i++) {
 				action ();
 			}
-			CollectPeers ();
+			CollectGarbage ();
 			int grefsAfter = JniEnvironment.Runtime.GlobalReferenceCount;
 
 			Assert.LessOrEqual (grefsAfter, grefsBefore,
-				$"TryFindClass should not leak global references after {LeakCheckIterations} iterations. " +
+				$"Operation should not leak global references after {LeakCheckIterations} iterations. " +
 				$"Before={grefsBefore}, After={grefsAfter}, Delta={grefsAfter - grefsBefore}");
 		}
 
 		static void CollectPeers ()
 		{
+			CollectGarbage ();
+			JniEnvironment.Runtime.ValueManager.CollectPeers ();
+			JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
+			CollectGarbage ();
+		}
+
+		static void CollectGarbage ()
+		{
 			for (int i = 0; i < 3; i++) {
 				GC.Collect ();
 				GC.WaitForPendingFinalizers ();
 			}
-
-			JniEnvironment.Runtime.ValueManager.CollectPeers ();
-			JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
 		}
 
 		[Test]
