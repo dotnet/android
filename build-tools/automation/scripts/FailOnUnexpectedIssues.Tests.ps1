@@ -191,7 +191,11 @@ try {
 	}
 	Assert-True (-not ($output -join "`n").Contains('result=Failed')) 'A recovered cache failure from the timeline API remained gating.'
 	Assert-True ($requestLines[0] -eq 'GET /project/_apis/build/builds/42/timeline?api-version=7.1 HTTP/1.1') 'The timeline API URI was incorrect.'
-	Assert-True ($requestLines -contains 'Authorization: Bearer test-token') 'The timeline API authorization header was incorrect.'
+	$authorizationHeader = @($requestLines | Where-Object { $_.StartsWith('Authorization: ') })
+	Assert-True ($authorizationHeader.Count -eq 1) 'The timeline API authorization header was missing or duplicated.'
+	$authorization = [Net.Http.Headers.AuthenticationHeaderValue]::Parse($authorizationHeader[0].Substring('Authorization: '.Length))
+	Assert-True ($authorization.Scheme -eq 'Bearer') 'The timeline API authorization scheme was incorrect.'
+	Assert-True ($authorization.Parameter -eq $env:SYSTEM_ACCESSTOKEN) 'The timeline API authorization parameter was incorrect.'
 	Remove-Item Env:SYSTEM_ACCESSTOKEN, Env:SYSTEM_JOBID
 
 	$output = Invoke-Gate @(

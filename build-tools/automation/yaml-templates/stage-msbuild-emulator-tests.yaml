@@ -82,3 +82,4 @@ stages:
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
       parameters:
         condition: ${{ parameters.shouldFailOnIssue }}
+        xaSourcePath: ${{ parameters.xaSourcePath }}
