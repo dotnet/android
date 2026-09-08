@@ -1,9 +1,11 @@
 ﻿#nullable enable
 
 using System;
-using System.Diagnostics;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
+using System.Threading;
 
 namespace Java.Interop {
 
@@ -106,6 +108,30 @@ namespace Java.Interop {
 			if (value == null)
 				throw new ObjectDisposedException (nameof (JniPeerMembers));
 			return value;
+		}
+
+		static ConcurrentDictionary<TKey, TValue> GetOrCreate<TKey, TValue> (ref ConcurrentDictionary<TKey, TValue>? dictionary, int capacity)
+			where TKey : notnull
+		{
+			var value = Volatile.Read (ref dictionary);
+			if (value != null)
+				return value;
+
+			var candidate = new ConcurrentDictionary<TKey, TValue> (1, capacity);
+			return Interlocked.CompareExchange (ref dictionary, candidate, null) ?? candidate;
+		}
+
+		static void Clear<TKey, TValue> (ref ConcurrentDictionary<TKey, TValue>? dictionary, Action<TValue>? dispose = null)
+			where TKey : notnull
+		{
+			var values = Interlocked.Exchange (ref dictionary, null);
+			if (values == null)
+				return;
+			if (dispose != null) {
+				foreach (var value in values.Values)
+					dispose (value);
+			}
+			values.Clear ();
 		}
 
 		protected virtual void Dispose (bool disposing)

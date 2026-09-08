@@ -884,6 +884,23 @@ Rimuovere il riferimento '{0}' dal progetto e aggiungere invece il pacchetto NuG
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
+  <data name="XA4325" xml:space="preserve">
+    <value>Failed to rewrite managed JNI names for R8. {0}</value>
+    <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4325_* resources.</comment>
+  </data>
+  <data name="XA4325_AssemblyFailure" xml:space="preserve">
+    <value>Could not rewrite the JNI names in the assembly '{0}': {1}</value>
+    <comment>{0} - The path of the assembly which could not be rewritten.
+{1} - The underlying message describing why the assembly could not be rewritten. It is not localized.</comment>
+  </data>
+  <data name="XA4325_SourceDestinationCount" xml:space="preserve">
+    <value>The 'SourceFiles' and 'DestinationFiles' item groups must contain the same number of items.</value>
+    <comment>The following are literal MSBuild item group names and should not be translated: 'SourceFiles', 'DestinationFiles'.</comment>
+  </data>
+  <data name="XA4326" xml:space="preserve">
+    <value>Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous JNIEnv.FindClass source.</value>
+    <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>La directory '{0}' delle toolchain di Android NDK non è presente. Installare Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -1129,7 +1146,7 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 </comment>
   </data>
   <data name="XA1049" xml:space="preserve">
-    <value>The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'. Set one property to 'false'.</value>
+    <value>Non è possibile impostare entrambe le proprietà 'AndroidEnableMarshalMethods' e 'PublishReadyToRun' di MSBuild su 'true'. Impostare una proprietà su 'false'.</value>
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
@@ -1242,6 +1259,36 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
     <comment>The following are literal names and should not be translated: Java.
 {0} - Java package or type name
 {1} - Java reserved keyword or restricted identifier</comment>
+  </data>
+  <data name="XA4259" xml:space="preserve">
+    <value>Type '{0}' has multiple managed constructors that map to the same Java Native Interface (JNI) signature '{1}'. Change the constructor parameter types so each constructor has a unique JNI signature.</value>
+    <comment>The following terms should not be translated: Java Native Interface, JNI.
+{0} - Fully-qualified managed type name
+{1} - Colliding JNI constructor signature</comment>
+  </data>
+  <data name="XA4260" xml:space="preserve">
+    <value>Type '{0}' has a constructor parameter type '{1}' that cannot be represented in a Java constructor. Remove the constructor or change the parameter to a supported Java type.</value>
+    <comment>The following term should not be translated: Java.
+{0} - Fully-qualified managed type name
+{1} - Unsupported managed constructor parameter type</comment>
+  </data>
+  <data name="XA4261" xml:space="preserve">
+    <value>Type '{0}' has Java constructor signature '{1}', but its base type does not expose a compatible Java constructor. Add a compatible base constructor or remove the derived constructor.</value>
+    <comment>The following term should not be translated: Java.
+{0} - Fully-qualified managed type name
+{1} - JNI signature of the derived constructor</comment>
+  </data>
+  <data name="XA4262" xml:space="preserve">
+    <value>Type '{0}' has an invalid [Export] SuperArgumentsString value '{1}'. The value references a constructor parameter that does not exist.</value>
+    <comment>The following terms should not be translated: Export, SuperArgumentsString.
+{0} - Fully-qualified managed type name
+{1} - Invalid SuperArgumentsString value</comment>
+  </data>
+  <data name="XA4263" xml:space="preserve">
+    <value>The exported member '{0}' has unsupported signature type '{1}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter].</value>
+    <comment>The following are literal names and should not be translated: Java, [ExportParameter].
+{0} - Fully-qualified managed member name
+{1} - Managed parameter or return type</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Comando '{0}' non riuscito.\n{1}</value>

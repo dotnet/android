@@ -29,6 +29,10 @@ class NoOpTrimmableTypeMapLogger : ITrimmableTypeMapLogger
 	public virtual void LogExportFieldOnGenericTypeError () { }
 	public virtual void LogExportFieldReturnsVoidError () { }
 	public virtual void LogUnsupportedExportSignatureError (string memberName, string managedTypeName) { }
+	public virtual void LogAmbiguousConstructorSignatureError (string managedTypeName, string jniSignature) { }
+	public virtual void LogUnsupportedConstructorParameterTypeError (string managedTypeName, string parameterType) { }
+	public virtual void LogMissingBaseConstructorError (string managedTypeName, string jniSignature) { }
+	public virtual void LogInvalidSuperArgumentsStringError (string managedTypeName, string superArgumentsString) { }
 	public virtual void LogCustomJavaObjectError (string managedTypeName) { }
 	public virtual void LogCustomJavaObjectWarning (string managedTypeName) { }
 }
