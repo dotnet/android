@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Xamarin.Android.Build;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
@@ -175,6 +176,125 @@ namespace Xamarin.Android.Build.Tests
 		public void FastDeploy2DoesNotResetForUnrelatedPushFailure ()
 		{
 			Assert.IsFalse (FastDeploy2.IsUnexpectedRemoteFilesystemError ("adb: error: device offline"));
+		}
+
+		[TestCase ("adb: error: device offline", true)]
+		[TestCase ("adb: failed to install app.apk: cmd: Failure calling service package: Broken pipe (32)", true)]
+		[TestCase ("adb: failed to install app.apk: Broken pipe (32)", false)]
+		[TestCase ("cmd: Failure calling service package: Security exception", false)]
+		[TestCase ("Failure [INSTALL_FAILED_INSUFFICIENT_STORAGE]", false)]
+		public void FastDeploy2ClassifiesOnlyKnownTransientInstallFailures (string output, bool expected)
+		{
+			Assert.AreEqual (expected, FastDeploy2.IsTransientInstallFailure (output));
+		}
+
+		[Test]
+		public async Task FastDeploy2RetriesTransientInstallOnce ()
+		{
+			var task = new TestFastDeploy2 (
+				CreateAdbResult (1, "adb: failed to install app.apk: cmd: Failure calling service package: Broken pipe (32)"),
+				CreateAdbResult (0, "Success"));
+
+			await task.InstallApkWithRetry ("app.apk", reinstall: false, testOnly: false, user: "");
+
+			Assert.AreEqual (2, task.InstallAttempts);
+			Assert.AreEqual (1, task.RecoveryAttempts);
+		}
+
+		[Test]
+		public void FastDeploy2DoesNotRetrySemanticInstallFailure ()
+		{
+			var task = new TestFastDeploy2 (
+				CreateAdbResult (1, "Failure [INSTALL_FAILED_INSUFFICIENT_STORAGE]"));
+
+			var exception = Assert.ThrowsAsync<FastDeployInstallException> (
+				async () => await task.InstallApkWithRetry ("app.apk", reinstall: false, testOnly: false, user: ""));
+
+			Assert.IsNotNull (exception);
+			Assert.AreEqual ("ADB0060", exception.ErrorCode);
+			Assert.AreEqual (1, task.InstallAttempts);
+			Assert.AreEqual (0, task.RecoveryAttempts);
+		}
+
+		[Test]
+		public void FastDeploy2PreservesBothTransientInstallAttempts ()
+		{
+			var task = new TestFastDeploy2 (
+				CreateAdbResult (1, "first failure: cmd: Failure calling service package: Broken pipe (32)"),
+				CreateAdbResult (1, "second failure: device offline"));
+
+			var exception = Assert.ThrowsAsync<FastDeployInstallException> (
+				async () => await task.InstallApkWithRetry ("app.apk", reinstall: false, testOnly: false, user: ""));
+
+			Assert.IsNotNull (exception);
+			Assert.AreEqual ("ADB0010", exception.ErrorCode);
+			Assert.That (exception.Message, Does.Contain ("Install attempt 1"));
+			Assert.That (exception.Message, Does.Contain ("first failure"));
+			Assert.That (exception.Message, Does.Contain ("ADB transport recovery"));
+			Assert.That (exception.Message, Does.Contain ("Install attempt 2"));
+			Assert.That (exception.Message, Does.Contain ("second failure"));
+			Assert.AreEqual (2, task.InstallAttempts);
+			Assert.AreEqual (1, task.RecoveryAttempts);
+		}
+
+		[Test]
+		public void FastDeploy2PreservesOriginalFailureWhenRecoveryFails ()
+		{
+			var task = new TestFastDeploy2 (
+				new InvalidOperationException ("package manager still unavailable"),
+				CreateAdbResult (1, "cmd: Failure calling service package: Broken pipe (32)"));
+
+			var exception = Assert.ThrowsAsync<FastDeployInstallException> (
+				async () => await task.InstallApkWithRetry ("app.apk", reinstall: false, testOnly: false, user: ""));
+
+			Assert.IsNotNull (exception);
+			Assert.That (exception.Message, Does.Contain ("Failure calling service package: Broken pipe (32)"));
+			Assert.That (exception.Message, Does.Contain ("package manager still unavailable"));
+			Assert.AreEqual (1, task.InstallAttempts);
+			Assert.AreEqual (1, task.RecoveryAttempts);
+		}
+
+		static FastDeploy2.AdbCommandResult CreateAdbResult (int exitCode, string output)
+		{
+			return new FastDeploy2.AdbCommandResult {
+				ExitCode = exitCode,
+				StandardOutput = output,
+				StandardError = "",
+			};
+		}
+
+		sealed class TestFastDeploy2 : FastDeploy2
+		{
+			readonly Queue<AdbCommandResult> results;
+			readonly Exception recoveryException;
+
+			public int InstallAttempts { get; private set; }
+			public int RecoveryAttempts { get; private set; }
+
+			public TestFastDeploy2 (params AdbCommandResult [] results)
+				: this (recoveryException: null, results)
+			{
+			}
+
+			public TestFastDeploy2 (Exception recoveryException, params AdbCommandResult [] results)
+			{
+				this.results = new Queue<AdbCommandResult> (results);
+				this.recoveryException = recoveryException;
+				BuildEngine = new MockBuildEngine (TestContext.Out);
+				PackageName = "com.example.app";
+			}
+
+			internal override Task<AdbCommandResult> RunInstallCommand (string apkFile, bool reinstall, bool testOnly, string user)
+			{
+				InstallAttempts++;
+				return Task.FromResult (results.Dequeue ());
+			}
+
+			internal override Task WaitForInstallTransportRecovery ()
+			{
+				RecoveryAttempts++;
+				return recoveryException == null ? Task.CompletedTask : Task.FromException (recoveryException);
+			}
 		}
 
 	}

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
@@ -22,6 +23,7 @@ namespace Xamarin.Android.Tools.Tests;
 ///   - MapAdbStateToStatus: used internally by ParseAdbDevicesOutput, public for extensibility
 ///   - ListDevicesAsync: used by MAUI DevTools Adb provider (Providers/Android/Adb.cs)
 ///   - WaitForDeviceAsync: used by MAUI DevTools Adb provider
+///   - WaitForPackageManagerAsync: used by dotnet/android FastDeploy2 install recovery
 ///   - StopEmulatorAsync: used by MAUI DevTools Adb provider
 ///   - GetEmulatorAvdNameAsync: internal, used by ListDevicesAsync only
 /// </summary>
@@ -1328,8 +1330,7 @@ public class AdbRunnerTests
 			async () => await runner.ListForwardPortsAsync (""));
 	}
 
-	// These tests use a fake 'adb' script to control process output,
-	// verifying AVD detection order and offline emulator handling.
+	// These tests use a fake 'adb' script to control process output.
 
 	static string CreateFakeAdb (string scriptBody)
 	{
@@ -1351,6 +1352,95 @@ public class AdbRunnerTests
 		if (dir is { Length: > 0 }) {
 			File.Delete (adbPath);
 			Directory.Delete (dir);
+		}
+	}
+
+	[Test]
+	public async Task WaitForPackageManagerAsync_RetriesUntilResponsive ()
+	{
+		var adbPath = CreateFakeAdb ("""
+			if [[ "$3" == "wait-for-device" ]]; then
+			    exit 0
+			fi
+			if [[ "$3" == "shell" && "$4" == "pm" && "$5" == "path" && "$6" == "android" ]]; then
+			    count_file="$0.count"
+			    count=0
+			    if [[ -f "$count_file" ]]; then
+			        count=$(cat "$count_file")
+			    fi
+			    count=$((count + 1))
+			    echo "$count" > "$count_file"
+			    if [[ "$count" -eq 1 ]]; then
+			        echo "cmd: Failure calling service package: Broken pipe (32)" >&2
+			        exit 1
+			    fi
+			    echo "package:/system/framework/framework-res.apk"
+			    exit 0
+			fi
+			exit 1
+			""");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			await runner.WaitForPackageManagerAsync (
+				"emulator-5554",
+				TimeSpan.FromSeconds (2),
+				TimeSpan.FromMilliseconds (10));
+
+			Assert.AreEqual ("2", File.ReadAllText (adbPath + ".count").Trim ());
+		} finally {
+			File.Delete (adbPath + ".count");
+			CleanupFakeAdb (adbPath);
+		}
+	}
+
+	[Test]
+	public void WaitForPackageManagerAsync_TimeoutIncludesLastDiagnostic ()
+	{
+		var adbPath = CreateFakeAdb ("""
+			if [[ "$3" == "wait-for-device" ]]; then
+			    exit 0
+			fi
+			if [[ "$3" == "shell" && "$4" == "pm" && "$5" == "path" && "$6" == "android" ]]; then
+			    echo "cmd: Failure calling service package: Broken pipe (32)" >&2
+			    exit 1
+			fi
+			exit 1
+			""");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			var exception = Assert.ThrowsAsync<TimeoutException> (
+				async () => await runner.WaitForPackageManagerAsync (
+					"emulator-5554",
+					TimeSpan.FromMilliseconds (500),
+					TimeSpan.FromMilliseconds (10)));
+
+			Assert.IsNotNull (exception);
+			Assert.That (exception.Message, Does.Contain ("Failure calling service package: Broken pipe (32)"));
+		} finally {
+			CleanupFakeAdb (adbPath);
+		}
+	}
+
+	[Test]
+	public void WaitForPackageManagerAsync_CancellationIsNotReportedAsTimeout ()
+	{
+		var adbPath = CreateFakeAdb ("exit 0");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			using var cts = new CancellationTokenSource ();
+			cts.Cancel ();
+
+			Assert.ThrowsAsync<OperationCanceledException> (
+				async () => await runner.WaitForPackageManagerAsync (
+					"emulator-5554",
+					TimeSpan.FromSeconds (1),
+					TimeSpan.FromMilliseconds (10),
+					cts.Token));
+		} finally {
+			CleanupFakeAdb (adbPath);
 		}
 	}
 

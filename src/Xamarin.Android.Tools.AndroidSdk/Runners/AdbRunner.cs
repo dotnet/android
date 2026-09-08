@@ -147,6 +147,65 @@ public class AdbRunner
 		}
 	}
 
+	/// <summary>
+	/// Waits for an ADB device and its Android package manager service to become responsive.
+	/// </summary>
+	/// <param name="serial">Optional device serial. When omitted, ADB's default device selection is used.</param>
+	/// <param name="timeout">Maximum time to wait. Defaults to 60 seconds.</param>
+	/// <param name="cancellationToken">Token used to cancel the wait.</param>
+	public Task WaitForPackageManagerAsync (string? serial = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+	{
+		return WaitForPackageManagerAsync (serial, timeout, TimeSpan.FromMilliseconds (500), cancellationToken);
+	}
+
+	internal async Task WaitForPackageManagerAsync (
+		string? serial,
+		TimeSpan? timeout,
+		TimeSpan pollInterval,
+		CancellationToken cancellationToken = default)
+	{
+		var effectiveTimeout = timeout ?? TimeSpan.FromSeconds (60);
+
+		if (effectiveTimeout <= TimeSpan.Zero)
+			throw new ArgumentOutOfRangeException (nameof (timeout), effectiveTimeout, "Timeout must be a positive value.");
+		if (pollInterval <= TimeSpan.Zero)
+			throw new ArgumentOutOfRangeException (nameof (pollInterval), pollInterval, "Poll interval must be a positive value.");
+
+		using var cts = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
+		cts.CancelAfter (effectiveTimeout);
+		string lastDiagnostic = "";
+
+		try {
+			await WaitForDeviceAsync (serial, effectiveTimeout, cts.Token).ConfigureAwait (false);
+
+			while (true) {
+				var args = new List<string> ();
+				if (serial is { Length: > 0 }) {
+					args.Add ("-s");
+					args.Add (serial);
+				}
+				args.Add ("shell");
+				args.Add ("pm");
+				args.Add ("path");
+				args.Add ("android");
+
+				var result = await RunCommandAsync (args.ToArray (), cts.Token).ConfigureAwait (false);
+				var packagePath = FirstNonEmptyLine (result.StandardOutput);
+				if (result.ExitCode == 0 && packagePath != null && packagePath.StartsWith ("package:", StringComparison.Ordinal)) {
+					return;
+				}
+
+				lastDiagnostic = result.FormatDiagnostic ();
+				logger.Invoke (TraceLevel.Warning, $"Android package manager is not responsive yet: {lastDiagnostic}");
+				await Task.Delay (pollInterval, cts.Token).ConfigureAwait (false);
+			}
+		} catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) {
+			var device = serial is { Length: > 0 } ? $"device '{serial}'" : "the default device";
+			var diagnostic = lastDiagnostic.Length > 0 ? $" Last response: {lastDiagnostic}" : "";
+			throw new TimeoutException ($"Timed out waiting for the Android package manager on {device} after {effectiveTimeout.TotalSeconds:0.###} seconds.{diagnostic}");
+		}
+	}
+
 	public async Task StopEmulatorAsync (string serial, CancellationToken cancellationToken = default)
 	{
 		if (string.IsNullOrWhiteSpace (serial))
@@ -232,6 +291,42 @@ public class AdbRunner
 		}
 		var output = stdout.ToString ().Trim ();
 		return output.Length > 0 ? output : null;
+	}
+
+	async Task<AdbCommandResult> RunCommandAsync (string [] args, CancellationToken cancellationToken)
+	{
+		using var stdout = new StringWriter ();
+		using var stderr = new StringWriter ();
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, args);
+		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+		return new AdbCommandResult (exitCode, stdout.ToString ().Trim (), stderr.ToString ().Trim ());
+	}
+
+	readonly struct AdbCommandResult
+	{
+		public int ExitCode { get; }
+		public string StandardOutput { get; }
+		public string StandardError { get; }
+
+		public AdbCommandResult (int exitCode, string standardOutput, string standardError)
+		{
+			ExitCode = exitCode;
+			StandardOutput = standardOutput;
+			StandardError = standardError;
+		}
+
+		public string FormatDiagnostic ()
+		{
+			string output;
+			if (StandardOutput.Length == 0) {
+				output = StandardError;
+			} else if (StandardError.Length == 0) {
+				output = StandardOutput;
+			} else {
+				output = $"{StandardOutput}{Environment.NewLine}{StandardError}";
+			}
+			return $"exit code {ExitCode}: {(output.Length > 0 ? output : "<no output>")}";
+		}
 	}
 
 	internal static string? FirstNonEmptyLine (string output)
@@ -668,4 +763,3 @@ public class AdbRunner
 		return result;
 	}
 }
-
