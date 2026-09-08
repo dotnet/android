@@ -195,10 +195,7 @@ namespace Xamarin.Android.Tasks
 						if (DontObfuscate) {
 							xamcfg.WriteLine ("-dontobfuscate");
 						} else {
-							xamcfg.WriteLine ("-keep,allowshrinking,allowoptimization class **");
-							xamcfg.WriteLine ("-keepclassmembers,allowshrinking,allowoptimization class ** {");
-							xamcfg.WriteLine ("   public protected *;");
-							xamcfg.WriteLine ("}");
+							WriteSelectiveObfuscationRules (xamcfg);
 						}
 						xamcfg.WriteLine ();
 						xamcfg.Flush ();
@@ -261,6 +258,18 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return responseFile;
+		}
+
+		internal static void WriteSelectiveObfuscationRules (TextWriter writer)
+		{
+			writer.WriteLine ("-keep,allowshrinking,allowoptimization class **");
+			writer.WriteLine ("-keepclassmembers,allowshrinking,allowoptimization class ** {");
+			writer.WriteLine ("   public protected *;");
+			writer.WriteLine ("}");
+			// Managed interface proxy selection observes Class.getInterfaces(), which R8 cannot infer.
+			writer.WriteLine ("-keep,allowoptimization interface ** {");
+			writer.WriteLine ("   public protected *;");
+			writer.WriteLine ("}");
 		}
 
 		// ProGuard "global" options that affect the whole build and are not allowed inside

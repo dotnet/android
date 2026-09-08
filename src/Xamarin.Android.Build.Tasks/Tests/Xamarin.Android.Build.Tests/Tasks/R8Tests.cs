@@ -48,6 +48,24 @@ namespace Xamarin.Android.Build.Tests
 				File.Delete (path);
 			}
 		}
+
+		[Test]
+		public void WriteSelectiveObfuscationRules ()
+		{
+			using var writer = new StringWriter ();
+			R8.WriteSelectiveObfuscationRules (writer);
+
+			var expected = """
+				-keep,allowshrinking,allowoptimization class **
+				-keepclassmembers,allowshrinking,allowoptimization class ** {
+				   public protected *;
+				}
+				-keep,allowoptimization interface ** {
+				   public protected *;
+				}
+
+				""";
+			Assert.AreEqual (expected, writer.ToString ());
+		}
 	}
 }
-
