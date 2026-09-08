@@ -26,9 +26,25 @@ namespace Xamarin.ProjectTools
 			bool hasAgpPluginResolutionFailure = false;
 			bool usesDotNetPublicMaven = false;
 			bool hasPermanentHttpFailure = false;
+			bool inMavenArtifactFailure = false;
+			bool hasPermanentJarProbeFailure = false;
+			bool hasAarDiagnostic = false;
+			bool hasPermanentAarFailure = false;
 			string? transientReason = null;
 
 			foreach (string line in buildOutput) {
+				if (Contains (line, "Cannot download Maven artifact")) {
+					hasPermanentHttpFailure |= HasPermanentMavenArtifactFailure (
+						hasPermanentJarProbeFailure,
+						hasAarDiagnostic,
+						hasPermanentAarFailure
+					);
+					inMavenArtifactFailure = true;
+					hasPermanentJarProbeFailure = false;
+					hasAarDiagnostic = false;
+					hasPermanentAarFailure = false;
+				}
+
 				hasDependencyResolutionFailure |=
 					Contains (line, "Could not resolve") ||
 					Contains (line, "Could not download") ||
@@ -42,7 +58,18 @@ namespace Xamarin.ProjectTools
 					Contains (line, "Plugin [id: 'com.android.application'") ||
 					Contains (line, "com.android.application.gradle.plugin");
 				usesDotNetPublicMaven |= Contains (line, TestEnvironment.DotNetPublicMaven);
-				hasPermanentHttpFailure |= ContainsAny (line, permanentHttpFailures);
+
+				bool hasPermanentHttpFailureInLine = ContainsAny (line, permanentHttpFailures);
+				// Maven restore probes JAR before AAR, so a rejected JAR probe is not permanent
+				// when an AAR diagnostic follows for the same artifact.
+				if (inMavenArtifactFailure && IsMavenArtifactDiagnostic (line, ".jar:")) {
+					hasPermanentJarProbeFailure |= hasPermanentHttpFailureInLine;
+				} else if (inMavenArtifactFailure && IsMavenArtifactDiagnostic (line, ".aar:")) {
+					hasAarDiagnostic = true;
+					hasPermanentAarFailure |= hasPermanentHttpFailureInLine;
+				} else {
+					hasPermanentHttpFailure |= hasPermanentHttpFailureInLine;
+				}
 
 				if (transientReason == null) {
 					if (Contains (line, "Connection reset")) {
@@ -68,6 +95,12 @@ namespace Xamarin.ProjectTools
 				}
 			}
 
+			hasPermanentHttpFailure |= HasPermanentMavenArtifactFailure (
+				hasPermanentJarProbeFailure,
+				hasAarDiagnostic,
+				hasPermanentAarFailure
+			);
+
 			if (hasPermanentHttpFailure) {
 				reason = "";
 				return false;
@@ -85,6 +118,16 @@ namespace Xamarin.ProjectTools
 
 			reason = "";
 			return false;
+		}
+
+		static bool HasPermanentMavenArtifactFailure (bool hasPermanentJarProbeFailure, bool hasAarDiagnostic, bool hasPermanentAarFailure)
+		{
+			return hasPermanentAarFailure || (hasPermanentJarProbeFailure && !hasAarDiagnostic);
+		}
+
+		static bool IsMavenArtifactDiagnostic (string line, string extension)
+		{
+			return Contains (line, "XA4236: -") && Contains (line, extension);
 		}
 
 		static bool Contains (string value, string text)

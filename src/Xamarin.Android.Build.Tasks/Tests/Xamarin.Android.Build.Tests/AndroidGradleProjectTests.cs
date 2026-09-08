@@ -649,6 +649,18 @@ public class Foo {{
 			"DNS resolution failure"
 		)]
 		[TestCase (
+			"error XA4236: Cannot download Maven artifact 'com.facebook.android:facebook-bolts'.\n" +
+			"error XA4236: - facebook-bolts-18.3.0.jar: Response status code does not indicate success: 401 (Unauthorized)\n" +
+			"error XA4236: - facebook-bolts-18.3.0.aar: nodename nor servname provided, or not known (pkgs.dev.azure.com:443)",
+			"DNS resolution failure"
+		)]
+		[TestCase (
+			"error XA4236: Cannot download Maven artifact 'com.facebook.android:facebook-bolts'.\n" +
+			"error XA4236: - facebook-bolts-18.3.0.jar: Response status code does not indicate success: 404 (Not Found)\n" +
+			"error XA4236: - facebook-bolts-18.3.0.aar: Connection reset",
+			"connection reset"
+		)]
+		[TestCase (
 			"Failed to install the following SDK components: platforms;android-37.0\nOperation timed out",
 			"network timeout"
 		)]
@@ -667,6 +679,27 @@ public class Foo {{
 		[TestCase (
 			"Could not GET an artifact from dotnet-public-maven\n" +
 			"Response status code does not indicate success: 404 (Not Found)"
+		)]
+		[TestCase (
+			"error XA4236: Cannot download Maven artifact 'com.facebook.android:facebook-bolts'.\n" +
+			"error XA4236: - facebook-bolts-18.3.0.jar: Connection reset\n" +
+			"error XA4236: - facebook-bolts-18.3.0.aar: Response status code does not indicate success: 401 (Unauthorized)"
+		)]
+		[TestCase (
+			"error XA4236: Cannot download Maven artifact 'com.facebook.android:facebook-bolts'.\n" +
+			"error XA4236: - facebook-bolts-18.3.0.jar: Response status code does not indicate success: 404 (Not Found)\n" +
+			"error XA4236: - facebook-bolts-18.3.0.aar: Response status code does not indicate success: 404 (Not Found)"
+		)]
+		[TestCase (
+			"error XA4236: Cannot download Maven artifact 'com.example:jar-only'.\n" +
+			"error XA4236: - jar-only-1.0.jar: Response status code does not indicate success: 404 (Not Found)"
+		)]
+		[TestCase (
+			"error XA4236: Cannot download Maven artifact 'com.example:jar-only'.\n" +
+			"error XA4236: - jar-only-1.0.jar: Response status code does not indicate success: 404 (Not Found)\n" +
+			"error XA4236: Cannot download Maven artifact 'com.facebook.android:facebook-bolts'.\n" +
+			"error XA4236: - facebook-bolts-18.3.0.jar: Response status code does not indicate success: 404 (Not Found)\n" +
+			"error XA4236: - facebook-bolts-18.3.0.aar: Connection reset"
 		)]
 		public void DoNotClassifyPermanentBuildFailureAsTransient (string buildOutput)
 		{
