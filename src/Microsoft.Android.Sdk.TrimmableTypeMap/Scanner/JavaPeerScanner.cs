@@ -1288,10 +1288,10 @@ public sealed class JavaPeerScanner : IDisposable
 	/// Looks up an unqualified managed type name across loaded assemblies.
 	/// Used only by legacy-compatible constructor signature discovery.
 	/// </summary>
-	string? TryResolveJniObjectDescriptor (string managedType)
+	string? TryResolveJniObjectDescriptor (ReadOnlySpan<char> managedType)
 	{
 		foreach (var index in assemblyCache.Values) {
-			if (index.TypesByFullName.TryGetValue (managedType, out var handle)) {
+			if (index.TypesByFullName.GetAlternateLookup<ReadOnlySpan<char>> ().TryGetValue (managedType, out var handle)) {
 				return GetJniObjectDescriptor (handle, index);
 			}
 		}
@@ -1323,7 +1323,8 @@ public sealed class JavaPeerScanner : IDisposable
 	string? ResolveTypeOfArgumentToJniName (string assemblyQualifiedName)
 	{
 		var commaIdx = assemblyQualifiedName.IndexOf (',');
-		var typeName = (commaIdx >= 0 ? assemblyQualifiedName.Substring (0, commaIdx) : assemblyQualifiedName).Trim ();
+		var qualifiedName = assemblyQualifiedName.AsSpan ();
+		var typeName = (commaIdx >= 0 ? qualifiedName [..commaIdx] : qualifiedName).Trim ();
 		var descriptor = TryResolveJniObjectDescriptor (typeName);
 		if (descriptor is null || descriptor.Length < 3) {
 			return null;
@@ -2487,19 +2488,23 @@ public sealed class JavaPeerScanner : IDisposable
 	{
 		var commaIndex = value.IndexOf (',');
 		if (commaIndex < 0) {
-			return NormalizeConnectorManagedTypeName (value);
+			return value.Trim ().Replace ('/', '+');
 		}
 
-		var typeName = NormalizeConnectorManagedTypeName (value.Substring (0, commaIndex));
-		var remainder = value.Substring (commaIndex + 1).Trim ();
+		var qualifiedName = value.AsSpan ();
+		var remainder = qualifiedName [(commaIndex + 1)..].Trim ();
 		var nextCommaIndex = remainder.IndexOf (',');
-		var assemblyName = nextCommaIndex < 0 ? remainder : remainder.Substring (0, nextCommaIndex).Trim ();
-		return string.Equals (assemblyName, defaultAssemblyName, StringComparison.Ordinal) ? typeName : null;
+		var assemblyName = nextCommaIndex < 0 ? remainder : remainder [..nextCommaIndex].Trim ();
+		return assemblyName.Equals (defaultAssemblyName, StringComparison.Ordinal)
+			? NormalizeConnectorManagedTypeName (qualifiedName [..commaIndex])
+			: null;
 	}
 
-	static string NormalizeConnectorManagedTypeName (string managedTypeName)
+	static string NormalizeConnectorManagedTypeName (ReadOnlySpan<char> managedTypeName)
 	{
-		return managedTypeName.Trim ().Replace ('/', '+');
+		var typeName = managedTypeName.Trim ();
+		return string.Create (typeName.Length, typeName, static (destination, name) =>
+			name.Replace (destination, '/', '+'));
 	}
 
 	/// <summary>
@@ -2752,11 +2757,11 @@ public sealed class JavaPeerScanner : IDisposable
 		if (connector is not null) {
 			// Strip the optional type qualifier after ':'
 			int colonIndex = connector.IndexOf (':');
-			string handlerName = colonIndex >= 0 ? connector.Substring (0, colonIndex) : connector;
+			var handlerName = colonIndex >= 0 ? connector.AsSpan (0, colonIndex) : connector.AsSpan ();
 
 			if (handlerName.StartsWith ("Get", StringComparison.Ordinal)
 				&& handlerName.EndsWith ("Handler", StringComparison.Ordinal)) {
-				return "n_" + handlerName.Substring (3, handlerName.Length - 3 - "Handler".Length);
+				return string.Concat ("n_".AsSpan (), handlerName.Slice ("Get".Length, handlerName.Length - "Get".Length - "Handler".Length));
 			}
 		}
 
@@ -2786,7 +2791,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 		// After ':' is typically "TypeName, AssemblyName, Version=…" (assembly-qualified name),
 		// but some connectors only provide "TypeName" without an assembly.
-		string typeQualified = connector.Substring (colonIndex + 1);
+		var typeQualified = connector.AsSpan (colonIndex + 1);
 		int commaIndex = typeQualified.IndexOf (',');
 
 		if (commaIndex < 0) {
@@ -2795,10 +2800,10 @@ public sealed class JavaPeerScanner : IDisposable
 			return;
 		}
 
-		declaringTypeName = NormalizeConnectorManagedTypeName (typeQualified.Substring (0, commaIndex));
-		string rest = typeQualified.Substring (commaIndex + 1).Trim ();
+		declaringTypeName = NormalizeConnectorManagedTypeName (typeQualified [..commaIndex]);
+		var rest = typeQualified [(commaIndex + 1)..].Trim ();
 		int nextComma = rest.IndexOf (',');
-		declaringAssemblyName = nextComma >= 0 ? rest.Substring (0, nextComma).Trim () : rest.Trim ();
+		declaringAssemblyName = (nextComma >= 0 ? rest [..nextComma].Trim () : rest).ToString ();
 	}
 
 	string GetHashedPackageName (string ns, string assemblyName)
@@ -2833,9 +2838,9 @@ public sealed class JavaPeerScanner : IDisposable
 	{
 		// Strip nested type suffix (e.g., "My.Namespace.Outer+Inner" → "My.Namespace.Outer")
 		int plusIndex = fullName.IndexOf ('+');
-		var nameForNamespace = plusIndex >= 0 ? fullName.Substring (0, plusIndex) : fullName;
+		var nameForNamespace = plusIndex >= 0 ? fullName.AsSpan (0, plusIndex) : fullName.AsSpan ();
 		int lastDot = nameForNamespace.LastIndexOf ('.');
-		return lastDot >= 0 ? nameForNamespace.Substring (0, lastDot) : "";
+		return lastDot >= 0 ? nameForNamespace [..lastDot].ToString () : "";
 	}
 
 	static string ExtractShortName (string fullName)
