@@ -630,5 +630,49 @@ public class Foo {{
 			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-release.aar"));
 		}
 
+		[TestCase (
+			"Plugin [id: 'com.android.application', version: '9.1.1'] was not found\n" +
+			"Searched in dotnet-public-maven(https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1)",
+			"AGP plugin resolution from dotnet-public-maven"
+		)]
+		[TestCase (
+			"Could not GET an AndroidX module from dotnet-public-maven\nConnection reset",
+			"connection reset"
+		)]
+		[TestCase (
+			"Could not HEAD an AGP plugin in dotnet-public-maven\npkgs.dev.azure.com: nodename nor servname provided, or not known",
+			"DNS resolution failure"
+		)]
+		[TestCase (
+			"error XA4236: Cannot download Maven artifact 'com.facebook.android:facebook-bolts'.\n" +
+			"facebook-bolts-18.3.0.aar: nodename nor servname provided, or not known (pkgs.dev.azure.com:443)",
+			"DNS resolution failure"
+		)]
+		[TestCase (
+			"Failed to install the following SDK components: platforms;android-37.0\nOperation timed out",
+			"network timeout"
+		)]
+		public void DetectTransientDependencyResolutionFailure (string buildOutput, string expectedReason)
+		{
+			Assert.IsTrue (TransientBuildFailure.TryGetDependencyResolutionReason (buildOutput.Split ('\n'), out string reason));
+			Assert.AreEqual (expectedReason, reason);
+		}
+
+		[TestCase ("error CS1002: ; expected")]
+		[TestCase ("error XAGRDL1000: 'Invalid' not found in root project")]
+		[TestCase (
+			"Plugin [id: 'com.android.application', version: '99.0.0'] was not found\n" +
+			"Searched in MavenCentral"
+		)]
+		[TestCase (
+			"Could not GET an artifact from dotnet-public-maven\n" +
+			"Response status code does not indicate success: 404 (Not Found)"
+		)]
+		public void DoNotClassifyPermanentBuildFailureAsTransient (string buildOutput)
+		{
+			Assert.IsFalse (TransientBuildFailure.TryGetDependencyResolutionReason (buildOutput.Split ('\n'), out string reason));
+			Assert.AreEqual ("", reason);
+		}
+
 	}
 }

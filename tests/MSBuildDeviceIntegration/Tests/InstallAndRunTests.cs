@@ -3027,9 +3027,12 @@ public class FacebookSdk {{
 				},
 			};
 			proj.SetRuntime (runtime);
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
+			proj.SetDefaultTargetDevice ();
+			var successMarker = $"GradleFBProj-{runtime}-{(isRelease ? "Release" : "Debug")}-{Guid.NewGuid ():N}-Success";
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", $@"
 Facebook.FacebookSdk.InitializeSDK(this, Java.Lang.Boolean.True);
 Facebook.FacebookSdk.LogEvent(""TestFacebook"");
+Console.WriteLine(""{successMarker}"");
 ");
 			proj.AndroidManifest =@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" xmlns:tools=""http://schemas.android.com/tools"" android:versionCode=""1"" android:versionName=""1.0"" package=""com.xamarin.gradleproj"">
@@ -3040,8 +3043,45 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 </manifest>";
 
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj));
-			RunProjectAndAssert (proj, builder);
+			const int maxBuildAttempts = 3;
+			var buildLogs = new List<string> ();
+			var lastTransientReason = "";
+			bool buildSucceeded = false;
+			builder.ThrowOnBuildFailure = false;
+			for (int attempt = 1; attempt <= maxBuildAttempts; attempt++) {
+				var buildLog = attempt == 1 ? "build.log" : $"build-retry-{attempt}.log";
+				var buildLogPath = Path.Combine (Root, builder.ProjectDirectory, buildLog);
+				buildLogs.Add (buildLogPath);
+				builder.BuildLogFile = buildLog;
+				buildSucceeded = builder.Build (proj);
+				if (buildSucceeded)
+					break;
+				if (!TransientBuildFailure.TryGetDependencyResolutionReason (builder.LastBuildOutput, out lastTransientReason))
+					break;
+				if (attempt == maxBuildAttempts)
+					break;
+
+				var retryDelay = TimeSpan.FromSeconds (attempt * 10);
+				TestContext.Out.WriteLine (
+					$"GradleFBProj build attempt {attempt}/{maxBuildAttempts} failed due to {lastTransientReason}. " +
+					$"Retrying in {retryDelay.TotalSeconds} seconds. Log: '{buildLogPath}'."
+				);
+				Thread.Sleep (retryDelay);
+			}
+			Assert.IsTrue (buildSucceeded,
+				$"Build should have succeeded. Last transient reason: '{lastTransientReason}'. Build logs: {string.Join (", ", buildLogs)}");
+
+			builder.ThrowOnBuildFailure = true;
+			ClearAdbLogcat ();
+			Assert.IsTrue (
+				MonitorAdbLogcat (
+					CreateLineChecker (successMarker),
+					Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"),
+					ActivityStartTimeoutInSeconds,
+					onMonitoringStarted: () => RunProjectAndAssert (proj, builder)
+				),
+				$"Application output did not contain '{successMarker}'."
+			);
 		}
 
 		[Test]
