@@ -33,6 +33,10 @@ stages:
         parameters:
           use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
+    - powershell: |
+        & "$(System.DefaultWorkingDirectory)/build-tools/automation/scripts/CaptureLogcat.Tests.ps1"
+      displayName: test bounded logcat capture
+
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
