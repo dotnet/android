@@ -133,7 +133,7 @@ namespace Xamarin.Android.Tools
 				if (!string.IsNullOrEmpty (entryDir))
 					Directory.CreateDirectory (entryDir);
 
-				entry.ExtractToFile (destinationFile, overwrite: true); // CodeQL [SM02729] IsUnderDirectory canonicalizes both paths and enforces ordinal directory-boundary containment.
+				entry.ExtractToFile (destinationFile, overwrite: true); // codeql[SM02729] IsUnderDirectory canonicalizes both paths and enforces ordinal directory-boundary containment.
 			}
 		}
 
