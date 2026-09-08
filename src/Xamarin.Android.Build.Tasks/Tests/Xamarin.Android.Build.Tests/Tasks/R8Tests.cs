@@ -50,10 +50,10 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void WriteSelectiveObfuscationRules ()
+		public void WritePrivateMemberObfuscationRules ()
 		{
 			using var writer = new StringWriter ();
-			R8.WriteSelectiveObfuscationRules (writer);
+			R8.WriteObfuscationRules (writer, "private-members");
 
 			var expected = """
 				-keep,allowshrinking,allowoptimization class **
@@ -66,6 +66,15 @@ namespace Xamarin.Android.Build.Tests
 
 				""";
 			Assert.AreEqual (expected, writer.ToString ());
+		}
+
+		[Test]
+		public void WriteDisabledObfuscationRules ()
+		{
+			using var writer = new StringWriter ();
+			R8.WriteObfuscationRules (writer, "disabled");
+
+			Assert.AreEqual ("-dontobfuscate" + System.Environment.NewLine, writer.ToString ());
 		}
 	}
 }

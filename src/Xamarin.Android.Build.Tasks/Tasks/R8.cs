@@ -37,7 +37,7 @@ namespace Xamarin.Android.Tasks
 		public string? BuildMetadataFileOutput { get; set; }
 		public ITaskItem []? ProguardConfigurationFiles { get; set; }
 		public bool UseTrimmableNativeAotProguardConfiguration { get; set; }
-		public bool DontObfuscate { get; set; }
+		public string ObfuscationMode { get; set; } = "private-members";
 
 		// User-authored AndroidJavaSource (Bind != true) .java files. These have no managed peer and are
 		// therefore absent from the acw-map, so they must be kept explicitly when shrinking is enabled.
@@ -192,11 +192,7 @@ namespace Xamarin.Android.Tasks
 				}
 				if (!ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
 					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
-						if (DontObfuscate) {
-							xamcfg.WriteLine ("-dontobfuscate");
-						} else {
-							WriteSelectiveObfuscationRules (xamcfg);
-						}
+						WriteObfuscationRules (xamcfg, ObfuscationMode);
 						xamcfg.WriteLine ();
 						xamcfg.Flush ();
 						if (UseTrimmableNativeAotProguardConfiguration) {
@@ -260,8 +256,13 @@ namespace Xamarin.Android.Tasks
 			return responseFile;
 		}
 
-		internal static void WriteSelectiveObfuscationRules (TextWriter writer)
+		internal static void WriteObfuscationRules (TextWriter writer, string obfuscationMode)
 		{
+			if (string.Equals (obfuscationMode, "disabled", StringComparison.OrdinalIgnoreCase)) {
+				writer.WriteLine ("-dontobfuscate");
+				return;
+			}
+
 			writer.WriteLine ("-keep,allowshrinking,allowoptimization class **");
 			writer.WriteLine ("-keepclassmembers,allowshrinking,allowoptimization class ** {");
 			writer.WriteLine ("   public protected *;");
