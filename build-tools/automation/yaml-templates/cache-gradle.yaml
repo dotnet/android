@@ -39,7 +39,9 @@ steps:
 - pwsh: |
     git log -1 --format=%H external/Java.Interop > $(Agent.TempDirectory)/java-interop-submodule-hash.txt
     $gradleUserHome = Join-Path "$(Agent.TempDirectory)" "gradle-user-home"
-    Remove-Item -LiteralPath $gradleUserHome -Recurse -Force -ErrorAction SilentlyContinue
+    if (Test-Path -LiteralPath $gradleUserHome) {
+      Remove-Item -LiteralPath $gradleUserHome -Recurse -Force
+    }
     $gradleDependencyCacheDir = Join-Path $gradleUserHome "caches\modules-2"
     $gradleDistsDir = Join-Path $gradleUserHome "wrapper\dists"
     New-Item -ItemType Directory -Path $gradleDependencyCacheDir, $gradleDistsDir -Force | Out-Null
@@ -51,6 +53,7 @@ steps:
   condition: eq(variables['Agent.OS'], 'Windows_NT')
 
 - task: Cache@2
+  name: gradleDependenciesCache
   displayName: cache Gradle dependencies
   continueOnError: true
   inputs:
@@ -61,6 +64,7 @@ steps:
     cacheHitVar: GRADLE_DEPENDENCY_CACHE_RESTORED
 
 - task: Cache@2
+  name: gradleDistributionsCache
   displayName: cache Gradle distributions
   continueOnError: true
   inputs:
@@ -73,20 +77,6 @@ steps:
     cacheHitVar: GRADLE_DISTS_RESTORED
 
 - pwsh: |
-    $validCacheStates = @("true", "inexact", "false")
-
-    function Reset-FailedRestore ([string] $name, [string] $state, [string] $path) {
-        if ($validCacheStates -contains $state) {
-            Write-Host "$name cache state: $state"
-            return
-        }
-
-        Write-Host "##vso[task.logissue type=warning]$name cache restore did not complete; using an empty job-local cache."
-        Remove-Item -LiteralPath $path -Recurse -Force -ErrorAction SilentlyContinue
-        New-Item -ItemType Directory -Path $path -Force | Out-Null
-    }
-
-    Reset-FailedRestore "Gradle dependency" "$(GRADLE_DEPENDENCY_CACHE_RESTORED)" "$(GRADLE_DEPENDENCY_CACHE_DIR)"
-    Reset-FailedRestore "Gradle distribution" "$(GRADLE_DISTS_RESTORED)" "$(GRADLE_DISTS_DIR)"
+    & '${{ parameters.xaSourcePath }}/build-tools/automation/scripts/RecoverGradleCache.ps1'
     Write-Host "GRADLE_USER_HOME=$(GRADLE_USER_HOME)"
   displayName: validate isolated Gradle state

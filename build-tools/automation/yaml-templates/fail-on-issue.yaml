@@ -1,11 +1,11 @@
 parameters:
   condition: succeeded()
+  xaSourcePath: $(System.DefaultWorkingDirectory)
 
 steps:
 - powershell: |
-    Write-Host "Current job status is: $env:AGENT_JOBSTATUS"
-    if ($env:AGENT_JOBSTATUS -eq "SucceededWithIssues") {
-        Write-Host "##vso[task.complete result=Failed;]DONE"
-    }
+    & '${{ parameters.xaSourcePath }}/build-tools/automation/scripts/FailOnUnexpectedIssues.ps1'
   displayName: fail if any issues occurred
   condition: ${{ parameters.condition }}
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)

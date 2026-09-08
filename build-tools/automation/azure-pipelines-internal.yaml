@@ -1014,3 +1014,5 @@ extends:
             use1ESTemplate: true
 
         - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
+          parameters:
+            xaSourcePath: $(Build.SourcesDirectory)/android
