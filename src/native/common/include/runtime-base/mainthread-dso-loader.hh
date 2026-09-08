@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cerrno>
+#include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <semaphore.h>
@@ -22,41 +24,7 @@ namespace xamarin::android {
 	class MainThreadDsoLoader
 	{
 	public:
-		explicit MainThreadDsoLoader () noexcept
-		{
-			// Not shared between processes, initially unsignalled. Can only fail if the initial value
-			// exceeds `SEM_VALUE_MAX`, which 0 clearly does not.
-			if (sem_init (&load_complete_sem, 0, 0) != 0) {
-				Helpers::abort_applicationf (
-					LOG_ASSEMBLY,
-					std::source_location::current (),
-					"Failed to initialize the DSO load semaphore. %s",
-					strerror (errno)
-				);
-			}
-
-			if (pipe (pipe_fds) != 0) {
-				Helpers::abort_applicationf (
-					LOG_ASSEMBLY,
-					std::source_location::current (),
-					"Failed to create a pipe for main thread DSO loader. %s",
-					strerror (errno)
-				);
-			}
-
-			int ret = ALooper_addFd (
-				main_thread_looper,
-				pipe_fds[0],
-				ALOOPER_POLL_CALLBACK,
-				ALOOPER_EVENT_INPUT,
-				load_cb,
-				this
-			);
-
-			if (ret == -1) {
-				Helpers::abort_application ("Failed to init main looper with pipe file descriptors in the main thread DSO loader"sv);
-			}
-		}
+		explicit MainThreadDsoLoader () noexcept = default;
 
 		MainThreadDsoLoader (const MainThreadDsoLoader&) = delete;
 		MainThreadDsoLoader (MainThreadDsoLoader&&) = delete;
@@ -66,18 +34,14 @@ namespace xamarin::android {
 		// pulls in `operator delete` and, with it, a dependency on `libc++`.
 		~MainThreadDsoLoader () noexcept
 		{
-			if (pipe_fds[0] != -1) {
-				ALooper_removeFd (main_thread_looper, pipe_fds[0]);
-				close (pipe_fds[0]);
+			if (state == nullptr) {
+				return;
 			}
 
-			if (pipe_fds[1] != -1) {
-				close (pipe_fds[1]);
-			}
-
-			sem_destroy (&load_complete_sem);
-
-			// No need to release the looper, it needs to stay acquired.
+			// A timed-out callback may still be queued or running. It owns a separate reference to
+			// the state and releases it after unregistering itself and finishing all state accesses.
+			__atomic_store_n (&state->cancelled, true, __ATOMIC_RELEASE);
+			release_state (state);
 		}
 
 		MainThreadDsoLoader& operator=(const MainThreadDsoLoader&) = delete;
@@ -85,17 +49,16 @@ namespace xamarin::android {
 
 		bool load (std::string_view const& full_name, std::string_view const& undecorated_name) noexcept
 		{
-			if (!undecorated_library_name.empty ()) [[unlikely]] {
+			if (state != nullptr) [[unlikely]] {
 				Helpers::abort_application ("Main thread DSO loader object reused! DO NOT DO THAT!"sv);
 			}
 			log_debugf (LOG_ASSEMBLY, "Running DSO loader on thread %d, dispatching to main thread", static_cast<int>(gettid ()));
 
-			undecorated_library_name = undecorated_name;
-			load_success = false;
+			state = create_state (undecorated_name);
 			constexpr std::array<uint8_t, 1> payload { 0xFF };
 			ssize_t nbytes;
 			do {
-				nbytes = write (pipe_fds[1], payload.data (), payload.size ());
+				nbytes = write (state->pipe_fds[1], payload.data (), payload.size ());
 			} while (nbytes == -1 && errno == EINTR);
 
 			if (nbytes != static_cast<ssize_t>(payload.size ())) {
@@ -104,6 +67,9 @@ namespace xamarin::android {
 					"Write failure when posting a DSO load event to main thread. %s",
 					nbytes == -1 ? strerror (errno) : "incomplete write"
 				);
+				__atomic_store_n (&state->cancelled, true, __ATOMIC_RELEASE);
+				close (state->pipe_fds[1]);
+				state->pipe_fds[1] = -1;
 				return false;
 			}
 
@@ -112,10 +78,11 @@ namespace xamarin::android {
 
 			if (!try_acquire_for (LoadTimeoutSeconds)) {
 				log_warnf (LOG_ASSEMBLY, "Timeout while waiting for shared library '%.*s' to load.", static_cast<int>(full_name.length ()), full_name.data ());
+				__atomic_store_n (&state->cancelled, true, __ATOMIC_RELEASE);
 				return false;
 			}
 
-			return load_success;
+			return state->load_success;
 		}
 
 		static void init (JNIEnv *main_jni_env, ALooper *main_looper)
@@ -131,6 +98,94 @@ namespace xamarin::android {
 		}
 
 	private:
+		struct LoadState
+		{
+			int      pipe_fds[2];
+			sem_t    load_complete_sem;
+			char    *undecorated_library_name;
+			size_t   undecorated_library_name_length;
+			uint32_t references;
+			bool     load_success;
+			bool     cancelled;
+		};
+
+		static auto create_state (std::string_view const& undecorated_name) noexcept -> LoadState*
+		{
+			auto *new_state = static_cast<LoadState*> (std::calloc (1uz, sizeof (LoadState)));
+			if (new_state == nullptr) [[unlikely]] {
+				Helpers::abort_application ("Unable to allocate main thread DSO loader state"sv);
+			}
+
+			new_state->pipe_fds[0] = -1;
+			new_state->pipe_fds[1] = -1;
+			new_state->references = 2u; // The stack loader and the looper callback each own one.
+
+			size_t name_capacity = Helpers::add_with_overflow_check<size_t> (undecorated_name.length (), 1uz);
+			new_state->undecorated_library_name = static_cast<char*> (std::malloc (name_capacity));
+			if (new_state->undecorated_library_name == nullptr) [[unlikely]] {
+				Helpers::abort_application ("Unable to allocate main thread DSO library name"sv);
+			}
+			if (!undecorated_name.empty ()) {
+				std::memcpy (new_state->undecorated_library_name, undecorated_name.data (), undecorated_name.length ());
+			}
+			new_state->undecorated_library_name[undecorated_name.length ()] = '\0';
+			new_state->undecorated_library_name_length = undecorated_name.length ();
+
+			// Not shared between processes, initially unsignalled. Can only fail if the initial value
+			// exceeds `SEM_VALUE_MAX`, which 0 clearly does not.
+			if (sem_init (&new_state->load_complete_sem, 0, 0) != 0) {
+				Helpers::abort_applicationf (
+					LOG_ASSEMBLY,
+					std::source_location::current (),
+					"Failed to initialize the DSO load semaphore. %s",
+					strerror (errno)
+				);
+			}
+
+			if (pipe (new_state->pipe_fds) != 0) {
+				Helpers::abort_applicationf (
+					LOG_ASSEMBLY,
+					std::source_location::current (),
+					"Failed to create a pipe for main thread DSO loader. %s",
+					strerror (errno)
+				);
+			}
+
+			int ret = ALooper_addFd (
+				main_thread_looper,
+				new_state->pipe_fds[0],
+				ALOOPER_POLL_CALLBACK,
+				ALOOPER_EVENT_INPUT,
+				load_cb,
+				new_state
+			);
+
+			if (ret == -1) {
+				Helpers::abort_application ("Failed to init main looper with pipe file descriptors in the main thread DSO loader"sv);
+			}
+
+			return new_state;
+		}
+
+		static void release_state (LoadState *load_state) noexcept
+		{
+			if (__atomic_sub_fetch (&load_state->references, 1u, __ATOMIC_ACQ_REL) != 0u) {
+				return;
+			}
+
+			if (load_state->pipe_fds[0] != -1) {
+				close (load_state->pipe_fds[0]);
+			}
+			if (load_state->pipe_fds[1] != -1) {
+				close (load_state->pipe_fds[1]);
+			}
+			if (sem_destroy (&load_state->load_complete_sem) != 0) {
+				log_warnf (LOG_ASSEMBLY, "Failed to destroy the DSO load semaphore. %s", strerror (errno));
+			}
+
+			std::free (load_state->undecorated_library_name);
+			std::free (load_state);
+		}
 
 		// Waits up to `timeout_seconds` for the main thread callback to signal that it is done.
 		// Returns `false` if it didn't within that time.
@@ -146,7 +201,7 @@ namespace xamarin::android {
 			// The deadline is absolute, so retrying after a signal cannot extend the total wait.
 			int ret;
 			do {
-				ret = sem_timedwait (&load_complete_sem, &deadline);
+				ret = sem_timedwait (&state->load_complete_sem, &deadline);
 			} while (ret == -1 && errno == EINTR);
 
 			if (ret != 0 && errno != ETIMEDOUT) [[unlikely]] {
@@ -158,18 +213,24 @@ namespace xamarin::android {
 
 		static auto load_cb ([[maybe_unused]] int fd, [[maybe_unused]] int events, void *data) noexcept -> int
 		{
-			auto self = reinterpret_cast<MainThreadDsoLoader*> (data);
-			if (self == nullptr) [[unlikely]] {
-				Helpers::abort_application ("MainThreadDsoLoader instance not passed to the looper callback."sv);
+			auto load_state = reinterpret_cast<LoadState*> (data);
+			if (load_state == nullptr) [[unlikely]] {
+				Helpers::abort_application ("MainThreadDsoLoader state not passed to the looper callback."sv);
 			}
 
-			auto over_and_out = [&self]() -> int {
+			auto over_and_out = [fd, load_state]() -> int {
 				// We're one-shot, 0 means just that
-				sem_post (&self->load_complete_sem);
+				ALooper_removeFd (main_thread_looper, fd);
+				sem_post (&load_state->load_complete_sem);
+				release_state (load_state);
 				return 0;
 			};
 
-			if (self->undecorated_library_name.empty ()) {
+			if (__atomic_load_n (&load_state->cancelled, __ATOMIC_ACQUIRE)) {
+				return over_and_out ();
+			}
+
+			if (load_state->undecorated_library_name_length == 0uz) {
 				log_warnf (LOG_ASSEMBLY, "Library name not specified in main thread looper callback.");
 				return over_and_out ();
 			}
@@ -178,19 +239,19 @@ namespace xamarin::android {
 				LOG_ASSEMBLY,
 				"Looper CB called on thread %d. Will attempt to load DSO '%.*s'",
 				static_cast<int>(gettid ()),
-				static_cast<int>(self->undecorated_library_name.length ()),
-				self->undecorated_library_name.data ()
+				static_cast<int>(load_state->undecorated_library_name_length),
+				load_state->undecorated_library_name
 			);
 
-			self->load_success = SystemLoadLibraryWrapper::load (main_thread_jni_env /* RuntimeEnvironment::get_jnienv () */, self->undecorated_library_name);
+			load_state->load_success = SystemLoadLibraryWrapper::load (
+				main_thread_jni_env /* RuntimeEnvironment::get_jnienv () */,
+				std::string_view { load_state->undecorated_library_name, load_state->undecorated_library_name_length }
+			);
 			return over_and_out ();
 		}
 
 	private:
-		int pipe_fds[2] = {-1, -1};
-		sem_t load_complete_sem {};
-		std::string_view undecorated_library_name {};
-		bool load_success = false;
+		LoadState *state = nullptr;
 
 		static inline ALooper *main_thread_looper = nullptr;
 		static inline JNIEnv *main_thread_jni_env = nullptr;
