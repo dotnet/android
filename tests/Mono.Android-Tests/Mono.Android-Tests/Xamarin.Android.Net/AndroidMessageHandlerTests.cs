@@ -6,6 +6,7 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -364,6 +365,7 @@ namespace Xamarin.Android.NetTests
 			listener.Start ();
 
 			var cancellationObserved = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var firstServerBodyRead = new TaskCompletionSource<int> (TaskCreationOptions.RunContinuationsAsynchronously);
 			var firstServerTask = HandleCancelledRequest ();
 
 			using var cancellationTokenSource = new CancellationTokenSource ();
@@ -386,6 +388,7 @@ namespace Xamarin.Android.NetTests
 				var firstResponseTask = client.SendAsync (request, cancellationTokenSource.Token);
 				firstRequestTask = firstResponseTask;
 				await WaitForTask (contentStream.FirstWriteCompletedTask, "The first request body did not start uploading.").ConfigureAwait (false);
+				await WaitForTask (firstServerBodyRead.Task, "The first server handler did not receive the request body prefix.").ConfigureAwait (false);
 				Assert.IsTrue (contentStream.IsFirstCopyBlocked, "The first content copy was not blocked after its initial destination write.");
 				Assert.AreEqual (1, contentStream.CopyCount, "The first request should start exactly one content copy.");
 
@@ -426,6 +429,7 @@ namespace Xamarin.Android.NetTests
 				Assert.AreEqual (0, streamAfterRetry.Position, "Stream position should be 0 after successful request");
 			} finally {
 				bool firstWriteCompletedBeforeCleanup = contentStream.FirstWriteCompletedTask.IsCompleted;
+				bool firstServerBodyReadBeforeCleanup = firstServerBodyRead.Task.IsCompleted;
 				bool firstRequestCompletedBeforeCleanup = firstRequestTask.IsCompleted;
 				bool firstServerCompletedBeforeCleanup = firstServerTask.IsCompleted;
 				bool retryRequestCompletedBeforeCleanup = retryRequestTask.IsCompleted;
@@ -440,6 +444,7 @@ namespace Xamarin.Android.NetTests
 
 				await Task.WhenAll (
 					ObserveTaskAfterCleanup (contentStream.FirstWriteCompletedTask, "first destination write signal", firstWriteCompletedBeforeCleanup, cancellationExpected: !firstWriteCompletedBeforeCleanup, listenerAbortExpected: false),
+					ObserveTaskAfterCleanup (firstServerBodyRead.Task, "first server body read signal", firstServerBodyReadBeforeCleanup, cancellationExpected: false, listenerAbortExpected: true),
 					ObserveTaskAfterCleanup (firstRequestTask, "first request", firstRequestCompletedBeforeCleanup, cancellationExpected: firstRequestCancellationExpected, listenerAbortExpected: false),
 					ObserveTaskAfterCleanup (firstServerTask, "first server handler", firstServerCompletedBeforeCleanup, cancellationExpected: false, listenerAbortExpected: true),
 					ObserveTaskAfterCleanup (retryRequestTask, "retry request", retryRequestCompletedBeforeCleanup, cancellationExpected: !retryRequestCompletedBeforeCleanup, listenerAbortExpected: false),
@@ -449,28 +454,26 @@ namespace Xamarin.Android.NetTests
 
 			async Task HandleCancelledRequest ()
 			{
-				var context = await listener.GetContextAsync ().ConfigureAwait (false);
-				using var response = context.Response;
-				var buffer = new byte [4096];
-				await cancellationObserved.Task.ConfigureAwait (false);
-
 				try {
-					while (await context.Request.InputStream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false) > 0) {
+					var context = await listener.GetContextAsync ().ConfigureAwait (false);
+					using var response = context.Response;
+					Assert.AreEqual (requestBody.Length, context.Request.ContentLength64, "The first request declared an unexpected content length.");
+
+					var buffer = new byte [4096];
+					int bytesRead = await context.Request.InputStream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false);
+					Assert.Greater (bytesRead, 0, "The first request ended before the server received its body prefix.");
+					Assert.Less (bytesRead, context.Request.ContentLength64, "The first server read unexpectedly consumed the complete request body.");
+					for (int i = 0; i < bytesRead; i++) {
+						if (buffer [i] != requestBody [i])
+							Assert.Fail ($"The first request body differed at offset {i}.");
 					}
-				} catch (IOException) {
-					// The canceled client can close the connection while the server drains the request.
-				} catch (HttpListenerException) {
-					// The canceled client can close the connection while the server drains the request.
-				}
 
-				try {
-					response.StatusCode = 204;
-					response.ContentLength64 = 0;
-					response.Close ();
-				} catch (IOException) {
-					// The canceled client can close the connection before the server closes the response.
-				} catch (HttpListenerException) {
-					// The canceled client can close the connection before the server closes the response.
+					firstServerBodyRead.TrySetResult (bytesRead);
+					await cancellationObserved.Task.ConfigureAwait (false);
+					response.Abort ();
+				} catch (Exception ex) {
+					firstServerBodyRead.TrySetException (ex);
+					throw;
 				}
 			}
 
@@ -481,11 +484,10 @@ namespace Xamarin.Android.NetTests
 				Assert.AreEqual (requestBody.Length, context.Request.ContentLength64, "The retry request declared an unexpected content length.");
 				var buffer = new byte [4096];
 				int totalBytesRead = 0;
-				int bytesRead;
-				while ((bytesRead = await context.Request.InputStream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false)) > 0) {
-					if (totalBytesRead + bytesRead > requestBody.Length)
-						Assert.Fail ($"The retry request body exceeded the expected {requestBody.Length} bytes.");
-
+				while (totalBytesRead < requestBody.Length) {
+					int bytesToRead = Math.Min (buffer.Length, requestBody.Length - totalBytesRead);
+					int bytesRead = await context.Request.InputStream.ReadAsync (buffer, 0, bytesToRead).ConfigureAwait (false);
+					Assert.Greater (bytesRead, 0, "The retry request ended before the complete body was received.");
 					for (int i = 0; i < bytesRead; i++) {
 						if (buffer [i] != requestBody [totalBytesRead + i])
 							Assert.Fail ($"The retry request body differed at offset {totalBytesRead + i}.");
@@ -574,6 +576,79 @@ namespace Xamarin.Android.NetTests
 				try {
 					await firstCopyTask.ConfigureAwait (false);
 				} catch (OperationCanceledException) {
+				}
+			}
+		}
+
+		[Test]
+		public async Task HttpListenerAbortCompletesPendingRequestBodyRead ()
+		{
+			const int contentLength = 1024;
+			const int requestTimeoutMilliseconds = 10_000;
+			byte [] bodyPrefix = { 0, 1, 2, 3, 4, 5, 6, 7 };
+
+			int testPort = GetAvailablePort ();
+			using var listener = new HttpListener ();
+			listener.Prefixes.Add ($"http://127.0.0.1:{testPort}/");
+			listener.Start ();
+			var contextTask = listener.GetContextAsync ();
+
+			using var client = new TcpClient ();
+			await client.ConnectAsync (IPAddress.Loopback, testPort).ConfigureAwait (false);
+			using NetworkStream clientStream = client.GetStream ();
+			byte [] requestHeaders = Encoding.ASCII.GetBytes (
+				$"POST / HTTP/1.1\r\nHost: 127.0.0.1:{testPort}\r\nContent-Length: {contentLength}\r\nConnection: keep-alive\r\n\r\n"
+			);
+			await clientStream.WriteAsync (requestHeaders, 0, requestHeaders.Length).ConfigureAwait (false);
+			await clientStream.WriteAsync (bodyPrefix, 0, bodyPrefix.Length).ConfigureAwait (false);
+			await clientStream.FlushAsync ().ConfigureAwait (false);
+
+			var contextCompleted = await Task.WhenAny (contextTask, Task.Delay (requestTimeoutMilliseconds)).ConfigureAwait (false);
+			Assert.AreSame (contextTask, contextCompleted, "The listener did not accept the partial fixed-length request.");
+			var context = await contextTask.ConfigureAwait (false);
+			using var response = context.Response;
+			Task<int> pendingReadTask = Task.FromResult (0);
+			try {
+				Assert.AreEqual (contentLength, context.Request.ContentLength64, "The listener observed an unexpected content length.");
+
+				var receivedPrefix = new byte [bodyPrefix.Length];
+				int totalBytesRead = 0;
+				while (totalBytesRead < receivedPrefix.Length) {
+					int bytesRead = await context.Request.InputStream.ReadAsync (
+						receivedPrefix,
+						totalBytesRead,
+						receivedPrefix.Length - totalBytesRead
+					).ConfigureAwait (false);
+					Assert.Greater (bytesRead, 0, "The partial request ended before the body prefix was received.");
+					totalBytesRead += bytesRead;
+				}
+				CollectionAssert.AreEqual (bodyPrefix, receivedPrefix, "The listener received an unexpected request body prefix.");
+
+				var pendingReadBuffer = new byte [1];
+				pendingReadTask = context.Request.InputStream.ReadAsync (pendingReadBuffer, 0, pendingReadBuffer.Length);
+				var prematureCompletion = await Task.WhenAny (pendingReadTask, Task.Delay (250)).ConfigureAwait (false);
+				Assert.AreNotSame (pendingReadTask, prematureCompletion, "The request body read should remain pending while the client keeps the incomplete request open.");
+
+				response.Abort ();
+				var readCompleted = await Task.WhenAny (pendingReadTask, Task.Delay (requestTimeoutMilliseconds)).ConfigureAwait (false);
+				Assert.AreSame (pendingReadTask, readCompleted, "Aborting the response did not terminate the pending request body read.");
+				try {
+					int bytesRead = await pendingReadTask.ConfigureAwait (false);
+					Assert.AreEqual (0, bytesRead, "The aborted request body read should not produce additional bytes.");
+				} catch (IOException) {
+				} catch (HttpListenerException) {
+				} catch (ObjectDisposedException) {
+				}
+			} finally {
+				response.Abort ();
+				listener.Abort ();
+				var readCompleted = await Task.WhenAny (pendingReadTask, Task.Delay (requestTimeoutMilliseconds)).ConfigureAwait (false);
+				Assert.AreSame (pendingReadTask, readCompleted, "The pending request body read did not finish during cleanup.");
+				try {
+					await pendingReadTask.ConfigureAwait (false);
+				} catch (IOException) {
+				} catch (HttpListenerException) {
+				} catch (ObjectDisposedException) {
 				}
 			}
 		}
