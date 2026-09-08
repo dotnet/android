@@ -101,6 +101,7 @@ stages:
         windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
         buildResultArtifactName: Build Results - macOS
         use1ESTemplate: false
+        collectTestTimings: ${{ ne(variables.SkipTestStages, 'true') }}
 
 # Windows Build Stage
 - stage: win_build_test
@@ -308,6 +309,7 @@ stages:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         testFilter: ''
         testRunTitle: Xamarin.Android.Build.Tests - macOS
+        balanceFile: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/test-timings/macos.xml
         retryFailedTests: false
         xaSourcePath: $(System.DefaultWorkingDirectory)
 
@@ -360,6 +362,7 @@ stages:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         testFilter: ''
         testRunTitle: Xamarin.Android.Build.Tests - Windows
+        balanceFile: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/test-timings/windows.xml
         retryFailedTests: false
         xaSourcePath: $(System.DefaultWorkingDirectory)
 
@@ -421,6 +424,7 @@ stages:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: $(ExcludedNightlyNUnitCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
+        balanceFile: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/test-timings/macos-device.xml
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:

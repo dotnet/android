@@ -10,6 +10,7 @@ parameters:
   windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
   buildResultArtifactName: Build Results - macOS
   use1ESTemplate: true
+  collectTestTimings: false
 
 steps:
 - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
@@ -80,6 +81,21 @@ steps:
   inputs:
     SourceFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
     Contents: '*.symbols.nupkg'
+
+- ${{ if eq(parameters.collectTestTimings, true) }}:
+  # Publish one immutable snapshot with the assemblies, not one lookup per shard.
+  - task: PowerShell@2
+    displayName: Prepare test timing snapshot
+    inputs:
+      pwsh: true
+      filePath: ${{ parameters.xaSourcePath }}/build-tools/automation/scripts/GetTestTimingSnapshot.ps1
+      arguments: >-
+        -CollectionUri "$(System.CollectionUri)"
+        -Project "$(System.TeamProjectId)"
+        -DefinitionId $(System.DefinitionId)
+        -OutputDirectory "${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/test-timings"
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
 - ${{ if ne(parameters.use1ESTemplate, true) }}:
   - task: PublishPipelineArtifact@1

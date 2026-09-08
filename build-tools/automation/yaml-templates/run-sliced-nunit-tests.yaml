@@ -5,29 +5,30 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)
   retryFailedTests: true  # Retry failed tests once
   condition: succeeded()  # Condition to run tests
+  balanceFile: ''         # All shards must use the same OS/suite timing snapshot
 
 steps:
-- ${{if parameters.testFilter}}:
-  - pwsh: >-
-      $(Agent.ToolsDirectory)/dotnet-test-slicer slice
-      --test-assembly="${{ parameters.testAssembly }}"
-      --test-filter="${{ parameters.testFilter }}"
-      --slice-number=$(System.JobPositionInPhase)
-      --total-slices=$(System.TotalJobsInPhase)
-      --outfile="${{ parameters.testAssembly }}.runsettings"
+- pwsh: |
+    $arguments = @(
+      'slice'
+      "--test-assembly=${{ parameters.testAssembly }}"
+      '--slice-number=$(System.JobPositionInPhase)'
+      '--total-slices=$(System.TotalJobsInPhase)'
+      "--outfile=${{ parameters.testAssembly }}.runsettings"
+    )
+    if ("${{ parameters.testFilter }}") {
+      $arguments += "--test-filter=${{ parameters.testFilter }}"
+    }
+    if ("${{ parameters.balanceFile }}") {
+      $arguments += "--balance-file=${{ parameters.balanceFile }}"
+    }
+    & "$(Agent.ToolsDirectory)/dotnet-test-slicer" @arguments
+  ${{ if parameters.testFilter }}:
     displayName: Slice unit tests with filter
-    failOnStderr: true
-    condition: ${{ parameters.condition }}
-- ${{ else }}:
-  - pwsh: >-
-      $(Agent.ToolsDirectory)/dotnet-test-slicer slice
-      --test-assembly="${{ parameters.testAssembly }}"
-      --slice-number=$(System.JobPositionInPhase)
-      --total-slices=$(System.TotalJobsInPhase)
-      --outfile="${{ parameters.testAssembly }}.runsettings"
+  ${{ else }}:
     displayName: Slice unit tests
-    failOnStderr: true
-    condition: ${{ parameters.condition }}
+  failOnStderr: true
+  condition: ${{ parameters.condition }}
 
 - ${{ if eq(parameters.retryFailedTests, 'false') }}:
   # If we aren't using auto-retry logic, then this is just a simple template call
