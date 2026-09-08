@@ -17,7 +17,7 @@ function Invoke-Gate ([object[]] $records, [string] $recoveredTasks, [string] $j
 		-RecoveredOptionalTaskRefs $recoveredTasks `
 		-JobId $jobId `
 		-TimelinePath $timelinePath `
-		-TimelinePollTimeoutSeconds 0 6>&1
+		-TimelinePollTimeoutSeconds 1 6>&1
 }
 
 function New-Task ([string] $refName, [string] $result, [string] $parentId = $jobId) {
@@ -58,29 +58,108 @@ function New-Timeline ([object[]] $records) {
 }
 
 function Invoke-GateSequence ([object[]] $timelines, [string] $recoveredTasks) {
-	$global:XATimelineSequence = $timelines
-	$global:XATimelineSequenceIndex = 0
-	$env:SYSTEM_ACCESSTOKEN = 'test-token'
-	$env:SYSTEM_COLLECTIONURI = 'https://dev.azure.com/example/'
-	$env:SYSTEM_TEAMPROJECT = 'project'
-	$env:BUILD_BUILDID = '42'
-	$env:SYSTEM_JOBID = $jobId
-	function Invoke-RestMethod {
-		param ($Headers, $TimeoutSec, $Uri)
-		$index = [Math]::Min($global:XATimelineSequenceIndex, $global:XATimelineSequence.Count - 1)
-		$global:XATimelineSequenceIndex++
-		return $global:XATimelineSequence[$index]
+	$timelinePaths = [System.Collections.Generic.List[string]]::new()
+	foreach ($timeline in $timelines) {
+		$timelinePath = Join-Path $tempRoot "$([Guid]::NewGuid()).json"
+		$timeline | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $timelinePath -Encoding ASCII
+		$timelinePaths.Add($timelinePath)
 	}
+	return & $gateScript `
+		-JobStatus 'SucceededWithIssues' `
+		-RecoveredOptionalTaskRefs $recoveredTasks `
+		-JobId $jobId `
+		-TimelinePath $timelinePaths.ToArray() `
+		-TimelinePollTimeoutSeconds $timelines.Count `
+		-TimelinePollIntervalSeconds 0 6>&1
+}
+
+function Get-FreeTcpPort {
+	$listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 0)
 	try {
-		return & $gateScript `
-			-JobStatus 'SucceededWithIssues' `
-			-RecoveredOptionalTaskRefs $recoveredTasks `
-			-TimelinePollTimeoutSeconds $timelines.Count `
-			-TimelinePollIntervalSeconds 0 6>&1
+		$listener.Start()
+		return ([Net.IPEndPoint] $listener.LocalEndpoint).Port
 	} finally {
-		Remove-Item Function:\Invoke-RestMethod -ErrorAction SilentlyContinue
-		Remove-Item Env:SYSTEM_ACCESSTOKEN, Env:SYSTEM_JOBID -ErrorAction SilentlyContinue
-		Remove-Variable XATimelineSequence, XATimelineSequenceIndex -Scope Global -ErrorAction SilentlyContinue
+		$listener.Stop()
+	}
+}
+
+function Start-TestHttpServer ([string] $responseBody, [int] $bodyDelayMilliseconds = 0) {
+	$port = Get-FreeTcpPort
+	$readyPath = Join-Path $tempRoot "$([Guid]::NewGuid()).ready"
+	$requestPath = Join-Path $tempRoot "$([Guid]::NewGuid()).request"
+	$job = Start-Job -ScriptBlock {
+		param ($port, $readyPath, $requestPath, $responseBody, $bodyDelayMilliseconds)
+		$ErrorActionPreference = 'Stop'
+		$listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, $port)
+		try {
+			$listener.Start()
+			Set-Content -LiteralPath $readyPath -Value 'ready' -Encoding ASCII
+			$client = $listener.AcceptTcpClient()
+			try {
+				$stream = $client.GetStream()
+				$reader = [IO.StreamReader]::new($stream, [Text.Encoding]::ASCII, $false, 1024, $true)
+				$requestLines = [System.Collections.Generic.List[string]]::new()
+				while ($true) {
+					$line = $reader.ReadLine()
+					if ([string]::IsNullOrEmpty($line)) {
+						break
+					}
+					$requestLines.Add($line)
+				}
+				$requestLines | Set-Content -LiteralPath $requestPath -Encoding ASCII
+
+				$bodyBytes = [Text.Encoding]::UTF8.GetBytes($responseBody)
+				$headers = "HTTP/1.1 200 OK`r`nContent-Type: application/json`r`nContent-Length: $($bodyBytes.Length)`r`nConnection: close`r`n`r`n"
+				$headerBytes = [Text.Encoding]::ASCII.GetBytes($headers)
+				$stream.Write($headerBytes, 0, $headerBytes.Length)
+				$stream.Flush()
+				if ($bodyDelayMilliseconds -gt 0) {
+					Start-Sleep -Milliseconds $bodyDelayMilliseconds
+				}
+				$stream.Write($bodyBytes, 0, $bodyBytes.Length)
+				$stream.Flush()
+			} finally {
+				if ($null -ne $reader) {
+					$reader.Dispose()
+				}
+				if ($null -ne $client) {
+					$client.Dispose()
+				}
+			}
+		} finally {
+			$listener.Stop()
+		}
+	} -ArgumentList $port, $readyPath, $requestPath, $responseBody, $bodyDelayMilliseconds
+
+	$readyDeadline = [DateTime]::UtcNow.AddSeconds(10)
+	while (-not (Test-Path -LiteralPath $readyPath) -and [DateTime]::UtcNow -lt $readyDeadline) {
+		if ($job.State -in @('Failed', 'Stopped', 'Completed')) {
+			break
+		}
+		Start-Sleep -Milliseconds 50
+	}
+	if (-not (Test-Path -LiteralPath $readyPath)) {
+		$jobOutput = Receive-Job -Job $job 2>&1
+		Remove-Job -Job $job -Force
+		throw "The test HTTP server did not start: $($jobOutput -join "`n")"
+	}
+
+	return @{
+		Job = $job
+		Port = $port
+		RequestPath = $requestPath
+	}
+}
+
+function Stop-TestHttpServer ($server) {
+	$serverFailed = $server.Job.State -eq 'Failed'
+	if ($server.Job.State -notin @('Completed', 'Failed', 'Stopped')) {
+		Stop-Job -Job $server.Job
+	}
+	$serverOutput = Receive-Job -Job $server.Job 2>&1
+	Remove-Job -Job $server.Job -Force
+	if ($serverFailed) {
+		throw "The test HTTP server failed: $($serverOutput -join "`n")"
 	}
 }
 
@@ -92,27 +171,28 @@ try {
 	) 'gradleDependenciesCache'
 	Assert-True (-not ($output -join "`n").Contains('result=Failed')) 'A recovered optional cache failure remained gating.'
 
-	$env:SYSTEM_ACCESSTOKEN = 'test-token'
-	$env:SYSTEM_COLLECTIONURI = 'https://dev.azure.com/example/'
-	$env:SYSTEM_TEAMPROJECT = 'project'
-	$env:BUILD_BUILDID = '42'
-	$env:SYSTEM_JOBID = $jobId
-	function Invoke-RestMethod {
-		param ($Headers, $TimeoutSec, $Uri)
-		$env:CAPTURED_AUTHORIZATION = $Headers.Authorization
-		$env:CAPTURED_TIMELINE_URI = $Uri
-		return New-Timeline @(
-				(New-Task 'gradleDependenciesCache' 'failed')
-			)
+	$timelineJson = New-Timeline @(
+		(New-Task 'gradleDependenciesCache' 'failed')
+	) | ConvertTo-Json -Depth 5 -Compress
+	$server = Start-TestHttpServer $timelineJson
+	try {
+		$env:SYSTEM_ACCESSTOKEN = 'test-token'
+		$env:SYSTEM_COLLECTIONURI = "http://127.0.0.1:$($server.Port)/"
+		$env:SYSTEM_TEAMPROJECT = 'project'
+		$env:BUILD_BUILDID = '42'
+		$env:SYSTEM_JOBID = $jobId
+		$output = & $gateScript `
+			-JobStatus 'SucceededWithIssues' `
+			-RecoveredOptionalTaskRefs 'gradleDependenciesCache' `
+			-TimelinePollTimeoutSeconds 5 6>&1
+		$requestLines = Get-Content -LiteralPath $server.RequestPath
+	} finally {
+		Stop-TestHttpServer $server
 	}
-	$output = & $gateScript `
-		-JobStatus 'SucceededWithIssues' `
-		-RecoveredOptionalTaskRefs 'gradleDependenciesCache' 6>&1
 	Assert-True (-not ($output -join "`n").Contains('result=Failed')) 'A recovered cache failure from the timeline API remained gating.'
-	Assert-True ($env:CAPTURED_AUTHORIZATION -eq 'Bearer test-token') 'The timeline API authorization header was incorrect.'
-	Assert-True ($env:CAPTURED_TIMELINE_URI -eq 'https://dev.azure.com/example/project/_apis/build/builds/42/timeline?api-version=7.1') 'The timeline API URI was incorrect.'
-	Remove-Item Function:\Invoke-RestMethod
-	Remove-Item Env:SYSTEM_ACCESSTOKEN, Env:SYSTEM_JOBID, Env:CAPTURED_AUTHORIZATION, Env:CAPTURED_TIMELINE_URI
+	Assert-True ($requestLines[0] -eq 'GET /project/_apis/build/builds/42/timeline?api-version=7.1 HTTP/1.1') 'The timeline API URI was incorrect.'
+	Assert-True ($requestLines -contains 'Authorization: Bearer test-token') 'The timeline API authorization header was incorrect.'
+	Remove-Item Env:SYSTEM_ACCESSTOKEN, Env:SYSTEM_JOBID
 
 	$output = Invoke-Gate @(
 		@{
@@ -132,6 +212,12 @@ try {
 	) 'gradleDependenciesCache'
 	Assert-True (($output -join "`n").Contains('result=Failed')) 'A later genuine issue was masked by cache recovery.'
 	Assert-True (($output -join "`n").Contains('realFailure')) 'The unexpected issue task was not diagnosed.'
+
+	$output = Invoke-Gate @(
+		(New-Task 'gradleDependenciesCache' 'failed'),
+		(New-Task 'unknownResult' 'futureResult')
+	) 'gradleDependenciesCache'
+	Assert-True (($output -join "`n").Contains('result=Failed')) 'An unknown completed task result did not fail closed.'
 
 	$output = Invoke-GateSequence @(
 		(New-Timeline @(
@@ -203,24 +289,26 @@ try {
 	Assert-True (($output -join "`n").Contains('result=Failed')) 'A non-terminal preceding task did not fail closed after the poll bound.'
 	Assert-True (($output -join "`n").Contains('Timeline completeness was not established')) 'The timeline poll timeout was not diagnosed.'
 
-	$global:XATimelineRequestCount = 0
-	$env:SYSTEM_ACCESSTOKEN = 'test-token'
-	$env:SYSTEM_JOBID = $jobId
-	function Invoke-RestMethod {
-		$global:XATimelineRequestCount++
-		Start-Sleep -Milliseconds 600
-		return $incompleteTimeline
+	$server = Start-TestHttpServer $timelineJson 3000
+	try {
+		$env:SYSTEM_ACCESSTOKEN = 'test-token'
+		$env:SYSTEM_COLLECTIONURI = "http://127.0.0.1:$($server.Port)/"
+		$env:SYSTEM_TEAMPROJECT = 'project'
+		$env:BUILD_BUILDID = '42'
+		$env:SYSTEM_JOBID = $jobId
+		$deadlineStopwatch = [Diagnostics.Stopwatch]::StartNew()
+		$output = & $gateScript `
+			-JobStatus 'SucceededWithIssues' `
+			-RecoveredOptionalTaskRefs 'gradleDependenciesCache' `
+			-TimelinePollTimeoutSeconds 1 `
+			-TimelinePollIntervalSeconds 0 6>&1
+		$deadlineStopwatch.Stop()
+	} finally {
+		Stop-TestHttpServer $server
 	}
-	$output = & $gateScript `
-		-JobStatus 'SucceededWithIssues' `
-		-RecoveredOptionalTaskRefs 'gradleDependenciesCache' `
-		-TimelinePollTimeoutSeconds 1 `
-		-TimelinePollIntervalSeconds 0 6>&1
-	Assert-True (($output -join "`n").Contains('result=Failed')) 'A slow timeline request did not fail closed.'
-	Assert-True ($global:XATimelineRequestCount -eq 1) 'Timeline request time was not counted against the polling timeout.'
-	Remove-Item Function:\Invoke-RestMethod
+	Assert-True (($output -join "`n").Contains('result=Failed')) 'A response body completed after the deadline did not fail closed.'
+	Assert-True ($deadlineStopwatch.Elapsed.TotalSeconds -lt 2.5) 'The response-body read exceeded the timeline polling deadline tolerance.'
 	Remove-Item Env:SYSTEM_ACCESSTOKEN, Env:SYSTEM_JOBID
-	Remove-Variable XATimelineRequestCount -Scope Global
 
 	$output = Invoke-Gate @(
 		(New-Task 'realFailure' 'succeededWithIssues')
@@ -252,16 +340,15 @@ try {
 	Assert-True (($output -join "`n").Contains('result=Failed')) 'A missing Azure access token did not fail closed.'
 
 	$env:SYSTEM_ACCESSTOKEN = 'test-token'
+	$env:SYSTEM_COLLECTIONURI = "http://127.0.0.1:$(Get-FreeTcpPort)/"
+	$env:SYSTEM_TEAMPROJECT = 'project'
+	$env:BUILD_BUILDID = '42'
 	$env:SYSTEM_JOBID = $jobId
-	function Invoke-RestMethod {
-		throw 'simulated timeline API failure'
-	}
 	$output = & $gateScript `
 		-JobStatus 'SucceededWithIssues' `
 		-RecoveredOptionalTaskRefs 'gradleDependenciesCache' `
-		-TimelinePollTimeoutSeconds 0 6>&1
+		-TimelinePollTimeoutSeconds 1 6>&1
 	Assert-True (($output -join "`n").Contains('result=Failed')) 'A timeline API failure did not fail closed.'
-	Remove-Item Function:\Invoke-RestMethod
 	Remove-Item Env:SYSTEM_ACCESSTOKEN, Env:SYSTEM_JOBID
 
 	$output = Invoke-Gate @() '' 'Succeeded'
@@ -272,9 +359,5 @@ try {
 	Remove-Item Env:SYSTEM_TEAMPROJECT -ErrorAction SilentlyContinue
 	Remove-Item Env:SYSTEM_JOBID -ErrorAction SilentlyContinue
 	Remove-Item Env:SYSTEM_ACCESSTOKEN -ErrorAction SilentlyContinue
-	Remove-Item Env:CAPTURED_AUTHORIZATION -ErrorAction SilentlyContinue
-	Remove-Item Env:CAPTURED_TIMELINE_URI -ErrorAction SilentlyContinue
-	Remove-Item Function:\Invoke-RestMethod -ErrorAction SilentlyContinue
-	Remove-Variable XATimelineRequestCount -Scope Global -ErrorAction SilentlyContinue
 	Remove-Item -LiteralPath $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
 }

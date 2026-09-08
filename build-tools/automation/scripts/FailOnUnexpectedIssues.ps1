@@ -2,7 +2,7 @@ param (
 	[string] $JobStatus = $env:AGENT_JOBSTATUS,
 	[string] $RecoveredOptionalTaskRefs = $env:RECOVERED_OPTIONAL_TASK_REFS,
 	[string] $JobId = $env:SYSTEM_JOBID,
-	[string] $TimelinePath,
+	[string[]] $TimelinePath,
 	[ValidateRange(0, 300)]
 	[int] $TimelinePollTimeoutSeconds = 20,
 	[ValidateRange(0, 60)]
@@ -11,6 +11,7 @@ param (
 
 $ErrorActionPreference = 'Stop'
 $gateTaskReferenceName = 'failOnUnexpectedIssues'
+$validTaskResults = @('succeeded', 'succeededWithIssues', 'failed', 'canceled', 'skipped', 'abandoned')
 Write-Host "Current job status is: $JobStatus"
 
 function Complete-AsFailed ([string] $message) {
@@ -25,6 +26,43 @@ function Get-TaskReferenceName ($task) {
 	return $task.name
 }
 
+function Get-TimelineFromApi ([string] $uri, [string] $accessToken) {
+	$client = [Net.Http.HttpClient]::new()
+	$request = [Net.Http.HttpRequestMessage]::new([Net.Http.HttpMethod]::Get, $uri)
+	$cancellation = [Threading.CancellationTokenSource]::new()
+	$response = $null
+	try {
+		$client.Timeout = [Threading.Timeout]::InfiniteTimeSpan
+		$request.Headers.Authorization = [Net.Http.Headers.AuthenticationHeaderValue]::new('Bearer', $accessToken)
+		$remainingMilliseconds = [Math]::Floor(
+			($TimelinePollTimeoutSeconds - $timelineStopwatch.Elapsed.TotalSeconds) * 1000
+		)
+		if ($remainingMilliseconds -le 0) {
+			throw [TimeoutException]::new('The timeline polling deadline elapsed before the request started.')
+		}
+		$cancellation.CancelAfter([int] $remainingMilliseconds)
+
+		$response = $client.SendAsync(
+			$request,
+			[Net.Http.HttpCompletionOption]::ResponseContentRead,
+			$cancellation.Token
+		).GetAwaiter().GetResult()
+		if (-not $response.IsSuccessStatusCode) {
+			throw "The timeline request failed with HTTP status $([int] $response.StatusCode) ($($response.ReasonPhrase))."
+		}
+
+		$content = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
+		return $content | ConvertFrom-Json
+	} finally {
+		if ($null -ne $response) {
+			$response.Dispose()
+		}
+		$cancellation.Dispose()
+		$request.Dispose()
+		$client.Dispose()
+	}
+}
+
 if ($JobStatus -ne 'SucceededWithIssues') {
 	return
 }
@@ -35,8 +73,9 @@ if ($allowedTasks.Count -eq 0) {
 	return
 }
 
+$hasTimelineFixture = $null -ne $TimelinePath -and $TimelinePath.Count -ne 0
 try {
-	if ([string]::IsNullOrWhiteSpace($TimelinePath)) {
+	if (-not $hasTimelineFixture) {
 		$requiredEnvironmentVariables = @{
 			BUILD_BUILDID = $env:BUILD_BUILDID
 			SYSTEM_COLLECTIONURI = $env:SYSTEM_COLLECTIONURI
@@ -52,9 +91,7 @@ try {
 
 		$project = [Uri]::EscapeDataString($env:SYSTEM_TEAMPROJECT)
 		$timelineUri = "$($env:SYSTEM_COLLECTIONURI)$project/_apis/build/builds/$($env:BUILD_BUILDID)/timeline?api-version=7.1"
-		$headers = @{
-			Authorization = "Bearer $($env:SYSTEM_ACCESSTOKEN)"
-		}
+		Add-Type -AssemblyName System.Net.Http
 	}
 } catch {
 	Complete-AsFailed "Could not prepare the Azure Pipelines timeline request: $($_.Exception.Message)"
@@ -71,17 +108,19 @@ $timelineStatus = 'The gate task was not present in the current-job timeline.'
 $timelineStopwatch = [Diagnostics.Stopwatch]::StartNew()
 
 for ($attempt = 1; $attempt -le $maxTimelineAttempts; $attempt++) {
-	$remainingSeconds = $TimelinePollTimeoutSeconds - $timelineStopwatch.Elapsed.TotalSeconds
-	if ($attempt -gt 1 -and $remainingSeconds -lt 1) {
+	$remainingMilliseconds = [Math]::Floor(
+		($TimelinePollTimeoutSeconds - $timelineStopwatch.Elapsed.TotalSeconds) * 1000
+	)
+	if ($remainingMilliseconds -le 0) {
 		break
 	}
 
 	try {
-		if (-not [string]::IsNullOrWhiteSpace($TimelinePath)) {
-			$timeline = Get-Content -LiteralPath $TimelinePath -Raw | ConvertFrom-Json
+		if ($hasTimelineFixture) {
+			$timelinePathIndex = [Math]::Min($attempt - 1, $TimelinePath.Count - 1)
+			$timeline = Get-Content -LiteralPath $TimelinePath[$timelinePathIndex] -Raw | ConvertFrom-Json
 		} else {
-			$requestTimeoutSeconds = [Math]::Max(1, [Math]::Floor($remainingSeconds))
-			$timeline = Invoke-RestMethod -Uri $timelineUri -Headers $headers -TimeoutSec $requestTimeoutSeconds
+			$timeline = Get-TimelineFromApi $timelineUri $env:SYSTEM_ACCESSTOKEN
 		}
 
 		if ($null -eq $timeline -or $null -eq $timeline.records) {
@@ -125,7 +164,14 @@ for ($attempt = 1; $attempt -le $maxTimelineAttempts; $attempt++) {
 					$_.state -ne 'completed' -or [string]::IsNullOrWhiteSpace($_.result)
 				})
 				if ($incompleteTasks.Count -eq 0) {
-					if ($attempt -eq 1 -or $timelineStopwatch.Elapsed.TotalSeconds -le $TimelinePollTimeoutSeconds) {
+					$invalidResultTasks = @($visiblePrecedingTasks | Where-Object {
+						$_.result -notin $validTaskResults
+					})
+					if ($invalidResultTasks.Count -ne 0) {
+						$invalidTask = $invalidResultTasks[0]
+						throw "Task '$(Get-TaskReferenceName $invalidTask)' has unsupported result '$($invalidTask.result)'."
+					}
+					if ($timelineStopwatch.Elapsed.TotalSeconds -le $TimelinePollTimeoutSeconds) {
 						$precedingTasks = $visiblePrecedingTasks
 						break
 					}
