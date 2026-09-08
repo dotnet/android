@@ -201,8 +201,8 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 		return;
 	}
 
-	constexpr size_t header_field_size = Constants::OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE / 2uz;
-	constexpr size_t header_value_size = header_field_size - 1uz;
+	static constexpr size_t header_field_size = Constants::OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE / 2uz;
+	static constexpr size_t header_value_size = header_field_size - 1uz;
 	auto is_valid_width_field = [] (const char *field) noexcept -> bool {
 		if (field [0] != '0' || (field [1] != 'x' && field [1] != 'X') || field [header_value_size] != '\0') {
 			return false;
