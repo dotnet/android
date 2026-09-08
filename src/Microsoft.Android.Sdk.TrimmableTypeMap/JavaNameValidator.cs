@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
-internal static class JavaNameValidator
+public static class JavaNameValidator
 {
 	// Java SE 21 reserved keywords and literals:
 	// https://docs.oracle.com/javase/specs/jls/se21/html/jls-3.html#jls-3.9
@@ -88,21 +88,21 @@ internal static class JavaNameValidator
 			? value <= char.MaxValue && JavaIdentifierData.IsPackageIdentifierPart ((char) value)
 			: JavaIdentifierData.IsSupportedIdentifierPart (value);
 
-	internal static bool TryGetInvalidPackageSegment (ReadOnlySpan<char> packageName, char separator, out string invalidSegment)
+	public static bool TryGetInvalidPackageSegment (ReadOnlySpan<char> packageName, char separator, out ReadOnlySpan<char> invalidSegment)
 	{
 		foreach (var range in packageName.Split (separator)) {
 			var segment = packageName [range];
 			if (IsInvalidPackageIdentifier (segment)) {
-				invalidSegment = segment.ToString ();
+				invalidSegment = segment;
 				return true;
 			}
 		}
 
-		invalidSegment = "";
+		invalidSegment = default;
 		return false;
 	}
 
-	internal static bool TryGetInvalidJniNameSegment (ReadOnlySpan<char> jniName, out string invalidSegment)
+	internal static bool TryGetInvalidJniNameSegment (ReadOnlySpan<char> jniName, out ReadOnlySpan<char> invalidSegment)
 	{
 		int lastSlash = jniName.LastIndexOf ('/');
 		if (lastSlash >= 0 && TryGetInvalidPackageSegment (jniName [..lastSlash], '/', out invalidSegment)) {
@@ -111,31 +111,31 @@ internal static class JavaNameValidator
 
 		var typeName = jniName [(lastSlash + 1)..];
 		if (IsInvalidIdentifier (typeName, isTypeName: true)) {
-			invalidSegment = typeName.ToString ();
+			invalidSegment = typeName;
 			return true;
 		}
 
-		invalidSegment = "";
+		invalidSegment = default;
 		return false;
 	}
 
-	internal static bool TryGetInvalidJniManifestNameSegment (ReadOnlySpan<char> jniName, out string invalidSegment)
+	internal static bool TryGetInvalidJniManifestNameSegment (ReadOnlySpan<char> jniName, out ReadOnlySpan<char> invalidSegment)
 	{
 		foreach (var range in jniName.Split ('/')) {
 			var segment = jniName [range];
 			bool isTypeName = range.End.Value == jniName.Length;
 			if (IsInvalidPackageIdentifier (segment) ||
 					isTypeName && RestrictedTypeIdentifiers.GetAlternateLookup<ReadOnlySpan<char>> ().Contains (segment)) {
-				invalidSegment = segment.ToString ();
+				invalidSegment = segment;
 				return true;
 			}
 		}
 
-		invalidSegment = "";
+		invalidSegment = default;
 		return false;
 	}
 
-	internal static bool TryGetInvalidJniSourceTypeSegment (ReadOnlySpan<char> jniName, out string invalidSegment)
+	internal static bool TryGetInvalidJniSourceTypeSegment (ReadOnlySpan<char> jniName, out ReadOnlySpan<char> invalidSegment)
 	{
 		if (TryGetInvalidJniNameSegment (jniName, out invalidSegment)) {
 			return true;
@@ -146,7 +146,7 @@ internal static class JavaNameValidator
 		foreach (var range in typeName.Split ('$')) {
 			var segment = typeName [range];
 			if (IsInvalidIdentifier (segment, isTypeName: true)) {
-				invalidSegment = segment.ToString ();
+				invalidSegment = segment;
 				return true;
 			}
 		}
@@ -154,7 +154,7 @@ internal static class JavaNameValidator
 		return false;
 	}
 
-	internal static bool TryGetInvalidJniTypeSegment (ReadOnlySpan<char> jniType, out string typeName, out string invalidSegment)
+	internal static bool TryGetInvalidJniTypeSegment (ReadOnlySpan<char> jniType, out ReadOnlySpan<char> typeName, out ReadOnlySpan<char> invalidSegment)
 	{
 		int typeStart = 0;
 		while (typeStart < jniType.Length && jniType [typeStart] == '[') {
@@ -162,23 +162,23 @@ internal static class JavaNameValidator
 		}
 
 		if (typeStart < jniType.Length - 1 && jniType [typeStart] == 'L' && jniType [jniType.Length - 1] == ';') {
-			typeName = jniType [(typeStart + 1)..^1].ToString ();
+			typeName = jniType [(typeStart + 1)..^1];
 			return TryGetInvalidJniSourceTypeSegment (typeName, out invalidSegment);
 		}
 
-		typeName = "";
-		invalidSegment = "";
+		typeName = default;
+		invalidSegment = default;
 		return false;
 	}
 
-	internal static bool TryGetInvalidJavaSourceTypeSegment (ReadOnlySpan<char> javaType, out string invalidSegment)
+	internal static bool TryGetInvalidJavaSourceTypeSegment (ReadOnlySpan<char> javaType, out ReadOnlySpan<char> invalidSegment)
 	{
 		var typeName = javaType;
 		while (typeName.EndsWith ("[]", StringComparison.Ordinal)) {
 			typeName = typeName [..^2];
 		}
 		if (typeName is "boolean" or "byte" or "char" or "short" or "int" or "long" or "float" or "double" or "void") {
-			invalidSegment = "";
+			invalidSegment = default;
 			return false;
 		}
 
@@ -188,29 +188,29 @@ internal static class JavaNameValidator
 				var nestedSegment = segment [nestedRange];
 				bool isTypeName = range.End.Value == typeName.Length || nestedRange.Start.Value > 0;
 				if (IsInvalidIdentifier (nestedSegment, isTypeName)) {
-					invalidSegment = nestedSegment.ToString ();
+					invalidSegment = nestedSegment;
 					return true;
 				}
 			}
 		}
 
-		invalidSegment = "";
+		invalidSegment = default;
 		return false;
 	}
 
-	internal static bool TryGetInvalidJavaManifestTypeSegment (ReadOnlySpan<char> javaType, out string invalidSegment)
+	internal static bool TryGetInvalidJavaManifestTypeSegment (ReadOnlySpan<char> javaType, out ReadOnlySpan<char> invalidSegment)
 	{
 		foreach (var range in javaType.Split ('.')) {
 			var segment = javaType [range];
 			bool isTypeName = range.End.Value == javaType.Length;
 			if (IsInvalidPackageIdentifier (segment) ||
 					isTypeName && RestrictedTypeIdentifiers.GetAlternateLookup<ReadOnlySpan<char>> ().Contains (segment)) {
-				invalidSegment = segment.ToString ();
+				invalidSegment = segment;
 				return true;
 			}
 		}
 
-		invalidSegment = "";
+		invalidSegment = default;
 		return false;
 	}
 }
