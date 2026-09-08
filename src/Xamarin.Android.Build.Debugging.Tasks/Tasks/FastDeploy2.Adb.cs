@@ -52,7 +52,7 @@ namespace Xamarin.Android.Tasks
 		/// Uninstalls <paramref name="packageName"/> via <c>adb shell pm uninstall</c>, optionally
 		/// preserving the application's data and cache directories (<c>-k</c>).
 		/// </summary>
-		async Task UninstallPackage (string packageName, bool preserveData, string user)
+		internal virtual async Task UninstallPackage (string packageName, bool preserveData, string user)
 		{
 			var args = new List<string> { "pm", "uninstall" };
 			if (preserveData) {

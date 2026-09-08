@@ -202,6 +202,46 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public async Task FastDeploy2RetriesTransientInstallAfterUninstall ()
+		{
+			var task = new TestFastDeploy2 (
+				CreateAdbResult (1, "Failure [INSTALL_FAILED_ALREADY_EXISTS]"),
+				CreateAdbResult (1, "adb: failed to install app.apk: cmd: Failure calling service package: Broken pipe (32)"),
+				CreateAdbResult (0, "Success"));
+
+			await task.InstallApkWithRetry ("app.apk", reinstall: false, testOnly: false, user: "");
+
+			Assert.AreEqual (3, task.InstallAttempts);
+			Assert.AreEqual (1, task.UninstallAttempts);
+			Assert.AreEqual (1, task.RecoveryAttempts);
+		}
+
+		[Test]
+		public void FastDeploy2DoesNotRetryTransientInstallTwiceAcrossUninstall ()
+		{
+			var task = new TestFastDeploy2 (
+				CreateAdbResult (1, "first failure: device offline"),
+				CreateAdbResult (1, "Failure [INSTALL_FAILED_ALREADY_EXISTS]"),
+				CreateAdbResult (1, "third failure: cmd: Failure calling service package: Broken pipe (32)"));
+
+			var exception = Assert.ThrowsAsync<FastDeployInstallException> (
+				async () => await task.InstallApkWithRetry ("app.apk", reinstall: false, testOnly: false, user: ""));
+
+			Assert.IsNotNull (exception);
+			Assert.AreEqual ("ADB0010", exception.ErrorCode);
+			Assert.That (exception.Message, Does.Contain ("Install attempt 1"));
+			Assert.That (exception.Message, Does.Contain ("first failure"));
+			Assert.That (exception.Message, Does.Contain ("Install attempt 2"));
+			Assert.That (exception.Message, Does.Contain ("INSTALL_FAILED_ALREADY_EXISTS"));
+			Assert.That (exception.Message, Does.Contain ("Install attempt 3"));
+			Assert.That (exception.Message, Does.Contain ("third failure"));
+			Assert.That (exception.Message, Does.Not.Contain ("Install attempt 4"));
+			Assert.AreEqual (3, task.InstallAttempts);
+			Assert.AreEqual (1, task.UninstallAttempts);
+			Assert.AreEqual (1, task.RecoveryAttempts);
+		}
+
+		[Test]
 		public void FastDeploy2DoesNotRetrySemanticInstallFailure ()
 		{
 			var task = new TestFastDeploy2 (
@@ -269,6 +309,7 @@ namespace Xamarin.Android.Build.Tests
 			readonly Exception recoveryException;
 
 			public int InstallAttempts { get; private set; }
+			public int UninstallAttempts { get; private set; }
 			public int RecoveryAttempts { get; private set; }
 
 			public TestFastDeploy2 (params AdbCommandResult [] results)
@@ -288,6 +329,12 @@ namespace Xamarin.Android.Build.Tests
 			{
 				InstallAttempts++;
 				return Task.FromResult (results.Dequeue ());
+			}
+
+			internal override Task UninstallPackage (string packageName, bool preserveData, string user)
+			{
+				UninstallAttempts++;
+				return Task.CompletedTask;
 			}
 
 			internal override Task WaitForInstallTransportRecovery ()
