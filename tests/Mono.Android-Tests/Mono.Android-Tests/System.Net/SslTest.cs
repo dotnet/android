@@ -112,15 +112,32 @@ namespace System.NetTests {
 				Assert.Ignore ("Not supported on API 23 and lower.");
 			}
 
-			Assert.DoesNotThrow (() => RunIgnoringWebException (DoVerifyTrustedCertificates), "Certificate validation");
+			using var tcpClient = ConnectToTrustedCertificatesEndpoint ();
+			using var ssl = new SslStream (tcpClient.GetStream (), false);
+			Assert.DoesNotThrow (() => ssl.AuthenticateAsClient ("google.com"), "Certificate validation");
 		}
 
-		void DoVerifyTrustedCertificates ()
+		static TcpClient ConnectToTrustedCertificatesEndpoint ()
 		{
-			var tcpClient = new TcpClient ("google.com", 443);
-			using (var ssl = new SslStream (tcpClient.GetStream (), false)) {
-				ssl.AuthenticateAsClient ("google.com");
+			try {
+				return new TcpClient ("google.com", 443);
+			} catch (SocketException ex) when (IsExternalConnectivityFailure (ex.SocketErrorCode)) {
+				Assert.Ignore ($"Unable to reach google.com:443 before TLS certificate validation. SocketError={ex.SocketErrorCode}; NativeError={ex.NativeErrorCode}; Message={ex.Message}");
+				throw;
 			}
+		}
+
+		static bool IsExternalConnectivityFailure (SocketError socketError)
+		{
+			switch (socketError) {
+				case SocketError.HostNotFound:
+				case SocketError.NoData:
+				case SocketError.NetworkUnreachable:
+				case SocketError.HostUnreachable:
+					return true;
+			}
+
+			return false;
 		}
 
 		void RunIgnoringWebException (Action test)
