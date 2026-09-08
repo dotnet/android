@@ -39,15 +39,16 @@ namespace Java.Interop
 
 		readonly Type                                       DeclaringType;
 
-		readonly ConcurrentDictionary<string, JniMethodInfo>    InstanceMethods      = new ConcurrentDictionary<string, JniMethodInfo> (1, 3, StringComparer.Ordinal);
-		readonly ConcurrentDictionary<Type, JniInstanceMethods> SubclassConstructors = new ConcurrentDictionary<Type, JniInstanceMethods> (1, 1);
+		ConcurrentDictionary<string, JniMethodInfo>?             instanceMethods;
+		ConcurrentDictionary<Type, JniInstanceMethods>?          subclassConstructors;
+
+		ConcurrentDictionary<string, JniMethodInfo>               InstanceMethods      => GetOrCreate (ref instanceMethods, 3);
+		ConcurrentDictionary<Type, JniInstanceMethods>            SubclassConstructors => GetOrCreate (ref subclassConstructors, 1);
 
 		internal void Dispose ()
 		{
-			InstanceMethods.Clear ();
-			foreach (var p in SubclassConstructors.Values)
-				p.Dispose ();
-			SubclassConstructors.Clear ();
+			Clear (ref instanceMethods);
+			Clear (ref subclassConstructors, static value => value.Dispose ());
 
 			if (jniPeerType != null)
 				jniPeerType.Dispose ();

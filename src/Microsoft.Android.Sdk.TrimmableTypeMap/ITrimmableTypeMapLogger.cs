@@ -29,6 +29,10 @@ public interface ITrimmableTypeMapLogger
 	void LogExportFieldOnGenericTypeError ();
 	void LogExportFieldReturnsVoidError ();
 	void LogUnsupportedExportSignatureError (string memberName, string managedTypeName);
+	void LogAmbiguousConstructorSignatureError (string managedTypeName, string jniSignature);
+	void LogUnsupportedConstructorParameterTypeError (string managedTypeName, string parameterType);
+	void LogMissingBaseConstructorError (string managedTypeName, string jniSignature);
+	void LogInvalidSuperArgumentsStringError (string managedTypeName, string superArgumentsString);
 	void LogCustomJavaObjectError (string managedTypeName);
 	void LogCustomJavaObjectWarning (string managedTypeName);
 }

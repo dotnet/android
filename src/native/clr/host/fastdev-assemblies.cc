@@ -4,9 +4,9 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <cstdlib>
 #include <cstring>
 #include <limits>
-#include <string>
 
 #include <constants.hh>
 #include <host/fastdev-assemblies.hh>
@@ -14,6 +14,49 @@
 #include <runtime-base/util.hh>
 
 using namespace xamarin::android;
+
+namespace {
+	// A minimal growable NUL-terminated character buffer. The TPA list has no useful upper bound -
+	// it holds one absolute path per assembly in the override directory - so it grows on demand
+	// rather than using a fixed buffer.
+	struct char_buffer final
+	{
+		char   *data = nullptr;
+		size_t  length = 0;
+		size_t  capacity = 0;
+	};
+
+	constexpr size_t CHAR_BUFFER_INITIAL_CAPACITY = 512uz;
+
+	// Appends `text` to `buffer`, growing it if needed. Returns `false` if the buffer could not be
+	// grown, in which case `buffer` is left unchanged and still owns its storage.
+	auto buffer_append (char_buffer &buffer, std::string_view text) noexcept -> bool
+	{
+		size_t required_capacity = Helpers::add_with_overflow_check<size_t> (buffer.length, text.length ());
+		required_capacity = Helpers::add_with_overflow_check<size_t> (required_capacity, 1uz);
+
+		if (required_capacity > buffer.capacity) {
+			size_t new_capacity = buffer.capacity == 0 ? CHAR_BUFFER_INITIAL_CAPACITY : buffer.capacity;
+			while (new_capacity < required_capacity) {
+				new_capacity = Helpers::add_with_overflow_check<size_t> (new_capacity, new_capacity);
+			}
+
+			char *grown = static_cast<char*> (std::realloc (buffer.data, new_capacity));
+			if (grown == nullptr) {
+				return false;
+			}
+
+			buffer.data = grown;
+			buffer.capacity = new_capacity;
+		}
+
+		memcpy (buffer.data + buffer.length, text.data (), text.length ());
+		buffer.length += text.length ();
+		buffer.data [buffer.length] = '\0';
+
+		return true;
+	}
+}
 
 auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*
 {
@@ -36,9 +79,9 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		return nullptr;
 	}
 
-	std::string const& override_dir_path = AndroidSystem::get_primary_override_dir ();
+	const char *override_dir_path = AndroidSystem::get_primary_override_dir ();
 	if (!Util::dir_exists (override_dir_path)) [[unlikely]] {
-		log_debugf (LOG_ASSEMBLY, "Override directory '%s' does not exist", override_dir_path.c_str ());
+		log_debugf (LOG_ASSEMBLY, "Override directory '%s' does not exist", override_dir_path);
 		return nullptr;
 	}
 
@@ -47,9 +90,9 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	if (override_dir_fd < 0) [[unlikely]] {
 		lock_guard dir_lock { override_dir_lock };
 		if (override_dir_fd < 0) [[likely]] {
-			override_dir = opendir (override_dir_path.c_str ());
+			override_dir = opendir (override_dir_path);
 			if (override_dir == nullptr) [[unlikely]] {
-				log_warnf (LOG_ASSEMBLY, "Failed to open override dir '%s'. %s", override_dir_path.c_str (), strerror (errno));
+				log_warnf (LOG_ASSEMBLY, "Failed to open override dir '%s'. %s", override_dir_path, strerror (errno));
 				return nullptr;
 			}
 			override_dir_fd = dirfd (override_dir);
@@ -60,7 +103,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		LOG_ASSEMBLY,
 		"Attempting to load FastDev assembly '%.*s' from override directory '%s'",
 		static_cast<int>(name.length ()), name.data (),
-		override_dir_path.c_str ()
+		override_dir_path
 	);
 
 	if (!Util::file_exists (override_dir_fd, name)) {
@@ -104,7 +147,19 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	//       the allocated space is no longer (if ever) needed by CoreCLR. Probably would be best if
 	//       CoreCLR notified us when it wants to free the data, as that eliminates any races as well
 	//       as ambiguity.
-	auto buffer = new uint8_t[file_size.value ()];
+	auto buffer = static_cast<uint8_t*> (std::malloc (file_size.value ()));
+	if (buffer == nullptr) [[unlikely]] {
+		log_warnf (
+			LOG_ASSEMBLY,
+			"Unable to allocate memory for FastDev assembly '%.*s'",
+			static_cast<int>(name.length ()), name.data ()
+		);
+
+		close (asm_fd);
+		size = 0;
+		return nullptr;
+	}
+
 	ssize_t nread = 0;
 	do {
 		nread = read (asm_fd, reinterpret_cast<void*>(buffer), file_size.value ());
@@ -112,7 +167,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	close (asm_fd);
 
 	if (nread != size) [[unlikely]] {
-		delete[] buffer;
+		std::free (buffer);
 
 		log_warnf (
 			LOG_ASSEMBLY,
@@ -129,26 +184,28 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	return reinterpret_cast<void*>(buffer);
 }
 
-auto FastDevAssemblies::build_tpa_list (std::string &tpa_list) noexcept -> bool
+auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 {
-	tpa_list.clear ();
+	tpa_in_use = false;
 
-	std::string const& override_dir_path = AndroidSystem::get_primary_override_dir ();
+	const char *override_dir_path = AndroidSystem::get_primary_override_dir ();
 	if (!Util::dir_exists (override_dir_path)) {
-		return false;
+		return nullptr;
 	}
 
-	DIR *dir = opendir (override_dir_path.c_str ());
+	DIR *dir = opendir (override_dir_path);
 	if (dir == nullptr) {
-		log_warnf (LOG_ASSEMBLY, "FastDev: failed to open override dir '%s'. %s", override_dir_path.c_str (), std::strerror (errno));
-		return false;
+		log_warnf (LOG_ASSEMBLY, "FastDev: failed to open override dir '%s'. %s", override_dir_path, std::strerror (errno));
+		return nullptr;
 	}
 
 	constexpr std::string_view dll_ext { ".dll" };
 	constexpr std::string_view r2r_ext { ".r2r.dll" };
 	constexpr std::string_view corelib_name { "System.Private.CoreLib.dll" };
+	char_buffer tpa_list {};
 	bool found_corelib = false;
 	bool found_r2r = false;
+	bool out_of_memory = false;
 	size_t count = 0;
 	dirent *e;
 	while ((e = readdir (dir)) != nullptr) {
@@ -166,12 +223,16 @@ auto FastDevAssemblies::build_tpa_list (std::string &tpa_list) noexcept -> bool
 			break;
 		}
 
-		if (!tpa_list.empty ()) {
-			tpa_list.append (":");
+		if (tpa_list.length > 0 && !buffer_append (tpa_list, ":"sv)) {
+			out_of_memory = true;
+			break;
 		}
-		tpa_list.append (override_dir_path);
-		tpa_list.append ("/");
-		tpa_list.append (name);
+		if (!buffer_append (tpa_list, override_dir_path) ||
+			!buffer_append (tpa_list, "/"sv) ||
+			!buffer_append (tpa_list, name)) {
+			out_of_memory = true;
+			break;
+		}
 		if (name == corelib_name) {
 			found_corelib = true;
 		}
@@ -179,11 +240,19 @@ auto FastDevAssemblies::build_tpa_list (std::string &tpa_list) noexcept -> bool
 	}
 	closedir (dir);
 
+	if (out_of_memory) {
+		// FastDev is a Debug-only convenience, so fall back to the probe-only path rather than
+		// aborting the application.
+		log_warn (LOG_ASSEMBLY, "FastDev: unable to allocate memory for the TPA list");
+		std::free (tpa_list.data);
+		return nullptr;
+	}
+
 	log_debugf (
 		LOG_ASSEMBLY,
 		"FastDev: built TPA list with %zu assemblies from '%s' (corelib=%s, r2r=%s)",
 		count,
-		override_dir_path.c_str (),
+		override_dir_path,
 		found_corelib ? "true" : "false",
 		found_r2r ? "true" : "false"
 	);
@@ -197,8 +266,14 @@ auto FastDevAssemblies::build_tpa_list (std::string &tpa_list) noexcept -> bool
 	// CoreCLR's `.r2r.dll` probes aren't compatible with our TPA path.
 	if (count > 0 && found_corelib && !found_r2r) {
 		tpa_in_use = true;
-		return true;
+		return tpa_list.data;
 	}
-	tpa_list.clear ();
-	return false;
+	std::free (tpa_list.data);
+	return nullptr;
+}
+
+void FastDevAssemblies::discard_tpa_list (char *tpa_list) noexcept
+{
+	std::free (tpa_list);
+	tpa_in_use = false;
 }

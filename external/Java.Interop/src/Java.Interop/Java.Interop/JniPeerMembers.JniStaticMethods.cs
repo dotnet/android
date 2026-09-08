@@ -15,11 +15,13 @@ namespace Java.Interop
 
 		internal    readonly    JniPeerMembers              Members;
 
-		readonly ConcurrentDictionary<string, JniMethodInfo> StaticMethods = new ConcurrentDictionary<string, JniMethodInfo> (1, 3, StringComparer.Ordinal);
+		ConcurrentDictionary<string, JniMethodInfo>? staticMethods;
+
+		ConcurrentDictionary<string, JniMethodInfo> StaticMethods => GetOrCreate (ref staticMethods, 3);
 
 		internal void Dispose ()
 		{
-			StaticMethods.Clear ();
+			Clear (ref staticMethods);
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
