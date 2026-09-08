@@ -63,6 +63,7 @@ namespace Xamarin.Android.Build.Tests
 				-keep,allowoptimization interface ** {
 				   public protected *;
 				}
+				-keep,allowshrinking class * implements **
 
 				""";
 			Assert.AreEqual (expected, writer.ToString ());

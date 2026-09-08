@@ -271,6 +271,7 @@ namespace Xamarin.Android.Tasks
 			writer.WriteLine ("-keep,allowoptimization interface ** {");
 			writer.WriteLine ("   public protected *;");
 			writer.WriteLine ("}");
+			writer.WriteLine ("-keep,allowshrinking class * implements **");
 		}
 
 		// ProGuard "global" options that affect the whole build and are not allowed inside
