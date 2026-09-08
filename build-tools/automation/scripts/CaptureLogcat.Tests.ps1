@@ -38,7 +38,8 @@ function Invoke-CaptureTest {
 		-AdbPath $fakeAdb `
 		-DeviceTimeoutSeconds $DeviceTimeoutSeconds `
 		-LogcatTimeoutSeconds $LogcatTimeoutSeconds `
-		-TerminationTimeoutSeconds 1 2>&1
+		-TerminationTimeoutSeconds 1 `
+		-OutputDrainTimeoutSeconds 2 2>&1
 	$exitCode = $LASTEXITCODE
 	$stopwatch.Stop()
 
@@ -95,13 +96,24 @@ switch ($args[0]) {
 				[Console]::Out.Flush()
 				exit 0
 			}
+			'burst' {
+				for ($i = 1; $i -le 2000; $i++) {
+					[Console]::Out.WriteLine("burst log line $i")
+				}
+				[Console]::Out.Flush()
+				[Console]::Error.WriteLine('burst stderr marker')
+				[Console]::Error.Flush()
+				exit 0
+			}
 			'fail' {
 				[Console]::Error.WriteLine('logcat failed')
 				[Console]::Error.Flush()
 				exit 23
 			}
 			'hang' {
-				[Console]::Out.WriteLine('partial log line')
+				for ($i = 1; $i -le 100; $i++) {
+					[Console]::Out.WriteLine("partial log line $i")
+				}
 				[Console]::Out.Flush()
 				Start-Sleep -Seconds 30
 				exit 0
@@ -144,6 +156,18 @@ exec "__POWERSHELL__" -NoLogo -NoProfile -File "__SCRIPT__" "$@"
 	Assert-True ($result.Output -match 'logcat capture completed') "Successful capture did not report completion: $($result.Output)"
 	Assert-True ((Get-Content -LiteralPath $result.Destination -Raw) -match 'complete log line') 'Successful capture did not preserve logcat output.'
 
+	for ($iteration = 1; $iteration -le 5; $iteration++) {
+		$result = Invoke-CaptureTest -Name "burst-$iteration" -DevicesMode 'device' -LogcatMode 'burst'
+		Assert-True ($result.ExitCode -eq 0) "Burst capture $iteration exited with $($result.ExitCode)."
+		Assert-True ($result.Output -match 'logcat capture completed') "Burst capture $iteration did not report completion: $($result.Output)"
+		Assert-True ($result.Output -match 'burst stderr marker') "Burst capture $iteration did not preserve stderr: $($result.Output)"
+		$burstLines = @(Get-Content -LiteralPath $result.Destination)
+		Assert-True ($burstLines.Count -eq 2000) "Burst capture $iteration preserved $($burstLines.Count) of 2000 lines."
+		for ($line = 1; $line -le 2000; $line++) {
+			Assert-True ($burstLines[$line - 1] -eq "burst log line $line") "Burst capture $iteration had unexpected output at line $line."
+		}
+	}
+
 	$result = Invoke-CaptureTest -Name 'no-device' -DevicesMode 'none' -LogcatMode 'success'
 	Assert-True ($result.ExitCode -eq 0) "No-device capture exited with $($result.ExitCode)."
 	Assert-True ($result.Output -match 'logcat capture skipped: no connected device') "No-device capture did not report the skip: $($result.Output)"
@@ -168,7 +192,11 @@ exec "__POWERSHELL__" -NoLogo -NoProfile -File "__SCRIPT__" "$@"
 	Assert-True ($result.ExitCode -eq 0) "Timed-out logcat capture exited with $($result.ExitCode)."
 	Assert-True ($result.Elapsed.TotalSeconds -lt 15) "Timed-out logcat capture took $($result.Elapsed.TotalSeconds) seconds."
 	Assert-True ($result.Output -match '##vso\[task.logissue type=warning\].*logcat capture timed out after 1 seconds') "Timed-out logcat capture did not emit the expected warning: $($result.Output)"
-	Assert-True ((Get-Content -LiteralPath $result.Destination -Raw) -match 'partial log line') 'Timed-out capture did not preserve partial logcat output.'
+	$partialLines = @(Get-Content -LiteralPath $result.Destination)
+	Assert-True ($partialLines.Count -eq 100) "Timed-out capture preserved $($partialLines.Count) of 100 partial lines."
+	for ($line = 1; $line -le 100; $line++) {
+		Assert-True ($partialLines[$line - 1] -eq "partial log line $line") "Timed-out capture had unexpected partial output at line $line."
+	}
 
 	Write-Host 'CaptureLogcat tests passed.'
 } finally {
