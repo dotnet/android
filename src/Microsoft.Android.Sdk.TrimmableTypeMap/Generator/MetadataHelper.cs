@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
@@ -16,15 +17,24 @@ static class MetadataHelper
 	/// </summary>
 	public static Guid DeterministicMvid (string moduleName, ReadOnlySpan<byte> contentBytes = default)
 	{
-		using var sha = SHA256.Create ();
-		byte [] nameBytes = Encoding.UTF8.GetBytes (moduleName);
-		byte [] input = new byte [nameBytes.Length + contentBytes.Length];
-		nameBytes.CopyTo (input, 0);
-		contentBytes.CopyTo (input.AsSpan (nameBytes.Length));
-		byte [] hash = sha.ComputeHash (input);
-		byte [] guidBytes = new byte [16];
-		Array.Copy (hash, guidBytes, 16);
-		return new Guid (guidBytes);
+		const int stackallocThresholdBytes = 256;
+		int nameByteCount = Encoding.UTF8.GetByteCount (moduleName);
+		int byteCount = checked (nameByteCount + contentBytes.Length);
+		byte []? rented = null;
+		Span<byte> input = byteCount <= stackallocThresholdBytes
+			? stackalloc byte [byteCount]
+			: (rented = ArrayPool<byte>.Shared.Rent (byteCount));
+		try {
+			Encoding.UTF8.GetBytes (moduleName.AsSpan (), input [..nameByteCount]);
+			contentBytes.CopyTo (input [nameByteCount..]);
+			Span<byte> hash = stackalloc byte [SHA256.HashSizeInBytes];
+			SHA256.HashData (input [..byteCount], hash);
+			return new Guid (hash [..16]);
+		} finally {
+			if (rented is not null) {
+				ArrayPool<byte>.Shared.Return (rented);
+			}
+		}
 	}
 
 	/// <summary>
@@ -32,7 +42,6 @@ static class MetadataHelper
 	/// </summary>
 	public static byte [] ComputeContentFingerprint (TypeMapAssemblyData data)
 	{
-		using var sha = SHA256.Create ();
 		using var stream = new MemoryStream ();
 		using var writer = new BinaryWriter (stream, Encoding.UTF8);
 		foreach (var entry in data.Entries) {
@@ -66,7 +75,7 @@ static class MetadataHelper
 			writer.Write (assoc.AliasProxyTypeReference);
 		}
 		writer.Flush ();
-		return sha.ComputeHash (stream.GetBuffer (), 0, checked ((int) stream.Length));
+		return SHA256.HashData (stream.GetBuffer ().AsSpan (0, checked ((int) stream.Length)));
 	}
 
 	/// <summary>
@@ -76,7 +85,6 @@ static class MetadataHelper
 	/// </summary>
 	public static byte [] ComputeIncrementalFingerprint (TypeMapAssemblyData data, Version systemRuntimeVersion, bool useSharedTypemapUniverse)
 	{
-		using var sha = SHA256.Create ();
 		using var stream = new MemoryStream ();
 		using var writer = new BinaryWriter (stream, Encoding.UTF8);
 		writer.Write (GeneratorModuleVersionId.ToByteArray ());
@@ -137,7 +145,7 @@ static class MetadataHelper
 			writer.Write (assemblyName);
 		}
 		writer.Flush ();
-		return sha.ComputeHash (stream.GetBuffer (), 0, checked ((int) stream.Length));
+		return SHA256.HashData (stream.GetBuffer ().AsSpan (0, checked ((int) stream.Length)));
 	}
 
 	/// <summary>
@@ -148,7 +156,6 @@ static class MetadataHelper
 		Version systemRuntimeVersion,
 		bool useSharedTypemapUniverse)
 	{
-		using var sha = SHA256.Create ();
 		using var stream = new MemoryStream ();
 		using var writer = new BinaryWriter (stream, Encoding.UTF8);
 		writer.Write (GeneratorModuleVersionId.ToByteArray ());
@@ -159,7 +166,7 @@ static class MetadataHelper
 			writer.Write (assemblyName);
 		}
 		writer.Flush ();
-		return sha.ComputeHash (stream.GetBuffer (), 0, checked ((int) stream.Length));
+		return SHA256.HashData (stream.GetBuffer ().AsSpan (0, checked ((int) stream.Length)));
 	}
 
 	static void WriteTypeRef (this BinaryWriter writer, TypeRefData type)
