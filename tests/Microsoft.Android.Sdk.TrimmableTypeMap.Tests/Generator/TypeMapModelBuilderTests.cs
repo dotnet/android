@@ -55,6 +55,16 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Build_UnicodeJniName_PreservesCodePoints ()
+		{
+			const string javaName = "com/\u00e9xample/Peer\u0394";
+			var model = BuildModel ([MakePeerWithActivation (javaName, "Test.UnicodePeer", "A")]);
+
+			Assert.Equal (javaName, Assert.Single (model.Entries).MapKey);
+			Assert.Equal (javaName, Assert.Single (model.ProxyTypes).JniName);
+		}
+
+		[Fact]
 		public void Build_DuplicateJniNames_CreatesAliasEntries ()
 		{
 			var peers = new List<JavaPeerInfo> {
@@ -1405,16 +1415,18 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void Build_ExportConstructorWithoutMatchingManagedCtor_Throws ()
+		public void Build_ConstructorWithoutMatchingManagedCtor_UsesActivationFallback ()
 		{
 			var peer = MakeAcwPeer ("my/app/MissingCtor", "MyApp.MissingCtor", "App") with {
 				JavaConstructors = new List<JavaConstructorInfo> {
-					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V", HasMatchingManagedCtor = false, SuperArgumentsString = "" },
+					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "(IC)V", HasMatchingManagedCtor = false, SuperArgumentsString = "" },
 				},
 			};
-			var ex = Assert.Throws<InvalidOperationException> (() => BuildModel (new [] { peer }));
-			Assert.Contains ("no matching user-visible managed constructor", ex.Message);
-			Assert.Contains ("MyApp.MissingCtor", ex.Message);
+			var model = BuildModel (new [] { peer });
+			var constructor = Assert.Single (model.ProxyTypes [0].UcoConstructors);
+			Assert.Equal ("(IC)V", constructor.JniSignature);
+			Assert.False (constructor.HasMatchingManagedCtor);
+			Assert.Empty (constructor.ManagedParameterTypes);
 		}
 
 		[Fact]

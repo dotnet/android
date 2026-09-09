@@ -156,6 +156,100 @@ namespace UserApp
 		}
 	}
 
+	public class SignedUnsignedConstructorCollision : Activity
+	{
+		public SignedUnsignedConstructorCollision (int value) { }
+		public SignedUnsignedConstructorCollision (uint value) { }
+	}
+
+	[Register ("com/example/userapp/Alias")]
+	public class ConstructorAliasOne : Java.Lang.Object
+	{
+		protected ConstructorAliasOne (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	[Register ("com/example/userapp/Alias")]
+	public class ConstructorAliasTwo : Java.Lang.Object
+	{
+		protected ConstructorAliasTwo (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	public class AliasedTypeConstructorCollision : Activity
+	{
+		public AliasedTypeConstructorCollision (ConstructorAliasOne value) { }
+		public AliasedTypeConstructorCollision (ConstructorAliasTwo value) { }
+	}
+
+	public class GenericParameterConstructor<T> : Activity
+	{
+		public GenericParameterConstructor (T value) { }
+	}
+
+	public class GenericInstantiationConstructor : Activity
+	{
+		public GenericInstantiationConstructor (System.Collections.Generic.List<string> value) { }
+	}
+
+	public class ByRefConstructor : Activity
+	{
+		public ByRefConstructor (ref int value) { }
+	}
+
+	public unsafe class PointerConstructor : Activity
+	{
+		public PointerConstructor (int* value) { }
+	}
+
+	public unsafe class FunctionPointerConstructor : Activity
+	{
+		public FunctionPointerConstructor (delegate* unmanaged<void> value) { }
+	}
+
+	public class RectangularArrayConstructor : Activity
+	{
+		public RectangularArrayConstructor (string[,] value) { }
+	}
+
+	public class NestedRectangularArrayConstructor : Activity
+	{
+		public NestedRectangularArrayConstructor (string[][,] value) { }
+	}
+
+	public unsafe class PointerArrayConstructor : Activity
+	{
+		public PointerArrayConstructor (int*[] value) { }
+	}
+
+	public unsafe class FunctionPointerArrayConstructor : Activity
+	{
+		public FunctionPointerArrayConstructor (delegate* unmanaged<void>[] value) { }
+	}
+
+	public class JaggedArrayConstructor : Activity
+	{
+		public JaggedArrayConstructor (string[][] value) { }
+	}
+
+	[Register ("com/example/userapp/NoDefaultBase")]
+	public class NoDefaultConstructorBase : Java.Lang.Object
+	{
+		[Register (".ctor", "(I)V", "")]
+		public NoDefaultConstructorBase (int value) { }
+
+		protected NoDefaultConstructorBase (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	public class MissingBaseConstructor : NoDefaultConstructorBase
+	{
+		public MissingBaseConstructor (string value) : base (0) { }
+	}
+
+	public class InvalidSuperArgumentsConstructor : Activity
+	{
+		[Export (".ctor", SuperArgumentsString = "p1")]
+		public InvalidSuperArgumentsConstructor (string value) { }
+	}
+
 	// [Export] shapes that the legacy JCW emitter (CecilImporter.GetJniSignature)
 	// cannot encode but that the trimmable scanner is expected to handle. These
 	// types are excluded from legacy↔new comparison in ScannerComparisonTests

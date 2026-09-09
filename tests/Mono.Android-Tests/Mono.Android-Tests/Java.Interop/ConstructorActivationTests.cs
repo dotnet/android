@@ -89,6 +89,19 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("UnicodeJavaIdentifiers")]
+		public void JavaSideUnicodeIdentifierConstructorsRunAndRegisterPeers ()
+		{
+			UnicodeLetterIdentifierPeer.Reset ();
+			using (var instance = CreateFromJava<UnicodeLetterIdentifierPeer> ("()V")) {
+				Assert.AreEqual (1, UnicodeLetterIdentifierPeer.ConstructorInvocations);
+				Assert.AreEqual ("com/\u00e9xample/\u0394elta", JNIEnv.GetClassNameFromInstance (instance.Handle));
+				AssertRegisteredSame (instance);
+			}
+
+		}
+
+		[Test]
 		public void ManagedConstructionDoesNotReenterThroughJavaConstructorActivation ()
 		{
 			ConstructorActivationDefault.Reset ();
@@ -924,6 +937,22 @@ namespace Java.InteropTests
 		public ConstructorActivationDefault ()
 		{
 			ConstructorOrdinal = ++ConstructorInvocations;
+		}
+
+		public static void Reset ()
+		{
+			ConstructorInvocations = 0;
+		}
+	}
+
+	[Register ("com/\u00e9xample/\u0394elta")]
+	public class UnicodeLetterIdentifierPeer : Java.Lang.Object
+	{
+		public static int ConstructorInvocations;
+
+		public UnicodeLetterIdentifierPeer ()
+		{
+			ConstructorInvocations++;
 		}
 
 		public static void Reset ()

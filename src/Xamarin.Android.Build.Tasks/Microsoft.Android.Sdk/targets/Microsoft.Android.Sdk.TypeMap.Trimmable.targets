@@ -1,7 +1,8 @@
 <!-- Trimmable typemap: managed type mapping instead of native binary typemaps. -->
 <Project>
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateEmptyTypemapStub" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotBootstrapSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
@@ -12,6 +13,7 @@
       Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " />
 
   <PropertyGroup>
+    <AndroidEnableLegacyCompatibilityAssemblyFixups Condition=" '$(AndroidEnableLegacyCompatibilityAssemblyFixups)' == '' ">false</AndroidEnableLegacyCompatibilityAssemblyFixups>
     <_TypeMapAssemblyName>_Microsoft.Android.TypeMaps</_TypeMapAssemblyName>
     <_TrimmableTypeMapPackageNamingPolicy Condition=" '$(_AndroidPackageNamingPolicySetByUser)' == 'true' ">$(AndroidPackageNamingPolicy)</_TrimmableTypeMapPackageNamingPolicy>
     <_TrimmableTypeMapPackageNamingPolicy Condition=" '$(_TrimmableTypeMapPackageNamingPolicy)' == '' ">Crc64</_TrimmableTypeMapPackageNamingPolicy>

@@ -28,15 +28,11 @@ bool clr_typemap_java_to_managed (const char *java_type_name, char const** assem
 
 managed_timing_sequence* monodroid_timing_start (const char *message)
 {
-	// Technically a reference here is against the idea of shared pointers, but
-	// in this instance it's fine since we know we won't be storing the pointer
-	// and this way things are slightly faster.
-	std::shared_ptr<Timing> const &timing = Host::get_timing ();
-	if (!timing) {
+	if (!FastTiming::enabled ()) [[likely]] {
 		return nullptr;
 	}
 
-	managed_timing_sequence *ret = timing->get_available_sequence ();
+	managed_timing_sequence *ret = Host::get_timing ().get_available_sequence ();
 	if (message != nullptr) {
 		log_write (LOG_TIMING, LogLevel::Info, message);
 	}
@@ -51,12 +47,7 @@ void monodroid_timing_stop (managed_timing_sequence *sequence, const char *messa
 		return;
 	}
 
-	std::shared_ptr<Timing> const &timing = Host::get_timing ();
-	if (!timing) [[unlikely]] {
-		return;
-	}
-
 	sequence->end = FastTiming::get_time ();
 	Timing::info (sequence, message == nullptr ? DEFAULT_MESSAGE.data () : message);
-	timing->release_sequence (sequence);
+	Host::get_timing ().release_sequence (sequence);
 }

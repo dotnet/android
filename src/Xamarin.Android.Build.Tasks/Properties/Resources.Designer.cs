@@ -1660,11 +1660,47 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Java name &apos;{0}&apos; contains reserved Java identifier &apos;{1}&apos;. Change the package or type name..
+        ///   Looks up a localized string similar to Java name &apos;{0}&apos; contains invalid or unsupported Java identifier &apos;{1}&apos;. Change the package or type name..
         /// </summary>
         public static string XA4258 {
             get {
                 return ResourceManager.GetString("XA4258", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; has multiple managed constructors that map to the same Java Native Interface (JNI) signature &apos;{1}&apos;. Change the constructor parameter types so each constructor has a unique JNI signature..
+        /// </summary>
+        public static string XA4259 {
+            get {
+                return ResourceManager.GetString("XA4259", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; has a constructor parameter type &apos;{1}&apos; that cannot be represented in a Java constructor. Remove the constructor or change the parameter to a supported Java type..
+        /// </summary>
+        public static string XA4260 {
+            get {
+                return ResourceManager.GetString("XA4260", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; has Java constructor signature &apos;{1}&apos;, but its base type does not expose a compatible Java constructor. Add a compatible base constructor or remove the derived constructor..
+        /// </summary>
+        public static string XA4261 {
+            get {
+                return ResourceManager.GetString("XA4261", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; has an invalid [Export] SuperArgumentsString value &apos;{1}&apos;. The value references a constructor parameter that does not exist..
+        /// </summary>
+        public static string XA4262 {
+            get {
+                return ResourceManager.GetString("XA4262", resourceCulture);
             }
         }
 
