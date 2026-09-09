@@ -127,11 +127,12 @@ sealed class JavaAnnotationParser
 				index.AssemblyName,
 				rawTypeKind: 0
 			);
-			if (!assemblies.TryGetValue (typeReference.AssemblyName, out attributeIndex) ||
-			    !attributeIndex.TypesByFullName.TryGetValue (typeReference.ManagedTypeName, out var resolvedHandle)) {
+			if (!assemblies.TryGetValue (typeReference.AssemblyName, out var resolvedIndex) || resolvedIndex is null ||
+			    !resolvedIndex.TypesByFullName.TryGetValue (typeReference.ManagedTypeName, out var resolvedHandle)) {
 				annotationTypes [key] = null;
 				return null;
 			}
+			attributeIndex = resolvedIndex;
 			attributeType = attributeIndex.Reader.GetTypeDefinition (resolvedHandle);
 		} else {
 			annotationTypes [key] = null;
