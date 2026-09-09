@@ -1,8 +1,8 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -15,6 +15,10 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 static class ModelBuilder
 {
 	const string ProxyTypeSuffix = "_Proxy";
+	const string AliasHolderTypeSuffix = "_Aliases";
+
+	static readonly SearchValues<char> ManagedTypeNameSeparators = SearchValues.Create (".+`");
+	static readonly SearchValues<char> JniNameSeparators = SearchValues.Create ("/$");
 
 	static readonly HashSet<string> EssentialRuntimeTypes = new (StringComparer.Ordinal) {
 		"java/lang/Object",
@@ -162,7 +166,7 @@ static class ModelBuilder
 		// Alias group: generate an alias holder and indexed entries for each peer.
 		// The base JNI name maps to the alias holder; each peer gets "[0]", "[1]", etc.
 		var aliasKeys = new List<string> ();
-		string holderTypeName = jniName.Replace ('/', '_').Replace ('$', '_') + "_Aliases";
+		string holderTypeName = JniNameToAliasHolderTypeName (jniName);
 		var holderNamespace = "_TypeMap.Aliases";
 		string holderRef = AssemblyQualify ($"{holderNamespace}.{holderTypeName}", assemblyName);
 
@@ -252,18 +256,18 @@ static class ModelBuilder
 
 	static string ManagedTypeNameToProxyTypeName (string managedTypeName)
 	{
-		var builder = new StringBuilder (managedTypeName.Length + ProxyTypeSuffix.Length);
-		AppendSafeManagedTypeName (builder, managedTypeName);
-		builder.Append (ProxyTypeSuffix);
-		return builder.ToString ();
+		return string.Create (managedTypeName.Length + ProxyTypeSuffix.Length, managedTypeName, static (destination, name) => {
+			name.AsSpan ().ReplaceAny (destination, ManagedTypeNameSeparators, '_');
+			ProxyTypeSuffix.AsSpan ().CopyTo (destination [name.Length..]);
+		});
 	}
 
-	static void AppendSafeManagedTypeName (StringBuilder builder, string managedTypeName)
+	static string JniNameToAliasHolderTypeName (string jniName)
 	{
-		for (int i = 0; i < managedTypeName.Length; i++) {
-			char c = managedTypeName [i];
-			builder.Append (c == '.' || c == '+' || c == '`' ? '_' : c);
-		}
+		return string.Create (jniName.Length + AliasHolderTypeSuffix.Length, jniName, static (destination, name) => {
+			name.AsSpan ().ReplaceAny (destination, JniNameSeparators, '_');
+			AliasHolderTypeSuffix.AsSpan ().CopyTo (destination [name.Length..]);
+		});
 	}
 
 	static JavaPeerProxyData BuildProxyType (JavaPeerInfo peer, string jniName, HashSet<string> usedProxyNames, bool isAcw)
