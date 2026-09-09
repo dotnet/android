@@ -3,7 +3,7 @@ param ($SourcesDirectory, $LocProjectPath)
 $jsonFiles = @()
 $jsonLocalizationFiles = Get-ChildItem -Recurse -Path "$SourcesDirectory" -Filter "*.en.json" | Where-Object { $_.Directory.Name -eq "localize" }
 $jsonLocalizationFiles | ForEach-Object {
-    $null = $_.Name -Match "(.+)\.[\w-]+\.json" # matches '[filename].[langcode].json
+    $null = $_.Name -Match "(.+)\.[\w-]+\.json" # matches '[filename].[langcode].json'
 
     $destinationFile = "$($_.Directory.FullName)\$($Matches.1).json"
     $jsonFiles += Copy-Item "$($_.FullName)" -Destination $destinationFile -PassThru
