@@ -104,7 +104,10 @@ steps:
       while kill -0 "$ADB_PID" 2>/dev/null; do
         if [ "$SECONDS" -ge 45 ]; then
           echo "capture deadline exceeded: $*; elapsed=${SECONDS}s; bytes=$(wc -c < "$OUTPUT")"
-          exit 124
+          kill -KILL "$ADB_PID" 2>/dev/null || echo "adb client $ADB_PID already exited"
+          wait "$ADB_PID" 2>/dev/null || :
+          ADB_PID=""
+          return 124
         fi
         sleep 1
       done
