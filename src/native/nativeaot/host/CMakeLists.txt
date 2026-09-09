@@ -112,7 +112,6 @@ macro(lib_target_options TARGET_NAME)
     ${SYSROOT_CXX_INCLUDE_DIR}
     ${RUNTIME_INCLUDE_DIR}
     ${TEMP_MONO_RUNTIME_INCLUDE_DIR}
-    ${LIBUNWIND_INCLUDE_DIRS}
   )
 
   target_link_directories(

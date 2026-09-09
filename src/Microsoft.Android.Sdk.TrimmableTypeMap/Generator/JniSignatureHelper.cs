@@ -220,35 +220,8 @@ static class JniSignatureHelper
 			throw new ArgumentException ("JNI name must not be null or empty.", nameof (jniName));
 		}
 
-		int segmentStart = 0;
-		for (int i = 0; i <= jniName.Length; i++) {
-			if (i == jniName.Length || jniName [i] == '/') {
-				if (i == segmentStart) {
-					throw new ArgumentException ($"JNI name '{jniName}' has an empty segment.", nameof (jniName));
-				}
-
-				// First char of a segment must not be a digit
-				char first = jniName [segmentStart];
-				if (first >= '0' && first <= '9') {
-					throw new ArgumentException ($"JNI name '{jniName}' has a segment starting with a digit.", nameof (jniName));
-				}
-
-				// All chars in the segment must be valid Java identifier chars
-				for (int j = segmentStart; j < i; j++) {
-					char c = jniName [j];
-					bool valid = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-					             (c >= '0' && c <= '9') || c == '_' || c == '$';
-					if (!valid) {
-						throw new ArgumentException ($"JNI name '{jniName}' contains invalid character '{c}'.", nameof (jniName));
-					}
-				}
-
-				segmentStart = i + 1;
-			}
-		}
-
 		if (JavaNameValidator.TryGetInvalidJniNameSegment (jniName, out var invalidIdentifier)) {
-			throw new ArgumentException ($"JNI name '{jniName}' contains reserved Java identifier '{invalidIdentifier}'.", nameof (jniName));
+			throw new ArgumentException ($"JNI name '{jniName}' contains invalid or unsupported Java identifier '{invalidIdentifier}'.", nameof (jniName));
 		}
 	}
 
