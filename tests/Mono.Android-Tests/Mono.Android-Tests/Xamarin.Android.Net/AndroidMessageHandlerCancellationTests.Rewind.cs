@@ -51,20 +51,14 @@ namespace Xamarin.Android.NetTests
 
 				var firstResponseTask = client.SendAsync (request, cancellationTokenSource.Token);
 				firstRequestTask = firstResponseTask;
-				await WaitForTask (contentStream.FirstWriteCompletedTask, "The first request body did not start uploading.").ConfigureAwait (false);
-				await WaitForTask (firstServerBodyRead.Task, "The first server handler did not receive the request body prefix.").ConfigureAwait (false);
+				await WaitForTask (contentStream.FirstWriteCompletedTask, requestTimeoutMilliseconds, "The first request body did not start uploading.").ConfigureAwait (false);
+				await WaitForTask (firstServerBodyRead.Task, requestTimeoutMilliseconds, "The first server handler did not receive the request body prefix.").ConfigureAwait (false);
 				Assert.IsTrue (contentStream.IsFirstCopyBlocked, "The first content copy was not blocked after its initial destination write.");
 				Assert.AreEqual (1, contentStream.CopyCount, "The first request should start exactly one content copy.");
 
 				cancellationTokenSource.Cancel ();
-				var completedTask = await Task.WhenAny (firstResponseTask, Task.Delay (requestTimeoutMilliseconds)).ConfigureAwait (false);
-				if (completedTask != firstResponseTask) {
-					cancellationObserved.TrySetResult (true);
-					await WaitForTask (firstServerTask, "The first server handler did not finish after releasing the request body.").ConfigureAwait (false);
-					Assert.Fail ($"The first request did not observe cancellation within {requestTimeoutMilliseconds}ms.");
-				}
-
 				try {
+					await WaitForTask (firstResponseTask, requestTimeoutMilliseconds, "The first request did not observe cancellation.").ConfigureAwait (false);
 					using var firstResponse = await firstResponseTask.ConfigureAwait (false);
 					Assert.Fail ("The first request completed successfully instead of observing cancellation.");
 				} catch (OperationCanceledException) {
@@ -72,7 +66,7 @@ namespace Xamarin.Android.NetTests
 				}
 
 				cancellationObserved.TrySetResult (true);
-				await WaitForTask (firstServerTask, "The first server handler did not finish after cancellation.").ConfigureAwait (false);
+				await WaitForTask (firstServerTask, requestTimeoutMilliseconds, "The first server handler did not finish after cancellation.").ConfigureAwait (false);
 
 				var streamAfterCancellation = await content.ReadAsStreamAsync ();
 				Assert.AreEqual (0, streamAfterCancellation.Position, "Stream position should be 0 after cancellation (stream should be rewound)");
@@ -83,7 +77,7 @@ namespace Xamarin.Android.NetTests
 				var retryResponseTask = client.SendAsync (retryRequest, retryCancellationTokenSource.Token);
 				retryRequestTask = retryResponseTask;
 				var retryTasks = Task.WhenAll (retryResponseTask, retryServerTask);
-				await WaitForTask (retryTasks, "The retry request and server handler did not finish.").ConfigureAwait (false);
+				await WaitForTask (retryTasks, requestTimeoutMilliseconds, "The retry request and server handler did not finish.").ConfigureAwait (false);
 
 				using var retryResponse = await retryResponseTask.ConfigureAwait (false);
 				Assert.True (retryResponse.IsSuccessStatusCode, "Second request should succeed with reused content");
@@ -166,23 +160,10 @@ namespace Xamarin.Android.NetTests
 				response.Close ();
 			}
 
-			async Task WaitForTask (Task task, string failureMessage)
-			{
-				var completed = await Task.WhenAny (task, Task.Delay (requestTimeoutMilliseconds)).ConfigureAwait (false);
-				if (completed != task)
-					Assert.Fail ($"{failureMessage} Timeout: {requestTimeoutMilliseconds}ms.");
-
-				await task.ConfigureAwait (false);
-			}
-
 			async Task ObserveTaskAfterCleanup (Task task, string taskName, bool completedBeforeCleanup, bool cancellationExpected, bool listenerAbortExpected)
 			{
-				var completed = await Task.WhenAny (task, Task.Delay (requestTimeoutMilliseconds)).ConfigureAwait (false);
-				if (completed != task)
-					Assert.Fail ($"The {taskName} did not finish during cleanup within {requestTimeoutMilliseconds}ms.");
-
 				try {
-					await task.ConfigureAwait (false);
+					await WaitForTask (task, requestTimeoutMilliseconds, $"The {taskName} did not finish during cleanup.").ConfigureAwait (false);
 				} catch (OperationCanceledException) when (cancellationExpected) {
 				} catch (HttpListenerException) when (listenerAbortExpected && !completedBeforeCleanup) {
 				} catch (ObjectDisposedException) when (listenerAbortExpected && !completedBeforeCleanup) {
@@ -206,9 +187,7 @@ namespace Xamarin.Android.NetTests
 
 			try {
 				firstCopyTask = stream.CopyToAsync (firstDestination, 8, cancellationTokenSource.Token);
-				var firstWriteCompleted = await Task.WhenAny (stream.FirstWriteCompletedTask, Task.Delay (copyTimeoutMilliseconds)).ConfigureAwait (false);
-				Assert.AreSame (stream.FirstWriteCompletedTask, firstWriteCompleted, "The controlled stream did not complete its first destination write.");
-				await stream.FirstWriteCompletedTask.ConfigureAwait (false);
+				await WaitForTask (stream.FirstWriteCompletedTask, copyTimeoutMilliseconds, "The controlled stream did not complete its first destination write.").ConfigureAwait (false);
 
 				Assert.IsTrue (stream.IsFirstCopyBlocked, "The first copy should remain blocked after its initial destination write.");
 				Assert.IsFalse (firstCopyTask.IsCompleted, "The first copy completed before cancellation.");
@@ -235,10 +214,8 @@ namespace Xamarin.Android.NetTests
 				cancellationTokenSource.Cancel ();
 				stream.ReleaseFirstCopy ();
 
-				var firstCopyCompleted = await Task.WhenAny (firstCopyTask, Task.Delay (copyTimeoutMilliseconds)).ConfigureAwait (false);
-				Assert.AreSame (firstCopyTask, firstCopyCompleted, "The first controlled copy did not finish during cleanup.");
 				try {
-					await firstCopyTask.ConfigureAwait (false);
+					await WaitForTask (firstCopyTask, copyTimeoutMilliseconds, "The first controlled copy did not finish during cleanup.").ConfigureAwait (false);
 				} catch (OperationCanceledException) {
 				}
 			}
@@ -267,8 +244,7 @@ namespace Xamarin.Android.NetTests
 			await clientStream.WriteAsync (bodyPrefix, 0, bodyPrefix.Length).ConfigureAwait (false);
 			await clientStream.FlushAsync ().ConfigureAwait (false);
 
-			var contextCompleted = await Task.WhenAny (contextTask, Task.Delay (requestTimeoutMilliseconds)).ConfigureAwait (false);
-			Assert.AreSame (contextTask, contextCompleted, "The listener did not accept the partial fixed-length request.");
+			await WaitForTask (contextTask, requestTimeoutMilliseconds, "The listener did not accept the partial fixed-length request.").ConfigureAwait (false);
 			var context = await contextTask.ConfigureAwait (false);
 			using var response = context.Response;
 			Task<int> pendingReadTask = Task.FromResult (0);
@@ -294,9 +270,8 @@ namespace Xamarin.Android.NetTests
 				Assert.AreNotSame (pendingReadTask, prematureCompletion, "The request body read should remain pending while the client keeps the incomplete request open.");
 
 				response.Abort ();
-				var readCompleted = await Task.WhenAny (pendingReadTask, Task.Delay (requestTimeoutMilliseconds)).ConfigureAwait (false);
-				Assert.AreSame (pendingReadTask, readCompleted, "Aborting the response did not terminate the pending request body read.");
 				try {
+					await WaitForTask (pendingReadTask, requestTimeoutMilliseconds, "Aborting the response did not terminate the pending request body read.").ConfigureAwait (false);
 					int bytesRead = await pendingReadTask.ConfigureAwait (false);
 					Assert.AreEqual (0, bytesRead, "The aborted request body read should not produce additional bytes.");
 				} catch (IOException) {
@@ -306,14 +281,23 @@ namespace Xamarin.Android.NetTests
 			} finally {
 				response.Abort ();
 				listener.Abort ();
-				var readCompleted = await Task.WhenAny (pendingReadTask, Task.Delay (requestTimeoutMilliseconds)).ConfigureAwait (false);
-				Assert.AreSame (pendingReadTask, readCompleted, "The pending request body read did not finish during cleanup.");
 				try {
-					await pendingReadTask.ConfigureAwait (false);
+					await WaitForTask (pendingReadTask, requestTimeoutMilliseconds, "The pending request body read did not finish during cleanup.").ConfigureAwait (false);
 				} catch (IOException) {
 				} catch (HttpListenerException) {
 				} catch (ObjectDisposedException) {
 				}
+			}
+		}
+
+		static async Task WaitForTask (Task task, int timeoutMilliseconds, string failureMessage)
+		{
+			try {
+				await task.WaitAsync (TimeSpan.FromMilliseconds (timeoutMilliseconds)).ConfigureAwait (false);
+			} catch (TimeoutException) {
+				if (task.IsFaulted)
+					await task.ConfigureAwait (false);
+				Assert.Fail ($"{failureMessage} Timeout: {timeoutMilliseconds}ms.");
 			}
 		}
 
