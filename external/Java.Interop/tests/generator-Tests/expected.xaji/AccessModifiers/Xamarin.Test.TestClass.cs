@@ -18,11 +18,7 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='TestClass']"
 	[global::Android.Runtime.Register ("xamarin/test/TestClass", DoNotGenerateAcw=true)]
 	public partial class TestClass : global::Java.Lang.Object {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/TestClass", typeof (TestClass));
-
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
+		private static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/TestClass", typeof (TestClass));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

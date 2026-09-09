@@ -59,6 +59,16 @@ namespace Android.WidgetTests {
 			var adapter = view.Adapter;
 			view.Adapter = adapter;
 		}
+
+		[Test]
+		public void GenericArrayAdapterUsesArrayAdapterClass ()
+		{
+			using var adapter = new ArrayAdapter<string> (Application.Context, Android.Resource.Layout.SimpleListItem1);
+
+			adapter.Add ("first");
+
+			Assert.AreEqual ("first", adapter.GetItem (0));
+		}
 	}
 
 	public class CanOverrideAbsListView_Adapter : AbsListView {

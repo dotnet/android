@@ -16,12 +16,12 @@ namespace Android.App {
 		public long[] Vibrate {
 			get {
 				if (vibrate_jfieldId == IntPtr.Zero)
-					vibrate_jfieldId = JNIEnv.GetFieldID (class_ref, "vibrate", "[J");
+					vibrate_jfieldId = JNIEnv.GetFieldID (_members.JniPeerType.PeerReference.Handle, "vibrate", "[J");
 				return (long[]) JNIEnv.GetArray (JNIEnv.GetObjectField (Handle, vibrate_jfieldId), JniHandleOwnership.TransferLocalRef, typeof (long))!;
 			}
 			set {
 				if (vibrate_jfieldId == IntPtr.Zero)
-					vibrate_jfieldId = JNIEnv.GetFieldID (class_ref, "vibrate", "[J");
+					vibrate_jfieldId = JNIEnv.GetFieldID (_members.JniPeerType.PeerReference.Handle, "vibrate", "[J");
 				IntPtr native_pattern = JNIEnv.NewArray (value);
 				JNIEnv.SetField (Handle, vibrate_jfieldId, native_pattern);
 				JNIEnv.DeleteLocalRef (native_pattern);
@@ -29,5 +29,4 @@ namespace Android.App {
 		}
 	}
 }
-
 

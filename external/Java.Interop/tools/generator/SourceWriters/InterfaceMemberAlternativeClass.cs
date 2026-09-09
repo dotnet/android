@@ -47,10 +47,10 @@ namespace generator.SourceWriters
 
 			Constructors.Add (new ConstructorWriter { Name = Name, IsInternal = true });
 
-			var needs_class_ref = AddFields (iface, should_obsolete, opt, context);
+			var needs_peer_members = AddFields (iface, should_obsolete, opt, context);
 			AddMethods (iface, should_obsolete, opt);
 
-			if (needs_class_ref || iface.Methods.Where (m => m.IsStatic).Any ())
+			if (needs_peer_members || iface.Methods.Where (m => m.IsStatic).Any ())
 				Fields.Add (new PeerMembersField (opt, iface.RawJniName, Name, false));
 
 			if (!iface.HasManagedName && !opt.SupportInterfaceConstants)
@@ -85,18 +85,18 @@ namespace generator.SourceWriters
 			var seen = new HashSet<string> ();
 
 			var original_fields = DeprecateFields (iface, shouldObsolete);
-			var needs_class_ref = AddInterfaceFields (iface, iface.Fields, seen, opt, context);
+			var needs_peer_members = AddInterfaceFields (iface, iface.Fields, seen, opt, context);
 			RestoreDeprecatedFields (original_fields);
 
 			foreach (var i in iface.GetAllImplementedInterfaces ().OfType<InterfaceGen> ()) {
 				AddInlineComment ($"// The following are fields from: {i.JavaName}");
 
 				original_fields = DeprecateFields (i, shouldObsolete);
-				needs_class_ref = AddInterfaceFields (i, i.Fields, seen, opt, context) || needs_class_ref;
+				needs_peer_members = AddInterfaceFields (i, i.Fields, seen, opt, context) || needs_peer_members;
 				RestoreDeprecatedFields (original_fields);
 			}
 
-			return needs_class_ref;
+			return needs_peer_members;
 		}
 
 		bool AddInterfaceFields (InterfaceGen iface, List<Field> fields, HashSet<string> seen, CodeGenerationOptions opt, CodeGeneratorContext context)

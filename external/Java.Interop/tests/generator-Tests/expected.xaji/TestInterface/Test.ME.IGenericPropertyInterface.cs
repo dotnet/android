@@ -23,10 +23,6 @@ namespace Test.ME {
 
 	[global::Android.Runtime.Register ("test/me/GenericPropertyInterface", DoNotGenerateAcw=true)]
 	internal partial class IGenericPropertyInterfaceInvoker : global::Java.Lang.Object, IGenericPropertyInterface {
-		static IntPtr java_class_ref {
-			get { return _members_test_me_GenericPropertyInterface.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -45,7 +41,7 @@ namespace Test.ME {
 			get { return _members_test_me_GenericPropertyInterface.ManagedPeerType; }
 		}
 
-		static readonly JniPeerMembers _members_test_me_GenericPropertyInterface = new XAPeerMembers ("test/me/GenericPropertyInterface", typeof (IGenericPropertyInterfaceInvoker));
+		private static readonly JniPeerMembers _members_test_me_GenericPropertyInterface = new XAPeerMembers ("test/me/GenericPropertyInterface", typeof (IGenericPropertyInterfaceInvoker));
 
 		public IGenericPropertyInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

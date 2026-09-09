@@ -36,10 +36,6 @@ namespace generator.SourceWriters
 
 			string members = $"_members_{iface.JavaFullNameId}";
 
-			if (!ji) {
-				Properties.Add (new InterfaceHandleGetter (members));
-			}
-
 			Properties.Add (new JniPeerMembersGetter (members));
 
 			if (!ji) {

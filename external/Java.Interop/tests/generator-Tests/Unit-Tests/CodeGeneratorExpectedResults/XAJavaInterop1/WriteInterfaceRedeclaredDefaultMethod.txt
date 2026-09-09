@@ -9,10 +9,6 @@ public partial interface IMyInterface2 : java.code.IMyInterface {
 
 [global::Android.Runtime.Register ("java/code/IMyInterface2", DoNotGenerateAcw=true)]
 internal partial class IMyInterface2Invoker : global::Java.Lang.Object, IMyInterface2 {
-	static IntPtr java_class_ref {
-		get { return _members_java_code_IMyInterface2.JniPeerType.PeerReference.Handle; }
-	}
-
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -31,9 +27,9 @@ internal partial class IMyInterface2Invoker : global::Java.Lang.Object, IMyInter
 		get { return _members_java_code_IMyInterface2.ManagedPeerType; }
 	}
 
-	static readonly JniPeerMembers _members_java_code_IMyInterface = new XAPeerMembers ("java/code/IMyInterface", typeof (IMyInterface2Invoker));
+	private static readonly JniPeerMembers _members_java_code_IMyInterface = new XAPeerMembers ("java/code/IMyInterface", typeof (IMyInterface2Invoker));
 
-	static readonly JniPeerMembers _members_java_code_IMyInterface2 = new XAPeerMembers ("java/code/IMyInterface2", typeof (IMyInterface2Invoker));
+	private static readonly JniPeerMembers _members_java_code_IMyInterface2 = new XAPeerMembers ("java/code/IMyInterface2", typeof (IMyInterface2Invoker));
 
 	public IMyInterface2Invoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{

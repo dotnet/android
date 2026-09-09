@@ -10,7 +10,7 @@ namespace Android.Content {
 		public bool GetAsBoolean (string key)
 		{
 			if (id_getAsBoolean_Ljava_lang_String_ == IntPtr.Zero)
-				id_getAsBoolean_Ljava_lang_String_ = JNIEnv.GetMethodID (class_ref, "getAsBoolean", "(Ljava/lang/String;)Ljava/lang/Boolean;");
+				id_getAsBoolean_Ljava_lang_String_ = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "getAsBoolean", "(Ljava/lang/String;)Ljava/lang/Boolean;");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
 				using (var ret = new Java.Lang.Boolean (JNIEnv.CallObjectMethod (Handle, id_getAsBoolean_Ljava_lang_String_, new JValue (jkey)),
@@ -26,7 +26,7 @@ namespace Android.Content {
 		public sbyte GetAsByte (string key)
 		{
 			if (id_getAsByte_Ljava_lang_String_ == IntPtr.Zero)
-				id_getAsByte_Ljava_lang_String_ = JNIEnv.GetMethodID (class_ref, "getAsByte", "(Ljava/lang/String;)Ljava/lang/Byte;");
+				id_getAsByte_Ljava_lang_String_ = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "getAsByte", "(Ljava/lang/String;)Ljava/lang/Byte;");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
 				using (var ret = new Java.Lang.Byte (JNIEnv.CallObjectMethod (Handle, id_getAsByte_Ljava_lang_String_, new JValue (jkey)),
@@ -42,7 +42,7 @@ namespace Android.Content {
 		public double GetAsDouble (string key)
 		{
 			if (id_getAsDouble_Ljava_lang_String_ == IntPtr.Zero)
-				id_getAsDouble_Ljava_lang_String_ = JNIEnv.GetMethodID (class_ref, "getAsDouble", "(Ljava/lang/String;)Ljava/lang/Double;");
+				id_getAsDouble_Ljava_lang_String_ = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "getAsDouble", "(Ljava/lang/String;)Ljava/lang/Double;");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
 				using (var ret = new Java.Lang.Double (JNIEnv.CallObjectMethod (Handle, id_getAsDouble_Ljava_lang_String_, new JValue (jkey)),
@@ -58,7 +58,7 @@ namespace Android.Content {
 		public float GetAsFloat (string key)
 		{
 			if (id_getAsFloat_Ljava_lang_String_ == IntPtr.Zero)
-				id_getAsFloat_Ljava_lang_String_ = JNIEnv.GetMethodID (class_ref, "getAsFloat", "(Ljava/lang/String;)Ljava/lang/Float;");
+				id_getAsFloat_Ljava_lang_String_ = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "getAsFloat", "(Ljava/lang/String;)Ljava/lang/Float;");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
 				using (var ret = new Java.Lang.Float (JNIEnv.CallObjectMethod (Handle, id_getAsFloat_Ljava_lang_String_, new JValue (jkey)),
@@ -74,7 +74,7 @@ namespace Android.Content {
 		public int GetAsInteger (string key)
 		{
 			if (id_getAsInteger_Ljava_lang_String_ == IntPtr.Zero)
-				id_getAsInteger_Ljava_lang_String_ = JNIEnv.GetMethodID (class_ref, "getAsInteger", "(Ljava/lang/String;)Ljava/lang/Integer;");
+				id_getAsInteger_Ljava_lang_String_ = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "getAsInteger", "(Ljava/lang/String;)Ljava/lang/Integer;");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
 				using (var ret = new Java.Lang.Integer (JNIEnv.CallObjectMethod (Handle, id_getAsInteger_Ljava_lang_String_, new JValue (jkey)),
@@ -90,7 +90,7 @@ namespace Android.Content {
 		public long GetAsLong (string key)
 		{
 			if (id_getAsLong_Ljava_lang_String_ == IntPtr.Zero)
-				id_getAsLong_Ljava_lang_String_ = JNIEnv.GetMethodID (class_ref, "getAsLong", "(Ljava/lang/String;)Ljava/lang/Long;");
+				id_getAsLong_Ljava_lang_String_ = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "getAsLong", "(Ljava/lang/String;)Ljava/lang/Long;");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
 				using (var ret = new Java.Lang.Long (JNIEnv.CallObjectMethod (Handle, id_getAsLong_Ljava_lang_String_, new JValue (jkey)),
@@ -106,7 +106,7 @@ namespace Android.Content {
 		public short GetAsShort (string key)
 		{
 			if (id_getAsShort_Ljava_lang_String_ == IntPtr.Zero)
-				id_getAsShort_Ljava_lang_String_ = JNIEnv.GetMethodID (class_ref, "getAsShort", "(Ljava/lang/String;)Ljava/lang/Short;");
+				id_getAsShort_Ljava_lang_String_ = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "getAsShort", "(Ljava/lang/String;)Ljava/lang/Short;");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
 				using (var ret = new Java.Lang.Short (JNIEnv.CallObjectMethod (Handle, id_getAsShort_Ljava_lang_String_, new JValue (jkey)),
@@ -123,7 +123,7 @@ namespace Android.Content {
 		public void Put (string key, bool value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Boolean_ == IntPtr.Zero)
-				id_put_Ljava_lang_String_Ljava_lang_Boolean_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Boolean;)V");
+				id_put_Ljava_lang_String_Ljava_lang_Boolean_ = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "put", "(Ljava/lang/String;Ljava/lang/Boolean;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
 				using (var val = new Java.Lang.Boolean (value))
@@ -139,7 +139,7 @@ namespace Android.Content {
 		public void Put (string key, sbyte value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Byte_ == IntPtr.Zero)
-				id_put_Ljava_lang_String_Ljava_lang_Byte_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Byte;)V");
+				id_put_Ljava_lang_String_Ljava_lang_Byte_ = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "put", "(Ljava/lang/String;Ljava/lang/Byte;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
 				using (var val = new Java.Lang.Byte (value))
@@ -155,7 +155,7 @@ namespace Android.Content {
 		public void Put (string key, short value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Short_ == IntPtr.Zero)
-				id_put_Ljava_lang_String_Ljava_lang_Short_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Short;)V");
+				id_put_Ljava_lang_String_Ljava_lang_Short_ = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "put", "(Ljava/lang/String;Ljava/lang/Short;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
 				using (var val = new Java.Lang.Short (value))
@@ -171,7 +171,7 @@ namespace Android.Content {
 		public void Put (string key, int value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Integer_ == IntPtr.Zero)
-				id_put_Ljava_lang_String_Ljava_lang_Integer_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Integer;)V");
+				id_put_Ljava_lang_String_Ljava_lang_Integer_ = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "put", "(Ljava/lang/String;Ljava/lang/Integer;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
 				using (var val = new Java.Lang.Integer (value))
@@ -187,7 +187,7 @@ namespace Android.Content {
 		public void Put (string key, long value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Long_ == IntPtr.Zero)
-				id_put_Ljava_lang_String_Ljava_lang_Long_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Long;)V");
+				id_put_Ljava_lang_String_Ljava_lang_Long_ = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "put", "(Ljava/lang/String;Ljava/lang/Long;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
 				using (var val = new Java.Lang.Long (value))
@@ -203,7 +203,7 @@ namespace Android.Content {
 		public void Put (string key, float value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Float_ == IntPtr.Zero)
-				id_put_Ljava_lang_String_Ljava_lang_Float_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Float;)V");
+				id_put_Ljava_lang_String_Ljava_lang_Float_ = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "put", "(Ljava/lang/String;Ljava/lang/Float;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
 				using (var val = new Java.Lang.Float (value))
@@ -219,7 +219,7 @@ namespace Android.Content {
 		public void Put (string key, double value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Double_ == IntPtr.Zero)
-				id_put_Ljava_lang_String_Ljava_lang_Double_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Double;)V");
+				id_put_Ljava_lang_String_Ljava_lang_Double_ = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "put", "(Ljava/lang/String;Ljava/lang/Double;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
 				using (var val = new Java.Lang.Double (value))

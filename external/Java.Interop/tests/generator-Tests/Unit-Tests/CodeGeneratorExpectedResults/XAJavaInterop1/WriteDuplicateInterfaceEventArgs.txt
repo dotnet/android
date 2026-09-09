@@ -13,10 +13,6 @@ public partial interface AnimatorListener : IJavaObject, IJavaPeerable {
 
 [global::Android.Runtime.Register ("java/code/AnimatorListener", DoNotGenerateAcw=true)]
 internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, AnimatorListener {
-	static IntPtr java_class_ref {
-		get { return _members_java_code_AnimatorListener.JniPeerType.PeerReference.Handle; }
-	}
-
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -35,7 +31,7 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 		get { return _members_java_code_AnimatorListener.ManagedPeerType; }
 	}
 
-	static readonly JniPeerMembers _members_java_code_AnimatorListener = new XAPeerMembers ("java/code/AnimatorListener", typeof (AnimatorListenerInvoker));
+	private static readonly JniPeerMembers _members_java_code_AnimatorListener = new XAPeerMembers ("java/code/AnimatorListener", typeof (AnimatorListenerInvoker));
 
 	public AnimatorListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{

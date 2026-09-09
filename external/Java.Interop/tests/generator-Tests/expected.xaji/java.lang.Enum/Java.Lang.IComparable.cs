@@ -17,10 +17,6 @@ namespace Java.Lang {
 
 	[global::Android.Runtime.Register ("java/lang/Comparable", DoNotGenerateAcw=true)]
 	internal partial class IComparableInvoker : global::Java.Lang.Object, IComparable {
-		static IntPtr java_class_ref {
-			get { return _members_java_lang_Comparable.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -39,7 +35,7 @@ namespace Java.Lang {
 			get { return _members_java_lang_Comparable.ManagedPeerType; }
 		}
 
-		static readonly JniPeerMembers _members_java_lang_Comparable = new XAPeerMembers ("java/lang/Comparable", typeof (IComparableInvoker));
+		private static readonly JniPeerMembers _members_java_lang_Comparable = new XAPeerMembers ("java/lang/Comparable", typeof (IComparableInvoker));
 
 		public IComparableInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

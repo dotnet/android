@@ -54,7 +54,7 @@ public abstract class Parent : Java.Lang.Object {
 		}
 	}
 
-	static readonly JniPeerMembers _members = new XAPeerMembers ("com/xamarin/android/Parent", typeof (Parent));
+	private static readonly JniPeerMembers _members = new XAPeerMembers ("com/xamarin/android/Parent", typeof (Parent));
 
 }
 
@@ -113,10 +113,6 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 
 [global::Android.Runtime.Register ("com/xamarin/android/Parent", DoNotGenerateAcw=true)]
 internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
-	static IntPtr java_class_ref {
-		get { return _members_com_xamarin_android_Parent.JniPeerType.PeerReference.Handle; }
-	}
-
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -135,7 +131,7 @@ internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
 		get { return _members_com_xamarin_android_Parent.ManagedPeerType; }
 	}
 
-	static readonly JniPeerMembers _members_com_xamarin_android_Parent = new XAPeerMembers ("com/xamarin/android/Parent", typeof (IParentInvoker));
+	private static readonly JniPeerMembers _members_com_xamarin_android_Parent = new XAPeerMembers ("com/xamarin/android/Parent", typeof (IParentInvoker));
 
 	public IParentInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{

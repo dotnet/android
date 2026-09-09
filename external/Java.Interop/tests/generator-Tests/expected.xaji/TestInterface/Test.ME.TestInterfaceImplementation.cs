@@ -39,11 +39,7 @@ namespace Test.ME {
 
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementation));
-
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
+		private static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementation));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -185,7 +181,7 @@ namespace Test.ME {
 		{
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementationInvoker));
+		private static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementationInvoker));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
