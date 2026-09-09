@@ -885,20 +885,20 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
   <data name="XA4325" xml:space="preserve">
-    <value>Failed to rewrite managed JNI names for R8. {0}</value>
+    <value>Nepovedlo se přepsat spravované názvy JNI pro R8. {0}</value>
     <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4325_* resources.</comment>
   </data>
   <data name="XA4325_AssemblyFailure" xml:space="preserve">
-    <value>Could not rewrite the JNI names in the assembly '{0}': {1}</value>
+    <value>Nepodařilo se přepsat názvy JNI v sestavení {0}: {1}</value>
     <comment>{0} - The path of the assembly which could not be rewritten.
 {1} - The underlying message describing why the assembly could not be rewritten. It is not localized.</comment>
   </data>
   <data name="XA4325_SourceDestinationCount" xml:space="preserve">
-    <value>The 'SourceFiles' and 'DestinationFiles' item groups must contain the same number of items.</value>
+    <value>Skupiny položek SourceFiles a DestinationFiles musí obsahovat stejný počet položek.</value>
     <comment>The following are literal MSBuild item group names and should not be translated: 'SourceFiles', 'DestinationFiles'.</comment>
   </data>
   <data name="XA4326" xml:space="preserve">
-    <value>Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous JNIEnv.FindClass source.</value>
+    <value>Vyhledání člena JNI nelze bezpečně přepsat, protože jeho popisovač třídy nemá jediný strukturálně jednoznačný zdroj JNIEnv.FindClass.</value>
     <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
@@ -1146,7 +1146,7 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 </comment>
   </data>
   <data name="XA1049" xml:space="preserve">
-    <value>Vlastnosti MSBuildu AndroidEnableMarshalMethods a PublishReadyToRun nelze současně nastavit na hodnotu true. Nastavte jednu vlastnost na false.</value>
+    <value>Vlastnosti MSBuildu AndroidEnableMarshalMethods a PublishReadyToRun nelze nastavit na hodnotu true. Nastavte jednu vlastnost na false.</value>
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
@@ -1255,10 +1255,10 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
   </data>
   <data name="XA4258" xml:space="preserve">
-    <value>Název Java {0} obsahuje vyhrazený identifikátor Java {1}. Změňte název balíčku nebo typu.</value>
+    <value>Java name '{0}' contains invalid or unsupported Java identifier '{1}'. Change the package or type name.</value>
     <comment>The following are literal names and should not be translated: Java.
 {0} - Java package or type name
-{1} - Java reserved keyword or restricted identifier</comment>
+{1} - Invalid, unsupported, reserved, or restricted Java identifier</comment>
   </data>
   <data name="XA4259" xml:space="preserve">
     <value>Type '{0}' has multiple managed constructors that map to the same Java Native Interface (JNI) signature '{1}'. Change the constructor parameter types so each constructor has a unique JNI signature.</value>
@@ -1285,7 +1285,7 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 {1} - Invalid SuperArgumentsString value</comment>
   </data>
   <data name="XA4263" xml:space="preserve">
-    <value>The exported member '{0}' has unsupported signature type '{1}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter].</value>
+    <value>Exportovaný člen {0} má nepodporovaný typ signatury {1}. Použijte partnerský typ Java, podporované mapování spravovaného typu na typ Java nebo [ExportParameter].</value>
     <comment>The following are literal names and should not be translated: Java, [ExportParameter].
 {0} - Fully-qualified managed member name
 {1} - Managed parameter or return type</comment>
