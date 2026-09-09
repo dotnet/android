@@ -21,8 +21,8 @@ on:
         - "03-region-directives"
         - "04-missing-xml-docs"
         - "05-general-mistakes"
-        - "06-unused-using-directives"
-        - "07-asynctask-log-property"
+        - "06-completely-dead-code"
+        - "07-stale-xamarin-references"
         - "08-string-literal-error-messages"
         required: false
         type: choice
@@ -63,6 +63,7 @@ safe-outputs:
     - src/**
     - tests/**
     - Documentation/**
+    - README.md
     auto-close-issue: false
     draft: false
     fallback-as-issue: false
@@ -205,6 +206,12 @@ Before changing files, score the proposed fix on a 0–30 scale across three dim
 
 **Threshold: ≥ 22 / 30 to implement.** Additionally, **safety must be ≥ 6** — any fix scoring lower on safety must be declined regardless of total. The SkiaSharp project that pioneered this rubric confirmed it correctly stops risky behavior-change fixes that otherwise look attractive.
 
+For `08-string-literal-error-messages`, a change that only moves an existing
+diagnostic into the English resource system, preserving its meaning, arguments,
+severity, and control flow, scores at least 8 for safety and 8 for scope. Treat
+the required resource, checked-in resource accessor, source call site, and XA
+message documentation as one cohesive fix.
+
 If the proposal scores below either bar, call `noop` with a message that includes the score breakdown and why you declined. Do not modify files.
 
 ## Phase 4: Implement and Validate
@@ -212,7 +219,7 @@ If the proposal scores below either bar, call `noop` with a message that include
 Implement the fix yourself:
 
 1. Make the smallest complete change that resolves the verified problem.
-2. Follow all repository instructions and existing style. Never modify generated files, non-English localization files, or unrelated code.
+2. Follow all repository instructions and existing style. Never modify generated files, non-English localization files, or unrelated code. The only generated-file exception is a checked-in `Resources.Designer.cs` accessor required by `08-string-literal-error-messages`; change only the accessor for the new English resource.
 3. Add or update a focused test when behavior changes or a regression test is practical.
 4. Bootstrap the repository toolchain with `./build.sh Prepare` before validation. This installs the repository-pinned .NET 11 SDK under the active `bin/{Debug|Release}/dotnet` configuration and prepares generated build prerequisites. Then run the smallest targeted build or test command through `./dotnet-local.sh`; never use the runner's system `dotnet` or lower `DotNetTargetFrameworkVersion` to work around missing tooling. A PR requires successful validation; if the fix cannot be validated in this environment, revert only your own changes and call `noop`.
 5. Review `git diff` for accidental or unrelated edits.

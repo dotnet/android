@@ -108,6 +108,21 @@ steps:
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
   parameters:
     command: test
+    project: src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj
+    arguments: -c $(XA.Build.Configuration) --logger trx --results-directory $(Agent.TempDirectory)/microsoft-android-build-tasks-tests
+    displayName: Test Microsoft.Android.Build.Tasks.Tests $(XA.Build.Configuration)
+
+- task: PublishTestResults@2
+  displayName: publish Microsoft.Android.Build.Tasks.Tests results
+  condition: always()
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: "$(Agent.TempDirectory)/microsoft-android-build-tasks-tests/*.trx"
+    testRunTitle: Microsoft.Android.Build.Tasks.Tests
+
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+  parameters:
+    command: test
     project: .github/skills/read-assembly-store/tests/AssemblyStore.Tests/AssemblyStore.Tests.csproj
     arguments: -c $(XA.Build.Configuration) --logger trx --results-directory $(Agent.TempDirectory)/assembly-store-tests
     displayName: Test AssemblyStore.Tests $(XA.Build.Configuration)
