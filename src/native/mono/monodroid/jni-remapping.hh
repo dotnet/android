@@ -11,7 +11,9 @@ namespace xamarin::android::internal
 	{
 	public:
 		static const char* lookup_replacement_type (const char *jniSimpleReference) noexcept;
+		static const char* lookup_reverse_type (const char *jniSimpleReference) noexcept;
 		static const JniRemappingReplacementMethod* lookup_replacement_method_info (const char *jniSourceType, const char *jniMethodName, const char *jniMethodSignature) noexcept;
+		static const JniRemappingReplacementField* lookup_replacement_field_info (const char *jniSourceType, const char *jniFieldName, const char *jniFieldSignature) noexcept;
 
 	private:
 		[[gnu::nonnull (2)]]

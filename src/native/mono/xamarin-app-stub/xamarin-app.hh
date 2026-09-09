@@ -313,6 +313,20 @@ struct JniRemappingReplacementField
 	const char    *target_signature;
 };
 
+struct JniRemappingIndexFieldEntry
+{
+	const JniRemappingString           name;
+	const JniRemappingString           signature;
+	const JniRemappingReplacementField replacement;
+};
+
+struct JniRemappingIndexFieldTypeEntry
+{
+	const JniRemappingString           name;
+	const uint32_t            field_count;
+	const JniRemappingIndexFieldEntry *fields;
+};
+
 struct JniRemappingTypeReplacementEntry
 {
 	const JniRemappingString  name;
@@ -320,7 +334,11 @@ struct JniRemappingTypeReplacementEntry
 };
 
 MONO_API MONO_API_EXPORT const JniRemappingIndexTypeEntry jni_remapping_method_replacement_index[];
+MONO_API MONO_API_EXPORT const JniRemappingIndexFieldTypeEntry jni_remapping_field_replacement_index[];
 MONO_API MONO_API_EXPORT const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[];
+MONO_API MONO_API_EXPORT const JniRemappingTypeReplacementEntry jni_remapping_reverse_type_replacements[];
+MONO_API MONO_API_EXPORT const uint32_t jni_remapping_reverse_type_replacement_count;
+MONO_API MONO_API_EXPORT const uint32_t jni_remapping_field_replacement_index_count;
 
 MONO_API MONO_API_EXPORT const uint64_t format_tag;
 

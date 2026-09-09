@@ -30,7 +30,22 @@ namespace Java.Interop
 
 		JniFieldInfo GetFieldInfo (ReadOnlySpan<char> field, ReadOnlySpan<char> signature)
 		{
-			var newField = JniPeerMembers.GetReplacementFieldInfo (Members.JniPeerTypeName, Members.ManagedPeerType, field, signature);
+			var newField = JniPeerMembers.GetReplacementFieldInfo (Members.JniPeerTypeName, field, signature);
+			if (newField.HasValue) {
+				var typeName     = newField.Value.TargetJniType ?? Members.JniPeerTypeName;
+				var fieldName    = newField.Value.TargetJniFieldName is string name ? name.AsSpan () : field;
+				var fieldSig     = newField.Value.TargetJniFieldSignature is string sig ? sig.AsSpan () : signature;
+
+				using var t = new JniType (typeName);
+				if (t.TryGetStaticField (fieldName, fieldSig, out var f)) {
+					return f;
+				}
+			}
+			if (Members.JniPeerType.TryGetStaticField (field, signature, out var originalField)) {
+				return originalField;
+			}
+
+			newField = JniPeerMembers.GetBaseReplacementFieldInfo (Members.ManagedPeerType, field, signature);
 			if (newField.HasValue) {
 				var typeName     = newField.Value.TargetJniType ?? Members.JniPeerTypeName;
 				var fieldName    = newField.Value.TargetJniFieldName is string name ? name.AsSpan () : field;

@@ -201,26 +201,30 @@ namespace Java.Interop {
 
 		internal static JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfo (
 			string jniTypeName,
+			ReadOnlySpan<char> field,
+			ReadOnlySpan<char> signature)
+		{
+			return JniEnvironment.Runtime.TypeManager.GetReplacementFieldInfo (jniTypeName, field, signature);
+		}
+
+		internal static JniRuntime.ReplacementFieldInfo? GetBaseReplacementFieldInfo (
 			Type managedPeerType,
 			ReadOnlySpan<char> field,
 			ReadOnlySpan<char> signature)
 		{
 			var typeManager = JniEnvironment.Runtime.TypeManager;
-			var info        = typeManager.GetReplacementFieldInfo (jniTypeName, field, signature);
-			if (info == null) {
-				for (Type? baseType = managedPeerType.BaseType; baseType != null; baseType = baseType.BaseType) {
-					var baseSignature = typeManager.GetTypeSignature (baseType);
-					string? effectiveBaseType = baseSignature.SimpleReference;
-					if (effectiveBaseType == null) {
-						continue;
-					}
-					info = typeManager.GetReplacementFieldInfo (effectiveBaseType, field, signature);
-					if (info != null) {
-						break;
-					}
+			for (Type? baseType = managedPeerType.BaseType; baseType != null; baseType = baseType.BaseType) {
+				var baseSignature = typeManager.GetTypeSignature (baseType);
+				string? effectiveBaseType = baseSignature.SimpleReference;
+				if (effectiveBaseType == null) {
+					continue;
+				}
+				var info = typeManager.GetReplacementFieldInfo (effectiveBaseType, field, signature);
+				if (info != null) {
+					return info;
 				}
 			}
-			return info;
+			return null;
 		}
 
 		internal static void AssertSelf (IJavaPeerable self)

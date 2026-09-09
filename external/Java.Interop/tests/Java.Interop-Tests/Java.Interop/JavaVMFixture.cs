@@ -140,6 +140,12 @@ namespace Java.InteropTests {
 		Dictionary<(string SourceType, string SourceName, string? SourceSignature), (string? TargetType, string? TargetName, string? TargetSignature)> ReplacementFields = new() {
 			[("java/lang/Math",                 "remappedToPi",         "D")]   = (null, "PI", null),
 			[("java/io/ByteArrayInputStream",   "remappedToPos",        "I")]   = (null, "pos", null),
+			[(FieldRemapBase.JniTypeName,       "hiddenInstanceField",  "Z")]   = (null, "remappedInstanceField", null),
+			[(FieldRemapBase.JniTypeName,       "hiddenStaticField",    "Ljava/lang/String;")] = (null, "remappedStaticField", null),
+			[(FieldRemapBase.JniTypeName,       "inheritedInstanceField", "Z")] = (null, "remappedInheritedInstanceField", null),
+			[(FieldRemapBase.JniTypeName,       "inheritedStaticField", "Ljava/lang/String;")] = (null, "remappedInheritedStaticField", null),
+			[(FieldRemapDerived.JniTypeName,    "inheritedInstanceField", "Z")] = (null, "missingInstanceField", null),
+			[(FieldRemapDerived.JniTypeName,    "inheritedStaticField", "Ljava/lang/String;")] = (null, "missingStaticField", null),
 		};
 
 		protected override JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSourceType, string jniFieldName, string jniFieldSignature)
