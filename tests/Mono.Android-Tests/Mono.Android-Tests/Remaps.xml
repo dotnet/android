@@ -55,4 +55,46 @@
       target-type="java/io/ByteArrayInputStream"
       target-field-name="pos"
       target-field-signature="I" />
+  <replace-field
+      source-type="net/dot/jni/test/FieldRemapBase"
+      source-field-name="hiddenInstanceField"
+      source-field-signature="Z"
+      target-type="net/dot/jni/test/FieldRemapBase"
+      target-field-name="remappedInstanceField"
+      target-field-signature="Z" />
+  <replace-field
+      source-type="net/dot/jni/test/FieldRemapBase"
+      source-field-name="hiddenStaticField"
+      source-field-signature="Ljava/lang/String;"
+      target-type="net/dot/jni/test/FieldRemapBase"
+      target-field-name="remappedStaticField"
+      target-field-signature="Ljava/lang/String;" />
+  <replace-field
+      source-type="net/dot/jni/test/FieldRemapBase"
+      source-field-name="inheritedInstanceField"
+      source-field-signature="Z"
+      target-type="net/dot/jni/test/FieldRemapBase"
+      target-field-name="remappedInheritedInstanceField"
+      target-field-signature="Z" />
+  <replace-field
+      source-type="net/dot/jni/test/FieldRemapBase"
+      source-field-name="inheritedStaticField"
+      source-field-signature="Ljava/lang/String;"
+      target-type="net/dot/jni/test/FieldRemapBase"
+      target-field-name="remappedInheritedStaticField"
+      target-field-signature="Ljava/lang/String;" />
+  <replace-field
+      source-type="net/dot/jni/test/FieldRemapDerived"
+      source-field-name="inheritedInstanceField"
+      source-field-signature="Z"
+      target-type="net/dot/jni/test/FieldRemapDerived"
+      target-field-name="missingInstanceField"
+      target-field-signature="Z" />
+  <replace-field
+      source-type="net/dot/jni/test/FieldRemapDerived"
+      source-field-name="inheritedStaticField"
+      source-field-signature="Ljava/lang/String;"
+      target-type="net/dot/jni/test/FieldRemapDerived"
+      target-field-name="missingStaticField"
+      target-field-signature="Ljava/lang/String;" />
 </replacements>
