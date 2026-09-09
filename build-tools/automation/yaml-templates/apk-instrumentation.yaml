@@ -113,8 +113,12 @@ steps:
       echo "$* exited with code $STATUS; elapsed=${SECONDS}s; bytes=$(wc -c < "$OUTPUT")"
       return "$STATUS"
     }
-    run_adb "$DEST/adb-devices-${{ parameters.testName }}.txt" adb devices
+    ADB_STATUS=0
+    run_adb "$DEST/adb-devices-${{ parameters.testName }}.txt" adb devices || ADB_STATUS=$?
     cat "$DEST/adb-devices-${{ parameters.testName }}.txt"
+    if [ "$ADB_STATUS" -ne 0 ]; then
+      exit "$ADB_STATUS"
+    fi
     if awk 'NR > 1 && $2 == "device" { found=1 } END { exit !found }' "$DEST/adb-devices-${{ parameters.testName }}.txt"; then
       run_adb "$DEST/logcat-${{ parameters.testName }}.txt" env ADB_TRACE=adb,shell adb logcat -d
     else
