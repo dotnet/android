@@ -119,6 +119,7 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("android-x64", true, true, "--partial", "", "--partial;--instruction-set:-optimistic", "")]
 		[TestCase ("android-x64", true, false, "", "", ";--instruction-set:-optimistic", "")]
 		[TestCase ("android-x64", true, true, "--instruction-set:x86-64", "", "--instruction-set:x86-64", "")]
+		[TestCase ("android-arm", true, true, "", "", ";--instruction-set:-optimistic", "")]
 		[TestCase ("android-arm64", true, true, "--map", "", "--map", "false")]
 		[TestCase ("android-arm64", true, true, "--map", "", "--map;" + Arm64ReadyToRunInstructionSet, "true")]
 		public void ReadyToRunInstructionSet (string rid, bool readyToRun, bool composite, string extraArgs, string compositeArgs,
