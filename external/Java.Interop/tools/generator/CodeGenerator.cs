@@ -77,6 +77,7 @@ namespace Xamarin.Android.Binder
 				IgnoreNonPublicType   = true,
 				UseShortFileNames     = options.UseShortFileNames,
 				ProductVersion        = options.ProductVersion,
+				MinimumApiLevel       = options.MinimumApiLevel,
 				SupportInterfaceConstants = options.SupportInterfaceConstants,
 				SupportDefaultInterfaceMethods = options.SupportDefaultInterfaceMethods,
 				SupportNestedInterfaceTypes = options.SupportNestedInterfaceTypes,

@@ -71,6 +71,23 @@ public class AcwMapWriterTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Write_UnicodeJniName_PreservesCodePoints ()
+	{
+		var peer = new JavaPeerInfo {
+			JavaName = "com/\u00e9xample/Peer\u0394",
+			CompatJniName = "com/\u00e9xample/Peer\u0394",
+			ManagedTypeName = "Example.UnicodePeer",
+			ManagedTypeNamespace = "Example",
+			ManagedTypeShortName = "UnicodePeer",
+			AssemblyName = "Example",
+		};
+
+		var lines = WriteLines ([peer]);
+
+		Assert.All (lines, line => Assert.EndsWith (";com.\u00e9xample.Peer\u0394", line));
+	}
+
+	[Fact]
 	public void Write_MultipleTypes_OrderedByManagedName ()
 	{
 		var peers = new [] {
