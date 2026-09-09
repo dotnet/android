@@ -68,9 +68,10 @@ public sealed class JavaPeerScanner : IDisposable
 			if (resolvedIndex.TypesByFullName.TryGetValue (typeName, out handle)) {
 				return true;
 			}
-			if (!resolvedIndex.ForwardedTypeAssemblies.TryGetValue (typeName, out assemblyName)) {
+			if (!resolvedIndex.ForwardedTypeAssemblies.TryGetValue (typeName, out var forwardedAssemblyName) || forwardedAssemblyName is null) {
 				break;
 			}
+			assemblyName = forwardedAssemblyName;
 		}
 		handle = default;
 		resolvedIndex = null;
@@ -3262,6 +3263,7 @@ public sealed class JavaPeerScanner : IDisposable
 			fields.Add (new JavaFieldInfo {
 				FieldName = fieldName,
 				JavaTypeName = javaReturnType,
+				JniTypeName = jniReturnType,
 				InitializerMethodName = managedName,
 				Visibility = access,
 				IsStatic = isStatic,
