@@ -95,6 +95,128 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
 
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
+		public void UnicodeJavaIdentifierActivityActivates (string typeMapImplementation, AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			const string javaName = "com.\u00e9xample.\u0394elta";
+			var expectedLogcatOutput = new HashSet<string> (StringComparer.Ordinal) {
+				"UNICODE_JCW_ACTIVATED=1",
+				"UNICODE_CURRENCY_ACTIVATED",
+				"UNICODE_CONNECTOR_ACTIVATED",
+				"UNICODE_SUPPLEMENTARY_CLASS_NOT_FOUND",
+			};
+			var proj = new XamarinAndroidApplicationProject (
+				packageName: PackageUtils.MakePackageName (runtime, "unicodeidentifier")) {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			proj.SetDefaultTargetDevice ();
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace (
+					"[Android.Runtime.Register (\"${JAVA_PACKAGENAME}.MainActivity\"),",
+					$"[Android.Runtime.Register (\"{javaName}\"),")
+				.Replace (
+					"//${FIELDS}",
+					"""
+					static int constructorInvocations;
+
+					public MainActivity ()
+					{
+						constructorInvocations++;
+					}
+					""")
+				.Replace (
+					"//${AFTER_ONCREATE}",
+					"""
+					Android.Util.Log.Info ("UnicodeJavaIdentifiers", $"UNICODE_JCW_ACTIVATED={constructorInvocations}");
+					var currencyHandle = Android.Runtime.JNIEnv.StartCreateInstance (typeof (CurrencyIdentifierPeer), "()V");
+					Android.Runtime.JNIEnv.FinishCreateInstance (currencyHandle, "()V");
+					using (var currency = Java.Lang.Object.GetObject<CurrencyIdentifierPeer> (
+						currencyHandle, Android.Runtime.JniHandleOwnership.TransferLocalRef)) {
+					}
+					var connectorHandle = Android.Runtime.JNIEnv.StartCreateInstance (typeof (ConnectorIdentifierPeer), "()V");
+					Android.Runtime.JNIEnv.FinishCreateInstance (connectorHandle, "()V");
+					using (var connector = Java.Lang.Object.GetObject<ConnectorIdentifierPeer> (
+						connectorHandle, Android.Runtime.JniHandleOwnership.TransferLocalRef)) {
+					}
+					try {
+						var supplementaryClass = Java.Interop.JniEnvironment.Types.FindClass ("com/example/\U00010428Peer\U00010400");
+						Java.Interop.JniObjectReference.Dispose (ref supplementaryClass);
+						Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_SUPPLEMENTARY_UNEXPECTEDLY_LOADED");
+					} catch (Java.Lang.ClassNotFoundException) {
+						Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_SUPPLEMENTARY_CLASS_NOT_FOUND");
+					}
+					""");
+			proj.Sources.Add (new BuildItem.Source ("JavaTypeIdentifierPeers.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Register ("com/example/\u00a2Peer")]
+					public class CurrencyIdentifierPeer : Java.Lang.Object
+					{
+						public CurrencyIdentifierPeer ()
+						{
+							Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_CURRENCY_ACTIVATED");
+						}
+					}
+
+					[Register ("com/example/\u203fPeer")]
+					public class ConnectorIdentifierPeer : Java.Lang.Object
+					{
+						public ConnectorIdentifierPeer ()
+						{
+							Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_CONNECTOR_ACTIVATED");
+						}
+					}
+
+					""",
+			});
+			proj.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("com\\example\\\U00010428Peer\U00010400.java") {
+				Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+				TextContent = () => """
+					package com.example;
+
+					public class 𐐨Peer𐐀 {}
+					""",
+			});
+			proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "supplementary-name.pro") {
+				TextContent = () => "-keep class com.example.𐐨Peer𐐀 { *; }",
+			});
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), $"{runtime}/{typeMapImplementation} should install.");
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			Assert.IsTrue (
+				DexUtils.ContainsClass ("Lcom/example/\U00010428Peer\U00010400;", dexFile, AndroidSdkPath),
+				"The exact supplementary descriptor should be present in DEX before Android fails to load it.");
+
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{proj.PackageName}/{javaName}");
+			Assert.IsTrue (
+				MonitorAdbLogcat (
+					line => {
+						expectedLogcatOutput.RemoveWhere (expected => line.Contains (expected, StringComparison.Ordinal));
+						return expectedLogcatOutput.Count == 0;
+					},
+					Path.Combine (Root, builder.ProjectDirectory, "unicode-identifier-logcat.log"),
+					ActivityStartTimeoutInSeconds
+				),
+				$"{runtime}/{typeMapImplementation} should activate every supported Unicode peer. " +
+					$"Missing: {string.Join (", ", expectedLogcatOutput)}"
+			);
+		}
+
 		[Test]
 		public void PublishReadyToRunPartial ([Values] bool isComposite)
 		{
@@ -734,19 +856,48 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
-		public void AssemblyStoreDecompressionCacheMapsPersistedAssemblies ()
+		public void AssemblyStoreDecompressionCacheMapsPersistedAssemblies ([Values] bool longCachePath)
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
 				return;
 			}
 
-			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "assemblycache")) {
+			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, longCachePath ? "assemblycachelong" : "assemblycache")) {
 				IsRelease = true,
 			};
 			app.SetRuntime (AndroidRuntime.CoreCLR);
 			app.SetRuntimeIdentifiers (new [] { DeviceAbi });
 			app.SetProperty ("AndroidEnableAssemblyStoreDecompressionCache", "true");
 			app.AndroidManifest = app.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
+
+			string cacheDirectory = "code_cache";
+			if (longCachePath) {
+				// Exceed Util::LocalPathBufferSize (1024), keeping each component below NAME_MAX.
+				string subdirectory = string.Join ("/", Enumerable.Repeat (new string ('a', 128), 9));
+				cacheDirectory += "/" + subdirectory;
+				app.AndroidManifest = app.AndroidManifest.Replace ("<application ", "<application android:name=\"com.test.CachePathApplication\" ");
+				app.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("CachePathApplication.java") {
+					Encoding = Encoding.ASCII,
+					Metadata = {
+						{ "Bind", "False" },
+					},
+					TextContent = () => $$"""
+						package com.test;
+
+						public class CachePathApplication extends android.app.Application {
+							@Override
+							public java.io.File getCodeCacheDir () {
+								java.io.File directory = new java.io.File (super.getCodeCacheDir (), "{{subdirectory}}");
+								if (!directory.isDirectory () && !directory.mkdirs ()) {
+									throw new IllegalStateException ("Unable to create the long code cache directory");
+								}
+								return directory;
+							}
+						}
+						""",
+				});
+			}
+			string cacheRoot = cacheDirectory + "/decompressed-assembly-cache-v1";
 
 			using var appBuilder = CreateApkBuilder ();
 			Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
@@ -767,15 +918,22 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			for (int attempt = 0; attempt < 40 && cacheFiles.Length < 2; attempt++) {
 				Thread.Sleep (250);
 				cacheFiles = RunAdbCommand (
-					$"shell run-as {app.PackageName} find code_cache/decompressed-assembly-cache-v1 -type f -name '*.bin'"
+					$"shell run-as {app.PackageName} find {cacheRoot} -type f -name '*.bin'"
 				)
 					.Split (new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
 					.Where (line => line.EndsWith (".bin", StringComparison.Ordinal))
 					.ToArray ();
 			}
 			Assert.That (cacheFiles.Length, Is.GreaterThanOrEqualTo (2), "The first launch should persist multiple decompressed assemblies.");
+			if (longCachePath) {
+				Assert.IsTrue (cacheFiles.All (path => path.Length > 1024), "Cache paths should exceed the native stack buffer size.");
+			}
 
 			RunAdbCommand ($"shell am force-stop --user all {app.PackageName}");
+			string staleTempFile = cacheFiles.Last () + ".tmp.stale";
+			RunAdbCommand ($"shell run-as {app.PackageName} touch {staleTempFile}");
+			StringAssert.Contains (staleTempFile, RunAdbCommand ($"shell run-as {app.PackageName} ls {staleTempFile}"),
+				"The stale temporary file should exist before restarting.");
 			string cacheFileToCorrupt = cacheFiles.First ();
 			string ValidFileHash () => RunAdbCommand (
 				$"shell run-as {app.PackageName} md5sum {cacheFileToCorrupt}"
@@ -810,6 +968,11 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				rewritten = ValidFileHash () == validHash;
 			}
 			Assert.IsTrue (rewritten, $"The corrupted cache file '{cacheFileToCorrupt}' should be rewritten with valid contents after fallback.");
+			Assert.That (
+				RunAdbCommand ($"shell run-as {app.PackageName} find {cacheRoot} -type f -name '*.tmp.stale'").Trim (),
+				Is.Empty,
+				"The second launch should remove stale temporary files."
+			);
 
 			string [] pids = RunAdbCommand ($"shell pidof {app.PackageName}")
 				.Split (new [] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
@@ -819,7 +982,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				maps.Append (RunAdbCommand ($"shell run-as {app.PackageName} cat /proc/{pid}/maps"));
 			}
 			StringAssert.Contains (
-				"/code_cache/decompressed-assembly-cache-v1/",
+				"/" + cacheRoot + "/",
 				maps.ToString (),
 				"The second launch should map persisted decompressed assemblies."
 			);
