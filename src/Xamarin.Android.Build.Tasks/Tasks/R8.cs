@@ -262,6 +262,9 @@ namespace Xamarin.Android.Tasks
 				writer.WriteLine ("-dontobfuscate");
 				return;
 			}
+			if (!string.Equals (obfuscationMode, "private-members", StringComparison.OrdinalIgnoreCase)) {
+				throw new ArgumentException ($"Unsupported R8 obfuscation mode '{obfuscationMode}'.", nameof (obfuscationMode));
+			}
 
 			writer.WriteLine ("-keep,allowshrinking,allowoptimization class **");
 			writer.WriteLine ("-keepclassmembers,allowshrinking,allowoptimization class ** {");

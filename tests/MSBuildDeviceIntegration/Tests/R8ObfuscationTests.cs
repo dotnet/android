@@ -128,6 +128,7 @@ namespace Xamarin.Android.Build.Tests
 				AssertDexDoesNotContainMethod (dexFiles, "packagePrivateEntry");
 				AssertDexDoesNotContainMethod (dexFiles, "privateEntry");
 
+				ClearAdbLogcat ();
 				RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
 				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (projectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");

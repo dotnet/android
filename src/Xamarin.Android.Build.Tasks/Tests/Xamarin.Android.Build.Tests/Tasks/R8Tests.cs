@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -76,6 +77,14 @@ namespace Xamarin.Android.Build.Tests
 			R8.WriteObfuscationRules (writer, "disabled");
 
 			Assert.AreEqual ("-dontobfuscate" + System.Environment.NewLine, writer.ToString ());
+		}
+
+		[Test]
+		public void WriteInvalidObfuscationModeThrows ()
+		{
+			using var writer = new StringWriter ();
+
+			Assert.Throws<ArgumentException> (() => R8.WriteObfuscationRules (writer, "private-member"));
 		}
 	}
 }

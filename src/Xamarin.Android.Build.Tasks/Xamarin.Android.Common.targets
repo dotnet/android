@@ -3094,6 +3094,15 @@ because xbuild doesn't support framework reference assemblies.
            Text="Invalid value for AndroidTypeMapImplementation: '$(AndroidTypeMapImplementation)'. Valid values are: llvm-ir, trimmable." />
   </Target>
 
+  <Target Name="_ValidateAndroidR8ObfuscationMode"
+      BeforeTargets="_CheckForInvalidConfigurationAndPlatform"
+      Condition=" '$(AndroidApplication)' == 'true' ">
+    <AndroidError Code="XA1050"
+        ResourceName="XA1050"
+        FormatArguments="$(AndroidR8ObfuscationMode)"
+        Condition=" '$(AndroidR8ObfuscationMode)' != 'disabled' And '$(AndroidR8ObfuscationMode)' != 'private-members' " />
+  </Target>
+
   <Target Name="_LinkAssemblies"
       DependsOnTargets="_ResolveAssemblies;_CreatePackageWorkspace;$(_BeforeLinkAssemblies);_LinkAssembliesNoShrink"
   />

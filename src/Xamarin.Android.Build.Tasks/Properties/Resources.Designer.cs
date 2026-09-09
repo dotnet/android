@@ -1024,6 +1024,15 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA1049", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;AndroidR8ObfuscationMode&apos; MSBuild property has an invalid value of &apos;{0}&apos;. Valid values are &apos;disabled&apos; and &apos;private-members&apos;..
+        /// </summary>
+        public static string XA1050 {
+            get {
+                return ResourceManager.GetString("XA1050", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released..
