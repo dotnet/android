@@ -10,7 +10,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	/// <summary>
-	/// Build tests specific to the NativeAOT runtime.
+	/// Build tests for NativeAOT and native runtime packaging.
 	/// </summary>
 	[TestFixture]
 	[Category ("Node-2")]
@@ -26,7 +26,51 @@ namespace Xamarin.Android.Build.Tests
 			"libc++_static.a",
 			"libc++abi.a",
 			"libunwind.a",
+			"libunwind_xamarin-debug.a",
+			"libunwind_xamarin-release.a",
 		];
+
+		[TestCase ("armeabi-v7a")]
+		[TestCase ("arm64-v8a")]
+		[TestCase ("x86_64")]
+		public void BuildCoreClrWithPrebuiltRuntime (string abi)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers ([abi]);
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), $"CoreCLR app build should succeed for {abi} with the prebuilt runtime.");
+			builder.Output.AssertTargetIsSkipped ("_LinkNativeRuntime", defaultIfNotUsed: true);
+		}
+
+		[TestCase ("armeabi-v7a")]
+		[TestCase ("arm64-v8a")]
+		[TestCase ("x86_64")]
+		public void BuildNativeAotWithoutCPlusPlusArchives (string abi)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			proj.SetRuntimeIdentifiers ([abi]);
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), $"NativeAOT build should succeed for {abi} without libc++ or libunwind.");
+
+			string intermediateDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			string [] responseFiles = Directory.GetFiles (intermediateDirectory, "ld.*.rsp", SearchOption.AllDirectories);
+			Assert.IsNotEmpty (responseFiles, "Native linker response files should be generated.");
+			foreach (string responseFile in responseFiles) {
+				string response = File.ReadAllText (responseFile);
+				StringAssert.Contains ("libnaot-android.release-static-release.a", response, responseFile);
+				foreach (string archiveName in CPlusPlusArchiveNames) {
+					StringAssert.DoesNotContain (archiveName, response, responseFile);
+				}
+			}
+		}
 
 		[Test]
 		public void RestoreNativeAot_AndroidArmRuntimePack ()
@@ -151,9 +195,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (AndroidRuntime.NativeAOT, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true)]
-		public void RuntimePackCPlusPlusArchives (AndroidRuntime runtime, bool shouldContain)
+		[TestCase (AndroidRuntime.NativeAOT)]
+		[TestCase (AndroidRuntime.CoreCLR)]
+		public void RuntimePackDoesNotContainCPlusPlusArchives (AndroidRuntime runtime)
 		{
 			string outputDirectory = Path.Combine (Root, TestName);
 			if (Directory.Exists (outputDirectory)) {
@@ -202,16 +246,13 @@ namespace Xamarin.Android.Build.Tests
 			using var package = ZipHelper.OpenZip (packagePath);
 			foreach (string archiveName in CPlusPlusArchiveNames) {
 				string archivePath = $"runtimes/android-arm64/native/{archiveName}";
-				if (shouldContain) {
-					package.AssertContainsEntry (packagePath, archivePath);
-				} else {
-					package.AssertDoesNotContainEntry (packagePath, archivePath);
-				}
+				package.AssertDoesNotContainEntry (packagePath, archivePath);
 			}
 		}
 
-		[Test]
-		public void CopyNativeAotRuntimePackRemovesStaleCPlusPlusArchives ()
+		[TestCase (AndroidRuntime.NativeAOT)]
+		[TestCase (AndroidRuntime.CoreCLR)]
+		public void CopyRuntimePackRemovesStaleCPlusPlusArchives (AndroidRuntime runtime)
 		{
 			string outputDirectory = Path.Combine (Root, TestName);
 			if (Directory.Exists (outputDirectory)) {
@@ -225,7 +266,7 @@ namespace Xamarin.Android.Build.Tests
 			string packsRoot = Path.Combine (outputDirectory, "packs");
 			string nativeDirectory = Path.Combine (
 				packsRoot,
-				$"Microsoft.Android.Runtime.NativeAOT.{apiLevelName}.android-arm64",
+				$"Microsoft.Android.Runtime.{runtime}.{apiLevelName}.android-arm64",
 				packVersion,
 				"runtimes",
 				"android-arm64",
@@ -236,7 +277,14 @@ namespace Xamarin.Android.Build.Tests
 				File.Create (Path.Combine (nativeDirectory, archiveName)).Dispose ();
 			}
 
-			string nativeProject = Path.Combine (XABuildPaths.TopDirectory, "src", "native", "native-nativeaot.csproj");
+			string runtimeOutputPath = Path.Combine (outputDirectory, "runtime-output");
+			string abiOutputPath = Path.Combine (runtimeOutputPath, "android-arm64");
+			Directory.CreateDirectory (abiOutputPath);
+			File.Create (Path.Combine (abiOutputPath, "libunwind_xamarin-debug.a")).Dispose ();
+			File.Create (Path.Combine (abiOutputPath, "libunwind_xamarin-release.a")).Dispose ();
+
+			string nativeProjectName = runtime == AndroidRuntime.NativeAOT ? "native-nativeaot.csproj" : "native-clr.csproj";
+			string nativeProject = Path.Combine (XABuildPaths.TopDirectory, "src", "native", nativeProjectName);
 			var dotnet = new DotNetCLI (nativeProject) {
 				ProjectDirectory = outputDirectory,
 				BuildLogFile = Path.Combine (outputDirectory, "build.log"),
@@ -250,14 +298,17 @@ namespace Xamarin.Android.Build.Tests
 						$"AndroidApiLevel={apiLevelName}",
 						$"AndroidPackVersion={packVersion}",
 						$"MicrosoftAndroidPacksRootDir={packsRoot}{Path.DirectorySeparatorChar}",
+						$"OutputPath={runtimeOutputPath}{Path.DirectorySeparatorChar}",
 					]
 				),
-				$"Copying the NativeAOT runtime pack should succeed. See {dotnet.ProcessLogFile}."
+				$"Copying the {runtime} runtime pack should succeed. See {dotnet.ProcessLogFile}."
 			);
 
 			foreach (string archiveName in CPlusPlusArchiveNames) {
 				FileAssert.DoesNotExist (Path.Combine (nativeDirectory, archiveName));
 			}
+			FileAssert.Exists (Path.Combine (nativeDirectory, "libc.so"));
+			FileAssert.Exists (Path.Combine (nativeDirectory, "libclang_rt.builtins-aarch64-android.a"));
 		}
 
 		[Test]
