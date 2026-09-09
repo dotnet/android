@@ -66,7 +66,7 @@ namespace Xamarin.Android.Build.Tests
 				-keep,allowshrinking class * implements **
 
 				""";
-			Assert.AreEqual (expected, writer.ToString ());
+			Assert.AreEqual (expected.ReplaceLineEndings (System.Environment.NewLine), writer.ToString ());
 		}
 
 		[Test]
