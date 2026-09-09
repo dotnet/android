@@ -62,7 +62,6 @@ namespace Xamarin.Android.NetTests
 					using var firstResponse = await firstResponseTask.ConfigureAwait (false);
 					Assert.Fail ("The first request completed successfully instead of observing cancellation.");
 				} catch (OperationCanceledException) {
-					cancellationObserved.TrySetResult (true);
 				}
 
 				cancellationObserved.TrySetResult (true);
