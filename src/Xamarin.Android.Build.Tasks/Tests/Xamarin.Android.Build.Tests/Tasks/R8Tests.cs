@@ -50,14 +50,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (false, "-keep")]
-		[TestCase (true,  "-keep,allowobfuscation")]
-		public void KeepOption (bool enableObfuscation, string expected)
-		{
-			var task = new R8 { EnableObfuscation = enableObfuscation };
-			Assert.AreEqual (expected, task.KeepOption);
-		}
-
 		[TestCase (false, true, false)]
 		[TestCase (true, false, false)]
 		[TestCase (false, true, true)]

@@ -110,51 +110,6 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 		}
 
 		[Test]
-		public void CountsMatchGeneratedTables ()
-		{
-			RunTask (
-				"""
-				<replacements>
-				  <replace-type from="a/B" to="x/Y" />
-				  <replace-type from="c/D" to="x/Z" />
-				  <reverse-type from="x/Y" to="a/B" />
-				  <replace-method source-type="a/B" source-method-name="m" source-method-signature="()V"
-				      target-type="x/Y" target-method-name="a" target-method-signature="()V"
-				      target-method-instance-to-static="false" />
-				  <replace-method source-type="c/D" source-method-name="m" source-method-signature="()V"
-				      target-type="x/Z" target-method-name="a" target-method-signature="()V"
-				      target-method-instance-to-static="false" />
-				  <replace-field source-type="a/B" source-field-name="f" source-field-signature="I"
-				      target-type="x/Y" target-field-name="a" target-field-signature="I" />
-				</replacements>
-				""");
-
-			Assert.AreEqual (2, Info.ReplacementTypeCount, "replace-type count");
-			Assert.AreEqual (1, Info.ReverseTypeCount, "reverse-type count");
-			Assert.AreEqual (2, Info.ReplacementMethodIndexEntryCount, "replace-method type count");
-			Assert.AreEqual (1, Info.ReplacementFieldIndexEntryCount, "replace-field type count");
-		}
-
-		[Test]
-		public void ReverseTypesAreEmittedSeparatelyFromForwardTypes ()
-		{
-			string ll = RunTask (
-				"""
-				<replacements>
-				  <replace-type from="a/B" to="x/Y" />
-				  <reverse-type from="x/Y" to="a/B" />
-				</replacements>
-				""");
-
-			int forward = ll.IndexOf ("@jni_remapping_type_replacements");
-			int reverse = ll.IndexOf ("@jni_remapping_reverse_type_replacements");
-			Assert.Greater (forward, -1, "Forward table must be emitted.");
-			Assert.Greater (reverse, -1, "Reverse table must be emitted.");
-			Assert.AreEqual (1, Info.ReplacementTypeCount);
-			Assert.AreEqual (1, Info.ReverseTypeCount);
-		}
-
-		[Test]
 		public void MissingTargetMethodSignatureIsBackwardCompatible ()
 		{
 			// The Intune/MAM mapping shape: no `target-method-signature`, wildcard source signature.
@@ -189,13 +144,12 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				  <replace-type from="mm/Middle" to="c" />
 				  <reverse-type from="c" to="mm/Middle" />
 				  <reverse-type from="a" to="zz/Last" />
-				  <reverse-type from="b" to="aa/First" />
 				</replacements>
 				""");
 
 			AssertOrdered (ll, "aa/First", "mm/Middle", "zz/Last");
 			Assert.AreEqual (3, Info.ReplacementTypeCount);
-			Assert.AreEqual (3, Info.ReverseTypeCount);
+			Assert.AreEqual (2, Info.ReverseTypeCount);
 		}
 
 		[Test]

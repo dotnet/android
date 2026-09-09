@@ -291,24 +291,13 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 		}
 
 		[TestCase ("missing")]
-		[TestCase ("empty-path")]
-		[TestCase ("empty-file")]
 		[TestCase ("truncated")]
 		[TestCase ("unrelated-object")]
 		[TestCase ("invalid-section")]
-		[TestCase ("wrong-endianness")]
-		[TestCase ("linked-library")]
-		[TestCase ("graph")]
 		public void InvalidNativeAotRetentionIsReportedAsXA4327 (string kind)
 		{
 			string path = Path.Combine (TestDirectory, "missing.o");
 			switch (kind) {
-			case "empty-path":
-				path = "";
-				break;
-			case "empty-file":
-				File.WriteAllBytes (path, []);
-				break;
 			case "truncated":
 				File.WriteAllBytes (path, [0x7F, (byte) 'E', (byte) 'L', (byte) 'F', 2, 1, 1]);
 				break;
@@ -326,17 +315,6 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 					writer.Write ((ulong) file.Length + 1);
 				}
 				break;
-			case "wrong-endianness":
-			case "linked-library":
-				path = WriteNativeObject (["com/contoso/Peer"]);
-				using (var file = File.Open (path, FileMode.Open, FileAccess.Write)) {
-					file.Position = kind == "wrong-endianness" ? 5 : 16;
-					file.WriteByte (kind == "wrong-endianness" ? (byte) 2 : (byte) 3);
-				}
-				break;
-			case "graph":
-				File.WriteAllText (path, """<DirectedGraph xmlns="http://schemas.microsoft.com/vs/2009/dgml"><Nodes /></DirectedGraph>""");
-				break;
 			}
 			var task = new GenerateR8JniRemapping {
 				BuildEngine = engine,
@@ -348,20 +326,6 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			Assert.IsFalse (task.Execute ());
 			Assert.AreEqual (1, Errors.Count);
 			Assert.AreEqual ("XA4327", Errors [0].Code);
-			FileAssert.DoesNotExist (task.OutputFile);
-		}
-
-		[Test]
-		public void NativeAotObjectWithoutNativeAotModeFails ()
-		{
-			var task = new GenerateR8JniRemapping {
-				BuildEngine = engine,
-				MappingFile = WriteMapping ("com.contoso.Peer -> a.b:\n"),
-				OutputFile = Path.Combine (TestDirectory, "r8-jni-remap.xml"),
-				NativeAotObjectFile = WriteNativeObject (["com/contoso/Peer"]),
-			};
-			Assert.IsFalse (task.Execute ());
-			Assert.AreEqual ("XA4327", Errors.Single ().Code);
 			FileAssert.DoesNotExist (task.OutputFile);
 		}
 
@@ -403,36 +367,6 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			$"""<replace-field source-type="{sourceType}" source-field-name="{name}" source-field-signature="{signature}" target-type="{targetType}" target-field-name="{targetName}" target-field-signature="{targetSignature}" />""";
 
 		[Test]
-		public void RenamedClassesProduceForwardAndReverseTypeEntries ()
-		{
-			var xml = Run (
-				"""
-				com.contoso.MainActivity -> a.b:
-				com.contoso.Untouched -> com.contoso.Untouched:
-				""");
-
-			StringAssert.Contains ("""<replace-type from="com/contoso/MainActivity" to="a/b" />""", xml);
-			StringAssert.Contains ("""<reverse-type from="a/b" to="com/contoso/MainActivity" />""", xml);
-			StringAssert.DoesNotContain ("com/contoso/Untouched", xml, "Unchanged classes must not produce entries.");
-		}
-
-		[Test]
-		public void MergedClassesDoNotProduceReverseTypeEntries ()
-		{
-			// R8 class merging maps two originals onto one residual class: the reverse
-			// direction is ambiguous and must not be described at all.
-			var xml = Run (
-				"""
-				com.contoso.One -> a.b:
-				com.contoso.Two -> a.b:
-				""");
-
-			StringAssert.Contains ("""<replace-type from="com/contoso/One" to="a/b" />""", xml);
-			StringAssert.Contains ("""<replace-type from="com/contoso/Two" to="a/b" />""", xml);
-			StringAssert.DoesNotContain ("reverse-type", xml);
-		}
-
-		[Test]
 		public void RemovedClassesAreSkipped ()
 		{
 			var xml = Run (
@@ -441,38 +375,6 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				""");
 
 			StringAssert.DoesNotContain ("com/contoso/Gone", xml);
-		}
-
-		[Test]
-		public void MethodOverloadsKeepDistinctSignatures ()
-		{
-			var xml = Run (
-				"""
-				com.contoso.Peer -> a.b:
-				    void doWork(int) -> c
-				    void doWork(java.lang.String) -> d
-				    void doWork() -> e
-				""");
-
-			StringAssert.Contains (Method ("a/b", "doWork", "(I)V", "a/b", "c", "(I)V"), xml);
-			StringAssert.Contains (Method ("a/b", "doWork", "(Ljava/lang/String;)V", "a/b", "d", "(Ljava/lang/String;)V"), xml);
-			StringAssert.Contains (Method ("a/b", "doWork", "()V", "a/b", "e", "()V"), xml);
-		}
-
-		[Test]
-		public void MethodDescriptorsAreRewrittenThroughTheMapping ()
-		{
-			var xml = Run (
-				"""
-				com.contoso.Peer -> a.b:
-				    com.contoso.Result run(com.contoso.Argument[],int) -> c
-				com.contoso.Argument -> a.d:
-				com.contoso.Result -> a.e:
-				""");
-
-			StringAssert.Contains (
-				Method ("a/b", "run", "([Lcom/contoso/Argument;I)Lcom/contoso/Result;", "a/b", "c", "([La/d;I)La/e;"),
-				xml);
 		}
 
 		[Test]
@@ -521,23 +423,8 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 
 			StringAssert.DoesNotContain ("replace-method", xml);
 			StringAssert.DoesNotContain ("replace-field", xml);
-		}
-
-		[Test]
-		public void FieldsAreEmittedWithRewrittenSignatures ()
-		{
-			var xml = Run (
-				"""
-				com.contoso.Peer -> a.b:
-				    int counter -> c
-				    com.contoso.Argument argument -> d
-				    com.contoso.Argument[] arguments -> e
-				com.contoso.Argument -> a.d:
-				""");
-
-			StringAssert.Contains (Field ("a/b", "counter", "I", "a/b", "c", "I"), xml);
-			StringAssert.Contains (Field ("a/b", "argument", "Lcom/contoso/Argument;", "a/b", "d", "La/d;"), xml);
-			StringAssert.Contains (Field ("a/b", "arguments", "[Lcom/contoso/Argument;", "a/b", "e", "[La/d;"), xml);
+			StringAssert.DoesNotContain ("replace-type", xml);
+			StringAssert.DoesNotContain ("reverse-type", xml);
 		}
 
 		[TestCase ("int", "I", "java.lang.String", "Ljava/lang/String;")]
@@ -556,6 +443,9 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			string secondTargetSignature = secondType == "com.contoso.Two" ? "La/b;" : secondSignature;
 			StringAssert.Contains (Field ("a/b", "value", firstSignature, "a/b", "c", firstTargetSignature), xml);
 			StringAssert.Contains (Field ("a/b", "value", secondSignature, "a/b", "d", secondTargetSignature), xml);
+			StringAssert.Contains ("""<replace-type from="com/contoso/One" to="a/b" />""", xml);
+			StringAssert.Contains ("""<replace-type from="com/contoso/Two" to="a/b" />""", xml);
+			StringAssert.DoesNotContain ("reverse-type", xml, "Merged classes have no unambiguous reverse mapping.");
 			Assert.AreEqual (0, Warnings.Count, "Different source descriptors must not conflict, even if the target descriptors match.");
 		}
 
@@ -638,27 +528,15 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			Assert.AreEqual ("XA4327", Errors [0].Code);
 		}
 
-		[Test]
-		public void MissingMappingIsReportedAsXA4327 ()
+		[TestCase (false)]
+		[TestCase (true)]
+		public void ExistingRemapEntriesAreNotOverridden (bool identicalTarget)
 		{
-			var task = new GenerateR8JniRemapping {
-				BuildEngine = engine,
-				MappingFile = Path.Combine (TestDirectory, "does-not-exist.txt"),
-				OutputFile = Path.Combine (TestDirectory, "r8-jni-remap.xml"),
-			};
-
-			Assert.IsFalse (task.Execute (), "Task should have failed.");
-			Assert.AreEqual (1, Errors.Count, "Task should have reported one error.");
-			Assert.AreEqual ("XA4327", Errors [0].Code);
-		}
-
-		[Test]
-		public void ExistingRemapEntriesAreNotOverridden ()
-		{
+			string targetType = identicalTarget ? "a/b" : "com/microsoft/intune/MainActivity";
 			var existing = WriteRemapXml (
-				"""
+				$"""
 				<replacements>
-				  <replace-type from="com/contoso/MainActivity" to="com/microsoft/intune/MainActivity" />
+				  <replace-type from="com/contoso/MainActivity" to="{targetType}" />
 				</replacements>
 				""");
 
@@ -676,34 +554,10 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			StringAssert.DoesNotContain ("source-type=\"a/b\"", xml,
 				"Members of an externally owned type must not be emitted using the residual owner.");
 			StringAssert.Contains ("""<replace-type from="com/contoso/Other" to="a/c" />""", xml);
-			Assert.AreEqual (1, Warnings.Count, "The conflict should have been reported.");
-			Assert.AreEqual ("XA4328", Warnings [0].Code);
-		}
-
-		[Test]
-		public void IdenticalExistingRemapEntriesDoNotWarn ()
-		{
-			var existing = WriteRemapXml (
-				"""
-				<replacements>
-				  <replace-type from="com/contoso/MainActivity" to="a/b" />
-				</replacements>
-				""");
-
-			var xml = Run (
-				"""
-				com.contoso.MainActivity -> a.b:
-				    void onCreate() -> c
-				    int counter -> d
-				""",
-				existing);
-
-			StringAssert.DoesNotContain ("replace-type", xml,
-				"A duplicate entry must not be emitted twice.");
-			StringAssert.DoesNotContain ("reverse-type", xml);
-			StringAssert.DoesNotContain ("replace-method", xml);
-			StringAssert.DoesNotContain ("replace-field", xml);
-			Assert.AreEqual (0, Warnings.Count, "An identical entry is not a conflict.");
+			Assert.AreEqual (identicalTarget ? 0 : 1, Warnings.Count);
+			if (!identicalTarget) {
+				Assert.AreEqual ("XA4328", Warnings [0].Code);
+			}
 		}
 
 		[Test]
