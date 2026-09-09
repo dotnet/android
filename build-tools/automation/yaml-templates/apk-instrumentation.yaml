@@ -84,16 +84,47 @@ steps:
   # exactly those cases would defeat the diagnostics this template exists for; the
   # capture is best-effort and time-bounded. See dotnet/android#11830.
 - script: |
+    set -e
     DEST="$(Build.StagingDirectory)/Test${{ parameters.configuration }}/${{ parameters.artifactFolder }}/"
-    bash "${{ parameters.xaSourcePath }}/build-tools/automation/scripts/capture-logcat.sh" "$DEST" "${{ parameters.testName }}"
+    mkdir -p "$DEST"
+    SECONDS=0
+    ADB_PID=""
+    trap 'if [ -n "$ADB_PID" ]; then
+      kill -KILL "$ADB_PID" 2>/dev/null || echo "adb client $ADB_PID already exited"
+      wait "$ADB_PID" 2>/dev/null || :
+    fi' EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    run_adb() {
+      local OUTPUT="$1" STATUS=0
+      shift
+      echo "$(date -u '+%Y-%m-%dT%H:%M:%SZ') starting $*; elapsed=${SECONDS}s"
+      "$@" > "$OUTPUT" &
+      ADB_PID=$!
+      while kill -0 "$ADB_PID" 2>/dev/null; do
+        if [ "$SECONDS" -ge 45 ]; then
+          echo "capture deadline exceeded: $*; elapsed=${SECONDS}s; bytes=$(wc -c < "$OUTPUT")"
+          exit 124
+        fi
+        sleep 1
+      done
+      wait "$ADB_PID" || STATUS=$?
+      ADB_PID=""
+      echo "$* exited with code $STATUS; elapsed=${SECONDS}s; bytes=$(wc -c < "$OUTPUT")"
+      return "$STATUS"
+    }
+    run_adb "$DEST/adb-devices-${{ parameters.testName }}.txt" adb devices
+    cat "$DEST/adb-devices-${{ parameters.testName }}.txt"
+    if awk 'NR > 1 && $2 == "device" { found=1 } END { exit !found }' "$DEST/adb-devices-${{ parameters.testName }}.txt"; then
+      run_adb "$DEST/logcat-${{ parameters.testName }}.txt" env ADB_TRACE=adb,shell adb logcat -d
+    else
+      echo "logcat capture skipped: no connected device"
+    fi
   displayName: capture logcat ${{ parameters.testName }}
   condition: always()
   continueOnError: true
-  # Task timeouts cancel the retry token. The helper returns failure after 45s
-  # instead, leaving room for two attempts and retry/startup overhead.
-  # Each attempt retains partial logcat, client stderr/trace, and timing/byte
-  # diagnostics under DEST; logcat-<testName>.txt remains the latest capture.
-  # Retry exhaustion still flows through continueOnError to fail-on-issue.yaml.
+  # Return failure before task cancellation so Azure can retry a hung capture.
+  # Allow two 45s attempts plus retry/startup overhead.
   retryCountOnTaskFailure: 1
   timeoutInMinutes: 2
 

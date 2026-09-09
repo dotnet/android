@@ -3,8 +3,7 @@ parameters:
   configuration: $(XA.Build.Configuration)
   artifactName: results
   includeBuildResults: false
-  # A successful task retry must not hide the failed logcat attempt's artifacts.
-  condition: or(ne(variables['Agent.JobStatus'], 'Succeeded'), eq(variables['XA.PublishAllLogs'], 'true'), eq(variables['LogcatCaptureFailed'], 'true'))
+  condition: or(ne(variables['Agent.JobStatus'], 'Succeeded'), eq(variables['XA.PublishAllLogs'], 'true'))
   use1ESTemplate: true
 
 steps:
