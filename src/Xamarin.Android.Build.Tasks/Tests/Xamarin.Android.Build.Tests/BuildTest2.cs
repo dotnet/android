@@ -24,6 +24,8 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public partial class BuildTest2 : BaseTest
 	{
+		const string Arm64ReadyToRunInstructionSet = "--instruction-set:-optimistic,aes,crc,dotprod,lse,rcpc,rdma,sha1,sha2";
+
 		static object [] MarshalMethodsDefaultStatusSource = new object [] {
 			new object[] {
 				/* isRelease */              true,
@@ -77,7 +79,8 @@ namespace Xamarin.Android.Build.Tests
 
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			StringAssertEx.Contains ("--instruction-set:-optimistic", b.LastBuildOutput);
+			var expectedInstructionSet = rid == "android-arm64" ? Arm64ReadyToRunInstructionSet : "--instruction-set:-optimistic";
+			StringAssertEx.Contains (expectedInstructionSet, b.LastBuildOutput);
 
 			var assemblyName = proj.ProjectName;
 			var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, rid, $"{proj.PackageName}-Signed.apk");
@@ -102,12 +105,14 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.Contains ("@uncompressed_assemblies_data_buffer = dso_local local_unnamed_addr global [0 x i8] zeroinitializer, align 1", compressedAssembliesSourceText);
 		}
 
-		[TestCase ("android-arm64", true, true, "", "", ";--instruction-set:-optimistic", "")]
-		[TestCase ("android-arm64", true, false, "--partial;--map", "", "--partial;--map;--instruction-set:-optimistic", "")]
+		[TestCase ("android-arm64", true, true, "", "", ";" + Arm64ReadyToRunInstructionSet, "")]
+		[TestCase ("android-arm64", true, false, "--partial;--map", "", "--partial;--map;" + Arm64ReadyToRunInstructionSet, "")]
 		[TestCase ("android-arm64", true, true, "--partial;--instruction-set:armv8-a", "", "--partial;--instruction-set:armv8-a", "")]
 		[TestCase ("android-arm64", true, true, "--instruction-set armv8-a", "", "--instruction-set armv8-a", "")]
 		[TestCase ("android-arm64", true, true, "--instruction-set:-optimistic", "", "--instruction-set:-optimistic", "")]
+		[TestCase ("android-arm64", true, true, Arm64ReadyToRunInstructionSet, "", Arm64ReadyToRunInstructionSet, "")]
 		[TestCase ("android-arm64", true, true, "", "--instruction-set:-optimistic", "", "")]
+		[TestCase ("android-arm64", true, false, "", Arm64ReadyToRunInstructionSet, "", "")]
 		[TestCase ("android-arm64", true, true, "--partial", "--instruction-set:armv8-a", "--partial", "")]
 		[TestCase ("android-arm64", true, false, "--partial", "--instruction-set:armv8-a", "--partial", "")]
 		[TestCase ("android-arm64", false, false, "--map", "", "--map", "")]
@@ -115,8 +120,9 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("android-x64", true, false, "", "", ";--instruction-set:-optimistic", "")]
 		[TestCase ("android-x64", true, true, "--instruction-set:x86-64", "", "--instruction-set:x86-64", "")]
 		[TestCase ("android-arm", true, true, "", "", ";--instruction-set:-optimistic", "")]
+		[TestCase ("android-x86", true, true, "", "", ";--instruction-set:-optimistic", "")]
 		[TestCase ("android-arm64", true, true, "--map", "", "--map", "false")]
-		[TestCase ("android-arm64", true, true, "--map", "", "--map;--instruction-set:-optimistic", "true")]
+		[TestCase ("android-arm64", true, true, "--map", "", "--map;" + Arm64ReadyToRunInstructionSet, "true")]
 		public void ReadyToRunInstructionSet (string rid, bool readyToRun, bool composite, string extraArgs, string compositeArgs,
 			string expected, string conservativeInstructionSet)
 		{

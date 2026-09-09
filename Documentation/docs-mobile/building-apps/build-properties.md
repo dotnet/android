@@ -1903,11 +1903,22 @@ ReadyToRun compilation is composite by default. See
 [`$(MauiEnableFullReadyToRun)`](#mauienablefullreadytorun) to opt in to
 full ReadyToRun.
 
-.NET for Android defaults crossgen2 to
-`--instruction-set:-optimistic`. This avoids generating precompiled code
-that requires optional CPU instructions and would fall back to JIT
-compilation on devices without those instructions. It does not disable
-hardware-specific optimizations in the JIT or tiered compilation.
+For ARM64, .NET for Android defaults crossgen2 to:
+
+```text
+--instruction-set:-optimistic,aes,crc,dotprod,lse,rcpc,rdma,sha1,sha2
+```
+
+This disables automatic optimistic instruction-set additions and explicitly
+enables the listed features, excluding RCPC2 without requiring RCPC2 to be
+absent. The listed features become baseline requirements for the precompiled
+image, rather than optional optimistic features. Devices without a required
+feature can reject the image's ReadyToRun code and fall back to JIT compilation.
+
+Other CPU architectures default to `--instruction-set:-optimistic`, which
+disables automatic optimistic instruction-set additions while retaining the
+normal baseline requirements. Neither policy disables hardware-specific
+optimizations in the JIT or tiered compilation.
 
 An explicit `--instruction-set` option in
 `$(PublishReadyToRunCrossgen2ExtraArgs)` overrides this default.
