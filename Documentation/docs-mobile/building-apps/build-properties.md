@@ -1915,7 +1915,7 @@ absent. The listed features become baseline requirements for the precompiled
 image, rather than optional optimistic features. Devices without a required
 feature can reject the image's ReadyToRun code and fall back to JIT compilation.
 
-Other CPU architectures default to `--instruction-set:-optimistic`, which
+x64 defaults to `--instruction-set:-optimistic`, which
 disables automatic optimistic instruction-set additions while retaining the
 normal baseline requirements. Neither policy disables hardware-specific
 optimizations in the JIT or tiered compilation.
