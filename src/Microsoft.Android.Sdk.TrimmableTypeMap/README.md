@@ -186,4 +186,5 @@ builds), the generator runs exactly once per outer build.
 | `Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets` | CoreCLR specifics, incl. the post-trim `linked-java` regeneration. |
 | `Microsoft.Android.Sdk.TypeMap.Trimmable.NativeAOT.targets` | NativeAOT specifics (ILC inputs, proguard). |
 | `../Microsoft.Android.Build.Tasks/Tasks/GenerateTrimmableTypeMap.cs` | The net11.0 MSBuild task front-end for the generator. |
+| `../Microsoft.Android.Build.Tasks/Tasks/GetAndroidPackageName.cs` | The net11.0 package-name task; shares Java identifier validation with the generator. |
 | `Microsoft.Android.Sdk.TrimmableTypeMap/**` | The net11.0 generator/scanner library invoked by the task. |

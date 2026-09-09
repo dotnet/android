@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
@@ -27,15 +28,24 @@ static class MetadataHelper
 	/// </summary>
 	public static Guid DeterministicMvid (string moduleName, ReadOnlySpan<byte> contentBytes = default)
 	{
-		using var sha = SHA256.Create ();
-		byte [] nameBytes = Encoding.UTF8.GetBytes (moduleName);
-		byte [] input = new byte [nameBytes.Length + contentBytes.Length];
-		nameBytes.CopyTo (input, 0);
-		contentBytes.CopyTo (input.AsSpan (nameBytes.Length));
-		byte [] hash = sha.ComputeHash (input);
-		byte [] guidBytes = new byte [16];
-		Array.Copy (hash, guidBytes, 16);
-		return new Guid (guidBytes);
+		const int stackallocThresholdBytes = 256;
+		int nameByteCount = Encoding.UTF8.GetByteCount (moduleName);
+		int byteCount = checked (nameByteCount + contentBytes.Length);
+		byte []? rented = null;
+		Span<byte> input = byteCount <= stackallocThresholdBytes
+			? stackalloc byte [byteCount]
+			: (rented = ArrayPool<byte>.Shared.Rent (byteCount));
+		try {
+			Encoding.UTF8.GetBytes (moduleName.AsSpan (), input [..nameByteCount]);
+			contentBytes.CopyTo (input [nameByteCount..]);
+			Span<byte> hash = stackalloc byte [SHA256.HashSizeInBytes];
+			SHA256.HashData (input [..byteCount], hash);
+			return new Guid (hash [..16]);
+		} finally {
+			if (rented is not null) {
+				ArrayPool<byte>.Shared.Return (rented);
+			}
+		}
 	}
 
 	/// <summary>
@@ -148,7 +158,6 @@ static class MetadataHelper
 				writer.WriteString (incremental, assemblyName);
 			}
 		}
-
 		return new ModelFingerprints (
 			writer.GetContentFingerprint (),
 			includeIncremental ? writer.GetIncrementalFingerprint () : null);

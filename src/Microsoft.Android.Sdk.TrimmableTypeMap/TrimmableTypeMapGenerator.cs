@@ -233,7 +233,7 @@ public class TrimmableTypeMapGenerator
 			ReportInvalidJniType (JniSignatureHelper.ParseReturnTypeString (jniSignature));
 		}
 
-		static bool TryGetInvalidThrownNameSegment (string thrownName, out string invalidIdentifier) =>
+		static bool TryGetInvalidThrownNameSegment (string thrownName, out ReadOnlySpan<char> invalidIdentifier) =>
 			thrownName.IndexOf ('/') >= 0
 				? JavaNameValidator.TryGetInvalidJniSourceTypeSegment (thrownName, out invalidIdentifier)
 				: JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (thrownName, out invalidIdentifier);
@@ -288,14 +288,14 @@ public class TrimmableTypeMapGenerator
 		void ReportInvalidJniType (string jniType)
 		{
 			if (JavaNameValidator.TryGetInvalidJniTypeSegment (jniType, out var typeName, out var invalidIdentifier)) {
-				ReportInvalidName (typeName, invalidIdentifier);
+				ReportInvalidName (typeName.ToString (), invalidIdentifier);
 			}
 		}
 
-		void ReportInvalidName (string name, string invalidIdentifier)
+		void ReportInvalidName (string name, ReadOnlySpan<char> invalidIdentifier)
 		{
 			if (reportedNames.Add (name)) {
-				logger.LogInvalidJavaNameError (name, invalidIdentifier);
+				logger.LogInvalidJavaNameError (name, invalidIdentifier.ToString ());
 				valid = false;
 			}
 		}
