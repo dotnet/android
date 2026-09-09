@@ -234,6 +234,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4261](xa4261.md): Type '{type}' has Java constructor signature '{signature}', but its base type does not expose a compatible Java constructor.
 + [XA4262](xa4262.md): Type '{type}' has an invalid [Export] SuperArgumentsString value '{value}'.
 + [XA4263](xa4263.md): The exported member '{member}' has unsupported signature type '{type}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter].
++ [XA4264](xa4264.md): Java callable wrapper XML file '{path}' was not found.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
