@@ -203,6 +203,8 @@ extends:
         - pwsh: ./build.ps1 --target=dotnet-pack --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
           displayName: Pack .NET Maui
           workingDirectory: $(Build.SourcesDirectory)/maui
+          env:
+            NoWarn: CS0618
 
         - task: DotNetCoreCLI@2
           displayName: Install MAUI workload packs

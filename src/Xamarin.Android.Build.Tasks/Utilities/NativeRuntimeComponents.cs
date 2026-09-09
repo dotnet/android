@@ -12,7 +12,7 @@ class NativeRuntimeComponents
 	{
 		public const string BCL = "bcl";
 		public const string CoreClrRuntime = "coreclr";
-		public const string CplusPlusRuntime = "c++";
+		public const string CompilerRuntime = "compiler-rt";
 		public const string XamarinAndroidRuntime = "xaruntime";
 	}
 
@@ -43,7 +43,7 @@ class NativeRuntimeComponents
 	sealed class ClangBuiltinsArchive : Archive
 	{
 		public ClangBuiltinsArchive (string clangAbi)
-			: base ($"libclang_rt.builtins-{clangAbi}-android.a", KnownSets.CplusPlusRuntime)
+			: base ($"libclang_rt.builtins-{clangAbi}-android.a", KnownSets.CompilerRuntime)
 		{}
 	}
 
@@ -67,15 +67,6 @@ class NativeRuntimeComponents
 	{
 		public ClrArchive (string name, bool wholeArchive = false)
 			: base (name, KnownSets.CoreClrRuntime, wholeArchive: wholeArchive)
-		{
-			DontExportSymbols = true;
-		}
-	}
-
-	sealed class CplusPlusArchive : Archive
-	{
-		public CplusPlusArchive (string name)
-			: base (name, KnownSets.CplusPlusRuntime)
 		{
 			DontExportSymbols = true;
 		}
@@ -127,17 +118,11 @@ class NativeRuntimeComponents
 			new AndroidArchive ("libxa-shared-bits-release.a"),
 			new AndroidArchive ("libxamarin-startup-release.a"),
 
-			// C++ standard library
-			new CplusPlusArchive ("libc++_static.a"),
-			new CplusPlusArchive ("libc++abi.a"),
-
 			// LLVM clang built-ins archives
 			new ClangBuiltinsArchive ("aarch64"),
 			new ClangBuiltinsArchive ("arm"),
 			new ClangBuiltinsArchive ("i686"),
 			new ClangBuiltinsArchive ("x86_64"),
-
-			new CplusPlusArchive ("libunwind.a"), // techically it's from clang
 		};
 
 		// Just the base names of libraries to link into the unified runtime.  Must have all the dependencies of all the static archives we
