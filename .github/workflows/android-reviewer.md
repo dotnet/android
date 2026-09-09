@@ -46,6 +46,7 @@ timeout-minutes: 60
 tools:
   bash:
     - az *
+    - c++ *
     - cat
     - git diff *
     - grep
