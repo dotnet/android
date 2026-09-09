@@ -73,12 +73,17 @@ static class JniRemappingLookup
 		byte[]? rentedSignature = null;
 		IntPtr retInfo;
 		try {
-			Span<byte> nameBuffer = nameLength <= 512
+			if (nameLength > 512)
+				rentedName = ArrayPool<byte>.Shared.Rent (nameLength);
+			if (signatureLength > 512)
+				rentedSignature = ArrayPool<byte>.Shared.Rent (signatureLength);
+
+			Span<byte> nameBuffer = rentedName == null
 				? stackalloc byte [nameLength]
-				: rentedName = ArrayPool<byte>.Shared.Rent (nameLength);
-			Span<byte> signatureBuffer = signatureLength <= 512
+				: rentedName.AsSpan (0, nameLength);
+			Span<byte> signatureBuffer = rentedSignature == null
 				? stackalloc byte [signatureLength]
-				: rentedSignature = ArrayPool<byte>.Shared.Rent (signatureLength);
+				: rentedSignature.AsSpan (0, signatureLength);
 			Encoding.UTF8.GetBytes (jniMethodName, nameBuffer);
 			nameBuffer [nameLength - 1] = 0;
 			Encoding.UTF8.GetBytes (jniMethodSignature, signatureBuffer);
