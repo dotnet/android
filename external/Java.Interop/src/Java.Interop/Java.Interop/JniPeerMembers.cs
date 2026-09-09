@@ -177,8 +177,8 @@ namespace Java.Interop {
 		internal static JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (
 			string jniTypeName,
 			Type managedPeerType,
-			string method,
-			string signature,
+			ReadOnlySpan<char> method,
+			ReadOnlySpan<char> signature,
 			bool searchBaseTypes = true)
 		{
 			var typeManager = JniEnvironment.Runtime.TypeManager;
@@ -202,8 +202,8 @@ namespace Java.Interop {
 		internal static JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfo (
 			string jniTypeName,
 			Type managedPeerType,
-			string field,
-			string signature)
+			ReadOnlySpan<char> field,
+			ReadOnlySpan<char> signature)
 		{
 			var typeManager = JniEnvironment.Runtime.TypeManager;
 			var info        = typeManager.GetReplacementFieldInfo (jniTypeName, field, signature);
@@ -250,11 +250,11 @@ namespace Java.Interop {
 			return n;
 		}
 
-		internal static void GetNameAndSignature (string encodedMember, out string name, out string signature)
+		internal static void GetNameAndSignature (string encodedMember, out ReadOnlySpan<char> name, out ReadOnlySpan<char> signature)
 		{
 			int n       = GetSignatureSeparatorIndex (encodedMember);
-			name        = encodedMember.Substring (0, n);
-			signature   = encodedMember.Substring (n + 1);
+			name        = encodedMember.AsSpan (0, n);
+			signature   = encodedMember.AsSpan (n + 1);
 		}
 	}
 }

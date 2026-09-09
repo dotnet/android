@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -27,6 +28,8 @@ enum JniParamKind
 /// </summary>
 static class JniSignatureHelper
 {
+	static readonly SearchValues<char> JavaSourceNameSeparators = SearchValues.Create ("/$");
+
 	/// <summary>
 	/// Parses the parameter types from a JNI method signature like "(Landroid/os/Bundle;)V".
 	/// </summary>
@@ -234,7 +237,11 @@ static class JniSignatureHelper
 	/// </summary>
 	internal static string JniNameToJavaName (string jniName)
 	{
-		return jniName.Replace ('/', '.').Replace ('$', '.');
+		if (jniName.AsSpan ().IndexOfAny (JavaSourceNameSeparators) < 0) {
+			return jniName;
+		}
+		return string.Create (jniName.Length, jniName, static (destination, name) =>
+			name.AsSpan ().ReplaceAny (destination, JavaSourceNameSeparators, '.'));
 	}
 
 	/// <summary>
@@ -259,7 +266,8 @@ static class JniSignatureHelper
 		if (lastSlash < 0) {
 			return null;
 		}
-		return jniName.Substring (0, lastSlash).Replace ('/', '.');
+		return string.Create (lastSlash, jniName, static (destination, name) =>
+			name.AsSpan (0, destination.Length).Replace (destination, '/', '.'));
 	}
 
 	/// <summary>

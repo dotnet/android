@@ -22,19 +22,19 @@ namespace Java.Interop
 		public JniFieldInfo GetFieldInfo (string encodedMember)
 		{
 			return StaticFields.GetOrAdd (encodedMember, static (member, fields) => {
-				string field, signature;
+				ReadOnlySpan<char> field, signature;
 				JniPeerMembers.GetNameAndSignature (member, out field, out signature);
 				return fields.GetFieldInfo (field, signature);
 			}, this);
 		}
 
-		JniFieldInfo GetFieldInfo (string field, string signature)
+		JniFieldInfo GetFieldInfo (ReadOnlySpan<char> field, ReadOnlySpan<char> signature)
 		{
 			var newField = JniPeerMembers.GetReplacementFieldInfo (Members.JniPeerTypeName, Members.ManagedPeerType, field, signature);
 			if (newField.HasValue) {
 				var typeName     = newField.Value.TargetJniType ?? Members.JniPeerTypeName;
-				var fieldName    = newField.Value.TargetJniFieldName ?? field;
-				var fieldSig     = newField.Value.TargetJniFieldSignature ?? signature;
+				var fieldName    = newField.Value.TargetJniFieldName is string name ? name.AsSpan () : field;
+				var fieldSig     = newField.Value.TargetJniFieldSignature is string sig ? sig.AsSpan () : signature;
 
 				using var t = new JniType (typeName);
 				if (t.TryGetStaticField (fieldName, fieldSig, out var f)) {

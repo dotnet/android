@@ -27,21 +27,21 @@ namespace Java.Interop
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
 			return StaticMethods.GetOrAdd (encodedMember, static (member, methods) => {
-				string method, signature;
+				ReadOnlySpan<char> method, signature;
 				JniPeerMembers.GetNameAndSignature (member, out method, out signature);
 				return methods.GetMethodInfo (method, signature);
 			}, this);
 		}
 
-		JniMethodInfo GetMethodInfo (string method, string signature)
+		JniMethodInfo GetMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
 		{
 			var m              = (JniMethodInfo?) null;
 			var newMethod      = JniPeerMembers.GetReplacementMethodInfo (Members.JniPeerTypeName, Members.ManagedPeerType, method, signature);
 			if (newMethod.HasValue) {
 				using var t = new JniType (newMethod.Value.TargetJniType ?? Members.JniPeerTypeName);
 				if (t.TryGetStaticMethod (
-						newMethod.Value.TargetJniMethodName ?? method,
-						newMethod.Value.TargetJniMethodSignature ?? signature,
+						newMethod.Value.TargetJniMethodName is string name ? name.AsSpan () : method,
+						newMethod.Value.TargetJniMethodSignature is string sig ? sig.AsSpan () : signature,
 						out m)) {
 					return m;
 				}
@@ -66,7 +66,7 @@ namespace Java.Interop
 		}
 #pragma warning restore CA1801
 
-		JniMethodInfo? FindInFallbackTypes (string method, string signature)
+		JniMethodInfo? FindInFallbackTypes (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
 		{
 			var fallbackTypes  = JniEnvironment.Runtime.TypeManager.GetStaticMethodFallbackTypes (Members.JniPeerTypeName);
 			if (fallbackTypes == null) {

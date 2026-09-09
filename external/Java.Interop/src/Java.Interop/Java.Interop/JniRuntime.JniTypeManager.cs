@@ -329,6 +329,25 @@ namespace Java.Interop {
 
 			protected virtual ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSimpleReference, string jniMethodName, string jniMethodSignature) => null;
 
+			internal ReplacementMethodInfo? GetReplacementMethodInfo (string jniSimpleReference, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+			{
+				AssertValid ();
+				AssertSimpleReference (jniSimpleReference, nameof (jniSimpleReference));
+				if (jniMethodName.IsEmpty)
+					throw new ArgumentNullException (nameof (jniMethodName));
+				if (jniMethodSignature.IsEmpty)
+					throw new ArgumentNullException (nameof (jniMethodSignature));
+
+				return GetReplacementMethodInfoCore (jniSimpleReference, jniMethodName, jniMethodSignature);
+			}
+
+			/// <summary>
+			/// Resolves member remapping without requiring name and signature strings.
+			/// The default implementation preserves dispatch to the string overload.
+			/// </summary>
+			protected virtual ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSimpleReference, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+				=> GetReplacementMethodInfoCore (jniSimpleReference, jniMethodName.ToString (), jniMethodSignature.ToString ());
+
 			public ReplacementFieldInfo? GetReplacementFieldInfo (string jniSimpleReference, string jniFieldName, string jniFieldSignature)
 			{
 				AssertValid ();
@@ -344,6 +363,25 @@ namespace Java.Interop {
 			}
 
 			protected virtual ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSimpleReference, string jniFieldName, string jniFieldSignature) => null;
+
+			internal ReplacementFieldInfo? GetReplacementFieldInfo (string jniSimpleReference, ReadOnlySpan<char> jniFieldName, ReadOnlySpan<char> jniFieldSignature)
+			{
+				AssertValid ();
+				AssertSimpleReference (jniSimpleReference, nameof (jniSimpleReference));
+				if (jniFieldName.IsEmpty)
+					throw new ArgumentNullException (nameof (jniFieldName));
+				if (jniFieldSignature.IsEmpty)
+					throw new ArgumentNullException (nameof (jniFieldSignature));
+
+				return GetReplacementFieldInfoCore (jniSimpleReference, jniFieldName, jniFieldSignature);
+			}
+
+			/// <summary>
+			/// Resolves field remapping without requiring name and signature strings.
+			/// The default implementation preserves dispatch to the string overload.
+			/// </summary>
+			protected virtual ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSimpleReference, ReadOnlySpan<char> jniFieldName, ReadOnlySpan<char> jniFieldSignature)
+				=> GetReplacementFieldInfoCore (jniSimpleReference, jniFieldName.ToString (), jniFieldSignature.ToString ());
 
 			// Default implementation is a no-op. Derived classes (e.g. `ReflectionJniTypeManager`)
 			// provide reflection-based registration. Override to provide custom registration.

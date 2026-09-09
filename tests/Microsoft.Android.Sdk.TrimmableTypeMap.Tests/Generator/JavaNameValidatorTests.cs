@@ -49,7 +49,7 @@ public class JavaNameValidatorTests
 	public void TryGetInvalidPackageSegment_ReservedIdentifier_ReturnsTrue (string identifier)
 	{
 		Assert.True (JavaNameValidator.TryGetInvalidPackageSegment ($"com.{identifier}.example", '.', out var actual));
-		Assert.Equal (identifier, actual);
+		Assert.Equal (identifier, actual.ToString ());
 	}
 
 	[Theory]
@@ -57,7 +57,7 @@ public class JavaNameValidatorTests
 	public void TryGetInvalidJniNameSegment_ReservedPackageIdentifier_ReturnsTrue (string identifier)
 	{
 		Assert.True (JavaNameValidator.TryGetInvalidJniNameSegment ($"com/{identifier}/Example", out var actual));
-		Assert.Equal (identifier, actual);
+		Assert.Equal (identifier, actual.ToString ());
 	}
 
 	[Theory]
@@ -65,7 +65,7 @@ public class JavaNameValidatorTests
 	public void TryGetInvalidJniNameSegment_ReservedTypeIdentifier_ReturnsTrue (string identifier)
 	{
 		Assert.True (JavaNameValidator.TryGetInvalidJniNameSegment ($"com/example/{identifier}", out var actual));
-		Assert.Equal (identifier, actual);
+		Assert.Equal (identifier, actual.ToString ());
 	}
 
 	[Theory]
@@ -76,7 +76,7 @@ public class JavaNameValidatorTests
 	{
 		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment (jniName, out _));
 		Assert.True (JavaNameValidator.TryGetInvalidJniSourceTypeSegment (jniName, out var actual));
-		Assert.Equal (expected, actual);
+		Assert.Equal (expected, actual.ToString ());
 	}
 
 	[Theory]
@@ -84,11 +84,11 @@ public class JavaNameValidatorTests
 	public void RestrictedTypeIdentifier_IsValidInPackageButInvalidAsType (string identifier)
 	{
 		Assert.False (JavaNameValidator.TryGetInvalidPackageSegment ($"com.example.{identifier}", '.', out var packageIdentifier));
-		Assert.Equal ("", packageIdentifier);
+		Assert.True (packageIdentifier.IsEmpty);
 		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment ($"com/{identifier}/Example", out var jniPackageIdentifier));
-		Assert.Equal ("", jniPackageIdentifier);
+		Assert.True (jniPackageIdentifier.IsEmpty);
 		Assert.True (JavaNameValidator.TryGetInvalidJniNameSegment ($"com/example/{identifier}", out var typeIdentifier));
-		Assert.Equal (identifier, typeIdentifier);
+		Assert.Equal (identifier, typeIdentifier.ToString ());
 	}
 
 	[Theory]
@@ -113,13 +113,13 @@ public class JavaNameValidatorTests
 	public void ValidNames_ReturnFalseAndEmptyIdentifier ()
 	{
 		Assert.False (JavaNameValidator.TryGetInvalidPackageSegment ("com.example.app", '.', out var packageIdentifier));
-		Assert.Equal ("", packageIdentifier);
+		Assert.True (packageIdentifier.IsEmpty);
 		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment ("com/example/MainActivity", out var jniIdentifier));
-		Assert.Equal ("", jniIdentifier);
+		Assert.True (jniIdentifier.IsEmpty);
 		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment ("com/example/Outer$Inner", out var nestedIdentifier));
-		Assert.Equal ("", nestedIdentifier);
+		Assert.True (nestedIdentifier.IsEmpty);
 		Assert.False (JavaNameValidator.TryGetInvalidJniSourceTypeSegment ("com/example/Outer$Inner", out nestedIdentifier));
-		Assert.Equal ("", nestedIdentifier);
+		Assert.True (nestedIdentifier.IsEmpty);
 	}
 
 	[Theory]
@@ -130,7 +130,7 @@ public class JavaNameValidatorTests
 	public void UnicodeIdentifiers_AreValid (string jniName)
 	{
 		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment (jniName, out var invalidIdentifier));
-		Assert.Equal ("", invalidIdentifier);
+		Assert.True (invalidIdentifier.IsEmpty);
 	}
 
 	[Theory]
@@ -210,7 +210,7 @@ public class JavaNameValidatorTests
 	public void InvalidOrUnsupportedIdentifier_ReturnsSegment (string jniName, string expected)
 	{
 		Assert.True (JavaNameValidator.TryGetInvalidJniNameSegment (jniName, out var invalidIdentifier));
-		Assert.Equal (expected, invalidIdentifier);
+		Assert.Equal (expected, invalidIdentifier.ToString ());
 	}
 
 	[Theory]
@@ -221,14 +221,14 @@ public class JavaNameValidatorTests
 	public void JavaTypeOnlyIdentifiers_AreInvalidPackageSegments (string packageName, string expected)
 	{
 		Assert.True (JavaNameValidator.TryGetInvalidPackageSegment (packageName, '.', out var invalidIdentifier));
-		Assert.Equal (expected, invalidIdentifier);
+		Assert.Equal (expected, invalidIdentifier.ToString ());
 		Assert.True (
 			JavaNameValidator.TryGetInvalidJniNameSegment (
 				packageName.Replace ('.', '/') + "/Peer",
 				out invalidIdentifier
 			)
 		);
-		Assert.Equal (expected, invalidIdentifier);
+		Assert.Equal (expected, invalidIdentifier.ToString ());
 	}
 
 	[Fact]
@@ -252,8 +252,8 @@ public class JavaNameValidatorTests
 	public void TryGetInvalidJniTypeSegment_ReservedTypeIdentifier_ReturnsTrue (string jniType, string expectedTypeName, string expectedIdentifier)
 	{
 		Assert.True (JavaNameValidator.TryGetInvalidJniTypeSegment (jniType, out var typeName, out var invalidIdentifier));
-		Assert.Equal (expectedTypeName, typeName);
-		Assert.Equal (expectedIdentifier, invalidIdentifier);
+		Assert.Equal (expectedTypeName, typeName.ToString ());
+		Assert.Equal (expectedIdentifier, invalidIdentifier.ToString ());
 	}
 
 	[Theory]
@@ -266,6 +266,6 @@ public class JavaNameValidatorTests
 	{
 		bool invalid = JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (javaType, out var invalidIdentifier);
 		Assert.Equal (expectedIdentifier is not null, invalid);
-		Assert.Equal (expectedIdentifier ?? "", invalidIdentifier);
+		Assert.Equal (expectedIdentifier ?? "", invalidIdentifier.ToString ());
 	}
 }

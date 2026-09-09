@@ -885,7 +885,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
   <data name="XA4325" xml:space="preserve">
-    <value>Failed to rewrite managed JNI names for R8. {0}</value>
+    <value>R8 のマネージド JNI 名を書き換えることができませんでした。{0}</value>
     <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4325_* resources.</comment>
   </data>
   <data name="XA4325_AssemblyFailure" xml:space="preserve">
@@ -1255,10 +1255,10 @@ In this message, the term "handheld app" means "app for handheld devices."
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
   </data>
   <data name="XA4258" xml:space="preserve">
-    <value>Java 名 '{0}' には、予約済みの Java 識別子 '{1}' が含まれています。パッケージ名または型名を変更してください。</value>
+    <value>Java name '{0}' contains invalid or unsupported Java identifier '{1}'. Change the package or type name.</value>
     <comment>The following are literal names and should not be translated: Java.
 {0} - Java package or type name
-{1} - Java reserved keyword or restricted identifier</comment>
+{1} - Invalid, unsupported, reserved, or restricted Java identifier</comment>
   </data>
   <data name="XA4259" xml:space="preserve">
     <value>Type '{0}' has multiple managed constructors that map to the same Java Native Interface (JNI) signature '{1}'. Change the constructor parameter types so each constructor has a unique JNI signature.</value>
