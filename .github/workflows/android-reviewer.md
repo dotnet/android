@@ -42,6 +42,7 @@ engine:
       }}
 max-daily-ai-credits: -1
 max-ai-credits: -1
+timeout-minutes: 60
 tools:
   bash:
     - az *
