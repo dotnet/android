@@ -26,7 +26,7 @@ namespace Xamarin.Android.Build.Tests
 		public void DotNetWorkloadSearchUsesEnglishDescription ()
 		{
 			const string description = ".NET SDK Workload for building Android applications.";
-			var testPath = Path.Combine (Root, TestName);
+			var testPath = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (testPath);
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = testPath;
 
