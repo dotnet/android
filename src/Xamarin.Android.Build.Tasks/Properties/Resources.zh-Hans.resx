@@ -885,20 +885,20 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
   <data name="XA4325" xml:space="preserve">
-    <value>Failed to rewrite managed JNI names for R8. {0}</value>
+    <value>未能重写 R8 的托管 JNI 名称。{0}</value>
     <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4325_* resources.</comment>
   </data>
   <data name="XA4325_AssemblyFailure" xml:space="preserve">
-    <value>Could not rewrite the JNI names in the assembly '{0}': {1}</value>
+    <value>无法重写程序集“{0}”中的 JNI 名称: {1}</value>
     <comment>{0} - The path of the assembly which could not be rewritten.
 {1} - The underlying message describing why the assembly could not be rewritten. It is not localized.</comment>
   </data>
   <data name="XA4325_SourceDestinationCount" xml:space="preserve">
-    <value>The 'SourceFiles' and 'DestinationFiles' item groups must contain the same number of items.</value>
+    <value>'SourceFiles' 和 'DestinationFiles' 项组必须包含相同数量的项。</value>
     <comment>The following are literal MSBuild item group names and should not be translated: 'SourceFiles', 'DestinationFiles'.</comment>
   </data>
   <data name="XA4326" xml:space="preserve">
-    <value>Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous JNIEnv.FindClass source.</value>
+    <value>无法安全地重写 JNI 成员查找，因为其类句柄没有结构上无歧义的 JNIEnv.FindClass 源。</value>
     <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
@@ -1255,10 +1255,10 @@ In this message, the term "handheld app" means "app for handheld devices."
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
   </data>
   <data name="XA4258" xml:space="preserve">
-    <value>Java 名称 "{0}" 包含保留的 Java 标识符 "{1}"。更改包名称或类型名称。</value>
+    <value>Java name '{0}' contains invalid or unsupported Java identifier '{1}'. Change the package or type name.</value>
     <comment>The following are literal names and should not be translated: Java.
 {0} - Java package or type name
-{1} - Java reserved keyword or restricted identifier</comment>
+{1} - Invalid, unsupported, reserved, or restricted Java identifier</comment>
   </data>
   <data name="XA4259" xml:space="preserve">
     <value>Type '{0}' has multiple managed constructors that map to the same Java Native Interface (JNI) signature '{1}'. Change the constructor parameter types so each constructor has a unique JNI signature.</value>
@@ -1285,7 +1285,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - Invalid SuperArgumentsString value</comment>
   </data>
   <data name="XA4263" xml:space="preserve">
-    <value>The exported member '{0}' has unsupported signature type '{1}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter].</value>
+    <value>导出的成员“{0}”具有不受支持的签名类型“{1}”。请使用 Java 对等类型、受支持的托管到 Java 映射或 [ExportParameter]。</value>
     <comment>The following are literal names and should not be translated: Java, [ExportParameter].
 {0} - Fully-qualified managed member name
 {1} - Managed parameter or return type</comment>

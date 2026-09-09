@@ -384,31 +384,44 @@ namespace Xamarin.Android.Tools.Bytecode {
 			for (int i = 0; i < data.Length; ++i)
 				data [i] = stream.ReadNetworkByte ();
 
-			// The .class file specially encodes NUL so that it takes 2 bytes, not 1.
-			// http://en.wikipedia.org/wiki/UTF-8#Modified_UTF-8
-			var fixup   = new List<byte> (data.Length);
+			// Modified UTF-8 encodes UTF-16 code units, so supplementary characters remain
+			// a high-surrogate/low-surrogate pair after decoding.
+			var decoded = new StringBuilder (data.Length);
 			for (int i = 0; i < data.Length; ++i) {
-				if (data [i] == 0xc0 && (i + 1) < data.Length && data [i + 1] == 0x80) {
-					fixup.Add (0x00);
-					i++;
+				byte first = data [i];
+				if ((first & 0x80) == 0) {
+					if (first == 0)
+						throw new InvalidDataException ("Modified UTF-8 contains a raw null byte.");
+					decoded.Append ((char) first);
 					continue;
 				}
-				// ...and they couldn't be bothered with supporting 4-byte UTF-8 sequences,
-				// needed for Emoji and chars off the Basic Multilingual Plane; instead, they're
-				// encoded as a surrogate pair. (What is this I don't even...)
-				if (data [i] == 0xed && i+6 < data.Length && data [i+3] == 0xed) {
-					var surrogatePair = new char [] {
-						(char) (0xD800 + (((data [i+1] & 0x0F) << 6) | (data [i+2] & 0x3F))),
-						(char) (0xDC00 + (((data [i+4] & 0x0F) << 6) | (data [i+5] & 0x3F))),
-					};
-					fixup.AddRange (Encoding.UTF8.GetBytes (surrogatePair));
-					i += 5;
+				if ((first & 0xe0) == 0xc0 && i + 1 < data.Length) {
+					byte second = ReadContinuationByte (data [++i]);
+					char value = (char) (((first & 0x1f) << 6) | (second & 0x3f));
+					if (value < '\u0080' && (first != 0xc0 || second != 0x80))
+						throw new InvalidDataException ("Modified UTF-8 contains an invalid two-byte overlong encoding.");
+					decoded.Append (value);
 					continue;
-
 				}
-				fixup.Add (data [i]);
+				if ((first & 0xf0) == 0xe0 && i + 2 < data.Length) {
+					byte second = ReadContinuationByte (data [++i]);
+					byte third = ReadContinuationByte (data [++i]);
+					char value = (char) (((first & 0x0f) << 12) | ((second & 0x3f) << 6) | (third & 0x3f));
+					if (value < '\u0800')
+						throw new InvalidDataException ("Modified UTF-8 contains an invalid three-byte overlong encoding.");
+					decoded.Append (value);
+					continue;
+				}
+				throw new InvalidDataException ($"Invalid modified UTF-8 lead byte 0x{first:x2}.");
 			}
-			value   = Encoding.UTF8.GetString (fixup.Count == data.Length ? data : fixup.ToArray ());
+			value = decoded.ToString ();
+		}
+
+		static byte ReadContinuationByte (byte value)
+		{
+			if ((value & 0xc0) != 0x80)
+				throw new InvalidDataException ($"Invalid modified UTF-8 continuation byte 0x{value:x2}.");
+			return value;
 		}
 
 		public override ConstantPoolItemType Type {

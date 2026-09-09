@@ -26,14 +26,15 @@
 #nullable enable
 using System;
 using System.IO;
-using System.Linq;
 using System.Xml;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	public class GetAndroidPackageName : AndroidTask
 	{
@@ -57,7 +58,7 @@ namespace Xamarin.Android.Tasks
 				if (reader.MoveToContent () == XmlNodeType.Element) {
 					var package = reader.GetAttribute ("package");
 					if (!package.IsNullOrEmpty ()) {
-						PackageName = ManifestDocument.ReplacePlaceholders (ManifestPlaceholders, package);
+						PackageName = ManifestPlaceholderResolver.Replace (ManifestPlaceholders, package);
 					}
 				}
 			}
@@ -72,7 +73,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (JavaNameValidator.TryGetInvalidPackageSegment (PackageName, '.', out var invalidIdentifier)) {
-				Log.LogCodedError ("XA4258", Properties.Resources.XA4258, PackageName, invalidIdentifier);
+				Log.LogCodedError ("XA4258", Properties.Resources.XA4258, PackageName, invalidIdentifier.ToString ());
 			}
 
 			Log.LogDebugMessage ($"  PackageName: {PackageName}");
