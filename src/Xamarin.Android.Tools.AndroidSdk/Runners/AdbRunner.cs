@@ -196,7 +196,7 @@ public class AdbRunner
 				}
 
 				lastDiagnostic = result.FormatDiagnostic ();
-				logger.Invoke (TraceLevel.Warning, $"Android package manager is not responsive yet: {lastDiagnostic}");
+				logger.Invoke (TraceLevel.Verbose, $"Android package manager is not responsive yet: {lastDiagnostic}");
 				await Task.Delay (pollInterval, cts.Token).ConfigureAwait (false);
 			}
 		} catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) {

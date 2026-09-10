@@ -1413,7 +1413,7 @@ public class AdbRunnerTests
 			var exception = Assert.ThrowsAsync<TimeoutException> (
 				async () => await runner.WaitForPackageManagerAsync (
 					"emulator-5554",
-					TimeSpan.FromMilliseconds (500),
+					TimeSpan.FromSeconds (5),
 					TimeSpan.FromMilliseconds (10)));
 
 			Assert.IsNotNull (exception);

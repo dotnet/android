@@ -221,9 +221,6 @@ namespace Xamarin.Android.Tasks
 			if (string.IsNullOrEmpty (output)) {
 				return false;
 			}
-			if (output.IndexOf ("device offline", StringComparison.OrdinalIgnoreCase) >= 0) {
-				return true;
-			}
 			return output.IndexOf ("Failure calling service package", StringComparison.OrdinalIgnoreCase) >= 0 &&
 				output.IndexOf ("Broken pipe", StringComparison.OrdinalIgnoreCase) >= 0;
 		}

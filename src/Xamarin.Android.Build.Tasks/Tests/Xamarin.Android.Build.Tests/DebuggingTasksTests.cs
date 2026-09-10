@@ -178,7 +178,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (FastDeploy2.IsUnexpectedRemoteFilesystemError ("adb: error: device offline"));
 		}
 
-		[TestCase ("adb: error: device offline", true)]
+		[TestCase ("adb: error: device offline", false)]
 		[TestCase ("adb: failed to install app.apk: cmd: Failure calling service package: Broken pipe (32)", true)]
 		[TestCase ("adb: failed to install app.apk: Broken pipe (32)", false)]
 		[TestCase ("cmd: Failure calling service package: Security exception", false)]
@@ -220,7 +220,7 @@ namespace Xamarin.Android.Build.Tests
 		public void FastDeploy2DoesNotRetryTransientInstallTwiceAcrossUninstall ()
 		{
 			var task = new TestFastDeploy2 (
-				CreateAdbResult (1, "first failure: device offline"),
+				CreateAdbResult (1, "first failure: cmd: Failure calling service package: Broken pipe (32)"),
 				CreateAdbResult (1, "Failure [INSTALL_FAILED_ALREADY_EXISTS]"),
 				CreateAdbResult (1, "third failure: cmd: Failure calling service package: Broken pipe (32)"));
 
@@ -261,7 +261,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var task = new TestFastDeploy2 (
 				CreateAdbResult (1, "first failure: cmd: Failure calling service package: Broken pipe (32)"),
-				CreateAdbResult (1, "second failure: device offline"));
+				CreateAdbResult (1, "second failure: cmd: Failure calling service package: Broken pipe (32)"));
 
 			var exception = Assert.ThrowsAsync<FastDeployInstallException> (
 				async () => await task.InstallApkWithRetry ("app.apk", reinstall: false, testOnly: false, user: ""));
