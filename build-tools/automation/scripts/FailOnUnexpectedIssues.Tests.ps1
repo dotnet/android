@@ -83,12 +83,12 @@ function Get-FreeTcpPort {
 	}
 }
 
-function Start-TestHttpServer ([string] $responseBody, [int] $bodyDelayMilliseconds = 0) {
+function Start-TestHttpServer ([string] $responseBody, [int] $bodyDelayMilliseconds = 0, [string] $status = '200 OK') {
 	$port = Get-FreeTcpPort
 	$readyPath = Join-Path $tempRoot "$([Guid]::NewGuid()).ready"
 	$requestPath = Join-Path $tempRoot "$([Guid]::NewGuid()).request"
 	$job = Start-Job -ScriptBlock {
-		param ($port, $readyPath, $requestPath, $responseBody, $bodyDelayMilliseconds)
+		param ($port, $readyPath, $requestPath, $responseBody, $bodyDelayMilliseconds, $status)
 		$ErrorActionPreference = 'Stop'
 		$listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, $port)
 		try {
@@ -109,7 +109,7 @@ function Start-TestHttpServer ([string] $responseBody, [int] $bodyDelayMilliseco
 				$requestLines | Set-Content -LiteralPath $requestPath -Encoding ASCII
 
 				$bodyBytes = [Text.Encoding]::UTF8.GetBytes($responseBody)
-				$headers = "HTTP/1.1 200 OK`r`nContent-Type: application/json`r`nContent-Length: $($bodyBytes.Length)`r`nConnection: close`r`n`r`n"
+				$headers = "HTTP/1.1 $status`r`nContent-Type: application/json`r`nContent-Length: $($bodyBytes.Length)`r`nConnection: close`r`n`r`n"
 				$headerBytes = [Text.Encoding]::ASCII.GetBytes($headers)
 				$stream.Write($headerBytes, 0, $headerBytes.Length)
 				$stream.Flush()
@@ -129,7 +129,7 @@ function Start-TestHttpServer ([string] $responseBody, [int] $bodyDelayMilliseco
 		} finally {
 			$listener.Stop()
 		}
-	} -ArgumentList $port, $readyPath, $requestPath, $responseBody, $bodyDelayMilliseconds
+	} -ArgumentList $port, $readyPath, $requestPath, $responseBody, $bodyDelayMilliseconds, $status
 
 	$readyDeadline = [DateTime]::UtcNow.AddSeconds(10)
 	while (-not (Test-Path -LiteralPath $readyPath) -and [DateTime]::UtcNow -lt $readyDeadline) {
@@ -196,6 +196,20 @@ try {
 	$authorization = [Net.Http.Headers.AuthenticationHeaderValue]::Parse($authorizationHeader[0].Substring('Authorization: '.Length))
 	Assert-True ($authorization.Scheme -eq 'Bearer') 'The timeline API authorization scheme was incorrect.'
 	Assert-True ($authorization.Parameter -eq $env:SYSTEM_ACCESSTOKEN) 'The timeline API authorization parameter was incorrect.'
+
+	$server = Start-TestHttpServer '{}' 0 '401 Unauthorized'
+	try {
+		$env:SYSTEM_COLLECTIONURI = "http://127.0.0.1:$($server.Port)/"
+		$output = & $gateScript `
+			-JobStatus 'SucceededWithIssues' `
+			-RecoveredOptionalTaskRefs 'gradleDependenciesCache' `
+			-TimelinePollTimeoutSeconds 1 `
+			-TimelinePollIntervalSeconds 1 6>&1
+	} finally {
+		Stop-TestHttpServer $server
+	}
+	Assert-True (($output -join "`n").Contains('result=Failed')) 'A non-success timeline HTTP response did not fail closed.'
+	Assert-True (($output -join "`n").Contains('HTTP status 401 (Unauthorized)')) 'The non-success timeline HTTP status was not diagnosed.'
 	Remove-Item Env:SYSTEM_ACCESSTOKEN, Env:SYSTEM_JOBID
 
 	$output = Invoke-Gate @(
