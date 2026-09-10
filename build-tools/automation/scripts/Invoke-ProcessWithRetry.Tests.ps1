@@ -10,6 +10,8 @@ $childScript = Join-Path $testDirectory 'Hang.ps1'
 $attemptFile = Join-Path $testDirectory 'attempts.txt'
 $retryChildScript = Join-Path $testDirectory 'FailThenSucceed.ps1'
 $retryAttemptFile = Join-Path $testDirectory 'retry-attempts.txt'
+$callerScript = Join-Path $testDirectory 'Caller.ps1'
+$callerResultFile = Join-Path $testDirectory 'caller-results.txt'
 
 try {
 	New-Item -ItemType Directory -Path $testDirectory | Out-Null
@@ -82,6 +84,46 @@ if ($attempt -eq 1) {
 	$retryAttempts = [int] (Get-Content -LiteralPath $retryAttemptFile -Raw)
 	if ($retryAttempts -ne 2) {
 		throw "Expected two nonzero-exit process attempts, got $retryAttempts."
+	}
+
+	@'
+param (
+	[string] $RetryScript,
+	[string] $PowerShellExe,
+	[string] $ResultFile
+)
+
+$ErrorActionPreference = 'Stop'
+$cases = @(
+	@{ Command = 'exit 0'; TimeoutSeconds = 10 }
+	@{ Command = 'exit 42'; TimeoutSeconds = 10 }
+	@{ Command = 'Start-Sleep -Seconds 30'; TimeoutSeconds = 1 }
+)
+$exitCodes = @()
+foreach ($case in $cases) {
+	& $RetryScript `
+		-FilePath $PowerShellExe `
+		-Arguments "-NoLogo -NoProfile -Command $($case.Command)" `
+		-TimeoutSeconds $case.TimeoutSeconds
+	$exitCodes += $LASTEXITCODE
+}
+Set-Content -LiteralPath $ResultFile -Value ($exitCodes -join ',') -Encoding ASCII
+'@ | Set-Content -LiteralPath $callerScript -Encoding ASCII
+
+	# A separate caller and result file also detect a premature successful exit.
+	& $powerShellExe -NoLogo -NoProfile -File $callerScript `
+		-RetryScript $scriptUnderTest `
+		-PowerShellExe $powerShellExe `
+		-ResultFile $callerResultFile
+	if ($LASTEXITCODE -ne 0) {
+		throw "Expected the calling script to complete successfully, got $LASTEXITCODE."
+	}
+	if (-not (Test-Path -LiteralPath $callerResultFile)) {
+		throw 'The retry helper exited the calling script before it could record the exit codes.'
+	}
+	$callerExitCodes = (Get-Content -LiteralPath $callerResultFile -Raw).Trim()
+	if ($callerExitCodes -ne '0,42,124') {
+		throw "Expected the caller to observe exit codes 0,42,124, got '$callerExitCodes'."
 	}
 } finally {
 	Remove-Item -LiteralPath $testDirectory -Recurse -Force -ErrorAction Ignore
