@@ -395,7 +395,8 @@ namespace Xamarin.Android.Tasks
 				}
 
 				try {
-					using var reader = XmlReader.Create (File.OpenRead (file), readerSettings);
+					using var stream = File.OpenRead (file);
+					using var reader = XmlReader.Create (stream, readerSettings);
 					ReadExistingEntries (reader);
 				} catch (Exception ex) when (ex is XmlException || ex is IOException || ex is UnauthorizedAccessException) {
 					// MergeRemapXml reports unreadable inputs (XA4318) later in the build.
