@@ -15,6 +15,9 @@ namespace Xamarin.Android.JcwGenTests {
 	[TestFixture]
 	public class BindingTests {
 
+		const string JniReferenceLeakCategory = "JniReferenceLeak";
+		const int LeakCheckIterations = 100;
+
 		[Test]
 		public void TestTimingCreateTimingIsCorrectType ()
 		{
@@ -95,22 +98,77 @@ namespace Xamarin.Android.JcwGenTests {
 		}
 
 		[Test]
+		[Explicit ("Run only in isolated JniReferenceLeak test runs.")]
+		[Category (JniReferenceLeakCategory)]
 		public void JavaSideActivation ()
 		{
-			using (var i = new ConstructorTest ()) {
-				// To ensure that CallMethodFromCtor.class_ref is initialized
-			}
 			using (var c = Java.Lang.Class.FromType (typeof (ConstructorTest))) {
-				int initGref = Java.Interop.Runtime.GlobalReferenceCount;
-				using (var j = Com.Xamarin.Android.CallMethodFromCtor.NewInstance (c)) {
-					var instance = j.JavaCast<ConstructorTest>();
-					Assert.AreSame (j, instance);
-					Assert.IsTrue (instance.DefaultConstructorInvoked);
-					Assert.IsTrue (instance.ActivationConstructorInvoked);
+				AssertNoSustainedGlobalReferenceGrowth (() => AssertJavaSideActivation (c));
+			}
+		}
+
+		[Test]
+		[Explicit ("Run only in isolated JniReferenceLeak test runs.")]
+		[Category (JniReferenceLeakCategory)]
+		public void AssertNoSustainedGlobalReferenceGrowth_DetectsRetainedGlobalReference ()
+		{
+			var objectClass = Java.Interop.JniEnvironment.Types.FindClass ("java/lang/Object");
+			var retainedReferences = new List<Java.Interop.JniObjectReference> ();
+			try {
+				Assert.Throws<AssertionException> (() => AssertNoSustainedGlobalReferenceGrowth (() => {
+					retainedReferences.Add (objectClass.NewGlobalRef ());
+				}));
+			} finally {
+				foreach (var retainedReference in retainedReferences) {
+					var reference = retainedReference;
+					Java.Interop.JniObjectReference.Dispose (ref reference);
 				}
-				int finiGref = Java.Interop.Runtime.GlobalReferenceCount;
-				Assert.AreEqual (initGref, finiGref,
-						string.Format ("Initial grefc={0}; final gref={1}; No GREFs should be lost!", initGref, finiGref));
+				Java.Interop.JniObjectReference.Dispose (ref objectClass);
+			}
+		}
+
+		static void AssertJavaSideActivation (Java.Lang.Class c)
+		{
+			using (var j = Com.Xamarin.Android.CallMethodFromCtor.NewInstance (c)) {
+				var instance = j.JavaCast<ConstructorTest>();
+				Assert.AreSame (j, instance);
+				Assert.IsTrue (instance.DefaultConstructorInvoked);
+				Assert.IsTrue (instance.ActivationConstructorInvoked);
+			}
+		}
+
+		static void AssertNoSustainedGlobalReferenceGrowth (Action action)
+		{
+			for (int i = 0; i < LeakCheckIterations; i++) {
+				action ();
+			}
+			CollectPeers ();
+
+			int grefsBefore = Java.Interop.Runtime.GlobalReferenceCount;
+			for (int i = 0; i < LeakCheckIterations; i++) {
+				action ();
+			}
+			CollectGarbage ();
+			int grefsAfter = Java.Interop.Runtime.GlobalReferenceCount;
+
+			Assert.LessOrEqual (grefsAfter, grefsBefore,
+					$"Operation should not leak global references after {LeakCheckIterations} iterations. " +
+					$"Before={grefsBefore}, After={grefsAfter}, Delta={grefsAfter - grefsBefore}");
+		}
+
+		static void CollectPeers ()
+		{
+			CollectGarbage ();
+			Java.Interop.JniEnvironment.Runtime.ValueManager.CollectPeers ();
+			Java.Interop.JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
+			CollectGarbage ();
+		}
+
+		static void CollectGarbage ()
+		{
+			for (int i = 0; i < 3; i++) {
+				GC.Collect ();
+				GC.WaitForPendingFinalizers ();
 			}
 		}
 
@@ -391,4 +449,3 @@ namespace Xamarin.Android.JcwGenTests {
 		}
 	}
 }
-
