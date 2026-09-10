@@ -221,7 +221,10 @@ Implement the fix yourself:
 1. Make the smallest complete change that resolves the verified problem.
 2. Follow all repository instructions and existing style. Never modify generated files, non-English localization files, or unrelated code. The only generated-file exception is a checked-in `Resources.Designer.cs` accessor required by `08-string-literal-error-messages`; change only the accessor for the new English resource.
 3. Add or update a focused test when behavior changes or a regression test is practical.
-4. Bootstrap the repository toolchain with `./build.sh Prepare` before validation. This installs the repository-pinned .NET 11 SDK under the active `bin/{Debug|Release}/dotnet` configuration and prepares generated build prerequisites. Then run the smallest targeted build or test command through `./dotnet-local.sh`; never use the runner's system `dotnet` or lower `DotNetTargetFrameworkVersion` to work around missing tooling. A PR requires successful validation; if the fix cannot be validated in this environment, revert only your own changes and call `noop`.
+4. Choose validation based on the files changed:
+   - For prose or link-only changes confined to `README.md` and/or `Documentation/**/*.md`, skip toolchain preparation because no compiled output is affected. Run `git diff --check` and verify every changed URL with `curl -fsSIL --max-redirs 5`.
+   - For every other change, bootstrap the repository toolchain with `AndroidSdkDirectory="$GITHUB_WORKSPACE/bin/Debug/android-sdk" AndroidNdkDirectory="$GITHUB_WORKSPACE/bin/Debug/android-ndk" ./build.sh Prepare`. Setting these MSBuild properties directly keeps preparation out of the hosted runner's read-only preinstalled Android SDK; `ANDROID_HOME` does not control the repository's preparation path. Then run the smallest targeted build or test command through `./dotnet-local.sh`; never use the runner's system `dotnet` or lower `DotNetTargetFrameworkVersion` to work around missing tooling.
+   A PR requires successful applicable validation. If the fix cannot be validated in this environment, revert only your own changes and call `noop`.
 5. Review `git diff` for accidental or unrelated edits.
 6. Commit the final changes with a concise message ending in:
 
