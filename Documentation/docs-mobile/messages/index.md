@@ -150,6 +150,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA1039](xa1039.md): The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/xamarin/androidx for more details.
 + [XA1040](xa1040.md): The CoreCLR runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues
 + [XA1041](xa1041.md): The MSBuild property 'MonoAndroidAssetPrefix' has an invalid value of 'c:\Foo\Assets'. The value is expected to be a directory path representing the relative location of your Assets or Resources
++ [XA1050](xa1050.md): The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value.
 
 ## XA2xxx: Linker
 

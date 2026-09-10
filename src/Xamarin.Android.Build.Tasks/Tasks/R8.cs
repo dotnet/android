@@ -36,6 +36,7 @@ namespace Xamarin.Android.Tasks
 		public string? ProguardMappingFileOutput { get; set; }
 		public string? BuildMetadataFileOutput { get; set; }
 		public string []? ProguardConfigurationFiles { get; set; }
+		public string ObfuscationMode { get; set; } = "disabled";
 
 		protected override string MainClass => "com.android.tools.r8.R8";
 
@@ -116,6 +117,9 @@ namespace Xamarin.Android.Tasks
 				}
 				if (!ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
 					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
+						WriteObfuscationRules (xamcfg, ObfuscationMode);
+						xamcfg.WriteLine ();
+						xamcfg.Flush ();
 						GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg.BaseStream);
 						if (IgnoreWarnings) {
 							xamcfg.WriteLine ("-ignorewarnings");
@@ -163,6 +167,27 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return responseFile;
+		}
+
+		internal static void WriteObfuscationRules (TextWriter writer, string obfuscationMode)
+		{
+			if (string.Equals (obfuscationMode, "disabled", StringComparison.OrdinalIgnoreCase)) {
+				writer.WriteLine ("-dontobfuscate");
+				return;
+			}
+			if (!string.Equals (obfuscationMode, "private-members", StringComparison.OrdinalIgnoreCase)) {
+				throw new ArgumentException ($"Unsupported R8 obfuscation mode '{obfuscationMode}'.", nameof (obfuscationMode));
+			}
+
+			writer.WriteLine ("-keep,allowshrinking,allowoptimization class **");
+			writer.WriteLine ("-keepclassmembers,allowshrinking,allowoptimization class ** {");
+			writer.WriteLine ("   public protected *;");
+			writer.WriteLine ("}");
+			// Managed interface proxy selection observes Class.getInterfaces(), which R8 cannot infer.
+			writer.WriteLine ("-keep,allowoptimization interface ** {");
+			writer.WriteLine ("   public protected *;");
+			writer.WriteLine ("}");
+			writer.WriteLine ("-keep,allowshrinking class * implements **");
 		}
 
 		// Note: We do not want to call the base.LogEventsFromTextOutput as it will incorrectly identify
