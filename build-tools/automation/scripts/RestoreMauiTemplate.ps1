@@ -35,7 +35,7 @@ function Test-RetryableMauiRestoreFailure
 			if ($missingPackageCount -gt 0 -and -not $currentPackageHasOlderDotNet11Version) {
 				return $false
 			}
-			if ($line -notmatch '(?i)error NU1102: Unable to find package Microsoft\.Extensions\.Logging(?:\.[A-Za-z0-9.-]+)? with version \(>= \d+\.\d+\.\d+-(preview|rc|alpha|beta)[^)]+\)') {
+			if ($line -notmatch '(?i)error NU1102: Unable to find package Microsoft\.Extensions\.Logging(?:\.[A-Za-z0-9.-]+)? with version \(>= \d+\.\d+\.\d+-(preview|rc|alpha|beta)(?:\.[0-9A-Za-z-]+)+\)\s*$') {
 				return $false
 			}
 

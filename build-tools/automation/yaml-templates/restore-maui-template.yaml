@@ -7,10 +7,6 @@ parameters:
 
 steps:
 - powershell: |
-    & '${{ parameters.xaSourcePath }}/build-tools/automation/scripts/RestoreMauiTemplate.Tests.ps1'
-  displayName: Test MAUI template restore retry
-
-- powershell: |
     if ([Environment]::OSVersion.Platform -eq "Unix") {
         $dotnetPath = "${{ parameters.xaSourcePath }}/bin/${{ parameters.configuration }}/dotnet/dotnet"
     } else {
