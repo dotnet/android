@@ -124,7 +124,7 @@ function Write-CommandResult ([string] $Name, [string []] $Arguments, $Result)
 		'===== stderr =====',
 		$Result.StandardError
 	) -join [Environment]::NewLine
-	Set-Content -LiteralPath $path -Value $content -Encoding ASCII
+	Set-Content -LiteralPath $path -Value $content -Encoding UTF8
 }
 
 function Invoke-Adb ([string []] $Arguments, [int] $TimeoutSeconds = 30, [switch] $Quiet)
@@ -171,8 +171,8 @@ function Invoke-Adb ([string []] $Arguments, [int] $TimeoutSeconds = 30, [switch
 			$process.WaitForExit()
 		}
 
-		[string] $standardOutput = if (Test-Path $stdoutPath) { Get-Content -LiteralPath $stdoutPath -Raw } else { "" }
-		[string] $standardError = if (Test-Path $stderrPath) { Get-Content -LiteralPath $stderrPath -Raw } else { "" }
+		[string] $standardOutput = if (Test-Path $stdoutPath) { Get-Content -LiteralPath $stdoutPath -Raw -Encoding UTF8 } else { "" }
+		[string] $standardError = if (Test-Path $stderrPath) { Get-Content -LiteralPath $stderrPath -Raw -Encoding UTF8 } else { "" }
 		if ($null -eq $standardOutput) {
 			$standardOutput = ""
 		}
@@ -216,14 +216,17 @@ function Get-AdbDeviceSnapshot ([string] $Name)
 
 	$devices = @()
 	foreach ($line in ($result.StandardOutput -split '\r?\n')) {
-		if (-not $line -or $line.StartsWith('List of devices attached', [StringComparison]::OrdinalIgnoreCase)) {
+		$trimmedLine = $line.Trim()
+		if (-not $trimmedLine -or
+				$trimmedLine.StartsWith('List of devices attached', [StringComparison]::OrdinalIgnoreCase) -or
+				$trimmedLine.StartsWith('*', [StringComparison]::Ordinal)) {
 			continue
 		}
-		if ($line -match '^\s*(\S+)\s+(\S+)(?:\s+.*)?$') {
+		if ($trimmedLine -match '^(\S+)\s+(\S+)(?:\s+.*)?$') {
 			$devices += [pscustomobject]@{
 				Serial = $Matches[1]
 				State = $Matches[2].ToLowerInvariant()
-				Line = $line.Trim()
+				Line = $trimmedLine
 			}
 		}
 	}
@@ -409,7 +412,7 @@ function Capture-DeviceDiagnostics ([string] $Serial, [string] $Name)
 	}
 
 	$safeName = $Name -replace '[^A-Za-z0-9_.-]', '-'
-	Set-Content -LiteralPath (Join-Path $uploadDirectory "device-state-$ConfigurationName-$safeName.log") -Value ($content -join [Environment]::NewLine) -Encoding ASCII
+	Set-Content -LiteralPath (Join-Path $uploadDirectory "device-state-$ConfigurationName-$safeName.log") -Value ($content -join [Environment]::NewLine) -Encoding UTF8
 }
 
 function Restart-AndroidDevice ([string] $Serial)
@@ -517,7 +520,7 @@ function Verify-MauiR2RPackage ([string] $Serial)
 	$pathArguments = @('-s', $Serial, 'shell', 'pm', 'path', $PackageName)
 	$pathResult = Invoke-Adb $pathArguments -TimeoutSeconds 30
 	Write-CommandResult "pm-path-command-$ConfigurationName" $pathArguments $pathResult
-	Set-Content -LiteralPath (Join-Path $uploadDirectory "pm-path-$ConfigurationName.log") -Value $pathResult.StandardOutput -Encoding ASCII
+	Set-Content -LiteralPath (Join-Path $uploadDirectory "pm-path-$ConfigurationName.log") -Value $pathResult.StandardOutput -Encoding UTF8
 	if ($pathResult.ExitCode -ne 0 -or -not $pathResult.StandardOutput.Trim().StartsWith('package:', [StringComparison]::Ordinal)) {
 		throw "The MAUI R2R package '$PackageName' was not present after installation."
 	}
@@ -525,7 +528,7 @@ function Verify-MauiR2RPackage ([string] $Serial)
 	$dumpsysArguments = @('-s', $Serial, 'shell', 'dumpsys', 'package', $PackageName)
 	$dumpsysResult = Invoke-Adb $dumpsysArguments -TimeoutSeconds 30 -Quiet
 	Write-CommandResult "dumpsys-package-command-$ConfigurationName" $dumpsysArguments $dumpsysResult
-	Set-Content -LiteralPath (Join-Path $uploadDirectory "dumpsys-package-$ConfigurationName.log") -Value $dumpsysResult.StandardOutput -Encoding ASCII
+	Set-Content -LiteralPath (Join-Path $uploadDirectory "dumpsys-package-$ConfigurationName.log") -Value $dumpsysResult.StandardOutput -Encoding UTF8
 	if ($dumpsysResult.ExitCode -ne 0) {
 		Write-Warning "Could not capture dumpsys details for installed package '$PackageName'."
 	}
@@ -607,7 +610,7 @@ try {
 	$logcatArguments = @('-s', $selectedSerial, 'logcat', '-d', '-b', 'all')
 	$logcatResult = Invoke-Adb $logcatArguments -TimeoutSeconds 60 -Quiet
 	Write-CommandResult "logcat-command-$ConfigurationName" $logcatArguments $logcatResult
-	Set-Content -LiteralPath (Join-Path $uploadDirectory "logcat-$ConfigurationName.log") -Value $logcatResult.StandardOutput -Encoding ASCII
+	Set-Content -LiteralPath (Join-Path $uploadDirectory "logcat-$ConfigurationName.log") -Value $logcatResult.StandardOutput -Encoding UTF8
 
 	if ($pidResult.ExitCode -ne 0 -or -not $pidResult.StandardOutput.Trim()) {
 		throw "The MAUI R2R APK did not remain running after launch."

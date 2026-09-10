@@ -76,6 +76,10 @@ if ($command -eq 'version') {
 
 if ($command -eq 'devices -l') {
 	Write-Output 'List of devices attached'
+	if ($scenario -eq 'daemon-noise') {
+		Write-Output '* daemon not running; starting now at tcp:5037'
+		Write-Output '* daemon started successfully'
+	}
 	switch ($scenario) {
 		'recover-device' {
 			if ($serverRestarted) {
@@ -122,7 +126,11 @@ if ($command -match '^-s test-device shell pm path android$') {
 }
 
 if ($command -match '^-s test-device shell getprop$') {
-	Write-Output '[ro.build.fingerprint]: [test/fingerprint]'
+	if ($scenario -eq 'unicode-diagnostics') {
+		Write-Output ('[ro.product.name]: [caf' + [string][char]0x00E9 + '-' + [string][char]0x6F22 + ']')
+	} else {
+		Write-Output '[ro.build.fingerprint]: [test/fingerprint]'
+	}
 	exit 0
 }
 
@@ -142,12 +150,20 @@ if ($command -match '^-s test-device shell pm list packages -3 -U$') {
 }
 
 if ($command -match '^-s test-device shell pm path com\.xamarin\.mauir2r\.') {
-	Write-Output 'package:/data/app/maui/base.apk'
+	if ($scenario -eq 'unicode-diagnostics') {
+		Write-Output ('package:/data/app/caf' + [string][char]0x00E9 + '-' + [string][char]0x6F22 + '/base.apk')
+	} else {
+		Write-Output 'package:/data/app/maui/base.apk'
+	}
 	exit 0
 }
 
 if ($command -match '^-s test-device shell dumpsys package com\.xamarin\.mauir2r\.') {
-	Write-Output 'Package diagnostic output'
+	if ($scenario -eq 'unicode-diagnostics') {
+		Write-Output ('Package label: caf' + [string][char]0x00E9 + '-' + [string][char]0x6F22)
+	} else {
+		Write-Output 'Package diagnostic output'
+	}
 	exit 0
 }
 
@@ -215,7 +231,11 @@ if ($command -match '^-s test-device shell pidof com\.xamarin\.mauir2r\.') {
 }
 
 if ($command -eq '-s test-device logcat -d -b all') {
-	Write-Output 'test logcat'
+	if ($scenario -eq 'unicode-diagnostics') {
+		Write-Output ('FATAL EXCEPTION: caf' + [string][char]0x00E9 + '-' + [string][char]0x6F22)
+	} else {
+		Write-Output 'test logcat'
+	}
 	exit 0
 }
 
@@ -284,6 +304,10 @@ exit 2
 	$pollSnapshots = @(Get-ChildItem -LiteralPath $recoveredAfterPolls.Directory -Filter 'adb-devices-recover-device-after-polls-post-adb-restart*.log')
 	Assert-Equal 3 $pollSnapshots.Count 'Each device recovery poll must preserve a separate adb devices snapshot.'
 
+	$daemonNoise = Invoke-TestCase 'daemon-noise' 0
+	Assert-NotContains $daemonNoise.Transcript '^kill-server$' 'ADB daemon startup messages must not be treated as extra or unauthorized devices.'
+	Assert-MatchCount $daemonNoise.Transcript ' install -r ' 1 'ADB daemon startup messages must not block installation on the one real device.'
+
 	$unauthorized = Invoke-TestCase 'unauthorized' 1
 	Assert-MatchCount $unauthorized.Transcript '^kill-server$' 1 'Unauthorized device flow must attempt one ADB server restart.'
 	Assert-NotContains $unauthorized.Transcript ' install -r ' 'Persistent unauthorized device flow must fail before installation.'
@@ -323,6 +347,22 @@ exit 2
 	$pidMissing = Invoke-TestCase 'pid-missing' 1
 	Assert-Contains $pidMissing.Output 'did not remain running after launch' "Empty pidof output must report the smoke-test failure instead of a null-reference error. Output: $($pidMissing.Output -join ' | ')"
 	Assert-NotContains $pidMissing.Output 'null-valued expression' 'Empty adb output must remain a non-null string.'
+
+	$unicodeDiagnostics = Invoke-TestCase 'unicode-diagnostics' 0 $false
+	$unicodeText = 'caf' + [string][char]0x00E9 + '-' + [string][char]0x6F22
+	$unicodeArtifacts = @(
+		'device-state-unicode-diagnostics-initial.log',
+		'pm-path-command-unicode-diagnostics.log',
+		'pm-path-unicode-diagnostics.log',
+		'dumpsys-package-command-unicode-diagnostics.log',
+		'dumpsys-package-unicode-diagnostics.log',
+		'logcat-command-unicode-diagnostics.log',
+		'logcat-unicode-diagnostics.log'
+	)
+	foreach ($artifact in $unicodeArtifacts) {
+		$content = Get-Content -LiteralPath (Join-Path $unicodeDiagnostics.Directory $artifact) -Raw -Encoding UTF8
+		Assert-Contains @($content) ([Regex]::Escape($unicodeText)) "ADB diagnostic artifact '$artifact' must preserve UTF-8 output."
+	}
 
 	$overallTimeout = Invoke-TestCase 'overall-timeout' 1 $true 0 1
 	Assert-MatchCount $overallTimeout.Transcript '^version$' 1 'The end-to-end deadline must stop the hanging adb command without starting later operations.'
