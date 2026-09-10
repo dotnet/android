@@ -12,6 +12,7 @@
     <Project Path="tests/CodeGen-Binding/Xamarin.Android.FixJavaAbstractMethod-APIv2Binding/Xamarin.Android.FixJavaAbstractMethod-APIv2Binding.csproj" />
     <Project Path="tests/CodeGen-Binding/Xamarin.Android.FixJavaAbstractMethod-Library/Xamarin.Android.FixJavaAbstractMethod-Library.csproj" />
     <Project Path="tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj" />
+    <Project Path="tests/CodeGen-Binding/Xamarin.Android.LegacyThresholdBinding/Xamarin.Android.LegacyThresholdBinding.csproj" />
     <Project Path="tests/CodeGen-Binding/Xamarin.Android.LibraryProjectZip-LibBinding/Xamarin.Android.LibraryProjectZip-LibBinding.csproj" />
     <Project Path="tests/CodeGen-Binding/Xamarin.Android.McwGen-Tests/Xamarin.Android.McwGen-Tests.csproj" />
   </Folder>

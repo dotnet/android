@@ -10,7 +10,7 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 	// Metadata.xml XPath class reference: path="/api/package[@name='com.xamarin.android']/class[@name='Parent.Child']"
 	[global::Android.Runtime.Register ("com/xamarin/android/Parent$Child", DoNotGenerateAcw=true)]
 	public partial class Child : Java.Lang.Object {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("com/xamarin/android/Parent$Child", typeof (Child));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("com/xamarin/android/Parent$Child", typeof (Child));
 
 		internal static new IntPtr class_ref {
 			get { return _members.JniPeerType.PeerReference.Handle; }
@@ -20,18 +20,6 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
 		}
 
 		protected Child (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
@@ -54,19 +42,7 @@ internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
 		get { return _members_com_xamarin_android_Parent; }
 	}
 
-	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-	protected override IntPtr ThresholdClass {
-		get { return _members_com_xamarin_android_Parent.JniPeerType.PeerReference.Handle; }
-	}
-
-	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-	protected override global::System.Type ThresholdType {
-		get { return _members_com_xamarin_android_Parent.ManagedPeerType; }
-	}
-
-	static readonly JniPeerMembers _members_com_xamarin_android_Parent = new XAPeerMembers ("com/xamarin/android/Parent", typeof (IParentInvoker));
+	static readonly JniPeerMembers _members_com_xamarin_android_Parent = new JniPeerMembers ("com/xamarin/android/Parent", typeof (IParentInvoker));
 
 	public IParentInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{

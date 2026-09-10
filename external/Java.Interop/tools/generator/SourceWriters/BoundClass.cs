@@ -119,10 +119,6 @@ namespace generator.SourceWriters
 
 			if (klass.BaseGen != null && klass.InheritsObject) {
 				Properties.Add (new JniPeerMembersGetter ());
-				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-					Properties.Add (new ClassThresholdClassGetter ());
-					Properties.Add (new ThresholdTypeGetter ());
-				}
 			}
 		}
 

@@ -1,7 +1,7 @@
 // Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']"
 [Register ("java/code/IMyInterface", "", "java.code.IMyInterfaceInvoker")]
 public partial interface IMyInterface : IJavaObject, IJavaPeerable {
-	private static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/IMyInterface", typeof (IMyInterface), isInterface: true);
+	private static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterface), isInterface: true);
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='DoDeclaration' and count(parameter)=0]"
 	[Register ("DoDeclaration", "()V", "GetDoDeclarationHandler:java.code.IMyInterfaceInvoker, MyAssembly")]
@@ -52,19 +52,7 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 		get { return _members_java_code_IMyInterface; }
 	}
 
-	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-	protected override IntPtr ThresholdClass {
-		get { return _members_java_code_IMyInterface.JniPeerType.PeerReference.Handle; }
-	}
-
-	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-	protected override global::System.Type ThresholdType {
-		get { return _members_java_code_IMyInterface.ManagedPeerType; }
-	}
-
-	static readonly JniPeerMembers _members_java_code_IMyInterface = new XAPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
+	static readonly JniPeerMembers _members_java_code_IMyInterface = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
 
 	public IMyInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{

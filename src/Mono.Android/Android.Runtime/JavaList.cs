@@ -10,7 +10,7 @@ namespace Android.Runtime {
 	// java.util.ArrayList allows null values
 	public partial class JavaList : Java.Lang.Object, System.Collections.IList {
 
-		internal static readonly JniPeerMembers list_members = new XAPeerMembers ("java/util/List", typeof (JavaList), isInterface: true);
+		internal static readonly JniPeerMembers list_members = new JniPeerMembers ("java/util/List", typeof (JavaList), isInterface: true);
 
 		//
 		// Exception audit:

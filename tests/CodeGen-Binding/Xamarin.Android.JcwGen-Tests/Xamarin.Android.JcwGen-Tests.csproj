@@ -37,6 +37,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\TestRunner.Core\TestRunner.Core.NET.csproj" />
+    <ProjectReference Include="..\Xamarin.Android.LegacyThresholdBinding\Xamarin.Android.LegacyThresholdBinding.csproj" />
     <ProjectReference Include="..\Xamarin.Android.FixJavaAbstractMethod-APIv2Binding\Xamarin.Android.FixJavaAbstractMethod-APIv2Binding.csproj" />
     <ProjectReference Include="..\Xamarin.Android.FixJavaAbstractMethod-Library\Xamarin.Android.FixJavaAbstractMethod-Library.csproj" />
     <ProjectReference Include="..\Xamarin.Android.LibraryProjectZip-LibBinding\Xamarin.Android.LibraryProjectZip-LibBinding.csproj" />

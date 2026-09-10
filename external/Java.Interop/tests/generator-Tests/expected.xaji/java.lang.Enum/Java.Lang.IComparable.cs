@@ -27,19 +27,7 @@ namespace Java.Lang {
 			get { return _members_java_lang_Comparable; }
 		}
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members_java_lang_Comparable.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members_java_lang_Comparable.ManagedPeerType; }
-		}
-
-		static readonly JniPeerMembers _members_java_lang_Comparable = new XAPeerMembers ("java/lang/Comparable", typeof (IComparableInvoker));
+		static readonly JniPeerMembers _members_java_lang_Comparable = new JniPeerMembers ("java/lang/Comparable", typeof (IComparableInvoker));
 
 		public IComparableInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
