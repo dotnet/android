@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
+using System.Text.Json;
 
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -119,17 +119,25 @@ namespace Xamarin.Android.Build.Tests
 			);
 
 			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-			var assets = File.ReadAllText (Path.Combine (intermediate, "..", "project.assets.json"));
-			var runtimePackMatch = Regex.Match (assets, "\"Microsoft\\.NETCore\\.App\\.Runtime\\.NativeAOT\\.[a-z0-9.-]+/([^\"]+)\"");
-			Assert.IsTrue (
-				runtimePackMatch.Success,
+			using var assets = JsonDocument.Parse (File.ReadAllText (Path.Combine (intermediate, "..", "project.assets.json")));
+			var runtimePacks = assets.RootElement
+				.GetProperty ("project")
+				.GetProperty ("frameworks")
+				.EnumerateObject ()
+				.SelectMany (framework => framework.Value.GetProperty ("downloadDependencies").EnumerateArray ())
+				.Where (dependency => dependency.GetProperty ("name").GetString ()?.StartsWith ("Microsoft.NETCore.App.Runtime.NativeAOT.", StringComparison.Ordinal) == true)
+				.ToArray ();
+			Assert.IsNotEmpty (
+				runtimePacks,
 				"Restore should select a NativeAOT runtime pack."
 			);
-			Assert.AreNotEqual (
-				"0.0.0",
-				runtimePackMatch.Groups [1].Value,
-				"Restore should ignore MicrosoftNETCoreAppRefPackageVersion and use the SDK-selected NativeAOT runtime pack version."
-			);
+			foreach (var runtimePack in runtimePacks) {
+				Assert.AreNotEqual (
+					"[0.0.0, 0.0.0]",
+					runtimePack.GetProperty ("version").GetString (),
+					"Restore should ignore MicrosoftNETCoreAppRefPackageVersion and use the SDK-selected NativeAOT runtime pack version."
+				);
+			}
 		}
 
 		[Test]
