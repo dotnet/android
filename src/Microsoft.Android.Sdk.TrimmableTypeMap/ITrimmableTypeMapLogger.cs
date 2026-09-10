@@ -22,6 +22,17 @@ public interface ITrimmableTypeMapLogger
 		string unresolvedAssemblyPath);
 	void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName);
 	void LogInvalidJavaNameError (string javaName, string invalidIdentifier);
+	void LogDuplicateJavaTypeError (string javaName);
+	void LogDuplicateJavaTypeDetailsError (string javaName, string managedTypeName);
+	void LogExportFieldWithParametersError ();
+	void LogExportOnGenericTypeError ();
+	void LogExportFieldOnGenericTypeError ();
+	void LogExportFieldReturnsVoidError ();
+	void LogUnsupportedExportSignatureError (string memberName, string managedTypeName);
+	void LogAmbiguousConstructorSignatureError (string managedTypeName, string jniSignature);
+	void LogUnsupportedConstructorParameterTypeError (string managedTypeName, string parameterType);
+	void LogMissingBaseConstructorError (string managedTypeName, string jniSignature);
+	void LogInvalidSuperArgumentsStringError (string managedTypeName, string superArgumentsString);
 	void LogCustomJavaObjectError (string managedTypeName);
 	void LogCustomJavaObjectWarning (string managedTypeName);
 }

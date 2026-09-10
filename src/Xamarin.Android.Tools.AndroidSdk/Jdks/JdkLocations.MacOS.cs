@@ -12,8 +12,7 @@ namespace Xamarin.Android.Tools {
 		{
 			return GetUnixConfiguredJdkPaths (logger)
 				.Select (p => JdkInfo.TryGetJdkInfo (p, logger, "monodroid-config.xml"))
-				.Where (jdk => jdk != null)
-				.Select (jdk => jdk!)
+				.OfType<JdkInfo> ()
 				.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
 		}
 

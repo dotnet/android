@@ -884,6 +884,23 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
+  <data name="XA4325" xml:space="preserve">
+    <value>未能重写 R8 的托管 JNI 名称。{0}</value>
+    <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4325_* resources.</comment>
+  </data>
+  <data name="XA4325_AssemblyFailure" xml:space="preserve">
+    <value>无法重写程序集“{0}”中的 JNI 名称: {1}</value>
+    <comment>{0} - The path of the assembly which could not be rewritten.
+{1} - The underlying message describing why the assembly could not be rewritten. It is not localized.</comment>
+  </data>
+  <data name="XA4325_SourceDestinationCount" xml:space="preserve">
+    <value>'SourceFiles' 和 'DestinationFiles' 项组必须包含相同数量的项。</value>
+    <comment>The following are literal MSBuild item group names and should not be translated: 'SourceFiles', 'DestinationFiles'.</comment>
+  </data>
+  <data name="XA4326" xml:space="preserve">
+    <value>无法安全地重写 JNI 成员查找，因为其类句柄没有结构上无歧义的 JNIEnv.FindClass 源。</value>
+    <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>缺少 Android NDK 工具链目录“{0}”。请安装 Android NDK。</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -1128,6 +1145,10 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - The path to the AndroidManifest.xml file.
 </comment>
   </data>
+  <data name="XA1049" xml:space="preserve">
+    <value>“AndroidEnableMarshalMethods” 和 “PublishReadyToRun” MSBuild 属性不能同时设置为 “true”。将一个属性设置为 “false”。</value>
+    <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>不满足 Java 依赖项“{0}”。</value>
     <comment>The following are literal names and should not be translated: Java.
@@ -1234,10 +1255,40 @@ In this message, the term "handheld app" means "app for handheld devices."
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
   </data>
   <data name="XA4258" xml:space="preserve">
-    <value>Java 名称 "{0}" 包含保留的 Java 标识符 "{1}"。更改包名称或类型名称。</value>
+    <value>Java name '{0}' contains invalid or unsupported Java identifier '{1}'. Change the package or type name.</value>
     <comment>The following are literal names and should not be translated: Java.
 {0} - Java package or type name
-{1} - Java reserved keyword or restricted identifier</comment>
+{1} - Invalid, unsupported, reserved, or restricted Java identifier</comment>
+  </data>
+  <data name="XA4259" xml:space="preserve">
+    <value>Type '{0}' has multiple managed constructors that map to the same Java Native Interface (JNI) signature '{1}'. Change the constructor parameter types so each constructor has a unique JNI signature.</value>
+    <comment>The following terms should not be translated: Java Native Interface, JNI.
+{0} - Fully-qualified managed type name
+{1} - Colliding JNI constructor signature</comment>
+  </data>
+  <data name="XA4260" xml:space="preserve">
+    <value>Type '{0}' has a constructor parameter type '{1}' that cannot be represented in a Java constructor. Remove the constructor or change the parameter to a supported Java type.</value>
+    <comment>The following term should not be translated: Java.
+{0} - Fully-qualified managed type name
+{1} - Unsupported managed constructor parameter type</comment>
+  </data>
+  <data name="XA4261" xml:space="preserve">
+    <value>Type '{0}' has Java constructor signature '{1}', but its base type does not expose a compatible Java constructor. Add a compatible base constructor or remove the derived constructor.</value>
+    <comment>The following term should not be translated: Java.
+{0} - Fully-qualified managed type name
+{1} - JNI signature of the derived constructor</comment>
+  </data>
+  <data name="XA4262" xml:space="preserve">
+    <value>Type '{0}' has an invalid [Export] SuperArgumentsString value '{1}'. The value references a constructor parameter that does not exist.</value>
+    <comment>The following terms should not be translated: Export, SuperArgumentsString.
+{0} - Fully-qualified managed type name
+{1} - Invalid SuperArgumentsString value</comment>
+  </data>
+  <data name="XA4263" xml:space="preserve">
+    <value>导出的成员“{0}”具有不受支持的签名类型“{1}”。请使用 Java 对等类型、受支持的托管到 Java 映射或 [ExportParameter]。</value>
+    <comment>The following are literal names and should not be translated: Java, [ExportParameter].
+{0} - Fully-qualified managed member name
+{1} - Managed parameter or return type</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>命令 '{0}' 失败。\n{1}</value>

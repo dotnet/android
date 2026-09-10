@@ -305,6 +305,16 @@ namespace Java.InteropTests
 				Assert.AreEqual (43, value.IntValue ());
 			}
 		}
+
+		[Test, Category ("Export")]
+		public void ExportField_InstancePrimitive_InitializerVisibleFromJava ()
+		{
+			using var value = new ExportInstanceField ();
+			using var klass = Java.Lang.Class.FromType (typeof (ExportInstanceField));
+			var field = JNIEnv.GetFieldID (klass.Handle, "ANSWER", "I");
+			Assert.AreNotEqual (IntPtr.Zero, field, "JNI field id for ANSWER not found");
+			Assert.AreEqual (42, JNIEnv.GetIntField (value.Handle, field));
+		}
 	}
 
 	// ---------------------------------------------------------------
@@ -339,6 +349,12 @@ namespace Java.InteropTests
 
 		[ExportField ("OBJECT_ANSWER")]
 		public static Java.Lang.Integer GetObjectAnswer () => new Java.Lang.Integer (43);
+	}
+
+	class ExportInstanceField : Java.Lang.Object
+	{
+		[ExportField ("ANSWER")]
+		public int GetAnswer () => 42;
 	}
 
 	class ExportString : Java.Lang.Object

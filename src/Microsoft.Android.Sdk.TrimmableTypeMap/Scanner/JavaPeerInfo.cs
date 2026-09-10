@@ -58,10 +58,15 @@ public sealed record JavaPeerInfo
 	public string? BaseJavaName { get; init; }
 
 	/// <summary>
-	/// JNI names of Java interfaces this type implements, e.g., ["android/view/View$OnClickListener"].
-	/// Needed by JCW Java source generation ("implements" clause).
+	/// JNI names of direct Java interfaces this type implements, in managed metadata order.
 	/// </summary>
 	public IReadOnlyList<string> ImplementedInterfaceJavaNames { get; init; } = Array.Empty<string> ();
+
+	/// <summary>
+	/// Ordered JNI names to emit in the Java callable wrapper's implements clause.
+	/// Redundant parent interfaces and duplicate Java names are omitted.
+	/// </summary>
+	internal IReadOnlyList<string>? JavaCallableWrapperInterfaceJavaNames { get; init; }
 
 	/// <summary>
 	/// Java annotations forwarded from managed custom attributes decorated with
@@ -119,6 +124,12 @@ public sealed record JavaPeerInfo
 	/// Each has a JNI signature and an ordinal index for the nctor_N native method.
 	/// </summary>
 	public IReadOnlyList<JavaConstructorInfo> JavaConstructors { get; init; } = [];
+
+	/// <summary>
+	/// Constructor shapes which cannot be emitted safely by the trimmable type map.
+	/// Generation reports these before producing any Java or type-map output.
+	/// </summary>
+	public IReadOnlyList<ConstructorDiagnosticInfo> ConstructorDiagnostics { get; init; } = [];
 
 	/// <summary>
 	/// Java fields from [ExportField] attributes.
@@ -369,6 +380,11 @@ public sealed record JavaConstructorInfo
 	internal IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
 
 	/// <summary>
+	/// Per-parameter [ExportParameter] kinds for constructor argument marshalling.
+	/// </summary>
+	internal IReadOnlyList<ExportParameterKindInfo> ManagedParameterExportKinds { get; init; } = [];
+
+	/// <summary>
 	/// True when this Java constructor has a matching public managed constructor on the target type.
 	/// </summary>
 	public bool HasMatchingManagedCtor { get; init; }
@@ -377,6 +393,20 @@ public sealed record JavaConstructorInfo
 	/// Java annotations forwarded from the managed constructor.
 	/// </summary>
 	public IReadOnlyList<JavaAnnotationInfo> Annotations { get; init; } = [];
+}
+
+public sealed record ConstructorDiagnosticInfo
+{
+	public required ConstructorDiagnosticKind Kind { get; init; }
+	public required string Detail { get; init; }
+}
+
+public enum ConstructorDiagnosticKind
+{
+	AmbiguousJniSignature,
+	UnsupportedParameterType,
+	MissingBaseConstructor,
+	InvalidSuperArgumentsString,
 }
 
 /// <summary>
@@ -394,6 +424,12 @@ public sealed record JavaFieldInfo
 	/// Java type name for the field, e.g., "java.lang.String".
 	/// </summary>
 	public required string JavaTypeName { get; init; }
+
+	/// <summary>
+	/// JNI type descriptor retained for validation where Java source dots cannot distinguish
+	/// package segments from nested type segments.
+	/// </summary>
+	internal string? JniTypeName { get; init; }
 
 	/// <summary>
 	/// Name of the method that initializes this field, e.g., "GetInstance".

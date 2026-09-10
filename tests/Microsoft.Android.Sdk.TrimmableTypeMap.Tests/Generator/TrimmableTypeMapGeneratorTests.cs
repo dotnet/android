@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using System.Xml.Linq;
 using Xunit;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
@@ -14,33 +15,33 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 {
 	readonly List<string> logMessages = new ();
 
-	sealed class TestTrimmableTypeMapLogger (List<string> logMessages, List<string>? warnings = null) : ITrimmableTypeMapLogger
+	sealed class TestTrimmableTypeMapLogger (List<string> logMessages, List<string>? warnings = null) : NoOpTrimmableTypeMapLogger
 	{
-		public void LogNoJavaPeerTypesFound () =>
+		public override void LogNoJavaPeerTypesFound () =>
 			logMessages.Add ("No Java peer types found, skipping typemap generation.");
-		public void LogJavaPeerScanInfo (int assemblyCount, int peerCount) =>
+		public override void LogJavaPeerScanInfo (int assemblyCount, int peerCount) =>
 			logMessages.Add ($"Scanned {assemblyCount} assemblies, found {peerCount} Java peer types.");
-		public void LogGeneratingJcwFilesInfo (int jcwPeerCount, int totalPeerCount) =>
+		public override void LogGeneratingJcwFilesInfo (int jcwPeerCount, int totalPeerCount) =>
 			logMessages.Add ($"Generating JCW files for {jcwPeerCount} types (filtered from {totalPeerCount} total).");
-		public void LogDeferredRegistrationTypesInfo (int typeCount) =>
+		public override void LogDeferredRegistrationTypesInfo (int typeCount) =>
 			logMessages.Add ($"Found {typeCount} Application/Instrumentation types for deferred registration.");
-		public void LogGeneratedTypeMapAssemblyInfo (string assemblyName, int typeCount) =>
+		public override void LogGeneratedTypeMapAssemblyInfo (string assemblyName, int typeCount) =>
 			logMessages.Add ($"  {assemblyName}: {typeCount} types");
-		public void LogGeneratedRootTypeMapInfo (int assemblyReferenceCount) =>
+		public override void LogGeneratedRootTypeMapInfo (int assemblyReferenceCount) =>
 			logMessages.Add ($"  Root: {assemblyReferenceCount} per-assembly refs");
-		public void LogGeneratedTypeMapAssembliesInfo (int assemblyCount) =>
+		public override void LogGeneratedTypeMapAssembliesInfo (int assemblyCount) =>
 			logMessages.Add ($"Generated {assemblyCount} typemap assemblies.");
-		public void LogGeneratedJcwFilesInfo (int sourceCount) =>
+		public override void LogGeneratedJcwFilesInfo (int sourceCount) =>
 			logMessages.Add ($"Generated {sourceCount} JCW Java source files.");
-		public void LogRootingManifestReferencedTypeInfo (string javaTypeName, string managedTypeName) =>
+		public override void LogRootingManifestReferencedTypeInfo (string javaTypeName, string managedTypeName) =>
 			logMessages.Add ($"Rooting manifest-referenced type '{javaTypeName}' ({managedTypeName}) as unconditional.");
-		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
+		public override void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
 			warnings?.Add ($"Manifest-referenced type '{javaTypeName}' was not found in any scanned assembly. It may be a framework type.");
-		public void LogLibraryManifestMergeWarning (string message) =>
+		public override void LogLibraryManifestMergeWarning (string message) =>
 			warnings?.Add (message);
-		public void LogInvalidManifestPlaceholderWarning (string placeholders) =>
+		public override void LogInvalidManifestPlaceholderWarning (string placeholders) =>
 			warnings?.Add ($"Invalid $(AndroidManifestPlaceholders) '{placeholders}'.");
-		public void LogUnresolvableJavaPeerSkippedWarning (
+		public override void LogUnresolvableJavaPeerSkippedWarning (
 			string managedTypeName,
 			string assemblyName,
 			string unresolvedTypeName,
@@ -49,13 +50,35 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			warnings?.Add (
 				$"Skipping Java peer '{managedTypeName}' from '{assemblyName}' because referenced type " +
 				$"'{unresolvedTypeName}' from '{unresolvedAssemblyName}' at '{unresolvedAssemblyPath}' could not be resolved.");
-		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
+		public override void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
 			logMessages.Add ($"XA4251: Type '{managedTypeName}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map.");
-		public void LogInvalidJavaNameError (string javaName, string invalidIdentifier) =>
-			logMessages.Add ($"XA4258: Java name '{javaName}' contains reserved Java identifier '{invalidIdentifier}'.");
-		public void LogCustomJavaObjectError (string managedTypeName) =>
+		public override void LogInvalidJavaNameError (string javaName, string invalidIdentifier) =>
+			logMessages.Add ($"XA4258: Java name '{javaName}' contains invalid or unsupported Java identifier '{invalidIdentifier}'.");
+		public override void LogDuplicateJavaTypeError (string javaName) =>
+			logMessages.Add ($"XA4215: The Java type `{javaName}` is generated by more than one managed type.");
+		public override void LogDuplicateJavaTypeDetailsError (string javaName, string managedTypeName) =>
+			logMessages.Add ($"XA4215:   `{javaName}` generated by: {managedTypeName}");
+		public override void LogExportFieldWithParametersError () =>
+			logMessages.Add ("XA4205: [ExportField] can only be used on methods with 0 parameters.");
+		public override void LogExportOnGenericTypeError () =>
+			logMessages.Add ("XA4206: [Export] cannot be used on a generic type.");
+		public override void LogExportFieldReturnsVoidError () =>
+			logMessages.Add ("XA4208: [ExportField] cannot be used on a method returning 'void'.");
+		public override void LogExportFieldOnGenericTypeError () =>
+			logMessages.Add ("XA4207: [ExportField] cannot be used on a generic type.");
+		public override void LogUnsupportedExportSignatureError (string memberName, string managedTypeName) =>
+			logMessages.Add ($"XA4263: The exported member '{memberName}' has unsupported signature type '{managedTypeName}'.");
+		public override void LogAmbiguousConstructorSignatureError (string managedTypeName, string jniSignature) =>
+			logMessages.Add ($"XA4259: Type '{managedTypeName}' has multiple managed constructors that map to JNI signature '{jniSignature}'.");
+		public override void LogUnsupportedConstructorParameterTypeError (string managedTypeName, string parameterType) =>
+			logMessages.Add ($"XA4260: Type '{managedTypeName}' has a constructor parameter type '{parameterType}' that cannot be represented in Java.");
+		public override void LogMissingBaseConstructorError (string managedTypeName, string jniSignature) =>
+			logMessages.Add ($"XA4261: Type '{managedTypeName}' has constructor '{jniSignature}' with no callable Java base constructor.");
+		public override void LogInvalidSuperArgumentsStringError (string managedTypeName, string superArgumentsString) =>
+			logMessages.Add ($"XA4262: Type '{managedTypeName}' has invalid SuperArgumentsString '{superArgumentsString}'.");
+		public override void LogCustomJavaObjectError (string managedTypeName) =>
 			logMessages.Add ($"XA4212: Type `{managedTypeName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
-		public void LogCustomJavaObjectWarning (string managedTypeName) =>
+		public override void LogCustomJavaObjectWarning (string managedTypeName) =>
 			warnings?.Add ($"XA4212: Type `{managedTypeName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
 	}
 
@@ -63,7 +86,10 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	[InlineData ("com/for/Example", "for")]
 	[InlineData ("com/example/for", "for")]
 	[InlineData ("com/example/record", "record")]
-	public void ValidateJavaNames_ReservedIdentifier_LogsError (string javaName, string invalidIdentifier)
+	[InlineData ("com/1example/Peer", "1example")]
+	[InlineData ("com/e\u0301xample/Peer", "e\u0301xample")]
+	[InlineData ("com/\U00010428xample/Peer", "\U00010428xample")]
+	public void ValidateJavaNames_InvalidOrUnsupportedIdentifier_LogsError (string javaName, string invalidIdentifier)
 	{
 		var peers = new List<JavaPeerInfo> {
 			new JavaPeerInfo {
@@ -77,7 +103,67 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		};
 
 		Assert.False (CreateGenerator ().ValidateJavaNames (peers));
-		Assert.Contains (logMessages, message => message.Contains ($"XA4258: Java name '{javaName}' contains reserved Java identifier '{invalidIdentifier}'."));
+		Assert.Contains (
+			logMessages,
+			message => message.Contains (
+				$"XA4258: Java name '{javaName}' contains invalid or unsupported Java identifier '{invalidIdentifier}'.",
+				StringComparison.Ordinal
+			)
+		);
+	}
+
+	[Theory]
+	[InlineData (ConstructorDiagnosticKind.AmbiguousJniSignature, "(I)V", "XA4259")]
+	[InlineData (ConstructorDiagnosticKind.UnsupportedParameterType, "System.Int32&", "XA4260")]
+	[InlineData (ConstructorDiagnosticKind.MissingBaseConstructor, "(Ljava/lang/String;)V", "XA4261")]
+	[InlineData (ConstructorDiagnosticKind.InvalidSuperArgumentsString, "p1", "XA4262")]
+	public void ValidateConstructors_LogsCodedError (
+		ConstructorDiagnosticKind kind,
+		string detail,
+		string errorCode)
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/Type",
+				CompatJniName = "com/example/Type",
+				ManagedTypeName = "Example.Type",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Type",
+				AssemblyName = "Example",
+				ConstructorDiagnostics = [
+					new ConstructorDiagnosticInfo {
+						Kind = kind,
+						Detail = detail,
+					},
+				],
+			},
+		};
+
+		Assert.False (CreateGenerator ().ValidateConstructors (peers));
+		Assert.Contains (logMessages, message => message.StartsWith ($"{errorCode}:", StringComparison.Ordinal));
+	}
+
+	[Fact]
+	public void ValidateConstructors_IgnoresFrameworkPeers ()
+	{
+		var peer = new JavaPeerInfo {
+			JavaName = "android/example/FrameworkType",
+			CompatJniName = "android/example/FrameworkType",
+			ManagedTypeName = "Android.Example.FrameworkType",
+			ManagedTypeNamespace = "Android.Example",
+			ManagedTypeShortName = "FrameworkType",
+			AssemblyName = "Mono.Android",
+			IsFrameworkAssembly = true,
+			ConstructorDiagnostics = [
+				new ConstructorDiagnosticInfo {
+					Kind = ConstructorDiagnosticKind.UnsupportedParameterType,
+					Detail = "System.Object",
+				},
+			],
+		};
+
+		Assert.True (CreateGenerator ().ValidateConstructors ([peer]));
+		Assert.Empty (logMessages);
 	}
 
 	[Fact]
@@ -96,6 +182,163 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 
 		Assert.True (CreateGenerator ().ValidateJavaNames (peers));
 		Assert.DoesNotContain (logMessages, message => message.Contains ("XA4258"));
+	}
+
+	[Fact]
+	public void ValidateJavaNames_DuplicateGeneratedJcw_LogsXA4215 ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "examplelib/DuplicatePeer",
+				CompatJniName = "examplelib/DuplicatePeer",
+				ManagedTypeName = "Library1.FirstPeer",
+				ManagedTypeNamespace = "Library1",
+				ManagedTypeShortName = "FirstPeer",
+				AssemblyName = "Library1",
+			},
+			new JavaPeerInfo {
+				JavaName = "examplelib/DuplicatePeer",
+				CompatJniName = "examplelib/DuplicatePeer",
+				ManagedTypeName = "Library2.SecondPeer",
+				ManagedTypeNamespace = "Library2",
+				ManagedTypeShortName = "SecondPeer",
+				AssemblyName = "Library2",
+			},
+		};
+
+		Assert.False (CreateGenerator ().ValidateJavaNames (peers));
+		Assert.Contains (logMessages, message => message == "XA4215: The Java type `examplelib.DuplicatePeer` is generated by more than one managed type.");
+		Assert.Contains (logMessages, message => message == "XA4215:   `examplelib.DuplicatePeer` generated by: Library1.FirstPeer, Library1");
+		Assert.Contains (logMessages, message => message == "XA4215:   `examplelib.DuplicatePeer` generated by: Library2.SecondPeer, Library2");
+	}
+
+	[Theory]
+	[InlineData ("com/example/\u00a2Peer")]
+	[InlineData ("com/example/\u203fPeer")]
+	public void ValidateJavaNames_JavaTypeOnlyStartWithoutComponent_IsValid (string javaName)
+	{
+		var peer = new JavaPeerInfo {
+			JavaName = javaName,
+			CompatJniName = javaName,
+			ManagedTypeName = "Example.Type",
+			ManagedTypeNamespace = "Example",
+			ManagedTypeShortName = "Type",
+			AssemblyName = "Example",
+		};
+
+		Assert.True (CreateGenerator ().ValidateJavaNames ([peer]));
+		Assert.DoesNotContain (logMessages, message => message.Contains ("XA4258"));
+	}
+
+	[Fact]
+	public void ValidateJavaNames_JavaTypeOnlyNestedReferences_AreValid ()
+	{
+		const string nestedName = "com/example/\u00a2Outer$Inner";
+		var peer = new JavaPeerInfo {
+			JavaName = "com/example/Peer",
+			CompatJniName = "com/example/Peer",
+			ManagedTypeName = "Example.Type",
+			ManagedTypeNamespace = "Example",
+			ManagedTypeShortName = "Type",
+			AssemblyName = "Example",
+			JavaConstructors = [
+				new JavaConstructorInfo {
+					JniSignature = "()V",
+					ConstructorIndex = 0,
+					ThrownNames = [nestedName],
+				},
+			],
+			JavaFields = [
+				new JavaFieldInfo {
+					FieldName = "VALUE",
+					JavaTypeName = "com.example.\u00a2Outer.Inner",
+					JniTypeName = $"L{nestedName};",
+					InitializerMethodName = "GetValue",
+					Visibility = "public",
+				},
+			],
+		};
+
+		Assert.True (CreateGenerator ().ValidateJavaNames ([peer]));
+		Assert.DoesNotContain (logMessages, message => message.Contains ("XA4258"));
+	}
+
+	[Theory]
+	[InlineData ("com/example/\u00a2Peer", "\u00a2Peer")]
+	[InlineData ("com/example/\u203fPeer", "\u203fPeer")]
+	public void ValidateJavaNames_JavaTypeOnlyStartOnComponent_LogsError (string javaName, string invalidIdentifier)
+	{
+		var peer = new JavaPeerInfo {
+			JavaName = javaName,
+			CompatJniName = javaName,
+			ManagedTypeName = "Example.Type",
+			ManagedTypeNamespace = "Example",
+			ManagedTypeShortName = "Type",
+			AssemblyName = "Example",
+			ComponentAttribute = new ComponentInfo { Kind = ComponentKind.Activity },
+		};
+
+		Assert.False (CreateGenerator ().ValidateJavaNames ([peer]));
+		Assert.Contains (logMessages, message =>
+			message.Contains ($"Java name '{javaName}' contains invalid or unsupported Java identifier '{invalidIdentifier}'."));
+	}
+
+	[Fact]
+	public void ValidateJavaNames_JavaTypeOnlyStartOnAbstractComponent_IsValid ()
+	{
+		var peer = new JavaPeerInfo {
+			JavaName = "com/example/\u00a2Peer",
+			CompatJniName = "com/example/\u00a2Peer",
+			ManagedTypeName = "Example.Type",
+			ManagedTypeNamespace = "Example",
+			ManagedTypeShortName = "Type",
+			AssemblyName = "Example",
+			IsAbstract = true,
+			ComponentAttribute = new ComponentInfo { Kind = ComponentKind.Activity },
+		};
+
+		Assert.True (CreateGenerator ().ValidateJavaNames ([peer]));
+		Assert.DoesNotContain (logMessages, message => message.Contains ("XA4258"));
+	}
+
+	[Fact]
+	public void ValidateJavaNames_JavaTypeOnlyStartInManifestTemplate_LogsError ()
+	{
+		var manifest = XDocument.Parse ("""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+			  <application>
+			    <activity android:name=".¢Peer" />
+			  </application>
+			</manifest>
+			""");
+
+		Assert.False (CreateGenerator ().ValidateJavaNames ([], manifest: manifest));
+		Assert.Contains (logMessages, message =>
+			message.Contains ("Java name 'com.example.¢Peer' contains invalid or unsupported Java identifier '¢Peer'."));
+	}
+
+	[Fact]
+	public void ValidateJavaNames_DefaultPackageNestedThrownKeyword_LogsError ()
+	{
+		var peer = new JavaPeerInfo {
+			JavaName = "com/example/Peer",
+			CompatJniName = "com/example/Peer",
+			ManagedTypeName = "Example.Type",
+			ManagedTypeNamespace = "Example",
+			ManagedTypeShortName = "Type",
+			AssemblyName = "Example",
+			JavaConstructors = [
+				new JavaConstructorInfo {
+					JniSignature = "()V",
+					ConstructorIndex = 0,
+					ThrownNames = ["Outer$record"],
+				},
+			],
+		};
+
+		Assert.False (CreateGenerator ().ValidateJavaNames ([peer]));
+		Assert.Contains (logMessages, message =>
+			message.Contains ("Java name 'Outer$record' contains invalid or unsupported Java identifier 'record'."));
 	}
 
 	[Theory]
@@ -121,7 +364,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		};
 
 		Assert.False (CreateGenerator ().ValidateJavaNames (peers));
-		Assert.Contains (logMessages, message => message.Contains ($"XA4258: Java name '{referencedName}' contains reserved Java identifier '{invalidIdentifier}'."));
+		Assert.Contains (logMessages, message =>
+			message.Contains ($"XA4258: Java name '{referencedName}' contains invalid or unsupported Java identifier '{invalidIdentifier}'."));
 	}
 
 	[Theory]
@@ -162,7 +406,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		};
 
 		Assert.False (CreateGenerator ().ValidateJavaNames (peers));
-		Assert.Contains (logMessages, message => message.Contains ($"XA4258: Java name '{javaName}' contains reserved Java identifier '{invalidIdentifier}'."));
+		Assert.Contains (logMessages, message =>
+			message.Contains ($"XA4258: Java name '{javaName}' contains invalid or unsupported Java identifier '{invalidIdentifier}'."));
 	}
 
 	[Fact]
@@ -204,12 +449,17 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		};
 
 		Assert.False (CreateGenerator ().ValidateJavaNames (peers));
-		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$for' contains reserved Java identifier 'for'."));
-		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$record' contains reserved Java identifier 'record'."));
-		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$yield' contains reserved Java identifier 'yield'."));
-		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$permits' contains reserved Java identifier 'permits'."));
-		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$sealed' contains reserved Java identifier 'sealed'."));
-		Assert.Contains (logMessages, message => message.Contains ("Java name 'com.example.Outer.sealed' contains reserved Java identifier 'sealed'."));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$for' contains invalid or unsupported Java identifier 'for'."));
+		Assert.Contains (logMessages, message =>
+			message.Contains ("Java name 'com/example/Outer$record' contains invalid or unsupported Java identifier 'record'."));
+		Assert.Contains (logMessages, message =>
+			message.Contains ("Java name 'com/example/Outer$yield' contains invalid or unsupported Java identifier 'yield'."));
+		Assert.Contains (logMessages, message =>
+			message.Contains ("Java name 'com/example/Outer$permits' contains invalid or unsupported Java identifier 'permits'."));
+		Assert.Contains (logMessages, message =>
+			message.Contains ("Java name 'com/example/Outer$sealed' contains invalid or unsupported Java identifier 'sealed'."));
+		Assert.Contains (logMessages, message =>
+			message.Contains ("Java name 'com.example.Outer.sealed' contains invalid or unsupported Java identifier 'sealed'."));
 	}
 
 	[Fact]
@@ -239,14 +489,15 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 
 		Assert.True (basePeer.CannotRegisterInStaticConstructor);
 		Assert.False (CreateGenerator ().ValidateJavaNames (peers));
-		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$for' contains reserved Java identifier 'for'."));
+		Assert.Contains (logMessages, message =>
+			message.Contains ("Java name 'com/example/Outer$for' contains invalid or unsupported Java identifier 'for'."));
 	}
 
 	[Fact]
 	public void ValidateJavaNames_ReservedApplicationJavaClassIdentifier_LogsError ()
 	{
 		Assert.False (CreateGenerator ().ValidateJavaNames ([], "com.example.Outer.for"));
-		Assert.Contains (logMessages, message => message.Contains ("Java name 'com.example.Outer.for' contains reserved Java identifier 'for'."));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com.example.Outer.for' contains invalid or unsupported Java identifier 'for'."));
 	}
 
 	[Theory]
@@ -281,6 +532,29 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Empty (result.GeneratedJavaSources);
 		Assert.Empty (result.AllPeers);
 		Assert.Contains (logMessages, m => m.Contains ("No Java peer types found"));
+	}
+
+	[Fact]
+	public void Execute_InvalidManifestComponentWithoutPeers_ReportsError ()
+	{
+		var manifest = XDocument.Parse ("""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+			  <application>
+			    <activity android:name=".¢Peer" />
+			  </application>
+			</manifest>
+			""");
+
+		var result = CreateGenerator ().Execute (
+			[],
+			new Version (11, 0),
+			new HashSet<string> (),
+			manifestTemplate: manifest);
+
+		Assert.Empty (result.GeneratedAssemblies);
+		Assert.Empty (result.GeneratedJavaSources);
+		Assert.Contains (logMessages, message => message.StartsWith ("XA4258:", StringComparison.Ordinal));
+		Assert.DoesNotContain (logMessages, message => message.Contains ("No Java peer types found"));
 	}
 
 	[Fact]
@@ -336,7 +610,217 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Equal (full.GeneratedAssemblies.Count, optimized.GeneratedAssemblies.Count);
 		for (int i = 0; i < full.GeneratedAssemblies.Count; i++) {
 			Assert.Equal (full.GeneratedAssemblies [i].Name, optimized.GeneratedAssemblies [i].Name);
-			Assert.Equal (full.GeneratedAssemblies [i].Content.ToArray (), optimized.GeneratedAssemblies [i].Content.ToArray ());
+			Assert.Equal (ReadAllBytes (full.GeneratedAssemblies [i].Content), ReadAllBytes (optimized.GeneratedAssemblies [i].Content));
+		}
+	}
+
+	[Fact]
+	public void Execute_UnsupportedExportSignatures_ReportCodedDiagnosticsWithoutPartialMembers ()
+	{
+		using var peReader = CreateTestFixturePEReader ();
+		var result = CreateGenerator ().Execute ([Input ("TestFixtures", peReader)], new Version (11, 0), new HashSet<string> ());
+
+		Assert.Equal (11, logMessages.Count (message => message.StartsWith ("XA4263:", StringComparison.Ordinal)));
+		Assert.Equal (1, logMessages.Count (message => message.StartsWith ("XA4206:", StringComparison.Ordinal)));
+		foreach (var javaName in new [] {
+			"my/app/ExportWithUnsupportedManagedParameter",
+			"my/app/ExportWithUnsupportedManagedReturn",
+			"my/app/ExportFieldWithUnsupportedManagedReturn",
+			"my/app/ExportWithGenericMethodParameter",
+			"my/app/ExportWithGenericInstantiation",
+			"my/app/ExportWithInvalidExportParameterType",
+			"my/app/ExportWithInvalidExportParameterKind",
+			"my/app/ExportWithGenericExportParameter",
+			"my/app/ExportFieldWithInvalidExportParameterType",
+			"my/app/GenericExportType",
+		}) {
+			var peer = result.AllPeers.Single (candidate => candidate.JavaName == javaName);
+			Assert.DoesNotContain (peer.MarshalMethods, method => method.ManagedMethodName == "UnsupportedMember");
+			Assert.Empty (peer.JavaFields);
+			var source = result.GeneratedJavaSources.Single (candidate => candidate.RelativePath == javaName + ".java");
+			Assert.DoesNotContain (" unsupported (", source.Content, StringComparison.Ordinal);
+			Assert.DoesNotContain ("UNSUPPORTED_FIELD", source.Content, StringComparison.Ordinal);
+		}
+
+		foreach (var javaName in new [] {
+			"my/app/ExportConstructorUnsupportedManagedParameter",
+			"my/app/ExportConstructorInvalidExportParameter",
+		}) {
+			var peer = result.AllPeers.Single (candidate => candidate.JavaName == javaName);
+			Assert.DoesNotContain (peer.MarshalMethods, method => method.IsConstructor && method.IsExport);
+		}
+	}
+
+	[Fact]
+	public void GenerateTypeMapAssemblies_UnchangedFingerprintsSkipAllEmission ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			CreatePeer ("MyApp", "MyApp.MainActivity", "my/app/MainActivity"),
+			CreatePeer ("MyLibrary", "MyLibrary.Widget", "my/library/Widget"),
+		};
+		var fingerprints = new Dictionary<string, byte []> (StringComparer.Ordinal);
+		var generator = CreateGenerator ();
+		var first = generator.GenerateTypeMapAssemblies (
+			peers,
+			new Version (11, 0),
+			useSharedTypemapUniverse: true,
+			(name, fingerprint) => {
+				fingerprints.Add (name, fingerprint);
+				return true;
+			});
+		DisposeGeneratedAssemblies (first);
+
+		var second = generator.GenerateTypeMapAssemblies (
+			peers,
+			new Version (11, 0),
+			useSharedTypemapUniverse: true,
+			(name, fingerprint) => !fingerprints [name].SequenceEqual (fingerprint));
+
+		Assert.Empty (second);
+	}
+
+	[Fact]
+	public void Execute_IncrementalCallbackPreservesGeneratedBytes ()
+	{
+		using var fullReader = CreateTestFixturePEReader ();
+		using var incrementalReader = CreateTestFixturePEReader ();
+		var generator = CreateGenerator ();
+		var full = generator.Execute (
+			[Input ("TestFixtures", fullReader)],
+			new Version (11, 0),
+			new HashSet<string> ());
+		var incremental = generator.Execute (
+			[Input ("TestFixtures", incrementalReader)],
+			new Version (11, 0),
+			new HashSet<string> (),
+			shouldGenerateTypeMapAssembly: (_, _) => true);
+
+		Assert.Equal (full.GeneratedAssemblies.Count, incremental.GeneratedAssemblies.Count);
+		for (int i = 0; i < full.GeneratedAssemblies.Count; i++) {
+			Assert.Equal (full.GeneratedAssemblies [i].Name, incremental.GeneratedAssemblies [i].Name);
+			Assert.Equal (ReadAllBytes (full.GeneratedAssemblies [i].Content), ReadAllBytes (incremental.GeneratedAssemblies [i].Content));
+		}
+		DisposeGeneratedAssemblies (full.GeneratedAssemblies);
+		DisposeGeneratedAssemblies (incremental.GeneratedAssemblies);
+	}
+
+	[Fact]
+	public void GenerateTypeMapAssemblies_ChangedCrossAssemblyAliasRegeneratesOwner ()
+	{
+		var owner = CreatePeer ("Owner", "Owner.JavaObject", "java/lang/Object");
+		var alias = CreatePeer ("Alias", "Alias.JavaObject", "java/lang/Object") with {
+			IsFromJniTypeSignature = true,
+		};
+		var unrelatedAliasPeer = CreatePeer ("Alias", "Alias.Widget", "alias/Widget");
+		var peers = new List<JavaPeerInfo> { owner, alias, unrelatedAliasPeer };
+		var fingerprints = new Dictionary<string, byte []> (StringComparer.Ordinal);
+		var generator = CreateGenerator ();
+		var first = generator.GenerateTypeMapAssemblies (
+			peers,
+			new Version (11, 0),
+			useSharedTypemapUniverse: true,
+			(name, fingerprint) => {
+				fingerprints.Add (name, fingerprint);
+				return true;
+			});
+		DisposeGeneratedAssemblies (first);
+
+		peers [1] = alias with {
+			ManagedTypeName = "Alias.ChangedJavaObject",
+			ManagedTypeShortName = "ChangedJavaObject",
+		};
+		var regenerated = generator.GenerateTypeMapAssemblies (
+			peers,
+			new Version (11, 0),
+			useSharedTypemapUniverse: true,
+			(name, fingerprint) => !fingerprints [name].SequenceEqual (fingerprint));
+
+		var assembly = Assert.Single (regenerated);
+		Assert.Equal ("_Owner.TypeMap", assembly.Name);
+		DisposeGeneratedAssemblies (regenerated);
+	}
+
+	[Fact]
+	public void GenerateTypeMapAssemblies_ChangedAssemblySetRegeneratesRoot ()
+	{
+		var initialPeers = new List<JavaPeerInfo> {
+			CreatePeer ("MyApp", "MyApp.MainActivity", "my/app/MainActivity"),
+		};
+		var fingerprints = new Dictionary<string, byte []> (StringComparer.Ordinal);
+		var generator = CreateGenerator ();
+		var first = generator.GenerateTypeMapAssemblies (
+			initialPeers,
+			new Version (11, 0),
+			useSharedTypemapUniverse: true,
+			(name, fingerprint) => {
+				fingerprints.Add (name, fingerprint);
+				return true;
+			});
+		DisposeGeneratedAssemblies (first);
+
+		var peersWithLibrary = new List<JavaPeerInfo> (initialPeers) {
+			CreatePeer ("MyLibrary", "MyLibrary.Widget", "my/library/Widget"),
+		};
+		var regenerated = generator.GenerateTypeMapAssemblies (
+			peersWithLibrary,
+			new Version (11, 0),
+			useSharedTypemapUniverse: true,
+			(name, fingerprint) => !fingerprints.TryGetValue (name, out var prior) || !prior.SequenceEqual (fingerprint));
+
+		Assert.Equal (
+			["_MyLibrary.TypeMap", "_Microsoft.Android.TypeMaps"],
+			regenerated.Select (assembly => assembly.Name));
+		DisposeGeneratedAssemblies (regenerated);
+	}
+
+	[Fact]
+	public void Execute_WithConstructorDiagnostics_ReturnsNoPartialOutputs ()
+	{
+		using var fixtureReader = CreateTestFixturePEReader ();
+		using var invalidReader = CreateFixturePEReader ("InvalidConstructorFixtures.dll");
+		var result = CreateGenerator ().Execute (
+			[
+				Input ("TestFixtures", fixtureReader),
+				Input ("InvalidConstructorFixtures", invalidReader),
+			],
+			new Version (11, 0),
+			new HashSet<string> ());
+
+		Assert.Empty (result.GeneratedAssemblies);
+		Assert.Empty (result.GeneratedJavaSources);
+		Assert.Contains (logMessages, message => message.StartsWith ("XA4259:", StringComparison.Ordinal));
+		Assert.Contains (logMessages, message => message.StartsWith ("XA4260:", StringComparison.Ordinal));
+		Assert.Contains (logMessages, message => message.StartsWith ("XA4261:", StringComparison.Ordinal));
+		Assert.Contains (logMessages, message => message.StartsWith ("XA4262:", StringComparison.Ordinal));
+		Assert.Contains (logMessages, message => message.StartsWith ("XA4258:", StringComparison.Ordinal));
+		Assert.Single (logMessages, message =>
+			message.StartsWith ("XA4259:", StringComparison.Ordinal) &&
+			message.Contains ("MyApp.SignedUnsignedCollisionActivity", StringComparison.Ordinal));
+
+		foreach (var typeName in new [] {
+			"UnsupportedExportConstructorOverloadsActivity",
+			"RegisterBeforeExportActivity",
+			"ExportBeforeRegisterActivity",
+		}) {
+			var messages = logMessages.Where (message => message.Contains ($"MyApp.{typeName}", StringComparison.Ordinal)).ToList ();
+			Assert.Equal (2, messages.Count);
+			Assert.All (messages, message => Assert.StartsWith ("XA4263:", message));
+		}
+
+		foreach (var typeName in new [] {
+			"GenericParameterCtorActivity",
+			"GenericInstantiationCtorActivity",
+			"ByRefCtorActivity",
+			"PointerCtorActivity",
+			"FunctionPointerCtorActivity",
+			"RectangularArrayCtorActivity",
+			"NestedRectangularArrayCtorActivity",
+			"PointerArrayCtorActivity",
+			"FunctionPointerArrayCtorActivity",
+		}) {
+			var messages = logMessages.Where (message => message.Contains ($"MyApp.{typeName}", StringComparison.Ordinal)).ToList ();
+			var message = Assert.Single (messages);
+			Assert.StartsWith ("XA4260:", message);
 		}
 	}
 
@@ -354,6 +838,35 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Contains ("my.app.BaseApplication", result.ApplicationRegistrationTypes);
 		Assert.Contains ("my.app.BaseInstrumentation", result.ApplicationRegistrationTypes);
 		Assert.Contains ("my.app.IntermediateInstrumentation", result.ApplicationRegistrationTypes);
+	}
+
+	static JavaPeerInfo CreatePeer (string assemblyName, string managedTypeName, string javaName)
+	{
+		int separator = managedTypeName.LastIndexOf ('.');
+		return new JavaPeerInfo {
+			JavaName = javaName,
+			CompatJniName = javaName,
+			ManagedTypeName = managedTypeName,
+			ManagedTypeNamespace = separator < 0 ? "" : managedTypeName.Substring (0, separator),
+			ManagedTypeShortName = separator < 0 ? managedTypeName : managedTypeName.Substring (separator + 1),
+			AssemblyName = assemblyName,
+			DoNotGenerateAcw = true,
+		};
+	}
+
+	static byte [] ReadAllBytes (Stream stream)
+	{
+		stream.Position = 0;
+		using var buffer = new MemoryStream ();
+		stream.CopyTo (buffer);
+		return buffer.ToArray ();
+	}
+
+	static void DisposeGeneratedAssemblies (IEnumerable<GeneratedAssembly> assemblies)
+	{
+		foreach (var assembly in assemblies) {
+			assembly.Content.Dispose ();
+		}
 	}
 
 	[Fact]
@@ -454,7 +967,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		using var peReader = CreateTestFixturePEReader ();
 		var manifestTemplate = System.Xml.Linq.XDocument.Parse ("""
 			<?xml version="1.0" encoding="utf-8"?>
-			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${applicationId}">
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${PACKAGENAME}">
 			  <application>
 			    <activity android:name=".SimpleActivity" />
 			  </application>
@@ -470,12 +983,165 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 				PackageName: "my.app",
 				AndroidApiLevel: "35",
 				SupportedOSPlatformVersion: "24",
-				RuntimeProviderJavaName: "mono.MonoRuntimeProvider",
-				ManifestPlaceholders: "applicationId=my.app"),
+				RuntimeProviderJavaName: "mono.MonoRuntimeProvider"),
 			manifestTemplate);
 
 		var peer = result.AllPeers.First (p => p.ManagedTypeName == "MyApp.SimpleActivity");
-		Assert.True (peer.IsUnconditional, "Relative manifest names should root correctly after placeholder substitution.");
+		Assert.True (peer.IsUnconditional, "Unresolved template packages should use PackageName before expanding relative components.");
+		Assert.DoesNotContain (logMessages, message => message.StartsWith ("XA4258:", StringComparison.Ordinal));
+	}
+
+	[Fact]
+	public void Execute_InvalidResolvedPackageBeforeRelativeComponent_ReportsBeforeOutputs ()
+	{
+		using var peReader = CreateTestFixturePEReader ();
+		var manifestTemplate = XDocument.Parse ("""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${PACKAGENAME}">
+			  <application>
+			    <activity android:name=".SimpleActivity" />
+			  </application>
+			</manifest>
+			""");
+
+		var result = CreateGenerator ().Execute (
+			[Input ("TestFixtures", peReader)],
+			new Version (11, 0),
+			new HashSet<string> (),
+			manifestConfig: new ManifestConfig (
+				PackageName: "com.¢pkg",
+				AndroidApiLevel: "35",
+				SupportedOSPlatformVersion: "24",
+				RuntimeProviderJavaName: "mono.MonoRuntimeProvider"),
+			manifestTemplate: manifestTemplate);
+
+		Assert.Empty (result.GeneratedAssemblies);
+		Assert.Empty (result.GeneratedJavaSources);
+		Assert.Contains (logMessages, message =>
+			message.Contains ("Java name 'com.¢pkg.SimpleActivity' contains invalid or unsupported Java identifier '¢pkg'."));
+	}
+
+	[Theory]
+	[InlineData ("${applicationId}.UnnamedAlias", "my.app.UnnamedAlias")]
+	[InlineData (".legacy-alias", ".legacy-alias")]
+	[InlineData ("my.app.legacy-alias", "my.app.legacy-alias")]
+	[InlineData ("${applicationId}.legacy-alias", "my.app.legacy-alias")]
+	[InlineData ("${applicationId}.\u00a2Alias", "my.app.\u00a2Alias")]
+	[InlineData ("${applicationId}.for", "my.app.for")]
+	public void Execute_ActivityAliasNameIsPreservedWhileTargetIsRootedAndRewritten (string aliasName, string expectedAliasName)
+	{
+		using var peReader = CreateTestFixturePEReader ();
+		var manifestTemplate = XDocument.Parse ($$"""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${applicationId}">
+			  <application>
+			    <activity-alias
+			        android:name="{{aliasName}}"
+			        android:targetActivity="${targetPackage}.UnnamedActivity" />
+			  </application>
+			</manifest>
+			""");
+
+		var result = CreateGenerator ().Execute (
+			[Input ("TestFixtures", peReader)],
+			new Version (11, 0),
+			new HashSet<string> (),
+			manifestConfig: new ManifestConfig (
+				PackageName: "my.app",
+				AndroidApiLevel: "35",
+				SupportedOSPlatformVersion: "24",
+				RuntimeProviderJavaName: "mono.MonoRuntimeProvider",
+				ManifestPlaceholders: "targetPackage=myapp"),
+			manifestTemplate: manifestTemplate);
+
+		var peer = result.AllPeers.First (candidate => candidate.ManagedTypeName == "MyApp.UnnamedActivity");
+		Assert.True (peer.IsUnconditional, "The activity-alias target should root its Java peer.");
+		Assert.NotEmpty (result.GeneratedAssemblies);
+		Assert.NotEmpty (result.GeneratedJavaSources);
+		Assert.DoesNotContain (logMessages, message => message.StartsWith ("XA4258:", StringComparison.Ordinal));
+		var alias = Assert.Single (result.Manifest?.Document.Descendants ("activity-alias") ?? []);
+		XNamespace android = "http://schemas.android.com/apk/res/android";
+		Assert.Equal (expectedAliasName, (string?) alias.Attribute (android + "name"));
+		Assert.Equal (
+			JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName),
+			(string?) alias.Attribute (android + "targetActivity")
+		);
+		Assert.NotEqual ("myapp.UnnamedActivity", (string?) alias.Attribute (android + "targetActivity"));
+	}
+
+	[Theory]
+	[InlineData ("${applicationId}.¢Peer", "com.example.¢Peer", "¢Peer")]
+	[InlineData (".legacy-target", "com.example.legacy-target", "legacy-target")]
+	[InlineData ("com.example.for", "com.example.for", "for")]
+	public void Execute_InvalidActivityAliasTarget_ReportsBeforeOutputs (
+		string targetActivity,
+		string invalidName,
+		string invalidIdentifier)
+	{
+		using var peReader = CreateTestFixturePEReader ();
+		var manifestTemplate = XDocument.Parse ($$"""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${applicationId}">
+			  <application>
+			    <activity-alias android:name=".legacy-alias" android:targetActivity="{{targetActivity}}" />
+			  </application>
+			</manifest>
+			""");
+
+		var result = CreateGenerator ().Execute (
+			[Input ("TestFixtures", peReader)],
+			new Version (11, 0),
+			new HashSet<string> (),
+			manifestConfig: new ManifestConfig (
+				PackageName: "com.example",
+				AndroidApiLevel: "35",
+				SupportedOSPlatformVersion: "24",
+				RuntimeProviderJavaName: "mono.MonoRuntimeProvider"),
+			manifestTemplate: manifestTemplate);
+
+		Assert.Empty (result.GeneratedAssemblies);
+		Assert.Empty (result.GeneratedJavaSources);
+		Assert.Null (result.Manifest);
+		Assert.DoesNotContain (logMessages, message =>
+			message.StartsWith ("XA4258:", StringComparison.Ordinal) && message.Contains ("legacy-alias"));
+		Assert.Contains (logMessages, message =>
+			message.Contains (
+				$"Java name '{invalidName}' contains invalid or unsupported Java identifier '{invalidIdentifier}'.",
+				StringComparison.Ordinal
+			)
+		);
+	}
+
+	[Theory]
+	[InlineData (".Target", true)]
+	[InlineData (".legacy-target", false)]
+	[InlineData (".\u00a2Target", false)]
+	public void Execute_ActivityAliasWithoutPeers_ValidatesOnlyTarget (string targetActivity, bool validTarget)
+	{
+		var manifest = XDocument.Parse ($$"""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+			  <application>
+			    <activity-alias android:name=".legacy-alias" android:targetActivity="{{targetActivity}}" />
+			  </application>
+			</manifest>
+			""");
+
+		var result = CreateGenerator ().Execute (
+			[],
+			new Version (11, 0),
+			new HashSet<string> (),
+			manifestTemplate: manifest);
+
+		Assert.Empty (result.AllPeers);
+		Assert.Empty (result.GeneratedAssemblies);
+		Assert.Empty (result.GeneratedJavaSources);
+		Assert.DoesNotContain (logMessages, message =>
+			message.StartsWith ("XA4258:", StringComparison.Ordinal) && message.Contains ("legacy-alias"));
+		if (validTarget) {
+			Assert.DoesNotContain (logMessages, message => message.StartsWith ("XA4258:", StringComparison.Ordinal));
+			Assert.Contains (logMessages, message => message.Contains ("No Java peer types found"));
+		} else {
+			Assert.Contains (logMessages, message =>
+				message.StartsWith ("XA4258:", StringComparison.Ordinal) && message.Contains ($"com.example{targetActivity}"));
+			Assert.DoesNotContain (logMessages, message => message.Contains ("No Java peer types found"));
+		}
 	}
 
 	[Theory]
@@ -731,6 +1397,44 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.True (peers [0].IsUnconditional, "The manifest-referenced type should be rooted as unconditional.");
 		Assert.False (peers [1].IsUnconditional, "Non-matching peers should remain conditional.");
 		Assert.Contains (logMessages, m => m.Contains ("Rooting manifest-referenced type"));
+	}
+
+	[Fact]
+	public void RootCustomViewTypes_RootsReferencedManagedJavaAndCompatNames ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "crc64123456789abc/CustomView", CompatJniName = "my.app.CustomView",
+				ManagedTypeName = "MyApp.CustomView", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "CustomView",
+				AssemblyName = "MyApp",
+			},
+			new JavaPeerInfo {
+				JavaName = "com/example/RegisteredView", CompatJniName = "com/example/RegisteredView",
+				ManagedTypeName = "MyApp.RegisteredView", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "RegisteredView",
+				AssemblyName = "MyApp",
+			},
+			new JavaPeerInfo {
+				JavaName = "crc64123456789abc/CompatView", CompatJniName = "my/app/CompatView",
+				ManagedTypeName = "MyApp.CompatView", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "CompatView",
+				AssemblyName = "MyApp",
+			},
+			new JavaPeerInfo {
+				JavaName = "crc64123456789abc/UnusedView", CompatJniName = "my.app.UnusedView",
+				ManagedTypeName = "MyApp.UnusedView", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "UnusedView",
+				AssemblyName = "MyApp",
+			},
+		};
+
+		TrimmableTypeMapGenerator.RootCustomViewTypes (peers, [
+			"MyApp.CustomView",
+			"com.example.RegisteredView",
+			"my.app.CompatView",
+		]);
+
+		Assert.True (peers [0].IsUnconditional);
+		Assert.True (peers [1].IsUnconditional);
+		Assert.True (peers [2].IsUnconditional);
+		Assert.False (peers [3].IsUnconditional);
 	}
 
 	[Fact]
@@ -1183,9 +1887,12 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 
 
 	static PEReader CreateTestFixturePEReader ()
+		=> CreateFixturePEReader ("TestFixtures.dll");
+
+	static PEReader CreateFixturePEReader (string fileName)
 	{
 		var dir = Path.GetDirectoryName (typeof (FixtureTestBase).Assembly.Location)
 			?? throw new InvalidOperationException ("Cannot determine test assembly directory");
-		return new PEReader (File.OpenRead (Path.Combine (dir, "TestFixtures.dll")));
+		return new PEReader (File.OpenRead (Path.Combine (dir, fileName)));
 	}
 }

@@ -884,6 +884,23 @@ Supprimez la référence de '{0}' de votre projet et ajoutez plutôt le '{1}'.pa
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
+  <data name="XA4325" xml:space="preserve">
+    <value>Échec de la réécriture des noms JNI managés pour R8. {0}</value>
+    <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4325_* resources.</comment>
+  </data>
+  <data name="XA4325_AssemblyFailure" xml:space="preserve">
+    <value>Nous n’avons pas pu réécrire les noms JNI dans l’assembly « {0} » : {1}</value>
+    <comment>{0} - The path of the assembly which could not be rewritten.
+{1} - The underlying message describing why the assembly could not be rewritten. It is not localized.</comment>
+  </data>
+  <data name="XA4325_SourceDestinationCount" xml:space="preserve">
+    <value>Les groupes d’éléments « SourceFiles » et « DestinationFiles » doivent contenir le même nombre d’éléments.</value>
+    <comment>The following are literal MSBuild item group names and should not be translated: 'SourceFiles', 'DestinationFiles'.</comment>
+  </data>
+  <data name="XA4326" xml:space="preserve">
+    <value>Nous ne pouvons pas réécrire en toute sécurité une recherche de membre JNI, car son descripteur de classe ne possède pas de source JNIEnv.FindClass structurellement non ambiguë.</value>
+    <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Répertoire de chaînes d'outils du kit Android NDK manquant '{0}'. Installez le kit Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -1064,7 +1081,7 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {0} - User supplied Maven repository type</comment>
   </data>
   <data name="XA4240" xml:space="preserve">
-    <value>The Java callable wrapper code generation target '{0}' is no longer supported. The '_AndroidJcwCodegenTarget' property only supports 'XAJavaInterop1'; 'XamarinAndroid' and 'JavaInterop1' are not supported.</value>
+    <value>La cible de génération de code du wrapper Java appelable « {0} » n’est plus prise en charge. La propriété _AndroidJcwCodegenTarget prend uniquement en charge XAJavaInterop1; XamarinAndroid et JavaInterop1 ne sont pas pris en charge.</value>
     <comment>The following are literal names and should not be translated: _AndroidJcwCodegenTarget, XAJavaInterop1, XamarinAndroid, JavaInterop1
 {0} - The name of the current Java callable wrapper code generation target</comment>
   </data>
@@ -1127,6 +1144,10 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
     <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
 {0} - The path to the AndroidManifest.xml file.
 </comment>
+  </data>
+  <data name="XA1049" xml:space="preserve">
+    <value>Les propriétés MSBuild « AndroidEnableMarshalMethods » et « PublishReadyToRun » ne peuvent pas avoir toutes les deux la valeur « true ». Définissez une propriété sur « false ».</value>
+    <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>La dépendance Java « {0} » n’est pas satisfaite.</value>
@@ -1234,10 +1255,40 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
   </data>
   <data name="XA4258" xml:space="preserve">
-    <value>Le nom Java « {0} » contient l’identificateur Java réservé « {1} ». Modifiez le nom du package ou du type.</value>
+    <value>Java name '{0}' contains invalid or unsupported Java identifier '{1}'. Change the package or type name.</value>
     <comment>The following are literal names and should not be translated: Java.
 {0} - Java package or type name
-{1} - Java reserved keyword or restricted identifier</comment>
+{1} - Invalid, unsupported, reserved, or restricted Java identifier</comment>
+  </data>
+  <data name="XA4259" xml:space="preserve">
+    <value>Type '{0}' has multiple managed constructors that map to the same Java Native Interface (JNI) signature '{1}'. Change the constructor parameter types so each constructor has a unique JNI signature.</value>
+    <comment>The following terms should not be translated: Java Native Interface, JNI.
+{0} - Fully-qualified managed type name
+{1} - Colliding JNI constructor signature</comment>
+  </data>
+  <data name="XA4260" xml:space="preserve">
+    <value>Type '{0}' has a constructor parameter type '{1}' that cannot be represented in a Java constructor. Remove the constructor or change the parameter to a supported Java type.</value>
+    <comment>The following term should not be translated: Java.
+{0} - Fully-qualified managed type name
+{1} - Unsupported managed constructor parameter type</comment>
+  </data>
+  <data name="XA4261" xml:space="preserve">
+    <value>Type '{0}' has Java constructor signature '{1}', but its base type does not expose a compatible Java constructor. Add a compatible base constructor or remove the derived constructor.</value>
+    <comment>The following term should not be translated: Java.
+{0} - Fully-qualified managed type name
+{1} - JNI signature of the derived constructor</comment>
+  </data>
+  <data name="XA4262" xml:space="preserve">
+    <value>Type '{0}' has an invalid [Export] SuperArgumentsString value '{1}'. The value references a constructor parameter that does not exist.</value>
+    <comment>The following terms should not be translated: Export, SuperArgumentsString.
+{0} - Fully-qualified managed type name
+{1} - Invalid SuperArgumentsString value</comment>
+  </data>
+  <data name="XA4263" xml:space="preserve">
+    <value>Le membre exporté '{0}' a un type de signature non pris en charge '{1}'. Utilisez un type d’homologue Java, un mappage managé vers Java pris en charge ou [ExportParameter].</value>
+    <comment>The following are literal names and should not be translated: Java, [ExportParameter].
+{0} - Fully-qualified managed member name
+{1} - Managed parameter or return type</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>La commande « {0} » a échoué.\n{1}</value>

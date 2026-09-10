@@ -110,20 +110,12 @@ namespace Java.Lang {
 		protected void SetHandle (IntPtr value, JniHandleOwnership transfer)
 		{
 			var reference = new JniObjectReference (value);
-			var options   = FromJniHandleOwnership (transfer);
+			var options   = JNIEnv.ToJniObjectReferenceOptions (transfer);
 			JniEnvironment.Runtime.ValueManager.ConstructPeer (
 					this,
 					ref reference,
 					value == IntPtr.Zero ? JniObjectReferenceOptions.None : options);
 			JNIEnv.DeleteRef (value, transfer);
-		}
-
-		static JniObjectReferenceOptions FromJniHandleOwnership (JniHandleOwnership transfer)
-		{
-			var options = JniObjectReferenceOptions.Copy;
-			if (transfer.HasFlag (JniHandleOwnership.DoNotRegister))
-				options |= JniObjectReferenceOptions.CopyAndDoNotRegister;
-			return options;
 		}
 
 		internal static IJavaPeerable? PeekObject (IntPtr handle, Type? requiredType = null)

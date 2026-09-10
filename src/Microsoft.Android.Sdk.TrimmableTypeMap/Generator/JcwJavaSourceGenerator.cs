@@ -84,7 +84,7 @@ public sealed class JcwJavaSourceGenerator
 
 	/// <summary>
 	/// Validates that the JNI name is well-formed: non-empty, each segment separated by '/'
-	/// contains only valid Java identifier characters (letters, digits, '_', '$').
+	/// is a supported NFC Java 21 identifier, and no segment is reserved.
 	/// This also prevents path traversal (e.g., ".." segments, rooted paths, backslashes).
 	/// </summary>
 	static void WritePackageDeclaration (JavaPeerInfo type, TextWriter writer)
@@ -120,7 +120,7 @@ public sealed class JcwJavaSourceGenerator
 		// implements clause — always includes IGCUserPeer, plus any implemented interfaces
 		writer.Write ("\timplements\n\t\tmono.android.IGCUserPeer");
 
-		foreach (var iface in type.ImplementedInterfaceJavaNames) {
+		foreach (var iface in type.JavaCallableWrapperInterfaceJavaNames ?? type.ImplementedInterfaceJavaNames) {
 			writer.Write ($",\n\t\t{JniSignatureHelper.JniNameToJavaName (iface)}");
 		}
 

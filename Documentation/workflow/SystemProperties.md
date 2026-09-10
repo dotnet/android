@@ -4,6 +4,10 @@
 - [Custom Android system properties used by .NET for Android](#custom-android-system-properties-used-by-xamarinandroid)
     - [Introduction](#introduction)
     - [Known properties](#known-properties)
+        - [debug.dotnet.log](#debugdotnetlog)
+        - [debug.dotnet.max_grefc](#debugdotnetmax_grefc)
+        - [debug.dotnet.profile](#debugdotnetprofile)
+        - [debug.dotnet.timing](#debugdotnettiming)
         - [debug.mono.connect](#debugmonoconnect)
         - [debug.mono.debug](#debugmonodebug)
         - [debug.mono.env](#debugmonoenv)
@@ -39,6 +43,33 @@ $ adb shell setprop property_name "''"
 ```
 
 ## Known properties
+
+Properties under `debug.dotnet` are available to CoreCLR and NativeAOT as
+described below. Properties under `debug.mono` apply to MonoVM. CoreCLR and
+NativeAOT continue to accept the corresponding `debug.mono` property when a
+`debug.dotnet` value is not set.
+
+### debug.dotnet.log
+
+CoreCLR and NativeAOT equivalent of [`debug.mono.log`](#debugmonolog).
+NativeAOT also uses the `gref`, `gref=FILE`, `lref`, `lref=FILE`, and `all`
+values to configure managed JNI reference logging.
+
+### debug.dotnet.max_grefc
+
+CoreCLR and NativeAOT equivalent of
+[`debug.mono.max_grefc`](#debugmonomax_grefc).
+
+### debug.dotnet.profile
+
+CoreCLR uses the presence of this property when deciding whether runtime
+diagnostic output directories are required. `debug.mono.profile` is accepted
+as a fallback.
+
+### debug.dotnet.timing
+
+Configures CoreCLR fast timing output. Supported comma-separated values are
+`to-file`, `filename=FILE`, and `duration=MILLISECONDS`.
 
 ### debug.mono.connect
 

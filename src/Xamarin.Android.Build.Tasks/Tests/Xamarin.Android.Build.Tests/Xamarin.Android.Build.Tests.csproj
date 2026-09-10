@@ -18,6 +18,8 @@
 
   <ItemGroup>
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
+    <PackageReference Include="Polly" Version="$(PollyVersion)" />
+    <PackageReference Include="SharpZipLib" Version="$(SharpZipLibVersion)" />
     <Reference Include="Xamarin.Android.Build.Debugging.Tasks" Condition="Exists('$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Debugging.Tasks.dll')">
       <HintPath>$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Debugging.Tasks.dll</HintPath>
     </Reference>

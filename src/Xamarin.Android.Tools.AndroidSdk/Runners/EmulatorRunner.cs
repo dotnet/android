@@ -99,7 +99,7 @@ public class EmulatorRunner
 		};
 		process.ErrorDataReceived += (_, e) => {
 			if (e.Data != null)
-				logger.Invoke (TraceLevel.Warning, $"[emulator] {e.Data}");
+				logger.Invoke (TraceLevel.Verbose, $"[emulator] {e.Data}");
 		};
 
 		if (!process.Start ()) {

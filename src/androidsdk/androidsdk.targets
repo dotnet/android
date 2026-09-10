@@ -247,6 +247,10 @@
       <Hash>$(XAAndroidSourcesHash37_1)</Hash>
       <Destination>$(AndroidSdkFullPath)\sources\android-37.1</Destination>
     </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="source-37.2_r01.zip">
+      <Hash>$(XAAndroidSourcesHash37_2)</Hash>
+      <Destination>$(AndroidSdkFullPath)\sources\android-37.2</Destination>
+    </_AndroidSdkPackage>
 
     <!--
       Android NDK: single per-host zip. The zip contains an `android-ndk-r<ver>/`

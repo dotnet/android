@@ -132,6 +132,23 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Generate_RedundantInterfaceView_OmitsParentsAndDuplicateJavaNames ()
+		{
+			var java = GenerateFixture ("my/app/RedundantInterfaceView");
+
+			AssertContainsLine (
+				"""
+					implements
+						mono.android.IGCUserPeer,
+						android.view.View.INamedClickListener,
+						android.view.View.OnLongClickListener
+				{
+				""",
+				java
+			);
+		}
+
+		[Fact]
 		public void Generate_DeclaredDollarKeyword_PreservesDollar ()
 		{
 			var type = new JavaPeerInfo {
@@ -482,6 +499,11 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		[InlineData ("com/for/Example")]
 		[InlineData ("com/example/for")]
 		[InlineData ("com/example/record")]
+		[InlineData ("com/e\u0301xample/Cafe\u0301")]
+		[InlineData ("com/example/A\u0cf3")]
+		[InlineData ("com/example/\U00010428Peer\U00010400")]
+		[InlineData ("com/example/\u1c89Peer")]
+		[InlineData ("com/example/\u212bPeer")]
 		public void ValidateJniName_InvalidName_Throws (string badJniName)
 		{
 			Assert.Throws<ArgumentException> (() => JniSignatureHelper.ValidateJniName (badJniName));
@@ -495,6 +517,10 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		[InlineData ("com/example/$Generated")]
 		[InlineData ("com/example/Outer$for")]
 		[InlineData ("com/example/Outer$record")]
+		[InlineData ("com/\u00e9xample/\u0394elta")]
+		[InlineData ("com/example/\u00a2Peer")]
+		[InlineData ("com/example/\u203fPeer")]
+		[InlineData ("com/example/\u00c5Peer")]
 		public void ValidateJniName_ValidName_DoesNotThrow (string validJniName)
 		{
 			JniSignatureHelper.ValidateJniName (validJniName);

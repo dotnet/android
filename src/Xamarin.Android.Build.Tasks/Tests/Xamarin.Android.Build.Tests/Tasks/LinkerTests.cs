@@ -22,6 +22,39 @@ namespace Xamarin.Android.Build.Tests
 		void Logger (TraceLevel level, string message) =>
 			TestContext.WriteLine ($"{level}: {message}");
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public void LinkAssembliesNoShrinkLegacyCompatibilityFixups (bool enabled)
+		{
+			var task = new TestableLinkAssembliesNoShrink {
+				AddKeepAlives = true,
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				EnableLegacyCompatibilityAssemblyFixups = enabled,
+				UseDesignerAssembly = true,
+			};
+			var resolver = new DirectoryAssemblyResolver (Logger, false);
+			using var pipeline = new AssemblyPipeline (resolver);
+			var context = new MSBuildLinkContext (resolver, task.Log);
+
+			task.BuildPipelineForTest (pipeline, context);
+
+			Assert.AreEqual (enabled, pipeline.Steps.Any (step => step is FixAbstractMethodsStep),
+				$"{nameof (FixAbstractMethodsStep)} presence should match the compatibility fixup setting.");
+			Assert.AreEqual (enabled, pipeline.Steps.Any (step => step is FixLegacyResourceDesignerStep),
+				$"{nameof (FixLegacyResourceDesignerStep)} presence should match the compatibility fixup setting.");
+			Assert.AreEqual (enabled, pipeline.Steps.Any (step => step is AddKeepAlivesStep),
+				$"{nameof (AddKeepAlivesStep)} presence should match the compatibility fixup setting.");
+			Assert.IsTrue (pipeline.Steps.Any (step => step is FindJavaObjectsStep), $"{nameof (FindJavaObjectsStep)} should always run.");
+			Assert.IsTrue (pipeline.Steps.Any (step => step is SaveChangedAssemblyStep), $"{nameof (SaveChangedAssemblyStep)} should always run.");
+			Assert.IsTrue (pipeline.Steps.Any (step => step is FindTypeMapObjectsStep), $"{nameof (FindTypeMapObjectsStep)} should always run.");
+		}
+
+		sealed class TestableLinkAssembliesNoShrink : LinkAssembliesNoShrink
+		{
+			public void BuildPipelineForTest (AssemblyPipeline pipeline, MSBuildLinkContext context) =>
+				BuildPipeline (pipeline, context);
+		}
+
 		[Test]
 		public void FixAbstractMethodsStep_SkipDimMembers ()
 		{
@@ -373,23 +406,35 @@ $@"			var myButton = new AttributedButtonStub (this);
 				AddTestData (isRelease: true,  setAndroidAddKeepAlivesTrue: false, setLinkModeNone: true,  shouldAddKeepAlives: true,  runtime);
 			}
 
+			AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true, setLinkModeNone: false,
+				shouldAddKeepAlives: false, AndroidRuntime.CoreCLR, typeMapImplementation: "trimmable");
+			AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true, setLinkModeNone: false,
+				shouldAddKeepAlives: true, AndroidRuntime.CoreCLR, typeMapImplementation: "trimmable",
+				enableLegacyCompatibilityAssemblyFixups: true);
+
 			return ret;
 
-			void AddTestData (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone, bool shouldAddKeepAlives, AndroidRuntime runtime)
+			void AddTestData (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone,
+				bool shouldAddKeepAlives, AndroidRuntime runtime, string? typeMapImplementation = null,
+				bool enableLegacyCompatibilityAssemblyFixups = false)
 			{
 				ret.Add (new object[] {
 					isRelease,
 					setAndroidAddKeepAlivesTrue,
 					setLinkModeNone,
 					shouldAddKeepAlives,
-					runtime
+					runtime,
+					typeMapImplementation,
+					enableLegacyCompatibilityAssemblyFixups,
 				});
 			}
 		}
 
 		[Test]
 		[TestCaseSource (nameof (Get_AndroidAddKeepAlivesData))]
-		public void AndroidAddKeepAlives (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone, bool shouldAddKeepAlives, AndroidRuntime runtime)
+		public void AndroidAddKeepAlives (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone,
+			bool shouldAddKeepAlives, AndroidRuntime runtime, string? typeMapImplementation,
+			bool enableLegacyCompatibilityAssemblyFixups)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -446,6 +491,8 @@ namespace UnnamedProject {
 
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("AllowUnsafeBlocks", "True");
+			if (!typeMapImplementation.IsNullOrEmpty ())
+				proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
 
 			// We don't want `[TargetPlatform ("android35")]` to get set because we don't do AddKeepAlives on .NET for Android assemblies
 			proj.SetProperty ("GenerateAssemblyInfo", "False");
@@ -455,6 +502,9 @@ namespace UnnamedProject {
 
 			if (setLinkModeNone)
 				proj.SetProperty (isRelease ? proj.ReleaseProperties : proj.DebugProperties, "AndroidLinkMode", "None");
+
+			if (enableLegacyCompatibilityAssemblyFixups)
+				proj.SetProperty ("AndroidEnableLegacyCompatibilityAssemblyFixups", "True");
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Building a project should have succeded.");

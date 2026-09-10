@@ -42,14 +42,6 @@
 // NOTE: _fmt_ takes arguments in the std::format style not the POSIX printf style
 #define log_fatal(_category_, _fmt_, ...) log_fatal_fmt ((_category_), (_fmt_) __VA_OPT__(,) __VA_ARGS__)
 
-namespace xamarin::android {
-	[[gnu::always_inline]]
-	static inline void log_write (LogCategories category, LogLevel level, std::string_view const& message) noexcept
-	{
-		log_write (category, level, message.data ());
-	}
-}
-
 template<typename ...Args> [[gnu::always_inline]]
 static inline constexpr void log_debug_nocheck_fmt (LogCategories category, std::format_string<Args...> fmt, Args&& ...args)
 {

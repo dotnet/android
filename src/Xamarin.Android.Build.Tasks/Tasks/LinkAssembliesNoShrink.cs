@@ -1,8 +1,7 @@
 #nullable enable
 
 using System;
-using System.IO;
-using Microsoft.Build.Framework;
+using Microsoft.Android.Build.Tasks;
 using MonoDroid.Tuner;
 
 namespace Xamarin.Android.Tasks
@@ -17,42 +16,34 @@ namespace Xamarin.Android.Tasks
 
 		public bool AddKeepAlives { get; set; }
 
+		// MSBuild supplies the typemap-specific default. Keep direct task callers backward compatible.
+		public bool EnableLegacyCompatibilityAssemblyFixups { get; set; } = true;
+
 		public bool UseDesignerAssembly { get; set; }
-
-		protected override bool TryProcessWithoutPipeline (ITaskItem source, ITaskItem destination)
-		{
-			if (!bool.TryParse (source.GetMetadata ("AndroidSkipAssemblyModification"), out bool skipAssemblyModification) || !skipAssemblyModification)
-				return false;
-
-			// Downstream scanners treat a zero-byte file as an assembly that did not need scanning.
-			var marker = Path.ChangeExtension (destination.ItemSpec, ".scan.empty");
-			var markerDirectory = Path.GetDirectoryName (marker);
-			if (markerDirectory.IsNullOrEmpty ())
-				throw new InvalidOperationException ($"Could not determine the output directory for '{marker}'.");
-			Directory.CreateDirectory (markerDirectory);
-			JavaObjectsXmlFile.WriteEmptyFile (marker, Log);
-			return true;
-		}
 
 		protected override void BuildPipeline (AssemblyPipeline pipeline, MSBuildLinkContext context)
 		{
-			// FixAbstractMethodsStep
-			var fixAbstractMethodsStep = new FixAbstractMethodsStep ();
-			fixAbstractMethodsStep.Initialize (context);
-			pipeline.Steps.Add (fixAbstractMethodsStep);
+			if (EnableLegacyCompatibilityAssemblyFixups) {
+				// FixAbstractMethodsStep
+				var fixAbstractMethodsStep = new FixAbstractMethodsStep ();
+				fixAbstractMethodsStep.Initialize (context);
+				pipeline.Steps.Add (fixAbstractMethodsStep);
 
-			// FixLegacyResourceDesignerStep
-			if (UseDesignerAssembly) {
-				var fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep ();
-				fixLegacyResourceDesignerStep.Initialize (context);
-				pipeline.Steps.Add (fixLegacyResourceDesignerStep);
-			}
+				// FixLegacyResourceDesignerStep
+				if (UseDesignerAssembly) {
+					var fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep ();
+					fixLegacyResourceDesignerStep.Initialize (context);
+					pipeline.Steps.Add (fixLegacyResourceDesignerStep);
+				}
 
-			// AddKeepAlivesStep
-			if (AddKeepAlives) {
-				var addKeepAliveStep = new AddKeepAlivesStep ();
-				addKeepAliveStep.Initialize (context);
-				pipeline.Steps.Add (addKeepAliveStep);
+				// AddKeepAlivesStep
+				if (AddKeepAlives) {
+					var addKeepAliveStep = new AddKeepAlivesStep ();
+					addKeepAliveStep.Initialize (context);
+					pipeline.Steps.Add (addKeepAliveStep);
+				}
+			} else {
+				Log.LogDebugMessage ("Skipping legacy compatibility assembly fixups. Set `AndroidEnableLegacyCompatibilityAssemblyFixups` to `true` to enable them.");
 			}
 
 			// Ensure the <AssemblyModifierPipeline> task's steps are added

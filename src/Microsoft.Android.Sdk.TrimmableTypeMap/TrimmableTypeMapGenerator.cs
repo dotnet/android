@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection.PortableExecutable;
 using System.Xml.Linq;
@@ -30,6 +29,13 @@ public class TrimmableTypeMapGenerator
 	/// Set to <see langword="false"/> when callers do not consume method metadata for types
 	/// that cannot generate Java callable wrappers.
 	/// </param>
+	/// <param name="shouldGenerateTypeMapAssembly">
+	/// Optional incremental-build callback. It receives each output assembly name and a
+	/// content-model fingerprint, and returns whether that assembly should be emitted.
+	/// Assemblies skipped by the callback are omitted from
+	/// <see cref="TrimmableTypeMapResult.GeneratedAssemblies"/>. When omitted, all typemap
+	/// assemblies are generated.
+	/// </param>
 	public TrimmableTypeMapResult Execute (
 		IReadOnlyList<AssemblyInput> assemblies,
 		Version systemRuntimeVersion,
@@ -40,7 +46,9 @@ public class TrimmableTypeMapGenerator
 		string? packageNamingPolicy = null,
 		bool generateTypeMapAssemblies = true,
 		bool errorOnCustomJavaObject = true,
-		bool collectMarshalMethodsForNonAcw = true)
+		IReadOnlyCollection<string>? customViewTypeNames = null,
+		bool collectMarshalMethodsForNonAcw = true,
+		Func<string, byte [], bool>? shouldGenerateTypeMapAssembly = null)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
@@ -51,21 +59,27 @@ public class TrimmableTypeMapGenerator
 			frameworkAssemblyNames,
 			errorOnCustomJavaObject,
 			collectMarshalMethodsForNonAcw);
+		var manifestForRooting = PrepareManifestForRooting (manifestTemplate, manifestConfig);
 		if (allPeers.Count == 0) {
-			logger.LogNoJavaPeerTypesFound ();
+			if (ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass, manifestForRooting)) {
+				logger.LogNoJavaPeerTypesFound ();
+			}
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 		MarkFrameworkAssemblyPeers (allPeers, frameworkAssemblyNames);
+		bool validConstructors = ValidateConstructors (allPeers);
 
-		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig), manifestConfig?.ApplicationJavaClass);
+		RootCustomViewTypes (allPeers, customViewTypeNames);
+		RootManifestReferencedTypes (allPeers, manifestForRooting, manifestConfig?.ApplicationJavaClass);
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
-		if (!ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass)) {
+		bool validJavaNames = ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass, manifestForRooting);
+		if (!validConstructors || !validJavaNames) {
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
 
 		var generatedAssemblies = generateTypeMapAssemblies
-			? GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse)
+			? GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, shouldGenerateTypeMapAssembly)
 			: [];
 		var jcwPeers = allPeers.Where (ShouldGenerateJcw).ToList ();
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
@@ -83,19 +97,91 @@ public class TrimmableTypeMapGenerator
 		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest, appRegTypes);
 	}
 
-	internal bool ValidateJavaNames (IReadOnlyList<JavaPeerInfo> peers, string? applicationJavaClass = null)
+	internal static void RootCustomViewTypes (List<JavaPeerInfo> allPeers, IReadOnlyCollection<string>? customViewTypeNames)
+	{
+		if (customViewTypeNames is null || customViewTypeNames.Count == 0) {
+			return;
+		}
+
+		var names = new HashSet<string> (customViewTypeNames, StringComparer.Ordinal);
+		foreach (var peer in allPeers) {
+			if (names.Contains (peer.ManagedTypeName) ||
+					names.Contains (JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName)) ||
+					names.Contains (JniSignatureHelper.JniNameToJavaBinaryName (peer.CompatJniName))) {
+				peer.IsUnconditional = true;
+			}
+		}
+	}
+
+	internal bool ValidateConstructors (IReadOnlyList<JavaPeerInfo> peers)
+	{
+		bool valid = true;
+		foreach (var peer in peers) {
+			if (peer.IsFrameworkAssembly || !ShouldGenerateJcw (peer)) {
+				continue;
+			}
+			foreach (var diagnostic in peer.ConstructorDiagnostics) {
+				valid = false;
+				switch (diagnostic.Kind) {
+					case ConstructorDiagnosticKind.AmbiguousJniSignature:
+						logger.LogAmbiguousConstructorSignatureError (peer.ManagedTypeName, diagnostic.Detail);
+						break;
+					case ConstructorDiagnosticKind.UnsupportedParameterType:
+						logger.LogUnsupportedConstructorParameterTypeError (peer.ManagedTypeName, diagnostic.Detail);
+						break;
+					case ConstructorDiagnosticKind.MissingBaseConstructor:
+						logger.LogMissingBaseConstructorError (peer.ManagedTypeName, diagnostic.Detail);
+						break;
+					case ConstructorDiagnosticKind.InvalidSuperArgumentsString:
+						logger.LogInvalidSuperArgumentsStringError (peer.ManagedTypeName, diagnostic.Detail);
+						break;
+					default:
+						throw new InvalidOperationException ($"Unknown constructor diagnostic kind '{diagnostic.Kind}'.");
+				}
+			}
+		}
+		return valid;
+	}
+
+	internal bool ValidateJavaNames (
+		IReadOnlyList<JavaPeerInfo> peers,
+		string? applicationJavaClass = null,
+		XDocument? manifest = null)
 	{
 		bool valid = true;
 		var reportedNames = new HashSet<string> (StringComparer.Ordinal);
+		foreach (var group in peers
+				.Where (ShouldGenerateJcw)
+				.GroupBy (peer => peer.JavaName, StringComparer.Ordinal)
+				.OrderBy (group => group.Key, StringComparer.Ordinal)) {
+			var firstAssemblyName = group.First ().AssemblyName;
+			if (group.All (peer => string.Equals (peer.AssemblyName, firstAssemblyName, StringComparison.Ordinal))) {
+				continue;
+			}
+
+			var javaName = JniSignatureHelper.JniNameToJavaBinaryName (group.Key);
+			logger.LogDuplicateJavaTypeError (javaName);
+			foreach (var peer in group
+					.OrderBy (peer => peer.ManagedTypeName, StringComparer.Ordinal)
+					.ThenBy (peer => peer.AssemblyName, StringComparer.Ordinal)) {
+				logger.LogDuplicateJavaTypeDetailsError (javaName, $"{peer.ManagedTypeName}, {peer.AssemblyName}");
+			}
+			valid = false;
+		}
 		if (applicationJavaClass is not null &&
-				JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (applicationJavaClass, out var invalidApplicationIdentifier)) {
+				JavaNameValidator.TryGetInvalidJavaManifestTypeSegment (applicationJavaClass, out var invalidApplicationIdentifier)) {
 			ReportInvalidName (applicationJavaClass, invalidApplicationIdentifier);
 		}
+		ValidateManifestComponentNames ();
 		foreach (var peer in peers) {
 			if (!ShouldGenerateJcw (peer)) {
 				continue;
 			}
 			ReportInvalidJniName (peer.JavaName);
+			if (!peer.IsAbstract && peer.ComponentAttribute is not null &&
+					JavaNameValidator.TryGetInvalidJniManifestNameSegment (peer.JavaName, out var invalidManifestIdentifier)) {
+				ReportInvalidName (peer.JavaName, invalidManifestIdentifier);
+			}
 			if (peer.CannotRegisterInStaticConstructor &&
 					JavaNameValidator.TryGetInvalidJniSourceTypeSegment (peer.JavaName, out var invalidIdentifier)) {
 				ReportInvalidName (peer.JavaName, invalidIdentifier);
@@ -103,15 +189,14 @@ public class TrimmableTypeMapGenerator
 			if (peer.BaseJavaName is not null) {
 				ReportInvalidJniSourceType (peer.BaseJavaName);
 			}
-			foreach (var interfaceName in peer.ImplementedInterfaceJavaNames) {
+			foreach (var interfaceName in peer.JavaCallableWrapperInterfaceJavaNames ?? peer.ImplementedInterfaceJavaNames) {
 				ReportInvalidJniSourceType (interfaceName);
 			}
 			foreach (var constructor in peer.JavaConstructors) {
 				ValidateJniSignature (constructor.JniSignature);
 				if (constructor.ThrownNames is not null) {
 					foreach (var thrownName in constructor.ThrownNames) {
-						var javaThrownName = JniSignatureHelper.JniNameToJavaName (thrownName);
-						if (JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (javaThrownName, out invalidIdentifier)) {
+						if (TryGetInvalidThrownNameSegment (thrownName, out invalidIdentifier)) {
 							ReportInvalidName (thrownName, invalidIdentifier);
 						}
 					}
@@ -123,15 +208,17 @@ public class TrimmableTypeMapGenerator
 				}
 				if (method.ThrownNames is not null) {
 					foreach (var thrownName in method.ThrownNames) {
-						var javaThrownName = JniSignatureHelper.JniNameToJavaName (thrownName);
-						if (JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (javaThrownName, out invalidIdentifier)) {
+						if (TryGetInvalidThrownNameSegment (thrownName, out invalidIdentifier)) {
 							ReportInvalidName (thrownName, invalidIdentifier);
 						}
 					}
 				}
 			}
 			foreach (var field in peer.JavaFields) {
-				if (JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (field.JavaTypeName, out invalidIdentifier)) {
+				bool invalid = field.JniTypeName is not null
+					? JavaNameValidator.TryGetInvalidJniTypeSegment (field.JniTypeName, out _, out invalidIdentifier)
+					: JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (field.JavaTypeName, out invalidIdentifier);
+				if (invalid) {
 					ReportInvalidName (field.JavaTypeName, invalidIdentifier);
 				}
 			}
@@ -144,6 +231,44 @@ public class TrimmableTypeMapGenerator
 				ReportInvalidJniType (parameter.JniType);
 			}
 			ReportInvalidJniType (JniSignatureHelper.ParseReturnTypeString (jniSignature));
+		}
+
+		static bool TryGetInvalidThrownNameSegment (string thrownName, out ReadOnlySpan<char> invalidIdentifier) =>
+			thrownName.IndexOf ('/') >= 0
+				? JavaNameValidator.TryGetInvalidJniSourceTypeSegment (thrownName, out invalidIdentifier)
+				: JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (thrownName, out invalidIdentifier);
+
+		void ValidateManifestComponentNames ()
+		{
+			if (manifest?.Root is not { } root) {
+				return;
+			}
+
+			XNamespace androidNs = "http://schemas.android.com/apk/res/android";
+			XName attName = androidNs + "name";
+			string packageName = (string?) root.Attribute ("package") ?? "";
+			foreach (var element in root.Descendants ()) {
+				if (!ManifestConstants.ComponentElementNames.Contains (element.Name.LocalName)) {
+					continue;
+				}
+
+				if (element.Name.LocalName == "activity-alias") {
+					// An alias name is an arbitrary component identifier, not a Java type.
+					ValidateComponentName ((string?) element.Attribute (androidNs + "targetActivity"));
+				} else {
+					ValidateComponentName ((string?) element.Attribute (attName));
+				}
+			}
+
+			void ValidateComponentName (string? name)
+			{
+				if (name is not null) {
+					string resolvedName = ManifestNameResolver.Resolve (name, packageName);
+					if (JavaNameValidator.TryGetInvalidJavaManifestTypeSegment (resolvedName, out var invalidIdentifier)) {
+						ReportInvalidName (resolvedName, invalidIdentifier);
+					}
+				}
+			}
 		}
 
 		void ReportInvalidJniName (string jniName)
@@ -163,14 +288,14 @@ public class TrimmableTypeMapGenerator
 		void ReportInvalidJniType (string jniType)
 		{
 			if (JavaNameValidator.TryGetInvalidJniTypeSegment (jniType, out var typeName, out var invalidIdentifier)) {
-				ReportInvalidName (typeName, invalidIdentifier);
+				ReportInvalidName (typeName.ToString (), invalidIdentifier);
 			}
 		}
 
-		void ReportInvalidName (string name, string invalidIdentifier)
+		void ReportInvalidName (string name, ReadOnlySpan<char> invalidIdentifier)
 		{
 			if (reportedNames.Add (name)) {
-				logger.LogInvalidJavaNameError (name, invalidIdentifier);
+				logger.LogInvalidJavaNameError (name, invalidIdentifier.ToString ());
 				valid = false;
 			}
 		}
@@ -284,10 +409,11 @@ public class TrimmableTypeMapGenerator
 		return (peers, manifestInfo);
 	}
 
-	List<GeneratedAssembly> GenerateTypeMapAssemblies (
+	internal List<GeneratedAssembly> GenerateTypeMapAssemblies (
 		List<JavaPeerInfo> allPeers,
 		Version systemRuntimeVersion,
-		bool useSharedTypemapUniverse)
+		bool useSharedTypemapUniverse,
+		Func<string, byte [], bool>? shouldGenerateTypeMapAssembly = null)
 	{
 		List<(string AssemblyName, List<JavaPeerInfo> Peers)> peersByAssembly;
 
@@ -315,18 +441,33 @@ public class TrimmableTypeMapGenerator
 		foreach (var (assemblyName, peers) in peersByAssembly) {
 			string typeMapAssemblyName = $"_{assemblyName}.TypeMap";
 			perAssemblyNames.Add (typeMapAssemblyName);
-			var stream = new MemoryStream ();
-			generator.Generate (peers, stream, typeMapAssemblyName, useSharedTypemapUniverse);
-			stream.Position = 0;
+			var model = generator.CreateModel (peers, typeMapAssemblyName);
+			// Both fingerprints come out of a single walk over the model: the incremental one
+			// gates emission, the content one seeds the emitted assembly's deterministic MVID.
+			var fingerprints = generator.ComputeFingerprints (model, useSharedTypemapUniverse,
+				includeIncremental: shouldGenerateTypeMapAssembly is not null);
+			if (shouldGenerateTypeMapAssembly is not null) {
+				var fingerprint = fingerprints.Incremental ?? throw new InvalidOperationException ("Incremental fingerprint was requested but not produced.");
+				if (!shouldGenerateTypeMapAssembly (typeMapAssemblyName, fingerprint)) {
+					continue;
+				}
+			}
+			var stream = generator.GenerateToStream (model, useSharedTypemapUniverse, fingerprints.Content);
 			generatedAssemblies.Add (new GeneratedAssembly (typeMapAssemblyName, stream));
 			logger.LogGeneratedTypeMapAssemblyInfo (typeMapAssemblyName, peers.Count);
 		}
-		var rootStream = new MemoryStream ();
-		var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
-		rootGenerator.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream);
-		rootStream.Position = 0;
-		generatedAssemblies.Add (new GeneratedAssembly ("_Microsoft.Android.TypeMaps", rootStream));
-		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
+		const string rootAssemblyName = "_Microsoft.Android.TypeMaps";
+		bool generateRoot = true;
+		if (shouldGenerateTypeMapAssembly is not null) {
+			var rootFingerprint = MetadataHelper.ComputeRootIncrementalFingerprint (perAssemblyNames, systemRuntimeVersion, useSharedTypemapUniverse);
+			generateRoot = shouldGenerateTypeMapAssembly (rootAssemblyName, rootFingerprint);
+		}
+		if (generateRoot) {
+			var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
+			var rootStream = rootGenerator.GenerateToStream (perAssemblyNames, useSharedTypemapUniverse);
+			generatedAssemblies.Add (new GeneratedAssembly (rootAssemblyName, rootStream));
+			logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
+		}
 		logger.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);
 		return generatedAssemblies;
 	}
@@ -444,6 +585,12 @@ public class TrimmableTypeMapGenerator
 					if (element.Name.LocalName is "application" or "instrumentation") {
 						deferredRegistrationNames.Add (resolvedName);
 					}
+				}
+				break;
+			case "activity-alias":
+				var targetActivity = (string?) element.Attribute (androidNs + "targetActivity");
+				if (targetActivity is not null) {
+					componentNames.Add (ManifestNameResolver.Resolve (targetActivity, packageName));
 				}
 				break;
 			}
@@ -591,11 +738,8 @@ public class TrimmableTypeMapGenerator
 			return doc;
 		}
 
-		if (((string?) root.Attribute ("package")).IsNullOrEmpty () && !manifestConfig.PackageName.IsNullOrEmpty ()) {
-			root.SetAttributeValue ("package", manifestConfig.PackageName);
-		}
-
-		ManifestGenerator.ApplyPlaceholders (doc, manifestConfig.ManifestPlaceholders);
+		ManifestGenerator.ResolvePackageName (root, manifestConfig.PackageName);
+		ManifestGenerator.ApplyPlaceholders (doc, manifestConfig.ManifestPlaceholders, manifestConfig.PackageName);
 
 		if (!manifestConfig.ApplicationJavaClass.IsNullOrEmpty ()) {
 			var app = root.Element ("application");

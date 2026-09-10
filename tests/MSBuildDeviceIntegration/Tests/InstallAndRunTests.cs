@@ -95,6 +95,128 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
 
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
+		public void UnicodeJavaIdentifierActivityActivates (string typeMapImplementation, AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			const string javaName = "com.\u00e9xample.\u0394elta";
+			var expectedLogcatOutput = new HashSet<string> (StringComparer.Ordinal) {
+				"UNICODE_JCW_ACTIVATED=1",
+				"UNICODE_CURRENCY_ACTIVATED",
+				"UNICODE_CONNECTOR_ACTIVATED",
+				"UNICODE_SUPPLEMENTARY_CLASS_NOT_FOUND",
+			};
+			var proj = new XamarinAndroidApplicationProject (
+				packageName: PackageUtils.MakePackageName (runtime, "unicodeidentifier")) {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			proj.SetDefaultTargetDevice ();
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace (
+					"[Android.Runtime.Register (\"${JAVA_PACKAGENAME}.MainActivity\"),",
+					$"[Android.Runtime.Register (\"{javaName}\"),")
+				.Replace (
+					"//${FIELDS}",
+					"""
+					static int constructorInvocations;
+
+					public MainActivity ()
+					{
+						constructorInvocations++;
+					}
+					""")
+				.Replace (
+					"//${AFTER_ONCREATE}",
+					"""
+					Android.Util.Log.Info ("UnicodeJavaIdentifiers", $"UNICODE_JCW_ACTIVATED={constructorInvocations}");
+					var currencyHandle = Android.Runtime.JNIEnv.StartCreateInstance (typeof (CurrencyIdentifierPeer), "()V");
+					Android.Runtime.JNIEnv.FinishCreateInstance (currencyHandle, "()V");
+					using (var currency = Java.Lang.Object.GetObject<CurrencyIdentifierPeer> (
+						currencyHandle, Android.Runtime.JniHandleOwnership.TransferLocalRef)) {
+					}
+					var connectorHandle = Android.Runtime.JNIEnv.StartCreateInstance (typeof (ConnectorIdentifierPeer), "()V");
+					Android.Runtime.JNIEnv.FinishCreateInstance (connectorHandle, "()V");
+					using (var connector = Java.Lang.Object.GetObject<ConnectorIdentifierPeer> (
+						connectorHandle, Android.Runtime.JniHandleOwnership.TransferLocalRef)) {
+					}
+					try {
+						var supplementaryClass = Java.Interop.JniEnvironment.Types.FindClass ("com/example/\U00010428Peer\U00010400");
+						Java.Interop.JniObjectReference.Dispose (ref supplementaryClass);
+						Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_SUPPLEMENTARY_UNEXPECTEDLY_LOADED");
+					} catch (Java.Lang.ClassNotFoundException) {
+						Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_SUPPLEMENTARY_CLASS_NOT_FOUND");
+					}
+					""");
+			proj.Sources.Add (new BuildItem.Source ("JavaTypeIdentifierPeers.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Register ("com/example/\u00a2Peer")]
+					public class CurrencyIdentifierPeer : Java.Lang.Object
+					{
+						public CurrencyIdentifierPeer ()
+						{
+							Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_CURRENCY_ACTIVATED");
+						}
+					}
+
+					[Register ("com/example/\u203fPeer")]
+					public class ConnectorIdentifierPeer : Java.Lang.Object
+					{
+						public ConnectorIdentifierPeer ()
+						{
+							Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_CONNECTOR_ACTIVATED");
+						}
+					}
+
+					""",
+			});
+			proj.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("com\\example\\\U00010428Peer\U00010400.java") {
+				Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+				TextContent = () => """
+					package com.example;
+
+					public class 𐐨Peer𐐀 {}
+					""",
+			});
+			proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "supplementary-name.pro") {
+				TextContent = () => "-keep class com.example.𐐨Peer𐐀 { *; }",
+			});
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), $"{runtime}/{typeMapImplementation} should install.");
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			Assert.IsTrue (
+				DexUtils.ContainsClass ("Lcom/example/\U00010428Peer\U00010400;", dexFile, AndroidSdkPath),
+				"The exact supplementary descriptor should be present in DEX before Android fails to load it.");
+
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{proj.PackageName}/{javaName}");
+			Assert.IsTrue (
+				MonitorAdbLogcat (
+					line => {
+						expectedLogcatOutput.RemoveWhere (expected => line.Contains (expected, StringComparison.Ordinal));
+						return expectedLogcatOutput.Count == 0;
+					},
+					Path.Combine (Root, builder.ProjectDirectory, "unicode-identifier-logcat.log"),
+					ActivityStartTimeoutInSeconds
+				),
+				$"{runtime}/{typeMapImplementation} should activate every supported Unicode peer. " +
+					$"Missing: {string.Join (", ", expectedLogcatOutput)}"
+			);
+		}
+
 		[Test]
 		public void PublishReadyToRunPartial ([Values] bool isComposite)
 		{
@@ -734,19 +856,48 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
-		public void AssemblyStoreDecompressionCacheMapsPersistedAssemblies ()
+		public void AssemblyStoreDecompressionCacheMapsPersistedAssemblies ([Values] bool longCachePath)
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
 				return;
 			}
 
-			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "assemblycache")) {
+			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, longCachePath ? "assemblycachelong" : "assemblycache")) {
 				IsRelease = true,
 			};
 			app.SetRuntime (AndroidRuntime.CoreCLR);
 			app.SetRuntimeIdentifiers (new [] { DeviceAbi });
 			app.SetProperty ("AndroidEnableAssemblyStoreDecompressionCache", "true");
 			app.AndroidManifest = app.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
+
+			string cacheDirectory = "code_cache";
+			if (longCachePath) {
+				// Exceed Util::LocalPathBufferSize (1024), keeping each component below NAME_MAX.
+				string subdirectory = string.Join ("/", Enumerable.Repeat (new string ('a', 128), 9));
+				cacheDirectory += "/" + subdirectory;
+				app.AndroidManifest = app.AndroidManifest.Replace ("<application ", "<application android:name=\"com.test.CachePathApplication\" ");
+				app.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("CachePathApplication.java") {
+					Encoding = Encoding.ASCII,
+					Metadata = {
+						{ "Bind", "False" },
+					},
+					TextContent = () => $$"""
+						package com.test;
+
+						public class CachePathApplication extends android.app.Application {
+							@Override
+							public java.io.File getCodeCacheDir () {
+								java.io.File directory = new java.io.File (super.getCodeCacheDir (), "{{subdirectory}}");
+								if (!directory.isDirectory () && !directory.mkdirs ()) {
+									throw new IllegalStateException ("Unable to create the long code cache directory");
+								}
+								return directory;
+							}
+						}
+						""",
+				});
+			}
+			string cacheRoot = cacheDirectory + "/decompressed-assembly-cache-v1";
 
 			using var appBuilder = CreateApkBuilder ();
 			Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
@@ -767,15 +918,22 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			for (int attempt = 0; attempt < 40 && cacheFiles.Length < 2; attempt++) {
 				Thread.Sleep (250);
 				cacheFiles = RunAdbCommand (
-					$"shell run-as {app.PackageName} find code_cache/decompressed-assembly-cache-v1 -type f -name '*.bin'"
+					$"shell run-as {app.PackageName} find {cacheRoot} -type f -name '*.bin'"
 				)
 					.Split (new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
 					.Where (line => line.EndsWith (".bin", StringComparison.Ordinal))
 					.ToArray ();
 			}
 			Assert.That (cacheFiles.Length, Is.GreaterThanOrEqualTo (2), "The first launch should persist multiple decompressed assemblies.");
+			if (longCachePath) {
+				Assert.IsTrue (cacheFiles.All (path => path.Length > 1024), "Cache paths should exceed the native stack buffer size.");
+			}
 
 			RunAdbCommand ($"shell am force-stop --user all {app.PackageName}");
+			string staleTempFile = cacheFiles.Last () + ".tmp.stale";
+			RunAdbCommand ($"shell run-as {app.PackageName} touch {staleTempFile}");
+			StringAssert.Contains (staleTempFile, RunAdbCommand ($"shell run-as {app.PackageName} ls {staleTempFile}"),
+				"The stale temporary file should exist before restarting.");
 			string cacheFileToCorrupt = cacheFiles.First ();
 			string ValidFileHash () => RunAdbCommand (
 				$"shell run-as {app.PackageName} md5sum {cacheFileToCorrupt}"
@@ -810,6 +968,11 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				rewritten = ValidFileHash () == validHash;
 			}
 			Assert.IsTrue (rewritten, $"The corrupted cache file '{cacheFileToCorrupt}' should be rewritten with valid contents after fallback.");
+			Assert.That (
+				RunAdbCommand ($"shell run-as {app.PackageName} find {cacheRoot} -type f -name '*.tmp.stale'").Trim (),
+				Is.Empty,
+				"The second launch should remove stale temporary files."
+			);
 
 			string [] pids = RunAdbCommand ($"shell pidof {app.PackageName}")
 				.Split (new [] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
@@ -819,7 +982,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				maps.Append (RunAdbCommand ($"shell run-as {app.PackageName} cat /proc/{pid}/maps"));
 			}
 			StringAssert.Contains (
-				"/code_cache/decompressed-assembly-cache-v1/",
+				"/" + cacheRoot + "/",
 				maps.ToString (),
 				"The second launch should map persisted decompressed assemblies."
 			);
@@ -1749,6 +1912,279 @@ namespace Styleable.Library {
 			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds);
 			Assert.IsTrue (didStart, "Activity should have started.");
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
+		public void AppCompatJavaAliasCastsAndInflation (
+			string typemapImplementation,
+			AndroidRuntime runtime)
+		{
+			const string expectedLogcatOutput = "APPCOMPAT_ALIAS_CASTS_PASS";
+
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			var packageSuffix = $"appcompataliascasts{typemapImplementation.Replace ("-", "")}";
+			var packageName = PackageUtils.MakePackageName (runtime, packageSuffix);
+			var proj = new XamarinAndroidApplicationProject (
+				packageName: packageName) {
+				IsRelease = true,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			proj.SetProperty ("AndroidTypeMapImplementation", typemapImplementation);
+			proj.SetDefaultTargetDevice ();
+			proj.PackageReferences.Add (new Package {
+				Id = "Xamarin.AndroidX.AppCompat",
+				Version = "1.7.1.3",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\styles.xml") {
+				TextContent = () => """
+					<?xml version="1.0" encoding="utf-8"?>
+					<resources>
+						<style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar" />
+					</resources>
+					""",
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\alias_casts.xml") {
+				TextContent = () => """
+					<?xml version="1.0" encoding="utf-8"?>
+					<LinearLayout
+						xmlns:android="http://schemas.android.com/apk/res/android"
+						android:layout_width="match_parent"
+						android:layout_height="match_parent"
+						android:orientation="vertical">
+						<androidx.appcompat.widget.Toolbar
+							android:id="@+id/toolbar"
+							android:layout_width="match_parent"
+							android:layout_height="wrap_content" />
+						<androidx.appcompat.widget.AppCompatImageButton
+							android:id="@+id/image_button"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:src="@android:drawable/ic_menu_add" />
+					</LinearLayout>
+					""",
+			});
+			proj.MainActivity = """
+				using System;
+
+				using Android.App;
+				using Android.Content;
+				using Android.OS;
+				using Android.Runtime;
+				using Android.Util;
+				using Android.Views;
+
+				using AndroidX.AppCompat.App;
+				using AndroidX.AppCompat.Widget;
+				using AndroidX.Core.View;
+
+				using Java.Interop;
+
+				namespace UnnamedProject
+				{
+					[Activity (
+						Label = "AppCompat alias casts",
+						MainLauncher = true,
+						Theme = "@style/AppTheme")]
+					public class MainActivity : AppCompatActivity
+					{
+						public MainActivity ()
+						{
+						}
+
+						protected MainActivity (IntPtr handle, JniHandleOwnership transfer)
+							: base (handle, transfer)
+						{
+						}
+
+						protected override void OnCreate (Bundle savedInstanceState)
+						{
+							base.OnCreate (savedInstanceState);
+							SetContentView (Resource.Layout.alias_casts);
+
+							VerifyInflatedViews ();
+							VerifyManagedCreatedViews ();
+							VerifyCallerDirectedGenericWrapper ();
+
+							Log.Info ("JavaAliasCasts", "APPCOMPAT_ALIAS_CASTS_PASS");
+						}
+
+						void VerifyInflatedViews ()
+						{
+							const bool allowRegisteredAliasInflation = __ALLOW_REGISTERED_ALIAS_INFLATION__;
+
+							var toolbarView = FindViewById (Resource.Id.toolbar);
+							Require (toolbarView != null, "Inflated Toolbar was not found.");
+							Require (
+								toolbarView.GetType () == typeof (AndroidX.AppCompat.Widget.Toolbar),
+								$"Expected most-derived Toolbar binding; {Describe (toolbarView)}.");
+
+							var toolbar = JavaObjectExtensions.JavaCast<AndroidX.AppCompat.Widget.Toolbar> (toolbarView);
+							var toolbarAs = JavaPeerableExtensions.JavaAs<AndroidX.AppCompat.Widget.Toolbar> (toolbarView);
+							Require (ReferenceEquals (toolbarView, toolbar), "JavaCast<Toolbar> did not preserve the existing peer.");
+							Require (ReferenceEquals (toolbarView, toolbarAs), "JavaAs<Toolbar> did not preserve the existing peer.");
+							Require (
+								ReferenceEquals (toolbarView, FindViewById (Resource.Id.toolbar)),
+								"Repeated Toolbar lookup did not preserve peer identity.");
+
+							var imageView = FindViewById (Resource.Id.image_button);
+							Require (imageView != null, "Inflated AppCompatImageButton was not found.");
+							Require (
+								imageView.GetType () == typeof (AppCompatImageButton) ||
+									(allowRegisteredAliasInflation && imageView.GetType () == typeof (AppCompatImageButtonAlias)),
+								$"Expected the canonical AppCompatImageButton binding; {Describe (imageView)}.");
+							Require (
+								ReferenceEquals (imageView, FindViewById (Resource.Id.image_button)),
+								"Repeated AppCompatImageButton lookup did not preserve peer identity.");
+
+							using var untypedImage = new Java.Lang.Object (
+								imageView.Handle,
+								JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister);
+							var alias = JavaObjectExtensions.JavaCast<AppCompatImageButtonAlias> (untypedImage);
+							try {
+								using var aliasAs = JavaPeerableExtensions.JavaAs<AppCompatImageButtonAlias> (untypedImage);
+								Require (alias != null, "JavaCast did not select the concrete AppCompatImageButton alias.");
+								Require (aliasAs != null, "JavaAs did not select the concrete AppCompatImageButton alias.");
+								Require (
+									JNIEnv.IsSameObject (imageView.Handle, alias.Handle),
+									"Concrete alias did not retain the inflated Java object.");
+								Require (
+									JNIEnv.IsSameObject (imageView.Handle, aliasAs.Handle),
+									"Concrete alias JavaAs did not retain the inflated Java object.");
+								if (imageView is AppCompatImageButtonAlias) {
+									Require (ReferenceEquals (imageView, alias), "JavaCast did not preserve the inflated alias peer.");
+								}
+								Require (
+									AppCompatImageButtonAlias.HandleConstructorCalls == 2,
+									"Inflation and concrete alias casts did not use the expected handle constructors.");
+
+								var tintable = JavaObjectExtensions.JavaCast<ITintableBackgroundView> (untypedImage);
+								try {
+									using var tintableAs = JavaPeerableExtensions.JavaAs<ITintableBackgroundView> (untypedImage);
+									Require (tintable != null, "JavaCast did not resolve the AppCompat interface.");
+									Require (tintableAs != null, "JavaAs did not resolve the AppCompat interface.");
+									Require (
+										JNIEnv.IsSameObject (imageView.Handle, tintable.Handle),
+										"Interface cast did not retain the inflated Java object.");
+									Require (
+										JNIEnv.IsSameObject (imageView.Handle, tintableAs.PeerReference.Handle),
+										"Interface JavaAs did not retain the inflated Java object.");
+								} finally {
+									if (tintable != null && !ReferenceEquals (tintable, imageView)) {
+										tintable.Dispose ();
+									}
+								}
+							} finally {
+								if (alias != null && !ReferenceEquals (alias, imageView)) {
+									alias.Dispose ();
+								}
+							}
+						}
+
+						void VerifyManagedCreatedViews ()
+						{
+							using var image = new AppCompatImageButton (this);
+							using var untypedImage = new Java.Lang.Object (
+								image.Handle,
+								JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister);
+							var castImage = JavaObjectExtensions.JavaCast<AppCompatImageButton> (untypedImage);
+							var imageAs = JavaPeerableExtensions.JavaAs<AppCompatImageButton> (image);
+							Require (ReferenceEquals (image, castImage), "Managed-created JavaCast did not preserve peer identity.");
+							Require (ReferenceEquals (image, imageAs), "Managed-created JavaAs did not preserve peer identity.");
+
+							using var alias = new AppCompatImageButtonAlias (this);
+							using var untypedAlias = new Java.Lang.Object (
+								alias.Handle,
+								JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister);
+							var castAlias = JavaObjectExtensions.JavaCast<AppCompatImageButtonAlias> (untypedAlias);
+							var aliasAs = JavaPeerableExtensions.JavaAs<AppCompatImageButtonAlias> (alias);
+							Require (ReferenceEquals (alias, castAlias), "Managed-created alias JavaCast did not preserve peer identity.");
+							Require (ReferenceEquals (alias, aliasAs), "Managed-created alias JavaAs did not preserve peer identity.");
+						}
+
+						static void VerifyCallerDirectedGenericWrapper ()
+						{
+							using var list = new JavaList ();
+							using var untyped = new Java.Lang.Object (
+								list.Handle,
+								JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister);
+							using var generic = JavaObjectExtensions.JavaCast<JavaList<string>> (untyped);
+							using var genericAs = JavaPeerableExtensions.JavaAs<JavaList<string>> (untyped);
+							Require (generic != null, "JavaCast did not create the caller-directed generic wrapper.");
+							Require (genericAs != null, "JavaAs did not create the caller-directed generic wrapper.");
+							Require (
+								JNIEnv.IsSameObject (generic.Handle, genericAs.Handle),
+								"Caller-directed generic wrappers did not retain the same Java object.");
+							generic.Add ("alias");
+							Require (genericAs [0] == "alias", "Caller-directed generic wrappers did not round trip their value.");
+							Require (
+								ReferenceEquals (generic, JavaPeerableExtensions.JavaAs<JavaList<string>> (generic)),
+								"Generic JavaAs did not preserve the typed peer.");
+						}
+
+						static string Describe (Java.Lang.Object value)
+						{
+							return $"managed={value.GetType ().FullName}, java={JNIEnv.GetClassNameFromInstance (value.Handle)}";
+						}
+
+						static void Require (bool condition, string message)
+						{
+							if (!condition) {
+								throw new InvalidOperationException (message);
+							}
+						}
+					}
+
+					[Register ("androidx/appcompat/widget/AppCompatImageButton", DoNotGenerateAcw = true)]
+					public sealed class AppCompatImageButtonAlias : AppCompatImageButton
+					{
+						public static int HandleConstructorCalls;
+
+						public AppCompatImageButtonAlias (Context context)
+							: base (context)
+						{
+						}
+
+						public AppCompatImageButtonAlias (Context context, IAttributeSet attrs)
+							: base (context, attrs)
+						{
+						}
+
+						public AppCompatImageButtonAlias (Context context, IAttributeSet attrs, int style)
+							: base (context, attrs, style)
+						{
+						}
+
+						public AppCompatImageButtonAlias (IntPtr handle, JniHandleOwnership transfer)
+							: base (handle, transfer)
+						{
+							HandleConstructorCalls++;
+						}
+					}
+				}
+				""".Replace (
+					"__ALLOW_REGISTERED_ALIAS_INFLATION__",
+					typemapImplementation == "llvm-ir" ? "true" : "false");
+			using var builder = CreateApkBuilder (packageName: packageName);
+			Assert.AreEqual (proj.PackageName, TestPackageNames [packageName], "Teardown should track the installed package.");
+			RunAdbCommand ($"uninstall {proj.PackageName}");
+			try {
+				Assert.True (builder.Install (proj), "Project should have installed.");
+				ClearAdbLogcat ();
+				RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
+				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+					Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
+				Assert.True (MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput),
+					Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45), $"Output did not contain {expectedLogcatOutput}.");
+			} finally {
+				RunAdbCommand ($"shell am force-stop --user all {proj.PackageName}");
+				RunAdbCommand ($"uninstall {proj.PackageName}");
+			}
 		}
 
 		[Test]

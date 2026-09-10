@@ -15,6 +15,13 @@ namespace Xamarin.Android.Tasks;
 /// </summary>
 public class LinkNativeAotSharedLibrary : AndroidTask
 {
+	const string RuntimeWorkstationGcLibrary = "libRuntime.WorkstationGC.a";
+	static readonly string [] ArmEhabiPersonalitySymbols = [
+		"__aeabi_unwind_cpp_pr0",
+		"__aeabi_unwind_cpp_pr1",
+		"__aeabi_unwind_cpp_pr2",
+	];
+
 	public override string TaskPrefix => "LNAS";
 
 	[Required]
@@ -175,7 +182,11 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 		linkItems.Add (CopyItemWithAbi (NativeObject, abi));
 
 		foreach (var lib in NativeLibraries) {
-			linkItems.Add (CopyItemWithAbi (lib, abi));
+			ITaskItem? library = MakeArmEhabiPersonalitySymbolsAvailable (lib, abi);
+			if (library == null) {
+				return false;
+			}
+			linkItems.Add (CopyItemWithAbi (library, abi));
 		}
 
 		if (SystemLibraries != null) {
@@ -216,6 +227,34 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 		var output = CopyItemWithAbi (OutputSharedLibrary, abi);
 
 		return linker.Link (output, linkItems, startFiles, endFiles);
+	}
+
+	ITaskItem? MakeArmEhabiPersonalitySymbolsAvailable (ITaskItem library, string abi)
+	{
+		if (abi != "armeabi-v7a" || Path.GetFileName (library.ItemSpec) != RuntimeWorkstationGcLibrary) {
+			return library;
+		}
+
+		// NativeAOT's private libunwind already implements these, but localizes the symbols.
+		// Promote them instead of linking a second copy of libunwind.
+		Directory.CreateDirectory (IntermediateOutputPath);
+		string outputPath = Path.Combine (IntermediateOutputPath, "libRuntime.WorkstationGC.arm-ehabi.a");
+		string objcopy = Path.Combine (AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (AndroidBinUtilsDirectory, "llvm-objcopy"));
+		var args = new List<string> ();
+		foreach (string symbol in ArmEhabiPersonalitySymbols) {
+			args.Add ($"--globalize-symbol={symbol}");
+			args.Add ($"--weaken-symbol={symbol}");
+		}
+		args.Add (MonoAndroidHelper.QuoteFileNameArgument (library.ItemSpec));
+		args.Add (MonoAndroidHelper.QuoteFileNameArgument (outputPath));
+
+		if (MonoAndroidHelper.RunProcess ("Promote ARM EHABI personality symbols", objcopy, String.Join (" ", args), Log) != 0) {
+			return null;
+		}
+
+		var output = new TaskItem (library);
+		output.ItemSpec = outputPath;
+		return output;
 	}
 
 	/// <summary>

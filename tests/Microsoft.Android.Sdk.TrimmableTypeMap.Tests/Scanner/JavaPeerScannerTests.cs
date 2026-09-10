@@ -57,6 +57,7 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 
 		Assert.NotEmpty (peers);
 		Assert.All (peers, p => Assert.True (p.IsFrameworkAssembly, $"{p.ManagedTypeName} should be marked as a framework peer."));
+		Assert.All (peers, p => Assert.False (p.IsUnconditional, $"{p.ManagedTypeName} should not be rooted by framework assembly attributes."));
 	}
 
 	[Fact]
@@ -90,6 +91,27 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 		Assert.Equal (2, clickListenerPeers.Count);
 		Assert.Contains (clickListenerPeers, p => p.IsInterface);
 		Assert.Contains (clickListenerPeers, p => p.DoNotGenerateAcw);
+	}
+
+	[Theory]
+	[InlineData ("MyApp.IExplicitJavaInteropCollection", "MyApp.ExplicitJavaInteropCollectionProxy")]
+	[InlineData ("MyApp.IInheritedJavaInteropList", "MyApp.InheritedJavaInteropListProxy")]
+	[InlineData ("MyApp.AbstractJavaInteropList", "MyApp.AbstractJavaInteropListProxy")]
+	public void Scan_JniTypeSignatureExplicitInvoker_UsesJavaInteropConstructor (string targetType, string invokerType)
+	{
+		var peer = FindFixtureByManagedName (targetType);
+
+		Assert.Equal (invokerType, peer.InvokerTypeName);
+		Assert.Equal (ActivationCtorStyle.JavaInterop, peer.InvokerActivationCtorStyle);
+	}
+
+	[Fact]
+	public void Scan_JniTypeSignatureCrossAssemblyInvoker_IsIgnored ()
+	{
+		var peer = FindFixtureByManagedName ("MyApp.IUnsupportedExternalInvoker");
+
+		Assert.Null (peer.InvokerTypeName);
+		Assert.Null (peer.InvokerActivationCtorStyle);
 	}
 
 	[Fact]
@@ -130,6 +152,7 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 		var peer = FindFixtureByJavaName ("net/dot/jni/test/JavaDisposedObject");
 		Assert.Equal ("Java.Interop.TestTypes.JavaDisposedObject", peer.ManagedTypeName);
 		Assert.False (peer.DoNotGenerateAcw, "GenerateJavaPeer=true should map to DoNotGenerateAcw=false");
+		Assert.True (peer.IsUnconditional, "Non-framework JniTypeSignature peers should match the legacy IJniNameProviderAttribute root.");
 	}
 
 	[Fact]

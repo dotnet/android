@@ -196,10 +196,8 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			yield return builtInType;
 		}
 
-		if (TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types)) {
-			foreach (var type in types) {
-				yield return type;
-			}
+		foreach (var type in TrimmableTypeMap.Instance.GetTargetTypes (jniSimpleReference)) {
+			yield return type;
 		}
 	}
 
@@ -212,9 +210,8 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			return builtInType;
 		}
 
-		// TryGetTargetTypes returns a non-empty array when it succeeds.
-		if (TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types)) {
-			return types [0];
+		if (TrimmableTypeMap.Instance.TryGetTargetType (jniSimpleReference, out var type)) {
+			return type;
 		}
 
 		return null;
@@ -382,6 +379,9 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		=> JniRemappingLookup.GetReplacementType (jniSimpleReference);
 
 	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
+		=> JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
+
+	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 		=> JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
 
 	// The rest of the APIs are unsupported - they are not needed internally anywhere anyway

@@ -1,9 +1,11 @@
 ﻿#nullable enable
 
 using System;
-using System.Diagnostics;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
+using System.Threading;
 
 namespace Java.Interop {
 
@@ -108,6 +110,30 @@ namespace Java.Interop {
 			return value;
 		}
 
+		static ConcurrentDictionary<TKey, TValue> GetOrCreate<TKey, TValue> (ref ConcurrentDictionary<TKey, TValue>? dictionary, int capacity)
+			where TKey : notnull
+		{
+			var value = Volatile.Read (ref dictionary);
+			if (value != null)
+				return value;
+
+			var candidate = new ConcurrentDictionary<TKey, TValue> (1, capacity);
+			return Interlocked.CompareExchange (ref dictionary, candidate, null) ?? candidate;
+		}
+
+		static void Clear<TKey, TValue> (ref ConcurrentDictionary<TKey, TValue>? dictionary, Action<TValue>? dispose = null)
+			where TKey : notnull
+		{
+			var values = Interlocked.Exchange (ref dictionary, null);
+			if (values == null)
+				return;
+			if (dispose != null) {
+				foreach (var value in values.Values)
+					dispose (value);
+			}
+			values.Clear ();
+		}
+
 		protected virtual void Dispose (bool disposing)
 		{
 			if (!disposing || jniPeerType == null)
@@ -168,11 +194,11 @@ namespace Java.Interop {
 			return n;
 		}
 
-		internal static void GetNameAndSignature (string encodedMember, out string name, out string signature)
+		internal static void GetNameAndSignature (string encodedMember, out ReadOnlySpan<char> name, out ReadOnlySpan<char> signature)
 		{
 			int n       = GetSignatureSeparatorIndex (encodedMember);
-			name        = encodedMember.Substring (0, n);
-			signature   = encodedMember.Substring (n + 1);
+			name        = encodedMember.AsSpan (0, n);
+			signature   = encodedMember.AsSpan (n + 1);
 		}
 	}
 }

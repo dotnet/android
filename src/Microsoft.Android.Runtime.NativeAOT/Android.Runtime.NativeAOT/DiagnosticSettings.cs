@@ -65,7 +65,8 @@ struct DiagnosticSettings {
 	public void AddDebugDotnetLog ()
 	{
 		Span<byte>  value   = stackalloc byte [RuntimeNativeMethods.PROP_VALUE_MAX];
-		if (!RuntimeNativeMethods.TryGetSystemProperty ("debug.dotnet.log"u8, ref value)) {
+		if (!RuntimeNativeMethods.TryGetSystemProperty ("debug.dotnet.log"u8, ref value) &&
+		    !RuntimeNativeMethods.TryGetSystemProperty ("debug.mono.log"u8, ref value)) {
 			return;
 		}
 		AddParse (value);

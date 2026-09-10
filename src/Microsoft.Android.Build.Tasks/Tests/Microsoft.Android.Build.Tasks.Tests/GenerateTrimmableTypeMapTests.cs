@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
-using Xamarin.Android.Tasks;
-using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
@@ -45,6 +44,32 @@ namespace Xamarin.Android.Build.Tests {
 
 			Assert.IsFalse (task.Execute (), "Task should fail with invalid TargetFrameworkVersion.");
 			Assert.IsNotEmpty (errors, "Should have logged an error.");
+		}
+
+		[Test]
+		public void LoadCustomViewTypeNames_ParsesKeysAndIgnoresBlankLines ()
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			var mapFile = Path.Combine (directory, "custom-view-map.txt");
+			Directory.CreateDirectory (directory);
+			File.WriteAllText (mapFile, "Example.View;example.View\n\nExample.View;example.OtherView\nOther.View;other.View\n");
+
+			var typeNames = GenerateTrimmableTypeMap.LoadCustomViewTypeNames (mapFile);
+
+			CollectionAssert.AreEquivalent (new [] { "Example.View", "Other.View" }, typeNames);
+		}
+
+		[Test]
+		public void LoadCustomViewTypeNames_InvalidEntryThrows ()
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			var mapFile = Path.Combine (directory, "custom-view-map.txt");
+			Directory.CreateDirectory (directory);
+			File.WriteAllText (mapFile, "invalid");
+
+			var exception = Assert.Throws<InvalidDataException> (() => GenerateTrimmableTypeMap.LoadCustomViewTypeNames (mapFile));
+
+			StringAssert.Contains ("Invalid custom view map entry 'invalid'", exception?.Message);
 		}
 
 		[Test]
@@ -101,13 +126,76 @@ namespace Xamarin.Android.Build.Tests {
 				.First (p => p.Contains ("_Mono.Android.TypeMap.dll"));
 			var firstWriteTime = File.GetLastWriteTimeUtc (typeMapPath);
 
-			// Second run: same inputs — outputs should not be rewritten (CopyIfStreamChanged)
-			var task2 = CreateTask (assemblies, outputDir, javaDir);
+			// Second run: the persisted model fingerprint should avoid PE emission entirely.
+			var messages = new List<BuildMessageEventArgs> ();
+			var task2 = CreateTask (assemblies, outputDir, javaDir, messages: messages);
 			Assert.IsTrue (task2.Execute (), "Second run should succeed.");
 
 			var secondWriteTime = File.GetLastWriteTimeUtc (typeMapPath);
 			Assert.AreEqual (firstWriteTime, secondWriteTime,
 				"Typemap assembly should NOT be rewritten when content hasn't changed.");
+			Assert.IsTrue (messages.Any (message => message.Message?.Contains ("_Mono.Android.TypeMap: unchanged, skipping emission", StringComparison.Ordinal) == true),
+				"Second run should skip typemap PE emission based on the persisted model fingerprint.");
+		}
+
+		[Test]
+		public void Execute_MissingTypeMapAssembly_RegeneratesWithMatchingFingerprint ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			var assemblies = new [] { monoAndroidItem };
+			var task1 = CreateTask (assemblies, outputDir, javaDir);
+			Assert.IsTrue (task1.Execute (), "First run should succeed.");
+
+			var typeMapPath = task1.GeneratedAssemblies
+				.Select (i => i.ItemSpec)
+				.First (p => p.Contains ("_Mono.Android.TypeMap.dll"));
+			File.Delete (typeMapPath);
+
+			var messages = new List<BuildMessageEventArgs> ();
+			var task2 = CreateTask (assemblies, outputDir, javaDir, messages: messages);
+			Assert.IsTrue (task2.Execute (), "Second run should recover the missing typemap assembly.");
+
+			FileAssert.Exists (typeMapPath, "A missing typemap assembly should be regenerated even when its persisted fingerprint matches.");
+			Assert.IsTrue (messages.Any (message => message.Message?.Contains ("_Mono.Android.TypeMap: changed, generating", StringComparison.Ordinal) == true),
+				"A missing typemap assembly should be reported as changed rather than unchanged.");
+		}
+
+		[Test]
+		public void ReadTypeMapFingerprints_UnreadableCache_Regenerates ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+			var fingerprintsFile = Path.Combine (outputDir, "typemap-fingerprints.txt");
+			Directory.CreateDirectory (outputDir);
+			File.WriteAllText (fingerprintsFile, "_Existing.TypeMap\tfingerprint");
+
+			using var fingerprintsLock = File.Open (fingerprintsFile, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+			var task = CreateTask ([], outputDir, javaDir);
+
+			Assert.IsEmpty (task.ReadTypeMapFingerprints (), "An unreadable incremental cache should regenerate every typemap assembly.");
+		}
+
+		[Test]
+		public void ReadTypeMapFingerprints_InvalidCache_Regenerates ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+			Directory.CreateDirectory (outputDir);
+			File.WriteAllText (Path.Combine (outputDir, "typemap-fingerprints.txt"), "invalid");
+			var task = CreateTask ([], outputDir, javaDir);
+
+			Assert.IsEmpty (task.ReadTypeMapFingerprints (), "An invalid incremental cache should regenerate every typemap assembly.");
 		}
 
 		[Test]
@@ -278,125 +366,6 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsFalse (warnings.Any (w => w.Code == "XA4250"), "Resolved placeholder-based manifest references should not log XA4250.");
 		}
 
-		[Test]
-		public void Execute_GenerateNativeAotProguardConfiguration_UsesDgmlTypeMetadata ()
-		{
-			var path = Path.Combine (Root, "temp", TestName);
-			var dgmlFile = Path.Combine (path, "app.scan.dgml.xml");
-			var acwMapFile = Path.Combine (path, "acw-map.txt");
-			var outputFile = Path.Combine (path, "proguard", "proguard_project_references.cfg");
-			Directory.CreateDirectory (path);
-			File.WriteAllText (dgmlFile, """
-				<?xml version="1.0" encoding="utf-8"?>
-				<DirectedGraph xmlns="http://schemas.microsoft.com/vs/2009/dgml">
-				  <Nodes>
-				    <Node Id="1" Label="Type metadata: [UnnamedProject]UnnamedProject.MainActivity" />
-				    <Node Id="2" Label="Type metadata: [Mono.Android]Android.App.Activity" />
-				    <Node Id="3" Label="Type metadata: [My.Assembly]Duplicate.Type" />
-				    <Node Id="4" Label="Type metadata: [Xamarin.AndroidX.Activity]AndroidX.Activity.Result.Contract.ActivityResultContracts+TakePicture" />
-				    <Node Id="5" Label="Unrelated node" />
-				  </Nodes>
-				  <Links>
-				    <Node Id="6" Label="Type metadata: [Other.Assembly]Other.Type" />
-				  </Links>
-				</DirectedGraph>
-				""");
-			File.WriteAllText (acwMapFile, """
-				UnnamedProject.MainActivity, UnnamedProject;crc64a1.MainActivity
-				Android.App.Activity, Mono.Android;android.app.Activity
-				Duplicate.Type, My.Assembly;my.app.Duplicate
-				AndroidX.Activity.Result.Contract.ActivityResultContracts+TakePicture, Xamarin.AndroidX.Activity;androidx.activity.result.contract.ActivityResultContracts$TakePicture
-				Duplicate.Type;wrong.Duplicate
-				Other.Type;other.Type
-				""");
-
-			var task = new GenerateNativeAotProguardConfiguration {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				NativeAotDgmlFiles = new [] { new TaskItem (dgmlFile) },
-				AcwMapFile = acwMapFile,
-				OutputFile = outputFile,
-				TrimJavaCallableWrappers = true,
-			};
-
-			Assert.IsTrue (task.Execute (), "Task should succeed.");
-			var proguard = File.ReadAllText (outputFile);
-			StringAssert.Contains ("-keep class crc64a1.MainActivity { *; }", proguard);
-			StringAssert.Contains ("-keep class android.app.Activity { *; }", proguard);
-			StringAssert.Contains ("-keep class my.app.Duplicate { *; }", proguard);
-			StringAssert.Contains ("-keep class androidx.activity.result.contract.ActivityResultContracts$TakePicture { *; }", proguard);
-			StringAssert.DoesNotContain ("wrong.Duplicate", proguard);
-			StringAssert.DoesNotContain ("other.Type", proguard);
-		}
-
-		[Test]
-		public void Execute_GenerateNativeAotProguardConfiguration_KeepsAllWhenTrimmingDisabled ()
-		{
-			var path = Path.Combine (Root, "temp", TestName);
-			var acwMapFile = Path.Combine (path, "acw-map.txt");
-			var outputFile = Path.Combine (path, "proguard", "proguard_project_references.cfg");
-			Directory.CreateDirectory (path);
-			File.WriteAllText (acwMapFile, """
-				UnnamedProject.MainActivity, UnnamedProject;crc64a1.MainActivity
-				Android.App.Activity, Mono.Android;android.app.Activity
-				Duplicate.Type, My.Assembly;my.app.Duplicate
-				Other.Type;other.Type
-				""");
-
-			// No DGML is provided: with trimming disabled the task must keep every ACW from the map
-			// rather than shrinking to the DGML-retained subset.
-			var task = new GenerateNativeAotProguardConfiguration {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				AcwMapFile = acwMapFile,
-				OutputFile = outputFile,
-				TrimJavaCallableWrappers = false,
-			};
-
-			Assert.IsTrue (task.Execute (), "Task should succeed without a DGML when trimming is disabled.");
-			var proguard = File.ReadAllText (outputFile);
-			StringAssert.Contains ("-keep class crc64a1.MainActivity { *; }", proguard);
-			StringAssert.Contains ("-keep class android.app.Activity { *; }", proguard);
-			StringAssert.Contains ("-keep class my.app.Duplicate { *; }", proguard);
-			StringAssert.Contains ("-keep class other.Type { *; }", proguard);
-		}
-
-		[Test]
-		public void Execute_GenerateNativeAotProguardConfiguration_IgnoresDgmlWhenTrimmingDisabled ()
-		{
-			var path = Path.Combine (Root, "temp", TestName);
-			var dgmlFile = Path.Combine (path, "app.scan.dgml.xml");
-			var acwMapFile = Path.Combine (path, "acw-map.txt");
-			var outputFile = Path.Combine (path, "proguard", "proguard_project_references.cfg");
-			Directory.CreateDirectory (path);
-			File.WriteAllText (dgmlFile, """
-				<?xml version="1.0" encoding="utf-8"?>
-				<DirectedGraph xmlns="http://schemas.microsoft.com/vs/2009/dgml">
-				  <Nodes>
-				    <Node Id="1" Label="Type metadata: [UnnamedProject]UnnamedProject.MainActivity" />
-				    <Node Id="2" Label="Type metadata: [Mono.Android]Android.App.Activity" />
-				  </Nodes>
-				</DirectedGraph>
-				""");
-			File.WriteAllText (acwMapFile, """
-				UnnamedProject.MainActivity, UnnamedProject;crc64a1.MainActivity
-				Android.App.Activity, Mono.Android;android.app.Activity
-				Other.Type;other.Type
-				""");
-
-			var task = new GenerateNativeAotProguardConfiguration {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				NativeAotDgmlFiles = new [] { new TaskItem (dgmlFile) },
-				AcwMapFile = acwMapFile,
-				OutputFile = outputFile,
-				TrimJavaCallableWrappers = false,
-			};
-
-			Assert.IsTrue (task.Execute (), "Task should succeed and ignore the DGML when trimming is disabled.");
-			var proguard = File.ReadAllText (outputFile);
-			StringAssert.Contains ("-keep class crc64a1.MainActivity { *; }", proguard);
-			StringAssert.Contains ("-keep class android.app.Activity { *; }", proguard);
-			StringAssert.Contains ("-keep class other.Type { *; }", proguard);
-		}
-
 		GenerateTrimmableTypeMap CreateTask (ITaskItem [] assemblies, string outputDir, string javaDir,
 			IList<BuildMessageEventArgs>? messages = null, IList<BuildWarningEventArgs>? warnings = null,
 			IList<BuildErrorEventArgs>? errors = null, string tfv = "v11.0")
@@ -407,17 +376,22 @@ namespace Xamarin.Android.Build.Tests {
 				OutputDirectory = outputDir,
 				JavaSourceOutputDirectory = javaDir,
 				TargetFrameworkVersion = tfv,
+				TypeMapFingerprintsFile = Path.Combine (outputDir, "typemap-fingerprints.txt"),
 			};
 		}
 
 		static ITaskItem? FindMonoAndroidDll ()
 		{
-			var frameworkDir = TestEnvironment.MonoAndroidFrameworkDirectory;
-			if (string.IsNullOrEmpty (frameworkDir) || !Directory.Exists (frameworkDir)) {
+			var repositoryRoot = Path.GetFullPath (Path.Combine (AppContext.BaseDirectory, "..", "..", ".."));
+			var binDirectory = Path.Combine (repositoryRoot, "bin");
+			if (!Directory.Exists (binDirectory)) {
 				return null;
 			}
-			var path = Path.Combine (frameworkDir, "Mono.Android.dll");
-			if (!File.Exists (path)) {
+			var path = Directory.EnumerateFiles (binDirectory, "Mono.Android.dll", SearchOption.AllDirectories)
+				.FirstOrDefault (candidate =>
+					candidate.Contains ($"{Path.DirectorySeparatorChar}Microsoft.Android.Ref.", StringComparison.Ordinal) &&
+					candidate.Contains ($"{Path.DirectorySeparatorChar}ref{Path.DirectorySeparatorChar}", StringComparison.Ordinal));
+			if (path is null) {
 				return null;
 			}
 			var item = new TaskItem (path);

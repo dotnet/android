@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
+using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.AssemblyStore;
 using Xamarin.Android.Tasks;
@@ -36,6 +39,1417 @@ namespace Xamarin.Android.Build.Tests {
 			AssertTrimmableTypeMapOutputs (intermediateDir);
 		}
 
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "APT2008", false)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "XA4258", true)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "XA4258", true)]
+		public void Build_JavaTypeOnlyIdentifierStarts_MatchManifestLimitation (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			string expectedCode,
+			bool expectNoOutputs)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("ManifestIdentifierStarts.cs") {
+				TextContent = () => """
+					using Android.App;
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Register ("com/example/\u00a2Peer")]
+					[Activity]
+					public class CurrencyComponent : Activity
+					{
+						public CurrencyComponent () { }
+					}
+
+					[Register ("com/example/\u203fPeer")]
+					[Activity]
+					public class ConnectorComponent : Activity
+					{
+						public ConnectorComponent () { }
+					}
+
+					[Register ("com/example/\U00010428Peer")]
+					[Activity]
+					public class SupplementaryComponent : Activity
+					{
+						public SupplementaryComponent () { }
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (
+				builder.Build (proj),
+				$"{runtime}/{typeMapImplementation} should reject Java-only starts in manifest component names.");
+			StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput);
+
+			if (expectNoOutputs) {
+				StringAssertEx.Contains ("\u00a2Peer", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\u203fPeer", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\U00010428Peer", builder.LastBuildOutput);
+				AssertNoUnicodeOutputs (builder, "\u00a2Peer");
+				AssertNoUnicodeOutputs (builder, "\u203fPeer");
+				AssertNoUnicodeOutputs (builder, "\U00010428Peer");
+				return;
+			}
+
+			foreach (var javaName in new [] {
+				"com/example/\u00a2Peer",
+				"com/example/\u203fPeer",
+				"com/example/\U00010428Peer",
+			}) {
+				var relativePath = (javaName + ".java").Replace ('/', Path.DirectorySeparatorChar);
+				FileAssert.Exists (
+					builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", relativePath)),
+					$"llvm-ir should generate '{javaName}.java' before AAPT rejects the manifest name.");
+			}
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, true)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, false)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, false)]
+		public void Build_SupplementaryJavaIdentifier_MatchesRuntimeLimitation (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			bool shouldSucceed)
+		{
+			const string javaName = "com/example/\U00010428Peer\U00010400";
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("SupplementaryJavaIdentifier.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Register ("com/example/\U00010428Peer\U00010400")]
+					public class SupplementaryJavaIdentifier : Java.Lang.Object
+					{
+						public SupplementaryJavaIdentifier () { }
+					}
+					""",
+			});
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				"System.GC.KeepAlive (new UnnamedProject.SupplementaryJavaIdentifier ());");
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.AreEqual (
+				shouldSucceed,
+				builder.Build (proj),
+				$"{runtime}/{typeMapImplementation} should match the supplementary runtime limitation.");
+			if (!shouldSucceed) {
+				StringAssertEx.Contains ("error XA4258", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\U00010428Peer\U00010400", builder.LastBuildOutput);
+				AssertNoUnicodeOutputs (builder, "\U00010428Peer\U00010400");
+				return;
+			}
+
+			var relativeJavaPath = (javaName + ".java").Replace ('/', Path.DirectorySeparatorChar);
+			var javaPath = new [] {
+				builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", relativeJavaPath)),
+				builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "java", relativeJavaPath)),
+				builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "linked-java", relativeJavaPath)),
+			}.FirstOrDefault (File.Exists);
+			Assert.IsNotNull (javaPath, $"{runtime}/{typeMapImplementation} should preserve the supplementary Java source path.");
+			StringAssert.Contains ("public class \U00010428Peer\U00010400", File.ReadAllText (javaPath));
+
+			var classFile = builder.Output.GetIntermediaryPath (
+				Path.Combine ("android", "bin", "classes", relativeJavaPath.Replace (".java", ".class")));
+			FileAssert.Exists (classFile, "javac should accept the supplementary Java identifier.");
+
+			var acwMap = builder.Output.GetIntermediaryPath ("acw-map.txt");
+			StringAssert.Contains (
+				"UnnamedProject.SupplementaryJavaIdentifier;com.example.\U00010428Peer\U00010400",
+				File.ReadAllText (acwMap));
+
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			Assert.IsTrue (
+				DexUtils.ContainsClass ($"L{javaName};", dexFile, AndroidSdkPath),
+				"llvm-ir should preserve the exact supplementary descriptor even though Android cannot load it.");
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "JAVAC0000")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "XA4258")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "XA4258")]
+		public void Build_InvalidOrUnsupportedUnicodeIdentifiers_ReportDiagnosticWithoutTrimmableOutputs (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			string expectedCode)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			bool isTrimmable = typeMapImplementation == "trimmable";
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			string projectSource = """
+				using Android.Runtime;
+
+				namespace UnnamedProject;
+
+				[Register ("com/example/1Peer")]
+				public class InvalidDigitStart : Java.Lang.Object
+				{
+					public InvalidDigitStart () { }
+				}
+
+				[Register ("com/example/\u0301Peer")]
+				public class InvalidCombiningStart : Java.Lang.Object
+				{
+					public InvalidCombiningStart () { }
+				}
+				""";
+			if (isTrimmable) {
+				projectSource += """
+
+					[Register ("com/e\u0301xample/Cafe\u0301")]
+					public class UnsupportedCombiningMark : Java.Lang.Object
+					{
+						public UnsupportedCombiningMark () { }
+					}
+
+					[Register ("com/example/A\u0cf3")]
+					public class Unicode15CombiningMark : Java.Lang.Object
+					{
+						public Unicode15CombiningMark () { }
+					}
+
+					[Register ("com/example/\u1c89Peer")]
+					public class NewerUnicodeLetter : Java.Lang.Object
+					{
+						public NewerUnicodeLetter () { }
+					}
+
+					[Register ("com/example/\u212bPeer")]
+					public class NonNfcIdentifier : Java.Lang.Object
+					{
+						public NonNfcIdentifier () { }
+					}
+					""";
+			}
+			proj.Sources.Add (new BuildItem.Source ("InvalidUnicodeIdentifiers.cs") {
+				TextContent = () => projectSource,
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (
+				builder.Build (proj),
+				$"{runtime}/{typeMapImplementation} should reject invalid or unsupported Java identifiers.");
+			StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput);
+
+			if (isTrimmable) {
+				StringAssertEx.Contains ("1Peer", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\u0301Peer", builder.LastBuildOutput);
+				StringAssertEx.Contains ("e\u0301xample", builder.LastBuildOutput);
+				StringAssertEx.Contains ("A\u0cf3", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\u1c89Peer", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\u212bPeer", builder.LastBuildOutput);
+				AssertNoUnicodeOutputs (builder, "1Peer");
+				AssertNoUnicodeOutputs (builder, "\u0301Peer");
+				AssertNoUnicodeOutputs (builder, "Cafe\u0301");
+				AssertNoUnicodeOutputs (builder, "A\u0cf3");
+				AssertNoUnicodeOutputs (builder, "\u1c89Peer");
+				AssertNoUnicodeOutputs (builder, "\u212bPeer");
+				return;
+			}
+
+			foreach (var javaName in new [] {
+				"com/example/1Peer",
+				"com/example/\u0301Peer",
+			}) {
+				var relativePath = (javaName + ".java").Replace ('/', Path.DirectorySeparatorChar);
+				var javaPath = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", relativePath));
+				FileAssert.Exists (javaPath, $"llvm-ir should reach javac with '{javaName}'.");
+				var source = File.ReadAllText (javaPath);
+				StringAssert.Contains ($"public class {javaName.Substring (javaName.LastIndexOf ('/') + 1)}", source);
+			}
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, true, false)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, false, true)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, false, true)]
+		public void Build_CanonicallyEquivalentJavaNames_DoNotOverwriteOutputs (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			bool shouldSucceed,
+			bool expectNoOutputs)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("CanonicalJavaIdentifiers.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Register ("com/example/\u00c5Peer")]
+					public class ComposedIdentifier : Java.Lang.Object
+					{
+						public ComposedIdentifier () { }
+					}
+
+					[Register ("com/example/\u212bPeer")]
+					public class CanonicalEquivalentIdentifier : Java.Lang.Object
+					{
+						public CanonicalEquivalentIdentifier () { }
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.AreEqual (
+				shouldSucceed,
+				builder.Build (proj),
+				$"{runtime}/{typeMapImplementation} should match canonical-equivalent Java output behavior.");
+
+			if (expectNoOutputs) {
+				StringAssertEx.Contains ("error XA4258", builder.LastBuildOutput);
+				StringAssertEx.Contains ("\u212bPeer", builder.LastBuildOutput);
+				AssertNoUnicodeOutputs (builder, "\u00c5Peer");
+				AssertNoUnicodeOutputs (builder, "\u212bPeer");
+				return;
+			}
+
+			var javaDirectory = builder.Output.GetIntermediaryPath (
+				Path.Combine ("android", "src", "com", "example"));
+			if (!CanonicalEquivalentPathsAlias (javaDirectory)) {
+				return;
+			}
+			var javaFile = AssertSingleFile (javaDirectory, "*Peer.java");
+			StringAssert.Contains ("public class \u212bPeer", File.ReadAllText (javaFile));
+
+			var classDirectory = builder.Output.GetIntermediaryPath (
+				Path.Combine ("android", "bin", "classes", "com", "example"));
+			AssertSingleFile (classDirectory, "*Peer.class");
+
+			var acwMap = File.ReadAllText (builder.Output.GetIntermediaryPath ("acw-map.txt"));
+			StringAssert.Contains ("UnnamedProject.ComposedIdentifier;com.example.\u00c5Peer", acwMap);
+			StringAssert.Contains ("UnnamedProject.CanonicalEquivalentIdentifier;com.example.\u212bPeer", acwMap);
+
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			Assert.IsFalse (DexUtils.ContainsClass ("Lcom/example/\u00c5Peer;", dexFile, AndroidSdkPath));
+			Assert.IsTrue (DexUtils.ContainsClass ("Lcom/example/\u212bPeer;", dexFile, AndroidSdkPath));
+
+			static string AssertSingleFile (string directory, string pattern)
+			{
+				var files = Directory.GetFiles (directory, pattern, SearchOption.TopDirectoryOnly);
+				Assert.AreEqual (
+					1,
+					files.Length,
+					"APFS should expose the canonical-equivalent llvm-ir paths as one overwritten file.");
+				return files [0];
+			}
+
+			static bool CanonicalEquivalentPathsAlias (string directory)
+			{
+				var probeDirectory = Path.Combine (directory, "canonical-path-probe-" + Guid.NewGuid ().ToString ("N"));
+				Directory.CreateDirectory (probeDirectory);
+				try {
+					File.WriteAllText (Path.Combine (probeDirectory, "\u00c5"), "composed");
+					File.WriteAllText (Path.Combine (probeDirectory, "\u212b"), "equivalent");
+					return Directory.GetFiles (probeDirectory).Length == 1;
+				} finally {
+					foreach (var file in Directory.GetFiles (probeDirectory)) {
+						File.Delete (file);
+					}
+					Directory.Delete (probeDirectory);
+				}
+			}
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "parameters", "XA4205")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "parameters", "XA4205")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "parameters", "XA4205")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "void", "XA4208")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "void", "XA4208")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "void", "XA4208")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic", "XA4207")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic", "XA4207")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic", "XA4207")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "parameters-and-void", "XA4205")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "parameters-and-void", "XA4205")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "parameters-and-void", "XA4205")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic-parameters-and-void", "XA4207")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic-parameters-and-void", "XA4207")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic-parameters-and-void", "XA4207")]
+		public void Build_InvalidExportField_ReportsLegacyDiagnostic (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			string invalidShape,
+			string expectedCode)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var initializer = invalidShape switch {
+				"parameters" => "public int InitialValue (int value) => value;",
+				"void" => "public void InitialValue () { }",
+				"generic" => "public int InitialValue () => 42;",
+				"parameters-and-void" => "public void InitialValue (int value) { }",
+				"generic-parameters-and-void" => "public void InitialValue (int value) { }",
+				_ => throw new InvalidOperationException ($"Unknown invalid [ExportField] shape '{invalidShape}'."),
+			};
+			var proj = CreateExportFieldValidationProject (runtime, typeMapImplementation, $"""
+						[ExportField ("VALUE")]
+						{initializer}
+				""", genericType: invalidShape.StartsWith ("generic", StringComparison.Ordinal));
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), $"{runtime}/{typeMapImplementation} should reject {invalidShape} [ExportField] initializers.");
+			StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput, $"The build should report {expectedCode}.");
+			if (invalidShape == "parameters-and-void") {
+				Assert.IsFalse (
+					builder.LastBuildOutput.Any (line => line.Contains ("error XA4208", StringComparison.Ordinal)),
+					"XA4205 should take precedence over XA4208, matching LLVM-IR."
+				);
+			} else if (invalidShape == "generic-parameters-and-void") {
+				Assert.IsFalse (
+					builder.LastBuildOutput.Any (line =>
+						line.Contains ("error XA4205", StringComparison.Ordinal) ||
+						line.Contains ("error XA4208", StringComparison.Ordinal)),
+					"XA4207 should take precedence over initializer signature diagnostics, matching LLVM-IR."
+				);
+			}
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "arbitrary-parameter", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "arbitrary-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "arbitrary-parameter", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "arbitrary-return", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "arbitrary-return", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "arbitrary-return", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "arbitrary-field", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "arbitrary-field", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "arbitrary-field", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic-parameter", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic-parameter", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic-instantiation", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic-instantiation", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic-instantiation", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "function-pointer", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "function-pointer", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "function-pointer", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "by-ref-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "by-ref-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "pointer-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "pointer-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "rectangular-array-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "rectangular-array-parameter", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic-declaring-type", "XA4206")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic-declaring-type", "XA4206")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic-declaring-type", "XA4206")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "mismatched-export-parameter", "XALNS7004")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "mismatched-export-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "mismatched-export-parameter", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic-export-parameter", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic-export-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic-export-parameter", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "function-pointer-export-parameter", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "function-pointer-export-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "function-pointer-export-parameter", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "mismatched-field-export-parameter", "XALNS7004")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "mismatched-field-export-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "mismatched-field-export-parameter", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "special-array-parameter", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "special-array-parameter", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "special-array-parameter", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "special-array-return", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "special-array-return", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "special-array-return", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "special-array-field", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "special-array-field", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "special-array-field", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "special-xml-array-return", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "special-xml-array-return", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "special-xml-array-return", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "export-static-constructor", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "export-static-constructor", "success")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "export-static-constructor", "success")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "export-constructor-arbitrary", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "export-constructor-arbitrary", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "export-constructor-arbitrary", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "export-constructor-invalid-kind", "XALNS7004")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "export-constructor-invalid-kind", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "export-constructor-invalid-kind", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "export-constructor-valid-kind", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "export-constructor-valid-kind", "success")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "export-constructor-valid-kind", "success")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "export-named-constructor-arbitrary", "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "export-named-constructor-arbitrary", "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "export-named-constructor-arbitrary", "XA4263")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "export-named-constructor-valid-kind", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "export-named-constructor-valid-kind", "success")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "export-named-constructor-valid-kind", "success")]
+		public void Build_ExportSignature_MatchesRuntimeClassification (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			string invalidShape,
+			string expectedCode)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var (additionalTypes, member, marker, typeParameters) = invalidShape switch {
+				"arbitrary-parameter" => (
+					"public sealed class ManagedOnly { }",
+					"""[Export ("unsupported")] public void UnsupportedMember (ManagedOnly value) { }""",
+					"unsupported",
+					""),
+				"arbitrary-return" => (
+					"public sealed class ManagedOnly { }",
+					"""[Export ("unsupported")] public ManagedOnly UnsupportedMember () => new ();""",
+					"unsupported",
+					""),
+				"arbitrary-field" => (
+					"public sealed class ManagedOnly { }",
+					"""[ExportField ("UNSUPPORTED_FIELD")] public ManagedOnly UnsupportedMember () => new ();""",
+					"UNSUPPORTED_FIELD",
+					""),
+				"generic-parameter" => (
+					"",
+					"""[Export ("unsupported")] public T UnsupportedMember<T> (T value) => value;""",
+					"unsupported",
+					""),
+				"generic-instantiation" => (
+					"",
+					"""[Export ("unsupported")] public List<string> UnsupportedMember (List<string> value) => value;""",
+					"unsupported",
+					""),
+				"function-pointer" => (
+					"",
+					"""[Export ("unsupported")] public unsafe delegate* unmanaged<void> UnsupportedMember (delegate* unmanaged<void> value) => value;""",
+					"unsupported",
+					""),
+				"by-ref-parameter" => (
+					"",
+					"""[Export ("unsupported")] public void UnsupportedMember (ref int value) { }""",
+					"unsupported",
+					""),
+				"pointer-parameter" => (
+					"",
+					"""[Export ("unsupported")] public unsafe void UnsupportedMember (int* value) { }""",
+					"unsupported",
+					""),
+				"rectangular-array-parameter" => (
+					"",
+					"""[Export ("unsupported")] public void UnsupportedMember (string [,] value) { }""",
+					"unsupported",
+					""),
+				"generic-declaring-type" => (
+					"",
+					"""[Export ("unsupported")] public int UnsupportedMember () => 0;""",
+					"unsupported",
+					"<T>"),
+				"mismatched-export-parameter" => (
+					"public sealed class ManagedOnly { }",
+					"""
+					[Export ("unsupported")]
+					public ManagedOnly UnsupportedMember (
+						[ExportParameter (ExportParameterKind.InputStream)] ManagedOnly value)
+						=> value;
+					""",
+					"unsupported",
+					""),
+				"generic-export-parameter" => (
+					"",
+					"""
+					[Export ("unsupported")]
+					public T UnsupportedMember<T> (
+						[ExportParameter (ExportParameterKind.InputStream)] T value)
+						=> value;
+					""",
+					"unsupported",
+					""),
+				"function-pointer-export-parameter" => (
+					"",
+					"""
+					[Export ("unsupported")]
+					public unsafe delegate* unmanaged<void> UnsupportedMember (
+						[ExportParameter (ExportParameterKind.InputStream)] delegate* unmanaged<void> value)
+						=> value;
+					""",
+					"unsupported",
+					""),
+				"mismatched-field-export-parameter" => (
+					"public sealed class ManagedOnly { }",
+					"""
+					[return: ExportParameter (ExportParameterKind.OutputStream)]
+					[ExportField ("UNSUPPORTED_FIELD")]
+					public ManagedOnly UnsupportedMember () => new ();
+					""",
+					"UNSUPPORTED_FIELD",
+					""),
+				"special-array-parameter" => (
+					"",
+					"""
+					[Export ("unsupported")]
+					public void UnsupportedMember (
+						[ExportParameter (ExportParameterKind.InputStream)] Stream [] value)
+					{
+					}
+					""",
+					"unsupported",
+					""),
+				"special-array-return" => (
+					"",
+					"""
+					[return: ExportParameter (ExportParameterKind.OutputStream)]
+					[Export ("unsupported")]
+					public Stream [] UnsupportedMember () => [];
+					""",
+					"unsupported",
+					""),
+				"special-array-field" => (
+					"",
+					"""
+					[return: ExportParameter (ExportParameterKind.OutputStream)]
+					[ExportField ("UNSUPPORTED_FIELD")]
+					public Stream [] UnsupportedMember () => [];
+					""",
+					"UNSUPPORTED_FIELD",
+					""),
+				"special-xml-array-return" => (
+					"",
+					"""
+					[return: ExportParameter (ExportParameterKind.XmlPullParser)]
+					[Export ("unsupported")]
+					public XmlReader [] UnsupportedMember () => [];
+					""",
+					"unsupported",
+					""),
+				"export-static-constructor" => (
+					"",
+					"""
+					[Export]
+					static SignaturePeer ()
+					{
+					}
+					""",
+					".cctor",
+					""),
+				"export-constructor-arbitrary" => (
+					"public sealed class ManagedOnly { }",
+					"""
+					[Export (".ctor", SuperArgumentsString = "")]
+					public SignaturePeer (ManagedOnly value)
+					{
+					}
+					""",
+					"SignaturePeer",
+					""),
+				"export-constructor-invalid-kind" => (
+					"public sealed class ManagedOnly { }",
+					"""
+					[Export (".ctor", SuperArgumentsString = "")]
+					public SignaturePeer (
+						[ExportParameter (ExportParameterKind.InputStream)] ManagedOnly value)
+					{
+					}
+					""",
+					"SignaturePeer",
+					""),
+				"export-constructor-valid-kind" => (
+					"",
+					"""
+					[Export (".ctor", SuperArgumentsString = "")]
+					public SignaturePeer (
+						[ExportParameter (ExportParameterKind.InputStream)] Stream value)
+					{
+					}
+					""",
+					"java.io.InputStream",
+					""),
+				"export-named-constructor-arbitrary" => (
+					"public sealed class ManagedOnly { }",
+					"""
+					[Export ("notAConstructor", SuperArgumentsString = "")]
+					public SignaturePeer (ManagedOnly value)
+					{
+					}
+					""",
+					"SignaturePeer",
+					""),
+				"export-named-constructor-valid-kind" => (
+					"",
+					"""
+					[Export ("notAConstructor", SuperArgumentsString = "")]
+					public SignaturePeer (
+						[ExportParameter (ExportParameterKind.InputStream)] Stream value)
+					{
+					}
+					""",
+					"java.io.InputStream",
+					""),
+				_ => throw new InvalidOperationException ($"Unknown unsupported [Export] shape '{invalidShape}'."),
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				References = {
+					new BuildItem.Reference ("Mono.Android.Export"),
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.SetProperty ("AllowUnsafeBlocks", "true");
+			proj.Sources.Add (new BuildItem.Source ("ExportSignatureValidation.cs") {
+				TextContent = () => $$"""
+					using System.Collections.Generic;
+					using System.IO;
+					using System.Xml;
+					using Android.Runtime;
+					using Java.Interop;
+
+					namespace ExportSignatureValidation {
+						{{additionalTypes}}
+
+						[Register ("com/example/exports/SignaturePeer")]
+						public class SignaturePeer{{typeParameters}} : Java.Lang.Object {
+							public SignaturePeer () {
+							}
+
+							{{member}}
+						}
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			var succeeded = builder.Build (proj);
+			if (expectedCode == "success") {
+				Assert.IsTrue (succeeded, $"{runtime}/{typeMapImplementation} should retain legacy build support for {invalidShape}.");
+				return;
+			}
+
+			Assert.IsFalse (succeeded, $"{runtime}/{typeMapImplementation} should reject {invalidShape}.");
+			StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput, $"The build should report {expectedCode}.");
+			if (expectedCode == "XA4263") {
+				var expectedMemberName = invalidShape.Contains ("constructor", StringComparison.Ordinal)
+					? "ExportSignatureValidation.SignaturePeer.ctor"
+					: "ExportSignatureValidation.SignaturePeer.UnsupportedMember";
+				StringAssertEx.Contains (
+					expectedMemberName,
+					builder.LastBuildOutput,
+					"The diagnostic should identify the unsupported managed member."
+				);
+			}
+			AssertNoExportOutputs (builder, marker);
+		}
+
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
+		public void Build_SpecialMappingLookalikeTypes_ReportXA4263WithoutPartialOutputs (AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				References = {
+					new BuildItem.Reference ("Mono.Android.Export"),
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.Sources.Add (new BuildItem.Source ("SpecialMappingLookalikes.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+					using Java.Interop;
+
+					namespace System.IO {
+						public class Stream {
+						}
+					}
+
+					namespace System.Xml {
+						public class XmlReader {
+						}
+					}
+
+					namespace Java.Lang {
+						public interface ICharSequence {
+						}
+					}
+
+					namespace System.Collections {
+						public interface IList {
+						}
+
+						public interface IDictionary {
+						}
+
+						public interface ICollection {
+						}
+					}
+
+					namespace SpecialMappingLookalikes {
+						[Register ("com/example/exports/SpecialMappingLookalikePeer")]
+						public class SpecialMappingLookalikePeer : Java.Lang.Object {
+							[return: ExportParameter (ExportParameterKind.OutputStream)]
+							[Export ("invalidStream")]
+							public System.IO.Stream InvalidStream (
+								[ExportParameter (ExportParameterKind.InputStream)] System.IO.Stream value)
+								=> value;
+
+							[return: ExportParameter (ExportParameterKind.XmlPullParser)]
+							[ExportField ("INVALID_XML_FIELD")]
+							public System.Xml.XmlReader InvalidXmlField () => new ();
+
+							[Export ("invalidCharSequence")]
+							public Java.Lang.ICharSequence InvalidCharSequence (Java.Lang.ICharSequence value) => value;
+
+							[Export ("invalidList")]
+							public System.Collections.IList InvalidList (System.Collections.IList value) => value;
+
+							[Export ("invalidDictionary")]
+							public System.Collections.IDictionary InvalidDictionary (System.Collections.IDictionary value) => value;
+
+							[Export ("invalidCollection")]
+							public System.Collections.ICollection InvalidCollection (System.Collections.ICollection value) => value;
+
+							[Export ("notAConstructor", SuperArgumentsString = "")]
+							public SpecialMappingLookalikePeer (
+								[ExportParameter (ExportParameterKind.InputStream)] System.IO.Stream value)
+							{
+							}
+						}
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), $"{runtime}/trimmable should reject special-mapping lookalike types.");
+			foreach (var memberName in new [] {
+				"SpecialMappingLookalikes.SpecialMappingLookalikePeer.InvalidStream",
+				"SpecialMappingLookalikes.SpecialMappingLookalikePeer.InvalidXmlField",
+				"SpecialMappingLookalikes.SpecialMappingLookalikePeer.InvalidCharSequence",
+				"SpecialMappingLookalikes.SpecialMappingLookalikePeer.InvalidList",
+				"SpecialMappingLookalikes.SpecialMappingLookalikePeer.InvalidDictionary",
+				"SpecialMappingLookalikes.SpecialMappingLookalikePeer.InvalidCollection",
+				"SpecialMappingLookalikes.SpecialMappingLookalikePeer.ctor",
+			}) {
+				Assert.IsTrue (
+					builder.LastBuildOutput.Any (line =>
+						line.Contains ("error XA4263", StringComparison.Ordinal) &&
+						line.Contains (memberName, StringComparison.Ordinal)),
+					$"The build should report XA4263 for '{memberName}'."
+				);
+			}
+			AssertNoExportOutputs (builder, "invalidStream");
+		}
+
+		static XamarinAndroidApplicationProject CreateExportFieldValidationProject (
+			AndroidRuntime runtime,
+			string typeMapImplementation,
+			string members,
+			bool genericType = false)
+		{
+			var typeParameters = genericType ? "<T>" : "";
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = runtime == AndroidRuntime.NativeAOT,
+				References = {
+					new BuildItem.Reference ("Mono.Android.Export"),
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("ExportFieldValidation.cs") {
+				TextContent = () => $$"""
+					using Android.Runtime;
+					using Java.Interop;
+
+					namespace ExportFieldValidation {
+						[Register ("com/example/exportfields/ValidationPeer")]
+						class ValidationPeer{{typeParameters}} : Java.Lang.Object {
+							public ValidationPeer () {
+							}
+
+					{{members}}
+						}
+					}
+					""",
+			});
+			return proj;
+		}
+
+		[Test]
+		public void FindExportOutputs_FindsEveryArtifactKind ()
+		{
+			var root = Path.Combine (Root, "temp", TestName);
+			var typemapDirectory = Path.Combine (root, "typemap");
+			var acwMapFile = Path.Combine (root, "acw-map.txt");
+			var trimmableJavaDirectory = Path.Combine (typemapDirectory, "java", "com", "example");
+			var llvmIrJavaDirectory = Path.Combine (root, "android", "src", "com", "example");
+			Directory.CreateDirectory (trimmableJavaDirectory);
+			Directory.CreateDirectory (llvmIrJavaDirectory);
+
+			var expected = new [] {
+				Path.Combine (typemapDirectory, "_Example.TypeMap.dll"),
+				Path.Combine (typemapDirectory, "_Microsoft.Android.TypeMaps.dll"),
+				acwMapFile,
+				Path.Combine (trimmableJavaDirectory, "TrimmablePeer.java"),
+				Path.Combine (llvmIrJavaDirectory, "LlvmIrPeer.java"),
+			};
+			File.WriteAllBytes (expected [0], []);
+			File.WriteAllBytes (expected [1], []);
+			File.WriteAllText (expected [2], "Managed, Assembly;com/example/Peer");
+			File.WriteAllText (expected [3], "public int VALUE = InitialValue ();");
+			File.WriteAllText (expected [4], "public int VALUE = InitialValue ();");
+
+			CollectionAssert.AreEquivalent (
+				expected,
+				FindExportOutputs (typemapDirectory, acwMapFile, Path.Combine (root, "android", "src"), "VALUE")
+			);
+		}
+
+		static void AssertNoExportOutputs (ProjectBuilder builder, string memberName)
+		{
+			var typemapDirectory = builder.Output.GetIntermediaryPath ("typemap");
+			var acwMapFile = builder.Output.GetIntermediaryPath ("acw-map.txt");
+			var androidSourceDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src"));
+			var outputs = FindExportOutputs (typemapDirectory, acwMapFile, androidSourceDirectory, memberName);
+			Assert.IsEmpty (
+				outputs,
+				"Invalid exported metadata should not produce typemap assemblies, ACW maps, or partial Java output:" +
+				Environment.NewLine + string.Join (Environment.NewLine, outputs)
+			);
+		}
+
+		static string [] FindExportOutputs (string typemapDirectory, string acwMapFile, string androidSourceDirectory, string memberName)
+		{
+			var outputs = new List<string> ();
+			if (Directory.Exists (typemapDirectory)) {
+				outputs.AddRange (Directory.GetFiles (typemapDirectory, "*.TypeMap.dll", SearchOption.AllDirectories));
+				outputs.AddRange (Directory.GetFiles (typemapDirectory, "_Microsoft.Android.TypeMaps.dll", SearchOption.AllDirectories));
+			}
+			if (File.Exists (acwMapFile)) {
+				outputs.Add (acwMapFile);
+			}
+
+			foreach (var javaDirectory in new [] { Path.Combine (typemapDirectory, "java"), androidSourceDirectory }) {
+				if (!Directory.Exists (javaDirectory)) {
+					continue;
+				}
+				foreach (var javaFile in Directory.GetFiles (javaDirectory, "*.java", SearchOption.AllDirectories)) {
+					if (File.ReadAllText (javaFile).Contains (memberName, StringComparison.Ordinal)) {
+						outputs.Add (javaFile);
+					}
+				}
+			}
+			return outputs.ToArray ();
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "JAVAC0000", "JAVAC0000")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "XA4262", "XA4258")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "XA4262", "XA4258")]
+		public void Build_IndependentConstructorAndJavaNameDiagnostics_AreBothReported (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			string constructorCode,
+			string javaNameCode)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				References = {
+					new BuildItem.Reference ("Mono.Android.Export"),
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("IndependentDiagnostics.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+					using Java.Interop;
+
+					namespace UnnamedProject;
+
+					[Register ("my/app/InvalidConstructor")]
+					public class InvalidConstructor : Java.Lang.Object
+					{
+						[Export (".ctor", SuperArgumentsString = "p1 +")]
+						public InvalidConstructor (string value) { }
+					}
+
+					[Register ("my/app/for")]
+					public class ReservedName : Java.Lang.Object { }
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), $"{runtime}/{typeMapImplementation} should report both independent errors.");
+			StringAssertEx.Contains ($"error {constructorCode}", builder.LastBuildOutput);
+			StringAssertEx.Contains ($"error {javaNameCode}", builder.LastBuildOutput);
+			if (typeMapImplementation == "trimmable") {
+				AssertNoExportOutputs (builder, "InvalidConstructor");
+			} else {
+				StringAssertEx.Contains ("InvalidConstructor.java", builder.LastBuildOutput);
+				StringAssertEx.Contains ("for.java", builder.LastBuildOutput);
+			}
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "XALNS7003")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "success")]
+		public void Build_ExplicitExportConstructorAttributeOrders_MatchLegacyPipeline (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			string expectedCode)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				References = {
+					new BuildItem.Reference ("Mono.Android.Export"),
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("ExplicitExportConstructors.cs") {
+				TextContent = () => """
+					using Android.App;
+					using Android.Runtime;
+					using Java.Interop;
+
+					namespace UnnamedProject;
+
+					[Register ("my/app/RegisterFirst")]
+					public class RegisterFirst : Activity {
+						[Register (".ctor", "(I)V", "")]
+						[Export (".ctor", SuperArgumentsString = "")]
+						public RegisterFirst (uint value) { }
+					}
+
+					[Register ("my/app/ExportFirst")]
+					public class ExportFirst : Activity {
+						[Export (".ctor", SuperArgumentsString = "")]
+						[JniConstructorSignature ("(I)V")]
+						public ExportFirst (uint value) { }
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			var succeeded = builder.Build (proj);
+			if (expectedCode == "success") {
+				Assert.IsTrue (succeeded, $"{runtime}/{typeMapImplementation} should preserve explicit constructor metadata.");
+			} else {
+				Assert.IsFalse (succeeded, $"{runtime}/{typeMapImplementation} should retain measured legacy validation.");
+				StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput);
+			}
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
+		public void Build_ImplicitConstructorUsesCompatibleBaseJniSignature (string typeMapImplementation, AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("CompatibleBaseConstructor.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Register ("my/app/IntBase", DoNotGenerateAcw = true)]
+					public class IntBase : Java.Lang.Object {
+						[Register (".ctor", "(I)V", "")]
+						public IntBase (int value) { }
+					}
+
+					public class UIntDerived : IntBase {
+						public UIntDerived (uint value) : base ((int)value) { }
+					}
+					""",
+			});
+			proj.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("my\\app\\IntBase.java") {
+				Encoding = Encoding.ASCII,
+				TextContent = () => """
+					package my.app;
+
+					public class IntBase {
+						public IntBase (int value) {}
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), $"{runtime}/{typeMapImplementation} should match legacy JNI base compatibility.");
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "lambda", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "lambda", "success")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "lambda", "success")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "parenthesized-lambda", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "parenthesized-lambda", "success")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "parenthesized-lambda", "success")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "typed-lambda", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "typed-lambda", "success")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "typed-lambda", "success")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "literal-comma", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "literal-comma", "success")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "literal-comma", "success")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "method-reference", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "method-reference", "success")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "method-reference", "success")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic-method-reference", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic-method-reference", "success")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic-method-reference", "success")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "generic-construction", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "generic-construction", "success")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "generic-construction", "success")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "nested-generic", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "nested-generic", "success")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "nested-generic", "success")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "instanceof-generic", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "instanceof-generic", "success")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "instanceof-generic", "success")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "comparison", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "comparison", "success")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "comparison", "success")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "shift", "success")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "shift", "success")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "shift", "success")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "ordinary-bare", "JAVAC0000")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "ordinary-bare", "XA4262")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "ordinary-bare", "XA4262")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "ordinary-call", "JAVAC0000")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "ordinary-call", "XA4262")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "ordinary-call", "XA4262")]
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "ordinary-arithmetic", "JAVAC0000")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "ordinary-arithmetic", "XA4262")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "ordinary-arithmetic", "XA4262")]
+		public void Build_SuperArgumentsLambdaAndMethodReference_MatchJavac (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			string shape,
+			string expectedCode)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var superArguments = shape switch {
+				"lambda" => "p1 -> p1",
+				"parenthesized-lambda" => "(p1) -> p1",
+				"typed-lambda" => "(String p1, String p2) -> p1 + p2",
+				"literal-comma" => "p1 -> \\\"a,b\\\"",
+				"method-reference" => "Helper::p1",
+				"generic-method-reference" => "Helper::<String>p1",
+				"generic-construction" => "(p1) -> new SimpleEntry<String, String>(p1, p1)",
+				"nested-generic" => "(p1) -> new SimpleEntry<String, java.util.List<String>>(p1, java.util.Arrays.asList(\\\"a,b\\\", p1))",
+				"instanceof-generic" => "(p1) -> p1 instanceof java.util.Map<?, ?> ? p1 : p1",
+				"comparison" => "(int p1) -> p1 < 2 ? p1 : 2",
+				"shift" => "(int p1) -> p1 >> 1",
+				"ordinary-bare" => "p1",
+				"ordinary-call" => "p1.hashCode()",
+				"ordinary-arithmetic" => "p1 + 1",
+				_ => throw new InvalidOperationException ($"Unknown super argument shape '{shape}'."),
+			};
+			var functionalType = shape switch {
+				"typed-lambda" => "java.util.function.BiFunction<String, String, String>",
+				"comparison" or "shift" => "java.util.function.IntUnaryOperator",
+				"instanceof-generic" => "java.util.function.Function<Object, ?>",
+				"method-reference" or "generic-method-reference" => "java.util.function.Supplier<String>",
+				_ => "java.util.function.Function<String, ?>",
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				References = {
+					new BuildItem.Reference ("Mono.Android.Export"),
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("SuperArgumentsPeer.cs") {
+				TextContent = () => $$"""
+					using Android.Runtime;
+					using Java.Interop;
+
+					namespace UnnamedProject;
+
+					[Register ("my/app/SuperArgumentsBase", DoNotGenerateAcw = true)]
+					public class SuperArgumentsBase : Java.Lang.Object
+					{
+						[Register (".ctor", "(Ljava/util/function/Function;Ljava/lang/Object;)V", "")]
+						public SuperArgumentsBase () { }
+					}
+
+					[Register ("my/app/SuperArgumentsPeer")]
+					public class SuperArgumentsPeer : SuperArgumentsBase
+					{
+						[Export (".ctor", SuperArgumentsString = "{{superArguments}}")]
+						public SuperArgumentsPeer () { }
+					}
+					""",
+			});
+			proj.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("my\\app\\SuperArgumentsBase.java") {
+				Encoding = Encoding.ASCII,
+				TextContent = () => $$"""
+					package my.app;
+
+					public class SuperArgumentsBase {
+						public SuperArgumentsBase (
+							{{functionalType}} function) {}
+						public SuperArgumentsBase (
+							java.util.function.Function function,
+							Object value) {}
+
+						public static class Helper {
+							public static <T> T p1 () { return null; }
+						}
+
+						public static class SimpleEntry<K, V> extends java.util.AbstractMap.SimpleEntry<K, V> {
+							public SimpleEntry (K key, V value) { super (key, value); }
+						}
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			var succeeded = builder.Build (proj);
+			if (expectedCode == "success") {
+				Assert.IsTrue (succeeded, $"{runtime}/{typeMapImplementation} should compile {shape} super arguments.");
+			} else {
+				Assert.IsFalse (succeeded, $"{runtime}/{typeMapImplementation} should reject the bare p1 reference.");
+				StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput);
+				if (typeMapImplementation == "trimmable") {
+					AssertNoExportOutputs (builder, "SuperArgumentsPeer");
+				}
+			}
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "XALNS7004")]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "XA4263")]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "XA4263")]
+		public void Build_UnsupportedExportConstructorOverloads_ReportOnlyExportDiagnostics (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			string expectedCode)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				References = {
+					new BuildItem.Reference ("Mono.Android.Export"),
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("UnsupportedExportConstructors.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+					using Java.Interop;
+
+					namespace UnnamedProject;
+
+					public sealed class UnsupportedOne { }
+					public sealed class UnsupportedTwo { }
+
+					[Register ("my/app/NoDefaultBase", DoNotGenerateAcw = true)]
+					public class NoDefaultBase : Java.Lang.Object
+					{
+						[Register (".ctor", "(I)V", "")]
+						public NoDefaultBase (int value) { }
+					}
+
+					[Register ("my/app/UnsupportedExportConstructorOverloads")]
+					public class UnsupportedExportConstructorOverloads : NoDefaultBase
+					{
+						[Export (".ctor")]
+						public UnsupportedExportConstructorOverloads (
+							[ExportParameter (ExportParameterKind.InputStream)] UnsupportedOne value) : base (0) { }
+
+						[Export (".ctor")]
+						public UnsupportedExportConstructorOverloads (
+							[ExportParameter (ExportParameterKind.InputStream)] UnsupportedTwo value) : base (0) { }
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), $"{runtime}/{typeMapImplementation} should reject unsupported exported constructors.");
+			StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput);
+			if (typeMapImplementation == "trimmable") {
+				StringAssertEx.Contains ("unsupported signature type 'UnnamedProject.UnsupportedOne'", builder.LastBuildOutput);
+				StringAssertEx.Contains ("unsupported signature type 'UnnamedProject.UnsupportedTwo'", builder.LastBuildOutput);
+				Assert.IsFalse (builder.LastBuildOutput.Any (line =>
+					line.Contains ("Type 'UnnamedProject.UnsupportedExportConstructorOverloads'", StringComparison.Ordinal) &&
+					(line.Contains ("error XA4259", StringComparison.Ordinal) ||
+					 line.Contains ("error XA4260", StringComparison.Ordinal) ||
+					 line.Contains ("error XA4261", StringComparison.Ordinal))));
+			}
+			AssertNoExportOutputs (builder, "UnsupportedExportConstructorOverloads");
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, true)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR, false)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT, false)]
+		public void Build_WithCollidingConstructorSignatures_MatchesLegacyCount (
+			string typeMapImplementation,
+			AndroidRuntime runtime,
+			bool shouldSucceed)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.Sources.Add (new BuildItem.Source ("ConstructorCollision.cs") {
+				TextContent = () => """
+					using Android.App;
+
+					namespace UnnamedProject;
+
+					public class ConstructorCollision : Activity
+					{
+						public enum Kind { None }
+						public ConstructorCollision (int value) { }
+						public ConstructorCollision (uint value) { }
+						public ConstructorCollision (Kind value) { }
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.AreEqual (shouldSucceed, builder.Build (proj), $"{runtime}/{typeMapImplementation} should match legacy collision behavior.");
+			if (shouldSucceed) {
+				Assert.IsFalse (builder.LastBuildOutput.Any (line => line.Contains ("error XA4259", StringComparison.Ordinal)));
+				return;
+			}
+			StringAssertEx.Contains ("error XA4259", builder.LastBuildOutput);
+
+			var typemapDirectory = builder.Output.GetIntermediaryPath ("typemap");
+			Assert.IsFalse (Directory.Exists (typemapDirectory) && Directory.EnumerateFiles (typemapDirectory, "*.java", SearchOption.AllDirectories).Any (),
+				"Constructor diagnostics must be reported before partial Java output is written.");
+		}
+
+		[TestCase ("rectangular-in-sz-array", false)]
+		[TestCase ("pointer-array", true)]
+		[TestCase ("function-pointer-array", true)]
+		public void Build_WithUnsupportedNestedConstructorParameter_FailsBeforeWritingTrimmableOutputs (string shape, bool isUnsafe)
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var parameterType = shape switch {
+				"rectangular-in-sz-array" => "string[][,]",
+				"pointer-array" => "int*[]",
+				"function-pointer-array" => "delegate* unmanaged<void>[]",
+				_ => throw new InvalidOperationException ($"Unknown nested constructor shape '{shape}'."),
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				References = {
+					new BuildItem.Reference ("Mono.Android.Export"),
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			if (isUnsafe) {
+				proj.SetProperty ("AllowUnsafeBlocks", "true");
+			}
+			proj.Sources.Add (new BuildItem.Source ("NestedConstructorShape.cs") {
+				TextContent = () => $$"""
+					using Android.App;
+					using Java.Interop;
+
+					namespace UnnamedProject;
+
+					public {{(isUnsafe ? "unsafe " : "")}}class NestedConstructorShape : Activity
+					{
+						[Export (".ctor", SuperArgumentsString = "")]
+						public NestedConstructorShape ({{parameterType}} value) { }
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), $"Build should fail for nested constructor parameter '{parameterType}'.");
+			StringAssertEx.Contains ("error XA4260", builder.LastBuildOutput);
+
+			var typemapDirectory = builder.Output.GetIntermediaryPath ("typemap");
+			Assert.IsFalse (Directory.Exists (typemapDirectory) && Directory.EnumerateFiles (typemapDirectory, "*.java", SearchOption.AllDirectories).Any (),
+				"Constructor diagnostics must be reported before partial Java output is written.");
+		}
+
 		[Test]
 		public void Build_PublishAotProject_UsesTrimmableTypeMapForCoreClrDebug ()
 		{
@@ -65,6 +1479,7 @@ namespace Xamarin.Android.Build.Tests {
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
+			proj.MainActivity = proj.DefaultMainActivity;
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			bool trimNativeAotJavaCode = isRelease && runtime == AndroidRuntime.NativeAOT;
@@ -76,6 +1491,10 @@ namespace Xamarin.Android.Build.Tests {
 			AssertTrimmableTypeMapOutputs (intermediateDir);
 			var typemapDlls = Directory.GetFiles (intermediateDir, "*.dll");
 			Assert.IsNotEmpty (typemapDlls, "First build should have generated typemap DLL(s).");
+			var typemapFingerprints = Path.Combine (intermediateDir, "typemap-fingerprints.txt");
+			FileAssert.Exists (typemapFingerprints, "First build should persist typemap fingerprints.");
+			var typemapFingerprintContent = File.ReadAllText (typemapFingerprints);
+			var typemapWriteTimes = typemapDlls.ToDictionary (path => path, File.GetLastWriteTimeUtc);
 
 			string scanDgml = "";
 			DateTime scanDgmlTimestamp = default;
@@ -106,6 +1525,18 @@ namespace Xamarin.Android.Build.Tests {
 			foreach (var typemapDll in typemapDlls) {
 				FileAssert.Exists (typemapDll, $"No-op builds should preserve generated typemap assembly {typemapDll} when _GenerateTrimmableTypeMap is skipped.");
 			}
+
+			FileAssert.Exists (typemapFingerprints, "IncrementalClean should preserve typemap fingerprints on a no-op build.");
+			Assert.AreEqual (typemapFingerprintContent, File.ReadAllText (typemapFingerprints), "A no-op build should not change typemap fingerprints.");
+
+			proj.MainActivity += Environment.NewLine + "// Force trimmable typemap regeneration.";
+			proj.Touch ("MainActivity.cs");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Changed-input build should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
+			foreach (var typemapDll in typemapDlls) {
+				Assert.AreEqual (typemapWriteTimes [typemapDll], File.GetLastWriteTimeUtc (typemapDll),
+					$"A source change that does not affect the typemap model should skip PE emission for {typemapDll}.");
+			}
 		}
 
 		[Test]
@@ -116,6 +1547,7 @@ namespace Xamarin.Android.Build.Tests {
 			}
 
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.MainActivity = proj.DefaultMainActivity;
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
@@ -771,6 +2203,189 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void ReleaseCoreClrTrimmableTypeMap_TrimsUnusedBindingListenerImplementors ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var testRoot = Path.Combine ("temp", $"{TestName}_{Guid.NewGuid ():N}");
+			var binding = new XamarinAndroidBindingProject {
+				IsRelease = true,
+				ProjectName = "ListenerBinding",
+				AndroidClassParser = "class-parse",
+			};
+			binding.SetRuntime (AndroidRuntime.CoreCLR);
+
+			var javaRoot = Path.Combine (Root, testRoot, "java");
+			var javaSource = Path.Combine ("com", "example", "listener", "Widget.java");
+			Directory.CreateDirectory (Path.Combine (javaRoot, Path.GetDirectoryName (javaSource) ?? ""));
+			binding.Jars.Add (new AndroidItem.EmbeddedJar (Path.Combine ("java", "listener.jar")) {
+				BinaryContent = new JarContentBuilder {
+					BaseDirectory = javaRoot,
+					JarFileName = "listener.jar",
+					JavaSourceFileName = javaSource,
+					JavaSourceText = """
+						package com.example.listener;
+
+						public class Widget {
+							public interface OnChangedListener {
+								void onChanged ();
+							}
+
+							public void setOnChangedListener (OnChangedListener listener) {
+							}
+						}
+						""",
+				}.Build,
+			});
+
+			using var bindingBuilder = CreateDllBuilder (Path.Combine (testRoot, binding.ProjectName));
+			Assert.IsTrue (bindingBuilder.Build (binding), "Listener binding build should have succeeded.");
+
+			foreach (bool useListener in new [] { false, true }) {
+				var app = new XamarinAndroidApplicationProject {
+					IsRelease = true,
+					PackageName = useListener ? "com.xamarin.listenerused" : "com.xamarin.listenerunused",
+					ProjectName = useListener ? "ListenerUsed" : "ListenerUnused",
+				};
+				app.SetRuntime (AndroidRuntime.CoreCLR);
+				app.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+				app.SetProperty ("AndroidPackageFormat", "apk");
+				app.SetProperty (KnownProperties.AndroidLinkTool, "r8");
+				app.SetProperty ("TrimMode", "full");
+				app.SetProperty ("PublishReadyToRun", "false");
+				app.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+				app.References.Add (new BuildItem.ProjectReference ($"..\\{binding.ProjectName}\\{binding.ProjectName}.csproj", binding.ProjectName, binding.ProjectGuid));
+				if (useListener) {
+					app.MainActivity = app.DefaultMainActivity.Replace (
+						"//${AFTER_ONCREATE}",
+						"""
+									var widget = new Com.Example.Listener.Widget ();
+									widget.Changed += (sender, args) => { };
+						""");
+				}
+
+				using var builder = CreateApkBuilder (Path.Combine (testRoot, app.ProjectName));
+				Assert.IsTrue (builder.Build (app), $"{app.ProjectName} build should have succeeded.");
+
+				var linkedDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked"));
+				var linkedBinding = Path.Combine (linkedDirectory, $"{binding.ProjectName}.dll");
+				var javaDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "typemap", "linked-java"));
+				var implementorJava = Path.Combine (javaDirectory, "mono", "com", "example", "listener", "Widget_OnChangedListenerImplementor.java");
+				var acwMapPath = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "acw-map.txt"));
+				var proguardPath = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "proguard", "proguard_project_primary.cfg"));
+				var dexPath = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "bin", "classes.dex"));
+
+				Assert.AreEqual (
+					useListener,
+					AssemblyContainsType (linkedBinding, "Com.Example.Listener.Widget/IOnChangedListenerImplementor"),
+					$"{app.ProjectName} linked managed output should {(useListener ? "retain" : "trim")} the listener implementor.");
+				Assert.AreEqual (
+					useListener,
+					File.Exists (implementorJava),
+					$"{app.ProjectName} post-trim Java output should {(useListener ? "retain" : "trim")} the listener implementor.");
+				AssertFileContains (
+					acwMapPath,
+					"IOnChangedListenerImplementor",
+					useListener,
+					$"{app.ProjectName} ACW map");
+				AssertFileContains (
+					proguardPath,
+					"mono.com.example.listener.Widget_OnChangedListenerImplementor",
+					useListener,
+					$"{app.ProjectName} ProGuard configuration");
+				Assert.AreEqual (
+					useListener,
+					DexUtils.ContainsClass ("Lmono/com/example/listener/Widget_OnChangedListenerImplementor;", dexPath, AndroidSdkPath),
+					$"{app.ProjectName} DEX should {(useListener ? "retain" : "trim")} the listener implementor.");
+			}
+		}
+
+		[Test]
+		public void ReleaseCoreClrTrimmableTypeMap_UsesExternalJavaRoots ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var app = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				PackageName = "com.xamarin.externaljavaroots",
+				ProjectName = "ExternalJavaRoots",
+			};
+			app.SetRuntime (AndroidRuntime.CoreCLR);
+			app.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			app.SetProperty ("AndroidPackageFormat", "apk");
+			app.SetProperty ("TrimMode", "full");
+			app.SetProperty ("PublishReadyToRun", "false");
+			app.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			app.Sources.Add (new BuildItem.Source ("Views.cs") {
+				TextContent = () => """
+					using Android.Content;
+					using Android.Runtime;
+					using Android.Util;
+					using Android.Views;
+
+					namespace ExternalJavaRoots;
+
+					public class LayoutOnlyView : View
+					{
+						public LayoutOnlyView (Context context, IAttributeSet attributes) : base (context, attributes)
+						{
+						}
+					}
+
+					[Register ("com.example.RegisteredLayoutOnlyView")]
+					public class RegisteredLayoutOnlyView : View
+					{
+						public RegisteredLayoutOnlyView (Context context, IAttributeSet attributes) : base (context, attributes)
+						{
+						}
+					}
+
+					public class UnusedView : View
+					{
+						public UnusedView (Context context) : base (context)
+						{
+						}
+					}
+					""",
+			});
+			app.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\layout_only.xml") {
+				TextContent = () => """
+					<?xml version="1.0" encoding="utf-8"?>
+					<ExternalJavaRoots.LayoutOnlyView
+						xmlns:android="http://schemas.android.com/apk/res/android"
+						android:layout_width="match_parent"
+						android:layout_height="match_parent" />
+					""",
+			});
+			app.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\registered_layout_only.xml") {
+				TextContent = () => """
+					<?xml version="1.0" encoding="utf-8"?>
+					<com.example.RegisteredLayoutOnlyView
+						xmlns:android="http://schemas.android.com/apk/res/android"
+						android:layout_width="match_parent"
+						android:layout_height="match_parent" />
+					""",
+			});
+
+			using var builder = CreateApkBuilder (Path.Combine ("temp", $"{TestName}_{Guid.NewGuid ():N}"));
+			Assert.IsTrue (builder.Build (app), "External Java roots build should have succeeded.");
+
+			var linkedApp = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked", $"{app.ProjectName}.dll"));
+			Assert.IsTrue (AssemblyContainsType (linkedApp, "ExternalJavaRoots.LayoutOnlyView"), "The XML-only custom view should survive linking.");
+			Assert.IsTrue (AssemblyContainsType (linkedApp, "ExternalJavaRoots.RegisteredLayoutOnlyView"), "The XML-only custom view referenced by its explicit Java name should survive linking.");
+			Assert.IsFalse (AssemblyContainsType (linkedApp, "ExternalJavaRoots.UnusedView"), "An unreferenced ACW should be trimmed.");
+
+			var javaDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "typemap", "linked-java"));
+			Assert.IsNotEmpty (Directory.GetFiles (javaDirectory, "LayoutOnlyView.java", SearchOption.AllDirectories));
+			Assert.IsNotEmpty (Directory.GetFiles (javaDirectory, "RegisteredLayoutOnlyView.java", SearchOption.AllDirectories));
+			Assert.IsEmpty (Directory.GetFiles (javaDirectory, "UnusedView.java", SearchOption.AllDirectories));
+		}
+
+		[Test]
 		public void TrimmableTypeMap_PreserveLists_ArePackagedInSdk ()
 		{
 			foreach (var file in new [] {
@@ -998,6 +2613,204 @@ namespace UnnamedProject {
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded — abstract types with protected ctors should not cause XAGTT7009.");
 		}
 
+		[Test]
+		public void DexUtils_RejectsDex041Containers ()
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (directory);
+			var dexFile = Path.Combine (directory, "classes.dex");
+			var header = new byte [112];
+			Encoding.ASCII.GetBytes ("dex\n041\0").CopyTo (header, 0);
+			File.WriteAllBytes (dexFile, header);
+
+			Assert.Throws<NotSupportedException> (() => DexUtils.GetClassDescriptors (dexFile));
+		}
+
+		[TestCase ("magic-terminator")]
+		[TestCase ("header-size")]
+		[TestCase ("file-size")]
+		[TestCase ("map-missing")]
+		[TestCase ("map-section")]
+		[TestCase ("string-section")]
+		[TestCase ("data-section")]
+		public void DexUtils_RejectsMalformedHeaders (string malformedField)
+		{
+			var dex = CreateMinimalDex ([(byte) 'L', (byte) 'x', (byte) ';'], utf16Length: 3);
+			switch (malformedField) {
+				case "magic-terminator":
+					dex [7] = 1;
+					break;
+				case "header-size":
+					WriteUInt32 (dex, 36, 111);
+					break;
+				case "file-size":
+					WriteUInt32 (dex, 32, checked ((uint) dex.Length - 1));
+					break;
+				case "map-missing":
+					WriteUInt32 (dex, 52, 0);
+					break;
+				case "map-section":
+					WriteUInt32 (dex, checked ((int) ReadUInt32 (dex, 52)), uint.MaxValue);
+					break;
+				case "string-section":
+					WriteUInt32 (dex, 56, uint.MaxValue);
+					break;
+				case "data-section":
+					WriteUInt32 (dex, 104, uint.MaxValue);
+					break;
+				default:
+					throw new InvalidOperationException ($"Unknown malformed DEX field '{malformedField}'.");
+			}
+
+			var dexFile = WriteDexFile (dex, malformedField);
+			Assert.Throws<InvalidDataException> (() => DexUtils.GetClassDescriptors (dexFile));
+		}
+
+		[Test]
+		public void DexUtils_DecodesModifiedUtf8 ()
+		{
+			var bmpDex = CreateMinimalDex (
+				[(byte) 'L', 0xc2, 0x80, 0xe0, 0xa0, 0x80, (byte) ';'],
+				utf16Length: 4);
+			var nullDex = CreateMinimalDex (
+				[(byte) 'L', 0xc0, 0x80, (byte) ';'],
+				utf16Length: 3);
+			var supplementaryDex = CreateMinimalDex (
+				[(byte) 'L', (byte) 'x', (byte) '/', 0xed, 0xa0, 0x81, 0xed, 0xb0, 0x80, (byte) ';'],
+				utf16Length: 6);
+
+			Assert.AreEqual ("L\u0080\u0800;", DexUtils.GetClassDescriptors (WriteDexFile (bmpDex, "bmp")).Single ());
+			Assert.AreEqual ("L\0;", DexUtils.GetClassDescriptors (WriteDexFile (nullDex, "null")).Single ());
+			Assert.AreEqual ("Lx/\U00010400;", DexUtils.GetClassDescriptors (WriteDexFile (supplementaryDex, "supplementary")).Single ());
+		}
+
+		[Test]
+		public void DexUtils_RejectsMalformedModifiedUtf8 ()
+		{
+			foreach (var (name, bytes, length) in new [] {
+				("raw-null", new byte [] { (byte) 'L', 0, (byte) 'x', (byte) ';' }, 4u),
+				("two-byte-overlong", new byte [] { (byte) 'L', 0xc0, 0x81, (byte) ';' }, 3u),
+				("two-byte-overlong-c1", new byte [] { (byte) 'L', 0xc1, 0xbf, (byte) ';' }, 3u),
+				("three-byte-overlong", new byte [] { (byte) 'L', 0xe0, 0x81, 0x81, (byte) ';' }, 3u),
+				("unmatched-high", new byte [] { (byte) 'L', 0xed, 0xa0, 0x81, (byte) ';' }, 3u),
+				("unmatched-low", new byte [] { (byte) 'L', 0xed, 0xb0, 0x80, (byte) ';' }, 3u),
+			}) {
+				var dexFile = WriteDexFile (CreateMinimalDex (bytes, length), name);
+				Assert.Throws<InvalidDataException> (() => DexUtils.GetClassDescriptors (dexFile));
+			}
+		}
+
+		[Test]
+		public void DexUtils_RejectsUnboundedDeclaredStringLength ()
+		{
+			var dex = CreateMinimalDex ([], uint.MaxValue);
+			var dexFile = WriteDexFile (dex, "huge-string");
+
+			Assert.Throws<InvalidDataException> (() => DexUtils.GetClassDescriptors (dexFile));
+		}
+
+		string WriteDexFile (byte [] dex, string name)
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (directory);
+			var path = Path.Combine (directory, name + ".dex");
+			File.WriteAllBytes (path, dex);
+			return path;
+		}
+
+		static byte [] CreateMinimalDex (byte [] modifiedUtf8, uint utf16Length)
+		{
+			var length = EncodeUnsignedLeb128 (utf16Length);
+			const int stringIdsOffset = 112;
+			const int typeIdsOffset = 116;
+			const int classDefsOffset = 120;
+			const int stringDataOffset = 152;
+			int mapOffset = stringDataOffset + length.Length + modifiedUtf8.Length + 1;
+			var dex = new byte [mapOffset + 16];
+			Encoding.ASCII.GetBytes ("dex\n039\0").CopyTo (dex, 0);
+			WriteUInt32 (dex, 32, checked ((uint) dex.Length));
+			WriteUInt32 (dex, 36, 112);
+			WriteUInt32 (dex, 40, 0x12345678);
+			WriteUInt32 (dex, 52, checked ((uint) mapOffset));
+			WriteUInt32 (dex, 56, 1);
+			WriteUInt32 (dex, 60, stringIdsOffset);
+			WriteUInt32 (dex, 64, 1);
+			WriteUInt32 (dex, 68, typeIdsOffset);
+			WriteUInt32 (dex, 96, 1);
+			WriteUInt32 (dex, 100, classDefsOffset);
+			WriteUInt32 (dex, 104, checked ((uint) (dex.Length - stringDataOffset)));
+			WriteUInt32 (dex, 108, stringDataOffset);
+			WriteUInt32 (dex, stringIdsOffset, stringDataOffset);
+			length.CopyTo (dex, stringDataOffset);
+			modifiedUtf8.CopyTo (dex, stringDataOffset + length.Length);
+			WriteUInt32 (dex, mapOffset, 1);
+			dex [mapOffset + 4] = 0x00;
+			dex [mapOffset + 5] = 0x10;
+			WriteUInt32 (dex, mapOffset + 8, 1);
+			WriteUInt32 (dex, mapOffset + 12, checked ((uint) mapOffset));
+			return dex;
+		}
+
+		static byte [] EncodeUnsignedLeb128 (uint value)
+		{
+			var bytes = new List<byte> ();
+			do {
+				byte next = (byte) (value & 0x7f);
+				value >>= 7;
+				if (value != 0) {
+					next |= 0x80;
+				}
+				bytes.Add (next);
+			} while (value != 0);
+			return bytes.ToArray ();
+		}
+
+		static void WriteUInt32 (byte [] data, int offset, uint value)
+		{
+			data [offset] = (byte) value;
+			data [offset + 1] = (byte) (value >> 8);
+			data [offset + 2] = (byte) (value >> 16);
+			data [offset + 3] = (byte) (value >> 24);
+		}
+
+		static uint ReadUInt32 (byte [] data, int offset) =>
+			(uint) (
+				data [offset] |
+				data [offset + 1] << 8 |
+				data [offset + 2] << 16 |
+				data [offset + 3] << 24);
+
+		static void AssertNoUnicodeOutputs (ProjectBuilder builder, string memberName)
+		{
+			var typemapDirectory = builder.Output.GetIntermediaryPath ("typemap");
+			var acwMapFile = builder.Output.GetIntermediaryPath ("acw-map.txt");
+			var androidSourceDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src"));
+			var outputs = new List<string> ();
+			if (Directory.Exists (typemapDirectory)) {
+				outputs.AddRange (Directory.GetFiles (typemapDirectory, "*.TypeMap.dll", SearchOption.AllDirectories));
+				outputs.AddRange (Directory.GetFiles (typemapDirectory, "_Microsoft.Android.TypeMaps.dll", SearchOption.AllDirectories));
+			}
+			if (File.Exists (acwMapFile)) {
+				outputs.Add (acwMapFile);
+			}
+
+			foreach (var javaDirectory in new [] { Path.Combine (typemapDirectory, "java"), androidSourceDirectory }) {
+				if (!Directory.Exists (javaDirectory)) {
+					continue;
+				}
+				foreach (var javaFile in Directory.GetFiles (javaDirectory, "*.java", SearchOption.AllDirectories)) {
+					if (File.ReadAllText (javaFile).Contains (memberName, StringComparison.Ordinal)) {
+						outputs.Add (javaFile);
+					}
+				}
+			}
+			Assert.IsEmpty (
+				outputs,
+				"Invalid Unicode Java names should not produce typemap assemblies, ACW maps, or partial Java output:" +
+				Environment.NewLine + string.Join (Environment.NewLine, outputs)
+			);
+		}
+
 		static void AssertTrimmableTypeMapOutputs (string typemapDir)
 		{
 			DirectoryAssert.Exists (typemapDir);
@@ -1010,6 +2823,38 @@ namespace UnnamedProject {
 			var javaFiles = Directory.GetFiles (javaDir, "*.java", SearchOption.AllDirectories);
 			Assert.IsNotEmpty (javaFiles, "At least one trimmable JCW Java source file should be generated.");
 		}
+
+		static bool AssemblyContainsType (string assemblyPath, string typeFullName)
+		{
+			if (!File.Exists (assemblyPath)) {
+				return false;
+			}
+
+			using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
+			return ContainsType (assembly.MainModule.Types, typeFullName);
+		}
+
+		static bool ContainsType (IEnumerable<TypeDefinition> types, string typeFullName)
+		{
+			foreach (var type in types) {
+				if (type.FullName == typeFullName || ContainsType (type.NestedTypes, typeFullName)) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		static void AssertFileContains (string path, string value, bool expected, string description)
+		{
+			FileAssert.Exists (path, $"{description} should exist.");
+			var contents = File.ReadAllText (path);
+			Assert.AreEqual (
+				expected,
+				contents.Contains (value, StringComparison.Ordinal),
+				$"{description} should {(expected ? "contain" : "exclude")} '{value}'.");
+		}
+
 		DynamicCodeSupportProfile BuildDynamicCodeSupportProfile (string typemapImplementation, bool? dynamicCodeSupport)
 		{
 			var dynamicCodeSuffix = dynamicCodeSupport.HasValue ? $"_{dynamicCodeSupport.Value.ToString ().ToLowerInvariant ()}" : "";

@@ -18,6 +18,7 @@ struct CrossReferenceTarget
 	};
 
 	jobject get_handle () const noexcept;
+	bool is_gc_user_peer_known () const noexcept;
 	void mark_refs_added_if_needed () noexcept;
 };
 
@@ -83,7 +84,7 @@ private:
 	void add_circular_references (const StronglyConnectedComponent &scc) noexcept;
 	void add_cross_reference (size_t source_index, size_t dest_index, TemporaryPeerMap &temporary_peers) noexcept;
 	CrossReferenceTarget select_cross_reference_target (size_t scc_index, TemporaryPeerMap &temporary_peers) noexcept;
-	bool add_reference (jobject from, jobject to) noexcept;
+	bool add_reference (jobject from, jobject to, bool known_gc_user_peer = false) noexcept;
 
 	void cleanup_after_java_collection () noexcept;
 	void cleanup_scc_for_java_collection (const StronglyConnectedComponent &scc) noexcept;
@@ -99,7 +100,6 @@ private:
 	void abort_on_pending_java_exception (std::string_view message) noexcept;
 
 	void log_missing_add_references_method (jclass java_class) noexcept;
-	void log_missing_clear_references_method (jclass java_class) noexcept;
 	void log_weak_to_gref (jobject weak, jobject handle) noexcept;
 	void log_weak_ref_collected (jobject weak) noexcept;
 	void log_take_weak_global_ref (jobject handle) noexcept;

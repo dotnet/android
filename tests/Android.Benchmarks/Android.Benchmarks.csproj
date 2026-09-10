@@ -12,6 +12,8 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <RootNamespace>Xamarin.Android.Benchmarks</RootNamespace>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <UseMonoRuntime>false</UseMonoRuntime>
+    <AndroidTypeMapImplementation>trimmable</AndroidTypeMapImplementation>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 

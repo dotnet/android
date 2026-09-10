@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>$(NoWarn);CS0436</NoWarn>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TestFixtures\TestFixtures.csproj">
+      <Aliases>global,TestFixtures</Aliases>
+    </ProjectReference>
+    <ProjectReference Include="..\LookalikeConstructorTypes\LookalikeConstructorTypes.csproj">
+      <Aliases>Lookalikes</Aliases>
+    </ProjectReference>
+  </ItemGroup>
+
+</Project>

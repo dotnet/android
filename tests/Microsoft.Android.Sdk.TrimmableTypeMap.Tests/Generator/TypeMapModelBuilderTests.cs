@@ -55,6 +55,16 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Build_UnicodeJniName_PreservesCodePoints ()
+		{
+			const string javaName = "com/\u00e9xample/Peer\u0394";
+			var model = BuildModel ([MakePeerWithActivation (javaName, "Test.UnicodePeer", "A")]);
+
+			Assert.Equal (javaName, Assert.Single (model.Entries).MapKey);
+			Assert.Equal (javaName, Assert.Single (model.ProxyTypes).JniName);
+		}
+
+		[Fact]
 		public void Build_DuplicateJniNames_CreatesAliasEntries ()
 		{
 			var peers = new List<JavaPeerInfo> {
@@ -164,10 +174,8 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void Build_MixedAcwMcwAliasGroup_BaseEntryIsUnconditional ()
+		public void Build_MixedAcwMcwAliasGroup_BaseEntryIsConditional ()
 		{
-			// When at least one peer in an alias group is an ACW (unconditional),
-			// the base alias-holder entry should be unconditional (2-arg).
 			var peers = new List<JavaPeerInfo> {
 				MakeMcwPeer ("test/Mixed", "Test.Mcw", "A") with { DoNotGenerateAcw = true },
 				MakeAcwPeer ("test/Mixed", "Test.Acw", "A"),
@@ -175,8 +183,8 @@ public class ModelBuilderTests : FixtureTestBase
 
 			var model = BuildModel (peers);
 			var baseEntry = model.Entries.Single (e => e.MapKey == "test/Mixed");
-			Assert.True (baseEntry.IsUnconditional, "Mixed alias group with ACW should have unconditional base entry");
-			Assert.Null (baseEntry.TargetTypeReference);
+			Assert.False (baseEntry.IsUnconditional);
+			Assert.NotNull (baseEntry.TargetTypeReference);
 		}
 
 		[Fact]
@@ -215,16 +223,14 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void Build_UserAcwType_IsUnconditional ()
+		public void Build_UserAcwType_IsTrimmable ()
 		{
-			// User-defined ACW types (not MCW, not interface) are unconditional
-			// because Android can instantiate them from Java
 			var peer = MakeAcwPeer ("my/app/Main", "MyApp.MainActivity", "App");
 			var model = BuildModel (new [] { peer });
 
 			var mainEntry = model.Entries.First (e => e.MapKey == "my/app/Main");
-			Assert.True (mainEntry.IsUnconditional);
-			Assert.Null (mainEntry.TargetTypeReference);
+			Assert.False (mainEntry.IsUnconditional);
+			Assert.Equal ("MyApp.MainActivity, App", mainEntry.TargetTypeReference);
 		}
 
 		[Fact]
@@ -279,7 +285,7 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void Build_FrameworkAcwType_IsConditional ()
+		public void Build_AcwTypes_AreConditionalUnlessExplicitlyRooted ()
 		{
 			var frameworkAcwPeer = MakeAcwPeer ("mono/android/view/View_ClickEventDispatcher", "Android.Views.View_ClickEventDispatcher", "Mono.Android") with {
 				IsFrameworkAssembly = true,
@@ -289,9 +295,9 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.False (
 				BuildModel ([frameworkAcwPeer]).Entries.Single ().IsUnconditional,
 				"Framework ACWs should not unconditionally root their proxy types.");
-			Assert.True (
+			Assert.False (
 				BuildModel ([appAcwPeer]).Entries.Single ().IsUnconditional,
-				"Application ACWs must remain unconditional because Java can instantiate them.");
+				"Application ACWs should follow managed reachability unless an external Java root marks them unconditional.");
 		}
 
 	}
@@ -443,12 +449,12 @@ public class ModelBuilderTests : FixtureTestBase
 		[Theory]
 		[InlineData ("my/app/MainActivity")]
 		[InlineData ("my/app/TouchHandler")]
-		public void Fixture_UserAcwType_IsUnconditional (string javaName)
+		public void Fixture_UserAcwType_UsesExplicitRoots (string javaName)
 		{
 			var peer = FindFixtureByJavaName (javaName);
 			Assert.False (peer.DoNotGenerateAcw);
 			var model = BuildModel (new [] { peer });
-			Assert.True (model.Entries [0].IsUnconditional);
+			Assert.Equal (peer.IsUnconditional, model.Entries [0].IsUnconditional);
 		}
 
 		[Theory]
@@ -754,9 +760,9 @@ public class ModelBuilderTests : FixtureTestBase
 	public class FixtureImplementorsAndDispatchers
 	{
 		[Theory]
-		[InlineData ("mono/android/view/View_IOnClickListenerImplementor", "Implementor")]
-		[InlineData ("mono/android/view/View_ClickEventDispatcher", "EventDispatcher")]
-		public void Fixture_HelperType_IsUnconditional (string javaName, string kind)
+		[InlineData ("mono/android/view/View_IOnClickListenerImplementor")]
+		[InlineData ("mono/android/view/View_ClickEventDispatcher")]
+		public void Fixture_HelperType_IsConditional (string javaName)
 		{
 			var peer = FindFixtureByJavaName (javaName);
 			Assert.False (peer.DoNotGenerateAcw);
@@ -766,9 +772,7 @@ public class ModelBuilderTests : FixtureTestBase
 
 			var entry = model.Entries.FirstOrDefault ();
 			Assert.NotNull (entry);
-			// Implementor/EventDispatcher types are treated as unconditional ACW types.
-			// Future optimization (see #10911) may make them trimmable.
-			Assert.True (entry.IsUnconditional, $"{kind} should be unconditional");
+			Assert.False (entry.IsUnconditional);
 		}
 	}
 
@@ -1411,16 +1415,18 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void Build_ExportConstructorWithoutMatchingManagedCtor_Throws ()
+		public void Build_ConstructorWithoutMatchingManagedCtor_UsesActivationFallback ()
 		{
 			var peer = MakeAcwPeer ("my/app/MissingCtor", "MyApp.MissingCtor", "App") with {
 				JavaConstructors = new List<JavaConstructorInfo> {
-					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "()V", HasMatchingManagedCtor = false, SuperArgumentsString = "" },
+					new JavaConstructorInfo { ConstructorIndex = 0, JniSignature = "(IC)V", HasMatchingManagedCtor = false, SuperArgumentsString = "" },
 				},
 			};
-			var ex = Assert.Throws<InvalidOperationException> (() => BuildModel (new [] { peer }));
-			Assert.Contains ("no matching user-visible managed constructor", ex.Message);
-			Assert.Contains ("MyApp.MissingCtor", ex.Message);
+			var model = BuildModel (new [] { peer });
+			var constructor = Assert.Single (model.ProxyTypes [0].UcoConstructors);
+			Assert.Equal ("(IC)V", constructor.JniSignature);
+			Assert.False (constructor.HasMatchingManagedCtor);
+			Assert.Empty (constructor.ManagedParameterTypes);
 		}
 
 		[Fact]
@@ -1568,6 +1574,21 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.NotNull (resourceXmlDispatch);
 			Assert.Equal (ExportParameterKindInfo.XmlResourceParser, resourceXmlDispatch.ParameterKinds [0]);
 			Assert.Equal (ExportParameterKindInfo.XmlResourceParser, resourceXmlDispatch.ReturnKind);
+		}
+
+		[Fact]
+		public void Fixture_ExportConstructor_PropagatesParameterKinds ()
+		{
+			var peer = FindFixtureByJavaName ("my/app/ExportConstructorMappedParameter");
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			var proxy = Assert.Single (model.ProxyTypes);
+			var constructor = Assert.Single (
+				proxy.UcoConstructors,
+				candidate => candidate.JniSignature == "(Ljava/io/InputStream;)V");
+
+			Assert.True (constructor.HasMatchingManagedCtor);
+			Assert.Equal ("System.IO.Stream", constructor.ManagedParameterTypes [0].ManagedTypeName);
+			Assert.Equal ([ExportParameterKindInfo.InputStream], constructor.ParameterKinds);
 		}
 
 		[Fact]

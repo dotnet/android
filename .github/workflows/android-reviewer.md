@@ -42,16 +42,20 @@ engine:
       }}
 max-daily-ai-credits: -1
 max-ai-credits: -1
+timeout-minutes: 60
 tools:
   bash:
     - az *
+    - c++ *
     - cat
     - git diff *
     - grep
     - head
     - jq
+    - sed
     - tail
     - wc
+  web-fetch:
   github:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     toolsets: [pull_requests, repos]
