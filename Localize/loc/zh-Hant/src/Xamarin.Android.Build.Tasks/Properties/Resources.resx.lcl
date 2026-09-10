@@ -1637,10 +1637,13 @@
       </Item>
       <Item ItemId=";XA4258" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Java name '{0}' contains reserved Java identifier '{1}'. Change the package or type name.]]></Val>
+          <Val><![CDATA[Java name '{0}' contains invalid or unsupported Java identifier '{1}'. Change the package or type name.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Java 名稱 '{0}' 包含保留的 Java 識別碼 '{1}'。請變更套件或類型名稱。]]></Val>
+            <Val><![CDATA[Java 名稱 '{0}' 包含無效或不支援的 Java 識別碼 '{1}'。請變更套件或類型名稱。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Java name '{0}' contains reserved Java identifier '{1}'. Change the package or type name.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

@@ -1637,10 +1637,13 @@
       </Item>
       <Item ItemId=";XA4258" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Java name '{0}' contains reserved Java identifier '{1}'. Change the package or type name.]]></Val>
+          <Val><![CDATA[Java name '{0}' contains invalid or unsupported Java identifier '{1}'. Change the package or type name.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[O nome Java "{0}" contém o identificador Java reservado "{1}". Altere o nome do pacote ou do tipo.]]></Val>
+            <Val><![CDATA[O nome Java '{0}' contém um identificador Java inválido ou sem suporte '{1}'. Altere o pacote ou o nome do tipo.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Java name '{0}' contains reserved Java identifier '{1}'. Change the package or type name.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
