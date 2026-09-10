@@ -1119,6 +1119,22 @@ r8 dex-compiler and shrinker. The default value is a path into the
 .NET for Android workload installation. For further information see our
 documentation on [D8 and R8][d8-r8].
 
+## AndroidR8ObfuscationMode
+
+An enum-style property that specifies how `r8` obfuscates Java names when
+[`$(AndroidLinkTool)`](#androidlinktool) is `r8`. Supported values are:
+
+- `private-members` preserves Java class and interface names and public or
+  protected member names. Private and package-private members can be
+  obfuscated, and R8 optimization is enabled.
+- `disabled` disables obfuscation, preserves all Java names, and uses the
+  non-optimizing Android R8 defaults.
+
+This property does not disable R8 code shrinking.
+
+This property was introduced in a .NET 10 servicing release and defaults to
+`disabled` in .NET 10.
+
 ## AndroidResgenExtraArgs
 
 Specifies

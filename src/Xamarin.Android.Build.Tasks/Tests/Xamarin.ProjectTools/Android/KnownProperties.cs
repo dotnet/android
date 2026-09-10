@@ -25,6 +25,7 @@ namespace Xamarin.ProjectTools
 		public const string AndroidEnableDesugar = "AndroidEnableDesugar";
 		public const string AndroidManifestMerger = "AndroidManifestMerger";
 		public const string AndroidLinkTool = "AndroidLinkTool";
+		public const string AndroidR8ObfuscationMode = "AndroidR8ObfuscationMode";
 		public const string UseJackAndJill = "UseJackAndJill";
 		public const string AotAssemblies = "AotAssemblies";
 		public const string AndroidEnableProfiledAot = "AndroidEnableProfiledAot";
