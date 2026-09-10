@@ -3549,25 +3549,32 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			Assert.IsTrue (completed, $"`dotnet run` did not complete in time. See {logPath} for details.");
 
 			var outputText = output.ToString ();
+			string instrumentationError = TryParseInstrumentationStringResult (outputText, "error") ?? "<not reported>";
+			// App logcat events are best-effort diagnostics; instrumentation results are authoritative.
+			bool hasArgumentsLog = outputText.Contains ("BENCHMARK_ARGS", StringComparison.Ordinal);
+			bool hasCompletionLog = outputText.Contains ("BENCHMARKS_COMPLETE", StringComparison.Ordinal);
+
+			TestContext.Out.WriteLine (
+				$"BenchmarkDotNet process diagnostics: completed={completed}, exitCode={process.ExitCode}, " +
+				$"error={instrumentationError}, argumentsLog={hasArgumentsLog}, completionLog={hasCompletionLog}");
+
+			StringAssert.Contains ("INSTRUMENTATION_CODE: -1", outputText,
+				$"The instrumentation should have finished with Result.Ok. Error: {instrumentationError}. See {logPath} for details.");
+			Assert.AreEqual (0, process.ExitCode,
+				$"`dotnet run` should succeed. Instrumentation error: {instrumentationError}. See {logPath} for details.");
+
 			int benchmarks = ParseInstrumentationResult (outputText, "benchmarks");
 			int reports = ParseInstrumentationResult (outputText, "reports");
 			int successfulReports = ParseInstrumentationResult (outputText, "successfulReports");
 			int criticalValidationErrors = ParseInstrumentationResult (outputText, "criticalValidationErrors");
 			string benchmarkArgs = ParseInstrumentationStringResult (outputText, "args");
 			string greeting = ParseInstrumentationStringResult (outputText, "greeting");
-			// App logcat events are best-effort diagnostics; instrumentation results are authoritative.
-			bool hasArgumentsLog = outputText.Contains ("BENCHMARK_ARGS", StringComparison.Ordinal);
-			bool hasCompletionLog = outputText.Contains ("BENCHMARKS_COMPLETE", StringComparison.Ordinal);
 
 			TestContext.Out.WriteLine (
-				$"BenchmarkDotNet diagnostics: completed={completed}, exitCode={process.ExitCode}, " +
-				$"benchmarks={benchmarks}, reports={reports}, successfulReports={successfulReports}, " +
-				$"criticalValidationErrors={criticalValidationErrors}, args={benchmarkArgs}, greeting={greeting}, " +
-				$"argumentsLog={hasArgumentsLog}, completionLog={hasCompletionLog}");
+				$"BenchmarkDotNet results: benchmarks={benchmarks}, reports={reports}, " +
+				$"successfulReports={successfulReports}, criticalValidationErrors={criticalValidationErrors}, " +
+				$"args={benchmarkArgs}, greeting={greeting}");
 
-			StringAssert.Contains ("INSTRUMENTATION_CODE: -1", outputText,
-				$"The instrumentation should have finished with Result.Ok. See {logPath} for details.");
-			Assert.AreEqual (0, process.ExitCode, $"`dotnet run` should succeed. See {logPath} for details.");
 			Assert.AreEqual ("--custom-flag", benchmarkArgs,
 				$"The instrumentation should receive the custom argument passed after `--`. See {logPath} for details.");
 			Assert.AreEqual ("hello", greeting,
@@ -3590,6 +3597,15 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 
 		static string ParseInstrumentationStringResult (string output, string key)
 		{
+			var value = TryParseInstrumentationStringResult (output, key);
+			if (value != null)
+				return value;
+			Assert.Fail ($"INSTRUMENTATION_RESULT key '{key}' was not found.");
+			return "";
+		}
+
+		static string? TryParseInstrumentationStringResult (string output, string key)
+		{
 			// Parses lines like: INSTRUMENTATION_RESULT: key=value
 			var prefix = $"INSTRUMENTATION_RESULT: {key}=";
 			foreach (var rawLine in output.Split ('\n')) {
@@ -3598,8 +3614,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 					return line.Substring (prefix.Length).Trim ();
 				}
 			}
-			Assert.Fail ($"INSTRUMENTATION_RESULT key '{key}' was not found.");
-			return "";
+			return null;
 		}
 
 		static string GetAppHelperSource (string appHelperBody, string hotReloadMessage) => $$"""
