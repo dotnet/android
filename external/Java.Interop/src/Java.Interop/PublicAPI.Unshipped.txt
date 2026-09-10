@@ -1,4 +1,5 @@
 #nullable enable
+virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementMethodInfoCore(string! jniSimpleReference, System.ReadOnlySpan<char> jniMethodName, System.ReadOnlySpan<char> jniMethodSignature) -> Java.Interop.JniRuntime.ReplacementMethodInfo?
 static Java.Interop.JniEnvironment.BeginMarshalMethod(nint jnienv, out Java.Interop.JniTransition transition, out Java.Interop.JniRuntime? runtime) -> bool
 static Java.Interop.JniEnvironment.EndMarshalMethod(ref Java.Interop.JniTransition transition) -> void
 virtual Java.Interop.JniRuntime.OnEnterMarshalMethod() -> void

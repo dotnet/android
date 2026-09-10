@@ -194,11 +194,11 @@ namespace Java.Interop {
 			return n;
 		}
 
-		internal static void GetNameAndSignature (string encodedMember, out string name, out string signature)
+		internal static void GetNameAndSignature (string encodedMember, out ReadOnlySpan<char> name, out ReadOnlySpan<char> signature)
 		{
 			int n       = GetSignatureSeparatorIndex (encodedMember);
-			name        = encodedMember.Substring (0, n);
-			signature   = encodedMember.Substring (n + 1);
+			name        = encodedMember.AsSpan (0, n);
+			signature   = encodedMember.AsSpan (n + 1);
 		}
 	}
 }

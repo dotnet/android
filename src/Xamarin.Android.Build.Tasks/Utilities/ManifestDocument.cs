@@ -1066,18 +1066,7 @@ namespace Xamarin.Android.Tasks {
 
 		internal static string ReplacePlaceholders (string [] placeholders, string text, Action<string, string> logCodedWarning = null)
 		{
-			string result = text;
-			if (placeholders == null)
-				return result;
-			foreach (var entry in placeholders.Select (e => e.Split (new char [] {'='}, 2, StringSplitOptions.None))) {
-				if (entry.Length == 2)
-					result = result.Replace ("${" + entry [0] + "}", entry [1]);
-				else {
-					if (logCodedWarning != null)
-						logCodedWarning ("XA1010", string.Format (Properties.Resources.XA1010, string.Join (";", placeholders)));
-				}
-			}
-			return result;
+			return ManifestPlaceholderResolver.Replace (placeholders, text, logCodedWarning);
 		}
 
 		public void SetAbi (string abi)
