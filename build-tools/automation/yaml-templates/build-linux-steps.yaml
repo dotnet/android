@@ -79,6 +79,12 @@ steps:
   parameters:
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
+- pwsh: |
+    $scriptsDirectory = Join-Path '${{ parameters.xaSourcePath }}' 'build-tools/automation/scripts'
+    & (Join-Path $scriptsDirectory 'RecoverGradleCache.Tests.ps1')
+    & (Join-Path $scriptsDirectory 'FailOnUnexpectedIssues.Tests.ps1')
+  displayName: test optional cache recovery scripts
+
 - script: make jenkins CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins

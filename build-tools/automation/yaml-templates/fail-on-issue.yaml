@@ -4,7 +4,8 @@ parameters:
 
 steps:
 - powershell: |
-    & '${{ parameters.xaSourcePath }}/build-tools/automation/scripts/FailOnUnexpectedIssues.ps1'
+    $scriptPath = Join-Path '${{ parameters.xaSourcePath }}' 'build-tools/automation/scripts/FailOnUnexpectedIssues.ps1'
+    & $scriptPath
   name: failOnUnexpectedIssues
   displayName: fail if any issues occurred
   condition: ${{ parameters.condition }}
