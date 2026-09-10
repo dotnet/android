@@ -6,6 +6,8 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Android.Systems;
+
 using NUnit.Framework;
 
 using Xamarin.Android.NetTests;
@@ -121,10 +123,17 @@ namespace System.NetTests {
 		{
 			try {
 				return new TcpClient ("google.com", 443);
-			} catch (SocketException ex) when (IsExternalConnectivityFailure (ex.SocketErrorCode)) {
+			} catch (SocketException ex) when (IsExternalConnectivityFailure (ex)) {
 				Assert.Ignore ($"Unable to reach google.com:443 before TLS certificate validation. SocketError={ex.SocketErrorCode}; NativeError={ex.NativeErrorCode}; Message={ex.Message}");
 				throw;
 			}
+		}
+
+		static bool IsExternalConnectivityFailure (SocketException exception)
+		{
+			return IsExternalConnectivityFailure (exception.SocketErrorCode) ||
+				exception.NativeErrorCode == OsConstants.Enetunreach ||
+				exception.NativeErrorCode == OsConstants.Ehostunreach;
 		}
 
 		static bool IsExternalConnectivityFailure (SocketError socketError)
@@ -149,6 +158,14 @@ namespace System.NetTests {
 		public void ExternalConnectivityFailureClassification (SocketError socketError, bool expected)
 		{
 			Assert.AreEqual (expected, IsExternalConnectivityFailure (socketError));
+		}
+
+		[Test]
+		public void NativeExternalConnectivityFailureClassification ()
+		{
+			Assert.IsTrue (IsExternalConnectivityFailure (new SocketException (OsConstants.Enetunreach)), "ENETUNREACH");
+			Assert.IsTrue (IsExternalConnectivityFailure (new SocketException (OsConstants.Ehostunreach)), "EHOSTUNREACH");
+			Assert.IsFalse (IsExternalConnectivityFailure (new SocketException (OsConstants.Econnreset)), "ECONNRESET");
 		}
 
 		void RunIgnoringWebException (Action test)
