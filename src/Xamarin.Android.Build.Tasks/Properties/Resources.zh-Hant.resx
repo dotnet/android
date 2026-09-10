@@ -1261,25 +1261,25 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - Invalid, unsupported, reserved, or restricted Java identifier</comment>
   </data>
   <data name="XA4259" xml:space="preserve">
-    <value>Type '{0}' has multiple managed constructors that map to the same Java Native Interface (JNI) signature '{1}'. Change the constructor parameter types so each constructor has a unique JNI signature.</value>
+    <value>類型 '{0}' 具有多個受控建構函式，這些建構函式對應至相同的 JAVA 原生介面 (JNI) 簽章 '{1}'。請變更建構函式參數類型，讓每個建構函式都有唯一的 JNI 簽章。</value>
     <comment>The following terms should not be translated: Java Native Interface, JNI.
 {0} - Fully-qualified managed type name
 {1} - Colliding JNI constructor signature</comment>
   </data>
   <data name="XA4260" xml:space="preserve">
-    <value>Type '{0}' has a constructor parameter type '{1}' that cannot be represented in a Java constructor. Remove the constructor or change the parameter to a supported Java type.</value>
+    <value>類型 '{0}' 具有無法在 Java 建構函式中表示的建構函式參數類型 '{1}'。請移除建構函式，或將參數變更為支援的 Java 類型。</value>
     <comment>The following term should not be translated: Java.
 {0} - Fully-qualified managed type name
 {1} - Unsupported managed constructor parameter type</comment>
   </data>
   <data name="XA4261" xml:space="preserve">
-    <value>Type '{0}' has Java constructor signature '{1}', but its base type does not expose a compatible Java constructor. Add a compatible base constructor or remove the derived constructor.</value>
+    <value>類型 '{0}' 具有 JAVA 建構函式簽章 '{1}'，但其基底類型未提供相容的 Java 建構函式。請新增相容的基底建構函式，或移除衍生建構函式。</value>
     <comment>The following term should not be translated: Java.
 {0} - Fully-qualified managed type name
 {1} - JNI signature of the derived constructor</comment>
   </data>
   <data name="XA4262" xml:space="preserve">
-    <value>Type '{0}' has an invalid [Export] SuperArgumentsString value '{1}'. The value references a constructor parameter that does not exist.</value>
+    <value>類型 '{0}' 具有無效的 [Export] SuperArgumentsString 值 '{1}'。值參考不存在的建構函式參數。</value>
     <comment>The following terms should not be translated: Export, SuperArgumentsString.
 {0} - Fully-qualified managed type name
 {1} - Invalid SuperArgumentsString value</comment>

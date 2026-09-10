@@ -1261,25 +1261,25 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - Invalid, unsupported, reserved, or restricted Java identifier</comment>
   </data>
   <data name="XA4259" xml:space="preserve">
-    <value>Type '{0}' has multiple managed constructors that map to the same Java Native Interface (JNI) signature '{1}'. Change the constructor parameter types so each constructor has a unique JNI signature.</value>
+    <value>형식 '{0}'에 동일한 JNI(Java Native Interface) 서명 '{1}'에 매핑되는 관리되는 생성자가 여러 개 있습니다. 각 생성자가 고유한 JNI 서명을 갖도록 생성자 매개 변수 형식을 변경하세요.</value>
     <comment>The following terms should not be translated: Java Native Interface, JNI.
 {0} - Fully-qualified managed type name
 {1} - Colliding JNI constructor signature</comment>
   </data>
   <data name="XA4260" xml:space="preserve">
-    <value>Type '{0}' has a constructor parameter type '{1}' that cannot be represented in a Java constructor. Remove the constructor or change the parameter to a supported Java type.</value>
+    <value>'{0}' 형식에 Java 생성자에서 나타낼 수 없는 생성자 매개 변수 형식 '{1}'이 있습니다. 생성자를 제거하거나 매개 변수를 지원되는 Java 형식으로 변경하십시오.</value>
     <comment>The following term should not be translated: Java.
 {0} - Fully-qualified managed type name
 {1} - Unsupported managed constructor parameter type</comment>
   </data>
   <data name="XA4261" xml:space="preserve">
-    <value>Type '{0}' has Java constructor signature '{1}', but its base type does not expose a compatible Java constructor. Add a compatible base constructor or remove the derived constructor.</value>
+    <value>형식 '{0}'에는 Java 생성자 시그니처 '{1}'이(가) 있지만, 해당 기본 형식은 호환되는 Java 생성자를 노출하지 않습니다. 호환되는 기본 생성자를 추가하거나 파생된 생성자를 제거하세요.</value>
     <comment>The following term should not be translated: Java.
 {0} - Fully-qualified managed type name
 {1} - JNI signature of the derived constructor</comment>
   </data>
   <data name="XA4262" xml:space="preserve">
-    <value>Type '{0}' has an invalid [Export] SuperArgumentsString value '{1}'. The value references a constructor parameter that does not exist.</value>
+    <value>'{0}' 형식에 잘못된 [Export] SuperArgumentsString 값 '{1}'가 있습니다. 값이 존재하지 않는 생성자 매개 변수를 참조합니다.</value>
     <comment>The following terms should not be translated: Export, SuperArgumentsString.
 {0} - Fully-qualified managed type name
 {1} - Invalid SuperArgumentsString value</comment>

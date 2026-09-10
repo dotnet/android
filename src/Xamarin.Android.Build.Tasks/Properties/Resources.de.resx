@@ -1261,25 +1261,25 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 {1} - Invalid, unsupported, reserved, or restricted Java identifier</comment>
   </data>
   <data name="XA4259" xml:space="preserve">
-    <value>Type '{0}' has multiple managed constructors that map to the same Java Native Interface (JNI) signature '{1}'. Change the constructor parameter types so each constructor has a unique JNI signature.</value>
+    <value>Der Typ „{0}“ verfügt über mehrere verwaltete Konstruktoren, die derselben Java Native Interface (JNI)-Signatur „{1}“ zugeordnet sind. Ändern Sie die Konstruktorparametertypen, sodass jeder Konstruktor über eine eindeutige JNI-Signatur verfügt.</value>
     <comment>The following terms should not be translated: Java Native Interface, JNI.
 {0} - Fully-qualified managed type name
 {1} - Colliding JNI constructor signature</comment>
   </data>
   <data name="XA4260" xml:space="preserve">
-    <value>Type '{0}' has a constructor parameter type '{1}' that cannot be represented in a Java constructor. Remove the constructor or change the parameter to a supported Java type.</value>
+    <value>Der Typ „{0}“ weist den Konstruktorparametertyp „{1}“ auf, der nicht in einem Java-Konstruktor dargestellt werden kann. Entfernen Sie den Konstruktor, oder ändern Sie den Parameter in einen unterstützten Java-Typ.</value>
     <comment>The following term should not be translated: Java.
 {0} - Fully-qualified managed type name
 {1} - Unsupported managed constructor parameter type</comment>
   </data>
   <data name="XA4261" xml:space="preserve">
-    <value>Type '{0}' has Java constructor signature '{1}', but its base type does not expose a compatible Java constructor. Add a compatible base constructor or remove the derived constructor.</value>
+    <value>Der Typ „{0}“ weist die Java-Konstruktorsignatur „{1}“ auf, aber sein Basistyp macht keinen kompatiblen Java-Konstruktor verfügbar. Fügen Sie einen kompatiblen Basiskonstruktor hinzu, oder entfernen Sie den abgeleiteten Konstruktor.</value>
     <comment>The following term should not be translated: Java.
 {0} - Fully-qualified managed type name
 {1} - JNI signature of the derived constructor</comment>
   </data>
   <data name="XA4262" xml:space="preserve">
-    <value>Type '{0}' has an invalid [Export] SuperArgumentsString value '{1}'. The value references a constructor parameter that does not exist.</value>
+    <value>Der Typ „{0}“ weist einen ungültigen [Export] SuperArgumentsString-Wert „{1}“ auf. Der Wert verweist auf einen Konstruktorparameter, der nicht vorhanden ist.</value>
     <comment>The following terms should not be translated: Export, SuperArgumentsString.
 {0} - Fully-qualified managed type name
 {1} - Invalid SuperArgumentsString value</comment>
