@@ -28,11 +28,12 @@ about the various Microsoft.Android workloads.
     <PropertyGroup>
       <WorkloadDependenciesPath Condition="'$(WorkloadDependenciesPath)' == ''">$(OutputPath)workload-manifest\WorkloadDependencies.json</WorkloadDependenciesPath>
       <WorkloadManifestJsonPath Condition="'$(WorkloadManifestJsonPath)' == ''">$(OutputPath)workload-manifest\WorkloadManifest.json</WorkloadManifestJsonPath>
+      <_AndroidWorkloadManifestLocalizationPath>$([System.IO.Path]::GetDirectoryName('$(WorkloadManifestJsonPath)'))\localize</_AndroidWorkloadManifestLocalizationPath>
       <WorkloadManifestTargetsPath Condition="'$(WorkloadManifestTargetsPath)' == ''">$(OutputPath)workload-manifest\WorkloadManifest.targets</WorkloadManifestTargetsPath>
       <WorkloadVersion Condition="'$(WorkloadVersion)' == ''">$(AndroidPackVersionLong)</WorkloadVersion>
     </PropertyGroup>
 
-    <MakeDir Directories="$(OutputPath)workload-manifest" />
+    <MakeDir Directories="$(OutputPath)workload-manifest;$(_AndroidWorkloadManifestLocalizationPath)" />
     <ReplaceFileContents
         SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\WorkloadManifest.in.json"
         DestinationFile="$(WorkloadManifestJsonPath)"
@@ -43,6 +44,14 @@ about the various Microsoft.Android workloads.
         DestinationFile="$(WorkloadManifestTargetsPath)"
         Replacements="@NET_PREVIOUS_VERSION@=$(AndroidNetPreviousVersion)">
     </ReplaceFileContents>
+    <ItemGroup>
+      <_AndroidWorkloadManifestLocalizationFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\localize\WorkloadManifest.*.json" />
+    </ItemGroup>
+    <Copy
+        SourceFiles="@(_AndroidWorkloadManifestLocalizationFiles)"
+        DestinationFolder="$(_AndroidWorkloadManifestLocalizationPath)"
+        SkipUnchangedFiles="true"
+    />
 
     <ItemGroup>
       <_AndroidPreviewPlatformId
@@ -72,6 +81,7 @@ about the various Microsoft.Android workloads.
 
     <ItemGroup>
       <_PackageFiles Include="$(WorkloadManifestJsonPath)" PackagePath="data" />
+      <_PackageFiles Include="$(_AndroidWorkloadManifestLocalizationPath)\WorkloadManifest.*.json" PackagePath="data\localize" />
       <_PackageFiles Include="$(WorkloadManifestTargetsPath)" PackagePath="data" />
       <_PackageFiles Include="$(WorkloadDependenciesPath)" PackagePath="data" />
     </ItemGroup>

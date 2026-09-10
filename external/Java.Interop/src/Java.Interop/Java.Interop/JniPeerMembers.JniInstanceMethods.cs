@@ -60,7 +60,7 @@ namespace Java.Interop
 			if (signature == null)
 				throw new ArgumentNullException (nameof (signature));
 			return InstanceMethods.GetOrAdd (signature, static (member, methods) =>
-					methods.JniPeerType.GetConstructor (member), this);
+					methods.JniPeerType.GetConstructor (member.AsSpan ()), this);
 		}
 
 		internal JniInstanceMethods GetConstructorsForType (Type declaringType)
@@ -96,20 +96,20 @@ namespace Java.Interop
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
 			return InstanceMethods.GetOrAdd (encodedMember, static (member, methods) => {
-				string method, signature;
+				ReadOnlySpan<char> method, signature;
 				JniPeerMembers.GetNameAndSignature (member, out method, out signature);
 				return methods.GetMethodInfo (method, signature);
 			}, this);
 		}
 
-		JniMethodInfo GetMethodInfo (string method, string signature)
+		JniMethodInfo GetMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
 		{
 			var m              = (JniMethodInfo?) null;
 			var newMethod      = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (Members.JniPeerTypeName, method, signature);
 			if (newMethod.HasValue) {
 				var typeName   = newMethod.Value.TargetJniType ?? Members.JniPeerTypeName;
-				var methodName = newMethod.Value.TargetJniMethodName ?? method;
-				var methodSig  = newMethod.Value.TargetJniMethodSignature ?? signature;
+				var methodName = newMethod.Value.TargetJniMethodName is string name ? name.AsSpan () : method;
+				var methodSig  = newMethod.Value.TargetJniMethodSignature is string sig ? sig.AsSpan () : signature;
 
 				using var t = new JniType (typeName);
 				if (newMethod.Value.TargetJniMethodInstanceToStatic &&
