@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using System.IO;
-using Microsoft.Build.Framework;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 
@@ -78,21 +76,6 @@ namespace Xamarin.Android.Build.Tests
 			R8.WriteObfuscationRules (writer, "disabled");
 
 			Assert.AreEqual ("-dontobfuscate" + System.Environment.NewLine, writer.ToString ());
-		}
-
-		[Test]
-		public void InvalidObfuscationModeReportsXA1050 ()
-		{
-			var errors = new List<BuildErrorEventArgs> ();
-			var task = new R8 {
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
-				ObfuscationMode = "private-member",
-			};
-
-			Assert.IsFalse (task.Execute (), "Task should reject an invalid obfuscation mode.");
-			Assert.AreEqual (1, errors.Count, "Task should report one error.");
-			Assert.AreEqual ("XA1050", errors [0].Code);
-			StringAssert.Contains ("'private-member'", errors [0].Message);
 		}
 	}
 }

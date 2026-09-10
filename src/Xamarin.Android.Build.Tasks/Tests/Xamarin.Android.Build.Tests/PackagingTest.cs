@@ -62,6 +62,27 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[TestCase ("", true)]
+		[TestCase ("r8", false)]
+		public void InvalidR8ObfuscationModeIsValidatedOnlyForR8 (string linkTool, bool expectedResult)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, linkTool);
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidR8ObfuscationMode, "private-member");
+
+			using var builder = CreateApkBuilder ();
+			builder.Target = "_ValidateAndroidR8ObfuscationMode";
+			builder.ThrowOnBuildFailure = false;
+			builder.AutomaticNuGetRestore = false;
+			Assert.AreEqual (expectedResult, builder.Build (proj), "Validation result should depend on whether R8 is enabled.");
+			if (!expectedResult) {
+				StringAssertEx.Contains ("error XA1050", builder.LastBuildOutput);
+				StringAssertEx.Contains ("'private-member'", builder.LastBuildOutput);
+			}
+		}
+
 		[Test]
 		public void CheckR8InfoMessagesToNotBreakTheBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
