@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
@@ -50,17 +51,17 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (false, true, false)]
-		[TestCase (true, false, false)]
-		[TestCase (false, true, true)]
-		[TestCase (true, false, true)]
-		public void GenerateCommonXamarinConfiguration_OnlyDropsDontObfuscate (bool enableObfuscation, bool expectDontObfuscate, bool nativeAot)
+		[TestCase ("disabled", true, false)]
+		[TestCase ("runtime-remapping", false, false)]
+		[TestCase ("disabled", true, true)]
+		[TestCase ("runtime-remapping", false, true)]
+		public void GenerateCommonXamarinConfiguration_OnlyDropsDontObfuscate (string obfuscationMode, bool expectDontObfuscate, bool nativeAot)
 		{
 			var path = Path.GetTempFileName ();
 			try {
 				var task = new R8 {
 					BuildEngine = new MockBuildEngine (TestContext.Out),
-					EnableObfuscation = enableObfuscation,
+					ObfuscationMode = obfuscationMode,
 					UseTrimmableNativeAotProguardConfiguration = nativeAot,
 					ProguardCommonXamarinConfiguration = path,
 				};
@@ -77,6 +78,22 @@ namespace Xamarin.Android.Build.Tests
 					CollectionAssert.Contains (lines, "-keep class mono.android.GCUserPeer { <init>(); }");
 					CollectionAssert.Contains (lines, "-keep class mono.android.IGCUserPeer { *; }");
 				}
+			} finally {
+				File.Delete (path);
+			}
+		}
+
+		[Test]
+		public void GenerateCommonXamarinConfiguration_RejectsUnknownObfuscationMode ()
+		{
+			var path = Path.GetTempFileName ();
+			var task = new R8 {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				ObfuscationMode = "unknown",
+				ProguardCommonXamarinConfiguration = path,
+			};
+			try {
+				Assert.Throws<InvalidOperationException> (() => task.GenerateCommonXamarinConfiguration ());
 			} finally {
 				File.Delete (path);
 			}

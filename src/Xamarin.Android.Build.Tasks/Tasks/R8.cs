@@ -36,11 +36,9 @@ namespace Xamarin.Android.Tasks
 		public string? ProguardMappingFileOutput { get; set; }
 
 		/// <summary>
-		/// Allows R8 to rename types and members by omitting the SDK-generated
-		/// <c>-dontobfuscate</c>, and by letting the generated Java Callable Wrapper keep rules
-		/// retain their types without pinning their names.
+		/// Selects how R8 obfuscation is reconciled with managed JNI names.
 		/// </summary>
-		public bool EnableObfuscation { get; set; }
+		public string ObfuscationMode { get; set; } = "disabled";
 
 		public string? BuildMetadataFileOutput { get; set; }
 		public ITaskItem []? ProguardConfigurationFiles { get; set; }
@@ -247,7 +245,19 @@ namespace Xamarin.Android.Tasks
 		/// names are remapped at runtime the wrappers must survive shrinking but stay renameable,
 		/// otherwise a plain <c>-keep</c> pins their names and prevents obfuscation.
 		/// </summary>
-		internal string KeepOption => EnableObfuscation ? "-keep,allowobfuscation" : "-keep";
+		internal string KeepOption => IsRuntimeRemappingEnabled ? "-keep,allowobfuscation" : "-keep";
+
+		internal bool IsRuntimeRemappingEnabled {
+			get {
+				if (string.Equals (ObfuscationMode, "disabled", StringComparison.OrdinalIgnoreCase)) {
+					return false;
+				}
+				if (string.Equals (ObfuscationMode, "runtime-remapping", StringComparison.OrdinalIgnoreCase)) {
+					return true;
+				}
+				throw new InvalidOperationException ($"Unsupported R8 obfuscation mode '{ObfuscationMode}'.");
+			}
+		}
 
 		internal void GenerateCommonXamarinConfiguration ()
 		{
@@ -262,7 +272,7 @@ namespace Xamarin.Android.Tasks
 				while (reader.ReadLine () is string line) {
 					// The only SDK-generated option dropped when obfuscation is enabled. Every
 					// other rule in the configuration still applies.
-					if (EnableObfuscation && string.Equals (line.Trim (), "-dontobfuscate", StringComparison.OrdinalIgnoreCase)) {
+					if (IsRuntimeRemappingEnabled && string.Equals (line.Trim (), "-dontobfuscate", StringComparison.OrdinalIgnoreCase)) {
 						continue;
 					}
 					xamcfg.WriteLine (line);

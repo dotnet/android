@@ -67,29 +67,23 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (null, null, "false", "runtime-remapping", "false")]
-		[TestCase (null, "runtime-remapping", "false", "runtime-remapping", "false")]
-		[TestCase (null, "experimental-rewriting", "false", "experimental-rewriting", "false")]
-		[TestCase ("false", "unknown", "false", "unknown", "false")]
-		[TestCase ("true", null, "true", "runtime-remapping", "true")]
-		[TestCase ("true", "runtime-remapping", "true", "runtime-remapping", "true")]
-		public void R8ObfuscationDefaults (string? enabled, string? mode, string expectedEnabled, string expectedMode, string expectedRemapping)
+		[TestCase (null, "disabled", "false")]
+		[TestCase ("disabled", "disabled", "false")]
+		[TestCase ("runtime-remapping", "runtime-remapping", "true")]
+		public void R8ObfuscationDefaults (string? mode, string expectedMode, string expectedRemapping)
 		{
 			var project = new XamarinAndroidApplicationProject { IsRelease = true };
 			project.SetRuntime (AndroidRuntime.CoreCLR);
 			project.SetProperty ("AndroidLinkTool", "r8");
 			project.SetProperty ("AndroidTypeMapImplementation", "trimmable");
-			if (enabled != null) {
-				project.SetProperty ("AndroidEnableR8Obfuscation", enabled);
-			}
 			if (mode != null) {
 				project.SetProperty ("AndroidR8ObfuscationMode", mode);
 			}
 			project.Imports.Add (new Import ("R8Options.targets") {
 				TextContent = () => """
 					<Project>
-					  <Target Name="ReportR8Options" DependsOnTargets="_ValidateAndroidR8Obfuscation">
-					    <Message Importance="High" Text="R8_OPTIONS=$(AndroidEnableR8Obfuscation)|$(AndroidR8ObfuscationMode)|$(_AndroidR8RuntimeRemappingEnabled)" />
+					  <Target Name="ReportR8Options" DependsOnTargets="_ValidateAndroidR8ObfuscationMode">
+					    <Message Importance="High" Text="R8_OPTIONS=$(AndroidR8ObfuscationMode)|$(_AndroidR8RuntimeRemappingEnabled)" />
 					  </Target>
 					</Project>
 					""",
@@ -97,10 +91,9 @@ namespace Xamarin.Android.Build.Tests
 			using var builder = CreateApkBuilder ();
 			builder.Target = "ReportR8Options";
 			Assert.IsTrue (builder.Build (project));
-			StringAssertEx.Contains ($"R8_OPTIONS={expectedEnabled}|{expectedMode}|{expectedRemapping}", builder.LastBuildOutput);
+			StringAssertEx.Contains ($"R8_OPTIONS={expectedMode}|{expectedRemapping}", builder.LastBuildOutput);
 		}
 
-		[TestCase ("AndroidEnableR8Obfuscation", "yes", "AndroidEnableR8Obfuscation")]
 		[TestCase ("AndroidR8ObfuscationMode", "unknown", "AndroidR8ObfuscationMode")]
 		[TestCase ("AndroidR8ObfuscationMode", "experimental-rewriting", "not available in this SDK")]
 		[TestCase ("AndroidLinkTool", "d8", "AndroidLinkTool")]
@@ -112,13 +105,13 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var project = new XamarinAndroidApplicationProject { IsRelease = true };
 			project.SetRuntime (AndroidRuntime.CoreCLR);
-			project.SetProperty ("AndroidEnableR8Obfuscation", "true");
 			project.SetProperty ("RunAOTCompilation", "false");
 			project.SetProperty ("AndroidLinkTool", "r8");
 			project.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			project.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
 			project.SetProperty (property, value);
 			using var builder = CreateApkBuilder ();
-			builder.Target = "_ValidateAndroidR8Obfuscation";
+			builder.Target = "_ValidateAndroidR8ObfuscationMode";
 			builder.ThrowOnBuildFailure = false;
 			Assert.IsFalse (builder.Build (project));
 			StringAssertEx.Contains ("error XA4329:", builder.LastBuildOutput);
@@ -129,10 +122,9 @@ namespace Xamarin.Android.Build.Tests
 		public void R8ObfuscationDoesNotEnableLibraries ()
 		{
 			var project = new XamarinAndroidLibraryProject ();
-			project.SetProperty ("AndroidEnableR8Obfuscation", "true");
 			project.SetProperty ("AndroidR8ObfuscationMode", "experimental-rewriting");
 			using var builder = CreateDllBuilder ();
-			builder.Target = "_ValidateAndroidR8Obfuscation";
+			builder.Target = "_ValidateAndroidR8ObfuscationMode";
 			Assert.IsTrue (builder.Build (project), "Application obfuscation settings must not affect referenced libraries.");
 		}
 

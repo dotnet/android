@@ -489,33 +489,6 @@ removing the existing one(s) and adding your own AOT profiles.
 This property is `False` by default.
 
 
-## AndroidEnableR8Obfuscation
-
-A boolean property that opts an Android application into R8 name obfuscation.
-The default is `false`; setting
-[`$(AndroidR8ObfuscationMode)`](#androidr8obfuscationmode) alone does not enable it.
-This feature is experimental.
-
-The current implementation requires `AndroidLinkTool=r8`,
-`AndroidTypeMapImplementation=trimmable`, `PublishTrimmed=true`, and either the
-CoreCLR or NativeAOT runtime. Explicit incompatible settings produce
-[XA4329](../messages/xa4329.md) rather than being silently changed.
-This property has no effect on library projects.
-
-For example:
-
-```xml
-<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-  <AndroidLinkTool>r8</AndroidLinkTool>
-  <AndroidTypeMapImplementation>trimmable</AndroidTypeMapImplementation>
-  <PublishTrimmed>true</PublishTrimmed>
-  <AndroidEnableR8Obfuscation>true</AndroidEnableR8Obfuscation>
-  <AndroidR8ObfuscationMode>runtime-remapping</AndroidR8ObfuscationMode>
-</PropertyGroup>
-```
-
-Added in .NET 11.
-
 ## AndroidEnableRestrictToAttributes
 
 An enum-style property with valid values of `obsolete` and `disable`.
@@ -1144,15 +1117,32 @@ documentation on [D8 and R8][d8-r8].
 
 ## AndroidR8ObfuscationMode
 
-Selects how managed JNI references are reconciled with R8's obfuscated Java
-names. It is only used when
-[`$(AndroidEnableR8Obfuscation)`](#androidenabler8obfuscation) is `true`.
-The default is `runtime-remapping`.
+An enum-style property that selects how R8 obfuscates Java names. The default is
+`disabled`; selecting `runtime-remapping` explicitly opts the application into
+the experimental runtime-remapping implementation.
 
 | Value | Behavior |
 |---|---|
+| `disabled` | Disables obfuscation and preserves Java names. |
 | `runtime-remapping` | Keeps managed assemblies unchanged and translates JNI type/member lookups using generated native remapping tables. Available for trimmed CoreCLR and NativeAOT applications. |
 | `experimental-rewriting` | Reserved for the separate managed-assembly rewriting implementation. This SDK does not yet include its build pipeline; selecting it reports [XA4329](../messages/xa4329.md). |
+
+The `runtime-remapping` value requires `AndroidLinkTool=r8`,
+`AndroidTypeMapImplementation=trimmable`, `PublishTrimmed=true`, and either the
+CoreCLR or NativeAOT runtime. Explicit incompatible settings produce
+[XA4329](../messages/xa4329.md) rather than being silently changed. This
+property has no effect on library projects.
+
+For example:
+
+```xml
+<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+  <AndroidLinkTool>r8</AndroidLinkTool>
+  <AndroidTypeMapImplementation>trimmable</AndroidTypeMapImplementation>
+  <PublishTrimmed>true</PublishTrimmed>
+  <AndroidR8ObfuscationMode>runtime-remapping</AndroidR8ObfuscationMode>
+</PropertyGroup>
+```
 
 The runtime-remapping mode leaves managed assemblies unchanged. It runs R8 once,
 after managed trimming or ILC, then uses the resulting R8 mapping to
@@ -1162,8 +1152,8 @@ object and statically links the table afterward.
 
 Runtime-generated JNI names may require explicit remapping or keep rules.
 Conservative keep rules still protect native callbacks, bootstrap code, and
-resource-referenced names. Neither mode is selected as a fallback for another
-mode; unrecognized values report XA4329 when obfuscation is enabled.
+resource-referenced names. No mode falls back to another mode; unrecognized
+values report XA4329.
 
 Added in .NET 11.
 

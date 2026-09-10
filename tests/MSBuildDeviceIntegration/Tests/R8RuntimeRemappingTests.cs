@@ -80,15 +80,12 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidLinkTool", "r8");
 			proj.SetProperty ("AllowUnsafeBlocks", "true");
 			proj.SetProperty ("TrimMode", "full");
-			proj.SetProperty ("AndroidEnableR8Obfuscation", "true");
+			proj.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
 			proj.SetProperty ("AndroidCreateProguardMappingFile", "false");
 			string extraRules = "";
 			proj.OtherBuildItems.Add (new AndroidItem.ProguardConfiguration ("r8-custom.pro") {
 				TextContent = () => extraRules,
 			});
-			if (runtime == AndroidRuntime.NativeAOT) {
-				proj.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
-			}
 			proj.Sources.Add (new BuildItem.Source ("HiddenPeerBinding.cs") {
 				TextContent = () => """
 					using System;
@@ -230,7 +227,7 @@ namespace Xamarin.Android.Build.Tests
 				AssertR8Invocations (builder, 1);
 				AssertAppRuns ("r8-changed-rules.log");
 
-				proj.SetProperty ("AndroidEnableR8Obfuscation", "false");
+				proj.SetProperty ("AndroidR8ObfuscationMode", "disabled");
 				Assert.IsTrue (builder.Install (proj), "Disabling obfuscation should rebuild and install the baseline.");
 				AssertR8Invocations (builder, 1, obfuscationEnabled: false);
 				StringAssert.Contains ("-dontobfuscate", File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg")));

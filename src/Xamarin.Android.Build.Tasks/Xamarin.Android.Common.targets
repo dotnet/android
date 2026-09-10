@@ -253,6 +253,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' ">False</AndroidEnableDesugar>
 	<AndroidD8IgnoreWarnings    Condition=" '$(AndroidD8IgnoreWarnings)' == '' ">True</AndroidD8IgnoreWarnings>
 	<AndroidR8IgnoreWarnings    Condition=" '$(AndroidR8IgnoreWarnings)' == '' ">True</AndroidR8IgnoreWarnings>
+	<AndroidR8ObfuscationMode   Condition=" '$(AndroidR8ObfuscationMode)' == '' ">disabled</AndroidR8ObfuscationMode>
 	<AndroidCreateProguardMappingFile Condition="'$(AndroidCreateProguardMappingFile)' == '' And '$(AndroidLinkTool)' == 'r8'">True</AndroidCreateProguardMappingFile>
 
 	<!-- Figure out which is the main packaging format we want-->
@@ -975,7 +976,6 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidEnableProfiledAot=$(AndroidEnableProfiledAot)" />
 		<_PropertyCacheItems Include="AndroidDexTool=$(AndroidDexTool)" />
 		<_PropertyCacheItems Include="AndroidLinkTool=$(AndroidLinkTool)" />
-		<_PropertyCacheItems Include="AndroidEnableR8Obfuscation=$(AndroidEnableR8Obfuscation)" />
 		<_PropertyCacheItems Include="AndroidR8ObfuscationMode=$(AndroidR8ObfuscationMode)" />
 		<_PropertyCacheItems Include="AndroidLinkResources=$(AndroidLinkResources)" />
 		<_PropertyCacheItems Include="AndroidBundleToolExtraArgs=$(AndroidBundleToolExtraArgs)" />
@@ -3148,28 +3148,24 @@ because xbuild doesn't support framework reference assemblies.
   </Target>
 
   <PropertyGroup>
-    <AndroidEnableR8Obfuscation Condition=" '$(AndroidEnableR8Obfuscation)' == '' ">false</AndroidEnableR8Obfuscation>
-    <AndroidR8ObfuscationMode Condition=" '$(AndroidR8ObfuscationMode)' == '' ">runtime-remapping</AndroidR8ObfuscationMode>
     <_AndroidR8RuntimeRemappingEnabled>false</_AndroidR8RuntimeRemappingEnabled>
     <_AndroidR8RuntimeRemappingEnabled
-        Condition=" '$(AndroidApplication)' == 'true' and '$(AndroidEnableR8Obfuscation)' == 'true' and '$(AndroidR8ObfuscationMode)' == 'runtime-remapping' ">true</_AndroidR8RuntimeRemappingEnabled>
+        Condition=" '$(AndroidApplication)' == 'true' and '$(AndroidR8ObfuscationMode)' == 'runtime-remapping' ">true</_AndroidR8RuntimeRemappingEnabled>
   </PropertyGroup>
 
-  <Target Name="_ValidateAndroidR8Obfuscation"
-      BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
+  <Target Name="_ValidateAndroidR8ObfuscationMode"
+      BeforeTargets="_CheckForInvalidConfigurationAndPlatform"
+      Condition=" '$(AndroidApplication)' == 'true' ">
     <AndroidError Code="XA4329" ResourceName="XA4329"
-        FormatArguments="AndroidEnableR8Obfuscation;$(AndroidEnableR8Obfuscation);true, false"
-        Condition=" !$([System.String]::Equals('$(AndroidEnableR8Obfuscation)', 'true', System.StringComparison.OrdinalIgnoreCase)) and !$([System.String]::Equals('$(AndroidEnableR8Obfuscation)', 'false', System.StringComparison.OrdinalIgnoreCase)) " />
-    <CallTarget Targets="_ValidateEnabledAndroidR8Obfuscation"
-        Condition=" '$(AndroidApplication)' == 'true' and '$(AndroidEnableR8Obfuscation)' == 'true' " />
-  </Target>
-
-  <Target Name="_ValidateEnabledAndroidR8Obfuscation">
-    <AndroidError Code="XA4329" ResourceName="XA4329"
-        FormatArguments="AndroidR8ObfuscationMode;$(AndroidR8ObfuscationMode);runtime-remapping, experimental-rewriting"
-        Condition=" '$(AndroidR8ObfuscationMode)' != 'runtime-remapping' and '$(AndroidR8ObfuscationMode)' != 'experimental-rewriting' " />
+        FormatArguments="AndroidR8ObfuscationMode;$(AndroidR8ObfuscationMode);disabled, runtime-remapping, experimental-rewriting"
+        Condition=" '$(AndroidR8ObfuscationMode)' != 'disabled' and '$(AndroidR8ObfuscationMode)' != 'runtime-remapping' and '$(AndroidR8ObfuscationMode)' != 'experimental-rewriting' " />
     <AndroidError Code="XA4329" ResourceName="XA4329_RewritingUnavailable"
         Condition=" '$(AndroidR8ObfuscationMode)' == 'experimental-rewriting' " />
+    <CallTarget Targets="_ValidateAndroidR8RuntimeRemapping"
+        Condition=" '$(AndroidR8ObfuscationMode)' == 'runtime-remapping' " />
+  </Target>
+
+  <Target Name="_ValidateAndroidR8RuntimeRemapping">
     <AndroidError Code="XA4329" ResourceName="XA4329_RequiredProperty"
         FormatArguments="AndroidLinkTool;r8;'$(AndroidLinkTool)'"
         Condition=" '$(AndroidLinkTool)' != 'r8' " />

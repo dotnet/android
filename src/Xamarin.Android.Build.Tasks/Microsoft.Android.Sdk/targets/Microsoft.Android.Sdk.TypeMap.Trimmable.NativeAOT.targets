@@ -220,7 +220,7 @@
     <MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
     <WriteLinesToFile
         File="$(_TrimmableNativeAotProguardConfigurationInputsStamp)"
-        Lines="$(_AndroidTrimmableTypemapTrimJavaCode);$(AndroidEnableR8Obfuscation);$(AndroidR8ObfuscationMode)"
+        Lines="$(_AndroidTrimmableTypemapTrimJavaCode);$(AndroidR8ObfuscationMode)"
         Overwrite="true"
         WriteOnlyWhenDifferent="true" />
     <ItemGroup>

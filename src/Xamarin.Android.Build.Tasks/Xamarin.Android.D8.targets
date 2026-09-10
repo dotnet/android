@@ -78,7 +78,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         ProguardGeneratedReferenceConfiguration="$(_ProguardProjectConfiguration)"
         ProguardGeneratedApplicationConfiguration="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg"
         ProguardMappingFileOutput="$(_AndroidR8ProguardMappingFileOutput)"
-        EnableObfuscation="$(_AndroidR8RuntimeRemappingEnabled)"
+        ObfuscationMode="$(AndroidR8ObfuscationMode)"
         BuildMetadataFileOutput="$(_AndroidR8BuildMetadataFile)"
         ProguardConfigurationFiles="@(_ProguardConfiguration)"
         UseTrimmableNativeAotProguardConfiguration="$(_UseTrimmableNativeAotProguardConfiguration)"

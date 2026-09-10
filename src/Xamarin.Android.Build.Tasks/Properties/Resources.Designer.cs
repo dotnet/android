@@ -2140,7 +2140,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to AndroidR8ObfuscationMode=&apos;experimental-rewriting&apos; is not available in this SDK. Use &apos;runtime-remapping&apos; or set AndroidEnableR8Obfuscation=false..
+        ///   Looks up a localized string similar to AndroidR8ObfuscationMode=&apos;experimental-rewriting&apos; is not available in this SDK. Use &apos;runtime-remapping&apos; or &apos;disabled&apos;..
         /// </summary>
         public static string XA4329_RewritingUnavailable {
             get {
@@ -2149,7 +2149,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to AndroidEnableR8Obfuscation=true requires $({0}) to be &apos;{1}&apos;, but it is {2}..
+        ///   Looks up a localized string similar to AndroidR8ObfuscationMode=runtime-remapping requires $({0}) to be &apos;{1}&apos;, but it is {2}..
         /// </summary>
         public static string XA4329_RequiredProperty {
             get {
@@ -2158,7 +2158,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to AndroidEnableR8Obfuscation=true is not supported for runtime &apos;{0}&apos;. Supported runtimes are CoreCLR and NativeAOT..
+        ///   Looks up a localized string similar to AndroidR8ObfuscationMode=runtime-remapping is not supported for runtime &apos;{0}&apos;. Supported runtimes are CoreCLR and NativeAOT..
         /// </summary>
         public static string XA4329_UnsupportedRuntime {
             get {

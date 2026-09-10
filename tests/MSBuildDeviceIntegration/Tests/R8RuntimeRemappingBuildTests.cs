@@ -42,7 +42,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntimeIdentifiers (new [] { "arm64-v8a" });
 			proj.SetProperty ("AndroidTypeMapImplementation", typeMap);
 			proj.SetProperty ("AndroidLinkTool", "r8");
-			proj.SetProperty ("AndroidEnableR8Obfuscation", obfuscation.ToString ());
+			proj.SetProperty ("AndroidR8ObfuscationMode", obfuscation ? "runtime-remapping" : "disabled");
 			proj.SetProperty ("AndroidPackageFormats", "apk");
 			proj.SetProperty ("TrimMode", "full");
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
@@ -124,7 +124,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("AndroidLinkTool", "r8");
-			proj.SetProperty ("AndroidEnableR8Obfuscation", "true");
+			proj.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
 			proj.SetProperty ("AndroidCreateProguardMappingFile", "false");
 			proj.SetProperty ("AndroidPackageFormats", "apk");
 
