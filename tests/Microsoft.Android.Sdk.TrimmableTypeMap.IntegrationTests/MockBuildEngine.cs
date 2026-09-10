@@ -10,13 +10,6 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests;
 /// </summary>
 sealed class MockBuildEngine : IBuildEngine
 {
-	readonly IList<BuildWarningEventArgs>? warnings;
-
-	public MockBuildEngine (IList<BuildWarningEventArgs>? warnings = null)
-	{
-		this.warnings = warnings;
-	}
-
 	public bool ContinueOnError => false;
 	public int LineNumberOfTaskNode => 0;
 	public int ColumnNumberOfTaskNode => 0;
