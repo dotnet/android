@@ -159,6 +159,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA1047](xa1047.md): Required attribute '{0}' missing from element '{1}'; {2} line {3}.
 + [XA1048](xa1048.md): '{0}' does not contain an &lt;instrumentation&gt; element.
 + [XA1049](xa1049.md): The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'.
++ [XA1050](xa1050.md): The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value.
 
 ## XA2xxx: Linker
 

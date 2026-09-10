@@ -49,6 +49,11 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
+			if (!string.Equals (ObfuscationMode, "disabled", StringComparison.OrdinalIgnoreCase) &&
+					!string.Equals (ObfuscationMode, "private-members", StringComparison.OrdinalIgnoreCase)) {
+				Log.LogCodedError ("XA1050", Properties.Resources.XA1050, ObfuscationMode);
+				return false;
+			}
 			try {
 				return base.RunTask ();
 			} finally {
