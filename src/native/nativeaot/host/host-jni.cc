@@ -3,21 +3,22 @@
 #include <host/host-jni.hh>
 #include <host/host-nativeaot.hh>
 #include <host/os-bridge.hh>
+#include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
 #include <shared/helpers.hh>
 
 using namespace xamarin::android;
 
 namespace {
-	jstring duplicate_local_reference (JNIEnv *env, jstring value) noexcept
+	jstring_wrapper duplicate_local_reference (JNIEnv *env, jstring value) noexcept
 	{
 		if (value == nullptr) {
-			return nullptr;
+			return jstring_wrapper (env);
 		}
 
 		auto local_ref = reinterpret_cast<jstring> (env->NewLocalRef (value));
 		if (local_ref != nullptr) [[likely]] {
-			return local_ref;
+			return jstring_wrapper (env, local_ref);
 		}
 
 		if (env->ExceptionCheck ()) {
@@ -37,10 +38,9 @@ void XA_Host_NativeAOT_OnInit (jstring language, jstring filesDir, jstring cache
 {
 	JNIEnv *env = OSBridge::ensure_jnienv ();
 
-	// JNI method arguments are borrowed and must remain valid after Host::OnInit returns.
-	// Pass duplicates because Host::OnInit takes ownership of the references it receives.
-	jstring language_ref = duplicate_local_reference (env, language);
-	jstring files_dir_ref = duplicate_local_reference (env, filesDir);
-	jstring cache_dir_ref = duplicate_local_reference (env, cacheDir);
-	Host::OnInit (language_ref, files_dir_ref, cache_dir_ref, initArgs);
+	// Give the wrappers their own references; the caller still needs its borrowed arguments.
+	auto language_js = duplicate_local_reference (env, language);
+	auto files_dir = duplicate_local_reference (env, filesDir);
+	auto cache_dir = duplicate_local_reference (env, cacheDir);
+	Host::OnInit (language_js, files_dir, cache_dir, initArgs);
 }
