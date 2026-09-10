@@ -2822,6 +2822,7 @@ namespace UnnamedProject
 						$"{bridgeValue}");
 				""");
 			using var builder = CreateApkBuilder (packageName: packageName);
+			bool testCompleted = false;
 			try {
 				CleanupInterfaceMethodPackage (proj.PackageName);
 				Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
@@ -2845,8 +2846,13 @@ namespace UnnamedProject
 					logcatOutput,
 					"Managed and Java static, default, nested, and covariant bridge interface methods should all execute."
 				);
+				testCompleted = true;
 			} finally {
-				TryCleanupInterfaceMethodPackage (proj.PackageName);
+				if (testCompleted) {
+					CleanupInterfaceMethodPackage (proj.PackageName);
+				} else {
+					TryCleanupInterfaceMethodPackage (proj.PackageName);
+				}
 			}
 		}
 
