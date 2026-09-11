@@ -39,15 +39,15 @@ namespace Java.Interop
 
 		readonly Type                                       DeclaringType;
 
-		ConcurrentDictionary<string, JniMethodInfo>?             instanceMethods;
+		JniMethodInfoCache?                                      instanceMethods;
 		ConcurrentDictionary<Type, JniInstanceMethods>?          subclassConstructors;
 
-		ConcurrentDictionary<string, JniMethodInfo>               InstanceMethods      => GetOrCreate (ref instanceMethods, 3);
+		JniMethodInfoCache                                       InstanceMethods      => JniMethodInfoCache.GetOrCreate (ref instanceMethods);
 		ConcurrentDictionary<Type, JniInstanceMethods>            SubclassConstructors => GetOrCreate (ref subclassConstructors, 1);
 
 		internal void Dispose ()
 		{
-			Clear (ref instanceMethods, static value => value.StaticRedirect?.Dispose ());
+			JniMethodInfoCache.Dispose (ref instanceMethods);
 			Clear (ref subclassConstructors, static value => value.Dispose ());
 
 			if (jniPeerType != null)
@@ -107,7 +107,7 @@ namespace Java.Interop
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
-			return GetOrAddMethodInfo (InstanceMethods, encodedMember, static (member, methods) => {
+			return InstanceMethods.GetOrAdd (encodedMember, static (member, methods) => {
 				ReadOnlySpan<char> method, signature;
 				JniPeerMembers.GetNameAndSignature (member, out method, out signature);
 				return methods.GetMethodInfo (method, signature);

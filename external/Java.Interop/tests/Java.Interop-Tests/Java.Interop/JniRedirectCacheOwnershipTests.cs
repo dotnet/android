@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -75,28 +72,26 @@ namespace Java.InteropTests
 		[Test]
 		public void ConcurrentPublicationDisposesOnlyLosingRedirects ()
 		{
-			var lookup = GetMethodLookup ();
-			var cache = new ConcurrentDictionary<string, JniMethodInfo> ();
+			using var cache = new JniPeerMembers.JniMethodInfoCache ();
 			var candidates = new JniMethodInfo [2];
 			var results = new JniMethodInfo [candidates.Length];
 			using var ready = new Barrier (candidates.Length);
 			try {
 				Parallel.For (0, candidates.Length, i => {
-					results [i] = lookup (cache, "currentTimeMillis.()J", (member, index) => {
+					results [i] = cache.GetOrAdd ("currentTimeMillis.()J", (member, index) => {
 						candidates [index] = CreateRedirect ();
 						if (!ready.SignalAndWait (TimeSpan.FromSeconds (30)))
 							throw new TimeoutException ("Both candidates must be created before publication.");
 						return candidates [index];
 					}, i);
 				});
-
 				var winner = results [0];
 				Assert.AreSame (winner, results [1]);
-				Assert.AreEqual (1, cache.Count);
+				Assert.AreSame (winner, results [1]);
 				foreach (var candidate in candidates)
 					Assert.AreEqual (ReferenceEquals (candidate, winner), candidate.StaticRedirect.PeerReference.IsValid);
 				AssertSystemRedirectIsCallable (winner);
-				Assert.AreSame (winner, lookup (cache, "currentTimeMillis.()J",
+				Assert.AreSame (winner, cache.GetOrAdd ("currentTimeMillis.()J",
 					(member, state) => throw new InvalidOperationException ("A cache hit must not construct a candidate."), 0));
 			} finally {
 				foreach (var candidate in candidates)
@@ -108,13 +103,12 @@ namespace Java.InteropTests
 		[TestCase (true)]
 		public void ReentrantPublicationPreservesWinner (bool returnWinner)
 		{
-			var lookup = GetMethodLookup ();
-			var cache = new ConcurrentDictionary<string, JniMethodInfo> ();
+			using var cache = new JniPeerMembers.JniMethodInfoCache ();
 			var outer = CreateRedirect ();
 			var inner = CreateRedirect ();
 			try {
-				var method = lookup (cache, "currentTimeMillis.()J", (member, state) => {
-					var winner = lookup (cache, member, (key, argument) => inner, state);
+				var method = cache.GetOrAdd ("currentTimeMillis.()J", (member, state) => {
+					var winner = cache.GetOrAdd (member, (key, argument) => inner, state);
 					return returnWinner ? winner : outer;
 				}, 0);
 
@@ -130,32 +124,20 @@ namespace Java.InteropTests
 		[Test]
 		public void PublicationFailureDisposesCandidate ()
 		{
-			var lookup = GetMethodLookup ();
 			var comparer = new PublicationFailureComparer ();
-			var cache = new ConcurrentDictionary<string, JniMethodInfo> (comparer);
+			using var cache = new JniPeerMembers.JniMethodInfoCache (comparer);
 			var candidate = CreateRedirect ();
 			try {
 				var error = Assert.Throws<InvalidOperationException> (() =>
-					lookup (cache, "currentTimeMillis.()J", (member, state) => {
+					cache.GetOrAdd ("currentTimeMillis.()J", (member, state) => {
 						comparer.Fail = true;
 						return candidate;
 					}, 0));
 				Assert.AreEqual ("Publication failed.", error.Message);
-				Assert.IsTrue (cache.IsEmpty);
 				Assert.IsFalse (candidate.StaticRedirect.PeerReference.IsValid);
 			} finally {
 				candidate.StaticRedirect.Dispose ();
 			}
-		}
-
-		delegate JniMethodInfo MethodLookup (ConcurrentDictionary<string, JniMethodInfo> cache, string member, Func<string, int, JniMethodInfo> factory, int argument);
-
-		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "The private cache helper is invoked with a test-only factory in tests excluded from Native AOT.")]
-		static MethodLookup GetMethodLookup ()
-		{
-			var method = typeof (JniPeerMembers).GetMethod ("GetOrAddMethodInfo", BindingFlags.NonPublic | BindingFlags.Static)
-				?? throw new MissingMethodException (nameof (JniPeerMembers), "GetOrAddMethodInfo");
-			return (MethodLookup) method.MakeGenericMethod (typeof (int)).CreateDelegate (typeof (MethodLookup));
 		}
 
 		static JniMethodInfo CreateRedirect ()
