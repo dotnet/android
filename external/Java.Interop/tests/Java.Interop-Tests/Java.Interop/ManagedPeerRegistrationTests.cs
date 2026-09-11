@@ -1,4 +1,5 @@
 #nullable enable
+#if !__ANDROID__
 
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -29,6 +30,7 @@ namespace Java.InteropTests {
 				addRegistrations?.Invoke (args);
 			}
 		}
+		#endif // !__ANDROID__
 
 		[UnmanagedFunctionPointer (CallingConvention.Winapi)]
 		delegate int GetValue (IntPtr env, IntPtr klass);
