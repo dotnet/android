@@ -36,10 +36,20 @@ steps:
 # `restoreKeys` fallback still recovers most of the previous cache when only
 # a subset changes (e.g. a single component bump).
 - task: Cache@2
+  name: androidArchivesCache
   displayName: cache Android toolchain archives
   condition: ${{ parameters.condition }}
+  # The cache service is an optimization. If it is unavailable or rate-limited,
+  # continue with the SHA-verified source downloads instead of failing the job.
+  continueOnError: true
   inputs:
     key: '"android-archives" | "v1" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/Configuration.props | ${{ parameters.xaSourcePath }}/src/androidsdk/androidsdk.targets | ${{ parameters.xaSourcePath }}/src/openjdk/openjdk.targets | ${{ parameters.xaSourcePath }}/src/binutils/binutils.targets | ${{ parameters.xaSourcePath }}/src/aapt2/aapt2.targets | ${{ parameters.xaSourcePath }}/src/bundletool/bundletool.targets'
     restoreKeys: |
       "android-archives" | "v1" | "$(Agent.OS)"
     path: $(ANDROID_ARCHIVES_DIR)
+    cacheHitVar: ANDROID_ARCHIVES_CACHE_RESTORED
+
+- pwsh: |
+    & '${{ parameters.xaSourcePath }}/build-tools/automation/scripts/RecoverAndroidArchiveCache.ps1'
+  displayName: recover Android archive cache failure
+  condition: ${{ parameters.condition }}

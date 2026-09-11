@@ -90,6 +90,10 @@
 
   <Target Name="ExtractWorkloadPacks"
       DependsOnTargets="DeleteExtractedWorkloadPacks;_GetDefaultPackageVersion">
+    <ItemGroup Condition=" Exists('$(IntermediateOutputPath)') ">
+      <_StaleWorkloadTempDirectories Include="$([System.IO.Directory]::GetDirectories('$(IntermediateOutputPath)', '.xa-workload-temp-*'))" />
+    </ItemGroup>
+    <RemoveDir Directories="@(_StaleWorkloadTempDirectories)" />
     <ItemGroup>
       <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.NET.Sdk.Android.Manifest-*.nupkg" />
     </ItemGroup>
@@ -145,6 +149,7 @@
       <_InstallArguments Include="--skip-manifest-update" />
       <_InstallArguments Include="--skip-sign-check" />
       <_InstallArguments Include="--verbosity diag" />
+      <_InstallArguments Include="--no-http-cache" />
       <_InstallArguments Include="--source &quot;%(_NuGetSources.Identity)&quot;" />
       <_InstallArguments Include="--temp-dir &quot;$(_TempDirectory)&quot;" />
     </ItemGroup>
