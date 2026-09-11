@@ -48,6 +48,8 @@
 
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.EnsureAndroidSdkLicense" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.ReplaceDirectory" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RemoveDirectoryBackups" TaskFactory="TaskHostFactory" Runtime="NET" />
 
   <!--
     Catalog of platform APIs. Each item is downloaded as `<Identity>.zip`.
@@ -275,7 +277,7 @@
   </ItemGroup>
 
   <Target Name="_AddPlatformPackagesToInstall"
-      BeforeTargets="_DownloadAndroidSdkPackages;_ExtractAndroidSdkPackages;_GenerateAndroidPackageXmls;_CleanAndroidSdkComponents">
+      BeforeTargets="_DownloadAndroidSdkPackages;_ExtractAndroidSdkPackages;_GenerateAndroidPackageXmls;_CleanAndroidSdkPackageBackups;_CleanAndroidSdkComponents">
     <ItemGroup>
       <_AndroidSdkPackage Include="@(_PlatformPackage->'%(Identity).zip')"
           Condition=" '$(_InstallAllPlatforms)' == 'true' or
@@ -332,28 +334,25 @@
       <_StripComponents>%(_AndroidSdkPackage.StripComponents)</_StripComponents>
       <_StripComponents Condition=" '$(_StripComponents)' == '' ">1</_StripComponents>
       <_ZipPath>$([System.IO.Path]::Combine('$(AndroidToolchainCacheDirectory)', '%(_AndroidSdkPackage.Identity)'))</_ZipPath>
-      <_StagingDir>%(_AndroidSdkPackage.Destination).staging</_StagingDir>
-      <_DestDir>%(_AndroidSdkPackage.Destination)</_DestDir>
+      <_DestDir>$([System.Text.RegularExpressions.Regex]::Replace('%(_AndroidSdkPackage.Destination)', '[\\/]+$', ''))</_DestDir>
+      <_StagingDir>$(_DestDir).staging-$([System.Guid]::NewGuid().ToString('N'))</_StagingDir>
       <_NoSubdirectory Condition=" '$(_StripComponents)' == '1' ">false</_NoSubdirectory>
       <_NoSubdirectory Condition=" '$(_StripComponents)' == '0' ">true</_NoSubdirectory>
     </PropertyGroup>
-    <RemoveDir Directories="$(_DestDir);$(_StagingDir)" />
-    <MakeDir Directories="$(_DestDir)" />
+    <MakeDir Directories="$(_StagingDir)" />
     <!-- Windows: LibZipSharp via UnzipDirectoryChildren BootstrapTask. -->
     <UnzipDirectoryChildren
         Condition=" '$(HostOS)' == 'Windows' "
         SourceFiles="$(_ZipPath)"
-        DestinationFolder="$(_DestDir)"
+        DestinationFolder="$(_StagingDir)"
         NoSubdirectory="$(_NoSubdirectory)"
     />
     <!--
       Unix: `unzip` (preserves symlinks; LibZipSharp does not, which the NDK needs)
-      into a sibling .staging directory, then `<Move/>` every file into
-      $(_DestDir). When StripComponents=1, glob from inside the single
-      top-level directory of the zip so that `%(RecursiveDir)` already excludes
-      it - no path-rewriting required. Empty staging dirs are pruned afterwards.
+      into a unique sibling staging directory. When StripComponents=1, install
+      the single top-level directory; otherwise install the staging directory
+      itself. The staged directory atomically replaces the destination.
     -->
-    <MakeDir Condition=" '$(HostOS)' != 'Windows' " Directories="$(_StagingDir)" />
     <Exec
         Condition=" '$(HostOS)' != 'Windows' "
         Command="unzip -q -o &quot;$(_ZipPath)&quot; -d &quot;$(_StagingDir)&quot;"
@@ -362,27 +361,34 @@
       <_StagedTopDir Remove="@(_StagedTopDir)" />
       <_StagedTopDir Include="$([System.IO.Directory]::GetDirectories('$(_StagingDir)'))" />
     </ItemGroup>
-    <PropertyGroup Condition=" '$(HostOS)' != 'Windows' ">
-      <_GlobRoot Condition=" '$(_StripComponents)' == '1' ">@(_StagedTopDir)</_GlobRoot>
-      <_GlobRoot Condition=" '$(_StripComponents)' == '0' ">$(_StagingDir)</_GlobRoot>
+    <PropertyGroup>
+      <_InstallSourceDir Condition=" '$(HostOS)' == 'Windows' Or '$(_StripComponents)' == '0' ">$(_StagingDir)</_InstallSourceDir>
+      <_InstallSourceDir Condition=" '$(HostOS)' != 'Windows' And '$(_StripComponents)' == '1' ">@(_StagedTopDir)</_InstallSourceDir>
     </PropertyGroup>
-    <ItemGroup Condition=" '$(HostOS)' != 'Windows' And '$(_GlobRoot)' != '' ">
-      <_StagedFile Remove="@(_StagedFile)" />
-      <_StagedFile Include="$(_GlobRoot)\**\*" />
-    </ItemGroup>
-    <Move
-        Condition=" '$(HostOS)' != 'Windows' "
-        SourceFiles="@(_StagedFile)"
-        DestinationFiles="@(_StagedFile->'$(_DestDir)\%(RecursiveDir)%(Filename)%(Extension)')"
+    <ReplaceDirectory
+        SourceDirectory="$(_InstallSourceDir)"
+        DestinationDirectory="$(_DestDir)"
+        RequiredFile="source.properties"
     />
-    <RemoveDir Condition=" '$(HostOS)' != 'Windows' " Directories="$(_StagingDir)" />
-    <Error
-        Condition=" !Exists('$(_DestDir)\source.properties') "
-        Text="Expected Android SDK package '%(_AndroidSdkPackage.Identity)' to extract source.properties under '$(_DestDir)'."
-    />
+    <RemoveDir Condition=" Exists('$(_StagingDir)') " Directories="$(_StagingDir)" />
     <!-- Unzip preserves archive mtimes, so refresh the sentinel used by MSBuild Outputs. -->
     <Touch Files="$(_DestDir)\source.properties" />
     <Touch Files="$(_DestDir)\.extracted-%(_AndroidSdkPackage.Identity)-%(_AndroidSdkPackage.Hash)" AlwaysCreate="true" />
+    <OnError ExecuteTargets="_CleanAndroidSdkPackageStaging" />
+  </Target>
+
+  <Target Name="_CleanAndroidSdkPackageStaging">
+    <RemoveDir
+        Condition=" '$(_StagingDir)' != '' And Exists('$(_StagingDir)') "
+        Directories="$(_StagingDir)"
+        ContinueOnError="WarnAndContinue"
+    />
+  </Target>
+
+  <Target Name="_CleanAndroidSdkPackageBackups"
+      AfterTargets="_ExtractAndroidSdkPackages"
+      BeforeTargets="_CleanAndroidSdkComponents">
+    <RemoveDirectoryBackups Directories="@(_AndroidSdkPackage->'%(Destination)')" />
   </Target>
 
   <!--
@@ -411,7 +417,7 @@
 
   <Target Name="_InstallAndroidSdkComponents"
       BeforeTargets="Build"
-      DependsOnTargets="_ExtractAndroidSdkPackages;_GenerateAndroidPackageXmls"
+      DependsOnTargets="_ExtractAndroidSdkPackages;_CleanAndroidSdkPackageBackups;_GenerateAndroidPackageXmls"
   />
 
   <Target Name="_AcceptAndroidSdkLicenses"
