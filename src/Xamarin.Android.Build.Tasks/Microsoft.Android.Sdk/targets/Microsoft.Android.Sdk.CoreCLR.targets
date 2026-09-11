@@ -25,6 +25,18 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
     <AllowReadyToRunWithoutRuntimeIdentifier Condition=" '$(PublishReadyToRun)' == 'true' and '$(RuntimeIdentifiers)' != '' ">true</AllowReadyToRunWithoutRuntimeIdentifier>
   </PropertyGroup>
 
+  <!-- Exclude RCPC2 from ARM64 R2R without asserting that the feature must be absent.
+       The explicit list requires its other features; keep other architectures conservative.
+       Resolve this after project/package imports have supplied their crossgen2 arguments. -->
+  <Target Name="_AndroidSetReadyToRunInstructionSet"
+      BeforeTargets="_PrepareForReadyToRunCompilation"
+      Condition=" '$(AndroidApplication)' == 'true' and '$(PublishReadyToRun)' == 'true' and '$(_AndroidUseOptimisticReadyToRunInstructionSet)' != 'true' ">
+    <PropertyGroup Condition=" !$(PublishReadyToRunCrossgen2ExtraArgs.Contains('--instruction-set')) and !$(PublishReadyToRunCrossgen2CompositeExtraArgs.Contains('--instruction-set')) ">
+      <PublishReadyToRunCrossgen2ExtraArgs Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">$(PublishReadyToRunCrossgen2ExtraArgs);--instruction-set:-optimistic,aes,crc,dotprod,lse,rcpc,rdma,sha1,sha2</PublishReadyToRunCrossgen2ExtraArgs>
+      <PublishReadyToRunCrossgen2ExtraArgs Condition=" '$(RuntimeIdentifier)' != 'android-arm64' ">$(PublishReadyToRunCrossgen2ExtraArgs);--instruction-set:-optimistic</PublishReadyToRunCrossgen2ExtraArgs>
+    </PropertyGroup>
+  </Target>
+
   <!-- Default feature switches -->
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime"

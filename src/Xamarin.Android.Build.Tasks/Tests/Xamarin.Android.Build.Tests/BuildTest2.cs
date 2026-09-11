@@ -24,6 +24,8 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public partial class BuildTest2 : BaseTest
 	{
+		const string Arm64ReadyToRunInstructionSet = "--instruction-set:-optimistic,aes,crc,dotprod,lse,rcpc,rdma,sha1,sha2";
+
 		static object [] MarshalMethodsDefaultStatusSource = new object [] {
 			new object[] {
 				/* isRelease */              true,
@@ -75,8 +77,10 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
 			proj.SetProperty ("PublishReadyToRunComposite", isComposite.ToString ());
 
-			var b = CreateApkBuilder ();
+			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			var expectedInstructionSet = rid == "android-arm64" ? Arm64ReadyToRunInstructionSet : "--instruction-set:-optimistic";
+			StringAssertEx.Contains (expectedInstructionSet, b.LastBuildOutput);
 
 			var assemblyName = proj.ProjectName;
 			var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, rid, $"{proj.PackageName}-Signed.apk");
