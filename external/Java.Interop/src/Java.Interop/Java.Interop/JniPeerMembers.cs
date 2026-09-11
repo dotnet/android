@@ -136,14 +136,14 @@ namespace Java.Interop {
 
 		protected virtual void Dispose (bool disposing)
 		{
-			if (!disposing || jniPeerType == null)
+			if (!disposing)
 				return;
 
 			instanceMethods.Dispose ();
 			instanceFields.Dispose ();
 			staticMethods.Dispose ();
 			staticFields.Dispose ();
-			jniPeerType.Dispose ();
+			jniPeerType?.Dispose ();
 
 			jniPeerType     = null;
 		}
