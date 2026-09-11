@@ -156,8 +156,9 @@ namespace Java.Interop {
 		JniNativeMethodRegistration[]? methods;
 
 		/// <remarks>
-		/// Once JNI registration is attempted, the runtime retains this type and its delegates
-		/// until disposal, even if registration throws: JNI may have registered part of the batch.
+		/// Once a non-empty registration is requested, the runtime retains this type and its
+		/// delegates until disposal, even if registration throws: JNI may have registered part
+		/// of the batch.
 		/// </remarks>
 		[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
 		public void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
@@ -166,19 +167,17 @@ namespace Java.Interop {
 
 			if (methods == null)
 				throw new ArgumentNullException (nameof (methods));
+			if (methods.Length == 0)
+				return;
 
-			JniEnvironment.Types.RegisterNatives (PeerReference, methods, methods.Length, this);
-		}
-
-		internal void RetainNativeMethodRegistrations (JniNativeMethodRegistration[] registrations)
-		{
 			// RegisterNatives stores unmanaged function pointers without retaining the
 			// managed delegates behind them. JNI can publish part of a failing batch, so
 			// the first attempt owns this JniType until disposal and cannot be retried.
-			if (Interlocked.CompareExchange (ref methods, registrations, null) != null)
+			if (Interlocked.CompareExchange (ref this.methods, methods, null) != null)
 				throw new InvalidOperationException ("Native methods cannot be registered more than once.");
 
 			RegisterWithRuntime ();
+			JniEnvironment.Types.RegisterNatives (PeerReference, methods, methods.Length);
 		}
 
 		public void UnregisterNativeMethods ()
