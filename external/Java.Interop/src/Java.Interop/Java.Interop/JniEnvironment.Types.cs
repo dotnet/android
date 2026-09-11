@@ -248,8 +248,9 @@ namespace Java.Interop
 				}
 #endif  // DEBUG
 
-				if (numMethods == 0 || methods == null)
+				if (numMethods == 0 || methods == null) {
 					return;
+				}
 
 				// Marshal the non-blittable JniNativeMethodRegistration[] into blittable JniNativeMethod
 				// values and dispatch to the blittable overload, instead of invoking the JNI
