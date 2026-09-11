@@ -22,7 +22,7 @@ namespace Android.Runtime
 			public IntPtr          env;
 			public IntPtr          grefLoader;
 			public IntPtr          Loader_loadClass;
-			public IntPtr          grefClass; // TODO: remove, not needed anymore
+			public IntPtr          grefClass; // Unused; reserved to preserve the shared native/managed layout.
 			public uint            logCategories;
 			public int             version; // TODO: remove, not needed anymore
 			public int             grefGcThreshold;

@@ -492,8 +492,11 @@ void Host::Java_mono_android_Runtime_initInternal (
 
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
-	init.grefClass                                      = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_Class"sv, true);
-	Class_getName                                       = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
+
+	// java.lang.Class is a bootstrap class, so the cached method ID outlives this local reference.
+	jclass lrefClass = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_Class"sv, false);
+	Class_getName = env->GetMethodID (lrefClass, "getName", "()Ljava/lang/String;");
+	env->DeleteLocalRef (lrefClass);
 
 	jclass lrefLoaderClass                              = env->GetObjectClass (loader);
 	init.Loader_loadClass                               = env->GetMethodID (lrefLoaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");

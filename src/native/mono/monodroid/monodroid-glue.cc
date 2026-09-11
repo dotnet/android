@@ -836,8 +836,10 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 
 	log_info (LOG_GC, "GREF GC Threshold: {}", init.grefGcThreshold);
 
-	init.grefClass = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_Class", true);
-	Class_getName  = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
+	// java.lang.Class is a bootstrap class, so the cached method ID outlives this local reference.
+	jclass lrefClass = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_Class", false);
+	Class_getName = env->GetMethodID (lrefClass, "getName", "()Ljava/lang/String;");
+	env->DeleteLocalRef (lrefClass);
 
 	MonoAssembly *mono_android_assembly;
 
