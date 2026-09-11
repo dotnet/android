@@ -172,7 +172,7 @@ namespace Java.Interop {
 			JniEnvironment.Types.RegisterNatives (PeerReference, methods, methods.Length, this);
 		}
 
-		internal void KeepNativeMethodsAlive (JniNativeMethodRegistration[] registrations)
+		internal void RetainNativeMethodRegistrations (JniNativeMethodRegistration[] registrations)
 		{
 			lock (LazyInitializer.EnsureInitialized (ref nativeRegistrationLock)) {
 				// RegisterNatives stores unmanaged function pointers without retaining the

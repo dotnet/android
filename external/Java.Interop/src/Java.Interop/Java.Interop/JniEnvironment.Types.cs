@@ -279,7 +279,7 @@ namespace Java.Interop
 						unmanagedStrings [i * 2 + 1] = sig;
 						natives [i] = new JniNativeMethod ((byte*) name, (byte*) sig, Marshal.GetFunctionPointerForDelegate (m.Marshaler));
 					}
-					owner?.KeepNativeMethodsAlive (methods);
+					owner?.RetainNativeMethodRegistrations (methods);
 					RegisterNatives (type, natives);
 					// Keep the Marshaler delegates alive at least until JNI has consumed the function pointers.
 					GC.KeepAlive (methods);
