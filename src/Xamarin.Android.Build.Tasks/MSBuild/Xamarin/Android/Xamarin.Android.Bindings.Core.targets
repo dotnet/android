@@ -22,7 +22,6 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     <ApiOutputFile              Condition=" '$(ApiOutputFile)' == '' ">$(IntermediateOutputPath)api.xml</ApiOutputFile>
     <ClassParseToolExe          Condition=" '$(ClassParseToolExe)' == '' ">class-parse.dll</ClassParseToolExe>
     <BindingsGeneratorToolExe   Condition=" '$(BindingsGeneratorToolExe)' == '' ">generator.dll</BindingsGeneratorToolExe>
-    <JavadocToMdocToolExe       Condition=" '$(JavadocToMdocToolExe)' == '' ">javadoc-to-mdoc.exe</JavadocToMdocToolExe>
     <_GeneratorStampFile>$(_AndroidStampDirectory)generator.stamp</_GeneratorStampFile>
   </PropertyGroup>
 

@@ -4693,3 +4693,9 @@ virtual Java.Nio.CharBuffer.GetChars(int srcBegin, int srcEnd, char[]! dst, int 
 virtual Javax.Net.Ssl.ExtendedSSLSession.StatusResponses.get -> System.Collections.Generic.IList<byte[]!>?
 virtual Javax.Net.Ssl.SSLParameters.GetNamedGroups() -> string![]?
 virtual Javax.Net.Ssl.SSLParameters.SetNamedGroups(string![]? namedGroups) -> void
+*REMOVED*Android.Runtime.IntDefinitionAttribute
+*REMOVED*Android.Runtime.IntDefinitionAttribute.ConstantMember.get -> string?
+*REMOVED*Android.Runtime.IntDefinitionAttribute.ConstantMember.set -> void
+*REMOVED*Android.Runtime.IntDefinitionAttribute.IntDefinitionAttribute(string? constantMember) -> void
+*REMOVED*Android.Runtime.IntDefinitionAttribute.JniField.get -> string?
+*REMOVED*Android.Runtime.IntDefinitionAttribute.JniField.set -> void
