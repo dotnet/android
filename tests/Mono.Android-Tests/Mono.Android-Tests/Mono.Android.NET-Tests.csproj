@@ -147,6 +147,7 @@
     <Compile Include="Java.Interop\ManagedObjectProxyTests.cs" />
     <Compile Include="Java.Interop\JnienvTest.cs" />
     <Compile Include="Java.Interop\RawInterfaceCollectionHolder.cs" />
+    <Compile Include="Java.Interop\TransferredReferenceTests.cs" />
     <Compile Include="Java.Interop\TrimmableTypeMapRuntimeCoverageTests.cs" />
     <Compile Include="Java.Interop\TrimmableTypeMapTypeManagerTests.cs" />
     <Compile Include="Java.Interop\VirtualCallbackConstructorTests.cs" />
