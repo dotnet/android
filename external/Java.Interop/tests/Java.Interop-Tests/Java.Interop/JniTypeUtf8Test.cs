@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 
 using Java.Interop;
 
@@ -10,6 +11,9 @@ namespace Java.InteropTests
 {
 	[TestFixture]
 	public class JniTypeUtf8Test : JavaVMFixture {
+
+		const string JniReferenceLeakCategory = "JniReferenceLeak";
+		const int LeakCheckIterations = 100;
 
 		[Test]
 		public unsafe void Sanity_Utf8 ()
@@ -91,24 +95,77 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		[Ignore ("Frequently failing: https://github.com/dotnet/android/issues/12031")]
+		[Category (JniReferenceLeakCategory)]
 		public void TryFindClass_Utf8_DoesNotLeakGlobalRefs ()
 		{
-			int grefsBefore = JniEnvironment.Runtime.GlobalReferenceCount;
-			JniEnvironment.Types.TryFindClass ("does/not/Exist"u8, out _);
-			int grefsAfter = JniEnvironment.Runtime.GlobalReferenceCount;
-			Assert.AreEqual (grefsBefore, grefsAfter,
-				"TryFindClass for non-existent classes should not leak global references");
+			AssertNoSustainedGlobalReferenceGrowth (() => {
+				Assert.IsFalse (JniEnvironment.Types.TryFindClass ("does/not/Exist"u8, out var notFound));
+				Assert.IsFalse (notFound.IsValid);
+			});
 		}
 
 		[Test]
+		[Category (JniReferenceLeakCategory)]
 		public void TryFindClass_String_DoesNotLeakGlobalRefs ()
 		{
+			AssertNoSustainedGlobalReferenceGrowth (() => {
+				Assert.IsFalse (JniEnvironment.Types.TryFindClass ("does/not/Exist", out var notFound));
+				Assert.IsFalse (notFound.IsValid);
+			});
+		}
+
+		[Test]
+		[Category (JniReferenceLeakCategory)]
+		public void AssertNoSustainedGlobalReferenceGrowth_DetectsRetainedGlobalReference ()
+		{
+			var objectClass = JniEnvironment.Types.FindClass ("java/lang/Object");
+			var retainedReferences = new List<JniObjectReference> ();
+			try {
+				Assert.Throws<AssertionException> (() => AssertNoSustainedGlobalReferenceGrowth (() => {
+					retainedReferences.Add (objectClass.NewGlobalRef ());
+				}));
+			} finally {
+				foreach (var retainedReference in retainedReferences) {
+					var reference = retainedReference;
+					JniObjectReference.Dispose (ref reference);
+				}
+				JniObjectReference.Dispose (ref objectClass);
+			}
+		}
+
+		static void AssertNoSustainedGlobalReferenceGrowth (Action action)
+		{
+			for (int i = 0; i < LeakCheckIterations; i++) {
+				action ();
+			}
+			CollectPeers ();
+
 			int grefsBefore = JniEnvironment.Runtime.GlobalReferenceCount;
-			JniEnvironment.Types.TryFindClass ("does/not/Exist", out _);
+			for (int i = 0; i < LeakCheckIterations; i++) {
+				action ();
+			}
+			CollectGarbage ();
 			int grefsAfter = JniEnvironment.Runtime.GlobalReferenceCount;
-			Assert.AreEqual (grefsBefore, grefsAfter,
-				"TryFindClass for non-existent classes should not leak global references");
+
+			Assert.LessOrEqual (grefsAfter, grefsBefore,
+				$"Operation should not leak global references after {LeakCheckIterations} iterations. " +
+				$"Before={grefsBefore}, After={grefsAfter}, Delta={grefsAfter - grefsBefore}");
+		}
+
+		static void CollectPeers ()
+		{
+			CollectGarbage ();
+			JniEnvironment.Runtime.ValueManager.CollectPeers ();
+			JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
+			CollectGarbage ();
+		}
+
+		static void CollectGarbage ()
+		{
+			for (int i = 0; i < 3; i++) {
+				GC.Collect ();
+				GC.WaitForPendingFinalizers ();
+			}
 		}
 
 		[Test]
