@@ -125,7 +125,7 @@ namespace Java.InteropTests
 		public void PublicationFailureDisposesCandidate ()
 		{
 			var comparer = new PublicationFailureComparer ();
-			using var cache = new JniPeerMembers.JniMethodInfoCache (comparer);
+			using var cache = new JniPeerMembers.JniMethodInfoCache (1, 3, comparer);
 			var candidate = CreateRedirect ();
 			try {
 				var error = Assert.Throws<InvalidOperationException> (() =>

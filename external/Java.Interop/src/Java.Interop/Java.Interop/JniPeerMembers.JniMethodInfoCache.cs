@@ -18,9 +18,9 @@ namespace Java.Interop {
 				methods = new ConcurrentDictionary<string, JniMethodInfo> (concurrencyLevel, capacity);
 			}
 
-			internal JniMethodInfoCache (IEqualityComparer<string> comparer)
+			internal JniMethodInfoCache (int concurrencyLevel, int capacity, IEqualityComparer<string> comparer)
 			{
-				methods = new ConcurrentDictionary<string, JniMethodInfo> (comparer);
+				methods = new ConcurrentDictionary<string, JniMethodInfo> (concurrencyLevel, capacity, comparer);
 			}
 
 			internal static JniMethodInfoCache GetOrCreate (ref JniMethodInfoCache? cache, int concurrencyLevel, int capacity)
