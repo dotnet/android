@@ -30,7 +30,12 @@ namespace Java.Interop {
 					return value;
 
 				var candidate = new JniMethodInfoCache (concurrencyLevel, capacity);
-				return Interlocked.CompareExchange (ref cache, candidate, null) ?? candidate;
+				var existing = Interlocked.CompareExchange (ref cache, candidate, null);
+				if (existing == null)
+					return candidate;
+
+				candidate.Dispose ();
+				return existing;
 			}
 
 			internal static void Dispose (ref JniMethodInfoCache? cache)
