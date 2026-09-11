@@ -955,7 +955,7 @@ namespace Xamarin.Android.Tasks
 				output.IndexOf ("No such file or directory", StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
-		struct AdbCommandResult
+		internal struct AdbCommandResult
 		{
 			public int ExitCode;
 			public string StandardOutput;

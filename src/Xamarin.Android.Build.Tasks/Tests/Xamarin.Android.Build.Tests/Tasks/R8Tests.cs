@@ -48,6 +48,34 @@ namespace Xamarin.Android.Build.Tests
 				File.Delete (path);
 			}
 		}
+
+		[Test]
+		public void WritePrivateMemberObfuscationRules ()
+		{
+			using var writer = new StringWriter ();
+			R8.WriteObfuscationRules (writer, "private-members");
+
+			var expected = """
+				-keep,allowshrinking,allowoptimization class **
+				-keepclassmembers,allowshrinking,allowoptimization class ** {
+				   public protected *;
+				}
+				-keep,allowoptimization interface ** {
+				   public protected *;
+				}
+				-keep,allowshrinking class * implements **
+
+				""";
+			Assert.AreEqual (expected.ReplaceLineEndings (System.Environment.NewLine), writer.ToString ());
+		}
+
+		[Test]
+		public void WriteDisabledObfuscationRules ()
+		{
+			using var writer = new StringWriter ();
+			R8.WriteObfuscationRules (writer, "disabled");
+
+			Assert.AreEqual ("-dontobfuscate" + System.Environment.NewLine, writer.ToString ());
+		}
 	}
 }
-

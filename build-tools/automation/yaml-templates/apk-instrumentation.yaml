@@ -86,8 +86,10 @@ steps:
   # status when diagnostics cannot be collected. See dotnet/android#11830 and
   # dotnet/android#12704.
 - powershell: |
-    $destination = "$(Build.StagingDirectory)/Test${{ parameters.configuration }}/${{ parameters.artifactFolder }}/logcat-${{ parameters.testName }}.txt"
-    & "${{ parameters.xaSourcePath }}/build-tools/automation/scripts/CaptureLogcat.ps1" -Destination $destination
+    $destinationDirectory = "$(Build.StagingDirectory)/Test${{ parameters.configuration }}/${{ parameters.artifactFolder }}"
+    & "${{ parameters.xaSourcePath }}/build-tools/automation/scripts/CaptureLogcat.ps1" `
+      -Destination "$destinationDirectory/logcat-${{ parameters.testName }}.txt" `
+      -DeviceOutput "$destinationDirectory/adb-devices-${{ parameters.testName }}.txt"
   displayName: capture logcat ${{ parameters.testName }}
   condition: always()
 

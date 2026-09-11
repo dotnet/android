@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.4.10"
+    kotlin("jvm") version "2.4.20"
 }
 
 layout.buildDirectory.set(file((findProperty("kotlinBuildDir") as String?) ?: "$rootDir/build"))

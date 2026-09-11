@@ -885,20 +885,20 @@ Usuń odwołanie „{0}” z projektu i zamiast niego dodaj pakiet NuGet „{1}�
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
   <data name="XA4325" xml:space="preserve">
-    <value>Failed to rewrite managed JNI names for R8. {0}</value>
+    <value>Nie można zmodyfikować zarządzanych nazw JNI dla kompilatora R8. {0}</value>
     <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4325_* resources.</comment>
   </data>
   <data name="XA4325_AssemblyFailure" xml:space="preserve">
-    <value>Could not rewrite the JNI names in the assembly '{0}': {1}</value>
+    <value>Nie można zmodyfikować nazw JNI w zestawie „{0}”: {1}</value>
     <comment>{0} - The path of the assembly which could not be rewritten.
 {1} - The underlying message describing why the assembly could not be rewritten. It is not localized.</comment>
   </data>
   <data name="XA4325_SourceDestinationCount" xml:space="preserve">
-    <value>The 'SourceFiles' and 'DestinationFiles' item groups must contain the same number of items.</value>
+    <value>Grupy elementów „SourceFiles” i „DestinationFiles” muszą zawierać taką samą liczbę elementów.</value>
     <comment>The following are literal MSBuild item group names and should not be translated: 'SourceFiles', 'DestinationFiles'.</comment>
   </data>
   <data name="XA4326" xml:space="preserve">
-    <value>Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous JNIEnv.FindClass source.</value>
+    <value>Nie można bezpiecznie zmodyfikować wyszukiwania składowej JNI, ponieważ jego dojście do klasy nie ma jednego strukturalnie jednoznacznego źródła JNIEnv.FindClass.</value>
     <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
@@ -1255,40 +1255,45 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
   </data>
   <data name="XA4258" xml:space="preserve">
-    <value>Nazwa języka Java „{0}” zawiera zastrzeżony identyfikator Java „{1}”. Zmień nazwę pakietu lub typu.</value>
+    <value>Nazwa Java '{0}' zawiera nieprawidłowy lub nieobsługiwany identyfikator Java '{1}'. Zmień nazwę pakietu lub typu.</value>
     <comment>The following are literal names and should not be translated: Java.
 {0} - Java package or type name
-{1} - Java reserved keyword or restricted identifier</comment>
+{1} - Invalid, unsupported, reserved, or restricted Java identifier</comment>
   </data>
   <data name="XA4259" xml:space="preserve">
-    <value>Type '{0}' has multiple managed constructors that map to the same Java Native Interface (JNI) signature '{1}'. Change the constructor parameter types so each constructor has a unique JNI signature.</value>
+    <value>Typ „{0}” ma wiele konstruktorów zarządzanych, które są mapowane z tą samą sygnaturą „{1}” interfejsu Java Native Interface (JNI). Zmień typy parametrów konstruktora w taki sposób, aby każdy konstruktor miał unikatową sygnaturę JNI.</value>
     <comment>The following terms should not be translated: Java Native Interface, JNI.
 {0} - Fully-qualified managed type name
 {1} - Colliding JNI constructor signature</comment>
   </data>
   <data name="XA4260" xml:space="preserve">
-    <value>Type '{0}' has a constructor parameter type '{1}' that cannot be represented in a Java constructor. Remove the constructor or change the parameter to a supported Java type.</value>
+    <value>Typ „{0}” ma typ parametru konstruktora „{1}”, który nie może być reprezentowany w konstruktorze Java. Usuń konstruktora lub zmień parametr na obsługiwany typ Java.</value>
     <comment>The following term should not be translated: Java.
 {0} - Fully-qualified managed type name
 {1} - Unsupported managed constructor parameter type</comment>
   </data>
   <data name="XA4261" xml:space="preserve">
-    <value>Type '{0}' has Java constructor signature '{1}', but its base type does not expose a compatible Java constructor. Add a compatible base constructor or remove the derived constructor.</value>
+    <value>Typ „{0}” ma sygnaturę konstruktora Java „{1}”, ale jego typ podstawowy nie uwidacznia zgodnego konstruktora Java. Dodaj zgodnego konstruktora podstawowego lub usuń konstruktora pochodnego.</value>
     <comment>The following term should not be translated: Java.
 {0} - Fully-qualified managed type name
 {1} - JNI signature of the derived constructor</comment>
   </data>
   <data name="XA4262" xml:space="preserve">
-    <value>Type '{0}' has an invalid [Export] SuperArgumentsString value '{1}'. The value references a constructor parameter that does not exist.</value>
+    <value>Typ '{0}' ma nieprawidłową wartość [Export] SuperArgumentsString '{1}'. Wartość odwołuje się do parametru konstruktora, który nie istnieje.</value>
     <comment>The following terms should not be translated: Export, SuperArgumentsString.
 {0} - Fully-qualified managed type name
 {1} - Invalid SuperArgumentsString value</comment>
   </data>
   <data name="XA4263" xml:space="preserve">
-    <value>The exported member '{0}' has unsupported signature type '{1}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter].</value>
+    <value>Wyeksportowany '{0}' elementu członkowskiego ma nieobsługiwany typ podpisu '{1}'. Użyj typu elementu równorzędnego Java, obsługiwanego mapowania Managed-to-Java lub [ExportParameter].</value>
     <comment>The following are literal names and should not be translated: Java, [ExportParameter].
 {0} - Fully-qualified managed member name
 {1} - Managed parameter or return type</comment>
+  </data>
+  <data name="XA4264" xml:space="preserve">
+    <value>Java callable wrapper XML file '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: Java, XML.
+{0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Wykonanie polecenia „{0}” nie powiodło się.\n{1}</value>

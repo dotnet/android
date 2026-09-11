@@ -2,6 +2,8 @@
 param (
 	[Parameter(Mandatory = $true)]
 	[string] $Destination,
+	[Parameter(Mandatory = $true)]
+	[string] $DeviceOutput,
 	[string] $AdbPath = 'adb',
 	[int] $DeviceTimeoutSeconds = 10,
 	[int] $LogcatTimeoutSeconds = 45,
@@ -37,6 +39,34 @@ function Read-ProcessOutput {
 	}
 
 	return $content.TrimEnd()
+}
+
+function Get-OutputLength {
+	param (
+		[Parameter(Mandatory = $true)]
+		[string] $Path
+	)
+
+	if (-not (Test-Path -LiteralPath $Path)) {
+		return 0
+	}
+
+	return (Get-Item -LiteralPath $Path).Length
+}
+
+function Write-ProcessSummary {
+	param (
+		[Parameter(Mandatory = $true)]
+		[string] $Description,
+		[Parameter(Mandatory = $true)]
+		[PSCustomObject] $Result,
+		[Parameter(Mandatory = $true)]
+		[string] $OutputPath
+	)
+
+	$exitCode = if ($null -eq $Result.ExitCode) { 'none' } else { $Result.ExitCode }
+	$outputLength = Get-OutputLength -Path $OutputPath
+	Write-Host "$(Get-Date -AsUTC -Format 'yyyy-MM-ddTHH:mm:ssZ') finished $Description; elapsed=$($Result.ElapsedSeconds)s; exitCode=$exitCode; timedOut=$($Result.TimedOut); bytes=$outputLength"
 }
 
 function Wait-ForOutputDrain {
@@ -84,12 +114,14 @@ function Invoke-BoundedProcess {
 		[Parameter(Mandatory = $true)]
 		[int] $TerminationTimeoutSeconds,
 		[Parameter(Mandatory = $true)]
-		[int] $OutputDrainTimeoutSeconds
+		[int] $OutputDrainTimeoutSeconds,
+		[hashtable] $EnvironmentVariables = @{}
 	)
 
 	$process = $null
 	$standardOutput = $null
 	$standardError = $null
+	$stopwatch = [Diagnostics.Stopwatch]::StartNew()
 	try {
 		$startInfo = [Diagnostics.ProcessStartInfo]::new()
 		$startInfo.FileName = $FilePath
@@ -99,6 +131,9 @@ function Invoke-BoundedProcess {
 		$startInfo.RedirectStandardError = $true
 		foreach ($argument in $Arguments) {
 			$startInfo.ArgumentList.Add($argument)
+		}
+		foreach ($name in $EnvironmentVariables.Keys) {
+			$startInfo.Environment[$name] = $EnvironmentVariables[$name]
 		}
 
 		$standardOutput = [IO.File]::Open($StandardOutputPath, [IO.FileMode]::Create, [IO.FileAccess]::Write, [IO.FileShare]::Read)
@@ -130,6 +165,7 @@ function Invoke-BoundedProcess {
 		$outputDrain = Wait-ForOutputDrain `
 			-Tasks @($standardOutputTask, $standardErrorTask) `
 			-TimeoutSeconds $OutputDrainTimeoutSeconds
+		$stopwatch.Stop()
 		return [PSCustomObject] @{
 			ExitCode = if ($exited) { $process.ExitCode } else { $null }
 			TimedOut = -not $exited
@@ -137,8 +173,10 @@ function Invoke-BoundedProcess {
 			KillError = $killError
 			OutputDrainTimedOut = $outputDrain.TimedOut
 			OutputDrainError = $outputDrain.Error
+			ElapsedSeconds = [Math]::Round($stopwatch.Elapsed.TotalSeconds, 1)
 		}
 	} finally {
+		$stopwatch.Stop()
 		if ($null -ne $standardOutput) {
 			$standardOutput.Dispose()
 		}
@@ -187,10 +225,9 @@ function Get-FailureDetails {
 $temporaryPaths = @()
 
 try {
-	$devicesOutputPath = [IO.Path]::GetTempFileName()
 	$devicesErrorPath = [IO.Path]::GetTempFileName()
 	$logcatErrorPath = [IO.Path]::GetTempFileName()
-	$temporaryPaths = @($devicesOutputPath, $devicesErrorPath, $logcatErrorPath)
+	$temporaryPaths = @($devicesErrorPath, $logcatErrorPath)
 
 	$destinationDirectory = Split-Path -Parent $Destination
 	if ([string]::IsNullOrEmpty($destinationDirectory)) {
@@ -198,15 +235,17 @@ try {
 	}
 	New-Item -ItemType Directory -Force -Path $destinationDirectory | Out-Null
 
+	Write-Host "$(Get-Date -AsUTC -Format 'yyyy-MM-ddTHH:mm:ssZ') starting adb devices"
 	$devicesResult = Invoke-BoundedProcess `
 		-FilePath $AdbPath `
 		-Arguments @('devices') `
-		-StandardOutputPath $devicesOutputPath `
+		-StandardOutputPath $DeviceOutput `
 		-StandardErrorPath $devicesErrorPath `
 		-TimeoutSeconds $DeviceTimeoutSeconds `
 		-TerminationTimeoutSeconds $TerminationTimeoutSeconds `
 		-OutputDrainTimeoutSeconds $OutputDrainTimeoutSeconds
-	$devicesOutput = Read-ProcessOutput -Path $devicesOutputPath
+	Write-ProcessSummary -Description 'adb devices' -Result $devicesResult -OutputPath $DeviceOutput
+	$devicesOutput = Read-ProcessOutput -Path $DeviceOutput
 	$devicesError = Read-ProcessOutput -Path $devicesErrorPath
 
 	if (-not [string]::IsNullOrWhiteSpace($devicesOutput)) {
@@ -237,6 +276,7 @@ try {
 		exit 0
 	}
 
+	Write-Host "$(Get-Date -AsUTC -Format 'yyyy-MM-ddTHH:mm:ssZ') starting adb logcat -d with ADB_TRACE=adb,shell"
 	$logcatResult = Invoke-BoundedProcess `
 		-FilePath $AdbPath `
 		-Arguments @('logcat', '-d') `
@@ -244,8 +284,13 @@ try {
 		-StandardErrorPath $logcatErrorPath `
 		-TimeoutSeconds $LogcatTimeoutSeconds `
 		-TerminationTimeoutSeconds $TerminationTimeoutSeconds `
-		-OutputDrainTimeoutSeconds $OutputDrainTimeoutSeconds
+		-OutputDrainTimeoutSeconds $OutputDrainTimeoutSeconds `
+		-EnvironmentVariables @{ ADB_TRACE = 'adb,shell' }
+	Write-ProcessSummary -Description 'adb logcat -d' -Result $logcatResult -OutputPath $Destination
 	$logcatError = Read-ProcessOutput -Path $logcatErrorPath
+	if (-not [string]::IsNullOrWhiteSpace($logcatError)) {
+		Write-Host $logcatError
+	}
 
 	if ($logcatResult.TimedOut) {
 		$details = Get-FailureDetails -StandardError $logcatError -KillError $logcatResult.KillError -TerminationTimedOut $logcatResult.TerminationTimedOut -OutputDrainTimedOut $logcatResult.OutputDrainTimedOut -OutputDrainError $logcatResult.OutputDrainError
@@ -261,9 +306,6 @@ try {
 		$details = Get-FailureDetails -StandardError $logcatError -KillError '' -TerminationTimedOut $false -OutputDrainTimedOut $logcatResult.OutputDrainTimedOut -OutputDrainError $logcatResult.OutputDrainError
 		Write-CaptureWarning "logcat capture output was incomplete; partial output was retained at $Destination$details"
 		exit 0
-	}
-	if (-not [string]::IsNullOrWhiteSpace($logcatError)) {
-		Write-Host $logcatError
 	}
 
 	Write-Host "logcat capture completed: $Destination"

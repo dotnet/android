@@ -274,6 +274,25 @@ namespace Java.Interop {
 
 			protected virtual ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSimpleReference, string jniMethodName, string jniMethodSignature) => null;
 
+			internal ReplacementMethodInfo? GetReplacementMethodInfo (string jniSimpleReference, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+			{
+				AssertValid ();
+				AssertSimpleReference (jniSimpleReference, nameof (jniSimpleReference));
+				if (jniMethodName.IsEmpty)
+					throw new ArgumentNullException (nameof (jniMethodName));
+				if (jniMethodSignature.IsEmpty)
+					throw new ArgumentNullException (nameof (jniMethodSignature));
+
+				return GetReplacementMethodInfoCore (jniSimpleReference, jniMethodName, jniMethodSignature);
+			}
+
+			/// <summary>
+			/// Resolves member remapping without requiring name and signature strings.
+			/// The default implementation preserves dispatch to the string overload.
+			/// </summary>
+			protected virtual ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSimpleReference, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+				=> GetReplacementMethodInfoCore (jniSimpleReference, jniMethodName.ToString (), jniMethodSignature.ToString ());
+
 			// Default implementation is a no-op. Derived classes (e.g. `ReflectionJniTypeManager`)
 			// provide reflection-based registration. Override to provide custom registration.
 			public virtual void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
