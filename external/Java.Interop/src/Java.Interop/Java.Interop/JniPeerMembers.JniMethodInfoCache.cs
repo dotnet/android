@@ -13,9 +13,9 @@ namespace Java.Interop {
 
 			readonly ConcurrentDictionary<string, JniMethodInfo> methods;
 
-			public JniMethodInfoCache ()
+			public JniMethodInfoCache (int concurrencyLevel, int capacity)
 			{
-				methods = new ConcurrentDictionary<string, JniMethodInfo> (1, 3);
+				methods = new ConcurrentDictionary<string, JniMethodInfo> (concurrencyLevel, capacity);
 			}
 
 			internal JniMethodInfoCache (IEqualityComparer<string> comparer)
@@ -23,13 +23,13 @@ namespace Java.Interop {
 				methods = new ConcurrentDictionary<string, JniMethodInfo> (comparer);
 			}
 
-			internal static JniMethodInfoCache GetOrCreate (ref JniMethodInfoCache? cache)
+			internal static JniMethodInfoCache GetOrCreate (ref JniMethodInfoCache? cache, int concurrencyLevel, int capacity)
 			{
 				var value = Volatile.Read (ref cache);
 				if (value != null)
 					return value;
 
-				var candidate = new JniMethodInfoCache ();
+				var candidate = new JniMethodInfoCache (concurrencyLevel, capacity);
 				return Interlocked.CompareExchange (ref cache, candidate, null) ?? candidate;
 			}
 

@@ -17,7 +17,7 @@ namespace Java.Interop
 
 		JniMethodInfoCache? staticMethods;
 
-		JniMethodInfoCache StaticMethods => JniMethodInfoCache.GetOrCreate (ref staticMethods);
+		JniMethodInfoCache StaticMethods => JniMethodInfoCache.GetOrCreate (ref staticMethods, 1, 3);
 
 		internal void Dispose ()
 		{

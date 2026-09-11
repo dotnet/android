@@ -42,7 +42,7 @@ namespace Java.Interop
 		JniMethodInfoCache?                                      instanceMethods;
 		ConcurrentDictionary<Type, JniInstanceMethods>?          subclassConstructors;
 
-		JniMethodInfoCache                                       InstanceMethods      => JniMethodInfoCache.GetOrCreate (ref instanceMethods);
+		JniMethodInfoCache                                       InstanceMethods      => JniMethodInfoCache.GetOrCreate (ref instanceMethods, 1, 3);
 		ConcurrentDictionary<Type, JniInstanceMethods>            SubclassConstructors => GetOrCreate (ref subclassConstructors, 1);
 
 		internal void Dispose ()

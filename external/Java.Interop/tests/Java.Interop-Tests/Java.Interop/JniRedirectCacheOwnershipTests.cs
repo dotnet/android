@@ -72,7 +72,7 @@ namespace Java.InteropTests
 		[Test]
 		public void ConcurrentPublicationDisposesOnlyLosingRedirects ()
 		{
-			using var cache = new JniPeerMembers.JniMethodInfoCache ();
+			using var cache = new JniPeerMembers.JniMethodInfoCache (1, 3);
 			var candidates = new JniMethodInfo [2];
 			var results = new JniMethodInfo [candidates.Length];
 			using var ready = new Barrier (candidates.Length);
@@ -103,7 +103,7 @@ namespace Java.InteropTests
 		[TestCase (true)]
 		public void ReentrantPublicationPreservesWinner (bool returnWinner)
 		{
-			using var cache = new JniPeerMembers.JniMethodInfoCache ();
+			using var cache = new JniPeerMembers.JniMethodInfoCache (1, 3);
 			var outer = CreateRedirect ();
 			var inner = CreateRedirect ();
 			try {
