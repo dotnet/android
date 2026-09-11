@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 using Java.Interop;
 
@@ -65,19 +66,87 @@ namespace Java.InteropTests {
 
 		[TestCase (false)]
 		[TestCase (true)]
-		public void RepeatedRegistration_Throws (bool firstAttemptFails)
+		public void RepeatedRegistration_RetainsEveryDelegateBatch (bool firstAttemptFails)
 		{
-			using var owner = new JniType (JniTypeName);
-			var target = new NativeTarget ();
+			var retained = RegisterRepeatedly (firstAttemptFails);
+			Collect ();
+			Assert.IsTrue (retained.First.IsAlive, "The first registration delegate must remain retained.");
+			Assert.IsTrue (retained.Second.IsAlive, "The second registration delegate must remain retained.");
+			using var owner = retained.Owner;
+			Assert.AreEqual (42, Call (owner, "value"));
+			Assert.AreEqual (42, Call (owner, "existing"));
+		}
+
+		[MethodImpl (MethodImplOptions.NoInlining)]
+		static (JniType Owner, WeakReference First, WeakReference Second) RegisterRepeatedly (bool firstAttemptFails)
+		{
+			var owner = new JniType (JniTypeName);
+			var first = new NativeTarget ();
+			var second = new NativeTarget ();
 			if (firstAttemptFails) {
 				using var error = Assert.Throws<JavaException> (() => owner.RegisterNativeMethods (
-					new JniNativeMethodRegistration ("value", "()I", new GetValue (target.Value)),
-					new JniNativeMethodRegistration ("missing", "()I", new GetValue (target.Value))));
+					new JniNativeMethodRegistration ("value", "()I", new GetValue (first.Value)),
+					new JniNativeMethodRegistration ("missing", "()I", new GetValue (first.Value))));
 			} else {
-				owner.RegisterNativeMethods (new JniNativeMethodRegistration ("existing", "()I", new GetValue (target.Value)));
+				owner.RegisterNativeMethods (new JniNativeMethodRegistration ("value", "()I", new GetValue (first.Value)));
 			}
-			Assert.Throws<InvalidOperationException> (() =>
-				owner.RegisterNativeMethods (new JniNativeMethodRegistration ("value", "()I", new GetValue (target.Value))));
+			owner.RegisterNativeMethods (new JniNativeMethodRegistration ("existing", "()I", new GetValue (second.Value)));
+			return (owner, new WeakReference (first), new WeakReference (second));
+		}
+
+		[Test]
+		public void ConcurrentRegistration_SerializesAndRetainsEveryDelegateBatch ()
+		{
+			var retained = RegisterConcurrently ();
+			Collect ();
+			Assert.IsTrue (retained.First.IsAlive, "The first registration delegate must remain retained.");
+			Assert.IsTrue (retained.Second.IsAlive, "The second registration delegate must remain retained.");
+			using var owner = retained.Owner;
+			Assert.AreEqual (42, Call (owner, "value"));
+			Assert.AreEqual (42, Call (owner, "existing"));
+		}
+
+		[MethodImpl (MethodImplOptions.NoInlining)]
+		static (JniType Owner, WeakReference First, WeakReference Second) RegisterConcurrently ()
+		{
+			var owner = new JniType (JniTypeName);
+			var first = new NativeTarget ();
+			var second = new NativeTarget ();
+			Parallel.Invoke (
+				() => owner.RegisterNativeMethods (new JniNativeMethodRegistration ("value", "()I", new GetValue (first.Value))),
+				() => owner.RegisterNativeMethods (new JniNativeMethodRegistration ("existing", "()I", new GetValue (second.Value))));
+			return (owner, new WeakReference (first), new WeakReference (second));
+		}
+
+		[Test]
+		public void Unregister_AllowsRegistrationAgain ()
+		{
+			using var owner = new JniType (JniTypeName);
+			owner.RegisterNativeMethods (new JniNativeMethodRegistration ("value", "()I", new GetValue (static (env, klass) => 41)));
+			Assert.AreEqual (41, Call (owner, "value"));
+
+			owner.UnregisterNativeMethods ();
+			owner.RegisterNativeMethods (new JniNativeMethodRegistration ("value", "()I", new GetValue (static (env, klass) => 42)));
+			Assert.AreEqual (42, Call (owner, "value"));
+		}
+
+		[Test]
+		public void Unregister_ReleasesRegisteredDelegates ()
+		{
+			var retained = RegisterThenUnregister ();
+			Collect ();
+			Assert.IsFalse (retained.Target.IsAlive, "Unregistering must release retained delegates.");
+			retained.Owner.Dispose ();
+		}
+
+		[MethodImpl (MethodImplOptions.NoInlining)]
+		static (JniType Owner, WeakReference Target) RegisterThenUnregister ()
+		{
+			var owner = new JniType (JniTypeName);
+			var target = new NativeTarget ();
+			owner.RegisterNativeMethods (new JniNativeMethodRegistration ("value", "()I", new GetValue (target.Value)));
+			owner.UnregisterNativeMethods ();
+			return (owner, new WeakReference (target));
 		}
 
 		static int Call (JniType owner, string name)
