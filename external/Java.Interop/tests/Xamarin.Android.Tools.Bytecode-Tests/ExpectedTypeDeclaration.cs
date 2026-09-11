@@ -59,7 +59,6 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 				}
 			}
 
-
 			NAssert.AreEqual (Fields.Count, classDeclaration.Fields.Count,  FullName + " Fields Count");
 			for (int i = 0; i < Fields.Count; ++i) {
 				Fields [i].Assert (classDeclaration.Fields [i]);

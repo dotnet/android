@@ -40,5 +40,4 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			Assert.AreEqual ("com/xamarin",         moduleAttr.Exports [0].Exports);
 		}
 	}
-
 }
