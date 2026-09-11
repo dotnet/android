@@ -79,10 +79,18 @@ namespace Java.Lang {
 
 			public static void Remove (Action handler, Action<RunnableImplementor> remove)
 			{
+				Remove (handler, remove, static (callback, runnable) => {
+					callback (runnable);
+					return false;
+				});
+			}
+
+			public static bool Remove<TState> (Action handler, TState state, Func<TState, RunnableImplementor, bool> remove)
+			{
 				List<RunnableImplementor> pending = new ();
 				lock (instances) {
 					if (!instances.TryGetValue (handler, out var runnables))
-						return;
+						return false;
 					Prune (runnables);
 					foreach (var reference in runnables) {
 						if (reference.TryGetTarget (out var runnable))
@@ -92,14 +100,16 @@ namespace Java.Lang {
 						instances.Remove (handler);
 				}
 
+				bool result = false;
 				foreach (var runnable in pending) {
 					lock (runnable) {
 						if (runnable.Handle != IntPtr.Zero)
-							remove (runnable);
+							result |= remove (state, runnable);
 					}
 				}
 				// Native removal may not match the handler, token or drawable. Keep the
 				// weak mapping and let Java reachability determine when disposal is safe.
+				return result;
 			}
 		}
 

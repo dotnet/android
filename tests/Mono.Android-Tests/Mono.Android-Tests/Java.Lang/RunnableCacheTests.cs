@@ -64,6 +64,26 @@ namespace Xamarin.Android.RuntimeTests {
 		}
 
 		[Test]
+		public void RemovalAggregatesCallbackResults ()
+		{
+			Action action = () => {};
+			using var first = new RunnableImplementor (action, removable: true);
+			using var second = new RunnableImplementor (action, removable: true);
+			var callbacks = new List<RunnableImplementor> ();
+
+			bool result = RunnableImplementor.Remove (
+				action,
+				callbacks,
+				static (items, runnable) => {
+					items.Add (runnable);
+					return items.Count == 2;
+				});
+
+			Assert.IsTrue (result);
+			Assert.AreEqual (2, callbacks.Count);
+		}
+
+		[Test]
 		public void RemovalUsesSnapshotWithoutHoldingCacheLock ()
 		{
 			Action action = () => {};

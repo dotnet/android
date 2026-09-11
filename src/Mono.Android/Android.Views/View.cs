@@ -66,9 +66,10 @@ namespace Android.Views {
 
 		public bool RemoveCallbacks (Action action)
 		{
-			bool result = false;
-			Java.Lang.Thread.RunnableImplementor.Remove (action, runnable => result |= RemoveCallbacks (runnable));
-			return result;
+			return Java.Lang.Thread.RunnableImplementor.Remove (
+				action,
+				this,
+				static (view, runnable) => view.RemoveCallbacks (runnable));
 		}
 
 		public void ScheduleDrawable (Android.Graphics.Drawables.Drawable who, Action what, long when)
