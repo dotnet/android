@@ -95,7 +95,6 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		[Explicit ("Run only in isolated JniReferenceLeak test runs.")]
 		[Category (JniReferenceLeakCategory)]
 		public void TryFindClass_Utf8_DoesNotLeakGlobalRefs ()
 		{
@@ -106,7 +105,6 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		[Explicit ("Run only in isolated JniReferenceLeak test runs.")]
 		[Category (JniReferenceLeakCategory)]
 		public void TryFindClass_String_DoesNotLeakGlobalRefs ()
 		{
@@ -117,7 +115,6 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		[Explicit ("Run only in isolated JniReferenceLeak test runs.")]
 		[Category (JniReferenceLeakCategory)]
 		public void AssertNoSustainedGlobalReferenceGrowth_DetectsRetainedGlobalReference ()
 		{
