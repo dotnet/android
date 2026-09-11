@@ -168,6 +168,8 @@ namespace Java.Interop
 		bool                                            DestroyRuntimeOnDispose;
 
 		internal    JniObjectReference                  ClassLoader;
+		internal    IntPtr                              SystemClass;
+		internal    IntPtr                              SystemIdentityHashCode;
 
 		public  IntPtr                                  InvocationPointer   {get; private set;}
 
@@ -203,14 +205,6 @@ namespace Java.Interop
 			ObjectReferenceManager      = SetRuntime (options.ObjectReferenceManager ?? throw new NotSupportedException ($"Please set {nameof (CreationOptions)}.{nameof (options.ObjectReferenceManager)}!"));
 			TypeManager                 = SetRuntime (options.TypeManager ?? throw new NotSupportedException ($"Please set {nameof (CreationOptions)}.{nameof (options.TypeManager)}!"));
 
-			if (Interlocked.CompareExchange (ref current, this, null) != null) {
-				Debug.WriteLine ("WARNING: More than one JniRuntime instance created. This is DOOMED TO FAIL.");
-			}
-
-			lock (Runtimes) {
-				Runtimes [InvocationPointer] = this;
-			}
-
 			var envp    = options.EnvironmentPointer;
 			if (envp == IntPtr.Zero &&
 					Invoker.GetEnv (InvocationPointer, out envp, (int) JniVersion) != JNI_OK &&
@@ -220,6 +214,13 @@ namespace Java.Interop
 			}
 			var env     = new JniEnvironmentInfo (envp, this);
 			JniEnvironment.SetEnvironmentInfo (env);
+
+			// java/lang/System is a bootstrap class, so it can be resolved before
+			// initializing the application ClassLoader.
+			var systemType = new JniType ("java/lang/System"u8);
+			systemType.RegisterWithRuntime ();
+			SystemClass = systemType.PeerReference.Handle;
+			SystemIdentityHashCode = systemType.GetStaticMethod ("identityHashCode"u8, "(Ljava/lang/Object;)I"u8).ID;
 
 			ClassLoader = options.ClassLoader;
 			if (ClassLoader.IsValid) {
@@ -245,6 +246,14 @@ namespace Java.Interop
 				ManagedPeer.Init ();
 			}
 #endif  // !XA_JI_EXCLUDE
+
+			lock (Runtimes) {
+				Runtimes [InvocationPointer] = this;
+			}
+
+			if (Interlocked.CompareExchange (ref current, this, null) != null) {
+				Debug.WriteLine ("WARNING: More than one JniRuntime instance created. This is DOOMED TO FAIL.");
+			}
 		}
 
 		static unsafe IntPtr GetInvocationPointerFromEnvironmentPointer (IntPtr envp)

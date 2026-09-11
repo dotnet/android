@@ -1,10 +1,13 @@
 using Android.Runtime;
 using BenchmarkDotNet.Attributes;
+using Java.Interop;
 
 namespace Xamarin.Android.Benchmarks;
 
 [MemoryDiagnoser]
 [InvocationCount (OperationsPerIteration)]
+[WarmupCount (5)]
+[IterationCount (15)]
 public class PeerLookupBenchmarks
 {
 	const int OperationsPerIteration = 4096;
@@ -104,6 +107,122 @@ public class PeerLookupBenchmarks
 	static IntPtr CreateGlobalString ()
 	{
 		IntPtr localReference = JNIEnv.NewString ("benchmark");
+		try {
+			return JNIEnv.NewGlobalRef (localReference);
+		} finally {
+			JNIEnv.DeleteLocalRef (localReference);
+		}
+	}
+
+	static void DeleteGlobalReference (ref IntPtr reference)
+	{
+		if (reference == IntPtr.Zero)
+			return;
+		JNIEnv.DeleteGlobalRef (reference);
+		reference = IntPtr.Zero;
+	}
+}
+
+[MemoryDiagnoser]
+[WarmupCount (5)]
+[IterationCount (15)]
+public class PeerLookupLocalityBenchmarks
+{
+	const int OperationsPerIteration = 4096;
+
+	IntPtr [] references = [];
+	Java.Lang.String? [] peers = [];
+	WeakReference<Java.Lang.String>? recentPeer;
+	int operationIndex;
+
+	[Params (1, 2, 8, 64)]
+	public int WorkingSetSize { get; set; }
+
+	[Params (1, 8)]
+	public int ConsecutiveLookups { get; set; }
+
+	[GlobalSetup]
+	public void Setup ()
+	{
+		references = new IntPtr [WorkingSetSize];
+		peers = new Java.Lang.String? [WorkingSetSize];
+		for (int i = 0; i < references.Length; i++) {
+			references [i] = CreateGlobalString (i);
+			var peer = Java.Lang.Object.GetObject<Java.Lang.String> (
+				references [i],
+				JniHandleOwnership.DoNotTransfer);
+			if (peer == null)
+				throw new InvalidOperationException ($"Could not create Java string peer {i}.");
+			peers [i] = peer;
+		}
+
+		var firstPeer = peers [0];
+		if (firstPeer == null)
+			throw new InvalidOperationException ("The first Java string peer is unavailable.");
+		recentPeer = new WeakReference<Java.Lang.String> (firstPeer);
+	}
+
+	[GlobalCleanup]
+	public void Cleanup ()
+	{
+		recentPeer = null;
+		for (int i = 0; i < references.Length; i++) {
+			peers [i]?.Dispose ();
+			peers [i] = null;
+			DeleteGlobalReference (ref references [i]);
+		}
+	}
+
+	[Benchmark (Baseline = true, OperationsPerInvoke = OperationsPerIteration)]
+	public Java.Lang.String? CurrentRegistryLookup ()
+	{
+		Java.Lang.String? peer = null;
+		for (int i = 0; i < OperationsPerIteration; i++) {
+			peer = Java.Lang.Object.GetObject<Java.Lang.String> (
+				GetNextReference (),
+				JniHandleOwnership.DoNotTransfer);
+		}
+		return peer;
+	}
+
+	[Benchmark (OperationsPerInvoke = OperationsPerIteration)]
+	public Java.Lang.String? RecentPeerIsSameObjectFastPath ()
+	{
+		Java.Lang.String? peer = null;
+		for (int i = 0; i < OperationsPerIteration; i++) {
+			IntPtr reference = GetNextReference ();
+			var recent = recentPeer;
+			if (recent != null &&
+					recent.TryGetTarget (out peer) &&
+					JniEnvironment.Types.IsSameObject (
+						new JniObjectReference (reference),
+						peer.PeerReference)) {
+				continue;
+			}
+
+			peer = Java.Lang.Object.GetObject<Java.Lang.String> (
+				reference,
+				JniHandleOwnership.DoNotTransfer);
+			if (peer != null) {
+				if (recent == null) {
+					recentPeer = new WeakReference<Java.Lang.String> (peer);
+				} else {
+					recent.SetTarget (peer);
+				}
+			}
+		}
+		return peer;
+	}
+
+	IntPtr GetNextReference ()
+	{
+		int index = (operationIndex++ / ConsecutiveLookups) % WorkingSetSize;
+		return references [index];
+	}
+
+	static IntPtr CreateGlobalString (int index)
+	{
+		IntPtr localReference = JNIEnv.NewString ($"benchmark-{index}");
 		try {
 			return JNIEnv.NewGlobalRef (localReference);
 		} finally {

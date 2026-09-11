@@ -6,6 +6,8 @@ using Java.Interop;
 namespace Xamarin.Android.Benchmarks;
 
 [MemoryDiagnoser]
+[WarmupCount (5)]
+[IterationCount (15)]
 public unsafe class ExportRoundtripBenchmarks
 {
 	const int Value = 42;
@@ -30,7 +32,7 @@ public unsafe class ExportRoundtripBenchmarks
 			JNIEnv.DeleteLocalRef (peerClass);
 		}
 
-		long expected = DirectManagedCall ();
+		long expected = DirectStringCall ();
 		long primitiveResult = JniPrimitiveRoundtrip ();
 		long stringResult = JniStringRoundtrip ();
 		if (primitiveResult != State + Value)
@@ -46,7 +48,14 @@ public unsafe class ExportRoundtripBenchmarks
 		peer.Dispose ();
 	}
 
-	long DirectManagedCall ()
+	[Benchmark (Baseline = true)]
+	public long DirectPrimitiveCall ()
+	{
+		return peer.PrimitiveRoundtrip (Value, State);
+	}
+
+	[Benchmark]
+	public long DirectStringCall ()
 	{
 		return peer.Roundtrip (Value, State, TextValue);
 	}

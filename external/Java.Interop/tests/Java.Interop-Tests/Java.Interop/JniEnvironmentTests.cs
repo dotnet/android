@@ -56,6 +56,13 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void References_GetIdentityHashCode_Null ()
+		{
+			Assert.AreEqual (0, JniEnvironment.References.GetIdentityHashCode (default));
+			Assert.IsFalse (JniEnvironment.Exceptions.ExceptionCheck ());
+		}
+
+		[Test]
 		public void References_CreatedReference_InvalidRef ()
 		{
 			var c = JniEnvironment.LocalReferenceCount;
@@ -144,4 +151,3 @@ namespace Java.InteropTests
 		}
 	}
 }
-

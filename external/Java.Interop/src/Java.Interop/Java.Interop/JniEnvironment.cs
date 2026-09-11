@@ -226,7 +226,18 @@ namespace Java.Interop {
 
 		internal    JniEnvironmentInfo (IntPtr environmentPointer, JniRuntime runtime)
 		{
-			EnvironmentPointer  = environmentPointer;
+			if (environmentPointer == IntPtr.Zero)
+				throw new ArgumentException ("JNIEnv* must not be null.", nameof (environmentPointer));
+			if (runtime == null)
+				throw new ArgumentNullException (nameof (runtime));
+
+			int r = JniEnvironment.References.GetJavaVM (environmentPointer, out IntPtr vm);
+			if (r < 0)
+				throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r.ToString ());
+			if (vm != runtime.InvocationPointer)
+				throw new ArgumentException ("JNIEnv* does not belong to the specified JniRuntime.", nameof (environmentPointer));
+
+			this.environmentPointer = environmentPointer;
 			Runtime             = runtime;
 		}
 

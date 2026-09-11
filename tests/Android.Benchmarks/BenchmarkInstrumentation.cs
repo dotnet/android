@@ -40,6 +40,10 @@ public class BenchmarkInstrumentation : Instrumentation
 					.WithId ("Android"))
 				.AddLogger (ConsoleLogger.Default)
 				.AddColumnProvider (DefaultColumnProviders.Instance)
+				.AddColumn (
+					StatisticColumn.P50,
+					StatisticColumn.Max,
+					StatisticColumn.OperationsPerSecond)
 				.AddExporter (CsvExporter.Default, MarkdownExporter.GitHub)
 				.WithArtifactsPath (artifactsPath)
 				.WithOptions (ConfigOptions.DisableOptimizationsValidator);
@@ -48,7 +52,11 @@ public class BenchmarkInstrumentation : Instrumentation
 
 			var summaries = BenchmarkRunner.Run (GetType ().Assembly, config);
 			var reportCount = summaries.Sum (summary => summary.Reports.Length);
-			var hasErrors = summaries.Any (summary => summary.HasCriticalValidationErrors);
+			var hasErrors =
+				reportCount == 0 ||
+				summaries.Any (summary =>
+					summary.HasCriticalValidationErrors ||
+					summary.Reports.Any (report => !report.Success));
 
 			results.PutInt ("reports", reportCount);
 			results.PutString ("artifactsPath", artifactsPath);
