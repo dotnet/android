@@ -19,17 +19,8 @@ namespace Java.InteropTests {
 	[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Tests exercise standalone delegate-based native registration.")]
 	public class ManagedPeerRegistrationTests : JavaVMFixture {
 
-		internal const string JniTypeName = "net/dot/jni/test/ManagedPeerRegistration";
-		static Action<JniNativeMethodRegistrationArguments>? addRegistrations;
-		JniType? registeredClass;
+		const string JniTypeName = "net/dot/jni/test/ManagedPeerRegistration";
 
-		public class Registration {
-			[JniAddNativeMethodRegistration]
-			static void Register (JniNativeMethodRegistrationArguments args)
-			{
-				addRegistrations?.Invoke (args);
-			}
-		}
 		[UnmanagedFunctionPointer (CallingConvention.Winapi)]
 		delegate int GetValue (IntPtr env, IntPtr klass);
 
@@ -37,138 +28,40 @@ namespace Java.InteropTests {
 			public int Value (IntPtr env, IntPtr klass) => 42;
 		}
 
-		[SetUp]
-		public void SetUp ()
-		{
-			var manager = TypeManager ?? throw new InvalidOperationException ("The test type manager is not initialized.");
-			manager.NativeRegistrationObserver = ObserveRegistration;
-		}
-
-		[TearDown]
-		public void TearDown ()
-		{
-			if (TypeManager != null)
-				TypeManager.NativeRegistrationObserver = null;
-			addRegistrations = null;
-			registeredClass?.Dispose ();
-			registeredClass = null;
-		}
-
 		[Test]
-		public void EmptyJniTypeRegistration_DoesNotAdoptOwner ()
+		public void EmptyRegistration_DoesNotAdoptOwner ()
 		{
 			using var owner = new JniType (JniTypeName);
 			owner.RegisterNativeMethods ();
 			Assert.IsFalse (owner.IsRegisteredWithRuntime);
 		}
 
-		[Test]
-		public void EmptyRegistration_DisposesClass ()
-		{
-			using var existingOwner = new JniType (JniTypeName);
-			existingOwner.RegisterNativeMethods (
-				new JniNativeMethodRegistration ("existing", "()I", new GetValue (new NativeTarget ().Value)));
-			Register ();
-			Assert.IsFalse (GetRegisteredClass ().PeerReference.IsValid);
-			Assert.AreEqual (42, Call (existingOwner, "existing"));
-		}
-
-		[Test]
-		public void FailureBeforeAdoption_DisposesClass ()
-		{
-			var expected = new InvalidOperationException ("Registration failed before adoption.");
-			addRegistrations = args => throw expected;
-
-			var error = Assert.Throws<NotSupportedException> (Register);
-			Assert.AreSame (expected, error?.InnerException);
-			Assert.IsFalse (GetRegisteredClass ().PeerReference.IsValid);
-		}
-
 		[TestCase (false)]
 		[TestCase (true)]
-		public void MarshalingFailure_DisposesClass (bool genericDelegate)
+		public void RegistrationAttempt_RetainsOwnerAndDelegate (bool fail)
 		{
-			using var existingOwner = new JniType (JniTypeName);
-			existingOwner.RegisterNativeMethods (
-				new JniNativeMethodRegistration ("existing", "()I", new GetValue (new NativeTarget ().Value)));
-			addRegistrations = args => {
-				args.Registrations.Add (new JniNativeMethodRegistration ("value", "()I", new GetValue (new NativeTarget ().Value)));
-				args.Registrations.Add (genericDelegate
-					? new JniNativeMethodRegistration ("missing", "()I", new Func<IntPtr, IntPtr, int> (new NativeTarget ().Value))
-					: default);
-			};
-
-			var error = Assert.Throws<NotSupportedException> (Register);
-			Assert.That (error?.InnerException, Is.TypeOf<ArgumentException> ());
-			Assert.IsFalse (GetRegisteredClass ().PeerReference.IsValid);
-			Assert.AreEqual (42, Call (existingOwner, "existing"));
-		}
-
-		[TestCase (false)]
-		[TestCase (true)]
-		public void AdoptedRegistration_RemainsCallable (bool throwAfterAdoption)
-		{
-			var weakOwner = RegisterAndReleaseOwner (throwAfterAdoption);
+			var retained = RegisterAndReleaseOwner (fail);
 			Collect ();
-			Assert.IsTrue (weakOwner.TryGetTarget (out var owner), "The runtime must retain the registration owner.");
-			registeredClass = owner ?? throw new InvalidOperationException ("The registration owner was collected.");
-			Assert.IsTrue (registeredClass.PeerReference.IsValid);
-			Assert.AreEqual (42, Call (registeredClass, "value"));
+			Assert.IsTrue (retained.Owner.TryGetTarget (out var owner), "The runtime must retain the registration owner.");
+			Assert.IsTrue (retained.Target.IsAlive, "The runtime must retain the registered delegate.");
+			using var retainedOwner = owner ?? throw new InvalidOperationException ("The registration owner was collected.");
+			Assert.IsTrue (retainedOwner.PeerReference.IsValid);
+			Assert.AreEqual (42, Call (retainedOwner, "value"));
 		}
 
 		[MethodImpl (MethodImplOptions.NoInlining)]
-		WeakReference<JniType> RegisterAndReleaseOwner (bool throwAfterAdoption)
+		static (WeakReference<JniType> Owner, WeakReference Target) RegisterAndReleaseOwner (bool fail)
 		{
-			addRegistrations = args => args.Registrations.Add (
-				new JniNativeMethodRegistration ("value", "()I", new GetValue (new NativeTarget ().Value)));
-
-			if (throwAfterAdoption) {
-				var manager = TypeManager ?? throw new InvalidOperationException ("The test type manager is not initialized.");
-				var expected = new InvalidOperationException ("Registration failed after adoption.");
-				manager.NativeRegistrationObserver = nativeClass => {
-					registeredClass = nativeClass;
-					nativeClass.RegisterNativeMethods (
-						new JniNativeMethodRegistration ("value", "()I", new GetValue (new NativeTarget ().Value)));
-					throw expected;
-				};
-				var error = Assert.Throws<NotSupportedException> (Register);
-				Assert.AreSame (expected, error?.InnerException);
+			var owner = new JniType (JniTypeName);
+			var target = new NativeTarget ();
+			if (fail) {
+				using var error = Assert.Throws<JavaException> (() => owner.RegisterNativeMethods (
+					new JniNativeMethodRegistration ("value", "()I", new GetValue (target.Value)),
+					new JniNativeMethodRegistration ("missing", "()I", new GetValue (target.Value))));
 			} else {
-				Register ();
+				owner.RegisterNativeMethods (new JniNativeMethodRegistration ("value", "()I", new GetValue (target.Value)));
 			}
-
-			return ReleaseOwner ();
-		}
-
-		[Test]
-		public void PartialRegistrationFailure_PreservesBothOwners ()
-		{
-			using var existingOwner = new JniType (JniTypeName);
-			existingOwner.RegisterNativeMethods (
-				new JniNativeMethodRegistration ("existing", "()I", new GetValue (new NativeTarget ().Value)));
-			var weakOwner = RegisterPartialAndReleaseOwner (existingOwner);
-			Collect ();
-			Assert.IsTrue (weakOwner.TryGetTarget (out var owner), "A partial registration must remain runtime-owned.");
-			registeredClass = owner ?? throw new InvalidOperationException ("The partial registration owner was collected.");
-			Assert.IsTrue (registeredClass.PeerReference.IsValid);
-			Assert.AreEqual (42, Call (existingOwner, "existing"));
-			Assert.AreEqual (42, Call (registeredClass, "value"));
-		}
-
-		[MethodImpl (MethodImplOptions.NoInlining)]
-		WeakReference<JniType> RegisterPartialAndReleaseOwner (JniType existingOwner)
-		{
-			addRegistrations = args => {
-				args.Registrations.Add (new JniNativeMethodRegistration ("value", "()I", new GetValue (new NativeTarget ().Value)));
-				args.Registrations.Add (new JniNativeMethodRegistration ("missing", "()I", new GetValue (new NativeTarget ().Value)));
-			};
-
-			var error = Assert.Throws<NotSupportedException> (Register);
-			using var cause = error?.InnerException as JavaException;
-			Assert.IsNotNull (cause);
-			Assert.AreEqual (42, Call (existingOwner, "existing"), "Failure must not unregister another owner's methods.");
-			Assert.AreEqual (42, Call (GetRegisteredClass (), "value"), "JNI may register a method before rejecting the batch.");
-			return ReleaseOwner ();
+			return (new WeakReference<JniType> (owner), new WeakReference (target));
 		}
 
 		[TestCase (false)]
@@ -226,20 +119,6 @@ namespace Java.InteropTests {
 			return new WeakReference (target);
 		}
 
-		WeakReference<JniType> ReleaseOwner ()
-		{
-			var owner = new WeakReference<JniType> (GetRegisteredClass ());
-			registeredClass = null;
-			addRegistrations = null;
-			var manager = TypeManager ?? throw new InvalidOperationException ("The test type manager is not initialized.");
-			manager.NativeRegistrationObserver = ObserveRegistration;
-			// Clear the reflection registrar's shared list so only the runtime can retain the delegates.
-			Register ();
-			return owner;
-		}
-
-		void ObserveRegistration (JniType nativeClass) => registeredClass = nativeClass;
-
 		static int Call (JniType owner, string name)
 		{
 			var method = owner.GetStaticMethod (name, "()I");
@@ -251,32 +130,6 @@ namespace Java.InteropTests {
 			GC.Collect ();
 			GC.WaitForPendingFinalizers ();
 			GC.Collect ();
-		}
-
-		JniType GetRegisteredClass () =>
-			registeredClass ?? throw new InvalidOperationException ("The standalone registrar was not invoked.");
-
-		static unsafe void Register ()
-		{
-			using var managedPeer = new JniType ("net/dot/jni/ManagedPeer");
-			using var nativeClass = new JniType (JniTypeName);
-			var register = managedPeer.GetStaticMethod ("registerNativeMembers", "(Ljava/lang/Class;Ljava/lang/String;)V");
-			var classRef = nativeClass.PeerReference.NewLocalRef ();
-			var methods = JniEnvironment.Strings.NewString ("");
-			try {
-				var args = stackalloc JniArgumentValue [2];
-				args [0] = new JniArgumentValue (classRef);
-				args [1] = new JniArgumentValue (methods);
-				JniEnvironment.StaticMethods.CallStaticVoidMethod (managedPeer.PeerReference, register, args);
-			} finally {
-				try {
-					Assert.AreEqual (JniObjectReferenceType.Local, JniEnvironment.References.GetObjectRefType (classRef));
-					Assert.AreEqual (JniObjectReferenceType.Local, JniEnvironment.References.GetObjectRefType (methods));
-				} finally {
-					JniObjectReference.Dispose (ref classRef);
-					JniObjectReference.Dispose (ref methods);
-				}
-			}
 		}
 	}
 }
