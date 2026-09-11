@@ -170,9 +170,10 @@ namespace Java.Interop {
 			if (methods.Length == 0)
 				return;
 
-			// RegisterNatives stores unmanaged function pointers without retaining the
-			// managed delegates behind them. JNI can publish part of a failing batch, so
-			// the first attempt owns this JniType until disposal and cannot be retried.
+			// Retain the delegates before calling RegisterNatives: JNI stores only their
+			// unmanaged function pointers and may publish part of the batch before throwing.
+			// Storing them afterward could therefore leave callable pointers to collected
+			// delegates. The first attempt owns this JniType until disposal and cannot be retried.
 			if (Interlocked.CompareExchange (ref this.methods, methods, null) != null)
 				throw new InvalidOperationException ("Native methods cannot be registered more than once.");
 
