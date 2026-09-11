@@ -1,0 +1,22 @@
+<Project>
+  <PropertyGroup>
+    <HostOS>$(TestHostOS)</HostOS>
+    <AndroidSdkFullPath>$(TestSdkDirectory)</AndroidSdkFullPath>
+    <AndroidNdkDirectory>$(TestNdkDirectory)</AndroidNdkDirectory>
+    <AndroidToolchainCacheDirectory>$(TestCacheDirectory)</AndroidToolchainCacheDirectory>
+    <BootstrapTasksAssembly>$(TestBootstrapTasksAssembly)</BootstrapTasksAssembly>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\src\androidsdk\androidsdk.targets" />
+
+  <ItemGroup>
+    <_AndroidSdkPackage Remove="@(_AndroidSdkPackage)" />
+    <_AndroidSdkPackage Include="fake-platform.zip">
+      <Hash>TESTHASH</Hash>
+      <Destination>$(TestDestination)</Destination>
+    </_AndroidSdkPackage>
+  </ItemGroup>
+
+  <Target Name="_AddPlatformPackagesToInstall" />
+  <Target Name="_DownloadAndroidSdkPackages" />
+</Project>
