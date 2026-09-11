@@ -34,15 +34,10 @@ namespace Xamarin.Android.Tasks
 		public string? ProguardGeneratedApplicationConfiguration { get; set; }
 		public string? ProguardCommonXamarinConfiguration { get; set; }
 		public string? ProguardMappingFileOutput { get; set; }
-
-		/// <summary>
-		/// Selects how R8 obfuscation is reconciled with managed JNI names.
-		/// </summary>
-		public string ObfuscationMode { get; set; } = "disabled";
-
 		public string? BuildMetadataFileOutput { get; set; }
 		public ITaskItem []? ProguardConfigurationFiles { get; set; }
 		public bool UseTrimmableNativeAotProguardConfiguration { get; set; }
+		public string ObfuscationMode { get; set; } = "private-members";
 
 		// User-authored AndroidJavaSource (Bind != true) .java files. These have no managed peer and are
 		// therefore absent from the acw-map, so they must be kept explicitly when shrinking is enabled.
@@ -245,19 +240,7 @@ namespace Xamarin.Android.Tasks
 		/// names are remapped at runtime the wrappers must survive shrinking but stay renameable,
 		/// otherwise a plain <c>-keep</c> pins their names and prevents obfuscation.
 		/// </summary>
-		internal string KeepOption => IsRuntimeRemappingEnabled ? "-keep,allowobfuscation" : "-keep";
-
-		internal bool IsRuntimeRemappingEnabled {
-			get {
-				if (string.Equals (ObfuscationMode, "disabled", StringComparison.OrdinalIgnoreCase)) {
-					return false;
-				}
-				if (string.Equals (ObfuscationMode, "runtime-remapping", StringComparison.OrdinalIgnoreCase)) {
-					return true;
-				}
-				throw new InvalidOperationException ($"Unsupported R8 obfuscation mode '{ObfuscationMode}'.");
-			}
-		}
+		internal string KeepOption => string.Equals (ObfuscationMode, "runtime-remapping", StringComparison.OrdinalIgnoreCase) ? "-keep,allowobfuscation" : "-keep";
 
 		internal void GenerateCommonXamarinConfiguration ()
 		{
@@ -266,17 +249,12 @@ namespace Xamarin.Android.Tasks
 			}
 
 			using var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration);
+			WriteObfuscationRules (xamcfg, ObfuscationMode);
+			xamcfg.WriteLine ();
+			xamcfg.Flush ();
 			string resourceName = UseTrimmableNativeAotProguardConfiguration ? "proguard_trimmable_nativeaot.cfg" : "proguard_xamarin.cfg";
-			using (Stream resource = GetEmbeddedResourceStream (resourceName))
-			using (var reader = new StreamReader (resource)) {
-				while (reader.ReadLine () is string line) {
-					// The only SDK-generated option dropped when obfuscation is enabled. Every
-					// other rule in the configuration still applies.
-					if (IsRuntimeRemappingEnabled && string.Equals (line.Trim (), "-dontobfuscate", StringComparison.OrdinalIgnoreCase)) {
-						continue;
-					}
-					xamcfg.WriteLine (line);
-				}
+			using (Stream resource = GetEmbeddedResourceStream (resourceName)) {
+				resource.CopyTo (xamcfg.BaseStream);
 			}
 			if (IgnoreWarnings) {
 				xamcfg.WriteLine ("-ignorewarnings");
@@ -286,6 +264,39 @@ namespace Xamarin.Android.Tasks
 				xamcfg.WriteLine ("-keepattributes LineNumberTable");
 				xamcfg.WriteLine ($"-printmapping \"{Path.GetFullPath (ProguardMappingFileOutput)}\"");
 			}
+		}
+
+		internal static void WriteObfuscationRules (TextWriter writer, string obfuscationMode)
+		{
+			if (string.Equals (obfuscationMode, "disabled", StringComparison.OrdinalIgnoreCase)) {
+				writer.WriteLine ("-dontobfuscate");
+				return;
+			}
+
+			if (string.Equals (obfuscationMode, "runtime-remapping", StringComparison.OrdinalIgnoreCase)) {
+				// Keep names used by bootstrap JNI and resource/interface lookups that do not
+				// pass through the generated member-remapping tables.
+				writer.WriteLine ("-keep class mono.NativeLibraryHelper { *; <init>(...); }");
+				writer.WriteLine ("-keep class mono.android.Runtime { *; }");
+				writer.WriteLine ("-keep class mono.android.GCUserPeer { <init>(); }");
+				writer.WriteLine ("-keepclassmembernames interface * { *; }");
+				writer.WriteLine ("-keepnames public class *");
+				writer.WriteLine ("-keepnames class **$*");
+				return;
+			}
+			if (!string.Equals (obfuscationMode, "private-members", StringComparison.OrdinalIgnoreCase)) {
+				throw new InvalidOperationException ($"Unsupported R8 obfuscation mode '{obfuscationMode}'.");
+			}
+
+			writer.WriteLine ("-keep,allowshrinking,allowoptimization class **");
+			writer.WriteLine ("-keepclassmembers,allowshrinking,allowoptimization class ** {");
+			writer.WriteLine ("   public protected *;");
+			writer.WriteLine ("}");
+			// Managed interface proxy selection observes Class.getInterfaces(), which R8 cannot infer.
+			writer.WriteLine ("-keep,allowoptimization interface ** {");
+			writer.WriteLine ("   public protected *;");
+			writer.WriteLine ("}");
+			writer.WriteLine ("-keep,allowshrinking class * implements **");
 		}
 
 		// ProGuard "global" options that affect the whole build and are not allowed inside

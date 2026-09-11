@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
@@ -17,7 +18,9 @@ namespace Xamarin.Android.Build.Tests
 	public class PackagingTest : BaseTest
 	{
 		[Test]
-		public void CheckR8MetadataFilesExist ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void CheckR8MetadataFilesExist (
+			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime,
+			[Values ("disabled", "private-members", "runtime-remapping")] string obfuscationMode)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -29,6 +32,10 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidR8ObfuscationMode, obfuscationMode);
+			if (obfuscationMode == "runtime-remapping") {
+				proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			}
 			// Projects must set $(AndroidCreateProguardMappingFile) to true to opt in
 			proj.SetProperty (proj.ReleaseProperties, "AndroidCreateProguardMappingFile", true);
 			proj.SetProperty ("AndroidPackageFormat", "aab");
@@ -41,13 +48,41 @@ namespace Xamarin.Android.Build.Tests
 				FileAssert.Exists (aab, $"'{aab}' should have been generated.");
 				using (var zip = ZipHelper.OpenZip (aab)) {
 					Assert.IsTrue (zip.Any (e => e.FullName == "BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map"), $"AAB file `{aab}` should contain the ProGuard mapping.");
-					Assert.IsTrue (zip.Any (e => e.FullName == "BUNDLE-METADATA/com.android.tools/r8.json"), $"AAB file `{aab}` should contain the R8 build metadata.");
+					var metadata = zip.SingleOrDefault (e => e.FullName == "BUNDLE-METADATA/com.android.tools/r8.json");
+					Assert.IsNotNull (metadata, $"AAB file `{aab}` should contain the R8 build metadata.");
+					using var stream = new MemoryStream ();
+					metadata.Extract (stream);
+					stream.Position = 0;
+					using var document = JsonDocument.Parse (stream);
+					var options = document.RootElement.GetProperty ("options");
+					Assert.AreEqual (obfuscationMode != "disabled", options.GetProperty ("isOptimizationsEnabled").GetBoolean ());
 				}
 
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 				foreach (var target in new [] { "_CompileToDalvik", "_BuildApkEmbed" }) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
 				}
+			}
+		}
+
+		[TestCase ("", true)]
+		[TestCase ("r8", false)]
+		public void InvalidR8ObfuscationModeIsValidatedOnlyForR8 (string linkTool, bool expectedResult)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, linkTool);
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidR8ObfuscationMode, "private-member");
+
+			using var builder = CreateApkBuilder ();
+			builder.Target = "_ValidateAndroidR8ObfuscationMode";
+			builder.ThrowOnBuildFailure = false;
+			builder.AutomaticNuGetRestore = false;
+			Assert.AreEqual (expectedResult, builder.Build (proj), "Validation result should depend on whether R8 is enabled.");
+			if (!expectedResult) {
+				StringAssertEx.Contains ("error XA1050", builder.LastBuildOutput);
+				StringAssertEx.Contains ("'private-member'", builder.LastBuildOutput);
 			}
 		}
 

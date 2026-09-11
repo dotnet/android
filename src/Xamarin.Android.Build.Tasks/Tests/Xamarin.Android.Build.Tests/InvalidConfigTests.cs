@@ -67,7 +67,8 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (null, "disabled", "false")]
+		[TestCase (null, "private-members", "false")]
+		[TestCase ("private-members", "private-members", "false")]
 		[TestCase ("disabled", "disabled", "false")]
 		[TestCase ("runtime-remapping", "runtime-remapping", "true")]
 		public void R8ObfuscationDefaults (string? mode, string expectedMode, string expectedRemapping)
@@ -94,7 +95,6 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.Contains ($"R8_OPTIONS={expectedMode}|{expectedRemapping}", builder.LastBuildOutput);
 		}
 
-		[TestCase ("AndroidR8ObfuscationMode", "unknown", "AndroidR8ObfuscationMode")]
 		[TestCase ("AndroidR8ObfuscationMode", "experimental-rewriting", "not available in this SDK")]
 		[TestCase ("AndroidLinkTool", "d8", "AndroidLinkTool")]
 		[TestCase ("AndroidLinkTool", "", "AndroidLinkTool")]

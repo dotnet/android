@@ -52,10 +52,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[TestCase ("disabled", true, false)]
+		[TestCase ("private-members", false, false)]
 		[TestCase ("runtime-remapping", false, false)]
 		[TestCase ("disabled", true, true)]
+		[TestCase ("private-members", false, true)]
 		[TestCase ("runtime-remapping", false, true)]
-		public void GenerateCommonXamarinConfiguration_OnlyDropsDontObfuscate (string obfuscationMode, bool expectDontObfuscate, bool nativeAot)
+		public void GenerateCommonXamarinConfiguration_RespectsObfuscationMode (string obfuscationMode, bool expectDontObfuscate, bool nativeAot)
 		{
 			var path = Path.GetTempFileName ();
 			try {
@@ -69,14 +71,21 @@ namespace Xamarin.Android.Build.Tests
 
 				var lines = File.ReadAllLines (path);
 				Assert.AreEqual (expectDontObfuscate, lines.Any (l => l.Trim () == "-dontobfuscate"),
-					"-dontobfuscate is the only option that may be dropped.");
+					"Only disabled mode should prevent all obfuscation.");
 				Assert.IsTrue (lines.Any (l => l.Contains ("-keep class net.dot.jni.")),
-					"Every other rule must survive.");
+					"Shared bootstrap rules must survive.");
+				Assert.AreEqual (obfuscationMode == "private-members",
+					lines.Contains ("-keep,allowshrinking,allowoptimization class **"));
+				Assert.AreEqual (obfuscationMode == "runtime-remapping",
+					lines.Contains ("-keepclassmembernames interface * { *; }"),
+					"Remapping-specific rules must not change the existing modes.");
+				CollectionAssert.Contains (lines, "-keep class net.dot.android.ApplicationRegistration { *; }");
 				if (nativeAot) {
-					CollectionAssert.Contains (lines, "-keep class net.dot.android.ApplicationRegistration { *; <init>(...); }");
-					CollectionAssert.Contains (lines, "-keep class mono.android.Runtime { *; }");
-					CollectionAssert.Contains (lines, "-keep class mono.android.GCUserPeer { <init>(); }");
 					CollectionAssert.Contains (lines, "-keep class mono.android.IGCUserPeer { *; }");
+					if (obfuscationMode == "runtime-remapping") {
+						CollectionAssert.Contains (lines, "-keep class mono.android.Runtime { *; }");
+						CollectionAssert.Contains (lines, "-keep class mono.android.GCUserPeer { <init>(); }");
+					}
 				}
 			} finally {
 				File.Delete (path);
@@ -97,6 +106,35 @@ namespace Xamarin.Android.Build.Tests
 			} finally {
 				File.Delete (path);
 			}
+		}
+
+		[Test]
+		public void WritePrivateMemberObfuscationRules ()
+		{
+			using var writer = new StringWriter ();
+			R8.WriteObfuscationRules (writer, "private-members");
+
+			var expected = """
+				-keep,allowshrinking,allowoptimization class **
+				-keepclassmembers,allowshrinking,allowoptimization class ** {
+				   public protected *;
+				}
+				-keep,allowoptimization interface ** {
+				   public protected *;
+				}
+				-keep,allowshrinking class * implements **
+
+				""";
+			Assert.AreEqual (expected.ReplaceLineEndings (System.Environment.NewLine), writer.ToString ());
+		}
+
+		[Test]
+		public void WriteDisabledObfuscationRules ()
+		{
+			using var writer = new StringWriter ();
+			R8.WriteObfuscationRules (writer, "disabled");
+
+			Assert.AreEqual ("-dontobfuscate" + System.Environment.NewLine, writer.ToString ());
 		}
 	}
 }

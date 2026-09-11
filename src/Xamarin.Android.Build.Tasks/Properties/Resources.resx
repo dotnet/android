@@ -967,12 +967,6 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
 {0} - The member the entry describes.
 {1} - The Java signature which could not be converted.</comment>
   </data>
-  <data name="XA4329" xml:space="preserve">
-    <value>Invalid value for {0}: '{1}'. Valid values are: {2}.</value>
-    <comment>{0} - The MSBuild property name.
-{1} - The invalid property value.
-{2} - A comma-separated list of valid literal values. Do not translate these values.</comment>
-  </data>
   <data name="XA4329_RewritingUnavailable" xml:space="preserve">
     <value>AndroidR8ObfuscationMode='experimental-rewriting' is not available in this SDK. Use 'runtime-remapping' or 'disabled'.</value>
     <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, experimental-rewriting, runtime-remapping, disabled, SDK.</comment>
@@ -1237,6 +1231,11 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
     <value>The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'. Set one property to 'false'.</value>
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
+  <data name="XA1050" xml:space="preserve">
+    <value>The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value of '{0}'. Valid values are 'disabled', 'private-members', 'runtime-remapping', and 'experimental-rewriting'.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members, runtime-remapping, experimental-rewriting.
+{0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>Java dependency '{0}' is not satisfied.</value>
     <comment>The following are literal names and should not be translated: Java.
@@ -1377,6 +1376,11 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
     <comment>The following are literal names and should not be translated: Java, [ExportParameter].
 {0} - Fully-qualified managed member name
 {1} - Managed parameter or return type</comment>
+  </data>
+  <data name="XA4264" xml:space="preserve">
+    <value>Java callable wrapper XML file '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: Java, XML.
+{0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Command '{0}' failed.\n{1}</value>

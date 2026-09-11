@@ -1117,21 +1117,26 @@ documentation on [D8 and R8][d8-r8].
 
 ## AndroidR8ObfuscationMode
 
-An enum-style property that selects how R8 obfuscates Java names. The default is
-`disabled`; selecting `runtime-remapping` explicitly opts the application into
-the experimental runtime-remapping implementation.
+An enum-style property that specifies how `r8` obfuscates Java names when
+[`$(AndroidLinkTool)`](#androidlinktool) is `r8`. Supported values are:
 
 | Value | Behavior |
 |---|---|
-| `disabled` | Disables obfuscation and preserves Java names. |
+| `private-members` | Preserves Java class and interface names and public or protected member names. Private and package-private members can be obfuscated, and R8 optimization is enabled. |
+| `disabled` | Disables obfuscation, preserves all Java names, and uses the non-optimizing Android R8 defaults. |
 | `runtime-remapping` | Keeps managed assemblies unchanged and translates JNI type/member lookups using generated native remapping tables. Available for trimmed CoreCLR and NativeAOT applications. |
 | `experimental-rewriting` | Reserved for the separate managed-assembly rewriting implementation. This SDK does not yet include its build pipeline; selecting it reports [XA4329](../messages/xa4329.md). |
+
+This property does not disable R8 code shrinking. It was introduced in a .NET 10
+servicing release and defaults to `disabled` in .NET 10 and to `private-members`
+in .NET 11 and later. The experimental `runtime-remapping` value was added in
+.NET 11 and must be selected explicitly.
 
 The `runtime-remapping` value requires `AndroidLinkTool=r8`,
 `AndroidTypeMapImplementation=trimmable`, `PublishTrimmed=true`, and either the
 CoreCLR or NativeAOT runtime. Explicit incompatible settings produce
 [XA4329](../messages/xa4329.md) rather than being silently changed. This
-property has no effect on library projects.
+runtime-remapping mode has no effect on library projects.
 
 For example:
 
@@ -1153,9 +1158,7 @@ object and statically links the table afterward.
 Runtime-generated JNI names may require explicit remapping or keep rules.
 Conservative keep rules still protect native callbacks, bootstrap code, and
 resource-referenced names. No mode falls back to another mode; unrecognized
-values report XA4329.
-
-Added in .NET 11.
+values report [XA1050](../messages/xa1050.md) when R8 is enabled.
 
 ## AndroidResgenExtraArgs
 

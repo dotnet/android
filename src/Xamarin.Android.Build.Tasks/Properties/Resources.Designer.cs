@@ -1024,6 +1024,15 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA1049", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;AndroidR8ObfuscationMode&apos; MSBuild property has an invalid value of &apos;{0}&apos;. Valid values are &apos;disabled&apos;, &apos;private-members&apos;, &apos;runtime-remapping&apos;, and &apos;experimental-rewriting&apos;..
+        /// </summary>
+        public static string XA1050 {
+            get {
+                return ResourceManager.GetString("XA1050", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released..
@@ -1715,6 +1724,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Java callable wrapper XML file &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4264 {
+            get {
+                return ResourceManager.GetString("XA4264", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
         /// </summary>
         public static string XA4300 {
@@ -2127,15 +2145,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4328_UnsupportedSignature {
             get {
                 return ResourceManager.GetString("XA4328_UnsupportedSignature", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid value for {0}: &apos;{1}&apos;. Valid values are: {2}..
-        /// </summary>
-        public static string XA4329 {
-            get {
-                return ResourceManager.GetString("XA4329", resourceCulture);
             }
         }
 

@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
+    <RuntimeHostConfigurationOption Include="IncludeCategories" Value="$(IncludeCategories)" Condition=" '$(IncludeCategories)' != '' " />
   </ItemGroup>
 
   <ItemGroup>

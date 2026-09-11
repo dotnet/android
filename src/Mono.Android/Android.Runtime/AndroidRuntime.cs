@@ -97,6 +97,7 @@ namespace Android.Runtime {
 				je  = JavaProxyThrowable.Create (pendingException);
 			}
 			JniEnvironment.Exceptions.Throw (je.PeerReference);
+			GC.KeepAlive (je);
 		}
 	}
 

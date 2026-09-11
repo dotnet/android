@@ -184,6 +184,16 @@ stages:
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-NativeAOT
 
+    # Process-wide JNI reference counts need a fresh process without unrelated JcwGen tests.
+    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        testName: Xamarin.Android.JcwGen_Tests-JniReferenceLeaks
+        project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
+        extraBuildArgs: -p:IncludeCategories=JniReferenceLeak
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.JcwGen_Tests-Signed.apk
+        artifactFolder: $(DotNetTargetFramework)-JcwGen-JniReferenceLeaks
+
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)

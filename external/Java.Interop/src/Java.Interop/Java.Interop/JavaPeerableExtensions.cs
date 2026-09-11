@@ -12,7 +12,10 @@ namespace Java.Interop {
 		public static string? GetJniTypeName (this IJavaPeerable self)
 		{
 			JniPeerMembers.AssertSelf (self);
-			return JniEnvironment.Types.GetJniTypeNameFromInstance (self.PeerReference);
+			var name = JniEnvironment.Types.GetJniTypeNameFromInstance (self.PeerReference);
+			// PeerReference is borrowed and does not keep its managed owner alive.
+			GC.KeepAlive (self);
+			return name;
 		}
 
 		/// <include file="../Documentation/Java.Interop/JavaPeerableExtensions.xml" path="/docs/member[@name='M:TryJavaCast']/*" />
@@ -42,10 +45,12 @@ namespace Java.Interop {
 			}
 
 			var r = self.PeerReference;
-			return JniEnvironment.Runtime.ValueManager.CreatePeer (
+			var peer = JniEnvironment.Runtime.ValueManager.CreatePeer (
 					ref r, JniObjectReferenceOptions.Copy,
 					targetType: typeof (TResult))
 				as TResult;
+			GC.KeepAlive (self);
+			return peer;
 		}
 	}
 }

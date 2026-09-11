@@ -1261,25 +1261,25 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - Invalid, unsupported, reserved, or restricted Java identifier</comment>
   </data>
   <data name="XA4259" xml:space="preserve">
-    <value>Type '{0}' has multiple managed constructors that map to the same Java Native Interface (JNI) signature '{1}'. Change the constructor parameter types so each constructor has a unique JNI signature.</value>
+    <value>类型 "{0}" 有多个托管构造函数映射到相同的 Java Native Interface (JNI) 签名 "{1}"。请更改构造函数参数类型，使每个构造函数都有唯一的 JNI 签名。</value>
     <comment>The following terms should not be translated: Java Native Interface, JNI.
 {0} - Fully-qualified managed type name
 {1} - Colliding JNI constructor signature</comment>
   </data>
   <data name="XA4260" xml:space="preserve">
-    <value>Type '{0}' has a constructor parameter type '{1}' that cannot be represented in a Java constructor. Remove the constructor or change the parameter to a supported Java type.</value>
+    <value>类型 '{0}' 具有无法在 Java 构造函数中表示的构造函数参数类型 '{1}'。删除构造函数或将参数更改为支持的 Java 类型。</value>
     <comment>The following term should not be translated: Java.
 {0} - Fully-qualified managed type name
 {1} - Unsupported managed constructor parameter type</comment>
   </data>
   <data name="XA4261" xml:space="preserve">
-    <value>Type '{0}' has Java constructor signature '{1}', but its base type does not expose a compatible Java constructor. Add a compatible base constructor or remove the derived constructor.</value>
+    <value>类型 "{0}" 具有 Java 构造函数签名 "{1}"，但其基类型没有公开兼容的 Java 构造函数。请添加兼容的基类构造函数或移除派生构造函数。</value>
     <comment>The following term should not be translated: Java.
 {0} - Fully-qualified managed type name
 {1} - JNI signature of the derived constructor</comment>
   </data>
   <data name="XA4262" xml:space="preserve">
-    <value>Type '{0}' has an invalid [Export] SuperArgumentsString value '{1}'. The value references a constructor parameter that does not exist.</value>
+    <value>类型 '{0}' 具有无效的 [Export] SuperArgumentsString 值 '{1}'。该值引用的构造函数参数不存在。</value>
     <comment>The following terms should not be translated: Export, SuperArgumentsString.
 {0} - Fully-qualified managed type name
 {1} - Invalid SuperArgumentsString value</comment>
