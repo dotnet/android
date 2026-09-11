@@ -1,13 +1,18 @@
 [CmdletBinding()]
 param (
+	[Parameter(Mandatory)]
+	[ValidateNotNullOrEmpty()]
 	[string] $DotNetPath,
+	[Parameter(Mandatory)]
+	[ValidateNotNullOrEmpty()]
 	[string] $Project,
+	[Parameter(Mandatory)]
+	[ValidateNotNullOrEmpty()]
 	[string] $NuGetConfig,
 	[string] $BinaryLogPath,
 	[int] $MaxAttempts = 4,
 	[int] $InitialRetryDelaySeconds = 15,
-	[int] $MaxRetryDelaySeconds = 60,
-	[switch] $DefineOnly
+	[int] $MaxRetryDelaySeconds = 60
 )
 
 Set-StrictMode -Version 3.0
@@ -67,10 +72,13 @@ function Invoke-MauiTemplateRestore
 {
 	param (
 		[Parameter(Mandatory)]
+		[ValidateNotNullOrEmpty()]
 		[string] $DotNetPath,
 		[Parameter(Mandatory)]
+		[ValidateNotNullOrEmpty()]
 		[string] $Project,
 		[Parameter(Mandatory)]
+		[ValidateNotNullOrEmpty()]
 		[string] $NuGetConfig,
 		[string] $BinaryLogPath,
 		[int] $MaxAttempts = 4,
@@ -176,16 +184,14 @@ function Invoke-MauiTemplateRestore
 	return $lastExitCode
 }
 
-if (-not $DefineOnly) {
-	$exitCode = Invoke-MauiTemplateRestore `
-		-DotNetPath $DotNetPath `
-		-Project $Project `
-		-NuGetConfig $NuGetConfig `
-		-BinaryLogPath $BinaryLogPath `
-		-MaxAttempts $MaxAttempts `
-		-InitialRetryDelaySeconds $InitialRetryDelaySeconds `
-		-MaxRetryDelaySeconds $MaxRetryDelaySeconds
-	if ($exitCode -ne 0) {
-		throw "MAUI template restore failed with exit code $exitCode."
-	}
+$exitCode = Invoke-MauiTemplateRestore `
+	-DotNetPath $DotNetPath `
+	-Project $Project `
+	-NuGetConfig $NuGetConfig `
+	-BinaryLogPath $BinaryLogPath `
+	-MaxAttempts $MaxAttempts `
+	-InitialRetryDelaySeconds $InitialRetryDelaySeconds `
+	-MaxRetryDelaySeconds $MaxRetryDelaySeconds
+if ($exitCode -ne 0) {
+	throw "MAUI template restore failed with exit code $exitCode."
 }
