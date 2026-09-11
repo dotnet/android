@@ -187,8 +187,7 @@ namespace Java.Interop {
 				PeerReference,
 				methods,
 				methods.Length,
-				this,
-				static type => type.RegisterWithRuntime ());
+				this);
 		}
 
 		public void UnregisterNativeMethods ()

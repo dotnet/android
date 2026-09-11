@@ -225,11 +225,11 @@ namespace Java.Interop
 			[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
 			public static unsafe void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods, int numMethods)
 			{
-				RegisterNatives<object?> (type, methods, numMethods, null, null);
+				RegisterNatives (type, methods, numMethods, null);
 			}
 
 			[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
-			internal static unsafe void RegisterNatives<TState> (JniObjectReference type, JniNativeMethodRegistration [] methods, int numMethods, TState state, Action<TState>? beforeJniCall)
+			internal static unsafe void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods, int numMethods, JniType? owner)
 			{
 				if ((numMethods < 0) ||
 						(numMethods > (methods?.Length ?? 0))) {
@@ -279,7 +279,7 @@ namespace Java.Interop
 						unmanagedStrings [i * 2 + 1] = sig;
 						natives [i] = new JniNativeMethod ((byte*) name, (byte*) sig, Marshal.GetFunctionPointerForDelegate (m.Marshaler));
 					}
-					beforeJniCall?.Invoke (state);
+					owner?.RegisterWithRuntime ();
 					RegisterNatives (type, natives);
 					// Keep the Marshaler delegates alive at least until JNI has consumed the function pointers.
 					GC.KeepAlive (methods);
