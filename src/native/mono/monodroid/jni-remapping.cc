@@ -39,6 +39,25 @@ JniRemapping::lookup_replacement_type (const char *jniSimpleReference) noexcept
 	return nullptr;
 }
 
+const char*
+JniRemapping::lookup_reverse_type (const char *jniSimpleReference) noexcept
+{
+	if (jni_remapping_reverse_type_replacement_count == 0 || jniSimpleReference == nullptr || *jniSimpleReference == '\0') {
+		return nullptr;
+	}
+
+	size_t ref_len = strlen (jniSimpleReference);
+	for (size_t i = 0uz; i < jni_remapping_reverse_type_replacement_count; i++) {
+		JniRemappingTypeReplacementEntry const& entry = jni_remapping_reverse_type_replacements[i];
+
+		if (equal (entry.name, jniSimpleReference, ref_len)) {
+			return entry.replacement;
+		}
+	}
+
+	return nullptr;
+}
+
 const JniRemappingReplacementMethod*
 JniRemapping::lookup_replacement_method_info (const char *jniSourceType, const char *jniMethodName, const char *jniMethodSignature) noexcept
 {
@@ -91,6 +110,59 @@ JniRemapping::lookup_replacement_method_info (const char *jniSourceType, const c
 
 		if (equal (entry.signature, jniMethodSignature, static_cast<size_t>(sig_end - jniMethodSignature) + 1uz)) {
 			return &type->methods[i].replacement;
+		}
+	}
+
+	return nullptr;
+}
+
+const JniRemappingReplacementField*
+JniRemapping::lookup_replacement_field_info (const char *jniSourceType, const char *jniFieldName, const char *jniFieldSignature) noexcept
+{
+	if (jni_remapping_field_replacement_index_count == 0 ||
+	    jniSourceType == nullptr || *jniSourceType == '\0' ||
+	    jniFieldName == nullptr || *jniFieldName == '\0') {
+		return nullptr;
+	}
+
+	size_t source_type_len = strlen (jniSourceType);
+
+	const JniRemappingIndexFieldTypeEntry *type = nullptr;
+	for (size_t i = 0uz; i < jni_remapping_field_replacement_index_count; i++) {
+		JniRemappingIndexFieldTypeEntry const& entry = jni_remapping_field_replacement_index[i];
+
+		if (!equal (entry.name, jniSourceType, source_type_len)) {
+			continue;
+		}
+
+		type = &jni_remapping_field_replacement_index[i];
+		break;
+	}
+
+	if (type == nullptr || type->field_count == 0 || type->fields == nullptr) {
+		return nullptr;
+	}
+
+	size_t field_name_len = strlen (jniFieldName);
+	size_t signature_len = jniFieldSignature == nullptr ? 0uz : strlen (jniFieldSignature);
+
+	if (signature_len > 0uz) {
+		for (size_t i = 0uz; i < type->field_count; i++) {
+			JniRemappingIndexFieldEntry const& entry = type->fields[i];
+
+			if (equal (entry.name, jniFieldName, field_name_len) &&
+			    entry.signature.length != 0 &&
+			    equal (entry.signature, jniFieldSignature, signature_len)) {
+				return &entry.replacement;
+			}
+		}
+	}
+
+	for (size_t i = 0uz; i < type->field_count; i++) {
+		JniRemappingIndexFieldEntry const& entry = type->fields[i];
+
+		if (equal (entry.name, jniFieldName, field_name_len) && entry.signature.length == 0) {
+			return &entry.replacement;
 		}
 	}
 

@@ -289,3 +289,17 @@ _monodroid_lookup_replacement_method_info (const char *jniSourceType, const char
 	return JniRemapping::lookup_replacement_method_info (jniSourceType, jniMethodName, jniMethodSignature);
 }
 
+const char*
+_monodroid_lookup_reverse_type (const char *jniSimpleReference)
+{
+	return JniRemapping::lookup_reverse_type (jniSimpleReference);
+}
+
+const JniRemappingReplacementField*
+_monodroid_lookup_replacement_field_info (
+	const char *jniSourceType,
+	const char *jniFieldName,
+	const char *jniFieldSignature)
+{
+	return JniRemapping::lookup_replacement_field_info (jniSourceType, jniFieldName, jniFieldSignature);
+}

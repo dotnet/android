@@ -24,12 +24,16 @@ namespace Java.Interop
 							declaringType.FullName));
 
 			DeclaringType   = declaringType;
-			jniPeerType     = new JniType (info.Name);
+			targetJniTypeName   = info.Name;
+			jniPeerType     = new JniType (targetJniTypeName);
 			jniPeerType.RegisterWithRuntime ();
 		}
 
 		JniPeerMembers?                                     members;
 		JniType?                                            jniPeerType;
+		readonly string?                                    targetJniTypeName;
+
+		string TargetJniTypeName => targetJniTypeName ?? Members.JniPeerTypeName;
 
 		internal    JniPeerMembers                          Members => members ?? throw new InvalidOperationException ();
 
@@ -60,7 +64,23 @@ namespace Java.Interop
 			if (signature == null)
 				throw new ArgumentNullException (nameof (signature));
 			return InstanceMethods.GetOrAdd (signature, static (member, methods) =>
-					methods.JniPeerType.GetConstructor (member.AsSpan ()), this);
+					methods.GetConstructorCore (member), this);
+		}
+
+		JniMethodInfo GetConstructorCore (string signature)
+		{
+			// Constructors are never renamed, but their parameter types can be, so the descriptor
+			// still has to be translated.
+			var newMethod = JniPeerMembers.GetReplacementMethodInfo (TargetJniTypeName, DeclaringType, "<init>", signature, searchBaseTypes: false);
+			var targetSignature = newMethod?.TargetJniMethodSignature;
+			if (targetSignature != null && !string.Equals (targetSignature, signature, StringComparison.Ordinal)) {
+				var typeName = newMethod?.TargetJniType ?? TargetJniTypeName;
+				using var t = new JniType (typeName);
+				if (t.TryGetInstanceMethod ("<init>", targetSignature, out var m)) {
+					return m;
+				}
+			}
+			return JniPeerType.GetConstructor (signature.AsSpan ());
 		}
 
 		internal JniInstanceMethods GetConstructorsForType (Type declaringType)
@@ -105,9 +125,9 @@ namespace Java.Interop
 		JniMethodInfo GetMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
 		{
 			var m              = (JniMethodInfo?) null;
-			var newMethod      = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (Members.JniPeerTypeName, method, signature);
+			var newMethod      = JniPeerMembers.GetReplacementMethodInfo (TargetJniTypeName, DeclaringType, method, signature);
 			if (newMethod.HasValue) {
-				var typeName   = newMethod.Value.TargetJniType ?? Members.JniPeerTypeName;
+				var typeName   = newMethod.Value.TargetJniType ?? TargetJniTypeName;
 				var methodName = newMethod.Value.TargetJniMethodName is string name ? name.AsSpan () : method;
 				var methodSig  = newMethod.Value.TargetJniMethodSignature is string sig ? sig.AsSpan () : signature;
 
@@ -121,7 +141,7 @@ namespace Java.Interop
 				if (t.TryGetInstanceMethod (methodName, methodSig, out m)) {
 					return m;
 				}
-				Console.Error.WriteLine ($"warning: For declared method `{Members.JniPeerTypeName}.{method}.{signature}`, could not find requested method `{typeName}.{methodName}.{methodSig}`!");
+				Console.Error.WriteLine ($"warning: For declared method `{TargetJniTypeName}.{method}.{signature}`, could not find requested method `{typeName}.{methodName}.{methodSig}`!");
 			}
 			return JniPeerType.GetInstanceMethod (method, signature);
 		}

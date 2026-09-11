@@ -271,5 +271,58 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			}
 			returnType = JniTypeTokenToJavaSource (jniReturnType, returnArrayDepth);
 		}
+
+		/// <summary>
+		/// Converts a Java *source* form type as used in mapping.txt member lines ("int",
+		/// "java.lang.String[]") to its JNI type token ("I", "[Ljava/lang/String;").
+		/// </summary>
+		public static string JavaSourceTypeToJniTypeToken (string javaSourceType)
+		{
+			string trimmed = javaSourceType.Trim ();
+			int arrayDepth = 0;
+			int elementEnd = trimmed.Length;
+			while (elementEnd >= 2 &&
+					trimmed [elementEnd - 1] == ']' &&
+					trimmed [elementEnd - 2] == '[') {
+				arrayDepth++;
+				elementEnd -= 2;
+			}
+
+			string elementType = trimmed.Substring (0, elementEnd).Trim ();
+			if (elementType.Length == 0) {
+				throw new ArgumentException ($"Malformed Java source type '{javaSourceType}'.", nameof (javaSourceType));
+			}
+
+			string elementToken = elementType switch {
+				"void" => "V",
+				"boolean" => "Z",
+				"byte" => "B",
+				"char" => "C",
+				"short" => "S",
+				"int" => "I",
+				"long" => "J",
+				"float" => "F",
+				"double" => "D",
+				_ => "L" + elementType.Replace ('.', '/') + ";",
+			};
+
+			return arrayDepth == 0 ? elementToken : new string ('[', arrayDepth) + elementToken;
+		}
+
+		/// <summary>
+		/// Builds a JNI method descriptor from Java *source* form parameter and return types,
+		/// e.g. (["android.os.Bundle", "int"], "void") -&gt; "(Landroid/os/Bundle;I)V".
+		/// </summary>
+		public static string JavaSourceTypesToMethodDescriptor (IReadOnlyList<string> javaParameterTypes, string javaReturnType)
+		{
+			var descriptor = new StringBuilder ();
+			descriptor.Append ('(');
+			foreach (string javaParameterType in javaParameterTypes) {
+				descriptor.Append (JavaSourceTypeToJniTypeToken (javaParameterType));
+			}
+			descriptor.Append (')');
+			descriptor.Append (JavaSourceTypeToJniTypeToken (javaReturnType));
+			return descriptor.ToString ();
+		}
 	}
 }

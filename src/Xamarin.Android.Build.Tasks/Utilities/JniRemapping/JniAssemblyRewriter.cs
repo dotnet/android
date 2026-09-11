@@ -71,5 +71,11 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			FieldRvaTable fieldRvaTable = FieldRvaTable.Read (peReader, reader);
 			new JniRewritePlanner (peReader, reader, mapping.CreateReverseMapping (), fieldRvaTable, log).CreatePlan ();
 		}
+
+		public static void ScanAssembly (PEReader peReader, MetadataReader reader, R8Mapping mapping, TaskLoggingHelper log)
+		{
+			FieldRvaTable fieldRvaTable = FieldRvaTable.Read (peReader, reader);
+			new JniRewritePlanner (peReader, reader, mapping, fieldRvaTable, log).CreatePlan ();
+		}
 	}
 }

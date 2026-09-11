@@ -81,8 +81,6 @@ properties that determine build ordering.
       $(AfterGenerateAndroidManifest);
       _ReadAndroidManifest;
       _CompileJava;
-      _CreateApplicationSharedLibraries;
-      $(_NativeRuntimeLinking);
       _CompileDex;
       $(_AfterCompileDex);
       _CreateBaseApk;

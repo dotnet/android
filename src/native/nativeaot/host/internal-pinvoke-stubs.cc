@@ -32,19 +32,6 @@ bool clr_typemap_java_to_managed (
 	pinvoke_unreachable ();
 }
 
-const char* _monodroid_lookup_replacement_type ([[maybe_unused]] const char *jniSimpleReference)
-{
-	pinvoke_unreachable ();
-}
-
-const JniRemappingReplacementMethod* _monodroid_lookup_replacement_method_info (
-	[[maybe_unused]] const char *jniSourceType,
-	[[maybe_unused]] const char *jniMethodName,
-	[[maybe_unused]] const char *jniMethodSignature)
-{
-	pinvoke_unreachable ();
-}
-
 managed_timing_sequence* monodroid_timing_start ([[maybe_unused]] const char *message)
 {
 	pinvoke_unreachable ();

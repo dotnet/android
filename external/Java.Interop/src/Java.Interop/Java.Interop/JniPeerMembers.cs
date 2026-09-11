@@ -14,17 +14,19 @@ namespace Java.Interop {
 		private bool isInterface;
 
 		public JniPeerMembers (string jniPeerTypeName, Type managedPeerType, bool isInterface)
-			: this (jniPeerTypeName = GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: true, isInterface: isInterface)
+			: this (GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: true, isInterface: isInterface)
 		{
 		}
 
 		public JniPeerMembers (string jniPeerTypeName, Type managedPeerType)
-			: this (jniPeerTypeName = GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: true, isInterface: false)
+			: this (GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: true, isInterface: false)
 		{
 		}
 
 		static string GetReplacementType (string jniPeerTypeName)
 		{
+			if (jniPeerTypeName == null)
+				throw new ArgumentNullException (nameof (jniPeerTypeName));
 			var replacement = JniEnvironment.Runtime.TypeManager.GetReplacementType (jniPeerTypeName);
 			if (replacement != null)
 				return replacement;
@@ -67,7 +69,7 @@ namespace Java.Interop {
 
 		static JniPeerMembers CreatePeerMembers (string jniPeerTypeName, Type managedPeerType)
 		{
-			return new JniPeerMembers (jniPeerTypeName, managedPeerType, checkManagedPeerType: false);
+			return new JniPeerMembers (GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: false);
 		}
 
 		JniType?            jniPeerType;
@@ -77,7 +79,11 @@ namespace Java.Interop {
 		JniStaticFields     staticFields;
 
 		public      Type        ManagedPeerType {get; private set;}
+
+		/// <summary>The JNI type name used to look the peer type up at runtime. This is the
+		/// remapped name when the type was renamed in the packaged application.</summary>
 		public      string      JniPeerTypeName {get; private set;}
+
 		public      JniType     JniPeerType {
 			get {
 				var t = JniType.GetCachedJniType (ref jniPeerType, JniPeerTypeName);
@@ -165,6 +171,60 @@ namespace Java.Interop {
 		protected virtual JniPeerMembers GetPeerMembers (IJavaPeerable value)
 		{
 			return isInterface ? this : value.JniPeerMembers;
+		}
+
+		// Member keys use the replaced type name but retain the managed member name and signature.
+		internal static JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (
+			string jniTypeName,
+			Type managedPeerType,
+			ReadOnlySpan<char> method,
+			ReadOnlySpan<char> signature,
+			bool searchBaseTypes = true)
+		{
+			var typeManager = JniEnvironment.Runtime.TypeManager;
+			var info        = typeManager.GetReplacementMethodInfo (jniTypeName, method, signature);
+			if (info == null && searchBaseTypes) {
+				for (Type? baseType = managedPeerType.BaseType; baseType != null; baseType = baseType.BaseType) {
+					var baseSignature = typeManager.GetTypeSignature (baseType);
+					string? effectiveBaseType = baseSignature.SimpleReference;
+					if (effectiveBaseType == null) {
+						continue;
+					}
+					info = typeManager.GetReplacementMethodInfo (effectiveBaseType, method, signature);
+					if (info != null) {
+						break;
+					}
+				}
+			}
+			return info;
+		}
+
+		internal static JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfo (
+			string jniTypeName,
+			ReadOnlySpan<char> field,
+			ReadOnlySpan<char> signature)
+		{
+			return JniEnvironment.Runtime.TypeManager.GetReplacementFieldInfo (jniTypeName, field, signature);
+		}
+
+		internal static JniRuntime.ReplacementFieldInfo? GetBaseReplacementFieldInfo (
+			Type managedPeerType,
+			ReadOnlySpan<char> field,
+			ReadOnlySpan<char> signature)
+		{
+			var typeManager = JniEnvironment.Runtime.TypeManager;
+			for (Type? baseType = managedPeerType.BaseType; baseType != null; baseType = baseType.BaseType) {
+				var baseSignature = typeManager.GetTypeSignature (baseType);
+				string? effectiveBaseType = baseSignature.SimpleReference;
+				if (effectiveBaseType == null) {
+					continue;
+				}
+				var info = typeManager.GetReplacementFieldInfo (effectiveBaseType, field, signature);
+				if (info != null) {
+					return info;
+				}
+			}
+			return null;
 		}
 
 		internal static void AssertSelf (IJavaPeerable self)

@@ -1702,7 +1702,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateEmptyAndroidRemapNativeCode"
         DependsOnTargets="_PrepareAndroidRemapNativeAssemblySources"
-        Condition=" '@(_AndroidRemapMembers->Count())' == '0' "
+        Condition=" '@(_AndroidRemapMembers->Count())' == '0' and '$(_AndroidR8RuntimeRemappingEnabled)' != 'true' "
         Inputs="$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
         Outputs="@(_AndroidRemapAssemblySource)">
   <GenerateJniRemappingNativeCode
@@ -1712,6 +1712,11 @@ because xbuild doesn't support framework reference assemblies.
    />
    <Touch Files="@(_AndroidRemapAssemblySource)" />
 </Target>
+
+<!-- MAM assets still precede resource packaging. R8 XML is only a late native-link input. -->
+<Target Name="_AndroidCollectRemapsBeforeR8"
+    Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' "
+    DependsOnTargets="_ConvertAndroidMamMappingFileToXml;_CollectAndroidRemapMembers" />
 
 <PropertyGroup>
   <_GenerateAndroidRemapNativeCodeDependsOn>
@@ -1724,7 +1729,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateAndroidRemapNativeCode"
         DependsOnTargets="$(_GenerateAndroidRemapNativeCodeDependsOn)"
-        Condition=" '@(_AndroidRemapMembers->Count())' != '0' "
+        Condition=" '$(_AndroidRuntime)' != 'NativeAOT' and '@(_AndroidRemapMembers->Count())' != '0' and '$(_AndroidR8RuntimeRemappingEnabled)' != 'true' "
         Inputs="@(_GeneratePackageManagerJavaInputs);$(_XARemapMembersFilePath)"
         Outputs="$(_AndroidStampDirectory)_GenerateAndroidRemapNativeCode.stamp">
   <GenerateJniRemappingNativeCode
@@ -1758,6 +1763,7 @@ because xbuild doesn't support framework reference assemblies.
     _PrepareAssemblies;
     _PrepareEnvironmentAssemblySources;
     _GenerateEnvironmentFiles;
+    _AndroidCollectRemapsBeforeR8;
     _GenerateAndroidRemapNativeCode;
     UpdateAndroidAssets;
     _GenerateEmptyAndroidRemapNativeCode;
@@ -1871,6 +1877,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CreateBaseApkInputs">
   <PropertyGroup>
+    <_Aapt2ProguardRules Condition=" '$(AndroidLinkTool)' != '' ">$(IntermediateOutputPath)aapt_rules.txt</_Aapt2ProguardRules>
     <_CreateBaseApkInputs>
       $(_CreateBaseApkInputs);
       @(_AndroidMSBuildAllProjects);
@@ -1881,6 +1888,10 @@ because xbuild doesn't support framework reference assemblies.
       $(_AndroidBuildPropertiesCache);
     </_CreateBaseApkInputs>
   </PropertyGroup>
+  <!-- The packaged resources already track generation time. Invalidate them when rules
+       are missing rather than touching unchanged rules and unnecessarily rerunning R8. -->
+  <Delete Files="$(_PackagedResources)"
+      Condition=" '$(_Aapt2ProguardRules)' != '' and !Exists('$(_Aapt2ProguardRules)') " />
 </Target>
 
 <Target Name="_PrepareCreateBaseApk"
@@ -1950,6 +1961,12 @@ because xbuild doesn't support framework reference assemblies.
     <FileWrites Include="$(_PackagedResources)" />
     <FileWrites Include="$(_GeneratedPrimaryJavaResgenFile)" />
   </ItemGroup>
+  <!-- Keep these items in the incremental parent, not the skipped CallTarget child. -->
+  <ItemGroup Condition=" '$(_Aapt2ProguardRules)' != '' ">
+    <ProguardConfiguration Include="$(_Aapt2ProguardRules)" AndroidGeneratedProguardConfiguration="true" />
+    <FileWrites Include="$(_Aapt2ProguardRules)" />
+    <FileWrites Include="$(IntermediateOutputPath)android\*\aapt_rules.txt" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_FindJavaStubFiles" DependsOnTargets="_GenerateJavaStubs;_ManifestMerger;_ConvertCustomView;$(_AfterConvertCustomView);_GenerateEnvironmentFiles;">
@@ -1992,12 +2009,12 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_CompileToDalvikDependsOnTargets>
 		_CompileJava;
-		_CreateApplicationSharedLibraries;
-		$(_NativeRuntimeLinking);
+		_AndroidLinkBeforeR8;
 		$(_BeforeCompileToDalvik);
 		_GetLibraryImports;
 		_SetProguardMappingFileProperty;
 		_CalculateProguardConfigurationFiles;
+		_AndroidPrepareR8JniCompileToDalvikInputs;
 	</_CompileToDalvikDependsOnTargets>
 	<_CompileToDalvikInputs>
 		@(_AndroidMSBuildAllProjects)
@@ -2013,16 +2030,53 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_CompileDexDependsOn>
 		_CompileToDalvik;
+		_AndroidLinkAfterR8;
 	</_CompileDexDependsOn>
 </PropertyGroup>
+
+<Target Name="_AndroidLinkBeforeR8"
+    Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' != 'true' "
+    DependsOnTargets="_CreateApplicationSharedLibraries;$(_NativeRuntimeLinking)" />
+
+<Target Name="_AndroidLinkAfterR8"
+    Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidRuntime)' == 'CoreCLR' "
+    DependsOnTargets="_AndroidGenerateR8JniRemappingNativeCode;_CreateApplicationSharedLibraries;$(_NativeRuntimeLinking)" />
 
 <Target Name="_SetProguardMappingFileProperty">
 	<PropertyGroup>
 		<AndroidProguardMappingFile Condition=" '$(AndroidLinkTool)' == 'r8' And '$(AndroidCreateProguardMappingFile)' == 'True' ">$(OutputPath)mapping.txt</AndroidProguardMappingFile>
+		<_AndroidR8ProguardMappingFileOutput>$(AndroidProguardMappingFile)</_AndroidR8ProguardMappingFileOutput>
+		<!-- The JNI runtime remapping always needs the final mapping, so R8 writes one to the
+		     intermediate directory even when the user did not ask for a mapping file. -->
+		<_AndroidR8ProguardMappingFileOutput Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' And '$(_AndroidR8ProguardMappingFileOutput)' == '' ">$(IntermediateOutputPath)r8-jni-final-mapping.txt</_AndroidR8ProguardMappingFileOutput>
+		<_AndroidR8JniMappingFile Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' ">$([System.IO.Path]::GetFullPath('$(_AndroidR8ProguardMappingFileOutput)'))</_AndroidR8JniMappingFile>
 	</PropertyGroup>
 </Target>
 
+<Target Name="_AndroidPrepareR8JniCompileToDalvikInputs"
+		Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' ">
+	<PropertyGroup>
+		<_CompileToDalvikInputs>
+			$(_CompileToDalvikInputs)
+			;$(_ProguardProjectConfiguration)
+			;@(ProguardConfiguration)
+			;$(AndroidR8JarPath)
+		</_CompileToDalvikInputs>
+	</PropertyGroup>
+</Target>
+
+<!-- A generation stamp preserves unchanged keep-rule timestamps without rerunning
+     the generator on every build. Recover the rules if only their file was deleted. -->
+<Target Name="_AndroidInvalidateProguardConfigurationStamp"
+		Condition=" '$(_ProguardProjectConfiguration)' != '' and !Exists('$(_ProguardProjectConfiguration)') ">
+	<Delete Files="$(_ProguardProjectConfiguration).stamp" />
+</Target>
+
 <Target Name="_CalculateProguardConfigurationFiles">
+  <!-- Rule generation can run in a per-RID build; also track its outputs in the outer build. -->
+  <ItemGroup Condition=" '$(_ProguardProjectConfiguration)' != '' and Exists('$(_ProguardProjectConfiguration).stamp') ">
+    <FileWrites Include="$(_ProguardProjectConfiguration);$(_ProguardProjectConfiguration).stamp" />
+  </ItemGroup>
   <!-- Support the $(ProguardConfigFiles) property to keep backwards compatibility -->
   <ItemGroup Condition=" '$(ProguardConfigFiles)' != '' ">
     <_ProguardConfiguration Include="$(ProguardConfigFiles)" />
@@ -3079,12 +3133,15 @@ because xbuild doesn't support framework reference assemblies.
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Designer.targets" />
 
 <Target Name="_ValidateAndroidR8ObfuscationMode"
-    Condition=" '$(AndroidLinkTool)' == 'r8' "
     BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
   <AndroidError Code="XA1050"
       ResourceName="XA1050"
       FormatArguments="$(AndroidR8ObfuscationMode)"
-      Condition=" '$(AndroidR8ObfuscationMode)' != 'disabled' And '$(AndroidR8ObfuscationMode)' != 'private-members' " />
+      Condition=" '$(AndroidLinkTool)' == 'r8' and '$(AndroidR8ObfuscationMode)' != 'disabled' and '$(AndroidR8ObfuscationMode)' != 'private-members' and '$(AndroidR8ObfuscationMode)' != 'runtime-remapping' and '$(AndroidR8ObfuscationMode)' != 'experimental-rewriting' " />
+  <AndroidError Code="XA4329" ResourceName="XA4329_RewritingUnavailable"
+      Condition=" '$(AndroidApplication)' == 'true' and '$(AndroidR8ObfuscationMode)' == 'experimental-rewriting' " />
+  <CallTarget Targets="_ValidateAndroidR8RuntimeRemapping"
+      Condition=" '$(AndroidApplication)' == 'true' and '$(AndroidR8ObfuscationMode)' == 'runtime-remapping' " />
 </Target>
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets"
@@ -3101,6 +3158,27 @@ because xbuild doesn't support framework reference assemblies.
       BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
     <Error Condition=" '$(AndroidTypeMapImplementation)' != '' and '$(AndroidTypeMapImplementation)' != 'llvm-ir' and '$(AndroidTypeMapImplementation)' != 'trimmable' "
            Text="Invalid value for AndroidTypeMapImplementation: '$(AndroidTypeMapImplementation)'. Valid values are: llvm-ir, trimmable." />
+  </Target>
+
+  <PropertyGroup>
+    <_AndroidR8RuntimeRemappingEnabled>false</_AndroidR8RuntimeRemappingEnabled>
+    <_AndroidR8RuntimeRemappingEnabled
+        Condition=" '$(AndroidApplication)' == 'true' and '$(AndroidR8ObfuscationMode)' == 'runtime-remapping' ">true</_AndroidR8RuntimeRemappingEnabled>
+  </PropertyGroup>
+
+  <Target Name="_ValidateAndroidR8RuntimeRemapping">
+    <AndroidError Code="XA4329" ResourceName="XA4329_RequiredProperty"
+        FormatArguments="AndroidLinkTool;r8;'$(AndroidLinkTool)'"
+        Condition=" '$(AndroidLinkTool)' != 'r8' " />
+    <AndroidError Code="XA4329" ResourceName="XA4329_RequiredProperty"
+        FormatArguments="AndroidTypeMapImplementation;trimmable;'$(AndroidTypeMapImplementation)'"
+        Condition=" '$(AndroidTypeMapImplementation)' != 'trimmable' " />
+    <AndroidError Code="XA4329" ResourceName="XA4329_RequiredProperty"
+        FormatArguments="PublishTrimmed;true;'$(PublishTrimmed)'"
+        Condition=" '$(PublishTrimmed)' != 'true' " />
+    <AndroidError Code="XA4329" ResourceName="XA4329_UnsupportedRuntime"
+        FormatArguments="$(_AndroidRuntime)"
+        Condition=" '$(_AndroidRuntime)' != 'CoreCLR' and '$(_AndroidRuntime)' != 'NativeAOT' " />
   </Target>
 
   <Target Name="_LinkAssemblies"

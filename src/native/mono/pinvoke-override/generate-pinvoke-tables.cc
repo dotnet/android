@@ -53,6 +53,8 @@ const std::vector<std::string> internal_pinvoke_names = {
 	"monodroid_log",
 	"_monodroid_lookup_replacement_type",
 	"_monodroid_lookup_replacement_method_info",
+	"_monodroid_lookup_reverse_type",
+	"_monodroid_lookup_replacement_field_info",
 	"_monodroid_lref_log_delete",
 	"_monodroid_lref_log_new",
 	"_monodroid_max_gref_get",

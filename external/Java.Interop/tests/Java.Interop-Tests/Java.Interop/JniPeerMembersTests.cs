@@ -208,6 +208,120 @@ namespace Java.InteropTests
 		[Test]
 		[Category ("NativeAOTIgnore")]
 		[Category ("TrimmableTypeMapUnsupported")]
+		public void ReplaceStaticFieldName ()
+		{
+			// Resolves `java.lang.Math.PI`, not the nonexistent `remappedToPi`.
+			var info = JavaLangRemappingTestMath._members.StaticFields.GetFieldInfo ("remappedToPi.D");
+			Assert.IsNotNull (info);
+			Assert.IsTrue (info.IsStatic);
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
+		public void ReplaceInstanceFieldName ()
+		{
+			// Resolves `java.io.ByteArrayInputStream.pos`, not the nonexistent `remappedToPos`.
+			var info = JavaIoRemappingTestStream._members.InstanceFields.GetFieldInfo ("remappedToPos.I");
+			Assert.IsNotNull (info);
+			Assert.IsFalse (info.IsStatic);
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
+		public void DeclaredInstanceFieldHidesBaseFieldRemap ()
+		{
+			var members = new JniPeerMembers (FieldRemapDerived.JniTypeName, typeof (FieldRemapDerived));
+			try {
+				using var type = new JniType (FieldRemapDerived.JniTypeName);
+				var expected = type.GetInstanceField ("hiddenInstanceField", "Z");
+				var remapped = type.GetInstanceField ("remappedInstanceField", "Z");
+				var actual = members.InstanceFields.GetFieldInfo ("hiddenInstanceField.Z");
+
+				Assert.AreEqual (expected.ID, actual.ID);
+				Assert.AreNotEqual (remapped.ID, actual.ID);
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
+		public void DeclaredStaticFieldHidesBaseFieldRemap ()
+		{
+			var members = new JniPeerMembers (FieldRemapDerived.JniTypeName, typeof (FieldRemapDerived));
+			try {
+				using var type = new JniType (FieldRemapDerived.JniTypeName);
+				var expected = type.GetStaticField ("hiddenStaticField", "Ljava/lang/String;");
+				var remapped = type.GetStaticField ("remappedStaticField", "Ljava/lang/String;");
+				var actual = members.StaticFields.GetFieldInfo ("hiddenStaticField.Ljava/lang/String;");
+
+				Assert.AreEqual (expected.ID, actual.ID);
+				Assert.AreNotEqual (remapped.ID, actual.ID);
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
+		public void FailedCurrentInstanceFieldRemapFallsBackToBaseRemap ()
+		{
+			var members = new JniPeerMembers (FieldRemapDerived.JniTypeName, typeof (FieldRemapDerived));
+			try {
+				using var type = new JniType (FieldRemapBase.JniTypeName);
+				var expected = type.GetInstanceField ("remappedInheritedInstanceField", "Z");
+				var actual = members.InstanceFields.GetFieldInfo ("inheritedInstanceField.Z");
+
+				Assert.AreEqual (expected.ID, actual.ID);
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
+		public void FailedCurrentStaticFieldRemapFallsBackToBaseRemap ()
+		{
+			var members = new JniPeerMembers (FieldRemapDerived.JniTypeName, typeof (FieldRemapDerived));
+			try {
+				using var type = new JniType (FieldRemapBase.JniTypeName);
+				var expected = type.GetStaticField ("remappedInheritedStaticField", "Ljava/lang/String;");
+				var actual = members.StaticFields.GetFieldInfo ("inheritedStaticField.Ljava/lang/String;");
+
+				Assert.AreEqual (expected.ID, actual.ID);
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
+		public void ReplacementConstructorUsesTargetSignature ()
+		{
+			// The declared parameter type does not exist; the replacement pins `(I)V` instead.
+			var ctor = JavaLangRemappingTestStringBuilder._members.InstanceMethods.GetConstructor ("(Lnet/dot/jni/test/RenamedInt;)V");
+			Assert.IsNotNull (ctor);
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
+		public void ReplacementMethodUsesTargetSignature ()
+		{
+			// The declared parameter type does not exist; the replacement pins `(Ljava/lang/String;)I` instead.
+			var method = JavaLangRemappingTestStringBuilder._members.InstanceMethods.GetMethodInfo ("indexOf.(Lnet/dot/jni/test/RenamedString;)I");
+			Assert.IsNotNull (method);
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
 		public void ReplacementTypeUsedForMethodLookup ()
 		{
 			using var o = new RenameClassDerived ();
@@ -350,6 +464,37 @@ namespace Java.InteropTests
 			const string id = "remappedToStaticHashCode.()I";
 			return _members.InstanceMethods.InvokeVirtualInt32Method (id, this, null);
 		}
+	}
+
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
+	class JavaLangRemappingTestMath : JavaObject {
+		internal    const    string         JniTypeName = "java/lang/Math";
+		internal    static   readonly JniPeerMembers _members = new JniPeerMembers (JniTypeName, typeof (JavaLangRemappingTestMath));
+	}
+
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
+	class JavaIoRemappingTestStream : JavaObject {
+		internal    const    string         JniTypeName = "java/io/ByteArrayInputStream";
+		internal    static   readonly JniPeerMembers _members = new JniPeerMembers (JniTypeName, typeof (JavaIoRemappingTestStream));
+	}
+
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
+	class JavaLangRemappingTestStringBuilder : JavaObject {
+		internal    const    string         JniTypeName = "java/lang/StringBuilder";
+		internal    static   readonly JniPeerMembers _members = new JniPeerMembers (JniTypeName, typeof (JavaLangRemappingTestStringBuilder));
+	}
+
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
+	class FieldRemapBase : JavaObject {
+		internal    const    string         JniTypeName = "net/dot/jni/test/FieldRemapBase";
+		static      readonly JniPeerMembers _members = new JniPeerMembers (JniTypeName, typeof (FieldRemapBase));
+
+		public override JniPeerMembers JniPeerMembers => _members;
+	}
+
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
+	class FieldRemapDerived : FieldRemapBase {
+		internal new const string JniTypeName = "net/dot/jni/test/FieldRemapDerived";
 	}
 
 	[JniTypeSignature (JavaLangRemappingTestRuntime.JniTypeName, GenerateJavaPeer=false)]

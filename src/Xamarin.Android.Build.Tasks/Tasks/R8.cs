@@ -169,7 +169,7 @@ namespace Xamarin.Android.Tasks
 					using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration)) {
 						appcfg.WriteLine ("# ACW keep rules are generated from NativeAOT ILC metadata.");
 						foreach (var java in GetUserJavaTypes ()) {
-							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
+							appcfg.WriteLine ($"{KeepOption} class {java} {{ *; }}");
 						}
 					}
 				} else if (!AcwMapFile.IsNullOrEmpty ()) {
@@ -181,37 +181,16 @@ namespace Xamarin.Android.Tasks
 					javaTypes.Sort (StringComparer.Ordinal);
 					using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration)) {
 						foreach (var java in javaTypes) {
-							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
+							appcfg.WriteLine ($"{KeepOption} class {java} {{ *; }}");
 						}
 						// User-authored AndroidJavaSource (Bind != true) has no managed peer and is absent
 						// from the acw-map, so keep it explicitly; otherwise shrinking removes it.
 						foreach (var java in GetUserJavaTypes ()) {
-							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
+							appcfg.WriteLine ($"{KeepOption} class {java} {{ *; }}");
 						}
 					}
 				}
-				if (!ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
-					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
-						WriteObfuscationRules (xamcfg, ObfuscationMode);
-						xamcfg.WriteLine ();
-						xamcfg.Flush ();
-						if (UseTrimmableNativeAotProguardConfiguration) {
-							using var stream = GetEmbeddedResourceStream ("proguard_trimmable_nativeaot.cfg");
-							stream.CopyTo (xamcfg.BaseStream);
-						} else {
-							using var stream = GetEmbeddedResourceStream ("proguard_xamarin.cfg");
-							stream.CopyTo (xamcfg.BaseStream);
-						}
-						if (IgnoreWarnings) {
-							xamcfg.WriteLine ("-ignorewarnings");
-						}
-						if (!ProguardMappingFileOutput.IsNullOrEmpty ()) {
-							xamcfg.WriteLine ("-keepattributes SourceFile");
-							xamcfg.WriteLine ("-keepattributes LineNumberTable");
-							xamcfg.WriteLine ($"-printmapping \"{Path.GetFullPath (ProguardMappingFileOutput)}\"");
-						}
-					}
-				}
+				GenerateCommonXamarinConfiguration ();
 			} else {
 				//NOTE: we may be calling r8 *only* for multi-dex, and all shrinking is disabled
 				WriteArg (response, "--no-tree-shaking");
@@ -256,11 +235,57 @@ namespace Xamarin.Android.Tasks
 			return responseFile;
 		}
 
+		/// <summary>
+		/// The keep option used for the generated Java Callable Wrapper keep rules. When the JNI
+		/// names are remapped at runtime the wrappers must survive shrinking but stay renameable,
+		/// otherwise a plain <c>-keep</c> pins their names and prevents obfuscation.
+		/// </summary>
+		internal string KeepOption => string.Equals (ObfuscationMode, "runtime-remapping", StringComparison.OrdinalIgnoreCase) ? "-keep,allowobfuscation" : "-keep";
+
+		internal void GenerateCommonXamarinConfiguration ()
+		{
+			if (ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
+				return;
+			}
+
+			using var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration);
+			WriteObfuscationRules (xamcfg, ObfuscationMode);
+			xamcfg.WriteLine ();
+			xamcfg.Flush ();
+			string resourceName = UseTrimmableNativeAotProguardConfiguration ? "proguard_trimmable_nativeaot.cfg" : "proguard_xamarin.cfg";
+			using (Stream resource = GetEmbeddedResourceStream (resourceName)) {
+				resource.CopyTo (xamcfg.BaseStream);
+			}
+			if (IgnoreWarnings) {
+				xamcfg.WriteLine ("-ignorewarnings");
+			}
+			if (!ProguardMappingFileOutput.IsNullOrEmpty ()) {
+				xamcfg.WriteLine ("-keepattributes SourceFile");
+				xamcfg.WriteLine ("-keepattributes LineNumberTable");
+				xamcfg.WriteLine ($"-printmapping \"{Path.GetFullPath (ProguardMappingFileOutput)}\"");
+			}
+		}
+
 		internal static void WriteObfuscationRules (TextWriter writer, string obfuscationMode)
 		{
 			if (string.Equals (obfuscationMode, "disabled", StringComparison.OrdinalIgnoreCase)) {
 				writer.WriteLine ("-dontobfuscate");
 				return;
+			}
+
+			if (string.Equals (obfuscationMode, "runtime-remapping", StringComparison.OrdinalIgnoreCase)) {
+				// Keep names used by bootstrap JNI and resource/interface lookups that do not
+				// pass through the generated member-remapping tables.
+				writer.WriteLine ("-keep class mono.NativeLibraryHelper { *; <init>(...); }");
+				writer.WriteLine ("-keep class mono.android.Runtime { *; }");
+				writer.WriteLine ("-keep class mono.android.GCUserPeer { <init>(); }");
+				writer.WriteLine ("-keepclassmembernames interface * { *; }");
+				writer.WriteLine ("-keepnames public class *");
+				writer.WriteLine ("-keepnames class **$*");
+				return;
+			}
+			if (!string.Equals (obfuscationMode, "private-members", StringComparison.OrdinalIgnoreCase)) {
+				throw new InvalidOperationException ($"Unsupported R8 obfuscation mode '{obfuscationMode}'.");
 			}
 
 			writer.WriteLine ("-keep,allowshrinking,allowoptimization class **");
