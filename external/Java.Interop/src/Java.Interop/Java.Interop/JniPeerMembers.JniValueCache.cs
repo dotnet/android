@@ -1,14 +1,17 @@
 #nullable enable
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
 namespace Java.Interop {
 
 	partial class JniPeerMembers {
 
-		private sealed class JniValueCache<TKey, TValue> : IDisposable
+		private sealed class JniValueCache<TKey, TValue> : IDisposable, IReadOnlyDictionary<TKey, TValue>
 			where TKey : notnull
 			where TValue : class
 		{
@@ -21,6 +24,17 @@ namespace Java.Interop {
 				values       = new ConcurrentDictionary<TKey, TValue> (concurrencyLevel, capacity);
 				this.dispose = dispose;
 			}
+
+			public int Count => values.Count;
+			public IEnumerable<TKey> Keys => values.Keys;
+			public IEnumerable<TValue> Values => values.Values;
+			public TValue this [TKey key] => values [key];
+
+			public bool ContainsKey (TKey key) => values.ContainsKey (key);
+			public bool TryGetValue (TKey key, [MaybeNullWhen (false)] out TValue value) => values.TryGetValue (key, out value);
+
+			public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator () => values.GetEnumerator ();
+			IEnumerator IEnumerable.GetEnumerator () => GetEnumerator ();
 
 			internal static JniValueCache<TKey, TValue> GetOrCreate (ref JniValueCache<TKey, TValue>? cache, int concurrencyLevel, int capacity, Action<TValue> dispose)
 			{

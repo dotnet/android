@@ -12,7 +12,7 @@ namespace Java.InteropTests
 		public void DisposingPeerMembersReleasesRedirect (bool isStatic)
 		{
 			var members = isStatic
-				? new JniPeerMembers (IAndroidInterface.JniTypeName, typeof (IAndroidInterface))
+				? new JniPeerMembers (JavaLangRemappingTestRuntime.JniTypeName, typeof (JavaLangRemappingTestRuntime))
 				: new JniPeerMembers (JavaLangRemappingTestObject.JniTypeName, typeof (JavaLangRemappingTestObject));
 			JniType redirect = null;
 			try {
@@ -34,8 +34,7 @@ namespace Java.InteropTests
 		static unsafe void AssertRedirectIsCallable (JniPeerMembers members, bool isStatic)
 		{
 			if (isStatic) {
-				var value = members.StaticMethods.InvokeObjectMethod ("getClassName.()Ljava/lang/String;", null);
-				Assert.AreEqual ("DesugarAndroidInterface$-CC", JniEnvironment.Strings.ToString (ref value, JniObjectReferenceOptions.CopyAndDispose));
+				Assert.Greater (members.StaticMethods.InvokeInt64Method ("remappedToCurrentTimeMillis.()J", null), 0);
 			} else {
 				using var value = new JavaLangRemappingTestObject ();
 				Assert.AreEqual (value.GetHashCode (), members.InstanceMethods.InvokeNonvirtualInt32Method ("remappedToStaticHashCode.()I", value, null));
@@ -45,7 +44,7 @@ namespace Java.InteropTests
 		static JniMethodInfo GetRedirectedMethod (JniPeerMembers members, bool isStatic)
 		{
 			return isStatic
-				? members.StaticMethods.GetMethodInfo ("getClassName.()Ljava/lang/String;")
+				? members.StaticMethods.GetMethodInfo ("remappedToCurrentTimeMillis.()J")
 				: members.InstanceMethods.GetMethodInfo ("remappedToStaticHashCode.()I");
 		}
 

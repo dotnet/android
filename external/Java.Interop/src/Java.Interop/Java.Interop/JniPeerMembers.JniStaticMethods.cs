@@ -37,12 +37,20 @@ namespace Java.Interop
 			var m              = (JniMethodInfo?) null;
 			var newMethod      = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (Members.JniPeerTypeName, method, signature);
 			if (newMethod.HasValue) {
-				using var t = new JniType (newMethod.Value.TargetJniType ?? Members.JniPeerTypeName);
-				if (t.TryGetStaticMethod (
-						newMethod.Value.TargetJniMethodName is string name ? name.AsSpan () : method,
-						newMethod.Value.TargetJniMethodSignature is string sig ? sig.AsSpan () : signature,
-						out m)) {
-					return m;
+				JniType? t = new JniType (newMethod.Value.TargetJniType ?? Members.JniPeerTypeName);
+				try {
+					if (t.TryGetStaticMethod (
+							newMethod.Value.TargetJniMethodName is string name ? name.AsSpan () : method,
+							newMethod.Value.TargetJniMethodSignature is string sig ? sig.AsSpan () : signature,
+							out m)) {
+						if (!JniEnvironment.Types.IsSameObject (t.PeerReference, Members.JniPeerType.PeerReference)) {
+							m.StaticRedirect = t;
+							t = null;
+						}
+						return m;
+					}
+				} finally {
+					t?.Dispose ();
 				}
 			}
 			if (Members.JniPeerType.TryGetStaticMethod (method, signature, out m)) {
