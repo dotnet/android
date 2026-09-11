@@ -28,6 +28,9 @@ namespace Xamarin.Android.NetTests
 			listener.Prefixes.Add ($"http://+:{testPort}/");
 			listener.Start ();
 
+			var requestBody = new byte [requestContentLength];
+			for (int i = 0; i < requestBody.Length; i++)
+				requestBody [i] = (byte) (i % 251);
 			var cancellationObserved = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 			var firstServerBodyRead = new TaskCompletionSource<int> (TaskCreationOptions.RunContinuationsAsynchronously);
 			var firstServerTask = HandleCancelledRequest ();
@@ -35,9 +38,6 @@ namespace Xamarin.Android.NetTests
 			using var cancellationTokenSource = new CancellationTokenSource ();
 			using var retryCancellationTokenSource = new CancellationTokenSource ();
 			using var client = new HttpClient (new AndroidMessageHandler ());
-			var requestBody = new byte [requestContentLength];
-			for (int i = 0; i < requestBody.Length; i++)
-				requestBody [i] = (byte) (i % 251);
 			var contentStream = new ControlledSeekableStream (requestBody);
 			using var content = new StreamContent (contentStream);
 			using var request = new HttpRequestMessage (HttpMethod.Post, $"http://localhost:{testPort}/") { Content = content };
