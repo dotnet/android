@@ -155,7 +155,7 @@ namespace Java.Interop {
 
 		// Retains delegates from every batch JNI may have partially registered.
 		JniNativeMethodRegistration[]? methods;
-		object? nativeRegistrationLock;
+		Lock? nativeRegistrationLock;
 
 		/// <remarks>
 		/// Once JNI registration is attempted, the runtime retains this type and its delegates
