@@ -101,6 +101,48 @@ namespace Xamarin.Android.Build.Tests
 			return RunProcess (adb, $"{adbTarget} {command}", timeout);
 		}
 
+		protected static (int code, string stdOutput, string stdError) RunAdbCommandWithExitCode (params string [] command)
+		{
+			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
+			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
+			var arguments = new List<string> ();
+			string adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
+			if (!string.IsNullOrWhiteSpace (adbTarget)) {
+				if (adbTarget == "-d" || adbTarget == "-e") {
+					arguments.Add (adbTarget);
+				} else if (adbTarget.StartsWith ("-s", StringComparison.Ordinal)) {
+					string serial = adbTarget.Substring (2).Trim ();
+					if (serial.Length == 0) {
+						throw new InvalidOperationException ("ADB_TARGET must include a device serial after '-s'.");
+					}
+					arguments.Add ("-s");
+					arguments.Add (serial);
+				} else {
+					throw new InvalidOperationException ($"Unsupported ADB_TARGET value '{adbTarget}'.");
+				}
+			}
+			arguments.AddRange (command);
+			TestContext.Out.WriteLine ($"{nameof (RunAdbCommandWithExitCode)}: {adb} {string.Join (" ", arguments.Select (a => $"[{a}]"))}");
+
+			var info = Xamarin.Android.Tools.ProcessUtils.CreateProcessStartInfo (adb, arguments.ToArray ());
+			using var standardOutput = new StringWriter ();
+			using var standardError = new StringWriter ();
+			using var cancellationTokenSource = new CancellationTokenSource (TimeSpan.FromSeconds (30));
+			int exitCode;
+			try {
+				exitCode = Xamarin.Android.Tools.ProcessUtils.StartProcess (
+					info,
+					standardOutput,
+					standardError,
+					cancellationTokenSource.Token
+				).GetAwaiter ().GetResult ();
+			} catch (OperationCanceledException) {
+				exitCode = -1;
+				standardError.WriteLine ("adb timed out after 30 seconds.");
+			}
+			return (exitCode, standardOutput.ToString ().Trim (), standardError.ToString ().Trim ());
+		}
+
 		protected static (int code, string stdOutput, string stdError) RunApkDiffCommand (string args, string logFilePath)
 		{
 			var executableName = OperatingSystem.IsWindows () ? "apkdiff.exe" : "apkdiff";

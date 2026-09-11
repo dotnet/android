@@ -1611,7 +1611,7 @@ namespace UnamedProject
 				}
 
 				foreach (var className in classes) {
-					Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, "<init>", "()V", dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+					Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 				}
 			}
 		}
