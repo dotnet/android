@@ -154,7 +154,6 @@ namespace Java.Interop {
 
 		// Retains delegates from the batch JNI may have partially registered.
 		JniNativeMethodRegistration[]? methods;
-		Lock? nativeRegistrationLock;
 
 		/// <remarks>
 		/// Once JNI registration is attempted, the runtime retains this type and its delegates
@@ -173,16 +172,13 @@ namespace Java.Interop {
 
 		internal void RetainNativeMethodRegistrations (JniNativeMethodRegistration[] registrations)
 		{
-			lock (LazyInitializer.EnsureInitialized (ref nativeRegistrationLock)) {
-				// RegisterNatives stores unmanaged function pointers without retaining the
-				// managed delegates behind them. JNI can publish part of a failing batch, so
-				// the first attempt owns this JniType until disposal and cannot be retried.
-				if (methods != null)
-					throw new InvalidOperationException ("Native method registration has already been attempted for this JniType.");
+			// RegisterNatives stores unmanaged function pointers without retaining the
+			// managed delegates behind them. JNI can publish part of a failing batch, so
+			// the first attempt owns this JniType until disposal and cannot be retried.
+			if (Interlocked.CompareExchange (ref methods, registrations, null) != null)
+				throw new InvalidOperationException ("Native method registration has already been attempted for this JniType.");
 
-				RegisterWithRuntime ();
-				methods = registrations;
-			}
+			RegisterWithRuntime ();
 		}
 
 		public void UnregisterNativeMethods ()
