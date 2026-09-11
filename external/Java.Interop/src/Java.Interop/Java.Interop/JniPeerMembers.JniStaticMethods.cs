@@ -21,12 +21,12 @@ namespace Java.Interop
 
 		internal void Dispose ()
 		{
-			Clear (ref staticMethods);
+			Clear (ref staticMethods, static value => value.StaticRedirect?.Dispose ());
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
-			return StaticMethods.GetOrAdd (encodedMember, static (member, methods) => {
+			return GetOrAddMethodInfo (StaticMethods, encodedMember, static (member, methods) => {
 				ReadOnlySpan<char> method, signature;
 				JniPeerMembers.GetNameAndSignature (member, out method, out signature);
 				return methods.GetMethodInfo (method, signature);
@@ -72,23 +72,28 @@ namespace Java.Interop
 			if (fallbackTypes == null) {
 				return null;
 			}
-			foreach (var ft in fallbackTypes) {
-				JniType? t = null;
-				try {
+			JniType? t = null;
+			try {
+				JniMethodInfo? m = null;
+				foreach (var ft in fallbackTypes) {
 					if (!JniType.TryParse (ft, out t)) {
 						continue;
 					}
-					if (t.TryGetStaticMethod (method, signature, out var m)) {
-						m.StaticRedirect    = t;
-						t                   = null;
-						return m;
+					if (t.TryGetStaticMethod (method, signature, out m)) {
+						break;
 					}
+					t.Dispose ();
+					t = null;
 				}
-				finally {
-					t?.Dispose ();
+				if (m != null) {
+					// Transfer ownership only after the fallback enumerator has been disposed.
+					m.StaticRedirect = t;
+					t = null;
 				}
+				return m;
+			} finally {
+				t?.Dispose ();
 			}
-			return null;
 		}
 
 		public unsafe void InvokeVoidMethod (string encodedMember, JniArgumentValue* parameters)

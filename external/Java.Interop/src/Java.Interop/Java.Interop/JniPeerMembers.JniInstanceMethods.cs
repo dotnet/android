@@ -47,7 +47,7 @@ namespace Java.Interop
 
 		internal void Dispose ()
 		{
-			Clear (ref instanceMethods);
+			Clear (ref instanceMethods, static value => value.StaticRedirect?.Dispose ());
 			Clear (ref subclassConstructors, static value => value.Dispose ());
 
 			if (jniPeerType != null)
@@ -95,7 +95,7 @@ namespace Java.Interop
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
-			return InstanceMethods.GetOrAdd (encodedMember, static (member, methods) => {
+			return GetOrAddMethodInfo (InstanceMethods, encodedMember, static (member, methods) => {
 				ReadOnlySpan<char> method, signature;
 				JniPeerMembers.GetNameAndSignature (member, out method, out signature);
 				return methods.GetMethodInfo (method, signature);
@@ -111,15 +111,20 @@ namespace Java.Interop
 				var methodName = newMethod.Value.TargetJniMethodName is string name ? name.AsSpan () : method;
 				var methodSig  = newMethod.Value.TargetJniMethodSignature is string sig ? sig.AsSpan () : signature;
 
-				using var t = new JniType (typeName);
-				if (newMethod.Value.TargetJniMethodInstanceToStatic &&
-						t.TryGetStaticMethod (methodName, methodSig, out m)) {
-					m.ParameterCount = newMethod.Value.TargetJniMethodParameterCount;
-					m.StaticRedirect = new JniType (typeName);
-					return m;
-				}
-				if (t.TryGetInstanceMethod (methodName, methodSig, out m)) {
-					return m;
+				JniType? t = new JniType (typeName);
+				try {
+					if (newMethod.Value.TargetJniMethodInstanceToStatic &&
+							t.TryGetStaticMethod (methodName, methodSig, out m)) {
+						m.ParameterCount = newMethod.Value.TargetJniMethodParameterCount;
+						m.StaticRedirect = t;
+						t = null;
+						return m;
+					}
+					if (t.TryGetInstanceMethod (methodName, methodSig, out m)) {
+						return m;
+					}
+				} finally {
+					t?.Dispose ();
 				}
 				Console.Error.WriteLine ($"warning: For declared method `{Members.JniPeerTypeName}.{method}.{signature}`, could not find requested method `{typeName}.{methodName}.{methodSig}`!");
 			}
