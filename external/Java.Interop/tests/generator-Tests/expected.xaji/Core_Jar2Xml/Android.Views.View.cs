@@ -81,13 +81,10 @@ namespace Android.Views {
 			public unsafe void OnClick (global::Android.Views.View v)
 			{
 				const string __id = "onClick.(Landroid/view/View;)V";
-				try {
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue ((v == null) ? IntPtr.Zero : ((global::Java.Lang.Object) v).Handle);
-					_members_android_view_View_OnClickListener.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-				} finally {
-					global::System.GC.KeepAlive (v);
-				}
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue ((v == null) ? IntPtr.Zero : ((global::Java.Lang.Object) v).Handle);
+				_members_android_view_View_OnClickListener.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+				global::System.GC.KeepAlive (v);
 			}
 
 		}
@@ -176,13 +173,10 @@ namespace Android.Views {
 		public virtual unsafe void SetOnClickListener (global::Android.Views.View.IOnClickListener l)
 		{
 			const string __id = "setOnClickListener.(Landroid/view/View$OnClickListener;)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((l == null) ? IntPtr.Zero : ((global::Java.Lang.Object) l).Handle);
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			} finally {
-				global::System.GC.KeepAlive (l);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue ((l == null) ? IntPtr.Zero : ((global::Java.Lang.Object) l).Handle);
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+			global::System.GC.KeepAlive (l);
 		}
 
 		static Delegate cb_setOn123Listener_SetOn123Listener_Landroid_view_View_OnClickListener__V;
@@ -211,13 +205,10 @@ namespace Android.Views {
 		public virtual unsafe void SetOn123Listener (global::Android.Views.View.IOnClickListener l)
 		{
 			const string __id = "setOn123Listener.(Landroid/view/View$OnClickListener;)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((l == null) ? IntPtr.Zero : ((global::Java.Lang.Object) l).Handle);
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			} finally {
-				global::System.GC.KeepAlive (l);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue ((l == null) ? IntPtr.Zero : ((global::Java.Lang.Object) l).Handle);
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+			global::System.GC.KeepAlive (l);
 		}
 
 		static Delegate cb_addTouchables_AddTouchables_Ljava_util_ArrayList__V;

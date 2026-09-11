@@ -20,12 +20,9 @@ public partial class MyClass {
 		if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 			return;
 
-		try {
-			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
-		} finally {
-		}
+		var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+		SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+		_members.InstanceMethods.FinishCreateInstance (__id, this, null);
 	}
 
 	// Metadata.xml XPath constructor reference: path="/api/package[@name='java.code']/class[@name='MyClass']/constructor[@name='MyClass' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
@@ -94,22 +91,16 @@ public partial class MyClass {
 		[Register ("get_Count", "()I", "Getget_CountHandler")]
 		get {
 			const string __id = "get_Count.()I";
-			try {
-				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
-				return __rm;
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+			return __rm;
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_Count' and count(parameter)=1 and parameter[1][@type='int']]"
 		[Register ("set_Count", "(I)V", "Getset_Count_IHandler")]
 		set {
 			const string __id = "set_Count.(I)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (value);
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (value);
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 		}
 	}
 
@@ -159,11 +150,8 @@ public partial class MyClass {
 		[Register ("get_Key", "()Ljava/lang/String;", "Getget_KeyHandler")]
 		get {
 			const string __id = "get_Key.()Ljava/lang/String;";
-			try {
-				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+			return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_Key' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
 		[Register ("set_Key", "(Ljava/lang/String;)V", "Getset_Key_Ljava_lang_String_Handler")]
@@ -185,22 +173,16 @@ public partial class MyClass {
 		[Register ("get_StaticCount", "()I", "")]
 		get {
 			const string __id = "get_StaticCount.()I";
-			try {
-				var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
-				return __rm;
-			} finally {
-			}
+			var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+			return __rm;
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_StaticCount' and count(parameter)=1 and parameter[1][@type='int']]"
 		[Register ("set_StaticCount", "(I)V", "")]
 		set {
 			const string __id = "set_StaticCount.(I)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (value);
-				_members.StaticMethods.InvokeVoidMethod (__id, __args);
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (value);
+			_members.StaticMethods.InvokeVoidMethod (__id, __args);
 		}
 	}
 
@@ -317,11 +299,8 @@ public partial class MyClass {
 	public virtual unsafe string? Key ()
 	{
 		const string __id = "Key.()Ljava/lang/String;";
-		try {
-			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-			return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-		} finally {
-		}
+		var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+		return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='StaticMethod' and count(parameter)=0]"
@@ -329,10 +308,7 @@ public partial class MyClass {
 	public static unsafe void StaticMethod ()
 	{
 		const string __id = "StaticMethod.()V";
-		try {
-			_members.StaticMethods.InvokeVoidMethod (__id, null);
-		} finally {
-		}
+		_members.StaticMethods.InvokeVoidMethod (__id, null);
 	}
 
 	static Delegate? cb_AbstractMethod_AbstractMethod_V;

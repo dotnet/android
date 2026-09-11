@@ -92,23 +92,17 @@ namespace Xamarin.Test {
 			[Register ("getAdapter", "()Lxamarin/test/SpinnerAdapter;", "GetGetAdapterHandler")]
 			get {
 				const string __id = "getAdapter.()Lxamarin/test/SpinnerAdapter;";
-				try {
-					var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-					return global::Java.Lang.Object.GetObject<global::Xamarin.Test.ISpinnerAdapter> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-				} finally {
-				}
+				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+				return global::Java.Lang.Object.GetObject<global::Xamarin.Test.ISpinnerAdapter> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='AbsSpinner']/method[@name='setAdapter' and count(parameter)=1 and parameter[1][@type='xamarin.test.SpinnerAdapter']]"
 			[Register ("setAdapter", "(Lxamarin/test/SpinnerAdapter;)V", "GetSetAdapter_Lxamarin_test_SpinnerAdapter_Handler")]
 			set {
 				const string __id = "setAdapter.(Lxamarin/test/SpinnerAdapter;)V";
-				try {
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue ((value == null) ? IntPtr.Zero : ((global::Java.Lang.Object) value).Handle);
-					_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-				} finally {
-					global::System.GC.KeepAlive (value);
-				}
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue ((value == null) ? IntPtr.Zero : ((global::Java.Lang.Object) value).Handle);
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+				global::System.GC.KeepAlive (value);
 			}
 		}
 
@@ -139,11 +133,8 @@ namespace Xamarin.Test {
 			[Register ("getAdapter", "()Lxamarin/test/Adapter;", "GetGetAdapterHandler")]
 			get {
 				const string __id = "getAdapter.()Lxamarin/test/Adapter;";
-				try {
-					var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
-					return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-				} finally {
-				}
+				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+				return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='AdapterView']/method[@name='setAdapter' and count(parameter)=1 and parameter[1][@type='T']]"
 			[Register ("setAdapter", "(Lxamarin/test/Adapter;)V", "GetSetAdapter_Lxamarin_test_Adapter_Handler")]

@@ -74,9 +74,13 @@ namespace generator.SourceWriters
 			foreach (var prep in constructor.Parameters.GetCallPrep (opt))
 				writer.WriteLine (prep);
 
-			writer.WriteLine ("try {");
+			var needsFinally = SourceWriterExtensions.HasCallCleanup (constructor.Parameters, opt);
 
-			writer.Indent ();
+			if (needsFinally) {
+				writer.WriteLine ("try {");
+				writer.Indent ();
+			}
+
 			WriteParamterListCallArgs (writer, constructor.Parameters, false, opt);
 			writer.WriteLine ("var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (){0});", constructor.Parameters.GetCallArgs (opt, invoker: false));
 			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
@@ -85,21 +89,21 @@ namespace generator.SourceWriters
 				writer.WriteLine ("SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);");
 			}
 			writer.WriteLine ("_members.InstanceMethods.FinishCreateInstance (__id, this{0});", constructor.Parameters.GetCallArgs (opt, invoker: false));
-			writer.Unindent ();
 
-			writer.WriteLine ("} finally {");
+			if (needsFinally) {
+				writer.Unindent ();
+				writer.WriteLine ("} finally {");
+				writer.Indent ();
 
-			writer.Indent ();
-			var call_cleanup = constructor.Parameters.GetCallCleanup (opt);
-			foreach (string cleanup in call_cleanup)
-				writer.WriteLine (cleanup);
+				SourceWriterExtensions.WriteCallCleanup (writer, constructor.Parameters, opt);
 
-			foreach (var p in constructor.Parameters.Where (para => para.ShouldGenerateKeepAlive ()))
-				writer.WriteLine ($"global::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
+				SourceWriterExtensions.WriteKeepAlive (writer, constructor.Parameters, opt);
 
-			writer.Unindent ();
-
-			writer.WriteLine ("}");
+				writer.Unindent ();
+				writer.WriteLine ("}");
+			} else {
+				SourceWriterExtensions.WriteKeepAlive (writer, constructor.Parameters, opt);
+			}
 		}
 
 		void WriteParamterListCallArgs (CodeWriter writer, ParameterList parameters, bool invoker, CodeGenerationOptions opt)

@@ -11,21 +11,15 @@ public partial class MyClass {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_UIntProp' and count(parameter)=0]"
 		get {
 			const string __id = "get_UIntProp.()I";
-			try {
-				var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
-				return (uint)__rm;
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
+			return (uint)__rm;
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_UIntProp' and count(parameter)=1 and parameter[1][@type='uint']]"
 		set {
 			const string __id = "set_UIntProp.(I)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (value);
-				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (value);
+			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
 		}
 	}
 
@@ -33,21 +27,15 @@ public partial class MyClass {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_UShortProp' and count(parameter)=0]"
 		get {
 			const string __id = "get_UShortProp.()S";
-			try {
-				var __rm = _members.InstanceMethods.InvokeAbstractInt16Method (__id, this, null);
-				return (ushort)__rm;
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeAbstractInt16Method (__id, this, null);
+			return (ushort)__rm;
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_UShortProp' and count(parameter)=1 and parameter[1][@type='ushort']]"
 		set {
 			const string __id = "set_UShortProp.(S)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (value);
-				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (value);
+			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
 		}
 	}
 
@@ -55,21 +43,15 @@ public partial class MyClass {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_ULongProp' and count(parameter)=0]"
 		get {
 			const string __id = "get_ULongProp.()J";
-			try {
-				var __rm = _members.InstanceMethods.InvokeAbstractInt64Method (__id, this, null);
-				return (ulong)__rm;
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeAbstractInt64Method (__id, this, null);
+			return (ulong)__rm;
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_ULongProp' and count(parameter)=1 and parameter[1][@type='ulong']]"
 		set {
 			const string __id = "set_ULongProp.(J)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (value);
-				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (value);
+			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
 		}
 	}
 
@@ -77,21 +59,15 @@ public partial class MyClass {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_UByteProp' and count(parameter)=0]"
 		get {
 			const string __id = "get_UByteProp.()B";
-			try {
-				var __rm = _members.InstanceMethods.InvokeAbstractSByteMethod (__id, this, null);
-				return (byte)__rm;
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeAbstractSByteMethod (__id, this, null);
+			return (byte)__rm;
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_UByteProp' and count(parameter)=1 and parameter[1][@type='ubyte']]"
 		set {
 			const string __id = "set_UByteProp.(B)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (value);
-				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (value);
+			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
 		}
 	}
 

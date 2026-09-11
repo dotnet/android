@@ -80,10 +80,7 @@ namespace Xamarin.Test {
 			public unsafe void Foo ()
 			{
 				const string __id = "foo.()V";
-				try {
-					_members_xamarin_test_PublicClass_ProtectedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-				} finally {
-				}
+				_members_xamarin_test_PublicClass_ProtectedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 			}
 
 		}
@@ -125,12 +122,9 @@ namespace Xamarin.Test {
 			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
-			try {
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
-			} finally {
-			}
+			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
 		}
 
 		static Delegate cb_foo_Foo_V;
@@ -158,10 +152,7 @@ namespace Xamarin.Test {
 		public virtual unsafe void Foo ()
 		{
 			const string __id = "foo.()V";
-			try {
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 		}
 
 	}

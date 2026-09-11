@@ -28,10 +28,7 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 	virtual unsafe void DoSomething ()
 	{
 		const string __id = "DoSomething.()V";
-		try {
-			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
-		} finally {
-		}
+		_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 	}
 
 }

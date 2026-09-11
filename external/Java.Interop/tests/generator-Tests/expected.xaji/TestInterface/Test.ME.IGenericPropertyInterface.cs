@@ -95,11 +95,8 @@ namespace Test.ME {
 		public unsafe global::Java.Lang.Object Object {
 			get {
 				const string __id = "getObject.()Ljava/lang/Object;";
-				try {
-					var __rm = _members_test_me_GenericPropertyInterface.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
-					return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-				} finally {
-				}
+				var __rm = _members_test_me_GenericPropertyInterface.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+				return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 			set {
 				const string __id = "setObject.(Ljava/lang/Object;)V";

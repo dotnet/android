@@ -31,10 +31,7 @@ namespace Xamarin.Test {
 			set {
 				const string __id = "backColor.I";
 
-				try {
-					_members.InstanceFields.SetValue (__id, this, value.ToArgb ());
-				} finally {
-				}
+				_members.InstanceFields.SetValue (__id, this, value.ToArgb ());
 			}
 		}
 
@@ -144,22 +141,16 @@ namespace Xamarin.Test {
 			[Register ("getSomeColor", "()I", "GetGetSomeColorHandler")]
 			get {
 				const string __id = "getSomeColor.()I";
-				try {
-					var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
-					return new global::Android.Graphics.Color (__rm);
-				} finally {
-				}
+				var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
+				return new global::Android.Graphics.Color (__rm);
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeColor' and count(parameter)=1 and parameter[1][@type='Android.Graphics.Color']]"
 			[Register ("setSomeColor", "(I)V", "GetSetSomeColor_IHandler")]
 			set {
 				const string __id = "setSomeColor.(I)V";
-				try {
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue (value.ToArgb ());
-					_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-				} finally {
-				}
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value.ToArgb ());
+				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
 			}
 		}
 

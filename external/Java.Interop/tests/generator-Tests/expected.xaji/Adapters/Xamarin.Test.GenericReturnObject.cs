@@ -71,11 +71,8 @@ namespace Xamarin.Test {
 		public virtual unsafe global::Xamarin.Test.AdapterView GenericReturn ()
 		{
 			const string __id = "GenericReturn.()Lxamarin/test/AdapterView;";
-			try {
-				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-				return global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+			return global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 		}
 
 	}

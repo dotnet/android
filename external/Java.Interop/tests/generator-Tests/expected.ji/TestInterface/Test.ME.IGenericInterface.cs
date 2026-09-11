@@ -32,13 +32,10 @@ namespace Test.ME {
 		{
 			const string __id = "SetObject.(Ljava/lang/Object;)V";
 			var native_value = (value?.PeerReference ?? default);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_value);
-				_members_test_me_GenericInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-			} finally {
-				global::System.GC.KeepAlive (value);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (native_value);
+			_members_test_me_GenericInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			global::System.GC.KeepAlive (value);
 		}
 
 	}

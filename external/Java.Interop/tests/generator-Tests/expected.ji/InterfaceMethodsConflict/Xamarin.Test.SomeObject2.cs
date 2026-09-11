@@ -34,10 +34,7 @@ namespace Xamarin.Test {
 		public virtual unsafe void Irrelevant ()
 		{
 			const string __id = "irrelevant.()V";
-			try {
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/interface[@name='I1']/method[@name='close' and count(parameter)=0]"
@@ -64,10 +61,7 @@ namespace Xamarin.Test {
 		public override unsafe void Close ()
 		{
 			const string __id = "close.()V";
-			try {
-				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 		}
 
 	}

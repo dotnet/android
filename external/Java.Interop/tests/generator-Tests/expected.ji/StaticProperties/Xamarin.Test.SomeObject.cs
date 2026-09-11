@@ -33,21 +33,15 @@ namespace Xamarin.Test {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeInteger' and count(parameter)=0]"
 			get {
 				const string __id = "getSomeInteger.()I";
-				try {
-					var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
-					return __rm;
-				} finally {
-				}
+				var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+				return __rm;
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeInteger' and count(parameter)=1 and parameter[1][@type='int']]"
 			set {
 				const string __id = "setSomeInteger.(I)V";
-				try {
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue (value);
-					_members.StaticMethods.InvokeVoidMethod (__id, __args);
-				} finally {
-				}
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value);
+				_members.StaticMethods.InvokeVoidMethod (__id, __args);
 			}
 		}
 
@@ -55,11 +49,8 @@ namespace Xamarin.Test {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeString' and count(parameter)=0]"
 			get {
 				const string __id = "getSomeString.()Ljava/lang/String;";
-				try {
-					var __rm = _members.StaticMethods.InvokeObjectMethod (__id, null);
-					return global::Java.Interop.JniEnvironment.Strings.ToString (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
-				} finally {
-				}
+				var __rm = _members.StaticMethods.InvokeObjectMethod (__id, null);
+				return global::Java.Interop.JniEnvironment.Strings.ToString (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeString' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
 			set {
@@ -80,11 +71,8 @@ namespace Xamarin.Test {
 		public static unsafe global::Java.Lang.Object GetSomeObject ()
 		{
 			const string __id = "getSomeObject.()Ljava/lang/Object;";
-			try {
-				var __rm = _members.StaticMethods.InvokeObjectMethod (__id, null);
-				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Lang.Object> (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
-			} finally {
-			}
+			var __rm = _members.StaticMethods.InvokeObjectMethod (__id, null);
+			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Lang.Object> (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeObject' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
@@ -92,13 +80,10 @@ namespace Xamarin.Test {
 		public static unsafe void SetSomeObject (global::Java.Lang.Object newvalue)
 		{
 			const string __id = "setSomeObject.(Ljava/lang/Object;)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (newvalue);
-				_members.StaticMethods.InvokeVoidMethod (__id, __args);
-			} finally {
-				global::System.GC.KeepAlive (newvalue);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (newvalue);
+			_members.StaticMethods.InvokeVoidMethod (__id, __args);
+			global::System.GC.KeepAlive (newvalue);
 		}
 
 	}

@@ -34,10 +34,7 @@ namespace Java.IO {
 		public virtual unsafe void PrintStackTrace ()
 		{
 			const string __id = "printStackTrace.()V";
-			try {
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 		}
 
 	}

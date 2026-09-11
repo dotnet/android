@@ -28,11 +28,8 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 		[Register ("get_Value", "()I", "Getget_ValueHandler:java.code.IMyInterface, MyAssembly")]
 		get {
 			const string __id = "get_Value.()I";
-			try {
-				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
-				return __rm;
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+			return __rm;
 		}
 	}
 

@@ -13,11 +13,8 @@ public partial class MyClass {
 		set {
 			const string __id = "field.Ljava/code/Example;";
 
-			try {
-				_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
-			} finally {
-				GC.KeepAlive (value);
-			}
+			_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
+			GC.KeepAlive (value);
 		}
 	}
 

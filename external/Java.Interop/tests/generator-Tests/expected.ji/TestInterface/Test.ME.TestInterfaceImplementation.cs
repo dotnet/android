@@ -57,12 +57,9 @@ namespace Test.ME {
 			if (PeerReference.IsValid)
 				return;
 
-			try {
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-				Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
-				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
-			} finally {
-			}
+			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+			Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
+			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/method[@name='getSpanFlags' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
@@ -111,14 +108,12 @@ namespace Test.ME {
 		public override unsafe int GetSpanFlags (global::Java.Lang.Object tag)
 		{
 			const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (tag);
-				var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
-				return __rm;
-			} finally {
-				global::System.GC.KeepAlive (tag);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (tag);
+			var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
+			var __result = __rm;
+			global::System.GC.KeepAlive (tag);
+			return __result;
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/method[@name='append' and count(parameter)=1 and parameter[1][@type='java.lang.CharSequence']]"
@@ -126,13 +121,10 @@ namespace Test.ME {
 		public override unsafe void Append (global::Java.Lang.ICharSequence value)
 		{
 			const string __id = "append.(Ljava/lang/CharSequence;)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (value);
-				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-			} finally {
-				global::System.GC.KeepAlive (value);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (value);
+			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			global::System.GC.KeepAlive (value);
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/method[@name='identity' and count(parameter)=1 and parameter[1][@type='java.lang.CharSequence']]"
@@ -140,14 +132,12 @@ namespace Test.ME {
 		public override unsafe global::Java.Lang.ICharSequence IdentityFormatted (global::Java.Lang.ICharSequence value)
 		{
 			const string __id = "identity.(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (value);
-				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
-				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<Java.Lang.ICharSequence>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
-			} finally {
-				global::System.GC.KeepAlive (value);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (value);
+			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
+			var __result = global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<Java.Lang.ICharSequence>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
+			global::System.GC.KeepAlive (value);
+			return __result;
 		}
 
 	}

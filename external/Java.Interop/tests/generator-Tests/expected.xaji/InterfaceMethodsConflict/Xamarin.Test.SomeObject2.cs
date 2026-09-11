@@ -71,10 +71,7 @@ namespace Xamarin.Test {
 		public virtual unsafe void Irrelevant ()
 		{
 			const string __id = "irrelevant.()V";
-			try {
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 		}
 
 		static Delegate cb_close_Close_V;
@@ -128,10 +125,7 @@ namespace Xamarin.Test {
 		public override unsafe void Close ()
 		{
 			const string __id = "close.()V";
-			try {
-				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 		}
 
 	}

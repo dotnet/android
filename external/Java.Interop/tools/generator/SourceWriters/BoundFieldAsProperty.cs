@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -152,9 +151,21 @@ namespace generator.SourceWriters
 				}
 			}
 
-			writer.WriteLine ("try {");
+			var needsFinally = field.Symbol.IsArray
+				? opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1
+				: SourceWriterExtensions.HasCallCleanup (field.SetParameters, opt) ||
+					(field.SetParameters.HasCleanup && !have_prep && opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1);
+			var needsKeepAlive = opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1 &&
+					field.Symbol.JniName != null &&
+					field.Symbol.JniName.Length > 1 &&
+					(field.Symbol.JniName [0] == 'L' || field.Symbol.JniName [0] == '[');
 
-			writer.Write ($"\t_members.{indirect}.SetValue (__id{(field.IsStatic ? "" : ", this")}, ");
+			if (needsFinally) {
+				writer.WriteLine ("try {");
+				writer.Write ("\t");
+			}
+
+			writer.Write ($"_members.{indirect}.SetValue (__id{(field.IsStatic ? "" : ", this")}, ");
 
 			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
 				if (invokeType != "Object" || have_prep) {
@@ -170,32 +181,26 @@ namespace generator.SourceWriters
 				writer.WriteLine ($"{(invokeType != "Object" ? arg : "new JniObjectReference (" + arg + ")")});");
 			}
 
-			writer.WriteLine ("} finally {");
-			writer.Indent ();
+			if (needsFinally) {
+				writer.WriteLine ("} finally {");
+				writer.Indent ();
 
-			if (field.Symbol.IsArray) {
-				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
+				if (field.Symbol.IsArray) {
 					writer.WriteLine ($"global::Android.Runtime.JNIEnv.DeleteLocalRef ({arg});");
-				}
-			} else {
-				foreach (var cleanup in field.SetParameters.GetCallCleanup (opt))
-					writer.WriteLine (cleanup);
-				if (field.SetParameters.HasCleanup && !have_prep) {
-					if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
+				} else {
+					SourceWriterExtensions.WriteCallCleanup (writer, field.SetParameters, opt);
+					if (!have_prep && opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1)
 						writer.WriteLine ($"global::Android.Runtime.JNIEnv.DeleteLocalRef ({arg});");
-					}
 				}
-			}
 
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1 &&
-					field.Symbol.JniName != null &&
-					field.Symbol.JniName.Length > 1 &&
-					(field.Symbol.JniName[0] == 'L' || field.Symbol.JniName[0] == '[')) {
+				if (needsKeepAlive)
+					writer.WriteLine ("GC.KeepAlive (value);");
+
+				writer.Unindent ();
+				writer.WriteLine ("}");
+			} else if (needsKeepAlive) {
 				writer.WriteLine ($"GC.KeepAlive (value);");
 			}
-
-			writer.Unindent ();
-			writer.WriteLine ("}");
 		}
 	}
 }

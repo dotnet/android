@@ -30,10 +30,7 @@ namespace Xamarin.Test {
 		public unsafe void Close ()
 		{
 			const string __id = "close.()V";
-			try {
-				_members_xamarin_test_I2.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members_xamarin_test_I2.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 		}
 
 	}

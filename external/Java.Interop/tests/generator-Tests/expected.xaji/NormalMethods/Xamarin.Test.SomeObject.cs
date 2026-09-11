@@ -55,15 +55,12 @@ namespace Xamarin.Test {
 			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((c == null) ? IntPtr.Zero : ((global::Java.Lang.Object) c).Handle);
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
-				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-				_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
-			} finally {
-				global::System.GC.KeepAlive (c);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue ((c == null) ? IntPtr.Zero : ((global::Java.Lang.Object) c).Handle);
+			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
+			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+			_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
+			global::System.GC.KeepAlive (c);
 		}
 
 		static Delegate cb_getType_GetType_arrayI;
@@ -91,11 +88,8 @@ namespace Xamarin.Test {
 		public new virtual unsafe int[] GetType ()
 		{
 			const string __id = "getType.()[I";
-			try {
-				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-				return (int[]) JNIEnv.GetArray (__rm.Handle, JniHandleOwnership.TransferLocalRef, typeof (int));
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+			return (int[]) JNIEnv.GetArray (__rm.Handle, JniHandleOwnership.TransferLocalRef, typeof (int));
 		}
 
 		static Delegate cb_handle_Handle_Ljava_lang_Object_Ljava_lang_Throwable__I;
@@ -126,16 +120,14 @@ namespace Xamarin.Test {
 		public new virtual unsafe int Handle (global::Java.Lang.Object o, global::Java.Lang.Throwable t)
 		{
 			const string __id = "handle.(Ljava/lang/Object;Ljava/lang/Throwable;)I";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [2];
-				__args [0] = new JniArgumentValue ((o == null) ? IntPtr.Zero : ((global::Java.Lang.Object) o).Handle);
-				__args [1] = new JniArgumentValue ((t == null) ? IntPtr.Zero : ((global::Java.Lang.Throwable) t).Handle);
-				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
-				return __rm;
-			} finally {
-				global::System.GC.KeepAlive (o);
-				global::System.GC.KeepAlive (t);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [2];
+			__args [0] = new JniArgumentValue ((o == null) ? IntPtr.Zero : ((global::Java.Lang.Object) o).Handle);
+			__args [1] = new JniArgumentValue ((t == null) ? IntPtr.Zero : ((global::Java.Lang.Throwable) t).Handle);
+			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
+			var __result = __rm;
+			global::System.GC.KeepAlive (o);
+			global::System.GC.KeepAlive (t);
+			return __result;
 		}
 
 		static Delegate cb_IntegerMethod_IntegerMethod_I;
@@ -163,11 +155,8 @@ namespace Xamarin.Test {
 		public virtual unsafe int IntegerMethod ()
 		{
 			const string __id = "IntegerMethod.()I";
-			try {
-				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
-				return __rm;
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+			return __rm;
 		}
 
 		static Delegate cb_VoidMethod_VoidMethod_V;
@@ -195,10 +184,7 @@ namespace Xamarin.Test {
 		public virtual unsafe void VoidMethod ()
 		{
 			const string __id = "VoidMethod.()V";
-			try {
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 		}
 
 		static Delegate cb_StringMethod_StringMethod_Ljava_lang_String_;
@@ -226,11 +212,8 @@ namespace Xamarin.Test {
 		public virtual unsafe string StringMethod ()
 		{
 			const string __id = "StringMethod.()Ljava/lang/String;";
-			try {
-				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+			return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 		}
 
 		static Delegate cb_ObjectMethod_ObjectMethod_Ljava_lang_Object_;
@@ -258,11 +241,8 @@ namespace Xamarin.Test {
 		public virtual unsafe global::Java.Lang.Object ObjectMethod ()
 		{
 			const string __id = "ObjectMethod.()Ljava/lang/Object;";
-			try {
-				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-				return global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+			return global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 		}
 
 		static Delegate cb_VoidMethodWithParams_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object__V;
@@ -334,11 +314,8 @@ namespace Xamarin.Test {
 		public virtual unsafe int ObsoleteMethod ()
 		{
 			const string __id = "ObsoleteMethod.()I";
-			try {
-				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
-				return __rm;
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+			return __rm;
 		}
 
 		static Delegate cb_ArrayListTest_ArrayListTest_Ljava_util_ArrayList__V;
