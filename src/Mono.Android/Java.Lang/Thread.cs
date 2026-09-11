@@ -26,32 +26,80 @@ namespace Java.Lang {
 
 				Handler = handler;
 				this.removable = removable;
-				if (removable)
-					lock (instances)
-						instances.AddOrUpdate (handler, this);
+				if (removable) {
+					lock (instances) {
+						var runnables = instances.GetOrCreateValue (handler);
+						Prune (runnables);
+						runnables.Add (new WeakReference<RunnableImplementor> (this, trackResurrection: true));
+					}
+				}
 			}
 
 			public void Run ()
 			{
-				if (Handler != null)
-					Handler ();
-				if (removable)
-					lock (instances)
-						if (Handler != null)
-							instances.Remove (Handler);
-				Dispose ();
+				try {
+					Handler?.Invoke ();
+				} finally {
+					Dispose ();
+				}
 			}
 
-			static ConditionalWeakTable<Action, RunnableImplementor> instances = new ();
-
-			public static RunnableImplementor Remove (Action handler)
+			public new void Dispose ()
 			{
-				RunnableImplementor result;
-				lock (instances) {
-					instances.TryGetValue (handler, out result!);
-					instances.Remove (handler);
+				lock (this)
+					base.Dispose ();
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				if (removable && Handler != null) {
+					lock (instances) {
+						if (instances.TryGetValue (Handler, out var runnables)) {
+							Prune (runnables, this);
+							if (runnables.Count == 0)
+								instances.Remove (Handler);
+						}
+					}
 				}
-				return result;
+				base.Dispose (disposing);
+			}
+
+			// Java owns queued callbacks. Neither a rooted Action nor native cancellation
+			// should keep a runnable alive through this lookup table.
+			static readonly ConditionalWeakTable<Action, List<WeakReference<RunnableImplementor>>> instances = new ();
+
+			static void Prune (List<WeakReference<RunnableImplementor>> runnables, RunnableImplementor? completed = null)
+			{
+				for (int i = runnables.Count - 1; i >= 0; i--) {
+					if (!runnables [i].TryGetTarget (out var runnable) ||
+							ReferenceEquals (runnable, completed) || runnable.Handle == IntPtr.Zero)
+						runnables.RemoveAt (i);
+				}
+			}
+
+			public static void Remove (Action handler, Action<RunnableImplementor> remove)
+			{
+				List<RunnableImplementor> pending = new ();
+				lock (instances) {
+					if (!instances.TryGetValue (handler, out var runnables))
+						return;
+					Prune (runnables);
+					foreach (var reference in runnables) {
+						if (reference.TryGetTarget (out var runnable))
+							pending.Add (runnable);
+					}
+					if (runnables.Count == 0)
+						instances.Remove (handler);
+				}
+
+				foreach (var runnable in pending) {
+					lock (runnable) {
+						if (runnable.Handle != IntPtr.Zero)
+							remove (runnable);
+					}
+				}
+				// Native removal may not match the handler, token or drawable. Keep the
+				// weak mapping and let Java reachability determine when disposal is safe.
 			}
 		}
 

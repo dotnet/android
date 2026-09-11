@@ -127,6 +127,7 @@
     <Compile Include="Android.Content\SharedPreferencesTest.cs" />
     <Compile Include="Android.Graphics\NinePatchTests.cs" />
     <Compile Include="Android.OS\BundleTest.cs" />
+    <Compile Include="Android.OS\CallbackLifetimeTests.cs" />
     <Compile Include="Android.OS\HandlerTest.cs" />
     <Compile Include="Android.Runtime\CharSequenceTest.cs" />
     <Compile Include="Android.Runtime\InputStreamInvokerTest.cs" />
@@ -153,6 +154,7 @@
     <Compile Include="Java.Interop\VirtualCallbackConstructorTests.cs" />
     <Compile Include="Java.Lang\ObjectArrayMarshaling.cs" />
     <Compile Include="Java.Lang\ObjectTest.cs" />
+    <Compile Include="Java.Lang\RunnableCacheTests.cs" />
     <Compile Include="Localization\LocalizationTests.cs" />
     <Compile Include="System\AppContextTests.cs" />
     <Compile Include="System\AppDomainTest.cs" />
