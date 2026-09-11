@@ -68,6 +68,10 @@ namespace Java.Interop
 			if (declaringType == DeclaringType)
 				return this;
 
+			var cache = SubclassConstructors;
+			if (cache.TryGetValue (declaringType, out var constructors))
+				return constructors;
+
 			// Initialize before publication in case construction recursively accesses this cache:
 			// System.ArgumentException: An item with the same key has already been added. Key: Java.Interop.JavaProxyThrowable
 			//    at System.Collections.Generic.Dictionary`2.TryInsert(TKey key, TValue value, InsertionBehavior behavior)
@@ -90,7 +94,15 @@ namespace Java.Interop
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods..ctor(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 27
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.GetConstructorsForType(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 77
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(String constructorSignature, Type declaringType, JniArgumentValue* parameters) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 146
-			return SubclassConstructors.GetOrAdd (declaringType, static type => new JniInstanceMethods (type));
+			var candidate = new JniInstanceMethods (declaringType);
+			try {
+				constructors = cache.GetOrAdd (declaringType, candidate);
+				return constructors;
+			} finally {
+				// Only the published candidate transfers ownership to the cache.
+				if (!ReferenceEquals (constructors, candidate))
+					candidate.Dispose ();
+			}
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
