@@ -23,7 +23,7 @@ namespace Xamarin.Android.RuntimeTests {
 			try {
 				list = b.GetIntegerArrayList ("key");
 				Assert.NotNull (list, "'key' doesn't refer to a list of integers after non-generic call");
-			} catch (Exception e) {
+			} catch (Exception) {
 				Assert.Fail ("Java.Lang.Object caches too aggresively");
 			}
 		}
@@ -38,7 +38,7 @@ namespace Xamarin.Android.RuntimeTests {
 			try {
 				var list = b.GetIntegerArrayList ("key");
 				Assert.NotNull (list, "'key' doesn't refer to a list of integers");
-			} catch (Exception e) {
+			} catch (Exception) {
 				Assert.Fail ("Java.Lang.Object caches too aggresively");
 			}
 		}

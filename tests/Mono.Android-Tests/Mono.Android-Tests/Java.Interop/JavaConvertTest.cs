@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection;
 
 using Android.App;
 using Android.Content;
@@ -32,6 +32,7 @@ namespace Java.InteropTests
 				new {Key = "z",   Value = (object) false },
 				new {Key = "_",   Value = (object) "string" },
 				new {Key = "nil", Value = (object) null },
+#pragma warning disable CA1422 // Boxed primitive constructors are obsolete since API 31 (Byte/Short), API 33 (Double/Float/Integer/Long/Boolean), and API 34 (Character).
 				new {Key = "jlb", Value = (object) new Java.Lang.Byte (10)},
 				new {Key = "jlc", Value = (object) new Java.Lang.Character ('d')},
 				new {Key = "jld", Value = (object) new Java.Lang.Double (12.01)},
@@ -40,6 +41,7 @@ namespace Java.InteropTests
 				new {Key = "jlj", Value = (object) new Java.Lang.Long (15L)},
 				new {Key = "jls", Value = (object) new Java.Lang.Short (16)},
 				new {Key = "jlz", Value = (object) new Java.Lang.Boolean (true)},
+#pragma warning restore CA1422
 				new {Key = "jl_", Value = (object) new Java.Lang.String ("JavaString")},
 				new {Key = "njo", Value = (object) new NonJavaObject ()},
 				new {Key = "jo",  Value = (object) new MyIntent ()},
@@ -148,8 +150,10 @@ namespace Java.InteropTests
 		public void ValueManagerConvertsJavaListToPrimitiveIList ()
 		{
 			using (var values = new Java.Util.ArrayList ())
+#pragma warning disable CA1422 // Boolean(bool) constructor is obsolete since API 33.
 			using (var first = new Java.Lang.Boolean (true))
 			using (var second = new Java.Lang.Boolean (false)) {
+#pragma warning restore CA1422
 				values.Add (first);
 				values.Add (second);
 
@@ -296,7 +300,9 @@ namespace Java.InteropTests
 		[TestCase (typeof (IList<string>), typeof (JavaList<>), false)]
 		[TestCase (typeof (ICollection<string>), typeof (JavaCollection<>), false)]
 		[TestCase (typeof (IDictionary<string, string>), typeof (JavaDictionary<,>), true)]
-		public void FromJniHandle_ReferenceArgumentsUseCanonicalTemplate (Type targetType, Type expectedWrapperDefinition, bool dictionary)
+		public void FromJniHandle_ReferenceArgumentsUseCanonicalTemplate (
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			Type targetType, Type expectedWrapperDefinition, bool dictionary)
 		{
 			Java.Lang.Object source = dictionary ? new JavaDictionary () : new JavaList ();
 			using (source) {
@@ -321,7 +327,9 @@ namespace Java.InteropTests
 		[TestCase (typeof (IDictionary<UnsupportedValueType, string>), true)]
 		[TestCase (typeof (IDictionary<string, UnsupportedValueType>), true)]
 		[Category ("NativeAOTTrimmable")]
-		public void FromJniHandle_UnsupportedValueTypeUsesUntypedFallback (Type targetType, bool dictionary)
+		public void FromJniHandle_UnsupportedValueTypeUsesUntypedFallback (
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			Type targetType, bool dictionary)
 		{
 			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
 				Assert.Ignore ("This test validates unsupported value-type container fallback on the trimmable typemap path.");
@@ -355,20 +363,11 @@ namespace Java.InteropTests
 			return list;
 		}
 
-		static object InvokeJavaConvertFromJniHandle (Type targetType, IntPtr handle, JniHandleOwnership transfer)
+		static object InvokeJavaConvertFromJniHandle (
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			Type targetType, IntPtr handle, JniHandleOwnership transfer)
 		{
-			var javaConvert = typeof (Java.Lang.Object).Assembly.GetType ("Java.Interop.JavaConvert");
-			Assert.IsNotNull (javaConvert);
-
-			var method = javaConvert.GetMethod (
-				"FromJniHandle",
-				BindingFlags.Public | BindingFlags.Static,
-				binder: null,
-				types: new [] { typeof (IntPtr), typeof (JniHandleOwnership), typeof (Type) },
-				modifiers: null);
-			Assert.IsNotNull (method);
-
-			var value = method.Invoke (null, new object [] { handle, transfer, targetType });
+			var value = JavaConvert.FromJniHandle (handle, transfer, targetType);
 			Assert.IsNotNull (value);
 			return value;
 		}

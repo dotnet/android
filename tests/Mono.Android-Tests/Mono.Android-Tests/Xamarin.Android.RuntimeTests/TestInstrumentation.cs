@@ -1,5 +1,8 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Android.App;
 using Android.OS;
@@ -69,7 +72,7 @@ namespace Xamarin.Android.RuntimeTests
 				var value = AppContext.GetData ("IncludeCategories") as string;
 				if (string.IsNullOrEmpty (value))
 					return null;
-				return value!.Split (new [] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+				return value.Split (new [] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 			}
 		}
 
@@ -104,6 +107,8 @@ namespace Xamarin.Android.RuntimeTests
 			base.OnCreate (arguments);
 		}
 
+		// Keep the expression fixture rooted for its linker regression test.
+		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods, typeof (System.LinqTests.LinqExpressionTest))]
 		protected override IEnumerable<Assembly> GetTestAssemblies ()
 		{
 			return [
