@@ -2,25 +2,19 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
 
 namespace Java.Interop {
 
 	partial class JniPeerMembers {
 
-		internal sealed class JniMethodInfoCache : IDisposable {
+		private sealed class JniMethodInfoCache : IDisposable {
 
 			readonly ConcurrentDictionary<string, JniMethodInfo> methods;
 
 			public JniMethodInfoCache (int concurrencyLevel, int capacity)
 			{
 				methods = new ConcurrentDictionary<string, JniMethodInfo> (concurrencyLevel, capacity);
-			}
-
-			internal JniMethodInfoCache (int concurrencyLevel, int capacity, IEqualityComparer<string> comparer)
-			{
-				methods = new ConcurrentDictionary<string, JniMethodInfo> (concurrencyLevel, capacity, comparer);
 			}
 
 			internal static JniMethodInfoCache GetOrCreate (ref JniMethodInfoCache? cache, int concurrencyLevel, int capacity)
