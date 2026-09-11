@@ -51,7 +51,16 @@ namespace Java.InteropTests {
 			[JavaObjectWithMissingJavaPeer.JniTypeName]     = typeof (JavaObjectWithMissingJavaPeer),
 			[MyDisposableObject.JniTypeName]                = typeof (JavaDisposedObject),
 			[MyJavaInterfaceImpl.JniTypeName]               = typeof (MyJavaInterfaceImpl),
+			[ManagedPeerRegistrationTests.JniTypeName]      = typeof (ManagedPeerRegistrationTests.Registration),
 		};
+
+		internal Action<JniType>? NativeRegistrationObserver;
+
+		public override void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
+		{
+			NativeRegistrationObserver?.Invoke (nativeClass);
+			base.RegisterNativeMembers (nativeClass, type, methods);
+		}
 
 		public JavaVMFixtureTypeManager ()
 		{

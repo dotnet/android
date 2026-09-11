@@ -43,6 +43,8 @@ namespace Java.Interop {
 		bool    registered;
 		JniObjectReference  peerReference;
 
+		internal bool IsRegisteredWithRuntime => registered;
+
 		public  JniObjectReference  PeerReference   {
 			get {return peerReference;}
 		}
@@ -151,11 +153,14 @@ namespace Java.Interop {
 			return JniEnvironment.Types.IsInstanceOf (value, PeerReference);
 		}
 
-#pragma warning disable 0414
-		// This isn't used anywhere; it's just present so that the GC won't collect the referenced delegates.
+		// Retains delegates from every batch JNI may have partially registered.
 		JniNativeMethodRegistration[]? methods;
-#pragma warning restore 0414
+		object? nativeRegistrationLock;
 
+		/// <remarks>
+		/// Once JNI registration is attempted, the runtime retains this type and its delegates
+		/// until disposal, even if registration throws: JNI may have registered part of the batch.
+		/// </remarks>
 		[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
 		public void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
 		{
@@ -164,10 +169,17 @@ namespace Java.Interop {
 			if (methods == null)
 				throw new ArgumentNullException (nameof (methods));
 
-			JniEnvironment.Types.RegisterNatives (PeerReference, methods, checked ((int)methods.Length));
-			// Prevents method delegates from being GC'd so long as this type remains
-			this.methods = methods;
-			RegisterWithRuntime ();
+			JniEnvironment.Types.RegisterNatives (PeerReference, methods, methods.Length, this);
+		}
+
+		internal void KeepNativeMethodsAlive (JniNativeMethodRegistration[] registrations)
+		{
+			lock (LazyInitializer.EnsureInitialized (ref nativeRegistrationLock)) {
+				// JNI can partially publish a batch before failing. Earlier batches may still be callable too.
+				var retained = methods == null ? registrations : methods.Concat (registrations).ToArray ();
+				RegisterWithRuntime ();
+				methods = retained;
+			}
 		}
 
 		public void UnregisterNativeMethods ()

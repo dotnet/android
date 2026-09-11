@@ -282,30 +282,33 @@ namespace Java.Interop {
 
 			try {
 				var r_nativeClass   = new JniObjectReference (n_nativeClass);
-#pragma warning disable CA2000
+#pragma warning disable CA2000 // Disposed below unless native registration transfers ownership to the runtime.
 				var nativeClass     = new JniType (ref r_nativeClass, JniObjectReferenceOptions.Copy);
 #pragma warning restore CA2000
-
-				var methodsRef              = new JniObjectReference (n_methods);
-
-				var typeSig                 = new JniTypeSignature (nativeClass.Name);
-				var type                    = GetTypeFromSignature (JniEnvironment.Runtime.TypeManager, typeSig);
-
-				int methodsLength           = JniEnvironment.Strings.GetStringLength (methodsRef);
-				var methodsChars            = JniEnvironment.Strings.GetStringChars (methodsRef, null);
-				var methods                 = new ReadOnlySpan<char>(methodsChars, methodsLength);
 				try {
-					JniEnvironment.Runtime.TypeManager.RegisterNativeMembers (nativeClass, type, methods);
-				}
-				catch (Exception e) {
-					throw new NotSupportedException (
-							$"Unable to register native members for Java type `{nativeClass.Name}` <=> managed type `{type?.AssemblyQualifiedName}`.",
-							e);
-				}
-				finally {
-					JniEnvironment.Strings.ReleaseStringChars (methodsRef, methodsChars);
-				}
+					var methodsRef              = new JniObjectReference (n_methods);
 
+					var typeSig                 = new JniTypeSignature (nativeClass.Name);
+					var type                    = GetTypeFromSignature (JniEnvironment.Runtime.TypeManager, typeSig);
+
+					int methodsLength           = JniEnvironment.Strings.GetStringLength (methodsRef);
+					var methodsChars            = JniEnvironment.Strings.GetStringChars (methodsRef, null);
+					var methods                 = new ReadOnlySpan<char>(methodsChars, methodsLength);
+					try {
+						JniEnvironment.Runtime.TypeManager.RegisterNativeMembers (nativeClass, type, methods);
+					}
+					catch (Exception e) {
+						throw new NotSupportedException (
+								$"Unable to register native members for Java type `{nativeClass.Name}` <=> managed type `{type?.AssemblyQualifiedName}`.",
+								e);
+					}
+					finally {
+						JniEnvironment.Strings.ReleaseStringChars (methodsRef, methodsChars);
+					}
+				} finally {
+					if (!nativeClass.IsRegisteredWithRuntime)
+						nativeClass.Dispose ();
+				}
 			}
 			catch (Exception e) {
 				__r?.OnUserUnhandledException (ref envp, e);
