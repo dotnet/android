@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 using System;
-using System.Collections.Concurrent;
 
 namespace Java.Interop
 {
@@ -39,16 +38,16 @@ namespace Java.Interop
 
 		readonly Type                                       DeclaringType;
 
-		JniMethodInfoCache?                                      instanceMethods;
-		ConcurrentDictionary<Type, JniInstanceMethods>?          subclassConstructors;
+		JniValueCache<string, JniMethodInfo>?                     instanceMethods;
+		JniValueCache<Type, JniInstanceMethods>?                 subclassConstructors;
 
-		JniMethodInfoCache                                       InstanceMethods      => JniMethodInfoCache.GetOrCreate (ref instanceMethods, 1, 3);
-		ConcurrentDictionary<Type, JniInstanceMethods>            SubclassConstructors => GetOrCreate (ref subclassConstructors, 1);
+		JniValueCache<string, JniMethodInfo>                      InstanceMethods      => JniValueCache<string, JniMethodInfo>.GetOrCreate (ref instanceMethods, 1, 3, static value => value.StaticRedirect?.Dispose ());
+		JniValueCache<Type, JniInstanceMethods>                  SubclassConstructors => JniValueCache<Type, JniInstanceMethods>.GetOrCreate (ref subclassConstructors, 1, 1, static value => value.Dispose ());
 
 		internal void Dispose ()
 		{
-			JniMethodInfoCache.Dispose (ref instanceMethods);
-			Clear (ref subclassConstructors, static value => value.Dispose ());
+			JniValueCache<string, JniMethodInfo>.Dispose (ref instanceMethods);
+			JniValueCache<Type, JniInstanceMethods>.Dispose (ref subclassConstructors);
 
 			if (jniPeerType != null)
 				jniPeerType.Dispose ();
@@ -67,10 +66,6 @@ namespace Java.Interop
 		{
 			if (declaringType == DeclaringType)
 				return this;
-
-			var cache = SubclassConstructors;
-			if (cache.TryGetValue (declaringType, out var constructors))
-				return constructors;
 
 			// Initialize before publication in case construction recursively accesses this cache:
 			// System.ArgumentException: An item with the same key has already been added. Key: Java.Interop.JavaProxyThrowable
@@ -94,15 +89,7 @@ namespace Java.Interop
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods..ctor(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 27
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.GetConstructorsForType(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 77
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(String constructorSignature, Type declaringType, JniArgumentValue* parameters) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 146
-			var candidate = new JniInstanceMethods (declaringType);
-			try {
-				constructors = cache.GetOrAdd (declaringType, candidate);
-				return constructors;
-			} finally {
-				// Only the published candidate transfers ownership to the cache.
-				if (!ReferenceEquals (constructors, candidate))
-					candidate.Dispose ();
-			}
+			return SubclassConstructors.GetOrAdd (declaringType, static type => new JniInstanceMethods (type));
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)

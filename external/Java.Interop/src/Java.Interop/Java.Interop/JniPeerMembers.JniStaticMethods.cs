@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 using System;
-using System.Collections.Concurrent;
 
 namespace Java.Interop
 {
@@ -15,13 +14,13 @@ namespace Java.Interop
 
 		internal    readonly    JniPeerMembers              Members;
 
-		JniMethodInfoCache? staticMethods;
+		JniValueCache<string, JniMethodInfo>? staticMethods;
 
-		JniMethodInfoCache StaticMethods => JniMethodInfoCache.GetOrCreate (ref staticMethods, 1, 3);
+		JniValueCache<string, JniMethodInfo> StaticMethods => JniValueCache<string, JniMethodInfo>.GetOrCreate (ref staticMethods, 1, 3, static value => value.StaticRedirect?.Dispose ());
 
 		internal void Dispose ()
 		{
-			JniMethodInfoCache.Dispose (ref staticMethods);
+			JniValueCache<string, JniMethodInfo>.Dispose (ref staticMethods);
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)

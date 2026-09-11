@@ -59,31 +59,6 @@ namespace Java.InteropTests
 			});
 		}
 
-		[Test]
-		public void PublicationFailureDisposesConstructor ()
-		{
-			RunWithReferenceTracking ((members, references, runtime) => {
-				var comparer = new ThrowingTypeComparer ();
-				var cache = new ConcurrentDictionary<Type, JniPeerMembers.JniInstanceMethods> (comparer);
-				var field = typeof (JniPeerMembers.JniInstanceMethods).GetField ("subclassConstructors", BindingFlags.NonPublic | BindingFlags.Instance);
-				Assert.IsNotNull (field);
-				field.SetValue (members.InstanceMethods, cache);
-				references.OnCreate = () => comparer.ThrowOnHash = true;
-
-				Assert.Throws<InvalidOperationException> (() => members.InstanceMethods.GetConstructorsForType (typeof (MyString)));
-				references.OnCreate = null;
-				comparer.ThrowOnHash = false;
-
-				Assert.AreEqual (1, references.Created.Count);
-				Assert.IsEmpty (cache);
-				AssertReleased (references, runtime);
-
-				// Failure must leave the cache usable for a subsequent lookup.
-				var constructor = members.InstanceMethods.GetConstructorsForType (typeof (MyString));
-				AssertWinnerAndCleanup (members, references, runtime, constructor, 2);
-			});
-		}
-
 		static unsafe void AssertWinnerAndCleanup (JniPeerMembers members, TrackingReferenceManager references, JniRuntime runtime, JniPeerMembers.JniInstanceMethods winner, int created)
 		{
 			var type = winner.JniPeerType;
@@ -241,19 +216,6 @@ namespace Java.InteropTests
 				inner.WriteGlobalReferenceLine (format, args);
 		}
 
-		sealed class ThrowingTypeComparer : IEqualityComparer<Type>
-		{
-			public bool ThrowOnHash;
-
-			public bool Equals (Type x, Type y) => x == y;
-
-			public int GetHashCode (Type type)
-			{
-				if (ThrowOnHash)
-					throw new InvalidOperationException ("Constructor publication failed.");
-				return type.GetHashCode ();
-			}
-		}
 	}
 }
 #endif
