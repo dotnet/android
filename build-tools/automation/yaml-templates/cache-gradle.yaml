@@ -1,15 +1,17 @@
-# Shared Gradle dependency cache template
-# Caches Gradle downloads between pipeline runs to avoid transient network
-# failures when resolving Maven dependencies or when downloading the Gradle
-# distribution itself.
+# Shared Gradle state and dependency cache template
+# Gives each job a clean Gradle user home while caching downloads between
+# pipeline runs to avoid transient network failures when resolving Maven
+# dependencies or downloading the Gradle distribution itself.
 #
 # Two caches are used, because they have different invalidation rules:
 #
-#   * $HOME/.gradle/caches        - resolved Maven dependencies. Keyed on the
-#                                   Gradle build files that declare them.
-#   * $HOME/.gradle/wrapper/dists - the Gradle distribution .zip downloaded by
-#                                   the Gradle wrapper. Keyed only on
-#                                   gradle-wrapper.properties.
+#   * caches/modules-2 - resolved Maven dependencies. Keyed on the Gradle build
+#                       files that declare them.
+#   * wrapper/dists    - the Gradle distribution .zip downloaded by the Gradle
+#                       wrapper. Keyed only on gradle-wrapper.properties.
+#
+# Mutable caches, transforms, and daemon registry state are intentionally not
+# restored across jobs.
 #
 # Without the second cache every agent re-downloads the distribution from
 # services.gradle.org (which redirects to github.com). A transient HTTP 5xx
@@ -22,37 +24,60 @@ parameters:
 
 steps:
 - script: |
+    set -euo pipefail
     git log -1 --format=%H external/Java.Interop > $(Agent.TempDirectory)/java-interop-submodule-hash.txt
-    echo "##vso[task.setvariable variable=GRADLE_CACHE_DIR]$HOME/.gradle/caches"
-    echo "##vso[task.setvariable variable=GRADLE_DISTS_DIR]$HOME/.gradle/wrapper/dists"
+    gradle_user_home="$(Agent.TempDirectory)/gradle-user-home"
+    rm -rf -- "$gradle_user_home"
+    mkdir -p "$gradle_user_home/caches/modules-2" "$gradle_user_home/wrapper/dists"
+    echo "##vso[task.setvariable variable=GRADLE_USER_HOME]$gradle_user_home"
+    echo "##vso[task.setvariable variable=GRADLE_DEPENDENCY_CACHE_DIR]$gradle_user_home/caches/modules-2"
+    echo "##vso[task.setvariable variable=GRADLE_DISTS_DIR]$gradle_user_home/wrapper/dists"
   workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: prepare Gradle cache variables
+  displayName: prepare isolated Gradle state
   condition: ne(variables['Agent.OS'], 'Windows_NT')
 
 - pwsh: |
     git log -1 --format=%H external/Java.Interop > $(Agent.TempDirectory)/java-interop-submodule-hash.txt
-    $gradleCacheDir = Join-Path $env:USERPROFILE ".gradle\caches"
-    Write-Host "##vso[task.setvariable variable=GRADLE_CACHE_DIR]$gradleCacheDir"
-    $gradleDistsDir = Join-Path $env:USERPROFILE ".gradle\wrapper\dists"
+    $gradleUserHome = Join-Path "$(Agent.TempDirectory)" "gradle-user-home"
+    if (Test-Path -LiteralPath $gradleUserHome) {
+      Remove-Item -LiteralPath $gradleUserHome -Recurse -Force
+    }
+    $gradleDependencyCacheDir = Join-Path $gradleUserHome "caches\modules-2"
+    $gradleDistsDir = Join-Path $gradleUserHome "wrapper\dists"
+    New-Item -ItemType Directory -Path $gradleDependencyCacheDir, $gradleDistsDir -Force | Out-Null
+    Write-Host "##vso[task.setvariable variable=GRADLE_USER_HOME]$gradleUserHome"
+    Write-Host "##vso[task.setvariable variable=GRADLE_DEPENDENCY_CACHE_DIR]$gradleDependencyCacheDir"
     Write-Host "##vso[task.setvariable variable=GRADLE_DISTS_DIR]$gradleDistsDir"
   workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: prepare Gradle cache variables
+  displayName: prepare isolated Gradle state
   condition: eq(variables['Agent.OS'], 'Windows_NT')
 
 - task: Cache@2
-  displayName: cache Gradle downloads
+  name: gradleDependenciesCache
+  displayName: cache Gradle dependencies
+  continueOnError: true
   inputs:
-    key: '"gradle" | "v1" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties | ${{ parameters.xaSourcePath }}/src/**/build.gradle | $(Agent.TempDirectory)/java-interop-submodule-hash.txt'
+    key: '"gradle" | "v2" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties | ${{ parameters.xaSourcePath }}/src/**/build.gradle | $(Agent.TempDirectory)/java-interop-submodule-hash.txt'
     restoreKeys: |
-      "gradle" | "v1" | "$(Agent.OS)"
-    path: $(GRADLE_CACHE_DIR)
+      "gradle" | "v2" | "$(Agent.OS)"
+    path: $(GRADLE_DEPENDENCY_CACHE_DIR)
+    cacheHitVar: GRADLE_DEPENDENCY_CACHE_RESTORED
 
 - task: Cache@2
+  name: gradleDistributionsCache
   displayName: cache Gradle distributions
+  continueOnError: true
   inputs:
     # No `restoreKeys` fallback: a partial restore would bring back a
     # distribution the wrapper cannot use, and Cache@2 would then save the old
     # and new distributions together under the new key, growing the cache on
     # every version bump. An exact-key miss re-downloads only the new version.
-    key: '"gradle-dists" | "v1" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties'
+    key: '"gradle-dists" | "v2" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties'
     path: $(GRADLE_DISTS_DIR)
+    cacheHitVar: GRADLE_DISTS_RESTORED
+
+- pwsh: |
+    $scriptPath = Join-Path '${{ parameters.xaSourcePath }}' 'build-tools/automation/scripts/RecoverGradleCache.ps1'
+    & $scriptPath
+    Write-Host "GRADLE_USER_HOME=$(GRADLE_USER_HOME)"
+  displayName: validate isolated Gradle state

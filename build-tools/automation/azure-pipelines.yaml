@@ -282,6 +282,8 @@ extends:
             condition: or(ne(variables['Agent.JobStatus'], 'Succeeded'), eq(variables['XA.PublishAllLogs'], 'true'))
 
         - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
+          parameters:
+            xaSourcePath: $(Build.SourcesDirectory)/android
 
 
     - stage: dotnet_prepare_release
