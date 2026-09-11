@@ -85,6 +85,22 @@ namespace Java.Lang {
 				});
 			}
 
+			public static void Remove<TState> (Action handler, TState state, Action<RunnableImplementor, TState> remove)
+			{
+				Remove (handler, (state, remove), static (context, runnable) => {
+					context.remove (runnable, context.state);
+					return false;
+				});
+			}
+
+			public static void Remove<TState1, TState2> (Action handler, TState1 state1, TState2 state2, Action<RunnableImplementor, TState1, TState2> remove)
+			{
+				Remove (handler, (state1, state2, remove), static (context, runnable) => {
+					context.remove (runnable, context.state1, context.state2);
+					return false;
+				});
+			}
+
 			public static bool Remove<TState> (Action handler, TState state, Func<TState, RunnableImplementor, bool> remove)
 			{
 				List<RunnableImplementor> pending = new ();

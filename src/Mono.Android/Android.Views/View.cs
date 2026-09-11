@@ -79,7 +79,7 @@ namespace Android.Views {
 
 		public void UnscheduleDrawable (Android.Graphics.Drawables.Drawable who, Action what)
 		{
-			Java.Lang.Thread.RunnableImplementor.Remove (what, runnable => UnscheduleDrawable (who, runnable));
+			Java.Lang.Thread.RunnableImplementor.Remove (what, this, who, static (runnable, view, who) => view.UnscheduleDrawable (who, runnable));
 		}
 
 #if ANDROID_11
