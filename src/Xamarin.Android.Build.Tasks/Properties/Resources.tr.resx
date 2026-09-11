@@ -1255,7 +1255,7 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
   </data>
   <data name="XA4258" xml:space="preserve">
-    <value>Java name '{0}' contains invalid or unsupported Java identifier '{1}'. Change the package or type name.</value>
+    <value>Java adı '{0}' geçersiz veya desteklenmeyen Java tanımlayıcı '{1}' içeriyor. Paketi veya tür adını değiştirin.</value>
     <comment>The following are literal names and should not be translated: Java.
 {0} - Java package or type name
 {1} - Invalid, unsupported, reserved, or restricted Java identifier</comment>
@@ -1289,6 +1289,11 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
     <comment>The following are literal names and should not be translated: Java, [ExportParameter].
 {0} - Fully-qualified managed member name
 {1} - Managed parameter or return type</comment>
+  </data>
+  <data name="XA4264" xml:space="preserve">
+    <value>Java callable wrapper XML file '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: Java, XML.
+{0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>'{0}' komutu başarısız oldu.\n{1}</value>
