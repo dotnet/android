@@ -42,8 +42,6 @@ namespace Java.Interop {
 		bool    registered;
 		JniObjectReference  peerReference;
 
-		internal bool IsRegisteredWithRuntime => registered;
-
 		public  JniObjectReference  PeerReference   {
 			get {return peerReference;}
 		}
@@ -121,6 +119,12 @@ namespace Java.Interop {
 			if (methods != null)
 				UnregisterNativeMethods ();
 			JniObjectReference.Dispose (ref peerReference);
+		}
+
+		internal void DisposeUnlessRegisteredWithRuntime ()
+		{
+			if (!registered)
+				Dispose ();
 		}
 
 		public JniType? GetSuperclass ()

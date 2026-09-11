@@ -306,8 +306,7 @@ namespace Java.Interop {
 						JniEnvironment.Strings.ReleaseStringChars (methodsRef, methodsChars);
 					}
 				} finally {
-					if (!nativeClass.IsRegisteredWithRuntime)
-						nativeClass.Dispose ();
+					nativeClass.DisposeUnlessRegisteredWithRuntime ();
 				}
 			}
 			catch (Exception e) {

@@ -27,11 +27,12 @@ namespace Java.InteropTests {
 		}
 
 		[Test]
-		public void EmptyRegistration_DoesNotAdoptOwner ()
+		public void EmptyRegistration_AllowsNonEmptyRegistration ()
 		{
 			using var owner = new JniType (JniTypeName);
 			owner.RegisterNativeMethods ();
-			Assert.IsFalse (owner.IsRegisteredWithRuntime);
+			owner.RegisterNativeMethods (new JniNativeMethodRegistration ("value", "()I", new GetValue (static (env, klass) => 42)));
+			Assert.AreEqual (42, Call (owner, "value"));
 		}
 
 		[TestCase (false)]
