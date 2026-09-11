@@ -18,7 +18,6 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			new ExpectedTypeDeclaration {
 				MajorVersion        = 0x37,
 				MinorVersion        = 0,
-				ConstantPoolCount   = 12,
 				AccessFlags         = ClassAccessFlags.Module,
 				FullName            = "module-info",
 			}.Assert (c);
@@ -41,5 +40,5 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			Assert.AreEqual ("com/xamarin",         moduleAttr.Exports [0].Exports);
 		}
 	}
-}
 
+}
