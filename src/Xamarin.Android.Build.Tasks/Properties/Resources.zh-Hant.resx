@@ -885,20 +885,20 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
   <data name="XA4325" xml:space="preserve">
-    <value>Failed to rewrite managed JNI names for R8. {0}</value>
+    <value>無法重寫 R8 的受管理 JNI 名稱。{0}</value>
     <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4325_* resources.</comment>
   </data>
   <data name="XA4325_AssemblyFailure" xml:space="preserve">
-    <value>Could not rewrite the JNI names in the assembly '{0}': {1}</value>
+    <value>無法重寫組件 '{0}' 中的 JNI 名稱: {1}</value>
     <comment>{0} - The path of the assembly which could not be rewritten.
 {1} - The underlying message describing why the assembly could not be rewritten. It is not localized.</comment>
   </data>
   <data name="XA4325_SourceDestinationCount" xml:space="preserve">
-    <value>The 'SourceFiles' and 'DestinationFiles' item groups must contain the same number of items.</value>
+    <value>'SourceFiles' 和 'DestinationFiles' 項目群組必須包含相同數量的項目。</value>
     <comment>The following are literal MSBuild item group names and should not be translated: 'SourceFiles', 'DestinationFiles'.</comment>
   </data>
   <data name="XA4326" xml:space="preserve">
-    <value>Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous JNIEnv.FindClass source.</value>
+    <value>無法安全地重寫 JNI 成員查閱，因為其類別控制代碼沒有一個在結構上明確的 JNIEnv.FindClass 來源。</value>
     <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
@@ -1255,37 +1255,37 @@ In this message, the term "handheld app" means "app for handheld devices."
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
   </data>
   <data name="XA4258" xml:space="preserve">
-    <value>Java 名稱 '{0}' 包含保留的 Java 識別碼 '{1}'。請變更套件或類型名稱。</value>
+    <value>Java name '{0}' contains invalid or unsupported Java identifier '{1}'. Change the package or type name.</value>
     <comment>The following are literal names and should not be translated: Java.
 {0} - Java package or type name
-{1} - Java reserved keyword or restricted identifier</comment>
+{1} - Invalid, unsupported, reserved, or restricted Java identifier</comment>
   </data>
   <data name="XA4259" xml:space="preserve">
-    <value>Type '{0}' has multiple managed constructors that map to the same Java Native Interface (JNI) signature '{1}'. Change the constructor parameter types so each constructor has a unique JNI signature.</value>
+    <value>類型 '{0}' 具有多個受控建構函式，這些建構函式對應至相同的 JAVA 原生介面 (JNI) 簽章 '{1}'。請變更建構函式參數類型，讓每個建構函式都有唯一的 JNI 簽章。</value>
     <comment>The following terms should not be translated: Java Native Interface, JNI.
 {0} - Fully-qualified managed type name
 {1} - Colliding JNI constructor signature</comment>
   </data>
   <data name="XA4260" xml:space="preserve">
-    <value>Type '{0}' has a constructor parameter type '{1}' that cannot be represented in a Java constructor. Remove the constructor or change the parameter to a supported Java type.</value>
+    <value>類型 '{0}' 具有無法在 Java 建構函式中表示的建構函式參數類型 '{1}'。請移除建構函式，或將參數變更為支援的 Java 類型。</value>
     <comment>The following term should not be translated: Java.
 {0} - Fully-qualified managed type name
 {1} - Unsupported managed constructor parameter type</comment>
   </data>
   <data name="XA4261" xml:space="preserve">
-    <value>Type '{0}' has Java constructor signature '{1}', but its base type does not expose a compatible Java constructor. Add a compatible base constructor or remove the derived constructor.</value>
+    <value>類型 '{0}' 具有 JAVA 建構函式簽章 '{1}'，但其基底類型未提供相容的 Java 建構函式。請新增相容的基底建構函式，或移除衍生建構函式。</value>
     <comment>The following term should not be translated: Java.
 {0} - Fully-qualified managed type name
 {1} - JNI signature of the derived constructor</comment>
   </data>
   <data name="XA4262" xml:space="preserve">
-    <value>Type '{0}' has an invalid [Export] SuperArgumentsString value '{1}'. The value references a constructor parameter that does not exist.</value>
+    <value>類型 '{0}' 具有無效的 [Export] SuperArgumentsString 值 '{1}'。值參考不存在的建構函式參數。</value>
     <comment>The following terms should not be translated: Export, SuperArgumentsString.
 {0} - Fully-qualified managed type name
 {1} - Invalid SuperArgumentsString value</comment>
   </data>
   <data name="XA4263" xml:space="preserve">
-    <value>The exported member '{0}' has unsupported signature type '{1}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter].</value>
+    <value>匯出的成員 '{0}' 具有不支援的簽章類型 '{1}'。請使用 Java 同儕型別、支援的 managed-to-Java 對應，或 [ExportParameter]。</value>
     <comment>The following are literal names and should not be translated: Java, [ExportParameter].
 {0} - Fully-qualified managed member name
 {1} - Managed parameter or return type</comment>

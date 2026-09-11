@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -49,7 +52,7 @@ namespace Xamarin.Android.Tasks
 		/// Uninstalls <paramref name="packageName"/> via <c>adb shell pm uninstall</c>, optionally
 		/// preserving the application's data and cache directories (<c>-k</c>).
 		/// </summary>
-		async Task UninstallPackage (string packageName, bool preserveData, string user)
+		internal virtual async Task UninstallPackage (string packageName, bool preserveData, string user)
 		{
 			var args = new List<string> { "pm", "uninstall" };
 			if (preserveData) {
@@ -66,12 +69,14 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Installs an APK via <c>adb install</c>. On an "already exists" or "requires uninstall"
 		/// failure the package is uninstalled (optionally preserving data) and the install is
-		/// retried once, mirroring the legacy behavior. Any other failure throws a
+		/// retried once, mirroring the legacy behavior. A recognized transient device transport
+		/// or package-manager failure waits for recovery and retries once. Any other failure throws a
 		/// <see cref="FastDeployInstallException"/> carrying the matching <c>ADB####</c> error code.
 		/// </summary>
-		async Task InstallApkWithRetry (string apkFile, bool reinstall, bool testOnly, string user)
+		internal async Task InstallApkWithRetry (string apkFile, bool reinstall, bool testOnly, string user)
 		{
-			var result = await RunInstallCommand (apkFile, reinstall, testOnly, user);
+			var retryState = new InstallRetryState ();
+			var result = await RunInstallCommandWithTransportRetry (apkFile, reinstall, testOnly, user, retryState);
 			var kind = ClassifyInstallResult (result);
 			if (kind == InstallResultKind.Success) {
 				return;
@@ -81,17 +86,56 @@ namespace Xamarin.Android.Tasks
 				bool preserveData = kind == InstallResultKind.AlreadyExists;
 				LogDebugMessage ($"Package '{PackageName}' could not be installed directly ({kind}). Uninstalling (preserving data: {preserveData}) and retrying.");
 				await UninstallPackage (PackageName, preserveData: preserveData, user: user);
-				result = await RunInstallCommand (apkFile, reinstall: true, testOnly: testOnly, user: user);
+				result = await RunInstallCommandWithTransportRetry (apkFile, reinstall: true, testOnly: testOnly, user: user, retryState);
 				kind = ClassifyInstallResult (result);
 				if (kind == InstallResultKind.Success) {
 					return;
 				}
 			}
 
-			throw new FastDeployInstallException (GetInstallErrorCode (kind), result.Output);
+			throw new FastDeployInstallException (GetInstallErrorCode (kind), retryState.GetFailureMessage ());
 		}
 
-		async Task<AdbCommandResult> RunInstallCommand (string apkFile, bool reinstall, bool testOnly, string user)
+		async Task<AdbCommandResult> RunInstallCommandWithTransportRetry (
+			string apkFile,
+			bool reinstall,
+			bool testOnly,
+			string user,
+			InstallRetryState retryState)
+		{
+			var result = await RunInstallCommand (apkFile, reinstall, testOnly, user);
+			retryState.AddInstallAttempt (result);
+			if (retryState.TransportRetryUsed || ClassifyInstallResult (result) != InstallResultKind.TransientTransport) {
+				return result;
+			}
+
+			retryState.TransportRetryUsed = true;
+			LogDebugMessage ($"Transient ADB/package-manager communication failure while installing '{PackageName}'. Waiting for recovery before retrying once.");
+			try {
+				await WaitForInstallTransportRecovery ();
+				retryState.AddRecoveryDiagnostic ("The device and Android package manager became responsive.");
+			} catch (OperationCanceledException) {
+				throw;
+			} catch (Exception ex) {
+				retryState.AddRecoveryDiagnostic ($"Recovery failed: {ex}");
+				throw new FastDeployInstallException ("ADB0010", retryState.GetFailureMessage ());
+			}
+
+			result = await RunInstallCommand (apkFile, reinstall, testOnly, user);
+			retryState.AddInstallAttempt (result);
+			return result;
+		}
+
+		internal virtual async Task WaitForInstallTransportRecovery ()
+		{
+			string serial = string.Equals (DeviceId, "any", StringComparison.OrdinalIgnoreCase) ? null : DeviceId;
+			var adbRunner = new AdbRunner (
+				ResolveAdbPath (),
+				logger: (_, message) => LogDiagnostic ($"ADB install recovery: {message}"));
+			await adbRunner.WaitForPackageManagerAsync (serial, TimeSpan.FromSeconds (10), CancellationToken);
+		}
+
+		internal virtual async Task<AdbCommandResult> RunInstallCommand (string apkFile, bool reinstall, bool testOnly, string user)
 		{
 			var args = new List<string> { "install" };
 			if (reinstall) {
@@ -112,7 +156,7 @@ namespace Xamarin.Android.Tasks
 			return await RunLoggedDeviceOperation (operation, () => RunAdbCommand (args.ToArray ()));
 		}
 
-		enum InstallResultKind
+		internal enum InstallResultKind
 		{
 			Success,
 			AlreadyExists,
@@ -120,6 +164,7 @@ namespace Xamarin.Android.Tasks
 			IncompatibleCpuAbi,
 			SdkNotSupported,
 			InsufficientSpace,
+			TransientTransport,
 			Failed,
 		}
 
@@ -127,7 +172,7 @@ namespace Xamarin.Android.Tasks
 		/// Classifies <c>adb install</c> output, mirroring the failure categories that the legacy
 		/// install path raised as typed exceptions.
 		/// </summary>
-		static InstallResultKind ClassifyInstallResult (AdbCommandResult result)
+		internal static InstallResultKind ClassifyInstallResult (AdbCommandResult result)
 		{
 			string output = result.Output ?? "";
 
@@ -156,6 +201,9 @@ namespace Xamarin.Android.Tasks
 			if (output.Contains ("[INSTALL_FAILED_CPU_ABI_INCOMPATIBLE") || output.Contains ("[INSTALL_FAILED_NO_MATCHING_ABIS")) {
 				return InstallResultKind.IncompatibleCpuAbi;
 			}
+			if (IsTransientInstallFailure (output)) {
+				return InstallResultKind.TransientTransport;
+			}
 
 			if (result.ExitCode != 0 ||
 					output.IndexOf ("Failure", StringComparison.OrdinalIgnoreCase) >= 0 ||
@@ -168,6 +216,15 @@ namespace Xamarin.Android.Tasks
 			return InstallResultKind.Success;
 		}
 
+		internal static bool IsTransientInstallFailure (string output)
+		{
+			if (string.IsNullOrEmpty (output)) {
+				return false;
+			}
+			return output.IndexOf ("Failure calling service package", StringComparison.OrdinalIgnoreCase) >= 0 &&
+				output.IndexOf ("Broken pipe", StringComparison.OrdinalIgnoreCase) >= 0;
+		}
+
 		static string GetInstallErrorCode (InstallResultKind kind)
 		{
 			return kind switch {
@@ -178,6 +235,46 @@ namespace Xamarin.Android.Tasks
 				InstallResultKind.InsufficientSpace => "ADB0060",
 				_ => "ADB0010",
 			};
+		}
+
+		sealed class InstallRetryState
+		{
+			readonly List<string> diagnostics = new List<string> ();
+			string firstInstallOutput;
+			int installAttemptCount;
+
+			public bool TransportRetryUsed { get; set; }
+
+			public void AddInstallAttempt (AdbCommandResult result)
+			{
+				installAttemptCount++;
+				string output = result.Output ?? "";
+				if (installAttemptCount == 1) {
+					firstInstallOutput = output;
+				}
+				diagnostics.Add ($"Install attempt {installAttemptCount} (exit code {result.ExitCode}):{Environment.NewLine}{(output.Length > 0 ? output : "<no output>")}");
+			}
+
+			public void AddRecoveryDiagnostic (string diagnostic)
+			{
+				diagnostics.Add ($"ADB transport recovery:{Environment.NewLine}{diagnostic}");
+			}
+
+			public string GetFailureMessage ()
+			{
+				if (installAttemptCount == 1 && diagnostics.Count == 1) {
+					return firstInstallOutput ?? "";
+				}
+
+				var message = new StringBuilder ();
+				foreach (string diagnostic in diagnostics) {
+					if (message.Length > 0) {
+						message.AppendLine ();
+					}
+					message.AppendLine (diagnostic);
+				}
+				return message.ToString ().TrimEnd ();
+			}
 		}
 	}
 

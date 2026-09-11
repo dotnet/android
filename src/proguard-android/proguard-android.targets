@@ -1,29 +1,35 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <_Destination>$(MicrosoftAndroidSdkOutDir)proguard-android.txt</_Destination>
+    <_OptimizeDestination>$(MicrosoftAndroidSdkOutDir)proguard-android-optimize.txt</_OptimizeDestination>
   </PropertyGroup>
 
   <Target Name="_GenerateProGuardRules"
       BeforeTargets="Build"
       Inputs="$(MSBuildThisFile);build.gradle;settings.gradle"
-      Outputs="$(_Destination)">
+      Outputs="$(_Destination);$(_OptimizeDestination)">
     <Exec
         Command="&quot;$(GradleWPath)&quot; extractProguardFiles $(GradleArgs)"
         EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
     <ItemGroup>
-      <_ProguardRules Include="$(MSBuildThisFileDirectory)build\intermediates\default_proguard_files\global\proguard-android.txt-*" />
+      <_ProguardRules Include="$(MSBuildThisFileDirectory)build\intermediates\default_proguard_files\global\proguard-android.txt-*">
+        <Destination>$(_Destination)</Destination>
+      </_ProguardRules>
+      <_ProguardRules Include="$(MSBuildThisFileDirectory)build\intermediates\default_proguard_files\global\proguard-android-optimize.txt-*">
+        <Destination>$(_OptimizeDestination)</Destination>
+      </_ProguardRules>
     </ItemGroup>
     <Copy
         SourceFiles="@(_ProguardRules)"
-        DestinationFiles="$(_Destination)"
+        DestinationFiles="@(_ProguardRules->'%(Destination)')"
     />
-    <Touch Files="$(_Destination)" />
+    <Touch Files="$(_Destination);$(_OptimizeDestination)" />
   </Target>
 
   <Target Name="_CleanProguardRules" BeforeTargets="Clean">
-    <Delete Files="$(_Destination)" />
+    <Delete Files="$(_Destination);$(_OptimizeDestination)" />
     <Exec
         Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
         EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"

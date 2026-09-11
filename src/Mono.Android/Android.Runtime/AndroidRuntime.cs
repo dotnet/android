@@ -97,6 +97,7 @@ namespace Android.Runtime {
 				je  = JavaProxyThrowable.Create (pendingException);
 			}
 			JniEnvironment.Exceptions.Throw (je.PeerReference);
+			GC.KeepAlive (je);
 		}
 	}
 
@@ -382,6 +383,11 @@ namespace Android.Runtime {
 		}
 
 		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
+		{
+			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
+		}
+
+		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 		{
 			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
 		}

@@ -37,6 +37,7 @@ namespace Xamarin.Android.Tasks
 		public string? BuildMetadataFileOutput { get; set; }
 		public ITaskItem []? ProguardConfigurationFiles { get; set; }
 		public bool UseTrimmableNativeAotProguardConfiguration { get; set; }
+		public string ObfuscationMode { get; set; } = "private-members";
 
 		// User-authored AndroidJavaSource (Bind != true) .java files. These have no managed peer and are
 		// therefore absent from the acw-map, so they must be kept explicitly when shrinking is enabled.
@@ -191,6 +192,9 @@ namespace Xamarin.Android.Tasks
 				}
 				if (!ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
 					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
+						WriteObfuscationRules (xamcfg, ObfuscationMode);
+						xamcfg.WriteLine ();
+						xamcfg.Flush ();
 						if (UseTrimmableNativeAotProguardConfiguration) {
 							using var stream = GetEmbeddedResourceStream ("proguard_trimmable_nativeaot.cfg");
 							stream.CopyTo (xamcfg.BaseStream);
@@ -250,6 +254,24 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return responseFile;
+		}
+
+		internal static void WriteObfuscationRules (TextWriter writer, string obfuscationMode)
+		{
+			if (string.Equals (obfuscationMode, "disabled", StringComparison.OrdinalIgnoreCase)) {
+				writer.WriteLine ("-dontobfuscate");
+				return;
+			}
+
+			writer.WriteLine ("-keep,allowshrinking,allowoptimization class **");
+			writer.WriteLine ("-keepclassmembers,allowshrinking,allowoptimization class ** {");
+			writer.WriteLine ("   public protected *;");
+			writer.WriteLine ("}");
+			// Managed interface proxy selection observes Class.getInterfaces(), which R8 cannot infer.
+			writer.WriteLine ("-keep,allowoptimization interface ** {");
+			writer.WriteLine ("   public protected *;");
+			writer.WriteLine ("}");
+			writer.WriteLine ("-keep,allowshrinking class * implements **");
 		}
 
 		// ProGuard "global" options that affect the whole build and are not allowed inside
