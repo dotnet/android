@@ -35,6 +35,15 @@ namespace Java.InteropTests {
 			Assert.AreEqual (42, Call (owner, "value"));
 		}
 
+		[Test]
+		public void ManagedMarshallingFailure_DoesNotAdoptOwner ()
+		{
+			using var owner = new JniType (JniTypeName);
+			Assert.Throws<ArgumentException> (() => owner.RegisterNativeMethods (new JniNativeMethodRegistration [1]));
+			owner.DisposeUnlessRegisteredWithRuntime ();
+			Assert.IsFalse (owner.PeerReference.IsValid);
+		}
+
 		[TestCase (false)]
 		[TestCase (true)]
 		public void RegistrationAttempt_RetainsOwnerAndDelegate (bool fail)

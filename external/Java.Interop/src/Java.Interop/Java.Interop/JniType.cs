@@ -181,8 +181,14 @@ namespace Java.Interop {
 			if (Interlocked.CompareExchange (ref this.methods, methods, null) != null)
 				throw new InvalidOperationException ("Native methods cannot be registered more than once.");
 
-			RegisterWithRuntime ();
-			JniEnvironment.Types.RegisterNatives (PeerReference, methods, methods.Length);
+			// Transfer ownership only after managed marshalling succeeds, immediately before
+			// JNI can publish any function pointers.
+			JniEnvironment.Types.RegisterNatives (
+				PeerReference,
+				methods,
+				methods.Length,
+				this,
+				static type => type.RegisterWithRuntime ());
 		}
 
 		public void UnregisterNativeMethods ()
