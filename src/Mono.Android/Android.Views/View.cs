@@ -66,12 +66,10 @@ namespace Android.Views {
 
 		public bool RemoveCallbacks (Action action)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Remove (action);
-			if (runnable == null)
-				return false;
-			bool result = RemoveCallbacks (runnable);
-			runnable.Dispose ();
-			return result;
+			return Java.Lang.Thread.RunnableImplementor.Remove (
+				action,
+				this,
+				static (view, runnable) => view.RemoveCallbacks (runnable));
 		}
 
 		public void ScheduleDrawable (Android.Graphics.Drawables.Drawable who, Action what, long when)
@@ -81,11 +79,7 @@ namespace Android.Views {
 
 		public void UnscheduleDrawable (Android.Graphics.Drawables.Drawable who, Action what)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Remove (what);
-			if (runnable == null)
-				return;
-			UnscheduleDrawable (who, runnable);
-			runnable.Dispose ();
+			Java.Lang.Thread.RunnableImplementor.Remove (what, this, who, static (runnable, view, who) => view.UnscheduleDrawable (who, runnable));
 		}
 
 #if ANDROID_11

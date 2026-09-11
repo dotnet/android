@@ -63,20 +63,12 @@ namespace Android.OS {
 
 		public void RemoveCallbacks (Action action)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Remove (action);
-			if (runnable == null)
-				return;
-			RemoveCallbacks (runnable);
-			runnable.Dispose ();
+			Java.Lang.Thread.RunnableImplementor.Remove (action, this, static (runnable, handler) => handler.RemoveCallbacks (runnable));
 		}
 
 		public void RemoveCallbacks (Action action, Java.Lang.Object token)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Remove (action);
-			if (runnable == null)
-				return;
-			RemoveCallbacks (runnable, token);
-			runnable.Dispose ();
+			Java.Lang.Thread.RunnableImplementor.Remove (action, this, token, static (runnable, handler, token) => handler.RemoveCallbacks (runnable, token));
 		}
 	}
 
@@ -103,4 +95,3 @@ namespace Android.OS {
 		}
 	}
 }
-

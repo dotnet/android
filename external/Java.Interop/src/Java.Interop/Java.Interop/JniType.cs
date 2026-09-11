@@ -5,7 +5,6 @@ using System.Buffers;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -122,6 +121,12 @@ namespace Java.Interop {
 			JniObjectReference.Dispose (ref peerReference);
 		}
 
+		internal void DisposeUnlessRegisteredWithRuntime ()
+		{
+			if (!registered)
+				Dispose ();
+		}
+
 		public JniType? GetSuperclass ()
 		{
 			AssertValid ();
@@ -151,11 +156,25 @@ namespace Java.Interop {
 			return JniEnvironment.Types.IsInstanceOf (value, PeerReference);
 		}
 
-#pragma warning disable 0414
-		// This isn't used anywhere; it's just present so that the GC won't collect the referenced delegates.
-		JniNativeMethodRegistration[]? methods;
-#pragma warning restore 0414
+		object? nativeMethodsLock;
+		// Retains delegates from every batch JNI may have partially registered.
+		List<JniNativeMethodRegistration[]>? methods;
 
+		object GetNativeMethodsLock ()
+		{
+			var value = Volatile.Read (ref nativeMethodsLock);
+			if (value != null)
+				return value;
+
+			var candidate = new object ();
+			return Interlocked.CompareExchange (ref nativeMethodsLock, candidate, null) ?? candidate;
+		}
+
+		/// <remarks>
+		/// Once a non-empty registration is requested, the runtime retains this type and its
+		/// delegates until unregistration or disposal, even if registration throws: JNI may
+		/// have registered part of the batch.
+		/// </remarks>
 		[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
 		public void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
 		{
@@ -163,18 +182,29 @@ namespace Java.Interop {
 
 			if (methods == null)
 				throw new ArgumentNullException (nameof (methods));
+			if (methods.Length == 0)
+				return;
 
-			JniEnvironment.Types.RegisterNatives (PeerReference, methods, checked ((int)methods.Length));
-			// Prevents method delegates from being GC'd so long as this type remains
-			this.methods = methods;
-			RegisterWithRuntime ();
+			lock (GetNativeMethodsLock ()) {
+				// Retain each batch before calling RegisterNatives: JNI stores only the
+				// unmanaged function pointers and may publish part of a batch before throwing.
+				// Storing it afterward could therefore leave callable pointers to collected
+				// delegates.
+				this.methods ??= new List<JniNativeMethodRegistration[]> ();
+				this.methods.Add (methods);
+				RegisterWithRuntime ();
+				JniEnvironment.Types.RegisterNatives (PeerReference, methods, methods.Length);
+			}
 		}
 
 		public void UnregisterNativeMethods ()
 		{
 			AssertValid ();
 
-			JniEnvironment.Types.UnregisterNatives (PeerReference);
+			lock (GetNativeMethodsLock ()) {
+				JniEnvironment.Types.UnregisterNatives (PeerReference);
+				methods = null;
+			}
 		}
 
 		public JniMethodInfo GetConstructor (string signature)

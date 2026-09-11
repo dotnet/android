@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 using System;
-using System.Collections.Concurrent;
 
 namespace Java.Interop
 {
@@ -39,16 +38,16 @@ namespace Java.Interop
 
 		readonly Type                                       DeclaringType;
 
-		ConcurrentDictionary<string, JniMethodInfo>?             instanceMethods;
-		ConcurrentDictionary<Type, JniInstanceMethods>?          subclassConstructors;
+		JniValueCache<string, JniMethodInfo>?                     instanceMethods;
+		JniValueCache<Type, JniInstanceMethods>?                 subclassConstructors;
 
-		ConcurrentDictionary<string, JniMethodInfo>               InstanceMethods      => GetOrCreate (ref instanceMethods, 3);
-		ConcurrentDictionary<Type, JniInstanceMethods>            SubclassConstructors => GetOrCreate (ref subclassConstructors, 1);
+		JniValueCache<string, JniMethodInfo>                      InstanceMethods      => JniValueCache<string, JniMethodInfo>.GetOrCreate (ref instanceMethods, 1, 3, static value => value.StaticRedirect?.Dispose ());
+		JniValueCache<Type, JniInstanceMethods>                  SubclassConstructors => JniValueCache<Type, JniInstanceMethods>.GetOrCreate (ref subclassConstructors, 1, 1, static value => value.Dispose ());
 
 		internal void Dispose ()
 		{
-			Clear (ref instanceMethods);
-			Clear (ref subclassConstructors, static value => value.Dispose ());
+			JniValueCache<string, JniMethodInfo>.Dispose (ref instanceMethods);
+			JniValueCache<Type, JniInstanceMethods>.Dispose (ref subclassConstructors);
 
 			if (jniPeerType != null)
 				jniPeerType.Dispose ();
@@ -111,15 +110,20 @@ namespace Java.Interop
 				var methodName = newMethod.Value.TargetJniMethodName is string name ? name.AsSpan () : method;
 				var methodSig  = newMethod.Value.TargetJniMethodSignature is string sig ? sig.AsSpan () : signature;
 
-				using var t = new JniType (typeName);
-				if (newMethod.Value.TargetJniMethodInstanceToStatic &&
-						t.TryGetStaticMethod (methodName, methodSig, out m)) {
-					m.ParameterCount = newMethod.Value.TargetJniMethodParameterCount;
-					m.StaticRedirect = new JniType (typeName);
-					return m;
-				}
-				if (t.TryGetInstanceMethod (methodName, methodSig, out m)) {
-					return m;
+				JniType? t = new JniType (typeName);
+				try {
+					if (newMethod.Value.TargetJniMethodInstanceToStatic &&
+							t.TryGetStaticMethod (methodName, methodSig, out m)) {
+						m.ParameterCount = newMethod.Value.TargetJniMethodParameterCount;
+						m.StaticRedirect = t;
+						t = null;
+						return m;
+					}
+					if (t.TryGetInstanceMethod (methodName, methodSig, out m)) {
+						return m;
+					}
+				} finally {
+					t?.Dispose ();
 				}
 				Console.Error.WriteLine ($"warning: For declared method `{Members.JniPeerTypeName}.{method}.{signature}`, could not find requested method `{typeName}.{methodName}.{methodSig}`!");
 			}

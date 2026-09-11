@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -122,7 +122,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		static void AssertSingleCachedValue<T> (ConcurrentDictionary<string, T> cache, string key, T [] values)
+		static void AssertSingleCachedValue<T> (IReadOnlyDictionary<string, T> cache, string key, T [] values)
 			where T : class
 		{
 			Assert.AreEqual (1, cache.Count);
@@ -131,39 +131,39 @@ namespace Java.InteropTests
 			Assert.AreSame (cache [key], values [0]);
 		}
 
-		static ConcurrentDictionary<string, JniFieldInfo> GetInstanceFields (JniPeerMembers.JniInstanceFields fields)
+		static IReadOnlyDictionary<string, JniFieldInfo> GetInstanceFields (JniPeerMembers.JniInstanceFields fields)
 		{
 			var field = typeof (JniPeerMembers.JniInstanceFields).GetField ("instanceFields", BindingFlags.NonPublic | BindingFlags.Instance);
 			return GetCache<string, JniFieldInfo> (field, fields);
 		}
 
-		static ConcurrentDictionary<string, JniMethodInfo> GetInstanceMethods (JniPeerMembers.JniInstanceMethods methods)
+		static IReadOnlyDictionary<string, JniMethodInfo> GetInstanceMethods (JniPeerMembers.JniInstanceMethods methods)
 		{
 			var field = typeof (JniPeerMembers.JniInstanceMethods).GetField ("instanceMethods", BindingFlags.NonPublic | BindingFlags.Instance);
 			return GetCache<string, JniMethodInfo> (field, methods);
 		}
 
-		static ConcurrentDictionary<Type, JniPeerMembers.JniInstanceMethods> GetSubclassConstructors (JniPeerMembers.JniInstanceMethods methods)
+		static IReadOnlyDictionary<Type, JniPeerMembers.JniInstanceMethods> GetSubclassConstructors (JniPeerMembers.JniInstanceMethods methods)
 		{
 			var field = typeof (JniPeerMembers.JniInstanceMethods).GetField ("subclassConstructors", BindingFlags.NonPublic | BindingFlags.Instance);
 			return GetCache<Type, JniPeerMembers.JniInstanceMethods> (field, methods);
 		}
 
-		static ConcurrentDictionary<string, JniFieldInfo> GetStaticFields (JniPeerMembers.JniStaticFields fields)
+		static IReadOnlyDictionary<string, JniFieldInfo> GetStaticFields (JniPeerMembers.JniStaticFields fields)
 		{
 			var field = typeof (JniPeerMembers.JniStaticFields).GetField ("staticFields", BindingFlags.NonPublic | BindingFlags.Instance);
 			return GetCache<string, JniFieldInfo> (field, fields);
 		}
 
-		static ConcurrentDictionary<string, JniMethodInfo> GetStaticMethods (JniPeerMembers.JniStaticMethods methods)
+		static IReadOnlyDictionary<string, JniMethodInfo> GetStaticMethods (JniPeerMembers.JniStaticMethods methods)
 		{
 			var field = typeof (JniPeerMembers.JniStaticMethods).GetField ("staticMethods", BindingFlags.NonPublic | BindingFlags.Instance);
 			return GetCache<string, JniMethodInfo> (field, methods);
 		}
 
-		static ConcurrentDictionary<TKey, TValue> GetCache<TKey, TValue> (FieldInfo field, object owner)
+		static IReadOnlyDictionary<TKey, TValue> GetCache<TKey, TValue> (FieldInfo field, object owner)
 		{
-			return (ConcurrentDictionary<TKey, TValue>) field.GetValue (owner);
+			return (IReadOnlyDictionary<TKey, TValue>) field.GetValue (owner);
 		}
 
 		[Test]

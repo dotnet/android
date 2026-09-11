@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 using System;
-using System.Collections.Concurrent;
 
 namespace Java.Interop
 {
@@ -15,13 +14,13 @@ namespace Java.Interop
 
 		internal    readonly    JniPeerMembers              Members;
 
-		ConcurrentDictionary<string, JniMethodInfo>? staticMethods;
+		JniValueCache<string, JniMethodInfo>? staticMethods;
 
-		ConcurrentDictionary<string, JniMethodInfo> StaticMethods => GetOrCreate (ref staticMethods, 3);
+		JniValueCache<string, JniMethodInfo> StaticMethods => JniValueCache<string, JniMethodInfo>.GetOrCreate (ref staticMethods, 1, 3, static value => value.StaticRedirect?.Dispose ());
 
 		internal void Dispose ()
 		{
-			Clear (ref staticMethods);
+			JniValueCache<string, JniMethodInfo>.Dispose (ref staticMethods);
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
@@ -38,12 +37,20 @@ namespace Java.Interop
 			var m              = (JniMethodInfo?) null;
 			var newMethod      = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (Members.JniPeerTypeName, method, signature);
 			if (newMethod.HasValue) {
-				using var t = new JniType (newMethod.Value.TargetJniType ?? Members.JniPeerTypeName);
-				if (t.TryGetStaticMethod (
-						newMethod.Value.TargetJniMethodName is string name ? name.AsSpan () : method,
-						newMethod.Value.TargetJniMethodSignature is string sig ? sig.AsSpan () : signature,
-						out m)) {
-					return m;
+				JniType? t = new JniType (newMethod.Value.TargetJniType ?? Members.JniPeerTypeName);
+				try {
+					if (t.TryGetStaticMethod (
+							newMethod.Value.TargetJniMethodName is string name ? name.AsSpan () : method,
+							newMethod.Value.TargetJniMethodSignature is string sig ? sig.AsSpan () : signature,
+							out m)) {
+						if (!JniEnvironment.Types.IsSameObject (t.PeerReference, Members.JniPeerType.PeerReference)) {
+							m.StaticRedirect = t;
+							t = null;
+						}
+						return m;
+					}
+				} finally {
+					t?.Dispose ();
 				}
 			}
 			if (Members.JniPeerType.TryGetStaticMethod (method, signature, out m)) {
@@ -72,23 +79,28 @@ namespace Java.Interop
 			if (fallbackTypes == null) {
 				return null;
 			}
-			foreach (var ft in fallbackTypes) {
-				JniType? t = null;
-				try {
+			JniType? t = null;
+			try {
+				JniMethodInfo? m = null;
+				foreach (var ft in fallbackTypes) {
 					if (!JniType.TryParse (ft, out t)) {
 						continue;
 					}
-					if (t.TryGetStaticMethod (method, signature, out var m)) {
-						m.StaticRedirect    = t;
-						t                   = null;
-						return m;
+					if (t.TryGetStaticMethod (method, signature, out m)) {
+						break;
 					}
+					t.Dispose ();
+					t = null;
 				}
-				finally {
-					t?.Dispose ();
+				if (m != null) {
+					// Transfer ownership only after the fallback enumerator has been disposed.
+					m.StaticRedirect = t;
+					t = null;
 				}
+				return m;
+			} finally {
+				t?.Dispose ();
 			}
-			return null;
 		}
 
 		public unsafe void InvokeVoidMethod (string encodedMember, JniArgumentValue* parameters)
