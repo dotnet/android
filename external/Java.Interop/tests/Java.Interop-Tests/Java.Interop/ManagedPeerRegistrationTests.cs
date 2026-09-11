@@ -30,8 +30,6 @@ namespace Java.InteropTests {
 				addRegistrations?.Invoke (args);
 			}
 		}
-		#endif // !__ANDROID__
-
 		[UnmanagedFunctionPointer (CallingConvention.Winapi)]
 		delegate int GetValue (IntPtr env, IntPtr klass);
 
@@ -274,3 +272,4 @@ namespace Java.InteropTests {
 		}
 	}
 }
+#endif // !__ANDROID__

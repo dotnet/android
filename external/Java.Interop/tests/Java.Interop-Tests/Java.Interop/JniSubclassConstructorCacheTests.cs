@@ -26,7 +26,11 @@ namespace Java.InteropTests
 
 				var calls = Enumerable.Range (0, count)
 					.Select (_ => Task.Factory.StartNew (
-						() => members.InstanceMethods.GetConstructorsForType (typeof (MyString)),
+						() => {
+							runtime.AttachCurrentThread ();
+							Assert.AreSame (runtime, JniEnvironment.Runtime);
+							return members.InstanceMethods.GetConstructorsForType (typeof (MyString));
+						},
 						CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default))
 					.ToArray ();
 				var constructors = Task.WhenAll (calls).GetAwaiter ().GetResult ();

@@ -57,7 +57,7 @@ namespace Java.InteropTests
 
 			var exception = Assert.Throws<NotSupportedException> (() =>
 				Java.Lang.Object.GetObject<MissingTransferredReferencePeer> (input.Handle, transfer));
-			Assert.IsInstanceOf<MissingMethodException> (exception.InnerException);
+			StringAssert.Contains (typeof (MissingTransferredReferencePeer).FullName, exception.Message);
 			input.AssertOwnership (transfer);
 		}
 
