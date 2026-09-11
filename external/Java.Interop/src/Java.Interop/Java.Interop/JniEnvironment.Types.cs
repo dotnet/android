@@ -248,11 +248,8 @@ namespace Java.Interop
 				}
 #endif  // DEBUG
 
-				if (numMethods == 0 || methods == null) {
-					if (methods != null)
-						owner?.KeepNativeMethodsAlive (methods);
+				if (numMethods == 0 || methods == null)
 					return;
-				}
 
 				// Marshal the non-blittable JniNativeMethodRegistration[] into blittable JniNativeMethod
 				// values and dispatch to the blittable overload, instead of invoking the JNI

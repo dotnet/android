@@ -55,6 +55,14 @@ namespace Java.InteropTests {
 		}
 
 		[Test]
+		public void EmptyJniTypeRegistration_DoesNotAdoptOwner ()
+		{
+			using var owner = new JniType (JniTypeName);
+			owner.RegisterNativeMethods ();
+			Assert.IsFalse (owner.IsRegisteredWithRuntime);
+		}
+
+		[Test]
 		public void EmptyRegistration_DisposesClass ()
 		{
 			using var existingOwner = new JniType (JniTypeName);
