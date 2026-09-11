@@ -176,7 +176,7 @@ namespace Java.Interop {
 			// managed delegates behind them. JNI can publish part of a failing batch, so
 			// the first attempt owns this JniType until disposal and cannot be retried.
 			if (Interlocked.CompareExchange (ref methods, registrations, null) != null)
-				throw new InvalidOperationException ("Native method registration has already been attempted for this JniType.");
+				throw new InvalidOperationException ("Native methods cannot be registered more than once.");
 
 			RegisterWithRuntime ();
 		}
