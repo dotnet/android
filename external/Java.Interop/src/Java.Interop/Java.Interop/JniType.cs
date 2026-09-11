@@ -175,7 +175,11 @@ namespace Java.Interop {
 		internal void KeepNativeMethodsAlive (JniNativeMethodRegistration[] registrations)
 		{
 			lock (LazyInitializer.EnsureInitialized (ref nativeRegistrationLock)) {
-				// JNI can partially publish a batch before failing. Earlier batches may still be callable too.
+				// RegisterNatives stores unmanaged function pointers without retaining the
+				// managed delegates behind them. Root every attempted batch because JNI can
+				// publish part of a failing batch, and earlier batches remain callable after
+				// later registrations. Runtime tracking also keeps this JniType alive until
+				// disposal, when its native methods are unregistered.
 				var retained = methods == null ? registrations : methods.Concat (registrations).ToArray ();
 				RegisterWithRuntime ();
 				methods = retained;
