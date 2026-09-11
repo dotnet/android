@@ -5,7 +5,6 @@ using System.Buffers;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -153,7 +152,7 @@ namespace Java.Interop {
 			return JniEnvironment.Types.IsInstanceOf (value, PeerReference);
 		}
 
-		// Retains delegates from every batch JNI may have partially registered.
+		// Retains delegates from the batch JNI may have partially registered.
 		JniNativeMethodRegistration[]? methods;
 		Lock? nativeRegistrationLock;
 
@@ -176,13 +175,13 @@ namespace Java.Interop {
 		{
 			lock (LazyInitializer.EnsureInitialized (ref nativeRegistrationLock)) {
 				// RegisterNatives stores unmanaged function pointers without retaining the
-				// managed delegates behind them. Root every attempted batch because JNI can
-				// publish part of a failing batch, and earlier batches remain callable after
-				// later registrations. Runtime tracking also keeps this JniType alive until
-				// disposal, when its native methods are unregistered.
-				var retained = methods == null ? registrations : methods.Concat (registrations).ToArray ();
+				// managed delegates behind them. JNI can publish part of a failing batch, so
+				// the first attempt owns this JniType until disposal and cannot be retried.
+				if (methods != null)
+					throw new InvalidOperationException ("Native method registration has already been attempted for this JniType.");
+
 				RegisterWithRuntime ();
-				methods = retained;
+				methods = registrations;
 			}
 		}
 
