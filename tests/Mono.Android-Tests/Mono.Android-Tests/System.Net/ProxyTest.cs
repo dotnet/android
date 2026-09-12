@@ -17,7 +17,9 @@ namespace System.NetTests {
 		{
 			using var server = LocalHttpServer.Start ();
 			string url      = $"{server.Url}ok?query&foo|bar";
+#pragma warning disable SYSLIB0014 // Regression coverage for HttpWebRequest URL handling.
 			var request     = (HttpWebRequest) WebRequest.Create (url);
+#pragma warning restore SYSLIB0014
 			request.Method  = "GET";
 			var response    = (HttpWebResponse) request.GetResponse ();
 			int len = 0;

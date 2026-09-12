@@ -1,0 +1,5 @@
+# Friend access to Mono.Android exposes internal class_ref members and JNI
+# delegates that would normally be invisible to these generated bindings.
+[obj/**/generated/src/*.cs]
+dotnet_diagnostic.CS0108.severity = none
+dotnet_diagnostic.CS0436.severity = none
