@@ -1149,6 +1149,11 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
     <value>Die MSBuild-Eigenschaften „AndroidEnableMarshalMethods“ und „PublishReadyToRun“ können nicht beide auf „true“ festgelegt werden. Legen Sie eine der Eigenschaften auf „false“ fest.</value>
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
+  <data name="XA1050" xml:space="preserve">
+    <value>The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value of '{0}'. Valid values are 'disabled' and 'private-members'.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members.
+{0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>Java-Abhängigkeit „{0}“ wurde nicht erfüllt.</value>
     <comment>The following are literal names and should not be translated: Java.
