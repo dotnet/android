@@ -17,6 +17,7 @@ namespace System.XmlTests {
 
         [Test]
         [RequiresUnreferencedCode ("Tests XML serialization metadata after trimming.")]
+        [RequiresDynamicCode ("Tests XML serialization that may require runtime code generation.")]
         public void TrimmingDefaultValueAttribute ()
         {
             // Context: https://github.com/dotnet/runtime/issues/109724

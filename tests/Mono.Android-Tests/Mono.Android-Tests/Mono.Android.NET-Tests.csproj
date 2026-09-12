@@ -18,9 +18,10 @@
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
     <WarningsAsErrors>IL2037</WarningsAsErrors>
-    <!-- Runtime regression tests intentionally exercise trim-unsafe APIs and dependencies.
-         Keep their linker warnings visible while enforcing compiler warnings and IL2037. -->
+    <!-- Runtime regression tests intentionally exercise trim-unsafe and AOT-unsafe APIs and dependencies.
+         Keep linker and NativeAOT analysis warnings visible while enforcing C# compiler warnings and IL2037. -->
     <ILLinkTreatWarningsAsErrors>false</ILLinkTreatWarningsAsErrors>
+    <IlcTreatWarningsAsErrors>false</IlcTreatWarningsAsErrors>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
     <AndroidNdkDirectory></AndroidNdkDirectory>
   </PropertyGroup>
