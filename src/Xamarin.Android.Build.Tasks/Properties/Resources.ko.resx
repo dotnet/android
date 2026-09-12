@@ -1149,6 +1149,11 @@ In this message, the term "handheld app" means "app for handheld devices."
     <value>'AndroidEnableMarshalMethods' 및 'PublishReadyToRun' MSBuild 속성을 둘 다 'true'로 설정할 수는 없습니다. 속성 하나를 'false'로 설정합니다.</value>
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
+  <data name="XA1050" xml:space="preserve">
+    <value>The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value of '{0}'. Valid values are 'disabled' and 'private-members'.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members.
+{0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>Java 종속성 '{0}'이(가) 충족되지 않습니다.</value>
     <comment>The following are literal names and should not be translated: Java.
