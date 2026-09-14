@@ -75,12 +75,12 @@ Tool 'dotnet-trace' was successfully installed.
 The following commands collect a GC memory dump from a CoreCLR application.
 The same diagnostic-port connection can be used with `dotnet-trace`.
 
-1. Start the forwarding router:
+1. In a separate terminal, start the forwarding router:
    `dotnet-dsrouter android`
-2. Build, install, and start the application on the device:
+2. In another terminal, build, install, and start the application on the device:
    `dotnet build -t:Run -c Release -p:EnableDiagnostics=true .\MyApp.csproj`
-3. Run `dotnet-gcdump ps` to find the router process.
-4. Run `dotnet-gcdump collect -p PID`.
+3. In a third terminal, run `dotnet-gcdump ps` to find the router process.
+4. In the same terminal, run `dotnet-gcdump collect -p PID`.
 
 `EnableDiagnostics` is an Android SDK/MSBuild property. It is distinct from
 the `DOTNET_EnableDiagnostics` runtime environment variable. The build
