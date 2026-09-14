@@ -10,7 +10,7 @@ sealed class StartupNoGCRegion
 	static readonly TimeSpan DefaultFallbackTimeout = TimeSpan.FromSeconds (10);
 	static readonly StartupNoGCRegion instance = new ();
 
-	readonly object sync = new ();
+	readonly Lock sync = new ();
 	Timer? fallbackTimer;
 	State state;
 
