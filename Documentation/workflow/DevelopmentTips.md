@@ -30,9 +30,9 @@ during process startup, printing the created directory to `adb logcat`:
 
      W/monodroid( 2796): Creating public update directory: `/data/data/Mono.Android.NET_Tests/files/.__override__`
 
-When a MonoVM app needs to resolve native libraries and assemblies, it will
-look for those files within the update directory *first*. This includes the
-Mono runtime library and BCL assemblies.
+When the app needs to resolve native libraries and assemblies, it will look
+for those files within the update directory *first*. This includes the Mono
+runtime library and BCL assemblies.
 
 Note that the update directory is *per-app*. The above mentioned `Mono.Android.NET_Tests`
 directory is created when running the
@@ -483,11 +483,12 @@ copying `.nupkg` files to the `library-packs` directory of a given
 The `library-packs` directory is simply an implicit NuGet feed that is
 automatically picked up by the .NET SDK.
 
-## Enabling Runtime Logging
+## Enabling Mono Logging
 
 ### The easy way
 
-A quick way to enable runtime logging is to use the `RunWithLogging` target:
+A quick way to enable Mono logging is to use the `RunWithLogging`
+target:
 
 ```bash
 $ dotnet build -t:RunWithLogging
@@ -507,7 +508,7 @@ the logcat buffer.  This value can be overridden by setting the
 `$(RunLogDelayInMS)` MSBuild property to a number of milliseconds that
 the target should wait before creating the log file.
 
-### The manual MonoVM way
+### The manual way
 
 Since [6e58ce4][6e58ce4], logging from Mono is no longer enabled by
 default. You can set the `debug.mono.log` system property to answer

@@ -24,15 +24,19 @@ together to make this happen:
 * [`dotnet-gcdump`][dotnet-gcdump] is a .NET global tool that can be
   used to collect memory dumps of .NET applications.
 
-* CoreCLR's EventPipe diagnostic server is included in the application and
-  communicates with the diagnostic tools through `dotnet-dsrouter`.
+* The Mono Diagnostic component, `libmono-component-diagnostics_tracing.so`,
+  is included in MonoVM applications and is used to collect the trace data.
 
-> [!NOTE]
-> Use current releases of the diagnostic tools that support the .NET 11 RC1
-> validation baseline. Check [dotnet-trace](https://www.nuget.org/packages/dotnet-trace/),
-> [dotnet-dsrouter](https://www.nuget.org/packages/dotnet-dsrouter/), and
-> [dotnet-gcdump](https://www.nuget.org/packages/dotnet-gcdump/) on NuGet for
-> the latest versions.
+* CoreCLR's EventPipe diagnostic server is included in .NET 11 and later
+  applications and communicates with the diagnostic tools through
+  `dotnet-dsrouter`.
+
+> **NOTE:** Use current releases of the diagnostic tools. The .NET 11 RC1
+> SDK is the validation baseline for the workflow described here. Check
+> [dotnet-trace](https://www.nuget.org/packages/dotnet-trace/),
+> [dotnet-dsrouter](https://www.nuget.org/packages/dotnet-dsrouter/),
+> and [dotnet-gcdump](https://www.nuget.org/packages/dotnet-gcdump/)
+> on NuGet for the latest versions.
 
 See the [`dotnet-trace` documentation][dotnet-trace] for further details about its usage.
 
@@ -66,6 +70,7 @@ Tool 'dotnet-trace' was successfully installed.
 ```
 
 ## Quickstart (CoreCLR on an Android device)
+**Do not run the app through Visual Studio**, the app freezes on the splash screen.
 
 The following commands collect a GC memory dump from a CoreCLR application.
 The same diagnostic-port connection can be used with `dotnet-trace`.
@@ -176,10 +181,10 @@ dotnet-trace collect -p 1234
 ...
 ```
 
-`dotnet-dsrouter android` establishes the required device forwarding. Keep the
-application endpoint on `127.0.0.1`; do not bind the router or the runtime
-diagnostic endpoint to a network interface accessible beyond the development
-machine.
+Keep the application endpoint on `127.0.0.1`; do not bind the router or the
+runtime diagnostic endpoint to a network interface accessible beyond the
+development machine. Diagnostic TCP endpoints are unauthenticated and
+unencrypted development interfaces and must remain local.
 
 ### Android System Properties
 
