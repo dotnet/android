@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.Versioning;
 using Android.Runtime;
+using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
 namespace Android.App {
 
@@ -39,7 +41,42 @@ namespace Android.App {
 		{
 			RunOnUiThread (new Java.Lang.Thread.RunnableImplementor (action));
 		}
+
+		[SupportedOSPlatform ("android19.0")]
+		[Register ("reportFullyDrawn", "()V", "GetReportFullyDrawnHandler")]
+		public virtual unsafe void ReportFullyDrawn ()
+		{
+			const string id = "reportFullyDrawn.()V";
+			try {
+				_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, null);
+			} finally {
+				if (RuntimeFeature.IsCoreClrRuntime) {
+					StartupNoGCRegion.End ();
+				}
+			}
+		}
+
+		static Delegate? cb_reportFullyDrawn_ReportFullyDrawn_V;
+
+		static Delegate GetReportFullyDrawnHandler ()
+		{
+			return cb_reportFullyDrawn_ReportFullyDrawn_V ??= new _JniMarshal_PP_V (n_ReportFullyDrawn);
+		}
+
+		static void n_ReportFullyDrawn (IntPtr jnienv, IntPtr native__this)
+		{
+			unsafe {
+				Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_ReportFullyDrawn);
+			}
+		}
+
+		static void __n_ReportFullyDrawn (IntPtr jnienv, IntPtr native__this)
+		{
+			var activity = Java.Lang.Object.GetObject<Activity> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			if (activity == null) {
+				throw new InvalidOperationException ("Could not obtain the managed Activity instance for reportFullyDrawn.");
+			}
+			activity.ReportFullyDrawn ();
+		}
 	}
 }
-
-
