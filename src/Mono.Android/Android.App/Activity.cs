@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Android.Runtime;
 
@@ -53,14 +54,23 @@ namespace Android.App {
 			}
 		}
 
-		static Delegate? cb_reportFullyDrawn_ReportFullyDrawn_V;
-
 		static Delegate GetReportFullyDrawnHandler ()
 		{
-			return cb_reportFullyDrawn_ReportFullyDrawn_V ??= new _JniMarshal_PP_V (n_ReportFullyDrawn);
+			return new _JniMarshal_PP_V (n_ReportFullyDrawn_Dynamic);
 		}
 
+		[UnmanagedCallersOnly]
 		static void n_ReportFullyDrawn (IntPtr jnienv, IntPtr native__this)
+		{
+			InvokeReportFullyDrawn (jnienv, native__this);
+		}
+
+		static void n_ReportFullyDrawn_Dynamic (IntPtr jnienv, IntPtr native__this)
+		{
+			InvokeReportFullyDrawn (jnienv, native__this);
+		}
+
+		static void InvokeReportFullyDrawn (IntPtr jnienv, IntPtr native__this)
 		{
 			unsafe {
 				Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_ReportFullyDrawn);
