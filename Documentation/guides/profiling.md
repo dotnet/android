@@ -1,9 +1,18 @@
 # Profiling Startup
 
-There are currently a few different ways at getting timing information
-from .NET for Android & Mono. This document aims to demystify the
-command-line commands involved in retrieving this data from Android
-devices.
+There are currently a few different ways of getting timing information from
+.NET for Android and Mono. This document aims to demystify the command-line
+commands involved in retrieving this data from Android devices.
+
+> [!IMPORTANT]
+> The runtime logging, Mono JIT, Mono AOT, and Mono profiler instructions in
+> this page apply to MonoVM applications, including .NET 10 and earlier
+> applications that use the Mono default. Ordinary .NET 11 and later Android
+> applications use CoreCLR; Android has no interpreter in .NET 11 and later.
+> For CoreCLR EventPipe tracing and diagnostic-port workflows, see
+> [Tracing .NET for Android applications](tracing.md). Native CPU profiling
+> with `simpleperf` is separate and remains applicable to native code in any
+> runtime.
 
 This document explains many uses of `adb` at the command-line. On
 Windows, you will need either `adb.exe` in your `%PATH%` or a
@@ -35,6 +44,8 @@ taken: reflecting what a user experiences when launching the app.
 You can also run `adb logcat -c` to clear the log at any point.
 
 ## Profiling the Runtime
+
+The following `debug.mono.*` timing instructions are for MonoVM.
 
 Before launching the app, run the `adb` command:
 

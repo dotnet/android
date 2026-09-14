@@ -15,6 +15,18 @@ an [MSBuild PropertyGroup](/visualstudio/msbuild/propertygroup-element-msbuild).
 > [!NOTE]
 > In .NET for Android there is technically no distinction between an application and a bindings project, so properties will work in both. In practice it is highly recommended to create separate application and bindings projects. Properties that are primarily used in bindings projects are documented in the [MSBuild bindings project properties](../binding-libs/msbuild-reference/build-properties.md) reference guide.
 
+## Runtime scope
+
+Ordinary Android applications target CoreCLR in .NET 11 and later. Android
+applications targeting .NET 10 and earlier use Mono by default. Setting
+`$(PublishAot)` to `true` selects the NativeAOT runtime for supported publish
+or optimized builds and takes precedence over `$(UseMonoRuntime)`.
+
+`$(UseMonoRuntime)=true` is not a .NET 11 escape hatch. The .NET 11 SDK
+rejects it with [NETSDK1242](https://learn.microsoft.com/dotnet/core/tools/sdk-errors/netsdk1242).
+Use the .NET 10-and-earlier Mono guidance only when targeting a framework where
+Mono is supported.
+
 ## AdbTarget
 
 The `$(AdbTarget)` property specifies the Android target device the
@@ -434,12 +446,17 @@ This property is `False` by default.
 
 ## AndroidEnableProfiler
 
-Synonym for the [`$(EnableDiagnostics)`](#enablediagnostics) property.
+For Mono applications, this is a synonym for the
+[`$(EnableDiagnostics)`](#enablediagnostics) property. If it is `true`, the
+Mono diagnostic component, `libmono-component-diagnostics_tracing.so`, is
+included in the application.
 
-Required for using `dotnet-trace` or `dotnet-gcdump` in Android
-applications. If set to `true`, it includes the Mono diagnostic
-component in the application. This component is the
-`libmono-component-diagnostics_tracing.so` native library.
+For CoreCLR applications in .NET 11 and later, this property enables the
+CoreCLR diagnostic-port configuration used by tools such as `dotnet-trace` and
+`dotnet-gcdump`; it does not add a Mono diagnostic component. NativeAOT is a
+separate runtime selected by `$(PublishAot)` and this
+property documents only the supported Android packaging and configuration
+behavior.
 
 This property is `False` by default.
 
@@ -1364,8 +1381,9 @@ Introduced in .NET 11.
 
 ## AndroidUseInterpreter
 
-A boolean property that causes the `.apk` to contain the mono
-*interpreter*, and not the normal JIT.
+A boolean property that causes a MonoVM `.apk` to contain the Mono
+*interpreter*, and not the normal JIT. It is a Mono-only setting and is not a
+CoreCLR setting. Android has no interpreter in .NET 11 and later.
 
 ***Experimental***.
 
@@ -1606,19 +1624,27 @@ For more information about device selection, see the
 ## DiagnosticAddress
 
 A value provided by `dotnet-dsrouter` such as `127.0.0.1`, the IP
-address component of `$(DiagnosticConfiguration)` or `$DOTNET_DiagnosticPorts`.
+address component of `$(DiagnosticConfiguration)` or
+`DOTNET_DiagnosticPorts`.
 
-Implicitly enables the Mono diagnostic component, meaning that
-`$(EnableDiagnostics)`/`$(AndroidEnableProfiler)` is set to `true`.
+When this property is nonempty, it implicitly enables Android diagnostics.
+For CoreCLR, the resulting TCP endpoint is normally kept on loopback and is
+used by `dotnet-dsrouter`. For an Android emulator, use `10.0.2.2` to reach
+the development machine; for a physical device, use `127.0.0.1` with the
+device forwarding established by `dotnet-dsrouter android`.
 
 Defaults to `127.0.0.1`.
 
 ## DiagnosticConfiguration
 
-A value provided by `dotnet-dsrouter` for `$DOTNET_DiagnosticPorts` such as:
+A value provided by `dotnet-dsrouter` for `DOTNET_DiagnosticPorts` such as:
 
 * `127.0.0.1:9000,suspend,connect`
 * `127.0.0.1:9000,nosuspend,connect`
+
+When diagnostics are enabled without an explicit configuration, the derived
+defaults are address `127.0.0.1`, port `9000`, `DiagnosticSuspend=false`, and
+`DiagnosticListenMode=connect`.
 
 Note that the `,` character will need to be escaped with `%2c` if
 passed in command-line to `dotnet build`:
@@ -1627,29 +1653,30 @@ passed in command-line to `dotnet build`:
 dotnet build -c Release -p:DiagnosticConfiguration=127.0.0.1:9000%2csuspend%2cconnect
 ```
 
-This will automatically set the `$DOTNET_DiagnosticPorts` environment
-variable packaged inside the application.
+This automatically sets the `DOTNET_DiagnosticPorts` environment variable
+packaged inside the application. In `connect` mode, the Android runtime
+connects to the configured TCP endpoint and `dotnet-dsrouter` bridges that
+connection to the local diagnostic tool. The endpoint is unauthenticated and
+unencrypted, so keep it on a local development interface.
 
-Implicitly enables the Mono diagnostic component, meaning that
-`$(EnableDiagnostics)`/`$(AndroidEnableProfiler)` is set to `true`.
+Setting this property, or any of the component properties below, implicitly
+enables Android diagnostics.
 
 ## DiagnosticListenMode
 
 A value provided by `dotnet-dsrouter` such as `connect`, the listening
-mode component of `$(DiagnosticConfiguration)` or `$DOTNET_DiagnosticPorts`.
+mode component of `$(DiagnosticConfiguration)` or `DOTNET_DiagnosticPorts`.
 
-Implicitly enables the Mono diagnostic component, meaning that
-`$(EnableDiagnostics)`/`$(AndroidEnableProfiler)` is set to `true`.
+When this property is nonempty, it implicitly enables Android diagnostics.
 
 Defaults to `connect`.
 
 ## DiagnosticPort
 
 A value provided by `dotnet-dsrouter` such as `9000`, the port
-component of `$(DiagnosticConfiguration)` or `$DOTNET_DiagnosticPorts`.
+component of `$(DiagnosticConfiguration)` or `DOTNET_DiagnosticPorts`.
 
-Implicitly enables the Mono diagnostic component, meaning that
-`$(EnableDiagnostics)`/`$(AndroidEnableProfiler)` is set to `true`.
+When this property is nonempty, it implicitly enables Android diagnostics.
 
 Defaults to `9000`.
 
@@ -1657,10 +1684,9 @@ Defaults to `9000`.
 
 A boolean value provided by `dotnet-dsrouter` such as `true/suspend`
 or `false/nosuspend`, a component of `$(DiagnosticConfiguration)`
-or `$DOTNET_DiagnosticPorts`.
+or `DOTNET_DiagnosticPorts`.
 
-Implicitly enables the Mono diagnostic component, meaning that
-`$(EnableDiagnostics)`/`$(AndroidEnableProfiler)` is set to `true`.
+When this property is nonempty, it implicitly enables Android diagnostics.
 
 Defaults to `false`.
 
@@ -1690,13 +1716,16 @@ is `True`.
 
 ## EnableDiagnostics
 
-Synonym for the [`$(AndroidEnableProfiler)`](#androidenableprofiler)
-property.
+An Android SDK/MSBuild property that enables diagnostics for the selected
+runtime. It is a synonym for
+[`$(AndroidEnableProfiler)`](#androidenableprofiler) for Mono applications.
+For CoreCLR, it enables the diagnostic-port configuration used by
+`dotnet-trace` and `dotnet-gcdump`.
 
-Required for using `dotnet-trace` or `dotnet-gcdump` in Android
-applications. If set to `true`, it includes the Mono diagnostic
-component in the application. This component is the
-`libmono-component-diagnostics_tracing.so` native library.
+`$(EnableDiagnostics)` is not the same as the CoreCLR runtime environment
+variable `DOTNET_EnableDiagnostics`. The former is evaluated by the Android
+SDK/MSBuild targets; the latter is read by the runtime when supplied as an
+environment variable.
 
 This property is `False` by default.
 
@@ -1953,13 +1982,15 @@ Xamarin.Android. This is the same property used for [Blazor WASM][blazor].
 ## UseMonoRuntime
 
 A boolean property that controls whether Android applications use the
-Mono runtime instead of CoreCLR. Set this property to `true` to use
-Mono or `false` to use CoreCLR. `$(PublishAot)` takes precedence and
-selects NativeAOT when set to `true`.
+Mono runtime instead of CoreCLR for supported .NET 10-and-earlier targets.
+Set this property to `true` to use Mono or `false` to use CoreCLR on those
+targets. `$(PublishAot)` takes precedence and selects NativeAOT when set to
+`true`.
 
 This property defaults to `true` in .NET 10 and earlier, so Android
-applications use Mono. In .NET 11 and later, it defaults to `false`,
-so Android applications use CoreCLR.
+applications use Mono. In .NET 11 and later, it defaults to `false`, so
+Android applications use CoreCLR, and an explicit `true` value is rejected
+with [NETSDK1242](https://learn.microsoft.com/dotnet/core/tools/sdk-errors/netsdk1242).
 
 For more information, see
 [Runtimes and compilation in .NET MAUI][maui-runtimes-compilation].

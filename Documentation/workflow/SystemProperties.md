@@ -44,10 +44,16 @@ $ adb shell setprop property_name "''"
 
 ## Known properties
 
-Properties under `debug.dotnet` are available to CoreCLR and NativeAOT as
-described below. Properties under `debug.mono` apply to MonoVM. CoreCLR and
-NativeAOT continue to accept the corresponding `debug.mono` property when a
-`debug.dotnet` value is not set.
+Properties under `debug.dotnet` are available to CoreCLR and supported
+NativeAOT/shared runtime paths as described below. Properties under
+`debug.mono` apply to MonoVM. For the four runtime-neutral settings listed
+below, CoreCLR and supported NativeAOT/shared paths first read the
+`debug.dotnet.*` property and then fall back to the corresponding
+`debug.mono.*` property when the preferred property is not set. MonoVM
+continues to use the `debug.mono.*` names.
+
+Prefer the `debug.dotnet.*` names for new scripts and migration work. The
+corresponding `debug.mono.*` fallback remains supported for compatibility.
 
 ### debug.dotnet.log
 
@@ -64,12 +70,19 @@ CoreCLR and NativeAOT equivalent of
 
 CoreCLR uses the presence of this property when deciding whether runtime
 diagnostic output directories are required. `debug.mono.profile` is accepted
-as a fallback.
+as a fallback for that presence check. This property is not the primary
+configuration for CoreCLR diagnostic ports; use the Android
+`DiagnosticConfiguration`, `DiagnosticAddress`, `DiagnosticPort`,
+`DiagnosticSuspend`, and `DiagnosticListenMode` MSBuild properties, which
+configure `DOTNET_DiagnosticPorts`.
 
 ### debug.dotnet.timing
 
-Configures CoreCLR fast timing output. Supported comma-separated values are
-`to-file`, `filename=FILE`, and `duration=MILLISECONDS`.
+Configures CoreCLR and supported NativeAOT/shared runtime fast timing output.
+Supported comma-separated values are `to-file`, `filename=FILE`, and
+`duration=MILLISECONDS`. The corresponding `debug.mono.timing` property is
+the compatibility fallback for non-Mono runtimes; MonoVM continues to use
+`debug.mono.timing`.
 
 ### debug.mono.connect
 
@@ -321,14 +334,15 @@ defaults to `2000` if the application is running in an emulator and
 
 ### debug.mono.profile
 
-In "legacy" Xamarin.Android applications (that is not NET6+ ones),
-value of this property specifies argument to the Mono logging
-profiler.
+For MonoVM applications, this property specifies arguments to the Mono
+logging profiler in legacy Xamarin.Android applications.
 
-In NET6+ applications, the only accepted value is `[aot:]PORTS` where
-`PORTS` becomes value of the `DOTNET_DiagnosticPorts` environment
-variable used by the NET6+ profiling infrastructure to configure the
-client/server ports.
+In .NET 6 and later MonoVM applications, the accepted value is `[aot:]PORTS`
+where `PORTS` becomes the value of the `DOTNET_DiagnosticPorts` environment
+variable used by the Mono profiling infrastructure to configure the
+client/server ports. For CoreCLR, do not use this property to configure
+diagnostic ports; use the Android diagnostic MSBuild properties described
+above.
 
 ### debug.mono.runtime_args
 

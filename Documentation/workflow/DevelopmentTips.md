@@ -2,6 +2,14 @@
 
 Tips and tricks while developing .NET for Android.
 
+The update-directory, `libmonosgen-2.0.so`, Mono runtime-pack, and
+`debug.mono.*` examples in this page are MonoVM-specific historical guidance.
+They apply to .NET 10 and earlier Mono applications and to supported explicit
+MonoVM builds. Ordinary .NET 11 and later Android applications use CoreCLR;
+use the CoreCLR diagnostics and runtime guidance in the
+[tracing](../guides/tracing.md) and
+[custom Android system properties](SystemProperties.md) documentation instead.
+
 # Run MSBuild-Based On-Device Unit Tests
 
 The [`tests/MSBuildDeviceIntegration`](tests/MSBuildDeviceIntegration)
@@ -22,9 +30,9 @@ during process startup, printing the created directory to `adb logcat`:
 
      W/monodroid( 2796): Creating public update directory: `/data/data/Mono.Android.NET_Tests/files/.__override__`
 
-When the app needs to resolve native libraries and assemblies, it will look
-for those files within the update directory *first*. This includes the Mono
-runtime library and BCL assemblies.
+When a MonoVM app needs to resolve native libraries and assemblies, it will
+look for those files within the update directory *first*. This includes the
+Mono runtime library and BCL assemblies.
 
 Note that the update directory is *per-app*. The above mentioned `Mono.Android.NET_Tests`
 directory is created when running the
@@ -475,12 +483,11 @@ copying `.nupkg` files to the `library-packs` directory of a given
 The `library-packs` directory is simply an implicit NuGet feed that is
 automatically picked up by the .NET SDK.
 
-## Enabling Mono Logging
+## Enabling Runtime Logging
 
 ### The easy way
 
-A quick way to enable Mono logging is to use the `RunWithLogging`
-target:
+A quick way to enable runtime logging is to use the `RunWithLogging` target:
 
 ```bash
 $ dotnet build -t:RunWithLogging
@@ -490,8 +497,8 @@ If successful, messages printed to the screen will show location
 of the logcat file with the logged messages.
 
 Verbosity of logging can be increased by setting the `$(RunLogVerbose)`
-property to `true`, in which case the log output file will contain
-(very) verbose log messages from the MonoVM runtime.
+property to `true`. The target selects `debug.mono.log` for MonoVM and
+`debug.dotnet.log` for CoreCLR and NativeAOT.
 
 By default, the target will wait for a 1000ms before it dumps the
 logcat buffer to file.  This is to give the Android logging daemon
@@ -500,7 +507,7 @@ the logcat buffer.  This value can be overridden by setting the
 `$(RunLogDelayInMS)` MSBuild property to a number of milliseconds that
 the target should wait before creating the log file.
 
-### The manual way
+### The manual MonoVM way
 
 Since [6e58ce4][6e58ce4], logging from Mono is no longer enabled by
 default. You can set the `debug.mono.log` system property to answer
