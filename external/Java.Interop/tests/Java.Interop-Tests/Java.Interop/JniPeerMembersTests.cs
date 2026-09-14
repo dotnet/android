@@ -302,6 +302,67 @@ namespace Java.InteropTests
 		[Test]
 		[Category ("NativeAOTIgnore")]
 		[Category ("TrimmableTypeMapUnsupported")]
+		public void DeclaredInstanceMethodHidesBaseMethodRemap ()
+		{
+			var members = new JniPeerMembers (FieldRemapDerived.JniTypeName, typeof (FieldRemapDerived));
+			try {
+				using var type = new JniType (FieldRemapDerived.JniTypeName);
+				var expected = type.GetInstanceMethod ("hiddenInstanceMethod", "()I");
+				var remapped = type.GetInstanceMethod ("remappedInstanceMethod", "()I");
+				var actual = members.InstanceMethods.GetMethodInfo ("hiddenInstanceMethod.()I");
+
+				Assert.AreEqual (expected.ID, actual.ID);
+				Assert.AreNotEqual (remapped.ID, actual.ID);
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
+		public void DeclaredStaticMethodHidesBaseMethodRemap ()
+		{
+			var members = new JniPeerMembers (FieldRemapDerived.JniTypeName, typeof (FieldRemapDerived));
+			try {
+				using var type = new JniType (FieldRemapDerived.JniTypeName);
+				var expected = type.GetStaticMethod ("hiddenStaticMethod", "()I");
+				var remapped = type.GetStaticMethod ("remappedStaticMethod", "()I");
+				var actual = members.StaticMethods.GetMethodInfo ("hiddenStaticMethod.()I");
+
+				Assert.AreEqual (expected.ID, actual.ID);
+				Assert.AreNotEqual (remapped.ID, actual.ID);
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
+		public unsafe void MethodRemappingPrefersSpecificSignatures ()
+		{
+			var members = new JniPeerMembers (FieldRemapBase.JniTypeName, typeof (FieldRemapBase));
+			try {
+				var intArgument = new JniArgumentValue (1);
+				Assert.AreEqual (101, members.StaticMethods.InvokeInt32Method ("remappedSpecificity.(I)I", &intArgument));
+
+				intArgument = new JniArgumentValue (2);
+				members.StaticMethods.InvokeVoidMethod ("remappedSpecificity.(I)V", &intArgument);
+				using var type = new JniType (FieldRemapBase.JniTypeName);
+				var valueField = type.GetStaticField ("specificityValue", "I");
+				Assert.AreEqual (202, JniEnvironment.StaticFields.GetStaticIntField (type.PeerReference, valueField));
+
+				var longArgument = new JniArgumentValue (3L);
+				Assert.AreEqual (303, members.StaticMethods.InvokeInt32Method ("remappedSpecificity.(J)I", &longArgument));
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
 		public void ReplacementConstructorUsesTargetSignature ()
 		{
 			// The declared parameter type does not exist; the replacement pins `(I)V` instead.

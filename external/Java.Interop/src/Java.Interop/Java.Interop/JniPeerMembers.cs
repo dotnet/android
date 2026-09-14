@@ -176,27 +176,30 @@ namespace Java.Interop {
 		// Member keys use the replaced type name but retain the managed member name and signature.
 		internal static JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (
 			string jniTypeName,
+			ReadOnlySpan<char> method,
+			ReadOnlySpan<char> signature)
+		{
+			return JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (jniTypeName, method, signature);
+		}
+
+		internal static JniRuntime.ReplacementMethodInfo? GetBaseReplacementMethodInfo (
 			Type managedPeerType,
 			ReadOnlySpan<char> method,
-			ReadOnlySpan<char> signature,
-			bool searchBaseTypes = true)
+			ReadOnlySpan<char> signature)
 		{
 			var typeManager = JniEnvironment.Runtime.TypeManager;
-			var info        = typeManager.GetReplacementMethodInfo (jniTypeName, method, signature);
-			if (info == null && searchBaseTypes) {
-				for (Type? baseType = managedPeerType.BaseType; baseType != null; baseType = baseType.BaseType) {
-					var baseSignature = typeManager.GetTypeSignature (baseType);
-					string? effectiveBaseType = baseSignature.SimpleReference;
-					if (effectiveBaseType == null) {
-						continue;
-					}
-					info = typeManager.GetReplacementMethodInfo (effectiveBaseType, method, signature);
-					if (info != null) {
-						break;
-					}
+			for (Type? baseType = managedPeerType.BaseType; baseType != null; baseType = baseType.BaseType) {
+				var baseSignature = typeManager.GetTypeSignature (baseType);
+				string? effectiveBaseType = baseSignature.SimpleReference;
+				if (effectiveBaseType == null) {
+					continue;
+				}
+				var info = typeManager.GetReplacementMethodInfo (effectiveBaseType, method, signature);
+				if (info != null) {
+					return info;
 				}
 			}
-			return info;
+			return null;
 		}
 
 		internal static JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfo (

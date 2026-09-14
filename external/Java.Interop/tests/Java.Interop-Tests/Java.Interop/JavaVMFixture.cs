@@ -135,6 +135,11 @@ namespace Java.InteropTests {
 			// `target-method-signature` carries.
 			[("java/lang/StringBuilder",   "<init>",   "(Lnet/dot/jni/test/RenamedInt;)V")]     = (null, "<init>", "(I)V", null, false),
 			[("java/lang/StringBuilder",   "indexOf",  "(Lnet/dot/jni/test/RenamedString;)I")]  = (null, "indexOf", "(Ljava/lang/String;)I", null, false),
+			[(FieldRemapBase.JniTypeName,  "hiddenInstanceMethod", "()I")] = (null, "remappedInstanceMethod", null, null, false),
+			[(FieldRemapBase.JniTypeName,  "hiddenStaticMethod",   "()I")] = (null, "remappedStaticMethod", null, null, false),
+			[(FieldRemapBase.JniTypeName,  "remappedSpecificity",  "(I)I")] = (null, "specificityExact", "(I)I", null, false),
+			[(FieldRemapBase.JniTypeName,  "remappedSpecificity",  "(I)")] = (null, "specificityParameters", "(I)V", null, false),
+			[(FieldRemapBase.JniTypeName,  "remappedSpecificity",  null)] = (null, "specificityWildcard", null, null, false),
 		};
 
 		Dictionary<(string SourceType, string SourceName, string? SourceSignature), (string? TargetType, string? TargetName, string? TargetSignature)> ReplacementFields = new() {

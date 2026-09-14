@@ -453,12 +453,18 @@ namespace Xamarin.Android.Tasks
 			sortedTypes.Sort ((l, r) => CompareUtf8 (l.Value.key, r.Value.key));
 
 			var ret = new List<StructureInstance<JniRemappingIndexTypeEntry>> (sortedTypes.Count);
-			foreach (var kvp in sortedTypes) {
+			for (int typeIndex = 0; typeIndex < sortedTypes.Count; typeIndex++) {
+				var kvp = sortedTypes [typeIndex];
 				var methods = kvp.Value.methods;
-				// Overloads share a name, so the native lookup binary-searches the name and then
-				// scans the equal-name run for a matching signature. Keep both keys in the sort.
+				// Keep exact descriptors before parameter-only descriptors and wildcards, matching
+				// the specificity passes used by both native runtimes.
 				methods.Sort ((l, r) => {
 					int cmp = CompareUtf8 (l.nameKey, r.nameKey);
+					if (cmp != 0) {
+						return cmp;
+					}
+					cmp = GetMethodSignatureSpecificity (l.method.SourceMethodSignature).CompareTo (
+						GetMethodSignatureSpecificity (r.method.SourceMethodSignature));
 					return cmp != 0 ? cmp : CompareUtf8 (l.signatureKey, r.signatureKey);
 				});
 
@@ -481,7 +487,7 @@ namespace Xamarin.Android.Tasks
 				var entry = new JniRemappingIndexTypeEntry {
 					name = MakeJniRemappingString (kvp.Key, kvp.Value.key),
 					method_count = (uint)typeMethods.Count,
-					MethodsArraySymbolName = MakeMembersArrayName ("mm", kvp.Key),
+					MethodsArraySymbolName = MakeMembersArrayName ("mm", typeIndex),
 					TypeMethods = typeMethods,
 				};
 
@@ -508,7 +514,8 @@ namespace Xamarin.Android.Tasks
 			sortedTypes.Sort ((l, r) => CompareUtf8 (l.Value.key, r.Value.key));
 
 			var ret = new List<StructureInstance<JniRemappingIndexFieldTypeEntry>> (sortedTypes.Count);
-			foreach (var kvp in sortedTypes) {
+			for (int typeIndex = 0; typeIndex < sortedTypes.Count; typeIndex++) {
+				var kvp = sortedTypes [typeIndex];
 				var fields = kvp.Value.fields;
 				fields.Sort ((l, r) => {
 					int cmp = CompareUtf8 (l.nameKey, r.nameKey);
@@ -533,7 +540,7 @@ namespace Xamarin.Android.Tasks
 				var entry = new JniRemappingIndexFieldTypeEntry {
 					name = MakeJniRemappingString (kvp.Key, kvp.Value.key),
 					field_count = (uint)typeFields.Count,
-					FieldsArraySymbolName = MakeMembersArrayName ("mf", kvp.Key),
+					FieldsArraySymbolName = MakeMembersArrayName ("mf", typeIndex),
 					TypeFields = typeFields,
 				};
 
@@ -543,9 +550,17 @@ namespace Xamarin.Android.Tasks
 			return ret;
 		}
 
-		static string MakeMembersArrayName (string prefix, string typeName)
+		static string MakeMembersArrayName (string prefix, int typeIndex)
 		{
-			return $"{prefix}_{typeName.Replace ('/', '_')}";
+			return $"{prefix}_{typeIndex}";
+		}
+
+		static int GetMethodSignatureSpecificity (string signature)
+		{
+			if (String.IsNullOrEmpty (signature)) {
+				return 2;
+			}
+			return signature [signature.Length - 1] == ')' ? 1 : 0;
 		}
 
 		static JniRemappingString MakeJniRemappingString (string str, byte [] utf8)

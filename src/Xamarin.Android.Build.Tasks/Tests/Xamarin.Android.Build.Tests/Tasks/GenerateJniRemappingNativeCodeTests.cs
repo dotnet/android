@@ -7,6 +7,7 @@ using System.Linq;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
+using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests.Tasks {
 
@@ -153,11 +154,17 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 		}
 
 		[Test]
-		public void MethodsAndFieldsAreSortedByNameThenSignature ()
+		public void MethodsAndFieldsUseStableLookupOrder ()
 		{
 			string ll = RunTask (
 				"""
 				<replacements>
+				  <replace-method source-type="a/B" source-method-name="alpha"
+				      target-type="x/Y" target-method-name="wildcard"
+				      target-method-instance-to-static="false" />
+				  <replace-method source-type="a/B" source-method-name="alpha" source-method-signature="(I)"
+				      target-type="x/Y" target-method-name="parameters" target-method-signature="(I)V"
+				      target-method-instance-to-static="false" />
 				  <replace-method source-type="a/B" source-method-name="zeta" source-method-signature="()V"
 				      target-type="x/Y" target-method-name="c" target-method-signature="()V"
 				      target-method-instance-to-static="false" />
@@ -174,12 +181,56 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				</replacements>
 				""");
 
-			// Overloads keep a stable (name, signature) order so the runtime can binary-search the
-			// name and scan the equal-name run.
-			AssertOrdered (ll, "c\"alpha", "c\"(I)V", "c\"(J)V", "c\"zeta");
+			// Exact descriptors precede parameter-only descriptors and wildcards so MonoVM's
+			// single scan cannot let a general remap shadow a specific one.
+			int methodsStart = ll.IndexOf ("@mm_0 =", System.StringComparison.Ordinal);
+			int methodsEnd = ll.IndexOf ("@jni_remapping_method_replacement_index", methodsStart, System.StringComparison.Ordinal);
+			Assert.Greater (methodsStart, -1);
+			Assert.Greater (methodsEnd, methodsStart);
+			string methodArray = ll.Substring (methodsStart, methodsEnd - methodsStart);
+			AssertOrdered (
+				methodArray,
+				"ptr @.JniRemappingString.1_str",
+				"ptr @.JniRemappingString.2_str",
+				"ptr @.JniRemappingString.3_str",
+				"ptr null",
+				"ptr @.JniRemappingString.4_str");
 			AssertOrdered (ll, "c\"af", "c\"zf");
 			Assert.AreEqual (1, Info.ReplacementMethodIndexEntryCount);
 			Assert.AreEqual (1, Info.ReplacementFieldIndexEntryCount);
+		}
+
+		[Test]
+		public void MemberArraySymbolsAreCollisionProofAndValidLlvm ()
+		{
+			string ll = RunTask (
+				"""
+				<replacements>
+				  <replace-method source-type="a/b_c" source-method-name="m" source-method-signature="()V"
+				      target-type="x/Y" target-method-name="a" target-method-signature="()V"
+				      target-method-instance-to-static="false" />
+				  <replace-method source-type="a_b/c" source-method-name="m" source-method-signature="()V"
+				      target-type="x/Y" target-method-name="b" target-method-signature="()V"
+				      target-method-instance-to-static="false" />
+				  <replace-field source-type="型/名前" source-field-name="f" source-field-signature="I"
+				      target-type="x/Y" target-field-name="g" target-field-signature="I" />
+				</replacements>
+				""");
+
+			StringAssert.Contains ("@mm_0", ll);
+			StringAssert.Contains ("@mm_1", ll);
+			StringAssert.Contains ("@mf_0", ll);
+
+			string binUtils = Path.Combine (TestEnvironment.OSBinDirectory, "binutils", "bin");
+			var compile = new CompileNativeAssembly {
+				BuildEngine = engine,
+				Sources = [new Microsoft.Build.Utilities.TaskItem (Path.Combine (TestDirectory, $"jni_remap.{Abi}.ll"))],
+				DebugBuild = false,
+				WorkingDirectory = TestDirectory,
+				AndroidBinUtilsDirectory = binUtils,
+			};
+			Assert.IsTrue (compile.Execute (), $"Generated LLVM IR should compile. Errors: {string.Join ("; ", Errors.Select (e => e.Message))}");
+			FileAssert.Exists (Path.Combine (TestDirectory, $"jni_remap.{Abi}.o"));
 		}
 
 		[Test]

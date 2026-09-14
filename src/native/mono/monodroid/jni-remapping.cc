@@ -88,28 +88,40 @@ JniRemapping::lookup_replacement_method_info (const char *jniSourceType, const c
 	size_t method_name_len = strlen (jniMethodName);
 	size_t signature_len = jniMethodSignature == nullptr ? 0uz : strlen (jniMethodSignature);
 
-	for (size_t i = 0uz; i < type->method_count; i++) {
-		JniRemappingIndexMethodEntry const& entry = type->methods[i];
-
-		if (!equal (entry.name, jniMethodName, method_name_len)) {
-			continue;
-		}
-
-		if (entry.signature.length == 0 || equal (entry.signature, jniMethodSignature, signature_len)) {
-			return &type->methods[i].replacement;
+	if (signature_len > 0uz) {
+		for (size_t i = 0uz; i < type->method_count; i++) {
+			JniRemappingIndexMethodEntry const& entry = type->methods[i];
+			if (equal (entry.name, jniMethodName, method_name_len) &&
+			    entry.signature.length != 0 &&
+			    equal (entry.signature, jniMethodSignature, signature_len)) {
+				return &entry.replacement;
+			}
 		}
 
 		const char *sig_end = jniMethodSignature + signature_len;
-		if (*sig_end == ')') {
-			continue;
-		}
-
 		while (sig_end != jniMethodSignature && *sig_end != ')') {
 			sig_end--;
 		}
 
-		if (equal (entry.signature, jniMethodSignature, static_cast<size_t>(sig_end - jniMethodSignature) + 1uz)) {
-			return &type->methods[i].replacement;
+		if (*sig_end == ')') {
+			size_t prefix_len = static_cast<size_t>(sig_end - jniMethodSignature) + 1uz;
+			if (prefix_len != signature_len) {
+				for (size_t i = 0uz; i < type->method_count; i++) {
+					JniRemappingIndexMethodEntry const& entry = type->methods[i];
+					if (equal (entry.name, jniMethodName, method_name_len) &&
+					    entry.signature.length != 0 &&
+					    equal (entry.signature, jniMethodSignature, prefix_len)) {
+						return &entry.replacement;
+					}
+				}
+			}
+		}
+	}
+
+	for (size_t i = 0uz; i < type->method_count; i++) {
+		JniRemappingIndexMethodEntry const& entry = type->methods[i];
+		if (equal (entry.name, jniMethodName, method_name_len) && entry.signature.length == 0) {
+			return &entry.replacement;
 		}
 	}
 

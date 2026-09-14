@@ -196,16 +196,17 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			yield return builtInType;
 		}
 
-		foreach (var type in TrimmableTypeMap.Instance.GetTargetTypes (jniSimpleReference)) {
-			yield return type;
-		}
-
 		// The type map is keyed by the JNI names the managed code declares, so a name that was
 		// renamed in the packaged application has to be translated back first.
 		if (GetOriginalSimpleReference (jniSimpleReference) is string originalReference) {
 			foreach (var type in TrimmableTypeMap.Instance.GetTargetTypes (originalReference)) {
 				yield return type;
 			}
+			yield break;
+		}
+
+		foreach (var type in TrimmableTypeMap.Instance.GetTargetTypes (jniSimpleReference)) {
+			yield return type;
 		}
 	}
 
@@ -218,16 +219,11 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			return builtInType;
 		}
 
-		if (TrimmableTypeMap.Instance.TryGetTargetType (jniSimpleReference, out var type)) {
-			return type;
+		if (GetOriginalSimpleReference (jniSimpleReference) is string originalReference) {
+			return TrimmableTypeMap.Instance.TryGetTargetType (originalReference, out var type) ? type : null;
 		}
 
-		if (GetOriginalSimpleReference (jniSimpleReference) is string originalReference &&
-				TrimmableTypeMap.Instance.TryGetTargetType (originalReference, out type)) {
-			return type;
-		}
-
-		return null;
+		return TrimmableTypeMap.Instance.TryGetTargetType (jniSimpleReference, out var directType) ? directType : null;
 	}
 
 	static string? GetOriginalSimpleReference (string jniSimpleReference)
