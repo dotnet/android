@@ -1,11 +1,16 @@
 # Tracing .NET for Android Applications
 
-Attaching `dotnet-trace` to a .NET for Android application, allows you to
-get profiling information in formats like `.nettrace` and
-`.speedscope`. These give you CPU sampling information about the time
-spent in each method in your application. This is quite useful for
-finding *where* time is spent in the startup or general performance of
-your .NET applications.
+Attaching `dotnet-trace` to a .NET for Android application allows you to get
+profiling information in formats like `.nettrace` and `.speedscope`. These
+give you CPU sampling information about the time spent in each method in your
+application. This is useful for finding *where* time is spent during startup
+or general application execution.
+
+The workflow in this section is for CoreCLR applications in .NET 11 and later.
+CoreCLR EventPipe diagnostics use the runtime diagnostic server and configured
+TCP diagnostic ports. MonoVM applications retain the historical
+`debug.mono.profile` and Mono diagnostic-component guidance described later
+in this page.
 
 To use `dotnet-trace` on Android, the following tools/components work
 together to make this happen:
@@ -20,10 +25,14 @@ together to make this happen:
   used to collect memory dumps of .NET applications.
 
 * The Mono Diagnostic component, `libmono-component-diagnostics_tracing.so`,
-  is included in the application and is used to collect the trace data.
+  is included in MonoVM applications and is used to collect the trace data.
 
-> **NOTE:** You need at least version 9.0.621003 of all the diagnostic
-> tools to use the features described in this guide. Check
+* CoreCLR's EventPipe diagnostic server is included in .NET 11 and later
+  applications and communicates with the diagnostic tools through
+  `dotnet-dsrouter`.
+
+> **NOTE:** Use current releases of the diagnostic tools. The .NET 11 RC1
+> SDK is the validation baseline for the workflow described here. Check
 > [dotnet-trace](https://www.nuget.org/packages/dotnet-trace/),
 > [dotnet-dsrouter](https://www.nuget.org/packages/dotnet-dsrouter/),
 > and [dotnet-gcdump](https://www.nuget.org/packages/dotnet-gcdump/)
@@ -60,20 +69,25 @@ You can invoke the tool using the following command: dotnet-trace
 Tool 'dotnet-trace' was successfully installed.
 ```
 
-## Quickstart (Android Device)
+## Quickstart (CoreCLR on an Android device)
 **Do not run the app through Visual Studio**, the app freezes on the splash screen.
 
-Run the following commands to create a memory dump of the app:
+The following commands collect a GC memory dump from a CoreCLR application.
+The same diagnostic-port connection can be used with `dotnet-trace`.
 
-1. `dotnet build -c Release -p:EnableDiagnostics=true .\MyApp.csproj`
-2. `adb install .\bin\Release\net11.0-android\MyApp-Signed.apk`
-3. `dotnet-dsrouter android`
-4. `adb shell setprop debug.mono.profile '127.0.0.1:9000,nosuspend'`
-5. Start the app on your device
-6. `dotnet-gcdump ps` to find the PID
-7. `dotnet-gcdump collect -p PID`
+1. In a separate terminal, start the forwarding router:
+   `dotnet-dsrouter android`
+2. In another terminal, build, install, and start the application on the device:
+   `dotnet build -t:Run -c Release -p:EnableDiagnostics=true .\MyApp.csproj`
+3. In a third terminal, run `dotnet-gcdump ps` to find the router process.
+4. In the same terminal, run `dotnet-gcdump collect -p PID`.
 
-This will create a `.gcdump` file wich you can open in Visual Studio.
+`EnableDiagnostics` is an Android SDK/MSBuild property. It is distinct from
+the `DOTNET_EnableDiagnostics` runtime environment variable. The build
+properties configure `DOTNET_DiagnosticPorts`; they do not use
+`debug.dotnet.profile` as the primary CoreCLR port configuration.
+
+This creates a `.gcdump` file that you can open in Visual Studio.
 
 ## Configuration & Setup
 
@@ -124,6 +138,12 @@ Unix by opening them with [https://speedscope.app/][speedscope].
 
 Running `dotnet-dsrouter` separately provides finer control over its
 options and can be useful for viewing its log messages when troubleshooting.
+The examples below use `connect` mode: the application connects to the
+router's TCP endpoint, and the diagnostic tool connects to the router's local
+IPC endpoint. Start the router before launching an application configured with
+`DiagnosticSuspend=true`; otherwise the application waits for a connection
+that does not yet exist. Use `DiagnosticSuspend=false` when the application
+should start before a tool attaches.
 
 For profiling an Android application running on an Android *emulator*:
 
@@ -148,8 +168,6 @@ info: dotnet-dsrouter-1234[0]
 For profiling an Android application running on an Android *device*:
 
 ```sh
-# `adb reverse` is required when using hardware devices
-$ adb reverse tcp:9000 tcp:9001
 $ dotnet-dsrouter android
 How to connect current dotnet-dsrouter pid=1234 with android device and diagnostics tooling.
 Build and run your application on android device such as:
@@ -162,36 +180,46 @@ dotnet-trace collect -p 1234
 ...
 ```
 
+The emulator's `10.0.2.2` address reaches the host loopback. On a physical
+device, `dotnet-dsrouter android` establishes the required device forwarding.
+Diagnostic TCP endpoints are unauthenticated and unencrypted development
+interfaces and must remain local.
+
 ### Android System Properties
 
 The `$(DiagnosticAddress)`, `$(DiagnosticPort)`, `$(DiagnosticSuspend)`,
 and `$(DiagnosticListenMode)` MSBuild properties configure the
-`$DOTNET_DiagnosticPorts` environment variable packaged in the application.
-Alternatively, the `debug.mono.profile` Android system property can configure
-diagnostics without rebuilding the app.
+`DOTNET_DiagnosticPorts` environment variable packaged in the application.
+`$(DiagnosticConfiguration)` can be used to provide the complete value.
+Nonempty `Diagnostic*` settings implicitly enable Android diagnostics when
+`$(AndroidEnableProfiler)` is not explicitly set to `false`.
 
-For emulators, `$DOTNET_DiagnosticPorts` should specify an IP address
+For CoreCLR, these MSBuild properties are the primary diagnostic-port
+configuration. `debug.dotnet.profile` is not a diagnostic-port setting; its
+presence is used by current runtime diagnostic-output-directory behavior.
+`DOTNET_EnableDiagnostics` is a separate CoreCLR runtime environment variable
+that controls whether diagnostics are enabled at runtime.
+
+For emulators, `DOTNET_DiagnosticPorts` should specify an IP address
 of 10.0.2.2:
 
 ```sh
-$ adb shell setprop debug.mono.profile '10.0.2.2:9000,suspend,connect'
+$ dotnet build -t:Run -c Release -p:DiagnosticAddress=10.0.2.2 -p:DiagnosticPort=9000 -p:DiagnosticSuspend=true -p:DiagnosticListenMode=connect
 ```
 
-For devices, `$DOTNET_DiagnosticPorts` should specify an IP address of
-127.0.0.1, and the port number should be the [port used used with adb
-reverse](#start-the-tracing-routerproxy-on-host), e.g:
+For devices, `DOTNET_DiagnosticPorts` should specify an IP address of
+127.0.0.1. `dotnet-dsrouter android` establishes the device connection:
 
 ```sh
-# `adb reverse` is required when using hardware devices
-$ adb reverse tcp:9000 tcp:9001
-$ adb shell setprop debug.mono.profile '127.0.0.1:9000,suspend,connect'
+$ dotnet-dsrouter android
+$ dotnet build -t:Run -c Release -p:DiagnosticAddress=127.0.0.1 -p:DiagnosticPort=9000 -p:DiagnosticSuspend=true -p:DiagnosticListenMode=connect
 ```
 
 `suspend` is useful as it blocks application startup, so you can
 actually `dotnet-trace` startup times of the application.
 
 If you are wanting to collect a `gcdump` or just get things working,
-try `nosuspend` instead. See the [`dotnet-dsrouter`
+use `-p:DiagnosticSuspend=false` instead. See the [`dotnet-dsrouter`
 documentation][nosuspend] for further information.
 
 [nosuspend]: https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-dsrouter#collect-a-trace-using-dotnet-trace-from-a-net-application-running-on-android
@@ -229,21 +257,23 @@ Unix by opening them with [https://speedscope.app/][speedscope].
 
 ### Running the .NET for Android Application
 
-`$(EnableDiagnostics)` must be set to `true` to include the Mono diagnostic
-component, `libmono-component-diagnostics_tracing.so`, in the application.
-`$(AndroidEnableProfiler)` is an equivalent property retained for backwards
-compatibility.
+For CoreCLR applications, set the Android SDK/MSBuild
+`$(EnableDiagnostics)` property to `true`, or set one of the
+`Diagnostic*` properties. `$(AndroidEnableProfiler)` is the legacy synonym
+retained for compatibility. These settings configure the CoreCLR diagnostic
+server and `DOTNET_DiagnosticPorts`; they do not add the Mono diagnostic
+component.
 
 ```sh
-$ dotnet build -f net8.0-android -t:Run -c Release -p:EnableDiagnostics=true
+$ dotnet build -f net11.0-android -t:Run -c Release -p:EnableDiagnostics=true
 ```
 
 Setting any of the `$(DiagnosticAddress)`, `$(DiagnosticPort)`,
 `$(DiagnosticSuspend)`, or `$(DiagnosticListenMode)` properties implicitly
-enables the diagnostic component, so `-p:EnableDiagnostics=true` is not needed
+enables Android diagnostics, so `-p:EnableDiagnostics=true` is not needed
 with the `dotnet-dsrouter` commands shown above.
 
-*NOTE: `-f net8.0-android` is only needed for projects with multiple `$(TargetFrameworks)`.*
+*NOTE: `-f net11.0-android` is only needed for projects with multiple `$(TargetFrameworks)`.*
 
 Once the application is installed and started, `dotnet-trace` should show something similar to:
 
@@ -300,6 +330,10 @@ open this file in Visual Studio on Windows, for example:
 
 ## Memory Dumps for Android in .NET 8+
 
+The following `debug.mono.profile` workflow is retained for MonoVM
+applications. Use the CoreCLR diagnostic-port workflow above for ordinary
+.NET 11 and later Android applications.
+
 In .NET 8, we have a simplified method for collecing `*.gcdump` files for
 Android applications. To get this data from an Android application, you need all
 the above setup for `adb shell`, `dsrouter`, etc. except you need to simply use
@@ -315,6 +349,10 @@ Note that using `nosuspend` in the `debug.mono.profile` property is
 useful, as it won't block application startup.
 
 ## Memory Dumps for Android in .NET 7
+
+This is the historical MonoVM workflow for .NET 7 applications. It is not
+the CoreCLR EventPipe workflow used by ordinary .NET 11 and later Android
+applications.
 
 In .NET 7, we have to use th older, more complicated method for collecting
 `*.gcdump` files for Android applications. To get this data from an Android
