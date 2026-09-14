@@ -41,7 +41,7 @@ public class GenerateACWMap : AndroidTask
 			var wrappersPath = JavaObjectsXmlFile.GetJavaObjectsXmlFilePath (assembly);
 
 			if (!File.Exists (wrappersPath)) {
-				Log.LogError ($"'{wrappersPath}' not found.");
+				Log.LogCodedError ("XA4264", Properties.Resources.XA4264, wrappersPath);
 				return;
 			}
 
