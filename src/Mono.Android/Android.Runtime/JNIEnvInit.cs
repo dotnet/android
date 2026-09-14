@@ -127,9 +127,7 @@ namespace Android.Runtime
 				throw new NotSupportedException ("Internal error: exactly one of RuntimeFeature.IsMonoRuntime or RuntimeFeature.IsCoreClrRuntime must be enabled.");
 			}
 
-			if (RuntimeFeature.IsCoreClrRuntime) {
-				StartupNoGCRegion.Start ();
-			}
+			StartupNoGCRegion.Start ();
 
 			IntPtr total_timing_sequence = IntPtr.Zero;
 			IntPtr partial_timing_sequence = IntPtr.Zero;
