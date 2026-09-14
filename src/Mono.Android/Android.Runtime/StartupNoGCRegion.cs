@@ -38,7 +38,7 @@ sealed class StartupNoGCRegion
 
 			bool started;
 			try {
-				started = GC.TryStartNoGCRegion (Budget, true);
+				started = GC.TryStartNoGCRegion (Budget, disallowFullBlockingGC: true);
 			} catch (InvalidOperationException) {
 				state = State.Ended;
 				return;
