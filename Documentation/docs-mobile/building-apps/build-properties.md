@@ -1627,11 +1627,13 @@ A value provided by `dotnet-dsrouter` such as `127.0.0.1`, the IP
 address component of `$(DiagnosticConfiguration)` or
 `DOTNET_DiagnosticPorts`.
 
-When this property is nonempty, it implicitly enables Android diagnostics.
+When this property is nonempty and `$(AndroidEnableProfiler)` is not explicitly
+set to `false`, it implicitly enables Android diagnostics.
 For CoreCLR, the resulting TCP endpoint is normally kept on loopback and is
 used by `dotnet-dsrouter`. For an Android emulator, use `10.0.2.2` to reach
-the development machine; for a physical device, use `127.0.0.1` with the
-device forwarding established by `dotnet-dsrouter android`.
+the development machine; for a physical device, use `127.0.0.1` with
+Android port forwarding enabled by
+`dotnet-dsrouter server-server --tcp-server 127.0.0.1:9000 --forward-port Android`.
 
 Defaults to `127.0.0.1`.
 
@@ -1639,8 +1641,8 @@ Defaults to `127.0.0.1`.
 
 A value provided by `dotnet-dsrouter` for `DOTNET_DiagnosticPorts` such as:
 
-* `127.0.0.1:9000,suspend,connect`
-* `127.0.0.1:9000,nosuspend,connect`
+* `127.0.0.1:9000,connect,suspend`
+* `127.0.0.1:9000,connect,nosuspend`
 
 When diagnostics are enabled without an explicit configuration, the derived
 defaults are address `127.0.0.1`, port `9000`, `DiagnosticSuspend=false`, and
@@ -1650,7 +1652,7 @@ Note that the `,` character will need to be escaped with `%2c` if
 passed in command-line to `dotnet build`:
 
 ```dotnetcli
-dotnet build -c Release -p:DiagnosticConfiguration=127.0.0.1:9000%2csuspend%2cconnect
+dotnet build -c Release -p:DiagnosticConfiguration=127.0.0.1:9000%2cconnect%2csuspend
 ```
 
 This automatically sets the `DOTNET_DiagnosticPorts` environment variable
@@ -1660,14 +1662,16 @@ connection to the local diagnostic tool. The endpoint is unauthenticated and
 unencrypted, so keep it on a local development interface.
 
 Setting this property, or any of the component properties below, implicitly
-enables Android diagnostics.
+enables Android diagnostics when `$(AndroidEnableProfiler)` is not explicitly
+set to `false`.
 
 ## DiagnosticListenMode
 
 A value provided by `dotnet-dsrouter` such as `connect`, the listening
 mode component of `$(DiagnosticConfiguration)` or `DOTNET_DiagnosticPorts`.
 
-When this property is nonempty, it implicitly enables Android diagnostics.
+When this property is nonempty and `$(AndroidEnableProfiler)` is not explicitly
+set to `false`, it implicitly enables Android diagnostics.
 
 Defaults to `connect`.
 
@@ -1676,7 +1680,8 @@ Defaults to `connect`.
 A value provided by `dotnet-dsrouter` such as `9000`, the port
 component of `$(DiagnosticConfiguration)` or `DOTNET_DiagnosticPorts`.
 
-When this property is nonempty, it implicitly enables Android diagnostics.
+When this property is nonempty and `$(AndroidEnableProfiler)` is not explicitly
+set to `false`, it implicitly enables Android diagnostics.
 
 Defaults to `9000`.
 
@@ -1686,7 +1691,8 @@ A boolean value provided by `dotnet-dsrouter` such as `true/suspend`
 or `false/nosuspend`, a component of `$(DiagnosticConfiguration)`
 or `DOTNET_DiagnosticPorts`.
 
-When this property is nonempty, it implicitly enables Android diagnostics.
+When this property is nonempty and `$(AndroidEnableProfiler)` is not explicitly
+set to `false`, it implicitly enables Android diagnostics.
 
 Defaults to `false`.
 
@@ -1984,8 +1990,8 @@ Xamarin.Android. This is the same property used for [Blazor WASM][blazor].
 A boolean property that controls whether Android applications use the
 Mono runtime instead of CoreCLR for supported .NET 10-and-earlier targets.
 Set this property to `true` to use Mono or `false` to use CoreCLR on those
-targets. `$(PublishAot)` takes precedence and selects NativeAOT when set to
-`true`.
+targets. `$(PublishAot)` takes precedence and selects NativeAOT for supported
+publish or optimized builds when set to `true`.
 
 This property defaults to `true` in .NET 10 and earlier, so Android
 applications use Mono. In .NET 11 and later, it defaults to `false`, so

@@ -2,11 +2,12 @@
 
 Tips and tricks while developing .NET for Android.
 
-The update-directory, `libmonosgen-2.0.so`, Mono runtime-pack, and
-`debug.mono.*` examples in this page are MonoVM-specific historical guidance.
-They apply to .NET 10 and earlier Mono applications and to supported explicit
-MonoVM builds. Ordinary .NET 11 and later Android applications use CoreCLR;
-use the CoreCLR diagnostics and runtime guidance in the
+The update-directory guidance in this page applies to Android fast deployment
+for both MonoVM and CoreCLR applications. The `libmonosgen-2.0.so`, Mono
+runtime-pack, and `debug.mono.*` examples are MonoVM-specific historical
+guidance. They apply to .NET 10 and earlier Mono applications and to
+supported explicit MonoVM builds. Ordinary .NET 11 and later Android
+applications use CoreCLR; use the CoreCLR diagnostics and runtime guidance in the
 [tracing](../guides/tracing.md) and
 [custom Android system properties](SystemProperties.md) documentation instead.
 
