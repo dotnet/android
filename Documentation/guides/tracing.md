@@ -76,7 +76,7 @@ The following commands collect a GC memory dump from a CoreCLR application.
 The same diagnostic-port connection can be used with `dotnet-trace`.
 
 1. Start the forwarding router:
-   `dotnet-dsrouter server-server --tcp-server 127.0.0.1:9000 --forward-port Android`
+   `dotnet-dsrouter android`
 2. Build, install, and start the application on the device:
    `dotnet build -t:Run -c Release -p:EnableDiagnostics=true .\MyApp.csproj`
 3. Run `dotnet-gcdump ps` to find the router process.
@@ -148,7 +148,7 @@ should start before a tool attaches.
 For profiling an Android application running on an Android *emulator*:
 
 ```sh
-$ dotnet-dsrouter server-server --tcp-server 127.0.0.1:9000
+$ dotnet-dsrouter android-emu
 How to connect current dotnet-dsrouter pid=1234 with android emulator and diagnostics tooling.
 Build and run your application on android emulator such as:
 [Default Tracing]
@@ -168,7 +168,7 @@ info: dotnet-dsrouter-1234[0]
 For profiling an Android application running on an Android *device*:
 
 ```sh
-$ dotnet-dsrouter server-server --tcp-server 127.0.0.1:9000 --forward-port Android
+$ dotnet-dsrouter android
 How to connect current dotnet-dsrouter pid=1234 with android device and diagnostics tooling.
 Build and run your application on android device such as:
 [Default Tracing]
@@ -180,11 +180,10 @@ dotnet-trace collect -p 1234
 ...
 ```
 
-Bind the host-side router endpoint to a loopback interface. For an Android
-emulator, `10.0.2.2` is the emulator alias for the host loopback; for a
-physical device, use `127.0.0.1` with Android port forwarding. Diagnostic TCP
-endpoints are unauthenticated and unencrypted development interfaces and must
-remain local.
+The emulator's `10.0.2.2` address reaches the host loopback. On a physical
+device, `dotnet-dsrouter android` establishes the required device forwarding.
+Diagnostic TCP endpoints are unauthenticated and unencrypted development
+interfaces and must remain local.
 
 ### Android System Properties
 
@@ -209,11 +208,10 @@ $ dotnet build -t:Run -c Release -p:DiagnosticAddress=10.0.2.2 -p:DiagnosticPort
 ```
 
 For devices, `DOTNET_DiagnosticPorts` should specify an IP address of
-127.0.0.1. `dotnet-dsrouter server-server` with Android port forwarding
-establishes the device connection:
+127.0.0.1. `dotnet-dsrouter android` establishes the device connection:
 
 ```sh
-$ dotnet-dsrouter server-server --tcp-server 127.0.0.1:9000 --forward-port Android
+$ dotnet-dsrouter android
 $ dotnet build -t:Run -c Release -p:DiagnosticAddress=127.0.0.1 -p:DiagnosticPort=9000 -p:DiagnosticSuspend=true -p:DiagnosticListenMode=connect
 ```
 
