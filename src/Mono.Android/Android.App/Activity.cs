@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Versioning;
 using Android.Runtime;
-using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
 namespace Android.App {
 
@@ -50,9 +49,7 @@ namespace Android.App {
 			try {
 				_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, null);
 			} finally {
-				if (RuntimeFeature.IsCoreClrRuntime) {
-					StartupNoGCRegion.End ();
-				}
+				StartupNoGCRegion.End ();
 			}
 		}
 

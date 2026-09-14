@@ -8,23 +8,11 @@ sealed class StartupNoGCRegion
 	const long Budget = 24 * 1024 * 1024;
 	// Bound the process-wide region when an app never reports that startup is fully drawn.
 	static readonly TimeSpan DefaultFallbackTimeout = TimeSpan.FromSeconds (10);
-	static readonly StartupNoGCRegion instance = new (
-		static (totalSize, disallowFullBlockingGC) => GC.TryStartNoGCRegion (totalSize, disallowFullBlockingGC),
-		GC.EndNoGCRegion,
-		GC.CollectionCount,
-		DefaultFallbackTimeout
-	);
+	static readonly StartupNoGCRegion instance = new ();
 
 	readonly object sync = new ();
-	readonly Func<long, bool, bool> tryStartNoGCRegion;
-	readonly Action endNoGCRegion;
-	readonly Func<int, int> collectionCount;
-	readonly TimeSpan fallbackTimeout;
 	Timer? fallbackTimer;
 	State state;
-	int gen0CollectionCount;
-	int gen1CollectionCount;
-	int gen2CollectionCount;
 
 	enum State
 	{
@@ -33,33 +21,13 @@ sealed class StartupNoGCRegion
 		Ended,
 	}
 
-	internal StartupNoGCRegion (
-		Func<long, bool, bool> tryStartNoGCRegion,
-		Action endNoGCRegion,
-		Func<int, int> collectionCount,
-		TimeSpan fallbackTimeout
-	)
-	{
-		ArgumentNullException.ThrowIfNull (tryStartNoGCRegion);
-		ArgumentNullException.ThrowIfNull (endNoGCRegion);
-		ArgumentNullException.ThrowIfNull (collectionCount);
-
-		this.tryStartNoGCRegion = tryStartNoGCRegion;
-		this.endNoGCRegion = endNoGCRegion;
-		this.collectionCount = collectionCount;
-		this.fallbackTimeout = fallbackTimeout;
-	}
-
-	internal static void Start () => instance.Start (
-		Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime,
-		Microsoft.Android.Runtime.RuntimeFeature.StartupNoGCRegion
-	);
+	internal static void Start () => instance.StartRegion ();
 
 	internal static void End () => instance.Finish ();
 
-	internal void Start (bool isCoreClrRuntime, bool isEnabled = true)
+	void StartRegion ()
 	{
-		if (!isCoreClrRuntime || !isEnabled) {
+		if (Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime) {
 			return;
 		}
 
@@ -70,7 +38,7 @@ sealed class StartupNoGCRegion
 
 			bool started;
 			try {
-				started = tryStartNoGCRegion (Budget, true);
+				started = GC.TryStartNoGCRegion (Budget, true);
 			} catch (InvalidOperationException) {
 				state = State.Ended;
 				return;
@@ -81,9 +49,6 @@ sealed class StartupNoGCRegion
 				return;
 			}
 
-			gen0CollectionCount = collectionCount (0);
-			gen1CollectionCount = collectionCount (1);
-			gen2CollectionCount = collectionCount (2);
 			fallbackTimer = new Timer (
 				static value => {
 					if (value is StartupNoGCRegion noGCRegion) {
@@ -91,7 +56,7 @@ sealed class StartupNoGCRegion
 					}
 				},
 				this,
-				fallbackTimeout,
+				DefaultFallbackTimeout,
 				Timeout.InfiniteTimeSpan
 			);
 			state = State.Active;
@@ -101,7 +66,6 @@ sealed class StartupNoGCRegion
 	internal void Finish ()
 	{
 		Timer? timer;
-		bool collectionOccurred;
 		lock (sync) {
 			if (state != State.Active) {
 				return;
@@ -110,23 +74,12 @@ sealed class StartupNoGCRegion
 			state = State.Ended;
 			timer = fallbackTimer;
 			fallbackTimer = null;
-			// CoreCLR does not provide an ownership token for the process-wide no-GC region.
-			// Avoid ending a replacement region when ownership loss is already observable.
-			// Apps which manage their own no-GC regions must disable this startup feature.
-			collectionOccurred =
-				collectionCount (0) != gen0CollectionCount ||
-				collectionCount (1) != gen1CollectionCount ||
-				collectionCount (2) != gen2CollectionCount;
 		}
 
 		timer?.Dispose ();
 
-		if (collectionOccurred) {
-			return;
-		}
-
 		try {
-			endNoGCRegion ();
+			GC.EndNoGCRegion ();
 		} catch (InvalidOperationException) {
 			// The runtime already left the region because its budget was exhausted
 			// or a collection was induced.

@@ -529,17 +529,6 @@ will be used.
 
 This property is `False` by default.
 
-## AndroidEnableStartupNoGCRegion
-
-The `$(AndroidEnableStartupNoGCRegion)` property controls whether CoreCLR Android
-applications request a 24 MiB no-GC region during runtime-managed application
-startup. The region ends when `Activity.ReportFullyDrawn()` is first called or
-after a bounded fallback timeout. The default value is `True` for CoreCLR
-applications.
-
-Set this property to `False` when application startup code, startup hooks, or
-libraries manage no-GC regions directly through `GC.TryStartNoGCRegion()`.
-
 ## AndroidErrorOnCustomJavaObject
 
 A boolean property that
