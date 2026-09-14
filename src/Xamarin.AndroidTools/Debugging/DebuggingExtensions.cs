@@ -30,6 +30,22 @@ namespace Xamarin.AndroidTools.Debugging
 		/// </summary>
 		public async static Task StartWithDebuggingAsync(this IAndroidDevice device, ExecutionConfiguration configuration, CancellationToken token)
 		{
+			if (configuration.RunCommand is AmStartCommand) {
+				var gate = ManagedActivityLaunch.GetGate (device.ID);
+				if (!await gate.WaitAsync (TimeSpan.FromSeconds (30), token).ConfigureAwait (false))
+					throw new TimeoutException (Properties.Resources.ManagedLaunchGateTimeout);
+				try {
+					await StartWithDebuggingCoreAsync (device, configuration, token).ConfigureAwait (false);
+				} finally {
+					gate.Release ();
+				}
+			} else {
+				await StartWithDebuggingCoreAsync (device, configuration, token).ConfigureAwait (false);
+			}
+		}
+
+		static async Task StartWithDebuggingCoreAsync (IAndroidDevice device, ExecutionConfiguration configuration, CancellationToken token)
+		{
 			// TODO: refactor IAndroidDevice some more to remove casts
 			var androidDevice = (AndroidDevice)device;
 
@@ -43,6 +59,9 @@ namespace Xamarin.AndroidTools.Debugging
 			}
 
 			bool javaDebugging = false;
+			if (!configuration.AllowJavaDebugging && configuration.RunCommand is AmStartCommand managedCommand)
+				managedCommand.EnableDebugging = false;
+
 			if (configuration.AllowJavaDebugging && configuration.RunCommand is AmStartCommand) {
 				var cmd = ((AmStartCommand)configuration.RunCommand);
 				if (androidDevice.IsWSA() || androidDevice.IsEmulator) // force -D for WSA and Emulators
@@ -59,7 +78,11 @@ namespace Xamarin.AndroidTools.Debugging
 				configuration.LogWiter(configuration.RunCommand.ToString());
 			}
 
-			await androidDevice.ExecuteIntentCommandAsync(configuration.RunCommand, configuration.LogWiter, token).ConfigureAwait(false);
+			if (!configuration.AllowJavaDebugging && configuration.RunCommand is AmStartCommand startCommand) {
+				await ManagedActivityLaunch.RunAsync (androidDevice, configuration, startCommand, token).ConfigureAwait (false);
+			} else {
+				await androidDevice.ExecuteIntentCommandAsync(configuration.RunCommand, configuration.LogWiter, token).ConfigureAwait(false);
+			}
 			if (javaDebugging)
 				await androidDevice.ConnectJdwpAsync (configuration, token).ConfigureAwait(false);
 		}
