@@ -55,6 +55,26 @@ public class StartupNoGCRegionTest
 	}
 
 	[Test]
+	public void DisabledRegionDoesNotAffectApplicationRegion ()
+	{
+		int startCount = 0;
+		int endCount = 0;
+		var noGCRegion = Create (
+			(_, _) => {
+				startCount++;
+				return true;
+			},
+			() => endCount++
+		);
+
+		noGCRegion.Start (isCoreClrRuntime: true, isEnabled: false);
+		noGCRegion.Finish ();
+
+		Assert.AreEqual (0, startCount);
+		Assert.AreEqual (0, endCount);
+	}
+
+	[Test]
 	public void StartFailureDoesNotEndRegion ()
 	{
 		int endCount = 0;
@@ -155,7 +175,7 @@ public class StartupNoGCRegionTest
 	}
 
 	[Test]
-	public void ReplacementRegionIsNotEndedAfterCollection ()
+	public void ObservedOwnershipLossDoesNotEndReplacementRegion ()
 	{
 		int collectionCount = 0;
 		int endCount = 0;

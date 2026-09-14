@@ -50,13 +50,16 @@ sealed class StartupNoGCRegion
 		this.fallbackTimeout = fallbackTimeout;
 	}
 
-	internal static void Start () => instance.Start (isCoreClrRuntime: true);
+	internal static void Start () => instance.Start (
+		Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime,
+		Microsoft.Android.Runtime.RuntimeFeature.StartupNoGCRegion
+	);
 
 	internal static void End () => instance.Finish ();
 
-	internal void Start (bool isCoreClrRuntime)
+	internal void Start (bool isCoreClrRuntime, bool isEnabled = true)
 	{
-		if (!isCoreClrRuntime) {
+		if (!isCoreClrRuntime || !isEnabled) {
 			return;
 		}
 
@@ -107,6 +110,9 @@ sealed class StartupNoGCRegion
 			state = State.Ended;
 			timer = fallbackTimer;
 			fallbackTimer = null;
+			// CoreCLR does not provide an ownership token for the process-wide no-GC region.
+			// Avoid ending a replacement region when ownership loss is already observable.
+			// Apps which manage their own no-GC regions must disable this startup feature.
 			collectionOccurred =
 				collectionCount (0) != gen0CollectionCount ||
 				collectionCount (1) != gen1CollectionCount ||

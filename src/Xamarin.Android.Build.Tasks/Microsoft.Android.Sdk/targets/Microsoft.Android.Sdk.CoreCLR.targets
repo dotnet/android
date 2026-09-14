@@ -12,6 +12,7 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
   <!-- Default property values for CoreCLR -->
   <PropertyGroup>
     <_AndroidRuntimePackRuntime>CoreCLR</_AndroidRuntimePackRuntime>
+    <AndroidEnableStartupNoGCRegion Condition=" '$(AndroidEnableStartupNoGCRegion)' == '' ">true</AndroidEnableStartupNoGCRegion>
   </PropertyGroup>
   <!-- Properties for $(OutputType)=Exe (Android Applications) -->
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' ">
@@ -33,6 +34,10 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
     />
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime"
         Value="true"
+        Trim="true"
+    />
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.StartupNoGCRegion"
+        Value="$(AndroidEnableStartupNoGCRegion)"
         Trim="true"
     />
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime"
