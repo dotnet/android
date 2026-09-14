@@ -172,7 +172,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidEnableAssemblyCompression Condition=" '$(AndroidEnableAssemblyCompression)' == '' ">True</AndroidEnableAssemblyCompression>
 	<_AndroidAssemblyStoreCompressionLevel Condition=" '$(_AndroidAssemblyStoreCompressionLevel)' == '' And '$(Optimize)' == 'True' ">22</_AndroidAssemblyStoreCompressionLevel>
 	<_AndroidAssemblyStoreCompressionLevel Condition=" '$(_AndroidAssemblyStoreCompressionLevel)' == '' ">3</_AndroidAssemblyStoreCompressionLevel>
-	<AndroidEnableAssemblyStoreDecompressionCache Condition=" '$(AndroidEnableAssemblyStoreDecompressionCache)' == '' ">False</AndroidEnableAssemblyStoreDecompressionCache>
 	<AndroidIncludeWrapSh Condition=" '$(AndroidIncludeWrapSh)' == '' ">False</AndroidIncludeWrapSh>
 	<_AndroidCheckedBuild Condition=" '$(_AndroidCheckedBuild)' == '' "></_AndroidCheckedBuild>
 
@@ -1839,7 +1838,6 @@ because xbuild doesn't support framework reference assemblies.
       BoundExceptionType="$(AndroidBoundExceptionType)"
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
       UseAssemblyStore="$(_AndroidUseAssemblyStore)"
-      AndroidEnableAssemblyStoreDecompressionCache="$(AndroidEnableAssemblyStoreDecompressionCache)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
       TargetsCLR="$(_AndroidUseCLR)"
