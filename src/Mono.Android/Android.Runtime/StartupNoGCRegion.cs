@@ -63,7 +63,7 @@ sealed class StartupNoGCRegion
 		}
 	}
 
-	internal void Finish ()
+	void Finish ()
 	{
 		Timer? timer;
 		lock (sync) {
