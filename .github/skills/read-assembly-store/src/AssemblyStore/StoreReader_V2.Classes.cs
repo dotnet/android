@@ -15,18 +15,16 @@ partial class StoreReader_V2
 
 		// Index size in bytes
 		public readonly uint index_size;
-		public readonly ulong content_id;
 
-		public uint NativeSize => (uint)(5 * sizeof (uint) + ((version & ASSEMBLY_STORE_FORMAT_NUMBER_MASK) >= 4 ? sizeof (ulong) : 0));
+		public const uint NativeSize = 5 * sizeof (uint);
 
-		public Header (uint magic, uint version, uint entry_count, uint index_entry_count, uint index_size, ulong content_id)
+		public Header (uint magic, uint version, uint entry_count, uint index_entry_count, uint index_size)
 		{
 			this.magic = magic;
 			this.version = version;
 			this.entry_count = entry_count;
 			this.index_entry_count = index_entry_count;
 			this.index_size = index_size;
-			this.content_id = content_id;
 		}
 	}
 
