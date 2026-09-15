@@ -11,11 +11,8 @@ public partial class MyClass {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_UIntProp' and count(parameter)=0]"
 		get {
 			const string __id = "get_UIntProp.()[I";
-			try {
-				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
-				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt32Array>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt32Array>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_UIntProp' and count(parameter)=1 and parameter[1][@type='uint[]']]"
 		set {
@@ -38,11 +35,8 @@ public partial class MyClass {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_UShortProp' and count(parameter)=0]"
 		get {
 			const string __id = "get_UShortProp.()[S";
-			try {
-				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
-				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt16Array>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt16Array>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_UShortProp' and count(parameter)=1 and parameter[1][@type='ushort[]']]"
 		set {
@@ -65,11 +59,8 @@ public partial class MyClass {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_ULongProp' and count(parameter)=0]"
 		get {
 			const string __id = "get_ULongProp.()[J";
-			try {
-				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
-				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt64Array>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt64Array>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_ULongProp' and count(parameter)=1 and parameter[1][@type='ulong[]']]"
 		set {
@@ -92,11 +83,8 @@ public partial class MyClass {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_UByteProp' and count(parameter)=0]"
 		get {
 			const string __id = "get_UByteProp.()[B";
-			try {
-				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
-				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaSByteArray>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaSByteArray>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_UByteProp' and count(parameter)=1 and parameter[1][@type='ubyte[]']]"
 		set {

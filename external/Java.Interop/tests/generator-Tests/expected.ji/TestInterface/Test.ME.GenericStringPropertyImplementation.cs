@@ -38,23 +38,17 @@ namespace Test.ME {
 			if (PeerReference.IsValid)
 				return;
 
-			try {
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-				Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
-				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
-			} finally {
-			}
+			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+			Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
+			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
 		}
 
 		public virtual unsafe string Object {
 			// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/class[@name='GenericStringPropertyImplementation']/method[@name='getObject' and count(parameter)=0]"
 			get {
 				const string __id = "getObject.()Ljava/lang/String;";
-				try {
-					var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-					return global::Java.Interop.JniEnvironment.Strings.ToString (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
-				} finally {
-				}
+				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+				return global::Java.Interop.JniEnvironment.Strings.ToString (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/class[@name='GenericStringPropertyImplementation']/method[@name='SetObject' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
 			set {
