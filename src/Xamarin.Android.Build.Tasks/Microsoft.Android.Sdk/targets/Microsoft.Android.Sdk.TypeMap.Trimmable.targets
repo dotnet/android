@@ -126,6 +126,11 @@
       Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);@(ExtractedManifestDocuments);@(_AndroidTrimmableTypeMapExtraFrameworkAssembly);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_CustomViewMapFile);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_TrimmableTypeMapOutputStamp)">
 
+    <PropertyGroup>
+      <_AndroidIncludeBuiltInValueTypeUniverses>false</_AndroidIncludeBuiltInValueTypeUniverses>
+      <_AndroidIncludeBuiltInValueTypeUniverses Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">true</_AndroidIncludeBuiltInValueTypeUniverses>
+    </PropertyGroup>
+
     <ItemGroup>
       <_TypeMapInputAssemblies Include="@(ReferencePath)" />
       <_TypeMapInputAssemblies Include="@(ResolvedAssemblies)" />
@@ -173,6 +178,7 @@
         CheckedBuild="$(_AndroidCheckedBuild)"
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"
         ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
+        IncludeBuiltInValueTypeUniverses="$(_AndroidIncludeBuiltInValueTypeUniverses)"
         GeneratedAssembliesListFile="$(_TypeMapAssembliesListFile)"
         TypeMapFingerprintsFile="$(_TrimmableTypeMapFingerprintsFile)"
         AcwMapOutputFile="$(_PreTrimTypeMapAcwMapOutputFile)"
