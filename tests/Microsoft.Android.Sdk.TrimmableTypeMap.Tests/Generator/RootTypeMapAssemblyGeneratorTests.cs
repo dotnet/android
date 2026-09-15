@@ -11,11 +11,20 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 {
-	static MemoryStream GenerateRootAssembly (IReadOnlyList<string> perAssemblyNames, bool useSharedTypemapUniverse = false, string? assemblyName = null)
+	static MemoryStream GenerateRootAssembly (
+		IReadOnlyList<string> perAssemblyNames,
+		bool useSharedTypemapUniverse = false,
+		string? assemblyName = null,
+		bool includeBuiltInValueTypeUniverses = true)
 	{
 		var stream = new MemoryStream ();
 		var generator = new RootTypeMapAssemblyGenerator (new Version (11, 0, 0, 0));
-		generator.Generate (perAssemblyNames, useSharedTypemapUniverse, stream, assemblyName);
+		generator.Generate (
+			perAssemblyNames,
+			useSharedTypemapUniverse,
+			stream,
+			assemblyName,
+			includeBuiltInValueTypeUniverses: includeBuiltInValueTypeUniverses);
 		stream.Position = 0;
 		return stream;
 	}
@@ -109,6 +118,15 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 		var reader = pe.GetMetadataReader ();
 		var targetAttrs = GetTypeMapAssemblyTargetAttributeTargets (reader);
 		Assert.Equal (new [] { ("Mono.Android", "Mono.Android") }, targetAttrs);
+	}
+
+	[Fact]
+	public void Generate_CoreClr_OmitsValueTypeDictionaryTargetAttribute ()
+	{
+		using var stream = GenerateRootAssembly ([], includeBuiltInValueTypeUniverses: false);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		Assert.Empty (GetTypeMapAssemblyTargetAttributes (reader));
 	}
 
 	[Fact]

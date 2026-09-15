@@ -362,18 +362,27 @@ namespace Java.InteropTests
 		[TestCase (typeof (IDictionary<UnsupportedValueType, string>), true)]
 		[TestCase (typeof (IDictionary<string, UnsupportedValueType>), true)]
 		[Category ("NativeAOTTrimmable")]
-		public void FromJniHandle_UnsupportedValueTypeUsesUntypedFallback (Type targetType, bool dictionary)
+		public void FromJniHandle_UnsupportedValueTypeUsesRuntimeSpecificPath (Type targetType, bool dictionary)
 		{
 			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("This test validates value-type container fallback on the trimmable typemap path.");
+				Assert.Ignore ("This test validates value-type containers on the trimmable typemap path.");
 			}
 
 			Java.Lang.Object source = dictionary ? new JavaDictionary () : new JavaList ();
 			using (source) {
 				var converted = InvokeJavaConvertFromJniHandle (targetType, source.Handle, JniHandleOwnership.DoNotTransfer);
 				try {
-					Assert.AreEqual (dictionary ? typeof (JavaDictionary) : typeof (JavaList), converted.GetType ());
-					Assert.IsFalse (targetType.IsInstanceOfType (converted));
+					if (Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime) {
+						Assert.AreEqual (dictionary ? typeof (JavaDictionary) : typeof (JavaList), converted.GetType ());
+						Assert.IsFalse (targetType.IsInstanceOfType (converted));
+					} else {
+						Assert.IsTrue (targetType.IsInstanceOfType (converted));
+						var targetDefinition = targetType.GetGenericTypeDefinition ();
+						var expectedDefinition = dictionary
+							? typeof (JavaDictionary<,>)
+							: targetDefinition == typeof (ICollection<>) ? typeof (JavaCollection<>) : typeof (JavaList<>);
+						Assert.AreEqual (expectedDefinition, converted.GetType ().GetGenericTypeDefinition ());
+					}
 				} finally {
 					(converted as IDisposable)?.Dispose ();
 				}

@@ -75,7 +75,7 @@ namespace Java.Interop {
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
 
 			if (target.IsGenericType && !target.IsGenericTypeDefinition) {
-				if (RuntimeFeature.TrimmableTypeMap) {
+				if (RuntimeFeature.IsNativeAotRuntime) {
 					if (SafeJavaCollectionFactory.TryGetFromJniHandleConverter (target, out var collectionConverter))
 						return collectionConverter;
 				} else if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
@@ -98,19 +98,28 @@ namespace Java.Interop {
 
 			[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2055:RequiresUnreferencedCode",
 				Justification = "The target generic type is expected to be preserved by the trimmer as the target type in marshaling.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL2067:UnrecognizedReflectionPattern",
+				Justification = "This method is used only when dynamic code is supported. The target closed generic collection type is preserved by the marshaling call site, including its public FromJniHandle method.")]
 			[RequiresDynamicCode ("This API uses reflection to create generic types at runtime, which is not supported in AOT scenarios.")]
 			static Func<IntPtr, JniHandleOwnership, object?>? TryMakeGenericCollectionTypeFactory (Type target)
 			{
-				if (target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
-					Type t = typeof (JavaDictionary<,>).MakeGenericType (target.GetGenericArguments ());
+				var genericDefinition = target.GetGenericTypeDefinition ();
+				if (genericDefinition == typeof (IDictionary<,>) || genericDefinition == typeof (JavaDictionary<,>)) {
+					Type t = genericDefinition == typeof (JavaDictionary<,>)
+						? target
+						: typeof (JavaDictionary<,>).MakeGenericType (target.GetGenericArguments ());
 					return GetJniHandleConverterForType (t);
 				}
-				if (target.GetGenericTypeDefinition() == typeof (IList<>)) {
-					Type t = typeof (JavaList<>).MakeGenericType (target.GetGenericArguments ());
+				if (genericDefinition == typeof (IList<>) || genericDefinition == typeof (JavaList<>)) {
+					Type t = genericDefinition == typeof (JavaList<>)
+						? target
+						: typeof (JavaList<>).MakeGenericType (target.GetGenericArguments ());
 					return GetJniHandleConverterForType (t);
 				}
-				if (target.GetGenericTypeDefinition() == typeof (ICollection<>)) {
-					Type t = typeof (JavaCollection<>).MakeGenericType (target.GetGenericArguments ());
+				if (genericDefinition == typeof (ICollection<>) || genericDefinition == typeof (JavaCollection<>)) {
+					Type t = genericDefinition == typeof (JavaCollection<>)
+						? target
+						: typeof (JavaCollection<>).MakeGenericType (target.GetGenericArguments ());
 					return GetJniHandleConverterForType (t);
 				}
 
