@@ -195,6 +195,97 @@ namespace Java.InteropTests
 			CollectionAssert.AreEqual (new [] { true, false }, converted);
 		}
 
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		[Category ("JavaArrayTrimmable")]
+		public void FromJniHandle_JavaArrayInt32 ()
+		{
+			var handle = JNIEnv.NewArray (new [] { 1, 2, 3 });
+			var converted = InvokeJavaConvertFromJniHandle (
+				typeof (Android.Runtime.JavaArray<int>),
+				handle,
+				JniHandleOwnership.TransferLocalRef);
+			try {
+				var array = (Android.Runtime.JavaArray<int>) converted;
+				CollectionAssert.AreEqual (new [] { 1, 2, 3 }, array);
+			} finally {
+				(converted as IDisposable)?.Dispose ();
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		[Category ("JavaArrayTrimmable")]
+		public void FromJniHandle_JavaArrayNullableDouble ()
+		{
+			var handle = JNIEnv.NewArray (new double? [] { 1.5, null, 2.5 });
+			var converted = InvokeJavaConvertFromJniHandle (
+				typeof (Android.Runtime.JavaArray<double?>),
+				handle,
+				JniHandleOwnership.TransferLocalRef);
+			try {
+				var array = (Android.Runtime.JavaArray<double?>) converted;
+				CollectionAssert.AreEqual (new double? [] { 1.5, null, 2.5 }, array);
+			} finally {
+				(converted as IDisposable)?.Dispose ();
+			}
+		}
+
+		[Test]
+		[Category ("JavaArrayTrimmable")]
+		public void FromJniHandle_JavaArrayReferenceArgumentUsesCanonicalTemplate ()
+		{
+			var handle = JNIEnv.NewArray (new [] { "one", "two" });
+			var converted = InvokeJavaConvertFromJniHandle (
+				typeof (Android.Runtime.JavaArray<string>),
+				handle,
+				JniHandleOwnership.TransferLocalRef);
+			try {
+				var array = (Android.Runtime.JavaArray<string>) converted;
+				CollectionAssert.AreEqual (new [] { "one", "two" }, array);
+			} finally {
+				(converted as IDisposable)?.Dispose ();
+			}
+		}
+
+		[Test]
+		[Category ("JavaArrayTrimmable")]
+		public void FromJniHandle_JavaArrayJaggedPrimitiveArrayUsesCanonicalTemplate ()
+		{
+			var handle = JNIEnv.NewArray (new [] {
+				new [] { 1, 2 },
+				new [] { 3, 4 },
+			});
+			var converted = InvokeJavaConvertFromJniHandle (
+				typeof (Android.Runtime.JavaArray<int[]>),
+				handle,
+				JniHandleOwnership.TransferLocalRef);
+			try {
+				var array = (Android.Runtime.JavaArray<int[]>) converted;
+				CollectionAssert.AreEqual (new [] { 1, 2 }, array [0]);
+				CollectionAssert.AreEqual (new [] { 3, 4 }, array [1]);
+			} finally {
+				(converted as IDisposable)?.Dispose ();
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		[Category ("JavaArrayTrimmable")]
+		public void ValueManagerConvertsPrimitiveArrayToJavaInteropWrapper ()
+		{
+			var reference = new JniObjectReference (JNIEnv.NewArray (new [] { 1, 2, 3 }), JniObjectReferenceType.Local);
+			var converted = JniEnvironment.Runtime.ValueManager.GetValue<Java.Interop.JavaArray<int>> (
+				ref reference,
+				JniObjectReferenceOptions.CopyAndDispose);
+			try {
+				Assert.AreEqual (typeof (JavaInt32Array), converted.GetType ());
+				CollectionAssert.AreEqual (new [] { 1, 2, 3 }, converted);
+			} finally {
+				converted.Dispose ();
+			}
+		}
+
 		[TestCase (JniObjectReferenceOptions.Copy, true)]
 		[TestCase (JniObjectReferenceOptions.CopyAndDispose, false)]
 		public void ValueManagerRejectsNonListForPrimitiveIListAndHonorsOwnership (

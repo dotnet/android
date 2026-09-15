@@ -426,6 +426,16 @@ public class TrimmableTypeMap
 		[DynamicallyAccessedMembers (Constructors)]
 		Type? targetType = null)
 	{
+		if (IsClosedJavaArray (targetType)) {
+			IJavaPeerable? array;
+			if (ValueTypeJavaArrayFactory.TryGetFromJniHandleConverter (targetType, out var arrayConverter)) {
+				array = arrayConverter (handle, ImplicitPeerOwnership);
+			} else {
+				array = ActivateUsingReflection (targetType, handle, ImplicitPeerOwnership);
+			}
+			return RegisterCreatedPeer (array);
+		}
+
 		var proxy = GetProxyForJavaObject (handle, targetType);
 
 		IJavaPeerable? peer;
@@ -454,6 +464,14 @@ public class TrimmableTypeMap
 	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
 	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
+
+	static bool IsClosedJavaArray ([NotNullWhen (true)] Type? targetType)
+	{
+		return targetType is not null &&
+			targetType.IsGenericType &&
+			!targetType.IsGenericTypeDefinition &&
+			targetType.GetGenericTypeDefinition () == typeof (global::Android.Runtime.JavaArray<>);
+	}
 
 	static bool ShouldActivateClosedGenericTarget (
 			[NotNullWhen (true)] JavaPeerProxy? proxy,

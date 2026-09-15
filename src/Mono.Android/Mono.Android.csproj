@@ -329,6 +329,7 @@
     <Compile Include="Java.Interop\ValueTypeFactory.cs" />
     <Compile Include="Java.Interop\ValueTypeCollectionFactory.cs" />
     <Compile Include="Java.Interop\ValueTypeDictionaryFactory.cs" />
+    <Compile Include="Java.Interop\ValueTypeJavaArrayFactory.cs" />
     <Compile Include="Java.Interop\ValueTypeListFactory.cs" />
     <Compile Include="Java.Interop\ValueTypeSetFactory.cs" />
     <Compile Include="Java.Lang\Boolean.cs" />
