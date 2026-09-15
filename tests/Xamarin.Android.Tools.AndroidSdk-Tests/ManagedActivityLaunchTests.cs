@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using Mono.AndroidTools;
 using NUnit.Framework;
 using Xamarin.AndroidTools.Debugging;
+using ManagedActivityLaunch = Microsoft.Android.Run.ManagedActivityLaunch;
 
 namespace Xamarin.Android.Tools.Tests;
 
@@ -35,33 +36,36 @@ public class ManagedActivityLaunchTests
 		return configuration;
 	}
 
+	static Task<string> LaunchAsync (AndroidDevice device, ExecutionConfiguration configuration, CancellationToken token)
+	{
+		var command = configuration.RunCommand as AmStartCommand;
+		Assert.IsNotNull (command);
+		// Exercise the implementation compiled into the real run executable; only
+		// transport/setup/fallback callbacks come from this private ADB fixture.
+		return ManagedActivityLaunch.RunAsync (
+			device.ID, configuration.PackageName, command.Component, command.User, command.ForceStop,
+			command.ToString (), configuration.Debugger.Timeout,
+			prepare: t => device.SetDebugPropertiesAsync (configuration.PackageName, configuration.Debugger, t),
+			runShellCommand: device.RunShellCommand,
+			launchUnprotected: t => device.ExecuteIntentCommandAsync (command, configuration.LogWiter, t),
+			log: message => configuration.LogWiter?.Invoke (message),
+			logCleanupError: AndroidLogger.LogError,
+			token: token);
+	}
+
 	[Test]
 	public async Task ManagedLaunchArmsWithoutJavaWaitAndCleansAfterAttach ()
 	{
 		await using var server = new LaunchAdbServer ();
-		await server.Device.StartWithDebuggingAsync (Configuration (), CancellationToken.None);
+		var processName = await LaunchAsync (server.Device, Configuration (), CancellationToken.None);
 
+		Assert.AreEqual (PackageName, processName);
 		var commands = server.Commands.ToArray ();
-		CollectionAssert.Contains (commands, "am set-debug-app \"com.example.managed\"");
+		CollectionAssert.Contains (commands, "am set-debug-app 'com.example.managed'");
 		Assert.IsFalse (commands.Any (c => c.Contains ("-w") || c.Contains ("--persistent") || c.Contains (" -D")));
 		Assert.Greater (Array.LastIndexOf (commands, "am clear-debug-app"), Array.FindIndex (commands, c => c.StartsWith ("am start ", StringComparison.Ordinal)));
 		Assert.IsTrue (server.Attached);
 		Assert.IsNull (server.DebugApp);
-	}
-
-	[Test]
-	public async Task DisallowJavaDebuggingClearsReusedCommandFlag ()
-	{
-		await using var server = new LaunchAdbServer ();
-		var configuration = Configuration ();
-		var command = configuration.RunCommand as AmStartCommand;
-		Assert.IsNotNull (command);
-		command.EnableDebugging = true;
-
-		await server.Device.StartWithDebuggingAsync (configuration, CancellationToken.None);
-
-		Assert.IsFalse (command.EnableDebugging);
-		Assert.IsFalse (server.Commands.Any (c => c.Contains (" -D")));
 	}
 
 	[Test]
@@ -77,7 +81,7 @@ public class ManagedActivityLaunchTests
 			}
 			return output;
 		};
-		var launch = server.Device.StartWithDebuggingAsync (Configuration (), CancellationToken.None);
+		var launch = LaunchAsync (server.Device, Configuration (), CancellationToken.None);
 		await observedPid.Task.WaitAsync (TimeSpan.FromSeconds (5));
 		Assert.IsFalse (launch.IsCompleted);
 		Assert.AreEqual (PackageName, server.DebugApp);
@@ -98,7 +102,7 @@ public class ManagedActivityLaunchTests
 	{
 		await using var server = new LaunchAdbServer ();
 		server.TransformResponse = (command, output) => command.StartsWith ("am start ", StringComparison.Ordinal) ? error : output;
-		Assert.CatchAsync (() => server.Device.StartWithDebuggingAsync (Configuration (), CancellationToken.None));
+		Assert.CatchAsync (() => LaunchAsync (server.Device, Configuration (), CancellationToken.None));
 		Assert.IsNull (server.DebugApp);
 		CollectionAssert.Contains (server.Commands, "am clear-debug-app");
 	}
@@ -114,7 +118,7 @@ public class ManagedActivityLaunchTests
 		server.TransformResponse = (command, output) => command.StartsWith ("am start ", StringComparison.Ordinal)
 			? $"Starting: Intent {{ dat={uri} cmp={configuration.RunCommand.Component} }}\n"
 			: output;
-		await server.Device.StartWithDebuggingAsync (configuration, CancellationToken.None);
+		await LaunchAsync (server.Device, configuration, CancellationToken.None);
 		Assert.IsTrue (server.Attached);
 		Assert.IsNull (server.DebugApp);
 	}
@@ -128,7 +132,7 @@ public class ManagedActivityLaunchTests
 	{
 		await using var server = new LaunchAdbServer ();
 		server.TransformResponse = (command, output) => command.StartsWith ("am start ", StringComparison.Ordinal) ? output + warning : output;
-		await server.Device.StartWithDebuggingAsync (Configuration (), CancellationToken.None);
+		await LaunchAsync (server.Device, Configuration (), CancellationToken.None);
 		Assert.IsTrue (server.Attached);
 		Assert.IsNull (server.DebugApp);
 	}
@@ -140,9 +144,9 @@ public class ManagedActivityLaunchTests
 	{
 		await using var server = new LaunchAdbServer ();
 		server.TransformResponse = (command, output) => command.StartsWith ("am start ", StringComparison.Ordinal) ? output + diagnostic : output;
-		var error = Assert.CatchAsync (() => server.Device.StartWithDebuggingAsync (Configuration (), CancellationToken.None));
+		var error = Assert.CatchAsync<ManagedActivityLaunch.CommandFailedException> (() => LaunchAsync (server.Device, Configuration (), CancellationToken.None));
 		if (notFound)
-			Assert.IsInstanceOf<ActivityNotFoundException> (error);
+			Assert.IsTrue (error.ActivityNotFound);
 		else
 			StringAssert.Contains (diagnostic.Trim (), error.Message);
 		Assert.IsNull (server.DebugApp);
@@ -169,7 +173,8 @@ public class ManagedActivityLaunchTests
 		server.TransformResponse = (command, output) => command.StartsWith ("am start ", StringComparison.Ordinal)
 			? output.Replace ("Stopping: com.example.managed\n", "")
 			: output;
-		await server.Device.StartWithDebuggingAsync (configuration, CancellationToken.None);
+		var processName = await LaunchAsync (server.Device, configuration, CancellationToken.None);
+		Assert.AreEqual (effectiveProcess, processName);
 		CollectionAssert.Contains (server.Commands, configuration.RunCommand.ToString (), declaration);
 		Assert.IsFalse (server.Commands.Any (c => c.Contains ("debug-app")), declaration);
 		Assert.IsTrue (messages.Any (m => m.Contains ("process")), declaration);
@@ -179,9 +184,10 @@ public class ManagedActivityLaunchTests
 	public async Task ActivityCanOverrideCustomApplicationProcessBackToPackage ()
 	{
 		await using var server = new LaunchAdbServer { ApplicationProcessName = "com.example.managed:app" };
-		await server.Device.StartWithDebuggingAsync (Configuration (), CancellationToken.None);
-		CollectionAssert.Contains (server.Commands, "pm resolve-activity --user \"0\" -n \"com.example.managed/.MainActivity\"");
-		CollectionAssert.Contains (server.Commands, "am set-debug-app \"com.example.managed\"");
+		var processName = await LaunchAsync (server.Device, Configuration (), CancellationToken.None);
+		Assert.AreEqual (PackageName, processName);
+		CollectionAssert.Contains (server.Commands, "pm resolve-activity --user '0' -n 'com.example.managed/.MainActivity'");
+		CollectionAssert.Contains (server.Commands, "am set-debug-app 'com.example.managed'");
 		Assert.IsTrue (server.Attached);
 	}
 
@@ -196,7 +202,8 @@ public class ManagedActivityLaunchTests
 		var messages = new List<string> ();
 		configuration.LogWiter = messages.Add;
 		server.TransformResponse = (command, output) => command.StartsWith ("pm resolve-activity ", StringComparison.Ordinal) ? metadata : output;
-		await server.Device.StartWithDebuggingAsync (configuration, CancellationToken.None);
+		var processName = await LaunchAsync (server.Device, configuration, CancellationToken.None);
+		Assert.IsNull (processName, "Unconfirmed metadata must not produce a guessed process identity.");
 		Assert.IsFalse (server.Commands.Any (c => c.Contains ("debug-app")));
 		CollectionAssert.Contains (server.Commands, configuration.RunCommand.ToString ());
 		Assert.IsTrue (messages.Any (m => m.Contains ("could not be confirmed")));
@@ -212,7 +219,7 @@ public class ManagedActivityLaunchTests
 				cancellation.Cancel ();
 			return output;
 		};
-		Assert.CatchAsync<OperationCanceledException> (() => server.Device.StartWithDebuggingAsync (Configuration (), cancellation.Token));
+		Assert.CatchAsync<OperationCanceledException> (() => LaunchAsync (server.Device, Configuration (), cancellation.Token));
 		Assert.IsFalse (server.Commands.Any (c => c.StartsWith ("am ", StringComparison.Ordinal)));
 	}
 
@@ -220,9 +227,9 @@ public class ManagedActivityLaunchTests
 	public async Task ResolverTransportFailureIsPropagatedBeforeArming ()
 	{
 		await using var server = new LaunchAdbServer {
-			FailTransportCommand = "pm resolve-activity --user \"0\" -n \"com.example.managed/.MainActivity\"",
+			FailTransportCommand = "pm resolve-activity --user '0' -n 'com.example.managed/.MainActivity'",
 		};
-		var error = Assert.CatchAsync (() => server.Device.StartWithDebuggingAsync (Configuration (), CancellationToken.None));
+		var error = Assert.CatchAsync (() => LaunchAsync (server.Device, Configuration (), CancellationToken.None));
 		StringAssert.Contains ("simulated transport fail", error.ToString ());
 		Assert.IsFalse (server.Commands.Any (c => c.StartsWith ("am ", StringComparison.Ordinal)));
 	}
@@ -233,7 +240,7 @@ public class ManagedActivityLaunchTests
 		await using var server = new LaunchAdbServer ();
 		var configuration = Configuration ();
 		server.FailTransportCommand = configuration.RunCommand.ToString ();
-		var error = Assert.CatchAsync (() => server.Device.StartWithDebuggingAsync (configuration, CancellationToken.None));
+		var error = Assert.CatchAsync (() => LaunchAsync (server.Device, configuration, CancellationToken.None));
 		StringAssert.Contains ("simulated transport fail", error.ToString ());
 		Assert.IsNull (server.DebugApp);
 		CollectionAssert.Contains (server.Commands, "am clear-debug-app");
@@ -245,11 +252,12 @@ public class ManagedActivityLaunchTests
 		await using var server = new LaunchAdbServer { AttachOnDump = false };
 		var configuration = Configuration ();
 		configuration.Debugger.Timeout = TimeSpan.FromMilliseconds (150);
-		Assert.ThrowsAsync<TimeoutException> (() => server.Device.StartWithDebuggingAsync (configuration, CancellationToken.None));
+		var error = Assert.ThrowsAsync<TimeoutException> (() => LaunchAsync (server.Device, configuration, CancellationToken.None));
+		Assert.IsInstanceOf<TimeoutException> (error.GetBaseException (), "The task host must classify the deadline as a timeout.");
 		Assert.IsNull (server.DebugApp);
 		server.AttachOnDump = true;
 		configuration.Debugger.Timeout = TimeSpan.FromSeconds (2);
-		await server.Device.StartWithDebuggingAsync (configuration, CancellationToken.None);
+		await LaunchAsync (server.Device, configuration, CancellationToken.None);
 		Assert.IsNull (server.DebugApp);
 		Assert.AreEqual (2, server.Commands.Count (c => c.StartsWith ("am set-debug-app", StringComparison.Ordinal)));
 	}
@@ -274,7 +282,7 @@ public class ManagedActivityLaunchTests
 		};
 		var configuration = Configuration ();
 		configuration.Debugger.Timeout = TimeSpan.FromMilliseconds (150);
-		Assert.ThrowsAsync<TimeoutException> (() => server.Device.StartWithDebuggingAsync (configuration, CancellationToken.None));
+		Assert.ThrowsAsync<TimeoutException> (() => LaunchAsync (server.Device, configuration, CancellationToken.None));
 	}
 
 	[TestCase (0)]
@@ -284,12 +292,12 @@ public class ManagedActivityLaunchTests
 		await using var server = new LaunchAdbServer ();
 		var configuration = Configuration ();
 		configuration.Debugger.Timeout = TimeSpan.FromMilliseconds (milliseconds);
-		Assert.ThrowsAsync<ArgumentOutOfRangeException> (() => server.Device.StartWithDebuggingAsync (configuration, CancellationToken.None));
+		Assert.ThrowsAsync<ArgumentOutOfRangeException> (() => LaunchAsync (server.Device, configuration, CancellationToken.None));
 		Assert.IsFalse (server.Commands.Any (c => c.Contains ("debug-app")));
 	}
 
 	[TestCase ("pm list users")]
-	[TestCase ("am set-debug-app \"com.example.managed\"")]
+	[TestCase ("am set-debug-app 'com.example.managed'")]
 	[TestCase ("armed-state")]
 	[TestCase ("launch")]
 	[TestCase ("attached-state")]
@@ -306,7 +314,7 @@ public class ManagedActivityLaunchTests
 				cancellation.Cancel ();
 			return output;
 		};
-		Assert.CatchAsync<OperationCanceledException> (() => server.Device.StartWithDebuggingAsync (Configuration (), cancellation.Token));
+		Assert.CatchAsync<OperationCanceledException> (() => LaunchAsync (server.Device, Configuration (), cancellation.Token));
 		Assert.IsNull (server.DebugApp);
 		if (boundary != "pm list users")
 			CollectionAssert.Contains (server.Commands, "am clear-debug-app");
@@ -318,7 +326,7 @@ public class ManagedActivityLaunchTests
 		await using var server = new LaunchAdbServer ();
 		using var cancellation = new CancellationTokenSource ();
 		cancellation.Cancel ();
-		Assert.CatchAsync<OperationCanceledException> (() => server.Device.StartWithDebuggingAsync (Configuration (), cancellation.Token));
+		Assert.CatchAsync<OperationCanceledException> (() => LaunchAsync (server.Device, Configuration (), cancellation.Token));
 		Assert.IsEmpty (server.Commands);
 	}
 
@@ -341,7 +349,7 @@ public class ManagedActivityLaunchTests
 					return "cleanup failure";
 				return output;
 			};
-			var error = Assert.ThrowsAsync<AdbException> (() => server.Device.StartWithDebuggingAsync (Configuration (), CancellationToken.None));
+			var error = Assert.ThrowsAsync<ManagedActivityLaunch.CommandFailedException> (() => LaunchAsync (server.Device, Configuration (), CancellationToken.None));
 			StringAssert.Contains ("primary launch failure", error.Message);
 			Assert.IsTrue (errors.Any (e => e.Contains ("Failed to clean up")));
 			if (changeOwner) {
@@ -358,7 +366,7 @@ public class ManagedActivityLaunchTests
 	{
 		await using var server = new LaunchAdbServer ();
 		server.TransformResponse = (command, output) => command == "am clear-debug-app" ? "cleanup failure" : output;
-		var error = Assert.ThrowsAsync<AdbException> (() => server.Device.StartWithDebuggingAsync (Configuration (), CancellationToken.None));
+		var error = Assert.ThrowsAsync<ManagedActivityLaunch.CommandFailedException> (() => LaunchAsync (server.Device, Configuration (), CancellationToken.None));
 		Assert.AreEqual ("cleanup failure", error.Message);
 	}
 
@@ -369,24 +377,24 @@ public class ManagedActivityLaunchTests
 	public async Task MalformedUsersCannotMasqueradeAsSingleUser (string users)
 	{
 		await using var server = new LaunchAdbServer { UserList = users };
-		Assert.ThrowsAsync<InvalidOperationException> (() => server.Device.StartWithDebuggingAsync (Configuration (), CancellationToken.None));
+		Assert.ThrowsAsync<InvalidOperationException> (() => LaunchAsync (server.Device, Configuration (), CancellationToken.None));
 		Assert.IsFalse (server.Commands.Any (c => c.StartsWith ("am ", StringComparison.Ordinal)));
 	}
 
 	[TestCase ("ACTIVITY MANAGER RUNNING PROCESSES (dumpsys activity processes)\n  mDebugApp=broken\n  mForceBackgroundCheck=false\n")]
+	[TestCase ("ACTIVITY MANAGER RUNNING PROCESSES (dumpsys activity processes)\n  mDebugApp=com.example.managed/orig=null mDebugTransient=true mOrigWaitForDebugger=false\n  mDebugApp=broken\n  mForceBackgroundCheck=false\n")]
+	[TestCase ("ACTIVITY MANAGER RUNNING PROCESSES (dumpsys activity processes)\n  mDebugApp=com.example.managed/orig=null mDebugTransient=true mOrigWaitForDebugger=false\n    mDebugApp=com.example.other/orig=null mDebugTransient=true mOrigWaitForDebugger=false\n  mForceBackgroundCheck=false\n")]
 	public async Task MalformedDumpCannotMasqueradeAsUnowned (string dump)
 	{
 		await using var server = new LaunchAdbServer ();
 		server.TransformResponse = (command, output) => command == "dumpsys activity processes" ? dump : output;
-		Assert.ThrowsAsync<InvalidOperationException> (() => server.Device.StartWithDebuggingAsync (Configuration (), CancellationToken.None));
+		Assert.ThrowsAsync<InvalidOperationException> (() => LaunchAsync (server.Device, Configuration (), CancellationToken.None));
 		Assert.IsFalse (server.Commands.Any (c => c.StartsWith ("am ", StringComparison.Ordinal)));
 	}
 
 	[TestCase ("warm")]
 	[TestCase ("multiple-users")]
 	[TestCase ("different-user")]
-	[TestCase ("wait")]
-	[TestCase ("repeat")]
 	[TestCase ("older-api")]
 	public async Task UnsupportedLaunchesPreserveCommandWithoutDebugAppMutation (string reason)
 	{
@@ -398,14 +406,12 @@ public class ManagedActivityLaunchTests
 			server.UserList += "\tUserInfo{10:Work:30} running\n";
 		if (reason == "different-user")
 			command.User = "10";
-		command.Wait = reason == "wait";
-		command.Repeat = reason == "repeat" ? 2 : 0;
 		if (reason == "older-api")
 			server.ApiLevel = 30;
 		var expected = command.ToString ();
 		var messages = new List<string> ();
 		configuration.LogWiter = messages.Add;
-		await server.Device.StartWithDebuggingAsync (configuration, CancellationToken.None);
+		await LaunchAsync (server.Device, configuration, CancellationToken.None);
 		CollectionAssert.Contains (server.Commands, expected);
 		Assert.IsFalse (server.Commands.Any (c => c.Contains ("debug-app")));
 		Assert.IsTrue (messages.Any (m => m.Contains ("Launching without changing")));
@@ -420,7 +426,7 @@ public class ManagedActivityLaunchTests
 		var configuration = Configuration ();
 		configuration.RunCommand.PackageName = package;
 		configuration.RunCommand.Component = component;
-		Assert.ThrowsAsync<ArgumentException> (() => server.Device.StartWithDebuggingAsync (configuration, CancellationToken.None));
+		Assert.ThrowsAsync<ArgumentException> (() => LaunchAsync (server.Device, configuration, CancellationToken.None));
 		Assert.IsFalse (server.Commands.Any (c => c.Contains ("debug-app")));
 	}
 
@@ -436,9 +442,9 @@ public class ManagedActivityLaunchTests
 			ForceStop = true,
 		};
 		var configuration = new ExecutionConfiguration (PackageName, command) { AllowJavaDebugging = false };
-		await server.Device.StartWithDebuggingAsync (configuration, CancellationToken.None);
+		await LaunchAsync (server.Device, configuration, CancellationToken.None);
 		CollectionAssert.Contains (server.Commands, command.ToString ());
-		CollectionAssert.Contains (server.Commands, "am set-debug-app \"com.example.managed\"");
+		CollectionAssert.Contains (server.Commands, "am set-debug-app 'com.example.managed'");
 	}
 
 	[Test]
@@ -480,7 +486,7 @@ public class ManagedActivityLaunchTests
 			return Task.CompletedTask;
 		};
 		try {
-			var launch = server.Device.StartWithDebuggingAsync (configuration, cancellation.Token);
+			var launch = LaunchAsync (server.Device, configuration, cancellation.Token);
 			if (boundary == "pending") {
 				await pending.Task.WaitAsync (TimeSpan.FromSeconds (5));
 				cancellation.Cancel ();
@@ -503,7 +509,7 @@ public class ManagedActivityLaunchTests
 	{
 		await using var server = new LaunchAdbServer ();
 		server.TransformResponse = (command, output) => command == "dumpsys activity processes" ? dump : output;
-		await server.Device.StartWithDebuggingAsync (Configuration (), CancellationToken.None);
+		await LaunchAsync (server.Device, Configuration (), CancellationToken.None);
 		Assert.IsTrue (server.Commands.Any (c => c.StartsWith ("am start ", StringComparison.Ordinal)));
 		Assert.IsFalse (server.Commands.Any (c => c.Contains ("debug-app")));
 	}
@@ -525,7 +531,10 @@ public class ManagedActivityLaunchTests
 					: output.Replace ("  mForceBackgroundCheck=false", "  mDebugApp=broken\n  mForceBackgroundCheck=false");
 			return output;
 		};
-		Assert.CatchAsync<InvalidOperationException> (() => server.Device.StartWithDebuggingAsync (Configuration (), CancellationToken.None));
+		Assert.CatchAsync<InvalidOperationException> (() => LaunchAsync (server.Device, Configuration (), CancellationToken.None));
+		if (boundary == "stale-clear")
+			Assert.IsFalse (server.Commands.Any (c => c.StartsWith ("am set-debug-app ", StringComparison.Ordinal)),
+				"After any clear, reject unsupported state before rearming, not only during final cleanup.");
 	}
 
 	[TestCase (false)]
@@ -540,10 +549,10 @@ public class ManagedActivityLaunchTests
 					cancellation.Cancel ();
 				return output;
 			};
-			Assert.CatchAsync<OperationCanceledException> (() => server.Device.StartWithDebuggingAsync (Configuration (), cancellation.Token));
+			Assert.CatchAsync<OperationCanceledException> (() => LaunchAsync (server.Device, Configuration (), cancellation.Token));
 		} else {
 			server.FailTransportCommand = "dumpsys activity processes";
-			var error = Assert.CatchAsync (() => server.Device.StartWithDebuggingAsync (Configuration (), CancellationToken.None));
+			var error = Assert.CatchAsync (() => LaunchAsync (server.Device, Configuration (), CancellationToken.None));
 			StringAssert.Contains ("simulated transport fail", error.ToString ());
 		}
 		Assert.IsFalse (server.Commands.Any (c => c.StartsWith ("am ", StringComparison.Ordinal)));
@@ -563,11 +572,13 @@ public class ManagedActivityLaunchTests
 			}
 			return Task.CompletedTask;
 		};
-		var first = server.Device.StartWithDebuggingAsync (Configuration (), cancellation.Token);
+		var configuration = Configuration ();
+		configuration.Debugger.Timeout = TimeSpan.FromSeconds (40);
+		var first = LaunchAsync (server.Device, configuration, cancellation.Token);
 		try {
 			await pending.Task.WaitAsync (TimeSpan.FromSeconds (5));
 			var error = Assert.ThrowsAsync<TimeoutException> (async () =>
-				await server.CreateDevice ().StartWithDebuggingAsync (Configuration (), CancellationToken.None).WaitAsync (TimeSpan.FromSeconds (35)));
+				await LaunchAsync (server.CreateDevice (), Configuration (), CancellationToken.None).WaitAsync (TimeSpan.FromSeconds (35)));
 			StringAssert.Contains ("another activity debug launch", error.Message);
 			Assert.IsFalse (server.Commands.Any (c => c.StartsWith ("am ", StringComparison.Ordinal)));
 		} finally {
@@ -588,7 +599,7 @@ public class ManagedActivityLaunchTests
 		var configuration = new ExecutionConfiguration (package, new AmStartCommand (package, ".Activity") { ForceStop = true }) {
 			AllowJavaDebugging = false,
 		};
-		Assert.ThrowsAsync<ArgumentException> (() => server.Device.StartWithDebuggingAsync (configuration, CancellationToken.None));
+		Assert.ThrowsAsync<ArgumentException> (() => LaunchAsync (server.Device, configuration, CancellationToken.None));
 		Assert.IsFalse (server.Commands.Any (c => c.Contains ("debug-app")));
 	}
 
@@ -655,9 +666,9 @@ public class ManagedActivityLaunchTests
 		Assert.IsNotNull (command);
 		command.User = user;
 		var expected = command.ToString ();
-		await server.Device.StartWithDebuggingAsync (configuration, CancellationToken.None);
+		await LaunchAsync (server.Device, configuration, CancellationToken.None);
 		CollectionAssert.Contains (server.Commands, expected);
-		CollectionAssert.Contains (server.Commands, "am set-debug-app \"com.example.managed\"");
+		CollectionAssert.Contains (server.Commands, "am set-debug-app 'com.example.managed'");
 	}
 
 	[TestCase ("com.example.other", false)]
@@ -667,9 +678,24 @@ public class ManagedActivityLaunchTests
 	{
 		await using var server = new LaunchAdbServer ();
 		server.SetDebugAppState (package, transient);
-		Assert.ThrowsAsync<InvalidOperationException> (() => server.Device.StartWithDebuggingAsync (Configuration (), CancellationToken.None));
+		Assert.ThrowsAsync<InvalidOperationException> (() => LaunchAsync (server.Device, Configuration (), CancellationToken.None));
 		Assert.IsFalse (server.Commands.Any (c => c.Contains ("debug-app")));
 		Assert.AreEqual (package, server.DebugApp);
+	}
+
+	[TestCase ("com.example.managed", false)]
+	[TestCase ("com.example.other", false)]
+	[TestCase (null, true)]
+	public async Task OriginalDebugAppOrWaitSettingIsNotCleared (string original, bool wait)
+	{
+		await using var server = new LaunchAdbServer { OriginalDebugApp = original };
+		server.SetDebugAppState (PackageName, true);
+		if (wait)
+			server.TransformResponse = (command, output) => output.Replace ("mOrigWaitForDebugger=false", "mOrigWaitForDebugger=true");
+		Assert.ThrowsAsync<InvalidOperationException> (() => LaunchAsync (server.Device, Configuration (), CancellationToken.None));
+		Assert.IsFalse (server.Commands.Any (c => c.Contains ("debug-app")));
+		Assert.AreEqual (PackageName, server.DebugApp);
+		Assert.AreEqual (original, server.OriginalDebugApp);
 	}
 
 	[Test]
@@ -677,9 +703,9 @@ public class ManagedActivityLaunchTests
 	{
 		await using var server = new LaunchAdbServer ();
 		server.SetDebugAppState (PackageName, true);
-		await server.Device.StartWithDebuggingAsync (Configuration (), CancellationToken.None);
+		await LaunchAsync (server.Device, Configuration (), CancellationToken.None);
 		var commands = server.Commands.ToArray ();
-		Assert.Less (Array.IndexOf (commands, "am clear-debug-app"), Array.IndexOf (commands, "am set-debug-app \"com.example.managed\""));
+		Assert.Less (Array.IndexOf (commands, "am clear-debug-app"), Array.IndexOf (commands, "am set-debug-app 'com.example.managed'"));
 		Assert.AreEqual (2, commands.Count (c => c == "am clear-debug-app"));
 	}
 
@@ -697,7 +723,7 @@ public class ManagedActivityLaunchTests
 			}
 			return Task.CompletedTask;
 		};
-		var launch = server.Device.StartWithDebuggingAsync (Configuration (), cancellation.Token);
+		var launch = LaunchAsync (server.Device, Configuration (), cancellation.Token);
 		await arming.Task.WaitAsync (TimeSpan.FromSeconds (5));
 		cancellation.Cancel ();
 		Assert.IsFalse (launch.IsCompleted);
@@ -721,11 +747,11 @@ public class ManagedActivityLaunchTests
 			}
 			return Task.CompletedTask;
 		};
-		var first = server.Device.StartWithDebuggingAsync (Configuration (), CancellationToken.None);
+		var first = LaunchAsync (server.Device, Configuration (), CancellationToken.None);
 		await cleaning.Task.WaitAsync (TimeSpan.FromSeconds (5));
 		var commandCount = server.Commands.Count;
 		using var cancellation = new CancellationTokenSource ();
-		var second = server.CreateDevice ().StartWithDebuggingAsync (Configuration (), cancellation.Token);
+		var second = LaunchAsync (server.CreateDevice (), Configuration (), cancellation.Token);
 		Assert.IsFalse (second.IsCompleted);
 		Assert.AreEqual (commandCount, server.Commands.Count);
 		cancellation.Cancel ();
@@ -756,7 +782,7 @@ public class ManagedActivityLaunchTests
 		};
 		var configuration = Configuration ();
 		configuration.Debugger.Timeout = TimeSpan.FromMilliseconds (250);
-		var launch = server.Device.StartWithDebuggingAsync (configuration, CancellationToken.None);
+		var launch = LaunchAsync (server.Device, configuration, CancellationToken.None);
 		await starting.Task.WaitAsync (TimeSpan.FromSeconds (5));
 		Assert.ThrowsAsync<TimeoutException> (async () => await launch.WaitAsync (TimeSpan.FromSeconds (5)));
 		Assert.IsNull (server.DebugApp);
@@ -778,8 +804,8 @@ public class ManagedActivityLaunchTests
 			? "Error: Activity not started, primary failure"
 			: output;
 		try {
-			var launch = server.Device.StartWithDebuggingAsync (Configuration (), CancellationToken.None);
-			var error = Assert.ThrowsAsync<AdbException> (async () => await launch.WaitAsync (TimeSpan.FromSeconds (8)));
+			var launch = LaunchAsync (server.Device, Configuration (), CancellationToken.None);
+			var error = Assert.ThrowsAsync<ManagedActivityLaunch.CommandFailedException> (async () => await launch.WaitAsync (TimeSpan.FromSeconds (8)));
 			StringAssert.Contains ("primary failure", error.Message);
 		} finally {
 			release.TrySetResult ();
@@ -796,17 +822,21 @@ public class ManagedActivityLaunchTests
 
 	// A private TCP endpoint exercises AndroidDevice's actual ADB transport without
 	// replacing the launch algorithm or touching an installed adb server/device.
-	sealed class LaunchAdbServer : IAsyncDisposable
+	internal sealed class LaunchAdbServer : IAsyncDisposable
 	{
 		readonly TcpListener listener = new TcpListener (IPAddress.Loopback, 0);
 		readonly CancellationTokenSource stop = new CancellationTokenSource ();
 		readonly List<Task> connections = [];
 		readonly Task accepting;
 		string debugProperty = "";
+		string fakeAdbPath;
 		bool started;
 		bool transient;
+		int pidRequests;
 
 		public ConcurrentQueue<string> Commands { get; } = new ConcurrentQueue<string> ();
+		public ConcurrentQueue<string> AdbCommands { get; } = new ConcurrentQueue<string> ();
+		public bool LogDaemonStartup { get; set; }
 		public string DebugApp { get; set; }
 		public string OriginalDebugApp { get; set; }
 		public bool AttachOnDump { get; set; } = true;
@@ -816,20 +846,61 @@ public class ManagedActivityLaunchTests
 		public string ApplicationProcessName { get; set; } = PackageName;
 		public Func<string, Task> BeforeResponse { get; set; } = _ => Task.CompletedTask;
 		public Func<string, string, string> TransformResponse { get; set; } = (_, output) => output;
+		public Func<string, (int ExitCode, string Error)> CliResult { get; set; } = _ => (0, "");
 		public string FailTransportCommand { get; set; }
 		public bool Attached { get; private set; }
 		public AndroidDevice Device { get; }
+		public string Serial { get; }
 		readonly AdbServer adb;
 
-		public LaunchAdbServer ()
+		public LaunchAdbServer (string serial = "managed-launch-test")
 		{
+			Serial = serial;
 			listener.Start ();
 			adb = new AdbServer (IPAddress.Loopback, ((IPEndPoint) listener.LocalEndpoint).Port);
 			Device = CreateDevice ();
 			accepting = AcceptAsync ();
 		}
 
-		public AndroidDevice CreateDevice () => new AndroidDevice ("managed-launch-test", adb: adb);
+		public AndroidDevice CreateDevice () => new AndroidDevice (Serial, adb: adb);
+
+		public string CreateFakeAdb ()
+		{
+			if (OS.IsWindows)
+				Assert.Ignore ("Fake adb process tests require bash, like AdbRunnerTests.");
+			Assert.IsNull (fakeAdbPath);
+			var directory = Path.Combine (Path.GetTempPath (), $"managed-launch-adb-{Guid.NewGuid ():N}");
+			Directory.CreateDirectory (directory);
+			fakeAdbPath = Path.Combine (directory, "adb");
+			// This is only a process-to-fixture bridge. All state transitions and
+			// responses stay in the same private server used by the task tests.
+			var daemonOutput = LogDaemonStartup
+				? "if [[ \"$command\" == *get-serialno ]]; then\n    printf '%s\\n' '* daemon not running; starting now at tcp:5037' '* daemon started successfully' >&2\nfi"
+				: "";
+			File.WriteAllText (fakeAdbPath, $$"""
+				#!/bin/bash
+				set -e
+				exec 3<>/dev/tcp/127.0.0.1/{{((IPEndPoint) listener.LocalEndpoint).Port}}
+				LC_ALL=C
+				command="$*"
+				{{daemonOutput}}
+				printf '%04x%s' "${#command}" "$command" >&3
+				IFS= read -r status <&3
+				while IFS= read -r record <&3; do
+				    case "$record" in
+				        O*) printf '%s\n' "${record:1}" ;;
+				        o*) printf '%s' "${record:1}" ;;
+				        E*) printf '%s\n' "${record:1}" >&2 ;;
+				        e*) printf '%s' "${record:1}" >&2 ;;
+				        *) printf '%s\n' 'Invalid fake ADB response record' >&2; exit 1 ;;
+				    esac
+				done
+				exit "$status"
+
+				""");
+			FileUtil.Chmod (fakeAdbPath, 0x1ED); // 0755
+			return fakeAdbPath;
+		}
 
 		public void SetDebugAppState (string package, bool isTransient)
 		{
@@ -853,26 +924,83 @@ public class ManagedActivityLaunchTests
 			try {
 				using (client) {
 					var stream = client.GetStream ();
-					Assert.AreEqual ("host:transport:managed-launch-test", await ReadCommandAsync (stream));
+					var request = await ReadCommandAsync (stream);
+					if (!request.StartsWith ("host:transport:", StringComparison.Ordinal)) {
+						AdbCommands.Enqueue (request);
+						foreach (var target in new [] { $"-s {Serial} ", "-d ", "-e " }) {
+							if (request.StartsWith (target, StringComparison.Ordinal)) {
+								request = request.Substring (target.Length);
+								break;
+							}
+						}
+						if (request.StartsWith ("shell ", StringComparison.Ordinal))
+							request = request.Substring (6);
+						var reply = await RespondToCommandAsync (request);
+						var result = reply.Success ? CliResult (request) : (ExitCode: 1, Error: reply.Output);
+						if (reply.Success && request.StartsWith ("pidof ", StringComparison.Ordinal) &&
+								string.IsNullOrWhiteSpace (reply.Output) && result.ExitCode == 0 && string.IsNullOrWhiteSpace (result.Error))
+							result = (1, "");
+						var cliResponse = new StringBuilder ().Append (result.ExitCode.ToString (CultureInfo.InvariantCulture)).Append ('\n');
+						AppendCliOutput (cliResponse, 'O', reply.Success ? reply.Output : "");
+						AppendCliOutput (cliResponse, 'E', result.Error);
+						await stream.WriteAsync (Encoding.UTF8.GetBytes (cliResponse.ToString ()), stop.Token);
+						return;
+					}
+					Assert.AreEqual ("host:transport:" + Serial, request);
 					await stream.WriteAsync (Encoding.ASCII.GetBytes ("OKAY"), stop.Token);
 					var command = await ReadCommandAsync (stream);
 					Assert.IsTrue (command.StartsWith ("shell:", StringComparison.Ordinal), command);
 					command = command.Substring (6);
-					Commands.Enqueue (command);
-					await BeforeResponse (command).WaitAsync (stop.Token);
-					if (command == FailTransportCommand) {
-						await stream.WriteAsync (Encoding.ASCII.GetBytes ("FAIL0018simulated transport fail"), stop.Token);
-						return;
-					}
-					var response = TransformResponse (command, Respond (command));
-					await stream.WriteAsync (Encoding.UTF8.GetBytes ("OKAY" + response), stop.Token);
+					var response = await RespondToCommandAsync (command);
+					var status = response.Success ? "OKAY" : "FAIL" + Encoding.UTF8.GetByteCount (response.Output).ToString ("X4", CultureInfo.InvariantCulture);
+					await stream.WriteAsync (Encoding.UTF8.GetBytes (status + response.Output), stop.Token);
 				}
 			} catch (OperationCanceledException) when (stop.IsCancellationRequested) {
 			}
 		}
 
+		async Task<(bool Success, string Output)> RespondToCommandAsync (string command)
+		{
+			Commands.Enqueue (command);
+			await BeforeResponse (command).WaitAsync (stop.Token);
+			if (command == FailTransportCommand)
+				return (false, "simulated transport fail");
+			return (true, TransformResponse (command, Respond (command)));
+		}
+
+		static void AppendCliOutput (StringBuilder response, char channel, string output)
+		{
+			// Preserve both channels and whether the last line was terminated.
+			// The shell bridge emits the bytes, not a merged approximation of ADB.
+			var lines = output.Split ('\n');
+			for (int i = 0; i < lines.Length; i++) {
+				bool last = i == lines.Length - 1;
+				if (last && lines [i].Length == 0)
+					break;
+				response.Append (last ? char.ToLowerInvariant (channel) : channel).Append (lines [i]).Append ('\n');
+			}
+		}
+
 		string Respond (string command)
 		{
+			if (command == "get-serialno")
+				return Serial + "\n";
+			if (command.StartsWith ("forward ", StringComparison.Ordinal) || command.StartsWith ("reverse ", StringComparison.Ordinal))
+				return "";
+			if (command.StartsWith ("pidof ", StringComparison.Ordinal)) {
+				var process = command.Substring ("pidof ".Length);
+				if (process != EffectiveProcessName && process != "'" + EffectiveProcessName.Replace ("'", "'\\''") + "'")
+					return "";
+				return Interlocked.Increment (ref pidRequests) == 1 ? "1234\n" : "";
+			}
+			if (command.StartsWith ("logcat ", StringComparison.Ordinal))
+				return "managed-launch logcat\n";
+			if (command.StartsWith ("am force-stop ", StringComparison.Ordinal))
+				return "";
+			if (command.StartsWith ("input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard", StringComparison.Ordinal)) {
+				var start = command.IndexOf ("am start ", StringComparison.Ordinal);
+				return start >= 0 ? Respond (command.Substring (start)) : "";
+			}
 			if (command == "date +%s")
 				return "1000\n";
 			if (command.StartsWith ("setprop ", StringComparison.Ordinal)) {
@@ -882,10 +1010,12 @@ public class ManagedActivityLaunchTests
 			}
 			if (command == "getprop")
 				return $"[ro.build.version.sdk]: [{ApiLevel}]\n[debug.mono.extra]: [{debugProperty}]\n";
+			if (command == "getprop ro.build.version.sdk")
+				return ApiLevel.ToString (CultureInfo.InvariantCulture) + "\n";
 			if (command == "pm list users")
 				return UserList;
 			if (command.StartsWith ("pm resolve-activity ", StringComparison.Ordinal)) {
-				var component = command.Substring (command.IndexOf ("-n \"", StringComparison.Ordinal) + 4).TrimEnd ('"');
+				var component = command.Substring (command.IndexOf ("-n ", StringComparison.Ordinal) + 3).Trim ('\'', '"');
 				var activity = component.Substring (component.IndexOf ('/') + 1);
 				if (activity.StartsWith (".", StringComparison.Ordinal))
 					activity = PackageName + activity;
@@ -899,7 +1029,7 @@ public class ManagedActivityLaunchTests
 					$"  ApplicationInfo:\n    packageName={PackageName}\n    processName={ApplicationProcessName}\n" +
 					"    uid=10123 flags=0x0 privateFlags=0x0 theme=0x0\n";
 			}
-			if (command == "am set-debug-app \"com.example.managed\"") {
+			if (command == "am set-debug-app 'com.example.managed'") {
 				DebugApp = PackageName;
 				transient = true;
 				started = false;
@@ -955,6 +1085,10 @@ public class ManagedActivityLaunchTests
 			listener.Stop ();
 			await Task.WhenAll (connections);
 			stop.Dispose ();
+			if (fakeAdbPath != null) {
+				File.Delete (fakeAdbPath);
+				Directory.Delete (Path.GetDirectoryName (fakeAdbPath));
+			}
 		}
 	}
 }

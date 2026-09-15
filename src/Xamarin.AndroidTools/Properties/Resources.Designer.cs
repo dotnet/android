@@ -68,46 +68,6 @@ namespace Xamarin.AndroidTools.Properties {
                 return ResourceManager.GetString("JdwpClientDisconnectError", resourceCulture);
             }
         }
-
-        internal static string ManagedLaunchUnsupported {
-            get { return ResourceManager.GetString("ManagedLaunchUnsupported", resourceCulture); }
-        }
-
-        internal static string ManagedLaunchPackageMismatch {
-            get { return ResourceManager.GetString("ManagedLaunchPackageMismatch", resourceCulture); }
-        }
-
-        internal static string ManagedLaunchComponentUnsupported {
-            get { return ResourceManager.GetString("ManagedLaunchComponentUnsupported", resourceCulture); }
-        }
-
-        internal static string ManagedLaunchLayoutUnsupported {
-            get { return ResourceManager.GetString("ManagedLaunchLayoutUnsupported", resourceCulture); }
-        }
-
-        internal static string ManagedLaunchGateTimeout {
-            get { return ResourceManager.GetString("ManagedLaunchGateTimeout", resourceCulture); }
-        }
-
-        internal static string ManagedLaunchProcessUnsupported {
-            get { return ResourceManager.GetString("ManagedLaunchProcessUnsupported", resourceCulture); }
-        }
-
-        internal static string ManagedLaunchStateUnavailable {
-            get { return ResourceManager.GetString("ManagedLaunchStateUnavailable", resourceCulture); }
-        }
-
-        internal static string ManagedLaunchStateConflict {
-            get { return ResourceManager.GetString("ManagedLaunchStateConflict", resourceCulture); }
-        }
-
-        internal static string ManagedLaunchTimeout {
-            get { return ResourceManager.GetString("ManagedLaunchTimeout", resourceCulture); }
-        }
-
-        internal static string ManagedLaunchCleanupFailed {
-            get { return ResourceManager.GetString("ManagedLaunchCleanupFailed", resourceCulture); }
-        }
         
         /// <summary>
         ///   Looks up a localized string similar to The Android SDK directory could not be found. Check that the Android SDK Manager in Visual Studio shows a valid installation. To use a custom SDK path for a command line build, set the &apos;AndroidSdkDirectory&apos; MSBuild property to the custom path..

@@ -41,12 +41,16 @@ static class AdbHelper
 		return psi;
 	}
 
-	public static async Task<(int ExitCode, string Output, string Error)> RunAsync (string adbPath, string? adbTarget, string arguments, CancellationToken cancellationToken, bool verbose = false)
-	{
-		var psi = CreateStartInfo (adbPath, adbTarget, arguments);
+	public static Task<(int ExitCode, string Output, string Error)> RunAsync (string adbPath, string? adbTarget, string arguments, CancellationToken cancellationToken, bool verbose = false) =>
+		RunAsync (CreateStartInfo (adbPath, adbTarget, arguments), cancellationToken, verbose);
 
+	public static Task<(int ExitCode, string Output, string Error)> RunAsync (string adbPath, string? adbTarget, IEnumerable<string> arguments, CancellationToken cancellationToken, bool verbose = false) =>
+		RunAsync (CreateStartInfo (adbPath, adbTarget, arguments), cancellationToken, verbose);
+
+	static async Task<(int ExitCode, string Output, string Error)> RunAsync (ProcessStartInfo psi, CancellationToken cancellationToken, bool verbose)
+	{
 		if (verbose)
-			Console.WriteLine ($"Running: adb {psi.Arguments}");
+			Console.WriteLine ($"Running: adb {(psi.ArgumentList.Count == 0 ? psi.Arguments : string.Join (" ", psi.ArgumentList))}");
 
 		using var stdout = new StringWriter ();
 		using var stderr = new StringWriter ();

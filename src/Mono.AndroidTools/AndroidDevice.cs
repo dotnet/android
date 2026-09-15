@@ -697,36 +697,8 @@ namespace Mono.AndroidTools
 		/// </summary>
 		public async Task ExecuteIntentCommandAsync(AmIntentCommand intentCommand, Action<string> logWiter, CancellationToken cancellationToken = default(CancellationToken))
 		{
-			await ExecuteIntentCommandAsync (intentCommand, logWiter, cancellationToken, waitForCompletion: false).ConfigureAwait (false);
-		}
-
-		/// <summary>
-		/// Executes an intent, optionally awaiting the shell command instead of returning
-		/// after five seconds. The caller must supply a bounded cancellation token when waiting.
-		/// </summary>
-		public async Task ExecuteIntentCommandAsync (AmIntentCommand intentCommand, Action<string> logWiter, CancellationToken cancellationToken, bool waitForCompletion)
-		{
 			var command = intentCommand.ToString();
 			var log = new AndroidTaskLog("StartIntent", command);
-
-			if (waitForCompletion) {
-				var output = await RunShellCommand (command, cancellationToken).ConfigureAwait (false);
-				cancellationToken.ThrowIfCancellationRequested ();
-				AndroidLogger.LogTask (log.Complete (output));
-				logWiter?.Invoke (output);
-				AdbOutputParsing.CheckStartResult (output, intentCommand.Component ?? intentCommand.Intent);
-				if (intentCommand is AmStartCommand) {
-					bool starting = false;
-					foreach (var line in output.Split ('\n')) {
-						starting |= line.StartsWith ("Starting: Intent {", StringComparison.Ordinal) && line.TrimEnd ('\r').EndsWith ("}", StringComparison.Ordinal);
-						if (line.StartsWith ("Error:", StringComparison.Ordinal) || line.StartsWith ("Exception occurred while executing", StringComparison.Ordinal))
-							throw new AdbException (output);
-					}
-					if (!starting)
-						throw new AdbException (output);
-				}
-				return;
-			}
 
 			var shellTask = RunShellCommand(command, cancellationToken).ContinueWith(t => {
 				if (t.IsFaulted) {

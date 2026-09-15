@@ -27,6 +27,13 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.AndroidTools\Xamarin.AndroidTools.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.Android.Run\Microsoft.Android.Run.csproj" />
+    <ProjectReference Include="..\..\src\Xamarin.Android.Build.Debugging.Tasks\Xamarin.Android.Build.Debugging.Tasks.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Microsoft.Android.Build.BaseTasks-Tests\Utilites\MockBuildEngine.cs" Link="MockBuildEngine.cs" />
+    <Content Include="..\..\src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.Application.targets" Link="Microsoft.Android.Sdk.Application.targets" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

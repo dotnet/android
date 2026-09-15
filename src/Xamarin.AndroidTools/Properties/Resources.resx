@@ -120,36 +120,6 @@
   <data name="JdwpClientDisconnectError" xml:space="preserve">
     <value>Unexpected error occurred trying to disconnect Jdwp client.</value>
   </data>
-  <data name="ManagedLaunchUnsupported" xml:space="preserve">
-    <value>Managed startup ANR protection requires Android 12 or later and a force-stopped, non-waiting, non-repeated activity launch on a single-user device. Launching without changing the device debug-app setting.</value>
-  </data>
-  <data name="ManagedLaunchPackageMismatch" xml:space="preserve">
-    <value>Managed startup protection requires a valid package name and an explicit activity component in that same package.</value>
-  </data>
-  <data name="ManagedLaunchComponentUnsupported" xml:space="preserve">
-    <value>Managed startup ANR protection requires an explicit activity component. Launching without protection or changing the device debug-app setting.</value>
-  </data>
-  <data name="ManagedLaunchLayoutUnsupported" xml:space="preserve">
-    <value>The ActivityManager process dump layout is not supported for managed startup ANR protection. Launching without protection or changing the device debug-app setting.</value>
-  </data>
-  <data name="ManagedLaunchGateTimeout" xml:space="preserve">
-    <value>Timed out waiting for another activity debug launch on this device to finish. This launch has not started.</value>
-  </data>
-  <data name="ManagedLaunchProcessUnsupported" xml:space="preserve">
-    <value>The activity uses a custom process, or its package process could not be confirmed. Launching without managed startup ANR protection or changing the device debug-app setting.</value>
-  </data>
-  <data name="ManagedLaunchStateUnavailable" xml:space="preserve">
-    <value>Could not read ActivityManager debug-app state or Android users safely.</value>
-  </data>
-  <data name="ManagedLaunchStateConflict" xml:space="preserve">
-    <value>The device debug-app setting belongs to another launch or has changed unexpectedly. It has not been cleared.</value>
-  </data>
-  <data name="ManagedLaunchTimeout" xml:space="preserve">
-    <value>Timed out waiting for ActivityManager to attach the managed debug process and consume the transient debug-app setting.</value>
-  </data>
-  <data name="ManagedLaunchCleanupFailed" xml:space="preserve">
-    <value>Failed to clean up the transient Android debug-app setting after a managed launch failure.</value>
-  </data>
   <data name="XA5300_AndroidSdk_JdkInfo" xml:space="preserve">
     <value>An exception occurred while retrieving the properties of the selected Java SDK installation. Check that the selected Java SDK installation contains a compatible version of Java and that 'java -XshowSettings:properties -version' runs successfully for that installation. Exception: {0}</value>
     <comment>The following terms should not be translated: java -XshowSettings:properties -version
