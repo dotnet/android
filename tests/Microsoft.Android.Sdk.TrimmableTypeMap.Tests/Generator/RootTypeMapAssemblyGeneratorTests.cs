@@ -111,6 +111,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Equal (new [] {
 			("Mono.Android", "JavaDictionary", "Mono.Android"),
 			("Mono.Android", "JavaList", "Mono.Android"),
+			("Mono.Android", "JavaCollection", "Mono.Android"),
 		}, targetAttrs);
 	}
 
@@ -122,7 +123,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 		var targetAttrs = GetTypeMapAssemblyTargetAttributes (reader);
-		Assert.Equal (5, targetAttrs.Count);
+		Assert.Equal (6, targetAttrs.Count);
 	}
 
 	[Fact]
@@ -137,7 +138,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 			.Select (target => target.TargetName)
 			.ToList ();
 
-		Assert.Equal (4, attrValues.Count);
+		Assert.Equal (5, attrValues.Count);
 		Assert.Contains ("_App.TypeMap", attrValues);
 		Assert.Contains ("_Mono.Android.TypeMap", attrValues);
 		Assert.Contains ("Mono.Android", attrValues);
@@ -158,6 +159,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 			("_Mono.Android.TypeMap", "__TypeMapAnchor", "_Mono.Android.TypeMap"),
 			("Mono.Android", "JavaDictionary", "Mono.Android"),
 			("Mono.Android", "JavaList", "Mono.Android"),
+			("Mono.Android", "JavaCollection", "Mono.Android"),
 		}, targetAttributes);
 	}
 
@@ -176,6 +178,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 			("_Mono.Android.TypeMap", "Object", "Mono.Android"),
 			("Mono.Android", "JavaDictionary", "Mono.Android"),
 			("Mono.Android", "JavaList", "Mono.Android"),
+			("Mono.Android", "JavaCollection", "Mono.Android"),
 		}, targetAttributes);
 	}
 
@@ -286,7 +289,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		// Both modes should have assembly target attributes
 		var targetAttrs = GetTypeMapAssemblyTargetAttributes (reader);
-		Assert.Equal (4, targetAttrs.Count);
+		Assert.Equal (5, targetAttrs.Count);
 	}
 
 	[Fact]
