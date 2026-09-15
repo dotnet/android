@@ -217,13 +217,23 @@ namespace Java.Interop {
 			ReadOnlySpan<char> fallbackSignature,
 			[NotNullWhen (true)] out JniMethodInfo? method)
 		{
-			if (info.TargetJniMethodNameUtf8 != IntPtr.Zero && info.TargetJniMethodSignatureUtf8 != IntPtr.Zero) {
-				return type.TryGetInstanceMethod (info.TargetJniMethodNameUtf8, info.TargetJniMethodSignatureUtf8, out method);
+			if (info.TargetJniMethodNameUtf8 != IntPtr.Zero) {
+				if (info.TargetJniMethodSignatureUtf8 != IntPtr.Zero) {
+					return type.TryGetInstanceMethod (info.TargetJniMethodNameUtf8, info.TargetJniMethodSignatureUtf8, out method);
+				}
+				var signature = info.TargetJniMethodSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
+				return type.TryGetInstanceMethod (info.TargetJniMethodNameUtf8, signature, out method);
+			}
+			if (info.TargetJniMethodSignatureUtf8 != IntPtr.Zero) {
+				var name = info.TargetJniMethodName is string targetName ? targetName.AsSpan () : fallbackName;
+				return type.TryGetInstanceMethod (name, info.TargetJniMethodSignatureUtf8, out method);
 			}
 
-			var name = info.TargetJniMethodName is string targetName ? targetName.AsSpan () : fallbackName;
-			var signature = info.TargetJniMethodSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
-			return type.TryGetInstanceMethod (name, signature, out method);
+			{
+				var name = info.TargetJniMethodName is string targetName ? targetName.AsSpan () : fallbackName;
+				var signature = info.TargetJniMethodSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
+				return type.TryGetInstanceMethod (name, signature, out method);
+			}
 		}
 
 		static bool TryGetStaticMethod (
@@ -233,13 +243,23 @@ namespace Java.Interop {
 			ReadOnlySpan<char> fallbackSignature,
 			[NotNullWhen (true)] out JniMethodInfo? method)
 		{
-			if (info.TargetJniMethodNameUtf8 != IntPtr.Zero && info.TargetJniMethodSignatureUtf8 != IntPtr.Zero) {
-				return type.TryGetStaticMethod (info.TargetJniMethodNameUtf8, info.TargetJniMethodSignatureUtf8, out method);
+			if (info.TargetJniMethodNameUtf8 != IntPtr.Zero) {
+				if (info.TargetJniMethodSignatureUtf8 != IntPtr.Zero) {
+					return type.TryGetStaticMethod (info.TargetJniMethodNameUtf8, info.TargetJniMethodSignatureUtf8, out method);
+				}
+				var signature = info.TargetJniMethodSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
+				return type.TryGetStaticMethod (info.TargetJniMethodNameUtf8, signature, out method);
+			}
+			if (info.TargetJniMethodSignatureUtf8 != IntPtr.Zero) {
+				var name = info.TargetJniMethodName is string targetName ? targetName.AsSpan () : fallbackName;
+				return type.TryGetStaticMethod (name, info.TargetJniMethodSignatureUtf8, out method);
 			}
 
-			var name = info.TargetJniMethodName is string targetName ? targetName.AsSpan () : fallbackName;
-			var signature = info.TargetJniMethodSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
-			return type.TryGetStaticMethod (name, signature, out method);
+			{
+				var name = info.TargetJniMethodName is string targetName ? targetName.AsSpan () : fallbackName;
+				var signature = info.TargetJniMethodSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
+				return type.TryGetStaticMethod (name, signature, out method);
+			}
 		}
 
 		internal static JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfo (
@@ -284,13 +304,23 @@ namespace Java.Interop {
 			ReadOnlySpan<char> fallbackSignature,
 			[NotNullWhen (true)] out JniFieldInfo? field)
 		{
-			if (info.TargetJniFieldNameUtf8 != IntPtr.Zero && info.TargetJniFieldSignatureUtf8 != IntPtr.Zero) {
-				return type.TryGetInstanceField (info.TargetJniFieldNameUtf8, info.TargetJniFieldSignatureUtf8, out field);
+			if (info.TargetJniFieldNameUtf8 != IntPtr.Zero) {
+				if (info.TargetJniFieldSignatureUtf8 != IntPtr.Zero) {
+					return type.TryGetInstanceField (info.TargetJniFieldNameUtf8, info.TargetJniFieldSignatureUtf8, out field);
+				}
+				var signature = info.TargetJniFieldSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
+				return type.TryGetInstanceField (info.TargetJniFieldNameUtf8, signature, out field);
+			}
+			if (info.TargetJniFieldSignatureUtf8 != IntPtr.Zero) {
+				var name = info.TargetJniFieldName is string targetName ? targetName.AsSpan () : fallbackName;
+				return type.TryGetInstanceField (name, info.TargetJniFieldSignatureUtf8, out field);
 			}
 
-			var name = info.TargetJniFieldName is string targetName ? targetName.AsSpan () : fallbackName;
-			var signature = info.TargetJniFieldSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
-			return type.TryGetInstanceField (name, signature, out field);
+			{
+				var name = info.TargetJniFieldName is string targetName ? targetName.AsSpan () : fallbackName;
+				var signature = info.TargetJniFieldSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
+				return type.TryGetInstanceField (name, signature, out field);
+			}
 		}
 
 		static bool TryGetStaticField (
@@ -300,13 +330,23 @@ namespace Java.Interop {
 			ReadOnlySpan<char> fallbackSignature,
 			[NotNullWhen (true)] out JniFieldInfo? field)
 		{
-			if (info.TargetJniFieldNameUtf8 != IntPtr.Zero && info.TargetJniFieldSignatureUtf8 != IntPtr.Zero) {
-				return type.TryGetStaticField (info.TargetJniFieldNameUtf8, info.TargetJniFieldSignatureUtf8, out field);
+			if (info.TargetJniFieldNameUtf8 != IntPtr.Zero) {
+				if (info.TargetJniFieldSignatureUtf8 != IntPtr.Zero) {
+					return type.TryGetStaticField (info.TargetJniFieldNameUtf8, info.TargetJniFieldSignatureUtf8, out field);
+				}
+				var signature = info.TargetJniFieldSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
+				return type.TryGetStaticField (info.TargetJniFieldNameUtf8, signature, out field);
+			}
+			if (info.TargetJniFieldSignatureUtf8 != IntPtr.Zero) {
+				var name = info.TargetJniFieldName is string targetName ? targetName.AsSpan () : fallbackName;
+				return type.TryGetStaticField (name, info.TargetJniFieldSignatureUtf8, out field);
 			}
 
-			var name = info.TargetJniFieldName is string targetName ? targetName.AsSpan () : fallbackName;
-			var signature = info.TargetJniFieldSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
-			return type.TryGetStaticField (name, signature, out field);
+			{
+				var name = info.TargetJniFieldName is string targetName ? targetName.AsSpan () : fallbackName;
+				var signature = info.TargetJniFieldSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
+				return type.TryGetStaticField (name, signature, out field);
+			}
 		}
 
 		internal static void AssertSelf (IJavaPeerable self)

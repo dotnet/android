@@ -141,7 +141,10 @@ namespace Java.Interop
 				if (TryGetInstanceMethod (t, info, method, signature, out m)) {
 					return m;
 				}
-				Console.Error.WriteLine ($"warning: For declared method `{TargetJniTypeName}.{method}.{signature}`, could not find requested method `{info.TargetJniType}.{info.TargetJniMethodName}.{info.TargetJniMethodSignature}`!");
+				var targetType = info.TargetJniType ?? TargetJniTypeName;
+				var targetName = info.TargetJniMethodName ?? method.ToString ();
+				var targetSignature = info.TargetJniMethodSignature ?? signature.ToString ();
+				Console.Error.WriteLine ($"warning: For declared method `{TargetJniTypeName}.{method}.{signature}`, could not find requested method `{targetType}.{targetName}.{targetSignature}`!");
 			}
 			if (JniPeerType.TryGetInstanceMethod (method, signature, out m)) {
 				return m;
