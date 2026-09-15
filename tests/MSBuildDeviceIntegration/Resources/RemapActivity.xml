@@ -10,4 +10,27 @@
       source-method-name="setOnClickListener"
       target-type="example/ViewHelper"
       target-method-name="mySetOnClickListener" target-method-instance-to-static="true" />
+  <replace-method
+      source-type="example/RemapActivity"
+      source-method-name="exact" source-method-signature="(I)I"
+      target-type="example/RemapActivity"
+      target-method-name="exactTarget" target-method-signature="(I)I"
+      target-method-instance-to-static="false" />
+  <replace-method
+      source-type="example/RemapActivity"
+      source-method-name="parameterOnly" source-method-signature="(J)"
+      target-type="example/RemapActivity"
+      target-method-name="parameterOnlyTarget" target-method-signature="(J)I"
+      target-method-instance-to-static="false" />
+  <replace-method
+      source-type="example/RemapActivity"
+      source-method-name="wildcard"
+      target-type="example/RemapActivity"
+      target-method-name="wildcardTarget" target-method-signature="()I"
+      target-method-instance-to-static="false" />
+  <replace-field
+      source-type="example/RemapActivity"
+      source-field-name="sourceValue" source-field-signature="I"
+      target-type="example/RemapActivity"
+      target-field-name="targetValue" target-field-signature="I" />
 </replacements>

@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <managed-interface.hh>
 #include "xamarin-app.hh"
 #include <shared/xxhash.hh>
 
@@ -354,5 +355,13 @@ const JniRemappingTypeReplacementEntry jni_remapping_reverse_type_replacements[]
 	},
 };
 
-const uint32_t jni_remapping_reverse_type_replacement_count = 1;
-const uint32_t jni_remapping_field_replacement_index_count = 1;
+extern "C" const xamarin::android::JniRemappingData jni_remapping_data {
+	.type_replacements = jni_remapping_type_replacements,
+	.reverse_type_replacements = jni_remapping_reverse_type_replacements,
+	.method_replacement_index = jni_remapping_method_replacement_index,
+	.field_replacement_index = jni_remapping_field_replacement_index,
+	.type_replacement_count = 2,
+	.reverse_type_replacement_count = 1,
+	.method_replacement_index_count = 2,
+	.field_replacement_index_count = 1,
+};
