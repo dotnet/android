@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.DotNet.Helix.Sdk" DefaultTargets="Test">
+  <PropertyGroup>
+    <Language>msbuild</Language>
+    <IsPosixShell Condition="'$(ApkTestsHelixWorkItemOS)' == 'linux'">true</IsPosixShell>
+    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
+    <FailOnTestFailure>true</FailOnTestFailure>
+    <HelixType Condition="'$(HelixType)' == ''">tests/android/apk-tests/</HelixType>
+    <HelixTestRunName Condition="'$(HelixTestRunName)' == ''">Android APK Tests - Helix</HelixTestRunName>
+    <ApkTestsHelixWorkItemTimeout Condition="'$(ApkTestsHelixWorkItemTimeout)' == ''">00:30:00</ApkTestsHelixWorkItemTimeout>
+  </PropertyGroup>
+
+  <Import Project="$(ApkTestsHelixItemsProps)" Condition="Exists('$(ApkTestsHelixItemsProps)')" />
+
+  <ItemGroup>
+    <HelixTargetQueue Include="$(HelixTargetQueueForItem)" Condition="'$(HelixTargetQueueForItem)' != ''">
+      <TestRunName>$(HelixTestRunName)</TestRunName>
+    </HelixTargetQueue>
+    <HelixWorkItem Include="@(_ApkTestHelixWorkItem)">
+      <Timeout>$(ApkTestsHelixWorkItemTimeout)</Timeout>
+    </HelixWorkItem>
+  </ItemGroup>
+
+  <Target Name="_ValidateApkTestsHelixInputs" BeforeTargets="Test">
+    <Error Text="ApkTestsHelixItemsProps must name a generated work-item props file."
+           Condition="'$(ApkTestsHelixItemsProps)' == '' or !Exists('$(ApkTestsHelixItemsProps)')" />
+    <Error Text="HelixTargetQueueForItem is required."
+           Condition="'$(HelixTargetQueueForItem)' == ''" />
+    <Error Text="No APK test Helix work items were generated."
+           Condition="'@(_ApkTestHelixWorkItem->Count())' == '0'" />
+    <Message Text="Submitting @(_ApkTestHelixWorkItem->Count()) APK test work items to $(HelixTargetQueueForItem)."
+             Importance="High" />
+  </Target>
+</Project>
