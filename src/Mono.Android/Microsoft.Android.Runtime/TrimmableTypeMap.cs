@@ -430,19 +430,12 @@ public class TrimmableTypeMap
 
 		IJavaPeerable? peer;
 		if (ShouldActivateClosedGenericTarget (proxy, targetType)) {
-			if (RuntimeFeature.IsNativeAotRuntime &&
-					targetType.GetGenericTypeDefinition () == typeof (JavaSet<>)) {
-				var elementType = targetType.GetGenericArguments () [0];
-				if (!elementType.IsValueType) {
-					peer = CreateReferenceSetFromJniHandle (elementType, handle, ImplicitPeerOwnership);
-				} else if (ValueTypeSetFactory.TryGetFromJniHandleConverter (targetType, out var setConverter)) {
-					peer = (IJavaPeerable?) setConverter (handle, ImplicitPeerOwnership);
-				} else {
-					peer = ActivateUsingReflection (targetType, handle, ImplicitPeerOwnership);
+			if (RuntimeFeature.IsNativeAotRuntime) {
+				if (TryCreateNativeAotSet (targetType, handle, ImplicitPeerOwnership, out peer)) {
+					return RegisterCreatedPeer (peer);
 				}
-			} else {
-				peer = ActivateUsingReflection (targetType, handle, ImplicitPeerOwnership);
 			}
+			peer = ActivateUsingReflection (targetType, handle, ImplicitPeerOwnership);
 		} else {
 			peer = proxy?.CreateInstance (handle, ImplicitPeerOwnership);
 		}
@@ -485,6 +478,31 @@ public class TrimmableTypeMap
 		}
 
 		return (IJavaPeerable) ctor.Invoke ([handle, transfer]);
+	}
+
+	static bool TryCreateNativeAotSet (
+		Type targetType,
+		IntPtr handle,
+		JniHandleOwnership transfer,
+		[NotNullWhen (true)] out IJavaPeerable? peer)
+	{
+		if (targetType.GetGenericTypeDefinition () != typeof (JavaSet<>)) {
+			peer = null;
+			return false;
+		}
+
+		var elementType = targetType.GetGenericArguments () [0];
+		if (!elementType.IsValueType) {
+			peer = CreateReferenceSetFromJniHandle (elementType, handle, transfer);
+			return true;
+		}
+		if (ValueTypeSetFactory.TryGetFromJniHandleConverter (targetType, out var setConverter)) {
+			peer = (IJavaPeerable?) setConverter (handle, transfer);
+			return peer != null;
+		}
+
+		peer = null;
+		return false;
 	}
 
 	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
