@@ -72,12 +72,15 @@ namespace Java.Interop
 			// Constructors are never renamed, but their parameter types can be, so the descriptor
 			// still has to be translated.
 			var newMethod = JniPeerMembers.GetReplacementMethodInfo (TargetJniTypeName, "<init>", signature);
-			var targetSignature = newMethod?.TargetJniMethodSignature;
-			if (targetSignature != null && !string.Equals (targetSignature, signature, StringComparison.Ordinal)) {
-				var typeName = newMethod?.TargetJniType ?? TargetJniTypeName;
-				using var t = new JniType (typeName);
-				if (t.TryGetInstanceMethod ("<init>", targetSignature, out var m)) {
-					return m;
+			if (newMethod.HasValue) {
+				var info = newMethod.Value;
+				if (info.TargetJniMethodSignatureUtf8 != IntPtr.Zero ||
+						(info.TargetJniMethodSignature is string targetSignature &&
+						!string.Equals (targetSignature, signature, StringComparison.Ordinal))) {
+					using var t = CreateTargetType (info, TargetJniTypeName);
+					if (TryGetInstanceMethod (t, info, "<init>".AsSpan (), signature.AsSpan (), out var m)) {
+						return m;
+					}
 				}
 			}
 			return JniPeerType.GetConstructor (signature.AsSpan ());
@@ -127,21 +130,18 @@ namespace Java.Interop
 			var m              = (JniMethodInfo?) null;
 			var newMethod      = JniPeerMembers.GetReplacementMethodInfo (TargetJniTypeName, method, signature);
 			if (newMethod.HasValue) {
-				var typeName   = newMethod.Value.TargetJniType ?? TargetJniTypeName;
-				var methodName = newMethod.Value.TargetJniMethodName is string name ? name.AsSpan () : method;
-				var methodSig  = newMethod.Value.TargetJniMethodSignature is string sig ? sig.AsSpan () : signature;
-
-				using var t = new JniType (typeName);
-				if (newMethod.Value.TargetJniMethodInstanceToStatic &&
-						t.TryGetStaticMethod (methodName, methodSig, out m)) {
-					m.ParameterCount = newMethod.Value.TargetJniMethodParameterCount;
-					m.StaticRedirect = new JniType (typeName);
+				var info = newMethod.Value;
+				using var t = CreateTargetType (info, TargetJniTypeName);
+				if (info.TargetJniMethodInstanceToStatic &&
+						TryGetStaticMethod (t, info, method, signature, out m)) {
+					m.ParameterCount = info.TargetJniMethodParameterCount;
+					m.StaticRedirect = CreateTargetType (info, TargetJniTypeName);
 					return m;
 				}
-				if (t.TryGetInstanceMethod (methodName, methodSig, out m)) {
+				if (TryGetInstanceMethod (t, info, method, signature, out m)) {
 					return m;
 				}
-				Console.Error.WriteLine ($"warning: For declared method `{TargetJniTypeName}.{method}.{signature}`, could not find requested method `{typeName}.{methodName}.{methodSig}`!");
+				Console.Error.WriteLine ($"warning: For declared method `{TargetJniTypeName}.{method}.{signature}`, could not find requested method `{info.TargetJniType}.{info.TargetJniMethodName}.{info.TargetJniMethodSignature}`!");
 			}
 			if (JniPeerType.TryGetInstanceMethod (method, signature, out m)) {
 				return m;
@@ -149,18 +149,15 @@ namespace Java.Interop
 
 			newMethod = JniPeerMembers.GetBaseReplacementMethodInfo (DeclaringType, method, signature);
 			if (newMethod.HasValue) {
-				var typeName   = newMethod.Value.TargetJniType ?? TargetJniTypeName;
-				var methodName = newMethod.Value.TargetJniMethodName is string name ? name.AsSpan () : method;
-				var methodSig  = newMethod.Value.TargetJniMethodSignature is string sig ? sig.AsSpan () : signature;
-
-				using var t = new JniType (typeName);
-				if (newMethod.Value.TargetJniMethodInstanceToStatic &&
-						t.TryGetStaticMethod (methodName, methodSig, out m)) {
-					m.ParameterCount = newMethod.Value.TargetJniMethodParameterCount;
-					m.StaticRedirect = new JniType (typeName);
+				var info = newMethod.Value;
+				using var t = CreateTargetType (info, TargetJniTypeName);
+				if (info.TargetJniMethodInstanceToStatic &&
+						TryGetStaticMethod (t, info, method, signature, out m)) {
+					m.ParameterCount = info.TargetJniMethodParameterCount;
+					m.StaticRedirect = CreateTargetType (info, TargetJniTypeName);
 					return m;
 				}
-				if (t.TryGetInstanceMethod (methodName, methodSig, out m)) {
+				if (TryGetInstanceMethod (t, info, method, signature, out m)) {
 					return m;
 				}
 			}

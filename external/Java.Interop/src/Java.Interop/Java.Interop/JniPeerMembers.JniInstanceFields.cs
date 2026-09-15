@@ -37,12 +37,9 @@ namespace Java.Interop
 		{
 			var newField = JniPeerMembers.GetReplacementFieldInfo (Members.JniPeerTypeName, field, signature);
 			if (newField.HasValue) {
-				var typeName     = newField.Value.TargetJniType ?? Members.JniPeerTypeName;
-				var fieldName    = newField.Value.TargetJniFieldName is string name ? name.AsSpan () : field;
-				var fieldSig     = newField.Value.TargetJniFieldSignature is string sig ? sig.AsSpan () : signature;
-
-				using var t = new JniType (typeName);
-				if (t.TryGetInstanceField (fieldName, fieldSig, out var f)) {
+				var info = newField.Value;
+				using var t = CreateTargetType (info, Members.JniPeerTypeName);
+				if (TryGetInstanceField (t, info, field, signature, out var f)) {
 					return f;
 				}
 			}
@@ -52,12 +49,9 @@ namespace Java.Interop
 
 			newField = JniPeerMembers.GetBaseReplacementFieldInfo (Members.ManagedPeerType, field, signature);
 			if (newField.HasValue) {
-				var typeName     = newField.Value.TargetJniType ?? Members.JniPeerTypeName;
-				var fieldName    = newField.Value.TargetJniFieldName is string name ? name.AsSpan () : field;
-				var fieldSig     = newField.Value.TargetJniFieldSignature is string sig ? sig.AsSpan () : signature;
-
-				using var t = new JniType (typeName);
-				if (t.TryGetInstanceField (fieldName, fieldSig, out var f)) {
+				var info = newField.Value;
+				using var t = CreateTargetType (info, Members.JniPeerTypeName);
+				if (TryGetInstanceField (t, info, field, signature, out var f)) {
 					return f;
 				}
 			}

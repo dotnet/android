@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Threading;
 
@@ -202,6 +203,45 @@ namespace Java.Interop {
 			return null;
 		}
 
+		static JniType CreateTargetType (JniRuntime.ReplacementMethodInfo info, string fallbackType)
+		{
+			return info.TargetJniTypeUtf8 != IntPtr.Zero
+				? new JniType (info.TargetJniTypeUtf8)
+				: new JniType (info.TargetJniType ?? fallbackType);
+		}
+
+		static bool TryGetInstanceMethod (
+			JniType type,
+			JniRuntime.ReplacementMethodInfo info,
+			ReadOnlySpan<char> fallbackName,
+			ReadOnlySpan<char> fallbackSignature,
+			[NotNullWhen (true)] out JniMethodInfo? method)
+		{
+			if (info.TargetJniMethodNameUtf8 != IntPtr.Zero && info.TargetJniMethodSignatureUtf8 != IntPtr.Zero) {
+				return type.TryGetInstanceMethod (info.TargetJniMethodNameUtf8, info.TargetJniMethodSignatureUtf8, out method);
+			}
+
+			var name = info.TargetJniMethodName is string targetName ? targetName.AsSpan () : fallbackName;
+			var signature = info.TargetJniMethodSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
+			return type.TryGetInstanceMethod (name, signature, out method);
+		}
+
+		static bool TryGetStaticMethod (
+			JniType type,
+			JniRuntime.ReplacementMethodInfo info,
+			ReadOnlySpan<char> fallbackName,
+			ReadOnlySpan<char> fallbackSignature,
+			[NotNullWhen (true)] out JniMethodInfo? method)
+		{
+			if (info.TargetJniMethodNameUtf8 != IntPtr.Zero && info.TargetJniMethodSignatureUtf8 != IntPtr.Zero) {
+				return type.TryGetStaticMethod (info.TargetJniMethodNameUtf8, info.TargetJniMethodSignatureUtf8, out method);
+			}
+
+			var name = info.TargetJniMethodName is string targetName ? targetName.AsSpan () : fallbackName;
+			var signature = info.TargetJniMethodSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
+			return type.TryGetStaticMethod (name, signature, out method);
+		}
+
 		internal static JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfo (
 			string jniTypeName,
 			ReadOnlySpan<char> field,
@@ -228,6 +268,45 @@ namespace Java.Interop {
 				}
 			}
 			return null;
+		}
+
+		static JniType CreateTargetType (JniRuntime.ReplacementFieldInfo info, string fallbackType)
+		{
+			return info.TargetJniTypeUtf8 != IntPtr.Zero
+				? new JniType (info.TargetJniTypeUtf8)
+				: new JniType (info.TargetJniType ?? fallbackType);
+		}
+
+		static bool TryGetInstanceField (
+			JniType type,
+			JniRuntime.ReplacementFieldInfo info,
+			ReadOnlySpan<char> fallbackName,
+			ReadOnlySpan<char> fallbackSignature,
+			[NotNullWhen (true)] out JniFieldInfo? field)
+		{
+			if (info.TargetJniFieldNameUtf8 != IntPtr.Zero && info.TargetJniFieldSignatureUtf8 != IntPtr.Zero) {
+				return type.TryGetInstanceField (info.TargetJniFieldNameUtf8, info.TargetJniFieldSignatureUtf8, out field);
+			}
+
+			var name = info.TargetJniFieldName is string targetName ? targetName.AsSpan () : fallbackName;
+			var signature = info.TargetJniFieldSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
+			return type.TryGetInstanceField (name, signature, out field);
+		}
+
+		static bool TryGetStaticField (
+			JniType type,
+			JniRuntime.ReplacementFieldInfo info,
+			ReadOnlySpan<char> fallbackName,
+			ReadOnlySpan<char> fallbackSignature,
+			[NotNullWhen (true)] out JniFieldInfo? field)
+		{
+			if (info.TargetJniFieldNameUtf8 != IntPtr.Zero && info.TargetJniFieldSignatureUtf8 != IntPtr.Zero) {
+				return type.TryGetStaticField (info.TargetJniFieldNameUtf8, info.TargetJniFieldSignatureUtf8, out field);
+			}
+
+			var name = info.TargetJniFieldName is string targetName ? targetName.AsSpan () : fallbackName;
+			var signature = info.TargetJniFieldSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
+			return type.TryGetStaticField (name, signature, out field);
 		}
 
 		internal static void AssertSelf (IJavaPeerable self)
