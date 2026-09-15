@@ -153,6 +153,7 @@ steps:
 
 - ${{ each testCase in parameters.testCases }}:
   - powershell: |
+      $xaSourcePath = '${{ parameters.xaSourcePath }}'
       $projectDirectory = '${{ parameters.matrixDirectory }}/${{ testCase.name }}'
       $payloadDirectory = '${{ parameters.payloadDirectory }}/${{ testCase.name }}'
       $runtimeIdentifier = '${{ testCase.runtimeIdentifier }}'
@@ -187,46 +188,13 @@ steps:
       New-Item -ItemType Directory -Force -Path $payloadPlatformTools | Out-Null
       Copy-Item -Path (Join-Path $platformTools '*') -Destination $payloadPlatformTools -Recurse -Force
 
+      $runnerScript = Join-Path $xaSourcePath 'build-tools/automation/scripts/RunMauiR2RHelix.ps1'
+      Copy-Item -LiteralPath $runnerScript -Destination (Join-Path $payloadDirectory 'RunMauiR2RHelix.ps1') -Force
+
       $script = @"
       @echo on
-      setlocal
-      set "UPLOAD_DIR=%HELIX_WORKITEM_UPLOAD_ROOT%"
-      if "%UPLOAD_DIR%"=="" set "UPLOAD_DIR=%~dp0"
-      if not exist "%UPLOAD_DIR%" mkdir "%UPLOAD_DIR%"
-      echo Scenario: ${{ testCase.displayName }} > "%UPLOAD_DIR%\scenario-${{ testCase.name }}.txt"
-      echo RuntimeIdentifier: $runtimeIdentifier >> "%UPLOAD_DIR%\scenario-${{ testCase.name }}.txt"
-      echo PackageName: $packageName >> "%UPLOAD_DIR%\scenario-${{ testCase.name }}.txt"
-      echo APK: $apkName >> "%UPLOAD_DIR%\scenario-${{ testCase.name }}.txt"
-      set "ADB=%~dp0platform-tools\adb.exe"
-      if not exist "%ADB%" (
-        echo Could not find payload adb.exe at "%ADB%"
-        dir "%~dp0" /s
-        exit /b 1
-      )
-      "%ADB%" version || exit /b 1
-      "%ADB%" devices -l > "%UPLOAD_DIR%\adb-devices-${{ testCase.name }}.log"
-      type "%UPLOAD_DIR%\adb-devices-${{ testCase.name }}.log"
-      "%ADB%" wait-for-device || exit /b 1
-      "%ADB%" shell getprop > "%UPLOAD_DIR%\getprop-${{ testCase.name }}.log"
-      "%ADB%" shell getprop ro.product.cpu.abi
-      "%ADB%" shell getprop ro.product.cpu.abilist
-      "%ADB%" shell getprop ro.build.fingerprint
-      "%ADB%" uninstall $packageName
-      "%ADB%" install -r "%~dp0$apkName" || exit /b 1
-      "%ADB%" shell pm path $packageName > "%UPLOAD_DIR%\pm-path-${{ testCase.name }}.log"
-      "%ADB%" shell dumpsys package $packageName > "%UPLOAD_DIR%\dumpsys-package-${{ testCase.name }}.log"
-      "%ADB%" shell logcat -c
-      "%ADB%" shell monkey -p $packageName -c android.intent.category.LAUNCHER 1 || exit /b 1
-      ping -n 11 127.0.0.1 > nul
-      "%ADB%" shell pidof $packageName
-      if errorlevel 1 (
-        "%ADB%" logcat -d -b all > "%UPLOAD_DIR%\logcat-${{ testCase.name }}.log"
-        "%ADB%" uninstall $packageName
-        exit /b 1
-      )
-      "%ADB%" logcat -d -b all > "%UPLOAD_DIR%\logcat-${{ testCase.name }}.log"
-      "%ADB%" uninstall $packageName
-      exit /b 0
+      powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0RunMauiR2RHelix.ps1" -AdbPath "%~dp0platform-tools\adb.exe" -ApkPath "%~dp0$apkName" -PackageName "$packageName" -ScenarioName "${{ testCase.displayName }}" -ConfigurationName "${{ testCase.name }}" -RuntimeIdentifier "$runtimeIdentifier" -OverallTimeoutSeconds 540
+      exit /b %ERRORLEVEL%
       "@
 
       Set-Content -LiteralPath (Join-Path $payloadDirectory 'run-maui-r2r.cmd') -Value $script -Encoding ASCII
@@ -245,6 +213,10 @@ steps:
     xaSourcePath: ${{ parameters.xaSourcePath }}
     displayName: Restore MAUI R2R Helix project
     continueOnError: false
+
+- powershell: |
+    & '${{ parameters.xaSourcePath }}/build-tools/automation/scripts/RunMauiR2RHelix.Tests.Process.ps1'
+  displayName: Test MAUI R2R Helix device recovery
 
 - powershell: |
     & '${{ parameters.xaSourcePath }}/build-tools/automation/scripts/ConfigureMauiR2RHelixEnvironment.Tests.ps1'
