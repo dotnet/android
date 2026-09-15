@@ -23,7 +23,7 @@ namespace xamarin::android {
 		JNIEnv         *env;
 		jobject         grefLoader;
 		jmethodID       Loader_loadClass;
-		jclass          grefClass;
+		jclass          grefClass; // Unused; reserved to preserve the shared native/managed layout.
 		unsigned int    logCategories;
 		int             version;
 		int             grefGcThreshold;

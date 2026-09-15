@@ -12,12 +12,7 @@ namespace Android.Graphics.Drawables {
 
 		public void UnscheduleSelf (Action what)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Remove (what);
-			if (runnable == null)
-				return;
-			UnscheduleSelf (runnable);
-			runnable.Dispose ();
+			Java.Lang.Thread.RunnableImplementor.Remove (what, this, static (runnable, drawable) => drawable.UnscheduleSelf (runnable));
 		}
 	}
 }
-
