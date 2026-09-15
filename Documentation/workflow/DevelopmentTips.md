@@ -2,6 +2,15 @@
 
 Tips and tricks while developing .NET for Android.
 
+The update-directory guidance in this page applies to Android fast deployment
+for both MonoVM and CoreCLR applications. The `libmonosgen-2.0.so`, Mono
+runtime-pack, and `debug.mono.*` examples are MonoVM-specific historical
+guidance. They apply to .NET 10 and earlier Mono applications and to
+supported explicit MonoVM builds. Ordinary .NET 11 and later Android
+applications use CoreCLR; use the CoreCLR diagnostics and runtime guidance in the
+[tracing](../guides/tracing.md) and
+[custom Android system properties](SystemProperties.md) documentation instead.
+
 # Run MSBuild-Based On-Device Unit Tests
 
 The [`tests/MSBuildDeviceIntegration`](tests/MSBuildDeviceIntegration)
@@ -490,8 +499,8 @@ If successful, messages printed to the screen will show location
 of the logcat file with the logged messages.
 
 Verbosity of logging can be increased by setting the `$(RunLogVerbose)`
-property to `true`, in which case the log output file will contain
-(very) verbose log messages from the MonoVM runtime.
+property to `true`. The target selects `debug.mono.log` for MonoVM and
+`debug.dotnet.log` for CoreCLR and NativeAOT.
 
 By default, the target will wait for a 1000ms before it dumps the
 logcat buffer to file.  This is to give the Android logging daemon

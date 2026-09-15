@@ -1149,6 +1149,11 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
     <value>Non è possibile impostare entrambe le proprietà 'AndroidEnableMarshalMethods' e 'PublishReadyToRun' di MSBuild su 'true'. Impostare una proprietà su 'false'.</value>
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
+  <data name="XA1050" xml:space="preserve">
+    <value>La proprietà MSBuild 'AndroidR8ObfuscationMode' contiene un valore '{0}' non valido. I valori validi sono 'disabled' e 'private-members'.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members.
+{0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>La dipendenza Java '{0}' non è soddisfatta.</value>
     <comment>The following are literal names and should not be translated: Java.
@@ -1291,7 +1296,7 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 {1} - Managed parameter or return type</comment>
   </data>
   <data name="XA4264" xml:space="preserve">
-    <value>Java callable wrapper XML file '{0}' was not found.</value>
+    <value>Il file XML del wrapper richiamabile Java '{0}' non è stato trovato.</value>
     <comment>The following are literal names and should not be translated: Java, XML.
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>

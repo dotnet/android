@@ -1,4 +1,6 @@
-﻿//
+﻿#nullable enable
+
+//
 // Platform.cs
 //
 // Author:
@@ -39,7 +41,7 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 				buf = Marshal.AllocHGlobal (8192);
 				// This is a hacktastic way of getting sysname from uname ()
 				if (uname (buf) == 0) {
-					string os = Marshal.PtrToStringAnsi (buf);
+					string? os = Marshal.PtrToStringAnsi (buf);
 					if (os == "Darwin")
 						return true;
 				}
