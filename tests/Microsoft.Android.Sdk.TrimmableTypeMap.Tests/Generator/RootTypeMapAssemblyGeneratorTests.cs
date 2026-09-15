@@ -124,12 +124,14 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_CoreClr_OmitsValueTypeDictionaryTargetAttribute ()
+	public void Generate_CoreClr_OmitsBuiltInValueTypeCollectionTargetAttributes ()
 	{
-		using var stream = GenerateRootAssembly ([], includeBuiltInValueTypeUniverses: false);
+		using var stream = GenerateRootAssembly (["_App.TypeMap"], includeBuiltInValueTypeUniverses: false);
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
-		Assert.Empty (GetTypeMapAssemblyTargetAttributes (reader));
+		Assert.Equal (new [] {
+			("_App.TypeMap", "__TypeMapAnchor", "_App.TypeMap"),
+		}, GetTypeMapAssemblyTargetAttributeTargets (reader));
 	}
 
 	[Fact]

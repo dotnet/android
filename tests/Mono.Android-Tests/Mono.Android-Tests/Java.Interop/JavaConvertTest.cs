@@ -433,6 +433,26 @@ namespace Java.InteropTests
 			}
 		}
 
+		[TestCase (typeof (JavaList<DateTime>))]
+		[TestCase (typeof (JavaList<UnsupportedValueType>))]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_CoreClrConcreteUnsupportedValueTypeUsesReflection (Type targetType)
+		{
+			if (Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime) {
+				Assert.Ignore ("NativeAOT cannot reflectively activate arbitrary closed generic JavaList<T> types.");
+			}
+
+			using (var source = new JavaList ()) {
+				var converted = InvokeJavaConvertFromJniHandle (targetType, source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					Assert.IsTrue (targetType.IsInstanceOfType (converted));
+					Assert.AreEqual (typeof (JavaList<>), converted.GetType ().GetGenericTypeDefinition ());
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
 		readonly struct UnsupportedValueType
 		{
 		}
