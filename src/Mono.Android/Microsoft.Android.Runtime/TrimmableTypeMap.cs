@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -429,9 +430,16 @@ public class TrimmableTypeMap
 
 		IJavaPeerable? peer;
 		if (ShouldActivateClosedGenericTarget (proxy, targetType)) {
-			if (targetType.GetGenericTypeDefinition () == typeof (JavaSet<>) &&
-					ValueTypeSetFactory.TryGetFromJniHandleConverter (targetType, out var setConverter)) {
-				peer = (IJavaPeerable?) setConverter (handle, ImplicitPeerOwnership);
+			if (RuntimeFeature.IsNativeAotRuntime &&
+					targetType.GetGenericTypeDefinition () == typeof (JavaSet<>)) {
+				var elementType = targetType.GetGenericArguments () [0];
+				if (!elementType.IsValueType) {
+					peer = CreateReferenceSetFromJniHandle (elementType, handle, ImplicitPeerOwnership);
+				} else if (ValueTypeSetFactory.TryGetFromJniHandleConverter (targetType, out var setConverter)) {
+					peer = (IJavaPeerable?) setConverter (handle, ImplicitPeerOwnership);
+				} else {
+					peer = ActivateUsingReflection (targetType, handle, ImplicitPeerOwnership);
+				}
 			} else {
 				peer = ActivateUsingReflection (targetType, handle, ImplicitPeerOwnership);
 			}
@@ -477,6 +485,31 @@ public class TrimmableTypeMap
 		}
 
 		return (IJavaPeerable) ctor.Invoke ([handle, transfer]);
+	}
+
+	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
+		Justification = "The element type is always a reference type, so JavaSet<elementType> canonicalizes to the JavaSet<__Canon> template whose activation constructor is rooted by the direct JavaSet<IJavaPeerable> construction.")]
+	[UnconditionalSuppressMessage ("Trimming", "IL2071:MakeGenericType",
+		Justification = "JavaSet<T>'s element constructor requirement belongs to the dynamic-code element activation path. Trimmable typemap element creation uses registered activation constructors instead.")]
+	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
+		Justification = "The constructed JavaSet type rides the JavaSet<IJavaPeerable> canonical template whose activation constructor is rooted by the concrete-literal branch.")]
+	static IJavaPeerable CreateReferenceSetFromJniHandle (Type elementType, IntPtr handle, JniHandleOwnership transfer)
+	{
+		if (elementType == typeof (IJavaPeerable)) {
+			return new JavaSet<IJavaPeerable> (handle, transfer);
+		}
+
+		var setType = typeof (JavaSet<>).MakeGenericType (elementType);
+		var instance = Activator.CreateInstance (
+			setType,
+			ActivationConstructorBindingFlags,
+			binder: null,
+			args: [handle, transfer],
+			culture: CultureInfo.InvariantCulture);
+		if (instance is not IJavaPeerable peer) {
+			throw new InvalidOperationException ($"Unable to create a JavaSet instance for element type '{elementType}'.");
+		}
+		return peer;
 	}
 
 	static void MarkCreatedPeer (IJavaPeerable peer)

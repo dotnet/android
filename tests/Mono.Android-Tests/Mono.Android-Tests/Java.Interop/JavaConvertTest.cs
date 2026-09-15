@@ -513,6 +513,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTTrimmable")]
 		public void FromJniHandle_JavaSetReferenceArgumentUsesCanonicalTemplate ()
 		{
 			using (var source = new JavaSet ()) {
@@ -592,6 +593,8 @@ namespace Java.InteropTests
 		[TestCase (typeof (JavaList<UnsupportedValueType>))]
 		[TestCase (typeof (JavaCollection<DateTime>))]
 		[TestCase (typeof (JavaCollection<UnsupportedValueType>))]
+		[TestCase (typeof (JavaSet<DateTime>))]
+		[TestCase (typeof (JavaSet<UnsupportedValueType>))]
 		[Category ("NativeAOTTrimmable")]
 		public void FromJniHandle_CoreClrConcreteUnsupportedValueTypeUsesReflection (Type targetType)
 		{
@@ -599,7 +602,9 @@ namespace Java.InteropTests
 				Assert.Ignore ("NativeAOT cannot reflectively activate arbitrary closed generic Java collection types.");
 			}
 
-			using (var source = new JavaList ()) {
+			using (Java.Lang.Object source = targetType.GetGenericTypeDefinition () == typeof (JavaSet<>)
+					? new JavaSet ()
+					: new JavaList ()) {
 				var converted = InvokeJavaConvertFromJniHandle (targetType, source.Handle, JniHandleOwnership.DoNotTransfer);
 				try {
 					Assert.IsTrue (targetType.IsInstanceOfType (converted));

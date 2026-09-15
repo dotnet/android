@@ -2230,12 +2230,12 @@ namespace Xamarin.Android.Build.Tests {
 			using (var rootAssembly = AssemblyDefinition.ReadAssembly (generatedRoot)) {
 				var builtInUniverseTypes = rootAssembly.MainModule.GetTypeReferences ()
 					.Where (type => type.Namespace == "Android.Runtime" &&
-						(type.Name == "JavaDictionary" || type.Name == "JavaList" || type.Name == "JavaCollection"))
+						(type.Name == "JavaDictionary" || type.Name == "JavaList" || type.Name == "JavaCollection" || type.Name == "JavaSet"))
 					.Select (type => type.Name)
 					.OrderBy (name => name, StringComparer.Ordinal)
 					.ToArray ();
 				CollectionAssert.AreEqual (
-					expected ? new [] { "JavaCollection", "JavaDictionary", "JavaList" } : [],
+					expected ? new [] { "JavaCollection", "JavaDictionary", "JavaList", "JavaSet" } : [],
 					builtInUniverseTypes,
 					$"{runtime} root typemap built-in collection universe edges.");
 			}
@@ -2243,7 +2243,7 @@ namespace Xamarin.Android.Build.Tests {
 			var linkedMonoAndroid = runtime == AndroidRuntime.NativeAOT
 				? builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "assets", "shrunk", "arm64-v8a", "Mono.Android.dll"))
 				: builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked", "Mono.Android.dll"));
-			foreach (var universeTypeName in new [] { "ValueTypeDictionaryFactory", "ValueTypeListFactory", "ValueTypeCollectionFactory" }) {
+			foreach (var universeTypeName in new [] { "ValueTypeDictionaryFactory", "ValueTypeListFactory", "ValueTypeCollectionFactory", "ValueTypeSetFactory" }) {
 				Assert.AreEqual (
 					expected,
 					AssemblyContainsTypeNameFragment (linkedMonoAndroid, universeTypeName),
