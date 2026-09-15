@@ -249,12 +249,12 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		targetType ??= typeof (T);
 
-		if (typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
-			return (T?) CreatePeer (ref reference, options, targetType);
-		}
-
 		if (PrimitiveArrayInfo.TryCreateWrapper (ref reference, options, targetType, out var arrayWrapper)) {
 			return (T) arrayWrapper;
+		}
+
+		if (typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
+			return (T?) CreatePeer (ref reference, options, targetType);
 		}
 
 		var value = JavaConvert.FromObjectReference (ref reference, options, targetType);
@@ -275,10 +275,6 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			return null;
 		}
 
-		if (targetType != null && typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
-			return CreatePeer (ref reference, options, targetType);
-		}
-
 		var boxed = PeekBoxedObject (reference);
 		if (boxed != null) {
 			JniObjectReference.Dispose (ref reference, options);
@@ -290,6 +286,10 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		if (targetType != null && PrimitiveArrayInfo.TryCreateWrapper (ref reference, options, targetType, out var arrayWrapper)) {
 			return arrayWrapper;
+		}
+
+		if (targetType != null && typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
+			return CreatePeer (ref reference, options, targetType);
 		}
 
 		return JavaConvert.FromObjectReference (ref reference, options, targetType);

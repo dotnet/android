@@ -5,6 +5,10 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Android.Runtime {
 
+	// Marker for the external TypeMap universe that conditionally roots closed JavaArray<T> wrappers.
+	internal sealed class JavaArray {
+	}
+
 	[Register ("mono/android/runtime/JavaArray", DoNotGenerateAcw=true)]
 	public sealed class JavaArray<
 			[DynamicallyAccessedMembers (Constructors)]
