@@ -2664,7 +2664,19 @@ namespace UnnamedProject
 				},
 			};
 			proj.SetRuntime (runtime);
-			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": global::Example.RemapActivity");
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace (": Activity", ": global::Example.RemapActivity")
+				.Replace ("//${AFTER_ONCREATE}", """
+					if (Exact (1) != 11)
+						throw new System.InvalidOperationException ("Exact JNI method remapping failed.");
+					if (ParameterOnly (2) != 22)
+						throw new System.InvalidOperationException ("Parameter-only JNI method remapping failed.");
+					if (Wildcard () != 30)
+						throw new System.InvalidOperationException ("Wildcard JNI method remapping failed.");
+					if (SourceValue != 40)
+						throw new System.InvalidOperationException ("JNI field remapping failed.");
+					Console.WriteLine ("# JNI_REMAP_LOOKUP_SUCCESS");
+				""");
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 			RunProjectAndAssert (proj, builder);
@@ -2683,6 +2695,7 @@ namespace UnnamedProject
 					logcatOutput,
 					"View.setOnClickListener() wasn't remapped to ViewHelper.mySetOnClickListener()!"
 			);
+			StringAssert.Contains ("# JNI_REMAP_LOOKUP_SUCCESS", logcatOutput, "Managed JNI remapping lookup cases did not pass.");
 		}
 
 		[Test]
