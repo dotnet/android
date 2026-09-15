@@ -1,0 +1,21 @@
+parameters:
+  project:
+  nugetConfig:
+  xaSourcePath:
+  logsDirectory:
+  configuration: $(XA.Build.Configuration)
+
+steps:
+- powershell: |
+    if ([Environment]::OSVersion.Platform -eq "Unix") {
+        $dotnetPath = "${{ parameters.xaSourcePath }}/bin/${{ parameters.configuration }}/dotnet/dotnet"
+    } else {
+        $dotnetPath = "${{ parameters.xaSourcePath }}\bin\${{ parameters.configuration }}\dotnet\dotnet.exe"
+    }
+
+    & '${{ parameters.xaSourcePath }}/build-tools/automation/scripts/RestoreMauiTemplate.ps1' `
+      -DotNetPath $dotnetPath `
+      -Project '${{ parameters.project }}' `
+      -NuGetConfig '${{ parameters.nugetConfig }}' `
+      -BinaryLogPath '${{ parameters.logsDirectory }}/MauiTestProj-Restore.binlog'
+  displayName: Restore MAUI template dependencies
