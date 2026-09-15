@@ -62,7 +62,7 @@ fi
 echo ""
 echo "### Stale Xamarin documentation and repository links"
 DOC_MATCHES=$(grep -rnEi \
-    'https?://(docs\.microsoft\.com/xamarin/android|developer\.xamarin\.com/(guides/)?android|github\.com/dotnet/android/wiki)' \
+    'https?://(docs\.microsoft\.com/xamarin/android|developer\.xamarin\.com/(guides/)?android|github\.com/xamarin/xamarin-android/wiki)' \
     --include='*.md' \
     --exclude='previous-releases.md' \
     --exclude-dir=release-notes \
