@@ -103,7 +103,7 @@ Examples:
 ```markdown
 ### Build and deployment performance
 
-- [GitHub PR 3640](https://github.com/xamarin/xamarin-android/pull/3640):
+- [GitHub PR 3640](https://github.com/dotnet/android/pull/3640):
   Use System.Reflection.Metadata rather than Cecil for
   `ResolveLibraryProjectImports`.  This reduced the time for the
   `ResolveLibraryProjectImports` task from about 4.8 seconds to about 4.5
@@ -114,7 +114,7 @@ Examples:
 ### Application behavior on device and emulator
 
 - [Developer Community 743965](https://developercommunity.visualstudio.com/content/problem/743965/newtonsoftjsonjsonreaderexception-unexpected-chara.html),
-  [GitHub Issue 3626](https://github.com/xamarin/xamarin-android/issues/3626):
+  [GitHub Issue 3626](https://github.com/dotnet/android/issues/3626):
   Starting in Xamarin.Android 10.0, _Newtonsoft.Json.JsonReaderException:
   Unexpected character encountered_ caused `JsonConvert.DeserializeObject()` to
   fail in apps built in the Release configuration.
@@ -240,7 +240,7 @@ added to `Documentation/release-notes/images/`.
    The GitHub compare view is handy for this step. For example:
 
    ```
-   https://github.com/xamarin/xamarin-android/compare/v11.1.99.168...master
+   https://github.com/dotnet/android/compare/v11.1.99.168...master
    ```
 
    (This step will no longer be necessary once labels are being added
@@ -257,7 +257,7 @@ added to `Documentation/release-notes/images/`.
    {
        "branch": "master",
        "commit": "9bc00032eebc30e91a66114eff9026c6a3b0e4d7",
-       "repo": "git@github.com:https://github.com/xamarin/xamarin-android",
+       "repo": "git@github.com:https://github.com/dotnet/android",
        "sha256": "12caa3ca0e6f949183573bdc7727f7fa3143e46ef4b7202b6e42e28acc55a59b",
        "size": 411149176,
        "tag": "v11.1.99.218",
@@ -335,7 +335,7 @@ added to `Documentation/release-notes/images/`.
    the `pre` tag to free up the non-`pre` tag for the Release version.
 
 4. Create a GitHub release: Go to
-   <https://github.com/xamarin/xamarin-android/tags>, click the **...** menu on
+   <https://github.com/dotnet/android/tags>, click the **...** menu on
    the far right of the tag name from step 2, then click **Create release**.
 
 5. Paste the release notes into the GitHub release.
@@ -425,7 +425,7 @@ added to `Documentation/release-notes/images/`.
    issue search page for the repository. For example:
 
    ```
-   https://github.com/xamarin/xamarin-android/issues?q=5298+5294+5250
+   https://github.com/dotnet/android/issues?q=5298+5294+5250
    ```
 
 2. Validate that the count of items returned by the search is correct.
@@ -517,7 +517,7 @@ added to `Documentation/release-notes/images/`.
 
 [commit-messages]: /Documentation/workflow/commit-messages.md
 [docs-guidelines]: https://github.com/MicrosoftDocs/xamarin-docs/blob/live/contributing-guidelines/template.md
-[draft-notes]: https://github.com/xamarin/xamarin-android/wiki/Draft-release-notes
+[draft-notes]: https://github.com/dotnet/android/wiki/Draft-release-notes
 [insertion-definition]: https://dev.azure.com/devdiv/DevDiv/_release?view=mine&definitionId=1755
 [xe-docs]: https://github.com/MicrosoftDocs/xamarin-engineering-docs-pr/tree/master/docs/android/release-notes.
 [toc]: https://github.com/MicrosoftDocs/xamarin-engineering-docs-pr/blob/master/docs/android/release-notes/TOC.md

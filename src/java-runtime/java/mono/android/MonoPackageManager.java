@@ -79,8 +79,8 @@ public class MonoPackageManager {
 				// in memory. This was seen on some devices (Huawei P8) and the x86_64 Android emulator. See the
 				// following issues:
 				//
-				//   https://github.com/xamarin/xamarin-android/issues/4772
-				//   https://github.com/xamarin/xamarin-android/issues/4852
+				//   https://github.com/dotnet/android/issues/4772
+				//   https://github.com/dotnet/android/issues/4852
 				//
 				// We could limit the preloading to only 64-bit 5.x Android versions but it appears to be more effort
 				// than necessary as preloading won't hurt performance (much - some libraries might not be needed

@@ -56,7 +56,7 @@ body:
     id: logs
     attributes:
       label: Relevant log output
-      description: Please copy and paste any (short!) relevant log output.  Longer logs can be attached as .txt files.  This is likely a [logcat](https://github.com/xamarin/xamarin-android/wiki/Getting-Log--from-logcat) log.
+      description: Please copy and paste any (short!) relevant log output.  Longer logs can be attached as .txt files.  This is likely a [logcat](https://github.com/dotnet/android/wiki/Getting-Log--from-logcat) log.
       render: shell
   - type: markdown
     attributes:

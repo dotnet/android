@@ -4,7 +4,7 @@ using Javax.Net.Ssl;
 
 namespace Xamarin.Android.Net
 {
-	// Context: https://github.com/xamarin/xamarin-android/issues/1615
+	// Context: https://github.com/dotnet/android/issues/1615
 	//
 	// Code based on the code provided in the issue above
 	//

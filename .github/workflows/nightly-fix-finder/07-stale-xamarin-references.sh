@@ -7,7 +7,7 @@ cat << 'GUIDANCE'
 ### What to look for
 Comments in source code and current documentation that still describe the
 product as Xamarin or Xamarin.Android, or link to the archived
-`xamarin/xamarin-android` or `mono/mono` repositories, when the text clearly
+`dotnet/android` or `mono/mono` repositories, when the text clearly
 predates the .NET 6 transition.
 
 Good candidates state current behavior, ownership, setup, or contribution
@@ -62,7 +62,7 @@ fi
 echo ""
 echo "### Stale Xamarin documentation and repository links"
 DOC_MATCHES=$(grep -rnEi \
-    'https?://(docs\.microsoft\.com/xamarin/android|developer\.xamarin\.com/(guides/)?android|github\.com/xamarin/xamarin-android/wiki)' \
+    'https?://(docs\.microsoft\.com/xamarin/android|developer\.xamarin\.com/(guides/)?android|github\.com/dotnet/android/wiki)' \
     --include='*.md' \
     --exclude='previous-releases.md' \
     --exclude-dir=release-notes \
