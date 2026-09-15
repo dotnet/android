@@ -161,7 +161,7 @@ public sealed class RootTypeMapAssemblyGenerator
 			EmitPerAssemblyUniverseAssemblyTargetAttributes (pe, perAssemblyTypeMapNames);
 		}
 		if (includeBuiltInValueTypeUniverses) {
-			EmitValueTypeDictionaryAssemblyTargetAttribute (pe);
+			EmitBuiltInCollectionUniverseAssemblyTargetAttributes (pe);
 		}
 
 		// Emit [assembly: IgnoresAccessChecksTo("...")] so TypeMapLoader.Initialize() can access
@@ -200,13 +200,19 @@ public sealed class RootTypeMapAssemblyGenerator
 		}
 	}
 
-	static void EmitValueTypeDictionaryAssemblyTargetAttribute (PEAssemblyBuilder pe)
+	static void EmitBuiltInCollectionUniverseAssemblyTargetAttributes (PEAssemblyBuilder pe)
 	{
 		var openAttrRef = GetTypeMapAssemblyTargetAttributeRef (pe);
-		var javaDictionaryRef = pe.Metadata.AddTypeReference (pe.MonoAndroidRef,
+		EmitBuiltInCollectionUniverseAssemblyTargetAttribute (pe, openAttrRef, "JavaDictionary");
+		EmitBuiltInCollectionUniverseAssemblyTargetAttribute (pe, openAttrRef, "JavaList");
+	}
+
+	static void EmitBuiltInCollectionUniverseAssemblyTargetAttribute (PEAssemblyBuilder pe, EntityHandle openAttrRef, string typeName)
+	{
+		var collectionRef = pe.Metadata.AddTypeReference (pe.MonoAndroidRef,
 			pe.Metadata.GetOrAddString ("Android.Runtime"),
-			pe.Metadata.GetOrAddString ("JavaDictionary"));
-		var ctorRef = GetTypeMapAssemblyTargetAttributeCtorRef (pe, openAttrRef, javaDictionaryRef);
+			pe.Metadata.GetOrAddString (typeName));
+		var ctorRef = GetTypeMapAssemblyTargetAttributeCtorRef (pe, openAttrRef, collectionRef);
 		EmitAssemblyTargetAttribute (pe, ctorRef, "Mono.Android");
 	}
 

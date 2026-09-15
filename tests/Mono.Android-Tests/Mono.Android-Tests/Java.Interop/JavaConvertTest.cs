@@ -161,16 +161,19 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTTrimmable")]
 		public void FromJniHandle_IListNullableInt32 ()
 		{
-			using (var source = new JavaList<int?> ()) {
+			using (var source = new JavaList ()) {
 				source.Add (1);
-				source.Add (null);
+				AddNullToJavaList (source);
 				source.Add (3);
 
 				var converted = InvokeJavaConvertFromJniHandle (typeof (IList<int?>), source.Handle, JniHandleOwnership.DoNotTransfer);
 				try {
-					Assert.AreEqual (typeof (JavaList<int?>), converted.GetType ());
+					var convertedType = converted.GetType ();
+					Assert.AreEqual (typeof (JavaList<>), convertedType.GetGenericTypeDefinition ());
+					CollectionAssert.AreEqual (new [] { typeof (int?) }, convertedType.GetGenericArguments ());
 
 					var list = (IList<int?>) converted;
 					Assert.AreEqual (3, list.Count);
@@ -309,23 +312,64 @@ namespace Java.InteropTests
 		}
 
 		// Regression: byte-element collections must stay supported on the trimmable typemap path
-		// (ValueTypeFactory maps byte alongside sbyte). byte marshals to java.lang.Byte bitwise, so
+		// (ValueTypeListFactory maps byte alongside sbyte). byte marshals to java.lang.Byte bitwise, so
 		// values above 127 round-trip through the signed Java byte.
 		[Test]
+		[Category ("NativeAOTTrimmable")]
 		public void FromJniHandle_IListByte ()
 		{
-			using (var source = new JavaList<byte> ()) {
-				source.Add ((byte) 1);
-				source.Add ((byte) 200);
+			using (var source = new JavaList ()) {
+				source.Add ((sbyte) 1);
+				source.Add (unchecked ((sbyte) 200));
 
 				var converted = InvokeJavaConvertFromJniHandle (typeof (IList<byte>), source.Handle, JniHandleOwnership.DoNotTransfer);
 				try {
-					Assert.AreEqual (typeof (JavaList<byte>), converted.GetType ());
+					var convertedType = converted.GetType ();
+					Assert.AreEqual (typeof (JavaList<>), convertedType.GetGenericTypeDefinition ());
+					CollectionAssert.AreEqual (new [] { typeof (byte) }, convertedType.GetGenericArguments ());
 
 					var list = (IList<byte>) converted;
 					Assert.AreEqual (2, list.Count);
 					Assert.AreEqual ((byte) 1, list [0]);
 					Assert.AreEqual ((byte) 200, list [1]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_JavaListInt64 ()
+		{
+			using (var source = new JavaList ()) {
+				source.Add (100L);
+				source.Add (200L);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (JavaList<long>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var list = (JavaList<long>) converted;
+					Assert.AreEqual (100L, list [0]);
+					Assert.AreEqual (200L, list [1]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_JavaListNullableDouble ()
+		{
+			using (var source = new JavaList ()) {
+				source.Add (1.5);
+				AddNullToJavaList (source);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (JavaList<double?>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var list = (JavaList<double?>) converted;
+					Assert.AreEqual ((double?) 1.5, list [0]);
+					Assert.IsNull (list [1]);
 				} finally {
 					(converted as IDisposable)?.Dispose ();
 				}
@@ -389,8 +433,34 @@ namespace Java.InteropTests
 			}
 		}
 
+		[TestCase (typeof (JavaList<DateTime>))]
+		[TestCase (typeof (JavaList<UnsupportedValueType>))]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_CoreClrConcreteUnsupportedValueTypeUsesReflection (Type targetType)
+		{
+			if (Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime) {
+				Assert.Ignore ("NativeAOT cannot reflectively activate arbitrary closed generic JavaList<T> types.");
+			}
+
+			using (var source = new JavaList ()) {
+				var converted = InvokeJavaConvertFromJniHandle (targetType, source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					Assert.IsTrue (targetType.IsInstanceOfType (converted));
+					Assert.AreEqual (typeof (JavaList<>), converted.GetType ().GetGenericTypeDefinition ());
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
 		readonly struct UnsupportedValueType
 		{
+		}
+
+		static void AddNullToJavaList (JavaList list)
+		{
+			var add = JNIEnv.GetMethodID (list.Class.Handle, "add", "(Ljava/lang/Object;)Z");
+			JNIEnv.CallBooleanMethod (list.Handle, add, JValue.Zero);
 		}
 
 		static Java.Util.ArrayList CreateList (params int[][] items)

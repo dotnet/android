@@ -29,8 +29,10 @@ namespace Java.Interop;
 /// <item><description>reference element arguments ride the <c>__Canon</c> template: the wrapper definition is
 /// reflectively closed and its activation constructor invoked, kept alive by a concrete-literal
 /// <c>IJavaPeerable</c> rooting branch in the same method;</description></item>
-/// <item><description>primitive/nullable value-type arguments go through <see cref="ValueTypeFactory"/>,
-/// which roots the exact instantiation with a direct <c>new</c>;</description></item>
+/// <item><description>primitive/nullable value-type list arguments go through <see cref="ValueTypeListFactory"/>,
+/// whose conditional typemap entries root only requested exact instantiations;</description></item>
+/// <item><description>primitive/nullable value-type collection and mixed dictionary arguments go through
+/// <see cref="ValueTypeFactory"/>, which roots the exact instantiation with a direct <c>new</c>;</description></item>
 /// <item><description>other value types use the corresponding untyped collection wrapper because
 /// their exact generic instantiations are not rooted.</description></item>
 /// </list>
@@ -66,11 +68,9 @@ static class SafeJavaCollectionFactory
 				if (genericDefinition == typeof (IList<>) || genericDefinition == typeof (JavaList<>)) {
 					var elementType = arguments [0];
 					if (elementType.IsValueType) {
-						if (!ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (elementType, out var listFactory)) {
+						if (!ValueTypeListFactory.TryGetFromJniHandleConverter (targetType, out converter)) {
 							converter = GetUntypedFromJniHandleConverter (genericDefinition);
-							return true;
 						}
-						converter = (handle, transfer) => handle == IntPtr.Zero ? null : listFactory.CreateList (handle, transfer);
 						return true;
 					}
 					converter = (handle, transfer) => CreateReferenceListFromJniHandle (elementType, handle, transfer);

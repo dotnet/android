@@ -111,22 +111,27 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_EmptyList_ProducesValueTypeDictionaryTargetAttribute ()
+	public void Generate_EmptyList_ProducesValueTypeCollectionTargetAttributes ()
 	{
 		using var stream = GenerateRootAssembly ([]);
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 		var targetAttrs = GetTypeMapAssemblyTargetAttributeTargets (reader);
-		Assert.Equal (new [] { ("Mono.Android", "Mono.Android") }, targetAttrs);
+		Assert.Equal (new [] {
+			("Mono.Android", "JavaDictionary", "Mono.Android"),
+			("Mono.Android", "JavaList", "Mono.Android"),
+		}, targetAttrs);
 	}
 
 	[Fact]
-	public void Generate_CoreClr_OmitsValueTypeDictionaryTargetAttribute ()
+	public void Generate_CoreClr_OmitsBuiltInValueTypeCollectionTargetAttributes ()
 	{
-		using var stream = GenerateRootAssembly ([], includeBuiltInValueTypeUniverses: false);
+		using var stream = GenerateRootAssembly (["_App.TypeMap"], includeBuiltInValueTypeUniverses: false);
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
-		Assert.Empty (GetTypeMapAssemblyTargetAttributes (reader));
+		Assert.Equal (new [] {
+			("_App.TypeMap", "__TypeMapAnchor", "_App.TypeMap"),
+		}, GetTypeMapAssemblyTargetAttributeTargets (reader));
 	}
 
 	[Fact]
@@ -137,7 +142,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 		var targetAttrs = GetTypeMapAssemblyTargetAttributes (reader);
-		Assert.Equal (4, targetAttrs.Count);
+		Assert.Equal (5, targetAttrs.Count);
 	}
 
 	[Fact]
@@ -152,7 +157,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 			.Select (target => target.TargetName)
 			.ToList ();
 
-		Assert.Equal (3, attrValues.Count);
+		Assert.Equal (4, attrValues.Count);
 		Assert.Contains ("_App.TypeMap", attrValues);
 		Assert.Contains ("_Mono.Android.TypeMap", attrValues);
 		Assert.Contains ("Mono.Android", attrValues);
@@ -169,9 +174,10 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 		var targetAttributes = GetTypeMapAssemblyTargetAttributeTargets (reader);
 
 		Assert.Equal (new [] {
-			("_App.TypeMap", "_App.TypeMap"),
-			("_Mono.Android.TypeMap", "_Mono.Android.TypeMap"),
-			("Mono.Android", "Mono.Android"),
+			("_App.TypeMap", "__TypeMapAnchor", "_App.TypeMap"),
+			("_Mono.Android.TypeMap", "__TypeMapAnchor", "_Mono.Android.TypeMap"),
+			("Mono.Android", "JavaDictionary", "Mono.Android"),
+			("Mono.Android", "JavaList", "Mono.Android"),
 		}, targetAttributes);
 	}
 
@@ -186,9 +192,10 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 		var targetAttributes = GetTypeMapAssemblyTargetAttributeTargets (reader);
 
 		Assert.Equal (new [] {
-			("_App.TypeMap", "Mono.Android"),
-			("_Mono.Android.TypeMap", "Mono.Android"),
-			("Mono.Android", "Mono.Android"),
+			("_App.TypeMap", "Object", "Mono.Android"),
+			("_Mono.Android.TypeMap", "Object", "Mono.Android"),
+			("Mono.Android", "JavaDictionary", "Mono.Android"),
+			("Mono.Android", "JavaList", "Mono.Android"),
 		}, targetAttributes);
 	}
 
@@ -209,9 +216,9 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 		return result;
 	}
 
-	static List<(string TargetName, string GenericArgumentScope)> GetTypeMapAssemblyTargetAttributeTargets (MetadataReader reader)
+	static List<(string TargetName, string GenericArgumentName, string GenericArgumentScope)> GetTypeMapAssemblyTargetAttributeTargets (MetadataReader reader)
 	{
-		var result = new List<(string TargetName, string GenericArgumentScope)> ();
+		var result = new List<(string TargetName, string GenericArgumentName, string GenericArgumentScope)> ();
 		foreach (var attr in GetTypeMapAssemblyTargetAttributes (reader)) {
 			var targetName = GetTypeMapAssemblyTargetName (reader, attr);
 			var memberRef = reader.GetMemberReference ((MemberReferenceHandle)attr.Constructor);
@@ -223,9 +230,18 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 			Assert.Equal (1, blob.ReadCompressedInteger ());
 			Assert.Equal (0x12, blob.ReadByte ()); // ELEMENT_TYPE_CLASS
 			var targetType = DecodeTypeDefOrRefOrSpec (blob.ReadCompressedInteger ());
-			result.Add ((targetName, GetResolutionScopeName (reader, targetType)));
+			result.Add ((targetName, GetTypeName (reader, targetType), GetResolutionScopeName (reader, targetType)));
 		}
 		return result;
+	}
+
+	static string GetTypeName (MetadataReader reader, EntityHandle handle)
+	{
+		return handle.Kind switch {
+			HandleKind.TypeDefinition => reader.GetString (reader.GetTypeDefinition ((TypeDefinitionHandle)handle).Name),
+			HandleKind.TypeReference => reader.GetString (reader.GetTypeReference ((TypeReferenceHandle)handle).Name),
+			_ => throw new InvalidOperationException ($"Unexpected type handle kind: {handle.Kind}"),
+		};
 	}
 
 	static string GetTypeMapAssemblyTargetName (MetadataReader reader, CustomAttribute attr)
@@ -290,7 +306,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		// Both modes should have assembly target attributes
 		var targetAttrs = GetTypeMapAssemblyTargetAttributes (reader);
-		Assert.Equal (3, targetAttrs.Count);
+		Assert.Equal (4, targetAttrs.Count);
 	}
 
 	[Fact]
