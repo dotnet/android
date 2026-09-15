@@ -376,6 +376,86 @@ namespace Java.InteropTests
 			}
 		}
 
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_ICollectionInt32 ()
+		{
+			using (var source = new JavaList ()) {
+				source.Add (1);
+				source.Add (2);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (ICollection<int>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var convertedType = converted.GetType ();
+					Assert.AreEqual (typeof (JavaCollection<>), convertedType.GetGenericTypeDefinition ());
+					CollectionAssert.AreEqual (new [] { typeof (int) }, convertedType.GetGenericArguments ());
+
+					var collection = (ICollection<int>) converted;
+					CollectionAssert.AreEqual (new [] { 1, 2 }, collection);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_ICollectionNullableInt64 ()
+		{
+			using (var source = new JavaList ()) {
+				source.Add (100L);
+				AddNullToJavaList (source);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (ICollection<long?>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var convertedType = converted.GetType ();
+					Assert.AreEqual (typeof (JavaCollection<>), convertedType.GetGenericTypeDefinition ());
+					CollectionAssert.AreEqual (new [] { typeof (long?) }, convertedType.GetGenericArguments ());
+
+					var collection = (ICollection<long?>) converted;
+					CollectionAssert.AreEqual (new long? [] { 100L, null }, collection);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_JavaCollectionByte ()
+		{
+			using (var source = new JavaList ()) {
+				source.Add ((sbyte) 1);
+				source.Add (unchecked ((sbyte) 200));
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (JavaCollection<byte>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var collection = (JavaCollection<byte>) converted;
+					CollectionAssert.AreEqual (new byte [] { 1, 200 }, collection);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_JavaCollectionNullableDouble ()
+		{
+			using (var source = new JavaList ()) {
+				source.Add (1.5);
+				AddNullToJavaList (source);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (JavaCollection<double?>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var collection = (JavaCollection<double?>) converted;
+					CollectionAssert.AreEqual (new double? [] { 1.5, null }, collection);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
 		// Keep the expected wrapper types open so NativeAOT must construct the closed reference-type
 		// wrappers through SafeJavaCollectionFactory's rooted canonical templates.
 		[TestCase (typeof (IList<string>), typeof (JavaList<>), false)]
@@ -435,18 +515,20 @@ namespace Java.InteropTests
 
 		[TestCase (typeof (JavaList<DateTime>))]
 		[TestCase (typeof (JavaList<UnsupportedValueType>))]
+		[TestCase (typeof (JavaCollection<DateTime>))]
+		[TestCase (typeof (JavaCollection<UnsupportedValueType>))]
 		[Category ("NativeAOTTrimmable")]
 		public void FromJniHandle_CoreClrConcreteUnsupportedValueTypeUsesReflection (Type targetType)
 		{
 			if (Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime) {
-				Assert.Ignore ("NativeAOT cannot reflectively activate arbitrary closed generic JavaList<T> types.");
+				Assert.Ignore ("NativeAOT cannot reflectively activate arbitrary closed generic Java collection types.");
 			}
 
 			using (var source = new JavaList ()) {
 				var converted = InvokeJavaConvertFromJniHandle (targetType, source.Handle, JniHandleOwnership.DoNotTransfer);
 				try {
 					Assert.IsTrue (targetType.IsInstanceOfType (converted));
-					Assert.AreEqual (typeof (JavaList<>), converted.GetType ().GetGenericTypeDefinition ());
+					Assert.AreEqual (targetType.GetGenericTypeDefinition (), converted.GetType ().GetGenericTypeDefinition ());
 				} finally {
 					(converted as IDisposable)?.Dispose ();
 				}
