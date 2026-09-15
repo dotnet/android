@@ -109,6 +109,7 @@ using Android;
 					__reply.ReadList (list, (global::Java.Lang.ClassLoader) null);
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -129,6 +130,7 @@ using Android;
 					__reply.ReadMap (m, (global::Java.Lang.ClassLoader) null);
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
