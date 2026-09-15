@@ -16,7 +16,7 @@ abstract class ValueTypeFactory
 	// NativeAOT's MakeGenericType() and MakeArrayType() paths use canonical templates.
 	// Reference types collapse to __Canon, but value types stay value-specific. This map
 	// intentionally roots each primitive/nullable value shape through direct typeof(T), typeof(T[]),
-	// new T[length], and Java collection wrapper constructor references.
+	// new T[length], and mixed Java dictionary wrapper constructor references.
 	// `byte` is included alongside `sbyte` (both marshal to java.lang.Byte bitwise) so that
 	// byte-element collections keep working on the trimmable path, matching the reflection paths.
 	internal static readonly Dictionary<Type, ValueTypeFactory> PrimitiveTypeFactories = new () {
@@ -46,8 +46,6 @@ abstract class ValueTypeFactory
 
 	public abstract Array CreateArray (int length);
 
-	internal abstract ICollection CreateCollection (IntPtr handle, JniHandleOwnership transfer);
-
 	internal abstract IDictionary CreateDictionaryWithReferenceKey (Type keyType, IntPtr handle, JniHandleOwnership transfer);
 
 	internal abstract IDictionary CreateDictionaryWithReferenceValue (Type valueType, IntPtr handle, JniHandleOwnership transfer);
@@ -66,11 +64,6 @@ sealed class ValueTypeFactory<[DynamicallyAccessedMembers (SafeJavaCollectionFac
 	public override Array CreateArray (int length)
 	{
 		return new T [length];
-	}
-
-	internal override ICollection CreateCollection (IntPtr handle, JniHandleOwnership transfer)
-	{
-		return new JavaCollection<T> (handle, transfer);
 	}
 
 	internal override IDictionary CreateDictionaryWithReferenceKey (Type keyType, IntPtr handle, JniHandleOwnership transfer)
