@@ -31,8 +31,10 @@ namespace Java.Interop;
 /// <c>IJavaPeerable</c> rooting branch in the same method;</description></item>
 /// <item><description>primitive/nullable value-type list arguments go through <see cref="ValueTypeListFactory"/>,
 /// whose conditional typemap entries root only requested exact instantiations;</description></item>
-/// <item><description>primitive/nullable value-type collection and mixed dictionary arguments go through
-/// <see cref="ValueTypeFactory"/>, which roots the exact instantiation with a direct <c>new</c>;</description></item>
+/// <item><description>primitive/nullable value-type collection arguments go through <see cref="ValueTypeCollectionFactory"/>,
+/// whose conditional typemap entries root only requested exact instantiations;</description></item>
+/// <item><description>primitive/nullable mixed dictionary arguments go through <see cref="ValueTypeFactory"/>,
+/// which roots the exact canonical template through a concrete exemplar;</description></item>
 /// <item><description>other value types use the corresponding untyped collection wrapper because
 /// their exact generic instantiations are not rooted.</description></item>
 /// </list>
@@ -80,11 +82,9 @@ static class SafeJavaCollectionFactory
 				if (genericDefinition == typeof (ICollection<>) || genericDefinition == typeof (JavaCollection<>)) {
 					var elementType = arguments [0];
 					if (elementType.IsValueType) {
-						if (!ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (elementType, out var collectionFactory)) {
+						if (!ValueTypeCollectionFactory.TryGetFromJniHandleConverter (targetType, out converter)) {
 							converter = GetUntypedFromJniHandleConverter (genericDefinition);
-							return true;
 						}
-						converter = (handle, transfer) => handle == IntPtr.Zero ? null : collectionFactory.CreateCollection (handle, transfer);
 						return true;
 					}
 					converter = (handle, transfer) => CreateReferenceCollectionFromJniHandle (elementType, handle, transfer);
@@ -173,7 +173,7 @@ static class SafeJavaCollectionFactory
 
 	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
 		Justification = "MakeGenericType () and Activator.CreateInstance () are annotated because arbitrary constructed generics can lack a runtime template. " +
-			"elementType is always a reference type here (value types are diverted to ValueTypeFactory above), so JavaCollection<elementType> canonicalizes to the " +
+			"elementType is always a reference type here (value types are diverted to ValueTypeCollectionFactory above), so JavaCollection<elementType> canonicalizes to the " +
 			"JavaCollection<__Canon> template whose activation constructor is rooted by the direct JavaCollection<IJavaPeerable> construction in the other branch.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2071:MakeGenericType",
 		Justification = "IL2071 fires because MakeGenericType () cannot statically prove the runtime elementType satisfies the DynamicallyAccessedMembers(Constructors) " +
