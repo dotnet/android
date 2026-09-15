@@ -57,6 +57,71 @@ public class CachedMavenRepositoryTests
 	}
 
 	[Test]
+	public void TryGetFilePath_FailedDownloadDoesNotPopulateCache ()
+	{
+		var artifact = new Artifact ("com.example", "lib", "1.0.0");
+		var content = new byte [] { 1, 2, 3 };
+		var inner = new FlakyRepository ("central", content);
+		var cache = new CachedMavenRepository (cache_dir, inner);
+		var path = cache.GetArtifactFilePath (artifact, "lib-1.0.0.jar");
+		var directory = Path.GetDirectoryName (path);
+		if (directory is null)
+			throw new InvalidOperationException ($"Could not determine the directory for '{path}'.");
+
+		Assert.Throws<IOException> (() => cache.TryGetFilePath (artifact, "lib-1.0.0.jar", out _));
+		Assert.IsFalse (File.Exists (path), "A failed download must not populate the final cache path.");
+		CollectionAssert.IsEmpty (Directory.GetFiles (directory), "A failed download must clean up its temporary file.");
+
+		Assert.IsTrue (cache.TryGetFilePath (artifact, "lib-1.0.0.jar", out var actual));
+		Assert.AreEqual (path, actual);
+		CollectionAssert.AreEqual (content, File.ReadAllBytes (path));
+		Assert.AreEqual (2, inner.CallCount);
+	}
+
+	[Test]
+	public async Task GetFilePathAsync_FailedDownloadDoesNotPopulateCache ()
+	{
+		var artifact = new Artifact ("com.example", "lib", "1.0.0");
+		var content = new byte [] { 1, 2, 3 };
+		var inner = new FlakyRepository ("central", content);
+		var cache = new CachedMavenRepository (cache_dir, inner);
+		var path = cache.GetArtifactFilePath (artifact, "lib-1.0.0.jar");
+		var directory = Path.GetDirectoryName (path);
+		if (directory is null)
+			throw new InvalidOperationException ($"Could not determine the directory for '{path}'.");
+
+		Assert.ThrowsAsync<IOException> (async () =>
+			await cache.GetFilePathAsync (artifact, "lib-1.0.0.jar", CancellationToken.None));
+		Assert.IsFalse (File.Exists (path), "A failed download must not populate the final cache path.");
+		CollectionAssert.IsEmpty (Directory.GetFiles (directory), "A failed download must clean up its temporary file.");
+
+		var actual = await cache.GetFilePathAsync (artifact, "lib-1.0.0.jar", CancellationToken.None);
+
+		Assert.AreEqual (path, actual);
+		CollectionAssert.AreEqual (content, File.ReadAllBytes (path));
+		Assert.AreEqual (2, inner.CallCount);
+	}
+
+	[Test]
+	public async Task GetFilePathAsync_ConcurrentPublisherUsesCompletedFile ()
+	{
+		var artifact = new Artifact ("com.example", "lib", "1.0.0");
+		var content = new byte [] { 1, 2, 3 };
+		var path = Path.GetFullPath (Path.Combine (cache_dir, "central", "com.example", "lib", "1.0.0", "lib-1.0.0.jar"));
+		var directory = Path.GetDirectoryName (path);
+		if (directory is null)
+			throw new InvalidOperationException ($"Could not determine the directory for '{path}'.");
+		var inner = new StubRepository ("central", artifact, "lib-1.0.0.jar", () => new PublishingStream (path, content));
+		var cache = new CachedMavenRepository (cache_dir, inner);
+
+		var actual = await cache.GetFilePathAsync (artifact, "lib-1.0.0.jar", CancellationToken.None);
+
+		Assert.AreEqual (path, actual);
+		CollectionAssert.AreEqual (content, File.ReadAllBytes (path));
+		CollectionAssert.AreEqual (new [] { path }, Directory.GetFiles (directory));
+	}
+
+	[Test]
 	public void GetArtifactFilePath_RelativeFilename_Throws ()
 	{
 		var artifact = new Artifact ("com.example", "lib", "1.0.0");
@@ -142,14 +207,19 @@ public class CachedMavenRepositoryTests
 	{
 		readonly Artifact expected;
 		readonly string expected_filename;
-		readonly byte [] content;
+		readonly Func<Stream> stream_factory;
 
 		public StubRepository (string name, Artifact expected, string filename, byte [] content)
+			: this (name, expected, filename, () => new MemoryStream (content))
+		{
+		}
+
+		public StubRepository (string name, Artifact expected, string filename, Func<Stream> streamFactory)
 		{
 			Name = name;
 			this.expected = expected;
 			this.expected_filename = filename;
-			this.content = content;
+			stream_factory = streamFactory;
 		}
 
 		public string Name { get; }
@@ -157,7 +227,7 @@ public class CachedMavenRepositoryTests
 		public bool TryGetFile (Artifact artifact, string filename, [NotNullWhen (true)] out Stream? stream)
 		{
 			if (artifact.GroupId == expected.GroupId && artifact.Id == expected.Id && artifact.Version == expected.Version && filename == expected_filename) {
-				stream = new MemoryStream (content);
+				stream = stream_factory ();
 				return true;
 			}
 			stream = null;
@@ -180,6 +250,62 @@ public class CachedMavenRepositoryTests
 		{
 			CallCount++;
 			throw new InvalidOperationException ("Inner repository should not be consulted when the resolved path escapes the cache directory.");
+		}
+	}
+
+	sealed class FlakyRepository : IMavenRepository
+	{
+		readonly byte [] content;
+
+		public FlakyRepository (string name, byte [] content)
+		{
+			Name = name;
+			this.content = content;
+		}
+
+		public string Name { get; }
+
+		public int CallCount { get; private set; }
+
+		public bool TryGetFile (Artifact artifact, string filename, [NotNullWhen (true)] out Stream? stream)
+		{
+			CallCount++;
+			stream = CallCount == 1 ? new FaultingStream () : new MemoryStream (content);
+			return true;
+		}
+	}
+
+	sealed class FaultingStream : MemoryStream
+	{
+		public override void CopyTo (Stream destination, int bufferSize)
+		{
+			destination.WriteByte (1);
+			throw new IOException ("Simulated interrupted Maven download.");
+		}
+
+		public override async Task CopyToAsync (Stream destination, int bufferSize, CancellationToken cancellationToken)
+		{
+			await destination.WriteAsync (new byte [] { 1 }, 0, 1, cancellationToken);
+			throw new IOException ("Simulated interrupted Maven download.");
+		}
+	}
+
+	sealed class PublishingStream : MemoryStream
+	{
+		readonly string path;
+		readonly byte [] content;
+
+		public PublishingStream (string path, byte [] content)
+			: base (content)
+		{
+			this.path = path;
+			this.content = content;
+		}
+
+		public override async Task CopyToAsync (Stream destination, int bufferSize, CancellationToken cancellationToken)
+		{
+			await base.CopyToAsync (destination, bufferSize, cancellationToken);
+			File.WriteAllBytes (path, content);
 		}
 	}
 }

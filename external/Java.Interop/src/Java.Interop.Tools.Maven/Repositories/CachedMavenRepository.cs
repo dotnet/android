@@ -48,11 +48,21 @@ public class CachedMavenRepository : IMavenRepository
 		}
 
 		if (repository.TryGetFile (artifact, filename, out var repo_stream)) {
-			Directory.CreateDirectory (GetArtifactDirectory (artifact));
+			var directory = GetArtifactDirectory (artifact);
+			Directory.CreateDirectory (directory);
+			var temporary_file = Path.Combine (directory, Path.GetRandomFileName ());
 
-			using (var sw = File.Create (file))
-			using (repo_stream)
-				repo_stream.CopyTo (sw);
+			try {
+				using (var sw = File.Create (temporary_file))
+				using (repo_stream)
+					repo_stream.CopyTo (sw);
+
+				PublishTemporaryFile (temporary_file, file);
+			} catch (Exception ex) {
+				DeleteTemporaryFileAfterFailure (temporary_file, ex);
+				throw;
+			}
+			File.Delete (temporary_file);
 
 			path = file;
 			return true;
@@ -69,17 +79,44 @@ public class CachedMavenRepository : IMavenRepository
 			return file;
 
 		if (repository.TryGetFile (artifact, filename, out var repo_stream)) {
-			Directory.CreateDirectory (GetArtifactDirectory (artifact));
+			var directory = GetArtifactDirectory (artifact);
+			Directory.CreateDirectory (directory);
+			var temporary_file = Path.Combine (directory, Path.GetRandomFileName ());
 
-			using (var sw = File.Create (file))
-			using (repo_stream)
-				await repo_stream.CopyToAsync (sw, 81920, cancellationToken);
+			try {
+				using (var sw = File.Create (temporary_file))
+				using (repo_stream)
+					await repo_stream.CopyToAsync (sw, 81920, cancellationToken);
 
+				PublishTemporaryFile (temporary_file, file);
+			} catch (Exception ex) {
+				DeleteTemporaryFileAfterFailure (temporary_file, ex);
+				throw;
+			}
+			File.Delete (temporary_file);
 
 			return file;
 		}
 
 		return null;
+	}
+
+	static void PublishTemporaryFile (string temporaryFile, string file)
+	{
+		try {
+			File.Move (temporaryFile, file);
+		} catch (IOException) when (File.Exists (file)) {
+			// Another process completed the same artifact download first.
+		}
+	}
+
+	static void DeleteTemporaryFileAfterFailure (string temporaryFile, Exception failure)
+	{
+		try {
+			File.Delete (temporaryFile);
+		} catch (Exception cleanupException) when (cleanupException is IOException || cleanupException is UnauthorizedAccessException) {
+			failure.Data ["MavenCacheTemporaryFileCleanupException"] = cleanupException;
+		}
 	}
 
 	/// <summary>
