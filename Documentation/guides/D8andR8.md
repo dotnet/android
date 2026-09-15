@@ -93,22 +93,22 @@ Usage: r8 [options] <input-files>
 
 In other words, what is currently happening *before* we introduce D8/R8 support?
 
-1. The [Javac](https://github.com/xamarin/xamarin-android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/Javac.cs)
+1. The [Javac](https://github.com/dotnet/android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/Javac.cs)
    MSBuild task compiles `*.java` files to a `classes.zip` file.
-2. The [Desugar](https://github.com/xamarin/xamarin-android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/Desugar.cs)
+2. The [Desugar](https://github.com/dotnet/android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/Desugar.cs)
    MSBuild task "desugars" using `desugar_deploy.jar` if
    `$(AndroidEnableDesugar)` is `True`.
-3. The [Proguard](https://github.com/xamarin/xamarin-android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/Proguard.cs)
+3. The [Proguard](https://github.com/dotnet/android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/Proguard.cs)
    MSBuild task shrinks the compiled Java code if
    `$(AndroidEnableProguard)` is `True`. Developers may also supply
    custom proguard configuration files via `ProguardConfiguration`
    build items.
-4. The [CreateMultiDexMainDexClassList](https://github.com/xamarin/xamarin-android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/CreateMultiDexMainDexClassList.cs)
+4. The [CreateMultiDexMainDexClassList](https://github.com/dotnet/android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/CreateMultiDexMainDexClassList.cs)
    MSBuild task runs `proguard` to generate a final, combined
    `multidex.keep` file if `$(AndroidEnableMultiDex)` is `True`.
    Developers can also supply custom `multidex.keep` files via
    `MultiDexMainDexList` build items.
-5. The [CompileToDalvik](https://github.com/xamarin/xamarin-android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/CompileToDalvik.cs)
+5. The [CompileToDalvik](https://github.com/dotnet/android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/CompileToDalvik.cs)
    MSBuild task runs `dx.jar` to generate a final `classes.dex` file
    in `$(IntermediateOutputPath)android\bin`. If `multidex` is
    enabled, a `classes2.dex` (and potentially more) are also generated
@@ -118,7 +118,7 @@ In other words, what is currently happening *before* we introduce D8/R8 support?
 
 .NET for Android now has two new MSBuild tasks: `<R8/>` and `<D8/>`.
 
-1. The [Javac](https://github.com/xamarin/xamarin-android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/Javac.cs)
+1. The [Javac](https://github.com/dotnet/android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/Javac.cs)
    MSBuild task will remain unchanged.
 2. `D8` will run if `$(AndroidEnableMultiDex)` is `False`,
    `$(AndroidLinkTool)` is not `r8`, and "desugar" by default.
@@ -264,7 +264,7 @@ Some of my thoughts:
 
 [dex]: https://source.android.com/devices/tech/dalvik/dalvik-bytecode
 [multidex]: https://developer.android.com/studio/build/multidex
-[debug_symbols]: https://github.com/xamarin/xamarin-android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.targets#L315-L336
+[debug_symbols]: https://github.com/dotnet/android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.targets#L315-L336
 [depot_tools]: http://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html
 [powershell_script]: https://github.com/jonathanpeppers/HelloWorld/blob/39e2854f6ca39c0941fb8bd6f2a16d8b7663003e/build.ps1
-[d8andr8_zip]: https://github.com/xamarin/xamarin-android/files/2470385/d8andr8.zip
+[d8andr8_zip]: https://github.com/dotnet/android/files/2470385/d8andr8.zip

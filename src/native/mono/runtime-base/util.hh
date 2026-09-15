@@ -397,7 +397,7 @@ namespace xamarin::android
 			}
 
 			// It's likely that we got a nullptr because the current thread isn't attached (see
-			// https://github.com/xamarin/xamarin-android/issues/6211), so we need to attach the thread to the root
+			// https://github.com/dotnet/android/issues/6211), so we need to attach the thread to the root
 			// domain
 			ret = mono_get_root_domain ();
 			if (attach_thread_if_needed) {

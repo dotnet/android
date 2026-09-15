@@ -115,7 +115,7 @@ not be supported:
 ```
 
 [rids]: https://docs.microsoft.com/dotnet/core/rid-catalog
-[abet-sys]: https://github.com/xamarin/xamarin-android/issues/4127
+[abet-sys]: https://github.com/dotnet/android/issues/4127
 
 ## Default file inclusion
 
