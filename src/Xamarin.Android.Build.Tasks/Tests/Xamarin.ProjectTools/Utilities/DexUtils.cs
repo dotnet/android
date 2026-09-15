@@ -74,7 +74,7 @@ namespace Xamarin.ProjectTools
 
 		public static bool ContainsClass (string className, IEnumerable<string> dexDump)
 		{
-			return dexDump.Any (line => line.Contains ("Class descriptor") && line.Contains (className));
+			return dexDump.Any (line => ContainsDexDumpValue (line, "Class descriptor", className));
 		}
 
 		public static IReadOnlyList<string> GetClassDescriptors (string dexFile)

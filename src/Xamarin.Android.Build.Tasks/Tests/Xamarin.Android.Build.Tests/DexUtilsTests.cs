@@ -6,6 +6,21 @@ namespace Xamarin.Android.Build.Tests;
 [TestFixture]
 public class DexUtilsTests
 {
+	[TestCase ("Class descriptor", "Lexample/Peer$-CC;", true)]
+	[TestCase ("Class descriptor", "Lexample/Peer$-CC", false)]
+	[TestCase ("Class descriptor", "Peer$-CC;", false)]
+	[TestCase ("Class descriptor", "Lexample/Peer$-CC$Nested;", false)]
+	[TestCase ("Other Class descriptor", "Lexample/Peer$-CC;", false)]
+	[TestCase ("Class descriptor extension", "Lexample/Peer$-CC;", false)]
+	public void ContainsClassMatchesExactFieldAndDescriptor (string field, string className, bool expected)
+	{
+		var dexDump = new [] {
+			$"\t{field}  : 'Lexample/Peer$-CC;'  \r",
+		};
+
+		Assert.AreEqual (expected, DexUtils.ContainsClass (className, dexDump));
+	}
+
 	[Test]
 	public void ContainsClassWithMethodScopesSignatureToMethod ()
 	{
