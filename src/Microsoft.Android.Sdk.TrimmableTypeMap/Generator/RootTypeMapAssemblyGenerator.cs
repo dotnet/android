@@ -134,7 +134,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		} else {
 			EmitPerAssemblyUniverseAssemblyTargetAttributes (pe, perAssemblyTypeMapNames);
 		}
-		EmitBuiltInCollectionUniverseAssemblyTargetAttributes (pe);
+		EmitBuiltInUniverseAssemblyTargetAttributes (pe);
 
 		// Emit [assembly: IgnoresAccessChecksTo("...")] so TypeMapLoader.Initialize() can access
 		// internal types (TrimmableTypeMap and friends in Mono.Android, and private anchors
@@ -172,16 +172,17 @@ public sealed class RootTypeMapAssemblyGenerator
 		}
 	}
 
-	static void EmitBuiltInCollectionUniverseAssemblyTargetAttributes (PEAssemblyBuilder pe)
+	static void EmitBuiltInUniverseAssemblyTargetAttributes (PEAssemblyBuilder pe)
 	{
 		var openAttrRef = GetTypeMapAssemblyTargetAttributeRef (pe);
-		EmitBuiltInCollectionUniverseAssemblyTargetAttribute (pe, openAttrRef, "JavaDictionary");
-		EmitBuiltInCollectionUniverseAssemblyTargetAttribute (pe, openAttrRef, "JavaList");
-		EmitBuiltInCollectionUniverseAssemblyTargetAttribute (pe, openAttrRef, "JavaCollection");
-		EmitBuiltInCollectionUniverseAssemblyTargetAttribute (pe, openAttrRef, "JavaSet");
+		EmitBuiltInUniverseAssemblyTargetAttribute (pe, openAttrRef, "JavaDictionary");
+		EmitBuiltInUniverseAssemblyTargetAttribute (pe, openAttrRef, "JavaList");
+		EmitBuiltInUniverseAssemblyTargetAttribute (pe, openAttrRef, "JavaCollection");
+		EmitBuiltInUniverseAssemblyTargetAttribute (pe, openAttrRef, "JavaSet");
+		EmitBuiltInUniverseAssemblyTargetAttribute (pe, openAttrRef, "JavaArray");
 	}
 
-	static void EmitBuiltInCollectionUniverseAssemblyTargetAttribute (PEAssemblyBuilder pe, EntityHandle openAttrRef, string typeName)
+	static void EmitBuiltInUniverseAssemblyTargetAttribute (PEAssemblyBuilder pe, EntityHandle openAttrRef, string typeName)
 	{
 		var collectionRef = pe.Metadata.AddTypeReference (pe.MonoAndroidRef,
 			pe.Metadata.GetOrAddString ("Android.Runtime"),

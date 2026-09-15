@@ -12,8 +12,9 @@ static class SafeArrayFactory
 	// and StandardCanonicalizationAlgorithm canonicalizes reference DefTypes and arrays to __Canon.
 	//
 	// Value-type element arrays are different: value types do not collapse to __Canon, so an exact
-	// vector EEType/template must be available. ValueTypeFactory roots typeof(T[]), new T[length],
-	// and the matching Java collection wrapper instantiations in one shared primitive map.
+	// vector EEType/template must be available. ValueTypeFactory roots only the exact typeof(T[]) and
+	// new T[length] shapes used here; Android.Runtime.JavaArray<T> wrappers use their own conditional
+	// typemap universe.
 
 	internal static bool TryGetArrayType (Type elementType, int rank, [NotNullWhen (true)] out Type? arrayType)
 	{

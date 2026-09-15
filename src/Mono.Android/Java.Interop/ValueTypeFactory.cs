@@ -16,7 +16,8 @@ abstract class ValueTypeFactory
 	// NativeAOT's MakeGenericType() and MakeArrayType() paths use canonical templates.
 	// Reference types collapse to __Canon, but value types stay value-specific. This map
 	// intentionally roots each primitive/nullable value shape through direct typeof(T), typeof(T[]),
-	// new T[length], and mixed Java dictionary wrapper constructor references.
+	// new T[length], and mixed Java dictionary wrapper constructor references. Android.Runtime.JavaArray<T>
+	// wrappers are rooted separately and conditionally by ValueTypeJavaArrayFactory.
 	// `byte` is included alongside `sbyte` (both marshal to java.lang.Byte bitwise) so that
 	// byte-element collections keep working on the trimmable path, matching the reflection paths.
 	internal static readonly Dictionary<Type, ValueTypeFactory> PrimitiveTypeFactories = new () {
