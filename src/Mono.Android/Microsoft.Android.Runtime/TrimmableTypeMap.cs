@@ -427,12 +427,12 @@ public class TrimmableTypeMap
 		Type? targetType = null)
 	{
 		if (IsClosedJavaArray (targetType)) {
-			IJavaPeerable? array;
-			if (ValueTypeJavaArrayFactory.TryGetFromJniHandleConverter (targetType, out var arrayConverter)) {
-				array = arrayConverter (handle, ImplicitPeerOwnership);
-			} else {
-				array = ActivateUsingReflection (targetType, handle, ImplicitPeerOwnership);
+			if (RuntimeFeature.IsNativeAotRuntime) {
+				if (TryCreateNativeAotJavaArray (targetType, handle, ImplicitPeerOwnership, out var nativeAotArray)) {
+					return RegisterCreatedPeer (nativeAotArray);
+				}
 			}
+			var array = ActivateUsingReflection (targetType, handle, ImplicitPeerOwnership);
 			return RegisterCreatedPeer (array);
 		}
 
@@ -496,6 +496,23 @@ public class TrimmableTypeMap
 		}
 
 		return (IJavaPeerable) ctor.Invoke ([handle, transfer]);
+	}
+
+	static bool TryCreateNativeAotJavaArray (
+		Type targetType,
+		IntPtr handle,
+		JniHandleOwnership transfer,
+		[NotNullWhen (true)] out IJavaPeerable? peer)
+	{
+		var elementType = targetType.GetGenericArguments () [0];
+		if (!elementType.IsValueType ||
+				!ValueTypeJavaArrayFactory.TryGetFromJniHandleConverter (targetType, out var arrayConverter)) {
+			peer = null;
+			return false;
+		}
+
+		peer = arrayConverter (handle, transfer);
+		return peer != null;
 	}
 
 	static bool TryCreateNativeAotSet (

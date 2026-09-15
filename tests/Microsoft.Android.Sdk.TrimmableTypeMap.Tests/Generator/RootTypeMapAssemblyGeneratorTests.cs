@@ -111,7 +111,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_EmptyList_ProducesValueTypeCollectionTargetAttributes ()
+	public void Generate_EmptyList_ProducesBuiltInValueTypeUniverseTargetAttributes ()
 	{
 		using var stream = GenerateRootAssembly ([]);
 		using var pe = new PEReader (stream);
@@ -127,7 +127,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_CoreClr_OmitsBuiltInValueTypeCollectionTargetAttributes ()
+	public void Generate_CoreClr_OmitsBuiltInValueTypeUniverseTargetAttributes ()
 	{
 		using var stream = GenerateRootAssembly (["_App.TypeMap"], includeBuiltInValueTypeUniverses: false);
 		using var pe = new PEReader (stream);

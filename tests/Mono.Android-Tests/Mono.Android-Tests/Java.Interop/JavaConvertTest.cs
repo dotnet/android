@@ -272,6 +272,28 @@ namespace Java.InteropTests
 		[Test]
 		[Category ("NativeAOTTrimmable")]
 		[Category ("JavaArrayTrimmable")]
+		public void FromJniHandle_CoreClrJavaArrayUnsupportedValueTypeUsesReflection ()
+		{
+			if (Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime) {
+				Assert.Ignore ("NativeAOT cannot reflectively activate arbitrary closed generic JavaArray types.");
+			}
+
+			var handle = JNIEnv.NewObjectArray (0, Java.Lang.Class.Object);
+			var converted = InvokeJavaConvertFromJniHandle (
+				typeof (Android.Runtime.JavaArray<UnsupportedValueType>),
+				handle,
+				JniHandleOwnership.TransferLocalRef);
+			try {
+				var array = (Android.Runtime.JavaArray<UnsupportedValueType>) converted;
+				Assert.AreEqual (0, array.Count);
+			} finally {
+				(converted as IDisposable)?.Dispose ();
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		[Category ("JavaArrayTrimmable")]
 		public void ValueManagerConvertsPrimitiveArrayToJavaInteropWrapper ()
 		{
 			var reference = new JniObjectReference (JNIEnv.NewArray (new [] { 1, 2, 3 }), JniObjectReferenceType.Local);
