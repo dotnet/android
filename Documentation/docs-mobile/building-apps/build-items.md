@@ -465,6 +465,11 @@ included from the final package. The default values are as follows
 </ItemGroup>
 ```
 
+Build-time Java archive entries such as nested `.jar` files, Kotlin Multiplatform
+compiler metadata, `R.txt`, `proguard.txt`, and embedded AAR or shrinker metadata
+are excluded from application packages. Use `AndroidPackagingOptionsInclude` to
+package one of these entries intentionally.
+
 Items can use file blob characters for wildcards such as `*` and `?`.
 However these Items MUST use URL encoding or '$([MSBuild]::Escape(''))'.
 This is so MSBuild does not try to interpret them as actual file wildcards.

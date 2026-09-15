@@ -16,6 +16,8 @@ namespace Xamarin.Android.Tasks;
 /// </summary>
 public class CollectJarContentFilesForArchive : AndroidTask
 {
+	const string KotlinProjectStructureMetadata = "META-INF/kotlin-project-structure-metadata.json";
+
 	public override string TaskPrefix => "CJC";
 
 	public string AndroidPackageFormat { get; set; } = "";
@@ -72,6 +74,7 @@ public class CollectJarContentFilesForArchive : AndroidTask
 		foreach (var jarFile in jarFilePaths) {
 			using (var stream = File.OpenRead (jarFile))
 			using (var jar = ZipArchive.Open (stream)) {
+				bool isKotlinMultiplatformMetadataArchive = jar.ContainsEntry (KotlinProjectStructureMetadata);
 				foreach (var jarItem in jar) {
 					if (jarItem.IsDirectory)
 						continue;
@@ -93,6 +96,11 @@ public class CollectJarContentFilesForArchive : AndroidTask
 					}
 
 					if (!forceInclude) {
+						if (IsBuildTimeOnlyEntry (name, isKotlinMultiplatformMetadataArchive)) {
+							Log.LogDebugMessage ($"Ignoring build-time jar entry '{name}' from '{Path.GetFileName (jarFile)}'.");
+							continue;
+						}
+
 						foreach (var pattern in excludePatterns) {
 							if (pattern.IsMatch (path)) {
 								Log.LogDebugMessage ($"Ignoring jar entry '{name}' from '{Path.GetFileName (jarFile)}'. Filename matched the exclude pattern '{pattern}'.");
@@ -119,6 +127,33 @@ public class CollectJarContentFilesForArchive : AndroidTask
 		FilesToAddToArchive = files.ToArray ();
 
 		return !Log.HasLoggedErrors;
+	}
+
+	static bool IsBuildTimeOnlyEntry (string name, bool isKotlinMultiplatformMetadataArchive)
+	{
+		var normalizedName = name.Replace ('\\', '/');
+
+		if (isKotlinMultiplatformMetadataArchive &&
+				(normalizedName.Equals (KotlinProjectStructureMetadata, StringComparison.OrdinalIgnoreCase) ||
+				!normalizedName.StartsWith ("META-INF/", StringComparison.OrdinalIgnoreCase))) {
+			return true;
+		}
+
+		var extension = Path.GetExtension (normalizedName);
+		if (extension.Equals (".jar", StringComparison.OrdinalIgnoreCase) ||
+				extension.Equals (".knm", StringComparison.OrdinalIgnoreCase)) {
+			return true;
+		}
+
+		if (normalizedName.Equals ("R.txt", StringComparison.OrdinalIgnoreCase) ||
+				normalizedName.Equals ("proguard.txt", StringComparison.OrdinalIgnoreCase)) {
+			return true;
+		}
+
+		return normalizedName.Equals ("META-INF/com/android/build/gradle/aar-metadata.properties", StringComparison.OrdinalIgnoreCase) ||
+			normalizedName.StartsWith ("META-INF/proguard/", StringComparison.OrdinalIgnoreCase) ||
+			normalizedName.StartsWith ("META-INF/com.android.tools/proguard/", StringComparison.OrdinalIgnoreCase) ||
+			normalizedName.StartsWith ("META-INF/com.android.tools/r8", StringComparison.OrdinalIgnoreCase);
 	}
 
 	static Regex FileGlobToRegEx (string fileGlob, RegexOptions options)
