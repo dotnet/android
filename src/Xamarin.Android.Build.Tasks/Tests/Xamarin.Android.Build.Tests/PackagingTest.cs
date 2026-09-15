@@ -865,7 +865,9 @@ public class Test
 		}
 
 		[Test]
-		public void CheckExcludedFilesAreMissing ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void CheckExcludedFilesAreMissing (
+			[Values ("apk", "aab")] string packageFormat,
+			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -875,16 +877,25 @@ public class Test
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Kotlin_StdLib_Common);
+			proj.PackageReferences.Add (KnownPackages.Xamarin_KotlinX_Coroutines_Android);
 			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				string expected = $"Ignoring jar entry 'kotlin/Error.kotlin_metadata'";
-				Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), $"Error.kotlin_metadata should have been ignored.");
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsFalse (zip.ContainsEntry ("kotlin/Error.kotlin_metadata"), "Error.kotlin_metadata should have been ignored.");
+				var archive = Path.Combine (Root, b.ProjectDirectory,
+					proj.OutputPath, $"{proj.PackageName}-Signed.{packageFormat}");
+				var prefix = packageFormat == "apk" ? "" : "base/root/";
+				var excludedFiles = new [] {
+					"kotlin/Error.kotlin_metadata",
+					"META-INF/proguard/coroutines.pro",
+					"META-INF/com.android.tools/r8/coroutines.pro",
+				};
+				using (var zip = ZipHelper.OpenZip (archive)) {
+					foreach (var excludedFile in excludedFiles) {
+						Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Ignoring jar entry '{excludedFile}'"), $"{excludedFile} should have been ignored.");
+						Assert.IsFalse (zip.ContainsEntry (prefix + excludedFile), $"{prefix + excludedFile} should have been ignored.");
+					}
 				}
 			}
 		}

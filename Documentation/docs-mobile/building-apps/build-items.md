@@ -422,7 +422,18 @@ excluded from the final package. The default values are as follows
 ```xml
 <ItemGroup>
 	<AndroidPackagingOptionsExclude Include="DebugProbesKt.bin" />
-	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin_*')" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin*'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.jar$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.knm$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)[^/]+Main/default/(manifest|linkdata/*)$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)R.txt$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)proguard.txt$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/kotlin-project-structure-metadata.json$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/proguard/*$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/com.android.tools/proguard/*$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/com.android.tools/r8/*$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/com.android.tools/r8-*/*$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/com/android/build/gradle/aar-metadata.properties$'))" />
 </ItemGroup>
 ```
 
@@ -464,11 +475,6 @@ included from the final package. The default values are as follows
 	<AndroidPackagingOptionsInclude Include="$([MSBuild]::Escape('*.kotlin_builtins')" />
 </ItemGroup>
 ```
-
-Build-time Java archive entries such as nested `.jar` files, Kotlin Multiplatform
-compiler metadata, `R.txt`, `proguard.txt`, and embedded AAR or shrinker metadata
-are excluded from application packages. Use `AndroidPackagingOptionsInclude` to
-package one of these entries intentionally.
 
 Items can use file blob characters for wildcards such as `*` and `?`.
 However these Items MUST use URL encoding or '$([MSBuild]::Escape(''))'.
