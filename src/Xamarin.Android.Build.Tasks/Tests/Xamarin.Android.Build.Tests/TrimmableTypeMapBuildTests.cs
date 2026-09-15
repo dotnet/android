@@ -2202,6 +2202,55 @@ namespace Xamarin.Android.Build.Tests {
 			AssertPostTrimR8InputsExcludeDeadFrameworkImplementor (dexFile, javaSourceDirectory, acwMapPath, proguardPrimaryPath);
 		}
 
+		[TestCase (AndroidRuntime.CoreCLR, false)]
+		[TestCase (AndroidRuntime.NativeAOT, true)]
+		public void ReleaseTrimmableTypeMap_BuiltInCollectionUniversesAreNativeAotOnly (AndroidRuntime runtime, bool expected)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				PackageName = "com.xamarin.collectionuniverses",
+				ProjectName = "CollectionUniverses",
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			proj.SetProperty ("AndroidPackageFormat", "apk");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("PublishReadyToRun", "false");
+			proj.SetProperty ("TrimMode", "full");
+
+			using var builder = CreateApkBuilder (Path.Combine ("temp", $"{TestName}_{runtime}_{Guid.NewGuid ():N}"));
+			Assert.IsTrue (builder.Build (proj), $"{runtime} build should have succeeded.");
+
+			var generatedRoot = builder.Output.GetIntermediaryPath (
+				Path.Combine ("android-arm64", "typemap", "_Microsoft.Android.TypeMaps.dll"));
+			using (var rootAssembly = AssemblyDefinition.ReadAssembly (generatedRoot)) {
+				var builtInUniverseTypes = rootAssembly.MainModule.GetTypeReferences ()
+					.Where (type => type.Namespace == "Android.Runtime" &&
+						(type.Name == "JavaDictionary" || type.Name == "JavaList" || type.Name == "JavaCollection"))
+					.Select (type => type.Name)
+					.OrderBy (name => name, StringComparer.Ordinal)
+					.ToArray ();
+				CollectionAssert.AreEqual (
+					expected ? new [] { "JavaCollection", "JavaDictionary", "JavaList" } : [],
+					builtInUniverseTypes,
+					$"{runtime} root typemap built-in collection universe edges.");
+			}
+
+			var linkedMonoAndroid = runtime == AndroidRuntime.NativeAOT
+				? builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "assets", "shrunk", "arm64-v8a", "Mono.Android.dll"))
+				: builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked", "Mono.Android.dll"));
+			foreach (var universeTypeName in new [] { "ValueTypeDictionaryFactory", "ValueTypeListFactory", "ValueTypeCollectionFactory" }) {
+				Assert.AreEqual (
+					expected,
+					AssemblyContainsTypeNameFragment (linkedMonoAndroid, universeTypeName),
+					$"{runtime} linked Mono.Android should {(expected ? "retain" : "trim")} {universeTypeName}.");
+			}
+		}
+
 		[Test]
 		public void ReleaseCoreClrTrimmableTypeMap_TrimsUnusedBindingListenerImplementors ()
 		{
@@ -2838,6 +2887,28 @@ namespace UnnamedProject {
 		{
 			foreach (var type in types) {
 				if (type.FullName == typeFullName || ContainsType (type.NestedTypes, typeFullName)) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		static bool AssemblyContainsTypeNameFragment (string assemblyPath, string typeNameFragment)
+		{
+			if (!File.Exists (assemblyPath)) {
+				return false;
+			}
+
+			using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
+			return ContainsTypeNameFragment (assembly.MainModule.Types, typeNameFragment);
+		}
+
+		static bool ContainsTypeNameFragment (IEnumerable<TypeDefinition> types, string typeNameFragment)
+		{
+			foreach (var type in types) {
+				if (type.FullName.Contains (typeNameFragment, StringComparison.Ordinal) ||
+						ContainsTypeNameFragment (type.NestedTypes, typeNameFragment)) {
 					return true;
 				}
 			}
