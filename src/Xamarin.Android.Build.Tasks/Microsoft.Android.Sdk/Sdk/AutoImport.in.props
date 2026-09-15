@@ -65,6 +65,17 @@ https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/
   <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '@DOTNET_TARGET_FRAMEWORK_VERSION@')) ">
     <AndroidPackagingOptionsExclude Include="DebugProbesKt.bin" />
     <AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin*'))" />
+    <AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.jar$'))" />
+    <AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.knm$'))" />
+    <AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)[^/]+Main/default/(manifest|linkdata/*)$'))" />
+    <AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)R.txt$'))" />
+    <AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)proguard.txt$'))" />
+    <AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/kotlin-project-structure-metadata.json$'))" />
+    <AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/proguard/*$'))" />
+    <AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/com.android.tools/proguard/*$'))" />
+    <AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/com.android.tools/r8/*$'))" />
+    <AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/com.android.tools/r8-*/*$'))" />
+    <AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/com/android/build/gradle/aar-metadata.properties$'))" />
     <AndroidPackagingOptionsInclude Include="$([MSBuild]::Escape('*.kotlin_builtins'))" />
   </ItemGroup>
 
