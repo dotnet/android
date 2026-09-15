@@ -67,5 +67,66 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[TestCase (null, "private-members", "false")]
+		[TestCase ("private-members", "private-members", "false")]
+		[TestCase ("disabled", "disabled", "false")]
+		[TestCase ("runtime-remapping", "runtime-remapping", "true")]
+		public void R8ObfuscationDefaults (string? mode, string expectedMode, string expectedRemapping)
+		{
+			var project = new XamarinAndroidApplicationProject { IsRelease = true };
+			project.SetRuntime (AndroidRuntime.CoreCLR);
+			project.SetProperty ("AndroidLinkTool", "r8");
+			project.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			if (mode != null) {
+				project.SetProperty ("AndroidR8ObfuscationMode", mode);
+			}
+			project.Imports.Add (new Import ("R8Options.targets") {
+				TextContent = () => """
+					<Project>
+					  <Target Name="ReportR8Options" DependsOnTargets="_ValidateAndroidR8ObfuscationMode">
+					    <Message Importance="High" Text="R8_OPTIONS=$(AndroidR8ObfuscationMode)|$(_AndroidR8RuntimeRemappingEnabled)" />
+					  </Target>
+					</Project>
+					""",
+			});
+			using var builder = CreateApkBuilder ();
+			builder.Target = "ReportR8Options";
+			Assert.IsTrue (builder.Build (project));
+			StringAssertEx.Contains ($"R8_OPTIONS={expectedMode}|{expectedRemapping}", builder.LastBuildOutput);
+		}
+
+		[TestCase ("AndroidR8ObfuscationMode", "experimental-rewriting", "not available in this SDK")]
+		[TestCase ("AndroidLinkTool", "d8", "AndroidLinkTool")]
+		[TestCase ("AndroidLinkTool", "", "AndroidLinkTool")]
+		[TestCase ("AndroidTypeMapImplementation", "llvm-ir", "AndroidTypeMapImplementation")]
+		[TestCase ("PublishTrimmed", "false", "PublishTrimmed")]
+		[TestCase ("_AndroidRuntime", "MonoVM", "Supported runtimes are CoreCLR and NativeAOT")]
+		public void R8ObfuscationInvalidConfiguration (string property, string value, string expectedMessage)
+		{
+			var project = new XamarinAndroidApplicationProject { IsRelease = true };
+			project.SetRuntime (AndroidRuntime.CoreCLR);
+			project.SetProperty ("RunAOTCompilation", "false");
+			project.SetProperty ("AndroidLinkTool", "r8");
+			project.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			project.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
+			project.SetProperty (property, value);
+			using var builder = CreateApkBuilder ();
+			builder.Target = "_ValidateAndroidR8ObfuscationMode";
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (project));
+			StringAssertEx.Contains ("error XA4329:", builder.LastBuildOutput);
+			StringAssertEx.Contains (expectedMessage, builder.LastBuildOutput);
+		}
+
+		[Test]
+		public void R8ObfuscationDoesNotEnableLibraries ()
+		{
+			var project = new XamarinAndroidLibraryProject ();
+			project.SetProperty ("AndroidR8ObfuscationMode", "experimental-rewriting");
+			using var builder = CreateDllBuilder ();
+			builder.Target = "_ValidateAndroidR8ObfuscationMode";
+			Assert.IsTrue (builder.Build (project), "Application obfuscation settings must not affect referenced libraries.");
+		}
+
 	}
 }

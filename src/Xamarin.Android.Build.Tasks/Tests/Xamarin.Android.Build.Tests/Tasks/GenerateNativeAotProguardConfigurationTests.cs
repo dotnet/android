@@ -9,8 +9,9 @@ namespace Xamarin.Android.Build.Tests;
 [Parallelizable (ParallelScope.Children)]
 public class GenerateNativeAotProguardConfigurationTests : BaseTest
 {
-	[Test]
-	public void Execute_UsesDgmlTypeMetadata ()
+	[TestCase (false)]
+	[TestCase (true)]
+	public void Execute_UsesDgmlTypeMetadata (bool enableObfuscation)
 	{
 		var path = Path.Combine (Root, "temp", TestName);
 		var dgmlFile = Path.Combine (path, "app.scan.dgml.xml");
@@ -47,14 +48,16 @@ public class GenerateNativeAotProguardConfigurationTests : BaseTest
 			AcwMapFile = acwMapFile,
 			OutputFile = outputFile,
 			TrimJavaCallableWrappers = true,
+			EnableObfuscation = enableObfuscation,
 		};
 
 		Assert.IsTrue (task.Execute (), "Task should succeed.");
 		var proguard = File.ReadAllText (outputFile);
-		StringAssert.Contains ("-keep class crc64a1.MainActivity { *; }", proguard);
-		StringAssert.Contains ("-keep class android.app.Activity { *; }", proguard);
-		StringAssert.Contains ("-keep class my.app.Duplicate { *; }", proguard);
-		StringAssert.Contains ("-keep class androidx.activity.result.contract.ActivityResultContracts$TakePicture { *; }", proguard);
+		var keepOption = enableObfuscation ? "-keep,allowobfuscation" : "-keep";
+		StringAssert.Contains ($"{keepOption} class crc64a1.MainActivity {{ *; }}", proguard);
+		StringAssert.Contains ($"{keepOption} class android.app.Activity {{ *; }}", proguard);
+		StringAssert.Contains ($"{keepOption} class my.app.Duplicate {{ *; }}", proguard);
+		StringAssert.Contains ($"{keepOption} class androidx.activity.result.contract.ActivityResultContracts$TakePicture {{ *; }}", proguard);
 		StringAssert.DoesNotContain ("wrong.Duplicate", proguard);
 		StringAssert.DoesNotContain ("other.Type", proguard);
 	}

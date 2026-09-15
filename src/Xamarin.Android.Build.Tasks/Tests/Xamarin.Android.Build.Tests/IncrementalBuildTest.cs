@@ -1766,6 +1766,8 @@ namespace Lib2
 			proj.SetRuntime (runtime);
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "first build should succeed");
+				var rules = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "aapt_rules.txt");
+				var rulesTimestamp = File.GetLastWriteTimeUtc (rules);
 
 				// AndroidResource change
 				proj.LayoutMain += $"{Environment.NewLine}<!--comment-->";
@@ -1781,6 +1783,22 @@ namespace Lib2
 				}
 				builder.Output.AssertTargetIsSkipped ("_CompileJava");
 				builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
+				if (runtime == AndroidRuntime.NativeAOT) {
+					Assert.AreEqual (rulesTimestamp, File.GetLastWriteTimeUtc (rules), "Unchanged AAPT rules should retain their timestamp.");
+				}
+
+				builder.BuildLogFile = "build3.log";
+				Assert.IsTrue (builder.Build (proj), "no-op build should succeed");
+				builder.Output.AssertTargetIsSkipped ("_CreateBaseApk");
+				builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
+
+				if (runtime == AndroidRuntime.NativeAOT) {
+					File.Delete (rules);
+					builder.BuildLogFile = "build4.log";
+					Assert.IsTrue (builder.Build (proj), "missing AAPT rules should be regenerated");
+					Assert.IsTrue (File.Exists (rules), "AAPT rules should exist after recovery.");
+					builder.Output.AssertTargetIsNotSkipped ("_CreateBaseApk");
+				}
 			}
 		}
 

@@ -77,6 +77,28 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void GetType_ReverseMappingPrecedesDirectResidualName ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			var signature = new JniTypeSignature ("net/dot/android/test/ResidualCollisionExisting");
+			var result = JniEnvironment.Runtime.TypeManager.GetType (signature);
+
+			Assert.AreEqual (typeof (ResidualCollisionRenamed), result);
+		}
+
+		[Test]
+		public void GetType_ReverseMappingDoesNotFallBackWhenOriginalIsMissing ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			var signature = new JniTypeSignature ("net/dot/android/test/ResidualMissingOriginalExisting");
+			var result = JniEnvironment.Runtime.TypeManager.GetType (signature);
+
+			Assert.IsNull (result);
+		}
+
+		[Test]
 		public void TryGetTargetType_MissingEntry_ReturnsFalse ()
 		{
 			AssumeTrimmableTypeMapEnabled ();
@@ -699,5 +721,20 @@ namespace Java.InteropTests
 	class TrimmableRegisteredGenericHolder<T> : Java.Lang.Object
 	{
 		public T Value { get; set; }
+	}
+
+	[Register ("net/dot/android/test/ResidualCollisionRenamed")]
+	class ResidualCollisionRenamed : Java.Lang.Object
+	{
+	}
+
+	[Register ("net/dot/android/test/ResidualCollisionExisting")]
+	class ResidualCollisionExisting : Java.Lang.Object
+	{
+	}
+
+	[Register ("net/dot/android/test/ResidualMissingOriginalExisting")]
+	class ResidualMissingOriginalExisting : Java.Lang.Object
+	{
 	}
 }
