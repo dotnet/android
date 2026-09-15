@@ -456,6 +456,81 @@ namespace Java.InteropTests
 			}
 		}
 
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_JavaSetInt32 ()
+		{
+			using (var source = new JavaSet ()) {
+				source.Add (1);
+				source.Add (2);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (JavaSet<int>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var set = (JavaSet<int>) converted;
+					CollectionAssert.AreEquivalent (new [] { 1, 2 }, set);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_JavaSetNullableDouble ()
+		{
+			using (var source = new JavaSet ()) {
+				source.Add (1.5);
+				source.Add (null);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (JavaSet<double?>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var set = (JavaSet<double?>) converted;
+					CollectionAssert.AreEquivalent (new double? [] { 1.5, null }, set);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_ICollectionInt32FromJavaSetUsesJavaCollection ()
+		{
+			using (var source = new JavaSet ()) {
+				source.Add (1);
+				source.Add (2);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (ICollection<int>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var convertedType = converted.GetType ();
+					Assert.AreEqual (typeof (JavaCollection<>), convertedType.GetGenericTypeDefinition ());
+					CollectionAssert.AreEqual (new [] { typeof (int) }, convertedType.GetGenericArguments ());
+					CollectionAssert.AreEquivalent (new [] { 1, 2 }, (ICollection<int>) converted);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		[Test]
+		public void FromJniHandle_JavaSetReferenceArgumentUsesCanonicalTemplate ()
+		{
+			using (var source = new JavaSet ()) {
+				source.Add ("one");
+				source.Add ("two");
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (JavaSet<string>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var convertedType = converted.GetType ();
+					Assert.AreEqual (typeof (JavaSet<>), convertedType.GetGenericTypeDefinition ());
+					CollectionAssert.AreEqual (new [] { typeof (string) }, convertedType.GetGenericArguments ());
+					CollectionAssert.AreEquivalent (new [] { "one", "two" }, (JavaSet<string>) converted);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
 		// Keep the expected wrapper types open so NativeAOT must construct the closed reference-type
 		// wrappers through SafeJavaCollectionFactory's rooted canonical templates.
 		[TestCase (typeof (IList<string>), typeof (JavaList<>), false)]

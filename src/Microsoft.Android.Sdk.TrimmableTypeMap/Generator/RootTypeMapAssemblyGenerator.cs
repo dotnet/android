@@ -206,6 +206,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		EmitBuiltInCollectionUniverseAssemblyTargetAttribute (pe, openAttrRef, "JavaDictionary");
 		EmitBuiltInCollectionUniverseAssemblyTargetAttribute (pe, openAttrRef, "JavaList");
 		EmitBuiltInCollectionUniverseAssemblyTargetAttribute (pe, openAttrRef, "JavaCollection");
+		EmitBuiltInCollectionUniverseAssemblyTargetAttribute (pe, openAttrRef, "JavaSet");
 	}
 
 	static void EmitBuiltInCollectionUniverseAssemblyTargetAttribute (PEAssemblyBuilder pe, EntityHandle openAttrRef, string typeName)

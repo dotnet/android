@@ -429,7 +429,12 @@ public class TrimmableTypeMap
 
 		IJavaPeerable? peer;
 		if (ShouldActivateClosedGenericTarget (proxy, targetType)) {
-			peer = ActivateUsingReflection (targetType, handle, ImplicitPeerOwnership);
+			if (targetType.GetGenericTypeDefinition () == typeof (JavaSet<>) &&
+					ValueTypeSetFactory.TryGetFromJniHandleConverter (targetType, out var setConverter)) {
+				peer = (IJavaPeerable?) setConverter (handle, ImplicitPeerOwnership);
+			} else {
+				peer = ActivateUsingReflection (targetType, handle, ImplicitPeerOwnership);
+			}
 		} else {
 			peer = proxy?.CreateInstance (handle, ImplicitPeerOwnership);
 		}
