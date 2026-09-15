@@ -1,9 +1,7 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Reflection;
 
 using Android.App;
 using Android.Content;
@@ -36,33 +34,20 @@ namespace Java.LangTests
 		[Test]
 		public void JavaConvert_FromJavaObject_ShouldNotBreakExistingReferences ()
 		{
-			Func<IJavaObject, int> toInt = GetIJavaObjectToInt32 ();
+			Func<IJavaObject, int> toInt = JavaConvert.FromJavaObject<int>;
 
+#pragma warning disable CA1422 // Integer(int) constructor is obsolete since API 33.
 			using (var instance  = new Java.Lang.Integer (42)) {
+#pragma warning restore CA1422
 				Assert.AreSame (instance, Java.Lang.Object.GetObject<Java.Lang.Integer>(instance.Handle, JniHandleOwnership.DoNotTransfer));
+#pragma warning disable CS0618 // Retain the existing live-peer weak-reference snapshot semantics.
 				Assert.IsTrue (Java.Interop.Runtime.GetSurfacedObjects ()
 						.Any (o => object.ReferenceEquals (o.Target , instance)));
+#pragma warning restore CS0618
 				int e = toInt (instance);
 				Assert.AreEqual (42, e);
 				Assert.AreSame (instance, Java.Lang.Object.GetObject<Java.Lang.Integer>(instance.Handle, JniHandleOwnership.DoNotTransfer));
 			}
-		}
-
-		static Func<IJavaObject, int> GetIJavaObjectToInt32 ()
-		{
-			[UnconditionalSuppressMessage ("Trimming", "IL2060", Justification = "")]
-			static MethodInfo MakeGenericMethod (MethodInfo method, Type type) =>
-				// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-				#pragma warning disable IL3050
-				method.MakeGenericMethod (type);
-				#pragma warning restore IL3050
-
-			var JavaConvert       = Type.GetType ("Java.Interop.JavaConvert, Mono.Android");
-			var FromJavaObject_T  = JavaConvert.GetMethods (BindingFlags.Public | BindingFlags.Static)
-				.First (m => m.Name == "FromJavaObject" && m.IsGenericMethod);
-			return (Func<IJavaObject, int>) Delegate.CreateDelegate (
-					typeof(Func<IJavaObject, int>),
-					MakeGenericMethod (FromJavaObject_T, typeof (int)));
 		}
 
 		[Test]

@@ -285,9 +285,11 @@ namespace Android.RuntimeTests {
 		public void GetArray_JavaLangByteArrayToSystemByteArray ()
 		{
 			var byteObjectArray = new Java.Lang.Byte[]{
+#pragma warning disable CA1422 // Byte(byte) constructor is obsolete since API 31.
 				new Java.Lang.Byte (1),
 				new Java.Lang.Byte (2),
 				new Java.Lang.Byte (3),
+#pragma warning restore CA1422
 			};
 			byte[] byteArray = JNIEnv.GetArray<byte>(byteObjectArray);
 			AssertArrays ("GetArray: Java.Lang.Byte[]->byte[]", byteArray, (byte) 1, (byte) 2, (byte) 3);

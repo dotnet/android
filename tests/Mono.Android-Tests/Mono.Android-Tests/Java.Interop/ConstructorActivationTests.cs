@@ -1,6 +1,8 @@
 #nullable enable annotations
 
 using System;
+using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using Android.App;
@@ -67,8 +69,7 @@ namespace Java.InteropTests
 			Assert.IsFalse (IsReflectionActivationConstructorCached (typeof (ReflectionMissingActivationPeer)));
 
 			for (int i = 0; i < 2; i++) {
-				var exception = Assert.Throws<TargetInvocationException> (() => CreateReflectionProxy<ReflectionMissingActivationPeer> ());
-				Assert.IsInstanceOf<MissingMethodException> (exception?.InnerException);
+				Assert.Throws<MissingMethodException> (() => CreateReflectionProxy<ReflectionMissingActivationPeer> ());
 			}
 
 			Assert.IsTrue (IsReflectionActivationConstructorCached (typeof (ReflectionMissingActivationPeer)));
@@ -625,23 +626,15 @@ namespace Java.InteropTests
 			}
 		}
 
-		static T CreateReflectionProxy<T> ()
+		static T CreateReflectionProxy<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T> ()
 			where T : IJavaPeerable
 		{
 			IntPtr handle = JNIEnv.StartCreateInstance ("java/lang/Object", "()V");
 			JNIEnv.FinishCreateInstance (handle, "()V");
 			try {
-				const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Static;
-				var createProxy = typeof (Java.Interop.TypeManager).GetMethod (
-						"CreateProxy",
-						flags,
-						null,
-						new [] { typeof (Type), typeof (IntPtr), typeof (JniHandleOwnership) },
-						null);
-				if (createProxy == null)
-					throw new InvalidOperationException ("Could not find TypeManager.CreateProxy.");
-
-				var proxy = createProxy.Invoke (null, new object [] { typeof (T), handle, JniHandleOwnership.TransferLocalRef });
+				var proxy = Java.Interop.TypeManager.CreateProxy (typeof (T), handle, JniHandleOwnership.TransferLocalRef);
 				handle = IntPtr.Zero;
 				if (proxy is not T result)
 					throw new InvalidOperationException ($"TypeManager.CreateProxy returned an unexpected peer for {typeof (T)}.");
@@ -654,44 +647,40 @@ namespace Java.InteropTests
 
 		static bool IsReflectionActivationConstructorCached (Type type)
 		{
-			var cache = GetReflectionActivationConstructorCache ();
-			var containsKey = cache.GetType ().GetMethod ("ContainsKey", new [] { typeof (Type) });
-			if (containsKey == null)
-				throw new InvalidOperationException ("Could not inspect the reflection activation constructor cache.");
-
-			return containsKey.Invoke (cache, new object [] { type }) is true;
+			return GetReflectionActivationConstructorCache ().Contains (type);
 		}
 
 		static ConstructorInfo? GetCachedReflectionActivationConstructor (Type type)
 		{
-			var cache = GetReflectionActivationConstructorCache ();
-			var item = cache.GetType ().GetProperty ("Item");
-			if (item == null)
-				throw new InvalidOperationException ("Could not inspect a reflection activation constructor cache entry.");
-
-			var activation = item.GetValue (cache, new object [] { type });
+			var activation = GetReflectionActivationConstructorCache () [type];
 			if (activation == null)
 				throw new InvalidOperationException ("The reflection activation constructor cache entry is null.");
 
-			var constructor = activation.GetType ().GetProperty ("Constructor");
+			var activationType = typeof (Java.Interop.TypeManager).GetNestedType ("ActivationConstructor", BindingFlags.NonPublic);
+			if (activationType == null)
+				throw new InvalidOperationException ("Could not find the reflection activation constructor cache entry type.");
+
+			var constructor = activationType.GetProperty ("Constructor");
 			if (constructor == null)
 				throw new InvalidOperationException ("Could not inspect the cached reflection activation constructor.");
 
 			return constructor.GetValue (activation) as ConstructorInfo;
 		}
 
-		static object GetReflectionActivationConstructorCache ()
+		static IDictionary GetReflectionActivationConstructorCache ()
 		{
 			const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Static;
 			var cacheField = typeof (Java.Interop.TypeManager).GetField ("ActivationConstructorCache", flags);
 			if (cacheField == null)
 				throw new InvalidOperationException ("Could not find the reflection activation constructor cache.");
 
-			return cacheField.GetValue (null) ??
-					throw new InvalidOperationException ("The reflection activation constructor cache is null.");
+			return cacheField.GetValue (null) as IDictionary ??
+					throw new InvalidOperationException ("The reflection activation constructor cache is not a dictionary.");
 		}
 
-		static T CreateFromJava<T> (string constructorSignature, params JValue [] arguments)
+		static T CreateFromJava<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T> (string constructorSignature, params JValue [] arguments)
 			where T : Java.Lang.Object
 		{
 			var instance = JNIEnv.StartCreateInstance (typeof (T), constructorSignature, arguments);
@@ -701,7 +690,9 @@ namespace Java.InteropTests
 			return result;
 		}
 
-		static T CreateFromJavaWithLocalArray<T> (string constructorSignature, IntPtr array)
+		static T CreateFromJavaWithLocalArray<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T> (string constructorSignature, IntPtr array)
 			where T : Java.Lang.Object
 		{
 			try {
@@ -725,7 +716,9 @@ namespace Java.InteropTests
 			}
 		}
 
-		static void AssertRegisteredSame<T> (T instance)
+		static void AssertRegisteredSame<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T> (T instance)
 			where T : Java.Lang.Object
 		{
 			var registered = Java.Lang.Object.GetObject<T> (instance.Handle, JniHandleOwnership.DoNotTransfer);
