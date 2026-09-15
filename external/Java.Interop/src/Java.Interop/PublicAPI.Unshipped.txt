@@ -1,6 +1,12 @@
 #nullable enable
 virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementMethodInfoCore(string! jniSimpleReference, System.ReadOnlySpan<char> jniMethodName, System.ReadOnlySpan<char> jniMethodSignature) -> Java.Interop.JniRuntime.ReplacementMethodInfo?
 virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementFieldInfoCore(string! jniSimpleReference, System.ReadOnlySpan<char> jniFieldName, System.ReadOnlySpan<char> jniFieldSignature) -> Java.Interop.JniRuntime.ReplacementFieldInfo?
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodNameUtf8.get -> nint
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodNameUtf8.set -> void
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodSignatureUtf8.get -> nint
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodSignatureUtf8.set -> void
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniTypeUtf8.get -> nint
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniTypeUtf8.set -> void
 static Java.Interop.JniEnvironment.BeginMarshalMethod(nint jnienv, out Java.Interop.JniTransition transition, out Java.Interop.JniRuntime? runtime) -> bool
 static Java.Interop.JniEnvironment.EndMarshalMethod(ref Java.Interop.JniTransition transition) -> void
 virtual Java.Interop.JniRuntime.OnEnterMarshalMethod() -> void
@@ -132,10 +138,16 @@ Java.Interop.JniRuntime.ReplacementFieldInfo.SourceJniType.get -> string?
 Java.Interop.JniRuntime.ReplacementFieldInfo.SourceJniType.set -> void
 Java.Interop.JniRuntime.ReplacementFieldInfo.TargetJniFieldName.get -> string?
 Java.Interop.JniRuntime.ReplacementFieldInfo.TargetJniFieldName.set -> void
+Java.Interop.JniRuntime.ReplacementFieldInfo.TargetJniFieldNameUtf8.get -> nint
+Java.Interop.JniRuntime.ReplacementFieldInfo.TargetJniFieldNameUtf8.set -> void
 Java.Interop.JniRuntime.ReplacementFieldInfo.TargetJniFieldSignature.get -> string?
 Java.Interop.JniRuntime.ReplacementFieldInfo.TargetJniFieldSignature.set -> void
+Java.Interop.JniRuntime.ReplacementFieldInfo.TargetJniFieldSignatureUtf8.get -> nint
+Java.Interop.JniRuntime.ReplacementFieldInfo.TargetJniFieldSignatureUtf8.set -> void
 Java.Interop.JniRuntime.ReplacementFieldInfo.TargetJniType.get -> string?
 Java.Interop.JniRuntime.ReplacementFieldInfo.TargetJniType.set -> void
+Java.Interop.JniRuntime.ReplacementFieldInfo.TargetJniTypeUtf8.get -> nint
+Java.Interop.JniRuntime.ReplacementFieldInfo.TargetJniTypeUtf8.set -> void
 override Java.Interop.JniRuntime.ReflectionJniTypeManager.GetReplacementFieldInfoCore(string! jniSimpleReference, string! jniFieldName, string! jniFieldSignature) -> Java.Interop.JniRuntime.ReplacementFieldInfo?
 override Java.Interop.JniRuntime.ReplacementFieldInfo.Equals(object? obj) -> bool
 override Java.Interop.JniRuntime.ReplacementFieldInfo.GetHashCode() -> int

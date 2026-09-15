@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
+using System.Text;
 using System.Threading;
 
 namespace Java.Interop {
@@ -18,12 +19,58 @@ namespace Java.Interop {
 			Justification = "Deliberate choice to 'hide' these types from code completion for `Java.Interop.`; see 045b8af7.")]
 		public struct ReplacementMethodInfo : IEquatable<ReplacementMethodInfo>
 		{
+			string? targetJniType;
+			string? targetJniMethodName;
+			string? targetJniMethodSignature;
+			IntPtr targetJniTypeUtf8;
+			IntPtr targetJniMethodNameUtf8;
+			IntPtr targetJniMethodSignatureUtf8;
+
 			public  string? SourceJniType                   {get; set;}
 			public  string? SourceJniMethodName             {get; set;}
 			public  string? SourceJniMethodSignature        {get; set;}
-			public  string? TargetJniType                   {get; set;}
-			public  string? TargetJniMethodName             {get; set;}
-			public  string? TargetJniMethodSignature        {get; set;}
+			public  string? TargetJniType {
+				get => targetJniType ?? GetUtf8String (targetJniTypeUtf8);
+				set {
+					targetJniType = value;
+					targetJniTypeUtf8 = IntPtr.Zero;
+				}
+			}
+			public  string? TargetJniMethodName {
+				get => targetJniMethodName ?? GetUtf8String (targetJniMethodNameUtf8);
+				set {
+					targetJniMethodName = value;
+					targetJniMethodNameUtf8 = IntPtr.Zero;
+				}
+			}
+			public  string? TargetJniMethodSignature {
+				get => targetJniMethodSignature ?? GetUtf8String (targetJniMethodSignatureUtf8);
+				set {
+					targetJniMethodSignature = value;
+					targetJniMethodSignatureUtf8 = IntPtr.Zero;
+				}
+			}
+			public  IntPtr  TargetJniTypeUtf8 {
+				get => targetJniTypeUtf8;
+				set {
+					targetJniTypeUtf8 = value;
+					targetJniType = null;
+				}
+			}
+			public  IntPtr  TargetJniMethodNameUtf8 {
+				get => targetJniMethodNameUtf8;
+				set {
+					targetJniMethodNameUtf8 = value;
+					targetJniMethodName = null;
+				}
+			}
+			public  IntPtr  TargetJniMethodSignatureUtf8 {
+				get => targetJniMethodSignatureUtf8;
+				set {
+					targetJniMethodSignatureUtf8 = value;
+					targetJniMethodSignature = null;
+				}
+			}
 			public  int?    TargetJniMethodParameterCount   {get; set;}
 			public  bool    TargetJniMethodInstanceToStatic {get; set;}
 
@@ -81,12 +128,58 @@ namespace Java.Interop {
 			Justification = "Deliberate choice to 'hide' these types from code completion for `Java.Interop.`; see 045b8af7.")]
 		public struct ReplacementFieldInfo : IEquatable<ReplacementFieldInfo>
 		{
+			string? targetJniType;
+			string? targetJniFieldName;
+			string? targetJniFieldSignature;
+			IntPtr targetJniTypeUtf8;
+			IntPtr targetJniFieldNameUtf8;
+			IntPtr targetJniFieldSignatureUtf8;
+
 			public  string? SourceJniType               {get; set;}
 			public  string? SourceJniFieldName          {get; set;}
 			public  string? SourceJniFieldSignature     {get; set;}
-			public  string? TargetJniType               {get; set;}
-			public  string? TargetJniFieldName          {get; set;}
-			public  string? TargetJniFieldSignature     {get; set;}
+			public  string? TargetJniType {
+				get => targetJniType ?? GetUtf8String (targetJniTypeUtf8);
+				set {
+					targetJniType = value;
+					targetJniTypeUtf8 = IntPtr.Zero;
+				}
+			}
+			public  string? TargetJniFieldName {
+				get => targetJniFieldName ?? GetUtf8String (targetJniFieldNameUtf8);
+				set {
+					targetJniFieldName = value;
+					targetJniFieldNameUtf8 = IntPtr.Zero;
+				}
+			}
+			public  string? TargetJniFieldSignature {
+				get => targetJniFieldSignature ?? GetUtf8String (targetJniFieldSignatureUtf8);
+				set {
+					targetJniFieldSignature = value;
+					targetJniFieldSignatureUtf8 = IntPtr.Zero;
+				}
+			}
+			public  IntPtr  TargetJniTypeUtf8 {
+				get => targetJniTypeUtf8;
+				set {
+					targetJniTypeUtf8 = value;
+					targetJniType = null;
+				}
+			}
+			public  IntPtr  TargetJniFieldNameUtf8 {
+				get => targetJniFieldNameUtf8;
+				set {
+					targetJniFieldNameUtf8 = value;
+					targetJniFieldName = null;
+				}
+			}
+			public  IntPtr  TargetJniFieldSignatureUtf8 {
+				get => targetJniFieldSignatureUtf8;
+				set {
+					targetJniFieldSignatureUtf8 = value;
+					targetJniFieldSignature = null;
+				}
+			}
 
 			public override bool Equals (object? obj)
 			{
@@ -108,12 +201,14 @@ namespace Java.Interop {
 
 			public override int GetHashCode ()
 			{
-				return (SourceJniType?.GetHashCode () ?? 0) ^
-					(SourceJniFieldName?.GetHashCode () ?? 0) ^
-					(SourceJniFieldSignature?.GetHashCode () ?? 0) ^
-					(TargetJniType?.GetHashCode () ?? 0) ^
-					(TargetJniFieldName?.GetHashCode () ?? 0) ^
-					(TargetJniFieldSignature?.GetHashCode () ?? 0);
+				return HashCode.Combine (
+					SourceJniType,
+					SourceJniFieldName,
+					SourceJniFieldSignature,
+					TargetJniType,
+					TargetJniFieldName,
+					TargetJniFieldSignature
+				);
 			}
 
 			public override string ToString ()
@@ -130,6 +225,20 @@ namespace Java.Interop {
 
 			public static bool operator==(ReplacementFieldInfo a, ReplacementFieldInfo b) => a.Equals (b);
 			public static bool operator!=(ReplacementFieldInfo a, ReplacementFieldInfo b) => !a.Equals (b);
+		}
+
+		static unsafe string? GetUtf8String (IntPtr value)
+		{
+			if (value == IntPtr.Zero) {
+				return null;
+			}
+
+			byte* start = (byte*)value;
+			int length = 0;
+			while (start [length] != 0) {
+				length++;
+			}
+			return Encoding.UTF8.GetString (start, length);
 		}
 
 		/// <include file="../Documentation/Java.Interop/JniRuntime.JniTypeManager.xml" path="/docs/member[@name='T:JniTypeManager']/*" />
