@@ -84,14 +84,21 @@ namespace Xamarin.Android.Tasks
 		const string ReverseTypeReplacementsVariableName = "jni_remapping_reverse_type_replacements";
 		const string MethodReplacementIndexVariableName = "jni_remapping_method_replacement_index";
 		const string FieldReplacementIndexVariableName = "jni_remapping_field_replacement_index";
+		const string RemappingDataVariableName = "jni_remapping_data";
 
-		// The runtime reads the table sizes from these symbols instead of `application_config`, so
-		// that the same lookup implementation works in the NativeAOT build, which has no
-		// application config at all.
-		const string TypeReplacementCountVariableName = "jni_remapping_type_replacement_count";
-		const string ReverseTypeReplacementCountVariableName = "jni_remapping_reverse_type_replacement_count";
-		const string MethodReplacementIndexCountVariableName = "jni_remapping_method_replacement_index_count";
-		const string FieldReplacementIndexCountVariableName = "jni_remapping_field_replacement_index_count";
+		sealed class JniRemappingDataContextDataProvider : NativeAssemblerStructContextDataProvider
+		{
+			public override string? GetPointedToSymbolName (object data, string fieldName)
+			{
+				return fieldName switch {
+					nameof (JniRemappingData.type_replacements) => TypeReplacementsVariableName,
+					nameof (JniRemappingData.reverse_type_replacements) => ReverseTypeReplacementsVariableName,
+					nameof (JniRemappingData.method_replacement_index) => MethodReplacementIndexVariableName,
+					nameof (JniRemappingData.field_replacement_index) => FieldReplacementIndexVariableName,
+					_ => base.GetPointedToSymbolName (data, fieldName),
+				};
+			}
+		}
 
 		sealed class JniRemappingTypeReplacementEntryContextDataProvider : NativeAssemblerStructContextDataProvider
 		{
@@ -328,6 +335,27 @@ namespace Xamarin.Android.Tasks
 			public string    replacement;
 		};
 
+		[NativeAssemblerStructContextDataProvider (typeof(JniRemappingDataContextDataProvider))]
+		sealed class JniRemappingData
+		{
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+			public JniRemappingTypeReplacementEntry type_replacements;
+
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+			public JniRemappingTypeReplacementEntry reverse_type_replacements;
+
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+			public JniRemappingIndexTypeEntry method_replacement_index;
+
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+			public JniRemappingIndexFieldTypeEntry field_replacement_index;
+
+			public uint type_replacement_count;
+			public uint reverse_type_replacement_count;
+			public uint method_replacement_index_count;
+			public uint field_replacement_index_count;
+		}
+
 		sealed class GeneratedTables
 		{
 			public List<StructureInstance<JniRemappingTypeReplacementEntry>> TypeReplacements;
@@ -349,6 +377,7 @@ namespace Xamarin.Android.Tasks
 		StructureInfo jniRemappingIndexFieldEntryStructureInfo;
 		StructureInfo jniRemappingIndexFieldTypeEntryStructureInfo;
 		StructureInfo jniRemappingTypeReplacementEntryStructureInfo;
+		StructureInfo jniRemappingDataStructureInfo;
 
 		public int ReplacementTypeCount { get; private set; } = 0;
 		public int ReverseTypeCount { get; private set; } = 0;
@@ -608,7 +637,7 @@ namespace Xamarin.Android.Tasks
 					LlvmIrVariableOptions.GlobalConstant
 				);
 
-				AddCounts (module);
+				AddData (module);
 				return;
 			}
 
@@ -627,15 +656,22 @@ namespace Xamarin.Android.Tasks
 
 			module.AddGlobalVariable (FieldReplacementIndexVariableName, tables.FieldIndexTypes, LlvmIrVariableOptions.GlobalConstant);
 
-			AddCounts (module);
+			AddData (module);
 		}
 
-		void AddCounts (LlvmIrModule module)
+		void AddData (LlvmIrModule module)
 		{
-			module.AddGlobalVariable (TypeReplacementCountVariableName, (uint)ReplacementTypeCount);
-			module.AddGlobalVariable (ReverseTypeReplacementCountVariableName, (uint)ReverseTypeCount);
-			module.AddGlobalVariable (MethodReplacementIndexCountVariableName, (uint)ReplacementMethodIndexEntryCount);
-			module.AddGlobalVariable (FieldReplacementIndexCountVariableName, (uint)ReplacementFieldIndexEntryCount);
+			var data = new JniRemappingData {
+				type_replacement_count = (uint)ReplacementTypeCount,
+				reverse_type_replacement_count = (uint)ReverseTypeCount,
+				method_replacement_index_count = (uint)ReplacementMethodIndexEntryCount,
+				field_replacement_index_count = (uint)ReplacementFieldIndexEntryCount,
+			};
+			module.AddGlobalVariable (
+				RemappingDataVariableName,
+				new StructureInstance<JniRemappingData> (jniRemappingDataStructureInfo, data),
+				LlvmIrVariableOptions.GlobalConstant
+			);
 		}
 
 		void MapStructures (LlvmIrModule module)
@@ -648,6 +684,7 @@ namespace Xamarin.Android.Tasks
 			jniRemappingIndexFieldEntryStructureInfo = module.MapStructure<JniRemappingIndexFieldEntry> ();
 			jniRemappingIndexFieldTypeEntryStructureInfo = module.MapStructure<JniRemappingIndexFieldTypeEntry> ();
 			jniRemappingTypeReplacementEntryStructureInfo = module.MapStructure<JniRemappingTypeReplacementEntry> ();
+			jniRemappingDataStructureInfo = module.MapStructure<JniRemappingData> ();
 		}
 	}
 }

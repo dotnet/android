@@ -31,7 +31,7 @@ namespace Android.Runtime
 			public int             packageNamingPolicy;
 			public byte            ioExceptionType;
 			public int             jniAddNativeMethodRegistrationAttributePresent;
-			public bool            jniRemappingInUse;
+			public IntPtr          jniRemappingData;
 			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
 			public IntPtr          propagateUncaughtExceptionFn;
@@ -39,7 +39,6 @@ namespace Android.Runtime
 		}
 #pragma warning restore 0649
 
-		internal static bool jniRemappingInUse;
 		internal static bool MarshalMethodsEnabled;
 		internal static bool PropagateExceptions;
 		internal static BoundExceptionType BoundExceptionType;
@@ -205,7 +204,7 @@ namespace Android.Runtime
 			Logger.SetLogCategories ((LogCategories)args.logCategories);
 
 			gref_gc_threshold = args.grefGcThreshold;
-			jniRemappingInUse = args.jniRemappingInUse;
+			JniRemappingLookup.Initialize (args.jniRemappingData);
 			MarshalMethodsEnabled = args.marshalMethodsEnabled;
 			java_class_loader = args.grefLoader;
 

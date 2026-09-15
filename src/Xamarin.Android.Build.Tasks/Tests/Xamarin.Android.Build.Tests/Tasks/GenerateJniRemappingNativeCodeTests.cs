@@ -90,17 +90,9 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 					"jni_remapping_reverse_type_replacements",
 					"jni_remapping_method_replacement_index",
 					"jni_remapping_field_replacement_index",
+					"jni_remapping_data",
 				}) {
 				StringAssert.Contains ($"@{symbol}", ll, $"`{symbol}` must always be emitted.");
-			}
-
-			foreach (string counter in new [] {
-					"jni_remapping_type_replacement_count",
-					"jni_remapping_reverse_type_replacement_count",
-					"jni_remapping_method_replacement_index_count",
-					"jni_remapping_field_replacement_index_count",
-				}) {
-				StringAssert.Contains ($"@{counter} = dso_local local_unnamed_addr constant i32 0", ll, $"`{counter}` must be zero.");
 			}
 
 			var info = task.NativeCodeInfo ?? throw new AssertionException ("The task must provide native code information.");

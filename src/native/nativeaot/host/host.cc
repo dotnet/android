@@ -3,7 +3,6 @@
 #include <host/host-nativeaot.hh>
 #include <host/os-bridge.hh>
 #include <runtime-base/android-system.hh>
-#include <runtime-base/jni-remapping.hh>
 #include <runtime-base/logger.hh>
 
 using namespace xamarin::android;
@@ -83,7 +82,7 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 
 	initArgs->logCategories = log_categories;
 	initArgs->grefGcThreshold = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
-	initArgs->jniRemappingInUse = JniRemapping::is_in_use ();
+	initArgs->jniRemappingData = &jni_remapping_data;
 	initArgs->grefIGCUserPeer = env->NewGlobalRef (lrefIGCUserPeer);
 	initArgs->grefGCUserPeerable = env->NewGlobalRef (lrefGCUserPeerable);
 

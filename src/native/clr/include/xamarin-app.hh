@@ -302,20 +302,6 @@ struct AppEnvironmentVariable
 };
 
 extern "C" {
-	// MUST match src/Xamarin.Android.Build.Tasks/Utilities/JniRemappingAssemblyGenerator.cs
-	//
-	// The table sizes live in dedicated symbols rather than in `ApplicationConfig` so that the
-	// NativeAOT build, which has no application config, can share the same lookup implementation.
-	[[gnu::visibility("default")]] extern const JniRemappingIndexTypeEntry jni_remapping_method_replacement_index[];
-	[[gnu::visibility("default")]] extern const JniRemappingIndexFieldTypeEntry jni_remapping_field_replacement_index[];
-	[[gnu::visibility("default")]] extern const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[];
-	[[gnu::visibility("default")]] extern const JniRemappingTypeReplacementEntry jni_remapping_reverse_type_replacements[];
-
-	[[gnu::visibility("default")]] extern const uint32_t jni_remapping_type_replacement_count;
-	[[gnu::visibility("default")]] extern const uint32_t jni_remapping_reverse_type_replacement_count;
-	[[gnu::visibility("default")]] extern const uint32_t jni_remapping_method_replacement_index_count;
-	[[gnu::visibility("default")]] extern const uint32_t jni_remapping_field_replacement_index_count;
-
 	[[gnu::visibility("default")]] extern const uint64_t format_tag;
 
 #if defined (DEBUG)

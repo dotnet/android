@@ -97,7 +97,6 @@ set(XAMARIN_MONODROID_SOURCES
   embedded-assemblies.cc
   globals.cc
   internal-pinvokes.cc
-  jni-remapping.cc
   mono-log-adapter.cc
   monodroid-glue.cc
   monodroid-tracing.cc
