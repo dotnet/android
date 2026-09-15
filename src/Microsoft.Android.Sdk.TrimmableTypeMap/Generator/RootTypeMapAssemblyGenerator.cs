@@ -134,6 +134,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		} else {
 			EmitPerAssemblyUniverseAssemblyTargetAttributes (pe, perAssemblyTypeMapNames);
 		}
+		EmitValueTypeDictionaryAssemblyTargetAttribute (pe);
 
 		// Emit [assembly: IgnoresAccessChecksTo("...")] so TypeMapLoader.Initialize() can access
 		// internal types (TrimmableTypeMap and friends in Mono.Android, and private anchors
@@ -169,6 +170,16 @@ public sealed class RootTypeMapAssemblyGenerator
 			var ctorRef = GetTypeMapAssemblyTargetAttributeCtorRef (pe, openAttrRef, perAssemblyAnchorRef);
 			EmitAssemblyTargetAttribute (pe, ctorRef, name);
 		}
+	}
+
+	static void EmitValueTypeDictionaryAssemblyTargetAttribute (PEAssemblyBuilder pe)
+	{
+		var openAttrRef = GetTypeMapAssemblyTargetAttributeRef (pe);
+		var javaDictionaryRef = pe.Metadata.AddTypeReference (pe.MonoAndroidRef,
+			pe.Metadata.GetOrAddString ("Android.Runtime"),
+			pe.Metadata.GetOrAddString ("JavaDictionary"));
+		var ctorRef = GetTypeMapAssemblyTargetAttributeCtorRef (pe, openAttrRef, javaDictionaryRef);
+		EmitAssemblyTargetAttribute (pe, ctorRef, "Mono.Android");
 	}
 
 	static TypeReferenceHandle GetTypeMapAssemblyTargetAttributeRef (PEAssemblyBuilder pe)

@@ -221,16 +221,21 @@ namespace Java.InteropTests
 			}
 		}
 
+		// Keep the source and expected wrapper type open so NativeAOT must root the
+		// JavaDictionary<int?, __Canon> template through ValueTypeFactory's mixed-value exemplar.
 		[Test]
+		[Category ("NativeAOTTrimmable")]
 		public void FromJniHandle_IDictionaryNullableInt32String ()
 		{
-			using (var source = new JavaDictionary<int?, string> ()) {
+			using (var source = new JavaDictionary ()) {
 				source.Add (1, "one");
 				source.Add (null, "null");
 
 				var converted = InvokeJavaConvertFromJniHandle (typeof (IDictionary<int?, string>), source.Handle, JniHandleOwnership.DoNotTransfer);
 				try {
-					Assert.AreEqual (typeof (JavaDictionary<int?, string>), converted.GetType ());
+					var convertedType = converted.GetType ();
+					Assert.AreEqual (typeof (JavaDictionary<,>), convertedType.GetGenericTypeDefinition ());
+					CollectionAssert.AreEqual (new [] { typeof (int?), typeof (string) }, convertedType.GetGenericArguments ());
 
 					var dictionary = (IDictionary<int?, string>) converted;
 					Assert.AreEqual ("one", dictionary [1]);
@@ -243,7 +248,7 @@ namespace Java.InteropTests
 
 		// The non-generic source and assertions intentionally avoid referencing
 		// JavaDictionary<int, long>, so NativeAOT must root that exact wrapper through
-		// ValueTypeFactory<T>.CreateDictionaryWithKey<TKey>'s generic-virtual dispatch.
+		// the hand-written value-type dictionary universe.
 		[Test]
 		[Category ("NativeAOTTrimmable")]
 		public void FromJniHandle_IDictionaryInt32Int64 ()
@@ -261,6 +266,42 @@ namespace Java.InteropTests
 					var dictionary = (IDictionary<int, long>) converted;
 					Assert.AreEqual (100L, dictionary [1]);
 					Assert.AreEqual (200L, dictionary [2]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_IDictionaryNullableDoubleNullableBoolean ()
+		{
+			using (var source = new JavaDictionary ()) {
+				source.Add (1.5, true);
+				source.Add (null, null);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (IDictionary<double?, bool?>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var dictionary = (IDictionary<double?, bool?>) converted;
+					Assert.AreEqual ((bool?) true, dictionary [1.5]);
+					Assert.IsNull (dictionary [null]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_JavaDictionaryNullableByteInt16 ()
+		{
+			using (var source = new JavaDictionary ()) {
+				source.Add ((byte) 200, (short) -2);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (JavaDictionary<byte?, short>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var dictionary = (JavaDictionary<byte?, short>) converted;
+					Assert.AreEqual ((short) -2, dictionary [(byte) 200]);
 				} finally {
 					(converted as IDisposable)?.Dispose ();
 				}
@@ -324,7 +365,7 @@ namespace Java.InteropTests
 		public void FromJniHandle_UnsupportedValueTypeUsesUntypedFallback (Type targetType, bool dictionary)
 		{
 			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("This test validates unsupported value-type container fallback on the trimmable typemap path.");
+				Assert.Ignore ("This test validates value-type container fallback on the trimmable typemap path.");
 			}
 
 			Java.Lang.Object source = dictionary ? new JavaDictionary () : new JavaList ();
