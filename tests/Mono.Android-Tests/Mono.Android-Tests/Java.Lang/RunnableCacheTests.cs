@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Android.Runtime;
+using Java.Interop;
+
 using NUnit.Framework;
 
 using RunnableImplementor = Java.Lang.Thread.RunnableImplementor;
@@ -32,11 +35,15 @@ namespace Xamarin.Android.RuntimeTests {
 			using var disposed = new RunnableImplementor (action, removable: true);
 			disposed.Dispose ();
 			using var pending = new RunnableImplementor (action, removable: true);
-			var candidates = new List<RunnableImplementor> ();
+			int candidates = 0;
+			bool foundPending = false;
 
-			RunnableImplementor.Remove (action, candidates.Add);
-			Assert.AreEqual (1, candidates.Count);
-			Assert.AreSame (pending, candidates [0]);
+			RunnableImplementor.Remove (action, reference => {
+				candidates++;
+				foundPending = JNIEnv.IsSameObject (pending.Handle, reference.Handle);
+			});
+			Assert.AreEqual (1, candidates);
+			Assert.IsTrue (foundPending);
 			Assert.AreNotEqual (IntPtr.Zero, pending.Handle);
 		}
 
@@ -55,10 +62,14 @@ namespace Xamarin.Android.RuntimeTests {
 			else
 				first.Run ();
 
-			var candidates = new List<RunnableImplementor> ();
-			RunnableImplementor.Remove (action, candidates.Add);
-			Assert.AreEqual (1, candidates.Count);
-			Assert.AreSame (second, candidates [0]);
+			int candidates = 0;
+			bool foundSecond = false;
+			RunnableImplementor.Remove (action, reference => {
+				candidates++;
+				foundSecond = JNIEnv.IsSameObject (second.Handle, reference.Handle);
+			});
+			Assert.AreEqual (1, candidates);
+			Assert.IsTrue (foundSecond);
 			Assert.AreEqual (IntPtr.Zero, first.Handle);
 			Assert.AreNotEqual (IntPtr.Zero, second.Handle);
 		}
@@ -69,18 +80,19 @@ namespace Xamarin.Android.RuntimeTests {
 			Action action = () => {};
 			using var first = new RunnableImplementor (action, removable: true);
 			using var second = new RunnableImplementor (action, removable: true);
-			var callbacks = new List<RunnableImplementor> ();
+			var callbacks = new List<bool> ();
 
 			bool result = RunnableImplementor.Remove (
 				action,
 				callbacks,
-				static (items, runnable) => {
-					items.Add (runnable);
+				static (items, reference) => {
+					items.Add (reference.IsValid);
 					return items.Count == 2;
 				});
 
 			Assert.IsTrue (result);
 			Assert.AreEqual (2, callbacks.Count);
+			Assert.IsTrue (callbacks.TrueForAll (valid => valid));
 		}
 
 		[Test]
@@ -91,39 +103,48 @@ namespace Xamarin.Android.RuntimeTests {
 			RunnableImplementor second = null;
 			int removals = 0;
 			try {
-				RunnableImplementor.Remove (action, runnable => {
-					Assert.AreSame (first, runnable);
+				RunnableImplementor.Remove (action, reference => {
+					Assert.IsTrue (JNIEnv.IsSameObject (first.Handle, reference.Handle));
 					removals++;
 					var post = Task.Run (() => second = new RunnableImplementor (action, removable: true));
 					Assert.IsTrue (post.Wait (TimeSpan.FromSeconds (10)), "Removal must not hold the cache lock.");
 				});
 				Assert.AreEqual (1, removals, "A reentrant post must not be added to an in-progress removal.");
-				var candidates = new List<RunnableImplementor> ();
-				RunnableImplementor.Remove (action, candidates.Add);
-				Assert.AreEqual (2, candidates.Count);
-				Assert.AreSame (first, candidates [0]);
-				Assert.AreSame (second, candidates [1]);
+				int candidates = 0;
+				bool foundFirst = false;
+				bool foundSecond = false;
+				RunnableImplementor.Remove (action, reference => {
+					candidates++;
+					foundFirst |= JNIEnv.IsSameObject (first.Handle, reference.Handle);
+					foundSecond |= JNIEnv.IsSameObject (second.Handle, reference.Handle);
+				});
+				Assert.AreEqual (2, candidates);
+				Assert.IsTrue (foundFirst);
+				Assert.IsTrue (foundSecond);
 			} finally {
 				second?.Dispose ();
 			}
 		}
 
 		[Test]
-		public void CompletionDoesNotDisposeDuringRemoval ()
+		public void CompletionKeepsRemovalReferenceAlive ()
 		{
 			using var running = new ManualResetEventSlim ();
 			Action action = () => running.Set ();
 			using var runnable = new RunnableImplementor (action, removable: true);
 			Task execution = null;
+			JniObjectReference javaWeak = runnable.PeerReference.NewWeakGlobalRef ();
 			try {
-				RunnableImplementor.Remove (action, candidate => {
+				RunnableImplementor.Remove (action, reference => {
 					execution = Task.Run (() => runnable.Run ());
 					Assert.IsTrue (running.Wait (TimeSpan.FromSeconds (10)));
-					Assert.IsFalse (execution.Wait (TimeSpan.FromMilliseconds (100)),
-						"Completion must wait until the native removal finishes using the peer.");
-					Assert.AreNotEqual (IntPtr.Zero, candidate.Handle);
+					Assert.IsTrue (execution.Wait (TimeSpan.FromSeconds (10)));
+					Assert.AreEqual (IntPtr.Zero, runnable.Handle);
+					Assert.IsTrue (reference.IsValid);
+					Assert.IsTrue (JNIEnv.IsSameObject (javaWeak.Handle, reference.Handle));
 				});
 			} finally {
+				JniObjectReference.Dispose (ref javaWeak);
 				if (execution != null)
 					Assert.IsTrue (execution.Wait (TimeSpan.FromSeconds (10)));
 			}

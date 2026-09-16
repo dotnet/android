@@ -1,5 +1,6 @@
 using System;
 using Android.Runtime;
+using Java.Interop;
 
 namespace Android.OS {
 
@@ -69,6 +70,27 @@ namespace Android.OS {
 		public void RemoveCallbacks (Action action, Java.Lang.Object token)
 		{
 			Java.Lang.Thread.RunnableImplementor.Remove (action, this, token, static (runnable, handler, token) => handler.RemoveCallbacks (runnable, token));
+		}
+
+		unsafe void RemoveCallbacks (JniObjectReference runnable)
+		{
+			const string id = "removeCallbacks.(Ljava/lang/Runnable;)V";
+			JniArgumentValue* args = stackalloc JniArgumentValue [1];
+			args [0] = new JniArgumentValue (runnable.Handle);
+			_members.InstanceMethods.InvokeNonvirtualVoidMethod (id, this, args);
+		}
+
+		unsafe void RemoveCallbacks (JniObjectReference runnable, Java.Lang.Object token)
+		{
+			const string id = "removeCallbacks.(Ljava/lang/Runnable;Ljava/lang/Object;)V";
+			try {
+				JniArgumentValue* args = stackalloc JniArgumentValue [2];
+				args [0] = new JniArgumentValue (runnable.Handle);
+				args [1] = new JniArgumentValue (token.Handle);
+				_members.InstanceMethods.InvokeNonvirtualVoidMethod (id, this, args);
+			} finally {
+				GC.KeepAlive (token);
+			}
 		}
 	}
 

@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using Android.Runtime;
+using Java.Interop;
 
 namespace Java.Lang {
 
@@ -14,6 +15,7 @@ namespace Java.Lang {
 
 			public Action Handler;
 			bool removable;
+			JniObjectReference removalReference;
 
 			public RunnableImplementor (Action handler) : this (handler, false) {}
 
@@ -27,6 +29,7 @@ namespace Java.Lang {
 				Handler = handler;
 				this.removable = removable;
 				if (removable) {
+					removalReference = PeerReference.NewWeakGlobalRef ();
 					lock (instances) {
 						var runnables = instances.GetOrCreateValue (handler);
 						Prune (runnables);
@@ -44,22 +47,19 @@ namespace Java.Lang {
 				}
 			}
 
-			public new void Dispose ()
-			{
-				lock (this)
-					base.Dispose ();
-			}
-
 			protected override void Dispose (bool disposing)
 			{
-				if (removable && Handler != null) {
-					lock (instances) {
-						if (instances.TryGetValue (Handler, out var runnables)) {
-							Prune (runnables, this);
-							if (runnables.Count == 0)
-								instances.Remove (Handler);
+				lock (this) {
+					if (removable && Handler != null) {
+						lock (instances) {
+							if (instances.TryGetValue (Handler, out var runnables)) {
+								Prune (runnables, this);
+								if (runnables.Count == 0)
+									instances.Remove (Handler);
+							}
 						}
 					}
+					JniObjectReference.Dispose (ref removalReference);
 				}
 				base.Dispose (disposing);
 			}
@@ -77,7 +77,7 @@ namespace Java.Lang {
 				}
 			}
 
-			public static void Remove (Action handler, Action<RunnableImplementor> remove)
+			public static void Remove (Action handler, Action<JniObjectReference> remove)
 			{
 				Remove (handler, remove, static (callback, runnable) => {
 					callback (runnable);
@@ -85,7 +85,7 @@ namespace Java.Lang {
 				});
 			}
 
-			public static void Remove<TState> (Action handler, TState state, Action<RunnableImplementor, TState> remove)
+			public static void Remove<TState> (Action handler, TState state, Action<JniObjectReference, TState> remove)
 			{
 				Remove (handler, (state, remove), static (context, runnable) => {
 					context.remove (runnable, context.state);
@@ -93,7 +93,7 @@ namespace Java.Lang {
 				});
 			}
 
-			public static void Remove<TState1, TState2> (Action handler, TState1 state1, TState2 state2, Action<RunnableImplementor, TState1, TState2> remove)
+			public static void Remove<TState1, TState2> (Action handler, TState1 state1, TState2 state2, Action<JniObjectReference, TState1, TState2> remove)
 			{
 				Remove (handler, (state1, state2, remove), static (context, runnable) => {
 					context.remove (runnable, context.state1, context.state2);
@@ -101,7 +101,7 @@ namespace Java.Lang {
 				});
 			}
 
-			public static bool Remove<TState> (Action handler, TState state, Func<TState, RunnableImplementor, bool> remove)
+			public static bool Remove<TState> (Action handler, TState state, Func<TState, JniObjectReference, bool> remove)
 			{
 				List<RunnableImplementor> pending = new ();
 				lock (instances) {
@@ -118,9 +118,17 @@ namespace Java.Lang {
 
 				bool result = false;
 				foreach (var runnable in pending) {
+					JniObjectReference reference = default;
 					lock (runnable) {
-						if (runnable.Handle != IntPtr.Zero)
-							result |= remove (state, runnable);
+						if (runnable.removalReference.IsValid)
+							reference = runnable.removalReference.NewLocalRef ();
+					}
+					if (!reference.IsValid)
+						continue;
+					try {
+						result |= remove (state, reference);
+					} finally {
+						JniObjectReference.Dispose (ref reference);
 					}
 				}
 				// Native removal may not match the handler, token or drawable. Keep the
