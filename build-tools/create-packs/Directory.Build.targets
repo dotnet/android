@@ -135,6 +135,7 @@
     <!-- dotnet workload install android -->
     <PropertyGroup>
       <_TempDirectory>$(IntermediateOutputPath).xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
+      <_AndroidWorkloadInstallTimeout Condition=" '$(_AndroidWorkloadInstallTimeout)' == '' ">2147483647</_AndroidWorkloadInstallTimeout>
     </PropertyGroup>
     <ItemGroup>
       <_NuGetSources Include="$(OutputPath.TrimEnd('\'))" />
@@ -154,6 +155,7 @@
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; workload install @(_InstallArguments, ' ')"
         WorkingDirectory="$(_TempDirectory)"
+        Timeout="$(_AndroidWorkloadInstallTimeout)"
     />
     <RemoveDir Directories="$(_TempDirectory)" />
   </Target>

@@ -110,11 +110,11 @@ steps:
     project: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
     arguments: -t:ExtractWorkloadPacks -c ${{ parameters.configuration }} -v:n -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog
     continueOnError: false
+    retryCountOnTaskFailure: 1
     taskTimeoutInMinutes: 45
-    processTimeoutInMinutes: 20
-    processRetryCount: 1
-    processRetryDelaySeconds: 5
     env:
+      # Exec times out before the pipeline task so a stalled install can be retried.
+      _AndroidWorkloadInstallTimeout: '1200000'
       NUGET_RETRY_HTTP_429: 'true'
       NUGET_OBSERVE_RETRY_AFTER: 'true'
       NUGET_MAX_RETRY_AFTER_DELAY_SECONDS: '60'
