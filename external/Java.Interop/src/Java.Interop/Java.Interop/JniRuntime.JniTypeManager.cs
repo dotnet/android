@@ -42,6 +42,14 @@ namespace Java.Interop {
 				}
 			}
 			public  string? TargetJniMethodSignature        {get; set;}
+			/// <summary>
+			/// Gets or sets a pointer to a NUL-terminated UTF-8 JNI type name.
+			/// </summary>
+			/// <remarks>
+			/// Java.Interop does not own or free this memory. A non-zero pointer must remain valid
+			/// and unchanged for as long as this <see cref="ReplacementMethodInfo"/> may be used.
+			/// Setting this property clears <see cref="TargetJniType"/>.
+			/// </remarks>
 			public  IntPtr  TargetJniTypeUtf8 {
 				get => targetJniTypeUtf8;
 				set {
@@ -49,6 +57,14 @@ namespace Java.Interop {
 					targetJniType = null;
 				}
 			}
+			/// <summary>
+			/// Gets or sets a pointer to a NUL-terminated UTF-8 JNI method name.
+			/// </summary>
+			/// <remarks>
+			/// Java.Interop does not own or free this memory. A non-zero pointer must remain valid
+			/// and unchanged for as long as this <see cref="ReplacementMethodInfo"/> may be used.
+			/// Setting this property clears <see cref="TargetJniMethodName"/>.
+			/// </remarks>
 			public  IntPtr  TargetJniMethodNameUtf8 {
 				get => targetJniMethodNameUtf8;
 				set {

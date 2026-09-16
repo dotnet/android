@@ -5,6 +5,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 using Java.Interop;
 
@@ -52,9 +53,21 @@ namespace Java.InteropTests {
 			[MyDisposableObject.JniTypeName]                = typeof (JavaDisposedObject),
 			[MyJavaInterfaceImpl.JniTypeName]               = typeof (MyJavaInterfaceImpl),
 		};
+		readonly Dictionary<string, IntPtr> utf8Values = new (StringComparer.Ordinal);
+		readonly object utf8ValuesLock = new ();
 
 		public JavaVMFixtureTypeManager ()
 		{
+		}
+
+		protected override void Dispose (bool disposing)
+		{
+			lock (utf8ValuesLock) {
+				foreach (var value in utf8Values.Values)
+					Marshal.ZeroFreeCoTaskMemUTF8 (value);
+				utf8Values.Clear ();
+			}
+			base.Dispose (disposing);
 		}
 
 		protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
@@ -152,12 +165,23 @@ namespace Java.InteropTests {
 					SourceJniType                   = jniSourceType,
 					SourceJniMethodName             = jniMethodName,
 					SourceJniMethodSignature        = jniMethodSignature,
-					TargetJniType                   = r.TargetType ?? jniSourceType,
-					TargetJniMethodName             = r.TargetName ?? jniMethodName,
-					TargetJniMethodSignature        = targetSig    ?? jniMethodSignature,
+					TargetJniTypeUtf8               = GetUtf8Value (r.TargetType ?? jniSourceType),
+					TargetJniMethodNameUtf8         = GetUtf8Value (r.TargetName ?? jniMethodName),
+					TargetJniMethodSignature        = targetSig,
 					TargetJniMethodParameterCount   = paramCount,
 					TargetJniMethodInstanceToStatic = r.TurnStatic,
 			};
+
+			IntPtr GetUtf8Value (string value)
+			{
+				lock (utf8ValuesLock) {
+					if (utf8Values.TryGetValue (value, out var pointer))
+						return pointer;
+					pointer = Marshal.StringToCoTaskMemUTF8 (value);
+					utf8Values.Add (value, pointer);
+					return pointer;
+				}
+			}
 
 			string GetAlternateMethodSignature ()
 			{
