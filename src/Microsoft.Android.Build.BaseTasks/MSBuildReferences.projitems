@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- https://github.com/xamarin/xamarin-android/blob/adcad50c014574322fb5cf8ef92bbab0e9673c8a/build-tools/scripts/MSBuildReferences.projitems -->
+<!-- https://github.com/dotnet/android/blob/adcad50c014574322fb5cf8ef92bbab0e9673c8a/build-tools/scripts/MSBuildReferences.projitems -->
 
 <Project>
   <!--Import this file in projects needing to reference Microsoft.Build.*.dll -->

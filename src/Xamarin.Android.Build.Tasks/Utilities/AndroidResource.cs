@@ -184,7 +184,7 @@ namespace Monodroid {
 					return;
 				if (n.Contains (',')) {
 					// attr.Value could be an assembly-qualified name that isn't in acw-map.txt;
-					// see e5b1c92c, https://github.com/xamarin/xamarin-android/issues/1296#issuecomment-365091948
+					// see e5b1c92c, https://github.com/dotnet/android/issues/1296#issuecomment-365091948
 					n = attr.Value.Substring (0, attr.Value.IndexOf (','));
 				}
 				registerCustomView?.Invoke (n);

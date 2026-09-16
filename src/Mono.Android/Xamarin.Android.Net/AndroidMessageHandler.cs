@@ -1197,7 +1197,7 @@ namespace Xamarin.Android.Net
 					// There's also no way to send content using GET (except in the URL, of course), so discarding
 					// request.Content is what we should do.
 					//
-					// See https://github.com/xamarin/xamarin-android/issues/1282
+					// See https://github.com/dotnet/android/issues/1282
 					if (redirectState.Method == HttpMethod.Get) {
 						if (Logger.LogNet)
 							Logger.Log (LogLevel.Info, LOG_APP, $"Discarding content on redirect");

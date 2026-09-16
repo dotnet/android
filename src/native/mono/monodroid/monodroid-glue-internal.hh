@@ -47,7 +47,7 @@
 #include <mono/metadata/mono-private-unstable.h>
 
 // See https://github.com/dotnet/runtime/pull/67024
-// See https://github.com/xamarin/xamarin-android/issues/6935
+// See https://github.com/dotnet/android/issues/6935
 extern mono_bool mono_opt_aot_lazy_assembly_load;
 
 namespace xamarin::android::internal

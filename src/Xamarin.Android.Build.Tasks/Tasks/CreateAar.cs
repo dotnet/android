@@ -56,7 +56,7 @@ namespace Xamarin.Android.Tasks
 				}
 				if (AndroidAssets != null) {
 					foreach (var asset in AndroidAssets) {
-						// See: https://github.com/xamarin/xamarin-android/commit/665cb59205f8ac565b6acbda740624844bc1cbd9
+						// See: https://github.com/dotnet/android/commit/665cb59205f8ac565b6acbda740624844bc1cbd9
 						if (Directory.Exists (asset.ItemSpec)) {
 							Log.LogDebugMessage ($"Skipping item, is a directory: {asset.ItemSpec}");
 							continue;
@@ -70,7 +70,7 @@ namespace Xamarin.Android.Tasks
 				if (AndroidResources != null) {
 					var nameCaseMap = new StringBuilder ();
 					foreach (var resource in AndroidResources) {
-						// See: https://github.com/xamarin/xamarin-android/commit/665cb59205f8ac565b6acbda740624844bc1cbd9
+						// See: https://github.com/dotnet/android/commit/665cb59205f8ac565b6acbda740624844bc1cbd9
 						if (Directory.Exists (resource.ItemSpec)) {
 							Log.LogDebugMessage ($"Skipping item, is a directory: {resource.ItemSpec}");
 							continue;

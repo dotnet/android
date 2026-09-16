@@ -56,7 +56,7 @@ If you are interested in fixing issues and contributing directly to the code bas
 
   - Ask a question on [Stack Overflow](https://stackoverflow.com/questions/tagged/xamarin.android) or [Microsoft Q&A](https://docs.microsoft.com/en-us/answers/topics/dotnet-android.html).
   - [Request a new feature or vote for popular feature requests](https://developercommunity.visualstudio.com/search?entry=suggestion&space=8&preview2=true&q=xamarin+android&stateGroup=active&ftype=idea&sort=votes) on Microsoft Developer Community.
-  - File an issue in [GitHub Issues](https://github.com/xamarin/xamarin-android/issues/new/choose).
+  - File an issue in [GitHub Issues](https://github.com/dotnet/android/issues/new/choose).
   - Discuss development and design on [Discord](https://aka.ms/dotnet-discord).
 
 [![Discord](https://img.shields.io/badge/chat-on%20discord-brightgreen)](https://aka.ms/dotnet-discord)

@@ -217,7 +217,7 @@ namespace Xamarin.Android.Tasks
 				XPathNavigator current = nodes.Current;
 
 				// <merge> anywhere is ignored - Android always returns 'null' if you try to find such
-				// an element. Prevents https://github.com/xamarin/xamarin-android/issues/1929
+				// an element. Prevents https://github.com/dotnet/android/issues/1929
 				if (MonoAndroidHelper.StringEquals ("merge", current.LocalName))
 					continue;
 

@@ -327,7 +327,7 @@ The `System.Reflection.Emit` sequence mentioned in 3. above is among
 the most costly operations, repeated for each registered method.
 
 Some more information about Java type registration can be found
-[here](https://github.com/xamarin/xamarin-android/wiki/Blueprint#java-type-registration).
+[here](https://github.com/dotnet/android/wiki/Blueprint#java-type-registration).
 
 ## Marshal methods
 

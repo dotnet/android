@@ -186,7 +186,7 @@ and `as`, the native assembler. These tools are included in the
 
 The default value is `$(MonoAndroidBinDirectory)\binutils\bin\`.
 
-[binutils]: https://github.com/xamarin/xamarin-android-binutils/
+[binutils]: https://github.com/dotnet/android-native-tools/
 
 ## AndroidBoundExceptionType
 
@@ -378,7 +378,7 @@ The default value is `d8`. See our
 documentation on [D8 and R8][d8-r8].
 
 [dex]: https://source.android.com/devices/tech/dalvik/dalvik-bytecode
-[d8-r8]: https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/D8andR8.md
+[d8-r8]: https://github.com/dotnet/android/blob/main/Documentation/guides/D8andR8.md
 
 ## AndroidEnableDesugar
 
@@ -849,7 +849,7 @@ used for Java code. The default value is an empty string, or
 `proguard` if `$(AndroidEnableProguard)` is `True`. See our documentation on
 [D8 and R8][d8-r8].
 
-[d8-r8]: https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/D8andR8.md
+[d8-r8]: https://github.com/dotnet/android/blob/main/Documentation/guides/D8andR8.md
 
 ## AndroidLintEnabled
 

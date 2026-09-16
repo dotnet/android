@@ -755,7 +755,7 @@ See the following links about this problem:
   * [MSBuild Repro][msbuild_repro]
 
 [msbuild]: https://github.com/Microsoft/msbuild/blob/master/documentation/wiki/Rebuilding-when-nothing-changed.md
-[github_issue]: https://github.com/xamarin/xamarin-android/issues/2247
+[github_issue]: https://github.com/dotnet/android/issues/2247
 [clean]: https://github.com/Microsoft/msbuild/issues/2408#issuecomment-321082997
 [msbuild_issue]: https://github.com/Microsoft/msbuild/issues/3916
 [msbuild_repro]: https://github.com/jonathanpeppers/MSBuildIncrementalClean

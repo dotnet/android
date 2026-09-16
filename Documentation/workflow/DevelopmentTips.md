@@ -96,7 +96,7 @@ First, you'll need to get a version of `libmonosgen-2.0.so` that includes debug
 symbols.  You can either use a custom local build or download the debug version
 of `libmonosgen-2.0.so` for a published .NET for Android version:
 
- 1. Go to <https://github.com/xamarin/xamarin-android/tags> and click on the
+ 1. Go to <https://github.com/dotnet/android/tags> and click on the
     .NET for Android version you are debugging.
 
  2. Find the **OSS core** section at the bottom of the release information and
@@ -557,7 +557,7 @@ The `debug.mono.log` system property can also be set in an
 be preferred if it is not blank.
 
 [mono-logging]: https://www.mono-project.com/docs/advanced/runtime/logging-runtime-events/
-[6e58ce4]: https://github.com/xamarin/xamarin-android/commit/6e58ce405d00a965f3c206e2d509f5a5343b16f7
+[6e58ce4]: https://github.com/dotnet/android/commit/6e58ce405d00a965f3c206e2d509f5a5343b16f7
 
 ## Installing .NET MAUI
 
