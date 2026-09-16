@@ -1,5 +1,6 @@
 <replacements>
   <replace-type from="android/app/Activity" to="example/RemapActivity" />
+  <replace-type from="example/ActivitéSource" to="example/RemapActivity" />
   <replace-method
       source-type="example/RemapActivity"
       source-method-name="onCreate"

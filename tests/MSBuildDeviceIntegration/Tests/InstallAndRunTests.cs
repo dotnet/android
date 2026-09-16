@@ -2557,7 +2557,7 @@ namespace UnnamedProject
 				.Replace (": Activity", ": global::Example.RemapActivity")
 				.Replace ("//${AFTER_ONCREATE}", """
 			unsafe {
-				var members = new Java.Interop.JniPeerMembers ("example/RemapActivity", typeof (global::Example.RemapActivity));
+				var members = new Java.Interop.JniPeerMembers ("example/ActivitéSource", typeof (global::Example.RemapActivity));
 				try {
 					members.InstanceMethods.InvokeNonvirtualVoidMethod ("méthodeSource.()V", this, null);
 				} finally {
