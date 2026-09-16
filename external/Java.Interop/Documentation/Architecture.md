@@ -273,3 +273,4 @@ I halted the above loop after reaching 25686556 instances.
 
 I'm not sure when the JDK would stop handing out references, but it's probably
 bound to process heap limits (e.g. depends on 32-bit vs. 64-bit process).
+
