@@ -130,7 +130,7 @@ namespace Xamarin.Android.Tasks
 						AppendArg (response, Path.GetFullPath (r.ItemSpec));
 						continue;
 					}
-					Log.LogError ($"Unsupported @(Reference) item: {r.ItemSpec}");
+					Log.LogCodedError ("XA1037", Properties.Resources.XA1037, r.ItemSpec);
 				}
 			}
 			AppendArg (response, "--output-javadoc");
