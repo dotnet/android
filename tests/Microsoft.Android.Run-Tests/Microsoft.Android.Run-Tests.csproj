@@ -4,11 +4,13 @@
 
   <PropertyGroup>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <RootNamespace>Microsoft.Android.Run.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <IsPackable>false</IsPackable>
-    <OutputPath>$(TestOutputDirectory)</OutputPath>
+    <OutputPath>$(TestOutputDirectory)Microsoft.Android.Run-Tests\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Nullable>enable</Nullable>
     <RollForward>Major</RollForward>
   </PropertyGroup>
 
@@ -19,14 +21,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources\manifest-simplewidget.xml">
-      <LogicalName>manifest-simplewidget.xml</LogicalName>
-    </EmbeddedResource>
+    <Compile Remove="ManagedLaunchTestAdbProxy\**" />
+    <EmbeddedResource Remove="ManagedLaunchTestAdbProxy\**" />
+    <None Remove="ManagedLaunchTestAdbProxy\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
-    <ProjectReference Include="..\..\src\Xamarin.AndroidTools\Xamarin.AndroidTools.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.Android.Run\Microsoft.Android.Run.csproj" />
+    <ProjectReference Include="ManagedLaunchTestAdbProxy\ManagedLaunchTestAdbProxy.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>
