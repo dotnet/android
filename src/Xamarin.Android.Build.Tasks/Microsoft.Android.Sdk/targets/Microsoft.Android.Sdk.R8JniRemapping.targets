@@ -73,22 +73,28 @@
       <_AndroidNativeAotR8RemappingObject Include="@(_AndroidNativeAotR8RemappingSource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
         <abi>%(_AndroidNativeAotR8RemappingSource.abi)</abi>
       </_AndroidNativeAotR8RemappingObject>
+      <!-- The outer build passes its merged remap XML because item lists do not cross the
+           post-R8 MSBuild boundary. Direct inner-build callers still use the evaluated items. -->
+      <_AndroidNativeAotR8ExistingRemapXml Include="$(_AndroidR8ExistingRemapXmlFile)"
+          Condition=" '$(_AndroidR8ExistingRemapXmlFile)' != '' " />
+      <_AndroidNativeAotR8ExistingRemapXml Include="@(_AndroidRemapMembers)"
+          Condition=" '$(_AndroidR8ExistingRemapXmlFile)' == '' " />
     </ItemGroup>
   </Target>
 
   <Target Name="_AndroidGenerateNativeAotR8Remapping"
       Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' "
       DependsOnTargets="_AndroidGenerateNativeAotR8RemappingInputs"
-      Inputs="$(NativeObject);$(_AndroidR8JniMappingFile);@(_AndroidRemapMembers);$(_AndroidBuildPropertiesCache);$(_AndroidR8JniTaskAssembly)"
+      Inputs="$(NativeObject);$(_AndroidR8JniMappingFile);@(_AndroidNativeAotR8ExistingRemapXml);$(_AndroidBuildPropertiesCache);$(_AndroidR8JniTaskAssembly)"
       Outputs="$(_AndroidNativeAotR8GeneratedRemappingXml);$(_AndroidNativeAotR8RemappingXml)">
     <GenerateR8JniRemapping
         MappingFile="$(_AndroidR8JniMappingFile)"
-        ExistingRemapXmlFiles="@(_AndroidRemapMembers)"
+        ExistingRemapXmlFiles="@(_AndroidNativeAotR8ExistingRemapXml)"
         NativeAot="true"
         NativeAotObjectFile="$(NativeObject)"
         OutputFile="$(_AndroidNativeAotR8GeneratedRemappingXml)" />
     <MergeRemapXml
-        InputRemapXmlFiles="@(_AndroidRemapMembers);$(_AndroidNativeAotR8GeneratedRemappingXml)"
+        InputRemapXmlFiles="@(_AndroidNativeAotR8ExistingRemapXml);$(_AndroidNativeAotR8GeneratedRemappingXml)"
         OutputFile="$(_AndroidNativeAotR8RemappingXml)" />
     <Touch Files="$(_AndroidNativeAotR8GeneratedRemappingXml);$(_AndroidNativeAotR8RemappingXml)" />
     <ItemGroup>
