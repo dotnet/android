@@ -890,6 +890,7 @@ public class Test
 					"kotlin/Error.kotlin_metadata",
 					"META-INF/proguard/coroutines.pro",
 					"META-INF/com.android.tools/r8/coroutines.pro",
+					"META-INF/com.android.tools/r8-from-1.6.0/coroutines.pro",
 				};
 				using (var zip = ZipHelper.OpenZip (archive)) {
 					foreach (var excludedFile in excludedFiles) {

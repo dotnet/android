@@ -431,8 +431,7 @@ excluded from the final package. The default values are as follows
 	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/kotlin-project-structure-metadata.json$'))" />
 	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/proguard/*$'))" />
 	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/com.android.tools/proguard/*$'))" />
-	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/com.android.tools/r8/*$'))" />
-	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/com.android.tools/r8-*/*$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/com.android.tools/r8*/*$'))" />
 	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/com/android/build/gradle/aar-metadata.properties$'))" />
 </ItemGroup>
 ```
