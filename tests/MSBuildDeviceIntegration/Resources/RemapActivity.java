@@ -7,6 +7,10 @@ public class RemapActivity extends android.app.Activity {
         Log.d ("*REMAP-TEST*", "RemapActivity.onMyCreate() invoked!");
         super.onCreate(bundle);
     }
+
+    public void méthodeCible () {
+        Log.d ("*REMAP-TEST*", "RemapActivity.méthodeCible() invoked!");
+    }
 }
 
 class ViewHelper {
