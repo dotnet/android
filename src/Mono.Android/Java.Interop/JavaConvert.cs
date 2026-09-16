@@ -75,13 +75,13 @@ namespace Java.Interop {
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
 
 			if (target.IsGenericType && !target.IsGenericTypeDefinition) {
-				if (RuntimeFeature.IsNativeAotRuntime) {
-					if (SafeJavaCollectionFactory.TryGetFromJniHandleConverter (target, out var collectionConverter))
-						return collectionConverter;
-				} else if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
+				if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
 					var factoryConverter = TryMakeGenericCollectionTypeFactory (target);
 					if (factoryConverter != null)
 						return factoryConverter;
+				} else if (RuntimeFeature.TrimmableTypeMap) {
+					if (SafeJavaCollectionFactory.TryGetFromJniHandleConverter (target, out var collectionConverter))
+						return collectionConverter;
 				} else {
 					throw new NotSupportedException ($"Cannot convert Java collection elements to closed generic array element type '{target}' because the runtime does not support dynamic code generation.");
 				}
