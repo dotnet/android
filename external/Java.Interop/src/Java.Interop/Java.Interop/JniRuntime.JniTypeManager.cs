@@ -30,7 +30,8 @@ namespace Java.Interop {
 			/// </summary>
 			/// <remarks>
 			/// Java.Interop does not own or free this memory. A non-zero pointer must remain valid
-			/// and unchanged for as long as this <see cref="ReplacementMethodInfo"/> may be used.
+			/// and unchanged for the lifetime of the associated <see cref="JniRuntime"/>, because
+			/// cached JNI type and method metadata may retain and dereference it.
 			/// </remarks>
 			public  IntPtr  TargetJniTypeUtf8               {get; set;}
 			/// <summary>
@@ -38,7 +39,8 @@ namespace Java.Interop {
 			/// </summary>
 			/// <remarks>
 			/// Java.Interop does not own or free this memory. A non-zero pointer must remain valid
-			/// and unchanged for as long as this <see cref="ReplacementMethodInfo"/> may be used.
+			/// and unchanged for the lifetime of the associated <see cref="JniRuntime"/>, because
+			/// cached JNI type and method metadata may retain and dereference it.
 			/// </remarks>
 			public  IntPtr  TargetJniMethodNameUtf8         {get; set;}
 			/// <summary>
@@ -46,7 +48,8 @@ namespace Java.Interop {
 			/// </summary>
 			/// <remarks>
 			/// Java.Interop does not own or free this memory. A non-zero pointer must remain valid
-			/// and unchanged for as long as this <see cref="ReplacementMethodInfo"/> may be used.
+			/// and unchanged for the lifetime of the associated <see cref="JniRuntime"/>, because
+			/// cached JNI type and method metadata may retain and dereference it.
 			/// </remarks>
 			public  IntPtr  TargetJniMethodSignatureUtf8    {get; set;}
 			public  int?    TargetJniMethodParameterCount   {get; set;}

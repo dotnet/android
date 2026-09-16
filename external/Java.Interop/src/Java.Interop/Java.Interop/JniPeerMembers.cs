@@ -275,19 +275,19 @@ namespace Java.Interop {
 
 		static string GetTargetMethodNameForDiagnostics (JniRuntime.ReplacementMethodInfo info, ReadOnlySpan<char> fallback)
 		{
-			if (info.TargetJniMethodName != null)
-				return info.TargetJniMethodName;
 			if (info.TargetJniMethodNameUtf8 != IntPtr.Zero)
 				return GetUtf8String (info.TargetJniMethodNameUtf8);
+			if (info.TargetJniMethodName != null)
+				return info.TargetJniMethodName;
 			return fallback.ToString ();
 		}
 
 		static string GetTargetMethodSignatureForDiagnostics (JniRuntime.ReplacementMethodInfo info, ReadOnlySpan<char> fallback)
 		{
-			if (info.TargetJniMethodSignature != null)
-				return info.TargetJniMethodSignature;
 			if (info.TargetJniMethodSignatureUtf8 != IntPtr.Zero)
 				return GetUtf8String (info.TargetJniMethodSignatureUtf8);
+			if (info.TargetJniMethodSignature != null)
+				return info.TargetJniMethodSignature;
 			return fallback.ToString ();
 		}
 
