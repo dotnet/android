@@ -155,6 +155,17 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
 
+    # Process-wide JNI reference counts need a fresh process without unrelated tests.
+    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
+      parameters:
+        buildConfiguration: $(XA.Build.Configuration)
+        configuration: Debug
+        testName: Mono.Android.NET_Tests-JniReferenceLeaks
+        project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+        extraBuildArgs: -p:TestsFlavor=JniReferenceLeaks -p:IncludeCategories=JniReferenceLeak -p:UseMonoRuntime=false
+        artifactSource: bin/TestDebug/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+        artifactFolder: $(DotNetTargetFramework)-JniReferenceLeaks
+
     # Smoke coverage that the test app still builds and runs under Mono.
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
       parameters:

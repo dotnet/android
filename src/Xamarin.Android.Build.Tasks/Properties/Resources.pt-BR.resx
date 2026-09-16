@@ -1149,6 +1149,11 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
     <value>As propriedades 'AndroidEnableMarshalMethods' e 'PublishReadyToRun' do MSBuild não podem ser definidas como 'true'. Defina uma propriedade como 'false'.</value>
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
+  <data name="XA1050" xml:space="preserve">
+    <value>A propriedade 'AndroidR8ObfuscationMode' do MSBuild tem um valor inválido de '{0}'. Os valores válidos são 'disabled' e 'private-members'.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members.
+{0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>A dependência de Java "{0}" não foi atendida.</value>
     <comment>The following are literal names and should not be translated: Java.
@@ -1291,7 +1296,7 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
 {1} - Managed parameter or return type</comment>
   </data>
   <data name="XA4264" xml:space="preserve">
-    <value>Java callable wrapper XML file '{0}' was not found.</value>
+    <value>Não foi encontrado o arquivo XML do wrapper chamado em Java '{0}'.</value>
     <comment>The following are literal names and should not be translated: Java, XML.
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
