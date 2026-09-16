@@ -3,7 +3,6 @@
 #include "android-system.hh"
 #include "globals.hh"
 #include "internal-pinvokes.hh"
-#include "jni-remapping.hh"
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
@@ -276,16 +275,3 @@ monodroid_get_dylib ()
 {
 	return nullptr;
 }
-
-const char*
-_monodroid_lookup_replacement_type (const char *jniSimpleReference)
-{
-	return JniRemapping::lookup_replacement_type (jniSimpleReference);
-}
-
-const JniRemappingReplacementMethod*
-_monodroid_lookup_replacement_method_info (const char *jniSourceType, const char *jniMethodName, const char *jniMethodSignature)
-{
-	return JniRemapping::lookup_replacement_method_info (jniSourceType, jniMethodName, jniMethodSignature);
-}
-
