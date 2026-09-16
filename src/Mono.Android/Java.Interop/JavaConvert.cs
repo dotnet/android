@@ -75,7 +75,7 @@ namespace Java.Interop {
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
 
 			if (target.IsGenericType && !target.IsGenericTypeDefinition) {
-				if (RuntimeFeature.AotGenericCollectionMarshaling) {
+				if (RuntimeFeature.UseTypeMapAttributesForJavaDictionaryValueTypeLookups) {
 					if (SafeJavaCollectionFactory.TryGetFromJniHandleConverter (target, out var collectionConverter))
 						return collectionConverter;
 				} else if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {

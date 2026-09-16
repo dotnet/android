@@ -11,7 +11,7 @@ static class RuntimeFeature
 	const bool IsAssignableFromCheckEnabledByDefault = true;
 	const bool StartupHookSupportEnabledByDefault = true;
 	const bool TrimmableTypeMapEnabledByDefault = false;
-	const bool AotGenericCollectionMarshalingEnabledByDefault = false;
+	const bool UseTypeMapAttributesForJavaDictionaryValueTypeLookupsEnabledByDefault = false;
 	const bool ObjectReferenceLoggingEnabledByDefault = false;
 	const bool ManagedToJavaUsesAssemblyFullNameEnabledByDefault = false;
 
@@ -43,9 +43,9 @@ static class RuntimeFeature
 	internal static bool TrimmableTypeMap { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (TrimmableTypeMap)}", out bool isEnabled) ? isEnabled : TrimmableTypeMapEnabledByDefault;
 
-	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (AotGenericCollectionMarshaling)}")]
-	internal static bool AotGenericCollectionMarshaling { get; } =
-		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (AotGenericCollectionMarshaling)}", out bool isEnabled) ? isEnabled : AotGenericCollectionMarshalingEnabledByDefault;
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (UseTypeMapAttributesForJavaDictionaryValueTypeLookups)}")]
+	internal static bool UseTypeMapAttributesForJavaDictionaryValueTypeLookups { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (UseTypeMapAttributesForJavaDictionaryValueTypeLookups)}", out bool isEnabled) ? isEnabled : UseTypeMapAttributesForJavaDictionaryValueTypeLookupsEnabledByDefault;
 
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ObjectReferenceLogging)}")]
 	internal static bool ObjectReferenceLogging { get; } =
