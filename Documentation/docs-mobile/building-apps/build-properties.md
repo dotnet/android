@@ -186,7 +186,7 @@ and `as`, the native assembler. These tools are included in the
 
 The default value is `$(MonoAndroidBinDirectory)\binutils\bin\`.
 
-[binutils]: https://github.com/dotnet/android-binutils/
+[binutils]: https://github.com/dotnet/android-native-tools/
 
 ## AndroidBoundExceptionType
 
