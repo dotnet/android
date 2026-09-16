@@ -12,6 +12,8 @@ namespace Microsoft.Android.Runtime;
 
 static class JniRemappingLookup
 {
+	const int AsciiComparisonChunkSize = 16;
+
 	unsafe struct NativeJniRemappingString
 	{
 		public uint  length;
@@ -215,13 +217,28 @@ static class JniRemappingLookup
 	static int CompareUtf8ToAscii (ReadOnlySpan<byte> utf8, ReadOnlySpan<char> ascii)
 	{
 		int commonLength = Math.Min (utf8.Length, ascii.Length);
-		if (Ascii.Equals (utf8.Slice (0, commonLength), ascii.Slice (0, commonLength)))
-			return utf8.Length.CompareTo (ascii.Length);
+		int offset = 0;
+		while (commonLength - offset >= AsciiComparisonChunkSize) {
+			ReadOnlySpan<byte> utf8Chunk = utf8.Slice (offset, AsciiComparisonChunkSize);
+			ReadOnlySpan<char> asciiChunk = ascii.Slice (offset, AsciiComparisonChunkSize);
+			if (!Ascii.Equals (utf8Chunk, asciiChunk)) {
+				for (int i = 0; i < AsciiComparisonChunkSize; i++) {
+					int result = utf8Chunk [i].CompareTo ((byte)asciiChunk [i]);
+					if (result != 0)
+						return result;
+				}
+			}
+			offset += AsciiComparisonChunkSize;
+		}
 
-		for (int i = 0; i < commonLength; i++) {
-			int result = utf8 [i].CompareTo ((byte)ascii [i]);
-			if (result != 0)
-				return result;
+		ReadOnlySpan<byte> utf8Tail = utf8.Slice (offset, commonLength - offset);
+		ReadOnlySpan<char> asciiTail = ascii.Slice (offset, commonLength - offset);
+		if (!Ascii.Equals (utf8Tail, asciiTail)) {
+			for (int i = 0; i < utf8Tail.Length; i++) {
+				int result = utf8Tail [i].CompareTo ((byte)asciiTail [i]);
+				if (result != 0)
+					return result;
+			}
 		}
 		return utf8.Length.CompareTo (ascii.Length);
 	}
