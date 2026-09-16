@@ -372,7 +372,7 @@ namespace Java.InteropTests
 			using (source) {
 				var converted = InvokeJavaConvertFromJniHandle (targetType, source.Handle, JniHandleOwnership.DoNotTransfer);
 				try {
-					if (Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime) {
+					if (Microsoft.Android.Runtime.RuntimeFeature.AotGenericCollectionMarshaling) {
 						Assert.AreEqual (dictionary ? typeof (JavaDictionary) : typeof (JavaList), converted.GetType ());
 						Assert.IsFalse (targetType.IsInstanceOfType (converted));
 					} else {
