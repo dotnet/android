@@ -1149,6 +1149,11 @@ In this message, the term "handheld app" means "app for handheld devices."
     <value>Свойства MSBuild "AndroidEnableMarshalMethods" и "PublishReadyToRun" не могут одновременно иметь значение "true". Установите для одного свойства "false".</value>
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
+  <data name="XA1050" xml:space="preserve">
+    <value>Свойство MSBuild "AndroidR8ObfuscationMode" имеет недопустимое значение "{0}". Допустимые значения: "disabled" и "private-members".</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members.
+{0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>Зависимость Java "{0}" не удовлетворена.</value>
     <comment>The following are literal names and should not be translated: Java.
@@ -1255,31 +1260,31 @@ In this message, the term "handheld app" means "app for handheld devices."
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
   </data>
   <data name="XA4258" xml:space="preserve">
-    <value>Java name '{0}' contains invalid or unsupported Java identifier '{1}'. Change the package or type name.</value>
+    <value>Имя Java '{0}' содержит недопустимый или неподдерживаемый идентификатор Java '{1}'. Измените имя пакета или типа.</value>
     <comment>The following are literal names and should not be translated: Java.
 {0} - Java package or type name
 {1} - Invalid, unsupported, reserved, or restricted Java identifier</comment>
   </data>
   <data name="XA4259" xml:space="preserve">
-    <value>Type '{0}' has multiple managed constructors that map to the same Java Native Interface (JNI) signature '{1}'. Change the constructor parameter types so each constructor has a unique JNI signature.</value>
+    <value>Тип "{0}" содержит несколько управляемых конструкторов, которые сопоставляются с одной и той же сигнатурой собственного интерфейса Java (Java Native Interface, JNI) "{1}". Измените типы параметров конструктора, чтобы у каждого конструктора была уникальная сигнатура JNI.</value>
     <comment>The following terms should not be translated: Java Native Interface, JNI.
 {0} - Fully-qualified managed type name
 {1} - Colliding JNI constructor signature</comment>
   </data>
   <data name="XA4260" xml:space="preserve">
-    <value>Type '{0}' has a constructor parameter type '{1}' that cannot be represented in a Java constructor. Remove the constructor or change the parameter to a supported Java type.</value>
+    <value>Тип '{0}' имеет тип параметра конструктора '{1}', который не может быть представлен в конструкторе Java. Удалите конструктор или измените параметр на поддерживаемый тип Java.</value>
     <comment>The following term should not be translated: Java.
 {0} - Fully-qualified managed type name
 {1} - Unsupported managed constructor parameter type</comment>
   </data>
   <data name="XA4261" xml:space="preserve">
-    <value>Type '{0}' has Java constructor signature '{1}', but its base type does not expose a compatible Java constructor. Add a compatible base constructor or remove the derived constructor.</value>
+    <value>Тип '{0}' имеет сигнатуру конструктора Java '{1}', но его базовый тип не предоставляет совместимый конструктор Java. Добавьте совместимый базовый конструктор или удалите производный конструктор.</value>
     <comment>The following term should not be translated: Java.
 {0} - Fully-qualified managed type name
 {1} - JNI signature of the derived constructor</comment>
   </data>
   <data name="XA4262" xml:space="preserve">
-    <value>Type '{0}' has an invalid [Export] SuperArgumentsString value '{1}'. The value references a constructor parameter that does not exist.</value>
+    <value>Тип '{0}' имеет недопустимое значение [Export] SuperArgumentsString '{1}'. Значение ссылается на несуществующий параметр конструктора.</value>
     <comment>The following terms should not be translated: Export, SuperArgumentsString.
 {0} - Fully-qualified managed type name
 {1} - Invalid SuperArgumentsString value</comment>
@@ -1289,6 +1294,11 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: Java, [ExportParameter].
 {0} - Fully-qualified managed member name
 {1} - Managed parameter or return type</comment>
+  </data>
+  <data name="XA4264" xml:space="preserve">
+    <value>XML-файл вызываемой оболочки Java '{0}' не найден.</value>
+    <comment>The following are literal names and should not be translated: Java, XML.
+{0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Не удалось выполнить команду "{0}".\n{1}</value>

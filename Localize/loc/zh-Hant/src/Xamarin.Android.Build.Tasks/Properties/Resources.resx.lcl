@@ -972,6 +972,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA1050" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value of '{0}'. Valid values are 'disabled' and 'private-members'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['AndroidR8ObfuscationMode' MSBuild 屬性的值 '{0}' 無效。有效值為 'disabled' 和 'private-members'。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA2000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released.]]></Val>
@@ -1637,10 +1646,13 @@
       </Item>
       <Item ItemId=";XA4258" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Java name '{0}' contains reserved Java identifier '{1}'. Change the package or type name.]]></Val>
+          <Val><![CDATA[Java name '{0}' contains invalid or unsupported Java identifier '{1}'. Change the package or type name.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Java 名稱 '{0}' 包含保留的 Java 識別碼 '{1}'。請變更套件或類型名稱。]]></Val>
+            <Val><![CDATA[Java 名稱 '{0}' 包含無效或不支援的 Java 識別碼 '{1}'。請變更套件或類型名稱。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Java name '{0}' contains reserved Java identifier '{1}'. Change the package or type name.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1685,6 +1697,15 @@
           <Val><![CDATA[The exported member '{0}' has unsupported signature type '{1}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter]5D;.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[匯出的成員 '{0}' 具有不支援的簽章類型 '{1}'。請使用 Java 同儕型別、支援的 managed-to-Java 對應，或 [ExportParameter]5D;。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4264" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Java callable wrapper XML file '{0}' was not found.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[找不到 Java 可呼叫包裝函式 XML 檔案 '{0}'。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

@@ -8,14 +8,10 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests;
 /// <summary>
 /// Minimal IBuildEngine implementation for use with TaskLoggingHelper in tests.
 /// </summary>
-sealed class MockBuildEngine : IBuildEngine
+sealed class MockBuildEngine (IList<BuildWarningEventArgs>? warnings = null) : IBuildEngine
 {
-	readonly IList<BuildWarningEventArgs>? warnings;
-
-	public MockBuildEngine (IList<BuildWarningEventArgs>? warnings = null)
-	{
-		this.warnings = warnings;
-	}
+	// Kept to help stale PRs conflict instead of silently deleting the required constructor.
+	// public MockBuildEngine (IList<BuildWarningEventArgs>? warnings = null)
 
 	public bool ContinueOnError => false;
 	public int LineNumberOfTaskNode => 0;

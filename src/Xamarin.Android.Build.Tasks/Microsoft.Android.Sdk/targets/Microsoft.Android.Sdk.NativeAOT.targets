@@ -34,16 +34,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <IlcExportUnmanagedEntrypoints>true</IlcExportUnmanagedEntrypoints>
   </PropertyGroup>
 
-  <!-- Outer restores use RuntimeIdentifiers; RuntimeIdentifier is only set in per-RID inner builds. -->
-  <ItemGroup>
-    <_AndroidNetCoreAppNativeAotKnownRuntimePack Include="@(KnownRuntimePack->WithMetadataValue('Identity', 'Microsoft.NETCore.App')->WithMetadataValue('RuntimePackLabels', 'NativeAOT'))" />
-    <KnownRuntimePack Remove="@(_AndroidNetCoreAppNativeAotKnownRuntimePack)" />
-    <KnownRuntimePack Include="@(_AndroidNetCoreAppNativeAotKnownRuntimePack)">
-      <LatestRuntimeFrameworkVersion>$(MicrosoftNETCoreAppRefPackageVersion)</LatestRuntimeFrameworkVersion>
-      <RuntimePackRuntimeIdentifiers>%(RuntimePackRuntimeIdentifiers);android-arm</RuntimePackRuntimeIdentifiers>
-    </KnownRuntimePack>
-  </ItemGroup>
-
   <!-- Default property values for NativeAOT Debug configuration -->
   <PropertyGroup Condition="'$(DebugSymbols)' == 'true'">
     <NativeDebugSymbols>true</NativeDebugSymbols>

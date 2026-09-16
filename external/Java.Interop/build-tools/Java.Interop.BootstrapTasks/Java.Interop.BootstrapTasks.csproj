@@ -10,6 +10,9 @@
   <PropertyGroup>
     <OutputPath>$(BuildToolOutputFullPathNoTF)</OutputPath>
     <GitDefaultBranch>main</GitDefaultBranch>
+    <!-- Java.Interop versions follow .NET, not dotnet/android branches or tags. -->
+    <GitIgnoreBranchVersion>true</GitIgnoreBranchVersion>
+    <GitIgnoreTagVersion>true</GitIgnoreTagVersion>
     <GitThisAssembly>false</GitThisAssembly>
   </PropertyGroup>
 

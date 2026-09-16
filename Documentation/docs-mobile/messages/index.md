@@ -159,6 +159,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA1047](xa1047.md): Required attribute '{0}' missing from element '{1}'; {2} line {3}.
 + [XA1048](xa1048.md): '{0}' does not contain an &lt;instrumentation&gt; element.
 + [XA1049](xa1049.md): The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'.
++ [XA1050](xa1050.md): The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value.
 
 ## XA2xxx: Linker
 
@@ -234,6 +235,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4261](xa4261.md): Type '{type}' has Java constructor signature '{signature}', but its base type does not expose a compatible Java constructor.
 + [XA4262](xa4262.md): Type '{type}' has an invalid [Export] SuperArgumentsString value '{value}'.
 + [XA4263](xa4263.md): The exported member '{member}' has unsupported signature type '{type}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter].
++ [XA4264](xa4264.md): Java callable wrapper XML file '{path}' was not found.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}

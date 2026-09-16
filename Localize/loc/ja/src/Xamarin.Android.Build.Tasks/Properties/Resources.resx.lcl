@@ -972,6 +972,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA1050" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value of '{0}'. Valid values are 'disabled' and 'private-members'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['AndroidR8ObfuscationMode' MSBuild プロパティの値 '{0}' が無効です。有効な値は 'disabled' と 'private-members' です。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA2000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released.]]></Val>
@@ -1637,10 +1646,13 @@
       </Item>
       <Item ItemId=";XA4258" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Java name '{0}' contains reserved Java identifier '{1}'. Change the package or type name.]]></Val>
+          <Val><![CDATA[Java name '{0}' contains invalid or unsupported Java identifier '{1}'. Change the package or type name.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Java 名 '{0}' には、予約済みの Java 識別子 '{1}' が含まれています。パッケージ名または型名を変更してください。]]></Val>
+            <Val><![CDATA[Java 名 '{0}' には、無効であるかサポートされていない Java 識別子 '{1}' が含まれています。パッケージ名または型名を変更してください。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Java name '{0}' contains reserved Java identifier '{1}'. Change the package or type name.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1685,6 +1697,15 @@
           <Val><![CDATA[The exported member '{0}' has unsupported signature type '{1}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter]5D;.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[エクスポートされたメンバー '{0}' に、サポートされていないシグネチャ型 '{1}' があります。Java のピア型、サポートされているマネージド コードから Java へのマッピング、または [ExportParameter]5D; を使用してください。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4264" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Java callable wrapper XML file '{0}' was not found.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Java 呼び出し可能ラッパー XML ファイル '{0}' が見つかりませんでした。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

@@ -97,16 +97,6 @@ namespace xamarin::android {
 		}
 
 #if !defined (XA_HOST_NATIVEAOT)
-		static auto get_app_code_cache_dir () noexcept -> const char*
-		{
-			return app_code_cache_dir;
-		}
-
-		static void set_app_code_cache_dir (jstring_wrapper& code_cache_dir) noexcept
-		{
-			app_code_cache_dir = Util::duplicate_string (code_cache_dir.get_cstr ());
-		}
-
 		static auto get_native_libraries_dir () noexcept -> const char*
 		{
 			return native_libraries_dir;
@@ -238,7 +228,6 @@ namespace xamarin::android {
 		static inline const char *primary_override_dir = "";
 #if !defined (XA_HOST_NATIVEAOT)
 		static inline const char *native_libraries_dir = "";
-		static inline const char *app_code_cache_dir = "";
 
 #if defined (DEBUG)
 		static inline BundledProperty *bundled_properties = nullptr;

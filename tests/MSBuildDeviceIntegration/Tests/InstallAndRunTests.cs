@@ -856,139 +856,6 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
-		public void AssemblyStoreDecompressionCacheMapsPersistedAssemblies ([Values] bool longCachePath)
-		{
-			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
-				return;
-			}
-
-			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, longCachePath ? "assemblycachelong" : "assemblycache")) {
-				IsRelease = true,
-			};
-			app.SetRuntime (AndroidRuntime.CoreCLR);
-			app.SetRuntimeIdentifiers (new [] { DeviceAbi });
-			app.SetProperty ("AndroidEnableAssemblyStoreDecompressionCache", "true");
-			app.AndroidManifest = app.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
-
-			string cacheDirectory = "code_cache";
-			if (longCachePath) {
-				// Exceed Util::LocalPathBufferSize (1024), keeping each component below NAME_MAX.
-				string subdirectory = string.Join ("/", Enumerable.Repeat (new string ('a', 128), 9));
-				cacheDirectory += "/" + subdirectory;
-				app.AndroidManifest = app.AndroidManifest.Replace ("<application ", "<application android:name=\"com.test.CachePathApplication\" ");
-				app.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("CachePathApplication.java") {
-					Encoding = Encoding.ASCII,
-					Metadata = {
-						{ "Bind", "False" },
-					},
-					TextContent = () => $$"""
-						package com.test;
-
-						public class CachePathApplication extends android.app.Application {
-							@Override
-							public java.io.File getCodeCacheDir () {
-								java.io.File directory = new java.io.File (super.getCodeCacheDir (), "{{subdirectory}}");
-								if (!directory.isDirectory () && !directory.mkdirs ()) {
-									throw new IllegalStateException ("Unable to create the long code cache directory");
-								}
-								return directory;
-							}
-						}
-						""",
-				});
-			}
-			string cacheRoot = cacheDirectory + "/decompressed-assembly-cache-v1";
-
-			using var appBuilder = CreateApkBuilder ();
-			Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
-
-			ClearAdbLogcat ();
-			AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
-			Assert.IsTrue (
-				WaitForActivityToStart (
-					app.PackageName,
-					"MainActivity",
-					Path.Combine (Root, appBuilder.ProjectDirectory, "assembly-cache-first-launch.log"),
-					ActivityStartTimeoutInSeconds
-				),
-				"First launch should succeed."
-			);
-
-			string [] cacheFiles = [];
-			for (int attempt = 0; attempt < 40 && cacheFiles.Length < 2; attempt++) {
-				Thread.Sleep (250);
-				cacheFiles = RunAdbCommand (
-					$"shell run-as {app.PackageName} find {cacheRoot} -type f -name '*.bin'"
-				)
-					.Split (new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-					.Where (line => line.EndsWith (".bin", StringComparison.Ordinal))
-					.ToArray ();
-			}
-			Assert.That (cacheFiles.Length, Is.GreaterThanOrEqualTo (2), "The first launch should persist multiple decompressed assemblies.");
-			if (longCachePath) {
-				Assert.IsTrue (cacheFiles.All (path => path.Length > 1024), "Cache paths should exceed the native stack buffer size.");
-			}
-
-			RunAdbCommand ($"shell am force-stop --user all {app.PackageName}");
-			string staleTempFile = cacheFiles.Last () + ".tmp.stale";
-			RunAdbCommand ($"shell run-as {app.PackageName} touch {staleTempFile}");
-			StringAssert.Contains (staleTempFile, RunAdbCommand ($"shell run-as {app.PackageName} ls {staleTempFile}"),
-				"The stale temporary file should exist before restarting.");
-			string cacheFileToCorrupt = cacheFiles.First ();
-			string ValidFileHash () => RunAdbCommand (
-				$"shell run-as {app.PackageName} md5sum {cacheFileToCorrupt}"
-			).Split (new [] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault () ?? "";
-
-			string validHash = ValidFileHash ();
-			Assert.That (validHash, Is.Not.Empty, $"Should be able to hash the persisted cache file '{cacheFileToCorrupt}'.");
-
-			RunAdbCommand (
-				$"shell run-as {app.PackageName} dd if=/dev/zero of={cacheFileToCorrupt} bs=1 count=1 conv=notrunc"
-			);
-			Assert.That (ValidFileHash (), Is.Not.EqualTo (validHash), "Corrupting the cache file should change its contents.");
-
-			ClearAdbLogcat ();
-			AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
-			Assert.IsTrue (
-				WaitForActivityToStart (
-					app.PackageName,
-					"MainActivity",
-					Path.Combine (Root, appBuilder.ProjectDirectory, "assembly-cache-second-launch.log"),
-					ActivityStartTimeoutInSeconds
-				),
-				"Second launch should succeed."
-			);
-
-			// A corrupted entry must be rejected (footer hash mismatch) and re-decompressed, which
-			// re-persists a byte-identical file. Verify the *exact* corrupted file is healed rather
-			// than merely checking that some other valid entry is still mapped.
-			bool rewritten = false;
-			for (int attempt = 0; attempt < 40 && !rewritten; attempt++) {
-				Thread.Sleep (250);
-				rewritten = ValidFileHash () == validHash;
-			}
-			Assert.IsTrue (rewritten, $"The corrupted cache file '{cacheFileToCorrupt}' should be rewritten with valid contents after fallback.");
-			Assert.That (
-				RunAdbCommand ($"shell run-as {app.PackageName} find {cacheRoot} -type f -name '*.tmp.stale'").Trim (),
-				Is.Empty,
-				"The second launch should remove stale temporary files."
-			);
-
-			string [] pids = RunAdbCommand ($"shell pidof {app.PackageName}")
-				.Split (new [] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-			Assert.IsNotEmpty (pids, "The application process should be running after the second launch.");
-			var maps = new StringBuilder ();
-			foreach (string pid in pids) {
-				maps.Append (RunAdbCommand ($"shell run-as {app.PackageName} cat /proc/{pid}/maps"));
-			}
-			StringAssert.Contains (
-				"/" + cacheRoot + "/",
-				maps.ToString (),
-				"The second launch should map persisted decompressed assemblies."
-			);
-		}
-
-		[Test]
 		public void ActivityAliasRuns ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -3410,6 +3277,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		const string BenchmarkDotNetInstrumentationSource = """
 			using System;
 			using System.IO;
+			using System.Linq;
 			using BenchmarkDotNet.Attributes;
 			using BenchmarkDotNet.Columns;
 			using BenchmarkDotNet.Configs;
@@ -3435,13 +3303,18 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				[Instrumentation (Name = "${JAVA_PACKAGENAME}.BenchmarkInstrumentation")]
 				public class BenchmarkInstrumentation : Instrumentation
 				{
+					string? benchmarkArgs;
+					string? greeting;
+
 					protected BenchmarkInstrumentation (IntPtr handle, Android.Runtime.JniHandleOwnership ownership)
 						: base (handle, ownership) { }
 
 					public override void OnCreate (Bundle? arguments)
 					{
 						base.OnCreate (arguments);
-						Console.WriteLine ($"BENCHMARK_ARGS args={arguments?.GetString ("args")} greeting={arguments?.GetString ("greeting")}");
+						benchmarkArgs = arguments?.GetString ("args");
+						greeting = arguments?.GetString ("greeting");
+						Console.WriteLine ($"BENCHMARK_ARGS args={benchmarkArgs} greeting={greeting}");
 						Start ();
 					}
 
@@ -3462,8 +3335,17 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 								.WithArtifactsPath (artifacts)
 								.WithOptions (ConfigOptions.DisableOptimizationsValidator);
 							var summary = BenchmarkRunner.Run<SampleBenchmarks> (config);
-							Console.WriteLine ($"BENCHMARKS_COMPLETE reports={summary.Reports.Length}");
+							var successfulReports = summary.Reports.Count (report => report.Success);
+							var criticalValidationErrors = summary.ValidationErrors.Count (error => error.IsCritical);
+							Console.WriteLine (
+								$"BENCHMARKS_COMPLETE benchmarks={summary.BenchmarksCases.Length} reports={summary.Reports.Length} " +
+								$"successfulReports={successfulReports} criticalValidationErrors={criticalValidationErrors}");
+							results.PutInt ("benchmarks", summary.BenchmarksCases.Length);
 							results.PutInt ("reports", summary.Reports.Length);
+							results.PutInt ("successfulReports", successfulReports);
+							results.PutInt ("criticalValidationErrors", criticalValidationErrors);
+							results.PutString ("args", benchmarkArgs ?? "<null>");
+							results.PutString ("greeting", greeting ?? "<null>");
 							Finish (Result.Ok, results);
 						} catch (Exception ex) {
 							Console.WriteLine ($"BENCHMARKS_FAILED {ex}");
@@ -3534,30 +3416,72 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			Assert.IsTrue (completed, $"`dotnet run` did not complete in time. See {logPath} for details.");
 
 			var outputText = output.ToString ();
+			string instrumentationError = TryParseInstrumentationStringResult (outputText, "error") ?? "<not reported>";
+			// App logcat events are best-effort diagnostics; instrumentation results are authoritative.
+			bool hasArgumentsLog = outputText.Contains ("BENCHMARK_ARGS", StringComparison.Ordinal);
+			bool hasCompletionLog = outputText.Contains ("BENCHMARKS_COMPLETE", StringComparison.Ordinal);
 
-			// `Console.WriteLine` from the app lands in logcat, which `dotnet run` streams
-			StringAssert.Contains ("BENCHMARK_ARGS args=--custom-flag greeting=hello", outputText,
-				$"The instrumentation should receive the arguments passed after `--`. See {logPath} for details.");
-			StringAssert.Contains ("BENCHMARKS_COMPLETE reports=1", outputText,
-				$"BenchmarkDotNet should have produced 1 report. See {logPath} for details.");
+			TestContext.Out.WriteLine (
+				$"BenchmarkDotNet process diagnostics: completed={completed}, exitCode={process.ExitCode}, " +
+				$"error={instrumentationError}, argumentsLog={hasArgumentsLog}, completionLog={hasCompletionLog}");
+
 			StringAssert.Contains ("INSTRUMENTATION_CODE: -1", outputText,
-				$"The instrumentation should have finished with Result.Ok. See {logPath} for details.");
-			Assert.AreEqual (0, process.ExitCode, $"`dotnet run` should succeed. See {logPath} for details.");
+				$"The instrumentation should have finished with Result.Ok. Error: {instrumentationError}. See {logPath} for details.");
+			Assert.AreEqual (0, process.ExitCode,
+				$"`dotnet run` should succeed. Instrumentation error: {instrumentationError}. See {logPath} for details.");
+
+			int benchmarks = ParseInstrumentationResult (outputText, "benchmarks");
+			int reports = ParseInstrumentationResult (outputText, "reports");
+			int successfulReports = ParseInstrumentationResult (outputText, "successfulReports");
+			int criticalValidationErrors = ParseInstrumentationResult (outputText, "criticalValidationErrors");
+			string benchmarkArgs = ParseInstrumentationStringResult (outputText, "args");
+			string greeting = ParseInstrumentationStringResult (outputText, "greeting");
+
+			TestContext.Out.WriteLine (
+				$"BenchmarkDotNet results: benchmarks={benchmarks}, reports={reports}, " +
+				$"successfulReports={successfulReports}, criticalValidationErrors={criticalValidationErrors}, " +
+				$"args={benchmarkArgs}, greeting={greeting}");
+
+			Assert.AreEqual ("--custom-flag", benchmarkArgs,
+				$"The instrumentation should receive the custom argument passed after `--`. See {logPath} for details.");
+			Assert.AreEqual ("hello", greeting,
+				$"The instrumentation should receive the named argument passed after `--`. See {logPath} for details.");
+			Assert.AreEqual (1, benchmarks, $"BenchmarkDotNet should discover 1 benchmark, got {benchmarks}. See {logPath} for details.");
+			Assert.AreEqual (1, reports, $"BenchmarkDotNet should produce 1 report, got {reports}. See {logPath} for details.");
+			Assert.AreEqual (1, successfulReports, $"BenchmarkDotNet should produce 1 successful report, got {successfulReports}. See {logPath} for details.");
+			Assert.AreEqual (0, criticalValidationErrors,
+				$"BenchmarkDotNet should have no critical validation errors, got {criticalValidationErrors}. See {logPath} for details.");
 		}
 
 		static int ParseInstrumentationResult (string output, string key)
 		{
-			// Parses lines like: INSTRUMENTATION_RESULT: passed=1
+			var value = ParseInstrumentationStringResult (output, key);
+			if (!int.TryParse (value, out int result)) {
+				Assert.Fail ($"INSTRUMENTATION_RESULT key '{key}' has invalid integer value '{value}'.");
+			}
+			return result;
+		}
+
+		static string ParseInstrumentationStringResult (string output, string key)
+		{
+			var value = TryParseInstrumentationStringResult (output, key);
+			if (value != null)
+				return value;
+			Assert.Fail ($"INSTRUMENTATION_RESULT key '{key}' was not found.");
+			return "";
+		}
+
+		static string? TryParseInstrumentationStringResult (string output, string key)
+		{
+			// Parses lines like: INSTRUMENTATION_RESULT: key=value
 			var prefix = $"INSTRUMENTATION_RESULT: {key}=";
 			foreach (var rawLine in output.Split ('\n')) {
 				var line = rawLine.Trim ();
 				if (line.StartsWith (prefix, StringComparison.Ordinal)) {
-					var valueStr = line.Substring (prefix.Length).Trim ();
-					if (int.TryParse (valueStr, out int value))
-						return value;
+					return line.Substring (prefix.Length).Trim ();
 				}
 			}
-			return -1;
+			return null;
 		}
 
 		static string GetAppHelperSource (string appHelperBody, string hotReloadMessage) => $$"""
