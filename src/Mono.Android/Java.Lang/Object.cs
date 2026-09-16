@@ -172,7 +172,11 @@ namespace Java.Lang {
 				peer = JniEnvironment.Runtime.ValueManager.CreatePeer (ref reference, JniObjectReferenceOptions.Copy, type);
 				if (peer != null) {
 					// Activation can register a competing peer before this one is constructed.
-					peer = PeekObject (handle, type) ?? peer;
+					var registered = PeekObject (handle, type);
+					if (registered != null && !ReferenceEquals (peer, registered)) {
+						peer.DisposeUnlessReferenced ();
+						peer = registered;
+					}
 				}
 			}
 			JNIEnv.DeleteRef (handle, transfer);

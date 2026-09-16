@@ -547,6 +547,8 @@ namespace Android.RuntimeTests {
 				// return a new peer even when a compatible one is already registered, so
 				// the caller which loses the race receives an unregistered alias.
 				Assert.AreNotSame (first, second, "Each CreatePeer() caller should receive its own peer.");
+				Assert.IsTrue (first.PeerReference.IsValid && second.PeerReference.IsValid,
+					"Low-level GetPeer() must leave both returned peers usable.");
 				Assert.AreEqual (2, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ConstructorInvocations,
 					"Both callers should have raced through peer activation.");
 				Assert.AreEqual (0, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.DisposeInvocations,
@@ -593,7 +595,7 @@ namespace Android.RuntimeTests {
 			var createdPeers = new ConcurrentQueue<Java.InteropTests.TrimmableRuntimeJavaInteropPeer> ();
 			using var activationBarrier = new Barrier (2);
 			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ActivationBarrier = activationBarrier;
-			// Retain the losing alias too, so its finalizer cannot race the disposal assertion.
+			// Retain both peers to check that the losing alias is released without waiting for GC.
 			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.PeerCreated = createdPeers.Enqueue;
 			try {
 				var firstTask = Task.Factory.StartNew (
@@ -623,6 +625,11 @@ namespace Android.RuntimeTests {
 				var registered = Java.Interop.JniRuntime.CurrentRuntime.ValueManager.PeekPeer (reference);
 				Assert.IsNotNull (registered, "One of the racing peers should have won registration.");
 				Assert.AreSame (registered, first, "Array marshaling should return the peer which won registration.");
+				Assert.AreEqual (2, createdPeers.Count);
+				foreach (var peer in createdPeers) {
+					Assert.AreEqual (ReferenceEquals (peer, registered), peer.PeerReference.IsValid,
+						"Only the returned registered peer should retain a JNI reference.");
+				}
 			} finally {
 				Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ActivationBarrier = null;
 				Java.InteropTests.TrimmableRuntimeJavaInteropPeer.PeerCreated = null;
