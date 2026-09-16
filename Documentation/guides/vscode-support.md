@@ -2,13 +2,13 @@
 
 .NET for Android itself can be developed within
 [Visual Studio Code (VSCode)](https://code.visualstudio.com/).
-There is a workspace included in the repo `Xamarin.Android.code-workspace`.
+There is a workspace included in the repo `Microsoft.Android.code-workspace`.
 The required extensions should be installed when you open the
 workspace.
 
 ## Building .NET for Android
 
-Open the `Xamarin.Android.code-workspace` in VSCode. Then use the
+Open the `Microsoft.Android.code-workspace` in VSCode. Then use the
 Build Command Pallette (Ctrl+Shift+B in Windows, Cmd+Shift+B on Mac)
 to list the available build commands.
 
@@ -46,7 +46,7 @@ to be done in your **Preferences** > **Settings** in VSCode. This will save
 the setting globally so it will be available when ever you open
 .NET for Android.
 
-Alternatively you can add something like the following to the `Xamarin.Android.code-workspace`:
+Alternatively you can add something like the following to the `Microsoft.Android.code-workspace`:
 
 macOS or Linux Setting:
 
