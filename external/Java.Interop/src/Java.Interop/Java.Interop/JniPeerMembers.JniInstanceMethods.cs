@@ -107,21 +107,21 @@ namespace Java.Interop
 			var m              = (JniMethodInfo?) null;
 			var newMethod      = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (Members.JniPeerTypeName, method, signature);
 			if (newMethod.HasValue) {
-				var typeName   = newMethod.Value.TargetJniType ?? Members.JniPeerTypeName;
-				var methodName = newMethod.Value.TargetJniMethodName is string name ? name.AsSpan () : method;
-				var methodSig  = newMethod.Value.TargetJniMethodSignature is string sig ? sig.AsSpan () : signature;
-
-				using var t = new JniType (typeName);
-				if (newMethod.Value.TargetJniMethodInstanceToStatic &&
-						t.TryGetStaticMethod (methodName, methodSig, out m)) {
-					m.ParameterCount = newMethod.Value.TargetJniMethodParameterCount;
-					m.StaticRedirect = new JniType (typeName);
+				var info = newMethod.Value;
+				using var t = CreateTargetType (info, Members.JniPeerTypeName);
+				if (info.TargetJniMethodInstanceToStatic &&
+						TryGetStaticMethod (t, info, method, signature, out m)) {
+					m.ParameterCount = info.TargetJniMethodParameterCount;
+					m.StaticRedirect = CreateTargetType (info, Members.JniPeerTypeName);
 					return m;
 				}
-				if (t.TryGetInstanceMethod (methodName, methodSig, out m)) {
+				if (TryGetInstanceMethod (t, info, method, signature, out m)) {
 					return m;
 				}
-				Console.Error.WriteLine ($"warning: For declared method `{Members.JniPeerTypeName}.{method}.{signature}`, could not find requested method `{typeName}.{methodName}.{methodSig}`!");
+				var targetType = info.TargetJniType ?? Members.JniPeerTypeName;
+				var targetName = info.TargetJniMethodName ?? method.ToString ();
+				var targetSignature = info.TargetJniMethodSignature ?? signature.ToString ();
+				Console.Error.WriteLine ($"warning: For declared method `{Members.JniPeerTypeName}.{method}.{signature}`, could not find requested method `{targetType}.{targetName}.{targetSignature}`!");
 			}
 			return JniPeerType.GetInstanceMethod (method, signature);
 		}

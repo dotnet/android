@@ -38,11 +38,9 @@ namespace Java.Interop
 			var m              = (JniMethodInfo?) null;
 			var newMethod      = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (Members.JniPeerTypeName, method, signature);
 			if (newMethod.HasValue) {
-				using var t = new JniType (newMethod.Value.TargetJniType ?? Members.JniPeerTypeName);
-				if (t.TryGetStaticMethod (
-						newMethod.Value.TargetJniMethodName is string name ? name.AsSpan () : method,
-						newMethod.Value.TargetJniMethodSignature is string sig ? sig.AsSpan () : signature,
-						out m)) {
+				var info = newMethod.Value;
+				using var t = CreateTargetType (info, Members.JniPeerTypeName);
+				if (TryGetStaticMethod (t, info, method, signature, out m)) {
 					return m;
 				}
 			}

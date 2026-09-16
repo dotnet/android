@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
+using System.Text;
 using System.Threading;
 
 namespace Java.Interop {
@@ -18,12 +19,43 @@ namespace Java.Interop {
 			Justification = "Deliberate choice to 'hide' these types from code completion for `Java.Interop.`; see 045b8af7.")]
 		public struct ReplacementMethodInfo : IEquatable<ReplacementMethodInfo>
 		{
+			string? targetJniType;
+			string? targetJniMethodName;
+			IntPtr targetJniTypeUtf8;
+			IntPtr targetJniMethodNameUtf8;
+
 			public  string? SourceJniType                   {get; set;}
 			public  string? SourceJniMethodName             {get; set;}
 			public  string? SourceJniMethodSignature        {get; set;}
-			public  string? TargetJniType                   {get; set;}
-			public  string? TargetJniMethodName             {get; set;}
+			public  string? TargetJniType {
+				get => targetJniType ?? GetUtf8String (targetJniTypeUtf8);
+				set {
+					targetJniType = value;
+					targetJniTypeUtf8 = IntPtr.Zero;
+				}
+			}
+			public  string? TargetJniMethodName {
+				get => targetJniMethodName ?? GetUtf8String (targetJniMethodNameUtf8);
+				set {
+					targetJniMethodName = value;
+					targetJniMethodNameUtf8 = IntPtr.Zero;
+				}
+			}
 			public  string? TargetJniMethodSignature        {get; set;}
+			public  IntPtr  TargetJniTypeUtf8 {
+				get => targetJniTypeUtf8;
+				set {
+					targetJniTypeUtf8 = value;
+					targetJniType = null;
+				}
+			}
+			public  IntPtr  TargetJniMethodNameUtf8 {
+				get => targetJniMethodNameUtf8;
+				set {
+					targetJniMethodNameUtf8 = value;
+					targetJniMethodName = null;
+				}
+			}
 			public  int?    TargetJniMethodParameterCount   {get; set;}
 			public  bool    TargetJniMethodInstanceToStatic {get; set;}
 
@@ -49,14 +81,16 @@ namespace Java.Interop {
 
 			public override int GetHashCode ()
 			{
-				return (SourceJniType?.GetHashCode () ?? 0) ^
-					(SourceJniMethodName?.GetHashCode () ?? 0) ^
-					(SourceJniMethodSignature?.GetHashCode () ?? 0) ^
-					(TargetJniType?.GetHashCode () ?? 0) ^
-					(TargetJniMethodName?.GetHashCode () ?? 0) ^
-					(TargetJniMethodSignature?.GetHashCode () ?? 0) ^
-					(TargetJniMethodParameterCount?.GetHashCode () ?? 0) ^
-					TargetJniMethodInstanceToStatic.GetHashCode ();
+				return HashCode.Combine (
+					SourceJniType,
+					SourceJniMethodName,
+					SourceJniMethodSignature,
+					TargetJniType,
+					TargetJniMethodName,
+					TargetJniMethodSignature,
+					TargetJniMethodParameterCount,
+					TargetJniMethodInstanceToStatic
+				);
 			}
 
 			public override string ToString ()
@@ -75,6 +109,20 @@ namespace Java.Interop {
 
 			public static bool operator==(ReplacementMethodInfo a, ReplacementMethodInfo b) => a.Equals (b);
 			public static bool operator!=(ReplacementMethodInfo a, ReplacementMethodInfo b) => !a.Equals (b);
+		}
+
+		static unsafe string? GetUtf8String (IntPtr value)
+		{
+			if (value == IntPtr.Zero) {
+				return null;
+			}
+
+			byte* start = (byte*)value;
+			int length = 0;
+			while (start [length] != 0) {
+				length++;
+			}
+			return Encoding.UTF8.GetString (start, length);
 		}
 
 		/// <include file="../Documentation/Java.Interop/JniRuntime.JniTypeManager.xml" path="/docs/member[@name='T:JniTypeManager']/*" />

@@ -167,6 +167,47 @@ namespace Java.Interop {
 			return isInterface ? this : value.JniPeerMembers;
 		}
 
+		static JniType CreateTargetType (JniRuntime.ReplacementMethodInfo info, string fallbackType)
+		{
+			return info.TargetJniTypeUtf8 != IntPtr.Zero
+				? new JniType (info.TargetJniTypeUtf8)
+				: new JniType (info.TargetJniType ?? fallbackType);
+		}
+
+		static bool TryGetInstanceMethod (
+			JniType type,
+			JniRuntime.ReplacementMethodInfo info,
+			ReadOnlySpan<char> fallbackName,
+			ReadOnlySpan<char> fallbackSignature,
+			[System.Diagnostics.CodeAnalysis.NotNullWhen (true)] out JniMethodInfo? method)
+		{
+			if (info.TargetJniMethodNameUtf8 != IntPtr.Zero) {
+				var signature = info.TargetJniMethodSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
+				return type.TryGetInstanceMethod (info.TargetJniMethodNameUtf8, signature, out method);
+			}
+
+			var name = info.TargetJniMethodName is string targetName ? targetName.AsSpan () : fallbackName;
+			var fallback = info.TargetJniMethodSignature is string targetSignatureValue ? targetSignatureValue.AsSpan () : fallbackSignature;
+			return type.TryGetInstanceMethod (name, fallback, out method);
+		}
+
+		static bool TryGetStaticMethod (
+			JniType type,
+			JniRuntime.ReplacementMethodInfo info,
+			ReadOnlySpan<char> fallbackName,
+			ReadOnlySpan<char> fallbackSignature,
+			[System.Diagnostics.CodeAnalysis.NotNullWhen (true)] out JniMethodInfo? method)
+		{
+			if (info.TargetJniMethodNameUtf8 != IntPtr.Zero) {
+				var signature = info.TargetJniMethodSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
+				return type.TryGetStaticMethod (info.TargetJniMethodNameUtf8, signature, out method);
+			}
+
+			var name = info.TargetJniMethodName is string targetName ? targetName.AsSpan () : fallbackName;
+			var fallback = info.TargetJniMethodSignature is string targetSignatureValue ? targetSignatureValue.AsSpan () : fallbackSignature;
+			return type.TryGetStaticMethod (name, fallback, out method);
+		}
+
 		internal static void AssertSelf (IJavaPeerable self)
 		{
 			if (self == null)
