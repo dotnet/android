@@ -202,10 +202,12 @@ namespace Xamarin.Android.Tasks
 		sealed class JniRemappingData
 		{
 			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+#pragma warning disable CS0649 // Field is populated during native code generation
 			public JniRemappingTypeReplacementEntry type_replacements;
 
 			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
 			public JniRemappingIndexTypeEntry method_replacement_index;
+#pragma warning restore CS0649
 
 			public uint type_replacement_count;
 			public uint method_replacement_index_count;
