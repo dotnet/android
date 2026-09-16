@@ -285,8 +285,8 @@
       <_Libdir>-L "$(DotNetPreviewPath)packs/Microsoft.NETCore.App.Ref"</_Libdir>
       <_Output>-o "$(_ExternalDocsRoot)"</_Output>
       <_DocTypeArgs Condition=" '$(DocTypeName)' != '' ">--type=$(DocTypeName)</_DocTypeArgs>
-      <_RootFxDir>$(BaseIntermediateOutputPath)docs-gen-temp/</_RootFxDir>
-      <_FxConfig>-fx "$(_RootFxDir)"</_FxConfig>
+      <_RootFxDir>$(BaseIntermediateOutputPath)docs-gen-temp$([System.IO.Path]::DirectorySeparatorChar)</_RootFxDir>
+      <_FxConfig>-fx "$(_RootFxDir)."</_FxConfig>
       <_ExtraMdocArgs>-lang docid -lang fsharp --debug --delete</_ExtraMdocArgs>
     </PropertyGroup>
     <ItemGroup>
