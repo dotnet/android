@@ -19,28 +19,11 @@ namespace Java.Interop {
 			Justification = "Deliberate choice to 'hide' these types from code completion for `Java.Interop.`; see 045b8af7.")]
 		public struct ReplacementMethodInfo : IEquatable<ReplacementMethodInfo>
 		{
-			string? targetJniType;
-			string? targetJniMethodName;
-			IntPtr targetJniTypeUtf8;
-			IntPtr targetJniMethodNameUtf8;
-
 			public  string? SourceJniType                   {get; set;}
 			public  string? SourceJniMethodName             {get; set;}
 			public  string? SourceJniMethodSignature        {get; set;}
-			public  string? TargetJniType {
-				get => targetJniType ?? GetUtf8String (targetJniTypeUtf8);
-				set {
-					targetJniType = value;
-					targetJniTypeUtf8 = IntPtr.Zero;
-				}
-			}
-			public  string? TargetJniMethodName {
-				get => targetJniMethodName ?? GetUtf8String (targetJniMethodNameUtf8);
-				set {
-					targetJniMethodName = value;
-					targetJniMethodNameUtf8 = IntPtr.Zero;
-				}
-			}
+			public  string? TargetJniType                   {get; set;}
+			public  string? TargetJniMethodName             {get; set;}
 			public  string? TargetJniMethodSignature        {get; set;}
 			/// <summary>
 			/// Gets or sets a pointer to a NUL-terminated UTF-8 JNI type name.
@@ -48,30 +31,24 @@ namespace Java.Interop {
 			/// <remarks>
 			/// Java.Interop does not own or free this memory. A non-zero pointer must remain valid
 			/// and unchanged for as long as this <see cref="ReplacementMethodInfo"/> may be used.
-			/// Setting this property clears <see cref="TargetJniType"/>.
 			/// </remarks>
-			public  IntPtr  TargetJniTypeUtf8 {
-				get => targetJniTypeUtf8;
-				set {
-					targetJniTypeUtf8 = value;
-					targetJniType = null;
-				}
-			}
+			public  IntPtr  TargetJniTypeUtf8               {get; set;}
 			/// <summary>
 			/// Gets or sets a pointer to a NUL-terminated UTF-8 JNI method name.
 			/// </summary>
 			/// <remarks>
 			/// Java.Interop does not own or free this memory. A non-zero pointer must remain valid
 			/// and unchanged for as long as this <see cref="ReplacementMethodInfo"/> may be used.
-			/// Setting this property clears <see cref="TargetJniMethodName"/>.
 			/// </remarks>
-			public  IntPtr  TargetJniMethodNameUtf8 {
-				get => targetJniMethodNameUtf8;
-				set {
-					targetJniMethodNameUtf8 = value;
-					targetJniMethodName = null;
-				}
-			}
+			public  IntPtr  TargetJniMethodNameUtf8         {get; set;}
+			/// <summary>
+			/// Gets or sets a pointer to a NUL-terminated UTF-8 JNI method signature.
+			/// </summary>
+			/// <remarks>
+			/// Java.Interop does not own or free this memory. A non-zero pointer must remain valid
+			/// and unchanged for as long as this <see cref="ReplacementMethodInfo"/> may be used.
+			/// </remarks>
+			public  IntPtr  TargetJniMethodSignatureUtf8    {get; set;}
 			public  int?    TargetJniMethodParameterCount   {get; set;}
 			public  bool    TargetJniMethodInstanceToStatic {get; set;}
 
@@ -91,6 +68,9 @@ namespace Java.Interop {
 					string.Equals (TargetJniType, other.TargetJniType) &&
 					string.Equals (TargetJniMethodName, other.TargetJniMethodName) &&
 					string.Equals (TargetJniMethodSignature, other.TargetJniMethodSignature) &&
+					TargetJniTypeUtf8 == other.TargetJniTypeUtf8 &&
+					TargetJniMethodNameUtf8 == other.TargetJniMethodNameUtf8 &&
+					TargetJniMethodSignatureUtf8 == other.TargetJniMethodSignatureUtf8 &&
 					TargetJniMethodParameterCount == other.TargetJniMethodParameterCount &&
 					TargetJniMethodInstanceToStatic == other.TargetJniMethodInstanceToStatic;
 			}
@@ -104,8 +84,13 @@ namespace Java.Interop {
 					TargetJniType,
 					TargetJniMethodName,
 					TargetJniMethodSignature,
-					TargetJniMethodParameterCount,
-					TargetJniMethodInstanceToStatic
+					HashCode.Combine (
+						TargetJniTypeUtf8,
+						TargetJniMethodNameUtf8,
+						TargetJniMethodSignatureUtf8,
+						TargetJniMethodParameterCount,
+						TargetJniMethodInstanceToStatic
+					)
 				);
 			}
 
@@ -118,6 +103,9 @@ namespace Java.Interop {
 					$", {nameof (TargetJniType)} = \"{TargetJniType}\"" +
 					$", {nameof (TargetJniMethodName)} = \"{TargetJniMethodName}\"" +
 					$", {nameof (TargetJniMethodSignature)} = \"{TargetJniMethodSignature}\"" +
+					$", {nameof (TargetJniTypeUtf8)} = 0x{TargetJniTypeUtf8.ToString ("x")}" +
+					$", {nameof (TargetJniMethodNameUtf8)} = 0x{TargetJniMethodNameUtf8.ToString ("x")}" +
+					$", {nameof (TargetJniMethodSignatureUtf8)} = 0x{TargetJniMethodSignatureUtf8.ToString ("x")}" +
 					$", {nameof (TargetJniMethodParameterCount)} = {TargetJniMethodParameterCount?.ToString () ?? "null"}" +
 					$", {nameof (TargetJniMethodInstanceToStatic)} = {TargetJniMethodInstanceToStatic}" +
 					$"}}";
@@ -125,20 +113,6 @@ namespace Java.Interop {
 
 			public static bool operator==(ReplacementMethodInfo a, ReplacementMethodInfo b) => a.Equals (b);
 			public static bool operator!=(ReplacementMethodInfo a, ReplacementMethodInfo b) => !a.Equals (b);
-		}
-
-		static unsafe string? GetUtf8String (IntPtr value)
-		{
-			if (value == IntPtr.Zero) {
-				return null;
-			}
-
-			byte* start = (byte*)value;
-			int length = 0;
-			while (start [length] != 0) {
-				length++;
-			}
-			return Encoding.UTF8.GetString (start, length);
 		}
 
 		/// <include file="../Documentation/Java.Interop/JniRuntime.JniTypeManager.xml" path="/docs/member[@name='T:JniTypeManager']/*" />
@@ -314,6 +288,23 @@ namespace Java.Interop {
 
 			protected virtual string? GetReplacementTypeCore (string jniSimpleReference) => null;
 
+			internal IntPtr GetReplacementTypeUtf8 (string jniSimpleReference)
+			{
+				AssertValid ();
+				AssertSimpleReference (jniSimpleReference, nameof (jniSimpleReference));
+
+				return GetReplacementTypeUtf8Core (jniSimpleReference);
+			}
+
+			/// <summary>
+			/// Resolves a replacement JNI type to stable NUL-terminated UTF-8 memory.
+			/// </summary>
+			/// <remarks>
+			/// Java.Interop does not own or free the returned memory. A non-zero pointer must remain
+			/// valid and unchanged for the lifetime of the associated <see cref="JniRuntime"/>.
+			/// </remarks>
+			protected virtual IntPtr GetReplacementTypeUtf8Core (string jniSimpleReference) => IntPtr.Zero;
+
 			public IReadOnlyList<string>? GetStaticMethodFallbackTypes (string jniSimpleReference)
 			{
 				AssertValid ();
@@ -350,12 +341,40 @@ namespace Java.Interop {
 				return GetReplacementMethodInfoCore (jniSimpleReference, jniMethodName, jniMethodSignature);
 			}
 
+			internal ReplacementMethodInfo? GetReplacementMethodInfo (IntPtr jniSimpleReferenceUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+			{
+				AssertValid ();
+				if (jniSimpleReferenceUtf8 == IntPtr.Zero)
+					throw new ArgumentNullException (nameof (jniSimpleReferenceUtf8));
+				if (jniMethodName.IsEmpty)
+					throw new ArgumentNullException (nameof (jniMethodName));
+				if (jniMethodSignature.IsEmpty)
+					throw new ArgumentNullException (nameof (jniMethodSignature));
+
+				return GetReplacementMethodInfoCore (jniSimpleReferenceUtf8, jniMethodName, jniMethodSignature);
+			}
+
 			/// <summary>
 			/// Resolves member remapping without requiring name and signature strings.
 			/// The default implementation preserves dispatch to the string overload.
 			/// </summary>
 			protected virtual ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSimpleReference, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 				=> GetReplacementMethodInfoCore (jniSimpleReference, jniMethodName.ToString (), jniMethodSignature.ToString ());
+
+			/// <summary>
+			/// Resolves member remapping with a source JNI type in stable NUL-terminated UTF-8 memory.
+			/// </summary>
+			protected virtual ReplacementMethodInfo? GetReplacementMethodInfoCore (IntPtr jniSimpleReferenceUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+				=> GetReplacementMethodInfoCore (GetUtf8String (jniSimpleReferenceUtf8), jniMethodName, jniMethodSignature);
+
+			static unsafe string GetUtf8String (IntPtr value)
+			{
+				byte* start = (byte*)value;
+				int length = 0;
+				while (start [length] != 0)
+					length++;
+				return Encoding.UTF8.GetString (start, length);
+			}
 
 			// Default implementation is a no-op. Derived classes (e.g. `ReflectionJniTypeManager`)
 			// provide reflection-based registration. Override to provide custom registration.

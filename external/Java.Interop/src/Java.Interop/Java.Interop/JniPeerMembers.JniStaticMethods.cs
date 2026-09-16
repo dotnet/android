@@ -36,10 +36,10 @@ namespace Java.Interop
 		JniMethodInfo GetMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
 		{
 			var m              = (JniMethodInfo?) null;
-			var newMethod      = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (Members.JniPeerTypeName, method, signature);
+			var newMethod      = Members.GetReplacementMethodInfo (method, signature);
 			if (newMethod.HasValue) {
 				var info = newMethod.Value;
-				using var t = CreateTargetType (info, Members.JniPeerTypeName);
+				using var t = CreateTargetType (info, Members);
 				if (TryGetStaticMethod (t, info, method, signature, out m)) {
 					return m;
 				}

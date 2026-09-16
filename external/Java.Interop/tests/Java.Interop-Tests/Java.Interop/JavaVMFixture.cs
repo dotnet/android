@@ -135,6 +135,11 @@ namespace Java.InteropTests {
 			? v
 			: null;
 
+		protected override IntPtr GetReplacementTypeUtf8Core (string jniSimpleReference) =>
+			ReplacmentTypes.TryGetValue (jniSimpleReference, out var v)
+			? GetUtf8Value (v)
+			: IntPtr.Zero;
+
 		Dictionary<(string SourceType, string SourceName, string? SourceSignature), (string? TargetType, string? TargetName, string? TargetSignature, int? ParamCount, bool TurnStatic)> ReplacementMethods = new() {
 			[("java/lang/Object",                       "remappedToToString",       "()Ljava/lang/String;")]    = (null, "toString", null, null, false),
 			[("java/lang/Object",                       "remappedToStaticHashCode", null)]                      = ("net/dot/jni/test/ObjectHelper", "getHashCodeHelper", null, null, true),
@@ -162,26 +167,12 @@ namespace Java.InteropTests {
 			}
 			// Console.Error.WriteLine ($"# jonp: found replacement: ({GetValue (r.TargetType)}, {GetValue (r.TargetName)}, {GetValue (r.TargetSignature)}, {r.ParamCount?.ToString () ?? "null"}, {r.IsStatic})");
 			return new JniRuntime.ReplacementMethodInfo {
-					SourceJniType                   = jniSourceType,
-					SourceJniMethodName             = jniMethodName,
-					SourceJniMethodSignature        = jniMethodSignature,
 					TargetJniTypeUtf8               = GetUtf8Value (r.TargetType ?? jniSourceType),
 					TargetJniMethodNameUtf8         = GetUtf8Value (r.TargetName ?? jniMethodName),
-					TargetJniMethodSignature        = targetSig,
+					TargetJniMethodSignatureUtf8    = targetSig == null ? IntPtr.Zero : GetUtf8Value (targetSig),
 					TargetJniMethodParameterCount   = paramCount,
 					TargetJniMethodInstanceToStatic = r.TurnStatic,
 			};
-
-			IntPtr GetUtf8Value (string value)
-			{
-				lock (utf8ValuesLock) {
-					if (utf8Values.TryGetValue (value, out var pointer))
-						return pointer;
-					pointer = Marshal.StringToCoTaskMemUTF8 (value);
-					utf8Values.Add (value, pointer);
-					return pointer;
-				}
-			}
 
 			string GetAlternateMethodSignature ()
 			{
@@ -193,6 +184,25 @@ namespace Java.InteropTests {
 			// {
 			// 	return value == null ? "null" : $"\"{value}\"";
 			// }
+		}
+
+		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (IntPtr jniSourceTypeUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+		{
+			var jniSourceType = Marshal.PtrToStringUTF8 (jniSourceTypeUtf8);
+			if (jniSourceType == null)
+				throw new InvalidOperationException ("The test remapping source type is null.");
+			return GetReplacementMethodInfoCore (jniSourceType, jniMethodName.ToString (), jniMethodSignature.ToString ());
+		}
+
+		IntPtr GetUtf8Value (string value)
+		{
+			lock (utf8ValuesLock) {
+				if (utf8Values.TryGetValue (value, out var pointer))
+					return pointer;
+				pointer = Marshal.StringToCoTaskMemUTF8 (value);
+				utf8Values.Add (value, pointer);
+				return pointer;
+			}
 		}
 	}
 }

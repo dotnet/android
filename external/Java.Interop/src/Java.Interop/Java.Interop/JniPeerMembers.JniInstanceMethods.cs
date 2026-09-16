@@ -105,22 +105,22 @@ namespace Java.Interop
 		JniMethodInfo GetMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
 		{
 			var m              = (JniMethodInfo?) null;
-			var newMethod      = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (Members.JniPeerTypeName, method, signature);
+			var newMethod      = Members.GetReplacementMethodInfo (method, signature);
 			if (newMethod.HasValue) {
 				var info = newMethod.Value;
-				using var t = CreateTargetType (info, Members.JniPeerTypeName);
+				using var t = CreateTargetType (info, Members);
 				if (info.TargetJniMethodInstanceToStatic &&
 						TryGetStaticMethod (t, info, method, signature, out m)) {
 					m.ParameterCount = info.TargetJniMethodParameterCount;
-					m.StaticRedirect = CreateTargetType (info, Members.JniPeerTypeName);
+					m.StaticRedirect = CreateTargetType (info, Members);
 					return m;
 				}
 				if (TryGetInstanceMethod (t, info, method, signature, out m)) {
 					return m;
 				}
-				var targetType = info.TargetJniType ?? Members.JniPeerTypeName;
-				var targetName = info.TargetJniMethodName ?? method.ToString ();
-				var targetSignature = info.TargetJniMethodSignature ?? signature.ToString ();
+				var targetType = GetTargetTypeNameForDiagnostics (info, Members);
+				var targetName = GetTargetMethodNameForDiagnostics (info, method);
+				var targetSignature = GetTargetMethodSignatureForDiagnostics (info, signature);
 				Console.Error.WriteLine ($"warning: For declared method `{Members.JniPeerTypeName}.{method}.{signature}`, could not find requested method `{targetType}.{targetName}.{targetSignature}`!");
 			}
 			return JniPeerType.GetInstanceMethod (method, signature);
