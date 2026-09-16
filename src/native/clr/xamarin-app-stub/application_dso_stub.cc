@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <stdlib.h>
 
+#include <managed-interface.hh>
 #include <xamarin-app.hh>
 
 // This file MUST have "valid" values everywhere - the DSO it is compiled into is loaded by the
@@ -213,6 +214,13 @@ const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[] = {
 		},
 		.replacement = "another/replacement/java/type",
 	},
+};
+
+extern "C" const xamarin::android::JniRemappingData jni_remapping_data {
+	.type_replacements = jni_remapping_type_replacements,
+	.method_replacement_index = jni_remapping_method_replacement_index,
+	.type_replacement_count = 2,
+	.method_replacement_index_count = 2,
 };
 
 const char *init_runtime_property_names[] = {
