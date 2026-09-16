@@ -286,6 +286,7 @@
       <_Output>-o "$(_ExternalDocsRoot)"</_Output>
       <_DocTypeArgs Condition=" '$(DocTypeName)' != '' ">--type=$(DocTypeName)</_DocTypeArgs>
       <_RootFxDir>$(BaseIntermediateOutputPath)docs-gen-temp$([System.IO.Path]::DirectorySeparatorChar)</_RootFxDir>
+      <!-- Avoid ending the quoted Windows path with a backslash; "\." names the same directory. -->
       <_FxConfig>-fx "$(_RootFxDir)."</_FxConfig>
       <_ExtraMdocArgs>-lang docid -lang fsharp --debug --delete</_ExtraMdocArgs>
     </PropertyGroup>
