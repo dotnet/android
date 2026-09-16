@@ -97,6 +97,7 @@ namespace Com.Xamarin.Test
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 

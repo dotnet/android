@@ -253,13 +253,11 @@ namespace Com.Android.Internal.Util.Custom.Faceunlock
 			{
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
-				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
 					__data.WriteLong (operationId);
-					remote.Transact (IFaceServiceStub.TransactionAuthenticate, __data, __reply, 0);
-					__reply.ReadException ();
+					remote.Transact (IFaceServiceStub.TransactionAuthenticate, __data, null, global::Android.OS.TransactionFlags.Oneway);
 
 				} finally {
 					__data.Recycle ();
@@ -272,12 +270,10 @@ namespace Com.Android.Internal.Util.Custom.Faceunlock
 			{
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
-				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
-					remote.Transact (IFaceServiceStub.TransactionCancel, __data, __reply, 0);
-					__reply.ReadException ();
+					remote.Transact (IFaceServiceStub.TransactionCancel, __data, null, global::Android.OS.TransactionFlags.Oneway);
 
 				} finally {
 					__data.Recycle ();
@@ -290,15 +286,13 @@ namespace Com.Android.Internal.Util.Custom.Faceunlock
 			{
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
-				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
 					__data.WriteByteArray (cryptoToken);
 					__data.WriteInt (timeout);
 					__data.WriteIntArray (disabledFeatures);
-					remote.Transact (IFaceServiceStub.TransactionEnroll, __data, __reply, 0);
-					__reply.ReadException ();
+					remote.Transact (IFaceServiceStub.TransactionEnroll, __data, null, global::Android.OS.TransactionFlags.Oneway);
 
 				} finally {
 					__data.Recycle ();
@@ -424,13 +418,11 @@ namespace Com.Android.Internal.Util.Custom.Faceunlock
 			{
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
-				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
 					__data.WriteInt (biometricId);
-					remote.Transact (IFaceServiceStub.TransactionRemove, __data, __reply, 0);
-					__reply.ReadException ();
+					remote.Transact (IFaceServiceStub.TransactionRemove, __data, null, global::Android.OS.TransactionFlags.Oneway);
 
 				} finally {
 					__data.Recycle ();
@@ -443,13 +435,11 @@ namespace Com.Android.Internal.Util.Custom.Faceunlock
 			{
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
-				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
 					__data.WriteByteArray (cryptoToken);
-					remote.Transact (IFaceServiceStub.TransactionResetLockout, __data, __reply, 0);
-					__reply.ReadException ();
+					remote.Transact (IFaceServiceStub.TransactionResetLockout, __data, null, global::Android.OS.TransactionFlags.Oneway);
 
 				} finally {
 					__data.Recycle ();
@@ -484,13 +474,11 @@ namespace Com.Android.Internal.Util.Custom.Faceunlock
 			{
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
-				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
 					__data.WriteStrongBinder ((((receiver != null)) ? (receiver.AsBinder ()) : (null)));
-					remote.Transact (IFaceServiceStub.TransactionSetCallback, __data, __reply, 0);
-					__reply.ReadException ();
+					remote.Transact (IFaceServiceStub.TransactionSetCallback, __data, null, global::Android.OS.TransactionFlags.Oneway);
 
 				} finally {
 					__data.Recycle ();
@@ -503,7 +491,6 @@ namespace Com.Android.Internal.Util.Custom.Faceunlock
 			{
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
-				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -511,8 +498,7 @@ namespace Com.Android.Internal.Util.Custom.Faceunlock
 					__data.WriteInt (enable ? 1 : 0);
 					__data.WriteByteArray (token);
 					__data.WriteInt (faceId);
-					remote.Transact (IFaceServiceStub.TransactionSetFeature, __data, __reply, 0);
-					__reply.ReadException ();
+					remote.Transact (IFaceServiceStub.TransactionSetFeature, __data, null, global::Android.OS.TransactionFlags.Oneway);
 
 				} finally {
 					__data.Recycle ();
