@@ -7,7 +7,7 @@ cat << 'GUIDANCE'
 ### What to look for
 Comments in source code and current documentation that still describe the
 product as Xamarin or Xamarin.Android, or link to the archived
-`dotnet/android` or `mono/mono` repositories, when the text clearly
+`xamarin/xamarin-android` or `mono/mono` repositories, when the text clearly
 predates the .NET 6 transition.
 
 Good candidates state current behavior, ownership, setup, or contribution

@@ -240,7 +240,7 @@ added to `Documentation/release-notes/images/`.
    The GitHub compare view is handy for this step. For example:
 
    ```
-   https://github.com/dotnet/android/compare/v11.1.99.168...master
+   https://github.com/dotnet/android/compare/v11.1.99.168...main
    ```
 
    (This step will no longer be necessary once labels are being added

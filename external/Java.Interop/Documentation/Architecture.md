@@ -33,7 +33,7 @@ Within Xamarin.Android, there are four "moving parts":
 4. MSBuild glue code to glue various things together. See
     [xamarin-android/src/Xamarin.Android.Build.Tasks][xa-tasks].
 
-[xa-tasks]: https://github.com/dotnet/android/tree/master/src/Xamarin.Android.Build.Tasks
+[xa-tasks]: https://github.com/dotnet/android/tree/main/src/Xamarin.Android.Build.Tasks
 
 Furthermore, there's a matter of "time": binding assemblies (2) are emitted
 at one time, while everything else (1, 3, 4) are bundled with the SDK and
@@ -273,4 +273,3 @@ I halted the above loop after reaching 25686556 instances.
 
 I'm not sure when the JDK would stop handing out references, but it's probably
 bound to process heap limits (e.g. depends on 32-bit vs. 64-bit process).
-
