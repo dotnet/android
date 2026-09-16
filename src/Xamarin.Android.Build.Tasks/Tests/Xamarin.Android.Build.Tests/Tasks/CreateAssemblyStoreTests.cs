@@ -42,6 +42,7 @@ public class CreateAssemblyStoreTests : BaseTest
 		Assert.AreEqual (0x80010003u, reader.ReadUInt32 (), "Unexpected arm64 assembly store version.");
 		uint assemblyCount = reader.ReadUInt32 ();
 		uint indexEntryCount = reader.ReadUInt32 ();
+		Assert.AreEqual (1u, assemblyCount, "The store should contain only the real assembly.");
 		Assert.AreEqual (assemblyCount * 2, indexEntryCount, "Unexpected index entry count.");
 		uint indexSize = reader.ReadUInt32 ();
 		Assert.AreEqual (5 * sizeof (uint), reader.BaseStream.Position, "Unexpected assembly store header size.");

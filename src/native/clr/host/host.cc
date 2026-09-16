@@ -35,6 +35,14 @@
 
 using namespace xamarin::android;
 
+namespace {
+	[[gnu::always_inline]]
+	auto is_legacy_native_image_name (std::string_view const& name) noexcept -> bool
+	{
+		return name.ends_with (".ni.dll"sv) || name.ends_with (".ni"sv);
+	}
+} // anonymous namespace
+
 void Host::clr_error_writer (const char *message) noexcept
 {
 	log_errorf (LOG_DEFAULT, "CLR error: %s", optional_string (message));
@@ -47,6 +55,9 @@ bool Host::clr_external_assembly_probe (const char *path, void **data_start, int
 	if (data_start == nullptr || size == nullptr) {
 		return false; // TODO: abort instead?
 	}
+
+	*data_start = nullptr;
+	*size = 0;
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.start_event (TimingEventKind::AssemblyLoad);
@@ -69,6 +80,11 @@ bool Host::clr_external_assembly_probe (const char *path, void **data_start, int
 
 		return data_start != nullptr && size > 0;
 	};
+
+	if (path != nullptr && is_legacy_native_image_name (path)) {
+		log_debugf (LOG_ASSEMBLY, "Assembly '%s' ignored", path);
+		return log_and_return (path, *data_start, *size);
+	}
 
 	if constexpr (Constants::is_debug_build) {
 		*data_start = FastDevAssemblies::open_assembly (path, *size);
