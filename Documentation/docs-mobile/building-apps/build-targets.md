@@ -28,6 +28,9 @@ Builds the app with an  embedded AOT profiler, sets the profiler TCP port to
 [`$(AndroidAotProfilerPort)`](build-properties.md#androidaotprofilerport),
 and starts the default activity.
 
+This legacy target applies to supported .NET 10-and-earlier projects that
+use Mono. It does not configure CoreCLR or NativeAOT profiling.
+
 The default TCP port is `9999`.
 
 Added in Xamarin.Android 10.2.
@@ -71,6 +74,9 @@ Added in .NET 11.
 Must be called *after* the [BuildAndStartAotProfiling](#buildandstartaotprofiling)
 target.
 
+This legacy target applies to supported .NET 10-and-earlier projects that
+use Mono.
+
 Collects the AOT profiler data from the device or emulator through the TCP port
 [`$(AndroidAotProfilerPort)`](build-properties.md#androidaotprofilerport)
 and writes them to
@@ -85,7 +91,7 @@ property.
 This is equivalent to:
 
 ```shell
-aprofutil $(AProfUtilExtraOptions) -s -v -f -p $(AndroidAotProfilerPort) -o "$(AndroidAotCustomProfilePath)"
+aprofutil $(AProfUtilExtraOptions) -s -v -p $(AndroidAotProfilerPort) -o "$(AndroidAotCustomProfilePath)"
 ```
 
 Added in Xamarin.Android 10.2.

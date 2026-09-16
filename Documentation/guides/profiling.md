@@ -89,6 +89,10 @@ call][managed_timing] or [this native call][native_timing].
 
 ## Profiling the AOT Compiler
 
+This section applies to supported .NET 10-and-earlier applications that
+use Mono. The generated `.aprof` file is a Mono AOT profile; it is not a
+CoreCLR MIBC profile or dynamic PGO input.
+
 The application needs to be built with embedded AOT profiler, the
 profiler needs to be enabled and the application run on device or
 emulator. That can be done by using `BuildAndStartAotProfiling`

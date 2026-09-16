@@ -71,43 +71,44 @@ these calls.
 
 ## AndroidAotAdditionalArguments
 
-A string property that allows
-passing options to the Mono compiler during the `Aot`
-task for projects that have either
-[`$(AndroidEnableProfiledAot)`](#androidenableprofiledaot) or
-[`$(AotAssemblies)`](#aotassemblies) set to `true`.
-The string value of the property is added to the response file when
-calling the Mono cross-compiler.
+A string property that allows supported .NET 10-and-earlier projects
+that use Mono to pass additional comma-separated options within the
+Mono AOT compiler's `--aot=...` argument. The property is used only
+when Mono AOT compilation is enabled.
 
 In general, this property should be left blank, but in certain
 special scenarios it might provide useful flexibility.
 
 The `$(AndroidAotAdditionalArguments)` property is different from the related
 [`$(AndroidExtraAotOptions)`](#androidextraaotoptions) property;
-`$(AndroidAotAdditionalArguments)` passes full standalone space-separated options
-like `--verbose` or `--debug` to the AOT compiler, while
-`$(AndroidExtraAotOptions)` contains comma-separated arguments which are part of
-the `--aot` option of the AOT compiler.
+`$(AndroidAotAdditionalArguments)` is included within the `--aot` option,
+while `$(AndroidExtraAotOptions)` passes standalone arguments directly to
+the Mono AOT compiler process.
 
 ## AndroidAotCustomProfilePath
 
-The file that `aprofutil` should create to hold profiler data.
+The file that `aprofutil` should create to hold Mono AOT profiler data.
+The default value is `custom.aprof`.
 
-## AndroidAotProfiles
-
-A string property that allows the
-developer to add AOT profiles from the command line. It's a
-semicolon or comma-separated list of absolute paths.
+This property applies to the legacy AOT profiling targets for supported
+.NET 10-and-earlier projects that use Mono.
 
 ## AndroidAotProfilerPort
 
-The port that `aprofutil` should connect to when obtaining profiling data.
+The port that `aprofutil` should connect to when obtaining Mono AOT
+profiling data. The default value is `9999`.
+
+This property applies to the legacy AOT profiling targets for supported
+.NET 10-and-earlier projects that use Mono.
 
 ## AndroidAotEnableLazyLoad
 
-Enable lazy (delayed) loading of AOT-d assemblies, instead of
-preloading them at the startup.  The default value is `True` for Release builds
-with any form of AOT enabled.
+Enables lazy (delayed) loading of Mono AOT-compiled assemblies instead of
+preloading them at startup.
+
+This property applies to supported .NET 10-and-earlier projects that use
+Mono. It defaults to `True` when Mono AOT is enabled and debug symbols are
+not included. It does not configure CoreCLR or NativeAOT.
 
 Introduced in .NET 6.
 
@@ -429,10 +430,13 @@ A bool property, that determines whether or not LLVM marshal methods are enabled
 LLVM marshal methods are an app startup optimization which uses native entry points
 for Java `native` method registration.
 
-This property is False by default.
+This property defaults to `True` for Mono applications unless the project uses
+Razor or [`$(PublishReadyToRun)`](#publishreadytorun). It defaults to `False`
+otherwise.
 
 This property cannot be set to `true` when
-[`$(PublishReadyToRun)`](#publishreadytorun) is `true`.
+[`$(PublishReadyToRun)`](#publishreadytorun) is `true`. Setting both properties
+to `true` stops the build with [XA1049](../messages/xa1049.md).
 
 Added in .NET 8.
 
@@ -495,16 +499,20 @@ By default this value is False.
 ## AndroidEnableProfiledAot
 
 A boolean property that
-determines whether or not the AOT profiles are used during
-Ahead-of-Time compilation.
+determines whether or not Mono AOT profiles are used during
+Ahead-of-Time compilation. It applies to supported .NET 10-and-earlier
+projects that use Mono and does not configure ReadyToRun, MIBC profiles,
+dynamic PGO, or NativeAOT.
 
 The profiles are listed in
 [`@(AndroidAotProfile)`](build-items.md#androidaotprofile)
-item group. This ItemGroup contains default profile(s). It can be overridden by
-removing the existing one(s) and adding your own AOT profiles.
+item group. When profiled AOT is enabled, the default profile is included
+unless [`$(AndroidUseDefaultAotProfile)`](#androidusedefaultaotprofile) is
+`false`. Custom profiles can be added with `@(AndroidAotProfile)`.
 
-This property is `False` by default.
-
+When [`$(RunAOTCompilation)`](#runaotcompilation) is `true` and this
+property is not set, it defaults to `true`. Consequently, it defaults to
+`true` for applicable Release builds that use Mono.
 
 ## AndroidEnableRestrictToAttributes
 
@@ -544,7 +552,9 @@ determines whether or not Mono's
 [concurrent GC collector](https://www.mono-project.com/docs/about-mono/releases/4.8.0/#concurrent-sgen)
 will be used.
 
-This property is `False` by default.
+This property is `True` by default. It applies to supported .NET
+10-and-earlier projects that use Mono and does not configure the CoreCLR
+or NativeAOT garbage collectors.
 
 ## AndroidErrorOnCustomJavaObject
 
@@ -575,24 +585,19 @@ This property is no longer supported.
 
 ## AndroidExtraAotOptions
 
-A string property that allows
-passing options to the Mono compiler during the `Aot`
-task for projects that have either
-[`$(AndroidEnableProfiledAot)`](#androidenableprofiledaot) or
-[`$(AotAssemblies)`](#aotassemblies) set to `true`.
-The string value of the property is added to the response file when
-calling the Mono cross-compiler.
+A string property that allows supported .NET 10-and-earlier projects
+that use Mono to pass semicolon-separated standalone arguments directly
+to the Mono AOT compiler process. The property is used only when Mono AOT
+compilation is enabled.
 
 In general, this property should be left blank, but in certain
 special scenarios it might provide useful flexibility.
 
 The `$(AndroidExtraAotOptions)` property is different from the related
 [`$(AndroidAotAdditionalArguments)`](#androidaotadditionalarguments) property;
-`$(AndroidAotAdditionalArguments)` places
-comma-separated arguments into the `--aot` option of the Mono
-compiler. `$(AndroidExtraAotOptions)` instead passes full standalone
-space-separated options like `--verbose` or `--debug` to the
-compiler.
+`$(AndroidExtraAotOptions)` passes standalone process arguments, while
+`$(AndroidAotAdditionalArguments)` is included within the comma-separated
+`--aot=...` option.
 
 <a name="AndroidFastDeploymentType"></a>
 
@@ -1282,9 +1287,11 @@ A bool property that specifies whether or not the *method bodies* of AOT compile
 
 The default value is `false`, and the method bodies of AOT compiled methods will *not* be removed.
 
-When set to `true`, [`$(AndroidEnableProfiledAot)`](#androidenableprofiledaot) is set to `false` by default.
-This means that in Release configuration builds -- in which
-[`$(RunAOTCompilation)`](#runaotcompilation) is `true` by default -- AOT is enabled for *everything*.
+When set to `true`, [`$(AndroidEnableProfiledAot)`](#androidenableprofiledaot)
+is set to `false` by default. This means that in supported .NET 8 and .NET 9
+Mono Release builds -- in which
+[`$(RunAOTCompilation)`](#runaotcompilation) is `true` by default -- Mono AOT
+is enabled for *everything*.
 This can result in increased app sizes. This behavior can be overridden by explicitly setting
 `$(AndroidEnableProfiledAot)` to `true` within your project file.
 
@@ -1329,9 +1336,14 @@ use the `apksigner` tool rather than `jarsigner`.
 ## AndroidUseDefaultAotProfile
 
 A bool property that allows
-the developer to suppress usage of the default AOT profiles.
+the developer to suppress usage of the default Mono AOT profile.
 
-To suppress the default AOT profiles, set the property to `false`.
+The default profile is used when
+[`$(AndroidEnableProfiledAot)`](#androidenableprofiledaot) is `true`
+unless this property is set to `false`.
+
+This property applies to supported .NET 10-and-earlier projects that use
+Mono. It does not select MIBC profiles or dynamic PGO for CoreCLR.
 
 ## AndroidUseDesignerAssembly
 
@@ -1382,8 +1394,12 @@ Introduced in .NET 11.
 ## AndroidUseInterpreter
 
 A boolean property that causes a MonoVM `.apk` to contain the Mono
-*interpreter*, and not the normal JIT. It is a Mono-only setting and is not a
-CoreCLR setting. Android has no interpreter in .NET 11 and later.
+*interpreter*, and not the normal JIT. It defaults to `True` for Debug
+builds that use Mono and `False` otherwise.
+
+This property applies to supported .NET 10-and-earlier projects that use
+Mono. It is not a CoreCLR setting, and Android has no interpreter in .NET 11
+and later.
 
 ***Experimental***.
 
@@ -1528,16 +1544,27 @@ about the requirements for `/manifest/@android:versionName`.
 ## AotAssemblies
 
 A boolean property that determines whether or not assemblies will be
-Ahead-of-Time compiled into native code and included in applications.
-This property is `False` by default.
+Ahead-of-Time compiled into native code by Mono and included in applications.
+When it is not specified, its effective value follows
+[`$(RunAOTCompilation)`](#runaotcompilation): `False` for Debug builds
+and `True` for Release builds that use Mono on supported .NET
+10-and-earlier target frameworks.
 
-Deprecated in .NET 7. Migrate to the new
-[`$(RunAOTCompilation)`](#runaotcompilation) MSBuild property instead,
-as support for `$(AotAssemblies)` will be removed in a future release.
+Deprecated in .NET 7. For supported .NET 10-and-earlier projects that use
+Mono, migrate to the
+[`$(RunAOTCompilation)`](#runaotcompilation) MSBuild property instead.
+Specifying `$(AotAssemblies)`, including setting it to `false`, emits
+warning XA1029. Setting it to `true` for CoreCLR or NativeAOT also causes
+the build-stopping [XA1044](../messages/xa1044.md) error because the value
+is forwarded to `$(RunAOTCompilation)`.
+
+For .NET 11 CoreCLR projects, remove `$(AotAssemblies)` without adding
+`$(RunAOTCompilation)`. CoreCLR does not use the Mono AOT pipeline.
 
 ## AProfUtilExtraOptions
 
-Extra options to pass to `aprofutil`.
+Extra options to pass to `aprofutil` when using the legacy Mono AOT
+profiling targets in supported .NET 10-and-earlier projects.
 
 ## BeforeBuildAndroidAssetPacks
 
@@ -1738,16 +1765,20 @@ This property is `False` by default.
 ## EnableLLVM
 
 A boolean property that determines whether
-or not LLVM will be used when Ahead-of-Time compiling assemblies
-into native code.
+or not LLVM will be used by the Mono AOT compiler when Ahead-of-Time
+compiling assemblies into native code.
 
 The Android NDK must be installed to build a project that has this
 property enabled.
 
 This property is `False` by default.
 
-This property is ignored unless the
-[`$(AotAssemblies)`](#aotassemblies) MSBuild property is `True`.
+This property applies to supported .NET 10-and-earlier projects that use
+Mono and affects compilation only when
+[`$(RunAOTCompilation)`](#runaotcompilation) is `True`.
+
+Setting this property to `true` for CoreCLR or NativeAOT resets it to
+`false` and stops the build with [XA1044](../messages/xa1044.md).
 
 ## EnableMSTestRunner
 
@@ -1977,11 +2008,15 @@ A boolean property that determines whether or not assemblies will be
 Ahead-of-Time compiled with the Mono AOT compiler and included in
 applications that use the Mono runtime. This property is `False` by
 default for `Debug` builds and `True` by default for `Release` builds
-that use Mono. It does not enable ReadyToRun or NativeAOT.
+that use Mono on supported .NET 10-and-earlier target frameworks.
 
 This MSBuild property replaces the
 [`$(AotAssemblies)`](#aotassemblies) MSBuild property from
 Xamarin.Android. This is the same property used for [Blazor WASM][blazor].
+
+This property does not enable ReadyToRun or NativeAOT. Setting it to
+`true` for CoreCLR or NativeAOT resets it to `false` and stops the build
+with [XA1044](../messages/xa1044.md).
 
 [blazor]: /aspnet/core/blazor/host-and-deploy/webassembly/#ahead-of-time-aot-compilation
 
