@@ -2781,6 +2781,16 @@ namespace UnnamedProject
 			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
 			proj.SetProperty ("AndroidTypeMapImplementation", typemapImplementation);
 			proj.SetProperty ("AndroidLinkTool", useR8 ? "r8" : "");
+			if (useR8) {
+				// Keep the companion methods and names stable for the DEX and JNI assertions.
+				// Shrinking remains enabled; the Java fixture supplies the required call sites.
+				proj.OtherBuildItems.Add (new AndroidItem.ProguardConfiguration ("interface-methods.pro") {
+					TextContent = () => """
+						-dontoptimize
+						-dontobfuscate
+						""",
+				});
+			}
 			proj.SetDefaultTargetDevice ();
 			proj.SupportedOSPlatformVersion = "24";
 			if (!apiNative) {
