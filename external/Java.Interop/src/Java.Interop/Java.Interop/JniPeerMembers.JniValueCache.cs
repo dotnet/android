@@ -11,13 +11,14 @@ namespace Java.Interop {
 
 	partial class JniPeerMembers {
 
-		private sealed class JniValueCache<TKey, TValue> : IDisposable, IReadOnlyDictionary<TKey, TValue>
+		internal sealed class JniValueCache<TKey, TValue> : IDisposable, IReadOnlyDictionary<TKey, TValue>
 			where TKey : notnull
 			where TValue : class
 		{
 
 			readonly ConcurrentDictionary<TKey, TValue> values;
 			readonly Action<TValue> dispose;
+			int disposed;
 
 			public JniValueCache (int concurrencyLevel, int capacity, Action<TValue> dispose)
 			{
@@ -63,6 +64,8 @@ namespace Java.Interop {
 
 			public TValue GetOrAdd<TArg> (TKey key, Func<TKey, TArg, TValue> factory, TArg argument)
 			{
+				AssertNotDisposed ();
+
 				if (values.TryGetValue (key, out var value))
 					return value;
 
@@ -71,9 +74,15 @@ namespace Java.Interop {
 				// JNI lookup can also reenter this cache, so do not lock construction.
 				TValue? candidate = factory (key, argument);
 				try {
+					AssertNotDisposed ();
 					value = values.GetOrAdd (key, candidate);
 					if (ReferenceEquals (value, candidate))
 						candidate = null;
+					if (Volatile.Read (ref disposed) != 0) {
+						if (values.TryRemove (key, out var removed))
+							dispose (removed);
+						throw new ObjectDisposedException (nameof (JniValueCache<TKey, TValue>));
+					}
 					return value;
 				} finally {
 					if (candidate != null)
@@ -81,11 +90,21 @@ namespace Java.Interop {
 				}
 			}
 
+			void AssertNotDisposed ()
+			{
+				if (Volatile.Read (ref disposed) != 0)
+					throw new ObjectDisposedException (nameof (JniValueCache<TKey, TValue>));
+			}
+
 			public void Dispose ()
 			{
-				foreach (var value in values.Values)
-					dispose (value);
-				values.Clear ();
+				if (Interlocked.Exchange (ref disposed, 1) != 0)
+					return;
+
+				foreach (var key in values.Keys) {
+					if (values.TryRemove (key, out var value))
+						dispose (value);
+				}
 			}
 		}
 	}

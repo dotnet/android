@@ -112,12 +112,35 @@ namespace Java.Interop {
 
 		public void Dispose ()
 		{
+			var sync = Interlocked.Exchange (ref nativeMethodsLock, disposedNativeMethodsLock);
+			if (ReferenceEquals (sync, disposedNativeMethodsLock))
+				return;
+
+			try {
+				if (sync == null) {
+					DisposeCore ();
+				} else {
+					lock (sync)
+						DisposeCore ();
+				}
+			} catch {
+				Interlocked.CompareExchange (ref nativeMethodsLock, sync, disposedNativeMethodsLock);
+				throw;
+			}
+		}
+
+		void DisposeCore ()
+		{
 			if (!PeerReference.IsValid)
 				return;
-			if (registered)
+			if (methods != null) {
+				JniEnvironment.Types.UnregisterNatives (PeerReference);
+				methods = null;
+			}
+			if (registered) {
 				JniEnvironment.Runtime.UnTrack (PeerReference.Handle);
-			if (methods != null)
-				UnregisterNativeMethods ();
+				registered = false;
+			}
 			JniObjectReference.Dispose (ref peerReference);
 		}
 
@@ -156,6 +179,7 @@ namespace Java.Interop {
 			return JniEnvironment.Types.IsInstanceOf (value, PeerReference);
 		}
 
+		static readonly object disposedNativeMethodsLock = new object ();
 		object? nativeMethodsLock;
 		// Retains delegates from every batch JNI may have partially registered.
 		List<JniNativeMethodRegistration[]>? methods;
@@ -163,11 +187,16 @@ namespace Java.Interop {
 		object GetNativeMethodsLock ()
 		{
 			var value = Volatile.Read (ref nativeMethodsLock);
+			if (ReferenceEquals (value, disposedNativeMethodsLock))
+				throw new ObjectDisposedException (GetType ().FullName);
 			if (value != null)
 				return value;
 
 			var candidate = new object ();
-			return Interlocked.CompareExchange (ref nativeMethodsLock, candidate, null) ?? candidate;
+			value = Interlocked.CompareExchange (ref nativeMethodsLock, candidate, null);
+			if (ReferenceEquals (value, disposedNativeMethodsLock))
+				throw new ObjectDisposedException (GetType ().FullName);
+			return value ?? candidate;
 		}
 
 		/// <remarks>
@@ -186,6 +215,8 @@ namespace Java.Interop {
 				return;
 
 			lock (GetNativeMethodsLock ()) {
+				AssertValid ();
+
 				// Retain each batch before calling RegisterNatives: JNI stores only the
 				// unmanaged function pointers and may publish part of a batch before throwing.
 				// Storing it afterward could therefore leave callable pointers to collected
@@ -202,6 +233,7 @@ namespace Java.Interop {
 			AssertValid ();
 
 			lock (GetNativeMethodsLock ()) {
+				AssertValid ();
 				JniEnvironment.Types.UnregisterNatives (PeerReference);
 				methods = null;
 			}
