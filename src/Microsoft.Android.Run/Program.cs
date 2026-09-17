@@ -32,6 +32,7 @@ bool isDotnetTestMode = false;
 string? dotnetTestPipe = null;
 bool waitForExit = true;
 bool attachDebugger = false;
+bool enableManagedLaunchProtection = true;
 string? debugPidTarget = null;
 List<PortMapping> forwardPorts = [];
 List<PortMapping> reversePorts = [];
@@ -99,6 +100,9 @@ async Task<int> RunAsync (string[] args)
 		{ "attach-debugger",
 			"Protect activity startup while a managed debugger attaches. Does not request Java debugger attach.",
 			v => attachDebugger = v != null },
+		{ "no-managed-launch-protection",
+			"Disable the managed startup protection transaction while preserving debugger setup and non-waiting launch behavior.",
+			v => enableManagedLaunchProtection = v == null },
 		{ "forward-port=",
 			"Forward a TCP port from the host to the device in {MAPPING} format (HOST_PORT:DEVICE_PORT). May be repeated.",
 			v => forwardPorts.Add (ParsePortMapping (v, "--forward-port")) },
@@ -543,7 +547,7 @@ async Task<bool> StartAppAsync ()
 	// Only explicit managed debug intent selects the transaction. No-wait and
 	// port mappings also serve ordinary launches and instrumentation.
 	if (attachDebugger) {
-		await StartManagedAppAsync ();
+		await StartManagedAppAsync (enableManagedLaunchProtection);
 		return true;
 	}
 
@@ -564,7 +568,7 @@ async Task<bool> StartAppAsync ()
 	return true;
 }
 
-async Task StartManagedAppAsync ()
+async Task StartManagedAppAsync (bool enableManagedLaunchProtection)
 {
 	if (string.IsNullOrEmpty (adbPath) || string.IsNullOrEmpty (package) || string.IsNullOrEmpty (activity))
 		throw new InvalidOperationException (ManagedActivityLaunchResources.ManagedLaunchPackageMismatch);
@@ -595,29 +599,50 @@ async Task StartManagedAppAsync ()
 	// Never use am start -W here, even when streaming logcat until app exit:
 	// managed application startup can be blocked waiting for debugger attach.
 	var startCommand = $"am start -S{userArg} -n {QuoteForDeviceShell (component)}";
-	var processName = await ManagedActivityLaunch.RunAsync (
-		serial, validatedPackage, component, deviceUserId, forceStop: true,
-		startCommand: startCommand, startupTimeout: TimeSpan.FromSeconds (ManagedLaunchTimeoutSeconds),
-		prepare: async token => {
-			if (wakeDevice) {
-				// As on the ordinary path, wake/keyguard preparation is best effort.
-				var (_, output, error) = await AdbHelper.RunAsync (validatedAdbPath, adbTarget,
-					new [] { "shell", "input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard" }, token, verbose);
-				if (verbose)
-					Console.Write (output);
-				if (!string.IsNullOrWhiteSpace (error))
-					Console.Error.Write (error);
-			}
-		},
-		runShellCommand: RunShellAsync,
-		launchUnprotected: async token => {
-			var output = await RunShellAsync (startCommand, token);
-			Console.WriteLine (output);
-			CheckStartResult (output, component);
-		},
-		log: Console.WriteLine,
-		logCleanupError: (message, error) => Console.Error.WriteLine ($"{message}{Environment.NewLine}{error}"),
-		token: cts.Token);
+	async Task PrepareAsync (CancellationToken token)
+	{
+		if (wakeDevice) {
+			// As on the ordinary path, wake/keyguard preparation is best effort.
+			var (_, output, error) = await AdbHelper.RunAsync (validatedAdbPath, adbTarget,
+				new [] { "shell", "input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard" }, token, verbose);
+			if (verbose)
+				Console.Write (output);
+			if (!string.IsNullOrWhiteSpace (error))
+				Console.Error.Write (error);
+		}
+	}
+
+	async Task LaunchUnprotectedAsync (CancellationToken token)
+	{
+		var output = await RunShellAsync (startCommand, token);
+		Console.WriteLine (output);
+		CheckStartResult (output, component);
+	}
+
+	string? processName;
+	if (enableManagedLaunchProtection) {
+		processName = await ManagedActivityLaunch.RunAsync (
+			serial, validatedPackage, component, deviceUserId, forceStop: true,
+			startCommand: startCommand, startupTimeout: TimeSpan.FromSeconds (ManagedLaunchTimeoutSeconds),
+			prepare: PrepareAsync,
+			runShellCommand: RunShellAsync,
+			launchUnprotected: LaunchUnprotectedAsync,
+			log: Console.WriteLine,
+			logCleanupError: (message, error) => Console.Error.WriteLine ($"{message}{Environment.NewLine}{error}"),
+			token: cts.Token);
+	} else {
+		using var timeout = CancellationTokenSource.CreateLinkedTokenSource (cts.Token);
+		timeout.CancelAfter (TimeSpan.FromSeconds (ManagedLaunchTimeoutSeconds));
+		try {
+			await PrepareAsync (timeout.Token);
+			timeout.Token.ThrowIfCancellationRequested ();
+			await LaunchUnprotectedAsync (timeout.Token);
+			timeout.Token.ThrowIfCancellationRequested ();
+		} catch (OperationCanceledException ex) when (timeout.IsCancellationRequested && !cts.IsCancellationRequested) {
+			throw new TimeoutException (ManagedActivityLaunchResources.ManagedLaunchTimeout, ex);
+		}
+		processName = null;
+	}
 	// Reuse confirmed ActivityInfo metadata for startup and exit tracking. When
 	// unavailable, retain the legacy package probe; never guess a custom process.
 	debugPidTarget = processName ?? validatedPackage;

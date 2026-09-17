@@ -68,6 +68,13 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public bool AllowJavaDebugging { get; set; } = true;
 
+		/// <summary>
+		/// Private tri-state override for the managed launch protection transaction.
+		/// Blank or true preserves the existing automatic debug-path behavior; false
+		/// keeps managed debugger setup but bypasses the debug-app transaction.
+		/// </summary>
+		public string? EnableManagedLaunchProtection { get; set; }
+
 		AndroidDevice? Device;
 
 		public RunActivity ()
@@ -129,7 +136,7 @@ namespace Xamarin.Android.Tasks
 				LogMessage (string.Format (Resources.StartDebugger_ipAddress_port, ipAddress, port), MessageImportance.High);
 				if (AllowJavaDebugging) {
 					await device.StartWithDebuggingAsync (startConfiguration, CancellationToken);
-				} else {
+				} else if (IsManagedLaunchProtectionEnabled ()) {
 					// Keep the managed-only transaction in this task, not in the
 					// deprecated libraries still needed by the other launch paths.
 					var component = amStartCommand.Component;
@@ -152,10 +159,18 @@ namespace Xamarin.Android.Tasks
 							throw new ActivityNotFoundException (ex.Message);
 						throw new AdbException (ex.Message, ex);
 					}
+				} else {
+					await device.SetDebugPropertiesAsync (PackageName, startConfiguration.Debugger, managedLaunchCancellation.Token);
+					managedLaunchCancellation.Token.ThrowIfCancellationRequested ();
+					await device.ExecuteIntentCommandAsync (amStartCommand, startConfiguration.LogWiter, managedLaunchCancellation.Token);
+					managedLaunchCancellation.Token.ThrowIfCancellationRequested ();
 				}
 			} else {
 				await device.StartWithoutDebuggingAsync (startConfiguration, CancellationToken);
 			}
 		}
+
+		bool IsManagedLaunchProtectionEnabled () =>
+			!string.Equals (EnableManagedLaunchProtection, "false", System.StringComparison.OrdinalIgnoreCase);
 	}
 }

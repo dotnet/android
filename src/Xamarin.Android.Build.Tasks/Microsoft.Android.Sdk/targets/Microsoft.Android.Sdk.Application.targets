@@ -141,10 +141,12 @@ This file contains targets specific for Android application projects.
       <_AndroidRunNoWakeDeviceArg Condition=" '$(WaitForExit)' == 'false' ">--no-wake-device</_AndroidRunNoWakeDeviceArg>
       <_AndroidRunAttachDebuggerArg></_AndroidRunAttachDebuggerArg>
       <_AndroidRunAttachDebuggerArg Condition=" '$(AndroidAttachDebugger)' == 'true' and '$(AndroidInstrumentation)' == '' ">--attach-debugger</_AndroidRunAttachDebuggerArg>
+      <_AndroidRunManagedLaunchProtectionArg></_AndroidRunManagedLaunchProtectionArg>
+      <_AndroidRunManagedLaunchProtectionArg Condition=" '$(_AndroidEnableManagedLaunchProtection)' == 'false' and '$(AndroidAttachDebugger)' == 'true' and '$(AndroidInstrumentation)' == '' ">--no-managed-launch-protection</_AndroidRunManagedLaunchProtectionArg>
       <!-- Preserve the legacy _Run argument order: target port is the host-side forward. -->
       <_AndroidRunForwardPortArg Condition=" '$(AndroidAttachDebugger)' == 'true' and '$(AndroidDebuggerServer)' == 'true' ">--forward-port &quot;$(AndroidSdbTargetPort):$(AndroidSdbHostPort)&quot;</_AndroidRunForwardPortArg>
       <RunCommand>dotnet</RunCommand>
-      <RunArguments>exec &quot;$(_AndroidRunPath)&quot; --adb &quot;$(_AdbToolPath)&quot; $(_AndroidRunAdbTargetArg) --package &quot;$(_AndroidPackage)&quot; $(_AndroidRunActivityArg) $(_AndroidRunInstrumentArg) --logcat-args &quot;$(_AndroidRunLogcatArgs)&quot; $(_AndroidRunUserArg) $(_AndroidRunNoWaitArg) $(_AndroidRunNoWakeDeviceArg) $(_AndroidRunAttachDebuggerArg) $(_AndroidRunForwardPortArg) $(_AndroidRunExtraArgs)</RunArguments>
+      <RunArguments>exec &quot;$(_AndroidRunPath)&quot; --adb &quot;$(_AdbToolPath)&quot; $(_AndroidRunAdbTargetArg) --package &quot;$(_AndroidPackage)&quot; $(_AndroidRunActivityArg) $(_AndroidRunInstrumentArg) --logcat-args &quot;$(_AndroidRunLogcatArgs)&quot; $(_AndroidRunUserArg) $(_AndroidRunNoWaitArg) $(_AndroidRunNoWakeDeviceArg) $(_AndroidRunAttachDebuggerArg) $(_AndroidRunManagedLaunchProtectionArg) $(_AndroidRunForwardPortArg) $(_AndroidRunExtraArgs)</RunArguments>
     </PropertyGroup>
   </Target>
 

@@ -24,6 +24,24 @@ depend on the retiring `Mono.AndroidTools` or `Xamarin.AndroidTools` libraries.
 It protects startup, not the debugger connection itself: callers still supply
 the runtime's debugger configuration.
 
+## Temporary opt-out
+
+If startup protection causes a problem, disable it in the project:
+
+```xml
+<PropertyGroup>
+  <_AndroidEnableManagedLaunchProtection>false</_AndroidEnableManagedLaunchProtection>
+</PropertyGroup>
+```
+
+This private property is blank by default. Blank or `true` retains the normal
+debug-only eligibility checks; `false` bypasses the protection transaction in both
+`dotnet run` and `-t:Run`. It does not disable debugger intent or port forwarding,
+enable Java debugging, or add an activity-start wait. The CLI carries the opt-out
+as `--no-managed-launch-protection` alongside `--attach-debugger`.
+Opting out removes startup ANR protection; it is a workaround, not a different
+debugger configuration.
+
 ## Transaction and safety boundaries
 
 - Serialize the device's debug-app transaction within each launch host. Validate

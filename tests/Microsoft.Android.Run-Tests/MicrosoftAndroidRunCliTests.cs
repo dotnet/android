@@ -28,6 +28,7 @@ namespace Microsoft.Android.Run.Tests
 			var result = await RunProgramAsync ("--help");
 			Assert.AreEqual (0, result.ExitCode, result.Error);
 			StringAssert.Contains ("--attach-debugger", result.Output);
+			StringAssert.Contains ("--no-managed-launch-protection", result.Output);
 		}
 
 		[Test]
@@ -78,6 +79,50 @@ namespace Microsoft.Android.Run.Tests
 			Assert.AreEqual ("com.example.other", server.State.DebugApp);
 			Assert.AreEqual (ports, server.Commands.Contains ("forward tcp:10000 tcp:10000"));
 			Assert.AreEqual (ports, server.Commands.Contains ("reverse tcp:8000 tcp:8001"));
+		}
+
+		[TestCase ("older-api", false)]
+		[TestCase ("older-api", true)]
+		[TestCase ("custom-process", false)]
+		public async Task ManagedDebugFallbackOrOptOutWakesDeviceOnlyOnce (string reason, bool optOut)
+		{
+			await using var server = new ManagedLaunchTestServer (PackageName);
+			if (reason == "older-api")
+				server.State.ApiLevel = 30;
+			if (reason == "custom-process")
+				server.State.EffectiveProcessName = PackageName + ":custom";
+
+			var arguments = new List<string> { "--activity", ".MainActivity", "--attach-debugger", "--no-wait" };
+			if (optOut)
+				arguments.Add ("--no-managed-launch-protection");
+
+			var result = await RunProgramAsync (server, arguments.ToArray ());
+
+			Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
+			Assert.AreEqual (1, server.Commands.Count (command => command.StartsWith ("input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard", StringComparison.Ordinal)));
+		}
+
+		[TestCase ("foreign-owner")]
+		[TestCase ("malformed-state")]
+		public async Task OptOutBypassesManagedLaunchStateQueriesAndMutations (string scenario)
+		{
+			await using var server = new ManagedLaunchTestServer (PackageName);
+			server.State.SetDebugAppState ("com.example.other", isTransient: true);
+			if (scenario == "malformed-state")
+				server.State.TransformResponse = (command, output) => command == "dumpsys activity processes" ? "broken" : output;
+
+			var result = await RunProgramAsync (server,
+				"--activity", ".MainActivity", "--attach-debugger", "--no-managed-launch-protection", "--no-wake-device");
+
+			Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
+			Assert.IsFalse (server.Commands.Any (command => command == "dumpsys activity processes" ||
+				command.StartsWith ("pm list users", StringComparison.Ordinal) ||
+				command.StartsWith ("pm resolve-activity ", StringComparison.Ordinal) ||
+				command.StartsWith ("am set-debug-app ", StringComparison.Ordinal) ||
+				command == "am clear-debug-app"));
+			Assert.IsTrue (server.Commands.Any (command => command.StartsWith ("pidof ", StringComparison.Ordinal)));
+			Assert.IsTrue (server.Commands.Any (command => command.StartsWith ("am start ", StringComparison.Ordinal) && !command.Contains (" -W", StringComparison.Ordinal)));
+			CollectionAssert.DoesNotContain (server.Commands.ToArray (), "getprop ro.build.version.sdk");
 		}
 
 		[TestCase ("older-api")]
@@ -203,6 +248,56 @@ namespace Microsoft.Android.Run.Tests
 			Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
 			Assert.IsTrue (server.Commands.Any (command => command.StartsWith ("am instrument ", StringComparison.Ordinal)));
 			Assert.IsFalse (server.Commands.Any (command => command.Contains ("debug-app", StringComparison.Ordinal) || command.StartsWith ("am start ", StringComparison.Ordinal)));
+		}
+
+		[Test]
+		public async Task OptOutPreservesAttachDebuggerWithoutProtection ()
+		{
+			await using var server = new ManagedLaunchTestServer (PackageName);
+
+			var result = await RunProgramAsync (server,
+				"--activity", ".MainActivity", "--attach-debugger", "--no-managed-launch-protection", "--no-wait", "--forward-port", "10000:10000", "--no-wake-device");
+
+			Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
+			Assert.IsTrue (server.AdbCommands.Any (command => command.EndsWith ("forward tcp:10000 tcp:10000", StringComparison.Ordinal)));
+			Assert.IsTrue (server.Commands.Any (command => command.StartsWith ("am start ", StringComparison.Ordinal) && !command.Contains (" -W", StringComparison.Ordinal)));
+			Assert.IsFalse (server.Commands.Any (command => command.Contains ("debug-app", StringComparison.Ordinal)));
+		}
+
+		[Test]
+		public async Task OptOutStartupTimeoutRemainsFailure ()
+		{
+			await using var server = new ManagedLaunchTestServer (PackageName);
+			var release = new TaskCompletionSource (TaskCreationOptions.RunContinuationsAsynchronously);
+			server.State.BeforeResponse = command => command.StartsWith ("am start ", StringComparison.Ordinal) ? release.Task : Task.CompletedTask;
+			try {
+				var result = await RunProgramAsync (server,
+					"--activity", ".MainActivity", "--attach-debugger", "--no-managed-launch-protection", "--no-wait", "--no-wake-device");
+
+				Assert.AreEqual (1, result.ExitCode, result.Output + result.Error);
+				StringAssert.Contains ("Timed out", result.Error);
+				Assert.IsFalse (result.Output.Contains ("Stopping application...", StringComparison.Ordinal));
+				Assert.IsFalse (server.Commands.Any (command => command.Contains ("debug-app", StringComparison.Ordinal)));
+			} finally {
+				release.TrySetResult ();
+			}
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public async Task OptOutFlagDoesNotChangeNonDebugOrInstrumentationPaths (bool instrumentation)
+		{
+			await using var server = new ManagedLaunchTestServer (PackageName);
+			var arguments = instrumentation
+				? new [] { "--instrument", "runner", "--no-managed-launch-protection", "--no-wait", "--forward-port", "10000:10000" }
+				: new [] { "--activity", ".MainActivity", "--no-managed-launch-protection", "--no-wait" };
+
+			var result = await RunProgramAsync (server, arguments);
+
+			Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
+			Assert.IsFalse (server.Commands.Any (command => command.Contains ("debug-app", StringComparison.Ordinal) || command == "dumpsys activity processes"));
+			Assert.AreEqual (instrumentation, server.Commands.Any (command => command.StartsWith ("am instrument ", StringComparison.Ordinal)));
+			Assert.AreEqual (!instrumentation, server.Commands.Any (command => command.Contains ("am start ", StringComparison.Ordinal) && !command.Contains (" -W", StringComparison.Ordinal)));
 		}
 
 		[Test]

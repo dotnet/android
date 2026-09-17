@@ -41,6 +41,42 @@ namespace Microsoft.Android.Build.Tasks.Tests
 		}
 
 		[Test]
+		public void ManagedLaunchProtectionOptOutSkipsMutationButPreservesManagedSetup ()
+		{
+			using var server = CreateServer ();
+			var task = CreateRunActivity (server);
+			task.AttachDebugger = true;
+			task.AllowJavaDebugging = false;
+			task.EnableManagedLaunchProtection = "FaLsE";
+
+			Assert.IsTrue (task.Execute ());
+			Assert.AreEqual (1, server.Commands.Count (command => command == "date +%s"));
+			Assert.IsTrue (server.Commands.Any (command => command.StartsWith ("am start ", StringComparison.Ordinal) && !command.Contains (" -D", StringComparison.Ordinal)));
+			Assert.IsFalse (server.Commands.Any (command => command.Contains ("debug-app", StringComparison.Ordinal) || command == "dumpsys activity processes"));
+		}
+
+		[TestCase ("foreign-owner")]
+		[TestCase ("malformed-state")]
+		public void ManagedLaunchProtectionOptOutBypassesStateChecks (string scenario)
+		{
+			using var server = CreateServer ();
+			server.State.SetDebugAppState ("com.example.other", isTransient: true);
+			if (scenario == "malformed-state")
+				server.State.TransformResponse = (command, output) => command == "dumpsys activity processes" ? "broken" : output;
+			var task = CreateRunActivity (server);
+			task.AttachDebugger = true;
+			task.AllowJavaDebugging = false;
+			task.EnableManagedLaunchProtection = "false";
+
+			Assert.IsTrue (task.Execute ());
+			Assert.IsFalse (server.Commands.Any (command => command == "dumpsys activity processes" ||
+				command.StartsWith ("pm list users", StringComparison.Ordinal) ||
+				command.StartsWith ("pm resolve-activity ", StringComparison.Ordinal) ||
+				command.StartsWith ("am set-debug-app ", StringComparison.Ordinal) ||
+				command == "am clear-debug-app"));
+		}
+
+		[Test]
 		public async Task ExplicitJavaDebuggingStillUsesDAndJdwp ()
 		{
 			await using var server = CreateServer ("emulator-5554");
@@ -89,13 +125,15 @@ namespace Microsoft.Android.Build.Tasks.Tests
 			Assert.IsTrue (messages.Any (message => message.Message.Contains ("Launching without", StringComparison.Ordinal)));
 		}
 
-		[Test]
-		public async Task FallbackCancellationAfterLaunchReturnsFalseAndFinishes ()
+		[TestCase (true)]
+		[TestCase (false)]
+		public async Task FallbackCancellationAfterLaunchReturnsFalseAndFinishes (bool enableManagedLaunchProtection)
 		{
 			await using var server = CreateServer ();
 			var task = CreateRunActivity (server);
 			task.AttachDebugger = true;
 			task.AllowJavaDebugging = false;
+			task.EnableManagedLaunchProtection = enableManagedLaunchProtection ? "true" : "false";
 			task.ForceStop = true;
 			server.State.EffectiveProcessName = PackageName + ":custom";
 			var starting = new TaskCompletionSource (TaskCreationOptions.RunContinuationsAsynchronously);
@@ -114,7 +152,11 @@ namespace Microsoft.Android.Build.Tasks.Tests
 				((ICancelableTask) task).Cancel ();
 				release.TrySetResult ();
 				Assert.IsFalse (await launch.WaitAsync (TimeSpan.FromSeconds (8)));
-				Assert.IsFalse (server.Commands.Any (command => command.Contains ("debug-app", StringComparison.Ordinal)));
+				Assert.AreEqual (enableManagedLaunchProtection, server.Commands.Any (command =>
+					command.StartsWith ("pm list users", StringComparison.Ordinal) ||
+					command.StartsWith ("pm resolve-activity ", StringComparison.Ordinal) ||
+					command == "dumpsys activity processes"));
+				Assert.IsFalse (server.Commands.Any (command => command.StartsWith ("am set-debug-app ", StringComparison.Ordinal) || command == "am clear-debug-app"));
 			} finally {
 				release.TrySetResult ();
 				await task.Finished.Task.WaitAsync (TimeSpan.FromSeconds (8));
@@ -208,10 +250,12 @@ namespace Microsoft.Android.Build.Tasks.Tests
 			}
 		}
 
-		[TestCase (".MainActivity", "true", "", true)]
-		[TestCase (".MainActivity", "false", "", false)]
-		[TestCase ("", "true", "com.example/runner", false)]
-		public async Task RunArgumentsCarryOnlyExplicitActivityDebugIntent (string activity, string attachDebugger, string instrumentation, bool expectAttachFlag)
+		[TestCase (".MainActivity", "true", "", "", true, false, true)]
+		[TestCase (".MainActivity", "false", "", "true", false, false, false)]
+		[TestCase (".MainActivity", "true", "", "true", true, false, true)]
+		[TestCase (".MainActivity", "true", "", "FaLsE", true, true, true)]
+		[TestCase ("", "true", "com.example/runner", "false", false, false, true)]
+		public async Task RunArgumentsCarryOnlyExplicitActivityDebugIntent (string activity, string attachDebugger, string instrumentation, string managedLaunchProtection, bool expectAttachFlag, bool expectOptOutFlag, bool expectForwardPort)
 		{
 			string directory = Path.Combine (Path.GetTempPath (), $"managed-launch-msbuild-{Guid.NewGuid ():N}");
 			Directory.CreateDirectory (directory);
@@ -228,6 +272,7 @@ namespace Microsoft.Android.Build.Tasks.Tests
 						new System.Xml.Linq.XElement ("AndroidLaunchActivity", activity),
 						new System.Xml.Linq.XElement ("AndroidInstrumentation", instrumentation),
 						new System.Xml.Linq.XElement ("AndroidAttachDebugger", attachDebugger),
+						new System.Xml.Linq.XElement ("_AndroidEnableManagedLaunchProtection", managedLaunchProtection),
 						new System.Xml.Linq.XElement ("AndroidDebuggerServer", "true"),
 						new System.Xml.Linq.XElement ("Configuration", "Debug"),
 						new System.Xml.Linq.XElement ("WaitForExit", "false")),
@@ -238,8 +283,57 @@ namespace Microsoft.Android.Build.Tasks.Tests
 
 				Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
 				Assert.AreEqual (expectAttachFlag, result.Output.Contains ("--attach-debugger", StringComparison.Ordinal), result.Output);
+				Assert.AreEqual (expectOptOutFlag, result.Output.Contains ("--no-managed-launch-protection", StringComparison.Ordinal), result.Output);
+				Assert.AreEqual (expectForwardPort, result.Output.Contains ("--forward-port", StringComparison.Ordinal), result.Output);
 				Assert.AreEqual (instrumentation.Length != 0, result.Output.Contains ("--instrument", StringComparison.Ordinal), result.Output);
 				Assert.AreEqual (instrumentation.Length == 0, result.Output.Contains ("--activity", StringComparison.Ordinal), result.Output);
+			} finally {
+				File.Delete (project);
+				Directory.Delete (directory);
+			}
+		}
+
+		[TestCase ("")]
+		[TestCase ("true")]
+		[TestCase ("FaLsE")]
+		public async Task RunTargetBindsPrivateManagedLaunchProtectionProperty (string managedLaunchProtection)
+		{
+			string targetsPath = Path.Combine (Path.GetDirectoryName (typeof (RunActivity).Assembly.Location) ?? throw new InvalidOperationException (),
+				"Xamarin.Android.Common.Debugging.targets");
+			var targets = System.Xml.Linq.XDocument.Load (targetsPath);
+			var ns = targets.Root?.Name.Namespace ?? System.Xml.Linq.XNamespace.None;
+			var runTarget = targets.Descendants (ns + "Target").Single (target => (string?) target.Attribute ("Name") == "_Run");
+			var binding = runTarget.Elements (ns + "RunActivity").Single ().Attribute (nameof (RunActivity.EnableManagedLaunchProtection));
+			Assert.IsNotNull (binding, "The shipping task must receive the private property.");
+			Assert.AreEqual ("$(_AndroidEnableManagedLaunchProtection)", binding?.Value);
+			Assert.IsFalse (targets.Descendants (ns + "_AndroidEnableManagedLaunchProtection").Any (), "The private property must remain blank by default.");
+
+			string directory = Path.Combine (Path.GetTempPath (), $"managed-launch-run-{Guid.NewGuid ():N}");
+			Directory.CreateDirectory (directory);
+			string project = Path.Combine (directory, "run.proj");
+			try {
+				new System.Xml.Linq.XDocument (new System.Xml.Linq.XElement ("Project",
+					new System.Xml.Linq.XElement ("Import", new System.Xml.Linq.XAttribute ("Project", targetsPath)),
+					new System.Xml.Linq.XElement ("PropertyGroup",
+						new System.Xml.Linq.XElement ("AndroidApplication", "true"),
+						new System.Xml.Linq.XElement ("_AndroidPackage", PackageName),
+						new System.Xml.Linq.XElement ("RunActivity", ".MainActivity"),
+						new System.Xml.Linq.XElement ("AndroidAttachDebugger", "true"),
+						new System.Xml.Linq.XElement ("_AndroidAllowJavaDebugging", "false"),
+						new System.Xml.Linq.XElement ("AdbTarget", "-s ignored"),
+						new System.Xml.Linq.XElement ("_AndroidPlatformToolsDirectory", ""),
+						new System.Xml.Linq.XElement ("AndroidSdbTargetPort", "10000"),
+						new System.Xml.Linq.XElement ("AndroidSdbHostPort", "10000"),
+						new System.Xml.Linq.XElement ("_AndroidEnableManagedLaunchProtection", managedLaunchProtection)),
+					new System.Xml.Linq.XElement ("Target", new System.Xml.Linq.XAttribute ("Name", "AndroidPrepareForBuild")),
+					new System.Xml.Linq.XElement ("Target", new System.Xml.Linq.XAttribute ("Name", "Probe"),
+						new System.Xml.Linq.XElement ("Message", new System.Xml.Linq.XAttribute ("Importance", "high"),
+							new System.Xml.Linq.XAttribute ("Text", "ManagedLaunchProtection=" + binding?.Value))))).Save (project);
+
+				var result = await RunDotnetAsync ("msbuild", project, "-nologo", "-t:Probe");
+
+				Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
+				Assert.IsTrue (result.Output.Split ('\n').Any (line => line.Trim () == "ManagedLaunchProtection=" + managedLaunchProtection), result.Output);
 			} finally {
 				File.Delete (project);
 				Directory.Delete (directory);
