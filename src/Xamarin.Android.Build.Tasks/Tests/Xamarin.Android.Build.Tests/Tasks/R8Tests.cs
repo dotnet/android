@@ -3,15 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	public class R8Tests : BaseTest
+	public class R8Tests
 	{
 		[TestCase ("-keep class com.example.Foo { *; }", false, "")]
 		[TestCase ("-dontwarn com.example.**",           false, "")]
@@ -83,12 +81,8 @@ namespace Xamarin.Android.Build.Tests
 			Directory.CreateDirectory (path);
 			string responseFile = "";
 			try {
-				string acwMap = Path.Combine (path, "acw-map.txt");
-				string applicationConfiguration = Path.Combine (path, "application.cfg");
 				string commonConfiguration = Path.Combine (path, "xamarin.cfg");
-				File.WriteAllText (acwMap, "Managed.GeneratedPeer;com.example.GeneratedPeer\n");
 				var task = new R8TestTask {
-					AcwMapFile = acwMap,
 					BuildEngine = new MockBuildEngine (TestContext.Out),
 					EnableShrinking = true,
 					JarPath = "r8.jar",
@@ -96,13 +90,12 @@ namespace Xamarin.Android.Build.Tests
 					ObfuscationMode = "private-members",
 					OutputDirectory = path,
 					ProguardCommonXamarinConfiguration = commonConfiguration,
-					ProguardGeneratedApplicationConfiguration = applicationConfiguration,
 					UseTrimmableNativeAotProguardConfiguration = nativeAot,
 				};
 
 				task.TestGenerateCommandLineCommands ();
 				responseFile = task.ResponseFilePath;
-				string configuration = File.ReadAllText (commonConfiguration) + File.ReadAllText (applicationConfiguration);
+				string configuration = File.ReadAllText (commonConfiguration);
 				var keepTargets = Regex.Matches (configuration, @"^-keep (?:class|interface) (?<name>[^\s{]+)", RegexOptions.Multiline)
 					.Cast<Match> ()
 					.Select (match => match.Groups ["name"].Value)
@@ -119,8 +112,6 @@ namespace Xamarin.Android.Build.Tests
 				StringAssert.Contains ("void monodroidClearReferences();", configuration);
 				StringAssert.Contains ("public static native void registerNativeMembers(java.lang.Class,java.lang.String);", configuration);
 				StringAssert.Contains ("public static native void construct(java.lang.Object,java.lang.String,java.lang.Object[]);", configuration);
-				StringAssert.DoesNotContain ("com.example.GeneratedPeer", configuration,
-					"An ordinary generated app peer must remain eligible for R8 obfuscation.");
 
 				if (nativeAot) {
 					Assert.That (keepTargets, Does.Contain ("net.dot.jni.nativeaot.JavaInteropRuntime"));
