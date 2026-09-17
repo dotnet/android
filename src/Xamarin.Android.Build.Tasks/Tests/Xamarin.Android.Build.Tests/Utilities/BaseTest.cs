@@ -129,7 +129,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var result = (code: exitCode, stdOutput: stdOutput.ToString ().Trim (), stdError: stdError.ToString ().Trim ());
 			var logContent = $"apkdiff exited with code: {exitCode}" +
-				$"\ncontext: https://github.com/xamarin/xamarin-android/blob/main/Documentation/project-docs/ApkSizeRegressionChecks.md" +
+				$"\ncontext: https://github.com/dotnet/android/blob/main/Documentation/project-docs/ApkSizeRegressionChecks.md" +
 				$"\nstdOut:\n{result.stdOutput}\nstdErr:\n{result.stdError}";
 			File.WriteAllText (logFilePath, logContent);
 			TestContext.AddTestAttachment (logFilePath, Path.GetFileName (logFilePath));

@@ -18,7 +18,7 @@ namespace Xamarin.Android.NetTests
 	[TestFixture]
 	[Category ("AndroidMessageHandlerCancellation")]
 	[Category ("InetAccess")]
-	public class AndroidMessageHandlerCancellationTests
+	public partial class AndroidMessageHandlerCancellationTests
 	{
 		const int StalledResponseContentLength = 1024 * 1024;
 		const int UploadContentLength = 16 * 1024 * 1024;

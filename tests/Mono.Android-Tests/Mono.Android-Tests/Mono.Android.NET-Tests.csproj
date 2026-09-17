@@ -128,6 +128,7 @@
     <Compile Include="Android.Graphics\NinePatchTests.cs" />
     <Compile Include="Android.OS\BundleTest.cs" />
     <Compile Include="Android.OS\CallbackLifetimeTests.cs" />
+    <Compile Include="Android.OS\AidlProxyTests.cs" />
     <Compile Include="Android.OS\HandlerTest.cs" />
     <Compile Include="Android.Runtime\CharSequenceTest.cs" />
     <Compile Include="Android.Runtime\InputStreamInvokerTest.cs" />
@@ -182,6 +183,7 @@
     <Compile Include="System.Threading\InterlockedTest.cs" />
     <Compile Include="System.Xml\XmlSerializer.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidHandlerTestBase.cs" />
+    <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerCancellationTests.Rewind.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerCancellationTests.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerTests.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerNegotiateAuthenticationTests.cs" />
@@ -195,6 +197,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AndroidInterfaceDescription Include="Android.OS\IAidlProxyTest.aidl" />
     <AndroidJavaSource Include="java/net/dot/android/test/*.java" />
     <AndroidJavaSource Update="java/net/dot/android/test/InterfaceCollectionFixture.java" Bind="false" />
   </ItemGroup>

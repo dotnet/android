@@ -507,13 +507,9 @@ namespace Xamarin.Android.Net
 			"Last-Modified"
 		};
 
-		static readonly List <IAndroidAuthenticationModule> authModules = new List <IAndroidAuthenticationModule> {
-			new AuthModuleBasic (),
-			new AuthModuleDigest ()
-		};
-
 		CookieContainer? _cookieContainer;
 		DecompressionMethods _decompressionMethods;
+		IAndroidAuthenticationModule []? authModules;
 
 		bool disposed;
 		bool started;
@@ -759,7 +755,20 @@ namespace Xamarin.Android.Net
 		/// </para>
 		/// </summary>
 		/// <value>The pre authentication data.</value>
-		public AuthenticationData? PreAuthenticationData { get; set; }
+		public AuthenticationData? PreAuthenticationData {
+			get;
+			set {
+				// Keep these constructor references in the setter so apps that never configure pre-authentication can trim the built-in modules.
+				if (value != null && authModules == null) {
+					authModules = [
+						new AuthModuleBasic (),
+						new AuthModuleDigest ()
+					];
+				}
+
+				field = value;
+			}
+		}
 
 		/// <summary>
 		/// If the website requires authentication, this property will contain data about each scheme supported
@@ -1188,7 +1197,7 @@ namespace Xamarin.Android.Net
 					// There's also no way to send content using GET (except in the URL, of course), so discarding
 					// request.Content is what we should do.
 					//
-					// See https://github.com/xamarin/xamarin-android/issues/1282
+					// See https://github.com/dotnet/android/issues/1282
 					if (redirectState.Method == HttpMethod.Get) {
 						if (Logger.LogNet)
 							Logger.Log (LogLevel.Info, LOG_APP, $"Discarding content on redirect");
@@ -1737,9 +1746,7 @@ namespace Xamarin.Android.Net
 				(key, algorithmName) = (rsa, "RSA");
 			} else if (clientCertificate.GetECDsaPrivateKey () is {} ec) {
 				(key, algorithmName) = (ec, "EC");
-			// Retain DSA only for customer-provided client certificates after preferring RSA and ECDSA.
-			// No Microsoft-controlled signing, issuance, key generation, or password storage; removal breaks compatibility.
-			} else if (clientCertificate.GetDSAPrivateKey () is {} dsa) { // CodeQL [SM03800]
+			} else if (clientCertificate.GetDSAPrivateKey () is {} dsa) { // CodeQL [SM03800] Used only after RSA and ECDSA for customer-provided client certificate compatibility.
 				(key, algorithmName) = (dsa, "DSA");
 			} else {
 				return null;
@@ -1770,7 +1777,7 @@ namespace Xamarin.Android.Net
 				return;
 			}
 
-			var auth = data.Scheme == AuthenticationScheme.Unsupported ? data.AuthModule : authModules.Find (m => m?.Scheme == data.Scheme);
+			var auth = data.Scheme == AuthenticationScheme.Unsupported ? data.AuthModule : authModules?.FirstOrDefault (m => m.Scheme == data.Scheme);
 			if (auth == null) {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"Authentication module for scheme '{data.Scheme}' not found. No authentication will be performed");
