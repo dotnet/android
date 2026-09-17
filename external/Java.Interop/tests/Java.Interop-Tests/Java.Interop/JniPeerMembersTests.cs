@@ -225,7 +225,6 @@ namespace Java.InteropTests
 			JniObjectReference.Dispose (ref r);
 		}
 
-#if !ANDROID    // Android doesn't allow providing a custom TypeManager
 		[Test]
 		[Category ("NativeAOTIgnore")]
 		public void ReplaceInstanceMethodWithUtf8Signature ()
@@ -235,7 +234,6 @@ namespace Java.InteropTests
 			var r = o.remappedToStringWithUtf8Signature ();
 			JniObjectReference.Dispose (ref r);
 		}
-#endif  // !ANDROID
 
 		[Test]
 		[Category ("NativeAOTIgnore")]
@@ -357,13 +355,11 @@ namespace Java.InteropTests
 			return _members.InstanceMethods.InvokeNonvirtualObjectMethod (id, this, null);
 		}
 
-#if !ANDROID
 		public unsafe JniObjectReference remappedToStringWithUtf8Signature ()
 		{
 			const string id = "remappedToStringWithUtf8Signature.()Ljava/lang/String;";
 			return _members.InstanceMethods.InvokeNonvirtualObjectMethod (id, this, null);
 		}
-#endif  // !ANDROID
 
 		public unsafe int remappedToStaticHashCode ()
 		{
