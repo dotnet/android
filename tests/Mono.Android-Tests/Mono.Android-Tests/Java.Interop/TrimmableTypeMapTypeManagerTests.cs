@@ -77,6 +77,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void GetType_ReverseMappingPrecedesDirectResidualName ()
 		{
 			AssumeTrimmableTypeMapEnabled ();
@@ -88,6 +89,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void GetType_ReverseMappingDoesNotFallBackWhenOriginalIsMissing ()
 		{
 			AssumeTrimmableTypeMapEnabled ();

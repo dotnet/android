@@ -30,15 +30,11 @@
   <Target Name="_AndroidLinkNativeAotAfterR8"
       AfterTargets="_CompileToDalvik"
       Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_OuterIntermediateOutputPath)' == '' and '$(DesignTimeBuild)' != 'true' "
-      DependsOnTargets="_ResolveAssemblies;_CollectAndroidRemapMembers">
-    <PropertyGroup>
-      <_AndroidR8ExistingRemapXmlFile
-          Condition=" '@(_AndroidRemapMembers->Count())' != '0' and Exists('$(_XARemapMembersFilePath)') ">$([MSBuild]::NormalizePath('$(_XARemapMembersFilePath)'))</_AndroidR8ExistingRemapXmlFile>
-    </PropertyGroup>
+      DependsOnTargets="_ResolveAssemblies">
     <MSBuild
         Projects="@(_ProjectToBuild)"
         Targets="_AndroidLinkNativeAotForRuntimeIdentifier"
-        Properties="_AndroidNativeAotLinkAfterR8=true;_AndroidR8JniMappingFile=$(_AndroidR8JniMappingFile);_AndroidR8ExistingRemapXmlFile=$([MSBuild]::Escape('$(_AndroidR8ExistingRemapXmlFile)'))"
+        Properties="_AndroidNativeAotLinkAfterR8=true;_AndroidR8JniMappingFile=$(_AndroidR8JniMappingFile)"
         BuildInParallel="$(_AndroidBuildRuntimeIdentifiersInParallel)">
       <Output TaskParameter="TargetOutputs" ItemName="_AndroidNativeAotLinkedFileToPublish" />
     </MSBuild>
