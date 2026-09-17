@@ -561,7 +561,7 @@ be preferred if it is not blank.
 
 ## Installing .NET MAUI
 
-`make pack-dotnet` or `msbuild Xamarin.Android.slnx -t:PackDotNet`
+`make pack-dotnet` or `msbuild Microsoft.Android.slnx -t:PackDotNet`
 provisions a .NET SDK and locally built Android workload in:
 
     bin/$(Configuration)/dotnet/
@@ -573,7 +573,7 @@ Android workload.
 To simplify things, we have an MSBuild target to install .NET MAUI:
 
     # or dotnet-local.cmd on Windows
-    dotnet-local.sh build Xamarin.Android.slnx -t:InstallMaui -p:MauiVersion=9.0.0
+    dotnet-local.sh build Microsoft.Android.slnx -t:InstallMaui -p:MauiVersion=9.0.0
 
 To find the version number of .NET MAUI you want to install, find the
 package on the [nightly Azure DevOps feed][maui-feed]. Or look for the
