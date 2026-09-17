@@ -24,7 +24,15 @@ static class JniRemappingLookup
 	{
 		public byte* target_type;
 		public byte* target_name;
+		public byte* target_signature;
 		public byte  is_static;
+	}
+
+	unsafe struct NativeJniRemappingReplacementField
+	{
+		public byte* target_type;
+		public byte* target_name;
+		public byte* target_signature;
 	}
 
 	unsafe struct NativeJniRemappingIndexMethodEntry
@@ -47,12 +55,30 @@ static class JniRemappingLookup
 		public byte*                    replacement;
 	}
 
+	unsafe struct NativeJniRemappingIndexFieldEntry
+	{
+		public NativeJniRemappingString           name;
+		public NativeJniRemappingString           signature;
+		public NativeJniRemappingReplacementField replacement;
+	}
+
+	unsafe struct NativeJniRemappingIndexFieldTypeEntry
+	{
+		public NativeJniRemappingString          name;
+		public uint                              field_count;
+		public NativeJniRemappingIndexFieldEntry* fields;
+	}
+
 	unsafe struct NativeJniRemappingData
 	{
 		public NativeJniRemappingTypeReplacementEntry* type_replacements;
+		public NativeJniRemappingTypeReplacementEntry* reverse_type_replacements;
 		public NativeJniRemappingIndexTypeEntry*        method_replacement_index;
+		public NativeJniRemappingIndexFieldTypeEntry*   field_replacement_index;
 		public uint                                     type_replacement_count;
+		public uint                                     reverse_type_replacement_count;
 		public uint                                     method_replacement_index_count;
+		public uint                                     field_replacement_index_count;
 	}
 
 	static unsafe NativeJniRemappingData* nativeData;
@@ -66,11 +92,19 @@ static class JniRemappingLookup
 		}
 
 		nativeData = (NativeJniRemappingData*)data;
-		isInUse = nativeData->type_replacement_count > 0 || nativeData->method_replacement_index_count > 0;
+		isInUse =
+			nativeData->type_replacement_count > 0 ||
+			nativeData->reverse_type_replacement_count > 0 ||
+			nativeData->method_replacement_index_count > 0 ||
+			nativeData->field_replacement_index_count > 0;
 	}
 
 	internal static IReadOnlyList<string> GetStaticMethodFallbackTypes (string jniSimpleReference, bool useReplacementTypes)
 	{
+		if (useReplacementTypes) {
+			jniSimpleReference = GetReverseType (jniSimpleReference) ?? jniSimpleReference;
+		}
+
 		int slash = jniSimpleReference.LastIndexOf ('/');
 		var desugarType = slash > 0
 			? $"{jniSimpleReference.Substring (0, slash + 1)}Desugar{jniSimpleReference.Substring (slash + 1)}"
@@ -107,6 +141,22 @@ static class JniRemappingLookup
 			throw new InvalidOperationException ("JNI remapping data has not been initialized.");
 
 		return (IntPtr)LookupType (data->type_replacements, data->type_replacement_count, jniSimpleReference);
+	}
+
+	internal static unsafe string? GetReverseType (string? jniSimpleReference)
+	{
+		if (jniSimpleReference is null || !isInUse || jniSimpleReference.Length == 0)
+			return null;
+
+		NativeJniRemappingData* data = nativeData;
+		if (data == null)
+			throw new InvalidOperationException ("JNI remapping data has not been initialized.");
+
+		byte* replacement = LookupType (
+			data->reverse_type_replacements,
+			data->reverse_type_replacement_count,
+			jniSimpleReference);
+		return replacement == null ? null : Marshal.PtrToStringUTF8 ((IntPtr)replacement);
 	}
 
 	internal static JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (string jniSourceType, string jniMethodName, string jniMethodSignature)
@@ -155,14 +205,18 @@ static class JniRemappingLookup
 			string sourceType = GetSourceTypeForDiagnostics (jniSourceType, jniSourceTypeUtf8);
 			string sourceSignature = jniMethodSignature.ToString ();
 			paramCount = JniMemberSignature.GetParameterCountFromMethodSignature (sourceSignature) + 1;
-			targetSignature = $"(L{sourceType};" + sourceSignature.Substring ("(".Length);
+			targetSignature = method->target_signature == null
+				? $"(L{sourceType};" + sourceSignature.Substring ("(".Length)
+				: Marshal.PtrToStringUTF8 ((IntPtr)method->target_signature);
 		}
 
 		var ret = new JniRuntime.ReplacementMethodInfo {
 			TargetJniTypeUtf8               = (IntPtr)method->target_type,
 			TargetJniMethodNameUtf8         = (IntPtr)method->target_name,
 			TargetJniMethodSignature        = targetSignature,
-			TargetJniMethodSignatureUtf8    = isStatic ? IntPtr.Zero : (IntPtr)matchedSignature,
+			TargetJniMethodSignatureUtf8    = isStatic
+				? IntPtr.Zero
+				: (IntPtr)(method->target_signature == null ? matchedSignature : method->target_signature),
 			TargetJniMethodParameterCount   = paramCount,
 			TargetJniMethodInstanceToStatic = isStatic,
 		};
@@ -180,6 +234,55 @@ static class JniRemappingLookup
 		}
 
 		return ret;
+	}
+
+	internal static JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfo (string jniSourceType, string jniFieldName, string jniFieldSignature)
+		=> GetReplacementFieldInfo (jniSourceType, jniFieldName.AsSpan (), jniFieldSignature.AsSpan ());
+
+	internal static unsafe JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfo (
+		string jniSourceType,
+		ReadOnlySpan<char> jniFieldName,
+		ReadOnlySpan<char> jniFieldSignature)
+	{
+		if (!isInUse)
+			return null;
+
+		NativeJniRemappingData* data = nativeData;
+		if (data == null)
+			throw new InvalidOperationException ("JNI remapping data has not been initialized.");
+
+		NativeJniRemappingReplacementField* field = LookupField (
+			data,
+			jniSourceType,
+			jniFieldName,
+			jniFieldSignature);
+		if (field == null)
+			return null;
+		if (field->target_type == null || field->target_name == null) {
+			throw new InvalidOperationException (
+				$"JNI remapping entry for `{jniSourceType}.{jniFieldName}:{jniFieldSignature}` is missing target information.");
+		}
+
+		string targetType = Marshal.PtrToStringUTF8 ((IntPtr)field->target_type) ?? "";
+		string targetName = Marshal.PtrToStringUTF8 ((IntPtr)field->target_name) ?? "";
+		string targetSignature = field->target_signature == null
+			? jniFieldSignature.ToString ()
+			: Marshal.PtrToStringUTF8 ((IntPtr)field->target_signature) ?? "";
+
+		if (Logger.LogAssembly) {
+			var message = $"Remapping field `{jniSourceType}.{jniFieldName}:{jniFieldSignature}` to " +
+				$"`{targetType}.{targetName}:{targetSignature}`";
+			Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+		}
+
+		return new JniRuntime.ReplacementFieldInfo {
+			SourceJniType = jniSourceType,
+			SourceJniFieldName = jniFieldName.ToString (),
+			SourceJniFieldSignature = jniFieldSignature.ToString (),
+			TargetJniType = targetType,
+			TargetJniFieldName = targetName,
+			TargetJniFieldSignature = targetSignature,
+		};
 	}
 
 	static string GetSourceTypeForDiagnostics (ReadOnlySpan<char> jniSourceType, IntPtr jniSourceTypeUtf8)
@@ -425,6 +528,53 @@ static class JniRemappingLookup
 			if (entry->signature.length == 0) {
 				return &entry->replacement;
 			}
+		}
+		return null;
+	}
+
+	static unsafe NativeJniRemappingReplacementField* LookupField (
+		NativeJniRemappingData* data,
+		ReadOnlySpan<char> sourceType,
+		ReadOnlySpan<char> name,
+		ReadOnlySpan<char> signature)
+	{
+		bool sourceTypeIsAscii = Ascii.IsValid (sourceType);
+		int typeIndex = LowerBoundByName (
+			data->field_replacement_index,
+			data->field_replacement_index_count,
+			sizeof (NativeJniRemappingIndexFieldTypeEntry),
+			sourceType,
+			sourceTypeIsAscii);
+		if (typeIndex >= checked ((int)data->field_replacement_index_count) ||
+				!Equal (data->field_replacement_index [typeIndex].name, sourceType, sourceTypeIsAscii))
+			return null;
+
+		NativeJniRemappingIndexFieldTypeEntry* type = &data->field_replacement_index [typeIndex];
+		bool nameIsAscii = Ascii.IsValid (name);
+		int first = LowerBoundByName (
+			type->fields,
+			type->field_count,
+			sizeof (NativeJniRemappingIndexFieldEntry),
+			name,
+			nameIsAscii);
+		int count = checked ((int)type->field_count);
+		if (first >= count || !Equal (type->fields [first].name, name, nameIsAscii))
+			return null;
+
+		int last = first + 1;
+		while (last < count && Equal (type->fields [last].name, name, nameIsAscii))
+			last++;
+
+		bool signatureIsAscii = Ascii.IsValid (signature);
+		for (int i = first; i < last; i++) {
+			NativeJniRemappingIndexFieldEntry* entry = &type->fields [i];
+			if (entry->signature.length != 0 && Equal (entry->signature, signature, signatureIsAscii))
+				return &entry->replacement;
+		}
+		for (int i = first; i < last; i++) {
+			NativeJniRemappingIndexFieldEntry* entry = &type->fields [i];
+			if (entry->signature.length == 0)
+				return &entry->replacement;
 		}
 		return null;
 	}
