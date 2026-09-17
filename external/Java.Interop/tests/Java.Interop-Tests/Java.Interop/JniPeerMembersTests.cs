@@ -227,6 +227,16 @@ namespace Java.InteropTests
 
 		[Test]
 		[Category ("NativeAOTIgnore")]
+		public void ReplaceInstanceMethodWithUtf8Signature ()
+		{
+			using var o = new JavaLangRemappingTestObject ();
+			// Shouldn't throw; should instead invoke Object.toString()
+			var r = o.remappedToStringWithUtf8Signature ();
+			JniObjectReference.Dispose (ref r);
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void ReplaceStaticMethodName ()
 		{
 			var r = JavaLangRemappingTestRuntime.remappedToGetRuntime ();
@@ -342,6 +352,12 @@ namespace Java.InteropTests
 		public unsafe JniObjectReference remappedToToString ()
 		{
 			const string id = "remappedToToString.()Ljava/lang/String;";
+			return _members.InstanceMethods.InvokeNonvirtualObjectMethod (id, this, null);
+		}
+
+		public unsafe JniObjectReference remappedToStringWithUtf8Signature ()
+		{
+			const string id = "remappedToStringWithUtf8Signature.()Ljava/lang/String;";
 			return _members.InstanceMethods.InvokeNonvirtualObjectMethod (id, this, null);
 		}
 

@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Runtime.InteropServices;
 
 namespace Java.Interop
 {
@@ -95,11 +96,7 @@ namespace Java.Interop
 			if (value == IntPtr.Zero)
 				throw new NotSupportedException ();
 
-			byte* start = (byte*)value;
-			int length = 0;
-			while (start [length] != 0)
-				length++;
-			return System.Text.Encoding.UTF8.GetString (start, length);
+			return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)value));
 		}
 #endif  // DEBUG
 

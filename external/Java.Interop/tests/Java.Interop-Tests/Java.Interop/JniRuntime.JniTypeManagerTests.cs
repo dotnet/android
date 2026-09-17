@@ -1,4 +1,6 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
 using Java.Interop;
 
@@ -8,6 +10,31 @@ namespace Java.InteropTests {
 
 	[TestFixture]
 	public class JniRuntimeJniTypeManagerTests : JavaVMFixture {
+
+		[Test]
+		public void ReplacementMethodInfoToStringConvertsUtf8Pointers ()
+		{
+			var type = Marshal.StringToCoTaskMemUTF8 ("java/lang/Object");
+			var name = Marshal.StringToCoTaskMemUTF8 ("toString");
+			var signature = Marshal.StringToCoTaskMemUTF8 ("()Ljava/lang/String;");
+			try {
+				var info = new JniRuntime.ReplacementMethodInfo {
+					TargetJniTypeUtf8            = type,
+					TargetJniMethodNameUtf8      = name,
+					TargetJniMethodSignatureUtf8 = signature,
+				};
+
+				var value = info.ToString ();
+
+				Assert.That (value, Does.Contain ("TargetJniTypeUtf8 = \"java/lang/Object\""));
+				Assert.That (value, Does.Contain ("TargetJniMethodNameUtf8 = \"toString\""));
+				Assert.That (value, Does.Contain ("TargetJniMethodSignatureUtf8 = \"()Ljava/lang/String;\""));
+			} finally {
+				Marshal.ZeroFreeCoTaskMemUTF8 (type);
+				Marshal.ZeroFreeCoTaskMemUTF8 (name);
+				Marshal.ZeroFreeCoTaskMemUTF8 (signature);
+			}
+		}
 
 		[Test]
 		[Category ("TrimmableTypeMapUnsupported")]

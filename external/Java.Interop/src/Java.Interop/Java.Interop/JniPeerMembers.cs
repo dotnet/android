@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace Java.Interop {
@@ -257,11 +258,7 @@ namespace Java.Interop {
 
 		static unsafe string GetUtf8String (IntPtr value)
 		{
-			byte* start = (byte*)value;
-			int length = 0;
-			while (start [length] != 0)
-				length++;
-			return System.Text.Encoding.UTF8.GetString (start, length);
+			return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)value));
 		}
 
 		static string GetTargetTypeNameForDiagnostics (JniRuntime.ReplacementMethodInfo info, JniPeerMembers fallback)

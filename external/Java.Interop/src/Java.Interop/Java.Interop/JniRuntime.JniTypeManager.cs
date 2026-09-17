@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
@@ -14,6 +15,14 @@ using System.Threading;
 namespace Java.Interop {
 
 	public partial class JniRuntime {
+
+		static unsafe string GetUtf8String (IntPtr value)
+		{
+			if (value == IntPtr.Zero)
+				return "";
+
+			return Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)value));
+		}
 
 		[SuppressMessage ("Design", "CA1034:Nested types should not be visible",
 			Justification = "Deliberate choice to 'hide' these types from code completion for `Java.Interop.`; see 045b8af7.")]
@@ -106,9 +115,9 @@ namespace Java.Interop {
 					$", {nameof (TargetJniType)} = \"{TargetJniType}\"" +
 					$", {nameof (TargetJniMethodName)} = \"{TargetJniMethodName}\"" +
 					$", {nameof (TargetJniMethodSignature)} = \"{TargetJniMethodSignature}\"" +
-					$", {nameof (TargetJniTypeUtf8)} = 0x{TargetJniTypeUtf8.ToString ("x")}" +
-					$", {nameof (TargetJniMethodNameUtf8)} = 0x{TargetJniMethodNameUtf8.ToString ("x")}" +
-					$", {nameof (TargetJniMethodSignatureUtf8)} = 0x{TargetJniMethodSignatureUtf8.ToString ("x")}" +
+					$", {nameof (TargetJniTypeUtf8)} = \"{GetUtf8String (TargetJniTypeUtf8)}\"" +
+					$", {nameof (TargetJniMethodNameUtf8)} = \"{GetUtf8String (TargetJniMethodNameUtf8)}\"" +
+					$", {nameof (TargetJniMethodSignatureUtf8)} = \"{GetUtf8String (TargetJniMethodSignatureUtf8)}\"" +
 					$", {nameof (TargetJniMethodParameterCount)} = {TargetJniMethodParameterCount?.ToString () ?? "null"}" +
 					$", {nameof (TargetJniMethodInstanceToStatic)} = {TargetJniMethodInstanceToStatic}" +
 					$"}}";
@@ -369,15 +378,6 @@ namespace Java.Interop {
 			/// </summary>
 			protected virtual ReplacementMethodInfo? GetReplacementMethodInfoCore (IntPtr jniSimpleReferenceUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 				=> GetReplacementMethodInfoCore (GetUtf8String (jniSimpleReferenceUtf8), jniMethodName, jniMethodSignature);
-
-			static unsafe string GetUtf8String (IntPtr value)
-			{
-				byte* start = (byte*)value;
-				int length = 0;
-				while (start [length] != 0)
-					length++;
-				return Encoding.UTF8.GetString (start, length);
-			}
 
 			// Default implementation is a no-op. Derived classes (e.g. `ReflectionJniTypeManager`)
 			// provide reflection-based registration. Override to provide custom registration.
