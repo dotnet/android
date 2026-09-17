@@ -247,12 +247,12 @@ Steps (1) through (4) are the same, then:
 
 
 [0]: https://docs.microsoft.com/en-us/windows/win32/debug/debugger-exception-handling
-[1]: https://github.com/xamarin/xamarin-android/blob/402ae221be90fdb4b48c2aeb29170b745c30f60b/src/Mono.Android/Android.Runtime/JNINativeWrapper.cs#L34-L97
-[2]: https://github.com/xamarin/xamarin-android/blob/402ae221be90fdb4b48c2aeb29170b745c30f60b/src/Mono.Android/Android.Runtime/AndroidEnvironment.cs#L115-L129
+[1]: https://github.com/dotnet/android/blob/402ae221be90fdb4b48c2aeb29170b745c30f60b/src/Mono.Android/Android.Runtime/JNINativeWrapper.cs#L34-L97
+[2]: https://github.com/dotnet/android/blob/402ae221be90fdb4b48c2aeb29170b745c30f60b/src/Mono.Android/Android.Runtime/AndroidEnvironment.cs#L115-L129
 [3]: https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/functions.html#Throw
 [4]: https://developer.android.com/reference/java/lang/Thread#getUncaughtExceptionHandler()
 [5]: https://developer.android.com/reference/java/lang/Thread.UncaughtExceptionHandler#uncaughtException(java.lang.Thread,%20java.lang.Throwable)
-[6]: https://github.com/xamarin/xamarin-android/blob/4cae5f5e40896c69b7448cb78cf613cf6327c97c/src/Mono.Android/Android.Runtime/JNIEnv.cs#L265-L296
+[6]: https://github.com/dotnet/android/blob/4cae5f5e40896c69b7448cb78cf613cf6327c97c/src/Mono.Android/Android.Runtime/JNIEnv.cs#L265-L296
 
 
 ---

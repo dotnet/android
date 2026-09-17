@@ -28,9 +28,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" />
-    <!-- Mono.Android is built as a dependency so the ref assembly is available on disk.
+    <!-- Mono.Android is built as a dependency so the implementation assembly is available on disk.
          ReferenceOutputAssembly=false because we read it with SRM/Cecil, not compile against it directly.
-         Instead, we reference the ref assembly below so we can use typeof(Java.Lang.Object). -->
+         Instead, we reference the implementation assembly below so reflection can inspect its private metadata. -->
     <ProjectReference Include="..\..\src\Mono.Android\Mono.Android.csproj"
                       ReferenceOutputAssembly="false" />
     <!-- User-type fixture assembly: built as a dependency, scanned via SRM/Cecil in tests.
@@ -41,22 +41,22 @@
                       ReferenceOutputAssembly="false" />
   </ItemGroup>
 
-  <!-- Discover the Mono.Android ref assembly path and add a direct Reference to it.
-       This lets tests use typeof(Java.Lang.Object).Assembly.Location to find the assembly. -->
+  <!-- Discover the Mono.Android implementation assembly path and add a direct Reference to it.
+       This lets tests use typeof(Java.Lang.Object).Assembly to inspect runtime metadata. -->
   <Target Name="_AddMonoAndroidReference" BeforeTargets="ResolveAssemblyReferences">
     <ItemGroup>
-      <_MonoAndroidRefCandidate
+      <_MonoAndroidAssemblyCandidate
           Condition=" '%(AndroidBuildApiLevel.Unstable)' == 'false' "
-          Include="$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\lib\packs\Microsoft.Android.Ref.%(AndroidBuildApiLevel.Identity)\*\ref\net*\Mono.Android.dll"
+          Include="$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Microsoft.Android\%(AndroidBuildApiLevel.Identity)\Mono.Android.dll"
       />
     </ItemGroup>
     <PropertyGroup>
-      <_MonoAndroidRefAssembly>@(_MonoAndroidRefCandidate, ';')</_MonoAndroidRefAssembly>
-      <_MonoAndroidRefAssembly>$(_MonoAndroidRefAssembly.Split(';')[0])</_MonoAndroidRefAssembly>
+      <_MonoAndroidAssembly>@(_MonoAndroidAssemblyCandidate, ';')</_MonoAndroidAssembly>
+      <_MonoAndroidAssembly>$(_MonoAndroidAssembly.Split(';')[0])</_MonoAndroidAssembly>
     </PropertyGroup>
-    <ItemGroup Condition=" '$(_MonoAndroidRefAssembly)' != '' ">
+    <ItemGroup Condition=" '$(_MonoAndroidAssembly)' != '' ">
       <Reference Include="Mono.Android">
-        <HintPath>$(_MonoAndroidRefAssembly)</HintPath>
+        <HintPath>$(_MonoAndroidAssembly)</HintPath>
       </Reference>
     </ItemGroup>
   </Target>

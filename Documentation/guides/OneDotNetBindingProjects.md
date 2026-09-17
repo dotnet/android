@@ -89,7 +89,7 @@ Or exclude *all* files within that folder:
 <AndroidLibrary Remove="AndroidStudio\**\*" />
 ```
 
-[default-items]: https://github.com/xamarin/xamarin-android/blob/main/src/Xamarin.Android.Build.Tasks/Microsoft.Android.Sdk/Sdk/AutoImport.props
+[default-items]: https://github.com/dotnet/android/blob/main/src/Xamarin.Android.Build.Tasks/Microsoft.Android.Sdk/Sdk/AutoImport.props
 
 ## Embedded `.jar`./`.aar`
 

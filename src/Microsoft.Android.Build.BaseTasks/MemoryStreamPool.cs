@@ -1,4 +1,4 @@
-// https://github.com/xamarin/xamarin-android/blob/c9e5f58d2fa92283917ae4e8f9c370adfd40b908/src/Xamarin.Android.Build.Tasks/Utilities/MemoryStreamPool.cs
+// https://github.com/dotnet/android/blob/c9e5f58d2fa92283917ae4e8f9c370adfd40b908/src/Xamarin.Android.Build.Tasks/Utilities/MemoryStreamPool.cs
 
 using System.IO;
 using System.Text;

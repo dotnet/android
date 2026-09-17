@@ -84,8 +84,8 @@ startup: across native and managed code.
 An example of these log messages would be [this managed
 call][managed_timing] or [this native call][native_timing].
 
-[managed_timing]: https://github.com/xamarin/xamarin-android/blob/faf2a3d7271e2e321b2fa500f85fa0f824abcf89/src/Mono.Android/Android.Runtime/JNIEnv.cs#L160
-[native_timing]: https://github.com/xamarin/xamarin-android/blob/6be4bdbcfd9f2fbe6267aceb934394bcdd0f13b4/src/monodroid/jni/monodroid-glue.cc#L2062
+[managed_timing]: https://github.com/dotnet/android/blob/faf2a3d7271e2e321b2fa500f85fa0f824abcf89/src/Mono.Android/Android.Runtime/JNIEnv.cs#L160
+[native_timing]: https://github.com/dotnet/android/blob/6be4bdbcfd9f2fbe6267aceb934394bcdd0f13b4/src/monodroid/jni/monodroid-glue.cc#L2062
 
 ## Profiling the AOT Compiler
 

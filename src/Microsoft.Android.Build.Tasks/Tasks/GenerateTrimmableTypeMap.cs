@@ -139,6 +139,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
 	public bool GenerateTypeMapAssemblies { get; set; } = true;
+	public bool IncludeBuiltInValueTypeUniverses { get; set; }
 	public bool CleanJavaSourceOutputDirectory { get; set; }
 
 	/// <summary>
@@ -257,6 +258,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				errorOnCustomJavaObject: ErrorOnCustomJavaObject,
 				customViewTypeNames: customViewTypeNames,
 				collectMarshalMethodsForNonAcw: false,
+				includeBuiltInValueTypeUniverses: IncludeBuiltInValueTypeUniverses,
 				shouldGenerateTypeMapAssembly: TypeMapFingerprintsFile.IsNullOrEmpty () ? null : ShouldGenerateTypeMapAssembly);
 			if (Log.HasLoggedErrors) {
 				return false;
