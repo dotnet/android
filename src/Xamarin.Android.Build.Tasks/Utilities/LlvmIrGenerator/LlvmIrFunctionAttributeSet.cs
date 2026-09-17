@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -67,7 +68,7 @@ class LlvmIrFunctionAttributeSet : IEnumerable<LlvmIrFunctionAttribute>, IEquata
 
 	IEnumerator IEnumerable.GetEnumerator () => GetEnumerator ();
 
-	public bool Equals (LlvmIrFunctionAttributeSet other)
+	public bool Equals (LlvmIrFunctionAttributeSet? other)
 	{
 		if (other == null) {
 			return false;
@@ -86,7 +87,7 @@ class LlvmIrFunctionAttributeSet : IEnumerable<LlvmIrFunctionAttribute>, IEquata
 		return true;
 	}
 
-	public override bool Equals (object obj)
+	public override bool Equals (object? obj)
 	{
 		var attrSet = obj as LlvmIrFunctionAttributeSet;
 		if (attrSet == null) {
