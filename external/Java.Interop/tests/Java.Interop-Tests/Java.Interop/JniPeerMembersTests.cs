@@ -240,6 +240,22 @@ namespace Java.InteropTests
 		[Test]
 		[Category ("NativeAOTIgnore")]
 		[Category ("TrimmableTypeMapUnsupported")]
+		public void ReplacedStaticFieldRetainsTargetOwner ()
+		{
+			Assert.AreEqual (Math.PI, JavaLangRemappingTestObject.remappedStaticPi ());
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
+		public void ReplacedStaticMethodRetainsTargetOwner ()
+		{
+			Assert.AreEqual (5, JavaLangRemappingTestObject.remappedStaticAbs (-5));
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
 		public void ReplaceInstanceFieldName ()
 		{
 			// Resolves `java.io.ByteArrayInputStream.pos`, not the nonexistent `remappedToPos`.
@@ -595,6 +611,17 @@ namespace Java.InteropTests
 		{
 			const string id = "remappedToStaticHashCode.()I";
 			return _members.InstanceMethods.InvokeVirtualInt32Method (id, this, null);
+		}
+
+		public static unsafe double remappedStaticPi ()
+		{
+			return _members.StaticFields.GetDoubleValue ("remappedStaticPi.D");
+		}
+
+		public static unsafe int remappedStaticAbs (int value)
+		{
+			var argument = new JniArgumentValue (value);
+			return _members.StaticMethods.InvokeInt32Method ("remappedStaticAbs.(I)I", &argument);
 		}
 	}
 

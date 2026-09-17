@@ -446,7 +446,7 @@ namespace Xamarin.Android.Tasks
 			return left.Length < right.Length ? -1 : 1;
 		}
 
-		static byte [] Utf8 (string str) => String.IsNullOrEmpty (str) ? [] : Encoding.UTF8.GetBytes (str);
+		static byte [] Utf8 (string str) => str.IsNullOrEmpty () ? [] : Encoding.UTF8.GetBytes (str);
 
 		GeneratedTables Init ()
 		{
@@ -611,7 +611,7 @@ namespace Xamarin.Android.Tasks
 
 		static int GetMethodSignatureSpecificity (string signature)
 		{
-			if (String.IsNullOrEmpty (signature)) {
+			if (signature.IsNullOrEmpty ()) {
 				return 2;
 			}
 			return signature [signature.Length - 1] == ')' ? 1 : 0;

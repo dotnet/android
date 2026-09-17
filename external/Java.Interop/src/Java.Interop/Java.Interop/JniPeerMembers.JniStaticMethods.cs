@@ -21,7 +21,7 @@ namespace Java.Interop
 
 		internal void Dispose ()
 		{
-			Clear (ref staticMethods);
+			Clear (ref staticMethods, static method => method.StaticRedirect?.Dispose ());
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
@@ -39,9 +39,15 @@ namespace Java.Interop
 			var newMethod      = Members.GetReplacementMethodInfo (method, signature);
 			if (newMethod.HasValue) {
 				var info = newMethod.Value;
-				using var t = CreateTargetType (info, Members);
-				if (TryGetStaticMethod (t, info, method, signature, out m)) {
-					return m;
+				JniType? t = CreateTargetType (info, Members);
+				try {
+					if (TryGetStaticMethod (t, info, method, signature, out m)) {
+						m.StaticRedirect = t;
+						t = null;
+						return m;
+					}
+				} finally {
+					t?.Dispose ();
 				}
 			}
 			if (Members.JniPeerType.TryGetStaticMethod (method, signature, out m)) {
@@ -50,9 +56,15 @@ namespace Java.Interop
 			newMethod = JniPeerMembers.GetBaseReplacementMethodInfo (Members.ManagedPeerType, method, signature);
 			if (newMethod.HasValue) {
 				var info = newMethod.Value;
-				using var t = CreateTargetType (info, Members);
-				if (TryGetStaticMethod (t, info, method, signature, out m)) {
-					return m;
+				JniType? t = CreateTargetType (info, Members);
+				try {
+					if (TryGetStaticMethod (t, info, method, signature, out m)) {
+						m.StaticRedirect = t;
+						t = null;
+						return m;
+					}
+				} finally {
+					t?.Dispose ();
 				}
 			}
 			m   = FindInFallbackTypes (method, signature);

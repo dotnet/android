@@ -177,6 +177,7 @@ namespace Java.InteropTests {
 			[("java/lang/Object",                       "remappedToToString",                  "()Ljava/lang/String;")]    = (null, "toString", null, null, false, ReplacementMethodStorage.TypeUtf8 | ReplacementMethodStorage.MethodUtf8),
 			[("java/lang/Object",                       "remappedToStringWithUtf8Signature",    "()Ljava/lang/String;")]    = (null, "toString", "()Ljava/lang/String;", null, false, ReplacementMethodStorage.SignatureUtf8),
 			[("java/lang/Object",                       "remappedToStaticHashCode",            null)]                      = ("net/dot/jni/test/ObjectHelper", "getHashCodeHelper", null, null, true, ReplacementMethodStorage.TypeUtf8 | ReplacementMethodStorage.MethodUtf8 | ReplacementMethodStorage.SignatureUtf8),
+			[("java/lang/Object",                       "remappedStaticAbs",                   "(I)I")]                    = ("java/lang/Math", "abs", null, null, false, ReplacementMethodStorage.Strings),
 			[("java/lang/Runtime",                      "remappedToGetRuntime",                null)]                      = (null, "getRuntime", null, null, false, ReplacementMethodStorage.Strings),
 
 			// NOTE: key must use *post-renamed* value, not pre-renamed value
@@ -200,6 +201,7 @@ namespace Java.InteropTests {
 
 		Dictionary<(string SourceType, string SourceName, string? SourceSignature), (string? TargetType, string? TargetName, string? TargetSignature)> ReplacementFields = new() {
 			[("java/lang/Math",                 "remappedToPi",         "D")]   = (null, "PI", null),
+			[("java/lang/Object",               "remappedStaticPi",     "D")]   = ("java/lang/Math", "PI", null),
 			[("java/io/ByteArrayInputStream",   "remappedToPos",        "I")]   = (null, "pos", null),
 			[(FieldRemapBase.RuntimeJniTypeName, "hiddenInstanceField",  "Z")]   = (null, "remappedInstanceField", null),
 			[(FieldRemapBase.RuntimeJniTypeName, "hiddenStaticField",    "Ljava/lang/String;")] = (null, "remappedStaticField", null),

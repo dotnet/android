@@ -36,9 +36,15 @@ namespace Java.Interop
 				var fieldName    = newField.Value.TargetJniFieldName is string name ? name.AsSpan () : field;
 				var fieldSig     = newField.Value.TargetJniFieldSignature is string sig ? sig.AsSpan () : signature;
 
-				using var t = new JniType (typeName);
-				if (t.TryGetStaticField (fieldName, fieldSig, out var f)) {
-					return f;
+				JniType? t = new JniType (typeName);
+				try {
+					if (t.TryGetStaticField (fieldName, fieldSig, out var f)) {
+						f.StaticRedirect = t;
+						t = null;
+						return f;
+					}
+				} finally {
+					t?.Dispose ();
 				}
 			}
 			if (Members.JniPeerType.TryGetStaticField (field, signature, out var originalField)) {
@@ -51,17 +57,28 @@ namespace Java.Interop
 				var fieldName    = newField.Value.TargetJniFieldName is string name ? name.AsSpan () : field;
 				var fieldSig     = newField.Value.TargetJniFieldSignature is string sig ? sig.AsSpan () : signature;
 
-				using var t = new JniType (typeName);
-				if (t.TryGetStaticField (fieldName, fieldSig, out var f)) {
-					return f;
+				JniType? t = new JniType (typeName);
+				try {
+					if (t.TryGetStaticField (fieldName, fieldSig, out var f)) {
+						f.StaticRedirect = t;
+						t = null;
+						return f;
+					}
+				} finally {
+					t?.Dispose ();
 				}
 			}
 			return Members.JniPeerType.GetStaticField (field, signature);
 		}
 
+		JniType GetFieldDeclaringType (JniFieldInfo field)
+		{
+			return field.StaticRedirect ?? Members.JniPeerType;
+		}
+
 		internal void Dispose ()
 		{
-			Clear (ref staticFields);
+			Clear (ref staticFields, static field => field.StaticRedirect?.Dispose ());
 		}
 	}}
 }
