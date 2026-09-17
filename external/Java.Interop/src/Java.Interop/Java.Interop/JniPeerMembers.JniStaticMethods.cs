@@ -47,6 +47,14 @@ namespace Java.Interop
 			if (Members.JniPeerType.TryGetStaticMethod (method, signature, out m)) {
 				return m;
 			}
+			newMethod = JniPeerMembers.GetBaseReplacementMethodInfo (Members.ManagedPeerType, method, signature);
+			if (newMethod.HasValue) {
+				var info = newMethod.Value;
+				using var t = CreateTargetType (info, Members);
+				if (TryGetStaticMethod (t, info, method, signature, out m)) {
+					return m;
+				}
+			}
 			m   = FindInFallbackTypes (method, signature);
 			if (m != null) {
 				return m;
