@@ -109,6 +109,29 @@ namespace Java.InteropTests {
 			Assert.AreEqual (42, Call (owner, "existing"));
 		}
 
+		[Test]
+		public void RegistrationCopiesDelegateBatch ()
+		{
+			var retained = RegisterAndMutateBatch ();
+			Collect ();
+			Assert.IsTrue (retained.Target.IsAlive, "Mutating the caller's array must not release the registered delegate.");
+			using var owner = retained.Owner;
+			Assert.AreEqual (42, Call (owner, "value"));
+		}
+
+		[MethodImpl (MethodImplOptions.NoInlining)]
+		static (JniType Owner, WeakReference Target) RegisterAndMutateBatch ()
+		{
+			var owner = new JniType (JniTypeName);
+			var target = new NativeTarget ();
+			var registrations = new [] {
+				new JniNativeMethodRegistration ("value", "()I", new GetValue (target.Value)),
+			};
+			owner.RegisterNativeMethods (registrations);
+			registrations [0] = default;
+			return (owner, new WeakReference (target));
+		}
+
 		[TestCase (false)]
 		[TestCase (true)]
 		public void Dispose_PreventsConcurrentRegistration (bool registerFirst)

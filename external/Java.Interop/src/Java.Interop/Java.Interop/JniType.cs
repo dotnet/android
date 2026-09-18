@@ -222,9 +222,10 @@ namespace Java.Interop {
 				// Storing it afterward could therefore leave callable pointers to collected
 				// delegates.
 				this.methods ??= new List<JniNativeMethodRegistration[]> ();
-				this.methods.Add (methods);
+				var retainedMethods = (JniNativeMethodRegistration[]) methods.Clone ();
+				this.methods.Add (retainedMethods);
 				RegisterWithRuntime ();
-				JniEnvironment.Types.RegisterNatives (PeerReference, methods, methods.Length);
+				JniEnvironment.Types.RegisterNatives (PeerReference, retainedMethods, retainedMethods.Length);
 			}
 		}
 
