@@ -18,6 +18,10 @@
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
     <WarningsAsErrors>IL2037</WarningsAsErrors>
+    <!-- Runtime regression tests intentionally exercise trim-unsafe and AOT-unsafe APIs and dependencies.
+         Keep linker and NativeAOT analysis warnings visible while enforcing C# compiler warnings and IL2037. -->
+    <ILLinkTreatWarningsAsErrors>false</ILLinkTreatWarningsAsErrors>
+    <IlcTreatWarningsAsErrors>false</IlcTreatWarningsAsErrors>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
     <AndroidNdkDirectory></AndroidNdkDirectory>
   </PropertyGroup>
@@ -86,8 +90,6 @@
     <ProjectReference Include="..\..\StartupHook\StartupHook.csproj" />
     <ProjectReference Include="..\Java.Interop-Tests\Java.Interop-Tests.NET.csproj" />
     <ProjectReference Include="..\Mono.Android-Test.Library\Mono.Android-Test.Library.NET.csproj" />
-    <!-- Required for [Export] / [ExportField] runtime support (ExportTests.cs) on the LLVM-IR typemap path -->
-    <Reference Include="Mono.Android.Export" Condition=" '$(AndroidTypeMapImplementation)' != 'trimmable' " />
   </ItemGroup>
 
   <ItemGroup>
