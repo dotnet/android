@@ -167,7 +167,7 @@ public class ExtractTypeMapKeysFromLlvmIrTests
 
 	[TestCase ("")]
 	[TestCase ("test/Type[1]")]
-	[TestCase ("[Ltest/Type;")]
+	[TestCase ("[Ltest/Type")]
 	[TestCase ("test.Type")]
 	[TestCase ("test//Type")]
 	[TestCase ("/Type")]
@@ -189,6 +189,15 @@ public class ExtractTypeMapKeysFromLlvmIrTests
 		Assert.IsFalse (task.Execute ());
 		Assert.That (errors.Single ().Code, Is.EqualTo ("XA4327"));
 		Assert.That (File.Exists (task.OutputFile), Is.False);
+	}
+
+	[Test]
+	public void ReadsArrayDescriptors ([Values (ReleaseSymbol, DebugSymbol)] string symbol)
+	{
+		string [] names = ["[Ljava/lang/Object;", "[Z", "[B", "[C", "[S", "[I", "[J", "[F", "[D", "[[Ltest/Outer$Inner;", "test/Outer$Inner"];
+		var task = CreateTask (WriteEmittedBlob ("arrays.ll", symbol, names, false, AndroidTargetArch.Arm64));
+		Assert.IsTrue (task.Execute ());
+		AssertOutput (task.OutputFile, ["java/lang/Object", "test/Outer$Inner"]);
 	}
 
 	[Test]

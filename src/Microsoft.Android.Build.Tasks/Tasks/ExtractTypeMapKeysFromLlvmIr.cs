@@ -216,19 +216,11 @@ public class ExtractTypeMapKeysFromLlvmIr : AndroidTask
 			}
 			string name = Utf8.GetString (nameBytes.ToArray ());
 			nameBytes.Clear ();
-			ValidateName (name);
-			keys.Add (name);
-		}
-
-		void ValidateName (string name)
-		{
-			if (name.Length == 0 || name [0] == '/' || name [name.Length - 1] == '/' || name.Contains ("//")) {
-				throw Invalid ("An empty Java class name or package segment was found.");
+			if (!TypeMapClassName.TryGetClassName (name, out var className)) {
+				throw Invalid ($"Invalid Java type name '{name}' in the blob.");
 			}
-			foreach (char c in name) {
-				if (Char.IsWhiteSpace (c) || Char.IsControl (c) || ".;[]\\\"'*!?:,{}()#@<>%".IndexOf (c) >= 0) {
-					throw Invalid ("A noncanonical Java class name was found in the blob.");
-				}
+			if (className != null) {
+				keys.Add (className);
 			}
 		}
 
