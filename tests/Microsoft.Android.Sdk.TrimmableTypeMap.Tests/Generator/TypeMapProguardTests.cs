@@ -157,6 +157,79 @@ public class TypeMapProguardTests : IDisposable
 		Assert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
 	}
 
+	[Theory]
+	[InlineData ("CoreCLR", "llvm-ir")]
+	[InlineData ("CoreCLR", "trimmable")]
+	[InlineData ("NativeAOT", "trimmable")]
+	public void DisabledPipelineNeedsNoTypemapInputsOrModernTaskAssembly (string runtime, string representation)
+	{
+		Write ("acw-map.txt", "App.Live, App;test.Live\n");
+		var project = CreateProject (runtime, representation);
+		Build (project, "-p:_AndroidEnableTypemapR8Trimming=false", "-p:_MicrosoftAndroidBuildTasksAssembly=missing.dll");
+		Assert.False (File.Exists (Path.Combine (directory, "obj", "typemap.keys.txt")));
+		Assert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
+		if (runtime == "NativeAOT") {
+			Assert.Equal ("# Class roots are supplied by the legacy ACW configuration.",
+				File.ReadAllText (Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg")).Trim ());
+		}
+	}
+
+	[Theory]
+	[InlineData ("CoreCLR", "llvm-ir")]
+	[InlineData ("NativeAOT", "trimmable")]
+	public void EnablingDisablingAndUnsettingCannotReuseLegacyRules (string runtime, string representation)
+	{
+		Write ("first.ll", "@java_type_names = dso_local local_unnamed_addr constant [10 x i8] c\"test/Live\\00\", align 1\n");
+		Write ("app.dgml", """<DirectedGraph><Nodes><Node Id="1" Label="Type metadata: [App]App.Live" /></Nodes></DirectedGraph>""");
+		Write ("acw-map.txt", "App.Live, App;test.Live\n");
+		var project = CreateProject (runtime, representation,
+			new XElement ("_TypeMapAssemblySource", new XAttribute ("Include", "$(MSBuildProjectDirectory)/first.ll")),
+			new XElement ("ResolvedFileToPublish", new XAttribute ("Include", "app.so"),
+				new XAttribute ("AndroidTypeMapDgmlFile", "$(MSBuildProjectDirectory)/app.dgml")));
+		var keys = Path.Combine (directory, "obj", "typemap.keys.txt");
+		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
+		foreach (var enabled in new [] { "true", "" }) {
+			Build (project, "-p:_AndroidEnableTypemapR8Trimming=true");
+			var keysTime = File.GetLastWriteTimeUtc (keys);
+			Build (project, "-p:_AndroidEnableTypemapR8Trimming=false");
+			Assert.Equal (keysTime, File.GetLastWriteTimeUtc (keys));
+			Assert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
+			// The CoreCLR legacy producer runs in the RID inner build, outside this fixture.
+			if (runtime == "CoreCLR") {
+				File.WriteAllText (rules, "# legacy rules");
+			}
+			Assert.DoesNotContain ("-keep class test.Live", File.ReadAllText (rules));
+			Build (project, "-p:_AndroidEnableTypemapR8Trimming=" + enabled);
+			Assert.Equal ("-keep class test.Live\n", File.ReadAllText (rules));
+			Assert.Contains ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
+		}
+	}
+
+	[Theory]
+	[InlineData ("false", "false", false)]
+	[InlineData ("false", "true", true)]
+	[InlineData ("true", "false", true)]
+	public void DisablingAutomaticDgmlPreservesExplicitDiagnostics (string enabled, string diagnostics, bool serialBuild)
+	{
+		var project = CreateProject ("NativeAOT", "trimmable");
+		var document = XDocument.Load (project);
+		var root = document.Root ?? throw new InvalidOperationException ();
+		root.Add (new XElement ("Import", new XAttribute ("Project",
+			Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.TypeMap.Trimmable.NativeAOT.targets"))));
+		root.Add (new XElement ("Target", new XAttribute ("Name", "_ReadGeneratedTrimmableTypeMapAssemblies")));
+		root.Add (new XElement ("Target", new XAttribute ("Name", "Build"),
+			new XAttribute ("DependsOnTargets", "_AddTrimmableTypeMapAssembliesToIlc"),
+			new XElement ("WriteLinesToFile", new XAttribute ("File", "$(MSBuildProjectDirectory)/ilc.txt"),
+				new XAttribute ("Lines", "@(IlcArg);Diagnostics=$(IlcGenerateDgmlFile);Parallel=$(_AndroidBuildRuntimeIdentifiersInParallel)"),
+				new XAttribute ("Overwrite", "true"))));
+		document.Save (project);
+		Build (project, "-p:_AndroidEnableTypemapR8Trimming=" + enabled, "-p:IlcGenerateDgmlFile=" + diagnostics, "-p:Optimize=true");
+		var output = File.ReadAllText (Path.Combine (directory, "ilc.txt"));
+		Assert.Equal (enabled == "true" && diagnostics == "false", output.Contains ("--scandgmllog:", StringComparison.Ordinal));
+		Assert.Equal (serialBuild, output.Contains ("Parallel=false", StringComparison.Ordinal));
+		Assert.Contains ("Diagnostics=" + diagnostics, output);
+	}
+
 	[Fact]
 	public void InnerBuildDoesNotGenerateOuterClassRules ()
 	{
@@ -240,7 +313,7 @@ public class TypeMapProguardTests : IDisposable
 	public void InactivePathsDoNotConsumeOrGenerateKeys (string runtime, string representation, string trimmed, string linkTool)
 	{
 		var project = CreateProject (runtime, representation);
-		Build (project, $"-p:PublishTrimmed={trimmed}", $"-p:AndroidLinkTool={linkTool}");
+		Build (project, $"-p:PublishTrimmed={trimmed}", $"-p:AndroidLinkTool={linkTool}", "-p:_AndroidEnableTypemapR8Trimming=true");
 		Assert.False (File.Exists (Path.Combine (directory, "obj", "typemap.keys.txt")));
 	}
 
@@ -273,13 +346,18 @@ public class TypeMapProguardTests : IDisposable
 					new XElement ("AndroidLinkTool", "r8"),
 					new XElement ("_AndroidTrimmableTypemapTrimJavaCode", "true"),
 					new XElement ("IntermediateOutputPath", "$(MSBuildProjectDirectory)/obj/"),
+					new XElement ("_AndroidBuildPropertiesCache", "$(MSBuildProjectDirectory)/obj/build.props.cache"),
 					new XElement ("_AcwMapFile", "$(MSBuildProjectDirectory)/acw-map.txt")),
 				new XElement ("Import", new XAttribute ("Project", targets)),
 				new XElement ("Target", new XAttribute ("Name", "_GenerateJavaStubs"),
 					new XElement ("ItemGroup", sourceItems)),
 				new XElement ("Target", new XAttribute ("Name", "_CalculateProguardConfigurationFiles")),
+				new XElement ("Target", new XAttribute ("Name", "_CreatePropertiesCache"),
+					new XElement ("WriteLinesToFile", new XAttribute ("File", "$(_AndroidBuildPropertiesCache)"),
+						new XAttribute ("Lines", "Enabled=$(_AndroidEnableTypemapR8Trimming)"),
+						new XAttribute ("Overwrite", "true"), new XAttribute ("WriteOnlyWhenDifferent", "true"))),
 				new XElement ("Target", new XAttribute ("Name", "Build"),
-					new XAttribute ("DependsOnTargets", "_CalculateProguardConfigurationFiles;_AndroidGenerateTypeMapProguardConfiguration"),
+					new XAttribute ("DependsOnTargets", "_CreatePropertiesCache;_CalculateProguardConfigurationFiles;_AndroidGenerateTypeMapProguardConfiguration"),
 					new XElement ("WriteLinesToFile", new XAttribute ("File", "$(MSBuildProjectDirectory)/writes.txt"),
 						new XAttribute ("Lines", "@(FileWrites);UseTypeMap=$(_AndroidUseTypeMapProguardConfiguration)"), new XAttribute ("Overwrite", "true")))))
 			.Save (path);

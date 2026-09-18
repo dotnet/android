@@ -50,6 +50,14 @@ classes to disappear. It keeps explicit runtime bootstrap roots rather than
 whole wrapper packages. User Java source retention and application/library
 ProGuard rules remain separate.
 
+The temporary private override `_AndroidEnableTypemapR8Trimming` controls this
+pipeline. Leave it unset for the automatic behavior, set it to `true` to enable
+the pipeline in eligible managed-trimmed CoreCLR/NativeAOT R8 builds, or set it
+to `false` to use legacy ACW retention without running the new tasks. Disabling
+it also avoids automatic NativeAOT DGML generation, but does not suppress
+explicit `IlcGenerateDgmlFile` diagnostics. It does not enable R8 or managed
+trimming in otherwise ineligible builds.
+
 This pipeline disables all obfuscation, including private-member
 obfuscation, with both `-dontobfuscate` and R8's `--no-minification` option.
 MonoVM, nonshrinking/multidex-only builds, and the existing complete
