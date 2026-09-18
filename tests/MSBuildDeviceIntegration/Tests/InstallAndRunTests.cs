@@ -2553,7 +2553,18 @@ namespace UnnamedProject
 				},
 			};
 			proj.SetRuntime (runtime);
-			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": global::Example.RemapActivity");
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace (": Activity", ": global::Example.RemapActivity")
+				.Replace ("//${AFTER_ONCREATE}", """
+			unsafe {
+				var members = new Java.Interop.JniPeerMembers ("example/ActivitéSource", typeof (global::Example.RemapActivity));
+				try {
+					members.InstanceMethods.InvokeNonvirtualVoidMethod ("méthodeSource.()V", this, null);
+				} finally {
+					Java.Interop.JniPeerMembers.Dispose (members);
+				}
+			}
+""");
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 			RunProjectAndAssert (proj, builder);
@@ -2571,6 +2582,11 @@ namespace UnnamedProject
 					"ViewHelper.mySetOnClickListener() invoked!",
 					logcatOutput,
 					"View.setOnClickListener() wasn't remapped to ViewHelper.mySetOnClickListener()!"
+			);
+			StringAssert.Contains (
+					"RemapActivity.méthodeCible() invoked!",
+					logcatOutput,
+					"The non-ASCII method name wasn't remapped!"
 			);
 		}
 

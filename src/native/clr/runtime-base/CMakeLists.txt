@@ -53,7 +53,6 @@ set(XA_RUNTIME_BASE_SOURCES
   android-system.cc
   android-system-shared.cc
   cpu-arch-detect.cc
-  jni-remapping.cc
   logger.cc
   util.cc
 )

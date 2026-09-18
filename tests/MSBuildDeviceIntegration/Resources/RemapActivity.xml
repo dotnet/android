@@ -1,5 +1,6 @@
 <replacements>
   <replace-type from="android/app/Activity" to="example/RemapActivity" />
+  <replace-type from="example/ActivitéSource" to="example/RemapActivity" />
   <replace-method
       source-type="example/RemapActivity"
       source-method-name="onCreate"
@@ -10,4 +11,10 @@
       source-method-name="setOnClickListener"
       target-type="example/ViewHelper"
       target-method-name="mySetOnClickListener" target-method-instance-to-static="true" />
+  <replace-method
+      source-type="example/RemapActivity"
+      source-method-name="méthodeSource"
+      source-method-signature="()V"
+      target-type="example/RemapActivity"
+      target-method-name="méthodeCible" target-method-instance-to-static="false" />
 </replacements>
