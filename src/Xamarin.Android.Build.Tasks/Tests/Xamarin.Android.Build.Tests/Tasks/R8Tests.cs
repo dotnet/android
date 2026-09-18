@@ -1,4 +1,5 @@
 using System.IO;
+using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 
@@ -76,6 +77,62 @@ namespace Xamarin.Android.Build.Tests
 			R8.WriteObfuscationRules (writer, "disabled");
 
 			Assert.AreEqual ("-dontobfuscate" + System.Environment.NewLine, writer.ToString ());
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void RetainedTypeMapRulesDoNotRootAllAcwsOrObfuscatePrivateMembers (bool scopedMembers)
+		{
+			var directory = Path.Combine (Path.GetTempPath (), "R8TypeMap_" + System.Guid.NewGuid ().ToString ("N"));
+			Directory.CreateDirectory (directory);
+			try {
+				var map = Path.Combine (directory, "acw-map.txt");
+				File.WriteAllText (map, "Unused.Type;unused.Wrapper\n");
+				var source = Path.Combine (directory, "UserSource.java");
+				File.WriteAllText (source, "package example;\npublic class UserSource {}");
+				var task = new R8ResponseTestTask {
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+					UseTypeMapProguardConfiguration = true,
+					UseScopedTypeMapMembers = scopedMembers,
+					EnableShrinking = true,
+					ObfuscationMode = "private-members",
+					AcwMapFile = map,
+					JavaSourceFiles = [new TaskItem (source)],
+					JavaPlatformJarPath = Path.Combine (directory, "android.jar"),
+					ProguardGeneratedApplicationConfiguration = Path.Combine (directory, "primary.cfg"),
+					ProguardCommonXamarinConfiguration = Path.Combine (directory, "common.cfg"),
+					ResponseFile = Path.Combine (directory, "r8.rsp"),
+				};
+				var response = task.WriteResponse ();
+				StringAssert.Contains ("--no-minification", response);
+				StringAssert.DoesNotContain ("--no-tree-shaking", response);
+				var primary = File.ReadAllText (task.ProguardGeneratedApplicationConfiguration);
+				StringAssert.DoesNotContain ("unused.Wrapper", primary);
+				StringAssert.Contains ("-keep class example.UserSource { *; }", primary);
+				var common = File.ReadAllText (task.ProguardCommonXamarinConfiguration);
+				StringAssert.Contains ("-dontobfuscate", common);
+				StringAssert.DoesNotContain ("-keep,allowshrinking,allowoptimization class **", common);
+				StringAssert.DoesNotContain ("-keep class mono.android.**", common);
+				if (scopedMembers) {
+					StringAssert.DoesNotContain ("-keepclassmembers class * {", common);
+					StringAssert.Contains ("-keep class mono.android.Runtime { *; }", common);
+					StringAssert.Contains ("-keep class net.dot.jni.ManagedPeer { *; }", common);
+					StringAssert.Contains ("-keep interface mono.android.IGCUserPeer { *; }", common);
+				} else {
+					StringAssert.Contains ("-keepclassmembers class * {", common);
+				}
+			} finally {
+				Directory.Delete (directory, recursive: true);
+			}
+		}
+
+		sealed class R8ResponseTestTask : R8
+		{
+			public string ResponseFile { get; set; } = "";
+
+			protected override string CreateResponseFilePath () => ResponseFile;
+
+			public string WriteResponse () => File.ReadAllText (CreateResponseFile ());
 		}
 	}
 }
