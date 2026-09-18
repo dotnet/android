@@ -807,6 +807,8 @@ namespace Android.Runtime {
 
 		public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 		{
+			EnsureNotDisposed ();
+
 			if (!reference.IsValid)
 				return null;
 
