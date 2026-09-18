@@ -5,8 +5,9 @@ using System.IO;
 using System.Text;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks;
+namespace Microsoft.Android.Tasks;
 
 public class GenerateTypeMapProguardConfiguration : AndroidTask
 {
