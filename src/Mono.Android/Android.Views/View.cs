@@ -4,6 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using Android.AccessibilityServices;
 using Android.OS;
 using Android.Runtime;
+using JniArgumentValue = Java.Interop.JniArgumentValue;
+using JniObjectReference = Java.Interop.JniObjectReference;
 
 namespace Android.Views {
 
@@ -66,12 +68,10 @@ namespace Android.Views {
 
 		public bool RemoveCallbacks (Action action)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Remove (action);
-			if (runnable == null)
-				return false;
-			bool result = RemoveCallbacks (runnable);
-			runnable.Dispose ();
-			return result;
+			return Java.Lang.Thread.RunnableImplementor.Remove (
+				action,
+				this,
+				static (view, runnable) => view.RemoveCallbacks (runnable));
 		}
 
 		public void ScheduleDrawable (Android.Graphics.Drawables.Drawable who, Action what, long when)
@@ -81,11 +81,28 @@ namespace Android.Views {
 
 		public void UnscheduleDrawable (Android.Graphics.Drawables.Drawable who, Action what)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Remove (what);
-			if (runnable == null)
-				return;
-			UnscheduleDrawable (who, runnable);
-			runnable.Dispose ();
+			Java.Lang.Thread.RunnableImplementor.Remove (what, this, who, static (runnable, view, who) => view.UnscheduleDrawable (who, runnable));
+		}
+
+		unsafe bool RemoveCallbacks (JniObjectReference runnable)
+		{
+			const string id = "removeCallbacks.(Ljava/lang/Runnable;)Z";
+			JniArgumentValue* args = stackalloc JniArgumentValue [1];
+			args [0] = new JniArgumentValue (runnable.Handle);
+			return _members.InstanceMethods.InvokeVirtualBooleanMethod (id, this, args);
+		}
+
+		unsafe void UnscheduleDrawable (Android.Graphics.Drawables.Drawable who, JniObjectReference runnable)
+		{
+			const string id = "unscheduleDrawable.(Landroid/graphics/drawable/Drawable;Ljava/lang/Runnable;)V";
+			try {
+				JniArgumentValue* args = stackalloc JniArgumentValue [2];
+				args [0] = new JniArgumentValue (who == null ? IntPtr.Zero : who.Handle);
+				args [1] = new JniArgumentValue (runnable.Handle);
+				_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
+			} finally {
+				GC.KeepAlive (who);
+			}
 		}
 
 #if ANDROID_11

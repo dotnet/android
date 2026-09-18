@@ -136,18 +136,26 @@ namespace Java.Interop {
 
 		protected virtual void Dispose (bool disposing)
 		{
-			if (!disposing || jniPeerType == null)
+			if (!disposing)
 				return;
 
 			instanceMethods.Dispose ();
 			instanceFields.Dispose ();
 			staticMethods.Dispose ();
 			staticFields.Dispose ();
-			jniPeerType.Dispose ();
+			jniPeerType?.Dispose ();
 
 			jniPeerType     = null;
 		}
 
+		/// <summary>
+		/// Releases JNI resources cached by <paramref name="members"/>.
+		/// </summary>
+		/// <remarks>
+		/// The caller must ensure that no member lookup, invocation, or previously returned
+		/// cached value is in use while this method executes. Later access can recreate the
+		/// released caches.
+		/// </remarks>
 		public static void Dispose (JniPeerMembers members)
 		{
 			if (members == null)

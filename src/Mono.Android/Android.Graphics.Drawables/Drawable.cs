@@ -1,5 +1,6 @@
 using System;
 using Android.Runtime;
+using Java.Interop;
 
 namespace Android.Graphics.Drawables {
 
@@ -12,12 +13,15 @@ namespace Android.Graphics.Drawables {
 
 		public void UnscheduleSelf (Action what)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Remove (what);
-			if (runnable == null)
-				return;
-			UnscheduleSelf (runnable);
-			runnable.Dispose ();
+			Java.Lang.Thread.RunnableImplementor.Remove (what, this, static (runnable, drawable) => drawable.UnscheduleSelf (runnable));
+		}
+
+		unsafe void UnscheduleSelf (JniObjectReference runnable)
+		{
+			const string id = "unscheduleSelf.(Ljava/lang/Runnable;)V";
+			JniArgumentValue* args = stackalloc JniArgumentValue [1];
+			args [0] = new JniArgumentValue (runnable.Handle);
+			_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
 		}
 	}
 }
-

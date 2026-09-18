@@ -111,11 +111,14 @@ namespace Java.Lang {
 		{
 			var reference = new JniObjectReference (value);
 			var options   = JNIEnv.ToJniObjectReferenceOptions (transfer);
-			JniEnvironment.Runtime.ValueManager.ConstructPeer (
-					this,
-					ref reference,
-					value == IntPtr.Zero ? JniObjectReferenceOptions.None : options);
-			JNIEnv.DeleteRef (value, transfer);
+			try {
+				JniEnvironment.Runtime.ValueManager.ConstructPeer (
+						this,
+						ref reference,
+						value == IntPtr.Zero ? JniObjectReferenceOptions.None : options);
+			} finally {
+				JNIEnv.DeleteRef (value, transfer);
+			}
 		}
 
 		internal static IJavaPeerable? PeekObject (IntPtr handle, Type? requiredType = null)
@@ -166,9 +169,11 @@ namespace Java.Lang {
 			if (handle == IntPtr.Zero)
 				return null;
 
-			var r = JniEnvironment.Runtime.ValueManager.GetPeer (new JniObjectReference (handle), type);
-			JNIEnv.DeleteRef (handle, transfer);
-			return r;
+			try {
+				return JniEnvironment.Runtime.ValueManager.GetPeer (new JniObjectReference (handle), type);
+			} finally {
+				JNIEnv.DeleteRef (handle, transfer);
+			}
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]

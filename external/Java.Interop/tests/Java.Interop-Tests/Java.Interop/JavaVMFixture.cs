@@ -126,6 +126,7 @@ namespace Java.InteropTests {
 			[("java/lang/Object",                       "remappedToToString",       "()Ljava/lang/String;")]    = (null, "toString", null, null, false),
 			[("java/lang/Object",                       "remappedToStaticHashCode", null)]                      = ("net/dot/jni/test/ObjectHelper", "getHashCodeHelper", null, null, true),
 			[("java/lang/Runtime",                      "remappedToGetRuntime",     null)]                      = (null, "getRuntime", null, null, false),
+			[("java/lang/Runtime",                      "remappedToCurrentTimeMillis", "()J")]                 = ("java/lang/System", "currentTimeMillis", null, null, false),
 
 			// NOTE: key must use *post-renamed* value, not pre-renamed value
 			// NOTE: SourceSignature lacking return type; "closer in spirit" to what `remapping-config.json` allows

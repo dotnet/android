@@ -100,13 +100,16 @@ namespace Java.Lang {
 		{
 			var reference = new JniObjectReference (value);
 
-			Construct (
-					ref reference,
-					value == IntPtr.Zero ? JniObjectReferenceOptions.None : JniObjectReferenceOptions.Copy);
-			if (value != IntPtr.Zero) {
-				SetJavaStackTrace (new JniObjectReference (value));
+			try {
+				Construct (
+						ref reference,
+						value == IntPtr.Zero ? JniObjectReferenceOptions.None : JniObjectReferenceOptions.Copy);
+				if (value != IntPtr.Zero) {
+					SetJavaStackTrace (new JniObjectReference (value));
+				}
+			} finally {
+				JNIEnv.DeleteRef (value, transfer);
 			}
-			JNIEnv.DeleteRef (value, transfer);
 		}
 
 		public static Throwable FromException (System.Exception e)

@@ -11,7 +11,8 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 
 		public  ushort                              MajorVersion;
 		public  ushort                              MinorVersion;
-		public  int                                 ConstantPoolCount;
+		// Leave null for compiler-generated class files whose constant pool varies by JDK.
+		public  int?                                ConstantPoolCount;
 		public  ClassAccessFlags                    AccessFlags;
 		public  string                              FullName;
 		public  TypeInfo                            Superclass;
@@ -26,7 +27,8 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 		{
 			NAssert.AreEqual (MajorVersion,             classDeclaration.MajorVersion,          FullName + " Major Version");
 			NAssert.AreEqual (MinorVersion,             classDeclaration.MinorVersion,          FullName + " Minor Version");
-			NAssert.AreEqual (ConstantPoolCount,        classDeclaration.ConstantPool.Count,    FullName + " ConstantPool Count");
+			if (ConstantPoolCount.HasValue)
+				NAssert.AreEqual (ConstantPoolCount.Value, classDeclaration.ConstantPool.Count, FullName + " ConstantPool Count");
 			NAssert.AreEqual (AccessFlags,              classDeclaration.AccessFlags,           FullName + " AccessFlags");
 			NAssert.AreEqual (FullName,                 classDeclaration.ThisClass.Name.Value,  FullName + " Name");
 			NAssert.AreEqual (Superclass?.BinaryName,   classDeclaration?.SuperClass?.Name?.Value,  FullName + " SuperClass Name");
@@ -70,4 +72,3 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 		}
 	}
 }
-

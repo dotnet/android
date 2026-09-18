@@ -22,6 +22,12 @@
       target-type="java/lang/Runtime"
       target-method-name="getRuntime" target-method-instance-to-static="false" />
   <replace-method
+      source-type="java/lang/Runtime"
+      source-method-name="remappedToCurrentTimeMillis"
+      source-method-signature="()J"
+      target-type="java/lang/System"
+      target-method-name="currentTimeMillis" target-method-instance-to-static="false" />
+  <replace-method
       source-type="net/dot/jni/test/RenameClassBase2"
       source-method-name="hashCode"
       source-method-signature="()"
