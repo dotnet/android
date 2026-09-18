@@ -29,6 +29,13 @@ public class ExtractTypeMapKeysFromDgmlTests : IDisposable
 		""";
 
 	[Fact]
+	public void TaskLivesInModernBuildTasksAssembly ()
+	{
+		Assert.Equal ("Microsoft.Android.Tasks.ExtractTypeMapKeysFromDgml", typeof (ExtractTypeMapKeysFromDgml).FullName);
+		Assert.Equal ("Microsoft.Android.Build.Tasks", typeof (ExtractTypeMapKeysFromDgml).Assembly.GetName ().Name);
+	}
+
+	[Fact]
 	public void Execute_UnionsGraphsAndMatchesOnlyQualifiedMetadata ()
 	{
 		var (task, errors) = CreateTask ("""
