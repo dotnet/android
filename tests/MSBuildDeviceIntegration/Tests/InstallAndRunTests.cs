@@ -2868,14 +2868,15 @@ namespace UnnamedProject
 
 		static void CleanupInterfaceMethodPackage (string packageName)
 		{
-			RunAdbCommandWithExitCode ("shell", "am", "force-stop", packageName);
-			RunAdbCommandWithExitCode ("uninstall", packageName);
-			var (exitCode, standardOutput, standardError) = RunAdbCommandWithExitCode (
+			RunAdbCommandWithExitCode (new [] { "shell", "am", "force-stop", packageName });
+			RunAdbCommandWithExitCode (new [] { "uninstall", packageName });
+			var (exitCode, standardOutput, standardError) = RunAdbCommandWithExitCode (new [] {
 				"shell",
 				"pm",
 				"list",
 				"packages",
-				packageName);
+				packageName,
+			});
 			Assert.AreEqual (0, exitCode, $"Failed to query installed packages: {standardError}");
 			var installedPackages = standardOutput.Split (
 				new [] { '\r', '\n' },
