@@ -378,8 +378,11 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 	protected override string? GetReplacementTypeCore (string jniSimpleReference)
 		=> JniRemappingLookup.GetReplacementType (jniSimpleReference);
 
-	protected override IntPtr GetReplacementTypeUtf8Core (string jniSimpleReference)
-		=> JniRemappingLookup.GetReplacementTypeUtf8 (jniSimpleReference);
+	protected override void GetReplacementTypeInfoCore (string jniSimpleReference, out string? replacement, out IntPtr replacementUtf8)
+	{
+		replacement = null;
+		replacementUtf8 = JniRemappingLookup.GetReplacementTypeUtf8 (jniSimpleReference);
+	}
 
 	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
 		=> JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);

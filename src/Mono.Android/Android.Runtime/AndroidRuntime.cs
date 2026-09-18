@@ -382,9 +382,10 @@ namespace Android.Runtime {
 			return JniRemappingLookup.GetReplacementType (jniSimpleReference);
 		}
 
-		protected override IntPtr GetReplacementTypeUtf8Core (string jniSimpleReference)
+		protected override void GetReplacementTypeInfoCore (string jniSimpleReference, out string? replacement, out IntPtr replacementUtf8)
 		{
-			return JniRemappingLookup.GetReplacementTypeUtf8 (jniSimpleReference);
+			replacement = null;
+			replacementUtf8 = JniRemappingLookup.GetReplacementTypeUtf8 (jniSimpleReference);
 		}
 
 		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
