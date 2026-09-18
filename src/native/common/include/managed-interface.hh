@@ -19,9 +19,13 @@ namespace xamarin::android {
 
 	struct JniRemappingData {
 		const void *type_replacements;
+		const void *reverse_type_replacements;
 		const void *method_replacement_index;
+		const void *field_replacement_index;
 		uint32_t    type_replacement_count;
+		uint32_t    reverse_type_replacement_count;
 		uint32_t    method_replacement_index_count;
+		uint32_t    field_replacement_index_count;
 	};
 
 	extern "C" {

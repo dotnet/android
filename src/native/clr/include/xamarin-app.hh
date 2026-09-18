@@ -243,8 +243,7 @@ struct JniRemappingReplacementMethod
 {
 	const char    *target_type;
 	const char    *target_name;
-	// const char    *target_signature;
-	// const int32_t  param_count;
+	const char    *target_signature;
 	const bool     is_static;
 };
 

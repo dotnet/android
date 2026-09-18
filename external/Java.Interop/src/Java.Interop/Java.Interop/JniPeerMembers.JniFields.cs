@@ -202,109 +202,109 @@ namespace Java.Interop {
 		public bool GetBooleanValue (string encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			return JniEnvironment.StaticFields.GetStaticBooleanField (Members.JniPeerType.PeerReference, f);
+			return JniEnvironment.StaticFields.GetStaticBooleanField (GetFieldDeclaringType (f).PeerReference, f);
 		}
 
 		public void SetValue (string encodedMember, bool value)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			JniEnvironment.StaticFields.SetStaticBooleanField (Members.JniPeerType.PeerReference, f, value);
+			JniEnvironment.StaticFields.SetStaticBooleanField (GetFieldDeclaringType (f).PeerReference, f, value);
 		}
 
 		public sbyte GetSByteValue (string encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			return JniEnvironment.StaticFields.GetStaticByteField (Members.JniPeerType.PeerReference, f);
+			return JniEnvironment.StaticFields.GetStaticByteField (GetFieldDeclaringType (f).PeerReference, f);
 		}
 
 		public void SetValue (string encodedMember, sbyte value)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			JniEnvironment.StaticFields.SetStaticByteField (Members.JniPeerType.PeerReference, f, value);
+			JniEnvironment.StaticFields.SetStaticByteField (GetFieldDeclaringType (f).PeerReference, f, value);
 		}
 
 		public char GetCharValue (string encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			return JniEnvironment.StaticFields.GetStaticCharField (Members.JniPeerType.PeerReference, f);
+			return JniEnvironment.StaticFields.GetStaticCharField (GetFieldDeclaringType (f).PeerReference, f);
 		}
 
 		public void SetValue (string encodedMember, char value)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			JniEnvironment.StaticFields.SetStaticCharField (Members.JniPeerType.PeerReference, f, value);
+			JniEnvironment.StaticFields.SetStaticCharField (GetFieldDeclaringType (f).PeerReference, f, value);
 		}
 
 		public short GetInt16Value (string encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			return JniEnvironment.StaticFields.GetStaticShortField (Members.JniPeerType.PeerReference, f);
+			return JniEnvironment.StaticFields.GetStaticShortField (GetFieldDeclaringType (f).PeerReference, f);
 		}
 
 		public void SetValue (string encodedMember, short value)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			JniEnvironment.StaticFields.SetStaticShortField (Members.JniPeerType.PeerReference, f, value);
+			JniEnvironment.StaticFields.SetStaticShortField (GetFieldDeclaringType (f).PeerReference, f, value);
 		}
 
 		public int GetInt32Value (string encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			return JniEnvironment.StaticFields.GetStaticIntField (Members.JniPeerType.PeerReference, f);
+			return JniEnvironment.StaticFields.GetStaticIntField (GetFieldDeclaringType (f).PeerReference, f);
 		}
 
 		public void SetValue (string encodedMember, int value)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			JniEnvironment.StaticFields.SetStaticIntField (Members.JniPeerType.PeerReference, f, value);
+			JniEnvironment.StaticFields.SetStaticIntField (GetFieldDeclaringType (f).PeerReference, f, value);
 		}
 
 		public long GetInt64Value (string encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			return JniEnvironment.StaticFields.GetStaticLongField (Members.JniPeerType.PeerReference, f);
+			return JniEnvironment.StaticFields.GetStaticLongField (GetFieldDeclaringType (f).PeerReference, f);
 		}
 
 		public void SetValue (string encodedMember, long value)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			JniEnvironment.StaticFields.SetStaticLongField (Members.JniPeerType.PeerReference, f, value);
+			JniEnvironment.StaticFields.SetStaticLongField (GetFieldDeclaringType (f).PeerReference, f, value);
 		}
 
 		public float GetSingleValue (string encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			return JniEnvironment.StaticFields.GetStaticFloatField (Members.JniPeerType.PeerReference, f);
+			return JniEnvironment.StaticFields.GetStaticFloatField (GetFieldDeclaringType (f).PeerReference, f);
 		}
 
 		public void SetValue (string encodedMember, float value)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			JniEnvironment.StaticFields.SetStaticFloatField (Members.JniPeerType.PeerReference, f, value);
+			JniEnvironment.StaticFields.SetStaticFloatField (GetFieldDeclaringType (f).PeerReference, f, value);
 		}
 
 		public double GetDoubleValue (string encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			return JniEnvironment.StaticFields.GetStaticDoubleField (Members.JniPeerType.PeerReference, f);
+			return JniEnvironment.StaticFields.GetStaticDoubleField (GetFieldDeclaringType (f).PeerReference, f);
 		}
 
 		public void SetValue (string encodedMember, double value)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			JniEnvironment.StaticFields.SetStaticDoubleField (Members.JniPeerType.PeerReference, f, value);
+			JniEnvironment.StaticFields.SetStaticDoubleField (GetFieldDeclaringType (f).PeerReference, f, value);
 		}
 
 		public JniObjectReference GetObjectValue (string encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			return JniEnvironment.StaticFields.GetStaticObjectField (Members.JniPeerType.PeerReference, f);
+			return JniEnvironment.StaticFields.GetStaticObjectField (GetFieldDeclaringType (f).PeerReference, f);
 		}
 
 		public void SetValue (string encodedMember, JniObjectReference value)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			JniEnvironment.StaticFields.SetStaticObjectField (Members.JniPeerType.PeerReference, f, value);
+			JniEnvironment.StaticFields.SetStaticObjectField (GetFieldDeclaringType (f).PeerReference, f, value);
 		}
 	}}
 }
