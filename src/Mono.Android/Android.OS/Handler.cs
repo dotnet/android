@@ -86,7 +86,7 @@ namespace Android.OS {
 			try {
 				JniArgumentValue* args = stackalloc JniArgumentValue [2];
 				args [0] = new JniArgumentValue (runnable.Handle);
-				args [1] = new JniArgumentValue (token.Handle);
+				args [1] = new JniArgumentValue (token == null ? IntPtr.Zero : token.Handle);
 				_members.InstanceMethods.InvokeNonvirtualVoidMethod (id, this, args);
 			} finally {
 				GC.KeepAlive (token);

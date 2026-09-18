@@ -11,6 +11,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 
 		public  ushort                              MajorVersion;
 		public  ushort                              MinorVersion;
+		// Leave null for compiler-generated class files whose constant pool varies by JDK.
 		public  int?                                ConstantPoolCount;
 		public  ClassAccessFlags                    AccessFlags;
 		public  string                              FullName;

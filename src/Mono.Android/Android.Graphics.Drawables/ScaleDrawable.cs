@@ -21,7 +21,7 @@ namespace Android.Graphics.Drawables {
 			const string id = "unscheduleDrawable.(Landroid/graphics/drawable/Drawable;Ljava/lang/Runnable;)V";
 			try {
 				JniArgumentValue* args = stackalloc JniArgumentValue [2];
-				args [0] = new JniArgumentValue (who.Handle);
+				args [0] = new JniArgumentValue (who == null ? IntPtr.Zero : who.Handle);
 				args [1] = new JniArgumentValue (runnable.Handle);
 				_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
 			} finally {

@@ -109,6 +109,23 @@ namespace Xamarin.Android.RuntimeTests {
 		}
 
 		[Test]
+		public void RemoveCallbacksWithNullTokenRemovesEveryPost ()
+		{
+			using var queue = new CallbackQueue ();
+			using var token = new Java.Lang.String ("token");
+			using var otherToken = new Java.Lang.String ("other token");
+			int calls = 0;
+			Action action = () => calls++;
+			Assert.IsTrue (queue.Handler.PostAtTime (action, token, SystemClock.UptimeMillis ()));
+			Assert.IsTrue (queue.Handler.PostAtTime (action, otherToken, SystemClock.UptimeMillis ()));
+
+			queue.Handler.RemoveCallbacks (action, null);
+			queue.Drain ();
+
+			Assert.AreEqual (0, calls);
+		}
+
+		[Test]
 		public void WrongTokenDoesNotDisposeOrForgetQueuedCallback ()
 		{
 			using var queue = new CallbackQueue ();
