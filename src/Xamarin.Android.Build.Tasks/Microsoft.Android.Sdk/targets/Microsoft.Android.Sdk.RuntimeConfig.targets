@@ -58,6 +58,12 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
         Value="$(_AndroidIsAssignableFromCheck)"
         Trim="true"
     />
+    <!-- Private escape hatch for the startup no-GC optimization, which is enabled by default on CoreCLR and NativeAOT. -->
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.StartupNoGCRegion"
+        Condition="'$(_AndroidEnableStartupNoGCRegion)' != ''"
+        Value="$(_AndroidEnableStartupNoGCRegion)"
+        Trim="true"
+    />
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.ObjectReferenceLogging"
         Condition="'$(_AndroidEnableObjectReferenceLogging)' != ''"
         Value="$(_AndroidEnableObjectReferenceLogging)"

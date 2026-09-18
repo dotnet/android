@@ -109,7 +109,9 @@ namespace Android.Runtime
 				throw new NotSupportedException ("Internal error: NativeAOT cannot be enabled with MonoVM or CoreCLR.");
 			}
 
-			StartupNoGCRegion.Start ();
+			if (!RuntimeFeature.IsMonoRuntime && RuntimeFeature.StartupNoGCRegion) {
+				StartupNoGCRegion.Start ();
+			}
 			androidRuntime = runtime;
 			JniRuntime.SetCurrent (runtime);
 			RegisterTrimmableTypeMapNativeMethodsIfNeeded ();
@@ -127,7 +129,9 @@ namespace Android.Runtime
 				throw new NotSupportedException ("Internal error: exactly one of RuntimeFeature.IsMonoRuntime or RuntimeFeature.IsCoreClrRuntime must be enabled.");
 			}
 
-			StartupNoGCRegion.Start ();
+			if (!RuntimeFeature.IsMonoRuntime && RuntimeFeature.StartupNoGCRegion) {
+				StartupNoGCRegion.Start ();
+			}
 
 			IntPtr total_timing_sequence = IntPtr.Zero;
 			IntPtr partial_timing_sequence = IntPtr.Zero;

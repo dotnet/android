@@ -27,10 +27,6 @@ sealed class StartupNoGCRegion
 
 	void StartRegion ()
 	{
-		if (Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime) {
-			return;
-		}
-
 		lock (sync) {
 			if (state != State.NotStarted) {
 				return;

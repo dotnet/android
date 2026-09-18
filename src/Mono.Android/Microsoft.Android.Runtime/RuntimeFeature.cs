@@ -9,6 +9,7 @@ static class RuntimeFeature
 	const bool IsCoreClrRuntimeEnabledByDefault = false;
 	const bool IsNativeAotRuntimeEnabledByDefault = false;
 	const bool IsAssignableFromCheckEnabledByDefault = true;
+	const bool StartupNoGCRegionEnabledByDefault = true;
 	const bool StartupHookSupportEnabledByDefault = true;
 	const bool TrimmableTypeMapEnabledByDefault = false;
 	const bool ObjectReferenceLoggingEnabledByDefault = false;
@@ -32,6 +33,10 @@ static class RuntimeFeature
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsAssignableFromCheck)}")]
 	internal static bool IsAssignableFromCheck { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (IsAssignableFromCheck)}", out bool isEnabled) ? isEnabled : IsAssignableFromCheckEnabledByDefault;
+
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (StartupNoGCRegion)}")]
+	internal static bool StartupNoGCRegion { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (StartupNoGCRegion)}", out bool isEnabled) ? isEnabled : StartupNoGCRegionEnabledByDefault;
 
 	[FeatureSwitchDefinition (StartupHookProviderSwitch)]
 	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]

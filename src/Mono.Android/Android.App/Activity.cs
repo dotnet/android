@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Versioning;
 using Android.Runtime;
+using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
 namespace Android.App {
 
@@ -41,6 +42,7 @@ namespace Android.App {
 			RunOnUiThread (new Java.Lang.Thread.RunnableImplementor (action));
 		}
 
+		// The binding generator has no hook for injecting the startup no-GC cleanup into this method.
 		[SupportedOSPlatform ("android19.0")]
 		[Register ("reportFullyDrawn", "()V", "GetReportFullyDrawnHandler")]
 		public virtual unsafe void ReportFullyDrawn ()
@@ -49,7 +51,9 @@ namespace Android.App {
 			try {
 				_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, null);
 			} finally {
-				StartupNoGCRegion.End ();
+				if (!RuntimeFeature.IsMonoRuntime && RuntimeFeature.StartupNoGCRegion) {
+					StartupNoGCRegion.End ();
+				}
 			}
 		}
 
