@@ -148,6 +148,14 @@ namespace Java.Interop {
 			jniPeerType     = null;
 		}
 
+		/// <summary>
+		/// Releases JNI resources cached by <paramref name="members"/>.
+		/// </summary>
+		/// <remarks>
+		/// The caller must ensure that no member lookup, invocation, or previously returned
+		/// cached value is in use while this method executes. Later access can recreate the
+		/// released caches.
+		/// </remarks>
 		public static void Dispose (JniPeerMembers members)
 		{
 			if (members == null)

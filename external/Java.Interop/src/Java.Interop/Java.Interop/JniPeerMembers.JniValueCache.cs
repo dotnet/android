@@ -18,6 +18,9 @@ namespace Java.Interop {
 
 			readonly ConcurrentDictionary<TKey, TValue> values;
 			readonly Action<TValue> dispose;
+			// JniPeerMembers disposal requires external synchronization with users of returned
+			// values. This state only prevents in-flight factories from publishing into a
+			// detached cache after teardown.
 			int disposed;
 
 			public JniValueCache (int concurrencyLevel, int capacity, Action<TValue> dispose)
