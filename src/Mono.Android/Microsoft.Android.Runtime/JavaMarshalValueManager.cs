@@ -43,6 +43,7 @@ sealed class JavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 
 	public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 	{
+		EnsureNotDisposed ();
 		return JavaMarshalRegisteredPeers.PeekPeer (reference);
 	}
 

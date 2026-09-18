@@ -102,6 +102,32 @@ namespace Java.InteropTests
 				JNIEnv.DeleteLocalRef (handle);
 			}
 		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		[Category ("PeerManagerLifetime")]
+		public void PeekPeer_DisposedManager_Throws (bool registered)
+		{
+			// Use the runtime's factory without replacing or disposing its process-wide manager.
+			using var manager = JNIEnvInit.CreateValueManager ();
+			manager.OnSetRuntime (JniRuntime.CurrentRuntime);
+			using var peer = new Java.Lang.String ("registered peer");
+			manager.AddPeer (peer);
+			var unregistered = JNIEnv.CreateInstance (ReentrantLookupPeer.JniName, "()V");
+			try {
+				var reference = registered ? peer.PeerReference : new JniObjectReference (unregistered);
+				Assert.AreSame (registered ? peer : null, manager.PeekPeer (reference));
+
+				manager.Dispose ();
+
+				Assert.Throws<ObjectDisposedException> (() => manager.PeekPeer (reference));
+				Assert.Throws<ObjectDisposedException> (() => manager.PeekPeer (default));
+				Assert.AreSame (peer, Java.Lang.Object.GetObject<Java.Lang.Object> (peer.Handle, JniHandleOwnership.DoNotTransfer),
+					"Disposing the isolated manager must not affect the active runtime.");
+			} finally {
+				JNIEnv.DeleteLocalRef (unregistered);
+			}
+		}
 	}
 
 	[Register (JniName, DoNotGenerateAcw = true)]
