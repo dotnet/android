@@ -226,6 +226,8 @@ namespace Java.InteropTests
 			}
 		}
 
+#if !__ANDROID__
+		// These tests use JavaVMFixture's custom JniTypeManager, which Android does not support.
 		[Test]
 		[Category ("NativeAOTIgnore")]
 		[Category ("TrimmableTypeMapUnsupported")]
@@ -450,6 +452,7 @@ namespace Java.InteropTests
 			var method = JavaLangRemappingTestStringBuilder._members.InstanceMethods.GetMethodInfo ("indexOf.(Lnet/dot/jni/test/RenamedString;)I");
 			Assert.IsNotNull (method);
 		}
+#endif  // !__ANDROID__
 
 		[Test]
 		[Category ("NativeAOTIgnore")]
