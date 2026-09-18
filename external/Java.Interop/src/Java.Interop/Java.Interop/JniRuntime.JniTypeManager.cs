@@ -292,10 +292,8 @@ namespace Java.Interop {
 
 			public string? GetReplacementType (string jniSimpleReference)
 			{
-				AssertValid ();
-				AssertSimpleReference (jniSimpleReference, nameof (jniSimpleReference));
-
-				return GetReplacementTypeCore (jniSimpleReference);
+				GetReplacementTypeInfo (jniSimpleReference, out var replacement, out var replacementUtf8);
+				return replacementUtf8 != IntPtr.Zero ? GetUtf8String (replacementUtf8) : replacement;
 			}
 
 			protected virtual string? GetReplacementTypeCore (string jniSimpleReference) => null;
@@ -306,6 +304,8 @@ namespace Java.Interop {
 				AssertSimpleReference (jniSimpleReference, nameof (jniSimpleReference));
 
 				GetReplacementTypeInfoCore (jniSimpleReference, out replacement, out replacementUtf8);
+				if (replacementUtf8 != IntPtr.Zero)
+					replacement = null;
 			}
 
 			/// <summary>
@@ -315,8 +315,9 @@ namespace Java.Interop {
 			/// The default implementation preserves compatibility with string-based type managers by
 			/// calling <see cref="GetReplacementTypeCore(string)"/> once and setting
 			/// <paramref name="replacementUtf8"/> to zero. Overrides are authoritative and must return
-			/// results equivalent to <see cref="GetReplacementTypeCore(string)"/> for every reference,
-			/// setting only one representation.
+			/// results equivalent to <see cref="GetReplacementTypeCore(string)"/> for every reference.
+			/// A non-zero <paramref name="replacementUtf8"/> takes precedence over
+			/// <paramref name="replacement"/>.
 			/// Java.Interop does not own or free non-zero UTF-8 memory, which must remain valid and
 			/// unchanged for the lifetime of the associated <see cref="JniRuntime"/>.
 			/// </remarks>

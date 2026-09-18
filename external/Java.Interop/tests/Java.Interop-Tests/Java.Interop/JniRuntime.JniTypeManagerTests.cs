@@ -45,13 +45,19 @@ namespace Java.InteropTests {
 			Assert.AreEqual (IntPtr.Zero, stringReplacementUtf8);
 			Assert.AreEqual (1, stringManager.LookupCount);
 
-			using var utf8Manager = new Utf8ReplacementTypeManager ();
-			utf8Manager.GetReplacementTypeInfo ("java/lang/Object", out var missingReplacement, out var missingReplacementUtf8);
-			Assert.IsNull (missingReplacement);
-			Assert.AreEqual (IntPtr.Zero, missingReplacementUtf8);
-			utf8Manager.GetReplacementTypeInfo ("java/lang/String", out var replacement, out var replacementUtf8);
-			Assert.IsNull (replacement);
-			Assert.AreEqual (new IntPtr (1), replacementUtf8);
+			var utf8Value = Marshal.StringToCoTaskMemUTF8 ("java/lang/Object");
+			try {
+				using var utf8Manager = new Utf8ReplacementTypeManager (utf8Value);
+				utf8Manager.GetReplacementTypeInfo ("java/lang/Double", out var missingReplacement, out var missingReplacementUtf8);
+				Assert.IsNull (missingReplacement);
+				Assert.AreEqual (IntPtr.Zero, missingReplacementUtf8);
+				utf8Manager.GetReplacementTypeInfo ("java/lang/String", out var replacement, out var replacementUtf8);
+				Assert.IsNull (replacement);
+				Assert.AreEqual (utf8Value, replacementUtf8);
+				Assert.AreEqual ("java/lang/Object", utf8Manager.GetReplacementType ("java/lang/String"));
+			} finally {
+				Marshal.ZeroFreeCoTaskMemUTF8 (utf8Value);
+			}
 		}
 
 		[Test]
@@ -93,10 +99,17 @@ namespace Java.InteropTests {
 
 		class Utf8ReplacementTypeManager : JniRuntime.JniTypeManager {
 
+			readonly IntPtr replacement;
+
+			public Utf8ReplacementTypeManager (IntPtr replacement)
+			{
+				this.replacement = replacement;
+			}
+
 			protected override void GetReplacementTypeInfoCore (string jniSimpleReference, out string replacement, out IntPtr replacementUtf8)
 			{
-				replacement = null;
-				replacementUtf8 = jniSimpleReference == "java/lang/String" ? new IntPtr (1) : IntPtr.Zero;
+				replacement = jniSimpleReference == "java/lang/String" ? "ignored/string/value" : null;
+				replacementUtf8 = jniSimpleReference == "java/lang/String" ? this.replacement : IntPtr.Zero;
 			}
 		}
 	}
