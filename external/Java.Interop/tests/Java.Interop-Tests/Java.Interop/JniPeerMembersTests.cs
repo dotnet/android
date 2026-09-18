@@ -18,6 +18,27 @@ namespace Java.InteropTests
 			JniPeerMembers.Dispose (members);
 		}
 
+#if !ANDROID    // Android doesn't allow providing a custom TypeManager
+		[Test]
+		[NonParallelizable]
+		public void HandledReplacementTypeMissDoesNotUseStringFallback ()
+		{
+			var typeManager = JavaVMFixture.TypeManager;
+			Assert.IsNotNull (typeManager);
+			typeManager.TrackReplacementTypeLookups ("java/lang/Double");
+			try {
+				var members = new JniPeerMembers ("java/lang/Double", typeof (MyString));
+				JniPeerMembers.Dispose (members);
+
+				var counts = typeManager.GetReplacementTypeLookupCounts ();
+				Assert.AreEqual (1, counts.Utf8);
+				Assert.AreEqual (0, counts.String);
+			} finally {
+				typeManager.TrackReplacementTypeLookups ("");
+			}
+		}
+#endif  // !ANDROID
+
 		[Test]
 		[Category ("TrimmableTypeMapUnsupported")]
 		public void VirtualInvokeOnBaseInvokesMostDerivedJavaMethod ()

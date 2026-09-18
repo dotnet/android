@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 using Java.Interop;
 
@@ -138,15 +139,38 @@ namespace Java.InteropTests {
 			["net/dot/jni/test/RenameClassBase1"] = "net/dot/jni/test/RenameClassBase2",
 		};
 
-		protected override string? GetReplacementTypeCore (string jniSimpleReference) =>
-			ReplacmentTypes.TryGetValue (jniSimpleReference, out var v)
-			? v
-			: null;
+		string? trackedReplacementType;
+		int replacementTypeStringLookupCount;
+		int replacementTypeUtf8LookupCount;
 
-		protected override IntPtr GetReplacementTypeUtf8Core (string jniSimpleReference) =>
-			ReplacmentTypes.TryGetValue (jniSimpleReference, out var v)
-			? GetUtf8Value (v)
-			: IntPtr.Zero;
+		public void TrackReplacementTypeLookups (string jniSimpleReference)
+		{
+			trackedReplacementType = jniSimpleReference;
+			replacementTypeStringLookupCount = 0;
+			replacementTypeUtf8LookupCount = 0;
+		}
+
+		public (int String, int Utf8) GetReplacementTypeLookupCounts ()
+			=> (replacementTypeStringLookupCount, replacementTypeUtf8LookupCount);
+
+		protected override string? GetReplacementTypeCore (string jniSimpleReference)
+		{
+			if (jniSimpleReference == trackedReplacementType)
+				Interlocked.Increment (ref replacementTypeStringLookupCount);
+			return ReplacmentTypes.TryGetValue (jniSimpleReference, out var value)
+				? value
+				: null;
+		}
+
+		protected override void GetReplacementTypeInfoCore (string jniSimpleReference, out string? replacement, out IntPtr replacementUtf8)
+		{
+			if (jniSimpleReference == trackedReplacementType)
+				Interlocked.Increment (ref replacementTypeUtf8LookupCount);
+			replacement = null;
+			replacementUtf8 = ReplacmentTypes.TryGetValue (jniSimpleReference, out var value)
+				? GetUtf8Value (value)
+				: IntPtr.Zero;
+		}
 
 		Dictionary<(string SourceType, string SourceName, string? SourceSignature), (string? TargetType, string? TargetName, string? TargetSignature, int? ParamCount, bool TurnStatic, ReplacementMethodStorage Storage)> ReplacementMethods = new() {
 			[("java/lang/Object",                       "remappedToToString",                  "()Ljava/lang/String;")]    = (null, "toString", null, null, false, ReplacementMethodStorage.TypeUtf8 | ReplacementMethodStorage.MethodUtf8),

@@ -1,7 +1,7 @@
 #nullable enable
 virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementMethodInfoCore(string! jniSimpleReference, System.ReadOnlySpan<char> jniMethodName, System.ReadOnlySpan<char> jniMethodSignature) -> Java.Interop.JniRuntime.ReplacementMethodInfo?
 virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementMethodInfoCore(nint jniSimpleReferenceUtf8, System.ReadOnlySpan<char> jniMethodName, System.ReadOnlySpan<char> jniMethodSignature) -> Java.Interop.JniRuntime.ReplacementMethodInfo?
-virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementTypeUtf8Core(string! jniSimpleReference) -> nint
+virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementTypeInfoCore(string! jniSimpleReference, out string? replacement, out nint replacementUtf8) -> void
 Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodNameUtf8.get -> nint
 Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodNameUtf8.set -> void
 Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodSignatureUtf8.get -> nint

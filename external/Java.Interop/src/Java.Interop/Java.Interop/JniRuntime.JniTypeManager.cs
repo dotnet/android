@@ -300,22 +300,31 @@ namespace Java.Interop {
 
 			protected virtual string? GetReplacementTypeCore (string jniSimpleReference) => null;
 
-			internal IntPtr GetReplacementTypeUtf8 (string jniSimpleReference)
+			internal void GetReplacementTypeInfo (string jniSimpleReference, out string? replacement, out IntPtr replacementUtf8)
 			{
 				AssertValid ();
 				AssertSimpleReference (jniSimpleReference, nameof (jniSimpleReference));
 
-				return GetReplacementTypeUtf8Core (jniSimpleReference);
+				GetReplacementTypeInfoCore (jniSimpleReference, out replacement, out replacementUtf8);
 			}
 
 			/// <summary>
-			/// Resolves a replacement JNI type to stable NUL-terminated UTF-8 memory.
+			/// Resolves a replacement JNI type as either a managed string or stable NUL-terminated UTF-8 memory.
 			/// </summary>
 			/// <remarks>
-			/// Java.Interop does not own or free the returned memory. A non-zero pointer must remain
-			/// valid and unchanged for the lifetime of the associated <see cref="JniRuntime"/>.
+			/// The default implementation preserves compatibility with string-based type managers by
+			/// calling <see cref="GetReplacementTypeCore(string)"/> once and setting
+			/// <paramref name="replacementUtf8"/> to zero. Overrides are authoritative and must return
+			/// results equivalent to <see cref="GetReplacementTypeCore(string)"/> for every reference,
+			/// setting only one representation.
+			/// Java.Interop does not own or free non-zero UTF-8 memory, which must remain valid and
+			/// unchanged for the lifetime of the associated <see cref="JniRuntime"/>.
 			/// </remarks>
-			protected virtual IntPtr GetReplacementTypeUtf8Core (string jniSimpleReference) => IntPtr.Zero;
+			protected virtual void GetReplacementTypeInfoCore (string jniSimpleReference, out string? replacement, out IntPtr replacementUtf8)
+			{
+				replacement = GetReplacementTypeCore (jniSimpleReference);
+				replacementUtf8 = IntPtr.Zero;
+			}
 
 			public IReadOnlyList<string>? GetStaticMethodFallbackTypes (string jniSimpleReference)
 			{

@@ -41,14 +41,8 @@ namespace Java.Interop {
 		static JniPeerTypeNameInfo GetReplacementType (string jniPeerTypeName)
 		{
 			var typeManager = JniEnvironment.Runtime.TypeManager;
-			var replacementUtf8 = typeManager.GetReplacementTypeUtf8 (jniPeerTypeName);
-			if (replacementUtf8 != IntPtr.Zero)
-				return new JniPeerTypeNameInfo (jniPeerTypeName, null, replacementUtf8);
-
-			var replacement = typeManager.GetReplacementType (jniPeerTypeName);
-			if (replacement != null)
-				return new JniPeerTypeNameInfo (jniPeerTypeName, replacement, IntPtr.Zero);
-			return new JniPeerTypeNameInfo (jniPeerTypeName, null, IntPtr.Zero);
+			typeManager.GetReplacementTypeInfo (jniPeerTypeName, out var replacement, out var replacementUtf8);
+			return new JniPeerTypeNameInfo (jniPeerTypeName, replacement, replacementUtf8);
 		}
 
 		JniPeerMembers (JniPeerTypeNameInfo jniPeerTypeName, Type managedPeerType, bool checkManagedPeerType, bool isInterface = false)

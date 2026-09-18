@@ -37,6 +37,24 @@ namespace Java.InteropTests {
 		}
 
 		[Test]
+		public void ReplacementTypeInfoSupportsStringAndUtf8Results ()
+		{
+			using var stringManager = new StringReplacementTypeManager ();
+			stringManager.GetReplacementTypeInfo ("java/lang/String", out var stringReplacement, out var stringReplacementUtf8);
+			Assert.AreEqual ("java/lang/Object", stringReplacement);
+			Assert.AreEqual (IntPtr.Zero, stringReplacementUtf8);
+			Assert.AreEqual (1, stringManager.LookupCount);
+
+			using var utf8Manager = new Utf8ReplacementTypeManager ();
+			utf8Manager.GetReplacementTypeInfo ("java/lang/Object", out var missingReplacement, out var missingReplacementUtf8);
+			Assert.IsNull (missingReplacement);
+			Assert.AreEqual (IntPtr.Zero, missingReplacementUtf8);
+			utf8Manager.GetReplacementTypeInfo ("java/lang/String", out var replacement, out var replacementUtf8);
+			Assert.IsNull (replacement);
+			Assert.AreEqual (new IntPtr (1), replacementUtf8);
+		}
+
+		[Test]
 		[Category ("TrimmableTypeMapUnsupported")]
 		[RequiresDynamicCode ("This test uses ReflectionJniTypeManager, which is reflection-based and not NativeAOT-compatible.")]
 		[RequiresUnreferencedCode ("This test uses ReflectionJniTypeManager, which is reflection-based and not trimming-compatible.")]
@@ -59,6 +77,26 @@ namespace Java.InteropTests {
 		class MyTypeManager : JniRuntime.ReflectionJniTypeManager {
 			public MyTypeManager ()
 			{
+			}
+		}
+
+		class StringReplacementTypeManager : JniRuntime.JniTypeManager {
+
+			public int LookupCount { get; private set; }
+
+			protected override string GetReplacementTypeCore (string jniSimpleReference)
+			{
+				LookupCount++;
+				return jniSimpleReference == "java/lang/String" ? "java/lang/Object" : null;
+			}
+		}
+
+		class Utf8ReplacementTypeManager : JniRuntime.JniTypeManager {
+
+			protected override void GetReplacementTypeInfoCore (string jniSimpleReference, out string replacement, out IntPtr replacementUtf8)
+			{
+				replacement = null;
+				replacementUtf8 = jniSimpleReference == "java/lang/String" ? new IntPtr (1) : IntPtr.Zero;
 			}
 		}
 	}
