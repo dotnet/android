@@ -125,13 +125,13 @@ public class ExtractTypeMapKeysFromDgml : AndroidTask
 			case UnicodeCategory.TitlecaseLetter:
 			case UnicodeCategory.ModifierLetter:
 			case UnicodeCategory.OtherLetter:
+			case UnicodeCategory.LetterNumber:
 			case UnicodeCategory.CurrencySymbol:
 			case UnicodeCategory.ConnectorPunctuation:
 				break;
 			case UnicodeCategory.DecimalDigitNumber:
 			case UnicodeCategory.NonSpacingMark:
 			case UnicodeCategory.SpacingCombiningMark:
-			case UnicodeCategory.Format:
 				if (segmentStart) {
 					return false;
 				}

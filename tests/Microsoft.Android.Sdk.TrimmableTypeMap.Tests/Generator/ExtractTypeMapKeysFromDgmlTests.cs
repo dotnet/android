@@ -124,6 +124,7 @@ public class ExtractTypeMapKeysFromDgmlTests : IDisposable
 	{
 		const string map = "Example.Type, App;com.\u00e9xample.Peer\u0394$Nested\n" +
 			"Example.Type, App;com.example.\U00010400Peer\n" +
+			"Example.Type, App;com.example.\u2160Peer\n" +
 			"Example.Type, App;com.example.A\u0301\n" +
 			"Example.Type, App;com.example.a\n" +
 			"Example.Type, App;com.example.Z\n";
@@ -133,7 +134,7 @@ public class ExtractTypeMapKeysFromDgmlTests : IDisposable
 		Assert.True (task.Execute ());
 		Assert.Empty (errors);
 		AssertOutput (task, "com/example/A\u0301\ncom/example/Z\ncom/example/a\n" +
-			"com/example/\U00010400Peer\ncom/\u00e9xample/Peer\u0394$Nested\n");
+			"com/example/\u2160Peer\ncom/example/\U00010400Peer\ncom/\u00e9xample/Peer\u0394$Nested\n");
 	}
 
 	[Theory]
@@ -325,6 +326,7 @@ public class ExtractTypeMapKeysFromDgmlTests : IDisposable
 	[InlineData ("Example.Type, App;example..Type")]
 	[InlineData ("Example.Type, App;example/Type/")]
 	[InlineData ("Example.Type, App;example. Type")]
+	[InlineData ("Example.Type, App;example.Type\u200b")]
 	[InlineData ("Example.Type, App;example.*")]
 	[InlineData ("Example.Type, App;-keep class example.Type")]
 	public void Execute_RejectsMalformedMapEntries (string map)
