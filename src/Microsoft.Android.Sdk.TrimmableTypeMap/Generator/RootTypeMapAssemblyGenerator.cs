@@ -74,7 +74,13 @@ public sealed class RootTypeMapAssemblyGenerator
 	/// <param name="stream">Stream to write the output PE to.</param>
 	/// <param name="assemblyName">Optional assembly name (defaults to _Microsoft.Android.TypeMaps).</param>
 	/// <param name="moduleName">Optional module name for the PE metadata.</param>
-	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, Stream stream, string? assemblyName = null, string? moduleName = null)
+	public void Generate (
+		IReadOnlyList<string> perAssemblyTypeMapNames,
+		bool useSharedTypemapUniverse,
+		Stream stream,
+		string? assemblyName = null,
+		string? moduleName = null,
+		bool includeBuiltInValueTypeUniverses = false)
 	{
 		if (perAssemblyTypeMapNames is null) {
 			throw new ArgumentNullException (nameof (perAssemblyTypeMapNames));
@@ -83,18 +89,38 @@ public sealed class RootTypeMapAssemblyGenerator
 			throw new ArgumentNullException (nameof (stream));
 		}
 
-		CreatePEBuilder (perAssemblyTypeMapNames, useSharedTypemapUniverse, assemblyName, moduleName).WritePE (stream);
+		CreatePEBuilder (
+			perAssemblyTypeMapNames,
+			useSharedTypemapUniverse,
+			assemblyName,
+			moduleName,
+			includeBuiltInValueTypeUniverses).WritePE (stream);
 	}
 
 	/// <summary>
 	/// Generates the root typemap assembly and returns a read-only stream over the serialised image.
 	/// </summary>
-	internal Stream GenerateToStream (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, string? assemblyName = null, string? moduleName = null)
+	internal Stream GenerateToStream (
+		IReadOnlyList<string> perAssemblyTypeMapNames,
+		bool useSharedTypemapUniverse,
+		bool includeBuiltInValueTypeUniverses = false,
+		string? assemblyName = null,
+		string? moduleName = null)
 	{
-		return CreatePEBuilder (perAssemblyTypeMapNames, useSharedTypemapUniverse, assemblyName, moduleName).CreatePEStream ();
+		return CreatePEBuilder (
+			perAssemblyTypeMapNames,
+			useSharedTypemapUniverse,
+			assemblyName,
+			moduleName,
+			includeBuiltInValueTypeUniverses).CreatePEStream ();
 	}
 
-	PEAssemblyBuilder CreatePEBuilder (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, string? assemblyName, string? moduleName)
+	PEAssemblyBuilder CreatePEBuilder (
+		IReadOnlyList<string> perAssemblyTypeMapNames,
+		bool useSharedTypemapUniverse,
+		string? assemblyName,
+		string? moduleName,
+		bool includeBuiltInValueTypeUniverses)
 	{
 		if (perAssemblyTypeMapNames is null) {
 			throw new ArgumentNullException (nameof (perAssemblyTypeMapNames));
@@ -134,6 +160,9 @@ public sealed class RootTypeMapAssemblyGenerator
 		} else {
 			EmitPerAssemblyUniverseAssemblyTargetAttributes (pe, perAssemblyTypeMapNames);
 		}
+		if (includeBuiltInValueTypeUniverses) {
+			EmitValueTypeDictionaryAssemblyTargetAttribute (pe);
+		}
 
 		// Emit [assembly: IgnoresAccessChecksTo("...")] so TypeMapLoader.Initialize() can access
 		// internal types (TrimmableTypeMap and friends in Mono.Android, and private anchors
@@ -169,6 +198,16 @@ public sealed class RootTypeMapAssemblyGenerator
 			var ctorRef = GetTypeMapAssemblyTargetAttributeCtorRef (pe, openAttrRef, perAssemblyAnchorRef);
 			EmitAssemblyTargetAttribute (pe, ctorRef, name);
 		}
+	}
+
+	static void EmitValueTypeDictionaryAssemblyTargetAttribute (PEAssemblyBuilder pe)
+	{
+		var openAttrRef = GetTypeMapAssemblyTargetAttributeRef (pe);
+		var javaDictionaryRef = pe.Metadata.AddTypeReference (pe.MonoAndroidRef,
+			pe.Metadata.GetOrAddString ("Android.Runtime"),
+			pe.Metadata.GetOrAddString ("JavaDictionary"));
+		var ctorRef = GetTypeMapAssemblyTargetAttributeCtorRef (pe, openAttrRef, javaDictionaryRef);
+		EmitAssemblyTargetAttribute (pe, ctorRef, "Mono.Android");
 	}
 
 	static TypeReferenceHandle GetTypeMapAssemblyTargetAttributeRef (PEAssemblyBuilder pe)

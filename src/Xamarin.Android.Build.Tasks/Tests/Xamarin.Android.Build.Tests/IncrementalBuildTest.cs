@@ -637,7 +637,7 @@ namespace Lib2
 			}
 		}
 
-		//https://github.com/xamarin/xamarin-android/issues/2247
+		//https://github.com/dotnet/android/issues/2247
 		[Test]
 		[NonParallelizable] // Do not run timing sensitive tests in parallel
 		public void AppProjectTargetsDoNotBreak ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)

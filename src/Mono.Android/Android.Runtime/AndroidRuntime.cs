@@ -454,7 +454,7 @@ namespace Android.Runtime {
 
 		class MagicRegistrationMap {
 #pragma warning disable CS0649 // Field is never assigned to;
-			// assigned to in generated IL: https://github.com/xamarin/xamarin-android/blob/cbfa7e20acebd37b52ec4de9d5c1a4a66ddda799/src/Xamarin.Android.Build.Tasks/Linker/MonoDroid.Tuner/MonoDroidMarkStep.cs#L204
+			// assigned to in generated IL: https://github.com/dotnet/android/blob/cbfa7e20acebd37b52ec4de9d5c1a4a66ddda799/src/Xamarin.Android.Build.Tasks/Linker/MonoDroid.Tuner/MonoDroidMarkStep.cs#L204
 			static Dictionary<string, int>? typesMap;
 #pragma warning restore CS0649
 

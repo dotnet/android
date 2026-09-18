@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 
 namespace Xamarin.Installer.AndroidSDK.Common
 {
@@ -8,20 +10,23 @@ namespace Xamarin.Installer.AndroidSDK.Common
         {
         }
 
-        public string PayloadFileName { get; set; }
+        public string? PayloadFileName { get; set; }
 
         public override bool IsValidForSystem()
         {
             return IsPlatformValid() && IsHostArchValid();
         }
 
-        public override bool Equals(Object obj)
+        public override bool Equals(Object? obj)
         {
             return Equals(obj as JdkArchive);
         }
 
-        public bool Equals(JdkArchive other)
+        public bool Equals(JdkArchive? other)
         {
+            if (other == null)
+                return false;
+
             return base.Equals(other);
         }
 

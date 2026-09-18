@@ -124,7 +124,7 @@ class TypeMapCecilAdapter
 		// omit them from the table we output - we need the same number of entries in both java-to-managed and
 		// managed-to-java tables.  `SkipInJavaToManaged` set to `true` will cause the native assembly generator
 		// to output `0` as the token id for the type, thus effectively causing the runtime unable to match such
-		// a Java type name to a managed type. This fixes https://github.com/xamarin/xamarin-android/issues/4660
+		// a Java type name to a managed type. This fixes https://github.com/dotnet/android/issues/4660
 		var entry = new TypeMapReleaseEntry {
 			JavaName = javaName,
 			ManagedTypeName = td.FullName,

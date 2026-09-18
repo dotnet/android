@@ -108,7 +108,6 @@ namespace xamarin::android {
 		static constexpr size_t APP_DIRS_FILES_DIR_INDEX = 0uz;
 		static constexpr size_t APP_DIRS_CACHE_DIR_INDEX = 1uz;
 		static constexpr size_t APP_DIRS_DATA_DIR_INDEX = 2uz;
-		static constexpr size_t APP_DIRS_CODE_CACHE_DIR_INDEX = 3uz;
 
 		static inline constexpr size_t PROPERTY_VALUE_BUFFER_LEN = PROP_VALUE_MAX + 1uz;
 

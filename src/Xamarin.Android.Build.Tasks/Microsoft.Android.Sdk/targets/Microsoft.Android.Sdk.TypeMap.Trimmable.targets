@@ -82,6 +82,8 @@
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap"
         Value="true" Trim="true" />
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.UseTypeMapAttributesForJavaDictionaryValueTypeLookups"
+        Value="$([MSBuild]::ValueOrDefault('$(PublishAot)', 'false'))" Trim="true" />
     <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
         Value="$(_TypeMapAssemblyName)" />
     <!-- [Export] metadata is still needed at compile time, but the legacy runtime helper
@@ -125,6 +127,11 @@
       DependsOnTargets="$(_GenerateTrimmableTypeMapDependsOn)"
       Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);@(ExtractedManifestDocuments);@(_AndroidTrimmableTypeMapExtraFrameworkAssembly);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_CustomViewMapFile);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_TrimmableTypeMapOutputStamp)">
+
+    <PropertyGroup>
+      <_AndroidIncludeBuiltInValueTypeUniverses>false</_AndroidIncludeBuiltInValueTypeUniverses>
+      <_AndroidIncludeBuiltInValueTypeUniverses Condition=" '$(PublishAot)' == 'true' ">true</_AndroidIncludeBuiltInValueTypeUniverses>
+    </PropertyGroup>
 
     <ItemGroup>
       <_TypeMapInputAssemblies Include="@(ReferencePath)" />
@@ -173,6 +180,7 @@
         CheckedBuild="$(_AndroidCheckedBuild)"
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"
         ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
+        IncludeBuiltInValueTypeUniverses="$(_AndroidIncludeBuiltInValueTypeUniverses)"
         GeneratedAssembliesListFile="$(_TypeMapAssembliesListFile)"
         TypeMapFingerprintsFile="$(_TrimmableTypeMapFingerprintsFile)"
         AcwMapOutputFile="$(_PreTrimTypeMapAcwMapOutputFile)"

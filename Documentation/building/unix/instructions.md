@@ -137,7 +137,7 @@ In order to get a list of the tests you can use the `list-nunit-tests` make targ
 
 or via the `ListNUnitTests` target
 
-    msbuild Xamarin.Android.slnx /t:ListNUnitTests
+    msbuild Microsoft.Android.slnx /t:ListNUnitTests
 
 This will produce a list of the tests in all of the test assemblies.
 
@@ -150,7 +150,7 @@ or msbuild property.
 
 or via
 
-    msbuild Xamarin.Android.slnx /t:RunNunitTests /p:TEST=Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile
+    msbuild Microsoft.Android.slnx /t:RunNunitTests /p:TEST=Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile
 
 ## Running On-Device Tests
 

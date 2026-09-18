@@ -417,10 +417,10 @@
     - name: .NET 8 Release Notes
       items:
       - name: .NET 8 34.0.95
-        href: https://github.com/xamarin/xamarin-android/releases/tag/34.0.95
+        href: https://github.com/dotnet/android/releases/tag/34.0.95
       - name: .NET 8 34.0.85
-        href: https://github.com/xamarin/xamarin-android/releases/tag/34.0.85
+        href: https://github.com/dotnet/android/releases/tag/34.0.85
       - name: .NET 8 34.0.79
-        href: https://github.com/xamarin/xamarin-android/releases/tag/34.0.85
+        href: https://github.com/dotnet/android/releases/tag/34.0.79
       - name: .NET 8 34.0.52
-        href: https://github.com/xamarin/xamarin-android/releases/tag/34.0.52
+        href: https://github.com/dotnet/android/releases/tag/34.0.52

@@ -52,7 +52,7 @@ namespace Java.LangTests
 		{
 			[UnconditionalSuppressMessage ("Trimming", "IL2060", Justification = "")]
 			static MethodInfo MakeGenericMethod (MethodInfo method, Type type) =>
-				// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
+				// FIXME: https://github.com/dotnet/android/issues/8724
 				#pragma warning disable IL3050
 				method.MakeGenericMethod (type);
 				#pragma warning restore IL3050
