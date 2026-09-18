@@ -1,5 +1,66 @@
 This is the D8 and R8 integration specification for .NET for Android.
 
+# Retained typemap class roots
+
+When managed trimming and R8 are enabled, CoreCLR and trimmable NativeAOT
+builds derive Java class roots from the final typemap rather than retaining
+every class in the ACW map:
+
+| Runtime and typemap | Retained-key source |
+| --- | --- |
+| NativeAOT, trimmable | ILC type-metadata nodes joined to the ACW map |
+| CoreCLR, LLVM IR | The generated LLVM Java-name blob, after `GenerateTypeMappings` |
+| CoreCLR, trimmable | Surviving `TypeMapAttribute<T>` records in linked typemap assemblies, including empty stubs |
+
+Inner builds return their exact source paths to the outer build. Keys are
+unioned across the requested RIDs/ABIs; stale files from other builds are not
+discovered by globbing. NativeAOT uses the scan graph in optimized builds and
+the codegen graph when the scanner is disabled. Its existing Java-trimming
+opt-out instead extracts every ACW class without requiring a graph.
+
+All three adapters and the shared generator are `Microsoft.Android.Tasks`
+tasks in `Microsoft.Android.Build.Tasks.dll`.
+The adapters write `typemap.keys.txt` in the outer intermediate directory.
+The format is UTF-8 without a BOM, one canonical JNI class name per line,
+ordinal-sorted and distinct, with LF endings and a final LF when nonempty.
+For example:
+
+```text
+android/app/Activity
+example/Outer$Inner
+```
+
+The DLL adapter collapses implementation-specific numeric aliases before
+writing this format. A valid zero-byte file means no retained classes;
+missing, unreadable, or unsupported inputs fail the build.
+
+`GenerateTypeMapProguardConfiguration` knows only this format. It accepts a
+union of keys files and writes deterministic class-only rules to
+`proguard/proguard_project_references.cfg`:
+
+```text
+-keep class android.app.Activity
+-keep class example.Outer$Inner
+```
+
+The generator never emits member rules or global R8 options. The separate
+`proguard_typemap.cfg` runtime configuration retains members of surviving
+classes, including surviving third-party classes, while allowing unused
+classes to disappear. It keeps explicit runtime bootstrap roots rather than
+whole wrapper packages. User Java source retention and application/library
+ProGuard rules remain separate.
+
+This pipeline disables all obfuscation, including private-member
+obfuscation, with both `-dontobfuscate` and R8's `--no-minification` option.
+MonoVM, nonshrinking/multidex-only builds, and the existing complete
+`ProguardConfigFiles` override keep their previous behavior.
+
+Both extraction and rule generation use their real files as incremental
+outputs. A content-sensitive input manifest also tracks source-list and
+runtime/trim-policy changes, so removing a RID or switching modes cannot
+reuse stale class roots. The outputs are registered in `FileWrites` and
+regenerated if deleted.
+
 # What is D8? What is R8?
 
 At a high level, here are the steps that occur during an Android

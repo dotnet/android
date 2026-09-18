@@ -19,6 +19,52 @@ namespace Xamarin.Android.Build.Tests {
 	[Category ("Node-2")]
 	public class TrimmableTypeMapBuildTests : BaseTest {
 
+		[TestCase (AndroidRuntime.CoreCLR, "llvm-ir")]
+		[TestCase (AndroidRuntime.CoreCLR, "trimmable")]
+		[TestCase (AndroidRuntime.NativeAOT, "trimmable")]
+		public void RetainedTypeMapClassRulesDriveR8 (AndroidRuntime runtime, string implementation)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			proj.SetRuntime (runtime);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
+			proj.SetProperty ("AndroidTypeMapImplementation", implementation);
+			proj.SetProperty ("TrimMode", "full");
+			proj.SetProperty ("AndroidR8ObfuscationMode", "private-members");
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj));
+
+			var intermediate = builder.Output.GetIntermediaryPath ("android-arm64");
+			var keysFile = Path.Combine (intermediate, "typemap.keys.txt");
+			var keys = File.ReadAllLines (keysFile);
+			var live = keys.Single (key => key.EndsWith ("/MainActivity", StringComparison.Ordinal));
+			const string dead = "mono/android/animation/Animator_AnimatorListenerImplementor";
+			CollectionAssert.DoesNotContain (keys, dead);
+			var configuration = Path.Combine (intermediate, "proguard", "proguard_project_references.cfg");
+			CollectionAssert.AreEqual (
+				keys.Select (key => "-keep class " + key.Replace ('/', '.')).OrderBy (line => line, StringComparer.Ordinal),
+				File.ReadAllLines (configuration));
+			var common = File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg"));
+			StringAssert.Contains ("-dontobfuscate", common);
+			StringAssert.Contains ("-keepclassmembers class *", common);
+			StringAssert.DoesNotContain ("-keep class mono.android.**", common);
+			StringAssert.DoesNotContain ("-keep class net.dot.jni.**", common);
+			var dex = Path.Combine (intermediate, "android", "bin", "classes.dex");
+			Assert.IsTrue (DexUtils.ContainsClass ($"L{live};", dex, AndroidSdkPath), "Live class names must not be obfuscated.");
+			Assert.IsFalse (DexUtils.ContainsClass ($"L{dead};", dex, AndroidSdkPath), "Dead wrappers must not be rooted by runtime package rules.");
+
+			Assert.IsTrue (builder.Build (proj));
+			builder.Output.AssertTargetIsSkipped ("_AndroidExtractTypeMapKeys");
+			builder.Output.AssertTargetIsSkipped ("_AndroidGenerateTypeMapProguardConfiguration");
+			File.Delete (configuration);
+			Assert.IsTrue (builder.Build (proj));
+			builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateTypeMapProguardConfiguration");
+			FileAssert.Exists (configuration);
+		}
+
 		[Test]
 		public void Build_WithTrimmableTypeMap_Succeeds ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
@@ -1513,7 +1559,8 @@ namespace Xamarin.Android.Build.Tests {
 				builder.Output.IsTargetSkipped ("_GenerateJavaStubs"),
 				"_GenerateJavaStubs should be skipped on incremental build.");
 			if (trimNativeAotJavaCode) {
-				builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMapProguardConfiguration");
+				builder.Output.AssertTargetIsSkipped ("_AndroidExtractTypeMapKeys");
+				builder.Output.AssertTargetIsSkipped ("_AndroidGenerateTypeMapProguardConfiguration");
 				Assert.AreEqual (scanDgmlTimestamp, File.GetLastWriteTimeUtc (scanDgml), "No-op builds should not rewrite the scan DGML.");
 			}
 			if (isRelease && runtime == AndroidRuntime.CoreCLR) {
@@ -2914,10 +2961,22 @@ namespace UnnamedProject {
 			Assert.IsFalse (acwMap.Contains (deadManagedType, StringComparison.Ordinal), $"{acwMapPath} should be based on linked assemblies.");
 			Assert.IsFalse (acwMap.Contains (deadJavaDotName, StringComparison.Ordinal), $"{acwMapPath} should not keep removed framework listener implementors.");
 
-			FileAssert.Exists (proguardPrimaryPath, "R8 should generate a primary proguard configuration from the post-trim acw-map.");
+			FileAssert.Exists (proguardPrimaryPath, "R8 should generate a separate configuration for user Java sources.");
 			Assert.IsFalse (
 				File.ReadAllText (proguardPrimaryPath).Contains (deadJavaDotName, StringComparison.Ordinal),
 				$"{proguardPrimaryPath} should not keep removed framework listener implementors.");
+			var proguardDirectory = Path.GetDirectoryName (proguardPrimaryPath);
+			Assert.IsNotNull (proguardDirectory);
+			var references = Path.Combine (proguardDirectory, "proguard_project_references.cfg");
+			var rules = File.ReadAllLines (references);
+			Assert.IsNotEmpty (rules, "Retained typemap keys should provide class roots.");
+			Assert.IsTrue (rules.All (line => line.StartsWith ("-keep class ", StringComparison.Ordinal) && !line.Contains ('{')),
+				"Typemap ProGuard rules must contain only class roots, not member rules.");
+			Assert.IsFalse (rules.Any (line => line.Contains (deadJavaDotName, StringComparison.Ordinal)),
+				"Retained typemap class roots should exclude trimmed framework implementors.");
+			var common = File.ReadAllText (Path.Combine (proguardDirectory, "proguard_xamarin.cfg"));
+			StringAssert.Contains ("-dontobfuscate", common);
+			StringAssert.DoesNotContain ("-keep,allowshrinking,allowoptimization class **", common);
 
 			FileAssert.Exists (dexFile, "R8 should produce classes.dex.");
 			Assert.IsFalse (

@@ -1,0 +1,103 @@
+<!-- Retained typemap keys supply managed-peer class roots on the shrinking CoreCLR/NativeAOT path. -->
+<Project>
+  <UsingTask TaskName="Microsoft.Android.Tasks.ExtractTypeMapKeysFromDgml" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.ExtractTypeMapKeysFromLlvmIr" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.ExtractTypeMapKeysFromAssemblies" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateTypeMapProguardConfiguration" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
+
+  <PropertyGroup>
+    <_CompileToDalvikDependsOnTargets>$(_CompileToDalvikDependsOnTargets);_AndroidGenerateTypeMapProguardConfiguration</_CompileToDalvikDependsOnTargets>
+  </PropertyGroup>
+
+  <Target Name="_AndroidConfigureTypeMapProguard"
+      BeforeTargets="_CalculateProguardConfigurationFiles"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and ('$(_AndroidRuntime)' == 'CoreCLR' or ('$(_AndroidRuntime)' == 'NativeAOT' and '$(AndroidTypeMapImplementation)' == 'trimmable')) ">
+    <PropertyGroup>
+      <_ProguardProjectConfiguration>$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
+      <_AndroidTypeMapProguardConfiguration>$(_ProguardProjectConfiguration)</_AndroidTypeMapProguardConfiguration>
+      <!-- ProguardConfigFiles is the existing complete configuration override. The NativeAOT
+           escape hatch continues to select the legacy all-ACW retention policy. -->
+      <_AndroidUseTypeMapProguardConfiguration Condition=" '$(ProguardConfigFiles)' == '' and ('$(_AndroidRuntime)' != 'NativeAOT' or '$(_UseTrimmableNativeAotProguardConfiguration)' != 'false') ">true</_AndroidUseTypeMapProguardConfiguration>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_AndroidExtractTypeMapKeysInputs"
+      DependsOnTargets="_GenerateJavaStubs;_AndroidConfigureTypeMapProguard">
+    <PropertyGroup>
+      <_AndroidTypeMapKeysFile>$(IntermediateOutputPath)typemap.keys.txt</_AndroidTypeMapKeysFile>
+      <_AndroidTypeMapKeysInputsFile>$(IntermediateOutputPath)typemap.keys.inputs</_AndroidTypeMapKeysInputsFile>
+      <_AndroidTypeMapKeysKind Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">dgml</_AndroidTypeMapKeysKind>
+      <_AndroidTypeMapKeysKind Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(AndroidTypeMapImplementation)' != 'trimmable' ">llvm-ir</_AndroidTypeMapKeysKind>
+      <_AndroidTypeMapKeysKind Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(AndroidTypeMapImplementation)' == 'trimmable' ">assemblies</_AndroidTypeMapKeysKind>
+      <_AndroidTypeMapLinkedAssemblies>@(ResolvedFileToPublish->'%(AndroidTypeMapLinkedAssemblies)'->Distinct())</_AndroidTypeMapLinkedAssemblies>
+    </PropertyGroup>
+    <ItemGroup>
+      <_AndroidTypeMapKeySource Remove="@(_AndroidTypeMapKeySource)" />
+      <_AndroidTypeMapDgmlSource Remove="@(_AndroidTypeMapDgmlSource)" />
+      <!-- Inner builds return exact producer paths, not globbed candidates from old RIDs/modes.
+           Keep missing files in the list so extraction fails instead of silently losing a RID. -->
+      <_AndroidTypeMapDgmlSource Include="@(ResolvedFileToPublish->'%(AndroidTypeMapDgmlFile)'->Distinct())"
+          Condition=" '$(_AndroidTypeMapKeysKind)' == 'dgml' and '$(_AndroidTrimmableTypemapTrimJavaCode)' == 'true' " />
+      <_AndroidTypeMapKeySource Include="@(_AndroidTypeMapDgmlSource);$(_AcwMapFile)"
+          Condition=" '$(_AndroidTypeMapKeysKind)' == 'dgml' " />
+      <_AndroidTypeMapKeySource Include="@(_TypeMapAssemblySource->Distinct())"
+          Condition=" '$(_AndroidTypeMapKeysKind)' == 'llvm-ir' " />
+      <_AndroidTypeMapKeySource Include="$(_AndroidTypeMapLinkedAssemblies)"
+          Condition=" '$(_AndroidTypeMapKeysKind)' == 'assemblies' " />
+      <_AndroidTypeMapKeysState Remove="@(_AndroidTypeMapKeysState)" />
+      <_AndroidTypeMapKeysState Include="Runtime=$(_AndroidRuntime);Representation=$(_AndroidTypeMapKeysKind);TrimJava=$(_AndroidTrimmableTypemapTrimJavaCode);Optimize=$(Optimize);RuntimeIdentifier=$(RuntimeIdentifier);RuntimeIdentifiers=$(RuntimeIdentifiers);TypemapPolicy=$(_AndroidUseTypeMapProguardConfiguration)" />
+      <_AndroidTypeMapKeysState Include="@(_AndroidTypeMapKeySource->'%(FullPath)')" />
+    </ItemGroup>
+    <!-- Unlike the generated outputs, this input manifest must preserve its timestamp when
+         unchanged. File timestamps alone cannot detect a removed source or a property switch. -->
+    <WriteLinesToFile File="$(_AndroidTypeMapKeysInputsFile)" Lines="@(_AndroidTypeMapKeysState)"
+        Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidTypeMapKeysInputsFile)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidExtractTypeMapKeys"
+      DependsOnTargets="_AndroidExtractTypeMapKeysInputs"
+      Inputs="@(_AndroidTypeMapKeySource);$(_AndroidTypeMapKeysInputsFile);$(_MicrosoftAndroidBuildTasksAssembly)"
+      Outputs="$(_AndroidTypeMapKeysFile)">
+    <ExtractTypeMapKeysFromDgml
+        Condition=" '$(_AndroidTypeMapKeysKind)' == 'dgml' "
+        NativeAotDgmlFiles="@(_AndroidTypeMapDgmlSource)"
+        AcwMapFile="$(_AcwMapFile)"
+        TrimJavaCallableWrappers="$(_AndroidTrimmableTypemapTrimJavaCode)"
+        OutputFile="$(_AndroidTypeMapKeysFile)" />
+    <ExtractTypeMapKeysFromLlvmIr
+        Condition=" '$(_AndroidTypeMapKeysKind)' == 'llvm-ir' "
+        LlvmIrFiles="@(_AndroidTypeMapKeySource)"
+        OutputFile="$(_AndroidTypeMapKeysFile)" />
+    <ExtractTypeMapKeysFromAssemblies
+        Condition=" '$(_AndroidTypeMapKeysKind)' == 'assemblies' "
+        LinkedAssemblies="@(_AndroidTypeMapKeySource)"
+        OutputFile="$(_AndroidTypeMapKeysFile)" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidTypeMapKeysFile)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidGenerateTypeMapProguardConfigurationInputs"
+      DependsOnTargets="_AndroidExtractTypeMapKeys">
+    <ItemGroup>
+      <_AndroidTypeMapKeyFile Remove="@(_AndroidTypeMapKeyFile)" />
+      <_AndroidTypeMapKeyFile Include="$(_AndroidTypeMapKeysFile)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidGenerateTypeMapProguardConfiguration"
+      DependsOnTargets="_AndroidGenerateTypeMapProguardConfigurationInputs"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and ('$(_AndroidRuntime)' == 'CoreCLR' or ('$(_AndroidRuntime)' == 'NativeAOT' and '$(AndroidTypeMapImplementation)' == 'trimmable')) "
+      Inputs="@(_AndroidTypeMapKeyFile);$(_MicrosoftAndroidBuildTasksAssembly)"
+      Outputs="$(_ProguardProjectConfiguration)">
+    <GenerateTypeMapProguardConfiguration
+        TypeMapKeyFiles="@(_AndroidTypeMapKeyFile)"
+        OutputFile="$(_ProguardProjectConfiguration)" />
+    <ItemGroup>
+      <FileWrites Include="$(_ProguardProjectConfiguration)" />
+    </ItemGroup>
+  </Target>
+</Project>
