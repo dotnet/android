@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.Android.Build.Tasks\Microsoft.Android.Build.Tasks.csproj" />
     <ProjectReference Include="TestAttributeFixtures\TestAttributeFixtures.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
