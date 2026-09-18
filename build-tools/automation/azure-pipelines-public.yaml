@@ -607,6 +607,13 @@ stages:
       parameters:
         project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
 
+    - template: /build-tools/automation/yaml-templates/restore-maui-template.yaml
+      parameters:
+        project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
+        nugetConfig: $(Build.SourcesDirectory)/maui/NuGet.config
+        xaSourcePath: $(Build.SourcesDirectory)/android
+        logsDirectory: $(Build.StagingDirectory)/logs
+
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
