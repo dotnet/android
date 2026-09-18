@@ -1,6 +1,8 @@
 variables:
 - name: RunningOnCI
   value: true
+- name: GRADLE_USER_HOME
+  value: $(Agent.TempDirectory)/gradle-user-home
 - name: XA.Build.Configuration
   value: Release
 - name: NuGetArtifactName
