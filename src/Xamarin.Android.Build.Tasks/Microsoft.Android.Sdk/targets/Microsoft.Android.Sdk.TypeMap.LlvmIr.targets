@@ -446,8 +446,8 @@
 
   <Target Name="_GenerateProguardConfiguration"
       AfterTargets="_PrepareLinkedAssembliesForProguard"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
-      Inputs="@(_LinkedAssemblyForProguard)"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' and ('$(_AndroidRuntime)' != 'CoreCLR' or '$(AndroidLinkTool)' != 'r8' or '$(_AndroidEnableTypemapR8Trimming)' == 'false') "
+      Inputs="@(_LinkedAssemblyForProguard);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_ProguardProjectConfiguration)">
     <GenerateProguardConfiguration
         LinkedAssemblies="@(_LinkedAssemblyForProguard)"
