@@ -380,34 +380,10 @@ namespace Xamarin.Android.Tasks
 		StructureInfo jniRemappingIndexFieldTypeEntryStructureInfo;
 		StructureInfo jniRemappingTypeReplacementEntryStructureInfo;
 		StructureInfo jniRemappingDataStructureInfo;
-		readonly Dictionary<string, byte []> utf8SortKeys = new Dictionary<string, byte []> (StringComparer.Ordinal);
-
 		public int ReplacementTypeCount { get; private set; } = 0;
 		public int ReverseTypeCount { get; private set; } = 0;
 		public int ReplacementMethodIndexEntryCount { get; private set; } = 0;
 		public int ReplacementFieldIndexEntryCount { get; private set; } = 0;
-
-		int CompareUtf8 (string left, string right)
-		{
-			byte [] leftBytes = GetUtf8SortKey (left);
-			byte [] rightBytes = GetUtf8SortKey (right);
-			int min = Math.Min (leftBytes.Length, rightBytes.Length);
-			for (int i = 0; i < min; i++) {
-				if (leftBytes [i] != rightBytes [i]) {
-					return leftBytes [i] < rightBytes [i] ? -1 : 1;
-				}
-			}
-			return leftBytes.Length.CompareTo (rightBytes.Length);
-		}
-
-		byte [] GetUtf8SortKey (string value)
-		{
-			if (!utf8SortKeys.TryGetValue (value, out byte [] bytes)) {
-				bytes = Encoding.UTF8.GetBytes (value);
-				utf8SortKeys.Add (value, bytes);
-			}
-			return bytes;
-		}
 
 		public JniRemappingAssemblyGenerator (TaskLoggingHelper log)
 			: base (log)
@@ -544,7 +520,6 @@ namespace Xamarin.Android.Tasks
 					MethodsArraySymbolName = MakeMembersArrayName ("mm", typeIndex),
 					TypeMethods = typeMethods,
 				};
-				ret.Add (new StructureInstance<JniRemappingIndexTypeEntry> (jniRemappingIndexTypeEntryStructureInfo, entry));
 				ret.Add (new StructureInstance<JniRemappingIndexTypeEntry> (jniRemappingIndexTypeEntryStructureInfo, entry));
 			}
 
