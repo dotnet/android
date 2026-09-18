@@ -60,6 +60,7 @@ namespace Xamarin.Android.Build.Tests
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), $"NativeAOT build should succeed for {abi} without libc++ or libunwind.");
+			Assert.IsFalse (builder.LastBuildOutput.ContainsText ("XA1040"), "NativeAOT should not produce an experimental feature warning.");
 
 			string intermediateDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			string [] responseFiles = Directory.GetFiles (intermediateDirectory, "ld.*.rsp", SearchOption.AllDirectories);

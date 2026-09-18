@@ -946,15 +946,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The {0} runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues.
-        /// </summary>
-        public static string XA1040 {
-            get {
-                return ResourceManager.GetString("XA1040", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The MSBuild property &apos;{0}&apos; has an invalid value of &apos;{1}&apos;. The value is expected to be a directory path representing the relative location of your Assets or Resources..
         /// </summary>
         public static string XA1041 {
