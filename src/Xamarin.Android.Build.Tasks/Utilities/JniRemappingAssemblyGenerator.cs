@@ -336,7 +336,7 @@ namespace Xamarin.Android.Tasks
 					return 0;
 				}
 
-				return (uint)Encoding.UTF8.GetBytes (str).Length;
+				return (uint)GetUtf8SortKey (str).Length;
 			}
 		}
 
