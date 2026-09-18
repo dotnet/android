@@ -1005,9 +1005,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="_AndroidRuntime=$(_AndroidRuntime)" />
 		<_PropertyCacheItems Include="PublishTrimmed=$(PublishTrimmed)" />
 		<_PropertyCacheItems Include="Optimize=$(Optimize)" />
-		<_PropertyCacheItems Include="_AndroidTrimmableTypemapTrimJavaCode=$(_AndroidTrimmableTypemapTrimJavaCode)" />
 		<_PropertyCacheItems Include="_AndroidEnableTypemapR8Trimming=$(_AndroidEnableTypemapR8Trimming)" />
-		<_PropertyCacheItems Include="_UseTrimmableNativeAotProguardConfiguration=$(_UseTrimmableNativeAotProguardConfiguration)" />
 		<_PropertyCacheItems Include="ProguardConfigFiles=$(ProguardConfigFiles)" />
 		<_PropertyCacheItems Include="_AndroidUseMarshalMethods=$(_AndroidUseMarshalMethods)" />
 		<_PropertyCacheItems Include="_AndroidJcwCodegenTarget=$(_AndroidJcwCodegenTarget)" />

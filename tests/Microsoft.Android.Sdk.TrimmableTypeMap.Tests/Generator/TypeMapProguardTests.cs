@@ -119,8 +119,8 @@ public class TypeMapProguardTests : IDisposable
 		Build (project);
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
 		Assert.Equal ("-keep class test.Live\n-keep class test.Second\n", File.ReadAllText (rules));
-		Build (project, "-p:_AndroidTrimmableTypemapTrimJavaCode=false");
-		Assert.Equal ("-keep class test.Dead\n-keep class test.Live\n-keep class test.Second\n", File.ReadAllText (rules));
+		Build (project, "-p:_AndroidEnableTypemapR8Trimming=false");
+		Assert.Contains ("legacy ACW configuration", File.ReadAllText (rules));
 		File.Delete (Path.Combine (directory, "second.dgml"));
 		var output = Build (project, expectSuccess: false);
 		Assert.Contains ("XA4321", output);
@@ -231,6 +231,25 @@ public class TypeMapProguardTests : IDisposable
 	}
 
 	[Fact]
+	public void UnoptimizedNativeAotRequiresExplicitPipelineOptIn ()
+	{
+		Write ("app.dgml", """<DirectedGraph><Nodes><Node Id="1" Label="Type metadata: [App]App.Live" /></Nodes></DirectedGraph>""");
+		Write ("acw-map.txt", "App.Live, App;test.Live\nApp.Dead, App;test.Dead\n");
+		var project = CreateProject ("NativeAOT", "trimmable",
+			new XElement ("ResolvedFileToPublish", new XAttribute ("Include", "app.so"),
+				new XAttribute ("AndroidTypeMapDgmlFile", "$(MSBuildProjectDirectory)/app.dgml")));
+		var keys = Path.Combine (directory, "obj", "typemap.keys.txt");
+		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
+		Build (project, "-p:Optimize=false");
+		Assert.False (File.Exists (keys));
+		Assert.Contains ("legacy ACW configuration", File.ReadAllText (rules));
+		Build (project, "-p:Optimize=false", "-p:_AndroidEnableTypemapR8Trimming=true");
+		Assert.Equal ("-keep class test.Live\n", File.ReadAllText (rules));
+		Build (project, "-p:Optimize=false");
+		Assert.Contains ("legacy ACW configuration", File.ReadAllText (rules));
+	}
+
+	[Fact]
 	public void InnerBuildDoesNotGenerateOuterClassRules ()
 	{
 		var project = CreateProject ("CoreCLR", "trimmable");
@@ -286,6 +305,7 @@ public class TypeMapProguardTests : IDisposable
 			new XElement ("NativeIntermediateOutputPath", "$(MSBuildProjectDirectory)/custom-native/"),
 			new XElement ("TargetName", "App"),
 			new XElement ("Optimize", optimize),
+			new XElement ("_AndroidEnableTypemapR8Trimming", "true"),
 			new XElement ("_TypeMapAssemblyName", "_Microsoft.Android.TypeMaps")));
 		foreach (var target in new [] { "BuildOnlySettings", "_CheckForInvalidConfigurationAndPlatform", "_FixupIntermediateAssembly", "_PatchNuGetReferenceMetadata", "ResolveReferences", "_AndroidAot" }) {
 			root.Add (new XElement ("Target", new XAttribute ("Name", target)));
@@ -344,7 +364,7 @@ public class TypeMapProguardTests : IDisposable
 					new XElement ("AndroidTypeMapImplementation", representation),
 					new XElement ("PublishTrimmed", "true"),
 					new XElement ("AndroidLinkTool", "r8"),
-					new XElement ("_AndroidTrimmableTypemapTrimJavaCode", "true"),
+					new XElement ("Optimize", "true"),
 					new XElement ("IntermediateOutputPath", "$(MSBuildProjectDirectory)/obj/"),
 					new XElement ("_AndroidBuildPropertiesCache", "$(MSBuildProjectDirectory)/obj/build.props.cache"),
 					new XElement ("_AcwMapFile", "$(MSBuildProjectDirectory)/acw-map.txt")),

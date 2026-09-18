@@ -11,13 +11,12 @@
 
   <Target Name="_AndroidConfigureTypeMapProguard"
       BeforeTargets="_CalculateProguardConfigurationFiles"
-      Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and ('$(_AndroidRuntime)' == 'CoreCLR' or ('$(_AndroidRuntime)' == 'NativeAOT' and '$(AndroidTypeMapImplementation)' == 'trimmable')) ">
+      Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and ('$(_AndroidRuntime)' == 'CoreCLR' or ('$(_AndroidRuntime)' == 'NativeAOT' and '$(AndroidTypeMapImplementation)' == 'trimmable' and ('$(Optimize)' == 'true' or '$(_AndroidEnableTypemapR8Trimming)' == 'true'))) ">
     <PropertyGroup>
       <_ProguardProjectConfiguration>$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
       <_AndroidTypeMapProguardConfiguration>$(_ProguardProjectConfiguration)</_AndroidTypeMapProguardConfiguration>
-      <!-- ProguardConfigFiles is the existing complete configuration override. The NativeAOT
-           escape hatch continues to select the legacy all-ACW retention policy. -->
-      <_AndroidUseTypeMapProguardConfiguration Condition=" '$(ProguardConfigFiles)' == '' and ('$(_AndroidRuntime)' != 'NativeAOT' or '$(_UseTrimmableNativeAotProguardConfiguration)' != 'false') ">true</_AndroidUseTypeMapProguardConfiguration>
+      <!-- ProguardConfigFiles is the existing complete configuration override. -->
+      <_AndroidUseTypeMapProguardConfiguration Condition=" '$(ProguardConfigFiles)' == '' ">true</_AndroidUseTypeMapProguardConfiguration>
     </PropertyGroup>
   </Target>
 
@@ -34,7 +33,7 @@
   <Target Name="_AndroidGenerateLegacyNativeAotProguardConfiguration"
       BeforeTargets="_CalculateProguardConfigurationFiles"
       DependsOnTargets="_AndroidGenerateLegacyNativeAotProguardConfigurationInputs"
-      Condition=" '$(_AndroidEnableTypemapR8Trimming)' == 'false' and '$(_AndroidRuntime)' == 'NativeAOT' and '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
+      Condition=" ('$(_AndroidEnableTypemapR8Trimming)' == 'false' or ('$(_AndroidEnableTypemapR8Trimming)' != 'true' and '$(Optimize)' != 'true')) and '$(_AndroidRuntime)' == 'NativeAOT' and '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
       Inputs="$(_AcwMapFile);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_ProguardProjectConfiguration)">
     <MakeDir Directories="$(IntermediateOutputPath)proguard" />
@@ -62,7 +61,7 @@
       <!-- Inner builds return exact producer paths, not globbed candidates from old RIDs/modes.
            Keep missing files in the list so extraction fails instead of silently losing a RID. -->
       <_AndroidTypeMapDgmlSource Include="@(ResolvedFileToPublish->'%(AndroidTypeMapDgmlFile)'->Distinct())"
-          Condition=" '$(_AndroidTypeMapKeysKind)' == 'dgml' and '$(_AndroidTrimmableTypemapTrimJavaCode)' == 'true' " />
+          Condition=" '$(_AndroidTypeMapKeysKind)' == 'dgml' " />
       <_AndroidTypeMapKeySource Include="@(_AndroidTypeMapDgmlSource);$(_AcwMapFile)"
           Condition=" '$(_AndroidTypeMapKeysKind)' == 'dgml' " />
       <_AndroidTypeMapKeySource Include="@(_TypeMapAssemblySource->Distinct())"
@@ -70,7 +69,7 @@
       <_AndroidTypeMapKeySource Include="$(_AndroidTypeMapLinkedAssemblies)"
           Condition=" '$(_AndroidTypeMapKeysKind)' == 'assemblies' " />
       <_AndroidTypeMapKeysState Remove="@(_AndroidTypeMapKeysState)" />
-      <_AndroidTypeMapKeysState Include="Runtime=$(_AndroidRuntime);Representation=$(_AndroidTypeMapKeysKind);TrimJava=$(_AndroidTrimmableTypemapTrimJavaCode);Optimize=$(Optimize);RuntimeIdentifier=$(RuntimeIdentifier);RuntimeIdentifiers=$(RuntimeIdentifiers);TypemapPolicy=$(_AndroidUseTypeMapProguardConfiguration);Enabled=$(_AndroidEnableTypemapR8Trimming)" />
+      <_AndroidTypeMapKeysState Include="Runtime=$(_AndroidRuntime);Representation=$(_AndroidTypeMapKeysKind);Optimize=$(Optimize);RuntimeIdentifier=$(RuntimeIdentifier);RuntimeIdentifiers=$(RuntimeIdentifiers);TypemapPolicy=$(_AndroidUseTypeMapProguardConfiguration);Enabled=$(_AndroidEnableTypemapR8Trimming)" />
       <_AndroidTypeMapKeysState Include="@(_AndroidTypeMapKeySource->'%(FullPath)')" />
     </ItemGroup>
     <!-- Unlike the generated outputs, this input manifest must preserve its timestamp when
@@ -90,7 +89,6 @@
         Condition=" '$(_AndroidTypeMapKeysKind)' == 'dgml' "
         NativeAotDgmlFiles="@(_AndroidTypeMapDgmlSource)"
         AcwMapFile="$(_AcwMapFile)"
-        TrimJavaCallableWrappers="$(_AndroidTrimmableTypemapTrimJavaCode)"
         OutputFile="$(_AndroidTypeMapKeysFile)" />
     <ExtractTypeMapKeysFromLlvmIr
         Condition=" '$(_AndroidTypeMapKeysKind)' == 'llvm-ir' "
@@ -115,7 +113,7 @@
 
   <Target Name="_AndroidGenerateTypeMapProguardConfiguration"
       DependsOnTargets="_AndroidGenerateTypeMapProguardConfigurationInputs"
-      Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and ('$(_AndroidRuntime)' == 'CoreCLR' or ('$(_AndroidRuntime)' == 'NativeAOT' and '$(AndroidTypeMapImplementation)' == 'trimmable')) "
+      Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and ('$(_AndroidRuntime)' == 'CoreCLR' or ('$(_AndroidRuntime)' == 'NativeAOT' and '$(AndroidTypeMapImplementation)' == 'trimmable' and ('$(Optimize)' == 'true' or '$(_AndroidEnableTypemapR8Trimming)' == 'true'))) "
       Inputs="@(_AndroidTypeMapKeyFile);$(_MicrosoftAndroidBuildTasksAssembly);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_ProguardProjectConfiguration)">
     <GenerateTypeMapProguardConfiguration

@@ -15,8 +15,8 @@ every class in the ACW map:
 Inner builds return their exact source paths to the outer build. Keys are
 unioned across the requested RIDs/ABIs; stale files from other builds are not
 discovered by globbing. NativeAOT uses the scan graph in optimized builds and
-the codegen graph when the scanner is disabled. Its existing Java-trimming
-opt-out instead extracts every ACW class without requiring a graph.
+the codegen graph when the scanner is disabled. DGML is consumed only by the
+retained-keys adapter, not by a separate NativeAOT rule generator.
 
 All three adapters and the shared generator are `Microsoft.Android.Tasks`
 tasks in `Microsoft.Android.Build.Tasks.dll`.
@@ -51,12 +51,15 @@ whole wrapper packages. User Java source retention and application/library
 ProGuard rules remain separate.
 
 The temporary private override `_AndroidEnableTypemapR8Trimming` controls this
-pipeline. Leave it unset for the automatic behavior, set it to `true` to enable
+pipeline. It replaces the old NativeAOT-specific trimming and ProGuard switches.
+Leave it unset for the automatic behavior, set it to `true` to enable
 the pipeline in eligible managed-trimmed CoreCLR/NativeAOT R8 builds, or set it
 to `false` to use legacy ACW retention without running the new tasks. Disabling
 it also avoids automatic NativeAOT DGML generation, but does not suppress
 explicit `IlcGenerateDgmlFile` diagnostics. It does not enable R8 or managed
 trimming in otherwise ineligible builds.
+Automatic NativeAOT selection requires an optimized build; unoptimized builds
+require explicit `true` to avoid generating large codegen graphs by default.
 
 This pipeline disables all obfuscation, including private-member
 obfuscation, with both `-dontobfuscate` and R8's `--no-minification` option.
