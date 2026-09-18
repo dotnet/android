@@ -74,9 +74,8 @@ pipeline. It replaces the old NativeAOT-specific trimming and ProGuard switches.
 Leave it unset for automatic CoreCLR behavior, set it to `true` to enable
 the pipeline in eligible managed-trimmed CoreCLR/NativeAOT R8 builds, or set it
 to `false` to use legacy ACW retention without running the new tasks. Disabling
-it avoids NativeAOT object inspection. Explicit `IlcGenerateDgmlFile`
-diagnostics are independent and remain honored. The switch does not enable R8
-or managed trimming in otherwise ineligible builds.
+it avoids NativeAOT object inspection. The switch does not enable R8 or managed
+trimming in otherwise ineligible builds.
 
 NativeAOT object inspection currently requires explicit `true` and the Android
 NDK's `llvm-readobj` and adjacent `llvm-objdump`, even when using the

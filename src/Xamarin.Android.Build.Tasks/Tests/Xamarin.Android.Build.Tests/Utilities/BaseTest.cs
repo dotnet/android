@@ -638,11 +638,11 @@ namespace Xamarin.Android.Build.Tests
 		// NativeAOT trims with ILC and does not emit illink's `obj/<config>/<rid>/linked/` output.
 		// Tests that inspect the `linked/` directory (e.g. to verify trimming or type-map behavior)
 		// therefore cannot run as-is on NativeAOT.
-		// TODO: add DGML-based counterparts to verify these behaviors on NativeAOT (follow-up issue).
+		// NativeAOT typemap retention is covered by native object extraction tests.
 		protected bool IgnoreNativeAotLinkedAssemblyChecks (AndroidRuntime runtime)
 		{
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT does not produce illink's `linked/` output; skipping `linked/` assembly inspection (DGML counterpart tracked as a follow-up).");
+				Assert.Ignore ("NativeAOT produces ILC native objects rather than illink's `linked/` assemblies; skipping linked assembly inspection.");
 				return true;
 			}
 
