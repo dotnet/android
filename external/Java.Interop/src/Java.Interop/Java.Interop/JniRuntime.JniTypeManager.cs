@@ -77,6 +77,61 @@ namespace Java.Interop {
 			public static bool operator!=(ReplacementMethodInfo a, ReplacementMethodInfo b) => !a.Equals (b);
 		}
 
+		[SuppressMessage ("Design", "CA1034:Nested types should not be visible",
+			Justification = "Deliberate choice to 'hide' these types from code completion for `Java.Interop.`; see 045b8af7.")]
+		public struct ReplacementFieldInfo : IEquatable<ReplacementFieldInfo>
+		{
+			public  string? SourceJniType               {get; set;}
+			public  string? SourceJniFieldName          {get; set;}
+			public  string? SourceJniFieldSignature     {get; set;}
+			public  string? TargetJniType               {get; set;}
+			public  string? TargetJniFieldName          {get; set;}
+			public  string? TargetJniFieldSignature     {get; set;}
+
+			public override bool Equals (object? obj)
+			{
+				if (obj is ReplacementFieldInfo o) {
+					return Equals (o);
+				}
+				return false;
+			}
+
+			public bool Equals (ReplacementFieldInfo other)
+			{
+				return string.Equals (SourceJniType, other.SourceJniType) &&
+					string.Equals (SourceJniFieldName, other.SourceJniFieldName) &&
+					string.Equals (SourceJniFieldSignature, other.SourceJniFieldSignature) &&
+					string.Equals (TargetJniType, other.TargetJniType) &&
+					string.Equals (TargetJniFieldName, other.TargetJniFieldName) &&
+					string.Equals (TargetJniFieldSignature, other.TargetJniFieldSignature);
+			}
+
+			public override int GetHashCode ()
+			{
+				return (SourceJniType?.GetHashCode () ?? 0) ^
+					(SourceJniFieldName?.GetHashCode () ?? 0) ^
+					(SourceJniFieldSignature?.GetHashCode () ?? 0) ^
+					(TargetJniType?.GetHashCode () ?? 0) ^
+					(TargetJniFieldName?.GetHashCode () ?? 0) ^
+					(TargetJniFieldSignature?.GetHashCode () ?? 0);
+			}
+
+			public override string ToString ()
+			{
+				return $"{nameof (ReplacementFieldInfo)} {{ " +
+					$"{nameof (SourceJniType)} = \"{SourceJniType}\"" +
+					$", {nameof (SourceJniFieldName)} = \"{SourceJniFieldName}\"" +
+					$", {nameof (SourceJniFieldSignature)} = \"{SourceJniFieldSignature}\"" +
+					$", {nameof (TargetJniType)} = \"{TargetJniType}\"" +
+					$", {nameof (TargetJniFieldName)} = \"{TargetJniFieldName}\"" +
+					$", {nameof (TargetJniFieldSignature)} = \"{TargetJniFieldSignature}\"" +
+					$"}}";
+			}
+
+			public static bool operator==(ReplacementFieldInfo a, ReplacementFieldInfo b) => a.Equals (b);
+			public static bool operator!=(ReplacementFieldInfo a, ReplacementFieldInfo b) => !a.Equals (b);
+		}
+
 		/// <include file="../Documentation/Java.Interop/JniRuntime.JniTypeManager.xml" path="/docs/member[@name='T:JniTypeManager']/*" />
 		public partial class JniTypeManager : IDisposable, ISetRuntime {
 
@@ -292,6 +347,41 @@ namespace Java.Interop {
 			/// </summary>
 			protected virtual ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSimpleReference, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 				=> GetReplacementMethodInfoCore (jniSimpleReference, jniMethodName.ToString (), jniMethodSignature.ToString ());
+
+			public ReplacementFieldInfo? GetReplacementFieldInfo (string jniSimpleReference, string jniFieldName, string jniFieldSignature)
+			{
+				AssertValid ();
+				AssertSimpleReference (jniSimpleReference, nameof (jniSimpleReference));
+				if (string.IsNullOrEmpty (jniFieldName)) {
+					throw new ArgumentNullException (nameof (jniFieldName));
+				}
+				if (string.IsNullOrEmpty (jniFieldSignature)) {
+					throw new ArgumentNullException (nameof (jniFieldSignature));
+				}
+
+				return GetReplacementFieldInfoCore (jniSimpleReference, jniFieldName, jniFieldSignature);
+			}
+
+			protected virtual ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSimpleReference, string jniFieldName, string jniFieldSignature) => null;
+
+			internal ReplacementFieldInfo? GetReplacementFieldInfo (string jniSimpleReference, ReadOnlySpan<char> jniFieldName, ReadOnlySpan<char> jniFieldSignature)
+			{
+				AssertValid ();
+				AssertSimpleReference (jniSimpleReference, nameof (jniSimpleReference));
+				if (jniFieldName.IsEmpty)
+					throw new ArgumentNullException (nameof (jniFieldName));
+				if (jniFieldSignature.IsEmpty)
+					throw new ArgumentNullException (nameof (jniFieldSignature));
+
+				return GetReplacementFieldInfoCore (jniSimpleReference, jniFieldName, jniFieldSignature);
+			}
+
+			/// <summary>
+			/// Resolves field remapping without requiring name and signature strings.
+			/// The default implementation preserves dispatch to the string overload.
+			/// </summary>
+			protected virtual ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSimpleReference, ReadOnlySpan<char> jniFieldName, ReadOnlySpan<char> jniFieldSignature)
+				=> GetReplacementFieldInfoCore (jniSimpleReference, jniFieldName.ToString (), jniFieldSignature.ToString ());
 
 			// Default implementation is a no-op. Derived classes (e.g. `ReflectionJniTypeManager`)
 			// provide reflection-based registration. Override to provide custom registration.

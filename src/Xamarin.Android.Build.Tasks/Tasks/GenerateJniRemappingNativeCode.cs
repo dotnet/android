@@ -19,11 +19,16 @@ namespace Xamarin.Android.Tasks
 		{
 			public int ReplacementTypeCount             { get; }
 			public int ReplacementMethodIndexEntryCount { get; }
+			public int ReverseTypeCount                 { get; }
+			public int ReplacementFieldIndexEntryCount  { get; }
 
-			public JniRemappingNativeCodeInfo (int replacementTypeCount, int replacementMethodIndexEntryCount)
+			public JniRemappingNativeCodeInfo (int replacementTypeCount, int replacementMethodIndexEntryCount,
+			                                   int reverseTypeCount = 0, int replacementFieldIndexEntryCount = 0)
 			{
 				ReplacementTypeCount = replacementTypeCount;
 				ReplacementMethodIndexEntryCount = replacementMethodIndexEntryCount;
+				ReverseTypeCount = reverseTypeCount;
+				ReplacementFieldIndexEntryCount = replacementFieldIndexEntryCount;
 			}
 		}
 
@@ -38,6 +43,11 @@ namespace Xamarin.Android.Tasks
 		public string [] SupportedAbis { get; set; } = [];
 
 		public bool GenerateEmptyCode { get; set; }
+
+		/// <summary>Table sizes produced by the last run; exposed for tests and for consumers
+		/// which cannot reach the registered task object (for example the per-RID NativeAOT
+		/// build).</summary>
+		internal JniRemappingNativeCodeInfo? NativeCodeInfo { get; private set; }
 
 		public override bool RunTask ()
 		{
@@ -56,13 +66,15 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateEmpty ()
 		{
-			Generate (new JniRemappingAssemblyGenerator (Log), typeReplacementsCount: 0);
+			Generate (new JniRemappingAssemblyGenerator (Log));
 		}
 
 		void Generate (string remappingXmlFilePath)
 		{
 			var typeReplacements = new List<JniRemappingTypeReplacement> ();
+			var reverseTypeReplacements = new List<JniRemappingTypeReplacement> ();
 			var methodReplacements = new List<JniRemappingMethodReplacement> ();
+			var fieldReplacements = new List<JniRemappingFieldReplacement> ();
 
 			var readerSettings = new XmlReaderSettings {
 				XmlResolver = null,
@@ -72,14 +84,14 @@ namespace Xamarin.Android.Tasks
 				if (reader.MoveToContent () != XmlNodeType.Element || reader.LocalName != "replacements") {
 					Log.LogCodedError ("XA1045", Properties.Resources.XA1045, remappingXmlFilePath);
 				} else {
-					ReadXml (reader, typeReplacements, methodReplacements, remappingXmlFilePath);
+					ReadXml (reader, typeReplacements, reverseTypeReplacements, methodReplacements, fieldReplacements, remappingXmlFilePath);
 				}
 			}
 
-			Generate (new JniRemappingAssemblyGenerator (Log, typeReplacements, methodReplacements), typeReplacements.Count);
+			Generate (new JniRemappingAssemblyGenerator (Log, typeReplacements, reverseTypeReplacements, methodReplacements, fieldReplacements));
 		}
 
-		void Generate (JniRemappingAssemblyGenerator jniRemappingComposer, int typeReplacementsCount)
+		void Generate (JniRemappingAssemblyGenerator jniRemappingComposer)
 		{
 			LLVMIR.LlvmIrModule module =  jniRemappingComposer.Construct ();
 
@@ -94,14 +106,25 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
+			NativeCodeInfo = new JniRemappingNativeCodeInfo (
+				jniRemappingComposer.ReplacementTypeCount,
+				jniRemappingComposer.ReplacementMethodIndexEntryCount,
+				jniRemappingComposer.ReverseTypeCount,
+				jniRemappingComposer.ReplacementFieldIndexEntryCount
+			);
+
 			BuildEngine4.RegisterTaskObjectAssemblyLocal (
 				ProjectSpecificTaskObjectKey (JniRemappingNativeCodeInfoKey),
-				new JniRemappingNativeCodeInfo (typeReplacementsCount, jniRemappingComposer.ReplacementMethodIndexEntryCount),
+				NativeCodeInfo,
 				RegisteredTaskObjectLifetime.Build
 			);
 		}
 
-		void ReadXml (XmlReader reader, List<JniRemappingTypeReplacement> typeReplacements, List<JniRemappingMethodReplacement> methodReplacements, string remappingXmlFilePath)
+		void ReadXml (XmlReader reader, List<JniRemappingTypeReplacement> typeReplacements,
+		              List<JniRemappingTypeReplacement> reverseTypeReplacements,
+		              List<JniRemappingMethodReplacement> methodReplacements,
+		              List<JniRemappingFieldReplacement> fieldReplacements,
+		              string remappingXmlFilePath)
 		{
 			bool haveAllAttributes;
 
@@ -119,6 +142,14 @@ namespace Xamarin.Android.Tasks
 					}
 
 					typeReplacements.Add (new JniRemappingTypeReplacement (from, to));
+				} else if (MonoAndroidHelper.StringEquals ("reverse-type", reader.LocalName)) {
+					haveAllAttributes &= GetRequiredAttribute ("from", out string from);
+					haveAllAttributes &= GetRequiredAttribute ("to", out string to);
+					if (!haveAllAttributes) {
+						continue;
+					}
+
+					reverseTypeReplacements.Add (new JniRemappingTypeReplacement (from, to));
 				} else if (MonoAndroidHelper.StringEquals ("replace-method", reader.LocalName)) {
 					haveAllAttributes &= GetRequiredAttribute ("source-type", out string sourceType);
 					haveAllAttributes &= GetRequiredAttribute ("source-method-name", out string sourceMethodName);
@@ -136,10 +167,31 @@ namespace Xamarin.Android.Tasks
 					}
 
 					string sourceMethodSignature = reader.GetAttribute ("source-method-signature");
+					// Optional: inputs which predate it (for example the Intune/MAM mapping) keep
+					// the source signature on the target method.
+					string targetMethodSignature = reader.GetAttribute ("target-method-signature");
 					methodReplacements.Add (
 						new JniRemappingMethodReplacement (
 							sourceType, sourceMethodName, sourceMethodSignature,
-							targetType, targetMethodName, isStatic
+							targetType, targetMethodName, targetMethodSignature, isStatic
+						)
+					);
+				} else if (MonoAndroidHelper.StringEquals ("replace-field", reader.LocalName)) {
+					haveAllAttributes &= GetRequiredAttribute ("source-type", out string sourceType);
+					haveAllAttributes &= GetRequiredAttribute ("source-field-name", out string sourceFieldName);
+					haveAllAttributes &= GetRequiredAttribute ("target-type", out string targetType);
+					haveAllAttributes &= GetRequiredAttribute ("target-field-name", out string targetFieldName);
+
+					if (!haveAllAttributes) {
+						continue;
+					}
+
+					string sourceFieldSignature = reader.GetAttribute ("source-field-signature");
+					string targetFieldSignature = reader.GetAttribute ("target-field-signature");
+					fieldReplacements.Add (
+						new JniRemappingFieldReplacement (
+							sourceType, sourceFieldName, sourceFieldSignature,
+							targetType, targetFieldName, targetFieldSignature
 						)
 					);
 				}

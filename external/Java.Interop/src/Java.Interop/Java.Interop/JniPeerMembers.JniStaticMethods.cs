@@ -36,7 +36,7 @@ namespace Java.Interop
 		JniMethodInfo GetMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
 		{
 			var m              = (JniMethodInfo?) null;
-			var newMethod      = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (Members.JniPeerTypeName, method, signature);
+			var newMethod      = JniPeerMembers.GetReplacementMethodInfo (Members.JniPeerTypeName, method, signature);
 			if (newMethod.HasValue) {
 				using var t = new JniType (newMethod.Value.TargetJniType ?? Members.JniPeerTypeName);
 				if (t.TryGetStaticMethod (
@@ -48,6 +48,16 @@ namespace Java.Interop
 			}
 			if (Members.JniPeerType.TryGetStaticMethod (method, signature, out m)) {
 				return m;
+			}
+			newMethod = JniPeerMembers.GetBaseReplacementMethodInfo (Members.ManagedPeerType, method, signature);
+			if (newMethod.HasValue) {
+				using var t = new JniType (newMethod.Value.TargetJniType ?? Members.JniPeerTypeName);
+				if (t.TryGetStaticMethod (
+						newMethod.Value.TargetJniMethodName is string name ? name.AsSpan () : method,
+						newMethod.Value.TargetJniMethodSignature is string sig ? sig.AsSpan () : signature,
+						out m)) {
+					return m;
+				}
 			}
 			m   = FindInFallbackTypes (method, signature);
 			if (m != null) {
