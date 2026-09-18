@@ -98,11 +98,13 @@ namespace Microsoft.Android.Tasks
 					throw new BadImageFormatException ("Invalid TypeMap attribute arguments.");
 				}
 
-				key = NormalizeKey (key);
-				if (!GenerateTypeMapProguardConfiguration.IsClassName (key)) {
+				key = TypeMapKey.NormalizeAliasKey (key);
+				if (!TypeMapClassName.TryGetClassName (key, out string? className)) {
 					throw new BadImageFormatException ($"Invalid TypeMap class name '{key}'.");
 				}
-				keys.Add (key);
+				if (className != null) {
+					keys.Add (className);
+				}
 			}
 		}
 
@@ -153,20 +155,6 @@ namespace Microsoft.Android.Tasks
 				throw new BadImageFormatException ("Invalid TypeMap constructor signature.");
 			}
 			return count;
-		}
-
-		static string NormalizeKey (string key)
-		{
-			int start = key.LastIndexOf ('[');
-			if (start <= 0 || start == key.Length - 2 || key [key.Length - 1] != ']') {
-				return key;
-			}
-			for (int i = start + 1; i < key.Length - 1; i++) {
-				if (key [i] < '0' || key [i] > '9') {
-					return key;
-				}
-			}
-			return key.Substring (0, start);
 		}
 	}
 }

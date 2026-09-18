@@ -89,6 +89,21 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 		Assert.Equal (expected + "\n", File.ReadAllText (task.OutputFile));
 	}
 
+	[Theory]
+	[InlineData ("[Ljava/lang/Object;", "java/lang/Object\n")]
+	[InlineData ("[[Ltest/Outer$Inner;", "test/Outer$Inner\n")]
+	[InlineData ("[Ltest/Outer$Inner;[000]", "test/Outer$Inner\n")]
+	[InlineData ("[B", "")]
+	[InlineData ("[[Z", "")]
+	[InlineData ("[I[0]", "")]
+	public void ArrayEntriesKeepOnlyTheirObjectElementClass (string key, string expected)
+	{
+		var (task, engine) = CreateTask (Emit ("Map", Entry (key)));
+		Assert.True (task.Execute ());
+		Assert.Empty (engine.Errors);
+		Assert.Equal (new UTF8Encoding (false).GetBytes (expected), File.ReadAllBytes (task.OutputFile));
+	}
+
 	[Fact]
 	public void EmptyStubsAndOrdinaryManagedAssembliesContributeNoKeys ()
 	{
@@ -180,6 +195,10 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 	[InlineData ("/test")]
 	[InlineData ("test//Invalid")]
 	[InlineData ("test/Invalid\u200bName")]
+	[InlineData ("[L;")]
+	[InlineData ("[V")]
+	[InlineData ("[Ltest/A")]
+	[InlineData ("[[")]
 	public void InvalidKeyFails (string key)
 	{
 		var (task, engine) = CreateTask (Emit ("Map", Entry (key)));
