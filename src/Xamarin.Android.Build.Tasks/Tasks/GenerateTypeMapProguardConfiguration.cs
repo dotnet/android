@@ -40,7 +40,7 @@ public class GenerateTypeMapProguardConfiguration : AndroidTask
 					}
 					if (!IsClassName (name)) {
 						Log.LogCodedError ("XA4328", Properties.Resources.XA4328, currentFile,
-							string.Format (Properties.Resources.XA4328_InvalidName, lineNumber, name));
+							string.Format (CultureInfo.CurrentCulture, Properties.Resources.XA4328_InvalidName, lineNumber, name));
 						return false;
 					}
 					classes.Add (name.Replace ('/', '.'));
@@ -49,7 +49,7 @@ public class GenerateTypeMapProguardConfiguration : AndroidTask
 
 			currentFile = OutputFile;
 			var directory = Path.GetDirectoryName (OutputFile);
-			if (!directory.IsNullOrEmpty ()) {
+			if (directory != null && directory.Length > 0) {
 				Directory.CreateDirectory (directory);
 			}
 			using var writer = new StreamWriter (OutputFile, append: false, new UTF8Encoding (false)) { NewLine = "\n" };
