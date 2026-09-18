@@ -748,7 +748,11 @@ namespace Java.InteropTests
 		{
 		}
 
-		static void AssertValueTypeDictionaryConversion<TKey, TValue> ()
+		static void AssertValueTypeDictionaryConversion<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			TKey,
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			TValue> ()
 		{
 			using (var source = new JavaDictionary ()) {
 				AssertValueTypeDictionaryConversion<TKey, TValue> (
@@ -760,7 +764,14 @@ namespace Java.InteropTests
 			}
 		}
 
-		static void AssertValueTypeDictionaryConversion<TKey, TValue> (JavaDictionary source, Type targetType)
+		static void AssertValueTypeDictionaryConversion<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			TKey,
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			TValue> (
+			JavaDictionary source,
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			Type targetType)
 		{
 			var converted = InvokeJavaConvertFromJniHandle (targetType, source.Handle, JniHandleOwnership.DoNotTransfer);
 			try {

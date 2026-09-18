@@ -90,8 +90,6 @@
     <ProjectReference Include="..\..\StartupHook\StartupHook.csproj" />
     <ProjectReference Include="..\Java.Interop-Tests\Java.Interop-Tests.NET.csproj" />
     <ProjectReference Include="..\Mono.Android-Test.Library\Mono.Android-Test.Library.NET.csproj" />
-    <!-- Required for [Export] / [ExportField] runtime support (ExportTests.cs) on the LLVM-IR typemap path -->
-    <Reference Include="Mono.Android.Export" Condition=" '$(AndroidTypeMapImplementation)' != 'trimmable' " />
   </ItemGroup>
 
   <ItemGroup>

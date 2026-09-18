@@ -145,7 +145,7 @@ namespace Java.InteropTests
 		public void NewOpenGenericTypeThrows ()
 		{
 			try {
-				var lrefInstance = JNIEnv.StartCreateInstance (typeof (GenericHolder<>), "()V");
+				var lrefInstance = JNIEnv.StartCreateInstance (typeof (JniEnvGenericHolder<>), "()V");
 				JNIEnv.FinishCreateInstance (lrefInstance, "()V");
 				Assert.Fail ("SHOULD NOT BE REACHED: creation of open generic types is not supported");
 			} catch (NotSupportedException) {
@@ -155,7 +155,7 @@ namespace Java.InteropTests
 		[Test]
 		public void NewClosedGenericTypeWorks ()
 		{
-			using (var holder = new GenericHolder<int>()) {
+			using (var holder = new JniEnvGenericHolder<int>()) {
 			}
 		}
 
@@ -163,16 +163,16 @@ namespace Java.InteropTests
 		[Category ("ConstructorParity")]
 		public void ExistingJavaObjectWrapsAsKnownClosedGenericType ()
 		{
-			GenericHolder<int>.ActivationConstructorInvocations = 0;
+			JniEnvGenericHolder<int>.ActivationConstructorInvocations = 0;
 
-			IntPtr handle = JNIEnv.CreateInstance (typeof (GenericHolder<int>), "()V");
+			IntPtr handle = JNIEnv.CreateInstance (typeof (JniEnvGenericHolder<int>), "()V");
 			try {
-				using var first = Java.Lang.Object.GetObject<GenericHolder<int>> (handle, JniHandleOwnership.DoNotTransfer);
-				var second = Java.Lang.Object.GetObject<GenericHolder<int>> (handle, JniHandleOwnership.DoNotTransfer);
+				using var first = Java.Lang.Object.GetObject<JniEnvGenericHolder<int>> (handle, JniHandleOwnership.DoNotTransfer);
+				var second = Java.Lang.Object.GetObject<JniEnvGenericHolder<int>> (handle, JniHandleOwnership.DoNotTransfer);
 				try {
 					Assert.IsNotNull (first);
 					Assert.AreSame (first, second);
-					Assert.AreEqual (1, GenericHolder<int>.ActivationConstructorInvocations);
+					Assert.AreEqual (1, JniEnvGenericHolder<int>.ActivationConstructorInvocations);
 				} finally {
 					if (!ReferenceEquals (first, second))
 						second?.Dispose ();
@@ -734,15 +734,15 @@ namespace Java.InteropTests
 		}
 	}
 
-	class GenericHolder<T> : Java.Lang.Object {
+	class JniEnvGenericHolder<T> : Java.Lang.Object {
 
 		public static int ActivationConstructorInvocations;
 
-		public GenericHolder ()
+		public JniEnvGenericHolder ()
 		{
 		}
 
-		protected GenericHolder (IntPtr handle, JniHandleOwnership transfer)
+		protected JniEnvGenericHolder (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
 			ActivationConstructorInvocations++;
