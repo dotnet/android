@@ -169,7 +169,8 @@ static class MetadataHelper
 	public static byte [] ComputeRootIncrementalFingerprint (
 		IReadOnlyList<string> perAssemblyTypeMapNames,
 		Version systemRuntimeVersion,
-		bool useSharedTypemapUniverse)
+		bool useSharedTypemapUniverse,
+		bool includeBuiltInValueTypeUniverses)
 	{
 		// This method needs only one hash. The content sink is used as the writer's always-present
 		// sink; the returned value is still solely the incremental-build fingerprint for the root.
@@ -177,6 +178,7 @@ static class MetadataHelper
 		writer.WriteRaw (Sink.Content, GeneratorModuleVersionId.ToByteArray ());
 		writer.WriteString (Sink.Content, systemRuntimeVersion.ToString ());
 		writer.WriteBoolean (Sink.Content, useSharedTypemapUniverse);
+		writer.WriteBoolean (Sink.Content, includeBuiltInValueTypeUniverses);
 		writer.WriteInt32 (Sink.Content, perAssemblyTypeMapNames.Count);
 		foreach (var assemblyName in perAssemblyTypeMapNames) {
 			writer.WriteString (Sink.Content, assemblyName);

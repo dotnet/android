@@ -13,12 +13,14 @@ namespace Xamarin.Android.Build.Tests.Tasks;
 public class CreateAssemblyStoreTests : BaseTest
 {
 	[Test]
-	public void CoreCLRStoreUsesVersionThreeHeader ()
+	[TestCase ("Example.dll.zst")]
+	[TestCase ("Example.ni.dll.zst")]
+	public void CoreCLRStoreUsesVersionThreeHeader (string assemblyFileName)
 	{
-		string testDirectory = Path.Combine (Root, "temp", nameof (CoreCLRStoreUsesVersionThreeHeader));
+		string testDirectory = Path.Combine (Root, "temp", $"{nameof (CoreCLRStoreUsesVersionThreeHeader)}-{assemblyFileName}");
 		Directory.CreateDirectory (testDirectory);
 
-		string assemblyPath = Path.Combine (testDirectory, "Example.dll.zst");
+		string assemblyPath = Path.Combine (testDirectory, assemblyFileName);
 		File.WriteAllBytes (assemblyPath, [1, 3, 3, 7, 9, 11, 17, 23]);
 
 		var metadata = new Dictionary<string, string> {
@@ -42,11 +44,15 @@ public class CreateAssemblyStoreTests : BaseTest
 		Assert.AreEqual (0x80010003u, reader.ReadUInt32 (), "Unexpected arm64 assembly store version.");
 		uint assemblyCount = reader.ReadUInt32 ();
 		uint indexEntryCount = reader.ReadUInt32 ();
+		Assert.AreEqual (1u, assemblyCount, "The store should contain only the real assembly.");
 		Assert.AreEqual (assemblyCount * 2, indexEntryCount, "Unexpected index entry count.");
 		uint indexSize = reader.ReadUInt32 ();
 		Assert.AreEqual (5 * sizeof (uint), reader.BaseStream.Position, "Unexpected assembly store header size.");
 
 		reader.BaseStream.Seek (indexSize, SeekOrigin.Current);
 		Assert.AreEqual (0u, reader.ReadUInt32 (), "The first descriptor should immediately follow the index.");
+
+		string manifest = File.ReadAllText ($"{storePath}.manifest");
+		StringAssert.Contains ($" {Path.GetFileNameWithoutExtension (assemblyFileName)}", manifest, "The real assembly name should be indexed.");
 	}
 }

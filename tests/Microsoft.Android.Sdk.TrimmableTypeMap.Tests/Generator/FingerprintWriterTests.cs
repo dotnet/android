@@ -172,13 +172,18 @@ public class FingerprintWriterTests : FixtureTestBase
 			writer.Write (GeneratorModuleVersionId.ToByteArray ());
 			writer.Write (systemRuntimeVersion.ToString ());
 			writer.Write (true);
+			writer.Write (true);
 			writer.Write (names.Length);
 			foreach (var name in names) {
 				writer.Write (name);
 			}
 		}));
 
-		Assert.Equal (expected, MetadataHelper.ComputeRootIncrementalFingerprint (names, systemRuntimeVersion, useSharedTypemapUniverse: true));
+		Assert.Equal (expected, MetadataHelper.ComputeRootIncrementalFingerprint (
+			names,
+			systemRuntimeVersion,
+			useSharedTypemapUniverse: true,
+			includeBuiltInValueTypeUniverses: true));
 	}
 
 	static Guid GeneratorModuleVersionId => typeof (TypeMapAssemblyGenerator).Module.ModuleVersionId;

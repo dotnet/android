@@ -131,6 +131,7 @@
     <Compile Include="Android.Content\SharedPreferencesTest.cs" />
     <Compile Include="Android.Graphics\NinePatchTests.cs" />
     <Compile Include="Android.OS\BundleTest.cs" />
+    <Compile Include="Android.OS\AidlProxyTests.cs" />
     <Compile Include="Android.OS\HandlerTest.cs" />
     <Compile Include="Android.Runtime\CharSequenceTest.cs" />
     <Compile Include="Android.Runtime\InputStreamInvokerTest.cs" />
@@ -197,6 +198,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AndroidInterfaceDescription Include="Android.OS\IAidlProxyTest.aidl" />
     <AndroidJavaSource Include="java/net/dot/android/test/*.java" />
     <AndroidJavaSource Update="java/net/dot/android/test/InterfaceCollectionFixture.java" Bind="false" />
   </ItemGroup>

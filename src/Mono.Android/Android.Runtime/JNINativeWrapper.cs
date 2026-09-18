@@ -54,7 +54,7 @@ namespace Android.Runtime {
 				param_types [i] = parameters [i].ParameterType;
 			}
 
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
+			// FIXME: https://github.com/dotnet/android/issues/8724
 			// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
 			#pragma warning disable IL3050
 			var dynamic = new DynamicMethod (DynamicMethodNameCounter.GetUniqueName (), ret_type, param_types, typeof (DynamicMethodNameCounter), true);

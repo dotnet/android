@@ -95,6 +95,28 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
 
+		[Test]
+		public void CoreCLRAssemblyNameWithNativeImageSuffix ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject (
+				packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "nativeimagesuffix")) {
+				IsRelease = true,
+				ProjectName = "Real.ni",
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers ([DeviceAbi]);
+			proj.SetDefaultTargetDevice ();
+			proj.SetProperty ("PublishReadyToRun", "false");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Project should have installed.");
+			StartActivityAndAssert (proj);
+		}
+
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
 		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
@@ -1124,7 +1146,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		public static Func<string, bool> CreateLineChecker (string expectedLogcatOutput)
 		{
 			// On .NET 6, `adb logcat` output may be line-wrapped in unexpected ways.
-			// https://github.com/xamarin/xamarin-android/pull/6119#issuecomment-896246633
+			// https://github.com/dotnet/android/pull/6119#issuecomment-896246633
 			// Try to see if *successive* lines match expected output
 			var remaining   = expectedLogcatOutput;
 			return line => {
@@ -2910,7 +2932,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		[Test]
 		public void MicrosoftIntune ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
-			Assert.Ignore ("https://github.com/xamarin/xamarin-android/issues/8548");
+			Assert.Ignore ("https://github.com/dotnet/android/issues/8548");
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}

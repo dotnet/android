@@ -144,12 +144,12 @@ Then update the following files:
     the `%(Hash)` metadata.  `%(IsLatestStable)` should be `true` so that it
     will be downloaded and installed.
 
-At this point, you can run `Xamarin.Android.slnx -t:Prepare` using your usual mechanism.
+At this point, you can run `Microsoft.Android.slnx -t:Prepare` using your usual mechanism.
 However, it might not download the new platform into your local Android SDK.
 
 ### Build Xamarin.Android
 
-Build `Xamarin.Android.slnx` using your usual mechanism. This will not use the new platform yet,
+Build `Microsoft.Android.slnx` using your usual mechanism. This will not use the new platform yet,
 but will build the tools like `param-name-importer` and `class-parse` that will be needed
 in the next steps.
 
@@ -262,7 +262,7 @@ cp src/Mono.Android/PublicAPI/API-36/* src/Mono.Android/PublicAPI/API-36.1
 
 ### Building the New Mono.Android
 
-- Build `Xamarin.Android.slnx` with your usual mechanism, and the new `Mono.Android.dll` should be built
+- Build `Microsoft.Android.slnx` with your usual mechanism, and the new `Mono.Android.dll` should be built
 - Read the note at the bottom of `/src/Mono.Android/metadata` that has a few lines that must be 
   copy/pasted for new API levels
 - Add required metadata fixes in `/src/Mono.Android/metadata` until `Mono.Android.csproj` builds

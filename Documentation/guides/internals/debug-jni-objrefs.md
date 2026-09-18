@@ -54,7 +54,7 @@ In particular, `adb logcat` has a `MissingMethodException` mentioning that a con
 with the signature `(IntPtr, JniHandleOwnership)` could not be found.
 
 If you see a `NotSupportedException` with
-[*anything else* as the inner exception](https://github.com/xamarin/xamarin-android/issues/7324),
+[*anything else* as the inner exception](https://github.com/dotnet/android/issues/7324),
 then this is *not* due to JNI object references, and the rest of this guide will not help you.
 You will need to examine the inner exception to determine the original cause of the exception.
 

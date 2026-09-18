@@ -917,6 +917,16 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA1036", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unsupported @(Reference) item: {0}.
+        /// </summary>
+        public static string XA1037 {
+            get {
+                return ResourceManager.GetString("XA1037", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to The &apos;{0}&apos; MSBuild property has an invalid value of &apos;{1}&apos;. A valid value is one of: {2}..
         /// </summary>

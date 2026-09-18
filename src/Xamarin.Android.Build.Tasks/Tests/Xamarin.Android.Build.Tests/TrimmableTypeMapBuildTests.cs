@@ -2079,7 +2079,6 @@ namespace Xamarin.Android.Build.Tests {
 			var packagedTypeMapEntries = helper.ListArchiveContents ("lib/", arch: AndroidTargetArch.Arm64)
 				.Where (entry => entry.StartsWith ("lib/arm64-v8a/lib__", StringComparison.Ordinal) &&
 					entry.EndsWith (".dll.so", StringComparison.Ordinal) &&
-					!entry.EndsWith (".ni.dll.so", StringComparison.Ordinal) &&
 					entry.Contains ("TypeMap", StringComparison.Ordinal))
 				.ToArray ();
 			Assert.AreEqual (
@@ -2892,7 +2891,7 @@ namespace UnnamedProject {
 			Assert.IsNotNull (explorer, $"{apkPath} should contain an {targetArch} assembly store.");
 
 			return explorer.Assemblies
-				.Where (a => !a.Ignore && a.Name.EndsWith (".dll", StringComparison.OrdinalIgnoreCase) && !a.Name.EndsWith (".ni.dll", StringComparison.OrdinalIgnoreCase))
+				.Where (a => !a.Ignore && a.Name.EndsWith (".dll", StringComparison.OrdinalIgnoreCase))
 				.Select (a => a.Name)
 				.ToHashSet (StringComparer.Ordinal);
 		}
