@@ -15,10 +15,15 @@
 
   <ItemGroup>
     <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\MockBuildEngine.cs" Link="MockBuildEngine.cs" />
+    <Compile Include="..\..\..\..\tests\Microsoft.Android.Run-Tests\ProcessTestUtilities.cs" Link="ProcessTestUtilities.cs" />
+    <Compile Include="..\..\..\..\tests\Microsoft.Android.Run-Tests\ManagedLaunchTestState.cs" Link="ManagedLaunchTestState.cs" />
+    <Compile Include="..\..\..\..\tests\Microsoft.Android.Run-Tests\ManagedLaunchTestServer.cs" Link="ManagedLaunchTestServer.cs" />
+    <Content Include="..\..\..\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.Application.targets" Link="Microsoft.Android.Sdk.Application.targets" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Microsoft.Android.Build.Tasks.csproj" />
+    <ProjectReference Include="..\..\..\Xamarin.Android.Build.Debugging.Tasks\Xamarin.Android.Build.Debugging.Tasks.csproj" />
     <ProjectReference Include="..\..\..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj">
       <Aliases>xamarinbuildtasks</Aliases>
     </ProjectReference>

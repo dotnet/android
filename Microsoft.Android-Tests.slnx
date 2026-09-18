@@ -28,6 +28,8 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Android.Benchmarks/Android.Benchmarks.csproj" />
+    <Project Path="tests/Microsoft.Android.Run-Tests/ManagedLaunchTestAdbProxy/ManagedLaunchTestAdbProxy.csproj" />
+    <Project Path="tests/Microsoft.Android.Run-Tests/Microsoft.Android.Run-Tests.csproj" />
     <Project Path="tests/StartupHook/StartupHook.csproj" />
   </Folder>
   <Folder Name="/tests/Mono.Android-Tests/" />
