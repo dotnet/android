@@ -1,17 +1,19 @@
+extern alias xamarinbuildtasks;
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
-using Xamarin.Android.Tasks;
-using Xamarin.Android.Tasks.LLVMIR;
+using xamarinbuildtasks::Xamarin.Android.Tasks.LLVMIR;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Build.Tests.Tasks;
+namespace Xamarin.Android.Build.Tests;
 
 [TestFixture]
 public class ExtractTypeMapKeysFromLlvmIrTests
