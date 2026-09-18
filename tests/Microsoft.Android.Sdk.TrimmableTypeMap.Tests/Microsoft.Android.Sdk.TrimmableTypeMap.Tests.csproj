@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tasks\ExtractTypeMapKeysFromAssemblies.cs" Link="Tasks\ExtractTypeMapKeysFromAssemblies.cs" />
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tasks\ExtractTypeMapKeysFromDgml.cs" Link="Tasks\ExtractTypeMapKeysFromDgml.cs" />
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tasks\ExtractTypeMapKeysFromLlvmIr.cs" Link="Tasks\ExtractTypeMapKeysFromLlvmIr.cs" />
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tasks\GenerateTypeMapProguardConfiguration.cs" Link="Tasks\GenerateTypeMapProguardConfiguration.cs" />
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\MetadataExtensions.cs" Link="Tasks\MetadataExtensions.cs" />
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\NullableExtensions.cs" Link="Tasks\NullableExtensions.cs" />

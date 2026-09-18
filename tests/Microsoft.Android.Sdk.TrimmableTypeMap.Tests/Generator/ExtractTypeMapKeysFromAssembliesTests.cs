@@ -79,14 +79,8 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 	[InlineData ("test/A[123]", "test/A")]
 	[InlineData ("test/A[000]", "test/A")]
 	[InlineData ("test/A[9999999999999999999999999999999]", "test/A")]
-	[InlineData ("test/A[]", "test/A[]")]
-	[InlineData ("test/A[-1]", "test/A[-1]")]
-	[InlineData ("test/A[1x]", "test/A[1x]")]
-	[InlineData ("test/A[1]Extra", "test/A[1]Extra")]
-	[InlineData ("test/A[1", "test/A[1")]
-	[InlineData ("test/A[", "test/A[")]
-	[InlineData ("[0]", "[0]")]
-	[InlineData ("test/A[\u0661]", "test/A[\u0661]")]
+	[InlineData ("test/Outer$Inner[2]", "test/Outer$Inner")]
+	[InlineData ("test/\u2160[1]", "test/\u2160")]
 	public void NormalizesOnlyFinalNonemptyAsciiDecimalAlias (string key, string expected)
 	{
 		var (task, _) = CreateTask (Emit ("Map", Entry (key)));
@@ -97,21 +91,26 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 	[Fact]
 	public void EmptyStubsAndOrdinaryManagedAssembliesContributeNoKeys ()
 	{
-		var pe = new PEAssemblyBuilder (RuntimeVersion);
-		pe.EmitPreamble ("Stub", "Stub.dll");
-		string stub = Path.Combine (directory, "Stub.dll");
-		using (var stream = File.Create (stub)) {
-			pe.WritePE (stream);
-		}
-		var (task, _) = CreateTask (stub, typeof (ExtractTypeMapKeysFromAssembliesTests).Assembly.Location);
+		string stub = EmitStub ("Stub");
+		string fixtures = Path.Combine (AppContext.BaseDirectory, "TestFixtures.dll");
+		var (task, _) = CreateTask (stub, fixtures);
 		Assert.True (task.Execute ());
 		Assert.Empty (File.ReadAllBytes (task.OutputFile));
 
 		task.LinkedAssemblies = [new TaskItem (Emit ("Map", Entry ("test/Present")))];
 		Assert.True (task.Execute ());
-		task.LinkedAssemblies = [];
+		task.LinkedAssemblies = [new TaskItem (stub)];
 		Assert.True (task.Execute ());
 		Assert.Empty (File.ReadAllBytes (task.OutputFile));
+	}
+
+	[Fact]
+	public void MissingAssemblyInputsFail ()
+	{
+		var (task, engine) = CreateTask ();
+		Assert.False (task.Execute ());
+		Assert.Contains (engine.Errors, e => e.Code == "XA4327");
+		Assert.False (File.Exists (task.OutputFile));
 	}
 
 	[Fact]
@@ -142,12 +141,15 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 	[Theory]
 	[InlineData ("missing")]
 	[InlineData ("malformed")]
+	[InlineData ("zero-byte")]
 	[InlineData ("directory")]
 	public void BadRequiredAssemblyFailsWithoutWritingOutput (string kind)
 	{
 		string path = Path.Combine (directory, "bad.dll");
 		if (kind == "malformed") {
 			File.WriteAllBytes (path, [1, 2, 3]);
+		} else if (kind == "zero-byte") {
+			File.WriteAllBytes (path, []);
 		} else if (kind == "directory") {
 			Directory.CreateDirectory (path);
 		}
@@ -162,9 +164,43 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 	[InlineData ("test/Invalid\nName")]
 	[InlineData ("test/Invalid\rName")]
 	[InlineData ("test/Invalid\0Name")]
+	[InlineData ("test/A[]")]
+	[InlineData ("test/A[-1]")]
+	[InlineData ("test/A[1x]")]
+	[InlineData ("test/A[1]Extra")]
+	[InlineData ("test/A[1")]
+	[InlineData ("test/A[")]
+	[InlineData ("[0]")]
+	[InlineData ("test/A[\u0661]")]
+	[InlineData ("test/A[1][2]")]
+	[InlineData ("test.Invalid")]
+	[InlineData ("test/*")]
+	[InlineData ("test/")]
+	[InlineData ("/test")]
+	[InlineData ("test//Invalid")]
+	[InlineData ("test/Invalid\u200bName")]
 	public void InvalidKeyFails (string key)
 	{
 		var (task, engine) = CreateTask (Emit ("Map", Entry (key)));
+		Assert.False (task.Execute ());
+		Assert.Contains (engine.Errors, e => e.Code == "XA4327");
+	}
+
+	[Fact]
+	public void NetmoduleIsNotAValidAssemblyInput ()
+	{
+		var metadata = new MetadataBuilder ();
+		metadata.AddModule (0, metadata.GetOrAddString ("Invalid.netmodule"), metadata.GetOrAddGuid (Guid.NewGuid ()), default, default);
+		metadata.AddTypeDefinition (default, default, metadata.GetOrAddString ("<Module>"), default,
+			MetadataTokens.FieldDefinitionHandle (1), MetadataTokens.MethodDefinitionHandle (1));
+		var image = new BlobBuilder ();
+		new ManagedPEBuilder (new PEHeaderBuilder (imageCharacteristics: Characteristics.Dll),
+			new MetadataRootBuilder (metadata), new BlobBuilder ()).Serialize (image);
+		string path = Path.Combine (directory, "Invalid.netmodule");
+		using (var stream = File.Create (path)) {
+			image.WriteContentTo (stream);
+		}
+		var (task, engine) = CreateTask (path);
 		Assert.False (task.Execute ());
 		Assert.Contains (engine.Errors, e => e.Code == "XA4327");
 	}
@@ -178,9 +214,93 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 		Assert.Contains (engine.Errors, e => e.Code == "XA4327");
 	}
 
+	[Theory]
+	[InlineData ("prolog")]
+	[InlineData ("null-key")]
+	[InlineData ("null-type")]
+	[InlineData ("missing-type")]
+	[InlineData ("named-arguments")]
+	[InlineData ("trailing-bytes")]
+	[InlineData ("argument-count")]
+	[InlineData ("key-type")]
+	[InlineData ("type-parameter")]
+	[InlineData ("static-method")]
+	[InlineData ("method-name")]
+	public void MalformedTypeMapAttributeFails (string defect)
+	{
+		var (task, engine) = CreateTask (EmitAttribute (defect));
+		Assert.False (task.Execute ());
+		Assert.Contains (engine.Errors, e => e.Code == "XA4327");
+		Assert.False (File.Exists (task.OutputFile));
+	}
+
+	[Theory]
+	[InlineData ("type-attribute")]
+	[InlineData ("other-namespace")]
+	public void OnlyAssemblyTypeMapAttributesAreEntries (string kind)
+	{
+		var (task, _) = CreateTask (EmitAttribute (kind));
+		Assert.True (task.Execute ());
+		Assert.Empty (File.ReadAllBytes (task.OutputFile));
+	}
+
+	string EmitAttribute (string kind)
+	{
+		var pe = new PEAssemblyBuilder (RuntimeVersion);
+		pe.EmitPreamble ("Attributes", "Attributes.dll");
+		var metadata = pe.Metadata;
+		var systemType = metadata.AddTypeReference (pe.SystemRuntimeRef,
+			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Type"));
+		var openAttribute = metadata.AddTypeReference (pe.SystemRuntimeInteropServicesRef,
+			metadata.GetOrAddString (kind == "other-namespace" ? "Unrelated" : "System.Runtime.InteropServices"),
+			metadata.GetOrAddString ("TypeMapAttribute`1"));
+		var attributeType = pe.MakeGenericTypeSpec (openAttribute, systemType);
+		var constructor = pe.AddMemberRef (attributeType, kind == "method-name" ? "NotAConstructor" : ".ctor", s =>
+			s.MethodSignature (isInstanceMethod: kind != "static-method").Parameters (kind == "argument-count" ? 1 : 2,
+				r => r.Void (), p => {
+					if (kind == "key-type") {
+						p.AddParameter ().Type ().Int32 ();
+					} else {
+						p.AddParameter ().Type ().String ();
+					}
+					if (kind != "argument-count") {
+						if (kind == "type-parameter") {
+							p.AddParameter ().Type ().String ();
+						} else {
+							p.AddParameter ().Type ().Type (systemType, isValueType: false);
+						}
+					}
+				}));
+		var value = new BlobBuilder ();
+		value.WriteUInt16 ((ushort) (kind == "prolog" ? 2 : 1));
+		value.WriteSerializedString (kind == "null-key" ? null : "test/Key");
+		if (kind != "missing-type") {
+			value.WriteSerializedString (kind == "null-type" ? null : "System.Object, System.Runtime");
+		}
+		value.WriteUInt16 ((ushort) (kind == "named-arguments" ? 1 : 0));
+		if (kind == "trailing-bytes") {
+			value.WriteByte (42);
+		}
+		EntityHandle parent = EntityHandle.AssemblyDefinition;
+		if (kind == "type-attribute") {
+			parent = metadata.AddTypeDefinition (TypeAttributes.Public, default, metadata.GetOrAddString ("NotAnAssembly"),
+				default, MetadataTokens.FieldDefinitionHandle (1), MetadataTokens.MethodDefinitionHandle (1));
+		}
+		metadata.AddCustomAttribute (parent, constructor, metadata.GetOrAddBlob (value));
+		string path = Path.Combine (directory, "Attributes.dll");
+		using var stream = File.Create (path);
+		pe.WritePE (stream);
+		return path;
+	}
+
 	[Fact]
 	public async Task RealILLinkRetainsOnlyLiveTypeMapAttributes ()
 	{
+		// The emitter references these assemblies in unused MemberRefs even when the
+		// fixture contains no Android proxy IL. Resolve them without skipping errors.
+		EmitStub ("Mono.Android");
+		EmitStub ("Java.Interop");
+		EmitStub ("Mono.Android.Runtime");
 		EmitTargets ();
 		string input = Emit ("_Bindings.TypeMap",
 			Entry ("test/Unconditional"),
@@ -216,6 +336,14 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 			keys.Add (blob.ReadSerializedString () ?? throw new InvalidOperationException ());
 		}
 		Assert.Equal (new [] { "test/Alias[0]", "test/Surviving", "test/Unconditional" }, keys.OrderBy (k => k, StringComparer.Ordinal));
+	}
+
+	string EmitStub (string name)
+	{
+		string path = Path.Combine (directory, name + ".dll");
+		using var stream = File.Create (path);
+		new TypeMapAssemblyGenerator (RuntimeVersion).GenerateEmpty (stream, name);
+		return path;
 	}
 
 	void EmitTargets ()
@@ -284,7 +412,7 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 		foreach (string arg in new [] {
 			"exec", "--fx-version", Path.GetFileName (runtimeDirectory), linker,
 			"-a", Path.GetFileNameWithoutExtension (root), "-reference", root, "-d", directory, "-d", runtimeDirectory, "-out", output,
-			"--typemap-entry-assembly", "Root", "--skip-unresolved", "true",
+			"--typemap-entry-assembly", "Root", "--skip-unresolved", "false",
 		}) {
 			start.ArgumentList.Add (arg);
 		}

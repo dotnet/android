@@ -23,6 +23,11 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
+			if (LinkedAssemblies.Length == 0) {
+				Log.LogCodedError ("XA4327", Properties.Resources.XA4327, nameof (LinkedAssemblies), "No linked assemblies were supplied.");
+				return false;
+			}
+
 			var keys = new SortedSet<string> (StringComparer.Ordinal);
 			foreach (var assembly in LinkedAssemblies) {
 				try {
@@ -57,7 +62,13 @@ namespace Xamarin.Android.Tasks
 		{
 			using var stream = File.OpenRead (assemblyPath);
 			using var pe = new PEReader (stream);
+			if (!pe.HasMetadata) {
+				throw new BadImageFormatException ("The input has no managed metadata.");
+			}
 			var reader = pe.GetMetadataReader ();
+			if (!reader.IsAssembly) {
+				throw new BadImageFormatException ("The input is not a managed assembly.");
+			}
 
 			// ILLink preserves the surviving TypeMap attributes, including their conditional
 			// target argument. Alias arrays and Register attributes are not the linked map.
@@ -73,7 +84,7 @@ namespace Xamarin.Android.Tasks
 					throw new BadImageFormatException ("Invalid TypeMap attribute prolog.");
 				}
 				string? key = blob.ReadSerializedString ();
-				if (key.IsNullOrEmpty () || key.IndexOfAny (new [] { '\r', '\n', '\0' }) >= 0) {
+				if (key.IsNullOrEmpty ()) {
 					throw new BadImageFormatException ("Invalid TypeMap key.");
 				}
 				for (int i = 1; i < argumentCount; i++) {
@@ -85,22 +96,31 @@ namespace Xamarin.Android.Tasks
 					throw new BadImageFormatException ("Invalid TypeMap attribute arguments.");
 				}
 
-				keys.Add (NormalizeKey (key));
+				key = NormalizeKey (key);
+				if (!GenerateTypeMapProguardConfiguration.IsClassName (key)) {
+					throw new BadImageFormatException ($"Invalid TypeMap class name '{key}'.");
+				}
+				keys.Add (key);
 			}
 		}
 
 		static int GetArgumentCount (MetadataReader reader, CustomAttribute attribute)
 		{
 			BlobHandle signature;
+			StringHandle constructorName;
 			if (attribute.Constructor.Kind == HandleKind.MemberReference) {
-				signature = reader.GetMemberReference ((MemberReferenceHandle) attribute.Constructor).Signature;
+				var constructor = reader.GetMemberReference ((MemberReferenceHandle) attribute.Constructor);
+				signature = constructor.Signature;
+				constructorName = constructor.Name;
 			} else {
-				signature = reader.GetMethodDefinition ((MethodDefinitionHandle) attribute.Constructor).Signature;
+				var constructor = reader.GetMethodDefinition ((MethodDefinitionHandle) attribute.Constructor);
+				signature = constructor.Signature;
+				constructorName = constructor.Name;
 			}
 			var blob = reader.GetBlobReader (signature);
 			var header = blob.ReadSignatureHeader ();
 			int count = blob.ReadCompressedInteger ();
-			if (header.Kind != SignatureKind.Method || !header.IsInstance || header.IsGeneric ||
+			if (reader.GetString (constructorName) != ".ctor" || header.Kind != SignatureKind.Method || !header.IsInstance || header.IsGeneric ||
 			    (count != 2 && count != 3) || blob.ReadSignatureTypeCode () != SignatureTypeCode.Void ||
 			    blob.ReadSignatureTypeCode () != SignatureTypeCode.String) {
 				throw new BadImageFormatException ("Invalid TypeMap constructor signature.");
