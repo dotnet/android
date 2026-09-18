@@ -242,7 +242,7 @@ namespace Java.InteropTests
 		[Category ("TrimmableTypeMapUnsupported")]
 		public void ReplacedStaticFieldRetainsTargetOwner ()
 		{
-			Assert.AreEqual (Math.PI, JavaLangRemappingTestObject.remappedStaticPi ());
+			Assert.AreEqual (global::System.Math.PI, JavaLangRemappingTestObject.remappedStaticPi ());
 		}
 
 		[Test]

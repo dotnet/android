@@ -2,6 +2,7 @@
 
 using System;
 using System.Buffers;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -83,9 +84,11 @@ static class JniRemappingLookup
 
 	static unsafe NativeJniRemappingData* nativeData;
 	static bool isInUse;
+	static readonly ConcurrentDictionary<string, string> reverseTypes = new (StringComparer.Ordinal);
 
 	internal static unsafe void Initialize (IntPtr data)
 	{
+		reverseTypes.Clear ();
 		if (data == IntPtr.Zero) {
 			isInUse = false;
 			return;
@@ -148,6 +151,12 @@ static class JniRemappingLookup
 		if (jniSimpleReference is null || !isInUse || jniSimpleReference.Length == 0)
 			return null;
 
+		string replacement = reverseTypes.GetOrAdd (jniSimpleReference, static source => LookupReverseType (source));
+		return string.Equals (replacement, jniSimpleReference, StringComparison.Ordinal) ? null : replacement;
+	}
+
+	static unsafe string LookupReverseType (string jniSimpleReference)
+	{
 		NativeJniRemappingData* data = nativeData;
 		if (data == null)
 			throw new InvalidOperationException ("JNI remapping data has not been initialized.");
@@ -156,7 +165,9 @@ static class JniRemappingLookup
 			data->reverse_type_replacements,
 			data->reverse_type_replacement_count,
 			jniSimpleReference);
-		return replacement == null ? null : Marshal.PtrToStringUTF8 ((IntPtr)replacement);
+		return replacement == null
+			? jniSimpleReference
+			: Marshal.PtrToStringUTF8 ((IntPtr)replacement) ?? jniSimpleReference;
 	}
 
 	internal static JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (string jniSourceType, string jniMethodName, string jniMethodSignature)
