@@ -63,7 +63,7 @@ public class GenerateTypeMapProguardConfiguration : AndroidTask
 		return !Log.HasLoggedErrors;
 	}
 
-	static bool IsClassName (string name)
+	internal static bool IsClassName (string name)
 	{
 		bool first = true;
 		for (int i = 0; i < name.Length; i++) {
