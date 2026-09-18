@@ -68,6 +68,12 @@ namespace Xamarin.Android.Build.Tests {
 			var dex = Path.Combine (intermediate, "android", "bin", "classes.dex");
 			Assert.IsTrue (DexUtils.ContainsClass ($"L{live};", dex, AndroidSdkPath), "Live class names must not be obfuscated.");
 			Assert.IsFalse (DexUtils.ContainsClass ($"L{dead};", dex, AndroidSdkPath), "Dead wrappers must not be rooted by runtime package rules.");
+			using (var metadata = JsonDocument.Parse (File.ReadAllText (Path.Combine (intermediate, "r8.json")))) {
+				var options = metadata.RootElement.GetProperty ("options");
+				Assert.IsTrue (options.GetProperty ("isShrinkingEnabled").GetBoolean ());
+				Assert.IsFalse (options.GetProperty ("isObfuscationEnabled").GetBoolean ());
+				Assert.AreEqual (runtime == AndroidRuntime.CoreCLR, options.GetProperty ("isOptimizationsEnabled").GetBoolean ());
+			}
 
 			Assert.IsTrue (builder.Build (proj));
 			builder.Output.AssertTargetIsSkipped ("_AndroidExtractTypeMapKeys");

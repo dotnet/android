@@ -86,6 +86,10 @@ and keeps all ACW classes.
 
 This pipeline disables all obfuscation, including private-member
 obfuscation, with both `-dontobfuscate` and R8's `--no-minification` option.
+CoreCLR uses `proguard-android-optimize.txt` so optimization remains enabled
+independently of obfuscation. Its JNI class/member keep rules still protect
+the names and signatures required by managed code. NativeAOT retains its
+existing non-optimizing defaults.
 MonoVM, nonshrinking/multidex-only builds, and the existing complete
 `ProguardConfigFiles` override keep their previous behavior.
 

@@ -103,7 +103,8 @@ public class ScopedTypeMapR8Tests : DeviceTest
 			var projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
 			var dexFiles = Directory.GetFiles (Path.Combine (projectDirectory, proj.IntermediateOutputPath), "classes*.dex", SearchOption.AllDirectories);
 			Assert.IsNotEmpty (dexFiles);
-			Assert.IsTrue (dexFiles.Any (dex => DexUtils.ContainsClassWithMethod ("Lexample/Helper;", "used", "()I", dex, AndroidSdkPath)));
+			Assert.IsTrue (dexFiles.Any (dex => DexUtils.ContainsClassWithMethod ("Lexample/ScopedPeer;", "keptMethod", "()I", dex, AndroidSdkPath)),
+				"The JNI entry point must survive, even when R8 inlines its Java-only helper.");
 			Assert.IsFalse (dexFiles.Any (dex => DexUtils.ContainsClassWithMethod ("Lexample/Helper;", "unused", "()I", dex, AndroidSdkPath)),
 				"Preserving JNI-facing peers must not keep unused members of Java-only dependencies.");
 			Assert.IsFalse (dexFiles.Any (dex => DexUtils.ContainsClass ("Lexample/UnusedDependency;", dex, AndroidSdkPath)));

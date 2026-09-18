@@ -2031,8 +2031,8 @@ because xbuild doesn't support framework reference assemblies.
     <_ProguardConfiguration Include="$(ProguardConfigFiles)" />
   </ItemGroup>
   <ItemGroup Condition=" '$(ProguardConfigFiles)' == '' ">
-    <_ProguardConfiguration Include="$(MSBuildThisFileDirectory)proguard-android.txt"          Condition=" '$(AndroidR8ObfuscationMode)' == 'disabled' or '$(_AndroidUseTypeMapProguardConfiguration)' == 'true' " />
-    <_ProguardConfiguration Include="$(MSBuildThisFileDirectory)proguard-android-optimize.txt" Condition=" '$(AndroidR8ObfuscationMode)' != 'disabled' and '$(_AndroidUseTypeMapProguardConfiguration)' != 'true' " />
+    <_ProguardConfiguration Include="$(MSBuildThisFileDirectory)proguard-android.txt"          Condition=" ('$(AndroidR8ObfuscationMode)' == 'disabled' or '$(_AndroidUseTypeMapProguardConfiguration)' == 'true') and !('$(_AndroidUseTypeMapProguardConfiguration)' == 'true' and '$(_AndroidRuntime)' == 'CoreCLR') " />
+    <_ProguardConfiguration Include="$(MSBuildThisFileDirectory)proguard-android-optimize.txt" Condition=" ('$(AndroidR8ObfuscationMode)' != 'disabled' and '$(_AndroidUseTypeMapProguardConfiguration)' != 'true') or ('$(_AndroidUseTypeMapProguardConfiguration)' == 'true' and '$(_AndroidRuntime)' == 'CoreCLR') " />
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"         Condition=" '$(AndroidLinkTool)' != '' " />
     <_ProguardConfiguration Include="$(_ProguardProjectConfiguration)"                               Condition=" '$(AndroidLinkTool)' != '' " />
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg" Condition=" '$(AndroidLinkTool)' != '' " />
