@@ -29,7 +29,7 @@
        ILC object/output paths. The final mapping path is absolute and shared by every RID. -->
   <Target Name="_AndroidLinkNativeAotAfterR8"
       AfterTargets="_CompileToDalvik"
-      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_OuterIntermediateOutputPath)' == '' and '$(DesignTimeBuild)' != 'true' "
+      Condition=" '$(MSBuildLastTaskResult)' == 'true' and '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_OuterIntermediateOutputPath)' == '' and '$(DesignTimeBuild)' != 'true' "
       DependsOnTargets="_ResolveAssemblies">
     <MSBuild
         Projects="@(_ProjectToBuild)"
