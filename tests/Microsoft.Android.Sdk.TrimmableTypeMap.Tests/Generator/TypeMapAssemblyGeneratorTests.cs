@@ -98,6 +98,35 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_ExportWithoutXmlMarshalling_DoesNotReferenceSystemXml ()
+	{
+		var peer = ScanFixtures ().Single (p => p.JavaName == "my/app/ExportExample");
+		using var stream = GenerateAssembly (new [] { peer });
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var asmRefs = reader.AssemblyReferences
+			.Select (h => reader.GetString (reader.GetAssemblyReference (h).Name))
+			.ToList ();
+
+		Assert.DoesNotContain ("System.Xml.ReaderWriter", asmRefs);
+		Assert.DoesNotContain ("System.Private.Xml", asmRefs);
+	}
+
+	[Fact]
+	public void Generate_ExportWithXmlMarshalling_ReferencesSystemXml ()
+	{
+		var peer = ScanFixtures ().Single (p => p.JavaName == "my/app/ExportMarshallingShapes");
+		using var stream = GenerateAssembly (new [] { peer });
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var asmRefs = reader.AssemblyReferences
+			.Select (h => reader.GetString (reader.GetAssemblyReference (h).Name))
+			.ToList ();
+
+		Assert.Contains ("System.Xml.ReaderWriter", asmRefs);
+	}
+
+	[Fact]
 	public void Generate_InheritedGenericBaseCallback_UsesValueTypeGenericArgument ()
 	{
 		var peer = ScanFixtures ().Single (p => p.JavaName == "my/app/EnumSelectableList");
