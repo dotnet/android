@@ -183,6 +183,10 @@ public class ExtractTypeMapKeysFromDgml : AndroidTask
 			}
 
 			if (!label.StartsWith (TypeMetadataPrefix, StringComparison.Ordinal)) {
+				// ILC renders built-in types as keywords, not assembly-qualified ACW identities.
+				if (IsIntrinsicTypeMetadata (label)) {
+					continue;
+				}
 				throw new XmlException ($"Invalid NativeAOT type metadata label '{label}'.");
 			}
 			var assemblyStart = TypeMetadataPrefix.Length;
@@ -199,4 +203,23 @@ public class ExtractTypeMapKeysFromDgml : AndroidTask
 			typeKeys.Add ($"{managedTypeName}, {assemblyName}");
 		}
 	}
+
+	static bool IsIntrinsicTypeMetadata (string label) => label is
+		"Type metadata: void" or
+		"Type metadata: bool" or
+		"Type metadata: char" or
+		"Type metadata: int8" or
+		"Type metadata: uint8" or
+		"Type metadata: int16" or
+		"Type metadata: uint16" or
+		"Type metadata: int32" or
+		"Type metadata: uint32" or
+		"Type metadata: int64" or
+		"Type metadata: uint64" or
+		"Type metadata: native int" or
+		"Type metadata: native uint" or
+		"Type metadata: float32" or
+		"Type metadata: float64" or
+		"Type metadata: string" or
+		"Type metadata: object";
 }

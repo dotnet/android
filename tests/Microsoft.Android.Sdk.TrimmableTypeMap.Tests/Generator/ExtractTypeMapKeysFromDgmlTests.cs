@@ -287,6 +287,38 @@ public class ExtractTypeMapKeysFromDgmlTests : IDisposable
 	}
 
 	[Theory]
+	[InlineData ("void")]
+	[InlineData ("bool")]
+	[InlineData ("char")]
+	[InlineData ("int8")]
+	[InlineData ("uint8")]
+	[InlineData ("int16")]
+	[InlineData ("uint16")]
+	[InlineData ("int32")]
+	[InlineData ("uint32")]
+	[InlineData ("int64")]
+	[InlineData ("uint64")]
+	[InlineData ("native int")]
+	[InlineData ("native uint")]
+	[InlineData ("float32")]
+	[InlineData ("float64")]
+	[InlineData ("string")]
+	[InlineData ("object")]
+	public void Execute_IgnoresIntrinsicTypeMetadata (string type)
+	{
+		var (task, errors) = CreateTask ("Example.Type, App;example.Type", true,
+			$"""
+			<DirectedGraph><Nodes>
+			  <Node Label="Type metadata: {type}" />
+			  <Node Label="Type metadata: [App]Example.Type" />
+			</Nodes></DirectedGraph>
+			""");
+		Assert.True (task.Execute ());
+		Assert.Empty (errors);
+		Assert.Equal ("example/Type\n", File.ReadAllText (task.OutputFile));
+	}
+
+	[Theory]
 	[InlineData ("Type metadata: [App")]
 	[InlineData ("Type metadata: []Example.Type")]
 	[InlineData ("Type metadata: [App]")]
