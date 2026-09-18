@@ -55,6 +55,26 @@
       <Link>..\Expected\CheckPackageManagerAssemblyOrder.java</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(XamarinAndroidSourcePath)src\native\common\include\shared\runtime-jni-names.hh">
+      <Link>RuntimeJniAudit\runtime-jni-names.hh</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(XamarinAndroidSourcePath)src\java-runtime\java\mono\android\Runtime.java">
+      <Link>RuntimeJniAudit\Runtime.java</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(XamarinAndroidSourcePath)src\native\clr\**\*.cc">
+      <Link>RuntimeJniAudit\Native\CoreCLR\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(XamarinAndroidSourcePath)src\native\nativeaot\**\*.cc">
+      <Link>RuntimeJniAudit\Native\NativeAOT\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(XamarinAndroidSourcePath)external\Java.Interop\src\Java.Interop\Java.Interop\ManagedPeer.cs;$(XamarinAndroidSourcePath)external\Java.Interop\src\Java.Interop\Java.Interop\JavaProxyObject.cs;$(XamarinAndroidSourcePath)external\Java.Interop\src\Java.Interop\Java.Interop\JavaProxyThrowable.cs">
+      <Link>RuntimeJniAudit\Java.Interop\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
