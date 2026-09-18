@@ -55,12 +55,9 @@ namespace Java.IO {
 			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
-			try {
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
-			} finally {
-			}
+			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
 		}
 
 		static Delegate cb_available_Available_I;
@@ -88,11 +85,8 @@ namespace Java.IO {
 		public virtual unsafe int Available ()
 		{
 			const string __id = "available.()I";
-			try {
-				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
-				return __rm;
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+			return __rm;
 		}
 
 		static Delegate cb_close_Close_V;
@@ -120,10 +114,7 @@ namespace Java.IO {
 		public virtual unsafe void Close ()
 		{
 			const string __id = "close.()V";
-			try {
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 		}
 
 		static Delegate cb_mark_Mark_I_V;
@@ -151,12 +142,9 @@ namespace Java.IO {
 		public virtual unsafe void Mark (int readlimit)
 		{
 			const string __id = "mark.(I)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (readlimit);
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (readlimit);
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 		}
 
 		static Delegate cb_markSupported_MarkSupported_Z;
@@ -184,11 +172,8 @@ namespace Java.IO {
 		public virtual unsafe bool MarkSupported ()
 		{
 			const string __id = "markSupported.()Z";
-			try {
-				var __rm = _members.InstanceMethods.InvokeVirtualBooleanMethod (__id, this, null);
-				return __rm;
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeVirtualBooleanMethod (__id, this, null);
+			return __rm;
 		}
 
 		static Delegate cb_read_Read_I;
@@ -330,10 +315,7 @@ namespace Java.IO {
 		public virtual unsafe void Reset ()
 		{
 			const string __id = "reset.()V";
-			try {
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 		}
 
 		static Delegate cb_skip_Skip_J_J;
@@ -361,13 +343,10 @@ namespace Java.IO {
 		public virtual unsafe long Skip (long byteCount)
 		{
 			const string __id = "skip.(J)J";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (byteCount);
-				var __rm = _members.InstanceMethods.InvokeVirtualInt64Method (__id, this, __args);
-				return __rm;
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (byteCount);
+			var __rm = _members.InstanceMethods.InvokeVirtualInt64Method (__id, this, __args);
+			return __rm;
 		}
 
 	}
@@ -397,11 +376,8 @@ namespace Java.IO {
 		public override unsafe int Read ()
 		{
 			const string __id = "read.()I";
-			try {
-				var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
-				return __rm;
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
+			return __rm;
 		}
 
 	}

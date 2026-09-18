@@ -74,14 +74,12 @@ namespace Android.Text {
 		public virtual unsafe global::Android.Text.SpanTypes GetSpanFlags (global::Java.Lang.Object p0)
 		{
 			const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((p0 == null) ? IntPtr.Zero : ((global::Java.Lang.Object) p0).Handle);
-				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
-				return (global::Android.Text.SpanTypes) __rm;
-			} finally {
-				global::System.GC.KeepAlive (p0);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue ((p0 == null) ? IntPtr.Zero : ((global::Java.Lang.Object) p0).Handle);
+			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
+			var __result = (global::Android.Text.SpanTypes) __rm;
+			global::System.GC.KeepAlive (p0);
+			return __result;
 		}
 
 	}

@@ -16,11 +16,8 @@ public partial class MyClass {
 		[Register ("get_UIntProp", "()[I", "")]
 		get {
 			const string __id = "get_UIntProp.()[I";
-			try {
-				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
-				return (uint[]) JNIEnv.GetArray (__rm.Handle, JniHandleOwnership.TransferLocalRef, typeof (uint));
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+			return (uint[]) JNIEnv.GetArray (__rm.Handle, JniHandleOwnership.TransferLocalRef, typeof (uint));
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_UIntProp' and count(parameter)=1 and parameter[1][@type='uint[]']]"
 		[Register ("set_UIntProp", "([I)V", "")]
@@ -46,11 +43,8 @@ public partial class MyClass {
 		[Register ("get_UShortProp", "()[S", "")]
 		get {
 			const string __id = "get_UShortProp.()[S";
-			try {
-				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
-				return (ushort[]) JNIEnv.GetArray (__rm.Handle, JniHandleOwnership.TransferLocalRef, typeof (ushort));
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+			return (ushort[]) JNIEnv.GetArray (__rm.Handle, JniHandleOwnership.TransferLocalRef, typeof (ushort));
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_UShortProp' and count(parameter)=1 and parameter[1][@type='ushort[]']]"
 		[Register ("set_UShortProp", "([S)V", "")]
@@ -76,11 +70,8 @@ public partial class MyClass {
 		[Register ("get_ULongProp", "()[J", "")]
 		get {
 			const string __id = "get_ULongProp.()[J";
-			try {
-				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
-				return (ulong[]) JNIEnv.GetArray (__rm.Handle, JniHandleOwnership.TransferLocalRef, typeof (ulong));
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+			return (ulong[]) JNIEnv.GetArray (__rm.Handle, JniHandleOwnership.TransferLocalRef, typeof (ulong));
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_ULongProp' and count(parameter)=1 and parameter[1][@type='ulong[]']]"
 		[Register ("set_ULongProp", "([J)V", "")]
@@ -106,11 +97,8 @@ public partial class MyClass {
 		[Register ("get_UByteProp", "()[B", "")]
 		get {
 			const string __id = "get_UByteProp.()[B";
-			try {
-				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
-				return (byte[]) JNIEnv.GetArray (__rm.Handle, JniHandleOwnership.TransferLocalRef, typeof (byte));
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+			return (byte[]) JNIEnv.GetArray (__rm.Handle, JniHandleOwnership.TransferLocalRef, typeof (byte));
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_UByteProp' and count(parameter)=1 and parameter[1][@type='ubyte[]']]"
 		[Register ("set_UByteProp", "([B)V", "")]
