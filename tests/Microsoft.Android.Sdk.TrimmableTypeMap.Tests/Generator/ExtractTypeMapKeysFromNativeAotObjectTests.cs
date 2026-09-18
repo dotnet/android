@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Microsoft.Android.Tasks;
@@ -47,7 +48,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 	}
 
 	[Fact]
-	public void ExtractsOnlySymbolPayloadAndUnionsEveryGroupAndObject ()
+	public void ExtractsOnlySymbolPayloadAndUnionsEveryJavaGroupAndObject ()
 	{
 		string arm64 = WriteObject ("arm64", NativeAotObjectTestFixture.CreateGroups (
 			["test/Zebra", "test/Outer$Inner", "test/Alias[0]", "test/\u00e9clair"],
@@ -132,6 +133,175 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		Assert.Empty (engine.Errors);
 		Assert.True (File.Exists (task.OutputFile));
 		Assert.Empty (File.ReadAllBytes (task.OutputFile));
+	}
+
+	[Fact]
+	public void SelectsJavaGroupsByFixupsRatherThanKeyAppearance ()
+	{
+		string path = WriteObject ("mixed-universes", NativeAotObjectTestFixture.CreateGroups (
+			["System.Collections.Generic.IDictionary`2[System.Char,System.Int32]", "foreign/LooksLikeJava"],
+			["test/Shared", "test/Alias[0]"],
+			["test/PerAssembly", "test/Alias[1]"]));
+		var (task, engine) = CreateTask (path);
+		task.UseGroupMetadata = true;
+		task.RelocationOutput = AddGroupMetadata (path,
+			"_ZTV43Mono_Android_Android_Runtime_JavaDictionary",
+			"_ZTV29Mono_Android_Java_Lang_Object",
+			"_ZTV37_Mono_Android_TypeMap___TypeMapAnchor");
+
+		Assert.True (task.Execute ());
+		Assert.Empty (engine.Errors);
+		Assert.Equal ("test/Alias\ntest/PerAssembly\ntest/Shared\n", File.ReadAllText (task.OutputFile));
+		Assert.Equal (".rela.rodata", task.RelocationSection);
+		Assert.Equal (12, task.RelocationEnd - task.RelocationStart);
+	}
+
+	[Theory]
+	[InlineData ("aarch64", "R_AARCH64_PREL32", "SHT_RELA", ".rela.rodata")]
+	[InlineData ("arm", "R_ARM_REL32", "SHT_REL", ".rel.rodata")]
+	[InlineData ("x86_64", "R_X86_64_PC32", "SHT_RELA", ".rela.rodata")]
+	[InlineData ("i386", "R_386_PC32", "SHT_REL", ".rel.rodata")]
+	public void ResolvesGroupSlotsUsingTargetRelocationKind (string arch, string kind, string sectionType, string sectionName)
+	{
+		string path = WriteObject ("abi-group", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
+		Summary (path) ["Arch"] = arch;
+		var (task, engine) = CreateTask (path);
+		task.UseGroupMetadata = true;
+		task.RelocationOutput = AddGroupMetadata (path, "_ZTV29Mono_Android_Java_Lang_Object")
+			.Replace ("R_AARCH64_PREL32", kind, StringComparison.Ordinal);
+		var relocationSection = RelocationSection (path);
+		relocationSection ["Name"] = new JsonObject { ["Name"] = sectionName, ["Value"] = 0 };
+		relocationSection ["Type"] = new JsonObject { ["Name"] = sectionType, ["Value"] = 0 };
+
+		Assert.True (task.Execute ());
+		Assert.Empty (engine.Errors);
+		Assert.Equal ("test/Live\n", File.ReadAllText (task.OutputFile));
+		Assert.Equal (sectionName, task.RelocationSection);
+	}
+
+	[Fact]
+	public void ResolvesCompilationPrefixedMapAndFixupSymbols ()
+	{
+		string path = WriteObject ("prefixed", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
+		Symbol (path) ["Name"] = new JsonObject { ["Name"] = "Compilation_123___external_type_map__", ["Value"] = 0 };
+		var (task, engine) = CreateTask (path);
+		task.UseGroupMetadata = true;
+		task.RelocationOutput = AddGroupMetadata (path, "Compilation_123__ZTV29Mono_Android_Java_Lang_Object");
+
+		Assert.True (task.Execute ());
+		Assert.Empty (engine.Errors);
+		Assert.Equal ("test/Live\n", File.ReadAllText (task.OutputFile));
+	}
+
+	[Fact]
+	public void MalformedSelectedJavaKeyStillFails ()
+	{
+		string path = WriteObject ("invalid-java-group", NativeAotObjectTestFixture.CreateGroups (
+			["System.Collections.Generic.IDictionary`2[System.Char,System.Int32]"],
+			["test/Invalid[abc]"]));
+		var (task, engine) = CreateTask (path);
+		task.UseGroupMetadata = true;
+		task.RelocationOutput = AddGroupMetadata (path,
+			"_ZTV43Mono_Android_Android_Runtime_JavaDictionary", "_ZTV29Mono_Android_Java_Lang_Object");
+
+		AssertFailure (task, engine);
+	}
+
+	[Theory]
+	[InlineData ("_ZTV43Mono_Android_Android_Runtime_JavaDictionary")]
+	[InlineData ("_ZTV29Mono_Android_Java_Lang_ObjectExtra")]
+	[InlineData ("_ZTV30ThirdParty_TypeMap___TypeMapAnchor")]
+	[InlineData ("_ZTV30_Other_TypeMap___TypeMapAnchorExtra")]
+	public void MissingRecognizedJavaGroupIsNotAnEmptySuccess (string groupSymbol)
+	{
+		string path = WriteObject ("foreign-only", NativeAotObjectTestFixture.CreateBlob ("test/LooksLikeJava"));
+		var (task, engine) = CreateTask (path);
+		task.UseGroupMetadata = true;
+		task.RelocationOutput = AddGroupMetadata (path, groupSymbol);
+
+		AssertFailure (task, engine);
+	}
+
+	[Theory]
+	[InlineData ("missing-fixups")]
+	[InlineData ("duplicate-fixups")]
+	[InlineData ("bad-fixup-size")]
+	[InlineData ("missing-relocation-section")]
+	[InlineData ("ambiguous-relocation-section")]
+	[InlineData ("wrong-target-section")]
+	[InlineData ("missing-relocation")]
+	[InlineData ("duplicate-relocation")]
+	[InlineData ("wrong-relocation-kind")]
+	[InlineData ("nonzero-addend")]
+	public void InvalidGroupMetadataFails (string defect)
+	{
+		string path = WriteObject ("invalid-group-metadata", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
+		var (task, engine) = CreateTask (path);
+		task.UseGroupMetadata = true;
+		task.RelocationOutput = AddGroupMetadata (path, "_ZTV29Mono_Android_Java_Lang_Object");
+		var symbols = Array (Document (path) ["Symbols"]);
+		var sections = Array (Document (path) ["Sections"]);
+		switch (defect) {
+		case "missing-fixups":
+			symbols.RemoveAt (symbols.Count - 1);
+			break;
+		case "duplicate-fixups":
+			symbols.Add (symbols [symbols.Count - 1]?.DeepClone ());
+			break;
+		case "bad-fixup-size":
+			Object (Object (symbols [symbols.Count - 1]) ["Symbol"]) ["Size"] = 3;
+			break;
+		case "missing-relocation-section":
+			sections.RemoveAt (sections.Count - 1);
+			break;
+		case "ambiguous-relocation-section":
+			var duplicate = Object (sections [sections.Count - 1]?.DeepClone ());
+			Object (duplicate ["Section"]) ["Index"] = 4;
+			sections.Add (duplicate);
+			break;
+		case "wrong-target-section":
+			RelocationSection (path) ["Info"] = 2;
+			break;
+		case "missing-relocation":
+			task.RelocationOutput = "";
+			break;
+		case "duplicate-relocation":
+			task.RelocationOutput += task.RelocationOutput;
+			break;
+		case "wrong-relocation-kind":
+			task.RelocationOutput = task.RelocationOutput.Replace ("R_AARCH64_PREL32", "R_AARCH64_ABS64", StringComparison.Ordinal);
+			break;
+		case "nonzero-addend":
+			task.RelocationOutput = task.RelocationOutput.TrimEnd () + "+0x4\n";
+			break;
+		}
+		AssertFailure (task, engine);
+	}
+
+	[Fact]
+	public void OutOfRangeGroupFixupFails ()
+	{
+		byte [] group = NativeAotObjectTestFixture.CreateGroup (
+			NativeAotObjectTestFixture.CreateTable ([NativeAotObjectTestFixture.CreateKey ("test/Live")]), typeIndex: 2);
+		string path = WriteObject ("bad-group-index", NativeAotObjectTestFixture.CreateTable ([group]));
+		var (task, engine) = CreateTask (path);
+		task.UseGroupMetadata = true;
+		task.RelocationOutput = AddGroupMetadata (path, "_ZTV29Mono_Android_Java_Lang_Object");
+
+		AssertFailure (task, engine);
+		Assert.Null (task.RelocationSection);
+	}
+
+	[Fact]
+	public void EmptyOuterTableDoesNotRequireGroupRelocations ()
+	{
+		var (task, engine) = CreateTask (WriteObject ("empty-groups", NativeAotObjectTestFixture.CreateGroups ()));
+		task.UseGroupMetadata = true;
+
+		Assert.True (task.Execute ());
+		Assert.Empty (engine.Errors);
+		Assert.Empty (File.ReadAllBytes (task.OutputFile));
+		Assert.Null (task.RelocationSection);
 	}
 
 	[Theory]
@@ -567,13 +737,65 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 	JsonObject Summary (string path) => Object (Document (path) ["FileSummary"]);
 	JsonObject Section (string path) => Object (Object (Array (Document (path) ["Sections"]) [1]) ["Section"]);
 	JsonObject Symbol (string path) => Object (Object (Array (Document (path) ["Symbols"]) [1]) ["Symbol"]);
+	JsonObject RelocationSection (string path) => Object (Object (Array (Document (path) ["Sections"]) [2]) ["Section"]);
+
+	string AddGroupMetadata (string path, params string [] groupSymbols)
+	{
+		var symbol = Symbol (path);
+		long size = symbol ["Size"]?.GetValue<long> () ?? throw new InvalidOperationException ();
+		string mapName = Object (symbol ["Name"]) ["Name"]?.GetValue<string> () ?? throw new InvalidOperationException ();
+		string prefix = mapName.Substring (0, mapName.Length - "__external_type_map__".Length);
+		long value = SymbolOffset + size + 16;
+		Array (Document (path) ["Symbols"]).Add (new JsonObject {
+			["Symbol"] = new JsonObject {
+				["Name"] = new JsonObject { ["Name"] = prefix + "__external_CommonFixupsTable_references", ["Value"] = 0 },
+				["Value"] = value,
+				["Size"] = groupSymbols.Length * 4,
+				["Section"] = new JsonObject { ["Name"] = ".rodata", ["Value"] = 1 },
+			},
+		});
+		Array (Document (path) ["Sections"]).Add (new JsonObject {
+			["Section"] = new JsonObject {
+				["Index"] = 3,
+				["Name"] = new JsonObject { ["Name"] = ".rela.rodata", ["Value"] = 0 },
+				["Type"] = new JsonObject { ["Name"] = "SHT_RELA", ["Value"] = 4 },
+				["Info"] = 1,
+			},
+		});
+		var relocations = new StringBuilder ("RELOCATION RECORDS FOR [.rodata]:\nOFFSET TYPE VALUE\n");
+		for (int i = 0; i < groupSymbols.Length; i++) {
+			relocations.Append ($"{value + i * 4:x16} R_AARCH64_PREL32 {groupSymbols [i]}\n");
+		}
+		return relocations.ToString ();
+	}
+
 	static JsonObject Object (JsonNode? node) => node as JsonObject ?? throw new InvalidOperationException ("Expected an object fixture.");
 	static JsonArray Array (JsonNode? node) => node as JsonArray ?? throw new InvalidOperationException ("Expected an array fixture.");
 
 	sealed class MetadataTask (Func<string, string> reader) : ExtractTypeMapKeysFromNativeAotObject
 	{
 		public Func<string, string> MetadataReader { get; set; } = reader;
+		public bool UseGroupMetadata { get; set; }
+		public string RelocationOutput { get; set; } = "";
+		public string? RelocationSection { get; private set; }
+		public long RelocationStart { get; private set; }
+		public long RelocationEnd { get; private set; }
 
 		protected override Task<string> ReadObjectMetadataAsync (string objectFile) => Task.FromResult (MetadataReader (objectFile));
+
+		// Parser fixtures model Java groups; separate relocation tests exercise group selection.
+		protected override Task<HashSet<uint>> GetJavaTypeMapGroupsAsync (
+			string objectFile, JsonElement fileMetadata, string mapSymbol, IReadOnlyCollection<uint> groupIndices, long fileLength) =>
+			UseGroupMetadata
+				? base.GetJavaTypeMapGroupsAsync (objectFile, fileMetadata, mapSymbol, groupIndices, fileLength)
+				: Task.FromResult (new HashSet<uint> (groupIndices));
+
+		protected override Task<string> ReadObjectRelocationsAsync (string objectFile, string section, long start, long end)
+		{
+			RelocationSection = section;
+			RelocationStart = start;
+			RelocationEnd = end;
+			return Task.FromResult (RelocationOutput);
+		}
 	}
 }

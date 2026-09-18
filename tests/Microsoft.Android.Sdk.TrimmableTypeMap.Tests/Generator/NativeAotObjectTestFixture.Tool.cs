@@ -11,6 +11,10 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 static partial class NativeAotObjectTestFixture
 {
 	public static string WriteObject (string directory, string name, string llvmReadObjPath, params string [] keys)
+		=> WriteObjectGroups (directory, name, llvmReadObjPath, ("_ZTV29Mono_Android_Java_Lang_Object", keys));
+
+	public static string WriteObjectGroups (
+		string directory, string name, string llvmReadObjPath, params (string Symbol, string [] Keys) [] groups)
 	{
 		string? toolDirectory = Path.GetDirectoryName (llvmReadObjPath);
 		if (string.IsNullOrEmpty (toolDirectory)) {
@@ -20,7 +24,7 @@ static partial class NativeAotObjectTestFixture
 		Directory.CreateDirectory (directory);
 		string objectPath = Path.ChangeExtension (Path.Combine (directory, name), ".o");
 		string sourcePath = Path.ChangeExtension (objectPath, ".s");
-		byte [] blob = CreateBlob (keys);
+		byte [] blob = CreateGroups (groups.Select (group => group.Keys).ToArray ());
 		var source = new StringBuilder ("""
 			.section .rodata,"a",%progbits
 			.globl __external_type_map__
@@ -35,6 +39,27 @@ static partial class NativeAotObjectTestFixture
 			source.Append ('\n');
 		}
 		source.Append (".size __external_type_map__, . - __external_type_map__\n");
+		source.Append ("""
+			.balign 4
+			.globl __external_CommonFixupsTable_references
+			.type __external_CommonFixupsTable_references,%object
+			__external_CommonFixupsTable_references:
+
+			""");
+		foreach (var group in groups) {
+			source.Append (".long ").Append (group.Symbol).Append (" - .\n");
+		}
+		source.Append ("""
+			.size __external_CommonFixupsTable_references, . - __external_CommonFixupsTable_references
+			.section .data,"aw",%progbits
+
+			""");
+		foreach (string symbol in groups.Select (group => group.Symbol).Distinct (StringComparer.Ordinal)) {
+			source.Append (".globl ").Append (symbol).Append ('\n');
+			source.Append (".type ").Append (symbol).Append (",%object\n");
+			source.Append (symbol).Append (":\n.byte 0\n");
+			source.Append (".size ").Append (symbol).Append (", 1\n");
+		}
 		File.WriteAllText (sourcePath, source.ToString (), new UTF8Encoding (false));
 
 		using var stdout = new StringWriter (CultureInfo.InvariantCulture);

@@ -11,7 +11,17 @@ sealed class NativeAotTypeMapReader (byte [] data)
 {
 	static readonly UTF8Encoding Utf8 = new UTF8Encoding (false, true);
 
-	public void ReadKeys (ISet<string> keys)
+	public HashSet<uint> ReadGroupTypeIndices ()
+	{
+		var indices = new HashSet<uint> ();
+		foreach (int groupOffset in ReadHashtable (0)) {
+			int offset = groupOffset;
+			indices.Add (ReadUnsigned (ref offset));
+		}
+		return indices;
+	}
+
+	public void ReadKeys (ISet<string> keys, ISet<uint> javaGroups)
 	{
 		var groups = new HashSet<int> ();
 		var entries = new HashSet<int> ();
@@ -20,7 +30,10 @@ sealed class NativeAotTypeMapReader (byte [] data)
 				continue;
 			}
 			int offset = groupOffset;
-			ReadUnsigned (ref offset); // Group type's common-fixup index.
+			uint groupTypeIndex = ReadUnsigned (ref offset);
+			if (!javaGroups.Contains (groupTypeIndex)) {
+				continue;
+			}
 			if (ReadUnsigned (ref offset) != 1) {
 				throw new BadImageFormatException ("The NativeAOT object contains an invalid external type map.");
 			}
