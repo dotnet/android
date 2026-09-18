@@ -8,8 +8,10 @@ using System.Reflection.PortableExecutable;
 using System.Text;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
+using Xamarin.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	public class ExtractTypeMapKeysFromAssemblies : AndroidTask
 	{

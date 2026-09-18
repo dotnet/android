@@ -10,6 +10,7 @@ using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Android.Tasks;
 using Xamarin.Android.Tasks;
 using Xunit;
 using TaskItem = Microsoft.Build.Utilities.TaskItem;

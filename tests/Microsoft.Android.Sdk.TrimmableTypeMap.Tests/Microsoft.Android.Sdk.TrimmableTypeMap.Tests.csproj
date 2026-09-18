@@ -8,7 +8,6 @@
     <RootNamespace>Microsoft.Android.Sdk.TrimmableTypeMap.Tests</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <!-- Exclude fixture subdirectories — they are separate projects compiled independently -->
@@ -31,7 +30,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
-    <ProjectReference Include="..\..\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.Android.Build.Tasks\Microsoft.Android.Build.Tasks.csproj" />
     <ProjectReference Include="TestAttributeFixtures\TestAttributeFixtures.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
@@ -47,17 +46,7 @@
     </ProjectReference>
   </ItemGroup>
 
-  <!-- Exercise metadata-only build tasks without requiring a full Android SDK build. -->
   <ItemGroup>
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tasks\ExtractTypeMapKeysFromAssemblies.cs" Link="Tasks\ExtractTypeMapKeysFromAssemblies.cs" />
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tasks\ExtractTypeMapKeysFromDgml.cs" Link="Tasks\ExtractTypeMapKeysFromDgml.cs" />
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tasks\ExtractTypeMapKeysFromLlvmIr.cs" Link="Tasks\ExtractTypeMapKeysFromLlvmIr.cs" />
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tasks\GenerateTypeMapProguardConfiguration.cs" Link="Tasks\GenerateTypeMapProguardConfiguration.cs" />
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\MetadataExtensions.cs" Link="Tasks\MetadataExtensions.cs" />
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\NullableExtensions.cs" Link="Tasks\NullableExtensions.cs" />
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\DummyCustomAttributeProvider.cs" Link="Tasks\DummyCustomAttributeProvider.cs" />
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Properties\Resources.Designer.cs" Link="Tasks\Resources.Designer.cs" />
-    <EmbeddedResource Include="..\..\src\Xamarin.Android.Build.Tasks\Properties\Resources.resx" LogicalName="Xamarin.Android.Tasks.Properties.Resources.resources" />
     <AssemblyMetadata Include="ILLinkPath" Value="$(PkgMicrosoft_NET_ILLink_Tasks)\tools\net\illink.dll" />
   </ItemGroup>
 
