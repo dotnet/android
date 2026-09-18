@@ -559,6 +559,35 @@ namespace UnnamedProject {
 		}
 
 		[Test]
+		public void StartupNoGCRegionFeatureSwitch ([Values (true, false, null)] bool? enabled)
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			proj.SetRuntime (runtime);
+			// Keep the completion path reachable so it cannot accidentally retain the disabled helper.
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"base.OnCreate (bundle);",
+				"base.OnCreate (bundle);\nReportFullyDrawn ();");
+			if (enabled.HasValue) {
+				proj.SetProperty ("_AndroidEnableStartupNoGCRegion", enabled.Value.ToString ());
+			}
+
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			using var assembly = AssemblyDefinition.ReadAssembly (BuildTest.GetLinkedPath (b, true, "Mono.Android.dll"));
+			var type = assembly.MainModule.GetType ("Android.Runtime.StartupNoGCRegion");
+			if (enabled != false) {
+				Assert.IsNotNull (type, "StartupNoGCRegion should be retained when enabled or unspecified.");
+			} else {
+				Assert.IsNull (type, "StartupNoGCRegion should be trimmed away completely when disabled.");
+			}
+		}
+
+		[Test]
 		public void AndroidUseNegotiateAuthentication ([Values (true, false, null)] bool? useNegotiateAuthentication, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
