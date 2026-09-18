@@ -79,8 +79,9 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("-dontobfuscate" + System.Environment.NewLine, writer.ToString ());
 		}
 
-		[Test]
-		public void RetainedTypeMapRulesDoNotRootAllAcwsOrObfuscatePrivateMembers ()
+		[TestCase (false)]
+		[TestCase (true)]
+		public void RetainedTypeMapRulesDoNotRootAllAcwsOrObfuscatePrivateMembers (bool scopedMembers)
 		{
 			var directory = Path.Combine (Path.GetTempPath (), "R8TypeMap_" + System.Guid.NewGuid ().ToString ("N"));
 			Directory.CreateDirectory (directory);
@@ -92,6 +93,7 @@ namespace Xamarin.Android.Build.Tests
 				var task = new R8ResponseTestTask {
 					BuildEngine = new MockBuildEngine (TestContext.Out),
 					UseTypeMapProguardConfiguration = true,
+					UseScopedTypeMapMembers = scopedMembers,
 					EnableShrinking = true,
 					ObfuscationMode = "private-members",
 					AcwMapFile = map,
@@ -111,6 +113,14 @@ namespace Xamarin.Android.Build.Tests
 				StringAssert.Contains ("-dontobfuscate", common);
 				StringAssert.DoesNotContain ("-keep,allowshrinking,allowoptimization class **", common);
 				StringAssert.DoesNotContain ("-keep class mono.android.**", common);
+				if (scopedMembers) {
+					StringAssert.DoesNotContain ("-keepclassmembers class * {", common);
+					StringAssert.Contains ("-keep class mono.android.Runtime { *; }", common);
+					StringAssert.Contains ("-keep class net.dot.jni.ManagedPeer { *; }", common);
+					StringAssert.Contains ("-keep interface mono.android.IGCUserPeer { *; }", common);
+				} else {
+					StringAssert.Contains ("-keepclassmembers class * {", common);
+				}
 			} finally {
 				Directory.Delete (directory, recursive: true);
 			}

@@ -49,7 +49,16 @@ namespace Xamarin.Android.Build.Tests {
 				File.ReadAllLines (configuration));
 			var common = File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg"));
 			StringAssert.Contains ("-dontobfuscate", common);
-			StringAssert.Contains ("-keepclassmembers class *", common);
+			var members = Path.Combine (intermediate, "proguard", "proguard_typemap_members.cfg");
+			if (runtime == AndroidRuntime.CoreCLR) {
+				StringAssert.DoesNotContain ("-keepclassmembers class * {", common);
+				CollectionAssert.AreEqual (
+					keys.Select (key => "-keepclassmembers class " + key.Replace ('/', '.') + " { *; }").OrderBy (line => line, StringComparer.Ordinal),
+					File.ReadAllLines (members));
+			} else {
+				StringAssert.Contains ("-keepclassmembers class * {", common);
+				FileAssert.DoesNotExist (members);
+			}
 			StringAssert.DoesNotContain ("-keep class mono.android.**", common);
 			StringAssert.DoesNotContain ("-keep class net.dot.jni.**", common);
 			var dex = Path.Combine (intermediate, "android", "bin", "classes.dex");
@@ -59,6 +68,14 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (builder.Build (proj));
 			builder.Output.AssertTargetIsSkipped ("_AndroidExtractTypeMapKeys");
 			builder.Output.AssertTargetIsSkipped ("_AndroidGenerateTypeMapProguardConfiguration");
+			if (runtime == AndroidRuntime.CoreCLR) {
+				builder.Output.AssertTargetIsSkipped ("_AndroidGenerateTypeMapMemberProguardConfiguration");
+				File.Delete (members);
+				Assert.IsTrue (builder.Build (proj));
+				builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateTypeMapMemberProguardConfiguration");
+				builder.Output.AssertTargetIsNotSkipped ("_CompileToDalvik");
+				FileAssert.Exists (members);
+			}
 			File.Delete (configuration);
 			Assert.IsTrue (builder.Build (proj));
 			builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateTypeMapProguardConfiguration");

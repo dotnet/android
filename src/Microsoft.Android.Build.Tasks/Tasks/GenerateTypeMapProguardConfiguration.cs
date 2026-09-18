@@ -55,7 +55,7 @@ public class GenerateTypeMapProguardConfiguration : AndroidTask
 			}
 			using var writer = new StreamWriter (OutputFile, append: false, new UTF8Encoding (false)) { NewLine = "\n" };
 			foreach (var name in classes) {
-				writer.WriteLine ($"-keep class {name}");
+				WriteClassRule (writer, name);
 			}
 		} catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is DecoderFallbackException) {
 			Log.LogCodedError ("XA4328", Properties.Resources.XA4328, currentFile, ex.Message);
@@ -63,6 +63,9 @@ public class GenerateTypeMapProguardConfiguration : AndroidTask
 		}
 		return !Log.HasLoggedErrors;
 	}
+
+	protected virtual void WriteClassRule (TextWriter writer, string name) =>
+		writer.WriteLine ($"-keep class {name}");
 
 	internal static bool IsClassName (string name)
 	{

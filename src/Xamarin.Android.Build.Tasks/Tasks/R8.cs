@@ -37,6 +37,7 @@ namespace Xamarin.Android.Tasks
 		public string? BuildMetadataFileOutput { get; set; }
 		public ITaskItem []? ProguardConfigurationFiles { get; set; }
 		public bool UseTypeMapProguardConfiguration { get; set; }
+		public bool UseScopedTypeMapMembers { get; set; }
 		public string ObfuscationMode { get; set; } = "private-members";
 
 		// User-authored AndroidJavaSource (Bind != true) .java files. These have no managed peer and are
@@ -199,7 +200,7 @@ namespace Xamarin.Android.Tasks
 						xamcfg.WriteLine ();
 						xamcfg.Flush ();
 						if (UseTypeMapProguardConfiguration) {
-							using var stream = GetEmbeddedResourceStream ("proguard_typemap.cfg");
+							using var stream = GetEmbeddedResourceStream (UseScopedTypeMapMembers ? "proguard_typemap_coreclr.cfg" : "proguard_typemap.cfg");
 							stream.CopyTo (xamcfg.BaseStream);
 						} else {
 							using var stream = GetEmbeddedResourceStream ("proguard_xamarin.cfg");

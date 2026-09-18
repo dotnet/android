@@ -43,12 +43,28 @@ union of keys files and writes deterministic class-only rules to
 -keep class example.Outer$Inner
 ```
 
-The generator never emits member rules or global R8 options. The separate
-`proguard_typemap.cfg` runtime configuration retains members of surviving
-classes, including surviving third-party classes, while allowing unused
-classes to disappear. It keeps explicit runtime bootstrap roots rather than
-whole wrapper packages. User Java source retention and application/library
-ProGuard rules remain separate.
+The class-root generator never emits member rules or global R8 options.
+CoreCLR uses a separate `GenerateTypeMapMemberProguardConfiguration` task to
+write `proguard/proguard_typemap_members.cfg` from the same retained keys:
+
+```text
+-keepclassmembers class android.app.Activity { *; }
+-keepclassmembers class example.Outer$Inner { *; }
+```
+
+This preserves JNI-facing methods, constructors, and fields without also
+preserving every member of Java-only dependencies. R8's member matching
+includes inherited accessible methods and superclass fields. The separate
+`proguard_typemap_coreclr.cfg` configuration preserves runtime bootstrap
+classes and their members, plus framework-driven view members. Dynamic JNI
+or reflection access to types or members not represented by retained managed
+bindings still needs application/library ProGuard rules.
+
+NativeAOT continues to use `proguard_typemap.cfg`, which retains members of
+all surviving classes, including third-party classes, while allowing unused
+classes to disappear. Both policies keep explicit runtime bootstrap roots
+rather than whole wrapper packages. User Java source retention and
+application/library ProGuard rules remain separate.
 
 The temporary private override `_AndroidEnableTypemapR8Trimming` controls this
 pipeline. It replaces the old NativeAOT-specific trimming and ProGuard switches.

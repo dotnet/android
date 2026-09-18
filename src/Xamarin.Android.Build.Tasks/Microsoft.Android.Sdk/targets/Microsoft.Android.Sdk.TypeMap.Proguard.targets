@@ -4,6 +4,7 @@
   <UsingTask TaskName="Microsoft.Android.Tasks.ExtractTypeMapKeysFromLlvmIr" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Microsoft.Android.Tasks.ExtractTypeMapKeysFromAssemblies" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateTypeMapProguardConfiguration" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateTypeMapMemberProguardConfiguration" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <_CompileToDalvikDependsOnTargets>$(_CompileToDalvikDependsOnTargets);_AndroidGenerateTypeMapProguardConfiguration</_CompileToDalvikDependsOnTargets>
@@ -17,6 +18,7 @@
       <_AndroidTypeMapProguardConfiguration>$(_ProguardProjectConfiguration)</_AndroidTypeMapProguardConfiguration>
       <!-- ProguardConfigFiles is the existing complete configuration override. -->
       <_AndroidUseTypeMapProguardConfiguration Condition=" '$(ProguardConfigFiles)' == '' ">true</_AndroidUseTypeMapProguardConfiguration>
+      <_AndroidUseScopedTypeMapMembers Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidUseTypeMapProguardConfiguration)' == 'true' ">true</_AndroidUseScopedTypeMapMembers>
     </PropertyGroup>
   </Target>
 
@@ -50,6 +52,7 @@
     <PropertyGroup>
       <_AndroidTypeMapKeysFile>$(IntermediateOutputPath)typemap.keys.txt</_AndroidTypeMapKeysFile>
       <_AndroidTypeMapKeysInputsFile>$(IntermediateOutputPath)typemap.keys.inputs</_AndroidTypeMapKeysInputsFile>
+      <_AndroidTypeMapTasksAssemblyFile>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '$(_MicrosoftAndroidBuildTasksAssembly)'))</_AndroidTypeMapTasksAssemblyFile>
       <_AndroidTypeMapKeysKind Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">dgml</_AndroidTypeMapKeysKind>
       <_AndroidTypeMapKeysKind Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(AndroidTypeMapImplementation)' != 'trimmable' ">llvm-ir</_AndroidTypeMapKeysKind>
       <_AndroidTypeMapKeysKind Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(AndroidTypeMapImplementation)' == 'trimmable' ">assemblies</_AndroidTypeMapKeysKind>
@@ -83,7 +86,7 @@
 
   <Target Name="_AndroidExtractTypeMapKeys"
       DependsOnTargets="_AndroidExtractTypeMapKeysInputs"
-      Inputs="@(_AndroidTypeMapKeySource);$(_AndroidTypeMapKeysInputsFile);$(_MicrosoftAndroidBuildTasksAssembly)"
+      Inputs="@(_AndroidTypeMapKeySource);$(_AndroidTypeMapKeysInputsFile);$(_AndroidTypeMapTasksAssemblyFile)"
       Outputs="$(_AndroidTypeMapKeysFile)">
     <ExtractTypeMapKeysFromDgml
         Condition=" '$(_AndroidTypeMapKeysKind)' == 'dgml' "
@@ -114,13 +117,35 @@
   <Target Name="_AndroidGenerateTypeMapProguardConfiguration"
       DependsOnTargets="_AndroidGenerateTypeMapProguardConfigurationInputs"
       Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and ('$(_AndroidRuntime)' == 'CoreCLR' or ('$(_AndroidRuntime)' == 'NativeAOT' and '$(AndroidTypeMapImplementation)' == 'trimmable' and ('$(Optimize)' == 'true' or '$(_AndroidEnableTypemapR8Trimming)' == 'true'))) "
-      Inputs="@(_AndroidTypeMapKeyFile);$(_MicrosoftAndroidBuildTasksAssembly);$(_AndroidBuildPropertiesCache)"
+      Inputs="@(_AndroidTypeMapKeyFile);$(_AndroidTypeMapTasksAssemblyFile);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_ProguardProjectConfiguration)">
     <GenerateTypeMapProguardConfiguration
         TypeMapKeyFiles="@(_AndroidTypeMapKeyFile)"
         OutputFile="$(_ProguardProjectConfiguration)" />
     <ItemGroup>
       <FileWrites Include="$(_ProguardProjectConfiguration)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidGenerateTypeMapMemberProguardConfigurationInputs"
+      DependsOnTargets="_AndroidGenerateTypeMapProguardConfigurationInputs">
+    <PropertyGroup>
+      <_AndroidTypeMapMemberProguardConfiguration>$(IntermediateOutputPath)proguard\proguard_typemap_members.cfg</_AndroidTypeMapMemberProguardConfiguration>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_AndroidGenerateTypeMapMemberProguardConfiguration"
+      AfterTargets="_AndroidGenerateTypeMapProguardConfiguration"
+      DependsOnTargets="_AndroidGenerateTypeMapMemberProguardConfigurationInputs"
+      Condition=" '$(_AndroidUseScopedTypeMapMembers)' == 'true' "
+      Inputs="@(_AndroidTypeMapKeyFile);$(_AndroidTypeMapTasksAssemblyFile);$(_AndroidBuildPropertiesCache)"
+      Outputs="$(_AndroidTypeMapMemberProguardConfiguration)">
+    <GenerateTypeMapMemberProguardConfiguration
+        TypeMapKeyFiles="@(_AndroidTypeMapKeyFile)"
+        OutputFile="$(_AndroidTypeMapMemberProguardConfiguration)" />
+    <ItemGroup>
+      <_ProguardConfiguration Include="$(_AndroidTypeMapMemberProguardConfiguration)" />
+      <FileWrites Include="$(_AndroidTypeMapMemberProguardConfiguration)" />
     </ItemGroup>
   </Target>
 </Project>
