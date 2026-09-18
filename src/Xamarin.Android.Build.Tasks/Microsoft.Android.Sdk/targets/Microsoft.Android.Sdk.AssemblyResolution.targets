@@ -72,16 +72,21 @@ _ResolveAssemblies MSBuild target.
   <Target Name="_ComputeFilesToPublishForRuntimeIdentifiers"
       DependsOnTargets="BuildOnlySettings;_CheckForInvalidConfigurationAndPlatform;_FixupIntermediateAssembly;_PatchNuGetReferenceMetadata;ResolveReferences;ComputeFilesToPublish;$(_RunAotMaybe)"
       Returns="@(ResolvedFileToPublish)">
+      <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">
+        <_AndroidTypeMapLlvmReadObjPath>$(_NdkBinDir)llvm-readobj</_AndroidTypeMapLlvmReadObjPath>
+        <_AndroidTypeMapLlvmReadObjPath Condition=" $([MSBuild]::IsOSPlatform('windows')) ">$(_NdkBinDir)llvm-readobj.exe</_AndroidTypeMapLlvmReadObjPath>
+        <_AndroidTypeMapLlvmObjDumpPath>$(_NdkBinDir)llvm-objdump</_AndroidTypeMapLlvmObjDumpPath>
+        <_AndroidTypeMapLlvmObjDumpPath Condition=" $([MSBuild]::IsOSPlatform('windows')) ">$(_NdkBinDir)llvm-objdump.exe</_AndroidTypeMapLlvmObjDumpPath>
+      </PropertyGroup>
       <ItemGroup>
         <ResolvedFileToPublish Remove="@(_SourceItemsToCopyToPublishDirectory)" />
         <!-- Return the exact per-RID producer paths to the outer typemap/R8 build. The
-             native graph and linked metadata must not be replaced by pre-trim or R2R inputs. -->
+             ILC object and linked metadata must not be replaced by pre-trim or R2R inputs. -->
         <ResolvedFileToPublish Update="@(ResolvedFileToPublish)"
-            Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(_AndroidRuntime)' == 'NativeAOT' and '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(Optimize)' == 'true' "
-            AndroidTypeMapDgmlFile="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml" />
-        <ResolvedFileToPublish Update="@(ResolvedFileToPublish)"
-            Condition=" '$(_AndroidEnableTypemapR8Trimming)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' and '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(Optimize)' != 'true' "
-            AndroidTypeMapDgmlFile="$(NativeIntermediateOutputPath)$(TargetName).codegen.dgml.xml" />
+            Condition=" '$(_AndroidEnableTypemapR8Trimming)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' and '$(AndroidTypeMapImplementation)' == 'trimmable' "
+            AndroidTypeMapNativeObject="$(NativeObject)"
+            AndroidTypeMapLlvmReadObjPath="$(_AndroidTypeMapLlvmReadObjPath)"
+            AndroidTypeMapLlvmObjDumpPath="$(_AndroidTypeMapLlvmObjDumpPath)" />
         <_AndroidLinkedTypeMapKeySource Include="@(_GeneratedTypeMapAssembliesFromList->'$(IntermediateOutputPath)linked\%(Filename)%(Extension)')"
             Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' " />
         <!-- The root carries the complete generator-known inventory, including trimmed maps
@@ -94,9 +99,6 @@ _ResolveAssemblies MSBuild target.
             Update="@(ResolvedFileToPublish)"
             RuntimeIdentifier="$(RuntimeIdentifier)"
         />
-      </ItemGroup>
-      <ItemGroup Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(_AndroidRuntime)' == 'NativeAOT' and ('$(Optimize)' == 'true' or '$(_AndroidEnableTypemapR8Trimming)' == 'true') ">
-        <FileWrites Include="@(ResolvedFileToPublish->'%(AndroidTypeMapDgmlFile)'->Distinct())" />
       </ItemGroup>
       <!-- In .NET 11+, multiple targets (ILLink, NativeAOT runtime, Android) may independently
            add the same assembly to ResolvedFileToPublish. Deduplicate before returning to the

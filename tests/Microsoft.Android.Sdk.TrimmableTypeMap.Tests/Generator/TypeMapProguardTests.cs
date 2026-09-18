@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
@@ -165,44 +166,60 @@ public class TypeMapProguardTests : IDisposable
 		Assert.Equal (membersTime, File.GetLastWriteTimeUtc (members));
 	}
 
-	[Fact]
-	public void DgmlTargetUnionsRequestedGraphsAndHonorsDisabledTrimming ()
+	[NativeAotObjectFact]
+	public void NativeObjectTargetUnionsRidsAndHonorsDisabledTrimming ()
 	{
-		Write ("first.dgml", """<DirectedGraph><Nodes><Node Id="1" Label="Type metadata: [App]App.Live" /></Nodes></DirectedGraph>""");
-		Write ("second.dgml", """<DirectedGraph><Nodes><Node Id="2" Label="Type metadata: [App]App.Second" /></Nodes></DirectedGraph>""");
+		var first = WriteNativeObject ("first", "test/Live", "test/Outer$Inner[0]");
+		var second = WriteNativeObject ("second", "test/Second", "test/Outer$Inner[1]");
 		Write ("acw-map.txt", "App.Live, App;test.Live\nApp.Second, App;test.Second\nApp.Dead, App;test.Dead\n");
 		var project = CreateProject ("NativeAOT", "trimmable",
-			new XElement ("ResolvedFileToPublish", new XAttribute ("Include", "first.so"),
-				new XAttribute ("AndroidTypeMapDgmlFile", "$(MSBuildProjectDirectory)/first.dgml")),
-			new XElement ("ResolvedFileToPublish", new XAttribute ("Include", "second.so"),
-				new XAttribute ("AndroidTypeMapDgmlFile", "$(MSBuildProjectDirectory)/second.dgml")));
-		Build (project);
+			NativeObjectItem ("first.so", first),
+			NativeObjectItem ("second.so", second));
+		Build (project, "-p:_AndroidEnableTypemapR8Trimming=true");
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
-		Assert.Equal ("-keep class test.Live\n-keep class test.Second\n", File.ReadAllText (rules));
+		Assert.Equal ("-keep class test.Live\n-keep class test.Outer$Inner\n-keep class test.Second\n", File.ReadAllText (rules));
 		Assert.False (File.Exists (Path.Combine (directory, "obj", "proguard", "proguard_typemap_members.cfg")));
 		Build (project, "-p:_AndroidEnableTypemapR8Trimming=false");
 		Assert.Contains ("legacy ACW configuration", File.ReadAllText (rules));
-		File.Delete (Path.Combine (directory, "second.dgml"));
-		var output = Build (project, expectSuccess: false);
-		Assert.Contains ("XA4321", output);
+		File.Delete (second);
+		var output = Build (project, false, "-p:_AndroidEnableTypemapR8Trimming=true");
+		Assert.Contains ("XA4327", output);
 	}
 
-	[Fact]
+	[NativeAotObjectFact]
+	public void NativeObjectTargetSelectsJavaGroupsWithoutGuessingFromKeys ()
+	{
+		var nativeObject = NativeAotObjectTestFixture.WriteObjectGroups (
+			directory, "groups", NativeAotObjectIntegrationTools.LlvmReadObjPath,
+			("_ZTV43Mono_Android_Android_Runtime_JavaDictionary",
+				["System.Collections.Generic.IDictionary`2[System.Char,System.Int32]", "foreign/LooksLikeJava"]),
+			("_ZTV29Mono_Android_Java_Lang_Object",
+				["test/Live", "[Ljava/lang/Object;", "[I"]));
+		var project = CreateProject ("NativeAOT", "trimmable", NativeObjectItem ("app.so", nativeObject));
+		Build (project, "-p:_AndroidEnableTypemapR8Trimming=true");
+		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
+		Assert.Equal ("-keep class java.lang.Object\n-keep class test.Live\n", File.ReadAllText (rules));
+
+		NativeAotObjectTestFixture.WriteObjectGroups (
+			directory, "groups", NativeAotObjectIntegrationTools.LlvmReadObjPath,
+			("_ZTV29Mono_Android_Java_Lang_Object", ["test/*"]));
+		Assert.Contains ("XA4327", Build (project, false, "-p:_AndroidEnableTypemapR8Trimming=true"));
+	}
+
+	[NativeAotObjectFact]
 	public void RuntimeSwitchCannotReuseAnotherRepresentation ()
 	{
 		Write ("first.ll", "@java_type_names = dso_local local_unnamed_addr constant [10 x i8] c\"test/Llvm\\00\", align 1\n");
-		Write ("app.dgml", """<DirectedGraph><Nodes><Node Id="1" Label="Type metadata: [App]App.Live" /></Nodes></DirectedGraph>""");
-		Write ("acw-map.txt", "App.Live, App;test.Native\n");
+		var nativeObject = WriteNativeObject ("app", "test/Native");
 		var project = CreateProject ("CoreCLR", "llvm-ir",
 			new XElement ("_TypeMapAssemblySource", new XAttribute ("Include", "$(MSBuildProjectDirectory)/first.ll")),
-			new XElement ("ResolvedFileToPublish", new XAttribute ("Include", "app.so"),
-				new XAttribute ("AndroidTypeMapDgmlFile", "$(MSBuildProjectDirectory)/app.dgml")));
+			NativeObjectItem ("app.so", nativeObject));
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
 		var members = Path.Combine (directory, "obj", "proguard", "proguard_typemap_members.cfg");
 		Build (project);
 		Assert.Equal ("-keep class test.Llvm\n", File.ReadAllText (rules));
 		Assert.Contains ("Members=" + members, File.ReadAllText (Path.Combine (directory, "writes.txt")));
-		Build (project, "-p:_AndroidRuntime=NativeAOT", "-p:AndroidTypeMapImplementation=trimmable");
+		Build (project, "-p:_AndroidRuntime=NativeAOT", "-p:AndroidTypeMapImplementation=trimmable", "-p:_AndroidEnableTypemapR8Trimming=true");
 		Assert.Equal ("-keep class test.Native\n", File.ReadAllText (rules));
 		Assert.DoesNotContain ("Members=" + members, File.ReadAllText (Path.Combine (directory, "writes.txt")));
 		Build (project);
@@ -241,18 +258,17 @@ public class TypeMapProguardTests : IDisposable
 		}
 	}
 
-	[Theory]
+	[NativeAotObjectTheory]
 	[InlineData ("CoreCLR", "llvm-ir")]
 	[InlineData ("NativeAOT", "trimmable")]
 	public void EnablingDisablingAndUnsettingCannotReuseLegacyRules (string runtime, string representation)
 	{
 		Write ("first.ll", "@java_type_names = dso_local local_unnamed_addr constant [10 x i8] c\"test/Live\\00\", align 1\n");
-		Write ("app.dgml", """<DirectedGraph><Nodes><Node Id="1" Label="Type metadata: [App]App.Live" /></Nodes></DirectedGraph>""");
+		var nativeObject = WriteNativeObject ("app", "test/Live");
 		Write ("acw-map.txt", "App.Live, App;test.Live\n");
 		var project = CreateProject (runtime, representation,
 			new XElement ("_TypeMapAssemblySource", new XAttribute ("Include", "$(MSBuildProjectDirectory)/first.ll")),
-			new XElement ("ResolvedFileToPublish", new XAttribute ("Include", "app.so"),
-				new XAttribute ("AndroidTypeMapDgmlFile", "$(MSBuildProjectDirectory)/app.dgml")));
+			NativeObjectItem ("app.so", nativeObject));
 		var keys = Path.Combine (directory, "obj", "typemap.keys.txt");
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
 		foreach (var enabled in new [] { "true", "" }) {
@@ -267,15 +283,20 @@ public class TypeMapProguardTests : IDisposable
 			}
 			Assert.DoesNotContain ("-keep class test.Live", File.ReadAllText (rules));
 			Build (project, "-p:_AndroidEnableTypemapR8Trimming=" + enabled);
-			Assert.Equal ("-keep class test.Live\n", File.ReadAllText (rules));
-			Assert.Contains ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
+			if (runtime == "NativeAOT" && enabled == "") {
+				Assert.Contains ("legacy ACW configuration", File.ReadAllText (rules));
+				Assert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
+			} else {
+				Assert.Equal ("-keep class test.Live\n", File.ReadAllText (rules));
+				Assert.Contains ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
+			}
 		}
 	}
 
 	[Theory]
 	[InlineData ("false", "false", false)]
 	[InlineData ("false", "true", true)]
-	[InlineData ("true", "false", true)]
+	[InlineData ("true", "false", false)]
 	public void DisablingAutomaticDgmlPreservesExplicitDiagnostics (string enabled, string diagnostics, bool serialBuild)
 	{
 		var project = CreateProject ("NativeAOT", "trimmable");
@@ -292,28 +313,66 @@ public class TypeMapProguardTests : IDisposable
 		document.Save (project);
 		Build (project, "-p:_AndroidEnableTypemapR8Trimming=" + enabled, "-p:IlcGenerateDgmlFile=" + diagnostics, "-p:Optimize=true");
 		var output = File.ReadAllText (Path.Combine (directory, "ilc.txt"));
-		Assert.Equal (enabled == "true" && diagnostics == "false", output.Contains ("--scandgmllog:", StringComparison.Ordinal));
+		Assert.DoesNotContain ("--scandgmllog:", output);
+		Assert.DoesNotContain ("--dgmllog:", output);
 		Assert.Equal (serialBuild, output.Contains ("Parallel=false", StringComparison.Ordinal));
 		Assert.Contains ("Diagnostics=" + diagnostics, output);
 	}
 
-	[Fact]
-	public void UnoptimizedNativeAotRequiresExplicitPipelineOptIn ()
+	[NativeAotObjectFact]
+	public void UnoptimizedNativeAotReadsObjectWithoutGraphs ()
 	{
-		Write ("app.dgml", """<DirectedGraph><Nodes><Node Id="1" Label="Type metadata: [App]App.Live" /></Nodes></DirectedGraph>""");
-		Write ("acw-map.txt", "App.Live, App;test.Live\nApp.Dead, App;test.Dead\n");
+		var nativeObject = WriteNativeObject ("app", "test/Live");
 		var project = CreateProject ("NativeAOT", "trimmable",
-			new XElement ("ResolvedFileToPublish", new XAttribute ("Include", "app.so"),
-				new XAttribute ("AndroidTypeMapDgmlFile", "$(MSBuildProjectDirectory)/app.dgml")));
+			NativeObjectItem ("app.so", nativeObject));
 		var keys = Path.Combine (directory, "obj", "typemap.keys.txt");
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
-		Build (project, "-p:Optimize=false");
-		Assert.False (File.Exists (keys));
-		Assert.Contains ("legacy ACW configuration", File.ReadAllText (rules));
 		Build (project, "-p:Optimize=false", "-p:_AndroidEnableTypemapR8Trimming=true");
+		Assert.Equal ("test/Live\n", File.ReadAllText (keys));
 		Assert.Equal ("-keep class test.Live\n", File.ReadAllText (rules));
-		Build (project, "-p:Optimize=false");
-		Assert.Contains ("legacy ACW configuration", File.ReadAllText (rules));
+	}
+
+	[Fact]
+	public void NativeAotWithoutOptInDoesNotRequireObjectTools ()
+	{
+		Write ("acw-map.txt", "App.Live, App;test.Live\n");
+		var project = CreateProject ("NativeAOT", "trimmable");
+		Build (project, "-p:_MicrosoftAndroidBuildTasksAssembly=missing.dll");
+		Assert.False (File.Exists (Path.Combine (directory, "obj", "typemap.keys.txt")));
+		Assert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
+	}
+
+	[Theory]
+	[InlineData ("NativeAOT", "true", "r8", "true", "true")]
+	[InlineData ("NativeAOT", "false", "r8", "true", "false")]
+	[InlineData ("NativeAOT", "", "r8", "true", "false")]
+	[InlineData ("NativeAOT", "true", "", "true", "false")]
+	[InlineData ("NativeAOT", "true", "r8", "false", "false")]
+	[InlineData ("CoreCLR", "true", "r8", "true", "false")]
+	public void NdkDependencyRequiresNativeObjectOptIn (string runtime, string enabled, string linkTool, string trimmed, string expected)
+	{
+		var common = XDocument.Load (Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets"));
+		XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
+		var dependencyProperties = common.Root?.Elements (ns + "Target")
+			.Single (target => (string?) target.Attribute ("Name") == "GetAndroidDependencies")
+			.Element (ns + "PropertyGroup") ?? throw new InvalidOperationException ();
+		var path = Path.Combine (directory, "dependencies.proj");
+		new XDocument (new XElement (ns + "Project",
+			new XElement (ns + "PropertyGroup",
+				new XElement (ns + "_AndroidRuntime", runtime),
+				new XElement (ns + "AndroidTypeMapImplementation", "trimmable"),
+				new XElement (ns + "_AndroidEnableTypemapR8Trimming", enabled),
+				new XElement (ns + "_AndroidUseWorkloadNativeLinker", "true"),
+				new XElement (ns + "PublishAot", "true"),
+				new XElement (ns + "PublishTrimmed", trimmed),
+				new XElement (ns + "AndroidLinkTool", linkTool)),
+			new XElement (ns + "Target", new XAttribute ("Name", "Build"),
+				new XElement (dependencyProperties),
+				new XElement (ns + "WriteLinesToFile", new XAttribute ("File", "$(MSBuildProjectDirectory)/ndk-required.txt"),
+					new XAttribute ("Lines", "$(_NdkRequired)"), new XAttribute ("Overwrite", "true")))))
+			.Save (path);
+		Build (path);
+		Assert.Equal (expected, File.ReadAllText (Path.Combine (directory, "ndk-required.txt")).Trim ());
 	}
 
 	[Fact]
@@ -357,8 +416,8 @@ public class TypeMapProguardTests : IDisposable
 	}
 
 	[Theory]
-	[InlineData ("NativeAOT", "true", "custom-native/App.scan.dgml.xml")]
-	[InlineData ("NativeAOT", "false", "custom-native/App.codegen.dgml.xml")]
+	[InlineData ("NativeAOT", "true", "custom-object/retained.o")]
+	[InlineData ("NativeAOT", "false", "custom-object/retained.o")]
 	[InlineData ("CoreCLR", "true", "obj/linked/_Binding.TypeMap.dll")]
 	public void InnerBuildReturnsExactProducerPaths (string runtime, string optimize, string expected)
 	{
@@ -370,6 +429,8 @@ public class TypeMapProguardTests : IDisposable
 		root.Add (new XElement ("PropertyGroup",
 			new XElement ("RuntimeIdentifier", "android-x64"),
 			new XElement ("NativeIntermediateOutputPath", "$(MSBuildProjectDirectory)/custom-native/"),
+			new XElement ("NativeObject", "$(MSBuildProjectDirectory)/custom-object/retained.o"),
+			new XElement ("_NdkBinDir", "$(MSBuildProjectDirectory)/custom-ndk-bin/"),
 			new XElement ("TargetName", "App"),
 			new XElement ("Optimize", optimize),
 			new XElement ("_AndroidEnableTypemapR8Trimming", "true"),
@@ -381,16 +442,24 @@ public class TypeMapProguardTests : IDisposable
 			new XElement ("ItemGroup",
 				new XElement ("_GeneratedTypeMapAssembliesFromList", new XAttribute ("Include", "generated/_Binding.TypeMap.dll")),
 				new XElement ("ResolvedFileToPublish", new XAttribute ("Include", "R2R/_Microsoft.Android.TypeMaps.dll")))));
-		var metadata = runtime == "NativeAOT" ? "AndroidTypeMapDgmlFile" : "AndroidTypeMapLinkedAssemblies";
+		var metadata = runtime == "NativeAOT" ? "AndroidTypeMapNativeObject" : "AndroidTypeMapLinkedAssemblies";
 		root.Add (new XElement ("Target", new XAttribute ("Name", "Build"),
 			new XAttribute ("DependsOnTargets", "_ComputeFilesToPublishForRuntimeIdentifiers"),
 			new XElement ("WriteLinesToFile", new XAttribute ("File", "$(MSBuildProjectDirectory)/producer.txt"),
 				new XAttribute ("Lines", $"@(ResolvedFileToPublish->'%({metadata})')"),
+				new XAttribute ("Overwrite", "true")),
+			new XElement ("WriteLinesToFile", new XAttribute ("File", "$(MSBuildProjectDirectory)/readobj.txt"),
+				new XAttribute ("Lines", "@(ResolvedFileToPublish->'%(AndroidTypeMapLlvmReadObjPath)')"),
 				new XAttribute ("Overwrite", "true"))));
 		document.Save (project);
 		Build (project);
 		Assert.Equal (Path.Combine (directory, expected).Replace ('\\', '/'),
 			File.ReadAllText (Path.Combine (directory, "producer.txt")).Trim ().Replace ('\\', '/'));
+		if (runtime == "NativeAOT") {
+			var executable = OperatingSystem.IsWindows () ? "llvm-readobj.exe" : "llvm-readobj";
+			Assert.Equal (Path.Combine (directory, "custom-ndk-bin", executable).Replace ('\\', '/'),
+				File.ReadAllText (Path.Combine (directory, "readobj.txt")).Trim ().Replace ('\\', '/'));
+		}
 	}
 
 	[Theory]
@@ -471,6 +540,7 @@ public class TypeMapProguardTests : IDisposable
 			RedirectStandardError = true,
 			UseShellExecute = false,
 		};
+		start.Environment ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
 		foreach (var argument in new [] { "msbuild", project, "-t:Build", "-nologo", "-v:minimal", "-nr:false" }) {
 			start.ArgumentList.Add (argument);
 		}
@@ -480,8 +550,13 @@ public class TypeMapProguardTests : IDisposable
 		using var process = Process.Start (start) ?? throw new InvalidOperationException ("Could not start MSBuild.");
 		var stdout = process.StandardOutput.ReadToEndAsync ();
 		var stderr = process.StandardError.ReadToEndAsync ();
-		Assert.True (process.WaitForExit (120000), "MSBuild did not finish.");
+		bool completed = process.WaitForExit (120000);
+		if (!completed) {
+			process.Kill (entireProcessTree: true);
+			process.WaitForExit ();
+		}
 		var output = stdout.GetAwaiter ().GetResult () + stderr.GetAwaiter ().GetResult ();
+		Assert.True (completed, "MSBuild did not finish." + Environment.NewLine + output);
 		Assert.True (expectSuccess ? process.ExitCode == 0 : process.ExitCode != 0, output);
 		return output;
 	}
@@ -492,6 +567,15 @@ public class TypeMapProguardTests : IDisposable
 		File.WriteAllText (path, content, new UTF8Encoding (false));
 		return path;
 	}
+
+	string WriteNativeObject (string name, params string [] keys) =>
+		NativeAotObjectTestFixture.WriteObject (directory, name, NativeAotObjectIntegrationTools.LlvmReadObjPath, keys);
+
+	static XElement NativeObjectItem (string output, string nativeObject) =>
+		new ("ResolvedFileToPublish", new XAttribute ("Include", output),
+			new XAttribute ("AndroidTypeMapNativeObject", nativeObject),
+			new XAttribute ("AndroidTypeMapLlvmReadObjPath", NativeAotObjectIntegrationTools.LlvmReadObjPath),
+			new XAttribute ("AndroidTypeMapLlvmObjDumpPath", NativeAotObjectIntegrationTools.LlvmObjDumpPath));
 
 	public void Dispose () => Directory.Delete (directory, recursive: true);
 }

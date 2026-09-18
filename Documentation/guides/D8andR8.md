@@ -8,17 +8,18 @@ every class in the ACW map:
 
 | Runtime and typemap | Retained-key source |
 | --- | --- |
-| NativeAOT, trimmable | ILC type-metadata nodes joined to the ACW map |
+| NativeAOT, trimmable | Retained external typemap records in each RID's final ILC object |
 | CoreCLR, LLVM IR | The generated LLVM Java-name blob, after `GenerateTypeMappings` |
 | CoreCLR, trimmable | Surviving `TypeMapAttribute<T>` records in linked typemap assemblies, including empty stubs |
 
 Inner builds return their exact source paths to the outer build. Keys are
 unioned across the requested RIDs/ABIs; stale files from other builds are not
-discovered by globbing. NativeAOT uses the scan graph in optimized builds and
-the codegen graph when the scanner is disabled. DGML is consumed only by the
-retained-keys adapter, not by a separate NativeAOT rule generator.
+discovered by globbing. NativeAOT locates external typemap blobs with
+`llvm-readobj`, resolves Java group identities using bounded `llvm-objdump`
+relocations, reads their object-file byte ranges, and decodes the retained
+NativeFormat keys. It does not require an ACW map or generate dependency graphs.
 
-All three adapters and the shared generator are `Microsoft.Android.Tasks`
+All three adapters and both ProGuard generators are `Microsoft.Android.Tasks`
 tasks in `Microsoft.Android.Build.Tasks.dll`.
 The adapters write `typemap.keys.txt` in the outer intermediate directory.
 The format is UTF-8 without a BOM, one canonical JNI class name per line,
@@ -30,8 +31,10 @@ android/app/Activity
 example/Outer$Inner
 ```
 
-The DLL adapter collapses implementation-specific numeric aliases before
-writing this format. A valid zero-byte file means no retained classes;
+The assembly and NativeAOT object adapters collapse implementation-specific
+numeric aliases before writing this format. Valid JNI array entries contribute
+their reference element class; primitive arrays do not contribute a class.
+A valid zero-byte file means no retained classes;
 missing, unreadable, or unsupported inputs fail the build.
 
 `GenerateTypeMapProguardConfiguration` knows only this format. It accepts a
@@ -68,14 +71,19 @@ application/library ProGuard rules remain separate.
 
 The temporary private override `_AndroidEnableTypemapR8Trimming` controls this
 pipeline. It replaces the old NativeAOT-specific trimming and ProGuard switches.
-Leave it unset for the automatic behavior, set it to `true` to enable
+Leave it unset for automatic CoreCLR behavior, set it to `true` to enable
 the pipeline in eligible managed-trimmed CoreCLR/NativeAOT R8 builds, or set it
 to `false` to use legacy ACW retention without running the new tasks. Disabling
-it also avoids automatic NativeAOT DGML generation, but does not suppress
-explicit `IlcGenerateDgmlFile` diagnostics. It does not enable R8 or managed
-trimming in otherwise ineligible builds.
-Automatic NativeAOT selection requires an optimized build; unoptimized builds
-require explicit `true` to avoid generating large codegen graphs by default.
+it avoids NativeAOT object inspection. Explicit `IlcGenerateDgmlFile`
+diagnostics are independent and remain honored. The switch does not enable R8
+or managed trimming in otherwise ineligible builds.
+
+NativeAOT object inspection currently requires explicit `true` and the Android
+NDK's `llvm-readobj` and adjacent `llvm-objdump`, even when using the
+workload-provided native linker. The workload's native tools do not yet include them.
+`GetAndroidDependencies` includes the NDK for this opt-in configuration.
+Leaving the override unset or `false` preserves NativeAOT's no-NDK build path
+and keeps all ACW classes.
 
 This pipeline disables all obfuscation, including private-member
 obfuscation, with both `-dontobfuscate` and R8's `--no-minification` option.
