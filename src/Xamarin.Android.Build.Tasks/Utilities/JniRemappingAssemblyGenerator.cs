@@ -50,6 +50,19 @@ namespace Xamarin.Android.Tasks
 	{
 		const string TypeReplacementsVariableName = "jni_remapping_type_replacements";
 		const string MethodReplacementIndexVariableName = "jni_remapping_method_replacement_index";
+		const string RemappingDataVariableName = "jni_remapping_data";
+
+		sealed class JniRemappingDataContextDataProvider : NativeAssemblerStructContextDataProvider
+		{
+			public override string GetPointedToSymbolName (object data, string fieldName)
+			{
+				return fieldName switch {
+					nameof (JniRemappingData.type_replacements) => TypeReplacementsVariableName,
+					nameof (JniRemappingData.method_replacement_index) => MethodReplacementIndexVariableName,
+					_ => base.GetPointedToSymbolName (data, fieldName),
+				};
+			}
+		}
 
 		sealed class JniRemappingTypeReplacementEntryContextDataProvider : NativeAssemblerStructContextDataProvider
 		{
@@ -185,6 +198,21 @@ namespace Xamarin.Android.Tasks
 			public string    replacement;
 		};
 
+		[NativeAssemblerStructContextDataProvider (typeof(JniRemappingDataContextDataProvider))]
+		sealed class JniRemappingData
+		{
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+#pragma warning disable CS0649 // Field is populated during native code generation
+			public JniRemappingTypeReplacementEntry type_replacements;
+
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+			public JniRemappingIndexTypeEntry method_replacement_index;
+#pragma warning restore CS0649
+
+			public uint type_replacement_count;
+			public uint method_replacement_index_count;
+		}
+
 		List<JniRemappingTypeReplacement> typeReplacementsInput;
 		List<JniRemappingMethodReplacement> methodReplacementsInput;
 
@@ -193,8 +221,33 @@ namespace Xamarin.Android.Tasks
 		StructureInfo jniRemappingIndexMethodEntryStructureInfo;
 		StructureInfo jniRemappingIndexTypeEntryStructureInfo;
 		StructureInfo jniRemappingTypeReplacementEntryStructureInfo;
+		StructureInfo jniRemappingDataStructureInfo;
+		readonly Dictionary<string, byte []> utf8SortKeys = new Dictionary<string, byte []> (StringComparer.Ordinal);
 
+		public int ReplacementTypeCount { get; private set; } = 0;
 		public int ReplacementMethodIndexEntryCount { get; private set; } = 0;
+
+		int CompareUtf8 (string left, string right)
+		{
+			byte [] leftBytes = GetUtf8SortKey (left);
+			byte [] rightBytes = GetUtf8SortKey (right);
+			int min = Math.Min (leftBytes.Length, rightBytes.Length);
+			for (int i = 0; i < min; i++) {
+				if (leftBytes [i] != rightBytes [i]) {
+					return leftBytes [i] < rightBytes [i] ? -1 : 1;
+				}
+			}
+			return leftBytes.Length.CompareTo (rightBytes.Length);
+		}
+
+		byte [] GetUtf8SortKey (string value)
+		{
+			if (!utf8SortKeys.TryGetValue (value, out byte [] bytes)) {
+				bytes = Encoding.UTF8.GetBytes (value);
+				utf8SortKeys.Add (value, bytes);
+			}
+			return bytes;
+		}
 
 		public JniRemappingAssemblyGenerator (TaskLoggingHelper log)
 			: base (log)
@@ -222,7 +275,8 @@ namespace Xamarin.Android.Tasks
 
 				typeReplacements.Add (new StructureInstance<JniRemappingTypeReplacementEntry> (jniRemappingTypeReplacementEntryStructureInfo, entry));
 			}
-			typeReplacements.Sort ((StructureInstance<JniRemappingTypeReplacementEntry> l, StructureInstance<JniRemappingTypeReplacementEntry> r) => l.Instance.name.str.CompareTo (r.Instance.name.str));
+			typeReplacements.Sort ((StructureInstance<JniRemappingTypeReplacementEntry> l, StructureInstance<JniRemappingTypeReplacementEntry> r) => CompareUtf8 (l.Instance.name.str, r.Instance.name.str));
+			ReplacementTypeCount = typeReplacements.Count;
 
 			var methodIndexTypes = new List<StructureInstance<JniRemappingIndexTypeEntry>> ();
 			var types = new Dictionary<string, StructureInstance<JniRemappingIndexTypeEntry>> (StringComparer.Ordinal);
@@ -255,10 +309,10 @@ namespace Xamarin.Android.Tasks
 
 			foreach (var kvp in types) {
 				kvp.Value.Instance.method_count = (uint)kvp.Value.Instance.TypeMethods.Count;
-				kvp.Value.Instance.TypeMethods.Sort ((StructureInstance<JniRemappingIndexMethodEntry> l, StructureInstance<JniRemappingIndexMethodEntry> r) => l.Instance.name.str.CompareTo (r.Instance.name.str));
+				kvp.Value.Instance.TypeMethods.Sort ((StructureInstance<JniRemappingIndexMethodEntry> l, StructureInstance<JniRemappingIndexMethodEntry> r) => CompareUtf8 (l.Instance.name.str, r.Instance.name.str));
 			}
 
-			methodIndexTypes.Sort ((StructureInstance<JniRemappingIndexTypeEntry> l, StructureInstance<JniRemappingIndexTypeEntry> r) => l.Instance.name.str.CompareTo (r.Instance.name.str));
+			methodIndexTypes.Sort ((StructureInstance<JniRemappingIndexTypeEntry> l, StructureInstance<JniRemappingIndexTypeEntry> r) => CompareUtf8 (l.Instance.name.str, r.Instance.name.str));
 			ReplacementMethodIndexEntryCount = methodIndexTypes.Count;
 
 			return (typeReplacements, methodIndexTypes);
@@ -282,7 +336,7 @@ namespace Xamarin.Android.Tasks
 					return 0;
 				}
 
-				return (uint)Encoding.UTF8.GetBytes (str).Length;
+				return (uint)Encoding.UTF8.GetByteCount (str);
 			}
 		}
 
@@ -310,6 +364,7 @@ namespace Xamarin.Android.Tasks
 					new StructureInstance<JniRemappingIndexTypeEntry> (jniRemappingIndexTypeEntryStructureInfo, new JniRemappingIndexTypeEntry ()) { IsZeroInitialized = true },
 					LlvmIrVariableOptions.GlobalConstant
 				);
+				AddData (module);
 				return;
 			}
 
@@ -320,6 +375,20 @@ namespace Xamarin.Android.Tasks
 			}
 
 			module.AddGlobalVariable (MethodReplacementIndexVariableName, methodIndexTypes, LlvmIrVariableOptions.GlobalConstant);
+			AddData (module);
+		}
+
+		void AddData (LlvmIrModule module)
+		{
+			var data = new JniRemappingData {
+				type_replacement_count = (uint)ReplacementTypeCount,
+				method_replacement_index_count = (uint)ReplacementMethodIndexEntryCount,
+			};
+			module.AddGlobalVariable (
+				RemappingDataVariableName,
+				new StructureInstance<JniRemappingData> (jniRemappingDataStructureInfo, data),
+				LlvmIrVariableOptions.GlobalConstant
+			);
 		}
 
 		void MapStructures (LlvmIrModule module)
@@ -329,6 +398,7 @@ namespace Xamarin.Android.Tasks
 			jniRemappingIndexMethodEntryStructureInfo = module.MapStructure<JniRemappingIndexMethodEntry> ();
 			jniRemappingIndexTypeEntryStructureInfo = module.MapStructure<JniRemappingIndexTypeEntry> ();
 			jniRemappingTypeReplacementEntryStructureInfo = module.MapStructure<JniRemappingTypeReplacementEntry> ();
+			jniRemappingDataStructureInfo = module.MapStructure<JniRemappingData> ();
 		}
 	}
 }
