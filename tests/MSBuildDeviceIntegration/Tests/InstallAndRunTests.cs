@@ -2560,6 +2560,11 @@ namespace UnnamedProject
 				var members = new Java.Interop.JniPeerMembers ("example/ActivitéSource", typeof (global::Example.RemapActivity));
 				try {
 					members.InstanceMethods.InvokeNonvirtualVoidMethod ("méthodeSource.()V", this, null);
+					members.InstanceMethods.InvokeNonvirtualVoidMethod ("lookup123456789.()V", this, null);
+					members.InstanceMethods.InvokeNonvirtualVoidMethod ("lookup1234567890.()V", this, null);
+					members.InstanceMethods.InvokeNonvirtualVoidMethod ("lookup12345678901.()V", this, null);
+					members.InstanceMethods.InvokeNonvirtualVoidMethod ("aaaaaaaaaaaaaaaaA.()V", this, null);
+					members.InstanceMethods.InvokeNonvirtualVoidMethod ("aaaaaaaaaaaaaaaaB.()V", this, null);
 				} finally {
 					Java.Interop.JniPeerMembers.Dispose (members);
 				}
@@ -2588,6 +2593,13 @@ namespace UnnamedProject
 					logcatOutput,
 					"The non-ASCII method name wasn't remapped!"
 			);
+			foreach (string methodName in new [] { "boundary15", "boundary16", "boundary17", "secondChunkA", "secondChunkB" }) {
+				StringAssert.Contains (
+						$"RemapActivity.{methodName}() invoked!",
+						logcatOutput,
+						$"The ASCII chunk-boundary method '{methodName}' wasn't remapped!"
+				);
+			}
 		}
 
 		[Test]
