@@ -138,7 +138,6 @@ namespace Xamarin.Android.Tools
 						//the original exception is more important than this one
 					}
 				}
-
 			}
 		}
 
@@ -359,3 +358,4 @@ namespace Xamarin.Android.Tools
 		}
 	}
 }
+
