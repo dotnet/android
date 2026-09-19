@@ -9,9 +9,11 @@ namespace Android.App {
 
 		public Notification (int icon, string tickerText) : this (icon, tickerText, Java.Lang.JavaSystem.CurrentTimeMillis ()) {}
 
-		public Notification (int icon, Java.Lang.ICharSequence tickerText) : this (icon, tickerText, Java.Lang.JavaSystem.CurrentTimeMillis ()) {}
+#pragma warning disable CS0618 // Preserve the legacy ICharSequence constructor.
+	public Notification (int icon, Java.Lang.ICharSequence tickerText) : this (icon, tickerText, Java.Lang.JavaSystem.CurrentTimeMillis ()) {}
+#pragma warning restore CS0618
 
-		static IntPtr vibrate_jfieldId;
+	static IntPtr vibrate_jfieldId;
 		[Register ("vibrate")]
 		public long[] Vibrate {
 			get {
@@ -29,5 +31,4 @@ namespace Android.App {
 		}
 	}
 }
-
 

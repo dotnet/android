@@ -489,8 +489,11 @@ namespace Android.Runtime {
 		{
 			try {
 				if (methods.IsEmpty) {
-					if (jniAddNativeMethodRegistrationAttributePresent)
+					if (jniAddNativeMethodRegistrationAttributePresent) {
+#pragma warning disable CS0618 // ReflectionJniTypeManager has not migrated its registration override to spans.
 						base.RegisterNativeMembers (nativeClass, type, methods.ToString ());
+#pragma warning restore CS0618
+					}
 					return;
 				} else if (FastRegisterNativeMembers (nativeClass, type, methods)) {
 					return;
@@ -499,7 +502,9 @@ namespace Android.Runtime {
 				int methodCount = CountMethods (methods);
 				if (methodCount < 1) {
 					if (jniAddNativeMethodRegistrationAttributePresent) {
+#pragma warning disable CS0618 // ReflectionJniTypeManager has not migrated its registration override to spans.
 						base.RegisterNativeMembers (nativeClass, type, methods.ToString ());
+#pragma warning restore CS0618
 					}
 					return;
 				}

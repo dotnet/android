@@ -24,6 +24,8 @@
 *REMOVED*Org.Apache.Http.Impl.Cookie.BasicClientCookie.SetExpiryDate(Java.Util.Date! date) -> void
 *REMOVED*Org.Apache.Http.Impl.Cookie.BasicClientCookie.SetPath(string! path) -> void
 *REMOVED*Org.Apache.Http.Impl.Cookie.BasicClientCookie.SetValue(string! value) -> void
+*REMOVED*Xamarin.Android.Net.IAndroidAuthenticationModule.Authenticate(string! challenge, Java.Net.HttpURLConnection! request, System.Net.ICredentials! credentials) -> System.Net.Authorization!
+*REMOVED*Xamarin.Android.Net.IAndroidAuthenticationModule.PreAuthenticate(Java.Net.HttpURLConnection! request, System.Net.ICredentials! credentials) -> System.Net.Authorization!
 *REMOVED*REMOVED Xamarin.Android.Net.AndroidClientHandler
 *REMOVED*REMOVED Xamarin.Android.Net.AndroidClientHandler.AndroidClientHandler() -> void
 *REMOVED*REMOVED Xamarin.Android.Net.AndroidClientHandler.AssertSelf() -> void
@@ -2435,6 +2437,8 @@ REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.GetJavaProxy(System.Uri
 REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.GetSSLHostnameVerifier(Javax.Net.Ssl.HttpsURLConnection! connection) -> Javax.Net.Ssl.IHostnameVerifier?
 REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.SetupRequest(System.Net.Http.HttpRequestMessage! request, Java.Net.HttpURLConnection! conn) -> System.Threading.Tasks.Task!
 REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.WriteRequestContentToOutput(System.Net.Http.HttpRequestMessage! request, Java.Net.HttpURLConnection! httpConnection, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Xamarin.Android.Net.IAndroidAuthenticationModule.Authenticate(string! challenge, Java.Net.HttpURLConnection! request, System.Net.ICredentials! credentials) -> System.Net.Authorization?
+Xamarin.Android.Net.IAndroidAuthenticationModule.PreAuthenticate(Java.Net.HttpURLConnection! request, System.Net.ICredentials! credentials) -> System.Net.Authorization?
 abstract Android.App.PrivateCompute.DataMigrationToPccService.OnMigrationRequested(Java.Util.Functions.IConsumer! callback) -> void
 abstract Android.App.PrivateCompute.PccService.OnReceiveData(Android.OS.Bundle! data, string! packageName) -> void
 abstract Android.Media.Projection.AppContentProjectionService.OnContentRequest(Android.Media.Projection.AppContentRequest! request) -> void

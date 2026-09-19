@@ -235,9 +235,11 @@ namespace Android.Runtime {
 			get { return new JavaSet (GetKeys (), JniHandleOwnership.TransferLocalRef); }
 		}
 
+#pragma warning disable CS8766 // Preserve the legacy nullable API and null SyncRoot behavior.
 		public object? SyncRoot {
 			get { return null; }
 		}
+#pragma warning restore CS8766
 
 		public ICollection Values {
 			get { return new JavaCollection (GetValues (), JniHandleOwnership.TransferLocalRef); }
