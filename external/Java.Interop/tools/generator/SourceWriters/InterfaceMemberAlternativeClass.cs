@@ -53,6 +53,16 @@ namespace generator.SourceWriters
 			if (needs_class_ref || iface.Methods.Where (m => m.IsStatic).Any ())
 				Fields.Add (new PeerMembersField (opt, iface.RawJniName, Name, false));
 
+			// This type flattens the constants and static methods of the interface and every
+			// interface it implements into a single type deriving from `Java.Lang.Object`, so
+			// none of its members hide an inherited one and `new` would produce CS0109.
+			foreach (var field in Fields)
+				field.IsShadow = false;
+			foreach (var property in Properties)
+				property.IsShadow = false;
+			foreach (var method in Methods)
+				method.IsShadow = false;
+
 			if (!iface.HasManagedName && !opt.SupportInterfaceConstants)
 				sibling_classes.Add (new InterfaceConstsForwardClass (iface, opt));
 		}

@@ -60,6 +60,8 @@ namespace Xamarin.Android.JniEnv
 			o.WriteLine ("//");
 			o.WriteLine ("// To make changes, edit monodroid/tools/jnienv-gen and rerun");
 			o.WriteLine ();
+			o.WriteLine ("#nullable enable");
+			o.WriteLine ();
 			o.WriteLine ("using System;");
 			o.WriteLine ("using System.Runtime.ExceptionServices;");
 			o.WriteLine ("using System.Runtime.InteropServices;");
@@ -199,7 +201,7 @@ namespace Xamarin.Android.JniEnv
 					var copyArray = JNIEnvEntries.Single (e => e.Name.StartsWith ("Get", StringComparison.Ordinal) && e.Name.EndsWith ("ArrayRegion", StringComparison.Ordinal) &&
 							e.Parameters [0].Type.Type == entry.ReturnType.Type);
 					o.Write ("\t\t{2} static {0} {1} (", entry.ReturnType.ManagedType, entry.ApiName, entry.Visibility);
-					o.WriteLine ("{0} array)", copyArray.Parameters [3].Type.ManagedType);
+					o.WriteLine ("{0}? array)", copyArray.Parameters [3].Type.ManagedType);
 					o.WriteLine ("\t\t{");
 					o.WriteLine ("\t\t\tif (array == null)");
 					o.WriteLine ("\t\t\t\treturn IntPtr.Zero;");

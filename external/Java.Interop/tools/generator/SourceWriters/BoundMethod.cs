@@ -52,9 +52,6 @@ namespace generator.SourceWriters
 			if (method.ExplicitInterface.HasValue ())
 				ExplicitInterfaceImplementation = method.ExplicitInterface;
 
-			if ((IsVirtual || !IsOverride) && type.RequiresNew (method.AdjustedName, method))
-				IsShadow = true;
-
 			// Allow user to override our virtual/override logic
 			if (method.ManagedOverride?.ToLowerInvariant () == "virtual") {
 				IsVirtual = true;
@@ -66,6 +63,11 @@ namespace generator.SourceWriters
 				IsVirtual = false;
 				IsOverride = false;
 			}
+
+			// `new` hides an inherited member, so it is invalid on an override or on an
+			// explicit interface implementation.
+			if ((IsVirtual || !IsOverride) && !ExplicitInterfaceImplementation.HasValue () && type.RequiresNew (method.AdjustedName, method, opt))
+				IsShadow = true;
 
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
 

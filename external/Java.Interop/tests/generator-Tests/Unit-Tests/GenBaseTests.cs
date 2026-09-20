@@ -17,25 +17,25 @@ namespace generatortests
 		public void PropertyRequiresNew ()
 		{
 			var c = SupportTypeBuilder.CreateClassWithProperty ("MyClass", "java.myClass", "Handle", "int", options);
-			Assert.True (c.RequiresNew (c.Properties.First ()));
+			Assert.True (c.RequiresNew (c.Properties.First (), options));
 
 			c.Properties.First ().Name = "GetHashCode";
-			Assert.True (c.RequiresNew (c.Properties.First ()));
+			Assert.True (c.RequiresNew (c.Properties.First (), options));
 
 			c.Properties.First ().Name = "GetType";
-			Assert.True (c.RequiresNew (c.Properties.First ()));
+			Assert.True (c.RequiresNew (c.Properties.First (), options));
 
 			c.Properties.First ().Name = "ToString";
-			Assert.True (c.RequiresNew (c.Properties.First ()));
+			Assert.True (c.RequiresNew (c.Properties.First (), options));
 
 			c.Properties.First ().Name = "Equals";
-			Assert.True (c.RequiresNew (c.Properties.First ()));
+			Assert.True (c.RequiresNew (c.Properties.First (), options));
 
 			c.Properties.First ().Name = "ReferenceEquals";
-			Assert.True (c.RequiresNew (c.Properties.First ()));
+			Assert.True (c.RequiresNew (c.Properties.First (), options));
 
 			c.Properties.First ().Name = "Handle2";
-			Assert.False (c.RequiresNew (c.Properties.First ()));
+			Assert.False (c.RequiresNew (c.Properties.First (), options));
 		}
 
 		[Test]
@@ -61,12 +61,12 @@ namespace generatortests
 			var m = SupportTypeBuilder.CreateMethod (c, "Handle", options);
 
 			// Yes
-			Assert.True (c.RequiresNew (m.Name, m));
+			Assert.True (c.RequiresNew (m.Name, m, options));
 
 			// Yes, even with parameters
 			m.Parameters.Add (new Parameter ("value", "int", "int", false));
 
-			Assert.True (c.RequiresNew (m.Name, m));
+			Assert.True (c.RequiresNew (m.Name, m, options));
 		}
 
 		[Test]
@@ -76,19 +76,19 @@ namespace generatortests
 			var m = SupportTypeBuilder.CreateMethod (c, "Equals", options, "void", false, false);
 
 			// No because 0 parameters
-			Assert.False (c.RequiresNew (m.Name, m));
+			Assert.False (c.RequiresNew (m.Name, m, options));
 
 			var p0 = new Parameter ("p0", "object", "object", false);
 			m.Parameters.Add (p0);
 
 			// Yes
-			Assert.True (c.RequiresNew (m.Name, m));
+			Assert.True (c.RequiresNew (m.Name, m, options));
 
 			// No because parameter is wrong type
 			var p1 = new Parameter ("p1", "string", "string", false);
 			m = SupportTypeBuilder.CreateMethod (c, "Equals", options, "void", true, false, p1);
 
-			Assert.False (c.RequiresNew (m.Name, m));
+			Assert.False (c.RequiresNew (m.Name, m, options));
 		}
 
 		[Test]
@@ -113,12 +113,12 @@ namespace generatortests
 			var m = SupportTypeBuilder.CreateMethod (c, name, options);
 
 			// Yes
-			Assert.True (c.RequiresNew (m.Name, m));
+			Assert.True (c.RequiresNew (m.Name, m, options));
 
 			// No because > 0 parameters
 			m.Parameters.Add (new Parameter ("value", "int", "int", false));
 
-			Assert.False (c.RequiresNew (m.Name, m));
+			Assert.False (c.RequiresNew (m.Name, m, options));
 		}
 
 		void TestStaticMethodsWithTwoParameters (string name)
@@ -130,17 +130,17 @@ namespace generatortests
 			var m = SupportTypeBuilder.CreateMethod (c, name, options, "void", true, false, p0, p1);
 
 			// Yes
-			Assert.True (c.RequiresNew (m.Name, m));
+			Assert.True (c.RequiresNew (m.Name, m, options));
 
 			// No because != 2 parameters
 			m.Parameters.Add (new Parameter ("value", "int", "int", false));
-			Assert.False (c.RequiresNew (m.Name, m));
+			Assert.False (c.RequiresNew (m.Name, m, options));
 
 			// No because parameter is wrong type
 			var p2 = new Parameter ("p1", "string", "string", false);
 			m = SupportTypeBuilder.CreateMethod (c, name, options, "void", true, false, p0, p2);
 
-			Assert.False (c.RequiresNew (m.Name, m));
+			Assert.False (c.RequiresNew (m.Name, m, options));
 		}
 	}
 }

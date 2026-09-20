@@ -1,3 +1,15 @@
+// Java allows a type to redeclare a member that a base type or base interface already
+// declares, including members that are hand-bound instead of generated.
+#pragma warning disable 0108, 0114
+// Java types may declare a `finalize()` method, which is bound as `Finalize()`.
+#pragma warning disable 0465
+// Java deprecates types and members independently of the APIs that use, declare or
+// override them, so a binding that is not deprecated can still reference one that is.
+#pragma warning disable 0618, 0672, 0809
+// Java nullness annotations are not required to agree between a member and the member
+// it overrides or implements, and are absent from much of the API surface.
+#pragma warning disable 8603, 8604, 8625, 8764, 8765, 8766, 8767, 8768
+
 using System;
 using System.Collections.Generic;
 using Android.Runtime;
@@ -11,7 +23,7 @@ namespace Java.Util {
 	public partial interface IDeque : global::Java.Util.IQueue {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.util']/interface[@name='Deque']/method[@name='add' and count(parameter)=1 and parameter[1][@type='E']]"
 		[Register ("add", "(Ljava/lang/Object;)Z", "GetAdd_Ljava_lang_Object_Handler:Java.Util.IDequeInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
-		bool Add (global::Java.Lang.Object e);
+		new bool Add (global::Java.Lang.Object e);
 
 	}
 

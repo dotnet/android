@@ -26,6 +26,10 @@ namespace generator.SourceWriters
 			IsUnsafe = true;
 			IsStatic = method.IsStatic;
 
+			// The invoker derives from `Java.Lang.Object`, so interface members that collide
+			// with one of its members have to be marked `new`.
+			IsShadow = GenBase.HidesJavaLangObjectMember (method.AdjustedName, method);
+
 			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
 				method_callback = new MethodCallback (iface, method, opt, null, method.IsReturnCharSequence);
 			}

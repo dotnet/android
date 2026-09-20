@@ -75,15 +75,16 @@ namespace Xamarin.SourceWriter
 			else if (IsPrivate)
 				writer.Write ("private ");
 
+			// `new` must precede `const`, so write it first for all field kinds.
+			if (IsShadow)
+				writer.Write ("new ");
+
 			if (IsStatic)
 				writer.Write ("static ");
 			if (IsReadonly)
 				writer.Write ("readonly ");
 			if (IsConst)
 				writer.Write ("const ");
-
-			if (IsShadow)
-				writer.Write ("new ");
 
 			WriteType (writer);
 

@@ -39,7 +39,11 @@ namespace generator.SourceWriters
 			ExplicitInterfaceImplementation = method.ExplicitInterface;
 
 			IsAbstract = true;
-			IsShadow = impl.RequiresNew (method.Name, method);
+			// `new` hides an inherited member, so it is invalid on an override or on an
+			// explicit interface implementation.
+			IsShadow = !ExplicitInterfaceImplementation.HasValue () &&
+					method.ManagedOverride?.ToLowerInvariant () != "override" &&
+					impl.RequiresNew (method.Name, method, opt);
 			SetVisibility (method.Visibility);
 
 			NewFirst = true;

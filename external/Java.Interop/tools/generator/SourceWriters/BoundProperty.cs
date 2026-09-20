@@ -31,7 +31,6 @@ namespace generator.SourceWriters
 
 			if (is_virtual && withCallbacks) {
 				IsVirtual = true;
-				IsShadow = gen.RequiresNew (property);
 
 				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1)
 					getter_callback = new MethodCallback (gen, property.Getter, opt, property.AdjustedName, false);
@@ -71,6 +70,9 @@ namespace generator.SourceWriters
 				IsVirtual = false;
 				IsOverride = false;
 			}
+
+			// `new` only applies when the property hides rather than overrides the inherited one.
+			IsShadow = !IsOverride && gen.RequiresNew (property, opt);
 
 			// Add [Obsolete] or [ObsoletedOSPlatform]
 			if (property.IsWholePropertyDeprecated) {

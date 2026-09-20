@@ -54,6 +54,7 @@ namespace generator.SourceWriters
 			UseExplicitPrivateKeyword = true;
 
 			IsStatic = field.IsStatic;
+			IsShadow = type.HidesInheritedMember (field.Name, opt);
 
 			HasGet = true;
 

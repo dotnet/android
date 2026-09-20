@@ -15,6 +15,7 @@ namespace generator.SourceWriters
 		readonly Method method;
 		readonly string property_name;
 		readonly bool is_formatted;
+		readonly bool is_shadow;
 		readonly CodeGenerationOptions opt;
 
 		readonly FieldWriter delegate_field;
@@ -34,14 +35,19 @@ namespace generator.SourceWriters
 			is_formatted = isFormatted;
 			opt = options;
 
-			delegate_field = new MethodCallbackDelegateField (method, options);
-			delegate_getter = new GetDelegateHandlerMethod (method, options);
+			// The callback infrastructure is private, so it is only visible to - and therefore
+			// only hidden by - a derived type nested inside the type that declares it.
+			is_shadow = type.HidesEnclosingTypeCallback (method);
+
+			delegate_field = new MethodCallbackDelegateField (method, options) { IsShadow = is_shadow };
+			delegate_getter = new GetDelegateHandlerMethod (method, options) { IsShadow = is_shadow };
 
 			Name = "n_" + method.Name + method.IDSignature;
 			ReturnType = new TypeReferenceWriter (method.RetVal.NativeType);
 
 			IsStatic = true;
 			IsPrivate = method.IsInterfaceDefaultMethod;
+			IsShadow = is_shadow;
 
 			SourceWriterExtensions.AddObsolete (Attributes, null, opt, forceDeprecate: !string.IsNullOrWhiteSpace (method.Deprecated), deprecatedSince: method.DeprecatedSince);
 
@@ -74,7 +80,7 @@ namespace generator.SourceWriters
 			foreach (var attribute in attributes)
 				attribute.WriteAttribute (writer);
 
-			writer.WriteLine ($"private static {method.RetVal.NativeType} __{Name} (IntPtr jnienv, IntPtr native__this{method.Parameters.GetCallbackSignature (opt)})");
+			writer.WriteLine ($"private static {(is_shadow ? "new " : string.Empty)}{method.RetVal.NativeType} __{Name} (IntPtr jnienv, IntPtr native__this{method.Parameters.GetCallbackSignature (opt)})");
 			writer.WriteLine ("{");
 
 			writer.Indent ();

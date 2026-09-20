@@ -27,6 +27,13 @@ namespace generator.SourceWriters
 
 				SourceWriterExtensions.AddFields (this, iface, iface.Fields, seen, opt, context);
 			}
+
+			// This type flattens the constants of every implemented interface into a single
+			// static class, so none of its members hide an inherited one.
+			foreach (var field in Fields)
+				field.IsShadow = false;
+			foreach (var property in Properties)
+				property.IsShadow = false;
 		}
 
 		public bool ShouldGenerate => Fields.Any () || Properties.Any ();

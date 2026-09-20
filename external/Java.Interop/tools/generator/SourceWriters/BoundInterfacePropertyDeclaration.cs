@@ -18,6 +18,9 @@ namespace generator.SourceWriters
 			Name = property.AdjustedName;
 			ExplicitInterfaceImplementation = property.ExplicitInterface;
 
+			// Java lets an interface redeclare a member of a base interface; C# needs `new`.
+			IsShadow = !ExplicitInterfaceImplementation.HasValue () && gen.RequiresNew (property, opt);
+
 			PropertyType = new TypeReferenceWriter (opt.GetTypeReferenceName (property));
 			IsAutoProperty = true;
 

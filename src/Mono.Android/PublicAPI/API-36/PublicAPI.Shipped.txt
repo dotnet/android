@@ -129776,58 +129776,58 @@ Xamarin.Android.Net.IAndroidAuthenticationModule.AuthenticationType.get -> strin
 Xamarin.Android.Net.IAndroidAuthenticationModule.CanPreAuthenticate.get -> bool
 Xamarin.Android.Net.IAndroidAuthenticationModule.PreAuthenticate(Java.Net.HttpURLConnection! request, System.Net.ICredentials! credentials) -> System.Net.Authorization!
 Xamarin.Android.Net.IAndroidAuthenticationModule.Scheme.get -> Xamarin.Android.Net.AuthenticationScheme
-~static Android.Runtime.JNIEnv.CallBooleanMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[] parms) -> bool
-~static Android.Runtime.JNIEnv.CallByteMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[] parms) -> sbyte
-~static Android.Runtime.JNIEnv.CallCharMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[] parms) -> char
-~static Android.Runtime.JNIEnv.CallDoubleMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[] parms) -> double
-~static Android.Runtime.JNIEnv.CallFloatMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[] parms) -> float
-~static Android.Runtime.JNIEnv.CallIntMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[] parms) -> int
-~static Android.Runtime.JNIEnv.CallLongMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[] parms) -> long
-~static Android.Runtime.JNIEnv.CallNonvirtualBooleanMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> bool
-~static Android.Runtime.JNIEnv.CallNonvirtualByteMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> sbyte
-~static Android.Runtime.JNIEnv.CallNonvirtualCharMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> char
-~static Android.Runtime.JNIEnv.CallNonvirtualDoubleMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> double
-~static Android.Runtime.JNIEnv.CallNonvirtualFloatMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> float
-~static Android.Runtime.JNIEnv.CallNonvirtualIntMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> int
-~static Android.Runtime.JNIEnv.CallNonvirtualLongMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> long
-~static Android.Runtime.JNIEnv.CallNonvirtualObjectMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> nint
-~static Android.Runtime.JNIEnv.CallNonvirtualShortMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> short
-~static Android.Runtime.JNIEnv.CallNonvirtualVoidMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> void
-~static Android.Runtime.JNIEnv.CallObjectMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[] parms) -> nint
-~static Android.Runtime.JNIEnv.CallShortMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[] parms) -> short
-~static Android.Runtime.JNIEnv.CallStaticBooleanMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> bool
-~static Android.Runtime.JNIEnv.CallStaticByteMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> sbyte
-~static Android.Runtime.JNIEnv.CallStaticCharMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> char
-~static Android.Runtime.JNIEnv.CallStaticDoubleMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> double
-~static Android.Runtime.JNIEnv.CallStaticFloatMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> float
-~static Android.Runtime.JNIEnv.CallStaticIntMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> int
-~static Android.Runtime.JNIEnv.CallStaticLongMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> long
-~static Android.Runtime.JNIEnv.CallStaticObjectMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> nint
-~static Android.Runtime.JNIEnv.CallStaticShortMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> short
-~static Android.Runtime.JNIEnv.CallStaticVoidMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[] parms) -> void
-~static Android.Runtime.JNIEnv.CallVoidMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[] parms) -> void
-~static Android.Runtime.JNIEnv.CopyArray(byte[] src, nint dest) -> void
-~static Android.Runtime.JNIEnv.CopyArray(char[] src, nint dest) -> void
-~static Android.Runtime.JNIEnv.CopyArray(double[] src, nint dest) -> void
-~static Android.Runtime.JNIEnv.CopyArray(float[] src, nint dest) -> void
-~static Android.Runtime.JNIEnv.CopyArray(int[] src, nint dest) -> void
-~static Android.Runtime.JNIEnv.CopyArray(long[] src, nint dest) -> void
-~static Android.Runtime.JNIEnv.CopyArray(nint src, byte[] dest) -> void
-~static Android.Runtime.JNIEnv.CopyArray(nint src, char[] dest) -> void
-~static Android.Runtime.JNIEnv.CopyArray(nint src, double[] dest) -> void
-~static Android.Runtime.JNIEnv.CopyArray(nint src, float[] dest) -> void
-~static Android.Runtime.JNIEnv.CopyArray(nint src, int[] dest) -> void
-~static Android.Runtime.JNIEnv.CopyArray(nint src, long[] dest) -> void
-~static Android.Runtime.JNIEnv.CopyArray(nint src, short[] dest) -> void
-~static Android.Runtime.JNIEnv.CopyArray(short[] src, nint dest) -> void
-~static Android.Runtime.JNIEnv.GetFieldID(nint jclass, string name, string sig) -> nint
-~static Android.Runtime.JNIEnv.GetMethodID(nint kls, string name, string signature) -> nint
-~static Android.Runtime.JNIEnv.GetStaticFieldID(nint jclass, string name, string sig) -> nint
-~static Android.Runtime.JNIEnv.GetStaticMethodID(nint jclass, string name, string sig) -> nint
-~static Android.Runtime.JNIEnv.NewArray(byte[] array) -> nint
-~static Android.Runtime.JNIEnv.NewArray(char[] array) -> nint
-~static Android.Runtime.JNIEnv.NewArray(double[] array) -> nint
-~static Android.Runtime.JNIEnv.NewArray(float[] array) -> nint
-~static Android.Runtime.JNIEnv.NewArray(int[] array) -> nint
-~static Android.Runtime.JNIEnv.NewArray(long[] array) -> nint
-~static Android.Runtime.JNIEnv.NewArray(short[] array) -> nint
+static Android.Runtime.JNIEnv.CallBooleanMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[]! parms) -> bool
+static Android.Runtime.JNIEnv.CallByteMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[]! parms) -> sbyte
+static Android.Runtime.JNIEnv.CallCharMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[]! parms) -> char
+static Android.Runtime.JNIEnv.CallDoubleMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[]! parms) -> double
+static Android.Runtime.JNIEnv.CallFloatMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[]! parms) -> float
+static Android.Runtime.JNIEnv.CallIntMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[]! parms) -> int
+static Android.Runtime.JNIEnv.CallLongMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[]! parms) -> long
+static Android.Runtime.JNIEnv.CallNonvirtualBooleanMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> bool
+static Android.Runtime.JNIEnv.CallNonvirtualByteMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> sbyte
+static Android.Runtime.JNIEnv.CallNonvirtualCharMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> char
+static Android.Runtime.JNIEnv.CallNonvirtualDoubleMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> double
+static Android.Runtime.JNIEnv.CallNonvirtualFloatMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> float
+static Android.Runtime.JNIEnv.CallNonvirtualIntMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> int
+static Android.Runtime.JNIEnv.CallNonvirtualLongMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> long
+static Android.Runtime.JNIEnv.CallNonvirtualObjectMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> nint
+static Android.Runtime.JNIEnv.CallNonvirtualShortMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> short
+static Android.Runtime.JNIEnv.CallNonvirtualVoidMethod(nint jobject, nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> void
+static Android.Runtime.JNIEnv.CallObjectMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[]! parms) -> nint
+static Android.Runtime.JNIEnv.CallShortMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[]! parms) -> short
+static Android.Runtime.JNIEnv.CallStaticBooleanMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> bool
+static Android.Runtime.JNIEnv.CallStaticByteMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> sbyte
+static Android.Runtime.JNIEnv.CallStaticCharMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> char
+static Android.Runtime.JNIEnv.CallStaticDoubleMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> double
+static Android.Runtime.JNIEnv.CallStaticFloatMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> float
+static Android.Runtime.JNIEnv.CallStaticIntMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> int
+static Android.Runtime.JNIEnv.CallStaticLongMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> long
+static Android.Runtime.JNIEnv.CallStaticObjectMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> nint
+static Android.Runtime.JNIEnv.CallStaticShortMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> short
+static Android.Runtime.JNIEnv.CallStaticVoidMethod(nint jclass, nint jmethod, params Android.Runtime.JValue[]! parms) -> void
+static Android.Runtime.JNIEnv.CallVoidMethod(nint jobject, nint jmethod, params Android.Runtime.JValue[]! parms) -> void
+static Android.Runtime.JNIEnv.CopyArray(byte[]! src, nint dest) -> void
+static Android.Runtime.JNIEnv.CopyArray(char[]! src, nint dest) -> void
+static Android.Runtime.JNIEnv.CopyArray(double[]! src, nint dest) -> void
+static Android.Runtime.JNIEnv.CopyArray(float[]! src, nint dest) -> void
+static Android.Runtime.JNIEnv.CopyArray(int[]! src, nint dest) -> void
+static Android.Runtime.JNIEnv.CopyArray(long[]! src, nint dest) -> void
+static Android.Runtime.JNIEnv.CopyArray(nint src, byte[]! dest) -> void
+static Android.Runtime.JNIEnv.CopyArray(nint src, char[]! dest) -> void
+static Android.Runtime.JNIEnv.CopyArray(nint src, double[]! dest) -> void
+static Android.Runtime.JNIEnv.CopyArray(nint src, float[]! dest) -> void
+static Android.Runtime.JNIEnv.CopyArray(nint src, int[]! dest) -> void
+static Android.Runtime.JNIEnv.CopyArray(nint src, long[]! dest) -> void
+static Android.Runtime.JNIEnv.CopyArray(nint src, short[]! dest) -> void
+static Android.Runtime.JNIEnv.CopyArray(short[]! src, nint dest) -> void
+static Android.Runtime.JNIEnv.GetFieldID(nint jclass, string! name, string! sig) -> nint
+static Android.Runtime.JNIEnv.GetMethodID(nint kls, string! name, string! signature) -> nint
+static Android.Runtime.JNIEnv.GetStaticFieldID(nint jclass, string! name, string! sig) -> nint
+static Android.Runtime.JNIEnv.GetStaticMethodID(nint jclass, string! name, string! sig) -> nint
+static Android.Runtime.JNIEnv.NewArray(byte[]? array) -> nint
+static Android.Runtime.JNIEnv.NewArray(char[]? array) -> nint
+static Android.Runtime.JNIEnv.NewArray(double[]? array) -> nint
+static Android.Runtime.JNIEnv.NewArray(float[]? array) -> nint
+static Android.Runtime.JNIEnv.NewArray(int[]? array) -> nint
+static Android.Runtime.JNIEnv.NewArray(long[]? array) -> nint
+static Android.Runtime.JNIEnv.NewArray(short[]? array) -> nint

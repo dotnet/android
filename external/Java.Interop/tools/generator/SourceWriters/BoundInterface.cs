@@ -229,7 +229,7 @@ namespace generator.SourceWriters
 				if (m.Name == iface.Name || iface.ContainsProperty (m.Name, true))
 					m.Name = "Invoke" + m.Name;
 
-				Methods.Add (new BoundInterfaceMethodDeclaration (m, iface.AssemblyQualifiedName + "Invoker", opt));
+				Methods.Add (new BoundInterfaceMethodDeclaration (iface, m, iface.AssemblyQualifiedName + "Invoker", opt));
 			}
 
 			if (!opt.SupportDefaultInterfaceMethods)

@@ -16,13 +16,16 @@ namespace generator.SourceWriters
 		readonly Method method;
 		readonly CodeGenerationOptions opt;
 
-		public BoundInterfaceMethodDeclaration (Method method, string adapter, CodeGenerationOptions opt)
+		public BoundInterfaceMethodDeclaration (GenBase gen, Method method, string adapter, CodeGenerationOptions opt)
 		{
 			this.method = method;
 			this.opt = opt;
 
 			Name = method.AdjustedName;
 			ExplicitInterfaceImplementation = method.ExplicitInterface;
+
+			// Java lets an interface redeclare a member of a base interface; C# needs `new`.
+			IsShadow = !ExplicitInterfaceImplementation.HasValue () && gen.RequiresNew (Name, method, opt);
 
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
 			IsDeclaration = true;

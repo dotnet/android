@@ -112,7 +112,9 @@ namespace generator.SourceWriters
 			var baseFromSameAssembly = klass?.BaseGen?.FromXml ?? false;
 			var requireNew = klass.InheritsObject && baseFromSameAssembly;
 
-			Fields.Add (new PeerMembersField (opt, klass.RawJniName, klass.Name, false));
+			// `_members` is private, so it is only visible to - and therefore only hidden by - a
+			// derived type that is nested inside the type declaring it.
+			Fields.Add (new PeerMembersField (opt, klass.RawJniName, klass.Name, false, isShadow: klass.HidesEnclosingTypePrivateMember ()));
 			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
 				Properties.Add (new ClassHandleGetter (requireNew));
 			}

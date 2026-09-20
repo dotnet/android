@@ -82,13 +82,12 @@ namespace generator.SourceWriters
 				if (prop != null) {
 					var setter = "__Set" + prop.Name;
 					props.Add (prop.Name);
-					refs.Add (setter);
 
-					AddInterfaceListenerEventsAndProperties (tw, iface, target, name, setter,
-						string.Format ("__v => {0} = __v", prop.Name),
-						string.Format ("__v => {0} = null", prop.Name), opt, prop.Getter);
+					if (AddInterfaceListenerEventsAndProperties (tw, iface, target, name, setter,
+							string.Format ("__v => {0} = __v", prop.Name),
+							string.Format ("__v => {0} = null", prop.Name), opt, prop.Getter))
+						refs.Add (setter);
 				} else {
-					refs.Add (method.Name);
 					string rm = null;
 					string remove;
 
@@ -102,9 +101,10 @@ namespace generator.SourceWriters
 						remove = string.Format ("__v => {{throw new NotSupportedException (\"Cannot unregister from {0}.{1}\");}}",
 							iface.FullName, method.Name);
 
-					AddInterfaceListenerEventsAndProperties (tw, iface, target, name, method.Name,
-						method.Name,
-						remove, opt, method);
+					if (AddInterfaceListenerEventsAndProperties (tw, iface, target, name, method.Name,
+							method.Name,
+							remove, opt, method))
+						refs.Add (method.Name);
 				}
 			}
 
@@ -116,10 +116,14 @@ namespace generator.SourceWriters
 
 		// Parameter 'setListenerMethod' refers to the method used to set the listener, like 'addOnRoutingChangedListener'/'setOnRoutingChangedListener'.
 		// This is used to determine what API level the listener setter is available on.
-		public static void AddInterfaceListenerEventsAndProperties (TypeWriter tw, InterfaceGen iface, ClassGen target, string name, string connector_fmt, string add, string remove, CodeGenerationOptions opt, Method setListenerMethod)
+		// Returns true when at least one event was generated, which means the caller needs to
+		// emit a `weak_implementor_<connector_fmt>` field for the generated event to reference.
+		public static bool AddInterfaceListenerEventsAndProperties (TypeWriter tw, InterfaceGen iface, ClassGen target, string name, string connector_fmt, string add, string remove, CodeGenerationOptions opt, Method setListenerMethod)
 		{
 			if (!iface.IsValid)
-				return;
+				return false;
+
+			var needsWeakImplementor = false;
 
 			foreach (var method in iface.Methods) {
 				var nameSpec = iface.Methods.Count > 1 ? method.EventName ?? method.AdjustedName : string.Empty;
@@ -131,14 +135,17 @@ namespace generator.SourceWriters
 				if (target.ContainsName (nameUnique))
 					nameUnique += "Event";
 
-				AddInterfaceListenerEventOrProperty (tw, iface, method, target, nameUnique, connector_fmt, add, remove, opt, setListenerMethod);
+				needsWeakImplementor |= AddInterfaceListenerEventOrProperty (tw, iface, method, target, nameUnique, connector_fmt, add, remove, opt, setListenerMethod);
 			}
+
+			return needsWeakImplementor;
 		}
 
-		public static void AddInterfaceListenerEventOrProperty (TypeWriter tw, InterfaceGen iface, Method method, ClassGen target, string name, string connector_fmt, string add, string remove, CodeGenerationOptions opt, Method setListenerMethod)
+		// Returns true when an event referencing `weak_implementor_<connector_fmt>` was generated.
+		public static bool AddInterfaceListenerEventOrProperty (TypeWriter tw, InterfaceGen iface, Method method, ClassGen target, string name, string connector_fmt, string add, string remove, CodeGenerationOptions opt, Method setListenerMethod)
 		{
 			if (method.EventName == string.Empty)
-				return;
+				return false;
 
 			var nameSpec = iface.Methods.Count > 1 ? method.AdjustedName : string.Empty;
 			var idx = iface.FullName.LastIndexOf (".", StringComparison.Ordinal);
@@ -155,22 +162,25 @@ namespace generator.SourceWriters
 			if (method.RetVal.IsVoid || method.IsEventHandlerWithHandledProperty) {
 				if (opt.GetSafeIdentifier (name) != name) {
 					Report.LogCodedWarning (0, Report.WarningInvalidEventName2, method, iface.FullName, name);
-					return;
+					return false;
 				} else {
 					var mt = target.Methods.Where (method => string.Compare (method.Name, connector_fmt, StringComparison.OrdinalIgnoreCase) == 0 && method.IsListenerConnector).FirstOrDefault ();
 					var hasHandlerArgument = mt != null && mt.IsListenerConnector && mt.Parameters.Count == 2 && mt.Parameters [1].Type == "Android.OS.Handler";
 
 					tw.Events.Add (new InterfaceListenerEvent (iface, setListenerMethod, name, nameSpec, full_delegate_name, connector_fmt, add, remove, hasHandlerArgument, opt));
+					return true;
 				}
 			} else {
 				if (opt.GetSafeIdentifier (name) != name) {
 					Report.LogCodedWarning (0, Report.WarningInvalidEventPropertyName, method, iface.FullName, name);
-					return;
+					return false;
 				}
 
 				tw.Properties.Add (new InterfaceListenerPropertyImplementor (iface, name, opt));
 				tw.Properties.Add (new InterfaceListenerProperty (iface, name, nameSpec, method.AdjustedName, full_delegate_name, opt));
 			}
+
+			return false;
 		}
 
 		public static void AddMethodCustomAttributes (List<AttributeWriter> attributes, Method method)

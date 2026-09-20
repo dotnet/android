@@ -181,6 +181,7 @@ namespace MonoDroid.Generation
 			sw.WriteLine ("//------------------------------------------------------------------------------");
 			sw.WriteLine ();
 			sw.WriteLine ("#nullable restore"); // Roslyn turns off NRT for generated files by default, re-enable it
+			WriteJavaProjectionWarningSuppressions (sw);
 		}
 
 		protected override bool GetEnumMappedMemberInfo ()

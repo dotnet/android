@@ -11,7 +11,7 @@ namespace generator.SourceWriters
 	public class PeerMembersField : FieldWriter
 	{
 		// static readonly JniPeerMembers _members = new XAPeerMembers ("android/provider/ContactsContract$AggregationExceptions", typeof (AggregationExceptions));
-		public PeerMembersField (CodeGenerationOptions opt, string rawJniType, string declaringType, bool isInterface, string name = "_members")
+		public PeerMembersField (CodeGenerationOptions opt, string rawJniType, string declaringType, bool isInterface, string name = "_members", bool isShadow = false)
 		{
 			Name = name;
 			Type = new TypeReferenceWriter ("JniPeerMembers");
@@ -19,6 +19,7 @@ namespace generator.SourceWriters
 			IsPrivate = isInterface;
 			IsStatic = true;
 			IsReadonly = true;
+			IsShadow = isShadow;
 
 			var peer = opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1 ? "XAPeerMembers" : "JniPeerMembers";
 

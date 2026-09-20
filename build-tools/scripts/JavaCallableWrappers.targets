@@ -2,7 +2,7 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="GenerateJavaCallableWrappers"
       AfterTargets="$(JavaCallableWrapperAfterTargets)"
-      Inputs="$(JavaCallableWrapperAbsAssembly);@(JavaCallableWrapperSource)"
+      Inputs="$(MSBuildThisFileFullPath);$(JavaCallableWrapperAbsAssembly);@(JavaCallableWrapperSource)"
       Outputs="$(OutputPath)mono.android.jar">
     <MakeDir Directories="$(IntermediateOutputPath)jcw;$(IntermediateOutputPath)jcw/bin" />
     <ItemGroup>
@@ -29,7 +29,7 @@
         Overwrite="True"
     />
     <PropertyGroup>
-      <_Target>-source $(JavacSourceVersion) -target $(JavacTargetVersion)</_Target>
+      <_Target>--release $(JavacTargetVersion)</_Target>
       <_D>-d "$(IntermediateOutputPath)jcw/bin"</_D>
       <_AndroidJar>"$(AndroidSdkDirectory)\platforms\android-$(AndroidPlatformId)\android.jar"</_AndroidJar>
       <_MonoAndroidJar>$(OutputPath)mono.android.jar</_MonoAndroidJar>

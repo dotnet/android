@@ -902,7 +902,7 @@ namespace MonoDroid.Generation
 
 		public string RawVisibility => support.Visibility;
 
-		public bool RequiresNew (Property property)
+		public bool RequiresNew (Property property, CodeGenerationOptions opt)
 		{
 			switch (property.AdjustedName.ToLowerInvariant ()) {
 				case "handle":
@@ -914,22 +914,43 @@ namespace MonoDroid.Generation
 					return true;
 			}
 
-			return IsThrowable () && ThrowableRequiresNew.Contains (property.AdjustedName);
+			if (IsThrowable () && ThrowableRequiresNew.Contains (property.AdjustedName))
+				return true;
+
+			return HidesInheritedMember (property.AdjustedName, opt);
 		}
 
-		public bool RequiresNew (string memberName, Method method)
+		public bool RequiresNew (string memberName, Method method, CodeGenerationOptions opt)
+		{
+			// Only a class inherits from `Java.Lang.Object`, and `java.lang.Object` and
+			// `java.lang.Throwable` declare these members themselves.
+			if (this is ClassGen klass && klass.InheritsObject && HidesJavaLangObjectMember (memberName, method))
+				return true;
+
+			if (IsThrowable () && ThrowableRequiresNew.Contains (memberName))
+				return true;
+
+			return HidesInheritedMember (memberName, method, opt);
+		}
+
+		// Members that every generated peer type inherits from `Java.Lang.Object`/`System.Object`.
+		// Redeclaring one of them requires `new` to avoid CS0108/CS0114.
+		public static bool HidesJavaLangObjectMember (string memberName, Method method)
 		{
 			switch (memberName.ToLowerInvariant ()) {
 				case "handle":
 					// The same name as a property always requires new, no matter the parameters
 					return true;
+				case "clone":
 				case "gethashcode":
 				case "gettype":
 				case "tostring":
 					return method.Parameters.Count == 0;
 				case "equals":
-					if (method.Parameters.Count == 1 && method.Parameters.All (p => p.Type == "object"))
+					// `Java.Lang.Object.Equals(Java.Lang.Object)` is the instance overload...
+					if (method.Parameters.Count == 1 && method.Parameters.All (IsObjectParameter))
 						return true;
+					// ...while `System.Object.Equals(object, object)` takes `System.Object`.
 					if (method.Parameters.Count == 2 && method.Parameters.All (p => p.Type == "object"))
 						return true;
 
@@ -941,7 +962,78 @@ namespace MonoDroid.Generation
 					break;
 			}
 
-			return IsThrowable () && ThrowableRequiresNew.Contains (memberName);
+			return false;
+		}
+
+		// `java.lang.Object` is projected as `Java.Lang.Object`, which itself derives from
+		// `System.Object`, so either spelling matches the signature being hidden.
+		static bool IsObjectParameter (Parameter parameter) =>
+			parameter.Type == "object" || parameter.Type == "Java.Lang.Object";
+
+		// A class only hides members of its base classes, while an interface hides members of
+		// its base interfaces. Java allows redeclaring an inherited field or method, so the
+		// projected member has to be marked `new` for the C# compiler not to warn about it.
+		IEnumerable<GenBase> HidingScope (CodeGenerationOptions opt) =>
+			this is InterfaceGen
+				// Base interfaces that only carry constants are not emitted in the interface
+				// list, so nothing they declare can be hidden.
+				? GetAllDerivedInterfaces ().Where (i => !i.IsConstSugar (opt) && i.RawVisibility == "public").Cast<GenBase> ()
+				: Ancestors ();
+
+		// Returns true when a base type declares a member named `memberName`, which means a
+		// member of that name declared here has to be marked `new` (CS0108).
+		public bool HidesInheritedMember (string memberName, CodeGenerationOptions opt) =>
+			HidingScope (opt).Any (g => g.DeclaresMemberNamed (memberName));
+
+		// C# only considers a method to hide a base method when the signatures match, so an
+		// unnecessary `new` would produce CS0109. Fields, properties and nested types still
+		// hide by name alone.
+		public bool HidesInheritedMember (string memberName, Method method, CodeGenerationOptions opt) =>
+			HidingScope (opt).Any (g => g.DeclaresNonMethodNamed (memberName) ||
+					g.Methods.Any (m => m.AdjustedName == memberName && ParameterList.Equals (m.Parameters, method.Parameters)));
+
+		bool DeclaresMemberNamed (string memberName) =>
+			DeclaresNonMethodNamed (memberName) || Methods.Any (m => m.AdjustedName == memberName);
+
+		bool DeclaresNonMethodNamed (string memberName) =>
+			Fields.Any (f => f.Name == memberName) ||
+			Properties.Any (p => p.AdjustedName == memberName) ||
+			HasNestedType (memberName);
+
+		// Private generator infrastructure members such as `_members` or the JNI callback
+		// fields are only visible to a derived type when that type is nested inside the type
+		// that declares them, in which case they need `new`.
+		public bool HidesEnclosingTypePrivateMember () =>
+			Ancestors ().Any (a => FullName.StartsWith (a.FullName + ".", StringComparison.Ordinal));
+
+		// True when an enclosing base type binds the same Java method, so that the JNI callback
+		// infrastructure generated for it (`cb_`, `n_`, `__n_`, `Get...Handler`) is hidden.
+		public bool HidesEnclosingTypeCallback (Method method) =>
+			Ancestors ().Any (a => FullName.StartsWith (a.FullName + ".", StringComparison.Ordinal) &&
+					a.AllMethods ().Any (m => m.Name == method.Name && m.IDSignature == method.IDSignature));
+
+		// Every method bound by this type, including the ones projected as property accessors.
+		IEnumerable<Method> AllMethods () =>
+			Methods
+				.Concat (Properties.Where (p => p.Getter != null).Select (p => p.Getter))
+				.Concat (Properties.Where (p => p.Setter != null).Select (p => p.Setter));
+
+		// Emits suppressions for the diagnostics that are an inherent consequence of faithfully
+		// projecting the Java API surface into C#, which the generator cannot avoid without
+		// changing the bound API. Everything else is expected to be warning free.
+		protected static void WriteJavaProjectionWarningSuppressions (System.IO.TextWriter sw)
+		{
+			sw.WriteLine ("// Java allows a type to redeclare a member that a base type or base interface already");
+			sw.WriteLine ("// declares, including members that are hand-bound instead of generated.");
+			sw.WriteLine ("#pragma warning disable 0108, 0114");
+			sw.WriteLine ("// Java types may declare a `finalize()` method, which is bound as `Finalize()`.");
+			sw.WriteLine ("#pragma warning disable 0465");
+			sw.WriteLine ("// Java deprecates types and members independently of the APIs that use, declare or");
+			sw.WriteLine ("// override them, so a binding that is not deprecated can still reference one that is.");
+			sw.WriteLine ("#pragma warning disable 0618, 0672, 0809");
+			sw.WriteLine ("// Java nullness annotations are not required to agree between a member and the member");
+			sw.WriteLine ("// it overrides or implements, and are absent from much of the API surface.");
+			sw.WriteLine ("#pragma warning disable 8603, 8604, 8625, 8764, 8765, 8766, 8767, 8768");
 		}
 
 		public virtual void ResetValidation ()
