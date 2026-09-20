@@ -29,6 +29,8 @@ namespace MonoDroid.Generation {
 			get { return "IntPtr.Zero"; }
 		}
 
+		public ISymbol ElementSymbol => sym;
+
 		public string ElementType {
 			get {
 				return sym.FullName;

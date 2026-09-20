@@ -33,6 +33,21 @@ namespace generator.SourceWriters
 
 			SetVisibility ((property.Setter ?? property.Getter).Visibility);
 
+			// The `string` convenience property must carry the deprecation of the
+			// `ICharSequence` property it forwards to, otherwise it silently loses it and
+			// reports CS0618 for calling a deprecated member.
+			if (property.IsWholePropertyDeprecated) {
+				SourceWriterExtensions.AddObsolete (Attributes, property.Getter.Deprecated.Trim (), opt, deprecatedSince: property.Getter.DeprecatedSince);
+			} else {
+				if (property.Getter?.Deprecated != null)
+					SourceWriterExtensions.AddObsolete (GetterAttributes, property.Getter.Deprecated.Trim (), opt, deprecatedSince: property.Getter?.DeprecatedSince);
+
+				if (property.Setter?.Deprecated != null)
+					SourceWriterExtensions.AddObsolete (SetterAttributes, property.Setter.Deprecated.Trim (), opt, deprecatedSince: property.Setter?.DeprecatedSince);
+			}
+
+			JavaProjectionWarnings.AddObsoleteSuppressions (this, property, opt);
+
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, property.Getter, opt);
 
 			string arrayConvertMethod = opt.GetStringArrayToCharSequenceArrayMethodName ();

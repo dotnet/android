@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Xamarin.SourceWriter
 {
-	public abstract class TypeWriter : ISourceWriter
+	public abstract class TypeWriter : ISourceWriter, ISuppressWarnings
 	{
 		Visibility visibility;
 		int current_priority = 1;
@@ -24,6 +24,7 @@ namespace Xamarin.SourceWriter
 		public bool IsProtected { get => visibility.HasFlag (Visibility.Protected); set => visibility = value ? Visibility.Protected : Visibility.Default; }
 		public ObservableCollection<MethodWriter> Methods { get; } = new ObservableCollection<MethodWriter> ();
 		public List<string> Comments { get; } = new List<string> ();
+		public List<WarningSuppression> SuppressWarnings { get; } = new List<WarningSuppression> ();
 		public List<AttributeWriter> Attributes { get; } = new List<AttributeWriter> ();
 		public ObservableCollection<EventWriter> Events { get; } = new ObservableCollection<EventWriter> ();
 		public ObservableCollection<FieldWriter> Fields { get; } = new ObservableCollection<FieldWriter> ();
@@ -77,11 +78,13 @@ namespace Xamarin.SourceWriter
 
 		public virtual void Write (CodeWriter writer)
 		{
+			this.WriteSuppressWarningsStart (writer);
 			WriteComments (writer);
 			WriteAttributes (writer);
 			WriteSignature (writer);
 			WriteMembers (writer);
 			WriteTypeClose (writer);
+			this.WriteSuppressWarningsEnd (writer);
 		}
 
 		public virtual void WriteComments (CodeWriter writer)

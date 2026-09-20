@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Xamarin.SourceWriter
 {
-	public class PropertyWriter : ISourceWriter
+	public class PropertyWriter : ISourceWriter, ISuppressWarnings
 	{
 		Visibility visibility;
 
@@ -12,6 +12,7 @@ namespace Xamarin.SourceWriter
 		public List<MethodParameterWriter> Parameters { get; } = new List<MethodParameterWriter> ();
 		public TypeReferenceWriter PropertyType { get; set; }
 		public List<string> Comments { get; } = new List<string> ();
+		public List<WarningSuppression> SuppressWarnings { get; } = new List<WarningSuppression> ();
 		public List<AttributeWriter> Attributes { get; } = new List<AttributeWriter> ();
 		public bool IsPublic { get => visibility.HasFlag (Visibility.Public); set => visibility |= Visibility.Public; }
 		public bool UseExplicitPrivateKeyword { get; set; }
@@ -57,9 +58,11 @@ namespace Xamarin.SourceWriter
 
 		public virtual void Write (CodeWriter writer)
 		{
+			this.WriteSuppressWarningsStart (writer);
 			WriteComments (writer);
 			WriteAttributes (writer);
 			WriteSignature (writer);
+			this.WriteSuppressWarningsEnd (writer);
 		}
 
 		public virtual void WriteComments (CodeWriter writer)

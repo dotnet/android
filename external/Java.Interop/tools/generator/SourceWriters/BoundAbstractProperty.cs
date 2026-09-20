@@ -41,6 +41,22 @@ namespace generator.SourceWriters
 					setter_callback = new MethodCallback (gen, property.Setter, opt, property.AdjustedName, false);
 			}
 
+			// Add [Obsolete] or [ObsoletedOSPlatform]. Without this an abstract declaration of a
+			// deprecated Java member would lose its deprecation, while the overrides generated
+			// for it (invokers, implementors) keep theirs.
+			if (property.IsWholePropertyDeprecated) {
+				SourceWriterExtensions.AddObsolete (Attributes, property.Getter.Deprecated.Trim (), opt, deprecatedSince: property.Getter.DeprecatedSince);
+			} else {
+				if (property.Getter?.Deprecated != null)
+					SourceWriterExtensions.AddObsolete (GetterAttributes, property.Getter.Deprecated.Trim (), opt, deprecatedSince: property.Getter?.DeprecatedSince);
+
+				if (property.Setter?.Deprecated != null)
+					SourceWriterExtensions.AddObsolete (SetterAttributes, property.Setter.Deprecated.Trim (), opt, deprecatedSince: property.Setter?.DeprecatedSince);
+			}
+
+			JavaProjectionWarnings.AddObsoleteSuppressions (this, property, opt);
+			JavaProjectionWarnings.AddNullabilitySuppressions (this, gen, property, opt);
+
 			if (gen.IsGeneratable)
 				GetterComments.Add ($"// Metadata.xml XPath method reference: path=\"{gen.MetadataXPathReference}/method[@name='{property.Getter.JavaName}'{property.Getter.Parameters.GetMethodXPathPredicate ()}]\"");
 			if (property.Getter.IsReturnEnumified)

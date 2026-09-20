@@ -4,13 +4,14 @@ using System.Text;
 
 namespace Xamarin.SourceWriter
 {
-	public class FieldWriter : ISourceWriter
+	public class FieldWriter : ISourceWriter, ISuppressWarnings
 	{
 		Visibility visibility;
 
 		public string Name { get; set; }
 		public TypeReferenceWriter Type { get; set; }
 		public List<string> Comments { get; } = new List<string> ();
+		public List<WarningSuppression> SuppressWarnings { get; } = new List<WarningSuppression> ();
 		public List<AttributeWriter> Attributes { get; } = new List<AttributeWriter> ();
 		public bool IsPublic { get => visibility.HasFlag (Visibility.Public); set => visibility = value ? Visibility.Public : Visibility.Default; }
 		public bool UseExplicitPrivateKeyword { get; set; }
@@ -47,9 +48,11 @@ namespace Xamarin.SourceWriter
 
 		public virtual void Write (CodeWriter writer)
 		{
+			this.WriteSuppressWarningsStart (writer);
 			WriteComments (writer);
 			WriteAttributes (writer);
 			WriteSignature (writer);
+			this.WriteSuppressWarningsEnd (writer);
 		}
 
 		public virtual void WriteComments (CodeWriter writer)

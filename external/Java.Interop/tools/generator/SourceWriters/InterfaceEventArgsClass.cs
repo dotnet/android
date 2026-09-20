@@ -10,8 +10,10 @@ namespace generator.SourceWriters
 {
 	public class InterfaceEventArgsClass : ClassWriter
 	{
-		public InterfaceEventArgsClass (InterfaceGen iface, Method method)
+		public InterfaceEventArgsClass (InterfaceGen iface, Method method, CodeGenerationOptions opt)
 		{
+			JavaProjectionWarnings.AddObsoleteUseSuppressions (this, method, opt);
+
 			Name = iface.GetArgsName (method);
 			Inherits = "global::System.EventArgs";
 

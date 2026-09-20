@@ -23,6 +23,8 @@ namespace generator.SourceWriters
 			Name = property.AdjustedName;
 			PropertyType = new TypeReferenceWriter (opt.GetTypeReferenceName (property));
 
+			JavaProjectionWarnings.AddNullabilitySuppressions (this, iface, property, opt);
+
 			IsPublic = true;
 			IsUnsafe = true;
 

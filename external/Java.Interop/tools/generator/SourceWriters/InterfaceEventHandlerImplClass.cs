@@ -15,6 +15,8 @@ namespace generator.SourceWriters
 			var jni_class = "mono/" + iface.RawJniName.Replace ('$', '_') + "Implementor";
 
 			Name = iface.Name + "Implementor";
+
+			JavaProjectionWarnings.AddGeneratedHelperSuppressions (this, iface, opt);
 			Inherits = "global::Java.Lang.Object";
 			Implements.Add (iface.Name);
 

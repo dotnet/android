@@ -345,14 +345,30 @@ namespace generator.SourceWriters
 			attributes.Add (new ObsoleteAttr (message, isError));
 		}
 
-		// Returns true if attribute was applied
-		static bool AddObsoletedOSPlatformAttribute (List<AttributeWriter> attributes, string message, AndroidSdkVersion? deprecatedSince, CodeGenerationOptions opt)
+		// True when `AddObsolete` would emit `[Obsolete]` rather than `[ObsoletedOSPlatform]`
+		// or nothing at all. Only `[Obsolete]` makes the C# compiler report CS0618/CS0672/
+		// CS0809 against a member that uses, overrides or is overridden by the annotated API.
+		public static bool EmitsObsoleteAttribute (string message, CodeGenerationOptions opt, AndroidSdkVersion? deprecatedSince)
+		{
+			if (!message.HasValue () || message == "not deprecated")
+				return false;
+
+			return !UsesObsoletedOSPlatformAttribute (deprecatedSince, opt);
+		}
+
+		static bool UsesObsoletedOSPlatformAttribute (AndroidSdkVersion? deprecatedSince, CodeGenerationOptions opt)
 		{
 			if (!opt.UseObsoletedOSPlatformAttributes)
 				return false;
 
 			// If it was obsoleted in a version earlier than we support (like 15), use a regular [Obsolete] instead
-			if (!deprecatedSince.HasValue || deprecatedSince.Value <= opt.MinimumApiLevel)
+			return deprecatedSince.HasValue && deprecatedSince.Value > opt.MinimumApiLevel;
+		}
+
+		// Returns true if attribute was applied
+		static bool AddObsoletedOSPlatformAttribute (List<AttributeWriter> attributes, string message, AndroidSdkVersion? deprecatedSince, CodeGenerationOptions opt)
+		{
+			if (!UsesObsoletedOSPlatformAttribute (deprecatedSince, opt))
 				return false;
 
 			// This is the default Android message, but it isn't useful so remove it

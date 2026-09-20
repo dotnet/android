@@ -18,6 +18,8 @@ namespace generator.SourceWriters
 		{
 			Name = $"{klass.Name}Invoker";
 
+			JavaProjectionWarnings.AddGeneratedHelperSuppressions (this, klass, opt);
+
 			IsInternal = true;
 			IsPartial = true;
 			UsePriorityOrder = true;

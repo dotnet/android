@@ -24,6 +24,11 @@ namespace MonoDroid.Generation
 		public bool IsFinal { get; set; }
 		public bool IsInterfaceDefaultMethod { get; set; }
 		public Method OverriddenInterfaceMethod { get; set; }
+
+		// The method in a base class that this method overrides, when known. Used to
+		// reconcile differences (deprecation, nullability) that Java permits but C# warns
+		// about.
+		public Method OverriddenBaseMethod { get; set; }
 		public bool IsReturnEnumified { get; set; }
 		public bool IsStatic { get; set; }
 		public bool IsVirtual { get; set; }
@@ -150,6 +155,7 @@ namespace MonoDroid.Generation
 			clone.IsFinal = IsFinal;
 			clone.IsInterfaceDefaultMethod = IsInterfaceDefaultMethod;
 			clone.OverriddenInterfaceMethod = OverriddenInterfaceMethod;
+			clone.OverriddenBaseMethod = OverriddenBaseMethod;
 			clone.IsReturnEnumified = IsReturnEnumified;
 			clone.IsStatic = IsStatic;
 			clone.IsVirtual = IsVirtual;

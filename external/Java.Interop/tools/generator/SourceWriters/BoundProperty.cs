@@ -88,6 +88,9 @@ namespace generator.SourceWriters
 					SourceWriterExtensions.AddObsolete (SetterAttributes, property.Setter.Deprecated.Trim (), opt, deprecatedSince: property.Setter?.DeprecatedSince);
 			}
 
+			JavaProjectionWarnings.AddObsoleteSuppressions (this, property, opt);
+			JavaProjectionWarnings.AddNullabilitySuppressions (this, gen, property, opt);
+
 			SourceWriterExtensions.AddRestrictToWarning (GetterAttributes, property.Getter.AnnotatedVisibility, false, opt);
 			SourceWriterExtensions.AddRestrictToWarning (SetterAttributes, property.Setter?.AnnotatedVisibility, false, opt);
 

@@ -12,6 +12,8 @@ namespace generator.SourceWriters
 	{
 		public MethodExtensionAsyncWrapper (Method method, CodeGenerationOptions opt, string selfType)
 		{
+			JavaProjectionWarnings.AddObsoleteUseSuppressions (this, method, opt);
+
 			Name = method.AdjustedName + "Async";
 			IsStatic = true;
 

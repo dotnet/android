@@ -18,6 +18,8 @@ namespace generator.SourceWriters
 		{
 			Name = $"{iface.Name}Invoker";
 
+			JavaProjectionWarnings.AddGeneratedHelperSuppressions (this, iface, opt);
+
 			IsInternal = true;
 			IsPartial = true;
 			UsePriorityOrder = true;

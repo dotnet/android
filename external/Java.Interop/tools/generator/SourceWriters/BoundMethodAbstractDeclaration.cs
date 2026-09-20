@@ -39,17 +39,15 @@ namespace generator.SourceWriters
 			ExplicitInterfaceImplementation = method.ExplicitInterface;
 
 			IsAbstract = true;
-			// `new` hides an inherited member, so it is invalid on an override or on an
-			// explicit interface implementation.
-			IsShadow = !ExplicitInterfaceImplementation.HasValue () &&
-					method.ManagedOverride?.ToLowerInvariant () != "override" &&
-					impl.RequiresNew (method.Name, method, opt);
+			// The `managedOverride` fixup below can make this an override, and `new` hides an
+			// inherited member, so it is invalid on an override or on an explicit interface
+			// implementation. Use `AdjustedName`, since that is the name actually emitted.
+			IsOverride = method.ManagedOverride?.ToLowerInvariant () == "override";
+			IsShadow = !IsOverride && !ExplicitInterfaceImplementation.HasValue () &&
+					impl.RequiresNew (method.AdjustedName, method, opt);
 			SetVisibility (method.Visibility);
 
 			NewFirst = true;
-
-			if (method.ManagedOverride?.ToLowerInvariant () == "override")
-				IsOverride = true;
 
 			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
 				method_callback = new MethodCallback (impl, method, opt, null, method.IsReturnCharSequence);
@@ -61,6 +59,10 @@ namespace generator.SourceWriters
 				Comments.Add ($"// Metadata.xml XPath method reference: path=\"{method.GetMetadataXPathReference (method.DeclaringType)}\"");
 
 			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
+
+			JavaProjectionWarnings.AddFinalizeSuppression (this, method);
+			JavaProjectionWarnings.AddObsoleteSuppressions (this, method, opt);
+			JavaProjectionWarnings.AddNullabilitySuppressions (this, gen, method, opt);
 			SourceWriterExtensions.AddRestrictToWarning (Attributes, method.AnnotatedVisibility, false, opt);
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);

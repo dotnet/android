@@ -22,6 +22,8 @@ namespace generator.SourceWriters
 			Name = method.AdjustedName;
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
 
+			JavaProjectionWarnings.AddNullabilitySuppressions (this, iface, method, opt);
+
 			IsPublic = true;
 			IsUnsafe = true;
 			IsStatic = method.IsStatic;

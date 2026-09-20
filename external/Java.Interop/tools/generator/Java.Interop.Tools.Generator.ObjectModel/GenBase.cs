@@ -240,6 +240,28 @@ namespace MonoDroid.Generation
 			return BaseSymbol != null && BaseSymbol.ContainsMethod (method, check_base_ifaces, check_base_ifaces);
 		}
 
+		// The `ContainsMethod` counterpart that returns the matching base member, so callers
+		// can compare details (deprecation, nullability) that Java allows to differ between
+		// a method and the method it overrides.
+		// `match_visibility` mirrors `ContainsMethod`'s rule that a method with a different
+		// visibility is a different method. Callers that only want to compare signature
+		// details, such as nullability, pass `false`: C# still treats such a member as
+		// implemented, it just warns about the difference.
+		public Method FindOverriddenMethod (Method method, bool check_ifaces, bool check_base_ifaces, bool match_visibility = true)
+		{
+			if (jni_sig_hash.TryGetValue (method.JavaName + method.JniSignature, out var bm) && bm != method) {
+				if (!match_visibility || bm.Visibility == method.Visibility || bm.IsAbstract)
+					return bm;
+			}
+			if (check_ifaces) {
+				foreach (ISymbol isym in Interfaces) {
+					if ((isym is GenericSymbol gs ? gs.Gen : isym) is InterfaceGen igen && igen.FindOverriddenMethod (method, true, true, match_visibility) is Method im)
+						return im;
+				}
+			}
+			return BaseSymbol?.FindOverriddenMethod (method, check_base_ifaces, check_base_ifaces, match_visibility);
+		}
+
 		public bool ContainsName (string name)
 		{
 			if (HasNestedType (name) || ContainsProperty (name, true))
@@ -320,6 +342,7 @@ namespace MonoDroid.Generation
 					}
 
 					m.IsOverride = true;
+					m.OverriddenBaseMethod = bm;
 					if (opt.FixObsoleteOverrides) {
 						// If method overrides a deprecated method, it also needs to be marked as deprecated
 						if (bm.Deprecated.HasValue () && !m.Deprecated.HasValue ())
@@ -461,8 +484,10 @@ namespace MonoDroid.Generation
 			foreach (var m in Methods) {
 				if (m.Name == Name || ContainsProperty (m.Name, true) || HasNestedType (m.Name))
 					m.Name = "Invoke" + m.Name;
-				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseGen != null && BaseGen.ContainsMethod (m, true)))
+				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseGen != null && BaseGen.ContainsMethod (m, true))) {
 					m.IsOverride = true;
+					m.OverriddenBaseMethod ??= BaseGen?.FindOverriddenMethod (m, true, true);
+				}
 			}
 
 			foreach (var nt in NestedTypes)
@@ -851,8 +876,10 @@ namespace MonoDroid.Generation
 					m.Name = "GetHashCode";
 				}
 				jni_sig_hash [m.JavaName + m.JniSignature] = m;
-				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseSymbol != null && BaseSymbol.ContainsMethod (m, true)))
+				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseSymbol != null && BaseSymbol.ContainsMethod (m, true))) {
 					m.IsOverride = true;
+					m.OverriddenBaseMethod ??= BaseSymbol?.FindOverriddenMethod (m, true, true);
+				}
 			}
 			return true;
 		}
@@ -904,14 +931,18 @@ namespace MonoDroid.Generation
 
 		public bool RequiresNew (Property property, CodeGenerationOptions opt)
 		{
-			switch (property.AdjustedName.ToLowerInvariant ()) {
-				case "handle":
-				case "gethashcode":
-				case "gettype":
-				case "tostring":
-				case "equals":
-				case "referenceequals":
-					return true;
+			// Only a class inherits from `Java.Lang.Object`; an interface does not, so
+			// redeclaring one of these names there hides nothing (CS0109).
+			if (this is ClassGen klass && klass.InheritsObject) {
+				switch (property.AdjustedName.ToLowerInvariant ()) {
+					case "handle":
+					case "gethashcode":
+					case "gettype":
+					case "tostring":
+					case "equals":
+					case "referenceequals":
+						return true;
+				}
 			}
 
 			if (IsThrowable () && ThrowableRequiresNew.Contains (property.AdjustedName))
@@ -986,11 +1017,16 @@ namespace MonoDroid.Generation
 			HidingScope (opt).Any (g => g.DeclaresMemberNamed (memberName));
 
 		// C# only considers a method to hide a base method when the signatures match, so an
-		// unnecessary `new` would produce CS0109. Fields, properties and nested types still
+		// unnecessary `new` would produce CS0109. A C# signature includes generic arity, so
+		// `M<T> (int)` does not hide `M (int)`. Fields, properties and nested types still
 		// hide by name alone.
 		public bool HidesInheritedMember (string memberName, Method method, CodeGenerationOptions opt) =>
 			HidingScope (opt).Any (g => g.DeclaresNonMethodNamed (memberName) ||
-					g.Methods.Any (m => m.AdjustedName == memberName && ParameterList.Equals (m.Parameters, method.Parameters)));
+					g.Methods.Any (m => m.AdjustedName == memberName && SignaturesMatch (m, method)));
+
+		static bool SignaturesMatch (Method a, Method b) =>
+			(a.GenericArguments?.Count ?? 0) == (b.GenericArguments?.Count ?? 0) &&
+			ParameterList.Equals (a.Parameters, b.Parameters);
 
 		bool DeclaresMemberNamed (string memberName) =>
 			DeclaresNonMethodNamed (memberName) || Methods.Any (m => m.AdjustedName == memberName);
@@ -1017,24 +1053,6 @@ namespace MonoDroid.Generation
 			Methods
 				.Concat (Properties.Where (p => p.Getter != null).Select (p => p.Getter))
 				.Concat (Properties.Where (p => p.Setter != null).Select (p => p.Setter));
-
-		// Emits suppressions for the diagnostics that are an inherent consequence of faithfully
-		// projecting the Java API surface into C#, which the generator cannot avoid without
-		// changing the bound API. Everything else is expected to be warning free.
-		protected static void WriteJavaProjectionWarningSuppressions (System.IO.TextWriter sw)
-		{
-			sw.WriteLine ("// Java allows a type to redeclare a member that a base type or base interface already");
-			sw.WriteLine ("// declares, including members that are hand-bound instead of generated.");
-			sw.WriteLine ("#pragma warning disable 0108, 0114");
-			sw.WriteLine ("// Java types may declare a `finalize()` method, which is bound as `Finalize()`.");
-			sw.WriteLine ("#pragma warning disable 0465");
-			sw.WriteLine ("// Java deprecates types and members independently of the APIs that use, declare or");
-			sw.WriteLine ("// override them, so a binding that is not deprecated can still reference one that is.");
-			sw.WriteLine ("#pragma warning disable 0618, 0672, 0809");
-			sw.WriteLine ("// Java nullness annotations are not required to agree between a member and the member");
-			sw.WriteLine ("// it overrides or implements, and are absent from much of the API surface.");
-			sw.WriteLine ("#pragma warning disable 8603, 8604, 8625, 8764, 8765, 8766, 8767, 8768");
-		}
 
 		public virtual void ResetValidation ()
 		{

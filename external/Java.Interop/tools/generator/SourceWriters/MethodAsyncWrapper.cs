@@ -15,6 +15,8 @@ namespace generator.SourceWriters
 
 		public MethodAsyncWrapper (Method method, CodeGenerationOptions opt)
 		{
+			JavaProjectionWarnings.AddObsoleteUseSuppressions (this, method, opt);
+
 			this.method = method;
 			this.opt = opt;
 
