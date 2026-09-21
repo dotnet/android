@@ -300,9 +300,9 @@ directory.
 ## .NET for Android runtime events
 
 Runtime interop timing events use the `Microsoft.Android.Runtime` provider.
-They are disabled by default so normal trimmed `Release` applications do not
-retain EventSource support or the provider implementation. Enable EventSource
-support in the application project:
+Optimized `Release` applications disable EventSource support by default so the
+provider implementation can be trimmed away. Enable EventSource support in the
+application project:
 
 ```xml
 <PropertyGroup>

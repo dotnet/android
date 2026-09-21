@@ -34,8 +34,14 @@ namespace Android.RuntimeTests
 				"The foundation should not define events owned by later instrumentation layers.");
 
 			using var listener = new CapturingEventListener ();
-			Assert.IsTrue (Invoke<bool> (eventSourceType, "IsEnabled", EventKeywords.None));
+			var holderType = eventSourceType.GetNestedType ("RuntimeEventSourceHolder", BindingFlags.NonPublic)
+				?? throw new InvalidOperationException ("Could not find the runtime EventSource holder.");
+			var instanceField = holderType.GetField ("Instance", BindingFlags.NonPublic | BindingFlags.Static)
+				?? throw new InvalidOperationException ("Could not find the runtime EventSource instance.");
+			var eventSource = instanceField.GetValue (null) as EventSource
+				?? throw new InvalidOperationException ("Could not create the runtime EventSource.");
 			Assert.IsTrue (listener.ProviderCreated, "The EventListener should observe provider creation.");
+			GC.KeepAlive (eventSource);
 		}
 
 		static T GetConstant<T> (Type type, string name)
@@ -44,15 +50,6 @@ namespace Android.RuntimeTests
 				?? throw new InvalidOperationException ($"Could not find {type.FullName}.{name}.");
 			var value = field.GetRawConstantValue ()
 				?? throw new InvalidOperationException ($"{type.FullName}.{name} did not have a constant value.");
-			return (T) value;
-		}
-
-		static T Invoke<T> (Type type, string name, params object?[] arguments)
-		{
-			var method = type.GetMethod (name, BindingFlags.NonPublic | BindingFlags.Static)
-				?? throw new InvalidOperationException ($"Could not find {type.FullName}.{name}.");
-			var value = method.Invoke (null, arguments)
-				?? throw new InvalidOperationException ($"{type.FullName}.{name} returned null.");
 			return (T) value;
 		}
 
