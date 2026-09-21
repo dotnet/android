@@ -56,6 +56,43 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void AssemblyModifierPipelineAllowsDuplicateAssemblyNames ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var sourcePath = Path.Combine (path, "source", "Test.dll");
+			var destinationPath = Path.Combine (path, "destination", "Test.dll");
+			var duplicatePath1 = Path.Combine (path, "duplicate1", "Duplicate.dll");
+			var duplicatePath2 = Path.Combine (path, "duplicate2", "Duplicate.dll");
+
+			Directory.CreateDirectory (Path.GetDirectoryName (sourcePath));
+			using (var assembly = AssemblyDefinition.CreateAssembly (new AssemblyNameDefinition ("Test", new Version ()), "Test", ModuleKind.Dll)) {
+				assembly.Write (sourcePath);
+			}
+
+			var source = CreateAssemblyItem (sourcePath);
+			var task = new TestableLinkAssembliesNoShrink {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				DestinationFiles = [CreateAssemblyItem (destinationPath)],
+				ResolvedAssemblies = [
+					source,
+					CreateAssemblyItem (duplicatePath1),
+					CreateAssemblyItem (duplicatePath2),
+				],
+				SourceFiles = [source],
+			};
+
+			Assert.IsTrue (task.Execute (), "Task should succeed when resolver inputs contain duplicate assembly names.");
+			FileAssert.Exists (destinationPath);
+
+			static Microsoft.Build.Utilities.TaskItem CreateAssemblyItem (string itemSpec)
+			{
+				var item = new Microsoft.Build.Utilities.TaskItem (itemSpec);
+				item.SetMetadata ("Abi", "x86_64");
+				return item;
+			}
+		}
+
+		[Test]
 		public void FixAbstractMethodsStep_SkipDimMembers ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
