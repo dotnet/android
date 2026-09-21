@@ -65,9 +65,10 @@ This preserves JNI-facing methods, constructors, and fields without also
 preserving every member of Java-only dependencies. R8's member matching
 includes inherited accessible methods and superclass fields. The separate
 `proguard_typemap_coreclr.cfg` configuration preserves runtime bootstrap
-classes and their members, plus framework-driven view members. Dynamic JNI
-or reflection access to types or members not represented by retained managed
-bindings still needs application/library ProGuard rules.
+classes and their members, reflection-visible interface implementation
+relationships used for managed proxy selection, plus framework-driven view
+members. Dynamic JNI or reflection access to types or members not represented
+by retained managed bindings still needs application/library ProGuard rules.
 
 NativeAOT continues to use `proguard_typemap.cfg`, which retains members of
 all surviving classes and interfaces, including third-party types, while
