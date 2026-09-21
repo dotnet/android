@@ -19,6 +19,8 @@ namespace Android.RuntimeTests
 		{
 			Assert.IsTrue (AppContext.TryGetSwitch ("System.Diagnostics.Tracing.EventSource.IsSupported", out bool enabled) && enabled,
 				"The runtime EventSource feature switch should be enabled for this test application.");
+			Assert.IsTrue (Microsoft.Android.Runtime.RuntimeFeature.EventSourceSupport,
+				"The runtime EventSource feature wrapper should report support as enabled.");
 
 			var eventSourceType = Type.GetType ("Microsoft.Android.Runtime.RuntimeEventSource, Mono.Android", throwOnError: true)
 				?? throw new InvalidOperationException ("Could not find the runtime EventSource.");
