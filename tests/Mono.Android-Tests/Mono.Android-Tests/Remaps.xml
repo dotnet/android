@@ -65,6 +65,20 @@
       target-method-signature="()I" target-method-instance-to-static="false" />
   <replace-method
       source-type="net/dot/jni/test/FieldRemapBase"
+      source-method-name="inheritedStaticMethod"
+      source-method-signature="()I"
+      target-type="net/dot/jni/test/ObjectHelper"
+      target-method-name="remappedInheritedStaticMethod"
+      target-method-signature="()I" target-method-instance-to-static="false" />
+  <replace-method
+      source-type="net/dot/jni/test/FieldRemapDerived"
+      source-method-name="inheritedStaticMethod"
+      source-method-signature="()I"
+      target-type="net/dot/jni/test/FieldRemapDerived"
+      target-method-name="missingStaticMethod"
+      target-method-signature="()I" target-method-instance-to-static="false" />
+  <replace-method
+      source-type="net/dot/jni/test/FieldRemapBase"
       source-method-name="remappedSpecificity"
       source-method-signature="(I)I"
       target-type="net/dot/jni/test/FieldRemapBase"
@@ -130,7 +144,7 @@
       source-type="net/dot/jni/test/FieldRemapBase"
       source-field-name="inheritedStaticField"
       source-field-signature="Ljava/lang/String;"
-      target-type="net/dot/jni/test/FieldRemapBase"
+      target-type="net/dot/jni/test/ObjectHelper"
       target-field-name="remappedInheritedStaticField"
       target-field-signature="Ljava/lang/String;" />
   <replace-field

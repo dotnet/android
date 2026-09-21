@@ -21,7 +21,7 @@ namespace Java.Interop
 
 		internal void Dispose ()
 		{
-			Clear (ref staticMethods);
+			Clear (ref staticMethods, static method => method.StaticRedirect?.Dispose ());
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
@@ -39,8 +39,7 @@ namespace Java.Interop
 			var newMethod      = Members.GetReplacementMethodInfo (method, signature);
 			if (newMethod.HasValue) {
 				var info = newMethod.Value;
-				using var t = CreateTargetType (info, Members);
-				if (TryGetStaticMethod (t, info, method, signature, out m)) {
+				if (TryGetReplacementMethod (info, method, signature, out m)) {
 					return m;
 				}
 			}
@@ -50,8 +49,7 @@ namespace Java.Interop
 			newMethod = Members.GetBaseReplacementMethodInfo (method, signature);
 			if (newMethod.HasValue) {
 				var info = newMethod.Value;
-				using var t = CreateTargetType (info, Members);
-				if (TryGetStaticMethod (t, info, method, signature, out m))
+				if (TryGetReplacementMethod (info, method, signature, out m))
 					return m;
 			}
 			m   = FindInFallbackTypes (method, signature);
@@ -59,6 +57,25 @@ namespace Java.Interop
 				return m;
 			}
 			return Members.JniPeerType.GetStaticMethod (method, signature);
+		}
+
+		bool TryGetReplacementMethod (
+			JniRuntime.ReplacementMethodInfo info,
+			ReadOnlySpan<char> fallbackName,
+			ReadOnlySpan<char> fallbackSignature,
+			[System.Diagnostics.CodeAnalysis.NotNullWhen (true)] out JniMethodInfo? method)
+		{
+			JniType? type = CreateTargetType (info, Members);
+			try {
+				if (!TryGetStaticMethod (type, info, fallbackName, fallbackSignature, out method))
+					return false;
+
+				method.StaticRedirect = type;
+				type = null;
+				return true;
+			} finally {
+				type?.Dispose ();
+			}
 		}
 
 #pragma warning disable CA1801
