@@ -8,7 +8,6 @@
 
 #include "host-common.hh"
 #include <runtime-base/jni-wrappers.hh>
-#include <runtime-base/timing.hh>
 #include "../shared/log_types.hh"
 #include "managed-interface.hh"
 
@@ -22,11 +21,6 @@ namespace xamarin::android {
 		static void Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept;
 		static void Java_mono_android_Runtime_registerNatives (JNIEnv *env, jclass nativeClass) noexcept;
 		static void propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException) noexcept;
-
-		static auto get_timing () noexcept -> Timing&
-		{
-			return _timing;
-		}
 
 		static auto get_java_class_TimeZone () noexcept -> jclass
 		{
@@ -54,10 +48,6 @@ namespace xamarin::android {
 	private:
 		static inline void *clr_host = nullptr;
 		static inline unsigned int domain_id = 0;
-		// Constant-initialized and live for the whole lifetime of the process, so there is
-		// nothing to allocate or free. Only used when fast timing is enabled, which callers
-		// check with `FastTiming::enabled ()`.
-		static inline Timing _timing {};
 		static inline bool found_assembly_store = false;
 		static inline jnienv_register_jni_natives_fn jnienv_register_jni_natives = nullptr;
 		static inline jnienv_propagate_uncaught_exception_fn jnienv_propagate_uncaught_exception = nullptr;
