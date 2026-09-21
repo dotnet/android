@@ -117,9 +117,12 @@ namespace generator.SourceWriters
 		}
 
 		// The generated member's signature or body refers to a deprecated Java API.
-		public static void AddObsoleteUseSuppressions (ISuppressWarnings writer, MethodBase method, CodeGenerationOptions opt)
+		public static void AddObsoleteUseSuppressions (ISuppressWarnings writer, MethodBase method, CodeGenerationOptions opt, GenBase declaringType = null)
 		{
 			if (IsBoundAsObsolete (method.Deprecated, method.DeprecatedSince, opt))
+				return;
+
+			if (declaringType != null && IsBoundAsObsolete (declaringType, opt))
 				return;
 
 			if (SignatureUsesObsoleteType (method, opt))
@@ -160,9 +163,12 @@ namespace generator.SourceWriters
 		// member. C# resolves a call to an overriding member against the declaration it
 		// overrides, so dispatching to a member that overrides a deprecated one reports the
 		// base member's deprecation at the call site.
-		public static void AddCallbackObsoleteSuppressions (ISuppressWarnings writer, Method method, CodeGenerationOptions opt)
+		public static void AddCallbackObsoleteSuppressions (ISuppressWarnings writer, Method method, CodeGenerationOptions opt, GenBase declaringType = null)
 		{
 			if (IsBoundAsObsolete (method.Deprecated, method.DeprecatedSince, opt))
+				return;
+
+			if (declaringType != null && IsBoundAsObsolete (declaringType, opt))
 				return;
 
 			var base_method = method.OverriddenBaseMethod ?? method.OverriddenInterfaceMethod;

@@ -54,7 +54,7 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
-			JavaProjectionWarnings.AddCallbackObsoleteSuppressions (marshal_body_suppressions, method, opt);
+			JavaProjectionWarnings.AddCallbackObsoleteSuppressions (marshal_body_suppressions, method, opt, type);
 			JavaProjectionWarnings.AddMarshalArgumentSuppressions (marshal_body_suppressions, type, method, opt);
 
 			Parameters.Add (new MethodParameterWriter ("jnienv", TypeReferenceWriter.IntPtr));

@@ -19,7 +19,7 @@ namespace generator.SourceWriters
 
 		public BoundConstructor (ClassGen klass, Ctor constructor, bool useBase, CodeGenerationOptions opt, CodeGeneratorContext context)
 		{
-			JavaProjectionWarnings.AddObsoleteUseSuppressions (this, constructor, opt);
+			JavaProjectionWarnings.AddObsoleteUseSuppressions (this, constructor, opt, klass);
 
 			this.constructor = constructor;
 			this.opt = opt;

@@ -40,7 +40,7 @@ namespace generator.SourceWriters
 			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
 
 			JavaProjectionWarnings.AddFinalizeSuppression (this, method);
-			JavaProjectionWarnings.AddObsoleteSuppressions (this, method, opt);
+			JavaProjectionWarnings.AddObsoleteSuppressions (this, method, opt, gen);
 			JavaProjectionWarnings.AddNullabilitySuppressions (this, gen, method, opt);
 			SourceWriterExtensions.AddRestrictToWarning (Attributes, method.AnnotatedVisibility, false, opt);
 
