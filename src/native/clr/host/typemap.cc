@@ -7,7 +7,6 @@
 
 #include <host/typemap.hh>
 #include <runtime-base/crc32.hh>
-#include <runtime-base/timing-internal.hh>
 #include <runtime-base/search.hh>
 #include <runtime-base/util.hh>
 #include <xamarin-app.hh>
@@ -354,9 +353,6 @@ auto TypeMapper::managed_to_java (const char *typeName, const char *assemblyFull
 #endif
 {
 	log_debugf (LOG_ASSEMBLY, "managed_to_java: looking up type '%s'", optional_string (typeName));
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.start_event (TimingEventKind::ManagedToJava);
-	}
 
 	if (typeName == nullptr) [[unlikely]] {
 		log_warnf (LOG_ASSEMBLY, "typemap: type name not specified in typemap_managed_to_java");
@@ -372,10 +368,6 @@ auto TypeMapper::managed_to_java (const char *typeName, const char *assemblyFull
 	}
 	const char *ret = managed_to_java_debug (typeName, assemblyFullName);
 #endif
-
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.end_event ();
-	}
 
 	return ret;
 }
@@ -509,9 +501,6 @@ auto TypeMapper::java_to_managed_release (const char *java_type_name, char const
 auto TypeMapper::java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool
 {
 	log_debugf (LOG_ASSEMBLY, "java_to_managed: looking up type '%s'", optional_string (java_type_name));
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.start_event (TimingEventKind::JavaToManaged);
-	}
 
 	if (java_type_name == nullptr) [[unlikely]] {
 		log_warnf (LOG_ASSEMBLY, "typemap: type name not specified in typemap_java_to_managed");
@@ -524,10 +513,6 @@ auto TypeMapper::java_to_managed (const char *java_type_name, char const** assem
 #else
 	ret = java_to_managed_debug (java_type_name, assembly_name, managed_type_token_id);
 #endif
-
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.end_event ();
-	}
 
 	return ret;
 }

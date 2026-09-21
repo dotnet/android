@@ -593,8 +593,6 @@ else()
   add_subdirectory(common/java-interop)
 
   if (IS_CLR_RUNTIME)
-    add_subdirectory(common/runtime-base)
-
     add_subdirectory(${SOURCES_PREFIX}/runtime-base)
     add_subdirectory(${SOURCES_PREFIX}/shared)
     add_subdirectory(${SOURCES_PREFIX}/xamarin-app-stub)

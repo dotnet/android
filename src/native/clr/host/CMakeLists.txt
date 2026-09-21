@@ -99,14 +99,6 @@ macro(lib_target_options TARGET_NAME)
     )
   endif()
 
-  if (ENABLE_TIMING)
-    target_compile_definitions(
-      ${TARGET_NAME}
-      PRIVATE
-      MONODROID_TIMING
-    )
-  endif()
-
   target_compile_options(
     ${TARGET_NAME}
     PRIVATE
