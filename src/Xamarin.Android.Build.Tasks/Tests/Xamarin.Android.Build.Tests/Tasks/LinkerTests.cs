@@ -75,7 +75,7 @@ namespace Xamarin.Android.Build.Tests
 				.Replace (
 					"//${FIELDS}",
 					"""
-					[DynamicDependency ("GCBridgeStart", "Microsoft.Android.Runtime.RuntimeEventSource", "Mono.Android")]
+					[DynamicDependency ("IsEnabled", "Microsoft.Android.Runtime.RuntimeEventSource", "Mono.Android")]
 					static void PreserveRuntimeEventSourceCallPath ()
 					{
 					}

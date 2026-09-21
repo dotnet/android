@@ -315,14 +315,8 @@ collection with tools such as `dotnet-trace`. It enables the diagnostic
 transport; for MonoVM it also packages the `diagnostics_tracing` component.
 `$(AndroidEnableProfiler)` remains its legacy synonym.
 
-Collect the runtime timing events at informational level:
-
-```sh
-$ dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtime:0xC:4
-```
-
-The provider contract reserves the following event IDs and keywords. Call-site
-instrumentation is added independently from the provider foundation.
+This foundation does not define any events. Later instrumentation layers add
+events to the provider using the following reserved contract:
 
 | Event IDs | Keyword | Area |
 |---|---|---|
@@ -330,8 +324,12 @@ instrumentation is added independently from the provider foundation.
 | 7-8 | `0x8` | GC bridge start/stop |
 | 9-10 | `0x4` | Trimmable type-map lookup start/stop |
 
-Use keyword `0x8` for GC bridge events, `0x4` for type-map events, or `0xC`
-for both.
+After the corresponding instrumentation layers are present, collect their
+events at informational level:
+
+```sh
+$ dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtime:0xF:4
+```
 
 ## How to get GC memory dumps?
 
