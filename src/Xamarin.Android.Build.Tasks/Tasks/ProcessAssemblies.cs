@@ -135,10 +135,15 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				using (var pe = new PEReader (File.OpenRead (assembly.ItemSpec))) {
-					if (!pe.HasMetadata) {
-						Log.LogDebugMessage ($"Skipping non-.NET assembly: {assembly.ItemSpec}");
-						continue;
+				bool hasMonoAndroidReference = false;
+				if (!DesignTimeBuild) {
+					using (var pe = new PEReader (File.OpenRead (assembly.ItemSpec))) {
+						if (!pe.HasMetadata) {
+							Log.LogDebugMessage ($"Skipping non-.NET assembly: {assembly.ItemSpec}");
+							continue;
+						}
+						hasMonoAndroidReference = MonoAndroidHelper.IsMonoAndroidAssembly (assembly) ||
+							MonoAndroidHelper.HasMonoAndroidReference (pe.GetMetadataReader ());
 					}
 				}
 
@@ -148,8 +153,7 @@ namespace Xamarin.Android.Tasks
 				assembly.SetMetadata ("FrameworkAssembly", MonoAndroidHelper.IsFrameworkAssembly (assembly).ToString ());
 
 				if (!DesignTimeBuild) {
-					// Designer builds don't produce assemblies, the HasMonoAndroidReference call would throw an exception in that case
-					assembly.SetMetadata ("HasMonoAndroidReference", MonoAndroidHelper.HasMonoAndroidReference (assembly).ToString ());
+					assembly.SetMetadata ("HasMonoAndroidReference", hasMonoAndroidReference.ToString ());
 				}
 				output.Add (assembly);
 			}
