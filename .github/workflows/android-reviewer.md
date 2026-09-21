@@ -25,6 +25,9 @@ permissions:
 model: gpt-5.6-sol
 engine:
   id: copilot
+  # Pinned to the gh-aw compiler-tested Copilot CLI version. Bump manually
+  # (and re-run `gh aw compile`) when gh-aw updates its tested/cached version,
+  # or if this version starts failing to install/run.
   version: 1.0.80
   env:
     COPILOT_GITHUB_TOKEN: |
