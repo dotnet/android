@@ -665,5 +665,3 @@ stages:
         use1ESTemplate: false
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
-      parameters:
-        xaSourcePath: $(Build.SourcesDirectory)/android
