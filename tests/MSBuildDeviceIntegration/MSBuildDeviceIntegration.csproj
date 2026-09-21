@@ -58,4 +58,8 @@
     <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\..\src\Microsoft.Android.Build.Tasks\Utilities\JniRemapping\R8Mapping.cs" Link="Utilities\JniRemapping\R8Mapping.cs" />
+  </ItemGroup>
+
 </Project>

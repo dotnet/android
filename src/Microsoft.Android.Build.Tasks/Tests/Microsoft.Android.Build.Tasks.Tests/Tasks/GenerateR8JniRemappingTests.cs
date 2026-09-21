@@ -1,5 +1,7 @@
 #nullable enable
 
+extern alias xamarinbuildtasks;
+
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,9 +9,11 @@ using System.Text;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Android.Tasks;
 using NUnit.Framework;
 
-using Xamarin.Android.Tasks;
+using GenerateJniRemappingNativeCode = xamarinbuildtasks::Xamarin.Android.Tasks.GenerateJniRemappingNativeCode;
+using MergeRemapXml = xamarinbuildtasks::Xamarin.Android.Tasks.MergeRemapXml;
 
 namespace Xamarin.Android.Build.Tests.Tasks
 {
@@ -149,6 +153,56 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 			Assert.IsFalse (task.Execute ());
 			Assert.AreEqual ("XA4327", Errors.Single ().Code);
+		}
+
+		[Test]
+		public void GeneratedDocumentParsesWithTheExistingRemapSchema ()
+		{
+			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
+			string outputFile = Path.Combine (TestDirectory, "r8-jni-remap.xml");
+			File.WriteAllText (mappingFile, """
+				com.contoso.Peer -> a.b:
+				    void doWork(int) -> c
+				    int counter -> d
+				""");
+			var task = new GenerateR8JniRemapping {
+				BuildEngine = engine,
+				MappingFile = mappingFile,
+				OutputFile = outputFile,
+			};
+			Assert.IsTrue (task.Execute (), "Task should have succeeded.");
+
+			string mamFile = Path.Combine (TestDirectory, "mam.xml");
+			File.WriteAllText (mamFile, """
+				<replacements>
+				  <replace-type from="com/contoso/Mam" to="com/microsoft/intune/Mam" />
+				</replacements>
+				""");
+			string mergedFile = Path.Combine (TestDirectory, "xa-remap-members.xml");
+			var merge = new MergeRemapXml {
+				BuildEngine = engine,
+				InputRemapXmlFiles = [
+					new TaskItem (mamFile),
+					new TaskItem (outputFile),
+				],
+				OutputFile = new TaskItem (mergedFile),
+			};
+			Assert.IsTrue (merge.Execute (), "MergeRemapXml should have succeeded.");
+			Assert.AreEqual (0, Errors.Count, "The merge should have no errors.");
+
+			string merged = File.ReadAllText (mergedFile);
+			StringAssert.Contains ("""<replace-type from="com/contoso/Mam" to="com/microsoft/intune/Mam" />""", merged);
+			StringAssert.Contains ("""<replace-type from="com/contoso/Peer" to="a/b" />""", merged);
+			StringAssert.Contains ("replace-field", merged);
+
+			var generate = new GenerateJniRemappingNativeCode {
+				BuildEngine = engine,
+				RemappingXmlFilePath = new TaskItem (mergedFile),
+				OutputDirectory = TestDirectory,
+				SupportedAbis = ["arm64-v8a"],
+			};
+			Assert.IsTrue (generate.Execute (), "GenerateJniRemappingNativeCode should have succeeded.");
+			Assert.AreEqual (0, Errors.Count, "The generated document must parse with the existing schema.");
 		}
 
 		string WriteNativeObject (string [] literals)

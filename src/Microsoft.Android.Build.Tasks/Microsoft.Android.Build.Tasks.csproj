@@ -12,6 +12,7 @@
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <RootNamespace>Microsoft.Android.Tasks</RootNamespace>
     <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <WarningsAsErrors>Nullable</WarningsAsErrors>
     <!--
       Deliberately *not* the shared tools\ directory. MSBuild probes a task assembly's own
@@ -36,12 +37,14 @@
   -->
   <Target Name="_CopyDotNetPackageDependencies" AfterTargets="ResolveAssemblyReferences">
     <ItemGroup>
-      <ReferenceCopyLocalPaths Include="@(ReferencePath)" Condition=" '%(Filename)' == 'System.IO.Hashing' " />
+      <ReferenceCopyLocalPaths Include="@(ReferencePath)"
+          Condition=" '%(Filename)' == 'ELFSharp' Or '%(Filename)' == 'System.IO.Hashing' " />
     </ItemGroup>
   </Target>
 
   <!-- Microsoft.Build.* references flow transitively from Microsoft.Android.Build.BaseTasks. -->
   <ItemGroup>
+    <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
     <Compile Remove="Tests\**" />
     <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
     <ProjectReference Include="..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
@@ -51,6 +54,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\DummyCustomAttributeProvider.cs" Link="Utilities\DummyCustomAttributeProvider.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MetadataExtensions.cs" Link="Utilities\MetadataExtensions.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\NullableExtensions.cs" Link="Utilities\NullableExtensions.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ManifestPlaceholderResolver.cs" Link="Utilities\ManifestPlaceholderResolver.cs" />
   </ItemGroup>

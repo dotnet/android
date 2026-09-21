@@ -275,10 +275,14 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 		public bool TryGetOriginalMethodName (string originalJniClassName, string obfuscatedMethodName, IReadOnlyList<string> originalJavaParameterTypes, string originalJavaReturnType, out string originalMethodName)
 		{
+			if (originalMethods.TryGetValue (originalJniClassName, out var classMethods) &&
+					classMethods.TryGetValue (BuildMethodKey (obfuscatedMethodName, originalJavaParameterTypes, originalJavaReturnType), out var methodName) &&
+					methodName.Length != 0) {
+				originalMethodName = methodName;
+				return true;
+			}
 			originalMethodName = "";
-			return originalMethods.TryGetValue (originalJniClassName, out var classMethods) &&
-				classMethods.TryGetValue (BuildMethodKey (obfuscatedMethodName, originalJavaParameterTypes, originalJavaReturnType), out originalMethodName) &&
-				originalMethodName.Length != 0;
+			return false;
 		}
 
 		public bool TryGetRenamedField (string owningJniClassName, string originalFieldName, out string obfuscatedFieldName)
@@ -504,7 +508,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			fieldNames.Sort (StringComparer.Ordinal);
 			fieldTypes.TryGetValue (originalClassName, out var classFieldTypes);
 			foreach (string fieldName in fieldNames) {
-				string javaFieldType = "";
+				string? javaFieldType = null;
 				classFieldTypes?.TryGetValue (fieldName, out javaFieldType);
 				result.Add (new R8FieldMapping (fieldName, classFields [fieldName], javaFieldType ?? ""));
 			}
