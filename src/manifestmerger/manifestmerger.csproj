@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Serialize all projects that invoke the shared Gradle wrapper. -->
+    <!-- This is an ordering dependency: build java-source-utils before manifestmerger so their Gradle invocations cannot overlap. -->
     <ProjectReference Include="..\..\external\Java.Interop\tools\java-source-utils\java-source-utils.csproj" ReferenceOutputAssembly="False" />
     <ProjectReference Include="..\androidsdk\androidsdk.csproj" ReferenceOutputAssembly="False" />
   </ItemGroup>
