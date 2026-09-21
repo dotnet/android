@@ -252,7 +252,9 @@ public class TypeMapProguardTests : IDisposable
 			File.ReadAllText (Path.Combine (directory, "writes.txt")).Replace ('\\', '/'));
 		Build (project, "-p:_AndroidRuntime=NativeAOT", "-p:AndroidTypeMapImplementation=trimmable", "-p:_AndroidEnableTypemapR8Trimming=true");
 		Assert.Equal ("-keep class test.Native\n", File.ReadAllText (rules));
-		Assert.DoesNotContain ("Members=" + members, File.ReadAllText (Path.Combine (directory, "writes.txt")));
+		Assert.DoesNotContain (
+			"Members=" + members.Replace ('\\', '/'),
+			File.ReadAllText (Path.Combine (directory, "writes.txt")).Replace ('\\', '/'));
 		Build (project);
 		Assert.Equal ("-keep class test.Llvm\n", File.ReadAllText (rules));
 		Assert.Equal ("-keepclassmembers class test.Llvm { *; }\n", File.ReadAllText (members));
