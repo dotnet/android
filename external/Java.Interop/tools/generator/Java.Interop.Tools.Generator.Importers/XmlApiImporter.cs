@@ -392,6 +392,7 @@ namespace MonoDroid.Generation
 				JavaName = elem.XGetAttribute ("name"),
 				JniSignatureOverride = elem.XGetAttribute ("managed-jni-signature"),
 				ManagedOverride = elem.XGetAttribute ("managedOverride"),
+				ManagedNullabilityMismatch = elem.XGetAttribute ("managedNullabilityMismatch"),
 				ManagedReturn = elem.XGetAttribute ("managedReturn"),
 				KotlinInlineClassReturnJniType = elem.Attribute ("kotlin-inline-class-return-jni-type") != null ? elem.XGetAttribute ("kotlin-inline-class-return-jni-type") : null,
 				PropertyNameOverride = elem.XGetAttribute ("propertyName"),

@@ -12,6 +12,7 @@ namespace Xamarin.SourceWriter
 		int indent;
 		bool need_indent = true;
 		string base_indent;
+		readonly Dictionary<string, int> suppression_depth = new Dictionary<string, int> ();
 
 		public CodeWriter (string filename)
 		{
@@ -30,6 +31,37 @@ namespace Xamarin.SourceWriter
 			WriteIndent ();
 			stream.Write (value);
 		}
+		// `#pragma warning restore` ends a suppression however many `disable` directives
+		// preceded it, so a nested `disable`/`restore` pair for the same code would stop
+		// suppressing the enclosing scope early. Track how deep each code is nested and let
+		// only the outermost pair be written.
+		public bool BeginWarningSuppression (string code)
+		{
+			if (code == null)
+				throw new ArgumentNullException (nameof (code));
+
+			suppression_depth.TryGetValue (code, out var depth);
+			suppression_depth [code] = depth + 1;
+
+			return depth == 0;
+		}
+
+		public bool EndWarningSuppression (string code)
+		{
+			if (code == null)
+				throw new ArgumentNullException (nameof (code));
+
+			if (!suppression_depth.TryGetValue (code, out var depth) || depth == 0)
+				throw new InvalidOperationException ($"No warning suppression is open for '{code}'.");
+
+			suppression_depth [code] = depth - 1;
+
+			return depth == 1;
+		}
+
+		public bool IsWarningSuppressed (string code) =>
+			suppression_depth.TryGetValue (code, out var depth) && depth > 0;
+
 
 		public void WriteLine ()
 		{

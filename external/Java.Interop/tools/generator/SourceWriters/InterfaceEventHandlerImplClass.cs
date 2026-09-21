@@ -16,7 +16,9 @@ namespace generator.SourceWriters
 
 			Name = iface.Name + "Implementor";
 
-			JavaProjectionWarnings.AddGeneratedHelperSuppressions (this, iface, opt);
+			// The helper exists only to support a deprecated Java type, so it carries that
+			// type's deprecation rather than suppressing the references to it.
+			SourceWriterExtensions.AddObsolete (Attributes, iface.DeprecatedComment, opt, iface.IsDeprecated, deprecatedSince: iface.DeprecatedSince);
 			Inherits = "global::Java.Lang.Object";
 			Implements.Add (iface.Name);
 

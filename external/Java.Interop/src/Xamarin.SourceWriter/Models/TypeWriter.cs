@@ -25,6 +25,10 @@ namespace Xamarin.SourceWriter
 		public ObservableCollection<MethodWriter> Methods { get; } = new ObservableCollection<MethodWriter> ();
 		public List<string> Comments { get; } = new List<string> ();
 		public List<WarningSuppression> SuppressWarnings { get; } = new List<WarningSuppression> ();
+
+		// Suppressions that only have to cover the type's declaration -- its base list, for
+		// example -- rather than everything the type contains.
+		public WarningSuppressionScope SignatureSuppressions { get; } = new WarningSuppressionScope ();
 		public List<AttributeWriter> Attributes { get; } = new List<AttributeWriter> ();
 		public ObservableCollection<EventWriter> Events { get; } = new ObservableCollection<EventWriter> ();
 		public ObservableCollection<FieldWriter> Fields { get; } = new ObservableCollection<FieldWriter> ();
@@ -81,7 +85,9 @@ namespace Xamarin.SourceWriter
 			this.WriteSuppressWarningsStart (writer);
 			WriteComments (writer);
 			WriteAttributes (writer);
+			SignatureSuppressions.WriteSuppressWarningsStart (writer);
 			WriteSignature (writer);
+			SignatureSuppressions.WriteSuppressWarningsEnd (writer);
 			WriteMembers (writer);
 			WriteTypeClose (writer);
 			this.WriteSuppressWarningsEnd (writer);

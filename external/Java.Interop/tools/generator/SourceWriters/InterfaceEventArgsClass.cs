@@ -12,8 +12,6 @@ namespace generator.SourceWriters
 	{
 		public InterfaceEventArgsClass (InterfaceGen iface, Method method, CodeGenerationOptions opt, GenBase declaringType = null)
 		{
-			JavaProjectionWarnings.AddSynthesizedTypeObsoleteSuppressions (this, iface, method, opt);
-
 			Name = iface.GetArgsName (method);
 			Inherits = "global::System.EventArgs";
 
@@ -45,6 +43,8 @@ namespace generator.SourceWriters
 				IsPublic = true
 			};
 
+			JavaProjectionWarnings.AddSynthesizedMemberObsoleteSuppressions (ctor, method.Parameters.Where (p => !p.IsSender), opt);
+
 			if (method.IsEventHandlerWithHandledProperty) {
 				ctor.Parameters.Add (new MethodParameterWriter ("handled", TypeReferenceWriter.Bool));
 				ctor.Body.Add ("this.handled = handled;");
@@ -71,10 +71,14 @@ namespace generator.SourceWriters
 				if (Properties.Any (prop => prop.Name == p.PropertyName))
 					continue;
 
-				Fields.Add (new FieldWriter {
+				var field = new FieldWriter {
 					Name = opt.GetSafeIdentifier (p.Name),
 					Type = new TypeReferenceWriter (opt.GetTypeReferenceName (p))
-				});
+				};
+
+				JavaProjectionWarnings.AddSynthesizedMemberObsoleteSuppressions (field, new [] { p }, opt);
+
+				Fields.Add (field);
 
 				var prop = new PropertyWriter {
 					Name = p.PropertyName,
@@ -82,6 +86,8 @@ namespace generator.SourceWriters
 					IsPublic = true,
 					HasGet = true
 				};
+
+				JavaProjectionWarnings.AddSynthesizedMemberObsoleteSuppressions (prop, new [] { p }, opt);
 
 				prop.GetBody.Add ($"return {opt.GetSafeIdentifier (p.Name)};");
 

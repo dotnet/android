@@ -18,7 +18,9 @@ namespace generator.SourceWriters
 		{
 			Name = $"{klass.Name}Invoker";
 
-			JavaProjectionWarnings.AddGeneratedHelperSuppressions (this, klass, opt);
+			// The helper exists only to support a deprecated Java type, so it carries that
+			// type's deprecation rather than suppressing the references to it.
+			SourceWriterExtensions.AddObsolete (Attributes, klass.DeprecatedComment, opt, klass.IsDeprecated, deprecatedSince: klass.DeprecatedSince);
 
 			IsInternal = true;
 			IsPartial = true;

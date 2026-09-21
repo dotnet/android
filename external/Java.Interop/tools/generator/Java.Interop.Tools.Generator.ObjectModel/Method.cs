@@ -35,6 +35,11 @@ namespace MonoDroid.Generation
 		public string JavaName { get; set; }
 		public string JniSignatureOverride { get; set; }
 		public string ManagedOverride { get; set; }
+
+		// Names the parts of this member whose nullability disagrees with the base member it
+		// overrides, for the cases where that base member is hand-bound and therefore not
+		// visible to the generator. Either or both of `return` and `parameters`.
+		public string ManagedNullabilityMismatch { get; set; }
 		public string ManagedReturn { get; set; }
 		public string KotlinInlineClassReturnJniType { get; set; }
 		public string PropertyNameOverride { get; set; }
@@ -162,6 +167,7 @@ namespace MonoDroid.Generation
 			clone.JavaName = JavaName;
 			clone.JniSignatureOverride = JniSignatureOverride;
 			clone.ManagedOverride = ManagedOverride;
+			clone.ManagedNullabilityMismatch = ManagedNullabilityMismatch;
 			clone.ManagedReturn = ManagedReturn;
 			clone.KotlinInlineClassReturnJniType = KotlinInlineClassReturnJniType;
 			clone.PropertyNameOverride = PropertyNameOverride;

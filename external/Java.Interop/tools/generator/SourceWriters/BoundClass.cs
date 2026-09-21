@@ -44,7 +44,7 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddObsolete (Attributes, klass.DeprecatedComment, opt, forceDeprecate: klass.IsDeprecated, deprecatedSince: klass.DeprecatedSince);
 
-			JavaProjectionWarnings.AddObsoleteBaseTypeSuppressions (this, klass, opt);
+			JavaProjectionWarnings.AddObsoleteBaseTypeSuppressions (SignatureSuppressions, klass, opt);
 			SourceWriterExtensions.AddRestrictToWarning (Attributes, klass.AnnotatedVisibility, true, opt);
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, klass, opt);

@@ -14,6 +14,10 @@ namespace generator.SourceWriters
 		{
 			Name = $"__Create{iface.Name}Implementor";
 
+			// The implementor carries the deprecation of the listener it implements, and this
+			// factory names it in both its return type and its body.
+			JavaProjectionWarnings.AddImplementorUseSuppressions (this, iface, opt);
+
 			ReturnType = new TypeReferenceWriter ($"{opt.GetOutputName (iface.FullName)}Implementor");
 
 			Body.Add ($"return new {opt.GetOutputName (iface.FullName)}Implementor ({(iface.NeedsSender ? "this" : "")});");

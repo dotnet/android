@@ -98038,7 +98038,7 @@ override Android.Widget.AbsoluteLayout.ThresholdType.get -> System.Type!
 override Android.Widget.AbsSeekBar.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Widget.AbsSeekBar.ThresholdClass.get -> nint
 override Android.Widget.AbsSeekBar.ThresholdType.get -> System.Type!
-override Android.Widget.AbsSpinner.Adapter.get -> Android.Widget.ISpinnerAdapter!
+override Android.Widget.AbsSpinner.Adapter.get -> Android.Widget.ISpinnerAdapter?
 override Android.Widget.AbsSpinner.Adapter.set -> void
 override Android.Widget.AbsSpinner.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Widget.AbsSpinner.SelectedView.get -> Android.Views.View?

@@ -38,6 +38,12 @@ namespace Xamarin.SourceWriter
 		public static void WriteSuppressWarningsStart (this ISuppressWarnings self, CodeWriter writer)
 		{
 			foreach (var suppression in Ordered (self)) {
+				// The writer tracks how deeply each code is nested, so a member inside an
+				// already-suppressed scope does not emit a redundant pair that would end the
+				// enclosing suppression when it is restored.
+				if (!writer.BeginWarningSuppression (suppression.Code))
+					continue;
+
 				writer.WriteLine ($"// {suppression.Reason}");
 				writer.WriteLine ($"#pragma warning disable {suppression.Code}");
 			}
@@ -45,13 +51,16 @@ namespace Xamarin.SourceWriter
 
 		public static void WriteSuppressWarningsEnd (this ISuppressWarnings self, CodeWriter writer)
 		{
-			foreach (var suppression in Ordered (self).Reverse ())
+			foreach (var suppression in Ordered (self).Reverse ()) {
+				if (!writer.EndWarningSuppression (suppression.Code))
+					continue;
+
 				writer.WriteLine ($"#pragma warning restore {suppression.Code}");
+			}
 		}
 
 		// The same diagnostic can be reported for more than one reason on a single member,
-		// and a nested `disable`/`restore` pair for the same code would end the suppression
-		// early, so each code is emitted once.
+		// so each code is emitted once, with the reasons combined.
 		static IList<WarningSuppression> Ordered (ISuppressWarnings self) =>
 			self.SuppressWarnings
 				.GroupBy (s => s.Code)

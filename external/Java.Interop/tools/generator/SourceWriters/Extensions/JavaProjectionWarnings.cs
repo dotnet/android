@@ -96,15 +96,6 @@ namespace generator.SourceWriters
 				writer.Add (CS0809, ObsoleteOverriddenReason);
 		}
 
-		// The generator synthesizes helper types (invokers, implementors, event arguments)
-		// for a bound Java type. When the Java type is deprecated the helper unavoidably
-		// derives from, implements, or mentions it, so suppress CS0618 for the helper.
-		public static void AddGeneratedHelperSuppressions (ISuppressWarnings writer, GenBase gen, CodeGenerationOptions opt)
-		{
-			if (IsBoundAsObsolete (gen, opt))
-				writer.Add (CS0618, GeneratedHelperReason);
-		}
-
 		// The bound type is not deprecated itself, but derives from or implements a Java type
 		// that is.
 		public static void AddObsoleteBaseTypeSuppressions (ISuppressWarnings writer, GenBase gen, CodeGenerationOptions opt)
@@ -129,15 +120,21 @@ namespace generator.SourceWriters
 				writer.Add (CS0618, ObsoleteUseReason);
 		}
 
-		// The generator synthesizes event argument types for the methods of a listener
-		// interface. The synthesized type is not the bound listener method, so -- unlike the
-		// members generated directly from that method -- it does not carry the method's
-		// deprecation and cannot rely on it to silence references to deprecated types.
-		public static void AddSynthesizedTypeObsoleteSuppressions (ISuppressWarnings writer, GenBase gen, Method method, CodeGenerationOptions opt)
+		// The implementor generated for a deprecated listener interface carries that
+		// interface's deprecation, so the generated code that names it has to say so.
+		public static void AddImplementorUseSuppressions (ISuppressWarnings writer, GenBase iface, CodeGenerationOptions opt)
 		{
-			if (IsBoundAsObsolete (gen, opt) ||
-					IsBoundAsObsolete (method.Deprecated, method.DeprecatedSince, opt) ||
-					SignatureUsesObsoleteType (method, opt))
+			if (IsBoundAsObsolete (iface, opt))
+				writer.Add (CS0618, GeneratedHelperReason);
+		}
+
+		// The generator synthesizes event argument types for the methods of a listener
+		// interface. The synthesized members are not the bound listener method, so -- unlike
+		// the members generated directly from it -- they do not carry its deprecation and
+		// cannot rely on it to silence a reference to a deprecated parameter type.
+		public static void AddSynthesizedMemberObsoleteSuppressions (ISuppressWarnings writer, IEnumerable<Parameter> parameters, CodeGenerationOptions opt)
+		{
+			if (parameters.Any (p => IsBoundAsObsolete (p.Symbol, opt)))
 				writer.Add (CS0618, GeneratedHelperReason);
 		}
 
@@ -202,6 +199,8 @@ namespace generator.SourceWriters
 
 			if (type == null)
 				return;
+
+			AddDeclaredNullabilityMismatchSuppressions (writer, method);
 
 			foreach (var (base_method, via_interface) in GetOverriddenMembers (type, method)) {
 				if (hidesBaseMember && !via_interface)
@@ -298,6 +297,32 @@ namespace generator.SourceWriters
 			}
 		}
 
+		// The base member an override resolves to can be hand-bound, in which case the
+		// generator cannot see it or its annotations. `managedNullabilityMismatch` metadata
+		// names the parts that disagree, so the override still gets the same member-scoped
+		// suppression the generator would have computed for a visible base member -- instead
+		// of the binding having to misstate the API's contract to match it.
+		static void AddDeclaredNullabilityMismatchSuppressions (ISuppressWarnings writer, Method method)
+		{
+			var declared = method.ManagedNullabilityMismatch;
+
+			if (!declared.HasValue ())
+				return;
+
+			foreach (var part in declared.Split (new [] { ' ', '\t', ',' }, StringSplitOptions.RemoveEmptyEntries)) {
+				switch (part.ToLowerInvariant ()) {
+				case "return":
+					writer.Add (CS8764, ReturnNullabilityReason);
+					break;
+				case "parameters":
+					writer.Add (CS8765, ParameterNullabilityReason);
+					break;
+				default:
+					throw new InvalidOperationException ($"Unknown managedNullabilityMismatch value '{part}' on '{method.JavaName}'.");
+				}
+			}
+		}
+
 		// Return types are covariant, so returning non-null where the base member allows null
 		// is safe and is not reported. Only the reverse -- widening the base member's
 		// guarantee -- is a warning.
@@ -327,7 +352,9 @@ namespace generator.SourceWriters
 			null => false,
 			// Arrays are reference types even when their element type is not.
 			_ when symbol.IsArray => true,
-			SimpleSymbol => false,
+			// `SimpleSymbol` covers the primitives, but also the `object` an unbounded Java
+			// type parameter is erased to. Only a reference type defaults to null.
+			SimpleSymbol => symbol.DefaultValue == "null",
 			_ => !symbol.IsEnum,
 		};
 

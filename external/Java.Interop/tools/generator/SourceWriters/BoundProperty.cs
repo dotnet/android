@@ -80,8 +80,10 @@ namespace generator.SourceWriters
 				force_shadow = true;
 			}
 
-			// `new` only applies when the property hides rather than overrides the inherited one.
-			IsShadow = !IsOverride && (force_shadow || gen.RequiresNew (property, opt));
+			// `new` only applies when the property hides rather than overrides the inherited
+			// one, and is invalid on an explicit interface implementation.
+			IsShadow = !IsOverride && !ExplicitInterfaceImplementation.HasValue () &&
+				(force_shadow || gen.RequiresNew (property, opt));
 
 			// Add [Obsolete] or [ObsoletedOSPlatform]
 			if (property.IsWholePropertyDeprecated) {
