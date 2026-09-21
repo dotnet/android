@@ -138,8 +138,8 @@ public class TypeMapProguardTests : IDisposable
 		var keys = Path.Combine (directory, "obj", "typemap.keys.txt");
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
 		var members = Path.Combine (directory, "obj", "proguard", "proguard_typemap_members.cfg");
-		Assert.Equal ("-keep class test.Live\n-keep class test.Second\n", File.ReadAllText (rules));
-		Assert.Equal ("-keepclassmembers class test.Live { *; }\n-keepclassmembers class test.Second { *; }\n", File.ReadAllText (members));
+		Assert.Equal (TypeRules ("test.Live", "test.Second"), File.ReadAllText (rules));
+		Assert.Equal (MemberRules ("test.Live", "test.Second"), File.ReadAllText (members));
 		var firstTime = File.GetLastWriteTimeUtc (keys);
 		var rulesTime = File.GetLastWriteTimeUtc (rules);
 		var membersTime = File.GetLastWriteTimeUtc (members);
@@ -153,21 +153,21 @@ public class TypeMapProguardTests : IDisposable
 
 		Build (project, "-p:OneAbi=true");
 		Assert.Equal ("test/Live\n", File.ReadAllText (keys));
-		Assert.Equal ("-keep class test.Live\n", File.ReadAllText (rules));
-		Assert.Equal ("-keepclassmembers class test.Live { *; }\n", File.ReadAllText (members));
+		Assert.Equal (TypeRules ("test.Live"), File.ReadAllText (rules));
+		Assert.Equal (MemberRules ("test.Live"), File.ReadAllText (members));
 		File.Delete (members);
 		Build (project, "-p:OneAbi=true");
-		Assert.Equal ("-keepclassmembers class test.Live { *; }\n", File.ReadAllText (members));
+		Assert.Equal (MemberRules ("test.Live"), File.ReadAllText (members));
 		File.Delete (keys);
 		Build (project, "-p:OneAbi=true");
 		Assert.Equal ("test/Live\n", File.ReadAllText (keys));
 		File.Delete (rules);
 		Build (project, "-p:OneAbi=true");
-		Assert.Equal ("-keep class test.Live\n", File.ReadAllText (rules));
+		Assert.Equal (TypeRules ("test.Live"), File.ReadAllText (rules));
 		Write ("first.ll", "@java_type_names = dso_local local_unnamed_addr constant [13 x i8] c\"test/Changed\\00\", align 1\n");
 		Build (project, "-p:OneAbi=true");
-		Assert.Equal ("-keep class test.Changed\n", File.ReadAllText (rules));
-		Assert.Equal ("-keepclassmembers class test.Changed { *; }\n", File.ReadAllText (members));
+		Assert.Equal (TypeRules ("test.Changed"), File.ReadAllText (rules));
+		Assert.Equal (MemberRules ("test.Changed"), File.ReadAllText (members));
 
 		var writes = File.ReadAllText (Path.Combine (directory, "writes.txt"));
 		Assert.Contains ("typemap.keys.txt", writes);
@@ -206,7 +206,7 @@ public class TypeMapProguardTests : IDisposable
 			NativeObjectItem ("second.so", second));
 		Build (project, "-p:_AndroidEnableTypemapR8Trimming=true");
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
-		Assert.Equal ("-keep class test.Live\n-keep class test.Outer$Inner\n-keep class test.Second\n", File.ReadAllText (rules));
+		Assert.Equal (TypeRules ("test.Live", "test.Outer$Inner", "test.Second"), File.ReadAllText (rules));
 		Assert.False (File.Exists (Path.Combine (directory, "obj", "proguard", "proguard_typemap_members.cfg")));
 		Build (project, "-p:_AndroidEnableTypemapR8Trimming=false");
 		Assert.Contains ("legacy ACW configuration", File.ReadAllText (rules));
@@ -227,7 +227,7 @@ public class TypeMapProguardTests : IDisposable
 		var project = CreateProject ("NativeAOT", "trimmable", NativeObjectItem ("app.so", nativeObject));
 		Build (project, "-p:_AndroidEnableTypemapR8Trimming=true");
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
-		Assert.Equal ("-keep class java.lang.Object\n-keep class test.Live\n", File.ReadAllText (rules));
+		Assert.Equal (TypeRules ("java.lang.Object", "test.Live"), File.ReadAllText (rules));
 
 		NativeAotObjectTestFixture.WriteObjectGroups (
 			directory, "groups", NativeAotObjectIntegrationTools.LlvmReadObjPath,
@@ -246,18 +246,18 @@ public class TypeMapProguardTests : IDisposable
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
 		var members = Path.Combine (directory, "obj", "proguard", "proguard_typemap_members.cfg");
 		Build (project);
-		Assert.Equal ("-keep class test.Llvm\n", File.ReadAllText (rules));
+		Assert.Equal (TypeRules ("test.Llvm"), File.ReadAllText (rules));
 		Assert.Contains (
 			"Members=" + members.Replace ('\\', '/'),
 			File.ReadAllText (Path.Combine (directory, "writes.txt")).Replace ('\\', '/'));
 		Build (project, "-p:_AndroidRuntime=NativeAOT", "-p:AndroidTypeMapImplementation=trimmable", "-p:_AndroidEnableTypemapR8Trimming=true");
-		Assert.Equal ("-keep class test.Native\n", File.ReadAllText (rules));
+		Assert.Equal (TypeRules ("test.Native"), File.ReadAllText (rules));
 		Assert.DoesNotContain (
 			"Members=" + members.Replace ('\\', '/'),
 			File.ReadAllText (Path.Combine (directory, "writes.txt")).Replace ('\\', '/'));
 		Build (project);
-		Assert.Equal ("-keep class test.Llvm\n", File.ReadAllText (rules));
-		Assert.Equal ("-keepclassmembers class test.Llvm { *; }\n", File.ReadAllText (members));
+		Assert.Equal (TypeRules ("test.Llvm"), File.ReadAllText (rules));
+		Assert.Equal (MemberRules ("test.Llvm"), File.ReadAllText (members));
 	}
 
 	[Fact]
@@ -320,7 +320,7 @@ public class TypeMapProguardTests : IDisposable
 				Assert.Contains ("legacy ACW configuration", File.ReadAllText (rules));
 				Assert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
 			} else {
-				Assert.Equal ("-keep class test.Live\n", File.ReadAllText (rules));
+				Assert.Equal (TypeRules ("test.Live"), File.ReadAllText (rules));
 				Assert.Contains ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
 			}
 		}
@@ -336,7 +336,7 @@ public class TypeMapProguardTests : IDisposable
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
 		Build (project, "-p:Optimize=false", "-p:_AndroidEnableTypemapR8Trimming=true");
 		Assert.Equal ("test/Live\n", File.ReadAllText (keys));
-		Assert.Equal ("-keep class test.Live\n", File.ReadAllText (rules));
+		Assert.Equal (TypeRules ("test.Live"), File.ReadAllText (rules));
 	}
 
 	[Fact]
@@ -384,7 +384,7 @@ public class TypeMapProguardTests : IDisposable
 			new XElement ("ResolvedFileToPublish", new XAttribute ("Include", "pretrim/unused.dll")));
 		Build (project);
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
-		Assert.Equal ("-keep class test.Alias\n-keep class test.Live\n-keep class test.Second\n", File.ReadAllText (rules));
+		Assert.Equal (TypeRules ("test.Alias", "test.Live", "test.Second"), File.ReadAllText (rules));
 		File.Delete (second);
 		Assert.Contains ("XA4327", Build (project, expectSuccess: false));
 	}
@@ -446,6 +446,12 @@ public class TypeMapProguardTests : IDisposable
 		Build (project, $"-p:PublishTrimmed={trimmed}", $"-p:AndroidLinkTool={linkTool}", "-p:_AndroidEnableTypemapR8Trimming=true");
 		Assert.False (File.Exists (Path.Combine (directory, "obj", "typemap.keys.txt")));
 	}
+
+	static string TypeRules (params string [] names) =>
+		string.Concat (names.Select (name => $"-keep class {name}\n-keep interface {name}\n"));
+
+	static string MemberRules (params string [] names) =>
+		string.Concat (names.Select (name => $"-keepclassmembers class {name} {{ *; }}\n-keepclassmembers interface {name} {{ *; }}\n"));
 
 	GenerateTypeMapProguardConfiguration CreateGenerator (params string [] inputs)
 	{
