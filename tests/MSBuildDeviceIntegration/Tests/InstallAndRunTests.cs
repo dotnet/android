@@ -2593,12 +2593,16 @@ namespace UnnamedProject
 					logcatOutput,
 					"The non-ASCII method name wasn't remapped!"
 			);
+			int previousMessageIndex = -1;
 			foreach (string methodName in new [] { "boundary15", "boundary16", "boundary17", "secondChunkA", "secondChunkB" }) {
-				StringAssert.Contains (
-						$"RemapActivity.{methodName}() invoked!",
-						logcatOutput,
-						$"The ASCII chunk-boundary method '{methodName}' wasn't remapped!"
+				string message = $"RemapActivity.{methodName}() invoked!";
+				int messageIndex = logcatOutput.IndexOf (message, StringComparison.Ordinal);
+				Assert.Greater (
+						messageIndex,
+						previousMessageIndex,
+						$"The ASCII chunk-boundary method '{methodName}' wasn't remapped to the expected target in invocation order!"
 				);
+				previousMessageIndex = messageIndex;
 			}
 		}
 
