@@ -13,7 +13,7 @@ using Microsoft.Android.Build.Tasks;
 namespace Xamarin.Android.Tasks
 {
 	/// <summary>
-	/// Processes .dll files coming from @(ResolvedFileToPublish). Removes duplicate .NET assemblies by MVID.
+	/// Processes .dll files coming from @(ResolvedFileToPublish). Removes duplicate .NET assemblies by name and ABI.
 	///
 	/// Also sets some metadata:
 	/// * %(FrameworkAssembly)=True to determine if framework or user assembly
@@ -128,6 +128,7 @@ namespace Xamarin.Android.Tasks
 
 		void SetMetadataForAssemblies (List<ITaskItem> output, Dictionary<string, ITaskItem> symbols)
 		{
+			var assemblyNamesByAbi = new Dictionary<string, HashSet<string>> (StringComparer.OrdinalIgnoreCase);
 			foreach (ITaskItem assembly in InputAssemblies) {
 				if (DesignTimeBuild && !File.Exists (assembly.ItemSpec)) {
 					// Designer builds don't produce assemblies, so library and main application DLLs might not
@@ -145,6 +146,18 @@ namespace Xamarin.Android.Tasks
 						hasMonoAndroidReference = MonoAndroidHelper.IsMonoAndroidAssembly (assembly) ||
 							MonoAndroidHelper.HasMonoAndroidReference (pe.GetMetadataReader ());
 					}
+				}
+
+				string rid = assembly.GetMetadata ("RuntimeIdentifier");
+				string abi = AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid);
+				string assemblyName = MonoAndroidHelper.GetAssemblyNameWithCulture (assembly);
+				if (!assemblyNamesByAbi.TryGetValue (abi, out HashSet<string> assemblyNames)) {
+					assemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+					assemblyNamesByAbi.Add (abi, assemblyNames);
+				}
+				if (!assemblyNames.Add (assemblyName)) {
+					Log.LogDebugMessage ($"Skipping duplicate assembly '{assembly.ItemSpec}' for ABI '{abi}'.");
+					continue;
 				}
 
 				ITaskItem? symbol = GetOrCreateSymbolItem (symbols, assembly);
