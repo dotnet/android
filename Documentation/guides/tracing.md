@@ -310,11 +310,12 @@ diagnostics opt-in in the application project:
 </PropertyGroup>
 ```
 
-This opt-in also forces `$(EventSourceSupport)` to `true`. Applications must
-additionally enable the diagnostic transport with `-p:EnableDiagnostics=true`
-so that `dotnet-trace` can connect. For MonoVM this also packages the
-`diagnostics_tracing` component; `$(AndroidEnableProfiler)` remains its legacy
-synonym.
+This opt-in also forces the generated runtime EventSource support option to
+`true`, even if `$(EventSourceSupport)` was supplied as an immutable global
+property. Applications must additionally enable the diagnostic transport with
+`-p:EnableDiagnostics=true` so that `dotnet-trace` can connect. For MonoVM this
+also packages the `diagnostics_tracing` component; `$(AndroidEnableProfiler)`
+remains its legacy synonym.
 
 Collect the runtime timing events at informational level:
 

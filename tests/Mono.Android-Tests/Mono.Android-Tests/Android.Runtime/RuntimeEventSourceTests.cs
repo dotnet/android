@@ -27,6 +27,12 @@ namespace Android.RuntimeTests
 			Assert.AreEqual ((EventKeywords) 0x2, GetConstant<EventKeywords> (eventSourceType, "ReachabilityKeyword"));
 			Assert.AreEqual ((EventKeywords) 0x4, GetConstant<EventKeywords> (eventSourceType, "TypeMapKeyword"));
 			Assert.AreEqual ((EventKeywords) 0x8, GetConstant<EventKeywords> (eventSourceType, "GCBridgeKeyword"));
+			Assert.AreEqual (1, GetConstant<int> (eventSourceType, "ManagedPeerCreatedEventId"));
+			Assert.AreEqual (2, GetConstant<int> (eventSourceType, "JavaPeerCreatedEventId"));
+			Assert.AreEqual (3, GetConstant<int> (eventSourceType, "ManagedPeerReleasedJavaPeerEventId"));
+			Assert.AreEqual (4, GetConstant<int> (eventSourceType, "JavaPeerReleasedManagedPeerEventId"));
+			Assert.AreEqual (5, GetConstant<int> (eventSourceType, "ManagedPeerOnlyReachableFromJavaPeerEventId"));
+			Assert.AreEqual (6, GetConstant<int> (eventSourceType, "JavaPeerOnlyReachableFromManagedPeerEventId"));
 
 			var typeMapKeyword = GetConstant<EventKeywords> (eventSourceType, "TypeMapKeyword");
 			var gcBridgeKeyword = GetConstant<EventKeywords> (eventSourceType, "GCBridgeKeyword");
@@ -84,6 +90,9 @@ namespace Android.RuntimeTests
 				?? throw new InvalidOperationException ($"Could not find {type.FullName}.{name}.");
 			var value = field.GetRawConstantValue ()
 				?? throw new InvalidOperationException ($"{type.FullName}.{name} did not have a constant value.");
+			if (typeof (T).IsEnum) {
+				return (T) Enum.ToObject (typeof (T), value);
+			}
 			return (T) value;
 		}
 
