@@ -36,6 +36,8 @@
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\CallNonvirtualBase.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\CallNonvirtualDerived.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\CallNonvirtualDerived2.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\FieldRemapBase.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\FieldRemapDerived.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\CallVirtualFromConstructorBase.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\CallVirtualFromConstructorDerived.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\GetThis.java" />

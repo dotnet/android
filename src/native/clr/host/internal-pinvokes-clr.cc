@@ -3,7 +3,6 @@
 #include <runtime-base/android-system.hh>
 #include <runtime-base/cpu-arch.hh>
 #include <runtime-base/internal-pinvokes.hh>
-#include <runtime-base/jni-remapping.hh>
 
 using namespace xamarin::android;
 
@@ -25,14 +24,28 @@ bool clr_typemap_java_to_managed (const char *java_type_name, char const** assem
 	return TypeMapper::java_to_managed (java_type_name, assembly_name, managed_type_token_id);
 }
 
-const char*
-_monodroid_lookup_replacement_type (const char *jniSimpleReference)
+managed_timing_sequence* monodroid_timing_start (const char *message)
 {
-	return JniRemapping::lookup_replacement_type (jniSimpleReference);
+	if (!FastTiming::enabled ()) [[likely]] {
+		return nullptr;
+	}
+
+	managed_timing_sequence *ret = Host::get_timing ().get_available_sequence ();
+	if (message != nullptr) {
+		log_write (LOG_TIMING, LogLevel::Info, message);
+	}
+	ret->start = FastTiming::get_time ();
+	return ret;
 }
 
-const JniRemappingReplacementMethod*
-_monodroid_lookup_replacement_method_info (const char *jniSourceType, const char *jniMethodName, const char *jniMethodSignature)
+void monodroid_timing_stop (managed_timing_sequence *sequence, const char *message)
 {
-	return JniRemapping::lookup_replacement_method_info (jniSourceType, jniMethodName, jniMethodSignature);
+	constexpr std::string_view DEFAULT_MESSAGE { "Managed Timing" };
+	if (sequence == nullptr) {
+		return;
+	}
+
+	sequence->end = FastTiming::get_time ();
+	Timing::info (sequence, message == nullptr ? DEFAULT_MESSAGE.data () : message);
+	Host::get_timing ().release_sequence (sequence);
 }

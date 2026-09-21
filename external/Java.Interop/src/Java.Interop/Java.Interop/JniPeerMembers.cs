@@ -197,6 +197,39 @@ namespace Java.Interop {
 				: JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (jniPeerTypeNameUtf8, method, signature);
 		}
 
+		JniRuntime.ReplacementMethodInfo? GetBaseReplacementMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
+		{
+			var typeManager = JniEnvironment.Runtime.TypeManager;
+			for (Type? baseType = ManagedPeerType.BaseType; baseType != null; baseType = baseType.BaseType) {
+				var baseSignature = typeManager.GetTypeSignature (baseType);
+				string? effectiveBaseType = baseSignature.SimpleReference;
+				if (effectiveBaseType == null)
+					continue;
+				var info = typeManager.GetReplacementMethodInfo (effectiveBaseType, method, signature);
+				if (info != null)
+					return info;
+			}
+			return null;
+		}
+
+		JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfo (ReadOnlySpan<char> field, ReadOnlySpan<char> signature)
+			=> JniEnvironment.Runtime.TypeManager.GetReplacementFieldInfo (JniPeerTypeName, field, signature);
+
+		JniRuntime.ReplacementFieldInfo? GetBaseReplacementFieldInfo (ReadOnlySpan<char> field, ReadOnlySpan<char> signature)
+		{
+			var typeManager = JniEnvironment.Runtime.TypeManager;
+			for (Type? baseType = ManagedPeerType.BaseType; baseType != null; baseType = baseType.BaseType) {
+				var baseSignature = typeManager.GetTypeSignature (baseType);
+				string? effectiveBaseType = baseSignature.SimpleReference;
+				if (effectiveBaseType == null)
+					continue;
+				var info = typeManager.GetReplacementFieldInfo (effectiveBaseType, field, signature);
+				if (info != null)
+					return info;
+			}
+			return null;
+		}
+
 		static JniType CreateTargetType (JniRuntime.ReplacementMethodInfo info, JniPeerMembers fallback)
 		{
 			if (info.TargetJniTypeUtf8 != IntPtr.Zero)
