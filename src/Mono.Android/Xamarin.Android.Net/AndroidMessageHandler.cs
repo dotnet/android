@@ -328,7 +328,7 @@ namespace Xamarin.Android.Net
 			}
 
 			/// <summary>
-			/// Void counterpart of <see cref="RunOperation{T}"/>, for operations that return no value.
+			/// Void counterpart of <see cref="RunOperation{T}(Func{CancellationToken,Task{T}},CancellationToken,string)"/>, for operations that return no value.
 			/// Delegates to the generic overload so the BeginUse/try/finally/EndUse bracket lives in exactly
 			/// one place.
 			/// </summary>
@@ -336,7 +336,7 @@ namespace Xamarin.Android.Net
 				RunOperation<bool> (async operationToken => { await operation (operationToken).ConfigureAwait (false); return true; }, callerToken, canceledMessage);
 
 			/// <summary>
-			/// Synchronous, value-returning wrapper over <see cref="RunOperation{T}"/> for the synchronous
+			/// Synchronous, value-returning wrapper over <see cref="RunOperation{T}(Func{CancellationToken,Task{T}},CancellationToken,string)"/> for the synchronous
 			/// <see cref="Stream"/> overrides, which carry no caller token. It uses the drain-safety bracket
 			/// directly rather than allocating a completed task.
 			/// </summary>
@@ -1784,7 +1784,7 @@ namespace Xamarin.Android.Net
 				return;
 			}
 
-			Authorization authorization = auth.Authenticate (data.Challenge!, httpConnection, creds);
+			Authorization? authorization = auth.Authenticate (data.Challenge!, httpConnection, creds);
 			if (authorization == null) {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"Authorization module {auth.GetType ()} for scheme {data.Scheme} returned no authorization");
