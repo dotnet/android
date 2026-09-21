@@ -40,7 +40,6 @@ static class JavaMarshalRegisteredPeers
 	static bool initialized;
 
 	// The native GC bridge serializes rounds on one dedicated processing thread.
-	[ThreadStatic]
 	static bool gcBridgeEventEnabled;
 
 	/// <summary>
