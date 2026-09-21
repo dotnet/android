@@ -235,10 +235,10 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 		{
 			// '_' (0x5F) sorts after 'Z' (0x5A) but before 'a' (0x61); a culture-sensitive
 			// comparison would order these differently, and the native binary search would break.
-			Assert.Less (JniRemappingAssemblyGenerator.CompareUtf8 (Utf8 ("Z"), Utf8 ("_")), 0);
-			Assert.Less (JniRemappingAssemblyGenerator.CompareUtf8 (Utf8 ("_"), Utf8 ("a")), 0);
-			Assert.Less (JniRemappingAssemblyGenerator.CompareUtf8 (Utf8 ("a"), Utf8 ("ab")), 0);
-			Assert.AreEqual (0, JniRemappingAssemblyGenerator.CompareUtf8 (Utf8 ("a/B"), Utf8 ("a/B")));
+			Assert.Less (JniRemappingNativeCodeGenerator.CompareUtf8 (Utf8 ("Z"), Utf8 ("_")), 0);
+			Assert.Less (JniRemappingNativeCodeGenerator.CompareUtf8 (Utf8 ("_"), Utf8 ("a")), 0);
+			Assert.Less (JniRemappingNativeCodeGenerator.CompareUtf8 (Utf8 ("a"), Utf8 ("ab")), 0);
+			Assert.AreEqual (0, JniRemappingNativeCodeGenerator.CompareUtf8 (Utf8 ("a/B"), Utf8 ("a/B")));
 
 			static byte [] Utf8 (string s) => System.Text.Encoding.UTF8.GetBytes (s);
 		}
