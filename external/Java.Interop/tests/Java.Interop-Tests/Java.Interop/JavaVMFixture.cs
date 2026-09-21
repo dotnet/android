@@ -188,6 +188,8 @@ namespace Java.InteropTests {
 			[("java/lang/StringBuilder",   "indexOf",  "(Lnet/dot/jni/test/RenamedString;)I")]  = (null, "indexOf", "(Ljava/lang/String;)I", null, false, ReplacementMethodStorage.Strings),
 			[(FieldRemapBase.JniTypeName,  "hiddenInstanceMethod", "()I")] = (null, "remappedInstanceMethod", null, null, false, ReplacementMethodStorage.Strings),
 			[(FieldRemapBase.JniTypeName,  "hiddenStaticMethod",   "()I")] = (null, "remappedStaticMethod", null, null, false, ReplacementMethodStorage.Strings),
+			[(FieldRemapBase.JniTypeName,  "inheritedStaticMethod", "()I")] = ("net/dot/jni/test/ObjectHelper", "remappedInheritedStaticMethod", null, null, false, ReplacementMethodStorage.Strings),
+			[(FieldRemapDerived.JniTypeName, "inheritedStaticMethod", "()I")] = (null, "missingStaticMethod", null, null, false, ReplacementMethodStorage.Strings),
 			[(FieldRemapBase.JniTypeName,  "remappedSpecificity",  "(I)I")] = (null, "specificityExact", "(I)I", null, false, ReplacementMethodStorage.Strings),
 			[(FieldRemapBase.JniTypeName,  "remappedSpecificity",  "(I)")] = (null, "specificityParameters", "(I)V", null, false, ReplacementMethodStorage.Strings),
 			[(FieldRemapBase.JniTypeName,  "remappedSpecificity",  null)] = (null, "specificityWildcard", null, null, false, ReplacementMethodStorage.Strings),
@@ -199,7 +201,7 @@ namespace Java.InteropTests {
 			[(FieldRemapBase.JniTypeName,       "hiddenInstanceField",  "Z")]   = (null, "remappedInstanceField", null),
 			[(FieldRemapBase.JniTypeName,       "hiddenStaticField",    "Ljava/lang/String;")] = (null, "remappedStaticField", null),
 			[(FieldRemapBase.JniTypeName,       "inheritedInstanceField", "Z")] = (null, "remappedInheritedInstanceField", null),
-			[(FieldRemapBase.JniTypeName,       "inheritedStaticField", "Ljava/lang/String;")] = (null, "remappedInheritedStaticField", null),
+			[(FieldRemapBase.JniTypeName,       "inheritedStaticField", "Ljava/lang/String;")] = ("net/dot/jni/test/ObjectHelper", "remappedInheritedStaticField", null),
 			[(FieldRemapDerived.JniTypeName,    "inheritedInstanceField", "Z")] = (null, "missingInstanceField", null),
 			[(FieldRemapDerived.JniTypeName,    "inheritedStaticField", "Ljava/lang/String;")] = (null, "missingStaticField", null),
 		};

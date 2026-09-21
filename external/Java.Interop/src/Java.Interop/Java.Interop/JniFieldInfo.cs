@@ -10,6 +10,8 @@ namespace Java.Interop
 
 		public      bool        IsStatic    {get; private set;}
 
+		internal    JniType?     StaticRedirect;
+
 		internal    bool        IsValid {
 			get {return ID != IntPtr.Zero;}
 		}
@@ -69,5 +71,5 @@ namespace Java.Interop
 					ID.ToString ("x"));
 		}
 	}
-}
 
+}
