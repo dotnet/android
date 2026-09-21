@@ -80,7 +80,7 @@ public class AssemblyModifierPipeline : AndroidTask
 			ReadSymbols = ReadSymbols,
 		};
 
-		ILookup<AndroidTargetArch, ITaskItem> perArchAssemblies = ResolvedAssemblies.ToLookup (MonoAndroidHelper.GetTargetArch);
+		Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> perArchAssemblies = MonoAndroidHelper.GetPerArchAssemblies (ResolvedAssemblies, [], validate: false);
 
 		AssemblyPipeline? pipeline = null;
 		var currentArch = AndroidTargetArch.None;
@@ -103,7 +103,8 @@ public class AssemblyModifierPipeline : AndroidTask
 				var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: ReadSymbols, loadReaderParameters: readerParameters);
 
 				// Add SearchDirectories for the current architecture's ResolvedAssemblies
-				foreach (ITaskItem assembly in perArchAssemblies [sourceArch]) {
+				foreach (var kvp in perArchAssemblies [sourceArch]) {
+					ITaskItem assembly = kvp.Value;
 					var path = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec));
 					if (!resolver.SearchDirectories.Contains (path)) {
 						resolver.SearchDirectories.Add (path);

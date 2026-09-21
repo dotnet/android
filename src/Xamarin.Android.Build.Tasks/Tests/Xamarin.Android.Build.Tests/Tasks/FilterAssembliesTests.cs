@@ -127,6 +127,23 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.IsEmpty (actual, "Native DLLs without CLI metadata should be skipped.");
 		}
 
+		[Test]
+		public void ProcessAssemblies_NativeDllSkipped ()
+		{
+			var nativeDll = Path.Combine (tempDirectory, "native.dll");
+			CreateNativePE (nativeDll);
+			var input = new TaskItem (nativeDll);
+			input.SetMetadata ("RuntimeIdentifier", "android-x64");
+			var task = new ProcessAssemblies {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				InputAssemblies = [input],
+				RuntimeIdentifiers = ["android-x64"],
+			};
+
+			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+			CollectionAssert.IsEmpty (task.OutputAssemblies, "Native DLLs without CLI metadata should be skipped.");
+		}
+
 		/// <summary>
 		/// Creates a minimal valid PE file without CLI metadata, simulating a native DLL.
 		/// </summary>

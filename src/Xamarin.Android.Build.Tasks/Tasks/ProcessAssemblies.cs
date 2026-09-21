@@ -135,6 +135,13 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
+				using (var pe = new PEReader (File.OpenRead (assembly.ItemSpec))) {
+					if (!pe.HasMetadata) {
+						Log.LogDebugMessage ($"Skipping non-.NET assembly: {assembly.ItemSpec}");
+						continue;
+					}
+				}
+
 				ITaskItem? symbol = GetOrCreateSymbolItem (symbols, assembly);
 				SetAssemblyAbiMetadata (assembly, symbol);
 				SetDestinationSubDirectory (assembly, symbol);
