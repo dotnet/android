@@ -25,6 +25,7 @@ permissions:
 model: gpt-5.6-sol
 engine:
   id: copilot
+  version: 1.0.80
   env:
     COPILOT_GITHUB_TOKEN: |
       ${{ case(
