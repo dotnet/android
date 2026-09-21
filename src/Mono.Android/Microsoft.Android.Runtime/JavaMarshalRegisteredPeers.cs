@@ -39,6 +39,10 @@ static class JavaMarshalRegisteredPeers
 	static readonly object initializeLock = new ();
 	static bool initialized;
 
+	// The native GC bridge serializes rounds on one dedicated processing thread.
+	[ThreadStatic]
+	static bool gcBridgeEventEnabled;
+
 	/// <summary>
 	/// Performs the one-shot, process-global GC-bridge initialization the first time it is
 	/// called; subsequent calls return immediately. See <see cref="JavaMarshalRegisteredPeers"/>
@@ -49,6 +53,10 @@ static class JavaMarshalRegisteredPeers
 		lock (initializeLock) {
 			if (initialized)
 				return;
+
+			if (RuntimeFeature.EventSourceSupport) {
+				RuntimeEventSource.Initialize ();
+			}
 
 			unsafe {
 				var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (
@@ -515,7 +523,22 @@ static class JavaMarshalRegisteredPeers
 			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
 		}
 
-		HandleContext.EnsureAllContextsAreOurs (mcr);
+		if (!RuntimeFeature.EventSourceSupport) {
+			HandleContext.EnsureAllContextsAreOurs (mcr);
+			return;
+		}
+
+		gcBridgeEventEnabled = false;
+		gcBridgeEventEnabled = RuntimeEventSource.GCBridgeStart ();
+		bool preprocessingCompleted = false;
+		try {
+			HandleContext.EnsureAllContextsAreOurs (mcr);
+			preprocessingCompleted = true;
+		} finally {
+			if (!preprocessingCompleted) {
+				gcBridgeEventEnabled = false;
+			}
+		}
 	}
 
 	[UnmanagedCallersOnly]
@@ -525,6 +548,24 @@ static class JavaMarshalRegisteredPeers
 			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
 		}
 
+		if (!RuntimeFeature.EventSourceSupport) {
+			CompleteBridgeProcessing (mcr);
+			return;
+		}
+
+		bool emitGCBridgeStop = gcBridgeEventEnabled;
+		try {
+			CompleteBridgeProcessing (mcr);
+			if (emitGCBridgeStop) {
+				RuntimeEventSource.GCBridgeStop ();
+			}
+		} finally {
+			gcBridgeEventEnabled = false;
+		}
+	}
+
+	static unsafe void CompleteBridgeProcessing (MarkCrossReferencesArgs* mcr)
+	{
 		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
 
 // This call site is reachable on all platforms. 'JavaMarshal.FinishCrossReferenceProcessing(MarkCrossReferencesArgs*, ReadOnlySpan<GCHandle>)' is only supported on: 'android'.
