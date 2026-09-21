@@ -1036,7 +1036,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;AndroidR8ObfuscationMode&apos; MSBuild property has an invalid value of &apos;{0}&apos;. Valid values are &apos;disabled&apos; and &apos;private-members&apos;..
+        ///   Looks up a localized string similar to The &apos;AndroidR8ObfuscationMode&apos; MSBuild property has an invalid value of &apos;{0}&apos;. Valid values are &apos;disabled&apos;, &apos;private-members&apos;, and &apos;runtime-remapping&apos;..
         /// </summary>
         public static string XA1050 {
             get {
@@ -2092,6 +2092,18 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4328_UnsupportedSignature {
             get {
                 return ResourceManager.GetString("XA4328_UnsupportedSignature", resourceCulture);
+            }
+        }
+
+        public static string XA4329_RequiredProperty {
+            get {
+                return ResourceManager.GetString("XA4329_RequiredProperty", resourceCulture);
+            }
+        }
+
+        public static string XA4329_UnsupportedRuntime {
+            get {
+                return ResourceManager.GetString("XA4329_UnsupportedRuntime", resourceCulture);
             }
         }
         

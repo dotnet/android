@@ -1,0 +1,48 @@
+<Project>
+
+  <!-- ILC needs only original JNI names. Keep its managed publish inputs for Java stub generation,
+       then link its object file after the outer build's one R8 pass has assigned the final names.
+       Import after the common targets have resolved the runtime-remapping opt-in. -->
+  <PropertyGroup Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' ">
+    <!-- The SDK also schedules NativeCompile directly from ComputeFilesToPublish. Android's
+         hook below replaces that full compile/link/publish step with the appropriate half. -->
+    <_ComputeFilesToPublishDependsOn>$([MSBuild]::Unescape($(_ComputeFilesToPublishDependsOn.Replace('NativeCompile;', ''))))</_ComputeFilesToPublishDependsOn>
+    <_AndroidRunNativeCompileDependsOn>_ComputeAssembliesToCompileToNative;IlcCompile</_AndroidRunNativeCompileDependsOn>
+    <!-- The second per-RID evaluation reconstructs native linker inputs, not ILC outputs. -->
+    <_AndroidRunNativeCompileDependsOn Condition=" '$(_AndroidNativeAotLinkAfterR8)' == 'true' ">_ComputeAssembliesToCompileToNative;SetupOSSpecificProps</_AndroidRunNativeCompileDependsOn>
+  </PropertyGroup>
+
+  <Target Name="_AndroidLinkNativeAotForRuntimeIdentifier"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidNativeAotLinkAfterR8)' == 'true' "
+      DependsOnTargets="_ComputeFilesToPublishForRuntimeIdentifiers;_GenerateNativeAotAndroidAppAssemblerSources;_AndroidLinkNativeAotSharedLibrary"
+      Returns="@(_AndroidNativeAotLinkedFileToPublish)">
+    <ItemGroup>
+      <_AndroidNativeAotLinkedFileToPublish Include="@(ResolvedFileToPublish)"
+          Condition=" '%(ResolvedFileToPublish.Identity)' == '$(_AndroidNativeAotSharedLibrary)' ">
+        <AndroidNativeAotRemappingDirectory>$(_AndroidNativeAotR8RemappingDirectory)</AndroidNativeAotRemappingDirectory>
+      </_AndroidNativeAotLinkedFileToPublish>
+    </ItemGroup>
+  </Target>
+
+  <!-- Called by the outer post-Dalvik hook, including when R8 itself is up to date. Reuse the
+       original per-RID project properties so single-RID and multi-RID builds resolve identical
+       ILC object/output paths. The final mapping path is absolute and shared by every RID. -->
+  <Target Name="_AndroidLinkNativeAotAfterR8"
+      AfterTargets="_CompileToDalvik"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_OuterIntermediateOutputPath)' == '' and '$(DesignTimeBuild)' != 'true' "
+      DependsOnTargets="_ResolveAssemblies">
+    <MSBuild
+        Projects="@(_ProjectToBuild)"
+        Targets="_AndroidLinkNativeAotForRuntimeIdentifier"
+        Properties="_AndroidNativeAotLinkAfterR8=true;_AndroidR8JniMappingFile=$(_AndroidR8JniMappingFile)"
+        BuildInParallel="$(_AndroidBuildRuntimeIdentifiersInParallel)">
+      <Output TaskParameter="TargetOutputs" ItemName="_AndroidNativeAotLinkedFileToPublish" />
+    </MSBuild>
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(_AndroidNativeAotLinkedFileToPublish)" />
+      <ResolvedFileToPublish Include="@(_AndroidNativeAotLinkedFileToPublish)" />
+      <FileWrites Include="@(_AndroidNativeAotLinkedFileToPublish->'%(AndroidNativeAotRemappingDirectory)**')" />
+    </ItemGroup>
+  </Target>
+
+</Project>

@@ -29,6 +29,8 @@ public class GenerateNativeAotProguardConfiguration : AndroidTask
 	// this avoids generating and processing the very large ILC dependency graph.
 	public bool TrimJavaCallableWrappers { get; set; } = true;
 
+	public bool EnableObfuscation { get; set; }
+
 	public override bool RunTask ()
 	{
 		var dir = Path.GetDirectoryName (OutputFile);
@@ -61,8 +63,9 @@ public class GenerateNativeAotProguardConfiguration : AndroidTask
 
 		using var writer = new StringWriter ();
 		writer.WriteLine ("# ACWs retained by NativeAOT ILC");
+		string keepOption = EnableObfuscation ? "-keep,allowobfuscation" : "-keep";
 		foreach (var javaTypeName in javaTypes) {
-			writer.WriteLine ($"-keep class {javaTypeName} {{ *; }}");
+			writer.WriteLine ($"{keepOption} class {javaTypeName} {{ *; }}");
 		}
 		Files.CopyIfStringChanged (writer.ToString (), OutputFile);
 
