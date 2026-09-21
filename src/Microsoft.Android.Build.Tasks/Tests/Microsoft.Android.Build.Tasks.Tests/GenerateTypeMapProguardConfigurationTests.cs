@@ -48,7 +48,7 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 	[TestCase ("test/Foo\u0000")]
 	public void RejectsInvalidRecordsWithoutOverwritingOutput (string content)
 	{
-		var path = Path.Combine (Root, "temp", TestName);
+		var path = Path.Combine (Root, "temp", $"{TestName}_{Guid.NewGuid ():N}");
 		Directory.CreateDirectory (path);
 		var input = Path.Combine (path, "input.keys");
 		var output = Path.Combine (path, "classes.cfg");
