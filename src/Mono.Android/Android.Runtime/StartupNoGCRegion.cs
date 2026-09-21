@@ -5,7 +5,8 @@ namespace Android.Runtime;
 
 sealed class StartupNoGCRegion
 {
-	const long Budget = 24 * 1024 * 1024;
+	const long Budget32Bit = 12 * 1024 * 1024;
+	const long Budget64Bit = 24 * 1024 * 1024;
 	// Bound the process-wide region when an app never reports that startup is fully drawn.
 	static readonly TimeSpan DefaultFallbackTimeout = TimeSpan.FromSeconds (10);
 	static readonly StartupNoGCRegion instance = new ();
@@ -34,8 +35,10 @@ sealed class StartupNoGCRegion
 
 			bool started;
 			try {
-				started = GC.TryStartNoGCRegion (Budget, disallowFullBlockingGC: true);
-			} catch (InvalidOperationException) {
+				long budget = IntPtr.Size == 4 ? Budget32Bit : Budget64Bit;
+				started = GC.TryStartNoGCRegion (budget, disallowFullBlockingGC: true);
+			} catch (Exception) {
+				// This startup optimization must never prevent the application from starting.
 				state = State.Ended;
 				return;
 			}
@@ -76,9 +79,8 @@ sealed class StartupNoGCRegion
 
 		try {
 			GC.EndNoGCRegion ();
-		} catch (InvalidOperationException) {
-			// The runtime already left the region because its budget was exhausted
-			// or a collection was induced.
+		} catch (Exception) {
+			// Ending this startup optimization must never fail the application.
 		}
 	}
 }
