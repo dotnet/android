@@ -283,9 +283,15 @@ namespace generator.SourceWriters
 			}
 		}
 
+		// Return types are covariant, so returning non-null where the base member allows null
+		// is safe and is not reported. Only the reverse -- widening the base member's
+		// guarantee -- is a warning.
 		static bool ReturnNullabilityDiffers (Method method, Method baseMethod) =>
-			IsReferenceType (method.RetVal.Symbol) && method.RetVal.NotNull != baseMethod.RetVal.NotNull;
+			IsReferenceType (method.RetVal.Symbol) && !method.RetVal.NotNull && baseMethod.RetVal.NotNull;
 
+		// Parameters are contravariant, so accepting null where the base member requires
+		// non-null is safe and is not reported. Only the reverse -- refusing a null the base
+		// member's callers are allowed to pass -- is a warning.
 		static bool ParameterNullabilityDiffers (Method method, Method baseMethod)
 		{
 			if (method.Parameters.Count != baseMethod.Parameters.Count)
@@ -294,7 +300,7 @@ namespace generator.SourceWriters
 			for (var i = 0; i < method.Parameters.Count; i++) {
 				var p = method.Parameters [i];
 
-				if (IsReferenceType (p.Symbol) && p.NotNull != baseMethod.Parameters [i].NotNull)
+				if (IsReferenceType (p.Symbol) && p.NotNull && !baseMethod.Parameters [i].NotNull)
 					return true;
 			}
 
