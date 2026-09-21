@@ -31,6 +31,7 @@ namespace Xamarin.SourceWriter
 			WriteIndent ();
 			stream.Write (value);
 		}
+
 		// `#pragma warning restore` ends a suppression however many `disable` directives
 		// preceded it, so a nested `disable`/`restore` pair for the same code would stop
 		// suppressing the enclosing scope early. Track how deep each code is nested and let
