@@ -129,6 +129,7 @@
     <Compile Include="Android.Runtime\JavaCollectionTest.cs" />
     <Compile Include="Android.Runtime\JnienvArrayMarshaling.cs" />
     <Compile Include="Android.Runtime\RuntimeEventSourceTests.cs" />
+    <Compile Include="Android.Runtime\TimingLoggerTests.cs" />
     <Compile Include="Android.Runtime\XmlReaderPullParserTest.cs" />
     <Compile Include="Android.Runtime\XmlReaderResourceParserTest.cs" />
     <Compile Include="Android.Views\LayoutInflaterTest.cs" />
