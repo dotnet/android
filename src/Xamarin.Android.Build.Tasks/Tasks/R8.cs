@@ -194,14 +194,10 @@ namespace Xamarin.Android.Tasks
 					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
 						WriteObfuscationRules (xamcfg, ObfuscationMode);
 						xamcfg.WriteLine ();
-						xamcfg.Flush ();
-						if (UseTrimmableNativeAotProguardConfiguration) {
-							using var stream = GetEmbeddedResourceStream ("proguard_trimmable_nativeaot.cfg");
-							stream.CopyTo (xamcfg.BaseStream);
-						} else {
-							using var stream = GetEmbeddedResourceStream ("proguard_xamarin.cfg");
-							stream.CopyTo (xamcfg.BaseStream);
-						}
+						string resourceName = UseTrimmableNativeAotProguardConfiguration ? "proguard_trimmable_nativeaot.cfg" : "proguard_xamarin.cfg";
+						bool filterLegacyObfuscationRules = !string.Equals (ObfuscationMode, "disabled", StringComparison.OrdinalIgnoreCase);
+						WriteEmbeddedConfiguration (xamcfg, resourceName, filterLegacyObfuscationRules);
+						WriteEmbeddedConfiguration (xamcfg, "proguard_r8_jni_runtime.cfg", filterLegacyObfuscationRules: false);
 						if (IgnoreWarnings) {
 							xamcfg.WriteLine ("-ignorewarnings");
 						}
@@ -272,6 +268,22 @@ namespace Xamarin.Android.Tasks
 			writer.WriteLine ("   public protected *;");
 			writer.WriteLine ("}");
 			writer.WriteLine ("-keep,allowshrinking class * implements **");
+		}
+
+		void WriteEmbeddedConfiguration (StreamWriter writer, string resourceName, bool filterLegacyObfuscationRules)
+		{
+			using Stream resource = GetEmbeddedResourceStream (resourceName);
+			using var reader = new StreamReader (resource);
+			while (reader.ReadLine () is string line) {
+				string trimmed = line.Trim ();
+				if (filterLegacyObfuscationRules &&
+						(String.Equals (trimmed, "-dontobfuscate", StringComparison.OrdinalIgnoreCase) ||
+						 trimmed.StartsWith ("-keep class net.dot.jni.** ", StringComparison.Ordinal) ||
+						 trimmed.StartsWith ("-keep class mono.android.** ", StringComparison.Ordinal))) {
+					continue;
+				}
+				writer.WriteLine (line);
+			}
 		}
 
 		// ProGuard "global" options that affect the whole build and are not allowed inside
