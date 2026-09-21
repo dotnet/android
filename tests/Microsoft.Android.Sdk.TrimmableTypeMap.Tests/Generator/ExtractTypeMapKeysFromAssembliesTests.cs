@@ -316,11 +316,14 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 	[Fact]
 	public async Task RealILLinkRetainsOnlyLiveTypeMapAttributes ()
 	{
-		// The emitter references these assemblies in unused MemberRefs even when the
-		// fixture contains no Android proxy IL. Resolve them without skipping errors.
+		// Resolve unused emitter references and optional host-runtime facades without
+		// weakening the linker's unresolved-reference checks.
 		EmitStub ("Mono.Android");
 		EmitStub ("Java.Interop");
 		EmitStub ("Mono.Android.Runtime");
+		EmitStub ("System.Configuration.ConfigurationManager");
+		EmitStub ("System.Drawing.Common");
+		EmitStub ("System.Security.Permissions");
 		EmitTargets ();
 		string input = Emit ("_Bindings.TypeMap",
 			Entry ("test/Unconditional"),
