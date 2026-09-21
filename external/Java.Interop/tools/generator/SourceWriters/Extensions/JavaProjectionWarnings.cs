@@ -71,11 +71,16 @@ namespace generator.SourceWriters
 				writer.Add (CS0465, FinalizeReason);
 		}
 
-		public static void AddObsoleteSuppressions (ISuppressWarnings writer, Method method, CodeGenerationOptions opt)
+		public static void AddObsoleteSuppressions (ISuppressWarnings writer, Method method, CodeGenerationOptions opt, GenBase declaringType = null)
 		{
 			var self_obsolete = IsBoundAsObsolete (method.Deprecated, method.DeprecatedSince, opt);
 
-			if (!self_obsolete && SignatureUsesObsoleteType (method, opt))
+			// C# does not report *use* of a deprecated binding from inside a type that is
+			// itself `[Obsolete]`. CS0672 and CS0809 describe the declaration rather than a
+			// use, so they are still reported there and are handled below.
+			var in_obsolete_type = declaringType != null && IsBoundAsObsolete (declaringType, opt);
+
+			if (!self_obsolete && !in_obsolete_type && SignatureUsesObsoleteType (method, opt))
 				writer.Add (CS0618, ObsoleteUseReason);
 
 			var base_method = method.OverriddenBaseMethod ?? method.OverriddenInterfaceMethod;
@@ -167,12 +172,12 @@ namespace generator.SourceWriters
 				writer.Add (CS0618, ObsoleteUseReason);
 		}
 
-		public static void AddObsoleteSuppressions (ISuppressWarnings writer, Property property, CodeGenerationOptions opt)
+		public static void AddObsoleteSuppressions (ISuppressWarnings writer, Property property, CodeGenerationOptions opt, GenBase declaringType = null)
 		{
-			AddObsoleteSuppressions (writer, property.Getter, opt);
+			AddObsoleteSuppressions (writer, property.Getter, opt, declaringType);
 
 			if (property.Setter != null)
-				AddObsoleteSuppressions (writer, property.Setter, opt);
+				AddObsoleteSuppressions (writer, property.Setter, opt, declaringType);
 		}
 
 		// Java's `@Nullable`/`@NonNull` annotations are documentation, not part of the type
@@ -252,6 +257,15 @@ namespace generator.SourceWriters
 		public static void AddMarshalArgumentSuppressions (ISuppressWarnings writer, GenBase type, Method method, CodeGenerationOptions opt)
 		{
 			if (!opt.SupportNullableReferenceTypes || type == null)
+				return;
+
+			// The call only binds to the base declaration when the member is emitted as an
+			// explicit interface implementation; an implicit implementation is reached through
+			// the deriving type's own, more permissive, declaration.
+			var is_explicit = method.ExplicitInterface.HasValue () ||
+				(opt.SupportDefaultInterfaceMethods && type is InterfaceGen && method.OverriddenInterfaceMethod != null);
+
+			if (!is_explicit)
 				return;
 
 			foreach (var (base_method, via_interface) in GetOverriddenMembers (type, method)) {

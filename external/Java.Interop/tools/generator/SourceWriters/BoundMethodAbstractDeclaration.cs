@@ -61,7 +61,7 @@ namespace generator.SourceWriters
 			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
 
 			JavaProjectionWarnings.AddFinalizeSuppression (this, method);
-			JavaProjectionWarnings.AddObsoleteSuppressions (this, method, opt);
+			JavaProjectionWarnings.AddObsoleteSuppressions (this, method, opt, gen ?? impl);
 			// `gen` is the interface the method is declared by, and is null when the class
 			// declares it itself, so the class is what the member is compared against.
 			JavaProjectionWarnings.AddNullabilitySuppressions (this, gen ?? impl, method, opt, ExplicitInterfaceImplementation.HasValue ());
