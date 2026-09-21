@@ -36,6 +36,7 @@ namespace Android.RuntimeTests
 				"The foundation should not define events owned by later instrumentation layers.");
 
 			using var listener = new CapturingEventListener ();
+			Assert.IsFalse (listener.ProviderCreated, "The provider should not be created before its lazy holder is accessed.");
 			var holderType = eventSourceType.GetNestedType ("RuntimeEventSourceHolder", BindingFlags.NonPublic)
 				?? throw new InvalidOperationException ("Could not find the runtime EventSource holder.");
 			var instanceField = holderType.GetField ("Instance", BindingFlags.NonPublic | BindingFlags.Static)
