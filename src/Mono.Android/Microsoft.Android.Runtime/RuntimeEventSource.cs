@@ -32,13 +32,13 @@ internal static class RuntimeEventSource
 
 	internal static bool IsEnabled (EventKeywords keywords)
 	{
-		return RuntimeFeature.InteropEventSource &&
+		return RuntimeFeature.EventSourceSupport &&
 			RuntimeEventSourceHolder.Instance.IsEnabled (EventLevel.Informational, keywords);
 	}
 
 	internal static void GCBridgeStart ()
 	{
-		if (!RuntimeFeature.InteropEventSource) {
+		if (!RuntimeFeature.EventSourceSupport) {
 			return;
 		}
 		if (RuntimeEventSourceHolder.Instance.IsEnabled (EventLevel.Informational, GCBridgeKeyword)) {
@@ -48,7 +48,7 @@ internal static class RuntimeEventSource
 
 	internal static void GCBridgeStop ()
 	{
-		if (!RuntimeFeature.InteropEventSource) {
+		if (!RuntimeFeature.EventSourceSupport) {
 			return;
 		}
 		if (RuntimeEventSourceHolder.Instance.IsEnabled (EventLevel.Informational, GCBridgeKeyword)) {
@@ -58,7 +58,7 @@ internal static class RuntimeEventSource
 
 	internal static void TypeMapLookupStart (string direction)
 	{
-		if (!RuntimeFeature.InteropEventSource) {
+		if (!RuntimeFeature.EventSourceSupport) {
 			return;
 		}
 		if (RuntimeEventSourceHolder.Instance.IsEnabled (EventLevel.Informational, TypeMapKeyword)) {
@@ -68,7 +68,7 @@ internal static class RuntimeEventSource
 
 	internal static void TypeMapLookupStop (string direction)
 	{
-		if (!RuntimeFeature.InteropEventSource) {
+		if (!RuntimeFeature.EventSourceSupport) {
 			return;
 		}
 		if (RuntimeEventSourceHolder.Instance.IsEnabled (EventLevel.Informational, TypeMapKeyword)) {

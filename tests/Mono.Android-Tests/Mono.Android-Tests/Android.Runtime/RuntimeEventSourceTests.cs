@@ -17,7 +17,7 @@ namespace Android.RuntimeTests
 		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Microsoft.Android.Runtime.RuntimeEventSource", "Mono.Android")]
 		public void ProviderContractAndEmission ()
 		{
-			Assert.IsTrue (AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.InteropEventSource", out bool enabled) && enabled,
+			Assert.IsTrue (AppContext.TryGetSwitch ("System.Diagnostics.Tracing.EventSource.IsSupported", out bool enabled) && enabled,
 				"The runtime EventSource feature switch should be enabled for this test application.");
 
 			var eventSourceType = Type.GetType ("Microsoft.Android.Runtime.RuntimeEventSource, Mono.Android", throwOnError: true)

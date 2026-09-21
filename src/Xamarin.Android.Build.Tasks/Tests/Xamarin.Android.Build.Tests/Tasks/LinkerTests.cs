@@ -70,9 +70,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidUseAssemblyStore", "true");
 			proj.SetProperty ("PublishReadyToRun", "false");
 
-			if (enabled) {
-				proj.SetProperty ("_AndroidEnableInteropEventSource", "true");
-			}
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${USINGS}", "using System.Diagnostics.CodeAnalysis;")
 				.Replace (
@@ -87,8 +84,8 @@ namespace Xamarin.Android.Build.Tests
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (
-				builder.Build (proj, parameters: ["EventSourceSupport=false"]),
-				"build should have succeeded even when EventSourceSupport was an immutable global property.");
+				builder.Build (proj, parameters: [$"EventSourceSupport={enabled.ToString ().ToLowerInvariant ()}"]),
+				"build should have succeeded.");
 
 			var outputDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
 			var runtimeConfigFiles = Directory.GetFiles (outputDirectory, $"{proj.ProjectName}.runtimeconfig.json", SearchOption.AllDirectories);
@@ -100,12 +97,8 @@ namespace Xamarin.Android.Build.Tests
 					.GetProperty ("configProperties");
 				Assert.AreEqual (
 					enabled,
-					configProperties.GetProperty ("Microsoft.Android.Runtime.RuntimeFeature.InteropEventSource").GetBoolean (),
-					"the runtime EventSource feature switch should match the private opt-in");
-				Assert.AreEqual (
-					enabled,
 					configProperties.GetProperty ("System.Diagnostics.Tracing.EventSource.IsSupported").GetBoolean (),
-					"the private opt-in should force EventSource support on");
+					"the standard EventSource feature switch should match EventSourceSupport");
 			}
 
 			var linkedRuntimeAssembly = Path.Combine (

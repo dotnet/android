@@ -301,21 +301,19 @@ directory.
 
 Runtime interop timing events use the `Microsoft.Android.Runtime` provider.
 They are disabled by default so normal trimmed `Release` applications do not
-retain EventSource support or the provider implementation. Enable the private
-diagnostics opt-in in the application project:
+retain EventSource support or the provider implementation. Enable EventSource
+support in the application project:
 
 ```xml
 <PropertyGroup>
-  <_AndroidEnableInteropEventSource>true</_AndroidEnableInteropEventSource>
+  <EventSourceSupport>true</EventSourceSupport>
 </PropertyGroup>
 ```
 
-This opt-in also forces the generated runtime EventSource support option to
-`true`, even if `$(EventSourceSupport)` was supplied as an immutable global
-property. Applications must additionally enable the diagnostic transport with
-`-p:EnableDiagnostics=true` so that `dotnet-trace` can connect. For MonoVM this
-also packages the `diagnostics_tracing` component; `$(AndroidEnableProfiler)`
-remains its legacy synonym.
+`$(EnableDiagnostics)` is additionally required only for out-of-process
+collection with tools such as `dotnet-trace`. It enables the diagnostic
+transport; for MonoVM it also packages the `diagnostics_tracing` component.
+`$(AndroidEnableProfiler)` remains its legacy synonym.
 
 Collect the runtime timing events at informational level:
 

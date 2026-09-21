@@ -19,7 +19,7 @@
     <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
     <WarningsAsErrors>IL2037</WarningsAsErrors>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
-    <_AndroidEnableInteropEventSource>true</_AndroidEnableInteropEventSource>
+    <EventSourceSupport>true</EventSourceSupport>
     <AndroidNdkDirectory></AndroidNdkDirectory>
   </PropertyGroup>
 

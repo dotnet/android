@@ -159,8 +159,6 @@
 
     <!-- profiler won't work without internet permission, we must thus force it -->
     <AndroidNeedsInternetPermission Condition=" '$(AndroidEnableProfiler)' == 'true' ">True</AndroidNeedsInternetPermission>
-    <!-- EventSource is required whenever the private runtime interop diagnostics opt-in is enabled. -->
-    <EventSourceSupport Condition=" '$(_AndroidEnableInteropEventSource)' == 'true' ">true</EventSourceSupport>
   </PropertyGroup>
   <!-- Trimmer switches that default to OFF in Release mode -->
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' and '$(Optimize)' == 'true' ">
