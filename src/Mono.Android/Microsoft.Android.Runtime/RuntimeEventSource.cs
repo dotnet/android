@@ -16,7 +16,7 @@ internal static class RuntimeEventSource
 
 	internal static void Initialize ()
 	{
-		_ = RuntimeEventSourceHolder.Instance;
+		RuntimeEventSourceHolder.Instance.Initialize ();
 	}
 
 	internal static bool GCBridgeStart ()
@@ -44,6 +44,10 @@ internal static class RuntimeEventSource
 	[EventSource (Name = ProviderName)]
 	sealed class RuntimeEventSourceImplementation : EventSource
 	{
+		internal void Initialize ()
+		{
+		}
+
 		public static class Keywords
 		{
 			public const EventKeywords GCBridge = GCBridgeKeyword;
