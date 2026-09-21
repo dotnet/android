@@ -37,24 +37,24 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		CollectionAssert.AreEqual (new UTF8Encoding (false).GetBytes (expected), File.ReadAllBytes (task.OutputFile));
 	}
 
-	[TestCase ("test/*")]
-	[TestCase ("test/Foo { *; }")]
-	[TestCase ("test/Foo[1]")]
-	[TestCase ("test.Foo")]
-	[TestCase ("test//Foo")]
-	[TestCase ("/test/Foo")]
-	[TestCase ("test/Foo/")]
-	[TestCase ("test/1Foo")]
-	[TestCase ("test/Foo;")]
-	[TestCase ("test/Foo #comment")]
-	[TestCase ("-dontshrink")]
-	[TestCase ("test/Foo\n-keep class **")]
-	[TestCase ("test/Foo\r-dontobfuscate")]
-	[TestCase ("\ufefftest/Foo")]
-	[TestCase ("test/Foo\u0000")]
+	[TestCase ("test/*", TestName = "RejectsInvalidRecord_Wildcard")]
+	[TestCase ("test/Foo { *; }", TestName = "RejectsInvalidRecord_ProguardBlock")]
+	[TestCase ("test/Foo[1]", TestName = "RejectsInvalidRecord_AliasSuffix")]
+	[TestCase ("test.Foo", TestName = "RejectsInvalidRecord_DottedName")]
+	[TestCase ("test//Foo", TestName = "RejectsInvalidRecord_DoubleSlash")]
+	[TestCase ("/test/Foo", TestName = "RejectsInvalidRecord_LeadingSlash")]
+	[TestCase ("test/Foo/", TestName = "RejectsInvalidRecord_TrailingSlash")]
+	[TestCase ("test/1Foo", TestName = "RejectsInvalidRecord_LeadingDigit")]
+	[TestCase ("test/Foo;", TestName = "RejectsInvalidRecord_DescriptorTerminator")]
+	[TestCase ("test/Foo #comment", TestName = "RejectsInvalidRecord_InlineComment")]
+	[TestCase ("-dontshrink", TestName = "RejectsInvalidRecord_Directive")]
+	[TestCase ("test/Foo\n-keep class **", TestName = "RejectsInvalidRecord_LineFeedInjection")]
+	[TestCase ("test/Foo\r-dontobfuscate", TestName = "RejectsInvalidRecord_CarriageReturnInjection")]
+	[TestCase ("\ufefftest/Foo", TestName = "RejectsInvalidRecord_Bom")]
+	[TestCase ("test/Foo\u0000", TestName = "RejectsInvalidRecord_NullCharacter")]
 	public void RejectsInvalidRecordsWithoutOverwritingOutput (string content)
 	{
-		var path = Path.Combine (Root, "temp", TestName, Guid.NewGuid ().ToString ("N"));
+		var path = Path.Combine (Root, "temp", TestName);
 		Directory.CreateDirectory (path);
 		var input = Path.Combine (path, "input.keys");
 		var output = Path.Combine (path, "classes.cfg");
