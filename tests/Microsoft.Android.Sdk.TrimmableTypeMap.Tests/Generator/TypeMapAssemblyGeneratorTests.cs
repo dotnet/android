@@ -131,37 +131,36 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Contains ("System.Xml.ReaderWriter", asmRefs);
 
 		var expectedAdapters = new [] {
-			(Parent: "XmlPullParserReader", Method: "FromJniHandle", ReturnType: "System.Xml.XmlReader",
+			(Key: "PullParserFromHandle", Parent: "XmlPullParserReader", Method: "FromJniHandle", ReturnType: "System.Xml.XmlReader",
 				ParameterTypes: new [] { "System.IntPtr", "Android.Runtime.JniHandleOwnership" }),
-			(Parent: "XmlResourceParserReader", Method: "FromJniHandle", ReturnType: "System.Xml.XmlReader",
+			(Key: "ResourceParserFromHandle", Parent: "XmlResourceParserReader", Method: "FromJniHandle", ReturnType: "System.Xml.XmlReader",
 				ParameterTypes: new [] { "System.IntPtr", "Android.Runtime.JniHandleOwnership" }),
-			(Parent: "XmlReaderPullParser", Method: "ToLocalJniHandle", ReturnType: "System.IntPtr",
+			(Key: "PullParserToHandle", Parent: "XmlReaderPullParser", Method: "ToLocalJniHandle", ReturnType: "System.IntPtr",
 				ParameterTypes: new [] { "System.Xml.XmlReader" }),
-			(Parent: "XmlReaderResourceParser", Method: "ToLocalJniHandle", ReturnType: "System.IntPtr",
+			(Key: "ResourceParserToHandle", Parent: "XmlReaderResourceParser", Method: "ToLocalJniHandle", ReturnType: "System.IntPtr",
 				ParameterTypes: new [] { "System.Xml.XmlReader" }),
 		};
-		var adapterHandles = new List<MemberReferenceHandle> ();
+		var adapterHandles = new Dictionary<string, MemberReferenceHandle> ();
 		foreach (var expected in expectedAdapters) {
 			var handle = FindMemberReferenceHandle (reader, "Android.Runtime", expected.Parent, expected.Method);
 			var signature = reader.GetMemberReference (handle).DecodeMethodSignature (SignatureTypeProvider.Instance, null);
 
 			Assert.Equal (expected.ReturnType, signature.ReturnType);
 			Assert.Equal (expected.ParameterTypes, signature.ParameterTypes);
-			adapterHandles.Add (handle);
+			adapterHandles.Add (expected.Key, handle);
 		}
 
-		var callTokens = reader.MethodDefinitions
-			.Select (handle => reader.GetMethodDefinition (handle))
-			.Where (method => method.RelativeVirtualAddress != 0)
-			.SelectMany (method => {
-				var ilBytes = pe.GetMethodBody (method.RelativeVirtualAddress).GetILBytes ();
-				Assert.NotNull (ilBytes);
-				return ReadCallTokens (ilBytes);
-			})
-			.ToHashSet ();
-		foreach (var handle in adapterHandles) {
-			Assert.Contains (MetadataTokens.GetToken (handle), callTokens);
-		}
+		var pullParserCalls = ReadMethodCallTokens (pe, reader, "n_readXml_uco_");
+		Assert.Contains (MetadataTokens.GetToken (adapterHandles ["PullParserFromHandle"]), pullParserCalls);
+		Assert.Contains (MetadataTokens.GetToken (adapterHandles ["PullParserToHandle"]), pullParserCalls);
+		Assert.DoesNotContain (MetadataTokens.GetToken (adapterHandles ["ResourceParserFromHandle"]), pullParserCalls);
+		Assert.DoesNotContain (MetadataTokens.GetToken (adapterHandles ["ResourceParserToHandle"]), pullParserCalls);
+
+		var resourceParserCalls = ReadMethodCallTokens (pe, reader, "n_readResourceXml_uco_");
+		Assert.Contains (MetadataTokens.GetToken (adapterHandles ["ResourceParserFromHandle"]), resourceParserCalls);
+		Assert.Contains (MetadataTokens.GetToken (adapterHandles ["ResourceParserToHandle"]), resourceParserCalls);
+		Assert.DoesNotContain (MetadataTokens.GetToken (adapterHandles ["PullParserFromHandle"]), resourceParserCalls);
+		Assert.DoesNotContain (MetadataTokens.GetToken (adapterHandles ["PullParserToHandle"]), resourceParserCalls);
 	}
 
 	[Fact]
@@ -1423,6 +1422,16 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	static List<int> ReadLdftnTokens (byte [] ilBytes)
 	{
 		return ReadInlineMetadataTokens (ilBytes, 0xFE, 0x06);
+	}
+
+	static List<int> ReadMethodCallTokens (PEReader pe, MetadataReader reader, string methodNamePrefix)
+	{
+		var method = reader.MethodDefinitions
+			.Select (handle => reader.GetMethodDefinition (handle))
+			.Single (method => reader.GetString (method.Name).StartsWith (methodNamePrefix, StringComparison.Ordinal));
+		var ilBytes = pe.GetMethodBody (method.RelativeVirtualAddress).GetILBytes ();
+		Assert.NotNull (ilBytes);
+		return ReadCallTokens (ilBytes);
 	}
 
 	static List<int> ReadCallTokens (byte [] ilBytes)
