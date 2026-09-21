@@ -122,7 +122,9 @@ namespace generator.SourceWriters
 					Methods.Add (new ExplicitInterfaceInvokerMethod (gen, m, opt));
 				} else {
 					m.IsOverride = true;
-					Methods.Add (new BoundMethod (klass, m, opt, false));
+					// A method declared by the class always overrides the member the invoker
+					// inherits, even when the class emitted it as `virtual`.
+					Methods.Add (new BoundMethod (klass, m, opt, false, forceOverride: gen is null));
 
 					if (m.Asyncify)
 						Methods.Add (new MethodAsyncWrapper (m, opt));

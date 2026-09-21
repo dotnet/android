@@ -13,13 +13,18 @@ namespace generator.SourceWriters
 		readonly Method method;
 		readonly CodeGenerationOptions opt;
 
-		public BoundMethodStringOverload (Method method, CodeGenerationOptions opt)
+		public BoundMethodStringOverload (Method method, CodeGenerationOptions opt, GenBase declaringType = null)
 		{
 			this.method = method;
 			this.opt = opt;
 
 			Name = method.Name;
 			IsStatic = method.IsStatic;
+
+			// The synthesized overload is a separate, non-virtual member, so it hides rather
+			// than overrides the overload synthesized for the same method on a base type.
+			IsShadow = declaringType != null && !method.IsStatic &&
+					declaringType.StringOverloadRequiresNew (Name, method, opt);
 
 			SetVisibility (method.Visibility);
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"));

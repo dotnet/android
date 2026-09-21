@@ -25,6 +25,14 @@ namespace Xamarin.SourceWriter
 		List<WarningSuppression> SuppressWarnings { get; }
 	}
 
+	// A standalone set of suppressions, for the generated constructs that are written
+	// directly to a `CodeWriter` instead of through a writer that implements
+	// `ISuppressWarnings`.
+	public class WarningSuppressionScope : ISuppressWarnings
+	{
+		public List<WarningSuppression> SuppressWarnings { get; } = new List<WarningSuppression> ();
+	}
+
 	public static class WarningSuppressionExtensions
 	{
 		public static void WriteSuppressWarningsStart (this ISuppressWarnings self, CodeWriter writer)

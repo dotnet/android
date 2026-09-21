@@ -81,6 +81,8 @@ namespace generator.SourceWriters
 				var gen_string_overload = !method.IsOverride && method.Parameters.HasCharSequence && !iface.ContainsMethod (name_and_jnisig);
 
 				if (gen_string_overload || method.IsReturnCharSequence)
+					// The alternative class derives from `Java.Lang.Object` rather than from
+					// the interface, so it inherits nothing the overload could hide.
 					Methods.Add (new BoundMethodStringOverload (method, opt));
 
 				if (method.Asyncify)

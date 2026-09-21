@@ -15,6 +15,8 @@ namespace generator.SourceWriters
 
 		public InterfaceListenerPropertyImplementor (InterfaceGen iface, string name, CodeGenerationOptions opt)
 		{
+			JavaProjectionWarnings.AddListenerEventSuppressions (this, iface, null, opt);
+
 			this.name = name;
 			this.opt = opt;
 

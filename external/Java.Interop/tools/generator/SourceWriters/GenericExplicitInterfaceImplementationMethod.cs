@@ -28,6 +28,8 @@ namespace generator.SourceWriters
 
 			Comments.Add ($"// This method is explicitly implemented as a member of an instantiated {gen.FullName}");
 
+			JavaProjectionWarnings.AddGenericMarshalSuppressions (this, method, opt);
+
 			SourceWriterExtensions.AddMethodCustomAttributes (Attributes, method);
 			this.AddMethodParameters (method.Parameters, opt);
 		}

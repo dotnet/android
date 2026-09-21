@@ -87,7 +87,7 @@ namespace MonoDroid.Generation
 		{
 			var name = GetOutputName (field.Symbol.FullName);
 
-			if (field.NotNull || field.Symbol.IsEnum)
+			if (field.NotNull || IsNeverAnnotatedEnum (field.Symbol))
 				return name;
 
 			return name + GetNullable (field.Symbol.FullName);
@@ -97,7 +97,7 @@ namespace MonoDroid.Generation
 		{
 			var name = GetOutputName (symbol.Type);
 
-			if (symbol.NotNull || symbol.Symbol.IsEnum)
+			if (symbol.NotNull || IsNeverAnnotatedEnum (symbol.Symbol))
 				return name;
 
 			return name + GetNullable (symbol.Type);
@@ -107,7 +107,7 @@ namespace MonoDroid.Generation
 		{
 			var name = GetOutputName (symbol.FullName);
 
-			if (symbol.NotNull || symbol.Symbol.IsEnum)
+			if (symbol.NotNull || IsNeverAnnotatedEnum (symbol.Symbol))
 				return name;
 
 			return name + GetNullable (symbol.FullName);
@@ -122,9 +122,13 @@ namespace MonoDroid.Generation
 		}
 
 
+		// An enum is a value type, which is never annotated. An array of enums is a reference
+		// type like any other, so it is annotated from the Java nullness annotations.
+		static bool IsNeverAnnotatedEnum (ISymbol symbol) => symbol.IsEnum && !symbol.IsArray;
+
 		public string GetNullForgiveness (Field field)
 		{
-			if (field.NotNull || field.Symbol.IsEnum)
+			if (field.NotNull || IsNeverAnnotatedEnum (field.Symbol))
 				return NullForgivingOperator;
 
 			return string.Empty;
@@ -132,7 +136,7 @@ namespace MonoDroid.Generation
 
 		public string GetNullForgiveness (ReturnValue symbol)
 		{
-			if (symbol.NotNull || symbol.Symbol.IsEnum)
+			if (symbol.NotNull || IsNeverAnnotatedEnum (symbol.Symbol))
 				return NullForgivingOperator;
 
 			return string.Empty;
@@ -140,7 +144,7 @@ namespace MonoDroid.Generation
 
 		public string GetNullForgiveness (Parameter symbol)
 		{
-			if (symbol.NotNull || symbol.Symbol.IsEnum)
+			if (symbol.NotNull || IsNeverAnnotatedEnum (symbol.Symbol))
 				return NullForgivingOperator;
 
 			return string.Empty;

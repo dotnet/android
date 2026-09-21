@@ -56,6 +56,10 @@ namespace MonoDroid.Generation {
 			get { return true; }
 		}
 
+		public ISymbol [] TypeParams {
+			get { return parms?.TypeParams; }
+		}
+
 		public string ReturnCast => string.Empty;
 
 		public string GetObjectHandleProperty (CodeGenerationOptions opt, string variable)

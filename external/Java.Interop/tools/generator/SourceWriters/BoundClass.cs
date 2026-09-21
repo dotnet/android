@@ -158,7 +158,7 @@ namespace generator.SourceWriters
 		{
 			if (klass.Interfaces.Any (p => p.FullName == "Java.Lang.ICharSequence")) {
 				Methods.Add (new CharSequenceEnumeratorMethod ());
-				Methods.Add (new CharSequenceGenericEnumeratorMethod ());
+				Methods.Add (new CharSequenceGenericEnumeratorMethod (klass.BaseTypeImplementsCharSequence ()));
 			}
 		}
 
@@ -302,7 +302,7 @@ namespace generator.SourceWriters
 			Methods.Add (new BoundMethodAbstractDeclaration (iface, method, opt, klass));
 
 			if (method.IsReturnCharSequence || method.Parameters.HasCharSequence)
-				Methods.Add (new BoundMethodStringOverload (method, opt));
+				Methods.Add (new BoundMethodStringOverload (method, opt, klass));
 
 			if (method.Asyncify)
 				Methods.Add (new MethodAsyncWrapper (method, opt));
@@ -319,7 +319,7 @@ namespace generator.SourceWriters
 			var gen_string_overload = !method.IsOverride && method.Parameters.HasCharSequence && !klass.ContainsMethod (name_and_jnisig);
 
 			if (gen_string_overload  || method.IsReturnCharSequence)
-				Methods.Add (new BoundMethodStringOverload (method, opt));
+				Methods.Add (new BoundMethodStringOverload (method, opt, klass));
 
 			if (method.Asyncify)
 				Methods.Add (new MethodAsyncWrapper (method, opt));

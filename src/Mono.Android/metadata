@@ -1633,6 +1633,10 @@
   <remove-node api-since="30" path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellIdentity' and count(parameter)=0]" />
   <remove-node api-since="30" path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellSignalStrength' and count(parameter)=0]" />
 
+  <!-- The hand-bound CellInfo members above are invisible to the generator, so the covariant
+       overrides in the subclasses have to be told that they hide them. -->
+  <attr api-since="30" path="/api/package[@name='android.telephony']/class[starts-with(@name,'CellInfo') and @name!='CellInfo']/method[(@name='getCellIdentity' or @name='getCellSignalStrength') and count(parameter)=0]" name="managedOverride">new</attr>
+
   <!-- Work around a generator bug where having multiple Listener methods with the same name cause multiple conflicting EventArgs classes to be created. -->
   <!-- These are "default" method versions, so it's ok to remove them from an interface. -->
   <remove-node api-since="30" path="/api/package[@name='android.animation']/interface[@name='Animator.AnimatorListener']/method[@name='onAnimationStart' and count(parameter)=2]" />
@@ -1710,6 +1714,10 @@
   <attr api-since="9" path="/api/package[@name='java.sql']/class[@name='SQLException']/method[@name='iterator' and count(parameter)=0]" name="return-not-null">true</attr>
   <attr path="/api/package[@name='android.database']/class[@name='CursorJoiner']/method[@name='iterator' and count(parameter)=0]" name="return-not-null">true</attr>
   <attr api-since="24" path="/api/package[@name='android.icu.text']/class[@name='UnicodeSet']/method[@name='iterator' and count(parameter)=0]" name="return-not-null">true</attr>
+  <!-- The hand-bound AdapterView<T>.Adapter and the annotated ByteBuffer.slice(int,int) both
+       declare a non-null return, so the overrides below have to agree with them. -->
+  <attr path="/api/package[@name='android.widget']/class[@name='AbsSpinner']/method[@name='getAdapter' and count(parameter)=0]" name="return-not-null">true</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='slice' and count(parameter)=2 and parameter[1][@type='int'] and parameter[2][@type='int']]" name="return-not-null">true</attr>
 
   <!-- If you try to implement ICursor in API-30+, we generate an invalid invoker for this method due to the
        generic parameters.  Since this is a default method we can just remove it until that bug is fixed.

@@ -204,6 +204,22 @@ namespace MonoDroid.Generation {
 				return false;
 			return true;
 		}
+
+		// Whether two parameters are emitted as the same C# type. Unlike `Equals`, the Java
+		// generic arguments are ignored, because they are erased in the generated binding:
+		// `Consumer<? super E>` and `Consumer<? super Integer>` are both emitted as
+		// `IConsumer`, so for questions decided by the C# signature -- such as whether one
+		// member hides another -- they are the same parameter.
+		public bool ManagedTypeEquals (Parameter other) =>
+			IsArray == other.IsArray && FilterCSharpType (Type) == FilterCSharpType (other.Type);
+
+		// The type used in place of this parameter's by the `string` overload the generator
+		// synthesizes for methods that take a `java.lang.CharSequence`.
+		public string StringOverloadType => Type.Replace ("Java.Lang.ICharSequence", "string");
+
+		public bool StringOverloadTypeEquals (Parameter other) =>
+			IsArray == other.IsArray &&
+			FilterCSharpType (StringOverloadType) == FilterCSharpType (other.StringOverloadType);
 		
 		static string FilterCSharpType (string s)
 		{

@@ -17,7 +17,7 @@ namespace generator.SourceWriters
 
 		public Method JavaMethod { get; }
 
-		public BoundMethod (GenBase type, Method method, CodeGenerationOptions opt, bool generateCallbacks)
+		public BoundMethod (GenBase type, Method method, CodeGenerationOptions opt, bool generateCallbacks, bool forceOverride = false)
 		{
 			JavaMethod = method;
 
@@ -39,6 +39,15 @@ namespace generator.SourceWriters
 			IsVirtual = virt_ov.Trim () == "virtual";
 			IsOverride = virt_ov.Trim () == "override";
 
+			// A method re-declaring a Java default interface method is emitted as `virtual`
+			// rather than `override`, because a C# default interface member is not inherited
+			// by the implementing class. That does not hold for a type deriving from such a
+			// class, where the member is an ordinary inherited virtual method.
+			if (forceOverride) {
+				IsVirtual = false;
+				IsOverride = true;
+			}
+
 			// When using DIM, don't generate "virtual sealed" methods, remove both modifiers instead
 			if (opt.SupportDefaultInterfaceMethods && method.OverriddenInterfaceMethod != null && IsVirtual && IsSealed) {
 				IsVirtual = false;
@@ -53,20 +62,30 @@ namespace generator.SourceWriters
 				ExplicitInterfaceImplementation = method.ExplicitInterface;
 
 			// Allow user to override our virtual/override logic
-			if (method.ManagedOverride?.ToLowerInvariant () == "virtual") {
+			var managed_override = method.ManagedOverride?.ToLowerInvariant ();
+			var force_shadow = false;
+
+			if (managed_override == "virtual") {
 				IsVirtual = true;
 				IsOverride = false;
-			} else if (method.ManagedOverride?.ToLowerInvariant () == "override") {
+			} else if (managed_override == "override") {
 				IsVirtual = false;
 				IsOverride = true;
-			} else if (method.ManagedOverride?.ToLowerInvariant () == "none") {
+			} else if (managed_override == "none") {
 				IsVirtual = false;
 				IsOverride = false;
+			} else if (managed_override == "new") {
+				// The hidden member is not visible to the generator, for example because it
+				// was removed from the API description and hand-bound instead. Leave the
+				// computed virtual-ness alone; only the `override` has to become a `new`.
+				IsOverride = false;
+				force_shadow = true;
 			}
 
 			// `new` hides an inherited member, so it is invalid on an override or on an
 			// explicit interface implementation.
-			if ((IsVirtual || !IsOverride) && !ExplicitInterfaceImplementation.HasValue () && type.RequiresNew (method.AdjustedName, method, opt))
+			if ((IsVirtual || !IsOverride) && !ExplicitInterfaceImplementation.HasValue () &&
+					(force_shadow || type.RequiresNew (method.AdjustedName, method, opt)))
 				IsShadow = true;
 
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
@@ -80,7 +99,7 @@ namespace generator.SourceWriters
 
 			JavaProjectionWarnings.AddFinalizeSuppression (this, method);
 			JavaProjectionWarnings.AddObsoleteSuppressions (this, method, opt);
-			JavaProjectionWarnings.AddNullabilitySuppressions (this, type, method, opt);
+			JavaProjectionWarnings.AddNullabilitySuppressions (this, type, method, opt, ExplicitInterfaceImplementation.HasValue ());
 			SourceWriterExtensions.AddRestrictToWarning (Attributes, method.AnnotatedVisibility, false, opt);
 
 			if (method.IsReturnEnumified)

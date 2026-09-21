@@ -112,6 +112,8 @@ namespace generator.SourceWriters
 
 			IsPublic = true;
 
+			JavaProjectionWarnings.AddNoHandlerReturnSuppression (this, method, opt);
+
 			this.AddMethodParameters (method.Parameters, opt);
 		}
 

@@ -29,12 +29,13 @@ namespace generator.SourceWriters
 		// 	for (int i = 0; i < Length(); i++)
 		// 		yield return CharAt (i);
 		// }
-		public CharSequenceGenericEnumeratorMethod ()
+		public CharSequenceGenericEnumeratorMethod (bool isShadow = false)
 		{
 			Name = "GetEnumerator";
 			ReturnType = new TypeReferenceWriter ("global::System.Collections.Generic.IEnumerator<char>");
 
 			IsPublic = true;
+			IsShadow = isShadow;
 
 			Body.Add ("for (int i = 0; i < Length (); i++)");
 			Body.Add ("\tyield return CharAt (i);");

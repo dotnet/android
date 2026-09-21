@@ -20,6 +20,7 @@ namespace generator.SourceWriters
 
 		readonly FieldWriter delegate_field;
 		readonly MethodWriter delegate_getter;
+		readonly WarningSuppressionScope marshal_body_suppressions = new WarningSuppressionScope ();
 
 		// static sbyte n_ByteValueExact (IntPtr jnienv, IntPtr native__this)
 		// {
@@ -53,6 +54,9 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
+			JavaProjectionWarnings.AddCallbackObsoleteSuppressions (marshal_body_suppressions, method, opt);
+			JavaProjectionWarnings.AddMarshalArgumentSuppressions (marshal_body_suppressions, type, method, opt);
+
 			Parameters.Add (new MethodParameterWriter ("jnienv", TypeReferenceWriter.IntPtr));
 			Parameters.Add (new MethodParameterWriter ("native__this", TypeReferenceWriter.IntPtr));
 
@@ -74,6 +78,8 @@ namespace generator.SourceWriters
 
 		void WriteMarshalBody (CodeWriter writer)
 		{
+			marshal_body_suppressions.WriteSuppressWarningsStart (writer);
+
 			var attributes = new List<AttributeWriter> ();
 			SourceWriterExtensions.AddObsolete (attributes, null, opt, forceDeprecate: !string.IsNullOrWhiteSpace (method.Deprecated), deprecatedSince: method.DeprecatedSince);
 			SourceWriterExtensions.AddSupportedOSPlatform (attributes, method, opt);
@@ -110,6 +116,8 @@ namespace generator.SourceWriters
 
 			writer.Unindent ();
 			writer.WriteLine ("}");
+
+			marshal_body_suppressions.WriteSuppressWarningsEnd (writer);
 		}
 
 		public override void Write (CodeWriter writer)

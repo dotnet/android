@@ -60,19 +60,28 @@ namespace generator.SourceWriters
 			}
 
 			// Allow user to override our virtual/override logic
-			if (!forceOverride && (property.Getter ?? property.Setter).ManagedOverride?.ToLowerInvariant () == "virtual") {
+			var managed_override = (property.Getter ?? property.Setter).ManagedOverride?.ToLowerInvariant ();
+			var force_shadow = false;
+
+			if (!forceOverride && managed_override == "virtual") {
 				IsVirtual = true;
 				IsOverride = false;
-			} else if (!forceOverride && (property.Getter ?? property.Setter).ManagedOverride?.ToLowerInvariant () == "override") {
+			} else if (!forceOverride && managed_override == "override") {
 				IsVirtual = false;
 				IsOverride = true;
-			} else if (!forceOverride && (property.Getter ?? property.Setter).ManagedOverride?.ToLowerInvariant () == "none") {
+			} else if (!forceOverride && managed_override == "none") {
 				IsVirtual = false;
 				IsOverride = false;
+			} else if (!forceOverride && managed_override == "new") {
+				// The hidden member is not visible to the generator, for example because it
+				// was removed from the API description and hand-bound instead. Leave the
+				// computed virtual-ness alone; only the `override` has to become a `new`.
+				IsOverride = false;
+				force_shadow = true;
 			}
 
 			// `new` only applies when the property hides rather than overrides the inherited one.
-			IsShadow = !IsOverride && gen.RequiresNew (property, opt);
+			IsShadow = !IsOverride && (force_shadow || gen.RequiresNew (property, opt));
 
 			// Add [Obsolete] or [ObsoletedOSPlatform]
 			if (property.IsWholePropertyDeprecated) {
@@ -89,7 +98,7 @@ namespace generator.SourceWriters
 			}
 
 			JavaProjectionWarnings.AddObsoleteSuppressions (this, property, opt);
-			JavaProjectionWarnings.AddNullabilitySuppressions (this, gen, property, opt);
+			JavaProjectionWarnings.AddNullabilitySuppressions (this, gen, property, opt, ExplicitInterfaceImplementation.HasValue ());
 
 			SourceWriterExtensions.AddRestrictToWarning (GetterAttributes, property.Getter.AnnotatedVisibility, false, opt);
 			SourceWriterExtensions.AddRestrictToWarning (SetterAttributes, property.Setter?.AnnotatedVisibility, false, opt);

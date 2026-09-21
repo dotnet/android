@@ -30,6 +30,10 @@ namespace generator.SourceWriters
 			if (!method.IsVoid)
 				ReturnType.Name += "<" + opt.GetTypeReferenceName (method.RetVal) + ">";
 
+			// The wrapper exists only to invoke the method it wraps, so a deprecated method
+			// has a deprecated wrapper.
+			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
+
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
 			Body.Add ($"return global::System.Threading.Tasks.Task.Run (() => {method.AdjustedName} ({method.Parameters.GetCall (opt)}));");

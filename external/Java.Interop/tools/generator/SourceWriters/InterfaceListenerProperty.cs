@@ -12,6 +12,8 @@ namespace generator.SourceWriters
 	{
 		public InterfaceListenerProperty (InterfaceGen iface, string name, string nameSpec, string methodName, string fullDelegateName, CodeGenerationOptions opt)
 		{
+			JavaProjectionWarnings.AddListenerEventSuppressions (this, iface, null, opt);
+
 			Name = name;
 			PropertyType = new TypeReferenceWriter (opt.GetOutputName (fullDelegateName)) { Nullable = opt.SupportNullableReferenceTypes };
 

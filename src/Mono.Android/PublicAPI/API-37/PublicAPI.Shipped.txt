@@ -8164,7 +8164,7 @@ Android.Bluetooth.BluetoothA2dp
 Android.Bluetooth.BluetoothA2dp.ConnectedDevices.get -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
 Android.Bluetooth.BluetoothA2dp.Finalize() -> void
 Android.Bluetooth.BluetoothA2dp.GetConnectionState(Android.Bluetooth.BluetoothDevice? device) -> Android.Bluetooth.ProfileState
-Android.Bluetooth.BluetoothA2dp.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]! states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
+Android.Bluetooth.BluetoothA2dp.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]? states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
 Android.Bluetooth.BluetoothA2dp.InterfaceConsts
 Android.Bluetooth.BluetoothA2dp.IsA2dpPlaying(Android.Bluetooth.BluetoothDevice? device) -> bool
 Android.Bluetooth.BluetoothA2dp.SupportedCodecTypes.get -> System.Collections.Generic.ICollection<Android.Bluetooth.BluetoothCodecType!>!
@@ -8351,7 +8351,7 @@ Android.Bluetooth.BluetoothGatt.Disconnect() -> void
 Android.Bluetooth.BluetoothGatt.DiscoverServices() -> bool
 Android.Bluetooth.BluetoothGatt.ExecuteReliableWrite() -> bool
 Android.Bluetooth.BluetoothGatt.GetConnectionState(Android.Bluetooth.BluetoothDevice? device) -> Android.Bluetooth.ProfileState
-Android.Bluetooth.BluetoothGatt.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]! states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
+Android.Bluetooth.BluetoothGatt.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]? states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
 Android.Bluetooth.BluetoothGatt.GetService(Java.Util.UUID? uuid) -> Android.Bluetooth.BluetoothGattService?
 Android.Bluetooth.BluetoothGatt.InterfaceConsts
 Android.Bluetooth.BluetoothGatt.ReadCharacteristic(Android.Bluetooth.BluetoothGattCharacteristic? characteristic) -> bool
@@ -8388,7 +8388,7 @@ Android.Bluetooth.BluetoothGattServer.Close() -> void
 Android.Bluetooth.BluetoothGattServer.Connect(Android.Bluetooth.BluetoothDevice? device, bool autoConnect) -> bool
 Android.Bluetooth.BluetoothGattServer.ConnectedDevices.get -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
 Android.Bluetooth.BluetoothGattServer.GetConnectionState(Android.Bluetooth.BluetoothDevice? device) -> Android.Bluetooth.ProfileState
-Android.Bluetooth.BluetoothGattServer.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]! states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
+Android.Bluetooth.BluetoothGattServer.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]? states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
 Android.Bluetooth.BluetoothGattServer.GetService(Java.Util.UUID? uuid) -> Android.Bluetooth.BluetoothGattService?
 Android.Bluetooth.BluetoothGattServer.InterfaceConsts
 Android.Bluetooth.BluetoothGattServer.NotifyCharacteristicChanged(Android.Bluetooth.BluetoothDevice! device, Android.Bluetooth.BluetoothGattCharacteristic! characteristic, bool confirm, byte[]! value) -> int
@@ -8413,7 +8413,7 @@ Android.Bluetooth.BluetoothGattService.MIncludedServices.set -> void
 Android.Bluetooth.BluetoothHeadset
 Android.Bluetooth.BluetoothHeadset.ConnectedDevices.get -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
 Android.Bluetooth.BluetoothHeadset.GetConnectionState(Android.Bluetooth.BluetoothDevice? device) -> Android.Bluetooth.ProfileState
-Android.Bluetooth.BluetoothHeadset.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]! states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
+Android.Bluetooth.BluetoothHeadset.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]? states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
 Android.Bluetooth.BluetoothHeadset.InterfaceConsts
 Android.Bluetooth.BluetoothHeadset.IsAudioConnected(Android.Bluetooth.BluetoothDevice? device) -> bool
 Android.Bluetooth.BluetoothHeadset.IsNoiseReductionSupported(Android.Bluetooth.BluetoothDevice! device) -> bool
@@ -8426,7 +8426,7 @@ Android.Bluetooth.BluetoothHealth.ConnectChannelToSource(Android.Bluetooth.Bluet
 Android.Bluetooth.BluetoothHealth.ConnectedDevices.get -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
 Android.Bluetooth.BluetoothHealth.DisconnectChannel(Android.Bluetooth.BluetoothDevice? device, Android.Bluetooth.BluetoothHealthAppConfiguration? config, int channelId) -> bool
 Android.Bluetooth.BluetoothHealth.GetConnectionState(Android.Bluetooth.BluetoothDevice? device) -> Android.Bluetooth.ProfileState
-Android.Bluetooth.BluetoothHealth.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]! states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
+Android.Bluetooth.BluetoothHealth.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]? states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
 Android.Bluetooth.BluetoothHealth.GetMainChannelFd(Android.Bluetooth.BluetoothDevice? device, Android.Bluetooth.BluetoothHealthAppConfiguration? config) -> Android.OS.ParcelFileDescriptor?
 Android.Bluetooth.BluetoothHealth.InterfaceConsts
 Android.Bluetooth.BluetoothHealth.RegisterSinkAppConfiguration(string? name, int dataType, Android.Bluetooth.BluetoothHealthCallback? callback) -> bool
@@ -8454,7 +8454,7 @@ Android.Bluetooth.BluetoothHidDevice.Connect(Android.Bluetooth.BluetoothDevice? 
 Android.Bluetooth.BluetoothHidDevice.ConnectedDevices.get -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
 Android.Bluetooth.BluetoothHidDevice.Disconnect(Android.Bluetooth.BluetoothDevice? device) -> bool
 Android.Bluetooth.BluetoothHidDevice.GetConnectionState(Android.Bluetooth.BluetoothDevice? device) -> Android.Bluetooth.ProfileState
-Android.Bluetooth.BluetoothHidDevice.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]! states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
+Android.Bluetooth.BluetoothHidDevice.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]? states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
 Android.Bluetooth.BluetoothHidDevice.InterfaceConsts
 Android.Bluetooth.BluetoothHidDevice.RegisterApp(Android.Bluetooth.BluetoothHidDeviceAppSdpSettings? sdp, Android.Bluetooth.BluetoothHidDeviceAppQosSettings? inQos, Android.Bluetooth.BluetoothHidDeviceAppQosSettings? outQos, Java.Util.Concurrent.IExecutor? executor, Android.Bluetooth.BluetoothHidDevice.Callback? callback) -> bool
 Android.Bluetooth.BluetoothHidDevice.ReplyReport(Android.Bluetooth.BluetoothDevice? device, sbyte type, sbyte id, byte[]? data) -> bool
@@ -11502,11 +11502,11 @@ Android.Content.Res.IFontScaleConverter.IsNonLinearFontScalingActive(float fontS
 Android.Content.Res.IXmlResourceParser
 Android.Content.Res.IXmlResourceParser.AttributeCount.get -> int
 Android.Content.Res.IXmlResourceParser.Close() -> void
-Android.Content.Res.IXmlResourceParser.GetAttributeName(int pos) -> string!
+Android.Content.Res.IXmlResourceParser.GetAttributeName(int pos) -> string?
 Android.Content.Res.IXmlResourceParser.GetAttributeNamespace(int index) -> string?
-Android.Content.Res.IXmlResourceParser.GetAttributeValue(int pos) -> string!
+Android.Content.Res.IXmlResourceParser.GetAttributeValue(int pos) -> string?
 Android.Content.Res.IXmlResourceParser.GetAttributeValue(string? ns, string? name) -> string?
-Android.Content.Res.IXmlResourceParser.PositionDescription.get -> string!
+Android.Content.Res.IXmlResourceParser.PositionDescription.get -> string?
 Android.Content.Res.KeyboardHidden
 Android.Content.Res.KeyboardHidden.No = 1 -> Android.Content.Res.KeyboardHidden
 Android.Content.Res.KeyboardHidden.Undefined = 0 -> Android.Content.Res.KeyboardHidden
@@ -98038,7 +98038,7 @@ override Android.Widget.AbsoluteLayout.ThresholdType.get -> System.Type!
 override Android.Widget.AbsSeekBar.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Widget.AbsSeekBar.ThresholdClass.get -> nint
 override Android.Widget.AbsSeekBar.ThresholdType.get -> System.Type!
-override Android.Widget.AbsSpinner.Adapter.get -> Android.Widget.ISpinnerAdapter?
+override Android.Widget.AbsSpinner.Adapter.get -> Android.Widget.ISpinnerAdapter!
 override Android.Widget.AbsSpinner.Adapter.set -> void
 override Android.Widget.AbsSpinner.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Widget.AbsSpinner.SelectedView.get -> Android.Views.View?
@@ -99707,7 +99707,7 @@ override Java.Nio.MappedByteBuffer.Compact() -> Java.Nio.ByteBuffer?
 override Java.Nio.MappedByteBuffer.Duplicate() -> Java.Nio.ByteBuffer?
 override Java.Nio.MappedByteBuffer.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Java.Nio.MappedByteBuffer.Slice() -> Java.Nio.ByteBuffer?
-override Java.Nio.MappedByteBuffer.Slice(int index, int length) -> Java.Nio.MappedByteBuffer?
+override Java.Nio.MappedByteBuffer.Slice(int index, int length) -> Java.Nio.MappedByteBuffer!
 override Java.Nio.MappedByteBuffer.ThresholdClass.get -> nint
 override Java.Nio.MappedByteBuffer.ThresholdType.get -> System.Type!
 override Java.Nio.ReadOnlyBufferException.JniPeerMembers.get -> Java.Interop.JniPeerMembers!

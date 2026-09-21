@@ -124,7 +124,7 @@ namespace generator.SourceWriters
 
 						// Check if there's an existing EventArgs class to add to
 						if (event_args_class is null) {
-							event_args_class = new InterfaceEventArgsClass (iface, method, opt);
+							event_args_class = new InterfaceEventArgsClass (iface, method, opt, context.ContextTypes.Skip (1).FirstOrDefault ());
 							post_sibling_types.Add (event_args_class);
 						}
 
@@ -245,7 +245,7 @@ namespace generator.SourceWriters
 				var gen_string_overload = !method.IsOverride && method.Parameters.HasCharSequence && !iface.ContainsMethod (name_and_jnisig);
 
 				if (gen_string_overload || method.IsReturnCharSequence)
-					Methods.Add (new BoundMethodStringOverload (method, opt));
+					Methods.Add (new BoundMethodStringOverload (method, opt, iface));
 
 				if (method.Asyncify)
 					Methods.Add (new MethodAsyncWrapper (method, opt));

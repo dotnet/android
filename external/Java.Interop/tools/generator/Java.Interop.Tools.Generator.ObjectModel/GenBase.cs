@@ -929,8 +929,7 @@ namespace MonoDroid.Generation
 
 		public string RawVisibility => support.Visibility;
 
-		public bool RequiresNew (Property property, CodeGenerationOptions opt)
-		{
+		public bool RequiresNew (Property property, CodeGenerationOptions opt)		{
 			// Only a class inherits from `Java.Lang.Object`; an interface does not, so
 			// redeclaring one of these names there hides nothing (CS0109).
 			if (this is ClassGen klass && klass.InheritsObject) {
@@ -945,11 +944,40 @@ namespace MonoDroid.Generation
 				}
 			}
 
+			if (this is InterfaceGen && HidesJavaObjectInterfaceMember (property.AdjustedName))
+				return true;
+
 			if (IsThrowable () && ThrowableRequiresNew.Contains (property.AdjustedName))
 				return true;
 
 			return HidesInheritedMember (property.AdjustedName, opt);
 		}
+
+		// True when a base type also implements `java.lang.CharSequence`, and so also has the
+		// `IEnumerable<char>` support the generator synthesizes for it.
+		public bool BaseTypeImplementsCharSequence () =>
+			Ancestors ().Any (a => a.Interfaces.Any (i => i.FullName == "Java.Lang.ICharSequence"));
+
+		// True when a base type declares a nested type of the same name. The `EventArgs`
+		// classes synthesized for listener interfaces are placed in the listener's declaring
+		// type but are not in `NestedTypes`, so they are enumerated the way they are emitted.
+		public bool HidesNestedType (string name) =>
+			Ancestors ().Any (a => a.HasNestedType (name) || a.SynthesizedEventArgsNames ().Contains (name));
+
+		IEnumerable<string> SynthesizedEventArgsNames () =>
+			NestedTypes.OfType<InterfaceGen> ()
+				.Where (i => i.IsListener)
+				.SelectMany (i => i.Methods
+					.Where (m => m.EventName != string.Empty &&
+						(m.RetVal.IsVoid || m.IsEventHandlerWithHandledProperty) &&
+						(!m.IsSimpleEventHandler || m.IsEventHandlerWithHandledProperty))
+					.Select (m => i.GetArgsName (m)));
+
+		// A generated interface extends `Android.Runtime.IJavaObject`, which declares `Handle`.
+		// It does not inherit the `System.Object` members a class does, so only that one name
+		// is hidden.
+		static bool HidesJavaObjectInterfaceMember (string memberName) =>
+			string.Equals (memberName, "Handle", StringComparison.OrdinalIgnoreCase);
 
 		public bool RequiresNew (string memberName, Method method, CodeGenerationOptions opt)
 		{
@@ -958,10 +986,27 @@ namespace MonoDroid.Generation
 			if (this is ClassGen klass && klass.InheritsObject && HidesJavaLangObjectMember (memberName, method))
 				return true;
 
+			if (this is InterfaceGen && HidesJavaObjectInterfaceMember (memberName))
+				return true;
+
 			if (IsThrowable () && ThrowableRequiresNew.Contains (memberName))
 				return true;
 
 			return HidesInheritedMember (memberName, method, opt);
+		}
+
+		// The `string` overload the generator synthesizes for a method that takes or returns a
+		// `java.lang.CharSequence` is a separate, non-virtual member, so it hides -- rather
+		// than overrides -- the overload synthesized for the same method on a base type.
+		public bool StringOverloadRequiresNew (string memberName, Method method, CodeGenerationOptions opt)
+		{
+			if (this is ClassGen klass && klass.InheritsObject && HidesJavaLangObjectMember (memberName, method))
+				return true;
+
+			if (IsThrowable () && ThrowableRequiresNew.Contains (memberName))
+				return true;
+
+			return StringOverloadHidesInheritedMember (memberName, method, opt);
 		}
 
 		// Members that every generated peer type inherits from `Java.Lang.Object`/`System.Object`.
@@ -1021,12 +1066,49 @@ namespace MonoDroid.Generation
 		// `M<T> (int)` does not hide `M (int)`. Fields, properties and nested types still
 		// hide by name alone.
 		public bool HidesInheritedMember (string memberName, Method method, CodeGenerationOptions opt) =>
-			HidingScope (opt).Any (g => g.DeclaresNonMethodNamed (memberName) ||
-					g.Methods.Any (m => m.AdjustedName == memberName && SignaturesMatch (m, method)));
+			HidesEmittedMember (memberName, method, false, opt);
 
-		static bool SignaturesMatch (Method a, Method b) =>
-			(a.GenericArguments?.Count ?? 0) == (b.GenericArguments?.Count ?? 0) &&
-			ParameterList.Equals (a.Parameters, b.Parameters);
+		// True when the `string` overload the generator synthesizes for `method` hides a
+		// member of a base type. The synthesized overload is not a Java method, so it is
+		// matched on the signature the generator emits for it rather than on `method`'s own.
+		public bool StringOverloadHidesInheritedMember (string memberName, Method method, CodeGenerationOptions opt) =>
+			HidesEmittedMember (memberName, method, true, opt);
+
+		bool HidesEmittedMember (string memberName, Method method, bool stringOverload, CodeGenerationOptions opt) =>
+			HidingScope (opt).Any (g => g.DeclaresNonMethodNamed (memberName) ||
+					g.Methods.Any (m => EmittedMembers (m).Any (e => e.Name == memberName &&
+						SignaturesMatch (m, method, stringOverload || e.IsStringOverload))));
+
+		// The C# members the generator emits for a Java method: the bound method itself, and
+		// the `string` overload synthesized when the method takes or returns a
+		// `java.lang.CharSequence`. A method returning a `CharSequence` is bound under a
+		// `Formatted` name, leaving the plain name to the synthesized overload.
+		static IEnumerable<(string Name, bool IsStringOverload)> EmittedMembers (Method method)
+		{
+			yield return (method.AdjustedName, false);
+
+			if (method.IsReturnCharSequence || method.Parameters.HasCharSequence)
+				yield return (method.Name, true);
+		}
+
+		static bool SignaturesMatch (Method a, Method b, bool stringOverload)
+		{
+			if ((a.GenericArguments?.Count ?? 0) != (b.GenericArguments?.Count ?? 0))
+				return false;
+
+			if (a.Parameters.Count != b.Parameters.Count)
+				return false;
+
+			for (var i = 0; i < a.Parameters.Count; i++) {
+				var x = a.Parameters [i];
+				var y = b.Parameters [i];
+
+				if (!(stringOverload ? x.StringOverloadTypeEquals (y) : x.ManagedTypeEquals (y)))
+					return false;
+			}
+
+			return true;
+		}
 
 		bool DeclaresMemberNamed (string memberName) =>
 			DeclaresNonMethodNamed (memberName) || Methods.Any (m => m.AdjustedName == memberName);

@@ -10,12 +10,16 @@ namespace generator.SourceWriters
 {
 	public class InterfaceEventArgsClass : ClassWriter
 	{
-		public InterfaceEventArgsClass (InterfaceGen iface, Method method, CodeGenerationOptions opt)
+		public InterfaceEventArgsClass (InterfaceGen iface, Method method, CodeGenerationOptions opt, GenBase declaringType = null)
 		{
-			JavaProjectionWarnings.AddObsoleteUseSuppressions (this, method, opt);
+			JavaProjectionWarnings.AddSynthesizedTypeObsoleteSuppressions (this, iface, method, opt);
 
 			Name = iface.GetArgsName (method);
 			Inherits = "global::System.EventArgs";
+
+			// This type is nested in the listener's declaring type, whose base type may
+			// declare or synthesize a nested type of the same name.
+			IsShadow = declaringType != null && declaringType.HidesNestedType (Name);
 
 			IsPublic = true;
 			IsPartial = true;
