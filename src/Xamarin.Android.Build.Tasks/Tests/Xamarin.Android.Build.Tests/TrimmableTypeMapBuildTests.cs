@@ -1641,6 +1641,38 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void Build_WithTrimmableTypeMap_KeepsNativeAotGcBridgeTemporaryPeer ()
+		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				LinkTool = "r8",
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var dexDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin"));
+			var dexFiles = Directory.GetFiles (dexDirectory, "classes*.dex");
+			Assert.IsNotEmpty (dexFiles, "R8 should produce DEX files.");
+			foreach (var (method, signature) in new [] {
+				("<init>", "()V"),
+				("monodroidAddReference", "(Ljava/lang/Object;)V"),
+				("monodroidClearReferences", "()V"),
+			}) {
+				Assert.IsTrue (dexFiles.Any (dex => DexUtils.ContainsClassWithMethod (
+					"Lmono/android/GCUserPeer;", method, signature, dex, AndroidSdkPath)),
+					$"R8 must preserve GCUserPeer.{method}{signature} for the native GC bridge.");
+			}
+		}
+
+		[Test]
 		public void Build_WithTrimmableTypeMap_DeletesStaleGeneratedJavaSources ()
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
