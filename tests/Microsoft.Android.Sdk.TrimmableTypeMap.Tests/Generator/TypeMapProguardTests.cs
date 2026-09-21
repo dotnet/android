@@ -102,6 +102,26 @@ public class TypeMapProguardTests : IDisposable
 		Assert.Contains (engine.Errors, error => error.Code == "XA4328");
 	}
 
+	[Fact]
+	public void NoInputsReportsOutputPath ()
+	{
+		var task = CreateGenerator ();
+		Assert.False (task.Execute ());
+		var error = Assert.Single (engine.Errors);
+		Assert.Equal ("XA4328", error.Code);
+		Assert.Contains (task.OutputFile, error.Message, StringComparison.Ordinal);
+	}
+
+	[Fact]
+	public void InvalidOutputPathReportsGenerationError ()
+	{
+		var task = CreateGenerator (Write ("valid.keys", "test/Foo"));
+		task.OutputFile = "\0";
+		Assert.False (task.Execute ());
+		var error = Assert.Single (engine.Errors);
+		Assert.Equal ("XA4328", error.Code);
+	}
+
 	GenerateTypeMapProguardConfiguration CreateGenerator (params string [] inputs)
 	{
 		var items = new ITaskItem [inputs.Length];

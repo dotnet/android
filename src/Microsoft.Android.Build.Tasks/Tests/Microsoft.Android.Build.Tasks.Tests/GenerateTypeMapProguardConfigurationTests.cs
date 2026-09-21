@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Microsoft.Android.Tasks;
@@ -52,7 +54,7 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 	[TestCase ("test/Foo\u0000")]
 	public void RejectsInvalidRecordsWithoutOverwritingOutput (string content)
 	{
-		var path = Path.Combine (Root, "temp", $"{TestName}_{Guid.NewGuid ():N}");
+		var path = Path.Combine (Root, "temp", TestName, Guid.NewGuid ().ToString ("N"));
 		Directory.CreateDirectory (path);
 		var input = Path.Combine (path, "input.keys");
 		var output = Path.Combine (path, "classes.cfg");
@@ -108,6 +110,45 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		var task = CreateTask (input, Path.Combine (path, "classes.cfg"));
 		Assert.IsFalse (task.Execute ());
 		Assert.IsFalse (File.Exists (task.OutputFile));
+	}
+
+	[Test]
+	public void NoInputsReportsOutputPath ()
+	{
+		var path = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (path);
+		var output = Path.Combine (path, "classes.cfg");
+		var errors = new List<BuildErrorEventArgs> ();
+		var engine = new MockBuildEngine (TestContext.Out, errors);
+		var task = new GenerateTypeMapProguardConfiguration {
+			BuildEngine = engine,
+			OutputFile = output,
+		};
+
+		Assert.IsFalse (task.Execute ());
+		Assert.AreEqual (1, errors.Count);
+		Assert.AreEqual ("XA4328", errors [0].Code);
+		StringAssert.Contains (output, errors [0].Message);
+	}
+
+	[Test]
+	public void InvalidOutputPathReportsGenerationError ()
+	{
+		var path = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (path);
+		var input = Path.Combine (path, "input.keys");
+		File.WriteAllText (input, "test/Foo");
+		var errors = new List<BuildErrorEventArgs> ();
+		var engine = new MockBuildEngine (TestContext.Out, errors);
+		var task = new GenerateTypeMapProguardConfiguration {
+			BuildEngine = engine,
+			TypeMapKeyFiles = [new TaskItem (input)],
+			OutputFile = "\0",
+		};
+
+		Assert.IsFalse (task.Execute ());
+		Assert.AreEqual (1, errors.Count);
+		Assert.AreEqual ("XA4328", errors [0].Code);
 	}
 
 	static GenerateTypeMapProguardConfiguration CreateTask (string input, string output) => new () {
