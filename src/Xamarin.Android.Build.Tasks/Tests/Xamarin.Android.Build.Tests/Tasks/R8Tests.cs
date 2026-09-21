@@ -118,6 +118,7 @@ namespace Xamarin.Android.Build.Tests
 					StringAssert.Contains ("-keep class mono.android.Runtime { *; }", common);
 					StringAssert.Contains ("-keep class net.dot.jni.ManagedPeer { *; }", common);
 					StringAssert.Contains ("-keep interface mono.android.IGCUserPeer { *; }", common);
+					StringAssert.Contains ("-keep,allowshrinking class * implements **", common);
 				} else {
 					StringAssert.Contains ("-keepclassmembers class * {", common);
 				}
