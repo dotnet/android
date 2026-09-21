@@ -127,63 +127,6 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.IsEmpty (actual, "Native DLLs without CLI metadata should be skipped.");
 		}
 
-		[Test]
-		public void ProcessAssemblies_NativeDllSkipped ()
-		{
-			var nativeDll = Path.Combine (tempDirectory, "native.dll");
-			CreateNativePE (nativeDll);
-			var input = new TaskItem (nativeDll);
-			input.SetMetadata ("RuntimeIdentifier", "android-x64");
-			var task = new ProcessAssemblies {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				InputAssemblies = [input],
-				RuntimeIdentifiers = ["android-x64"],
-			};
-
-			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
-			CollectionAssert.IsEmpty (task.OutputAssemblies, "Native DLLs without CLI metadata should be skipped.");
-		}
-
-		[Test]
-		public void ProcessAssemblies_DuplicateAssemblyNameAndAbiSkipped ()
-		{
-			var firstDirectory = Path.Combine (tempDirectory, "first");
-			var secondDirectory = Path.Combine (tempDirectory, "second");
-			var thirdDirectory = Path.Combine (tempDirectory, "third");
-			Directory.CreateDirectory (firstDirectory);
-			Directory.CreateDirectory (secondDirectory);
-			Directory.CreateDirectory (thirdDirectory);
-			var assemblyName = Path.GetFileName (typeof (ProcessAssemblies).Assembly.Location);
-			var firstAssembly = Path.Combine (firstDirectory, assemblyName);
-			var secondAssembly = Path.Combine (secondDirectory, assemblyName);
-			var thirdAssembly = Path.Combine (thirdDirectory, assemblyName);
-			File.Copy (typeof (ProcessAssemblies).Assembly.Location, firstAssembly);
-			File.Copy (typeof (ProcessAssemblies).Assembly.Location, secondAssembly);
-			File.Copy (typeof (ProcessAssemblies).Assembly.Location, thirdAssembly);
-
-			var task = new ProcessAssemblies {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				InputAssemblies = [
-					CreateAssemblyItem (firstAssembly, "android-x64"),
-					CreateAssemblyItem (secondAssembly, "android-x64"),
-					CreateAssemblyItem (thirdAssembly, "android-arm64"),
-				],
-				RuntimeIdentifiers = ["android-x64", "android-arm64"],
-			};
-
-			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
-			Assert.AreEqual (2, task.OutputAssemblies.Length);
-			Assert.AreEqual (firstAssembly, task.OutputAssemblies [0].ItemSpec);
-			Assert.AreEqual (thirdAssembly, task.OutputAssemblies [1].ItemSpec);
-
-			static TaskItem CreateAssemblyItem (string itemSpec, string runtimeIdentifier)
-			{
-				var item = new TaskItem (itemSpec);
-				item.SetMetadata ("RuntimeIdentifier", runtimeIdentifier);
-				return item;
-			}
-		}
-
 		/// <summary>
 		/// Creates a minimal valid PE file without CLI metadata, simulating a native DLL.
 		/// </summary>

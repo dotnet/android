@@ -13,7 +13,7 @@ using Microsoft.Android.Build.Tasks;
 namespace Xamarin.Android.Tasks
 {
 	/// <summary>
-	/// Processes .dll files coming from @(ResolvedFileToPublish). Removes duplicate .NET assemblies by name and ABI.
+	/// Processes .dll files coming from @(ResolvedFileToPublish). Removes duplicate .NET assemblies by MVID.
 	///
 	/// Also sets some metadata:
 	/// * %(FrameworkAssembly)=True to determine if framework or user assembly
@@ -128,35 +128,10 @@ namespace Xamarin.Android.Tasks
 
 		void SetMetadataForAssemblies (List<ITaskItem> output, Dictionary<string, ITaskItem> symbols)
 		{
-			var assemblyNamesByAbi = new Dictionary<string, HashSet<string>> (StringComparer.OrdinalIgnoreCase);
 			foreach (ITaskItem assembly in InputAssemblies) {
 				if (DesignTimeBuild && !File.Exists (assembly.ItemSpec)) {
 					// Designer builds don't produce assemblies, so library and main application DLLs might not
 					// be there and would later cause an error when the `_CopyAssembliesForDesigner` task runs
-					continue;
-				}
-
-				bool hasMonoAndroidReference = false;
-				if (!DesignTimeBuild) {
-					using (var pe = new PEReader (File.OpenRead (assembly.ItemSpec))) {
-						if (!pe.HasMetadata) {
-							Log.LogDebugMessage ($"Skipping non-.NET assembly: {assembly.ItemSpec}");
-							continue;
-						}
-						hasMonoAndroidReference = MonoAndroidHelper.IsMonoAndroidAssembly (assembly) ||
-							MonoAndroidHelper.HasMonoAndroidReference (pe.GetMetadataReader ());
-					}
-				}
-
-				string rid = assembly.GetMetadata ("RuntimeIdentifier");
-				string abi = AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid);
-				string assemblyName = MonoAndroidHelper.GetAssemblyNameWithCulture (assembly);
-				if (!assemblyNamesByAbi.TryGetValue (abi, out HashSet<string> assemblyNames)) {
-					assemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-					assemblyNamesByAbi.Add (abi, assemblyNames);
-				}
-				if (!assemblyNames.Add (assemblyName)) {
-					Log.LogDebugMessage ($"Skipping duplicate assembly '{assembly.ItemSpec}' for ABI '{abi}'.");
 					continue;
 				}
 
@@ -166,7 +141,8 @@ namespace Xamarin.Android.Tasks
 				assembly.SetMetadata ("FrameworkAssembly", MonoAndroidHelper.IsFrameworkAssembly (assembly).ToString ());
 
 				if (!DesignTimeBuild) {
-					assembly.SetMetadata ("HasMonoAndroidReference", hasMonoAndroidReference.ToString ());
+					// Designer builds don't produce assemblies, the HasMonoAndroidReference call would throw an exception in that case
+					assembly.SetMetadata ("HasMonoAndroidReference", MonoAndroidHelper.HasMonoAndroidReference (assembly).ToString ());
 				}
 				output.Add (assembly);
 			}
