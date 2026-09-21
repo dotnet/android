@@ -64,7 +64,7 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateEmpty ()
 		{
-			Generate (new JniRemappingAssemblyGenerator (Log));
+			Generate (new JniRemappingNativeCodeGenerator (Log));
 		}
 
 		void Generate (string remappingXmlFilePath)
@@ -86,10 +86,10 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			Generate (new JniRemappingAssemblyGenerator (Log, typeReplacements, reverseTypeReplacements, methodReplacements, fieldReplacements));
+			Generate (new JniRemappingNativeCodeGenerator (Log, typeReplacements, reverseTypeReplacements, methodReplacements, fieldReplacements));
 		}
 
-		void Generate (JniRemappingAssemblyGenerator jniRemappingComposer)
+		void Generate (JniRemappingNativeCodeGenerator jniRemappingComposer)
 		{
 			LLVMIR.LlvmIrModule module =  jniRemappingComposer.Construct ();
 
@@ -146,7 +146,6 @@ namespace Xamarin.Android.Tasks
 					if (!haveAllAttributes) {
 						continue;
 					}
-
 					reverseTypeReplacements.Add (new JniRemappingTypeReplacement (from, to));
 				} else if (MonoAndroidHelper.StringEquals ("replace-method", reader.LocalName)) {
 					haveAllAttributes &= GetRequiredAttribute ("source-type", out string sourceType);
@@ -179,7 +178,6 @@ namespace Xamarin.Android.Tasks
 					haveAllAttributes &= GetRequiredAttribute ("source-field-name", out string sourceFieldName);
 					haveAllAttributes &= GetRequiredAttribute ("target-type", out string targetType);
 					haveAllAttributes &= GetRequiredAttribute ("target-field-name", out string targetFieldName);
-
 					if (!haveAllAttributes) {
 						continue;
 					}
