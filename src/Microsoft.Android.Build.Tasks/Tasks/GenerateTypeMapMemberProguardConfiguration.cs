@@ -6,6 +6,9 @@ public class GenerateTypeMapMemberProguardConfiguration : GenerateTypeMapProguar
 {
 	public override string TaskPrefix => "GTMMPC";
 
-	protected override void WriteClassRule (TextWriter writer, string name) =>
+	protected override void WriteClassRule (TextWriter writer, string name)
+	{
 		writer.WriteLine ($"-keepclassmembers class {name} {{ *; }}");
+		writer.WriteLine ($"-keepclassmembers interface {name} {{ *; }}");
+	}
 }

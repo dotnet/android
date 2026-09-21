@@ -64,8 +64,11 @@ public class GenerateTypeMapProguardConfiguration : AndroidTask
 		return !Log.HasLoggedErrors;
 	}
 
-	protected virtual void WriteClassRule (TextWriter writer, string name) =>
+	protected virtual void WriteClassRule (TextWriter writer, string name)
+	{
 		writer.WriteLine ($"-keep class {name}");
+		writer.WriteLine ($"-keep interface {name}");
+	}
 
 	internal static bool IsClassName (string name)
 	{

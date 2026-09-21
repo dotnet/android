@@ -16,13 +16,17 @@ public class TypeMapProguardTests : IDisposable
 	public TypeMapProguardTests () => Directory.CreateDirectory (directory);
 
 	[Fact]
-	public void GeneratorUnionsCanonicalKeysAndWritesOnlyClassRules ()
+	public void GeneratorUnionsCanonicalKeysAndWritesClassAndInterfaceRules ()
 	{
 		var first = Write ("first.keys", "test/Outer$Inner\r\nandroid/app/Activity\r\n\r\ntest/Caf\u00e9\n");
 		var second = Write ("second.keys", "android/app/Activity\ntest/\U00010428Peer\n");
 		var task = CreateGenerator (first, second);
 		Assert.True (task.Execute ());
-		var expected = "-keep class android.app.Activity\n-keep class test.Caf\u00e9\n-keep class test.Outer$Inner\n-keep class test.\U00010428Peer\n";
+		var expected =
+			"-keep class android.app.Activity\n-keep interface android.app.Activity\n" +
+			"-keep class test.Caf\u00e9\n-keep interface test.Caf\u00e9\n" +
+			"-keep class test.Outer$Inner\n-keep interface test.Outer$Inner\n" +
+			"-keep class test.\U00010428Peer\n-keep interface test.\U00010428Peer\n";
 		Assert.Equal (new UTF8Encoding (false).GetBytes (expected), File.ReadAllBytes (task.OutputFile));
 	}
 
@@ -38,7 +42,10 @@ public class TypeMapProguardTests : IDisposable
 			OutputFile = Path.Combine (directory, "members.cfg"),
 		};
 		Assert.True (task.Execute ());
-		Assert.Equal ("-keepclassmembers class test.Base { *; }\n-keepclassmembers class test.Contract { *; }\n-keepclassmembers class test.Peer { *; }\n",
+		Assert.Equal (
+			"-keepclassmembers class test.Base { *; }\n-keepclassmembers interface test.Base { *; }\n" +
+			"-keepclassmembers class test.Contract { *; }\n-keepclassmembers interface test.Contract { *; }\n" +
+			"-keepclassmembers class test.Peer { *; }\n-keepclassmembers interface test.Peer { *; }\n",
 			File.ReadAllText (task.OutputFile));
 	}
 

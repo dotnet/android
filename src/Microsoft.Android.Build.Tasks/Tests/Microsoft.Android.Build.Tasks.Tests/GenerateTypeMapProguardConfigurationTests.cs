@@ -27,7 +27,11 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		};
 
 		Assert.IsTrue (task.Execute ());
-		var expected = "-keep class android.app.Activity\n-keep class test.Caf\u00e9\n-keep class test.Outer$Inner\n-keep class test.\U00010428Peer\n";
+		var expected =
+			"-keep class android.app.Activity\n-keep interface android.app.Activity\n" +
+			"-keep class test.Caf\u00e9\n-keep interface test.Caf\u00e9\n" +
+			"-keep class test.Outer$Inner\n-keep interface test.Outer$Inner\n" +
+			"-keep class test.\U00010428Peer\n-keep interface test.\U00010428Peer\n";
 		CollectionAssert.AreEqual (new UTF8Encoding (false).GetBytes (expected), File.ReadAllBytes (task.OutputFile));
 	}
 
