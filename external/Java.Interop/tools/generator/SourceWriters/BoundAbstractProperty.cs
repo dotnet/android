@@ -55,7 +55,7 @@ namespace generator.SourceWriters
 			}
 
 			JavaProjectionWarnings.AddObsoleteSuppressions (this, property, opt, gen);
-			JavaProjectionWarnings.AddNullabilitySuppressions (this, gen, property, opt);
+			JavaProjectionWarnings.AddNullabilitySuppressions (this, gen, property, opt, hidesBaseMember: IsShadow);
 
 			if (gen.IsGeneratable)
 				GetterComments.Add ($"// Metadata.xml XPath method reference: path=\"{gen.MetadataXPathReference}/method[@name='{property.Getter.JavaName}'{property.Getter.Parameters.GetMethodXPathPredicate ()}]\"");

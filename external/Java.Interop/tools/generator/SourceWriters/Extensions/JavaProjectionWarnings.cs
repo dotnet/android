@@ -192,7 +192,10 @@ namespace generator.SourceWriters
 		// nullability mismatch that only the Java author can resolve.
 		// An explicit interface implementation is reported under a different pair of codes
 		// than an implicit one, which is reported differently again from a class override.
-		public static void AddNullabilitySuppressions (ISuppressWarnings writer, GenBase type, Method method, CodeGenerationOptions opt, bool explicitInterfaceImplementation = false)
+		// A member emitted with `new` hides the inherited one instead of overriding it, so the
+		// class-override checks do not apply to it. It is still an implicit implementation of
+		// any interface member it matches, so the interface checks do.
+		public static void AddNullabilitySuppressions (ISuppressWarnings writer, GenBase type, Method method, CodeGenerationOptions opt, bool explicitInterfaceImplementation = false, bool hidesBaseMember = false)
 		{
 			if (!opt.SupportNullableReferenceTypes)
 				return;
@@ -201,6 +204,9 @@ namespace generator.SourceWriters
 				return;
 
 			foreach (var (base_method, via_interface) in GetOverriddenMembers (type, method)) {
+				if (hidesBaseMember && !via_interface)
+					continue;
+
 				var return_code = !via_interface ? CS8764 : explicitInterfaceImplementation ? CS8768 : CS8766;
 				var parameter_code = !via_interface ? CS8765 : explicitInterfaceImplementation ? CS8769 : CS8767;
 
@@ -212,12 +218,12 @@ namespace generator.SourceWriters
 			}
 		}
 
-		public static void AddNullabilitySuppressions (ISuppressWarnings writer, GenBase type, Property property, CodeGenerationOptions opt, bool explicitInterfaceImplementation = false)
+		public static void AddNullabilitySuppressions (ISuppressWarnings writer, GenBase type, Property property, CodeGenerationOptions opt, bool explicitInterfaceImplementation = false, bool hidesBaseMember = false)
 		{
-			AddNullabilitySuppressions (writer, type, property.Getter, opt, explicitInterfaceImplementation);
+			AddNullabilitySuppressions (writer, type, property.Getter, opt, explicitInterfaceImplementation, hidesBaseMember);
 
 			if (property.Setter != null)
-				AddNullabilitySuppressions (writer, type, property.Setter, opt, explicitInterfaceImplementation);
+				AddNullabilitySuppressions (writer, type, property.Setter, opt, explicitInterfaceImplementation, hidesBaseMember);
 		}
 
 		// The implementor generated for a Java listener has to return something before a
@@ -246,14 +252,17 @@ namespace generator.SourceWriters
 				writer.Add (CS8625, NoHandlerArgumentReason);
 		}
 
-		// An instantiated generic interface member marshals its arguments through casts and
-		// `ToString ()` calls that the compiler cannot prove to be non-null.
-		public static void AddGenericMarshalSuppressions (ISuppressWarnings writer, Method method, CodeGenerationOptions opt)
+		// An instantiated generic interface member marshals its arguments to the type the
+		// interface was instantiated with. Only the `string` instantiation produces an
+		// expression the compiler considers nullable -- `JavaCast` is emitted with a
+		// null-forgiving operator and the array conversion returns a non-null array -- so it
+		// is the only one that can pass null to a parameter annotated as non-null.
+		public static void AddGenericMarshalSuppressions (ISuppressWarnings writer, Method method, Dictionary<string, string> genericTypeMappings, CodeGenerationOptions opt)
 		{
 			if (!opt.SupportNullableReferenceTypes)
 				return;
 
-			if (method.Parameters.Any (p => IsReferenceType (p.Symbol) && p.NotNull))
+			if (method.Parameters.Any (p => IsReferenceType (p.Symbol) && p.NotNull && p.GetGenericType (genericTypeMappings) == "string"))
 				writer.Add (CS8604, GenericMarshalArgumentReason);
 		}
 

@@ -98,7 +98,7 @@ namespace generator.SourceWriters
 			}
 
 			JavaProjectionWarnings.AddObsoleteSuppressions (this, property, opt, gen);
-			JavaProjectionWarnings.AddNullabilitySuppressions (this, gen, property, opt, ExplicitInterfaceImplementation.HasValue ());
+			JavaProjectionWarnings.AddNullabilitySuppressions (this, gen, property, opt, ExplicitInterfaceImplementation.HasValue (), IsShadow);
 
 			SourceWriterExtensions.AddRestrictToWarning (GetterAttributes, property.Getter.AnnotatedVisibility, false, opt);
 			SourceWriterExtensions.AddRestrictToWarning (SetterAttributes, property.Setter?.AnnotatedVisibility, false, opt);

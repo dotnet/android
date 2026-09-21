@@ -14,12 +14,16 @@ namespace generator.SourceWriters
 		readonly Method method;
 		readonly CodeGenerationOptions opt;
 		readonly GenericSymbol gen;
+		readonly Dictionary<string, string> mappings = new Dictionary<string, string> ();
 
 		public GenericExplicitInterfaceImplementationMethod (Method method, GenericSymbol gen, CodeGenerationOptions opt)
 		{
 			this.method = method;
 			this.opt = opt;
 			this.gen = gen;
+
+			for (var i = 0; i < gen.TypeParams.Length; i++)
+				mappings [gen.Gen.TypeParameters [i].Name] = gen.TypeParams [i].FullName;
 
 			Name = method.Name;
 
@@ -28,7 +32,7 @@ namespace generator.SourceWriters
 
 			Comments.Add ($"// This method is explicitly implemented as a member of an instantiated {gen.FullName}");
 
-			JavaProjectionWarnings.AddGenericMarshalSuppressions (this, method, opt);
+			JavaProjectionWarnings.AddGenericMarshalSuppressions (this, method, mappings, opt);
 
 			SourceWriterExtensions.AddMethodCustomAttributes (Attributes, method);
 			this.AddMethodParameters (method.Parameters, opt);
@@ -36,11 +40,6 @@ namespace generator.SourceWriters
 
 		protected override void WriteBody (CodeWriter writer)
 		{
-			var mappings = new Dictionary<string, string> ();
-
-			for (var i = 0; i < gen.TypeParams.Length; i++)
-				mappings [gen.Gen.TypeParameters [i].Name] = gen.TypeParams [i].FullName;
-
 			var call = method.Name + " (" + method.Parameters.GetGenericCall (opt, mappings) + ")";
 			writer.WriteLine ($"{(method.IsVoid ? string.Empty : "return ")}{method.RetVal.GetGenericReturn (opt, call, mappings)};");
 		}

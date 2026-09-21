@@ -99,7 +99,7 @@ namespace generator.SourceWriters
 
 			JavaProjectionWarnings.AddFinalizeSuppression (this, method);
 			JavaProjectionWarnings.AddObsoleteSuppressions (this, method, opt, type);
-			JavaProjectionWarnings.AddNullabilitySuppressions (this, type, method, opt, ExplicitInterfaceImplementation.HasValue ());
+			JavaProjectionWarnings.AddNullabilitySuppressions (this, type, method, opt, ExplicitInterfaceImplementation.HasValue (), IsShadow);
 			SourceWriterExtensions.AddRestrictToWarning (Attributes, method.AnnotatedVisibility, false, opt);
 
 			if (method.IsReturnEnumified)
