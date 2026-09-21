@@ -827,9 +827,9 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 	init.boundExceptionType     = application_config.bound_exception_type;
 	init.jniAddNativeMethodRegistrationAttributePresent = application_config.jni_add_native_method_registration_attribute_present ? 1 : 0;
 	init.jniRemappingInUse =
-		application_config.jni_remapping_replacement_type_count > 0 ||
-		application_config.jni_remapping_replacement_method_index_entry_count > 0 ||
+		jni_remapping_type_replacement_count > 0 ||
 		jni_remapping_reverse_type_replacement_count > 0 ||
+		jni_remapping_method_replacement_index_count > 0 ||
 		jni_remapping_field_replacement_index_count > 0;
 	init.marshalMethodsEnabled  = application_config.marshal_methods_enabled;
 

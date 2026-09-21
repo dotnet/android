@@ -23,12 +23,12 @@ JniRemapping::equal (JniRemappingString const& left, const char *right, size_t r
 const char*
 JniRemapping::lookup_replacement_type (const char *jniSimpleReference) noexcept
 {
-	if (application_config.jni_remapping_replacement_type_count == 0 || jniSimpleReference == nullptr || *jniSimpleReference == '\0') {
+	if (jni_remapping_type_replacement_count == 0 || jniSimpleReference == nullptr || *jniSimpleReference == '\0') {
 		return nullptr;
 	}
 
 	size_t ref_len = strlen (jniSimpleReference);
-	for (size_t i = 0uz; i < application_config.jni_remapping_replacement_type_count; i++) {
+	for (size_t i = 0uz; i < jni_remapping_type_replacement_count; i++) {
 		JniRemappingTypeReplacementEntry const& entry = jni_remapping_type_replacements[i];
 
 		if (equal (entry.name, jniSimpleReference, ref_len)) {
@@ -61,7 +61,7 @@ JniRemapping::lookup_reverse_type (const char *jniSimpleReference) noexcept
 const JniRemappingReplacementMethod*
 JniRemapping::lookup_replacement_method_info (const char *jniSourceType, const char *jniMethodName, const char *jniMethodSignature) noexcept
 {
-	if (application_config.jni_remapping_replacement_method_index_entry_count == 0 ||
+	if (jni_remapping_method_replacement_index_count == 0 ||
 	    jniSourceType == nullptr || *jniSourceType == '\0' ||
 	    jniMethodName == nullptr || *jniMethodName == '\0') {
 		return nullptr;
@@ -70,7 +70,7 @@ JniRemapping::lookup_replacement_method_info (const char *jniSourceType, const c
 	size_t source_type_len = strlen (jniSourceType);
 
 	const JniRemappingIndexTypeEntry *type = nullptr;
-	for (size_t i = 0uz; i < application_config.jni_remapping_replacement_method_index_entry_count; i++) {
+	for (size_t i = 0uz; i < jni_remapping_method_replacement_index_count; i++) {
 		JniRemappingIndexTypeEntry const& entry = jni_remapping_method_replacement_index[i];
 
 		if (!equal (entry.name, jniSourceType, source_type_len)) {

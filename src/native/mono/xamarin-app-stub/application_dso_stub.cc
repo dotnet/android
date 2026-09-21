@@ -354,5 +354,7 @@ const JniRemappingTypeReplacementEntry jni_remapping_reverse_type_replacements[]
 	},
 };
 
+const uint32_t jni_remapping_type_replacement_count = 2;
 const uint32_t jni_remapping_reverse_type_replacement_count = 1;
+const uint32_t jni_remapping_method_replacement_index_count = 2;
 const uint32_t jni_remapping_field_replacement_index_count = 1;

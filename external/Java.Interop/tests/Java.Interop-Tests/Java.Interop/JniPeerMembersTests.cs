@@ -310,11 +310,38 @@ namespace Java.InteropTests
 		{
 			var members = new JniPeerMembers (FieldRemapDerived.JniTypeName, typeof (FieldRemapDerived));
 			try {
-				using var type = new JniType (FieldRemapBase.JniTypeName);
-				var expected = type.GetStaticField ("remappedInheritedStaticField", "Ljava/lang/String;");
-				var actual = members.StaticFields.GetFieldInfo ("inheritedStaticField.Ljava/lang/String;");
+				var value = members.StaticFields.GetObjectValue ("inheritedStaticField.Ljava/lang/String;");
+				var actual = JniEnvironment.Strings.ToString (ref value, JniObjectReferenceOptions.CopyAndDispose);
+				Assert.AreEqual ("inherited target", actual);
 
-				Assert.AreEqual (expected.ID, actual.ID);
+				var updated = JniEnvironment.Strings.NewString ("updated target");
+				try {
+					members.StaticFields.SetValue ("inheritedStaticField.Ljava/lang/String;", updated);
+					value = members.StaticFields.GetObjectValue ("inheritedStaticField.Ljava/lang/String;");
+					actual = JniEnvironment.Strings.ToString (ref value, JniObjectReferenceOptions.CopyAndDispose);
+					Assert.AreEqual ("updated target", actual);
+				} finally {
+					JniObjectReference.Dispose (ref updated);
+					var original = JniEnvironment.Strings.NewString ("inherited target");
+					try {
+						members.StaticFields.SetValue ("inheritedStaticField.Ljava/lang/String;", original);
+					} finally {
+						JniObjectReference.Dispose (ref original);
+					}
+				}
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
+		public unsafe void FailedCurrentStaticMethodRemapFallsBackToBaseRemap ()
+		{
+			var members = new JniPeerMembers (FieldRemapDerived.JniTypeName, typeof (FieldRemapDerived));
+			try {
+				Assert.AreEqual (23, members.StaticMethods.InvokeInt32Method ("inheritedStaticMethod.()I", null));
 			} finally {
 				JniPeerMembers.Dispose (members);
 			}
