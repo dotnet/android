@@ -22,7 +22,7 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase (AndroidRuntime.CoreCLR, "llvm-ir")]
 		[TestCase (AndroidRuntime.CoreCLR, "trimmable")]
 		[TestCase (AndroidRuntime.NativeAOT, "trimmable")]
-		public void RetainedTypeMapClassRulesDriveR8 (AndroidRuntime runtime, string implementation)
+		public void RetainedTypeMapRulesDriveR8 (AndroidRuntime runtime, string implementation)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
@@ -49,7 +49,10 @@ namespace Xamarin.Android.Build.Tests {
 			CollectionAssert.DoesNotContain (keys, dead);
 			var configuration = Path.Combine (intermediate, "proguard", "proguard_project_references.cfg");
 			CollectionAssert.AreEqual (
-				keys.Select (key => "-keep class " + key.Replace ('/', '.')).OrderBy (line => line, StringComparer.Ordinal),
+				keys.OrderBy (key => key, StringComparer.Ordinal).SelectMany (key => new [] {
+					"-keep class " + key.Replace ('/', '.'),
+					"-keep interface " + key.Replace ('/', '.'),
+				}),
 				File.ReadAllLines (configuration));
 			var common = File.ReadAllText (Path.Combine (intermediate, "proguard", "proguard_xamarin.cfg"));
 			StringAssert.Contains ("-dontobfuscate", common);
@@ -57,10 +60,14 @@ namespace Xamarin.Android.Build.Tests {
 			if (runtime == AndroidRuntime.CoreCLR) {
 				StringAssert.DoesNotContain ("-keepclassmembers class * {", common);
 				CollectionAssert.AreEqual (
-					keys.Select (key => "-keepclassmembers class " + key.Replace ('/', '.') + " { *; }").OrderBy (line => line, StringComparer.Ordinal),
+					keys.OrderBy (key => key, StringComparer.Ordinal).SelectMany (key => new [] {
+						"-keepclassmembers class " + key.Replace ('/', '.') + " { *; }",
+						"-keepclassmembers interface " + key.Replace ('/', '.') + " { *; }",
+					}),
 					File.ReadAllLines (members));
 			} else {
 				StringAssert.Contains ("-keepclassmembers class * {", common);
+				StringAssert.Contains ("-keepclassmembers interface * {", common);
 				FileAssert.DoesNotExist (members);
 			}
 			StringAssert.DoesNotContain ("-keep class mono.android.**", common);
@@ -3034,11 +3041,14 @@ namespace UnnamedProject {
 			Assert.IsNotNull (proguardDirectory);
 			var references = Path.Combine (proguardDirectory, "proguard_project_references.cfg");
 			var rules = File.ReadAllLines (references);
-			Assert.IsNotEmpty (rules, "Retained typemap keys should provide class roots.");
-			Assert.IsTrue (rules.All (line => line.StartsWith ("-keep class ", StringComparison.Ordinal) && !line.Contains ('{')),
-				"Typemap ProGuard rules must contain only class roots, not member rules.");
+			Assert.IsNotEmpty (rules, "Retained typemap keys should provide type roots.");
+			Assert.IsTrue (rules.All (line =>
+				(line.StartsWith ("-keep class ", StringComparison.Ordinal) ||
+				line.StartsWith ("-keep interface ", StringComparison.Ordinal)) &&
+				!line.Contains ('{')),
+				"Typemap ProGuard rules must contain only class and interface roots, not member rules.");
 			Assert.IsFalse (rules.Any (line => line.Contains (deadJavaDotName, StringComparison.Ordinal)),
-				"Retained typemap class roots should exclude trimmed framework implementors.");
+				"Retained typemap type roots should exclude trimmed framework implementors.");
 			var common = File.ReadAllText (Path.Combine (proguardDirectory, "proguard_xamarin.cfg"));
 			StringAssert.Contains ("-dontobfuscate", common);
 			StringAssert.DoesNotContain ("-keep,allowshrinking,allowoptimization class **", common);

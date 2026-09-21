@@ -1,9 +1,9 @@
 This is the D8 and R8 integration specification for .NET for Android.
 
-# Retained typemap class roots
+# Retained typemap type roots
 
 When managed trimming and R8 are enabled, CoreCLR and trimmable NativeAOT
-builds derive Java class roots from the final typemap rather than retaining
+builds derive Java class and interface roots from the final typemap rather than retaining
 every class in the ACW map:
 
 | Runtime and typemap | Retained-key source |
@@ -22,7 +22,7 @@ NativeFormat keys. It does not require an ACW map or generate dependency graphs.
 All three adapters and both ProGuard generators are `Microsoft.Android.Tasks`
 tasks in `Microsoft.Android.Build.Tasks.dll`.
 The adapters write `typemap.keys.txt` in the outer intermediate directory.
-The format is UTF-8 without a BOM, one canonical JNI class name per line,
+The format is UTF-8 without a BOM, one canonical JNI type name per line,
 ordinal-sorted and distinct, with LF endings and a final LF when nonempty.
 For example:
 
@@ -33,26 +33,32 @@ example/Outer$Inner
 
 The assembly and NativeAOT object adapters collapse implementation-specific
 numeric aliases before writing this format. Valid JNI array entries contribute
-their reference element class; primitive arrays do not contribute a class.
-A valid zero-byte file means no retained classes;
+their reference element type; primitive arrays do not contribute a type.
+A valid zero-byte file means no retained types;
 missing, unreadable, or unsupported inputs fail the build.
 
 `GenerateTypeMapProguardConfiguration` knows only this format. It accepts a
-union of keys files and writes deterministic class-only rules to
+union of keys files and writes deterministic type-root rules to
 `proguard/proguard_project_references.cfg`:
 
 ```text
 -keep class android.app.Activity
+-keep interface android.app.Activity
 -keep class example.Outer$Inner
+-keep interface example.Outer$Inner
 ```
 
-The class-root generator never emits member rules or global R8 options.
+Each retained key emits both alternatives because the key format does not
+encode whether the Java type is a class or interface. The root generator
+never emits member rules or global R8 options.
 CoreCLR uses a separate `GenerateTypeMapMemberProguardConfiguration` task to
 write `proguard/proguard_typemap_members.cfg` from the same retained keys:
 
 ```text
 -keepclassmembers class android.app.Activity { *; }
+-keepclassmembers interface android.app.Activity { *; }
 -keepclassmembers class example.Outer$Inner { *; }
+-keepclassmembers interface example.Outer$Inner { *; }
 ```
 
 This preserves JNI-facing methods, constructors, and fields without also
@@ -64,8 +70,8 @@ or reflection access to types or members not represented by retained managed
 bindings still needs application/library ProGuard rules.
 
 NativeAOT continues to use `proguard_typemap.cfg`, which retains members of
-all surviving classes, including third-party classes, while allowing unused
-classes to disappear. Both policies keep explicit runtime bootstrap roots
+all surviving classes and interfaces, including third-party types, while
+allowing unused types to disappear. Both policies keep explicit runtime bootstrap roots
 rather than whole wrapper packages. User Java source retention and
 application/library ProGuard rules remain separate.
 
@@ -96,7 +102,7 @@ MonoVM, nonshrinking/multidex-only builds, and the existing complete
 Both extraction and rule generation use their real files as incremental
 outputs. A content-sensitive input manifest also tracks source-list and
 runtime/trim-policy changes, so removing a RID or switching modes cannot
-reuse stale class roots. The outputs are registered in `FileWrites` and
+reuse stale type roots. The outputs are registered in `FileWrites` and
 regenerated if deleted.
 
 # What is D8? What is R8?
