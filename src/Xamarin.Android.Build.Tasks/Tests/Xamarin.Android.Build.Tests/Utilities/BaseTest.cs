@@ -95,10 +95,23 @@ namespace Xamarin.Android.Build.Tests
 
 		protected static string RunAdbCommand (string command, bool ignoreErrors = true, int timeout = 30)
 		{
+			var (_, stdOutput, stdError) = RunAdbCommandWithExitCode (command, timeout);
+			return stdOutput + stdError;
+		}
+
+		protected static (int code, string stdOutput, string stdError) RunAdbCommandWithExitCode (string command, int timeout = 30)
+		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
 			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
 			string adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
-			return RunProcess (adb, $"{adbTarget} {command}", timeout);
+			return RunProcessWithExitCode (adb, $"{adbTarget} {command}", timeout);
+		}
+
+		protected static (int code, string stdOutput, string stdError) RunAdbCommandWithExitCode (string [] command, int timeout = 30)
+		{
+			var arguments = new Microsoft.Build.Utilities.CommandLineBuilder ();
+			arguments.AppendSwitchIfNotNull ("", command, " ");
+			return RunAdbCommandWithExitCode (arguments.ToString (), timeout);
 		}
 
 		protected static (int code, string stdOutput, string stdError) RunApkDiffCommand (string args, string logFilePath)
