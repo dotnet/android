@@ -536,18 +536,13 @@ static class JavaMarshalRegisteredPeers
 			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
 		}
 
+		CompleteBridgeProcessing (mcr);
 		if (!RuntimeFeature.EventSourceSupport) {
-			CompleteBridgeProcessing (mcr);
 			return;
 		}
 
-		bool emitGCBridgeStop = gcBridgeEventEnabled;
-		try {
-			CompleteBridgeProcessing (mcr);
-			if (emitGCBridgeStop) {
-				RuntimeEventSource.GCBridgeStop ();
-			}
-		} finally {
+		if (gcBridgeEventEnabled) {
+			RuntimeEventSource.GCBridgeStop ();
 			gcBridgeEventEnabled = false;
 		}
 	}
