@@ -297,6 +297,43 @@ And the output files should be found in the current directory. You can
 use the `-o` switch if you would prefer to output them to a specific
 directory.
 
+## .NET for Android runtime events
+
+Runtime interop timing events use the `Microsoft.Android.Runtime` provider.
+They are disabled by default so normal trimmed `Release` applications do not
+retain EventSource support or the provider implementation. Enable the private
+diagnostics opt-in in the application project:
+
+```xml
+<PropertyGroup>
+  <_AndroidEnableInteropEventSource>true</_AndroidEnableInteropEventSource>
+</PropertyGroup>
+```
+
+This opt-in also forces `$(EventSourceSupport)` to `true`. Applications must
+additionally enable the diagnostic transport with `-p:EnableDiagnostics=true`
+so that `dotnet-trace` can connect. For MonoVM this also packages the
+`diagnostics_tracing` component; `$(AndroidEnableProfiler)` remains its legacy
+synonym.
+
+Collect the runtime timing events at informational level:
+
+```sh
+$ dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtime:0xC:4
+```
+
+The provider contract reserves the following event IDs and keywords. Call-site
+instrumentation is added independently from the provider foundation.
+
+| Event IDs | Keyword | Area |
+|---|---|---|
+| 1-6 | `0x1` / `0x2` | Java interop peer lifecycle and reachability |
+| 7-8 | `0x8` | GC bridge start/stop |
+| 9-10 | `0x4` | Trimmable type-map lookup start/stop |
+
+Use keyword `0x8` for GC bridge events, `0x4` for type-map events, or `0xC`
+for both.
+
 ## How to get GC memory dumps?
 
 If running on desktop, you can use the `dotnet-gcdump` global tool for

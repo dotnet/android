@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -53,6 +54,78 @@ namespace Xamarin.Android.Build.Tests
 		{
 			public void BuildPipelineForTest (AssemblyPipeline pipeline, MSBuildLinkContext context) =>
 				BuildPipeline (pipeline, context);
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void RuntimeEventSourceFeatureSwitch (bool enabled)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
+			proj.SetProperty ("AndroidPackageFormat", "apk");
+			proj.SetProperty ("AndroidUseAssemblyStore", "true");
+			proj.SetProperty ("PublishReadyToRun", "false");
+
+			if (enabled) {
+				proj.SetProperty ("_AndroidEnableInteropEventSource", "true");
+			}
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${USINGS}", "using System.Diagnostics.CodeAnalysis;")
+				.Replace (
+					"//${FIELDS}",
+					"""
+					[DynamicDependency ("GCBridgeStart", "Microsoft.Android.Runtime.RuntimeEventSource", "Mono.Android")]
+					static void PreserveRuntimeEventSourceCallPath ()
+					{
+					}
+					""")
+				.Replace ("//${AFTER_ONCREATE}", "PreserveRuntimeEventSourceCallPath ();");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (
+				builder.Build (proj, parameters: ["EventSourceSupport=false"]),
+				"build should have succeeded even when EventSourceSupport was an immutable global property.");
+
+			var outputDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
+			var runtimeConfigFiles = Directory.GetFiles (outputDirectory, $"{proj.ProjectName}.runtimeconfig.json", SearchOption.AllDirectories);
+			Assert.AreEqual (1, runtimeConfigFiles.Length, $"{outputDirectory} should contain one runtimeconfig.json.");
+
+			using (var runtimeConfig = JsonDocument.Parse (File.ReadAllText (runtimeConfigFiles [0]))) {
+				var configProperties = runtimeConfig.RootElement
+					.GetProperty ("runtimeOptions")
+					.GetProperty ("configProperties");
+				Assert.AreEqual (
+					enabled,
+					configProperties.GetProperty ("Microsoft.Android.Runtime.RuntimeFeature.InteropEventSource").GetBoolean (),
+					"the runtime EventSource feature switch should match the private opt-in");
+				Assert.AreEqual (
+					enabled,
+					configProperties.GetProperty ("System.Diagnostics.Tracing.EventSource.IsSupported").GetBoolean (),
+					"the private opt-in should force EventSource support on");
+			}
+
+			var linkedRuntimeAssembly = Path.Combine (
+				Root,
+				builder.ProjectDirectory,
+				proj.IntermediateOutputPath,
+				"android-arm64",
+				"linked",
+				"Mono.Android.dll");
+			FileAssert.Exists (linkedRuntimeAssembly);
+
+			using var assembly = AssemblyDefinition.ReadAssembly (linkedRuntimeAssembly);
+			var eventSourceType = assembly.MainModule.GetType ("Microsoft.Android.Runtime.RuntimeEventSource");
+			Assert.IsNotNull (eventSourceType, "the synthetic call path should retain the runtime EventSource facade");
+			var implementationType = eventSourceType.NestedTypes.FirstOrDefault (type => type.Name == "RuntimeEventSourceImplementation");
+			if (enabled) {
+				Assert.IsNotNull (implementationType, "the enabled runtime EventSource implementation should remain in the linked assembly");
+			} else {
+				Assert.IsNull (implementationType, "the disabled runtime EventSource implementation should be removed from the linked assembly");
+			}
 		}
 
 		[Test]

@@ -13,6 +13,7 @@ static class RuntimeFeature
 	const bool TrimmableTypeMapEnabledByDefault = false;
 	const bool UseTypeMapAttributesForJavaDictionaryValueTypeLookupsEnabledByDefault = false;
 	const bool ObjectReferenceLoggingEnabledByDefault = false;
+	const bool InteropEventSourceEnabledByDefault = false;
 	const bool ManagedToJavaUsesAssemblyFullNameEnabledByDefault = false;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
@@ -50,6 +51,10 @@ static class RuntimeFeature
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ObjectReferenceLogging)}")]
 	internal static bool ObjectReferenceLogging { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (ObjectReferenceLogging)}", out bool isEnabled) ? isEnabled : ObjectReferenceLoggingEnabledByDefault;
+
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (InteropEventSource)}")]
+	internal static bool InteropEventSource { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (InteropEventSource)}", out bool isEnabled) ? isEnabled : InteropEventSourceEnabledByDefault;
 
 	// Enabled for Debug builds, whose string-based typemaps support Fast Deployment without embedding assembly MVIDs.
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ManagedToJavaUsesAssemblyFullName)}")]

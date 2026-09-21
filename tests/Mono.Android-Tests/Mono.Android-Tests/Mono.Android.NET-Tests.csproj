@@ -19,6 +19,7 @@
     <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
     <WarningsAsErrors>IL2037</WarningsAsErrors>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
+    <_AndroidEnableInteropEventSource>true</_AndroidEnableInteropEventSource>
     <AndroidNdkDirectory></AndroidNdkDirectory>
   </PropertyGroup>
 
@@ -133,6 +134,7 @@
     <Compile Include="Android.Runtime\InputStreamInvokerTest.cs" />
     <Compile Include="Android.Runtime\JavaCollectionTest.cs" />
     <Compile Include="Android.Runtime\JnienvArrayMarshaling.cs" />
+    <Compile Include="Android.Runtime\RuntimeEventSourceTests.cs" />
     <Compile Include="Android.Runtime\XmlReaderPullParserTest.cs" />
     <Compile Include="Android.Runtime\XmlReaderResourceParserTest.cs" />
     <Compile Include="Android.Views\LayoutInflaterTest.cs" />
