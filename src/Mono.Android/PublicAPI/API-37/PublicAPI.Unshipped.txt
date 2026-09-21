@@ -2338,10 +2338,10 @@ Android.Widget.PhotoPicker.PhotoPickerUiCustomizationParams.Builder.SetAspectRat
 Android.Widget.PhotoPicker.PhotoPickerUiCustomizationParams.DescribeContents() -> int
 Android.Widget.PhotoPicker.PhotoPickerUiCustomizationParams.InterfaceConsts
 Android.Widget.PhotoPicker.PhotoPickerUiCustomizationParams.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
-Android.Widget.Photopicker.AspectRatio
-Android.Widget.Photopicker.AspectRatio.Portrait916 = 1 -> Android.Widget.Photopicker.AspectRatio
-Android.Widget.Photopicker.AspectRatio.Square11 = 0 -> Android.Widget.Photopicker.AspectRatio
-Android.Widget.Photopicker.AspectRatio.Undefined = -1 -> Android.Widget.Photopicker.AspectRatio
+Android.Widget.PhotoPicker.AspectRatio
+Android.Widget.PhotoPicker.AspectRatio.Portrait916 = 1 -> Android.Widget.PhotoPicker.AspectRatio
+Android.Widget.PhotoPicker.AspectRatio.Square11 = 0 -> Android.Widget.PhotoPicker.AspectRatio
+Android.Widget.PhotoPicker.AspectRatio.Undefined = -1 -> Android.Widget.PhotoPicker.AspectRatio
 Java.Interop.BaseExportAttribute
 Java.Interop.BaseExportAttribute.BaseExportAttribute() -> void
 Java.Interop.IAndroidCallableWrapper
@@ -3843,9 +3843,9 @@ const Android.Webkit.WebChromeClient.FileChooserParams.PermissionModeRead = Andr
 const Android.Webkit.WebChromeClient.FileChooserParams.PermissionModeReadWrite = Android.Webkit.PermissionMode.ReadWrite -> Android.Webkit.PermissionMode
 const Android.Widget.PhotoPicker.PhotoPickerSelectionParams.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.Widget.PhotoPicker.PhotoPickerSelectionParams.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
-const Android.Widget.PhotoPicker.PhotoPickerUiCustomizationParams.AspectRatioPortrait916 = Android.Widget.Photopicker.AspectRatio.Portrait916 -> Android.Widget.Photopicker.AspectRatio
-const Android.Widget.PhotoPicker.PhotoPickerUiCustomizationParams.AspectRatioSquare11 = Android.Widget.Photopicker.AspectRatio.Square11 -> Android.Widget.Photopicker.AspectRatio
-const Android.Widget.PhotoPicker.PhotoPickerUiCustomizationParams.AspectRatioUndefined = Android.Widget.Photopicker.AspectRatio.Undefined -> Android.Widget.Photopicker.AspectRatio
+const Android.Widget.PhotoPicker.PhotoPickerUiCustomizationParams.AspectRatioPortrait916 = Android.Widget.PhotoPicker.AspectRatio.Portrait916 -> Android.Widget.PhotoPicker.AspectRatio
+const Android.Widget.PhotoPicker.PhotoPickerUiCustomizationParams.AspectRatioSquare11 = Android.Widget.PhotoPicker.AspectRatio.Square11 -> Android.Widget.PhotoPicker.AspectRatio
+const Android.Widget.PhotoPicker.PhotoPickerUiCustomizationParams.AspectRatioUndefined = Android.Widget.PhotoPicker.AspectRatio.Undefined -> Android.Widget.PhotoPicker.AspectRatio
 const Android.Widget.PhotoPicker.PhotoPickerUiCustomizationParams.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.Widget.PhotoPicker.PhotoPickerUiCustomizationParams.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
 override Android.App.AnrTypes.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
