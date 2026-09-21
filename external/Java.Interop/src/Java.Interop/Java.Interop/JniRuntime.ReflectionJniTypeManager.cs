@@ -342,6 +342,8 @@ namespace Java.Interop {
 
 			protected override ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSimpleReference, string jniMethodName, string jniMethodSignature) => null;
 
+			protected override ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSimpleReference, string jniFieldName, string jniFieldSignature) => null;
+
 			public override void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 			{
 				TryRegisterNativeMembers (nativeClass, type, methods);
