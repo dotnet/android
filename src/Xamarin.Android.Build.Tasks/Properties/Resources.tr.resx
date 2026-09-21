@@ -505,6 +505,11 @@ AndroidManifest.xml dosyasındaki değeri $(SupportedOSPlatformVersion) değeriy
 {0} - The minimum SDK version number
 {1} - The SupportedOSPlatformVersion property value</comment>
   </data>
+  <data name="XA1037" xml:space="preserve">
+    <value>Unsupported @(Reference) item: {0}</value>
+    <comment>The following are literal names and should not be translated: @(Reference)
+{0} - The unsupported reference item</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>Derlemede AppDomain.CreateDomain() kullanımı algılandı: {0}. .NET 6 ve üzeri yalnızca tek bir AppDomain'i destekleyeceğinden, .NET 6 yayımlandıktan sonra bu API artık Android için .NET'te kullanılamayacaktır.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain

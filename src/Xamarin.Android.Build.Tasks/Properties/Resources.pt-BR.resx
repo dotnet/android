@@ -505,6 +505,11 @@ Altere o valor no AndroidManifest.xml para corresponder ao valor $(SupportedOSPl
 {0} - The minimum SDK version number
 {1} - The SupportedOSPlatformVersion property value</comment>
   </data>
+  <data name="XA1037" xml:space="preserve">
+    <value>Unsupported @(Reference) item: {0}</value>
+    <comment>The following are literal names and should not be translated: @(Reference)
+{0} - The unsupported reference item</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>Detectado o uso de AppDomain.CreateDomain() no assembly: {0}. O .NET 6 e versões superiores darão suporte apenas a um único AppDomain, portanto, essa API não estará mais disponível no .NET para Android quando o .NET 6 for lançado.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
