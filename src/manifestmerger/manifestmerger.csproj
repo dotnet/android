@@ -11,6 +11,13 @@
     <ProjectReference Include="..\..\external\Java.Interop\tools\java-source-utils\java-source-utils.csproj" ReferenceOutputAssembly="False" />
     <ProjectReference Include="..\androidsdk\androidsdk.csproj" ReferenceOutputAssembly="False" />
   </ItemGroup>
+
+  <Target Name="_ValidateGradleProjectOrdering" BeforeTargets="_BuildManifestMerger">
+    <Error
+        Condition=" '@(ProjectReference->WithMetadataValue('Filename', 'java-source-utils')->Count())' == '0' "
+        Text="manifestmerger must reference java-source-utils to serialize their Gradle invocations."
+    />
+  </Target>
   
   <Import Project="..\..\Configuration.props" />
   
