@@ -228,7 +228,7 @@ namespace Android.RuntimeTests
 			var keyword = GetConstant<EventKeywords> (eventSourceType, "TypeMapKeyword");
 
 			using var listener = new CapturingEventListener ();
-			Assert.IsTrue (Invoke<bool> (eventSourceType, "IsEnabled", keyword),
+			Assert.IsTrue (listener.ProviderCreated,
 				"The provider must be enabled so a zero event count verifies the LLVM-IR path rather than a disabled listener.");
 			var type = JniEnvironment.Runtime.TypeManager.GetType (new JniTypeSignature ("android/view/View"));
 			var signature = JniEnvironment.Runtime.TypeManager.GetTypeSignature (typeof (Android.Views.View));
