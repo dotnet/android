@@ -528,17 +528,8 @@ static class JavaMarshalRegisteredPeers
 			return;
 		}
 
-		gcBridgeEventEnabled = false;
 		gcBridgeEventEnabled = RuntimeEventSource.GCBridgeStart ();
-		bool preprocessingCompleted = false;
-		try {
-			HandleContext.EnsureAllContextsAreOurs (mcr);
-			preprocessingCompleted = true;
-		} finally {
-			if (!preprocessingCompleted) {
-				gcBridgeEventEnabled = false;
-			}
-		}
+		HandleContext.EnsureAllContextsAreOurs (mcr);
 	}
 
 	[UnmanagedCallersOnly]
