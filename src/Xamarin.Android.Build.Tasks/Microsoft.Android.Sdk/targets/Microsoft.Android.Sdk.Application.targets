@@ -171,7 +171,7 @@ This file contains targets specific for Android application projects.
 
     <PropertyGroup>
       <_AndroidRuntimeLogProperty>debug.dotnet.log</_AndroidRuntimeLogProperty>
-      <_AndroidRuntimeLog>default,assembly,timing=bare</_AndroidRuntimeLog>
+      <_AndroidRuntimeLog>default,assembly</_AndroidRuntimeLog>
       <_AndroidRuntimeLog Condition=" '$(RunLogVerbose)' != 'false' ">all</_AndroidRuntimeLog>
       <RunLogDelayInMS>1000</RunLogDelayInMS> <!-- milliseconds -->
     </PropertyGroup>

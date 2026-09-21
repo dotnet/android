@@ -28,7 +28,6 @@
 #include <runtime-base/logger.hh>
 #include <runtime-base/monodroid-dl.hh>
 #include <runtime-base/monodroid-state.hh>
-#include <runtime-base/timing-internal.hh>
 #include <runtime-base/util.hh>
 #include <shared/log_types.hh>
 
@@ -47,16 +46,7 @@ bool Host::clr_external_assembly_probe (const char *path, void **data_start, int
 		return false; // TODO: abort instead?
 	}
 
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.start_event (TimingEventKind::AssemblyLoad);
-	}
-
 	auto log_and_return = [](const char *name, void *data_start, int64_t size) {
-		if (FastTiming::enabled ()) [[unlikely]] {
-			internal_timing.end_event (true /* uses_more_info */);
-			internal_timing.add_more_info (name);
-		}
-
 		log_debugf (
 			LOG_ASSEMBLY,
 			"Assembly '%s' data %smapped (%p, %" PRId64 " bytes)",
@@ -312,13 +302,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 {
 	Logger::init_logging_categories ();
 
-	// If fast logging is disabled, log messages immediately
-	FastTiming::initialize ((Logger::log_timing_categories() & LogTimingCategories::FastBare) != LogTimingCategories::FastBare);
-
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.start_event (TimingEventKind::TotalRuntimeInit);
-	}
-
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_wrapper language (env, lang);
 	jstring_wrapper &files_dir = applicationDirs[Constants::APP_DIRS_FILES_DIR_INDEX];
@@ -343,10 +326,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 	AndroidSystem::setup_app_library_directories (runtimeApks, applicationDirs, haveSplitApks);
 
 	gather_assemblies_and_libraries (runtimeApks, haveSplitApks);
-
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.start_event (TimingEventKind::ManagedRuntimeInit);
-	}
 
 	coreclr_set_error_writer (clr_error_writer);
 	// We REALLY shouldn't be doing this
@@ -435,7 +414,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 		}
 	}
 
-	int hr = FastTiming::time_call ("coreclr_initialize"sv, coreclr_initialize,
+	int hr = coreclr_initialize (
 		application_config.android_package_name,
 		"Xamarin.Android",
 		prop_count,
@@ -444,10 +423,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 		&clr_host,
 		&domain_id
 	);
-
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.end_event ();
-	}
 
 	// TODO: make S_OK & friends known to us
 	if (hr != 0 /* S_OK */) {
@@ -510,13 +485,11 @@ void Host::Java_mono_android_Runtime_initInternal (
 
 	log_infof (LOG_GC, "GREF GC Threshold: %d", init.grefGcThreshold);
 
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.start_event (TimingEventKind::NativeToManagedTransition);
-	}
+	OSBridge::initialize_on_runtime_init (env, runtimeClass);
+	GCBridge::initialize_on_runtime_init (env, runtimeClass);
 
 	log_debugf (LOG_ASSEMBLY, "Creating UCO delegate to %s.Initialize", Constants::JNIENVINIT_FULL_TYPE_NAME.data ());
-	void *delegate = nullptr;
-	delegate = FastTiming::time_call ("create_delegate for Initialize"sv, create_delegate, Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "Initialize"sv);
+	void *delegate = create_delegate (Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "Initialize"sv);
 	auto initialize = reinterpret_cast<jnienv_initialize_fn> (delegate);
 	abort_unless (
 		initialize != nullptr,
@@ -530,7 +503,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	);
 
 	log_debugf (LOG_DEFAULT, "Calling into managed runtime init");
-	FastTiming::time_call ("JNIEnv.Initialize UCO"sv, initialize, &init);
+	initialize (&init);
 
 	// RegisterJniNatives and PropagateUncaughtException are returned from Initialize
 	// to avoid extra create_delegate calls. RegisterJniNatives is null when using the
@@ -539,20 +512,11 @@ void Host::Java_mono_android_Runtime_initInternal (
 	jnienv_propagate_uncaught_exception = init.propagateUncaughtExceptionFn;
 	abort_unless (jnienv_propagate_uncaught_exception != nullptr, "Failed to obtain unmanaged-callers-only function pointer to the PropagateUncaughtException method.");
 
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.end_event (); // native to managed
-		internal_timing.end_event (); // total init time
-	}
-
 	MonodroidState::mark_startup_done ();
 }
 
 void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept
 {
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.start_event (TimingEventKind::RuntimeRegister);
-	}
-
 	jsize managedType_len = env->GetStringLength (managedType);
 	const jchar *managedType_ptr = env->GetStringChars (managedType, nullptr);
 	int methods_len = env->GetStringLength (methods);
@@ -569,14 +533,6 @@ void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType,
 
 	env->ReleaseStringChars (methods, methods_ptr);
 	env->ReleaseStringChars (managedType, managedType_ptr);
-
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.end_event (true /* uses_more_info */);
-
-		mt_ptr = env->GetStringUTFChars (managedType, nullptr);
-		internal_timing.add_more_info (mt_ptr);
-		env->ReleaseStringUTFChars (managedType, mt_ptr);
-	}
 }
 
 void Host::Java_mono_android_Runtime_registerNatives ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass nativeClass) noexcept
