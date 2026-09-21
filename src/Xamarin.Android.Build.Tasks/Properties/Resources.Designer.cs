@@ -2004,6 +2004,96 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4324", resourceCulture);
             }
         }
+
+        public static string XA4327 {
+            get {
+                return ResourceManager.GetString("XA4327", resourceCulture);
+            }
+        }
+
+        public static string XA4327_MappingNotFound {
+            get {
+                return ResourceManager.GetString("XA4327_MappingNotFound", resourceCulture);
+            }
+        }
+
+        public static string XA4327_MappingDataFailure {
+            get {
+                return ResourceManager.GetString("XA4327_MappingDataFailure", resourceCulture);
+            }
+        }
+
+        public static string XA4327_AssemblyReadFailure {
+            get {
+                return ResourceManager.GetString("XA4327_AssemblyReadFailure", resourceCulture);
+            }
+        }
+
+        public static string XA4327_AmbiguousEntry {
+            get {
+                return ResourceManager.GetString("XA4327_AmbiguousEntry", resourceCulture);
+            }
+        }
+
+        public static string XA4327_NativeAotObjectRequired {
+            get {
+                return ResourceManager.GetString("XA4327_NativeAotObjectRequired", resourceCulture);
+            }
+        }
+
+        public static string XA4327_NativeAotObjectReadFailure {
+            get {
+                return ResourceManager.GetString("XA4327_NativeAotObjectReadFailure", resourceCulture);
+            }
+        }
+
+        public static string XA4327_NativeAotModeRequired {
+            get {
+                return ResourceManager.GetString("XA4327_NativeAotModeRequired", resourceCulture);
+            }
+        }
+
+        public static string XA4327_NativeAotObjectFormat {
+            get {
+                return ResourceManager.GetString("XA4327_NativeAotObjectFormat", resourceCulture);
+            }
+        }
+
+        public static string XA4327_NativeAotInvalidSection {
+            get {
+                return ResourceManager.GetString("XA4327_NativeAotInvalidSection", resourceCulture);
+            }
+        }
+
+        public static string XA4327_NativeAotTruncatedSection {
+            get {
+                return ResourceManager.GetString("XA4327_NativeAotTruncatedSection", resourceCulture);
+            }
+        }
+
+        public static string XA4327_NativeAotMissingSections {
+            get {
+                return ResourceManager.GetString("XA4327_NativeAotMissingSections", resourceCulture);
+            }
+        }
+
+        public static string XA4328 {
+            get {
+                return ResourceManager.GetString("XA4328", resourceCulture);
+            }
+        }
+
+        public static string XA4328_ConflictingEntry {
+            get {
+                return ResourceManager.GetString("XA4328_ConflictingEntry", resourceCulture);
+            }
+        }
+
+        public static string XA4328_UnsupportedSignature {
+            get {
+                return ResourceManager.GetString("XA4328_UnsupportedSignature", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..

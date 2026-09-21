@@ -78,7 +78,7 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 
-	class JniRemappingAssemblyGenerator : LlvmIrComposer
+	class JniRemappingNativeCodeGenerator : LlvmIrComposer
 	{
 		const string TypeReplacementsVariableName = "jni_remapping_type_replacements";
 		const string ReverseTypeReplacementsVariableName = "jni_remapping_reverse_type_replacements";
@@ -385,11 +385,11 @@ namespace Xamarin.Android.Tasks
 		public int ReplacementMethodIndexEntryCount { get; private set; } = 0;
 		public int ReplacementFieldIndexEntryCount { get; private set; } = 0;
 
-		public JniRemappingAssemblyGenerator (TaskLoggingHelper log)
+		public JniRemappingNativeCodeGenerator (TaskLoggingHelper log)
 			: base (log)
 		{}
 
-		public JniRemappingAssemblyGenerator (TaskLoggingHelper log,
+		public JniRemappingNativeCodeGenerator (TaskLoggingHelper log,
 		                                      List<JniRemappingTypeReplacement> typeReplacements,
 		                                      List<JniRemappingTypeReplacement> reverseTypeReplacements,
 		                                      List<JniRemappingMethodReplacement> methodReplacements,

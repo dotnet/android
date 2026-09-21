@@ -889,6 +889,85 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
+  <data name="XA4327" xml:space="preserve">
+    <value>Failed to generate the R8 JNI remapping data. {0}</value>
+    <comment>The following are literal names and should not be translated: R8, JNI.
+{0} - A sentence describing the specific failure.</comment>
+  </data>
+  <data name="XA4327_MappingNotFound" xml:space="preserve">
+    <value>The R8 mapping file '{0}' was not found.</value>
+    <comment>The following is a literal name and should not be translated: R8.
+{0} - The path of the missing mapping file.</comment>
+  </data>
+  <data name="XA4327_MappingDataFailure" xml:space="preserve">
+    <value>The R8 mapping file '{0}' could not be read: {1}</value>
+    <comment>The following is a literal name and should not be translated: R8.
+{0} - The path of the mapping file.
+{1} - The exception message.</comment>
+  </data>
+  <data name="XA4327_AssemblyReadFailure" xml:space="preserve">
+    <value>The linked managed assembly '{0}' could not be read: {1}</value>
+    <comment>{0} - The path of the managed assembly.
+{1} - The exception message.</comment>
+  </data>
+  <data name="XA4327_AmbiguousEntry" xml:space="preserve">
+    <value>The generated '{0}' entries for '{1}' have conflicting runtime targets '{2}' and '{3}', which cannot be represented by the JNI remapping tables.</value>
+    <comment>The following is a literal name and should not be translated: JNI.
+{0} - The XML element name.
+{1} - The runtime lookup key.
+{2} - The first target.
+{3} - The conflicting target.</comment>
+  </data>
+  <data name="XA4327_NativeAotObjectRequired" xml:space="preserve">
+    <value>NativeAOT JNI retention requires an existing post-ILC NativeAotObjectFile; '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, JNI, ILC, NativeAotObjectFile.
+{0} - The path of the missing ILC native object, or an empty string if none was supplied.</comment>
+  </data>
+  <data name="XA4327_NativeAotObjectReadFailure" xml:space="preserve">
+    <value>The NativeAOT retention object '{0}' could not be read: {1}</value>
+    <comment>The following is a literal name and should not be translated: NativeAOT.
+{0} - The path of the ILC native object.
+{1} - The exception message.</comment>
+  </data>
+  <data name="XA4327_NativeAotModeRequired" xml:space="preserve">
+    <value>NativeAotObjectFile requires NativeAot=true.</value>
+    <comment>The following are literal names and should not be translated: NativeAotObjectFile, NativeAot=true.</comment>
+  </data>
+  <data name="XA4327_NativeAotObjectFormat" xml:space="preserve">
+    <value>Expected a 32-bit or 64-bit little-endian relocatable NativeAOT ELF object.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
+  </data>
+  <data name="XA4327_NativeAotInvalidSection" xml:space="preserve">
+    <value>The NativeAOT ELF object contains an invalid section extent.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
+  </data>
+  <data name="XA4327_NativeAotTruncatedSection" xml:space="preserve">
+    <value>The NativeAOT ELF object contains truncated section data.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, ELF.</comment>
+  </data>
+  <data name="XA4327_NativeAotMissingSections" xml:space="preserve">
+    <value>The NativeAOT object must contain allocated __managedcode and initialized data sections.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, __managedcode.</comment>
+  </data>
+  <data name="XA4328" xml:space="preserve">
+    <value>The R8 JNI remapping data is incomplete. {0}</value>
+    <comment>The following are literal names and should not be translated: R8, JNI.
+{0} - A sentence describing the specific omission.</comment>
+  </data>
+  <data name="XA4328_ConflictingEntry" xml:space="preserve">
+    <value>The '{0}' entry for '{1}' was not emitted: another JNI remapping input already maps it to '{2}', which conflicts with '{3}'.</value>
+    <comment>The following is a literal name and should not be translated: JNI.
+{0} - The XML element name.
+{1} - The source lookup key.
+{2} - The existing target.
+{3} - The generated target.</comment>
+  </data>
+  <data name="XA4328_UnsupportedSignature" xml:space="preserve">
+    <value>The entry for '{0}' was not emitted: its signature '{1}' could not be converted to a JNI descriptor.</value>
+    <comment>The following is a literal name and should not be translated: JNI.
+{0} - The member the entry describes.
+{1} - The Java signature which could not be converted.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
