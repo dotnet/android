@@ -147,7 +147,9 @@ public class TypeMapProguardTests : IDisposable
 		Assert.Equal (firstTime, File.GetLastWriteTimeUtc (keys));
 		Assert.Equal (rulesTime, File.GetLastWriteTimeUtc (rules));
 		Assert.Equal (membersTime, File.GetLastWriteTimeUtc (members));
-		Assert.Contains (members, File.ReadAllText (Path.Combine (directory, "writes.txt")));
+		Assert.Contains (
+			members.Replace ('\\', '/'),
+			File.ReadAllText (Path.Combine (directory, "writes.txt")).Replace ('\\', '/'));
 
 		Build (project, "-p:OneAbi=true");
 		Assert.Equal ("test/Live\n", File.ReadAllText (keys));
@@ -245,7 +247,9 @@ public class TypeMapProguardTests : IDisposable
 		var members = Path.Combine (directory, "obj", "proguard", "proguard_typemap_members.cfg");
 		Build (project);
 		Assert.Equal ("-keep class test.Llvm\n", File.ReadAllText (rules));
-		Assert.Contains ("Members=" + members, File.ReadAllText (Path.Combine (directory, "writes.txt")));
+		Assert.Contains (
+			"Members=" + members.Replace ('\\', '/'),
+			File.ReadAllText (Path.Combine (directory, "writes.txt")).Replace ('\\', '/'));
 		Build (project, "-p:_AndroidRuntime=NativeAOT", "-p:AndroidTypeMapImplementation=trimmable", "-p:_AndroidEnableTypemapR8Trimming=true");
 		Assert.Equal ("-keep class test.Native\n", File.ReadAllText (rules));
 		Assert.DoesNotContain ("Members=" + members, File.ReadAllText (Path.Combine (directory, "writes.txt")));
