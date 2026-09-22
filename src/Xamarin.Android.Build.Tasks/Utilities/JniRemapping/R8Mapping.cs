@@ -30,6 +30,9 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		// Original JNI class name -> (original field name -> obfuscated field name).
 		readonly Dictionary<string, Dictionary<string, string>> fields = new Dictionary<string, Dictionary<string, string>> (StringComparer.Ordinal);
 
+		// Original JNI class name -> (original field name -> declared field type, in Java source form).
+		readonly Dictionary<string, Dictionary<string, string>> fieldTypes = new Dictionary<string, Dictionary<string, string>> (StringComparer.Ordinal);
+
 		// Original JNI class name -> ("name(javaParam,javaParam,...):javaReturn" -> obfuscated method name).
 		readonly Dictionary<string, Dictionary<string, string>> methods = new Dictionary<string, Dictionary<string, string>> (StringComparer.Ordinal);
 
@@ -136,6 +139,10 @@ namespace Xamarin.Android.Tasks.JniRemapping
 						mapping.fields [currentOriginalClass] = classFields = new Dictionary<string, string> (StringComparer.Ordinal);
 					}
 					classFields [memberName] = obfuscatedName;
+					if (!mapping.fieldTypes.TryGetValue (currentOriginalClass, out var classFieldTypes)) {
+						mapping.fieldTypes [currentOriginalClass] = classFieldTypes = new Dictionary<string, string> (StringComparer.Ordinal);
+					}
+					classFieldTypes [memberName] = javaReturnType ?? "";
 				} else {
 					string key = BuildMethodKey (memberName, javaParameterTypes, javaReturnType ?? "");
 					if (positionRange == null) {
@@ -465,6 +472,86 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			}
 		}
 
+		/// <summary>
+		/// Enumerates surviving class mappings and their unambiguous member mappings in stable
+		/// ordinal order without recording them as accessed.
+		/// </summary>
+		internal IEnumerable<R8ClassMapping> EnumerateClassMappings ()
+		{
+			var originalClassNames = new List<string> (classes.Keys);
+			originalClassNames.Sort (StringComparer.Ordinal);
+			foreach (string originalClassName in originalClassNames) {
+				string obfuscatedClassName = classes [originalClassName];
+				if (IsRemovedClassName (obfuscatedClassName)) {
+					continue;
+				}
+				yield return new R8ClassMapping (
+					originalClassName,
+					obfuscatedClassName,
+					EnumerateFieldMappings (originalClassName),
+					EnumerateMethodMappings (originalClassName));
+			}
+		}
+
+		List<R8FieldMapping> EnumerateFieldMappings (string originalClassName)
+		{
+			var result = new List<R8FieldMapping> ();
+			if (!fields.TryGetValue (originalClassName, out var classFields)) {
+				return result;
+			}
+
+			var fieldNames = new List<string> (classFields.Keys);
+			fieldNames.Sort (StringComparer.Ordinal);
+			fieldTypes.TryGetValue (originalClassName, out var classFieldTypes);
+			foreach (string fieldName in fieldNames) {
+				string javaFieldType = "";
+				classFieldTypes?.TryGetValue (fieldName, out javaFieldType);
+				result.Add (new R8FieldMapping (fieldName, classFields [fieldName], javaFieldType ?? ""));
+			}
+			return result;
+		}
+
+		List<R8MethodMapping> EnumerateMethodMappings (string originalClassName)
+		{
+			var result = new List<R8MethodMapping> ();
+			if (!methods.TryGetValue (originalClassName, out var classMethods)) {
+				return result;
+			}
+
+			var methodKeys = new List<string> (classMethods.Keys);
+			methodKeys.Sort (StringComparer.Ordinal);
+			foreach (string methodKey in methodKeys) {
+				string obfuscatedName = classMethods [methodKey];
+				if (obfuscatedName.Length == 0) {
+					continue;
+				}
+				if (!TrySplitMethodKey (methodKey, out string name, out string [] javaParameterTypes, out string javaReturnType)) {
+					continue;
+				}
+				result.Add (new R8MethodMapping (name, obfuscatedName, javaParameterTypes, javaReturnType));
+			}
+			return result;
+		}
+
+		internal static bool TrySplitMethodKey (string methodKey, out string javaMethodName, out string [] javaParameterTypes, out string javaReturnType)
+		{
+			javaMethodName = "";
+			javaParameterTypes = [];
+			javaReturnType = "";
+
+			int parenOpen = methodKey.IndexOf ('(');
+			int parenClose = methodKey.LastIndexOf ("):", StringComparison.Ordinal);
+			if (parenOpen < 0 || parenClose < parenOpen) {
+				return false;
+			}
+
+			javaMethodName = methodKey.Substring (0, parenOpen);
+			string parameterList = methodKey.Substring (parenOpen + 1, parenClose - parenOpen - 1);
+			javaParameterTypes = parameterList.Length == 0 ? [] : parameterList.Split (',');
+			javaReturnType = methodKey.Substring (parenClose + 2);
+			return javaMethodName.Length != 0;
+		}
+
 		internal static string BuildClassEntry (string className) => $"C\t{className}";
 		internal static string BuildFieldEntry (string className, string fieldName) => $"F\t{className}\t{fieldName}";
 		internal static string BuildMethodEntry (string className, string methodKey) => $"M\t{className}\t{methodKey}";
@@ -742,7 +829,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 				name = left.Substring (lastSpace + 1);
 				javaParameterTypes = null;
-				javaReturnType = null;
+				javaReturnType = left.Substring (0, lastSpace);
 				return name.Length > 0;
 			}
 		}
@@ -808,6 +895,58 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 			// Only one trailing number - ":originalStartLine".
 			return s.Substring (0, lastColon);
+		}
+	}
+
+	sealed class R8ClassMapping
+	{
+		public string OriginalJniName { get; }
+		public string ObfuscatedJniName { get; }
+		public IReadOnlyList<R8FieldMapping> Fields { get; }
+		public IReadOnlyList<R8MethodMapping> Methods { get; }
+
+		public bool IsRenamed => !String.Equals (OriginalJniName, ObfuscatedJniName, StringComparison.Ordinal);
+
+		public R8ClassMapping (string originalJniName, string obfuscatedJniName, IReadOnlyList<R8FieldMapping> fields, IReadOnlyList<R8MethodMapping> methods)
+		{
+			OriginalJniName = originalJniName;
+			ObfuscatedJniName = obfuscatedJniName;
+			Fields = fields;
+			Methods = methods;
+		}
+	}
+
+	sealed class R8FieldMapping
+	{
+		public string OriginalName { get; }
+		public string ObfuscatedName { get; }
+		public string JavaFieldType { get; }
+
+		public bool IsRenamed => !String.Equals (OriginalName, ObfuscatedName, StringComparison.Ordinal);
+
+		public R8FieldMapping (string originalName, string obfuscatedName, string javaFieldType)
+		{
+			OriginalName = originalName;
+			ObfuscatedName = obfuscatedName;
+			JavaFieldType = javaFieldType;
+		}
+	}
+
+	sealed class R8MethodMapping
+	{
+		public string OriginalName { get; }
+		public string ObfuscatedName { get; }
+		public IReadOnlyList<string> JavaParameterTypes { get; }
+		public string JavaReturnType { get; }
+
+		public bool IsRenamed => !String.Equals (OriginalName, ObfuscatedName, StringComparison.Ordinal);
+
+		public R8MethodMapping (string originalName, string obfuscatedName, IReadOnlyList<string> javaParameterTypes, string javaReturnType)
+		{
+			OriginalName = originalName;
+			ObfuscatedName = obfuscatedName;
+			JavaParameterTypes = javaParameterTypes;
+			JavaReturnType = javaReturnType;
 		}
 	}
 }
