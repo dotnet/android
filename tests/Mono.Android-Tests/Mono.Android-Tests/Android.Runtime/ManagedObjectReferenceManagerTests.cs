@@ -27,6 +27,10 @@ namespace Xamarin.Android.RuntimeTests {
 			typeof (global::Android.Runtime.AndroidEnvironment).Assembly.GetType ("Android.Runtime.ReferenceLogEvent", throwOnError: true)
 				?? throw new InvalidOperationException ("ReferenceLogEvent type was not found.");
 
+		static Type JNIEnvInitType =>
+			typeof (global::Android.Runtime.AndroidEnvironment).Assembly.GetType ("Android.Runtime.JNIEnvInit", throwOnError: true)
+				?? throw new InvalidOperationException ("JNIEnvInit type was not found.");
+
 		static MethodInfo GetMethod (string name)
 		{
 			return ManagerType.GetMethod (name, BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic)
@@ -135,6 +139,40 @@ namespace Xamarin.Android.RuntimeTests {
 
 			Assert.AreEqual (1, globalCount);
 			Assert.AreEqual (0, arguments [1]);
+		}
+
+		[Test]
+		public void InitializesMaxGrefCountsFromArguments ()
+		{
+			Type argsType = JNIEnvInitType.GetNestedType ("JnienvInitializeArgs", BindingFlags.NonPublic)
+				?? throw new InvalidOperationException ("JnienvInitializeArgs type was not found.");
+			object args = Activator.CreateInstance (argsType)
+				?? throw new InvalidOperationException ("JnienvInitializeArgs could not be created.");
+			FieldInfo thresholdField = argsType.GetField ("grefGcThreshold")
+				?? throw new InvalidOperationException ("grefGcThreshold field was not found.");
+			FieldInfo maximumField = argsType.GetField ("maxGrefCount")
+				?? throw new InvalidOperationException ("maxGrefCount field was not found.");
+			FieldInfo storedThresholdField = JNIEnvInitType.GetField ("gref_gc_threshold", BindingFlags.Static | BindingFlags.NonPublic)
+				?? throw new InvalidOperationException ("gref_gc_threshold field was not found.");
+			FieldInfo storedMaximumField = JNIEnvInitType.GetField ("max_gref_count", BindingFlags.Static | BindingFlags.NonPublic)
+				?? throw new InvalidOperationException ("max_gref_count field was not found.");
+			MethodInfo initialize = JNIEnvInitType.GetMethod ("InitializeMaxGrefCounts", BindingFlags.Static | BindingFlags.NonPublic)
+				?? throw new InvalidOperationException ("InitializeMaxGrefCounts method was not found.");
+			object? previousThreshold = storedThresholdField.GetValue (null);
+			object? previousMaximum = storedMaximumField.GetValue (null);
+
+			try {
+				thresholdField.SetValue (args, 1800);
+				maximumField.SetValue (args, 2000);
+
+				initialize.Invoke (null, [args]);
+
+				Assert.AreEqual (1800, storedThresholdField.GetValue (null));
+				Assert.AreEqual (2000, storedMaximumField.GetValue (null));
+			} finally {
+				storedThresholdField.SetValue (null, previousThreshold);
+				storedMaximumField.SetValue (null, previousMaximum);
+			}
 		}
 
 		[Test]

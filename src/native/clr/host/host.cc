@@ -498,6 +498,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
+	init.maxGrefCount                                   = static_cast<int>(AndroidSystem::get_max_gref_count ());
 	init.grefClass                                      = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_Class"sv, true);
 	Class_getName                                       = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
 

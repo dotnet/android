@@ -43,9 +43,6 @@ namespace {
 		if (entrypoint_name == "_monodroid_lookup_replacement_method_info"sv) {
 			return reinterpret_cast<void*> (&_monodroid_lookup_replacement_method_info);
 		}
-		if (entrypoint_name == "_monodroid_max_gref_get"sv) {
-			return reinterpret_cast<void*> (&_monodroid_max_gref_get);
-		}
 		if (entrypoint_name == "_monodroid_register_reference_logging_callbacks"sv) {
 			return reinterpret_cast<void*> (&_monodroid_register_reference_logging_callbacks);
 		}

@@ -43,6 +43,7 @@ namespace Android.Runtime
 			public byte            lightLref;
 			public byte            grefToLogcat;
 			public byte            lrefToLogcat;
+			public int             maxGrefCount;
 		}
 #pragma warning restore 0649
 
@@ -51,6 +52,7 @@ namespace Android.Runtime
 		internal static bool PropagateExceptions;
 		internal static BoundExceptionType BoundExceptionType;
 		internal static int gref_gc_threshold;
+		internal static int max_gref_count;
 		internal static IntPtr grefIGCUserPeer_class;
 		internal static IntPtr grefGCUserPeerable_class;
 		internal static IntPtr java_class_loader;
@@ -90,19 +92,16 @@ namespace Android.Runtime
 			androidRuntime.TypeManager.RegisterNativeMembers (jniType, type, methods);
 		}
 
-		// This must be called by NativeAOT before InitializeJniRuntime, as early as possible
-		internal static void NativeAotInitializeMaxGrefGet ()
-		{
-			gref_gc_threshold = RuntimeNativeMethods._monodroid_max_gref_get ();
-			if (gref_gc_threshold != int.MaxValue) {
-				gref_gc_threshold = checked((gref_gc_threshold * 9) / 10);
-			}
-		}
-
 		internal static void InitializeBeforeRuntimeCreation (JnienvInitializeArgs args)
 		{
 			InitializeCommonState (args);
 			InitializeTrimmableTypeMapDataIfNeeded ();
+		}
+
+		internal static void InitializeMaxGrefCounts (JnienvInitializeArgs args)
+		{
+			gref_gc_threshold = args.grefGcThreshold;
+			max_gref_count = args.maxGrefCount;
 		}
 
 		// NOTE: should have different name than `Initialize` to avoid:
@@ -219,7 +218,11 @@ namespace Android.Runtime
 		{
 			Logger.SetLogCategories ((LogCategories)args.logCategories);
 
-			gref_gc_threshold = args.grefGcThreshold;
+			if (RuntimeFeature.IsMonoRuntime) {
+				gref_gc_threshold = args.grefGcThreshold;
+			} else {
+				InitializeMaxGrefCounts (args);
+			}
 			jniRemappingInUse = args.jniRemappingInUse;
 			MarshalMethodsEnabled = args.marshalMethodsEnabled;
 			java_class_loader = args.grefLoader;

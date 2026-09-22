@@ -2,7 +2,6 @@
 #include <host/host-common.hh>
 #include <host/os-bridge.hh>
 #include <host/typemap.hh>
-#include <runtime-base/android-system.hh>
 #include <runtime-base/cpu-arch.hh>
 #include <runtime-base/internal-pinvokes.hh>
 #include <runtime-base/jni-remapping.hh>
@@ -57,11 +56,6 @@ char* monodroid_TypeManager_get_java_class_name (jclass klass) noexcept
 void monodroid_free (void *ptr) noexcept
 {
 	free (ptr);
-}
-
-int _monodroid_max_gref_get () noexcept
-{
-	return static_cast<int>(AndroidSystem::get_max_gref_count ());
 }
 
 void _monodroid_register_reference_logging_callbacks (reference_log_fn log_callback, reference_log_message_fn message_callback, uint8_t log_reference_metadata) noexcept

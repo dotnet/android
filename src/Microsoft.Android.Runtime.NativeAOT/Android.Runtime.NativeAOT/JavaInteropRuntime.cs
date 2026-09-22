@@ -11,21 +11,16 @@ static partial class JavaInteropRuntime
 
 	[LibraryImport ("xa-internal-api")]
 	[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-	private static partial int XA_Host_NativeAOT_JNI_OnLoad (IntPtr vm, IntPtr reserved);
+	private static partial int XA_Host_NativeAOT_JNI_OnLoad (IntPtr vm, IntPtr reserved, ref JNIEnvInit.JnienvInitializeArgs initArgs);
 
 	[UnmanagedCallersOnly (EntryPoint="JNI_OnLoad")]
 	static int JNI_OnLoad (IntPtr vm, IntPtr reserved)
 	{
 		try {
 			AndroidLog.Print (AndroidLogLevel.Info, "JavaInteropRuntime", "JNI_OnLoad()");
-			XA_Host_NativeAOT_JNI_OnLoad (vm, reserved);
-			// This must be called before anything else, otherwise we'll see several spurious GC invocations and log messages
-			// similar to:
-			//
-			//  09-15 14:51:01.311 11071 11071 D monodroid-gc: 1 outstanding GREFs. Performing a full GC!
-			//
-			JNIEnvInit.NativeAotInitializeMaxGrefGet ();
-
+			var initArgs = new JNIEnvInit.JnienvInitializeArgs ();
+			XA_Host_NativeAOT_JNI_OnLoad (vm, reserved, ref initArgs);
+			JNIEnvInit.InitializeMaxGrefCounts (initArgs);
 			LogcatTextWriter.Init ();
 			return (int) JniVersion.v1_6;
 		}

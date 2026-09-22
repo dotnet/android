@@ -63,6 +63,7 @@ namespace xamarin::android {
 		uint8_t         lightLref;
 		uint8_t         grefToLogcat;
 		uint8_t         lrefToLogcat;
+		int              maxGrefCount;
 	};
 
 	// Keep the enum values in sync with those in src/Mono.Android/AndroidRuntime/BoundExceptionType.cs

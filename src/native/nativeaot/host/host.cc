@@ -82,6 +82,7 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 
 	initArgs->logCategories = log_categories;
 	initArgs->grefGcThreshold = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
+	initArgs->maxGrefCount = static_cast<int>(AndroidSystem::get_max_gref_count ());
 	initArgs->grefIGCUserPeer = env->NewGlobalRef (lrefIGCUserPeer);
 	initArgs->grefGCUserPeerable = env->NewGlobalRef (lrefGCUserPeerable);
 	initArgs->grefLogPath = Logger::gref_log_path ();

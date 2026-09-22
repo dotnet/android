@@ -26,7 +26,6 @@ extern "C" {
 	xamarin::android::managed_timing_sequence* monodroid_timing_start (const char *message);
 	void monodroid_timing_stop (xamarin::android::managed_timing_sequence *sequence, const char *message);
 
-	int _monodroid_max_gref_get () noexcept;
 	void _monodroid_register_reference_logging_callbacks (xamarin::android::reference_log_fn log_callback, xamarin::android::reference_log_message_fn message_callback, uint8_t log_reference_metadata) noexcept;
 	void _monodroid_gc_wait_for_bridge_processing ();
 	void _monodroid_detect_cpu_and_architecture (unsigned short *built_for_cpu, unsigned short *running_on_cpu, unsigned char *is64bit);
