@@ -23,7 +23,6 @@ namespace Xamarin.Android.Build.Tests
 		[TearDown]
 		public void ClearDebugProperties ()
 		{
-			ClearDebugProperty ();
 		}
 
 		void SetTargetFrameworkAndManifest(XamarinAndroidApplicationProject proj, Builder builder, int? apiLevelOverride)
@@ -99,7 +98,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ClassLibraryMainLauncherRuns ([Values] bool preloadAssemblies, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void ClassLibraryMainLauncherRuns ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -138,7 +137,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 			app.SetRuntime (runtime);
 			app.SetDefaultTargetDevice ();
-			app.SetProperty ("AndroidEnablePreloadAssemblies", preloadAssemblies.ToString ());
 
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "MyLibrary"

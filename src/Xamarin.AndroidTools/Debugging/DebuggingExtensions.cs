@@ -30,12 +30,14 @@ namespace Xamarin.AndroidTools.Debugging
 		/// </summary>
 		public async static Task StartWithDebuggingAsync(this IAndroidDevice device, ExecutionConfiguration configuration, CancellationToken token)
 		{
+			if (!configuration.AllowJavaDebugging) {
+				throw new NotSupportedException ("Mono soft-debugger startup is no longer supported.");
+			}
+
 			// TODO: refactor IAndroidDevice some more to remove casts
 			var androidDevice = (AndroidDevice)device;
 
 			await androidDevice.ExecuteAndLogCommandAsync(configuration.BeforeRunCommand, configuration.LogWiter, token).ConfigureAwait(false);
-
-			await device.SetDebugPropertiesAsync(configuration.PackageName, configuration.Debugger, token).ConfigureAwait(false);
 
 			// add --include-stopped-packages if it's not present on broadcast commands because otherwise we won't start anything anyway
 			if (configuration.RunCommand is AmBroadcastCommand) {
@@ -43,25 +45,27 @@ namespace Xamarin.AndroidTools.Debugging
 			}
 
 			bool javaDebugging = false;
-			if (configuration.AllowJavaDebugging && configuration.RunCommand is AmStartCommand) {
-				var cmd = ((AmStartCommand)configuration.RunCommand);
-				if (androidDevice.IsWSA() || androidDevice.IsEmulator) // force -D for WSA and Emulators
+			if (configuration.RunCommand is AmStartCommand cmd) {
+				if (androidDevice.IsWSA() || androidDevice.IsEmulator) {
 					cmd.EnableDebugging = true;
+				}
 				javaDebugging = cmd.EnableDebugging;
 			}
 
 			// if the startCommand is null it is because there is no activity to start, in which case
 			// we will return a completed task and the user will have to manually start up the process
-			if (configuration.RunCommand == null)
+			if (configuration.RunCommand == null) {
 				return;
+			}
 
 			if (configuration.LogWiter != null) {
 				configuration.LogWiter(configuration.RunCommand.ToString());
 			}
 
 			await androidDevice.ExecuteIntentCommandAsync(configuration.RunCommand, configuration.LogWiter, token).ConfigureAwait(false);
-			if (javaDebugging)
+			if (javaDebugging) {
 				await androidDevice.ConnectJdwpAsync (configuration, token).ConfigureAwait(false);
+			}
 		}
 
 		/// <summary>
@@ -73,13 +77,6 @@ namespace Xamarin.AndroidTools.Debugging
 			var androidDevice = (AndroidDevice)device;
 
 			await androidDevice.ExecuteAndLogCommandAsync(configuration.BeforeRunCommand, configuration.LogWiter, token).ConfigureAwait(false);
-
-			// reset the debug timeout in case the user tries to run after debugging within the 30 second time window
-			await androidDevice.SetProperty("debug.mono.extra", string.Empty, token).ConfigureAwait(false);
-
-			// clear the fast dev property file
-			await androidDevice.SetFastDevPropertyFile(configuration.PackageName, "debug.mono.extra", string.Empty, token).ConfigureAwait(false);
-			token.ThrowIfCancellationRequested();
 
 			// add --include-stopped-packages if it's not present on broadcast commands because otherwise we won't start anything anyway
 			if (configuration.RunCommand is AmBroadcastCommand)
@@ -93,34 +90,6 @@ namespace Xamarin.AndroidTools.Debugging
 			}
 
 			await androidDevice.ExecuteIntentCommandAsync(configuration.RunCommand, configuration.LogWiter, token).ConfigureAwait(false);
-		}
-
-		/// <summary>
-		/// Returns a Task which sets up the debug property and sets the fast dev property for the given package
-		/// </summary>
-		public async static Task SetDebugPropertiesAsync(this IAndroidDevice device, string packageName, DebuggerOptions options, CancellationToken token)
-		{
-			if (string.IsNullOrEmpty(packageName))
-				throw new ArgumentException(nameof(packageName));
-
-			// TODO: refactor IAndroidDevice some more to remove casts
-			var androidDevice = (AndroidDevice)device;
-
-			const int loglevel = 0;
-
-			// Get the time the device thinks it is, and add options.Timeout seconds (defaults to 30)
-			long expire_date = (await androidDevice.GetDate(token).ConfigureAwait(false)) + (int)options.Timeout.TotalSeconds;
-
-			string endpoint = options.StdoutPort > -1
-				? string.Format("{0}:{1}:{2}", options.Address, options.SdbPort, options.StdoutPort)
-				: string.Format("{0}:{1}", options.Address, options.SdbPort);
-
-			// Set property to tell the device to launch in debug mode
-			string debugArg = string.Format("debug={0},timeout={1},loglevel={2},server={3}", endpoint, expire_date, loglevel, options.Server ? "y" : "n");
-
-			await androidDevice.SetProperty("debug.mono.extra", debugArg, token).ConfigureAwait(false);
-
-			await androidDevice.SetFastDevPropertyFile(packageName, "debug.mono.extra", debugArg, token).ConfigureAwait(false);
 		}
 
 		/// <summary>

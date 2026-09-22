@@ -2,12 +2,8 @@
 
 Tips and tricks while developing .NET for Android.
 
-The update-directory guidance in this page applies to Android fast deployment
-for both MonoVM and CoreCLR applications. The `libmonosgen-2.0.so`, Mono
-runtime-pack, and `debug.mono.*` examples are MonoVM-specific historical
-guidance. They apply to .NET 10 and earlier Mono applications and to
-supported explicit MonoVM builds. Ordinary .NET 11 and later Android
-applications use CoreCLR; use the CoreCLR diagnostics and runtime guidance in the
+The update-directory guidance in this page applies to Android fast deployment.
+Use the CoreCLR diagnostics and runtime guidance in the
 [tracing](../guides/tracing.md) and
 [custom Android system properties](SystemProperties.md) documentation instead.
 
@@ -484,7 +480,7 @@ copying `.nupkg` files to the `library-packs` directory of a given
 The `library-packs` directory is simply an implicit NuGet feed that is
 automatically picked up by the .NET SDK.
 
-## Enabling Mono Logging
+## Enabling Runtime Logging
 
 ### The easy way
 
@@ -499,8 +495,7 @@ If successful, messages printed to the screen will show location
 of the logcat file with the logged messages.
 
 Verbosity of logging can be increased by setting the `$(RunLogVerbose)`
-property to `true`. The target selects `debug.mono.log` for MonoVM and
-`debug.dotnet.log` for CoreCLR and NativeAOT.
+property to `true`. The target configures `debug.dotnet.log`.
 
 By default, the target will wait for a 1000ms before it dumps the
 logcat buffer to file.  This is to give the Android logging daemon
@@ -511,53 +506,30 @@ the target should wait before creating the log file.
 
 ### The manual way
 
-Since [6e58ce4][6e58ce4], logging from Mono is no longer enabled by
-default. You can set the `debug.mono.log` system property to answer
-questions like: Is AOT working? Is the Mono Interpreter enabled?
-
-If you wanted to enable logging for AOT, for example:
+Set `debug.dotnet.log` to a comma-separated list of runtime categories:
 
 ```bash
-$ adb shell setprop debug.mono.log mono_log_level=debug,mono_log_mask=aot
+$ adb shell setprop debug.dotnet.log default,timing=bare,assembly,gc,debugger
 ```
 
-You could use `mono_log_mask=all` to enable all logging. See the [Mono
-documentation][mono-logging] for more information about
-`MONO_LOG_LEVEL` and `MONO_LOG_MASK`.  You can specify more than one
-category as the value of `mono_log-mask`, in which case individual
-categories need to be separated with `:`, for instance:
+Use `all` to enable every category:
 
 ```bash
-$ adb shell setprop debug.mono.log mono_log_level=debug,mono_log_mask=gc:asm:dll
+$ adb shell setprop debug.dotnet.log all
 ```
 
-There is further logging produced by `libmonodroid.so` you can enable with:
+To unset `debug.dotnet.log`, run:
 
 ```bash
-$ adb shell setprop debug.mono.log=default,timing=bare,assembly,gc,debugger
-```
-
-You can combine both together. The following would log nearly everything:
-
-```bash
-$ adb shell setprop debug.mono.log=default,timing=bare,assembly,gc,debugger,mono_log_level=debug,mono_log_mask=aot
-```
-
-To unset `debug.mono.log`, you can do:
-
-```bash
-$ adb shell setprop debug.mono.log "''"
+$ adb shell setprop debug.dotnet.log "''"
 ```
 
 You could also reboot the device or emulator to completely clear all
 system properties.
 
-The `debug.mono.log` system property can also be set in an
+The `debug.dotnet.log` system property can also be set in an
 `@(AndroidEnvironment)` text file. However, the system property will
 be preferred if it is not blank.
-
-[mono-logging]: https://www.mono-project.com/docs/advanced/runtime/logging-runtime-events/
-[6e58ce4]: https://github.com/dotnet/android/commit/6e58ce405d00a965f3c206e2d509f5a5343b16f7
 
 ## Installing .NET MAUI
 

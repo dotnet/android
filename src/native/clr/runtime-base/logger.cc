@@ -105,9 +105,6 @@ Logger::init_logging_categories () noexcept
 	char value[Constants::PROPERTY_VALUE_BUFFER_LEN];
 	const char *categories = AndroidSystem::monodroid_get_system_property (Constants::DEBUG_DOTNET_LOG_PROPERTY.data (), value, sizeof (value));
 	if (categories == nullptr) {
-		categories = AndroidSystem::monodroid_get_system_property (Constants::LEGACY_DEBUG_MONO_LOG_PROPERTY.data (), value, sizeof (value));
-	}
-	if (categories == nullptr) {
 		return;
 	}
 

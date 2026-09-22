@@ -6,11 +6,8 @@ give you CPU sampling information about the time spent in each method in your
 application. This is useful for finding *where* time is spent during startup
 or general application execution.
 
-The workflow in this section is for CoreCLR applications in .NET 11 and later.
 CoreCLR EventPipe diagnostics use the runtime diagnostic server and configured
-TCP diagnostic ports. MonoVM applications retain the historical
-`debug.mono.profile` and Mono diagnostic-component guidance described later
-in this page.
+TCP diagnostic ports.
 
 To use `dotnet-trace` on Android, the following tools/components work
 together to make this happen:
@@ -23,9 +20,6 @@ together to make this happen:
 
 * [`dotnet-gcdump`][dotnet-gcdump] is a .NET global tool that can be
   used to collect memory dumps of .NET applications.
-
-* The Mono Diagnostic component, `libmono-component-diagnostics_tracing.so`,
-  is included in MonoVM applications and is used to collect the trace data.
 
 * CoreCLR's EventPipe diagnostic server is included in .NET 11 and later
   applications and communicates with the diagnostic tools through
@@ -191,8 +185,7 @@ The `$(DiagnosticAddress)`, `$(DiagnosticPort)`, `$(DiagnosticSuspend)`,
 and `$(DiagnosticListenMode)` MSBuild properties configure the
 `DOTNET_DiagnosticPorts` environment variable packaged in the application.
 `$(DiagnosticConfiguration)` can be used to provide the complete value.
-Nonempty `Diagnostic*` settings implicitly enable Android diagnostics when
-`$(AndroidEnableProfiler)` is not explicitly set to `false`.
+Nonempty `Diagnostic*` settings implicitly enable Android diagnostics.
 
 For CoreCLR, these MSBuild properties are the primary diagnostic-port
 configuration. `debug.dotnet.profile` is not a diagnostic-port setting; its
@@ -259,10 +252,8 @@ Unix by opening them with [https://speedscope.app/][speedscope].
 
 For CoreCLR applications, set the Android SDK/MSBuild
 `$(EnableDiagnostics)` property to `true`, or set one of the
-`Diagnostic*` properties. `$(AndroidEnableProfiler)` is the legacy synonym
-retained for compatibility. These settings configure the CoreCLR diagnostic
-server and `DOTNET_DiagnosticPorts`; they do not add the Mono diagnostic
-component.
+`Diagnostic*` properties. These settings configure the CoreCLR diagnostic
+server and `DOTNET_DiagnosticPorts`.
 
 ```sh
 $ dotnet build -f net11.0-android -t:Run -c Release -p:EnableDiagnostics=true
@@ -312,8 +303,7 @@ application project:
 
 `$(EnableDiagnostics)` is additionally required only for out-of-process
 collection with tools such as `dotnet-trace`. It enables the diagnostic
-transport; for MonoVM it also packages the `diagnostics_tracing` component.
-`$(AndroidEnableProfiler)` remains its legacy synonym.
+transport.
 
 The GC bridge instrumentation defines the following events:
 
@@ -372,10 +362,6 @@ open this file in Visual Studio on Windows, for example:
 
 ## Memory Dumps for Android in .NET 8+
 
-The following `debug.mono.profile` workflow is retained for MonoVM
-applications. Use the CoreCLR diagnostic-port workflow above for ordinary
-.NET 11 and later Android applications.
-
 In .NET 8, we have a simplified method for collecing `*.gcdump` files for
 Android applications. To get this data from an Android application, you need all
 the above setup for `adb shell`, `dsrouter`, etc. except you need to simply use
@@ -386,57 +372,6 @@ $ dotnet-gcdump collect -p 38604
 ```
 
 This will create a `*.gcdump` file in the current directory.
-
-Note that using `nosuspend` in the `debug.mono.profile` property is
-useful, as it won't block application startup.
-
-## Memory Dumps for Android in .NET 7
-
-This is the historical MonoVM workflow for .NET 7 applications. It is not
-the CoreCLR EventPipe workflow used by ordinary .NET 11 and later Android
-applications.
-
-In .NET 7, we have to use th older, more complicated method for collecting
-`*.gcdump` files for Android applications. To get this data from an Android
-application, you need all the above setup for `adb shell`, `dsrouter`, etc.
-
-```sh
-$ dotnet-trace collect --diagnostic-port /tmp/maui-app --providers Microsoft-DotNETRuntimeMonoProfiler:0xC900001:4
-```
-
-`0xC900001`, a bitmask, enables the following event types:
-
-* `GCKeyword`
-* `GCHeapCollectKeyword`
-* `GCRootKeyword`
-
-See the [`Microsoft-DotNETRuntimeMonoProfiler` event types][mono-events] for more info.
-
-`:4` enables "Informational" verbosity, where the different logging
-levels are described by [`dotnet-trace help` output][dotnet-trace-help].
-
-This saves a `.nettrace` file with GC events that are not available
-with the default provider.
-
-To actually view this data, you'll have to use one of:
-
-* https://github.com/lateralusX/diagnostics-nettrace-samples
-* https://github.com/filipnavara/mono-gcdump
-
-Using `mono-gcdump`:
-
-```sh
-$ dotnet run --project path/to/filipnavara/mono-gcdump/mono-gcdump.csproj -- convert foo.nettrace
-```
-
-This saves a `foo.gcdump` that you can open in Visual Studio.
-
-See the [dotnet/runtime documentation][gc-dumps-on-mono] for
-additional details.
-
-[mono-events]: https://github.com/dotnet/runtime/blob/c887c92d8af4ce65b19962b777f96ae8eb997a42/src/coreclr/vm/ClrEtwAll.man#L7433-L7468
-[dotnet-trace-help]: https://github.com/dotnet/diagnostics/blob/6d755e8b5435b1380c118e9d81e075654b0330c9/documentation/dotnet-trace-instructions.md#dotnet-trace-help
-[gc-dumps-on-mono]: https://github.com/dotnet/runtime/blob/728fd85bc7ad04f5a0ea2ad0d4d8afe371ff9b64/docs/design/mono/diagnostics-tracing.md#collect-gc-dumps-on-monovm
 
 ## How to `dotnet trace` a Build?
 

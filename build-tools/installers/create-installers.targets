@@ -182,7 +182,6 @@
   <Import Project="unix-binutils.projitems" />
   <ItemGroup>
     <_MSBuildFilesUnix Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\illinkanalyzer" Permission="755" />
-    <_MSBuildFilesUnix Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\jit-times" Permission="755" />
     <_MSBuildFilesUnix Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\mono.config" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\aapt2" />
     <_MSBuildFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)libZipSharpNative-*.$(LibExtension)" />

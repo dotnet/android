@@ -85,7 +85,6 @@
     <Project Path="external/Java.Interop/tools/class-parse/class-parse.csproj" />
     <Project Path="external/Java.Interop/tools/java-source-utils/java-source-utils.csproj" />
     <Project Path="external/Java.Interop/tools/jcw-gen/jcw-gen.csproj" />
-    <Project Path="tools/jit-times/jit-times.csproj" />
     <Project Path="tools/relnote-gen/relnote-gen.csproj" />
     <Project Path="tools/tmt/tmt.csproj">
       <Platform Solution="*|Any CPU" Project="anycpu" />

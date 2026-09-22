@@ -1000,15 +1000,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Support for the &apos;MONO_GC_PARAMS=bridge-implementation=old&apos; value will be removed in .NET 7..
-        /// </summary>
-        public static string XA2000_gcParams_bridgeImpl {
-            get {
-                return ResourceManager.GetString("XA2000_gcParams_bridgeImpl", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Source file &apos;{0}&apos; could not be found..
         /// </summary>
         public static string XA2001 {

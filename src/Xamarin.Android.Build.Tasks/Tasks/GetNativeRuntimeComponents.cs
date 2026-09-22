@@ -13,8 +13,6 @@ public class GetNativeRuntimeComponents : AndroidTask
 {
 	public override string TaskPrefix => "GNRC";
 
-	public ITaskItem[]? MonoComponents { get; set; }
-
 	[Required]
 	public ITaskItem[] ResolvedNativeArchives { get; set; } = [];
 
@@ -40,7 +38,7 @@ public class GetNativeRuntimeComponents : AndroidTask
 
 	public override bool RunTask ()
 	{
-		var components = new NativeRuntimeComponents (MonoComponents);
+		var components = new NativeRuntimeComponents ();
 		var uniqueAbis = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 		var archives = new List<ITaskItem> ();
 		var symbolsToExport = new List<ITaskItem> ();

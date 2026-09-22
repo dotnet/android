@@ -27,8 +27,6 @@ public sealed class GenerateNativeAotBootstrapSources : AndroidTask
 
 	public ITaskItem []? Environments { get; set; }
 
-	public bool EnableSGenConcurrent { get; set; }
-
 	// Names of the extra per-process runtime providers (e.g. NativeAotRuntimeProvider_1) that the
 	// manifest declares for components with a non-default android:process; their Java sources must be
 	// generated too. On the legacy path GenerateAdditionalProviderSources writes these; the trimmable
@@ -38,7 +36,7 @@ public sealed class GenerateNativeAotBootstrapSources : AndroidTask
 	public override bool RunTask ()
 	{
 		GenerateAdditionalProviderSources.GenerateNativeAotBootstrapFiles (
-			Log, OutputDirectory, TargetName, Environments, EnableSGenConcurrent);
+			Log, OutputDirectory, TargetName, Environments);
 
 		GenerateAdditionalProviderSources.WriteAdditionalRuntimeProviderSources (OutputDirectory, isCoreCLR: false, AdditionalProviderSources);
 

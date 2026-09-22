@@ -132,7 +132,6 @@
         AdditionalProviderSources="@(_AdditionalProviderSources)"
         AndroidRuntime="$(_AndroidRuntime)"
         Environments="@(_EnvironmentFiles)"
-        EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
         CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
         IntermediateOutputDirectory="$(IntermediateOutputPath)"
         OutputDirectory="$(IntermediateOutputPath)android"

@@ -184,9 +184,16 @@ namespace Mono.AndroidTools
 			}
 		}
 
+		public string DotNetLog {
+			get {
+				return Get ("debug.dotnet.log");
+			}
+		}
+
+		[Obsolete ("Use DotNetLog.")]
 		public string MonoLog {
 			get {
-				return Get ("debug.mono.log");
+				return DotNetLog;
 			}
 		}
 	}

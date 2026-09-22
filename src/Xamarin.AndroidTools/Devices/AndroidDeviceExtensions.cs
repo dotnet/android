@@ -248,66 +248,34 @@ public static class AndroidDeviceExtensions
 		}
 	}
 
-	[Obsolete ("Use StartWithDebuggingAsync")]
+	[Obsolete ("Mono soft debugging is no longer supported.")]
 	public static Task StartActivityWithDebugging (this AndroidDevice device, string package, string activity,
 		IPAddress address, int sdbPort, int stdoutPort, bool server)
 	{
 		return StartActivityWithDebugging (device, package, activity, address, sdbPort, stdoutPort, server, CancellationToken.None);
 	}
 
-	[Obsolete("Use StartWithDebuggingAsync")]
-	public async static Task StartActivityWithDebugging (this AndroidDevice device, string package, string activity,
+	[Obsolete ("Mono soft debugging is no longer supported.")]
+	public static Task StartActivityWithDebugging (this AndroidDevice device, string package, string activity,
         IPAddress address, int sdbPort, int stdoutPort, bool server, CancellationToken token)
 	{
-		var androidDevice = (IAndroidDevice)device;
-
-		var debuggerOptions = new DebuggerOptions(address, sdbPort, stdoutPort, server);
-
-		await androidDevice.SetDebugPropertiesAsync(package, debuggerOptions, token).ConfigureAwait(false);
-
-		// if the startCommand is null it is because there is no activity to start, in which case
-		// we will return a completed task and the user will have to manually start up the process
-		if (string.IsNullOrEmpty(activity))
-			return;
-
-		var command = new AmStartCommand(package, activity);
-		command.Action = command.Action ?? "android.intent.action.MAIN";
-		command.Categories = command.Categories ?? new[] { "android.intent.category.LAUNCHER" };
-		await device.ExecuteIntentCommandAsync(command, null, token).ConfigureAwait(false);
+		return Task.FromException (new NotSupportedException ("Mono soft-debugger startup is no longer supported."));
 	}
 
-	[Obsolete ("Use SetDebugPropertiesAsync")]
+	[Obsolete ("Mono soft debugging is no longer supported.")]
 	public static Task SetDebugProperties (this AndroidDevice device, IPAddress address, int sdbPort, int stdoutPort,
 		bool server, CancellationToken token)
 	{
-		return SetDebugProperties (device, null, address, sdbPort, stdoutPort, server, token);
+		return Task.FromException (new NotSupportedException ("Mono soft-debugger startup is no longer supported."));
 	}
 
 	/// <summary>
 	/// Returns a Task which sets up the debug property
 	/// </summary>
-	[Obsolete ("Use SetDebugPropertiesAsync")]
+	[Obsolete ("Mono soft debugging is no longer supported.")]
 	public static Task SetDebugProperties (this AndroidDevice device, AmStartCommand  startCommand, IPAddress address, int sdbPort, int stdoutPort, bool server, CancellationToken token)
 	{
-		const int loglevel = 0;
-
-		// Get the time the device thinks it is, and add 30 seconds
-		return device.GetDate (token).ContinueWith (t => {
-			long expire_date = t.Result + 30; // 30 seconds
-			string endpoint = stdoutPort > -1
-				? string.Format ("{0}:{1}:{2}", address, sdbPort, stdoutPort)
-				: string.Format ("{0}:{1}", address, sdbPort);
-
-			// Set property to tell the device to launch in debug mode
-			string debugArg = string.Format (
-				                  "debug={0},timeout={1},loglevel={2},server={3}",
-				                  endpoint, expire_date, loglevel, server ? "y" : "n"
-			                  );
-
-			return device.SetProperty ("debug.mono.extra", debugArg, token).ContinueWith (r => {
-				return device.SetFastDevPropertyFile (startCommand?.PackageName, "debug.mono.extra", debugArg, token);
-			}, token, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default).Unwrap ();
-		}, token, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default).Unwrap ();
+		return Task.FromException (new NotSupportedException ("Mono soft-debugger startup is no longer supported."));
 	}
 
 	public static Task StartActivityWithoutDebugging (this AndroidDevice device, string package, string activity)
@@ -322,19 +290,11 @@ public static class AndroidDeviceExtensions
 
 	public static Task StartActivityWithoutDebugging (this AndroidDevice device, AmStartCommand startCommand, CancellationToken token = default(CancellationToken))
 	{
-		// In case the user is quick and the 30 second timeout is still valid, we'll go ahead and reset it
-		return device.SetProperty ("debug.mono.extra", string.Empty, token).ContinueWith (r => {
-			return device.SetFastDevPropertyFile (startCommand?.PackageName, "debug.mono.extra", string.Empty, token);
-		}).ContinueWith (t => {
-			if (t.IsFaulted)
-				throw t.Exception;
-			token.ThrowIfCancellationRequested ();
-			// Launch the activity
-			var command = new AmStartCommand (startCommand);
-			command.Action = command.Action ?? "android.intent.action.MAIN";
-			command.Categories = command.Categories ?? new [] {"android.intent.category.LAUNCHER"};
-			return device.ExecuteIntentCommandAsync (command, null, token);
-		}, token, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default).Unwrap ();
+		token.ThrowIfCancellationRequested ();
+		var command = new AmStartCommand (startCommand);
+		command.Action = command.Action ?? "android.intent.action.MAIN";
+		command.Categories = command.Categories ?? new [] {"android.intent.category.LAUNCHER"};
+		return device.ExecuteIntentCommandAsync (command, null, token);
 	}
 
 	public static Task SetFastDevPropertyFile (this AndroidDevice device, string package, string property, string value,

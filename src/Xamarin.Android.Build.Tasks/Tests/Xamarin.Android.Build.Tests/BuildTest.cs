@@ -1668,27 +1668,29 @@ namespace UnnamedProject
 			var ret = new List<object[]> ();
 
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData ("LowercaseMD5", "", runtime, runtime == AndroidRuntime.CoreCLR);
-				AddTestData ("LowercaseCrc64", "", runtime, false);
-				AddTestData ("", "127.0.0.1:9000,suspend,connect", runtime, false);
+				AddTestData ("LowercaseMD5", "", runtime, runtime == AndroidRuntime.CoreCLR, enableDiagnostics: false);
+				AddTestData ("LowercaseCrc64", "", runtime, enableCrashReport: false, enableDiagnostics: false);
+				AddTestData ("", "127.0.0.1:9000,suspend,connect", runtime, enableCrashReport: false, enableDiagnostics: false);
+				AddTestData ("", "", runtime, enableCrashReport: false, enableDiagnostics: true);
 			}
 
 			return ret;
 
-			void AddTestData (string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport)
+			void AddTestData (string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport, bool enableDiagnostics)
 			{
 				ret.Add (new object[] {
 					packageNamingPolicy,
 					diagnosticConfiguration,
 					runtime,
 					enableCrashReport,
+					enableDiagnostics,
 				});
 			}
 		}
 
 		[Test]
 		[TestCaseSource (nameof (Get_EnvironmentVariablesData))]
-		public void EnvironmentVariables (string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport)
+		public void EnvironmentVariables (string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport, bool enableDiagnostics)
 		{
 			// NativeAOT does not support debug builds, but environment file creation and contents are relevant to NativeAOT too.
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
@@ -1706,6 +1708,7 @@ namespace UnnamedProject
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("EnableCrashReport", enableCrashReport.ToString ());
+			proj.SetProperty ("EnableDiagnostics", enableDiagnostics.ToString ());
 			if (!string.IsNullOrEmpty (packageNamingPolicy))
 				proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
 			if (!string.IsNullOrEmpty (diagnosticConfiguration))
@@ -1714,13 +1717,13 @@ namespace UnnamedProject
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var environment = b.Output.GetIntermediaryPath (Path.Combine ("__environment__.txt"));
 				FileAssert.Exists (environment);
-				var values = new List<string> {
-					"mono.enable_assembly_preload=0",
-				};
+				var values = new List<string> ();
 				if (!isRelease)
 					values.Add ("DOTNET_MODIFIABLE_ASSEMBLIES=Debug");
 				if (!string.IsNullOrEmpty (diagnosticConfiguration))
 					values.Add ($"DOTNET_DiagnosticPorts={diagnosticConfiguration}");
+				else if (enableDiagnostics)
+					values.Add ("DOTNET_DiagnosticPorts=127.0.0.1:9000,connect,nosuspend");
 				if (enableCrashReport)
 					values.Add ("DOTNET_EnableCrashReport=1");
 				Assert.AreEqual (string.Join (Environment.NewLine, values), File.ReadAllText (environment).Trim ());
