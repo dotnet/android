@@ -23,6 +23,8 @@
     <AndroidJavaSource Include="../Xamarin.Android.McwGen-Tests/java/**/*.java" />
     <Compile Remove="TimingTests.cs" />
     <AndroidLibrary Include="../Xamarin.Android.McwGen-Tests/Jars/KotlinUnsignedTypes.jar" />
+    <EmbeddedResource Include="../PrecompiledThresholdConsumer/LegacyThresholdConsumer.dll"
+        LogicalName="Xamarin.Android.JcwGenTests.LegacyThresholdConsumer.dll" />
     <None Remove="Java\DefaultMethodsInterface.java" />
     <None Remove="Java\StaticMethodsInterface.java" />
   </ItemGroup>
