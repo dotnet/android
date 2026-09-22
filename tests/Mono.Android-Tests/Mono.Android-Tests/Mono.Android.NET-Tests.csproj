@@ -94,6 +94,7 @@
 
   <ItemGroup>
     <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootAssembly Include="Mono.Android-Test.Library.NET" RootMode="All" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
     <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
     <TrimmerRootAssembly Include="StartupHook" RootMode="All" Condition=" '$(StartupHookSupport)' == 'true' " />
     <TrimmerRootDescriptor Include="TrimmerRoots.xml" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
@@ -197,8 +198,6 @@
 
   <ItemGroup>
     <AndroidInterfaceDescription Include="Android.OS\IAidlProxyTest.aidl" />
-    <AndroidJavaSource Include="java/net/dot/android/test/*.java" />
-    <AndroidJavaSource Update="java/net/dot/android/test/InterfaceCollectionFixture.java" Bind="false" />
   </ItemGroup>
 
   <ItemGroup>

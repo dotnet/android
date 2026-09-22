@@ -113,8 +113,3 @@ namespace Java.InteropTests {
 		}
 	}
 }
-
-namespace Net.Dot.Android.Test {
-	partial class IValueProviderInvoker {
-	}
-}
