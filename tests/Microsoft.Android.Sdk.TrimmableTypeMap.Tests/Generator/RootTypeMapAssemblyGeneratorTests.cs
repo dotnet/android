@@ -200,6 +200,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var stream = GenerateRootAssembly (
 			[ "_App.TypeMap" ],
 			useSharedTypemapUniverse: false,
+			includeBuiltInValueTypeUniverses: false,
 			preGeneratedTypeMapNames: [ "_Mono.Android.TypeMap", "_Java.Interop.TypeMap" ]);
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();

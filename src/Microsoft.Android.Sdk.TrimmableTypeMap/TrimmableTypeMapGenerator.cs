@@ -67,9 +67,6 @@ public class TrimmableTypeMapGenerator
 			errorOnCustomJavaObject,
 			collectMarshalMethodsForNonAcw);
 		bool hasPeers = allPeers.Count > 0;
-		if (!hasPeers) {
-			logger.LogNoJavaPeerTypesFound ();
-		}
 		MarkFrameworkAssemblyPeers (allPeers, frameworkAssemblyNames);
 		bool validConstructors = ValidateConstructors (allPeers);
 		var manifestForRooting = PrepareManifestForRooting (manifestTemplate, manifestConfig);
@@ -91,6 +88,9 @@ public class TrimmableTypeMapGenerator
 		bool validJavaNames = ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass, manifestForRooting, preGeneratedJcwNames, preGeneratedJcwSource);
 		if (!validConstructors || !validJavaNames) {
 			return new TrimmableTypeMapResult ([], [], allPeers);
+		}
+		if (!hasPeers) {
+			logger.LogNoJavaPeerTypesFound ();
 		}
 
 		bool needsRootForPreGeneratedTypeMaps =
