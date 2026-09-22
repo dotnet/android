@@ -34,6 +34,8 @@ namespace Android.Runtime
 			public bool            jniRemappingInUse;
 			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
+			public IntPtr          propagateUncaughtExceptionFn;
+			public IntPtr          registerJniNativesFn;
 			public IntPtr          grefLogPath;
 			public IntPtr          lrefLogPath;
 			public IntPtr          referenceLogDirectory;
@@ -41,8 +43,6 @@ namespace Android.Runtime
 			public byte            lightLref;
 			public byte            grefToLogcat;
 			public byte            lrefToLogcat;
-			public IntPtr          propagateUncaughtExceptionFn;
-			public IntPtr          registerJniNativesFn;
 		}
 #pragma warning restore 0649
 
@@ -228,14 +228,16 @@ namespace Android.Runtime
 			grefIGCUserPeer_class = args.grefIGCUserPeer;
 			grefGCUserPeerable_class = args.grefGCUserPeerable;
 			PropagateExceptions = args.brokenExceptionTransitions == 0;
-			ReferenceLoggingConfiguration = new ReferenceLoggingConfiguration (
-				Marshal.PtrToStringUTF8 (args.grefLogPath),
-				Marshal.PtrToStringUTF8 (args.lrefLogPath),
-				Marshal.PtrToStringUTF8 (args.referenceLogDirectory),
-				args.lightGref != 0,
-				args.lightLref != 0,
-				args.grefToLogcat != 0,
-				args.lrefToLogcat != 0);
+			if (!RuntimeFeature.IsMonoRuntime) {
+				ReferenceLoggingConfiguration = new ReferenceLoggingConfiguration (
+					Marshal.PtrToStringUTF8 (args.grefLogPath),
+					Marshal.PtrToStringUTF8 (args.lrefLogPath),
+					Marshal.PtrToStringUTF8 (args.referenceLogDirectory),
+					args.lightGref != 0,
+					args.lightLref != 0,
+					args.grefToLogcat != 0,
+					args.lrefToLogcat != 0);
+			}
 
 			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args.packageNamingPolicy;
 		}

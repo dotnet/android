@@ -131,7 +131,7 @@
     <Compile Include="Android.OS\AidlProxyTests.cs" />
     <Compile Include="Android.OS\HandlerTest.cs" />
     <Compile Include="Android.Runtime\CharSequenceTest.cs" />
-    <Compile Include="Android.Runtime\AndroidObjectReferenceManagerTests.cs" />
+    <Compile Include="Android.Runtime\ManagedObjectReferenceManagerTests.cs" />
     <Compile Include="Android.Runtime\InputStreamInvokerTest.cs" />
     <Compile Include="Android.Runtime\JavaCollectionTest.cs" />
     <Compile Include="Android.Runtime\JnienvArrayMarshaling.cs" />

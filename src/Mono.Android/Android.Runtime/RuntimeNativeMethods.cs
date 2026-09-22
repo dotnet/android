@@ -36,6 +36,30 @@ namespace Android.Runtime
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial void monodroid_free (IntPtr ptr);
 
+		[LibraryImport (RuntimeConstants.InternalDllName)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial int _monodroid_gref_get ();
+
+		[LibraryImport (RuntimeConstants.InternalDllName)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial int _monodroid_gref_inc ();
+
+		[LibraryImport (RuntimeConstants.InternalDllName)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial int _monodroid_gref_dec ();
+
+		[LibraryImport (RuntimeConstants.InternalDllName)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial int _monodroid_weak_gref_get ();
+
+		[LibraryImport (RuntimeConstants.InternalDllName)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial int _monodroid_weak_gref_inc ();
+
+		[LibraryImport (RuntimeConstants.InternalDllName)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial int _monodroid_weak_gref_dec ();
+
 		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial IntPtr _monodroid_lookup_replacement_type (string jniSimpleReference);
@@ -55,6 +79,34 @@ namespace Android.Runtime
 		[LibraryImport (RuntimeConstants.InternalDllName)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial void _monodroid_gc_wait_for_bridge_processing ();
+
+		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial int _monodroid_gref_log (string message);
+
+		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial int _monodroid_gref_log_new (IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string? threadName, int threadId, string? from, int from_writable);
+
+		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial void _monodroid_gref_log_delete (IntPtr handle, byte type, string? threadName, int threadId, string? from, int from_writable);
+
+		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial void _monodroid_weak_gref_new (IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string? threadName, int threadId, string? from, int from_writable);
+
+		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial void _monodroid_weak_gref_delete (IntPtr handle, byte type, string? threadName, int threadId, string? from, int from_writable);
+
+		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial int _monodroid_lref_log_new (int lrefc, IntPtr handle, byte type, string? threadName, int threadId, string from, int from_writable);
+
+		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial void _monodroid_lref_log_delete (int lrefc, IntPtr handle, byte type, string? threadName, int threadId, string from, int from_writable);
 
 		[LibraryImport (RuntimeConstants.InternalDllName)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]

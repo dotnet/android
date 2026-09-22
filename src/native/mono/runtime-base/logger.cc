@@ -1,9 +1,11 @@
 #include <array>
+#include <cerrno>
 #include <cstdarg>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
 #include <strings.h>
+#include <unistd.h>
 
 #include <android/log.h>
 #include <mono/utils/mono-publib.h>
@@ -19,13 +21,49 @@ using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
 namespace {
+	FILE*
+	open_file (LogCategories category, const char *path, const char *override_dir, const char *filename)
+	{
+		char *p = NULL;
+		FILE *f;
+
+		if (path && access (path, W_OK) < 0) {
+			log_warn (category,
+				"Could not open path '{}' for logging (\"{}\"). Using '{}/{}' instead.",
+				optional_string (path),
+				strerror (errno),
+				optional_string (override_dir),
+				optional_string (filename)
+			);
+			path  = NULL;
+		}
+
+		if (!path) {
+			Util::create_public_directory (override_dir);
+			p     = Util::path_combine (override_dir, filename);
+			path  = p;
+		}
+
+		unlink (path);
+
+		f = Util::monodroid_fopen (path, "a");
+
+		if (f) {
+			Util::set_world_accessable (path);
+		} else {
+			log_warn (category, "Could not open path '{}' for logging: {}", optional_string (path), strerror (errno));
+		}
+
+		free (p);
+
+		return f;
+	}
+
+
 	const char *gref_file = nullptr;
 	const char *lref_file = nullptr;
-	const char *reference_log_dir = nullptr;
 	bool light_gref  = false;
 	bool light_lref  = false;
-	bool gref_to_logcat = false;
-	bool lref_to_logcat = false;
 }
 
 #if defined(DEBUG)
@@ -56,55 +94,18 @@ Logger::set_debugger_log_level (const char *level) noexcept
 void
 Logger::init_reference_logging (const char *override_dir) noexcept
 {
-	reference_log_dir = override_dir;
-}
+	if ((log_categories & LOG_GREF) != 0 && !light_gref) {
+		gref_log  = open_file (LOG_GREF, gref_file, override_dir, "grefs.txt");
+	}
 
-const char*
-Logger::gref_log_path () noexcept
-{
-	return gref_file;
-}
-
-const char*
-Logger::lref_log_path () noexcept
-{
-	return lref_file;
-}
-
-const char*
-Logger::reference_log_directory () noexcept
-{
-	return reference_log_dir;
-}
-
-bool
-Logger::light_gref_enabled () noexcept
-{
-	return light_gref;
-}
-
-bool
-Logger::light_lref_enabled () noexcept
-{
-	return light_lref;
-}
-
-bool
-Logger::gref_to_logcat_enabled () noexcept
-{
-	return gref_to_logcat;
-}
-
-bool
-Logger::lref_to_logcat_enabled () noexcept
-{
-	return lref_to_logcat;
-}
-
-bool
-Logger::gref_enabled () noexcept
-{
-	return (log_categories & LOG_GREF) != 0;
+	if ((log_categories & LOG_LREF) != 0 && !light_lref) {
+		// if both lref & gref have files specified, and they're the same path, reuse the FILE*.
+		if (lref_file != nullptr && strcmp (lref_file, gref_file != nullptr ? gref_file : "") == 0) {
+			lref_log  = gref_log;
+		} else {
+			lref_log  = open_file (LOG_LREF, lref_file, override_dir, "lrefs.txt");
+		}
+	}
 }
 
 [[gnu::always_inline]] bool

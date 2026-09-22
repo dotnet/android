@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace Xamarin.Android.RuntimeTests {
 
 	[TestFixture]
-	public class AndroidObjectReferenceManagerTests {
+	public class ManagedObjectReferenceManagerTests {
 		sealed class TrackingWriter : StringWriter {
 			public int DisposeCount { get; private set; }
 
@@ -20,8 +20,8 @@ namespace Xamarin.Android.RuntimeTests {
 		}
 
 		static Type ManagerType =>
-			typeof (global::Android.Runtime.AndroidEnvironment).Assembly.GetType ("Android.Runtime.AndroidObjectReferenceManager", throwOnError: true)
-				?? throw new InvalidOperationException ("AndroidObjectReferenceManager type was not found.");
+			typeof (global::Android.Runtime.AndroidEnvironment).Assembly.GetType ("Android.Runtime.ManagedObjectReferenceManager", throwOnError: true)
+				?? throw new InvalidOperationException ("ManagedObjectReferenceManager type was not found.");
 
 		static Type EventType =>
 			typeof (global::Android.Runtime.AndroidEnvironment).Assembly.GetType ("Android.Runtime.ReferenceLogEvent", throwOnError: true)
@@ -41,7 +41,7 @@ namespace Xamarin.Android.RuntimeTests {
 				binder: null,
 				args: [grefLog, lrefLog, false, false],
 				culture: CultureInfo.InvariantCulture)
-				?? throw new InvalidOperationException ("AndroidObjectReferenceManager could not be created.");
+				?? throw new InvalidOperationException ("ManagedObjectReferenceManager could not be created.");
 		}
 
 		static object GetEvent (string name)

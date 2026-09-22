@@ -5,7 +5,6 @@
 #include <mono/utils/mono-publib.h>
 #include <java-interop.h>
 #include <jni.h>
-#include <managed-interface.hh>
 
 #include "log_types.hh"
 #include <runtime-base/timing.hh>
@@ -16,7 +15,19 @@ int monodroid_embedded_assemblies_set_assemblies_prefix (const char *prefix);
 void monodroid_log (xamarin::android::LogLevel level, LogCategories category, const char *message);
 void monodroid_free (void *ptr);
 int _monodroid_max_gref_get ();
-void _monodroid_register_reference_logging_callbacks (xamarin::android::reference_log_fn log_callback, xamarin::android::reference_log_message_fn message_callback);
+int _monodroid_gref_get ();
+int _monodroid_gref_inc ();
+int _monodroid_gref_dec ();
+void _monodroid_gref_log (const char *message);
+int _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable);
+void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable);
+int _monodroid_weak_gref_get ();
+int _monodroid_weak_gref_inc ();
+int _monodroid_weak_gref_dec ();
+void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable);
+void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable);
+void _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char  *from, int from_writable);
+void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char  *from, int from_writable);
 void _monodroid_gc_wait_for_bridge_processing ();
 xamarin::android::managed_timing_sequence* monodroid_timing_start (const char *message);
 void monodroid_timing_stop (xamarin::android::managed_timing_sequence *sequence, const char *message);

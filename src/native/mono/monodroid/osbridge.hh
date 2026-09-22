@@ -6,7 +6,6 @@
 #include <mono/metadata/appdomain.h>
 #include <mono/metadata/sgen-bridge.h>
 
-#include <managed-interface.hh>
 #include "util.hh"
 
 namespace xamarin::android::internal
@@ -77,6 +76,21 @@ namespace xamarin::android::internal
 		void clear_mono_java_gc_bridge_info ();
 		jobject	lref_to_gref (JNIEnv *env, jobject lref);
 
+		int get_gc_gref_count () const
+		{
+			return gc_gref_count;
+		}
+
+		int get_gc_weak_gref_count () const
+		{
+			return gc_weak_gref_count;
+		}
+
+		int _monodroid_gref_inc ();
+		int _monodroid_gref_dec ();
+		int _monodroid_weak_gref_inc ();
+		int _monodroid_weak_gref_dec ();
+
 		const MonoJavaGCBridgeType& get_java_gc_bridge_type (uint32_t index)
 		{
 			if (index < NUM_XA_GC_BRIDGE_TYPES)
@@ -103,18 +117,13 @@ namespace xamarin::android::internal
 			return jvm;
 		}
 
-		void set_reference_logging_callbacks (reference_log_fn log_callback, reference_log_message_fn message_callback);
-		void log_reference (
-			ReferenceLogEvent kind,
-			jobject current_handle,
-			char current_type,
-			jobject new_handle,
-			char new_type,
-			const char *thread_name,
-			int thread_id,
-			const char *stack_trace);
-		void log_reference_message (const char *message);
-		void log_reference_messagef (const char *format, ...) __attribute__ ((format (printf, 2, 3)));
+		void _monodroid_gref_log (const char *message);
+		int _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable);
+		void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable);
+		void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable);
+		void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable);
+		void _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable);
+		void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable);
 		void monodroid_disable_gc_hooks ();
 		void register_gc_hooks ();
 		MonoGCBridgeObjectKind gc_bridge_class_kind (MonoClass *klass);
@@ -144,6 +153,8 @@ namespace xamarin::android::internal
 		MonoJavaGCBridgeInfo* get_gc_bridge_info_for_class (MonoClass *klass);
 		MonoJavaGCBridgeInfo* get_gc_bridge_info_for_object (MonoObject *object);
 		char get_object_ref_type (JNIEnv *env, void *handle);
+		char* _get_stack_trace_line_end (char *m);
+		void _write_stack_trace (FILE *to, char *from, LogCategories = LOG_NONE);
 		mono_bool take_global_ref_jni (JNIEnv *env, MonoObject *obj);
 		mono_bool take_weak_global_ref_jni (JNIEnv *env, MonoObject *obj);
 		mono_bool add_reference_jobject (JNIEnv *env, jobject handle, jobject reffed_handle);
@@ -165,9 +176,9 @@ namespace xamarin::android::internal
 		char* describe_target (AddReferenceTarget target);
 #endif
 	private:
+		int gc_gref_count = 0;
+		int gc_weak_gref_count = 0;
 		int gc_disabled = 0;
-		reference_log_fn reference_log_callback = nullptr;
-		reference_log_message_fn reference_log_message_callback = nullptr;
 
 		MonodroidBridgeProcessingInfo *domains_list = nullptr;
 

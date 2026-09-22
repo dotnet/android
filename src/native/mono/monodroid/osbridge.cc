@@ -1,4 +1,3 @@
-#include <cstdarg>
 #include <cstring>
 
 #include <sys/types.h>
@@ -166,62 +165,312 @@ OSBridge::get_object_ref_type (JNIEnv *env, void *handle)
 	}
 }
 
-void
-OSBridge::set_reference_logging_callbacks (reference_log_fn log_callback, reference_log_message_fn message_callback)
+int
+OSBridge::_monodroid_gref_inc ()
 {
-	abort_if_invalid_pointer_argument (log_callback, "log_callback");
-	abort_if_invalid_pointer_argument (message_callback, "message_callback");
-	reference_log_callback = log_callback;
-	reference_log_message_callback = message_callback;
+	return __sync_add_and_fetch (&gc_gref_count, 1);
+}
+
+int
+OSBridge::_monodroid_gref_dec ()
+{
+	return __sync_sub_and_fetch (&gc_gref_count, 1);
+}
+
+int
+OSBridge::_monodroid_weak_gref_inc ()
+{
+	return __sync_add_and_fetch (&gc_weak_gref_count, 1);
+}
+
+int
+OSBridge::_monodroid_weak_gref_dec ()
+{
+	return __sync_sub_and_fetch (&gc_weak_gref_count, 1);
+}
+
+char*
+OSBridge::_get_stack_trace_line_end (char *m)
+{
+	while (*m && *m != '\n')
+		m++;
+	return m;
 }
 
 void
-OSBridge::log_reference (
-	ReferenceLogEvent kind,
-	jobject current_handle,
-	char current_type,
-	jobject new_handle,
-	char new_type,
-	const char *thread_name,
-	int thread_id,
-	const char *stack_trace)
+OSBridge::_write_stack_trace (FILE *to, char *from, LogCategories category)
 {
-	abort_if_invalid_pointer_argument (reference_log_callback, "reference_log_callback");
-	reference_log_callback (
-		kind,
-		current_handle,
-		static_cast<uint8_t>(current_type),
-		new_handle,
-		static_cast<uint8_t>(new_type),
-		thread_name,
-		thread_id,
-		stack_trace);
+	char *n	= const_cast<char*> (from);
+
+	char c;
+	do {
+		char *m     = n;
+		char *end   = _get_stack_trace_line_end (m);
+
+		n       = end + 1;
+		c       = *end;
+		*end    = '\0';
+		if ((category == LOG_GREF && gref_to_logcat) ||
+				(category == LOG_LREF && lref_to_logcat)) {
+			log_debug (category, "{}", optional_string (m));
+		}
+		if (to != nullptr) {
+			fprintf (to, "%s\n", optional_string (m));
+			fflush (to);
+		}
+		*end    = c;
+	} while (c);
 }
 
 void
-OSBridge::log_reference_message (const char *message)
+OSBridge::_monodroid_gref_log (const char *message)
 {
-	if (!Logger::gref_enabled ()) [[likely]] {
-		return;
+	if (gref_to_logcat) {
+		log_debug (LOG_GREF, "{}", optional_string (message));
 	}
+	if (!gref_log)
+		return;
+	fprintf (gref_log, "%s", optional_string (message));
+	fflush (gref_log);
+}
 
-	abort_if_invalid_pointer_argument (reference_log_message_callback, "reference_log_message_callback");
-	reference_log_message_callback (message);
+int
+OSBridge::_monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable)
+{
+	int c = _monodroid_gref_inc ();
+	if ((log_categories & LOG_GREF) == 0)
+		return c;
+
+	log_info (LOG_GREF,
+		"+g+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})",
+		c,
+		gc_weak_gref_count,
+		reinterpret_cast<void*>(curHandle),
+		curType,
+		reinterpret_cast<void*>(newHandle),
+		newType,
+		optional_string (threadName),
+		threadId
+	);
+	if (gref_to_logcat) {
+		if (from_writable) {
+			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		} else {
+			log_info (LOG_GREF, "{}", optional_string (from));
+		}
+	}
+	if (!gref_log)
+		return c;
+	fprintf (gref_log, "+g+ grefc %i gwrefc %i obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%i)\n",
+	         c,
+	         gc_weak_gref_count,
+	         curHandle,
+	         curType,
+	         newHandle,
+	         newType,
+	         optional_string (threadName),
+	         threadId);
+	if (from_writable)
+		_write_stack_trace (gref_log, const_cast<char*>(from));
+	else
+		fprintf (gref_log, "%s\n", from);
+
+	fflush (gref_log);
+
+	return c;
 }
 
 void
-OSBridge::log_reference_messagef (const char *format, ...)
+OSBridge::_monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
 {
-	if (!Logger::gref_enabled ()) [[likely]] {
+	int c = _monodroid_gref_dec ();
+	if ((log_categories & LOG_GREF) == 0)
 		return;
+	log_info (LOG_GREF,
+		"-g- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})",
+		c,
+		gc_weak_gref_count,
+		reinterpret_cast<void*>(handle),
+		type,
+		optional_string (threadName),
+		threadId
+	);
+	if (gref_to_logcat) {
+		if (from_writable) {
+			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		} else {
+			log_info (LOG_GREF, "{}", optional_string (from));
+		}
 	}
+	if (!gref_log)
+		return;
+	fprintf (gref_log, "-g- grefc %i gwrefc %i handle %p/%c from thread '%s'(%i)\n",
+	         c,
+	         gc_weak_gref_count,
+	         handle,
+	         type,
+	         optional_string (threadName),
+	         threadId);
+	if (from_writable)
+		_write_stack_trace (gref_log, const_cast<char*>(from));
+	else
+		fprintf (gref_log, "%s\n", optional_string (from));
 
-	va_list args;
-	va_start (args, format);
-	char *message = Util::monodroid_strdup_vprintf (format, args);
-	va_end (args);
-	log_reference_message (message);
-	free (message);
+	fflush (gref_log);
+}
+
+void
+OSBridge::_monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable)
+{
+	int c = _monodroid_weak_gref_inc ();
+	if ((log_categories & LOG_GREF) == 0)
+		return;
+	log_info (LOG_GREF,
+		"+w+ grefc {} gwrefc {} obj-handle {:p}/{} -> new-handle {:p}/{} from thread '{}'({})",
+		gc_gref_count,
+		c,
+		reinterpret_cast<void*>(curHandle),
+		curType,
+		reinterpret_cast<void*>(newHandle),
+		newType,
+		optional_string (threadName),
+		threadId
+	);
+	if (gref_to_logcat) {
+		if (from_writable) {
+			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		} else {
+			log_info (LOG_GREF, "{}", optional_string (from));
+		}
+	}
+	if (!gref_log)
+		return;
+	fprintf (gref_log, "+w+ grefc %i gwrefc %i obj-handle %p/%c -> new-handle %p/%c from thread '%s'(%i)\n",
+	         gc_gref_count,
+	         c,
+	         curHandle,
+	         curType,
+	         newHandle,
+	         newType,
+	         optional_string (threadName),
+	         threadId);
+	if (from_writable)
+		_write_stack_trace (gref_log, const_cast<char*>(from));
+	else
+		fprintf (gref_log, "%s\n", optional_string (from));
+
+	fflush (gref_log);
+}
+
+void
+OSBridge::_monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
+{
+	int c = _monodroid_weak_gref_dec ();
+	if ((log_categories & LOG_GREF) == 0)
+		return;
+	log_info (LOG_GREF,
+		"-w- grefc {} gwrefc {} handle {:p}/{} from thread '{}'({})",
+		gc_gref_count,
+		c,
+		reinterpret_cast<void*>(handle),
+		type,
+		optional_string (threadName),
+		threadId
+	);
+	if (gref_to_logcat) {
+		if (from_writable) {
+			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		} else {
+			log_info (LOG_GREF, "{}", optional_string (from));
+		}
+	}
+	if (!gref_log)
+		return;
+	fprintf (gref_log, "-w- grefc %i gwrefc %i handle %p/%c from thread '%s'(%i)\n",
+	         gc_gref_count,
+	         c,
+	         handle,
+	         type,
+	         optional_string (threadName),
+	         threadId);
+	if (from_writable)
+		_write_stack_trace (gref_log, const_cast<char*>(from));
+	else
+		fprintf (gref_log, "%s\n", optional_string (from));
+
+	fflush (gref_log);
+}
+
+void
+OSBridge::_monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
+{
+	if ((log_categories & LOG_LREF) == 0)
+		return;
+	log_info (LOG_LREF,
+		"+l+ lrefc {} handle {:p}/{} from thread '{}'({})",
+		lrefc,
+		reinterpret_cast<void*>(handle),
+		type,
+		optional_string (threadName),
+		threadId
+	);
+	if (lref_to_logcat) {
+		if (from_writable) {
+			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		} else {
+			log_info (LOG_GREF, "{}", optional_string (from));
+		}
+	}
+	if (!lref_log)
+		return;
+	fprintf (lref_log, "+l+ lrefc %i handle %p/%c from thread '%s'(%i)\n",
+	         lrefc,
+	         handle,
+	         type,
+	         optional_string (threadName),
+	         threadId);
+	if (from_writable)
+		_write_stack_trace (lref_log, const_cast<char*>(from));
+	else
+		fprintf (lref_log, "%s\n", optional_string (from));
+
+	fflush (lref_log);
+}
+
+void
+OSBridge::_monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
+{
+	if ((log_categories & LOG_LREF) == 0)
+		return;
+	log_info (LOG_LREF,
+		"-l- lrefc {} handle {:p}/{} from thread '{}'({})",
+		lrefc,
+		reinterpret_cast<void*>(handle),
+		type,
+		optional_string (threadName),
+		threadId
+	);
+	if (lref_to_logcat) {
+		if (from_writable) {
+			_write_stack_trace (nullptr, const_cast<char*>(from), LOG_GREF);
+		} else {
+			log_info (LOG_GREF, "{}", optional_string (from));
+		}
+	}
+	if (!lref_log)
+		return;
+	fprintf (lref_log, "-l- lrefc %i handle %p/%c from thread '%s'(%i)\n",
+	         lrefc,
+	         handle,
+	         type,
+	         optional_string (threadName),
+	         threadId);
+	if (from_writable)
+		_write_stack_trace (lref_log, const_cast<char*>(from));
+	else
+		fprintf (lref_log, "%s\n", optional_string (from));
+
+	fflush (lref_log);
 }
 
 void
@@ -242,40 +491,39 @@ OSBridge::take_global_ref_jni (JNIEnv *env, MonoObject *obj)
 
 	jobject weak = control_block->handle;
 	jobject handle = env->NewGlobalRef (weak);
-	log_reference_messagef ("*try_take_global obj=%p -> wref=%p handle=%p", obj, weak, handle);
+	if (gref_log) {
+		fprintf (gref_log, "*try_take_global obj=%p -> wref=%p handle=%p\n", obj, weak, handle);
+		fflush (gref_log);
+	}
 	if (handle) {
-		log_reference (
-			ReferenceLogEvent::GlobalCreated,
-			weak,
-			get_object_ref_type (env, weak),
-			handle,
-			get_object_ref_type (env, handle),
-			"finalizer",
-			gettid (),
-			"   at [[gc:take_global_ref_jni]]");
-	} else if (Logger::gc_spew_enabled () && Logger::gref_enabled ()) [[unlikely]] {
+		if ((log_categories & LOG_GREF) != 0) {
+			_monodroid_gref_log_new (weak, get_object_ref_type (env, weak),
+					handle, get_object_ref_type (env, handle),
+					"finalizer", gettid (),
+					"   at [[gc:take_global_ref_jni]]", 0);
+		} else {
+			_monodroid_gref_inc ();
+		}
+	} else if (Logger::gc_spew_enabled ()) [[unlikely]] {
 		MonoClass *klass = mono_object_get_class (obj);
 		char *message = Util::monodroid_strdup_printf (
 				"handle %p/W; MCW type: `%s.%s`: was collected by a Java GC",
 				weak,
 				mono_class_get_namespace (klass),
 				mono_class_get_name (klass));
-		log_reference_message (message);
+		_monodroid_gref_log (message);
 		free (message);
 	}
 
 	control_block->handle = handle;
 	control_block->handle_type = type;
 
-	log_reference (
-		ReferenceLogEvent::WeakGlobalDeleted,
-		weak,
-		get_object_ref_type (env, weak),
-		nullptr,
-		'I',
-		"finalizer",
-		gettid (),
-		"   at [[gc:take_global_ref_jni]]");
+	if ((log_categories & LOG_GREF) != 0) {
+		_monodroid_weak_gref_delete (weak, get_object_ref_type (env, weak),
+				"finalizer", gettid (), "   at [[gc:take_global_ref_jni]]", 0);
+	} else {
+		_monodroid_weak_gref_dec ();
+	}
 	env->DeleteWeakGlobalRef (weak);
 
 	return handle != nullptr;
@@ -292,31 +540,29 @@ OSBridge::take_weak_global_ref_jni (JNIEnv *env, MonoObject *obj)
 	}
 
 	jobject handle = control_block->handle;
-	log_reference_messagef ("*take_weak obj=%p; handle=%p", obj, handle);
+	if (gref_log) {
+		fprintf (gref_log, "*take_weak obj=%p; handle=%p\n", obj, handle);
+		fflush (gref_log);
+	}
 
 	jobject weak = env->NewWeakGlobalRef (handle);
-	log_reference (
-		ReferenceLogEvent::WeakGlobalCreated,
-		handle,
-		get_object_ref_type (env, handle),
-		weak,
-		get_object_ref_type (env, weak),
-		"finalizer",
-		gettid (),
-		"   at [[gc:take_weak_global_ref_jni]]");
+	if ((log_categories & LOG_GREF) != 0) {
+		_monodroid_weak_gref_new (handle, get_object_ref_type (env, handle),
+				weak, get_object_ref_type (env, weak),
+				"finalizer", gettid (), "   at [[gc:take_weak_global_ref_jni]]", 0);
+	} else {
+		_monodroid_weak_gref_inc ();
+	}
 
 	control_block->handle = weak;
 	control_block->handle_type = type;
 
-	log_reference (
-		ReferenceLogEvent::GlobalDeleted,
-		handle,
-		get_object_ref_type (env, handle),
-		nullptr,
-		'I',
-		"finalizer",
-		gettid (),
-		"   at [[gc:take_weak_global_ref_jni]]");
+	if ((log_categories & LOG_GREF) != 0) {
+		_monodroid_gref_log_delete (handle, get_object_ref_type (env, handle),
+				"finalizer", gettid (), "   at [[gc:take_weak_global_ref_jni]]", 0);
+	} else {
+		_monodroid_gref_dec ();
+	}
 	env->DeleteGlobalRef (handle);
 	return 1;
 }

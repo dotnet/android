@@ -49,11 +49,11 @@ namespace Android.Runtime {
 		WeakGlobalDeleted,
 	}
 
-	internal sealed class AndroidObjectReferenceManager : JniRuntime.JniObjectReferenceManager {
+	internal sealed class ManagedObjectReferenceManager : JniRuntime.JniObjectReferenceManager {
 		const string GrefLogTag = "monodroid-gref";
 		const string LrefLogTag = "monodroid-lref";
 
-		static AndroidObjectReferenceManager? current;
+		static ManagedObjectReferenceManager? current;
 
 		readonly object grefLock = new object ();
 		readonly object lrefLock = new object ();
@@ -71,7 +71,7 @@ namespace Android.Runtime {
 		public override bool LogGlobalReferenceMessages => Logger.LogGlobalRef;
 		public override bool LogLocalReferenceMessages => Logger.LogLocalRef;
 
-		public AndroidObjectReferenceManager ()
+		public ManagedObjectReferenceManager ()
 			: this (JNIEnvInit.ReferenceLoggingConfiguration)
 		{
 			Volatile.Write (ref current, this);
@@ -82,7 +82,7 @@ namespace Android.Runtime {
 			}
 		}
 
-		AndroidObjectReferenceManager (ReferenceLoggingConfiguration configuration)
+		ManagedObjectReferenceManager (ReferenceLoggingConfiguration configuration)
 		{
 			grefToLogcat = configuration.GrefToLogcat;
 			lrefToLogcat = configuration.LrefToLogcat;
@@ -113,7 +113,7 @@ namespace Android.Runtime {
 
 		}
 
-		internal AndroidObjectReferenceManager (TextWriter? grefLog, TextWriter? lrefLog, bool grefToLogcat = false, bool lrefToLogcat = false)
+		internal ManagedObjectReferenceManager (TextWriter? grefLog, TextWriter? lrefLog, bool grefToLogcat = false, bool lrefToLogcat = false)
 		{
 			if (grefLog != null && lrefLog != null && object.ReferenceEquals (grefLog, lrefLog)) {
 				this.grefLog = this.lrefLog = TextWriter.Synchronized (grefLog);

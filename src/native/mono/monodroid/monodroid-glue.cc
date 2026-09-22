@@ -828,13 +828,6 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 	init.jniAddNativeMethodRegistrationAttributePresent = application_config.jni_add_native_method_registration_attribute_present ? 1 : 0;
 	init.jniRemappingInUse = application_config.jni_remapping_replacement_type_count > 0 || application_config.jni_remapping_replacement_method_index_entry_count > 0;
 	init.marshalMethodsEnabled  = application_config.marshal_methods_enabled;
-	init.grefLogPath            = Logger::gref_log_path ();
-	init.lrefLogPath            = Logger::lref_log_path ();
-	init.referenceLogDirectory = Logger::reference_log_directory ();
-	init.lightGref              = Logger::light_gref_enabled () ? 1 : 0;
-	init.lightLref              = Logger::light_lref_enabled () ? 1 : 0;
-	init.grefToLogcat           = Logger::gref_to_logcat_enabled () ? 1 : 0;
-	init.lrefToLogcat           = Logger::lref_to_logcat_enabled () ? 1 : 0;
 
 	java_System_identityHashCode = env->GetStaticMethodID (java_System, "identityHashCode", "(Ljava/lang/Object;)I");
 
