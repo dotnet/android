@@ -26,7 +26,7 @@ namespace Xamarin.Android.Build.Tests
 		static readonly string [] CPlusPlusArchiveNames = [
 			"libc++_static.a",
 			"libc++abi.a",
-			"libunwind.a",
+			"libunwind.a", // Android NDK archive, unrelated to the removed bundled libunwind.
 		];
 
 		[TestCase ("armeabi-v7a")]
