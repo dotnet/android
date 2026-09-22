@@ -36,7 +36,10 @@ public class NativeLibraryLoadTests : DeviceTest
 				$$"""
 			// Blocking the main thread here verifies CoreCLR directly loads libraries missing from the
 			// build-time DSO cache instead of dispatching System.loadLibrary to the main thread.
-			var loadTask = Task.Run (NativeMethods.GetError);
+			var loadTask = Task.Run (() => {
+				System.Threading.Thread.Sleep (TimeSpan.FromMilliseconds (250));
+				return NativeMethods.GetError ();
+			});
 			if (!loadTask.Wait (TimeSpan.FromSeconds (2))) {
 				Android.Util.Log.Error ("NativeLibraryLoadTest", "{{timeoutMessage}}");
 				return;
