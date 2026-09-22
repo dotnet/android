@@ -216,6 +216,32 @@ namespace Java.InteropTests {
 		}
 
 		[Test]
+		public void DisposePeerUnlessReferenced_CallsManagedDispose ()
+		{
+			using var registered = new AnotherJavaInterfaceImpl ();
+			var lref = registered.PeerReference.NewLocalRef ();
+			try {
+				using var alias = valueManager.CreatePeer (
+						ref lref,
+						JniObjectReferenceOptions.Copy,
+						typeof (AnotherJavaInterfaceImpl)) as AnotherJavaInterfaceImpl
+					?? throw new InvalidOperationException ("Could not create peer alias.");
+
+				Assert.AreNotSame (registered, alias);
+				Assert.AreSame (registered, valueManager.PeekPeer (lref));
+
+				alias.DisposeUnlessReferenced ();
+
+				Assert.IsTrue (alias.DisposeCalled, "The unregistered alias should receive its managed disposal callback.");
+				Assert.IsFalse (alias.PeerReference.IsValid, "The unregistered alias should release its JNI reference.");
+				Assert.IsFalse (registered.DisposeCalled, "The registered peer should remain undisposed.");
+				Assert.IsTrue (registered.PeerReference.IsValid, "The registered peer should retain its JNI reference.");
+			} finally {
+				JniObjectReference.Dispose (ref lref);
+			}
+		}
+
+		[Test]
 		public void CreatePeer_ThrowsIfNoActivationConstructorPresent ()
 		{
 			using var v1    = new GetThis ();
@@ -429,6 +455,11 @@ namespace Java.InteropTests {
 
 		internal    static  readonly    JniPeerMembers  _members    = new JniPeerMembers (JniTypeName, typeof (AnotherJavaInterfaceImpl));
 
+		public bool DisposeCalled {
+			get;
+			private set;
+		}
+
 		public override JniPeerMembers JniPeerMembers {
 			get {return _members;}
 		}
@@ -445,6 +476,13 @@ namespace Java.InteropTests {
 			var peer = _members.InstanceMethods.StartCreateInstance (id, GetType (), null);
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 			_members.InstanceMethods.FinishCreateInstance (id, this, null);
+		}
+
+		protected override void Dispose (bool disposing)
+		{
+			if (disposing)
+				DisposeCalled = true;
+			base.Dispose (disposing);
 		}
 	}
 }

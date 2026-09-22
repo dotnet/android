@@ -153,7 +153,7 @@ namespace Java.Interop
 				if (o != null && object.ReferenceEquals (o, value))
 					return;
 
-				DisposePeer (h, value);
+				DisposePeer (value);
 			}
 
 			public object? PeekValue (JniObjectReference reference)

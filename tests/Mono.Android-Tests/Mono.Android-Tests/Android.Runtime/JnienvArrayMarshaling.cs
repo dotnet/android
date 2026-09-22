@@ -551,8 +551,8 @@ namespace Android.RuntimeTests {
 				Assert.IsTrue (first.PeerReference.IsValid, "The returned registered peer must remain usable.");
 				Assert.AreEqual (2, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ConstructorInvocations,
 					"Both callers should have raced through peer activation.");
-				Assert.AreEqual (0, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.DisposeInvocations,
-					"A peer handed back to a caller should not be disposed.");
+				Assert.AreEqual (1, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.DisposeInvocations,
+					"The losing alias should receive its managed disposal callback.");
 
 				var registered = Java.Interop.JniRuntime.CurrentRuntime.ValueManager.PeekPeer (reference);
 				Assert.IsNotNull (registered, "One of the racing peers should have won registration.");
@@ -561,6 +561,9 @@ namespace Android.RuntimeTests {
 				foreach (var peer in createdPeers) {
 					Assert.AreEqual (ReferenceEquals (peer, registered), peer.PeerReference.IsValid,
 						"Only the returned registered peer should retain a JNI reference.");
+					Assert.AreEqual (!ReferenceEquals (peer, registered),
+						peer.JniManagedPeerState.HasFlag (Java.Interop.JniManagedPeerStates.Disposed),
+						"Only the losing alias should receive its managed disposal callback.");
 				}
 
 				using (var objectArray = new Java.Lang.Object (
@@ -616,8 +619,8 @@ namespace Android.RuntimeTests {
 				Assert.AreSame (first, second, "Both converting callers should receive the registered peer.");
 				Assert.AreEqual (2, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ConstructorInvocations,
 					"Both callers should have raced through peer activation.");
-				Assert.AreEqual (0, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.DisposeInvocations,
-					"A peer handed back to a caller should not be disposed.");
+				Assert.AreEqual (1, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.DisposeInvocations,
+					"The losing alias should receive its managed disposal callback.");
 
 				// The race must not corrupt the registry: exactly one peer keeps the Java
 				// instance's identity. Before the fix the peer created second registered
@@ -629,6 +632,9 @@ namespace Android.RuntimeTests {
 				foreach (var peer in createdPeers) {
 					Assert.AreEqual (ReferenceEquals (peer, registered), peer.PeerReference.IsValid,
 						"Only the returned registered peer should retain a JNI reference.");
+					Assert.AreEqual (!ReferenceEquals (peer, registered),
+						peer.JniManagedPeerState.HasFlag (Java.Interop.JniManagedPeerStates.Disposed),
+						"Only the losing alias should receive its managed disposal callback.");
 				}
 			} finally {
 				Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ActivationBarrier = null;
