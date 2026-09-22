@@ -270,7 +270,6 @@ namespace Xamarin.Android.Build.Tests
 				new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (runtime);
 			proj.IsRelease = isRelease;
-			proj.AotAssemblies = false; // Release defaults to Profiled AOT for .NET 6
 			proj.SetRuntimeIdentifiers (new[] { "arm64-v8a" });
 			proj.SetProperty ("LinkerDumpDependencies", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", "False");
@@ -711,7 +710,6 @@ namespace Xamarin.Android.Build.Tests
 
 			//NOTE: these properties should not affect class libraries at all
 			proj.SetProperty ("AndroidPackageFormat", "aab");
-			proj.SetProperty ("AotAssemblies", "true");
 			proj.SetProperty ("AndroidEnableMultiDex", "true");
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -772,65 +770,26 @@ class MemTest {
 			}
 		}
 
-		static IEnumerable<object[]> Get_BuildBasicApplicationFSharpData ()
-		{
-			var ret = new List<object[]> ();
-
-			// TODO: AndroidRuntime.NativeAOT doesn't work yet. Fails with
-			//
-			//  error : Runtime critical type System.RuntimeMethodHandle not found
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR }) {
-				AddTestData (isRelease: false, aot: false, runtime);
-				AddTestData (isRelease: true,  aot: false, runtime);
-				AddTestData (isRelease: true,  aot: true,  runtime);
-			}
-
-			return ret;
-
-			void AddTestData (bool isRelease, bool aot, AndroidRuntime runtime)
-			{
-				ret.Add (new object[] {
-					isRelease,
-					aot,
-					runtime,
-				});
-			}
-		}
-
 		[Test]
-		[TestCaseSource (nameof (Get_BuildBasicApplicationFSharpData))]
 		[Category ("Minor"), Category ("FSharp")]
 		[NonParallelizable] // parallel NuGet restore causes failures
-		public void BuildBasicApplicationFSharp (bool isRelease, bool aot, AndroidRuntime runtime)
+		public void BuildBasicApplicationFSharp ([Values] bool isRelease)
 		{
-			if (runtime == AndroidRuntime.NativeAOT) {
-				if (!aot) {
-					Assert.Ignore ("NativeAOT disabled for !aot");
-					return;
-				}
-			} else if (runtime == AndroidRuntime.CoreCLR) {
-				if (aot) {
-					Assert.Ignore ("CoreCLR + AOT == NativeAOT");
-					return;
-				}
-			}
-
 			var proj = new XamarinAndroidApplicationProject {
 				Language = XamarinAndroidProjectLanguage.FSharp,
 				IsRelease = isRelease,
-				AotAssemblies = aot,
 			};
-			proj.SetRuntime (runtime);
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 		}
 
 		[Test]
 		[NonParallelizable]
-		public void BuildBasicApplicationAppCompat ([Values] bool publishAot, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildBasicApplicationAppCompat ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease, aot: publishAot)) {
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 

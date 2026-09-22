@@ -64,5 +64,24 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test]
+		[TestCase ("RunAOTCompilation")]
+		[TestCase ("EnableLLVM")]
+		public void UnsupportedMonoAotPropertyFailsBuild (string property)
+		{
+			var project = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			project.SetRuntime (AndroidRuntime.CoreCLR);
+			project.SetProperty (property, "true");
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (project), "Build should have failed.");
+			StringAssertEx.Contains ("error XA1044", builder.LastBuildOutput, "Build output should contain error XA1044");
+			StringAssertEx.Contains (property, builder.LastBuildOutput, $"Build output should mention {property}");
+			StringAssertEx.Contains ("CoreCLR", builder.LastBuildOutput, "Build output should mention CoreCLR");
+		}
+
 	}
 }

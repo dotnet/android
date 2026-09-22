@@ -27,7 +27,7 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("SmokeTests")]
 		[TestCaseSource (nameof (DotNetBuildSource))]
 		[NonParallelizable] // On MacOS, parallel /restore causes issues
-		public void DotNetBuild (string runtimeIdentifiers, bool isRelease, bool aot, bool usesAssemblyStore, AndroidRuntime runtime)
+		public void DotNetBuild (string runtimeIdentifiers, bool isRelease, bool usesAssemblyStore, AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -66,7 +66,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity")
 				.Replace ("//${AFTER_ONCREATE}", @"button.Text = Resource.CancelButton;");
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStore.ToString ());
-			proj.SetProperty ("RunAOTCompilation", aot.ToString ());
 			proj.OtherBuildItems.Add (new AndroidItem.InputJar ("javaclasses.jar") {
 				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 			});
@@ -195,10 +194,6 @@ namespace Xamarin.Android.Build.Tests
 				} else {
 					helper.AssertContainsEntry ("assemblies/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				}
-				if (aot) {
-					helper.AssertContainsEntry ($"lib/{abi}/libaot-{proj.ProjectName}.dll.so");
-					helper.AssertContainsEntry ($"lib/{abi}/libaot-Mono.Android.dll.so");
-				}
 			}
 
 			if (isRelease) {
@@ -243,7 +238,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 			if (perAbi) {
 				proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, true);
-				proj.SetProperty (proj.ReleaseProperties, KnownProperties.RunAOTCompilation, false);
 				proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
 				proj.Imports.Add (new Import (() => "ApplicationArtifactPerAbi.targets") {
 					TextContent = () => """
@@ -455,16 +449,10 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		// DotNet fails, see https://github.com/dotnet/runtime/issues/65484
-		// Enable the commented out signature (and AOT) once the above is fixed
 		[Test]
-		public void SmokeTestBuildWithSpecialCharacters ([Values (false, true)] bool forms, [Values (false, true)] bool aot, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void SmokeTestBuildWithSpecialCharacters ([Values (false, true)] bool forms, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, aot: aot, release: true)) {
-				return;
-			} else if (!aot && runtime == AndroidRuntime.NativeAOT) {
-				// Just saving time, aot && !aot would be identical tests with NativeAOT runtime
-				Assert.Ignore ("NativeAOT always uses AOT, obviously");
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
 			}
 
@@ -817,13 +805,11 @@ public class Test
 		}
 
 		[Test]
-		[Category ("AOT")]
 		[NonParallelizable]
 		public void BuildApplicationWithSpacesInPath ([Values (true, false)] bool enableMultiDex, [Values ("", "r8")] string linkTool, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
-			const bool aotAssemblies = false;
-			if (IgnoreUnsupportedConfiguration (runtime, aot: aotAssemblies, release: isRelease)) {
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
@@ -836,7 +822,6 @@ public class Test
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
-				AotAssemblies = aotAssemblies,
 				LinkTool = linkTool,
 				References = { new BuildItem ("ProjectReference", $"..\\{TestName}Library1\\Library1.csproj") },
 			};
@@ -857,18 +842,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			if (enableMultiDex)
 				proj.SetProperty ("AndroidEnableMultiDex", "True");
 
-			proj.Imports.Add (new Import ("foo.targets") {
-				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
-<Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
-<Target Name=""_Foo"" AfterTargets=""_SetLatestTargetFrameworkVersion"">
-	<PropertyGroup>
-		<AotAssemblies Condition=""!Exists('$(MonoAndroidBinDirectory)" + Path.DirectorySeparatorChar + @"cross-arm')"">False</AotAssemblies>
-	</PropertyGroup>
-	<Message Text=""$(AotAssemblies)"" />
-</Target>
-</Project>
-",
-			});
 			using (var libb = CreateDllBuilder (Path.Combine ("temp", $"{folderName}Library1")))
 			using (var b = CreateApkBuilder (Path.Combine ("temp", folderName))) {
 				libb.Build (lib);

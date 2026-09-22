@@ -68,8 +68,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.ProjectModel.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Protocol.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Versioning.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)startup.aotprofile" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)startup-xf.aotprofile" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)r8.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)bundletool.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime.jar" />

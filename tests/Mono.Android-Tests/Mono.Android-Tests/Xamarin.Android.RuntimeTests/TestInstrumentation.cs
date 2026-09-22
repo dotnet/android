@@ -45,15 +45,6 @@ namespace Xamarin.Android.RuntimeTests
 					}
 				}
 
-				if (HasAppContextSwitch ("EnableLLVM")) {
-					// FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190
-					categories.Add ("LLVMIgnore");
-					// InetAccess: https://github.com/dotnet/runtime/issues/73304
-					categories.Add ("InetAccess");
-					// NetworkInterfaces: https://github.com/dotnet/runtime/issues/75155
-					categories.Add ("NetworkInterfaces");
-				}
-
 				// Process-wide reference counts are only stable in the dedicated filtered run.
 				if (!IsOnlyIncludedCategory (JniReferenceLeakCategory)) {
 					categories.Add (JniReferenceLeakCategory);

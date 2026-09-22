@@ -388,9 +388,8 @@
     `$(_AndroidLinkFlag)` tracks ILLink, while @(_ResolvedAssemblies) tracks the later in-place
     rewrites that the link flag cannot observe. The assembly hash also invalidates the target when
     the resolved assembly set changes. Without the final assemblies as inputs, the shrunk copies
-    could go stale while @(_ResolvedAssemblies) moved on, so mono-aot-cross compiled the rewritten
-    assemblies while packaging shipped the pre-rewrite copies. Their metadata field tables then
-    disagreed, and AOT `SFLDA` patches resolved to the wrong MonoClassField at runtime. This mirrors
+    could go stale while @(_ResolvedAssemblies) moved on, so downstream build steps could consume
+    the rewritten assemblies while packaging shipped the pre-rewrite copies. This mirrors
     `_RemoveRegisterAttributeCoreClr` in Microsoft.Android.Sdk.TypeMap.Trimmable.targets.
   -->
   <Target Name="_RemoveRegisterAttribute"

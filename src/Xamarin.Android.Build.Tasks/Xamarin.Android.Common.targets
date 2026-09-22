@@ -30,7 +30,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.AssemblyModifierPipeline" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Microsoft.Android.Tasks.GetAndroidPackageName" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.GetAndroidPackageName" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
-<UsingTask TaskName="Xamarin.Android.Tasks.Aot" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildAppBundle" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildApkSet" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -148,8 +147,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <!-- Version/fx properties -->
 <PropertyGroup>
 	<_XAMajorVersionNumber>1</_XAMajorVersionNumber>
-	<AndroidUseInterpreter Condition=" '$(AndroidUseInterpreter)' == '' ">$(UseInterpreter)</AndroidUseInterpreter>
-	<AndroidUseInterpreter Condition=" '$(AndroidUseInterpreter)' == '' ">False</AndroidUseInterpreter>
 	<AndroidApplication Condition="'$(AndroidApplication)' == ''">false</AndroidApplication>
 	<AndroidNeedsInternetPermission Condition="'$(AndroidNeedsInternetPermission)' == '' And '$(AndroidEmbedProfilers)' == ''">False</AndroidNeedsInternetPermission>
 	<AndroidNeedsInternetPermission Condition="'$(AndroidNeedsInternetPermission)' == '' And '$(AndroidEmbedProfilers)' != ''">True</AndroidNeedsInternetPermission>
@@ -178,14 +175,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidGenerateLayoutBindings Condition=" '$(Language)' != 'C#' ">False</AndroidGenerateLayoutBindings>
 
 	<AndroidErrorOnCustomJavaObject Condition=" '$(AndroidErrorOnCustomJavaObject)' == '' ">True</AndroidErrorOnCustomJavaObject>
-
-	<!-- Ahead-of-time compilation properties -->
-	<AotAssemblies Condition=" '$(AndroidEnableProfiledAot)' == 'True' ">True</AotAssemblies>
-	<AndroidAotMode Condition=" '$(AotAssemblies)' != 'True' And '$(AndroidUseInterpreter)' == 'True' ">Interpreter</AndroidAotMode>
-	<AndroidAotMode Condition=" '$(AndroidAotMode)' == '' And '$(AotAssemblies)' == 'True' ">Normal</AndroidAotMode>
-	<AndroidAotMode Condition=" '$(AndroidAotMode)' == '' ">None</AndroidAotMode>
-	<AotAssemblies Condition=" '$(AndroidAotMode)' != '' And '$(AndroidAotMode)' != 'None' And '$(AndroidAotMode)' != 'Interpreter' ">True</AotAssemblies>
-	<AotAssemblies Condition=" '$(AotAssemblies)' == '' ">False</AotAssemblies>
 
 	<AndroidUseDebugRuntime
 			Condition="'$(AndroidUseDebugRuntime)' == '' And '$(EmbedAssembliesIntoApk)' == 'True' And '$(Optimize)' == 'True' "
@@ -348,7 +337,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </PropertyGroup>
 
 <PropertyGroup>
-  <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(UsingMicrosoftNETSdkRazor)' == 'true') ">False</AndroidEnableMarshalMethods>
   <!-- NOTE: temporarily disable for NativeAOT and CoreCLR for now -->
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' ">False</AndroidEnableMarshalMethods>
@@ -505,20 +493,12 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Target Name="_CheckNonIdealAppConfigurations"
     Condition=" '$(AndroidApplication)' == 'true' ">
   <AndroidWarning Code="XA0119"
-      ResourceName="XA0119_AOT"
-      Condition=" '$(AndroidEnableFastDeployment)' == 'True' And '$(AotAssemblies)' == 'True' "
-  />
-  <AndroidWarning Code="XA0119"
       ResourceName="XA0119_LinkMode"
       Condition=" '$(AndroidEnableFastDeployment)' == 'True' And '$(AndroidLinkMode)' != 'None' "
   />
   <AndroidWarning Code="XA0119"
       ResourceName="XA0119_LinkTool"
       Condition=" '$(AndroidEnableFastDeployment)' == 'True' And '$(AndroidLinkTool)' != '' "
-  />
-  <AndroidWarning Code="XA0119"
-      ResourceName="XA0119_Interpreter"
-      Condition=" '$(AndroidUseInterpreter)' == 'True' And '$(AotAssemblies)' == 'True' "
   />
   <AndroidWarning Code="XA0119"
       ResourceName="XA0119_ReadyToRun"
@@ -539,14 +519,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidWarning Code="XA1028"
       ResourceName="XA1028"
       Condition=" $(_AndroidXA1028) == 'true' "
-  />
-  <AndroidWarning Code="XA1029"
-      ResourceName="XA1029"
-      Condition=" $(_AndroidXA1029) == 'true' "
-  />
-  <AndroidError Code="XA1030"
-      ResourceName="XA1030"
-      Condition=" $(_AndroidXA1030) == 'true' "
   />
   <AndroidError Code="XA1044"
       ResourceName="XA1044"
@@ -798,7 +770,6 @@ because xbuild doesn't support framework reference assemblies.
 
 	<!-- We should slowly port all the <CreateProperty/> calls to <PropertyGroup/> here -->
 	<PropertyGroup>
-		<AProfUtilToolPath Condition=" '$(AProfUtilToolPath)' == '' ">$(MonoAndroidBinDirectory)</AProfUtilToolPath>
 		<_DefaultLintToolPath>$(_AndroidSdkDirectory)\cmdline-tools\$(AndroidCommandLineToolsVersion)\bin</_DefaultLintToolPath>
 		<LintToolPath Condition=" '$(LintToolPath)' == '' And Exists ($(_DefaultLintToolPath)) ">$(_DefaultLintToolPath)</LintToolPath>
 		<AdbToolPath Condition=" '$(AdbToolPath)' == '' ">$(_AndroidPlatformToolsDirectory)</AdbToolPath>
@@ -960,12 +931,9 @@ because xbuild doesn't support framework reference assemblies.
 	</GetFileHash>
 	<ItemGroup>
 		<!-- List of items we want to trigger a build if changed -->
-		<_PropertyCacheItems Include="AotAssemblies=$(AotAssemblies)" />
 		<_PropertyCacheItems Include="AndroidAddKeepAlives=$(AndroidAddKeepAlives)" />
-		<_PropertyCacheItems Include="AndroidAotMode=$(AndroidAotMode)" />
 		<_PropertyCacheItems Include="AndroidEmbedProfilers=$(AndroidEmbedProfilers)" />
 		<_PropertyCacheItems Include="AndroidEnableLegacyCompatibilityAssemblyFixups=$(AndroidEnableLegacyCompatibilityAssemblyFixups)" />
-		<_PropertyCacheItems Include="AndroidEnableProfiledAot=$(AndroidEnableProfiledAot)" />
 		<_PropertyCacheItems Include="AndroidDexTool=$(AndroidDexTool)" />
 		<_PropertyCacheItems Include="AndroidLinkTool=$(AndroidLinkTool)" />
 		<_PropertyCacheItems Include="AndroidR8ObfuscationMode=$(AndroidR8ObfuscationMode)" />
@@ -1479,10 +1447,9 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <!-- Runs additional steps after ILLink runs (_LinkAssemblies).
-     When marshal methods are enabled, assemblies must be modified in-place in linked/ so that
-     _RunAotForAllRIDs (which dispatches inner builds that AOT from linked/) sees the updated
-     assemblies and re-AOTs them. When marshal methods are NOT enabled (NativeAOT, CoreCLR, etc.),
-     write to afterlink/ so linked/ stays unchanged and IlcCompile incrementalism is preserved. -->
+     Preserve the existing in-place rewrite behavior when marshal methods are explicitly enabled.
+     Otherwise, write to afterlink/ so linked/ stays unchanged and downstream incrementalism is
+     preserved. -->
 <Target Name="_RunAfterILLinkAdditionalSteps"
     DependsOnTargets="_LinkAssembliesNoShrinkInputs"
     Condition="'$(PublishTrimmed)' == 'true' and '$(AndroidTypeMapImplementation)' != 'trimmable'"
@@ -2483,9 +2450,6 @@ because xbuild doesn't support framework reference assemblies.
       Condition=" '%(_BuildTargetAbis.Identity)' == 'armeabi' "
       Text="Invalid value 'armeabi' in %24(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties to remove the old value. If the properties page does not show an 'armeabi' checkbox, un-check and re-check one of the other ABIs and save the changes."
   />
-  <AndroidError Code="XA1025"
-      ResourceName="XA1025"
-      Condition=" '$(_AndroidAotModeValidateAbi)' != 'false' AND '%(_BuildTargetAbis.Identity)' == 'armeabi-v7a' AND '$(AndroidAotMode)' == 'Hybrid' " />
 </Target>
 
 <PropertyGroup>
@@ -2996,7 +2960,6 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="GetAndroidDependencies" DependsOnTargets="$(GetAndroidDependenciesDependsOn)" Returns="@(AndroidDependency);@(JavaDependency)">
   <PropertyGroup>
     <_ProjectAndroidManifest>$(ProjectDir)$(AndroidManifest)</_ProjectAndroidManifest>
-    <_NdkRequired Condition="'$(EnableLLVM)' == 'True'">true</_NdkRequired>
     <_NdkRequired Condition="'$(PublishAot)' == 'true' and '$(_AndroidUseWorkloadNativeLinker)' != 'true'">true</_NdkRequired>
     <_NdkRequired Condition="'$(_NdkRequired)' == ''">false</_NdkRequired>
   </PropertyGroup>

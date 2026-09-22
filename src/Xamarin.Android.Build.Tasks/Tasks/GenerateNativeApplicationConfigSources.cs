@@ -96,7 +96,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			SequencePointsMode sequencePointsMode;
-			if (!Aot.TryGetSequencePointsMode (AndroidSequencePointsMode, out sequencePointsMode))
+			if (!SequencePointsModeParser.TryParse (AndroidSequencePointsMode, out sequencePointsMode))
 				sequencePointsMode = SequencePointsMode.None;
 
 			// Even though environment files were potentially parsed in GenerateJavaStubs, we need to do it here again because we might have additional environment

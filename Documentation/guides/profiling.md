@@ -87,53 +87,6 @@ call][managed_timing] or [this native call][native_timing].
 [managed_timing]: https://github.com/dotnet/android/blob/faf2a3d7271e2e321b2fa500f85fa0f824abcf89/src/Mono.Android/Android.Runtime/JNIEnv.cs#L160
 [native_timing]: https://github.com/dotnet/android/blob/6be4bdbcfd9f2fbe6267aceb934394bcdd0f13b4/src/monodroid/jni/monodroid-glue.cc#L2062
 
-## Profiling the AOT Compiler
-
-The application needs to be built with embedded AOT profiler, the
-profiler needs to be enabled and the application run on device or
-emulator. That can be done by using `BuildAndStartAotProfiling`
-target:
-
-    > msbuild /t:BuildAndStartAotProfiling <your.csproj>
-
-Related to that target is `$(AndroidAotProfilerPort)` property, which can
-be used to choose the socket port number for communication with the
-profiler. The default value is 9999.
-
-Once the application starts, the `FinishAotProfiling` target can be
-used to collect the profile from the device or emulator:
-
-    > msbuild /t:FinishAotProfiling <your.csproj>
-
-The `FinishAotProfiling` target uses the `$(AndroidAotProfilerPort)` for
-socket port number and `$(AndroidAotCustomProfilePath)` for the newly
-created profile file, the default value is `custom.aprof`.
-
-The profile can be used to build your app with AOT profile. Add it to
-the `@(AndroidAotProfile)` item group in your `.csproj` file and set the
-`$(AndroidEnableProfiledAot)` property to `true`. You might also disable
-the default AOT profile with `$(AndroidUseDefaultAotProfile)`
-property. Part of your `.csproj` file might look like:
-
-```xml
-<ItemGroup>
-  <AndroidAotProfile Include="$(MSBuildThisFileDirectory)custom.aprof" />
-</ItemGroup>
-<PropertyGroup>
-  <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
-  <AndroidUseDefaultAotProfile>false</AndroidUseDefaultAotProfile>
-</PropertyGroup>
-```
-
-The profile itself can be inspected and optionally filtered by the
-[`aprofutil`][aprofutil] tool.
-
-[aprofutil]: https://github.com/mono/mono/blob/2019-10/mcs/tools/aprofutil/README.md
-
-Using the AOT profile is useful for scenarios like speeding up the
-startup of your application or other performance critical parts, by
-selectively AOT'ing only the methods included in the profile.
-
 ## Profiling the JIT Compiler
 
 If profiling a Release build, you'll need to edit your
