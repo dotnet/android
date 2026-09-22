@@ -506,7 +506,7 @@ AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변
 {1} - The SupportedOSPlatformVersion property value</comment>
   </data>
   <data name="XA1037" xml:space="preserve">
-    <value>Unsupported @(Reference) item: {0}</value>
+    <value>지원되지 않는 @(참조) 항목: {0}</value>
     <comment>The following are literal names and should not be translated: @(Reference)
 {0} - The unsupported reference item</comment>
   </data>
@@ -888,23 +888,6 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <value>[{0}] 원본 파일 '{1}'을(를) 삭제할 수 없습니다.</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
-  </data>
-  <data name="XA4325" xml:space="preserve">
-    <value>R8의 관리되는 JNI 이름을 다시 작성하지 못했습니다. {0}</value>
-    <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4325_* resources.</comment>
-  </data>
-  <data name="XA4325_AssemblyFailure" xml:space="preserve">
-    <value>어셈블리 '{0}'의 JNI 이름을 다시 작성할 수 없습니다: {1}</value>
-    <comment>{0} - The path of the assembly which could not be rewritten.
-{1} - The underlying message describing why the assembly could not be rewritten. It is not localized.</comment>
-  </data>
-  <data name="XA4325_SourceDestinationCount" xml:space="preserve">
-    <value>'SourceFiles' 및 'DestinationFiles' 항목 그룹에는 같은 수의 항목이 포함되어야 합니다.</value>
-    <comment>The following are literal MSBuild item group names and should not be translated: 'SourceFiles', 'DestinationFiles'.</comment>
-  </data>
-  <data name="XA4326" xml:space="preserve">
-    <value>클래스 핸들에 구조적으로 명확한 JNIEnv.FindClass 원본이 하나 없으므로 JNI 멤버 조회를 안전하게 다시 작성할 수 없습니다.</value>
-    <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>Android NDK 도구 체인 디렉터리 '{0}'이(가) 없습니다. Android NDK를 설치하세요.</value>
