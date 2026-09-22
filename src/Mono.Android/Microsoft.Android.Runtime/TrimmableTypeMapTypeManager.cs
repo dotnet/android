@@ -390,7 +390,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		return signature.IsValid ? [signature] : [];
 	}
 
-	// Remapping APIs, used by the Intune/MAM mapping and by R8 JNI runtime remapping
+	// Remapping APIs, used by the Intune/MAM mapping and generated JNI runtime remapping
 
 	protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
 		=> JniRemappingLookup.GetStaticMethodFallbackTypes (jniSimpleReference, useReplacementTypes: true);
@@ -398,11 +398,20 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 	protected override string? GetReplacementTypeCore (string jniSimpleReference)
 		=> JniRemappingLookup.GetReplacementType (jniSimpleReference);
 
+	protected override void GetReplacementTypeInfoCore (string jniSimpleReference, out string? replacement, out IntPtr replacementUtf8)
+	{
+		replacement = null;
+		replacementUtf8 = JniRemappingLookup.GetReplacementTypeUtf8 (jniSimpleReference);
+	}
+
 	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
 		=> JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
 
 	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 		=> JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
+
+	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (IntPtr jniSourceTypeUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+		=> JniRemappingLookup.GetReplacementMethodInfo (jniSourceTypeUtf8, jniMethodName, jniMethodSignature);
 
 	protected override JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSourceType, string jniFieldName, string jniFieldSignature)
 		=> JniRemappingLookup.GetReplacementFieldInfo (jniSourceType, jniFieldName, jniFieldSignature);

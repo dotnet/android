@@ -35,7 +35,7 @@ namespace Java.Interop
 
 		JniFieldInfo GetFieldInfo (ReadOnlySpan<char> field, ReadOnlySpan<char> signature)
 		{
-			var newField = Members.GetReplacementFieldInfo (field, signature);
+			var newField = JniPeerMembers.GetReplacementFieldInfo (Members.JniPeerTypeName, field, signature);
 			if (newField.HasValue) {
 				var typeName     = newField.Value.TargetJniType ?? Members.JniPeerTypeName;
 				var fieldName    = newField.Value.TargetJniFieldName is string name ? name.AsSpan () : field;
@@ -50,7 +50,7 @@ namespace Java.Interop
 				return originalField;
 			}
 
-			newField = Members.GetBaseReplacementFieldInfo (field, signature);
+			newField = JniPeerMembers.GetBaseReplacementFieldInfo (Members.ManagedPeerType, field, signature);
 			if (newField.HasValue) {
 				var typeName     = newField.Value.TargetJniType ?? Members.JniPeerTypeName;
 				var fieldName    = newField.Value.TargetJniFieldName is string name ? name.AsSpan () : field;

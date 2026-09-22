@@ -382,6 +382,12 @@ namespace Android.Runtime {
 			return JniRemappingLookup.GetReplacementType (jniSimpleReference);
 		}
 
+		protected override void GetReplacementTypeInfoCore (string jniSimpleReference, out string? replacement, out IntPtr replacementUtf8)
+		{
+			replacement = null;
+			replacementUtf8 = JniRemappingLookup.GetReplacementTypeUtf8 (jniSimpleReference);
+		}
+
 		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
 		{
 			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
@@ -392,14 +398,9 @@ namespace Android.Runtime {
 			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
 		}
 
-		protected override JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSourceType, string jniFieldName, string jniFieldSignature)
+		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (IntPtr jniSourceTypeUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 		{
-			return JniRemappingLookup.GetReplacementFieldInfo (jniSourceType, jniFieldName, jniFieldSignature);
-		}
-
-		protected override JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSourceType, ReadOnlySpan<char> jniFieldName, ReadOnlySpan<char> jniFieldSignature)
-		{
-			return JniRemappingLookup.GetReplacementFieldInfo (jniSourceType, jniFieldName, jniFieldSignature);
+			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceTypeUtf8, jniMethodName, jniMethodSignature);
 		}
 
 		protected override Type? GetInvokerTypeCore (Type type)
@@ -499,11 +500,8 @@ namespace Android.Runtime {
 		{
 			try {
 				if (methods.IsEmpty) {
-					if (jniAddNativeMethodRegistrationAttributePresent) {
-#pragma warning disable CS0618 // ReflectionJniTypeManager has not migrated its registration override to spans.
+					if (jniAddNativeMethodRegistrationAttributePresent)
 						base.RegisterNativeMembers (nativeClass, type, methods.ToString ());
-#pragma warning restore CS0618
-					}
 					return;
 				} else if (FastRegisterNativeMembers (nativeClass, type, methods)) {
 					return;
@@ -512,9 +510,7 @@ namespace Android.Runtime {
 				int methodCount = CountMethods (methods);
 				if (methodCount < 1) {
 					if (jniAddNativeMethodRegistrationAttributePresent) {
-#pragma warning disable CS0618 // ReflectionJniTypeManager has not migrated its registration override to spans.
 						base.RegisterNativeMembers (nativeClass, type, methods.ToString ());
-#pragma warning restore CS0618
 					}
 					return;
 				}

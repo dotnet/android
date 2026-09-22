@@ -30,48 +30,50 @@ namespace Java.Interop
 
 		JniFieldInfo GetFieldInfo (ReadOnlySpan<char> field, ReadOnlySpan<char> signature)
 		{
-			var newField = Members.GetReplacementFieldInfo (field, signature);
-			if (newField.HasValue && TryGetReplacementField (newField.Value, field, signature, out var replacement))
-				return replacement;
+			var newField = JniPeerMembers.GetReplacementFieldInfo (Members.JniPeerTypeName, field, signature);
+			if (newField.HasValue) {
+				var typeName     = newField.Value.TargetJniType ?? Members.JniPeerTypeName;
+				var fieldName    = newField.Value.TargetJniFieldName is string name ? name.AsSpan () : field;
+				var fieldSig     = newField.Value.TargetJniFieldSignature is string sig ? sig.AsSpan () : signature;
 
+				JniType? t = new JniType (typeName);
+				try {
+					if (t.TryGetStaticField (fieldName, fieldSig, out var f)) {
+						f.StaticRedirect = t;
+						t = null;
+						return f;
+					}
+				} finally {
+					t?.Dispose ();
+				}
+			}
 			if (Members.JniPeerType.TryGetStaticField (field, signature, out var originalField)) {
 				return originalField;
 			}
 
-			newField = Members.GetBaseReplacementFieldInfo (field, signature);
-			if (newField.HasValue && TryGetReplacementField (newField.Value, field, signature, out replacement))
-				return replacement;
+			newField = JniPeerMembers.GetBaseReplacementFieldInfo (Members.ManagedPeerType, field, signature);
+			if (newField.HasValue) {
+				var typeName     = newField.Value.TargetJniType ?? Members.JniPeerTypeName;
+				var fieldName    = newField.Value.TargetJniFieldName is string name ? name.AsSpan () : field;
+				var fieldSig     = newField.Value.TargetJniFieldSignature is string sig ? sig.AsSpan () : signature;
 
-			return Members.JniPeerType.GetStaticField (field, signature);
-		}
-
-		bool TryGetReplacementField (
-			JniRuntime.ReplacementFieldInfo info,
-			ReadOnlySpan<char> fallbackName,
-			ReadOnlySpan<char> fallbackSignature,
-			[System.Diagnostics.CodeAnalysis.NotNullWhen (true)] out JniFieldInfo? field)
-		{
-			var typeName  = info.TargetJniType ?? Members.JniPeerTypeName;
-			var fieldName = info.TargetJniFieldName is string name ? name.AsSpan () : fallbackName;
-			var fieldSig  = info.TargetJniFieldSignature is string sig ? sig.AsSpan () : fallbackSignature;
-			JniType? type = new JniType (typeName);
-			try {
-				if (!type.TryGetStaticField (fieldName, fieldSig, out field))
-					return false;
-
-				field.StaticRedirect = type;
-				type = null;
-				return true;
-			} finally {
-				type?.Dispose ();
+				JniType? t = new JniType (typeName);
+				try {
+					if (t.TryGetStaticField (fieldName, fieldSig, out var f)) {
+						f.StaticRedirect = t;
+						t = null;
+						return f;
+					}
+				} finally {
+					t?.Dispose ();
+				}
 			}
+			return Members.JniPeerType.GetStaticField (field, signature);
 		}
 
 		JniType GetFieldDeclaringType (JniFieldInfo field)
 		{
-			if (field.StaticRedirect != null)
-				return field.StaticRedirect;
-			return Members.JniPeerType;
+			return field.StaticRedirect ?? Members.JniPeerType;
 		}
 
 		internal void Dispose ()

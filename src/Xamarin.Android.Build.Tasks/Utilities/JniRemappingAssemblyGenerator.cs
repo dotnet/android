@@ -30,12 +30,19 @@ namespace Xamarin.Android.Tasks
 
 		public string TargetType { get; }
 		public string TargetMethod { get; }
+
+		/// <summary>
+		/// The JNI method descriptor to use on the target type, or <c>null</c> when the source
+		/// signature is used unchanged. Remapping inputs which predate this attribute (for example
+		/// the Intune/MAM mapping) leave it unset.
+		/// </summary>
 		public string TargetMethodSignature { get; }
 
 		public bool TargetIsStatic { get; }
 
 		public JniRemappingMethodReplacement (string sourceType, string sourceMethod, string sourceMethodSignature,
-		                                      string targetType, string targetMethod, string targetMethodSignature, bool targetIsStatic)
+		                                      string targetType, string targetMethod, string targetMethodSignature,
+		                                      bool targetIsStatic)
 		{
 			SourceType = sourceType;
 			SourceMethod = sourceMethod;
@@ -77,11 +84,21 @@ namespace Xamarin.Android.Tasks
 		const string ReverseTypeReplacementsVariableName = "jni_remapping_reverse_type_replacements";
 		const string MethodReplacementIndexVariableName = "jni_remapping_method_replacement_index";
 		const string FieldReplacementIndexVariableName = "jni_remapping_field_replacement_index";
+		const string RemappingDataVariableName = "jni_remapping_data";
 
-		const string TypeReplacementCountVariableName = "jni_remapping_type_replacement_count";
-		const string ReverseTypeReplacementCountVariableName = "jni_remapping_reverse_type_replacement_count";
-		const string MethodReplacementIndexCountVariableName = "jni_remapping_method_replacement_index_count";
-		const string FieldReplacementIndexCountVariableName = "jni_remapping_field_replacement_index_count";
+		sealed class JniRemappingDataContextDataProvider : NativeAssemblerStructContextDataProvider
+		{
+			public override string GetPointedToSymbolName (object data, string fieldName)
+			{
+				return fieldName switch {
+					nameof (JniRemappingData.type_replacements) => TypeReplacementsVariableName,
+					nameof (JniRemappingData.reverse_type_replacements) => ReverseTypeReplacementsVariableName,
+					nameof (JniRemappingData.method_replacement_index) => MethodReplacementIndexVariableName,
+					nameof (JniRemappingData.field_replacement_index) => FieldReplacementIndexVariableName,
+					_ => base.GetPointedToSymbolName (data, fieldName),
+				};
+			}
+		}
 
 		sealed class JniRemappingTypeReplacementEntryContextDataProvider : NativeAssemblerStructContextDataProvider
 		{
@@ -227,9 +244,6 @@ namespace Xamarin.Android.Tasks
 		{
 			public uint   length;
 			public string str;
-
-			[NativeAssembler (Ignore = true)]
-			public byte[] utf8;
 		};
 
 		sealed class JniRemappingReplacementMethod
@@ -238,6 +252,13 @@ namespace Xamarin.Android.Tasks
 			public string  target_name;
 			public string  target_signature;
 			public bool    is_static;
+		};
+
+		sealed class JniRemappingReplacementField
+		{
+			public string  target_type;
+			public string  target_name;
+			public string  target_signature;
 		};
 
 		[NativeAssemblerStructContextDataProvider (typeof(JniRemappingIndexMethodEntryContextDataProvider))]
@@ -272,13 +293,6 @@ namespace Xamarin.Android.Tasks
 			public List<StructureInstance<JniRemappingIndexMethodEntry>> TypeMethods;
 		};
 
-		sealed class JniRemappingReplacementField
-		{
-			public string target_type;
-			public string target_name;
-			public string target_signature;
-		};
-
 		[NativeAssemblerStructContextDataProvider (typeof(JniRemappingIndexFieldEntryContextDataProvider))]
 		sealed class JniRemappingIndexFieldEntry
 		{
@@ -297,7 +311,7 @@ namespace Xamarin.Android.Tasks
 		{
 			[NativeAssembler (UsesDataProvider = true)]
 			public JniRemappingString          name;
-			public uint                        field_count;
+			public uint               field_count;
 
 			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - populated during native code generation
@@ -321,41 +335,65 @@ namespace Xamarin.Android.Tasks
 			public string    replacement;
 		};
 
-		readonly List<JniRemappingTypeReplacement> typeReplacementsInput;
-		readonly List<JniRemappingTypeReplacement> reverseTypeReplacementsInput;
-		readonly List<JniRemappingMethodReplacement> methodReplacementsInput;
-		readonly List<JniRemappingFieldReplacement> fieldReplacementsInput;
+		[NativeAssemblerStructContextDataProvider (typeof(JniRemappingDataContextDataProvider))]
+		sealed class JniRemappingData
+		{
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+#pragma warning disable CS0649 // Field is populated during native code generation
+			public JniRemappingTypeReplacementEntry type_replacements;
+
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+			public JniRemappingTypeReplacementEntry reverse_type_replacements;
+
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+			public JniRemappingIndexTypeEntry method_replacement_index;
+
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
+			public JniRemappingIndexFieldTypeEntry field_replacement_index;
+#pragma warning restore CS0649
+
+			public uint type_replacement_count;
+			public uint reverse_type_replacement_count;
+			public uint method_replacement_index_count;
+			public uint field_replacement_index_count;
+		}
+
+		sealed class GeneratedTables
+		{
+			public List<StructureInstance<JniRemappingTypeReplacementEntry>> TypeReplacements;
+			public List<StructureInstance<JniRemappingTypeReplacementEntry>> ReverseTypeReplacements;
+			public List<StructureInstance<JniRemappingIndexTypeEntry>>       MethodIndexTypes;
+			public List<StructureInstance<JniRemappingIndexFieldTypeEntry>>  FieldIndexTypes;
+		}
+
+		List<JniRemappingTypeReplacement> typeReplacementsInput;
+		List<JniRemappingTypeReplacement> reverseTypeReplacementsInput;
+		List<JniRemappingMethodReplacement> methodReplacementsInput;
+		List<JniRemappingFieldReplacement> fieldReplacementsInput;
 
 		StructureInfo jniRemappingStringStructureInfo;
 		StructureInfo jniRemappingReplacementMethodStructureInfo;
+		StructureInfo jniRemappingReplacementFieldStructureInfo;
 		StructureInfo jniRemappingIndexMethodEntryStructureInfo;
 		StructureInfo jniRemappingIndexTypeEntryStructureInfo;
-		StructureInfo jniRemappingReplacementFieldStructureInfo;
 		StructureInfo jniRemappingIndexFieldEntryStructureInfo;
 		StructureInfo jniRemappingIndexFieldTypeEntryStructureInfo;
 		StructureInfo jniRemappingTypeReplacementEntryStructureInfo;
-
-		public int ReplacementTypeCount { get; private set; }
-		public int ReverseReplacementTypeCount { get; private set; }
+		StructureInfo jniRemappingDataStructureInfo;
+		public int ReplacementTypeCount { get; private set; } = 0;
+		public int ReverseTypeCount { get; private set; } = 0;
 		public int ReplacementMethodIndexEntryCount { get; private set; } = 0;
-		public int ReplacementFieldIndexEntryCount { get; private set; }
+		public int ReplacementFieldIndexEntryCount { get; private set; } = 0;
 
 		public JniRemappingAssemblyGenerator (TaskLoggingHelper log)
-			: this (
-				log,
-				new List<JniRemappingTypeReplacement> (),
-				new List<JniRemappingTypeReplacement> (),
-				new List<JniRemappingMethodReplacement> (),
-				new List<JniRemappingFieldReplacement> ()
-			)
+			: base (log)
 		{}
 
-		public JniRemappingAssemblyGenerator (
-			TaskLoggingHelper log,
-			List<JniRemappingTypeReplacement> typeReplacements,
-			List<JniRemappingTypeReplacement> reverseTypeReplacements,
-			List<JniRemappingMethodReplacement> methodReplacements,
-			List<JniRemappingFieldReplacement> fieldReplacements)
+		public JniRemappingAssemblyGenerator (TaskLoggingHelper log,
+		                                      List<JniRemappingTypeReplacement> typeReplacements,
+		                                      List<JniRemappingTypeReplacement> reverseTypeReplacements,
+		                                      List<JniRemappingMethodReplacement> methodReplacements,
+		                                      List<JniRemappingFieldReplacement> fieldReplacements)
 			: base (log)
 		{
 			this.typeReplacementsInput = typeReplacements ?? throw new ArgumentNullException (nameof (typeReplacements));
@@ -364,134 +402,202 @@ namespace Xamarin.Android.Tasks
 			this.fieldReplacementsInput = fieldReplacements ?? throw new ArgumentNullException (nameof (fieldReplacements));
 		}
 
-		(
-			List<StructureInstance<JniRemappingTypeReplacementEntry>> TypeReplacements,
-			List<StructureInstance<JniRemappingTypeReplacementEntry>> ReverseTypeReplacements,
-			List<StructureInstance<JniRemappingIndexTypeEntry>> MethodIndexTypes,
-			List<StructureInstance<JniRemappingIndexFieldTypeEntry>> FieldIndexTypes
-		) Init ()
+		/// <summary>
+		/// Orders UTF-8 encoded names exactly the way the native lookup's <c>memcmp</c>-based
+		/// comparison does, so the runtime can binary-search the emitted tables.
+		/// </summary>
+		internal static int CompareUtf8 (byte [] left, byte [] right)
 		{
-			var typeReplacements = MakeTypeReplacements (typeReplacementsInput);
-			var reverseTypeReplacements = MakeTypeReplacements (reverseTypeReplacementsInput);
-
-			var methodIndexTypes = new List<StructureInstance<JniRemappingIndexTypeEntry>> ();
-			var methodTypes = new Dictionary<string, StructureInstance<JniRemappingIndexTypeEntry>> (StringComparer.Ordinal);
-
-			foreach (JniRemappingMethodReplacement mmr in methodReplacementsInput) {
-				if (!methodTypes.TryGetValue (mmr.SourceType, out StructureInstance<JniRemappingIndexTypeEntry> typeEntry)) {
-					var entry = new JniRemappingIndexTypeEntry {
-						name = MakeJniRemappingString (mmr.SourceType),
-						MethodsArraySymbolName = $"mm_{MakeIdentifier (mmr.SourceType)}",
-						TypeMethods = new List<StructureInstance<JniRemappingIndexMethodEntry>> (),
-					};
-
-					typeEntry = new StructureInstance<JniRemappingIndexTypeEntry> (jniRemappingIndexTypeEntryStructureInfo, entry);
-					methodIndexTypes.Add (typeEntry);
-					methodTypes.Add (mmr.SourceType, typeEntry);
+			int min = Math.Min (left.Length, right.Length);
+			for (int i = 0; i < min; i++) {
+				if (left [i] != right [i]) {
+					return left [i] < right [i] ? -1 : 1;
 				}
-
-				var method = new JniRemappingIndexMethodEntry {
-					name = MakeJniRemappingString (mmr.SourceMethod),
-					signature = MakeJniRemappingString (mmr.SourceMethodSignature),
-					replacement = new JniRemappingReplacementMethod {
-						target_type = mmr.TargetType,
-						target_name = mmr.TargetMethod,
-						target_signature = mmr.TargetMethodSignature,
-						is_static = mmr.TargetIsStatic,
-					},
-				};
-
-				typeEntry.Instance.TypeMethods.Add (new StructureInstance<JniRemappingIndexMethodEntry> (jniRemappingIndexMethodEntryStructureInfo, method));
 			}
 
-			foreach (var entry in methodTypes.Values) {
-				entry.Instance.method_count = (uint)entry.Instance.TypeMethods.Count;
-				entry.Instance.TypeMethods.Sort ((l, r) => CompareUtf8 (l.Instance.name, r.Instance.name));
-			}
-			methodIndexTypes.Sort ((l, r) => CompareUtf8 (l.Instance.name, r.Instance.name));
-
-			var fieldIndexTypes = new List<StructureInstance<JniRemappingIndexFieldTypeEntry>> ();
-			var fieldTypes = new Dictionary<string, StructureInstance<JniRemappingIndexFieldTypeEntry>> (StringComparer.Ordinal);
-
-			foreach (JniRemappingFieldReplacement mfr in fieldReplacementsInput) {
-				if (!fieldTypes.TryGetValue (mfr.SourceType, out StructureInstance<JniRemappingIndexFieldTypeEntry> typeEntry)) {
-					var entry = new JniRemappingIndexFieldTypeEntry {
-						name = MakeJniRemappingString (mfr.SourceType),
-						FieldsArraySymbolName = $"mf_{MakeIdentifier (mfr.SourceType)}",
-						TypeFields = new List<StructureInstance<JniRemappingIndexFieldEntry>> (),
-					};
-
-					typeEntry = new StructureInstance<JniRemappingIndexFieldTypeEntry> (jniRemappingIndexFieldTypeEntryStructureInfo, entry);
-					fieldIndexTypes.Add (typeEntry);
-					fieldTypes.Add (mfr.SourceType, typeEntry);
-				}
-
-				var field = new JniRemappingIndexFieldEntry {
-					name = MakeJniRemappingString (mfr.SourceField),
-					signature = MakeJniRemappingString (mfr.SourceFieldSignature),
-					replacement = new JniRemappingReplacementField {
-						target_type = mfr.TargetType,
-						target_name = mfr.TargetField,
-						target_signature = mfr.TargetFieldSignature,
-					},
-				};
-
-				typeEntry.Instance.TypeFields.Add (new StructureInstance<JniRemappingIndexFieldEntry> (jniRemappingIndexFieldEntryStructureInfo, field));
+			if (left.Length == right.Length) {
+				return 0;
 			}
 
-			foreach (var entry in fieldTypes.Values) {
-				entry.Instance.field_count = (uint)entry.Instance.TypeFields.Count;
-				entry.Instance.TypeFields.Sort ((l, r) => CompareUtf8 (l.Instance.name, r.Instance.name));
-			}
-			fieldIndexTypes.Sort ((l, r) => CompareUtf8 (l.Instance.name, r.Instance.name));
-
-			ReplacementTypeCount = typeReplacements.Count;
-			ReverseReplacementTypeCount = reverseTypeReplacements.Count;
-			ReplacementMethodIndexEntryCount = methodIndexTypes.Count;
-			ReplacementFieldIndexEntryCount = fieldIndexTypes.Count;
-
-			return (typeReplacements, reverseTypeReplacements, methodIndexTypes, fieldIndexTypes);
-
-			List<StructureInstance<JniRemappingTypeReplacementEntry>> MakeTypeReplacements (List<JniRemappingTypeReplacement> input)
-			{
-				var replacements = new List<StructureInstance<JniRemappingTypeReplacementEntry>> ();
-				foreach (JniRemappingTypeReplacement replacement in input) {
-					var entry = new JniRemappingTypeReplacementEntry {
-						name = MakeJniRemappingString (replacement.From),
-						replacement = replacement.To,
-					};
-
-					replacements.Add (new StructureInstance<JniRemappingTypeReplacementEntry> (jniRemappingTypeReplacementEntryStructureInfo, entry));
-				}
-				replacements.Sort ((l, r) => CompareUtf8 (l.Instance.name, r.Instance.name));
-				return replacements;
-			}
-
-			string MakeIdentifier (string typeName)
-			{
-				return typeName.Replace ('/', '_').Replace ('$', '_');
-			}
+			return left.Length < right.Length ? -1 : 1;
 		}
 
-		static JniRemappingString MakeJniRemappingString (string str)
+		static byte [] Utf8 (string str) => str.IsNullOrEmpty () ? [] : Encoding.UTF8.GetBytes (str);
+
+		GeneratedTables Init ()
 		{
-			byte[] utf8 = String.IsNullOrEmpty (str) ? [] : Encoding.UTF8.GetBytes (str);
+			if (typeReplacementsInput == null) {
+				return null;
+			}
+
+			var ret = new GeneratedTables {
+				TypeReplacements = MakeTypeReplacements (typeReplacementsInput),
+				ReverseTypeReplacements = MakeTypeReplacements (reverseTypeReplacementsInput),
+				MethodIndexTypes = MakeMethodIndex (),
+				FieldIndexTypes = MakeFieldIndex (),
+			};
+
+			ReplacementTypeCount = ret.TypeReplacements.Count;
+			ReverseTypeCount = ret.ReverseTypeReplacements.Count;
+			ReplacementMethodIndexEntryCount = ret.MethodIndexTypes.Count;
+			ReplacementFieldIndexEntryCount = ret.FieldIndexTypes.Count;
+
+			return ret;
+		}
+
+		List<StructureInstance<JniRemappingTypeReplacementEntry>> MakeTypeReplacements (List<JniRemappingTypeReplacement> input)
+		{
+			var sorted = new List<(byte [] key, JniRemappingTypeReplacement replacement)> (input.Count);
+			foreach (JniRemappingTypeReplacement tr in input) {
+				sorted.Add ((Utf8 (tr.From), tr));
+			}
+			sorted.Sort ((l, r) => CompareUtf8 (l.key, r.key));
+
+			var ret = new List<StructureInstance<JniRemappingTypeReplacementEntry>> (sorted.Count);
+			foreach ((byte [] key, JniRemappingTypeReplacement tr) in sorted) {
+				var entry = new JniRemappingTypeReplacementEntry {
+					name = MakeJniRemappingString (tr.From, key),
+					replacement = tr.To,
+				};
+
+				ret.Add (new StructureInstance<JniRemappingTypeReplacementEntry> (jniRemappingTypeReplacementEntryStructureInfo, entry));
+			}
+
+			return ret;
+		}
+
+		List<StructureInstance<JniRemappingIndexTypeEntry>> MakeMethodIndex ()
+		{
+			var types = new Dictionary<string, (byte [] key, List<(byte [] nameKey, byte [] signatureKey, JniRemappingMethodReplacement method)> methods)> (StringComparer.Ordinal);
+
+			foreach (JniRemappingMethodReplacement mmr in methodReplacementsInput) {
+				if (!types.TryGetValue (mmr.SourceType, out var typeEntry)) {
+					typeEntry = (Utf8 (mmr.SourceType), new List<(byte [], byte [], JniRemappingMethodReplacement)> ());
+					types.Add (mmr.SourceType, typeEntry);
+				}
+
+				typeEntry.methods.Add ((Utf8 (mmr.SourceMethod), Utf8 (mmr.SourceMethodSignature), mmr));
+			}
+
+			var sortedTypes = new List<KeyValuePair<string, (byte [] key, List<(byte [] nameKey, byte [] signatureKey, JniRemappingMethodReplacement method)> methods)>> (types);
+			sortedTypes.Sort ((l, r) => CompareUtf8 (l.Value.key, r.Value.key));
+
+			var ret = new List<StructureInstance<JniRemappingIndexTypeEntry>> (sortedTypes.Count);
+			for (int typeIndex = 0; typeIndex < sortedTypes.Count; typeIndex++) {
+				var kvp = sortedTypes [typeIndex];
+				var methods = kvp.Value.methods;
+				// Keep exact descriptors before parameter-only descriptors and wildcards, matching
+				// the specificity passes used by both native runtimes.
+				methods.Sort ((l, r) => {
+					int cmp = CompareUtf8 (l.nameKey, r.nameKey);
+					if (cmp != 0) {
+						return cmp;
+					}
+					cmp = GetMethodSignatureSpecificity (l.method.SourceMethodSignature).CompareTo (
+						GetMethodSignatureSpecificity (r.method.SourceMethodSignature));
+					return cmp != 0 ? cmp : CompareUtf8 (l.signatureKey, r.signatureKey);
+				});
+
+				var typeMethods = new List<StructureInstance<JniRemappingIndexMethodEntry>> (methods.Count);
+				foreach ((byte [] nameKey, byte [] signatureKey, JniRemappingMethodReplacement mmr) in methods) {
+					var method = new JniRemappingIndexMethodEntry {
+						name = MakeJniRemappingString (mmr.SourceMethod, nameKey),
+						signature = MakeJniRemappingString (mmr.SourceMethodSignature, signatureKey),
+						replacement = new JniRemappingReplacementMethod {
+							target_type = mmr.TargetType,
+							target_name = mmr.TargetMethod,
+							target_signature = mmr.TargetMethodSignature,
+							is_static = mmr.TargetIsStatic,
+						},
+					};
+
+					typeMethods.Add (new StructureInstance<JniRemappingIndexMethodEntry> (jniRemappingIndexMethodEntryStructureInfo, method));
+				}
+
+				var entry = new JniRemappingIndexTypeEntry {
+					name = MakeJniRemappingString (kvp.Key, kvp.Value.key),
+					method_count = (uint)typeMethods.Count,
+					MethodsArraySymbolName = MakeMembersArrayName ("mm", typeIndex),
+					TypeMethods = typeMethods,
+				};
+				ret.Add (new StructureInstance<JniRemappingIndexTypeEntry> (jniRemappingIndexTypeEntryStructureInfo, entry));
+			}
+
+			return ret;
+		}
+
+		List<StructureInstance<JniRemappingIndexFieldTypeEntry>> MakeFieldIndex ()
+		{
+			var types = new Dictionary<string, (byte [] key, List<(byte [] nameKey, byte [] signatureKey, JniRemappingFieldReplacement field)> fields)> (StringComparer.Ordinal);
+
+			foreach (JniRemappingFieldReplacement mfr in fieldReplacementsInput) {
+				if (!types.TryGetValue (mfr.SourceType, out var typeEntry)) {
+					typeEntry = (Utf8 (mfr.SourceType), new List<(byte [], byte [], JniRemappingFieldReplacement)> ());
+					types.Add (mfr.SourceType, typeEntry);
+				}
+
+				typeEntry.fields.Add ((Utf8 (mfr.SourceField), Utf8 (mfr.SourceFieldSignature), mfr));
+			}
+
+			var sortedTypes = new List<KeyValuePair<string, (byte [] key, List<(byte [] nameKey, byte [] signatureKey, JniRemappingFieldReplacement field)> fields)>> (types);
+			sortedTypes.Sort ((l, r) => CompareUtf8 (l.Value.key, r.Value.key));
+
+			var ret = new List<StructureInstance<JniRemappingIndexFieldTypeEntry>> (sortedTypes.Count);
+			for (int typeIndex = 0; typeIndex < sortedTypes.Count; typeIndex++) {
+				var kvp = sortedTypes [typeIndex];
+				var fields = kvp.Value.fields;
+				fields.Sort ((l, r) => {
+					int cmp = CompareUtf8 (l.nameKey, r.nameKey);
+					return cmp != 0 ? cmp : CompareUtf8 (l.signatureKey, r.signatureKey);
+				});
+
+				var typeFields = new List<StructureInstance<JniRemappingIndexFieldEntry>> (fields.Count);
+				foreach ((byte [] nameKey, byte [] signatureKey, JniRemappingFieldReplacement mfr) in fields) {
+					var field = new JniRemappingIndexFieldEntry {
+						name = MakeJniRemappingString (mfr.SourceField, nameKey),
+						signature = MakeJniRemappingString (mfr.SourceFieldSignature, signatureKey),
+						replacement = new JniRemappingReplacementField {
+							target_type = mfr.TargetType,
+							target_name = mfr.TargetField,
+							target_signature = mfr.TargetFieldSignature,
+						},
+					};
+
+					typeFields.Add (new StructureInstance<JniRemappingIndexFieldEntry> (jniRemappingIndexFieldEntryStructureInfo, field));
+				}
+
+				var entry = new JniRemappingIndexFieldTypeEntry {
+					name = MakeJniRemappingString (kvp.Key, kvp.Value.key),
+					field_count = (uint)typeFields.Count,
+					FieldsArraySymbolName = MakeMembersArrayName ("mf", typeIndex),
+					TypeFields = typeFields,
+				};
+
+				ret.Add (new StructureInstance<JniRemappingIndexFieldTypeEntry> (jniRemappingIndexFieldTypeEntryStructureInfo, entry));
+			}
+
+			return ret;
+		}
+
+		static string MakeMembersArrayName (string prefix, int typeIndex)
+		{
+			return $"{prefix}_{typeIndex}";
+		}
+
+		static int GetMethodSignatureSpecificity (string signature)
+		{
+			if (signature.IsNullOrEmpty ()) {
+				return 2;
+			}
+			return signature [signature.Length - 1] == ')' ? 1 : 0;
+		}
+
+		static JniRemappingString MakeJniRemappingString (string str, byte [] utf8)
+		{
 			return new JniRemappingString {
 				length = (uint)utf8.Length,
 				str = str,
-				utf8 = utf8,
 			};
-		}
-
-		static int CompareUtf8 (JniRemappingString left, JniRemappingString right)
-		{
-			int count = Math.Min (left.utf8.Length, right.utf8.Length);
-			for (int i = 0; i < count; i++) {
-				int result = left.utf8 [i].CompareTo (right.utf8 [i]);
-				if (result != 0)
-					return result;
-			}
-			return left.utf8.Length.CompareTo (right.utf8.Length);
 		}
 
 		protected override void Construct (LlvmIrModule module)
@@ -499,68 +605,71 @@ namespace Xamarin.Android.Tasks
 			module.DefaultStringGroup = "jremap";
 
 			MapStructures (module);
-			var data = Init ();
 
-			AddTable (
-				module,
-				TypeReplacementsVariableName,
-				data.TypeReplacements,
-				jniRemappingTypeReplacementEntryStructureInfo,
-				new JniRemappingTypeReplacementEntry ()
-			);
-			AddTable (
-				module,
-				ReverseTypeReplacementsVariableName,
-				data.ReverseTypeReplacements,
-				jniRemappingTypeReplacementEntryStructureInfo,
-				new JniRemappingTypeReplacementEntry ()
-			);
+			GeneratedTables tables = Init ();
 
-			foreach (StructureInstance<JniRemappingIndexTypeEntry> entry in data.MethodIndexTypes) {
-				module.AddGlobalVariable (entry.Instance.MethodsArraySymbolName, entry.Instance.TypeMethods, LlvmIrVariableOptions.LocalConstant);
-			}
-			AddTable (
-				module,
-				MethodReplacementIndexVariableName,
-				data.MethodIndexTypes,
-				jniRemappingIndexTypeEntryStructureInfo,
-				new JniRemappingIndexTypeEntry ()
-			);
+			if (tables == null) {
+				module.AddGlobalVariable (
+					typeof(StructureInstance<JniRemappingTypeReplacementEntry>),
+					TypeReplacementsVariableName,
+					new StructureInstance<JniRemappingTypeReplacementEntry> (jniRemappingTypeReplacementEntryStructureInfo, new JniRemappingTypeReplacementEntry ()) { IsZeroInitialized = true },
+					LlvmIrVariableOptions.GlobalConstant
+				);
 
-			foreach (StructureInstance<JniRemappingIndexFieldTypeEntry> entry in data.FieldIndexTypes) {
-				module.AddGlobalVariable (entry.Instance.FieldsArraySymbolName, entry.Instance.TypeFields, LlvmIrVariableOptions.LocalConstant);
-			}
-			AddTable (
-				module,
-				FieldReplacementIndexVariableName,
-				data.FieldIndexTypes,
-				jniRemappingIndexFieldTypeEntryStructureInfo,
-				new JniRemappingIndexFieldTypeEntry ()
-			);
+				module.AddGlobalVariable (
+					typeof(StructureInstance<JniRemappingTypeReplacementEntry>),
+					ReverseTypeReplacementsVariableName,
+					new StructureInstance<JniRemappingTypeReplacementEntry> (jniRemappingTypeReplacementEntryStructureInfo, new JniRemappingTypeReplacementEntry ()) { IsZeroInitialized = true },
+					LlvmIrVariableOptions.GlobalConstant
+				);
 
-			module.AddGlobalVariable (TypeReplacementCountVariableName, (uint)ReplacementTypeCount, LlvmIrVariableOptions.GlobalConstant);
-			module.AddGlobalVariable (ReverseTypeReplacementCountVariableName, (uint)ReverseReplacementTypeCount, LlvmIrVariableOptions.GlobalConstant);
-			module.AddGlobalVariable (MethodReplacementIndexCountVariableName, (uint)ReplacementMethodIndexEntryCount, LlvmIrVariableOptions.GlobalConstant);
-			module.AddGlobalVariable (FieldReplacementIndexCountVariableName, (uint)ReplacementFieldIndexEntryCount, LlvmIrVariableOptions.GlobalConstant);
-		}
+				module.AddGlobalVariable (
+					typeof(StructureInstance<JniRemappingIndexTypeEntry>),
+					MethodReplacementIndexVariableName,
+					new StructureInstance<JniRemappingIndexTypeEntry> (jniRemappingIndexTypeEntryStructureInfo, new JniRemappingIndexTypeEntry ()) { IsZeroInitialized = true },
+					LlvmIrVariableOptions.GlobalConstant
+				);
 
-		static void AddTable<T> (
-			LlvmIrModule module,
-			string variableName,
-			List<StructureInstance<T>> entries,
-			StructureInfo structureInfo,
-			T emptyEntry)
-			where T : class
-		{
-			if (entries.Count > 0) {
-				module.AddGlobalVariable (variableName, entries, LlvmIrVariableOptions.GlobalConstant);
+				module.AddGlobalVariable (
+					typeof(StructureInstance<JniRemappingIndexFieldTypeEntry>),
+					FieldReplacementIndexVariableName,
+					new StructureInstance<JniRemappingIndexFieldTypeEntry> (jniRemappingIndexFieldTypeEntryStructureInfo, new JniRemappingIndexFieldTypeEntry ()) { IsZeroInitialized = true },
+					LlvmIrVariableOptions.GlobalConstant
+				);
+
+				AddData (module);
 				return;
 			}
 
+			module.AddGlobalVariable (TypeReplacementsVariableName, tables.TypeReplacements, LlvmIrVariableOptions.GlobalConstant);
+			module.AddGlobalVariable (ReverseTypeReplacementsVariableName, tables.ReverseTypeReplacements, LlvmIrVariableOptions.GlobalConstant);
+
+			foreach (StructureInstance<JniRemappingIndexTypeEntry> entry in tables.MethodIndexTypes) {
+				module.AddGlobalVariable (entry.Instance.MethodsArraySymbolName, entry.Instance.TypeMethods, LlvmIrVariableOptions.LocalConstant);
+			}
+
+			module.AddGlobalVariable (MethodReplacementIndexVariableName, tables.MethodIndexTypes, LlvmIrVariableOptions.GlobalConstant);
+
+			foreach (StructureInstance<JniRemappingIndexFieldTypeEntry> entry in tables.FieldIndexTypes) {
+				module.AddGlobalVariable (entry.Instance.FieldsArraySymbolName, entry.Instance.TypeFields, LlvmIrVariableOptions.LocalConstant);
+			}
+
+			module.AddGlobalVariable (FieldReplacementIndexVariableName, tables.FieldIndexTypes, LlvmIrVariableOptions.GlobalConstant);
+
+			AddData (module);
+		}
+
+		void AddData (LlvmIrModule module)
+		{
+			var data = new JniRemappingData {
+				type_replacement_count = (uint)ReplacementTypeCount,
+				reverse_type_replacement_count = (uint)ReverseTypeCount,
+				method_replacement_index_count = (uint)ReplacementMethodIndexEntryCount,
+				field_replacement_index_count = (uint)ReplacementFieldIndexEntryCount,
+			};
 			module.AddGlobalVariable (
-				typeof(StructureInstance<T>),
-				variableName,
-				new StructureInstance<T> (structureInfo, emptyEntry) { IsZeroInitialized = true },
+				RemappingDataVariableName,
+				new StructureInstance<JniRemappingData> (jniRemappingDataStructureInfo, data),
 				LlvmIrVariableOptions.GlobalConstant
 			);
 		}
@@ -569,12 +678,13 @@ namespace Xamarin.Android.Tasks
 		{
 			jniRemappingStringStructureInfo = module.MapStructure<JniRemappingString> ();
 			jniRemappingReplacementMethodStructureInfo = module.MapStructure<JniRemappingReplacementMethod> ();
+			jniRemappingReplacementFieldStructureInfo = module.MapStructure<JniRemappingReplacementField> ();
 			jniRemappingIndexMethodEntryStructureInfo = module.MapStructure<JniRemappingIndexMethodEntry> ();
 			jniRemappingIndexTypeEntryStructureInfo = module.MapStructure<JniRemappingIndexTypeEntry> ();
-			jniRemappingReplacementFieldStructureInfo = module.MapStructure<JniRemappingReplacementField> ();
 			jniRemappingIndexFieldEntryStructureInfo = module.MapStructure<JniRemappingIndexFieldEntry> ();
 			jniRemappingIndexFieldTypeEntryStructureInfo = module.MapStructure<JniRemappingIndexFieldTypeEntry> ();
 			jniRemappingTypeReplacementEntryStructureInfo = module.MapStructure<JniRemappingTypeReplacementEntry> ();
+			jniRemappingDataStructureInfo = module.MapStructure<JniRemappingData> ();
 		}
 	}
 }

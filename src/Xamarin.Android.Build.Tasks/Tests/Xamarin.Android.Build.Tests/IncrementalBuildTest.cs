@@ -115,16 +115,7 @@ namespace Xamarin.Android.Build.Tests
       source-method-name="onCreate"
       target-type="example/RemapActivity"
       target-method-name="onMyCreate"
-      target-method-signature="()V"
       target-method-instance-to-static="false" />
-  <reverse-type from="example/ResidualActivity" to="example/OriginalActivity" />
-  <replace-field
-      source-type="example/RemapActivity"
-      source-field-name="oldField"
-      source-field-signature="I"
-      target-type="example/FieldOwner"
-      target-field-name="newField"
-      target-field-signature="Lexample/TargetField;" />
 </replacements>
 """,
 					},
@@ -135,7 +126,6 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				AssertJniRemappingCounts (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
-				AssertJniRemappingNativeCode (proj, b);
 				var remapSourceTimestamps = GetJniRemappingSourceTimestamps (proj, b);
 
 				proj.MainActivity += Environment.NewLine + "// Force an incremental C# rebuild.";
@@ -144,22 +134,6 @@ namespace Xamarin.Android.Build.Tests
 				AssertJniRemappingCounts (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
 				AssertJniRemappingSourceTimestamps (remapSourceTimestamps);
 			}
-		}
-
-		void AssertJniRemappingNativeCode (XamarinAndroidApplicationProject proj, ProjectBuilder builder)
-		{
-			string path = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android", "jni_remap.arm64-v8a.ll");
-			string source = File.ReadAllText (path);
-			StringAssert.Contains ("@jni_remapping_type_replacement_count", source);
-			StringAssert.Contains ("@jni_remapping_reverse_type_replacement_count", source);
-			StringAssert.Contains ("@jni_remapping_method_replacement_index_count", source);
-			StringAssert.Contains ("@jni_remapping_field_replacement_index_count", source);
-			StringAssert.Contains ("example/ResidualActivity", source);
-			StringAssert.Contains ("example/OriginalActivity", source);
-			StringAssert.Contains ("()V", source);
-			StringAssert.Contains ("example/FieldOwner", source);
-			StringAssert.Contains ("newField", source);
-			StringAssert.Contains ("Lexample/TargetField;", source);
 		}
 
 		void AssertJniRemappingCounts (XamarinAndroidApplicationProject proj, ProjectBuilder builder, uint expectedTypeCount, uint expectedMethodCount)
