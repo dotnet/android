@@ -2332,6 +2332,34 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		[Ignore ("FIXME: https://github.com/dotnet/android/issues/12880")]
+		public void DotNetInstallAndRunPreviousSdk (
+				[Values] bool isRelease,
+				[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				TargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android",
+				IsRelease = isRelease,
+				EnableDefaultItems = true,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (new[] { "arm64-v8a", "x86_64" });
+
+			var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+			RunProjectAndAssert (proj, builder);
+
+			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
+			Assert.IsTrue(didLaunch, "Activity should have started.");
+		}
+
+		[Test]
 		public void DotNetInstallAndRunPreviewAPILevels (
 				[Values (false, true)] bool isRelease,
 				[Values ("net11.0-android37.1", "net11.0-android37.2")] string targetFramework)

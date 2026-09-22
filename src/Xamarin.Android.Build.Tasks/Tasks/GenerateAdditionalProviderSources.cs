@@ -65,9 +65,9 @@ public sealed class GenerateAdditionalProviderSources : AndroidTask
 	void Generate (NativeCodeGenStateObject codeGenState)
 	{
 		// Create additional runtime provider java sources.
-		bool isMonoVM = androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.CoreCLR;
+		bool isCoreCLR = androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.CoreCLR;
 
-		WriteAdditionalRuntimeProviderSources (OutputDirectory, isMonoVM, AdditionalProviderSources);
+		WriteAdditionalRuntimeProviderSources (OutputDirectory, isCoreCLR, AdditionalProviderSources);
 
 		// For NativeAOT, generate JavaInteropRuntime.java and NativeAotEnvironmentVars.java
 		if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
@@ -113,18 +113,18 @@ public sealed class GenerateAdditionalProviderSources : AndroidTask
 	/// by cloning the runtime provider template for each name. Shared between the legacy (ILLink) and
 	/// trimmable build paths so both emit the extra providers a multi-process app declares in its manifest.
 	/// </summary>
-	internal static void WriteAdditionalRuntimeProviderSources (string outputDirectory, bool isMonoVM, string [] additionalProviderSources)
+	internal static void WriteAdditionalRuntimeProviderSources (string outputDirectory, bool isCoreCLR, string [] additionalProviderSources)
 	{
 		if (additionalProviderSources.Length == 0) {
 			return;
 		}
-		string providerTemplateFile = isMonoVM ?
+		string providerTemplateFile = isCoreCLR ?
 			"MonoRuntimeProvider.Bundled.java" :
 			"NativeAotRuntimeProvider.java";
 		string providerTemplate = GetResource (providerTemplateFile);
 		foreach (var provider in additionalProviderSources) {
-			var contents = providerTemplate.Replace (isMonoVM ? "MonoRuntimeProvider" : "NativeAotRuntimeProvider", provider);
-			var realProvider = isMonoVM ?
+			var contents = providerTemplate.Replace (isCoreCLR ? "MonoRuntimeProvider" : "NativeAotRuntimeProvider", provider);
+			var realProvider = isCoreCLR ?
 				Path.Combine (outputDirectory, "src", "mono", provider + ".java") :
 				Path.Combine (outputDirectory, "src", "net", "dot", "jni", "nativeaot", provider + ".java");
 			Files.CopyIfStringChanged (contents, realProvider);

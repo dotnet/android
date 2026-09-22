@@ -40,7 +40,7 @@ public sealed class GenerateNativeAotBootstrapSources : AndroidTask
 		GenerateAdditionalProviderSources.GenerateNativeAotBootstrapFiles (
 			Log, OutputDirectory, TargetName, Environments, EnableSGenConcurrent);
 
-		GenerateAdditionalProviderSources.WriteAdditionalRuntimeProviderSources (OutputDirectory, isMonoVM: false, AdditionalProviderSources);
+		GenerateAdditionalProviderSources.WriteAdditionalRuntimeProviderSources (OutputDirectory, isCoreCLR: false, AdditionalProviderSources);
 
 		return !Log.HasLoggedErrors;
 	}

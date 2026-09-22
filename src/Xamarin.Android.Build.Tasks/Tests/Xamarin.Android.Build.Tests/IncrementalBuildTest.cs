@@ -56,6 +56,44 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Ignore ("FIXME: https://github.com/dotnet/android/issues/12879")]
+		public void BasicApplicationRepetitiveReleaseBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject () { IsRelease = isRelease };
+			using (var b = CreateApkBuilder ()) {
+				var foo = new BuildItem.Source ("Foo.cs") {
+					TextContent = () => @"using System;
+	namespace UnnamedProject {
+		public class Foo {
+		}
+	}"
+				};
+
+				proj.SetRuntime (runtime);
+				proj.Sources.Add (foo);
+				Assert.IsTrue (b.Build (proj), "first build failed");
+				var firstBuildTime = b.LastBuildTime;
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build failed");
+				Assert.IsTrue (
+					firstBuildTime > b.LastBuildTime, "Second build ({0}) should have been faster than the first ({1})",
+					b.LastBuildTime, firstBuildTime
+				);
+				b.Output.AssertTargetIsSkipped ("_Sign");
+				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesShrink);
+				proj.Touch ("Foo.cs");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
+				b.Output.AssertTargetIsNotSkipped ("CoreCompile");
+				b.Output.AssertTargetIsNotSkipped ("_Sign");
+				b.Output.AssertTargetIsPartiallyBuilt ("_CompressAssemblies");
+			}
+		}
+
+		[Test]
 		public void JniRemappingCountsSurviveIncrementalBuild ()
 		{
 			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
