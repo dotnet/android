@@ -15,11 +15,10 @@ namespace Xamarin.Android.Tasks
 		/// <param name="doc">The XDocument to update, or null to create a new one.</param>
 		/// <param name="deviceId">The device ID.</param>
 		/// <param name="resultingAbi">The device's ABI.</param>
-		/// <param name="toolsAbi">The tools ABI.</param>
 		/// <param name="sdkVersion">The SDK version.</param>
 		/// <param name="longOutput">The long output string from adb.</param>
 		/// <returns>The updated or newly created XDocument.</returns>
-		public static XDocument Update (XDocument doc, string deviceId, string resultingAbi, string toolsAbi, int sdkVersion, string longOutput)
+		public static XDocument Update (XDocument doc, string deviceId, string resultingAbi, int sdkVersion, string longOutput)
 		{
 			XElement devices;
 			if (doc == null) {
@@ -43,7 +42,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			deviceElement.SetElementValue ("ResultingAbi", resultingAbi);
-			deviceElement.SetElementValue ("ToolsAbi", toolsAbi);
 			deviceElement.SetElementValue ("SdkVersion", sdkVersion);
 			deviceElement.SetElementValue ("LongOutput", longOutput);
 
@@ -57,14 +55,12 @@ namespace Xamarin.Android.Tasks
 		/// <param name="deviceId">The device ID to look up.</param>
 		/// <param name="longOutput">The expected long output to validate the cache entry.</param>
 		/// <param name="resultingAbi">The cached ABI if found and valid.</param>
-		/// <param name="toolsAbi">The cached tools ABI if found and valid.</param>
 		/// <param name="sdkVersion">The cached SDK version if found and valid.</param>
 		/// <param name="log">Optional logger for debug messages.</param>
 		/// <returns>True if a valid cache entry was found, false otherwise.</returns>
-		public static bool TryGet (XDocument doc, string deviceId, string longOutput, out string resultingAbi, out string toolsAbi, out int sdkVersion, TaskLoggingHelper log = null)
+		public static bool TryGet (XDocument doc, string deviceId, string longOutput, out string resultingAbi, out int sdkVersion, TaskLoggingHelper log = null)
 		{
 			resultingAbi = null;
-			toolsAbi = null;
 			sdkVersion = 0;
 
 			if (doc == null)
@@ -86,7 +82,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			resultingAbi = element.Element ("ResultingAbi")?.Value;
-			toolsAbi = element.Element ("ToolsAbi")?.Value ?? string.Empty;
 
 			if (!int.TryParse (element.Element ("SdkVersion")?.Value, out sdkVersion))
 				return false;

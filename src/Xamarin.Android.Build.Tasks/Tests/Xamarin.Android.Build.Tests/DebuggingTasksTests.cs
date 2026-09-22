@@ -91,18 +91,18 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploy2ParsesWarmStateProbe ()
+		public void FastDeployParsesWarmStateProbe ()
 		{
-			var state = FastDeploy2.ParseWarmStateProbeOutput (
+			var state = FastDeploy.ParseWarmStateProbeOutput (
 				"""
-				__XA_FD2_REDIRECT__=
-				__XA_FD2_RUN_AS_DISABLED__=
-				__XA_FD2_REMOTE_HASH__=remote-hash
-				__XA_FD2_PID__=123 456
-				__XA_FD2_PATH__=/data/user/0/com.example
-				__XA_FD2_OVERRIDE_HASH__=override-hash
-				__XA_FD2_RUN_AS_STATUS__=0
-				__XA_FD2_FORCE_STOP_STATUS__=0
+				__XA_FD_REDIRECT__=
+				__XA_FD_RUN_AS_DISABLED__=
+				__XA_FD_REMOTE_HASH__=remote-hash
+				__XA_FD_PID__=123 456
+				__XA_FD_PATH__=/data/user/0/com.example
+				__XA_FD_OVERRIDE_HASH__=override-hash
+				__XA_FD_RUN_AS_STATUS__=0
+				__XA_FD_FORCE_STOP_STATUS__=0
 				""");
 
 			Assert.IsTrue (state.HasRequiredState);
@@ -115,12 +115,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploy2RejectsIncompleteWarmStateProbe ()
+		public void FastDeployRejectsIncompleteWarmStateProbe ()
 		{
-			var state = FastDeploy2.ParseWarmStateProbeOutput (
+			var state = FastDeploy.ParseWarmStateProbeOutput (
 				"""
-				__XA_FD2_REDIRECT__=
-				__XA_FD2_RUN_AS_DISABLED__=true
+				__XA_FD_REDIRECT__=
+				__XA_FD_RUN_AS_DISABLED__=true
 				run-as: package not debuggable
 				""");
 
@@ -130,7 +130,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploy2PlansOnlyNewStagingDirectories ()
+		public void FastDeployPlansOnlyNewStagingDirectories ()
 		{
 			var previousFiles = new [] {
 				"arm64-v8a/App.dll",
@@ -143,7 +143,7 @@ namespace Xamarin.Android.Build.Tests
 				"arm64-v8a/fr/App.resources.dll",
 			};
 
-			HashSet<string> files = FastDeploy2.GetFilesRequiringStagingDirectories (currentFiles, previousFiles);
+			HashSet<string> files = FastDeploy.GetFilesRequiringStagingDirectories (currentFiles, previousFiles);
 
 			CollectionAssert.AreEquivalent (
 				new [] { "arm64-v8a/fr/App.resources.dll" },
@@ -151,7 +151,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploy2PlansAllStagingDirectoriesAfterReset ()
+		public void FastDeployPlansAllStagingDirectoriesAfterReset ()
 		{
 			var currentFiles = new [] {
 				"App.dll",
@@ -159,7 +159,7 @@ namespace Xamarin.Android.Build.Tests
 				"arm64-v8a/fr/App.resources.dll",
 			};
 
-			HashSet<string> files = FastDeploy2.GetFilesRequiringStagingDirectories (currentFiles, previousFiles: null);
+			HashSet<string> files = FastDeploy.GetFilesRequiringStagingDirectories (currentFiles, previousFiles: null);
 
 			CollectionAssert.AreEquivalent (currentFiles, files);
 		}
@@ -167,15 +167,15 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("adb: error: failed to copy: No such file or directory")]
 		[TestCase ("adb: error: target '/data/local/tmp/app/arm64-v8a' is not a directory")]
 		[TestCase ("remote couldn't create file: Is a directory")]
-		public void FastDeploy2DetectsInvalidRemoteFilesystem (string output)
+		public void FastDeployDetectsInvalidRemoteFilesystem (string output)
 		{
-			Assert.IsTrue (FastDeploy2.IsUnexpectedRemoteFilesystemError (output));
+			Assert.IsTrue (FastDeploy.IsUnexpectedRemoteFilesystemError (output));
 		}
 
 		[Test]
-		public void FastDeploy2DoesNotResetForUnrelatedPushFailure ()
+		public void FastDeployDoesNotResetForUnrelatedPushFailure ()
 		{
-			Assert.IsFalse (FastDeploy2.IsUnexpectedRemoteFilesystemError ("adb: error: device offline"));
+			Assert.IsFalse (FastDeploy.IsUnexpectedRemoteFilesystemError ("adb: error: device offline"));
 		}
 
 		[TestCase ("adb: error: device offline", false)]
@@ -183,15 +183,15 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("adb: failed to install app.apk: Broken pipe (32)", false)]
 		[TestCase ("cmd: Failure calling service package: Security exception", false)]
 		[TestCase ("Failure [INSTALL_FAILED_INSUFFICIENT_STORAGE]", false)]
-		public void FastDeploy2ClassifiesOnlyKnownTransientInstallFailures (string output, bool expected)
+		public void FastDeployClassifiesOnlyKnownTransientInstallFailures (string output, bool expected)
 		{
-			Assert.AreEqual (expected, FastDeploy2.IsTransientInstallFailure (output));
+			Assert.AreEqual (expected, FastDeploy.IsTransientInstallFailure (output));
 		}
 
 		[Test]
-		public async Task FastDeploy2RetriesTransientInstallOnce ()
+		public async Task FastDeployRetriesTransientInstallOnce ()
 		{
-			var task = new TestFastDeploy2 (
+			var task = new TestFastDeploy (
 				CreateAdbResult (1, "adb: failed to install app.apk: cmd: Failure calling service package: Broken pipe (32)"),
 				CreateAdbResult (0, "Success"));
 
@@ -202,9 +202,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public async Task FastDeploy2RetriesTransientInstallAfterUninstall ()
+		public async Task FastDeployRetriesTransientInstallAfterUninstall ()
 		{
-			var task = new TestFastDeploy2 (
+			var task = new TestFastDeploy (
 				CreateAdbResult (1, "Failure [INSTALL_FAILED_ALREADY_EXISTS]"),
 				CreateAdbResult (1, "adb: failed to install app.apk: cmd: Failure calling service package: Broken pipe (32)"),
 				CreateAdbResult (0, "Success"));
@@ -217,9 +217,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploy2DoesNotRetryTransientInstallTwiceAcrossUninstall ()
+		public void FastDeployDoesNotRetryTransientInstallTwiceAcrossUninstall ()
 		{
-			var task = new TestFastDeploy2 (
+			var task = new TestFastDeploy (
 				CreateAdbResult (1, "first failure: cmd: Failure calling service package: Broken pipe (32)"),
 				CreateAdbResult (1, "Failure [INSTALL_FAILED_ALREADY_EXISTS]"),
 				CreateAdbResult (1, "third failure: cmd: Failure calling service package: Broken pipe (32)"));
@@ -242,9 +242,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploy2DoesNotRetrySemanticInstallFailure ()
+		public void FastDeployDoesNotRetrySemanticInstallFailure ()
 		{
-			var task = new TestFastDeploy2 (
+			var task = new TestFastDeploy (
 				CreateAdbResult (1, "Failure [INSTALL_FAILED_INSUFFICIENT_STORAGE]"));
 
 			var exception = Assert.ThrowsAsync<FastDeployInstallException> (
@@ -257,9 +257,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploy2PreservesBothTransientInstallAttempts ()
+		public void FastDeployPreservesBothTransientInstallAttempts ()
 		{
-			var task = new TestFastDeploy2 (
+			var task = new TestFastDeploy (
 				CreateAdbResult (1, "first failure: cmd: Failure calling service package: Broken pipe (32)"),
 				CreateAdbResult (1, "second failure: cmd: Failure calling service package: Broken pipe (32)"));
 
@@ -278,9 +278,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploy2PreservesOriginalFailureWhenRecoveryFails ()
+		public void FastDeployPreservesOriginalFailureWhenRecoveryFails ()
 		{
-			var task = new TestFastDeploy2 (
+			var task = new TestFastDeploy (
 				new InvalidOperationException ("package manager still unavailable"),
 				CreateAdbResult (1, "cmd: Failure calling service package: Broken pipe (32)"));
 
@@ -294,16 +294,16 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, task.RecoveryAttempts);
 		}
 
-		static FastDeploy2.AdbCommandResult CreateAdbResult (int exitCode, string output)
+		static FastDeploy.AdbCommandResult CreateAdbResult (int exitCode, string output)
 		{
-			return new FastDeploy2.AdbCommandResult {
+			return new FastDeploy.AdbCommandResult {
 				ExitCode = exitCode,
 				StandardOutput = output,
 				StandardError = "",
 			};
 		}
 
-		sealed class TestFastDeploy2 : FastDeploy2
+		sealed class TestFastDeploy : FastDeploy
 		{
 			readonly Queue<AdbCommandResult> results;
 			readonly Exception recoveryException;
@@ -312,12 +312,12 @@ namespace Xamarin.Android.Build.Tests
 			public int UninstallAttempts { get; private set; }
 			public int RecoveryAttempts { get; private set; }
 
-			public TestFastDeploy2 (params AdbCommandResult [] results)
+			public TestFastDeploy (params AdbCommandResult [] results)
 				: this (recoveryException: null, results)
 			{
 			}
 
-			public TestFastDeploy2 (Exception recoveryException, params AdbCommandResult [] results)
+			public TestFastDeploy (Exception recoveryException, params AdbCommandResult [] results)
 			{
 				this.results = new Queue<AdbCommandResult> (results);
 				this.recoveryException = recoveryException;

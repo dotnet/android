@@ -1,16 +1,15 @@
-# FastDeploy2
+# FastDeploy
 
-`FastDeploy2` is the fast-deployment strategy used by `Install` builds (it is the
-default; the legacy strategy is still available as `FastDeploy`). Fast deployment
-keeps the installed `.apk` small and avoids a full re-install on every `F5`: the
+`FastDeploy` is the fast-deployment strategy used by `Install` builds. Fast
+deployment keeps the installed `.apk` small and avoids a full re-install on every `F5`: the
 application assemblies (and, optionally, environment files) are pushed to the
 device separately and surfaced to the app through an *override directory*, so an
 inner-loop change only re-transfers the files that actually changed.
 
-This document describes how the [`FastDeploy2`][task] MSBuild task works: the
+This document describes how the [`FastDeploy`][task] MSBuild task works: the
 stages it runs, the `adb` commands it issues, and the properties that control it.
 
-[task]: ../../src/Xamarin.Android.Build.Debugging.Tasks/Tasks/FastDeploy2.cs
+[task]: ../../src/Xamarin.Android.Build.Debugging.Tasks/Tasks/FastDeploy.cs
 
 ## MSBuild properties
 
@@ -19,9 +18,8 @@ properties intended for end users are:
 
 | Property | Default | Description |
 | --- | --- | --- |
-| `$(_AndroidFastDevStrategy)` | `FastDeploy2` | `FastDeploy` or `FastDeploy2`. Set to `FastDeploy` to fall back to the legacy strategy. |
-| `$(_AndroidFastDeployAppFileTransferMode)` | `Symlink` (for `FastDeploy2`) | How staged files are surfaced in the override directory: `Symlink` or `Copy`. |
-| `$(AndroidFastDeploymentAdbCompressionAlgorithm)` | `any` | The `adb push -z` compression algorithm. `FastDeploy2` relies on a modern Android SDK Platform-Tools `adb` for multi-file `push -z` support. |
+| `$(_AndroidFastDeployAppFileTransferMode)` | `Symlink` | How staged files are surfaced in the override directory: `Symlink` or `Copy`. |
+| `$(AndroidFastDeploymentAdbCompressionAlgorithm)` | `any` | The `adb push -z` compression algorithm. `FastDeploy` relies on a modern Android SDK Platform-Tools `adb` for multi-file `push -z` support. |
 
 The following internal/unsupported properties tune or disable implementation
 details:
@@ -36,31 +34,27 @@ details:
 
 ## On-device layout
 
-* **Staging directory:** `/data/local/tmp/fastdeploy2/<package-name>/<user-id>`.
+* **Staging directory:** `/data/local/tmp/fastdeploy/<package-name>/<user-id>`.
   Files are pushed here first (this location is writable by `adb` without
   `run-as`).
 * **Override directory:** `files/.__override__` inside the application's private
   data directory (resolved with `run-as`). The runtime loads assemblies from here
   in preference to the ones embedded in the `.apk`.
-* **Manifest markers:** a `.fastdeploy2-manifest-hash` file is written to both the
+* **Manifest markers:** a `.fastdeploy-manifest-hash` file is written to both the
   staging and override directories. It records the hash of the last successfully
   deployed manifest so the next build can detect whether the device is already up
   to date and skip redundant work.
 
-After installing or reinstalling an APK, FastDeploy2 checks for orphaned staging
+After installing or reinstalling an APK, FastDeploy checks for orphaned staging
 directories. In one `adb shell` command it enumerates staged
 `<package-name>/<user-id>` directories, compares them with
 `pm list packages --user <user-id>`, and removes directories for packages that
 are no longer installed. Incremental deployments that do not install the APK
 skip cleanup entirely.
 
-Changing `$(_AndroidFastDevStrategy)` or
-`$(_AndroidFastDeployAppFileTransferMode)` invalidates the deployment
-configuration. In particular, switching from `FastDeploy2` to legacy
-`FastDeploy` removes the FastDeploy2-managed override tree before
-`xamarin.sync` runs, so legacy deployment never attempts to overwrite
-FastDeploy2 symlinks. The installed package and unrelated application data are
-preserved.
+Changing `$(_AndroidFastDeployAppFileTransferMode)` invalidates the deployment
+configuration so the override tree is rebuilt using the selected transfer mode.
+The installed package and unrelated application data are preserved.
 
 ## Stages
 
@@ -72,7 +66,7 @@ is passed to every subsequent command as `adb -s <id> …`.
 
 ### 2. Validate warm device state
 
-When the APK and local FastDeploy2 manifest are current, one tagged
+When the APK and local FastDeploy manifest are current, one tagged
 `adb shell` probe performs the warm-path validation. It reads both compatibility
 properties, the staging marker, the app-private path and override marker through
 `run-as`, and the current process id. If the app is running, the same shell
@@ -149,7 +143,7 @@ This is the incremental core (`DeployFastDevFilesWithAdbPush`):
    `{ relative-path → (size, mtime) }` forms the manifest. A single SHA256 hash
    over the whole manifest is used as the device readiness marker (see below).
 2. **Compare against the device.** The previous manifest is read from `obj`, and
-   the on-device `.fastdeploy2-manifest-hash` markers are read to confirm the
+   the on-device `.fastdeploy-manifest-hash` markers are read to confirm the
    device still matches it. If the staging directory is not in the expected
    state it is reset:
    ```
@@ -192,7 +186,7 @@ This is the incremental core (`DeployFastDevFilesWithAdbPush`):
 
 The marker match is intentionally the fast-path filesystem contract; the task
 does not probe every expected directory before each upload. If a push reports
-that an expected remote path is missing or has the wrong file type, FastDeploy2
+that an expected remote path is missing or has the wrong file type, FastDeploy
 discards the incremental state, clears the staging and override trees, and
 retries once as a full deployment. A successful retry rewrites both remote
 markers and the local manifest.
@@ -206,7 +200,7 @@ diagnostics map to `XA0131`–`XA0137`. See the
 
 ## Command Compatibility
 
-.NET for Android supports Android 7.0 (API level 24) and later. FastDeploy2's
+.NET for Android supports Android 7.0 (API level 24) and later. FastDeploy's
 device-side commands are available by Android 6.0 (API level 23), before the
 supported device floor. The API levels below are approximate because shell
 utilities are not Android SDK APIs.
@@ -214,15 +208,15 @@ utilities are not Android SDK APIs.
 Host-side `adb` commands depend on the installed Android SDK Platform-Tools
 version rather than the device API level:
 
-| Command | FastDeploy2 use | Compatibility |
+| Command | FastDeploy use | Compatibility |
 | --- | --- | --- |
 | `adb devices`, `adb -s <device> shell ...` | Device selection and all device-side operations | Standard Platform-Tools commands |
 | `adb install -r -d [-t] [--user <id>]` | APK installation and replacement | Standard Platform-Tools command; `--user` corresponds to Android multi-user support introduced in API 17 |
 | `adb push -z <algorithm>` | Batched compressed staging-file upload | Modern Platform-Tools capability; not controlled by the device application API level |
 
-FastDeploy2 uses these device-side commands and shell features:
+FastDeploy uses these device-side commands and shell features:
 
-| Command or shell feature | FastDeploy2 use | Approximate availability |
+| Command or shell feature | FastDeploy use | Approximate availability |
 | --- | --- | --- |
 | `sh`/mksh syntax, `[ ... ]`, `test`, `command -v`, `cd`, `pwd`, `echo`, globbing, command/parameter/arithmetic expansion, and redirection | Combined checks, override updates, and cleanup control flow | API 14; Android has used mksh since Android 4.0 |
 | `getprop` | Validate `run-as` compatibility properties | API 1 |
