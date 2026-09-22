@@ -115,9 +115,11 @@ namespace Android.Runtime {
 			get {return false;}
 		}
 
+#pragma warning disable CS8766 // Preserve the legacy nullable API and null SyncRoot behavior.
 		public object? SyncRoot {
 			get {return null;}
 		}
+#pragma warning restore CS8766
 
 		//
 		// Exception audit:
@@ -389,10 +391,12 @@ namespace Android.Runtime {
 			return GetEnumerator ()!;
 		}
 
+#pragma warning disable CS8613 // Java collections can contain null elements even when T is non-nullable.
 		public new IEnumerator<T?> GetEnumerator ()
 		{
 			return System.Linq.Extensions.ToEnumerator_Dispose<T> (Iterator());
 		}
+#pragma warning restore CS8613
 		
 		public new static ICollection<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{

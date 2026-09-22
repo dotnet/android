@@ -53,6 +53,16 @@ namespace Java.Interop {
 			Initialize (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
+		internal unsafe JniType (IntPtr classname)
+		{
+			if (classname == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (classname));
+
+			var name = MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)classname);
+			var peer = JniEnvironment.Types.FindClass (name);
+			Initialize (ref peer, JniObjectReferenceOptions.CopyAndDispose);
+		}
+
 		public JniType (ref JniObjectReference peerReference, JniObjectReferenceOptions transfer)
 		{
 			Initialize (ref peerReference, transfer);
@@ -101,6 +111,17 @@ namespace Java.Interop {
 		}
 
 		public static JniType GetCachedJniType ([NotNull] ref JniType? cachedType, string classname)
+		{
+			if (cachedType != null && cachedType.PeerReference.IsValid)
+				return cachedType;
+			var t = new JniType (classname);
+			if (Interlocked.CompareExchange (ref cachedType, t, null) != null)
+				t.Dispose ();
+			cachedType.RegisterWithRuntime ();
+			return cachedType;
+		}
+
+		internal static JniType GetCachedJniType ([NotNull] ref JniType? cachedType, IntPtr classname)
 		{
 			if (cachedType != null && cachedType.PeerReference.IsValid)
 				return cachedType;
@@ -496,7 +517,49 @@ namespace Java.Interop {
 			return method != null;
 		}
 
+		internal bool TryGetInstanceMethod (IntPtr name, ReadOnlySpan<char> signature, [NotNullWhen (true)] out JniMethodInfo? method)
+		{
+			var id = GetMemberID (name, signature, MemberKind.InstanceMethod, throwOnError: false);
+			method = id == IntPtr.Zero ? null : CreateMethodInfo (name, signature, id, isStatic: false);
+			return method != null;
+		}
+
+		internal bool TryGetInstanceMethod (IntPtr name, IntPtr signature, [NotNullWhen (true)] out JniMethodInfo? method)
+		{
+			var id = GetMemberID (name, signature, MemberKind.InstanceMethod, throwOnError: false);
+			method = id == IntPtr.Zero ? null : new JniMethodInfo (name, signature, id, isStatic: false);
+			return method != null;
+		}
+
+		internal bool TryGetInstanceMethod (ReadOnlySpan<char> name, IntPtr signature, [NotNullWhen (true)] out JniMethodInfo? method)
+		{
+			var id = GetMemberID (name, signature, MemberKind.InstanceMethod, throwOnError: false);
+			method = id == IntPtr.Zero ? null : CreateMethodInfo (name, signature, id, isStatic: false);
+			return method != null;
+		}
+
 		internal bool TryGetStaticMethod (ReadOnlySpan<char> name, ReadOnlySpan<char> signature, [NotNullWhen (true)] out JniMethodInfo? method)
+		{
+			var id = GetMemberID (name, signature, MemberKind.StaticMethod, throwOnError: false);
+			method = id == IntPtr.Zero ? null : CreateMethodInfo (name, signature, id, isStatic: true);
+			return method != null;
+		}
+
+		internal bool TryGetStaticMethod (IntPtr name, ReadOnlySpan<char> signature, [NotNullWhen (true)] out JniMethodInfo? method)
+		{
+			var id = GetMemberID (name, signature, MemberKind.StaticMethod, throwOnError: false);
+			method = id == IntPtr.Zero ? null : CreateMethodInfo (name, signature, id, isStatic: true);
+			return method != null;
+		}
+
+		internal bool TryGetStaticMethod (IntPtr name, IntPtr signature, [NotNullWhen (true)] out JniMethodInfo? method)
+		{
+			var id = GetMemberID (name, signature, MemberKind.StaticMethod, throwOnError: false);
+			method = id == IntPtr.Zero ? null : new JniMethodInfo (name, signature, id, isStatic: true);
+			return method != null;
+		}
+
+		internal bool TryGetStaticMethod (ReadOnlySpan<char> name, IntPtr signature, [NotNullWhen (true)] out JniMethodInfo? method)
 		{
 			var id = GetMemberID (name, signature, MemberKind.StaticMethod, throwOnError: false);
 			method = id == IntPtr.Zero ? null : CreateMethodInfo (name, signature, id, isStatic: true);
@@ -507,6 +570,24 @@ namespace Java.Interop {
 		{
 #if DEBUG
 			return new JniMethodInfo (name.ToString (), signature.ToString (), id, isStatic);
+#else
+			return new JniMethodInfo (id, isStatic);
+#endif
+		}
+
+		static JniMethodInfo CreateMethodInfo (IntPtr name, ReadOnlySpan<char> signature, IntPtr id, bool isStatic)
+		{
+#if DEBUG
+			return new JniMethodInfo (name, signature.ToString (), id, isStatic);
+#else
+			return new JniMethodInfo (id, isStatic);
+#endif
+		}
+
+		static JniMethodInfo CreateMethodInfo (ReadOnlySpan<char> name, IntPtr signature, IntPtr id, bool isStatic)
+		{
+#if DEBUG
+			return new JniMethodInfo (name.ToString (), signature, id, isStatic);
 #else
 			return new JniMethodInfo (id, isStatic);
 #endif
@@ -530,66 +611,100 @@ namespace Java.Interop {
 
 		unsafe IntPtr GetMemberID (ReadOnlySpan<char> name, ReadOnlySpan<char> signature, MemberKind kind, bool throwOnError = true)
 		{
-			AssertValid ();
-
 			// Match StringToCoTaskMemUTF8, including unpaired-surrogate replacement
 			// and embedded-NUL termination, rather than changing to JNI modified UTF-8.
 			int nameLength = checked (Encoding.UTF8.GetByteCount (name) + 1);
-			int signatureLength = checked (Encoding.UTF8.GetByteCount (signature) + 1);
 			byte[]? rentedName = null;
-			byte[]? rentedSignature = null;
 			try {
 				if (nameLength > 512)
 					rentedName = ArrayPool<byte>.Shared.Rent (nameLength);
-				if (signatureLength > 512)
-					rentedSignature = ArrayPool<byte>.Shared.Rent (signatureLength);
 
 				Span<byte> nameBuffer = rentedName == null
 					? stackalloc byte [nameLength]
 					: rentedName.AsSpan (0, nameLength);
-				Span<byte> signatureBuffer = rentedSignature == null
-					? stackalloc byte [signatureLength]
-					: rentedSignature.AsSpan (0, signatureLength);
 				Encoding.UTF8.GetBytes (name, nameBuffer);
 				nameBuffer [nameLength - 1] = 0;
-				Encoding.UTF8.GetBytes (signature, signatureBuffer);
-				signatureBuffer [signatureLength - 1] = 0;
 
-				var env = JniEnvironment.EnvironmentPointer;
-				IntPtr id;
 				fixed (byte* nameStart = nameBuffer)
-				fixed (byte* signatureStart = signatureBuffer) {
-					var namePtr = (IntPtr) nameStart;
-					var signaturePtr = (IntPtr) signatureStart;
-					id = kind switch {
-						MemberKind.InstanceMethod => JniNativeMethods.GetMethodID (env, PeerReference.Handle, namePtr, signaturePtr),
-						MemberKind.StaticMethod => JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, namePtr, signaturePtr),
-						MemberKind.InstanceField => JniNativeMethods.GetFieldID (env, PeerReference.Handle, namePtr, signaturePtr),
-						MemberKind.StaticField => JniNativeMethods.GetStaticFieldID (env, PeerReference.Handle, namePtr, signaturePtr),
-						_ => throw new ArgumentOutOfRangeException (nameof (kind)),
-					};
-				}
-				var thrown = JniNativeMethods.ExceptionOccurred (env);
-				if (!throwOnError) {
-					if (thrown != IntPtr.Zero) {
-						JniEnvironment.Exceptions.ExceptionClear ();
-						JniEnvironment.References.RawDeleteLocalRef (env, thrown);
-						return IntPtr.Zero;
-					}
-					Debug.Assert (id != IntPtr.Zero);
-					return id;
-				}
-				var exception = JniEnvironment.GetExceptionForLastThrowable (thrown);
-				if (exception != null)
-					ExceptionDispatchInfo.Capture (exception).Throw ();
-				if (id == IntPtr.Zero)
-					throw new InvalidOperationException ("Should not be reached; JNI member lookup should have thrown!");
-				return id;
+					return GetMemberID ((IntPtr)nameStart, signature, kind, throwOnError);
 			} finally {
 				if (rentedName != null)
 					ArrayPool<byte>.Shared.Return (rentedName);
-				if (rentedSignature != null)
-					ArrayPool<byte>.Shared.Return (rentedSignature);
+			}
+		}
+
+		unsafe IntPtr GetMemberID (IntPtr name, ReadOnlySpan<char> signature, MemberKind kind, bool throwOnError = true)
+		{
+			if (name == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (name));
+			return GetMemberID (signature, name, false, kind, throwOnError);
+		}
+
+		unsafe IntPtr GetMemberID (IntPtr name, IntPtr signature, MemberKind kind, bool throwOnError = true)
+		{
+			AssertValid ();
+			if (name == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (name));
+			if (signature == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (signature));
+
+			var env = JniEnvironment.EnvironmentPointer;
+			IntPtr id = kind switch {
+				MemberKind.InstanceMethod => JniNativeMethods.GetMethodID (env, PeerReference.Handle, name, signature),
+				MemberKind.StaticMethod => JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, name, signature),
+				MemberKind.InstanceField => JniNativeMethods.GetFieldID (env, PeerReference.Handle, name, signature),
+				MemberKind.StaticField => JniNativeMethods.GetStaticFieldID (env, PeerReference.Handle, name, signature),
+				_ => throw new ArgumentOutOfRangeException (nameof (kind)),
+			};
+			var thrown = JniNativeMethods.ExceptionOccurred (env);
+			if (!throwOnError) {
+				if (thrown != IntPtr.Zero) {
+					JniEnvironment.Exceptions.ExceptionClear ();
+					JniEnvironment.References.RawDeleteLocalRef (env, thrown);
+					return IntPtr.Zero;
+				}
+				Debug.Assert (id != IntPtr.Zero);
+				return id;
+			}
+
+			var exception = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			if (exception != null)
+				ExceptionDispatchInfo.Capture (exception).Throw ();
+			if (id == IntPtr.Zero)
+				throw new InvalidOperationException ("Should not be reached; JNI member lookup should have thrown!");
+			return id;
+		}
+
+		unsafe IntPtr GetMemberID (ReadOnlySpan<char> name, IntPtr signature, MemberKind kind, bool throwOnError = true)
+		{
+			if (signature == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (signature));
+			return GetMemberID (name, signature, true, kind, throwOnError);
+		}
+
+		unsafe IntPtr GetMemberID (ReadOnlySpan<char> value, IntPtr otherValue, bool valueIsName, MemberKind kind, bool throwOnError)
+		{
+			int valueLength = checked (Encoding.UTF8.GetByteCount (value) + 1);
+			byte[]? rentedValue = null;
+			try {
+				if (valueLength > 512)
+					rentedValue = ArrayPool<byte>.Shared.Rent (valueLength);
+
+				Span<byte> valueBuffer = rentedValue == null
+					? stackalloc byte [valueLength]
+					: rentedValue.AsSpan (0, valueLength);
+				Encoding.UTF8.GetBytes (value, valueBuffer);
+				valueBuffer [valueLength - 1] = 0;
+
+				fixed (byte* valueStart = valueBuffer) {
+					var valuePointer = (IntPtr)valueStart;
+					return valueIsName
+						? GetMemberID (valuePointer, otherValue, kind, throwOnError)
+						: GetMemberID (otherValue, valuePointer, kind, throwOnError);
+				}
+			} finally {
+				if (rentedValue != null)
+					ArrayPool<byte>.Shared.Return (rentedValue);
 			}
 		}
 	}

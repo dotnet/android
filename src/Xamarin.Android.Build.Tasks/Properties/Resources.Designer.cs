@@ -917,6 +917,16 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA1036", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unsupported @(Reference) item: {0}.
+        /// </summary>
+        public static string XA1037 {
+            get {
+                return ResourceManager.GetString("XA1037", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to The &apos;{0}&apos; MSBuild property has an invalid value of &apos;{1}&apos;. A valid value is one of: {2}..
         /// </summary>
@@ -1995,42 +2005,6 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to rewrite managed JNI names for R8. {0}.
-        /// </summary>
-        public static string XA4325 {
-            get {
-                return ResourceManager.GetString("XA4325", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not rewrite the JNI names in the assembly &apos;{0}&apos;: {1}.
-        /// </summary>
-        public static string XA4325_AssemblyFailure {
-            get {
-                return ResourceManager.GetString("XA4325_AssemblyFailure", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;SourceFiles&apos; and &apos;DestinationFiles&apos; item groups must contain the same number of items..
-        /// </summary>
-        public static string XA4325_SourceDestinationCount {
-            get {
-                return ResourceManager.GetString("XA4325_SourceDestinationCount", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous JNIEnv.FindClass source..
-        /// </summary>
-        public static string XA4326 {
-            get {
-                return ResourceManager.GetString("XA4326", resourceCulture);
-            }
-        }
-
         /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>

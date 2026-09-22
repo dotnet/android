@@ -52,13 +52,8 @@ namespace Kajabity.Tools.Java
         /// <param name="comments">Optional comments that are placed at the beginning of the output.</param>
         public void Write( Stream stream, string comments )
         {
-            //  Create a writer to output to an ISO-8859-1 encoding (code page 28592).
-            StreamWriter writer = new StreamWriter( stream, System.Text.Encoding.GetEncoding( 28592 ) );
-
-            //TODO: Confirm correct codepage:
-            //  28592              iso-8859-2                   Central European (ISO)
-            //  28591              iso-8859-1                   Western European (ISO)
-            //  from http://msdn.microsoft.com/en-us/library/system.text.encodinginfo.getencoding.aspx
+            //  Create a writer to output to an ISO-8859-1 encoding (code page 28591).
+            StreamWriter writer = new StreamWriter( stream, JavaProperties.DefaultEncoding );
 
             if( comments != null)
             {

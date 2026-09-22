@@ -60,6 +60,7 @@ namespace Android.App {
 		}
 	}
 
+	[Obsolete ("This class is obsoleted in this android platform")]
 	[Register ("mono/android/app/TabEventDispatcher")]
 	internal sealed class TabEventDispatcher : Java.Lang.Object, ActionBar.ITabListener {
 

@@ -1988,6 +1988,7 @@
   <ns-replace source="privatecompute"       replacement="PrivateCompute" />
   <ns-replace source="voiceinteraction"     replacement="VoiceInteractions" />
   <ns-replace source="permissionui"         replacement="PermissionUI" />
+  <ns-replace source="agenticon"            replacement="AgentIcon" />
   <ns-replace source="contentsafety"        replacement="ContentSafety" />
   <ns-replace source="personalcontext"      replacement="PersonalContext" />
   <ns-replace source="multisensory"         replacement="MultiSensory" />
