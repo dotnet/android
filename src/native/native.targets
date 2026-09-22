@@ -12,15 +12,6 @@
           DependsOnTargets="_PrepareCommonProperties;_ConfigureAndBuildArchiveDSOStub;_ConfigureAndBuildTestJniLibrary;_ConfigureRuntimes;_BuildAndroidRuntimes;_CopyToPackDirs">
   </Target>
 
-  <!-- The runtime check makes the target run only once, when building the CoreCLR runtime. Otherwise, when building in parallel, we will get
-       the "Text file busy" error on Ci, as both of the runtimes will attempt to compile and run the same binaries a the same time -->
-  <Target Name="_TestPinvokeTables" Condition=" '$(HostOS)' == 'Linux' And '$(RunningOnCI)' == 'true' And '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
-    <Exec
-        Command="..\..\build-tools\scripts\generate-pinvoke-tables.sh --test-only --ci"
-        WorkingDirectory="$(MSBuildThisFileDirectory)"
-        />
-  </Target>
-
   <Target Name="_ConfigureRuntimesInputs">
     <ItemGroup>
       <_ConfigureRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
@@ -211,7 +202,7 @@
   </Target>
 
   <Target Name="_BuildAndroidRuntimes"
-          DependsOnTargets="_BuildAndroidRuntimesInputs;_TestPinvokeTables"
+          DependsOnTargets="_BuildAndroidRuntimesInputs"
           Inputs="@(_BuildAndroidRuntimesInputs)"
           Outputs="@(_BuildAndroidRuntimesOutputs)">
     <Exec
