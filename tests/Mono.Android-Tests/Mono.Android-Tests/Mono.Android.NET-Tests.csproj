@@ -146,6 +146,7 @@
     <Compile Include="Java.Interop\JavaConvertTest.cs" />
     <Compile Include="Java.Interop\JavaListTest.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensionsTests.cs" />
+    <Compile Include="Java.Interop\JniRemappingLookupTests.cs" />
     <Compile Include="Java.Interop\ManagedObjectProxyTests.cs" />
     <Compile Include="Java.Interop\JnienvTest.cs" />
     <Compile Include="Java.Interop\RawInterfaceCollectionHolder.cs" />
