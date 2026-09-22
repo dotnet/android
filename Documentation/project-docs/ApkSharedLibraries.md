@@ -125,14 +125,14 @@ In order to examine content of our "payload" ELF shared library, one can run the
 shipped with the Android NDK (and also part of native developer tools on macOS and Linux distributions which have
 the LLVM Clang toolchain installed), or the `readelf` utility which is part of GNU binutils.
 
-File used in the samples below is the `.NET for Android` assembly store, wrapped in an ELF image for the Arm64
+File used in the samples below is a discrete managed assembly, wrapped in an ELF image for the Arm64
 (`AArch64`) architecture.
 
 The first command verifies that the file is a valid ELF image and shows the header information, including the
 target platform/abi/machine:
 
 ```shell
-$ llvm-readelf --file-header libassembly-store.so
+$ llvm-readelf --file-header lib_Test.dll.so
 ELF Header:
   Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
   Class:                             ELF64
@@ -159,7 +159,7 @@ The second command lists the sections contained within the ELF image, their alig
 into the file where the sections begin:
 
 ```shell
-$ llvm-readelf --section-headers libassembly-store.so
+$ llvm-readelf --section-headers lib_Test.dll.so
 There are 11 section headers, starting at offset 0xcf648:
 
 Section Headers:
@@ -192,7 +192,7 @@ shared library.
 In order to extract payload from the ELF image, one can use the following command:
 
 ```shell
-$ llvm-objcopy --dump-section=payload=payload.bin libassembly-store.so
+$ llvm-objcopy --dump-section=payload=payload.bin lib_Test.dll.so
 $ ls -gG payload.bin
 -rw-rw-r-- 1 833095 Sep 12 11:32 payload.bin
 ```
@@ -205,13 +205,10 @@ $ printf "%d\n" 0x0cb647
 833095
 ```
 
-In this case, the payload file is an assembly store, which should have its first 4 bytes read
-`XABA`, we can verify this with the following command:
+The extracted payload should match the original assembly:
 
 ```shell
-$ hexdump -c -n 4 payload.bin
-0000000   X   A   B   A
-0000004
+$ cmp payload.bin Test.dll
 ```
 
 ### Layout of the assembly store payload library
