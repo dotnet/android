@@ -20,7 +20,7 @@ namespace Java.InteropTests
 		}
 
 		[TestCase ("0/net/dot/android/remap/Before")]
-		[TestCase ("\uffff/net/dot/android/remap/After")]
+		[TestCase ("\ue000/net/dot/android/remap/After")]
 		public void ReplacementTypeLookupReturnsNullOutsideTable (string source)
 		{
 			Assert.IsNull (JniEnvironment.Runtime.TypeManager.GetReplacementType (source));
