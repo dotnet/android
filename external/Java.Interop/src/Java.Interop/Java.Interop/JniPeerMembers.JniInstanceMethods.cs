@@ -134,8 +134,9 @@ namespace Java.Interop
 					m.StaticRedirect = CreateTargetType (info, Members);
 					return m;
 				}
-				if (TryGetInstanceMethod (t, info, method, signature, out m))
+				if (TryGetInstanceMethod (t, info, method, signature, out m)) {
 					return m;
+				}
 				var targetType = GetTargetTypeNameForDiagnostics (info, Members);
 				var targetName = GetTargetMethodNameForDiagnostics (info, method);
 				var targetSignature = GetTargetMethodSignatureForDiagnostics (info, signature);
