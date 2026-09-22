@@ -4,11 +4,13 @@
 -->
 <Project>
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateR8JniRemapping" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateR8JniRemapping" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateR8JniRemapping" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 
   <Target Name="_AndroidR8JniRemappingInputs">
     <PropertyGroup>
-      <_AndroidR8JniTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '$(_XamarinAndroidBuildTasksAssembly)'))</_AndroidR8JniTaskAssembly>
+      <_AndroidR8JniTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '$(_MicrosoftAndroidBuildTasksAssembly)'))</_AndroidR8JniTaskAssembly>
+      <_AndroidR8JniLegacyTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '$(_XamarinAndroidBuildTasksAssembly)'))</_AndroidR8JniLegacyTaskAssembly>
     </PropertyGroup>
   </Target>
 
@@ -23,7 +25,7 @@
   <Target Name="_AndroidGenerateR8JniRemapping"
       Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidRuntime)' == 'CoreCLR' "
       DependsOnTargets="_AndroidGenerateR8JniRemappingInputs"
-      Inputs="$(_AndroidR8JniMappingFile);@(_AndroidRemapMembers);@(_AndroidR8JniRemappingAssembly);$(_AndroidBuildPropertiesCache);$(_AndroidR8JniTaskAssembly)"
+      Inputs="$(_AndroidR8JniMappingFile);@(_AndroidRemapMembers);@(_AndroidR8JniRemappingAssembly);$(_AndroidBuildPropertiesCache);$(_AndroidR8JniTaskAssembly);$(_AndroidR8JniLegacyTaskAssembly)"
       Outputs="$(_AndroidR8JniGeneratedRemappingXml);$(_AndroidR8JniRemappingXml)">
     <GenerateR8JniRemapping
         MappingFile="$(_AndroidR8JniMappingFile)"
@@ -41,7 +43,7 @@
 
   <Target Name="_AndroidGenerateR8JniRemappingNativeCode"
       DependsOnTargets="_AndroidGenerateR8JniRemapping;_PrepareAndroidRemapNativeAssemblySources"
-      Inputs="$(_AndroidR8JniRemappingXml);$(_AndroidBuildPropertiesCache);$(_AndroidR8JniTaskAssembly)"
+      Inputs="$(_AndroidR8JniRemappingXml);$(_AndroidBuildPropertiesCache);$(_AndroidR8JniLegacyTaskAssembly)"
       Outputs="@(_AndroidRemapAssemblySource)">
     <GenerateJniRemappingNativeCode
         OutputDirectory="$(_NativeAssemblySourceDir)"
@@ -79,7 +81,7 @@
   <Target Name="_AndroidGenerateNativeAotR8Remapping"
       Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' "
       DependsOnTargets="_AndroidGenerateNativeAotR8RemappingInputs"
-      Inputs="$(NativeObject);$(_AndroidR8JniMappingFile);@(_AndroidRemapMembers);$(_AndroidBuildPropertiesCache);$(_AndroidR8JniTaskAssembly)"
+      Inputs="$(NativeObject);$(_AndroidR8JniMappingFile);@(_AndroidRemapMembers);$(_AndroidBuildPropertiesCache);$(_AndroidR8JniTaskAssembly);$(_AndroidR8JniLegacyTaskAssembly)"
       Outputs="$(_AndroidNativeAotR8GeneratedRemappingXml);$(_AndroidNativeAotR8RemappingXml)">
     <GenerateR8JniRemapping
         MappingFile="$(_AndroidR8JniMappingFile)"
@@ -99,7 +101,7 @@
   <Target Name="_AndroidCompileNativeAotR8Remapping"
       Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' "
       DependsOnTargets="_AndroidGenerateNativeAotR8Remapping"
-      Inputs="$(_AndroidNativeAotR8RemappingXml);$(_AndroidR8JniTaskAssembly);$(_AndroidBuildPropertiesCache)"
+      Inputs="$(_AndroidNativeAotR8RemappingXml);$(_AndroidR8JniLegacyTaskAssembly);$(_AndroidBuildPropertiesCache)"
       Outputs="@(_AndroidNativeAotR8RemappingSource);@(_AndroidNativeAotR8RemappingObject)">
     <GenerateJniRemappingNativeCode
         RemappingXmlFilePath="$(_AndroidNativeAotR8RemappingXml)"
