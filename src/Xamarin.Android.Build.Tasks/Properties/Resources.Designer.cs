@@ -2006,6 +2006,42 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not extract Java type map keys from &apos;{0}&apos;: {1}.
+        /// </summary>
+        public static string XA4327 {
+            get {
+                return ResourceManager.GetString("XA4327", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Could not generate typemap ProGuard configuration from &apos;{0}&apos;: {1}.
+        /// </summary>
+        public static string XA4328 {
+            get {
+                return ResourceManager.GetString("XA4328", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No retained Java type map key files were provided..
+        /// </summary>
+        public static string XA4328_NoInputs {
+            get {
+                return ResourceManager.GetString("XA4328_NoInputs", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Line {0} contains an invalid retained Java class name: &apos;{1}&apos;..
+        /// </summary>
+        public static string XA4328_InvalidName {
+            get {
+                return ResourceManager.GetString("XA4328_InvalidName", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>
         public static string XA5101 {
