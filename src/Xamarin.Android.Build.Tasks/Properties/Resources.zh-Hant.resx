@@ -506,7 +506,7 @@ In this message, the term "binding" means a piece of generated code that makes i
 {1} - The SupportedOSPlatformVersion property value</comment>
   </data>
   <data name="XA1037" xml:space="preserve">
-    <value>Unsupported @(Reference) item: {0}</value>
+    <value>不支援的 @(Reference) 項目: {0}</value>
     <comment>The following are literal names and should not be translated: @(Reference)
 {0} - The unsupported reference item</comment>
   </data>
@@ -888,23 +888,6 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <value>[{0}] 無法刪除來源檔案 '{1}'</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
-  </data>
-  <data name="XA4325" xml:space="preserve">
-    <value>無法重寫 R8 的受管理 JNI 名稱。{0}</value>
-    <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4325_* resources.</comment>
-  </data>
-  <data name="XA4325_AssemblyFailure" xml:space="preserve">
-    <value>無法重寫組件 '{0}' 中的 JNI 名稱: {1}</value>
-    <comment>{0} - The path of the assembly which could not be rewritten.
-{1} - The underlying message describing why the assembly could not be rewritten. It is not localized.</comment>
-  </data>
-  <data name="XA4325_SourceDestinationCount" xml:space="preserve">
-    <value>'SourceFiles' 和 'DestinationFiles' 項目群組必須包含相同數量的項目。</value>
-    <comment>The following are literal MSBuild item group names and should not be translated: 'SourceFiles', 'DestinationFiles'.</comment>
-  </data>
-  <data name="XA4326" xml:space="preserve">
-    <value>無法安全地重寫 JNI 成員查閱，因為其類別控制代碼沒有一個在結構上明確的 JNIEnv.FindClass 來源。</value>
-    <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>缺少 Android NDK 工具鏈目錄 '{0}'。請安裝 Android NDK。</value>

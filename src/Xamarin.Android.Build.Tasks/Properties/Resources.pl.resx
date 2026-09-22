@@ -506,7 +506,7 @@ Zmień wartość w pliku AndroidManifest.xml, aby odpowiadała wartości $(Suppo
 {1} - The SupportedOSPlatformVersion property value</comment>
   </data>
   <data name="XA1037" xml:space="preserve">
-    <value>Unsupported @(Reference) item: {0}</value>
+    <value>Nieobsługiwany element @(Reference): {0}</value>
     <comment>The following are literal names and should not be translated: @(Reference)
 {0} - The unsupported reference item</comment>
   </data>
@@ -888,23 +888,6 @@ Usuń odwołanie „{0}” z projektu i zamiast niego dodaj pakiet NuGet „{1}�
     <value>[{0}] Nie można usunąć pliku źródłowego „{1}”</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
-  </data>
-  <data name="XA4325" xml:space="preserve">
-    <value>Nie można zmodyfikować zarządzanych nazw JNI dla kompilatora R8. {0}</value>
-    <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4325_* resources.</comment>
-  </data>
-  <data name="XA4325_AssemblyFailure" xml:space="preserve">
-    <value>Nie można zmodyfikować nazw JNI w zestawie „{0}”: {1}</value>
-    <comment>{0} - The path of the assembly which could not be rewritten.
-{1} - The underlying message describing why the assembly could not be rewritten. It is not localized.</comment>
-  </data>
-  <data name="XA4325_SourceDestinationCount" xml:space="preserve">
-    <value>Grupy elementów „SourceFiles” i „DestinationFiles” muszą zawierać taką samą liczbę elementów.</value>
-    <comment>The following are literal MSBuild item group names and should not be translated: 'SourceFiles', 'DestinationFiles'.</comment>
-  </data>
-  <data name="XA4326" xml:space="preserve">
-    <value>Nie można bezpiecznie zmodyfikować wyszukiwania składowej JNI, ponieważ jego dojście do klasy nie ma jednego strukturalnie jednoznacznego źródła JNIEnv.FindClass.</value>
-    <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>Brak katalogu łańcuchów narzędzi zestawu Android NDK „{0}”. Zainstaluj zestaw Android NDK.</value>

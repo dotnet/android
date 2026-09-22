@@ -506,7 +506,7 @@ Buď změňte hodnotu v souboru AndroidManifest.xml tak, aby odpovídala hodnot�
 {1} - The SupportedOSPlatformVersion property value</comment>
   </data>
   <data name="XA1037" xml:space="preserve">
-    <value>Unsupported @(Reference) item: {0}</value>
+    <value>Nepodporovaná položka @(Reference): {0}</value>
     <comment>The following are literal names and should not be translated: @(Reference)
 {0} - The unsupported reference item</comment>
   </data>
@@ -888,23 +888,6 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
     <value>[{0}] Nepovedlo se odstranit zdrojový soubor {1}</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
-  </data>
-  <data name="XA4325" xml:space="preserve">
-    <value>Nepovedlo se přepsat spravované názvy JNI pro R8. {0}</value>
-    <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4325_* resources.</comment>
-  </data>
-  <data name="XA4325_AssemblyFailure" xml:space="preserve">
-    <value>Nepodařilo se přepsat názvy JNI v sestavení {0}: {1}</value>
-    <comment>{0} - The path of the assembly which could not be rewritten.
-{1} - The underlying message describing why the assembly could not be rewritten. It is not localized.</comment>
-  </data>
-  <data name="XA4325_SourceDestinationCount" xml:space="preserve">
-    <value>Skupiny položek SourceFiles a DestinationFiles musí obsahovat stejný počet položek.</value>
-    <comment>The following are literal MSBuild item group names and should not be translated: 'SourceFiles', 'DestinationFiles'.</comment>
-  </data>
-  <data name="XA4326" xml:space="preserve">
-    <value>Vyhledání člena JNI nelze bezpečně přepsat, protože jeho popisovač třídy nemá jediný strukturálně jednoznačný zdroj JNIEnv.FindClass.</value>
-    <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>Chybí adresář sady nástrojů Android NDK {0}. Nainstalujte prosím sadu Android NDK.</value>
