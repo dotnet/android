@@ -32,12 +32,13 @@ comma-separated list of `NAME[=VALUE]` categories:
   `mono.android.app.DUMP_TIMING_DATA` broadcast is received.
 
 NativeAOT supports `gref`, `gref=FILE`, `lref`, `lref=FILE`, and `all` for
-managed JNI reference logging.
+managed JNI reference logging. Bare `gref` and `lref` values log to logcat;
+the `=FILE` forms write to the requested path.
 
-The `gref` and `lref` forms write complete logs to `grefs.txt` and
-`lrefs.txt` under the application's `files/.__override__` directory. The `+`
-forms write best-effort output to logcat and can affect application
-performance.
+For CoreCLR, the bare `gref` and `lref` forms write complete logs to
+`grefs.txt` and `lrefs.txt` under the application's `files/.__override__`
+directory. The `+` forms write best-effort output to logcat and can affect
+application performance.
 
 Example:
 

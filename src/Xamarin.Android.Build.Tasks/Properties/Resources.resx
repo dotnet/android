@@ -233,10 +233,6 @@ Note: the Android Designer is incompatible with Java SDK 11.0: https://aka.ms/vs
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
 {0} - The library name.</comment>
   </data>
-  <data name="XA0104" xml:space="preserve">
-    <value>Invalid value for `$(AndroidSequencePointsMode)`: {0}</value>
-    <comment>The following are literal names and should not be translated: `$(AndroidSequencePointsMode)`</comment>
-  </data>
   <data name="XA0105" xml:space="preserve">
     <value>The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)

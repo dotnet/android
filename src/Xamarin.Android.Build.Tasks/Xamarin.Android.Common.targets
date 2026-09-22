@@ -263,7 +263,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 	<_PackagedResources>$(IntermediateOutputPath)android\bin\packaged_resources</_PackagedResources>
 
-	<_AndroidSequencePointsMode Condition=" '$(_AndroidSequencePointsMode)' == ''">None</_AndroidSequencePointsMode>
 	<_AndroidBuildPropertiesCache>$(IntermediateOutputPath)build.props</_AndroidBuildPropertiesCache>
 	<_AdbPropertiesCache>$(IntermediateOutputPath)adb.props</_AdbPropertiesCache>
 	<AndroidMakeBundleKeepTemporaryFiles Condition=" '$(AndroidMakeBundleKeepTemporaryFiles)' == '' ">False</AndroidMakeBundleKeepTemporaryFiles>
@@ -936,7 +935,6 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidSdkPath=$(_AndroidSdkDirectory)" />
 		<_PropertyCacheItems Include="AndroidNdkPath=$(_AndroidNdkDirectory)" />
 		<_PropertyCacheItems Include="JavaSdkPath=$(_JavaSdkDirectory)" />
-		<_PropertyCacheItems Include="AndroidSequencePointsMode=$(_AndroidSequencePointsMode)" />
 		<_PropertyCacheItems Include="AndroidNETSdkVersion=$(AndroidNETSdkVersion)" />
 		<_PropertyCacheItems Include="AndroidUseLatestPlatformSdk=$(AndroidUseLatestPlatformSdk)" />
 		<_PropertyCacheItems Include="TargetFrameworkVersion=$(TargetFrameworkVersion)" />
