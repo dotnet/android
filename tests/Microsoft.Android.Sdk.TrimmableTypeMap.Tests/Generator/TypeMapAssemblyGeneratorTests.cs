@@ -98,6 +98,72 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_ExportWithoutXmlMarshalling_DoesNotReferenceSystemXml ()
+	{
+		var peer = ScanFixtures ().Single (p => p.JavaName == "my/app/ExportExample");
+		using var stream = GenerateAssembly (new [] { peer });
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var asmRefs = reader.AssemblyReferences
+			.Select (h => reader.GetString (reader.GetAssemblyReference (h).Name))
+			.ToList ();
+		var typeNames = GetTypeRefNames (reader);
+
+		Assert.DoesNotContain ("System.Xml.ReaderWriter", asmRefs);
+		Assert.DoesNotContain ("XmlReader", typeNames);
+		Assert.DoesNotContain ("XmlPullParserReader", typeNames);
+		Assert.DoesNotContain ("XmlResourceParserReader", typeNames);
+		Assert.DoesNotContain ("XmlReaderPullParser", typeNames);
+		Assert.DoesNotContain ("XmlReaderResourceParser", typeNames);
+	}
+
+	[Fact]
+	public void Generate_ExportWithXmlMarshalling_EmitsAdapterReferences ()
+	{
+		var peer = ScanFixtures ().Single (p => p.JavaName == "my/app/ExportMarshallingShapes");
+		using var stream = GenerateAssembly (new [] { peer });
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var asmRefs = reader.AssemblyReferences
+			.Select (h => reader.GetString (reader.GetAssemblyReference (h).Name))
+			.ToList ();
+
+		Assert.Contains ("System.Xml.ReaderWriter", asmRefs);
+
+		var expectedAdapters = new [] {
+			(Key: "PullParserFromHandle", Parent: "XmlPullParserReader", Method: "FromJniHandle", ReturnType: "System.Xml.XmlReader",
+				ParameterTypes: new [] { "System.IntPtr", "Android.Runtime.JniHandleOwnership" }),
+			(Key: "ResourceParserFromHandle", Parent: "XmlResourceParserReader", Method: "FromJniHandle", ReturnType: "System.Xml.XmlReader",
+				ParameterTypes: new [] { "System.IntPtr", "Android.Runtime.JniHandleOwnership" }),
+			(Key: "PullParserToHandle", Parent: "XmlReaderPullParser", Method: "ToLocalJniHandle", ReturnType: "System.IntPtr",
+				ParameterTypes: new [] { "System.Xml.XmlReader" }),
+			(Key: "ResourceParserToHandle", Parent: "XmlReaderResourceParser", Method: "ToLocalJniHandle", ReturnType: "System.IntPtr",
+				ParameterTypes: new [] { "System.Xml.XmlReader" }),
+		};
+		var adapterHandles = new Dictionary<string, MemberReferenceHandle> ();
+		foreach (var expected in expectedAdapters) {
+			var handle = FindMemberReferenceHandle (reader, "Android.Runtime", expected.Parent, expected.Method);
+			var signature = reader.GetMemberReference (handle).DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+
+			Assert.Equal (expected.ReturnType, signature.ReturnType);
+			Assert.Equal (expected.ParameterTypes, signature.ParameterTypes);
+			adapterHandles.Add (expected.Key, handle);
+		}
+
+		var pullParserCalls = ReadMethodCallTokens (pe, reader, "n_readXml_uco_");
+		Assert.Contains (MetadataTokens.GetToken (adapterHandles ["PullParserFromHandle"]), pullParserCalls);
+		Assert.Contains (MetadataTokens.GetToken (adapterHandles ["PullParserToHandle"]), pullParserCalls);
+		Assert.DoesNotContain (MetadataTokens.GetToken (adapterHandles ["ResourceParserFromHandle"]), pullParserCalls);
+		Assert.DoesNotContain (MetadataTokens.GetToken (adapterHandles ["ResourceParserToHandle"]), pullParserCalls);
+
+		var resourceParserCalls = ReadMethodCallTokens (pe, reader, "n_readResourceXml_uco_");
+		Assert.Contains (MetadataTokens.GetToken (adapterHandles ["ResourceParserFromHandle"]), resourceParserCalls);
+		Assert.Contains (MetadataTokens.GetToken (adapterHandles ["ResourceParserToHandle"]), resourceParserCalls);
+		Assert.DoesNotContain (MetadataTokens.GetToken (adapterHandles ["PullParserFromHandle"]), resourceParserCalls);
+		Assert.DoesNotContain (MetadataTokens.GetToken (adapterHandles ["PullParserToHandle"]), resourceParserCalls);
+	}
+
+	[Fact]
 	public void Generate_InheritedGenericBaseCallback_UsesValueTypeGenericArgument ()
 	{
 		var peer = ScanFixtures ().Single (p => p.JavaName == "my/app/EnumSelectableList");
@@ -1312,6 +1378,11 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 	static MemberReferenceHandle FindCallbackMemberRefHandle (MetadataReader reader, string methodName, string parentNamespace, string parentName)
 	{
+		return FindMemberReferenceHandle (reader, parentNamespace, parentName, methodName);
+	}
+
+	static MemberReferenceHandle FindMemberReferenceHandle (MetadataReader reader, string parentNamespace, string parentName, string methodName)
+	{
 		var refs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
 			.Select (MetadataTokens.MemberReferenceHandle)
 			.Where (h => {
@@ -1351,6 +1422,16 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	static List<int> ReadLdftnTokens (byte [] ilBytes)
 	{
 		return ReadInlineMetadataTokens (ilBytes, 0xFE, 0x06);
+	}
+
+	static List<int> ReadMethodCallTokens (PEReader pe, MetadataReader reader, string methodNamePrefix)
+	{
+		var method = reader.MethodDefinitions
+			.Select (handle => reader.GetMethodDefinition (handle))
+			.Single (method => reader.GetString (method.Name).StartsWith (methodNamePrefix, StringComparison.Ordinal));
+		var ilBytes = pe.GetMethodBody (method.RelativeVirtualAddress).GetILBytes ();
+		Assert.NotNull (ilBytes);
+		return ReadCallTokens (ilBytes);
 	}
 
 	static List<int> ReadCallTokens (byte [] ilBytes)
