@@ -214,7 +214,9 @@ namespace Xamarin.ProjectTools
 		{
 			var runtimeInfo = new List<RuntimeInfo> ();
 			var runtimeDirs = new HashSet<string> ();
-			var rootRuntimeDirs = Directory.GetDirectories (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Runtime.CoreCLR.{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}.*");
+			var targetPlatform = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
+			var versionString = targetPlatform.Minor == 0 ? $"{targetPlatform.Major}" : $"{targetPlatform.Major}.{targetPlatform.Minor}";
+			var rootRuntimeDirs = Directory.GetDirectories (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Runtime.CoreCLR.{versionString}.*");
 			foreach (var dir in rootRuntimeDirs) {
 				runtimeDirs.Add (Directory.GetDirectories (dir).LastOrDefault ());
 			}
