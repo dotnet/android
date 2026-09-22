@@ -51,10 +51,6 @@
           Include="@(AndroidBuildApiLevel)"
           Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidLatestStableApiLevel)' and Exists('$(_MonoAndroidNETOutputRoot)%(AndroidBuildApiLevel.Identity)\Mono.Android.dll') "
       />
-      <_AndroidAdditionalPackInfo Include="@(_AndroidAdditionalApiLevel)">
-        <AndroidRuntime>%(_AndroidRIDs.Runtime)</AndroidRuntime>
-        <AndroidRID>%(_AndroidRIDs.Identity)</AndroidRID>
-      </_AndroidAdditionalPackInfo>
     </ItemGroup>
   </Target>
 
@@ -65,7 +61,7 @@
 
   <Target Name="_CreateAdditionalApiLevelPacks"
       DependsOnTargets="_CreateItemGroups">
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Runtime.%(_AndroidAdditionalPackInfo.AndroidRuntime).%(_AndroidAdditionalPackInfo.Identity).%(_AndroidAdditionalPackInfo.AndroidRID).binlog&quot; -p:AndroidApiLevel=%(_AndroidAdditionalPackInfo.Identity) -p:AndroidRID=%(_AndroidAdditionalPackInfo.AndroidRID) -p:AndroidRuntime=%(_AndroidAdditionalPackInfo.AndroidRuntime) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <!-- Native runtime packs are API-independent and are created once for AndroidLatestStableApiLevel. -->
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Runtime.Managed.%(_AndroidAdditionalApiLevel.Identity).binlog&quot; -p:AndroidApiLevel=%(_AndroidAdditionalApiLevel.Identity) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.Managed.proj&quot;" />
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Ref.%(_AndroidAdditionalApiLevel.Identity).binlog&quot; -p:AndroidApiLevel=%(_AndroidAdditionalApiLevel.Identity) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
   </Target>
