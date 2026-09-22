@@ -317,23 +317,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</Otherwise>
 </Choose>
 
-<PropertyGroup Condition=" '$(_AndroidRuntime)' != 'CoreCLR' ">
-  <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' and ('$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true') ">false</AndroidUseAssemblyStore>
-  <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
-  <_AndroidUseAssemblyStore>$(AndroidUseAssemblyStore)</_AndroidUseAssemblyStore>
-  <_AndroidDlopenAssemblyStore>false</_AndroidDlopenAssemblyStore>
-</PropertyGroup>
-
 <!-- For CoreCLR assembly stores are always on, individual assembly entries in the APK aren't supported.
      The store, however, will NOT be built for Fastdev! -->
 <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">
   <_AndroidUseAssemblyStore Condition="'$(EmbedAssembliesIntoApk)' == 'true' ">true</_AndroidUseAssemblyStore>
   <_AndroidUseAssemblyStore Condition="'$(EmbedAssembliesIntoApk)' != 'true' ">false</_AndroidUseAssemblyStore>
-  <!-- CoreCLR's native host ONLY supports the dlopen()-based assembly store: the store is wrapped as
-       a real shared library whose payload is exposed via the `_assembly_store` dynamic symbol,
-       and the host resolves it with dlopen()+dlsym() (there is no ZIP-scanning fallback). This value
-       is intentionally hardcoded and MUST NOT be overridden. -->
-  <_AndroidDlopenAssemblyStore>true</_AndroidDlopenAssemblyStore>
 </PropertyGroup>
 
 <PropertyGroup>
@@ -2212,7 +2200,6 @@ because xbuild doesn't support framework reference assemblies.
   -->
   <CreateAssemblyStore
       Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
-      TargetRuntime="$(_AndroidRuntime)"
       AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       ResolvedFrameworkAssemblies="@(_BuildApkResolvedFrameworkAssemblies)"
@@ -2222,15 +2209,6 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="AssembliesToAddToArchive" ItemName="_BuildApkAssembliesToAddToArchive" />
   </CreateAssemblyStore>
 
-  <!-- CoreCLR's host resolves the assembly store only via dlopen()+dlsym(), with no
-       ZIP-scanning fallback. Fail fast if a later import overrides this value. -->
-  <Error
-      Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidDlopenAssemblyStore)' != 'true' "
-      Text="Internal error: _AndroidDlopenAssemblyStore must be 'true' for the CoreCLR runtime, but was '$(_AndroidDlopenAssemblyStore)'. This property is dictated by the runtime and must not be overridden." />
-  <Error
-      Condition=" '$(_AndroidRuntime)' != 'CoreCLR' and '$(_AndroidDlopenAssemblyStore)' != 'false' "
-      Text="Internal error: _AndroidDlopenAssemblyStore must be 'false' for the '$(_AndroidRuntime)' runtime, but was '$(_AndroidDlopenAssemblyStore)'. This property is dictated by the runtime and must not be overridden." />
-
   <WrapAssembliesAsSharedLibraries
       Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
@@ -2239,7 +2217,6 @@ because xbuild doesn't support framework reference assemblies.
       ResolvedAssemblies="@(_BuildApkAssembliesToAddToArchive)"
       SupportedAbis="@(_BuildTargetAbis)"
       UseAssemblyStore="$(_AndroidUseAssemblyStore)"
-      UseDlopenAssemblyStore="$(_AndroidDlopenAssemblyStore)"
       RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
     <Output TaskParameter="WrappedAssemblies" ItemName="FilesToAddToArchive" />
   </WrapAssembliesAsSharedLibraries>

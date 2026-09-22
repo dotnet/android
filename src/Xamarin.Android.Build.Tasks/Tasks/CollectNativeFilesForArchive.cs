@@ -103,7 +103,10 @@ public class CollectNativeFilesForArchive : AndroidTask
 		// Task output parameters
 		FilesToAddToArchive = apk.ToArray ();
 		OutputFiles = outputFiles.Select (a => new TaskItem (a)).ToArray ();
-		DSODirectoriesToDelete = DSOWrapperGenerator.GetDirectoriesToCleanUp (dsoWrapperConfig).Select (d => new TaskItem (d)).ToArray ();
+		DSODirectoriesToDelete = DSOWrapperGenerator.GetDirectoriesToCleanUp (dsoWrapperConfig)
+			.Concat (DlopenAssemblyStoreGenerator.GetDirectoriesToCleanUp (IntermediateOutputPath, SupportedAbis))
+			.Select (d => new TaskItem (d))
+			.ToArray ();
 
 		return !Log.HasLoggedErrors;
 	}

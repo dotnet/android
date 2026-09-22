@@ -22,27 +22,19 @@ partial class AssemblyStoreGenerator
 			this.index_entry_count = index_entry_count;
 			this.index_size = index_size;
 		}
-#if XABT_TESTS
-		public AssemblyStoreHeader (uint magic, uint version, uint entry_count, uint index_entry_count, uint index_size)
-			: this (version, entry_count, index_entry_count, index_size)
-		{
-			this.magic = magic;
-		}
-#endif
 	}
 
 	sealed class AssemblyStoreIndexEntry
 	{
 		// We treat `bool` as `byte` here, since that's what gets written to the binary
-		public const uint NativeSize32 = 2 * sizeof (uint) + sizeof (byte);
-		public const uint NativeSize64 = sizeof (ulong) + sizeof (uint) + sizeof (byte);
+		public const uint NativeSize = 2 * sizeof (uint) + sizeof (byte);
 
 		public readonly string name;
-		public readonly ulong name_hash;
+		public readonly uint name_hash;
 		public readonly uint  descriptor_index;
 		public readonly bool ignore;
 
-		public AssemblyStoreIndexEntry (string name, ulong name_hash, uint descriptor_index, bool ignore)
+		public AssemblyStoreIndexEntry (string name, uint name_hash, uint descriptor_index, bool ignore)
 		{
 			this.name = name;
 			this.name_hash = name_hash;

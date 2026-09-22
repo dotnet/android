@@ -29,23 +29,17 @@ Fast Deployment is in effect (in which case assemblies aren't placed
 in the archives at all, they are instead synchronized from the host to
 the device/emulator filesystem).
 
-Applications using MonoVM runtime have the option to turn assembly
-stores off in favor of individual assemblies, but CoreCLR applications
-(with the exception of FastDev, as mentioned above) support only
-this form of assembly storage.
+CoreCLR applications use this form of assembly storage whenever
+assemblies are embedded in the application. Fast Deployment keeps
+assemblies outside the archive and therefore does not create a store.
 
 ## Rationale
 
-During native startup, the .NET for Android runtime looks inside the
-application APK file for the managed assemblies (and their associated
-pdb and config files, if applicable) in order to map them (using the
-`mmap(2)` call) into memory so that they can be given to the Mono
-runtime when it requests a given assembly is loaded.  The reason for
-the memory mapping is that, as far as Android is concerned, managed
-assembly files are just data/resources and, thus, aren't extracted to
-the filesystem.  As a result, Mono wouldn't be able to find the
-assemblies by scanning the filesystem - the host application
-(.NET for Android) must give it a hand in finding them.
+During native startup, the .NET for Android runtime must make the
+managed assemblies (and their associated pdb and config files, if
+applicable) available to CoreCLR. As far as Android is concerned,
+managed assembly files are data rather than native libraries and are
+not independently extracted from the archive.
 
 Applications can contain hundreds of assemblies (for instance a Hello
 World MAUI application currently contains over 120 assemblies) and
@@ -59,19 +53,12 @@ An assembly store, however, needs to be mapped only once and any
 further operations are merely pointer arithmetic, making the process
 not only faster but also reducing the algorithm complexity to O(1).
 
-The way the store is located and mapped depends on the runtime:
-
-  - **MonoVM** locates the store by scanning the APK/AAB ZIP central
-    directory, then `mmap(2)`s the wrapper shared library and walks its
-    ELF section headers by hand to find the `payload` section.
-  - **CoreCLR** relies on the dynamic linker instead: the store is
-    wrapped in a shared library whose payload lives in a *loadable* ELF
-    section pointed at by the exported `_assembly_store` dynamic symbol.
-    The runtime simply `dlopen()`s `libassembly-store.so` and resolves
-    the payload pointer with `dlsym("_assembly_store")`; there is no
-    ZIP scanning or manual section-header parsing. See
-    [ApkSharedLibraries.md](ApkSharedLibraries.md) for the two payload
-    layouts.
+The store is wrapped in a shared library whose payload lives in a
+*loadable* ELF section pointed at by the exported `_assembly_store`
+dynamic symbol. The runtime `dlopen()`s `libassembly-store.so` and
+resolves the payload pointer with `dlsym("_assembly_store")`; there is
+no ZIP scanning or manual section-header parsing. See
+[ApkSharedLibraries.md](ApkSharedLibraries.md) for the payload layout.
 
 # Store locations
 
@@ -107,7 +94,7 @@ and aligned to a byte boundary.
 The header is a fixed-size structure at the beginning of each assembly store file:
 
 - **MAGIC** (`uint32_t`) - Magic value `0x41424158` ("XABA" in little-endian)
-- **FORMAT_VERSION** (`uint32_t`) - Store format version number (includes ABI and 64-bit flags). Version `3` is used by MonoVM and CoreCLR applications (see [Hash table format](#hash-table-format))
+- **FORMAT_VERSION** (`uint32_t`) - Store format version number (includes ABI and 64-bit flags). The current format version is `3` (see [Hash table format](#hash-table-format))
 - **ENTRY_COUNT** (`uint32_t`) - Number of assemblies in the store
 - **INDEX_ENTRY_COUNT** (`uint32_t`) - Number of entries in the index (typically `ENTRY_COUNT * 2`)
 - **INDEX_SIZE** (`uint32_t`) - Index size in bytes
@@ -116,7 +103,7 @@ The header is a fixed-size structure at the beginning of each assembly store fil
 
 Variable-size section containing hash-based lookup entries for assembly names. Contains `INDEX_ENTRY_COUNT` entries (typically `ENTRY_COUNT * 2` entries to handle assembly names both with and without file extensions):
 
-- **NAME_HASH** (`hash_t`) - Hash of the assembly name. For CoreCLR applications this is always a `uint32_t` CRC32 hash regardless of platform bitness. For MonoVM applications it is an xxHash (`uint32_t` on 32-bit platforms, `uint64_t` on 64-bit platforms)
+- **NAME_HASH** (`uint32_t`) - CRC32 hash of the assembly name, regardless of platform bitness
 - **DESCRIPTOR_INDEX** (`uint32_t`) - Index into the assembly descriptor array
 - **IGNORE** (`uint8_t`) - If set to any value other than 0, the assembly should be ignored during loading
 
@@ -225,21 +212,13 @@ The index contains entries for assembly name lookups, with each entry formatted 
 
 Each entry contains the assembly name hash. In case of satellite assemblies, 
 the assembly culture (e.g. `en/` or `fr/`) is treated as part of the assembly 
-name, thus resulting in a unique hash. The hash is
-calculated **without** including the `.dll` extension. This is done
-for runtime efficiency as the vast majority of runtime requests to load
-an assembly do not include the `.dll` suffix, thus saving us time of
-appending it in order to generate the hash for index lookup. 
+name, thus resulting in a unique hash. Each assembly contributes two index entries. One hashes the full
+assembly name including the `.dll` extension, and the other hashes the
+extensionless name. Each hash is calculated from its exact lookup key.
 
-The hashing algorithm depends on the runtime the application targets:
-
- - **CoreCLR** (store format version `3`): the hash is a 32-bit
-   [CRC32](https://en.wikipedia.org/wiki/Cyclic_redundancy_check)
-   value, used on both 32-bit and 64-bit platforms.
- - **MonoVM** (store format version `3`): the hash is obtained using the
-   [xxHash](https://cyan4973.github.io/xxHash/) algorithm and is
-   platform-specific (32-bit on 32-bit platforms, 64-bit on 64-bit
-   platforms).
+The hash is a 32-bit
+[CRC32](https://en.wikipedia.org/wiki/Cyclic_redundancy_check)
+value on both 32-bit and 64-bit platforms.
 
 Because the CoreCLR hash is only 32 bits wide, hash collisions between
 two different assembly names are possible (albeit extremely unlikely).
@@ -262,10 +241,8 @@ struct AssemblyStoreIndexEntry
 
 Individual fields have the following meanings:
 
- - `name_hash`: the hash of the assembly's name **without** the `.dll`
-   suffix. For CoreCLR this is always a 32-bit CRC32 hash; for MonoVM
-   it is a platform-specific xxHash (32-bit hash on 32-bit platforms,
-   64-bit hash on 64-bit platforms)
+ - `name_hash`: the 32-bit CRC32 hash of the entry's lookup key (either
+   the full assembly name or its extensionless form)
  - `descriptor_index`: index into assembly store [Assembly descriptor table](#assembly-descriptor-table)
    describing the assembly.
  - `ignore`: if set to anything other than 0, the assembly should be ignored when loading
@@ -300,7 +277,9 @@ struct [[gnu::packed]] AssemblyStoreIndexEntry final
 };
 ```
 
-This structure represents an entry in the Assembly Store index. In the CoreCLR native header ([`xamarin-app.hh`](../../src/native/clr/include/xamarin-app.hh)), `xamarin::android::hash_t` is defined as `uint32_t`, so `name_hash` holds the 32-bit CRC32 hash of the assembly name on all platforms. MonoVM stores instead use a platform-specific xxHash (`uint32_t` on 32-bit platforms and `XXH64_hash_t` on 64-bit platforms).
+This structure represents an entry in the Assembly Store index.
+`xamarin::android::hash_t` is defined as `uint32_t`, so `name_hash`
+holds the 32-bit CRC32 hash of the assembly name on all platforms.
 
 ## AssemblyStoreEntryDescriptor
 

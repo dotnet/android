@@ -15,10 +15,10 @@ class AssemblyStoreBuilder
 	readonly TaskLoggingHelper log;
 	readonly AssemblyStoreGenerator storeGenerator;
 
-	public AssemblyStoreBuilder (TaskLoggingHelper log, AndroidRuntime targetRuntime)
+	public AssemblyStoreBuilder (TaskLoggingHelper log)
 	{
 		this.log = log;
-		storeGenerator = new (log, targetRuntime);
+		storeGenerator = new (log);
 	}
 
 	public void AddAssembly (string assemblySourcePath, ITaskItem assemblyItem, bool includeDebugSymbols)

@@ -429,15 +429,12 @@ namespace Xamarin.Android.Build.Tests
 				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 
 				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
-				EnvironmentHelper.IApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles, runtime);
+				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
 
 				string apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
-				uint numberOfAssembliesInApk = runtime switch {
-					AndroidRuntime.CoreCLR => ((EnvironmentHelper.ApplicationConfig)app_config).number_of_assemblies_in_apk,
-					_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
-				};
+				uint numberOfAssembliesInApk = app_config.number_of_assemblies_in_apk;
 
 				foreach (AndroidTargetArch arch in targetArches) {
 					Assert.AreEqual (
