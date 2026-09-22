@@ -51,7 +51,7 @@ namespace Java.Interop
 
 		internal void Dispose ()
 		{
-			Clear (ref instanceMethods);
+			Clear (ref instanceMethods, static method => method.StaticRedirect?.Dispose ());
 			Clear (ref subclassConstructors, static value => value.Dispose ());
 
 			if (jniPeerType != null)
@@ -127,15 +127,20 @@ namespace Java.Interop
 			var newMethod      = Members.GetReplacementMethodInfo (method, signature);
 			if (newMethod.HasValue) {
 				var info = newMethod.Value;
-				using var t = CreateTargetType (info, Members);
-				if (info.TargetJniMethodInstanceToStatic &&
-						TryGetStaticMethod (t, info, method, signature, out m)) {
-					m.ParameterCount = info.TargetJniMethodParameterCount;
-					m.StaticRedirect = CreateTargetType (info, Members);
-					return m;
-				}
-				if (TryGetInstanceMethod (t, info, method, signature, out m)) {
-					return m;
+				JniType? t = CreateTargetType (info, Members);
+				try {
+					if (info.TargetJniMethodInstanceToStatic &&
+							TryGetStaticMethod (t, info, method, signature, out m)) {
+						m.ParameterCount = info.TargetJniMethodParameterCount;
+						m.StaticRedirect = t;
+						t = null;
+						return m;
+					}
+					if (TryGetInstanceMethod (t, info, method, signature, out m)) {
+						return m;
+					}
+				} finally {
+					t?.Dispose ();
 				}
 				var targetType = GetTargetTypeNameForDiagnostics (info, Members);
 				var targetName = GetTargetMethodNameForDiagnostics (info, method);
@@ -148,15 +153,20 @@ namespace Java.Interop
 			newMethod = JniPeerMembers.GetBaseReplacementMethodInfo (DeclaringType, method, signature);
 			if (newMethod.HasValue) {
 				var info = newMethod.Value;
-				using var t = CreateTargetType (info, TargetJniTypeName);
-				if (info.TargetJniMethodInstanceToStatic &&
-						TryGetStaticMethod (t, info, method, signature, out m)) {
-					m.ParameterCount = info.TargetJniMethodParameterCount;
-					m.StaticRedirect = CreateTargetType (info, TargetJniTypeName);
-					return m;
+				JniType? t = CreateTargetType (info, TargetJniTypeName);
+				try {
+					if (info.TargetJniMethodInstanceToStatic &&
+							TryGetStaticMethod (t, info, method, signature, out m)) {
+						m.ParameterCount = info.TargetJniMethodParameterCount;
+						m.StaticRedirect = t;
+						t = null;
+						return m;
+					}
+					if (TryGetInstanceMethod (t, info, method, signature, out m))
+						return m;
+				} finally {
+					t?.Dispose ();
 				}
-				if (TryGetInstanceMethod (t, info, method, signature, out m))
-					return m;
 			}
 
 			return JniPeerType.GetInstanceMethod (method, signature);

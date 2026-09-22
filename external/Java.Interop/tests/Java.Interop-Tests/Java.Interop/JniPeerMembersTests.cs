@@ -182,6 +182,12 @@ namespace Java.InteropTests
 			return GetCache<string, JniMethodInfo> (field, methods);
 		}
 
+		static JniType GetStaticRedirect (JniMethodInfo method)
+		{
+			var field = typeof (JniMethodInfo).GetField ("StaticRedirect", BindingFlags.NonPublic | BindingFlags.Instance);
+			return (JniType) field.GetValue (method);
+		}
+
 		static ConcurrentDictionary<TKey, TValue> GetCache<TKey, TValue> (FieldInfo field, object owner)
 		{
 			return (ConcurrentDictionary<TKey, TValue>) field.GetValue (owner);
@@ -253,6 +259,21 @@ namespace Java.InteropTests
 		public void ReplacedStaticMethodRetainsTargetOwner ()
 		{
 			Assert.AreEqual (5, JavaLangRemappingTestObject.remappedStaticAbs (-5));
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
+		public void DisposeReleasesInstanceMethodStaticRedirect ()
+		{
+			var members = new JniPeerMembers (JavaLangRemappingTestObject.JniTypeName, typeof (JavaLangRemappingTestObject));
+			var method = members.InstanceMethods.GetMethodInfo ("remappedToStaticHashCode.()I");
+			var redirect = GetStaticRedirect (method);
+			Assert.IsTrue (redirect.PeerReference.IsValid);
+
+			JniPeerMembers.Dispose (members);
+
+			Assert.IsFalse (redirect.PeerReference.IsValid);
 		}
 
 		[Test]
