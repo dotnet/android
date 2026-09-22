@@ -27,6 +27,8 @@ namespace Xamarin.Android.Build.Tests
 			"libc++_static.a",
 			"libc++abi.a",
 			"libunwind.a",
+			"libunwind_xamarin-debug.a",
+			"libunwind_xamarin-release.a",
 		];
 
 		[TestCase ("armeabi-v7a")]
@@ -315,6 +317,10 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			string runtimeOutputPath = Path.Combine (outputDirectory, "runtime-output");
+			string abiOutputPath = Path.Combine (runtimeOutputPath, "android-arm64");
+			Directory.CreateDirectory (abiOutputPath);
+			File.Create (Path.Combine (abiOutputPath, "libunwind_xamarin-debug.a")).Dispose ();
+			File.Create (Path.Combine (abiOutputPath, "libunwind_xamarin-release.a")).Dispose ();
 
 			string nativeProjectName = runtime == AndroidRuntime.NativeAOT ? "native-nativeaot.csproj" : "native-clr.csproj";
 			string nativeProject = Path.Combine (XABuildPaths.TopDirectory, "src", "native", nativeProjectName);
