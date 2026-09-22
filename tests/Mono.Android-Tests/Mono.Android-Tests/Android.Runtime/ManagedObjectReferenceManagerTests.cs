@@ -1,7 +1,5 @@
 using System;
-using System.Globalization;
 using System.IO;
-using System.Reflection;
 
 using NUnit.Framework;
 
@@ -19,38 +17,20 @@ namespace Xamarin.Android.RuntimeTests {
 			}
 		}
 
-		static Type ManagerType =>
-			typeof (global::Android.Runtime.AndroidEnvironment).Assembly.GetType ("Android.Runtime.ManagedObjectReferenceManager", throwOnError: true)
-				?? throw new InvalidOperationException ("ManagedObjectReferenceManager type was not found.");
-
-		static Type EventType =>
-			typeof (global::Android.Runtime.AndroidEnvironment).Assembly.GetType ("Android.Runtime.ReferenceLogEvent", throwOnError: true)
-				?? throw new InvalidOperationException ("ReferenceLogEvent type was not found.");
-
-		static Type JNIEnvInitType =>
-			typeof (global::Android.Runtime.AndroidEnvironment).Assembly.GetType ("Android.Runtime.JNIEnvInit", throwOnError: true)
-				?? throw new InvalidOperationException ("JNIEnvInit type was not found.");
-
-		static MethodInfo GetMethod (string name)
+		static global::Android.Runtime.ManagedObjectReferenceManager CreateManager (TextWriter? grefLog = null, TextWriter? lrefLog = null)
 		{
-			return ManagerType.GetMethod (name, BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic)
-				?? throw new InvalidOperationException ($"{name} method was not found.");
+			return new global::Android.Runtime.ManagedObjectReferenceManager (grefLog, lrefLog, false, false);
 		}
 
-		static object CreateManager (TextWriter? grefLog = null, TextWriter? lrefLog = null)
+		static global::Android.Runtime.ReferenceLogEvent GetEvent (string name)
 		{
-			return Activator.CreateInstance (
-				ManagerType,
-				BindingFlags.Instance | BindingFlags.NonPublic,
-				binder: null,
-				args: [grefLog, lrefLog, false, false],
-				culture: CultureInfo.InvariantCulture)
-				?? throw new InvalidOperationException ("ManagedObjectReferenceManager could not be created.");
-		}
-
-		static object GetEvent (string name)
-		{
-			return Enum.Parse (EventType, name);
+			return name switch {
+				"GlobalCreated"      => global::Android.Runtime.ReferenceLogEvent.GlobalCreated,
+				"GlobalDeleted"      => global::Android.Runtime.ReferenceLogEvent.GlobalDeleted,
+				"WeakGlobalCreated"  => global::Android.Runtime.ReferenceLogEvent.WeakGlobalCreated,
+				"WeakGlobalDeleted"  => global::Android.Runtime.ReferenceLogEvent.WeakGlobalDeleted,
+				_                    => throw new ArgumentOutOfRangeException (nameof (name)),
+			};
 		}
 
 		static void AssertReferenceLogFileMode (string path)
@@ -76,19 +56,16 @@ namespace Xamarin.Android.RuntimeTests {
 				(byte) 'G';
 			byte newType = eventName == "WeakGlobalCreated" ? (byte) 'W' : (byte) 'G';
 
-			object? result = GetMethod ("FormatReferenceMessage").Invoke (
-				obj: null,
-				parameters: [
-					GetEvent (eventName),
-					2,
-					3,
-					new IntPtr (0x1234),
-					currentType,
-					new IntPtr (0x5678),
-					newType,
-					"worker",
-					42,
-				]);
+			string result = global::Android.Runtime.ManagedObjectReferenceManager.FormatReferenceMessage (
+				GetEvent (eventName),
+				2,
+				3,
+				new IntPtr (0x1234),
+				currentType,
+				new IntPtr (0x5678),
+				newType,
+				"worker",
+				42);
 
 			Assert.AreEqual (expected, result);
 		}
@@ -96,19 +73,16 @@ namespace Xamarin.Android.RuntimeTests {
 		[Test]
 		public void FormatsUnnamedThreadWithNullMarker ()
 		{
-			object? result = GetMethod ("FormatReferenceMessage").Invoke (
-				obj: null,
-				parameters: [
-					GetEvent ("GlobalDeleted"),
-					2,
-					3,
-					new IntPtr (0x1234),
-					(byte) 'G',
-					IntPtr.Zero,
-					(byte) 'I',
-					null,
-					42,
-				]);
+			string result = global::Android.Runtime.ManagedObjectReferenceManager.FormatReferenceMessage (
+				global::Android.Runtime.ReferenceLogEvent.GlobalDeleted,
+				2,
+				3,
+				new IntPtr (0x1234),
+				(byte) 'G',
+				IntPtr.Zero,
+				(byte) 'I',
+				null,
+				42);
 
 			Assert.AreEqual ("-g- grefc 2 gwrefc 3 handle 0x1234/G from thread '<null>'(42)", result);
 		}
@@ -116,62 +90,45 @@ namespace Xamarin.Android.RuntimeTests {
 		[Test]
 		public void CountsGlobalAndWeakReferencesIndependently ()
 		{
-			object manager = CreateManager ();
-			MethodInfo logReference = GetMethod ("LogReference");
+			var manager = CreateManager ();
 
-			logReference.Invoke (manager, [GetEvent ("GlobalCreated"), IntPtr.Zero, (byte) 'L', new IntPtr (1), (byte) 'G', "", 1, null]);
-			logReference.Invoke (manager, [GetEvent ("WeakGlobalCreated"), new IntPtr (1), (byte) 'G', new IntPtr (2), (byte) 'W', "", 1, null]);
-			logReference.Invoke (manager, [GetEvent ("GlobalCreated"), IntPtr.Zero, (byte) 'L', new IntPtr (3), (byte) 'G', "", 1, null]);
-			logReference.Invoke (manager, [GetEvent ("GlobalDeleted"), new IntPtr (1), (byte) 'G', IntPtr.Zero, (byte) 'I', "", 1, null]);
+			manager.LogReference (global::Android.Runtime.ReferenceLogEvent.GlobalCreated, IntPtr.Zero, (byte) 'L', new IntPtr (1), (byte) 'G', "", 1, null);
+			manager.LogReference (global::Android.Runtime.ReferenceLogEvent.WeakGlobalCreated, new IntPtr (1), (byte) 'G', new IntPtr (2), (byte) 'W', "", 1, null);
+			manager.LogReference (global::Android.Runtime.ReferenceLogEvent.GlobalCreated, IntPtr.Zero, (byte) 'L', new IntPtr (3), (byte) 'G', "", 1, null);
+			manager.LogReference (global::Android.Runtime.ReferenceLogEvent.GlobalDeleted, new IntPtr (1), (byte) 'G', IntPtr.Zero, (byte) 'I', "", 1, null);
 
-			Assert.AreEqual (1, ManagerType.GetProperty ("GlobalReferenceCount")?.GetValue (manager));
-			Assert.AreEqual (1, ManagerType.GetProperty ("WeakGlobalReferenceCount")?.GetValue (manager));
+			Assert.AreEqual (1, manager.GlobalReferenceCount);
+			Assert.AreEqual (1, manager.WeakGlobalReferenceCount);
 		}
 
 		[Test]
 		public void UpdatesCountsWithoutFormattingMetadata ()
 		{
-			object manager = CreateManager ();
-			MethodInfo updateReferenceCount = GetMethod ("UpdateReferenceCount");
-			object?[] arguments = [GetEvent ("GlobalCreated"), 0];
-
-			object? globalCount = updateReferenceCount.Invoke (manager, arguments);
+			var manager = CreateManager ();
+			int globalCount = manager.UpdateReferenceCount (global::Android.Runtime.ReferenceLogEvent.GlobalCreated, out int weakCount);
 
 			Assert.AreEqual (1, globalCount);
-			Assert.AreEqual (0, arguments [1]);
+			Assert.AreEqual (0, weakCount);
 		}
 
 		[Test]
 		public void InitializesMaxGrefCountsFromArguments ()
 		{
-			Type argsType = JNIEnvInitType.GetNestedType ("JnienvInitializeArgs", BindingFlags.NonPublic)
-				?? throw new InvalidOperationException ("JnienvInitializeArgs type was not found.");
-			object args = Activator.CreateInstance (argsType)
-				?? throw new InvalidOperationException ("JnienvInitializeArgs could not be created.");
-			FieldInfo thresholdField = argsType.GetField ("grefGcThreshold")
-				?? throw new InvalidOperationException ("grefGcThreshold field was not found.");
-			FieldInfo maximumField = argsType.GetField ("maxGrefCount")
-				?? throw new InvalidOperationException ("maxGrefCount field was not found.");
-			FieldInfo storedThresholdField = JNIEnvInitType.GetField ("gref_gc_threshold", BindingFlags.Static | BindingFlags.NonPublic)
-				?? throw new InvalidOperationException ("gref_gc_threshold field was not found.");
-			FieldInfo storedMaximumField = JNIEnvInitType.GetField ("max_gref_count", BindingFlags.Static | BindingFlags.NonPublic)
-				?? throw new InvalidOperationException ("max_gref_count field was not found.");
-			MethodInfo initialize = JNIEnvInitType.GetMethod ("InitializeMaxGrefCounts", BindingFlags.Static | BindingFlags.NonPublic)
-				?? throw new InvalidOperationException ("InitializeMaxGrefCounts method was not found.");
-			object? previousThreshold = storedThresholdField.GetValue (null);
-			object? previousMaximum = storedMaximumField.GetValue (null);
+			var args = new global::Android.Runtime.JNIEnvInit.JnienvInitializeArgs {
+				grefGcThreshold = 1800,
+				maxGrefCount = 2000,
+			};
+			int previousThreshold = global::Android.Runtime.JNIEnvInit.gref_gc_threshold;
+			int previousMaximum = global::Android.Runtime.JNIEnvInit.max_gref_count;
 
 			try {
-				thresholdField.SetValue (args, 1800);
-				maximumField.SetValue (args, 2000);
+				global::Android.Runtime.JNIEnvInit.InitializeMaxGrefCounts (args);
 
-				initialize.Invoke (null, [args]);
-
-				Assert.AreEqual (1800, storedThresholdField.GetValue (null));
-				Assert.AreEqual (2000, storedMaximumField.GetValue (null));
+				Assert.AreEqual (1800, global::Android.Runtime.JNIEnvInit.gref_gc_threshold);
+				Assert.AreEqual (2000, global::Android.Runtime.JNIEnvInit.max_gref_count);
 			} finally {
-				storedThresholdField.SetValue (null, previousThreshold);
-				storedMaximumField.SetValue (null, previousMaximum);
+				global::Android.Runtime.JNIEnvInit.gref_gc_threshold = previousThreshold;
+				global::Android.Runtime.JNIEnvInit.max_gref_count = previousMaximum;
 			}
 		}
 
@@ -183,15 +140,14 @@ namespace Xamarin.Android.RuntimeTests {
 			Directory.CreateDirectory (directory);
 
 			try {
-				MethodInfo createLogWriter = GetMethod ("CreateLogWriter");
-				var explicitWriter = createLogWriter.Invoke (null, [true, false, explicitPath, directory, "fallback.txt", "test"]) as TextWriter;
+				var explicitWriter = global::Android.Runtime.ManagedObjectReferenceManager.CreateLogWriter (true, false, explicitPath, directory, "fallback.txt", "test");
 				Assert.IsNotNull (explicitWriter);
 				explicitWriter?.WriteLine ("explicit");
 				explicitWriter?.Dispose ();
 				Assert.AreEqual ("explicit" + Environment.NewLine, File.ReadAllText (explicitPath));
 				AssertReferenceLogFileMode (explicitPath);
 
-				var defaultWriter = createLogWriter.Invoke (null, [true, false, null, directory, "fallback.txt", "test"]) as TextWriter;
+				var defaultWriter = global::Android.Runtime.ManagedObjectReferenceManager.CreateLogWriter (true, false, null, directory, "fallback.txt", "test");
 				Assert.IsNotNull (defaultWriter);
 				defaultWriter?.WriteLine ("default");
 				defaultWriter?.Dispose ();
@@ -199,7 +155,7 @@ namespace Xamarin.Android.RuntimeTests {
 				Assert.AreEqual ("default" + Environment.NewLine, File.ReadAllText (fallbackPath));
 				AssertReferenceLogFileMode (fallbackPath);
 
-				Assert.IsNull (createLogWriter.Invoke (null, [true, true, explicitPath, directory, "fallback.txt", "test"]));
+				Assert.IsNull (global::Android.Runtime.ManagedObjectReferenceManager.CreateLogWriter (true, true, explicitPath, directory, "fallback.txt", "test"));
 			} finally {
 				if (File.Exists (explicitPath)) {
 					File.Delete (explicitPath);
