@@ -2450,7 +2450,7 @@ namespace UnnamedProject
 
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
-			builder.AssertHasSomeWarnings (1);
+			builder.AssertHasNoWarnings ();
 			RunProjectAndAssert (proj, builder);
 
 			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
