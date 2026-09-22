@@ -64,13 +64,10 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 	public unsafe bool OnAnimationEnd (int param1)
 	{
 		const string __id = "OnAnimationEnd.(I)Z";
-		try {
-			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-			__args [0] = new JniArgumentValue (param1);
-			var __rm = _members_java_code_AnimatorListener.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
-			return __rm;
-		} finally {
-		}
+		JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+		__args [0] = new JniArgumentValue (param1);
+		var __rm = _members_java_code_AnimatorListener.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
+		return __rm;
 	}
 
 	static Delegate cb_OnAnimationEnd_OnAnimationEnd_II_Z;
@@ -96,14 +93,11 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 	public unsafe bool OnAnimationEnd (int param1, int param2)
 	{
 		const string __id = "OnAnimationEnd.(II)Z";
-		try {
-			JniArgumentValue* __args = stackalloc JniArgumentValue [2];
-			__args [0] = new JniArgumentValue (param1);
-			__args [1] = new JniArgumentValue (param2);
-			var __rm = _members_java_code_AnimatorListener.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
-			return __rm;
-		} finally {
-		}
+		JniArgumentValue* __args = stackalloc JniArgumentValue [2];
+		__args [0] = new JniArgumentValue (param1);
+		__args [1] = new JniArgumentValue (param2);
+		var __rm = _members_java_code_AnimatorListener.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
+		return __rm;
 	}
 
 }

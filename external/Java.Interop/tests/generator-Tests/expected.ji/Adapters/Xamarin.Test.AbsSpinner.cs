@@ -33,22 +33,16 @@ namespace Xamarin.Test {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='AbsSpinner']/method[@name='getAdapter' and count(parameter)=0]"
 			get {
 				const string __id = "getAdapter.()Lxamarin/test/SpinnerAdapter;";
-				try {
-					var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-					return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Xamarin.Test.ISpinnerAdapter> (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
-				} finally {
-				}
+				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Xamarin.Test.ISpinnerAdapter> (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='AbsSpinner']/method[@name='setAdapter' and count(parameter)=1 and parameter[1][@type='xamarin.test.SpinnerAdapter']]"
 			set {
 				const string __id = "setAdapter.(Lxamarin/test/SpinnerAdapter;)V";
-				try {
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue (value);
-					_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-				} finally {
-					global::System.GC.KeepAlive (value);
-				}
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value);
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+				global::System.GC.KeepAlive (value);
 			}
 		}
 
@@ -72,23 +66,17 @@ namespace Xamarin.Test {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='AdapterView']/method[@name='getAdapter' and count(parameter)=0]"
 			get {
 				const string __id = "getAdapter.()Lxamarin/test/Adapter;";
-				try {
-					var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
-					return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Lang.Object>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
-				} finally {
-				}
+				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Lang.Object>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='AdapterView']/method[@name='setAdapter' and count(parameter)=1 and parameter[1][@type='T']]"
 			set {
 				const string __id = "setAdapter.(Lxamarin/test/Adapter;)V";
 				var native_value = (value?.PeerReference ?? default);
-				try {
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue (native_value);
-					_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-				} finally {
-					global::System.GC.KeepAlive (value);
-				}
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (native_value);
+				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+				global::System.GC.KeepAlive (value);
 			}
 		}
 

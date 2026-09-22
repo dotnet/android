@@ -38,14 +38,11 @@ namespace Xamarin.Test {
 			if (PeerReference.IsValid)
 				return;
 
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (aint);
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
-				Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
-				_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (aint);
+			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
+			Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
+			_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
 		}
 
 	}

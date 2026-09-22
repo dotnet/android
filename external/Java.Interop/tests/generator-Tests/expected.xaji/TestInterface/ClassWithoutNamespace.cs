@@ -53,12 +53,9 @@ public abstract partial class ClassWithoutNamespace : global::Java.Lang.Object, 
 		if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 			return;
 
-		try {
-			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
-		} finally {
-		}
+		var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+		SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+		_members.InstanceMethods.FinishCreateInstance (__id, this, null);
 	}
 
 	static Delegate cb_Foo_Foo_V;
@@ -112,10 +109,7 @@ internal partial class ClassWithoutNamespaceInvoker : ClassWithoutNamespace {
 	public override unsafe void Foo ()
 	{
 		const string __id = "Foo.()V";
-		try {
-			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-		} finally {
-		}
+		_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 	}
 
 }

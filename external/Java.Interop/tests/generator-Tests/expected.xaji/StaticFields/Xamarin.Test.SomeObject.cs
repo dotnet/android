@@ -43,10 +43,7 @@ namespace Xamarin.Test {
 			set {
 				const string __id = "Value2.I";
 
-				try {
-					_members.StaticFields.SetValue (__id, value);
-				} finally {
-				}
+				_members.StaticFields.SetValue (__id, value);
 			}
 		}
 
@@ -63,10 +60,7 @@ namespace Xamarin.Test {
 			set {
 				const string __id = "BooleanValue.Z";
 
-				try {
-					_members.StaticFields.SetValue (__id, value);
-				} finally {
-				}
+				_members.StaticFields.SetValue (__id, value);
 			}
 		}
 
@@ -83,10 +77,7 @@ namespace Xamarin.Test {
 			set {
 				const string __id = "CharValue.C";
 
-				try {
-					_members.StaticFields.SetValue (__id, value);
-				} finally {
-				}
+				_members.StaticFields.SetValue (__id, value);
 			}
 		}
 
