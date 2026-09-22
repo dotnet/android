@@ -131,14 +131,20 @@ namespace Java.Interop {
 			Justification = "Deliberate choice to 'hide' these types from code completion for `Java.Interop.`; see 045b8af7.")]
 		public struct ReplacementFieldInfo : IEquatable<ReplacementFieldInfo>
 		{
-			public string? SourceJniType           { get; set; }
-			public string? SourceJniFieldName      { get; set; }
-			public string? SourceJniFieldSignature { get; set; }
-			public string? TargetJniType           { get; set; }
-			public string? TargetJniFieldName      { get; set; }
-			public string? TargetJniFieldSignature { get; set; }
+			public  string? SourceJniType               {get; set;}
+			public  string? SourceJniFieldName          {get; set;}
+			public  string? SourceJniFieldSignature     {get; set;}
+			public  string? TargetJniType               {get; set;}
+			public  string? TargetJniFieldName          {get; set;}
+			public  string? TargetJniFieldSignature     {get; set;}
 
-			public override bool Equals (object? obj) => obj is ReplacementFieldInfo other && Equals (other);
+			public override bool Equals (object? obj)
+			{
+				if (obj is ReplacementFieldInfo o) {
+					return Equals (o);
+				}
+				return false;
+			}
 
 			public bool Equals (ReplacementFieldInfo other)
 			{
@@ -151,7 +157,14 @@ namespace Java.Interop {
 			}
 
 			public override int GetHashCode ()
-				=> HashCode.Combine (SourceJniType, SourceJniFieldName, SourceJniFieldSignature, TargetJniType, TargetJniFieldName, TargetJniFieldSignature);
+			{
+				return (SourceJniType?.GetHashCode () ?? 0) ^
+					(SourceJniFieldName?.GetHashCode () ?? 0) ^
+					(SourceJniFieldSignature?.GetHashCode () ?? 0) ^
+					(TargetJniType?.GetHashCode () ?? 0) ^
+					(TargetJniFieldName?.GetHashCode () ?? 0) ^
+					(TargetJniFieldSignature?.GetHashCode () ?? 0);
+			}
 
 			public override string ToString ()
 			{
@@ -165,8 +178,8 @@ namespace Java.Interop {
 					$"}}";
 			}
 
-			public static bool operator == (ReplacementFieldInfo left, ReplacementFieldInfo right) => left.Equals (right);
-			public static bool operator != (ReplacementFieldInfo left, ReplacementFieldInfo right) => !left.Equals (right);
+			public static bool operator==(ReplacementFieldInfo a, ReplacementFieldInfo b) => a.Equals (b);
+			public static bool operator!=(ReplacementFieldInfo a, ReplacementFieldInfo b) => !a.Equals (b);
 		}
 
 		/// <include file="../Documentation/Java.Interop/JniRuntime.JniTypeManager.xml" path="/docs/member[@name='T:JniTypeManager']/*" />
@@ -435,10 +448,12 @@ namespace Java.Interop {
 			{
 				AssertValid ();
 				AssertSimpleReference (jniSimpleReference, nameof (jniSimpleReference));
-				if (string.IsNullOrEmpty (jniFieldName))
+				if (string.IsNullOrEmpty (jniFieldName)) {
 					throw new ArgumentNullException (nameof (jniFieldName));
-				if (string.IsNullOrEmpty (jniFieldSignature))
+				}
+				if (string.IsNullOrEmpty (jniFieldSignature)) {
 					throw new ArgumentNullException (nameof (jniFieldSignature));
+				}
 
 				return GetReplacementFieldInfoCore (jniSimpleReference, jniFieldName, jniFieldSignature);
 			}
@@ -457,6 +472,10 @@ namespace Java.Interop {
 				return GetReplacementFieldInfoCore (jniSimpleReference, jniFieldName, jniFieldSignature);
 			}
 
+			/// <summary>
+			/// Resolves field remapping without requiring name and signature strings.
+			/// The default implementation preserves dispatch to the string overload.
+			/// </summary>
 			protected virtual ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSimpleReference, ReadOnlySpan<char> jniFieldName, ReadOnlySpan<char> jniFieldSignature)
 				=> GetReplacementFieldInfoCore (jniSimpleReference, jniFieldName.ToString (), jniFieldSignature.ToString ());
 

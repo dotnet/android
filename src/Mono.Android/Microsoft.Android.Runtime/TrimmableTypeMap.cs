@@ -558,6 +558,7 @@ public class TrimmableTypeMap
 				return;
 			}
 
+			className = JniRemappingLookup.GetReverseType (className) ?? className;
 			var cacheEntry = s_instance.GetProxyCacheEntryForJniName (className);
 			if (cacheEntry is JavaPeerProxy[] proxies && proxies.Length == 0) {
 				return;

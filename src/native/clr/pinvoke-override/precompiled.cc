@@ -37,18 +37,6 @@ namespace {
 		if (entrypoint_name == "monodroid_log"sv) {
 			return reinterpret_cast<void*> (&monodroid_log);
 		}
-		if (entrypoint_name == "_monodroid_lookup_replacement_type"sv) {
-			return reinterpret_cast<void*> (&_monodroid_lookup_replacement_type);
-		}
-		if (entrypoint_name == "_monodroid_lookup_replacement_method_info"sv) {
-			return reinterpret_cast<void*> (&_monodroid_lookup_replacement_method_info);
-		}
-		if (entrypoint_name == "_monodroid_lookup_reverse_type"sv) {
-			return reinterpret_cast<void*> (&_monodroid_lookup_reverse_type);
-		}
-		if (entrypoint_name == "_monodroid_lookup_replacement_field_info"sv) {
-			return reinterpret_cast<void*> (&_monodroid_lookup_replacement_field_info);
-		}
 		if (entrypoint_name == "_monodroid_register_reference_logging_callbacks"sv) {
 			return reinterpret_cast<void*> (&_monodroid_register_reference_logging_callbacks);
 		}

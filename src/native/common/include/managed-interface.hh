@@ -36,6 +36,21 @@ namespace xamarin::android {
 		const char *stack_trace);
 	using reference_log_message_fn = void (*) (const char *message);
 
+	struct JniRemappingData {
+		const void *type_replacements;
+		const void *reverse_type_replacements;
+		const void *method_replacement_index;
+		const void *field_replacement_index;
+		uint32_t    type_replacement_count;
+		uint32_t    reverse_type_replacement_count;
+		uint32_t    method_replacement_index_count;
+		uint32_t    field_replacement_index_count;
+	};
+
+	extern "C" {
+		[[gnu::visibility("default")]] extern const JniRemappingData jni_remapping_data;
+	}
+
 	// NOTE: Keep this in sync with managed side in src/Mono.Android/Android.Runtime/JNIEnvInit.cs
 	struct JnienvInitializeArgs {
 		JavaVM         *javaVm;
@@ -51,7 +66,7 @@ namespace xamarin::android {
 		int             packageNamingPolicy;
 		uint8_t         boundExceptionType;
 		int             jniAddNativeMethodRegistrationAttributePresent;
-		bool            jniRemappingInUse;
+		const JniRemappingData *jniRemappingData;
 		bool            marshalMethodsEnabled;
 		jobject         grefGCUserPeerable;
 		jnienv_propagate_uncaught_exception_fn propagateUncaughtExceptionFn;

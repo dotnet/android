@@ -218,8 +218,6 @@ struct ApplicationConfig
 	uint32_t android_runtime_jnienv_class_token;
 	uint32_t jnienv_initialize_method_token;
 	uint32_t jnienv_registerjninatives_method_token;
-	// Unused by the CoreCLR runtime, which reads the table sizes from the `jni_remapping_*_count`
-	// symbols instead so that the lookup code is shared with NativeAOT. Kept for layout stability.
 	uint32_t jni_remapping_replacement_type_count;
 	uint32_t jni_remapping_replacement_method_index_entry_count;
 	const char *android_package_name;
@@ -245,8 +243,6 @@ struct JniRemappingReplacementMethod
 {
 	const char    *target_type;
 	const char    *target_name;
-	// JNI descriptor to use on the target type, or `nullptr` when the source signature is used
-	// unchanged (remapping inputs which predate `target-method-signature`).
 	const char    *target_signature;
 	const bool     is_static;
 };
@@ -265,27 +261,6 @@ struct JniRemappingIndexTypeEntry
 	const JniRemappingIndexMethodEntry *methods;
 };
 
-struct JniRemappingReplacementField
-{
-	const char    *target_type;
-	const char    *target_name;
-	const char    *target_signature;
-};
-
-struct JniRemappingIndexFieldEntry
-{
-	const JniRemappingString           name;
-	const JniRemappingString           signature;
-	const JniRemappingReplacementField replacement;
-};
-
-struct JniRemappingIndexFieldTypeEntry
-{
-	const JniRemappingString           name;
-	const uint32_t            field_count;
-	const JniRemappingIndexFieldEntry *fields;
-};
-
 struct JniRemappingTypeReplacementEntry
 {
 	const JniRemappingString  name;
@@ -299,19 +274,8 @@ struct AppEnvironmentVariable
 };
 
 extern "C" {
-	// MUST match src/Xamarin.Android.Build.Tasks/Utilities/JniRemappingAssemblyGenerator.cs
-	//
-	// The table sizes live in dedicated symbols rather than in `ApplicationConfig` so that the
-	// NativeAOT build, which has no application config, can share the same lookup implementation.
 	[[gnu::visibility("default")]] extern const JniRemappingIndexTypeEntry jni_remapping_method_replacement_index[];
-	[[gnu::visibility("default")]] extern const JniRemappingIndexFieldTypeEntry jni_remapping_field_replacement_index[];
 	[[gnu::visibility("default")]] extern const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[];
-	[[gnu::visibility("default")]] extern const JniRemappingTypeReplacementEntry jni_remapping_reverse_type_replacements[];
-
-	[[gnu::visibility("default")]] extern const uint32_t jni_remapping_type_replacement_count;
-	[[gnu::visibility("default")]] extern const uint32_t jni_remapping_reverse_type_replacement_count;
-	[[gnu::visibility("default")]] extern const uint32_t jni_remapping_method_replacement_index_count;
-	[[gnu::visibility("default")]] extern const uint32_t jni_remapping_field_replacement_index_count;
 
 	[[gnu::visibility("default")]] extern const uint64_t format_tag;
 

@@ -4,33 +4,9 @@
 #include <host/typemap.hh>
 #include <runtime-base/cpu-arch.hh>
 #include <runtime-base/internal-pinvokes.hh>
-#include <runtime-base/jni-remapping.hh>
 
 using namespace xamarin::android;
 
-const char*
-_monodroid_lookup_replacement_type (const char *jniSimpleReference)
-{
-	return JniRemapping::lookup_replacement_type (jniSimpleReference);
-}
-
-const char*
-_monodroid_lookup_reverse_type (const char *jniSimpleReference)
-{
-	return JniRemapping::lookup_reverse_type (jniSimpleReference);
-}
-
-const JniRemappingReplacementMethod*
-_monodroid_lookup_replacement_method_info (const char *jniSourceType, const char *jniMethodName, const char *jniMethodSignature)
-{
-	return JniRemapping::lookup_replacement_method_info (jniSourceType, jniMethodName, jniMethodSignature);
-}
-
-const JniRemappingReplacementField*
-_monodroid_lookup_replacement_field_info (const char *jniSourceType, const char *jniFieldName, const char *jniFieldSignature)
-{
-	return JniRemapping::lookup_replacement_field_info (jniSourceType, jniFieldName, jniFieldSignature);
-}
 BridgeProcessingFtn clr_initialize_gc_bridge (
 	BridgeProcessingStartedFtn bridge_processing_started_callback,
 	BridgeProcessingFinishedFtn bridge_processing_finished_callback) noexcept

@@ -31,7 +31,6 @@ set(XAMARIN_MONODROID_SOURCES
   host-environment.cc
   host-jni.cc
   internal-pinvoke-stubs.cc
-  jni-remapping-tables-stub.cc
 
   ../runtime-base/android-system.cc
 
@@ -44,7 +43,6 @@ set(XAMARIN_MONODROID_SOURCES
   ${CLR_SOURCES_PATH}/host/runtime-util.cc
   ${CLR_SOURCES_PATH}/runtime-base/android-system-shared.cc
   ${CLR_SOURCES_PATH}/runtime-base/cpu-arch-detect.cc
-  ${CLR_SOURCES_PATH}/runtime-base/jni-remapping.cc
   ${CLR_SOURCES_PATH}/runtime-base/logger.cc
   ${CLR_SOURCES_PATH}/runtime-base/util.cc
   ${CLR_SOURCES_PATH}/shared/helpers.cc
