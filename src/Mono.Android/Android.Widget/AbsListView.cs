@@ -59,12 +59,14 @@ namespace Android.Widget {
 		}
 #pragma warning restore 0169
 
+#pragma warning disable CS8764 // AdapterView<T> predates NRT, but an AbsListView can have no adapter.
 		public abstract override IListAdapter? Adapter {
 			[Register ("getAdapter", "()Landroid/widget/ListAdapter;", "GetGetAdapterHandler")]
 			get;
 			[Register ("setAdapter", "(Landroid/widget/ListAdapter;)V", "GetSetAdapter_Landroid_widget_ListAdapter_Handler")]
 			set;
 		}
+#pragma warning restore CS8764
 
 #if ANDROID_12
 		static IntPtr id_setAdapter_Landroid_widget_ListAdapter_;

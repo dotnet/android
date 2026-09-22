@@ -24,7 +24,6 @@
       <AndroidRID>android-arm</AndroidRID>
       <ToolchainPrefix>arm-linux-androideabi</ToolchainPrefix>
       <ClangArch>arm</ClangArch>
-      <UnwindArchDir>arm</UnwindArchDir>
       <SupportMonoVM>True</SupportMonoVM>
       <SupportCoreCLR>True</SupportCoreCLR>
       <SupportNativeAOT>True</SupportNativeAOT>
@@ -37,7 +36,6 @@
       <AndroidRID>android-arm64</AndroidRID>
       <ToolchainPrefix>aarch64-linux-android</ToolchainPrefix>
       <ClangArch>aarch64</ClangArch>
-      <UnwindArchDir>aarch64</UnwindArchDir>
       <SupportMonoVM>True</SupportMonoVM>
       <SupportCoreCLR>True</SupportCoreCLR>
       <SupportNativeAOT>True</SupportNativeAOT>
@@ -50,7 +48,6 @@
       <AndroidRID>android-x86</AndroidRID>
       <ToolchainPrefix>i686-linux-android</ToolchainPrefix>
       <ClangArch>i686</ClangArch>
-      <UnwindArchDir>i386</UnwindArchDir>
       <SupportMonoVM>True</SupportMonoVM>
       <SupportCoreCLR>False</SupportCoreCLR>
       <SupportNativeAOT>False</SupportNativeAOT>
@@ -63,7 +60,6 @@
       <AndroidRID>android-x64</AndroidRID>
       <ToolchainPrefix>x86_64-linux-android</ToolchainPrefix>
       <ClangArch>x86_64</ClangArch>
-      <UnwindArchDir>x86_64</UnwindArchDir>
       <SupportMonoVM>True</SupportMonoVM>
       <SupportCoreCLR>True</SupportCoreCLR>
       <SupportNativeAOT>True</SupportNativeAOT>

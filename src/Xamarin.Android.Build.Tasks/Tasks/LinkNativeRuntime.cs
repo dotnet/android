@@ -114,14 +114,14 @@ public class LinkNativeRuntime : AsyncTask
 		// ...and after them the BCL PAL libraries...
 		ret.AddRange (sets[NativeRuntimeComponents.KnownSets.BCL]);
 
-		// ...and then the C/C++ runtime libraries
+		// ...and then the C runtime and compiler support libraries
 		var systemLibs = new Dictionary<string, ITaskItem> (StringComparer.Ordinal);
 		foreach (ITaskItem item in GetAbiItems (LinkLibraries, "_RequiredLinkLibraries", abi)) {
 			systemLibs.Add (Path.GetFileName (item.ItemSpec), item);
 		}
 
 		ret.Add (systemLibs["log"]);
-		ret.AddRange (sets[NativeRuntimeComponents.KnownSets.CplusPlusRuntime]);
+		ret.AddRange (sets[NativeRuntimeComponents.KnownSets.CompilerRuntime]);
 		ret.Add (systemLibs["z"]);
 		ret.Add (systemLibs["m"]);
 		ret.Add (systemLibs["dl"]);

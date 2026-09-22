@@ -61,8 +61,6 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libruntime-base-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libruntime-base-release.a" />
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libruntime-base-common-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libruntime-base-common-debug.a" />
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libruntime-base-common-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libruntime-base-common-release.a" />
-      <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin-debug.a" />
-      <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin-release.a" />
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-java-interop-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-java-interop-debug.a" />
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-java-interop-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-java-interop-release.a" />
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-lz4-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxa-lz4-debug.a" />
@@ -97,12 +95,6 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' Or '$(AndroidRuntime)' == 'NativeAOT' ">
       <NativeRuntimeAsset Include="@(_AndroidNdkRedistributable)"
           Condition=" '%(_AndroidNdkRedistributable.AndroidRID)' == '$(AndroidRID)' And '%(_AndroidNdkRedistributable.Kind)' == 'Toolchain' " />
-    </ItemGroup>
-
-    <!-- NativeAOT applications do not link libc++, so its archives are only shipped for CoreCLR. -->
-    <ItemGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">
-      <NativeRuntimeAsset Include="@(_AndroidNdkRedistributable)"
-          Condition=" '%(_AndroidNdkRedistributable.AndroidRID)' == '$(AndroidRID)' And '%(_AndroidNdkRedistributable.Kind)' == 'CplusPlus' " />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'NativeAOT' ">

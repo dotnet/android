@@ -104,8 +104,11 @@
     <ItemGroup>
       <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\LICENSE.TXT" />
       <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\data\*" />
+      <_WLExtractedLocalizationFiles Include="$(_SdkManifestsFolder)temp\data\localize\*" />
     </ItemGroup>
     <Move SourceFiles="@(_WLExtractedFiles)" DestinationFolder="$(_SdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\" />
+    <MakeDir Directories="$(_SdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\localize\" />
+    <Move SourceFiles="@(_WLExtractedLocalizationFiles)" DestinationFolder="$(_SdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\localize\" />
     <RemoveDir Directories="$(_SdkManifestsFolder)temp\" />
     <!--
       Reset timestamps to "now" on the local agent. The zip entries inside
@@ -117,7 +120,7 @@
       subsequent builds, breaking "target should be skipped" assertions.
     -->
     <ItemGroup>
-      <_WLExtractedDestFiles Include="$(_SdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\*" />
+      <_WLExtractedDestFiles Include="$(_SdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\**\*" />
     </ItemGroup>
     <Touch Files="@(_WLExtractedDestFiles)" />
 

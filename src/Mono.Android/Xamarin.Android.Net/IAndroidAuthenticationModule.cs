@@ -36,7 +36,7 @@ namespace Xamarin.Android.Net
 		/// <param name="challenge">Challenge.</param>
 		/// <param name="request">Request.</param>
 		/// <param name="credentials">Credentials.</param>
-		Authorization Authenticate (string challenge, HttpURLConnection request, ICredentials credentials);
+		Authorization? Authenticate (string challenge, HttpURLConnection request, ICredentials credentials);
 
 		/// <summary>
 		/// Pre-authenticate using the specified credentials.
@@ -44,6 +44,6 @@ namespace Xamarin.Android.Net
 		/// <returns><see cref="Authorization"/> instance which contains the value of the response header to authorize the connection</returns>
 		/// <param name="request">Request.</param>
 		/// <param name="credentials">Credentials.</param>
-		Authorization PreAuthenticate (HttpURLConnection request, ICredentials credentials);
+		Authorization? PreAuthenticate (HttpURLConnection request, ICredentials credentials);
 	}
 }

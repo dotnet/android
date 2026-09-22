@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Threading.Tasks;
 
 using Java.Interop;
 using NUnit.Framework;
@@ -17,23 +18,173 @@ namespace Java.InteropTests
 			JniPeerMembers.Dispose (members);
 		}
 
+#if !ANDROID    // Android doesn't allow providing a custom TypeManager
+		[Test]
+		[NonParallelizable]
+		public void HandledReplacementTypeMissDoesNotUseStringFallback ()
+		{
+			var typeManager = JavaVMFixture.TypeManager;
+			Assert.IsNotNull (typeManager);
+			typeManager.TrackReplacementTypeLookups ("java/lang/Double");
+			try {
+				var members = new JniPeerMembers ("java/lang/Double", typeof (MyString));
+				JniPeerMembers.Dispose (members);
+
+				var counts = typeManager.GetReplacementTypeLookupCounts ();
+				Assert.AreEqual (1, counts.Utf8);
+				Assert.AreEqual (0, counts.String);
+			} finally {
+				typeManager.TrackReplacementTypeLookups ("");
+			}
+		}
+#endif  // !ANDROID
+
 		[Test]
 		[Category ("TrimmableTypeMapUnsupported")]
 		public void VirtualInvokeOnBaseInvokesMostDerivedJavaMethod ()
 		{
-			var registered  = GetInstanceMethods (MyString._members.InstanceMethods);
-			Assert.AreEqual (0, registered.Count);
+			Assert.IsNull (GetInstanceMethods (MyString._members.InstanceMethods));
 			using (var s = new MyString ("hello!")) {
+				var registered = GetInstanceMethods (MyString._members.InstanceMethods);
 				Assert.AreEqual (1, registered.Count);  // for the constructor
 				Assert.AreEqual ("hello!", s.ToString ());
 				Assert.AreEqual (1, registered.Count);
 			}
 		}
 
+		[Test]
+		[Category ("TrimmableTypeMapUnsupported")]
+		public void ConcurrentFirstUsePublishesSingleInstanceMethodCache ()
+		{
+			var members = new JniPeerMembers (MyString.JniTypeName, typeof (MyString));
+			try {
+				var methods = members.InstanceMethods;
+				var constructors = new JniMethodInfo [16];
+
+				Assert.IsNull (GetInstanceMethods (methods));
+				Parallel.For (0, constructors.Length, i => constructors [i] = methods.GetConstructor ("()V"));
+
+				var registered = GetInstanceMethods (methods);
+				Assert.AreEqual (1, registered.Count);
+				foreach (var constructor in constructors)
+					Assert.AreSame (constructors [0], constructor);
+				Assert.AreSame (registered ["()V"], constructors [0]);
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
+		}
+
+		[Test]
+		public void PeerMemberCachesAreInitiallyNull ()
+		{
+			var members = new JniPeerMembers (CallNonvirtualBase.JniTypeName, typeof (CallNonvirtualBase));
+			try {
+				Assert.IsNull (GetInstanceFields (members.InstanceFields));
+				Assert.IsNull (GetInstanceMethods (members.InstanceMethods));
+				Assert.IsNull (GetSubclassConstructors (members.InstanceMethods));
+				Assert.IsNull (GetStaticFields (members.StaticFields));
+				Assert.IsNull (GetStaticMethods (members.StaticMethods));
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
+		}
+
+		[Test]
+		public void ConstructorTypeCacheIsAllocatedOnlyForManagedSubclasses ()
+		{
+			var members = new JniPeerMembers (CallNonvirtualBase.JniTypeName, typeof (CallNonvirtualBase));
+			try {
+				var methods = members.InstanceMethods;
+
+				Assert.AreSame (methods, methods.GetConstructorsForType (typeof (CallNonvirtualBase)));
+				Assert.IsNull (GetSubclassConstructors (methods));
+
+				var derivedMethods = methods.GetConstructorsForType (typeof (CallNonvirtualDerived));
+				var constructors = GetSubclassConstructors (methods);
+				Assert.AreEqual (1, constructors.Count);
+				Assert.AreSame (derivedMethods, constructors [typeof (CallNonvirtualDerived)]);
+
+				methods.Dispose ();
+				Assert.IsNull (GetSubclassConstructors (methods));
+				Assert.Throws<InvalidOperationException> (() => {
+					var type = derivedMethods.JniPeerType;
+				});
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
+		}
+
+		[Test]
+		public void ConcurrentFirstUsePublishesSingleFieldAndStaticMethodCaches ()
+		{
+			var instanceMembers = new JniPeerMembers (CallNonvirtualBase.JniTypeName, typeof (CallNonvirtualBase));
+			try {
+				var instanceFields = new JniFieldInfo [16];
+				Assert.IsNull (GetInstanceFields (instanceMembers.InstanceFields));
+				Parallel.For (0, instanceFields.Length, i => instanceFields [i] = instanceMembers.InstanceFields.GetFieldInfo ("methodInvoked.Z"));
+				AssertSingleCachedValue (GetInstanceFields (instanceMembers.InstanceFields), "methodInvoked.Z", instanceFields);
+			} finally {
+				JniPeerMembers.Dispose (instanceMembers);
+			}
+
+			var staticMembers = new JniPeerMembers (JavaLangSystemTestObject.JniTypeName, typeof (JavaLangSystemTestObject));
+			try {
+				var staticFields = new JniFieldInfo [16];
+				Assert.IsNull (GetStaticFields (staticMembers.StaticFields));
+				Parallel.For (0, staticFields.Length, i => staticFields [i] = staticMembers.StaticFields.GetFieldInfo ("in.Ljava/io/InputStream;"));
+				AssertSingleCachedValue (GetStaticFields (staticMembers.StaticFields), "in.Ljava/io/InputStream;", staticFields);
+
+				var staticMethods = new JniMethodInfo [16];
+				Assert.IsNull (GetStaticMethods (staticMembers.StaticMethods));
+				Parallel.For (0, staticMethods.Length, i => staticMethods [i] = staticMembers.StaticMethods.GetMethodInfo ("currentTimeMillis.()J"));
+				AssertSingleCachedValue (GetStaticMethods (staticMembers.StaticMethods), "currentTimeMillis.()J", staticMethods);
+			} finally {
+				JniPeerMembers.Dispose (staticMembers);
+			}
+		}
+
+		static void AssertSingleCachedValue<T> (ConcurrentDictionary<string, T> cache, string key, T [] values)
+			where T : class
+		{
+			Assert.AreEqual (1, cache.Count);
+			foreach (var value in values)
+				Assert.AreSame (values [0], value);
+			Assert.AreSame (cache [key], values [0]);
+		}
+
+		static ConcurrentDictionary<string, JniFieldInfo> GetInstanceFields (JniPeerMembers.JniInstanceFields fields)
+		{
+			var field = typeof (JniPeerMembers.JniInstanceFields).GetField ("instanceFields", BindingFlags.NonPublic | BindingFlags.Instance);
+			return GetCache<string, JniFieldInfo> (field, fields);
+		}
+
 		static ConcurrentDictionary<string, JniMethodInfo> GetInstanceMethods (JniPeerMembers.JniInstanceMethods methods)
 		{
-			var f   = typeof (JniPeerMembers.JniInstanceMethods).GetField ("InstanceMethods", BindingFlags.NonPublic | BindingFlags.Instance);
-			return (ConcurrentDictionary<string, JniMethodInfo>) f.GetValue (methods);
+			var field = typeof (JniPeerMembers.JniInstanceMethods).GetField ("instanceMethods", BindingFlags.NonPublic | BindingFlags.Instance);
+			return GetCache<string, JniMethodInfo> (field, methods);
+		}
+
+		static ConcurrentDictionary<Type, JniPeerMembers.JniInstanceMethods> GetSubclassConstructors (JniPeerMembers.JniInstanceMethods methods)
+		{
+			var field = typeof (JniPeerMembers.JniInstanceMethods).GetField ("subclassConstructors", BindingFlags.NonPublic | BindingFlags.Instance);
+			return GetCache<Type, JniPeerMembers.JniInstanceMethods> (field, methods);
+		}
+
+		static ConcurrentDictionary<string, JniFieldInfo> GetStaticFields (JniPeerMembers.JniStaticFields fields)
+		{
+			var field = typeof (JniPeerMembers.JniStaticFields).GetField ("staticFields", BindingFlags.NonPublic | BindingFlags.Instance);
+			return GetCache<string, JniFieldInfo> (field, fields);
+		}
+
+		static ConcurrentDictionary<string, JniMethodInfo> GetStaticMethods (JniPeerMembers.JniStaticMethods methods)
+		{
+			var field = typeof (JniPeerMembers.JniStaticMethods).GetField ("staticMethods", BindingFlags.NonPublic | BindingFlags.Instance);
+			return GetCache<string, JniMethodInfo> (field, methods);
+		}
+
+		static ConcurrentDictionary<TKey, TValue> GetCache<TKey, TValue> (FieldInfo field, object owner)
+		{
+			return (ConcurrentDictionary<TKey, TValue>) field.GetValue (owner);
 		}
 
 		[Test]
@@ -92,6 +243,16 @@ namespace Java.InteropTests
 			using var o = new JavaLangRemappingTestObject ();
 			// Shouldn't throw; should instead invoke Object.toString()
 			var r = o.remappedToToString ();
+			JniObjectReference.Dispose (ref r);
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		public void ReplaceInstanceMethodWithUtf8Signature ()
+		{
+			using var o = new JavaLangRemappingTestObject ();
+			// Shouldn't throw; should instead invoke Object.toString()
+			var r = o.remappedToStringWithUtf8Signature ();
 			JniObjectReference.Dispose (ref r);
 		}
 
@@ -169,6 +330,11 @@ namespace Java.InteropTests
 	}
 
 	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
+	abstract class JavaLangSystemTestObject : JavaObject {
+		internal const string JniTypeName = "java/lang/System";
+	}
+
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
 	class MyString : JavaObject {
 		internal    const   string      JniTypeName = "java/lang/String";
 
@@ -207,6 +373,12 @@ namespace Java.InteropTests
 		public unsafe JniObjectReference remappedToToString ()
 		{
 			const string id = "remappedToToString.()Ljava/lang/String;";
+			return _members.InstanceMethods.InvokeNonvirtualObjectMethod (id, this, null);
+		}
+
+		public unsafe JniObjectReference remappedToStringWithUtf8Signature ()
+		{
+			const string id = "remappedToStringWithUtf8Signature.()Ljava/lang/String;";
 			return _members.InstanceMethods.InvokeNonvirtualObjectMethod (id, this, null);
 		}
 

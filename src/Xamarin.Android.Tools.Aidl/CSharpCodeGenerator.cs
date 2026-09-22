@@ -269,6 +269,7 @@ namespace Xamarin.Android.Tools.Aidl
 
 			foreach (var method in type.Methods) {
 				bool isVoidReturn = method.ReturnType.ToString () == "void";
+				bool isOneWay = type.Modifier == "oneway" || method.Modifier == "oneway";
 				w.WriteLine (@"
 			case Transaction{0}: {{
 				data.EnforceInterface (descriptor);", method.Name);
@@ -297,7 +298,7 @@ namespace Xamarin.Android.Tools.Aidl
 					w.WriteLine ("\t\t\t\tthis.{0} ({1});", method.Name, args);
 				else
 					w.WriteLine ("\t\t\t\tvar result = this.{0} ({1});", method.Name, args);
-				if (method.Modifier == null || !method.Modifier.Contains ("oneway"))
+				if (!isOneWay)
 					w.WriteLine ("\t\t\t\treply.WriteNoException ();");
 				if (!isVoidReturn)
 					w.WriteLine ("\t\t\t\t{0}", GetWriteStatements (method.ReturnType, "reply", "result", "global::Android.OS.ParcelableWriteFlags.ReturnValue"));
@@ -340,7 +341,7 @@ namespace Xamarin.Android.Tools.Aidl
 			{{
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 ", ToOutputTypeName (name_cache.ToCSharp (method.ReturnType)), method.Name, args);
-				bool isOneWay = type.Modifier == "oneway";
+				bool isOneWay = type.Modifier == "oneway" || method.Modifier == "oneway";
 				bool hasReturn = method.ReturnType.ToString () != "void";
 				if (!isOneWay)
 					w.WriteLine ("\t\t\t\tglobal::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();");
@@ -355,10 +356,11 @@ namespace Xamarin.Android.Tools.Aidl
 					else if (arg.Modifier != null && arg.Modifier.Contains ("out") && arg.Type.ArrayDimension > 0)
 						w.WriteLine ("\t\t\t\t\t" + GetWriteOutStatements (arg.Type, "__data", SafeCSharpName (arg.Name)));
 				}
-				w.WriteLine ("\t\t\t\t\tremote.Transact ({1}Stub.Transaction{0}, __data, {2}, 0);",
+				w.WriteLine ("\t\t\t\t\tremote.Transact ({1}Stub.Transaction{0}, __data, {2}, {3});",
 					method.Name,
 					type.Name,
-					isOneWay ? "null" : "__reply");
+					isOneWay ? "null" : "__reply",
+					isOneWay ? "global::Android.OS.TransactionFlags.Oneway" : "0");
 				if (!isOneWay)
 					w.WriteLine ("\t\t\t\t\t__reply.ReadException ();");
 				if (hasReturn)
@@ -366,18 +368,14 @@ namespace Xamarin.Android.Tools.Aidl
 				foreach (var arg in method.Arguments)
 					if (arg.Modifier != null && arg.Modifier.Contains ("out"))
 						w.WriteLine ("\t\t\t\t\t{0}", GetReadStatements (arg.Type, "__reply", SafeCSharpName (arg.Name)));
+				w.WriteLine (@"
+				} finally {");
+				if (!isOneWay)
+					w.WriteLine ("\t\t\t\t\t__reply.Recycle ();");
+				w.WriteLine ("\t\t\t\t\t__data.Recycle ();");
+				w.WriteLine ("\t\t\t\t}");
 				if (hasReturn)
-					w.WriteLine (@"
-				} finally {
-					__reply.Recycle ();
-					__data.Recycle ();
-				}
-				return __result;");
-				else
-					w.WriteLine (@"
-				} finally {
-					__data.Recycle ();
-				}");
+					w.WriteLine ("\t\t\t\treturn __result;");
 				w.WriteLine (@"
 			}
 ");
@@ -427,7 +425,6 @@ namespace Xamarin.Android.Tools.Aidl
 				return String.Format ("{0} = {1}.ReadInt () != 0;", arg, parcel);
 			case "bool []":
 				return String.Format ("{0} = {1}.CreateBooleanArray ();", arg, parcel);
-			// FIXME: I'm not sure if aidl should support byte...
 			case "sbyte":
 				return String.Format ("{0} = {1}.ReadByte ();", arg, parcel);
 			case "byte []":
@@ -501,7 +498,6 @@ namespace Xamarin.Android.Tools.Aidl
 				return String.Format ("{1}.ReadStringArray ({0});", arg, parcel);
 			case "bool []":
 				return String.Format ("{1}.ReadBooleanArray ({0});", arg, parcel);
-			// FIXME: I'm not sure if aidl should support byte...
 			case "byte []":
 				return String.Format ("{1}.ReadByteArray ({0});", arg, parcel);
 			case "char []":
@@ -565,7 +561,6 @@ namespace Xamarin.Android.Tools.Aidl
 				return parcel + ".WriteInt (" + arg + " ? 1 : 0);";
 			case "bool []":
 				return parcel + ".WriteBooleanArray (" + arg + ");";
-			// FIXME: I'm not sure if aidl should support byte...
 			case "sbyte":
 				return parcel + ".WriteByte (" + arg + ");";
 			case "byte []":
@@ -683,4 +678,3 @@ namespace Xamarin.Android.Tools.Aidl
 		}
 	}
 }
-

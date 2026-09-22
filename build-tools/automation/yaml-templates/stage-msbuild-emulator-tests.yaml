@@ -51,7 +51,7 @@ stages:
     # Currently needed for samples/NativeAOT
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
       parameters:
-        project: Xamarin.Android.slnx
+        project: Microsoft.Android.slnx
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
@@ -66,6 +66,7 @@ stages:
         testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: $(ExcludedNightlyNUnitCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
+        xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - ${{ if ne(parameters.usesCleanImages, true) }}:
       - template: start-stop-emulator.yaml

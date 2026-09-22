@@ -23,6 +23,34 @@ namespace Xamarin.Android.Build.Tests
 	public class XASdkTests : BaseTest
 	{
 		[Test]
+		public void DotNetWorkloadSearchUsesEnglishDescription ()
+		{
+			const string description = ".NET SDK Workload for building Android applications.";
+			var testPath = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (testPath);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = testPath;
+
+			var manifestRoot = TestEnvironment.UseLocalBuildOutput ?
+				TestEnvironment.WorkloadManifestOverridePath :
+				Path.Combine (TestEnvironment.DotNetPreviewDirectory, "sdk-manifests");
+			Assert.IsTrue (Directory.Exists (manifestRoot), $"The workload manifest root '{manifestRoot}' should exist.");
+			var androidManifestDirectory = $"{Path.DirectorySeparatorChar}microsoft.net.sdk.android{Path.DirectorySeparatorChar}";
+			var englishCatalog = Directory.EnumerateFiles (manifestRoot, "WorkloadManifest.en.json", SearchOption.AllDirectories)
+				.FirstOrDefault (path => path.IndexOf (androidManifestDirectory, StringComparison.OrdinalIgnoreCase) >= 0);
+			Assert.IsNotNull (englishCatalog, $"An English Android workload localization catalog should be installed under '{manifestRoot}'.");
+			StringAssert.Contains (description, File.ReadAllText (englishCatalog));
+
+			var dotnet = new DotNetCLI (Path.Combine (testPath, "unused.csproj"));
+			dotnet.EnvironmentVariables ["DOTNET_CLI_UI_LANGUAGE"] = "en";
+
+			Assert.IsTrue (dotnet.WorkloadSearch ("android"), "`dotnet workload search android` should succeed");
+			StringAssert.Contains (
+				description,
+				File.ReadAllText (dotnet.ProcessLogFile),
+				"`dotnet workload search android` should use the English workload description");
+		}
+
+		[Test]
 		public void DotNetNew ([Values ("android", "androidlib", "android-bindinglib", "androidwear")] string template)
 		{
 			var templateName = TestName.Replace ("-", "");

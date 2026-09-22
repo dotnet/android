@@ -457,10 +457,17 @@ namespace generatortests
 			var xml = @"<api>
 			  <package name='java.lang' jni-name='java/lang'>
 			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' final='true' name='String' static='false' visibility='public' jni-signature='Ljava/lang/String;' />
 			  </package>
 			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
 			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
 			      <method abstract='true' deprecated='not deprecated' final='true' name='DoStuff' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' compatVirtualMethod='true'></method>
+			      <method abstract='true' deprecated='not deprecated' final='true' name='DoStuffWithObject' jni-signature='(Ljava/lang/Object;)I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' compatVirtualMethod='true'>
+			        <parameter name='value' type='java.lang.Object' jni-type='Ljava/lang/Object;' />
+			      </method>
+			      <method abstract='true' deprecated='not deprecated' final='true' name='DoStuffWithString' jni-signature='(Ljava/lang/String;)I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' compatVirtualMethod='true'>
+			        <parameter name='value' type='java.lang.String' jni-type='Ljava/lang/String;' />
+			      </method>
 			    </class>
 			  </package>
 			</api>";
@@ -472,7 +479,29 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("catch (Java.Lang.NoSuchMethodError) { throw new Java.Lang.AbstractMethodError (__id); }".NormalizeLineEndings ()), $"was: `{writer}`");
+			var generated = writer.ToString ();
+			Assert.True (generated.NormalizeLineEndings ().Contains ("catch (Java.Lang.NoSuchMethodError) { throw new Java.Lang.AbstractMethodError (__id); }".NormalizeLineEndings ()), $"was: `{writer}`");
+			Assert.That (generated.NormalizeLineEndings (), Does.Contain ("""
+				var __result = __rm;
+				global::System.GC.KeepAlive (value);
+				return __result;
+			}
+			catch (Java.Lang.NoSuchMethodError) {
+				global::System.GC.KeepAlive (value);
+				throw new Java.Lang.AbstractMethodError (__id);
+			}
+			""".NormalizeLineEndings ()), generated);
+			Assert.That (generated.NormalizeLineEndings (), Does.Contain ("""
+			}
+			catch (Java.Lang.NoSuchMethodError) {
+				throw new Java.Lang.AbstractMethodError (__id);
+			} finally {
+			""".NormalizeLineEndings ()), generated);
+			var expectedStringCleanup = Target == CodeGenerationTarget.JavaInterop1
+				? "global::Java.Interop.JniObjectReference.Dispose (ref native_value);"
+				: "JNIEnv.DeleteLocalRef (native_value);";
+			Assert.That (generated, Does.Contain (expectedStringCleanup));
+			Assert.AreEqual (generated.Count (c => c == '{'), generated.Count (c => c == '}'), generated);
 		}
 
 		[Test]
@@ -804,13 +833,16 @@ namespace generatortests
 			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			// These should use [Obsolete] because they have always been obsolete in all currently supported versions (21+)
+			// These should use [Obsolete] because they have always been obsolete in all currently supported versions (24+)
 			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"This is a field deprecated since 0!\")]"), writer.ToString ());
 			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"This is a constructor deprecated since empty string!\")]"), writer.ToString ());
 
+			// getCount/setCount were deprecated-since 22, which is below MINIMUM_API_LEVEL (24), so they
+			// should use [Obsolete] rather than [ObsoletedOSPlatform] since they have always been obsolete.
+			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"deprecated\")]"), writer.ToString ());
+
 			// This should not have a message because the default "deprecated" message isn't useful
 			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android25.0\")]"), writer.ToString ());
-			Assert.True (writer.ToString ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform (\"android22.0\")]"), writer.ToString ());
 
 			// This should use [Obsolete] because the 'deprecated-since' attribute could not be parsed
 			Assert.True (writer.ToString ().Contains ("[global::System.Obsolete (@\"This method has an invalid deprecated-since!\")]"), writer.ToString ());
@@ -1437,6 +1469,58 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			StringAssert.Contains ("[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android30.0\")]", builder.ToString (), "Should contain SupportedOSPlatform!");
+		}
+
+		[Test]
+		// CodeGenerationOptions.MinimumApiLevel defaults to 24 (matches $(AndroidMinimumDotNetApiLevel)
+		// in Configuration.props), so there's no sense writing [SupportedOSPlatform] for an API
+		// available at or below that floor: it's available in every version we support. Only API
+		// levels above the floor need it.
+		[TestCase (22, false)]
+		[TestCase (23, false)]
+		[TestCase (24, false)]
+		[TestCase (25, true)]
+		public void SupportedOSPlatformOmittedAtOrBelowMinimumApiLevel (int apiLevel, bool expectAttribute)
+		{
+			var klass = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
+			klass.ApiAvailableSince = new AndroidSdkVersion (apiLevel);
+
+			generator.Context.ContextTypes.Push (klass);
+			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			var attribute = $"[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android{apiLevel}.0\")]";
+
+			if (expectAttribute)
+				StringAssert.Contains (attribute, builder.ToString (), $"Should contain SupportedOSPlatform for android{apiLevel}!");
+			else
+				StringAssert.DoesNotContain (attribute, builder.ToString (), $"Should NOT contain SupportedOSPlatform for android{apiLevel}!");
+		}
+
+		[Test]
+		// Confirms MinimumApiLevel is actually wired through, not just defaulted: overriding it to a
+		// non-default value moves the floor below which [SupportedOSPlatform] is omitted.
+		[TestCase (21, 22, true)]
+		[TestCase (21, 21, false)]
+		[TestCase (30, 25, false)]
+		[TestCase (30, 31, true)]
+		public void SupportedOSPlatformRespectsMinimumApiLevelOverride (int minimumApiLevel, int apiLevel, bool expectAttribute)
+		{
+			options.MinimumApiLevel = minimumApiLevel;
+
+			var klass = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
+			klass.ApiAvailableSince = new AndroidSdkVersion (apiLevel);
+
+			generator.Context.ContextTypes.Push (klass);
+			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			var attribute = $"[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android{apiLevel}.0\")]";
+
+			if (expectAttribute)
+				StringAssert.Contains (attribute, builder.ToString (), $"Should contain SupportedOSPlatform for android{apiLevel} with MinimumApiLevel={minimumApiLevel}!");
+			else
+				StringAssert.DoesNotContain (attribute, builder.ToString (), $"Should NOT contain SupportedOSPlatform for android{apiLevel} with MinimumApiLevel={minimumApiLevel}!");
 		}
 
 		[Test]

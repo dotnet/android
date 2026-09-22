@@ -5,7 +5,7 @@ Parses `git log` output to produce .NET for Android release notes fragments.
 Usage:
 
 ```zsh
-(cd ~/Developer/src/xamarin/xamarin-android ;
+(cd ~/Developer/src/dotnet/android ;
   git log -p --cherry-pick --right-only FROM...TO) \
 | dotnet run \
 | pbcopy

@@ -34,6 +34,7 @@
     <ItemGroup>
       <_ConfigureRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
       <_ConfigureRuntimesInputs  Include="CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="CMakePresets.json" />
       <_ConfigureRuntimesInputs  Include="common\java-interop\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="common\libunwind\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="common\runtime-base\CMakeLists.txt" />
@@ -68,7 +69,6 @@
       <_ConfigureRuntimesInputs  Include="clr\host\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="clr\runtime-base\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="clr\shared\CMakeLists.txt" />
-      <_ConfigureRuntimesInputs  Include="clr\startup\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="clr\xamarin-app-stub\CMakeLists.txt" />
     </ItemGroup>
 
@@ -80,6 +80,7 @@
   <Target Name="_ConfigureArchiveDSOInputsAndOutputs">
     <ItemGroup>
       <_ArchiveDSOInput Include="common\archive-dso-stub\CMakeLists.txt" />
+      <_ArchiveDSOInput Include="CMakePresets.json" />
 
       <_ArchiveDSOOutput Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-archive-dso-stub\CMakeCache.txt')" />
       <_ArchiveDSOOutput Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libarchive-dso-stub.so')" />
@@ -120,6 +121,7 @@
 
     <ItemGroup>
       <_TestJniLibraryInput Include="common\test-jni-library\CMakeLists.txt" />
+      <_TestJniLibraryInput Include="CMakePresets.json" />
 
       <_TestJniLibraryOutput Include="@(_TestJniLibraryAbi->'$(FlavorIntermediateOutputPath)%(AndroidRID)-test-jni-library\CMakeCache.txt')" />
 
@@ -376,23 +378,19 @@
                          RuntimePackName="$(_RuntimePackName)" />
     </ItemGroup>
 
-    <!-- NativeAOT applications do not link libc++, so its archives are only shipped for CoreCLR. -->
-    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
-      <_RuntimePackFiles Include="@(_AndroidNdkRedistributable)"
-                         Condition=" '%(_AndroidNdkRedistributable.Kind)' == 'CplusPlus' "
-                         AndroidRID="%(_AndroidNdkRedistributable.AndroidRID)"
-                         AndroidRuntime="$(CMakeRuntimeFlavor)"
-                         RuntimePackName="$(_RuntimePackName)" />
+    <!-- Remove archives left behind by builds that linked libc++ or the Xamarin unwinder. -->
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' Or '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
+      <_RuntimePackFiles Remove="@(_RuntimePackFiles)"
+                         Condition=" '%(_RuntimePackFiles.Filename)' == 'libunwind_xamarin-debug' Or '%(_RuntimePackFiles.Filename)' == 'libunwind_xamarin-release' " />
+      <_ObsoleteRuntimePackDirectory Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.$(_RuntimePackName).$(AndroidApiLevel).%(AndroidRID)\$(AndroidPackVersion)\runtimes\%(AndroidRID)\native')" />
+      <_ObsoleteRuntimePackFile Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libc++_static.a')" />
+      <_ObsoleteRuntimePackFile Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libc++abi.a')" />
+      <_ObsoleteRuntimePackFile Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libunwind.a')" />
+      <_ObsoleteRuntimePackFile Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libunwind_xamarin-debug.a')" />
+      <_ObsoleteRuntimePackFile Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libunwind_xamarin-release.a')" />
     </ItemGroup>
 
-    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
-      <_NativeAotObsoleteRuntimePackFile Include="@(_AndroidNdkRedistributable)"
-                                         Condition=" '%(_AndroidNdkRedistributable.Kind)' == 'CplusPlus' ">
-        <DestinationFile>$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.$(_RuntimePackName).$(AndroidApiLevel).%(_AndroidNdkRedistributable.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_AndroidNdkRedistributable.AndroidRID)\native\%(_AndroidNdkRedistributable.Filename)%(_AndroidNdkRedistributable.Extension)</DestinationFile>
-      </_NativeAotObsoleteRuntimePackFile>
-    </ItemGroup>
-
-    <Delete Files="@(_NativeAotObsoleteRuntimePackFile->'%(DestinationFile)')" />
+    <Delete Files="@(_ObsoleteRuntimePackFile)" />
 
     <Copy
         SourceFiles="%(_RuntimePackFiles.Identity)"

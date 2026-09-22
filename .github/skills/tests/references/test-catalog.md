@@ -7,7 +7,7 @@ Mapping of test area keywords to assemblies, filters, and build prerequisites.
 - **Filter**: The `--filter` argument for host-side `dotnet test`, or on-device MTP category/property notes.
 - **Build**: What must be built before running:
   - **Standalone** — Can run with plain `dotnet test <project>.csproj`. No local SDK needed.
-  - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `./dotnet-local.sh build Xamarin.Android.slnx -c Debug` or `make prepare && make all`.
+  - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `./dotnet-local.sh build Microsoft.Android.slnx -c Debug` or `make prepare && make all`.
 - **Device**: Whether an Android device/emulator is required.
 
 ---
@@ -22,6 +22,7 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 |-----------|---------|---------|
 | **assembly store reader** | `.github/skills/read-assembly-store/tests/AssemblyStore.Tests/` | `dotnet test .github/skills/read-assembly-store/tests/AssemblyStore.Tests/AssemblyStore.Tests.csproj -v minimal` |
 | **trimmable type map** (unit) | `tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/` | `dotnet test tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests.csproj -v minimal` |
+| **modern Android build tasks** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal` |
 | **aidl** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj -v minimal` |
 | **source writer** | `external/Java.Interop/tests/Xamarin.SourceWriter-Tests/` | `dotnet test external/Java.Interop/tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -v minimal` |
 | **java source** | `external/Java.Interop/tests/Java.Interop.Tools.JavaSource-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.JavaSource-Tests/Java.Interop.Tools.JavaSource-Tests.csproj -v minimal` |
@@ -41,7 +42,7 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 ## Host-Side MSBuild Tests (full-build — requires local SDK)
 
 Assembly: `bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll`
-Build: Full-build — `./dotnet-local.sh build Xamarin.Android.slnx -c Debug` or `make prepare && make all`
+Build: Full-build — `./dotnet-local.sh build Microsoft.Android.slnx -c Debug` or `make prepare && make all`
 Device: No
 
 | Test Area | Filter | Test Classes / Notes |

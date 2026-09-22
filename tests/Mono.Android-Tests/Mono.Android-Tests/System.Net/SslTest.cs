@@ -6,6 +6,8 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Android.Systems;
+
 using NUnit.Framework;
 
 using Xamarin.Android.NetTests;
@@ -112,15 +114,58 @@ namespace System.NetTests {
 				Assert.Ignore ("Not supported on API 23 and lower.");
 			}
 
-			Assert.DoesNotThrow (() => RunIgnoringWebException (DoVerifyTrustedCertificates), "Certificate validation");
+			using var tcpClient = ConnectToTrustedCertificatesEndpoint ();
+			using var ssl = new SslStream (tcpClient.GetStream (), false);
+			Assert.DoesNotThrow (() => ssl.AuthenticateAsClient ("google.com"), "Certificate validation");
 		}
 
-		void DoVerifyTrustedCertificates ()
+		static TcpClient ConnectToTrustedCertificatesEndpoint ()
 		{
-			var tcpClient = new TcpClient ("google.com", 443);
-			using (var ssl = new SslStream (tcpClient.GetStream (), false)) {
-				ssl.AuthenticateAsClient ("google.com");
+			try {
+				return new TcpClient ("google.com", 443);
+			} catch (SocketException ex) when (IsExternalConnectivityFailure (ex)) {
+				Assert.Ignore ($"Unable to reach google.com:443 before TLS certificate validation. SocketError={ex.SocketErrorCode}; NativeError={ex.NativeErrorCode}; Message={ex.Message}");
+				throw;
 			}
+		}
+
+		static bool IsExternalConnectivityFailure (SocketException exception)
+		{
+			return IsExternalConnectivityFailure (exception.SocketErrorCode) ||
+				exception.NativeErrorCode == OsConstants.Enetunreach ||
+				exception.NativeErrorCode == OsConstants.Ehostunreach;
+		}
+
+		static bool IsExternalConnectivityFailure (SocketError socketError)
+		{
+			switch (socketError) {
+				case SocketError.HostNotFound:
+				case SocketError.NoData:
+				case SocketError.NetworkUnreachable:
+				case SocketError.HostUnreachable:
+					return true;
+			}
+
+			return false;
+		}
+
+		[TestCase (SocketError.HostNotFound, true)]
+		[TestCase (SocketError.NoData, true)]
+		[TestCase (SocketError.NetworkUnreachable, true)]
+		[TestCase (SocketError.HostUnreachable, true)]
+		[TestCase (SocketError.TimedOut, false)]
+		[TestCase (SocketError.ConnectionReset, false)]
+		public void ExternalConnectivityFailureClassification (SocketError socketError, bool expected)
+		{
+			Assert.AreEqual (expected, IsExternalConnectivityFailure (socketError));
+		}
+
+		[Test]
+		public void NativeExternalConnectivityFailureClassification ()
+		{
+			Assert.IsTrue (IsExternalConnectivityFailure (new SocketException (OsConstants.Enetunreach)), "ENETUNREACH");
+			Assert.IsTrue (IsExternalConnectivityFailure (new SocketException (OsConstants.Ehostunreach)), "EHOSTUNREACH");
+			Assert.IsFalse (IsExternalConnectivityFailure (new SocketException (OsConstants.Econnreset)), "ECONNRESET");
 		}
 
 		void RunIgnoringWebException (Action test)

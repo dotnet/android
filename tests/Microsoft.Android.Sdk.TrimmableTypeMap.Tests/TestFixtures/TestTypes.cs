@@ -1388,6 +1388,16 @@ namespace MyApp
 
 		public UnsignedParamActivity (ushort a, uint b, ulong c) { }
 	}
+
+	[Register ("my/app/CrossAssemblyParameter", DoNotGenerateAcw = true)]
+	public class CrossAssemblyCollisionParameter : Java.Lang.Object
+	{
+	}
+
+	[Register ("my/app/BorrowedParameter", DoNotGenerateAcw = true)]
+	public class CrossAssemblyBorrowedParameter : Java.Lang.Object
+	{
+	}
 }
 
 namespace MyApp.Generic

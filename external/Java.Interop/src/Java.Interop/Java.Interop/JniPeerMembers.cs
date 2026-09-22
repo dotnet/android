@@ -1,9 +1,12 @@
 ﻿#nullable enable
 
 using System;
-using System.Diagnostics;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Java.Interop {
 
@@ -12,26 +15,39 @@ namespace Java.Interop {
 		private bool isInterface;
 
 		public JniPeerMembers (string jniPeerTypeName, Type managedPeerType, bool isInterface)
-			: this (jniPeerTypeName = GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: true, isInterface: isInterface)
+			: this (GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: true, isInterface: isInterface)
 		{
 		}
 
 		public JniPeerMembers (string jniPeerTypeName, Type managedPeerType)
-			: this (jniPeerTypeName = GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: true, isInterface: false)
+			: this (GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: true, isInterface: false)
 		{
 		}
 
-		static string GetReplacementType (string jniPeerTypeName)
+		readonly struct JniPeerTypeNameInfo
 		{
-			var replacement = JniEnvironment.Runtime.TypeManager.GetReplacementType (jniPeerTypeName);
-			if (replacement != null)
-				return replacement;
-			return jniPeerTypeName;
+			public JniPeerTypeNameInfo (string sourceName, string? targetName, IntPtr targetNameUtf8)
+			{
+				SourceName = sourceName;
+				TargetName = targetName;
+				TargetNameUtf8 = targetNameUtf8;
+			}
+
+			public string SourceName { get; }
+			public string? TargetName { get; }
+			public IntPtr TargetNameUtf8 { get; }
 		}
 
-		JniPeerMembers (string jniPeerTypeName, Type managedPeerType, bool checkManagedPeerType, bool isInterface = false)
+		static JniPeerTypeNameInfo GetReplacementType (string jniPeerTypeName)
 		{
-			if (jniPeerTypeName == null)
+			var typeManager = JniEnvironment.Runtime.TypeManager;
+			typeManager.GetReplacementTypeInfo (jniPeerTypeName, out var replacement, out var replacementUtf8);
+			return new JniPeerTypeNameInfo (jniPeerTypeName, replacement, replacementUtf8);
+		}
+
+		JniPeerMembers (JniPeerTypeNameInfo jniPeerTypeName, Type managedPeerType, bool checkManagedPeerType, bool isInterface = false)
+		{
+			if (jniPeerTypeName.SourceName == null)
 				throw new ArgumentNullException (nameof (jniPeerTypeName));
 
 			if (checkManagedPeerType) {
@@ -42,17 +58,19 @@ namespace Java.Interop {
 
 #if DEBUG
 				var signatureFromType   = JniEnvironment.Runtime.TypeManager.GetTypeSignature (managedPeerType);
-				if (signatureFromType.SimpleReference != jniPeerTypeName) {
+				if (signatureFromType.SimpleReference != jniPeerTypeName.SourceName) {
 					Debug.WriteLine ("WARNING-Java.Interop: ManagedPeerType <=> JniTypeName Mismatch! javaVM.GetJniTypeInfoForType(typeof({0})).JniTypeName=\"{1}\" != \"{2}\"",
 							managedPeerType.FullName,
 							signatureFromType.SimpleReference,
-							jniPeerTypeName);
+							jniPeerTypeName.SourceName);
 					Debug.WriteLine (new System.Diagnostics.StackTrace (true));
 				}
 #endif  // DEBUG
 			}
 
-			JniPeerTypeName = jniPeerTypeName;
+			sourceJniPeerTypeName = jniPeerTypeName.SourceName;
+			this.jniPeerTypeName = jniPeerTypeName.TargetName;
+			jniPeerTypeNameUtf8 = jniPeerTypeName.TargetNameUtf8;
 			ManagedPeerType = managedPeerType;
 
 			this.isInterface = isInterface;
@@ -65,20 +83,27 @@ namespace Java.Interop {
 
 		static JniPeerMembers CreatePeerMembers (string jniPeerTypeName, Type managedPeerType)
 		{
-			return new JniPeerMembers (jniPeerTypeName, managedPeerType, checkManagedPeerType: false);
+			return new JniPeerMembers (new JniPeerTypeNameInfo (jniPeerTypeName, null, IntPtr.Zero), managedPeerType, checkManagedPeerType: false);
 		}
 
 		JniType?            jniPeerType;
+		string              sourceJniPeerTypeName;
+		string?             jniPeerTypeName;
+		IntPtr               jniPeerTypeNameUtf8;
 		JniInstanceMethods  instanceMethods;
 		JniInstanceFields   instanceFields;
 		JniStaticMethods    staticMethods;
 		JniStaticFields     staticFields;
 
 		public      Type        ManagedPeerType {get; private set;}
-		public      string      JniPeerTypeName {get; private set;}
+		public      string      JniPeerTypeName => jniPeerTypeNameUtf8 == IntPtr.Zero
+			? jniPeerTypeName ?? sourceJniPeerTypeName
+			: jniPeerTypeName ??= GetUtf8String (jniPeerTypeNameUtf8);
 		public      JniType     JniPeerType {
 			get {
-				var t = JniType.GetCachedJniType (ref jniPeerType, JniPeerTypeName);
+				var t = jniPeerTypeNameUtf8 == IntPtr.Zero
+					? JniType.GetCachedJniType (ref jniPeerType, jniPeerTypeName ?? sourceJniPeerTypeName)
+					: JniType.GetCachedJniType (ref jniPeerType, jniPeerTypeNameUtf8);
 				t.RegisterWithRuntime ();
 				return t;
 			}
@@ -106,6 +131,30 @@ namespace Java.Interop {
 			if (value == null)
 				throw new ObjectDisposedException (nameof (JniPeerMembers));
 			return value;
+		}
+
+		static ConcurrentDictionary<TKey, TValue> GetOrCreate<TKey, TValue> (ref ConcurrentDictionary<TKey, TValue>? dictionary, int capacity)
+			where TKey : notnull
+		{
+			var value = Volatile.Read (ref dictionary);
+			if (value != null)
+				return value;
+
+			var candidate = new ConcurrentDictionary<TKey, TValue> (1, capacity);
+			return Interlocked.CompareExchange (ref dictionary, candidate, null) ?? candidate;
+		}
+
+		static void Clear<TKey, TValue> (ref ConcurrentDictionary<TKey, TValue>? dictionary, Action<TValue>? dispose = null)
+			where TKey : notnull
+		{
+			var values = Interlocked.Exchange (ref dictionary, null);
+			if (values == null)
+				return;
+			if (dispose != null) {
+				foreach (var value in values.Values)
+					dispose (value);
+			}
+			values.Clear ();
 		}
 
 		protected virtual void Dispose (bool disposing)
@@ -141,6 +190,98 @@ namespace Java.Interop {
 			return isInterface ? this : value.JniPeerMembers;
 		}
 
+		JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
+		{
+			return jniPeerTypeNameUtf8 == IntPtr.Zero
+				? JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (jniPeerTypeName ?? sourceJniPeerTypeName, method, signature)
+				: JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (jniPeerTypeNameUtf8, method, signature);
+		}
+
+		static JniType CreateTargetType (JniRuntime.ReplacementMethodInfo info, JniPeerMembers fallback)
+		{
+			if (info.TargetJniTypeUtf8 != IntPtr.Zero)
+				return new JniType (info.TargetJniTypeUtf8);
+			if (info.TargetJniType != null)
+				return new JniType (info.TargetJniType);
+			return fallback.jniPeerTypeNameUtf8 != IntPtr.Zero
+				? new JniType (fallback.jniPeerTypeNameUtf8)
+				: new JniType (fallback.jniPeerTypeName ?? fallback.sourceJniPeerTypeName);
+		}
+
+		static bool TryGetInstanceMethod (
+			JniType type,
+			JniRuntime.ReplacementMethodInfo info,
+			ReadOnlySpan<char> fallbackName,
+			ReadOnlySpan<char> fallbackSignature,
+			[System.Diagnostics.CodeAnalysis.NotNullWhen (true)] out JniMethodInfo? method)
+		{
+			if (info.TargetJniMethodNameUtf8 != IntPtr.Zero) {
+				if (info.TargetJniMethodSignatureUtf8 != IntPtr.Zero)
+					return type.TryGetInstanceMethod (info.TargetJniMethodNameUtf8, info.TargetJniMethodSignatureUtf8, out method);
+				var signature = info.TargetJniMethodSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
+				return type.TryGetInstanceMethod (info.TargetJniMethodNameUtf8, signature, out method);
+			}
+
+			var name = info.TargetJniMethodName is string targetName ? targetName.AsSpan () : fallbackName;
+			if (info.TargetJniMethodSignatureUtf8 != IntPtr.Zero)
+				return type.TryGetInstanceMethod (name, info.TargetJniMethodSignatureUtf8, out method);
+			var fallback = info.TargetJniMethodSignature is string targetSignatureValue ? targetSignatureValue.AsSpan () : fallbackSignature;
+			return type.TryGetInstanceMethod (name, fallback, out method);
+		}
+
+		static bool TryGetStaticMethod (
+			JniType type,
+			JniRuntime.ReplacementMethodInfo info,
+			ReadOnlySpan<char> fallbackName,
+			ReadOnlySpan<char> fallbackSignature,
+			[System.Diagnostics.CodeAnalysis.NotNullWhen (true)] out JniMethodInfo? method)
+		{
+			if (info.TargetJniMethodNameUtf8 != IntPtr.Zero) {
+				if (info.TargetJniMethodSignatureUtf8 != IntPtr.Zero)
+					return type.TryGetStaticMethod (info.TargetJniMethodNameUtf8, info.TargetJniMethodSignatureUtf8, out method);
+				var signature = info.TargetJniMethodSignature is string targetSignature ? targetSignature.AsSpan () : fallbackSignature;
+				return type.TryGetStaticMethod (info.TargetJniMethodNameUtf8, signature, out method);
+			}
+
+			var name = info.TargetJniMethodName is string targetName ? targetName.AsSpan () : fallbackName;
+			if (info.TargetJniMethodSignatureUtf8 != IntPtr.Zero)
+				return type.TryGetStaticMethod (name, info.TargetJniMethodSignatureUtf8, out method);
+			var fallback = info.TargetJniMethodSignature is string targetSignatureValue ? targetSignatureValue.AsSpan () : fallbackSignature;
+			return type.TryGetStaticMethod (name, fallback, out method);
+		}
+
+		static unsafe string GetUtf8String (IntPtr value)
+		{
+			return System.Text.Encoding.UTF8.GetString (MemoryMarshal.CreateReadOnlySpanFromNullTerminated ((byte*)value));
+		}
+
+		static string GetTargetTypeNameForDiagnostics (JniRuntime.ReplacementMethodInfo info, JniPeerMembers fallback)
+		{
+			if (info.TargetJniTypeUtf8 != IntPtr.Zero)
+				return GetUtf8String (info.TargetJniTypeUtf8);
+			if (info.TargetJniType != null)
+				return info.TargetJniType;
+			return fallback.JniPeerTypeName;
+		}
+
+		static string GetTargetMethodNameForDiagnostics (JniRuntime.ReplacementMethodInfo info, ReadOnlySpan<char> fallback)
+		{
+			if (info.TargetJniMethodNameUtf8 != IntPtr.Zero)
+				return GetUtf8String (info.TargetJniMethodNameUtf8);
+			if (info.TargetJniMethodName != null)
+				return info.TargetJniMethodName;
+			return fallback.ToString ();
+		}
+
+		static string GetTargetMethodSignatureForDiagnostics (JniRuntime.ReplacementMethodInfo info, ReadOnlySpan<char> fallback)
+		{
+			if (info.TargetJniMethodSignatureUtf8 != IntPtr.Zero)
+				return GetUtf8String (info.TargetJniMethodSignatureUtf8);
+			if (info.TargetJniMethodSignature != null)
+				return info.TargetJniMethodSignature;
+			return fallback.ToString ();
+		}
+
 		internal static void AssertSelf (IJavaPeerable self)
 		{
 			if (self == null)
@@ -168,11 +309,11 @@ namespace Java.Interop {
 			return n;
 		}
 
-		internal static void GetNameAndSignature (string encodedMember, out string name, out string signature)
+		internal static void GetNameAndSignature (string encodedMember, out ReadOnlySpan<char> name, out ReadOnlySpan<char> signature)
 		{
 			int n       = GetSignatureSeparatorIndex (encodedMember);
-			name        = encodedMember.Substring (0, n);
-			signature   = encodedMember.Substring (n + 1);
+			name        = encodedMember.AsSpan (0, n);
+			signature   = encodedMember.AsSpan (n + 1);
 		}
 	}
 }

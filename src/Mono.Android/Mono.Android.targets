@@ -127,6 +127,7 @@
       <Generator>"$(MicrosoftAndroidSdkOutDir)generator.dll"</Generator>
       <_GenFlags>--public --product-version=7</_GenFlags>
       <_ApiLevel>--api-level=$(AndroidApiLevel)</_ApiLevel>
+      <_MinimumApiLevel>--minimum-api-level=$(AndroidMinimumDotNetApiLevel)</_MinimumApiLevel>
       <_Out>-o "$(IntermediateOutputPath)mcw"</_Out>
       <_Codegen>--codegen-target=XAJavaInterop1</_Codegen>
       <_Fixup>--fixup=metadata</_Fixup>
@@ -144,7 +145,7 @@
       <_LangFeatures Condition=" $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '7.0')) ">$(_LangFeatures),obsoleted-platform-attributes</_LangFeatures>
     </PropertyGroup>
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; $(Generator) $(_GenFlags) $(_ApiLevel) $(_Out) $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_LangFeatures) $(_Dirs) $(_Api) $(_WithJavadocXml)"
+        Command="&quot;$(DotNetPreviewTool)&quot; $(Generator) $(_GenFlags) $(_ApiLevel) $(_MinimumApiLevel) $(_Out) $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_LangFeatures) $(_Dirs) $(_Api) $(_WithJavadocXml)"
         IgnoreStandardErrorWarningFormat="True"
     />
     <ItemGroup>
@@ -284,8 +285,9 @@
       <_Libdir>-L "$(DotNetPreviewPath)packs/Microsoft.NETCore.App.Ref"</_Libdir>
       <_Output>-o "$(_ExternalDocsRoot)"</_Output>
       <_DocTypeArgs Condition=" '$(DocTypeName)' != '' ">--type=$(DocTypeName)</_DocTypeArgs>
-      <_RootFxDir>$(BaseIntermediateOutputPath)docs-gen-temp/</_RootFxDir>
-      <_FxConfig>-fx "$(_RootFxDir)"</_FxConfig>
+      <_RootFxDir>$(BaseIntermediateOutputPath)docs-gen-temp$([System.IO.Path]::DirectorySeparatorChar)</_RootFxDir>
+      <!-- Avoid ending the quoted Windows path with a backslash; "\." names the same directory. -->
+      <_FxConfig>-fx "$(_RootFxDir)."</_FxConfig>
       <_ExtraMdocArgs>-lang docid -lang fsharp --debug --delete</_ExtraMdocArgs>
     </PropertyGroup>
     <ItemGroup>

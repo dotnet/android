@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reference-wrapper subgraph from dotnet-android build 1585926, with readable node IDs. -->
+<DirectedGraph xmlns="http://schemas.microsoft.com/vs/2009/dgml">
+  <Nodes>
+    <Node Id="peer-metadata" Label="Type metadata: [Java.Interop]Java.Interop.IJavaPeerable" />
+    <Node Id="list-factory" Label="Mono_Android_Java_Interop_SafeJavaCollectionFactory__CreateReferenceListFromJniHandle" />
+    <Node Id="collection-factory" Label="Mono_Android_Java_Interop_SafeJavaCollectionFactory__CreateReferenceCollectionFromJniHandle" />
+    <Node Id="dictionary-factory" Label="Mono_Android_Java_Interop_SafeJavaCollectionFactory__CreateReferenceDictionaryFromJniHandle" />
+    <Node Id="dictionary-type" Label="_ZTV127Mono_Android_Android_Runtime_JavaDictionary_2&lt;Java_Interop_Java_Interop_IJavaPeerable__Java_Interop_Java_Interop_IJavaPeerable&gt; constructed" />
+    <Node Id="dictionary-canonical" Label="Mono_Android_Android_Runtime_JavaDictionary_2&lt;System___Canon__System___Canon&gt;___ctor_0" />
+    <Node Id="collection-type" Label="_ZTV86Mono_Android_Android_Runtime_JavaCollection_1&lt;Java_Interop_Java_Interop_IJavaPeerable&gt; constructed" />
+    <Node Id="collection-canonical" Label="Mono_Android_Android_Runtime_JavaCollection_1&lt;System___Canon&gt;___ctor" />
+    <Node Id="list-type" Label="_ZTV80Mono_Android_Android_Runtime_JavaList_1&lt;Java_Interop_Java_Interop_IJavaPeerable&gt; constructed" />
+    <Node Id="list-canonical" Label="Mono_Android_Android_Runtime_JavaList_1&lt;System___Canon&gt;___ctor_0" />
+    <Node Id="list-dictionary" Label="__GenericDict_Mono_Android_Android_Runtime_JavaList_1&lt;Java_Interop_Java_Interop_IJavaPeerable&gt;" />
+    <Node Id="list-constructor" Label="[Mono.Android]Android.Runtime.JavaList`1&lt;Java.Interop.IJavaPeerable&gt;..ctor(native int,JniHandleOwnership) backed by Mono_Android_Android_Runtime_JavaList_1&lt;System___Canon&gt;___ctor_0" />
+    <Node Id="collection-dictionary" Label="__GenericDict_Mono_Android_Android_Runtime_JavaCollection_1&lt;Java_Interop_Java_Interop_IJavaPeerable&gt;" />
+    <Node Id="collection-constructor" Label="[Mono.Android]Android.Runtime.JavaCollection`1&lt;Java.Interop.IJavaPeerable&gt;..ctor(native int,JniHandleOwnership) backed by Mono_Android_Android_Runtime_JavaCollection_1&lt;System___Canon&gt;___ctor" />
+    <Node Id="dictionary-dictionary" Label="__GenericDict_Mono_Android_Android_Runtime_JavaDictionary_2&lt;Java_Interop_Java_Interop_IJavaPeerable__Java_Interop_Java_Interop_IJavaPeerable&gt;" />
+    <Node Id="dictionary-constructor" Label="[Mono.Android]Android.Runtime.JavaDictionary`2&lt;Java.Interop.IJavaPeerable,Java.Interop.IJavaPeerable&gt;..ctor(native int,JniHandleOwnership) backed by Mono_Android_Android_Runtime_JavaDictionary_2&lt;System___Canon__System___Canon&gt;___ctor_0" />
+    <Node Id="dictionary-conditional" Label="(Mono_Android_Java_Interop_SafeJavaCollectionFactory__CreateReferenceDictionaryFromJniHandle, Type metadata: [Java.Interop]Java.Interop.IJavaPeerable)" />
+    <Node Id="collection-conditional" Label="(Mono_Android_Java_Interop_SafeJavaCollectionFactory__CreateReferenceCollectionFromJniHandle, Type metadata: [Java.Interop]Java.Interop.IJavaPeerable)" />
+    <Node Id="list-conditional" Label="(Mono_Android_Java_Interop_SafeJavaCollectionFactory__CreateReferenceListFromJniHandle, Type metadata: [Java.Interop]Java.Interop.IJavaPeerable)" />
+    <Node Id="list-dependency" Label="(__GenericDict_Mono_Android_Android_Runtime_JavaList_1&lt;Java_Interop_Java_Interop_IJavaPeerable&gt;, Mono_Android_Android_Runtime_JavaList_1&lt;System___Canon&gt;___ctor_0)" />
+    <Node Id="collection-dependency" Label="(__GenericDict_Mono_Android_Android_Runtime_JavaCollection_1&lt;Java_Interop_Java_Interop_IJavaPeerable&gt;, Mono_Android_Android_Runtime_JavaCollection_1&lt;System___Canon&gt;___ctor)" />
+    <Node Id="dictionary-dependency" Label="(__GenericDict_Mono_Android_Android_Runtime_JavaDictionary_2&lt;Java_Interop_Java_Interop_IJavaPeerable__Java_Interop_Java_Interop_IJavaPeerable&gt;, Mono_Android_Android_Runtime_JavaDictionary_2&lt;System___Canon__System___Canon&gt;___ctor_0)" />
+  </Nodes>
+  <Links>
+    <Link Source="peer-metadata" Target="dictionary-conditional" Reason="Secondary" />
+    <Link Source="peer-metadata" Target="collection-conditional" Reason="Secondary" />
+    <Link Source="peer-metadata" Target="list-conditional" Reason="Secondary" />
+    <Link Source="list-factory" Target="list-conditional" Reason="Primary" />
+    <Link Source="collection-factory" Target="collection-conditional" Reason="Primary" />
+    <Link Source="dictionary-factory" Target="dictionary-conditional" Reason="Primary" />
+    <Link Source="dictionary-type" Target="dictionary-dictionary" Reason="reloc" />
+    <Link Source="dictionary-canonical" Target="dictionary-dependency" Reason="Secondary" />
+    <Link Source="collection-type" Target="collection-dictionary" Reason="reloc" />
+    <Link Source="collection-canonical" Target="collection-dependency" Reason="Secondary" />
+    <Link Source="list-type" Target="list-dictionary" Reason="reloc" />
+    <Link Source="list-canonical" Target="list-dependency" Reason="Secondary" />
+    <Link Source="list-dictionary" Target="list-dependency" Reason="Primary" />
+    <Link Source="collection-dictionary" Target="collection-dependency" Reason="Primary" />
+    <Link Source="dictionary-dictionary" Target="dictionary-dependency" Reason="Primary" />
+    <Link Source="dictionary-conditional" Target="dictionary-type" Reason="newobj" />
+    <Link Source="collection-conditional" Target="collection-type" Reason="newobj" />
+    <Link Source="list-conditional" Target="list-type" Reason="newobj" />
+    <Link Source="list-dependency" Target="list-constructor" Reason="Generic dictionary dependency" />
+    <Link Source="collection-dependency" Target="collection-constructor" Reason="Generic dictionary dependency" />
+    <Link Source="dictionary-dependency" Target="dictionary-constructor" Reason="Generic dictionary dependency" />
+  </Links>
+</DirectedGraph>

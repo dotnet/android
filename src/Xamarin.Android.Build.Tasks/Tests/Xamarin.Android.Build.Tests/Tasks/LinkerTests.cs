@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -21,6 +22,134 @@ namespace Xamarin.Android.Build.Tests
 	{
 		void Logger (TraceLevel level, string message) =>
 			TestContext.WriteLine ($"{level}: {message}");
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void LinkAssembliesNoShrinkLegacyCompatibilityFixups (bool enabled)
+		{
+			var task = new TestableLinkAssembliesNoShrink {
+				AddKeepAlives = true,
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				EnableLegacyCompatibilityAssemblyFixups = enabled,
+				UseDesignerAssembly = true,
+			};
+			var resolver = new DirectoryAssemblyResolver (Logger, false);
+			using var pipeline = new AssemblyPipeline (resolver);
+			var context = new MSBuildLinkContext (resolver, task.Log);
+
+			task.BuildPipelineForTest (pipeline, context);
+
+			Assert.AreEqual (enabled, pipeline.Steps.Any (step => step is FixAbstractMethodsStep),
+				$"{nameof (FixAbstractMethodsStep)} presence should match the compatibility fixup setting.");
+			Assert.AreEqual (enabled, pipeline.Steps.Any (step => step is FixLegacyResourceDesignerStep),
+				$"{nameof (FixLegacyResourceDesignerStep)} presence should match the compatibility fixup setting.");
+			Assert.AreEqual (enabled, pipeline.Steps.Any (step => step is AddKeepAlivesStep),
+				$"{nameof (AddKeepAlivesStep)} presence should match the compatibility fixup setting.");
+			Assert.IsTrue (pipeline.Steps.Any (step => step is FindJavaObjectsStep), $"{nameof (FindJavaObjectsStep)} should always run.");
+			Assert.IsTrue (pipeline.Steps.Any (step => step is SaveChangedAssemblyStep), $"{nameof (SaveChangedAssemblyStep)} should always run.");
+			Assert.IsTrue (pipeline.Steps.Any (step => step is FindTypeMapObjectsStep), $"{nameof (FindTypeMapObjectsStep)} should always run.");
+		}
+
+		sealed class TestableLinkAssembliesNoShrink : LinkAssembliesNoShrink
+		{
+			public void BuildPipelineForTest (AssemblyPipeline pipeline, MSBuildLinkContext context) =>
+				BuildPipeline (pipeline, context);
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void RuntimeEventSourceFeatureSwitch (bool enabled)
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var lib = new XamarinAndroidLibraryProject {
+				IsRelease = true,
+				ProjectName = "EventSourceCallPath",
+				Sources = {
+					new BuildItem.Source ("EventSourceCallPath.cs") {
+						TextContent = () => """
+							using System;
+							using System.Diagnostics.CodeAnalysis;
+
+							namespace EventSourceCallPath;
+
+							public static class Instrumentation
+							{
+								[FeatureSwitchDefinition ("System.Diagnostics.Tracing.EventSource.IsSupported")]
+								static bool EventSourceSupport { get; } =
+									!AppContext.TryGetSwitch ("System.Diagnostics.Tracing.EventSource.IsSupported", out bool isEnabled) || isEnabled;
+
+								public static void Invoke ()
+								{
+									if (!EventSourceSupport) {
+										return;
+									}
+									PreserveRuntimeEventSource ();
+								}
+
+								[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Microsoft.Android.Runtime.RuntimeEventSource", "Mono.Android")]
+								static void PreserveRuntimeEventSource ()
+								{
+								}
+							}
+							""",
+					},
+				},
+			};
+			lib.SetRuntime (AndroidRuntime.CoreCLR);
+			lib.SetProperty ("IsTrimmable", "true");
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
+			proj.AddReference (lib);
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
+			proj.SetProperty ("AndroidPackageFormat", "apk");
+			proj.SetProperty ("AndroidUseAssemblyStore", "true");
+			proj.SetProperty ("PublishReadyToRun", "false");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "EventSourceCallPath.Instrumentation.Invoke ();");
+
+			using var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName));
+			Assert.IsTrue (libBuilder.Build (lib), "library build should have succeeded.");
+			using var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName));
+			Assert.IsTrue (
+				builder.Build (proj, parameters: [$"EventSourceSupport={enabled.ToString ().ToLowerInvariant ()}"]),
+				"build should have succeeded.");
+
+			var outputDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
+			var runtimeConfigFiles = Directory.GetFiles (outputDirectory, $"{proj.ProjectName}.runtimeconfig.json", SearchOption.AllDirectories);
+			Assert.AreEqual (1, runtimeConfigFiles.Length, $"{outputDirectory} should contain one runtimeconfig.json.");
+
+			using (var runtimeConfig = JsonDocument.Parse (File.ReadAllText (runtimeConfigFiles [0]))) {
+				var configProperties = runtimeConfig.RootElement
+					.GetProperty ("runtimeOptions")
+					.GetProperty ("configProperties");
+				Assert.AreEqual (
+					enabled,
+					configProperties.GetProperty ("System.Diagnostics.Tracing.EventSource.IsSupported").GetBoolean (),
+					"the standard EventSource feature switch should match EventSourceSupport");
+			}
+
+			var linkedRuntimeAssembly = Path.Combine (
+				Root,
+				builder.ProjectDirectory,
+				proj.IntermediateOutputPath,
+				"android-arm64",
+				"linked",
+				"Mono.Android.dll");
+			FileAssert.Exists (linkedRuntimeAssembly);
+
+			using var assembly = AssemblyDefinition.ReadAssembly (linkedRuntimeAssembly);
+			var eventSourceType = assembly.MainModule.GetType ("Microsoft.Android.Runtime.RuntimeEventSource");
+			if (enabled) {
+				Assert.IsNotNull (eventSourceType, "the enabled synthetic call path should retain the runtime EventSource facade");
+				var implementationType = eventSourceType.NestedTypes.FirstOrDefault (type => type.Name == "RuntimeEventSourceImplementation");
+				Assert.IsNotNull (implementationType, "the enabled runtime EventSource implementation should remain in the linked assembly");
+			} else {
+				Assert.IsNull (eventSourceType, "the disabled synthetic call path and runtime EventSource should be removed from the linked assembly");
+			}
+		}
 
 		[Test]
 		public void FixAbstractMethodsStep_SkipDimMembers ()
@@ -373,23 +502,35 @@ $@"			var myButton = new AttributedButtonStub (this);
 				AddTestData (isRelease: true,  setAndroidAddKeepAlivesTrue: false, setLinkModeNone: true,  shouldAddKeepAlives: true,  runtime);
 			}
 
+			AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true, setLinkModeNone: false,
+				shouldAddKeepAlives: false, AndroidRuntime.CoreCLR, typeMapImplementation: "trimmable");
+			AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true, setLinkModeNone: false,
+				shouldAddKeepAlives: true, AndroidRuntime.CoreCLR, typeMapImplementation: "trimmable",
+				enableLegacyCompatibilityAssemblyFixups: true);
+
 			return ret;
 
-			void AddTestData (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone, bool shouldAddKeepAlives, AndroidRuntime runtime)
+			void AddTestData (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone,
+				bool shouldAddKeepAlives, AndroidRuntime runtime, string? typeMapImplementation = null,
+				bool enableLegacyCompatibilityAssemblyFixups = false)
 			{
 				ret.Add (new object[] {
 					isRelease,
 					setAndroidAddKeepAlivesTrue,
 					setLinkModeNone,
 					shouldAddKeepAlives,
-					runtime
+					runtime,
+					typeMapImplementation,
+					enableLegacyCompatibilityAssemblyFixups,
 				});
 			}
 		}
 
 		[Test]
 		[TestCaseSource (nameof (Get_AndroidAddKeepAlivesData))]
-		public void AndroidAddKeepAlives (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone, bool shouldAddKeepAlives, AndroidRuntime runtime)
+		public void AndroidAddKeepAlives (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone,
+			bool shouldAddKeepAlives, AndroidRuntime runtime, string? typeMapImplementation,
+			bool enableLegacyCompatibilityAssemblyFixups)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -446,6 +587,8 @@ namespace UnnamedProject {
 
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("AllowUnsafeBlocks", "True");
+			if (!typeMapImplementation.IsNullOrEmpty ())
+				proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
 
 			// We don't want `[TargetPlatform ("android35")]` to get set because we don't do AddKeepAlives on .NET for Android assemblies
 			proj.SetProperty ("GenerateAssemblyInfo", "False");
@@ -455,6 +598,9 @@ namespace UnnamedProject {
 
 			if (setLinkModeNone)
 				proj.SetProperty (isRelease ? proj.ReleaseProperties : proj.DebugProperties, "AndroidLinkMode", "None");
+
+			if (enableLegacyCompatibilityAssemblyFixups)
+				proj.SetProperty ("AndroidEnableLegacyCompatibilityAssemblyFixups", "True");
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Building a project should have succeded.");
@@ -505,6 +651,35 @@ namespace UnnamedProject {
 
 				string not = shouldAddKeepAlives ? String.Empty : " not";
 				Assert.IsTrue (hasKeepAliveCall == shouldAddKeepAlives, $"KeepAlive call should{not} have been found (assembly '{shortAssemblyPath}')");
+			}
+		}
+
+		[Test]
+		public void StartupNoGCRegionFeatureSwitch ([Values (true, false, null)] bool? enabled)
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			proj.SetRuntime (runtime);
+			// Keep the completion path reachable so it cannot accidentally retain the disabled helper.
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"base.OnCreate (bundle);",
+				"base.OnCreate (bundle);\nReportFullyDrawn ();");
+			if (enabled.HasValue) {
+				proj.SetProperty ("_AndroidEnableStartupNoGCRegion", enabled.Value.ToString ());
+			}
+
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			using var assembly = AssemblyDefinition.ReadAssembly (BuildTest.GetLinkedPath (b, true, "Mono.Android.dll"));
+			var type = assembly.MainModule.GetType ("Android.Runtime.StartupNoGCRegion");
+			if (enabled != false) {
+				Assert.IsNotNull (type, "StartupNoGCRegion should be retained when enabled or unspecified.");
+			} else {
+				Assert.IsNull (type, "StartupNoGCRegion should be trimmed away completely when disabled.");
 			}
 		}
 

@@ -58,6 +58,7 @@ namespace MonoDroid.Generation
 		public string AssemblyName { get; set; }
 		public bool UseShortFileNames { get; set; }
 		public int ProductVersion { get; set; }
+		public int MinimumApiLevel { get; set; } = 24;
 		public bool SupportInterfaceConstants { get; set; }
 		public bool SupportDefaultInterfaceMethods { get; set; }
 		public bool SupportNestedInterfaceTypes { get; set; }

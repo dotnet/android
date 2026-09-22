@@ -66,7 +66,6 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public bool EmitLlvmIrComments { get; set; }
 
-		public bool AndroidEnableAssemblyStoreDecompressionCache { get; set; }
 		public string? RuntimeConfigBinFilePath { get; set; }
 		public string ProjectRuntimeConfigFilePath { get; set; } = String.Empty;
 		public string? ProjectRuntimeConfigDevFilePath { get; set; }
@@ -294,7 +293,6 @@ namespace Xamarin.Android.Tasks
 					MarshalMethodsEnabled = EnableMarshalMethods,
 					IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
 					HaveAssemblyStore = UseAssemblyStore,
-					AssemblyStoreDecompressionCacheEnabled = AndroidEnableAssemblyStoreDecompressionCache,
 				};
 			} else {
 				appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, Log) {

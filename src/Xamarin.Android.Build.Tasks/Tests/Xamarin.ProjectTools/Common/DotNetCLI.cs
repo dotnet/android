@@ -20,6 +20,7 @@ namespace Xamarin.ProjectTools
 		public string AndroidNdkPath { get; set; } = AndroidSdkResolver.GetAndroidNdkPath ();
 		public string JavaSdkPath { get; set; } = AndroidSdkResolver.GetJavaSdkPath ();
 		public string ProjectDirectory { get; set; }
+		public IDictionary<string, string> EnvironmentVariables { get; } = new Dictionary<string, string> ();
 
 		readonly string projectOrSolution;
 
@@ -62,6 +63,9 @@ namespace Xamarin.ProjectTools
 			}
 			if (Directory.Exists (JavaSdkPath)) {
 				p.StartInfo.SetEnvironmentVariable ("JavaSdkDirectory", JavaSdkPath.TrimEnd ('\\'));
+			}
+			foreach (var variable in EnvironmentVariables) {
+				p.StartInfo.SetEnvironmentVariable (variable.Key, variable.Value);
 			}
 
 			p.Start ();
@@ -183,6 +187,11 @@ namespace Xamarin.ProjectTools
 		{
 			var arguments = GetDefaultCommandLineArgs ("pack", target, runtimeIdentifier, parameters, msbuildArguments);
 			return Execute (arguments.ToArray ());
+		}
+
+		public bool WorkloadSearch (string searchString)
+		{
+			return Execute ("workload", "search", searchString);
 		}
 
 		public bool Publish (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)

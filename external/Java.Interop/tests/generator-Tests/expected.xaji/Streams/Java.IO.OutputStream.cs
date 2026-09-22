@@ -51,12 +51,9 @@ namespace Java.IO {
 			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
-			try {
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
-			} finally {
-			}
+			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
 		}
 
 		static Delegate cb_close_Close_V;
@@ -84,10 +81,7 @@ namespace Java.IO {
 		public virtual unsafe void Close ()
 		{
 			const string __id = "close.()V";
-			try {
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 		}
 
 		static Delegate cb_flush_Flush_V;
@@ -115,10 +109,7 @@ namespace Java.IO {
 		public virtual unsafe void Flush ()
 		{
 			const string __id = "flush.()V";
-			try {
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 		}
 
 		static Delegate cb_write_Write_arrayB_V;
@@ -258,12 +249,9 @@ namespace Java.IO {
 		public override unsafe void Write (int oneByte)
 		{
 			const string __id = "write.(I)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (oneByte);
-				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (oneByte);
+			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
 		}
 
 	}

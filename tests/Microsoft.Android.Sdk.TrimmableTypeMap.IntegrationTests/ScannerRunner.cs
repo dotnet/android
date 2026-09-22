@@ -18,6 +18,8 @@ record TypeMapEntry (string JavaName, string ManagedName, bool SkipInJavaToManag
 
 record MethodEntry (string JniName, string JniSignature, string? Connector);
 
+record ConstructorEntry (string JniSignature, string? SuperCall);
+
 record TypeMethodGroup (string ManagedName, List<MethodEntry> Methods);
 
 static class ScannerRunner
@@ -77,6 +79,34 @@ static class ScannerRunner
 		}
 
 		return (entries, methodsByJavaName);
+	}
+
+	public static List<ConstructorEntry> RunLegacyConstructors (string assemblyPath, string managedTypeName)
+	{
+		var cache = new TypeDefinitionCache ();
+		var resolver = new DefaultAssemblyResolver ();
+		var assemblyDirectory = Path.GetDirectoryName (assemblyPath);
+		if (assemblyDirectory is null) {
+			throw new InvalidOperationException ($"Could not determine the assembly directory for '{assemblyPath}'.");
+		}
+		resolver.AddSearchDirectory (assemblyDirectory);
+
+		var runtimeDir = Path.GetDirectoryName (typeof (object).Assembly.Location);
+		if (runtimeDir is not null) {
+			resolver.AddSearchDirectory (runtimeDir);
+		}
+
+		var readerParams = new ReaderParameters { AssemblyResolver = resolver };
+		using var assembly = CecilAssemblyDefinition.ReadAssembly (assemblyPath, readerParams);
+		var type = assembly.MainModule.Types.FirstOrDefault (t => t.FullName.Replace ('/', '+') == managedTypeName);
+		if (type is null) {
+			throw new InvalidOperationException ($"Could not find managed type '{managedTypeName}' in '{assemblyPath}'.");
+		}
+
+		var wrapper = CecilImporter.CreateType (type, cache);
+		return wrapper.Constructors
+			.Select (c => new ConstructorEntry (c.JniSignature, c.SuperCall))
+			.ToList ();
 	}
 
 	public static (List<TypeMapEntry> entries, Dictionary<string, List<TypeMethodGroup>> methodsByJavaName) RunNew (string[] assemblyPaths)

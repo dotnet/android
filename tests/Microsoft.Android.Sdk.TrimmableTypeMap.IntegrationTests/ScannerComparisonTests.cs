@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
@@ -135,9 +137,39 @@ var legacyNormalized = legacyMethods
 .ToDictionary (kvp => NormalizeCrc64 (kvp.Key), kvp => NormalizeMethodGroups (kvp.Value));
 var newNormalized = newMethods
 .ToDictionary (kvp => NormalizeCrc64 (kvp.Key), kvp => NormalizeMethodGroups (kvp.Value));
+		ExcludeConstructorDiagnosticFixtures (legacyNormalized);
+		ExcludeConstructorDiagnosticFixtures (newNormalized);
 
 var result = MarshalMethodDiffHelper.CompareUserTypeMarshalMethods (legacyNormalized, newNormalized);
 AssertNoDiffs ("MISSING from new scanner", result.Missing);
 AssertNoDiffs ("METHOD MISMATCHES", result.MethodMismatches);
 }
+
+	static void ExcludeConstructorDiagnosticFixtures (Dictionary<string, List<TypeMethodGroup>> methods)
+	{
+		var fixtureTypePrefix = "UserApp.";
+		var fixtureTypeNames = new HashSet<string> (StringComparer.Ordinal) {
+			$"{fixtureTypePrefix}SignedUnsignedConstructorCollision, UserTypesFixture",
+			$"{fixtureTypePrefix}AliasedTypeConstructorCollision, UserTypesFixture",
+			$"{fixtureTypePrefix}GenericParameterConstructor`1, UserTypesFixture",
+			$"{fixtureTypePrefix}GenericInstantiationConstructor, UserTypesFixture",
+			$"{fixtureTypePrefix}ByRefConstructor, UserTypesFixture",
+			$"{fixtureTypePrefix}PointerConstructor, UserTypesFixture",
+			$"{fixtureTypePrefix}FunctionPointerConstructor, UserTypesFixture",
+			$"{fixtureTypePrefix}RectangularArrayConstructor, UserTypesFixture",
+			$"{fixtureTypePrefix}NestedRectangularArrayConstructor, UserTypesFixture",
+			$"{fixtureTypePrefix}PointerArrayConstructor, UserTypesFixture",
+			$"{fixtureTypePrefix}FunctionPointerArrayConstructor, UserTypesFixture",
+			$"{fixtureTypePrefix}JaggedArrayConstructor, UserTypesFixture",
+			$"{fixtureTypePrefix}MissingBaseConstructor, UserTypesFixture",
+			$"{fixtureTypePrefix}InvalidSuperArgumentsConstructor, UserTypesFixture",
+		};
+
+		foreach (var javaName in methods.Keys.ToList ()) {
+			methods [javaName].RemoveAll (group => fixtureTypeNames.Contains (group.ManagedName));
+			if (methods [javaName].Count == 0) {
+				methods.Remove (javaName);
+			}
+		}
+	}
 }

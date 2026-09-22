@@ -28,7 +28,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidApkSigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AppendCustomMetadataToItemGroup" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AssemblyModifierPipeline" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidPackageName" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Microsoft.Android.Tasks.GetAndroidPackageName" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+<UsingTask TaskName="Microsoft.Android.Tasks.GetAndroidPackageName" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aot" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildAppBundle" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -44,8 +45,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNativeFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNonEmptyDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectRuntimeConfigFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Microsoft.Android.Tasks.CompressAssemblies" AssemblyFile="Microsoft.Android.Build.Tasks.dll" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
-<UsingTask TaskName="Microsoft.Android.Tasks.CompressAssemblies" AssemblyFile="Microsoft.Android.Build.Tasks.dll" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
+<UsingTask TaskName="Microsoft.Android.Tasks.CompressAssemblies" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+<UsingTask TaskName="Microsoft.Android.Tasks.CompressAssemblies" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.ComputeHash" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertResourcesCases" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertCustomView" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -171,7 +172,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidEnableAssemblyCompression Condition=" '$(AndroidEnableAssemblyCompression)' == '' ">True</AndroidEnableAssemblyCompression>
 	<_AndroidAssemblyStoreCompressionLevel Condition=" '$(_AndroidAssemblyStoreCompressionLevel)' == '' And '$(Optimize)' == 'True' ">22</_AndroidAssemblyStoreCompressionLevel>
 	<_AndroidAssemblyStoreCompressionLevel Condition=" '$(_AndroidAssemblyStoreCompressionLevel)' == '' ">3</_AndroidAssemblyStoreCompressionLevel>
-	<AndroidEnableAssemblyStoreDecompressionCache Condition=" '$(AndroidEnableAssemblyStoreDecompressionCache)' == '' ">False</AndroidEnableAssemblyStoreDecompressionCache>
 	<AndroidIncludeWrapSh Condition=" '$(AndroidIncludeWrapSh)' == '' ">False</AndroidIncludeWrapSh>
 	<_AndroidCheckedBuild Condition=" '$(_AndroidCheckedBuild)' == '' "></_AndroidCheckedBuild>
 
@@ -252,6 +252,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' ">False</AndroidEnableDesugar>
 	<AndroidD8IgnoreWarnings    Condition=" '$(AndroidD8IgnoreWarnings)' == '' ">True</AndroidD8IgnoreWarnings>
 	<AndroidR8IgnoreWarnings    Condition=" '$(AndroidR8IgnoreWarnings)' == '' ">True</AndroidR8IgnoreWarnings>
+	<AndroidR8ObfuscationMode   Condition=" '$(AndroidR8ObfuscationMode)' == '' ">private-members</AndroidR8ObfuscationMode>
 	<AndroidCreateProguardMappingFile Condition="'$(AndroidCreateProguardMappingFile)' == '' And '$(AndroidLinkTool)' == 'r8'">True</AndroidCreateProguardMappingFile>
 
 	<!-- Figure out which is the main packaging format we want-->
@@ -970,9 +971,11 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidAddKeepAlives=$(AndroidAddKeepAlives)" />
 		<_PropertyCacheItems Include="AndroidAotMode=$(AndroidAotMode)" />
 		<_PropertyCacheItems Include="AndroidEmbedProfilers=$(AndroidEmbedProfilers)" />
+		<_PropertyCacheItems Include="AndroidEnableLegacyCompatibilityAssemblyFixups=$(AndroidEnableLegacyCompatibilityAssemblyFixups)" />
 		<_PropertyCacheItems Include="AndroidEnableProfiledAot=$(AndroidEnableProfiledAot)" />
 		<_PropertyCacheItems Include="AndroidDexTool=$(AndroidDexTool)" />
 		<_PropertyCacheItems Include="AndroidLinkTool=$(AndroidLinkTool)" />
+		<_PropertyCacheItems Include="AndroidR8ObfuscationMode=$(AndroidR8ObfuscationMode)" />
 		<_PropertyCacheItems Include="AndroidLinkResources=$(AndroidLinkResources)" />
 		<_PropertyCacheItems Include="AndroidBundleToolExtraArgs=$(AndroidBundleToolExtraArgs)" />
 		<_PropertyCacheItems Include="AndroidKeyStore=$(AndroidKeyStore)" />
@@ -1469,6 +1472,7 @@ because xbuild doesn't support framework reference assemblies.
       ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
       SourceFiles="@(ResolvedAssemblies)"
       DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"
+      EnableLegacyCompatibilityAssemblyFixups="$(AndroidEnableLegacyCompatibilityAssemblyFixups)"
       TargetName="$(TargetName)"
       AddKeepAlives="$(AndroidAddKeepAlives)"
       UseDesignerAssembly="$(AndroidUseDesignerAssembly)"
@@ -1834,7 +1838,6 @@ because xbuild doesn't support framework reference assemblies.
       BoundExceptionType="$(AndroidBoundExceptionType)"
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
       UseAssemblyStore="$(_AndroidUseAssemblyStore)"
-      AndroidEnableAssemblyStoreDecompressionCache="$(AndroidEnableAssemblyStoreDecompressionCache)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
       TargetsCLR="$(_AndroidUseCLR)"
@@ -2023,7 +2026,8 @@ because xbuild doesn't support framework reference assemblies.
     <_ProguardConfiguration Include="$(ProguardConfigFiles)" />
   </ItemGroup>
   <ItemGroup Condition=" '$(ProguardConfigFiles)' == '' ">
-    <_ProguardConfiguration Include="$(MSBuildThisFileDirectory)proguard-android.txt" />
+    <_ProguardConfiguration Include="$(MSBuildThisFileDirectory)proguard-android.txt"          Condition=" '$(AndroidR8ObfuscationMode)' == 'disabled' " />
+    <_ProguardConfiguration Include="$(MSBuildThisFileDirectory)proguard-android-optimize.txt" Condition=" '$(AndroidR8ObfuscationMode)' != 'disabled' " />
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"         Condition=" '$(AndroidLinkTool)' != '' " />
     <_ProguardConfiguration Include="$(_ProguardProjectConfiguration)"                               Condition=" '$(AndroidLinkTool)' != '' " />
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg" Condition=" '$(AndroidLinkTool)' != '' " />
@@ -3071,6 +3075,15 @@ because xbuild doesn't support framework reference assemblies.
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Application.targets"
         Condition=" '$(AndroidApplication)' == 'True' "/>
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Designer.targets" />
+
+<Target Name="_ValidateAndroidR8ObfuscationMode"
+    Condition=" '$(AndroidLinkTool)' == 'r8' "
+    BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
+  <AndroidError Code="XA1050"
+      ResourceName="XA1050"
+      FormatArguments="$(AndroidR8ObfuscationMode)"
+      Condition=" '$(AndroidR8ObfuscationMode)' != 'disabled' And '$(AndroidR8ObfuscationMode)' != 'private-members' " />
+</Target>
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets"
         Condition=" '$(DesignTimeBuild)' != 'true' "/>

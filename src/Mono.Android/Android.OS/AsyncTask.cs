@@ -35,7 +35,6 @@ namespace Android.OS {
 		{
 		}
 
-		static IntPtr id_ctor;
 		[Register (".ctor", "()V", "")]
 		public AsyncTask ()
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
@@ -43,20 +42,10 @@ namespace Android.OS {
 			if (Handle != IntPtr.Zero)
 				return;
 
-			if (GetType () != typeof (AsyncTask)) {
-				SetHandle (
-						JNIEnv.StartCreateInstance (GetType (), "()V"),
-						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, "()V");
-				return;
-			}
-
-			if (id_ctor == IntPtr.Zero)
-				id_ctor = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerType.PeerReference.Handle, "<init>", "()V");
 			SetHandle (
-					JNIEnv.StartCreateInstance (GetPeerMembers (null).JniPeerType.PeerReference.Handle, id_ctor),
+					JNIEnv.StartCreateInstance (GetType (), "()V"),
 					JniHandleOwnership.TransferLocalRef);
-			JNIEnv.FinishCreateInstance (Handle, GetPeerMembers (null).JniPeerType.PeerReference.Handle, id_ctor);
+			JNIEnv.FinishCreateInstance (Handle, "()V");
 		}
 
 		protected override Java.Lang.Object? DoInBackground (params Java.Lang.Object[]? native_parms)

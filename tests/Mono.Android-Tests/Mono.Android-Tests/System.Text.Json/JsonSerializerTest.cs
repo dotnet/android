@@ -13,7 +13,7 @@ namespace System.Text.JsonTests {
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void Serialize ()
 		{
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
+			// FIXME: https://github.com/dotnet/android/issues/8724
 			#pragma warning disable IL3050
 			string text = JsonSerializer.Serialize(42);
 			#pragma warning restore IL3050
@@ -24,7 +24,7 @@ namespace System.Text.JsonTests {
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void Deserialize ()
 		{
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
+			// FIXME: https://github.com/dotnet/android/issues/8724
 			#pragma warning disable IL3050
 			object value = JsonSerializer.Deserialize("42", typeof(int));
 			#pragma warning restore IL3050

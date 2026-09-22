@@ -98,6 +98,72 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_ExportWithoutXmlMarshalling_DoesNotReferenceSystemXml ()
+	{
+		var peer = ScanFixtures ().Single (p => p.JavaName == "my/app/ExportExample");
+		using var stream = GenerateAssembly (new [] { peer });
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var asmRefs = reader.AssemblyReferences
+			.Select (h => reader.GetString (reader.GetAssemblyReference (h).Name))
+			.ToList ();
+		var typeNames = GetTypeRefNames (reader);
+
+		Assert.DoesNotContain ("System.Xml.ReaderWriter", asmRefs);
+		Assert.DoesNotContain ("XmlReader", typeNames);
+		Assert.DoesNotContain ("XmlPullParserReader", typeNames);
+		Assert.DoesNotContain ("XmlResourceParserReader", typeNames);
+		Assert.DoesNotContain ("XmlReaderPullParser", typeNames);
+		Assert.DoesNotContain ("XmlReaderResourceParser", typeNames);
+	}
+
+	[Fact]
+	public void Generate_ExportWithXmlMarshalling_EmitsAdapterReferences ()
+	{
+		var peer = ScanFixtures ().Single (p => p.JavaName == "my/app/ExportMarshallingShapes");
+		using var stream = GenerateAssembly (new [] { peer });
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		var asmRefs = reader.AssemblyReferences
+			.Select (h => reader.GetString (reader.GetAssemblyReference (h).Name))
+			.ToList ();
+
+		Assert.Contains ("System.Xml.ReaderWriter", asmRefs);
+
+		var expectedAdapters = new [] {
+			(Key: "PullParserFromHandle", Parent: "XmlPullParserReader", Method: "FromJniHandle", ReturnType: "System.Xml.XmlReader",
+				ParameterTypes: new [] { "System.IntPtr", "Android.Runtime.JniHandleOwnership" }),
+			(Key: "ResourceParserFromHandle", Parent: "XmlResourceParserReader", Method: "FromJniHandle", ReturnType: "System.Xml.XmlReader",
+				ParameterTypes: new [] { "System.IntPtr", "Android.Runtime.JniHandleOwnership" }),
+			(Key: "PullParserToHandle", Parent: "XmlReaderPullParser", Method: "ToLocalJniHandle", ReturnType: "System.IntPtr",
+				ParameterTypes: new [] { "System.Xml.XmlReader" }),
+			(Key: "ResourceParserToHandle", Parent: "XmlReaderResourceParser", Method: "ToLocalJniHandle", ReturnType: "System.IntPtr",
+				ParameterTypes: new [] { "System.Xml.XmlReader" }),
+		};
+		var adapterHandles = new Dictionary<string, MemberReferenceHandle> ();
+		foreach (var expected in expectedAdapters) {
+			var handle = FindMemberReferenceHandle (reader, "Android.Runtime", expected.Parent, expected.Method);
+			var signature = reader.GetMemberReference (handle).DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+
+			Assert.Equal (expected.ReturnType, signature.ReturnType);
+			Assert.Equal (expected.ParameterTypes, signature.ParameterTypes);
+			adapterHandles.Add (expected.Key, handle);
+		}
+
+		var pullParserCalls = ReadMethodCallTokens (pe, reader, "n_readXml_uco_");
+		Assert.Contains (MetadataTokens.GetToken (adapterHandles ["PullParserFromHandle"]), pullParserCalls);
+		Assert.Contains (MetadataTokens.GetToken (adapterHandles ["PullParserToHandle"]), pullParserCalls);
+		Assert.DoesNotContain (MetadataTokens.GetToken (adapterHandles ["ResourceParserFromHandle"]), pullParserCalls);
+		Assert.DoesNotContain (MetadataTokens.GetToken (adapterHandles ["ResourceParserToHandle"]), pullParserCalls);
+
+		var resourceParserCalls = ReadMethodCallTokens (pe, reader, "n_readResourceXml_uco_");
+		Assert.Contains (MetadataTokens.GetToken (adapterHandles ["ResourceParserFromHandle"]), resourceParserCalls);
+		Assert.Contains (MetadataTokens.GetToken (adapterHandles ["ResourceParserToHandle"]), resourceParserCalls);
+		Assert.DoesNotContain (MetadataTokens.GetToken (adapterHandles ["PullParserFromHandle"]), resourceParserCalls);
+		Assert.DoesNotContain (MetadataTokens.GetToken (adapterHandles ["PullParserToHandle"]), resourceParserCalls);
+	}
+
+	[Fact]
 	public void Generate_InheritedGenericBaseCallback_UsesValueTypeGenericArgument ()
 	{
 		var peer = ScanFixtures ().Single (p => p.JavaName == "my/app/EnumSelectableList");
@@ -173,6 +239,38 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_ConstructorWithoutMatchingManagedCtor_UsesActivationCtor ()
+	{
+		var peer = MakeAcwPeer ("my/app/MissingCtor", "MyApp.MissingCtor", "App") with {
+			JavaConstructors = [
+				new JavaConstructorInfo {
+					ConstructorIndex = 0,
+					JniSignature = "(IC)V",
+					HasMatchingManagedCtor = false,
+					SuperArgumentsString = "",
+				},
+			],
+		};
+
+		using var stream = GenerateAssembly ([peer], "MissingCtorActivationTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		Assert.NotEmpty (FindCtorMemberRefs (
+			reader,
+			"MyApp",
+			"MissingCtor",
+			"System.IntPtr",
+			"Android.Runtime.JniHandleOwnership"));
+		Assert.Empty (FindCtorMemberRefs (
+			reader,
+			"MyApp",
+			"MissingCtor",
+			"System.Int32",
+			"System.Char"));
+	}
+
+	[Fact]
 	public void Generate_InheritedCtor_CreateInstanceDoesNotActivate ()
 	{
 		var peers = ScanFixtures ();
@@ -185,6 +283,25 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var reader = pe.GetMetadataReader ();
 
 		AssertCreateInstanceReturnsNull (pe, reader, "MyApp_SimpleActivity_Proxy");
+	}
+
+	[Fact]
+	public void Generate_NoActivationCtor_CreateInstanceDoesNotReferenceLookalikeSignature ()
+	{
+		var peer = MakeMcwPeer ("test/Lookalike", "Test.Lookalike", "TestAsm") with {
+			DoNotGenerateAcw = true,
+		};
+		using var stream = GenerateAssembly ([peer], "LookalikeCreateInstanceTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		AssertCreateInstanceReturnsNull (pe, reader, "Test_Lookalike_Proxy");
+		Assert.Empty (FindCtorMemberRefs (
+			reader,
+			"Test",
+			"Lookalike",
+			"System.IntPtr",
+			"Android.Runtime.JniHandleOwnership"));
 	}
 
 	[Fact]
@@ -391,6 +508,49 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var sig = testMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
 		var paramType = Assert.Single (sig.ParameterTypes);
 		Assert.Equal ("System.Int32", paramType);
+	}
+
+	[Fact]
+	public void EmitBody_PreencodedSignature_PreservesMethodSignature ()
+	{
+		var pe = new PEAssemblyBuilder (new Version (11, 0, 0, 0));
+		pe.EmitPreamble ("PreencodedSigTest", "PreencodedSigTest.dll");
+		var objectRef = pe.Metadata.AddTypeReference (pe.SystemRuntimeRef,
+			pe.Metadata.GetOrAddString ("System"), pe.Metadata.GetOrAddString ("Object"));
+		pe.Metadata.AddTypeDefinition (
+			TypeAttributes.Public | TypeAttributes.Class,
+			pe.Metadata.GetOrAddString ("Test"),
+			pe.Metadata.GetOrAddString ("MyType"),
+			objectRef,
+			MetadataTokens.FieldDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.Field) + 1),
+			MetadataTokens.MethodDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.MethodDef) + 1));
+		var signature = new BlobBuilder ();
+		signature.WriteByte ((byte) SignatureAttributes.Instance);
+		signature.WriteCompressedInteger (1);
+		signature.WriteByte ((byte) SignatureTypeCode.String);
+		signature.WriteByte ((byte) SignatureTypeCode.Int32);
+
+		pe.EmitBody (
+			"PreencodedMethod",
+			MethodAttributes.Public,
+			pe.Metadata.GetOrAddBlob (signature),
+			encoder => {
+				encoder.OpCode (ILOpCode.Ldnull);
+				encoder.Return (returnsValue: true);
+			});
+		using var stream = new MemoryStream ();
+		pe.WritePE (stream);
+		stream.Position = 0;
+		using var peReader = new PEReader (stream);
+		var reader = peReader.GetMetadataReader ();
+		var method = reader.TypeDefinitions
+			.SelectMany (handle => reader.GetTypeDefinition (handle).GetMethods ())
+			.Select (handle => reader.GetMethodDefinition (handle))
+			.Single (method => reader.GetString (method.Name) == "PreencodedMethod");
+		var decoded = method.DecodeSignature (SignatureTypeProvider.Instance, null);
+
+		Assert.Equal ("System.String", decoded.ReturnType);
+		Assert.Equal ("System.Int32", Assert.Single (decoded.ParameterTypes));
 	}
 
 	[Fact]
@@ -1218,6 +1378,11 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 	static MemberReferenceHandle FindCallbackMemberRefHandle (MetadataReader reader, string methodName, string parentNamespace, string parentName)
 	{
+		return FindMemberReferenceHandle (reader, parentNamespace, parentName, methodName);
+	}
+
+	static MemberReferenceHandle FindMemberReferenceHandle (MetadataReader reader, string parentNamespace, string parentName, string methodName)
+	{
 		var refs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
 			.Select (MetadataTokens.MemberReferenceHandle)
 			.Where (h => {
@@ -1256,15 +1421,30 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 	static List<int> ReadLdftnTokens (byte [] ilBytes)
 	{
-		return ReadInlineMethodTokens (ilBytes, 0xFE, 0x06);
+		return ReadInlineMetadataTokens (ilBytes, 0xFE, 0x06);
+	}
+
+	static List<int> ReadMethodCallTokens (PEReader pe, MetadataReader reader, string methodNamePrefix)
+	{
+		var method = reader.MethodDefinitions
+			.Select (handle => reader.GetMethodDefinition (handle))
+			.Single (method => reader.GetString (method.Name).StartsWith (methodNamePrefix, StringComparison.Ordinal));
+		var ilBytes = pe.GetMethodBody (method.RelativeVirtualAddress).GetILBytes ();
+		Assert.NotNull (ilBytes);
+		return ReadCallTokens (ilBytes);
 	}
 
 	static List<int> ReadCallTokens (byte [] ilBytes)
 	{
-		return ReadInlineMethodTokens (ilBytes, 0x28);
+		return ReadInlineMetadataTokens (ilBytes, 0x28);
 	}
 
-	static List<int> ReadInlineMethodTokens (byte [] ilBytes, byte opcode)
+	static List<int> ReadLoadStaticFieldAddressTokens (byte [] ilBytes)
+	{
+		return ReadInlineMetadataTokens (ilBytes, 0x7F);
+	}
+
+	static List<int> ReadInlineMetadataTokens (byte [] ilBytes, byte opcode)
 	{
 		var tokens = new List<int> ();
 		for (int i = 0; i < ilBytes.Length - 4; i++) {
@@ -1280,7 +1460,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		return tokens;
 	}
 
-	static List<int> ReadInlineMethodTokens (byte [] ilBytes, byte opcodePrefix, byte opcode)
+	static List<int> ReadInlineMetadataTokens (byte [] ilBytes, byte opcodePrefix, byte opcode)
 	{
 		var tokens = new List<int> ();
 		for (int i = 0; i < ilBytes.Length - 5; i++) {
@@ -1588,19 +1768,17 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_MultipleAcwProxies_DeduplicatesUtf8Strings ()
+	public void Generate_MultipleAcwProxies_DeduplicatesSignaturesButNotMethodNames ()
 	{
 		var peers = ScanFixtures ();
-		// Get all ACW peers — they likely share signatures like "()V"
 		var acwPeers = peers.Where (p => !p.DoNotGenerateAcw && p.MarshalMethods.Count > 0).ToList ();
 		Assert.True (acwPeers.Count >= 2, "Need at least 2 ACW peers to test deduplication");
+		var model = ModelBuilder.Build (acwPeers, "DedupTest.dll", "DedupTest");
 
 		using var stream = GenerateAssembly (acwPeers, "DedupTest");
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 
-		// Count fields with HasFieldRVA — these are our UTF-8 RVA fields.
-		// With deduplication, common strings like "()V" should appear only once.
 		var rvaFields = reader.FieldDefinitions
 			.Select (h => reader.GetFieldDefinition (h))
 			.Where (f => (f.Attributes & FieldAttributes.HasFieldRVA) != 0)
@@ -1611,24 +1789,94 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			Assert.StartsWith ("__utf8_", reader.GetString (declaringType.Name));
 		});
 
-		// Collect all JNI method names and signatures from the ACW peers
-		var allStrings = acwPeers
-			.SelectMany (p => p.MarshalMethods)
-			.SelectMany (m => new [] { m.JniName, m.JniSignature })
-			.ToList ();
-		var uniqueStrings = allStrings.Distinct ().Count ();
+		var registrations = model.ProxyTypes.SelectMany (proxy => proxy.NativeRegistrations).ToList ();
+		int expectedFieldCount = registrations.Count +
+			registrations.Select (registration => registration.JniSignature).Distinct (StringComparer.Ordinal).Count ();
+		Assert.Equal (expectedFieldCount, rvaFields.Count);
+	}
 
-		// With dedup, RVA field count should equal unique string count, not total string count.
-		// Also include constructor registrations (nctor_*), so use <= for a safe assertion.
-		Assert.True (rvaFields.Count <= uniqueStrings + acwPeers.Count * 2,
-			$"Expected at most {uniqueStrings + acwPeers.Count * 2} RVA fields (unique strings + ctor names/sigs), " +
-			$"but found {rvaFields.Count}. Deduplication may not be working.");
+	[Fact]
+	public void Generate_SharedMethodNameUsesDistinctFieldsWhileSignatureRemainsShared ()
+	{
+		var first = MakeAcwPeer ("test/First", "Test.First", "TestAsm") with {
+			JavaConstructors = [],
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "run",
+					NativeCallbackName = "n_Run",
+					JniSignature = "()V",
+					ManagedMethodName = "Run",
+				},
+			],
+		};
+		var second = MakeAcwPeer ("test/Second", "Test.Second", "TestAsm") with {
+			JavaConstructors = [],
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "run",
+					NativeCallbackName = "n_Run",
+					JniSignature = "()V",
+					ManagedMethodName = "Run",
+				},
+			],
+		};
 
-		// The key assertion: fewer RVA fields than total strings means dedup is working
-		if (allStrings.Count > uniqueStrings) {
-			Assert.True (rvaFields.Count < allStrings.Count,
-				$"Expected fewer RVA fields ({rvaFields.Count}) than total strings ({allStrings.Count}) due to deduplication");
-		}
+		using var stream = GenerateAssembly ([first, second], "OwnerSpecificNames");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var firstFields = ReadRegisterNativesFieldTokens (pe, reader, "Test_First_Proxy");
+		var secondFields = ReadRegisterNativesFieldTokens (pe, reader, "Test_Second_Proxy");
+
+		Assert.Equal (2, firstFields.Count);
+		Assert.Equal (2, secondFields.Count);
+		Assert.NotEqual (firstFields [0], secondFields [0]);
+		Assert.Equal (firstFields [1], secondFields [1]);
+	}
+
+	[Fact]
+	public void Generate_RegistrationWithoutWrapperDoesNotConsumeUtf8Field ()
+	{
+		var peer = MakeAcwPeer ("test/Valid", "Test.Valid", "TestAsm") with {
+			JavaConstructors = [],
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "run",
+					NativeCallbackName = "n_Run",
+					JniSignature = "()V",
+					ManagedMethodName = "Run",
+				},
+			],
+		};
+		var model = ModelBuilder.Build ([peer], "MissingWrapper.dll", "MissingWrapper");
+		model.ProxyTypes.Single ().NativeRegistrations.Add (new NativeRegistrationData {
+			JniMethodName = "n_Missing",
+			JniSignature = "(I)V",
+			WrapperMethodName = "missing_uco",
+			WrapperTarget = new UcoWrapperTargetData {
+				TypeNamespace = "_TypeMap.Proxies",
+				TypeName = "Missing_Proxy",
+				MethodName = "missing_uco",
+			},
+		});
+
+		using var stream = new MemoryStream ();
+		new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0)).Emit (model, stream);
+		stream.Position = 0;
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		Assert.Equal (2, reader.GetTableRowCount (TableIndex.FieldRva));
+		Assert.Equal (2, ReadRegisterNativesFieldTokens (pe, reader, "Test_Valid_Proxy").Count);
+	}
+
+	static List<int> ReadRegisterNativesFieldTokens (PEReader pe, MetadataReader reader, string proxyTypeName)
+	{
+		var proxy = FindProxyType (reader, proxyTypeName);
+		var method = reader.GetMethodDefinition (FindMethodDefinition (reader, proxy, "RegisterNatives"));
+		var ilBytes = pe.GetMethodBody (method.RelativeVirtualAddress).GetILBytes ();
+		Assert.NotNull (ilBytes);
+		return ReadLoadStaticFieldAddressTokens (ilBytes);
 	}
 
 	[Fact]

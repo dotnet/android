@@ -521,6 +521,7 @@ namespace Xamarin.Android.Build.Tests
 			var noWarn = new List<string> {
 				"CA1416",
 				"CS0414",
+				"CS0618",
 				"CS1591",
 				"XA1005",
 				"XA4225",

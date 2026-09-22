@@ -97,6 +97,7 @@ namespace Android.Runtime {
 				je  = JavaProxyThrowable.Create (pendingException);
 			}
 			JniEnvironment.Exceptions.Throw (je.PeerReference);
+			GC.KeepAlive (je);
 		}
 	}
 
@@ -386,6 +387,11 @@ namespace Android.Runtime {
 			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
 		}
 
+		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+		{
+			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
+		}
+
 		protected override Type? GetInvokerTypeCore (Type type)
 		{
 			if (type.IsInterface || type.IsAbstract) {
@@ -438,7 +444,7 @@ namespace Android.Runtime {
 
 		class MagicRegistrationMap {
 #pragma warning disable CS0649 // Field is never assigned to;
-			// assigned to in generated IL: https://github.com/xamarin/xamarin-android/blob/cbfa7e20acebd37b52ec4de9d5c1a4a66ddda799/src/Xamarin.Android.Build.Tasks/Linker/MonoDroid.Tuner/MonoDroidMarkStep.cs#L204
+			// assigned to in generated IL: https://github.com/dotnet/android/blob/cbfa7e20acebd37b52ec4de9d5c1a4a66ddda799/src/Xamarin.Android.Build.Tasks/Linker/MonoDroid.Tuner/MonoDroidMarkStep.cs#L204
 			static Dictionary<string, int>? typesMap;
 #pragma warning restore CS0649
 
@@ -483,8 +489,11 @@ namespace Android.Runtime {
 		{
 			try {
 				if (methods.IsEmpty) {
-					if (jniAddNativeMethodRegistrationAttributePresent)
+					if (jniAddNativeMethodRegistrationAttributePresent) {
+#pragma warning disable CS0618 // ReflectionJniTypeManager has not migrated its registration override to spans.
 						base.RegisterNativeMembers (nativeClass, type, methods.ToString ());
+#pragma warning restore CS0618
+					}
 					return;
 				} else if (FastRegisterNativeMembers (nativeClass, type, methods)) {
 					return;
@@ -493,7 +502,9 @@ namespace Android.Runtime {
 				int methodCount = CountMethods (methods);
 				if (methodCount < 1) {
 					if (jniAddNativeMethodRegistrationAttributePresent) {
+#pragma warning disable CS0618 // ReflectionJniTypeManager has not migrated its registration override to spans.
 						base.RegisterNativeMembers (nativeClass, type, methods.ToString ());
+#pragma warning restore CS0618
 					}
 					return;
 				}

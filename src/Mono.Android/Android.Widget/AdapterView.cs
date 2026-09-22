@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using Android.Views;
 using JLO = Java.Lang.Object;
 
@@ -56,15 +55,11 @@ namespace Android.Widget {
 			T
 	> : AdapterView  where T : IAdapter {
 
-		[UnsafeAccessor (UnsafeAccessorKind.StaticField, Name = "_members")]
-		static extern ref readonly JniPeerMembers GetPeerMembers (AdapterView? _);
-
 		public AdapterView (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
 		}
 
-		static IntPtr id_ctor_Landroid_content_Context_;
 		[Register (".ctor", "(Landroid/content/Context;)V", "")]
 		public AdapterView (Android.Content.Context context)
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
@@ -72,23 +67,13 @@ namespace Android.Widget {
 			if (Handle != IntPtr.Zero)
 				return;
 
-			if (GetType () == typeof (AdapterView<T>)) {
-				if (id_ctor_Landroid_content_Context_ == IntPtr.Zero)
-					id_ctor_Landroid_content_Context_ = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerType.PeerReference.Handle, "<init>", "(Landroid/content/Context;)V");
-				SetHandle (
-						JNIEnv.StartCreateInstance (GetPeerMembers (null).JniPeerType.PeerReference.Handle, id_ctor_Landroid_content_Context_, new JValue (context)),
-						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, GetPeerMembers (null).JniPeerType.PeerReference.Handle, id_ctor_Landroid_content_Context_, new JValue (context));
-			} else {
-				SetHandle (
-						JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;)V", new JValue (context)),
-						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;)V", new JValue (context));
-			}
+			SetHandle (
+					JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;)V", new JValue (context)),
+					JniHandleOwnership.TransferLocalRef);
+			JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;)V", new JValue (context));
 			GC.KeepAlive (context);
 		}
 
-		static IntPtr id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_;
 		[Register (".ctor", "(Landroid/content/Context;Landroid/util/AttributeSet;)V", "")]
 		public AdapterView (Android.Content.Context context, Android.Util.IAttributeSet attrs)
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
@@ -96,24 +81,14 @@ namespace Android.Widget {
 			if (Handle != IntPtr.Zero)
 				return;
 
-			if (GetType () == typeof (AdapterView<T>)) {
-				if (id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_ == IntPtr.Zero)
-					id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_ = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerType.PeerReference.Handle, "<init>", "(Landroid/content/Context;Landroid/util/AttributeSet;)V");
-				SetHandle (
-						JNIEnv.StartCreateInstance (GetPeerMembers (null).JniPeerType.PeerReference.Handle, id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_, new JValue (context), new JValue (attrs)),
-						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, GetPeerMembers (null).JniPeerType.PeerReference.Handle, id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_, new JValue (context), new JValue (attrs));
-			} else {
-				SetHandle (
-						JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;Landroid/util/AttributeSet;)V", new JValue (context), new JValue (attrs)),
-						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;)V", new JValue (context), new JValue (attrs));
-			}
+			SetHandle (
+					JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;Landroid/util/AttributeSet;)V", new JValue (context), new JValue (attrs)),
+					JniHandleOwnership.TransferLocalRef);
+			JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;)V", new JValue (context), new JValue (attrs));
 			GC.KeepAlive (context);
 			GC.KeepAlive (attrs);
 		}
 
-		static IntPtr id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I;
 		[Register (".ctor", "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", "")]
 		public AdapterView (Android.Content.Context context, Android.Util.IAttributeSet attrs, int defStyle)
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
@@ -121,19 +96,10 @@ namespace Android.Widget {
 			if (Handle != IntPtr.Zero)
 				return;
 
-			if (GetType () == typeof (AdapterView<T>)) {
-				if (id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I == IntPtr.Zero)
-					id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerType.PeerReference.Handle, "<init>", "(Landroid/content/Context;Landroid/util/AttributeSet;I)V");
-				SetHandle (
-						JNIEnv.StartCreateInstance (GetPeerMembers (null).JniPeerType.PeerReference.Handle, id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I, new JValue (context), new JValue (attrs), new JValue (defStyle)),
-						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, GetPeerMembers (null).JniPeerType.PeerReference.Handle, id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I, new JValue (context), new JValue (attrs), new JValue (defStyle));
-			} else {
-				SetHandle (
-						JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", new JValue (context), new JValue (attrs), new JValue (defStyle)),
-						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", new JValue (context), new JValue (attrs), new JValue (defStyle));
-			}
+			SetHandle (
+					JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", new JValue (context), new JValue (attrs), new JValue (defStyle)),
+					JniHandleOwnership.TransferLocalRef);
+			JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", new JValue (context), new JValue (attrs), new JValue (defStyle));
 			GC.KeepAlive (context);
 			GC.KeepAlive (attrs);
 		}

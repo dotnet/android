@@ -138,6 +138,8 @@ endif()
 
 if(ANDROID_STL STREQUAL none)
   set(USES_LIBSTDCPP False)
+  # Clang otherwise adds libunwind even when the C++ standard library is disabled.
+  add_link_options(--unwindlib=none)
 else()
   set(USES_LIBSTDCPP True)
 endif()
@@ -649,7 +651,6 @@ else()
   add_subdirectory(common/java-interop)
 
   if (IS_MONO_RUNTIME OR IS_CLR_RUNTIME)
-    add_subdirectory(common/libunwind)
     add_subdirectory(common/runtime-base)
 
     add_subdirectory(${SOURCES_PREFIX}/runtime-base)
@@ -658,6 +659,9 @@ else()
   endif()
 
   if (IS_MONO_RUNTIME)
+    # Only `mono/tracing` links `xa::unwind`; the CoreCLR host has no unwinder of its own.
+    add_subdirectory(common/libunwind)
+
     add_subdirectory(mono/tracing)
     add_subdirectory(mono/pinvoke-override)
 

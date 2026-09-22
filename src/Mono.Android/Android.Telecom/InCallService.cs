@@ -11,10 +11,11 @@ namespace Android.Telecom
 		[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android23.0")]
 		public void SetAudioRoute ([global::Android.Runtime.GeneratedEnum] Android.Telecom.VideoQuality route)
 		{
+#pragma warning disable CA1416 // The underlying setAudioRoute(int) Java method is available on API 23.
 			SetAudioRoute ((CallAudioRoute) route);
+#pragma warning restore CA1416
 		}
 #endif
 	}
 }
-
 

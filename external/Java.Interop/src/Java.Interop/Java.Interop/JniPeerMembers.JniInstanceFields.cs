@@ -15,17 +15,19 @@ namespace Java.Interop
 
 		readonly JniPeerMembers                             Members;
 
-		readonly ConcurrentDictionary<string, JniFieldInfo> InstanceFields = new ConcurrentDictionary<string, JniFieldInfo> (1, 3, StringComparer.Ordinal);
+		ConcurrentDictionary<string, JniFieldInfo>? instanceFields;
+
+		ConcurrentDictionary<string, JniFieldInfo> InstanceFields => GetOrCreate (ref instanceFields, 3);
 
 		internal void Dispose ()
 		{
-			InstanceFields.Clear ();
+			Clear (ref instanceFields);
 		}
 
 		public JniFieldInfo GetFieldInfo (string encodedMember)
 		{
 			return InstanceFields.GetOrAdd (encodedMember, static (member, fields) => {
-				string field, signature;
+				ReadOnlySpan<char> field, signature;
 				JniPeerMembers.GetNameAndSignature (member, out field, out signature);
 				return fields.Members.JniPeerType.GetInstanceField (field, signature);
 			}, this);

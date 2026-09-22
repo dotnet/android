@@ -96,6 +96,150 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void CoreCLRAssemblyNameWithNativeImageSuffix ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject (
+				packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "nativeimagesuffix")) {
+				IsRelease = true,
+				ProjectName = "Real.ni",
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers ([DeviceAbi]);
+			proj.SetDefaultTargetDevice ();
+			proj.SetProperty ("PublishReadyToRun", "false");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Project should have installed.");
+			StartActivityAndAssert (proj);
+		}
+
+		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
+		public void UnicodeJavaIdentifierActivityActivates (string typeMapImplementation, AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			const string javaName = "com.\u00e9xample.\u0394elta";
+			var expectedLogcatOutput = new HashSet<string> (StringComparer.Ordinal) {
+				"UNICODE_JCW_ACTIVATED=1",
+				"UNICODE_CURRENCY_ACTIVATED",
+				"UNICODE_CONNECTOR_ACTIVATED",
+				"UNICODE_SUPPLEMENTARY_CLASS_NOT_FOUND",
+			};
+			var proj = new XamarinAndroidApplicationProject (
+				packageName: PackageUtils.MakePackageName (runtime, "unicodeidentifier")) {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			proj.SetDefaultTargetDevice ();
+			proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace (
+					"[Android.Runtime.Register (\"${JAVA_PACKAGENAME}.MainActivity\"),",
+					$"[Android.Runtime.Register (\"{javaName}\"),")
+				.Replace (
+					"//${FIELDS}",
+					"""
+					static int constructorInvocations;
+
+					public MainActivity ()
+					{
+						constructorInvocations++;
+					}
+					""")
+				.Replace (
+					"//${AFTER_ONCREATE}",
+					"""
+					Android.Util.Log.Info ("UnicodeJavaIdentifiers", $"UNICODE_JCW_ACTIVATED={constructorInvocations}");
+					var currencyHandle = Android.Runtime.JNIEnv.StartCreateInstance (typeof (CurrencyIdentifierPeer), "()V");
+					Android.Runtime.JNIEnv.FinishCreateInstance (currencyHandle, "()V");
+					using (var currency = Java.Lang.Object.GetObject<CurrencyIdentifierPeer> (
+						currencyHandle, Android.Runtime.JniHandleOwnership.TransferLocalRef)) {
+					}
+					var connectorHandle = Android.Runtime.JNIEnv.StartCreateInstance (typeof (ConnectorIdentifierPeer), "()V");
+					Android.Runtime.JNIEnv.FinishCreateInstance (connectorHandle, "()V");
+					using (var connector = Java.Lang.Object.GetObject<ConnectorIdentifierPeer> (
+						connectorHandle, Android.Runtime.JniHandleOwnership.TransferLocalRef)) {
+					}
+					try {
+						var supplementaryClass = Java.Interop.JniEnvironment.Types.FindClass ("com/example/\U00010428Peer\U00010400");
+						Java.Interop.JniObjectReference.Dispose (ref supplementaryClass);
+						Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_SUPPLEMENTARY_UNEXPECTEDLY_LOADED");
+					} catch (Java.Lang.ClassNotFoundException) {
+						Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_SUPPLEMENTARY_CLASS_NOT_FOUND");
+					}
+					""");
+			proj.Sources.Add (new BuildItem.Source ("JavaTypeIdentifierPeers.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Register ("com/example/\u00a2Peer")]
+					public class CurrencyIdentifierPeer : Java.Lang.Object
+					{
+						public CurrencyIdentifierPeer ()
+						{
+							Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_CURRENCY_ACTIVATED");
+						}
+					}
+
+					[Register ("com/example/\u203fPeer")]
+					public class ConnectorIdentifierPeer : Java.Lang.Object
+					{
+						public ConnectorIdentifierPeer ()
+						{
+							Android.Util.Log.Info ("UnicodeJavaIdentifiers", "UNICODE_CONNECTOR_ACTIVATED");
+						}
+					}
+
+					""",
+			});
+			proj.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("com\\example\\\U00010428Peer\U00010400.java") {
+				Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+				TextContent = () => """
+					package com.example;
+
+					public class 𐐨Peer𐐀 {}
+					""",
+			});
+			proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "supplementary-name.pro") {
+				TextContent = () => "-keep class com.example.𐐨Peer𐐀 { *; }",
+			});
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), $"{runtime}/{typeMapImplementation} should install.");
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			Assert.IsTrue (
+				DexUtils.ContainsClass ("Lcom/example/\U00010428Peer\U00010400;", dexFile, AndroidSdkPath),
+				"The exact supplementary descriptor should be present in DEX before Android fails to load it.");
+
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{proj.PackageName}/{javaName}");
+			Assert.IsTrue (
+				MonitorAdbLogcat (
+					line => {
+						expectedLogcatOutput.RemoveWhere (expected => line.Contains (expected, StringComparison.Ordinal));
+						return expectedLogcatOutput.Count == 0;
+					},
+					Path.Combine (Root, builder.ProjectDirectory, "unicode-identifier-logcat.log"),
+					ActivityStartTimeoutInSeconds
+				),
+				$"{runtime}/{typeMapImplementation} should activate every supported Unicode peer. " +
+					$"Missing: {string.Join (", ", expectedLogcatOutput)}"
+			);
+		}
+
+		[Test]
 		public void PublishReadyToRunPartial ([Values] bool isComposite)
 		{
 			const string logcatMessage = "R2R_PARTIAL_TEST_ONCREATE";
@@ -734,98 +878,6 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
-		public void AssemblyStoreDecompressionCacheMapsPersistedAssemblies ()
-		{
-			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
-				return;
-			}
-
-			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "assemblycache")) {
-				IsRelease = true,
-			};
-			app.SetRuntime (AndroidRuntime.CoreCLR);
-			app.SetRuntimeIdentifiers (new [] { DeviceAbi });
-			app.SetProperty ("AndroidEnableAssemblyStoreDecompressionCache", "true");
-			app.AndroidManifest = app.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
-
-			using var appBuilder = CreateApkBuilder ();
-			Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
-
-			ClearAdbLogcat ();
-			AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
-			Assert.IsTrue (
-				WaitForActivityToStart (
-					app.PackageName,
-					"MainActivity",
-					Path.Combine (Root, appBuilder.ProjectDirectory, "assembly-cache-first-launch.log"),
-					ActivityStartTimeoutInSeconds
-				),
-				"First launch should succeed."
-			);
-
-			string [] cacheFiles = [];
-			for (int attempt = 0; attempt < 40 && cacheFiles.Length < 2; attempt++) {
-				Thread.Sleep (250);
-				cacheFiles = RunAdbCommand (
-					$"shell run-as {app.PackageName} find code_cache/decompressed-assembly-cache-v1 -type f -name '*.bin'"
-				)
-					.Split (new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-					.Where (line => line.EndsWith (".bin", StringComparison.Ordinal))
-					.ToArray ();
-			}
-			Assert.That (cacheFiles.Length, Is.GreaterThanOrEqualTo (2), "The first launch should persist multiple decompressed assemblies.");
-
-			RunAdbCommand ($"shell am force-stop --user all {app.PackageName}");
-			string cacheFileToCorrupt = cacheFiles.First ();
-			string ValidFileHash () => RunAdbCommand (
-				$"shell run-as {app.PackageName} md5sum {cacheFileToCorrupt}"
-			).Split (new [] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault () ?? "";
-
-			string validHash = ValidFileHash ();
-			Assert.That (validHash, Is.Not.Empty, $"Should be able to hash the persisted cache file '{cacheFileToCorrupt}'.");
-
-			RunAdbCommand (
-				$"shell run-as {app.PackageName} dd if=/dev/zero of={cacheFileToCorrupt} bs=1 count=1 conv=notrunc"
-			);
-			Assert.That (ValidFileHash (), Is.Not.EqualTo (validHash), "Corrupting the cache file should change its contents.");
-
-			ClearAdbLogcat ();
-			AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
-			Assert.IsTrue (
-				WaitForActivityToStart (
-					app.PackageName,
-					"MainActivity",
-					Path.Combine (Root, appBuilder.ProjectDirectory, "assembly-cache-second-launch.log"),
-					ActivityStartTimeoutInSeconds
-				),
-				"Second launch should succeed."
-			);
-
-			// A corrupted entry must be rejected (footer hash mismatch) and re-decompressed, which
-			// re-persists a byte-identical file. Verify the *exact* corrupted file is healed rather
-			// than merely checking that some other valid entry is still mapped.
-			bool rewritten = false;
-			for (int attempt = 0; attempt < 40 && !rewritten; attempt++) {
-				Thread.Sleep (250);
-				rewritten = ValidFileHash () == validHash;
-			}
-			Assert.IsTrue (rewritten, $"The corrupted cache file '{cacheFileToCorrupt}' should be rewritten with valid contents after fallback.");
-
-			string [] pids = RunAdbCommand ($"shell pidof {app.PackageName}")
-				.Split (new [] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-			Assert.IsNotEmpty (pids, "The application process should be running after the second launch.");
-			var maps = new StringBuilder ();
-			foreach (string pid in pids) {
-				maps.Append (RunAdbCommand ($"shell run-as {app.PackageName} cat /proc/{pid}/maps"));
-			}
-			StringAssert.Contains (
-				"/code_cache/decompressed-assembly-cache-v1/",
-				maps.ToString (),
-				"The second launch should map persisted decompressed assemblies."
-			);
-		}
-
-		[Test]
 		public void ActivityAliasRuns ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1094,7 +1146,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		public static Func<string, bool> CreateLineChecker (string expectedLogcatOutput)
 		{
 			// On .NET 6, `adb logcat` output may be line-wrapped in unexpected ways.
-			// https://github.com/xamarin/xamarin-android/pull/6119#issuecomment-896246633
+			// https://github.com/dotnet/android/pull/6119#issuecomment-896246633
 			// Try to see if *successive* lines match expected output
 			var remaining   = expectedLogcatOutput;
 			return line => {
@@ -2522,57 +2574,250 @@ namespace UnnamedProject
 			);
 		}
 
+		static IEnumerable<TestCaseData> GetInterfaceMethodDesugaringData ()
+		{
+			foreach (var typemapImplementation in new [] { "llvm-ir", "trimmable" }) {
+				foreach (var useR8 in new [] { false, true }) {
+					foreach (var apiNative in new [] { true, false }) {
+						yield return CreateTestCase (
+							typemapImplementation,
+							AndroidRuntime.CoreCLR,
+							apiNative,
+							useR8);
+					}
+				}
+			}
+
+			foreach (var apiNative in new [] { true, false }) {
+				yield return CreateTestCase (
+					"trimmable",
+					AndroidRuntime.NativeAOT,
+					apiNative,
+					true);
+			}
+
+			static TestCaseData CreateTestCase (
+				string typemapImplementation,
+				AndroidRuntime runtime,
+				bool apiNative,
+				bool useR8)
+			{
+				var typemapName = typemapImplementation.Replace ("-", "_");
+				var apiName = apiNative ? "Native" : "Desugared";
+				var dexToolName = useR8 ? "R8" : "D8";
+				return new TestCaseData (typemapImplementation, runtime, apiNative, useR8)
+					.SetName ($"InterfaceMethods_{typemapName}_{runtime}_{apiName}_{dexToolName}");
+			}
+		}
+
 		[Test]
-		public void SupportDesugaringStaticInterfaceMethods ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestCaseSource (nameof (GetInterfaceMethodDesugaringData))]
+		public void InterfaceMethodsMatchDesugaring (
+			string typemapImplementation,
+			AndroidRuntime runtime,
+			bool apiNative,
+			bool useR8)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
-			// TODO: fix for NativeAOT, if possible. Currently fails with:
-			//
-			//  Process: com.xamarin.supportdesugaringstaticinterfacemethods_nativeaot, PID: 13888
-			//  java.lang.NoSuchMethodError: no static method "Lexample/StaticMethodsInterface;.getValue()I"
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("Currently broken on NativeAOT");
-			}
-
-			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+			var packageSuffix = $"interfacemethods_{typemapImplementation.Replace ("-", "")}_{apiNative}_{useR8}";
+			var packageName = PackageUtils.MakePackageName (runtime, packageSuffix).ToLowerInvariant ();
+			var proj = new XamarinAndroidApplicationProject (packageName: packageName) {
 				IsRelease = true,
-				EnableDefaultItems = true,
 				OtherBuildItems = {
-					new AndroidItem.AndroidJavaSource ("StaticMethodsInterface.java") {
+					new AndroidItem.AndroidJavaSource ("InterfaceMethods.java") {
 						Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
-						TextContent = () => ResourceData.IdmStaticMethodsInterface,
+						TextContent = () => ResourceData.InterfaceMethods,
 						Metadata = {
 							{ "Bind", "True" },
+						},
+					},
+					new AndroidItem.AndroidJavaSource ("InterfaceMethodPeer.java") {
+						Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+						TextContent = () => ResourceData.InterfaceMethodPeer,
+						Metadata = {
+							{ "Bind", "True" },
+						},
+					},
+					new AndroidItem.AndroidJavaSource ("ConcreteInterfaceMethodPeer.java") {
+						Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+						TextContent = () => ResourceData.ConcreteInterfaceMethodPeer,
+						Metadata = {
+							{ "Bind", "True" },
+						},
+					},
+					// Binding this covariant bridge is a separate generator gap, so execute it through JNI.
+					new AndroidItem.AndroidJavaSource ("InterfaceMethodBridgeInvoker.java") {
+						Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+						TextContent = () => ResourceData.InterfaceMethodBridgeInvoker,
+						Metadata = {
+							{ "Bind", "False" },
+						},
+					},
+					new AndroidItem.AndroidJavaSource ("CovariantInterfaceMethods.java") {
+						Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+						TextContent = () => ResourceData.CovariantInterfaceMethods,
+						Metadata = {
+							{ "Bind", "False" },
 						},
 					},
 				},
 			};
 			proj.SetRuntime (runtime);
-
-			// Note: To properly test, static interface default methods (Java 8+) must be compiled correctly.
-			// With $(SupportedOSPlatformVersion) >= 24, D8 handles them natively without desugaring.
+			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			proj.SetProperty ("AndroidTypeMapImplementation", typemapImplementation);
+			proj.SetProperty ("AndroidLinkTool", useR8 ? "r8" : "");
+			if (useR8) {
+				// Keep the companion methods and names stable for the DEX and JNI assertions.
+				// Shrinking remains enabled; the Java fixture supplies the required call sites.
+				proj.OtherBuildItems.Add (new AndroidItem.ProguardConfiguration ("interface-methods.pro") {
+					TextContent = () => """
+						-dontoptimize
+						-dontobfuscate
+						""",
+				});
+			}
+			proj.SetDefaultTargetDevice ();
 			proj.SupportedOSPlatformVersion = "24";
+			if (!apiNative) {
+				// .NET 11 rejects minSdk < 24. Rewrite the validated manifest only for this fixture
+				// so D8/R8 still emits the pre-API 24 companion-class form.
+				proj.Imports.Add (new Import (() => "ForceInterfaceMethodDesugaring.targets") {
+					TextContent = () => """
+						<Project>
+						  <Target Name="_ForceInterfaceMethodDesugaring" BeforeTargets="_CompileToDalvik">
+						    <XmlPoke
+						        XmlInputPath="$(IntermediateOutputPath)android\AndroidManifest.xml"
+						        Query="/*[local-name()='manifest']/*[local-name()='uses-sdk']/@*[local-name()='minSdkVersion']"
+						        Value="21"
+						    />
+						  </Target>
+						</Project>
+						""",
+				});
+			}
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				"""
+					using var peer = new Example.InterfaceMethodPeer ();
+					Example.IInterfaceMethods interfacePeer = peer;
+					Example.IInterfaceMethods.INested nestedPeer = peer;
+					using var concretePeer = new Example.ConcreteInterfaceMethodPeer ();
+					using var bridgeType = new Java.Interop.JniType ("example/InterfaceMethodBridgeInvoker");
+					var bridgeMethod = bridgeType.GetStaticMethod ("invokeCovariantBridge", "()Ljava/lang/String;");
+					var bridgeResult = Java.Interop.JniEnvironment.StaticMethods.CallStaticObjectMethod (bridgeType.PeerReference, bridgeMethod);
+					var bridgeValue = Java.Interop.JniEnvironment.Strings.ToString (
+						ref bridgeResult, Java.Interop.JniObjectReferenceOptions.CopyAndDispose);
+					Console.WriteLine (
+						$"INTERFACE_METHOD_RESULTS " +
+						$"{Example.IInterfaceMethods.StaticValue}:" +
+						$"{interfacePeer.DefaultValue}:" +
+						$"{concretePeer.DefaultValue}:" +
+						$"{Example.IInterfaceMethods.INested.NestedStaticValue}:" +
+						$"{nestedPeer.NestedDefaultValue}:" +
+						$"{bridgeValue}");
+				""");
+			using var builder = CreateApkBuilder (packageName: packageName);
+			bool testCompleted = false;
+			try {
+				CleanupInterfaceMethodPackage (proj.PackageName);
+				Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
-		Console.WriteLine ($""# jonp static interface default method invocation; IStaticMethodsInterface.Value={Example.IStaticMethodsInterface.Value}"");
-");
-			var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
-			RunProjectAndAssert (proj, builder);
-			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
-			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity", appStartupLogcatFile, ActivityStartTimeoutInSeconds);
-			Assert.IsTrue (didLaunch, "MainActivity should have launched!");
-			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
+				var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+				FileAssert.Exists (dexFile);
+				AssertInterfaceMethodDexShape (dexFile, apiNative);
 
-			StringAssert.Contains (
-					"IStaticMethodsInterface.Value=3",
+				RunProjectAndAssert (proj, builder);
+				var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
+				bool didLaunch = WaitForActivityToStart (
+					proj.PackageName,
+					"MainActivity",
+					appStartupLogcatFile,
+					ActivityStartTimeoutInSeconds);
+				Assert.IsTrue (didLaunch, "MainActivity should have launched!");
+				var logcatOutput = File.ReadAllText (appStartupLogcatFile);
+
+				StringAssert.Contains (
+					"INTERFACE_METHOD_RESULTS 11:22:23:33:44:bridge:44",
 					logcatOutput,
-					"Was IStaticMethodsInterface.Value executed?"
-			);
+					"Managed and Java static, default, nested, and covariant bridge interface methods should all execute."
+				);
+				testCompleted = true;
+			} finally {
+				if (testCompleted) {
+					CleanupInterfaceMethodPackage (proj.PackageName);
+				} else {
+					TryCleanupInterfaceMethodPackage (proj.PackageName);
+				}
+			}
+		}
+
+		static void CleanupInterfaceMethodPackage (string packageName)
+		{
+			RunAdbCommandWithExitCode (new [] { "shell", "am", "force-stop", packageName });
+			RunAdbCommandWithExitCode (new [] { "uninstall", packageName });
+			var (exitCode, standardOutput, standardError) = RunAdbCommandWithExitCode (new [] {
+				"shell",
+				"pm",
+				"list",
+				"packages",
+				packageName,
+			});
+			Assert.AreEqual (0, exitCode, $"Failed to query installed packages: {standardError}");
+			var installedPackages = standardOutput.Split (
+				new [] { '\r', '\n' },
+				StringSplitOptions.RemoveEmptyEntries);
+			CollectionAssert.DoesNotContain (
+				installedPackages,
+				$"package:{packageName}",
+				$"{packageName} should not remain installed.");
+		}
+
+		static void TryCleanupInterfaceMethodPackage (string packageName)
+		{
+			try {
+				CleanupInterfaceMethodPackage (packageName);
+			} catch (Exception ex) {
+				TestContext.WriteLine ($"Final cleanup for '{packageName}' failed: {ex}");
+			}
+		}
+
+		void AssertInterfaceMethodDexShape (string dexFile, bool apiNative)
+		{
+			const string interfaceClass = "Lexample/InterfaceMethods;";
+			const string nestedInterfaceClass = "Lexample/InterfaceMethods$Nested;";
+			const string covariantInterfaceClass = "Lexample/CovariantInterfaceMethods$Derived;";
+			var dexDump = DexUtils.GetDexDump (dexFile, AndroidSdkPath);
+
+			if (apiNative) {
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod (interfaceClass, "getStaticValue", "()I", dexDump));
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod (interfaceClass, "getDefaultValue", "()I", dexDump));
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod (nestedInterfaceClass, "getNestedStaticValue", "()I", dexDump));
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod (nestedInterfaceClass, "getNestedDefaultValue", "()I", dexDump));
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod (covariantInterfaceClass, "getCovariantValue",
+					"()Ljava/lang/Object;", dexDump));
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod (covariantInterfaceClass, "getCovariantValue",
+					"()Ljava/lang/String;", dexDump));
+				Assert.IsFalse (DexUtils.ContainsClass ("Lexample/InterfaceMethods$-CC;", dexDump));
+				Assert.IsFalse (DexUtils.ContainsClass ("Lexample/InterfaceMethods$Nested$-CC;", dexDump));
+				Assert.IsFalse (DexUtils.ContainsClass ("Lexample/CovariantInterfaceMethods$Derived$-CC;", dexDump));
+			} else {
+				Assert.IsFalse (DexUtils.ContainsClassWithMethod (interfaceClass, "getStaticValue", "()I", dexDump));
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod ("Lexample/InterfaceMethods$-CC;", "getStaticValue",
+					"()I", dexDump));
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod ("Lexample/InterfaceMethods$-CC;", "$default$getDefaultValue",
+					"(Lexample/InterfaceMethods;)I", dexDump));
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod ("Lexample/InterfaceMethods$Nested$-CC;", "getNestedStaticValue",
+					"()I", dexDump));
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod ("Lexample/InterfaceMethods$Nested$-CC;", "$default$getNestedDefaultValue",
+					"(Lexample/InterfaceMethods$Nested;)I", dexDump));
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod ("Lexample/CovariantInterfaceMethods$Derived$-CC;",
+					"$default$getCovariantValue",
+					"(Lexample/CovariantInterfaceMethods$Derived;)Ljava/lang/Object;", dexDump));
+			}
 		}
 
 		[Test]
@@ -2880,7 +3125,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		[Test]
 		public void MicrosoftIntune ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
-			Assert.Ignore ("https://github.com/xamarin/xamarin-android/issues/8548");
+			Assert.Ignore ("https://github.com/dotnet/android/issues/8548");
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
@@ -3247,6 +3492,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		const string BenchmarkDotNetInstrumentationSource = """
 			using System;
 			using System.IO;
+			using System.Linq;
 			using BenchmarkDotNet.Attributes;
 			using BenchmarkDotNet.Columns;
 			using BenchmarkDotNet.Configs;
@@ -3272,13 +3518,18 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				[Instrumentation (Name = "${JAVA_PACKAGENAME}.BenchmarkInstrumentation")]
 				public class BenchmarkInstrumentation : Instrumentation
 				{
+					string? benchmarkArgs;
+					string? greeting;
+
 					protected BenchmarkInstrumentation (IntPtr handle, Android.Runtime.JniHandleOwnership ownership)
 						: base (handle, ownership) { }
 
 					public override void OnCreate (Bundle? arguments)
 					{
 						base.OnCreate (arguments);
-						Console.WriteLine ($"BENCHMARK_ARGS args={arguments?.GetString ("args")} greeting={arguments?.GetString ("greeting")}");
+						benchmarkArgs = arguments?.GetString ("args");
+						greeting = arguments?.GetString ("greeting");
+						Console.WriteLine ($"BENCHMARK_ARGS args={benchmarkArgs} greeting={greeting}");
 						Start ();
 					}
 
@@ -3299,8 +3550,17 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 								.WithArtifactsPath (artifacts)
 								.WithOptions (ConfigOptions.DisableOptimizationsValidator);
 							var summary = BenchmarkRunner.Run<SampleBenchmarks> (config);
-							Console.WriteLine ($"BENCHMARKS_COMPLETE reports={summary.Reports.Length}");
+							var successfulReports = summary.Reports.Count (report => report.Success);
+							var criticalValidationErrors = summary.ValidationErrors.Count (error => error.IsCritical);
+							Console.WriteLine (
+								$"BENCHMARKS_COMPLETE benchmarks={summary.BenchmarksCases.Length} reports={summary.Reports.Length} " +
+								$"successfulReports={successfulReports} criticalValidationErrors={criticalValidationErrors}");
+							results.PutInt ("benchmarks", summary.BenchmarksCases.Length);
 							results.PutInt ("reports", summary.Reports.Length);
+							results.PutInt ("successfulReports", successfulReports);
+							results.PutInt ("criticalValidationErrors", criticalValidationErrors);
+							results.PutString ("args", benchmarkArgs ?? "<null>");
+							results.PutString ("greeting", greeting ?? "<null>");
 							Finish (Result.Ok, results);
 						} catch (Exception ex) {
 							Console.WriteLine ($"BENCHMARKS_FAILED {ex}");
@@ -3371,30 +3631,72 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			Assert.IsTrue (completed, $"`dotnet run` did not complete in time. See {logPath} for details.");
 
 			var outputText = output.ToString ();
+			string instrumentationError = TryParseInstrumentationStringResult (outputText, "error") ?? "<not reported>";
+			// App logcat events are best-effort diagnostics; instrumentation results are authoritative.
+			bool hasArgumentsLog = outputText.Contains ("BENCHMARK_ARGS", StringComparison.Ordinal);
+			bool hasCompletionLog = outputText.Contains ("BENCHMARKS_COMPLETE", StringComparison.Ordinal);
 
-			// `Console.WriteLine` from the app lands in logcat, which `dotnet run` streams
-			StringAssert.Contains ("BENCHMARK_ARGS args=--custom-flag greeting=hello", outputText,
-				$"The instrumentation should receive the arguments passed after `--`. See {logPath} for details.");
-			StringAssert.Contains ("BENCHMARKS_COMPLETE reports=1", outputText,
-				$"BenchmarkDotNet should have produced 1 report. See {logPath} for details.");
+			TestContext.Out.WriteLine (
+				$"BenchmarkDotNet process diagnostics: completed={completed}, exitCode={process.ExitCode}, " +
+				$"error={instrumentationError}, argumentsLog={hasArgumentsLog}, completionLog={hasCompletionLog}");
+
 			StringAssert.Contains ("INSTRUMENTATION_CODE: -1", outputText,
-				$"The instrumentation should have finished with Result.Ok. See {logPath} for details.");
-			Assert.AreEqual (0, process.ExitCode, $"`dotnet run` should succeed. See {logPath} for details.");
+				$"The instrumentation should have finished with Result.Ok. Error: {instrumentationError}. See {logPath} for details.");
+			Assert.AreEqual (0, process.ExitCode,
+				$"`dotnet run` should succeed. Instrumentation error: {instrumentationError}. See {logPath} for details.");
+
+			int benchmarks = ParseInstrumentationResult (outputText, "benchmarks");
+			int reports = ParseInstrumentationResult (outputText, "reports");
+			int successfulReports = ParseInstrumentationResult (outputText, "successfulReports");
+			int criticalValidationErrors = ParseInstrumentationResult (outputText, "criticalValidationErrors");
+			string benchmarkArgs = ParseInstrumentationStringResult (outputText, "args");
+			string greeting = ParseInstrumentationStringResult (outputText, "greeting");
+
+			TestContext.Out.WriteLine (
+				$"BenchmarkDotNet results: benchmarks={benchmarks}, reports={reports}, " +
+				$"successfulReports={successfulReports}, criticalValidationErrors={criticalValidationErrors}, " +
+				$"args={benchmarkArgs}, greeting={greeting}");
+
+			Assert.AreEqual ("--custom-flag", benchmarkArgs,
+				$"The instrumentation should receive the custom argument passed after `--`. See {logPath} for details.");
+			Assert.AreEqual ("hello", greeting,
+				$"The instrumentation should receive the named argument passed after `--`. See {logPath} for details.");
+			Assert.AreEqual (1, benchmarks, $"BenchmarkDotNet should discover 1 benchmark, got {benchmarks}. See {logPath} for details.");
+			Assert.AreEqual (1, reports, $"BenchmarkDotNet should produce 1 report, got {reports}. See {logPath} for details.");
+			Assert.AreEqual (1, successfulReports, $"BenchmarkDotNet should produce 1 successful report, got {successfulReports}. See {logPath} for details.");
+			Assert.AreEqual (0, criticalValidationErrors,
+				$"BenchmarkDotNet should have no critical validation errors, got {criticalValidationErrors}. See {logPath} for details.");
 		}
 
 		static int ParseInstrumentationResult (string output, string key)
 		{
-			// Parses lines like: INSTRUMENTATION_RESULT: passed=1
+			var value = ParseInstrumentationStringResult (output, key);
+			if (!int.TryParse (value, out int result)) {
+				Assert.Fail ($"INSTRUMENTATION_RESULT key '{key}' has invalid integer value '{value}'.");
+			}
+			return result;
+		}
+
+		static string ParseInstrumentationStringResult (string output, string key)
+		{
+			var value = TryParseInstrumentationStringResult (output, key);
+			if (value != null)
+				return value;
+			Assert.Fail ($"INSTRUMENTATION_RESULT key '{key}' was not found.");
+			return "";
+		}
+
+		static string? TryParseInstrumentationStringResult (string output, string key)
+		{
+			// Parses lines like: INSTRUMENTATION_RESULT: key=value
 			var prefix = $"INSTRUMENTATION_RESULT: {key}=";
 			foreach (var rawLine in output.Split ('\n')) {
 				var line = rawLine.Trim ();
 				if (line.StartsWith (prefix, StringComparison.Ordinal)) {
-					var valueStr = line.Substring (prefix.Length).Trim ();
-					if (int.TryParse (valueStr, out int value))
-						return value;
+					return line.Substring (prefix.Length).Trim ();
 				}
 			}
-			return -1;
+			return null;
 		}
 
 		static string GetAppHelperSource (string appHelperBody, string hotReloadMessage) => $$"""

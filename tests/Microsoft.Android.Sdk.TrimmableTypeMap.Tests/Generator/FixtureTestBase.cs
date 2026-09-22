@@ -34,9 +34,9 @@ public abstract class FixtureTestBase
 	}
 
 	static readonly Lazy<(List<JavaPeerInfo> peers, AssemblyManifestInfo manifestInfo)> _cachedScanResult = new (() => {
-		using var scanner = new JavaPeerScanner ();
 		using var peReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
 		using var attributePeReader = new PEReader (File.OpenRead (TestAttributeFixtureAssemblyPath));
+		using var scanner = new JavaPeerScanner ();
 		var assemblies = new [] {
 			GetAssemblyInput (peReader),
 			GetAssemblyInput (attributePeReader),

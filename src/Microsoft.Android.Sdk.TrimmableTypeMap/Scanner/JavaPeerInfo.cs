@@ -126,6 +126,12 @@ public sealed record JavaPeerInfo
 	public IReadOnlyList<JavaConstructorInfo> JavaConstructors { get; init; } = [];
 
 	/// <summary>
+	/// Constructor shapes which cannot be emitted safely by the trimmable type map.
+	/// Generation reports these before producing any Java or type-map output.
+	/// </summary>
+	public IReadOnlyList<ConstructorDiagnosticInfo> ConstructorDiagnostics { get; init; } = [];
+
+	/// <summary>
 	/// Java fields from [ExportField] attributes.
 	/// Each field is initialized by calling the annotated method.
 	/// </summary>
@@ -389,6 +395,20 @@ public sealed record JavaConstructorInfo
 	public IReadOnlyList<JavaAnnotationInfo> Annotations { get; init; } = [];
 }
 
+public sealed record ConstructorDiagnosticInfo
+{
+	public required ConstructorDiagnosticKind Kind { get; init; }
+	public required string Detail { get; init; }
+}
+
+public enum ConstructorDiagnosticKind
+{
+	AmbiguousJniSignature,
+	UnsupportedParameterType,
+	MissingBaseConstructor,
+	InvalidSuperArgumentsString,
+}
+
 /// <summary>
 /// Describes a Java field from an [ExportField] attribute.
 /// The field is initialized by calling the annotated method.
@@ -404,6 +424,12 @@ public sealed record JavaFieldInfo
 	/// Java type name for the field, e.g., "java.lang.String".
 	/// </summary>
 	public required string JavaTypeName { get; init; }
+
+	/// <summary>
+	/// JNI type descriptor retained for validation where Java source dots cannot distinguish
+	/// package segments from nested type segments.
+	/// </summary>
+	internal string? JniTypeName { get; init; }
 
 	/// <summary>
 	/// Name of the method that initializes this field, e.g., "GetInstance".

@@ -147,6 +147,7 @@ or 'Help->Report a Problem' in Visual Studio for Mac.
 + [XA1035](xa1035.md): The 'BundleAssemblies' property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the 'AndroidUseAssemblyStore' and 'AndroidEnableAssemblyCompression' properties.
 + [XA1036](xa1036.md): AndroidManifest.xml //uses-sdk/@android:minSdkVersion '29' does not match the $(SupportedOSPlatformVersion) value '21' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
 Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).
++ [XA1037](xa1037.md): Unsupported @(Reference) item: {item}
 + [XA1038](xa1038.md): The '{0}' MSBuild property has an invalid value. Value values are {1}.
 + [XA1039](xa1039.md): The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/xamarin/androidx for more details.
 + [XA1040](xa1040.md): The NativeAOT runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues
@@ -159,6 +160,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA1047](xa1047.md): Required attribute '{0}' missing from element '{1}'; {2} line {3}.
 + [XA1048](xa1048.md): '{0}' does not contain an &lt;instrumentation&gt; element.
 + [XA1049](xa1049.md): The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'.
++ [XA1050](xa1050.md): The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value.
 
 ## XA2xxx: Linker
 
@@ -228,8 +230,13 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4254](xa4254.md): Trimmable type map Java source input directory '{input}' and output directory '{output}' must be different.
 + [XA4255](xa4255.md): Generated trimmable type map Java source '{path}' was not found.
 + [XA4256](xa4256.md): Skipping Java peer type '{type}' from assembly '{assembly}' because referenced type '{referencedType}' from assembly '{referencedAssembly}' could not be resolved in '{path}'. This type will not be included in the trimmable type map.
-+ [XA4258](xa4258.md): Java name '{name}' contains reserved Java identifier '{identifier}'. Change the package or type name.
++ [XA4258](xa4258.md): Java name '{name}' contains invalid or unsupported Java identifier '{identifier}'. Change the package or type name.
++ [XA4259](xa4259.md): Type '{type}' has multiple managed constructors that map to the same Java Native Interface (JNI) signature '{signature}'.
++ [XA4260](xa4260.md): Type '{type}' has a constructor parameter type '{parameterType}' that cannot be represented in a Java constructor.
++ [XA4261](xa4261.md): Type '{type}' has Java constructor signature '{signature}', but its base type does not expose a compatible Java constructor.
++ [XA4262](xa4262.md): Type '{type}' has an invalid [Export] SuperArgumentsString value '{value}'.
 + [XA4263](xa4263.md): The exported member '{member}' has unsupported signature type '{type}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter].
++ [XA4264](xa4264.md): Java callable wrapper XML file '{path}' was not found.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
@@ -255,8 +262,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4322](xa4322.md): Skipping library ProGuard configuration file '{file}' (from {source}) because it contains the unsupported global option '{option}'. Global ProGuard options are only allowed in application projects.
 + [XA4323](xa4323.md): Ignoring directory '{directory}' as it does not exist.
 + [XA4324](xa4324.md): [{arch}] Unable to delete source file '{file}'.
-+ [XA4325](xa4325.md): Failed to rewrite managed JNI names for R8. {message}
-+ [XA4326](xa4326.md): Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous `JNIEnv.FindClass` source.
 
 ## XA5xxx: GCC and toolchain
 

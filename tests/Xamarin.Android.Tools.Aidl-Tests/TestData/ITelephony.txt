@@ -5954,6 +5954,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -5974,6 +5975,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -6212,6 +6214,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -6254,6 +6257,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -6273,6 +6277,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -6361,6 +6366,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -6380,6 +6386,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -6398,6 +6405,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -6417,6 +6425,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -6435,6 +6444,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -6454,6 +6464,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -6986,6 +6997,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -7006,6 +7018,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -7172,6 +7185,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -7182,14 +7196,12 @@ namespace Com.Android.Internal.Telephony
 			{
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
-				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
 					__data.WriteString (callingPackage);
 					__data.WriteInt (subId);
-					remote.Transact (ITelephonyStub.TransactionDisableVisualVoicemailSmsFilter, __data, __reply, 0);
-					__reply.ReadException ();
+					remote.Transact (ITelephonyStub.TransactionDisableVisualVoicemailSmsFilter, __data, null, global::Android.OS.TransactionFlags.Oneway);
 
 				} finally {
 					__data.Recycle ();
@@ -7264,6 +7276,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -7284,6 +7297,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -7523,6 +7537,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -7546,6 +7561,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -7565,6 +7581,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -8043,6 +8060,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -8062,6 +8080,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -8081,6 +8100,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -8150,6 +8170,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -8269,6 +8290,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -8288,6 +8310,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -8361,6 +8384,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -8549,6 +8573,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -8661,6 +8686,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -8705,6 +8731,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -8773,6 +8800,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -9131,6 +9159,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -9174,6 +9203,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -9665,6 +9695,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -9698,13 +9729,11 @@ namespace Com.Android.Internal.Telephony
 			{
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
-				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
 					__data.WriteStrongBinder ((((result != null)) ? (result.AsBinder ()) : (null)));
-					remote.Transact (ITelephonyStub.TransactionRequestModemActivityInfo, __data, __reply, 0);
-					__reply.ReadException ();
+					remote.Transact (ITelephonyStub.TransactionRequestModemActivityInfo, __data, null, global::Android.OS.TransactionFlags.Oneway);
 
 				} finally {
 					__data.Recycle ();
@@ -9776,6 +9805,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -9820,6 +9850,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -10139,6 +10170,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -10159,6 +10191,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -10179,6 +10212,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -10198,6 +10232,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -10313,6 +10348,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -10358,6 +10394,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -10570,6 +10607,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -10669,6 +10707,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -10711,6 +10750,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -10826,6 +10866,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -10846,6 +10887,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -10866,6 +10908,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -10886,6 +10929,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -10906,6 +10950,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -10926,6 +10971,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -10998,6 +11044,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11041,6 +11088,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11084,6 +11132,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11127,6 +11176,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11170,6 +11220,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11191,6 +11242,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11234,6 +11286,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11277,6 +11330,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11297,6 +11351,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11411,6 +11466,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11431,6 +11487,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11453,6 +11510,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11523,6 +11581,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11570,6 +11629,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11688,6 +11748,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11751,6 +11812,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11770,6 +11832,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11788,6 +11851,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11831,6 +11895,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -11874,6 +11939,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -12073,15 +12139,13 @@ namespace Com.Android.Internal.Telephony
 			{
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
-				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
 					__data.WriteTypedList (specifiers);
 					__data.WriteInt (subId);
 					__data.WriteStrongBinder ((((resultCallback != null)) ? (resultCallback.AsBinder ()) : (null)));
-					remote.Transact (ITelephonyStub.TransactionSetSystemSelectionChannels, __data, __reply, 0);
-					__reply.ReadException ();
+					remote.Transact (ITelephonyStub.TransactionSetSystemSelectionChannels, __data, null, global::Android.OS.TransactionFlags.Oneway);
 
 				} finally {
 					__data.Recycle ();
@@ -12119,15 +12183,13 @@ namespace Com.Android.Internal.Telephony
 			{
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
-				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
 					__data.WriteString (callingPackage);
 					__data.WriteString (callingAttributeTag);
 					__data.WriteStrongBinder ((((subIdResult != null)) ? (subIdResult.AsBinder ()) : (null)));
-					remote.Transact (ITelephonyStub.TransactionEnqueueSmsPickResult, __data, __reply, 0);
-					__reply.ReadException ();
+					remote.Transact (ITelephonyStub.TransactionEnqueueSmsPickResult, __data, null, global::Android.OS.TransactionFlags.Oneway);
 
 				} finally {
 					__data.Recycle ();
@@ -12257,13 +12319,11 @@ namespace Com.Android.Internal.Telephony
 			{
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
-				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
 					__data.WriteInt (isCepEnabled ? 1 : 0);
-					remote.Transact (ITelephonyStub.TransactionSetCepEnabled, __data, __reply, 0);
-					__reply.ReadException ();
+					remote.Transact (ITelephonyStub.TransactionSetCepEnabled, __data, null, global::Android.OS.TransactionFlags.Oneway);
 
 				} finally {
 					__data.Recycle ();
@@ -12287,6 +12347,7 @@ namespace Com.Android.Internal.Telephony
 					__reply.ReadException ();
 
 				} finally {
+					__reply.Recycle ();
 					__data.Recycle ();
 				}
 
@@ -12320,12 +12381,10 @@ namespace Com.Android.Internal.Telephony
 			{
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
-				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
-					remote.Transact (ITelephonyStub.TransactionRequestUserActivityNotification, __data, __reply, 0);
-					__reply.ReadException ();
+					remote.Transact (ITelephonyStub.TransactionRequestUserActivityNotification, __data, null, global::Android.OS.TransactionFlags.Oneway);
 
 				} finally {
 					__data.Recycle ();
@@ -12338,12 +12397,10 @@ namespace Com.Android.Internal.Telephony
 			{
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
-				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
-					remote.Transact (ITelephonyStub.TransactionUserActivity, __data, __reply, 0);
-					__reply.ReadException ();
+					remote.Transact (ITelephonyStub.TransactionUserActivity, __data, null, global::Android.OS.TransactionFlags.Oneway);
 
 				} finally {
 					__data.Recycle ();

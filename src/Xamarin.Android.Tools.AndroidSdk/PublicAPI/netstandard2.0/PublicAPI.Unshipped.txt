@@ -35,6 +35,7 @@ Xamarin.Android.Tools.AdbRunner.AdbRunner(string! adbPath, System.Collections.Ge
 virtual Xamarin.Android.Tools.AdbRunner.ListDevicesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AdbDeviceInfo!>!>!
 Xamarin.Android.Tools.AdbRunner.StopEmulatorAsync(string! serial, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Xamarin.Android.Tools.AdbRunner.WaitForDeviceAsync(string? serial = null, System.TimeSpan? timeout = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.AdbRunner.WaitForPackageManagerAsync(string? serial = null, System.TimeSpan? timeout = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Xamarin.Android.Tools.ChecksumType
 Xamarin.Android.Tools.ChecksumType.Sha1 = 0 -> Xamarin.Android.Tools.ChecksumType
 Xamarin.Android.Tools.ChecksumType.Sha256 = 1 -> Xamarin.Android.Tools.ChecksumType

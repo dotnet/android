@@ -7,6 +7,7 @@ parameters:
   condition: succeeded()  # Condition to run tests
 
 steps:
+# The tool apphost does not locate its runtime from PATH, so use the SDK installed during test setup.
 - ${{if parameters.testFilter}}:
   - pwsh: >-
       $(Agent.ToolsDirectory)/dotnet-test-slicer slice
@@ -18,6 +19,8 @@ steps:
     displayName: Slice unit tests with filter
     failOnStderr: true
     condition: ${{ parameters.condition }}
+    env:
+      DOTNET_ROOT: ${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet
 - ${{ else }}:
   - pwsh: >-
       $(Agent.ToolsDirectory)/dotnet-test-slicer slice
@@ -28,6 +31,8 @@ steps:
     displayName: Slice unit tests
     failOnStderr: true
     condition: ${{ parameters.condition }}
+    env:
+      DOTNET_ROOT: ${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet
 
 - ${{ if eq(parameters.retryFailedTests, 'false') }}:
   # If we aren't using auto-retry logic, then this is just a simple template call
@@ -63,6 +68,8 @@ steps:
     displayName: Look for failed tests
     workingDirectory: ${{ parameters.xaSourcePath }}
     condition: ${{ parameters.condition }}
+    env:
+      DOTNET_ROOT: ${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet
 
     # dotnet-test-slicer removed the failed tests from our results file, so it's safe to publish it now
   - task: PublishTestResults@2

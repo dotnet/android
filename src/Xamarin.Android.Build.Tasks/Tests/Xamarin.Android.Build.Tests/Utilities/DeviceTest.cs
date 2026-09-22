@@ -359,7 +359,8 @@ namespace Xamarin.Android.Build.Tests
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
 			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
-			var info = new ProcessStartInfo (adb, "logcat") {
+			string adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
+			var info = new ProcessStartInfo (adb, $"{adbTarget} logcat") {
 				RedirectStandardOutput = true,
 				UseShellExecute = false,
 				CreateNoWindow = true,

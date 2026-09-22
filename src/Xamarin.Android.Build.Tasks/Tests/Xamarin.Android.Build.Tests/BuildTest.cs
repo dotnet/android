@@ -1216,19 +1216,19 @@ public class MyReceiver : BroadcastReceiver
 				});
 			}
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "okio-1.13.0.jar") {
-				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/squareup/okio/okio/1.13.0/okio-1.13.0.jar"
+				TestResourceFileName = "okio-1.13.0.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "okhttp-3.8.0.jar") {
-				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/squareup/okhttp3/okhttp/3.8.0/okhttp-3.8.0.jar"
+				TestResourceFileName = "okhttp-3.8.0.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "retrofit-2.3.0.jar") {
-				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/squareup/retrofit2/retrofit/2.3.0/retrofit-2.3.0.jar"
+				TestResourceFileName = "retrofit-2.3.0.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "converter-gson-2.3.0.jar") {
-				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/squareup/retrofit2/converter-gson/2.3.0/converter-gson-2.3.0.jar"
+				TestResourceFileName = "converter-gson-2.3.0.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "gson-2.7.jar") {
-				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/google/code/gson/gson/2.7/gson-2.7.jar"
+				TestResourceFileName = "gson-2.7.jar"
 			});
 			/* The source is simple:
 			 *

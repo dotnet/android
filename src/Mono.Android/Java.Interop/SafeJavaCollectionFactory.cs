@@ -93,20 +93,24 @@ static class SafeJavaCollectionFactory
 
 				var keyType = arguments [0];
 				var valueType = arguments [1];
-				ValueTypeFactory? keyFactory = null;
-				ValueTypeFactory? valueFactory = null;
-				if ((keyType.IsValueType && !ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (keyType, out keyFactory))
-						|| (valueType.IsValueType && !ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (valueType, out valueFactory))) {
-					converter = GetUntypedFromJniHandleConverter (genericDefinition);
+				if (keyType.IsValueType && valueType.IsValueType) {
+					if (!ValueTypeDictionaryFactory.TryGetFromJniHandleConverter (targetType, out converter))
+						converter = GetUntypedFromJniHandleConverter (genericDefinition);
 					return true;
 				}
-				if (keyFactory != null) {
-					converter = valueFactory != null
-						? (handle, transfer) => handle == IntPtr.Zero ? null : keyFactory.CreateDictionary (valueFactory, handle, transfer)
-						: (handle, transfer) => handle == IntPtr.Zero ? null : keyFactory.CreateDictionaryWithReferenceValue (valueType, handle, transfer);
+				if (keyType.IsValueType) {
+					if (!ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (keyType, out var keyFactory)) {
+						converter = GetUntypedFromJniHandleConverter (genericDefinition);
+						return true;
+					}
+					converter = (handle, transfer) => handle == IntPtr.Zero ? null : keyFactory.CreateDictionaryWithReferenceValue (valueType, handle, transfer);
 					return true;
 				}
-				if (valueFactory != null) {
+				if (valueType.IsValueType) {
+					if (!ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (valueType, out var valueFactory)) {
+						converter = GetUntypedFromJniHandleConverter (genericDefinition);
+						return true;
+					}
 					converter = (handle, transfer) => handle == IntPtr.Zero ? null : valueFactory.CreateDictionaryWithReferenceKey (keyType, handle, transfer);
 					return true;
 				}

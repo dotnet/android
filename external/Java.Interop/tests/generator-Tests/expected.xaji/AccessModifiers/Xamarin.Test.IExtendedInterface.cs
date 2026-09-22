@@ -69,10 +69,7 @@ namespace Xamarin.Test {
 		public unsafe void ExtendedMethod ()
 		{
 			const string __id = "extendedMethod.()V";
-			try {
-				_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 		}
 
 		static Delegate cb_baseMethod_BaseMethod_V;
@@ -98,10 +95,7 @@ namespace Xamarin.Test {
 		public unsafe void BaseMethod ()
 		{
 			const string __id = "baseMethod.()V";
-			try {
-				_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 		}
 
 	}

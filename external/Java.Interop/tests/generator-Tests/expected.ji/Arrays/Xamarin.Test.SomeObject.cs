@@ -29,11 +29,8 @@ namespace Xamarin.Test {
 			set {
 				const string __id = "myStrings.[Ljava/lang/String;";
 
-				try {
-					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
-				} finally {
-					GC.KeepAlive (value);
-				}
+				_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
+				GC.KeepAlive (value);
 			}
 		}
 
@@ -49,11 +46,8 @@ namespace Xamarin.Test {
 			set {
 				const string __id = "myInts.[I";
 
-				try {
-					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
-				} finally {
-					GC.KeepAlive (value);
-				}
+				_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
+				GC.KeepAlive (value);
 			}
 		}
 
@@ -69,11 +63,8 @@ namespace Xamarin.Test {
 			set {
 				const string __id = "mybools.[Z";
 
-				try {
-					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
-				} finally {
-					GC.KeepAlive (value);
-				}
+				_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
+				GC.KeepAlive (value);
 			}
 		}
 
@@ -89,11 +80,8 @@ namespace Xamarin.Test {
 			set {
 				const string __id = "myObjects.[Ljava/lang/Object;";
 
-				try {
-					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
-				} finally {
-					GC.KeepAlive (value);
-				}
+				_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
+				GC.KeepAlive (value);
 			}
 		}
 
@@ -109,11 +97,8 @@ namespace Xamarin.Test {
 			set {
 				const string __id = "myfloats.[F";
 
-				try {
-					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
-				} finally {
-					GC.KeepAlive (value);
-				}
+				_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
+				GC.KeepAlive (value);
 			}
 		}
 
@@ -129,11 +114,8 @@ namespace Xamarin.Test {
 			set {
 				const string __id = "mydoubles.[D";
 
-				try {
-					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
-				} finally {
-					GC.KeepAlive (value);
-				}
+				_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
+				GC.KeepAlive (value);
 			}
 		}
 
@@ -149,11 +131,8 @@ namespace Xamarin.Test {
 			set {
 				const string __id = "mylongs.[J";
 
-				try {
-					_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
-				} finally {
-					GC.KeepAlive (value);
-				}
+				_members.InstanceFields.SetValue (__id, this, value?.PeerReference ?? default);
+				GC.KeepAlive (value);
 			}
 		}
 

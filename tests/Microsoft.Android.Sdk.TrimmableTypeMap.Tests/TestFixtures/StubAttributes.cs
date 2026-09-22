@@ -1,15 +1,5 @@
 using System;
 
-namespace Android.Runtime
-{
-	public enum JniHandleOwnership
-	{
-		DoNotTransfer = 0,
-		TransferLocalRef = 1,
-		TransferGlobalRef = 2,
-	}
-}
-
 namespace Lookalike
 {
 	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
@@ -33,17 +23,6 @@ namespace Lookalike
 
 namespace Java.Interop
 {
-	public struct JniObjectReference
-	{
-		public IntPtr Handle;
-	}
-
-	public enum JniObjectReferenceOptions
-	{
-		None = 0,
-		Copy = 1,
-		CopyAndDispose = 2,
-	}
 }
 
 namespace Android.App
@@ -216,13 +195,14 @@ namespace Java.Interop
 
 namespace Java.Interop
 {
-	[AttributeUsage (AttributeTargets.Class, AllowMultiple = false)]
+	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = false)]
 	public sealed class JniTypeSignatureAttribute : Attribute
 	{
 		public string SimpleReference { get; }
 		public bool GenerateJavaPeer { get; set; } = true;
 		public bool IsKeyword { get; set; }
 		public int ArrayRank { get; set; }
+		public Type? InvokerType { get; set; }
 
 		public JniTypeSignatureAttribute (string simpleReference) => SimpleReference = simpleReference;
 	}

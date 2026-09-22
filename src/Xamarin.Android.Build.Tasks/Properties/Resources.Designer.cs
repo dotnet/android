@@ -917,6 +917,16 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA1036", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unsupported @(Reference) item: {0}.
+        /// </summary>
+        public static string XA1037 {
+            get {
+                return ResourceManager.GetString("XA1037", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to The &apos;{0}&apos; MSBuild property has an invalid value of &apos;{1}&apos;. A valid value is one of: {2}..
         /// </summary>
@@ -1022,6 +1032,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA1049 {
             get {
                 return ResourceManager.GetString("XA1049", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;AndroidR8ObfuscationMode&apos; MSBuild property has an invalid value of &apos;{0}&apos;. Valid values are &apos;disabled&apos; and &apos;private-members&apos;..
+        /// </summary>
+        public static string XA1050 {
+            get {
+                return ResourceManager.GetString("XA1050", resourceCulture);
             }
         }
         
@@ -1660,11 +1679,47 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Java name &apos;{0}&apos; contains reserved Java identifier &apos;{1}&apos;. Change the package or type name..
+        ///   Looks up a localized string similar to Java name &apos;{0}&apos; contains invalid or unsupported Java identifier &apos;{1}&apos;. Change the package or type name..
         /// </summary>
         public static string XA4258 {
             get {
                 return ResourceManager.GetString("XA4258", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; has multiple managed constructors that map to the same Java Native Interface (JNI) signature &apos;{1}&apos;. Change the constructor parameter types so each constructor has a unique JNI signature..
+        /// </summary>
+        public static string XA4259 {
+            get {
+                return ResourceManager.GetString("XA4259", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; has a constructor parameter type &apos;{1}&apos; that cannot be represented in a Java constructor. Remove the constructor or change the parameter to a supported Java type..
+        /// </summary>
+        public static string XA4260 {
+            get {
+                return ResourceManager.GetString("XA4260", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; has Java constructor signature &apos;{1}&apos;, but its base type does not expose a compatible Java constructor. Add a compatible base constructor or remove the derived constructor..
+        /// </summary>
+        public static string XA4261 {
+            get {
+                return ResourceManager.GetString("XA4261", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; has an invalid [Export] SuperArgumentsString value &apos;{1}&apos;. The value references a constructor parameter that does not exist..
+        /// </summary>
+        public static string XA4262 {
+            get {
+                return ResourceManager.GetString("XA4262", resourceCulture);
             }
         }
 
@@ -1675,6 +1730,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4263 {
             get {
                 return ResourceManager.GetString("XA4263", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Java callable wrapper XML file &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4264 {
+            get {
+                return ResourceManager.GetString("XA4264", resourceCulture);
             }
         }
 
@@ -1941,42 +2005,6 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to rewrite managed JNI names for R8. {0}.
-        /// </summary>
-        public static string XA4325 {
-            get {
-                return ResourceManager.GetString("XA4325", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not rewrite the JNI names in the assembly &apos;{0}&apos;: {1}.
-        /// </summary>
-        public static string XA4325_AssemblyFailure {
-            get {
-                return ResourceManager.GetString("XA4325_AssemblyFailure", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;SourceFiles&apos; and &apos;DestinationFiles&apos; item groups must contain the same number of items..
-        /// </summary>
-        public static string XA4325_SourceDestinationCount {
-            get {
-                return ResourceManager.GetString("XA4325_SourceDestinationCount", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous JNIEnv.FindClass source..
-        /// </summary>
-        public static string XA4326 {
-            get {
-                return ResourceManager.GetString("XA4326", resourceCulture);
-            }
-        }
-
         /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>
