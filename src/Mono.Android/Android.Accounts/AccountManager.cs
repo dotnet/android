@@ -18,17 +18,17 @@ namespace Android.Accounts {
 		WeakReference? weak_implementor_AccountsUpdated;
 		public event EventHandler<AccountsUpdateEventArgs> AccountsUpdated {
 			add {
-				AndroidEventHelper.AddEventHandler<IOnAccountsUpdateListener, IOnAccountsUpdateListenerImplementor>(
+				EventHelper.AddEventHandler<IOnAccountsUpdateListener, IOnAccountsUpdateListenerImplementor>(
 						ref weak_implementor_AccountsUpdated,
 						() => new IOnAccountsUpdateListenerImplementor (this),
 						SetOnAccountsUpdatedListener,
 						__h => __h.Handler += value);
 			}
 			remove {
-				AndroidEventHelper.RemoveEventHandler<IOnAccountsUpdateListener, IOnAccountsUpdateListenerImplementor>(
+				EventHelper.RemoveEventHandler<IOnAccountsUpdateListener, IOnAccountsUpdateListenerImplementor>(
 						ref weak_implementor_AccountsUpdated,
 						IOnAccountsUpdateListenerImplementor.__IsEmpty,
-						SetOnAccountsUpdatedListener,
+						__h => SetOnAccountsUpdatedListener (null),
 						__h => __h.Handler -= value);
 			}
 		}
@@ -41,4 +41,3 @@ namespace Android.Accounts {
 }
 
 #endif  // ANDROID_5
-

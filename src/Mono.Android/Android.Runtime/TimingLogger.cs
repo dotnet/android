@@ -70,7 +70,7 @@ namespace Android.Runtime
 		}
 
 		/// <summary>
-		///   Dispose of the current instance. <see cref="Dispose"/> for more information.
+		///   Dispose of the current instance. <see cref="Dispose()"/> for more information.
 		/// </summary>
 		public void Dispose()
 		{
