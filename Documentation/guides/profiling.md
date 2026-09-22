@@ -5,19 +5,32 @@ This guide covers startup, runtime, native, and build profiling for current
 and diagnostic-port setup, see
 [Tracing .NET for Android applications](tracing.md).
 
-On Windows, put `adb.exe` in `%PATH%` or configure a PowerShell alias for it.
+This document explains many uses of `adb` at the command line. On Windows,
+you will need either `adb.exe` in your `%PATH%` or a
+[PowerShell alias][set_alias] for `adb`.
 
-## Overall startup
+[set_alias]: https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/set-alias
 
-Android's activity manager reports the user-visible launch time:
+## Overall Startup
 
-```sh
-adb logcat -c
-adb shell am start -S -W PACKAGE_NAME/ACTIVITY_NAME
-adb logcat -d | grep Displayed
-```
+The easiest way to time the complete startup is to launch the app by tapping
+the icon, and run:
 
-On PowerShell, use `Select-String Displayed` instead of `grep Displayed`.
+    # Windows / PowerShell
+    > adb logcat -d | Select-String Displayed
+
+    # macOS / Unix
+    > adb logcat -d | grep Displayed
+
+Both platforms will output something such as:
+
+    09-04 14:33:32.466  1169  1192 I ActivityManager: Displayed com.xamarin.android.helloworld/example.MainActivity: +1s3ms
+
+The `ActivityManager` system process logs how long it takes for any Android
+activity to start. This is the best measure of the overall time experienced by
+a user when launching the app.
+
+You can also run `adb logcat -c` to clear the log at any point.
 
 ## Native runtime timing
 
