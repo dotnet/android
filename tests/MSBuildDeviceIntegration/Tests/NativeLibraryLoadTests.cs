@@ -13,6 +13,71 @@ namespace Xamarin.Android.Build.Tests;
 public class NativeLibraryLoadTests : DeviceTest
 {
 	[Test]
+	public void UnknownSystemLibraryLoadsWithoutMainThreadDispatch ()
+	{
+		if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+			return;
+		}
+
+		const string completedMessage = "UNKNOWN_SYSTEM_LIBRARY_LOAD_COMPLETED";
+		const string timeoutMessage = "UNKNOWN_SYSTEM_LIBRARY_LOAD_TIMED_OUT";
+		string packageName = PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "unknownsystemlibrary");
+		var proj = new XamarinAndroidApplicationProject (packageName: packageName) {
+			EmbedAssembliesIntoApk = true,
+			ProjectName = "UnknownSystemLibrary",
+		};
+		proj.SetRuntime (AndroidRuntime.CoreCLR);
+		proj.SetRuntimeIdentifiers ([DeviceAbi]);
+		proj.SetDefaultTargetDevice ();
+		proj.MainActivity = proj.DefaultMainActivity
+			.Replace ("//${USINGS}", "using System;\nusing System.Runtime.InteropServices;\nusing System.Threading.Tasks;")
+			.Replace (
+				"//${AFTER_ONCREATE}",
+				$$"""
+			// Blocking the main thread here verifies CoreCLR directly loads libraries missing from the
+			// build-time DSO cache instead of dispatching System.loadLibrary to the main thread.
+			var loadTask = Task.Run (() => {
+				System.Threading.Thread.Sleep (TimeSpan.FromMilliseconds (250));
+				return NativeMethods.GetError ();
+			});
+			if (!loadTask.Wait (TimeSpan.FromSeconds (2))) {
+				Android.Util.Log.Error ("NativeLibraryLoadTest", "{{timeoutMessage}}");
+				return;
+			}
+			Android.Util.Log.Info ("NativeLibraryLoadTest", "{{completedMessage}}");
+"""
+			)
+			.Replace (
+				"//${AFTER_MAINACTIVITY}",
+				"""
+	static class NativeMethods
+	{
+		[DllImport ("libGLESv2", EntryPoint = "glGetError")]
+		public static extern uint GetError ();
+	}
+"""
+			);
+
+		using var builder = CreateApkBuilder (packageName: packageName);
+		Assert.IsTrue (builder.Install (proj), "Project should have installed.");
+
+		ClearAdbLogcat ();
+		bool loadTimedOut = false;
+		bool appCompleted = MonitorAdbLogcat (
+			line => {
+				loadTimedOut |= line.Contains (timeoutMessage, StringComparison.Ordinal);
+				return loadTimedOut || line.Contains (completedMessage, StringComparison.Ordinal);
+			},
+			Path.Combine (Root, builder.ProjectDirectory, "unknown-system-library-load.log"),
+			timeout: 30,
+			onMonitoringStarted: () => StartActivityAndAssert (proj)
+		);
+
+		Assert.IsFalse (loadTimedOut, "The worker P/Invoke waited for the blocked Android main thread.");
+		Assert.IsTrue (appCompleted, $"Output did not contain {completedMessage}.");
+	}
+
+	[Test]
 	public void MissingNativeLibraryHasUsefulErrorMessage ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 	{
 		bool isRelease = runtime == AndroidRuntime.NativeAOT;
