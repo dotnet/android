@@ -101,6 +101,19 @@ public class UnmanagedCallersOnlyCallbackTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Scanner_RejectsUnknownCallbackFormatVersion ()
+	{
+		using var assembly = CreateCallbackFormatAssembly (version: 3);
+		using var pe = new PEReader (assembly);
+		using var scanner = new JavaPeerScanner ();
+
+		var error = Assert.Throws<NotSupportedException> (() => scanner.Scan ([MakeInput (pe)]));
+		Assert.Contains ("CallbackFormat3", error.Message);
+		Assert.Contains ("format version '3'", error.Message);
+		Assert.Contains ("Supported versions are '1' and '2'", error.Message);
+	}
+
+	[Fact]
 	public void ModelBuilder_DirectCallbacks_AreNotEmittedAsWrappers ()
 	{
 		var model = ModelBuilder.Build (UcoPeers, "TestUcoTypeMap.dll", "TestUcoTypeMap");
@@ -402,5 +415,30 @@ public class UnmanagedCallersOnlyCallbackTests : FixtureTestBase
 			?? throw new InvalidOperationException (
 				$"Proxy for '{managedTypeName}' not found; found: " +
 				string.Join (", ", model.ProxyTypes.Select (p => p.TypeName)));
+	}
+
+	static MemoryStream CreateCallbackFormatAssembly (int version)
+	{
+		var stream = new MemoryStream ();
+		var pe = new PEAssemblyBuilder (new Version (11, 0, 0, 0));
+		var assemblyName = $"CallbackFormat{version}";
+		pe.EmitPreamble (assemblyName, assemblyName + ".dll");
+
+		var attributeType = pe.Metadata.AddTypeReference (
+			pe.MonoAndroidRef,
+			pe.Metadata.GetOrAddString ("Java.Interop"),
+			pe.Metadata.GetOrAddString ("JavaPeerCallbackFormatAttribute"));
+		var attributeCtor = pe.AddMemberRef (attributeType, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().Int32 ()));
+		pe.Metadata.AddCustomAttribute (
+			EntityHandle.AssemblyDefinition,
+			attributeCtor,
+			pe.BuildAttributeBlob (blob => blob.WriteInt32 (version)));
+
+		pe.WritePE (stream);
+		stream.Position = 0;
+		return stream;
 	}
 }

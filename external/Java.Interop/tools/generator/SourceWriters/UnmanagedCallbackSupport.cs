@@ -20,10 +20,11 @@ namespace generator.SourceWriters
 		Legacy,
 
 		/// <summary>
-		/// An <c>[UnmanagedCallersOnly]</c> <c>n_*</c> callback which forwards the raw JNI
-		/// arguments to <c>Java.Interop.JniMarshal.SafeInvokeAction/SafeInvokeFunc</c>.  Used for
-		/// shapes whose marshaling cannot be centralized — strings, arrays and other copy-back
-		/// parameters, <c>CharSequence</c> formatting, collections, and so on.
+		/// An <c>[UnmanagedCallersOnly]</c> <c>n_*</c> callback which waits for GC bridge
+		/// processing, then forwards the raw JNI arguments to
+		/// <c>Java.Interop.JniMarshal.SafeInvokeAction/SafeInvokeFunc</c>.  Used for shapes whose
+		/// marshaling cannot be centralized — strings, arrays and other copy-back parameters,
+		/// <c>CharSequence</c> formatting, collections, and so on.
 		/// </summary>
 		UnmanagedRaw,
 

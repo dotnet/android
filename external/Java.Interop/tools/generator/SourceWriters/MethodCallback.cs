@@ -90,6 +90,8 @@ namespace generator.SourceWriters
 
 			writer.WriteLine ("unsafe {");
 			writer.Indent ();
+			if (kind == UnmanagedCallbackKind.UnmanagedRaw)
+				writer.WriteLine ("global::Android.Runtime.JNIEnv.WaitForBridgeProcessing ();");
 			writer.WriteLine (method.IsVoid ? call + ";" : "return " + call + ";");
 			writer.Unindent ();
 			writer.WriteLine ("}");

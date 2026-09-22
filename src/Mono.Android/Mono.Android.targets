@@ -99,6 +99,12 @@
     />
 
   </Target>
+
+  <Target Name="_ValidateMonoAndroidUnmanagedCallersOnlyCallbacks"
+      Condition=" '$(_MonoAndroidEnableUnmanagedCallersOnlyCallbacks)' == 'true' and '$(AndroidTypeMapImplementation)' != 'trimmable' "
+      BeforeTargets="_GenerateBinding">
+    <Error Text="Experimental [UnmanagedCallersOnly] binding callbacks require AndroidTypeMapImplementation=trimmable, but '$(AndroidTypeMapImplementation)' was selected." />
+  </Target>
   
   <!-- Runs 'generator' -->
   <Target Name="_GenerateBinding"

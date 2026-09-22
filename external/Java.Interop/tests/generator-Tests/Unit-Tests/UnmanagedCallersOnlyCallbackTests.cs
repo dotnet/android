@@ -122,6 +122,11 @@ namespace generatortests
 			Assert.True (source.Contains (
 				"global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_label, &global::Com.Example.Widget.m2);"),
 				source);
+			var waitIndex = source.IndexOf ("global::Android.Runtime.JNIEnv.WaitForBridgeProcessing ();", StringComparison.Ordinal);
+			var invokeIndex = source.IndexOf (
+				"global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_label, &global::Com.Example.Widget.m2);",
+				StringComparison.Ordinal);
+			Assert.True (waitIndex >= 0 && waitIndex < invokeIndex, source);
 			Assert.True (source.Contains (
 				"private static IntPtr m2 (IntPtr jnienv, IntPtr native__this, IntPtr native_label)"),
 				source);

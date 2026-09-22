@@ -69,6 +69,12 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     </PropertyGroup>
   </Target>
 
+  <Target Name="_ValidateUnmanagedCallersOnlyBindingCallbacks"
+      Condition=" '$(_AndroidEnableUnmanagedCallersOnlyCallbacks)' == 'true' and '$(AndroidTypeMapImplementation)' != 'trimmable' "
+      BeforeTargets="GenerateBindings">
+    <Error Text="Experimental [UnmanagedCallersOnly] binding callbacks require AndroidTypeMapImplementation=trimmable, but '$(AndroidTypeMapImplementation)' was selected." />
+  </Target>
+
   <Target Name="GenerateBindings"
       Condition=" '$(_AndroidGenerateManagedBindings)' == 'true' "
       Inputs="$(ApiOutputFile);@(TransformFile);@(ReferencePath);@(ReferenceDependencyPaths);@(_AndroidMSBuildAllProjects)"

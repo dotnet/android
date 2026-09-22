@@ -451,6 +451,12 @@ sealed class AssemblyIndex : IDisposable
 
 			var value = ca.DecodeValue (customAttributeTypeProvider);
 			if (value.FixedArguments.Length == 1 && value.FixedArguments [0].Value is int version) {
+				if (version != JavaPeerCallbackFormat.ConnectorDelegates &&
+				    version != JavaPeerCallbackFormat.UnmanagedCallersOnlyCallbacks) {
+					throw new NotSupportedException (
+						$"Assembly '{AssemblyName}' declares unsupported Java peer callback format version '{version}'. " +
+						$"Supported versions are '{JavaPeerCallbackFormat.ConnectorDelegates}' and '{JavaPeerCallbackFormat.UnmanagedCallersOnlyCallbacks}'.");
+				}
 				CallbackFormatVersion = version;
 			}
 			return;
