@@ -226,6 +226,8 @@ namespace Java.InteropTests
 			}
 		}
 
+#if !__ANDROID__
+		// These tests use JavaVMFixture's custom JniTypeManager, which Android does not support.
 		[Test]
 		[Category ("NativeAOTIgnore")]
 		[Category ("TrimmableTypeMapUnsupported")]
@@ -235,6 +237,22 @@ namespace Java.InteropTests
 			var info = JavaLangRemappingTestMath._members.StaticFields.GetFieldInfo ("remappedToPi.D");
 			Assert.IsNotNull (info);
 			Assert.IsTrue (info.IsStatic);
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
+		public void ReplacedStaticFieldRetainsTargetOwner ()
+		{
+			Assert.AreEqual (global::System.Math.PI, JavaLangRemappingTestObject.remappedStaticPi ());
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
+		public void ReplacedStaticMethodRetainsTargetOwner ()
+		{
+			Assert.AreEqual (5, JavaLangRemappingTestObject.remappedStaticAbs (-5));
 		}
 
 		[Test]
@@ -293,7 +311,7 @@ namespace Java.InteropTests
 		{
 			var members = new JniPeerMembers (FieldRemapDerived.JniTypeName, typeof (FieldRemapDerived));
 			try {
-				using var type = new JniType (FieldRemapBase.JniTypeName);
+				using var type = new JniType (FieldRemapBase.RuntimeJniTypeName);
 				var expected = type.GetInstanceField ("remappedInheritedInstanceField", "Z");
 				var actual = members.InstanceFields.GetFieldInfo ("inheritedInstanceField.Z");
 
@@ -310,38 +328,11 @@ namespace Java.InteropTests
 		{
 			var members = new JniPeerMembers (FieldRemapDerived.JniTypeName, typeof (FieldRemapDerived));
 			try {
-				var value = members.StaticFields.GetObjectValue ("inheritedStaticField.Ljava/lang/String;");
-				var actual = JniEnvironment.Strings.ToString (ref value, JniObjectReferenceOptions.CopyAndDispose);
-				Assert.AreEqual ("inherited target", actual);
+				using var type = new JniType (FieldRemapBase.RuntimeJniTypeName);
+				var expected = type.GetStaticField ("remappedInheritedStaticField", "Ljava/lang/String;");
+				var actual = members.StaticFields.GetFieldInfo ("inheritedStaticField.Ljava/lang/String;");
 
-				var updated = JniEnvironment.Strings.NewString ("updated target");
-				try {
-					members.StaticFields.SetValue ("inheritedStaticField.Ljava/lang/String;", updated);
-					value = members.StaticFields.GetObjectValue ("inheritedStaticField.Ljava/lang/String;");
-					actual = JniEnvironment.Strings.ToString (ref value, JniObjectReferenceOptions.CopyAndDispose);
-					Assert.AreEqual ("updated target", actual);
-				} finally {
-					JniObjectReference.Dispose (ref updated);
-					var original = JniEnvironment.Strings.NewString ("inherited target");
-					try {
-						members.StaticFields.SetValue ("inheritedStaticField.Ljava/lang/String;", original);
-					} finally {
-						JniObjectReference.Dispose (ref original);
-					}
-				}
-			} finally {
-				JniPeerMembers.Dispose (members);
-			}
-		}
-
-		[Test]
-		[Category ("NativeAOTIgnore")]
-		[Category ("TrimmableTypeMapUnsupported")]
-		public unsafe void FailedCurrentStaticMethodRemapFallsBackToBaseRemap ()
-		{
-			var members = new JniPeerMembers (FieldRemapDerived.JniTypeName, typeof (FieldRemapDerived));
-			try {
-				Assert.AreEqual (23, members.StaticMethods.InvokeInt32Method ("inheritedStaticMethod.()I", null));
+				Assert.AreEqual (expected.ID, actual.ID);
 			} finally {
 				JniPeerMembers.Dispose (members);
 			}
@@ -388,6 +379,40 @@ namespace Java.InteropTests
 		[Test]
 		[Category ("NativeAOTIgnore")]
 		[Category ("TrimmableTypeMapUnsupported")]
+		public void FailedCurrentInstanceMethodRemapFallsBackToRenamedBaseRemap ()
+		{
+			var members = new JniPeerMembers (FieldRemapDerived.JniTypeName, typeof (FieldRemapDerived));
+			try {
+				using var type = new JniType (FieldRemapBase.RuntimeJniTypeName);
+				var expected = type.GetInstanceMethod ("remappedInheritedInstanceMethod", "()I");
+				var actual = members.InstanceMethods.GetMethodInfo ("inheritedInstanceMethod.()I");
+
+				Assert.AreEqual (expected.ID, actual.ID);
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
+		public void FailedCurrentStaticMethodRemapFallsBackToRenamedBaseRemap ()
+		{
+			var members = new JniPeerMembers (FieldRemapDerived.JniTypeName, typeof (FieldRemapDerived));
+			try {
+				using var type = new JniType (FieldRemapBase.RuntimeJniTypeName);
+				var expected = type.GetStaticMethod ("remappedInheritedStaticMethod", "()I");
+				var actual = members.StaticMethods.GetMethodInfo ("inheritedStaticMethod.()I");
+
+				Assert.AreEqual (expected.ID, actual.ID);
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
 		public unsafe void MethodRemappingPrefersSpecificSignatures ()
 		{
 			var members = new JniPeerMembers (FieldRemapBase.JniTypeName, typeof (FieldRemapBase));
@@ -397,7 +422,7 @@ namespace Java.InteropTests
 
 				intArgument = new JniArgumentValue (2);
 				members.StaticMethods.InvokeVoidMethod ("remappedSpecificity.(I)V", &intArgument);
-				using var type = new JniType (FieldRemapBase.JniTypeName);
+				using var type = new JniType (FieldRemapBase.RuntimeJniTypeName);
 				var valueField = type.GetStaticField ("specificityValue", "I");
 				Assert.AreEqual (202, JniEnvironment.StaticFields.GetStaticIntField (type.PeerReference, valueField));
 
@@ -427,6 +452,7 @@ namespace Java.InteropTests
 			var method = JavaLangRemappingTestStringBuilder._members.InstanceMethods.GetMethodInfo ("indexOf.(Lnet/dot/jni/test/RenamedString;)I");
 			Assert.IsNotNull (method);
 		}
+#endif  // !__ANDROID__
 
 		[Test]
 		[Category ("NativeAOTIgnore")]
@@ -589,6 +615,17 @@ namespace Java.InteropTests
 			const string id = "remappedToStaticHashCode.()I";
 			return _members.InstanceMethods.InvokeVirtualInt32Method (id, this, null);
 		}
+
+		public static unsafe double remappedStaticPi ()
+		{
+			return _members.StaticFields.GetDoubleValue ("remappedStaticPi.D");
+		}
+
+		public static unsafe int remappedStaticAbs (int value)
+		{
+			var argument = new JniArgumentValue (value);
+			return _members.StaticMethods.InvokeInt32Method ("remappedStaticAbs.(I)I", &argument);
+		}
 	}
 
 	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
@@ -612,6 +649,7 @@ namespace Java.InteropTests
 	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
 	class FieldRemapBase : JavaObject {
 		internal    const    string         JniTypeName = "net/dot/jni/test/FieldRemapBase";
+		internal    const    string         RuntimeJniTypeName = "net/dot/jni/test/FieldRemapRenamedBase";
 		static      readonly JniPeerMembers _members = new JniPeerMembers (JniTypeName, typeof (FieldRemapBase));
 
 		public override JniPeerMembers JniPeerMembers => _members;

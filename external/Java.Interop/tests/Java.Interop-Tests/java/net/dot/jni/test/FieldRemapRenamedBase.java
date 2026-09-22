@@ -1,6 +1,6 @@
 package net.dot.jni.test;
 
-public class FieldRemapBase
+public class FieldRemapRenamedBase
 {
 	public boolean hiddenInstanceField;
 	public boolean remappedInstanceField;

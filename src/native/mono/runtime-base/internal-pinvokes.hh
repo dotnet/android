@@ -44,8 +44,4 @@ void* monodroid_dylib_mono_new ([[maybe_unused]] const char *libmono_path);
 void monodroid_dylib_mono_free ([[maybe_unused]] void *mono_imports);
 int monodroid_dylib_mono_init (void *mono_imports, [[maybe_unused]] const char *libmono_path);
 void* monodroid_get_dylib ();
-const char* _monodroid_lookup_replacement_type (const char *jniSimpleReference);
-const JniRemappingReplacementMethod* _monodroid_lookup_replacement_method_info (const char *jniSourceType, const char *jniMethodName, const char *jniMethodSignature);
-const char* _monodroid_lookup_reverse_type (const char *jniSimpleReference);
-const JniRemappingReplacementField* _monodroid_lookup_replacement_field_info (const char *jniSourceType, const char *jniFieldName, const char *jniFieldSignature);
 void _monodroid_detect_cpu_and_architecture (unsigned short *built_for_cpu, unsigned short *running_on_cpu, unsigned char *is64bit);

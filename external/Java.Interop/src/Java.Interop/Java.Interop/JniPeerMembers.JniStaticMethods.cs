@@ -39,43 +39,39 @@ namespace Java.Interop
 			var newMethod      = Members.GetReplacementMethodInfo (method, signature);
 			if (newMethod.HasValue) {
 				var info = newMethod.Value;
-				if (TryGetReplacementMethod (info, method, signature, out m)) {
-					return m;
+				JniType? t = CreateTargetType (info, Members);
+				try {
+					if (TryGetStaticMethod (t, info, method, signature, out m)) {
+						m.StaticRedirect = t;
+						t = null;
+						return m;
+					}
+				} finally {
+					t?.Dispose ();
 				}
 			}
 			if (Members.JniPeerType.TryGetStaticMethod (method, signature, out m)) {
 				return m;
 			}
-			newMethod = Members.GetBaseReplacementMethodInfo (method, signature);
+			newMethod = JniPeerMembers.GetBaseReplacementMethodInfo (Members.ManagedPeerType, method, signature);
 			if (newMethod.HasValue) {
 				var info = newMethod.Value;
-				if (TryGetReplacementMethod (info, method, signature, out m))
-					return m;
+				JniType? t = CreateTargetType (info, Members);
+				try {
+					if (TryGetStaticMethod (t, info, method, signature, out m)) {
+						m.StaticRedirect = t;
+						t = null;
+						return m;
+					}
+				} finally {
+					t?.Dispose ();
+				}
 			}
 			m   = FindInFallbackTypes (method, signature);
 			if (m != null) {
 				return m;
 			}
 			return Members.JniPeerType.GetStaticMethod (method, signature);
-		}
-
-		bool TryGetReplacementMethod (
-			JniRuntime.ReplacementMethodInfo info,
-			ReadOnlySpan<char> fallbackName,
-			ReadOnlySpan<char> fallbackSignature,
-			[System.Diagnostics.CodeAnalysis.NotNullWhen (true)] out JniMethodInfo? method)
-		{
-			JniType? type = CreateTargetType (info, Members);
-			try {
-				if (!TryGetStaticMethod (type, info, fallbackName, fallbackSignature, out method))
-					return false;
-
-				method.StaticRedirect = type;
-				type = null;
-				return true;
-			} finally {
-				type?.Dispose ();
-			}
 		}
 
 #pragma warning disable CA1801

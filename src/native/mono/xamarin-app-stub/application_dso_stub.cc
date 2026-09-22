@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <managed-interface.hh>
 #include "xamarin-app.hh"
 #include <shared/xxhash.hh>
 
@@ -313,48 +314,13 @@ const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[] = {
 	},
 };
 
-static const JniRemappingIndexFieldEntry some_java_type_one_fields[] = {
-	{
-		.name = {
-			.length = 14,
-			.str = "old_field_name",
-		},
-
-		.signature = {
-			.length = 16,
-			.str = "Lsome/java/type;",
-		},
-
-		.replacement = {
-			.target_type = "some/java/target_type_one",
-			.target_name = "new_field_name",
-			.target_signature = "Lanother/java/type;",
-		}
-	},
+extern "C" const xamarin::android::JniRemappingData jni_remapping_data {
+	.type_replacements = jni_remapping_type_replacements,
+	.reverse_type_replacements = nullptr,
+	.method_replacement_index = jni_remapping_method_replacement_index,
+	.field_replacement_index = nullptr,
+	.type_replacement_count = 2,
+	.reverse_type_replacement_count = 0,
+	.method_replacement_index_count = 2,
+	.field_replacement_index_count = 0,
 };
-
-const JniRemappingIndexFieldTypeEntry jni_remapping_field_replacement_index[] = {
-	{
-		.name = {
-			.length = 18,
-			.str = "some/java/type_one",
-		},
-		.field_count = 1,
-		.fields = some_java_type_one_fields,
-	},
-};
-
-const JniRemappingTypeReplacementEntry jni_remapping_reverse_type_replacements[] = {
-	{
-		.name = {
-			.length = 17,
-			.str = "another/java/type",
-		},
-		.replacement = "some/java/type",
-	},
-};
-
-const uint32_t jni_remapping_type_replacement_count = 2;
-const uint32_t jni_remapping_reverse_type_replacement_count = 1;
-const uint32_t jni_remapping_method_replacement_index_count = 2;
-const uint32_t jni_remapping_field_replacement_index_count = 1;
