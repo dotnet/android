@@ -262,6 +262,9 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4322](xa4322.md): Skipping library ProGuard configuration file '{file}' (from {source}) because it contains the unsupported global option '{option}'. Global ProGuard options are only allowed in application projects.
 + [XA4323](xa4323.md): Ignoring directory '{directory}' as it does not exist.
 + [XA4324](xa4324.md): [{arch}] Unable to delete source file '{file}'.
++ [XA4327](xa4327.md): Failed to generate the R8 JNI remapping data. {message}
++ [XA4328](xa4328.md): The R8 JNI remapping data is incomplete. {message}
++ [XA4329](xa4329.md): Invalid or unsupported R8 obfuscation configuration.
 
 ## XA5xxx: GCC and toolchain
 
