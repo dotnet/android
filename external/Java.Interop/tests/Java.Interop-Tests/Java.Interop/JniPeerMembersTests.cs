@@ -279,6 +279,36 @@ namespace Java.InteropTests
 		[Test]
 		[Category ("NativeAOTIgnore")]
 		[Category ("TrimmableTypeMapUnsupported")]
+		public void ConcurrentRemappedMethodLookupDoesNotLeakGlobalReferences ()
+		{
+			const int iterationCount = 20;
+			const int concurrency = 16;
+
+			RunIteration ();
+			int grefsBefore = JniEnvironment.Runtime.GlobalReferenceCount;
+			for (int i = 0; i < iterationCount; i++)
+				RunIteration ();
+			int grefsAfter = JniEnvironment.Runtime.GlobalReferenceCount;
+
+			Assert.AreEqual (grefsBefore, grefsAfter);
+
+			static void RunIteration ()
+			{
+				var members = new JniPeerMembers (JavaLangRemappingTestObject.JniTypeName, typeof (JavaLangRemappingTestObject));
+				try {
+					Parallel.For (
+						0,
+						concurrency,
+						_ => members.InstanceMethods.GetMethodInfo ("remappedToStaticHashCode.()I"));
+				} finally {
+					JniPeerMembers.Dispose (members);
+				}
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
 		public void ReplaceInstanceFieldName ()
 		{
 			// Resolves `java.io.ByteArrayInputStream.pos`, not the nonexistent `remappedToPos`.

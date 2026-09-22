@@ -26,11 +26,16 @@ namespace Java.Interop
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
-			return StaticMethods.GetOrAdd (encodedMember, static (member, methods) => {
-				ReadOnlySpan<char> method, signature;
-				JniPeerMembers.GetNameAndSignature (member, out method, out signature);
-				return methods.GetMethodInfo (method, signature);
-			}, this);
+			return GetOrAdd (
+				StaticMethods,
+				encodedMember,
+				static (member, methods) => {
+					ReadOnlySpan<char> method, signature;
+					JniPeerMembers.GetNameAndSignature (member, out method, out signature);
+					return methods.GetMethodInfo (method, signature);
+				},
+				this,
+				static method => method.StaticRedirect?.Dispose ());
 		}
 
 		JniMethodInfo GetMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
