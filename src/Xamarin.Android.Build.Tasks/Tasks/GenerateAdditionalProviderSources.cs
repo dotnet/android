@@ -65,11 +65,7 @@ public sealed class GenerateAdditionalProviderSources : AndroidTask
 	void Generate (NativeCodeGenStateObject codeGenState)
 	{
 		// Create additional runtime provider java sources.
-		bool isMonoVM = androidRuntime switch {
-			Xamarin.Android.Tasks.AndroidRuntime.MonoVM => true,
-			Xamarin.Android.Tasks.AndroidRuntime.CoreCLR => true,
-			_ => false,
-		};
+		bool isMonoVM = androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.CoreCLR;
 
 		WriteAdditionalRuntimeProviderSources (OutputDirectory, isMonoVM, AdditionalProviderSources);
 

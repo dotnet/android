@@ -33,8 +33,6 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[]? NativeLibrariesNoJniPreload { get; set; }
 		public ITaskItem[]? NativeLibrariesAlwaysJniPreload { get; set; }
 
-		public ITaskItem[]? MonoComponents { get; set; }
-
 		public ITaskItem[]? SatelliteAssemblies { get; set; }
 
 		public bool UseAssemblyStore { get; set; }
@@ -52,9 +50,6 @@ namespace Xamarin.Android.Tasks
 		public bool EnablePreloadAssembliesDefault { get; set; }
 
 		[Required]
-		public bool TargetsCLR { get; set; }
-
-		[Required]
 		public string AndroidRuntime { get; set; } = "";
 
 		public bool EnableMarshalMethods { get; set; }
@@ -66,18 +61,12 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public bool EmitLlvmIrComments { get; set; }
 
-		public string? RuntimeConfigBinFilePath { get; set; }
 		public string ProjectRuntimeConfigFilePath { get; set; } = String.Empty;
 		public string? ProjectRuntimeConfigDevFilePath { get; set; }
-		public string? BoundExceptionType { get; set; }
 
 		public string? PackageNamingPolicy { get; set; }
 		public string? Debug { get; set; }
 		public ITaskItem[]? Environments { get; set; }
-		public string? AndroidAotMode { get; set; }
-		public bool AndroidAotEnableLazyLoad { get; set; }
-		public bool EnableLLVM { get; set; }
-		public string? TlsProvider { get; set; }
 		public string? AndroidSequencePointsMode { get; set; }
 		public bool EnableSGenConcurrent { get; set; }
 		public string? CustomBundleConfigFile { get; set; }
@@ -102,15 +91,8 @@ namespace Xamarin.Android.Tasks
 		{
 			androidRuntime = MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime);
 
-			bool usesMonoAOT = false;
-
 			if (!Enum.TryParse (PackageNamingPolicy, out PackageNamingPolicy pnp)) {
 				pnp = PackageNamingPolicyEnum.LowercaseCrc64;
-			}
-
-			AotMode aotMode = AotMode.None;
-			if (!AndroidAotMode.IsNullOrEmpty () && Aot.GetAndroidAotMode (AndroidAotMode, out aotMode) && aotMode != AotMode.None) {
-				usesMonoAOT = true;
 			}
 
 			SequencePointsMode sequencePointsMode;
@@ -133,15 +115,6 @@ namespace Xamarin.Android.Tasks
 				// process in the native code. This is just a precaution, because NativeAOT builds should
 				// not even use this task.
 				envBuilder.EnvironmentVariables.Clear ();
-			}
-
-			global::Android.Runtime.BoundExceptionType boundExceptionType;
-			if (String.IsNullOrEmpty (BoundExceptionType) || MonoAndroidHelper.StringEquals (BoundExceptionType, "System", StringComparison.OrdinalIgnoreCase)) {
-				boundExceptionType = global::Android.Runtime.BoundExceptionType.System;
-			} else if (MonoAndroidHelper.StringEquals (BoundExceptionType, "Java", StringComparison.OrdinalIgnoreCase)) {
-				boundExceptionType = global::Android.Runtime.BoundExceptionType.Java;
-			} else {
-				throw new InvalidOperationException ($"Unsupported BoundExceptionType value '{BoundExceptionType}'");
 			}
 
 			int assemblyNameWidth = 0;
@@ -241,19 +214,6 @@ namespace Xamarin.Android.Tasks
 				assemblyNameWidth += abiNameLength + 2; // room for '/' and the terminating NUL
 			}
 
-			MonoComponent monoComponents = MonoComponent.None;
-			if (MonoComponents != null && MonoComponents.Length > 0) {
-				foreach (ITaskItem item in MonoComponents) {
-					if (MonoAndroidHelper.StringEquals ("diagnostics_tracing", item.ItemSpec, StringComparison.OrdinalIgnoreCase)) {
-						monoComponents |= MonoComponent.Tracing;
-					} else if (MonoAndroidHelper.StringEquals ("hot_reload", item.ItemSpec, StringComparison.OrdinalIgnoreCase)) {
-						monoComponents |= MonoComponent.HotReload;
-					} else if (MonoAndroidHelper.StringEquals ("debugger", item.ItemSpec, StringComparison.OrdinalIgnoreCase)) {
-						monoComponents |= MonoComponent.Debugger;
-					}
-				}
-			}
-
 			var uniqueNativeLibraries = new List<ITaskItem> ();
 			var seenNativeLibraryNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 			if (NativeLibraries != null) {
@@ -269,60 +229,27 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
-			LLVMIR.LlvmIrComposer appConfigAsmGen;
-
-			if (TargetsCLR) {
-				Dictionary<string, string>? runtimeProperties = RuntimePropertiesParser.ParseConfig (ProjectRuntimeConfigFilePath, ProjectRuntimeConfigDevFilePath);
-				appConfigAsmGen = new ApplicationConfigNativeAssemblyGeneratorCLR (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, runtimeProperties, Log) {
-					UsesAssemblyPreload = envBuilder.Parser.UsesAssemblyPreload,
-					AndroidPackageName = AndroidPackageName,
-					PackageNamingPolicy = pnp,
-					JniAddNativeMethodRegistrationAttributePresent = NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent,
-					NumberOfAssembliesInApk = assemblyCount,
-					BundledAssemblyNameWidth = assemblyNameWidth,
-					NativeLibraries = uniqueNativeLibraries,
-					NativeLibrariesNoJniPreload = NativeLibrariesNoJniPreload,
-					NativeLibrariesAlwaysJniPreload = NativeLibrariesAlwaysJniPreload,
-					AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
-					JNIEnvInitializeToken = jnienv_initialize_method_token,
-					JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
-					JniRemappingReplacementTypeCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementTypeCount,
-					JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
-					MarshalMethodsEnabled = EnableMarshalMethods,
-					IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
-					HaveAssemblyStore = UseAssemblyStore,
-				};
-			} else {
-				appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, Log) {
-					UsesMonoAOT = usesMonoAOT,
-					UsesMonoLLVM = EnableLLVM,
-					UsesAssemblyPreload = envBuilder.Parser.UsesAssemblyPreload,
-					MonoAOTMode = aotMode.ToString ().ToLowerInvariant (),
-					AotEnableLazyLoad = AndroidAotEnableLazyLoad,
-					AndroidPackageName = AndroidPackageName,
-					BrokenExceptionTransitions = envBuilder.Parser.BrokenExceptionTransitions,
-					PackageNamingPolicy = pnp,
-					BoundExceptionType = boundExceptionType,
-					JniAddNativeMethodRegistrationAttributePresent = NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent,
-					HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
-					NumberOfAssembliesInApk = assemblyCount,
-					BundledAssemblyNameWidth = assemblyNameWidth,
-					MonoComponents = (MonoComponent)monoComponents,
-					NativeLibraries = uniqueNativeLibraries,
-					NativeLibrariesNoJniPreload = NativeLibrariesNoJniPreload,
-					NativeLibrariesAlwaysJniPreload = NativeLibrariesAlwaysJniPreload,
-					HaveAssemblyStore = UseAssemblyStore,
-					AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
-					JNIEnvInitializeToken = jnienv_initialize_method_token,
-					JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
-					JniRemappingReplacementTypeCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementTypeCount,
-					JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
-					MarshalMethodsEnabled = EnableMarshalMethods,
-					IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
-				};
-			}
+			Dictionary<string, string>? runtimeProperties = RuntimePropertiesParser.ParseConfig (ProjectRuntimeConfigFilePath, ProjectRuntimeConfigDevFilePath);
+			LLVMIR.LlvmIrComposer appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, runtimeProperties, Log) {
+				UsesAssemblyPreload = envBuilder.Parser.UsesAssemblyPreload,
+				AndroidPackageName = AndroidPackageName,
+				PackageNamingPolicy = pnp,
+				JniAddNativeMethodRegistrationAttributePresent = NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent,
+				NumberOfAssembliesInApk = assemblyCount,
+				BundledAssemblyNameWidth = assemblyNameWidth,
+				NativeLibraries = uniqueNativeLibraries,
+				NativeLibrariesNoJniPreload = NativeLibrariesNoJniPreload,
+				NativeLibrariesAlwaysJniPreload = NativeLibrariesAlwaysJniPreload,
+				AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
+				JNIEnvInitializeToken = jnienv_initialize_method_token,
+				JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
+				JniRemappingReplacementTypeCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementTypeCount,
+				JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
+				MarshalMethodsEnabled = EnableMarshalMethods,
+				IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
+				HaveAssemblyStore = UseAssemblyStore,
+			};
 			LLVMIR.LlvmIrModule appConfigModule = appConfigAsmGen.Construct ();
 			appConfigAsmGen.EmitComments = EmitLlvmIrComments;
 
@@ -362,9 +289,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (android_runtime_jnienv_class_token == -1 || jnienv_initialize_method_token == -1 || jnienv_registerjninatives_method_token == -1) {
-				if (!TargetsCLR) {
-					throw new InvalidOperationException ($"Required JNIEnvInit tokens not found in '{assemblyFilePath}' (class={android_runtime_jnienv_class_token}, init={jnienv_initialize_method_token}, register={jnienv_registerjninatives_method_token}).");
-				}
 
 				// In the trimmable typemap path (CoreCLR), some JNIEnvInit methods may be trimmed.
 				// Use token 0 for missing tokens — native code will skip them.

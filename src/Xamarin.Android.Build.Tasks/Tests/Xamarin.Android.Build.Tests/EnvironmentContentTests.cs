@@ -30,7 +30,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			string supportedAbis = runtime switch {
-				AndroidRuntime.MonoVM  => "armeabi-v7a;x86",
 				AndroidRuntime.CoreCLR => "arm64-v8a;x86_64",
 				AndroidRuntime.NativeAOT => "arm64-v8a;x86_64",
 				_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")

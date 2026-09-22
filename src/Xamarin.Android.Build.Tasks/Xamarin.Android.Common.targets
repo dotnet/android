@@ -44,7 +44,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectJarContentFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNativeFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNonEmptyDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CollectRuntimeConfigFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Microsoft.Android.Tasks.CompressAssemblies" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.CompressAssemblies" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.ComputeHash" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -333,9 +332,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' and ('$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true') ">false</AndroidUseAssemblyStore>
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
   <_AndroidUseAssemblyStore>$(AndroidUseAssemblyStore)</_AndroidUseAssemblyStore>
-  <!-- The assembly store loading mechanism is dictated by the runtime and MUST NOT be overridden
-       (see the CoreCLR block below). MonoVM only supports the classic assembly store, which is
-       located at runtime by scanning the APK. -->
   <_AndroidDlopenAssemblyStore>false</_AndroidDlopenAssemblyStore>
 </PropertyGroup>
 
@@ -352,12 +348,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </PropertyGroup>
 
 <PropertyGroup>
-  <_AndroidAotStripLibraries Condition=" '$(_AndroidAotStripLibraries)' == '' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</_AndroidAotStripLibraries>
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(UsingMicrosoftNETSdkRazor)' == 'true') ">False</AndroidEnableMarshalMethods>
-  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and '$(_AndroidRuntime)' == 'MonoVM' and '$(PublishReadyToRun)' != 'true' ">True</AndroidEnableMarshalMethods>
   <!-- NOTE: temporarily disable for NativeAOT and CoreCLR for now -->
-  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(_AndroidRuntime)' != 'MonoVM' or '$(PublishReadyToRun)' == 'true') ">False</AndroidEnableMarshalMethods>
+  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' ">False</AndroidEnableMarshalMethods>
 
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
@@ -932,7 +926,6 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidIntermediateJavaSourceDirectory>$(IntermediateOutputPath)android\src\</_AndroidIntermediateJavaSourceDirectory>
 	<_AndroidIntermediateDexOutputDirectory>$(IntermediateOutputPath)android\bin\</_AndroidIntermediateDexOutputDirectory>
 	<_AndroidIntermediateJavaClassDirectory>$(IntermediateOutputPath)android\bin\classes\</_AndroidIntermediateJavaClassDirectory>
-	<_AndroidAotBinDirectory>$(IntermediateOutputPath)aot</_AndroidAotBinDirectory>
 	<_AndroidResgenFlagFile>$(IntermediateOutputPath)R.cs.flag</_AndroidResgenFlagFile>
 	<_AndroidResFlagFile>$(IntermediateOutputPath)res.flag</_AndroidResFlagFile>
 	<_AndroidLinkFlag>$(IntermediateOutputPath)link.flag</_AndroidLinkFlag>
@@ -1673,7 +1666,7 @@ because xbuild doesn't support framework reference assemblies.
     <_GeneratedAndroidEnvironment Include="mono.enable_assembly_preload=0" Condition=" '$(AndroidEnablePreloadAssemblies)' != 'True' " />
     <_GeneratedAndroidEnvironment Include="DOTNET_MODIFIABLE_ASSEMBLIES=Debug" Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' " />
     <_GeneratedAndroidEnvironment Include="DOTNET_DiagnosticPorts=$(DiagnosticConfiguration)" Condition=" '$(DiagnosticConfiguration)' != '' " />
-    <_GeneratedAndroidEnvironment Include="DOTNET_EnableCrashReport=1" Condition=" '$(EnableCrashReport)' == 'true' and '$(UseMonoRuntime)' != 'true' " />
+    <_GeneratedAndroidEnvironment Include="DOTNET_EnableCrashReport=1" Condition=" '$(EnableCrashReport)' == 'true' " />
     <!-- RuntimeEnvironmentVariable items come from 'dotnet run -e NAME=VALUE' -->
     <_GeneratedAndroidEnvironment Include="@(RuntimeEnvironmentVariable->'%(Identity)=%(Value)')" />
   </ItemGroup>
@@ -1734,21 +1727,9 @@ because xbuild doesn't support framework reference assemblies.
   <Touch Files="$(_AndroidStampDirectory)_GenerateAndroidRemapNativeCode.stamp" AlwaysCreate="True" />
 </Target>
 
-<Target Name="_RunAotForAllRIDs"
-        Condition=" '$(_AndroidUseMarshalMethods)' == 'True' "
-        Returns="@(ResolvedFileToPublish)">
-  <MSBuild
-      Projects="@(_ProjectToBuild)"
-      BuildInParallel="$(_AndroidBuildRuntimeIdentifiersInParallel)"
-      Targets="_AndroidAotAndComputeFilesToPublishForRuntimeIdentifiers">
-    <Output TaskParameter="TargetOutputs" ItemName="ResolvedFileToPublish" />
-  </MSBuild>
-</Target>
-
 <PropertyGroup>
   <_GeneratePackageManagerJavaDependsOn>
     _GenerateJavaStubs;
-    _RunAotForAllRIDs;
     _ManifestMerger;
     _ConvertCustomView;
     $(_AfterConvertCustomView);
@@ -1820,13 +1801,8 @@ because xbuild doesn't support framework reference assemblies.
       NativeLibraries="@(_AllNativeLibraries)"
       NativeLibrariesNoJniPreload="@(_AndroidNativeLibraryNeverJniPreload);@(AndroidNativeLibraryNoJniPreload)"
       NativeLibrariesAlwaysJniPreload="@(_AndroidNativeLibraryAlwaysJniPreload)"
-      MonoComponents="@(_MonoComponent)"
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
       Environments="@(_EnvironmentFiles)"
-      AndroidAotMode="$(AndroidAotMode)"
-      AndroidAotEnableLazyLoad="$(AndroidAotEnableLazyLoad)"
-      EnableLLVM="$(EnableLLVM)"
-      TlsProvider="$(AndroidTlsProvider)"
       Debug="$(AndroidIncludeDebugSymbols)"
       EmitLlvmIrComments="$(_AndroidEmitLlvmIrComments)"
       AndroidSequencePointsMode="$(_SequencePointsMode)"
@@ -1835,12 +1811,9 @@ because xbuild doesn't support framework reference assemblies.
       AndroidPackageName="$(_AndroidPackage)"
       EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
-      BoundExceptionType="$(AndroidBoundExceptionType)"
-      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
       UseAssemblyStore="$(_AndroidUseAssemblyStore)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
-      TargetsCLR="$(_AndroidUseCLR)"
       AndroidRuntime="$(_AndroidRuntime)"
       ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
       ProjectRuntimeConfigDevFilePath="$(ProjectRuntimeConfigDevFilePath)"
@@ -2282,10 +2255,8 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="AssembliesToAddToArchive" ItemName="_BuildApkAssembliesToAddToArchive" />
   </CreateAssemblyStore>
 
-  <!-- The dlopen()-based assembly-store layout is dictated by the runtime and MUST NOT be overridden:
-       CoreCLR's host resolves the store only via dlopen()+dlsym() (there is no ZIP-scanning fallback),
-       while MonoVM only supports the classic ZIP-scanned store. An accidental override (e.g. from a
-       later import) would abort the app at startup, so fail fast here where the value is consumed. -->
+  <!-- CoreCLR's host resolves the assembly store only via dlopen()+dlsym(), with no
+       ZIP-scanning fallback. Fail fast if a later import overrides this value. -->
   <Error
       Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidDlopenAssemblyStore)' != 'true' "
       Text="Internal error: _AndroidDlopenAssemblyStore must be 'true' for the CoreCLR runtime, but was '$(_AndroidDlopenAssemblyStore)'. This property is dictated by the runtime and must not be overridden." />
@@ -2321,17 +2292,6 @@ because xbuild doesn't support framework reference assemblies.
       LibraryProjectJars="@(ExtractedJarImports)">
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectJarContentFilesForArchive>
-
-  <!-- CoreCLR builds embed runtime config in libxamarin-app.so -->
-  <CollectRuntimeConfigFilesForArchive
-      Condition=" '$(_AndroidRuntime)' == 'MonoVM' "
-      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-      IntermediateOutputPath="$(IntermediateOutputPath)"
-      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-      SupportedAbis="@(_BuildTargetAbis)"
-      RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
-    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
-  </CollectRuntimeConfigFilesForArchive>
 
   <CollectNativeFilesForArchive
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
@@ -2440,17 +2400,6 @@ because xbuild doesn't support framework reference assemblies.
       LibraryProjectJars="@(ExtractedJarImports)">
     <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
   </CollectJarContentFilesForArchive>
-
-  <!-- CoreCLR builds embed runtime config in libxamarin-app.so -->
-  <CollectRuntimeConfigFilesForArchive
-      Condition=" '$(_AndroidRuntime)' == 'MonoVM' "
-      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-      IntermediateOutputPath="$(IntermediateOutputPath)"
-      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-      SupportedAbis="@(_BuildTargetAbis)"
-      RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
-    <Output TaskParameter="FilesToAddToArchive" ItemName="FilesToAddToArchive" />
-  </CollectRuntimeConfigFilesForArchive>
 
   <CollectNativeFilesForArchive
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
@@ -2886,7 +2835,6 @@ because xbuild doesn't support framework reference assemblies.
  	<RemoveDirFixed Directories="$(IntermediateOutputPath)java" Condition="Exists ('$(IntermediateOutputPath)java')" />
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)proguard" Condition="Exists ('$(IntermediateOutputPath)proguard')" />
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediateResourceCache)" Condition="Exists ('$(MonoAndroidIntermediateResourceCache)')" />
-	<RemoveDirFixed Directories="$(_AndroidAotBinDirectory)" Condition="Exists ('$(_AndroidAotBinDirectory)')" />
 	<RemoveDirFixed Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="Exists ('$(_AndroidLibraryFlatArchivesDirectory)')" />
 	<RemoveDirFixed Directories="$(_AndroidLibraryFlatFilesDirectory)" Condition="Exists ('$(_AndroidLibraryFlatFilesDirectory)')" />
 	<RemoveDirFixed Directories="$(_AndroidStampDirectory)" Condition="Exists ('$(_AndroidStampDirectory)')" />

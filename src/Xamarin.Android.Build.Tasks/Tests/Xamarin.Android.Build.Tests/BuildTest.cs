@@ -183,9 +183,7 @@ namespace Xamarin.Android.Build.Tests
 				helper.AssertContainsEntry ($"assemblies/de-DE/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
 			}
 			foreach (var abi in rids.Select (AndroidRidAbiHelper.RuntimeIdentifierToAbi)) {
-				if (runtime == AndroidRuntime.MonoVM) {
-					helper.AssertContainsEntry ($"lib/{abi}/libmonosgen-2.0.so");
-				} else if (runtime == AndroidRuntime.CoreCLR) {
+				if (runtime == AndroidRuntime.CoreCLR) {
 					helper.AssertContainsEntry ($"lib/{abi}/libcoreclr.so");
 				} else if (runtime == AndroidRuntime.NativeAOT) {
 					helper.AssertContainsEntry ($"lib/{abi}/lib{proj.ProjectName}.so");
@@ -417,19 +415,12 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable]
-		public void CheckAssemblyCounts ([Values (true, false)] bool isRelease, [Values (true, false)] bool aot,
+		public void CheckAssemblyCounts ([Values (true, false)] bool isRelease,
 				                 [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (isRelease == false && aot == true) {
-				Assert.Ignore ("Not testing AOT with Debug builds");
-				return;
-			}
-
-			bool aotAssemblies = aot && runtime == AndroidRuntime.MonoVM;
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 				EmbedAssembliesIntoApk = true,
-				AotAssemblies = aotAssemblies,
 			};
 			proj.SetRuntime (runtime);
 
@@ -447,17 +438,10 @@ namespace Xamarin.Android.Build.Tests
 				EnvironmentHelper.IApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles, runtime);
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
 
-				if (aotAssemblies) {
-					foreach (var env in envFiles) {
-						StringAssert.Contains ("libaot-Mono.Android.dll.so", File.ReadAllText (env.Path));
-					}
-				}
-
 				string apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
 				uint numberOfAssembliesInApk = runtime switch {
-					AndroidRuntime.MonoVM  => ((EnvironmentHelper.ApplicationConfig_MonoVM)app_config).number_of_assemblies_in_apk,
-					AndroidRuntime.CoreCLR => ((EnvironmentHelper.ApplicationConfig_CoreCLR)app_config).number_of_assemblies_in_apk,
+					AndroidRuntime.CoreCLR => ((EnvironmentHelper.ApplicationConfig)app_config).number_of_assemblies_in_apk,
 					_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 				};
 
@@ -493,10 +477,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (runtime);
 			proj.ProjectName = testName;
 			proj.IsRelease = true;
-
-			if (runtime == AndroidRuntime.MonoVM) {
-				proj.AotAssemblies = aot;
-			}
 
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -842,7 +822,7 @@ public class Test
 		public void BuildApplicationWithSpacesInPath ([Values (true, false)] bool enableMultiDex, [Values ("", "r8")] string linkTool, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
-			bool aotAssemblies = runtime == AndroidRuntime.MonoVM;
+			const bool aotAssemblies = false;
 			if (IgnoreUnsupportedConfiguration (runtime, aot: aotAssemblies, release: isRelease)) {
 				return;
 			}
@@ -2304,7 +2284,6 @@ public class ToolbarEx {
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR)]
-		[TestCase (AndroidRuntime.MonoVM)]
 		public void BuildDoesNotModifyNuGetPackageCache (AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -2333,9 +2312,6 @@ public class ToolbarEx {
 				},
 			};
 			proj.SetRuntime (runtime);
-			if (runtime == AndroidRuntime.MonoVM) {
-				proj.SetProperty ("_DisableCheckForUnsupportedMonoMobileRuntime", "true");
-			}
 			proj.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
 			proj.SetProperty (KnownProperties.PublishTrimmed, true.ToString ());
 			proj.MainActivity = proj.DefaultMainActivity
@@ -2386,10 +2362,8 @@ public class ToolbarEx {
 		// TODO: [TestCase (false, AndroidRuntime.NativeAOT)]
 		public void SimilarAndroidXAssemblyNames (bool publishTrimmed, AndroidRuntime runtime)
 		{
-			bool aotAssemblies = runtime == AndroidRuntime.MonoVM && publishTrimmed;
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
-				AotAssemblies = aotAssemblies,
 				PackageReferences = {
 					new Package { Id = "Xamarin.AndroidX.CustomView", Version = "1.1.0.17" },
 					new Package { Id = "Xamarin.AndroidX.CustomView.PoolingContainer", Version = "1.0.0.4" },

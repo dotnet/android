@@ -177,12 +177,11 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 		var pinvokePreserveBaseAsmFilePath = EnableNativeRuntimeLinking ? Path.Combine (EnvironmentOutputDirectory, $"pinvoke_preserve.{targetAbi}") : null;
 		var marshalMethodsLlFilePath = $"{marshalMethodsBaseAsmFilePath}.ll";
 		var pinvokePreserveLlFilePath = pinvokePreserveBaseAsmFilePath != null ? $"{pinvokePreserveBaseAsmFilePath}.ll" : null;
-		var (assemblyCount, uniqueAssemblyNames) = GetAssemblyCountAndUniqueNames ();
+		var (_, uniqueAssemblyNames) = GetAssemblyCountAndUniqueNames ();
 
 		// Create the appropriate runtime-specific generator
 		MarshalMethodsNativeAssemblyGenerator marshalMethodsAsmGen = androidRuntime switch {
-			Tasks.AndroidRuntime.MonoVM => MakeMonoGenerator (),
-			Tasks.AndroidRuntime.CoreCLR => MakeCoreCLRGenerator (),
+			Tasks.AndroidRuntime.CoreCLR => MakeGenerator (),
 			_ => throw new NotSupportedException ($"Internal error: unsupported runtime type '{androidRuntime}'")
 		};
 
@@ -224,39 +223,14 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 		}
 
 		/// <summary>
-		/// Creates a MonoVM-specific marshal methods generator.
-		/// Handles both enabled and disabled marshal methods scenarios.
-		/// </summary>
-		/// <returns>A configured MonoVM marshal methods generator.</returns>
-		MarshalMethodsNativeAssemblyGenerator MakeMonoGenerator ()
-		{
-			if (EnableMarshalMethods) {
-				return new MarshalMethodsNativeAssemblyGeneratorMonoVM (
-					Log,
-					assemblyCount,
-					uniqueAssemblyNames,
-					EnsureCodeGenState (nativeCodeGenStates, targetArch)
-				);
-			}
-
-			// Generate empty/minimal code when marshal methods are disabled
-			return new MarshalMethodsNativeAssemblyGeneratorMonoVM (
-				Log,
-				targetArch,
-				assemblyCount,
-				uniqueAssemblyNames
-			);
-		}
-
-		/// <summary>
 		/// Creates a CoreCLR-specific marshal methods generator.
 		/// Handles both enabled and disabled marshal methods scenarios.
 		/// </summary>
 		/// <returns>A configured CoreCLR marshal methods generator.</returns>
-		MarshalMethodsNativeAssemblyGenerator MakeCoreCLRGenerator ()
+		MarshalMethodsNativeAssemblyGenerator MakeGenerator ()
 		{
 			if (EnableMarshalMethods) {
-				return new MarshalMethodsNativeAssemblyGeneratorCoreCLR (
+				return new MarshalMethodsNativeAssemblyGenerator (
 					Log,
 					uniqueAssemblyNames,
 					EnsureCodeGenState (nativeCodeGenStates, targetArch)
@@ -264,7 +238,7 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 			}
 
 			// Generate empty/minimal code when marshal methods are disabled
-			return new MarshalMethodsNativeAssemblyGeneratorCoreCLR (
+			return new MarshalMethodsNativeAssemblyGenerator (
 				Log,
 				targetArch,
 				uniqueAssemblyNames

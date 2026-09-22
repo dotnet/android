@@ -17,7 +17,7 @@
     <_StandardLibraryPath Condition=" '$(TargetFrameworkVersion)' == '' ">$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPathToStandardLibraries('.NETFramework', 'v4.7.2', ''))</_StandardLibraryPath>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(UsingMicrosoftNETSdk)' != 'true' And '$(_StandardLibraryPath)' != '' ">v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(UsingMicrosoftNETSdk)' != 'true' ">v4.7.1</TargetFrameworkVersion>
-    <!-- The min API level supported by Microsoft.Android.Sdk, for all runtimes (MonoVM, CoreCLR, NativeAOT).
+    <!-- The min API level supported by Microsoft.Android.Sdk, for all runtimes (CoreCLR and NativeAOT).
          Must match $(AndroidApiLevelMin) in dotnet/runtime's Directory.Build.props. -->
     <AndroidMinimumDotNetApiLevel Condition="'$(AndroidMinimumDotNetApiLevel)' == ''">24</AndroidMinimumDotNetApiLevel>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
@@ -265,9 +265,6 @@
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\Ndk.targets" />
   <ItemGroup>
     <AndroidAbiAndRuntimeFlavor
-        Include="@(AndroidSupportedTargetJitAbi->WithMetadataValue('SupportMonoVM', 'True'))"
-        AndroidRuntime="Mono" />
-    <AndroidAbiAndRuntimeFlavor
         Include="@(AndroidSupportedTargetJitAbi->WithMetadataValue('SupportNativeAOT', 'True'))"
         AndroidRuntime="NativeAOT" />
     <AndroidAbiAndRuntimeFlavor
@@ -278,7 +275,6 @@
   <!-- These properties serve the purpose of not duplicating the strings used by
        package creation tools -->
   <PropertyGroup>
-    <_MonoRuntimeFlavorDirName>mono</_MonoRuntimeFlavorDirName>
     <_CLRRuntimeFlavorDirName>clr</_CLRRuntimeFlavorDirName>
     <_NativeAotRuntimeFlavorDirName>nativeaot</_NativeAotRuntimeFlavorDirName>
   </PropertyGroup>

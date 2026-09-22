@@ -32,7 +32,6 @@
     <Project Path="src/Mono.Android/Mono.Android.csproj" />
     <Project Path="src/native/cmake-config/cmake-config.csproj" />
     <Project Path="src/native/native-clr.csproj" />
-    <Project Path="src/native/native-mono.csproj" />
     <Project Path="src/native/native-nativeaot.csproj" />
     <Project Path="src/openjdk/openjdk.csproj" />
     <Project Path="src/r8/r8.csproj" />

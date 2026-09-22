@@ -51,7 +51,7 @@ namespace Android.App {
 			try {
 				_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, null);
 			} finally {
-				if (!RuntimeFeature.IsMonoRuntime && RuntimeFeature.StartupNoGCRegion) {
+				if (RuntimeFeature.StartupNoGCRegion) {
 					StartupNoGCRegion.End ();
 				}
 			}

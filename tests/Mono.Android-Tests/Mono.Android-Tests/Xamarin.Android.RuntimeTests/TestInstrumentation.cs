@@ -22,12 +22,10 @@ namespace Xamarin.Android.RuntimeTests
 			get {
 				var categories = new List<string> ();
 
-				if (!Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime) {
-					// CoreCLR-specific exclusions
-					// TODO: https://github.com/dotnet/android/issues/10069
-					categories.Add ("CoreCLRIgnore");
-					categories.Add ("NTLM");
-				}
+				// CoreCLR-specific exclusions
+				// TODO: https://github.com/dotnet/android/issues/10069
+				categories.Add ("CoreCLRIgnore");
+				categories.Add ("NTLM");
 
 				if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
 					categories.Add ("NativeTypeMap");
