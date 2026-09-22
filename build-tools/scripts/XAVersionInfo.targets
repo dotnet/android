@@ -14,6 +14,10 @@
        is the dotnet/android commit. No submodules contribute version info
        anymore, so there is no _GetSubmodulesVersionInfo target. -->
   <Target Name="GetXAVersionInfo">
+    <PropertyGroup>
+      <_AndroidAllowMissingGitStartCommit>false</_AndroidAllowMissingGitStartCommit>
+      <_AndroidAllowMissingGitStartCommit Condition=" '$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)' != '' ">true</_AndroidAllowMissingGitStartCommit>
+    </PropertyGroup>
     <GitBlame
         FileName="Directory.Build.props"
         LineFilter="&lt;ProductVersion&gt;"
@@ -23,6 +27,7 @@
       <Output TaskParameter="Commits"                 ItemName="_XAVersionCommit" />
     </GitBlame>
     <GitCommitsInRange
+        AllowMissingStartCommit="$(_AndroidAllowMissingGitStartCommit)"
         ContinueOnError="true"
         StartCommit="%(_XAVersionCommit.CommitHash)"
         WorkingDirectory="$(XamarinAndroidSourcePath)"
@@ -39,6 +44,7 @@
       <Output TaskParameter="Commits"                 ItemName="_PackVersionCommit" />
     </GitBlame>
     <GitCommitsInRange
+        AllowMissingStartCommit="$(_AndroidAllowMissingGitStartCommit)"
         ContinueOnError="true"
         StartCommit="%(_PackVersionCommit.CommitHash)"
         WorkingDirectory="$(XamarinAndroidSourcePath)"
