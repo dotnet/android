@@ -488,6 +488,13 @@ void Host::Java_mono_android_Runtime_initInternal (
 	init.jniAddNativeMethodRegistrationAttributePresent = application_config.jni_add_native_method_registration_attribute_present ? 1 : 0;
 	init.jniRemappingInUse                              = application_config.jni_remapping_replacement_type_count > 0 || application_config.jni_remapping_replacement_method_index_entry_count > 0;
 	init.marshalMethodsEnabled                          = application_config.marshal_methods_enabled;
+	init.grefLogPath                                    = Logger::gref_log_path ();
+	init.lrefLogPath                                    = Logger::lref_log_path ();
+	init.referenceLogDirectory                         = Logger::reference_log_directory ();
+	init.lightGref                                      = Logger::light_gref_enabled () ? 1 : 0;
+	init.lightLref                                      = Logger::light_lref_enabled () ? 1 : 0;
+	init.grefToLogcat                                   = Logger::gref_to_logcat () ? 1 : 0;
+	init.lrefToLogcat                                   = Logger::lref_to_logcat () ? 1 : 0;
 
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());

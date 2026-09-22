@@ -25,7 +25,7 @@ namespace Java.Interop {
 		}
 
 		public static int GlobalReferenceCount {
-			get {return RuntimeNativeMethods._monodroid_gref_get ();}
+			get {return JniEnvironment.Runtime.GlobalReferenceCount;}
 		}
 
 		public static int LocalReferenceCount {

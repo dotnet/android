@@ -58,16 +58,11 @@ static partial class JavaInteropRuntime
 			XA_Host_NativeAOT_OnInit (language, filesDir, cacheDir, ref initArgs);
 			JNIEnvInit.InitializeBeforeRuntimeCreation (initArgs);
 
-			var settings    = new DiagnosticSettings ();
-			settings.AddDebugDotnetLog ();
-
 			var options = new NativeAotRuntimeOptions {
-				EnvironmentPointer          = jnienv,
-				ClassLoader                 = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
-				TypeManager                 = JNIEnvInit.CreateTypeManager (initArgs),
-				ValueManager                = JNIEnvInit.CreateValueManager (),
-				JniGlobalReferenceLogWriter = settings.GrefLog,
-				JniLocalReferenceLogWriter  = settings.LrefLog,
+				EnvironmentPointer = jnienv,
+				ClassLoader        = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
+				TypeManager        = JNIEnvInit.CreateTypeManager (initArgs),
+				ValueManager       = JNIEnvInit.CreateValueManager (),
 			};
 			runtime = options.CreateJreVM ();
 

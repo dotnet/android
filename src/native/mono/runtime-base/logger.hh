@@ -12,6 +12,14 @@ namespace xamarin::android {
 	public:
 		static void init_logging_categories (char*& mono_log_mask, char*& mono_log_level) noexcept;
 		static void init_reference_logging (const char *override_dir) noexcept;
+		static const char* gref_log_path () noexcept;
+		static const char* lref_log_path () noexcept;
+		static const char* reference_log_directory () noexcept;
+		static bool light_gref_enabled () noexcept;
+		static bool light_lref_enabled () noexcept;
+		static bool gref_to_logcat_enabled () noexcept;
+		static bool lref_to_logcat_enabled () noexcept;
+		static bool gref_enabled () noexcept;
 
 		static LogTimingCategories log_timing_categories () noexcept
 		{

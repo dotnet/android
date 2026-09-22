@@ -67,83 +67,10 @@ _monodroid_max_gref_get ()
     return static_cast<int>(AndroidSystem::get_max_gref_count ());
 }
 
-int
-_monodroid_gref_get ()
-{
-	return osBridge.get_gc_gref_count ();
-}
-
-int
-_monodroid_gref_inc ()
-{
-	return osBridge._monodroid_gref_inc ();
-}
-
-int
-_monodroid_gref_dec ()
-{
-	return osBridge._monodroid_gref_dec ();
-}
-
-
 void
-_monodroid_gref_log (const char *message)
+_monodroid_register_reference_logging_callbacks (reference_log_fn log_callback, reference_log_message_fn message_callback)
 {
-    osBridge._monodroid_gref_log (message);
-}
-
-int
-_monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable)
-{
-    return osBridge._monodroid_gref_log_new (curHandle, curType, newHandle, newType, threadName, threadId, from, from_writable);
-}
-
-void
-_monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
-{
-    osBridge._monodroid_gref_log_delete (handle, type, threadName, threadId, from, from_writable);
-}
-
-int
-_monodroid_weak_gref_get ()
-{
-	return osBridge.get_gc_weak_gref_count ();
-}
-
-int
-_monodroid_weak_gref_inc ()
-{
-	return osBridge._monodroid_weak_gref_inc ();
-}
-
-int
-_monodroid_weak_gref_dec ()
-{
-	return osBridge._monodroid_weak_gref_dec ();
-}
-
-void
-_monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable)
-{
-    osBridge._monodroid_weak_gref_new (curHandle, curType, newHandle, newType, threadName, threadId, from, from_writable);
-}
-
-void
-_monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
-{
-    osBridge._monodroid_weak_gref_delete (handle, type, threadName, threadId, from, from_writable);
-}
-
-void
-_monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
-{
-    osBridge._monodroid_lref_log_new (lrefc, handle, type, threadName, threadId, from, from_writable);
-}
-
-void
-_monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
-{
-    osBridge._monodroid_lref_log_delete (lrefc, handle, type, threadName, threadId, from, from_writable);
+	osBridge.set_reference_logging_callbacks (log_callback, message_callback);
 }
 
 void
@@ -288,4 +215,3 @@ _monodroid_lookup_replacement_method_info (const char *jniSourceType, const char
 {
 	return JniRemapping::lookup_replacement_method_info (jniSourceType, jniMethodName, jniMethodSignature);
 }
-

@@ -20,12 +20,6 @@ using namespace microsoft::java_interop;
 using namespace xamarin::android::internal;
 using namespace xamarin::android;
 
-// These two must stay here until JavaInterop is converted to C++
-FILE  *gref_log;
-FILE  *lref_log;
-bool    gref_to_logcat;
-bool    lref_to_logcat;
-
 #if defined (DEBUG)
 namespace xamarin::android::internal {
 	struct BundledProperty {

@@ -22,11 +22,6 @@
 
 static constexpr size_t PROPERTY_VALUE_BUFFER_LEN = xamarin::android::internal::SharedConstants::PROPERTY_VALUE_BUFFER_LEN;
 
-extern  FILE  *gref_log;
-extern  FILE  *lref_log;
-extern  bool   gref_to_logcat;
-extern  bool   lref_to_logcat;
-
 namespace xamarin::android {
 	class jstring_wrapper;
 	class jstring_array_wrapper;

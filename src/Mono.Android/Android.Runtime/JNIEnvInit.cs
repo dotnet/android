@@ -34,6 +34,13 @@ namespace Android.Runtime
 			public bool            jniRemappingInUse;
 			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
+			public IntPtr          grefLogPath;
+			public IntPtr          lrefLogPath;
+			public IntPtr          referenceLogDirectory;
+			public byte            lightGref;
+			public byte            lightLref;
+			public byte            grefToLogcat;
+			public byte            lrefToLogcat;
 			public IntPtr          propagateUncaughtExceptionFn;
 			public IntPtr          registerJniNativesFn;
 		}
@@ -47,6 +54,7 @@ namespace Android.Runtime
 		internal static IntPtr grefIGCUserPeer_class;
 		internal static IntPtr grefGCUserPeerable_class;
 		internal static IntPtr java_class_loader;
+		internal static ReferenceLoggingConfiguration ReferenceLoggingConfiguration;
 
 		internal static JniRuntime? androidRuntime;
 
@@ -220,6 +228,14 @@ namespace Android.Runtime
 			grefIGCUserPeer_class = args.grefIGCUserPeer;
 			grefGCUserPeerable_class = args.grefGCUserPeerable;
 			PropagateExceptions = args.brokenExceptionTransitions == 0;
+			ReferenceLoggingConfiguration = new ReferenceLoggingConfiguration (
+				Marshal.PtrToStringUTF8 (args.grefLogPath),
+				Marshal.PtrToStringUTF8 (args.lrefLogPath),
+				Marshal.PtrToStringUTF8 (args.referenceLogDirectory),
+				args.lightGref != 0,
+				args.lightLref != 0,
+				args.grefToLogcat != 0,
+				args.lrefToLogcat != 0);
 
 			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args.packageNamingPolicy;
 		}
