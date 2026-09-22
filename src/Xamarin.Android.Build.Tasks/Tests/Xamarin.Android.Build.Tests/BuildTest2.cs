@@ -101,6 +101,66 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.Contains ("@uncompressed_assemblies_data_buffer = dso_local local_unnamed_addr global [0 x i8] zeroinitializer, align 1", compressedAssembliesSourceText);
 		}
 
+		[TestCase ("", "--maxgenericcycle:2;--maxgenericcyclebreadth:1")]
+		[TestCase ("--partial", "--partial;--maxgenericcycle:2;--maxgenericcyclebreadth:1")]
+		[TestCase ("--maxgenericcycle:7", "--maxgenericcycle:7;--maxgenericcyclebreadth:1")]
+		[TestCase ("--maxgenericcycle=7", "--maxgenericcycle=7;--maxgenericcyclebreadth:1")]
+		[TestCase ("--maxgenericcycle;7", "--maxgenericcycle;7;--maxgenericcyclebreadth:1")]
+		[TestCase ("--maxgenericcyclebreadth:5", "--maxgenericcyclebreadth:5;--maxgenericcycle:2")]
+		[TestCase ("--maxgenericcyclebreadth=5", "--maxgenericcyclebreadth=5;--maxgenericcycle:2")]
+		[TestCase ("--maxgenericcyclebreadth;5", "--maxgenericcyclebreadth;5;--maxgenericcycle:2")]
+		[TestCase ("--maxgenericcycle:7;--maxgenericcyclebreadth:5", "--maxgenericcycle:7;--maxgenericcyclebreadth:5")]
+		[NonParallelizable]
+		public void ReadyToRunGenericCycleLimits (string extraArguments, string expectedArguments)
+		{
+			const string output = "ready-to-run-extra-arguments.txt";
+			var proj = new DotNetStandard {
+				IsRelease = true,
+				ProjectName = "ReadyToRunGenericCycleLimits",
+				Sdk = "Microsoft.NET.Sdk",
+				TargetFramework = "net10.0",
+			};
+			proj.SetProperty ("AndroidApplication", "true");
+			proj.SetProperty ("PublishReadyToRun", "true");
+			proj.SetProperty ("PublishTrimmed", "true");
+			proj.SetProperty ("_XamarinAndroidBuildTasksAssembly", typeof (GenerateMibcProfile).Assembly.Location);
+			proj.Imports.Add (new Import (Path.Combine (
+				XABuildPaths.TopDirectory,
+				"src",
+				"Xamarin.Android.Build.Tasks",
+				"Microsoft.Android.Sdk",
+				"targets",
+				"Microsoft.Android.Sdk.CoreCLR.targets"
+			)));
+			proj.Imports.Add (new Import ("capture-ready-to-run-arguments.targets") {
+				TextContent = () => $"""
+					<Project>
+					  <Target Name="_CaptureReadyToRunGenericCycleLimits"
+					      DependsOnTargets="_AndroidAddReadyToRunGenericCycleLimits">
+					    <WriteLinesToFile
+					        File="$(MSBuildProjectDirectory)/{output}"
+					        Lines="$([MSBuild]::Escape('$(PublishReadyToRunCrossgen2ExtraArgs)'))"
+					        Overwrite="true" />
+					  </Target>
+					</Project>
+					""",
+			});
+
+			using var b = CreateDllBuilder ();
+			b.Target = "_CaptureReadyToRunGenericCycleLimits";
+			var parameters = extraArguments.IsNullOrEmpty () ?
+				[] :
+				new [] { $"PublishReadyToRunCrossgen2ExtraArgs={extraArguments.Replace (";", "%3B")}" };
+			Assert.IsTrue (b.Build (proj, parameters: parameters), "Build should have succeeded.");
+
+			var outputPath = Path.Combine (Root, b.ProjectDirectory, output);
+			FileAssert.Exists (outputPath);
+			var actualArguments = File.ReadAllText (outputPath).Trim ()
+				.Split (new [] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+			var expected = expectedArguments.Split (new [] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+			CollectionAssert.AreEquivalent (expected, actualArguments);
+		}
+
 		[Test]
 		public void AndroidEnableMarshalMethodsWithReadyToRunFailsBuild ()
 		{

@@ -5,7 +5,7 @@ Microsoft.Android.Sdk.CoreCLR.targets
 This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
 ***********************************************************************************************
 -->
-<Project>
+<Project TreatAsLocalProperty="PublishReadyToRunCrossgen2ExtraArgs">
 
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateMibcProfile" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
@@ -24,6 +24,18 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' and '$(PublishReadyToRun)' == 'true' ">true</_IsPublishing>
     <AllowReadyToRunWithoutRuntimeIdentifier Condition=" '$(PublishReadyToRun)' == 'true' and '$(RuntimeIdentifiers)' != '' ">true</AllowReadyToRunWithoutRuntimeIdentifier>
   </PropertyGroup>
+
+  <Target Name="_AndroidAddReadyToRunGenericCycleLimits"
+      BeforeTargets="_PrepareForReadyToRunCompilation"
+      Condition=" '$(AndroidApplication)' == 'true' and '$(PublishReadyToRun)' == 'true' ">
+    <!-- Bound recursive generic expansion while preserving explicit crossgen2 overrides. -->
+    <PropertyGroup>
+      <PublishReadyToRunCrossgen2ExtraArgs
+          Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('$(PublishReadyToRunCrossgen2ExtraArgs)', '(^|[;\s])--maxgenericcycle([:=;\s]|$)'))">$(PublishReadyToRunCrossgen2ExtraArgs);--maxgenericcycle:2</PublishReadyToRunCrossgen2ExtraArgs>
+      <PublishReadyToRunCrossgen2ExtraArgs
+          Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('$(PublishReadyToRunCrossgen2ExtraArgs)', '(^|[;\s])--maxgenericcyclebreadth([:=;\s]|$)'))">$(PublishReadyToRunCrossgen2ExtraArgs);--maxgenericcyclebreadth:1</PublishReadyToRunCrossgen2ExtraArgs>
+    </PropertyGroup>
+  </Target>
 
   <!-- Default feature switches -->
   <ItemGroup>
