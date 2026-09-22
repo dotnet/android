@@ -2,6 +2,8 @@ using System;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 
 using NUnit.Framework;
 
@@ -263,6 +265,50 @@ namespace Xamarin.Android.JcwGenTests {
 			}
 		}
 
+		[Test]
+		public void LegacyThrowableVirtualMethodBinding ()
+		{
+			using (var b = new LegacyThresholdBinding.LegacyThresholdThrowable ()) {
+				b.Method ();
+				Assert.IsTrue (b.MethodInvoked);
+			}
+			using (var d = new LegacyThresholdBinding.LegacyThresholdThrowableDerived ()) {
+				d.Method ();
+				Assert.IsFalse (d.MethodInvoked);
+				Assert.IsTrue (d.DerivedMethodInvoked);
+			}
+			using (var d = new ManagedLegacyThresholdThrowableDerived ()) {
+				d.Method ();
+				Assert.IsFalse (d.MethodInvoked);
+				Assert.IsTrue (d.DerivedMethodInvoked);
+			}
+		}
+
+		[Test]
+		public void PrecompiledConsumerReferencesRemovedConcreteThresholdGetters ()
+		{
+			using var stream = typeof (BindingTests).Assembly.GetManifestResourceStream ("Xamarin.Android.JcwGenTests.LegacyThresholdConsumer.dll")
+				?? throw new InvalidOperationException ("The precompiled threshold consumer fixture is missing.");
+			using var assembly = new PEReader (stream);
+			var metadata = assembly.GetMetadataReader ();
+			var getterNames = new HashSet<string> ();
+
+			foreach (var handle in metadata.MemberReferences) {
+				var member = metadata.GetMemberReference (handle);
+				if (member.Parent.Kind != HandleKind.TypeReference)
+					continue;
+
+				var owner = metadata.GetTypeReference ((TypeReferenceHandle) member.Parent);
+				if (metadata.GetString (owner.Namespace) == "Android.App" && metadata.GetString (owner.Name) == "Activity")
+					getterNames.Add (metadata.GetString (member.Name));
+			}
+
+			Assert.That (getterNames, Is.SupersetOf (new [] { "get_ThresholdType", "get_ThresholdClass" }));
+			const BindingFlags declaredInstanceGetters = BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic;
+			Assert.IsNull (typeof (global::Android.App.Activity).GetMethod ("get_ThresholdType", declaredInstanceGetters));
+			Assert.IsNull (typeof (global::Android.App.Activity).GetMethod ("get_ThresholdClass", declaredInstanceGetters));
+		}
+
 		// A binding generated *after* the threshold overrides were removed, deriving from a
 		// binding generated before. The derived type inherits the base's `ThresholdType`, so
 		// honoring it would dispatch nonvirtually to the Java base and skip `ModernThresholdDerived.method()`.
@@ -487,6 +533,9 @@ namespace Xamarin.Android.JcwGenTests {
 	}
 
 	public class ManagedLegacyThresholdDerived : LegacyThresholdBinding.LegacyThresholdDerived {
+	}
+
+	public class ManagedLegacyThresholdThrowableDerived : LegacyThresholdBinding.LegacyThresholdThrowableDerived {
 	}
 
 	public class Default : Java.Lang.Object {
