@@ -2057,7 +2057,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_CompileToDalvikInputs>
 			$(_CompileToDalvikInputs)
 			;$(_ProguardProjectConfiguration)
-			;@(ProguardConfiguration)
+			;@(_ProguardConfiguration)
 			;$(AndroidR8JarPath)
 		</_CompileToDalvikInputs>
 	</PropertyGroup>

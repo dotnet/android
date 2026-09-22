@@ -82,8 +82,9 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("TrimMode", "full");
 			proj.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
 			proj.SetProperty ("AndroidCreateProguardMappingFile", "false");
+			proj.SetProperty ("ProguardConfigFiles", "r8-custom.pro");
 			string extraRules = "";
-			proj.OtherBuildItems.Add (new AndroidItem.ProguardConfiguration ("r8-custom.pro") {
+			proj.OtherBuildItems.Add (new BuildItem ("None", "r8-custom.pro") {
 				TextContent = () => extraRules,
 			});
 			proj.Sources.Add (new BuildItem.Source ("HiddenPeerBinding.cs") {
