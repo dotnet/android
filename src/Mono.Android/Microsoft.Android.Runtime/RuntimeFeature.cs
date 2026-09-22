@@ -17,6 +17,7 @@ static class RuntimeFeature
 	const bool ManagedToJavaUsesAssemblyFullNameEnabledByDefault = false;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
+	const string EventSourceSupportSwitch = "System.Diagnostics.Tracing.EventSource.IsSupported";
 	const string StartupHookProviderSwitch = "System.StartupHookProvider.IsSupported";
 
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsMonoRuntime)}")]
@@ -55,6 +56,10 @@ static class RuntimeFeature
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ObjectReferenceLogging)}")]
 	internal static bool ObjectReferenceLogging { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (ObjectReferenceLogging)}", out bool isEnabled) ? isEnabled : ObjectReferenceLoggingEnabledByDefault;
+
+	[FeatureSwitchDefinition (EventSourceSupportSwitch)]
+	internal static bool EventSourceSupport { get; } =
+		!AppContext.TryGetSwitch (EventSourceSupportSwitch, out bool isEnabled) || isEnabled;
 
 	// Enabled for Debug builds, whose string-based typemaps support Fast Deployment without embedding assembly MVIDs.
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ManagedToJavaUsesAssemblyFullName)}")]

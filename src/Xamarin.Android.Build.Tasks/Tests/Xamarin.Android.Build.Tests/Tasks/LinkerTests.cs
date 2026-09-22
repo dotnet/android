@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -53,6 +54,101 @@ namespace Xamarin.Android.Build.Tests
 		{
 			public void BuildPipelineForTest (AssemblyPipeline pipeline, MSBuildLinkContext context) =>
 				BuildPipeline (pipeline, context);
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void RuntimeEventSourceFeatureSwitch (bool enabled)
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var lib = new XamarinAndroidLibraryProject {
+				IsRelease = true,
+				ProjectName = "EventSourceCallPath",
+				Sources = {
+					new BuildItem.Source ("EventSourceCallPath.cs") {
+						TextContent = () => """
+							using System;
+							using System.Diagnostics.CodeAnalysis;
+
+							namespace EventSourceCallPath;
+
+							public static class Instrumentation
+							{
+								[FeatureSwitchDefinition ("System.Diagnostics.Tracing.EventSource.IsSupported")]
+								static bool EventSourceSupport { get; } =
+									!AppContext.TryGetSwitch ("System.Diagnostics.Tracing.EventSource.IsSupported", out bool isEnabled) || isEnabled;
+
+								public static void Invoke ()
+								{
+									if (!EventSourceSupport) {
+										return;
+									}
+									PreserveRuntimeEventSource ();
+								}
+
+								[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Microsoft.Android.Runtime.RuntimeEventSource", "Mono.Android")]
+								static void PreserveRuntimeEventSource ()
+								{
+								}
+							}
+							""",
+					},
+				},
+			};
+			lib.SetRuntime (AndroidRuntime.CoreCLR);
+			lib.SetProperty ("IsTrimmable", "true");
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
+			proj.AddReference (lib);
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
+			proj.SetProperty ("AndroidPackageFormat", "apk");
+			proj.SetProperty ("AndroidUseAssemblyStore", "true");
+			proj.SetProperty ("PublishReadyToRun", "false");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "EventSourceCallPath.Instrumentation.Invoke ();");
+
+			using var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName));
+			Assert.IsTrue (libBuilder.Build (lib), "library build should have succeeded.");
+			using var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName));
+			Assert.IsTrue (
+				builder.Build (proj, parameters: [$"EventSourceSupport={enabled.ToString ().ToLowerInvariant ()}"]),
+				"build should have succeeded.");
+
+			var outputDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
+			var runtimeConfigFiles = Directory.GetFiles (outputDirectory, $"{proj.ProjectName}.runtimeconfig.json", SearchOption.AllDirectories);
+			Assert.AreEqual (1, runtimeConfigFiles.Length, $"{outputDirectory} should contain one runtimeconfig.json.");
+
+			using (var runtimeConfig = JsonDocument.Parse (File.ReadAllText (runtimeConfigFiles [0]))) {
+				var configProperties = runtimeConfig.RootElement
+					.GetProperty ("runtimeOptions")
+					.GetProperty ("configProperties");
+				Assert.AreEqual (
+					enabled,
+					configProperties.GetProperty ("System.Diagnostics.Tracing.EventSource.IsSupported").GetBoolean (),
+					"the standard EventSource feature switch should match EventSourceSupport");
+			}
+
+			var linkedRuntimeAssembly = Path.Combine (
+				Root,
+				builder.ProjectDirectory,
+				proj.IntermediateOutputPath,
+				"android-arm64",
+				"linked",
+				"Mono.Android.dll");
+			FileAssert.Exists (linkedRuntimeAssembly);
+
+			using var assembly = AssemblyDefinition.ReadAssembly (linkedRuntimeAssembly);
+			var eventSourceType = assembly.MainModule.GetType ("Microsoft.Android.Runtime.RuntimeEventSource");
+			if (enabled) {
+				Assert.IsNotNull (eventSourceType, "the enabled synthetic call path should retain the runtime EventSource facade");
+				var implementationType = eventSourceType.NestedTypes.FirstOrDefault (type => type.Name == "RuntimeEventSourceImplementation");
+				Assert.IsNotNull (implementationType, "the enabled runtime EventSource implementation should remain in the linked assembly");
+			} else {
+				Assert.IsNull (eventSourceType, "the disabled synthetic call path and runtime EventSource should be removed from the linked assembly");
+			}
 		}
 
 		[Test]
