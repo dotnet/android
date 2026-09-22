@@ -166,9 +166,9 @@ namespace Java.Lang {
 			if (handle == IntPtr.Zero)
 				return null;
 
-			var peer = JniEnvironment.Runtime.ValueManager.GetPeer (new JniObjectReference (handle), type);
+			var r = JniEnvironment.Runtime.ValueManager.GetPeer (new JniObjectReference (handle), type);
 			JNIEnv.DeleteRef (handle, transfer);
-			return peer;
+			return r;
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
