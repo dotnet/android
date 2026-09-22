@@ -146,6 +146,25 @@ namespace Java.Interop {
 			return Interlocked.CompareExchange (ref dictionary, candidate, null) ?? candidate;
 		}
 
+		static TValue GetOrAdd<TKey, TValue, TState> (
+			ConcurrentDictionary<TKey, TValue> dictionary,
+			TKey key,
+			Func<TKey, TState, TValue> valueFactory,
+			TState state,
+			Action<TValue> dispose)
+			where TKey : notnull
+			where TValue : class
+		{
+			if (dictionary.TryGetValue (key, out var value))
+				return value;
+
+			var candidate = valueFactory (key, state);
+			value = dictionary.GetOrAdd (key, candidate);
+			if (!ReferenceEquals (value, candidate))
+				dispose (candidate);
+			return value;
+		}
+
 		static void Clear<TKey, TValue> (ref ConcurrentDictionary<TKey, TValue>? dictionary, Action<TValue>? dispose = null)
 			where TKey : notnull
 		{
@@ -296,6 +315,18 @@ namespace Java.Interop {
 			return JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (jniTypeName, method, signature);
 		}
 
+		static string? GetEffectiveBaseTypeName (JniRuntime.JniTypeManager typeManager, Type baseType)
+		{
+			var baseSignature = typeManager.GetTypeSignature (baseType);
+			string? effectiveBaseType = baseSignature.SimpleReference;
+			if (effectiveBaseType == null)
+				return null;
+
+			// Type managers may return either the declared or runtime JNI name. The extra lookup
+			// supports declared names; remapping producers must emit single-hop final targets.
+			return typeManager.GetReplacementType (effectiveBaseType) ?? effectiveBaseType;
+		}
+
 		internal static JniRuntime.ReplacementMethodInfo? GetBaseReplacementMethodInfo (
 			Type managedPeerType,
 			ReadOnlySpan<char> method,
@@ -303,12 +334,9 @@ namespace Java.Interop {
 		{
 			var typeManager = JniEnvironment.Runtime.TypeManager;
 			for (Type? baseType = managedPeerType.BaseType; baseType != null; baseType = baseType.BaseType) {
-				var baseSignature = typeManager.GetTypeSignature (baseType);
-				string? effectiveBaseType = baseSignature.SimpleReference;
-				if (effectiveBaseType == null) {
+				string? effectiveBaseType = GetEffectiveBaseTypeName (typeManager, baseType);
+				if (effectiveBaseType == null)
 					continue;
-				}
-				effectiveBaseType = typeManager.GetReplacementType (effectiveBaseType) ?? effectiveBaseType;
 				var info = typeManager.GetReplacementMethodInfo (effectiveBaseType, method, signature);
 				if (info != null) {
 					return info;
@@ -332,12 +360,9 @@ namespace Java.Interop {
 		{
 			var typeManager = JniEnvironment.Runtime.TypeManager;
 			for (Type? baseType = managedPeerType.BaseType; baseType != null; baseType = baseType.BaseType) {
-				var baseSignature = typeManager.GetTypeSignature (baseType);
-				string? effectiveBaseType = baseSignature.SimpleReference;
-				if (effectiveBaseType == null) {
+				string? effectiveBaseType = GetEffectiveBaseTypeName (typeManager, baseType);
+				if (effectiveBaseType == null)
 					continue;
-				}
-				effectiveBaseType = typeManager.GetReplacementType (effectiveBaseType) ?? effectiveBaseType;
 				var info = typeManager.GetReplacementFieldInfo (effectiveBaseType, field, signature);
 				if (info != null) {
 					return info;

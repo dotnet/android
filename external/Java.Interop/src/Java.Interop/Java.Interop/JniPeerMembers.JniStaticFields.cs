@@ -21,11 +21,16 @@ namespace Java.Interop
 
 		public JniFieldInfo GetFieldInfo (string encodedMember)
 		{
-			return StaticFields.GetOrAdd (encodedMember, static (member, fields) => {
-				ReadOnlySpan<char> field, signature;
-				JniPeerMembers.GetNameAndSignature (member, out field, out signature);
-				return fields.GetFieldInfo (field, signature);
-			}, this);
+			return GetOrAdd (
+				StaticFields,
+				encodedMember,
+				static (member, fields) => {
+					ReadOnlySpan<char> field, signature;
+					JniPeerMembers.GetNameAndSignature (member, out field, out signature);
+					return fields.GetFieldInfo (field, signature);
+				},
+				this,
+				static field => field.StaticRedirect?.Dispose ());
 		}
 
 		JniFieldInfo GetFieldInfo (ReadOnlySpan<char> field, ReadOnlySpan<char> signature)

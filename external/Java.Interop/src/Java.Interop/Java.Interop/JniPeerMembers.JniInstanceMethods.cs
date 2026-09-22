@@ -109,16 +109,26 @@ namespace Java.Interop
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods..ctor(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 27
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.GetConstructorsForType(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 77
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(String constructorSignature, Type declaringType, JniArgumentValue* parameters) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 146
-			return SubclassConstructors.GetOrAdd (declaringType, static type => new JniInstanceMethods (type));
+			return GetOrAdd (
+				SubclassConstructors,
+				declaringType,
+				static (type, _) => new JniInstanceMethods (type),
+				this,
+				static value => value.Dispose ());
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
-			return InstanceMethods.GetOrAdd (encodedMember, static (member, methods) => {
-				ReadOnlySpan<char> method, signature;
-				JniPeerMembers.GetNameAndSignature (member, out method, out signature);
-				return methods.GetMethodInfo (method, signature);
-			}, this);
+			return GetOrAdd (
+				InstanceMethods,
+				encodedMember,
+				static (member, methods) => {
+					ReadOnlySpan<char> method, signature;
+					JniPeerMembers.GetNameAndSignature (member, out method, out signature);
+					return methods.GetMethodInfo (method, signature);
+				},
+				this,
+				static method => method.StaticRedirect?.Dispose ());
 		}
 
 		JniMethodInfo GetMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
