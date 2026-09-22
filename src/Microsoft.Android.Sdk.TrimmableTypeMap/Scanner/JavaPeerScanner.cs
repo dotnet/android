@@ -2828,7 +2828,7 @@ public sealed class JavaPeerScanner : IDisposable
 			var handlerName = colonIndex >= 0 ? connector.AsSpan (0, colonIndex) : connector.AsSpan ();
 
 			if (handlerName.StartsWith ("n_", StringComparison.Ordinal)) {
-				return handlerName;
+				return handlerName.ToString ();
 			}
 
 			if (handlerName.StartsWith ("Get", StringComparison.Ordinal)

@@ -273,7 +273,7 @@ sealed class TypeMapAssemblyEmitter
 				continue;
 			}
 			foreach (var registration in proxy.NativeRegistrations) {
-				if (wrapperTargets.Contains (registration.WrapperTarget)) {
+				if (registration.DirectCallback is not null || wrapperTargets.Contains (registration.WrapperTarget)) {
 					registrations.Add (registration);
 				}
 			}
