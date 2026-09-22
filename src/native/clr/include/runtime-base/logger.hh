@@ -13,8 +13,6 @@ namespace xamarin::android {
 		static auto reference_log_directory () noexcept -> const char*;
 		static auto light_gref_enabled () noexcept -> bool;
 		static auto light_lref_enabled () noexcept -> bool;
-		static auto gref_enabled () noexcept -> bool;
-
 		static auto log_timing_categories () noexcept -> LogTimingCategories
 		{
 			return _log_timing_categories;

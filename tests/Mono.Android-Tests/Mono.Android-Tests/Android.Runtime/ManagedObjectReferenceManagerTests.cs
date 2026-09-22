@@ -49,6 +49,17 @@ namespace Xamarin.Android.RuntimeTests {
 			return Enum.Parse (EventType, name);
 		}
 
+		static void AssertReferenceLogFileMode (string path)
+		{
+			if (OperatingSystem.IsWindows ()) {
+				return;
+			}
+
+			Assert.AreEqual (
+				UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.OtherRead,
+				File.GetUnixFileMode (path));
+		}
+
 		[TestCase ("GlobalCreated", "+g+ grefc 2 gwrefc 3 obj-handle 0x1234/L -> new-handle 0x5678/G from thread 'worker'(42)")]
 		[TestCase ("GlobalDeleted", "-g- grefc 2 gwrefc 3 handle 0x1234/G from thread 'worker'(42)")]
 		[TestCase ("WeakGlobalCreated", "+w+ grefc 2 gwrefc 3 obj-handle 0x1234/G -> new-handle 0x5678/W from thread 'worker'(42)")]
@@ -79,6 +90,26 @@ namespace Xamarin.Android.RuntimeTests {
 		}
 
 		[Test]
+		public void FormatsUnnamedThreadWithNullMarker ()
+		{
+			object? result = GetMethod ("FormatReferenceMessage").Invoke (
+				obj: null,
+				parameters: [
+					GetEvent ("GlobalDeleted"),
+					2,
+					3,
+					new IntPtr (0x1234),
+					(byte) 'G',
+					IntPtr.Zero,
+					(byte) 'I',
+					null,
+					42,
+				]);
+
+			Assert.AreEqual ("-g- grefc 2 gwrefc 3 handle 0x1234/G from thread '<null>'(42)", result);
+		}
+
+		[Test]
 		public void CountsGlobalAndWeakReferencesIndependently ()
 		{
 			object manager = CreateManager ();
@@ -91,6 +122,19 @@ namespace Xamarin.Android.RuntimeTests {
 
 			Assert.AreEqual (1, ManagerType.GetProperty ("GlobalReferenceCount")?.GetValue (manager));
 			Assert.AreEqual (1, ManagerType.GetProperty ("WeakGlobalReferenceCount")?.GetValue (manager));
+		}
+
+		[Test]
+		public void UpdatesCountsWithoutFormattingMetadata ()
+		{
+			object manager = CreateManager ();
+			MethodInfo updateReferenceCount = GetMethod ("UpdateReferenceCount");
+			object?[] arguments = [GetEvent ("GlobalCreated"), 0];
+
+			object? globalCount = updateReferenceCount.Invoke (manager, arguments);
+
+			Assert.AreEqual (1, globalCount);
+			Assert.AreEqual (0, arguments [1]);
 		}
 
 		[Test]
@@ -107,12 +151,15 @@ namespace Xamarin.Android.RuntimeTests {
 				explicitWriter?.WriteLine ("explicit");
 				explicitWriter?.Dispose ();
 				Assert.AreEqual ("explicit" + Environment.NewLine, File.ReadAllText (explicitPath));
+				AssertReferenceLogFileMode (explicitPath);
 
 				var defaultWriter = createLogWriter.Invoke (null, [true, false, null, directory, "fallback.txt", "test"]) as TextWriter;
 				Assert.IsNotNull (defaultWriter);
 				defaultWriter?.WriteLine ("default");
 				defaultWriter?.Dispose ();
-				Assert.AreEqual ("default" + Environment.NewLine, File.ReadAllText (Path.Combine (directory, "fallback.txt")));
+				string fallbackPath = Path.Combine (directory, "fallback.txt");
+				Assert.AreEqual ("default" + Environment.NewLine, File.ReadAllText (fallbackPath));
+				AssertReferenceLogFileMode (fallbackPath);
 
 				Assert.IsNull (createLogWriter.Invoke (null, [true, true, explicitPath, directory, "fallback.txt", "test"]));
 			} finally {

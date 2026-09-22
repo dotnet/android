@@ -64,9 +64,9 @@ int _monodroid_max_gref_get () noexcept
 	return static_cast<int>(AndroidSystem::get_max_gref_count ());
 }
 
-void _monodroid_register_reference_logging_callbacks (reference_log_fn log_callback, reference_log_message_fn message_callback) noexcept
+void _monodroid_register_reference_logging_callbacks (reference_log_fn log_callback, reference_log_message_fn message_callback, uint8_t log_reference_metadata) noexcept
 {
-	OSBridge::set_reference_logging_callbacks (log_callback, message_callback);
+	OSBridge::set_reference_logging_callbacks (log_callback, message_callback, log_reference_metadata != 0);
 }
 
 void _monodroid_gc_wait_for_bridge_processing ()

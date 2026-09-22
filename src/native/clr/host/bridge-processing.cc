@@ -490,13 +490,10 @@ void BridgeProcessing::log_weak_to_gref (jobject weak, jobject handle) noexcept
 {
 	if (handle != nullptr) {
 		OSBridge::log_reference (
+			env,
 			ReferenceLogEvent::GlobalCreated,
 			weak,
-			OSBridge::get_object_ref_type (env, weak),
 			handle,
-			OSBridge::get_object_ref_type (env, handle),
-			"finalizer",
-			gettid (),
 			"   at [[clr-gc:take_global_ref]]");
 	}
 
@@ -528,13 +525,10 @@ void BridgeProcessing::log_take_weak_global_ref (jobject handle) noexcept
 void BridgeProcessing::log_weak_gref_new (jobject handle, jobject weak) noexcept
 {
 	OSBridge::log_reference (
+		env,
 		ReferenceLogEvent::WeakGlobalCreated,
 		handle,
-		OSBridge::get_object_ref_type (env, handle),
 		weak,
-		OSBridge::get_object_ref_type (env, weak),
-		"finalizer",
-		gettid (),
 		"   at [[clr-gc:take_weak_global_ref]]");
 }
 
@@ -542,13 +536,10 @@ void BridgeProcessing::log_weak_gref_new (jobject handle, jobject weak) noexcept
 void BridgeProcessing::log_gref_delete (jobject handle) noexcept
 {
 	OSBridge::log_reference (
+		env,
 		ReferenceLogEvent::GlobalDeleted,
 		handle,
-		OSBridge::get_object_ref_type (env, handle),
 		nullptr,
-		'I',
-		"finalizer",
-		gettid (),
 		"   at [[clr-gc:take_weak_global_ref]]");
 }
 
@@ -556,13 +547,10 @@ void BridgeProcessing::log_gref_delete (jobject handle) noexcept
 void BridgeProcessing::log_weak_ref_delete (jobject weak) noexcept
 {
 	OSBridge::log_reference (
+		env,
 		ReferenceLogEvent::WeakGlobalDeleted,
 		weak,
-		OSBridge::get_object_ref_type (env, weak),
 		nullptr,
-		'I',
-		"finalizer",
-		gettid (),
 		"   at [[clr-gc:take_global_ref]]");
 }
 

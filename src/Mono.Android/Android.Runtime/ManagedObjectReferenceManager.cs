@@ -52,6 +52,12 @@ namespace Android.Runtime {
 	internal sealed class ManagedObjectReferenceManager : JniRuntime.JniObjectReferenceManager {
 		const string GrefLogTag = "monodroid-gref";
 		const string LrefLogTag = "monodroid-lref";
+		const UnixFileMode ReferenceLogFileMode =
+			UnixFileMode.UserRead |
+			UnixFileMode.UserWrite |
+			UnixFileMode.GroupRead |
+			UnixFileMode.GroupWrite |
+			UnixFileMode.OtherRead;
 
 		static ManagedObjectReferenceManager? current;
 
@@ -68,8 +74,11 @@ namespace Android.Runtime {
 		public override int GlobalReferenceCount => Volatile.Read (ref grefCount);
 		public override int WeakGlobalReferenceCount => Volatile.Read (ref weakGrefCount);
 
-		public override bool LogGlobalReferenceMessages => Logger.LogGlobalRef;
-		public override bool LogLocalReferenceMessages => Logger.LogLocalRef;
+		public override bool LogGlobalReferenceMessages => GlobalReferenceLoggingEnabled;
+		public override bool LogLocalReferenceMessages => LocalReferenceLoggingEnabled;
+
+		static bool GlobalReferenceLoggingEnabled => RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef;
+		static bool LocalReferenceLoggingEnabled => RuntimeFeature.ObjectReferenceLogging && Logger.LogLocalRef;
 
 		public ManagedObjectReferenceManager ()
 			: this (JNIEnvInit.ReferenceLoggingConfiguration)
@@ -78,7 +87,8 @@ namespace Android.Runtime {
 			unsafe {
 				RuntimeNativeMethods._monodroid_register_reference_logging_callbacks (
 					&LogReferenceFromNative,
-					&LogMessageFromNative);
+					&LogMessageFromNative,
+					GlobalReferenceLoggingEnabled ? (byte) 1 : (byte) 0);
 			}
 		}
 
@@ -162,6 +172,11 @@ namespace Android.Runtime {
 		{
 			try {
 				var stream = new FileStream (path, FileMode.Create, FileAccess.Write, FileShare.Read);
+				try {
+					File.SetUnixFileMode (path, ReferenceLogFileMode);
+				} catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is SecurityException || e is PlatformNotSupportedException) {
+					Logger.Log (LogLevel.Warn, logTag, $"Could not set permissions on reference log '{path}': {e.Message}");
+				}
 				var writer = new StreamWriter (stream, new UTF8Encoding (encoderShouldEmitUTF8Identifier: false));
 				Logger.Log (LogLevel.Debug, logTag, $"Opened file '{path}' for logging.");
 				return TextWriter.Synchronized (writer);
@@ -174,7 +189,7 @@ namespace Android.Runtime {
 		public override JniObjectReference CreateLocalReference (JniObjectReference value, ref int localReferenceCount)
 		{
 			var reference = base.CreateLocalReference (value, ref localReferenceCount);
-			if (RuntimeFeature.ObjectReferenceLogging && Logger.LogLocalRef) {
+			if (LocalReferenceLoggingEnabled) {
 				LogLocalReference (created: true, localReferenceCount, reference);
 			}
 			return reference;
@@ -186,9 +201,10 @@ namespace Android.Runtime {
 				return;
 			}
 
-			var reference = value;
+			bool logging = LocalReferenceLoggingEnabled;
+			var reference = logging ? value : default;
 			base.DeleteLocalReference (ref value, ref localReferenceCount);
-			if (RuntimeFeature.ObjectReferenceLogging && Logger.LogLocalRef) {
+			if (logging) {
 				LogLocalReference (created: false, localReferenceCount, reference);
 			}
 		}
@@ -200,7 +216,7 @@ namespace Android.Runtime {
 			}
 
 			base.CreatedLocalReference (value, ref localReferenceCount);
-			if (RuntimeFeature.ObjectReferenceLogging && Logger.LogLocalRef) {
+			if (LocalReferenceLoggingEnabled) {
 				LogLocalReference (created: true, localReferenceCount, value);
 			}
 		}
@@ -211,9 +227,10 @@ namespace Android.Runtime {
 				return IntPtr.Zero;
 			}
 
-			var reference = value;
+			bool logging = LocalReferenceLoggingEnabled;
+			var reference = logging ? value : default;
 			var handle = base.ReleaseLocalReference (ref value, ref localReferenceCount);
-			if (RuntimeFeature.ObjectReferenceLogging && Logger.LogLocalRef) {
+			if (logging) {
 				LogLocalReference (created: false, localReferenceCount, reference);
 			}
 			return handle;
@@ -229,7 +246,7 @@ namespace Android.Runtime {
 
 		public override void WriteLocalReferenceLine (string format, params object?[] args)
 		{
-			if (!RuntimeFeature.ObjectReferenceLogging || !Logger.LogLocalRef) {
+			if (!LocalReferenceLoggingEnabled) {
 				return;
 			}
 			WriteReference (
@@ -243,7 +260,7 @@ namespace Android.Runtime {
 
 		public override void WriteGlobalReferenceLine (string format, params object?[] args)
 		{
-			if (!RuntimeFeature.ObjectReferenceLogging || !Logger.LogGlobalRef) {
+			if (!GlobalReferenceLoggingEnabled) {
 				return;
 			}
 			WriteGlobalReferenceLine (string.Format (CultureInfo.InvariantCulture, format, args));
@@ -257,15 +274,20 @@ namespace Android.Runtime {
 		public override JniObjectReference CreateGlobalReference (JniObjectReference value)
 		{
 			var reference = base.CreateGlobalReference (value);
-			int count = LogReference (
-				ReferenceLogEvent.GlobalCreated,
-				value.Handle,
-				GetObjectRefType (value.Type),
-				reference.Handle,
-				GetObjectRefType (reference.Type),
-				GetThreadName (),
-				Environment.CurrentManagedThreadId,
-				RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef ? new StackTrace (true).ToString () : null);
+			int count;
+			if (GlobalReferenceLoggingEnabled) {
+				count = LogReference (
+					ReferenceLogEvent.GlobalCreated,
+					value.Handle,
+					GetObjectRefType (value.Type),
+					reference.Handle,
+					GetObjectRefType (reference.Type),
+					GetThreadName (),
+					Environment.CurrentManagedThreadId,
+					new StackTrace (true).ToString ());
+			} else {
+				count = UpdateReferenceCount (ReferenceLogEvent.GlobalCreated, out _);
+			}
 
 			if (count >= JNIEnvInit.gref_gc_threshold) {
 				Logger.Log (LogLevel.Warn, "monodroid-gc", count + " outstanding GREFs. Performing a full GC!");
@@ -282,30 +304,38 @@ namespace Android.Runtime {
 				return;
 			}
 
-			LogReference (
-				ReferenceLogEvent.GlobalDeleted,
-				value.Handle,
-				GetObjectRefType (value.Type),
-				IntPtr.Zero,
-				(byte) 'I',
-				GetThreadName (),
-				Environment.CurrentManagedThreadId,
-				RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef ? new StackTrace (true).ToString () : null);
+			if (GlobalReferenceLoggingEnabled) {
+				LogReference (
+					ReferenceLogEvent.GlobalDeleted,
+					value.Handle,
+					GetObjectRefType (value.Type),
+					IntPtr.Zero,
+					(byte) 'I',
+					GetThreadName (),
+					Environment.CurrentManagedThreadId,
+					new StackTrace (true).ToString ());
+			} else {
+				UpdateReferenceCount (ReferenceLogEvent.GlobalDeleted, out _);
+			}
 			base.DeleteGlobalReference (ref value);
 		}
 
 		public override JniObjectReference CreateWeakGlobalReference (JniObjectReference value)
 		{
 			var reference = base.CreateWeakGlobalReference (value);
-			LogReference (
-				ReferenceLogEvent.WeakGlobalCreated,
-				value.Handle,
-				GetObjectRefType (value.Type),
-				reference.Handle,
-				GetObjectRefType (reference.Type),
-				GetThreadName (),
-				Environment.CurrentManagedThreadId,
-				RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef ? new StackTrace (true).ToString () : null);
+			if (GlobalReferenceLoggingEnabled) {
+				LogReference (
+					ReferenceLogEvent.WeakGlobalCreated,
+					value.Handle,
+					GetObjectRefType (value.Type),
+					reference.Handle,
+					GetObjectRefType (reference.Type),
+					GetThreadName (),
+					Environment.CurrentManagedThreadId,
+					new StackTrace (true).ToString ());
+			} else {
+				UpdateReferenceCount (ReferenceLogEvent.WeakGlobalCreated, out _);
+			}
 			return reference;
 		}
 
@@ -315,15 +345,19 @@ namespace Android.Runtime {
 				return;
 			}
 
-			LogReference (
-				ReferenceLogEvent.WeakGlobalDeleted,
-				value.Handle,
-				GetObjectRefType (value.Type),
-				IntPtr.Zero,
-				(byte) 'I',
-				GetThreadName (),
-				Environment.CurrentManagedThreadId,
-				RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef ? new StackTrace (true).ToString () : null);
+			if (GlobalReferenceLoggingEnabled) {
+				LogReference (
+					ReferenceLogEvent.WeakGlobalDeleted,
+					value.Handle,
+					GetObjectRefType (value.Type),
+					IntPtr.Zero,
+					(byte) 'I',
+					GetThreadName (),
+					Environment.CurrentManagedThreadId,
+					new StackTrace (true).ToString ());
+			} else {
+				UpdateReferenceCount (ReferenceLogEvent.WeakGlobalDeleted, out _);
+			}
 			base.DeleteWeakGlobalReference (ref value);
 		}
 
@@ -337,8 +371,28 @@ namespace Android.Runtime {
 				int threadId,
 				string? stackTrace)
 		{
+			int globalCount = UpdateReferenceCount (kind, out int weakCount);
+
+			if (GlobalReferenceLoggingEnabled) {
+				string line = FormatReferenceMessage (
+					kind,
+					globalCount,
+					weakCount,
+					currentHandle,
+					currentType,
+					newHandle,
+					newType,
+					threadName,
+					threadId);
+				WriteReference (grefLog, grefLock, grefToLogcat, GrefLogTag, line, stackTrace);
+			}
+
+			return globalCount;
+		}
+
+		int UpdateReferenceCount (ReferenceLogEvent kind, out int weakCount)
+		{
 			int globalCount;
-			int weakCount;
 
 			switch (kind) {
 				case ReferenceLogEvent.GlobalCreated:
@@ -359,20 +413,6 @@ namespace Android.Runtime {
 					break;
 				default:
 					throw new ArgumentOutOfRangeException (nameof (kind));
-			}
-
-			if (RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef) {
-				string line = FormatReferenceMessage (
-					kind,
-					globalCount,
-					weakCount,
-					currentHandle,
-					currentType,
-					newHandle,
-					newType,
-					threadName,
-					threadId);
-				WriteReference (grefLog, grefLock, grefToLogcat, GrefLogTag, line, stackTrace);
 			}
 
 			return globalCount;
@@ -414,7 +454,7 @@ namespace Android.Runtime {
 
 			return string.Create (
 				CultureInfo.InvariantCulture,
-				$"{prefix} grefc {globalCount} gwrefc {weakCount} {handles} from thread '{threadName ?? ""}'({threadId})");
+				$"{prefix} grefc {globalCount} gwrefc {weakCount} {handles} from thread '{threadName ?? "<null>"}'({threadId})");
 		}
 
 		static string FormatHandle (IntPtr handle, byte type)
@@ -435,7 +475,7 @@ namespace Android.Runtime {
 
 		static string GetThreadName ()
 		{
-			return Thread.CurrentThread.Name ?? "";
+			return Thread.CurrentThread.Name ?? "<null>";
 		}
 
 		static void WriteReference (
@@ -491,16 +531,20 @@ namespace Android.Runtime {
 			}
 
 			try {
-				bool logging = RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef;
+				var eventKind = (ReferenceLogEvent) kind;
+				if (!GlobalReferenceLoggingEnabled) {
+					manager.UpdateReferenceCount (eventKind, out _);
+					return;
+				}
 				manager.LogReference (
-					(ReferenceLogEvent) kind,
+					eventKind,
 					currentHandle,
 					currentType,
 					newHandle,
 					newType,
-					logging ? Marshal.PtrToStringUTF8 (threadName) : null,
+					Marshal.PtrToStringUTF8 (threadName),
 					threadId,
-					logging ? Marshal.PtrToStringUTF8 (stackTrace) : null);
+					Marshal.PtrToStringUTF8 (stackTrace));
 			} catch (Exception e) {
 				RuntimeNativeMethods.monodroid_log (LogLevel.Error, LogCategories.Default, $"Managed native reference callback failed: {e}");
 			}
@@ -515,7 +559,7 @@ namespace Android.Runtime {
 				return;
 			}
 
-			if (!RuntimeFeature.ObjectReferenceLogging || !Logger.LogGlobalRef) {
+			if (!GlobalReferenceLoggingEnabled) {
 				return;
 			}
 

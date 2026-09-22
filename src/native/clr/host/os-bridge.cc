@@ -1,5 +1,6 @@
 #include <cstdarg>
 #include <cstdlib>
+#include <unistd.h>
 
 #include <host/os-bridge.hh>
 #include <host/runtime-util.hh>
@@ -66,25 +67,36 @@ auto OSBridge::get_object_ref_type (JNIEnv *env, void *handle) noexcept -> char
 	}
 }
 
-void OSBridge::set_reference_logging_callbacks (reference_log_fn log_callback, reference_log_message_fn message_callback) noexcept
+void OSBridge::set_reference_logging_callbacks (reference_log_fn log_callback, reference_log_message_fn message_callback, bool log_reference_metadata) noexcept
 {
 	abort_if_invalid_pointer_argument (log_callback, "log_callback");
 	abort_if_invalid_pointer_argument (message_callback, "message_callback");
 	reference_log_callback = log_callback;
 	reference_log_message_callback = message_callback;
+	reference_logging_enabled = log_reference_metadata;
 }
 
 void OSBridge::log_reference (
+	JNIEnv *env,
 	ReferenceLogEvent kind,
 	jobject current_handle,
-	char current_type,
 	jobject new_handle,
-	char new_type,
-	const char *thread_name,
-	int thread_id,
 	const char *stack_trace) noexcept
 {
 	abort_if_invalid_pointer_argument (reference_log_callback, "reference_log_callback");
+	char current_type = 'I';
+	char new_type = 'I';
+	const char *thread_name = nullptr;
+	int thread_id = 0;
+	if (reference_logging_enabled) {
+		current_type = get_object_ref_type (env, current_handle);
+		new_type = get_object_ref_type (env, new_handle);
+		thread_name = "finalizer";
+		thread_id = gettid ();
+	} else {
+		stack_trace = nullptr;
+	}
+
 	reference_log_callback (
 		kind,
 		current_handle,
@@ -98,7 +110,7 @@ void OSBridge::log_reference (
 
 void OSBridge::log_reference_message (const char *message) noexcept
 {
-	if (!Logger::gref_enabled ()) [[likely]] {
+	if (!reference_logging_enabled) [[likely]] {
 		return;
 	}
 
@@ -108,7 +120,7 @@ void OSBridge::log_reference_message (const char *message) noexcept
 
 void OSBridge::log_reference_messagef (const char *format, ...) noexcept
 {
-	if (!Logger::gref_enabled ()) [[likely]] {
+	if (!reference_logging_enabled) [[likely]] {
 		return;
 	}
 

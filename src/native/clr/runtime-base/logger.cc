@@ -82,11 +82,6 @@ auto Logger::light_lref_enabled () noexcept -> bool
 	return light_lref;
 }
 
-auto Logger::gref_enabled () noexcept -> bool
-{
-	return (log_categories & LOG_GREF) != 0;
-}
-
 [[gnu::always_inline]] bool
 Logger::set_category (const char *name, const char *arg, size_t arg_length, unsigned int entry, bool arg_starts_with_name) noexcept
 {
