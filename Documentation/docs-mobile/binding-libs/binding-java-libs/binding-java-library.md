@@ -1,7 +1,7 @@
 ---
 title: Binding a Java Library
 description: Bind an existing Java library to use it from a .NET for Android application.
-ms.author: jopobst
+ms.author: jopepper
 ms.date: 05/07/2024
 ---
 
