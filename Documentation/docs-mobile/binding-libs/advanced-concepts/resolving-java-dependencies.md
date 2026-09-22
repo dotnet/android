@@ -1,7 +1,7 @@
 ---
 title: Resolving Java Dependencies in .NET for Android
 description: Resolving Java Dependencies in .NET for Android
-ms.author: jopobst
+ms.author: jopepper
 ms.date: 05/11/2024
 ---
 

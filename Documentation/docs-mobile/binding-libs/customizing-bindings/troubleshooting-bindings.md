@@ -1,7 +1,7 @@
 ---
 title: "Troubleshooting Bindings"
 description: "This article summarizes serveral common errors that may occur when generating bindings, along with possible causes and suggested ways to resolve them."
-ms.author: jopobst
+ms.author: jopepper
 ms.date: 05/09/2024
 ---
 

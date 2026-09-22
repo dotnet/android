@@ -23,7 +23,7 @@ applications targeting .NET 10 and earlier use Mono by default. Setting
 or optimized builds and takes precedence over `$(UseMonoRuntime)`.
 
 `$(UseMonoRuntime)=true` is not a .NET 11 escape hatch. The .NET 11 SDK
-rejects it with [NETSDK1242](https://learn.microsoft.com/dotnet/core/tools/sdk-errors/netsdk1242).
+rejects it with [NETSDK1242](/dotnet/core/tools/sdk-errors/netsdk1242).
 Use the .NET 10-and-earlier Mono guidance only when targeting a framework where
 Mono is supported.
 
@@ -1752,7 +1752,7 @@ This property is ignored unless the
 ## EnableMSTestRunner
 
 A boolean property that enables the
-[MSTest runner](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-running-tests)
+[MSTest runner](/dotnet/core/testing/unit-testing-mstest-running-tests)
 for Android test projects. When set to `true`, `dotnet run` will launch the
 application via `am instrument` instead of `am start`, allowing test results
 to be reported through Android's instrumentation protocol.
@@ -1784,7 +1784,7 @@ functioning, but at the benefit of reduced application size.
 Set to `false` by default in `Release` mode, unless
 `$(EnableDiagnostics)` or `$(AndroidEnableProfiler)` are enabled.
 
-[eventsource]: https://learn.microsoft.com/dotnet/core/diagnostics/eventsource
+[eventsource]: /dotnet/core/diagnostics/eventsource
 
 ## GenerateApplicationManifest
 
@@ -1890,7 +1890,7 @@ but at the benefit of reduced application size.
 Set to `false` by default in `Release` mode, unless
 `$(EnableDiagnostics)` or `$(AndroidEnableProfiler)` are enabled.
 
-[dotnetmetrics]: https://learn.microsoft.com/dotnet/core/diagnostics/metrics
+[dotnetmetrics]: /dotnet/core/diagnostics/metrics
 
 ## MonoAndroidAssetPrefix
 
@@ -1957,7 +1957,7 @@ full ReadyToRun.
 For more information, see
 [Runtimes and compilation in .NET MAUI][maui-runtimes-compilation].
 
-[ready-to-run]: https://learn.microsoft.com/dotnet/core/deploying/ready-to-run
+[ready-to-run]: /dotnet/core/deploying/ready-to-run
 
 ## PublishReadyToRunComposite
 
@@ -1996,19 +1996,19 @@ publish or optimized builds when set to `true`.
 This property defaults to `true` in .NET 10 and earlier, so Android
 applications use Mono. In .NET 11 and later, it defaults to `false`, so
 Android applications use CoreCLR, and an explicit `true` value is rejected
-with [NETSDK1242](https://learn.microsoft.com/dotnet/core/tools/sdk-errors/netsdk1242).
+with [NETSDK1242](/dotnet/core/tools/sdk-errors/netsdk1242).
 
 For more information, see
 [Runtimes and compilation in .NET MAUI][maui-runtimes-compilation].
 
-[maui-runtimes-compilation]: https://learn.microsoft.com/dotnet/maui/deployment/runtimes-compilation
+[maui-runtimes-compilation]: /dotnet/maui/deployment/runtimes-compilation
 
 ## WaitForExit
 
 A boolean property that controls the behavior of `dotnet run` when launching
 Android applications.
 
-When `$(WaitForExit)` not `false` (the default), `dotnet run` will:
+When `$(WaitForExit)` is not `false` (the default), `dotnet run` will:
 
 * Launch the Android application
 * Stream `logcat` output filtered to the application's process
