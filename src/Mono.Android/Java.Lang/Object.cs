@@ -166,19 +166,7 @@ namespace Java.Lang {
 			if (handle == IntPtr.Zero)
 				return null;
 
-			var peer = PeekObject (handle, type);
-			if (peer == null) {
-				var reference = new JniObjectReference (handle);
-				peer = JniEnvironment.Runtime.ValueManager.CreatePeer (ref reference, JniObjectReferenceOptions.Copy, type);
-				if (peer != null) {
-					// Activation can register a competing peer before this one is constructed.
-					var registered = PeekObject (handle, type);
-					if (registered != null && !ReferenceEquals (peer, registered)) {
-						peer.DisposeUnlessReferenced ();
-						peer = registered;
-					}
-				}
-			}
+			var peer = JniEnvironment.Runtime.ValueManager.GetPeer (new JniObjectReference (handle), type);
 			JNIEnv.DeleteRef (handle, transfer);
 			return peer;
 		}
