@@ -162,7 +162,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			static bool CallsRuntimeEventSource (MethodDefinition method) =>
-				method.Body.Instructions.Any (instruction =>
+				method.HasBody && method.Body.Instructions.Any (instruction =>
 					instruction.Operand is MethodReference reference &&
 					reference.DeclaringType.FullName == "Microsoft.Android.Runtime.RuntimeEventSource");
 		}
