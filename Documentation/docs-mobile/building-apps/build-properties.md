@@ -2008,7 +2008,7 @@ For more information, see
 A boolean property that controls the behavior of `dotnet run` when launching
 Android applications.
 
-When `$(WaitForExit)` not `false` (the default), `dotnet run` will:
+When `$(WaitForExit)` is not `false` (the default), `dotnet run` will:
 
 * Launch the Android application
 * Stream `logcat` output filtered to the application's process
