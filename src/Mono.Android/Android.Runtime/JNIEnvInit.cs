@@ -116,14 +116,12 @@ namespace Android.Runtime
 
 			InitializeBeforeRuntimeCreation (*args);
 
-			JniRuntime.JniTypeManager typeManager = CreateTypeManager ();
-			JniRuntime.JniValueManager valueManager = CreateValueManager ();
 			androidRuntime = new AndroidRuntime (
 					args->env,
 					args->javaVm,
 					args->grefLoader,
-					typeManager,
-					valueManager
+					new TrimmableTypeMapTypeManager (),
+					new TrimmableTypeMapValueManager ()
 			);
 			JniRuntime.SetCurrent (androidRuntime);
 			TrimmableTypeMap.RegisterNativeMethods ();
@@ -132,16 +130,6 @@ namespace Android.Runtime
 
 			RunStartupHooksIfNeeded ();
 			SetSynchronizationContext ();
-		}
-
-		internal static JniRuntime.JniTypeManager CreateTypeManager ()
-		{
-			return new TrimmableTypeMapTypeManager ();
-		}
-
-		internal static JniRuntime.JniValueManager CreateValueManager ()
-		{
-			return new TrimmableTypeMapValueManager ();
 		}
 
 		static void InitializeCommonState (JnienvInitializeArgs args)
