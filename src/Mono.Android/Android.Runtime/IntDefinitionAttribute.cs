@@ -2,7 +2,6 @@ using System;
 
 namespace Android.Runtime
 {
-	[Obsolete ("IntDefinitionAttribute is no longer emitted by the bindings generator.")]
 	[AttributeUsage (AttributeTargets.Field)]
 	public class IntDefinitionAttribute : Attribute
 	{
