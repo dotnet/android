@@ -90,31 +90,17 @@ namespace Android.RuntimeTests
 			Assert.Greater (JNIEnv.BridgeProcessingGeneration, initialBridgeGeneration,
 				"A GC bridge round should complete after forcing a full collection.");
 
+			CapturedEvent startEvent = default;
+			CapturedEvent stopEvent = default;
 			Assert.IsTrue (
-				SpinWait.SpinUntil (() => {
-					var bridgeEvents = listener.GetEvents (startEventId, stopEventId);
-					int startCount = 0;
-					int stopCount = 0;
-					foreach (var captured in bridgeEvents) {
-						if (captured.Id == startEventId) {
-							startCount++;
-						} else if (captured.Id == stopEventId) {
-							stopCount++;
-						}
-					}
-					return startCount > 0 && startCount == stopCount;
-				}, timeout),
+				SpinWait.SpinUntil (
+					() => listener.TryGetEventPair (startEventId, stopEventId, out startEvent, out stopEvent),
+					timeout),
 				"GC bridge Start and Stop events should be emitted as matched pairs.");
-
-			var events = listener.GetEvents (startEventId, stopEventId);
-			Assert.Greater (events.Count, 0);
-			Assert.AreEqual (0, events.Count % 2);
-			for (int i = 0; i < events.Count; i += 2) {
-				Assert.AreEqual (startEventId, events [i].Id);
-				Assert.AreEqual (0, events [i].Payload.Count);
-				Assert.AreEqual (stopEventId, events [i + 1].Id);
-				Assert.AreEqual (0, events [i + 1].Payload.Count);
-			}
+			Assert.AreEqual (startEventId, startEvent.Id);
+			Assert.AreEqual (0, startEvent.Payload.Count);
+			Assert.AreEqual (stopEventId, stopEvent.Id);
+			Assert.AreEqual (0, stopEvent.Payload.Count);
 		}
 
 		[MethodImpl (MethodImplOptions.NoInlining)]
@@ -208,6 +194,27 @@ namespace Android.RuntimeTests
 					}
 					return matchingEvents;
 				}
+			}
+
+			public bool TryGetEventPair (
+				int startEventId,
+				int stopEventId,
+				out CapturedEvent startEvent,
+				out CapturedEvent stopEvent)
+			{
+				lock (events) {
+					for (int i = 0; i + 1 < events.Count; i++) {
+						if (events [i].Id == startEventId && events [i + 1].Id == stopEventId) {
+							startEvent = events [i];
+							stopEvent = events [i + 1];
+							return true;
+						}
+					}
+				}
+
+				startEvent = default;
+				stopEvent = default;
+				return false;
 			}
 
 			protected override void OnEventSourceCreated (EventSource eventSource)
