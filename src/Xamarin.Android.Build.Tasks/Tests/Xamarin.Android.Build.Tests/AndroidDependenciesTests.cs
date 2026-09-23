@@ -478,8 +478,33 @@ namespace Xamarin.Android.Build.Tests
 					.Select (x => x.Trim ())
 					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
 					.SkipWhile (x => !x.StartsWith ("Output Item(s):", StringComparison.Ordinal))
-					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal));
+					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
+					.ToArray ();
+				Assert.IsNotEmpty (taskOutput, "CalculateProjectDependencies should log its output items.");
 				StringAssertEx.DoesNotContain ("ndk-bundle", taskOutput, "ndk-bundle should not be a dependency for CoreCLR.");
+			}
+		}
+
+		[Test]
+		public void NativeAotDoesNotRequireNdk_WhenWorkloadLinkerEnabled ()
+		{
+			// Do not set _AndroidUseWorkloadNativeLinker: this test intentionally verifies its default.
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			using (var builder = CreateApkBuilder ()) {
+				builder.Verbosity = LoggerVerbosity.Detailed;
+				builder.Target = "GetAndroidDependencies";
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				IEnumerable<string> taskOutput = builder.LastBuildOutput
+					.Select (x => x.Trim ())
+					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
+					.SkipWhile (x => !x.StartsWith ("Output Item(s):", StringComparison.Ordinal))
+					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
+					.ToArray ();
+				Assert.IsNotEmpty (taskOutput, "CalculateProjectDependencies should log its output items.");
+				StringAssertEx.DoesNotContain ("ndk-bundle", taskOutput, "ndk-bundle should not be a dependency for NativeAOT with the workload linker.");
 			}
 		}
 

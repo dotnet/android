@@ -49,8 +49,7 @@ Device: No
 |-----------|--------|---------------------|
 | **build** (general) | `--filter "FullyQualifiedName~BuildTest"` | `BuildTest`, `BuildTest2`, `BuildTest3` — core build pipeline tests |
 | **smoke** | `--filter "cat=SmokeTests"` | Quick subset of build, packaging, and asset pack tests |
-| **aot** | `--filter "cat=AOT"` | `AotTests` + AOT-related tests in `BuildTest`, `IncrementalBuildTest` |
-| **llvm** | `--filter "cat=LLVM"` | LLVM-specific AOT compilation tests |
+| **native aot** | `--filter "FullyQualifiedName~NativeAotBuildTests"` | NativeAOT build and packaging tests |
 | **bindings** | `--filter "FullyQualifiedName~BindingBuildTest"` | Java binding generation and build tests |
 | **packaging** | `--filter "FullyQualifiedName~PackagingTest"` | APK/AAB packaging, signing, zipalign |
 | **incremental build** | `--filter "FullyQualifiedName~IncrementalBuildTest"` | Incremental build correctness tests |
@@ -141,7 +140,6 @@ Device: **Yes**
 The `Mono.Android.NET-Tests.csproj` dynamically excludes categories based on runtime:
 - **CoreCLR runtime**: Excludes `CoreCLRIgnore`, `NTLM`
 - **NativeAOT runtime**: Excludes `NativeAOTIgnore`, `SSL`, `NTLM`, `Export`, `NativeTypeMap`
-- **LLVM**: Excludes `LLVMIgnore`, `InetAccess`, `NetworkInterfaces`
 
 Other categories: `SSL`, `InetAccess`, `JavaList`, `RuntimeConfig`, `Intune`, `NTLM`
 

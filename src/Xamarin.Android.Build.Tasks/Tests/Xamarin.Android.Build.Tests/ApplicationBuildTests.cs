@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
+using Microsoft.Build.Framework;
 using NUnit.Framework;
+using Xamarin.Android.Build;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
@@ -33,6 +35,44 @@ namespace Xamarin.Android.Build.Tests
 			project.SetRuntime (AndroidRuntime.CoreCLR);
 			using var builder = CreateApkBuilder (Path.Combine (rootPath, project.ProjectName));
 			Assert.IsTrue (builder.Build (project), "Build should have succeeded.");
+		}
+
+		[Test]
+		[NonParallelizable]
+		public void BuildApplicationWithSpecialCharactersInToolchainPath ()
+		{
+			if (!IsWindows) {
+				Assert.Ignore ("Symbolic-link handling for this path scenario is Windows-specific.");
+			}
+
+			string toolchainRoot = Path.Combine (Root, "temp", $"{TestName}-toolchain");
+			string toolchainPath = Path.Combine (toolchainRoot, "SDK Ümläüts");
+			string sdkPath = Path.Combine (toolchainPath, "sdk");
+			string ndkPath = Path.Combine (toolchainPath, "ndk");
+			string? oldSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
+			string? oldNdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_NDK_PATH");
+			try {
+				if (!SymbolicLink.Create (sdkPath, AndroidSdkPath) || !SymbolicLink.Create (ndkPath, AndroidNdkPath)) {
+					Assert.Ignore ("Creating symbolic links requires Windows Developer Mode or elevated permissions.");
+				}
+				DirectoryAssert.Exists (Path.Combine (sdkPath, "platforms"), "The SDK symbolic link should resolve.");
+				FileAssert.Exists (Path.Combine (ndkPath, "source.properties"), "The NDK symbolic link should resolve.");
+				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", sdkPath);
+				Environment.SetEnvironmentVariable ("TEST_ANDROID_NDK_PATH", ndkPath);
+
+				var project = new XamarinAndroidApplicationProject ();
+				project.SetRuntime (AndroidRuntime.CoreCLR);
+				using var builder = CreateApkBuilder (Path.Combine ("temp", TestName, "App"));
+				builder.Verbosity = LoggerVerbosity.Detailed;
+				Assert.IsTrue (builder.Build (project), "Build should have succeeded.");
+				StringAssertEx.Contains ($"_AndroidSdkDirectory={sdkPath}", builder.LastBuildOutput, "The build should use the SDK path containing spaces and non-ASCII characters.");
+			} finally {
+				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", oldSdkPath);
+				Environment.SetEnvironmentVariable ("TEST_ANDROID_NDK_PATH", oldNdkPath);
+				if (Directory.Exists (toolchainRoot)) {
+					Directory.Delete (toolchainRoot, recursive: true);
+				}
+			}
 		}
 
 		[Test]
