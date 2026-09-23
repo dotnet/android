@@ -30,11 +30,6 @@ _ResolveAssemblies MSBuild target.
     </CompileDependsOn>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <!-- When marshal methods are enabled, AOT needs to run after the GenerateJavaStubs task -->
-    <_RunAotMaybe Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">_AndroidAot</_RunAotMaybe>
-  </PropertyGroup>
-
   <!-- Some NuGet packages add assemblies as @(Reference) items with CopyToOutputDirectory
        metadata, or as @(None) items with CopyToOutputDirectory. Both paths flow into
        @(_SourceItemsToCopyToPublishDirectory) which gets blanket-removed from
@@ -70,7 +65,7 @@ _ResolveAssemblies MSBuild target.
        _CheckForMismatchingPlatform implementation target.
        See https://github.com/dotnet/msbuild/blob/eae54023463db15e9a9081f35a959c9162797643/src/Tasks/Microsoft.Common.CurrentVersion.targets#L823-L836 -->
   <Target Name="_ComputeFilesToPublishForRuntimeIdentifiers"
-      DependsOnTargets="BuildOnlySettings;_CheckForInvalidConfigurationAndPlatform;_FixupIntermediateAssembly;_PatchNuGetReferenceMetadata;ResolveReferences;ComputeFilesToPublish;$(_RunAotMaybe)"
+      DependsOnTargets="BuildOnlySettings;_CheckForInvalidConfigurationAndPlatform;_FixupIntermediateAssembly;_PatchNuGetReferenceMetadata;ResolveReferences;ComputeFilesToPublish"
       Returns="@(ResolvedFileToPublish)">
       <ItemGroup>
         <ResolvedFileToPublish Remove="@(_SourceItemsToCopyToPublishDirectory)" />
@@ -319,10 +314,6 @@ _ResolveAssemblies MSBuild target.
       <!-- Filename without extension -->
       <_ExcludedNativeLibraries Condition=" '$(_AndroidIncludeSystemGlobalizationNative)' != 'true' " Include="libSystem.Globalization.Native" />
       <_ExcludedNativeLibraries Condition=" '$(_AndroidEnableNativeStackTracing)' != 'true' " Include="libxamarin-native-tracing" />
-      <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'MonoVM' Or '$(_AndroidRuntime)' == '' " Include="libnet-android.debug" />
-      <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'MonoVM' Or '$(_AndroidRuntime)' == '' " Include="libnet-android.release" />
-      <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " Include="libmono-android.debug" />
-      <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " Include="libmono-android.release" />
       <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' And '$(AndroidIncludeDebugSymbols)' != 'true' " Include="libmscordaccore" />
       <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' And '$(AndroidIncludeDebugSymbols)' != 'true' " Include="libmscordbi" />
     </ItemGroup>

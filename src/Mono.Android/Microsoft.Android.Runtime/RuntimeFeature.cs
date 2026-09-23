@@ -5,7 +5,6 @@ namespace Microsoft.Android.Runtime;
 
 static class RuntimeFeature
 {
-	const bool IsMonoRuntimeEnabledByDefault = true;
 	const bool IsCoreClrRuntimeEnabledByDefault = false;
 	const bool IsNativeAotRuntimeEnabledByDefault = false;
 	const bool IsAssignableFromCheckEnabledByDefault = true;
@@ -20,10 +19,6 @@ static class RuntimeFeature
 	const string EventSourceSupportSwitch = "System.Diagnostics.Tracing.EventSource.IsSupported";
 	const string StartupHookProviderSwitch = "System.StartupHookProvider.IsSupported";
 
-	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsMonoRuntime)}")]
-	internal static bool IsMonoRuntime { get; } =
-		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (IsMonoRuntime)}", out bool isEnabled) ? isEnabled : IsMonoRuntimeEnabledByDefault;
-		
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsCoreClrRuntime)}")]
 	internal static bool IsCoreClrRuntime { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (IsCoreClrRuntime)}", out bool isEnabled) ? isEnabled : IsCoreClrRuntimeEnabledByDefault;

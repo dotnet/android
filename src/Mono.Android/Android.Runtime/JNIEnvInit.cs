@@ -99,17 +99,17 @@ namespace Android.Runtime
 
 		// NOTE: should have different name than `Initialize` to avoid:
 		// * Assertion at /__w/1/s/src/mono/mono/metadata/icall.c:6258, condition `!only_unmanaged_callers_only' not met
-		// Only used for NativeAOT after the runtime has been created. MonoVM and CoreCLR use Initialize().
+		// Only used for NativeAOT after the runtime has been created. CoreCLR uses Initialize().
 		internal static void InitializeNativeAotRuntime (JniRuntime runtime, JnienvInitializeArgs args)
 		{
 			if (!RuntimeFeature.IsNativeAotRuntime) {
 				throw new NotSupportedException ("JNIEnvInit.InitializeNativeAotRuntime can only be used to initialize NativeAOT.");
 			}
-			if (RuntimeFeature.IsMonoRuntime || RuntimeFeature.IsCoreClrRuntime) {
-				throw new NotSupportedException ("Internal error: NativeAOT cannot be enabled with MonoVM or CoreCLR.");
+			if (RuntimeFeature.IsCoreClrRuntime) {
+				throw new NotSupportedException ("Internal error: NativeAOT cannot be enabled with CoreCLR.");
 			}
 
-			if (!RuntimeFeature.IsMonoRuntime && RuntimeFeature.StartupNoGCRegion) {
+			if (RuntimeFeature.StartupNoGCRegion) {
 				StartupNoGCRegion.Start ();
 			}
 			androidRuntime = runtime;
@@ -118,18 +118,18 @@ namespace Android.Runtime
 			SetSynchronizationContext ();
 		}
 
-		// Only used for MonoVM and CoreCLR. NativeAOT uses InitializeNativeAotRuntime().
+		// Only used for CoreCLR. NativeAOT uses InitializeNativeAotRuntime().
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
 			if (RuntimeFeature.IsNativeAotRuntime) {
 				throw new NotSupportedException ("JNIEnvInit.Initialize cannot be used to initialize NativeAOT.");
 			}
-			if (RuntimeFeature.IsMonoRuntime == RuntimeFeature.IsCoreClrRuntime) {
-				throw new NotSupportedException ("Internal error: exactly one of RuntimeFeature.IsMonoRuntime or RuntimeFeature.IsCoreClrRuntime must be enabled.");
+			if (!RuntimeFeature.IsCoreClrRuntime) {
+				throw new NotSupportedException ("Internal error: CoreCLR must be enabled.");
 			}
 
-			if (!RuntimeFeature.IsMonoRuntime && RuntimeFeature.StartupNoGCRegion) {
+			if (RuntimeFeature.StartupNoGCRegion) {
 				StartupNoGCRegion.Start ();
 			}
 
@@ -184,27 +184,11 @@ namespace Android.Runtime
 				return new TrimmableTypeMapValueManager ();
 			}
 
-			if (RuntimeFeature.IsMonoRuntime) {
-				return CreateAndroidValueManager ();
-			}
-
-			if (RuntimeFeature.IsCoreClrRuntime) {
-				return CreateJavaMarshalValueManager ();
-			}
-
-			if (RuntimeFeature.IsNativeAotRuntime) {
-				return CreateJavaMarshalValueManager ();
-			}
-
-			throw new NotSupportedException ("Internal error: unknown runtime not supported");
+			return CreateJavaMarshalValueManager ();
 
 			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "CoreCLR value manager is preserved by the MarkJavaObjects trimmer step.")]
 			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
 			JniRuntime.JniValueManager CreateJavaMarshalValueManager () => new JavaMarshalValueManager ();
-
-			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Mono value manager is preserved by the MarkJavaObjects trimmer step.")]
-			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
-			JniRuntime.JniValueManager CreateAndroidValueManager () => new AndroidValueManager ();
 		}
 
 		static void InitializeCommonState (JnienvInitializeArgs args)

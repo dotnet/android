@@ -78,11 +78,6 @@ namespace Android.Runtime {
 			return wrap;
 		}
 
-		static void MonoDroidUnhandledException (Exception ex)
-		{
-			RuntimeNativeMethods.monodroid_unhandled_exception (ex);
-		}
-
 		internal static void PropagateUncaughtException (IntPtr env, IntPtr javaThreadPtr, IntPtr javaExceptionPtr)
 		{
 			if (!JNIEnvInit.PropagateExceptions)
@@ -101,15 +96,7 @@ namespace Android.Runtime {
 				Logger.Log (LogLevel.Info, "MonoDroid", "UNHANDLED EXCEPTION:");
 				Logger.Log (LogLevel.Info, "MonoDroid", javaException.ToString ());
 
-				if (RuntimeFeature.IsMonoRuntime) {
-					MonoDroidUnhandledException (innerException ?? javaException);
-				} else if (RuntimeFeature.IsCoreClrRuntime) {
-					ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent (innerException ?? javaException);
-				} else if (RuntimeFeature.IsNativeAotRuntime) {
-					ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent (innerException ?? javaException);
-				} else {
-					throw new NotSupportedException ("Internal error: unknown runtime not supported");
-				}
+				ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent (innerException ?? javaException);
 			} catch (Exception e) {
 				Logger.Log (LogLevel.Error, "monodroid", "Exception thrown while raising AppDomain.UnhandledException event: " + e.ToString ());
 			}
@@ -444,9 +431,6 @@ namespace Android.Runtime {
 			return JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (jobject));
 		}
 
-		[MethodImplAttribute(MethodImplOptions.InternalCall)]
-		static extern unsafe IntPtr monodroid_typemap_managed_to_java (Type type, byte* mvid);
-
 		internal static void LogTypemapTrace (StackTrace st)
 		{
 			string? trace = st.ToString ()?.Trim ();
@@ -459,14 +443,6 @@ namespace Android.Runtime {
 			}
 		}
 
-		// We need this proxy method because if `TypeManagedToJava` contained the call to `monodroid_typemap_managed_to_java`
-		// (which is an icall, or ecall in CoreCLR parlance), CoreCLR JIT would throw an exception, refusing to compile the
-		// method.  The exception would be thrown even if the icall weren't called (e.g. hidden behind a runtime type check)
-		static unsafe IntPtr monovm_typemap_managed_to_java (Type type, byte* mvidptr)
-		{
-			return monodroid_typemap_managed_to_java (type, mvidptr);
-		}
-
 		internal static unsafe string? TypemapManagedToJava (Type type)
 		{
 			if (RuntimeFeature.TrimmableTypeMap) {
@@ -477,7 +453,7 @@ namespace Android.Runtime {
 
 			byte[]? mvid_data = null;
 			// The Debug CoreCLR typemaps are keyed on the assembly display name, so computing the MVID would be wasted work.
-			if (!RuntimeFeature.IsCoreClrRuntime || !RuntimeFeature.ManagedToJavaUsesAssemblyFullName) {
+			if (!RuntimeFeature.ManagedToJavaUsesAssemblyFullName) {
 				if (mvid_bytes == null)
 					mvid_bytes = new byte[16];
 
@@ -490,18 +466,12 @@ namespace Android.Runtime {
 				}
 			}
 
+			if (type.FullName is null)
+				return null;
+			string? assemblyFullName = RuntimeFeature.ManagedToJavaUsesAssemblyFullName ? type.Assembly.FullName : null;
 			IntPtr ret;
 			fixed (byte* mvidptr = mvid_data) {
-				if (RuntimeFeature.IsMonoRuntime) {
-					ret = monovm_typemap_managed_to_java (type, mvidptr);
-				} else if (RuntimeFeature.IsCoreClrRuntime) {
-					if (type.FullName is null)
-						return null;
-					string? assemblyFullName = RuntimeFeature.ManagedToJavaUsesAssemblyFullName ? type.Assembly.FullName : null;
-					ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, assemblyFullName, (IntPtr)mvidptr);
-				} else {
-					throw new NotSupportedException ("Internal error: unknown runtime not supported");
-				}
+				ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, assemblyFullName, (IntPtr)mvidptr);
 			}
 
 			if (ret == IntPtr.Zero) {

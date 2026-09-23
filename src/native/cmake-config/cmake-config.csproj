@@ -8,8 +8,8 @@
     * src/native/CMakePresets.json
       (read by the cmake preset invocations in src/native/native.targets)
 
-  This is its own project so that native-mono.csproj, native-clr.csproj,
-  and native-nativeaot.csproj can each ProjectReference it. That gives us:
+  This is its own project so that native-clr.csproj and native-nativeaot.csproj
+  can each ProjectReference it. That gives us:
 
     * A single producer for the shared output files (no parallel-write race).
     * MSBuild project-reference ordering so every consumer's `cmake` preset

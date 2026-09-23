@@ -48,14 +48,11 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void UnsupportedJcwCodegenTargetIsRejected (
 			[Values ("XamarinAndroid", "JavaInterop1")] string codegenTarget,
-			[Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			var project = new XamarinAndroidApplicationProject {
 				IsRelease = runtime == AndroidRuntime.NativeAOT,
 			};
-			if (runtime == AndroidRuntime.MonoVM) {
-				project.SetProperty ("_DisableCheckForUnsupportedMonoMobileRuntime", "true");
-			}
 			project.SetRuntime (runtime);
 			project.SetProperty ("_AndroidJcwCodegenTarget", codegenTarget);
 			using (var builder = CreateApkBuilder ()) {
