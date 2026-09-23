@@ -52,7 +52,7 @@ tools:
     - az *
     - c++ *
     - cat
-    - dotnet test *
+    - dotnet *
     - git diff *
     - grep
     - head
