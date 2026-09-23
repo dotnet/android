@@ -110,6 +110,13 @@ namespace Android.Runtime
 
 		[LibraryImport (RuntimeConstants.InternalDllName)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial void _monodroid_register_reference_logging_callbacks (
+			delegate* unmanaged<int, IntPtr, byte, IntPtr, byte, IntPtr, int, IntPtr, void> referenceLogCallback,
+			delegate* unmanaged<IntPtr, void> referenceLogMessageCallback,
+			byte logReferenceMetadata);
+
+		[LibraryImport (RuntimeConstants.InternalDllName)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial IntPtr monodroid_TypeManager_get_java_class_name (IntPtr klass);
 
 		[LibraryImport (RuntimeConstants.InternalDllName)]

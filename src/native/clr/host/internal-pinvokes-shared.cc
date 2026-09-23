@@ -2,47 +2,11 @@
 #include <host/host-common.hh>
 #include <host/os-bridge.hh>
 #include <host/typemap.hh>
-#include <runtime-base/android-system.hh>
 #include <runtime-base/cpu-arch.hh>
 #include <runtime-base/internal-pinvokes.hh>
 #include <runtime-base/jni-remapping.hh>
 
 using namespace xamarin::android;
-
-int _monodroid_gref_get () noexcept
-{
-	return OSBridge::get_gc_gref_count ();
-}
-
-int _monodroid_gref_inc () noexcept
-{
-	return OSBridge::_monodroid_gref_inc ();
-}
-
-int _monodroid_gref_dec () noexcept
-{
-	return OSBridge::_monodroid_gref_dec ();
-}
-
-void _monodroid_gref_log (const char *message) noexcept
-{
-	OSBridge::_monodroid_gref_log (message);
-}
-
-int _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable) noexcept
-{
-	return OSBridge::_monodroid_gref_log_new (curHandle, curType, newHandle, newType, threadName, threadId, from);
-}
-
-void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable) noexcept
-{
-	OSBridge::_monodroid_gref_log_delete (handle, type, threadName, threadId, from);
-}
-
-void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable) noexcept
-{
-	OSBridge::_monodroid_weak_gref_delete (handle, type, threadName, threadId, from);
-}
 
 BridgeProcessingFtn clr_initialize_gc_bridge (
 	BridgeProcessingStartedFtn bridge_processing_started_callback,
@@ -94,39 +58,9 @@ void monodroid_free (void *ptr) noexcept
 	free (ptr);
 }
 
-void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable) noexcept
+void _monodroid_register_reference_logging_callbacks (reference_log_fn log_callback, reference_log_message_fn message_callback, uint8_t log_reference_metadata) noexcept
 {
-	OSBridge::_monodroid_weak_gref_new (curHandle, curType, newHandle, newType, threadName, threadId, from);
-}
-
-int _monodroid_weak_gref_get () noexcept
-{
-	return OSBridge::get_gc_weak_gref_count ();
-}
-
-int _monodroid_weak_gref_inc () noexcept
-{
-	return OSBridge::_monodroid_weak_gref_inc ();
-}
-
-int _monodroid_weak_gref_dec () noexcept
-{
-	return OSBridge::_monodroid_weak_gref_dec ();
-}
-
-int _monodroid_max_gref_get () noexcept
-{
-	return static_cast<int>(AndroidSystem::get_max_gref_count ());
-}
-
-void _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable)
-{
-	OSBridge::_monodroid_lref_log_new (lrefc, handle, type, threadName, threadId, from);
-}
-
-void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, [[maybe_unused]] int from_writable)
-{
-	OSBridge::_monodroid_lref_log_delete (lrefc, handle, type, threadName, threadId, from);
+	OSBridge::set_reference_logging_callbacks (log_callback, message_callback, log_reference_metadata != 0);
 }
 
 void _monodroid_gc_wait_for_bridge_processing ()

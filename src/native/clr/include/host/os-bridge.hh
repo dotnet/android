@@ -6,6 +6,7 @@
 
 #include <jni.h>
 
+#include <managed-interface.hh>
 #include <shared/cpp-util.hh>
 
 #include "../runtime-base/logger.hh"
@@ -19,30 +20,15 @@ namespace xamarin::android {
 		static auto lref_to_gref (JNIEnv *env, jobject lref) noexcept -> jobject;
 		static auto get_object_ref_type (JNIEnv *env, void *handle) noexcept -> char;
 
-		static auto get_gc_gref_count () noexcept -> int
-		{
-			return gc_gref_count;
-		}
-
-		static auto get_gc_weak_gref_count () noexcept -> int
-		{
-			return gc_weak_gref_count;
-		}
-
-		static auto _monodroid_gref_inc () noexcept -> int;
-		static auto _monodroid_gref_dec () noexcept -> int;
-		static auto _monodroid_weak_gref_inc () noexcept -> int;
-		static auto _monodroid_weak_gref_dec () noexcept -> int;
-
-		static void _monodroid_gref_log (const char *message) noexcept;
-		static void _monodroid_gref_logf (const char *format, ...) noexcept __attribute__ ((format (printf, 1, 2)));
-		static auto _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from) noexcept -> int;
-		static void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from) noexcept;
-		static void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from);
-		static void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from);
-
-		static void _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from);
-		static void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from);
+		static void set_reference_logging_callbacks (reference_log_fn log_callback, reference_log_message_fn message_callback, bool log_reference_metadata) noexcept;
+		static void log_reference (
+			JNIEnv *env,
+			ReferenceLogEvent kind,
+			jobject current_handle,
+			jobject new_handle,
+			const char *stack_trace) noexcept;
+		static void log_reference_message (const char *message) noexcept;
+		static void log_reference_messagef (const char *format, ...) noexcept __attribute__ ((format (printf, 1, 2)));
 
 		static auto ensure_jnienv () noexcept -> JNIEnv*
 		{
@@ -61,16 +47,12 @@ namespace xamarin::android {
 		}
 
 	private:
-		static void _write_stack_trace (FILE *to, const char *const from, LogCategories = LOG_NONE) noexcept;
-		static void log_it (LogCategories category, std::string_view const& line, FILE *to, const char *const from, bool logcat_enabled) noexcept;
-		static void log_itf (LogCategories category, FILE *to, const char *const from, bool logcat_enabled, const char *format, ...) noexcept __attribute__ ((format (printf, 5, 6)));
-
-	private:
 		static inline JavaVM *jvm = nullptr;
 		static inline jclass GCUserPeer_class = nullptr;
 		static inline jmethodID GCUserPeer_ctor = nullptr;
 
-		static inline int gc_gref_count = 0;
-		static inline int gc_weak_gref_count = 0;
+		static inline reference_log_fn reference_log_callback = nullptr;
+		static inline reference_log_message_fn reference_log_message_callback = nullptr;
+		static inline bool reference_logging_enabled = false;
 	};
 }

@@ -3,6 +3,7 @@
 #include <host/host-jni.hh>
 #include <host/host-nativeaot.hh>
 #include <host/os-bridge.hh>
+#include <runtime-base/android-system.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
 #include <shared/helpers.hh>
@@ -29,9 +30,13 @@ namespace {
 	}
 }
 
-auto XA_Host_NativeAOT_JNI_OnLoad (JavaVM *vm, void *reserved) -> int
+auto XA_Host_NativeAOT_JNI_OnLoad (JavaVM *vm, void *reserved, JnienvInitializeArgs *initArgs) -> int
 {
-	return Host::Java_JNI_OnLoad (vm, reserved);
+	abort_if_invalid_pointer_argument (initArgs, "initArgs");
+	int result = Host::Java_JNI_OnLoad (vm, reserved);
+	initArgs->grefGcThreshold = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
+	initArgs->maxGrefCount = static_cast<int>(AndroidSystem::get_max_gref_count ());
+	return result;
 }
 
 void XA_Host_NativeAOT_OnInit (jstring language, jstring filesDir, jstring cacheDir, JnienvInitializeArgs *initArgs)

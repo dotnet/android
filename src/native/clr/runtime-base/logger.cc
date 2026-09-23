@@ -1,11 +1,9 @@
-#include <cerrno>
 #include <cstdarg>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
 
 #include <strings.h>
-#include <unistd.h>
 
 #include <android/log.h>
 
@@ -21,6 +19,7 @@ using namespace xamarin::android;
 namespace {
 	char *gref_file = nullptr;
 	char *lref_file = nullptr;
+	const char *reference_log_dir = nullptr;
 	bool light_gref  = false;
 	bool light_lref  = false;
 
@@ -52,75 +51,35 @@ namespace {
 	}
 }
 
-[[gnu::always_inline]]
-auto Logger::open_file (const char *path) noexcept -> FILE*
-{
-	if (path == nullptr || *path == '\0') {
-		return nullptr;
-	}
-
-	// Ignore errors, by design
-	unlink (path);
-
-	// `monodroid_fopen` will log any errors
-	FILE *ret = Util::monodroid_fopen (path, "a");
-	if (ret != nullptr) {
-		Util::set_world_accessable (path);
-	}
-
-	return ret;
-}
-
-[[gnu::flatten, gnu::always_inline]]
-auto Logger::open_file (LogCategories category, const char *custom_path, const char *override_dir, const char *fallback_filename) noexcept -> FILE*
-{
-	auto log_and_return = [&category](FILE *f, const char *path) -> FILE* {
-		if (f != nullptr) {
-			log_debugf (category, "Opened file '%s' for logging.", path);
-		}
-		return f;
-	};
-
-	FILE *ret = open_file (custom_path);
-	if (ret != nullptr) {
-		return log_and_return (ret, custom_path);
-	}
-
-	if (override_dir == nullptr || *override_dir == '\0') {
-		return nullptr;
-	}
-
-	Util::create_public_directory (override_dir);
-	char stack_buffer [Util::LocalPathBufferSize];
-	char *path_buffer = Util::join_paths (stack_buffer, sizeof (stack_buffer), override_dir, fallback_filename);
-
-	ret = log_and_return (open_file (path_buffer), path_buffer);
-	if (path_buffer != stack_buffer) {
-		std::free (path_buffer);
-	}
-	return ret;
-}
-
 void
 Logger::init_reference_logging (const char *override_dir) noexcept
 {
-	if ((log_categories & LOG_GREF) != 0 && !light_gref) {
-		_gref_log = open_file (LOG_GREF, gref_file, override_dir, "grefs.txt");
-	}
+	reference_log_dir = override_dir;
+}
 
-	if ((log_categories & LOG_LREF) != 0 && !light_lref) {
-		// if both lref & gref have files specified, and they're the same path, reuse the FILE*.
-		if (lref_file != nullptr && strcmp (lref_file, gref_file != nullptr ? gref_file : "") == 0) {
-			_lref_log = _gref_log;
-		} else {
-			_lref_log = open_file (LOG_LREF, lref_file, override_dir, "lrefs.txt");
-		}
-	}
+auto Logger::gref_log_path () noexcept -> const char*
+{
+	return gref_file;
+}
 
-	std::free (gref_file);
-	gref_file = nullptr;
-	std::free (lref_file);
-	lref_file = nullptr;
+auto Logger::lref_log_path () noexcept -> const char*
+{
+	return lref_file;
+}
+
+auto Logger::reference_log_directory () noexcept -> const char*
+{
+	return reference_log_dir;
+}
+
+auto Logger::light_gref_enabled () noexcept -> bool
+{
+	return light_gref;
+}
+
+auto Logger::light_lref_enabled () noexcept -> bool
+{
+	return light_lref;
 }
 
 [[gnu::always_inline]] bool

@@ -36,6 +36,14 @@ namespace Android.Runtime
 			public IntPtr          grefGCUserPeerable;
 			public IntPtr          propagateUncaughtExceptionFn;
 			public IntPtr          registerJniNativesFn;
+			public IntPtr          grefLogPath;
+			public IntPtr          lrefLogPath;
+			public IntPtr          referenceLogDirectory;
+			public byte            lightGref;
+			public byte            lightLref;
+			public byte            grefToLogcat;
+			public byte            lrefToLogcat;
+			public int             maxGrefCount;
 		}
 #pragma warning restore 0649
 
@@ -44,9 +52,11 @@ namespace Android.Runtime
 		internal static bool PropagateExceptions;
 		internal static BoundExceptionType BoundExceptionType;
 		internal static int gref_gc_threshold;
+		internal static int max_gref_count;
 		internal static IntPtr grefIGCUserPeer_class;
 		internal static IntPtr grefGCUserPeerable_class;
 		internal static IntPtr java_class_loader;
+		internal static ReferenceLoggingConfiguration ReferenceLoggingConfiguration;
 
 		internal static JniRuntime? androidRuntime;
 
@@ -82,19 +92,16 @@ namespace Android.Runtime
 			androidRuntime.TypeManager.RegisterNativeMembers (jniType, type, methods);
 		}
 
-		// This must be called by NativeAOT before InitializeJniRuntime, as early as possible
-		internal static void NativeAotInitializeMaxGrefGet ()
-		{
-			gref_gc_threshold = RuntimeNativeMethods._monodroid_max_gref_get ();
-			if (gref_gc_threshold != int.MaxValue) {
-				gref_gc_threshold = checked((gref_gc_threshold * 9) / 10);
-			}
-		}
-
 		internal static void InitializeBeforeRuntimeCreation (JnienvInitializeArgs args)
 		{
 			InitializeCommonState (args);
 			InitializeTrimmableTypeMapDataIfNeeded ();
+		}
+
+		internal static void InitializeMaxGrefCounts (JnienvInitializeArgs args)
+		{
+			gref_gc_threshold = args.grefGcThreshold;
+			max_gref_count = args.maxGrefCount;
 		}
 
 		// NOTE: should have different name than `Initialize` to avoid:
@@ -195,7 +202,7 @@ namespace Android.Runtime
 		{
 			Logger.SetLogCategories ((LogCategories)args.logCategories);
 
-			gref_gc_threshold = args.grefGcThreshold;
+			InitializeMaxGrefCounts (args);
 			jniRemappingInUse = args.jniRemappingInUse;
 			MarshalMethodsEnabled = args.marshalMethodsEnabled;
 			java_class_loader = args.grefLoader;
@@ -204,6 +211,14 @@ namespace Android.Runtime
 			grefIGCUserPeer_class = args.grefIGCUserPeer;
 			grefGCUserPeerable_class = args.grefGCUserPeerable;
 			PropagateExceptions = args.brokenExceptionTransitions == 0;
+			ReferenceLoggingConfiguration = new ReferenceLoggingConfiguration (
+				Marshal.PtrToStringUTF8 (args.grefLogPath),
+				Marshal.PtrToStringUTF8 (args.lrefLogPath),
+				Marshal.PtrToStringUTF8 (args.referenceLogDirectory),
+				args.lightGref != 0,
+				args.lightLref != 0,
+				args.grefToLogcat != 0,
+				args.lrefToLogcat != 0);
 
 			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args.packageNamingPolicy;
 		}

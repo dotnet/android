@@ -274,6 +274,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntimeIdentifiers (new[] { "arm64-v8a" });
 			proj.SetProperty ("LinkerDumpDependencies", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", "False");
+			proj.SetProperty ("_AndroidEnableObjectReferenceLogging", "false");
 			if (r8) {
 				proj.SetProperty ("AndroidLinkTool", "r8");
 			}
@@ -290,6 +291,32 @@ namespace Xamarin.Android.Build.Tests
 
 				var depsFile = GetLinkedPath (b, true, "linker-dependencies.xml");
 				FileAssert.Exists (depsFile);
+
+				if (runtime == AndroidRuntime.CoreCLR) {
+					var monoAndroidPath = GetLinkedPath (b, true, "Mono.Android.dll");
+					using var monoAndroid = AssemblyDefinition.ReadAssembly (monoAndroidPath);
+					var referenceManager = monoAndroid.MainModule.GetType ("Android.Runtime.ManagedObjectReferenceManager");
+					if (referenceManager == null) {
+						Assert.Fail ($"{monoAndroidPath} should contain the managed reference manager.");
+						return;
+					}
+					string [] loggingMethods = [
+						"CreateLogWriter",
+						"TryCreateLogWriter",
+						"LogLocalReference",
+						"LogReference",
+						"FormatReferenceMessage",
+						"FormatHandle",
+						"GetObjectRefType",
+						"GetThreadName",
+						"WriteReference",
+					];
+					foreach (string methodName in loggingMethods) {
+						Assert.IsNull (
+							referenceManager.Methods.FirstOrDefault (method => method.Name == methodName),
+							$"Disabled reference logging should trim {methodName} from Mono.Android.dll.");
+					}
+				}
 
 				const int ApkSizeThreshold = 5 * 1024;
 				const int AssemblySizeThreshold = 5 * 1024;
