@@ -2,6 +2,15 @@
 
 Tips and tricks while developing .NET for Android.
 
+The update-directory guidance in this page applies to Android fast deployment
+for both MonoVM and CoreCLR applications. The `libmonosgen-2.0.so`, Mono
+runtime-pack, and `debug.mono.*` examples are MonoVM-specific historical
+guidance. They apply to .NET 10 and earlier Mono applications and to
+supported explicit MonoVM builds. Ordinary .NET 11 and later Android
+applications use CoreCLR; use the CoreCLR diagnostics and runtime guidance in the
+[tracing](../guides/tracing.md) and
+[custom Android system properties](SystemProperties.md) documentation instead.
+
 # Run MSBuild-Based On-Device Unit Tests
 
 The [`tests/MSBuildDeviceIntegration`](tests/MSBuildDeviceIntegration)
@@ -87,7 +96,7 @@ First, you'll need to get a version of `libmonosgen-2.0.so` that includes debug
 symbols.  You can either use a custom local build or download the debug version
 of `libmonosgen-2.0.so` for a published .NET for Android version:
 
- 1. Go to <https://github.com/xamarin/xamarin-android/tags> and click on the
+ 1. Go to <https://github.com/dotnet/android/tags> and click on the
     .NET for Android version you are debugging.
 
  2. Find the **OSS core** section at the bottom of the release information and
@@ -490,8 +499,8 @@ If successful, messages printed to the screen will show location
 of the logcat file with the logged messages.
 
 Verbosity of logging can be increased by setting the `$(RunLogVerbose)`
-property to `true`, in which case the log output file will contain
-(very) verbose log messages from the MonoVM runtime.
+property to `true`. The target selects `debug.mono.log` for MonoVM and
+`debug.dotnet.log` for CoreCLR and NativeAOT.
 
 By default, the target will wait for a 1000ms before it dumps the
 logcat buffer to file.  This is to give the Android logging daemon
@@ -548,11 +557,11 @@ The `debug.mono.log` system property can also be set in an
 be preferred if it is not blank.
 
 [mono-logging]: https://www.mono-project.com/docs/advanced/runtime/logging-runtime-events/
-[6e58ce4]: https://github.com/xamarin/xamarin-android/commit/6e58ce405d00a965f3c206e2d509f5a5343b16f7
+[6e58ce4]: https://github.com/dotnet/android/commit/6e58ce405d00a965f3c206e2d509f5a5343b16f7
 
 ## Installing .NET MAUI
 
-`make pack-dotnet` or `msbuild Xamarin.Android.slnx -t:PackDotNet`
+`make pack-dotnet` or `msbuild Microsoft.Android.slnx -t:PackDotNet`
 provisions a .NET SDK and locally built Android workload in:
 
     bin/$(Configuration)/dotnet/
@@ -564,7 +573,7 @@ Android workload.
 To simplify things, we have an MSBuild target to install .NET MAUI:
 
     # or dotnet-local.cmd on Windows
-    dotnet-local.sh build Xamarin.Android.slnx -t:InstallMaui -p:MauiVersion=9.0.0
+    dotnet-local.sh build Microsoft.Android.slnx -t:InstallMaui -p:MauiVersion=9.0.0
 
 To find the version number of .NET MAUI you want to install, find the
 package on the [nightly Azure DevOps feed][maui-feed]. Or look for the

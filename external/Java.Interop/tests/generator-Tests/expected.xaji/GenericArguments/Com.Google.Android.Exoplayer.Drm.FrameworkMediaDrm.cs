@@ -55,12 +55,9 @@ namespace Com.Google.Android.Exoplayer.Drm {
 			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
-			try {
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
-			} finally {
-			}
+			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='com.google.android.exoplayer.drm']/class[@name='FrameworkMediaDrm']/method[@name='setOnEventListener' and count(parameter)=1 and parameter[1][@type='com.google.android.exoplayer.drm.ExoMediaDrm.OnEventListener&lt;com.google.android.exoplayer.drm.FrameworkMediaCrypto&gt;']]"
@@ -68,13 +65,10 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		public unsafe void SetOnEventListener (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener p0)
 		{
 			const string __id = "setOnEventListener.(Lcom/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener;)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((p0 == null) ? IntPtr.Zero : ((global::Java.Lang.Object) p0).Handle);
-				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-			} finally {
-				global::System.GC.KeepAlive (p0);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue ((p0 == null) ? IntPtr.Zero : ((global::Java.Lang.Object) p0).Handle);
+			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			global::System.GC.KeepAlive (p0);
 		}
 
 		// This method is explicitly implemented as a member of an instantiated Com.Google.Android.Exoplayer.Drm.IExoMediaDrm

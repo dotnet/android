@@ -83,13 +83,10 @@ namespace Xamarin.Test {
 				public unsafe global::Xamarin.Test.NotificationCompatBase.Action Build (int p0)
 				{
 					const string __id = "build.(I)Lxamarin/test/NotificationCompatBase$Action;";
-					try {
-						JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-						__args [0] = new JniArgumentValue (p0);
-						var __rm = _members_xamarin_test_NotificationCompatBase_Action_Factory.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
-						return global::Java.Lang.Object.GetObject<global::Xamarin.Test.NotificationCompatBase.Action> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-					} finally {
-					}
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (p0);
+					var __rm = _members_xamarin_test_NotificationCompatBase_Action_Factory.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
+					return global::Java.Lang.Object.GetObject<global::Xamarin.Test.NotificationCompatBase.Action> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 				}
 
 			}
@@ -186,15 +183,12 @@ namespace Xamarin.Test {
 				if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 					return;
 
-				try {
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue ((__self == null) ? IntPtr.Zero : ((global::Java.Lang.Object) __self).Handle);
-					var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
-					SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-					_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
-				} finally {
-					global::System.GC.KeepAlive (__self);
-				}
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue ((__self == null) ? IntPtr.Zero : ((global::Java.Lang.Object) __self).Handle);
+				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
+				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+				_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
+				global::System.GC.KeepAlive (__self);
 			}
 
 		}

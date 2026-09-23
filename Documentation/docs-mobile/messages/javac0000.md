@@ -33,4 +33,4 @@ Consider submitting a [bug][bug] if you are getting this error under
 normal circumstances.
 
 [javac]: https://docs.oracle.com/javase/8/docs/technotes/tools/windows/javac.html
-[bug]: https://github.com/xamarin/xamarin-android/wiki/Submitting-Bugs,-Feature-Requests,-and-Pull-Requests
+[bug]: https://github.com/dotnet/android/wiki/Submitting-Bugs,-Feature-Requests,-and-Pull-Requests

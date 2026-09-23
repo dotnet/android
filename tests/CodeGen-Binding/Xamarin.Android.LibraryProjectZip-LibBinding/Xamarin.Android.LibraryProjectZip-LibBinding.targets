@@ -52,6 +52,8 @@
         EnvironmentVariables="ANDROID_HOME=$(AndroidSdkDirectory);ANDROID_NDK_HOME=$(AndroidNdkDirectory);JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
         Command="$(_Jdk9Modules) &quot;$(GradleWPath)&quot; assembleDebug $(GradleArgs)"
         WorkingDirectory="$(MSBuildThisFileDirectory)java\JavaLib"
+        StandardOutputImportance="High"
+        StandardErrorImportance="High"
     />
     <MakeDir Directories="$(OutputPath)" />
     <Copy SourceFiles="java\JavaLib\library\build\outputs\aar\library-debug.aar" DestinationFiles="$(OutputPath)JavaLib.aar" />

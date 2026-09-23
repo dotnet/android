@@ -27,10 +27,6 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
 
   <!-- Default feature switches -->
   <ItemGroup>
-    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime"
-        Value="false"
-        Trim="true"
-    />
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime"
         Value="true"
         Trim="true"

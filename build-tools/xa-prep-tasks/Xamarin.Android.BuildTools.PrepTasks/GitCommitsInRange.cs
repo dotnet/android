@@ -7,6 +7,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 {
 	public class GitCommitsInRange : Git
 	{
+		static readonly object MissingCommit = new object ();
+
 		[Output]
 		public                  int         CommitCount     { get; set; }
 
@@ -14,6 +16,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		public                  string      StartCommit     { get; set; }
 
 		public                  string      EndCommit       { get; set; }
+
+		public                  bool        AllowMissingStartCommit { get; set; }
 
 		protected   override    bool        LogTaskMessages {
 			get { return false; }
@@ -25,6 +29,13 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 		public override bool Execute ()
 		{
+			var cacheKey = (typeof (GitCommitsInRange), WorkingDirectory.ItemSpec, StartCommit, GetEndCommit (), ToolPath, ToolExe);
+			if (AllowMissingStartCommit && ReferenceEquals (BuildEngine4.GetRegisteredTaskObject (cacheKey, RegisteredTaskObjectLifetime.Build), MissingCommit)) {
+				Log.LogMessage (MessageImportance.Normal, $"Using cached git exit code 128. Setting {nameof (CommitCount)} to 0.");
+				CommitCount = 0;
+				return true;
+			}
+
 			Log.LogMessage (MessageImportance.Low, $"Task {nameof (GitCommitsInRange)}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (StartCommit)}: {StartCommit}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (EndCommit)}: {EndCommit}");
@@ -34,6 +45,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 			// fatal: bad revision '^cfa4209..HEAD'
 			if (ExitCode == 128) {
+				if (AllowMissingStartCommit)
+					BuildEngine4.RegisterTaskObject (cacheKey, MissingCommit, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
 				Log.LogMessage (MessageImportance.Normal, $"git exited with code 128. Setting {nameof (CommitCount)} to 0.");
 				CommitCount = 0;
 				return true;
@@ -44,13 +57,19 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			return !Log.HasLoggedErrors;
 		}
 
+		protected override bool HandleTaskExecutionErrors ()
+		{
+			if (AllowMissingStartCommit && ExitCode == 128)
+				return true;
+			return base.HandleTaskExecutionErrors ();
+		}
+
 		protected override string GenerateCommandLineCommands ()
 		{
-			string endCommit    = string.IsNullOrEmpty (EndCommit)
-				? "HEAD"
-				: EndCommit;
-			return $"log {StartCommit}..{endCommit} --oneline";
+			return $"log {StartCommit}..{GetEndCommit ()} --oneline";
 		}
+
+		string GetEndCommit () => string.IsNullOrEmpty (EndCommit) ? "HEAD" : EndCommit;
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{

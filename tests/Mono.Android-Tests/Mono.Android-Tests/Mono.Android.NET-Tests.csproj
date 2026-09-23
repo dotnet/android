@@ -19,6 +19,7 @@
     <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
     <WarningsAsErrors>IL2037</WarningsAsErrors>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
+    <EventSourceSupport>true</EventSourceSupport>
     <AndroidNdkDirectory></AndroidNdkDirectory>
   </PropertyGroup>
 
@@ -52,7 +53,6 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <UseMonoRuntime Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishAot)' != 'true' ">false</UseMonoRuntime>
     <TestsFlavor Condition=" '$(TestsFlavor)' == '' and '$(AndroidTypeMapImplementation)' == 'trimmable' ">CoreCLRTrimmable</TestsFlavor>
   </PropertyGroup>
 
@@ -127,16 +127,19 @@
     <Compile Include="Android.Content\SharedPreferencesTest.cs" />
     <Compile Include="Android.Graphics\NinePatchTests.cs" />
     <Compile Include="Android.OS\BundleTest.cs" />
+    <Compile Include="Android.OS\AidlProxyTests.cs" />
     <Compile Include="Android.OS\HandlerTest.cs" />
     <Compile Include="Android.Runtime\CharSequenceTest.cs" />
     <Compile Include="Android.Runtime\InputStreamInvokerTest.cs" />
     <Compile Include="Android.Runtime\JavaCollectionTest.cs" />
     <Compile Include="Android.Runtime\JnienvArrayMarshaling.cs" />
+    <Compile Include="Android.Runtime\RuntimeEventSourceTests.cs" />
     <Compile Include="Android.Runtime\XmlReaderPullParserTest.cs" />
     <Compile Include="Android.Runtime\XmlReaderResourceParserTest.cs" />
     <Compile Include="Android.Views\LayoutInflaterTest.cs" />
     <Compile Include="Android.Widget\AdapterTests.cs" />
     <Compile Include="Android.Widget\CustomWidgetTests.cs" />
+    <Compile Include="Java.Interop\ActivationConstructorCacheTests.cs" />
     <Compile Include="Java.Interop\ConstructorActivationTests.cs" />
     <Compile Include="Java.Interop\ExportTests.cs" />
     <Compile Include="Java.Interop\InterfaceCollectionMarshallingTests.cs" />
@@ -180,6 +183,7 @@
     <Compile Include="System.Threading\InterlockedTest.cs" />
     <Compile Include="System.Xml\XmlSerializer.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidHandlerTestBase.cs" />
+    <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerCancellationTests.Rewind.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerCancellationTests.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerTests.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerNegotiateAuthenticationTests.cs" />
@@ -193,6 +197,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AndroidInterfaceDescription Include="Android.OS\IAidlProxyTest.aidl" />
     <AndroidJavaSource Include="java/net/dot/android/test/*.java" />
     <AndroidJavaSource Update="java/net/dot/android/test/InterfaceCollectionFixture.java" Bind="false" />
   </ItemGroup>
@@ -294,8 +299,6 @@
     <RuntimeHostConfigurationOption Include="test_bool"    Value="true" />
     <RuntimeHostConfigurationOption Include="test_integer" Value="42" />
     <RuntimeHostConfigurationOption Include="test_string"  Value="foo" />
-    <!-- Set STARTUP_HOOKS via RuntimeHostConfigurationOption for MonoVM (read via AppContext.GetData) -->
-    <RuntimeHostConfigurationOption Include="STARTUP_HOOKS" Value="StartupHook" Condition=" '$(UseMonoRuntime)' == 'true' " />
   </ItemGroup>
 
 </Project>

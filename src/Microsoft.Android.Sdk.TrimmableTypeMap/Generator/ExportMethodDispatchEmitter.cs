@@ -444,12 +444,12 @@ sealed class ExportMethodDispatchEmitter
 			case ExportParameterKindInfo.XmlPullParser:
 				encoder.LoadArgument (argumentIndex);
 				encoder.LoadConstantI4 (0);
-				encoder.Call (_context.XmlPullParserReaderFromJniHandleRef, parameterCount: 2, returnsValue: true);
+				encoder.Call (_context.GetXmlPullParserReaderFromJniHandleRef (), parameterCount: 2, returnsValue: true);
 				return true;
 			case ExportParameterKindInfo.XmlResourceParser:
 				encoder.LoadArgument (argumentIndex);
 				encoder.LoadConstantI4 (0);
-				encoder.Call (_context.XmlResourceParserReaderFromJniHandleRef, parameterCount: 2, returnsValue: true);
+				encoder.Call (_context.GetXmlResourceParserReaderFromJniHandleRef (), parameterCount: 2, returnsValue: true);
 				return true;
 			default:
 				return false;
@@ -534,10 +534,10 @@ sealed class ExportMethodDispatchEmitter
 				encoder.Call (_context.OutputStreamAdapterToLocalJniHandleRef, parameterCount: 1, returnsValue: true);
 				return true;
 			case ExportParameterKindInfo.XmlPullParser:
-				encoder.Call (_context.XmlReaderPullParserToLocalJniHandleRef, parameterCount: 1, returnsValue: true);
+				encoder.Call (_context.GetXmlReaderPullParserToLocalJniHandleRef (), parameterCount: 1, returnsValue: true);
 				return true;
 			case ExportParameterKindInfo.XmlResourceParser:
-				encoder.Call (_context.XmlReaderResourceParserToLocalJniHandleRef, parameterCount: 1, returnsValue: true);
+				encoder.Call (_context.GetXmlReaderResourceParserToLocalJniHandleRef (), parameterCount: 1, returnsValue: true);
 				return true;
 			default:
 				return false;

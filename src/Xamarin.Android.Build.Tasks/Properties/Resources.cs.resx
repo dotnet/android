@@ -505,6 +505,11 @@ Buď změňte hodnotu v souboru AndroidManifest.xml tak, aby odpovídala hodnot�
 {0} - The minimum SDK version number
 {1} - The SupportedOSPlatformVersion property value</comment>
   </data>
+  <data name="XA1037" xml:space="preserve">
+    <value>Nepodporovaná položka @(Reference): {0}</value>
+    <comment>The following are literal names and should not be translated: @(Reference)
+{0} - The unsupported reference item</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>Použití funkce AppDomain.CreateDomain() zjištěné v sestavení: {0}. .NET 6 a vyšší bude podporovat jenom jednu doménu AppDomain, takže toto rozhraní API po vydání .NET 6 už v .NET pro Android nebude dostupné.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -884,23 +889,6 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
-  <data name="XA4325" xml:space="preserve">
-    <value>Nepovedlo se přepsat spravované názvy JNI pro R8. {0}</value>
-    <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4325_* resources.</comment>
-  </data>
-  <data name="XA4325_AssemblyFailure" xml:space="preserve">
-    <value>Nepodařilo se přepsat názvy JNI v sestavení {0}: {1}</value>
-    <comment>{0} - The path of the assembly which could not be rewritten.
-{1} - The underlying message describing why the assembly could not be rewritten. It is not localized.</comment>
-  </data>
-  <data name="XA4325_SourceDestinationCount" xml:space="preserve">
-    <value>Skupiny položek SourceFiles a DestinationFiles musí obsahovat stejný počet položek.</value>
-    <comment>The following are literal MSBuild item group names and should not be translated: 'SourceFiles', 'DestinationFiles'.</comment>
-  </data>
-  <data name="XA4326" xml:space="preserve">
-    <value>Vyhledání člena JNI nelze bezpečně přepsat, protože jeho popisovač třídy nemá jediný strukturálně jednoznačný zdroj JNIEnv.FindClass.</value>
-    <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
-  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Chybí adresář sady nástrojů Android NDK {0}. Nainstalujte prosím sadu Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -1149,6 +1137,11 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
     <value>Vlastnosti MSBuildu AndroidEnableMarshalMethods a PublishReadyToRun nelze nastavit na hodnotu true. Nastavte jednu vlastnost na false.</value>
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
+  <data name="XA1050" xml:space="preserve">
+    <value>Vlastnost MSBuildu AndroidR8ObfuscationMode má neplatnou hodnotu '{0}'. Platné hodnoty jsou disabled a private-members.</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members.
+{0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>Závislosti Java {0} není vyhověno.</value>
     <comment>The following are literal names and should not be translated: Java.
@@ -1255,31 +1248,31 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
   </data>
   <data name="XA4258" xml:space="preserve">
-    <value>Java name '{0}' contains invalid or unsupported Java identifier '{1}'. Change the package or type name.</value>
+    <value>Název Javy '{0}' obsahuje neplatný nebo nepodporovaný identifikátor Java '{1}'. Změňte název balíčku nebo typu.</value>
     <comment>The following are literal names and should not be translated: Java.
 {0} - Java package or type name
 {1} - Invalid, unsupported, reserved, or restricted Java identifier</comment>
   </data>
   <data name="XA4259" xml:space="preserve">
-    <value>Type '{0}' has multiple managed constructors that map to the same Java Native Interface (JNI) signature '{1}'. Change the constructor parameter types so each constructor has a unique JNI signature.</value>
+    <value>Typ {0} má více spravovaných konstruktorů, které mapují na stejný podpis Java Native Interface (JNI) {1}. Upravte typy parametrů konstruktoru tak, aby měl každý konstruktor jedinečný podpis JNI.</value>
     <comment>The following terms should not be translated: Java Native Interface, JNI.
 {0} - Fully-qualified managed type name
 {1} - Colliding JNI constructor signature</comment>
   </data>
   <data name="XA4260" xml:space="preserve">
-    <value>Type '{0}' has a constructor parameter type '{1}' that cannot be represented in a Java constructor. Remove the constructor or change the parameter to a supported Java type.</value>
+    <value>Typ '{0}' má '{1}' typu parametru konstruktoru, který nelze reprezentovat v konstruktoru Java. Odeberte konstruktor nebo změňte parametr na podporovaný typ Java.</value>
     <comment>The following term should not be translated: Java.
 {0} - Fully-qualified managed type name
 {1} - Unsupported managed constructor parameter type</comment>
   </data>
   <data name="XA4261" xml:space="preserve">
-    <value>Type '{0}' has Java constructor signature '{1}', but its base type does not expose a compatible Java constructor. Add a compatible base constructor or remove the derived constructor.</value>
+    <value>Typ '{0}' má podpis konstruktoru Java '{1}', ale jeho základní typ nevystavuje kompatibilní konstruktor Java. Přidejte kompatibilní základní konstruktor nebo odeberte odvozený konstruktor.</value>
     <comment>The following term should not be translated: Java.
 {0} - Fully-qualified managed type name
 {1} - JNI signature of the derived constructor</comment>
   </data>
   <data name="XA4262" xml:space="preserve">
-    <value>Type '{0}' has an invalid [Export] SuperArgumentsString value '{1}'. The value references a constructor parameter that does not exist.</value>
+    <value>Typ '{0}' má neplatnou hodnotu [Export] SuperArgumentsString '{1}'. Hodnota odkazuje na parametr konstruktoru, který neexistuje.</value>
     <comment>The following terms should not be translated: Export, SuperArgumentsString.
 {0} - Fully-qualified managed type name
 {1} - Invalid SuperArgumentsString value</comment>
@@ -1289,6 +1282,11 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
     <comment>The following are literal names and should not be translated: Java, [ExportParameter].
 {0} - Fully-qualified managed member name
 {1} - Managed parameter or return type</comment>
+  </data>
+  <data name="XA4264" xml:space="preserve">
+    <value>Soubor XML obálky volatelné z Javy {0} nebyl nalezen.</value>
+    <comment>The following are literal names and should not be translated: Java, XML.
+{0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Příkaz {0} selhal.\n{1}</value>

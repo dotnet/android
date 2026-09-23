@@ -505,6 +505,11 @@ In this message, the term "binding" means a piece of generated code that makes i
 {0} - The minimum SDK version number
 {1} - The SupportedOSPlatformVersion property value</comment>
   </data>
+  <data name="XA1037" xml:space="preserve">
+    <value>不支持的 @(Reference) 项: {0}</value>
+    <comment>The following are literal names and should not be translated: @(Reference)
+{0} - The unsupported reference item</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>在程序集 {0} 中检测到使用了 AppDomain.CreateDomain()。.NET 6 及更高版本将仅支持单个 AppDomain，因此，.NET 6 发布后，将无法再在 .NET for Android 中使用此 API。</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -884,23 +889,6 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
-  <data name="XA4325" xml:space="preserve">
-    <value>未能重写 R8 的托管 JNI 名称。{0}</value>
-    <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4325_* resources.</comment>
-  </data>
-  <data name="XA4325_AssemblyFailure" xml:space="preserve">
-    <value>无法重写程序集“{0}”中的 JNI 名称: {1}</value>
-    <comment>{0} - The path of the assembly which could not be rewritten.
-{1} - The underlying message describing why the assembly could not be rewritten. It is not localized.</comment>
-  </data>
-  <data name="XA4325_SourceDestinationCount" xml:space="preserve">
-    <value>'SourceFiles' 和 'DestinationFiles' 项组必须包含相同数量的项。</value>
-    <comment>The following are literal MSBuild item group names and should not be translated: 'SourceFiles', 'DestinationFiles'.</comment>
-  </data>
-  <data name="XA4326" xml:space="preserve">
-    <value>无法安全地重写 JNI 成员查找，因为其类句柄没有结构上无歧义的 JNIEnv.FindClass 源。</value>
-    <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
-  </data>
   <data name="XA5101" xml:space="preserve">
     <value>缺少 Android NDK 工具链目录“{0}”。请安装 Android NDK。</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -1149,6 +1137,11 @@ In this message, the term "handheld app" means "app for handheld devices."
     <value>“AndroidEnableMarshalMethods” 和 “PublishReadyToRun” MSBuild 属性不能同时设置为 “true”。将一个属性设置为 “false”。</value>
     <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
   </data>
+  <data name="XA1050" xml:space="preserve">
+    <value>“AndroidR8ObfuscationMode”MSBuild 属性具有无效的值 '{0}'。有效值为 “disabled” 和 “private-members”。</value>
+    <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members.
+{0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>不满足 Java 依赖项“{0}”。</value>
     <comment>The following are literal names and should not be translated: Java.
@@ -1255,31 +1248,31 @@ In this message, the term "handheld app" means "app for handheld devices."
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
   </data>
   <data name="XA4258" xml:space="preserve">
-    <value>Java name '{0}' contains invalid or unsupported Java identifier '{1}'. Change the package or type name.</value>
+    <value>Java 名称 '{0}' 包含无效或不受支持的 Java 标识符 '{1}'。更改包或类型名称。</value>
     <comment>The following are literal names and should not be translated: Java.
 {0} - Java package or type name
 {1} - Invalid, unsupported, reserved, or restricted Java identifier</comment>
   </data>
   <data name="XA4259" xml:space="preserve">
-    <value>Type '{0}' has multiple managed constructors that map to the same Java Native Interface (JNI) signature '{1}'. Change the constructor parameter types so each constructor has a unique JNI signature.</value>
+    <value>类型 "{0}" 有多个托管构造函数映射到相同的 Java Native Interface (JNI) 签名 "{1}"。请更改构造函数参数类型，使每个构造函数都有唯一的 JNI 签名。</value>
     <comment>The following terms should not be translated: Java Native Interface, JNI.
 {0} - Fully-qualified managed type name
 {1} - Colliding JNI constructor signature</comment>
   </data>
   <data name="XA4260" xml:space="preserve">
-    <value>Type '{0}' has a constructor parameter type '{1}' that cannot be represented in a Java constructor. Remove the constructor or change the parameter to a supported Java type.</value>
+    <value>类型 '{0}' 具有无法在 Java 构造函数中表示的构造函数参数类型 '{1}'。删除构造函数或将参数更改为支持的 Java 类型。</value>
     <comment>The following term should not be translated: Java.
 {0} - Fully-qualified managed type name
 {1} - Unsupported managed constructor parameter type</comment>
   </data>
   <data name="XA4261" xml:space="preserve">
-    <value>Type '{0}' has Java constructor signature '{1}', but its base type does not expose a compatible Java constructor. Add a compatible base constructor or remove the derived constructor.</value>
+    <value>类型 "{0}" 具有 Java 构造函数签名 "{1}"，但其基类型没有公开兼容的 Java 构造函数。请添加兼容的基类构造函数或移除派生构造函数。</value>
     <comment>The following term should not be translated: Java.
 {0} - Fully-qualified managed type name
 {1} - JNI signature of the derived constructor</comment>
   </data>
   <data name="XA4262" xml:space="preserve">
-    <value>Type '{0}' has an invalid [Export] SuperArgumentsString value '{1}'. The value references a constructor parameter that does not exist.</value>
+    <value>类型 '{0}' 具有无效的 [Export] SuperArgumentsString 值 '{1}'。该值引用的构造函数参数不存在。</value>
     <comment>The following terms should not be translated: Export, SuperArgumentsString.
 {0} - Fully-qualified managed type name
 {1} - Invalid SuperArgumentsString value</comment>
@@ -1289,6 +1282,11 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: Java, [ExportParameter].
 {0} - Fully-qualified managed member name
 {1} - Managed parameter or return type</comment>
+  </data>
+  <data name="XA4264" xml:space="preserve">
+    <value>找不到 Java 可调用包装器 XML 文件“{0}”。</value>
+    <comment>The following are literal names and should not be translated: Java, XML.
+{0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>命令 '{0}' 失败。\n{1}</value>

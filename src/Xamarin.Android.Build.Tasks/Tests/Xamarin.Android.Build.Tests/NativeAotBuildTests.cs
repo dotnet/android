@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -99,6 +100,44 @@ namespace Xamarin.Android.Build.Tests
 				assets,
 				"Restore should not fall back to the linux-bionic-arm NativeAOT runtime pack."
 			);
+		}
+
+		[Test]
+		public void RestoreNativeAot_UsesSdkRuntimePackVersion ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (
+				builder.RunTarget (proj, "Restore", parameters: [
+					"MicrosoftNETCoreAppRefPackageVersion=0.0.0",
+				]),
+				"Restore should use the .NET SDK's NativeAOT runtime pack version."
+			);
+
+			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			using var assets = JsonDocument.Parse (File.ReadAllText (Path.Combine (intermediate, "..", "project.assets.json")));
+			var runtimePacks = assets.RootElement
+				.GetProperty ("project")
+				.GetProperty ("frameworks")
+				.EnumerateObject ()
+				.SelectMany (framework => framework.Value.GetProperty ("downloadDependencies").EnumerateArray ())
+				.Where (dependency => dependency.GetProperty ("name").GetString ()?.StartsWith ("Microsoft.NETCore.App.Runtime.NativeAOT.", StringComparison.Ordinal) == true)
+				.ToArray ();
+			Assert.IsNotEmpty (
+				runtimePacks,
+				"Restore should select a NativeAOT runtime pack."
+			);
+			foreach (var runtimePack in runtimePacks) {
+				Assert.AreNotEqual (
+					"[0.0.0, 0.0.0]",
+					runtimePack.GetProperty ("version").GetString (),
+					"Restore should ignore MicrosoftNETCoreAppRefPackageVersion and use the SDK-selected NativeAOT runtime pack version."
+				);
+			}
 		}
 
 		[Test]

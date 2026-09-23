@@ -39,6 +39,7 @@ namespace Java.Interop {
 					je  = new JavaProxyThrowable (e);
 				}
 				Throw (je.PeerReference);
+				GC.KeepAlive (je);
 			}
 		}
 	}

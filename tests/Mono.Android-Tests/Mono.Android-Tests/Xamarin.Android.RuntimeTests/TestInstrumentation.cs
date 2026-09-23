@@ -11,6 +11,8 @@ namespace Xamarin.Android.RuntimeTests
 	[Instrumentation (Name = "xamarin.android.runtimetests.TestInstrumentation")]
 	public class TestInstrumentation : Xamarin.Android.UnitTests.TestInstrumentation
 	{
+		const string JniReferenceLeakCategory = "JniReferenceLeak";
+
 		protected TestInstrumentation (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
@@ -20,12 +22,10 @@ namespace Xamarin.Android.RuntimeTests
 			get {
 				var categories = new List<string> ();
 
-				if (!Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime) {
-					// CoreCLR-specific exclusions
-					// TODO: https://github.com/dotnet/android/issues/10069
-					categories.Add ("CoreCLRIgnore");
-					categories.Add ("NTLM");
-				}
+				// CoreCLR-specific exclusions
+				// TODO: https://github.com/dotnet/android/issues/10069
+				categories.Add ("CoreCLRIgnore");
+				categories.Add ("NTLM");
 
 				if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
 					categories.Add ("NativeTypeMap");
@@ -54,6 +54,11 @@ namespace Xamarin.Android.RuntimeTests
 					categories.Add ("NetworkInterfaces");
 				}
 
+				// Process-wide reference counts are only stable in the dedicated filtered run.
+				if (!IsOnlyIncludedCategory (JniReferenceLeakCategory)) {
+					categories.Add (JniReferenceLeakCategory);
+				}
+
 				return categories.Count > 0 ? categories : null;
 			}
 		}
@@ -66,11 +71,23 @@ namespace Xamarin.Android.RuntimeTests
 				// `configProperties` section, and we read it back with `AppContext.GetData`.
 				// Used by lanes that want to scope a run to specific categories, e.g.
 				// `-p:IncludeCategories=Intune` in stage-package-tests.yaml.
-				var value = AppContext.GetData ("IncludeCategories") as string;
-				if (string.IsNullOrEmpty (value))
-					return null;
-				return value!.Split (new [] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+				var categories = GetIncludedCategories ();
+				return categories.Length > 0 ? categories : null;
 			}
+		}
+
+		static bool IsOnlyIncludedCategory (string category)
+		{
+			var categories = GetIncludedCategories ();
+			return categories.Length == 1 && string.Equals (categories [0], category, StringComparison.Ordinal);
+		}
+
+		static string [] GetIncludedCategories ()
+		{
+			var value = AppContext.GetData ("IncludeCategories") as string;
+			if (value == null)
+				return [];
+			return value.Split (new [] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 		}
 
 		static bool HasAppContextSwitch (string key)

@@ -245,7 +245,6 @@ auto Host::create_delegate (
 [[gnu::flatten, gnu::always_inline]]
 void Host::preload_jni_libraries () noexcept
 {
-	// NOTE: when fixing a bug here, fix also the MonoVM code in src/native/mono/monodroid-glue.cc@preload_jni_libraries
 	if (application_config.number_of_shared_libraries == 0) [[unlikely]] {
 		return;
 	}
@@ -337,7 +336,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);
 	AndroidSystem::set_primary_override_dir (files_dir);
-	AndroidSystem::set_app_code_cache_dir (applicationDirs[Constants::APP_DIRS_CODE_CACHE_DIR_INDEX]);
 	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 	AndroidSystem::setup_environment ();
 	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());

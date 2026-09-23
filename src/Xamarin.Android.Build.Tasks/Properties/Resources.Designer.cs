@@ -917,6 +917,16 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA1036", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unsupported @(Reference) item: {0}.
+        /// </summary>
+        public static string XA1037 {
+            get {
+                return ResourceManager.GetString("XA1037", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to The &apos;{0}&apos; MSBuild property has an invalid value of &apos;{1}&apos;. A valid value is one of: {2}..
         /// </summary>
@@ -972,7 +982,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The MSBuild property &apos;{0}&apos; is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Either remove the property or guard it with a condition: Condition=&quot;&apos;$(UseMonoRuntime)&apos; == &apos;true&apos;&quot;.
+        ///   Looks up a localized string similar to The MSBuild property &apos;{0}&apos; is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Remove the property..
         /// </summary>
         public static string XA1044 {
             get {
@@ -1022,6 +1032,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA1049 {
             get {
                 return ResourceManager.GetString("XA1049", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;AndroidR8ObfuscationMode&apos; MSBuild property has an invalid value of &apos;{0}&apos;. Valid values are &apos;disabled&apos; and &apos;private-members&apos;..
+        /// </summary>
+        public static string XA1050 {
+            get {
+                return ResourceManager.GetString("XA1050", resourceCulture);
             }
         }
         
@@ -1715,6 +1734,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Java callable wrapper XML file &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4264 {
+            get {
+                return ResourceManager.GetString("XA4264", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
         /// </summary>
         public static string XA4300 {
@@ -1978,38 +2006,38 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to rewrite managed JNI names for R8. {0}.
+        ///   Looks up a localized string similar to Could not extract Java type map keys from &apos;{0}&apos;: {1}.
         /// </summary>
-        public static string XA4325 {
+        public static string XA4327 {
             get {
-                return ResourceManager.GetString("XA4325", resourceCulture);
+                return ResourceManager.GetString("XA4327", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to Could not rewrite the JNI names in the assembly &apos;{0}&apos;: {1}.
+        ///   Looks up a localized string similar to Could not generate typemap ProGuard configuration from &apos;{0}&apos;: {1}.
         /// </summary>
-        public static string XA4325_AssemblyFailure {
+        public static string XA4328 {
             get {
-                return ResourceManager.GetString("XA4325_AssemblyFailure", resourceCulture);
+                return ResourceManager.GetString("XA4328", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;SourceFiles&apos; and &apos;DestinationFiles&apos; item groups must contain the same number of items..
+        ///   Looks up a localized string similar to No retained Java type map key files were provided..
         /// </summary>
-        public static string XA4325_SourceDestinationCount {
+        public static string XA4328_NoInputs {
             get {
-                return ResourceManager.GetString("XA4325_SourceDestinationCount", resourceCulture);
+                return ResourceManager.GetString("XA4328_NoInputs", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous JNIEnv.FindClass source..
+        ///   Looks up a localized string similar to Line {0} contains an invalid retained Java class name: &apos;{1}&apos;..
         /// </summary>
-        public static string XA4326 {
+        public static string XA4328_InvalidName {
             get {
-                return ResourceManager.GetString("XA4326", resourceCulture);
+                return ResourceManager.GetString("XA4328_InvalidName", resourceCulture);
             }
         }
 

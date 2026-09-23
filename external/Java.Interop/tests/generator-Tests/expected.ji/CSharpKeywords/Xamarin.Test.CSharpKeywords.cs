@@ -34,13 +34,10 @@ namespace Xamarin.Test {
 		public virtual unsafe string UsePartial (int partial)
 		{
 			const string __id = "usePartial.(I)Ljava/lang/String;";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (partial);
-				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
-				return global::Java.Interop.JniEnvironment.Strings.ToString (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (partial);
+			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
+			return global::Java.Interop.JniEnvironment.Strings.ToString (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='CSharpKeywords']/method[@name='useThis' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"

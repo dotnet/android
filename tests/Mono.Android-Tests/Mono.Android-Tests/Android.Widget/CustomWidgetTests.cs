@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Android.App;
 using Android.Content;
 using Android.Util;
@@ -14,7 +14,7 @@ namespace Xamarin.Android.RuntimeTests
 	{
 		public CustomWidgetTests()
 		{
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/9008
+			// FIXME: https://github.com/dotnet/android/issues/9008
 			new Foo ();
 		}
 

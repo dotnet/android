@@ -72,13 +72,10 @@ namespace Xamarin.Test {
 		public virtual unsafe global::Java.Lang.Object SetCustomDimension (int index)
 		{
 			const string __id = "setCustomDimension.(I)Lxamarin/test/C;";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (index);
-				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
-				return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (index);
+			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
+			return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 		}
 
 	}

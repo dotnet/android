@@ -16,7 +16,7 @@ abstract class ValueTypeFactory
 	// NativeAOT's MakeGenericType() and MakeArrayType() paths use canonical templates.
 	// Reference types collapse to __Canon, but value types stay value-specific. This map
 	// intentionally roots each primitive/nullable value shape through direct typeof(T), typeof(T[]),
-	// new T[length], and Java collection wrapper constructor references.
+	// new T[length], and Java list/collection wrapper constructor references.
 	// `byte` is included alongside `sbyte` (both marshal to java.lang.Byte bitwise) so that
 	// byte-element collections keep working on the trimmable path, matching the reflection paths.
 	internal static readonly Dictionary<Type, ValueTypeFactory> PrimitiveTypeFactories = new () {
@@ -50,16 +50,9 @@ abstract class ValueTypeFactory
 
 	internal abstract ICollection CreateCollection (IntPtr handle, JniHandleOwnership transfer);
 
-	internal abstract IDictionary CreateDictionary (ValueTypeFactory valueFactory, IntPtr handle, JniHandleOwnership transfer);
-
 	internal abstract IDictionary CreateDictionaryWithReferenceKey (Type keyType, IntPtr handle, JniHandleOwnership transfer);
 
 	internal abstract IDictionary CreateDictionaryWithReferenceValue (Type valueType, IntPtr handle, JniHandleOwnership transfer);
-
-	internal abstract IDictionary CreateDictionaryWithKey<[DynamicallyAccessedMembers (SafeJavaCollectionFactory.Constructors)] TKey> (
-		ValueTypeFactory<TKey> keyFactory,
-		IntPtr handle,
-		JniHandleOwnership transfer);
 }
 
 sealed class ValueTypeFactory<[DynamicallyAccessedMembers (SafeJavaCollectionFactory.Constructors)] T> : ValueTypeFactory
@@ -87,11 +80,6 @@ sealed class ValueTypeFactory<[DynamicallyAccessedMembers (SafeJavaCollectionFac
 		return new JavaCollection<T> (handle, transfer);
 	}
 
-	internal override IDictionary CreateDictionary (ValueTypeFactory valueFactory, IntPtr handle, JniHandleOwnership transfer)
-	{
-		return valueFactory.CreateDictionaryWithKey (this, handle, transfer);
-	}
-
 	internal override IDictionary CreateDictionaryWithReferenceKey (Type keyType, IntPtr handle, JniHandleOwnership transfer)
 	{
 		// JavaDictionary<keyType, T> canonicalizes like JavaDictionary<__Canon, T>; the
@@ -111,15 +99,15 @@ sealed class ValueTypeFactory<[DynamicallyAccessedMembers (SafeJavaCollectionFac
 	/// <c>__Canon</c> template rooted by the <typeparamref name="TExemplar"/> instantiation.
 	/// </summary>
 	/// <typeparam name="TExemplar">
-	/// The <c>JavaDictionary&lt;IJavaPeerable, T&gt;</c> / <c>JavaDictionary&lt;T, IJavaPeerable&gt;</c> exemplar.
+	/// A <c>JavaDictionary&lt;IJavaPeerable, T&gt;</c> or <c>JavaDictionary&lt;T, IJavaPeerable&gt;</c> exemplar.
 	/// Its <see cref="DynamicallyAccessedMembersAttribute"/> roots the constructors of the canonical
 	/// template that <paramref name="arguments"/> resolves to (the exact-value argument stays value-specific).
 	/// </typeparam>
 	/// <param name="arguments">The <c>[key, value]</c> generic arguments, exactly one of which is a reference type.</param>
 	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
 		Justification = "NativeAOT's Type.MakeGenericType() and Activator.CreateInstance() are annotated because arbitrary constructed generics can lack a runtime template. " +
-			"This helper only closes JavaDictionary<,> over one reference argument and the mapped value type T. " +
-			"The reference argument canonicalizes to __Canon and T stays value-specific, so the result shares the JavaDictionary<IJavaPeerable, T> / JavaDictionary<T, IJavaPeerable> " +
+			"This helper only closes JavaDictionary<,> over one reference argument and the fixed value-type argument from TExemplar. " +
+			"The reference argument canonicalizes to __Canon and the value type stays exact, so the result shares the JavaDictionary<IJavaPeerable, T> / JavaDictionary<T, IJavaPeerable> " +
 			"template that TExemplar already roots.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2055:MakeGenericType",
 		Justification = "IL2055 is raised because the runtime key/value arguments cannot be statically proven to satisfy the DynamicallyAccessedMembers(Constructors) " +
@@ -150,20 +138,5 @@ sealed class ValueTypeFactory<[DynamicallyAccessedMembers (SafeJavaCollectionFac
 			throw new InvalidOperationException ($"Unable to create an instance of collection type '{dictionaryType}'.");
 		}
 		return (IDictionary) instance;
-	}
-
-	internal override IDictionary CreateDictionaryWithKey<[DynamicallyAccessedMembers (SafeJavaCollectionFactory.Constructors)] TKey> (
-		ValueTypeFactory<TKey> keyFactory,
-		IntPtr handle,
-		JniHandleOwnership transfer)
-	{
-		// Value/value dictionaries need no dedicated rooting token (unlike the mixed reference/value
-		// cases): the full JavaDictionary<TKey, T> cross-product is statically rooted by NativeAOT.
-		// Every ValueTypeFactory<X> is constructed in PrimitiveTypeFactories, CreateDictionary is a
-		// virtual call reachable for all of them (so CreateDictionaryWithKey<X> is instantiated for
-		// every key type X), and this override is a generic virtual method — so NativeAOT's GVM
-		// dependency analysis emits ValueTypeFactory<Y>.CreateDictionaryWithKey<X> (hence
-		// new JavaDictionary<X, Y>()) for every (X, Y) pair in the fixed primitive/nullable set.
-		return new JavaDictionary<TKey, T> (handle, transfer);
 	}
 }

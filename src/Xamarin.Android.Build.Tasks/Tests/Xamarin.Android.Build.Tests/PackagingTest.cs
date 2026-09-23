@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
@@ -17,7 +18,9 @@ namespace Xamarin.Android.Build.Tests
 	public class PackagingTest : BaseTest
 	{
 		[Test]
-		public void CheckR8MetadataFilesExist ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void CheckR8MetadataFilesExist (
+			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime,
+			[Values ("disabled", "private-members")] string obfuscationMode)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -29,6 +32,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidR8ObfuscationMode, obfuscationMode);
 			// Projects must set $(AndroidCreateProguardMappingFile) to true to opt in
 			proj.SetProperty (proj.ReleaseProperties, "AndroidCreateProguardMappingFile", true);
 			proj.SetProperty ("AndroidPackageFormat", "aab");
@@ -41,13 +45,41 @@ namespace Xamarin.Android.Build.Tests
 				FileAssert.Exists (aab, $"'{aab}' should have been generated.");
 				using (var zip = ZipHelper.OpenZip (aab)) {
 					Assert.IsTrue (zip.Any (e => e.FullName == "BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map"), $"AAB file `{aab}` should contain the ProGuard mapping.");
-					Assert.IsTrue (zip.Any (e => e.FullName == "BUNDLE-METADATA/com.android.tools/r8.json"), $"AAB file `{aab}` should contain the R8 build metadata.");
+					var metadata = zip.SingleOrDefault (e => e.FullName == "BUNDLE-METADATA/com.android.tools/r8.json");
+					Assert.IsNotNull (metadata, $"AAB file `{aab}` should contain the R8 build metadata.");
+					using var stream = new MemoryStream ();
+					metadata.Extract (stream);
+					stream.Position = 0;
+					using var document = JsonDocument.Parse (stream);
+					var options = document.RootElement.GetProperty ("options");
+					Assert.AreEqual (obfuscationMode == "private-members", options.GetProperty ("isOptimizationsEnabled").GetBoolean ());
 				}
 
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 				foreach (var target in new [] { "_CompileToDalvik", "_BuildApkEmbed" }) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
 				}
+			}
+		}
+
+		[TestCase ("", true)]
+		[TestCase ("r8", false)]
+		public void InvalidR8ObfuscationModeIsValidatedOnlyForR8 (string linkTool, bool expectedResult)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, linkTool);
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidR8ObfuscationMode, "private-member");
+
+			using var builder = CreateApkBuilder ();
+			builder.Target = "_ValidateAndroidR8ObfuscationMode";
+			builder.ThrowOnBuildFailure = false;
+			builder.AutomaticNuGetRestore = false;
+			Assert.AreEqual (expectedResult, builder.Build (proj), "Validation result should depend on whether R8 is enabled.");
+			if (!expectedResult) {
+				StringAssertEx.Contains ("error XA1050", builder.LastBuildOutput);
+				StringAssertEx.Contains ("'private-member'", builder.LastBuildOutput);
 			}
 		}
 
@@ -120,7 +152,6 @@ namespace Xamarin.Android.Build.Tests
 
 			AndroidTargetArch[] supportedArches = new[] {
 				runtime switch {
-					AndroidRuntime.MonoVM => AndroidTargetArch.Arm,
 					AndroidRuntime.CoreCLR => AndroidTargetArch.Arm64,
 					_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 				}
@@ -162,10 +193,6 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				"System.Collections.dll",
 				"System.Text.RegularExpressions.dll",
 			};
-
-			if (runtime == AndroidRuntime.MonoVM) {
-				expectedFiles.Add ("libarc.bin.so");
-			}
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
@@ -567,11 +594,7 @@ namespace UnnamedProject {
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningStorePass", Uri.EscapeDataString (pass));
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
 			if (perAbiApk) {
-				if (runtime == AndroidRuntime.MonoVM) {
-					proj.SetRuntimeIdentifiers (new[] { "armeabi-v7a", "x86", "arm64-v8a", "x86_64" });
-				} else {
-					proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
-				}
+				proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
 			} else {
 				proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
 			}
@@ -592,21 +615,12 @@ namespace UnnamedProject {
 				// Make sure the APKs have unique version codes
 				if (perAbiApk) {
 					var versionList = new List<int> ();
-					int armManifestCode = Int32.MinValue;
-					int x86ManifestCode = Int32.MinValue;
-					if (runtime == AndroidRuntime.MonoVM) {
-						armManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "armeabi-v7a", "AndroidManifest.xml"));
-						x86ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "x86", "AndroidManifest.xml"));
-						versionList.Add (armManifestCode);
-						versionList.Add (x86ManifestCode);
-					}
-
 					int arm64ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "arm64-v8a", "AndroidManifest.xml"));
 					int x86_64ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "x86_64", "AndroidManifest.xml"));
 					versionList.Add (arm64ManifestCode);
 					versionList.Add (x86_64ManifestCode);
 					Assert.True (versionList.Distinct ().Count () == versionList.Count,
-						$"APK version codes were not unique - armeabi-v7a: {armManifestCode}, x86: {x86ManifestCode}, arm64-v8a: {arm64ManifestCode}, x86_64: {x86_64ManifestCode}");
+						$"APK version codes were not unique - arm64-v8a: {arm64ManifestCode}, x86_64: {x86_64ManifestCode}");
 				}
 
 				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
@@ -733,9 +747,7 @@ namespace UnnamedProject {
 				return;
 			}
 
-			// PublishAot is NativeAOT but it doesn't support assemblies, so when `publishAot` is `true`, we run only
-			// the Mono test.
-			if (publishAot && runtime != AndroidRuntime.MonoVM) {
+			if (publishAot) {
 				Assert.Ignore ("NativeAOT and CoreCLR don't support PublishAot with satellite assemblies");
 			}
 
@@ -833,7 +845,9 @@ public class Test
 		}
 
 		[Test]
-		public void CheckExcludedFilesAreMissing ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void CheckExcludedFilesAreMissing (
+			[Values ("apk", "aab")] string packageFormat,
+			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -843,16 +857,26 @@ public class Test
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Kotlin_StdLib_Common);
+			proj.PackageReferences.Add (KnownPackages.Xamarin_KotlinX_Coroutines_Android);
 			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				string expected = $"Ignoring jar entry 'kotlin/Error.kotlin_metadata'";
-				Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), $"Error.kotlin_metadata should have been ignored.");
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsFalse (zip.ContainsEntry ("kotlin/Error.kotlin_metadata"), "Error.kotlin_metadata should have been ignored.");
+				var archive = Path.Combine (Root, b.ProjectDirectory,
+					proj.OutputPath, $"{proj.PackageName}-Signed.{packageFormat}");
+				var prefix = packageFormat == "apk" ? "" : "base/root/";
+				var excludedFiles = new [] {
+					"kotlin/Error.kotlin_metadata",
+					"META-INF/proguard/coroutines.pro",
+					"META-INF/com.android.tools/r8/coroutines.pro",
+					"META-INF/com.android.tools/r8-from-1.6.0/coroutines.pro",
+				};
+				using (var zip = ZipHelper.OpenZip (archive)) {
+					foreach (var excludedFile in excludedFiles) {
+						Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Ignoring jar entry '{excludedFile}'"), $"{excludedFile} should have been ignored.");
+						Assert.IsFalse (zip.ContainsEntry (prefix + excludedFile), $"{prefix + excludedFile} should have been ignored.");
+					}
 				}
 			}
 		}

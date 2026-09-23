@@ -2,7 +2,7 @@
 ***********************************************************************************************
 Microsoft.Android.Runtime.proj
 
-This project file is used to create Microsoft.Android.Runtime.[Mono|NativeAOT|etc.].[API].[RID] NuGets, which are
+This project file is used to create Microsoft.Android.Runtime.[CoreCLR|NativeAOT].[API].[RID] NuGets, which are
 runtime packs that contain the assets required for a self-contained publish of
 projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
 ***********************************************************************************************
@@ -15,7 +15,7 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
     <TargetFramework>netstandard2.0</TargetFramework>
     <AndroidRID Condition=" '$(AndroidRID)' == '' ">android-arm64</AndroidRID>
     <RuntimeIdentifier>$(AndroidRID)</RuntimeIdentifier>
-    <AndroidRuntime Condition=" '$(AndroidRuntime)' == '' ">Mono</AndroidRuntime>
+    <AndroidRuntime Condition=" '$(AndroidRuntime)' == '' ">CoreCLR</AndroidRuntime>
     <PackageId>Microsoft.Android.Runtime.$(AndroidRuntime).$(AndroidApiLevel).$(AndroidRID)</PackageId>
     <OverridePackageId>$(PackageId)</OverridePackageId>
     <PlatformPackageType>RuntimePack</PlatformPackageType>
@@ -49,7 +49,6 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
     <PropertyGroup>
       <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">$(_CLRRuntimeFlavorDirName)</_RuntimeFlavorDirName>
       <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'NativeAOT' ">$(_NativeAotRuntimeFlavorDirName)</_RuntimeFlavorDirName>
-      <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'Mono' Or '$(AndroidRuntime)' == '' ">$(_MonoRuntimeFlavorDirName)</_RuntimeFlavorDirName>
     </PropertyGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">
@@ -70,15 +69,6 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-startup-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-startup-debug.a" />
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-startup-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-startup-release.a" />
 
-    </ItemGroup>
-
-    <ItemGroup Condition=" '$(AndroidRuntime)' == 'Mono' ">
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libmono-android.debug.so" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libmono-android.release.so" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-debug-app-helper.so" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libxamarin-native-tracing.so" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin-debug.a" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libunwind_xamarin-release.a" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' != 'NativeAOT' ">

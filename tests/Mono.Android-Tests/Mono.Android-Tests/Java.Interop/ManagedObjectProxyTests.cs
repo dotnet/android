@@ -311,7 +311,6 @@ namespace Java.InteropTests
 
 		static async Task WaitForGC (Func<bool> predicate, string message, int timeoutMilliseconds = 5000)
 		{
-			bool requireBridgeGeneration = !Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime;
 			int initialBridgeGeneration = JNIEnv.BridgeProcessingGeneration;
 			var timeout = TimeSpan.FromMilliseconds (timeoutMilliseconds);
 			var stopwatch = Stopwatch.StartNew ();
@@ -323,15 +322,13 @@ namespace Java.InteropTests
 				JNIEnv.WaitForBridgeProcessing ();
 				await Task.Yield ();
 			} while ((!predicate () ||
-					(requireBridgeGeneration && JNIEnv.BridgeProcessingGeneration == initialBridgeGeneration)) &&
+					JNIEnv.BridgeProcessingGeneration == initialBridgeGeneration) &&
 				stopwatch.Elapsed < timeout);
 
 			int finalBridgeGeneration = JNIEnv.BridgeProcessingGeneration;
-			if (requireBridgeGeneration) {
-				Assert.Greater (finalBridgeGeneration, initialBridgeGeneration,
-					$"A JNI bridge-processing cycle did not complete within {timeoutMilliseconds}ms. " +
-					$"Initial generation: {initialBridgeGeneration}; final generation: {finalBridgeGeneration}.");
-			}
+			Assert.Greater (finalBridgeGeneration, initialBridgeGeneration,
+				$"A JNI bridge-processing cycle did not complete within {timeoutMilliseconds}ms. " +
+				$"Initial generation: {initialBridgeGeneration}; final generation: {finalBridgeGeneration}.");
 			Assert.IsTrue (predicate (), message);
 		}
 

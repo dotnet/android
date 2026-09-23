@@ -30,14 +30,14 @@ static constexpr uint32_t ASSEMBLY_STORE_ABI = 0x00040000;
 #endif
 
 // Increase whenever an incompatible change is made to the assembly store format
-static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 4 | ASSEMBLY_STORE_64BIT_FLAG | ASSEMBLY_STORE_ABI;
+static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 3 | ASSEMBLY_STORE_64BIT_FLAG | ASSEMBLY_STORE_ABI;
 
 static constexpr uint32_t MODULE_MAGIC_NAMES = 0x53544158; // 'XATS', little-endian
 static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-endian
 static constexpr uint8_t  MODULE_FORMAT_VERSION = 2;       // Keep in sync with the value in src/Xamarin.Android.Build.Tasks/Utilities/TypeMapGenerator.cs
 
 #if defined (DEBUG)
-// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
+// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
 //
 // If any of the members is set to maximum uint32_t value it means the entry is ignored (treated
 // as equivalent to `nullptr` if the member was a pointer). The reasoning is that no string could
@@ -49,14 +49,14 @@ struct TypeMapEntry
 	const uint32_t to;
 };
 
-// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
+// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
 struct TypeMapManagedTypeInfo
 {
 	const uint32_t assembly_name_index;
 	const uint32_t managed_type_token_id;
 };
 
-// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
+// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
 struct TypeMap
 {
 	uint32_t             entry_count;
@@ -128,7 +128,6 @@ struct CompressedAssemblyDescriptor
 //  [ENTRY_COUNT]        uint; number of entries in the store
 //  [INDEX_ENTRY_COUNT]  uint; number of entries in the index
 //  [INDEX_SIZE]         uint; index size in bytes
-//  [CONTENT_ID]         ulong: deterministic hash of everything after the header
 //
 // INDEX (variable size, HEADER.ENTRY_COUNT*2 entries, for assembly names with and without the extension)
 //  [NAME_HASH]          uint; CRC32 of the assembly name
@@ -160,7 +159,6 @@ struct [[gnu::packed]] AssemblyStoreHeader final
 	uint32_t entry_count;
 	uint32_t index_entry_count;
 	uint32_t index_size; // index size in bytes
-	uint64_t content_id;
 };
 
 struct [[gnu::packed]] AssemblyStoreIndexEntry final
@@ -224,7 +222,6 @@ struct ApplicationConfig
 	uint32_t jni_remapping_replacement_method_index_entry_count;
 	const char *android_package_name;
 	bool have_assembly_store;
-	bool assembly_store_decompression_cache_enabled;
 };
 
 struct DSOCacheEntry
@@ -284,7 +281,7 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const uint64_t format_tag;
 
 #if defined (DEBUG)
-	[[gnu::visibility("default")]] extern const TypeMap type_map; // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
+	[[gnu::visibility("default")]] extern const TypeMap type_map; // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
 	[[gnu::visibility("default")]] extern const TypeMapManagedTypeInfo type_map_managed_type_info[];
 	[[gnu::visibility("default")]] extern const char type_map_assembly_names[];
 	[[gnu::visibility("default")]] extern const char type_map_managed_type_names[];
