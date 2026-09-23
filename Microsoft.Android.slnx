@@ -71,6 +71,7 @@
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/MonoAndroidFixture/MonoAndroidFixture.csproj" />
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/TestAttributeFixtures/TestAttributeFixtures.csproj" />
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/TestFixtures/TestFixtures.csproj" />
+    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/TestUcoFixtures/TestUcoFixtures.csproj" />
     <Project Path="tests/MSBuildDeviceIntegration/MSBuildDeviceIntegration.csproj" />
     <Project Path="tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj" />
     <Project Path="tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj" />
