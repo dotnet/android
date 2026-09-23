@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public partial class FastDeploy2
+	public partial class FastDeploy
 	{
-		const string RemoteStagingRootPath = "/data/local/tmp/fastdeploy2";
-		const string ManifestHashMarker = ".fastdeploy2-manifest-hash";
+		const string RemoteStagingRootPath = "/data/local/tmp/fastdeploy";
+		const string ManifestHashMarker = ".fastdeploy-manifest-hash";
 
 		string RemoteStagingRoot => RemoteStagingRootPath;
 
@@ -21,12 +21,12 @@ namespace Xamarin.Android.Tasks
 		{
 			string command = CreateRemoteStagingCleanupCommand (RemoteStagingRoot);
 			if (command.Length >= MaxShellCommandLength) {
-				LogDiagnostic ($"FastDeploy2 orphan staging cleanup command length {command.Length} exceeds the configured maximum of {MaxShellCommandLength}; cleanup will be skipped.");
+				LogDiagnostic ($"FastDeploy orphan staging cleanup command length {command.Length} exceeds the configured maximum of {MaxShellCommandLength}; cleanup will be skipped.");
 				return;
 			}
 			AdbCommandResult result = await RunAdbShellCommand (command);
 			if (result.ExitCode != 0) {
-				LogDiagnostic ($"FastDeploy2 orphan staging cleanup failed and will be skipped. Output: {result.Output}");
+				LogDiagnostic ($"FastDeploy orphan staging cleanup failed and will be skipped. Output: {result.Output}");
 			} else if (!string.IsNullOrEmpty (result.StandardOutput)) {
 				LogDiagnostic (result.StandardOutput);
 			}
@@ -40,7 +40,7 @@ namespace Xamarin.Android.Tasks
 				"for t in rm rmdir pm grep;do command -v \"$t\">/dev/null 2>&1||exit 0;done",
 				"n=0;s=0;u=''",
 				"for c in \"$r\"/*/*;do [ -d \"$c\" ]||continue;i=${c##*/};case \"$i\" in ''|*[!0-9]*)continue;;esac;case \" $u \" in *\" $i \"*)continue;;esac;u=\"$u $i\";p=$(pm list packages --user \"$i\");x=$?;if [ $x -ne 0 ]||[ -z \"$p\" ];then s=1;continue;fi;echo \"$p\"|grep -qv '^package:';[ $? -eq 1 ]||{ s=1;continue;};for d in \"$r\"/*/\"$i\";do [ -d \"$d\" ]||continue;q=${d%/*};a=${q##*/};echo \"$p\"|grep -Fqx \"package:$a\";x=$?;[ $x -eq 0 ]&&continue;if [ $x -ne 1 ];then s=1;continue;fi;if [ -L \"$r\" ]||[ -L \"$q\" ]||[ -L \"$d\" ];then s=1;continue;fi;if rm -rf \"$d\";then rmdir \"$q\" 2>/dev/null||true;n=$((n+1));else s=1;fi;done;done",
-				"echo \"FastDeploy2 orphan staging cleanup: removed $n directories\"",
+				"echo \"FastDeploy orphan staging cleanup: removed $n directories\"",
 				"exit \"$s\"",
 			});
 		}
@@ -80,7 +80,7 @@ namespace Xamarin.Android.Tasks
 
 			var changedFiles = GetChangedFiles (currentManifest, previousManifest);
 			var removedFiles = GetRemovedFiles (currentManifest, previousManifest);
-			LogDiagnostic ($"FastDeploy2 manifest changed files: {changedFiles.Count}; removed files: {removedFiles.Count}.");
+			LogDiagnostic ($"FastDeploy manifest changed files: {changedFiles.Count}; removed files: {removedFiles.Count}.");
 
 			foreach (var file in files) {
 				if (changedFiles.Contains (file.RelativePath)) {
@@ -96,7 +96,7 @@ namespace Xamarin.Android.Tasks
 			if (filesRequiringDirectories.Count > 0) {
 				string output = await CreateRemoteStagingDirectories (remoteStagingPath, filesRequiringDirectories);
 				if (!string.IsNullOrEmpty (output) && IsShellError (output, "mkdir")) {
-					LogFastDeploy2Error ("XA0129", output, remoteStagingPath);
+					LogFastDeployError ("XA0129", output, remoteStagingPath);
 					return false;
 				}
 			}
@@ -108,10 +108,10 @@ namespace Xamarin.Android.Tasks
 			UploadFilesResult uploadResult = await UploadChangedFiles (remoteStagingPath, files, changedFiles);
 			if (!uploadResult.Success) {
 				if (uploadResult.RemoteStateInvalid && !forceFreshDeployment) {
-					LogDiagnostic ($"FastDeploy2 remote staging state was incomplete. Retrying with a fresh deployment. Output: {uploadResult.Output}");
+					LogDiagnostic ($"FastDeploy remote staging state was incomplete. Retrying with a fresh deployment. Output: {uploadResult.Output}");
 					return await DeployFastDevFilesWithAdbPush (overridePath, forceFreshDeployment: true);
 				}
-				LogFastDeploy2Error ("XA0129", uploadResult.Output, uploadResult.RemoteDirectory);
+				LogFastDeployError ("XA0129", uploadResult.Output, uploadResult.RemoteDirectory);
 				return false;
 			}
 
@@ -146,7 +146,7 @@ namespace Xamarin.Android.Tasks
 			var newFiles = previousSymlinkManifest == null ?
 				new HashSet<string> (currentManifest.Files.Keys, StringComparer.Ordinal) :
 				new HashSet<string> (currentManifest.Files.Keys.Where (file => !previousSymlinkManifest.Files.ContainsKey (file)), StringComparer.Ordinal);
-			LogDiagnostic ($"FastDeploy2 symlink update new files: {newFiles.Count}; removed files: {removedFiles.Count}.");
+			LogDiagnostic ($"FastDeploy symlink update new files: {newFiles.Count}; removed files: {removedFiles.Count}.");
 
 			if (!await RunCombinedShellSymlinkUpdate (remoteStagingPath, overridePath, currentManifest, previousSymlinkManifest, newFiles, removedFiles)) {
 				return await FallbackToCopy (remoteStagingPath, overridePath);
@@ -252,7 +252,7 @@ namespace Xamarin.Android.Tasks
 
 		async Task<bool> FallbackToCopy (string remoteStagingPath, string overridePath)
 		{
-			LogDiagnostic ("FastDeploy2 symlink update failed; falling back to copy mode.");
+			LogDiagnostic ("FastDeploy symlink update failed; falling back to copy mode.");
 			return await UpdateOverrideCopies (remoteStagingPath, overridePath, clearOverrideDirectory: true);
 		}
 
@@ -386,7 +386,7 @@ namespace Xamarin.Android.Tasks
 				var args = new [] { "shell" }.Concat (batch).ToArray ();
 				var result = await RunAdbCommand (args);
 				if (result.ExitCode != 0 || IsShellError (result.Output, "rm")) {
-					LogFastDeploy2Error ("XA0129", result.Output, remoteStagingPath);
+					LogFastDeployError ("XA0129", result.Output, remoteStagingPath);
 					return false;
 				}
 			}
@@ -397,7 +397,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var result = await RunAdbCommand ("shell", "rm", "-rf", remoteStagingPath);
 			if (result.ExitCode != 0 || IsShellError (result.Output, "rm")) {
-				LogFastDeploy2Error ("XA0129", result.Output, remoteStagingPath);
+				LogFastDeployError ("XA0129", result.Output, remoteStagingPath);
 				return false;
 			}
 			return true;
@@ -454,7 +454,7 @@ namespace Xamarin.Android.Tasks
 			string markerPath = CombineRemotePath (overridePath, ManifestHashMarker);
 			string output = await RunAsShell ($"if test -f {QuoteShellArgument (markerPath)}; then rm -rf {QuoteShellArgument (overridePath)}; else rm -f {QuoteShellArgument (markerPath)}; fi");
 			if (RaiseRunAsError (output) || IsShellError (output, "rm")) {
-				LogFastDeploy2Error ("XA0129", output, overridePath);
+				LogFastDeployError ("XA0129", output, overridePath);
 				return false;
 			}
 			return true;
@@ -464,7 +464,7 @@ namespace Xamarin.Android.Tasks
 		{
 			string output = await RunAs ("rm", "-rf", overridePath);
 			if (RaiseRunAsError (output) || IsShellError (output, "rm")) {
-				LogFastDeploy2Error ("XA0129", output, overridePath);
+				LogFastDeployError ("XA0129", output, overridePath);
 				return false;
 			}
 			return true;
@@ -491,7 +491,7 @@ namespace Xamarin.Android.Tasks
 					result.ExitCode != 0 ||
 					IsShellError (result.Output, "mkdir") ||
 					IsShellError (result.Output, "printf")) {
-				LogFastDeploy2Error ("XA0129", result.Output, remoteMarkerPath);
+				LogFastDeployError ("XA0129", result.Output, remoteMarkerPath);
 				return false;
 			}
 			return true;
@@ -518,10 +518,10 @@ namespace Xamarin.Android.Tasks
 			}
 
 			try {
-				var manifest = JsonSerializer.Deserialize (File.ReadAllText (manifestFile), typeof (ManifestData), FastDeploy2JsonSerializerContext.Default) as ManifestData;
+				var manifest = JsonSerializer.Deserialize (File.ReadAllText (manifestFile), typeof (ManifestData), FastDeployJsonSerializerContext.Default) as ManifestData;
 				return IsManifestForCurrentTarget (manifest) ? manifest : null;
 			} catch (Exception ex) {
-				LogDiagnostic ($"Ignoring FastDeploy2 manifest '{manifestFile}'. {ex}");
+				LogDiagnostic ($"Ignoring FastDeploy manifest '{manifestFile}'. {ex}");
 				return null;
 			}
 		}
@@ -530,7 +530,7 @@ namespace Xamarin.Android.Tasks
 		{
 			string manifestFile = GetManifestFilePath ();
 			Directory.CreateDirectory (Path.GetDirectoryName (manifestFile));
-			File.WriteAllText (manifestFile, JsonSerializer.Serialize (manifest, typeof (ManifestData), FastDeploy2JsonSerializerContext.Default));
+			File.WriteAllText (manifestFile, JsonSerializer.Serialize (manifest, typeof (ManifestData), FastDeployJsonSerializerContext.Default));
 		}
 
 		bool IsManifestForCurrentTarget (ManifestData manifest)
@@ -571,7 +571,7 @@ namespace Xamarin.Android.Tasks
 		{
 			return Path.Combine (
 				GetFullPath (IntermediateOutputPath),
-				"fastdeploy2",
+				"fastdeploy",
 				GetSafeFileName (GetDeviceId ()),
 				GetSafeFileName (PackageName),
 				GetSafeFileName (GetUserId ()),

@@ -115,27 +115,6 @@ namespace Xamarin.Android.Build.Debugging.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to copy Fast Deployment tools to &apos;{0}/{1}&apos; on the target device.
-        ///This device might not be compatible with Fast Deployment.
-        ///Please set the &apos;EmbedAssembliesIntoApk&apos; MSBuild property to &apos;true&apos; to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor..
-        /// </summary>
-        internal static string XA0126_UnableToCopyFastDevTools {
-            get {
-                return ResourceManager.GetString("XA0126_UnableToCopyFastDevTools", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error deploying &apos;{0}&apos; using &apos;{1}: {2}&apos;.
-        ///Please set the &apos;EmbedAssembliesIntoApk&apos; MSBuild property to &apos;true&apos; to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor..
-        /// </summary>
-        internal static string XA0127_ErrorDeployingFile {
-            get {
-                return ResourceManager.GetString("XA0127_ErrorDeployingFile", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The &apos;log.redirect-stdio&apos; Android system property is set to &apos;true&apos; on the target device or emulator.
         ///To enable compatibility with Fast Deployment, set the property to &apos;false&apos; or reboot the device or emulator to clear the value..
         /// </summary>
@@ -152,16 +131,6 @@ namespace Xamarin.Android.Build.Debugging.Tasks.Properties {
         internal static string XA0129_ErrorDeployingFile {
             get {
                 return ResourceManager.GetString("XA0129_ErrorDeployingFile", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Sorry. Fast Deployment is only supported on devices running Android 5.0 (API level 21) or higher.
-        ///Please set the &apos;EmbedAssembliesIntoApk&apos; MSBuild property to &apos;true&apos; to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor..
-        /// </summary>
-        internal static string XA0130_FastDevNotSupported {
-            get {
-                return ResourceManager.GetString("XA0130_FastDevNotSupported", resourceCulture);
             }
         }
         

@@ -53,7 +53,6 @@
     <Project Path="src/Xamarin.Installer.AndroidSDK/Xamarin.Installer.AndroidSDK.csproj" />
     <Project Path="src/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Build.Tasks.csproj" />
     <Project Path="src/Xamarin.Installer.Common/Xamarin.Installer.Common.csproj" />
-    <Project Path="tools/fastdev/fastdevtools.csproj" />
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj" />

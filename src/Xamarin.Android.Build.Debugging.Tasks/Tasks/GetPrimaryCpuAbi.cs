@@ -41,8 +41,6 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string ResultingAbi { get; set; }
 		[Output]
-		public string ToolsAbi { get; set; }
-		[Output]
 		public string RuntimeIdentifier { get; set; }
 		[Output]
 		public int SdkVersion { get; set; }
@@ -92,9 +90,8 @@ namespace Xamarin.Android.Tasks
 			if (File.Exists (DevicePropertyCache)) {
 				LogDebugMessage ($"Using cached properties: {DevicePropertyCache}");
 				doc = XDocument.Load (DevicePropertyCache);
-				if (DeviceCache.TryGet (doc, device.ID, device.LongOutput, out var cachedAbi, out var cachedToolsAbi, out var cachedSdkVersion, Log)) {
+				if (DeviceCache.TryGet (doc, device.ID, device.LongOutput, out var cachedAbi, out var cachedSdkVersion, Log)) {
 					ResultingAbi = cachedAbi;
-					ToolsAbi = cachedToolsAbi;
 					SdkVersion = cachedSdkVersion;
 					RuntimeIdentifier = GetRuntimeIdentifier ();
 					LogOutputs ();
@@ -157,7 +154,7 @@ namespace Xamarin.Android.Tasks
 			SdkVersion = sdkver;
 			LogOutputs ();
 
-			doc = DeviceCache.Update (doc, device.ID, ResultingAbi, ToolsAbi, SdkVersion, device.LongOutput);
+			doc = DeviceCache.Update (doc, device.ID, ResultingAbi, SdkVersion, device.LongOutput);
 			if (doc.SaveIfChanged (DevicePropertyCache)) {
 				LogDebugMessage ($"Saving: {DevicePropertyCache}");
 			}
@@ -170,7 +167,6 @@ namespace Xamarin.Android.Tasks
 		void LogOutputs ()
 		{
 			LogDebugMessage ($"  {nameof (ResultingAbi)}: {ResultingAbi}");
-			LogDebugMessage ($"  {nameof (ToolsAbi)}: {ToolsAbi}");
 			LogDebugMessage ($"  {nameof (RuntimeIdentifier)}: {RuntimeIdentifier}");
 			LogDebugMessage ($"  {nameof (SdkVersion)}: {SdkVersion}");
 		}

@@ -7,16 +7,16 @@ using Xamarin.Android.Build.Debugging.Tasks.Properties;
 
 namespace Xamarin.Android.Tasks
 {
-	public partial class FastDeploy2
+	public partial class FastDeploy
 	{
-		const string WarmRedirectTag = "__XA_FD2_REDIRECT__=";
-		const string WarmRunAsDisabledTag = "__XA_FD2_RUN_AS_DISABLED__=";
-		const string WarmRemoteHashTag = "__XA_FD2_REMOTE_HASH__=";
-		const string WarmPathTag = "__XA_FD2_PATH__=";
-		const string WarmOverrideHashTag = "__XA_FD2_OVERRIDE_HASH__=";
-		const string WarmPidTag = "__XA_FD2_PID__=";
-		const string WarmRunAsStatusTag = "__XA_FD2_RUN_AS_STATUS__=";
-		const string WarmForceStopStatusTag = "__XA_FD2_FORCE_STOP_STATUS__=";
+		const string WarmRedirectTag = "__XA_FD_REDIRECT__=";
+		const string WarmRunAsDisabledTag = "__XA_FD_RUN_AS_DISABLED__=";
+		const string WarmRemoteHashTag = "__XA_FD_REMOTE_HASH__=";
+		const string WarmPathTag = "__XA_FD_PATH__=";
+		const string WarmOverrideHashTag = "__XA_FD_OVERRIDE_HASH__=";
+		const string WarmPidTag = "__XA_FD_PID__=";
+		const string WarmRunAsStatusTag = "__XA_FD_RUN_AS_STATUS__=";
+		const string WarmForceStopStatusTag = "__XA_FD_FORCE_STOP_STATUS__=";
 
 		DeviceManifestState warmDeviceManifestState;
 		string warmDeviceManifestHash = "";
@@ -46,25 +46,25 @@ namespace Xamarin.Android.Tasks
 				runAsScript,
 			}).Select (QuoteShellArgument));
 			string script =
-				$"fd2_redirect=$(getprop log.redirect-stdio); echo {QuoteShellArgument (WarmRedirectTag)}$fd2_redirect; " +
-				$"fd2_run_as_disabled=$(getprop ro.boot.disable_runas); echo {QuoteShellArgument (WarmRunAsDisabledTag)}$fd2_run_as_disabled; " +
+				$"fd_redirect=$(getprop log.redirect-stdio); echo {QuoteShellArgument (WarmRedirectTag)}$fd_redirect; " +
+				$"fd_run_as_disabled=$(getprop ro.boot.disable_runas); echo {QuoteShellArgument (WarmRunAsDisabledTag)}$fd_run_as_disabled; " +
 				$"echo {QuoteShellArgument (WarmRemoteHashTag)}$(cat {QuoteShellArgument (remoteMarkerPath)} 2>/dev/null); " +
-				"if [ \"$fd2_redirect\" != true ] && [ \"$fd2_run_as_disabled\" != true ]; then " +
-				$"fd2_pid=$(pidof {packageName} 2>/dev/null || true); echo {QuoteShellArgument (WarmPidTag)}$fd2_pid; " +
-				$"{runAsCommand}; fd2_run_as_status=$?; echo {QuoteShellArgument (WarmRunAsStatusTag)}$fd2_run_as_status; " +
-				"fd2_force_stop_status=0; " +
-				$"if [ \"$fd2_run_as_status\" -eq 0 ] && [ -n \"$fd2_pid\" ]; then am force-stop {packageName}; fd2_force_stop_status=$?; fi; " +
-				$"echo {QuoteShellArgument (WarmForceStopStatusTag)}$fd2_force_stop_status; fi";
+				"if [ \"$fd_redirect\" != true ] && [ \"$fd_run_as_disabled\" != true ]; then " +
+				$"fd_pid=$(pidof {packageName} 2>/dev/null || true); echo {QuoteShellArgument (WarmPidTag)}$fd_pid; " +
+				$"{runAsCommand}; fd_run_as_status=$?; echo {QuoteShellArgument (WarmRunAsStatusTag)}$fd_run_as_status; " +
+				"fd_force_stop_status=0; " +
+				$"if [ \"$fd_run_as_status\" -eq 0 ] && [ -n \"$fd_pid\" ]; then am force-stop {packageName}; fd_force_stop_status=$?; fi; " +
+				$"echo {QuoteShellArgument (WarmForceStopStatusTag)}$fd_force_stop_status; fi";
 
 			AdbCommandResult result = await RunAdbShellCommand (script);
 			WarmStateProbeData data = ParseWarmStateProbeOutput (result.Output);
 
 			if (data.HasRedirectStdio && string.Equals ("true", data.RedirectStdio, StringComparison.OrdinalIgnoreCase)) {
-				LogFastDeploy2Error ("XA0128", Resources.XA0128_RedirectStdioIsEnabled);
+				LogFastDeployError ("XA0128", Resources.XA0128_RedirectStdioIsEnabled);
 				return WarmStateProbeOutcome.Failed;
 			}
 			if (data.HasRunAsDisabled && string.Equals ("true", data.RunAsDisabled, StringComparison.OrdinalIgnoreCase)) {
-				LogFastDeploy2Error ("XA0131", Resources.XA0131_DeveloperModeNotEnabled);
+				LogFastDeployError ("XA0131", Resources.XA0131_DeveloperModeNotEnabled);
 				return WarmStateProbeOutcome.Failed;
 			}
 
@@ -73,7 +73,7 @@ namespace Xamarin.Android.Tasks
 					data.RunAsStatus != 0 ||
 					data.ForceStopStatus != 0 ||
 					string.IsNullOrEmpty (data.InternalPath)) {
-				LogDiagnostic ($"FastDeploy2 warm-state probe was inconclusive. Falling back to detailed device checks. Output: {result.Output}");
+				LogDiagnostic ($"FastDeploy warm-state probe was inconclusive. Falling back to detailed device checks. Output: {result.Output}");
 				packageInfo = new PackageInfo ();
 				return WarmStateProbeOutcome.NotEligible;
 			}
@@ -86,7 +86,7 @@ namespace Xamarin.Android.Tasks
 				OverrideHash = data.OverrideHash,
 			};
 			warmProbeStoppedApp = true;
-			LogDiagnostic ("FastDeploy2 warm-state probe completed successfully.");
+			LogDiagnostic ("FastDeploy warm-state probe completed successfully.");
 			return WarmStateProbeOutcome.Ready;
 		}
 

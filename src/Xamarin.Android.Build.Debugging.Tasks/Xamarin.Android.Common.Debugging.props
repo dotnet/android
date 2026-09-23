@@ -25,7 +25,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 	<AndroidGdbHostPort>9999</AndroidGdbHostPort>
 	<AndroidGdbSymbolsPath>$(ProjectDir)\gdb-symbols</AndroidGdbSymbolsPath>
 	<AndroidPreserveUserData Condition=" '$(AndroidPreserveUserData)' == '' ">True</AndroidPreserveUserData>
-	<AndroidFastDeploymentToolVersion Condition=" '$(AndroidFastDeploymentToolVersion)' == '' ">$(XamarinAndroidVersion)</AndroidFastDeploymentToolVersion>
 	<LaunchFlags Condition="!($(LaunchFlags.Contains ('user'))) And '$(AndroidDeviceUserId)' != '' " >--user $(AndroidDeviceUserId)</LaunchFlags>
 </PropertyGroup>
 <PropertyGroup>
@@ -59,4 +58,3 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 	</_BeforeAddStaticResources>
 </PropertyGroup>
 </Project>
-

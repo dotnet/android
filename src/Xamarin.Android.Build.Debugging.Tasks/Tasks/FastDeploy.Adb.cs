@@ -8,10 +8,10 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public partial class FastDeploy2
+	public partial class FastDeploy
 	{
 		// The high-level device operations below are implemented directly on top of `adb`
-		// (via RunAdbCommand / RunAdbShellCommand) so that FastDeploy2 does not depend on the
+		// (via RunAdbCommand / RunAdbShellCommand) so that FastDeploy does not depend on the
 		// legacy Mono.AndroidTools / Xamarin.AndroidTools assemblies.
 
 		/// <summary>
@@ -279,7 +279,7 @@ namespace Xamarin.Android.Tasks
 	}
 
 	/// <summary>
-	/// Thrown when <c>adb install</c> fails for a reason FastDeploy2 cannot recover from. The
+	/// Thrown when <c>adb install</c> fails for a reason FastDeploy cannot recover from. The
 	/// <see cref="ErrorCode"/> is the <c>ADB####</c> code reported to MSBuild.
 	/// </summary>
 	class FastDeployInstallException : Exception
