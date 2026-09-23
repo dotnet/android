@@ -889,6 +889,24 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
+  <data name="XA4327" xml:space="preserve">
+    <value>Could not extract Java type map keys from '{0}': {1}</value>
+    <comment>{0} - The input file path or representation name.
+{1} - The underlying parser or input/output failure. It is not localized.</comment>
+  </data>
+  <data name="XA4328" xml:space="preserve">
+    <value>Could not generate typemap ProGuard configuration from '{0}': {1}</value>
+    <comment>{0} - The input or output file path.
+{1} - The underlying failure, or a formatted XA4328_* resource.</comment>
+  </data>
+  <data name="XA4328_NoInputs" xml:space="preserve">
+    <value>No retained Java type map key files were provided.</value>
+  </data>
+  <data name="XA4328_InvalidName" xml:space="preserve">
+    <value>Line {0} contains an invalid retained Java class name: '{1}'.</value>
+    <comment>{0} - The one-based line number.
+{1} - The invalid input record.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>缺少 Android NDK 工具链目录“{0}”。请安装 Android NDK。</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -1109,8 +1127,8 @@ In this message, the term "handheld app" means "app for handheld devices."
 </comment>
   </data>
   <data name="XA1044" xml:space="preserve">
-    <value>MSBuild 属性“{0}”与 {1} 运行时不兼容。启用此属性时，无法继续生成。移除属性或使用条件保护它: Condition="'$(UseMonoRuntime)' == 'true'"</value>
-    <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
+    <value>The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Remove the property.</value>
+    <comment>The following literal name should not be translated: MSBuild.
 {0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
