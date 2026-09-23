@@ -115,17 +115,11 @@
     <RuntimeIdentifiers Condition=" '$(RuntimeIdentifier)' == '' And '$(RuntimeIdentifiers)' == '' ">android-arm64;android-x64</RuntimeIdentifiers>
     <RuntimeIdentifier  Condition=" '$(RuntimeIdentifiers)' != '' And '$(RuntimeIdentifier)' != '' " />
     <GenerateApplicationManifest Condition=" '$(GenerateApplicationManifest)' == '' ">true</GenerateApplicationManifest>
-    <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == 'true' ">true</RunAOTCompilation>
-    <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' ">false</RunAOTCompilation>
     <!-- Error and reset unsupported Mono-specific properties. -->
     <_AndroidXA1044_RunAOTCompilation Condition=" '$(RunAOTCompilation)' == 'true' ">true</_AndroidXA1044_RunAOTCompilation>
     <_AndroidXA1044_EnableLLVM Condition=" '$(EnableLLVM)' == 'true' ">true</_AndroidXA1044_EnableLLVM>
     <RunAOTCompilation Condition=" '$(_AndroidXA1044_RunAOTCompilation)' == 'true' ">false</RunAOTCompilation>
     <EnableLLVM Condition=" '$(_AndroidXA1044_EnableLLVM)' == 'true' ">false</EnableLLVM>
-    <_AndroidXA1029 Condition=" '$(AotAssemblies)' != '' ">true</_AndroidXA1029>
-    <_AndroidXA1030 Condition=" '$(RunAOTCompilation)' == 'true' and '$(PublishTrimmed)' == 'false' ">true</_AndroidXA1030>
-    <AotAssemblies>$(RunAOTCompilation)</AotAssemblies>
-    <AndroidEnableProfiledAot Condition=" '$(AndroidEnableProfiledAot)' == '' and '$(RunAOTCompilation)' == 'true' ">true</AndroidEnableProfiledAot>
 
     <!--
       Runtime libraries feature switches defaults

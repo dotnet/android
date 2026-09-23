@@ -123,7 +123,6 @@ namespace Xamarin.Android.Build.Tests {
 				AndroidSdkPath = androidSdkPath,
 				TargetFrameworkVersion = targetFrameworkVersion,
 				AndroidSdkBuildToolsVersion = buildtools,
-				AotAssemblies = false,
 				SequencePointsMode = "None",
 				AndroidApplication = true,
 			};
@@ -177,7 +176,6 @@ namespace Xamarin.Android.Build.Tests {
 				AndroidSdkPath = androidSdkPath,
 				TargetFrameworkVersion = "v8.0",
 				AndroidSdkBuildToolsVersion = "26.0.3",
-				AotAssemblies = false,
 				SequencePointsMode = "None",
 				AndroidApplication = true,
 			};
@@ -234,7 +232,6 @@ namespace Xamarin.Android.Build.Tests {
 					AndroidSdkPath = path,
 					AndroidSdkBuildToolsVersion = "36.0.0",
 					TargetPlatformVersion = "37.0",
-					AotAssemblies = false,
 					SequencePointsMode = "None",
 					AndroidApplication = true,
 				};

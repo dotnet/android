@@ -33,8 +33,6 @@ namespace Xamarin.Android.Tasks
 
 		public string? SequencePointsMode { get; set; }
 
-		public bool AotAssemblies { get; set; }
-
 		public bool AndroidApplication { get; set; } = true;
 
 		[Output]
@@ -190,7 +188,7 @@ namespace Xamarin.Android.Tasks
 				return false;
 
 			SequencePointsMode mode;
-			if (!Aot.TryGetSequencePointsMode (SequencePointsMode ?? "None", out mode))
+			if (!SequencePointsModeParser.TryParse (SequencePointsMode ?? "None", out mode))
 				Log.LogCodedError ("XA0104", Properties.Resources.XA0104, SequencePointsMode ?? "");
 			AndroidSequencePointsMode = mode.ToString ();
 

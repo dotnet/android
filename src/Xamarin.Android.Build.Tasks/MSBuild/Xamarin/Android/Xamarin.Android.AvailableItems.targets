@@ -11,7 +11,6 @@ This item group populates the Build Action drop-down in IDEs.
 
   <!-- Not legacy binding projects -->
   <ItemGroup>
-    <AvailableItemName Include="AndroidAotProfile" />
     <AvailableItemName Include="AndroidAsset" />
     <AvailableItemName Include="AndroidEnvironment" />
     <AvailableItemName Include="AndroidExternalJavaLibrary" />

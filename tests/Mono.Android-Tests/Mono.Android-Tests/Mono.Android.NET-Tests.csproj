@@ -38,12 +38,6 @@
     <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
     <RuntimeHostConfigurationOption Include="PublishAot" Value="true" Condition=" '$(PublishAot)' == 'true' " />
     <!--
-      FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190
-      InetAccess excluded: https://github.com/dotnet/runtime/issues/73304
-      NetworkInterfaces excluded: https://github.com/dotnet/runtime/issues/75155
-    -->
-    <RuntimeHostConfigurationOption Include="EnableLLVM" Value="true" Condition=" '$(EnableLLVM)' == 'true' " />
-    <!--
       $(IncludeCategories) is set from the pipeline (e.g. -p:IncludeCategories=Intune)
       to restrict the on-device test run to a comma-separated list of NUnit [Category]
       names. Used by lanes like `Mono.Android.NET_Tests-IsAssignableFrom` which only

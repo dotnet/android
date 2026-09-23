@@ -280,7 +280,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			// do a release build
-			// change one of the properties (say AotAssemblies)
+			// Change one of the build properties.
 			// do another build. it should NOT hose the resource directory.
 			var proj = new XamarinAndroidApplicationProject () {
 				ProjectName = "App1",
@@ -425,17 +425,10 @@ namespace Xamarin.Android.Build.Tests
 				MaxCpuCount = 4,
 			};
 
-			bool aotAssemblies = runtime switch {
-				AndroidRuntime.CoreCLR => false,
-				AndroidRuntime.NativeAOT => false,
-				_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
-			};
-
 			for (int i=1; i <= 4; i++) {
 				var app1 = new XamarinAndroidApplicationProject () {
 					ProjectName = $"App{i}",
 					PackageName = $"com.companyname.App{i}",
-					AotAssemblies = aotAssemblies,
 					IsRelease = isRelease,
 					EnableMarshalMethods = true,
 				};

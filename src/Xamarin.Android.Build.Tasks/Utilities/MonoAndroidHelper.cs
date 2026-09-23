@@ -722,7 +722,7 @@ namespace Xamarin.Android.Tasks
 		/// function in <paramref name="shouldSkip"/> which returns `true` if the assembly passed to it should be **skipped**.
 		///
 		/// This method is necessary because sometimes our tasks will be given assemblies for more architectures than indicated as supported in their `SupportedAbis` properties.
-		/// One such example is the `AotTests.BuildAMassiveApp` test, which passes around a set of assemblies for all the supported architectures, but it supports only two ABIs
+		/// One such example is the `ApplicationBuildTests.BuildAMassiveApp` test, which passes around a set of assemblies for all the supported architectures, but it supports only two ABIs
 		/// via the `SupportedAbis` property.
 		/// </summary>
 		public static Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> GetPerArchAssemblies (IEnumerable<ITaskItem> input, ICollection<string> supportedAbis, bool validate, Func<ITaskItem, bool>? shouldSkip = null)
