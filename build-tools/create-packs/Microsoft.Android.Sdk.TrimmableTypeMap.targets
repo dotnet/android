@@ -11,7 +11,7 @@
 -->
 <Project>
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.dll" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Build.Tasks.dll" TaskFactory="TaskHostFactory" Runtime="NET" />
 
   <PropertyGroup>
     <_PreBuiltTypeMapPackSubDir>data\prebuilt-typemap</_PreBuiltTypeMapPackSubDir>
@@ -77,7 +77,7 @@
   <Target Name="_GeneratePreBuiltMonoAndroidTypeMap"
       BeforeTargets="ConfigureLocalWorkload;_GenerateXASdkContent"
       DependsOnTargets="_GeneratePreBuiltMonoAndroidTypeMapInputs;_InvalidatePreBuiltMonoAndroidTypeMapStampIfOutputsMissing"
-      Inputs="@(_PreBuiltTypeMapInput);@(_PreBuiltTypeMapFramework);$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.dll;$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Sdk.TrimmableTypeMap.dll"
+      Inputs="@(_PreBuiltTypeMapInput);@(_PreBuiltTypeMapFramework);$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Build.Tasks.dll;$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Sdk.TrimmableTypeMap.dll"
       Outputs="$(_PreBuiltTypeMapGenerationStamp)">
     <MakeDir Directories="$(_PreBuiltTypeMapOutputDir);$(_PreBuiltTypeMapJavaDir)" />
     <GenerateTrimmableTypeMap
