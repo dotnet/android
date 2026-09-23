@@ -1696,7 +1696,7 @@ class TestActivity : Activity { }"
 				GetApiLevelFromIdFunc = id => id == "36" || id == "36.1" ? 36 : 99,
 			};
 
-			// GenerateMainAndroidManifest strips "36.1" → "36" before setting TargetSdkVersion
+			// Manifest generation strips "36.1" to "36" before setting TargetSdkVersion.
 			string targetSdkVersion = "36.1";
 			if (MonoAndroidHelper.TryParseApiLevel (targetSdkVersion, out var version)) {
 				targetSdkVersion = version.Major.ToString ();

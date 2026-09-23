@@ -45,15 +45,7 @@ static class ScannerRunner
 		);
 
 		var javaTypes = scanner.GetJavaTypes (assembly);
-		var (dataSets, _) = TypeMapCecilAdapter.GetDebugNativeEntries (
-			javaTypes, cache, needUniqueAssemblies: false
-		);
-
-		var entries = dataSets.JavaToManaged
-			.Select (e => new TypeMapEntry (e.JavaName, e.ManagedName, e.SkipInJavaToManaged))
-			.OrderBy (e => e.JavaName, StringComparer.Ordinal)
-			.ThenBy (e => e.ManagedName, StringComparer.Ordinal)
-			.ToList ();
+		var entries = GetLegacyEntries (javaTypes, cache);
 
 		var methodsByJavaName = new Dictionary<string, List<TypeMethodGroup>> ();
 		foreach (var typeDef in javaTypes) {
@@ -80,6 +72,17 @@ static class ScannerRunner
 
 		return (entries, methodsByJavaName);
 	}
+
+	public static List<TypeMapEntry> GetLegacyEntries (List<CecilTypeDefinition> javaTypes, TypeDefinitionCache cache) =>
+		javaTypes
+			.Select (type => new TypeMapEntry (
+				Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName (type, cache),
+				GetManagedName (type),
+				type.IsInterface || type.HasGenericParameters
+			))
+			.OrderBy (entry => entry.JavaName, StringComparer.Ordinal)
+			.ThenBy (entry => entry.ManagedName, StringComparer.Ordinal)
+			.ToList ();
 
 	public static List<ConstructorEntry> RunLegacyConstructors (string assemblyPath, string managedTypeName)
 	{

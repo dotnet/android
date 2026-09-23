@@ -12,7 +12,6 @@ namespace Xamarin.Android.Tasks
 	public class PrepareAbiItems : AndroidTask
 	{
 		const string ArmV7a = "armeabi-v7a";
-		const string TypeMapBase = "typemaps";
 		const string EnvBase = "environment";
 		const string CompressedAssembliesBase = "compressed_assemblies";
 		const string JniRemappingBase = "jni_remap";
@@ -46,9 +45,7 @@ namespace Xamarin.Android.Tasks
 			var includes = new List<ITaskItem> ();
 			string baseName;
 
-			if (MonoAndroidHelper.StringEquals ("typemap", Mode, StringComparison.OrdinalIgnoreCase)) {
-				baseName = TypeMapBase;
-			} else if (MonoAndroidHelper.StringEquals ("environment", Mode, StringComparison.OrdinalIgnoreCase)) {
+			if (MonoAndroidHelper.StringEquals ("environment", Mode, StringComparison.OrdinalIgnoreCase)) {
 				baseName = EnvBase;
 			} else if (MonoAndroidHelper.StringEquals ("compressed", Mode, StringComparison.OrdinalIgnoreCase)) {
 				baseName = CompressedAssembliesBase;

@@ -500,14 +500,15 @@
       Outputs="@(_BuildTargetAbis->'$(_NativeAssemblySourceDir)typemap.%(Identity).ll')">
     <ItemGroup>
       <_TypeMapStubAbis Include="@(_BuildTargetAbis)" />
+      <_TypeMapAssemblySource Include="@(_TypeMapStubAbis->'$(_NativeAssemblySourceDir)typemap.%(Identity).ll')">
+        <abi>%(_TypeMapStubAbis.Identity)</abi>
+      </_TypeMapAssemblySource>
     </ItemGroup>
     <MakeDir Directories="$(_NativeAssemblySourceDir)" />
     <GenerateEmptyTypemapStub
         OutputDirectory="$(_NativeAssemblySourceDir)"
         Abis="@(_TypeMapStubAbis)"
-        Debug="$(AndroidIncludeDebugSymbols)">
-      <Output TaskParameter="Sources" ItemName="_TypeMapAssemblySource" />
-    </GenerateEmptyTypemapStub>
+        Debug="$(AndroidIncludeDebugSymbols)" />
     <ItemGroup>
       <FileWrites Include="@(_TypeMapAssemblySource)" />
     </ItemGroup>
@@ -516,10 +517,7 @@
   <!--
     Keep the resource designer assembly on the trimmable type map path.
 
-    The non-trimmable path (Microsoft.Android.Sdk.TypeMap.LlvmIr.targets) runs
-    PreTrimmingFixLegacyDesigner, which rewrites legacy resource field loads into designer
-    property-getter calls so the trimmer can drop unused designer members. The trimmable path
-    does not run that rewrite. More importantly, resource ids are resolved via reflection at
+    Resource ids are resolved via reflection at
     runtime (Android.Runtime.ResourceIdManager then ResourceDesignerAttribute then Type.GetType /
     UpdateIdValues), which neither ILLink nor ILC can follow. If the designer assembly is left
     trimmable it gets removed entirely, and accessing any resource id (e.g. from a reflection-only

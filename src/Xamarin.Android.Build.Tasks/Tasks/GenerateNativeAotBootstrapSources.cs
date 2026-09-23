@@ -9,8 +9,7 @@ namespace Xamarin.Android.Tasks;
 /// library and exposes the runtime init entry point) and NativeAotEnvironmentVars.java
 /// (bakes in environment variable names/values for the native runtime).
 ///
-/// These files are needed by NativeAotRuntimeProvider.java and must be generated regardless
-/// of the typemap implementation (managed or trimmable).
+/// These files are needed by NativeAotRuntimeProvider.java.
 ///
 /// Delegates to <see cref="GenerateAdditionalProviderSources.GenerateNativeAotBootstrapFiles"/>
 /// for the actual generation logic.
@@ -31,8 +30,7 @@ public sealed class GenerateNativeAotBootstrapSources : AndroidTask
 
 	// Names of the extra per-process runtime providers (e.g. NativeAotRuntimeProvider_1) that the
 	// manifest declares for components with a non-default android:process; their Java sources must be
-	// generated too. On the legacy path GenerateAdditionalProviderSources writes these; the trimmable
-	// path has no such task, so the bootstrap step handles them here.
+	// generated too.
 	public string [] AdditionalProviderSources { get; set; } = [];
 
 	public override bool RunTask ()

@@ -47,7 +47,6 @@ namespace Xamarin.Android.Build.Tests
 				$"{nameof (AddKeepAlivesStep)} presence should match the compatibility fixup setting.");
 			Assert.IsTrue (pipeline.Steps.Any (step => step is FindJavaObjectsStep), $"{nameof (FindJavaObjectsStep)} should always run.");
 			Assert.IsTrue (pipeline.Steps.Any (step => step is SaveChangedAssemblyStep), $"{nameof (SaveChangedAssemblyStep)} should always run.");
-			Assert.IsTrue (pipeline.Steps.Any (step => step is FindTypeMapObjectsStep), $"{nameof (FindTypeMapObjectsStep)} should always run.");
 		}
 
 		sealed class TestableLinkAssembliesNoShrink : LinkAssembliesNoShrink
@@ -827,26 +826,10 @@ namespace UnnamedProject {
 			}
 		}
 
-		// TODO: fix for (true, AndroidRuntime.CoreCLR)
 		[Test]
 		public void DoNotErrorOnPerArchJavaTypeDuplicates (
-			[Values(true, false)] bool enableMarshalMethods,
 			[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (enableMarshalMethods == true && runtime == AndroidRuntime.CoreCLR) {
-				// This currently fails with the following exception:
-				//
-				// Xamarin.Android.Common.targets(1603,3): error XARMM7015: System.NotSupportedException: Writing mixed-mode assemblies is not supported
-				//  at Mono.Cecil.ModuleWriter.Write(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
-				//  at Mono.Cecil.ModuleWriter.WriteModule(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
-				//  at Mono.Cecil.ModuleDefinition.Write(String fileName, WriterParameters parameters)
-				//  at Mono.Cecil.AssemblyDefinition.Write(String fileName, WriterParameters parameters)
-				//  at Xamarin.Android.Tasks.MarshalMethodsAssemblyRewriter.Rewrite(Boolean brokenExceptionTransitions) in src/Xamarin.Android.Build.Tasks/Utilities/MarshalMethodsAssemblyRewriter.cs:line 165
-				//  at Xamarin.Android.Tasks.RewriteMarshalMethods.RewriteMethods(NativeCodeGenState state, Boolean brokenExceptionTransitionsEnabled) in src/Xamarin.Android.Build.Tasks/Tasks/RewriteMarshalMethods.cs:line 160
-				Assert.Ignore ("Fails with Mono.Cecil exception on CoreCLR");
-				return;
-			}
-
 			var path = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject { IsRelease = true, ProjectName = "Lib1" };
 			lib.SetRuntime (runtime);
@@ -880,7 +863,6 @@ public abstract class MyRunner {
 				"base.OnCreate (bundle);",
 				"base.OnCreate (bundle);\n" +
 				"if (Lib1.Library1.Is64 ()) Console.WriteLine (\"Hello World!\");");
-			proj.EnableMarshalMethods = enableMarshalMethods;
 
 
 			using var lb = CreateDllBuilder (Path.Combine (path, "Lib1"));

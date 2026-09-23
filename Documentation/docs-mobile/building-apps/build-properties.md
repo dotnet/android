@@ -425,14 +425,9 @@ The default value is `False` when
 
 ## AndroidEnableMarshalMethods
 
-A bool property, that determines whether or not LLVM marshal methods are enabled.
-LLVM marshal methods are an app startup optimization which uses native entry points
-for Java `native` method registration.
-
-This property is False by default.
-
-This property cannot be set to `true` when
-[`$(PublishReadyToRun)`](#publishreadytorun) is `true`.
+A legacy boolean property for LLVM marshal methods. Marshal methods are no
+longer supported. Remove this property or set it to `false`; setting it to
+`true` produces error XA1049.
 
 Added in .NET 8.
 

@@ -1,11 +1,9 @@
 #nullable enable
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks;
 
@@ -25,24 +23,16 @@ public class GenerateEmptyTypemapStub : AndroidTask
 
 	public bool Debug { get; set; }
 
-	[Output]
-	public ITaskItem []? Sources { get; set; }
-
 	public override bool RunTask ()
 	{
 		Directory.CreateDirectory (OutputDirectory);
-		var sources = new List<ITaskItem> ();
 
 		foreach (var abi in Abis) {
 			string abiName = abi.ItemSpec;
 			string stubPath = Path.Combine (OutputDirectory, $"typemap.{abiName}.ll");
 			Files.CopyIfStringChanged (GenerateStubLlvmIr (abiName), stubPath);
-			var item = new TaskItem (stubPath);
-			item.SetMetadata ("abi", abiName);
-			sources.Add (item);
 		}
 
-		Sources = sources.ToArray ();
 		return !Log.HasLoggedErrors;
 	}
 
