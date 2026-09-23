@@ -266,6 +266,16 @@ namespace Xamarin.Android.JcwGenTests {
 		}
 
 		[Test]
+		public void LegacyCustomThresholdTargetsBaseClass ()
+		{
+			using (var d = new LegacyCustomThresholdDerived ()) {
+				d.Method ();
+				Assert.IsTrue (d.MethodInvoked);
+				Assert.IsFalse (d.DerivedMethodInvoked);
+			}
+		}
+
+		[Test]
 		public void LegacyThrowableVirtualMethodBinding ()
 		{
 			using (var b = new LegacyThresholdBinding.LegacyThresholdThrowable ()) {

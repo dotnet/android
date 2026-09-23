@@ -18,30 +18,36 @@ namespace Android.ContentTests {
 		[Category ("ThresholdDispatch")]
 		public async Task LoadInBackgroundDispatch ()
 		{
-			var completion = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var completion = new TaskCompletionSource<(bool CursorPresent, bool BaseCursorPresent, bool OverrideInvoked)> (TaskCreationOptions.RunContinuationsAsynchronously);
 			var looper = Looper.MainLooper ?? throw new InvalidOperationException ("The Android main looper is unavailable.");
 			using (var handler = new Handler (looper)) {
 				if (!handler.Post (() => {
 					try {
+						bool cursorPresent;
 						using (var loader = CreateCursorLoader ()) {
 							using (var cursor = loader.LoadInBackground ()) {
-								Assert.IsNotNull (cursor);
+								cursorPresent = cursor != null;
 							}
 						}
+						bool baseCursorPresent;
+						bool overrideInvoked;
 						using (var loader = new ManagedCursorLoader ()) {
 							using (var cursor = loader.CallBaseLoadInBackground ()) {
-								Assert.IsNotNull (cursor);
+								baseCursorPresent = cursor != null;
 							}
-							Assert.IsFalse (loader.OverrideInvoked);
+							overrideInvoked = loader.OverrideInvoked;
 						}
-						completion.SetResult (true);
+						completion.SetResult ((cursorPresent, baseCursorPresent, overrideInvoked));
 					} catch (Exception e) {
 						completion.SetException (e);
 					}
 				})) {
 					Assert.Fail ("Could not post the CursorLoader test to the Android main looper.");
 				}
-				await completion.Task;
+				var result = await completion.Task;
+				Assert.IsTrue (result.CursorPresent);
+				Assert.IsTrue (result.BaseCursorPresent);
+				Assert.IsFalse (result.OverrideInvoked);
 			}
 		}
 
