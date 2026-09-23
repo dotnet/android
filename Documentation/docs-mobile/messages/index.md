@@ -358,7 +358,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `GPM` - `GeneratePackageManagerJava`
 * `GRD` - `GenerateResourceDesigner`
 * `IAS` - `InstallApkSet`
-* `IJD` - `ImportJavaDoc`
 * `JDC` - `JavaDoc`
 * `JVC` - `Javac`
 * `JTX` - `JarToXml`
