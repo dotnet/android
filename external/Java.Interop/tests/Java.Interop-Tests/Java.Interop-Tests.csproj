@@ -32,7 +32,6 @@
 
   <ItemGroup>
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\AnotherJavaInterfaceImpl.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\CrossReferenceBridge.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\CallNonvirtualBase.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\CallNonvirtualDerived.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\CallNonvirtualDerived2.java" />

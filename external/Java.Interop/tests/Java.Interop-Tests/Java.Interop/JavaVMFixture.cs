@@ -53,7 +53,6 @@ namespace Java.InteropTests {
 			[AnotherJavaInterfaceImpl.JniTypeName]          = typeof (AnotherJavaInterfaceImpl),
 			[CallVirtualFromConstructorBase.JniTypeName]    = typeof (CallVirtualFromConstructorBase),
 			[CallVirtualFromConstructorDerived.JniTypeName] = typeof (CallVirtualFromConstructorDerived),
-			[CrossReferenceBridge.JniTypeName]              = typeof (CrossReferenceBridge),
 			[GetThis.JniTypeName]                           = typeof (GetThis),
 			[IAndroidInterface.JniTypeName]                 = typeof (IAndroidInterface),
 			[IJavaInterface.JniTypeName]                    = typeof (IJavaInterface),
