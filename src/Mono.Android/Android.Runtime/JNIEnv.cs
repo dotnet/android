@@ -265,17 +265,7 @@ namespace Android.Runtime {
 				if (!((e is Java.Lang.NoClassDefFoundError) || (e is Java.Lang.ClassNotFoundException)))
 					throw;
 				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"JNIEnv.FindClass(Type) caught unexpected exception: {e}");
-				var jni = Java.Interop.TypeManager.GetJniTypeName (type);
-				if (jni != null) {
-					e.Dispose ();
-					return FindClass (JavaNativeTypeManager.ToJniName (jni, rank));
-				}
-
-				// Though it's tempting to call TypeManager.RegisterType() to avoid
-				// calling GetCustomAttributes() again, this isn't necessary as
-				// JNIEnv.FindClass() will invoke the static constructor for the type,
-				// which will (indirectly) call TypeManager.RegisterType().
-				jni = JavaNativeTypeManager.ToJniNameFromAttributes (type);
+				var jni = JavaNativeTypeManager.ToJniNameFromAttributes (type);
 				if (jni != null) {
 					e.Dispose ();
 					return FindClass (JavaNativeTypeManager.ToJniName (jni, rank));

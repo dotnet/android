@@ -21,6 +21,14 @@ namespace Java.InteropTests
 		{
 		}
 
+		[Test]
+		public void ExplicitTypeRegistrationIsNotSupported ()
+		{
+			var exception = Assert.Throws<NotSupportedException> (() =>
+				Java.Interop.TypeManager.RegisterType ("example/CustomPeer", typeof (Java.Lang.Object)));
+			Assert.That (exception?.Message, Does.Contain ("trimmable type map"));
+		}
+
 		[TestCase ("android/app/Activity", "android/app/DesugarActivity$_CC", "android/app/Activity$-CC")]
 		[TestCase ("Activity", "DesugarActivity$_CC", "Activity$-CC")]
 		[TestCase ("com/example/package/MyInterface", "com/example/package/DesugarMyInterface$_CC", "com/example/package/MyInterface$-CC")]

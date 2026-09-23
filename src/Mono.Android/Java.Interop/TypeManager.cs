@@ -6,33 +6,6 @@ using Android.Runtime;
 
 namespace Java.Interop {
 
-	static class TypeManagerMapDictionaries
-	{
-		static Dictionary<string, Type>? _jniToManaged;
-		static Dictionary<Type, string>? _managedToJni;
-
-		public static readonly object AccessLock = new object ();
-
-		//
-		// Access to both properties MUST be done after taking lock on accessLock!
-		//
-		public static Dictionary<string, Type> JniToManaged {
-			get {
-				if (_jniToManaged == null)
-					_jniToManaged = new Dictionary<string, Type> (StringComparer.Ordinal);
-				return _jniToManaged;
-			}
-		}
-
-		public static Dictionary<Type, string> ManagedToJni {
-			get {
-				if (_managedToJni == null)
-					_managedToJni = new Dictionary<Type, string> ();
-				return _managedToJni;
-			}
-		}
-	}
-
 	public static partial class TypeManager {
 		internal static string GetClassName (IntPtr class_ptr)
 		{
@@ -41,15 +14,6 @@ namespace Java.Interop {
 			RuntimeNativeMethods.monodroid_free (ptr);
 
 			return ret;
-		}
-
-		internal static string? GetJniTypeName (Type type)
-		{
-			lock (TypeManagerMapDictionaries.AccessLock) {
-				if (TypeManagerMapDictionaries.ManagedToJni.TryGetValue (type, out var jni))
-					return jni;
-			}
-			return null;
 		}
 
 		class TypeNameComparer : IComparer<string> {
@@ -92,19 +56,7 @@ namespace Java.Interop {
 
 		public static void RegisterType (string java_class, Type t)
 		{
-			string jniFromType = JNIEnv.GetJniName (t);
-			lock (TypeManagerMapDictionaries.AccessLock) {
-				if (!TypeManagerMapDictionaries.JniToManaged.TryGetValue (java_class, out var lookup)) {
-					TypeManagerMapDictionaries.JniToManaged.Add (java_class, t);
-					if (String.Compare (jniFromType, java_class, StringComparison.OrdinalIgnoreCase) != 0) {
-						TypeManagerMapDictionaries.ManagedToJni.Add (t, java_class);
-					}
-				} else if (t != typeof (Java.Interop.TypeManager)) {
-					// skip the registration and output a warning
-					Logger.Log (LogLevel.Warn, "monodroid", FormattableString.Invariant ($"Type Registration Skipped for {java_class} to {t} "));
-				}
-
-			}
+			throw new NotSupportedException ("Explicit Java type registration is not supported with the trimmable type map. Use [Register] on Java peer types instead.");
 		}
 
 		const string TypeRegistrationNotSupported =
