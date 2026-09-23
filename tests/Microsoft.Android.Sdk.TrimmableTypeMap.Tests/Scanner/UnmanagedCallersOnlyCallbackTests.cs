@@ -114,6 +114,18 @@ public class UnmanagedCallersOnlyCallbackTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Scanner_RejectsCallbackFormatWithoutIntegerVersion ()
+	{
+		using var assembly = CreateCallbackFormatAssembly (version: null);
+		using var pe = new PEReader (assembly);
+		using var scanner = new JavaPeerScanner ();
+
+		var error = Assert.Throws<NotSupportedException> (() => scanner.Scan ([MakeInput (pe)]));
+		Assert.Contains ("CallbackFormatMissing", error.Message);
+		Assert.Contains ("without a supported integer version", error.Message);
+	}
+
+	[Fact]
 	public void ModelBuilder_DirectCallbacks_AreNotEmittedAsWrappers ()
 	{
 		var model = ModelBuilder.Build (UcoPeers, "TestUcoTypeMap.dll", "TestUcoTypeMap");
@@ -171,6 +183,25 @@ public class UnmanagedCallersOnlyCallbackTests : FixtureTestBase
 			.ToList ();
 		Assert.Contains ("n_OnLayout_ZIIII", memberRefNames);
 		Assert.Contains ("n_GetCount", memberRefNames);
+	}
+
+	[Fact]
+	public void Emitter_DeduplicatesDirectCallbackMemberReferences ()
+	{
+		var model = ModelBuilder.Build (UcoPeers, "TestUcoTypeMap.dll", "TestUcoTypeMap");
+		var proxy = FindProxy (model, UcoWidget);
+		var registration = proxy.NativeRegistrations.Single (r => r.JniMethodName == "n_OnLayout_ZIIII");
+		Assert.NotNull (registration.DirectCallback);
+		proxy.NativeRegistrations.Add (registration with { JniMethodName = "n_OnLayoutAlias" });
+
+		using var stream = new MemoryStream ();
+		new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0)).Emit (model, stream);
+		stream.Position = 0;
+
+		using var peReader = new PEReader (stream);
+		var reader = peReader.GetMetadataReader ();
+		Assert.Single (reader.MemberReferences,
+			handle => reader.GetString (reader.GetMemberReference (handle).Name) == "n_OnLayout_ZIIII");
 	}
 
 	[Fact]
@@ -417,11 +448,11 @@ public class UnmanagedCallersOnlyCallbackTests : FixtureTestBase
 				string.Join (", ", model.ProxyTypes.Select (p => p.TypeName)));
 	}
 
-	static MemoryStream CreateCallbackFormatAssembly (int version)
+	static MemoryStream CreateCallbackFormatAssembly (int? version)
 	{
 		var stream = new MemoryStream ();
 		var pe = new PEAssemblyBuilder (new Version (11, 0, 0, 0));
-		var assemblyName = $"CallbackFormat{version}";
+		var assemblyName = version.HasValue ? $"CallbackFormat{version}" : "CallbackFormatMissing";
 		pe.EmitPreamble (assemblyName, assemblyName + ".dll");
 
 		var attributeType = pe.Metadata.AddTypeReference (
@@ -429,13 +460,21 @@ public class UnmanagedCallersOnlyCallbackTests : FixtureTestBase
 			pe.Metadata.GetOrAddString ("Java.Interop"),
 			pe.Metadata.GetOrAddString ("JavaPeerCallbackFormatAttribute"));
 		var attributeCtor = pe.AddMemberRef (attributeType, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (version.HasValue ? 1 : 0,
 				rt => rt.Void (),
-				p => p.AddParameter ().Type ().Int32 ()));
+				p => {
+					if (version.HasValue) {
+						p.AddParameter ().Type ().Int32 ();
+					}
+				}));
 		pe.Metadata.AddCustomAttribute (
 			EntityHandle.AssemblyDefinition,
 			attributeCtor,
-			pe.BuildAttributeBlob (blob => blob.WriteInt32 (version)));
+			pe.BuildAttributeBlob (blob => {
+				if (version.HasValue) {
+					blob.WriteInt32 (version.Value);
+				}
+			}));
 
 		pe.WritePE (stream);
 		stream.Position = 0;

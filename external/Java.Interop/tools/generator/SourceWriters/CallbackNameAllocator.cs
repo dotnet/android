@@ -48,6 +48,8 @@ namespace generator.SourceWriters
 			public Dictionary<string, string> TargetNames { get; } = new Dictionary<string, string> (StringComparer.Ordinal);
 
 			public HashSet<string> UsedCallbackNames { get; } = new HashSet<string> (StringComparer.Ordinal);
+
+			public HashSet<string> UsedTargetNames { get; } = new HashSet<string> (StringComparer.Ordinal);
 		}
 
 		readonly Dictionary<GenBase, TypeAllocation> allocations = new Dictionary<GenBase, TypeAllocation> ();
@@ -96,10 +98,10 @@ namespace generator.SourceWriters
 		/// </summary>
 		static (string callback, string target) AddFallback (TypeAllocation allocation, string key)
 		{
-			var callback = Disambiguate (allocation, "n_" + key);
+			var callback = Disambiguate (allocation.UsedCallbackNames, "n_" + key);
 			allocation.CallbackNames [key] = callback;
 
-			var target = "__" + callback;
+			var target = Disambiguate (allocation.UsedTargetNames, "__" + callback);
 			allocation.TargetNames [key] = target;
 
 			return (callback, target);
@@ -118,6 +120,7 @@ namespace generator.SourceWriters
 		static TypeAllocation Build (GenBase owner)
 		{
 			var allocation = new TypeAllocation ();
+			ReserveExistingMemberNames (allocation, owner);
 
 			// Group by managed name so that the disambiguating index of a member depends only on
 			// the other members which share its name, and order within a group by the member's own
@@ -139,8 +142,10 @@ namespace generator.SourceWriters
 
 					var candidate = index == 0 ? "n_" + group.Key : $"n_{group.Key}_{index}";
 
-					allocation.CallbackNames [key] = Disambiguate (allocation, candidate);
-					allocation.TargetNames [key] = "m" + ordinal.ToString (System.Globalization.CultureInfo.InvariantCulture);
+					allocation.CallbackNames [key] = Disambiguate (allocation.UsedCallbackNames, candidate);
+					allocation.TargetNames [key] = Disambiguate (
+						allocation.UsedTargetNames,
+						"m" + ordinal.ToString (System.Globalization.CultureInfo.InvariantCulture));
 
 					index++;
 					ordinal++;
@@ -150,12 +155,34 @@ namespace generator.SourceWriters
 			return allocation;
 		}
 
-		static string Disambiguate (TypeAllocation allocation, string candidate)
+		static void ReserveExistingMemberNames (TypeAllocation allocation, GenBase owner)
+		{
+			foreach (var type in GetEmittedMemberOwners (owner)) {
+				foreach (var method in type.Methods) {
+					allocation.UsedCallbackNames.Add (method.Name);
+					allocation.UsedTargetNames.Add (method.Name);
+				}
+				foreach (var property in type.Properties) {
+					allocation.UsedCallbackNames.Add (property.Name);
+					allocation.UsedTargetNames.Add (property.Name);
+				}
+				foreach (var field in type.Fields) {
+					allocation.UsedCallbackNames.Add (field.Name);
+					allocation.UsedTargetNames.Add (field.Name);
+				}
+				foreach (var nestedType in type.NestedTypes) {
+					allocation.UsedCallbackNames.Add (nestedType.Name);
+					allocation.UsedTargetNames.Add (nestedType.Name);
+				}
+			}
+		}
+
+		static string Disambiguate (HashSet<string> usedNames, string candidate)
 		{
 			var name = candidate;
 			var suffix = 0;
 
-			while (!allocation.UsedCallbackNames.Add (name))
+			while (!usedNames.Add (name))
 				name = candidate + "_" + (++suffix).ToString (System.Globalization.CultureInfo.InvariantCulture);
 
 			return name;
@@ -175,8 +202,15 @@ namespace generator.SourceWriters
 		/// </remarks>
 		static IEnumerable<Method> GetCallbackCandidates (GenBase owner)
 		{
-			foreach (var m in GetDeclaredMethods (owner))
-				yield return m;
+			foreach (var type in GetEmittedMemberOwners (owner)) {
+				foreach (var m in GetDeclaredMethods (type))
+					yield return m;
+			}
+		}
+
+		static IEnumerable<GenBase> GetEmittedMemberOwners (GenBase owner)
+		{
+			yield return owner;
 
 			var inherited = owner switch {
 				ClassGen klass => klass.GetAllDerivedInterfaces (),
@@ -187,10 +221,8 @@ namespace generator.SourceWriters
 			if (inherited is null)
 				yield break;
 
-			foreach (var iface in inherited) {
-				foreach (var m in GetDeclaredMethods (iface))
-					yield return m;
-			}
+			foreach (var iface in inherited)
+				yield return iface;
 		}
 
 		static IEnumerable<Method> GetDeclaredMethods (GenBase type)

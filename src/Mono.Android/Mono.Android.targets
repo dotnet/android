@@ -19,6 +19,14 @@
   
   <PropertyGroup>
     <_ApiXmlLocation>Profiles\</_ApiXmlLocation>
+    <_MonoAndroidUnmanagedCallersOnlyCallbacksState Condition=" '$(_MonoAndroidEnableUnmanagedCallersOnlyCallbacks)' == 'true' ">true</_MonoAndroidUnmanagedCallersOnlyCallbacksState>
+    <_MonoAndroidUnmanagedCallersOnlyCallbacksState Condition=" '$(_MonoAndroidUnmanagedCallersOnlyCallbacksState)' == '' ">false</_MonoAndroidUnmanagedCallersOnlyCallbacksState>
+    <_MonoAndroidUnmanagedCallersOnlyCallbacksTrueStamp>$(IntermediateOutputPath)mono-android-uco-callbacks-true.stamp</_MonoAndroidUnmanagedCallersOnlyCallbacksTrueStamp>
+    <_MonoAndroidUnmanagedCallersOnlyCallbacksFalseStamp>$(IntermediateOutputPath)mono-android-uco-callbacks-false.stamp</_MonoAndroidUnmanagedCallersOnlyCallbacksFalseStamp>
+    <_MonoAndroidUnmanagedCallersOnlyCallbacksStamp Condition=" '$(_MonoAndroidUnmanagedCallersOnlyCallbacksState)' == 'true' ">$(_MonoAndroidUnmanagedCallersOnlyCallbacksTrueStamp)</_MonoAndroidUnmanagedCallersOnlyCallbacksStamp>
+    <_MonoAndroidUnmanagedCallersOnlyCallbacksStamp Condition=" '$(_MonoAndroidUnmanagedCallersOnlyCallbacksState)' != 'true' ">$(_MonoAndroidUnmanagedCallersOnlyCallbacksFalseStamp)</_MonoAndroidUnmanagedCallersOnlyCallbacksStamp>
+    <_MonoAndroidOtherUnmanagedCallersOnlyCallbacksStamp Condition=" '$(_MonoAndroidUnmanagedCallersOnlyCallbacksState)' == 'true' ">$(_MonoAndroidUnmanagedCallersOnlyCallbacksFalseStamp)</_MonoAndroidOtherUnmanagedCallersOnlyCallbacksStamp>
+    <_MonoAndroidOtherUnmanagedCallersOnlyCallbacksStamp Condition=" '$(_MonoAndroidUnmanagedCallersOnlyCallbacksState)' != 'true' ">$(_MonoAndroidUnmanagedCallersOnlyCallbacksTrueStamp)</_MonoAndroidOtherUnmanagedCallersOnlyCallbacksStamp>
   </PropertyGroup>
   
   <!-- Creates 'AssemblyInfo.cs' with appropriate version information -->
@@ -111,7 +119,7 @@
       BeforeTargets="CoreCompile"
       DependsOnTargets="_CopyXmlLocal"
       Inputs="$(MSBuildThisFileFullPath);metadata;enumflags;map.csv;methodmap.csv;$(IntermediateOutputPath)mcw\api-$(AndroidPlatformId).xml"
-      Outputs="$(IntermediateOutputPath)mcw\Mono.Android.projitems">
+      Outputs="$(IntermediateOutputPath)mcw\Mono.Android.projitems;$(_MonoAndroidUnmanagedCallersOnlyCallbacksStamp)">
     <PropertyGroup>
       <_PlatformIdVersions>$(AndroidSdkDirectory)\platforms\android-$(AndroidPlatformId)\data\api-versions.xml</_PlatformIdVersions>
       <_AndroidPlatformAnnotations>$(AndroidSdkDirectory)/platforms/android-$(AndroidPlatformId)/data/annotations.zip</_AndroidPlatformAnnotations>
@@ -171,6 +179,11 @@
     <PropertyGroup>
       <DefineConstants>$(DefineConstants);$([System.String]::Copy('$(_GeneratedDefineConstants)').Replace ('%24(DefineConstants);', ''))</DefineConstants>
     </PropertyGroup>
+    <Delete Files="$(_MonoAndroidOtherUnmanagedCallersOnlyCallbacksStamp)" />
+    <Touch Files="$(_MonoAndroidUnmanagedCallersOnlyCallbacksStamp)" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_MonoAndroidUnmanagedCallersOnlyCallbacksTrueStamp);$(_MonoAndroidUnmanagedCallersOnlyCallbacksFalseStamp)" />
+    </ItemGroup>
   </Target>
   <ItemGroup>
     <JavaCallableWrapperSource Include="java\**\*.java" />

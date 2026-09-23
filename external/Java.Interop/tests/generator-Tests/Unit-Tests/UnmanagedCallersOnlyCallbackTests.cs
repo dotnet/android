@@ -123,11 +123,7 @@ namespace generatortests
 			Assert.True (source.Contains (
 				"global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_label, &global::Com.Example.Widget.m2);"),
 				source);
-			var waitIndex = source.IndexOf ("global::Android.Runtime.JNIEnv.WaitForBridgeProcessing ();", StringComparison.Ordinal);
-			var invokeIndex = source.IndexOf (
-				"global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_label, &global::Com.Example.Widget.m2);",
-				StringComparison.Ordinal);
-			Assert.True (waitIndex >= 0 && waitIndex < invokeIndex, source);
+			Assert.False (source.Contains ("WaitForBridgeProcessing"), source);
 			Assert.True (source.Contains (
 				"private static IntPtr m2 (IntPtr jnienv, IntPtr native__this, IntPtr native_label)"),
 				source);
@@ -266,6 +262,31 @@ namespace generatortests
 		}
 
 		[Test]
+		public void FunctionPointerTargetsDoNotCollideWithBoundMembers ()
+		{
+			const string api = """
+				<api>
+				  <package name='java.lang'><class name='Object' visibility='public' /></package>
+				  <package name='com.example'>
+				    <class name='Widget' extends='java.lang.Object' visibility='public' abstract='false'>
+				      <method name='reserved' managedName='m0' return='void' visibility='public' abstract='false' final='false' static='false' />
+				      <method name='reservedCallback' managedName='n_Work' return='void' visibility='public' abstract='false' final='false' static='false' />
+				      <method name='work' return='void' visibility='public' abstract='false' final='false' static='false' />
+				    </class>
+				  </package>
+				</api>
+				""";
+			var source = GetGeneratedTypeOutput (ParseApiDefinition (api).Single (g => g.Name == "Widget"));
+
+			CompileCallbacks (source);
+			Assert.True (source.Contains ("public virtual unsafe void m0 ()"), source);
+			Assert.True (source.Contains ("&global::Com.Example.Widget.m0_1);"), source);
+			Assert.True (source.Contains ("private static void m0_1 (global::Com.Example.Widget __this)"), source);
+			Assert.True (source.Contains ("[Register (\"work\", \"()V\", \"n_Work_1\")]"), source);
+			Assert.True (source.Contains ("static void n_Work_1 (IntPtr jnienv"), source);
+		}
+
+		[Test]
 		public void GenerationIsRepeatable ()
 		{
 			// A second generator run over the same API description must produce byte-identical
@@ -332,6 +353,8 @@ namespace generatortests
 			delegate void _JniMarshal_PPI_V (IntPtr env, IntPtr self, int value);
 			namespace Java.Interop {
 				public static unsafe class JniMarshalTyped {
+					public static void Invoke_X<TSelf> (IntPtr env, IntPtr self, delegate*<TSelf, void> target)
+						where TSelf : class, Android.Runtime.IJavaObject { }
 					public static void Invoke_SX<TSelf, T> (IntPtr env, IntPtr self, T value, delegate*<TSelf, T, void> target)
 						where TSelf : class, Android.Runtime.IJavaObject where T : unmanaged { }
 					public static T Invoke_S<TSelf, T> (IntPtr env, IntPtr self, delegate*<TSelf, T> target)

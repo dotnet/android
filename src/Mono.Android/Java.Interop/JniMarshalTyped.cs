@@ -21,7 +21,7 @@ namespace Java.Interop {
 	/// <para>
 	/// These helpers own everything that would otherwise be duplicated into every generated
 	/// <c>n_*</c> callback: the JNI transition (<c>BeginMarshalMethod</c>/<c>EndMarshalMethod</c>),
-	/// GC bridge synchronization, unhandled exception reporting, the managed peer lookup for
+	/// including GC bridge synchronization, unhandled exception reporting, the managed peer lookup for
 	/// <c>self</c>, the peer lookup for supported object arguments, and the JNI conversion of a
 	/// peer return value.
 	/// </para>
@@ -51,8 +51,6 @@ namespace Java.Interop {
 		public static unsafe void Invoke_X<[DynamicallyAccessedMembers (Constructors)] TPeer> (IntPtr jnienv, IntPtr self, delegate* managed<TPeer, void> body)
 			where TPeer : class, IJavaObject
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -74,8 +72,6 @@ namespace Java.Interop {
 			where TPeer : class, IJavaObject
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -96,8 +92,6 @@ namespace Java.Interop {
 		public static unsafe IntPtr Invoke_O<[DynamicallyAccessedMembers (Constructors)] TPeer> (IntPtr jnienv, IntPtr self, delegate* managed<TPeer, IJavaObject?> body)
 			where TPeer : class, IJavaObject
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -119,8 +113,6 @@ namespace Java.Interop {
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -143,8 +135,6 @@ namespace Java.Interop {
 			where T0 : unmanaged
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -166,8 +156,6 @@ namespace Java.Interop {
 			where TPeer : class, IJavaObject
 			where T0 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -189,8 +177,6 @@ namespace Java.Interop {
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -214,8 +200,6 @@ namespace Java.Interop {
 			where T0 : class, IJavaObject
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -238,8 +222,6 @@ namespace Java.Interop {
 			where TPeer : class, IJavaObject
 			where T0 : class, IJavaObject
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -263,8 +245,6 @@ namespace Java.Interop {
 			where T0 : unmanaged
 			where T1 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -288,8 +268,6 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -312,8 +290,6 @@ namespace Java.Interop {
 			where T0 : unmanaged
 			where T1 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -336,8 +312,6 @@ namespace Java.Interop {
 			where T0 : class, IJavaObject
 			where T1 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -362,8 +336,6 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -387,8 +359,6 @@ namespace Java.Interop {
 			where T0 : class, IJavaObject
 			where T1 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -412,8 +382,6 @@ namespace Java.Interop {
 			where T0 : unmanaged
 			where T1 : class, IJavaObject
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -438,8 +406,6 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -463,8 +429,6 @@ namespace Java.Interop {
 			where T0 : unmanaged
 			where T1 : class, IJavaObject
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -488,8 +452,6 @@ namespace Java.Interop {
 			where T0 : class, IJavaObject
 			where T1 : class, IJavaObject
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -515,8 +477,6 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -541,8 +501,6 @@ namespace Java.Interop {
 			where T0 : class, IJavaObject
 			where T1 : class, IJavaObject
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -568,8 +526,6 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where T2 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -594,8 +550,6 @@ namespace Java.Interop {
 			where T2 : unmanaged
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -619,8 +573,6 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where T2 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -644,8 +596,6 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where T2 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -671,8 +621,6 @@ namespace Java.Interop {
 			where T2 : unmanaged
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -697,8 +645,6 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where T2 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -723,8 +669,6 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where T2 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -750,8 +694,6 @@ namespace Java.Interop {
 			where T2 : unmanaged
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -776,8 +718,6 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where T2 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -802,8 +742,6 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where T2 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -830,8 +768,6 @@ namespace Java.Interop {
 			where T2 : unmanaged
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -857,8 +793,6 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where T2 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -884,8 +818,6 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where T2 : class, IJavaObject
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -911,8 +843,6 @@ namespace Java.Interop {
 			where T2 : class, IJavaObject
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -937,8 +867,6 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where T2 : class, IJavaObject
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -963,8 +891,6 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where T2 : class, IJavaObject
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -991,8 +917,6 @@ namespace Java.Interop {
 			where T2 : class, IJavaObject
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -1018,8 +942,6 @@ namespace Java.Interop {
 			where T1 : unmanaged
 			where T2 : class, IJavaObject
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -1045,8 +967,6 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where T2 : class, IJavaObject
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -1073,8 +993,6 @@ namespace Java.Interop {
 			where T2 : class, IJavaObject
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -1100,8 +1018,6 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where T2 : class, IJavaObject
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -1127,8 +1043,6 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where T2 : class, IJavaObject
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -1156,8 +1070,6 @@ namespace Java.Interop {
 			where T2 : class, IJavaObject
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -1184,8 +1096,6 @@ namespace Java.Interop {
 			where T1 : class, IJavaObject
 			where T2 : class, IJavaObject
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -1213,8 +1123,6 @@ namespace Java.Interop {
 			where T2 : unmanaged
 			where T3 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -1240,8 +1148,6 @@ namespace Java.Interop {
 			where T3 : unmanaged
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -1266,8 +1172,6 @@ namespace Java.Interop {
 			where T2 : unmanaged
 			where T3 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -1293,8 +1197,6 @@ namespace Java.Interop {
 			where T3 : unmanaged
 			where T4 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -1321,8 +1223,6 @@ namespace Java.Interop {
 			where T4 : unmanaged
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -1348,8 +1248,6 @@ namespace Java.Interop {
 			where T3 : unmanaged
 			where T4 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -1376,8 +1274,6 @@ namespace Java.Interop {
 			where T4 : unmanaged
 			where T5 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -1405,8 +1301,6 @@ namespace Java.Interop {
 			where T5 : unmanaged
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -1433,8 +1327,6 @@ namespace Java.Interop {
 			where T4 : unmanaged
 			where T5 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -1462,8 +1354,6 @@ namespace Java.Interop {
 			where T5 : unmanaged
 			where T6 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -1492,8 +1382,6 @@ namespace Java.Interop {
 			where T6 : unmanaged
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -1521,8 +1409,6 @@ namespace Java.Interop {
 			where T5 : unmanaged
 			where T6 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -1551,8 +1437,6 @@ namespace Java.Interop {
 			where T6 : unmanaged
 			where T7 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return;
 
@@ -1582,8 +1466,6 @@ namespace Java.Interop {
 			where T7 : unmanaged
 			where TResult : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 
@@ -1612,8 +1494,6 @@ namespace Java.Interop {
 			where T6 : unmanaged
 			where T7 : unmanaged
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return default;
 

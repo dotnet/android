@@ -51,7 +51,7 @@ namespace Java.Interop {
 	/// <para>
 	/// These helpers own everything that would otherwise be duplicated into every generated
 	/// <c>n_*</c> callback: the JNI transition (<c>BeginMarshalMethod</c>/<c>EndMarshalMethod</c>),
-	/// GC bridge synchronization, unhandled exception reporting, the managed peer lookup for
+	/// including GC bridge synchronization, unhandled exception reporting, the managed peer lookup for
 	/// <c>self</c>, the peer lookup for supported object arguments, and the JNI conversion of a
 	/// peer return value.
 	/// </para>
@@ -143,8 +143,6 @@ namespace Java.Interop {
 			}
 #>
 		{
-			AndroidRuntimeInternal.WaitForBridgeProcessing ();
-
 			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
 				return<#= ret == 'X' ? "" : " default" #>;
 

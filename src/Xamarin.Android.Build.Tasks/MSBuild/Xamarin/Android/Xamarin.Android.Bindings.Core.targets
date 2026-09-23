@@ -23,7 +23,14 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     <ClassParseToolExe          Condition=" '$(ClassParseToolExe)' == '' ">class-parse.dll</ClassParseToolExe>
     <BindingsGeneratorToolExe   Condition=" '$(BindingsGeneratorToolExe)' == '' ">generator.dll</BindingsGeneratorToolExe>
     <JavadocToMdocToolExe       Condition=" '$(JavadocToMdocToolExe)' == '' ">javadoc-to-mdoc.exe</JavadocToMdocToolExe>
-    <_GeneratorStampFile>$(_AndroidStampDirectory)generator.stamp</_GeneratorStampFile>
+    <_AndroidUnmanagedCallersOnlyCallbacksState Condition=" '$(_AndroidEnableUnmanagedCallersOnlyCallbacks)' == 'true' ">true</_AndroidUnmanagedCallersOnlyCallbacksState>
+    <_AndroidUnmanagedCallersOnlyCallbacksState Condition=" '$(_AndroidUnmanagedCallersOnlyCallbacksState)' == '' ">false</_AndroidUnmanagedCallersOnlyCallbacksState>
+    <_GeneratorUcoCallbacksTrueStamp>$(_AndroidStampDirectory)generator-uco-callbacks-true.stamp</_GeneratorUcoCallbacksTrueStamp>
+    <_GeneratorUcoCallbacksFalseStamp>$(_AndroidStampDirectory)generator-uco-callbacks-false.stamp</_GeneratorUcoCallbacksFalseStamp>
+    <_GeneratorStampFile Condition=" '$(_AndroidUnmanagedCallersOnlyCallbacksState)' == 'true' ">$(_GeneratorUcoCallbacksTrueStamp)</_GeneratorStampFile>
+    <_GeneratorStampFile Condition=" '$(_AndroidUnmanagedCallersOnlyCallbacksState)' != 'true' ">$(_GeneratorUcoCallbacksFalseStamp)</_GeneratorStampFile>
+    <_OtherGeneratorStampFile Condition=" '$(_AndroidUnmanagedCallersOnlyCallbacksState)' == 'true' ">$(_GeneratorUcoCallbacksFalseStamp)</_OtherGeneratorStampFile>
+    <_OtherGeneratorStampFile Condition=" '$(_AndroidUnmanagedCallersOnlyCallbacksState)' != 'true' ">$(_GeneratorUcoCallbacksTrueStamp)</_OtherGeneratorStampFile>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(_UseLegacyJavadocImport)' != 'true' ">
@@ -132,6 +139,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     />
 
     <!-- Write a flag so we won't redo this target if nothing changed -->
+    <Delete Files="$(_OtherGeneratorStampFile)" />
     <Touch Files="$(_GeneratorStampFile)" AlwaysCreate="true" />
 
     <ItemGroup>
@@ -172,7 +180,8 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     <Delete Files="$(ApiOutputFile).class-parse" />
     <Delete Files="$(ApiOutputFile).fixed" />
     <Delete Files="$(ApiOutputFile).adjusted.fixed" />
-    <Delete Files="$(_GeneratorStampFile)" />
+    <Delete Files="$(_GeneratorUcoCallbacksTrueStamp);$(_GeneratorUcoCallbacksFalseStamp)" />
+    <Delete Files="$(_AndroidIntermediateDesignTimeStampDirectory)generator-uco-callbacks-true.stamp;$(_AndroidIntermediateDesignTimeStampDirectory)generator-uco-callbacks-false.stamp" />
     <Delete Files="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')" />
     <Delete Files="@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')" />
     <Delete Files="$(_AndroidIntermediateBindingClassesZip)" />

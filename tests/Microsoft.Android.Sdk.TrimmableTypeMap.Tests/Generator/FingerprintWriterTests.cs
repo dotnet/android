@@ -130,6 +130,14 @@ public class FingerprintWriterTests : FixtureTestBase
 
 		Assert.Equal (LegacyContentFingerprint (model), fingerprints.Content);
 		Assert.Equal (LegacyIncrementalFingerprint (model, systemRuntimeVersion, useSharedTypemapUniverse), fingerprints.Incremental);
+
+		var directModel = CreateDirectCallbackModel ("n_Direct");
+		var directFingerprints = MetadataHelper.ComputeFingerprints (
+			directModel, systemRuntimeVersion, useSharedTypemapUniverse, includeIncremental: true);
+		Assert.Equal (LegacyContentFingerprint (directModel), directFingerprints.Content);
+		Assert.Equal (
+			LegacyIncrementalFingerprint (directModel, systemRuntimeVersion, useSharedTypemapUniverse),
+			directFingerprints.Incremental);
 	}
 
 	[Fact]
@@ -163,6 +171,33 @@ public class FingerprintWriterTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void ComputeFingerprints_IncludeDirectCallbackMetadata ()
+	{
+		var systemRuntimeVersion = new Version (11, 0, 0, 0);
+		var first = MetadataHelper.ComputeFingerprints (
+			CreateDirectCallbackModel ("n_First"),
+			systemRuntimeVersion,
+			useSharedTypemapUniverse: true,
+			includeIncremental: true);
+		var second = MetadataHelper.ComputeFingerprints (
+			CreateDirectCallbackModel ("n_Second"),
+			systemRuntimeVersion,
+			useSharedTypemapUniverse: true,
+			includeIncremental: true);
+
+		Assert.NotEqual (first.Content, second.Content);
+		Assert.NotEqual (first.Incremental, second.Incremental);
+
+		var withoutDirectCallback = MetadataHelper.ComputeFingerprints (
+			CreateDirectCallbackModel ("n_First", includeDirectCallback: false),
+			systemRuntimeVersion,
+			useSharedTypemapUniverse: true,
+			includeIncremental: true);
+		Assert.NotEqual (first.Content, withoutDirectCallback.Content);
+		Assert.NotEqual (first.Incremental, withoutDirectCallback.Incremental);
+	}
+
+	[Fact]
 	public void ComputeRootIncrementalFingerprint_MatchesLegacyBufferedSerialization ()
 	{
 		var systemRuntimeVersion = new Version (11, 0, 0, 0);
@@ -187,6 +222,42 @@ public class FingerprintWriterTests : FixtureTestBase
 	}
 
 	static Guid GeneratorModuleVersionId => typeof (TypeMapAssemblyGenerator).Module.ModuleVersionId;
+
+	static TypeMapAssemblyData CreateDirectCallbackModel (string callbackMethodName, bool includeDirectCallback = true)
+	{
+		var callbackType = new TypeRefData {
+			ManagedTypeName = "MyApp.Widget",
+			AssemblyName = "MyApp",
+		};
+		var directCallback = new UcoMethodData {
+			WrapperName = "unused",
+			CallbackMethodName = callbackMethodName,
+			CallbackType = callbackType,
+			JniSignature = "(I)V",
+			CallbackParameterTypeNames = ["System.Int32"],
+			CallbackReturnTypeName = "System.Void",
+			IsDirectUnmanagedCallersOnlyCallback = true,
+		};
+		var proxy = new JavaPeerProxyData {
+			TypeName = "Widget_Proxy",
+			JniName = "my/app/Widget",
+			TargetType = callbackType,
+			IsAcw = true,
+		};
+		proxy.NativeRegistrations.Add (new NativeRegistrationData {
+			JniMethodName = "n_Registered",
+			JniSignature = "(I)V",
+			WrapperMethodName = "unused",
+			WrapperTarget = UcoWrapperTargetData.From (proxy, "unused"),
+			DirectCallback = includeDirectCallback ? directCallback : null,
+		});
+		var model = new TypeMapAssemblyData {
+			AssemblyName = "_MyApp.TypeMap",
+			ModuleName = "_MyApp.TypeMap.dll",
+		};
+		model.ProxyTypes.Add (proxy);
+		return model;
+	}
 
 	static void AssertSameBytes (Action<BinaryWriter> expected, Action<FingerprintWriter> actual)
 	{
@@ -360,6 +431,7 @@ public class FingerprintWriterTests : FixtureTestBase
 		LegacyWriteOptionalStrings (writer, method.CallbackParameterTypeNames);
 		LegacyWriteOptionalString (writer, method.CallbackReturnTypeName);
 		LegacyWriteExportMethodDispatch (writer, method.ExportMethodDispatch);
+		writer.Write (method.IsDirectUnmanagedCallersOnlyCallback);
 	}
 
 	static void LegacyWriteOptionalStrings (BinaryWriter writer, IReadOnlyList<string>? values)
@@ -418,5 +490,9 @@ public class FingerprintWriterTests : FixtureTestBase
 		writer.Write (registration.WrapperTarget.TypeNamespace);
 		writer.Write (registration.WrapperTarget.TypeName);
 		writer.Write (registration.WrapperTarget.MethodName);
+		writer.Write (registration.DirectCallback is not null);
+		if (registration.DirectCallback is not null) {
+			LegacyWriteUcoMethod (writer, registration.DirectCallback);
+		}
 	}
 }

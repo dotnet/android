@@ -151,6 +151,8 @@ sealed class TypeMapAssemblyEmitter
 	// Cached open TypeMapAttribute`1 ref shared across closed TypeSpecs.
 	TypeReferenceHandle _typeMapAttrOpenRef;
 
+	readonly Dictionary<string, MemberReferenceHandle> _callbackMemberRefs = new (StringComparer.Ordinal);
+
 	/// <summary>
 	/// Creates a new emitter.
 	/// </summary>
@@ -1102,6 +1104,19 @@ sealed class TypeMapAssemblyEmitter
 	/// </summary>
 	MemberReferenceHandle CreateCallbackMemberRef (UcoMethodData uco)
 	{
+		var cacheKey = string.Join ("\u001f", new [] {
+			GetTypeRefCacheKey (uco.CallbackType),
+			uco.CallbackMethodName,
+			uco.JniSignature,
+			uco.CallbackReturnTypeName ?? "",
+			uco.CallbackParameterTypeNames is null
+				? "\u0000"
+				: string.Join ("\u001e", uco.CallbackParameterTypeNames),
+		});
+		if (_callbackMemberRefs.TryGetValue (cacheKey, out var existing)) {
+			return existing;
+		}
+
 		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
 		var returnKind = JniSignatureHelper.ParseReturnType (uco.JniSignature);
 		int paramCount = 2 + jniParams.Count;
@@ -1135,7 +1150,18 @@ sealed class TypeMapAssemblyEmitter
 			});
 
 		var callbackTypeHandle = _pe.ResolveTypeRef (uco.CallbackType);
-		return _pe.AddMemberRef (callbackTypeHandle, uco.CallbackMethodName, encodeCallbackSig);
+		var callbackRef = _pe.AddMemberRef (callbackTypeHandle, uco.CallbackMethodName, encodeCallbackSig);
+		_callbackMemberRefs.Add (cacheKey, callbackRef);
+		return callbackRef;
+	}
+
+	static string GetTypeRefCacheKey (TypeRefData typeRef)
+	{
+		var typeKind = typeRef.EncodeAsValueType ? "valuetype" : "class";
+		if (typeRef.GenericArguments.Count == 0) {
+			return $"{typeKind}:{typeRef.AssemblyName}:{typeRef.ManagedTypeName}";
+		}
+		return $"{typeKind}:{typeRef.AssemblyName}:{typeRef.ManagedTypeName}<{string.Join (",", typeRef.GenericArguments.Select (GetTypeRefCacheKey))}>";
 	}
 
 	MethodDefinitionHandle EmitUcoMethod (UcoMethodData uco, JavaPeerProxyData proxy)
