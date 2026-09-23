@@ -76,7 +76,7 @@ namespace Android.Widget {
 			const string id = "setAdapter.(Landroid/widget/ListAdapter;)V";
 			try {
 				JniArgumentValue* args = stackalloc JniArgumentValue [1];
-				args [0] = new JniArgumentValue ((adapter == null) ? IntPtr.Zero : ((Java.Lang.Object) adapter).Handle);
+				args [0] = new JniArgumentValue (adapter);
 				_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
 			} finally {
 				GC.KeepAlive (adapter);

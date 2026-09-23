@@ -75,6 +75,11 @@ namespace Java.Lang {
 			get { return typeof (Java.Lang.Throwable); }
 		}
 
+		internal IntPtr GetThresholdClass ()
+		{
+			return ThresholdClass;
+		}
+
 		// Used only to preserve virtual dispatch for legacy bindings.
 		internal System.Type GetThresholdType ()
 		{

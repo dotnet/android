@@ -94,7 +94,7 @@ namespace Android.Widget {
 				const string id = "setAdapter.(Landroid/widget/Adapter;)V";
 				try {
 					JniArgumentValue* args = stackalloc JniArgumentValue [1];
-					args [0] = new JniArgumentValue ((value == null) ? IntPtr.Zero : ((Java.Lang.Object) value).Handle);
+					args [0] = new JniArgumentValue (value);
 					_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
 				} finally {
 					GC.KeepAlive (value);

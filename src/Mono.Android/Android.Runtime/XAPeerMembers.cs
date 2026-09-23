@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
 
 using Java.Interop;
 
 namespace Android.Runtime {
 
 	public class XAPeerMembers : JniPeerMembers {
+
+		static readonly Dictionary<string, JniPeerMembers> LegacyPeerMembers = new Dictionary<string, JniPeerMembers> (StringComparer.Ordinal);
 
 		public XAPeerMembers (string jniPeerTypeName, Type managedPeerType)
 			: base (jniPeerTypeName, managedPeerType)
@@ -30,8 +33,23 @@ namespace Android.Runtime {
 
 		protected override JniPeerMembers GetPeerMembers (IJavaPeerable value)
 		{
-			// Retained because this protected override is part of the shipped API.
-			return base.GetPeerMembers (value);
+			if (value.JniPeerMembers is not XAPeerMembers) {
+				return base.GetPeerMembers (value);
+			}
+
+			var peerType = GetThresholdType (value);
+			if (peerType == null || value.JniPeerMembers.ManagedPeerType == peerType) {
+				return base.GetPeerMembers (value);
+			}
+
+			var jniClass = Java.Interop.TypeManager.GetClassName (GetThresholdClass (value));
+			lock (LegacyPeerMembers) {
+				if (!LegacyPeerMembers.TryGetValue (jniClass, out var members)) {
+					members = new XAPeerMembers (jniClass, peerType);
+					LegacyPeerMembers.Add (jniClass, members);
+				}
+				return members;
+			}
 		}
 
 		static Type? GetThresholdType (IJavaPeerable value)
@@ -43,6 +61,17 @@ namespace Android.Runtime {
 				return t.GetThresholdType ();
 			}
 			return null;
+		}
+
+		static IntPtr GetThresholdClass (IJavaPeerable value)
+		{
+			if (value is Java.Lang.Object o) {
+				return o.GetThresholdClass ();
+			}
+			if (value is Java.Lang.Throwable t) {
+				return t.GetThresholdClass ();
+			}
+			return IntPtr.Zero;
 		}
 	}
 }
