@@ -1347,7 +1347,9 @@ because xbuild doesn't support framework reference assemblies.
      Trimmable jars replace JavaProxyObject/JavaProxyThrowable with non-native implementations. -->
 <Target Name="_CollectRuntimeJarFilenames">
   <PropertyGroup>
-    <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_trimmable.jar</_RuntimeJar>
+    <_RuntimeJar Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' ">$(MSBuildThisFileDirectory)\java_runtime_trimmable.jar</_RuntimeJar>
+    <_RuntimeJar Condition=" '$(AndroidTypeMapImplementation)' != 'trimmable' and '$(_AndroidRuntime)' == 'CoreCLR' ">$(MSBuildThisFileDirectory)\java_runtime_clr.jar</_RuntimeJar>
+    <_RuntimeJar Condition=" '$(AndroidTypeMapImplementation)' != 'trimmable' and '$(_AndroidRuntime)' != 'CoreCLR' ">$(MSBuildThisFileDirectory)\java_runtime.jar</_RuntimeJar>
   </PropertyGroup>
 </Target>
 
