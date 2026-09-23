@@ -214,21 +214,22 @@ Use with `/p:Configuration=Release` to generate self-contained "Release" package
 Package files created by this target are available in the
 [`@(ApplicationArtifact)`](build-items.md#applicationartifact) item group.
 
-## StartAndroidActivity
+## Run
 
-Starts the default activity on the device or the running emulator.
+Builds and installs the application, then starts it on the device or running emulator.
+This target uses the same launch path as `dotnet run -p:WaitForExit=false` and returns
+after starting the application. Unlike that command, the `Run` target wakes the device
+and dismisses its keyguard before launching the application.
 
 To start a different activity, set the
 [`$(AndroidLaunchActivity)`](build-properties.md#androidlaunchactivity)
 property to the activity name.
 
-This is equivalent to:
-
 ```shell
-adb shell am start -S -n @PACKAGE_NAME@/$(AndroidLaunchActivity)
+dotnet build -t:Run
 ```
 
-Added in Xamarin.Android 10.2.
+`StartAndroidActivity` is retained as an alias for `Run`.
 
 ## StopAndroidPackage
 
