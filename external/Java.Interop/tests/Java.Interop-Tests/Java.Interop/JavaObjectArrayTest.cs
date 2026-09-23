@@ -165,8 +165,8 @@ namespace Java.InteropTests
 		}
 	}
 
+#if !__ANDROID__
 	[TestFixture]
-	[Category ("TrimmableTypeMapUnsupported")]
 	public class JavaObjectArray_object_ContractTest : JavaObjectArrayContractTest<object> {
 		static  readonly    object  a   = new object ();
 
@@ -201,4 +201,5 @@ namespace Java.InteropTests
 			Dispose (c);
 		}
 	}
+#endif  // !__ANDROID__
 }

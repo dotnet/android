@@ -8,8 +8,8 @@ using NUnit.Framework;
 
 namespace Java.InteropTests {
 
+#if !__ANDROID__
 	[TestFixture]
-	[Category ("TrimmableTypeMapUnsupported")]
 	public class JavaManagedGCBridgeTests : JavaVMFixture {
 
 #if !NO_GC_BRIDGE_SUPPORT
@@ -54,6 +54,7 @@ namespace Java.InteropTests {
 			child   = new WeakReference<CrossReferenceBridge> (b, true);
 		}
 	}
+#endif  // !__ANDROID__
 
 	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
 	public class CrossReferenceBridge : JavaObject {

@@ -14,12 +14,9 @@ using NUnit.Framework;
 
 namespace Java.InteropTests {
 
-	// Android doesn't support `[NonParallelizable]`, but runs tests sequentially by default.
 #if !__ANDROID__
 	// Modifies JniRuntime.valueManager instance field; can't be done in parallel
 	[NonParallelizable]
-#endif  // !__ANDROID__
-	[Category ("TrimmableTypeMapUnsupported")]
 	public abstract class JniRuntimeJniValueManagerContract : JavaVMFixture {
 
 		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
@@ -473,7 +470,6 @@ namespace Java.InteropTests {
 		protected override Type ValueManagerType => typeof (T);
 	}
 
-#if !__ANDROID__
 	[TestFixture]
 	public class JniRuntimeJniValueManagerContract_NoGCIntegration : JniRuntimeJniValueManagerContract<ManagedValueManager> {
 	}

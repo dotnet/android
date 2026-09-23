@@ -72,13 +72,14 @@ namespace Java.InteropTests
 			Assert.Throws<ArgumentNullException> (() => new JavaVMWithNullBuilder ());
 		}
 
+#if !__ANDROID__
 		[Test]
-		[Category ("TrimmableTypeMapUnsupported")]
 		public void BuiltInSimpleReferenceMap_ContainsManagedPeerByDefault ()
 		{
 			var types = JniRuntime.CurrentRuntime.TypeManager.GetTypes (new JniTypeSignature (ManagedPeer.JniTypeName));
 			Assert.IsTrue (types.Contains (typeof (ManagedPeer)));
 		}
+#endif  // !__ANDROID__
 
 		class JavaVMWithNullBuilder : JniRuntime {
 			public JavaVMWithNullBuilder ()

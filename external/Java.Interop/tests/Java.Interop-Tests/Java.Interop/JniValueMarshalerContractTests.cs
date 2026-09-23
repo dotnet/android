@@ -14,7 +14,7 @@ using NUnit.Framework;
 
 namespace Java.InteropTests {
 
-	[Category ("TrimmableTypeMapUnsupported")]
+#if !__ANDROID__
 	public abstract class JniValueMarshalerContractTests<
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			T
@@ -704,6 +704,7 @@ namespace Java.InteropTests {
 }}";
 		}
 	}
+#endif  // !__ANDROID__
 
 	[JniValueMarshaler (typeof (DemoValueTypeValueMarshaler))]
 	struct DemoValueType {
@@ -760,11 +761,12 @@ namespace Java.InteropTests {
 		}
 	}
 
+#if !__ANDROID__
 	[TestFixture]
-	[Category ("TrimmableTypeMapUnsupported")]
 	class JniValueMarshaler_DemoValueType_ContractTests : JniValueMarshalerContractTests<DemoValueType> {
 
 		protected   override    DemoValueType       Value           {get {return new DemoValueType (42);}}
 		protected   override    bool                IsJniValueType  {get {return true;}}
 	}
+#endif  // !__ANDROID__
 }

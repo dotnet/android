@@ -39,8 +39,8 @@ namespace Java.InteropTests
 		}
 #endif  // !ANDROID
 
+#if !__ANDROID__
 		[Test]
-		[Category ("TrimmableTypeMapUnsupported")]
 		public void VirtualInvokeOnBaseInvokesMostDerivedJavaMethod ()
 		{
 			Assert.IsNull (GetInstanceMethods (MyString._members.InstanceMethods));
@@ -53,7 +53,6 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		[Category ("TrimmableTypeMapUnsupported")]
 		public void ConcurrentFirstUsePublishesSingleInstanceMethodCache ()
 		{
 			var members = new JniPeerMembers (MyString.JniTypeName, typeof (MyString));
@@ -73,6 +72,7 @@ namespace Java.InteropTests
 				JniPeerMembers.Dispose (members);
 			}
 		}
+#endif  // !__ANDROID__
 
 		[Test]
 		public void PeerMemberCachesAreInitiallyNull ()
@@ -226,15 +226,16 @@ namespace Java.InteropTests
 			}
 		}
 
+#if !__ANDROID__
 		[Test]
 		[Category ("NativeAOTIgnore")]
-		[Category ("TrimmableTypeMapUnsupported")]
 		public void ReplacementTypeUsedForMethodLookup ()
 		{
 			using var o = new RenameClassDerived ();
 			int r = o.hashCode();
 			Assert.AreEqual (33, r);
 		}
+#endif  // !__ANDROID__
 
 		[Test]
 		[Category ("NativeAOTIgnore")]
