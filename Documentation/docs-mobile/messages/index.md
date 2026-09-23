@@ -256,9 +256,9 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4316](xa4316.md): Specified input file '{file}' does not exist. Ignoring.
 + [XA4317](xa4317.md): Input file '{file}' does not start with `<replacements/>`. Skipping.
 + [XA4318](xa4318.md): Input file '{file}' could not be read: {message}. Skipping.
-+ [XA4319](xa4319.md): No NativeAOT DGML files were provided.
-+ [XA4320](xa4320.md): ACW map file '{file}' was not found.
-+ [XA4321](xa4321.md): NativeAOT DGML file '{file}' was not found.
++ [XA4319](xa4319.md): Retired: No NativeAOT DGML files were provided.
++ [XA4320](xa4320.md): Retired: ACW map file '{file}' was not found.
++ [XA4321](xa4321.md): Retired: NativeAOT DGML file '{file}' was not found.
 + [XA4322](xa4322.md): Skipping library ProGuard configuration file '{file}' (from {source}) because it contains the unsupported global option '{option}'. Global ProGuard options are only allowed in application projects.
 + [XA4323](xa4323.md): Ignoring directory '{directory}' as it does not exist.
 + [XA4324](xa4324.md): [{arch}] Unable to delete source file '{file}'.

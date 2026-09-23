@@ -1145,6 +1145,12 @@ An enum-style property that specifies how `r8` obfuscates Java names when
 
 This property does not disable R8 code shrinking.
 
+When managed-trimmed CoreCLR builds use retained typemap rules, all Java
+names are preserved regardless of this setting, but R8 optimization remains
+enabled. This path uses the optimizing Android defaults together with
+`-dontobfuscate` and `--no-minification`; disabling renaming does not disable
+optimization.
+
 This property was introduced in a .NET 10 servicing release. It defaults to
 `disabled` in .NET 10 and to `private-members` in .NET 11 and later.
 

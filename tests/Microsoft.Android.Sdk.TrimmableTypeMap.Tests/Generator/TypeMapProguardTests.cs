@@ -33,6 +33,42 @@ public class TypeMapProguardTests : IDisposable
 		Assert.Equal (new UTF8Encoding (false).GetBytes (expected), File.ReadAllBytes (task.OutputFile));
 	}
 
+	[Theory]
+	[InlineData ("CoreCLR", "true", "disabled", "proguard-android-optimize.txt")]
+	[InlineData ("CoreCLR", "true", "private-members", "proguard-android-optimize.txt")]
+	[InlineData ("CoreCLR", "false", "disabled", "proguard-android.txt")]
+	[InlineData ("CoreCLR", "false", "private-members", "proguard-android-optimize.txt")]
+	[InlineData ("NativeAOT", "true", "disabled", "proguard-android.txt")]
+	[InlineData ("NativeAOT", "true", "private-members", "proguard-android.txt")]
+	[InlineData ("MonoVM", "false", "disabled", "proguard-android.txt")]
+	public void PlatformConfigurationSeparatesCoreClrOptimizationFromObfuscation (string runtime, string typemap, string obfuscation, string expected)
+	{
+		var source = XDocument.Load (Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets"));
+		var target = new XElement (source.Descendants ().Single (element => element.Name.LocalName == "Target" && (string?) element.Attribute ("Name") == "_CalculateProguardConfigurationFiles"));
+		foreach (var element in target.DescendantsAndSelf ()) {
+			element.Name = element.Name.LocalName;
+		}
+		var project = Path.Combine (directory, "configuration.proj");
+		new XDocument (new XElement ("Project",
+			new XElement ("PropertyGroup",
+				new XElement ("_AndroidRuntime", runtime),
+				new XElement ("_AndroidUseTypeMapProguardConfiguration", typemap),
+				new XElement ("AndroidR8ObfuscationMode", obfuscation),
+				new XElement ("AndroidLinkTool", "r8"),
+				new XElement ("IntermediateOutputPath", "obj/")),
+			target,
+			new XElement ("Target", new XAttribute ("Name", "Build"), new XAttribute ("DependsOnTargets", "_CalculateProguardConfigurationFiles"),
+				new XElement ("WriteLinesToFile", new XAttribute ("File", "$(MSBuildProjectDirectory)/configurations.txt"),
+					new XAttribute ("Lines", "@(_ProguardConfiguration)"), new XAttribute ("Overwrite", "true")))))
+			.Save (project);
+		Build (project);
+		var configurations = File.ReadAllLines (Path.Combine (directory, "configurations.txt"));
+		Assert.Single (configurations, path => Path.GetFileName (path).StartsWith ("proguard-android", StringComparison.Ordinal));
+		Assert.Contains (configurations, path => Path.GetFileName (path) == expected);
+		Build (project, "-p:ProguardConfigFiles=custom.cfg");
+		Assert.Equal (["custom.cfg"], File.ReadAllLines (Path.Combine (directory, "configurations.txt")));
+	}
+
 	[Fact]
 	public void MemberGeneratorScopesRulesToCanonicalKeys ()
 	{
@@ -326,6 +362,34 @@ public class TypeMapProguardTests : IDisposable
 		}
 	}
 
+	[Theory]
+	[InlineData ("false", "false")]
+	[InlineData ("false", "true")]
+	[InlineData ("true", "false")]
+	[InlineData ("true", "true")]
+	public void TypemapInputsDoNotRequestGraphsOrChangeParallelism (string enabled, string diagnostics)
+	{
+		var project = CreateProject ("NativeAOT", "trimmable");
+		var document = XDocument.Load (project);
+		var root = document.Root ?? throw new InvalidOperationException ();
+		root.Add (new XElement ("Import", new XAttribute ("Project",
+			Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.TypeMap.Trimmable.NativeAOT.targets"))));
+		root.Add (new XElement ("Target", new XAttribute ("Name", "_ReadGeneratedTrimmableTypeMapAssemblies")));
+		root.Add (new XElement ("Target", new XAttribute ("Name", "Build"),
+			new XAttribute ("DependsOnTargets", "_AddTrimmableTypeMapAssembliesToIlc"),
+			new XElement ("WriteLinesToFile", new XAttribute ("File", "$(MSBuildProjectDirectory)/ilc.txt"),
+				new XAttribute ("Lines", "@(IlcArg);Diagnostics=$(IlcGenerateDgmlFile);Parallel=$(_AndroidBuildRuntimeIdentifiersInParallel)"),
+				new XAttribute ("Overwrite", "true"))));
+		document.Save (project);
+		Build (project, "-p:_AndroidEnableTypemapR8Trimming=" + enabled, "-p:IlcGenerateDgmlFile=" + diagnostics, "-p:Optimize=true");
+		var lines = File.ReadAllLines (Path.Combine (directory, "ilc.txt"));
+		var output = string.Join ("\n", lines);
+		Assert.DoesNotContain ("--scandgmllog:", output);
+		Assert.DoesNotContain ("--dgmllog:", output);
+		Assert.Contains ("Parallel=", lines);
+		Assert.Contains ("Diagnostics=" + diagnostics, output);
+	}
+
 	[NativeAotObjectFact]
 	public void UnoptimizedNativeAotReadsObjectWithoutGraphs ()
 	{
@@ -347,6 +411,39 @@ public class TypeMapProguardTests : IDisposable
 		Build (project, "-p:_MicrosoftAndroidBuildTasksAssembly=missing.dll");
 		Assert.False (File.Exists (Path.Combine (directory, "obj", "typemap.keys.txt")));
 		Assert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
+	}
+
+	[Theory]
+	[InlineData ("NativeAOT", "true", "r8", "true", "true")]
+	[InlineData ("NativeAOT", "false", "r8", "true", "false")]
+	[InlineData ("NativeAOT", "", "r8", "true", "false")]
+	[InlineData ("NativeAOT", "true", "", "true", "false")]
+	[InlineData ("NativeAOT", "true", "r8", "false", "false")]
+	[InlineData ("CoreCLR", "true", "r8", "true", "false")]
+	public void NdkDependencyRequiresNativeObjectOptIn (string runtime, string enabled, string linkTool, string trimmed, string expected)
+	{
+		var common = XDocument.Load (Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets"));
+		XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
+		var dependencyProperties = common.Root?.Elements (ns + "Target")
+			.Single (target => (string?) target.Attribute ("Name") == "GetAndroidDependencies")
+			.Element (ns + "PropertyGroup") ?? throw new InvalidOperationException ();
+		var path = Path.Combine (directory, "dependencies.proj");
+		new XDocument (new XElement (ns + "Project",
+			new XElement (ns + "PropertyGroup",
+				new XElement (ns + "_AndroidRuntime", runtime),
+				new XElement (ns + "AndroidTypeMapImplementation", "trimmable"),
+				new XElement (ns + "_AndroidEnableTypemapR8Trimming", enabled),
+				new XElement (ns + "_AndroidUseWorkloadNativeLinker", "true"),
+				new XElement (ns + "PublishAot", "true"),
+				new XElement (ns + "PublishTrimmed", trimmed),
+				new XElement (ns + "AndroidLinkTool", linkTool)),
+			new XElement (ns + "Target", new XAttribute ("Name", "Build"),
+				new XElement (dependencyProperties),
+				new XElement (ns + "WriteLinesToFile", new XAttribute ("File", "$(MSBuildProjectDirectory)/ndk-required.txt"),
+					new XAttribute ("Lines", "$(_NdkRequired)"), new XAttribute ("Overwrite", "true")))))
+			.Save (path);
+		Build (path);
+		Assert.Equal (expected, File.ReadAllText (Path.Combine (directory, "ndk-required.txt")).Trim ());
 	}
 
 	[Fact]

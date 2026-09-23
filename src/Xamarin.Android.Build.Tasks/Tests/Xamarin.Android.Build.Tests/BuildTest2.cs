@@ -1571,15 +1571,16 @@ namespace UnamedProject
 				}
 
 				var toolbar_class = "androidx.appcompat.widget.Toolbar";
-				IEnumerable<string> proguardProjectConfigurations = [Path.Combine (intermediate, "proguard",
-					runtime == AndroidRuntime.NativeAOT ? "proguard_project_references.cfg" : "proguard_project_primary.cfg")];
-				if (runtime == AndroidRuntime.NativeAOT && string.IsNullOrEmpty (rid)) {
-					proguardProjectConfigurations = Directory.GetFiles (intermediate, "proguard_project_references.cfg", SearchOption.AllDirectories);
-				}
+				var proguardProjectConfigurations = Directory.GetFiles (
+					Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath),
+					runtime == AndroidRuntime.NativeAOT ? "proguard_project_primary.cfg" : "proguard_project_references.cfg",
+					SearchOption.AllDirectories);
+				Assert.IsNotEmpty (proguardProjectConfigurations);
 				foreach (var proguardProjectConfiguration in proguardProjectConfigurations) {
-					FileAssert.Exists (proguardProjectConfiguration);
-					Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectConfiguration), $"-keep class {proj.JavaPackageName}.MainActivity"),
-						$"`{proj.JavaPackageName}.MainActivity` should exist in `{proguardProjectConfiguration}`!");
+					Assert.IsTrue (StringAssertEx.ContainsText (
+						File.ReadAllLines (proguardProjectConfiguration),
+						$"-keep class {proj.JavaPackageName}.MainActivity"),
+						$"`{proj.JavaPackageName}.MainActivity` should exist in `{proguardProjectConfiguration}`.");
 				}
 
 				// The user AndroidJavaSource keep is emitted into proguard_project_primary.cfg on every
@@ -1635,8 +1636,8 @@ namespace UnamedProject
 				var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
 				FileAssert.Exists (dexFile);
 
-				// Regression test: the trimmable NativeAOT path generates its ACW keep rules from the
-				// ILC DGML into proguard_project_references.cfg. If that file is not passed to R8, R8
+				// Regression test: NativeAOT must pass its generated ACW keep rules in
+				// proguard_project_references.cfg to R8. Otherwise R8
 				// tree-shakes the runtime ACW/JCW classes out of classes.dex and the app crashes at
 				// startup inside JavaInteropRuntime.init with a ClassNotFoundException for the
 				// UncaughtExceptionMarshaler Java Callable Wrapper. The JCW class name is CRC-hashed

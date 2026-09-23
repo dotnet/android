@@ -36,7 +36,8 @@ namespace Xamarin.Android.Tasks
 		public string? ProguardMappingFileOutput { get; set; }
 		public string? BuildMetadataFileOutput { get; set; }
 		public ITaskItem []? ProguardConfigurationFiles { get; set; }
-		public bool UseTrimmableNativeAotProguardConfiguration { get; set; }
+		public bool UseTypeMapProguardConfiguration { get; set; }
+		public bool UseScopedTypeMapMembers { get; set; }
 		public string ObfuscationMode { get; set; } = "private-members";
 
 		// User-authored AndroidJavaSource (Bind != true) .java files. These have no managed peer and are
@@ -161,18 +162,21 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (EnableShrinking) {
-				if (UseTrimmableNativeAotProguardConfiguration && !ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
-					// ACW keep rules come from the DGML/acw-map-driven proguard_project_references.cfg on
-					// the trimmable path. User-authored AndroidJavaSource (Bind != true) has no managed peer
+				if (UseTypeMapProguardConfiguration) {
+					WriteArg (response, "--no-minification");
+				}
+				if (UseTypeMapProguardConfiguration && !ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
+					// Class roots come from retained typemap keys, not the complete ACW map.
+					// User-authored AndroidJavaSource (Bind != true) has no managed peer
 					// and is absent from that map, so keep it here explicitly; otherwise R8 shrinks it away
 					// (e.g. dropping large unreferenced sources so an app that needs multidex no longer does).
 					using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration)) {
-						appcfg.WriteLine ("# ACW keep rules are generated from NativeAOT ILC metadata.");
+						appcfg.WriteLine ("# Class keep rules are generated from retained typemap keys.");
 						foreach (var java in GetUserJavaTypes ()) {
 							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
 						}
 					}
-				} else if (!AcwMapFile.IsNullOrEmpty ()) {
+				} else if (!UseTypeMapProguardConfiguration && !AcwMapFile.IsNullOrEmpty ()) {
 					var acwMap      = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (AcwMapFile), StringComparer.OrdinalIgnoreCase);
 					var javaTypes   = new List<string> (acwMap.Values.Count);
 					foreach (var v in acwMap.Values) {
@@ -192,11 +196,11 @@ namespace Xamarin.Android.Tasks
 				}
 				if (!ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
 					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
-						WriteObfuscationRules (xamcfg, ObfuscationMode);
+						WriteObfuscationRules (xamcfg, UseTypeMapProguardConfiguration ? "disabled" : ObfuscationMode);
 						xamcfg.WriteLine ();
 						xamcfg.Flush ();
-						if (UseTrimmableNativeAotProguardConfiguration) {
-							using var stream = GetEmbeddedResourceStream ("proguard_trimmable_nativeaot.cfg");
+						if (UseTypeMapProguardConfiguration) {
+							using var stream = GetEmbeddedResourceStream (UseScopedTypeMapMembers ? "proguard_typemap_coreclr.cfg" : "proguard_typemap.cfg");
 							stream.CopyTo (xamcfg.BaseStream);
 						} else {
 							using var stream = GetEmbeddedResourceStream ("proguard_xamarin.cfg");
@@ -344,7 +348,7 @@ namespace Xamarin.Android.Tasks
 
 		Stream GetEmbeddedResourceStream (string resourceName)
 		{
-			var stream = GetType ().Assembly.GetManifestResourceStream (resourceName);
+			var stream = typeof (R8).Assembly.GetManifestResourceStream (resourceName);
 			if (stream == null) {
 				throw new InvalidOperationException ($"Missing embedded resource '{resourceName}'.");
 			}
