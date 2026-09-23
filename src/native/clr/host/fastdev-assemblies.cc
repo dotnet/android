@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <cinttypes>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
@@ -118,12 +119,12 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		return nullptr;
 	}
 
-	constexpr size_t MAX_SIZE = std::numeric_limits<std::remove_reference_t<decltype(size)>>::max ();
-	if (file_size.value () > MAX_SIZE) [[unlikely]] {
+	constexpr int64_t MAX_SIZE = std::numeric_limits<int64_t>::max ();
+	if (static_cast<uint64_t>(file_size.value ()) > static_cast<uint64_t>(MAX_SIZE)) [[unlikely]] {
 		Helpers::abort_applicationf (
 			LOG_ASSEMBLY,
 			std::source_location::current (),
-			"FastDev assembly '%.*s' size exceeds the maximum supported value of %zu",
+			"FastDev assembly '%.*s' size exceeds the maximum supported value of %" PRId64,
 			static_cast<int>(name.length ()), name.data (),
 			MAX_SIZE
 		);
