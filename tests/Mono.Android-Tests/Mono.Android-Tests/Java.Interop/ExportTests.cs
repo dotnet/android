@@ -4,8 +4,6 @@ using Android.Runtime;
 
 using Java.Interop;
 
-using Microsoft.Android.Runtime;
-
 using NUnit.Framework;
 
 namespace Java.InteropTests
@@ -13,9 +11,7 @@ namespace Java.InteropTests
 	// Device-level coverage for [Export] / [ExportField] marshalling.
 	//
 	// These tests drive the Java side of an [Export]-bearing peer via JNIEnv,
-	// then assert what C# observed (and vice versa). They run under both the
-	// legacy llvm-ir typemap (which is the contract) and the trimmable typemap
-	// (which must match it).
+	// then assert what C# observed (and vice versa).
 	//
 	// Naming: each test is named Export_<Group>_<Feature>_<Behaviour> so the
 	// runner output is greppable.
@@ -175,8 +171,6 @@ namespace Java.InteropTests
 		[Test, Category ("Export")]
 		public void Export_Method_Throws_PrimitiveReturn_SurfacesAsManagedException ()
 		{
-			AssumeTrimmableExportExceptionRouting ();
-
 			using var e = new ExportThrowing ();
 			var m = JNIEnv.GetMethodID (e.Class.Handle, "Throwing", "()I");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for Throwing not found");
@@ -193,8 +187,6 @@ namespace Java.InteropTests
 		[Test, Category ("Export")]
 		public void Export_Method_Throws_ObjectReturn_SurfacesAsManagedException ()
 		{
-			AssumeTrimmableExportExceptionRouting ();
-
 			using var e = new ExportThrowing ();
 			var m = JNIEnv.GetMethodID (e.Class.Handle, "ThrowingString", "()Ljava/lang/String;");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for ThrowingString not found");
@@ -211,8 +203,6 @@ namespace Java.InteropTests
 		[Test, Category ("Export")]
 		public void Export_Method_Throws_FollowedBySecondCall_DoesNotLeakPendingException ()
 		{
-			AssumeTrimmableExportExceptionRouting ();
-
 			using var e = new ExportThrowing ();
 			var throwing = JNIEnv.GetMethodID (e.Class.Handle, "Throwing", "()I");
 			Assert.AreNotEqual (IntPtr.Zero, throwing, "JNI method id for Throwing not found");
@@ -234,8 +224,6 @@ namespace Java.InteropTests
 		[Test, Category ("Export")]
 		public void Export_Method_NestedJniCall_PreservesExceptionFromInnerExport ()
 		{
-			AssumeTrimmableExportExceptionRouting ();
-
 			// Outer [Export] method (ReentrantOuter) invokes Java reflection to call
 			// an inner [Export] method on the same peer (ReentrantInner) that throws.
 			// The inner throw is caught by the *inner* wrapper, set as a pending
@@ -250,13 +238,6 @@ namespace Java.InteropTests
 			Assert.That (ex, Is.Not.Null, "expected an exception from the nested call, got null");
 			Assert.That (ex.Message, Contains.Substring ("reentrant-boom"),
 				"the original inner-export exception message must propagate through both [Export] wrappers");
-		}
-
-		static void AssumeTrimmableExportExceptionRouting ()
-		{
-			if (!RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("[Export] exception routing coverage is only relevant for the trimmable typemap path.");
-			}
 		}
 
 		// ---------------------------------------------------------------

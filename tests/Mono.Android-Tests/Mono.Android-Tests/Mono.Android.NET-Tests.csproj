@@ -134,7 +134,6 @@
     <Compile Include="Android.Views\LayoutInflaterTest.cs" />
     <Compile Include="Android.Widget\AdapterTests.cs" />
     <Compile Include="Android.Widget\CustomWidgetTests.cs" />
-    <Compile Include="Java.Interop\ActivationConstructorCacheTests.cs" />
     <Compile Include="Java.Interop\ConstructorActivationTests.cs" />
     <Compile Include="Java.Interop\ExportTests.cs" />
     <Compile Include="Java.Interop\InterfaceCollectionMarshallingTests.cs" />

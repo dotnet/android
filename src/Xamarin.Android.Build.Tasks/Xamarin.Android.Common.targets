@@ -59,7 +59,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLibraryResources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateManagedAidlProxies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeApplicationConfigSources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeMarshalMethodSources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeRuntimeLinkingSources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1506,13 +1506,6 @@ because xbuild doesn't support framework reference assemblies.
       <Output TaskParameter="AssemblySources" ItemName="_CompressedAssembliesAssemblySource" />
   </PrepareAbiItems>
   <PrepareAbiItems
-    BuildTargetAbis="@(_BuildTargetAbis)"
-    NativeSourcesDir="$(_NativeAssemblySourceDir)"
-    Debug="$(AndroidIncludeDebugSymbols)"
-    Mode="marshal_methods">
-      <Output TaskParameter="AssemblySources" ItemName="_MarshalMethodsAssemblySource" />
-  </PrepareAbiItems>
-  <PrepareAbiItems
     Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' "
     BuildTargetAbis="@(_BuildTargetAbis)"
     NativeSourcesDir="$(_NativeAssemblySourceDir)"
@@ -1680,19 +1673,17 @@ because xbuild doesn't support framework reference assemblies.
       >
   </GenerateNativeApplicationConfigSources>
 
-  <GenerateNativeMarshalMethodSources
-      AndroidRuntime="$(_AndroidRuntime)"
-      EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)"
+  <GenerateNativeRuntimeLinkingSources
+      Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' "
       MonoComponents="@(_MonoComponent)"
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
       ResolvedAssemblies="@(_ResolvedAssemblies)"
       SupportedAbis="@(_BuildTargetAbis)">
-  </GenerateNativeMarshalMethodSources>
+  </GenerateNativeRuntimeLinkingSources>
 
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
   <ItemGroup>
     <FileWrites Include="@(_EnvironmentAssemblySource)" />
-    <FileWrites Include="@(_MarshalMethodsAssemblySource)" />
     <FileWrites Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' " Include="@(_RuntimeLinkingAssemblySource)" />
   </ItemGroup>
 </Target>
@@ -1904,9 +1895,6 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_PrepareNativeAssemblyItems" DependsOnTargets="_GenerateJavaStubs">
   <ItemGroup>
-    <_NativeAssemblyTarget Include="@(_TypeMapAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
-      <abi>%(_TypeMapAssemblySource.abi)</abi>
-    </_NativeAssemblyTarget>
     <_NativeAssemblyTarget Include="@(_EnvironmentAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
       <abi>%(_EnvironmentAssemblySource.abi)</abi>
     </_NativeAssemblyTarget>
@@ -1916,9 +1904,6 @@ because xbuild doesn't support framework reference assemblies.
     <_CompressedNativeAssemblyTarget Include="@(_CompressedAssembliesAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
       <abi>%(_CompressedAssembliesAssemblySource.abi)</abi>
     </_CompressedNativeAssemblyTarget>
-    <_NativeAssemblyTarget Include="@(_MarshalMethodsAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
-      <abi>%(_MarshalMethodsAssemblySource.abi)</abi>
-    </_NativeAssemblyTarget>
     <_NativeAssemblyTarget Include="@(_AndroidRemapAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
       <abi>%(_AndroidRemapAssemblySource.abi)</abi>
     </_NativeAssemblyTarget>
@@ -1946,10 +1931,10 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CompileNativeAssemblySources"
     DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles"
-    Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource);@(_RuntimeLinkingAssemblySource)"
+    Inputs="@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_AndroidRemapAssemblySource);@(_RuntimeLinkingAssemblySource)"
     Outputs="@(_NativeAssemblyTarget)">
   <CompileNativeAssembly
-      Sources="@(_TypeMapAssemblySource);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource);@(_RuntimeLinkingAssemblySource)"
+      Sources="@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_AndroidRemapAssemblySource);@(_RuntimeLinkingAssemblySource)"
       DebugBuild="$(AndroidIncludeDebugSymbols)"
       WorkingDirectory="$(_NativeAssemblySourceDir)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"

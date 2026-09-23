@@ -363,14 +363,8 @@ namespace Java.InteropTests
 			}
 		}
 
-		// Locks in the legacy llvm-ir typemap behavior for parameterized ctor activation.
-		// Java instantiation forwards JNI args to the user-visible managed ctor; trimmable
-		// typemap codegen must match this contract for non-()V signatures.
-		//
-		// NOTE: Legacy mono.android.TypeManager.Activate routes args through
-		// JNIEnv.GetObjectArray, which only supports IJavaObject-derived element types.
-		// Tests deliberately use Java.Lang.Throwable args (not System.String) to stay
-		// inside the supported legacy contract.
+		// Java instantiation forwards JNI args to the user-visible managed ctor,
+		// including non-()V signatures with Java.Lang.Throwable parameters.
 		[Test]
 		public void ActivatedDirectThrowableSubclasses_ThrowableCtor_ShouldForwardArgs ()
 		{

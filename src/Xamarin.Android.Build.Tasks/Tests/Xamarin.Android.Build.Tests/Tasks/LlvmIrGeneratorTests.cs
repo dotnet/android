@@ -82,25 +82,5 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.That (output, Does.Contain ("@test_function"), "Generated LLVM IR should contain the function name");
 		}
 
-		[Test]
-		public void EmptyMarshalMethodsSourceRetainsNativeHostEntryPoint ()
-		{
-			var log = new TaskLoggingHelper (new MockBuildEngine (TestContext.Out, [], [], []), "test");
-			var generator = new MarshalMethodsNativeAssemblyGenerator (log);
-			var module = generator.Construct ();
-
-			using var stream = new MemoryStream ();
-			using (var writer = new StreamWriter (stream, new UTF8Encoding (false), 1024, leaveOpen: true)) {
-				generator.Generate (module, AndroidTargetArch.Arm64, writer, "marshal_methods.arm64-v8a.ll");
-			}
-
-			stream.Position = 0;
-			using var reader = new StreamReader (stream);
-			string output = reader.ReadToEnd ();
-			Assert.That (output, Does.Contain ("@xamarin_app_init"));
-			Assert.That (output, Does.Contain ("@get_function_pointer"));
-			Assert.That (output, Does.Not.Contain ("@Java_"));
-		}
-
 	}
 }

@@ -1280,16 +1280,6 @@ namespace UnamedProject
 				start = DateTime.UtcNow;
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 
-				// These files won't exist in OSS .NET for Android, thus the existence check and
-				// Assert.Ignore below. They will also not exist in the commercial version of
-				// .NET for Android unless fastdev is enabled.
-				foreach (var file in new [] { "typemap.mj", "typemap.jm" }) {
-					var info = new FileInfo (Path.Combine (intermediate, "android", file));
-					if (info.Exists) {
-						Assert.IsTrue (info.LastWriteTimeUtc > start, $"`{file}` is older than `{start}`, with a timestamp of `{info.LastWriteTimeUtc}`!");
-					}
-				}
-
 				//One last build with no changes
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
 

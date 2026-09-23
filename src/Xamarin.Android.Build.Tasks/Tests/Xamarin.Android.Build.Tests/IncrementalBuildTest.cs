@@ -1440,12 +1440,8 @@ namespace Lib2
 
 				if (!isRelease && runtime == AndroidRuntime.CoreCLR) {
 					string projectDirectory = Path.Combine (Root, b.ProjectDirectory);
-					string intermediate = Path.Combine (projectDirectory, proj.IntermediateOutputPath, MonoAndroidHelper.AbiToRid (abi));
-					string typemap = Path.Combine (intermediate, "android", $"typemaps.{abi}.ll");
 					string apk = Directory.GetFiles (Path.Combine (projectDirectory, proj.OutputPath), "*-Signed.apk", SearchOption.AllDirectories).Single ();
-					DateTime typemapWriteTime = File.GetLastWriteTimeUtc (typemap);
 					DateTime apkWriteTime = File.GetLastWriteTimeUtc (apk);
-					string typemapHash = Files.HashFile (typemap);
 					string apkHash = Files.HashFile (apk);
 
 					// Change managed code without changing any Java type mappings.
@@ -1458,8 +1454,6 @@ namespace Lib2
 					b.Output.AssertTargetIsSkipped ("_CreateApplicationSharedLibraries");
 					b.Output.AssertTargetIsSkipped ("_BuildApkFastDev");
 					b.Output.AssertTargetIsSkipped ("_Sign");
-					Assert.AreEqual (typemapWriteTime, File.GetLastWriteTimeUtc (typemap), $"{typemap} should not be rewritten when its mappings have not changed.");
-					Assert.AreEqual (typemapHash, Files.HashFile (typemap), $"{typemap} contents should not change.");
 					Assert.AreEqual (apkWriteTime, File.GetLastWriteTimeUtc (apk), $"{apk} should not be rewritten for an incremental C# change.");
 					Assert.AreEqual (apkHash, Files.HashFile (apk), $"{apk} contents should not change.");
 				}
@@ -1469,8 +1463,6 @@ namespace Lib2
 		readonly string [] ExpectedAssemblyFiles = new [] {
 			Path.Combine ("android", "environment.@ABI@.o"),
 			Path.Combine ("android", "environment.@ABI@.ll"),
-			Path.Combine ("android", "typemap.@ABI@.o"),
-			Path.Combine ("android", "typemap.@ABI@.ll"),
 			Path.Combine ("app_shared_libraries", "@ABI@", "libxamarin-app.so")
 		};
 
@@ -1487,6 +1479,13 @@ namespace Lib2
 				var path = Path.Combine (intermediate, file);
 				CollectionAssert.Contains (lines, path, $"{file} is not in FileWrites!");
 				FileAssert.Exists (path);
+			}
+			var typeMapAssembly = Path.Combine (intermediate, "typemap", "_Microsoft.Android.TypeMaps.dll");
+			CollectionAssert.Contains (lines, typeMapAssembly, "The managed type map assembly should be in FileWrites.");
+			FileAssert.Exists (typeMapAssembly);
+
+			foreach (var obsoleteSource in new [] { $"typemap.{abi}.ll", $"marshal_methods.{abi}.ll" }) {
+				FileAssert.DoesNotExist (Path.Combine (intermediate, "android", obsoleteSource));
 			}
 		}
 

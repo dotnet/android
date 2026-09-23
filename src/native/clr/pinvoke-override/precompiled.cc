@@ -55,12 +55,6 @@ namespace {
 		if (entrypoint_name == "monodroid_TypeManager_get_java_class_name"sv) {
 			return reinterpret_cast<void*> (&monodroid_TypeManager_get_java_class_name);
 		}
-		if (entrypoint_name == "clr_typemap_managed_to_java"sv) {
-			return reinterpret_cast<void*> (&clr_typemap_managed_to_java);
-		}
-		if (entrypoint_name == "clr_typemap_java_to_managed"sv) {
-			return reinterpret_cast<void*> (&clr_typemap_java_to_managed);
-		}
 		if (entrypoint_name == "clr_initialize_gc_bridge"sv) {
 			return reinterpret_cast<void*> (&clr_initialize_gc_bridge);
 		}

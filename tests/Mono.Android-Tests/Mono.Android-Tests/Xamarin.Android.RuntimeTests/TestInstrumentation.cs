@@ -27,10 +27,8 @@ namespace Xamarin.Android.RuntimeTests
 				categories.Add ("CoreCLRIgnore");
 				categories.Add ("NTLM");
 
-				if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-					categories.Add ("NativeTypeMap");
-					categories.Add ("TrimmableTypeMapUnsupported");
-				}
+				categories.Add ("NativeTypeMap");
+				categories.Add ("TrimmableTypeMapUnsupported");
 
 				// Build-time flags flow in via runtimeconfig.json properties
 				// (see <RuntimeHostConfigurationOption> entries in Mono.Android.NET-Tests.csproj).
@@ -40,9 +38,6 @@ namespace Xamarin.Android.RuntimeTests
 					categories.Add ("SSL");
 					categories.Add ("NTLM");
 
-					if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-						categories.Add ("Export");
-					}
 				}
 
 				// Process-wide reference counts are only stable in the dedicated filtered run.
@@ -86,9 +81,6 @@ namespace Xamarin.Android.RuntimeTests
 
 		protected override IEnumerable<string>? ExcludedTestNames {
 			get {
-				if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
-					return null;
-
 				// Tests from the external Java.Interop-Tests assembly that fail under the
 				// trimmable typemap. These cannot use [Category] because we don't control
 				// that assembly — they must be excluded by name here.
@@ -98,8 +90,7 @@ namespace Xamarin.Android.RuntimeTests
 					// fixture uses that attribute to register native callbacks on a hand-written
 					// Java peer (an obsolete code path whose primary consumer, jnimarshalmethod-gen,
 					// was removed in dotnet/java-interop#1405). The trimmable typemap generator
-					// emits XA4251 when it encounters the attribute and instructs users to either
-					// avoid it or switch off the trimmable typemap.
+					// emits XA4251 when it encounters the attribute.
 					// See https://github.com/dotnet/android/issues/11170.
 					"Java.InteropTests.InvokeVirtualFromConstructorTests",
 				};

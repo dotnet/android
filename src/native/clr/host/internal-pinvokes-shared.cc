@@ -1,7 +1,6 @@
 #include <host/gc-bridge.hh>
 #include <host/host-common.hh>
 #include <host/os-bridge.hh>
-#include <host/typemap.hh>
 #include <runtime-base/cpu-arch.hh>
 #include <runtime-base/internal-pinvokes.hh>
 #include <runtime-base/jni-remapping.hh>

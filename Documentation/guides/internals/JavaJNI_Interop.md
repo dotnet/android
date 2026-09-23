@@ -1,3 +1,8 @@
+> **Historical reference:** This guide describes the removed legacy LLVM IR/native
+> typemap and marshal-method registration pipeline. Current CoreCLR and NativeAOT
+> applications use the generated managed trimmable typemap and its Java callable
+> wrappers instead.
+
 <!--toc:start-->
 - [Introduction](#introduction)
 - [Java <-> Managed interoperability overview](#java-managed-interoperability-overview)
