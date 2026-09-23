@@ -121,11 +121,6 @@ namespace Xamarin.Android.Tasks
 
 		public int ReplacementMethodIndexEntryCount { get; private set; } = 0;
 
-		/// <summary>
-		/// Whether to write additional descriptive comments into the generated LLVM IR.  Defaults to <c>false</c>.
-		/// </summary>
-		public bool EmitComments { get; set; }
-
 		public JniRemappingAssemblyGenerator (TaskLoggingHelper log)
 		{
 			if (log == null) {
@@ -173,7 +168,7 @@ namespace Xamarin.Android.Tasks
 
 		public void Generate (AndroidTargetArch arch, TextWriter output, string fileName)
 		{
-			using var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch), EmitComments);
+			using var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch));
 			var strings = new LlvmIrStringPool ();
 			ulong alignment = GetAlignment (w);
 

@@ -13,11 +13,6 @@ class NativeAotJniInitNativeAssemblyGenerator
 {
 	readonly List<string> jniOnLoadNames = new ();
 
-	/// <summary>
-	/// Whether to write additional descriptive comments into the generated LLVM IR.  Defaults to <c>false</c>.
-	/// </summary>
-	public bool EmitComments { get; set; }
-
 	public NativeAotJniInitNativeAssemblyGenerator (TaskLoggingHelper log, List<string>? runtimeComponentsJniOnLoadHandlers, List<string>? customJniOnLoadHandlers)
 	{
 		if (log == null) {
@@ -46,7 +41,7 @@ class NativeAotJniInitNativeAssemblyGenerator
 
 	public void Generate (AndroidTargetArch arch, TextWriter output, string fileName)
 	{
-		using var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch), EmitComments);
+		using var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch));
 		var strings = new LlvmIrStringPool ();
 
 		w.WriteHeader (fileName);

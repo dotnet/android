@@ -35,11 +35,6 @@ namespace Xamarin.Android.Tasks
 		readonly Dictionary<AndroidTargetArch, List<CompressedAssemblyDescriptor>> archDescriptors = new ();
 		readonly Dictionary<AndroidTargetArch, uint> archBufferSizes = new ();
 
-		/// <summary>
-		/// Whether to write additional descriptive comments into the generated LLVM IR.  Defaults to <c>false</c>.
-		/// </summary>
-		public bool EmitComments { get; set; }
-
 		public CompressedAssembliesNativeAssemblyGenerator (TaskLoggingHelper log, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? archAssemblies)
 		{
 			if (log == null) {
@@ -80,7 +75,7 @@ namespace Xamarin.Android.Tasks
 
 		public void Generate (AndroidTargetArch arch, TextWriter output, string fileName)
 		{
-			using var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch), EmitComments);
+			using var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch));
 			w.WriteHeader (fileName);
 			w.Write ($$"""
 

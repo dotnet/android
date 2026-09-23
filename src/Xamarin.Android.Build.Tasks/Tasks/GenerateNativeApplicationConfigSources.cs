@@ -52,13 +52,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidRuntime { get; set; } = "";
 
-		/// <summary>
-		/// When <c>true</c>, descriptive comments are written into the generated LLVM IR.  They make
-		/// the <c>.ll</c> far easier to read, but have no effect on the object code produced from it.
-		/// Set from the <c>$(_AndroidEmitLlvmIrComments)</c> MSBuild property.
-		/// </summary>
-		public bool EmitLlvmIrComments { get; set; }
-
 		public string ProjectRuntimeConfigFilePath { get; set; } = String.Empty;
 		public string? ProjectRuntimeConfigDevFilePath { get; set; }
 
@@ -243,7 +236,6 @@ namespace Xamarin.Android.Tasks
 				MarshalMethodsEnabled = false,
 				IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
 				HaveAssemblyStore = UseAssemblyStore,
-				EmitComments = EmitLlvmIrComments,
 			};
 
 			// Any errors in the input data must be reported before any of the output files is written

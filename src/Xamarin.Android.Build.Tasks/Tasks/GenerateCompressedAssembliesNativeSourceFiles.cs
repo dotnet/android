@@ -31,13 +31,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ProjectFullPath { get; set; } = "";
 
-		/// <summary>
-		/// When <c>true</c>, descriptive comments are written into the generated LLVM IR.  They make
-		/// the <c>.ll</c> far easier to read, but have no effect on the object code produced from it.
-		/// Set from the <c>$(_AndroidEmitLlvmIrComments)</c> MSBuild property.
-		/// </summary>
-		public bool EmitLlvmIrComments { get; set; }
-
 		public override bool RunTask ()
 		{
 			GenerateCompressedAssemblySources ();
@@ -100,9 +93,7 @@ namespace Xamarin.Android.Tasks
 
 			void Generate (Dictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? dict)
 			{
-				var generator = new CompressedAssembliesNativeAssemblyGenerator (Log, dict) {
-					EmitComments = EmitLlvmIrComments,
-				};
+				var generator = new CompressedAssembliesNativeAssemblyGenerator (Log, dict);
 
 				foreach (string abi in SupportedAbis) {
 					string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"compressed_assemblies.{abi.ToLowerInvariant ()}");

@@ -11,11 +11,10 @@ namespace Xamarin.Android.Build.Tests.Tasks;
 [TestFixture]
 public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 {
-	[TestCase (false)]
-	[TestCase (true)]
-	public void EmitsApplicationConfigForAllAbis (bool emitComments)
+	[Test]
+	public void EmitsApplicationConfigForAllAbis ()
 	{
-		string outputRoot = Path.Combine (Root, "temp", $"{nameof (EmitsApplicationConfigForAllAbis)}-{emitComments}");
+		string outputRoot = Path.Combine (Root, "temp", nameof (EmitsApplicationConfigForAllAbis));
 		string monoAndroidPath = Path.Combine (TestEnvironment.MonoAndroidFrameworkDirectory, "Mono.Android.dll");
 		FileAssert.Exists (monoAndroidPath);
 
@@ -28,7 +27,6 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			EnablePreloadAssembliesDefault = false,
 			AndroidRuntime = "CoreCLR",
 			UseAssemblyStore = true,
-			EmitLlvmIrComments = emitComments,
 		};
 
 		Assert.IsTrue (task.Execute (), "GenerateNativeApplicationConfigSources should succeed.");
@@ -51,7 +49,7 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			Assert.That (source, Does.Contain ("@dso_cache = "), abi);
 			Assert.That (source, Does.Contain ("!llvm.module.flags = "), abi);
 			Assert.That (source, Does.Contain ("i1, ; bool uses_assembly_preload"), abi);
-			Assert.That (source, emitComments ? Does.Contain ("; Application environment variables") : Does.Not.Contain ("; Application environment variables"), abi);
+			Assert.That (source, Does.Contain ("; Application environment variables"), abi);
 		}
 	}
 

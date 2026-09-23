@@ -76,12 +76,6 @@ class ApplicationConfigNativeAssemblyGenerator
 	readonly SortedDictionary <string, string> runtimeProperties;
 	State? state;
 
-	/// <summary>
-	/// Whether to write additional descriptive comments into the generated LLVM IR.  Defaults to <c>false</c>.
-	/// Set from the <c>$(_AndroidEmitLlvmIrComments)</c> MSBuild property.
-	/// </summary>
-	public bool EmitComments { get; set; }
-
 	public bool UsesAssemblyPreload { get; set; }
 	public string AndroidPackageName { get; set; } = "";
 	public int NumberOfAssembliesInApk { get; set; }
@@ -194,7 +188,7 @@ class ApplicationConfigNativeAssemblyGenerator
 	{
 		State data = EnsureState ();
 
-		using var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch), EmitComments);
+		using var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch));
 		var strings = new LlvmIrStringPool ();
 		ulong structAlignment = Math.Max (w.Target.PointerSize, NonPointerMemberAlignment);
 

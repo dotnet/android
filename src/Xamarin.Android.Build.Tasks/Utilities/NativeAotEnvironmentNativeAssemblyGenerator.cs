@@ -13,11 +13,6 @@ class NativeAotEnvironmentNativeAssemblyGenerator
 	readonly AppEnvironmentVariableTable environmentVariables;
 	readonly AppEnvironmentVariableTable systemProperties;
 
-	/// <summary>
-	/// Whether to write additional descriptive comments into the generated LLVM IR.  Defaults to <c>false</c>.
-	/// </summary>
-	public bool EmitComments { get; set; }
-
 	public NativeAotEnvironmentNativeAssemblyGenerator (TaskLoggingHelper log, EnvironmentBuilder envBuilder)
 	{
 		if (log == null) {
@@ -30,7 +25,7 @@ class NativeAotEnvironmentNativeAssemblyGenerator
 
 	public void Generate (AndroidTargetArch arch, TextWriter output, string fileName)
 	{
-		using var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch), EmitComments);
+		using var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch));
 		w.WriteHeader (fileName);
 		AppEnvironmentVariableTable.WriteDeclaration (w);
 

@@ -1649,7 +1649,6 @@ because xbuild doesn't support framework reference assemblies.
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
       Environments="@(_EnvironmentFiles)"
       Debug="$(AndroidIncludeDebugSymbols)"
-      EmitLlvmIrComments="$(_AndroidEmitLlvmIrComments)"
       AndroidSequencePointsMode="$(_SequencePointsMode)"
       EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
       SupportedAbis="@(_BuildTargetAbis)"
@@ -1898,7 +1897,6 @@ because xbuild doesn't support framework reference assemblies.
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
       SupportedAbis="@(_BuildTargetAbis)"
       Debug="$(AndroidIncludeDebugSymbols)"
-      EmitLlvmIrComments="$(_AndroidEmitLlvmIrComments)"
       EnableCompression="$(AndroidEnableAssemblyCompression)"
       ProjectFullPath="$(MSBuildProjectFullPath)"
   />

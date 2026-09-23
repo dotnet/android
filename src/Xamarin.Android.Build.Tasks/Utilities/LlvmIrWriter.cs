@@ -12,7 +12,7 @@ namespace Xamarin.Android.Tasks;
 /// <summary>
 /// Minimal helper used by the native assembly generators to write textual LLVM IR.  The generators
 /// write the IR text themselves (mostly as interpolated raw string literals), this class merely
-/// takes care of the parts shared by all of them: the module header and metadata footer, optional
+/// takes care of the parts shared by all of them: the module header and metadata footer,
 /// comments, string literals and alignment of global symbols.
 /// </summary>
 sealed class LlvmIrWriter : IDisposable
@@ -28,17 +28,10 @@ sealed class LlvmIrWriter : IDisposable
 
 	public LlvmIrTarget Target { get; }
 
-	/// <summary>
-	/// Whether additional descriptive comments are written to the generated LLVM IR.
-	/// Inline structure comments are always written.
-	/// </summary>
-	public bool EmitComments { get; }
-
-	public LlvmIrWriter (TextWriter output, LlvmIrTarget target, bool emitComments)
+	public LlvmIrWriter (TextWriter output, LlvmIrTarget target)
 	{
 		this.output = output ?? throw new ArgumentNullException (nameof (output));
 		Target = target ?? throw new ArgumentNullException (nameof (target));
-		EmitComments = emitComments;
 		previousCulture = CultureInfo.CurrentCulture;
 		CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 	}
@@ -83,16 +76,16 @@ sealed class LlvmIrWriter : IDisposable
 	/// Renders dynamic comment text (which may contain line breaks) safely.
 	/// Static comments can be written directly in IR literals.
 	/// </summary>
-	public string Comment (string? text) => EmitComments && !text.IsNullOrEmpty () ? $";{SanitizeComment (text)}" : "";
+	public string Comment (string? text) => !text.IsNullOrEmpty () ? $";{SanitizeComment (text)}" : "";
 
 	/// <summary>
-	/// Returns a comment which follows a value on the same line (separated with a space), if comments are enabled.
+	/// Returns a comment which follows a value on the same line (separated with a space).
 	/// </summary>
-	public string TrailingComment (string? text) => EmitComments && !text.IsNullOrEmpty () ? $" ;{SanitizeComment (text)}" : "";
+	public string TrailingComment (string? text) => !text.IsNullOrEmpty () ? $" ;{SanitizeComment (text)}" : "";
 
 	public void WriteCommentLine (string? text)
 	{
-		if (!EmitComments || text.IsNullOrEmpty ()) {
+		if (text.IsNullOrEmpty ()) {
 			return;
 		}
 
@@ -136,7 +129,7 @@ sealed class LlvmIrWriter : IDisposable
 	/// <summary>
 	/// Renders an array initializer in which every element is written on its own line.  Elements must
 	/// already be indented.  <paramref name="getElementComment"/> may return a comment which is
-	/// placed after the element when comments are enabled.
+	/// placed after the element.
 	/// </summary>
 	public string ArrayValue (IList<string> elements, Func<int, string?>? getElementComment = null)
 	{
@@ -217,7 +210,7 @@ sealed class LlvmIrWriter : IDisposable
 		sorted.Sort ((string a, string b) => a.CompareTo (b));
 
 		WriteLine ();
-		Write (Comment (" External functions"));
+		Write ("; External functions");
 		foreach (string name in sorted) {
 			WriteLine ();
 			Write ($"declare void @{name}() local_unnamed_addr");

@@ -40,7 +40,7 @@ public class LlvmIrWriterTests
 	public void CommentsCannotInjectLinesIntoIr ()
 	{
 		using var output = new StringWriter ();
-		using var writer = new LlvmIrWriter (output, LlvmIrTarget.Arm64, emitComments: true);
+		using var writer = new LlvmIrWriter (output, LlvmIrTarget.Arm64);
 
 		Assert.That (writer.Comment (" first\nsecond"), Does.Not.Contain ("\n"));
 		Assert.That (writer.TrailingComment (" first\rsecond"), Does.Not.Contain ("\r"));
@@ -48,12 +48,11 @@ public class LlvmIrWriterTests
 		Assert.That (output.ToString ().Split ('\n'), Has.Length.EqualTo (2));
 	}
 
-	[TestCase (false)]
-	[TestCase (true)]
-	public void InlineStructureCommentsAreUnconditional (bool emitComments)
+	[Test]
+	public void WritesInlineStructureComments ()
 	{
 		using var output = new StringWriter ();
-		using var writer = new LlvmIrWriter (output, LlvmIrTarget.Arm64, emitComments);
+		using var writer = new LlvmIrWriter (output, LlvmIrTarget.Arm64);
 		writer.Write ("i32, ; field\nptr ; final field");
 
 		string text = output.ToString ();
@@ -68,7 +67,7 @@ public class LlvmIrWriterTests
 		try {
 			CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo ("fr-FR");
 			using var output = new StringWriter ();
-			using (var writer = new LlvmIrWriter (output, LlvmIrTarget.Arm64, emitComments: false)) {
+			using (var writer = new LlvmIrWriter (output, LlvmIrTarget.Arm64)) {
 				Assert.That (CultureInfo.CurrentCulture, Is.EqualTo (CultureInfo.InvariantCulture));
 				writer.WriteGlobal ("number", LlvmIrWriter.GlobalConstant, "i32", 42.ToString (), 4);
 			}
