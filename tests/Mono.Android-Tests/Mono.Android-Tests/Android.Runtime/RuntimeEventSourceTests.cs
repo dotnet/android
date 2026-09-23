@@ -38,8 +38,7 @@ namespace Android.RuntimeTests
 			var gcBridgeTask = GetConstant<EventTask> (eventSourceType, "GCBridgeTask");
 
 			using var listener = new CapturingEventListener ();
-			Assert.AreEqual (!Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime, listener.ProviderCreated,
-				"The managed GC bridge should initialize the provider during setup; MonoVM should keep lazy initialization.");
+			Assert.IsTrue (listener.ProviderCreated, "The managed GC bridge should initialize the provider during setup.");
 			Assert.IsTrue (Invoke<bool> (eventSourceType, "GCBridgeStart"));
 			Assert.IsTrue (listener.ProviderCreated, "The EventListener should observe the runtime EventSource.");
 			Invoke (eventSourceType, "GCBridgeStop");
