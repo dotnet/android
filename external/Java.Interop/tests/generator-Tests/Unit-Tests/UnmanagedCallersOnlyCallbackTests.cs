@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using Mono.Cecil;
 using NUnit.Framework;
 using MonoDroid.Generation;
 using Xamarin.Android.Binder;
@@ -348,11 +349,14 @@ namespace generatortests
 			""";
 
 		static Assembly CompileCallbacks (string source)
+			=> CompileCallbacks (source, out _);
+
+		static Assembly CompileCallbacks (string source, out byte [] assemblyImage)
 		{
 			var assembly = Compiler.CompileSources (new [] {
 				"using System; using Android.Runtime; using Java.Interop; namespace Com.Example {\n" + source + "\n}",
 				CompilationSupport,
-			}, out var hasErrors, out var output);
+			}, out var hasErrors, out var output, out assemblyImage);
 			Assert.False (hasErrors, output + "\n" + source);
 			return assembly;
 		}
@@ -520,6 +524,51 @@ namespace generatortests
 				Assert.False (type.GetMethods (BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)
 					.Any (m => m.Name.StartsWith ("n_", StringComparison.Ordinal)), source);
 			}
+		}
+
+		[Test]
+		public void ImportedCallbackNamesMatchCompiledAssembly ()
+		{
+			const string baseApi = """
+				<api>
+				  <package name='java.lang'><class name='Object' visibility='public' /></package>
+				  <package name='com.example'>
+				    <interface name='Parent' visibility='public' abstract='true'>
+				      <method name='work' return='void' visibility='public' abstract='false' final='false' static='false'>
+				        <parameter name='value' type='int' />
+				      </method>
+				      <method name='work' return='void' visibility='public' abstract='false' final='false' static='false'>
+				        <parameter name='value' type='long' />
+				      </method>
+				    </interface>
+				  </package>
+				</api>
+				""";
+			options.AssemblyName = "BaseCallbacks";
+			options.SupportDefaultInterfaceMethods = true;
+			var baseSource = GetGeneratedTypeOutput (ParseApiDefinition (baseApi).Single (g => g.Name == "IParent"));
+			var baseAssembly = CompileCallbacks (baseSource, out var baseAssemblyImage);
+
+			var importOptions = CreateOptions ();
+			importOptions.SupportDefaultInterfaceMethods = true;
+			importOptions.UseShallowReferencedTypes = false;
+			using var baseDefinition = AssemblyDefinition.ReadAssembly (new System.IO.MemoryStream (baseAssemblyImage));
+			var importedParent = CecilApiImporter.CreateInterface (
+				baseDefinition.MainModule.GetType ("Com.Example.IParent"), importOptions);
+			foreach (var method in importedParent.Methods)
+				Assert.True (method.Validate (importOptions, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
+			var parentType = baseAssembly.GetType ("Com.Example.IParent");
+			Assert.IsNotNull (parentType);
+			var importedCallbackNames = importedParent.Methods
+				.Where (method => method.Name == "Work")
+				.Select (method => importOptions.CallbackNames.GetCallbackName (importedParent, method))
+				.OrderBy (name => name, StringComparer.Ordinal)
+				.ToList ();
+
+			CollectionAssert.AreEqual (new [] { "n_Work", "n_Work_1" }, importedCallbackNames);
+			foreach (var callbackName in importedCallbackNames)
+				Assert.IsNotNull (parentType.GetMethod (callbackName,
+					BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly), baseSource);
 		}
 
 		static void AssertInheritedConnector (Assembly assembly, MethodInfo accessor, string expected, bool legacy)

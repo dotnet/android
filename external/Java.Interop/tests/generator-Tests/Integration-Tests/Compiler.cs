@@ -69,6 +69,9 @@ namespace generatortests
 		}
 
 		public static Assembly CompileSources (IEnumerable<string> sources, out bool hasErrors, out string output)
+			=> CompileSources (sources, out hasErrors, out output, out _);
+
+		public static Assembly CompileSources (IEnumerable<string> sources, out bool hasErrors, out string output, out byte [] assemblyImage)
 		{
 			var supportFiles = Directory.EnumerateFiles (Path.Combine (Path.GetDirectoryName (supportFilePath), "SupportFiles"),
 				"*.cs", SearchOption.AllDirectories);
@@ -77,7 +80,8 @@ namespace generatortests
 				.Select (s => CSharpSyntaxTree.ParseText (s, parseOptions));
 			var references = GetReferencePaths ().Select (p => MetadataReference.CreateFromFile (p));
 
-			return Compile ("GeneratedCallbacks_" + Guid.NewGuid ().ToString ("N"), syntaxTrees, references, out hasErrors, out output, allowWarnings: true);
+			return Compile ("GeneratedCallbacks_" + Guid.NewGuid ().ToString ("N"), syntaxTrees, references,
+				out hasErrors, out output, allowWarnings: true, out assemblyImage);
 		}
 
 		static string [] GetReferencePaths ()
@@ -97,6 +101,10 @@ namespace generatortests
 
 		static Assembly Compile (string assemblyName, IEnumerable<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references,
 			out bool hasErrors, out string output, bool allowWarnings)
+			=> Compile (assemblyName, syntaxTrees, references, out hasErrors, out output, allowWarnings, out _);
+
+		static Assembly Compile (string assemblyName, IEnumerable<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references,
+			out bool hasErrors, out string output, bool allowWarnings, out byte [] assemblyImage)
 		{
 			// Compile!
 			var compilation = CSharpCompilation.Create (
@@ -117,13 +125,14 @@ namespace generatortests
 
 					hasErrors = true;
 					output = OutputDiagnostics (failures);
+					assemblyImage = null;
 				} else {
-					ms.Seek (0, SeekOrigin.Begin);
+					assemblyImage = ms.ToArray ();
 
 					hasErrors = false;
 					output = null;
 
-					return Assembly.Load (ms.ToArray ());
+					return Assembly.Load (assemblyImage);
 				}
 			}
 

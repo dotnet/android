@@ -5,6 +5,7 @@
 #nullable enable
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
@@ -34,6 +35,7 @@ namespace Java.Interop {
 	/// and friends for those.
 	/// </para>
 	/// </remarks>
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	[SuppressMessage (
 		"Design",
 		"CA1031:Do not catch general exception types",
