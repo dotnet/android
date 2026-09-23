@@ -27,13 +27,6 @@
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JavaVMFixture.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniNativeInterfaceTests.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniReferenceSafeHandleTest.cs" />
-    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniInstanceMethodIDTest.cs" />
-    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniRuntime.JniTypeManagerTests.cs" />
-    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\MethodBindingTests.cs" />
-    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniRuntime.JniValueManagerTests.cs" />
-    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\CallVirtualFromConstructorBase.cs" />
-    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\CallVirtualFromConstructorDerived.cs" />
-    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\InvokeVirtualFromConstructorTests.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)obj\Release\net7.0-android/designtime/Resource.designer.cs" />
   </ItemGroup>
 

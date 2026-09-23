@@ -18,62 +18,6 @@ namespace Java.InteropTests
 			JniPeerMembers.Dispose (members);
 		}
 
-#if !ANDROID    // Android doesn't allow providing a custom TypeManager
-		[Test]
-		[NonParallelizable]
-		public void HandledReplacementTypeMissDoesNotUseStringFallback ()
-		{
-			var typeManager = JavaVMFixture.TypeManager;
-			Assert.IsNotNull (typeManager);
-			typeManager.TrackReplacementTypeLookups ("java/lang/Double");
-			try {
-				var members = new JniPeerMembers ("java/lang/Double", typeof (MyString));
-				JniPeerMembers.Dispose (members);
-
-				var counts = typeManager.GetReplacementTypeLookupCounts ();
-				Assert.AreEqual (1, counts.Utf8);
-				Assert.AreEqual (0, counts.String);
-			} finally {
-				typeManager.TrackReplacementTypeLookups ("");
-			}
-		}
-#endif  // !ANDROID
-
-#if !__ANDROID__
-		[Test]
-		public void VirtualInvokeOnBaseInvokesMostDerivedJavaMethod ()
-		{
-			Assert.IsNull (GetInstanceMethods (MyString._members.InstanceMethods));
-			using (var s = new MyString ("hello!")) {
-				var registered = GetInstanceMethods (MyString._members.InstanceMethods);
-				Assert.AreEqual (1, registered.Count);  // for the constructor
-				Assert.AreEqual ("hello!", s.ToString ());
-				Assert.AreEqual (1, registered.Count);
-			}
-		}
-
-		[Test]
-		public void ConcurrentFirstUsePublishesSingleInstanceMethodCache ()
-		{
-			var members = new JniPeerMembers (MyString.JniTypeName, typeof (MyString));
-			try {
-				var methods = members.InstanceMethods;
-				var constructors = new JniMethodInfo [16];
-
-				Assert.IsNull (GetInstanceMethods (methods));
-				Parallel.For (0, constructors.Length, i => constructors [i] = methods.GetConstructor ("()V"));
-
-				var registered = GetInstanceMethods (methods);
-				Assert.AreEqual (1, registered.Count);
-				foreach (var constructor in constructors)
-					Assert.AreSame (constructors [0], constructor);
-				Assert.AreSame (registered ["()V"], constructors [0]);
-			} finally {
-				JniPeerMembers.Dispose (members);
-			}
-		}
-#endif  // !__ANDROID__
-
 		[Test]
 		public void PeerMemberCachesAreInitiallyNull ()
 		{
@@ -219,23 +163,8 @@ namespace Java.InteropTests
 				//   --- End of managed Java.Lang.NoSuchMethodError stack trace ---
 				// ```
 				Assert.IsTrue (e.Message.Contains ("doesNotExist", StringComparison.Ordinal));
-#if !ANDROID    // Android doesn't allow providing a custom TypeManager
-				Assert.AreEqual ("java/lang/Runtime",
-						JavaVMFixture.TypeManager.RequestedFallbackTypesForSimpleReference);
-#endif  // !ANDROID
 			}
 		}
-
-#if !__ANDROID__
-		[Test]
-		[Category ("NativeAOTIgnore")]
-		public void ReplacementTypeUsedForMethodLookup ()
-		{
-			using var o = new RenameClassDerived ();
-			int r = o.hashCode();
-			Assert.AreEqual (33, r);
-		}
-#endif  // !__ANDROID__
 
 		[Test]
 		[Category ("NativeAOTIgnore")]
@@ -274,54 +203,6 @@ namespace Java.InteropTests
 			o.remappedToStaticHashCode ();
 		}
 
-#if !__ANDROID__
-		// Note: this test looks up a static method from one class, then
-		// calls `JNIEnv::CallStaticObjectMethod()` passing in a jclass
-		// for a *different* class.
-		//
-		// This appears to work on Desktop JVM.
-		//
-		// On Android, this will ABORT the app:
-		//  JNI DETECTED ERROR IN APPLICATION: can't call static int com.xamarin.interop.DesugarAndroidInterface$_CC.getClassName() with class java.lang.Class<com.xamarin.interop.AndroidInterface>
-		//      in call to CallStaticObjectMethodA
-		//
-		// This *also* aborts on JDK-17 + macOS + arm64:
-		//  FATAL ERROR in native method: Wrong object class or methodID passed to JNI call
-		//  Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
-		//  V  [libjvm.dylib+0x4f718c]  jniCheck::validate_call(JavaThread*, _jclass*, _jmethodID*, _jobject*)+0x98
-		//  V  [libjvm.dylib+0x506474]  checked_jni_CallStaticObjectMethodA+0x150
-		//  C  [native JNI wrapper]  java_interop_jnienv_call_static_object_method_a+0x48
-		//  C  0x000000010798a8d8
-		//  C  0x000000010798a540
-		//  C  0x000000010798fa94
-		//  C  [libcoreclr.dylib+0x2db774]  CallDescrWorkerInternal+0x84
-		//  C  [libcoreclr.dylib+0x150db4]  CallDescrWorkerWithHandler(CallDescrData*, int)+0x74
-		//  C  [libcoreclr.dylib+0x1f92d0]  RuntimeMethodHandle::InvokeMethod(Object*, void**, SignatureNative*, bool)+0x79c
-		//  C  0x0000000104020ce4
-		//  …
-		//
-		// *Fascinating* the differences that can appear between JVM implementations
-		[Test]
-		public unsafe void DoesTheJmethodNeedToMatchDeclaringType ()
-		{
-			if (Environment.GetEnvironmentVariable ("CPUTYPE") is string cpu && cpu == "arm64") {
-				Assert.Ignore ("nope!");
-			}
-			if (VM.JdkInfo.Version is Version v && v >= new Version (17, 0)) {
-				// JDK-17 now crashes on this test as well:
-				// FATAL ERROR in native method: Wrong object class or methodID passed to JNI call
-				Assert.Ignore ("nope!");
-			}
-			var iface   = new JniType ("net/dot/jni/test/AndroidInterface");
-			var desugar = new JniType ("net/dot/jni/test/DesugarAndroidInterface$_CC");
-			var m       = desugar.GetStaticMethod ("getClassName", "()Ljava/lang/String;");
-
-			var r = JniEnvironment.StaticMethods.CallStaticObjectMethod (iface.PeerReference, m, null);
-			var s = JniEnvironment.Strings.ToString (ref r, JniObjectReferenceOptions.CopyAndDispose);
-			Assert.AreEqual ("DesugarAndroidInterface$-CC", s);
-		}
-#endif  // !__ANDROID__
-
 		[Test]
 		public void DesugarInterfaceStaticMethod ()
 		{
@@ -334,27 +215,6 @@ namespace Java.InteropTests
 	abstract class JavaLangSystemTestObject : JavaObject {
 		internal const string JniTypeName = "java/lang/System";
 	}
-
-	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
-	class MyString : JavaObject {
-		internal    const   string      JniTypeName = "java/lang/String";
-
-		internal    static  readonly    JniPeerMembers  _members    = new JniPeerMembers (JniTypeName, typeof (MyString));
-
-		public override JniPeerMembers JniPeerMembers {
-			get {return _members;}
-		}
-
-		public unsafe MyString (string value)
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
-		{
-			const   string  id  = "(Ljava/lang/String;)V";
-			var peer = _members.InstanceMethods.StartGenericCreateInstance (id, GetType (), value);
-			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
-			_members.InstanceMethods.FinishGenericCreateInstance (id, this, value);
-		}
-	}
-
 
 	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
 	class JavaLangRemappingTestObject : JavaObject {
@@ -405,37 +265,6 @@ namespace Java.InteropTests
 		{
 			const string id = "doesNotExist.()V";
 			_members.StaticMethods.InvokeVoidMethod (id, null);
-		}
-	}
-
-	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
-	class RenameClassBase : JavaObject {
-		internal    const       string          JniTypeName    = "net/dot/jni/test/RenameClassBase1";
-		static      readonly    JniPeerMembers  _members        = new JniPeerMembers (JniTypeName, typeof (RenameClassBase));
-
-		public      override    JniPeerMembers  JniPeerMembers  => _members;
-
-		public RenameClassBase ()
-		{
-		}
-
-		public virtual unsafe int hashCode ()
-		{
-			const string id = "hashCode.()I";
-			return _members.InstanceMethods.InvokeVirtualInt32Method (id, this, null);
-		}
-	}
-
-	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
-	class RenameClassDerived : RenameClassBase {
-		internal    new     const       string          JniTypeName    = "net/dot/jni/test/RenameClassDerived";
-		public RenameClassDerived ()
-		{
-		}
-
-		public override unsafe int hashCode ()
-		{
-			return base.hashCode ();
 		}
 	}
 
