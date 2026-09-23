@@ -200,6 +200,8 @@ Every generated JCW implements the Java [`IGCUserPeer`](../../../src/java-runtim
 
 Start at the boundary where the failure occurs; these files distinguish build output, registration, and peer activation:
 
+[`Java.Interop.TypeManager.RegisterType`](../../../src/Mono.Android/Java.Interop/TypeManager.cs) is not a fallback for a missing generated mapping: it throws `NotSupportedException` with the trimmable TypeMap. Give the peer a discoverable Java name (`[Register]` for a peer type, or the component `Name` attribute used above) so the scanner can generate the mapping instead.
+
 1. **Missing or wrong Java class:** inspect the merged manifest, `typemap/java/` (or CoreCLR's `typemap/linked-java/` after trimming), `java-files.txt` / `linked-java-files.txt`, and `acw-map.txt`. Confirm the expected Java name and base/override signatures. A stale `.class` is not proof that a corresponding TypeMap entry survived.
 2. **Unbound native method / `UnsatisfiedLinkError`:** compare the generated JCW's `native` method **name and JNI descriptor** with its generated proxy registration. Check whether `mono.android.Runtime.registerNatives` ran for the class (or its deferred helper did), and inspect `adb logcat` for the registration exception. Do not search for a missing `Java_...` export in this pipeline.
 3. **Wrong managed type or activation failure:** check `typemap-assemblies.txt`, the root `_Microsoft.Android.TypeMaps` assembly, `TrimmableTypeMap` lookup, proxy construction, and `JavaMarshalRegisteredPeers`. Verify whether a Java callback came from a managed-created peer or needs activation from a Java-created peer. On NativeAOT a missing generated mapping cannot be rescued by CoreCLR-only reflection.
