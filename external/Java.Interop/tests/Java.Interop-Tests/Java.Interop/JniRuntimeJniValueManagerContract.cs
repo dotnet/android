@@ -242,6 +242,45 @@ namespace Java.InteropTests {
 		}
 
 		[Test]
+		public unsafe void GetPeer_ReentrantActivation_ReturnsRegisteredPeer ()
+		{
+			using var t = new JniType (AnotherJavaInterfaceImpl.JniTypeName);
+			var ctor = t.GetConstructor ("()V");
+			var lref = t.NewObject (ctor, null);
+			AnotherJavaInterfaceImpl? reentrant = null;
+			var createdPeers = new List<AnotherJavaInterfaceImpl> ();
+			try {
+				Assert.IsNull (valueManager.PeekPeer (lref));
+				AnotherJavaInterfaceImpl.PeerCreated = createdPeers.Add;
+				AnotherJavaInterfaceImpl.BeforeConstruct = reference => {
+					reentrant = valueManager.GetPeer (reference, typeof (AnotherJavaInterfaceImpl)) as AnotherJavaInterfaceImpl;
+				};
+
+				var peer = valueManager.GetPeer (lref, typeof (AnotherJavaInterfaceImpl)) as AnotherJavaInterfaceImpl
+					?? throw new InvalidOperationException ("Could not create peer.");
+				var registered = valueManager.PeekPeer (lref)
+					?? throw new InvalidOperationException ("No peer was registered.");
+
+				Assert.AreSame (reentrant, registered, "The reentrant lookup should register first.");
+				Assert.AreSame (registered, peer, "The outer lookup should return the registered peer.");
+				Assert.AreEqual (2, createdPeers.Count, "Both lookups should construct a peer.");
+				Assert.AreNotSame (createdPeers [0], createdPeers [1]);
+				foreach (var created in createdPeers) {
+					Assert.AreEqual (ReferenceEquals (created, registered), created.PeerReference.IsValid,
+						"Only the returned registered peer should retain a JNI reference.");
+					Assert.AreEqual (!ReferenceEquals (created, registered), created.DisposeCalled,
+						"Only the losing alias should receive its managed disposal callback.");
+				}
+			} finally {
+				AnotherJavaInterfaceImpl.BeforeConstruct = null;
+				AnotherJavaInterfaceImpl.PeerCreated = null;
+				foreach (var peer in createdPeers)
+					peer.Dispose ();
+				JniObjectReference.Dispose (ref lref);
+			}
+		}
+
+		[Test]
 		public void CreatePeer_ThrowsIfNoActivationConstructorPresent ()
 		{
 			using var v1    = new GetThis ();
@@ -455,6 +494,9 @@ namespace Java.InteropTests {
 
 		internal    static  readonly    JniPeerMembers  _members    = new JniPeerMembers (JniTypeName, typeof (AnotherJavaInterfaceImpl));
 
+		internal static Action<JniObjectReference>? BeforeConstruct;
+		internal static Action<AnotherJavaInterfaceImpl>? PeerCreated;
+
 		public bool DisposeCalled {
 			get;
 			private set;
@@ -464,9 +506,14 @@ namespace Java.InteropTests {
 			get {return _members;}
 		}
 
-		AnotherJavaInterfaceImpl (ref JniObjectReference reference, JniObjectReferenceOptions options)
-			: base (ref reference, options)
+		unsafe AnotherJavaInterfaceImpl (ref JniObjectReference reference, JniObjectReferenceOptions options)
+			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
+			var callback = BeforeConstruct;
+			BeforeConstruct = null;
+			callback?.Invoke (reference);
+			Construct (ref reference, options);
+			PeerCreated?.Invoke (this);
 		}
 
 		public unsafe AnotherJavaInterfaceImpl ()
