@@ -14,7 +14,7 @@ class NativeAotEnvironmentNativeAssemblyGenerator
 	readonly AppEnvironmentVariableTable systemProperties;
 
 	/// <summary>
-	/// Whether to write descriptive comments into the generated LLVM IR.  Defaults to <c>false</c>.
+	/// Whether to write additional descriptive comments into the generated LLVM IR.  Defaults to <c>false</c>.
 	/// </summary>
 	public bool EmitComments { get; set; }
 
@@ -30,14 +30,14 @@ class NativeAotEnvironmentNativeAssemblyGenerator
 
 	public void Generate (AndroidTargetArch arch, TextWriter output, string fileName)
 	{
-		var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch), EmitComments);
+		using var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch), EmitComments);
 		w.WriteHeader (fileName);
 		AppEnvironmentVariableTable.WriteDeclaration (w);
 
-		w.WriteGlobal ("__naot_android_app_environment_variable_count", LlvmIrWriter.GlobalConstant, "i32", LlvmIrWriter.Number (environmentVariables.Count), 4);
+		w.WriteGlobal ("__naot_android_app_environment_variable_count", LlvmIrWriter.GlobalConstant, "i32", environmentVariables.Count.ToString (), 4);
 		environmentVariables.Write (w, "__naot_android_app_environment_variables", "__naot_android_app_environment_variable_contents", " Application environment variables array, name:value");
 
-		w.WriteGlobal ("__naot_android_app_system_property_count", LlvmIrWriter.GlobalConstant, "i32", LlvmIrWriter.Number (systemProperties.Count), 4);
+		w.WriteGlobal ("__naot_android_app_system_property_count", LlvmIrWriter.GlobalConstant, "i32", systemProperties.Count.ToString (), 4);
 		// We reuse the same structure as for environment variables, there's no point in adding a new, identical, one
 		systemProperties.Write (w, "__naot_android_app_system_properties", "__naot_android_app_system_property_contents", " System properties defined by the application");
 

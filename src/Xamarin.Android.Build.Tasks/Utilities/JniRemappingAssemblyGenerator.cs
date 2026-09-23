@@ -122,7 +122,7 @@ namespace Xamarin.Android.Tasks
 		public int ReplacementMethodIndexEntryCount { get; private set; } = 0;
 
 		/// <summary>
-		/// Whether to write descriptive comments into the generated LLVM IR.  Defaults to <c>false</c>.
+		/// Whether to write additional descriptive comments into the generated LLVM IR.  Defaults to <c>false</c>.
 		/// </summary>
 		public bool EmitComments { get; set; }
 
@@ -173,7 +173,7 @@ namespace Xamarin.Android.Tasks
 
 		public void Generate (AndroidTargetArch arch, TextWriter output, string fileName)
 		{
-			var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch), EmitComments);
+			using var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch), EmitComments);
 			var strings = new LlvmIrStringPool ();
 			ulong alignment = GetAlignment (w);
 
@@ -181,31 +181,31 @@ namespace Xamarin.Android.Tasks
 			w.Write ($$"""
 
 				%struct.JniRemappingIndexMethodEntry = type {
-					%struct.JniRemappingString, {{w.Comment (" JniRemappingString name")}}
-					%struct.JniRemappingString, {{w.Comment (" JniRemappingString signature")}}
-					%struct.JniRemappingReplacementMethod {{w.Comment (" JniRemappingReplacementMethod replacement")}}
+					%struct.JniRemappingString, ; JniRemappingString name
+					%struct.JniRemappingString, ; JniRemappingString signature
+					%struct.JniRemappingReplacementMethod ; JniRemappingReplacementMethod replacement
 				}
 
 				%struct.JniRemappingIndexTypeEntry = type {
-					%struct.JniRemappingString, {{w.Comment (" JniRemappingString name")}}
-					i32, {{w.Comment (" uint32_t method_count")}}
-					ptr {{w.Comment (" JniRemappingIndexMethodEntry methods")}}
+					%struct.JniRemappingString, ; JniRemappingString name
+					i32, ; uint32_t method_count
+					ptr ; JniRemappingIndexMethodEntry methods
 				}
 
 				%struct.JniRemappingReplacementMethod = type {
-					ptr, {{w.Comment (" char* target_type")}}
-					ptr, {{w.Comment (" char* target_name")}}
-					i1 {{w.Comment (" bool is_static")}}
+					ptr, ; char* target_type
+					ptr, ; char* target_name
+					i1 ; bool is_static
 				}
 
 				%struct.JniRemappingString = type {
-					i32, {{w.Comment (" uint32_t length")}}
-					ptr {{w.Comment (" char* str")}}
+					i32, ; uint32_t length
+					ptr ; char* str
 				}
 
 				%struct.JniRemappingTypeReplacementEntry = type {
-					%struct.JniRemappingString, {{w.Comment (" JniRemappingString name")}}
-					ptr {{w.Comment (" char* replacement")}}
+					%struct.JniRemappingString, ; JniRemappingString name
+					ptr ; char* replacement
 				}
 
 				""");
@@ -234,9 +234,9 @@ namespace Xamarin.Android.Tasks
 									{{RenderString (w, strings, method.name)}}, {{w.Comment ($" name: {method.name.str}")}}
 									{{RenderString (w, strings, method.signature)}}, {{w.Comment (signatureComment)}}
 									%struct.JniRemappingReplacementMethod {
-										ptr {{strings.GetPointer (method.target_type, "JniRemappingReplacementMethod", "target_type")}}, {{w.Comment (" char* target_type")}}
-										ptr {{strings.GetPointer (method.target_name, "JniRemappingReplacementMethod", "target_name")}}, {{w.Comment (" char* target_name")}}
-										i1 {{LlvmIrWriter.Bool (method.is_static)}}{{w.Comment (" bool is_static")}}
+										ptr {{strings.GetPointer (method.target_type, "JniRemappingReplacementMethod", "target_type")}}, ; char* target_type
+										ptr {{strings.GetPointer (method.target_name, "JniRemappingReplacementMethod", "target_name")}}, ; char* target_name
+										i1 {{(method.is_static ? "true" : "false")}}; bool is_static
 									}{{w.Comment ($" replacement: {method.target_type}.{method.target_name}")}}
 								}
 							""");
@@ -249,8 +249,8 @@ namespace Xamarin.Android.Tasks
 					elements.Add ($$"""
 							%struct.JniRemappingIndexTypeEntry {
 								{{RenderString (w, strings, type.name)}}, {{w.Comment ($" name: {type.name.str}")}}
-								i32 {{LlvmIrWriter.Number (type.TypeMethods.Count)}}, {{w.Comment (" uint32_t method_count")}}
-								ptr @{{type.MethodsArraySymbolName}}{{w.Comment (" JniRemappingIndexMethodEntry* methods")}}
+								i32 {{type.TypeMethods.Count}}, ; uint32_t method_count
+								ptr @{{type.MethodsArraySymbolName}}; JniRemappingIndexMethodEntry* methods
 							}
 						""");
 				}
@@ -270,8 +270,8 @@ namespace Xamarin.Android.Tasks
 		{
 			return $$"""
 				%struct.JniRemappingString {
-							i32 {{LlvmIrWriter.Number (s.length)}}, {{w.Comment (" uint32_t length")}}
-							ptr {{strings.GetPointer (s.str, "JniRemappingString", "str")}}{{w.Comment (" char* str")}}
+							i32 {{s.length}}, ; uint32_t length
+							ptr {{strings.GetPointer (s.str, "JniRemappingString", "str")}}; char* str
 						}
 				""";
 		}
@@ -281,8 +281,8 @@ namespace Xamarin.Android.Tasks
 			w.WriteGlobal (
 				name,
 				attributes,
-				$"[{LlvmIrWriter.Number (elements.Count)} x %struct.{structName}]",
-				w.ArrayValue (elements, LlvmIrWriter.IndexComment),
+				$"[{elements.Count} x %struct.{structName}]",
+				w.ArrayValue (elements, i => $" {i}"),
 				w.GetAggregateAlignment (alignment, (ulong)elements.Count * dataSize)
 			);
 		}

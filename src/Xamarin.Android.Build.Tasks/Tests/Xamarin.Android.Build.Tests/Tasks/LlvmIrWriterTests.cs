@@ -1,4 +1,5 @@
 #nullable enable
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -39,12 +40,44 @@ public class LlvmIrWriterTests
 	public void CommentsCannotInjectLinesIntoIr ()
 	{
 		using var output = new StringWriter ();
-		var writer = new LlvmIrWriter (output, LlvmIrTarget.Arm64, emitComments: true);
+		using var writer = new LlvmIrWriter (output, LlvmIrTarget.Arm64, emitComments: true);
 
 		Assert.That (writer.Comment (" first\nsecond"), Does.Not.Contain ("\n"));
 		Assert.That (writer.TrailingComment (" first\rsecond"), Does.Not.Contain ("\r"));
 		writer.WriteCommentLine (" first\nsecond");
 		Assert.That (output.ToString ().Split ('\n'), Has.Length.EqualTo (2));
+	}
+
+	[TestCase (false)]
+	[TestCase (true)]
+	public void InlineStructureCommentsAreUnconditional (bool emitComments)
+	{
+		using var output = new StringWriter ();
+		using var writer = new LlvmIrWriter (output, LlvmIrTarget.Arm64, emitComments);
+		writer.Write ("i32, ; field\nptr ; final field");
+
+		string text = output.ToString ();
+		Assert.That (text, Does.Contain ("i32, ; field"));
+		Assert.That (text, Does.Contain ("ptr ; final field"));
+	}
+
+	[Test]
+	public void WriterRestoresCulture ()
+	{
+		CultureInfo originalCulture = CultureInfo.CurrentCulture;
+		try {
+			CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo ("fr-FR");
+			using var output = new StringWriter ();
+			using (var writer = new LlvmIrWriter (output, LlvmIrTarget.Arm64, emitComments: false)) {
+				Assert.That (CultureInfo.CurrentCulture, Is.EqualTo (CultureInfo.InvariantCulture));
+				writer.WriteGlobal ("number", LlvmIrWriter.GlobalConstant, "i32", 42.ToString (), 4);
+			}
+
+			Assert.That (output.ToString (), Does.Contain ("i32 42, align 4"));
+			Assert.That (CultureInfo.CurrentCulture, Is.EqualTo (CultureInfo.GetCultureInfo ("fr-FR")));
+		} finally {
+			CultureInfo.CurrentCulture = originalCulture;
+		}
 	}
 
 	[Test]

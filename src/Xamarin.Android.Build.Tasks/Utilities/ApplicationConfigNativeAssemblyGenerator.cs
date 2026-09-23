@@ -77,7 +77,7 @@ class ApplicationConfigNativeAssemblyGenerator
 	State? state;
 
 	/// <summary>
-	/// Whether to write descriptive comments into the generated LLVM IR.  Defaults to <c>false</c>.
+	/// Whether to write additional descriptive comments into the generated LLVM IR.  Defaults to <c>false</c>.
 	/// Set from the <c>$(_AndroidEmitLlvmIrComments)</c> MSBuild property.
 	/// </summary>
 	public bool EmitComments { get; set; }
@@ -194,7 +194,7 @@ class ApplicationConfigNativeAssemblyGenerator
 	{
 		State data = EnsureState ();
 
-		var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch), EmitComments);
+		using var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch), EmitComments);
 		var strings = new LlvmIrStringPool ();
 		ulong structAlignment = Math.Max (w.Target.PointerSize, NonPointerMemberAlignment);
 
@@ -203,69 +203,69 @@ class ApplicationConfigNativeAssemblyGenerator
 		w.Write ($$"""
 
 			%struct.ApplicationConfig = type {
-				i1, {{w.Comment (" bool uses_assembly_preload")}}
-				i1, {{w.Comment (" bool marshal_methods_enabled")}}
-				i1, {{w.Comment (" bool ignore_split_configs")}}
-				i32, {{w.Comment (" uint32_t number_of_runtime_properties")}}
-				i32, {{w.Comment (" uint32_t package_naming_policy")}}
-				i32, {{w.Comment (" uint32_t environment_variable_count")}}
-				i32, {{w.Comment (" uint32_t system_property_count")}}
-				i32, {{w.Comment (" uint32_t number_of_assemblies_in_apk")}}
-				i32, {{w.Comment (" uint32_t bundled_assembly_name_width")}}
-				i32, {{w.Comment (" uint32_t number_of_dso_cache_entries")}}
-				i32, {{w.Comment (" uint32_t number_of_shared_libraries")}}
-				i32, {{w.Comment (" uint32_t android_runtime_jnienv_class_token")}}
-				i32, {{w.Comment (" uint32_t jnienv_initialize_method_token")}}
-				i32, {{w.Comment (" uint32_t jni_remapping_replacement_type_count")}}
-				i32, {{w.Comment (" uint32_t jni_remapping_replacement_method_index_entry_count")}}
-				ptr, {{w.Comment (" char* android_package_name")}}
-				i1 {{w.Comment (" bool have_assembly_store")}}
+				i1, ; bool uses_assembly_preload
+				i1, ; bool marshal_methods_enabled
+				i1, ; bool ignore_split_configs
+				i32, ; uint32_t number_of_runtime_properties
+				i32, ; uint32_t package_naming_policy
+				i32, ; uint32_t environment_variable_count
+				i32, ; uint32_t system_property_count
+				i32, ; uint32_t number_of_assemblies_in_apk
+				i32, ; uint32_t bundled_assembly_name_width
+				i32, ; uint32_t number_of_dso_cache_entries
+				i32, ; uint32_t number_of_shared_libraries
+				i32, ; uint32_t android_runtime_jnienv_class_token
+				i32, ; uint32_t jnienv_initialize_method_token
+				i32, ; uint32_t jni_remapping_replacement_type_count
+				i32, ; uint32_t jni_remapping_replacement_method_index_entry_count
+				ptr, ; char* android_package_name
+				i1 ; bool have_assembly_store
 			}
 
 			%struct.AssemblyStoreAssemblyDescriptor = type {
-				i32, {{w.Comment (" uint32_t data_offset")}}
-				i32, {{w.Comment (" uint32_t data_size")}}
-				i32, {{w.Comment (" uint32_t debug_data_offset")}}
-				i32, {{w.Comment (" uint32_t debug_data_size")}}
-				i32, {{w.Comment (" uint32_t config_data_offset")}}
-				i32 {{w.Comment (" uint32_t config_data_size")}}
+				i32, ; uint32_t data_offset
+				i32, ; uint32_t data_size
+				i32, ; uint32_t debug_data_offset
+				i32, ; uint32_t debug_data_size
+				i32, ; uint32_t config_data_offset
+				i32 ; uint32_t config_data_size
 			}
 
 			%struct.AssemblyStoreRuntimeData = type {
-				ptr, {{w.Comment (" uint8_t data_start")}}
-				i32, {{w.Comment (" uint32_t assembly_count")}}
-				i32, {{w.Comment (" uint32_t index_entry_count")}}
-				ptr {{w.Comment (" AssemblyStoreAssemblyDescriptor assemblies")}}
+				ptr, ; uint8_t data_start
+				i32, ; uint32_t assembly_count
+				i32, ; uint32_t index_entry_count
+				ptr ; AssemblyStoreAssemblyDescriptor assemblies
 			}
 
 			%struct.AssemblyStoreSingleAssemblyRuntimeData = type {
-				ptr, {{w.Comment (" uint8_t image_data")}}
-				ptr, {{w.Comment (" uint8_t debug_info_data")}}
-				ptr, {{w.Comment (" uint8_t config_data")}}
-				ptr {{w.Comment (" AssemblyStoreAssemblyDescriptor descriptor")}}
+				ptr, ; uint8_t image_data
+				ptr, ; uint8_t debug_info_data
+				ptr, ; uint8_t config_data
+				ptr ; AssemblyStoreAssemblyDescriptor descriptor
 			}
 
 			%struct.DSOCacheEntry = type {
-				i32, {{w.Comment (" uint32_t hash")}}
-				i1, {{w.Comment (" bool ignore")}}
-				i1, {{w.Comment (" bool is_jni_library")}}
-				i32, {{w.Comment (" uint32_t name_index")}}
-				ptr {{w.Comment (" void* handle")}}
+				i32, ; uint32_t hash
+				i1, ; bool ignore
+				i1, ; bool is_jni_library
+				i32, ; uint32_t name_index
+				ptr ; void* handle
 			}
 
 			%struct.XamarinAndroidBundledAssembly = type {
-				i32, {{w.Comment (" int32_t file_fd")}}
-				ptr, {{w.Comment (" char* file_name")}}
-				i32, {{w.Comment (" uint32_t data_offset")}}
-				i32, {{w.Comment (" uint32_t data_size")}}
-				ptr, {{w.Comment (" uint8_t data")}}
-				i32, {{w.Comment (" uint32_t name_length")}}
-				ptr {{w.Comment (" char* name")}}
+				i32, ; int32_t file_fd
+				ptr, ; char* file_name
+				i32, ; uint32_t data_offset
+				i32, ; uint32_t data_size
+				ptr, ; uint8_t data
+				i32, ; uint32_t name_length
+				ptr ; char* name
 			}
 
 			""");
 
-		w.WriteGlobal ("format_tag", LlvmIrWriter.GlobalConstant, "i64", LlvmIrWriter.Number (FORMAT_TAG), 8, $" 0x{FORMAT_TAG:x}");
+		w.WriteGlobal ("format_tag", LlvmIrWriter.GlobalConstant, "i64", FORMAT_TAG.ToString (), 8, $" 0x{FORMAT_TAG:x}");
 
 		data.EnvironmentVariables.Write (w, "app_environment_variables", "app_environment_variable_contents", " Application environment variables array, name:value");
 		data.SystemProperties.Write (w, "app_system_properties", "app_system_property_contents", " System properties defined by the application");
@@ -273,23 +273,23 @@ class ApplicationConfigNativeAssemblyGenerator
 		ApplicationConfig cfg = data.ApplicationConfig;
 		w.WriteGlobal ("application_config", LlvmIrWriter.GlobalConstant, "%struct.ApplicationConfig", $$"""
 			{
-				i1 {{LlvmIrWriter.Bool (cfg.uses_assembly_preload)}}, {{w.Comment (" bool uses_assembly_preload")}}
-				i1 {{LlvmIrWriter.Bool (cfg.marshal_methods_enabled)}}, {{w.Comment (" bool marshal_methods_enabled")}}
-				i1 {{LlvmIrWriter.Bool (cfg.ignore_split_configs)}}, {{w.Comment (" bool ignore_split_configs")}}
-				i32 {{LlvmIrWriter.Number (cfg.number_of_runtime_properties)}}, {{w.Comment (" uint32_t number_of_runtime_properties")}}
-				i32 {{LlvmIrWriter.Number (cfg.package_naming_policy)}}, {{w.Comment (" uint32_t package_naming_policy")}}
-				i32 {{LlvmIrWriter.Number (cfg.environment_variable_count)}}, {{w.Comment (" uint32_t environment_variable_count")}}
-				i32 {{LlvmIrWriter.Number (cfg.system_property_count)}}, {{w.Comment (" uint32_t system_property_count")}}
-				i32 {{LlvmIrWriter.Number (cfg.number_of_assemblies_in_apk)}}, {{w.Comment (" uint32_t number_of_assemblies_in_apk")}}
-				i32 {{LlvmIrWriter.Number (cfg.bundled_assembly_name_width)}}, {{w.Comment (" uint32_t bundled_assembly_name_width")}}
-				i32 {{LlvmIrWriter.Number (cfg.number_of_dso_cache_entries)}}, {{w.Comment (" uint32_t number_of_dso_cache_entries")}}
-				i32 {{LlvmIrWriter.Number (cfg.number_of_shared_libraries)}}, {{w.Comment (" uint32_t number_of_shared_libraries")}}
-				i32 {{LlvmIrWriter.Hex (cfg.android_runtime_jnienv_class_token)}}, {{w.Comment (" uint32_t android_runtime_jnienv_class_token")}}
-				i32 {{LlvmIrWriter.Hex (cfg.jnienv_initialize_method_token)}}, {{w.Comment (" uint32_t jnienv_initialize_method_token")}}
-				i32 {{LlvmIrWriter.Hex (cfg.jni_remapping_replacement_type_count)}}, {{w.Comment (" uint32_t jni_remapping_replacement_type_count")}}
-				i32 {{LlvmIrWriter.Number (cfg.jni_remapping_replacement_method_index_entry_count)}}, {{w.Comment (" uint32_t jni_remapping_replacement_method_index_entry_count")}}
-				ptr {{strings.GetPointer (cfg.android_package_name, "ApplicationConfig", "android_package_name")}}, {{w.Comment (" char* android_package_name")}}
-				i1 {{LlvmIrWriter.Bool (cfg.have_assembly_store)}}{{w.Comment (" bool have_assembly_store")}}
+				i1 {{(cfg.uses_assembly_preload ? "true" : "false")}}, ; bool uses_assembly_preload
+				i1 {{(cfg.marshal_methods_enabled ? "true" : "false")}}, ; bool marshal_methods_enabled
+				i1 {{(cfg.ignore_split_configs ? "true" : "false")}}, ; bool ignore_split_configs
+				i32 {{cfg.number_of_runtime_properties}}, ; uint32_t number_of_runtime_properties
+				i32 {{cfg.package_naming_policy}}, ; uint32_t package_naming_policy
+				i32 {{cfg.environment_variable_count}}, ; uint32_t environment_variable_count
+				i32 {{cfg.system_property_count}}, ; uint32_t system_property_count
+				i32 {{cfg.number_of_assemblies_in_apk}}, ; uint32_t number_of_assemblies_in_apk
+				i32 {{cfg.bundled_assembly_name_width}}, ; uint32_t bundled_assembly_name_width
+				i32 {{cfg.number_of_dso_cache_entries}}, ; uint32_t number_of_dso_cache_entries
+				i32 {{cfg.number_of_shared_libraries}}, ; uint32_t number_of_shared_libraries
+				i32 u0x{{cfg.android_runtime_jnienv_class_token:x8}}, ; uint32_t android_runtime_jnienv_class_token
+				i32 u0x{{cfg.jnienv_initialize_method_token:x8}}, ; uint32_t jnienv_initialize_method_token
+				i32 u0x{{cfg.jni_remapping_replacement_type_count:x8}}, ; uint32_t jni_remapping_replacement_type_count
+				i32 {{cfg.jni_remapping_replacement_method_index_entry_count}}, ; uint32_t jni_remapping_replacement_method_index_entry_count
+				ptr {{strings.GetPointer (cfg.android_package_name, "ApplicationConfig", "android_package_name")}}, ; char* android_package_name
+				i1 {{(cfg.have_assembly_store ? "true" : "false")}}; bool have_assembly_store
 			}
 			""", w.GetAggregateAlignment (structAlignment, ApplicationConfigDataSize));
 
@@ -304,8 +304,8 @@ class ApplicationConfigNativeAssemblyGenerator
 		w.WriteGlobal (
 			"init_runtime_property_names",
 			LlvmIrWriter.GlobalConstant,
-			$"[{LlvmIrWriter.Number (names.Count)} x ptr]",
-			w.ArrayValue (names, i => $" {LlvmIrWriter.Number (i)} ('{data.RuntimePropertyNames [i]}')"),
+			$"[{names.Count} x ptr]",
+			w.ArrayValue (names, i => $" {i} ('{data.RuntimePropertyNames [i]}')"),
 			w.GetPointerArrayAlignment (names.Count),
 			"Names of properties passed to coreclr_initialize"
 		);
@@ -317,20 +317,20 @@ class ApplicationConfigNativeAssemblyGenerator
 		w.WriteGlobal (
 			"init_runtime_property_values",
 			LlvmIrWriter.GlobalWritable,
-			$"[{LlvmIrWriter.Number (values.Count)} x ptr]",
-			w.ArrayValue (values, i => $" {LlvmIrWriter.Number (i)} ('{data.RuntimePropertyValues [i]}')"),
+			$"[{values.Count} x ptr]",
+			w.ArrayValue (values, i => $" {i} ('{data.RuntimePropertyValues [i]}')"),
 			w.GetPointerArrayAlignment (values.Count),
 			"Values of properties passed to coreclr_initialize"
 		);
 
 		ulong assemblyCount = (ulong)NumberOfAssembliesInApk;
-		w.WriteGlobal ("assembly_store_bundled_assemblies", LlvmIrWriter.GlobalWritable, $"[{LlvmIrWriter.Number (assemblyCount)} x %struct.AssemblyStoreSingleAssemblyRuntimeData]", "zeroinitializer", w.GetAggregateAlignment (w.Target.PointerSize, assemblyCount * AssemblyStoreSingleAssemblyRuntimeDataDataSize));
+		w.WriteGlobal ("assembly_store_bundled_assemblies", LlvmIrWriter.GlobalWritable, $"[{assemblyCount} x %struct.AssemblyStoreSingleAssemblyRuntimeData]", "zeroinitializer", w.GetAggregateAlignment (w.Target.PointerSize, assemblyCount * AssemblyStoreSingleAssemblyRuntimeDataDataSize));
 		w.WriteGlobal ("assembly_store", LlvmIrWriter.GlobalWritable, "%struct.AssemblyStoreRuntimeData", $$"""
 			{
-				ptr null, {{w.Comment (" uint8_t* data_start")}}
-				i32 0, {{w.Comment (" uint32_t assembly_count")}}
-				i32 0, {{w.Comment (" uint32_t index_entry_count")}}
-				ptr null{{w.Comment (" AssemblyStoreAssemblyDescriptor* assemblies")}}
+				ptr null, ; uint8_t* data_start
+				i32 0, ; uint32_t assembly_count
+				i32 0, ; uint32_t index_entry_count
+				ptr null; AssemblyStoreAssemblyDescriptor* assemblies
 			}
 			""", w.GetAggregateAlignment (structAlignment, AssemblyStoreRuntimeDataDataSize));
 
@@ -349,24 +349,24 @@ class ApplicationConfigNativeAssemblyGenerator
 		foreach (DSOCacheEntry entry in state.DsoCache) {
 			entries.Add ($$"""
 					%struct.DSOCacheEntry {
-						i32 {{LlvmIrWriter.Hex (entry.hash)}}, {{w.Comment ($" from name: {entry.HashedName}")}}
-						i1 {{LlvmIrWriter.Bool (entry.ignore)}}, {{w.Comment (" bool ignore")}}
-						i1 {{LlvmIrWriter.Bool (entry.is_jni_library)}}, {{w.Comment (" bool is_jni_library")}}
-						i32 {{LlvmIrWriter.Number (entry.name_index)}}, {{w.Comment ($" name: {entry.RealName}")}}
-						ptr null{{w.Comment (" void* handle")}}
+						i32 u0x{{entry.hash:x8}}, {{w.Comment ($" from name: {entry.HashedName}")}}
+						i1 {{(entry.ignore ? "true" : "false")}}, ; bool ignore
+						i1 {{(entry.is_jni_library ? "true" : "false")}}, ; bool is_jni_library
+						i32 {{entry.name_index}}, {{w.Comment ($" name: {entry.RealName}")}}
+						ptr null; void* handle
 					}
 				""");
 		}
 		w.WriteGlobal (
 			"dso_cache",
 			LlvmIrWriter.GlobalWritable,
-			$"[{LlvmIrWriter.Number (entries.Count)} x %struct.DSOCacheEntry]",
-			w.ArrayValue (entries, LlvmIrWriter.IndexComment),
+			$"[{entries.Count} x %struct.DSOCacheEntry]",
+			w.ArrayValue (entries, i => $" {i}"),
 			w.GetAggregateAlignment (structAlignment, (ulong)entries.Count * DSOCacheEntryDataSize),
 			" DSO cache entries"
 		);
 
-		w.WriteGlobal ("dso_jni_preloads_idx_stride", LlvmIrWriter.GlobalConstant, "i32", LlvmIrWriter.Number (state.NameMutationsCount), 4);
+		w.WriteGlobal ("dso_jni_preloads_idx_stride", LlvmIrWriter.GlobalConstant, "i32", state.NameMutationsCount.ToString (), 4);
 
 		// Indices array MUST NOT be sorted, since it groups alias entries together with the main entry
 		var indices = new List<string> (state.JniPreloadDSOs.Count);
@@ -377,16 +377,16 @@ class ApplicationConfigNativeAssemblyGenerator
 				throw new InvalidOperationException ($"Internal error: DSO entry in JNI preload list not found in the DSO cache list.");
 			}
 
-			indices.Add ($"\ti32 {LlvmIrWriter.Number (dsoIdx)}");
+			indices.Add ($"\ti32 {dsoIdx}");
 			indexNames.Add (preload.HashedName);
 		}
 
 		// Historically, the count has always been a 64-bit integer
-		w.WriteGlobal ("dso_jni_preloads_idx_count", LlvmIrWriter.GlobalConstant, "i64", LlvmIrWriter.Number (indices.Count), 8);
+		w.WriteGlobal ("dso_jni_preloads_idx_count", LlvmIrWriter.GlobalConstant, "i64", indices.Count.ToString (), 8);
 		w.WriteGlobal (
 			"dso_jni_preloads_idx",
 			LlvmIrWriter.GlobalConstant,
-			$"[{LlvmIrWriter.Number (indices.Count)} x i32]",
+			$"[{indices.Count} x i32]",
 			w.ArrayValue (indices, i => $" {indexNames [i]}"),
 			w.GetAggregateAlignment (4, (ulong)indices.Count * 4),
 			" Indices into dso_cache[] of DSO libraries to preload because of JNI use"

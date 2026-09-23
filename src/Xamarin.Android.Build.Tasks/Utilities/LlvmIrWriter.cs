@@ -15,7 +15,7 @@ namespace Xamarin.Android.Tasks;
 /// takes care of the parts shared by all of them: the module header and metadata footer, optional
 /// comments, string literals and alignment of global symbols.
 /// </summary>
-sealed class LlvmIrWriter
+sealed class LlvmIrWriter : IDisposable
 {
 	// Symbol attributes, see https://llvm.org/docs/LangRef.html#global-variables
 	public const string GlobalConstant = "dso_local local_unnamed_addr constant";
@@ -24,13 +24,13 @@ sealed class LlvmIrWriter
 	public const string LocalString    = "private unnamed_addr constant";
 
 	readonly TextWriter output;
+	readonly CultureInfo previousCulture;
 
 	public LlvmIrTarget Target { get; }
 
 	/// <summary>
-	/// Whether descriptive comments are written to the generated LLVM IR.  Comments make the
-	/// output easier to read, but they can account for the majority of the file's size and
-	/// have no effect on the code <c>llc</c> produces.
+	/// Whether additional descriptive comments are written to the generated LLVM IR.
+	/// Inline structure comments are always written.
 	/// </summary>
 	public bool EmitComments { get; }
 
@@ -39,7 +39,11 @@ sealed class LlvmIrWriter
 		this.output = output ?? throw new ArgumentNullException (nameof (output));
 		Target = target ?? throw new ArgumentNullException (nameof (target));
 		EmitComments = emitComments;
+		previousCulture = CultureInfo.CurrentCulture;
+		CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 	}
+
+	public void Dispose () => CultureInfo.CurrentCulture = previousCulture;
 
 	/// <summary>
 	/// Writes <paramref name="text"/> verbatim, except that line breaks (which may come from the
@@ -76,8 +80,8 @@ sealed class LlvmIrWriter
 	}
 
 	/// <summary>
-	/// Returns <paramref name="text"/> as an LLVM IR comment (i.e. prefixed with <c>;</c>) if comments are
-	/// enabled, an empty string otherwise.  The text is expected to contain any leading whitespace.
+	/// Renders dynamic comment text (which may contain line breaks) safely.
+	/// Static comments can be written directly in IR literals.
 	/// </summary>
 	public string Comment (string? text) => EmitComments && !text.IsNullOrEmpty () ? $";{SanitizeComment (text)}" : "";
 
@@ -126,7 +130,7 @@ sealed class LlvmIrWriter
 	{
 		WriteLine ();
 		WriteCommentLine (comment);
-		WriteLine ($"@{name} = {attributes} {type} {value}, align {Number (alignment)}");
+		WriteLine ($"@{name} = {attributes} {type} {value}, align {alignment}");
 	}
 
 	/// <summary>
@@ -162,11 +166,6 @@ sealed class LlvmIrWriter
 	}
 
 	/// <summary>
-	/// Returns the conventional array element comment, i.e. the element index.
-	/// </summary>
-	public static string IndexComment (int index) => $" {Number (index)}";
-
-	/// <summary>
 	/// Alignment of a structure or an array with elements of the given size and alignment.
 	/// </summary>
 	public ulong GetAggregateAlignment (ulong maxFieldAlignment, ulong dataSize) => Target.GetAggregateAlignment (maxFieldAlignment, dataSize);
@@ -183,8 +182,8 @@ sealed class LlvmIrWriter
 		var targetFlags = new StringBuilder ();
 		for (int i = 0; i < Target.ModuleFlags.Length; i++) {
 			int n = i + 7;
-			flags.Append ($", !{Number (n)}");
-			targetFlags.Append ($"!{Number (n)} = !{{{Target.ModuleFlags [i]}}}\n");
+			flags.Append ($", !{n}");
+			targetFlags.Append ($"!{n} = !{{{Target.ModuleFlags [i]}}}\n");
 		}
 
 		WriteLine ();
@@ -224,14 +223,6 @@ sealed class LlvmIrWriter
 			Write ($"declare void @{name}() local_unnamed_addr");
 		}
 	}
-
-	public static string Number (int value) => value.ToString (CultureInfo.InvariantCulture);
-	public static string Number (uint value) => value.ToString (CultureInfo.InvariantCulture);
-	public static string Number (ulong value) => value.ToString (CultureInfo.InvariantCulture);
-
-	public static string Hex (uint value) => $"u0x{value.ToString ("x8", CultureInfo.InvariantCulture)}";
-
-	public static string Bool (bool value) => value ? "true" : "false";
 
 	/// <summary>
 	/// Renders <paramref name="bytes"/> as an LLVM IR string constant (<c>c"..."</c>), escaping all the
@@ -290,7 +281,7 @@ sealed class LlvmIrStringBlob
 		return offset;
 	}
 
-	public string Type => $"[{LlvmIrWriter.Number (Size)} x i8]";
+	public string Type => $"[{Size} x i8]";
 
 	public string Value ()
 	{
@@ -361,7 +352,7 @@ sealed class LlvmIrStringPool
 			group = AddGroup (groupName, groupName);
 		}
 
-		string symbol = $"{group.SymbolPrefix}.{LlvmIrWriter.Number (group.Strings.Count)}";
+		string symbol = $"{group.SymbolPrefix}.{group.Strings.Count}";
 		if (!symbolSuffix.IsNullOrEmpty ()) {
 			symbol = $"{symbol}_{symbolSuffix}";
 		}
@@ -407,7 +398,7 @@ sealed class LlvmIrStringPool
 			foreach ((string symbol, string value) in group.Strings) {
 				byte[] bytes = MonoAndroidHelper.Utf8StringToBytes (value);
 				ulong size = (ulong)bytes.Length + 1;
-				writer.WriteLine ($"@{symbol} = {LlvmIrWriter.LocalString} [{LlvmIrWriter.Number (size)} x i8] {LlvmIrWriter.QuoteBytes (bytes, nullTerminated: true)}, align {LlvmIrWriter.Number (writer.GetAggregateAlignment (1, size))}");
+				writer.WriteLine ($"@{symbol} = {LlvmIrWriter.LocalString} [{size} x i8] {LlvmIrWriter.QuoteBytes (bytes, nullTerminated: true)}, align {writer.GetAggregateAlignment (1, size)}");
 			}
 		}
 	}

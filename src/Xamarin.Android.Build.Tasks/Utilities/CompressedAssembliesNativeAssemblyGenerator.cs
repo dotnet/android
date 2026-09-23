@@ -36,7 +36,7 @@ namespace Xamarin.Android.Tasks
 		readonly Dictionary<AndroidTargetArch, uint> archBufferSizes = new ();
 
 		/// <summary>
-		/// Whether to write descriptive comments into the generated LLVM IR.  Defaults to <c>false</c>.
+		/// Whether to write additional descriptive comments into the generated LLVM IR.  Defaults to <c>false</c>.
 		/// </summary>
 		public bool EmitComments { get; set; }
 
@@ -80,14 +80,14 @@ namespace Xamarin.Android.Tasks
 
 		public void Generate (AndroidTargetArch arch, TextWriter output, string fileName)
 		{
-			var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch), EmitComments);
+			using var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch), EmitComments);
 			w.WriteHeader (fileName);
 			w.Write ($$"""
 
 				%struct.CompressedAssemblyDescriptor = type {
-					i32, {{w.Comment (" uint32_t uncompressed_file_size")}}
-					i1, {{w.Comment (" bool loaded")}}
-					i32 {{w.Comment (" uint32_t buffer_offset")}}
+					i32, ; uint32_t uncompressed_file_size
+					i1, ; bool loaded
+					i32 ; uint32_t buffer_offset
 				}
 
 				""");
@@ -113,7 +113,7 @@ namespace Xamarin.Android.Tasks
 
 		static void WriteCount (LlvmIrWriter w, uint count)
 		{
-			w.WriteGlobal (CompressedAssemblyCountSymbolName, LlvmIrWriter.GlobalConstant, "i32", LlvmIrWriter.Number (count), 4);
+			w.WriteGlobal (CompressedAssemblyCountSymbolName, LlvmIrWriter.GlobalConstant, "i32", count.ToString (), 4);
 		}
 
 		static void WriteDescriptors (LlvmIrWriter w, List<CompressedAssemblyDescriptor> descriptors)
@@ -122,9 +122,9 @@ namespace Xamarin.Android.Tasks
 			foreach (CompressedAssemblyDescriptor d in descriptors) {
 				elements.Add ($$"""
 						%struct.CompressedAssemblyDescriptor {
-							i32 {{LlvmIrWriter.Number (d.uncompressed_file_size)}}, {{w.Comment (" uint32_t uncompressed_file_size")}}
-							i1 false, {{w.Comment (" bool loaded")}}
-							i32 {{LlvmIrWriter.Number (d.buffer_offset)}}{{w.Comment (" uint32_t buffer_offset")}}
+							i32 {{d.uncompressed_file_size}}, ; uint32_t uncompressed_file_size
+							i1 false, ; bool loaded
+							i32 {{d.buffer_offset}}; uint32_t buffer_offset
 						}
 					""");
 			}
@@ -132,16 +132,16 @@ namespace Xamarin.Android.Tasks
 			w.WriteGlobal (
 				DescriptorsArraySymbolName,
 				LlvmIrWriter.GlobalWritable,
-				$"[{LlvmIrWriter.Number (descriptors.Count)} x %struct.CompressedAssemblyDescriptor]",
-				w.ArrayValue (elements, i => $" {LlvmIrWriter.Number (i)}: {descriptors [i].AssemblyName}"),
+				$"[{descriptors.Count} x %struct.CompressedAssemblyDescriptor]",
+				w.ArrayValue (elements, i => $" {i}: {descriptors [i].AssemblyName}"),
 				w.GetAggregateAlignment (DescriptorAlignment, (ulong)descriptors.Count * DescriptorDataSize)
 			);
 		}
 
 		static void WriteBuffer (LlvmIrWriter w, uint bufferSize)
 		{
-			w.WriteGlobal (UncompressedAssembliesBufferSizeSymbolName, LlvmIrWriter.GlobalConstant, "i32", LlvmIrWriter.Number (bufferSize), 4);
-			w.WriteGlobal (UncompressedAssembliesBufferSymbolName, LlvmIrWriter.GlobalWritable, $"[{LlvmIrWriter.Number (bufferSize)} x i8]", "zeroinitializer", w.GetAggregateAlignment (1, bufferSize));
+			w.WriteGlobal (UncompressedAssembliesBufferSizeSymbolName, LlvmIrWriter.GlobalConstant, "i32", bufferSize.ToString (), 4);
+			w.WriteGlobal (UncompressedAssembliesBufferSymbolName, LlvmIrWriter.GlobalWritable, $"[{bufferSize} x i8]", "zeroinitializer", w.GetAggregateAlignment (1, bufferSize));
 		}
 	}
 }

@@ -935,7 +935,7 @@ namespace Xamarin.Android.Build.Tests
 			return fv;
 		}
 
-		// These fields are always uint32_t/uint64_t and LlvmIrWriter.Number writes unsigned decimal values,
+		// These fields are always uint32_t/uint64_t and the IR writer emits unsigned decimal values,
 		// so parse them directly as unsigned.
 		static bool TryParseInteger (string value, out uint fv)
 		{

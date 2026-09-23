@@ -47,8 +47,8 @@ sealed class AppEnvironmentVariableTable
 		w.Write ($$"""
 
 			%struct.AppEnvironmentVariable = type {
-				i32, {{w.Comment (" uint32_t name_index")}}
-				i32 {{w.Comment (" uint32_t value_index")}}
+				i32, ; uint32_t name_index
+				i32 ; uint32_t value_index
 			}
 
 			""");
@@ -60,8 +60,8 @@ sealed class AppEnvironmentVariableTable
 		foreach (var e in entries) {
 			elements.Add ($$"""
 					%struct.AppEnvironmentVariable {
-						i32 {{LlvmIrWriter.Number (e.NameIndex)}}, {{w.Comment ($" '{e.Name}'")}}
-						i32 {{LlvmIrWriter.Number (e.ValueIndex)}}{{w.Comment ($" '{e.Value}'")}}
+						i32 {{e.NameIndex}}, {{w.Comment ($" '{e.Name}'")}}
+						i32 {{e.ValueIndex}}{{w.Comment ($" '{e.Value}'")}}
 					}
 				""");
 		}
@@ -69,8 +69,8 @@ sealed class AppEnvironmentVariableTable
 		w.WriteGlobal (
 			arrayName,
 			LlvmIrWriter.GlobalConstant,
-			$"[{LlvmIrWriter.Number (elements.Count)} x %struct.AppEnvironmentVariable]",
-			w.ArrayValue (elements, LlvmIrWriter.IndexComment),
+			$"[{elements.Count} x %struct.AppEnvironmentVariable]",
+			w.ArrayValue (elements, i => $" {i}"),
 			w.GetAggregateAlignment (StructureAlignment, (ulong)elements.Count * StructureSize),
 			comment
 		);

@@ -14,7 +14,7 @@ class NativeAotJniInitNativeAssemblyGenerator
 	readonly List<string> jniOnLoadNames = new ();
 
 	/// <summary>
-	/// Whether to write descriptive comments into the generated LLVM IR.  Defaults to <c>false</c>.
+	/// Whether to write additional descriptive comments into the generated LLVM IR.  Defaults to <c>false</c>.
 	/// </summary>
 	public bool EmitComments { get; set; }
 
@@ -46,11 +46,11 @@ class NativeAotJniInitNativeAssemblyGenerator
 
 	public void Generate (AndroidTargetArch arch, TextWriter output, string fileName)
 	{
-		var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch), EmitComments);
+		using var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch), EmitComments);
 		var strings = new LlvmIrStringPool ();
 
 		w.WriteHeader (fileName);
-		w.WriteGlobal ("__jni_on_load_handler_count", LlvmIrWriter.GlobalConstant, "i32", LlvmIrWriter.Number (jniOnLoadNames.Count), 4);
+		w.WriteGlobal ("__jni_on_load_handler_count", LlvmIrWriter.GlobalConstant, "i32", jniOnLoadNames.Count.ToString (), 4);
 
 		var handlers = new List<string> (jniOnLoadNames.Count);
 		var names = new List<string> (jniOnLoadNames.Count);
@@ -59,10 +59,10 @@ class NativeAotJniInitNativeAssemblyGenerator
 			names.Add ($"\tptr {strings.GetPointer (name)}");
 		}
 
-		string type = $"[{LlvmIrWriter.Number (handlers.Count)} x ptr]";
+		string type = $"[{handlers.Count} x ptr]";
 		ulong alignment = w.GetPointerArrayAlignment (handlers.Count);
-		w.WriteGlobal ("__jni_on_load_handlers", LlvmIrWriter.GlobalConstant, type, w.ArrayValue (handlers, LlvmIrWriter.IndexComment), alignment);
-		w.WriteGlobal ("__jni_on_load_handler_names", LlvmIrWriter.GlobalConstant, type, w.ArrayValue (names, i => $" {LlvmIrWriter.Number (i)} ('{jniOnLoadNames [i]}')"), alignment);
+		w.WriteGlobal ("__jni_on_load_handlers", LlvmIrWriter.GlobalConstant, type, w.ArrayValue (handlers, i => $" {i}"), alignment);
+		w.WriteGlobal ("__jni_on_load_handler_names", LlvmIrWriter.GlobalConstant, type, w.ArrayValue (names, i => $" {i} ('{jniOnLoadNames [i]}')"), alignment);
 
 		strings.Write (w);
 

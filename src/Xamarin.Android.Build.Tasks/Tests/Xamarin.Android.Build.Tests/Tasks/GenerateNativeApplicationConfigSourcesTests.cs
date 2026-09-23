@@ -50,6 +50,7 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			Assert.That (source, Does.Contain ("@assembly_store = "), abi);
 			Assert.That (source, Does.Contain ("@dso_cache = "), abi);
 			Assert.That (source, Does.Contain ("!llvm.module.flags = "), abi);
+			Assert.That (source, Does.Contain ("i1, ; bool uses_assembly_preload"), abi);
 			Assert.That (source, emitComments ? Does.Contain ("; Application environment variables") : Does.Not.Contain ("; Application environment variables"), abi);
 		}
 	}
