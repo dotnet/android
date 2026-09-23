@@ -42,6 +42,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 	public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 	{
+		EnsureNotDisposed ();
 		return JavaMarshalRegisteredPeers.PeekPeer (reference);
 	}
 
