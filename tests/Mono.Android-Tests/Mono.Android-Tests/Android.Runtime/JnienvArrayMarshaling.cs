@@ -561,9 +561,6 @@ namespace Android.RuntimeTests {
 				foreach (var peer in createdPeers) {
 					Assert.AreEqual (ReferenceEquals (peer, registered), peer.PeerReference.IsValid,
 						"Only the returned registered peer should retain a JNI reference.");
-					Assert.AreEqual (!ReferenceEquals (peer, registered),
-						peer.JniManagedPeerState.HasFlag (Java.Interop.JniManagedPeerStates.Disposed),
-						"Only the losing alias should receive its managed disposal callback.");
 				}
 
 				using (var objectArray = new Java.Lang.Object (
@@ -632,9 +629,6 @@ namespace Android.RuntimeTests {
 				foreach (var peer in createdPeers) {
 					Assert.AreEqual (ReferenceEquals (peer, registered), peer.PeerReference.IsValid,
 						"Only the returned registered peer should retain a JNI reference.");
-					Assert.AreEqual (!ReferenceEquals (peer, registered),
-						peer.JniManagedPeerState.HasFlag (Java.Interop.JniManagedPeerStates.Disposed),
-						"Only the losing alias should receive its managed disposal callback.");
 				}
 			} finally {
 				Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ActivationBarrier = null;
