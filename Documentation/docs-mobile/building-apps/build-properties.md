@@ -483,9 +483,8 @@ will be loaded during process startup, before any application code is invoked.
 When set to `False`, assemblies will only be loaded on an as-needed basis.
 Loading assemblies on an as-needed basis allows applications to launch faster,
 and is also more consistent with desktop .NET semantics.
-To see the time savings, set the `debug.mono.log`
-System Property to include `timing`, and look for the
-`Finished loading assemblies: preloaded` message within `adb logcat`.
+To inspect assembly loading, set the `debug.dotnet.log` System Property to
+include `assembly` and review the assembly load messages within `adb logcat`.
 
 Applications or libraries, which use dependency injection may *require* that
 this property be `True` if they in turn require that
