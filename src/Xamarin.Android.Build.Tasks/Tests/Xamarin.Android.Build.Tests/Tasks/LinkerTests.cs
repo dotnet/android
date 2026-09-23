@@ -142,13 +142,29 @@ namespace Xamarin.Android.Build.Tests
 
 			using var assembly = AssemblyDefinition.ReadAssembly (linkedRuntimeAssembly);
 			var eventSourceType = assembly.MainModule.GetType ("Microsoft.Android.Runtime.RuntimeEventSource");
+			var registeredPeersType = assembly.MainModule.GetType ("Microsoft.Android.Runtime.JavaMarshalRegisteredPeers");
+			Assert.IsNotNull (registeredPeersType);
+			var initializeIfNeeded = registeredPeersType.Methods.Single (method => method.Name == "InitializeIfNeeded");
+			var bridgeProcessingStarted = registeredPeersType.Methods.Single (method => method.Name == "BridgeProcessingStarted");
+			var bridgeProcessingFinished = registeredPeersType.Methods.Single (method => method.Name == "BridgeProcessingFinished");
 			if (enabled) {
 				Assert.IsNotNull (eventSourceType, "the enabled synthetic call path should retain the runtime EventSource facade");
 				var implementationType = eventSourceType.NestedTypes.FirstOrDefault (type => type.Name == "RuntimeEventSourceImplementation");
 				Assert.IsNotNull (implementationType, "the enabled runtime EventSource implementation should remain in the linked assembly");
+				Assert.IsTrue (CallsRuntimeEventSource (initializeIfNeeded), "the enabled build should initialize the runtime EventSource before GC bridge processing");
+				Assert.IsTrue (CallsRuntimeEventSource (bridgeProcessingStarted), "the enabled build should retain the GC bridge Start call site");
+				Assert.IsTrue (CallsRuntimeEventSource (bridgeProcessingFinished), "the enabled build should retain the GC bridge Stop call site");
 			} else {
 				Assert.IsNull (eventSourceType, "the disabled synthetic call path and runtime EventSource should be removed from the linked assembly");
+				Assert.IsFalse (CallsRuntimeEventSource (initializeIfNeeded), "the disabled build should remove runtime EventSource initialization");
+				Assert.IsFalse (CallsRuntimeEventSource (bridgeProcessingStarted), "the disabled build should remove the GC bridge Start call site");
+				Assert.IsFalse (CallsRuntimeEventSource (bridgeProcessingFinished), "the disabled build should remove the GC bridge Stop call site");
 			}
+
+			static bool CallsRuntimeEventSource (MethodDefinition method) =>
+				method.HasBody && method.Body.Instructions.Any (instruction =>
+					instruction.Operand is MethodReference reference &&
+					reference.DeclaringType.FullName == "Microsoft.Android.Runtime.RuntimeEventSource");
 		}
 
 		[Test]

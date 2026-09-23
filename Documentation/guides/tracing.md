@@ -315,21 +315,29 @@ collection with tools such as `dotnet-trace`. It enables the diagnostic
 transport; for MonoVM it also packages the `diagnostics_tracing` component.
 `$(AndroidEnableProfiler)` remains its legacy synonym.
 
-This foundation does not define any events. Later instrumentation layers add
-events to the provider using the following reserved contract:
+The GC bridge instrumentation defines the following events:
 
 | Event IDs | Keyword | Area |
 |---|---|---|
-| 1-6 | `0x1` / `0x2` | Java interop peer lifecycle and reachability |
 | 7-8 | `0x8` | GC bridge start/stop |
-| 9-10 | `0x4` | Trimmable type-map lookup start/stop |
 
-After the corresponding instrumentation layers are present, collect their
-events at informational level:
+Collect the events at informational level:
 
 ```sh
-$ dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtime:0xF:4
+$ dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtime:0x8:4
 ```
+
+`GCBridgeStart` (event ID 7) and `GCBridgeStop` (event ID 8) have no payloads
+and measure the complete logical CoreCLR/NativeAOT GC bridge round. Start is
+emitted after validating the native callback argument and before managed
+pre-processing validates every reference-tracking context. Stop is emitted
+only after managed collected-context processing,
+`JavaMarshal.FinishCrossReferenceProcessing`, and
+`AndroidRuntimeInternal.NotifyBridgeProcessingFinished` have completed. The
+native cross-reference processing runs between these managed callbacks.
+Enablement is checked once at Start and latched on the dedicated serialized
+bridge-processing thread, so a listener attaching during a round cannot
+produce an unmatched Stop event.
 
 ## How to get GC memory dumps?
 
