@@ -20,11 +20,6 @@ namespace Xamarin.Android.Build.Tests
 		const int DEBUGGER_MAX_CONNECTIONS = 100;
 		const int DEBUGGER_CONNECTION_TIMEOUT = 3000;
 
-		[TearDown]
-		public void ClearDebugProperties ()
-		{
-		}
-
 		void SetTargetFrameworkAndManifest(XamarinAndroidApplicationProject proj, Builder builder, int? apiLevelOverride)
 		{
 			builder.LatestTargetFrameworkVersion (out string apiLevel);
