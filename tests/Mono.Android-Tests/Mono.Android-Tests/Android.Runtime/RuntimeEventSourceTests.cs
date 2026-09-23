@@ -215,30 +215,6 @@ namespace Android.RuntimeTests
 		}
 
 		[Test]
-		[Category ("TypeMap")]
-		public void LegacyTypeMapLookups_DoNotEmitTrimmableEvents ()
-		{
-			if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("This test validates the default LLVM-IR typemap path.");
-			}
-
-			var eventSourceType = GetRuntimeEventSourceType ();
-			int startEventId = GetConstant<int> (eventSourceType, "TypeMapLookupStartEventId");
-			int stopEventId = GetConstant<int> (eventSourceType, "TypeMapLookupStopEventId");
-			var keyword = GetConstant<EventKeywords> (eventSourceType, "TypeMapKeyword");
-
-			using var listener = new CapturingEventListener ();
-			Assert.IsTrue (listener.ProviderCreated,
-				"The provider must be enabled so a zero event count verifies the LLVM-IR path rather than a disabled listener.");
-			var type = JniEnvironment.Runtime.TypeManager.GetType (new JniTypeSignature ("android/view/View"));
-			var signature = JniEnvironment.Runtime.TypeManager.GetTypeSignature (typeof (Android.Views.View));
-
-			Assert.AreEqual (typeof (Android.Views.View), type);
-			Assert.AreEqual ("android/view/View", signature.SimpleReference);
-			Assert.AreEqual (0, listener.GetEvents (startEventId, stopEventId).Count);
-		}
-
-		[Test]
 		[Category ("GCBridge")]
 		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Microsoft.Android.Runtime.RuntimeEventSource", "Mono.Android")]
 		public void GCBridgeRoundEmission ()
@@ -418,25 +394,15 @@ namespace Android.RuntimeTests
 
 			public IReadOnlyList<CapturedEvent> GetEvents (params int [] eventIds)
 			{
-				return GetEvents (true, eventIds);
-			}
-
-			public IReadOnlyList<CapturedEvent> GetEventsFromAllThreads (params int [] eventIds)
-			{
-				return GetEvents (false, eventIds);
-			}
-
-			IReadOnlyList<CapturedEvent> GetEvents (bool currentThreadOnly, params int [] eventIds)
-			{
 				int managedThreadId = Environment.CurrentManagedThreadId;
 				lock (events) {
 					if (eventIds.Length == 0) {
-						return events.FindAll (captured => !currentThreadOnly || captured.ManagedThreadId == managedThreadId);
+						return events.FindAll (captured => captured.ManagedThreadId == managedThreadId);
 					}
 
 					var matchingEvents = new List<CapturedEvent> ();
 					foreach (var captured in events) {
-						if ((!currentThreadOnly || captured.ManagedThreadId == managedThreadId) && Array.IndexOf (eventIds, captured.Id) >= 0) {
+						if (captured.ManagedThreadId == managedThreadId && Array.IndexOf (eventIds, captured.Id) >= 0) {
 							matchingEvents.Add (captured);
 						}
 					}

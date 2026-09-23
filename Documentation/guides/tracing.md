@@ -353,8 +353,7 @@ events. Successful and failed backend lookups both emit a matched pair; the
 Stop event has no success or found payload, so the lookup result must be
 determined from the consuming runtime operation. Enablement is checked once
 when cache population begins and latched for exception-safe pairing, so a
-Start is followed by Stop even when the backend lookup throws. The LLVM-IR
-typemap does not emit these events.
+Start is followed by Stop even when the backend lookup throws.
 
 ## How to get GC memory dumps?
 
