@@ -58,7 +58,8 @@
         Assemblies="@(_PostTrimmingAssembly)"
         AddKeepAlives="$(AndroidAddKeepAlives)"
         AndroidLinkResources="$(AndroidLinkResources)"
-        Deterministic="$(Deterministic)" />
+        Deterministic="$(Deterministic)"
+        EnableLegacyCompatibilityAssemblyFixups="$(AndroidEnableLegacyCompatibilityAssemblyFixups)" />
     <MakeDir Directories="$(_AndroidStampDirectory)" />
     <Touch Files="$(_AndroidStampDirectory)_PostTrimmingPipeline.stamp" AlwaysCreate="true" />
     <ItemGroup>

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using Java.Interop.Tools.Cecil;
+using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Linker;
@@ -53,6 +54,51 @@ namespace Xamarin.Android.Build.Tests
 		{
 			public void BuildPipelineForTest (AssemblyPipeline pipeline, MSBuildLinkContext context) =>
 				BuildPipeline (pipeline, context);
+		}
+
+		[Test]
+		public void PostTrimmingSkipsLegacyAbstractFixupsButWarnsAboutAppDomain ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (path);
+			var assemblyPath = Path.Combine (path, "LegacyApp.dll");
+			using (var monoAndroid = CreateFauxMonoAndroidAssembly ()) {
+				CreateAbstractIfaceImplementation (assemblyPath, monoAndroid);
+			}
+
+			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath, new ReaderParameters { InMemory = true })) {
+				var createDomain = typeof (AppDomain).GetMethod ("CreateDomain", new [] { typeof (string) });
+				if (createDomain is null)
+					throw new InvalidOperationException ("System.AppDomain.CreateDomain(string) not found.");
+
+				var module = assembly.MainModule;
+				var method = new MethodDefinition ("CreateAppDomain", MethodAttributes.Public | MethodAttributes.Static, module.TypeSystem.Void);
+				method.Body.Instructions.Add (Instruction.Create (OpCodes.Ldstr, "example"));
+				method.Body.Instructions.Add (Instruction.Create (OpCodes.Call, module.ImportReference (createDomain)));
+				method.Body.Instructions.Add (Instruction.Create (OpCodes.Pop));
+				method.Body.Instructions.Add (Instruction.Create (OpCodes.Ret));
+				module.GetType ("MyNamespace.MyClass").Methods.Add (method);
+				assembly.Write (assemblyPath);
+			}
+
+			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
+				var warnings = new List<string> ();
+				var step = new PostTrimmingFixAbstractMethodsStep (
+					new TypeDefinitionCache (),
+					() => throw new InvalidOperationException ("Legacy abstract-method fixup should not run."),
+					_ => {},
+					warnings.Add,
+					enableLegacyCompatibilityAssemblyFixups: false);
+				var item = new TaskItem (assemblyPath);
+				var context = new StepContext (item, item);
+				step.ProcessAssembly (assembly, context);
+
+				Assert.IsFalse (context.IsAssemblyModified);
+				Assert.IsFalse (assembly.MainModule.GetType ("MyNamespace.MyClass").Methods.Any (m => m.Name == "MyMissingMethod"));
+				Assert.That (warnings, Has.Count.EqualTo (1));
+				StringAssert.Contains ("AppDomain.CreateDomain()", warnings [0]);
+			}
+			Directory.Delete (path, true);
 		}
 
 		[TestCase (false)]
