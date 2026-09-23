@@ -518,16 +518,13 @@ $@"			var myButton = new AttributedButtonStub (this);
 			}
 
 			AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true, setLinkModeNone: false,
-				shouldAddKeepAlives: false, AndroidRuntime.CoreCLR, typeMapImplementation: "trimmable");
-			AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true, setLinkModeNone: false,
-				shouldAddKeepAlives: true, AndroidRuntime.CoreCLR, typeMapImplementation: "trimmable",
+				shouldAddKeepAlives: true, AndroidRuntime.CoreCLR,
 				enableLegacyCompatibilityAssemblyFixups: true);
 
 			return ret;
 
 			void AddTestData (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone,
-				bool shouldAddKeepAlives, AndroidRuntime runtime, string? typeMapImplementation = null,
-				bool enableLegacyCompatibilityAssemblyFixups = false)
+				bool shouldAddKeepAlives, AndroidRuntime runtime, bool enableLegacyCompatibilityAssemblyFixups = false)
 			{
 				ret.Add (new object[] {
 					isRelease,
@@ -535,7 +532,6 @@ $@"			var myButton = new AttributedButtonStub (this);
 					setLinkModeNone,
 					shouldAddKeepAlives,
 					runtime,
-					typeMapImplementation,
 					enableLegacyCompatibilityAssemblyFixups,
 				});
 			}
@@ -544,8 +540,7 @@ $@"			var myButton = new AttributedButtonStub (this);
 		[Test]
 		[TestCaseSource (nameof (Get_AndroidAddKeepAlivesData))]
 		public void AndroidAddKeepAlives (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone,
-			bool shouldAddKeepAlives, AndroidRuntime runtime, string? typeMapImplementation,
-			bool enableLegacyCompatibilityAssemblyFixups)
+			bool shouldAddKeepAlives, AndroidRuntime runtime, bool enableLegacyCompatibilityAssemblyFixups)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -554,22 +549,6 @@ $@"			var myButton = new AttributedButtonStub (this);
 			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
 				return;
 			}
-
-			if (runtime == AndroidRuntime.CoreCLR && isRelease && !setAndroidAddKeepAlivesTrue && setLinkModeNone && shouldAddKeepAlives) {
-				// This currently fails with the following exception:
-				//
-				// error XALNS7015: System.NotSupportedException: Writing mixed-mode assemblies is not supported
-				//  at Mono.Cecil.ModuleWriter.Write(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
-				//  at Mono.Cecil.ModuleWriter.WriteModule(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
-				//  at Mono.Cecil.ModuleDefinition.Write(String fileName, WriterParameters parameters)
-				//  at Mono.Cecil.AssemblyDefinition.Write(String fileName, WriterParameters parameters)
-				//  at Xamarin.Android.Tasks.SaveChangedAssemblyStep.ProcessAssembly(AssemblyDefinition assembly, StepContext context) in src/Xamarin.Android.Build.Tasks/Tasks/AssemblyModifierPipeline.cs:line 197
-				//  at Xamarin.Android.Tasks.AssemblyPipeline.Run(AssemblyDefinition assembly, StepContext context) in src/Xamarin.Android.Build.Tasks/Utilities/AssemblyPipeline.cs:line 26
-				//  at Xamarin.Android.Tasks.AssemblyModifierPipeline.RunPipeline(AssemblyPipeline pipeline, ITaskItem source, ITaskItem destination) in src/Xamarin.Android.Build.Tasks/Tasks/AssemblyModifierPipeline.cs:line 175
-				//  at Xamarin.Android.Tasks.AssemblyModifierPipeline.RunTask() in src/Xamarin.Android.Build.Tasks/Tasks/AssemblyModifierPipeline.cs:line 123
-				Assert.Ignore ("CoreCLR: fails because of a Mono.Cecil lack of support");
-				return;
-			};
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -602,8 +581,6 @@ namespace UnnamedProject {
 
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("AllowUnsafeBlocks", "True");
-			if (!typeMapImplementation.IsNullOrEmpty ())
-				proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
 
 			// We don't want `[TargetPlatform ("android35")]` to get set because we don't do AddKeepAlives on .NET for Android assemblies
 			proj.SetProperty ("GenerateAssemblyInfo", "False");
