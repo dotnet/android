@@ -55,6 +55,9 @@ public class AdbDeviceInfo
 	/// </summary>
 	public string? TransportId { get; set; }
 
+	/// <summary>The device metadata from adb devices -l, used to invalidate cached device properties.</summary>
+	public string LongOutput { get; set; } = string.Empty;
+
 	/// <summary>
 	/// Whether this device is an emulator.
 	/// </summary>

@@ -53,6 +53,7 @@ public class AdbRunnerTests
 		Assert.AreEqual ("redfin", devices [0].Product);
 		Assert.AreEqual ("redfin", devices [0].Device);
 		Assert.AreEqual ("2", devices [0].TransportId);
+		Assert.AreEqual ("product:redfin;model:Pixel_5;device:redfin;transport_id:2", devices [0].LongOutput);
 		Assert.IsFalse (devices [0].IsEmulator);
 
 		// Emulator

@@ -20,11 +20,9 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.DetectIfAppWasUninstalled" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidActivityName" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetPrimaryCpuAbi" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GetGdbSymbols" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateGdbEnvironment" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FastDeploy" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MoveSubfolder" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.ResolveXamarinAndroidTools" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.RunTests" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.WaitForAppDetection" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 
@@ -70,15 +68,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 </PropertyGroup>
 
 <Target Name="_ResolveXamarinAndroidTools" DependsOnTargets="_SetLatestTargetFrameworkVersion">
-	<!-- Sets static values on Xamarin.AndroidTools.AndroidSdk and MonoDroidSdk -->
-	<ResolveXamarinAndroidTools
-			AndroidSdkPath="$(_AndroidSdkDirectory)"
-			AndroidNdkPath="$(_AndroidNdkDirectory)"
-			JavaSdkPath="$(_JavaSdkDirectory)"
-			MonoAndroidToolsPath="$(MonoAndroidToolsDirectory)"
-			MonoAndroidBinDirectory="$(MonoAndroidBinDirectory)"
-			ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)"
-	/>
+	<!-- Keep the target for existing MSBuild dependencies; the SDK is resolved by _ResolveSdks. -->
 </Target>
 
 <Target Name="_SetDexExtension">
@@ -109,6 +99,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 			AdbTarget="$(AdbTarget)"
 			AdbTargetArchitecture="$(AdbTargetArchitecture)"
 			AdbOptions="$(AdbOptions)"
+			AdbToolPath="$(AdbToolPath)"
+			AdbToolExe="$(AdbToolExe)"
 			DevicePropertyCache="$(_DevicePropertyCache)"
 			RuntimeIdentifiers="$(RuntimeIdentifier);$(RuntimeIdentifiers)"
 			Condition=" '$(DesignTimeBuild)' != 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
@@ -133,6 +125,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 	<DetectIfAppWasUninstalled
 			ContinueOnError="true"
 			AdbTarget="$(AdbTarget)"
+			AdbToolPath="$(AdbToolPath)"
+			AdbToolExe="$(AdbToolExe)"
 			PackageName="$(_AndroidPackage)"
 			UploadFlagFile="$(_UploadFlag)"
 			UserID="$(AndroidDeviceUserId)"
@@ -165,13 +159,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 	<Exec Command="&quot;$(_AndroidPlatformToolsDirectory)adb&quot; $(AdbTarget) $(AdbOptions) pull /system/$(_AndroidLibDirectory)     $(AndroidGdbSymbolsPath)" />
 	<Exec Command="&quot;$(_AndroidPlatformToolsDirectory)adb&quot; $(AdbTarget) $(AdbOptions) pull /system/bin/$(_AndroidAppProcess)   $(AndroidGdbSymbolsPath)\app_process" />
 
-	<GetGdbSymbols
-		AdbTarget="$(AdbTarget)"
-		PrimaryCpuAbi="$(_PrimaryCpuAbi)"
-		GdbSymbolsPath="$(AndroidGdbSymbolsPath)"
-		Package="$(_AndroidPackage)"
-		OutputPath="$(OutputPath)"
-	/>
 </Target>
 
 <Target Name="_PrepGdbConnection"

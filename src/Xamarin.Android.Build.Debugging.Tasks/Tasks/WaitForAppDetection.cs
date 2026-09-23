@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Mono.AndroidTools;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks {
@@ -14,12 +13,12 @@ namespace Xamarin.Android.Tasks {
 	{
 		public override string TaskPrefix => "WFAD";
 
-		System.Threading.Tasks.Task<List<AndroidInstalledPackage>>? getPackagesAsync;
+		System.Threading.Tasks.Task<Exception?>? getPackagesAsync;
 
 		public override bool Execute ()
 		{
 			var key =  ProjectSpecificTaskObjectKey (DetectIfAppWasUninstalled.GetPackagesAsyncKey);
-			getPackagesAsync = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<System.Threading.Tasks.Task<List<AndroidInstalledPackage>>> (key, RegisteredTaskObjectLifetime.Build);
+			getPackagesAsync = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<System.Threading.Tasks.Task<Exception?>> (key, RegisteredTaskObjectLifetime.Build);
 			return base.Execute ();
 		}
 
@@ -28,7 +27,9 @@ namespace Xamarin.Android.Tasks {
 			LogDebugMessage ("Waiting for DetectIfAppWasUninstalled...");
 			if (getPackagesAsync == null)
 				return;
-			await getPackagesAsync;
+			var error = await getPackagesAsync;
+			if (error != null)
+				LogDebugMessage ($"DetectIfAppWasUninstalled failed with {error}");
 			LogDebugMessage ("DetectIfAppWasUninstalled Completed.");
 			return;
 		}

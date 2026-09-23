@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using Mono.AndroidTools;
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tools;
 using Xamarin.Android.Build.Debugging.Tasks.Properties;
-using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -14,109 +16,87 @@ namespace Xamarin.Android.Tasks
 		const RegisteredTaskObjectLifetime Lifetime = RegisteredTaskObjectLifetime.Build;
 		static readonly object NullDevice = new object ();
 
-		static Tuple<string, string> GetKey (string target) =>
-			new Tuple<string, string> ($"{nameof (AndroidHelper)}_AndroidDevice", target ?? "");
+		static Tuple<string, string, string> GetKey (string target, string adbPath) =>
+			new Tuple<string, string, string> ($"{nameof (AndroidHelper)}_AndroidDevice", target ?? "", adbPath);
 
-		/// <summary>
-		/// Stores the AndroidDevice with a lifetime for the current build
-		/// </summary>
-		static void RegisterDevice (IBuildEngine4 engine, string target, AndroidDevice device)
+		static void RegisterDevice (IBuildEngine4 engine, string target, string adbPath, AdbDeviceInfo device)
 		{
-			var key = GetKey (target);
-			engine?.RegisterTaskObjectAssemblyLocal (key, device ?? NullDevice, Lifetime, allowEarlyCollection: false);
+			engine?.RegisterTaskObjectAssemblyLocal (GetKey (target, adbPath), device ?? NullDevice, Lifetime, allowEarlyCollection: false);
 		}
 
-		/// <summary>
-		/// Gets a cached AndroidDevice cached from the current build
-		/// </summary>
-		static object GetRegisteredDevice (IBuildEngine4 engine, string target)
+		static object GetRegisteredDevice (IBuildEngine4 engine, string target, string adbPath) =>
+			engine?.GetRegisteredTaskObjectAssemblyLocal (GetKey (target, adbPath), Lifetime);
+
+		public static AdbRunner CreateAdbRunner (string adbToolPath, string adbToolExe)
 		{
-			var key = GetKey (target);
-			return engine?.GetRegisteredTaskObjectAssemblyLocal (key, Lifetime);
+			return new AdbRunner (GetAdbPath (adbToolPath, adbToolExe));
 		}
 
-		public static AndroidDevice ParseTarget (string target, TaskLoggingHelper log, bool logErrors = true, IBuildEngine4 engine4 = null) =>
-			ParseTarget (target, m => log.LogDebugMessage (m), (c, m) => log.LogCodedError (c, m), logErrors, engine4);
-
-		public static AndroidDevice ParseTarget (string target, Action<string> logMessage, Action<string, string> logError, bool logErrors = true, IBuildEngine4 engine4 = null)
+		static string GetAdbPath (string adbToolPath, string adbToolExe)
 		{
+			var exe = string.IsNullOrEmpty (adbToolExe) ? (OS.IsWindows ? "adb.exe" : "adb") : adbToolExe;
+			return string.IsNullOrEmpty (adbToolPath) ? exe : Path.Combine (adbToolPath, exe);
+		}
+
+		public static AdbDeviceInfo ParseTarget (string target, TaskLoggingHelper log, bool logErrors = true, IBuildEngine4 engine4 = null, string adbToolPath = null, string adbToolExe = null) =>
+			ParseTarget (target, m => log.LogDebugMessage (m), (c, m) => log.LogCodedError (c, m), logErrors, engine4, adbToolPath, adbToolExe);
+
+		public static AdbDeviceInfo ParseTarget (string target, Action<string> logMessage, Action<string, string> logError, bool logErrors = true, IBuildEngine4 engine4 = null, string adbToolPath = null, string adbToolExe = null)
+		{
+			string adbPath = GetAdbPath (adbToolPath, adbToolExe);
 			try {
-				var device = GetRegisteredDevice (engine4, target);
+				var device = GetRegisteredDevice (engine4, target, adbPath);
 				if (device != null) {
 					logMessage ("Using cached value from RegisterTaskObject");
-					if (device == NullDevice) {
-						NoDeviceFound (target, logError, logErrors, engine4);
-					}
-					return device as AndroidDevice;
+					if (ReferenceEquals (device, NullDevice))
+						NoDeviceFound (target, adbPath, logError, logErrors, engine4);
+					return device as AdbDeviceInfo;
 				}
-				var t = AdbServer.Default.GetDevices ();
-				if (string.IsNullOrEmpty (target)) {
-					var e = t.Result.FirstOrDefault ();
-					if (e != null) {
-						// Register for a blank target and -s
-						RegisterDevice (engine4, target, e);
-						RegisterDevice (engine4, $"-s {e.ID}", e);
-						return e;
-					} else {
-						NoDeviceFound (target, logError, logErrors, engine4);
-						return null;
-					}
-				} else if (target.StartsWith ("-e")) {
-					var e = t.Result.Where (x => x.IsEmulator).FirstOrDefault ();
-					if (e != null) {
-						RegisterDevice (engine4, target, e);
-						return e;
-					} else {
-						NoDeviceFound (target, logError, logErrors, engine4);
-						return null;
-					}
-				} else if (target.StartsWith ("-d")) {
-					var e = t.Result.Where (x => !x.IsEmulator).FirstOrDefault ();
-					if (e != null) {
-						RegisterDevice (engine4, target, e);
-						return e;
-					} else {
-						NoDeviceFound (target, logError, logErrors, engine4);
-						return null;
-					}
-				} else if (target.StartsWith ("-s")) {
-					string deviceId = target.Substring (2).Trim ();
-					var e = t.Result.Where (x => deviceId == x.ID).FirstOrDefault ();
-					if (e != null) {
-						RegisterDevice (engine4, target, e);
-						return e;
-					} else {
-						NoDeviceFound (target, logError, logErrors, engine4);
-						return null;
-					}
+				var devices = CreateAdbRunner (adbToolPath, adbToolExe).ListDevicesAsync ().GetAwaiter ().GetResult ();
+				var selected = SelectDevice (devices, target);
+				if (selected != null) {
+					RegisterDevice (engine4, target, adbPath, selected);
+					if (string.IsNullOrEmpty (target))
+						RegisterDevice (engine4, $"-s {selected.Serial}", adbPath, selected);
+					return selected;
 				}
-				if (logErrors)
-					logError (DefaultErrorCode, string.Format (Resources.XA0010_AdbTarget, target));
-			} catch (Exception ex) {
-				// Register that no device was found for the current build
-				RegisterDevice (engine4, target, null);
-
-				if (logErrors) {
-					logError (DefaultErrorCode, string.Format (Resources.XA0010_Adb, ex));
+				if (target != null && target.Length > 0 && !target.StartsWith ("-e", StringComparison.Ordinal) &&
+					!target.StartsWith ("-d", StringComparison.Ordinal) && !target.StartsWith ("-s", StringComparison.Ordinal)) {
+					if (logErrors)
+						logError (DefaultErrorCode, string.Format (Resources.XA0010_AdbTarget, target));
 				} else {
-					logMessage (string.Format (Resources.XA0010_Adb, ex));
+					NoDeviceFound (target, adbPath, logError, logErrors, engine4);
 				}
+			} catch (Exception ex) {
+				RegisterDevice (engine4, target, adbPath, null);
+				if (logErrors)
+					logError (DefaultErrorCode, string.Format (Resources.XA0010_Adb, ex));
+				else
+					logMessage (string.Format (Resources.XA0010_Adb, ex));
 			}
 			return null;
 		}
 
-		static void NoDeviceFound (string target, Action<string, string> logError, bool logErrors, IBuildEngine4 engine4)
+		internal static AdbDeviceInfo SelectDevice (IReadOnlyList<AdbDeviceInfo> devices, string target)
 		{
-			// Register that no device was found for the current build
-			RegisterDevice (engine4, target, null);
-
-			if (logErrors) {
-				if (string.IsNullOrEmpty (target)) {
-					logError (DefaultErrorCode, Resources.XA0010_NoDevice);
-				} else {
-					logError (DefaultErrorCode, Resources.XA0010_Selected);
-				}
+			if (string.IsNullOrEmpty (target))
+				return devices.FirstOrDefault ();
+			if (target.StartsWith ("-e", StringComparison.Ordinal))
+				return devices.FirstOrDefault (x => x.IsEmulator);
+			if (target.StartsWith ("-d", StringComparison.Ordinal))
+				return devices.FirstOrDefault (x => !x.IsEmulator);
+			if (target.StartsWith ("-s", StringComparison.Ordinal)) {
+				string serial = target.Substring (2).Trim ();
+				return devices.FirstOrDefault (x => serial == x.Serial);
 			}
+			return null;
+		}
+
+		static void NoDeviceFound (string target, string adbPath, Action<string, string> logError, bool logErrors, IBuildEngine4 engine4)
+		{
+			RegisterDevice (engine4, target, adbPath, null);
+			if (logErrors)
+				logError (DefaultErrorCode, string.IsNullOrEmpty (target) ? Resources.XA0010_NoDevice : Resources.XA0010_Selected);
 		}
 	}
 }

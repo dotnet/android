@@ -63,8 +63,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Xamarin.AndroidTools\Xamarin.AndroidTools.csproj" />
-    <ProjectReference Include="..\Mono.AndroidTools\Mono.AndroidTools.csproj" />
     <ProjectReference Include="..\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
     <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
   </ItemGroup>

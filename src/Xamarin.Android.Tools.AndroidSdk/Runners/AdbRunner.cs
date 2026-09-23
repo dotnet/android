@@ -293,6 +293,23 @@ public class AdbRunner
 		return output.Length > 0 ? output : null;
 	}
 
+	/// <summary>Executes a shell command and reports adb failures rather than treating them as empty output.</summary>
+	public virtual async Task<string> ExecuteShellCommandAsync (string serial, string command, string[] args, CancellationToken cancellationToken = default)
+	{
+		var allArgs = new string [4 + args.Length];
+		allArgs [0] = "-s";
+		allArgs [1] = serial;
+		allArgs [2] = "shell";
+		allArgs [3] = command;
+		Array.Copy (args, 0, allArgs, 4, args.Length);
+		using var stdout = new StringWriter ();
+		using var stderr = new StringWriter ();
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, allArgs);
+		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+		ProcessUtils.ThrowIfFailed (exitCode, $"adb -s {serial} shell {command}", stderr, stdout);
+		return stdout.ToString ().Trim ();
+	}
+
 	async Task<AdbCommandResult> RunCommandAsync (string [] args, CancellationToken cancellationToken)
 	{
 		using var stdout = new StringWriter ();
@@ -634,6 +651,7 @@ public class AdbRunner
 				Serial = serial,
 				Type = deviceType,
 				Status = MapAdbStateToStatus (state),
+				LongOutput = string.Join (";", Regex.Split (properties, @"\s+")),
 			};
 
 			if (propDict.TryGetValue ("model", out var model))
