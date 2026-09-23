@@ -39,7 +39,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable]
-		public void BuildApplicationWithSpecialCharactersInToolchainPath ()
+		public void BuildApplicationWithSpecialCharactersInToolchainPath ([Values] bool isRelease)
 		{
 			if (!IsWindows) {
 				Assert.Ignore ("Symbolic-link handling for this path scenario is Windows-specific.");
@@ -56,7 +56,9 @@ namespace Xamarin.Android.Build.Tests
 				DirectoryAssert.Exists (Path.Combine (sdkPath, "platforms"), "The SDK symbolic link should resolve.");
 				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", sdkPath);
 
-				var project = new XamarinAndroidApplicationProject ();
+				var project = new XamarinAndroidApplicationProject {
+					IsRelease = isRelease,
+				};
 				project.SetRuntime (AndroidRuntime.CoreCLR);
 				using var builder = CreateApkBuilder (Path.Combine ("temp", TestName, "App"));
 				builder.Verbosity = LoggerVerbosity.Detailed;
@@ -65,6 +67,9 @@ namespace Xamarin.Android.Build.Tests
 			} finally {
 				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", oldSdkPath);
 				try {
+					if (Directory.Exists (sdkPath)) {
+						Directory.Delete (sdkPath);
+					}
 					if (Directory.Exists (toolchainRoot)) {
 						Directory.Delete (toolchainRoot, recursive: true);
 					}
