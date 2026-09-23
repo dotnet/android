@@ -190,11 +190,35 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				"ptr @.JniRemappingString.1_str",
 				"ptr @.JniRemappingString.2_str",
 				"ptr @.JniRemappingString.3_str",
+				"ptr @.JniRemappingString.4_str",
 				"ptr null",
-				"ptr @.JniRemappingString.4_str");
+				"ptr @.JniRemappingString.5_str");
 			AssertOrdered (ll, "c\"af", "c\"zf");
 			Assert.AreEqual (1, Info.ReplacementMethodIndexEntryCount);
 			Assert.AreEqual (1, Info.ReplacementFieldIndexEntryCount);
+		}
+
+		[Test]
+		public void MissingFieldSignaturesAreBackwardCompatible ()
+		{
+			string ll = RunTask (
+				"""
+				<replacements>
+				  <replace-field source-type="a/B" source-field-name="value"
+				      target-type="x/Y" target-field-name="replacement" />
+				</replacements>
+				""");
+
+			Assert.AreEqual (1, Info.ReplacementFieldIndexEntryCount);
+			int fieldsStart = ll.IndexOf ("@mf_0 =", System.StringComparison.Ordinal);
+			int fieldsEnd = ll.IndexOf ("@jni_remapping_field_replacement_index", fieldsStart, System.StringComparison.Ordinal);
+			Assert.Greater (fieldsStart, -1);
+			Assert.Greater (fieldsEnd, fieldsStart);
+			string fieldArray = ll.Substring (fieldsStart, fieldsEnd - fieldsStart);
+			StringAssert.IsMatch (@"i32 0,\s+ptr @\.JniRemappingString\.\d+_str", fieldArray,
+				"An absent source-field-signature must be emitted as a zero-length lookup string.");
+			StringAssert.Contains ("ptr null", fieldArray,
+				"An absent target-field-signature must remain null so the runtime uses the source signature.");
 		}
 
 		[Test]

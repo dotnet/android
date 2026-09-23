@@ -8,6 +8,8 @@ using System.Reflection.PortableExecutable;
 
 using Microsoft.Build.Utilities;
 
+using Xamarin.Android.Tasks;
+
 namespace Xamarin.Android.Tasks.JniRemapping
 {
 	/// <summary>

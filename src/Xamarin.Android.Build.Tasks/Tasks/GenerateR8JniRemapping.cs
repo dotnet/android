@@ -274,7 +274,7 @@ namespace Xamarin.Android.Tasks
 				LogR8JniRemappingWarning (string.Format (
 					Properties.Resources.XA4328_UnsupportedSignature,
 					$"{classMapping.OriginalJniName}.{method.OriginalName}",
-					string.Join (",", method.JavaParameterTypes)));
+					R8Mapping.BuildMethodKey (method.OriginalName, method.JavaParameterTypes, method.JavaReturnType)));
 				return;
 			}
 

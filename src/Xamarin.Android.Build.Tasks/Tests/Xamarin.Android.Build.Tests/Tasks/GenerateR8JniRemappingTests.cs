@@ -36,6 +36,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 		string TestDirectory => directory ?? throw new AssertionException ("Test directory was not initialized.");
 		List<BuildErrorEventArgs> Errors => errors ?? throw new AssertionException ("Error list was not initialized.");
+		List<BuildWarningEventArgs> Warnings => warnings ?? throw new AssertionException ("Warning list was not initialized.");
 
 		string Run (string mapping, string? nativeObject = null)
 		{
@@ -149,6 +150,19 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 			Assert.IsFalse (task.Execute ());
 			Assert.AreEqual ("XA4327", Errors.Single ().Code);
+		}
+
+		[Test]
+		public void UnsupportedMethodSignatureWarningIncludesReturnType ()
+		{
+			Run ("""
+				com.contoso.Peer -> a.b:
+				    void run( ) -> c
+
+				""");
+
+			Assert.AreEqual ("XA4328", Warnings.Single ().Code);
+			StringAssert.Contains ("run( ):void", Warnings [0].Message);
 		}
 
 		string WriteNativeObject (string [] literals)

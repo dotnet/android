@@ -163,10 +163,10 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 
-					string sourceMethodSignature = reader.GetAttribute ("source-method-signature");
+					string sourceMethodSignature = reader.GetAttribute ("source-method-signature") ?? "";
 					// Optional: inputs which predate it (for example the Intune/MAM mapping) keep
 					// the source signature on the target method.
-					string targetMethodSignature = reader.GetAttribute ("target-method-signature");
+					string? targetMethodSignature = reader.GetAttribute ("target-method-signature");
 					methodReplacements.Add (
 						new JniRemappingMethodReplacement (
 							sourceType, sourceMethodName, sourceMethodSignature,
@@ -182,8 +182,8 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 
-					string sourceFieldSignature = reader.GetAttribute ("source-field-signature");
-					string targetFieldSignature = reader.GetAttribute ("target-field-signature");
+					string sourceFieldSignature = reader.GetAttribute ("source-field-signature") ?? "";
+					string? targetFieldSignature = reader.GetAttribute ("target-field-signature");
 					fieldReplacements.Add (
 						new JniRemappingFieldReplacement (
 							sourceType, sourceFieldName, sourceFieldSignature,
