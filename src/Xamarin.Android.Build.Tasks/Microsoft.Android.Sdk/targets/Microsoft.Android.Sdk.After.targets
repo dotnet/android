@@ -25,7 +25,6 @@ This file is imported *after* the Microsoft.NET.Sdk/Sdk.targets.
   <Import Project="Microsoft.Android.Sdk.AssemblyResolution.targets" />
 
   <!-- This one must be imported after `Microsoft.Android.Sdk.AssemblyResolution.targets` -->
-  <Import Project="Microsoft.Android.Sdk.NativeRuntime.targets" Condition=" '$(AndroidApplication)' == 'true' And '$(_AndroidRuntime)' == 'CoreCLR' " />
 
   <Import Project="Microsoft.Android.Sdk.ProjectCapabilities.targets" />
   <Import Project="Microsoft.Android.Sdk.Publish.targets" />

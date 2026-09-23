@@ -1,12 +1,13 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 using Microsoft.Build.Utilities;
 
-using Xamarin.Android.Tasks.LLVMIR;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -46,289 +47,244 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 
-	class JniRemappingAssemblyGenerator : LlvmIrComposer
+	class JniRemappingAssemblyGenerator
 	{
 		const string TypeReplacementsVariableName = "jni_remapping_type_replacements";
 		const string MethodReplacementIndexVariableName = "jni_remapping_method_replacement_index";
 
-		sealed class JniRemappingTypeReplacementEntryContextDataProvider : NativeAssemblerStructContextDataProvider
-		{
-			public override string GetComment (object data, string fieldName)
-			{
-				var entry = EnsureType<JniRemappingTypeReplacementEntry>(data);
-
-				if (MonoAndroidHelper.StringEquals ("name", fieldName)) {
-					return $" name: {entry.name.str}";
-				}
-
-				if (MonoAndroidHelper.StringEquals ("replacement", fieldName)) {
-					return $" replacement: {entry.replacement}";
-				}
-
-				return String.Empty;
-			}
-		}
-
-		sealed class JniRemappingIndexTypeEntryContextDataProvider : NativeAssemblerStructContextDataProvider
-		{
-			public override string GetComment (object data, string fieldName)
-			{
-				var entry = EnsureType<JniRemappingIndexTypeEntry> (data);
-
-				if (MonoAndroidHelper.StringEquals ("name", fieldName)) {
-					return $" name: {entry.name.str}";
-				}
-
-				return String.Empty;
-			}
-
-			public override string GetPointedToSymbolName (object data, string fieldName)
-			{
-				var entry = EnsureType<JniRemappingIndexTypeEntry> (data);
-
-				if (MonoAndroidHelper.StringEquals ("methods", fieldName)) {
-					return entry.MethodsArraySymbolName;
-				}
-
-				return base.GetPointedToSymbolName (data, fieldName);
-			}
-
-			public override ulong GetBufferSize (object data, string fieldName)
-			{
-				var entry = EnsureType<JniRemappingIndexTypeEntry> (data);
-				if (MonoAndroidHelper.StringEquals ("methods", fieldName)) {
-					return (ulong)entry.TypeMethods.Count;
-				}
-
-				return 0;
-			}
-		}
-
-		sealed class JniRemappingIndexMethodEntryContextDataProvider : NativeAssemblerStructContextDataProvider
-		{
-			public override string GetComment (object data, string fieldName)
-			{
-				var entry = EnsureType<JniRemappingIndexMethodEntry> (data);
-
-				if (MonoAndroidHelper.StringEquals ("name", fieldName)) {
-					return $" name: {entry.name.str}";
-				}
-
-				if (MonoAndroidHelper.StringEquals ("replacement", fieldName)) {
-					return $" replacement: {entry.replacement.target_type}.{entry.replacement.target_name}";
-				}
-
-				if (MonoAndroidHelper.StringEquals ("signature", fieldName)) {
-					if (entry.signature.length == 0) {
-						return String.Empty;
-					}
-
-					return $"signature: {entry.signature.str}";
-				}
-
-				return String.Empty;
-			}
-		}
+		// The structure declarations written by this class must be identical to the structures in
+		// src/native/clr/include/xamarin-app.hh.  Data sizes are the sums of sizes of all the
+		// non-pointer members (see LlvmIrTarget.GetAggregateAlignment), alignments don't include
+		// the pointer members either (those are accounted for in GetAlignment below)
+		const ulong JniRemappingIndexMethodEntryDataSize = 9;
+		const ulong JniRemappingIndexTypeEntryDataSize = 8;
+		const ulong JniRemappingTypeReplacementEntryDataSize = 4;
+		const ulong NonPointerMemberAlignment = 4;
 
 		sealed class JniRemappingString
 		{
-			public uint   length;
-			public string str;
-		};
+			public readonly uint length;
+			public readonly string str;
 
-		sealed class JniRemappingReplacementMethod
-		{
-			public string  target_type;
-			public string  target_name;
-			public bool    is_static;
-		};
+			public JniRemappingString (string str)
+			{
+				this.str = str;
+				length = String.IsNullOrEmpty (str) ? 0 : (uint)Encoding.UTF8.GetBytes (str).Length;
+			}
+		}
 
-		[NativeAssemblerStructContextDataProvider (typeof(JniRemappingIndexMethodEntryContextDataProvider))]
 		sealed class JniRemappingIndexMethodEntry
 		{
-			[NativeAssembler (UsesDataProvider = true)]
-			public JniRemappingString            name;
+			public readonly JniRemappingString name;
+			public readonly JniRemappingString signature;
+			public readonly string target_type;
+			public readonly string target_name;
+			public readonly bool is_static;
 
-			[NativeAssembler (UsesDataProvider = true)]
-			public JniRemappingString            signature;
+			public JniRemappingIndexMethodEntry (JniRemappingMethodReplacement mmr)
+			{
+				name = new JniRemappingString (mmr.SourceMethod);
+				signature = new JniRemappingString (mmr.SourceMethodSignature);
+				target_type = mmr.TargetType;
+				target_name = mmr.TargetMethod;
+				is_static = mmr.TargetIsStatic;
+			}
+		}
 
-			[NativeAssembler (UsesDataProvider = true)]
-			public JniRemappingReplacementMethod replacement;
-		};
-
-		[NativeAssemblerStructContextDataProvider (typeof(JniRemappingIndexTypeEntryContextDataProvider))]
 		sealed class JniRemappingIndexTypeEntry
 		{
-			[NativeAssembler (UsesDataProvider = true)]
-			public JniRemappingString           name;
-			public uint                method_count;
+			public readonly JniRemappingString name;
+			public readonly string MethodsArraySymbolName;
+			public readonly List<JniRemappingIndexMethodEntry> TypeMethods = new ();
 
-			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
-#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - populated during native code generation
-			public JniRemappingIndexMethodEntry methods;
-#pragma warning restore CS0649
+			public JniRemappingIndexTypeEntry (string typeName)
+			{
+				name = new JniRemappingString (typeName);
+				MethodsArraySymbolName = $"mm_{typeName.Replace ('/', '_')}";
+			}
+		}
 
-			[NativeAssembler (Ignore = true)]
-			public string MethodsArraySymbolName;
-
-			[NativeAssembler (Ignore = true)]
-			public List<StructureInstance<JniRemappingIndexMethodEntry>> TypeMethods;
-		};
-
-		[NativeAssemblerStructContextDataProvider (typeof(JniRemappingTypeReplacementEntryContextDataProvider))]
 		sealed class JniRemappingTypeReplacementEntry
 		{
-			[NativeAssembler (UsesDataProvider = true)]
-			public JniRemappingString name;
+			public readonly JniRemappingString name;
+			public readonly string replacement;
 
-			[NativeAssembler (UsesDataProvider = true)]
-			public string    replacement;
-		};
+			public JniRemappingTypeReplacementEntry (JniRemappingTypeReplacement mtr)
+			{
+				name = new JniRemappingString (mtr.From);
+				replacement = mtr.To;
+			}
+		}
 
-		List<JniRemappingTypeReplacement> typeReplacementsInput;
-		List<JniRemappingMethodReplacement> methodReplacementsInput;
-
-		StructureInfo jniRemappingStringStructureInfo;
-		StructureInfo jniRemappingReplacementMethodStructureInfo;
-		StructureInfo jniRemappingIndexMethodEntryStructureInfo;
-		StructureInfo jniRemappingIndexTypeEntryStructureInfo;
-		StructureInfo jniRemappingTypeReplacementEntryStructureInfo;
+		readonly List<JniRemappingTypeReplacementEntry>? typeReplacements;
+		readonly List<JniRemappingIndexTypeEntry>? methodIndexTypes;
 
 		public int ReplacementMethodIndexEntryCount { get; private set; } = 0;
 
-		public JniRemappingAssemblyGenerator (TaskLoggingHelper log)
-			: base (log)
-		{}
+		/// <summary>
+		/// Whether to write descriptive comments into the generated LLVM IR.  Defaults to <c>false</c>.
+		/// </summary>
+		public bool EmitComments { get; set; }
 
-		public JniRemappingAssemblyGenerator (TaskLoggingHelper log, List<JniRemappingTypeReplacement> typeReplacements, List<JniRemappingMethodReplacement> methodReplacements)
-			: base (log)
+		public JniRemappingAssemblyGenerator (TaskLoggingHelper log)
 		{
-			this.typeReplacementsInput = typeReplacements ?? throw new ArgumentNullException (nameof (typeReplacements));
-			this.methodReplacementsInput = methodReplacements ?? throw new ArgumentNullException (nameof (methodReplacements));
+			if (log == null) {
+				throw new ArgumentNullException (nameof (log));
+			}
 		}
 
-		(List<StructureInstance<JniRemappingTypeReplacementEntry>>? typeReplacements, List<StructureInstance<JniRemappingIndexTypeEntry>>? methodIndexTypes) Init ()
+		public JniRemappingAssemblyGenerator (TaskLoggingHelper log, List<JniRemappingTypeReplacement> typeReplacements, List<JniRemappingMethodReplacement> methodReplacements)
+			: this (log)
 		{
-			if (typeReplacementsInput == null) {
-				return (null, null);
+			if (typeReplacements == null) {
+				throw new ArgumentNullException (nameof (typeReplacements));
 			}
 
-			var typeReplacements = new List<StructureInstance<JniRemappingTypeReplacementEntry>> ();
-			foreach (JniRemappingTypeReplacement mtr in typeReplacementsInput) {
-				var entry = new JniRemappingTypeReplacementEntry {
-					name = MakeJniRemappingString (mtr.From),
-					replacement = mtr.To,
-				};
-
-				typeReplacements.Add (new StructureInstance<JniRemappingTypeReplacementEntry> (jniRemappingTypeReplacementEntryStructureInfo, entry));
+			if (methodReplacements == null) {
+				throw new ArgumentNullException (nameof (methodReplacements));
 			}
-			typeReplacements.Sort ((StructureInstance<JniRemappingTypeReplacementEntry> l, StructureInstance<JniRemappingTypeReplacementEntry> r) => l.Instance.name.str.CompareTo (r.Instance.name.str));
 
-			var methodIndexTypes = new List<StructureInstance<JniRemappingIndexTypeEntry>> ();
-			var types = new Dictionary<string, StructureInstance<JniRemappingIndexTypeEntry>> (StringComparer.Ordinal);
+			this.typeReplacements = new List<JniRemappingTypeReplacementEntry> ();
+			foreach (JniRemappingTypeReplacement mtr in typeReplacements) {
+				this.typeReplacements.Add (new JniRemappingTypeReplacementEntry (mtr));
+			}
+			this.typeReplacements.Sort ((JniRemappingTypeReplacementEntry l, JniRemappingTypeReplacementEntry r) => l.name.str.CompareTo (r.name.str));
 
-			foreach (JniRemappingMethodReplacement mmr in methodReplacementsInput) {
-				if (!types.TryGetValue (mmr.SourceType, out StructureInstance<JniRemappingIndexTypeEntry> typeEntry)) {
-					var entry = new JniRemappingIndexTypeEntry {
-						name = MakeJniRemappingString (mmr.SourceType),
-						MethodsArraySymbolName = MakeMethodsArrayName (mmr.SourceType),
-						TypeMethods = new List<StructureInstance<JniRemappingIndexMethodEntry>> (),
-					};
+			methodIndexTypes = new List<JniRemappingIndexTypeEntry> ();
+			var types = new Dictionary<string, JniRemappingIndexTypeEntry> (StringComparer.Ordinal);
 
-					typeEntry = new StructureInstance<JniRemappingIndexTypeEntry> (jniRemappingIndexTypeEntryStructureInfo, entry);
+			foreach (JniRemappingMethodReplacement mmr in methodReplacements) {
+				if (!types.TryGetValue (mmr.SourceType, out JniRemappingIndexTypeEntry? typeEntry)) {
+					typeEntry = new JniRemappingIndexTypeEntry (mmr.SourceType);
 					methodIndexTypes.Add (typeEntry);
 					types.Add (mmr.SourceType, typeEntry);
 				}
 
-				var method = new JniRemappingIndexMethodEntry {
-					name = MakeJniRemappingString (mmr.SourceMethod),
-					signature = MakeJniRemappingString (mmr.SourceMethodSignature),
-					replacement = new JniRemappingReplacementMethod {
-						target_type = mmr.TargetType,
-						target_name = mmr.TargetMethod,
-						is_static = mmr.TargetIsStatic,
-					},
-				};
-
-				typeEntry.Instance.TypeMethods.Add (new StructureInstance<JniRemappingIndexMethodEntry> (jniRemappingIndexMethodEntryStructureInfo, method));
+				typeEntry.TypeMethods.Add (new JniRemappingIndexMethodEntry (mmr));
 			}
 
 			foreach (var kvp in types) {
-				kvp.Value.Instance.method_count = (uint)kvp.Value.Instance.TypeMethods.Count;
-				kvp.Value.Instance.TypeMethods.Sort ((StructureInstance<JniRemappingIndexMethodEntry> l, StructureInstance<JniRemappingIndexMethodEntry> r) => l.Instance.name.str.CompareTo (r.Instance.name.str));
+				kvp.Value.TypeMethods.Sort ((JniRemappingIndexMethodEntry l, JniRemappingIndexMethodEntry r) => l.name.str.CompareTo (r.name.str));
 			}
 
-			methodIndexTypes.Sort ((StructureInstance<JniRemappingIndexTypeEntry> l, StructureInstance<JniRemappingIndexTypeEntry> r) => l.Instance.name.str.CompareTo (r.Instance.name.str));
+			methodIndexTypes.Sort ((JniRemappingIndexTypeEntry l, JniRemappingIndexTypeEntry r) => l.name.str.CompareTo (r.name.str));
 			ReplacementMethodIndexEntryCount = methodIndexTypes.Count;
+		}
 
-			return (typeReplacements, methodIndexTypes);
+		public void Generate (AndroidTargetArch arch, TextWriter output, string fileName)
+		{
+			var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch), EmitComments);
+			var strings = new LlvmIrStringPool ();
+			ulong alignment = GetAlignment (w);
 
-			string MakeMethodsArrayName (string typeName)
-			{
-				return $"mm_{typeName.Replace ('/', '_')}";
-			}
+			w.WriteHeader (fileName);
+			w.Write ($$"""
 
-			JniRemappingString MakeJniRemappingString (string str)
-			{
-				return new JniRemappingString {
-					length = GetLength (str),
-					str = str,
-				};
-			}
-
-			uint GetLength (string str)
-			{
-				if (String.IsNullOrEmpty (str)) {
-					return 0;
+				%struct.JniRemappingIndexMethodEntry = type {
+					%struct.JniRemappingString, {{w.Comment (" JniRemappingString name")}}
+					%struct.JniRemappingString, {{w.Comment (" JniRemappingString signature")}}
+					%struct.JniRemappingReplacementMethod {{w.Comment (" JniRemappingReplacementMethod replacement")}}
 				}
 
-				return (uint)Encoding.UTF8.GetBytes (str).Length;
+				%struct.JniRemappingIndexTypeEntry = type {
+					%struct.JniRemappingString, {{w.Comment (" JniRemappingString name")}}
+					i32, {{w.Comment (" uint32_t method_count")}}
+					ptr {{w.Comment (" JniRemappingIndexMethodEntry methods")}}
+				}
+
+				%struct.JniRemappingReplacementMethod = type {
+					ptr, {{w.Comment (" char* target_type")}}
+					ptr, {{w.Comment (" char* target_name")}}
+					i1 {{w.Comment (" bool is_static")}}
+				}
+
+				%struct.JniRemappingString = type {
+					i32, {{w.Comment (" uint32_t length")}}
+					ptr {{w.Comment (" char* str")}}
+				}
+
+				%struct.JniRemappingTypeReplacementEntry = type {
+					%struct.JniRemappingString, {{w.Comment (" JniRemappingString name")}}
+					ptr {{w.Comment (" char* replacement")}}
+				}
+
+				""");
+
+			if (typeReplacements == null || methodIndexTypes == null) {
+				w.WriteGlobal (TypeReplacementsVariableName, LlvmIrWriter.GlobalConstant, "%struct.JniRemappingTypeReplacementEntry", "zeroinitializer", w.GetAggregateAlignment (alignment, JniRemappingTypeReplacementEntryDataSize));
+				w.WriteGlobal (MethodReplacementIndexVariableName, LlvmIrWriter.GlobalConstant, "%struct.JniRemappingIndexTypeEntry", "zeroinitializer", w.GetAggregateAlignment (alignment, JniRemappingIndexTypeEntryDataSize));
+			} else {
+				var elements = new List<string> (typeReplacements.Count);
+				foreach (JniRemappingTypeReplacementEntry entry in typeReplacements) {
+					elements.Add ($$"""
+							%struct.JniRemappingTypeReplacementEntry {
+								{{RenderString (w, strings, entry.name)}}, {{w.Comment ($" name: {entry.name.str}")}}
+								ptr {{strings.GetPointer (entry.replacement, "JniRemappingTypeReplacementEntry", "replacement")}}{{w.Comment ($" replacement: {entry.replacement}")}}
+							}
+						""");
+				}
+				WriteArray (w, TypeReplacementsVariableName, LlvmIrWriter.GlobalConstant, "JniRemappingTypeReplacementEntry", elements, alignment, JniRemappingTypeReplacementEntryDataSize);
+
+				foreach (JniRemappingIndexTypeEntry type in methodIndexTypes) {
+					elements = new List<string> (type.TypeMethods.Count);
+					foreach (JniRemappingIndexMethodEntry method in type.TypeMethods) {
+						string signatureComment = method.signature.length == 0 ? " JniRemappingString signature" : $"signature: {method.signature.str}";
+						elements.Add ($$"""
+								%struct.JniRemappingIndexMethodEntry {
+									{{RenderString (w, strings, method.name)}}, {{w.Comment ($" name: {method.name.str}")}}
+									{{RenderString (w, strings, method.signature)}}, {{w.Comment (signatureComment)}}
+									%struct.JniRemappingReplacementMethod {
+										ptr {{strings.GetPointer (method.target_type, "JniRemappingReplacementMethod", "target_type")}}, {{w.Comment (" char* target_type")}}
+										ptr {{strings.GetPointer (method.target_name, "JniRemappingReplacementMethod", "target_name")}}, {{w.Comment (" char* target_name")}}
+										i1 {{LlvmIrWriter.Bool (method.is_static)}}{{w.Comment (" bool is_static")}}
+									}{{w.Comment ($" replacement: {method.target_type}.{method.target_name}")}}
+								}
+							""");
+					}
+					WriteArray (w, type.MethodsArraySymbolName, LlvmIrWriter.LocalConstant, "JniRemappingIndexMethodEntry", elements, alignment, JniRemappingIndexMethodEntryDataSize);
+				}
+
+				elements = new List<string> (methodIndexTypes.Count);
+				foreach (JniRemappingIndexTypeEntry type in methodIndexTypes) {
+					elements.Add ($$"""
+							%struct.JniRemappingIndexTypeEntry {
+								{{RenderString (w, strings, type.name)}}, {{w.Comment ($" name: {type.name.str}")}}
+								i32 {{LlvmIrWriter.Number (type.TypeMethods.Count)}}, {{w.Comment (" uint32_t method_count")}}
+								ptr @{{type.MethodsArraySymbolName}}{{w.Comment (" JniRemappingIndexMethodEntry* methods")}}
+							}
+						""");
+				}
+				WriteArray (w, MethodReplacementIndexVariableName, LlvmIrWriter.GlobalConstant, "JniRemappingIndexTypeEntry", elements, alignment, JniRemappingIndexTypeEntryDataSize);
 			}
+
+			strings.Write (w);
+			w.WriteMetadata ();
+			output.Flush ();
 		}
 
-		protected override void Construct (LlvmIrModule module)
+		// All the structures written here either contain pointers or no members with alignment requirements higher than 4
+		static ulong GetAlignment (LlvmIrWriter w) => Math.Max (w.Target.PointerSize, NonPointerMemberAlignment);
+
+		// Renders a JniRemappingString structure embedded in another structure, at the second level of indentation
+		static string RenderString (LlvmIrWriter w, LlvmIrStringPool strings, JniRemappingString s)
 		{
-			module.DefaultStringGroup = "jremap";
-
-			MapStructures (module);
-			List<StructureInstance<JniRemappingTypeReplacementEntry>>? typeReplacements;
-			List<StructureInstance<JniRemappingIndexTypeEntry>>? methodIndexTypes;
-
-			(typeReplacements, methodIndexTypes) = Init ();
-
-			if (typeReplacements == null) {
-				module.AddGlobalVariable (
-					typeof(StructureInstance<JniRemappingTypeReplacementEntry>),
-					TypeReplacementsVariableName,
-					new StructureInstance<JniRemappingTypeReplacementEntry> (jniRemappingTypeReplacementEntryStructureInfo, new JniRemappingTypeReplacementEntry ()) { IsZeroInitialized = true },
-					LlvmIrVariableOptions.GlobalConstant
-				);
-
-				module.AddGlobalVariable (
-					typeof(StructureInstance<JniRemappingIndexTypeEntry>),
-					MethodReplacementIndexVariableName,
-					new StructureInstance<JniRemappingIndexTypeEntry> (jniRemappingIndexTypeEntryStructureInfo, new JniRemappingIndexTypeEntry ()) { IsZeroInitialized = true },
-					LlvmIrVariableOptions.GlobalConstant
-				);
-				return;
-			}
-
-			module.AddGlobalVariable (TypeReplacementsVariableName, typeReplacements, LlvmIrVariableOptions.GlobalConstant);
-
-			foreach (StructureInstance<JniRemappingIndexTypeEntry> entry in methodIndexTypes) {
-				module.AddGlobalVariable (entry.Instance.MethodsArraySymbolName, entry.Instance.TypeMethods, LlvmIrVariableOptions.LocalConstant);
-			}
-
-			module.AddGlobalVariable (MethodReplacementIndexVariableName, methodIndexTypes, LlvmIrVariableOptions.GlobalConstant);
+			return $$"""
+				%struct.JniRemappingString {
+							i32 {{LlvmIrWriter.Number (s.length)}}, {{w.Comment (" uint32_t length")}}
+							ptr {{strings.GetPointer (s.str, "JniRemappingString", "str")}}{{w.Comment (" char* str")}}
+						}
+				""";
 		}
 
-		void MapStructures (LlvmIrModule module)
+		static void WriteArray (LlvmIrWriter w, string name, string attributes, string structName, List<string> elements, ulong alignment, ulong dataSize)
 		{
-			jniRemappingStringStructureInfo = module.MapStructure<JniRemappingString> ();
-			jniRemappingReplacementMethodStructureInfo = module.MapStructure<JniRemappingReplacementMethod> ();
-			jniRemappingIndexMethodEntryStructureInfo = module.MapStructure<JniRemappingIndexMethodEntry> ();
-			jniRemappingIndexTypeEntryStructureInfo = module.MapStructure<JniRemappingIndexTypeEntry> ();
-			jniRemappingTypeReplacementEntryStructureInfo = module.MapStructure<JniRemappingTypeReplacementEntry> ();
+			w.WriteGlobal (
+				name,
+				attributes,
+				$"[{LlvmIrWriter.Number (elements.Count)} x %struct.{structName}]",
+				w.ArrayValue (elements, LlvmIrWriter.IndexComment),
+				w.GetAggregateAlignment (alignment, (ulong)elements.Count * dataSize)
+			);
 		}
 	}
 }

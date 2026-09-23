@@ -227,7 +227,7 @@ namespace Xamarin.Android.Tasks
 
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
 			Dictionary<string, string>? runtimeProperties = RuntimePropertiesParser.ParseConfig (ProjectRuntimeConfigFilePath, ProjectRuntimeConfigDevFilePath);
-			LLVMIR.LlvmIrComposer appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, runtimeProperties, Log) {
+			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, runtimeProperties, Log) {
 				UsesAssemblyPreload = envBuilder.Parser.UsesAssemblyPreload,
 				AndroidPackageName = AndroidPackageName,
 				PackageNamingPolicy = pnp,
@@ -243,9 +243,11 @@ namespace Xamarin.Android.Tasks
 				MarshalMethodsEnabled = false,
 				IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
 				HaveAssemblyStore = UseAssemblyStore,
+				EmitComments = EmitLlvmIrComments,
 			};
-			LLVMIR.LlvmIrModule appConfigModule = appConfigAsmGen.Construct ();
-			appConfigAsmGen.EmitComments = EmitLlvmIrComments;
+
+			// Any errors in the input data must be reported before any of the output files is written
+			appConfigAsmGen.Initialize ();
 
 			foreach (string abi in SupportedAbis) {
 				string targetAbi = abi.ToLowerInvariant ();
@@ -255,7 +257,7 @@ namespace Xamarin.Android.Tasks
 
 				using var appConfigWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
 				try {
-					appConfigAsmGen.Generate (appConfigModule, targetArch, appConfigWriter, environmentLlFilePath);
+					appConfigAsmGen.Generate (targetArch, appConfigWriter, environmentLlFilePath);
 				} catch {
 					throw;
 				} finally {

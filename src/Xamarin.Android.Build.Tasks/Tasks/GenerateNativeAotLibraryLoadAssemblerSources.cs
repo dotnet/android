@@ -92,7 +92,7 @@ public class GenerateNativeAotLibraryLoadAssemblerSources : AndroidTask
 
 		// Take library names, match against NativeRuntimeComponents to see whether a
 		// component has an init function associated with it.
-		var bclComponents = new NativeRuntimeComponents (monoComponents: null);
+		var bclComponents = new NativeRuntimeComponents ();
 		var bclInitFunctions = new List<string> ();
 
 		seen = new HashSet<string> (StringComparer.Ordinal);
@@ -146,11 +146,10 @@ public class GenerateNativeAotLibraryLoadAssemblerSources : AndroidTask
 
 		string jniInitFuncsLlFilePath = outputFile.ItemSpec;
 		var generator = new NativeAotJniInitNativeAssemblyGenerator (Log, bclInitFunctions, customInitFunctions);
-		LLVMIR.LlvmIrModule jniInitFuncsModule = generator.Construct ();
 		using var jniInitFuncsWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
 		bool fileFullyWritten = false;
 		try {
-			generator.Generate (jniInitFuncsModule, targetArch, jniInitFuncsWriter, jniInitFuncsLlFilePath!);
+			generator.Generate (targetArch, jniInitFuncsWriter, jniInitFuncsLlFilePath!);
 			jniInitFuncsWriter.Flush ();
 			Files.CopyIfStreamChanged (jniInitFuncsWriter.BaseStream, jniInitFuncsLlFilePath!);
 			fileFullyWritten = true;

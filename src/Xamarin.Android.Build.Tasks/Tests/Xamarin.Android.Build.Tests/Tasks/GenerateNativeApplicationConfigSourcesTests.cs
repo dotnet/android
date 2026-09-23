@@ -13,6 +13,49 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 {
 	[TestCase (false)]
 	[TestCase (true)]
+	public void EmitsApplicationConfigForAllAbis (bool emitComments)
+	{
+		string outputRoot = Path.Combine (Root, "temp", $"{nameof (EmitsApplicationConfigForAllAbis)}-{emitComments}");
+		string monoAndroidPath = Path.Combine (TestEnvironment.MonoAndroidFrameworkDirectory, "Mono.Android.dll");
+		FileAssert.Exists (monoAndroidPath);
+
+		var task = new GenerateNativeApplicationConfigSources {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			ResolvedAssemblies = [new TaskItem (monoAndroidPath)],
+			EnvironmentOutputDirectory = Path.Combine (outputRoot, "android"),
+			SupportedAbis = ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"],
+			AndroidPackageName = "com.microsoft.android.llvmassemblytest",
+			EnablePreloadAssembliesDefault = false,
+			AndroidRuntime = "CoreCLR",
+			UseAssemblyStore = true,
+			EmitLlvmIrComments = emitComments,
+		};
+
+		Assert.IsTrue (task.Execute (), "GenerateNativeApplicationConfigSources should succeed.");
+
+		foreach (var (abi, triple) in new [] {
+			("armeabi-v7a", "armv7-unknown-linux-android21"),
+			("arm64-v8a", "aarch64-unknown-linux-android21"),
+			("x86", "i686-unknown-linux-android21"),
+			("x86_64", "x86_64-unknown-linux-android21"),
+		}) {
+			string fileName = $"environment.{abi}.ll";
+			string source = File.ReadAllText (Path.Combine (outputRoot, "android", fileName));
+			Assert.That (source, Does.Contain ($"source_filename = \"{fileName}\""), abi);
+			Assert.That (source, Does.Contain ($"target triple = \"{triple}\""), abi);
+			Assert.That (source, Does.Contain ("%struct.ApplicationConfig = type"), abi);
+			Assert.That (source, Does.Contain ("@application_config = "), abi);
+			Assert.That (source, Does.Contain ("@app_environment_variables = "), abi);
+			Assert.That (source, Does.Contain ("@app_system_properties = "), abi);
+			Assert.That (source, Does.Contain ("@assembly_store = "), abi);
+			Assert.That (source, Does.Contain ("@dso_cache = "), abi);
+			Assert.That (source, Does.Contain ("!llvm.module.flags = "), abi);
+			Assert.That (source, emitComments ? Does.Contain ("; Application environment variables") : Does.Not.Contain ("; Application environment variables"), abi);
+		}
+	}
+
+	[TestCase (false)]
+	[TestCase (true)]
 	public void HaveAssemblyStoreIsEmittedForCoreCLR (bool haveAssemblyStore)
 	{
 		string outputRoot = Path.Combine (Root, "temp", $"{nameof (HaveAssemblyStoreIsEmittedForCoreCLR)}-{haveAssemblyStore}");

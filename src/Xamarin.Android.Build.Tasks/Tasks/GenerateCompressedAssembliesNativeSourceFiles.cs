@@ -100,10 +100,9 @@ namespace Xamarin.Android.Tasks
 
 			void Generate (Dictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? dict)
 			{
-				var composer = new CompressedAssembliesNativeAssemblyGenerator (Log, dict) {
+				var generator = new CompressedAssembliesNativeAssemblyGenerator (Log, dict) {
 					EmitComments = EmitLlvmIrComments,
 				};
-				LLVMIR.LlvmIrModule compressedAssemblies = composer.Construct ();
 
 				foreach (string abi in SupportedAbis) {
 					string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"compressed_assemblies.{abi.ToLowerInvariant ()}");
@@ -111,7 +110,7 @@ namespace Xamarin.Android.Tasks
 
 					using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 						try {
-							composer.Generate (compressedAssemblies, GenerateNativeApplicationConfigSources.GetAndroidTargetArchForAbi (abi), sw, llvmIrFilePath);
+							generator.Generate (GenerateNativeApplicationConfigSources.GetAndroidTargetArchForAbi (abi), sw, llvmIrFilePath);
 						} catch {
 							throw;
 						} finally {
