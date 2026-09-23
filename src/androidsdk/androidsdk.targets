@@ -336,6 +336,7 @@
       <_DestDir>%(_AndroidSdkPackage.Destination)</_DestDir>
       <_NoSubdirectory Condition=" '$(_StripComponents)' == '1' ">false</_NoSubdirectory>
       <_NoSubdirectory Condition=" '$(_StripComponents)' == '0' ">true</_NoSubdirectory>
+      <_ExtractFailed>false</_ExtractFailed>
     </PropertyGroup>
     <RemoveDir Directories="$(_DestDir);$(_StagingDir)" />
     <MakeDir Directories="$(_DestDir)" />
@@ -345,7 +346,11 @@
         SourceFiles="$(_ZipPath)"
         DestinationFolder="$(_DestDir)"
         NoSubdirectory="$(_NoSubdirectory)"
+        ContinueOnError="WarnAndContinue"
     />
+    <PropertyGroup Condition=" '$(HostOS)' == 'Windows' and '$(MSBuildLastTaskResult)' == 'false' ">
+      <_ExtractFailed>true</_ExtractFailed>
+    </PropertyGroup>
     <!--
       Unix: `unzip` (preserves symlinks; LibZipSharp does not, which the NDK needs)
       into a sibling .staging directory, then `<Move/>` every file into
@@ -357,6 +362,29 @@
     <Exec
         Condition=" '$(HostOS)' != 'Windows' "
         Command="unzip -q -o &quot;$(_ZipPath)&quot; -d &quot;$(_StagingDir)&quot;"
+        ContinueOnError="WarnAndContinue"
+    />
+    <PropertyGroup Condition=" '$(HostOS)' != 'Windows' and '$(MSBuildLastTaskResult)' == 'false' ">
+      <_ExtractFailed>true</_ExtractFailed>
+    </PropertyGroup>
+    <!-- The pipeline retries this build step; discard only a corrupt ZIP so the retry downloads it again. -->
+    <GetFileHash Condition=" '$(_ExtractFailed)' == 'true' and '%(_AndroidSdkPackage.Hash)' != '' "
+        Files="$(_ZipPath)"
+        Algorithm="SHA256">
+      <Output TaskParameter="Hash" PropertyName="_ExtractActualSha256" />
+    </GetFileHash>
+    <Message
+        Condition=" '$(_ExtractFailed)' == 'true' and '%(_AndroidSdkPackage.Hash)' != '' and '$(_ExtractActualSha256)' != '%(_AndroidSdkPackage.Hash)' "
+        Importance="high"
+        Text="Corrupt cached archive '%(_AndroidSdkPackage.Identity)' (SHA-256 $(_ExtractActualSha256)); removing it for the next attempt."
+    />
+    <Delete
+        Condition=" '$(_ExtractFailed)' == 'true' and '%(_AndroidSdkPackage.Hash)' != '' and '$(_ExtractActualSha256)' != '%(_AndroidSdkPackage.Hash)' "
+        Files="$(_ZipPath);$(_ZipPath).%(_AndroidSdkPackage.Hash).stamp"
+    />
+    <Error
+        Condition=" '$(_ExtractFailed)' == 'true' "
+        Text="Extraction failed for '%(_AndroidSdkPackage.Identity)' (expected SHA-256: %(_AndroidSdkPackage.Hash); actual: $(_ExtractActualSha256)). See the extraction error above."
     />
     <ItemGroup Condition=" '$(HostOS)' != 'Windows' And '$(_StripComponents)' == '1' And Exists('$(_StagingDir)') ">
       <_StagedTopDir Remove="@(_StagedTopDir)" />
