@@ -31,7 +31,6 @@
     <_GetChildProjectCopyToPublishDirectoryItems>false</_GetChildProjectCopyToPublishDirectoryItems>
     <!-- PublishAot enables analyzers for every build, but NativeAOT compilation only applies to publish or optimized builds. -->
     <_AndroidRuntime Condition=" '$(_AndroidRuntime)' == '' and '$(PublishAot)' == 'true' and ('$(_IsPublishing)' == 'true' or '$(Optimize)' == 'true') ">NativeAOT</_AndroidRuntime>
-    <_AndroidRuntime Condition=" '$(_AndroidRuntime)' == '' and '$(UseMonoRuntime)' == 'true' ">MonoVM</_AndroidRuntime>
     <_AndroidRuntime Condition=" '$(_AndroidRuntime)' == '' ">CoreCLR</_AndroidRuntime>
     <NativeCompilationDuringPublish Condition=" '$(NativeCompilationDuringPublish)' == '' and '$(PublishAot)' == 'true' and '$(_AndroidRuntime)' != 'NativeAOT' ">false</NativeCompilationDuringPublish>
     <PublishAotUsingRuntimePack Condition=" '$(PublishAotUsingRuntimePack)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">true</PublishAotUsingRuntimePack>
@@ -81,7 +80,6 @@
   <!--  User-facing configuration-specific defaults -->
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>
-    <UseInterpreter Condition=" '$(UseInterpreter)' == '' and '$(AndroidUseInterpreter)' == '' and '$(_AndroidRuntime)' == 'MonoVM' ">true</UseInterpreter>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <AndroidEnableFastDeployment Condition=" '$(AndroidEnableFastDeployment)' == '' ">false</AndroidEnableFastDeployment>
@@ -117,13 +115,11 @@
     <RuntimeIdentifiers Condition=" '$(RuntimeIdentifier)' == '' And '$(RuntimeIdentifiers)' == '' ">android-arm64;android-x64</RuntimeIdentifiers>
     <RuntimeIdentifier  Condition=" '$(RuntimeIdentifiers)' != '' And '$(RuntimeIdentifier)' != '' " />
     <GenerateApplicationManifest Condition=" '$(GenerateApplicationManifest)' == '' ">true</GenerateApplicationManifest>
-    <!-- Default to Mono's AOT in Release mode -->
-    <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == '' and '$(Configuration)' == 'Release' and '$(_AndroidRuntime)' == 'MonoVM' ">true</RunAOTCompilation>
     <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == 'true' ">true</RunAOTCompilation>
     <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' ">false</RunAOTCompilation>
-    <!-- Error and reset Mono-specific properties when the runtime is not MonoVM -->
-    <_AndroidXA1044_RunAOTCompilation Condition=" '$(RunAOTCompilation)' == 'true' and '$(_AndroidRuntime)' != 'MonoVM' ">true</_AndroidXA1044_RunAOTCompilation>
-    <_AndroidXA1044_EnableLLVM Condition=" '$(EnableLLVM)' == 'true' and '$(_AndroidRuntime)' != 'MonoVM' ">true</_AndroidXA1044_EnableLLVM>
+    <!-- Error and reset unsupported Mono-specific properties. -->
+    <_AndroidXA1044_RunAOTCompilation Condition=" '$(RunAOTCompilation)' == 'true' ">true</_AndroidXA1044_RunAOTCompilation>
+    <_AndroidXA1044_EnableLLVM Condition=" '$(EnableLLVM)' == 'true' ">true</_AndroidXA1044_EnableLLVM>
     <RunAOTCompilation Condition=" '$(_AndroidXA1044_RunAOTCompilation)' == 'true' ">false</RunAOTCompilation>
     <EnableLLVM Condition=" '$(_AndroidXA1044_EnableLLVM)' == 'true' ">false</EnableLLVM>
     <_AndroidXA1029 Condition=" '$(AotAssemblies)' != '' ">true</_AndroidXA1029>

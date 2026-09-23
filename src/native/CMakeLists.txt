@@ -47,18 +47,11 @@ include("${CMAKE_ANDROID_NDK}/build/cmake/abis.cmake")
 include("${CMAKE_SOURCE_DIR}/cmake/ArchiveDSOStub.cmake")
 
 string(TOLOWER "${RUNTIME_FLAVOR}" RUNTIME_FLAVOR_LOWER)
-if (RUNTIME_FLAVOR_LOWER STREQUAL monovm)
-  set(IS_MONO_RUNTIME True)
-  set(IS_CLR_RUNTIME False)
-  set(IS_NAOT_RUNTIME False)
-  set(SOURCES_PREFIX "mono")
-elseif(RUNTIME_FLAVOR_LOWER STREQUAL coreclr)
-  set(IS_MONO_RUNTIME False)
+if(RUNTIME_FLAVOR_LOWER STREQUAL coreclr)
   set(IS_CLR_RUNTIME True)
   set(IS_NAOT_RUNTIME False)
   set(SOURCES_PREFIX "clr")
 elseif(RUNTIME_FLAVOR_LOWER STREQUAL nativeaot)
-  set(IS_MONO_RUNTIME False)
   set(IS_CLR_RUNTIME False)
   set(IS_NAOT_RUNTIME True)
   set(SOURCES_PREFIX "nativeot")
@@ -191,11 +184,6 @@ if(IS_CLR_RUNTIME)
   temp_configure_mono_runtime_dir()
 elseif(IS_NAOT_RUNTIME)
   temp_configure_mono_runtime_dir()
-elseif(IS_MONO_RUNTIME)
-  set(RUNTIME_DIR_ARM64  "${NETCORE_APP_RUNTIME_DIR_ARM64}")
-  set(RUNTIME_DIR_ARM    "${NETCORE_APP_RUNTIME_DIR_ARM}")
-  set(RUNTIME_DIR_X86_64 "${NETCORE_APP_RUNTIME_DIR_X86_64}")
-  set(RUNTIME_DIR_X86    "${NETCORE_APP_RUNTIME_DIR_X86}")
 endif()
 
 if(ANDROID_ABI MATCHES "^arm64-v8a")
@@ -228,27 +216,19 @@ set(EXTERNAL_DIR "${REPO_ROOT_DIR}/external")
 set(JAVA_INTEROP_SRC_PATH "${EXTERNAL_DIR}/Java.Interop/src/java-interop")
 set(LIBUNWIND_SOURCE_DIR "${EXTERNAL_DIR}/libunwind")
 
-if(IS_MONO_RUNTIME)
-  set(ROBIN_MAP_DIR "${EXTERNAL_DIR}/robin-map")
-endif()
-
 #
 # Include directories
 #
 set(SYSROOT_CXX_INCLUDE_DIR ${CMAKE_SYSROOT}/usr/include/c++/v1)
 
-if(IS_MONO_RUNTIME)
-  set(RUNTIME_INCLUDE_DIR ${NET_RUNTIME_DIR}/native/include/mono-2.0)
-else()
-  # TEMPORARY: for now JI needs to build with MonoVM embedding APIs
-  set(TEMP_MONO_RUNTIME_INCLUDE_DIR ${TEMP_NETCORE_NET_RUNTIME_DIR}/native/include/mono-2.0)
+# TEMPORARY: for now JI needs to build with MonoVM embedding APIs
+set(TEMP_MONO_RUNTIME_INCLUDE_DIR ${TEMP_NETCORE_NET_RUNTIME_DIR}/native/include/mono-2.0)
 
-  if(LOCAL_CORECLR_PATH)
-    set(CLR_REPO_ROOT_PATH "${LOCAL_CORECLR_PATH}/../..")
-    set(RUNTIME_INCLUDE_DIR "${CLR_REPO_ROOT_PATH}/src/native/corehost;${CLR_REPO_ROOT_PATH}/src/coreclr/hosts/inc")
-  else()
-    set(RUNTIME_INCLUDE_DIR ${REPO_ROOT_DIR}/src-ThirdParty/dotnet/runtime)
-  endif()
+if(LOCAL_CORECLR_PATH)
+  set(CLR_REPO_ROOT_PATH "${LOCAL_CORECLR_PATH}/../..")
+  set(RUNTIME_INCLUDE_DIR "${CLR_REPO_ROOT_PATH}/src/native/corehost;${CLR_REPO_ROOT_PATH}/src/coreclr/hosts/inc")
+else()
+  set(RUNTIME_INCLUDE_DIR ${REPO_ROOT_DIR}/src-ThirdParty/dotnet/runtime)
 endif()
 
 set(JAVA_INTEROP_INCLUDE_DIR ${JAVA_INTEROP_SRC_PATH})
@@ -280,15 +260,6 @@ elseif(IS_NAOT_RUNTIME)
         ${CLR_INCLUDE_DIR}
      )
   endmacro()
-else()
-  macro(xa_add_include_directories TARGET)
-     target_include_directories(
-        ${TARGET}
-        PRIVATE
-        ${RUNTIME_INCLUDE_DIR}
-     )
-  endmacro()
-  include_directories(mono)
 endif()
 
 #
@@ -324,12 +295,6 @@ macro(xa_add_compile_definitions TARGET)
       PRIVATE
       TARGET_ANDROID
       XA_HOST_NATIVEAOT
-    )
-  else()
-    target_compile_definitions(
-      ${TARGET}
-      PRIVATE
-      XA_HOST_MONOVM
     )
   endif()
 endmacro()
@@ -650,33 +615,12 @@ elseif(BUILD_TEST_JNI_LIBRARY)
 else()
   add_subdirectory(common/java-interop)
 
-  if (IS_MONO_RUNTIME OR IS_CLR_RUNTIME)
+  if (IS_CLR_RUNTIME)
     add_subdirectory(common/runtime-base)
 
     add_subdirectory(${SOURCES_PREFIX}/runtime-base)
     add_subdirectory(${SOURCES_PREFIX}/shared)
     add_subdirectory(${SOURCES_PREFIX}/xamarin-app-stub)
-  endif()
-
-  if (IS_MONO_RUNTIME)
-    # Only `mono/tracing` links `xa::unwind`; the CoreCLR host has no unwinder of its own.
-    add_subdirectory(common/libunwind)
-
-    add_subdirectory(mono/tracing)
-    add_subdirectory(mono/pinvoke-override)
-
-    if(DEBUG_BUILD)
-      add_subdirectory(mono/xamarin-debug-app-helper)
-    endif()
-
-    add_subdirectory(mono/monodroid)
-
-    add_custom_target(run_static_analysis
-      COMMAND ${ANDROID_TOOLCHAIN_ROOT}/bin/clang-check -analyze -p="${CMAKE_CURRENT_BINARY_DIR}" ${CLANG_CHECK_SOURCES} > ${CMAKE_SOURCE_DIR}/static-analysis.${ANDROID_ABI}.${CMAKE_BUILD_TYPE}.txt 2>&1
-      COMMAND_EXPAND_LISTS
-      WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-      USES_TERMINAL
-    )
   endif()
 
   if (IS_CLR_RUNTIME)

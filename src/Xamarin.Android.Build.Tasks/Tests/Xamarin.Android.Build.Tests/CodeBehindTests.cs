@@ -748,8 +748,7 @@ namespace Xamarin.Android.Build.Tests
 			{
 				AssertExists (testName, csprojPath);
 				var sb = new StringBuilder (File.ReadAllText (csprojPath));
-				sb.Replace ("@UseMonoRuntime@", (runtime == AndroidRuntime.MonoVM).ToString ())
-				  .Replace ("@PublishAot@", (runtime == AndroidRuntime.NativeAOT).ToString ())
+				sb.Replace ("@PublishAot@", (runtime == AndroidRuntime.NativeAOT).ToString ())
 				  .Replace ("@Configuration@", isRelease ? "Release" : "Debug");
 				File.WriteAllText (csprojPath, sb.ToString ());
 			}

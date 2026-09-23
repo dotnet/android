@@ -166,11 +166,9 @@ This file contains targets specific for Android application projects.
     </GetAndroidActivityName>
 
     <PropertyGroup>
-      <_AndroidRuntimeLogProperty Condition=" '$(_AndroidRuntime)' == 'MonoVM' ">debug.mono.log</_AndroidRuntimeLogProperty>
-      <_AndroidRuntimeLogProperty Condition=" '$(_AndroidRuntime)' != 'MonoVM' ">debug.dotnet.log</_AndroidRuntimeLogProperty>
+      <_AndroidRuntimeLogProperty>debug.dotnet.log</_AndroidRuntimeLogProperty>
       <_AndroidRuntimeLog>default,assembly,timing=bare</_AndroidRuntimeLog>
-      <_AndroidRuntimeLog Condition=" '$(RunLogVerbose)' != 'false' and '$(_AndroidRuntime)' == 'MonoVM' ">$(_AndroidRuntimeLog),mono_log_level=debug,mono_log_mask=all</_AndroidRuntimeLog>
-      <_AndroidRuntimeLog Condition=" '$(RunLogVerbose)' != 'false' and '$(_AndroidRuntime)' != 'MonoVM' ">all</_AndroidRuntimeLog>
+      <_AndroidRuntimeLog Condition=" '$(RunLogVerbose)' != 'false' ">all</_AndroidRuntimeLog>
       <RunLogDelayInMS>1000</RunLogDelayInMS> <!-- milliseconds -->
     </PropertyGroup>
 

@@ -141,8 +141,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
 
 				bool ignoreSplitConfigs = runtime switch {
-					AndroidRuntime.MonoVM  => ((EnvironmentHelper.ApplicationConfig_MonoVM)app_config).ignore_split_configs,
-					AndroidRuntime.CoreCLR => ((EnvironmentHelper.ApplicationConfig_CoreCLR)app_config).ignore_split_configs,
+					AndroidRuntime.CoreCLR => ((EnvironmentHelper.ApplicationConfig)app_config).ignore_split_configs,
 					_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 				};
 				Assert.AreEqual (ignoreSplitConfigs, true, $"App config should indicate that split configs must be ignored");

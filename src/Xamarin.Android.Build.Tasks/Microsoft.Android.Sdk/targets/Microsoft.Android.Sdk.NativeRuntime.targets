@@ -43,7 +43,7 @@ Contains code to build and link the native runtime at application build time.
           Outputs="@(_UnifiedNativeRuntime)"
           Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' ">
 
-    <!-- AndroidApiLevel must be set to the same version our runtime, MonoVM and CoreCLR are built
+    <!-- AndroidApiLevel must be set to the same version our CoreCLR runtime is built
          against -->
     <LinkNativeRuntime
         MonoComponents="@(_MonoComponent)"

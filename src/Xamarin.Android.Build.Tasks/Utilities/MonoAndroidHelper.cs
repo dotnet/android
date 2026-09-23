@@ -854,8 +854,7 @@ namespace Xamarin.Android.Tasks
 			if (string.Equals (androidRuntime, "NativeAOT", StringComparison.OrdinalIgnoreCase))
 				return AndroidRuntime.NativeAOT;
 
-			// Default runtime is MonoVM
-			return AndroidRuntime.MonoVM;
+			return AndroidRuntime.CoreCLR;
 		}
 
 		public static JavaPeerStyle ParseCodeGenerationTarget (string codeGenerationTarget)

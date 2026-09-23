@@ -65,15 +65,6 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
-			// TODO: this appears to be a problem with `dotnet run --no-build` as it regenerates marshal method sources
-			// with 99% of methods missing. Binlog shows:
-			//
-			//    Input file "obj/Release/build.props" is newer than output file "obj/Release/stamp/_GeneratePackageManagerJava.stamp".
-			//
-			if (runtime == AndroidRuntime.MonoVM && isRelease) {
-				Assert.Ignore ("dotnet run --no-build breaks marshal methods (both managed and llvm-ir) on MonoVM");
-			}
-
 			if (runtime == AndroidRuntime.NativeAOT && typemapImplementation == "llvm-ir") {
 				Assert.Ignore ("NativeAOT doesn't work with LLVM-IR typemaps");
 			}
@@ -997,11 +988,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			proj.SetRuntime (runtime);
 
 			if (isRelease) {
-				if (runtime == AndroidRuntime.MonoVM) {
-					proj.SetRuntimeIdentifiers (new[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" });
-				} else {
-					proj.SetRuntimeIdentifiers (new [] {"arm64-v8a", "x86_64"});
-				}
+				proj.SetRuntimeIdentifiers (new [] {"arm64-v8a", "x86_64"});
 			}
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
@@ -1785,7 +1772,6 @@ namespace Styleable.Library {
 			string[] abis = runtime switch {
 				AndroidRuntime.CoreCLR => new string [] { "arm64-v8a", "x86_64" },
 				AndroidRuntime.NativeAOT => new string [] { "arm64-v8a", "x86_64" },
-				AndroidRuntime.MonoVM => new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" },
 				_ => throw new NotSupportedException ($"Unsupported runtime {runtime}")
 			};
 
@@ -2346,6 +2332,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		[Ignore ("FIXME: https://github.com/dotnet/android/issues/12880")]
 		public void DotNetInstallAndRunPreviousSdk (
 				[Values] bool isRelease,
 				[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
@@ -2354,20 +2341,13 @@ namespace UnnamedProject
 				return;
 			}
 
-			// Mono-only test for the moment (until net10 or later is the "previous" framework)
-			if (runtime != AndroidRuntime.MonoVM) {
-				Assert.Ignore ("Mono-only test until net9 is no longer the 'previous' SDK");
-			}
-
 			var proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				TargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android",
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
 			proj.SetRuntime (runtime);
-
-			// Requires 32-bit ABIs
-			proj.SetRuntimeIdentifiers (new[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" });
+			proj.SetRuntimeIdentifiers (new[] { "arm64-v8a", "x86_64" });
 
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
@@ -2498,23 +2478,7 @@ namespace UnnamedProject
 
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
-			if (runtime == AndroidRuntime.MonoVM) {
-				builder.AssertHasNoWarnings ();
-			} else {
-				// CoreCLR generates:
-				//   warning XA1040: The CoreCLR runtime on Android is an experimental feature and not yet suitable for production use.
-				//
-				// NativeAOT generates (twice, once per arch):
-				//   warning IL3053: Assembly 'Mono.Android' produced AOT analysis warnings.
-				//
-				uint expected = runtime switch {
-					AndroidRuntime.CoreCLR   => 1,
-					AndroidRuntime.NativeAOT => 2,
-					_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
-				};
-				builder.AssertHasSomeWarnings (expected);
-
-			}
+			builder.AssertHasNoWarnings ();
 			RunProjectAndAssert (proj, builder);
 
 			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));

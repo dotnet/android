@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 using Android.Runtime;
-using Microsoft.Android.Runtime;
 
 namespace Java.Interop {
 
@@ -22,12 +21,7 @@ namespace Java.Interop {
 		}
 
 		public static int MaxGlobalReferenceCount {
-			get {
-				if (RuntimeFeature.IsMonoRuntime) {
-					return RuntimeNativeMethods._monodroid_max_gref_get ();
-				}
-				return JNIEnvInit.max_gref_count;
-			}
+			get {return JNIEnvInit.max_gref_count;}
 		}
 
 		public static int GlobalReferenceCount {

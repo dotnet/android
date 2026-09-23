@@ -245,7 +245,6 @@ auto Host::create_delegate (
 [[gnu::flatten, gnu::always_inline]]
 void Host::preload_jni_libraries () noexcept
 {
-	// NOTE: when fixing a bug here, fix also the MonoVM code in src/native/mono/monodroid-glue.cc@preload_jni_libraries
 	if (application_config.number_of_shared_libraries == 0) [[unlikely]] {
 		return;
 	}

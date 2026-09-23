@@ -40,7 +40,7 @@ namespace Xamarin.Android.Build.Tests
 		{};
 
 		// This must be identical to the ApplicationConfig structure in src/native/clr/include/xamarin-app.hh
-		public sealed class ApplicationConfig_CoreCLR : IApplicationConfig
+		public sealed class ApplicationConfig : IApplicationConfig
 		{
 			public bool   uses_assembly_preload;
 			public bool   jni_add_native_method_registration_attribute_present;
@@ -65,7 +65,6 @@ namespace Xamarin.Android.Build.Tests
 
 		const uint ApplicationConfigFieldCount_CoreCLR = 19;
 
-		// This must be identical to the ApplicationConfig structure in src/native/mono/xamarin-app-stub/xamarin-app.hh
 		public sealed class ApplicationConfig_MonoVM : IApplicationConfig
 		{
 			public bool   uses_mono_llvm;
@@ -277,7 +276,6 @@ namespace Xamarin.Android.Build.Tests
 		static IApplicationConfig ReadApplicationConfig (EnvironmentFile envFile, AndroidRuntime runtime)
 		{
 			return runtime switch {
-				AndroidRuntime.MonoVM => ReadApplicationConfig_MonoVM (envFile),
 				AndroidRuntime.CoreCLR => ReadApplicationConfig_CoreCLR (envFile),
 				_ => throw new InvalidOperationException ($"Unsupported runtime '{runtime}'")
 			};
@@ -294,7 +292,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (appConfigSymbol.Size != 0, $"{ApplicationConfigSymbolName} size as specified in the '.size' directive must not be 0");
 
 			var pointers = new List <string> ();
-			var ret = new ApplicationConfig_CoreCLR ();
+			var ret = new ApplicationConfig ();
 			uint fieldCount = 0;
 			string[] field;
 
@@ -605,7 +603,6 @@ namespace Xamarin.Android.Build.Tests
 		static Dictionary<string, string> ReadEnvironmentVariables (EnvironmentFile envFile, AndroidRuntime runtime)
 		{
 			return runtime switch {
-				AndroidRuntime.MonoVM => ReadEnvironmentVariables_MonoVM (envFile),
 				AndroidRuntime.CoreCLR => ReadEnvironmentVariables_CoreCLR_NativeAOT (envFile, AppEnvironmentVariablesSymbolName, AppEnvironmentVariableContentsSymbolName),
 				AndroidRuntime.NativeAOT => ReadEnvironmentVariables_CoreCLR_NativeAOT (envFile, AppEnvironmentVariablesNativeAOTSymbolName, AppEnvironmentVariableContentsNativeAOTSymbolName),
 				_ => throw new InvalidOperationException ($"Unsupported runtime '{runtime}'")
@@ -730,20 +727,11 @@ namespace Xamarin.Android.Build.Tests
 		static void AssertApplicationConfigIsIdentical (IApplicationConfig firstAppConfig, string firstEnvFile, IApplicationConfig secondAppConfig, string secondEnvFile, AndroidRuntime runtime)
 		{
 			switch (runtime) {
-				case AndroidRuntime.MonoVM:
-					AssertApplicationConfigIsIdentical (
-						(ApplicationConfig_MonoVM)firstAppConfig,
-						firstEnvFile,
-						(ApplicationConfig_MonoVM)secondAppConfig,
-						secondEnvFile
-					);
-					break;
-
 				case AndroidRuntime.CoreCLR:
 					AssertApplicationConfigIsIdentical (
-						(ApplicationConfig_CoreCLR)firstAppConfig,
+						(ApplicationConfig)firstAppConfig,
 						firstEnvFile,
-						(ApplicationConfig_CoreCLR)secondAppConfig,
+						(ApplicationConfig)secondAppConfig,
 						secondEnvFile
 					);
 					break;
@@ -753,7 +741,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		static void AssertApplicationConfigIsIdentical (ApplicationConfig_CoreCLR firstAppConfig, string firstEnvFile, ApplicationConfig_CoreCLR secondAppConfig, string secondEnvFile)
+		static void AssertApplicationConfigIsIdentical (ApplicationConfig firstAppConfig, string firstEnvFile, ApplicationConfig secondAppConfig, string secondEnvFile)
 		{
 			Assert.AreEqual (firstAppConfig.uses_assembly_preload, secondAppConfig.uses_assembly_preload, $"Field 'uses_assembly_preload' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 			Assert.AreEqual (firstAppConfig.marshal_methods_enabled, secondAppConfig.marshal_methods_enabled, $"Field 'marshal_methods_enabled' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
@@ -898,7 +886,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				string[] requiredSharedLibrarySymbols = runtime switch {
-					AndroidRuntime.MonoVM  => requiredSharedLibrarySymbolsMonoVM,
 					AndroidRuntime.CoreCLR => requiredSharedLibrarySymbolsCoreCLR,
 					_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 				};
@@ -935,7 +922,6 @@ namespace Xamarin.Android.Build.Tests
 			foreach (EnvironmentFile envFile in envFilePaths) {
 				JniPreloads preloads = runtime switch {
 					AndroidRuntime.CoreCLR => ReadJniPreloads_CoreCLR (envFile, expectedDsoCacheEntryCount),
-					AndroidRuntime.MonoVM  => ReadJniPreloads_MonoVM (envFile, expectedDsoCacheEntryCount),
 					_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 				};
 

@@ -138,11 +138,6 @@ namespace Android.Runtime
 			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridge_processing_started_callback,
 			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridge_processing_finished_callback);
 
-		[MethodImplAttribute(MethodImplOptions.InternalCall)]
-		internal static extern void monodroid_unhandled_exception (Exception javaException);
-
-		[MethodImplAttribute(MethodImplOptions.InternalCall)]
-		internal static extern unsafe void monodroid_debugger_unhandled_exception (Exception e);
 	}
 }
 #endif // INSIDE_MONO_ANDROID_RUNTIME

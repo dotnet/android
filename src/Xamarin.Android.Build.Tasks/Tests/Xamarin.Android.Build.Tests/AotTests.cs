@@ -122,7 +122,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 			var app1 = new XamarinFormsMapsApplicationProject {
 				ProjectName = "App1",
-				AotAssemblies = runtime == AndroidRuntime.MonoVM,
 				IsRelease = true,
 			};
 			app1.SetRuntime (runtime);

@@ -778,7 +778,7 @@ class MemTest {
 
 			// TODO: AndroidRuntime.NativeAOT doesn't work yet. Fails with
 			//
-			//  Microsoft.Android.Sdk.Aot.targets(123,5): error : Runtime critical type System.RuntimeMethodHandle not found
+			//  error : Runtime critical type System.RuntimeMethodHandle not found
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR }) {
 				AddTestData (isRelease: false, aot: false, runtime);
 				AddTestData (isRelease: true,  aot: false, runtime);

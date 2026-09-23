@@ -154,7 +154,7 @@ Command:
 )
 ```
 
-Results are `.trx` files under `bin/TestDebug/TestResults/` and are published as VSTest results in CI. Always pass the same configuration and MSBuild properties to the install and `dotnet test --no-build` commands (for example, `-c Release -p:UseMonoRuntime=false`).
+Results are `.trx` files under `bin/TestDebug/TestResults/` and are published as VSTest results in CI. Always pass the same configuration and MSBuild properties to the install and `dotnet test --no-build` commands (for example, `-c Release -p:AndroidTypeMapImplementation=trimmable`).
 
 For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/`:
 ```bash

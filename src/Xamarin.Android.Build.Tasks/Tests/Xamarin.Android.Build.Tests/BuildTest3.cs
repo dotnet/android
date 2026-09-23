@@ -276,8 +276,7 @@ public partial class BuildTest3 : BaseTest
 
 		EnvironmentHelper.IApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles, runtime);
 		uint numberOfDsoCacheEntries = runtime switch {
-			AndroidRuntime.MonoVM  => ((EnvironmentHelper.ApplicationConfig_MonoVM)app_config).number_of_dso_cache_entries,
-			AndroidRuntime.CoreCLR => ((EnvironmentHelper.ApplicationConfig_CoreCLR)app_config).number_of_dso_cache_entries,
+			AndroidRuntime.CoreCLR => ((EnvironmentHelper.ApplicationConfig)app_config).number_of_dso_cache_entries,
 			_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 		};
 
