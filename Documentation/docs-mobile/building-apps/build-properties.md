@@ -415,9 +415,9 @@ A boolean property that controls whether untrimmed builds modify referenced
 assemblies to support legacy binding and resource designer behavior. These
 modifications include adding missing abstract interface methods, updating
 legacy resource designer references, and inserting `GC.KeepAlive()` calls into
-older Xamarin.Android binding assemblies. Trimmed builds using the `trimmable`
-type map do not run these compatibility fixups, and setting this property to
-`True` does not enable them for trimmed builds.
+older Xamarin.Android binding assemblies. Trimmed builds run their post-trimming
+assembly fixups separately after ILLink; this property does not control those
+steps.
 
 The default value is `False` when
 [`$(AndroidTypeMapImplementation)`](#androidtypemapimplementation) is

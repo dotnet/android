@@ -3,6 +3,7 @@
 
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateMissingTypeMapStubs" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateMissingTypeMapStubs" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
+  <UsingTask TaskName="Xamarin.Android.Tasks.PostTrimmingPipeline" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">mono.MonoRuntimeProvider</_TrimmableRuntimeProviderJavaName>
@@ -30,7 +31,39 @@
       DependsOnTargets="_GenerateTrimmableTypeMap">
     <PropertyGroup>
       <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --typemap-entry-assembly "$(_TypeMapAssemblyName)"</_ExtraTrimmerArgs>
+      <_TrimmerDumpDependencies Condition=" '$(LinkerDumpDependencies)' == 'true' ">true</_TrimmerDumpDependencies>
     </PropertyGroup>
+    <ItemGroup>
+      <TrimmerRootDescriptor Include="@(LinkDescription)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CollectPostTrimmingAssemblies"
+      Condition=" '$(PublishTrimmed)' == 'true' ">
+    <ItemGroup>
+      <_PostTrimmingAssembly Remove="@(_PostTrimmingAssembly)" />
+      <_PostTrimmingAssembly Include="@(ResolvedFileToPublish)"
+          Condition=" '%(Extension)' == '.dll' and '%(ResolvedFileToPublish.PostprocessAssembly)' == 'true' " />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_PostTrimmingPipeline"
+      AfterTargets="ILLink"
+      BeforeTargets="CreateReadyToRunImages"
+      DependsOnTargets="_CollectPostTrimmingAssemblies"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(RunILLink)' != 'false' "
+      Inputs="@(_PostTrimmingAssembly);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
+      Outputs="$(_AndroidStampDirectory)_PostTrimmingPipeline.stamp">
+    <PostTrimmingPipeline
+        Assemblies="@(_PostTrimmingAssembly)"
+        AddKeepAlives="$(AndroidAddKeepAlives)"
+        AndroidLinkResources="$(AndroidLinkResources)"
+        Deterministic="$(Deterministic)" />
+    <MakeDir Directories="$(_AndroidStampDirectory)" />
+    <Touch Files="$(_AndroidStampDirectory)_PostTrimmingPipeline.stamp" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidStampDirectory)_PostTrimmingPipeline.stamp" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_PrepareLinkedAssembliesForProguard"

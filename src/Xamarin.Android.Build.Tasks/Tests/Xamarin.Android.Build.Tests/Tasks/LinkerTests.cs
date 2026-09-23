@@ -507,14 +507,14 @@ $@"			var myButton = new AttributedButtonStub (this);
 				// Debug configuration
 				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: false, setLinkModeNone: false, shouldAddKeepAlives: false, runtime);
 
-				// Debug configuration, AndroidAddKeepAlives=true
-				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true,  setLinkModeNone: false, shouldAddKeepAlives: true,  runtime);
+				// The default trimmable path does not run legacy assembly fixups.
+				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true,  setLinkModeNone: false, shouldAddKeepAlives: false, runtime);
 
 				// Release configuration
 				AddTestData (isRelease: true,  setAndroidAddKeepAlivesTrue: false, setLinkModeNone: false, shouldAddKeepAlives: true,  runtime);
 
 				// Release configuration, AndroidLinkMode=None
-				AddTestData (isRelease: true,  setAndroidAddKeepAlivesTrue: false, setLinkModeNone: true,  shouldAddKeepAlives: true,  runtime);
+				AddTestData (isRelease: true,  setAndroidAddKeepAlivesTrue: false, setLinkModeNone: true,  shouldAddKeepAlives: false, runtime);
 			}
 
 			AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true, setLinkModeNone: false,
