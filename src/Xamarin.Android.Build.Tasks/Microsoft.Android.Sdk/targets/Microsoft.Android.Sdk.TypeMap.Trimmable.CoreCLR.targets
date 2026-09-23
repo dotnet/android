@@ -50,7 +50,7 @@
   <Target Name="_PostTrimmingPipeline"
       AfterTargets="ILLink"
       BeforeTargets="CreateReadyToRunImages"
-      DependsOnTargets="_CollectPostTrimmingAssemblies"
+      DependsOnTargets="_CreatePropertiesCache;_CollectPostTrimmingAssemblies"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(RunILLink)' != 'false' "
       Inputs="@(_PostTrimmingAssembly);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
       Outputs="$(_AndroidStampDirectory)_PostTrimmingPipeline.stamp">
