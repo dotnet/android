@@ -47,7 +47,6 @@
     <!-- Include only the linker sources required for the build tasks (LinkAssembliesNoShrink and PostTrimmingPipeline) -->
     <!-- These include: AddKeepAlivesStep, AddKeepAlivesHelper, CheckForObsoletePreserveAttributeStep, StripEmbeddedLibrariesStep, PostTrimmingAddKeepAlivesStep, FixAbstractMethodsStep, FixLegacyResourceDesignerStep, LinkDesignerBase -->
     <Compile Remove="Linker\**" />
-    <Compile Include="Linker\MonoDroid.Tuner\FindTypeMapObjectsStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\FindJavaObjectsStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\AddKeepAlivesStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\AddKeepAlivesHelper.cs" />
@@ -204,9 +203,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\Mono.Android\java\mono\android\TypeManager.java">
-      <LogicalName>JavaInteropTypeManager.java</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources\*" Exclude="Resources\LayoutBinding.cs">
       <LogicalName>%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>

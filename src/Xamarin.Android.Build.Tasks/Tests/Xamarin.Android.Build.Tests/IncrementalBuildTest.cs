@@ -430,7 +430,6 @@ namespace Xamarin.Android.Build.Tests
 					ProjectName = $"App{i}",
 					PackageName = $"com.companyname.App{i}",
 					IsRelease = isRelease,
-					EnableMarshalMethods = true,
 				};
 
 				app1.SetRuntime (runtime);

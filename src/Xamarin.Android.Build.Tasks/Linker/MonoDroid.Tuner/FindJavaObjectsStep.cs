@@ -22,8 +22,6 @@ public class FindJavaObjectsStep : BaseStep, IAssemblyModifierPipelineStep
 
 	public bool ErrorOnCustomJavaObject { get; set; }
 
-	public bool UseMarshalMethods { get; set; }
-
 	public TaskLoggingHelper Log { get; set; }
 
 	public FindJavaObjectsStep (TaskLoggingHelper log) => Log = log;
@@ -74,11 +72,8 @@ public class FindJavaObjectsStep : BaseStep, IAssemblyModifierPipelineStep
 		if (!context.IsAndroidAssembly)
 			return false;
 
-		// When marshal methods or non-JavaPeerStyle.XAJavaInterop1 are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
-		// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
-		// build and stored in a jar file.
-		var useMarshalMethods = !context.IsDebug && context.EnableMarshalMethods;
-		var shouldSkipNonUserAssemblies = !useMarshalMethods && context.CodeGenerationTarget == JavaPeerStyle.XAJavaInterop1;
+		// XAJavaInterop1 uses the framework JCWs from the runtime jar.
+		var shouldSkipNonUserAssemblies = context.CodeGenerationTarget == JavaPeerStyle.XAJavaInterop1;
 
 		if (shouldSkipNonUserAssemblies && !context.IsUserAssembly) {
 			Log.LogDebugMessage ($"Skipping assembly '{context.Source.ItemSpec}' because it is not a user assembly and we don't need JLOs from non-user assemblies");
@@ -113,11 +108,6 @@ public class FindJavaObjectsStep : BaseStep, IAssemblyModifierPipelineStep
 			DefaultApplicationJavaClass = ApplicationJavaClass,
 			DefaultMonoRuntimeInitialization = "mono.MonoPackageManager.LoadApplication (context);",
 		};
-
-		if (UseMarshalMethods) {
-			var classifier = new MarshalMethodsClassifier (Context, Context.Resolver, Log);
-			reader_options.MethodClassifier = new MarshalMethodsCollection (classifier);
-		}
 
 		foreach (var type in types) {
 			var wrapper = CecilImporter.CreateType (type, Context, reader_options);
