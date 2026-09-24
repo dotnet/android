@@ -64,6 +64,49 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[TestCase (true, false)]
+		[TestCase (true, true)]
+		[TestCase (false, false)]
+		[TestCase (false, true)]
+		public void TypeMapDefaultsToTrimmable (bool isApplication, bool isRelease)
+		{
+			XamarinProject project = isApplication
+				? new XamarinAndroidApplicationProject { IsRelease = isRelease }
+				: new XamarinAndroidLibraryProject { IsRelease = isRelease };
+			project.Imports.Add (new Import ("assert-typemap.targets") {
+				TextContent = () => """
+					<Project>
+					  <Target Name="_AssertTypeMapDefault" DependsOnTargets="_CheckForInvalidConfigurationAndPlatform">
+					    <Error Condition=" '$(AndroidTypeMapImplementation)' != 'trimmable' "
+					        Text="Expected the trimmable type map by default." />
+					  </Target>
+					</Project>
+					""",
+			});
+
+			using var builder = isApplication ? CreateApkBuilder () : CreateDllBuilder ();
+			builder.Target = "_AssertTypeMapDefault";
+			Assert.IsTrue (builder.Build (project), "The default type map should be trimmable for applications and libraries.");
+		}
+
+		[TestCase (true, "llvm-ir", "XA4265")]
+		[TestCase (false, "llvm-ir", "XA4265")]
+		[TestCase (true, "unsupported", "Invalid value for AndroidTypeMapImplementation")]
+		[TestCase (false, "unsupported", "Invalid value for AndroidTypeMapImplementation")]
+		public void UnsupportedTypeMapIsRejected (bool isApplication, string typeMapImplementation, string expectedError)
+		{
+			XamarinProject project = isApplication
+				? new XamarinAndroidApplicationProject ()
+				: new XamarinAndroidLibraryProject ();
+			project.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+
+			using var builder = isApplication ? CreateApkBuilder () : CreateDllBuilder ();
+			builder.Target = "_CheckForInvalidConfigurationAndPlatform";
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (project), "An unsupported type map should fail validation.");
+			StringAssertEx.Contains (expectedError, builder.LastBuildOutput);
+		}
+
 		[Test]
 		[TestCase ("RunAOTCompilation")]
 		[TestCase ("EnableLLVM")]

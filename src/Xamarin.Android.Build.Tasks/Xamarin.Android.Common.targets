@@ -3008,8 +3008,11 @@ because xbuild doesn't support framework reference assemblies.
 
   <Target Name="_ValidateAndroidTypeMapImplementation"
       BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
+    <AndroidError Code="XA4265"
+        ResourceName="XA4265"
+        Condition=" '$(AndroidTypeMapImplementation)' == 'llvm-ir' " />
     <Error Condition=" '$(AndroidTypeMapImplementation)' != '' and '$(AndroidTypeMapImplementation)' != 'llvm-ir' and '$(AndroidTypeMapImplementation)' != 'trimmable' "
-           Text="Invalid value for AndroidTypeMapImplementation: '$(AndroidTypeMapImplementation)'. Valid values are: llvm-ir, trimmable." />
+           Text="Invalid value for AndroidTypeMapImplementation: '$(AndroidTypeMapImplementation)'. The only supported value is: trimmable." />
   </Target>
 
   <Target Name="_LinkAssemblies"
