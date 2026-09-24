@@ -69,8 +69,8 @@ standard `DOTNET_DiagnosticPorts` environment variable.
 
 ## debug.dotnet.timing
 
-Configures fast timing output for CoreCLR and supported NativeAOT/shared
-runtime paths. Supported comma-separated options are:
+Configures fast timing output for CoreCLR. NativeAOT does not support the
+buffered timing and broadcast workflow. Supported comma-separated options are:
 
 * `to-file`
 * `filename=FILE`
@@ -85,8 +85,8 @@ adb shell setprop debug.dotnet.timing to-file,filename=fast-timing.txt
 ```
 
 The private `_AndroidFastTiming` build property adds the
-`mono.android.app.DumpTimingData` receiver. After the application starts,
-request buffered timing output from that receiver:
+`mono.android.app.DumpTimingData` receiver to CoreCLR applications. After the
+application starts, request buffered timing output from that receiver:
 
 ```sh
 adb shell am broadcast -a mono.android.app.DUMP_TIMING_DATA \

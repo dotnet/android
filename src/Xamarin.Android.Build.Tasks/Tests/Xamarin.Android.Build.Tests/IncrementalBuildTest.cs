@@ -810,12 +810,17 @@ namespace Lib2
 		}
 
 		[Test]
-		public void FastTimingManifestIncremental ()
+		public void FastTimingManifestIncremental ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				ManifestMerger = "manifestmerger.jar"
 			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				string manifest = b.Output.GetIntermediaryAsText ("android/AndroidManifest.xml");
@@ -826,8 +831,13 @@ namespace Lib2
 				b.Output.AssertTargetIsNotSkipped ("_ManifestMerger");
 
 				manifest = b.Output.GetIntermediaryAsText ("android/AndroidManifest.xml");
-				StringAssert.Contains ("mono.android.app.DumpTimingData", manifest);
-				StringAssert.Contains ("mono.android.app.DUMP_TIMING_DATA", manifest);
+				if (runtime == AndroidRuntime.CoreCLR) {
+					StringAssert.Contains ("mono.android.app.DumpTimingData", manifest);
+					StringAssert.Contains ("mono.android.app.DUMP_TIMING_DATA", manifest);
+				} else {
+					StringAssert.DoesNotContain ("mono.android.app.DumpTimingData", manifest);
+					StringAssert.DoesNotContain ("mono.android.app.DUMP_TIMING_DATA", manifest);
+				}
 			}
 		}
 

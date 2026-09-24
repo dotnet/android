@@ -46,9 +46,9 @@ Launch the application and inspect the timing category:
 adb logcat -d | grep monodroid-timing
 ```
 
-For buffered timing with lower measurement overhead, build and install with
-`-p:_AndroidFastTiming=True`. This private build property adds the
-`mono.android.app.DumpTimingData` broadcast receiver to the application:
+For buffered CoreCLR timing with lower measurement overhead, build and install
+with `-p:_AndroidFastTiming=True`. This private build property adds the
+`mono.android.app.DumpTimingData` broadcast receiver to a CoreCLR application:
 
 ```sh
 dotnet build -t:Install -p:_AndroidFastTiming=True
@@ -58,6 +58,8 @@ adb shell am broadcast -a mono.android.app.DUMP_TIMING_DATA \
   -n PACKAGE_NAME/mono.android.app.DumpTimingData
 adb logcat -d | grep monodroid-timing
 ```
+
+NativeAOT does not support this buffered timing and broadcast workflow.
 
 The optional `debug.dotnet.timing` property controls fast-timing file output:
 
