@@ -52,7 +52,7 @@ namespace Xamarin.Android.Tasks
 			if (!string.IsNullOrEmpty (AdbTargetArchitecture)) {
 				LogDebugMessage ($"Using $(AdbTargetArchitecture): {AdbTargetArchitecture}");
 				ResultingAbi = AdbTargetArchitecture;
-				RuntimeIdentifier = GetRuntimeIdentifier ();
+				SelectRuntimeIdentifier ();
 				LogOutputs ();
 				return true;
 			}
@@ -90,10 +90,10 @@ namespace Xamarin.Android.Tasks
 			if (File.Exists (DevicePropertyCache)) {
 				LogDebugMessage ($"Using cached properties: {DevicePropertyCache}");
 				doc = XDocument.Load (DevicePropertyCache);
-				if (DeviceCache.TryGet (doc, device.ID, device.LongOutput, out var cachedAbi, out var cachedSdkVersion, Log)) {
+				if (DeviceCache.TryGet (doc, device.ID, device.LongOutput, out var cachedAbi, out var cachedSdkVersion, out var cachedSupportedAbis, Log)) {
 					ResultingAbi = cachedAbi;
 					SdkVersion = cachedSdkVersion;
-					RuntimeIdentifier = GetRuntimeIdentifier ();
+					SelectRuntimeIdentifier (cachedSupportedAbis);
 					LogOutputs ();
 					return;
 				}
@@ -150,11 +150,17 @@ namespace Xamarin.Android.Tasks
 				LogDebugMessage ($"Falling back to pm dump {AndroidPackage}.");
 				ResultingAbi = await GetAbiFromPmDump (device);
 			}
-			RuntimeIdentifier = GetRuntimeIdentifier ();
+			string [] supportedAbis = device.Properties.ProductCpuAbiList;
+			if (supportedAbis.Length == 0) {
+				supportedAbis = new [] { device.Properties.ProductCpuAbi, device.Properties.ProductCpuAbi2 }
+					.Where (abi => !string.IsNullOrEmpty (abi)).ToArray ();
+			}
+			// Cache device capabilities before selecting the ABI for this app.
+			doc = DeviceCache.Update (doc, device.ID, ResultingAbi, sdkver, device.LongOutput, supportedAbis);
+			SelectRuntimeIdentifier (supportedAbis);
 			SdkVersion = sdkver;
 			LogOutputs ();
 
-			doc = DeviceCache.Update (doc, device.ID, ResultingAbi, SdkVersion, device.LongOutput);
 			if (doc.SaveIfChanged (DevicePropertyCache)) {
 				LogDebugMessage ($"Saving: {DevicePropertyCache}");
 			}
@@ -197,19 +203,26 @@ namespace Xamarin.Android.Tasks
 			return abis.Last ().Value;
 		}
 
-		string GetRuntimeIdentifier ()
+		internal void SelectRuntimeIdentifier (params string [] supportedAbis)
 		{
-			if (string.IsNullOrEmpty (ResultingAbi)) {
-				return null;
+			RuntimeIdentifier = null;
+			if (RuntimeIdentifiers == null) {
+				return;
 			}
-			if (RuntimeIdentifiers != null) {
+			foreach (var candidate in new [] { ResultingAbi }.Concat (supportedAbis)) {
+				string abi = candidate?.Trim ();
+				if (string.IsNullOrEmpty (abi)) {
+					continue;
+				}
 				foreach (var rid in RuntimeIdentifiers) {
-					if (AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid) == ResultingAbi) {
-						return rid;
+					if (AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid) == abi) {
+						ResultingAbi = abi;
+						RuntimeIdentifier = rid;
+						return;
 					}
 				}
 			}
-			return null;
+			LogDebugMessage ($"No device ABI matches the requested runtime identifiers: {string.Join (", ", RuntimeIdentifiers)}");
 		}
 	}
 }
