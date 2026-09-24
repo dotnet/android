@@ -27,7 +27,7 @@ public abstract partial class ClassWithoutNamespace : global::Java.Lang.Object, 
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	protected override IntPtr ThresholdClass {
-		get { return _members.JniPeerTypeHandle; }
+		get { return _members.JniPeerType.PeerReference.Handle; }
 	}
 
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]

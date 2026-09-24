@@ -25,7 +25,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		protected override IntPtr ThresholdClass {
-			get { return _members_com_google_android_exoplayer_drm_ExoMediaCrypto.JniPeerTypeHandle; }
+			get { return _members_com_google_android_exoplayer_drm_ExoMediaCrypto.JniPeerType.PeerReference.Handle; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
