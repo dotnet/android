@@ -140,22 +140,6 @@ ABI - is an acronym for Application Binary Interface.
 {0} - the target name the user supplied
     </comment>
   </data>
-  <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
-    <value>Невозможно скопировать инструменты быстрого развертывания в "{0}/{1}" на целевом устройстве.
-Это устройство может быть несовместимо с функцией быстрого развертывания.
-Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.</value>
-    <comment>The following are literal names and should not be translated:
-{0} - A device path
-{1} - A filename</comment>
-  </data>
-  <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
-    <value>Ошибка развертывания "{0}" с использованием "{1} : {2}".
-Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.</value>
-<comment>The following are literal names and should not be translated:
-{0} - A filename
-{1} - The tool that was used to deploy the file.
-{2} - The actual error that occured.</comment>
-  </data>
   <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
     <value>Системное свойство Android "log.redirect-stdio" установлено в значение "true" на целевом устройстве или эмуляторе.
 Чтобы включить совместимость с быстрым развертыванием, установите для свойства значение "false" или перезагрузите устройство или эмулятор, чтобы очистить значение.</value>
@@ -165,10 +149,6 @@ ABI - is an acronym for Application Binary Interface.
 Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.</value>
     <comment>The following are literal names and should not be translated:
 {0} - A filename</comment>
-  </data>
-  <data name="XA0130_FastDevNotSupported" xml:space="preserve">
-    <value>Приносим свои извинения. Быстрое развертывание поддерживается только на устройствах под управлением Android 5.0 (уровень API 21) или выше.
-Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.</value>
   </data>
   <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
     <value>Средство запуска от имени отключено на этом устройстве. Включите его, активировав параметры разработчика на устройстве или установив для ro.boot.disable_runas значение ЛОЖЬ.</value>

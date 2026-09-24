@@ -140,22 +140,6 @@ ABI - is an acronym for Application Binary Interface.
 {0} - the target name the user supplied
     </comment>
   </data>
-  <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
-    <value>No se pueden copiar las herramientas de implementación rápida en "{0}/{1}" en el dispositivo de destino.
-Es posible que este dispositivo no sea compatible con la implementación rápida.
-Establezca la propiedad "EmbedAssembliesIntoApk" de MSBuild en "true" para deshabilitar la implementación rápida en las páginas de propiedades del proyecto de Visual Studio, o bien edite el archivo del proyecto en un editor de texto.</value>
-    <comment>The following are literal names and should not be translated:
-{0} - A device path
-{1} - A filename</comment>
-  </data>
-  <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
-    <value>Error al implementar "{0}" mediante "{1}: {2}".
-Establezca la propiedad "EmbedAssembliesIntoApk" de MSBuild en "true" para deshabilitar la implementación rápida en las páginas de propiedades del proyecto de Visual Studio, o bien edite el archivo del proyecto en un editor de texto.</value>
-<comment>The following are literal names and should not be translated:
-{0} - A filename
-{1} - The tool that was used to deploy the file.
-{2} - The actual error that occured.</comment>
-  </data>
   <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
     <value>La propiedad del sistema Android "log.redirect-stdio" se establece en "true" en el emulador o dispositivo de destino.
 Para habilitar la compatibilidad con la implementación rápida, establezca la propiedad en "false" o reinicie el dispositivo o emulador para borrar el valor.</value>
@@ -165,10 +149,6 @@ Para habilitar la compatibilidad con la implementación rápida, establezca la p
 Establezca la propiedad "EmbedAssembliesIntoApk" de MSBuild en "true" para deshabilitar la implementación rápida en las páginas de propiedades del proyecto de Visual Studio, o bien edite el archivo del proyecto en un editor de texto.</value>
     <comment>The following are literal names and should not be translated:
 {0} - A filename</comment>
-  </data>
-  <data name="XA0130_FastDevNotSupported" xml:space="preserve">
-    <value>Lo siento. La implementación rápida solo se admite en dispositivos que ejecutan Android 5.0 (nivel de API 21) o superior.
-Establezca la propiedad "EmbedAssembliesIntoApk" de MSBuild en "true" para deshabilitar la implementación rápida en las páginas de propiedades del proyecto de Visual Studio, o bien edite el archivo del proyecto en un editor de texto.</value>
   </data>
   <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
     <value>La herramienta “ejecutar como” se ha deshabilitado en este dispositivo. Habilítela activando las opciones de desarrollador en el dispositivo o estableciendo “ro.boot.disable_runas” en “false”.</value>

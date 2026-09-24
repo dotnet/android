@@ -140,22 +140,6 @@ ABI - is an acronym for Application Binary Interface.
 {0} - the target name the user supplied
     </comment>
   </data>
-  <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
-    <value>대상 디바이스의 '{0}/{1}'에 빠른 배포 도구를 복사할 수 없습니다.
-이 디바이스는 빠른 배포와 호환되지 않을 수 있습니다.
-'EmbedAssembliesIntoApk' MSBuild 속성을 'true'로 설정하여 Visual Studio 프로젝트 속성 페이지에서 빠른 배포를 사용하지 않도록 설정하거나 텍스트 편집기에서 프로젝트 파일을 편집하세요.</value>
-    <comment>The following are literal names and should not be translated:
-{0} - A device path
-{1} - A filename</comment>
-  </data>
-  <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
-    <value>‘{1}: {2}’을(를) 사용하여 '{0}'을(를) 배포하는 동안 오류가 발생했습니다.
-'EmbedAssembliesIntoApk' MSBuild 속성을 'true'로 설정하여 Visual Studio 프로젝트 속성 페이지에서 빠른 배포를 사용하지 않도록 설정하거나 텍스트 편집기에서 프로젝트 파일을 편집하세요.</value>
-<comment>The following are literal names and should not be translated:
-{0} - A filename
-{1} - The tool that was used to deploy the file.
-{2} - The actual error that occured.</comment>
-  </data>
   <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
     <value>대상 디바이스 또는 에뮬레이터에서 'log.redirect-stdio' Android 시스템 속성이 'true'로 설정됩니다.
 빠른 배포와의 호환성을 활성화하려면 속성을 'false'로 설정하거나 디바이스 또는 에뮬레이터를 다시 부팅하여 값을 지웁니다.</value>
@@ -165,10 +149,6 @@ ABI - is an acronym for Application Binary Interface.
 'EmbedAssembliesIntoApk' MSBuild 속성을 'true'로 설정하여 Visual Studio 프로젝트 속성 페이지에서 빠른 배포를 사용하지 않도록 설정하거나 텍스트 편집기에서 프로젝트 파일을 편집하세요.</value>
     <comment>The following are literal names and should not be translated:
 {0} - A filename</comment>
-  </data>
-  <data name="XA0130_FastDevNotSupported" xml:space="preserve">
-    <value>죄송합니다. 빠른 배포는 Android 5.0(API 수준 21) 이상을 실행하는 디바이스에서만 지원됩니다.
-'EmbedAssembliesIntoApk' MSBuild 속성을 'true'로 설정하여 Visual Studio 프로젝트 속성 페이지에서 빠른 배포를 사용하지 않도록 설정하거나 텍스트 편집기에서 프로젝트 파일을 편집하세요.</value>
   </data>
   <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
     <value>이 디바이스에서 'run-as' 도구를 사용할 수 없습니다. 디바이스에서 개발자 옵션을 활성화하거나 'ro.boot.disable_runas'를 'false'로 설정하여 사용하도록 설정합니다.</value>

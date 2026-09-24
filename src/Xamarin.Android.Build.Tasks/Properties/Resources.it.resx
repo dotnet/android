@@ -297,10 +297,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>L'uso contestuale di Fast Deployment e di bundle dell'app Android non è attualmente supportato. Usare Fast Deployment per le configurazioni di debug e i bundle dell'app Android per le configurazioni di versione.</value>
     <comment>The following are literal names and should not be translated: Android App Bundles</comment>
   </data>
-  <data name="XA0119_AOT" xml:space="preserve">
-    <value>L'uso contestuale della distribuzione rapida e di AOT è sconsigliato. Usare la distribuzione rapida per le configurazioni di debug e AOT per le configurazioni di versione.</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
-  </data>
   <data name="XA0119_LinkMode" xml:space="preserve">
     <value>L'uso contestuale della distribuzione rapida e del linker è sconsigliato. Usare la distribuzione rapida per le configurazioni di debug e il linker per le configurazioni di versione.</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
@@ -308,10 +304,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
   <data name="XA0119_LinkTool" xml:space="preserve">
     <value>L'uso contestuale della distribuzione rapida e di un code shrinker è sconsigliato. Usare la distribuzione rapida per le configurazioni di debug e un code shrinker per le configurazioni di versione.</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
-  </data>
-  <data name="XA0119_Interpreter" xml:space="preserve">
-    <value>Disabilitazione dell'interprete; l'uso dell'interprete e dell'AOT contemporaneamente non è supportato. Usare l'interprete per il supporto del ricaricamento rapido nelle configurazioni di debug e AOT per le configurazioni di versione.</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
   </data>
   <data name="XA0119_ReadyToRun" xml:space="preserve">
     <value>Non è consigliabile usare contemporaneamente la distribuzione rapida e ReadyToRun. Usa la distribuzione rapida per le configurazioni di debug e ReadyToRun per le configurazioni di versione.</value>
@@ -469,10 +461,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>L'uso del compilatore DX DEX non è supportato. Impostare il compilatore DEX su 'd8' nelle pagine delle proprietà del progetto Visual Studio oppure modificare il file di progetto in un editor di testo e impostare la proprietà MSBuild 'AndroidDexTool' su 'd8'.</value>
     <comment>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</comment>
   </data>
-  <data name="XA1025" xml:space="preserve">
-    <value>Il valore sperimentale 'Hybrid' per la proprietà 'AndroidAotMode' MSBuild non è attualmente compatibile con l'ABI di destinazione armeabi-v7a. Per continuare a usare il valore sperimentale 'Hybrid' per 'AndroidAotMode', deselezionare l'ABI di destinazione armeabi-v7a nelle pagine delle proprietà del progetto Visual Studio o modificare il file di progetto in un editor di testo e rimuovere 'armeabi-v7a' dalla proprietà 'AndroidSupportedAbis' di MSBuild.</value>
-    <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
-  </data>
   <data name="XA1027" xml:space="preserve">
     <value>La proprietà 'EnableProguard' di MSBuild è impostata su 'true' e la proprietà 'AndroidLinkTool' di MSBuild è vuota, di conseguenza per 'AndroidLinkTool' verrà usato il valore predefinito 'proguard'.</value>
     <comment>The following are literal names and should not be translated: 'EnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
@@ -480,14 +468,6 @@ In this message, the term "binding" means a piece of generated code that makes i
   <data name="XA1028" xml:space="preserve">
     <value>La proprietà 'AndroidEnableProguard' di MSBuild è impostata su 'true' e la proprietà 'AndroidLinkTool' di MSBuild è vuota, di conseguenza per 'AndroidLinkTool' verrà usato il valore predefinito 'proguard'.</value>
     <comment>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
-  </data>
-  <data name="XA1029" xml:space="preserve">
-    <value>La proprietà MSBuild 'AotAssemblies' è deprecata. Modificare il file di progetto in un editor di testo per rimuovere questa proprietà e usare invece la proprietà MSBuild 'RunAOTCompilation'.</value>
-    <comment>The following are literal names and should not be translated: 'AotAssemblies', 'RunAOTCompilation'</comment>
-  </data>
-  <data name="XA1030" xml:space="preserve">
-    <value>La proprietà MSBuild 'RunAOTCompilation' è supportata solo quando è abilitato il troncamento. Modifica il file di progetto in un editor di testo per impostare 'PublishTrimmed' su 'true' per questa configurazione di compilazione.</value>
-    <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
   </data>
   <data name="XA1034" xml:space="preserve">
     <value>Il progetto fa riferimento '{0}' che usa l'assembly '_Microsoft.Android.Resource.Designer', ma questa funzionalità non è abilitata. Impostare la proprietà 'AndroidUseDesignerAssembly' di MSBuild su 'true' nel file di progetto.</value>
@@ -562,14 +542,6 @@ Modificare il valore in AndroidManifest.xml in modo che corrisponda al valore $(
   <data name="APT2265" xml:space="preserve">
     <value>Il progetto potrebbe contenere caratteri non ASCII nel nome file o nel percorso. Per informazioni dettagliate, vedere https://learn.microsoft.com/dotnet/android/messages/apt2265.</value>
     <comment>The following are literal names and should not be translated:</comment>
-  </data>
-  <data name="XA3001" xml:space="preserve">
-    <value>Non è stato possibile eseguire la compilazione AOT dell'assembly: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
-  </data>
-  <data name="XA3002" xml:space="preserve">
-    <value>Modalità AOT non valida: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
   <data name="XA3004" xml:space="preserve">
     <value>Android NDK r10d contiene bug e fornisce un file x86_64 libm.so incompatibile. Vedere https://code.google.com/p/android/issues/detail?id=161422.</value>
@@ -1328,10 +1300,6 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 {1} - The timeout in seconds.</comment>
   </data>
   <data name="XA0146" xml:space="preserve">
-    <value>Il tentativo di verificare se '{0}' è un file ELF valido non è riuscito a causa di un'eccezione; il controllo AOT per il file verrà ignorato.</value>
-    <comment>{0} - The file path.</comment>
-  </data>
-  <data name="XA0147" xml:space="preserve">
     <value>Il tentativo di verificare se '{0}' è un file ELF valido non è riuscito a causa di un'eccezione; il controllo AOT per il file verrà ignorato.</value>
     <comment>{0} - The file path.</comment>
   </data>

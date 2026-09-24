@@ -140,22 +140,6 @@ ABI - is an acronym for Application Binary Interface.
 {0} - the target name the user supplied
     </comment>
   </data>
-  <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
-    <value>Die Tools für die Schnelle Bereitstellung können auf dem Zielgerät nicht nach „{0}/{1}“ kopiert werden.
-Dieses Gerät ist möglicherweise nicht mit der Schnellen Bereitstellung kompatibel.
-Legen Sie die MSBuild-Eigenschaft „EmbedAssembliesIntoApk“ auf WAHR fest, um die Schnelle Bereitstellung auf den Visual Studio-Projekteigenschaftenseiten zu deaktivieren, oder bearbeiten Sie die Projektdatei in einem Text-Editor.</value>
-    <comment>The following are literal names and should not be translated:
-{0} - A device path
-{1} - A filename</comment>
-  </data>
-  <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
-    <value>Fehler beim Bereitstellen von „{0}“ mit „{1}: {2}“.
-Legen Sie die MSBuild-Eigenschaft „EmbedAssembliesIntoApk“ auf WAHR fest, um die Schnelle Bereitstellung auf den Visual Studio-Projekteigenschaftenseiten zu deaktivieren, oder bearbeiten Sie die Projektdatei in einem Text-Editor.</value>
-<comment>The following are literal names and should not be translated:
-{0} - A filename
-{1} - The tool that was used to deploy the file.
-{2} - The actual error that occured.</comment>
-  </data>
   <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
     <value>Die Android-Systemeigenschaft „log.redirect-stdio“ ist auf dem Zielgerät oder Emulator auf WAHR festgelegt.
 Um die Kompatibilität mit der Schnellen Bereitstellung zu aktivieren, legen Sie die Eigenschaft auf FALSCH fest, oder starten Sie das Gerät oder den Emulator neu, um den Wert zu löschen.</value>
@@ -165,10 +149,6 @@ Um die Kompatibilität mit der Schnellen Bereitstellung zu aktivieren, legen Sie
 Legen Sie die MSBuild-Eigenschaft „EmbedAssembliesIntoApk“ auf WAHR fest, um die Schnelle Bereitstellung auf den Visual Studio-Projekteigenschaftenseiten zu deaktivieren, oder bearbeiten Sie die Projektdatei in einem Text-Editor.</value>
     <comment>The following are literal names and should not be translated:
 {0} - A filename</comment>
-  </data>
-  <data name="XA0130_FastDevNotSupported" xml:space="preserve">
-    <value>Entschuldigung. Die Schnelle Bereitstellung wird nur auf Geräten mit Android 5.0 (API-Ebene 21) oder höher unterstützt.
-Legen Sie die MSBuild-Eigenschaft „EmbedAssembliesIntoApk“ auf WAHR fest, um die Schnelle Bereitstellung auf den Visual Studio-Projekteigenschaftenseiten zu deaktivieren, oder bearbeiten Sie die Projektdatei in einem Text-Editor.</value>
   </data>
   <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
     <value>Das "run-as"-Tool wurde auf diesem Gerät deaktiviert. Aktivieren Sie die Option, indem Sie die Entwickleroptionen auf dem Gerät aktivieren oder "ro.boot.disable_runas" auf "false" festlegen.</value>

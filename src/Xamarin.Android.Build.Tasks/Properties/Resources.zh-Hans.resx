@@ -297,10 +297,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>当前不支持同时使用快速部署和 Android 应用程序包。请使用快速部署进行调试配置，使用 Android 应用程序包进行发布配置。</value>
     <comment>The following are literal names and should not be translated: Android App Bundles</comment>
   </data>
-  <data name="XA0119_AOT" xml:space="preserve">
-    <value>建议不要同时使用快速部署和 AOT。请对调试配置使用快速部署，对发布配置使用 AOT。</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
-  </data>
   <data name="XA0119_LinkMode" xml:space="preserve">
     <value>建议不要同时使用快速部署和链接器。请对调试配置使用快速部署，对发布配置使用链接器。</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
@@ -308,10 +304,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
   <data name="XA0119_LinkTool" xml:space="preserve">
     <value>建议不要同时使用快速部署和代码 Shrinker。请对调试配置使用快速部署，对发布配置使用代码 Shrinker。</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
-  </data>
-  <data name="XA0119_Interpreter" xml:space="preserve">
-    <value>禁用解释器；不支持同时使用解释器和 AOT。使用解释器在调试配置和 AOT for Release 配置中进行热重载支持。</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
   </data>
   <data name="XA0119_ReadyToRun" xml:space="preserve">
     <value>不建议同时使用快速部署和 ReadyToRun。调试配置请使用快速部署，发布配置请使用 ReadyToRun。</value>
@@ -469,10 +461,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>已不支持 DX DEX 编译器。请在 Visual Studio 项目属性页中将 DEX 编译器设置为 "d8"，或者在文本编辑器中编辑项目文件，并将 "AndroidDexTool" MSBuild 属性设置为 "d8"。</value>
     <comment>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</comment>
   </data>
-  <data name="XA1025" xml:space="preserve">
-    <value>"AndroidAotMode" MSBuild 属性的实验性“混合”值当前与 armeabi-v7a 目标 ABI 不兼容。若要继续使用 "AndroidAotMode" 的实验性“混合”值，请在 Visual Studio 项目属性页中取消选择 armeabi-v7a 目标 ABI，或在文本编辑器中编辑项目文件，并从 "AndroidSupportedAbis' MSBuild" 属性中删除 "armeabi-v7a"。</value>
-    <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
-  </data>
   <data name="XA1027" xml:space="preserve">
     <value>"EnableProguard" MSBuild 属性设置为 "true"，并且 "AndroidLinkTool" MSBuild 属性为空，因此 "AndroidLinkTool" 将默认为 "proguard"。</value>
     <comment>The following are literal names and should not be translated: 'EnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
@@ -480,14 +468,6 @@ In this message, the term "binding" means a piece of generated code that makes i
   <data name="XA1028" xml:space="preserve">
     <value>"AndroidEnableProguard" MSBuild 属性设置为 "true"，并且 "AndroidLinkTool" MSBuild 属性为空，因此 "AndroidLinkTool" 将默认为 "proguard"。</value>
     <comment>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
-  </data>
-  <data name="XA1029" xml:space="preserve">
-    <value>"AotAssemblies" MSBuild 属性已弃用。在文本编辑器中编辑项目文件以删除此属性，并改用 "RunAOTCompilation" MSBuild 属性。</value>
-    <comment>The following are literal names and should not be translated: 'AotAssemblies', 'RunAOTCompilation'</comment>
-  </data>
-  <data name="XA1030" xml:space="preserve">
-    <value>仅当启用剪裁时，才支持 “RunAOTCompilation” MSBuild 属性。在文本编辑器中编辑项目文件，以将此生成配置的 “PublishTrimmed” 设置为 “true”。</value>
-    <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
   </data>
   <data name="XA1034" xml:space="preserve">
     <value>你的项目引用了 "{0}"，它使用 `_Microsoft.Android.Resource.Designer` 程序集，但未启用此功能。请在项目文件中将 `AndroidUseDesignerAssembly` MSBuild 属性设置为 "true"。</value>
@@ -562,14 +542,6 @@ In this message, the term "binding" means a piece of generated code that makes i
   <data name="APT2265" xml:space="preserve">
     <value>这可能是由于项目的文件名或路径中包含非 ASCII 字符。有关详细信息，请参阅 https://learn.microsoft.com/dotnet/android/messages/apt2265。</value>
     <comment>The following are literal names and should not be translated:</comment>
-  </data>
-  <data name="XA3001" xml:space="preserve">
-    <value>无法 AOT 程序集: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
-  </data>
-  <data name="XA3002" xml:space="preserve">
-    <value>AOT 模式无效: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
   <data name="XA3004" xml:space="preserve">
     <value>Android NDK r10d 有 bug，且提供了不兼容的 x86_64 libm.so。请参阅 https://code.google.com/p/android/issues/detail?id=161422。</value>
@@ -1329,10 +1301,6 @@ In this message, the term "handheld app" means "app for handheld devices."
   </data>
   <data name="XA0146" xml:space="preserve">
     <value>尝试检查“{0}”是否为正确对齐的 ELF 文件时失败并出现异常，忽略此文件的对齐检查。</value>
-    <comment>{0} - The file path.</comment>
-  </data>
-  <data name="XA0147" xml:space="preserve">
-    <value>尝试检查“{0}”是否为有效 ELF 文件时失败并出现异常，忽略此文件的 AOT 检查。</value>
     <comment>{0} - The file path.</comment>
   </data>
   <data name="XA0148" xml:space="preserve">
