@@ -1,4 +1,6 @@
 parameters:
+  guestReadiness: false
+  guestReadinessAttempt: '1'
   buildResultArtifactName: Build Results - Linux
   checkoutCommit: ''
   checkoutPath: 's/android'
@@ -54,6 +56,12 @@ stages:
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
     # Always checkout a second resource to ensure we are using multi-repo checkout behavior
+    - ${{ if eq(parameters.guestReadiness, true) }}:
+      - template: guest-readiness-build.yaml
+        parameters:
+          phase: Validate
+          attempt: ${{ parameters.guestReadinessAttempt }}
+          xaSourcePath: ${{ parameters.xaSourcePath }}
     #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
     - checkout: maui
 
@@ -82,13 +90,24 @@ stages:
       inputs:
         forceReinstallCredentialProvider: true
 
-    - script: make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
-      workingDirectory: ${{ parameters.xaSourcePath }}
-      displayName: make jenkins
-
-    - script: make create-nupkgs CONFIGURATION=$(XA.Build.Configuration)
-      workingDirectory: ${{ parameters.xaSourcePath }}
-      displayName: make create-nupkgs
+    - ${{ if eq(parameters.guestReadiness, true) }}:
+      - template: guest-readiness-build.yaml
+        parameters:
+          phase: Build
+          attempt: ${{ parameters.guestReadinessAttempt }}
+          xaSourcePath: ${{ parameters.xaSourcePath }}
+      - template: guest-readiness-build.yaml
+        parameters:
+          phase: Pack
+          attempt: ${{ parameters.guestReadinessAttempt }}
+          xaSourcePath: ${{ parameters.xaSourcePath }}
+    - ${{ else }}:
+      - script: make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
+        workingDirectory: ${{ parameters.xaSourcePath }}
+        displayName: make jenkins
+      - script: make create-nupkgs CONFIGURATION=$(XA.Build.Configuration)
+        workingDirectory: ${{ parameters.xaSourcePath }}
+        displayName: make create-nupkgs
 
     - task: CopyFiles@2
       inputs:

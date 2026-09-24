@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <!-- Configure-input tests never invoke the repository's external native-command task. -->
+    <BootstrapTasksAssembly>$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll</BootstrapTasksAssembly>
+    <CMakeRuntimeFlavor>MonoVM</CMakeRuntimeFlavor>
+    <FlavorIntermediateOutputPath>$(TestOutputPath)\</FlavorIntermediateOutputPath>
+  </PropertyGroup>
+  <Import Project="..\..\src\native\native.targets" />
+  <Target Name="Observe" DependsOnTargets="_ConfigureRuntimesInputs">
+    <WriteLinesToFile File="$(TestOutputPath)\argument.txt" Lines="$(_StartupDiagnosticsCmakeArg)" Overwrite="true" />
+    <WriteLinesToFile File="$(TestOutputPath)\inputs.txt" Lines="@(_ConfigureRuntimesInputs)" Overwrite="true" />
+  </Target>
+</Project>

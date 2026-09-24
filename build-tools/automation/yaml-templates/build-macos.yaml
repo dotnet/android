@@ -1,4 +1,6 @@
 parameters:
+  guestReadiness: false
+  guestReadinessAttempt: '1'
   buildResultArtifactName: Build Results - macOS
   checkoutCommit: ''
   checkoutPath: 's/android'
@@ -83,6 +85,8 @@ stages:
         testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
         windowsToolchainPdbArtifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
+        guestReadiness: ${{ parameters.guestReadiness }}
+        guestReadinessAttempt: ${{ parameters.guestReadinessAttempt }}
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:

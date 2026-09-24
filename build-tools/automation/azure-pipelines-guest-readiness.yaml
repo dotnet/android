@@ -1,0 +1,45 @@
+# Separate unsigned artifact producer. No existing release/signing graph is imported.
+trigger: none
+pr: none
+
+parameters:
+- name: enable
+  type: boolean
+  default: false
+- name: sourceCommit
+  type: string
+  default: ''
+- name: patchSha256
+  type: string
+  default: ''
+
+jobs:
+- job: guest_runtime_packs
+  condition: and(succeeded(), eq('${{ parameters.enable }}', 'true'))
+  pool:
+    vmImage: windows-2025
+  timeoutInMinutes: 240
+  steps:
+  - checkout: self
+    fetchDepth: 0
+    submodules: recursive
+    persistCredentials: false
+  - task: UseDotNet@2
+    inputs:
+      packageType: sdk
+      version: 9.0.x
+  - task: NuGetAuthenticate@1
+  - pwsh: |
+      & .\build-tools\scripts\guest-readiness-runtime-pack.ps1 `
+        -Execute -BuildNumber $env:BUILD_BUILDID -Attempt $env:SYSTEM_JOBATTEMPT `
+        -ExpectedSourceCommit $env:GUEST_SOURCE_COMMIT -ExpectedPatchSha256 $env:GUEST_PATCH_SHA256
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    displayName: Build normal Mono runtime packs and retain unsigned receipts
+    env:
+      GUEST_SOURCE_COMMIT: ${{ parameters.sourceCommit }}
+      GUEST_PATCH_SHA256: ${{ parameters.patchSha256 }}
+  - task: PublishPipelineArtifact@1
+    condition: always()
+    inputs:
+      targetPath: $(Build.SourcesDirectory)\bin\guest-readiness-producer
+      artifactName: android-guest-runtime-packs-unqualified

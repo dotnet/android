@@ -1,0 +1,105 @@
+"""Source-owned conditional expansion, not an Azure/1ES service preview."""
+import copy
+import json
+from pathlib import Path
+import subprocess
+import xml.etree.ElementTree as ET
+
+import yaml
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def expand(node, enabled):
+    """Evaluate only our mode conditions, preserving unrelated Azure expressions."""
+    if isinstance(node, list):
+        result = []
+        previous = None
+        for item in node:
+            if isinstance(item, dict) and len(item) == 1:
+                key = next(iter(item))
+                if key.startswith("${{ if eq(parameters.guestReadiness, "):
+                    previous = enabled == ("true" in key)
+                    if previous:
+                        result.extend(expand(item[key], enabled))
+                    continue
+                if key == "${{ else }}" and previous is not None:
+                    if not previous:
+                        result.extend(expand(item[key], enabled))
+                    previous = None
+                    continue
+            previous = None
+            result.append(expand(item, enabled))
+        return result
+    if isinstance(node, dict):
+        result = {}
+        for key, value in node.items():
+            if key.startswith("${{ if eq(parameters.guestReadiness, "):
+                if enabled == ("true" in key):
+                    result.update(expand(value, enabled))
+            else:
+                result[key] = expand(value, enabled)
+        return result
+    return node
+
+
+def remove_mode_parameters(node):
+    if isinstance(node, list):
+        return [remove_mode_parameters(x) for x in node
+                if not isinstance(x, dict) or x.get("name") not in ("guestReadiness", "guestReadinessAttempt")]
+    if isinstance(node, dict):
+        return {k: remove_mode_parameters(v) for k, v in node.items()
+                if k not in ("guestReadiness", "guestReadinessAttempt") and
+                not (k == "parameters" and isinstance(v, dict) and
+                     set(v) == {"guestReadiness", "guestReadinessAttempt"})}
+    return node
+
+
+paths = ["build-tools/automation/azure-pipelines.yaml"] + [
+    f"build-tools/automation/yaml-templates/{name}.yaml"
+    for name in ("build-macos", "commercial-build", "build-linux")]
+for path in paths:
+    old = yaml.safe_load(subprocess.check_output(
+        ["git", "show", f"a98605cfb228ee44dd63a4cd222b3609fbae38b6:{path}"], cwd=ROOT))
+    new = yaml.safe_load((ROOT / path).read_text())
+    assert remove_mode_parameters(expand(new, False)) == old, f"Default graph changed: {path}"
+
+root = yaml.safe_load((ROOT / paths[0]).read_text())
+parameters = {x["name"]: x for x in root["parameters"]}
+assert parameters["guestReadiness"]["default"] is False
+diagnostic = expand(root, True)
+text = json.dumps(diagnostic)
+for forbidden in ("nuget-msi-convert", "push_signed_nugets", "PushToMaestro", "darc", "SymbolUploader"):
+    assert forbidden not in text, forbidden
+stages = diagnostic["extends"]["parameters"]["stages"]
+prepare = next(x for x in stages if x.get("stage") == "dotnet_prepare_release")
+jobs = prepare["jobs"]
+signers = [x for x in jobs if x.get("template") == "sign-artifacts/jobs/v4.yml@yaml-templates"]
+assert len(signers) == 2
+assert prepare["dependsOn"] == ["mac_build", "linux_build"]
+oldroot = yaml.safe_load(subprocess.check_output(["git", "show", f"a98605cf:{paths[0]}"], cwd=ROOT))
+oldprepare = next(x for x in oldroot["extends"]["parameters"]["stages"] if x.get("stage") == "dotnet_prepare_release")
+assert prepare["condition"] == oldprepare["condition"]
+for before, after in zip([x for x in oldprepare["jobs"] if x.get("template") == "sign-artifacts/jobs/v4.yml@yaml-templates"], signers):
+    oldparams, newparams = before["parameters"], copy.deepcopy(after["parameters"])
+    for added in ("checkoutType", "checkoutPath", "preSignSteps", "postSignSteps"):
+        newparams.pop(added, None)
+    assert oldparams == newparams, "Existing signing policy changed"
+assert "security" in text.lower()
+for path in paths[2:]:
+    expanded = json.dumps(expand(yaml.safe_load((ROOT / path).read_text()), True))
+    assert all(f'"phase": "{p}"' in expanded for p in ("Validate", "Build", "Pack"))
+
+targets = ET.parse(ROOT / "build-tools/create-packs/Directory.Build.targets").getroot()
+assert any(x.attrib["Project"].endswith("GuestReadinessPackProperties.targets") for x in targets.findall("Import"))
+for target in ("CreateAllPacks", "_CreatePreviewPacks", "_CreateDefaultRefPack"):
+    for command in targets.findall(f"./Target[@Name='{target}']/Exec"):
+        assert "@(_GlobalProperties, ' ')" in command.attrib["Command"]
+sdk = ET.parse(ROOT / "build-tools/create-packs/Microsoft.Android.Sdk.proj").getroot()
+assert any("SignList.xml" in x.attrib.get("Include", "") for x in sdk.iter())
+sign = yaml.safe_load((ROOT / "build-tools/automation/yaml-templates/guest-readiness-sign.yaml").read_text())
+assert any(x.get("condition") == "always()" for x in sign["steps"])
+out = ROOT / "bin/guest-readiness-official-tests"
+out.mkdir(parents=True, exist_ok=True)
+(out / "diagnostic-source-graph.json").write_text(json.dumps(diagnostic, indent=2) + "\n")
+print("PASS: default graph equality in four templates; diagnostic promotion omission, preserved sign/security/full-pack graph.")

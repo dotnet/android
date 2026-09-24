@@ -1,4 +1,6 @@
 parameters:
+  guestReadiness: false
+  guestReadinessAttempt: '1'
   installerArtifactName: $(InstallerArtifactName)
   xaSourcePath: $(System.DefaultWorkingDirectory)/android
   makeMSBuildArgs: ''
@@ -8,6 +10,12 @@ parameters:
   use1ESTemplate: true
 
 steps:
+- ${{ if eq(parameters.guestReadiness, true) }}:
+  - template: guest-readiness-build.yaml
+    parameters:
+      phase: Validate
+      attempt: ${{ parameters.guestReadinessAttempt }}
+      xaSourcePath: ${{ parameters.xaSourcePath }}
 - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
   parameters:
     useAgentJdkPath: false
@@ -41,9 +49,16 @@ steps:
   condition: and(succeeded(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
 # Prepare and Build everything
-- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: make jenkins
+- ${{ if eq(parameters.guestReadiness, true) }}:
+  - template: guest-readiness-build.yaml
+    parameters:
+      phase: Build
+      attempt: ${{ parameters.guestReadinessAttempt }}
+      xaSourcePath: ${{ parameters.xaSourcePath }}
+- ${{ else }}:
+  - script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+    workingDirectory: ${{ parameters.xaSourcePath }}
+    displayName: make jenkins
 
 - task: CodeQL3000Finalize@0
   displayName: CodeQL 3000 Finalize
@@ -58,9 +73,16 @@ steps:
       /t:AddMachOEntitlements /p:Configuration=$(XA.Build.Configuration)
       /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
 
-- script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: make create-installers
+- ${{ if eq(parameters.guestReadiness, true) }}:
+  - template: guest-readiness-build.yaml
+    parameters:
+      phase: Pack
+      attempt: ${{ parameters.guestReadinessAttempt }}
+      xaSourcePath: ${{ parameters.xaSourcePath }}
+- ${{ else }}:
+  - script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+    workingDirectory: ${{ parameters.xaSourcePath }}
+    displayName: make create-installers
 
 - script: >
     mkdir -p ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&

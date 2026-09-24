@@ -29,6 +29,12 @@ resources:
     endpoint: xamarin
 
 parameters:
+- name: guestReadiness
+  type: boolean
+  default: false
+- name: guestReadinessAttempt
+  type: string
+  default: '1'
 - name: pushXAPackagesToMaestro
   default: true
 - name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
@@ -38,6 +44,13 @@ parameters:
 
 # Global variables
 variables:
+- ${{ if eq(parameters.guestReadiness, true) }}:
+  - name: GuestReadinessYamlVersion
+    value: $[ resources.repositories['yaml-templates'].version ]
+  - name: GuestReadiness1ESVersion
+    value: $[ resources.repositories['1esPipelines'].version ]
+  - name: GuestReadinessSkipCompliance
+    value: ${{ parameters.Skip1ESComplianceTasks }}
 - template: /build-tools/automation/yaml-templates/variables.yaml@self
 - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private') }}:
   - group: AzureDevOps-Artifact-Feeds-Pats
@@ -86,10 +99,16 @@ extends:
       skipBuildTagsForGitHubPullRequests: true
     stages:
     - template: /build-tools/automation/yaml-templates/build-macos.yaml@self
+      parameters:
+        guestReadiness: ${{ parameters.guestReadiness }}
+        guestReadinessAttempt: ${{ parameters.guestReadinessAttempt }}
 
     - template: /build-tools/automation/yaml-templates/build-windows.yaml@self
 
     - template: /build-tools/automation/yaml-templates/build-linux.yaml@self
+      parameters:
+        guestReadiness: ${{ parameters.guestReadiness }}
+        guestReadinessAttempt: ${{ parameters.guestReadinessAttempt }}
 
     - template: /build-tools/automation/yaml-templates/stage-package-tests.yaml@self
       parameters:
@@ -263,6 +282,19 @@ extends:
           uploadPrefix: sign-mac-win
           handleUnmappedFiles: fail
           timeoutInMinutes: 240
+          ${{ if eq(parameters.guestReadiness, true) }}:
+            checkoutType: self
+            checkoutPath: s/android
+            preSignSteps:
+            - template: /build-tools/automation/yaml-templates/guest-readiness-sign.yaml@self
+              parameters:
+                phase: Input
+                attempt: ${{ parameters.guestReadinessAttempt }}
+            postSignSteps:
+            - template: /build-tools/automation/yaml-templates/guest-readiness-sign.yaml@self
+              parameters:
+                phase: Output
+                attempt: ${{ parameters.guestReadinessAttempt }}
 
       # Check - "Xamarin.Android (Prepare .NET Release Sign Linux Archive)"
       - template: sign-artifacts/jobs/v4.yml@yaml-templates
@@ -281,156 +313,157 @@ extends:
           handleUnmappedFiles: fail
           timeoutInMinutes: 120
 
-      # Check - "Xamarin.Android (Prepare .NET Release Convert NuGet to MSI)"
-      - template: nuget-msi-convert/job/v4.yml@yaml-templates
-        parameters:
-          yamlResourceName: yaml-templates
-          dependsOn: sign_net_mac_win
-          artifactName: nuget-signed
-          artifactPatterns: |
-            !*Darwin*
-          propsArtifactName: $(NuGetArtifactName)
-          ${{ if and(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android')) }}:
-            signType: Real
-          ${{ else }}:
-            signType: Test
-          preConvertSteps:
-          - task: DownloadPipelineArtifact@2
-            inputs:
-              artifactName: nuget-signed
-              artifactPatterns: |
-                *Darwin*
-              downloadPath: $(Build.StagingDirectory)\drop\nugets
-          - task: DownloadPipelineArtifact@2
-            inputs:
-              artifactName: nuget-linux-signed
-              downloadPath: $(Build.StagingDirectory)\drop\nugets
-          postConvertSteps:
-          - task: DownloadPipelineArtifact@2
-            inputs:
-              artifactName: $(NuGetArtifactName)
-              downloadPath: $(Build.StagingDirectory)\sign-verify
-              patterns: |
-                **/SignVerifyIgnore.txt
-          - task: MicroBuildCodesignVerify@3
-            displayName: verify signed msi content
-            inputs:
-              TargetFolders: |
-                $(Build.ArtifactStagingDirectory)\bin\manifests
-                $(Build.ArtifactStagingDirectory)\bin\manifests-packs
-                $(Build.ArtifactStagingDirectory)\bin\msi-nupkgs
-              ExcludeSNVerify: true
-              ApprovalListPathForCerts: $(Build.StagingDirectory)\sign-verify\SignVerifyIgnore.txt
-
-      # Check - "Xamarin.Android (Prepare .NET Release Publish symbols and Push to Maestro)"
-      - job: push_signed_nugets
-        displayName: Publish symbols and Push to Maestro
-        dependsOn:
-        - nuget_convert
-        - sign_net_linux
-        condition: and(or(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(dependencies.nuget_convert.result, 'SucceededWithIssues')), or(eq(dependencies.sign_net_linux.result, 'Succeeded'), eq(dependencies.sign_net_linux.result, 'SucceededWithIssues')))
-        timeoutInMinutes: 90
-        pool:
-          name: AzurePipelines-EO
-          image: $(WindowsPoolImage1ESPT)
-          os: windows
-        workspace:
-          clean: all
-        templateContext:
-          outputs:
-          - output: artifactsDrop
-            dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection
-            buildNumber: $(ReleaseDropPrefix)/symbols
-            dropMetadataContainerName: DropMetadata-shipping-symbols
-            sourcePath: $(Build.StagingDirectory)\symbols
-            retentionDays: 120
-            toLowerCase: false
-        steps:
-        - checkout: self
-          clean: true
-          submodules: recursive
-
-        - template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
+      - ${{ if eq(parameters.guestReadiness, false) }}:
+        # Check - "Xamarin.Android (Prepare .NET Release Convert NuGet to MSI)"
+        - template: nuget-msi-convert/job/v4.yml@yaml-templates
           parameters:
-            version: $(DotNetPreviewSdkVersion)
-            quality: $(DotNetPreviewSdkQuality)
+            yamlResourceName: yaml-templates
+            dependsOn: sign_net_mac_win
+            artifactName: nuget-signed
+            artifactPatterns: |
+              !*Darwin*
+            propsArtifactName: $(NuGetArtifactName)
+            ${{ if and(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android')) }}:
+              signType: Real
+            ${{ else }}:
+              signType: Test
+            preConvertSteps:
+            - task: DownloadPipelineArtifact@2
+              inputs:
+                artifactName: nuget-signed
+                artifactPatterns: |
+                  *Darwin*
+                downloadPath: $(Build.StagingDirectory)\drop\nugets
+            - task: DownloadPipelineArtifact@2
+              inputs:
+                artifactName: nuget-linux-signed
+                downloadPath: $(Build.StagingDirectory)\drop\nugets
+            postConvertSteps:
+            - task: DownloadPipelineArtifact@2
+              inputs:
+                artifactName: $(NuGetArtifactName)
+                downloadPath: $(Build.StagingDirectory)\sign-verify
+                patterns: |
+                  **/SignVerifyIgnore.txt
+            - task: MicroBuildCodesignVerify@3
+              displayName: verify signed msi content
+              inputs:
+                TargetFolders: |
+                  $(Build.ArtifactStagingDirectory)\bin\manifests
+                  $(Build.ArtifactStagingDirectory)\bin\manifests-packs
+                  $(Build.ArtifactStagingDirectory)\bin\msi-nupkgs
+                ExcludeSNVerify: true
+                ApprovalListPathForCerts: $(Build.StagingDirectory)\sign-verify\SignVerifyIgnore.txt
 
-        # Download symbols to be published to the symbols artifact drop declared above
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            artifactName: $(WindowsToolchainPdbArtifactName)
-            downloadPath: $(Build.StagingDirectory)\symbols
+        # Check - "Xamarin.Android (Prepare .NET Release Publish symbols and Push to Maestro)"
+        - job: push_signed_nugets
+          displayName: Publish symbols and Push to Maestro
+          dependsOn:
+          - nuget_convert
+          - sign_net_linux
+          condition: and(or(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(dependencies.nuget_convert.result, 'SucceededWithIssues')), or(eq(dependencies.sign_net_linux.result, 'Succeeded'), eq(dependencies.sign_net_linux.result, 'SucceededWithIssues')))
+          timeoutInMinutes: 90
+          pool:
+            name: AzurePipelines-EO
+            image: $(WindowsPoolImage1ESPT)
+            os: windows
+          workspace:
+            clean: all
+          templateContext:
+            outputs:
+            - output: artifactsDrop
+              dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection
+              buildNumber: $(ReleaseDropPrefix)/symbols
+              dropMetadataContainerName: DropMetadata-shipping-symbols
+              sourcePath: $(Build.StagingDirectory)\symbols
+              retentionDays: 120
+              toLowerCase: false
+          steps:
+          - checkout: self
+            clean: true
+            submodules: recursive
 
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            artifactName: nuget-unsigned-symbols
-            downloadPath: $(Build.StagingDirectory)\symbols
+          - template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
+            parameters:
+              version: $(DotNetPreviewSdkVersion)
+              quality: $(DotNetPreviewSdkQuality)
 
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            artifactName: nuget-linux-unsigned-symbols
-            downloadPath: $(Build.StagingDirectory)\symbols
-
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            artifactName: DropMetadata-shipping-nugets
-            downloadPath: $(Build.StagingDirectory)\metadata
-          displayName: Download nugets drop metadata
-
-        - powershell: |
-            $jsonContent = Get-Content -Path "$(Build.StagingDirectory)\metadata\VSTSDrop.json" -Raw | ConvertFrom-Json
-            $dropPrefix = $jsonContent.VstsDropBuildArtifact.VstsDropUrl -replace 'https://devdiv.artifacts.visualstudio.com/DefaultCollection/_apis/drop/drops/' -replace '/nugets'
-            Write-Host "##vso[task.setvariable variable=ReleaseDropPrefix]$dropPrefix"
-          displayName: Set variable ReleaseDropPrefix
-
-        # Download nugets drop created by nuget-msi-convert/job/v4.yml and publish to maestro
-        - task: ms-vscs-artifact.build-tasks.artifactDropDownloadTask-1.artifactDropDownloadTask@1
-          displayName: Download $(ReleaseDropPrefix)/nugets
-          inputs:
-            dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection
-            buildNumber: $(ReleaseDropPrefix)/nugets
-            destinationPath: $(Build.StagingDirectory)\nuget-signed
-
-        - task: DotNetCoreCLI@2
-          displayName: build Xamarin.Android.Tools.BootstrapTasks.sln
-          inputs:
-            projects: $(System.DefaultWorkingDirectory)\Xamarin.Android.BootstrapTasks.sln
-            arguments: -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\bootstrap.binlog
-          condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
-
-        - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android') }}:
-          - task: AzureCLI@2
-            displayName: generate and publish BAR manifest
+          # Download symbols to be published to the symbols artifact drop declared above
+          - task: DownloadPipelineArtifact@2
             inputs:
-              azureSubscription: "Darc: Maestro Production"
-              scriptType: ps
-              scriptLocation: inlineScript
-              inlineScript: >-
-                dotnet build $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
-                -t:PushManifestToBuildAssetRegistry
-                -p:OutputPath=$(Build.StagingDirectory)\nuget-signed\
-                -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
+              artifactName: $(WindowsToolchainPdbArtifactName)
+              downloadPath: $(Build.StagingDirectory)\symbols
+
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              artifactName: nuget-unsigned-symbols
+              downloadPath: $(Build.StagingDirectory)\symbols
+
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              artifactName: nuget-linux-unsigned-symbols
+              downloadPath: $(Build.StagingDirectory)\symbols
+
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              artifactName: DropMetadata-shipping-nugets
+              downloadPath: $(Build.StagingDirectory)\metadata
+            displayName: Download nugets drop metadata
+
+          - powershell: |
+              $jsonContent = Get-Content -Path "$(Build.StagingDirectory)\metadata\VSTSDrop.json" -Raw | ConvertFrom-Json
+              $dropPrefix = $jsonContent.VstsDropBuildArtifact.VstsDropUrl -replace 'https://devdiv.artifacts.visualstudio.com/DefaultCollection/_apis/drop/drops/' -replace '/nugets'
+              Write-Host "##vso[task.setvariable variable=ReleaseDropPrefix]$dropPrefix"
+            displayName: Set variable ReleaseDropPrefix
+
+          # Download nugets drop created by nuget-msi-convert/job/v4.yml and publish to maestro
+          - task: ms-vscs-artifact.build-tasks.artifactDropDownloadTask-1.artifactDropDownloadTask@1
+            displayName: Download $(ReleaseDropPrefix)/nugets
+            inputs:
+              dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection
+              buildNumber: $(ReleaseDropPrefix)/nugets
+              destinationPath: $(Build.StagingDirectory)\nuget-signed
+
+          - task: DotNetCoreCLI@2
+            displayName: build Xamarin.Android.Tools.BootstrapTasks.sln
+            inputs:
+              projects: $(System.DefaultWorkingDirectory)\Xamarin.Android.BootstrapTasks.sln
+              arguments: -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\bootstrap.binlog
             condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
-          - task: AzureCLI@2
-            inputs:
-              azureSubscription: "Darc: Maestro Production"
-              scriptType: ps
-              scriptLocation: inlineScript
-              inlineScript: |
-                $versionEndpoint = 'https://maestro.dot.net/api/assets/darc-version?api-version=2019-01-16'
-                $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
-                $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
-                & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
-                & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --ci --publishing-infra-version 3 --azdev-pat $(System.AccessToken)
-            displayName: add build to default darc channel
-            condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
+          - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android') }}:
+            - task: AzureCLI@2
+              displayName: generate and publish BAR manifest
+              inputs:
+                azureSubscription: "Darc: Maestro Production"
+                scriptType: ps
+                scriptLocation: inlineScript
+                inlineScript: >-
+                  dotnet build $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
+                  -t:PushManifestToBuildAssetRegistry
+                  -p:OutputPath=$(Build.StagingDirectory)\nuget-signed\
+                  -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
+              condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
-        - template: build-tools\automation\yaml-templates\upload-results.yaml@self
-          parameters:
-            xaSourcePath: $(System.DefaultWorkingDirectory)
-            artifactName: Prepare Release - Push Internal
-            includeBuildResults: true
+            - task: AzureCLI@2
+              inputs:
+                azureSubscription: "Darc: Maestro Production"
+                scriptType: ps
+                scriptLocation: inlineScript
+                inlineScript: |
+                  $versionEndpoint = 'https://maestro.dot.net/api/assets/darc-version?api-version=2019-01-16'
+                  $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
+                  $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
+                  & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
+                  & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --ci --publishing-infra-version 3 --azdev-pat $(System.AccessToken)
+              displayName: add build to default darc channel
+              condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
+
+          - template: build-tools\automation\yaml-templates\upload-results.yaml@self
+            parameters:
+              xaSourcePath: $(System.DefaultWorkingDirectory)
+              artifactName: Prepare Release - Push Internal
+              includeBuildResults: true
 
     # Check - "Xamarin.Android (PoliCheck PoliCheck $(Language))"
     - template: security/policheck/v3.yml@yaml-templates

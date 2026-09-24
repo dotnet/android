@@ -1,0 +1,26 @@
+parameters:
+  phase: Validate
+  attempt: '1'
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
+
+steps:
+- task: PowerShell@2
+  displayName: Guest readiness ${{ parameters.phase }} (normal build route)
+  inputs:
+    pwsh: true
+    targetType: filePath
+    filePath: ${{ parameters.xaSourcePath }}/build-tools/scripts/guest-readiness-official.ps1
+    arguments: -Phase ${{ parameters.phase }}
+    workingDirectory: ${{ parameters.xaSourcePath }}
+  env:
+    GUEST_ATTEMPT: ${{ parameters.attempt }}
+    GUEST_CONFIGURATION: $(XA.Build.Configuration)
+    GUEST_SKIP_COMPLIANCE: $(GuestReadinessSkipCompliance)
+    GUEST_YAML_VERSION: $(GuestReadinessYamlVersion)
+    GUEST_1ES_VERSION: $(GuestReadiness1ESVersion)
+- ${{ if ne(parameters.phase, 'Validate') }}:
+  - task: PublishPipelineArtifact@1
+    condition: always()
+    inputs:
+      targetPath: ${{ parameters.xaSourcePath }}/bin/guest-readiness-official
+      artifactName: guest-readiness-$(Agent.OS)-${{ parameters.phase }}

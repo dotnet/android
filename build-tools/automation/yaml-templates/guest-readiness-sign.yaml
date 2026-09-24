@@ -1,0 +1,47 @@
+parameters:
+  phase: Input
+  attempt: '1'
+
+steps:
+- ${{ if eq(parameters.phase, 'Output') }}:
+  - checkout: 1esPipelines
+    path: s/guest-readiness-1es
+    persistCredentials: false
+- ${{ if eq(parameters.phase, 'Input') }}:
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      artifactName: guest-readiness-Darwin-Pack
+      downloadPath: $(Agent.TempDirectory)/guest-readiness-build
+- task: PowerShell@2
+  displayName: Guest readiness signing ${{ parameters.phase }} evidence
+  inputs:
+    pwsh: true
+    targetType: filePath
+    filePath: $(Pipeline.Workspace)/s/android/build-tools/scripts/guest-readiness-official.ps1
+    arguments: -Phase ${{ parameters.phase }}
+    workingDirectory: $(Pipeline.Workspace)/s/android
+  env:
+    GUEST_ATTEMPT: ${{ parameters.attempt }}
+    GUEST_CONFIGURATION: $(XA.Build.Configuration)
+    GUEST_SKIP_COMPLIANCE: $(GuestReadinessSkipCompliance)
+    GUEST_YAML_VERSION: $(GuestReadinessYamlVersion)
+    GUEST_1ES_VERSION: $(GuestReadiness1ESVersion)
+    GUEST_UNSIGNED_DIRECTORY: $(Agent.TempDirectory)/artifact-signing/unsigned/$(NuGetArtifactName)
+    GUEST_SIGNED_DIRECTORY: $(Build.ArtifactStagingDirectory)/signed
+    GUEST_BUILD_RECEIPT_DIRECTORY: $(Agent.TempDirectory)/guest-readiness-build
+    GUEST_SIGN_RECEIPT_DIRECTORY: $(Build.ArtifactStagingDirectory)/guest-readiness-sign
+    GUEST_TEMPLATE_CHECKOUT: $(Pipeline.Workspace)/s/yaml-templates
+    GUEST_1ES_CHECKOUT: $(Pipeline.Workspace)/s/guest-readiness-1es
+    GUEST_SIGN_BINLOG_DIRECTORY: $(Build.ArtifactStagingDirectory)/signing-binlogs
+- task: 1ES.PublishPipelineArtifact@1
+  condition: always()
+  inputs:
+    targetPath: $(Build.ArtifactStagingDirectory)/guest-readiness-sign
+    artifactName: guest-readiness-sign-${{ parameters.phase }}
+- ${{ if eq(parameters.phase, 'Output') }}:
+  - task: 1ES.PublishPipelineArtifact@1
+    displayName: Retain normal signed output including verification failures
+    condition: always()
+    inputs:
+      targetPath: $(Build.ArtifactStagingDirectory)/signed
+      artifactName: guest-readiness-signed-output

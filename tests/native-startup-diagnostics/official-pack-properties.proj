@@ -1,0 +1,15 @@
+<Project DefaultTargets="Parent">
+  <Import Project="..\..\build-tools\scripts\GuestReadinessPackProperties.targets" />
+  <Target Name="_SetGlobalProperties">
+    <ItemGroup>
+      <_GlobalProperties Include="-p:Configuration=$(Configuration)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="Parent" DependsOnTargets="_SetGlobalProperties">
+    <Exec Command="&quot;$(MSBuildBinPath)\MSBuild.exe&quot; &quot;$(MSBuildProjectFullPath)&quot; /nologo /v:q /t:Child @(_GlobalProperties, ' ') &quot;/p:ResultPath=$(ResultPath)&quot;" />
+  </Target>
+  <Target Name="Child">
+    <WriteLinesToFile File="$(ResultPath)" Overwrite="true"
+        Lines="$(AndroidGuestReadinessBuild)|$(AndroidPackVersionLong)|$(PackageVersion)|$(AndroidStartupDiagnosticsBuildId)|$(RunningOnCI)|$(Configuration)" />
+  </Target>
+</Project>

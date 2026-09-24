@@ -1,4 +1,5 @@
 option(ENABLE_TIMING "Build with timing support" OFF)
+include("${CMAKE_SOURCE_DIR}/cmake/StartupDiagnostics.cmake")
 
 # First generate some code
 
@@ -109,6 +110,10 @@ set(XAMARIN_MONODROID_SOURCES
   xamarin_getifaddrs.cc
 )
 
+if(NOT XA_STARTUP_DIAGNOSTICS_BUILD_ID STREQUAL "")
+  list(APPEND XAMARIN_MONODROID_SOURCES startup-diagnostics.cc startup-diagnostics-platform.cc)
+endif()
+
 list(APPEND LOCAL_CLANG_CHECK_SOURCES
   ${XAMARIN_MONODROID_SOURCES}
 )
@@ -149,6 +154,9 @@ if(BUILD_STATIC_LIBRARY)
 endif()
 
 macro(lib_target_options TARGET_NAME)
+  if(NOT XA_STARTUP_DIAGNOSTICS_BUILD_ID STREQUAL "")
+    target_compile_definitions(${TARGET_NAME} PRIVATE XA_STARTUP_DIAGNOSTICS_BUILD_ID="${XA_STARTUP_DIAGNOSTICS_BUILD_ID}")
+  endif()
   target_compile_definitions(
     ${TARGET_NAME}
     PRIVATE

@@ -9,7 +9,7 @@
   </Target>
 
   <Target Name="_BuildRuntimes" BeforeTargets="Build"
-          DependsOnTargets="_PrepareCommonProperties;_ConfigureAndBuildArchiveDSOStub;_ConfigureAndBuildTestJniLibrary;_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildAndroidAnalyzerRuntimes;_CopyToPackDirs">
+          DependsOnTargets="_PrepareCommonProperties;_PrepareStartupDiagnosticsBuildId;_ConfigureAndBuildArchiveDSOStub;_ConfigureAndBuildTestJniLibrary;_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildAndroidAnalyzerRuntimes;_CopyToPackDirs">
   </Target>
 
   <!-- The runtime check makes the target run only once, when building the CoreCLR runtime. Otherwise, when building in parallel, we will get
@@ -30,7 +30,22 @@
         WorkingDirectory="$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Release" />
   </Target>
 
-  <Target Name="_ConfigureRuntimesInputs">
+  <Target Name="_PrepareStartupDiagnosticsBuildId" Condition=" '$(CMakeRuntimeFlavor)' == 'MonoVM' ">
+    <Error
+        Condition=" '$(AndroidStartupDiagnosticsBuildId)' != '' And !$([System.Text.RegularExpressions.Regex]::IsMatch('$(AndroidStartupDiagnosticsBuildId)', '\A[a-z0-9][a-z0-9._-]{0,63}\z')) "
+        Text="AndroidStartupDiagnosticsBuildId must match [a-z0-9][a-z0-9._-]{0,63}." />
+    <PropertyGroup>
+      <_StartupDiagnosticsBuildIdInput>$(FlavorIntermediateOutputPath)startup-diagnostics-build-id.txt</_StartupDiagnosticsBuildIdInput>
+      <!-- Always pass the empty value too: omitting it would retain an enabled CMake cache entry. -->
+      <_StartupDiagnosticsCmakeArg>-DXA_STARTUP_DIAGNOSTICS_BUILD_ID="$(AndroidStartupDiagnosticsBuildId)"</_StartupDiagnosticsCmakeArg>
+    </PropertyGroup>
+    <MakeDir Directories="$(FlavorIntermediateOutputPath)" />
+    <WriteLinesToFile File="$(_StartupDiagnosticsBuildIdInput)"
+                      Lines="marker=$(AndroidStartupDiagnosticsBuildId)"
+                      Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+
+  <Target Name="_ConfigureRuntimesInputs" DependsOnTargets="_PrepareStartupDiagnosticsBuildId">
     <ItemGroup>
       <_ConfigureRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
       <_ConfigureRuntimesInputs  Include="CMakeLists.txt" />
@@ -48,6 +63,8 @@
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'MonoVM' ">
+      <_ConfigureRuntimesInputs  Include="$(_StartupDiagnosticsBuildIdInput)" />
+      <_ConfigureRuntimesInputs  Include="cmake\StartupDiagnostics.cmake" />
       <_ConfigureRuntimesInputs  Include="mono\monodroid\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="mono\runtime-base\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="mono\shared\CMakeLists.txt" />
@@ -161,7 +178,7 @@
       <_NoStrip Condition=" '$(DoNotStripMonodroid)' == 'true' ">-DSTRIP_DEBUG=OFF</_NoStrip>
       <_LocalDotNetRuntimePath Condition=" '$(CLRLocalRuntimePath)' != '' And '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">-DLOCAL_CORECLR_PATH="$(CLRLocalRuntimePath)"</_LocalDotNetRuntimePath>
       <_LocalDotNetRuntimeConfig Condition=" '$(CLRLocalRuntimeConfig)' != '' And '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">-DLOCAL_CORECLR_CONFIG="$(CLRLocalRuntimeConfig)"</_LocalDotNetRuntimeConfig>
-      <_CmakeAndroidFlags>-DOUTPUT_PATH="$(OutputPath.TrimEnd('\'))" -DRUNTIME_FLAVOR="$(CMakeRuntimeFlavor)" $(_NoInline) $(_NoStrip) $(_LocalDotNetRuntimePath) $(_LocaLDotNetRuntimeConfig) "$(MSBuildThisFileDirectory)"</_CmakeAndroidFlags>
+      <_CmakeAndroidFlags>-DOUTPUT_PATH="$(OutputPath.TrimEnd('\'))" -DRUNTIME_FLAVOR="$(CMakeRuntimeFlavor)" $(_NoInline) $(_NoStrip) $(_LocalDotNetRuntimePath) $(_LocaLDotNetRuntimeConfig) $(_StartupDiagnosticsCmakeArg) "$(MSBuildThisFileDirectory)"</_CmakeAndroidFlags>
     </PropertyGroup>
 
     <ItemGroup>

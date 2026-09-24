@@ -60,6 +60,7 @@
 #include <runtime-base/timing-internal.hh>
 #include "runtime-util.hh"
 #include "monodroid-state.hh"
+#include "startup-diagnostics.hh"
 #include "pinvoke-override-api.hh"
 #include <shared/cpp-util.hh>
 #include <runtime-base/dso-loader.hh>
@@ -68,6 +69,7 @@
 using namespace microsoft::java_interop;
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
+using namespace xamarin::android::startup;
 
 MonoCoreRuntimeProperties MonodroidRuntime::monovm_core_properties = {
 	.trusted_platform_assemblies = nullptr,
@@ -520,11 +522,15 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 
 	cur_time = time (nullptr);
 
-	if (!parse_runtime_args (runtime_args, &options)) {
+	bool parsed = parse_runtime_args (runtime_args, &options);
+	Diagnostics::config (!parsed ? ConfigResult::Invalid : runtime_args.length () == 0 ? ConfigResult::Absent : ConfigResult::Parsed);
+	if (!parsed) {
 		log_error (LOG_DEFAULT, "Failed to parse runtime args: '{}'", optional_string (runtime_args.get ()));
 	} else if (options.debug && cur_time > options.timeout_time) {
+		Diagnostics::expiry (cur_time, options.timeout_time, ExpiryDecision::Expired);
 		log_warn (LOG_DEBUGGER, "Not starting the debugger as the timeout value has been reached; current-time: {}; timeout: {}", cur_time, options.timeout_time);
 	} else if (options.debug && cur_time <= options.timeout_time) {
+		Diagnostics::expiry (cur_time, options.timeout_time, ExpiryDecision::Enabled);
 		EmbeddedAssemblies::set_register_debug_symbols (true);
 
 		int loglevel;
@@ -624,6 +630,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 
 		mono_debug_init (MONO_DEBUG_FORMAT_MONO);
 	} else {
+		Diagnostics::expiry (cur_time, options.timeout_time, ExpiryDecision::Disabled);
 		set_debug_options ();
 	}
 
@@ -736,11 +743,15 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 
 		runtime_config_args.kind = 1;
 		EmbeddedAssemblies::get_runtime_config_blob (runtime_config_args.runtimeconfig.data.data, runtime_config_args.runtimeconfig.data.data_len);
+		Diagnostics::runtime_config (true, Phase::Begin);
 		monovm_runtimeconfig_initialize (&runtime_config_args, cleanup_runtime_config, nullptr);
+		Diagnostics::runtime_config (true, Phase::End);
 
 		if (FastTiming::enabled ()) [[unlikely]] {
 			internal_timing.end_event ();
 		}
+	} else {
+		Diagnostics::runtime_config (false, Phase::Instant);
 	}
 
 	if (user_assemblies_count == 0 && AndroidSystem::count_override_assemblies () == 0) {
@@ -762,7 +773,9 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 		);
 	}
 
+	Diagnostics::boundary (Event::VmInit, Phase::Begin);
 	MonoDomain *domain = mono_jit_init_version (const_cast<char*> ("RootDomain"), const_cast<char*> ("mobile"));
+	Diagnostics::boundary (Event::VmInit, Phase::End, domain == nullptr ? Outcome::Null : Outcome::Returned);
 	return domain;
 }
 
@@ -1406,6 +1419,8 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
                                                           jobject loader, jobjectArray assembliesJava, jboolean isEmulator,
                                                           jboolean haveSplitApks) noexcept
 {
+	Diagnostics::initialize (app_environment_variables, application_config.environment_variable_count);
+	Diagnostics::boundary (Event::JniInit, Phase::Begin);
 	char *mono_log_mask_raw = nullptr;
 	char *mono_log_level_raw = nullptr;
 
@@ -1538,7 +1553,9 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		internal_timing.start_event (TimingEventKind::ManagedRuntimeInit);
 	}
 
+	Diagnostics::boundary (Event::RuntimeOptions, Phase::Begin);
 	mono_runtime_init (env, runtime_args);
+	Diagnostics::boundary (Event::RuntimeOptions, Phase::End);
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event ();
@@ -1547,7 +1564,9 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	jstring_array_wrapper assemblies (env, assembliesJava);
 	jstring_array_wrapper assembliesPaths (env);
 	/* the first assembly is used to initialize the AppDomain name */
-	create_and_initialize_domain (env, klass, runtimeApks, assemblies, nullptr, assembliesPaths, loader, /*is_root_domain:*/ true, /*force_preload_assemblies:*/ false, haveSplitApks);
+	Diagnostics::boundary (Event::DomainInit, Phase::Begin);
+	MonoDomain* initialized_domain = create_and_initialize_domain (env, klass, runtimeApks, assemblies, nullptr, assembliesPaths, loader, /*is_root_domain:*/ true, /*force_preload_assemblies:*/ false, haveSplitApks);
+	Diagnostics::boundary (Event::DomainInit, Phase::End, initialized_domain == nullptr ? Outcome::Null : Outcome::Returned);
 
 	if (Util::should_log (LOG_DEFAULT)) [[unlikely]] {
 		log_info_nocheck_fmt (
@@ -1574,6 +1593,8 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	}
 #endif // def RELEASE && def ANDROID && def NET
 	MonodroidState::mark_startup_done ();
+	Diagnostics::boundary (Event::JniInit, Phase::End);
+	Diagnostics::health ();
 }
 
 JNIEXPORT jint JNICALL

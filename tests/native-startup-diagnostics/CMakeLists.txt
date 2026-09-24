@@ -1,0 +1,28 @@
+cmake_minimum_required(VERSION 3.21)
+project(android-startup-diagnostics-tests LANGUAGES CXX)
+
+enable_testing()
+add_executable(startup-diagnostics-tests startup-diagnostics-tests.cc ../../src/native/mono/monodroid/startup-diagnostics.cc)
+target_compile_features(startup-diagnostics-tests PRIVATE cxx_std_17)
+target_include_directories(startup-diagnostics-tests PRIVATE ../../src/native/mono/monodroid)
+if(MSVC)
+  target_compile_options(startup-diagnostics-tests PRIVATE /W4 /WX)
+else()
+  target_compile_options(startup-diagnostics-tests PRIVATE -Wall -Wextra -Werror)
+endif()
+add_test(NAME startup-diagnostics COMMAND startup-diagnostics-tests)
+
+# No recorder or platform object is linked: an ordinary build cannot acquire a diagnostic sink.
+add_executable(startup-diagnostics-disabled-tests startup-diagnostics-disabled-tests.cc)
+target_compile_features(startup-diagnostics-disabled-tests PRIVATE cxx_std_17)
+target_include_directories(startup-diagnostics-disabled-tests PRIVATE ../../src/native/mono/monodroid)
+add_test(NAME startup-diagnostics-disabled COMMAND startup-diagnostics-disabled-tests)
+
+set(BUILD_ID_VALIDATION "${CMAKE_CURRENT_SOURCE_DIR}/../../src/native/cmake/StartupDiagnostics.cmake")
+add_test(NAME startup-build-id-empty COMMAND "${CMAKE_COMMAND}" -DXA_STARTUP_DIAGNOSTICS_BUILD_ID= -P "${BUILD_ID_VALIDATION}")
+add_test(NAME startup-build-id-valid COMMAND "${CMAKE_COMMAND}" -DXA_STARTUP_DIAGNOSTICS_BUILD_ID=android-d549-diag1 -P "${BUILD_ID_VALIDATION}")
+add_test(NAME startup-build-id-invalid COMMAND "${CMAKE_COMMAND}" -DXA_STARTUP_DIAGNOSTICS_BUILD_ID=invalid/marker -P "${BUILD_ID_VALIDATION}")
+set_tests_properties(startup-build-id-invalid PROPERTIES WILL_FAIL TRUE)
+add_test(NAME startup-build-id-lf COMMAND "${CMAKE_COMMAND}" -DCONTROL_BYTE=10 -P "${CMAKE_CURRENT_SOURCE_DIR}/build-id-control-test.cmake")
+add_test(NAME startup-build-id-cr COMMAND "${CMAKE_COMMAND}" -DCONTROL_BYTE=13 -P "${CMAKE_CURRENT_SOURCE_DIR}/build-id-control-test.cmake")
+set_tests_properties(startup-build-id-lf startup-build-id-cr PROPERTIES WILL_FAIL TRUE)
