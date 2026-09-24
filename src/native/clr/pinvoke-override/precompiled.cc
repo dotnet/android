@@ -58,10 +58,6 @@ namespace {
 		if (entrypoint_name == "clr_initialize_gc_bridge"sv) {
 			return reinterpret_cast<void*> (&clr_initialize_gc_bridge);
 		}
-		if (entrypoint_name == "xamarin_app_init"sv) {
-			return reinterpret_cast<void*> (&xamarin_app_init);
-		}
-
 		abort_missing_internal_symbol ("xa-internal-api"sv, entrypoint_name);
 	}
 
