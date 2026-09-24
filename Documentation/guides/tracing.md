@@ -186,6 +186,9 @@ and `$(DiagnosticListenMode)` MSBuild properties configure the
 `DOTNET_DiagnosticPorts` environment variable packaged in the application.
 `$(DiagnosticConfiguration)` can be used to provide the complete value.
 Nonempty `Diagnostic*` settings implicitly enable Android diagnostics.
+`$(AndroidEnableProfiler)` remains supported as a legacy synonym for
+`$(EnableDiagnostics)`. Setting it explicitly to `false` disables implicit
+diagnostics enablement.
 
 For CoreCLR, these MSBuild properties are the primary diagnostic-port
 configuration. `debug.dotnet.profile` is not a diagnostic-port setting; its
@@ -253,7 +256,8 @@ Unix by opening them with [https://speedscope.app/][speedscope].
 For CoreCLR applications, set the Android SDK/MSBuild
 `$(EnableDiagnostics)` property to `true`, or set one of the
 `Diagnostic*` properties. These settings configure the CoreCLR diagnostic
-server and `DOTNET_DiagnosticPorts`.
+server and `DOTNET_DiagnosticPorts`. `$(AndroidEnableProfiler)` remains
+supported as a legacy synonym for `$(EnableDiagnostics)`.
 
 ```sh
 $ dotnet build -f net11.0-android -t:Run -c Release -p:EnableDiagnostics=true

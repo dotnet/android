@@ -810,6 +810,28 @@ namespace Lib2
 		}
 
 		[Test]
+		public void FastTimingManifestIncremental ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				ManifestMerger = "manifestmerger.jar"
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should succeed");
+				string manifest = b.Output.GetIntermediaryAsText ("android/AndroidManifest.xml");
+				StringAssert.DoesNotContain ("mono.android.app.DumpTimingData", manifest);
+
+				proj.SetProperty ("_AndroidFastTiming", "True");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should succeed");
+				b.Output.AssertTargetIsNotSkipped ("_ManifestMerger");
+
+				manifest = b.Output.GetIntermediaryAsText ("android/AndroidManifest.xml");
+				StringAssert.Contains ("mono.android.app.DumpTimingData", manifest);
+				StringAssert.Contains ("mono.android.app.DUMP_TIMING_DATA", manifest);
+			}
+		}
+
+		[Test]
 		public void AndroidDefineConstantsAreOrderIndependent ()
 		{
 			var path = Path.Combine ("temp", TestName);

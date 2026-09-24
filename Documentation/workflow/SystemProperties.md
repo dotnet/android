@@ -79,12 +79,16 @@ runtime paths. Supported comma-separated options are:
 Example:
 
 ```sh
+dotnet build -t:Install -p:_AndroidFastTiming=True
 adb shell setprop debug.dotnet.log timing=fast-bare
 adb shell setprop debug.dotnet.timing to-file,filename=fast-timing.txt
 ```
 
-After the application starts, request buffered timing output:
+The private `_AndroidFastTiming` build property adds the
+`mono.android.app.DumpTimingData` receiver. After the application starts,
+request buffered timing output from that receiver:
 
 ```sh
-adb shell am broadcast -a mono.android.app.DUMP_TIMING_DATA PACKAGE_NAME
+adb shell am broadcast -a mono.android.app.DUMP_TIMING_DATA \
+  -n PACKAGE_NAME/mono.android.app.DumpTimingData
 ```

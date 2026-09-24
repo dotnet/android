@@ -46,13 +46,16 @@ Launch the application and inspect the timing category:
 adb logcat -d | grep monodroid-timing
 ```
 
-For buffered timing with lower measurement overhead, use `timing=fast-bare`
-and request the results after startup:
+For buffered timing with lower measurement overhead, build and install with
+`-p:_AndroidFastTiming=True`. This private build property adds the
+`mono.android.app.DumpTimingData` broadcast receiver to the application:
 
 ```sh
+dotnet build -t:Install -p:_AndroidFastTiming=True
 adb shell setprop debug.dotnet.log timing=fast-bare
 adb shell am start -S -W PACKAGE_NAME/ACTIVITY_NAME
-adb shell am broadcast -a mono.android.app.DUMP_TIMING_DATA PACKAGE_NAME
+adb shell am broadcast -a mono.android.app.DUMP_TIMING_DATA \
+  -n PACKAGE_NAME/mono.android.app.DumpTimingData
 adb logcat -d | grep monodroid-timing
 ```
 
