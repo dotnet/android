@@ -15,9 +15,12 @@ static class NativeAotObjectIntegrationTools
 	public static string LlvmObjDumpPath => Path.Combine (Path.GetDirectoryName (LlvmReadObjPath) ?? "",
 		OperatingSystem.IsWindows () ? "llvm-objdump.exe" : "llvm-objdump");
 
-	public static string? SkipReason => File.Exists (LlvmReadObjPath) && File.Exists (LlvmObjDumpPath)
+	public static string ClangPath => Path.Combine (Path.GetDirectoryName (LlvmReadObjPath) ?? "",
+		OperatingSystem.IsWindows () ? "clang.exe" : "clang");
+
+	public static string? SkipReason => File.Exists (LlvmReadObjPath) && File.Exists (LlvmObjDumpPath) && File.Exists (ClangPath)
 		? null
-		: "Set _NativeAotLlvmReadObjPath to the NDK llvm-readobj executable with adjacent llvm-objdump to run native-object integration tests.";
+		: "Set _NativeAotLlvmReadObjPath to the NDK llvm-readobj executable with adjacent llvm-objdump and clang to run native-object integration tests.";
 }
 
 sealed class NativeAotObjectFactAttribute : FactAttribute

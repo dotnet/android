@@ -687,6 +687,23 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		AssertFailure (task, engine, directory);
 	}
 
+	[Fact]
+	public void OutputWriteFailurePreservesExistingOutputAndRemovesTemporaryFile ()
+	{
+		var (task, engine) = CreateTask (WriteObject ("map", NativeAotObjectTestFixture.CreateBlob ("test/Live")));
+		Directory.CreateDirectory (Path.GetDirectoryName (task.OutputFile) ?? throw new InvalidOperationException ());
+		File.WriteAllText (task.OutputFile, "stale/sentinel\n");
+		task.OutputWriter = (outputFile, _) => {
+			File.WriteAllText (outputFile, "partial");
+			throw new IOException ("Could not finish writing output.");
+		};
+
+		Assert.False (task.Execute ());
+		Assert.Contains (engine.Errors, error => error.Code == "XA4327");
+		Assert.Equal ("stale/sentinel\n", File.ReadAllText (task.OutputFile));
+		Assert.Empty (Directory.GetFiles (Path.GetDirectoryName (task.OutputFile) ?? throw new InvalidOperationException (), "*.tmp"));
+	}
+
 	static void AssertFailure (ExtractTypeMapKeysFromNativeAotObject task, TypeMapTaskBuildEngine engine, string? file = null)
 	{
 		file ??= task.NativeObjectFiles.Length == 0 ? nameof (task.NativeObjectFiles) : task.NativeObjectFiles [0].ItemSpec;
@@ -775,6 +792,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 	sealed class MetadataTask (Func<string, string> reader) : ExtractTypeMapKeysFromNativeAotObject
 	{
 		public Func<string, string> MetadataReader { get; set; } = reader;
+		public Action<string, IReadOnlyCollection<string>>? OutputWriter { get; set; }
 		public bool UseGroupMetadata { get; set; }
 		public string RelocationOutput { get; set; } = "";
 		public string? RelocationSection { get; private set; }
@@ -782,6 +800,15 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		public long RelocationEnd { get; private set; }
 
 		protected override Task<string> ReadObjectMetadataAsync (string objectFile) => Task.FromResult (MetadataReader (objectFile));
+
+		protected override void WriteOutputFile (string outputFile, IReadOnlyCollection<string> keys)
+		{
+			if (OutputWriter is Action<string, IReadOnlyCollection<string>> outputWriter) {
+				outputWriter (outputFile, keys);
+				return;
+			}
+			base.WriteOutputFile (outputFile, keys);
+		}
 
 		// Parser fixtures model Java groups; separate relocation tests exercise group selection.
 		protected override Task<HashSet<uint>> GetJavaTypeMapGroupsAsync (
