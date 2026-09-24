@@ -18,7 +18,7 @@ namespace Test.ME {
 	// Metadata.xml XPath class reference: path="/api/package[@name='test.me']/class[@name='GenericStringPropertyImplementation']"
 	[global::Android.Runtime.Register ("test/me/GenericStringPropertyImplementation", DoNotGenerateAcw=true)]
 	public partial class GenericStringPropertyImplementation : global::Java.Lang.Object, global::Test.ME.IGenericPropertyInterface {
-		private static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/GenericStringPropertyImplementation", typeof (GenericStringPropertyImplementation));
+		static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/GenericStringPropertyImplementation", typeof (GenericStringPropertyImplementation));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

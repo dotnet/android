@@ -18,7 +18,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 	// Metadata.xml XPath class reference: path="/api/package[@name='com.google.android.exoplayer.drm']/class[@name='FrameworkMediaCrypto']"
 	[global::Android.Runtime.Register ("com/google/android/exoplayer/drm/FrameworkMediaCrypto", DoNotGenerateAcw=true)]
 	public sealed partial class FrameworkMediaCrypto : global::Java.Lang.Object, global::Com.Google.Android.Exoplayer.Drm.IExoMediaCrypto {
-		private static readonly JniPeerMembers _members = new XAPeerMembers ("com/google/android/exoplayer/drm/FrameworkMediaCrypto", typeof (FrameworkMediaCrypto));
+		static readonly JniPeerMembers _members = new XAPeerMembers ("com/google/android/exoplayer/drm/FrameworkMediaCrypto", typeof (FrameworkMediaCrypto));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

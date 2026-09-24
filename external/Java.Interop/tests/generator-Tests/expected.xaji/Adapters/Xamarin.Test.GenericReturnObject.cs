@@ -18,7 +18,7 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='GenericReturnObject']"
 	[global::Android.Runtime.Register ("xamarin/test/GenericReturnObject", DoNotGenerateAcw=true)]
 	public partial class GenericReturnObject : global::Java.Lang.Object {
-		private static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/GenericReturnObject", typeof (GenericReturnObject));
+		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/GenericReturnObject", typeof (GenericReturnObject));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

@@ -35,9 +35,9 @@ namespace Java.Util {
 			get { return _members_java_util_Queue.ManagedPeerType; }
 		}
 
-		private static readonly JniPeerMembers _members_java_util_Collection = new XAPeerMembers ("java/util/Collection", typeof (IQueueInvoker));
+		static readonly JniPeerMembers _members_java_util_Collection = new XAPeerMembers ("java/util/Collection", typeof (IQueueInvoker));
 
-		private static readonly JniPeerMembers _members_java_util_Queue = new XAPeerMembers ("java/util/Queue", typeof (IQueueInvoker));
+		static readonly JniPeerMembers _members_java_util_Queue = new XAPeerMembers ("java/util/Queue", typeof (IQueueInvoker));
 
 		public IQueueInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

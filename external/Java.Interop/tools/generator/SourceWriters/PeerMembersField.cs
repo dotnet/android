@@ -16,7 +16,7 @@ namespace generator.SourceWriters
 			Name = name;
 			Type = new TypeReferenceWriter ("JniPeerMembers");
 
-			IsPrivate = isInterface || opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1;
+			IsPrivate = isInterface;
 			IsStatic = true;
 			IsReadonly = true;
 

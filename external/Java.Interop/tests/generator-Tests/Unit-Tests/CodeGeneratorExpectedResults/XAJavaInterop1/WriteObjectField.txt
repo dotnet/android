@@ -23,7 +23,7 @@ public partial class MyClass {
 		}
 	}
 
-	private static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/MyClass", typeof (MyClass));
+	static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/MyClass", typeof (MyClass));
 
 	protected MyClass (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 	{

@@ -19,7 +19,7 @@ namespace Java.Lang {
 	[global::Android.Runtime.Register ("java/lang/Enum", DoNotGenerateAcw=true)]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"E extends java.lang.Enum<E>"})]
 	public abstract partial class Enum : global::Java.Lang.Object, global::Java.Lang.IComparable {
-		private static readonly JniPeerMembers _members = new XAPeerMembers ("java/lang/Enum", typeof (Enum));
+		static readonly JniPeerMembers _members = new XAPeerMembers ("java/lang/Enum", typeof (Enum));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -68,7 +68,7 @@ namespace Java.Lang {
 		{
 		}
 
-		private static readonly JniPeerMembers _members = new XAPeerMembers ("java/lang/Enum", typeof (EnumInvoker));
+		static readonly JniPeerMembers _members = new XAPeerMembers ("java/lang/Enum", typeof (EnumInvoker));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

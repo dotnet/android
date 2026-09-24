@@ -18,7 +18,7 @@ namespace Java.Lang {
 	// Metadata.xml XPath class reference: path="/api/package[@name='java.lang']/class[@name='Integer']"
 	[global::Android.Runtime.Register ("java/lang/Integer", DoNotGenerateAcw=true)]
 	public partial class Integer : global::Java.Lang.Object {
-		private static readonly JniPeerMembers _members = new XAPeerMembers ("java/lang/Integer", typeof (Integer));
+		static readonly JniPeerMembers _members = new XAPeerMembers ("java/lang/Integer", typeof (Integer));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

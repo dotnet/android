@@ -90,7 +90,7 @@ namespace Java.Lang {
 			}
 		}
 
-		private static readonly JniPeerMembers _members = new XAPeerMembers ("java/lang/State", typeof (State));
+		static readonly JniPeerMembers _members = new XAPeerMembers ("java/lang/State", typeof (State));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

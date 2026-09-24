@@ -35,7 +35,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 			get { return _members_com_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener.ManagedPeerType; }
 		}
 
-		private static readonly JniPeerMembers _members_com_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener = new XAPeerMembers ("com/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener", typeof (IExoMediaDrmOnEventListenerInvoker));
+		static readonly JniPeerMembers _members_com_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener = new XAPeerMembers ("com/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener", typeof (IExoMediaDrmOnEventListenerInvoker));
 
 		public IExoMediaDrmOnEventListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
@@ -205,7 +205,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 			get { return _members_com_google_android_exoplayer_drm_ExoMediaDrm.ManagedPeerType; }
 		}
 
-		private static readonly JniPeerMembers _members_com_google_android_exoplayer_drm_ExoMediaDrm = new XAPeerMembers ("com/google/android/exoplayer/drm/ExoMediaDrm", typeof (IExoMediaDrmInvoker));
+		static readonly JniPeerMembers _members_com_google_android_exoplayer_drm_ExoMediaDrm = new XAPeerMembers ("com/google/android/exoplayer/drm/ExoMediaDrm", typeof (IExoMediaDrmInvoker));
 
 		public IExoMediaDrmInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

@@ -34,7 +34,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 			get { return _members_com_google_android_exoplayer_drm_ExoMediaCrypto.ManagedPeerType; }
 		}
 
-		private static readonly JniPeerMembers _members_com_google_android_exoplayer_drm_ExoMediaCrypto = new XAPeerMembers ("com/google/android/exoplayer/drm/ExoMediaCrypto", typeof (IExoMediaCryptoInvoker));
+		static readonly JniPeerMembers _members_com_google_android_exoplayer_drm_ExoMediaCrypto = new XAPeerMembers ("com/google/android/exoplayer/drm/ExoMediaCrypto", typeof (IExoMediaCryptoInvoker));
 
 		public IExoMediaCryptoInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

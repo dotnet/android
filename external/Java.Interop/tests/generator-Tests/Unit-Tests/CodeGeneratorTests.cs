@@ -1417,7 +1417,7 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			var result = writer.ToString ().NormalizeLineEndings ();
-			Assert.True (result.Contains ("private static readonly JniPeerMembers _members".NormalizeLineEndings ()));
+			Assert.True (result.Contains ("static readonly JniPeerMembers _members".NormalizeLineEndings ()));
 			Assert.False (result.Contains ("class_ref".NormalizeLineEndings ()));
 		}
 
@@ -1435,7 +1435,7 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			var result = writer.ToString ().NormalizeLineEndings ();
-			Assert.True (result.Contains ("private static readonly JniPeerMembers _members".NormalizeLineEndings ()));
+			Assert.True (result.Contains ("static readonly JniPeerMembers _members".NormalizeLineEndings ()));
 			Assert.False (result.Contains ("class_ref".NormalizeLineEndings ()));
 		}
 

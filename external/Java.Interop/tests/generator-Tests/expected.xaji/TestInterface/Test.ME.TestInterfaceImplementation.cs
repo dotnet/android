@@ -39,7 +39,7 @@ namespace Test.ME {
 
 		}
 
-		private static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementation));
+		static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementation));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -178,7 +178,7 @@ namespace Test.ME {
 		{
 		}
 
-		private static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementationInvoker));
+		static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementationInvoker));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

@@ -18,7 +18,7 @@ namespace Xamarin.Test.Invalidnames {
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test.invalidnames']/class[@name='in']"
 	[global::Android.Runtime.Register ("xamarin/test/invalidnames/in", DoNotGenerateAcw=true)]
 	public partial class In : global::Java.Lang.Object {
-		private static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/invalidnames/in", typeof (In));
+		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/invalidnames/in", typeof (In));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

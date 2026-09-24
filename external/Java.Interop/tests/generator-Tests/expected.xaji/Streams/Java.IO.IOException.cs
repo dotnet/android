@@ -18,7 +18,7 @@ namespace Java.IO {
 	// Metadata.xml XPath class reference: path="/api/package[@name='java.io']/class[@name='IOException']"
 	[global::Android.Runtime.Register ("java/io/IOException", DoNotGenerateAcw=true)]
 	public abstract partial class IOException : global::Java.Lang.Throwable {
-		private static readonly JniPeerMembers _members = new XAPeerMembers ("java/io/IOException", typeof (IOException));
+		static readonly JniPeerMembers _members = new XAPeerMembers ("java/io/IOException", typeof (IOException));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -78,7 +78,7 @@ namespace Java.IO {
 		{
 		}
 
-		private static readonly JniPeerMembers _members = new XAPeerMembers ("java/io/IOException", typeof (IOExceptionInvoker));
+		static readonly JniPeerMembers _members = new XAPeerMembers ("java/io/IOException", typeof (IOExceptionInvoker));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

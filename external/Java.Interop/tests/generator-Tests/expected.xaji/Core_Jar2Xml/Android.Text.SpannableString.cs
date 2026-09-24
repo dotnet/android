@@ -18,7 +18,7 @@ namespace Android.Text {
 	// Metadata.xml XPath class reference: path="/api/package[@name='android.text']/class[@name='SpannableString']"
 	[global::Android.Runtime.Register ("android/text/SpannableString", DoNotGenerateAcw=true)]
 	public partial class SpannableString : global::Android.Text.SpannableStringInternal, global::Android.Text.ISpannable {
-		private static readonly JniPeerMembers _members = new XAPeerMembers ("android/text/SpannableString", typeof (SpannableString));
+		static readonly JniPeerMembers _members = new XAPeerMembers ("android/text/SpannableString", typeof (SpannableString));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

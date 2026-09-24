@@ -50,7 +50,7 @@ namespace Xamarin.Test {
 					get { return _members_xamarin_test_NotificationCompatBase_Action_Factory.ManagedPeerType; }
 				}
 
-				private static readonly JniPeerMembers _members_xamarin_test_NotificationCompatBase_Action_Factory = new XAPeerMembers ("xamarin/test/NotificationCompatBase$Action$Factory", typeof (IFactoryInvoker));
+				static readonly JniPeerMembers _members_xamarin_test_NotificationCompatBase_Action_Factory = new XAPeerMembers ("xamarin/test/NotificationCompatBase$Action$Factory", typeof (IFactoryInvoker));
 
 				public IFactoryInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 				{
@@ -87,7 +87,7 @@ namespace Xamarin.Test {
 
 			}
 
-			private static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/NotificationCompatBase$Action", typeof (Action));
+			static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/NotificationCompatBase$Action", typeof (Action));
 
 			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -119,7 +119,7 @@ namespace Xamarin.Test {
 			{
 			}
 
-			private static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/NotificationCompatBase$Action", typeof (ActionInvoker));
+			static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/NotificationCompatBase$Action", typeof (ActionInvoker));
 
 			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -138,7 +138,7 @@ namespace Xamarin.Test {
 		// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='NotificationCompatBase.InstanceInner']"
 		[global::Android.Runtime.Register ("xamarin/test/NotificationCompatBase$InstanceInner", DoNotGenerateAcw=true)]
 		public abstract partial class InstanceInner : global::Java.Lang.Object {
-			private static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/NotificationCompatBase$InstanceInner", typeof (InstanceInner));
+			static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/NotificationCompatBase$InstanceInner", typeof (InstanceInner));
 
 			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -187,7 +187,7 @@ namespace Xamarin.Test {
 			{
 			}
 
-			private static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/NotificationCompatBase$InstanceInner", typeof (InstanceInnerInvoker));
+			static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/NotificationCompatBase$InstanceInner", typeof (InstanceInnerInvoker));
 
 			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -203,7 +203,7 @@ namespace Xamarin.Test {
 
 		}
 
-		private static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/NotificationCompatBase", typeof (NotificationCompatBase));
+		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/NotificationCompatBase", typeof (NotificationCompatBase));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

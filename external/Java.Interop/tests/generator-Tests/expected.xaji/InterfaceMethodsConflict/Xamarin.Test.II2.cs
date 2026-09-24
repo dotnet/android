@@ -34,7 +34,7 @@ namespace Xamarin.Test {
 			get { return _members_xamarin_test_I2.ManagedPeerType; }
 		}
 
-		private static readonly JniPeerMembers _members_xamarin_test_I2 = new XAPeerMembers ("xamarin/test/I2", typeof (II2Invoker));
+		static readonly JniPeerMembers _members_xamarin_test_I2 = new XAPeerMembers ("xamarin/test/I2", typeof (II2Invoker));
 
 		public II2Invoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

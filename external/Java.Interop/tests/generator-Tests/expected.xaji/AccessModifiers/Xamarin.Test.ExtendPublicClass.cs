@@ -18,7 +18,7 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='ExtendPublicClass']"
 	[global::Android.Runtime.Register ("xamarin/test/ExtendPublicClass", DoNotGenerateAcw=true)]
 	public partial class ExtendPublicClass : global::Java.Lang.Object {
-		private static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/ExtendPublicClass", typeof (ExtendPublicClass));
+		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/ExtendPublicClass", typeof (ExtendPublicClass));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

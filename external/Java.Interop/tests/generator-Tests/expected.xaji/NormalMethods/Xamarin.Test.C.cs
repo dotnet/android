@@ -19,7 +19,7 @@ namespace Xamarin.Test {
 	[global::Android.Runtime.Register ("xamarin/test/C", DoNotGenerateAcw=true)]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T extends xamarin.test.C"})]
 	public partial class C : global::Java.Lang.Object {
-		private static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/C", typeof (C));
+		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/C", typeof (C));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

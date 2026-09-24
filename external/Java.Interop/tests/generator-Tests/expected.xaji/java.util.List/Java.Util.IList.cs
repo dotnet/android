@@ -31,7 +31,7 @@ namespace Java.Util {
 			get { return _members_java_util_List.ManagedPeerType; }
 		}
 
-		private static readonly JniPeerMembers _members_java_util_List = new XAPeerMembers ("java/util/List", typeof (IListInvoker));
+		static readonly JniPeerMembers _members_java_util_List = new XAPeerMembers ("java/util/List", typeof (IListInvoker));
 
 		public IListInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

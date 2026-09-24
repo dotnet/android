@@ -35,11 +35,11 @@ namespace Java.Util {
 			get { return _members_java_util_Deque.ManagedPeerType; }
 		}
 
-		private static readonly JniPeerMembers _members_java_util_Collection = new XAPeerMembers ("java/util/Collection", typeof (IDequeInvoker));
+		static readonly JniPeerMembers _members_java_util_Collection = new XAPeerMembers ("java/util/Collection", typeof (IDequeInvoker));
 
-		private static readonly JniPeerMembers _members_java_util_Deque = new XAPeerMembers ("java/util/Deque", typeof (IDequeInvoker));
+		static readonly JniPeerMembers _members_java_util_Deque = new XAPeerMembers ("java/util/Deque", typeof (IDequeInvoker));
 
-		private static readonly JniPeerMembers _members_java_util_Queue = new XAPeerMembers ("java/util/Queue", typeof (IDequeInvoker));
+		static readonly JniPeerMembers _members_java_util_Queue = new XAPeerMembers ("java/util/Queue", typeof (IDequeInvoker));
 
 		public IDequeInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

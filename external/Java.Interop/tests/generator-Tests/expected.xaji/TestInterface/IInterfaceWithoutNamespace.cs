@@ -32,7 +32,7 @@ internal partial class IInterfaceWithoutNamespaceInvoker : global::Java.Lang.Obj
 		get { return _members__InterfaceWithoutNamespace.ManagedPeerType; }
 	}
 
-	private static readonly JniPeerMembers _members__InterfaceWithoutNamespace = new XAPeerMembers ("InterfaceWithoutNamespace", typeof (IInterfaceWithoutNamespaceInvoker));
+	static readonly JniPeerMembers _members__InterfaceWithoutNamespace = new XAPeerMembers ("InterfaceWithoutNamespace", typeof (IInterfaceWithoutNamespaceInvoker));
 
 	public IInterfaceWithoutNamespaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{
