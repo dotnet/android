@@ -110,7 +110,7 @@ internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	protected override IntPtr ThresholdClass {
-		get { return _members_com_xamarin_android_Parent.JniPeerType.PeerReference.Handle; }
+		get { return _members_com_xamarin_android_Parent.JniPeerTypeHandle; }
 	}
 
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]

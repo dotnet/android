@@ -39,7 +39,7 @@ namespace generator.SourceWriters
 			Properties.Add (new JniPeerMembersGetter (members));
 
 			if (!ji) {
-				Properties.Add (new InterfaceThresholdClassGetter ($"{members}.JniPeerType.PeerReference.Handle"));
+				Properties.Add (new InterfaceThresholdClassGetter ($"{members}.JniPeerTypeHandle"));
 				Properties.Add (new ThresholdTypeGetter (members));
 			}
 

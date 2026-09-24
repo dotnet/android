@@ -18,6 +18,17 @@ namespace Java.InteropTests
 			JniPeerMembers.Dispose (members);
 		}
 
+		[Test]
+		public void JniPeerTypeHandle ()
+		{
+			var members = new JniPeerMembers (CallNonvirtualBase.JniTypeName, typeof (CallNonvirtualBase));
+			try {
+				Assert.AreEqual (members.JniPeerType.PeerReference.Handle, members.JniPeerTypeHandle);
+			} finally {
+				JniPeerMembers.Dispose (members);
+			}
+		}
+
 #if !ANDROID    // Android doesn't allow providing a custom TypeManager
 		[Test]
 		[NonParallelizable]

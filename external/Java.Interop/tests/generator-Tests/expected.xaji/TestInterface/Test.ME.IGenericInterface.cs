@@ -26,7 +26,7 @@ namespace Test.ME {
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		protected override IntPtr ThresholdClass {
-			get { return _members_test_me_GenericInterface.JniPeerType.PeerReference.Handle; }
+			get { return _members_test_me_GenericInterface.JniPeerTypeHandle; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]

@@ -21,7 +21,7 @@ namespace Xamarin.Test {
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		protected override IntPtr ThresholdClass {
-			get { return _members_xamarin_test_Adapter.JniPeerType.PeerReference.Handle; }
+			get { return _members_xamarin_test_Adapter.JniPeerTypeHandle; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]

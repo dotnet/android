@@ -66,7 +66,7 @@ namespace Java.Lang {
 		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		protected virtual IntPtr ThresholdClass {
-			get { return _members.JniPeerType.PeerReference.Handle; }
+			get { return _members.JniPeerTypeHandle; }
 		}
 
 		[DebuggerBrowsable (DebuggerBrowsableState.Never)]

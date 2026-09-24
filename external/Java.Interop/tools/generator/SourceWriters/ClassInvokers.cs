@@ -35,7 +35,7 @@ namespace generator.SourceWriters
 		// [DebuggerBrowsable (DebuggerBrowsableState.Never)]
 		// [EditorBrowsable (EditorBrowsableState.Never)]
 		// protected override IntPtr ThresholdClass {
-		// 	get { return _members.JniPeerType.PeerReference.Handle; }
+		// 	get { return _members.JniPeerTypeHandle; }
 		// }
 		public ClassThresholdClassGetter ()
 		{
@@ -49,7 +49,7 @@ namespace generator.SourceWriters
 			Attributes.Add (new EditorBrowsableAttr ());
 
 			HasGet = true;
-			GetBody.Add ("return _members.JniPeerType.PeerReference.Handle;");
+			GetBody.Add ("return _members.JniPeerTypeHandle;");
 		}
 	}
 
@@ -58,7 +58,7 @@ namespace generator.SourceWriters
 		// [DebuggerBrowsable (DebuggerBrowsableState.Never)]
 		// [EditorBrowsable (EditorBrowsableState.Never)]
 		// protected override IntPtr ThresholdClass {
-		// 	get { return _members.JniPeerType.PeerReference.Handle; }
+		// 	get { return _members.JniPeerTypeHandle; }
 		// }
 		public InterfaceThresholdClassGetter (string getExpression)
 		{

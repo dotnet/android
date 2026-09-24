@@ -18,7 +18,7 @@ internal partial class IMyInterface2Invoker : global::Java.Lang.Object, IMyInter
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	protected override IntPtr ThresholdClass {
-		get { return _members_java_code_IMyInterface2.JniPeerType.PeerReference.Handle; }
+		get { return _members_java_code_IMyInterface2.JniPeerTypeHandle; }
 	}
 
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]

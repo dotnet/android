@@ -99,6 +99,7 @@ namespace Java.Interop {
 		public      string      JniPeerTypeName => jniPeerTypeNameUtf8 == IntPtr.Zero
 			? jniPeerTypeName ?? sourceJniPeerTypeName
 			: jniPeerTypeName ??= GetUtf8String (jniPeerTypeNameUtf8);
+		public      IntPtr      JniPeerTypeHandle => JniPeerType.PeerReference.Handle;
 		public      JniType     JniPeerType {
 			get {
 				var t = jniPeerTypeNameUtf8 == IntPtr.Zero

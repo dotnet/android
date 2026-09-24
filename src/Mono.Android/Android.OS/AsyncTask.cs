@@ -23,7 +23,7 @@ namespace Android.OS {
 		static extern ref readonly JniPeerMembers GetPeerMembers (AsyncTask? _);
 
 		protected override IntPtr ThresholdClass {
-			get { return GetPeerMembers (null).JniPeerType.PeerReference.Handle; }
+			get { return GetPeerMembers (null).JniPeerTypeHandle; }
 		}
 
 		protected override global::System.Type ThresholdType {
@@ -66,7 +66,7 @@ namespace Android.OS {
 		public Android.OS.AsyncTask<TParams, TProgress, TResult>? Execute (params TParams[] @params)
 		{
 			if (id_execute_arrayLjava_lang_Object_ == IntPtr.Zero)
-				id_execute_arrayLjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerType.PeerReference.Handle, "execute", "([Ljava/lang/Object;)Landroid/os/AsyncTask;");
+				id_execute_arrayLjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerTypeHandle, "execute", "([Ljava/lang/Object;)Landroid/os/AsyncTask;");
 			IntPtr native__params = JNIEnv.NewObjectArray<TParams> (@params);
 			try {
 				var __ret = Java.Lang.Object.GetObject<Android.OS.AsyncTask<TParams, TProgress, TResult>> (JNIEnv.CallObjectMethod  (Handle, id_execute_arrayLjava_lang_Object_, new JValue (native__params)), JniHandleOwnership.TransferLocalRef);
@@ -85,7 +85,7 @@ namespace Android.OS {
 		public TResult? GetResult ()
 		{
 			if (id_get == IntPtr.Zero)
-				id_get = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerType.PeerReference.Handle, "get", "()Ljava/lang/Object;");
+				id_get = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerTypeHandle, "get", "()Ljava/lang/Object;");
 			return JavaConvert.FromJniHandle<TResult>(JNIEnv.CallObjectMethod  (Handle, id_get), JniHandleOwnership.TransferLocalRef);
 		}
 
