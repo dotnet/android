@@ -140,22 +140,6 @@ ABI - is an acronym for Application Binary Interface.
 {0} - the target name the user supplied
     </comment>
   </data>
-  <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
-    <value>Hızlı Dağıtım araçları hedef cihazda “{0}/{1}” hedefine kopyalanamıyor.
-Bu cihaz Hızlı Dağıtım ile uyumlu olmayabilir.
-Lütfen Hızlı Dağıtım sistemini devre dışı bırakmak için Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.</value>
-    <comment>The following are literal names and should not be translated:
-{0} - A device path
-{1} - A filename</comment>
-  </data>
-  <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
-    <value>“{1}: {2}” kullanılarak “{0}” dağıtılırken hata oluştu.
-Lütfen Hızlı Dağıtım sistemini devre dışı bırakmak için Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.</value>
-<comment>The following are literal names and should not be translated:
-{0} - A filename
-{1} - The tool that was used to deploy the file.
-{2} - The actual error that occured.</comment>
-  </data>
   <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
     <value>“log.redirect-stdio” Android sistem özelliği hedef cihazda veya emülatörde “true” olarak ayarlanmış.
 Hızlı Dağıtım ile uyumluluğu etkinleştirmek için özelliği “false” olarak ayarlayın veya değeri temizlemek için cihazı ya da emülatörü yeniden başlatın.</value>
@@ -165,10 +149,6 @@ Hızlı Dağıtım ile uyumluluğu etkinleştirmek için özelliği “false” 
 Lütfen Hızlı Dağıtım sistemini devre dışı bırakmak için Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.</value>
     <comment>The following are literal names and should not be translated:
 {0} - A filename</comment>
-  </data>
-  <data name="XA0130_FastDevNotSupported" xml:space="preserve">
-    <value>Üzgünüz. Hızlı Dağıtım yalnızca Android 5.0 (API düzeyi 21) veya üzerini çalıştıran cihazlarda desteklenir.
-Lütfen Hızlı Dağıtım sistemini devre dışı bırakmak için Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.</value>
   </data>
   <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
     <value>'farklı çalıştır' aracı bu cihazda devre dışı bırakıldı. Cihazda geliştirici seçeneklerini etkinleştirerek veya 'ro.boot.disable_runas' değerini 'false' olarak ayarlayarak etkinleştirin.</value>

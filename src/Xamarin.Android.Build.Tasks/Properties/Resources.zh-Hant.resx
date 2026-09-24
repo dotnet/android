@@ -297,10 +297,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>目前不支援同時使用快速部署及 Android App Bundles。請將快速部署用於偵錯組態; 將 Android App Bundles 用於發行組態。</value>
     <comment>The following are literal names and should not be translated: Android App Bundles</comment>
   </data>
-  <data name="XA0119_AOT" xml:space="preserve">
-    <value>不建議同時使用快速部署和 AOT。請將快速部署用於偵錯組態; 將 AOT 用於發行組態。</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
-  </data>
   <data name="XA0119_LinkMode" xml:space="preserve">
     <value>不建議同時使用快速部署和連結器。請將快速部署用於偵錯組態; 將連結器用於發行組態。</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
@@ -308,10 +304,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
   <data name="XA0119_LinkTool" xml:space="preserve">
     <value>不建議同時使用快速部署和程式碼壓縮程式。請將快速部署用於偵錯組態; 將程式碼壓縮程式用於發行組態。</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
-  </data>
-  <data name="XA0119_Interpreter" xml:space="preserve">
-    <value>正在停用解譯器; 不支援同時使用解譯器與 AOT。使用直譯器以在 Debug 設定中取得熱重新載入支援，使用 AOT 取得 Release 設定。</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
   </data>
   <data name="XA0119_ReadyToRun" xml:space="preserve">
     <value>不建議同時使用快速部署和 ReadyToRun。將快速部署用於偵錯組態並將 ReadyToRun 用於發行組態。</value>
@@ -469,10 +461,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>已不支援使用 DX DEX 編譯器。請在 Visual Studio 專案屬性頁中將 DEX 編譯器設為 'd8'，或在文字編輯器中編輯專案檔，並將 'AndroidDexTool' MSBuild 屬性設為 'd8'。</value>
     <comment>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</comment>
   </data>
-  <data name="XA1025" xml:space="preserve">
-    <value>'AndroidAotMode' MSBuild 屬性的實驗性 'Hybrid' 值目前與 armeabi v7a 目標 ABI 不相容。若要繼續使用 'AndroidAotMode' 的實驗性 'Hybrid' 值，請取消選取 Visual Studio 專案屬性頁面中的 armeabi-v7a 目標 ABI，或在文字編輯器中編輯專案檔，從 'AndroidSupportedAbis' MSBuild 屬性中移除 'armeabi-v7a'。</value>
-    <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
-  </data>
   <data name="XA1027" xml:space="preserve">
     <value>'EnableProguard' MSBuild 屬性設定為 'true'，而且 'AndroidLinkTool' MSBuild 屬性是空的，因此 'AndroidLinkTool' 預設為 'proguard'。</value>
     <comment>The following are literal names and should not be translated: 'EnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
@@ -480,14 +468,6 @@ In this message, the term "binding" means a piece of generated code that makes i
   <data name="XA1028" xml:space="preserve">
     <value>'AndroidEnableProguard' MSBuild 屬性設定為 'true'，而且 'AndroidLinkTool' MSBuild 屬性是空的，因此 'AndroidLinkTool' 預設為 'proguard'。</value>
     <comment>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
-  </data>
-  <data name="XA1029" xml:space="preserve">
-    <value>'AotAssemblies' MSBuild 屬性已被取代。在文字編輯器中編輯專案檔案以移除此屬性，並改為使用 'RunAOTCompilation' MSBuild 屬性。</value>
-    <comment>The following are literal names and should not be translated: 'AotAssemblies', 'RunAOTCompilation'</comment>
-  </data>
-  <data name="XA1030" xml:space="preserve">
-    <value>只有在啟用 [修剪] 時，才支援 'RunAOTCompilation' MSBuild 屬性。在文字編輯器中編輯專案檔案，以將此組建組態的 'PublishTrimmed' 設為 'true'。</value>
-    <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
   </data>
   <data name="XA1034" xml:space="preserve">
     <value>您的專案參考 '{0}' 使用 '_Microsoft.Android.Resource.Designer' 組件，但您未啟用此功能。請將專案檔案中的 'AndroidUseDesignerAssembly' MSBuild 屬性設定為 'true'。</value>
@@ -562,14 +542,6 @@ In this message, the term "binding" means a piece of generated code that makes i
   <data name="APT2265" xml:space="preserve">
     <value>這可能是因為專案的檔案名稱或路徑中包含非 ASCII 字元所造成。如需詳細資訊，請參閱 https://learn.microsoft.com/dotnet/android/messages/apt2265。</value>
     <comment>The following are literal names and should not be translated:</comment>
-  </data>
-  <data name="XA3001" xml:space="preserve">
-    <value>無法對組件進行 AOT 編譯: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
-  </data>
-  <data name="XA3002" xml:space="preserve">
-    <value>AOT 模式無效: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
   <data name="XA3004" xml:space="preserve">
     <value>Android NDK r10d 有錯誤，且會提供不相容的 x86_64 libm.so。請參閱 https://code.google.com/p/android/issues/detail?id=161422。</value>
@@ -1329,10 +1301,6 @@ In this message, the term "handheld app" means "app for handheld devices."
   </data>
   <data name="XA0146" xml:space="preserve">
     <value>嘗試檢查 '{0}' 是否正確對齊 ELF 檔案時失敗，發生例外狀況，因此將略過此檔案的對齊檢查。</value>
-    <comment>{0} - The file path.</comment>
-  </data>
-  <data name="XA0147" xml:space="preserve">
-    <value>嘗試檢查 '{0}' 是否為有效的 ELF 檔案時失敗，發生例外狀況，因此將略過此檔案的 AOT 檢查。</value>
     <comment>{0} - The file path.</comment>
   </data>
   <data name="XA0148" xml:space="preserve">

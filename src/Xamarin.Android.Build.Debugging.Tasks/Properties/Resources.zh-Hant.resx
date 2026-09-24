@@ -140,22 +140,6 @@ ABI - is an acronym for Application Binary Interface.
 {0} - the target name the user supplied
     </comment>
   </data>
-  <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
-    <value>無法將 [快速部署] 工具複製到目標裝置上的 '{0}/{1}'。
-此裝置可能與 [快速部署] 不相容。
-請將 'EmbedAssembliesIntoApk' MSBuild 屬性設定為 'true'，以停用 Visual Studio 專案屬性頁面中的快速部署，或在文字編輯器中編輯專案檔案。</value>
-    <comment>The following are literal names and should not be translated:
-{0} - A device path
-{1} - A filename</comment>
-  </data>
-  <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
-    <value>使用 '{1}: {2}' 部署 '{0}' 時發生錯誤。
-請將 'EmbedAssembliesIntoApk' MSBuild 屬性設定為 'true'，以停用 Visual Studio 專案屬性頁面中的快速部署，或在文字編輯器中編輯專案檔案。</value>
-<comment>The following are literal names and should not be translated:
-{0} - A filename
-{1} - The tool that was used to deploy the file.
-{2} - The actual error that occured.</comment>
-  </data>
   <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
     <value>目標裝置或模擬器上的 'log.redirect-stdio' Android 系統屬性設定為 'true'。
 若要啟用與 [快速部署] 的相容性，請將屬性設定為 'false' 或重新啟動裝置或模擬器以清除值。</value>
@@ -165,10 +149,6 @@ ABI - is an acronym for Application Binary Interface.
 請將 'EmbedAssembliesIntoApk' MSBuild 屬性設定為 'true'，以停用 Visual Studio 專案屬性頁面中的快速部署，或在文字編輯器中編輯專案檔案。</value>
     <comment>The following are literal names and should not be translated:
 {0} - A filename</comment>
-  </data>
-  <data name="XA0130_FastDevNotSupported" xml:space="preserve">
-    <value>抱歉。只有運行 Android 5.0 (API 層級 21) 或更高版本的裝置才支援 [快速部署]。
-請將 'EmbedAssembliesIntoApk' MSBuild 屬性設定為 'true'，以停用 Visual Studio 專案屬性頁面中的快速部署，或在文字編輯器中編輯專案檔案。</value>
   </data>
   <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
     <value>此裝置上的 'run-as' 工具已停用。啟用裝置上的開發人員選項，或將 'ro.boot.disable_runas' 設為 'false' 以啟用此功能。</value>

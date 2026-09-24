@@ -140,22 +140,6 @@ ABI - is an acronym for Application Binary Interface.
 {0} - the target name the user supplied
     </comment>
   </data>
-  <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
-    <value>Impossible de copier les outils de déploiement rapide vers « {0}/{1} » sur l’appareil cible.
-Cet appareil n’est peut-être pas compatible avec le déploiement rapide.
-Veuillez définir la propriété MSBuild « EmbedAssembliesIntoApk » sur « true » pour désactiver le déploiement rapide dans les pages de propriétés du projet Visual Studio, ou modifiez le fichier projet dans un éditeur de texte.</value>
-    <comment>The following are literal names and should not be translated:
-{0} - A device path
-{1} - A filename</comment>
-  </data>
-  <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
-    <value>Erreur lors du déploiement de « {0} » en utilisant « {1} : {2} ».
-Veuillez définir la propriété MSBuild « EmbedAssembliesIntoApk » sur « true » pour désactiver le déploiement rapide dans les pages de propriétés du projet Visual Studio, ou modifiez le fichier projet dans un éditeur de texte.</value>
-<comment>The following are literal names and should not be translated:
-{0} - A filename
-{1} - The tool that was used to deploy the file.
-{2} - The actual error that occured.</comment>
-  </data>
   <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
     <value>La propriété système Android « log.redirect-stdio » a la valeur « true » sur l’appareil ou l’émulateur cible.
 Pour activer la compatibilité avec le déploiement rapide, définissez la propriété sur « false » ou redémarrez l’appareil ou l’émulateur pour effacer la valeur.</value>
@@ -165,10 +149,6 @@ Pour activer la compatibilité avec le déploiement rapide, définissez la propr
 Veuillez définir la propriété MSBuild « EmbedAssembliesIntoApk » sur « true » pour désactiver le déploiement rapide dans les pages de propriétés du projet Visual Studio, ou modifiez le fichier projet dans un éditeur de texte.</value>
     <comment>The following are literal names and should not be translated:
 {0} - A filename</comment>
-  </data>
-  <data name="XA0130_FastDevNotSupported" xml:space="preserve">
-    <value>Désolé. Le déploiement rapide est uniquement pris en charge sur les appareils exécutant Android 5.0 (niveau d’API 21) ou supérieur.
-Veuillez définir la propriété MSBuild « EmbedAssembliesIntoApk » sur « true » pour désactiver le déploiement rapide dans les pages de propriétés du projet Visual Studio, ou modifiez le fichier projet dans un éditeur de texte.</value>
   </data>
   <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
     <value>L’outil d’identification a été désactivé sur cet appareil. Activez-le en activant les options de développeur sur l’appareil ou en définissant « ro.boot.disable_runas » sur « false ».</value>

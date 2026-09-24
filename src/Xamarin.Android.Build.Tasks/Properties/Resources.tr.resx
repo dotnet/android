@@ -297,10 +297,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>Hızlı Dağıtım ve Android Uygulama Paketlerinin aynı anda kullanılması şu anda desteklenmiyor. Hata Ayıklama yapılandırmaları için Hızlı Dağıtımı, Sürüm yapılandırmaları için Android Uygulama Paketlerini kullanın.</value>
     <comment>The following are literal names and should not be translated: Android App Bundles</comment>
   </data>
-  <data name="XA0119_AOT" xml:space="preserve">
-    <value>Hızlı dağıtımın ve AOT'nin aynı anda kullanılması önerilmez. Hata ayıklama yapılandırmaları için hızlı dağıtımı, Yayın yapılandırmaları için AOT'yi kullanın.</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
-  </data>
   <data name="XA0119_LinkMode" xml:space="preserve">
     <value>Hızlı dağıtımın ve bağlayıcının aynı anda kullanılması önerilmez. Hata Ayıklama yapılandırmaları için hızlı dağıtımı, Yayın yapılandırmaları için bağlayıcıyı kullanın.</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
@@ -308,10 +304,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
   <data name="XA0119_LinkTool" xml:space="preserve">
     <value>Hızlı dağıtımın ve kod küçültücünün aynı anda kullanılması önerilmez. Hata ayıklama yapılandırmaları için hızlı dağıtımı, Yayın yapılandırmaları için kod küçültücüyü kullanın.</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
-  </data>
-  <data name="XA0119_Interpreter" xml:space="preserve">
-    <value>Yorumlayıcı devre dışı bırakılıyor. Yorumlayıcıyı ve AOT'yi aynı anda kullanma desteklenmemektdir. Yorumlayıcıyı Hata Ayıklama yapılandırmalarında ve Yayınlama için AOT yapılandırmalarında yeniden yükleme desteği için kullanın.</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
   </data>
   <data name="XA0119_ReadyToRun" xml:space="preserve">
     <value>Hızlı dağıtım ile ReadyToRun'ın aynı anda kullanılması önerilmez. Hızlı dağıtımı Hata ayıklama yapılandırmaları için ve ReadyToRun'ı da Yayın yapılandırmaları için kullanın.</value>
@@ -469,10 +461,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>DX DEX Derleyicisinin kullanılması desteklenmemektedir. Lütfen Visual Studio projesi özellik sayfalarında DEX derleyicisini 'd8' olarak ayarlayın veya proje dosyasını bir metin düzenleyicide düzenleyip 'AndroidDexTool' MSBuild özelliğini 'd8' olarak ayarlayın.</value>
     <comment>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</comment>
   </data>
-  <data name="XA1025" xml:space="preserve">
-    <value>'AndroidAotMode' MSBuild özelliği için deneysel 'Hybrid' değeri şu anda armeabi-v7a hedef ABI ile uyumlu değil. 'AndroidAotMode' için deneysel 'Hybrid' değerini kullanmaya devam etmek için Visual Studio projesinin özellik sayfalarındaki armeabi-v7a hedef ABI seçimini kaldırın veya metin düzenleyicisinde proje dosyasını düzenleyerek 'AndroidSupportedAbis' MSBuild özelliğinden 'armeabi-v7a' öğesini kaldırın.</value>
-    <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
-  </data>
   <data name="XA1027" xml:space="preserve">
     <value>'EnableProguard' MSBuild özelliği 'true' olarak ayarlandığından ve 'AndroidLinkTool' MSBuild özelliği boş olduğundan 'AndroidLinkTool' varsayılan olarak 'proguard' değerini alır.</value>
     <comment>The following are literal names and should not be translated: 'EnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
@@ -480,14 +468,6 @@ In this message, the term "binding" means a piece of generated code that makes i
   <data name="XA1028" xml:space="preserve">
     <value>'AndroidEnableProguard' MSBuild özelliği 'true' olarak ayarlandığından ve 'AndroidLinkTool' MSBuild özelliği boş olduğundan 'AndroidLinkTool' varsayılan olarak 'proguard' değerini alır.</value>
     <comment>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
-  </data>
-  <data name="XA1029" xml:space="preserve">
-    <value>'AotAssemblies' MSBuild özelliği kullanım dışı bırakıldı. Bu özelliği kaldırmak için proje dosyasını bir metin düzenleyicisinde düzenleyin ve bunun yerine 'RunAOTCompilation' MSBuild özelliğini kullanın.</value>
-    <comment>The following are literal names and should not be translated: 'AotAssemblies', 'RunAOTCompilation'</comment>
-  </data>
-  <data name="XA1030" xml:space="preserve">
-    <value>'RunAOTCompilation' MSBuild özelliği yalnızca kırpma etkinleştirildiğinde desteklenir. Bu yapı yapılandırması için 'PublishTrimmed' öğesini 'true' olarak ayarlamak için proje dosyasını bir metin düzenleyicide düzenleyin.</value>
-    <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
   </data>
   <data name="XA1034" xml:space="preserve">
     <value>Projeniz `_Microsoft.Android.Resource.Designer` derlemesini kullanan '{0}' özelliğine başvuruyor ancak bu özellik etkin değil. Lütfen proje dosyanızda `AndroidUseDesignerAssembly` MSBuild özelliğini `true` olarak ayarlayın.</value>
@@ -562,14 +542,6 @@ AndroidManifest.xml dosyasındaki değeri $(SupportedOSPlatformVersion) değeriy
   <data name="APT2265" xml:space="preserve">
     <value>Bunun nedeni projenin dosya adında veya yolunda ASCII olmayan karakterler olması olabilir. Ayrıntılar için bkz. https://learn.microsoft.com/dotnet/android/messages/apt2265.</value>
     <comment>The following are literal names and should not be translated:</comment>
-  </data>
-  <data name="XA3001" xml:space="preserve">
-    <value>Bütünleştirilmiş koda AOT uygulanamadı: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
-  </data>
-  <data name="XA3002" xml:space="preserve">
-    <value>Geçersiz AOT modu: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
   <data name="XA3004" xml:space="preserve">
     <value>Android NDK r10d hatalı olduğundan uyumsuz bir x86_64 libm.so dosyası sağlıyor. Bkz. https://code.google.com/p/android/issues/detail?id=161422.</value>
@@ -1329,10 +1301,6 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
   </data>
   <data name="XA0146" xml:space="preserve">
     <value>'{0}' dosyasının doğru hizalanmış BIR DOSYA olup olmadığını denetleme denemesi, dosya için hizalama denetimi yoksayıldığında özel durumla başarısız oldu.</value>
-    <comment>{0} - The file path.</comment>
-  </data>
-  <data name="XA0147" xml:space="preserve">
-    <value>'{0}' dosyasının geçerli bir ELF dosyası olup olmadığını denetleme girişimi, özel durum nedeniyle başarısız oldu ve dosya için AOT denetimi yoksayıldı.</value>
     <comment>{0} - The file path.</comment>
   </data>
   <data name="XA0148" xml:space="preserve">

@@ -297,10 +297,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>Používání rychlého nasazení a Android App Bundles zároveň se v současné době nepodporuje. Pro konfigurace Debug použijte rychlé nasazení, pro konfigurace Release pak Android App Bundles.</value>
     <comment>The following are literal names and should not be translated: Android App Bundles</comment>
   </data>
-  <data name="XA0119_AOT" xml:space="preserve">
-    <value>Používání rychlého nasazení a AOT najednou se nedoporučuje. Pro konfigurace Debug použijte rychlé nasazení, pro konfigurace Release pak AOT.</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
-  </data>
   <data name="XA0119_LinkMode" xml:space="preserve">
     <value>Používání rychlého nasazení a linkeru najednou se nedoporučuje. Pro konfigurace Debug použijte rychlé nasazení, pro konfigurace Release pak linker.</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
@@ -308,10 +304,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
   <data name="XA0119_LinkTool" xml:space="preserve">
     <value>Používání rychlého nasazení a nástroje pro zmenšování kódu najednou se nedoporučuje. Pro konfigurace Debug použijte rychlé nasazení, pro konfigurace Release pak nástroj pro zmenšování kódu.</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
-  </data>
-  <data name="XA0119_Interpreter" xml:space="preserve">
-    <value>Zakázání interpreta; použití interpretu a AOT ve stejnou dobu není podporováno. Použijte interpret pro podporu opětovného načítání za provozu v konfiguracích ladění a AOT pro konfigurace release.</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
   </data>
   <data name="XA0119_ReadyToRun" xml:space="preserve">
     <value>Používání rychlého nasazení a ReadyToRun najednou se nedoporučuje. Pro konfigurace Debug použijte rychlé nasazení, pro konfigurace Release pak ReadyToRun.</value>
@@ -469,10 +461,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>Použití kompilátoru DX DEX není podporováno. Nastavte kompilátor DEX na 'd8' na stránkách vlastností projektu Visual Studio nebo upravte soubor projektu v textovém editoru a nastavte vlastnost Microsoft Build Engine AndroidDexTool na 'd8'.</value>
     <comment>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</comment>
   </data>
-  <data name="XA1025" xml:space="preserve">
-    <value>Experimentální hodnota Hybrid pro vlastnost MSBuildu AndroidAotMode není v tuto chvíli kompatibilní s cílovým ABI armeabi-v7a. Pokud chcete i nadále používat experimentální hodnotu Hybrid pro AndroidAotMode, zrušte výběr cílového ABI armeabi-v7a na stránkách vlastností projektu sady Visual Studio, nebo upravte soubor projektu v textovém editoru a odeberte z vlastnosti MSBuild AndroidSupportedAbis možnost armeabi-v7a.</value>
-    <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
-  </data>
   <data name="XA1027" xml:space="preserve">
     <value>Vlastnost MSBuildu EnableProguard je nastavená na true a vlastnost MSBuildu AndroidLinkTool je prázdná, proto se AndroidLinkTool nastaví na výchozí možnost proguard.</value>
     <comment>The following are literal names and should not be translated: 'EnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
@@ -480,14 +468,6 @@ In this message, the term "binding" means a piece of generated code that makes i
   <data name="XA1028" xml:space="preserve">
     <value>Vlastnost MSBuildu AndroidEnableProguard je nastavená na true a vlastnost MSBuildu AndroidLinkTool je prázdná, proto se AndroidLinkTool nastaví na výchozí možnost proguard.</value>
     <comment>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
-  </data>
-  <data name="XA1029" xml:space="preserve">
-    <value>Vlastnost MSBuild „AotAssemblies“ je zastaralá. Upravte soubor projektu v textovém editoru, aby se tato vlastnost odebrala, a místo toho použijte vlastnost MSBuild „RunAOTCompilation“.</value>
-    <comment>The following are literal names and should not be translated: 'AotAssemblies', 'RunAOTCompilation'</comment>
-  </data>
-  <data name="XA1030" xml:space="preserve">
-    <value>Vlastnost MSBuild RunAOTCompilation se podporuje jen tehdy, když je povolené trimování. Upravte soubor projektu v textovém editoru, aby se vlastnost PublishTrimmed pro tuto konfiguraci sestavení nastavila na true.</value>
-    <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
   </data>
   <data name="XA1034" xml:space="preserve">
     <value>Váš projekt odkazuje na literál {0}, který používá sestavení _Microsoft.Android.Resource.Designer, ale tuto funkci nemáte povolenou. Nastavte vlastnost MSBuild AndroidUseDesignerAssembly v souboru projektu na hodnotu true.</value>
@@ -562,14 +542,6 @@ Buď změňte hodnotu v souboru AndroidManifest.xml tak, aby odpovídala hodnot�
   <data name="APT2265" xml:space="preserve">
     <value>Příčinou může být to, že projekt má v názvu souboru nebo cestě jiné znaky než ASCII. Podrobnosti najdete tady: https://learn.microsoft.com/dotnet/android/messages/apt2265.</value>
     <comment>The following are literal names and should not be translated:</comment>
-  </data>
-  <data name="XA3001" xml:space="preserve">
-    <value>Sestavení se nepovedlo zkompilovat AOT: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
-  </data>
-  <data name="XA3002" xml:space="preserve">
-    <value>Neplatný režim AOT: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
   <data name="XA3004" xml:space="preserve">
     <value>Android NDK r10d obsahuje chyby a poskytuje nekompatibilní knihovnu libm.so pro architekturu x86_64. Viz https://code.google.com/p/android/issues/detail?id=161422.</value>
@@ -1329,10 +1301,6 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
   </data>
   <data name="XA0146" xml:space="preserve">
     <value>Pokus o kontrolu, zda je „{0}“ správně přidruženým souborem ELF, selhal s výjimkou. Kontrola přidružení tohoto souboru bude ignorována.</value>
-    <comment>{0} - The file path.</comment>
-  </data>
-  <data name="XA0147" xml:space="preserve">
-    <value>Pokus o kontrolu, zda je „{0}“ platný soubor ELF, selhal s výjimkou. Kontrola AOT pro tento soubor bude ignorována.</value>
     <comment>{0} - The file path.</comment>
   </data>
   <data name="XA0148" xml:space="preserve">
