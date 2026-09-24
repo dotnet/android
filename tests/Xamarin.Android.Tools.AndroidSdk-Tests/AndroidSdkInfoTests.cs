@@ -67,6 +67,38 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
+		public void DiscoverInstallationPaths_WithMissingPreferredJdk ()
+		{
+			CreateSdks (out string root, out string jdk, out _, out string sdk);
+			Directory.Delete (jdk, recursive: true);
+			try {
+				AndroidSdkInfo.DiscoverInstallationPaths (out var sdkPath, out var allSdkPaths, out _,
+					preferredAndroidSdkPath: sdk, preferredJavaSdkPath: jdk);
+
+				Assert.AreEqual (sdk, sdkPath);
+				CollectionAssert.Contains (allSdkPaths, sdk);
+			} finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		[Test]
+		public void DiscoverInstallationPaths_WithMissingPreferredAndroidSdk ()
+		{
+			CreateSdks (out string root, out string jdk, out _, out string sdk);
+			Directory.Delete (sdk, recursive: true);
+			try {
+				AndroidSdkInfo.DiscoverInstallationPaths (out _, out var allSdkPaths, out var javaSdkPath,
+					preferredAndroidSdkPath: sdk, preferredJavaSdkPath: jdk);
+
+				Assert.AreEqual (jdk, javaSdkPath);
+				CollectionAssert.DoesNotContain (allSdkPaths, sdk);
+			} finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		[Test]
 		public void Ndk_MultipleNdkVersionsInSdk ()
 		{
 			// Must match like-named constants in AndroidSdkBase

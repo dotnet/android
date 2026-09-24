@@ -1,4 +1,5 @@
 #nullable enable
+static Xamarin.Android.Tools.AndroidSdkInfo.DiscoverInstallationPaths(out string? androidSdkPath, out string![]! allAndroidSdkPaths, out string? javaSdkPath, string? preferredAndroidSdkPath = null, string? preferredJavaSdkPath = null, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
 Xamarin.Android.Tools.AdbDeviceInfo
 Xamarin.Android.Tools.AdbDeviceInfo.AdbDeviceInfo() -> void
 Xamarin.Android.Tools.AdbDeviceInfo.AvdName.get -> string?
