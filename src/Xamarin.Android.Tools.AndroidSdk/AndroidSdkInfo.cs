@@ -24,6 +24,20 @@ namespace Xamarin.Android.Tools
 				throw new InvalidOperationException ($"Could not determine Java SDK location. Please provide `{nameof (javaSdkPath)}`.");
 		}
 
+		/// <summary>
+		/// Discovers installed SDK and JDK paths without requiring both to be present, for installers
+		/// that must work before the SDK or JDK has been installed.
+		/// </summary>
+		public static void DiscoverInstallationPaths (out string? androidSdkPath, out string[] allAndroidSdkPaths, out string? javaSdkPath,
+			string? preferredAndroidSdkPath = null, string? preferredJavaSdkPath = null, Action<TraceLevel, string>? logger = null)
+		{
+			var sdk = CreateSdk (logger ?? DefaultConsoleLogger);
+			sdk.Initialize (preferredAndroidSdkPath, javaSdkPath: preferredJavaSdkPath);
+			androidSdkPath = sdk.AndroidSdkPath;
+			allAndroidSdkPaths = sdk.AllAndroidSdks;
+			javaSdkPath = sdk.JavaSdkPath;
+		}
+
 		static AndroidSdkBase CreateSdk (Action<TraceLevel, string> logger)
 		{
 			return OS.IsWindows
