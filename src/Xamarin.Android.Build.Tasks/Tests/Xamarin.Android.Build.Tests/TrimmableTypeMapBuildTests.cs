@@ -194,9 +194,9 @@ namespace Xamarin.Android.Build.Tests {
 
 			using (var builder = CreateApkBuilder (Path.Combine (testRoot, legacyApp.ProjectName))) {
 				builder.ThrowOnBuildFailure = false;
-				Assert.IsFalse (builder.Build (legacyApp), "Legacy typemap should reject a UCO binding.");
-				StringAssertEx.Contains ("error XA4265:", builder.LastBuildOutput);
-				StringAssertEx.Contains ("UcoBinding.dll", builder.LastBuildOutput);
+				Assert.IsFalse (builder.Build (legacyApp), "Legacy typemap should be rejected before processing the UCO binding.");
+				StringAssertEx.Contains ("error XA4267:", builder.LastBuildOutput);
+				StringAssertEx.Contains ("llvm-ir", builder.LastBuildOutput);
 			}
 		}
 
