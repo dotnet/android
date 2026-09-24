@@ -78,6 +78,14 @@
     <_GenerateProguardAfterTargets Condition=" '$(_GenerateProguardAfterTargets)' == '' ">ILLink</_GenerateProguardAfterTargets>
   </PropertyGroup>
 
+  <Target Name="_AndroidSetTrimmableProguardConfiguration"
+      BeforeTargets="ILLink"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' != '' ">
+    <PropertyGroup>
+      <_ProguardProjectConfiguration Condition=" '$(_ProguardProjectConfiguration)' == '' ">$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
+    </PropertyGroup>
+  </Target>
+
   <!-- Add TypeMap DLLs to ILLink input. ILLink natively understands TypeMapAttribute<T>. -->
   <Target Name="_AddTrimmableTypeMapToLinker"
       BeforeTargets="PrepareForILLink;_RunILLink"
@@ -148,11 +156,18 @@
     <GenerateProguardConfiguration
         LinkedAssemblies="@(_LinkedAssemblyForProguard)"
         OutputFile="$(_ProguardProjectConfiguration)" />
+    <ItemGroup>
+      <FileWrites Include="$(_ProguardProjectConfiguration)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_ComputePostTrimTrimmableTypeMapInputs"
       Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
       AfterTargets="_ResolveAssemblies">
+    <PropertyGroup>
+      <!-- _GetPrimaryCpuAbi may select a single device RID after the initial RuntimeIdentifiers default was evaluated. -->
+      <_PostTrimTypeMapFirstRuntimeIdentifier Condition=" '$(RuntimeIdentifier)' != '' ">$(RuntimeIdentifier)</_PostTrimTypeMapFirstRuntimeIdentifier>
+    </PropertyGroup>
     <ItemGroup>
       <_PostTrimTrimmableTypeMapInputAssemblies Remove="@(_PostTrimTrimmableTypeMapInputAssemblies)" />
       <!-- Only the linked .dll assemblies that already exist on disk are valid inputs.
