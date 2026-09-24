@@ -1,5 +1,4 @@
 #nullable enable
-Java.Interop.JniPeerMembers.JniPeerTypeHandle.get -> nint
 virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementMethodInfoCore(string! jniSimpleReference, System.ReadOnlySpan<char> jniMethodName, System.ReadOnlySpan<char> jniMethodSignature) -> Java.Interop.JniRuntime.ReplacementMethodInfo?
 virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementMethodInfoCore(nint jniSimpleReferenceUtf8, System.ReadOnlySpan<char> jniMethodName, System.ReadOnlySpan<char> jniMethodSignature) -> Java.Interop.JniRuntime.ReplacementMethodInfo?
 virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementTypeInfoCore(string! jniSimpleReference, out string? replacement, out nint replacementUtf8) -> void

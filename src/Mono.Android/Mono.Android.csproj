@@ -248,6 +248,7 @@
     <Compile Include="Android.Runtime\JNIEnv.g.cs" />
     <Compile Include="Android.Runtime\JNIEnvInit.cs" />
     <Compile Include="Android.Runtime\JniHandleOwnership.cs" />
+    <Compile Include="Android.Runtime\JniPeerMembersExtensions.cs" />
     <Compile Include="Android.Runtime\JNINativeWrapper.cs" />
     <Compile Include="Android.Runtime\JNINativeWrapper.g.cs">
       <DesignTime>True</DesignTime>

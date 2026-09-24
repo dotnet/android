@@ -11,7 +11,7 @@ namespace Android.Widget {
 		void AddTextChangedListener (TextWatcherImplementor watcher)
 		{
 			if (id_addTextChangedListener == IntPtr.Zero)
-				id_addTextChangedListener = JNIEnv.GetMethodID (_members.JniPeerTypeHandle, "addTextChangedListener", "(Landroid/text/TextWatcher;)V");
+				id_addTextChangedListener = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "addTextChangedListener", "(Landroid/text/TextWatcher;)V");
 			JNIEnv.CallVoidMethod (Handle, id_addTextChangedListener, new JValue (watcher));
 			GC.KeepAlive (watcher);
 			GC.KeepAlive (this);

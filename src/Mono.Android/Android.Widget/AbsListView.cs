@@ -75,7 +75,7 @@ namespace Android.Widget {
 		public virtual void SetAdapter (Android.Widget.IListAdapter adapter)
 		{
 			if (id_setAdapter_Landroid_widget_ListAdapter_ == IntPtr.Zero)
-				id_setAdapter_Landroid_widget_ListAdapter_ = JNIEnv.GetMethodID (_members.JniPeerTypeHandle, "setAdapter", "(Landroid/widget/ListAdapter;)V");
+				id_setAdapter_Landroid_widget_ListAdapter_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "setAdapter", "(Landroid/widget/ListAdapter;)V");
 
 			if (GetType () == ThresholdType)
 				JNIEnv.CallVoidMethod  (Handle, id_setAdapter_Landroid_widget_ListAdapter_, new JValue (adapter));
@@ -97,7 +97,7 @@ namespace Android.Widget {
 				value = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null).Handle;
 #else   // !JAVA_INTEROP
 				if (id_getAdapter == IntPtr.Zero)
-					id_getAdapter = JNIEnv.GetMethodID (_members.JniPeerTypeHandle, "getAdapter", "()Landroid/widget/Adapter;");
+					id_getAdapter = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "getAdapter", "()Landroid/widget/Adapter;");
 				value = JNIEnv.CallObjectMethod (Handle, id_getAdapter);
 #endif	// !JAVA_INTEROP
 				return Java.Lang.Object.GetObject<IListAdapter> (value, JniHandleOwnership.TransferLocalRef);
@@ -115,7 +115,7 @@ namespace Android.Widget {
 				}
 #else   // !JAVA_INTEROP
 				if (id_setAdapter_Landroid_widget_Adapter_ == IntPtr.Zero)
-					id_setAdapter_Landroid_widget_Adapter_ = JNIEnv.GetMethodID (_members.JniPeerTypeHandle, "setAdapter", "(Landroid/widget/ListAdapter;)V");
+					id_setAdapter_Landroid_widget_Adapter_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "setAdapter", "(Landroid/widget/ListAdapter;)V");
 				JNIEnv.CallVoidMethod (Handle, id_setAdapter_Landroid_widget_Adapter_, new JValue (JNIEnv.ToJniHandle (value)));
 #endif	// !JAVA_INTEROP
 			}

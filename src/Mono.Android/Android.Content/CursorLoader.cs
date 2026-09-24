@@ -11,7 +11,7 @@ namespace Android.Content
                 public override Java.Lang.Object? LoadInBackground ()
                 {
                         if (id_loadInBackground == IntPtr.Zero)
-                                id_loadInBackground = JNIEnv.GetMethodID (_members.JniPeerTypeHandle, "loadInBackground", "()Landroid/database/Cursor;");
+                                id_loadInBackground = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "loadInBackground", "()Landroid/database/Cursor;");
 
                         if (GetType () == ThresholdType)
                                 return (Java.Lang.Object?) Java.Lang.Object.GetObject<Android.Database.ICursor> (JNIEnv.CallObjectMethod  (Handle, id_loadInBackground), JniHandleOwnership.TransferLocalRef);

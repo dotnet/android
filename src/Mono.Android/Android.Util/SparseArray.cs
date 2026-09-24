@@ -31,9 +31,9 @@ namespace Android.Util
 		public virtual void Append (int key, E value)
 		{
 			if (id_append_ILjava_lang_Object_ == IntPtr.Zero)
-				id_append_ILjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerTypeHandle, "put", "(ILjava/lang/Object;)V");
+				id_append_ILjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "put", "(ILjava/lang/Object;)V");
 			JavaConvert.WithLocalJniHandle (value, lref => {
-					JNIEnv.CallNonvirtualVoidMethod (Handle, GetPeerMembers (null).JniPeerTypeHandle, id_append_ILjava_lang_Object_, new JValue (key), new JValue (lref));
+					JNIEnv.CallNonvirtualVoidMethod (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_append_ILjava_lang_Object_, new JValue (key), new JValue (lref));
 					return IntPtr.Zero;
 			});
 		}
@@ -44,8 +44,8 @@ namespace Android.Util
 		public new virtual E Get (int key)
 		{
 			if (id_get_I == IntPtr.Zero)
-				id_get_I = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerTypeHandle, "get", "(I)Ljava/lang/Object;");
-			return JavaConvert.FromJniHandle<E>(JNIEnv.CallNonvirtualObjectMethod (Handle, GetPeerMembers (null).JniPeerTypeHandle, id_get_I, new JValue (key)), JniHandleOwnership.TransferLocalRef);
+				id_get_I = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "get", "(I)Ljava/lang/Object;");
+			return JavaConvert.FromJniHandle<E>(JNIEnv.CallNonvirtualObjectMethod (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_get_I, new JValue (key)), JniHandleOwnership.TransferLocalRef);
 		}
 
 		static IntPtr id_get_ILjava_lang_Object_;
@@ -54,9 +54,9 @@ namespace Android.Util
 		public virtual E Get (int key, E valueIfKeyNotFound)
 		{
 			if (id_get_ILjava_lang_Object_ == IntPtr.Zero)
-				id_get_ILjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerTypeHandle, "get", "(ILjava/lang/Object;)Ljava/lang/Object;");
+				id_get_ILjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "get", "(ILjava/lang/Object;)Ljava/lang/Object;");
 			IntPtr value = JavaConvert.WithLocalJniHandle (valueIfKeyNotFound,
-					lref => JNIEnv.CallNonvirtualObjectMethod (Handle, GetPeerMembers (null).JniPeerTypeHandle, id_get_ILjava_lang_Object_, new JValue (key), new JValue (lref)));
+					lref => JNIEnv.CallNonvirtualObjectMethod (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_get_ILjava_lang_Object_, new JValue (key), new JValue (lref)));
 			return JavaConvert.FromJniHandle<E> (value, JniHandleOwnership.TransferLocalRef);
 		}
 
@@ -65,9 +65,9 @@ namespace Android.Util
 		public virtual int IndexOfValue (E value)
 		{
 			if (id_indexOfValue_Ljava_lang_Object_ == IntPtr.Zero)
-				id_indexOfValue_Ljava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerTypeHandle, "indexOfValue", "(Ljava/lang/Object;)I");
+				id_indexOfValue_Ljava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "indexOfValue", "(Ljava/lang/Object;)I");
 			return JavaConvert.WithLocalJniHandle (value,
-					lref => JNIEnv.CallNonvirtualIntMethod (Handle, GetPeerMembers (null).JniPeerTypeHandle, id_indexOfValue_Ljava_lang_Object_, new JValue (lref)));
+					lref => JNIEnv.CallNonvirtualIntMethod (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_indexOfValue_Ljava_lang_Object_, new JValue (lref)));
 		}
 
 		static IntPtr id_put_ILjava_lang_Object_;
@@ -75,9 +75,9 @@ namespace Android.Util
 		public virtual void Put (int key, E value)
 		{
 			if (id_put_ILjava_lang_Object_ == IntPtr.Zero)
-				id_put_ILjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerTypeHandle, "put", "(ILjava/lang/Object;)V");
+				id_put_ILjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "put", "(ILjava/lang/Object;)V");
 			JavaConvert.WithLocalJniHandle (value, lref => {
-					JNIEnv.CallNonvirtualVoidMethod (Handle, GetPeerMembers (null).JniPeerTypeHandle, id_put_ILjava_lang_Object_, new JValue (key), new JValue (lref));
+					JNIEnv.CallNonvirtualVoidMethod (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_put_ILjava_lang_Object_, new JValue (key), new JValue (lref));
 					return IntPtr.Zero;
 			});
 		}
@@ -87,9 +87,9 @@ namespace Android.Util
 		public virtual void SetValueAt (int index, E value)
 		{
 			if (id_setValueAt_ILjava_lang_Object_ == IntPtr.Zero)
-				id_setValueAt_ILjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerTypeHandle, "setValueAt", "(ILjava/lang/Object;)V");
+				id_setValueAt_ILjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "setValueAt", "(ILjava/lang/Object;)V");
 			JavaConvert.WithLocalJniHandle (value, lref => {
-					JNIEnv.CallNonvirtualVoidMethod (Handle, GetPeerMembers (null).JniPeerTypeHandle, id_setValueAt_ILjava_lang_Object_, new JValue (index), new JValue (lref));
+					JNIEnv.CallNonvirtualVoidMethod (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_setValueAt_ILjava_lang_Object_, new JValue (index), new JValue (lref));
 					return IntPtr.Zero;
 			});
 		}
@@ -100,9 +100,9 @@ namespace Android.Util
 		public new virtual E ValueAt (int index)
 		{
 			if (id_valueAt_I == IntPtr.Zero)
-				id_valueAt_I = JNIEnv.GetMethodID (GetPeerMembers (null).JniPeerTypeHandle, "valueAt", "(I)Ljava/lang/Object;");
+				id_valueAt_I = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "valueAt", "(I)Ljava/lang/Object;");
 			return JavaConvert.FromJniHandle<E> (
-					JNIEnv.CallNonvirtualObjectMethod (Handle, GetPeerMembers (null).JniPeerTypeHandle, id_valueAt_I, new JValue (index)),
+					JNIEnv.CallNonvirtualObjectMethod (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_valueAt_I, new JValue (index)),
 					JniHandleOwnership.TransferLocalRef);
 		}
 	}
