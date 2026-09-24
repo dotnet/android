@@ -40,6 +40,10 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		);
 		var config = EnvironmentHelper.ReadApplicationConfig (environmentFiles);
 		Assert.AreEqual (haveAssemblyStore, config.have_assembly_store);
+
+		string source = File.ReadAllText (Path.Combine (outputRoot, "android", "environment.arm64-v8a.ll"));
+		Assert.That (source, Does.Not.Contain ("jni_add_native_method_registration_attribute_present"));
+		Assert.That (source, Does.Not.Contain ("jnienv_registerjninatives_method_token"));
 	}
 
 	[Test]

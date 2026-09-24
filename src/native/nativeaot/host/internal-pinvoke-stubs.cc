@@ -16,22 +16,6 @@ namespace {
 	}
 }
 
-const char* clr_typemap_managed_to_java (
-	[[maybe_unused]] const char *typeName,
-	[[maybe_unused]] const char *assemblyFullName,
-	[[maybe_unused]] const uint8_t *mvid) noexcept
-{
-	pinvoke_unreachable ();
-}
-
-bool clr_typemap_java_to_managed (
-	[[maybe_unused]] const char *java_type_name,
-	[[maybe_unused]] char const** assembly_name,
-	[[maybe_unused]]  uint32_t *managed_type_token_id) noexcept
-{
-	pinvoke_unreachable ();
-}
-
 const char* _monodroid_lookup_replacement_type ([[maybe_unused]] const char *jniSimpleReference)
 {
 	pinvoke_unreachable ();

@@ -123,15 +123,6 @@ namespace Android.Runtime
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial int _monodroid_max_gref_get ();
 
-		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial IntPtr clr_typemap_managed_to_java (string fullName, string? assemblyFullName, IntPtr mvid);
-
-		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		[return: MarshalAs (UnmanagedType.U1)]
-		internal static partial bool clr_typemap_java_to_managed (string java_type_name, out IntPtr managed_assembly_name, out uint managed_type_token_id);
-
 		[LibraryImport (RuntimeConstants.InternalDllName)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial delegate* unmanaged<MarkCrossReferencesArgs*, void> clr_initialize_gc_bridge (

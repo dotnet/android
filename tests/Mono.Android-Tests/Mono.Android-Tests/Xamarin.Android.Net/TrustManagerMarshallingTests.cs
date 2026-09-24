@@ -2,7 +2,6 @@ using System.Linq;
 using Android.Runtime;
 using Java.Security;
 using Javax.Net.Ssl;
-using Microsoft.Android.Runtime;
 using NUnit.Framework;
 
 namespace Xamarin.Android.NetTests
@@ -35,8 +34,6 @@ namespace Xamarin.Android.NetTests
 		[Test]
 		public void JavaInterfaceLookup_BaseInterfaceReturnType_UsesDerivedInterfaceProxy ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			// Mirrors API 21-23 TrustManagerImpl: the Java signature returns the
 			// base interface, but the concrete object advertises a derived interface.
 			using var provider = global::Net.Dot.Android.Test.InterfaceMarshalling.ExtendedValueProviderAsValueProvider;
@@ -49,13 +46,6 @@ namespace Xamarin.Android.NetTests
 
 			Assert.AreEqual (42, provider.Value);
 			Assert.AreEqual (84, extendedProvider.OtherValue);
-		}
-
-		static void AssumeTrimmableTypeMapEnabled ()
-		{
-			if (!RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
-			}
 		}
 	}
 }

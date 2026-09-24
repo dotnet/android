@@ -183,12 +183,10 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 
 	public bool UsesAssemblyPreload { get; set; }
 	public string AndroidPackageName { get; set; } = "";
-	public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
 	public int NumberOfAssembliesInApk { get; set; }
 	public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
 	public int AndroidRuntimeJNIEnvToken { get; set; }
 	public int JNIEnvInitializeToken { get; set; }
-	public int JNIEnvRegisterJniNativesToken { get; set; }
 	public int JniRemappingReplacementTypeCount { get; set; }
 	public int JniRemappingReplacementMethodIndexEntryCount { get; set; }
 	public PackageNamingPolicy PackageNamingPolicy { get; set; }
@@ -267,7 +265,6 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 		DsoCacheState dsoState = InitDSOCache ();
 		var app_cfg = new ApplicationConfig {
 			uses_assembly_preload = UsesAssemblyPreload,
-			jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
 			marshal_methods_enabled = MarshalMethodsEnabled,
 			ignore_split_configs = IgnoreSplitConfigs,
 			number_of_runtime_properties = (uint)(runtimeProperties == null ? 0 : runtimeProperties.Count),
@@ -280,7 +277,6 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 			number_of_dso_cache_entries = (uint)dsoState.DsoCache.Count,
 			android_runtime_jnienv_class_token = (uint)AndroidRuntimeJNIEnvToken,
 			jnienv_initialize_method_token = (uint)JNIEnvInitializeToken,
-			jnienv_registerjninatives_method_token = (uint)JNIEnvRegisterJniNativesToken,
 			jni_remapping_replacement_type_count = (uint)JniRemappingReplacementTypeCount,
 			jni_remapping_replacement_method_index_entry_count = (uint)JniRemappingReplacementMethodIndexEntryCount,
 			android_package_name = AndroidPackageName,

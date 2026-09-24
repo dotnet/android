@@ -138,8 +138,6 @@ void FastTiming::dump (size_t entries, bool indent, LineWriter line_writer, FILE
 
 	// Values are in nanoseconds
 	uint64_t total_assembly_load_time = 0u;
-	uint64_t total_java_to_managed_time = 0u;
-	uint64_t total_managed_to_java_time = 0u;
 	uint64_t total_assembly_decompression_time = 0u;
 
 	line_writer (output, "All logged events:"sv);
@@ -157,14 +155,6 @@ void FastTiming::dump (size_t entries, bool indent, LineWriter line_writer, FILE
 
 			case TimingEventKind::AssemblyDecompression:
 				total_assembly_decompression_time += event_time_ns;
-				break;
-
-			case TimingEventKind::JavaToManaged:
-				total_java_to_managed_time += event_time_ns;
-				break;
-
-			case TimingEventKind::ManagedToJava:
-				total_managed_to_java_time += event_time_ns;
 				break;
 
 			default:
@@ -221,8 +211,6 @@ void FastTiming::dump (size_t entries, bool indent, LineWriter line_writer, FILE
 	// Do not change the sequence numbers. If a measurement is removed, its sequence number must not be reused.
 	// The sequence numbers are used by performance measuring utilities to find the figures.
 	log_time ("[2/5] Assembly load"sv, total_assembly_load_time);
-	log_time ("[2/6] Java to Managed lookup"sv, total_java_to_managed_time);
-	log_time ("[2/7] Managed to Java lookup"sv, total_managed_to_java_time);
 	log_time ("[2/8] Assembly decompression"sv, total_assembly_decompression_time);
 }
 

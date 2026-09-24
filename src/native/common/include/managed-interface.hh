@@ -15,7 +15,6 @@ namespace xamarin::android {
 	};
 
 	using jnienv_propagate_uncaught_exception_fn = void (*)(JNIEnv *env, jobject javaThread, jthrowable javaException);
-	using jnienv_register_jni_natives_fn = void (*)(const jchar *typeName_ptr, int32_t typeName_len, jclass jniClass, const jchar *methods_ptr, int32_t methods_len);
 
 	enum class ReferenceLogEvent : int32_t
 	{
@@ -50,12 +49,10 @@ namespace xamarin::android {
 		uint8_t         brokenExceptionTransitions;
 		int             packageNamingPolicy;
 		uint8_t         boundExceptionType;
-		int             jniAddNativeMethodRegistrationAttributePresent;
 		bool            jniRemappingInUse;
 		bool            marshalMethodsEnabled;
 		jobject         grefGCUserPeerable;
 		jnienv_propagate_uncaught_exception_fn propagateUncaughtExceptionFn;
-		jnienv_register_jni_natives_fn registerJniNativesFn;
 		const char      *grefLogPath;
 		const char      *lrefLogPath;
 		const char      *referenceLogDirectory;

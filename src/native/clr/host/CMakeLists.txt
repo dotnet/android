@@ -38,7 +38,6 @@ set(XAMARIN_MONODROID_SOURCES
   os-bridge.cc
   runtime-environment.cc
   runtime-util.cc
-  typemap.cc
 )
 
 if(DEBUG_BUILD)

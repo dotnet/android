@@ -600,10 +600,6 @@ namespace Java.InteropTests
 		[Category ("NativeAOTTrimmable")]
 		public void FromJniHandle_IDictionaryInt32Int64 ()
 		{
-			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("This test validates value/value dictionary rooting on the trimmable typemap path.");
-			}
-
 			using (var source = new JavaDictionary ()) {
 				source.Add (1, 100L);
 				source.Add (2, 200L);
@@ -711,10 +707,6 @@ namespace Java.InteropTests
 		[Category ("NativeAOTTrimmable")]
 		public void FromJniHandle_UnsupportedValueTypeUsesRuntimeSpecificPath (Type targetType, bool dictionary)
 		{
-			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("This test validates value-type containers on the trimmable typemap path.");
-			}
-
 			Java.Lang.Object source = dictionary ? new JavaDictionary () : new JavaList ();
 			using (source) {
 				var converted = InvokeJavaConvertFromJniHandle (targetType, source.Handle, JniHandleOwnership.DoNotTransfer);

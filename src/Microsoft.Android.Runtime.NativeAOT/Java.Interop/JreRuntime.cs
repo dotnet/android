@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -80,11 +79,9 @@ namespace Java.Interop {
 			return new TrimmableTypeMapTypeManager ();
 		}
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "CoreCLR value manager is preserved by the MarkJavaObjects trimmer step.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
 		static JniRuntime.JniValueManager CreateDefaultValueManager ()
 		{
-			return new JavaMarshalValueManager ();
+			return new TrimmableTypeMapValueManager ();
 		}
 
 		public override string? GetCurrentManagedThreadName ()

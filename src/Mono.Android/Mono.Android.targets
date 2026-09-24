@@ -161,10 +161,6 @@
       <DefineConstants>$(DefineConstants);$([System.String]::Copy('$(_GeneratedDefineConstants)').Replace ('%24(DefineConstants);', ''))</DefineConstants>
     </PropertyGroup>
   </Target>
-  <ItemGroup>
-    <JavaCallableWrapperSource Include="java\**\*.java" />
-  </ItemGroup>
-  
   <!-- Generates 'AndroidApiInfo.xml' file -->
   <Target Name="_GenerateAndroidApiInfo"
       BeforeTargets="GetTargetFrameworkProperties;GetReferenceAssemblyPaths;ResolveReferences"

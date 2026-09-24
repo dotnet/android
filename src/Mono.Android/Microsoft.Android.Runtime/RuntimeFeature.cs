@@ -10,10 +10,8 @@ static class RuntimeFeature
 	const bool IsAssignableFromCheckEnabledByDefault = true;
 	const bool StartupNoGCRegionEnabledByDefault = true;
 	const bool StartupHookSupportEnabledByDefault = true;
-	const bool TrimmableTypeMapEnabledByDefault = false;
 	const bool UseTypeMapAttributesForJavaDictionaryValueTypeLookupsEnabledByDefault = false;
 	const bool ObjectReferenceLoggingEnabledByDefault = false;
-	const bool ManagedToJavaUsesAssemblyFullNameEnabledByDefault = false;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
 	const string EventSourceSupportSwitch = "System.Diagnostics.Tracing.EventSource.IsSupported";
@@ -40,10 +38,6 @@ static class RuntimeFeature
 	internal static bool StartupHookSupport { get; } =
 		AppContext.TryGetSwitch (StartupHookProviderSwitch, out bool isEnabled) ? isEnabled : StartupHookSupportEnabledByDefault;
 
-	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (TrimmableTypeMap)}")]
-	internal static bool TrimmableTypeMap { get; } =
-		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (TrimmableTypeMap)}", out bool isEnabled) ? isEnabled : TrimmableTypeMapEnabledByDefault;
-
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (UseTypeMapAttributesForJavaDictionaryValueTypeLookups)}")]
 	internal static bool UseTypeMapAttributesForJavaDictionaryValueTypeLookups { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (UseTypeMapAttributesForJavaDictionaryValueTypeLookups)}", out bool isEnabled) ? isEnabled : UseTypeMapAttributesForJavaDictionaryValueTypeLookupsEnabledByDefault;
@@ -56,8 +50,4 @@ static class RuntimeFeature
 	internal static bool EventSourceSupport { get; } =
 		!AppContext.TryGetSwitch (EventSourceSupportSwitch, out bool isEnabled) || isEnabled;
 
-	// Enabled for Debug builds, whose string-based typemaps support Fast Deployment without embedding assembly MVIDs.
-	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ManagedToJavaUsesAssemblyFullName)}")]
-	internal static bool ManagedToJavaUsesAssemblyFullName { get; } =
-		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (ManagedToJavaUsesAssemblyFullName)}", out bool isEnabled) ? isEnabled : ManagedToJavaUsesAssemblyFullNameEnabledByDefault;
 }

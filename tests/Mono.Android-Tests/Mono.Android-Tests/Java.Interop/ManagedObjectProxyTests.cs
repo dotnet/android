@@ -214,21 +214,14 @@ namespace Java.InteropTests
 						JniObjectReference.Dispose (ref actualStringReference);
 					}
 
-					if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-						Assert.IsFalse (JNIEnv.CallBooleanMethod (reference.Handle, equals, new JValue (equalReference.Handle)),
-							"Trimmable proxies intentionally use Java reference identity instead of managed Equals.");
-						Assert.AreEqual (GetJavaIdentityHashCode (reference), actualHashCode,
-							"Trimmable proxies intentionally use Java identity hash codes.");
-						string runtimeClassName = JNIEnv.GetClassNameFromInstance (reference.Handle).Replace ('/', '.');
-						string expectedString = $"{runtimeClassName}@{unchecked ((uint) actualHashCode).ToString ("x", CultureInfo.InvariantCulture)}";
-						Assert.AreEqual (expectedString, actualString,
-							"Trimmable proxies should use the exact default java.lang.Object.toString format.");
-					} else {
-						Assert.IsTrue (JNIEnv.CallBooleanMethod (reference.Handle, equals, new JValue (equalReference.Handle)),
-							"The llvm-ir proxy forwards Java equals to the managed override.");
-						Assert.AreEqual (value.GetHashCode (), actualHashCode);
-						Assert.AreEqual (value.ToString (), actualString);
-					}
+					Assert.IsFalse (JNIEnv.CallBooleanMethod (reference.Handle, equals, new JValue (equalReference.Handle)),
+						"Trimmable proxies intentionally use Java reference identity instead of managed Equals.");
+					Assert.AreEqual (GetJavaIdentityHashCode (reference), actualHashCode,
+						"Trimmable proxies intentionally use Java identity hash codes.");
+					string runtimeClassName = JNIEnv.GetClassNameFromInstance (reference.Handle).Replace ('/', '.');
+					string expectedString = $"{runtimeClassName}@{unchecked ((uint) actualHashCode).ToString ("x", CultureInfo.InvariantCulture)}";
+					Assert.AreEqual (expectedString, actualString,
+						"Trimmable proxies should use the exact default java.lang.Object.toString format.");
 				} finally {
 					JNIEnv.DeleteLocalRef (proxyClass);
 				}
