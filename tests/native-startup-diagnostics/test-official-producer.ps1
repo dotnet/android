@@ -4,6 +4,8 @@ Set-StrictMode -Version Latest
 $root = [IO.Path]::GetFullPath("$PSScriptRoot\..\..")
 $out = Join-Path $root 'bin\guest-readiness-official-tests'
 New-Item -ItemType Directory -Force $out | Out-Null
+& (Join-Path $PSHOME $(if ($IsWindows) { 'pwsh.exe' } else { 'pwsh' })) -NoProfile -File "$PSScriptRoot\test-runtime-pack-producer.ps1"
+if ($LASTEXITCODE -ne 0) { throw "Runtime pack fixture preparation failed with exit code $LASTEXITCODE." }
 Import-Module "$root\build-tools\scripts\guest-readiness-runtime-pack.psm1" -Force
 function Assert([bool] $Value, [string] $Message) { if (-not $Value) { throw $Message } }
 function Reject([scriptblock] $Action, [string] $Message) {
@@ -319,6 +321,163 @@ $collisionDestination = Join-Path $bindingDirectory 'collision-SignList.xml'
 'different policy' | Set-Content $collisionDestination
 Reject { Copy-GuestReceiptFile $signListSource $collisionDestination } 'Retained receipt file collides with different bytes.'
 Assert ((Get-Content $collisionDestination -Raw).Trim() -ceq 'different policy') 'Collision not overwritten'
+
+# Run the complete Output entry point against synthetic signing inputs. Only Git and
+# standard NuGet verification execute; template files/binlogs/configs do not attest a real signer/build.
+$failureRoot = Join-Path $out ('output-failure-case-' + [Guid]::NewGuid().ToString('N'))
+$packed = Join-Path $failureRoot 'packed'
+$unsigned = Join-Path $failureRoot 'unsigned'
+$failureBuildDirectory = Join-Path $failureRoot 'build'
+$signReceiptDirectory = Join-Path $failureRoot 'receipts'
+$retained = Join-Path $failureRoot 'retained'
+$templateRoot = Join-Path $failureRoot 'yaml-templates'
+$microbuildRoot = Join-Path $failureRoot 'microbuild'
+$signBinlogs = Join-Path $failureRoot 'signing-binlogs'
+foreach ($directory in @($packed, $unsigned, $failureBuildDirectory, $signReceiptDirectory, $templateRoot, $microbuildRoot, $signBinlogs)) {
+    New-Item -ItemType Directory -Force $directory | Out-Null
+}
+@{ kind = 'synthetic-output-failure-fixture'; normalBuildOrSignerExecuted = $false
+   templateGitContext = 'Fixture folders inherit this test repository HEAD; not actual template checkouts.'
+   priorJobStatus = 'Failed'; normalCopySignedOutputDirectoryPresent = $false
+} | ConvertTo-Json | Set-Content (Join-Path $failureRoot 'fixture-scope.json')
+foreach ($spec in @(
+    @{ root = $templateRoot; paths = @('sign-artifacts\jobs\v4.yml', 'sign-artifacts\steps\v4.yml',
+        'sign-artifacts\steps\v4-SignFiles.proj', 'sign-artifacts\steps\common\Extract.ps1',
+        'sign-artifacts\steps\common\EscapeSignFiles.ps1') },
+    @{ root = $microbuildRoot; paths = @('azure-pipelines\MicroBuild.1ES.Unofficial.yml',
+        'azure-pipelines\Stages\Stage.yml', 'azure-pipelines\Jobs\Job.yml') }
+)) {
+    foreach ($relativePath in $spec.paths) {
+        $destination = Join-Path $spec.root $relativePath
+        New-Item -ItemType Directory -Force (Split-Path $destination) | Out-Null
+        'SYNTHETIC fixture, not actual template source.' | Set-Content $destination
+    }
+}
+foreach ($name in @('SignPackageContents.binlog', 'SignNuGetPackages.binlog')) {
+    'SYNTHETIC fixture, not a real signing binlog.' | Set-Content (Join-Path $signBinlogs $name)
+}
+$failureBuild = $build | ConvertTo-Json -Depth 15 | ConvertFrom-Json
+foreach ($template in $failureBuild.templates) { $template.commit = $environment.BUILD_SOURCEVERSION }
+$failureBuild.files = [Collections.Generic.List[object]]::new()
+$failureBuild.packages = [Collections.Generic.List[object]]::new()
+foreach ($rid in @('android-arm64', 'android-x64')) {
+    $id = "Microsoft.Android.Runtime.Mono.36.$rid"
+    $leaf = "$id.$($identity.version).nupkg"
+    Copy-Item (Native-Fixture "output-before-$rid" $rid) (Join-Path $unsigned $leaf)
+    Copy-Item (Native-Fixture "output-after-$rid" $rid 'signature') (Join-Path $packed $leaf)
+    $inventory = Read-GuestRuntimePackInventory (Join-Path $unsigned $leaf) $rid $identity.version
+    $inventoryName = "build.inventory.$id.json"
+    $json = ($inventory | ConvertTo-Json -Depth 12).Replace("`r`n", "`n").Replace("`r", "`n").TrimEnd([char]10) + "`n"
+    [IO.File]::WriteAllText((Join-Path $failureBuildDirectory $inventoryName), $json, [Text.UTF8Encoding]::new($false))
+    $failureBuild.files.Add([pscustomobject]@{ fileName = $leaf; sizeBytes = $inventory.sizeBytes; sha256 = $inventory.sha256 })
+    $failureBuild.packages.Add([pscustomobject]@{ id = $id; inventory = [pscustomobject]@{
+        fileName = $inventoryName; sha256 = (Get-FileHash (Join-Path $failureBuildDirectory $inventoryName)).Hash.ToLowerInvariant() } })
+    $abi = if ($rid -eq 'android-arm64') { 'arm64-v8a' } else { 'x86_64' }
+    foreach ($configuration in @('Debug', 'Release')) {
+        foreach ($name in @("CMakeCache-$abi-$configuration.txt", "CMakeCCompiler-$abi-$configuration.cmake", "CMakeCXXCompiler-$abi-$configuration.cmake")) {
+            $file = Join-Path $failureBuildDirectory $name
+            'SYNTHETIC fixture, not an actual compiler configuration.' | Set-Content $file
+            $failureBuild.files.Add([pscustomobject]@{ fileName = $name; sizeBytes = (Get-Item $file).Length; sha256 = (Get-FileHash $file).Hash.ToLowerInvariant() })
+        }
+    }
+}
+$failureBuild | ConvertTo-Json -Depth 15 | Set-Content (Join-Path $failureBuildDirectory 'pack-receipt.json') -Encoding utf8
+$env:GUEST_YAML_VERSION = $environment.BUILD_SOURCEVERSION
+$env:GUEST_1ES_VERSION = $environment.BUILD_SOURCEVERSION
+$env:GUEST_BUILD_RECEIPT_DIRECTORY = $failureBuildDirectory
+$env:GUEST_UNSIGNED_DIRECTORY = $unsigned
+$env:GUEST_SIGN_RECEIPT_DIRECTORY = $signReceiptDirectory
+$env:GUEST_TEMPLATE_CHECKOUT = $templateRoot
+$env:GUEST_1ES_CHECKOUT = $microbuildRoot
+$env:GUEST_SIGN_BINLOG_DIRECTORY = $signBinlogs
+$env:GUEST_SIGNING_OUTPUT_DIRECTORY = $packed
+$env:GUEST_RETAINED_OUTPUT_DIRECTORY = $retained
+$env:GUEST_SIGNING_JOB_STATUS = 'Failed'
+& "$root\build-tools\scripts\guest-readiness-official.ps1" -Phase Input
+Reject { & "$root\build-tools\scripts\guest-readiness-official.ps1" -Phase Output } 'Normal output retained, but standard verification failed; no policy admission.'
+$captured = Get-Content (Join-Path $signReceiptDirectory 'output-receipt.json') -Raw | ConvertFrom-Json
+Assert ($captured.status -ceq 'produced-verification-failed' -and $captured.failure.stage -ceq 'prior-signing-job') 'Original failed job remains failed with actual post-verifier failures'
+$contextRef = @($captured.files | Where-Object { $_.fileName -ceq 'output-signing-context.json' })
+Assert ($contextRef.Count -eq 1) 'Pre-hook observation bound in existing Output files'
+$contextPath = Join-Path $signReceiptDirectory $contextRef[0].fileName
+Assert ((Get-FileHash $contextPath).Hash.ToLowerInvariant() -ceq $contextRef[0].sha256) 'Observed signing context hash bound'
+$context = Get-Content $contextPath -Raw | ConvertFrom-Json
+Assert ($context.priorJobStatus -ceq 'Failed' -and $context.observationPhase -ceq 'Output-hook-entry') 'Exact observed prior job status and phase'
+Assert ([DateTimeOffset]::Parse($context.observedAtUtc) -le [DateTimeOffset]::Parse($captured.commands[0].startedAtUtc)) 'Observation predates capture commands'
+Assert (-not @($captured.files | Where-Object { $_.fileName.StartsWith('postsign.') }).Count) 'No reverse post-sign receipt hash cycle'
+Assert (-not (Test-Path (Join-Path $failureRoot 'signed'))) 'Normal CopySignedOutput destination is absent'
+Assert (@(Get-ChildItem $retained -File).Count -eq 2) 'Only the two expected produced archives retained'
+foreach ($rid in @('android-arm64', 'android-x64')) {
+    $id = "Microsoft.Android.Runtime.Mono.36.$rid"
+    $leaf = "$id.$($identity.version).nupkg"
+    Assert ((Get-FileHash (Join-Path $packed $leaf)).Hash -ceq (Get-FileHash (Join-Path $retained $leaf)).Hash) 'Retained archive is byte-identical to normal packed output'
+    $signature = Get-Content (Join-Path $signReceiptDirectory "output.signature.$id.json") -Raw | ConvertFrom-Json
+    $command = @($captured.commands | Where-Object { $_.name -ceq "output-verify-$rid" })[0]
+    Assert ($signature.verificationExitCode -ne 0 -and $signature.verificationExitCode -eq $command.exitCode) 'Actual fresh verifier exit retained'
+    Assert ($command.workingDirectory -ceq $packed -and $command.arguments[-1] -ceq $leaf) 'Verification uses exact normal packed path and leaf'
+    Assert ($signature.outputSha256 -ceq (Get-FileHash (Join-Path $signReceiptDirectory $signature.outputFileName)).Hash.ToLowerInvariant()) 'Actual failure log retained'
+    $postsign = Get-Content (Join-Path $signReceiptDirectory "postsign.$id.json") -Raw | ConvertFrom-Json
+    Assert ($postsign.status -ceq 'produced-verification-failed') 'Common sidecar does not invent success'
+    $verifyRef = @($postsign.operationEvidence | Where-Object { $_.role -ceq 'verify' })[0].reference
+    Assert ($verifyRef.sha256 -ceq (Get-FileHash (Join-Path $signReceiptDirectory 'output-receipt.json')).Hash.ToLowerInvariant()) 'Post-sign verify reference binds finalized Output in one direction'
+}
+
+# Exercise the production status assignment with modeled flags; no successful verifier is fabricated.
+$statusAssignment = $ast.Find({
+    param ($node)
+    $node -is [Management.Automation.Language.AssignmentStatementAst] -and
+        $node.Left.Extent.Text -ceq '$receipt.status' -and $node.Right.Extent.Text.Contains('$verificationFailed')
+}, $true)
+Assert ($null -ne $statusAssignment) 'Production Output status assignment found'
+foreach ($case in @(
+    @{ verifyFailed = $false; priorFailed = $false; status = 'completed-unadmitted' },
+    @{ verifyFailed = $false; priorFailed = $true; status = 'failed' },
+    @{ verifyFailed = $true; priorFailed = $false; status = 'produced-verification-failed' },
+    @{ verifyFailed = $true; priorFailed = $true; status = 'produced-verification-failed' }
+)) {
+    $receipt = [pscustomobject]@{ status = 'running' }
+    $verificationFailed = $case.verifyFailed; $priorSigningFailed = $case.priorFailed
+    & ([scriptblock]::Create($statusAssignment.Extent.Text))
+    Assert ($receipt.status -ceq $case.status) 'Fresh verification success cannot erase inherited failure'
+}
+$constructed = $captured | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+$constructed.status = 'completed-unadmitted'; $constructed.failure = $null
+$constructed.commands = @(); $constructed.files = @(); $constructed.packages = @()
+@{
+    fixtureKind = 'constructed-success-root-shape-only'
+    notice = 'Modeled root shape with no commands, files or packages; NOT actual successful build/sign/verification evidence and NOT admissible.'
+    root = $constructed
+} | ConvertTo-Json -Depth 20 | Set-Content (Join-Path $failureRoot 'constructed-success-root-shape.json') -Encoding utf8
+
+# Missing packed outputs never fall back to available unsigned inputs.
+$env:GUEST_SIGN_RECEIPT_DIRECTORY = Join-Path $failureRoot 'missing-packed-receipts'
+$env:GUEST_RETAINED_OUTPUT_DIRECTORY = Join-Path $failureRoot 'missing-packed-retained'
+$env:GUEST_SIGNING_OUTPUT_DIRECTORY = Join-Path $failureRoot 'missing-packed'
+Reject { & "$root\build-tools\scripts\guest-readiness-official.ps1" -Phase Output } 'Producer command failed: output-verification-tool-version (invocation-failed).'
+Assert (@(Get-ChildItem $env:GUEST_RETAINED_OUTPUT_DIRECTORY -File).Count -eq 0) 'No unsigned fallback when normal outputs are missing'
+$missing = Get-Content (Join-Path $env:GUEST_SIGN_RECEIPT_DIRECTORY 'output-receipt.json') -Raw | ConvertFrom-Json
+Assert ($missing.status -ceq 'failed' -and $missing.failure.message.Contains('Prior signing job status: Failed')) 'Missing output retains explicit failed provenance'
+
+# A normal packed candidate without a signature is observed and verified, never copied as signed output.
+$unsignedPacked = Join-Path $failureRoot 'unsigned-packed'
+New-Item -ItemType Directory $unsignedPacked | Out-Null
+foreach ($rid in @('android-arm64', 'android-x64')) {
+    $leaf = "Microsoft.Android.Runtime.Mono.36.$rid.$($identity.version).nupkg"
+    Copy-Item (Join-Path $unsigned $leaf) (Join-Path $unsignedPacked $leaf)
+}
+$env:GUEST_SIGN_RECEIPT_DIRECTORY = Join-Path $failureRoot 'unsigned-output-receipts'
+New-Item -ItemType Directory $env:GUEST_SIGN_RECEIPT_DIRECTORY | Out-Null
+foreach ($rid in @('android-arm64', 'android-x64')) {
+    $name = "input.inventory.Microsoft.Android.Runtime.Mono.36.$rid.json"
+    Copy-Item (Join-Path $signReceiptDirectory $name) (Join-Path $env:GUEST_SIGN_RECEIPT_DIRECTORY $name)
+}
+$env:GUEST_RETAINED_OUTPUT_DIRECTORY = Join-Path $failureRoot 'unsigned-output-retained'
+$env:GUEST_SIGNING_OUTPUT_DIRECTORY = $unsignedPacked
+Reject { & "$root\build-tools\scripts\guest-readiness-official.ps1" -Phase Output } 'Normal packed output has no signature entry; unsigned output is not retained as signed output.'
+Assert (@(Get-ChildItem $env:GUEST_RETAINED_OUTPUT_DIRECTORY -File).Count -eq 0) 'Missing signatures are not laundered into retained signed output'
+$unsignedSignature = Get-Content (Join-Path $env:GUEST_SIGN_RECEIPT_DIRECTORY 'output.signature.Microsoft.Android.Runtime.Mono.36.android-arm64.json') -Raw | ConvertFrom-Json
+Assert ($unsignedSignature.classification -ceq 'unsigned' -and $unsignedSignature.verificationExitCode -ne 0) 'Unsigned failure classification and actual verifier result retained'
+Write-Output 'PASS: actual Output failure path with absent normal signed directory, two retained invalid-signature archives, original failed status, missing-packed and unsigned-output rejection.'
 Write-Output 'PASS: Build-to-Pack source/command/log binding, byte-identical distinct receipt alias and SignList retention/collision.'
 Write-Output 'PASS: Mac-style LF/non-ASCII inventory through actual Input collector; deterministic UTF-8/no-BOM/LF/terminal newline and independent archive hash; raw Build/Pack/SignList copies unchanged.'
 Write-Output 'PASS: exact manual gates, real nested MSBuild OFF/ON/rejections, real ZIP native metadata/deltas, synthetic post-sign constructors and actual standard verification failure.'

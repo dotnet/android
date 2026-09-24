@@ -124,6 +124,30 @@ function Save-Inventory([string] $Directory, [string] $Rid, [string] $Prefix) {
 }
 try {
     $verificationFailed = $false
+    $priorSigningFailed = $false
+    $priorJobStatus = ''
+    if ($Phase -eq 'Output') {
+        $priorJobStatus = $env:GUEST_SIGNING_JOB_STATUS
+        if ($priorJobStatus -cnotin @('Succeeded', 'SucceededWithIssues', 'Failed', 'Canceled', 'Skipped') -or
+            [string]::IsNullOrWhiteSpace($env:GUEST_SIGNING_OUTPUT_DIRECTORY) -or
+            [string]::IsNullOrWhiteSpace($env:GUEST_RETAINED_OUTPUT_DIRECTORY)) {
+            throw 'Normal signing output, retention directory and prior job status are required.'
+        }
+        if ([IO.Path]::GetFullPath($env:GUEST_SIGNING_OUTPUT_DIRECTORY) -ieq [IO.Path]::GetFullPath($env:GUEST_RETAINED_OUTPUT_DIRECTORY)) {
+            throw 'Signing source and retained output directories must be distinct.'
+        }
+        New-Item -ItemType Directory -Force $env:GUEST_RETAINED_OUTPUT_DIRECTORY | Out-Null
+        $priorSigningFailed = $priorJobStatus -cne 'Succeeded'
+        $contextPath = Join-Path $out 'output-signing-context.json'
+        [pscustomobject]@{
+            schemaVersion = 1; kind = 'android-normal-signing-output-context'
+            priorJobStatus = $priorJobStatus; observationPhase = 'Output-hook-entry'; observedAtUtc = [DateTime]::UtcNow.ToString('O')
+            sourceStage = 'normal-packed-signing-output'; sourceDirectory = $env:GUEST_SIGNING_OUTPUT_DIRECTORY
+            notice = 'Pre-hook Agent.JobStatus environment observation, not the final provider job result. Individual earlier task results were not collected.'
+        } | ConvertTo-Json -Depth 4 | Set-Content $contextPath -Encoding utf8
+        $receipt.files.Add((Get-FileReference $contextPath))
+        Write-GuestProducerReceipt $receipt $receiptPath
+    }
     $patch = Join-Path $out "$($Phase.ToLowerInvariant()).source.patch"
     Invoke-Recorded 'source-patch' git @('diff', '--binary', "--output=$patch", $baseline, 'HEAD') | Out-Null
     $receipt.patchSha256 = (Get-FileHash $patch).Hash.ToLowerInvariant()
@@ -209,7 +233,7 @@ try {
             if ((Get-Content (Join-Path $out 'output-sign-template-commit.log') -Raw).Trim() -cne $env:GUEST_YAML_VERSION) {
                 throw 'Signer template checkout differs from resolved resource.'
             }
-            Invoke-Recorded 'verification-tool-version' dotnet @('--version') $env:GUEST_SIGNED_DIRECTORY | Out-Null
+            Invoke-Recorded 'verification-tool-version' dotnet @('--version') $env:GUEST_SIGNING_OUTPUT_DIRECTORY | Out-Null
             $toolVersion = (Get-Content (Join-Path $out 'output-verification-tool-version.log') -Raw).Trim()
             if ($toolVersion -cnotmatch '\A[0-9A-Za-z._-]{1,128}\z') { throw 'Invalid verifier version output.' }
             Invoke-Recorded '1es-template-commit' git @('rev-parse', 'HEAD') $env:GUEST_1ES_CHECKOUT | Out-Null
@@ -257,7 +281,7 @@ try {
                 throw 'Signing transformed its retained unsigned input inventory.'
             }
             $inputPackage.reference = Get-FileReference $originalInputPath
-            $output = Save-Inventory $env:GUEST_SIGNED_DIRECTORY $rid 'output'
+            $output = Save-Inventory $env:GUEST_SIGNING_OUTPUT_DIRECTORY $rid 'output'
             $outputCarriers = @(Read-GuestRuntimePackNativeCarriers $output.path $output.value $identity.buildId)
             $configurationEvidence = [Collections.Generic.List[object]]::new()
             $abi = if ($rid -eq 'android-arm64') { 'arm64-v8a' } else { 'x86_64' }
@@ -288,7 +312,7 @@ try {
                 carriers = $outputCarriers
             } | ConvertTo-Json -Depth 12 | Set-Content (Join-Path $out "native-provenance.$($output.value.id).json") -Encoding utf8
             $verify = Invoke-GuestProducerCommand -Name "output-verify-$rid" -Tool dotnet -Arguments @('nuget', 'verify', '--all', $output.value.fileName) `
-                -WorkingDirectory $env:GUEST_SIGNED_DIRECTORY -Receipt $receipt -ReceiptPath $receiptPath -AllowNonzeroExit
+                -WorkingDirectory $env:GUEST_SIGNING_OUTPUT_DIRECTORY -Receipt $receipt -ReceiptPath $receiptPath -AllowNonzeroExit
             $signature = New-GuestRuntimePackSignature $output.value $verify.exitCode $toolVersion (Join-Path $out $verify.outputFileName)
             $signaturePath = Join-Path $out "output.signature.$($output.value.id).json"
             $signature | ConvertTo-Json -Depth 8 | Set-Content $signaturePath -Encoding utf8
@@ -304,12 +328,19 @@ try {
                 changes = @(Get-GuestRuntimePackMemberDelta $inputPackage.value $output.value)
                 notice = 'Observed transformations only; no policy admission. NuGet pack task result not captured; correlate the provider timeline independently.'
             } | ConvertTo-Json -Depth 12 | Set-Content $deltaPath -Encoding utf8
-            if (-not $output.value.signatureEntryPresent -or $verify.exitCode -ne 0) {
+            if (-not $output.value.signatureEntryPresent) {
+                throw 'Normal packed output has no signature entry; unsigned output is not retained as signed output.'
+            }
+            Copy-GuestReceiptFile $output.path (Join-Path $env:GUEST_RETAINED_OUTPUT_DIRECTORY $output.value.fileName) | Out-Null
+            if ($verify.exitCode -ne 0) {
                 $verificationFailed = $true
             }
         }
     }
-    $receipt.status = if ($verificationFailed) { 'produced-verification-failed' } else { 'completed-unadmitted' }
+    if ($priorSigningFailed) {
+        $receipt.failure = [pscustomobject]@{ stage = 'prior-signing-job'; message = "Job status before output capture: $priorJobStatus; individual earlier task results were not collected." }
+    }
+    $receipt.status = if ($verificationFailed) { 'produced-verification-failed' } elseif ($priorSigningFailed) { 'failed' } else { 'completed-unadmitted' }
     Write-GuestProducerReceipt $receipt $receiptPath
     if ($Phase -eq 'Output') {
         foreach ($package in $receipt.packages) {
@@ -343,7 +374,11 @@ try {
 } catch {
     $receipt.status = 'failed'
     if ($null -eq $receipt.failure) { $receipt.failure = [pscustomobject]@{ stage = $Phase; message = $_.Exception.Message } }
+    if ($Phase -eq 'Output' -and -not [string]::IsNullOrWhiteSpace($priorJobStatus)) {
+        $receipt.failure.message = "Prior signing job status: $priorJobStatus; individual earlier task results not collected. $($receipt.failure.message)"
+    }
     Write-GuestProducerReceipt $receipt $receiptPath
     throw
 }
 if ($verificationFailed) { Write-Error 'Normal output retained, but standard verification failed; no policy admission.' }
+if ($priorSigningFailed) { Write-Error "Normal output retained, but prior signing job status was $priorJobStatus; no policy admission." }

@@ -311,6 +311,25 @@ leaf argument/cwd and combined stdout/stderr log hash, then fails the hook.
 The normal NuGet repack task's provider result is not captured by this helper;
 the delta explicitly states that limitation rather than fabricating a receipt.
 
+The Output provenance checkout and evidence step also use `always()`, not just
+the publishers. Evidence reads the normal signer's
+`$(Agent.TempDirectory)/artifact-signing/packed` directory directly: ordinary
+verification precedes `Copy Signed Output`, so a failed verification can leave
+`signed` absent. Only the two exact expected runtime archives with a signature
+entry are copied, byte-identically, into
+`$(Build.ArtifactStagingDirectory)/guest-readiness-signing-output` for retention.
+Signature presence is not verification or trust. Missing packed outputs or
+signature entries fail explicitly; unsigned inputs are never substituted.
+Fresh standard-verifier results and logs are retained, without inventing the
+earlier task's exit code. A prior job status other than `Succeeded` remains a
+failure even if fresh verification succeeds. The ordinary signer, verification,
+and copy steps are unchanged.
+`output-signing-context.json`, referenced by the Output root's existing `files`,
+records the exact pre-hook `Agent.JobStatus`, observation phase and UTC time.
+This is not the final provider job result; the owner must qualify that from the
+actual run timeline. Post-sign verification evidence references the finalized
+Output root, never the reverse, avoiding a circular hash dependency.
+
 Native provenance independently hashes and reads the complete source-owned
 `runtimes/<rid>/native/libmono-android.debug.so` and
 `libmono-android.release.so` carriers before and after signing. It checks bounded

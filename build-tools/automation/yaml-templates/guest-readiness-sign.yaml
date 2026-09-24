@@ -7,6 +7,7 @@ steps:
   - checkout: 1esPipelines
     path: s/guest-readiness-1es
     persistCredentials: false
+    condition: always()
 - ${{ if eq(parameters.phase, 'Input') }}:
   - task: DownloadPipelineArtifact@2
     inputs:
@@ -14,6 +15,8 @@ steps:
       downloadPath: $(Agent.TempDirectory)/guest-readiness-build
 - task: PowerShell@2
   displayName: Guest readiness signing ${{ parameters.phase }} evidence
+  ${{ if eq(parameters.phase, 'Output') }}:
+    condition: always()
   inputs:
     pwsh: true
     targetType: filePath
@@ -27,7 +30,9 @@ steps:
     GUEST_YAML_VERSION: $(GuestReadinessYamlVersion)
     GUEST_1ES_VERSION: $(GuestReadiness1ESVersion)
     GUEST_UNSIGNED_DIRECTORY: $(Agent.TempDirectory)/artifact-signing/unsigned/$(NuGetArtifactName)
-    GUEST_SIGNED_DIRECTORY: $(Build.ArtifactStagingDirectory)/signed
+    GUEST_SIGNING_OUTPUT_DIRECTORY: $(Agent.TempDirectory)/artifact-signing/packed
+    GUEST_RETAINED_OUTPUT_DIRECTORY: $(Build.ArtifactStagingDirectory)/guest-readiness-signing-output
+    GUEST_SIGNING_JOB_STATUS: $(Agent.JobStatus)
     GUEST_BUILD_RECEIPT_DIRECTORY: $(Agent.TempDirectory)/guest-readiness-build
     GUEST_SIGN_RECEIPT_DIRECTORY: $(Build.ArtifactStagingDirectory)/guest-readiness-sign
     GUEST_TEMPLATE_CHECKOUT: $(Pipeline.Workspace)/s/yaml-templates
@@ -40,8 +45,8 @@ steps:
     artifactName: guest-readiness-sign-${{ parameters.phase }}
 - ${{ if eq(parameters.phase, 'Output') }}:
   - task: 1ES.PublishPipelineArtifact@1
-    displayName: Retain normal signed output including verification failures
+    displayName: Retain normal signing output including verification failures
     condition: always()
     inputs:
-      targetPath: $(Build.ArtifactStagingDirectory)/signed
+      targetPath: $(Build.ArtifactStagingDirectory)/guest-readiness-signing-output
       artifactName: guest-readiness-signed-output

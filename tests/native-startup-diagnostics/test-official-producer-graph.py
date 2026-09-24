@@ -110,7 +110,18 @@ sign = yaml.safe_load((ROOT / "build-tools/automation/yaml-templates/guest-readi
 assert any(x.get("condition") == "always()" for x in sign["steps"])
 assert sign["steps"][0]["${{ if eq(parameters.phase, 'Output') }}"][0] == {
     "checkout": "1esPipelines", "path": "s/guest-readiness-1es", "persistCredentials": False,
+    "condition": "always()",
 }, "Retain the actual resolved-resource provenance checkout"
+capture = next(step for step in sign["steps"] if step.get("task") == "PowerShell@2")
+assert capture["${{ if eq(parameters.phase, 'Output') }}"] == {"condition": "always()"}
+assert "condition" not in capture and "continueOnError" not in capture
+assert capture["env"]["GUEST_SIGNING_OUTPUT_DIRECTORY"] == "$(Agent.TempDirectory)/artifact-signing/packed"
+assert capture["env"]["GUEST_SIGNING_JOB_STATUS"] == "$(Agent.JobStatus)"
+retained_output = sign["steps"][-1]["${{ if eq(parameters.phase, 'Output') }}"][0]
+assert retained_output["condition"] == "always()"
+assert retained_output["inputs"]["targetPath"] == capture["env"]["GUEST_RETAINED_OUTPUT_DIRECTORY"]
+assert retained_output["inputs"]["targetPath"] != capture["env"]["GUEST_SIGNING_OUTPUT_DIRECTORY"]
+assert retained_output["inputs"]["artifactName"] == "guest-readiness-signed-output"
 build = yaml.safe_load((ROOT / "build-tools/automation/yaml-templates/guest-readiness-build.yaml").read_text())
 publisher = yaml.safe_load((ROOT / "build-tools/automation/yaml-templates/publish-artifact.yaml").read_text())
 supported_task = publisher["steps"][1]["${{ if eq(parameters.use1ESTemplate, true) }}"][0]["task"]
@@ -147,3 +158,4 @@ out.mkdir(parents=True, exist_ok=True)
 print("PASS: default graph equality in four templates; diagnostic promotion omission, preserved sign/security/full-pack graph.")
 print("PASS: existing 1ES publisher, Validate/Build/Pack retention matrix, always-on failure receipts and exact Darwin/Linux artifact names/sign input.")
 print("PASS: diagnostic-only 1esPipelines SDL inclusion; all existing SDL coverage and resolved-resource provenance checkout preserved.")
+print("PASS: Output checkout/capture/publication all run on failure; source is normal packed output, with separate retained-output directory and prior job status.")
