@@ -36,11 +36,6 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData (true, "llvm-ir", runtime);
-				AddTestData (false, "llvm-ir", runtime);
-			}
-
 			AddTestData (true, "trimmable", AndroidRuntime.CoreCLR);
 			AddTestData (false, "trimmable", AndroidRuntime.CoreCLR);
 			AddTestData (true, "trimmable", AndroidRuntime.NativeAOT);
@@ -63,10 +58,6 @@ namespace Xamarin.Android.Build.Tests
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
-			}
-
-			if (runtime == AndroidRuntime.NativeAOT && typemapImplementation == "llvm-ir") {
-				Assert.Ignore ("NativeAOT doesn't work with LLVM-IR typemaps");
 			}
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
@@ -108,7 +99,6 @@ namespace Xamarin.Android.Build.Tests
 			StartActivityAndAssert (proj);
 		}
 
-		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
 		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
 		public void UnicodeJavaIdentifierActivityActivates (string typeMapImplementation, AndroidRuntime runtime)
@@ -1789,7 +1779,6 @@ namespace Styleable.Library {
 			Assert.IsTrue (didStart, "Activity should have started.");
 		}
 
-		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
 		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
 		public void AppCompatJavaAliasCastsAndInflation (
@@ -2044,7 +2033,7 @@ namespace Styleable.Library {
 				}
 				""".Replace (
 					"__ALLOW_REGISTERED_ALIAS_INFLATION__",
-					typemapImplementation == "llvm-ir" ? "true" : "false");
+					"false");
 			using var builder = CreateApkBuilder (packageName: packageName);
 			Assert.AreEqual (proj.PackageName, TestPackageNames [packageName], "Teardown should track the installed package.");
 			RunAdbCommand ($"uninstall {proj.PackageName}");
@@ -2540,15 +2529,13 @@ namespace UnnamedProject
 
 		static IEnumerable<TestCaseData> GetInterfaceMethodDesugaringData ()
 		{
-			foreach (var typemapImplementation in new [] { "llvm-ir", "trimmable" }) {
-				foreach (var useR8 in new [] { false, true }) {
-					foreach (var apiNative in new [] { true, false }) {
-						yield return CreateTestCase (
-							typemapImplementation,
-							AndroidRuntime.CoreCLR,
-							apiNative,
-							useR8);
-					}
+			foreach (var useR8 in new [] { false, true }) {
+				foreach (var apiNative in new [] { true, false }) {
+					yield return CreateTestCase (
+						"trimmable",
+						AndroidRuntime.CoreCLR,
+						apiNative,
+						useR8);
 				}
 			}
 

@@ -64,6 +64,81 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[TestCase (true, false)]
+		[TestCase (true, true)]
+		[TestCase (false, false)]
+		[TestCase (false, true)]
+		public void TypeMapDefaultsToTrimmable (bool isApplication, bool isRelease)
+		{
+			XamarinProject project = isApplication
+				? new XamarinAndroidApplicationProject { IsRelease = isRelease }
+				: new XamarinAndroidLibraryProject { IsRelease = isRelease };
+			project.Imports.Add (new Import ("assert-typemap.targets") {
+				TextContent = () => """
+					<Project>
+					  <Target Name="_AssertTypeMapDefault" DependsOnTargets="_CheckForInvalidConfigurationAndPlatform">
+					    <Error Condition=" '$(AndroidTypeMapImplementation)' != 'trimmable' "
+					        Text="Expected the trimmable type map by default." />
+					  </Target>
+					</Project>
+					""",
+			});
+
+			using var builder = isApplication ? CreateApkBuilder () : CreateDllBuilder ();
+			builder.Target = "_AssertTypeMapDefault";
+			Assert.IsTrue (builder.Build (project), "The default type map should be trimmable for applications and libraries.");
+		}
+
+		[Test]
+		public void LibraryBuildDoesNotGenerateTypeMap ()
+		{
+			var project = new XamarinAndroidLibraryProject ();
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (project), "A library should build with the trimmable type map default.");
+			FileAssert.DoesNotExist (builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "typemap-assemblies.txt")));
+		}
+
+		[TestCase (true, "llvm-ir", "XA4265")]
+		[TestCase (false, "llvm-ir", "XA4265")]
+		[TestCase (true, "unsupported", "Invalid value for AndroidTypeMapImplementation")]
+		[TestCase (false, "unsupported", "Invalid value for AndroidTypeMapImplementation")]
+		public void UnsupportedTypeMapIsRejected (bool isApplication, string typeMapImplementation, string expectedError)
+		{
+			XamarinProject project = isApplication
+				? new XamarinAndroidApplicationProject ()
+				: new XamarinAndroidLibraryProject ();
+			project.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
+
+			using var builder = isApplication ? CreateApkBuilder () : CreateDllBuilder ();
+			builder.Target = "_CheckForInvalidConfigurationAndPlatform";
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (project), "An unsupported type map should fail validation.");
+			StringAssertEx.Contains (expectedError, builder.LastBuildOutput);
+		}
+
+		[TestCase (true, "Build")]
+		[TestCase (false, "Build")]
+		[TestCase (true, "Publish")]
+		[TestCase (false, "Publish")]
+		[TestCase (true, "_GenerateJavaStubs")]
+		[TestCase (true, "_PrepareLinking")]
+		public void LegacyTypeMapIsRejectedBeforeBuildTargets (bool isApplication, string target)
+		{
+			XamarinProject project = isApplication
+				? new XamarinAndroidApplicationProject ()
+				: new XamarinAndroidLibraryProject ();
+			project.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
+			if (target == "_PrepareLinking") {
+				project.SetProperty ("PublishTrimmed", "true");
+			}
+
+			using var builder = isApplication ? CreateApkBuilder () : CreateDllBuilder ();
+			builder.Target = target;
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (project), "Legacy type maps should be rejected before generation.");
+			StringAssertEx.Contains ("error XA4265:", builder.LastBuildOutput);
+		}
+
 		[Test]
 		[TestCase ("RunAOTCompilation")]
 		[TestCase ("EnableLLVM")]

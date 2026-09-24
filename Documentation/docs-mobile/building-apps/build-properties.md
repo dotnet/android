@@ -1316,10 +1316,10 @@ This property is obsolete and should not be used.
 ## AndroidTypeMapImplementation
 
 An enum-style property that selects the type map implementation.
-Valid values are `llvm-ir` and `trimmable`.
+The only supported value is `trimmable`. Setting this property to `llvm-ir`
+causes error [XA4265](../messages/xa4265.md).
 
-The default value is `trimmable` when `$(PublishAot)` is `true` and `llvm-ir`
-otherwise.
+The default value is `trimmable` for all Android projects.
 
 ## AndroidUseApkSigner
 
