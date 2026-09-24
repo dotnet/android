@@ -9,7 +9,6 @@
     <OutputType>Exe</OutputType>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(XamarinAndroidSourcePath)product.snk</AssemblyOriginatorKeyFile>
-    <_SkipJniAddNativeMethodRegistrationAttributeScan>True</_SkipJniAddNativeMethodRegistrationAttributeScan>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>$(XamarinAndroidSourcePath)bin\Test$(Configuration)</OutputPath>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
@@ -80,20 +79,26 @@
     <ProjectReference Include="..\..\StartupHook\StartupHook.csproj" />
     <ProjectReference Include="..\Java.Interop-Tests\Java.Interop-Tests.NET.csproj" />
     <ProjectReference Include="..\Mono.Android-Test.Library\Mono.Android-Test.Library.NET.csproj" />
-    <!-- Required for [Export] / [ExportField] runtime support (ExportTests.cs) on the LLVM-IR typemap path -->
-    <Reference Include="Mono.Android.Export" Condition=" '$(AndroidTypeMapImplementation)' != 'trimmable' " />
   </ItemGroup>
 
   <ItemGroup>
-    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
-    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
     <TrimmerRootAssembly Include="StartupHook" RootMode="All" Condition=" '$(StartupHookSupport)' == 'true' " />
-    <TrimmerRootDescriptor Include="TrimmerRoots.xml" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
     <_AndroidRemapMembers Include="Remaps.xml" />
     <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
     <ProguardConfiguration Include="proguard.cfg" />
     <ProguardConfiguration Include="InterfaceCollection.proguard.cfg" />
   </ItemGroup>
+
+  <!-- Resolve the app's default type map before rooting NUnit's reflection-discovered tests. -->
+  <Target Name="_AndroidRootRuntimeTests"
+      BeforeTargets="PrepareForILLink;_RunILLink"
+      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' ">
+    <ItemGroup>
+      <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" />
+      <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
+      <TrimmerRootDescriptor Include="TrimmerRoots.xml" />
+    </ItemGroup>
+  </Target>
 
   <!--
     NativeAOT trims the closed-generic-instantiation metadata for IEquatable<T>,

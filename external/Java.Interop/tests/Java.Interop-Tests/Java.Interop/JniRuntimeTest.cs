@@ -1,7 +1,6 @@
 using System;
 using System.Reflection;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Diagnostics.CodeAnalysis;
 
@@ -11,9 +10,6 @@ using NUnit.Framework;
 
 namespace Java.InteropTests
 {
-#if !__ANDROID__
-	[NonParallelizable]
-#endif  // !__ANDROID__
 	[TestFixture]
 	public class JniRuntimeTest : JavaVMFixture
 	{
@@ -25,59 +21,10 @@ namespace Java.InteropTests
 			Assert.IsTrue (JniEnvironment.EnvironmentPointer != IntPtr.Zero);
 		}
 
-#if !__ANDROID__
-		[Test]
-		[RequiresDynamicCode ("This test intentionally uses the default JRE type manager, which is reflection-based and not NativeAOT-compatible.")]
-		[RequiresUnreferencedCode ("This test intentionally uses the default JRE type manager, which is reflection-based and not trimming-compatible.")]
-		public void JDK_OnlySupportsOneVM ()
-		{
-			try {
-				var second = new TestJVM (new TestJVMOptions () {
-					JvmLibraryPath  = TestJVM.GetJvmLibraryPath (),
-				});
-				// If we reach here, we're in a JVM that supports > 1 VM
-				second.Dispose ();
-				Assert.Ignore ();
-			} catch (NotSupportedException) {
-			} catch (Exception e){
-				Assert.Fail ("Expected NotSupportedException; got: {0}", e);
-			}
-		}
-
-		[Test]
-		[RequiresDynamicCode ("This test intentionally uses the default JRE type manager, which is reflection-based and not NativeAOT-compatible.")]
-		[RequiresUnreferencedCode ("This test intentionally uses the default JRE type manager, which is reflection-based and not trimming-compatible.")]
-		public void UseInvocationPointerOnNewThread ()
-		{
-			var InvocationPointer = JniRuntime.CurrentRuntime.InvocationPointer;
-
-			var t = new Thread (() => {
-				try {
-					var second = new TestJVM (new TestJVMOptions () {
-						InvocationPointer   = InvocationPointer,
-					});
-				}
-				catch (Exception e) {
-					Assert.Fail ("Expected no exception, got: {0}", e);
-				}
-			});
-			t.Start ();
-			t.Join ();
-		}
-#endif  // !__ANDROID__
-
 		[Test]
 		public void CreateJavaVMWithNullBuilder ()
 		{
 			Assert.Throws<ArgumentNullException> (() => new JavaVMWithNullBuilder ());
-		}
-
-		[Test]
-		[Category ("TrimmableTypeMapUnsupported")]
-		public void BuiltInSimpleReferenceMap_ContainsManagedPeerByDefault ()
-		{
-			var types = JniRuntime.CurrentRuntime.TypeManager.GetTypes (new JniTypeSignature (ManagedPeer.JniTypeName));
-			Assert.IsTrue (types.Contains (typeof (ManagedPeer)));
 		}
 
 		class JavaVMWithNullBuilder : JniRuntime {

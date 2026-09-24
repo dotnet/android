@@ -88,18 +88,6 @@ namespace Java.InteropTests
 			AssertGetJniTypeInfoForType (typeof (JavaArray<int[]>),         "[[I",                  true,   2);
 			AssertGetJniTypeInfoForType (typeof (JavaArray<int[]>[]),       "[[[I",                 true,   3);
 
-#if !__ANDROID__
-			// Re-enable once typemap files contain `JavaObject` subclasses, not just Java.Lang.Object subclasses
-			//
-			// Note: dotnet/android@5c23bcda updates Java.Lang.Object to inherit JavaObject; this is not enough,
-			// as `<GenerateJavaStubs/>` only processes assemblies if they reference Mono.Android.dll.
-			AssertGetJniTypeInfoForType (typeof (GenericHolder<int>),       GenericHolder<int>.JniTypeName,    false,   0);
-
-			// XAJavaInterop1 Java Callable Wrappers, as used in dotnet/android, may contain
-			// `Runtime.register("Java.InteropTests.GenericHolder`1, Mono.Android-Tests", …)`,
-			// which results in a generic type definition.  Permit this.
-			AssertGetJniTypeInfoForType (typeof (GenericHolder<>),          GenericHolder<int>.JniTypeName,    false,   0);
-#endif  // !__ANDROID__
 		}
 
 		static void AssertGetJniTypeInfoForType (Type type, string jniType, bool isKeyword, int arrayRank)

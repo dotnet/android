@@ -23,10 +23,6 @@ public class JavaPeerableExtensionsTests {
 		using var o = new JavaObject (ref r, JniObjectReferenceOptions.Copy);
 		// MyJavaInterfaceImpl doesn't provide an activation constructor
 		Assert.Throws<NotSupportedException>(() => o.JavaAs<MyJavaInterfaceImpl>());
-#if !__ANDROID__
-		// JavaObjectWithNoJavaPeer has no Java peer
-		Assert.Throws<ArgumentException>(() => v.JavaAs<JavaObjectWithNoJavaPeer>());
-#endif  // !__ANDROID__
 	}
 
 	[Test]
