@@ -315,17 +315,21 @@ collection with tools such as `dotnet-trace`. It enables the diagnostic
 transport; for MonoVM it also packages the `diagnostics_tracing` component.
 `$(AndroidEnableProfiler)` remains its legacy synonym.
 
-The GC bridge instrumentation defines the following events:
+The runtime timing instrumentation defines the following events:
 
 | Event IDs | Keyword | Area |
 |---|---|---|
 | 7-8 | `0x8` | GC bridge start/stop |
+| 9-10 | `0x4` | Trimmable type-map lookup start/stop |
 
-Collect the events at informational level:
+Collect both areas at informational level:
 
 ```sh
-$ dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtime:0x8:4
+$ dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtime:0xC:4
 ```
+
+Use keyword `0x8` for GC bridge events, `0x4` for type-map events, or `0xC`
+for both.
 
 `GCBridgeStart` (event ID 7) and `GCBridgeStop` (event ID 8) have no payloads
 and measure the complete logical CoreCLR/NativeAOT GC bridge round. Start is
@@ -338,6 +342,18 @@ native cross-reference processing runs between these managed callbacks.
 Enablement is checked once at Start and latched on the dedicated serialized
 bridge-processing thread, so a listener attaching during a round cannot
 produce an unmatched Stop event.
+
+`TypeMapLookupStart` (event ID 9) and `TypeMapLookupStop` (event ID 10) use
+task 2, keyword `0x4`, and have one `direction` string payload:
+`JavaToManaged` or `ManagedToJava`. They measure uncached backend lookups in
+the trimmable typemap only. The events are emitted from the cache-population
+callbacks for JNI-name-to-managed-proxy and managed-type-to-JNI-proxy
+resolution. A cache hit performs no provider enablement check and emits no
+events. Successful and failed backend lookups both emit a matched pair; the
+Stop event has no success or found payload, so the lookup result must be
+determined from the consuming runtime operation. Enablement is checked once
+when cache population begins and latched for exception-safe pairing, so a
+Start is followed by Stop even when the backend lookup throws.
 
 ## How to get GC memory dumps?
 
