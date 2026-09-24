@@ -30,7 +30,6 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
