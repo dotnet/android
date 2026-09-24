@@ -50,13 +50,6 @@ namespace Xamarin.Android.Tasks
 
 		protected override string GenerateCommandLineCommands ()
 		{
-			//   Running command: C:\Program Files (x86)\Java\jdk1.6.0_20\bin\javac.exe
-			//     "-J-Dfile.encoding=UTF8"
-			//     "-d" "bin\classes"
-			//     "-classpath" "C:\Users\Jonathan\Documents\Visual Studio 2010\Projects\AndroidMSBuildTest\AndroidMSBuildTest\obj\Debug\android\bin\mono.android.jar";"C:\Program Files (x86)\Android\android-sdk-windows\platforms\android-8\android.jar"
-			//     "-encoding" "UTF-8"
-			//     "@C:\Users\Jonathan\AppData\Local\Temp\tmp79c4ac38.tmp"
-
 			var cmd = new CommandLineBuilder ();
 
 			cmd.AppendSwitchIfNotNull ("-J-Dfile.encoding=", "UTF8");

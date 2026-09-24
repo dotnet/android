@@ -16,7 +16,6 @@
     <DefineConstants>$(DefineConstants);JAVA_INTEROP</DefineConstants>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\android-$(AndroidPlatformId)\</IntermediateOutputPath>
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
-    <JavaCallableWrapperAfterTargets>CoreBuild</JavaCallableWrapperAfterTargets>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <!-- @(Compile) ordering matters! See https://github.com/dotnet/java-interop/commit/d7dfa0bb7b03261d5eceb51ac22cd33aa15fa865 -->
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
@@ -51,10 +50,6 @@
     <AdditionalFiles Include="PublicAPI\API-$(AndroidApiLevel)\PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI\API-$(AndroidApiLevel)\PublicAPI.Unshipped.txt" />
   </ItemGroup>
-
-  <PropertyGroup>
-    <JavaCallableWrapperAbsAssembly>$([System.IO.Path]::GetFullPath ('$(OutputPath)$(AssemblyName).dll'))</JavaCallableWrapperAbsAssembly>
-  </PropertyGroup>
 
   <PropertyGroup Condition=" '$(_EnableMarshalMethods)' == 'YesPlease' ">
     <DefineConstants>$(DefineConstants);ENABLE_MARSHAL_METHODS</DefineConstants>
@@ -122,7 +117,6 @@
 
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
   <Import Project="Mono.Android.targets" />
-  <Import Project="..\..\build-tools\scripts\JavaCallableWrappers.targets" />
   <Import Project="$(IntermediateOutputPath)mcw\Mono.Android.projitems" Condition="Exists('$(IntermediateOutputPath)mcw\Mono.Android.projitems')" />
 
 <ItemGroup>
@@ -406,7 +400,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\build-tools\create-android-api\create-android-api.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\external\Java.Interop\tools\java-source-utils\java-source-utils.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\r8\r8.csproj" ReferenceOutputAssembly="False" />

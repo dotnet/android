@@ -1354,7 +1354,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_AddStaticResources"
-		Inputs="$(MonoPlatformJarPath);$(_AndroidBuildPropertiesCache)"
+		Inputs="$(_RuntimeJar);$(_AndroidBuildPropertiesCache)"
 		Outputs="$(_AndroidStaticResourcesFlag)"
 		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources)">
   <CopyResource

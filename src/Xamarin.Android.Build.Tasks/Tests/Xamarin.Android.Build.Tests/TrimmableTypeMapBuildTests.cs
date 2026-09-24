@@ -36,6 +36,13 @@ namespace Xamarin.Android.Build.Tests {
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
 			AssertTrimmableTypeMapOutputs (intermediateDir);
+			if (!isRelease) {
+				var frameworkJcw = Path.Combine (intermediateDir, "java", "android", "app", "ActivityTracker.java");
+				FileAssert.Exists (frameworkJcw);
+				var source = File.ReadAllText (frameworkJcw);
+				StringAssert.Contains ("mono.android.Runtime.registerNatives (ActivityTracker.class)", source);
+				StringAssert.DoesNotContain ("mono.android.TypeManager.Activate", source);
+			}
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR)]
@@ -2218,6 +2225,14 @@ namespace Xamarin.Android.Build.Tests {
 				var path = Path.Combine (TestEnvironment.DotNetPreviewAndroidSdkDirectory, "PreserveLists", file);
 				FileAssert.Exists (path, $"{path} should exist in the SDK pack.");
 			}
+		}
+
+		[Test]
+		public void TrimmableTypeMap_ReferencePack_DoesNotShipLegacyPlatformJcws ()
+		{
+			var referenceDirectory = TestEnvironment.MonoAndroidFrameworkDirectory;
+			FileAssert.DoesNotExist (Path.Combine (referenceDirectory, "mono.android.jar"));
+			FileAssert.DoesNotExist (Path.Combine (referenceDirectory, "mono.android.dex"));
 		}
 
 		[Test]

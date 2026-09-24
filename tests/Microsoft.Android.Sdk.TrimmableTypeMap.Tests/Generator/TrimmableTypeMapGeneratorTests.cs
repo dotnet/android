@@ -959,6 +959,16 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Contains (result.GeneratedJavaSources, s => s.RelativePath == "xamarin/android/net/ServerCertificateCustomValidator_TrustManager_FakeSSLSession.java");
 		Assert.Contains (result.GeneratedJavaSources, s => s.RelativePath == "xamarin/android/net/ServerCertificateCustomValidator_AlwaysAcceptingHostnameVerifier.java");
 		Assert.Contains (result.GeneratedJavaSources, s => s.RelativePath == "xamarin/android/net/ServerCertificateCustomValidator_NonRequiredFrameworkAcw.java");
+		var frameworkJcw = Assert.Single (result.GeneratedJavaSources,
+			s => s.RelativePath == "xamarin/android/net/ServerCertificateCustomValidator_TrustManager.java");
+		Assert.Contains ("mono.android.Runtime.registerNatives (ServerCertificateCustomValidator_TrustManager.class)", frameworkJcw.Content);
+		Assert.DoesNotContain ("mono.android.TypeManager.Activate", frameworkJcw.Content);
+		var frameworkConstructorJcw = Assert.Single (result.GeneratedJavaSources,
+			s => s.RelativePath == "myapp/PlainActivitySubclass.java");
+		Assert.Contains ("mono.android.Runtime.registerNatives (PlainActivitySubclass.class)", frameworkConstructorJcw.Content);
+		Assert.Contains ("private native void nctor_0 ()", frameworkConstructorJcw.Content);
+		Assert.DoesNotContain ("mono.android.TypeManager.Activate", frameworkConstructorJcw.Content);
+		Assert.Contains (result.GeneratedAssemblies, assembly => assembly.Name == "_Mono.Android.TypeMap");
 	}
 
 	[Fact]
