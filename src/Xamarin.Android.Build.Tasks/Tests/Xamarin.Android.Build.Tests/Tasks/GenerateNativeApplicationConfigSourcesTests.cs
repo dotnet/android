@@ -38,7 +38,7 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			required: true,
 			runtime: AndroidRuntime.CoreCLR
 		);
-		var config = (EnvironmentHelper.ApplicationConfig)EnvironmentHelper.ReadApplicationConfig (environmentFiles, AndroidRuntime.CoreCLR);
+		var config = EnvironmentHelper.ReadApplicationConfig (environmentFiles);
 		Assert.AreEqual (haveAssemblyStore, config.have_assembly_store);
 	}
 }

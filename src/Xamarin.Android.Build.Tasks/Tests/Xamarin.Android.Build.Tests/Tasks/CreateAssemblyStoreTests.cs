@@ -32,7 +32,6 @@ public class CreateAssemblyStoreTests : BaseTest
 			ResolvedFrameworkAssemblies = [],
 			ResolvedUserAssemblies = [new TaskItem (assemblyPath, metadata)],
 			SupportedAbis = ["arm64-v8a"],
-			TargetRuntime = "CoreCLR",
 			UseAssemblyStore = true,
 		};
 
