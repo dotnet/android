@@ -1,5 +1,5 @@
 <Project>
-  <Target Name="_GuestReadinessPackProperties" BeforeTargets="_SetGlobalProperties"
+  <Target Name="_GuestReadinessPackProperties" BeforeTargets="_SetGlobalProperties;GetXAVersionInfo"
       Condition=" '$(AndroidGuestReadinessBuild)' == 'true' ">
     <Error Condition=" !$([System.Text.RegularExpressions.Regex]::IsMatch('$(AndroidPackVersionLong)', '\A36\.1\.69-guest\.[1-9][0-9]{0,11}\.[1-9][0-9]{0,3}\z')) "
         Text="Guest readiness requires a canonical unique package version." />
@@ -9,7 +9,7 @@
         Text="Guest readiness requires its validated producer marker." />
     <Error Condition=" '$(AndroidStartupDiagnosticsBuildId)' != 'android-d549-$(AndroidPackVersionLong.Replace(`36.1.69-guest.`, ``).Replace(`.`, `-`))' "
         Text="Guest readiness version and marker must bind the same build and attempt." />
-    <Error Condition=" '$(RestoreConfigFile)' == '' Or !Exists('$(RestoreConfigFile)') "
+    <Error Condition=" !$([MSBuild]::IsOSPlatform('OSX')) And ('$(RestoreConfigFile)' == '' Or !Exists('$(RestoreConfigFile)')) "
         Text="Guest readiness requires the existing root restore configuration." />
     <ItemGroup>
       <_GlobalProperties Include="-p:AndroidGuestReadinessBuild=true" />
@@ -17,7 +17,7 @@
       <_GlobalProperties Include="-p:PackageVersion=$(PackageVersion)" />
       <_GlobalProperties Include="-p:AndroidStartupDiagnosticsBuildId=$(AndroidStartupDiagnosticsBuildId)" />
       <_GlobalProperties Include="-p:RunningOnCI=true" />
-      <_GlobalProperties Include="&quot;-p:RestoreConfigFile=$(RestoreConfigFile)&quot;" />
+      <_GlobalProperties Include="&quot;-p:RestoreConfigFile=$(RestoreConfigFile)&quot;" Condition=" !$([MSBuild]::IsOSPlatform('OSX')) " />
     </ItemGroup>
   </Target>
 </Project>

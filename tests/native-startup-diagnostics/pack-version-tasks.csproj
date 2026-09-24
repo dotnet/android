@@ -1,0 +1,20 @@
+<Project>
+  <PropertyGroup>
+    <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
+    <ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
+    <BaseIntermediateOutputPath>..\..\bin\guest-pack-version-tests\tasks-obj\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <OutputPath>..\..\bin\guest-pack-version-tests\tasks\</OutputPath>
+    <_PrepSource>..\..\build-tools\xa-prep-tasks\Xamarin.Android.BuildTools.PrepTasks</_PrepSource>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(_PrepSource)\Git.cs;$(_PrepSource)\GitBlame.cs;$(_PrepSource)\GitBranch.cs;$(_PrepSource)\GitCommitHash.cs;$(_PrepSource)\GitCommitsInRange.cs;$(_PrepSource)\GitCommitTime.cs;$(_PrepSource)\GitCommitInfo.cs;$(_PrepSource)\PathToolTask.cs;$(_PrepSource)\Which.cs" />
+    <Reference Include="Microsoft.Build.Framework" HintPath="$(MSBuildBinPath)\Microsoft.Build.Framework.dll" Private="false" />
+    <Reference Include="Microsoft.Build.Utilities.Core" HintPath="$(MSBuildBinPath)\Microsoft.Build.Utilities.Core.dll" Private="false" />
+  </ItemGroup>
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+</Project>

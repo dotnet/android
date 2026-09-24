@@ -104,6 +104,29 @@ try {
     [Environment]::SetEnvironmentVariable('RESTORECONFIGFILE', $previousRestoreConfig)
 }
 
+# Execute the production target with only its OS predicate modeled; this is not Mac execution.
+$hostPredicate = '$([MSBuild]::IsOSPlatform(''OSX''))'
+$targetText = Get-Content $targetImport -Raw
+Assert ($targetText.Contains($hostPredicate) -and -not $targetText.Contains('$(HostOS)')) 'Restore selection uses execution OS, never package target HostOS'
+foreach ($executionMac in @($false, $true)) {
+    $hostTarget = Join-Path $restoreDirectory "host-$executionMac.targets"
+    $targetText.Replace($hostPredicate, $executionMac.ToString().ToLowerInvariant()) | Set-Content $hostTarget
+    foreach ($targetHost in @('Darwin', 'Windows')) {
+        & $MSBuild $project /nologo /v:q /p:Configuration=Debug "/p:ResultPath=$result" @properties `
+            "/p:GuestPropertiesTarget=$hostTarget" "/p:HostOS=$targetHost"
+        $expectedConfig = if ($executionMac) { '' } else { $restoreConfig }
+        Assert ($LASTEXITCODE -eq 0 -and (Get-Content $result -Raw).Trim() -ceq
+            "true|$($identity.version)|$($identity.version)|$($identity.buildId)|true|Debug|$expectedConfig") 'Modeled execution host alone selects nested restore config'
+        $lines = & $MSBuild $project /nologo /v:q /p:Configuration=Debug "/p:ResultPath=$result" @properties `
+            "/p:GuestPropertiesTarget=$hostTarget" "/p:HostOS=$targetHost" /p:RestoreConfigFile= 2>&1
+        if ($executionMac) {
+            Assert ($LASTEXITCODE -eq 0 -and (Get-Content $result -Raw).Trim().EndsWith('|Debug|')) 'Mac discovery requires no explicit config'
+        } else {
+            Assert ($LASTEXITCODE -ne 0 -and ($lines -join "`n").Contains('Guest readiness requires the existing root restore configuration.')) 'Affected execution hosts still reject missing config'
+        }
+    }
+}
+
 # Actual ZIP bytes containing deliberately synthetic ELF headers, not executable Android evidence.
 function Native-Fixture([string] $Name, [string] $Rid = 'android-arm64', [string] $Fault = '') {
     $path = Join-Path $out "$Name.nupkg"
@@ -294,7 +317,13 @@ $argumentAssignment = $ast.Find({
 }, $true)
 Assert ($null -ne $argumentAssignment) 'Production MSBuild argument assignment found'
 . ([scriptblock]::Create($argumentAssignment.Extent.Text))
-Assert ($arguments -contains "-p:RestoreConfigFile=`"$restoreConfig`"") 'Actual production arguments select quoted absolute root config'
+Assert (($arguments -contains "-p:RestoreConfigFile=`"$restoreConfig`"") -eq (-not $IsMacOS)) 'Actual production arguments use execution-host config selection'
+foreach ($fixtureIsMacOS in @($false, $true)) {
+    # Bind a test input instead of overwriting PowerShell's read-only automatic variable.
+    . ([scriptblock]::Create($argumentAssignment.Extent.Text.Replace('$IsMacOS', '$fixtureIsMacOS')))
+    Assert (($arguments -contains "-p:RestoreConfigFile=`"$restoreConfig`"") -eq (-not $fixtureIsMacOS)) 'Modeled Mac arguments preserve normal config discovery'
+    Assert ($arguments -contains "-p:PackageVersion=$($identity.version)" -and $arguments -contains "-p:AndroidStartupDiagnosticsBuildId=$($identity.buildId)") 'Host selection does not change diagnostic version/marker'
+}
 Assert (-not ($arguments -match 'NuGetAudit|IgnoreFailedSources|RestoreSources=')) 'No audit disabling, ignored feed failures or replacement feed list'
 $definitions = $ast.FindAll({
     param ($node)

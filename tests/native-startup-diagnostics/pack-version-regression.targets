@@ -1,0 +1,20 @@
+<Project>
+  <!-- Import into the real runtime pack project; only payloads are synthetic. -->
+  <Target Name="PackVersionRegression" DependsOnTargets="_GetDefaultPackageVersion;_CalculatePackageInformation">
+    <Error Condition=" '$(PackageVersion)' != '$(ExpectedPackageVersion)' Or '$(AndroidPackVersionLong)' != '$(ExpectedPackageVersion)' "
+        Text="The actual runtime pack version target replaced the requested version." />
+    <Error Condition=" '$(AndroidMSIVersion)' != '36.1.74.0' "
+        Text="The numeric MSI/workload version changed." />
+    <PackTask PackageId="$(PackageId)" PackageVersion="$(PackageVersion)" Authors="Fixture"
+        Description="Synthetic payload; production version targets and NuGet PackTask."
+        PackageFiles="@(VersionFixturePayload)" PackageOutputPath="$(VersionFixtureOutput)"
+        NuspecOutputPath="$(VersionFixtureOutput)" NoPackageAnalysis="true"
+        RestoreOutputPath="$(MSBuildThisFileDirectory)..\..\bin\guest-pack-version-tests\tasks-obj"
+        IncludeBuildOutput="false" ContinuePackingAfterGeneratingNuspec="true"
+        SymbolPackageFormat="$(SymbolPackageFormat)"
+        PackItem="$(MSBuildProjectFullPath)" />
+  </Target>
+  <ItemGroup>
+    <VersionFixturePayload Include="$(MSBuildThisFileFullPath)" PackagePath="fixture\payload.targets" />
+  </ItemGroup>
+</Project>

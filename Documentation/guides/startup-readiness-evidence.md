@@ -247,11 +247,33 @@ version `36.1.69-guest.<Build.BuildId>.<attempt>` and marker
 `android-d549-<Build.BuildId>-<attempt>` agree. The attempt is shared across jobs,
 not derived independently from their retry counts.
 
-The diagnostic Build/Pack wrapper also passes an explicit absolute
+The diagnostic version is also preserved at the actual `GetXAVersionInfo`
+target, not only forwarded as a global property: MSBuild target-time assignments
+can replace command-line values. Pack projects validate the version/marker/config
+before that target. Ordinary builds retain their Git-derived version calculation;
+diagnostic builds retain the same numeric `AndroidMSIVersion` calculation for
+MSI/workload consumers, separately from the unique prerelease NuGet identity.
+
+Run `pwsh -NoProfile -File tests/native-startup-diagnostics/test-pack-version.ps1`
+for the version-authority regression. It compiles the unchanged production Git
+tasks, evaluates the real runtime pack project and imported shared-framework SDK,
+runs the real version targets, and invokes the SDK's real NuGet `PackTask`.
+Both app RIDs cover diagnostic, unset and explicit-false modes, checking archive
+names, nuspec identities, numeric MSI values and invalid diagnostic inputs.
+The package payload and dependency graph are test fixtures, not built Android
+binaries; these tests establish version authority, not a full pack, signing,
+restore/audit qualification or guest execution.
+
+On Linux execution hosts, the diagnostic Build/Pack wrapper passes an explicit absolute
 `RestoreConfigFile` for the unchanged repository-root `NuGet.config`, and retains
 its byte-identical hash-bound copy. The existing nested pack global-property
 forwarder carries that path into its child processes and rejects missing config
-files. This prevents the held debugger dependency's nested `<clear />` from
+files on Windows/Linux execution hosts. The check uses the executing OS, not
+`HostOS` (a Mac can produce Windows SDK packs). macOS retains ordinary config
+discovery: the retained successful Mac Build retrieved the NuGet vulnerability
+index and base/update data, unlike the blocked Windows/Linux requests. That
+observation establishes retrieval there, not whole-solution audit closure.
+This prevents the held debugger dependency's nested `<clear />` from
 replacing the approved root feeds with nuget.org; it does not change package
 versions, ignore failed sources, relax signature checks, or change network rules.
 Default-off builds retain their ordinary config discovery.
