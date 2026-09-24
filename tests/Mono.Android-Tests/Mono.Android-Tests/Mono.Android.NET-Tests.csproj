@@ -82,15 +82,23 @@
   </ItemGroup>
 
   <ItemGroup>
-    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
-    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
     <TrimmerRootAssembly Include="StartupHook" RootMode="All" Condition=" '$(StartupHookSupport)' == 'true' " />
-    <TrimmerRootDescriptor Include="TrimmerRoots.xml" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
     <_AndroidRemapMembers Include="Remaps.xml" />
     <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
     <ProguardConfiguration Include="proguard.cfg" />
     <ProguardConfiguration Include="InterfaceCollection.proguard.cfg" />
   </ItemGroup>
+
+  <!-- Resolve the app's default type map before rooting NUnit's reflection-discovered tests. -->
+  <Target Name="_AndroidRootRuntimeTests"
+      BeforeTargets="PrepareForILLink;_RunILLink"
+      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' ">
+    <ItemGroup>
+      <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" />
+      <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
+      <TrimmerRootDescriptor Include="TrimmerRoots.xml" />
+    </ItemGroup>
+  </Target>
 
   <!--
     NativeAOT trims the closed-generic-instantiation metadata for IEquatable<T>,

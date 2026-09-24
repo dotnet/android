@@ -36,6 +36,15 @@
     <RuntimeHostConfigurationOption Include="IncludeCategories" Value="$(IncludeCategories)" Condition=" '$(IncludeCategories)' != '' " />
   </ItemGroup>
 
+  <!-- NUnit discovers these fixtures by reflection; the type map default is set after project evaluation. -->
+  <Target Name="_AndroidRootJcwGenTests"
+      BeforeTargets="PrepareForILLink;_RunILLink"
+      Condition=" '$(Configuration)' == 'Release' and '$(PublishTrimmed)' == 'true' and '$(AndroidTypeMapImplementation)' == 'trimmable' ">
+    <ItemGroup>
+      <TrimmerRootAssembly Include="$(AssemblyName)" RootMode="All" />
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
     <ProjectReference Include="..\..\TestRunner.Core\TestRunner.Core.NET.csproj" />
     <ProjectReference Include="..\Xamarin.Android.FixJavaAbstractMethod-APIv2Binding\Xamarin.Android.FixJavaAbstractMethod-APIv2Binding.csproj" />
