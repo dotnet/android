@@ -25,6 +25,10 @@
       <Sha>ab01524bbb2ef1eea0ffaef161b3ef5686e8f256</Sha>
     </Dependency>
     <!-- Previous .NET version -->
+    <Dependency Name="Microsoft.NET.Workload.Mono.Toolchain.Current.Manifest-10.0.100" Version="10.0.113">
+      <Uri>https://github.com/dotnet/dotnet</Uri>
+      <Sha>e4bafa1e055a3c011e323305210b73d1d666029d</Sha>
+    </Dependency>
     <Dependency Name="Microsoft.NET.Workload.Mono.ToolChain.Current.Manifest-9.0.100" Version="9.0.12">
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>2b2a06c8a4d45ec0781266ffa3f3852a052f0fbb</Sha>
