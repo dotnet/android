@@ -3007,7 +3007,7 @@ because xbuild doesn't support framework reference assemblies.
   </Target>
 
   <Target Name="_ValidateAndroidTypeMapImplementation"
-      BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
+      BeforeTargets="_CheckForInvalidConfigurationAndPlatform;_GenerateJavaStubs;_PrepareLinking;Build;Publish">
     <AndroidError Code="XA4265"
         ResourceName="XA4265"
         Condition=" '$(AndroidTypeMapImplementation)' == 'llvm-ir' " />
@@ -3021,7 +3021,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <!-- TypeMap imports must be last so their target overrides (e.g. _RemoveRegisterAttribute) take precedence -->
 <Import Project="$(MSBuildThisFileDirectory)..\targets\Microsoft.Android.Sdk.TypeMap.Trimmable.targets"
-    Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
+    Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(AndroidApplication)' == 'true' " />
 <Import Project="$(MSBuildThisFileDirectory)..\targets\Microsoft.Android.Sdk.TypeMap.LlvmIr.targets"
     Condition=" '$(AndroidTypeMapImplementation)' != 'trimmable' " />
 
