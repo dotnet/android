@@ -902,9 +902,8 @@ namespace Xamarin.Android.Build.Tests
 			return fv;
 		}
 
-		// These fields are always uint32_t/uint64_t and the generator (LlvmIrGenerator/MonoAndroidHelper.CultureInvariantToString)
-		// writes them via uint/ulong.ToString(), which is always an unsigned decimal representation - there's no signed form to
-		// account for here, so parse directly as unsigned.
+		// These fields are always uint32_t/uint64_t and the IR writer emits unsigned decimal values,
+		// so parse them directly as unsigned.
 		static bool TryParseInteger (string value, out uint fv)
 		{
 			if (value.StartsWith ("0x", StringComparison.Ordinal)) {

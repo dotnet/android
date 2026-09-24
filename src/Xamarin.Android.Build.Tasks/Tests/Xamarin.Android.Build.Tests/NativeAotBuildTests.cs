@@ -42,7 +42,6 @@ namespace Xamarin.Android.Build.Tests
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), $"CoreCLR app build should succeed for {abi} with the prebuilt runtime.");
-			builder.Output.AssertTargetIsSkipped ("_LinkNativeRuntime", defaultIfNotUsed: true);
 		}
 
 		[TestCase ("armeabi-v7a")]

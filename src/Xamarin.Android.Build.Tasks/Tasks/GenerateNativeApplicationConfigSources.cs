@@ -52,13 +52,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidRuntime { get; set; } = "";
 
-		/// <summary>
-		/// When <c>true</c>, descriptive comments are written into the generated LLVM IR.  They make
-		/// the <c>.ll</c> far easier to read, but have no effect on the object code produced from it.
-		/// Set from the <c>$(_AndroidEmitLlvmIrComments)</c> MSBuild property.
-		/// </summary>
-		public bool EmitLlvmIrComments { get; set; }
-
 		public string ProjectRuntimeConfigFilePath { get; set; } = String.Empty;
 		public string? ProjectRuntimeConfigDevFilePath { get; set; }
 
@@ -227,7 +220,7 @@ namespace Xamarin.Android.Tasks
 
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
 			Dictionary<string, string>? runtimeProperties = RuntimePropertiesParser.ParseConfig (ProjectRuntimeConfigFilePath, ProjectRuntimeConfigDevFilePath);
-			LLVMIR.LlvmIrComposer appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, runtimeProperties, Log) {
+			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, runtimeProperties, Log) {
 				UsesAssemblyPreload = envBuilder.Parser.UsesAssemblyPreload,
 				AndroidPackageName = AndroidPackageName,
 				PackageNamingPolicy = pnp,
@@ -244,8 +237,9 @@ namespace Xamarin.Android.Tasks
 				IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
 				HaveAssemblyStore = UseAssemblyStore,
 			};
-			LLVMIR.LlvmIrModule appConfigModule = appConfigAsmGen.Construct ();
-			appConfigAsmGen.EmitComments = EmitLlvmIrComments;
+
+			// Any errors in the input data must be reported before any of the output files is written
+			appConfigAsmGen.Initialize ();
 
 			foreach (string abi in SupportedAbis) {
 				string targetAbi = abi.ToLowerInvariant ();
@@ -255,7 +249,7 @@ namespace Xamarin.Android.Tasks
 
 				using var appConfigWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
 				try {
-					appConfigAsmGen.Generate (appConfigModule, targetArch, appConfigWriter, environmentLlFilePath);
+					appConfigAsmGen.Generate (targetArch, appConfigWriter, environmentLlFilePath);
 				} catch {
 					throw;
 				} finally {

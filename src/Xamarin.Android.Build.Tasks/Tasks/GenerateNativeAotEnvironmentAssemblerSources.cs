@@ -39,11 +39,10 @@ public class GenerateNativeAotEnvironmentAssemblerSources : AndroidTask
 
 		string environmentLlFilePath = outputFile.ItemSpec;
 		var generator = new NativeAotEnvironmentNativeAssemblyGenerator (Log, envBuilder);
-		LLVMIR.LlvmIrModule environmentModule = generator.Construct ();
 		using var environmentWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
 		bool fileFullyWritten = false;
 		try {
-			generator.Generate (environmentModule, targetArch, environmentWriter, environmentLlFilePath);
+			generator.Generate (targetArch, environmentWriter, environmentLlFilePath);
 			environmentWriter.Flush ();
 			Files.CopyIfStreamChanged (environmentWriter.BaseStream, environmentLlFilePath);
 			fileFullyWritten = true;

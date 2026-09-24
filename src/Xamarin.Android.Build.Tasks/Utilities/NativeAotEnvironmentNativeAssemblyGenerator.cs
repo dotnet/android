@@ -1,77 +1,42 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
+using System.IO;
+
 using Microsoft.Build.Utilities;
-using Xamarin.Android.Tasks.LLVMIR;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
 
-class NativeAotEnvironmentNativeAssemblyGenerator : LlvmIrComposer
+class NativeAotEnvironmentNativeAssemblyGenerator
 {
-	readonly EnvironmentBuilder envBuilder;
-	StructureInfo? appEnvironmentVariableStructureInfo;
+	readonly AppEnvironmentVariableTable environmentVariables;
+	readonly AppEnvironmentVariableTable systemProperties;
 
 	public NativeAotEnvironmentNativeAssemblyGenerator (TaskLoggingHelper log, EnvironmentBuilder envBuilder)
-		: base (log)
 	{
-		this.envBuilder = envBuilder;
+		if (log == null) {
+			throw new ArgumentNullException (nameof (log));
+		}
+
+		environmentVariables = new AppEnvironmentVariableTable (log, new SortedDictionary<string, string> (envBuilder.EnvironmentVariables, StringComparer.Ordinal));
+		systemProperties = new AppEnvironmentVariableTable (log, new SortedDictionary<string, string> (envBuilder.SystemProperties, StringComparer.Ordinal));
 	}
 
-	protected override void Construct (LlvmIrModule module)
+	public void Generate (AndroidTargetArch arch, TextWriter output, string fileName)
 	{
-		MapStructures (module);
+		using var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch));
+		w.WriteHeader (fileName);
+		AppEnvironmentVariableTable.WriteDeclaration (w);
 
-		SortedDictionary<string, string>? environmentVariables = null;
-		if (envBuilder.EnvironmentVariables.Count > 0) {
-			environmentVariables = new (envBuilder.EnvironmentVariables, StringComparer.Ordinal);
-		}
+		w.WriteGlobal ("__naot_android_app_environment_variable_count", LlvmIrWriter.GlobalConstant, "i32", environmentVariables.Count.ToString (), 4);
+		environmentVariables.Write (w, "__naot_android_app_environment_variables", "__naot_android_app_environment_variable_contents", " Application environment variables array, name:value");
 
-		SortedDictionary<string, string>? systemProperties = null;
-		if (envBuilder.SystemProperties.Count > 0) {
-			systemProperties = new (envBuilder.SystemProperties, StringComparer.Ordinal);
-		} else {
-			systemProperties = new (StringComparer.Ordinal);
-		}
-
-		var envVarsBlob = new LlvmIrStringBlob ();
-		List<StructureInstance<LlvmIrHelpers.AppEnvironmentVariable>> appEnvVars = LlvmIrHelpers.MakeEnvironmentVariableList (
-			Log,
-			environmentVariables,
-			envVarsBlob,
-			appEnvironmentVariableStructureInfo
-		);
-
-		var envVarsCount = new LlvmIrGlobalVariable ((uint)appEnvVars.Count, "__naot_android_app_environment_variable_count");
-		module.Add (envVarsCount);
-
-		var envVars = new LlvmIrGlobalVariable (appEnvVars, "__naot_android_app_environment_variables") {
-			Comment = " Application environment variables array, name:value",
-			Options = LlvmIrVariableOptions.GlobalConstant,
-		};
-		module.Add (envVars);
-		module.AddGlobalVariable ("__naot_android_app_environment_variable_contents", envVarsBlob, LlvmIrVariableOptions.GlobalConstant);
-
+		w.WriteGlobal ("__naot_android_app_system_property_count", LlvmIrWriter.GlobalConstant, "i32", systemProperties.Count.ToString (), 4);
 		// We reuse the same structure as for environment variables, there's no point in adding a new, identical, one
-		var sysPropsBlob = new LlvmIrStringBlob ();
-		List<StructureInstance<LlvmIrHelpers.AppEnvironmentVariable>> appSysProps = LlvmIrHelpers.MakeEnvironmentVariableList (
-			Log,
-			systemProperties,
-			sysPropsBlob,
-			appEnvironmentVariableStructureInfo
-		);
+		systemProperties.Write (w, "__naot_android_app_system_properties", "__naot_android_app_system_property_contents", " System properties defined by the application");
 
-		var sysPropsCount = new LlvmIrGlobalVariable ((uint)appSysProps.Count, "__naot_android_app_system_property_count");
-		module.Add (sysPropsCount);
-
-		var sysProps = new LlvmIrGlobalVariable (appSysProps, "__naot_android_app_system_properties") {
-			Comment = " System properties defined by the application",
-			Options = LlvmIrVariableOptions.GlobalConstant,
-		};
-		module.Add (sysProps);
-		module.AddGlobalVariable ("__naot_android_app_system_property_contents", sysPropsBlob, LlvmIrVariableOptions.GlobalConstant);
-	}
-
-	void MapStructures (LlvmIrModule module)
-	{
-		appEnvironmentVariableStructureInfo = module.MapStructure<LlvmIrHelpers.AppEnvironmentVariable> ();
+		w.WriteMetadata ();
+		output.Flush ();
 	}
 }
