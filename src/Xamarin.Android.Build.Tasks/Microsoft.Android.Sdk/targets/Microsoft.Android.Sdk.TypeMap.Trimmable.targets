@@ -545,6 +545,11 @@
         OutputDirectory="$(IntermediateOutputPath)android"
         AdditionalProviderSources="@(_AdditionalProviderSources)" />
 
+    <GenerateCoreClrRuntimeProviderSources
+        Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '@(_AdditionalProviderSources->Count())' != '0' "
+        OutputDirectory="$(IntermediateOutputPath)android"
+        AdditionalProviderSources="@(_AdditionalProviderSources)" />
+
     <!-- Copy generated manifest to expected location -->
     <Copy SourceFiles="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
         DestinationFiles="$(IntermediateOutputPath)AndroidManifest.xml"
