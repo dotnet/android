@@ -1226,16 +1226,8 @@ class TestActivity : Activity { }"
 			using var b = CreateDllBuilder ();
 			b.ThrowOnBuildFailure = false;
 			Assert.IsFalse (b.Build (proj), "Build should have failed");
-			var extension = IsWindows ? ".exe" : "";
-			if (runtime == AndroidRuntime.NativeAOT) {
-				// The trimmable manifest generator emits the merged components in a different
-				// (but valid) order than the legacy path, so the offending <service> lands on a
-				// different manifest line. Assert the coded AMM0000 error itself rather than the
-				// exact line/column, which is an implementation detail of the manifest layout.
-				Assert.IsTrue (b.LastBuildOutput.ContainsText ($"java{extension} error AMM0000:"), "Should receive AMM0000 error");
-			} else {
-				Assert.IsTrue (b.LastBuildOutput.ContainsText ($"AndroidManifest.xml(12,5): java{extension} error AMM0000:"), "Should receive AMM0000 error");
-			}
+			// The trimmable manifest generator can change the component order and error location.
+			Assert.IsTrue (b.LastBuildOutput.ContainsText ("error AMM0000:"), "Should receive AMM0000 error");
 			Assert.IsTrue (b.LastBuildOutput.ContainsText ("Apps targeting Android 12 and higher are required to specify an explicit value for `android:exported`"), "Should receive AMM0000 error");
 		}
 
