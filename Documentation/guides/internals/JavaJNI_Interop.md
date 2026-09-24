@@ -1,766 +1,213 @@
-<!--toc:start-->
-- [Introduction](#introduction)
-- [Java <-> Managed interoperability overview](#java-managed-interoperability-overview)
-  - [Java Callable Wrappers (JCW)](#java-callable-wrappers-jcw)
-- [Registration](#registration)
-  - [Dynamic registration](#dynamic-registration)
-    - [Dynamic Java Callable Wrappers registration code](#dynamic-java-callable-wrappers-registration-code)
-    - [Dynamic Registration call sequence](#dynamic-registration-call-sequence)
-  - [Marshal methods](#marshal-methods)
-    - [Marshal Methods Java Callable Wrappers registration code](#marshal-methods-java-callable-wrappers-registration-code)
-    - [Marshal methods C# source code](#marshal-methods-c-source-code)
-    - [JNI requirements](#jni-requirements)
-    - [LLVM IR code generation](#llvm-ir-code-generation)
-    - [Assembly rewriting](#assembly-rewriting)
-      - [Wrappers for methods with non-blittable types](#wrappers-for-methods-with-non-blittable-types)
-      - [UnmanagedCallersOnly attribute](#unmanagedcallersonly-attribute)
-    - [Marshal Methods Registration call sequence](#marshal-methods-registration-call-sequence)
-<!--toc:end-->
+# Java and managed interoperability with the trimmable TypeMap
 
-# Introduction
+This is an internal guide to the interop path used by **CoreCLR and NativeAOT Android applications**. The Java VM (ART) and the managed runtime are separate environments in one process. JNI is the boundary in both directions: bound C# types call Java methods through Java.Interop, and Java calls managed methods through generated Java callable wrappers (JCWs) with registered JNI entrypoints.
 
-At the core of `.NET for Android` is its ability to interoperate with
-the Java/Kotlin APIs implemented in the Android system.  To make it
-work, it is necessary to "bridge" the two separate worlds of Java VM
-(`ART` in the Android OS) and the Managed VM (`MonoVM`).  Application
-developers expect to be able to call native Android APIs and receive
-calls (or react to events) from the Android side using code written in
-one of the .NET managed languages.  To make it work, `.NET for Android`
-employs a number of techniques, both at build and at run time, which
-are described in the sections below.
+`AndroidTypeMapImplementation=trimmable` is the only supported application TypeMap implementation. Earlier versions of this guide described a choice between reflection/delegate-based "dynamic" registration and native LLVM-generated marshal methods. Neither describes this path. Here, the build generates **managed** TypeMap assemblies (including proxy and marshal code) and Java sources; the managed runtime registers their native callbacks with ART. There is no application-level native TypeMap lookup table, generated `Java_...` symbol for each callback, or marshal-method callback rewriting.
 
-This guide is meant to explain the technical implementation in a way
-that is sufficient to understand the system without having to read the
-actual source code.
+| Earlier guide | Trimmable TypeMap path |
+| --- | --- |
+| JCW static initializer built `__md_methods` and called `Runtime.register` with an assembly-qualified type name. | A generated JCW calls `Runtime.registerNatives(Class)`; the generated managed proxy supplies the registrations for that Java class. |
+| "Dynamic" registration used connector delegates and reflection/`Reflection.Emit` at runtime. | The scanner reads connector metadata to locate existing callbacks, but generated `UnmanagedCallersOnly` forwarders register their function pointers without making per-method delegates. |
+| "Marshal methods" relied on JNI `Java_...` native exports, native LLVM code, and a callback assembly rewriter. | The TypeMap emitter writes managed proxy/entrypoint IL; `RegisterNatives` binds method name/signature pairs to those entrypoints. |
+| JNI symbol mangling selected the native implementation; `_mm_wrapper` adapted booleans and exceptions. | The generated registration table uses NUL-terminated UTF-8 names/signatures; generated managed entrypoints perform JNI ABI conversion and exception handoff. |
 
-# Java <-> Managed interoperability overview
+## Terms and a running example
 
-Java VM and Managed VM are two entirely separate entities which
-co-exist in the same process/application.  Despite sharing the same
-process resources, they don't "naturally" communicate with each other.
-There is no direct way to call Java/Kotlin from .NET a'la the
-`p/invoke` mechanism which allows calling native code APIs.  Nor there
-exists a way for Java/Kotlin code to invoke managed methods.  To make
-it possible, `.NET for Android` takes advantage of the Java's [JNI](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html)
-(`Java Native Interface`), a mechanism that allows native code
-(.NET managed code being "native" in this context) to register
-implementations of Java methods, written outside the Java VM and in
-languages other than Java/Kotlin (for instance in `C`, `C++` or
-`Rust`).
+| Term | Meaning |
+| --- | --- |
+| Bound managed type (MCW) | A C# binding for an existing Java class, such as `Android.App.Activity`. Its `JniPeerMembers` invokes Java methods. |
+| Java callable wrapper (JCW, or ACW) | A *generated Java class* for a managed subclass or Java-visible implementation. Java overrides call `native n_*` methods, which lead back to managed code. |
+| TypeMap assembly | A *generated managed DLL* containing Java-name/managed-type associations, proxy types, and (for JCWs) registration and JNI entrypoint code. |
+| Java peer / managed peer | Two objects representing one interop instance, with separate runtimes and garbage collectors. JNI references and peer bookkeeping link their lifetimes. |
 
-Such methods need to be appropriately declared in the Java code, for
-instance:
+For example, an application can subclass a bound `Activity`:
+
+```csharp
+using Android.App;
+using Android.OS;
+
+namespace MyApp
+{
+	[Activity (Name = "my.app.MainActivity", MainLauncher = true)]
+	public class MainActivity : Activity
+	{
+		protected override void OnCreate (Bundle? savedInstanceState)
+		{
+			base.OnCreate (savedInstanceState);
+			// Application work here.
+		}
+	}
+}
+```
+
+The binding for `Activity.OnCreate` carries the Java name `onCreate` and JNI signature `(Landroid/os/Bundle;)V`. The app override need not repeat `[Register]`: the scanner follows the registered base method through the override. The [scanner test fixtures](../../../tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/TestFixtures/TestTypes.cs) include both an explicitly registered `MainActivity` and an unannotated `UserActivity` override.
+
+The corresponding JCW is roughly the following Java. This excerpt omits constructor and peer-reference code; its class name, registration call, override, and native callback name match the [JCW generator tests](../../../tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/Generator/JcwJavaSourceGeneratorTests.cs):
 
 ```java
-class MainActivity
-  extends androidx.appcompat.app.AppCompatActivity
+package my.app;
+
+public class MainActivity extends android.app.Activity
+        implements mono.android.IGCUserPeer
 {
-  public void onCreate (android.os.Bundle p0)
-  {
-    n_onCreate (p0);
-  }
-
-  private native void n_onCreate (android.os.Bundle p0);
-}
-```
-
-Each native method is declared using the `native` keyword, and
-whenever it is invoked from other Java code, the Java VM will use the
-JNI to invoke the target method.
-
-Native methods can be registered either dynamically (by calling the
-[`RegisterNatives`](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/functions.html#RegisterNatives)
-JNI function) or "statically", by providing a native shared library
-which exports a symbol with appropriate name which points to the
-native function implementing the Java method.
-
-Both ways of registration are described in detail in the following
-sections.
-
-## Java Callable Wrappers (JCW)
-
-`.NET for Android` wraps the entire Android API by generating
-appropriate C# code which mirrors the Java/Kotlin code (classes,
-interfaces, methods, properties etc).  Each generated class that
-corresponds to a Java/Kotlin type, is derived from the
-`Java.Lang.Object` class (implemented in the `Mono.Android` assembly),
-which marks it as a "Java interoperable type", meaning that it can
-implement or override virtual Java methods.  To make registration and
-invoking of such methods possible, it is necessary to generate a Java
-class which mirrors the Managed one and provides an entry point to
-the Java <-> Managed transition.  The Java classes are generated
-during application (as well as `.NET for Android`) build and we call
-them **Java Callable Wrappers** (or **JCW** for short).  For instance,
-the following managed class:
-
-```csharp
-public class MainActivity : AppCompatActivity
-{
-  public override Android.Views.View? OnCreateView (Android.Views.View? parent, string name, Android.Content.Context context, Android.Util.IAttributeSet attrs)
-  {
-    return base.OnCreateView (parent, name, context, attrs);
-  }
-
-  protected override void OnCreate (Bundle savedInstanceState)
-  {
-     base.OnCreate(savedInstanceState);
-     DoSomething (savedInstanceState);
-  }
-
-  void DoSomething (Bundle bundle)
-  {
-     // do something with the bundle
-  }
-}
-```
-
-overrides two Java virtual methods found in the `AppCompatActivity`
-type: `OnCreateView` and `OnCreate`.  The `DoSomething` method does
-not correspond to any method found in the base Java type, and thus it
-won't be included in the JCW.
-
-The Java Callable Wrapper generated for the above class would look as
-follows (a few generated methods not relevant to the discussion have
-been omitted for brevity):
-
-```java
-public class MainActivity
-        extends androidx.appcompat.app.AppCompatActivity
-{
-  public android.view.View onCreateView (android.view.View p0, java.lang.String p1, android.content.Context p2, android.util.AttributeSet p3)
-  {
-    return n_onCreateView (p0, p1, p2, p3);
-  }
-  private native android.view.View n_onCreateView (android.view.View p0, java.lang.String p1, android.content.Context p2, android.util.AttributeSet p3);
-
-  public void onCreate (android.os.Bundle p0)
-  {
-    n_onCreate (p0);
-  }
-  private native void n_onCreate (android.os.Bundle p0);
-}
-```
-
-Understanding the connection between Managed methods and their Java
-counterparts is required in order to understand the registration
-mechanisms described in sections found later in this document.  The
-[Dynamic registration](#dynamic-registration) section will expand on
-this example in order to explain the details of how the Managed type
-and its methods are registered with the Java VM.
-
-# Registration
-
-Both mechanisms of method registration rely on generation of [Java
-Callable Wrappers](#java-callable-wrappers-jcw), with [Dynamic
-registration](#dynamic-registration) requiring more code to be
-generated so that the registration can be performed at the runtime.
-
-JCW are generated only for types that derive from
-the `Java.Lang.Object` type.  Finding such types is the task of the
-Java.Interop's [`JavaTypeScanner`](../../external/Java.Interop/src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/JavaTypeScanner.cs),
-which uses `Mono.Cecil` to read all the assemblies referenced by the
-application and its libraries.  The returned list of assemblies is
-then used by a variety of tasks, JCW being only one
-of them.
-
-After all types are found,
-[`JavaCallableWrapperGenerator`](../../external/Java.Interop/src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/JavaCallableWrapperGenerator.cs)
-is invoked in order to analyze each method in each type, looking for
-those which override a virtual Java method and, thus, need to be
-included in the wrapper class code. The generator optionally (if
-[marshal methods](#marshal-methods) are enabled) passes each method to
-an implementation of the
-[`Java.Interop.Tools.JavaCallableWrappers.JavaCallableMethodClassifier`](../../external/Java.Interop/src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/JavaCallableWrapperGenerator.cs)
-abstract class (which is
-[`MarshalMethodsClassifier`](../../src/Xamarin.Android.Build.Tasks/Utilities/MarshalMethodsClassifier.cs)
-in our case), to check whether the given method can be registered
-statically.
-
-`JavaCallableWrapperGenerator` looks for methods decorated with the
-`[Register]` attribute, which most frequently is created by invoking
-its constructor with three parameters:
-
-  1. Java method name
-  2. JNI method signature
-  3. "Connector" method name
-
-The "connector" is a static method which creates a delegate that
-subsequently allows calling of the native callback method:
-
-```csharp
-public class MainActivity : AppCompatActivity
-{
-  // Connector backing field
-  static Delegate? cb_onCreate_Landroid_os_Bundle_;
-
-  // Connector method
-  static Delegate GetOnCreate_Landroid_os_Bundle_Handler ()
-  {
-    if (cb_onCreate_Landroid_os_Bundle_ == null)
-      cb_onCreate_Landroid_os_Bundle_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_OnCreate_Landroid_os_Bundle_);
-    return cb_onCreate_Landroid_os_Bundle_;
-  }
-
-  // Native callback
-  static void n_OnCreate_Landroid_os_Bundle_ (IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState)
-  {
-    var __this = global::Java.Lang.Object.GetObject<Android.App.Activity> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-    var savedInstanceState = global::Java.Lang.Object.GetObject<Android.OS.Bundle> (native_savedInstanceState, JniHandleOwnership.DoNotTransfer);
-    __this.OnCreate (savedInstanceState);
-  }
-
-  // Target method
-  [Register ("onCreate", "(Landroid/os/Bundle;)V", "GetOnCreate_Landroid_os_Bundle_Handler")]
-  protected virtual unsafe void OnCreate (Android.OS.Bundle? savedInstanceState)
-  {
-    const string __id = "onCreate.(Landroid/os/Bundle;)V";
-    try {
-      JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-      __args [0] = new JniArgumentValue ((savedInstanceState == null) ? IntPtr.Zero : ((global::Java.Lang.Object) savedInstanceState).Handle);
-      _members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-    } finally {
-      global::System.GC.KeepAlive (savedInstanceState);
+    static {
+        mono.android.Runtime.registerNatives (MainActivity.class);
     }
-  }
-}
-```
 
-The above code is actually generated in the `Android.App.Activity`
-class while .NET for Android is built, from which our example
-`MainActivity` eventually derives.
-
-What happens with the above code depends on the registration mechanism
-and is described in the sections below.
-
-## Dynamic registration
-
-This registration mechanism has been used by `.NET for Android` since
-the beginning and it will remain in use for the foreseeable future
-when the application is built in the `Debug` configuration or when
-[Marshal Methods](#marshal-methods) are turned off.
-
-### Dynamic Java Callable Wrappers registration code
-
-Building on the C# example shown in the [Java Callable
-Wrappers](#java-callable-wrappers-jcw) section, the following Java
-code is generated (only the parts relevant to registration are shown):
-
-```java
-public class MainActivity
-        extends androidx.appcompat.app.AppCompatActivity
-{
-/** @hide */
-        public static final String __md_methods;
-        static {
-                __md_methods = 
-                        "n_onCreateView:(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;)Landroid/view/View;:GetOnCreateView_Landroid_view_View_Ljava_lang_String_Landroid_content_Context_Landroid_util_AttributeSet_Handler\n" +
-                        "n_onCreate:(Landroid/os/Bundle;)V:GetOnCreate_Landroid_os_Bundle_Handler\n" +
-                        "";
-                mono.android.Runtime.register ("HelloAndroid.MainActivity, HelloAndroid", MainActivity.class, __md_methods);
-        }
-
-        public android.view.View onCreateView (android.view.View p0, java.lang.String p1, android.content.Context p2, android.util.AttributeSet p3)
-        {
-                return n_onCreateView (p0, p1, p2, p3);
-        }
-
-        private native android.view.View n_onCreateView (android.view.View p0, java.lang.String p1, android.content.Context p2, android.util.AttributeSet p3);
-
-        public void onCreate (android.os.Bundle p0)
-        {
-                n_onCreate (p0);
-        }
-
-        private native void n_onCreate (android.os.Bundle p0);
-}
-```
-
-Code fragment which takes part in registration is the class's static
-constructor.  For each method registered for the type (that is,
-implemented or overridden in the managed code), the JCW generator
-outputs a single string which contains full information about the type
-and method to register.  Each such registration string is terminated
-with the newline character and the entire sequence ends with an empty
-string.  Together, all the lines are concatenated and placed in the
-`__md_methods` static variable.  The `mono.android.Runtime.register`
-method (see below for more details) is then invoked to register all
-the methods.
-
-### Dynamic Registration call sequence
-
-All the "native" methods declared in the generated Java type are
-registered when the type is constructed or accessed for the first
-time.  This is when the Java VM invokes the type's static constructor,
-kicking off a sequence of calls that eventually ends with all the type
-methods registered with JNI:
-
-  1. `mono.android.Runtime.register` is itself a native method,
-     declared in the
-     [`Runtime`](../../src/java-runtime/java/mono/android/Runtime.java)
-     class of .NET for Android's Java runtime code, and implemented in
-     the native .NET for Android
-     [runtime](../../src/monodroid/jni/monodroid-glue.cc) (the
-     `MonodroidRuntime::Java_mono_android_Runtime_register` method).
-	 Purpose of this method is to prepare a call into the
-     .NET for Android managed runtime code, the
-     [`Android.Runtime.JNIEnv::RegisterJniNatives`](../../src/Mono.Android/Android.Runtime/JNIEnv.cs)
-     method.
-  2. `Android.Runtime.JNIEnv::RegisterJniNatives` is passed name of
-     the managed type for which to register Java methods and uses .NET
-     reflection to load that type, followed by a call to cache the
-     type (via `RegisterType` method in the
-     [`TypeManager`](../../src/Mono.Android/Java.Interop/TypeManager.cs)
-     class) to end with a call to the
-     `Android.Runtime.AndroidTypeManager::RegisterNativeMembers`
-     method.
-  3. `Android.Runtime.AndroidTypeManager::RegisterNativeMembers`
-     eventually calls the
-     `Java.Interop.JniEnvironment.Types::RegisterNatives` method which
-	 first generates a delegate to the native callback method, using
-     `System.Reflection.Emit` (via the
-     [`Android.Runtime.JNINativeWrapper::CreateDelegate`](../../src/Mono.Android/Android.Runtime/JNINativeWrapper.cs)
-     method) and, eventually, invokes Java JNI's `RegisterNatives`
-     function, finally registering the native methods for a managed
-     type.
-  
-The `System.Reflection.Emit` sequence mentioned in 3. above is among
-the most costly operations, repeated for each registered method.
-
-Some more information about Java type registration can be found
-[here](https://github.com/dotnet/android/wiki/Blueprint#java-type-registration).
-
-## Marshal methods
-
-The goal of marshal methods is to completely bypass the [dynamic
-registration sequence](#dynamic-registration-call-sequence), replacing
-it with native code generated and compiled during application build,
-thus saving on the startup time of the application.
-
-Marshal methods registration mechanism takes advantage of the JNI
-ability to look up implementations of `native` Java methods in actual
-native (shared) libraries.  Such symbols must have names that follow a
-set of rules, so that JNI is able to properly locate them (details are
-explained in the [JNI Requirements](#jni-requirements) section below).
-
-To achieve that, the marshal methods mechanism uses a number of
-classes which [generate native](#llvm-ir-code-generation) code and 
-[modify assemblies](#assembly-rewriting) that contain the registered
-methods.
-
-Current implementation of the marshal methods classifier recognizes
-the "standard" method registration pattern, using the example of the
-`OnCreate` method shown in [Registration](#registration) above.
-
-The standard pattern consists of:
-
-  * the "connector" method, `GetOnCreate_Landroid_os_Bundle_Handler`
-    above
-  * the delegate backing field, `cb_onCreate_Landroid_os_Bundle_`
-    above
-  * the native callback method, `n_OnCreate_Landroid_os_Bundle_` above
-  * and the virtual target method which dispatches the call to the
-    actual object, `OnCreate` above.
-
-Whenever the classifier's `ShouldBeDynamicallyRegistered` method is
-called, it is passed not only the method's declaring type, but also
-the `Register` attribute instance which it then uses to check whether
-the method being registered conforms to the "standard" registration
-pattern shown above.  The connector, native callback methods as well
-as the backing field must be private and static in order for the
-registered method to be considered as a candidate for static
-registration.
-
-Registered methods which don't follow the "standard" pattern will be
-registered dynamically.
-
-### Marshal Methods Java Callable Wrappers registration code
-
-Building on the C# example show in the [Java Callable
-Wrappers](#java-callable-wrappers-jcw) section, the following Java
-code is generated (only the parts relevant to registration are shown):
-
-```java
-public class MainActivity
-        extends androidx.appcompat.app.AppCompatActivity
-{
-  public android.view.View onCreateView (android.view.View p0, java.lang.String p1, android.content.Context p2, android.util.AttributeSet p3)
-  {
-    return n_onCreateView (p0, p1, p2, p3);
-  }
-
-  private native android.view.View n_onCreateView (android.view.View p0, java.lang.String p1, android.content.Context p2, android.util.AttributeSet p3);
-
-  public void onCreate (android.os.Bundle p0)
-  {
-    n_onCreate (p0);
-  }
-
-  private native void n_onCreate (android.os.Bundle p0);
-}
-```
-
-Note that, compared to the code generated for the [dynamic
-registration](#dynamic-java-callable-wrappers-registration-code)
-mechanism, there is no static constructor while the rest 
-of the code remains exactly the same.
-
-### Marshal methods C# source code
-
-The marshal methods sections below will all refer to this code
-fragment:
-
-
-```csharp
-public class MainActivity : AppCompatActivity
-{
-  // Connector backing field
-  static Delegate? cb_onCreate_Landroid_os_Bundle_;
-
-  // Connector method
-  static Delegate GetOnCreate_Landroid_os_Bundle_Handler ()
-  {
-    if (cb_onCreate_Landroid_os_Bundle_ == null)
-      cb_onCreate_Landroid_os_Bundle_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_OnCreate_Landroid_os_Bundle_);
-    return cb_onCreate_Landroid_os_Bundle_;
-  }
-
-  // Native callback
-  static void n_OnCreate_Landroid_os_Bundle_ (IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState)
-  {
-    var __this = global::Java.Lang.Object.GetObject<Android.App.Activity> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-    var savedInstanceState = global::Java.Lang.Object.GetObject<Android.OS.Bundle> (native_savedInstanceState, JniHandleOwnership.DoNotTransfer);
-    __this.OnCreate (savedInstanceState);
-  }
-
-  // Target method
-  [Register ("onCreate", "(Landroid/os/Bundle;)V", "GetOnCreate_Landroid_os_Bundle_Handler")]
-  protected virtual unsafe void OnCreate (Android.OS.Bundle? savedInstanceState)
-  {
-    const string __id = "onCreate.(Landroid/os/Bundle;)V";
-    try {
-      JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-      __args [0] = new JniArgumentValue ((savedInstanceState == null) ? IntPtr.Zero : ((global::Java.Lang.Object) savedInstanceState).Handle);
-      _members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-    } finally {
-      global::System.GC.KeepAlive (savedInstanceState);
+    @Override
+    public void onCreate (android.os.Bundle p0)
+    {
+        n_OnCreate_Landroid_os_Bundle_ (p0);
     }
-  }
+
+    public native void n_OnCreate_Landroid_os_Bundle_ (android.os.Bundle p0);
 }
 ```
 
-### JNI requirements
+The Java name is `my/app/MainActivity`, not the assembly-qualified C# type name. The method descriptor means one `android.os.Bundle` argument and a `void` return; the `L...;` denotes an object reference. The generated callback name is derived from binding metadata. `OnCreate` can call `base.OnCreate` back into Java: that is a **new managed-to-Java invocation**, not a second JCW registration.
 
-JNI
-[specifies](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/design.html#resolving_native_method_names)
-a number of rules which govern how the native symbol name is
-constructed, so that a mapping of object-oriented Java code (with its
-package names/namespaces, class names and overloadable methods) into the essentially
-"flat" procedural "namespace" of the lowest common denominator C code.
+## Build-time representation
 
-The precise rules are outlined in the URL above, and their short
-version is as follows:
+[`GenerateTrimmableTypeMap`](../../../src/Microsoft.Android.Build.Tasks/Tasks/GenerateTrimmableTypeMap.cs) invokes the [`JavaPeerScanner`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Scanner/JavaPeerScanner.cs) on the application, references, and SDK/framework inputs. The scanner reads managed assembly metadata, including Java type names, `[Register]` methods, overrides of registered base/interface methods, constructors, `[Export]` members, and manifest components. The [`TrimmableTypeMapGenerator`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/TrimmableTypeMapGenerator.cs) validates the resulting model and feeds both the Java and managed emitters. The app's generated JCWs do not come from the old `JavaCallableWrapperGenerator` / `MarshalMethodsClassifier` pipeline.
 
-  * Each symbol starts with the `Java_` prefix
-  * Next follows the mangled (see below) **fully qualified class
-    name**
-  * Next the `_` character serves as a separator before
-  * A mangled **method** name, which is optionally followed by
-  * Double underscore `__` and the mangled method argument signature
+The main outputs are:
 
-"Mangling" is a way of encoding certain characters that are not
-directly representable both in the source code and in the native
-symbol name.  The JNI specification allows for direct use of ASCII
-letters (capital and lowercase) and digits, while all the other
-characters are either represented by placeholders or encoded as 16-bit
-hexadecimal Unicode character code (table copied from the JNI
-specification for easier reference):
+| Output | Role |
+| --- | --- |
+| `typemap/java/**/*.java` | Generated JCWs; [`JcwJavaSourceGenerator`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/JcwJavaSourceGenerator.cs) emits class declarations, constructors, overrides, native declarations, registration, and `IGCUserPeer` hooks. |
+| `typemap/_*.TypeMap.dll` | Per-input-assembly managed mapping attributes, proxy types, and JNI registration methods emitted by [`TypeMapAssemblyEmitter`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/TypeMapAssemblyEmitter.cs). |
+| `typemap/_Microsoft.Android.TypeMaps.dll` | Root assembly anchoring the per-assembly TypeMaps; its generated `TypeMapLoader.Initialize()` wires the mapping dictionaries ([`RootTypeMapAssemblyGenerator`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/RootTypeMapAssemblyGenerator.cs)). |
+| `typemap/typemap-assemblies.txt`, `java-files.txt`, `acw-map.txt` | Lists of actual generated assemblies/Java sources and Java-to-managed class mappings for the build. |
+| `android/src/net/dot/android/ApplicationRegistration.java`, merged `AndroidManifest.xml` | Generated application/instrumentation registration and manifest output. The former is built from scan results, **not** copied from a handwritten template. |
 
-| Escape sequence | Denotes                                  |
-|-----------------|------------------------------------------|
-| _0XXXX          | a Unicode character XXXX, all lower case |
-| _1              | The `_` character                        |
-| _2              | The `;` character in signatures          |
-| _3              | The `[` character in signatures          |
-| _               | The `.` or `/` characters                |
+The app build also generates needed **platform JCWs** from framework inputs alongside user JCWs: for example, the [build tests](../../../src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/TrimmableTypeMapBuildTests.cs) check for `typemap/java/android/app/ActivityTracker.java` and its `Runtime.registerNatives` call. The [reference pack](../../../build-tools/create-packs/Microsoft.Android.Ref.proj) no longer ships prebuilt `mono.android.jar` or `mono.android.dex`. The handwritten Java runtime support instead comes from `java_runtime_trimmable.jar`, selected by [`_CollectRuntimeJarFilenames`](../../../src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.targets); this is not a jar of pre-generated platform JCWs. `ApplicationRegistration.java` is generated separately during the app build.
 
-Generation of JNI symbol names is performed by the
-[`MarshalMethodsNativeAssemblyGenerator`](../../src/Xamarin.Android.Build.Tasks/Utilities/MarshalMethodsNativeAssemblyGenerator.cs)
-class while generating the native function source code.
+Each per-assembly TypeMap contains assembly-level mapping attributes: a key such as `my/app/MainActivity`, a proxy type, and, for a trimmable mapping, the managed target type. The root references the per-assembly maps via `TypeMapAssemblyTargetAttribute<T>`. The emitter writes **IL and metadata**, not `.cs` files; the C# in the sections below is an explanatory translation of emitted code, not a file that a developer should edit. See [`TypeMapAssemblyGenerator`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/TypeMapAssemblyGenerator.cs), [`TypeMapAssemblyEmitter.EmitTypeMapAttribute`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/TypeMapAssemblyEmitter.cs), and the [build-pipeline guide](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/README.md).
 
-JNI supports two forms of the native symbol name, as signalled in the
-bullet list above - a short and a long one.  The former is looked up
-first by the Java VM, followed by the latter.  The latter needs to be
-used only for overloaded methods, which is what our generator does.
-
-### LLVM IR code generation
-
-[`MarshalMethodsNativeAssemblyGenerator`](../../src/Xamarin.Android.Build.Tasks/Utilities/MarshalMethodsNativeAssemblyGenerator.cs)
-uses the LLVM IR generator infrastructure to output both data and
-executable code for all the marshal methods wrappers.  It is not
-necessary to understand the generated code unless one needs to modify
-it, so this document only shows the equivalent C++ code which can
-serve as a guide to understanding how the marshal method runtime
-invocation works:
-
-```C++
-using get_function_pointer_fn = void(*)(uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr);
-
-static get_function_pointer_fn get_function_pointer;
-
-void xamarin_app_init (get_function_pointer_fn fn) noexcept
-{
-  get_function_pointer = fn;
-}
-
-using android_app_activity_on_create_bundle_fn = void (*) (JNIEnv *env, jclass klass, jobject savedInstanceState);
-static android_app_activity_on_create_bundle_fn android_app_activity_on_create_bundle = nullptr;
-
-extern "C" JNIEXPORT void
-JNICALL Java_helloandroid_MainActivity_n_1onCreate__Landroid_os_Bundle_2 (JNIEnv *env, jclass klass, jobject savedInstanceState) noexcept
-{
-  if (android_app_activity_on_create_bundle == nullptr) {
-    get_function_pointer (
-      16, // mono image index
-      0,  // class index
-      0x0600055B, // method token
-      reinterpret_cast<void*&>(android_app_activity_on_create_bundle) // target pointer
-    );
-  }
-
-  android_app_activity_on_create_bundle (env, klass, savedInstanceState);
-}
-```
-
-The `xamarin_app_init` function is output only once and is called by
-the `.NET for Android` runtime twice during application startup - once
-to pass `get_function_pointer_fn` which does **not** use any locks (as
-we know that until a certain point during startup we are in a single
-lock, so no data access races can happen) and the other time just
-before handing control over to the MonoVM, to pass pointer to
-`get_function_pointer_fn` which **does** employ locking (since during
-runtime it may very well happen that our generated Java native
-functions will be called from different threads simultaneously).
-
-The `Java_helloandroid_MainActivity_n_1onCreate__Landroid_os_Bundle_2`
-function is a template which is repeated for each Java native
-function, with each function having its own set of arguments and its
-own callback backing field (`android_app_activity_on_create_bundle`
-here).
-
-The `get_function_pointer` function takes as parameters indexes into a
-couple of tables, one for `MonoImage*` pointers and the other for
-`MonoClass*` pointers - both of which are generated by the
-`MarshalMethodsNativeAssemblyGenerator` class at application build
-time and allow for very fast lookup during run time.  Target methods
-are retrieved by their token value, within the specified `MonoImage*`
-(essentially a pointer to managed assembly image in memory) and class.
-
-The method identified in such manner, **must** be decorated in the
-managed code with the
-[`[UnmanagedCallersOnly]`](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.unmanagedcallersonlyattribute?view=net-6.0)
-attribute (see [below](#unmanagedcallersonly-attribute) for more
-details) so that it can be invoked directly, as if it was a native
-method itself, with minimal managed marshaling overhead.
-
-### Assembly rewriting
-
-Please refer to the [C# code fragment](#marshal-methods-c-source-code)
-above in order to understand this section.
-
-Managed assemblies (including `Mono.Android.dll`) which contain Java
-types need to be usable in two contexts: with the "traditional"
-dynamic registration and with marshal methods.  Both of these
-mechanisms, however, have different requirements.  We cannot assume
-that any assembly (either from .NET for Android or a third party nuget)
-will have "marshal methods friendly" code and thus we need to make
-sure that the code meets our requirements.
-
-We do it by reading each relevant assembly and modifying it by
-altering the definition of the native callbacks and removing the
-code that's no longer used by marshal methods.  This task is performed
-by the
-[`MarshalMethodsAssemblyRewriter`](../../src/Xamarin.Android.Build.Tasks/Utilities/MarshalMethodsAssemblyRewriter.cs)
-invoked during application build after all the assemblies are linked
-but **before** type maps are generated (as rewriting **will** alter
-the method and potentially type tokens)
-
-The exact modifications we apply are:
-
-  * Removal of the **connector backing field**
-  * Removal of the **connector method**
-  * Generation of a **native callback wrapper** method, which catches
-    and propagates unhandled exceptions thrown by the native callback
-    or the target method.  This method is decorated with the
-    `[UnmanagedCallersOnly]` attribute and called directly from the
-    native code.
-  * Optionally, generate code in the **native callback wrapper** to handle
-    [non-blittable types](#wrappers-for-methods-with-non-blittable-types).
-
-All the modifications are performed with `Mono.Cecil`.
-
-After modifications, the assembly contains equivalent of the following
-C# code for each marshal method:
+For the example Activity, think of a mapping like this **conceptual C#**:
 
 ```csharp
-public class MainActivity : AppCompatActivity
-{
-  // Native callback
-  static void n_OnCreate_Landroid_os_Bundle_ (IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState)
-  {
-    var __this = global::Java.Lang.Object.GetObject<Android.App.Activity> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-    var savedInstanceState = global::Java.Lang.Object.GetObject<Android.OS.Bundle> (native_savedInstanceState, JniHandleOwnership.DoNotTransfer);
-    __this.OnCreate (savedInstanceState);
-  }
+// Assembly metadata, emitted as IL rather than source:
+[assembly: TypeMapAttribute ("my/app/MainActivity",
+			     typeof (MainActivityProxy), typeof (MyApp.MainActivity))]
 
-  // Native callback exception wrapper
-  [UnmanagedCallersOnly]
-  static void n_OnCreate_Landroid_os_Bundle__mm_wrapper (IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState)
-  {
-    try {
-      n_OnCreate_Landroid_os_Bundle_ (jnienv, native__this, native_savedInstanceState)
-    } catch (Exception ex) {
-      Android.Runtime.AndroidEnvironmentInternal.UnhandledException (ex);
-    }
-  }
-
-  // Target method
-  [Register ("onCreate", "(Landroid/os/Bundle;)V", "GetOnCreate_Landroid_os_Bundle_Handler")]
-  protected virtual unsafe void OnCreate (Android.OS.Bundle? savedInstanceState)
-  {
-    const string __id = "onCreate.(Landroid/os/Bundle;)V";
-    try {
-      JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-      __args [0] = new JniArgumentValue ((savedInstanceState == null) ? IntPtr.Zero : ((global::Java.Lang.Object) savedInstanceState).Handle);
-      _members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-    } finally {
-      global::System.GC.KeepAlive (savedInstanceState);
-    }
-  }
-}
+// The emitted ACW proxy derives from JavaPeerProxy<T> and implements
+// IAndroidCallableWrapper. Proxy names are chosen by the emitter.
 ```
 
-#### Wrappers for methods with non-blittable types
+There is no source-level `TypeMap` attribute for application code to write. The real emitted `TypeMapAttribute` takes the Java key and proxy reference; its trimmable three-argument form also takes the target reference. An unconditional mapping has just the key and proxy reference, whereas the target reference on a conditional mapping lets the trimming pipeline discard entries for unused managed types. ACW proxies implement `IAndroidCallableWrapper` to register callbacks; other proxies need not. [`JavaPeerProxy`](../../../src/Mono.Android/Java.Interop/JavaPeerProxy.cs) provides peer creation without `Activator.CreateInstance`.
 
-The
-[`[UnmanagedCallersOnly]`](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.unmanagedcallersonlyattribute?view=net-6.0)
-attribute requires that all the argument types as well as the method
-return type are
-[blittable](https://docs.microsoft.com/en-us/dotnet/framework/interop/blittable-and-non-blittable-types).
+The [shared TypeMap targets](../../../src/Xamarin.Android.Build.Tasks/Microsoft.Android.Sdk/targets/Microsoft.Android.Sdk.TypeMap.Trimmable.targets) run `_GenerateTrimmableTypeMap` after `CoreCompile`, compile the generated Java, and feed TypeMap DLLs to later steps. They track generated files and remove stale JCWs when the managed model changes. The target's stamp and output lists matter on incremental builds: a stale compiled Java class can otherwise outlive its managed callback.
 
-Among these types is one that's commonly used by the managed classes
-implementing Java methods: `bool`.  Currently this is the **only**
-non-blittable type we've encountered in bindings, so at this point it
-is the only one supported by the assembly rewriter.
+CoreCLR's [runtime-specific targets](../../../src/Xamarin.Android.Build.Tasks/Microsoft.Android.Sdk/targets/Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets) give the TypeMap DLLs to ILLink as trimmable inputs, with `_Microsoft.Android.TypeMaps` as the entry assembly. For `PublishTrimmed=true`, a **second scan of linked assemblies** regenerates JCWs in `typemap/linked-java/` and records `linked-java-files.txt`; the pre-trim Java set is not necessarily the packaged set. NativeAOT's [targets](../../../src/Xamarin.Android.Build.Tasks/Microsoft.Android.Sdk/targets/Microsoft.Android.Sdk.TypeMap.Trimmable.NativeAOT.targets) feed the generated DLLs to ILC and use its graph plus the ACW map when producing Java shrinker configuration. Both modes need reachable managed mapping/proxy/entrypoint code; they do not resurrect the native LLVM TypeMap.
 
-Whenever we encounter a method with a non-blittable type, we must
-generate a wrapper for it, so that we can decorate it with the
-`[UnmanagedCallersOnly]` attribute.  This is easier and less error
-prone than modifying the native callback method's IL stream to
-implement the necessary conversion.
+## Managed code calls Java
 
-An example of such method is
-`Android.Views.View.IOnTouchListener::OnTouch`:
+Android bindings are managed wrappers for *existing* Java APIs. For example, [`Activity.ReportFullyDrawn()`](../../../src/Mono.Android/Android.App/Activity.cs) uses its bound member descriptor `"reportFullyDrawn.()V"` and calls `_members.InstanceMethods.InvokeVirtualVoidMethod (...)` on `this`. The essential C# shape (simplified) is:
 
 ```csharp
-static bool n_OnTouch_Landroid_view_View_Landroid_view_MotionEvent_ (IntPtr jnienv, IntPtr native__this, IntPtr native_v, IntPtr native_e)
-{
-  var __this = global::Java.Lang.Object.GetObject<Android.Views.View.IOnTouchListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-  var v = global::Java.Lang.Object.GetObject<Android.Views.View> (native_v, JniHandleOwnership.DoNotTransfer);
-  var e = global::Java.Lang.Object.GetObject<Android.Views.MotionEvent> (native_e, JniHandleOwnership.DoNotTransfer);
-  bool __ret = __this.OnTouch (v, e);
-  return __ret;
-}
+const string id = "reportFullyDrawn.()V";
+_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, null);
 ```
 
-As it returns a `bool` value, it needs a wrapper to cast the return
-value properly. Each wrapper method retains the native callback method
-name, but appends the `_mm_wrapper` suffix to it:
+Java.Interop resolves the class and method, invokes JNI with the peer's reference, and converts values/references according to the binding. Other bound methods use `JniArgumentValue` arrays and the appropriate virtual, nonvirtual, or static `JniPeerMembers` invocation. The TypeMap is not a per-call method dispatch table: it is involved when Java classes and managed peers must be mapped or created, not in place of this invocation.
+
+When JNI returns an object or Java passes one into managed code, [`TrimmableTypeMapTypeManager`](../../../src/Mono.Android/Microsoft.Android.Runtime/TrimmableTypeMapTypeManager.cs) uses the Java name and generated mappings to select a managed target and proxy. [`TrimmableTypeMapValueManager`](../../../src/Mono.Android/Microsoft.Android.Runtime/TrimmableTypeMapValueManager.cs) looks for an existing managed peer or constructs one from the JNI handle. In the reverse direction, the type manager can obtain a JNI type signature for a managed peer type. Do not confuse a bound `Activity` MCW with the `MainActivity` JCW that implements Java-to-managed overrides.
+
+## Java code calls managed code
+
+### JCW declarations and per-class registration
+
+The generated Java `onCreate` calls its native `n_OnCreate_Landroid_os_Bundle_`; constructors similarly declare generated `nctor_*` native callbacks, and instantiate/activate the managed peer when appropriate. The class's static block calls `mono.android.Runtime.registerNatives (MainActivity.class)` when the class is first initialized. This is **per Java class**. Application and instrumentation JCWs instead use a guarded `__md_registerNatives()` helper called from their generated wrappers: registration in their static initializer can be too early in startup. The declaration of `registerNatives(Class)` in [`mono.android.Runtime`](../../../src/java-runtime/java/mono/android/Runtime.java) is handwritten Java; individual JCWs and their registration calls are generated.
+
+There is no concatenated `__md_methods` string and no `Runtime.register("managed.Type, Assembly", ...)` registration in this path. The old JNI native-symbol mangling rules (`Java_package_Class_method...`) matter for symbol-lookup-based JNI code, but generated app JCW callbacks here are associated with their Java declarations through [`RegisterNatives`](https://docs.oracle.com/en/java/javase/17/docs/specs/jni/functions.html#registernatives): the Java method **name** and **signature** must match; no `Java_...` export is required for each method.
+
+### Runtime startup and registration handshake
+
+On CoreCLR, the [native host](../../../src/native/clr/host/host.cc) captures the VM at `JNI_OnLoad`, initializes the managed runtime from `Runtime.initInternal`, and enters [`JNIEnvInit.Initialize`](../../../src/Mono.Android/Android.Runtime/JNIEnvInit.cs). That installs `TrimmableTypeMapTypeManager` and `TrimmableTypeMapValueManager` in `AndroidRuntime`, then calls `TrimmableTypeMap.RegisterNativeMethods()`. The old native `Runtime.register` entrypoint remains a compatibility stub, **not** the mechanism that registers every JCW.
+
+NativeAOT has its own entry: [`JavaInteropRuntime.JNI_OnLoad` and `init`](../../../src/Microsoft.Android.Runtime.NativeAOT/Android.Runtime.NativeAOT/JavaInteropRuntime.cs) initialize the native host and a [`JreRuntime`](../../../src/Microsoft.Android.Runtime.NativeAOT/Java.Interop/JreRuntime.cs), then call `JNIEnvInit.InitializeNativeAotRuntime()`. That path also registers the `TrimmableTypeMap` callback. NativeAOT cannot rely on CoreCLR's optional reflection-based peer construction path when a generated mapping is absent. Its generated `ApplicationRegistration.registerApplications()` calls `Runtime.registerNatives` for deferred startup types; the [`NativeAotRuntimeProvider`](../../../src/Xamarin.Android.Build.Tasks/Resources/NativeAotRuntimeProvider.java) invokes it after `JavaInteropRuntime.init(...)`.
+
+The first native binding is for `mono.android.Runtime.registerNatives` itself. [`TrimmableTypeMap.RegisterNativeMethods()`](../../../src/Mono.Android/Microsoft.Android.Runtime/TrimmableTypeMap.cs) uses actual C# UTF-8 string literals for its JNI name and signature:
 
 ```csharp
-static bool n_OnTouch_Landroid_view_View_Landroid_view_MotionEvent_ (IntPtr jnienv, IntPtr native__this, IntPtr native_v, IntPtr native_e)
-{
-  var __this = global::Java.Lang.Object.GetObject<Android.Views.View.IOnTouchListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-  var v = global::Java.Lang.Object.GetObject<Android.Views.View> (native_v, JniHandleOwnership.DoNotTransfer);
-  var e = global::Java.Lang.Object.GetObject<Android.Views.MotionEvent> (native_e, JniHandleOwnership.DoNotTransfer);
-  bool __ret = __this.OnTouch (v, e);
-  return __ret;
-}
-
-[UnmanagedCallersOnly]
-static byte n_OnTouch_Landroid_view_View_Landroid_view_MotionEvent__mm_wrapper (IntPtr jnienv, IntPtr native__this, IntPtr native_v, IntPtr native_e)
-{
-  try {
-    return n_OnTouch_Landroid_view_View_Landroid_view_MotionEvent_(jnienv, native__this, native_v, native_e) ? 1 : 0;
-  } catch (Exception ex) {
-    Android.Runtime.AndroidEnvironmentInternal.UnhandledException (ex);
-    return default;
-  }
+fixed (byte* name = "registerNatives"u8,
+	     sig = "(Ljava/lang/Class;)V"u8) {
+	var method = new JniNativeMethod (name, sig, onRegisterNatives);
+	JniEnvironment.Types.RegisterNatives (runtimeClass.PeerReference, [method]);
 }
 ```
 
-The wrapper's return statement uses the ternary operator to "cast" the
-boolean value to `1` (for `true`) or `0` (for `false`) because the
-value of `bool` across the managed runtime can take a range of values:
+When a JCW's static block (or deferred helper) calls this Java native method, `TrimmableTypeMap.OnRegisterNatives` obtains the class's JNI name, finds its mapping/proxy, and calls the proxy's `IAndroidCallableWrapper.RegisterNatives(JniType)`. This registers the class's `n_*` and `nctor_*` methods with ART. The handwritten [`TrimmableTypeMap`](../../../src/Mono.Android/Microsoft.Android.Runtime/TrimmableTypeMap.cs) does the lookup and handoff; the *per-class* method table is in a **generated managed TypeMap proxy**. The CoreCLR host does not supply a table of exported native functions for these app methods.
 
-  * `0` for `false`
-  * `-1` or `1` for `true`
-  * `!= 0` for true
+### Generated registration in C# terms, including UTF-8
 
-Since the `bool` type in C# can be 1, 2 or 4 bytes long, we need to
-cast it to some type of a known and static size.  The managed type
-`byte` was chosen as it corresponds to the Java/JNI `jboolean` type,
-defined as an unsigned 8-bit type.
-
-Whenever an **argument** value needs to be converted between `byte` and
-`bool`, we generate code that is equivalent of the `argument != 0`
-comparison, for instance for the
-`Android.Views.View.IOnFocusChangeListener::OnFocusChange` method:
+The [`TypeMapAssemblyEmitter`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/TypeMapAssemblyEmitter.cs) emits sealed `JavaPeerProxy<T>` types for peers that need proxies. A JCW proxy also implements `IAndroidCallableWrapper`. For each native method it emits a `JniNativeMethod` containing a **pointer to a name**, a **pointer to a JNI signature**, and a **callable entrypoint pointer**. Its `RegisterNatives` method stack-allocates the entries and passes a `ReadOnlySpan<JniNativeMethod>` to `JniEnvironment.Types.RegisterNatives`. In **conceptual C#** (field and callback identifiers are illustrative, and the emitter writes IL):
 
 ```csharp
-[UnmanagedCallersOnly]
-static void n_OnFocusChange_Landroid_view_View_Z (IntPtr jnienv, IntPtr native__this, IntPtr native_v, byte hasFocus)
+public unsafe void RegisterNatives (JniType jniType)
 {
-  n_OnFocusChange_Landroid_view_View_Z (jnienv, native__this, native_v, hasFocus != 0);
-}
-
-static void n_OnFocusChange_Landroid_view_View_Z (IntPtr jnienv, IntPtr native__this, IntPtr native_v, bool hasFocus)
-{
-  var __this = global::Java.Lang.Object.GetObject<Android.Views.View.IOnFocusChangeListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-  var v = global::Java.Lang.Object.GetObject<Android.Views.View> (native_v, JniHandleOwnership.DoNotTransfer);
-  __this.OnFocusChange (v, hasFocus);
+	JniNativeMethod* entries = stackalloc JniNativeMethod [1];
+	delegate* unmanaged<IntPtr, IntPtr, IntPtr, void> callback = &OnCreateEntry;
+	entries [0] = new JniNativeMethod (
+		&MethodNameUtf8, &MethodSignatureUtf8, (IntPtr) callback);
+	JniEnvironment.Types.RegisterNatives (
+		jniType.PeerReference,
+		new ReadOnlySpan<JniNativeMethod> (entries, 1));
 }
 ```
 
-#### UnmanagedCallersOnly attribute
+The [`PEAssemblyBuilder`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/PEAssemblyBuilder.cs) emits the actual name/signature fields as **NUL-terminated UTF-8 bytes in RVA data**. It can reuse identical signature data. A representative registration pair for the Activity example is `n_OnCreate_Landroid_os_Bundle_` and `(Landroid/os/Bundle;)V`; these identify the *native* Java declaration, not the C# method's `GetOnCreate...Handler` connector. There is no runtime decoding of `__md_methods` or per-callback `Java_...` export lookup. The handwritten `registerNatives` binding above likewise supplies `byte*` name/signature data, via C# `u8` literals.
 
-Each marshal methods native callback method is decorated with the
-[`[UnmanagedCallersOnly]`](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.unmanagedcallersonlyattribute?view=net-6.0)
-attribute, in order for us to be able to invoke the callback directly
-from native code with minimal overhead compared to traditional
-managed-from-native method calls (`mono_runtime_invoke`)
+These name/signature bytes are not Java `String` argument marshalling. JNI's `GetStringUTFChars`/`NewStringUTF` APIs use [modified UTF-8](https://docs.oracle.com/en/java/javase/17/docs/specs/jni/types.html#modified-utf-8-strings); the emitter stores the registration identifiers/descriptors as UTF-8 with explicit NUL terminators (the ASCII names/signatures above have the same bytes in either encoding). For example, the CoreCLR [class-name lookup](../../../src/native/clr/host/host-shared.cc) obtains a Java class name via `GetStringUTFChars`, then converts its dots to slashes for a TypeMap key. Separately, [`JniRemappingLookup`](../../../src/Mono.Android/Microsoft.Android.Runtime/JniRemappingLookup.cs) encodes method names/signatures as UTF-8 with an explicit trailing NUL for native remapping lookup. Neither path is a substitute for marshalling Java `String` values across JNI.
 
-### Marshal Methods Registration call sequence
+### From JNI ABI to a C# method
 
-The sequence described in the [dynamic
-registration sequence](#dynamic-registration-call-sequence) section
-above is completely removed for the marshal methods.  What remains
-common for both dynamic and marshal methods registration, is the
-resolution of the native function target done by the Java VM runtime.
-In both cases the method declared in a Java class as `native` is
-looked up by the Java VM when first JIT-ing the code.  The difference
-lies in the way this lookup is performed.
+JNI passes a `JNIEnv*`, the instance (`jobject`) or class (`jclass`), then the declared arguments. Java object handles appear as pointer-sized parameters; the generated managed entrypoints have JNI-ABI-compatible signatures and are marked `UnmanagedCallersOnly`. For the example callback, the ABI parameters correspond to `IntPtr env`, `IntPtr self`, and `IntPtr savedInstanceState`. This does **not** mean the app override accepts `IntPtr`: its bound callback/proxy converts the `Bundle` reference and dispatches the virtual C# `OnCreate(Bundle?)`.
 
-Dynamic registration uses the
-[`RegisterNatives`](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/functions.html#RegisterNatives)
-JNI function at the runtime, which stores a pointer to the registered
-method inside the structure which describes a Java class in the Java
-VM.
+The scanner reads `[Register ("onCreate", "(Landroid/os/Bundle;)V", "GetOnCreate_Landroid_os_Bundle_Handler")]` on the bound method (or its base). The third string is **connector metadata**, not the Java name of the native callback. For a normal registered binding, the scanner uses it to find the callback's declaring type and name (such as `n_OnCreate_Landroid_os_Bundle_`) and, when available, its *real* CLR signature. The [`TypeMapAssemblyEmitter`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/TypeMapAssemblyEmitter.cs) emits an `UnmanagedCallersOnly` forwarder to that existing callback, which then calls the virtual managed method. The old path made a delegate using `GetOnCreate...Handler` and `JNINativeWrapper.CreateDelegate`; the trimmable path derives callback metadata from the connector without creating a delegate per registration.
 
-Marshal methods, however, don't register anything with the JNI,
-instead they rely on the symbol lookup mechanism of the Java VM.
-Whenever a call to `native` Java method is JIT-ed and it is not
-registered previously using the `RegisterNatives` JNI function, Java
-VM will proceed to look for symbols in the process runtime image (e.g.
-using `dlopen` + `dlsym` calls on Unix) and, having found a matching
-symbol, use pointer to it as the target of the `native` Java method
-call.
+`[Export]` (and methods classified as directly callable) take a different branch. The [`ModelBuilder`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/ModelBuilder.cs) marks them for a generated direct dispatcher. The [`ExportMethodDispatchEmitter`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/ExportMethodDispatchEmitter.cs) emits the JNI entrypoint and argument conversions, calls the managed target, converts the return value, and copies back applicable array outputs; it does not invoke a connector callback. For example, a Java-visible C# method can be written as:
+
+```csharp
+[Java.Interop.Export ("handleClick")]
+public bool HandleClick (Android.Views.View view, int action)
+{
+	return action != 0;
+}
+```
+
+This is the shape exercised by the [export fixtures](../../../tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/TestFixtures/TestTypes.cs). The Java wrapper has a `native` declaration with its calculated JNI signature; the generated managed dispatcher, not the developer's C# method directly, is the unmanaged entrypoint.
+
+JNI signatures are **not** CLR method signatures. JNI `Z` is an eight-bit `jboolean`, `C` a 16-bit `jchar`, `I` a 32-bit `jint`, and `Landroid/os/Bundle;` a Java object reference. The emitted entrypoint uses JNI ABI types (a `byte` for a boolean); conversions such as `jniValue != 0` and `managedResult ? (byte) 1 : (byte) 0` bridge C# `bool`. For normal registered callbacks the generator uses the captured original callback signature where available: older bindings may declare `bool`/`char` while newer ones can use `sbyte`/`ushort`. It must not assume that the callback signature is identical to the Java descriptor; see the scanner's [callback signature handling](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Scanner/JavaPeerScanner.cs) and [test fixtures](../../../tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/TestFixtures/TestTypes.cs). No assembly rewriter is needed to insert separate `_mm_wrapper` methods.
+
+Both generated forwarders and direct dispatchers use a marshal-method frame: `BeginMarshalMethod`, a `try` around the managed call, exception handoff to `OnUserUnhandledException`, and `EndMarshalMethod` in `finally`. An arbitrary managed exception is not simply allowed to escape across an unmanaged JNI boundary. Compare [`EmitUcoForwarderBody`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/TypeMapAssemblyEmitter.cs) with the [`ExportMethodDispatchEmitter`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/ExportMethodDispatchEmitter.cs).
+
+The call sequence for a Java `onCreate(Bundle)` is therefore:
+
+1. ART enters the generated `MainActivity.onCreate`.
+2. That method calls its registered `n_OnCreate_Landroid_os_Bundle_`.
+3. JNI invokes the generated `UnmanagedCallersOnly` entrypoint for the registered name/signature. For a bound override, it forwards to the connector-derived bound callback; for a direct export it marshals and invokes the target itself.
+4. Peer lookup/activation and argument conversion supply the managed `MainActivity` and `Bundle`; virtual dispatch runs the app override. A call to `base.OnCreate` then goes **managed-to-Java** through `JniPeerMembers`.
+
+## Peer activation and lifetime
+
+A Java-side constructor and a managed-side constructor do not allocate one shared object. Generated JCW constructors call `super(...)` and, when the actual Java class matches the wrapper, a generated `nctor_*` callback to activate the matching managed peer. This class check matters when a JCW is further subclassed. For some startup types registration is deferred as described above. The generator produces the appropriate constructor shape from its scan; compare [`JcwJavaSourceGenerator`](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/Generator/JcwJavaSourceGenerator.cs) and its [constructor tests](../../../tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/Generator/JcwJavaSourceGeneratorTests.cs).
+
+On the managed side, [`TrimmableTypeMap`](../../../src/Mono.Android/Microsoft.Android.Runtime/TrimmableTypeMap.cs) uses generated mapping attributes to resolve a Java class and target type. Its [`JavaPeerProxy`](../../../src/Mono.Android/Java.Interop/JavaPeerProxy.cs) can create the managed object from a handle without late-bound `Activator.CreateInstance`; activation also accounts for an existing replaceable peer. [`TrimmableTypeMapTypeManager`](../../../src/Mono.Android/Microsoft.Android.Runtime/TrimmableTypeMapTypeManager.cs) resolves names/types, while [`TrimmableTypeMapValueManager`](../../../src/Mono.Android/Microsoft.Android.Runtime/TrimmableTypeMapValueManager.cs) checks for registered peers and handles construction/ownership.
+
+Every generated JCW implements the Java [`IGCUserPeer`](../../../src/java-runtime/java/mono/android/IGCUserPeer.java) hooks `monodroidAddReference` and `monodroidClearReferences`. Managed [`JavaMarshalRegisteredPeers`](../../../src/Mono.Android/Microsoft.Android.Runtime/JavaMarshalRegisteredPeers.cs) tracks add/peek/remove/finalize operations, and the GC bridge coordinates the two collectors. Local and global JNI references have different lifetimes: a managed wrapper may need a global reference to keep its peer accessible after a JNI call returns. `JniHandleOwnership` records whether an incoming reference is transferred. Calling `Dispose()` can remove the association; a raw `IntPtr` retained afterward is not a safe substitute for a live managed peer. For invalid reference diagnostics, see [Debugging JNI Object Reference Crashes](debug-jni-objrefs.md).
+
+## Diagnosing a broken interop path
+
+Start at the boundary where the failure occurs; these files distinguish build output, registration, and peer activation:
+
+[`Java.Interop.TypeManager.RegisterType`](../../../src/Mono.Android/Java.Interop/TypeManager.cs) is not a fallback for a missing generated mapping: it throws `NotSupportedException` with the trimmable TypeMap. Give the peer a discoverable Java name (`[Register]` for a peer type, or the component `Name` attribute used above) so the scanner can generate the mapping instead.
+
+1. **Missing or wrong Java class:** inspect the merged manifest, `typemap/java/` (or CoreCLR's `typemap/linked-java/` after trimming), `java-files.txt` / `linked-java-files.txt`, and `acw-map.txt`. Confirm the expected Java name and base/override signatures. A stale `.class` is not proof that a corresponding TypeMap entry survived.
+2. **Unbound native method / `UnsatisfiedLinkError`:** compare the generated JCW's `native` method **name and JNI descriptor** with its generated proxy registration. Check whether `mono.android.Runtime.registerNatives` ran for the class (or its deferred helper did), and inspect `adb logcat` for the registration exception. Do not search for a missing `Java_...` export in this pipeline.
+3. **Wrong managed type or activation failure:** check `typemap-assemblies.txt`, the root `_Microsoft.Android.TypeMaps` assembly, `TrimmableTypeMap` lookup, proxy construction, and `JavaMarshalRegisteredPeers`. Verify whether a Java callback came from a managed-created peer or needs activation from a Java-created peer. On NativeAOT a missing generated mapping cannot be rescued by CoreCLR-only reflection.
+4. **Release/trim-only failure:** inspect the *linked* managed assemblies and CoreCLR post-trim JCWs, or NativeAOT ILC inputs and shrinker rules. The pre-trim generated Java is not necessarily packaged Java. The [build-pipeline guide](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/README.md) explains target stamps and stale-file handling.
+5. **JNI reference or marshal failure:** use `adb logcat` and [the JNI reference guide](debug-jni-objrefs.md) for ownership and collection problems. For unsupported TypeMap settings see [the build property](../../docs-mobile/building-apps/build-properties.md); duplicate Java-visible constructor signatures produce [XA4259](../../docs-mobile/messages/xa4259.md).
+
+The [TypeMap generator tests](../../../tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/Generator/TypeMapAssemblyGeneratorTests.cs), [JCW tests](../../../tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/Generator/JcwJavaSourceGeneratorTests.cs), and [application build tests](../../../src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/TrimmableTypeMapBuildTests.cs) exercise these paths. Compare their expected names/signatures against the generated DLL and Java files before changing runtime registration.
