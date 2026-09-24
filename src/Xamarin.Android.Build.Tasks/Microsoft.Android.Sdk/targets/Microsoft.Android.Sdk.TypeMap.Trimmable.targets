@@ -344,8 +344,13 @@
       <_TrimmableTypeMapResolvedAssemblies Include="@(_GeneratedTypeMapAssembliesFromList)">
         <Abi>$(_TypeMapFirstAbi)</Abi>
         <RuntimeIdentifier>$(_TypeMapFirstRid)</RuntimeIdentifier>
+        <RelativePath>%(Filename)%(Extension)</RelativePath>
         <DestinationSubPath>$(_TypeMapFirstAbi)/%(Filename)%(Extension)</DestinationSubPath>
         <DestinationSubDirectory>$(_TypeMapFirstAbi)/</DestinationSubDirectory>
+        <!-- Keep the pre-trim copy for native config/store; FastDeploy selects the final
+             linked/R2R copy for the same destination only when that file exists. -->
+        <_AndroidPreTrimTypeMapCandidate
+            Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' ">true</_AndroidPreTrimTypeMapCandidate>
       </_TrimmableTypeMapResolvedAssemblies>
       <_ResolvedAssemblies Include="@(_TrimmableTypeMapResolvedAssemblies)" />
       <_ShrunkAssemblies Include="@(_TrimmableTypeMapResolvedAssemblies)" />
