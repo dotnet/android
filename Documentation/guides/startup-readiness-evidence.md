@@ -284,6 +284,10 @@ different destination bytes, missing sources or a copy hash mismatch fail.
 
 Build/Pack evidence is published as
 `guest-readiness-<Agent.OS>-Build` and `guest-readiness-<Agent.OS>-Pack`.
+The diagnostic steps use the existing `1ES.PublishPipelineArtifact@1` publisher
+with `condition: always()` so failed command receipts remain available. The
+ordinary `PublishPipelineArtifact@1` task is not permitted by this 1ES envelope.
+Artifact names remain exact (no retry suffix) for the signing job's download.
 Pack retains ordinary package hashes, complete native inventories, raw
 `buildtoolsinventory.csv`, `Configuration.props`, `Configuration.Generated.props`,
 and per-ABI Debug/Release `CMakeCache-<abi>-<configuration>.txt` plus

@@ -99,7 +99,38 @@ sdk = ET.parse(ROOT / "build-tools/create-packs/Microsoft.Android.Sdk.proj").get
 assert any("SignList.xml" in x.attrib.get("Include", "") for x in sdk.iter())
 sign = yaml.safe_load((ROOT / "build-tools/automation/yaml-templates/guest-readiness-sign.yaml").read_text())
 assert any(x.get("condition") == "always()" for x in sign["steps"])
+build = yaml.safe_load((ROOT / "build-tools/automation/yaml-templates/guest-readiness-build.yaml").read_text())
+publisher = yaml.safe_load((ROOT / "build-tools/automation/yaml-templates/publish-artifact.yaml").read_text())
+supported_task = publisher["steps"][1]["${{ if eq(parameters.use1ESTemplate, true) }}"][0]["task"]
+assert supported_task == "1ES.PublishPipelineArtifact@1"
+phase_condition = "${{ if ne(parameters.phase, 'Validate') }}"
+for phase in ("Validate", "Build", "Pack"):
+    steps = []
+    for step in build["steps"]:
+        if phase_condition in step:
+            if phase != "Validate":
+                steps.extend(step[phase_condition])
+        else:
+            steps.append(step)
+    assert all(step.get("task") != "PublishPipelineArtifact@1" for step in steps)
+    uploads = [step for step in steps if step.get("task") == supported_task]
+    assert len(uploads) == (0 if phase == "Validate" else 1)
+    if uploads:
+        assert uploads[0] == {
+            "task": supported_task,
+            "condition": "always()",
+            "inputs": {
+                "targetPath": "${{ parameters.xaSourcePath }}/bin/guest-readiness-official",
+                "artifactName": "guest-readiness-$(Agent.OS)-${{ parameters.phase }}",
+            },
+        }
+        for agent_os in ("Darwin", "Linux"):
+            name = uploads[0]["inputs"]["artifactName"].replace("$(Agent.OS)", agent_os).replace("${{ parameters.phase }}", phase)
+            assert name == f"guest-readiness-{agent_os}-{phase}"
+download = sign["steps"][1]["${{ if eq(parameters.phase, 'Input') }}"][0]
+assert download["inputs"]["artifactName"] == "guest-readiness-Darwin-Pack"
 out = ROOT / "bin/guest-readiness-official-tests"
 out.mkdir(parents=True, exist_ok=True)
 (out / "diagnostic-source-graph.json").write_text(json.dumps(diagnostic, indent=2) + "\n")
 print("PASS: default graph equality in four templates; diagnostic promotion omission, preserved sign/security/full-pack graph.")
+print("PASS: existing 1ES publisher, Validate/Build/Pack retention matrix, always-on failure receipts and exact Darwin/Linux artifact names/sign input.")

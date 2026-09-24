@@ -19,7 +19,7 @@ steps:
     GUEST_YAML_VERSION: $(GuestReadinessYamlVersion)
     GUEST_1ES_VERSION: $(GuestReadiness1ESVersion)
 - ${{ if ne(parameters.phase, 'Validate') }}:
-  - task: PublishPipelineArtifact@1
+  - task: 1ES.PublishPipelineArtifact@1
     condition: always()
     inputs:
       targetPath: ${{ parameters.xaSourcePath }}/bin/guest-readiness-official
