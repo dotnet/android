@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <cstdint>
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -135,6 +136,11 @@ namespace xamarin::android {
 			struct stat sbuf;
 			if (fstatat (dirfd, file_name, &sbuf, 0) == -1) {
 				log_warnf (LOG_ASSEMBLY, "Failed to stat file '%s': %s", optional_string (file_name), std::strerror (errno));
+				return std::nullopt;
+			}
+
+			if (sbuf.st_size < 0 || static_cast<uintmax_t>(sbuf.st_size) > static_cast<uintmax_t>(std::numeric_limits<size_t>::max ())) {
+				log_warnf (LOG_ASSEMBLY, "Invalid file size for '%s'", optional_string (file_name));
 				return std::nullopt;
 			}
 
