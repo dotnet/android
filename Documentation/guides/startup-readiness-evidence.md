@@ -249,9 +249,25 @@ not derived independently from their retry counts.
 
 The SDK project supplies its existing `SignList.xml`; runtime-only packing is
 not substituted. Both existing signing jobs, their Test/Real predicate,
-MicroBuild/1ES envelope, compliance/security steps, and ordinary artifacts remain.
-The manual non-release gate selects the unchanged **Test** branch. Other existing
-Windows/test stages remain unchanged. Only the two Android Mono native packs from
+compliance/security steps, and ordinary artifacts remain.
+Diagnostic mode selects the **Official MicroBuild/1ES envelope** required by
+definition 11410, independently of the unchanged **Test** signing branch selected
+by the manual non-release gate. Successful main build 15420423 at
+`f1052b05df0157cc4ed10b1151b34b31b8cfcae2` demonstrates this combination.
+The collector hashes the selected Official entry from the resolved MicroBuild
+checkout, not the inactive Unofficial entry. No breakglass or security suppression
+is added. Default-off envelope selection remains exactly as on the held baseline.
+
+Diagnostic mode overrides `HostedMacImage` and `HostedMacImageWithEmulator` to
+the explicit `macOS-15` label used by that successful build, after loading the
+baseline variables. The normal Azure Pipelines `vmImage` pool declarations remain
+unchanged; the pinned MicroBuild/1ES templates preserve this supported property.
+This qualifies a new producer host/toolchain, not reproduction of the baseline's
+historical `macOS-14-arm64` host. All Windows/test stage structures remain unchanged.
+Only producer pipeline hosts change: consumer macOS, Android emulator image and
+workload pins, SDK bits, and the held source baseline are not upgraded.
+A preview alone does not establish runtime template admission or image
+availability; the actual run must qualify both. Only the two Android Mono native packs from
 the macOS artifact receive the new post-sign evidence; the Linux SDK signing job
 is unchanged. The diagnostic graph omits the conversion and
 `push_signed_nugets` jobs at template-expansion time, including their BAR/Maestro,
@@ -363,5 +379,6 @@ headers, streaming marker boundaries, member deltas, and shared receipt
 construction. It also invokes the actual standard NuGet verifier on an invalid
 synthetic signature and retains its failure ledger. Synthetic success-status
 constructor fixtures are not successful verification or signing evidence.
-Run the existing `test-runtime-pack-producer.ps1` first to create its ZIP fixtures.
+The official test runs `test-runtime-pack-producer.ps1` in an isolated PowerShell
+process to recreate its ZIP fixtures and checks its exit code.
 Evidence is retained in `bin/guest-readiness-official-tests/`.

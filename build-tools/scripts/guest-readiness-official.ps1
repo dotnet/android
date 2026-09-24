@@ -246,7 +246,7 @@ try {
                    paths = @('sign-artifacts/jobs/v4.yml', 'sign-artifacts/steps/v4.yml', 'sign-artifacts/steps/v4-SignFiles.proj',
                        'sign-artifacts/steps/common/Extract.ps1', 'sign-artifacts/steps/common/EscapeSignFiles.ps1') },
                 @{ root = $env:GUEST_1ES_CHECKOUT; repository = '1ESPipelineTemplates/MicroBuildTemplate'; commit = $env:GUEST_1ES_VERSION
-                   paths = @('azure-pipelines/MicroBuild.1ES.Unofficial.yml', 'azure-pipelines/Stages/Stage.yml', 'azure-pipelines/Jobs/Job.yml') }
+                   paths = @('azure-pipelines/MicroBuild.1ES.Official.yml', 'azure-pipelines/Stages/Stage.yml', 'azure-pipelines/Jobs/Job.yml') }
             )) {
                 foreach ($path in $spec.paths) {
                     $templateFiles.Add([pscustomobject]@{ repository = $spec.repository; commit = $spec.commit; path = $path

@@ -71,8 +71,51 @@ root = yaml.safe_load((ROOT / paths[0]).read_text())
 parameters = {x["name"]: x for x in root["parameters"]}
 assert parameters["guestReadiness"]["default"] is False
 diagnostic = expand(root, True)
+assert diagnostic["extends"]["template"] == "azure-pipelines/MicroBuild.1ES.Official.yml@1esPipelines"
+assert not any(key.startswith("${{") for key in diagnostic["extends"]), "Diagnostic envelope must not depend on the Real-signing predicate"
+variable_template = "/build-tools/automation/yaml-templates/variables.yaml@self"
+variable_index = next(i for i, item in enumerate(diagnostic["variables"]) if item.get("template") == variable_template)
+host_overrides = {item["name"]: item["value"] for item in diagnostic["variables"][variable_index + 1:]
+                  if item.get("name") in ("HostedMacImage", "HostedMacImageWithEmulator")}
+assert host_overrides == {"HostedMacImage": "macOS-15", "HostedMacImageWithEmulator": "macOS-15"}
+assert not any(item.get("name") in host_overrides for item in expand(root, False)["variables"])
+mac = expand(yaml.safe_load((ROOT / paths[1]).read_text()), True)
+assert mac["stages"][0]["jobs"][0]["pool"]["${{ else }}"] == {
+    "name": "Azure Pipelines", "vmImage": "$(HostedMacImage)",
+}, "Keep the demonstrated normal hosted pool schema"
+# No stage/job import may silently shadow the root host selection.
+mac_consumers = []
+for name in ("build-macos", "stage-package-tests", "stage-msbuild-tests",
+             "run-msbuild-tests", "stage-msbuild-emulator-tests"):
+    pending = [yaml.safe_load((ROOT / f"build-tools/automation/yaml-templates/{name}.yaml").read_text())]
+    while pending:
+        node = pending.pop()
+        if isinstance(node, dict):
+            scoped_variables = node.get("variables", {})
+            assert isinstance(scoped_variables, dict), f"Review scoped variable imports in {name}"
+            assert not {key.casefold() for key in scoped_variables} & {
+                key.casefold() for key in host_overrides
+            }, f"Stage/job host override shadows root in {name}"
+            image = node.get("vmImage", node.get("image"))
+            if image in ("$(HostedMacImage)", "$(HostedMacImageWithEmulator)"):
+                mac_consumers.append((name, image[2:-1]))
+            pending.extend(node.values())
+        elif isinstance(node, list):
+            pending.extend(node)
+assert len(mac_consumers) == 6, "Audit every Mac build/package/MSBuild/emulator pool consumer"
+baseline_variables = yaml.safe_load((ROOT / variable_template.removeprefix("/").removesuffix("@self")).read_text())["variables"]
+for enabled in (False, True):
+    effective_variables = {item["name"]: item["value"] for item in baseline_variables if "name" in item}
+    for item in expand(root, enabled)["variables"]:
+        if "name" in item:
+            effective_variables[item["name"]] = item["value"]
+    for name, variable in mac_consumers:
+        expected = "macOS-15" if enabled else {
+            "HostedMacImage": "macOS-14-arm64", "HostedMacImageWithEmulator": "macOS-14"
+        }[variable]
+        assert effective_variables[variable] == expected, f"Wrong effective {name} image"
 text = json.dumps(diagnostic)
-for forbidden in ("nuget-msi-convert", "push_signed_nugets", "PushToMaestro", "darc", "SymbolUploader"):
+for forbidden in ("nuget-msi-convert", "push_signed_nugets", "PushToMaestro", "darc", "SymbolUploader", "breakglass"):
     assert forbidden not in text, forbidden
 stages = diagnostic["extends"]["parameters"]["stages"]
 prepare = next(x for x in stages if x.get("stage") == "dotnet_prepare_release")
@@ -94,6 +137,9 @@ for before, after in zip([x for x in oldprepare["jobs"] if x.get("template") == 
     for added in ("checkoutType", "checkoutPath", "preSignSteps", "postSignSteps"):
         newparams.pop(added, None)
     assert oldparams == newparams, "Existing signing policy changed"
+    signing_condition = "${{ if and(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android')) }}"
+    assert newparams[signing_condition] == {"signType": "Real"}
+    assert newparams["${{ else }}"] == {"signType": "Test"}
 assert "security" in text.lower()
 for path in paths[2:]:
     expanded = json.dumps(expand(yaml.safe_load((ROOT / path).read_text()), True))
@@ -159,3 +205,5 @@ print("PASS: default graph equality in four templates; diagnostic promotion omis
 print("PASS: existing 1ES publisher, Validate/Build/Pack retention matrix, always-on failure receipts and exact Darwin/Linux artifact names/sign input.")
 print("PASS: diagnostic-only 1esPipelines SDL inclusion; all existing SDL coverage and resolved-resource provenance checkout preserved.")
 print("PASS: Output checkout/capture/publication all run on failure; source is normal packed output, with separate retained-output directory and prior job status.")
+print("PASS: diagnostic Official envelope is independent of unchanged Test/Real signing; both hosted Mac images explicitly use macOS-15 after baseline variables, with default-off selection unchanged.")
+print("PASS: all six Mac pool consumers resolve macOS-15 in diagnostic mode and original labels when off; stage/job scopes cannot silently shadow root images.")

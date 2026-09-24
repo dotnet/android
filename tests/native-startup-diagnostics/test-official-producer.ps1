@@ -344,13 +344,13 @@ foreach ($spec in @(
     @{ root = $templateRoot; paths = @('sign-artifacts\jobs\v4.yml', 'sign-artifacts\steps\v4.yml',
         'sign-artifacts\steps\v4-SignFiles.proj', 'sign-artifacts\steps\common\Extract.ps1',
         'sign-artifacts\steps\common\EscapeSignFiles.ps1') },
-    @{ root = $microbuildRoot; paths = @('azure-pipelines\MicroBuild.1ES.Unofficial.yml',
+    @{ root = $microbuildRoot; paths = @('azure-pipelines\MicroBuild.1ES.Official.yml',
         'azure-pipelines\Stages\Stage.yml', 'azure-pipelines\Jobs\Job.yml') }
 )) {
     foreach ($relativePath in $spec.paths) {
         $destination = Join-Path $spec.root $relativePath
         New-Item -ItemType Directory -Force (Split-Path $destination) | Out-Null
-        'SYNTHETIC fixture, not actual template source.' | Set-Content $destination
+        "SYNTHETIC fixture for $relativePath, not actual template source." | Set-Content $destination
     }
 }
 foreach ($name in @('SignPackageContents.binlog', 'SignNuGetPackages.binlog')) {
@@ -418,6 +418,10 @@ foreach ($rid in @('android-arm64', 'android-x64')) {
     Assert ($signature.outputSha256 -ceq (Get-FileHash (Join-Path $signReceiptDirectory $signature.outputFileName)).Hash.ToLowerInvariant()) 'Actual failure log retained'
     $postsign = Get-Content (Join-Path $signReceiptDirectory "postsign.$id.json") -Raw | ConvertFrom-Json
     Assert ($postsign.status -ceq 'produced-verification-failed') 'Common sidecar does not invent success'
+    $officialTemplate = @($postsign.signer.templates | Where-Object { $_.path -ceq 'azure-pipelines/MicroBuild.1ES.Official.yml' })
+    Assert ($officialTemplate.Count -eq 1 -and $officialTemplate[0].commit -ceq $env:GUEST_1ES_VERSION) 'Actual selected Official entry and resolved commit retained'
+    Assert ($officialTemplate[0].sha256 -ceq (Get-FileHash (Join-Path $microbuildRoot 'azure-pipelines\MicroBuild.1ES.Official.yml')).Hash.ToLowerInvariant()) 'Official entry hash comes from the checked-out file'
+    Assert (-not @($postsign.signer.templates | Where-Object { $_.path.EndsWith('MicroBuild.1ES.Unofficial.yml') }).Count) 'No inactive Unofficial entry substituted'
     $verifyRef = @($postsign.operationEvidence | Where-Object { $_.role -ceq 'verify' })[0].reference
     Assert ($verifyRef.sha256 -ceq (Get-FileHash (Join-Path $signReceiptDirectory 'output-receipt.json')).Hash.ToLowerInvariant()) 'Post-sign verify reference binds finalized Output in one direction'
 }
