@@ -314,9 +314,10 @@ The default value is `XAJavaInterop1`.
 
 ## AndroidCreatePackagePerAbi
 
-A boolean property that determines if a *set* of files--one per RID
-specified in `$(RuntimeIdentifiers)`--should be created instead of having
-support for all selected architectures in a single `.apk`.
+A boolean property that determines whether to create one `.apk` per selected
+Android ABI (such as `arm64-v8a`) instead of only a single `.apk` supporting
+all selected ABIs. The RIDs in `$(RuntimeIdentifiers)` select those ABIs;
+APKs are produced per ABI, not per RID.
 
 See also the [Building ABI-Specific APKs](/xamarin/android/deploy-test/building-apps/abi-specific-apks)
 guide.
