@@ -42,22 +42,66 @@ $env:SYSTEM_JOBATTEMPT = '2147483648'
 Reject { & "$root\build-tools\scripts\guest-readiness-official.ps1" -Phase Validate } 'Invalid provider numeric identity.'
 $env:SYSTEM_JOBATTEMPT = '1'
 
+$restoreConfig = Join-Path $root 'NuGet.config'
 $properties = @('/p:AndroidGuestReadinessBuild=true', "/p:AndroidPackVersionLong=$($identity.version)",
-    "/p:PackageVersion=$($identity.version)", "/p:AndroidStartupDiagnosticsBuildId=$($identity.buildId)")
+    "/p:PackageVersion=$($identity.version)", "/p:AndroidStartupDiagnosticsBuildId=$($identity.buildId)",
+    "/p:RestoreConfigFile=$restoreConfig")
 $project = "$PSScriptRoot\official-pack-properties.proj"
 $result = Join-Path $out 'nested-properties.txt'
 & $MSBuild $project /nologo /v:q /p:Configuration=Debug "/p:ResultPath=$result" @properties
 Assert ($LASTEXITCODE -eq 0) 'Diagnostic nested MSBuild'
-Assert ((Get-Content $result -Raw).Trim() -ceq "true|$($identity.version)|$($identity.version)|$($identity.buildId)|true|Debug") 'Every nested property forwarded'
+Assert ((Get-Content $result -Raw).Trim() -ceq "true|$($identity.version)|$($identity.version)|$($identity.buildId)|true|Debug|$restoreConfig") 'Every nested property forwarded'
 & $MSBuild $project /nologo /v:q /p:Configuration=Debug "/p:ResultPath=$result"
-Assert ($LASTEXITCODE -eq 0 -and (Get-Content $result -Raw).Trim() -ceq '|||||Debug') 'Default-off nested MSBuild'
+Assert ($LASTEXITCODE -eq 0 -and (Get-Content $result -Raw).Trim() -ceq '|||||Debug|') 'Default-off nested MSBuild'
 foreach ($case in @(
     @{ argument = '/p:PackageVersion=36.1.69'; error = 'Guest readiness package versions must agree.' },
     @{ argument = '/p:AndroidStartupDiagnosticsBuildId=android-d549-12345-2'; error = 'Guest readiness version and marker must bind the same build and attempt.' },
-    @{ argument = '/p:AndroidStartupDiagnosticsBuildId=android-d549-12345-1%0A'; error = 'Guest readiness requires its validated producer marker.' }
+    @{ argument = '/p:AndroidStartupDiagnosticsBuildId=android-d549-12345-1%0A'; error = 'Guest readiness requires its validated producer marker.' },
+    @{ argument = '/p:RestoreConfigFile='; error = 'Guest readiness requires the existing root restore configuration.' },
+    @{ argument = "/p:RestoreConfigFile=$out\missing.config"; error = 'Guest readiness requires the existing root restore configuration.' }
 )) {
     $lines = & $MSBuild $project /nologo /v:q /p:Configuration=Debug "/p:ResultPath=$result" @properties $case.argument 2>&1
     Assert ($LASTEXITCODE -ne 0 -and ($lines -join "`n").Contains($case.error)) 'Precise property rejection'
+}
+
+# Real NuGet settings resolution; no package download, audit result or network probe.
+$restoreDirectory = Join-Path $out ('restore settings ' + [Guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory $restoreDirectory | Out-Null
+$copiedConfig = Join-Path $restoreDirectory 'root config.config'
+Copy-Item $restoreConfig $copiedConfig
+& $MSBuild $project /nologo /v:q /p:Configuration=Debug "/p:ResultPath=$result" @properties "/p:RestoreConfigFile=$copiedConfig"
+Assert ($LASTEXITCODE -eq 0 -and (Get-Content $result -Raw).Trim().EndsWith("|$copiedConfig")) 'Nested restore config path with spaces forwarded intact'
+$settingsProject = Join-Path $restoreDirectory 'settings.proj'
+Copy-Item $project $settingsProject
+$targetImport = Join-Path $root 'build-tools\scripts\GuestReadinessPackProperties.targets'
+'<configuration><packageSources><clear /><add key="fixture-only" value="https://nested.invalid/v3/index.json" /></packageSources></configuration>' |
+    Set-Content (Join-Path $restoreDirectory 'NuGet.config')
+$settingsOutput = Join-Path $restoreDirectory 'sources.txt'
+& dotnet msbuild $settingsProject /nologo /v:q /t:RestoreSettings "/p:GuestPropertiesTarget=$targetImport" "/p:ResultPath=$settingsOutput" "/p:RestorePackagesPath=$root\.packages"
+Assert ($LASTEXITCODE -eq 0 -and (Get-Content $settingsOutput -Raw).Trim() -ceq 'https://nested.invalid/v3/index.json') 'Nested clear replaces inherited sources without explicit config'
+& dotnet msbuild $settingsProject /nologo /v:q /t:RestoreSettings "/p:GuestPropertiesTarget=$targetImport" "/p:ResultPath=$settingsOutput" "/p:RestorePackagesPath=$root\.packages" "/p:RestoreConfigFile=$copiedConfig"
+Assert ($LASTEXITCODE -eq 0) 'Actual NuGet explicit config selection succeeds offline'
+$expectedSources = @(([xml](Get-Content $restoreConfig -Raw)).configuration.packageSources.add | ForEach-Object { $_.value })
+Assert (-not (Compare-Object $expectedSources @(Get-Content $settingsOutput))) 'Explicit root config selects exactly existing approved feeds, not nested source'
+Assert ((Get-Content "$settingsOutput.configs" -Raw).Trim() -ceq $copiedConfig) 'NuGet uses only explicitly selected config'
+Assert ((Get-FileHash $copiedConfig).Hash -ceq (Get-FileHash $restoreConfig).Hash) 'Root restore config bytes unchanged'
+$previousRestoreConfig = [Environment]::GetEnvironmentVariable('RESTORECONFIGFILE')
+try {
+    # Azure job variables become uppercase environment names, including in nested processes.
+    $env:RESTORECONFIGFILE = $copiedConfig
+    & $MSBuild $project /nologo /v:q /p:Configuration=Debug "/p:ResultPath=$result"
+    Assert ($LASTEXITCODE -eq 0 -and (Get-Content $result -Raw).Trim() -ceq "|||||Debug|$copiedConfig") 'Windows job environment reaches ordinary nested MSBuild without diagnostic pack/version properties'
+    & dotnet msbuild $settingsProject /nologo /v:q /t:RestoreSettings "/p:GuestPropertiesTarget=$targetImport" "/p:ResultPath=$settingsOutput" "/p:RestorePackagesPath=$root\.packages"
+    Assert ($LASTEXITCODE -eq 0 -and -not (Compare-Object $expectedSources @(Get-Content $settingsOutput))) 'Windows uppercase environment selects exact root feeds in actual NuGet task'
+    Assert ((Get-Content "$settingsOutput.configs" -Raw).Trim() -ceq $copiedConfig) 'Windows environment config overrides nested discovery'
+    $env:RESTORECONFIGFILE = Join-Path $restoreDirectory 'missing.config'
+    $lines = & dotnet msbuild $settingsProject /nologo /v:q /t:RestoreSettings "/p:GuestPropertiesTarget=$targetImport" "/p:ResultPath=$settingsOutput" "/p:RestorePackagesPath=$root\.packages" 2>&1
+    Assert ($LASTEXITCODE -ne 0 -and ($lines -join "`n").Contains($env:RESTORECONFIGFILE)) 'Missing Windows environment config fails explicitly instead of falling back'
+    [Environment]::SetEnvironmentVariable('RESTORECONFIGFILE', $null)
+    & dotnet msbuild $settingsProject /nologo /v:q /t:RestoreSettings "/p:GuestPropertiesTarget=$targetImport" "/p:ResultPath=$settingsOutput" "/p:RestorePackagesPath=$root\.packages"
+    Assert ($LASTEXITCODE -eq 0 -and (Get-Content $settingsOutput -Raw).Trim() -ceq 'https://nested.invalid/v3/index.json') 'Without diagnostic environment normal nested discovery is restored'
+} finally {
+    [Environment]::SetEnvironmentVariable('RESTORECONFIGFILE', $previousRestoreConfig)
 }
 
 # Actual ZIP bytes containing deliberately synthetic ELF headers, not executable Android evidence.
@@ -243,6 +287,15 @@ $parseErrors = $null; $parseTokens = $null
 $ast = [Management.Automation.Language.Parser]::ParseFile(
     "$root\build-tools\scripts\guest-readiness-official.ps1", [ref] $parseTokens, [ref] $parseErrors)
 Assert ($parseErrors.Count -eq 0) 'Official script parses'
+$argumentAssignment = $ast.Find({
+    param ($node)
+    $node -is [Management.Automation.Language.AssignmentStatementAst] -and
+        $node.Left.Extent.Text -ceq '$arguments'
+}, $true)
+Assert ($null -ne $argumentAssignment) 'Production MSBuild argument assignment found'
+. ([scriptblock]::Create($argumentAssignment.Extent.Text))
+Assert ($arguments -contains "-p:RestoreConfigFile=`"$restoreConfig`"") 'Actual production arguments select quoted absolute root config'
+Assert (-not ($arguments -match 'NuGetAudit|IgnoreFailedSources|RestoreSources=')) 'No audit disabling, ignored feed failures or replacement feed list'
 $definitions = $ast.FindAll({
     param ($node)
     $node -is [Management.Automation.Language.FunctionDefinitionAst] -and
@@ -253,7 +306,7 @@ foreach ($definition in $definitions) { . ([scriptblock]::Create($definition.Ext
 $bindingDirectory = Join-Path $out ('binding-case-' + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory $bindingDirectory | Out-Null
 $expectedArguments = @('jenkins', 'CONFIGURATION=Debug', 'PREPARE_CI=1', 'PREPARE_AUTOPROVISION=1',
-    "MSBUILD_ARGS=-p:AndroidPackVersionLong=$($identity.version) -p:PackageVersion=$($identity.version) -p:AndroidStartupDiagnosticsBuildId=$($identity.buildId) -p:AndroidGuestReadinessBuild=true -p:RunningOnCI=true")
+    "MSBUILD_ARGS=-p:AndroidPackVersionLong=$($identity.version) -p:PackageVersion=$($identity.version) -p:AndroidStartupDiagnosticsBuildId=$($identity.buildId) -p:AndroidGuestReadinessBuild=true -p:RunningOnCI=true -p:RestoreConfigFile=`"$restoreConfig`"")
 $syntheticBuild = [pscustomobject]@{
     schema = 2; kind = 'android-official-guest-readiness-phase'; component = 'android'; phase = 'Build'
     baseline = $build.baseline; sourceCommit = $build.sourceCommit; version = $build.version

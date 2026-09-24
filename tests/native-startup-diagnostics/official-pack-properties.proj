@@ -1,5 +1,8 @@
 <Project DefaultTargets="Parent">
-  <Import Project="..\..\build-tools\scripts\GuestReadinessPackProperties.targets" />
+  <PropertyGroup>
+    <GuestPropertiesTarget Condition=" '$(GuestPropertiesTarget)' == '' ">..\..\build-tools\scripts\GuestReadinessPackProperties.targets</GuestPropertiesTarget>
+  </PropertyGroup>
+  <Import Project="$(GuestPropertiesTarget)" />
   <Target Name="_SetGlobalProperties">
     <ItemGroup>
       <_GlobalProperties Include="-p:Configuration=$(Configuration)" />
@@ -10,6 +13,17 @@
   </Target>
   <Target Name="Child">
     <WriteLinesToFile File="$(ResultPath)" Overwrite="true"
-        Lines="$(AndroidGuestReadinessBuild)|$(AndroidPackVersionLong)|$(PackageVersion)|$(AndroidStartupDiagnosticsBuildId)|$(RunningOnCI)|$(Configuration)" />
+        Lines="$(AndroidGuestReadinessBuild)|$(AndroidPackVersionLong)|$(PackageVersion)|$(AndroidStartupDiagnosticsBuildId)|$(RunningOnCI)|$(Configuration)|$(RestoreConfigFile)" />
+  </Target>
+  <UsingTask TaskName="NuGet.Build.Tasks.GetRestoreSettingsTask" AssemblyFile="$(MSBuildToolsPath)\NuGet.Build.Tasks.dll" />
+  <Target Name="RestoreSettings">
+    <GetRestoreSettingsTask ProjectUniqueName="$(MSBuildProjectFullPath)"
+        RestoreConfigFile="$(RestoreConfigFile)" RestorePackagesPath="$(RestorePackagesPath)"
+        RestoreProjectStyle="PackageReference" MSBuildStartupDirectory="$(MSBuildStartupDirectory)">
+      <Output TaskParameter="OutputSources" PropertyName="ObservedSources" />
+      <Output TaskParameter="OutputConfigFilePaths" PropertyName="ObservedConfigs" />
+    </GetRestoreSettingsTask>
+    <WriteLinesToFile File="$(ResultPath)" Overwrite="true" Lines="$(ObservedSources)" />
+    <WriteLinesToFile File="$(ResultPath).configs" Overwrite="true" Lines="$(ObservedConfigs)" />
   </Target>
 </Project>

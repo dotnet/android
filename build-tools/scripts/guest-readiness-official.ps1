@@ -153,10 +153,12 @@ try {
     $receipt.patchSha256 = (Get-FileHash $patch).Hash.ToLowerInvariant()
     Invoke-Recorded 'submodules' git @('submodule', 'status', '--recursive') | Out-Null
     if ($Phase -in @('Build', 'Pack')) {
+        $restoreConfig = Join-Path $root 'NuGet.config'
+        $receipt.files.Add((Copy-GuestReceiptFile $restoreConfig (Join-Path $out 'NuGet.config')))
         $arguments = @(
             "-p:AndroidPackVersionLong=$($identity.version)", "-p:PackageVersion=$($identity.version)",
             "-p:AndroidStartupDiagnosticsBuildId=$($identity.buildId)", '-p:AndroidGuestReadinessBuild=true',
-            '-p:RunningOnCI=true'
+            '-p:RunningOnCI=true', "-p:RestoreConfigFile=`"$restoreConfig`""
         )
         # MSBUILD_ARGS reaches Prepare, recursive make and normal package Execs; values are validated above.
         $target = if ($Phase -eq 'Build') { 'jenkins' } else { 'create-installers' }

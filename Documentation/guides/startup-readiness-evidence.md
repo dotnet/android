@@ -247,6 +247,31 @@ version `36.1.69-guest.<Build.BuildId>.<attempt>` and marker
 `android-d549-<Build.BuildId>-<attempt>` agree. The attempt is shared across jobs,
 not derived independently from their retry counts.
 
+The diagnostic Build/Pack wrapper also passes an explicit absolute
+`RestoreConfigFile` for the unchanged repository-root `NuGet.config`, and retains
+its byte-identical hash-bound copy. The existing nested pack global-property
+forwarder carries that path into its child processes and rejects missing config
+files. This prevents the held debugger dependency's nested `<clear />` from
+replacing the approved root feeds with nuget.org; it does not change package
+versions, ignore failed sources, relax signature checks, or change network rules.
+Default-off builds retain their ordinary config discovery.
+The diagnostic Windows job uses the same MSBuild property through its scoped
+`RestoreConfigFile` pipeline variable. Azure exports it as `RESTORECONFIGFILE`;
+MSBuild and child processes inherit it for the unchanged Prepare/Build/Pack
+commands. Its value uses `$(Build.Repository.LocalPath)\NuGet.config`, the actual
+single-repository Windows checkout, not the macOS/Linux `s/android` layout.
+Tests check the case-sensitive Git filename `NuGet.config`, ordinary nested
+MSBuild environment propagation, and real NuGet config selection; no global
+NuGet policy or Windows package-version override is introduced.
+
+No audit setting is disabled or overridden. The approved `dotnet-public` service
+index inspected for this change exposes no `VulnerabilityInfo` resource, so root
+feed selection alone does **not** establish vulnerability-data coverage. Actual
+transitive restore, signature validation, and audit-data availability remain
+separate qualification gates; an authorized audit source or existing approved
+audit mechanism must supply that evidence. The newer main pipeline's audit
+disabling variables are not copied into this held-baseline diagnostic mode.
+
 The SDK project supplies its existing `SignList.xml`; runtime-only packing is
 not substituted. Both existing signing jobs, their Test/Real predicate,
 compliance/security steps, and ordinary artifacts remain.

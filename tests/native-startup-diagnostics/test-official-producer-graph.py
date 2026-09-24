@@ -54,7 +54,7 @@ def remove_mode_parameters(node):
         return {k: remove_mode_parameters(v) for k, v in node.items()
                 if k not in ("guestReadiness", "guestReadinessAttempt") and
                 not (k == "parameters" and isinstance(v, dict) and
-                     set(v) == {"guestReadiness", "guestReadinessAttempt"})}
+                     set(v) in ({"guestReadiness"}, {"guestReadiness", "guestReadinessAttempt"}))}
     return node
 
 
@@ -66,6 +66,20 @@ for path in paths:
         ["git", "show", f"{BASELINE}:{path}"], cwd=ROOT))
     new = yaml.safe_load((ROOT / path).read_text())
     assert remove_mode_parameters(expand(new, False)) == old, f"Default graph changed: {path}"
+
+windows_path = "build-tools/automation/yaml-templates/build-windows.yaml"
+windows = yaml.safe_load((ROOT / windows_path).read_text())
+old_windows = yaml.safe_load(subprocess.check_output(["git", "show", f"{BASELINE}:{windows_path}"], cwd=ROOT))
+assert remove_mode_parameters(expand(windows, False)) == old_windows, "Default Windows graph changed"
+diagnostic_windows = expand(windows, True)
+windows_job = diagnostic_windows["stages"][0]["jobs"][0]
+assert windows_job["variables"] == {"RestoreConfigFile": r"$(Build.Repository.LocalPath)\NuGet.config"}
+assert windows_job["steps"] == old_windows["stages"][0]["jobs"][0]["steps"], "Normal Windows command sequence changed"
+tracked_root_files = subprocess.check_output(
+    ["git", "ls-tree", "--name-only", BASELINE], cwd=ROOT, text=True).splitlines()
+assert [name for name in tracked_root_files if name.casefold() == "nuget.config"] == ["NuGet.config"]
+official_source = (ROOT / "build-tools/scripts/guest-readiness-official.ps1").read_text()
+assert "$restoreConfig = Join-Path $root 'NuGet.config'" in official_source
 
 root = yaml.safe_load((ROOT / paths[0]).read_text())
 parameters = {x["name"]: x for x in root["parameters"]}
@@ -118,6 +132,8 @@ text = json.dumps(diagnostic)
 for forbidden in ("nuget-msi-convert", "push_signed_nugets", "PushToMaestro", "darc", "SymbolUploader", "breakglass"):
     assert forbidden not in text, forbidden
 stages = diagnostic["extends"]["parameters"]["stages"]
+windows_stage = next(item for item in stages if item.get("template") == f"/{windows_path}@self")
+assert windows_stage["parameters"] == {"guestReadiness": "${{ parameters.guestReadiness }}"}
 prepare = next(x for x in stages if x.get("stage") == "dotnet_prepare_release")
 jobs = prepare["jobs"]
 signers = [x for x in jobs if x.get("template") == "sign-artifacts/jobs/v4.yml@yaml-templates"]
@@ -207,3 +223,4 @@ print("PASS: diagnostic-only 1esPipelines SDL inclusion; all existing SDL covera
 print("PASS: Output checkout/capture/publication all run on failure; source is normal packed output, with separate retained-output directory and prior job status.")
 print("PASS: diagnostic Official envelope is independent of unchanged Test/Real signing; both hosted Mac images explicitly use macOS-15 after baseline variables, with default-off selection unchanged.")
 print("PASS: all six Mac pool consumers resolve macOS-15 in diagnostic mode and original labels when off; stage/job scopes cannot silently shadow root images.")
+print("PASS: diagnostic Windows job selects its actual self checkout config without changing commands; default Windows graph and canonical Git NuGet.config casing preserved.")

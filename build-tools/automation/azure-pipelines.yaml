@@ -116,6 +116,8 @@ extends:
         guestReadinessAttempt: ${{ parameters.guestReadinessAttempt }}
 
     - template: /build-tools/automation/yaml-templates/build-windows.yaml@self
+      parameters:
+        guestReadiness: ${{ parameters.guestReadiness }}
 
     - template: /build-tools/automation/yaml-templates/build-linux.yaml@self
       parameters:

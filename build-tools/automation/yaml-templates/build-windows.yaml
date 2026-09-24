@@ -1,4 +1,5 @@
 parameters:
+  guestReadiness: false
   buildResultArtifactName: Build Results - Windows
   checkoutCommit: ''
   checkoutPath: ''
@@ -27,6 +28,10 @@ stages:
       image: $(WindowsPoolImage1ESPT)
       os: windows
     timeoutInMinutes: 240
+    ${{ if eq(parameters.guestReadiness, true) }}:
+      variables:
+        # MSBuild and child processes inherit the single-repository checkout's config.
+        RestoreConfigFile: $(Build.Repository.LocalPath)\NuGet.config
     steps:
     - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
       parameters:
