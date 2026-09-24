@@ -1554,9 +1554,10 @@ Deprecated in .NET 7. For supported .NET 10-and-earlier projects that use
 Mono, migrate to the
 [`$(RunAOTCompilation)`](#runaotcompilation) MSBuild property instead.
 Specifying `$(AotAssemblies)`, including setting it to `false`, emits
-warning XA1029. Setting it to `true` for CoreCLR or NativeAOT also causes
-the build-stopping [XA1044](../messages/xa1044.md) error because the value
-is forwarded to `$(RunAOTCompilation)`.
+Setting it to `true` for CoreCLR or NativeAOT causes the build-stopping
+[XA1044](../messages/xa1044.md) error when `$(RunAOTCompilation)` is
+unset (or otherwise evaluates to `true`), because the defaulting logic
+forwards `$(AotAssemblies)` to `$(RunAOTCompilation)`.
 
 For .NET 11 CoreCLR projects, remove `$(AotAssemblies)` without adding
 `$(RunAOTCompilation)`. CoreCLR does not use the Mono AOT pipeline.
