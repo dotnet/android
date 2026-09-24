@@ -90,6 +90,8 @@ extends:
         include:
         - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
           - repository: android-platform-support
+        - ${{ if eq(parameters.guestReadiness, true) }}:
+          - repository: 1esPipelines
         exclude:
         - repository: yaml-templates
         - repository: maui

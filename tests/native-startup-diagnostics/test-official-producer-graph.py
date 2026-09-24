@@ -8,6 +8,9 @@ import xml.etree.ElementTree as ET
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+BASELINE = "d549e1dc4e2a083b08b4f24cb5495e81b99d79b5"
+# Fresh publication clones do not contain the original private local implementation history.
+subprocess.run(["git", "merge-base", "--is-ancestor", BASELINE, "HEAD"], cwd=ROOT, check=True)
 
 
 def expand(node, enabled):
@@ -60,7 +63,7 @@ paths = ["build-tools/automation/azure-pipelines.yaml"] + [
     for name in ("build-macos", "commercial-build", "build-linux")]
 for path in paths:
     old = yaml.safe_load(subprocess.check_output(
-        ["git", "show", f"a98605cfb228ee44dd63a4cd222b3609fbae38b6:{path}"], cwd=ROOT))
+        ["git", "show", f"{BASELINE}:{path}"], cwd=ROOT))
     new = yaml.safe_load((ROOT / path).read_text())
     assert remove_mode_parameters(expand(new, False)) == old, f"Default graph changed: {path}"
 
@@ -77,7 +80,13 @@ jobs = prepare["jobs"]
 signers = [x for x in jobs if x.get("template") == "sign-artifacts/jobs/v4.yml@yaml-templates"]
 assert len(signers) == 2
 assert prepare["dependsOn"] == ["mac_build", "linux_build"]
-oldroot = yaml.safe_load(subprocess.check_output(["git", "show", f"a98605cf:{paths[0]}"], cwd=ROOT))
+oldroot = yaml.safe_load(subprocess.check_output(["git", "show", f"{BASELINE}:{paths[0]}"], cwd=ROOT))
+expected_sdl = copy.deepcopy(oldroot["extends"]["parameters"]["sdl"])
+expected_sdl["sourceRepositoriesToScan"]["include"].append({"repository": "1esPipelines"})
+assert diagnostic["extends"]["parameters"]["sdl"] == expected_sdl, "Diagnostic checkout must add scan coverage without suppressing or changing existing SDL"
+assert expand(root, False)["extends"]["parameters"]["sdl"] == oldroot["extends"]["parameters"]["sdl"]
+assert any(resource["repository"] == "1esPipelines" and resource["name"] == "1ESPipelineTemplates/MicroBuildTemplate"
+           for resource in root["resources"]["repositories"])
 oldprepare = next(x for x in oldroot["extends"]["parameters"]["stages"] if x.get("stage") == "dotnet_prepare_release")
 assert prepare["condition"] == oldprepare["condition"]
 for before, after in zip([x for x in oldprepare["jobs"] if x.get("template") == "sign-artifacts/jobs/v4.yml@yaml-templates"], signers):
@@ -99,6 +108,9 @@ sdk = ET.parse(ROOT / "build-tools/create-packs/Microsoft.Android.Sdk.proj").get
 assert any("SignList.xml" in x.attrib.get("Include", "") for x in sdk.iter())
 sign = yaml.safe_load((ROOT / "build-tools/automation/yaml-templates/guest-readiness-sign.yaml").read_text())
 assert any(x.get("condition") == "always()" for x in sign["steps"])
+assert sign["steps"][0]["${{ if eq(parameters.phase, 'Output') }}"][0] == {
+    "checkout": "1esPipelines", "path": "s/guest-readiness-1es", "persistCredentials": False,
+}, "Retain the actual resolved-resource provenance checkout"
 build = yaml.safe_load((ROOT / "build-tools/automation/yaml-templates/guest-readiness-build.yaml").read_text())
 publisher = yaml.safe_load((ROOT / "build-tools/automation/yaml-templates/publish-artifact.yaml").read_text())
 supported_task = publisher["steps"][1]["${{ if eq(parameters.use1ESTemplate, true) }}"][0]["task"]
@@ -134,3 +146,4 @@ out.mkdir(parents=True, exist_ok=True)
 (out / "diagnostic-source-graph.json").write_text(json.dumps(diagnostic, indent=2) + "\n")
 print("PASS: default graph equality in four templates; diagnostic promotion omission, preserved sign/security/full-pack graph.")
 print("PASS: existing 1ES publisher, Validate/Build/Pack retention matrix, always-on failure receipts and exact Darwin/Linux artifact names/sign input.")
+print("PASS: diagnostic-only 1esPipelines SDL inclusion; all existing SDL coverage and resolved-resource provenance checkout preserved.")

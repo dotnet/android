@@ -324,6 +324,9 @@ owned directories; same-leaf pre/post packages must never overwrite one another.
 Template provenance uses actual resource versions and checkout bytes for
 `yaml-templates` (`DevDiv/Xamarin.yaml-templates`, declared `refs/heads/main`) and
 `1esPipelines` (`1ESPipelineTemplates/MicroBuildTemplate`, existing default ref).
+Diagnostic mode adds the checked-out `1esPipelines` alias to SDL's
+`sourceRepositoriesToScan.include`; existing scan coverage and the default-off
+SDL configuration are unchanged. The provenance checkout is not removed or excluded.
 The reviewed snapshots are not hard-coded historical pins. MicroBuild's transitive
 `1ESPipelineTemplates` release-tag resolution is not exposed by this helper:
 the owner must capture/pin qualified provider resolutions and compare actual run
