@@ -5,6 +5,7 @@
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateEmptyTypemapStub" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotBootstrapSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateCoreClrRuntimeProviderSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets"
@@ -295,6 +296,7 @@
       <FileWrites Include="$(IntermediateOutputPath)AndroidManifest.xml" Condition="Exists('$(IntermediateOutputPath)AndroidManifest.xml')" />
       <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" Condition="Exists('$(IntermediateOutputPath)acw-map.txt')" />
       <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" Condition="Exists('$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java')" />
+      <FileWrites Include="$(IntermediateOutputPath)android/src/mono/MonoRuntimeProvider_*.java" />
     </ItemGroup>
   </Target>
 
@@ -342,8 +344,13 @@
       <_TrimmableTypeMapResolvedAssemblies Include="@(_GeneratedTypeMapAssembliesFromList)">
         <Abi>$(_TypeMapFirstAbi)</Abi>
         <RuntimeIdentifier>$(_TypeMapFirstRid)</RuntimeIdentifier>
+        <RelativePath>%(Filename)%(Extension)</RelativePath>
         <DestinationSubPath>$(_TypeMapFirstAbi)/%(Filename)%(Extension)</DestinationSubPath>
         <DestinationSubDirectory>$(_TypeMapFirstAbi)/</DestinationSubDirectory>
+        <!-- Keep the pre-trim copy for native config/store; FastDeploy selects the final
+             linked/R2R copy for the same destination only when that file exists. -->
+        <_AndroidPreTrimTypeMapCandidate
+            Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' ">true</_AndroidPreTrimTypeMapCandidate>
       </_TrimmableTypeMapResolvedAssemblies>
       <_ResolvedAssemblies Include="@(_TrimmableTypeMapResolvedAssemblies)" />
       <_ShrunkAssemblies Include="@(_TrimmableTypeMapResolvedAssemblies)" />
@@ -460,6 +467,11 @@
         AdditionalProviderSources="@(_AdditionalProviderSources)"
         EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)" />
 
+    <GenerateCoreClrRuntimeProviderSources
+        Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '@(_AdditionalProviderSources->Count())' != '0' "
+        OutputDirectory="$(IntermediateOutputPath)android"
+        AdditionalProviderSources="@(_AdditionalProviderSources)" />
+
     <!-- Copy generated manifest to expected location -->
     <Copy SourceFiles="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
         DestinationFiles="$(IntermediateOutputPath)AndroidManifest.xml"
@@ -487,6 +499,8 @@
       <FileWrites Include="$(IntermediateOutputPath)android\AndroidManifest.xml"
           Condition=" '$(AndroidManifestMerger)' != 'manifestmerger.jar' " />
       <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" />
+      <FileWrites Include="@(_AdditionalProviderSources->'$(IntermediateOutputPath)android/src/mono/%(Identity).java')"
+          Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
     </ItemGroup>
 
     <MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
@@ -500,14 +514,15 @@
       Outputs="@(_BuildTargetAbis->'$(_NativeAssemblySourceDir)typemap.%(Identity).ll')">
     <ItemGroup>
       <_TypeMapStubAbis Include="@(_BuildTargetAbis)" />
+      <_TypeMapAssemblySource Include="@(_TypeMapStubAbis->'$(_NativeAssemblySourceDir)typemap.%(Identity).ll')">
+        <abi>%(_TypeMapStubAbis.Identity)</abi>
+      </_TypeMapAssemblySource>
     </ItemGroup>
     <MakeDir Directories="$(_NativeAssemblySourceDir)" />
     <GenerateEmptyTypemapStub
         OutputDirectory="$(_NativeAssemblySourceDir)"
         Abis="@(_TypeMapStubAbis)"
-        Debug="$(AndroidIncludeDebugSymbols)">
-      <Output TaskParameter="Sources" ItemName="_TypeMapAssemblySource" />
-    </GenerateEmptyTypemapStub>
+        Debug="$(AndroidIncludeDebugSymbols)" />
     <ItemGroup>
       <FileWrites Include="@(_TypeMapAssemblySource)" />
     </ItemGroup>
@@ -516,10 +531,7 @@
   <!--
     Keep the resource designer assembly on the trimmable type map path.
 
-    The non-trimmable path (Microsoft.Android.Sdk.TypeMap.LlvmIr.targets) runs
-    PreTrimmingFixLegacyDesigner, which rewrites legacy resource field loads into designer
-    property-getter calls so the trimmer can drop unused designer members. The trimmable path
-    does not run that rewrite. More importantly, resource ids are resolved via reflection at
+    Resource ids are resolved via reflection at
     runtime (Android.Runtime.ResourceIdManager then ResourceDesignerAttribute then Type.GetType /
     UpdateIdValues), which neither ILLink nor ILC can follow. If the designer assembly is left
     trimmable it gets removed entirely, and accessing any resource id (e.g. from a reflection-only

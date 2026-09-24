@@ -227,10 +227,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     is processed by the ILLink step. If we do not do this then the reference to
     `netstandard.dll` is not replaced with `System.Private.CoreLib` and the app crashes.
 
-    No TrimmerRootDescriptor is needed: PreTrimmingFixLegacyDesigner rewrites library
-    assemblies *before* ILLink, replacing designer field loads with calls to the designer
-    assembly's property getters. ILLink then naturally preserves only the referenced
-    properties through its mark step, allowing everything else to be trimmed.
+    The trimmable typemap targets root the designer assembly when trimming is enabled:
+    resource IDs may be resolved through reflection at runtime.
 -->
 <Target Name="_AddResourceDesignerToPublishFiles"
     Condition=" '$(AndroidUseDesignerAssembly)' == 'True' "

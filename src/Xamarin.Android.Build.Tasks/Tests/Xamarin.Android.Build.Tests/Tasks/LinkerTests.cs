@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using Java.Interop.Tools.Cecil;
+using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Linker;
@@ -47,13 +48,57 @@ namespace Xamarin.Android.Build.Tests
 				$"{nameof (AddKeepAlivesStep)} presence should match the compatibility fixup setting.");
 			Assert.IsTrue (pipeline.Steps.Any (step => step is FindJavaObjectsStep), $"{nameof (FindJavaObjectsStep)} should always run.");
 			Assert.IsTrue (pipeline.Steps.Any (step => step is SaveChangedAssemblyStep), $"{nameof (SaveChangedAssemblyStep)} should always run.");
-			Assert.IsTrue (pipeline.Steps.Any (step => step is FindTypeMapObjectsStep), $"{nameof (FindTypeMapObjectsStep)} should always run.");
 		}
 
 		sealed class TestableLinkAssembliesNoShrink : LinkAssembliesNoShrink
 		{
 			public void BuildPipelineForTest (AssemblyPipeline pipeline, MSBuildLinkContext context) =>
 				BuildPipeline (pipeline, context);
+		}
+
+		[Test]
+		public void PostTrimmingSkipsLegacyAbstractFixupsButWarnsAboutAppDomain ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (path);
+			var assemblyPath = Path.Combine (path, "LegacyApp.dll");
+			using (var monoAndroid = CreateFauxMonoAndroidAssembly ()) {
+				CreateAbstractIfaceImplementation (assemblyPath, monoAndroid);
+			}
+
+			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath, new ReaderParameters { InMemory = true })) {
+				var createDomain = typeof (AppDomain).GetMethod ("CreateDomain", new [] { typeof (string) });
+				if (createDomain is null)
+					throw new InvalidOperationException ("System.AppDomain.CreateDomain(string) not found.");
+
+				var module = assembly.MainModule;
+				var method = new MethodDefinition ("CreateAppDomain", MethodAttributes.Public | MethodAttributes.Static, module.TypeSystem.Void);
+				method.Body.Instructions.Add (Instruction.Create (OpCodes.Ldstr, "example"));
+				method.Body.Instructions.Add (Instruction.Create (OpCodes.Call, module.ImportReference (createDomain)));
+				method.Body.Instructions.Add (Instruction.Create (OpCodes.Pop));
+				method.Body.Instructions.Add (Instruction.Create (OpCodes.Ret));
+				module.GetType ("MyNamespace.MyClass").Methods.Add (method);
+				assembly.Write (assemblyPath);
+			}
+
+			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
+				var warnings = new List<string> ();
+				var step = new PostTrimmingFixAbstractMethodsStep (
+					new TypeDefinitionCache (),
+					() => throw new InvalidOperationException ("Legacy abstract-method fixup should not run."),
+					_ => {},
+					warnings.Add,
+					enableLegacyCompatibilityAssemblyFixups: false);
+				var item = new TaskItem (assemblyPath);
+				var context = new StepContext (item, item);
+				step.ProcessAssembly (assembly, context);
+
+				Assert.IsFalse (context.IsAssemblyModified);
+				Assert.IsFalse (assembly.MainModule.GetType ("MyNamespace.MyClass").Methods.Any (m => m.Name == "MyMissingMethod"));
+				Assert.That (warnings, Has.Count.EqualTo (1));
+				StringAssert.Contains ("AppDomain.CreateDomain()", warnings [0]);
+			}
+			Directory.Delete (path, true);
 		}
 
 		[TestCase (false)]
@@ -209,7 +254,7 @@ namespace Xamarin.Android.Build.Tests
 			Directory.Delete (path, true);
 		}
 
-		static void CreateAbstractIfaceImplementation (string assemblyPath, AssemblyDefinition android)
+		static void CreateAbstractIfaceImplementation (string assemblyPath, AssemblyDefinition android, bool writeSymbols = false)
 		{
 			using (var assm = AssemblyDefinition.CreateAssembly (new AssemblyNameDefinition ("DimTest", new Version ()), "DimTest", ModuleKind.Dll)) {
 				var void_type = assm.MainModule.ImportReference (typeof (void));
@@ -231,8 +276,197 @@ namespace Xamarin.Android.Build.Tests
 				impl.Interfaces.Add (new InterfaceImplementation (iface));
 
 				assm.MainModule.Types.Add (impl);
-				assm.Write (assemblyPath);
+				var parameters = new WriterParameters { WriteSymbols = writeSymbols };
+				if (writeSymbols) {
+					parameters.SymbolWriterProvider = new PortablePdbWriterProvider ();
+				}
+				assm.Write (assemblyPath, parameters);
 			}
+		}
+
+		[Test]
+		public void PreTrimmingFixAbstractMethodsWritesOnlyModifiedCopies ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var outputDirectory = Path.Combine (path, "prelink");
+			Directory.CreateDirectory (path);
+			try {
+				var androidPath = Path.Combine (path, "Mono.Android.dll");
+				var libraryPath = Path.Combine (path, "MyAssembly.dll");
+				using (var android = CreateFauxMonoAndroidAssembly ()) {
+					android.Write (androidPath);
+					CreateAbstractIfaceImplementation (libraryPath, android);
+				}
+
+				var library = new Microsoft.Build.Utilities.TaskItem (libraryPath);
+				library.SetMetadata ("PostprocessAssembly", "True");
+				var task = new PreTrimmingFixAbstractMethods {
+					Assemblies = [new Microsoft.Build.Utilities.TaskItem (typeof (object).Assembly.Location),
+						new Microsoft.Build.Utilities.TaskItem (androidPath), library],
+					TargetName = "App",
+					OutputDirectory = outputDirectory,
+					Deterministic = true,
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+				};
+
+				Assert.IsTrue (task.Execute ());
+				var copy = Path.Combine (outputDirectory, "MyAssembly.dll");
+				FileAssert.Exists (copy);
+				Assert.AreEqual (copy, task.ModifiedAssemblies.Single ().ItemSpec);
+				Assert.IsFalse (File.Exists (Path.Combine (outputDirectory, "Mono.Android.dll")));
+
+				using (var original = AssemblyDefinition.ReadAssembly (libraryPath))
+				using (var modified = AssemblyDefinition.ReadAssembly (copy)) {
+					Assert.IsFalse (original.MainModule.GetType ("MyNamespace.MyClass").Methods.Any (method => method.Name == "MyAbstractMethod"));
+					var newMethod = modified.MainModule.GetType ("MyNamespace.MyClass").Methods.Single (method => method.Name == "MyAbstractMethod");
+					Assert.IsTrue (newMethod.Body.Instructions.Any (instruction =>
+						instruction.Operand is MethodReference constructor &&
+						constructor.DeclaringType.FullName == "Java.Lang.AbstractMethodError"));
+				}
+
+				File.SetLastWriteTimeUtc (copy, DateTime.UtcNow.AddMinutes (-2));
+				var writeTime = File.GetLastWriteTimeUtc (copy);
+				Assert.IsTrue (task.Execute ());
+				Assert.AreEqual (writeTime, File.GetLastWriteTimeUtc (copy),
+					"an unchanged abstract-method fixup must not invalidate FastDeploy inputs");
+
+				var updatedLibraryPath = Path.Combine (path, "UpdatedMyAssembly.dll");
+				using (var assembly = AssemblyDefinition.ReadAssembly (libraryPath)) {
+					var implementation = assembly.MainModule.GetType ("MyNamespace.MyClass");
+					var method = new MethodDefinition ("MyAbstractMethod", MethodAttributes.Public | MethodAttributes.Virtual,
+						assembly.MainModule.TypeSystem.Void);
+					method.Body.Instructions.Add (Instruction.Create (OpCodes.Ret));
+					implementation.Methods.Add (method);
+					assembly.Write (updatedLibraryPath);
+				}
+				File.Copy (updatedLibraryPath, libraryPath, overwrite: true);
+				Assert.IsTrue (task.Execute ());
+				Assert.IsEmpty (task.ModifiedAssemblies);
+				Assert.IsFalse (File.Exists (copy), "a stale prelink copy must not replace the updated library");
+			} finally {
+				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		[Test]
+		public void PreTrimmingFixAbstractMethodsPreservesUnchangedSymbols ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var outputDirectory = Path.Combine (path, "prelink");
+			Directory.CreateDirectory (path);
+			try {
+				var androidPath = Path.Combine (path, "Mono.Android.dll");
+				var libraryPath = Path.Combine (path, "MyAssembly.dll");
+				using (var android = CreateFauxMonoAndroidAssembly ()) {
+					android.Write (androidPath);
+					CreateAbstractIfaceImplementation (libraryPath, android, writeSymbols: true);
+				}
+
+				var library = new Microsoft.Build.Utilities.TaskItem (libraryPath);
+				library.SetMetadata ("PostprocessAssembly", "true");
+				var task = new PreTrimmingFixAbstractMethods {
+					Assemblies = [new Microsoft.Build.Utilities.TaskItem (typeof (object).Assembly.Location),
+						new Microsoft.Build.Utilities.TaskItem (androidPath), library],
+					TargetName = "App",
+					OutputDirectory = outputDirectory,
+					Deterministic = true,
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+				};
+
+				Assert.IsTrue (task.Execute ());
+				var outputDll = Path.Combine (outputDirectory, "MyAssembly.dll");
+				var outputPdb = Path.ChangeExtension (outputDll, ".pdb");
+				FileAssert.Exists (outputDll);
+				FileAssert.Exists (outputPdb);
+				File.SetLastWriteTimeUtc (outputDll, DateTime.UtcNow.AddMinutes (-2));
+				File.SetLastWriteTimeUtc (outputPdb, DateTime.UtcNow.AddMinutes (-2));
+				var dllWriteTime = File.GetLastWriteTimeUtc (outputDll);
+				var pdbWriteTime = File.GetLastWriteTimeUtc (outputPdb);
+
+				Assert.IsTrue (task.Execute ());
+				Assert.AreEqual (dllWriteTime, File.GetLastWriteTimeUtc (outputDll));
+				Assert.AreEqual (pdbWriteTime, File.GetLastWriteTimeUtc (outputPdb));
+				Assert.IsFalse (File.Exists (outputDll + ".tmp.dll"));
+				Assert.IsFalse (File.Exists (Path.ChangeExtension (outputDll + ".tmp.dll", ".pdb")));
+			} finally {
+				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		[Test]
+		public void PreTrimmingFixAbstractMethodsUsesSelectedBindingVersion ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var oldDirectory = Path.Combine (path, "old");
+			var newDirectory = Path.Combine (path, "new");
+			Directory.CreateDirectory (oldDirectory);
+			Directory.CreateDirectory (newDirectory);
+			try {
+				var androidPath = Path.Combine (path, "Mono.Android.dll");
+				var oldBindingPath = Path.Combine (oldDirectory, "TestBinding.dll");
+				var newBindingPath = Path.Combine (newDirectory, "TestBinding.dll");
+				var libraryPath = Path.Combine (oldDirectory, "LegacyLibrary.dll");
+				var nativePath = Path.Combine (oldDirectory, "NativeDependency.dll");
+				File.WriteAllBytes (nativePath, [0, 1, 2, 3]);
+				using (var android = CreateFauxMonoAndroidAssembly ()) {
+					android.Write (androidPath);
+					CreateBindingInterface (oldBindingPath, includeNewMethod: false);
+					CreateBindingInterface (newBindingPath, includeNewMethod: true);
+					using var oldBinding = AssemblyDefinition.ReadAssembly (oldBindingPath);
+					using var library = AssemblyDefinition.CreateAssembly (
+						new AssemblyNameDefinition ("LegacyLibrary", new Version (1, 0)), "LegacyLibrary", ModuleKind.Dll);
+					var implementation = new TypeDefinition ("Legacy", "Cursor", TypeAttributes.Public,
+						library.MainModule.ImportReference (android.MainModule.GetType ("Java.Lang.Object")));
+					implementation.Interfaces.Add (new InterfaceImplementation (
+						library.MainModule.ImportReference (oldBinding.MainModule.GetType ("Test.Bindings.ICursor"))));
+					var method = new MethodDefinition ("Method", MethodAttributes.Public | MethodAttributes.Virtual,
+						library.MainModule.TypeSystem.Void);
+					method.Body.Instructions.Add (Instruction.Create (OpCodes.Ret));
+					implementation.Methods.Add (method);
+					library.MainModule.Types.Add (implementation);
+					library.Write (libraryPath);
+				}
+
+				var oldLibrary = new Microsoft.Build.Utilities.TaskItem (libraryPath);
+				oldLibrary.SetMetadata ("PostprocessAssembly", "true");
+				var newBinding = new Microsoft.Build.Utilities.TaskItem (newBindingPath);
+				newBinding.SetMetadata ("PostprocessAssembly", "true");
+				var task = new PreTrimmingFixAbstractMethods {
+					Assemblies = [new Microsoft.Build.Utilities.TaskItem (nativePath), oldLibrary, newBinding,
+						new Microsoft.Build.Utilities.TaskItem (androidPath),
+						new Microsoft.Build.Utilities.TaskItem (typeof (object).Assembly.Location)],
+					TargetName = "App",
+					OutputDirectory = Path.Combine (path, "prelink"),
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+				};
+
+				Assert.IsTrue (task.Execute ());
+				var copy = Path.Combine (task.OutputDirectory, "LegacyLibrary.dll");
+				FileAssert.Exists (copy);
+				using var modified = AssemblyDefinition.ReadAssembly (copy);
+				Assert.IsTrue (modified.MainModule.GetType ("Legacy.Cursor").Methods.Any (member => member.Name == "NewMethod"),
+					"the current binding interface, not the nearby older DLL, must determine missing methods");
+			} finally {
+				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		static void CreateBindingInterface (string path, bool includeNewMethod)
+		{
+			using var assembly = AssemblyDefinition.CreateAssembly (
+				new AssemblyNameDefinition ("TestBinding", new Version (1, 0)), "TestBinding", ModuleKind.Dll);
+			var cursor = new TypeDefinition ("Test.Bindings", "ICursor",
+				TypeAttributes.Interface | TypeAttributes.Abstract | TypeAttributes.Public);
+			cursor.Methods.Add (new MethodDefinition ("Method",
+				MethodAttributes.Public | MethodAttributes.Abstract | MethodAttributes.Virtual,
+				assembly.MainModule.TypeSystem.Void));
+			if (includeNewMethod) {
+				cursor.Methods.Add (new MethodDefinition ("NewMethod",
+					MethodAttributes.Public | MethodAttributes.Abstract | MethodAttributes.Virtual,
+					assembly.MainModule.TypeSystem.Void));
+			}
+			assembly.MainModule.Types.Add (cursor);
+			assembly.Write (path);
 		}
 
 		[Test]
@@ -517,27 +751,24 @@ $@"			var myButton = new AttributedButtonStub (this);
 				// Debug configuration
 				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: false, setLinkModeNone: false, shouldAddKeepAlives: false, runtime);
 
-				// Debug configuration, AndroidAddKeepAlives=true
-				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true,  setLinkModeNone: false, shouldAddKeepAlives: true,  runtime);
+				// The default trimmable path does not run legacy assembly fixups.
+				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true,  setLinkModeNone: false, shouldAddKeepAlives: false, runtime);
 
 				// Release configuration
 				AddTestData (isRelease: true,  setAndroidAddKeepAlivesTrue: false, setLinkModeNone: false, shouldAddKeepAlives: true,  runtime);
 
 				// Release configuration, AndroidLinkMode=None
-				AddTestData (isRelease: true,  setAndroidAddKeepAlivesTrue: false, setLinkModeNone: true,  shouldAddKeepAlives: true,  runtime);
+				AddTestData (isRelease: true,  setAndroidAddKeepAlivesTrue: false, setLinkModeNone: true,  shouldAddKeepAlives: false, runtime);
 			}
 
 			AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true, setLinkModeNone: false,
-				shouldAddKeepAlives: false, AndroidRuntime.CoreCLR, typeMapImplementation: "trimmable");
-			AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true, setLinkModeNone: false,
-				shouldAddKeepAlives: true, AndroidRuntime.CoreCLR, typeMapImplementation: "trimmable",
+				shouldAddKeepAlives: true, AndroidRuntime.CoreCLR,
 				enableLegacyCompatibilityAssemblyFixups: true);
 
 			return ret;
 
 			void AddTestData (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone,
-				bool shouldAddKeepAlives, AndroidRuntime runtime, string? typeMapImplementation = null,
-				bool enableLegacyCompatibilityAssemblyFixups = false)
+				bool shouldAddKeepAlives, AndroidRuntime runtime, bool enableLegacyCompatibilityAssemblyFixups = false)
 			{
 				ret.Add (new object[] {
 					isRelease,
@@ -545,7 +776,6 @@ $@"			var myButton = new AttributedButtonStub (this);
 					setLinkModeNone,
 					shouldAddKeepAlives,
 					runtime,
-					typeMapImplementation,
 					enableLegacyCompatibilityAssemblyFixups,
 				});
 			}
@@ -554,8 +784,7 @@ $@"			var myButton = new AttributedButtonStub (this);
 		[Test]
 		[TestCaseSource (nameof (Get_AndroidAddKeepAlivesData))]
 		public void AndroidAddKeepAlives (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone,
-			bool shouldAddKeepAlives, AndroidRuntime runtime, string? typeMapImplementation,
-			bool enableLegacyCompatibilityAssemblyFixups)
+			bool shouldAddKeepAlives, AndroidRuntime runtime, bool enableLegacyCompatibilityAssemblyFixups)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -564,22 +793,6 @@ $@"			var myButton = new AttributedButtonStub (this);
 			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
 				return;
 			}
-
-			if (runtime == AndroidRuntime.CoreCLR && isRelease && !setAndroidAddKeepAlivesTrue && setLinkModeNone && shouldAddKeepAlives) {
-				// This currently fails with the following exception:
-				//
-				// error XALNS7015: System.NotSupportedException: Writing mixed-mode assemblies is not supported
-				//  at Mono.Cecil.ModuleWriter.Write(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
-				//  at Mono.Cecil.ModuleWriter.WriteModule(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
-				//  at Mono.Cecil.ModuleDefinition.Write(String fileName, WriterParameters parameters)
-				//  at Mono.Cecil.AssemblyDefinition.Write(String fileName, WriterParameters parameters)
-				//  at Xamarin.Android.Tasks.SaveChangedAssemblyStep.ProcessAssembly(AssemblyDefinition assembly, StepContext context) in src/Xamarin.Android.Build.Tasks/Tasks/AssemblyModifierPipeline.cs:line 197
-				//  at Xamarin.Android.Tasks.AssemblyPipeline.Run(AssemblyDefinition assembly, StepContext context) in src/Xamarin.Android.Build.Tasks/Utilities/AssemblyPipeline.cs:line 26
-				//  at Xamarin.Android.Tasks.AssemblyModifierPipeline.RunPipeline(AssemblyPipeline pipeline, ITaskItem source, ITaskItem destination) in src/Xamarin.Android.Build.Tasks/Tasks/AssemblyModifierPipeline.cs:line 175
-				//  at Xamarin.Android.Tasks.AssemblyModifierPipeline.RunTask() in src/Xamarin.Android.Build.Tasks/Tasks/AssemblyModifierPipeline.cs:line 123
-				Assert.Ignore ("CoreCLR: fails because of a Mono.Cecil lack of support");
-				return;
-			};
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -612,8 +825,6 @@ namespace UnnamedProject {
 
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("AllowUnsafeBlocks", "True");
-			if (!typeMapImplementation.IsNullOrEmpty ())
-				proj.SetProperty ("AndroidTypeMapImplementation", typeMapImplementation);
 
 			// We don't want `[TargetPlatform ("android35")]` to get set because we don't do AddKeepAlives on .NET for Android assemblies
 			proj.SetProperty ("GenerateAssemblyInfo", "False");
@@ -836,26 +1047,10 @@ namespace UnnamedProject {
 			}
 		}
 
-		// TODO: fix for (true, AndroidRuntime.CoreCLR)
 		[Test]
 		public void DoNotErrorOnPerArchJavaTypeDuplicates (
-			[Values(true, false)] bool enableMarshalMethods,
 			[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (enableMarshalMethods == true && runtime == AndroidRuntime.CoreCLR) {
-				// This currently fails with the following exception:
-				//
-				// Xamarin.Android.Common.targets(1603,3): error XARMM7015: System.NotSupportedException: Writing mixed-mode assemblies is not supported
-				//  at Mono.Cecil.ModuleWriter.Write(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
-				//  at Mono.Cecil.ModuleWriter.WriteModule(ModuleDefinition module, Disposable`1 stream, WriterParameters parameters)
-				//  at Mono.Cecil.ModuleDefinition.Write(String fileName, WriterParameters parameters)
-				//  at Mono.Cecil.AssemblyDefinition.Write(String fileName, WriterParameters parameters)
-				//  at Xamarin.Android.Tasks.MarshalMethodsAssemblyRewriter.Rewrite(Boolean brokenExceptionTransitions) in src/Xamarin.Android.Build.Tasks/Utilities/MarshalMethodsAssemblyRewriter.cs:line 165
-				//  at Xamarin.Android.Tasks.RewriteMarshalMethods.RewriteMethods(NativeCodeGenState state, Boolean brokenExceptionTransitionsEnabled) in src/Xamarin.Android.Build.Tasks/Tasks/RewriteMarshalMethods.cs:line 160
-				Assert.Ignore ("Fails with Mono.Cecil exception on CoreCLR");
-				return;
-			}
-
 			var path = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject { IsRelease = true, ProjectName = "Lib1" };
 			lib.SetRuntime (runtime);
@@ -889,7 +1084,6 @@ public abstract class MyRunner {
 				"base.OnCreate (bundle);",
 				"base.OnCreate (bundle);\n" +
 				"if (Lib1.Library1.Is64 ()) Console.WriteLine (\"Hello World!\");");
-			proj.EnableMarshalMethods = enableMarshalMethods;
 
 
 			using var lb = CreateDllBuilder (Path.Combine (path, "Lib1"));

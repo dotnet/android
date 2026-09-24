@@ -53,15 +53,7 @@ static class TypeDataBuilder
 		);
 
 		var javaTypes = scanner.GetJavaTypes (assembly);
-		var (dataSets, _) = TypeMapCecilAdapter.GetDebugNativeEntries (
-			javaTypes, cache, needUniqueAssemblies: false
-		);
-
-		var entries = dataSets.JavaToManaged
-			.Select (e => new TypeMapEntry (e.JavaName, e.ManagedName, e.SkipInJavaToManaged))
-			.OrderBy (e => e.JavaName, StringComparer.Ordinal)
-			.ThenBy (e => e.ManagedName, StringComparer.Ordinal)
-			.ToList ();
+		var entries = ScannerRunner.GetLegacyEntries (javaTypes, cache);
 
 		var perType = new Dictionary<string, TypeComparisonData> (StringComparer.Ordinal);
 

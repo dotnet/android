@@ -2,105 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using Java.Interop.Tools.JavaCallableWrappers;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Tasks;
 
-public sealed class GenerateAdditionalProviderSources : AndroidTask
+internal static class GenerateAdditionalProviderSources
 {
-	public override string TaskPrefix => "GPS";
-
-	[Required]
-	public string [] AdditionalProviderSources { get; set; } = [];
-
-	[Required]
-	public string AndroidRuntime { get; set; } = "";
-
-	public string CodeGenerationTarget { get; set; } = "";
-
-	[Required]
-	public string IntermediateOutputDirectory { get; set; } = "";
-
-	[Required]
-	public string OutputDirectory { get; set; } = "";
-
-	[Required]
-	public string TargetName { get; set; } = "";
-
-	public ITaskItem[]? Environments { get; set; }
-
-	// We need to pass this to the environment builder, otherwise not used
-	// by this task. See also GenerateNativeApplicationSources.cs
-	public bool EnableSGenConcurrent { get; set; }
-
-	AndroidRuntime androidRuntime;
-	JavaPeerStyle codeGenerationTarget;
-
-	public override bool RunTask ()
-	{
-		androidRuntime = MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime);
-		codeGenerationTarget = MonoAndroidHelper.ParseCodeGenerationTarget (CodeGenerationTarget);
-
-		// Retrieve the stored NativeCodeGenStateObject
-		var nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<NativeCodeGenStateCollection> (
-			MonoAndroidHelper.GetProjectBuildSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateObjectRegisterTaskKey, WorkingDirectory, IntermediateOutputDirectory),
-			RegisteredTaskObjectLifetime.Build
-		);
-
-		if (nativeCodeGenStates is null)
-			throw new InvalidOperationException ($"Internal error: {nameof (NativeCodeGenStateCollection)} not found");
-
-		// We only need the first architecture, since this task is architecture-agnostic
-		var templateCodeGenState = nativeCodeGenStates.States.First ().Value;
-
-		Generate (templateCodeGenState);
-
-		return !Log.HasLoggedErrors;
-	}
-
-	void Generate (NativeCodeGenStateObject codeGenState)
-	{
-		// Create additional runtime provider java sources.
-		bool isCoreCLR = androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.CoreCLR;
-
-		WriteAdditionalRuntimeProviderSources (OutputDirectory, isCoreCLR, AdditionalProviderSources);
-
-		// For NativeAOT, generate JavaInteropRuntime.java and NativeAotEnvironmentVars.java
-		if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
-			GenerateNativeAotBootstrapFiles (Log, OutputDirectory, TargetName, Environments, EnableSGenConcurrent);
-		}
-
-		// Create additional application java sources.
-		StringWriter regCallsWriter = new StringWriter ();
-		regCallsWriter.WriteLine ("// Application and Instrumentation ACWs must be registered first.");
-
-		foreach ((string jniName, string assemblyQualifiedName) in codeGenState.ApplicationsAndInstrumentationsToRegister) {
-			regCallsWriter.WriteLine (
-				codeGenerationTarget == JavaPeerStyle.XAJavaInterop1 ?
-					"\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);" :
-					"\t\tnet.dot.jni.ManagedPeer.registerNativeMembers ({1}.class, {1}.__md_methods);",
-				assemblyQualifiedName,
-				jniName
-			);
-		}
-
-		regCallsWriter.Close ();
-
-		var real_app_dir = Path.Combine (OutputDirectory, "src", "net", "dot", "android");
-		string applicationTemplateFile = "ApplicationRegistration.java";
-		SaveResource (
-			applicationTemplateFile,
-			applicationTemplateFile,
-			real_app_dir,
-			template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ())
-		);
-
-	}
-
 	static string GetResource (string resource)
 	{
 		using (var stream = typeof (GenerateAdditionalProviderSources).Assembly.GetManifestResourceStream (resource))
@@ -110,8 +19,7 @@ public sealed class GenerateAdditionalProviderSources : AndroidTask
 
 	/// <summary>
 	/// Writes the additional per-process runtime provider Java sources (e.g. NativeAotRuntimeProvider_1.java)
-	/// by cloning the runtime provider template for each name. Shared between the legacy (ILLink) and
-	/// trimmable build paths so both emit the extra providers a multi-process app declares in its manifest.
+	/// by cloning the runtime provider template for each name.
 	/// </summary>
 	internal static void WriteAdditionalRuntimeProviderSources (string outputDirectory, bool isCoreCLR, string [] additionalProviderSources)
 	{
@@ -131,16 +39,8 @@ public sealed class GenerateAdditionalProviderSources : AndroidTask
 		}
 	}
 
-	void SaveResource (string resource, string filename, string destDir, Func<string, string> applyTemplate)
-	{
-		string template = GetResource (resource);
-		template = applyTemplate (template);
-		Files.CopyIfStringChanged (template, Path.Combine (destDir, filename));
-	}
-
 	/// <summary>
 	/// Generates JavaInteropRuntime.java and NativeAotEnvironmentVars.java for NativeAOT apps.
-	/// Shared between the legacy (ILLink) and trimmable build paths.
 	/// </summary>
 	internal static void GenerateNativeAotBootstrapFiles (
 		Microsoft.Build.Utilities.TaskLoggingHelper log,

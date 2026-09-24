@@ -32,13 +32,9 @@ namespace Xamarin.Android.Tasks
 		public static AndroidVersions   SupportedVersions;
 		public static AndroidSdkInfo    AndroidSdk;
 
-		internal static XAAssemblyResolver MakeResolver (TaskLoggingHelper log, bool useMarshalMethods, AndroidTargetArch targetArch, Dictionary<string, ITaskItem> assemblies, bool loadDebugSymbols = true)
+		internal static XAAssemblyResolver MakeResolver (TaskLoggingHelper log, AndroidTargetArch targetArch, Dictionary<string, ITaskItem> assemblies, bool loadDebugSymbols = true)
 		{
 			var readerParams = new ReaderParameters ();
-			if (useMarshalMethods) {
-				readerParams.ReadWrite = true;
-				readerParams.InMemory = true;
-			}
 
 			var res = new XAAssemblyResolver (targetArch, log, loadDebugSymbols: loadDebugSymbols, loadReaderParameters: readerParams);
 			var uniqueDirs = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
@@ -772,7 +768,7 @@ namespace Xamarin.Android.Tasks
 				assemblies.Add (GetAssemblyNameWithCulture (assembly), assembly);
 			}
 
-			// It's possible some assembly collections will be empty (e.g. `ResolvedUserAssemblies` as passed to the `GenerateJavaStubs` task), which
+			// It's possible some assembly collections will be empty (e.g. `ResolvedUserAssemblies`), which
 			// isn't a problem and such empty collections should not be validated, as it will end in the "should never happen" exception below being
 			// thrown as a false negative.
 			if (assembliesPerArch.Count == 0 || !validate) {
@@ -808,18 +804,6 @@ namespace Xamarin.Android.Tasks
 					if (!dict.ContainsKey (kvp.Key)) {
 						throw new InvalidOperationException ($"Internal error: architecture '{arch}' does not have assembly '{kvp.Key}'");
 					}
-				}
-			}
-		}
-
-		internal static void DumpMarshalMethodsToConsole (string heading, IDictionary<string, IList<MarshalMethodEntry>> marshalMethods)
-		{
-			Console.WriteLine ();
-			Console.WriteLine ($"{heading}:");
-			foreach (var kvp in marshalMethods) {
-				Console.WriteLine ($"  {kvp.Key}");
-				foreach (var method in kvp.Value) {
-					Console.WriteLine ($"    {method.DeclaringType.FullName} {method.NativeCallback.FullName}");
 				}
 			}
 		}

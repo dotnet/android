@@ -415,9 +415,9 @@ A boolean property that controls whether untrimmed builds modify referenced
 assemblies to support legacy binding and resource designer behavior. These
 modifications include adding missing abstract interface methods, updating
 legacy resource designer references, and inserting `GC.KeepAlive()` calls into
-older Xamarin.Android binding assemblies. Trimmed builds using the `trimmable`
-type map do not run these compatibility fixups, and setting this property to
-`True` does not enable them for trimmed builds.
+older Xamarin.Android binding assemblies. Trimmed builds run their post-trimming
+assembly fixups separately after ILLink; this property does not control those
+steps.
 
 The default value is `False` when
 [`$(AndroidTypeMapImplementation)`](#androidtypemapimplementation) is
@@ -425,14 +425,9 @@ The default value is `False` when
 
 ## AndroidEnableMarshalMethods
 
-A bool property, that determines whether or not LLVM marshal methods are enabled.
-LLVM marshal methods are an app startup optimization which uses native entry points
-for Java `native` method registration.
-
-This property is False by default.
-
-This property cannot be set to `true` when
-[`$(PublishReadyToRun)`](#publishreadytorun) is `true`.
+A legacy boolean property for LLVM marshal methods. Marshal methods are no
+longer supported. Remove this property or set it to `false`; setting it to
+`true` produces error XA1049.
 
 Added in .NET 8.
 

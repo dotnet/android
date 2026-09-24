@@ -71,24 +71,21 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 		{ "mono-android.release",        String.Empty },
 	};
 
-	readonly NativeCodeGenStateObject state;
+	readonly AndroidTargetArch targetArch;
+	readonly List<PinvokeScanner.PinvokeEntryInfo> pinvokeInfos;
 	readonly ITaskItem[] monoComponents;
 
-	public PreservePinvokesNativeAssemblyGenerator (TaskLoggingHelper log, NativeCodeGenStateObject codeGenState, ITaskItem[] monoComponents)
+	public PreservePinvokesNativeAssemblyGenerator (TaskLoggingHelper log, AndroidTargetArch targetArch, List<PinvokeScanner.PinvokeEntryInfo> pinvokeInfos, ITaskItem[] monoComponents)
 		: base (log)
 	{
-		if (codeGenState.PinvokeInfos == null) {
-			throw new InvalidOperationException ($"Internal error: {nameof (codeGenState)} `{nameof (codeGenState.PinvokeInfos)}` property is `null`");
-		}
-
-		this.state = codeGenState;
+		this.targetArch = targetArch;
+		this.pinvokeInfos = pinvokeInfos ?? throw new ArgumentNullException (nameof (pinvokeInfos));
 		this.monoComponents = monoComponents;
 	}
 
 	protected override void Construct (LlvmIrModule module)
 	{
-		Log.LogDebugMessage ($"[{state.TargetArch}] Constructing p/invoke preserve code");
-		List<PinvokeScanner.PinvokeEntryInfo> pinvokeInfos = state.PinvokeInfos!;
+		Log.LogDebugMessage ($"[{targetArch}] Constructing p/invoke preserve code");
 		if (pinvokeInfos.Count == 0) {
 			// This is a very unlikely scenario, but we will work just fine.  The module that this generator produces will merely result
 			// in an empty (but valid) .ll file and an "empty" object file to link into the shared library.
@@ -127,14 +124,14 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 			return;
 		}
 
-		switch (state.TargetArch) {
+		switch (targetArch) {
 			case AndroidTargetArch.Arm64:
 			case AndroidTargetArch.X86_64:
 			case AndroidTargetArch.Arm:
 			case AndroidTargetArch.X86:
 				break;
 			default:
-				throw new NotSupportedException ($"Architecture {state.TargetArch} is not supported here");
+				throw new NotSupportedException ($"Architecture {targetArch} is not supported here");
 		}
 
 		Log.LogDebugMessage ("  Checking discovered p/invokes against the list of components");

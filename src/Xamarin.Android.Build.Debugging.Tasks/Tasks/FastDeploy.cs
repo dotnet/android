@@ -395,7 +395,7 @@ namespace Xamarin.Android.Tasks
 		List<DirectPushFile> PrepareDirectPushFiles ()
 		{
 			var files = new List<DirectPushFile> ();
-			foreach (var file in FastDevFiles ?? []) {
+			foreach (var file in FilterPreTrimTypeMapFiles (FastDevFiles ?? [])) {
 				string localPath = GetFullPath (file.ItemSpec);
 				if (!File.Exists (localPath)) {
 					LogDiagnostic ($"File '{file.ItemSpec}' does not exist. Skipping.");
@@ -429,6 +429,32 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return files;
+		}
+
+		internal ITaskItem [] FilterPreTrimTypeMapFiles (ITaskItem [] fastDevFiles)
+		{
+			var preTrimTargets = new HashSet<string> (StringComparer.Ordinal);
+			foreach (var file in fastDevFiles) {
+				if (file.GetMetadata ("_AndroidPreTrimTypeMapCandidate") == "true") {
+					if (!string.IsNullOrEmpty (file.GetMetadata ("TargetPath"))) {
+						preTrimTargets.Add (GetAdbPushTargetPath (file));
+					}
+				}
+			}
+			if (preTrimTargets.Count == 0) {
+				return fastDevFiles;
+			}
+
+			var finalTargets = new HashSet<string> (StringComparer.Ordinal);
+			foreach (var file in fastDevFiles) {
+				if (file.GetMetadata ("_AndroidPreTrimTypeMapCandidate") != "true" &&
+				    !string.IsNullOrEmpty (file.GetMetadata ("TargetPath")) &&
+				    preTrimTargets.Contains (GetAdbPushTargetPath (file)) && File.Exists (file.ItemSpec)) {
+					finalTargets.Add (GetAdbPushTargetPath (file));
+				}
+			}
+			return fastDevFiles.Where (file => file.GetMetadata ("_AndroidPreTrimTypeMapCandidate") != "true" ||
+				!finalTargets.Contains (GetAdbPushTargetPath (file))).ToArray ();
 		}
 
 		bool WriteFileIfChanged (string path, byte [] contents, DateTime modifiedDateTime)
