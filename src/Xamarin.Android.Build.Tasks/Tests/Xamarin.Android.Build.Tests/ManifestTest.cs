@@ -1610,7 +1610,7 @@ class TestActivity : Activity { }"
 				VersionResolver = new MockVersionResolver (),
 			};
 
-			manifest.Merge (null, cache, [td], null, false, null, null);
+			manifest.Merge (null, cache, [td], null, false, null);
 
 			var sb = new StringWriter ();
 			manifest.Save (null, sb);
