@@ -42,17 +42,12 @@
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
     <PropertyGroup>
-      <_ManifestOutput Condition=" '$(AndroidManifestMerger)' == 'legacy' ">$(IntermediateOutputPath)android\AndroidManifest.xml</_ManifestOutput>
-      <_ManifestOutput Condition=" '$(AndroidManifestMerger)' != 'legacy' ">$(IntermediateOutputPath)AndroidManifest.xml</_ManifestOutput>
+      <_ManifestOutput>$(IntermediateOutputPath)AndroidManifest.xml</_ManifestOutput>
       <_LinkingEnabled Condition=" '$(AndroidLinkMode)' != 'None'">True</_LinkingEnabled>
       <_LinkingEnabled Condition=" '$(AndroidLinkMode)' == 'None'">False</_LinkingEnabled>
       <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' != '' ">True</_HaveMultipleRIDs>
       <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' == '' ">False</_HaveMultipleRIDs>
     </PropertyGroup>
-    <ItemGroup>
-      <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
-    </ItemGroup>
-
     <GenerateJavaCallableWrappers
         CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
         OutputDirectory="$(IntermediateOutputPath)android\src"
@@ -117,7 +112,6 @@
         ManifestPlaceholders="$(AndroidManifestPlaceholders)"
         ManifestTemplate="$(_AndroidManifestAbs)"
         MergedAndroidManifestOutput="$(_ManifestOutput)"
-        MergedManifestDocuments="@(_MergedManifestDocuments)"
         NeedsInternet="$(AndroidNeedsInternetPermission)"
         PackageName="$(_AndroidPackage)"
         ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"

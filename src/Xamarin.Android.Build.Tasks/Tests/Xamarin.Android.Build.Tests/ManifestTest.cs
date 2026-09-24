@@ -726,7 +726,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void ManifestPlaceholders ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void ManifestPlaceholders ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -734,7 +734,6 @@ namespace Bug12935
 			}
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
-				ManifestMerger = manifestMerger,
 				JavaPackageName = "com.foo.bar",
 			};
 			proj.SetRuntime (runtime);
@@ -777,7 +776,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void ManifestPlaceHoldersXA1010 ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void ManifestPlaceHoldersXA1010 ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -785,26 +784,33 @@ namespace Bug12935
 			}
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
-				ManifestMerger = manifestMerger,
 			};
 			proj.SetRuntime (runtime);
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("application android:label=\"${PROJECT_NAME}\"", "application android:label=\"${ph1}\" x='${ph2}' ");
 			proj.SetProperty ("AndroidManifestPlaceholders", "ph2=a=b\\c;ph1");
 			using (var builder = CreateApkBuilder ()) {
-				IEnumerable<string> messages;
-				if (string.CompareOrdinal (manifestMerger, "legacy") == 0) {
-					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-					messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal));
-				}
-				else {
-					builder.ThrowOnBuildFailure = false;
-					Assert.IsFalse (builder.Build (proj), "Build should have failed.");
-					messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal));
-				}
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+				var messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal));
 				string warning = messages.FirstOrDefault (x => x.Contains ("warning XA1010:"));
 				Assert.IsNotNull (warning, "Warning should be XA1010");
 				StringAssert.Contains ("AndroidManifestPlaceholders", warning, "Warning should mention AndroidManifestPlaceholders");
 				StringAssert.Contains ("ph1", warning, "Warning should mention invalid placeholder");
+			}
+		}
+
+		[Test]
+		public void UnsupportedManifestMerger ([Values ("legacy", "other")] string manifestMerger)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				ManifestMerger = manifestMerger,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (proj), "Build should reject an unsupported manifest merger.");
+				StringAssert.Contains ("error XA1038:", string.Join ("\n", builder.LastBuildOutput));
+				StringAssert.Contains ("AndroidManifestMerger", string.Join ("\n", builder.LastBuildOutput));
 			}
 		}
 
@@ -902,7 +908,6 @@ namespace Bug12935
             android:name='.internal.FacebookInitProvider'
             android:exported='false' />
         <meta-data android:name='android.support.VERSION' android:value='25.4.0' />
-        <meta-data android:name='android.support.VERSION' android:value='25.4.0' />
     </application>
 </manifest>
 ", encoding: System.Text.Encoding.UTF8);
@@ -935,7 +940,6 @@ namespace Bug12935
 				},
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("AndroidManifestMerger", "legacy");
 			proj.Sources.Add (new BuildItem.Source ("TestActivity1.cs") {
 				TextContent = () => @"using System;
 using System.Collections.Generic;
@@ -1005,7 +1009,7 @@ public class TestActivity2 : FragmentActivity {
 		}
 
 		[Test]
-		public void AllActivityAttributeProperties ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void AllActivityAttributeProperties ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1013,12 +1017,10 @@ public class TestActivity2 : FragmentActivity {
 			}
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
-				ManifestMerger = manifestMerger,
 			};
 			proj.SetRuntime (runtime);
 
-			string expectedOutput = manifestMerger == "legacy" ?
-				$"android:allowEmbedded=\"true\" android:allowTaskReparenting=\"true\" android:alwaysRetainTaskState=\"true\" android:autoRemoveFromRecents=\"true\" android:banner=\"@drawable/icon\" android:clearTaskOnLaunch=\"true\" android:colorMode=\"hdr\" android:configChanges=\"mcc\" android:description=\"@string/app_name\" android:directBootAware=\"true\" android:documentLaunchMode=\"never\" android:enabled=\"true\" android:enableVrMode=\"foo\" android:excludeFromRecents=\"true\" android:exported=\"true\" android:finishOnCloseSystemDialogs=\"true\" android:finishOnTaskLaunch=\"true\" android:hardwareAccelerated=\"true\" android:icon=\"@drawable/icon\" android:immersive=\"true\" android:label=\"TestActivity\" android:launchMode=\"singleTop\" android:lockTaskMode=\"normal\" android:logo=\"@drawable/icon\" android:maxAspectRatio=\"1.2\" android:maxRecents=\"1\" android:multiprocess=\"true\" android:name=\"com.contoso.TestActivity\" android:noHistory=\"true\" android:parentActivityName=\"{proj.PackageName}.MainActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:persistableMode=\"persistNever\" android:process=\"com.contoso.process.testactivity_process\" android:recreateOnConfigChanges=\"mcc\" android:relinquishTaskIdentity=\"true\" android:resizeableActivity=\"true\" android:resumeWhilePausing=\"true\" android:rotationAnimation=\"crossfade\" android:roundIcon=\"@drawable/icon\" android:screenOrientation=\"portrait\" android:showForAllUsers=\"true\" android:showOnLockScreen=\"true\" android:showWhenLocked=\"true\" android:singleUser=\"true\" android:stateNotNeeded=\"true\" android:supportsPictureInPicture=\"true\" android:taskAffinity=\"com.contoso\" android:theme=\"@android:style/Theme.Light\" android:turnScreenOn=\"true\" android:uiOptions=\"splitActionBarWhenNarrow\" android:visibleToInstantApps=\"true\" android:windowSoftInputMode=\"stateUnchanged|adjustUnspecified\"" :
+			string expectedOutput =
 				$"android:name=\"com.contoso.TestActivity\" android:allowEmbedded=\"true\" android:allowTaskReparenting=\"true\" android:alwaysRetainTaskState=\"true\" android:autoRemoveFromRecents=\"true\" android:banner=\"@drawable/icon\" android:clearTaskOnLaunch=\"true\" android:colorMode=\"hdr\" android:configChanges=\"mcc\" android:description=\"@string/app_name\" android:directBootAware=\"true\" android:documentLaunchMode=\"never\" android:enableVrMode=\"foo\" android:enabled=\"true\" android:excludeFromRecents=\"true\" android:exported=\"true\" android:finishOnCloseSystemDialogs=\"true\" android:finishOnTaskLaunch=\"true\" android:hardwareAccelerated=\"true\" android:icon=\"@drawable/icon\" android:immersive=\"true\" android:label=\"TestActivity\" android:launchMode=\"singleTop\" android:lockTaskMode=\"normal\" android:logo=\"@drawable/icon\" android:maxAspectRatio=\"1.2\" android:maxRecents=\"1\" android:multiprocess=\"true\" android:noHistory=\"true\" android:parentActivityName=\"{proj.PackageName}.MainActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:persistableMode=\"persistNever\" android:process=\"com.contoso.process.testactivity_process\" android:recreateOnConfigChanges=\"mcc\" android:relinquishTaskIdentity=\"true\" android:resizeableActivity=\"true\" android:resumeWhilePausing=\"true\" android:rotationAnimation=\"crossfade\" android:roundIcon=\"@drawable/icon\" android:screenOrientation=\"portrait\" android:showForAllUsers=\"true\" android:showOnLockScreen=\"true\" android:showWhenLocked=\"true\" android:singleUser=\"true\" android:stateNotNeeded=\"true\" android:supportsPictureInPicture=\"true\" android:taskAffinity=\"com.contoso\" android:theme=\"@android:style/Theme.Light\" android:turnScreenOn=\"true\" android:uiOptions=\"splitActionBarWhenNarrow\" android:visibleToInstantApps=\"true\" android:windowSoftInputMode=\"stateUnchanged|adjustUnspecified\"";
 
 			proj.Sources.Add (new BuildItem.Source ("TestActivity.cs") {
@@ -1148,20 +1150,17 @@ class TestActivity : Activity { }"
 		}
 
 		[Test]
- 		public void AllServiceAttributeProperties ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void AllServiceAttributeProperties ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
  		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
- 			string expectedOutput = manifestMerger == "legacy" ?
-				"android:directBootAware=\"true\" android:enabled=\"true\" android:exported=\"true\" android:foregroundServiceType=\"connectedDevice\" android:icon=\"@drawable/icon\" android:isolatedProcess=\"true\" android:label=\"TestActivity\" android:name=\"com.contoso.TestActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:process=\"com.contoso.process.testactivity_process\" android:roundIcon=\"@drawable/icon\"" :
-				"android:name=\"com.contoso.TestActivity\" android:directBootAware=\"true\" android:enabled=\"true\" android:exported=\"true\" android:foregroundServiceType=\"connectedDevice\" android:icon=\"@drawable/icon\" android:isolatedProcess=\"true\" android:label=\"TestActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:process=\"com.contoso.process.testactivity_process\" android:roundIcon=\"@drawable/icon\"";
+			string expectedOutput = "android:name=\"com.contoso.TestActivity\" android:directBootAware=\"true\" android:enabled=\"true\" android:exported=\"true\" android:foregroundServiceType=\"connectedDevice\" android:icon=\"@drawable/icon\" android:isolatedProcess=\"true\" android:label=\"TestActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:process=\"com.contoso.process.testactivity_process\" android:roundIcon=\"@drawable/icon\"";
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
-				ManifestMerger = manifestMerger,
 			};
 			proj.SetRuntime (runtime);
 

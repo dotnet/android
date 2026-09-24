@@ -61,10 +61,7 @@ static class ComponentElementBuilder
 			element.Add (CreateMetaDataElement (meta));
 		}
 
-		// The legacy ManifestDocumentElement.ToElement sorts attributes alphabetically
-		// (specified.OrderBy (e => e)). Match that ordering so the generated manifest is
-		// byte-compatible with the legacy path when AndroidManifestMerger='legacy' (the
-		// manifestmerger.jar path re-sorts attributes itself, so this is also safe there).
+		// Match ManifestDocumentElement.ToElement's attribute ordering.
 		SortAttributesAlphabetically (element);
 
 		return element;

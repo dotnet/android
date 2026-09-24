@@ -39,7 +39,7 @@ public record GeneratedAssembly (string Name, Stream Content);
 public record GeneratedJavaSource (string RelativePath, string Content);
 
 /// <summary>
-/// The in-memory result of manifest generation: the merged document and
+/// The in-memory result of manifest generation: the application document and
 /// any additional content provider class names for ApplicationRegistration.java.
 /// </summary>
 public record GeneratedManifest (XDocument Document, string[] AdditionalProviderSources);
@@ -60,5 +60,4 @@ public record ManifestConfig (
 	bool EmbedAssemblies = false,
 	string? ManifestPlaceholders = null,
 	string? CheckedBuild = null,
-	string? ApplicationJavaClass = null,
-	IReadOnlyList<string>? LibraryManifests = null);
+	string? ApplicationJavaClass = null);

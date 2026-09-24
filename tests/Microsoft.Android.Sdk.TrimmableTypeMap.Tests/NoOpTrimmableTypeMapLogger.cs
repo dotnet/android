@@ -12,7 +12,6 @@ class NoOpTrimmableTypeMapLogger : ITrimmableTypeMapLogger
 	public virtual void LogGeneratedJcwFilesInfo (int sourceCount) { }
 	public virtual void LogRootingManifestReferencedTypeInfo (string javaTypeName, string managedTypeName) { }
 	public virtual void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) { }
-	public virtual void LogLibraryManifestMergeWarning (string message) { }
 	public virtual void LogInvalidManifestPlaceholderWarning (string placeholders) { }
 	public virtual void LogUnresolvableJavaPeerSkippedWarning (
 		string managedTypeName,

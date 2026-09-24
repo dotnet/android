@@ -1716,15 +1716,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unhandled exception merging `AndroidManifest.xml`: {0}.
-        /// </summary>
-        public static string XA4302 {
-            get {
-                return ResourceManager.GetString("XA4302", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error extracting resources from &quot;{0}&quot;: {1}.
         /// </summary>
         public static string XA4303 {
