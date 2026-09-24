@@ -332,6 +332,43 @@ $definitions = $ast.FindAll({
 }, $false)
 Assert ($definitions.Count -eq 2) 'Production receipt helpers found'
 foreach ($definition in $definitions) { . ([scriptblock]::Create($definition.Extent.Text)) }
+$gradleScope = $ast.Find({
+    param ($node)
+    $node -is [Management.Automation.Language.TryStatementAst] -and
+        $null -ne $node.Finally -and $node.Finally.Extent.Text.Contains('$env:GRADLEARGS = $previousGradleArgs')
+}, $true)
+Assert ($null -ne $gradleScope) 'Production scoped Gradle environment found'
+& {
+    $saved = $env:GRADLEARGS
+    $fixtureBase = $out
+    $productionScriptRoot = "$root\build-tools\scripts"
+    $target = 'jenkins'; $makeArguments = @('fixture-only')
+    $code = [scriptblock]::Create($gradleScope.Extent.Text.Replace('$IsMacOS', '$fixtureIsMacOS').Replace('$PSScriptRoot', '$productionScriptRoot'))
+    # Only the make process is modeled here; execute actual environment/retention/finally code.
+    function Invoke-Recorded {
+        $expected = if ($fixtureIsMacOS) { $previousGradleArgs } else {
+            $prefix = if ([string]::IsNullOrWhiteSpace($previousGradleArgs)) { '--stacktrace --no-daemon' } else { $previousGradleArgs }
+            "$prefix --init-script `"$(Join-Path $productionScriptRoot 'guest-readiness-repositories.gradle')`""
+        }
+        Assert ($env:GRADLEARGS -ceq $expected) 'Make receives quoted script path and existing Gradle options; Mac receives unchanged environment'
+        if ($failMake) { throw 'fixture make failure' }
+    }
+    try {
+        foreach ($fixtureIsMacOS in @($false, $true)) {
+            foreach ($previousGradleArgs in @($null, '--warning-mode all')) {
+                foreach ($failMake in @($false, $true)) {
+                    $env:GRADLEARGS = $previousGradleArgs
+                    $out = Join-Path $fixtureBase ('gradle scope ' + [Guid]::NewGuid().ToString('N'))
+                    New-Item -ItemType Directory -Force $out | Out-Null
+                    $receipt = [pscustomobject]@{ files = [Collections.Generic.List[object]]::new() }
+                    if ($failMake) { Reject { . $code } 'fixture make failure' } else { . $code }
+                    Assert ($env:GRADLEARGS -ceq $previousGradleArgs) 'Gradle environment restored after success or failure'
+                    Assert ($receipt.files.Count -eq $(if ($fixtureIsMacOS) { 0 } else { 1 })) 'Only affected hosts retain selected init-script bytes'
+                }
+            }
+        }
+    } finally { $env:GRADLEARGS = $saved }
+}
 $bindingDirectory = Join-Path $out ('binding-case-' + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory $bindingDirectory | Out-Null
 $expectedArguments = @('jenkins', 'CONFIGURATION=Debug', 'PREPARE_CI=1', 'PREPARE_AUTOPROVISION=1',

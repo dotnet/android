@@ -1,0 +1,25 @@
+buildscript {
+    repositories {
+        maven { url = 'https://buildscript.invalid/maven' }
+    }
+}
+plugins { id 'java' }
+allprojects {
+    buildscript { repositories { mavenCentral() } }
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = 'https://kotlin.bintray.com/kotlinx' }
+    }
+    tasks.register('assertRepositories') {
+        doLast {
+            def expectedMirror = providers.gradleProperty('expectMirror').get() == 'true'
+            def mirror = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1'
+            [repositories, buildscript.repositories].each { repositories ->
+                def maven = repositories.withType(org.gradle.api.artifacts.repositories.MavenArtifactRepository)
+                assert !maven.empty
+                assert maven.every { (it.url.toString() == mirror) == expectedMirror }
+            }
+        }
+    }
+}

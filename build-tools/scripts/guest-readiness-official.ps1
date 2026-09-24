@@ -177,7 +177,17 @@ try {
             $receipt.files.Add((Copy-GuestReceiptFile $buildPath $copy))
             Write-GuestProducerReceipt $receipt $receiptPath
         }
-        Invoke-Recorded "make-$target" make $makeArguments | Out-Null
+        $previousGradleArgs = $env:GRADLEARGS
+        try {
+            if (-not $IsMacOS) {
+                $gradleInit = Join-Path $PSScriptRoot 'guest-readiness-repositories.gradle'
+                $receipt.files.Add((Copy-GuestReceiptFile $gradleInit (Join-Path $out 'guest-readiness-repositories.gradle')))
+                $gradleArguments = if ([string]::IsNullOrWhiteSpace($previousGradleArgs)) { '--stacktrace --no-daemon' } else { $previousGradleArgs }
+                # Environment reaches both root and pinned Java.Interop MSBuild projects.
+                $env:GRADLEARGS = "$gradleArguments --init-script `"$gradleInit`""
+            }
+            Invoke-Recorded "make-$target" make $makeArguments | Out-Null
+        } finally { $env:GRADLEARGS = $previousGradleArgs }
         if ($Phase -eq 'Pack') {
             $directory = Join-Path $root "bin/Build$env:GUEST_CONFIGURATION/nuget-unsigned"
             $receipt.files.Add((Copy-GuestReceiptFile (Join-Path $directory 'SignList.xml') (Join-Path $out 'SignList.xml')))

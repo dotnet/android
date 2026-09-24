@@ -1,0 +1,22 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+buildscript {
+    repositories { maven { url = 'https://settings.invalid/maven' } }
+}
+dependencyResolutionManagement {
+    repositories { maven { url = 'https://dependencies.invalid/maven' } }
+}
+rootProject.name = 'guest-repository-test'
+include 'child'
+
+def expectedMirror = providers.gradleProperty('expectMirror').get() == 'true'
+def mirror = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1'
+[pluginManagement.repositories, dependencyResolutionManagement.repositories, buildscript.repositories].each { repositories ->
+    assert !repositories.empty
+    assert repositories.every { (it.url.toString() == mirror) == expectedMirror }
+}

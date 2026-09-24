@@ -1,0 +1,27 @@
+import org.gradle.api.artifacts.repositories.MavenArtifactRepository
+
+// Explicit diagnostic --init-script only. Same anonymous CFSClean feed as
+// f1052b05df0157cc4ed10b1151b34b31b8cfcae2 eng/gradle/*-repositories.gradle.
+def mirror = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1'
+def routeRepositories = { repositories ->
+    // Gradle also adds read-only plugin repository adapters; their underlying
+    // repositories are already routed in beforeSettings.
+    repositories.withType(MavenArtifactRepository).all { repository ->
+        repository.setUrl(mirror)
+        repository.setArtifactUrls([])
+    }
+    repositories.maven {
+        name = 'dotnet-public-maven'
+        url = mirror
+    }
+}
+
+gradle.beforeSettings { settings ->
+    routeRepositories(settings.pluginManagement.repositories)
+    routeRepositories(settings.dependencyResolutionManagement.repositories)
+    routeRepositories(settings.buildscript.repositories)
+}
+gradle.beforeProject { project ->
+    routeRepositories(project.buildscript.repositories)
+    routeRepositories(project.repositories)
+}

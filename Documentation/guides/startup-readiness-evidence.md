@@ -286,6 +286,32 @@ Tests check the case-sensitive Git filename `NuGet.config`, ordinary nested
 MSBuild environment propagation, and real NuGet config selection; no global
 NuGet policy or Windows package-version override is introduced.
 
+The diagnostic Windows/Linux execution paths also pass
+`--init-script ".../guest-readiness-repositories.gradle"` through the existing
+`GradleArgs` environment/MSBuild property. The script routes Maven repositories
+for settings plugins, settings dependencies/buildscript, and project
+dependencies/buildscript to the anonymous `dotnet-public-maven` feed. This is
+the CFSClean mirror used by immutable successful source
+`f1052b05df0157cc4ed10b1151b34b31b8cfcae2` in
+`eng/gradle/{plugin,dependency}-repositories.gradle`. Lifecycle hooks apply before
+settings/project evaluation, including the unchanged Java.Interop submodule.
+The Linux wrapper retains the script bytes in its existing receipt, preserves
+existing Gradle options, and restores its environment even when Make fails.
+The Windows diagnostic job uses its actual self-checkout path. No implicit
+conversion of MSBuild `RunningOnCI` into an environment variable is assumed.
+Mac and default-off builds keep their ordinary Gradle repository selection.
+No dependency/plugin versions, integrity checks, credentials, cache seeding or
+network policy are changed.
+
+`test-gradle-repositories.ps1 -JavaHome <existing-jdk>` exercises the held Gradle
+wrapper offline with ON/OFF settings/project/child-project repository fixtures
+and paths containing spaces. It also evaluates the three actual affected
+MSBuild projects with uppercase environment input and unchanged defaults.
+Separate real-target validation built/copied `java-source-utils.jar`,
+`manifestmerger.jar` and the normal ProGuard rules using their unchanged MSBuild
+targets and anonymous mirror. These are host-build observations, not isolated
+CI, whole-solution audit, signing or guest-execution qualification.
+
 No audit setting is disabled or overridden. The approved `dotnet-public` service
 index inspected for this change exposes no `VulnerabilityInfo` resource, so root
 feed selection alone does **not** establish vulnerability-data coverage. Actual

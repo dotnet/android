@@ -32,6 +32,7 @@ stages:
       variables:
         # MSBuild and child processes inherit the single-repository checkout's config.
         RestoreConfigFile: $(Build.Repository.LocalPath)\NuGet.config
+        GradleArgs: --stacktrace --no-daemon --init-script "$(Build.Repository.LocalPath)\build-tools\scripts\guest-readiness-repositories.gradle"
     steps:
     - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
       parameters:

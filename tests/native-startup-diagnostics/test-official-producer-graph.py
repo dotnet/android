@@ -73,7 +73,10 @@ old_windows = yaml.safe_load(subprocess.check_output(["git", "show", f"{BASELINE
 assert remove_mode_parameters(expand(windows, False)) == old_windows, "Default Windows graph changed"
 diagnostic_windows = expand(windows, True)
 windows_job = diagnostic_windows["stages"][0]["jobs"][0]
-assert windows_job["variables"] == {"RestoreConfigFile": r"$(Build.Repository.LocalPath)\NuGet.config"}
+assert windows_job["variables"] == {
+    "RestoreConfigFile": r"$(Build.Repository.LocalPath)\NuGet.config",
+    "GradleArgs": r'--stacktrace --no-daemon --init-script "$(Build.Repository.LocalPath)\build-tools\scripts\guest-readiness-repositories.gradle"',
+}
 assert windows_job["steps"] == old_windows["stages"][0]["jobs"][0]["steps"], "Normal Windows command sequence changed"
 tracked_root_files = subprocess.check_output(
     ["git", "ls-tree", "--name-only", BASELINE], cwd=ROOT, text=True).splitlines()
