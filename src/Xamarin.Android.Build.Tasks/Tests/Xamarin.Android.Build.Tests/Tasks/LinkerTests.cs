@@ -245,7 +245,7 @@ namespace Xamarin.Android.Build.Tests
 			Directory.Delete (path, true);
 		}
 
-		static void CreateAbstractIfaceImplementation (string assemblyPath, AssemblyDefinition android)
+		static void CreateAbstractIfaceImplementation (string assemblyPath, AssemblyDefinition android, bool writeSymbols = false)
 		{
 			using (var assm = AssemblyDefinition.CreateAssembly (new AssemblyNameDefinition ("DimTest", new Version ()), "DimTest", ModuleKind.Dll)) {
 				var void_type = assm.MainModule.ImportReference (typeof (void));
@@ -267,8 +267,197 @@ namespace Xamarin.Android.Build.Tests
 				impl.Interfaces.Add (new InterfaceImplementation (iface));
 
 				assm.MainModule.Types.Add (impl);
-				assm.Write (assemblyPath);
+				var parameters = new WriterParameters { WriteSymbols = writeSymbols };
+				if (writeSymbols) {
+					parameters.SymbolWriterProvider = new PortablePdbWriterProvider ();
+				}
+				assm.Write (assemblyPath, parameters);
 			}
+		}
+
+		[Test]
+		public void PreTrimmingFixAbstractMethodsWritesOnlyModifiedCopies ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var outputDirectory = Path.Combine (path, "prelink");
+			Directory.CreateDirectory (path);
+			try {
+				var androidPath = Path.Combine (path, "Mono.Android.dll");
+				var libraryPath = Path.Combine (path, "MyAssembly.dll");
+				using (var android = CreateFauxMonoAndroidAssembly ()) {
+					android.Write (androidPath);
+					CreateAbstractIfaceImplementation (libraryPath, android);
+				}
+
+				var library = new Microsoft.Build.Utilities.TaskItem (libraryPath);
+				library.SetMetadata ("PostprocessAssembly", "True");
+				var task = new PreTrimmingFixAbstractMethods {
+					Assemblies = [new Microsoft.Build.Utilities.TaskItem (typeof (object).Assembly.Location),
+						new Microsoft.Build.Utilities.TaskItem (androidPath), library],
+					TargetName = "App",
+					OutputDirectory = outputDirectory,
+					Deterministic = true,
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+				};
+
+				Assert.IsTrue (task.Execute ());
+				var copy = Path.Combine (outputDirectory, "MyAssembly.dll");
+				FileAssert.Exists (copy);
+				Assert.AreEqual (copy, task.ModifiedAssemblies.Single ().ItemSpec);
+				Assert.IsFalse (File.Exists (Path.Combine (outputDirectory, "Mono.Android.dll")));
+
+				using (var original = AssemblyDefinition.ReadAssembly (libraryPath))
+				using (var modified = AssemblyDefinition.ReadAssembly (copy)) {
+					Assert.IsFalse (original.MainModule.GetType ("MyNamespace.MyClass").Methods.Any (method => method.Name == "MyAbstractMethod"));
+					var newMethod = modified.MainModule.GetType ("MyNamespace.MyClass").Methods.Single (method => method.Name == "MyAbstractMethod");
+					Assert.IsTrue (newMethod.Body.Instructions.Any (instruction =>
+						instruction.Operand is MethodReference constructor &&
+						constructor.DeclaringType.FullName == "Java.Lang.AbstractMethodError"));
+				}
+
+				File.SetLastWriteTimeUtc (copy, DateTime.UtcNow.AddMinutes (-2));
+				var writeTime = File.GetLastWriteTimeUtc (copy);
+				Assert.IsTrue (task.Execute ());
+				Assert.AreEqual (writeTime, File.GetLastWriteTimeUtc (copy),
+					"an unchanged abstract-method fixup must not invalidate FastDeploy inputs");
+
+				var updatedLibraryPath = Path.Combine (path, "UpdatedMyAssembly.dll");
+				using (var assembly = AssemblyDefinition.ReadAssembly (libraryPath)) {
+					var implementation = assembly.MainModule.GetType ("MyNamespace.MyClass");
+					var method = new MethodDefinition ("MyAbstractMethod", MethodAttributes.Public | MethodAttributes.Virtual,
+						assembly.MainModule.TypeSystem.Void);
+					method.Body.Instructions.Add (Instruction.Create (OpCodes.Ret));
+					implementation.Methods.Add (method);
+					assembly.Write (updatedLibraryPath);
+				}
+				File.Copy (updatedLibraryPath, libraryPath, overwrite: true);
+				Assert.IsTrue (task.Execute ());
+				Assert.IsEmpty (task.ModifiedAssemblies);
+				Assert.IsFalse (File.Exists (copy), "a stale prelink copy must not replace the updated library");
+			} finally {
+				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		[Test]
+		public void PreTrimmingFixAbstractMethodsPreservesUnchangedSymbols ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var outputDirectory = Path.Combine (path, "prelink");
+			Directory.CreateDirectory (path);
+			try {
+				var androidPath = Path.Combine (path, "Mono.Android.dll");
+				var libraryPath = Path.Combine (path, "MyAssembly.dll");
+				using (var android = CreateFauxMonoAndroidAssembly ()) {
+					android.Write (androidPath);
+					CreateAbstractIfaceImplementation (libraryPath, android, writeSymbols: true);
+				}
+
+				var library = new Microsoft.Build.Utilities.TaskItem (libraryPath);
+				library.SetMetadata ("PostprocessAssembly", "true");
+				var task = new PreTrimmingFixAbstractMethods {
+					Assemblies = [new Microsoft.Build.Utilities.TaskItem (typeof (object).Assembly.Location),
+						new Microsoft.Build.Utilities.TaskItem (androidPath), library],
+					TargetName = "App",
+					OutputDirectory = outputDirectory,
+					Deterministic = true,
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+				};
+
+				Assert.IsTrue (task.Execute ());
+				var outputDll = Path.Combine (outputDirectory, "MyAssembly.dll");
+				var outputPdb = Path.ChangeExtension (outputDll, ".pdb");
+				FileAssert.Exists (outputDll);
+				FileAssert.Exists (outputPdb);
+				File.SetLastWriteTimeUtc (outputDll, DateTime.UtcNow.AddMinutes (-2));
+				File.SetLastWriteTimeUtc (outputPdb, DateTime.UtcNow.AddMinutes (-2));
+				var dllWriteTime = File.GetLastWriteTimeUtc (outputDll);
+				var pdbWriteTime = File.GetLastWriteTimeUtc (outputPdb);
+
+				Assert.IsTrue (task.Execute ());
+				Assert.AreEqual (dllWriteTime, File.GetLastWriteTimeUtc (outputDll));
+				Assert.AreEqual (pdbWriteTime, File.GetLastWriteTimeUtc (outputPdb));
+				Assert.IsFalse (File.Exists (outputDll + ".tmp.dll"));
+				Assert.IsFalse (File.Exists (Path.ChangeExtension (outputDll + ".tmp.dll", ".pdb")));
+			} finally {
+				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		[Test]
+		public void PreTrimmingFixAbstractMethodsUsesSelectedBindingVersion ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var oldDirectory = Path.Combine (path, "old");
+			var newDirectory = Path.Combine (path, "new");
+			Directory.CreateDirectory (oldDirectory);
+			Directory.CreateDirectory (newDirectory);
+			try {
+				var androidPath = Path.Combine (path, "Mono.Android.dll");
+				var oldBindingPath = Path.Combine (oldDirectory, "TestBinding.dll");
+				var newBindingPath = Path.Combine (newDirectory, "TestBinding.dll");
+				var libraryPath = Path.Combine (oldDirectory, "LegacyLibrary.dll");
+				var nativePath = Path.Combine (oldDirectory, "NativeDependency.dll");
+				File.WriteAllBytes (nativePath, [0, 1, 2, 3]);
+				using (var android = CreateFauxMonoAndroidAssembly ()) {
+					android.Write (androidPath);
+					CreateBindingInterface (oldBindingPath, includeNewMethod: false);
+					CreateBindingInterface (newBindingPath, includeNewMethod: true);
+					using var oldBinding = AssemblyDefinition.ReadAssembly (oldBindingPath);
+					using var library = AssemblyDefinition.CreateAssembly (
+						new AssemblyNameDefinition ("LegacyLibrary", new Version (1, 0)), "LegacyLibrary", ModuleKind.Dll);
+					var implementation = new TypeDefinition ("Legacy", "Cursor", TypeAttributes.Public,
+						library.MainModule.ImportReference (android.MainModule.GetType ("Java.Lang.Object")));
+					implementation.Interfaces.Add (new InterfaceImplementation (
+						library.MainModule.ImportReference (oldBinding.MainModule.GetType ("Test.Bindings.ICursor"))));
+					var method = new MethodDefinition ("Method", MethodAttributes.Public | MethodAttributes.Virtual,
+						library.MainModule.TypeSystem.Void);
+					method.Body.Instructions.Add (Instruction.Create (OpCodes.Ret));
+					implementation.Methods.Add (method);
+					library.MainModule.Types.Add (implementation);
+					library.Write (libraryPath);
+				}
+
+				var oldLibrary = new Microsoft.Build.Utilities.TaskItem (libraryPath);
+				oldLibrary.SetMetadata ("PostprocessAssembly", "true");
+				var newBinding = new Microsoft.Build.Utilities.TaskItem (newBindingPath);
+				newBinding.SetMetadata ("PostprocessAssembly", "true");
+				var task = new PreTrimmingFixAbstractMethods {
+					Assemblies = [new Microsoft.Build.Utilities.TaskItem (nativePath), oldLibrary, newBinding,
+						new Microsoft.Build.Utilities.TaskItem (androidPath),
+						new Microsoft.Build.Utilities.TaskItem (typeof (object).Assembly.Location)],
+					TargetName = "App",
+					OutputDirectory = Path.Combine (path, "prelink"),
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+				};
+
+				Assert.IsTrue (task.Execute ());
+				var copy = Path.Combine (task.OutputDirectory, "LegacyLibrary.dll");
+				FileAssert.Exists (copy);
+				using var modified = AssemblyDefinition.ReadAssembly (copy);
+				Assert.IsTrue (modified.MainModule.GetType ("Legacy.Cursor").Methods.Any (member => member.Name == "NewMethod"),
+					"the current binding interface, not the nearby older DLL, must determine missing methods");
+			} finally {
+				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		static void CreateBindingInterface (string path, bool includeNewMethod)
+		{
+			using var assembly = AssemblyDefinition.CreateAssembly (
+				new AssemblyNameDefinition ("TestBinding", new Version (1, 0)), "TestBinding", ModuleKind.Dll);
+			var cursor = new TypeDefinition ("Test.Bindings", "ICursor",
+				TypeAttributes.Interface | TypeAttributes.Abstract | TypeAttributes.Public);
+			cursor.Methods.Add (new MethodDefinition ("Method",
+				MethodAttributes.Public | MethodAttributes.Abstract | MethodAttributes.Virtual,
+				assembly.MainModule.TypeSystem.Void));
+			if (includeNewMethod) {
+				cursor.Methods.Add (new MethodDefinition ("NewMethod",
+					MethodAttributes.Public | MethodAttributes.Abstract | MethodAttributes.Virtual,
+					assembly.MainModule.TypeSystem.Void));
+			}
+			assembly.MainModule.Types.Add (cursor);
+			assembly.Write (path);
 		}
 
 		[Test]
