@@ -430,9 +430,7 @@ A bool property, that determines whether or not LLVM marshal methods are enabled
 LLVM marshal methods are an app startup optimization which uses native entry points
 for Java `native` method registration.
 
-This property defaults to `True` for Mono applications unless the project uses
-Razor or [`$(PublishReadyToRun)`](#publishreadytorun). It defaults to `False`
-otherwise.
+This property defaults to `False`.
 
 This property cannot be set to `true` when
 [`$(PublishReadyToRun)`](#publishreadytorun) is `true`. Setting both properties
@@ -1554,6 +1552,7 @@ Deprecated in .NET 7. For supported .NET 10-and-earlier projects that use
 Mono, migrate to the
 [`$(RunAOTCompilation)`](#runaotcompilation) MSBuild property instead.
 Specifying `$(AotAssemblies)`, including setting it to `false`, emits
+the [XA1029](../messages/xa1029.md) warning.
 Setting it to `true` for CoreCLR or NativeAOT causes the build-stopping
 [XA1044](../messages/xa1044.md) error when `$(RunAOTCompilation)` is
 unset (or otherwise evaluates to `true`), because the defaulting logic
