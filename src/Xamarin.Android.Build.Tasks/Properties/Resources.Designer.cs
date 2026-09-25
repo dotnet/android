@@ -837,7 +837,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;BundleAssemblies&apos; property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the &apos;AndroidUseAssemblyStore&apos; and &apos;AndroidEnableAssemblyCompression&apos; properties..
+        ///   Looks up a localized string similar to The &apos;BundleAssemblies&apos; property is deprecated and no longer affects the build. Remove it. For supported .NET 10-and-earlier Mono projects, use &apos;AndroidUseAssemblyStore&apos; with &apos;AndroidEnableAssemblyCompression&apos; for the former behavior. .NET 11 CoreCLR controls packaged assembly-store behavior and needs no replacement setting..
         /// </summary>
         public static string XA1035 {
             get {
