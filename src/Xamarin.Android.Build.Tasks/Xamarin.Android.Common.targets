@@ -263,14 +263,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 	<_PackagedResources>$(IntermediateOutputPath)android\bin\packaged_resources</_PackagedResources>
 
-	<_AndroidSequencePointsMode Condition=" '$(_AndroidSequencePointsMode)' == ''">None</_AndroidSequencePointsMode>
 	<_AndroidBuildPropertiesCache>$(IntermediateOutputPath)build.props</_AndroidBuildPropertiesCache>
 	<_AdbPropertiesCache>$(IntermediateOutputPath)adb.props</_AdbPropertiesCache>
 	<AndroidMakeBundleKeepTemporaryFiles Condition=" '$(AndroidMakeBundleKeepTemporaryFiles)' == '' ">False</AndroidMakeBundleKeepTemporaryFiles>
 
 	<!-- If true it will cause all the assemblies in the apk to be preloaded on startup time -->
-	<_AndroidEnablePreloadAssembliesDefault>False</_AndroidEnablePreloadAssembliesDefault>
-	<AndroidEnablePreloadAssemblies Condition=" '$(AndroidEnablePreloadAssemblies)' == '' ">$(_AndroidEnablePreloadAssembliesDefault)</AndroidEnablePreloadAssemblies>
 	<_NativeAssemblySourceDir>$(IntermediateOutputPath)android\</_NativeAssemblySourceDir>
 	<_SkipJniAddNativeMethodRegistrationAttributeScan Condition=" '$(_SkipJniAddNativeMethodRegistrationAttributeScan)' == '' ">False</_SkipJniAddNativeMethodRegistrationAttributeScan>
 
@@ -938,7 +935,6 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidSdkPath=$(_AndroidSdkDirectory)" />
 		<_PropertyCacheItems Include="AndroidNdkPath=$(_AndroidNdkDirectory)" />
 		<_PropertyCacheItems Include="JavaSdkPath=$(_JavaSdkDirectory)" />
-		<_PropertyCacheItems Include="AndroidSequencePointsMode=$(_AndroidSequencePointsMode)" />
 		<_PropertyCacheItems Include="AndroidNETSdkVersion=$(AndroidNETSdkVersion)" />
 		<_PropertyCacheItems Include="AndroidUseLatestPlatformSdk=$(AndroidUseLatestPlatformSdk)" />
 		<_PropertyCacheItems Include="TargetFrameworkVersion=$(TargetFrameworkVersion)" />
@@ -954,6 +950,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="_AndroidUseMarshalMethods=$(_AndroidUseMarshalMethods)" />
 		<_PropertyCacheItems Include="_AndroidJcwCodegenTarget=$(_AndroidJcwCodegenTarget)" />
 		<_PropertyCacheItems Include="_AndroidAssemblyStoreCompressionLevel=$(_AndroidAssemblyStoreCompressionLevel)" />
+		<_PropertyCacheItems Include="_AndroidFastTiming=$(_AndroidFastTiming)" />
 	</ItemGroup>
 	<WriteLinesToFile
 			File="$(_AndroidBuildPropertiesCache)"
@@ -1527,7 +1524,7 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <AndroidManifestOverlay
         Include="$(MSBuildThisFileDirectory)\ManifestOverlays\Timing.xml"
-        Condition=" '$(_AndroidFastTiming)' == 'True' "
+        Condition=" '$(_AndroidFastTiming)' == 'True' and '$(_AndroidRuntime)' == 'CoreCLR' "
     />
   </ItemGroup>
   <ManifestMerger
@@ -1618,7 +1615,6 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateEnvironmentFiles" DependsOnTargets="_AndroidConfigureHotReloadEnvironment">
   <ItemGroup>
-    <_GeneratedAndroidEnvironment Include="mono.enable_assembly_preload=0" Condition=" '$(AndroidEnablePreloadAssemblies)' != 'True' " />
     <_GeneratedAndroidEnvironment Include="DOTNET_MODIFIABLE_ASSEMBLIES=Debug" Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' " />
     <_GeneratedAndroidEnvironment Include="DOTNET_DiagnosticPorts=$(DiagnosticConfiguration)" Condition=" '$(DiagnosticConfiguration)' != '' " />
     <_GeneratedAndroidEnvironment Include="DOTNET_EnableCrashReport=1" Condition=" '$(EnableCrashReport)' == 'true' " />
@@ -1758,13 +1754,9 @@ because xbuild doesn't support framework reference assemblies.
       NativeLibrariesAlwaysJniPreload="@(_AndroidNativeLibraryAlwaysJniPreload)"
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
       Environments="@(_EnvironmentFiles)"
-      Debug="$(AndroidIncludeDebugSymbols)"
       EmitLlvmIrComments="$(_AndroidEmitLlvmIrComments)"
-      AndroidSequencePointsMode="$(_SequencePointsMode)"
-      EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
       SupportedAbis="@(_BuildTargetAbis)"
       AndroidPackageName="$(_AndroidPackage)"
-      EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       UseAssemblyStore="$(_AndroidUseAssemblyStore)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
@@ -1779,7 +1771,6 @@ because xbuild doesn't support framework reference assemblies.
       AndroidRuntime="$(_AndroidRuntime)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)"
-      MonoComponents="@(_MonoComponent)"
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
       ResolvedAssemblies="@(_ResolvedAssemblies)"

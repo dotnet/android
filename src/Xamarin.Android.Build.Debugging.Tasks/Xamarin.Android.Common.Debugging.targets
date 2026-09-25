@@ -182,7 +182,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 			GdbTargetPort="$(AndroidGdbTargetPort)"
 	/>
 	<Exec Command="&quot;$(_AndroidPlatformToolsDirectory)adb&quot; $(AdbTarget) forward tcp:$(AndroidGdbTargetPort) tcp:$(AndroidGdbHostPort)" />
-	<Exec Command="&quot;$(_AndroidPlatformToolsDirectory)adb&quot; $(AdbTarget) shell setprop debug.mono.gdbport $(AndroidGdbTargetPort)" />
 </Target>
 
 <Target Name="_GetProjectNdkBuildSymbols"

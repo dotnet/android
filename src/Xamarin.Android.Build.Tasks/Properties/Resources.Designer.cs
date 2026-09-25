@@ -331,15 +331,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid value for `$(AndroidSequencePointsMode)`: {0}.
-        /// </summary>
-        public static string XA0104 {
-            get {
-                return ResourceManager.GetString("XA0104", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project..
         /// </summary>
         public static string XA0105 {
@@ -996,15 +987,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA2000 {
             get {
                 return ResourceManager.GetString("XA2000", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Support for the &apos;MONO_GC_PARAMS=bridge-implementation=old&apos; value will be removed in .NET 7..
-        /// </summary>
-        public static string XA2000_gcParams_bridgeImpl {
-            get {
-                return ResourceManager.GetString("XA2000_gcParams_bridgeImpl", resourceCulture);
             }
         }
         

@@ -233,10 +233,6 @@ Note: the Android Designer is incompatible with Java SDK 11.0: https://aka.ms/vs
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
 {0} - The library name.</comment>
   </data>
-  <data name="XA0104" xml:space="preserve">
-    <value>Invalid value for `$(AndroidSequencePointsMode)`: {0}</value>
-    <comment>The following are literal names and should not be translated: `$(AndroidSequencePointsMode)`</comment>
-  </data>
   <data name="XA0105" xml:space="preserve">
     <value>The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -494,9 +490,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
     <value>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
-  </data>
-  <data name="XA2000_gcParams_bridgeImpl" xml:space="preserve">
-    <value>Support for the 'MONO_GC_PARAMS=bridge-implementation=old' value will be removed in .NET 7.</value>
   </data>
   <data name="XA2001" xml:space="preserve">
     <value>Source file '{0}' could not be found.</value>

@@ -181,7 +181,6 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 	StructureInfo? assemblyStoreRuntimeDataStructureInfo;
 	StructureInfo? appEnvironmentVariableStructureInfo;
 
-	public bool UsesAssemblyPreload { get; set; }
 	public string AndroidPackageName { get; set; } = "";
 	public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
 	public int NumberOfAssembliesInApk { get; set; }
@@ -266,7 +265,6 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 
 		DsoCacheState dsoState = InitDSOCache ();
 		var app_cfg = new ApplicationConfig {
-			uses_assembly_preload = UsesAssemblyPreload,
 			jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
 			marshal_methods_enabled = MarshalMethodsEnabled,
 			ignore_split_configs = IgnoreSplitConfigs,

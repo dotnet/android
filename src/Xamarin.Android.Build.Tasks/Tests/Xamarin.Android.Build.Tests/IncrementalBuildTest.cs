@@ -810,6 +810,38 @@ namespace Lib2
 		}
 
 		[Test]
+		public void FastTimingManifestIncremental ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				ManifestMerger = "manifestmerger.jar"
+			};
+			proj.SetRuntime (runtime);
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should succeed");
+				string manifest = b.Output.GetIntermediaryAsText ("android/AndroidManifest.xml");
+				StringAssert.DoesNotContain ("mono.android.app.DumpTimingData", manifest);
+
+				proj.SetProperty ("_AndroidFastTiming", "True");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should succeed");
+				b.Output.AssertTargetIsNotSkipped ("_ManifestMerger");
+
+				manifest = b.Output.GetIntermediaryAsText ("android/AndroidManifest.xml");
+				if (runtime == AndroidRuntime.CoreCLR) {
+					StringAssert.Contains ("mono.android.app.DumpTimingData", manifest);
+					StringAssert.Contains ("mono.android.app.DUMP_TIMING_DATA", manifest);
+				} else {
+					StringAssert.DoesNotContain ("mono.android.app.DumpTimingData", manifest);
+					StringAssert.DoesNotContain ("mono.android.app.DUMP_TIMING_DATA", manifest);
+				}
+			}
+		}
+
+		[Test]
 		public void AndroidDefineConstantsAreOrderIndependent ()
 		{
 			var path = Path.Combine ("temp", TestName);

@@ -2814,7 +2814,7 @@ namespace UnnamedProject
 						TextContent = () => @"Foo=Bar
 Bar34=Foo55
 Empty=
-MONO_GC_PARAMS=bridge-implementation=new",
+CUSTOM_ENVIRONMENT_VALUE=custom",
 					}
 				}
 			};
@@ -2827,7 +2827,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		Console.WriteLine (""Foo="" + Environment.GetEnvironmentVariable(""Foo""));
 		Console.WriteLine (""Bar34="" + Environment.GetEnvironmentVariable(""Bar34""));
 		Console.WriteLine (""Empty="" + Environment.GetEnvironmentVariable(""Empty""));
-		Console.WriteLine (""MONO_GC_PARAMS="" + Environment.GetEnvironmentVariable(""MONO_GC_PARAMS""));
+		Console.WriteLine (""CUSTOM_ENVIRONMENT_VALUE="" + Environment.GetEnvironmentVariable(""CUSTOM_ENVIRONMENT_VALUE""));
 		Console.WriteLine (""DOTNET_MODIFIABLE_ASSEMBLIES="" + Environment.GetEnvironmentVariable(""DOTNET_MODIFIABLE_ASSEMBLIES""));
 		Console.WriteLine (""DOTNET_DiagnosticPorts="" + Environment.GetEnvironmentVariable(""DOTNET_DiagnosticPorts""));
 		");
@@ -2859,9 +2859,9 @@ MONO_GC_PARAMS=bridge-implementation=new",
 					"The Environment variable \"Empty\" was not set."
 			);
 			StringAssert.Contains (
-					"MONO_GC_PARAMS=bridge-implementation=new",
+					"CUSTOM_ENVIRONMENT_VALUE=custom",
 					logcatOutput,
-					"The Environment variable \"MONO_GC_PARAMS\" was not set to expected value \"bridge-implementation=new\"."
+					"The environment variable \"CUSTOM_ENVIRONMENT_VALUE\" was not set to the expected value \"custom\"."
 			);
 			StringAssert.Contains (
 					"DOTNET_DiagnosticPorts=127.0.0.1:9000,connect,nosuspend",
