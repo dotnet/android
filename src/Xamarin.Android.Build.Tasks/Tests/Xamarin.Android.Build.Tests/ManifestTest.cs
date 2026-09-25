@@ -954,7 +954,7 @@ using Android.Views;
 using Android.Widget;
 using AndroidX.Fragment.App;
 using Android.Util;
-[Activity (Label = ""TestActivity1"")]
+[Activity (Label = ""TestActivity1"", Exported = true)]
 [IntentFilter (new[]{Intent.ActionMain}, Categories = new[]{ ""com.xamarin.sample"" })]
 public class TestActivity1 : FragmentActivity {
 }
@@ -974,7 +974,7 @@ using Android.Views;
 using Android.Widget;
 using AndroidX.Fragment.App;
 using Android.Util;
-[Activity (Label = ""TestActivity2"")]
+[Activity (Label = ""TestActivity2"", Exported = true)]
 [IntentFilter (new[]{Intent.ActionMain}, Categories = new[]{ ""com.xamarin.sample"" })]
 public class TestActivity2 : FragmentActivity {
 }
