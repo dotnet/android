@@ -195,6 +195,7 @@
   <ItemGroup>
     <AndroidInterfaceDescription Include="Android.OS\IAidlProxyTest.aidl" />
     <AndroidJavaSource Include="java/net/dot/android/test/*.java" />
+    <AndroidJavaSource Include="java/net/dot/android/remap/*.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/test/InterfaceCollectionFixture.java" Bind="false" />
   </ItemGroup>
 

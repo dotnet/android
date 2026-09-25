@@ -171,7 +171,16 @@ static class JniRemappingLookup
 	}
 
 	internal static JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (string jniSourceType, string jniMethodName, string jniMethodSignature)
-		=> GetReplacementMethodInfo (jniSourceType, jniMethodName.AsSpan (), jniMethodSignature.AsSpan ());
+	{
+		var replacement = GetReplacementMethodInfo (jniSourceType, jniMethodName.AsSpan (), jniMethodSignature.AsSpan ());
+		if (replacement is not JniRuntime.ReplacementMethodInfo info)
+			return null;
+
+		info.SourceJniType = jniSourceType;
+		info.SourceJniMethodName = jniMethodName;
+		info.SourceJniMethodSignature = jniMethodSignature;
+		return info;
+	}
 
 	internal static unsafe JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (string jniSourceType, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 		=> GetReplacementMethodInfo (jniSourceType.AsSpan (), IntPtr.Zero, jniMethodName, jniMethodSignature);

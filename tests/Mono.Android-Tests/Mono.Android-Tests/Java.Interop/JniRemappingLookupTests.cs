@@ -20,10 +20,30 @@ namespace Java.InteropTests
 		}
 
 		[TestCase ("0/net/dot/android/remap/Before")]
+		[TestCase ("net/dot/android/remap/Between")]
 		[TestCase ("\ue000/net/dot/android/remap/After")]
 		public void ReplacementTypeLookupReturnsNullOutsideTable (string source)
 		{
 			Assert.IsNull (JniEnvironment.Runtime.TypeManager.GetReplacementType (source));
+		}
+
+		[Test]
+		public void IncomingRenamedPeerUsesReverseTypeWithLlvmIrTypeMap ()
+		{
+			if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
+				Assert.Ignore ("This test validates the nontrimmable LLVM-IR typemap path.");
+
+			Assert.AreEqual (
+				typeof (IncomingDeclaredPeer),
+				JniEnvironment.Runtime.TypeManager.GetType (new JniTypeSignature (IncomingDeclaredPeer.RuntimeJniName)));
+
+			var handle = JNIEnv.CreateInstance (IncomingDeclaredPeer.RuntimeJniName, "()V");
+			try {
+				using var peer = Java.Lang.Object.GetObject<Java.Lang.Object> (handle, JniHandleOwnership.DoNotTransfer);
+				Assert.IsInstanceOf<IncomingDeclaredPeer> (peer);
+			} finally {
+				JNIEnv.DeleteLocalRef (handle);
+			}
 		}
 
 		[TestCase ("(I)I", "exact", "(I)I")]
@@ -47,6 +67,9 @@ namespace Java.InteropTests
 			Assert.AreEqual (
 				targetSignature,
 				GetString (replacement.TargetJniMethodSignature, replacement.TargetJniMethodSignatureUtf8) ?? sourceSignature);
+			Assert.AreEqual ("net/dot/android/remap/ManagedLookup", replacement.SourceJniType);
+			Assert.AreEqual ("overload", replacement.SourceJniMethodName);
+			Assert.AreEqual (sourceSignature, replacement.SourceJniMethodSignature);
 		}
 
 		[TestCase ("I", "exactValue", "J")]
@@ -67,5 +90,26 @@ namespace Java.InteropTests
 
 		static string GetString (string value, IntPtr utf8)
 			=> utf8 == IntPtr.Zero ? value : Marshal.PtrToStringUTF8 (utf8);
+	}
+
+	[Register (DeclaredJniName, DoNotGenerateAcw = true)]
+	sealed class IncomingDeclaredPeer : Java.Lang.Object
+	{
+		public const string DeclaredJniName = "net/dot/android/remap/IncomingDeclaredPeer";
+		public const string RuntimeJniName = "net/dot/android/remap/IncomingRenamedPeer";
+
+		public IncomingDeclaredPeer (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+	}
+
+	[Register ("net/dot/android/remap/IncomingWrongPeer", DoNotGenerateAcw = true)]
+	sealed class IncomingWrongPeer : Java.Lang.Object
+	{
+		public IncomingWrongPeer (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
 	}
 }

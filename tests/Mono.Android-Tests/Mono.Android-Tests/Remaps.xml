@@ -17,6 +17,12 @@
   <replace-type
       from="net/dot/android/remap/Źródło"
       to="net/dot/android/remap/UnicodeTarget" />
+  <reverse-type
+      from="net/dot/android/remap/IncomingRenamedPeer"
+      to="net/dot/android/remap/IncomingDeclaredPeer" />
+  <reverse-type
+      from="net/dot/android/remap/IncomingDeclaredPeer"
+      to="net/dot/android/remap/IncomingWrongPeer" />
   <replace-method
       source-type="java/lang/Object"
       source-method-name="remappedToToString"

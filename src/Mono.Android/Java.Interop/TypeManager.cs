@@ -263,6 +263,8 @@ namespace Java.Interop {
 
 		static Type? GetJavaToManagedTypeCore (string class_name)
 		{
+			class_name = JniRemappingLookup.GetReverseType (class_name) ?? class_name;
+
 			if (TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out Type? type)) {
 				return type;
 			}
