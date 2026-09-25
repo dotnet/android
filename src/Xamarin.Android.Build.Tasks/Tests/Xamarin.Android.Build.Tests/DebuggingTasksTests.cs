@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Xamarin.Android.Build;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
-using AT = Xamarin.AndroidTools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -21,73 +20,19 @@ namespace Xamarin.Android.Build.Tests
 		{
 		}
 
-		// https://github.com/xamarin/monodroid/blob/63bbeb076d809c74811a8001d38bf2e9e8672627/tests/msbuild/nunit/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests/ResolveXamarinAndroidToolsTests.cs
-		[Test]
-		[Repeat (10)]
-		public void TestResolveToolsExists ()
+		[TestCase (null, "physical")]
+		[TestCase ("-s physical", "physical")]
+		[TestCase ("-d", "physical")]
+		[TestCase ("-e", "emulator-5554")]
+		public void AndroidHelperSelectsDevice (string target, string expected)
 		{
-			List<BuildErrorEventArgs> errors = new List<BuildErrorEventArgs>();
-			List<BuildMessageEventArgs> messages = new List<BuildMessageEventArgs>();
-
-			var path = Path.Combine ("temp", TestName);
-			if (Directory.Exists (Path.Combine (Root, path)))
-				Directory.Delete (Path.Combine (Root, path), recursive: true);
-
-			var engine = new MockBuildEngine (TestContext.Out, errors: errors, messages: messages);
-			var frameworksRoot = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "packs", "Microsoft.NETCore.App.Ref");
-			var mscorlibDll = Directory.GetFiles (frameworksRoot, "mscorlib.dll", SearchOption.AllDirectories).LastOrDefault ();
-			var frameworksPath = Path.GetDirectoryName (mscorlibDll);
-			var androidSdk = CreateFauxAndroidSdkDirectory (Path.Combine (path, "Sdk"), "24.0.1", new[]
-			{
-				new ApiInfo { Id = "23", Level = 23, Name = "Marshmallow", FrameworkVersion = "v6.0", Stable = true },
-				new ApiInfo { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
-				new ApiInfo { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1", Stable = true },
-				new ApiInfo { Id = "28", Level = 28, Name = "Pie", FrameworkVersion = "v9.0", Stable = true },
-			});
-			//var androidNdk = CreateFauxAndroidNdkDirectory (Path.Combine (path, "Ndk"));
-			var javaSdk = CreateFauxJavaSdkDirectory (Path.Combine(path, "Java"), "1.8.0", out string javaExe, out string javacExe);
-			var task = new ResolveXamarinAndroidTools () {
-				BuildEngine = engine,
-				AndroidNdkPath = null,
-				AndroidSdkPath = androidSdk,
-				JavaSdkPath = javaSdk,
-				MonoAndroidToolsPath = TestEnvironment.AndroidMSBuildDirectory,
-				ReferenceAssemblyPaths = new string[] {
-					frameworksPath,
-					TestEnvironment.MonoAndroidFrameworkDirectory,
-				},
+			var devices = new [] {
+				new Xamarin.Android.Tools.AdbDeviceInfo { Serial = "physical", Type = Xamarin.Android.Tools.AdbDeviceType.Device },
+				new Xamarin.Android.Tools.AdbDeviceInfo { Serial = "emulator-5554", Type = Xamarin.Android.Tools.AdbDeviceType.Emulator },
 			};
-			// ResolveXamarinAndroidTools replaces process-wide AndroidSdk state and updates JAVA_HOME/PATH on Windows.
-			var javaHome = Environment.GetEnvironmentVariable ("JAVA_HOME");
-			var environmentPath = Environment.GetEnvironmentVariable ("PATH");
-			var actualAndroidSdk = AndroidSdkPath;
-			var actualAndroidNdk = AndroidNdkPath;
-			var actualJavaSdk = AndroidSdkResolver.GetJavaSdkPath ();
-			List<string> firstTaskExecMessages;
-
-			try {
-				Assert.True (task.Execute (), "Task should have completed successfully.");
-				Assert.AreEqual (0, errors.Count, "No Errors should have been raised");
-				firstTaskExecMessages = messages.Select (x => x.Message)?.ToList ();
-				Assert.True (task.Execute (), "Task should have completed successfully.");
-			} finally {
-				AT.AndroidSdk.Refresh (actualAndroidSdk, actualAndroidNdk, actualJavaSdk);
-				Environment.SetEnvironmentVariable ("JAVA_HOME", javaHome);
-				Environment.SetEnvironmentVariable ("PATH", environmentPath);
-			}
-
-			var expected = $"  Found FrameworkPath at {Path.GetFullPath (frameworksPath)}";
-			Assert.IsNotNull (firstTaskExecMessages, "First execution did not contain any messages!");
-			CollectionAssert.Contains (firstTaskExecMessages, expected);
-			CollectionAssert.DoesNotContain (firstTaskExecMessages, "  Using cached AndroidSdk values");
-			CollectionAssert.DoesNotContain (firstTaskExecMessages, "  Using cached MonoDroidSdk values");
-
-			Assert.AreEqual (0, errors.Count, "No Errors should have been raised");
-			var secondTaskExecMessages = messages.Select (x => x.Message)?.ToList ();
-			Assert.IsNotNull (secondTaskExecMessages, "Second execution did not contain any messages!");
-			CollectionAssert.Contains (secondTaskExecMessages, expected);
-			CollectionAssert.Contains (secondTaskExecMessages, "  Using cached AndroidSdk values");
-			CollectionAssert.Contains (secondTaskExecMessages, "  Using cached MonoDroidSdk values");
+			Assert.AreEqual (expected, AndroidHelper.SelectDevice (devices, target)?.Serial);
+			Assert.IsNull (AndroidHelper.SelectDevice (devices, "-s missing"));
+			Assert.IsNull (AndroidHelper.SelectDevice (devices, "invalid"));
 		}
 
 		[Test]

@@ -51,7 +51,16 @@ public class AdbRunner
 	/// For online emulators, queries the AVD name via <c>getprop</c> / <c>emu avd name</c>.
 	/// Offline emulators are included but without AVD names (querying them would fail).
 	/// </summary>
-	public virtual async Task<IReadOnlyList<AdbDeviceInfo>> ListDevicesAsync (CancellationToken cancellationToken = default)
+	public virtual Task<IReadOnlyList<AdbDeviceInfo>> ListDevicesAsync (CancellationToken cancellationToken = default)
+		=> ListDevicesCoreAsync (includeAvdNames: true, cancellationToken);
+
+	/// <summary>
+	/// Lists connected devices without querying AVD names when only device serials are needed.
+	/// </summary>
+	public Task<IReadOnlyList<AdbDeviceInfo>> ListDevicesWithoutAvdNamesAsync (CancellationToken cancellationToken = default)
+		=> ListDevicesCoreAsync (includeAvdNames: false, cancellationToken);
+
+	async Task<IReadOnlyList<AdbDeviceInfo>> ListDevicesCoreAsync (bool includeAvdNames, CancellationToken cancellationToken)
 	{
 		using var stdout = new StringWriter ();
 		using var stderr = new StringWriter ();
@@ -61,6 +70,9 @@ public class AdbRunner
 		ProcessUtils.ThrowIfFailed (exitCode, "adb devices -l", stderr, stdout);
 
 		var devices = ParseAdbDevicesOutput (stdout.ToString ().Split ('\n'));
+
+		if (!includeAvdNames)
+			return devices;
 
 		// For each online emulator, try to get the AVD name.
 		// Skip offline emulators — neither getprop nor 'emu avd name' work on them
@@ -291,6 +303,23 @@ public class AdbRunner
 		}
 		var output = stdout.ToString ().Trim ();
 		return output.Length > 0 ? output : null;
+	}
+
+	/// <summary>Executes a shell command and reports adb failures rather than treating them as empty output.</summary>
+	public virtual async Task<string> ExecuteShellCommandAsync (string serial, string command, string[] args, CancellationToken cancellationToken = default)
+	{
+		var allArgs = new string [4 + args.Length];
+		allArgs [0] = "-s";
+		allArgs [1] = serial;
+		allArgs [2] = "shell";
+		allArgs [3] = command;
+		Array.Copy (args, 0, allArgs, 4, args.Length);
+		using var stdout = new StringWriter ();
+		using var stderr = new StringWriter ();
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, allArgs);
+		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+		ProcessUtils.ThrowIfFailed (exitCode, $"adb -s {serial} shell {command}", stderr, stdout);
+		return stdout.ToString ().Trim ();
 	}
 
 	async Task<AdbCommandResult> RunCommandAsync (string [] args, CancellationToken cancellationToken)
@@ -634,6 +663,7 @@ public class AdbRunner
 				Serial = serial,
 				Type = deviceType,
 				Status = MapAdbStateToStatus (state),
+				LongOutput = string.Join (";", Regex.Split (properties, @"\s+")),
 			};
 
 			if (propDict.TryGetValue ("model", out var model))
