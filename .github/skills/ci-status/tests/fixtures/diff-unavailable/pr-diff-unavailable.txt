@@ -1,1 +1,0 @@
-The fixture simulates a failed `gh pr diff` request.

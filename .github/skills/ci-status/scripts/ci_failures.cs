@@ -4,8 +4,6 @@
 //
 // Live:
 //   dotnet run ci_failures.cs -- --build-id N [--pr N] [--repo dotnet/android] [--format markdown|json]
-// Fixture:
-//   dotnet run ci_failures.cs -- --input-dir path/to/fixture [--format markdown|json]
 
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -22,7 +20,6 @@ const string RES = "499b84ac-1321-427f-aa17-267ca6975798";
 
 string? buildId = null;
 string? pr = null;
-string? inputDir = null;
 string repo = "dotnet/android";
 string format = "markdown";
 var fetchErrors = new List<string> ();
@@ -42,9 +39,6 @@ for (int i = 0; i < args.Length; i++) {
 		case "--format":
 			format = ++i < args.Length ? args [i] : format;
 			break;
-		case "--input-dir":
-			inputDir = ++i < args.Length ? args [i] : null;
-			break;
 	}
 }
 
@@ -53,19 +47,12 @@ if (format != "markdown" && format != "json") {
 	return 1;
 }
 
-if (inputDir is null && string.IsNullOrEmpty (buildId)) {
+if (string.IsNullOrEmpty (buildId)) {
 	Console.Error.WriteLine ("usage: dotnet run ci_failures.cs -- --build-id N [--pr N] [--repo dotnet/android] [--format markdown|json]");
-	Console.Error.WriteLine ("   or: dotnet run ci_failures.cs -- --input-dir DIR [--format markdown|json]");
 	return 1;
 }
 
-if (inputDir is not null && !Directory.Exists (inputDir)) {
-	Console.Error.WriteLine ($"fixture directory not found: {inputDir}");
-	return 1;
-}
-
-var build = LoadObject ("build.json", () => AzJson ($"{ORG}/{PROJECT}/_apis/build/builds/{buildId}?api-version=7.1"));
-buildId ??= StrN (build ["id"]) ?? IntString (build ["id"]) ?? "fixture";
+var build = AzJson ($"{ORG}/{PROJECT}/_apis/build/builds/{buildId}?api-version=7.1") as JsonObject ?? new JsonObject ();
 pr ??= StrN (build ["pr"]);
 if (string.IsNullOrEmpty (pr)) {
 	var sourceBranch = Str (build ["sourceBranch"]);
@@ -74,10 +61,10 @@ if (string.IsNullOrEmpty (pr)) {
 		pr = prMatch.Groups ["pr"].Value;
 }
 
-var rootTimeline = LoadObject ("timeline.json", () => AzJson ($"{ORG}/{PROJECT}/_apis/build/builds/{buildId}/timeline?api-version=7.1"));
+var rootTimeline = AzJson ($"{ORG}/{PROJECT}/_apis/build/builds/{buildId}/timeline?api-version=7.1") as JsonObject ?? new JsonObject ();
 var timelines = LoadTimelines (rootTimeline);
-var failedTests = LoadArray ("failed.json", () => AzPagedArray ($"{ORG}/{PROJECT}/_apis/test/ResultsByBuild?buildId={buildId}&outcomes=Failed&api-version=7.1-preview"));
-var runs = LoadArray ("runs.json", () => GetArray (AzJson ($"{ORG}/{PROJECT}/_apis/test/runs?buildUri=vstfs:///Build/Build/{buildId}&api-version=7.1&includeRunDetails=true"), "value"));
+var failedTests = AzPagedArray ($"{ORG}/{PROJECT}/_apis/test/ResultsByBuild?buildId={buildId}&outcomes=Failed&api-version=7.1-preview");
+var runs = GetArray (AzJson ($"{ORG}/{PROJECT}/_apis/test/runs?buildUri=vstfs:///Build/Build/{buildId}&api-version=7.1&includeRunDetails=true"), "value");
 var prFiles = LoadPrFiles ();
 var runResults = new ConcurrentDictionary<int, JsonArray> ();
 var failures = new List<Failure> ();
@@ -361,13 +348,7 @@ List<TimelineData> LoadTimelines (JsonNode root)
 			var timelineId = Str (attempt? ["timelineId"]);
 			if (timelineId.Length == 0 || !loaded.Add (timelineId))
 				continue;
-			JsonNode previous;
-			if (inputDir is not null) {
-				var path = Path.Combine (inputDir, "previous-timelines", $"{timelineId}.json");
-				previous = ReadJsonFile (path) ?? new JsonObject ();
-			} else {
-				previous = AzJson ($"{ORG}/{PROJECT}/_apis/build/builds/{buildId}/timeline/{timelineId}?api-version=7.1") ?? new JsonObject ();
-			}
+			var previous = AzJson ($"{ORG}/{PROJECT}/_apis/build/builds/{buildId}/timeline/{timelineId}?api-version=7.1") ?? new JsonObject ();
 			result.Add (new TimelineData {
 				Id = timelineId,
 				IsCurrent = false,
@@ -378,45 +359,8 @@ List<TimelineData> LoadTimelines (JsonNode root)
 	return result;
 }
 
-JsonObject LoadObject (string fixtureName, Func<JsonNode?> live)
-{
-	JsonNode? node;
-	if (inputDir is not null) {
-		node = ReadJsonFile (Path.Combine (inputDir, fixtureName));
-		if (node is null)
-			fetchErrors.Add ($"Required fixture is missing or invalid: {fixtureName}");
-	} else {
-		node = live ();
-		if (node is null)
-			fetchErrors.Add ($"Required Azure response could not be loaded: {fixtureName}");
-	}
-	return node as JsonObject ?? new JsonObject ();
-}
-
-JsonArray LoadArray (string fixtureName, Func<JsonArray> live)
-{
-	if (inputDir is null)
-		return live ();
-	var node = ReadJsonFile (Path.Combine (inputDir, fixtureName));
-	if (node is JsonArray array)
-		return array;
-	return GetArray (node, "value");
-}
-
 List<string> LoadPrFiles ()
 {
-	if (inputDir is not null) {
-		var unavailable = Path.Combine (inputDir, "pr-diff-unavailable.txt");
-		if (File.Exists (unavailable)) {
-			fetchErrors.Add ("Fixture marks the PR diff as unavailable.");
-			return [];
-		}
-		prDiffAvailable = true;
-		var path = Path.Combine (inputDir, "pr-files.txt");
-		return File.Exists (path)
-			? File.ReadAllLines (path).Select (line => line.Trim ()).Where (line => line.Length > 0).ToList ()
-			: [];
-	}
 	if (string.IsNullOrEmpty (pr)) {
 		fetchErrors.Add ("The PR number could not be derived; PR diff evidence is unavailable.");
 		return [];
@@ -435,13 +379,7 @@ JsonArray ResultsForRun (int runId)
 {
 	if (runId <= 0)
 		return new JsonArray ();
-	return runResults.GetOrAdd (runId, id => {
-		if (inputDir is not null) {
-			var root = ReadJsonFile (Path.Combine (inputDir, "run-results.json")) as JsonObject;
-			return root? [id.ToString ()] as JsonArray ?? new JsonArray ();
-		}
-		return AzPagedArray ($"{ORG}/{PROJECT}/_apis/test/Runs/{id}/results?api-version=7.1");
-	});
+	return runResults.GetOrAdd (runId, id => AzPagedArray ($"{ORG}/{PROJECT}/_apis/test/Runs/{id}/results?api-version=7.1"));
 }
 
 string TaskLog (JsonNode record)
@@ -449,10 +387,6 @@ string TaskLog (JsonNode record)
 	var logId = IntString (record ["log"]? ["id"]) ?? StrN (record ["log"]? ["id"]);
 	if (string.IsNullOrEmpty (logId))
 		return "";
-	if (inputDir is not null) {
-		var path = Path.Combine (inputDir, "task-logs", $"{logId}.log");
-		return File.Exists (path) ? File.ReadAllText (path) : "";
-	}
 	return AzText ($"{ORG}/{PROJECT}/_apis/build/builds/{buildId}/logs/{logId}?api-version=7.1");
 }
 
@@ -1020,19 +954,6 @@ string [] Lines (string value)
 {
 	var text = value.Replace ("\r\n", "\n").Trim ();
 	return text.Length == 0 ? [] : text.Split ('\n');
-}
-
-JsonNode? ReadJsonFile (string path)
-{
-	if (!File.Exists (path))
-		return null;
-	try {
-		return JsonNode.Parse (File.ReadAllText (path));
-	} catch (JsonException e) {
-		Console.Error.WriteLine ($"invalid JSON fixture {path}: {e.Message}");
-		fetchErrors.Add ($"Invalid JSON fixture {path}: {e.Message}");
-		return null;
-	}
 }
 
 JsonNode? AzJson (string url)

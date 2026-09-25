@@ -1,6 +1,0 @@
-{
-  "records": [
-    { "id": "s1", "type": "Stage", "name": "MSBuild Tests", "refName": "msbuild_dotnet", "state": "completed", "result": "failed", "attempt": 1 },
-    { "id": "p1", "parentId": "s1", "type": "Phase", "name": "Linux > Tests > MSBuild", "refName": "msbuild_phase", "state": "completed", "result": "failed", "attempt": 1 }
-  ]
-}

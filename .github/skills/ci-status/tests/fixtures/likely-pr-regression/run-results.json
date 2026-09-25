@@ -1,8 +1,0 @@
-{
-  "201": [
-    { "automatedTestName": "Xamarin.Android.Build.Tests.FooTests.ShouldWork", "outcome": "Failed", "completedDate": "2026-09-25T10:00:00Z", "errorMessage": "Expected: 2 But was: 1" }
-  ],
-  "202": [
-    { "automatedTestName": "Xamarin.Android.Build.Tests.FooTests.ShouldWork", "outcome": "Failed", "completedDate": "2026-09-25T10:01:00Z", "errorMessage": "Expected: 2 But was: 1" }
-  ]
-}

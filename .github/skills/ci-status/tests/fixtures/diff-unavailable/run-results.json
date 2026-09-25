@@ -1,8 +1,0 @@
-{
-  "501": [
-    { "automatedTestName": "Example.Tests.MaybeFlakyTest.Fails", "outcome": "Failed", "completedDate": "2026-09-25T10:00:00Z", "errorMessage": "Expected: true But was: false" }
-  ],
-  "502": [
-    { "automatedTestName": "Example.Tests.MaybeFlakyTest.Fails", "outcome": "Passed", "completedDate": "2026-09-25T10:01:00Z" }
-  ]
-}

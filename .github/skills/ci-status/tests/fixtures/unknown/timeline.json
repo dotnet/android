@@ -1,8 +1,0 @@
-{
-  "records": [
-    { "id": "s1", "type": "Stage", "name": "Windows", "refName": "unknown_stage", "state": "completed", "result": "failed", "attempt": 1 },
-    { "id": "p1", "parentId": "s1", "type": "Phase", "name": "Windows > Build", "refName": "unknown_phase", "state": "completed", "result": "failed", "attempt": 1 },
-    { "id": "j1", "parentId": "p1", "type": "Job", "name": "Windows > Build", "refName": "Job1", "state": "completed", "result": "failed", "attempt": 1 },
-    { "id": "t1", "parentId": "j1", "type": "Task", "name": "Build", "refName": "PowerShell1", "state": "completed", "result": "failed", "attempt": 1, "issues": [{ "message": "PowerShell exited with code '1'." }] }
-  ]
-}

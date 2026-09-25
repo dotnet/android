@@ -1,7 +1,0 @@
-[
-  {
-    "automatedTestName": "Example.Tests.MaybeFlakyTest.Fails",
-    "automatedTestStorage": "Example.Tests.dll",
-    "runId": 501
-  }
-]
