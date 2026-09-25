@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <_GuestReadinessRoslynDirectory>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', 'bin', 'guest-readiness-roslyn'))</_GuestReadinessRoslynDirectory>
+  </PropertyGroup>
+  <!-- The common import registers this before Guardian's CSharp CoreCompile predecessor. -->
+  <Target Name="_GuestReadinessSetRoslynErrorLog" BeforeTargets="CoreCompile"
+      Condition="$([MSBuild]::IsOSPlatform('Windows')) and '$(NETCoreSdkVersion)' != '' and '$(GuardianDotnetAnalyzersRuleset)' != '' and '$(ErrorLog)' == ''">
+    <MakeDir Directories="$(_GuestReadinessRoslynDirectory)" />
+    <PropertyGroup>
+      <ErrorLog>$(_GuestReadinessRoslynDirectory)$(MSBuildProjectName).csproj.$([System.Guid]::NewGuid().ToString('N')).gdn.sarif,version=1.0</ErrorLog>
+    </PropertyGroup>
+  </Target>
+</Project>

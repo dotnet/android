@@ -80,7 +80,31 @@ assert windows_job["variables"] == {
     "RestoreConfigFile": r"$(Build.Repository.LocalPath)\NuGet.config",
     "GradleArgs": r'--stacktrace --no-daemon --init-script "$(Build.Repository.LocalPath)\build-tools\scripts\guest-readiness-repositories.gradle"',
 }
-assert windows_job["steps"] == old_windows["stages"][0]["jobs"][0]["steps"], "Normal Windows command sequence changed"
+roslyn_configure = {
+    "task": "PowerShell@2",
+    "displayName": "Configure unique diagnostic Roslyn outputs",
+    "inputs": {
+        "pwsh": True, "targetType": "filePath",
+        "filePath": "$(Build.Repository.LocalPath)/build-tools/scripts/guest-readiness-roslyn.ps1",
+        "arguments": "-Phase Configure",
+    },
+}
+roslyn_capture = {
+    "task": "PowerShell@2",
+    "displayName": "Retain diagnostic Roslyn outputs and unexplained root SARIF",
+    "condition": "always()",
+    "inputs": {
+        "pwsh": True, "targetType": "filePath",
+        "filePath": "$(Build.Repository.LocalPath)/build-tools/scripts/guest-readiness-roslyn.ps1",
+        "arguments": '-Phase Capture -Destination "$(Build.StagingDirectory)/Build$(XA.Build.Configuration)/guest-readiness-roslyn"',
+    },
+}
+windows_steps = windows_job["steps"]
+assert windows_steps.count(roslyn_configure) == windows_steps.count(roslyn_capture) == 1
+assert [step for step in windows_steps if step not in (roslyn_configure, roslyn_capture)] == old_windows["stages"][0]["jobs"][0]["steps"], "Normal Windows command sequence changed"
+assert windows_steps[windows_steps.index(roslyn_configure) + 1]["displayName"] == "Prepare Solution"
+assert windows_steps[windows_steps.index(roslyn_capture) - 1]["parameters"]["displayName"] == "Test PackDotNet"
+assert windows_steps[windows_steps.index(roslyn_capture) + 1]["template"].endswith("/upload-results.yaml")
 tracked_root_files = subprocess.check_output(
     ["git", "ls-tree", "--name-only", BASELINE], cwd=ROOT, text=True).splitlines()
 assert [name for name in tracked_root_files if name.casefold() == "nuget.config"] == ["NuGet.config"]

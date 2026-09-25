@@ -328,6 +328,41 @@ Separate real-target validation built/copied `java-source-utils.jar`,
 targets and anonymous mirror. These are host-build observations, not isolated
 CI, whole-solution audit, signing or guest-execution qualification.
 
+Diagnostic Windows builds configure `CustomAfterMicrosoftCommonTargets` through
+a job variable before Prepare. The source-owned common import registers its
+CoreCompile predecessor before Guardian's CSharp import. Only when Guardian is
+present and `ErrorLog` is empty, it selects
+`bin/guest-readiness-roslyn/<project>.csproj.<fresh-guid>.gdn.sarif,version=1.0`.
+This prevents concurrent compilations (including the same project/TFM/configuration
+and nested submodules) sharing Guardian's default project-relative file. Explicit
+`ErrorLog` values and NuGet's task-level restore-hook override remain authoritative;
+Configure rejects an existing environment hook instead of replacing it.
+No analyzer, ruleset, scanner filter, clean-tree check or submodule source changes.
+Mac/Linux and default-off Windows retain their original behavior.
+
+Before the existing Build Results upload, an always-running capture step copies
+the exact owned GUID leaves and, if present, the unexplained checkout-root `.sarif`.
+It records absence/presence, original path, size, write time and SHA-256 in
+`capture.json`. Original files are never moved, deleted or ignored. Regular files
+only, at most 64 MiB each, 10,000 owned leaves and 2 GiB total, are copied with
+concurrent writers/deletion denied. Unexpected entries fail without a success
+receipt. Every existing source/destination ancestor is checked for reparse points
+before creating directories or copying files, including nonexistent descendants
+of junctions. The copies are observations, not claims of scanner processing. The
+unchanged collector still discovers the original GUID logs beneath the source
+root with its existing `*.csproj.*.sarif` wildcard. Historical bare `.sarif` bytes
+and their writer were absent from the two selected Windows artifacts; if it
+recurs, capture retains it but the ordinary clean-tree gate still fails.
+
+`test-roslyn-output.ps1 -GuardianTargets <retained-injector-target>
+-GuardianCli <existing-1.24.0-cli>` runs three real concurrent SDK Csc invocations,
+checks NuGet restore traversal, explicit/OFF behavior and bounded capture. The
+optional actual Guardian copy/sanitize run checks one-to-one GUID leaf mapping,
+valid SARIF 2.1 and preserved real CA5350 findings/messages/source locations.
+Expected filtering of ordinary CS1030 warnings is not treated as evidence loss.
+This exercises the installed SDK security analyzer and retained injector target,
+not the hosted Guardian ruleset merger, a full product build or policy acceptance.
+
 No audit setting is disabled or overridden. The approved `dotnet-public` service
 index inspected for this change exposes no `VulnerabilityInfo` resource, so root
 feed selection alone does **not** establish vulnerability-data coverage. Actual
@@ -352,7 +387,7 @@ the explicit `macOS-15` label used by that successful build, after loading the
 baseline variables. The normal Azure Pipelines `vmImage` pool declarations remain
 unchanged; the pinned MicroBuild/1ES templates preserve this supported property.
 This qualifies a new producer host/toolchain, not reproduction of the baseline's
-historical `macOS-14-arm64` host. All Windows/test stage structures remain unchanged.
+historical `macOS-14-arm64` host. Windows/test pools and ordinary commands remain unchanged.
 Only producer pipeline hosts change: consumer macOS, Android emulator image and
 workload pins, SDK bits, and the held source baseline are not upgraded.
 A preview alone does not establish runtime template admission or image

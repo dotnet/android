@@ -54,6 +54,15 @@ stages:
       parameters:
         remove_dotnet: true
 
+    - ${{ if eq(parameters.guestReadiness, true) }}:
+      - task: PowerShell@2
+        displayName: Configure unique diagnostic Roslyn outputs
+        inputs:
+          pwsh: true
+          targetType: filePath
+          filePath: $(Build.Repository.LocalPath)/build-tools/scripts/guest-readiness-roslyn.ps1
+          arguments: -Phase Configure
+
     - task: DotNetCoreCLI@2
       displayName: Prepare Solution
       inputs:
@@ -126,6 +135,16 @@ stages:
           -t:PackDotNet -c $(XA.Build.Configuration) -v:n
           -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-pack.binlog
         displayName: Test PackDotNet
+
+    - ${{ if eq(parameters.guestReadiness, true) }}:
+      - task: PowerShell@2
+        displayName: Retain diagnostic Roslyn outputs and unexplained root SARIF
+        condition: always()
+        inputs:
+          pwsh: true
+          targetType: filePath
+          filePath: $(Build.Repository.LocalPath)/build-tools/scripts/guest-readiness-roslyn.ps1
+          arguments: -Phase Capture -Destination "$(Build.StagingDirectory)/Build$(XA.Build.Configuration)/guest-readiness-roslyn"
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:

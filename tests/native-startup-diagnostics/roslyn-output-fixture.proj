@@ -1,0 +1,46 @@
+<Project>
+  <PropertyGroup>
+    <NETCoreSdkVersion>fixture</NETCoreSdkVersion>
+    <Configuration>Release</Configuration>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+  <Import Project="$(GuardianTargets)" />
+  <UsingTask TaskName="Microsoft.CodeAnalysis.BuildTasks.Csc" AssemblyFile="$(MSBuildToolsPath)\Roslyn\Microsoft.Build.Tasks.CodeAnalysis.dll" />
+  <Target Name="CoreCompile">
+    <MakeDir Directories="$(FixtureOutput)\$(Instance)" />
+    <ItemGroup>
+      <_FixtureReference Include="$(FixtureReference)" />
+      <_FixtureReference Include="$([System.IO.Path]::GetDirectoryName('$(FixtureReference)'))\System.Security.Cryptography.dll" />
+      <_FixtureAnalyzer Include="$(MSBuildToolsPath)\Sdks\Microsoft.NET.Sdk\analyzers\Microsoft.CodeAnalysis.NetAnalyzers.dll" />
+      <_FixtureAnalyzer Include="$(MSBuildToolsPath)\Sdks\Microsoft.NET.Sdk\analyzers\Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll" />
+    </ItemGroup>
+    <Csc Sources="$(FixtureSource)" References="@(_FixtureReference)" TargetType="Library"
+        OutputAssembly="$(FixtureOutput)\$(Instance)\fixture.dll" ErrorLog="$(ErrorLog)"
+        Analyzers="@(_FixtureAnalyzer)" CodeAnalysisRuleSet="$(FixtureSource).ruleset"
+        NoStandardLib="true" UseSharedCompilation="false" />
+    <WriteLinesToFile File="$(FixtureOutput)\$(Instance)\result.txt" Overwrite="true"
+        Lines="$(ErrorLog);$(RunAnalyzersDuringBuild);$(GuardianDotnetAnalyzersRuleset);$(CustomAfterMicrosoftCommonTargets)" />
+  </Target>
+  <Target Name="Concurrent">
+    <ItemGroup>
+      <_Instance Include="$(MSBuildProjectFullPath)">
+        <AdditionalProperties>Instance=one</AdditionalProperties>
+      </_Instance>
+      <_Instance Include="$(MSBuildProjectFullPath)">
+        <AdditionalProperties>Instance=two</AdditionalProperties>
+      </_Instance>
+      <_Instance Include="$(NestedProject)">
+        <AdditionalProperties>Instance=nested</AdditionalProperties>
+      </_Instance>
+    </ItemGroup>
+    <MSBuild Projects="@(_Instance)" Targets="CoreCompile" BuildInParallel="true" />
+  </Target>
+  <Target Name="VerifyNuGetRestoreHook" BeforeTargets="_IsProjectRestoreSupported"
+      Condition="'$(FixtureRestoreReceipt)' != ''">
+    <Error Condition="'$(CustomAfterMicrosoftCommonTargets)' != '$(NuGetRestoreTargets)'"
+        Text="The inherited diagnostic hook displaced NuGet's restore-specific override." />
+    <WriteLinesToFile File="$(FixtureRestoreReceipt)" Overwrite="true"
+        Lines="$(CustomAfterMicrosoftCommonTargets);$(ExcludeRestorePackageImports)" />
+  </Target>
+</Project>
