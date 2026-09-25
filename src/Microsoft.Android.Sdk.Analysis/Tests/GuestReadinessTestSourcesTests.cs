@@ -62,6 +62,11 @@ public class GuestReadinessTestSourcesTests
 		Assert.AreEqual (source, GuestReadinessTestSources.GetDownloadUrl (source));
 		Environment.SetEnvironmentVariable ("ANDROID_GUEST_READINESS_TEST_ACQUISITION", "1");
 		Assert.AreEqual (OperatingSystem.IsWindows () || OperatingSystem.IsLinux () ? mirror : source, GuestReadinessTestSources.GetDownloadUrl (source));
+		const string serialization = "org/jetbrains/kotlinx/kotlinx-serialization-json-jvm/1.3.3/kotlinx-serialization-json-jvm-1.3.3.jar";
+		Assert.AreEqual (OperatingSystem.IsWindows () || OperatingSystem.IsLinux ()
+			? GuestReadinessTestSources.MavenCentralMirror + serialization
+			: "https://repo1.maven.org/maven2/" + serialization,
+			GuestReadinessTestSources.GetDownloadUrl ("https://repo1.maven.org/maven2/" + serialization));
 		foreach (var other in new [] {
 			"https://repo1.maven.org.evil/maven2/a.jar", "http://repo1.maven.org/maven2/a.jar",
 			"https://repo1.maven.org:444/maven2/a.jar", "https://user@repo1.maven.org/maven2/a.jar",

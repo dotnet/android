@@ -331,6 +331,50 @@ SDK version/base path. These prove the Windows mechanisms, not actual Linux
 CI/producer SDK identity or global-property precedence: project properties can still
 override environment properties. No `DotNetCLI` wrapper change is made.
 
+`DotNetPublish` and `MauiTargetFramework` already declare the current producer's
+local `nuget-unsigned` directory in their generated per-project config. Only
+those diagnostic project instances also set `RestoreAdditionalProjectSources`
+to that same single existing local directory: an explicit root config otherwise
+hides it. A pre-existing nonempty property, multiple declared sources, or a
+missing/nonlocal directory fails rather than being replaced. The root config,
+its remote sources, ordinary project configs, wrappers and default-off behavior
+are unchanged. The helper validates the original path before XML-escaping it
+for ProjectTools' raw property serialization; the decoded XML value remains
+the declared path, including literal `&`. Before assignment, diagnostic mode
+explicitly rejects literal `;`, percent-escape sequences detected by the existing
+MSBuild `ProjectCollection.Unescape` API, and expression introducers `$(`, `@(`,
+`%(`. The unescaped value is only compared, never assigned. This deliberately
+unsupported-input boundary prevents changing one declared literal source into
+multiple or interpreted sources; it is not general MSBuild expression support.
+The ordinary config route preserved literal `%3B` in the held-SDK probe, but the
+diagnostic additional-source property did not, so that literal is intentionally
+unsupported here. Literal `;` also failed in the ordinary config control; no
+prior support is claimed. Default-off behavior and the original source collection
+remain unchanged. Fresh offline Windows `10.0.401` children demonstrate this
+project-property mechanism under both inherited and explicit root-config paths;
+they do not qualify execution on the hosted Linux `10.0.301` SDK.
+The optional `test-test-sources.ps1 -BuildTestsAssembly <normally-built-dll>
+-RestoreDotNet <existing-10.0.401-host>` regression runs six real owning-assembly
+project-generation cases (plain and ampersand-containing paths, ON/OFF, and
+invalid-source guards, and unsupported-literal rejection without assignment or
+source-list mutation) and four fresh offline restores using a source path with
+spaces and a literal ampersand. Its initially plain
+`net10.0` ProjectTools fixture preserves the emitted property/item contracts,
+but imports no Android workload: this is not an Android restore, Maven task or
+native workload pass. No SDK/package acquisition is performed. The seven actual
+Linux cases remain the hosted end-to-end authority.
+
+The `DotNetPack` test's existing
+`org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.3.3` item selects the
+same approved mirror through supported `AndroidMavenLibrary.Repository`
+metadata only when diagnostic acquisition is enabled. This is separate from
+`DownloadedCache` URL routing. The repository base has one shared definition;
+`Bind=false`, version and dependency verification remain unchanged, and ordinary
+mode/macOS retain the item without repository metadata. The exact primary
+JAR/POM were byte-identical between Central and the mirror; that POM has no
+parent/imported POM. This availability evidence is not a hosted task pass,
+license decision or trust approval.
+
 The diagnostic Linux test setups and MAUI integration setup pass an explicit
 config only to the existing apkdiff installer. Linux uses the same root above;
 MAUI uses `$(Build.SourcesDirectory)/android/NuGet.config`, not the MAUI checkout.
@@ -341,7 +385,7 @@ version was listed by the already-approved `dotnet-public` feed. No global tool
 installation, new source, fallback, credential or package-version change is
 introduced by this plumbing.
 
-**Audit-data qualification remains blocked.** The failing Linux dgspecs record
+**Audit-data qualification remains blocked.** The earlier failing Linux dgspecs record
 `enableAudit=true`, `auditLevel=low`, `auditMode=all`, and user-config nuget.org
 discovery. Their NU1900 warnings are real vulnerability-data acquisition
 failures, not cosmetic warnings. The unchanged repository config has no explicit
@@ -352,6 +396,10 @@ package-source fallback, audit settings, advertised resources and actual data
 retrieval outcomes separately. No audit disable, warning suppression,
 ignore-failed-source setting, fabricated data, or network-policy approval follows
 from these setup changes; test assertions remain unchanged.
+The later Linux run's retained failing cases use the root sources with
+`true`/`low` and the SDK's TFM-dependent audit modes (`direct` for net9,
+`all` for net10). Its successful `DotNetNew` dgspecs/binlogs were not retained,
+so their effective audit-source and data-retrieval details remain unavailable.
 
 For this setup delta, compare the actual service preview against `01402b` using
 `--require-linux-test-setup --require-root-observer --expanded-preview <new>

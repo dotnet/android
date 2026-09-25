@@ -14,6 +14,114 @@ using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[TestFixture]
+	[NonParallelizable]
+	public class GuestReadinessSdkProjectTests
+	{
+		[Test]
+		public void GeneratedAcquisitionProperties ([Values (false, true)] bool enabled, [Values (false, true)] bool specialCharacters)
+		{
+			var saved = Environment.GetEnvironmentVariable ("ANDROID_GUEST_READINESS_TEST_ACQUISITION");
+			try {
+				Environment.SetEnvironmentVariable ("ANDROID_GUEST_READINESS_TEST_ACQUISITION", enabled ? "1" : null);
+				var directory = Path.Combine (TestContext.CurrentContext.WorkDirectory,
+					specialCharacters ? "guest readiness sdk projects & literal" : "guest readiness sdk projects");
+				var source = Path.Combine (directory, "local artifact feed");
+				Directory.CreateDirectory (source);
+				var project = new XamarinAndroidLibraryProject {
+					ProjectName = "GuestReadinessSources",
+					TargetFramework = "net10.0",
+					ExtraNuGetConfigSources = { source },
+				};
+				project.SetProperty ("DisableImplicitFrameworkReferences", "true");
+				project.SetProperty ("ManagePackageVersionsCentrally", "false");
+				project.SetProperty ("NuGetAudit", "true");
+				project.SetProperty ("NuGetAuditLevel", "low");
+				project.SetProperty ("NuGetAuditMode", "all");
+				project.PackageReferences.Add (new Package { Id = "Newtonsoft.Json", Version = "13.0.3" });
+				XASdkTests.ConfigureDiagnosticLocalSources (project);
+				project.OtherBuildItems.Add (XASdkTests.CreatePackMavenLibrary ());
+				var xml = XDocument.Parse (project.Save ().Single (r => r.Path == project.ProjectFilePath).Content);
+				bool diagnostic = enabled && (System.OperatingSystem.IsWindows () || System.OperatingSystem.IsLinux ());
+				Assert.AreEqual (diagnostic ? source : null, xml.Descendants ("RestoreAdditionalProjectSources").SingleOrDefault ()?.Value);
+				CollectionAssert.AreEqual (new [] { source }, project.ExtraNuGetConfigSources);
+				var item = xml.Descendants ("AndroidMavenLibrary").Single ();
+				Assert.AreEqual ("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm", item.Attribute ("Include").Value);
+				Assert.AreEqual ("1.3.3", item.Element ("Version").Value);
+				Assert.AreEqual ("false", item.Element ("Bind").Value);
+				Assert.IsNull (item.Element ("VerifyDependencies"));
+				Assert.AreEqual (diagnostic ? GuestReadinessTestSources.MavenCentralMirror : null, item.Element ("Repository")?.Value);
+				project.Populate (Path.Combine (directory, enabled ? "diagnostic" : "ordinary"));
+			} finally {
+				Environment.SetEnvironmentVariable ("ANDROID_GUEST_READINESS_TEST_ACQUISITION", saved);
+			}
+		}
+
+		[Test]
+		public void RejectUnsupportedLiteralSources ()
+		{
+			if (!System.OperatingSystem.IsWindows () && !System.OperatingSystem.IsLinux ())
+				return;
+			var saved = Environment.GetEnvironmentVariable ("ANDROID_GUEST_READINESS_TEST_ACQUISITION");
+			try {
+				foreach (var name in new [] { "literal;segment", "literal%3Bsegment", "literal%3bsegment", "literal%253Bsegment", "literal%25segment", "$(literal)", "@(literal)", "%(literal)" }) {
+					var source = Path.Combine (TestContext.CurrentContext.WorkDirectory, "unsupported literal sources", name);
+					Directory.CreateDirectory (source);
+					var project = new XamarinAndroidLibraryProject {
+						ExtraNuGetConfigSources = { source },
+					};
+					var before = project.Save ().Single (r => r.Path == project.ProjectFilePath).Content;
+					Environment.SetEnvironmentVariable ("ANDROID_GUEST_READINESS_TEST_ACQUISITION", "1");
+					var error = Assert.Throws<InvalidOperationException> (() => XASdkTests.ConfigureDiagnosticLocalSources (project));
+					Assert.AreEqual ("Diagnostic test acquisition requires a literal local source without semicolons, percent escapes, or MSBuild expressions.", error.Message);
+					Assert.IsNull (project.GetProperty ("RestoreAdditionalProjectSources"), name);
+					CollectionAssert.AreEqual (new [] { source }, project.ExtraNuGetConfigSources);
+					Assert.AreEqual (before, project.Save ().Single (r => r.Path == project.ProjectFilePath).Content);
+					Environment.SetEnvironmentVariable ("ANDROID_GUEST_READINESS_TEST_ACQUISITION", null);
+					XASdkTests.ConfigureDiagnosticLocalSources (project);
+					Assert.IsNull (project.GetProperty ("RestoreAdditionalProjectSources"), name);
+					CollectionAssert.AreEqual (new [] { source }, project.ExtraNuGetConfigSources);
+					Assert.AreEqual (before, project.Save ().Single (r => r.Path == project.ProjectFilePath).Content);
+				}
+			} finally {
+				Environment.SetEnvironmentVariable ("ANDROID_GUEST_READINESS_TEST_ACQUISITION", saved);
+			}
+		}
+
+		[Test]
+		public void RejectConflictingOrNonlocalSources ()
+		{
+			if (!System.OperatingSystem.IsWindows () && !System.OperatingSystem.IsLinux ())
+				return;
+			var saved = Environment.GetEnvironmentVariable ("ANDROID_GUEST_READINESS_TEST_ACQUISITION");
+			try {
+				Environment.SetEnvironmentVariable ("ANDROID_GUEST_READINESS_TEST_ACQUISITION", "1");
+				var project = new XamarinAndroidLibraryProject ();
+				project.ExtraNuGetConfigSources.Add (TestContext.CurrentContext.WorkDirectory);
+				project.SetProperty ("RestoreAdditionalProjectSources", "preserve-existing");
+				Assert.Throws<InvalidOperationException> (() => XASdkTests.ConfigureDiagnosticLocalSources (project));
+				Assert.AreEqual ("preserve-existing", project.GetProperty ("RestoreAdditionalProjectSources"));
+				project.SetProperty ("RestoreAdditionalProjectSources", "");
+				project.ExtraNuGetConfigSources.Add (TestContext.CurrentContext.WorkDirectory);
+				Assert.Throws<InvalidOperationException> (() => XASdkTests.ConfigureDiagnosticLocalSources (project));
+				project.ExtraNuGetConfigSources.Clear ();
+				Assert.Throws<InvalidOperationException> (() => XASdkTests.ConfigureDiagnosticLocalSources (project));
+				foreach (var invalid in new [] { "relative", "https://example.invalid/feed", Path.Combine (TestContext.CurrentContext.WorkDirectory, Guid.NewGuid ().ToString ("N")) }) {
+					project.ExtraNuGetConfigSources.Clear ();
+					project.ExtraNuGetConfigSources.Add (invalid);
+					Assert.Throws<InvalidOperationException> (() => XASdkTests.ConfigureDiagnosticLocalSources (project));
+					Assert.AreEqual ("", project.GetProperty ("RestoreAdditionalProjectSources"));
+				}
+				Environment.SetEnvironmentVariable ("ANDROID_GUEST_READINESS_TEST_ACQUISITION", null);
+				project.SetProperty ("RestoreAdditionalProjectSources", "preserve-existing");
+				XASdkTests.ConfigureDiagnosticLocalSources (project);
+				Assert.AreEqual ("preserve-existing", project.GetProperty ("RestoreAdditionalProjectSources"));
+			} finally {
+				Environment.SetEnvironmentVariable ("ANDROID_GUEST_READINESS_TEST_ACQUISITION", saved);
+			}
+		}
+	}
+
 	/// <summary>
 	/// Fixture containing tests which use custom dotnet commands (e.g. `dotnet new`, `dotnet pack`),
 	///  and in most cases don't use the common ProjectBuilder infrastructure.
@@ -128,10 +236,7 @@ public class JavaSourceTest {
 				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
 				MetadataValues = "Pack=false;Bind=false",
 			});
-			proj.OtherBuildItems.Add (new AndroidItem.AndroidMavenLibrary ("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm") {
-				MetadataValues = "Version=1.3.3;Bind=false",
-				BinaryContent = () => [],
-			});
+			proj.OtherBuildItems.Add (CreatePackMavenLibrary ());
 
 			var projBuilder = CreateDllBuilder ();
 			projBuilder.Save (proj);
@@ -212,6 +317,35 @@ public class JavaSourceTest {
 				&& XABuildConfig.AndroidLatestUnstableApiLevel != XABuildConfig.AndroidLatestStableApiLevel);
 		}
 
+		internal static AndroidItem.AndroidMavenLibrary CreatePackMavenLibrary ()
+		{
+			var item = new AndroidItem.AndroidMavenLibrary ("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm") {
+				MetadataValues = "Version=1.3.3;Bind=false",
+				BinaryContent = () => [],
+			};
+			if (TestEnvironment.UseGuestReadinessTestSources)
+				item.Metadata.Add ("Repository", GuestReadinessTestSources.MavenCentralMirror);
+			return item;
+		}
+
+		internal static void ConfigureDiagnosticLocalSources (XamarinProject project)
+		{
+			if (!TestEnvironment.UseGuestReadinessTestSources)
+				return;
+			if (!string.IsNullOrEmpty (project.GetProperty ("RestoreAdditionalProjectSources")))
+				throw new InvalidOperationException ("Diagnostic test acquisition must not overwrite RestoreAdditionalProjectSources.");
+			var source = project.ExtraNuGetConfigSources.Single ();
+			if (!Path.IsPathFullyQualified (source) || !Directory.Exists (source))
+				throw new InvalidOperationException ("Diagnostic test acquisition requires the existing local artifact source.");
+			if (source.Contains (';') ||
+					!string.Equals (Microsoft.Build.Evaluation.ProjectCollection.Unescape (source), source, StringComparison.Ordinal) ||
+					source.Contains ("$(", StringComparison.Ordinal) || source.Contains ("@(", StringComparison.Ordinal) || source.Contains ("%(", StringComparison.Ordinal))
+				throw new InvalidOperationException ("Diagnostic test acquisition requires a literal local source without semicolons, percent escapes, or MSBuild expressions.");
+			// The explicit root config otherwise hides this project's generated testsource1.
+			// SetProperty inserts raw XML; escape the validated path only at that boundary.
+			project.SetProperty ("RestoreAdditionalProjectSources", System.Security.SecurityElement.Escape (source));
+		}
+
 		[Test]
 		public void DotNetPublishDefaultValues([Values (false, true)] bool isRelease)
 		{
@@ -250,6 +384,7 @@ public class JavaSourceTest {
 				}
 			};
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
+			ConfigureDiagnosticLocalSources (proj);
 
 			var preview = IsPreviewFrameworkVersion (targetFramework);
 			if (preview) {
@@ -317,6 +452,7 @@ public class JavaSourceTest {
 					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
 				}
 			};
+			ConfigureDiagnosticLocalSources (library);
 
 			var preview = IsPreviewFrameworkVersion (targetFramework);
 			if (preview) {

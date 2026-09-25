@@ -4,8 +4,10 @@ using System.IO;
 namespace Xamarin.ProjectTools
 {
 	// Source-linked by both test harnesses; neither uses MSBuild to acquire these inputs.
-	internal static class GuestReadinessTestSources
+	public static class GuestReadinessTestSources
 	{
+		public const string MavenCentralMirror = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1/";
+
 		internal static bool Enabled => IsEnabled (Environment.OSVersion.Platform, Environment.GetEnvironmentVariable ("ANDROID_GUEST_READINESS_TEST_ACQUISITION"), OperatingSystem.IsLinux ());
 
 		internal static bool IsEnabled (PlatformID platform, string optIn, bool isLinux = false)
@@ -29,7 +31,6 @@ namespace Xamarin.ProjectTools
 		internal static string GetDownloadUrl (string url)
 		{
 			const string central = "https://repo1.maven.org/maven2/";
-			const string mirror = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1/";
 			if (!Enabled || !url.StartsWith (central, StringComparison.Ordinal))
 				return url;
 			var suffix = url.Substring (central.Length);
@@ -44,7 +45,7 @@ namespace Xamarin.ProjectTools
 						return url;
 				}
 			}
-			return mirror + suffix;
+			return MavenCentralMirror + suffix;
 		}
 	}
 }
