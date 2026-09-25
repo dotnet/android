@@ -862,20 +862,20 @@ Supprimez la référence de '{0}' de votre projet et ajoutez plutôt le '{1}'.pa
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
   <data name="XA4327" xml:space="preserve">
-    <value>Could not extract Java type map keys from '{0}': {1}</value>
+    <value>Impossible d’extraire les clés de mappage de type Java de '{0}' : {1}</value>
     <comment>{0} - The input file path or representation name.
 {1} - The underlying parser or input/output failure. It is not localized.</comment>
   </data>
   <data name="XA4328" xml:space="preserve">
-    <value>Could not generate typemap ProGuard configuration from '{0}': {1}</value>
+    <value>Impossible de générer la configuration ProGuard de mappage de type à partir de '{0}' : {1}</value>
     <comment>{0} - The input or output file path.
 {1} - The underlying failure, or a formatted XA4328_* resource.</comment>
   </data>
   <data name="XA4328_NoInputs" xml:space="preserve">
-    <value>No retained Java type map key files were provided.</value>
+    <value>Nous n’avons fourni aucun fichier clé de mappage de types Java.</value>
   </data>
   <data name="XA4328_InvalidName" xml:space="preserve">
-    <value>Line {0} contains an invalid retained Java class name: '{1}'.</value>
+    <value>La ligne {0} contient un nom de classe Java conservé non valide : « {1} ».</value>
     <comment>{0} - The one-based line number.
 {1} - The invalid input record.</comment>
   </data>
@@ -1099,7 +1099,7 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 </comment>
   </data>
   <data name="XA1044" xml:space="preserve">
-    <value>The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Remove the property.</value>
+    <value>La propriété MSBuild '{0}' n’est pas compatible avec le runtime {1}. La build ne peut pas continuer tant que cette propriété est activée. Supprimez la propriété.</value>
     <comment>The following literal name should not be translated: MSBuild.
 {0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).

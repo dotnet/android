@@ -862,20 +862,20 @@ Usuń odwołanie „{0}” z projektu i zamiast niego dodaj pakiet NuGet „{1}�
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
   <data name="XA4327" xml:space="preserve">
-    <value>Could not extract Java type map keys from '{0}': {1}</value>
+    <value>Nie można wyodrębnić kluczy mapy typów Java z '{0}': {1}</value>
     <comment>{0} - The input file path or representation name.
 {1} - The underlying parser or input/output failure. It is not localized.</comment>
   </data>
   <data name="XA4328" xml:space="preserve">
-    <value>Could not generate typemap ProGuard configuration from '{0}': {1}</value>
+    <value>Nie udało się wygenerować mapy typów dla konfiguracji ProGuard na podstawie „{0}”: {1}</value>
     <comment>{0} - The input or output file path.
 {1} - The underlying failure, or a formatted XA4328_* resource.</comment>
   </data>
   <data name="XA4328_NoInputs" xml:space="preserve">
-    <value>No retained Java type map key files were provided.</value>
+    <value>Nie podano zachowanych plików kluczy mapy typu Java.</value>
   </data>
   <data name="XA4328_InvalidName" xml:space="preserve">
-    <value>Line {0} contains an invalid retained Java class name: '{1}'.</value>
+    <value>Wiersz {0} zawiera nieprawidłową zachowaną nazwę klasy Java: „{1}” .</value>
     <comment>{0} - The one-based line number.
 {1} - The invalid input record.</comment>
   </data>
@@ -1099,7 +1099,7 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
 </comment>
   </data>
   <data name="XA1044" xml:space="preserve">
-    <value>The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Remove the property.</value>
+    <value>Właściwość programu MSBuild '{0}' nie jest zgodna ze środowiskiem uruchomieniowym {1}. Nie można kontynuować kompilacji, gdy ta właściwość jest włączona. Usuń właściwość.</value>
     <comment>The following literal name should not be translated: MSBuild.
 {0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
