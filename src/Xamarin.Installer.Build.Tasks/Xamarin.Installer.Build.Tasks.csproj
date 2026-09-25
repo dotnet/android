@@ -26,8 +26,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Xamarin.Installer.AndroidSDK\Xamarin.Installer.AndroidSDK.csproj" />
-    <ProjectReference Include="..\Xamarin.AndroidTools\Xamarin.AndroidTools.csproj" />
-    <ProjectReference Include="..\Mono.AndroidTools\Mono.AndroidTools.csproj" />
     <ProjectReference Include="..\Xamarin.Installer.Common\Xamarin.Installer.Common.csproj" />
     <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
   </ItemGroup>

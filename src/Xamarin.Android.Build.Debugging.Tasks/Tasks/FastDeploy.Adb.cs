@@ -12,7 +12,7 @@ namespace Xamarin.Android.Tasks
 	{
 		// The high-level device operations below are implemented directly on top of `adb`
 		// (via RunAdbCommand / RunAdbShellCommand) so that FastDeploy does not depend on the
-		// legacy Mono.AndroidTools / Xamarin.AndroidTools assemblies.
+		// legacy Android tooling assemblies.
 
 		/// <summary>
 		/// Reads a single system property via <c>adb shell getprop &lt;name&gt;</c>.
