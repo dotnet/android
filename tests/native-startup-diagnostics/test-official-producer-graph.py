@@ -79,12 +79,28 @@ windows_job = diagnostic_windows["stages"][0]["jobs"][0]
 spmi_output_variable = "GDNP_1ESSECRETSCANNING_OUTPUT"
 spmi_output_value = r"$(Agent.TempDirectory)\guest-readiness-spmi.sarif"
 retention_variable = "XA.PublishAllLogs"
-assert windows_job["variables"] == {
+expected_windows_variables = {
     "RestoreConfigFile": r"$(Build.Repository.LocalPath)\NuGet.config",
     "GradleArgs": r'--stacktrace --no-daemon --init-script "$(Build.Repository.LocalPath)\build-tools\scripts\guest-readiness-repositories.gradle"',
     spmi_output_variable: spmi_output_value,
     retention_variable: "true",
 }
+
+
+def assert_windows_source_variables(variables):
+    # Source typing stays strict even though the provider serializes this value unquoted.
+    assert variables == expected_windows_variables, "Expected exact source string variables"
+
+
+assert_windows_source_variables(windows_job["variables"])
+source_bool_variables = copy.deepcopy(windows_job["variables"])
+source_bool_variables[retention_variable] = True
+try:
+    assert_windows_source_variables(source_bool_variables)
+except AssertionError:
+    pass
+else:
+    raise AssertionError("Source boolean retention accepted instead of quoted string")
 roslyn_configure = {
     "task": "PowerShell@2",
     "displayName": "Configure unique diagnostic Roslyn outputs",
@@ -196,7 +212,14 @@ def assert_windows_evidence_variable_change(before, after, variable=spmi_output_
     assert isinstance(variables, list), "Expected provider-expanded variable list"
     overrides = [item for item in variables
                  if item.get("name", "").replace(".", "_").upper() == variable.replace(".", "_").upper()]
-    assert overrides == [{"name": variable, "value": value}], f"Expected one exact string variable: {variable}"
+    exact_variable = overrides == [{"name": variable, "value": value}]
+    # Actual 1ES serialization of this source string is `value: true`; no other field is normalized.
+    provider_retention_true = (
+        variable == retention_variable and value == "true" and len(overrides) == 1
+        and set(overrides[0]) == {"name", "value"}
+        and overrides[0]["name"] == retention_variable and overrides[0]["value"] is True
+    )
+    assert exact_variable or provider_retention_true, f"Expected exact variable or supported retention true rendering: {variable}"
     assert [item for item in variables if item.get("name", "").replace(".", "_").upper() == spmi_output_variable] == [
         {"name": spmi_output_variable, "value": spmi_output_value}
     ], "Reviewed SPMI output must remain exact and unique"
@@ -260,23 +283,30 @@ retention_job["steps"] += copy.deepcopy(observer_fixture)
 retention_after = copy.deepcopy(retention_before)
 retention_after["stages"][0]["jobs"][0]["variables"].append({"name": retention_variable, "value": "true"})
 assert_windows_evidence_variable_change(retention_before, retention_after, retention_variable, "true")
-for mutation in ("bool", "false", "alias", "duplicate", "spmi-output", "condition", "active-flag", "other-host"):
+provider_retention_after = copy.deepcopy(retention_after)
+provider_retention_after["stages"][0]["jobs"][0]["variables"][-1]["value"] = True
+assert_windows_evidence_variable_change(retention_before, provider_retention_after, retention_variable, "true")
+for mutation in ("bool-false", "false", "number", "alias", "duplicate", "extra-field", "spmi-output", "condition", "active-flag", "other-host", "other-job"):
     invalid = copy.deepcopy(retention_after)
     job = invalid["stages"][0]["jobs"][0]
-    if mutation in ("bool", "false"):
-        job["variables"][-1]["value"] = True if mutation == "bool" else "false"
+    if mutation in ("bool-false", "false", "number"):
+        job["variables"][-1]["value"] = {"bool-false": False, "false": "false", "number": 1}[mutation]
     elif mutation == "alias":
         job["variables"][-1]["name"] = "XA_PUBLISHALLLOGS"
     elif mutation == "duplicate":
         job["variables"].append({"name": "xa_publishalllogs", "value": "true"})
+    elif mutation == "extra-field":
+        job["variables"][-1]["extra"] = True
     elif mutation == "spmi-output":
         job["variables"][0]["value"] = "different"
     elif mutation == "condition":
         job["steps"][0]["condition"] = "always()"
     elif mutation == "active-flag":
         job["variables"].append({"name": "ONEES_HASACTIVESDLTASK", "value": "True"})
-    else:
+    elif mutation == "other-host":
         job["pool"]["os"] = "linux"
+    else:
+        invalid["stages"][0]["jobs"].append({"variables": [{"name": retention_variable, "value": True}]})
     try:
         assert_windows_evidence_variable_change(retention_before, invalid, retention_variable, "true")
     except AssertionError:
@@ -288,7 +318,7 @@ for mutation in ("bool", "false", "alias", "duplicate", "spmi-output", "conditio
 for status, expected_off in (("Succeeded", False), ("SucceededWithIssues", True), ("Failed", True), ("Canceled", True)):
     for setting, expected in (("", expected_off), ("false", expected_off), ("true", True)):
         assert (status != "Succeeded" or setting == "true") == expected
-print("PASS: modeled retention changes only healthy inner predicate; exact string/alias, 15 guards, SPMI output, observer and clean controls preserved.")
+print("PASS: source boolean rejected; modeled provider retention accepts only string true or exact boolean True; aliases, 15 guards, SPMI output, observer and clean controls preserved.")
 tracked_root_files = subprocess.check_output(
     ["git", "ls-tree", "--name-only", BASELINE], cwd=ROOT, text=True).splitlines()
 assert [name for name in tracked_root_files if name.casefold() == "nuget.config"] == ["NuGet.config"]
@@ -608,7 +638,7 @@ if args.expanded_preview:
             print("PASS: entire supplied provider graph differs only by the fixed diagnostic Windows SPMI user-copy variable.")
         if args.require_windows_retention:
             assert_windows_evidence_variable_change(before, preview, retention_variable, "true")
-            print("PASS: entire supplied provider graph differs only by quoted-string diagnostic Windows retention; all existing guards and tasks are identical.")
+            print("PASS: entire supplied provider graph differs only by diagnostic Windows retention (source string or observed provider true scalar); all existing guards and tasks are identical.")
         old_jobs = [job for stage in before["stages"] for job in stage.get("jobs", [])
                     if job.get("job") == sign_jobs[0]["job"]]
         assert len(old_jobs) == 1

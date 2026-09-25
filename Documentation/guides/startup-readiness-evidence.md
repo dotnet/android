@@ -453,6 +453,12 @@ For this delta, use `--require-windows-retention --require-root-observer
 --expanded-preview <new> --baseline-preview <36e62-preview>` instead of the older
 `--require-spmi-output` delta check. It requires whole-provider-object equality
 after removing only the retention variable, including unchanged pre-job length,
+accepting either its string value or the actual provider's unquoted `true`
+scalar rendering for this exact variable only. Source YAML must still contain
+the quoted string `'true'`; a source boolean is rejected separately. No other
+provider field is normalized, and false values, aliases and additional fields
+remain invalid. The retained actual service preview, not a synthetic rendering,
+qualifies this serialization distinction. The equality check also preserves
 one SPMI invocation and its fixed output, all guards and all other jobs.
 Predicate tests are models, not hosted execution. Qualification still requires
 actual scanner/report execution, published raw/processed evidence, and the
