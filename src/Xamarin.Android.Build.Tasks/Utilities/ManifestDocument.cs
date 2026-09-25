@@ -7,7 +7,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using System.Xml.XPath;
 using Microsoft.Build.Utilities;
 
 using Android.App;
@@ -22,7 +21,6 @@ using Monodroid;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.TypeNameMappings;
 
-using System.Xml;
 using System.Text;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
@@ -46,34 +44,6 @@ namespace Xamarin.Android.Tasks {
 		XName attName;
 
 		XElement app;
-
-		// the elements and attributes which we apply the "." -> PackageName replacement on
-		static readonly Dictionary<string, string []> ManifestAttributeFixups = new Dictionary<string, string []> {
-			{ "activity", new string[] {
-					"name",
-				}
-			},
-			{ "application", new string[] {
-					"backupAgent",
-				}
-			},
-			{ "instrumentation", new string[] {
-					"name",
-				}
-			},
-			{ "provider", new string[] {
-					"name",
-				}
-			},
-			{ "receiver", new string[] {
-					"name",
-				}
-			},
-			{ "service", new string[] {
-					"name",
-				}
-			},
-		};
 
 		// (element, android:name attribute value) which must ALL be present for
 		// the <activity/> to be considered a launcher
@@ -263,7 +233,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		public IList<string> Merge (TaskLoggingHelper log, TypeDefinitionCache cache, List<TypeDefinition> subclasses, string applicationClass, bool embed, string bundledWearApplicationName, IEnumerable<string> mergedManifestDocuments)
+		public IList<string> Merge (TaskLoggingHelper log, TypeDefinitionCache cache, List<TypeDefinition> subclasses, string applicationClass, bool embed, string bundledWearApplicationName)
 		{
 			var manifest = doc.Root;
 
@@ -457,16 +427,6 @@ namespace Xamarin.Android.Tasks {
 			ReorderActivityAliases (log, app);
 			ReorderElements (app);
 
-			if (mergedManifestDocuments != null) {
-				foreach (var mergedManifest in mergedManifestDocuments) {
-					try {
-						MergeLibraryManifest (mergedManifest);
-					} catch (Exception ex) {
-						log.LogCodedWarning ("XA4302", Properties.Resources.XA4302, ex);
-					}
-				}
-			}
-
 			return providerNames;
 
 			SequencePoint FindSource (IEnumerable<MethodDefinition> methods)
@@ -496,29 +456,6 @@ namespace Xamarin.Android.Tasks {
 			JavaNativeTypeManager.ToCompatJniName (type, cache).Replace ('/', '.')
 		);
 
-		// FIXME: our manifest merger is hacky.
-		// To support complete manifest merger, we will have to implement fairly complicated one, described at
-		// http://tools.android.com/tech-docs/new-build-system/user-guide/manifest-merger
-		void MergeLibraryManifest (string mergedManifest)
-		{
-			var nsResolver = new XmlNamespaceManager (new NameTable ());
-			nsResolver.AddNamespace ("android", androidNs.NamespaceName);
-			var xdoc = XDocument.Load (mergedManifest);
-			var package = xdoc.Root.Attribute ("package")?.Value ?? string.Empty;
-			foreach (var top in xdoc.XPathSelectElements ("/manifest/*")) {
-				var name = top.Attribute (AndroidXmlNamespace.GetName ("name"));
-				var existing = (name != null) ?
-					doc.XPathSelectElement (string.Format ("/manifest/{0}[@android:name='{1}']", top.Name.LocalName, name.Value), nsResolver) :
-					doc.XPathSelectElement (string.Format ("/manifest/{0}", top.Name.LocalName));
-				if (existing != null)
-					// if there is existing node with the same android:name, then append contents to existing node.
-					existing.Add (FixupNameElements (package, top.Nodes ()));
-				else
-					// otherwise, just add to the doc.
-					doc.Root.Add (FixupNameElements (package, new XNode [] { top }));
-			}
-		}
-
 		public IEnumerable<XElement> ResolveDuplicates (IEnumerable<XElement> elements)
 		{
 			foreach (var e in elements)
@@ -546,18 +483,6 @@ namespace Xamarin.Android.Tasks {
 					node.Remove ();
 				}
 			}
-		}
-
-		IEnumerable<XNode> FixupNameElements(string packageName, IEnumerable<XNode> nodes)
-		{
-			foreach (var element in nodes.Select ( x => x as XElement).Where (x => x != null && ManifestAttributeFixups.ContainsKey (x.Name.LocalName))) {
-				var attributes = ManifestAttributeFixups [element.Name.LocalName];
-				foreach (var attr in element.Attributes ().Where (x => attributes.Contains (x.Name.LocalName))) {
-					var typeName = attr.Value;
-					attr.Value = typeName.StartsWith (".", StringComparison.InvariantCultureIgnoreCase) ? packageName + typeName : typeName;
-				}
-			}
-			return nodes;
 		}
 
 		Func<TypeDefinition, string, TypeDefinitionCache, int, XElement> GetGenerator (TypeDefinition type, TypeDefinitionCache cache)

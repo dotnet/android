@@ -22,7 +22,7 @@ public class TrimmableTypeMapGenerator
 
 	/// <summary>
 	/// Runs the full generation pipeline: scan assemblies, generate typemap
-	/// assemblies, generate JCW Java sources, and optionally generate a merged manifest.
+	/// assemblies, generate JCW Java sources, and optionally generate an application manifest.
 	/// No file IO is performed — all results are returned in memory.
 	/// </summary>
 	/// <param name="collectMarshalMethodsForNonAcw">
@@ -382,14 +382,7 @@ public class TrimmableTypeMapGenerator
 			ForceExtractNativeLibs = forceDebuggable,
 			ManifestPlaceholders = config.ManifestPlaceholders,
 			ApplicationJavaClass = config.ApplicationJavaClass,
-			Warn = (code, message) => {
-				if (code == ManifestGenerator.LibraryManifestMergeWarningCode)
-					logger.LogLibraryManifestMergeWarning (message);
-				// Other codes (e.g. unresolvable type properties) are not yet assigned XA codes
-				// and are intentionally not surfaced here.
-			},
 			WarnInvalidPlaceholder = placeholders => logger.LogInvalidManifestPlaceholderWarning (placeholders),
-			LibraryManifests = config.LibraryManifests ?? [],
 		};
 
 		var (doc, providerNames) = generator.Generate (manifestTemplate, allPeers, assemblyManifestInfo);

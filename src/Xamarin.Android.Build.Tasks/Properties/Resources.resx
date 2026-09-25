@@ -735,11 +735,6 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>The abbreviation "ABI" should not be translated.
 {0} - Comma-separated list of the ignored library file names.</comment>
   </data>
-  <data name="XA4302" xml:space="preserve">
-    <value>Unhandled exception merging `AndroidManifest.xml`: {0}</value>
-    <comment>The following are literal names and should not be translated: `AndroidManifest.xml`
-{0} - The exception message of the associated exception</comment>
-  </data>
   <data name="XA4303" xml:space="preserve">
     <value>Error extracting resources from "{0}": {1}</value>
     <comment>{0} - The file name
