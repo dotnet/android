@@ -52,7 +52,7 @@ namespace Xamarin.Android.Tasks
 						NoDeviceFound (target, adbPath, logError, logErrors, engine4);
 					return device as AdbDeviceInfo;
 				}
-				var devices = CreateAdbRunner (adbToolPath, adbToolExe).ListDevicesAsync ().GetAwaiter ().GetResult ();
+				var devices = CreateAdbRunner (adbToolPath, adbToolExe).ListDevicesWithoutAvdNamesAsync ().GetAwaiter ().GetResult ();
 				var selected = SelectDevice (devices, target);
 				if (selected != null) {
 					RegisterDevice (engine4, target, adbPath, selected);

@@ -87,6 +87,11 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 <Target Name="_GetPrimaryCpuAbi"
 		DependsOnTargets="_SetupDesignTimeBuildForIntellisense;_ResolveXamarinAndroidTools;_ValidateAndroidPackageProperties"
 		Condition=" '$(AndroidApplication)' == 'true' and '$(EmbedAssembliesIntoApk)' == 'false' ">
+	<PropertyGroup>
+		<AdbToolPath Condition=" '$(AdbToolPath)' == '' and '$(_AndroidSdkDirectory)' != '' ">$([System.IO.Path]::Combine('$(_AndroidSdkDirectory)', 'platform-tools'))</AdbToolPath>
+		<AdbToolExe Condition=" '$(AdbToolExe)' == '' and $([MSBuild]::IsOSPlatform('windows')) ">adb.exe</AdbToolExe>
+		<AdbToolExe Condition=" '$(AdbToolExe)' == '' and !$([MSBuild]::IsOSPlatform('windows')) ">adb</AdbToolExe>
+	</PropertyGroup>
 	<GetPrimaryCpuAbi
 			AndroidPackage="$(_AndroidPackage)"
 			AdbTarget="$(AdbTarget)"

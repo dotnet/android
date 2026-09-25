@@ -1333,16 +1333,17 @@ public class AdbRunnerTests
 
 	// These tests use a fake 'adb' script to control process output.
 
-	static string CreateFakeAdb (string scriptBody)
+	static string CreateFakeAdb (string scriptBody, string windowsScriptBody = null)
 	{
-		if (OS.IsWindows)
+		if (OS.IsWindows && windowsScriptBody == null)
 			Assert.Ignore ("Fake adb tests use bash scripts and are not supported on Windows.");
 
 		var dir = Path.Combine (Path.GetTempPath (), $"fake-adb-{Guid.NewGuid ():N}");
 		Directory.CreateDirectory (dir);
-		var path = Path.Combine (dir, "adb");
-		File.WriteAllText (path, "#!/bin/bash\n" + scriptBody);
-		FileUtil.Chmod (path, 0x1ED); // 0755
+		var path = Path.Combine (dir, OS.IsWindows ? "adb.cmd" : "adb");
+		File.WriteAllText (path, OS.IsWindows ? "@echo off\r\n" + windowsScriptBody : "#!/bin/bash\n" + scriptBody);
+		if (!OS.IsWindows)
+			FileUtil.Chmod (path, 0x1ED); // 0755
 
 		return path;
 	}
@@ -1554,6 +1555,99 @@ public class AdbRunnerTests
 
 			Assert.AreEqual (AdbDeviceStatus.Offline, offline.Status);
 			Assert.IsNull (offline.AvdName, "Offline emulator should NOT have AVD name queried");
+		} finally {
+			CleanupFakeAdb (adbPath);
+		}
+	}
+
+	[Test]
+	public async Task ListDevicesWithoutAvdNamesAsync_SkipsOnlineEmulatorQueries ()
+	{
+		var adbPath = CreateFakeAdb ("""
+			if [[ "$1" == "devices" && "$2" == "-l" ]]; then
+			    echo "List of devices attached"
+			    echo "emulator-5554          device model:Pixel_7 transport_id:1"
+			    exit 0
+			fi
+			echo queried > "$0.queried"
+			exit 1
+			""", """
+			if "%1"=="devices" if "%2"=="-l" (
+			    echo List of devices attached
+			    echo emulator-5554          device model:Pixel_7 transport_id:1
+			    exit /b 0
+			)
+			echo queried > "%~f0.queried"
+			exit /b 1
+			""");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			var devices = await runner.ListDevicesWithoutAvdNamesAsync ();
+
+			Assert.AreEqual (1, devices.Count);
+			Assert.AreEqual ("emulator-5554", devices [0].Serial);
+			Assert.IsNull (devices [0].AvdName);
+			Assert.IsFalse (File.Exists (adbPath + ".queried"), "Device listing must not query AVD names");
+		} finally {
+			File.Delete (adbPath + ".queried");
+			CleanupFakeAdb (adbPath);
+		}
+	}
+
+	[Test]
+	public async Task ExecuteShellCommandAsync_ReturnsPackageOutput ()
+	{
+		var adbPath = CreateFakeAdb ("""
+			if [[ "$1" == "-s" && "$2" == "emulator-5554" && "$3" == "shell" && "$4" == "pm" && "$5" == "list" && "$6" == "packages" ]]; then
+			    echo "package:com.example.app"
+			    echo "package:com.example.other"
+			    exit 0
+			fi
+			exit 1
+			""", """
+			if "%1"=="-s" if "%2"=="emulator-5554" if "%3"=="shell" if "%4"=="pm" if "%5"=="list" if "%6"=="packages" (
+			    echo package:com.example.app
+			    echo package:com.example.other
+			    exit /b 0
+			)
+			exit /b 1
+			""");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			var output = await runner.ExecuteShellCommandAsync ("emulator-5554", "pm", new [] { "list", "packages" });
+
+			Assert.AreEqual ($"package:com.example.app{Environment.NewLine}package:com.example.other", output);
+		} finally {
+			CleanupFakeAdb (adbPath);
+		}
+	}
+
+	[Test]
+	public void ExecuteShellCommandAsync_ThrowsOnFailedPackageQuery ()
+	{
+		var adbPath = CreateFakeAdb ("""
+			if [[ "$1" == "-s" && "$2" == "emulator-5554" && "$3" == "shell" && "$4" == "pm" && "$5" == "list" && "$6" == "packages" ]]; then
+			    echo "Package manager unavailable" >&2
+			    exit 42
+			fi
+			exit 1
+			""", """
+			if "%1"=="-s" if "%2"=="emulator-5554" if "%3"=="shell" if "%4"=="pm" if "%5"=="list" if "%6"=="packages" (
+			    echo Package manager unavailable 1>&2
+			    exit /b 42
+			)
+			exit /b 1
+			""");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			var error = Assert.ThrowsAsync<InvalidOperationException> (
+				async () => await runner.ExecuteShellCommandAsync ("emulator-5554", "pm", new [] { "list", "packages" }));
+
+			Assert.That (error?.Message, Does.Contain ("exit code 42"));
+			Assert.That (error?.Message, Does.Contain ("Package manager unavailable"));
 		} finally {
 			CleanupFakeAdb (adbPath);
 		}

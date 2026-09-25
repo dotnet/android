@@ -51,7 +51,16 @@ public class AdbRunner
 	/// For online emulators, queries the AVD name via <c>getprop</c> / <c>emu avd name</c>.
 	/// Offline emulators are included but without AVD names (querying them would fail).
 	/// </summary>
-	public virtual async Task<IReadOnlyList<AdbDeviceInfo>> ListDevicesAsync (CancellationToken cancellationToken = default)
+	public virtual Task<IReadOnlyList<AdbDeviceInfo>> ListDevicesAsync (CancellationToken cancellationToken = default)
+		=> ListDevicesCoreAsync (includeAvdNames: true, cancellationToken);
+
+	/// <summary>
+	/// Lists connected devices without querying AVD names when only device serials are needed.
+	/// </summary>
+	public Task<IReadOnlyList<AdbDeviceInfo>> ListDevicesWithoutAvdNamesAsync (CancellationToken cancellationToken = default)
+		=> ListDevicesCoreAsync (includeAvdNames: false, cancellationToken);
+
+	async Task<IReadOnlyList<AdbDeviceInfo>> ListDevicesCoreAsync (bool includeAvdNames, CancellationToken cancellationToken)
 	{
 		using var stdout = new StringWriter ();
 		using var stderr = new StringWriter ();
@@ -61,6 +70,9 @@ public class AdbRunner
 		ProcessUtils.ThrowIfFailed (exitCode, "adb devices -l", stderr, stdout);
 
 		var devices = ParseAdbDevicesOutput (stdout.ToString ().Split ('\n'));
+
+		if (!includeAvdNames)
+			return devices;
 
 		// For each online emulator, try to get the AVD name.
 		// Skip offline emulators — neither getprop nor 'emu avd name' work on them
