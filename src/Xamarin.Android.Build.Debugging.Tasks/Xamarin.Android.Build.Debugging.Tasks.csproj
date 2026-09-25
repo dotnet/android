@@ -67,6 +67,17 @@
     <ProjectReference Include="..\Mono.AndroidTools\Mono.AndroidTools.csproj" />
     <ProjectReference Include="..\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
     <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
+    <!-- GetXAVersionInfo executes these tasks even in a standalone test build. -->
+    <ProjectReference Include="..\..\build-tools\xa-prep-tasks\xa-prep-tasks.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Share the transaction without a new public API or a dependency on the run executable. -->
+    <Compile Include="..\Microsoft.Android.Run\ManagedActivityLaunch.cs" Link="ManagedActivityLaunch.cs" />
+    <Compile Include="..\Microsoft.Android.Run\ManagedActivityLaunchResources.Designer.cs" Link="ManagedActivityLaunchResources.Designer.cs" />
+    <EmbeddedResource Include="..\Microsoft.Android.Run\ManagedActivityLaunchResources.resx" Link="ManagedActivityLaunchResources.resx">
+      <LogicalName>Microsoft.Android.Run.ManagedActivityLaunchResources.resources</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <Target Name="_SetAssemblyVersion"

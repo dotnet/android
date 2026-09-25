@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\..\Configuration.props" />
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <AssemblyName>ManagedLaunchTestAdbClient</AssemblyName>
+    <RootNamespace>Microsoft.Android.Run.Tests.ManagedLaunchTestAdbProxy</RootNamespace>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <OutputPath>$(TestOutputDirectory)Microsoft.Android.Run-Tests\ManagedLaunchTestAdbProxyTool\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Nullable>enable</Nullable>
+    <RollForward>Major</RollForward>
+  </PropertyGroup>
+
+</Project>
