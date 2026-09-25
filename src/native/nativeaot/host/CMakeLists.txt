@@ -110,14 +110,6 @@ macro(lib_target_options TARGET_NAME)
     ${TARGET_NAME}
     SYSTEM PRIVATE
     ${SYSROOT_CXX_INCLUDE_DIR}
-    ${RUNTIME_INCLUDE_DIR}
-    ${TEMP_MONO_RUNTIME_INCLUDE_DIR}
-  )
-
-  target_link_directories(
-    ${TARGET_NAME}
-    PRIVATE
-    ${NET_RUNTIME_DIR}/native
   )
 
   target_link_options(

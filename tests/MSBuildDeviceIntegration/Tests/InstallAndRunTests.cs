@@ -2435,6 +2435,9 @@ namespace UnnamedProject
 				[Values ("net10.0-android36.1")] string targetFramework,
 				[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			if (isRelease && targetFramework == "net10.0-android36.1" && runtime == AndroidRuntime.CoreCLR) {
+				Assert.Ignore ("https://github.com/dotnet/android/issues/12923");
+			}
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
