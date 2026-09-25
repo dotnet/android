@@ -150,11 +150,8 @@ namespace Xamarin.Android.Tasks
 				LogDebugMessage ($"Falling back to pm dump {AndroidPackage}.");
 				ResultingAbi = await GetAbiFromPmDump (device);
 			}
-			string [] supportedAbis = device.Properties.ProductCpuAbiList;
-			if (supportedAbis.Length == 0) {
-				supportedAbis = new [] { device.Properties.ProductCpuAbi, device.Properties.ProductCpuAbi2 }
-					.Where (abi => !string.IsNullOrEmpty (abi)).ToArray ();
-			}
+			string [] supportedAbis = GetSupportedAbis (device.Properties.ProductCpuAbiList,
+				device.Properties.ProductCpuAbi, device.Properties.ProductCpuAbi2);
 			// Cache device capabilities before selecting the ABI for this app.
 			doc = DeviceCache.Update (doc, device.ID, ResultingAbi, sdkver, device.LongOutput, supportedAbis);
 			SelectRuntimeIdentifier (supportedAbis);
@@ -203,13 +200,30 @@ namespace Xamarin.Android.Tasks
 			return abis.Last ().Value;
 		}
 
+		internal static string [] GetSupportedAbis (string [] supportedAbis, string primaryAbi, string secondaryAbi)
+		{
+			if (Array.Exists (supportedAbis, abi => !string.IsNullOrWhiteSpace (abi))) {
+				return supportedAbis;
+			}
+
+			var abis = new List<string> (2);
+			if (!string.IsNullOrWhiteSpace (primaryAbi)) {
+				abis.Add (primaryAbi);
+			}
+			if (!string.IsNullOrWhiteSpace (secondaryAbi)) {
+				abis.Add (secondaryAbi);
+			}
+			return abis.ToArray ();
+		}
+
 		internal void SelectRuntimeIdentifier (params string [] supportedAbis)
 		{
 			RuntimeIdentifier = null;
 			if (RuntimeIdentifiers == null) {
 				return;
 			}
-			foreach (var candidate in new [] { ResultingAbi }.Concat (supportedAbis)) {
+			string [] candidates = [ResultingAbi, .. supportedAbis];
+			foreach (var candidate in candidates) {
 				string abi = candidate?.Trim ();
 				if (string.IsNullOrEmpty (abi)) {
 					continue;

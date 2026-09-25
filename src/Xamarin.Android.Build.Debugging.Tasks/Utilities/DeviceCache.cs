@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Build.Utilities;
@@ -9,6 +10,8 @@ namespace Xamarin.Android.Tasks
 	/// </summary>
 	public static class DeviceCache
 	{
+		static readonly char [] CommaSeparator = [','];
+
 		/// <summary>
 		/// Updates or adds a device entry in the cache document.
 		/// </summary>
@@ -94,8 +97,8 @@ namespace Xamarin.Android.Tasks
 			if (!int.TryParse (element.Element ("SdkVersion")?.Value, out sdkVersion))
 				return false;
 
-			supportedAbis = supportedAbisElement.Value.Split (new [] { ',' }, System.StringSplitOptions.RemoveEmptyEntries);
-			return !string.IsNullOrEmpty (resultingAbi);
+			supportedAbis = supportedAbisElement.Value.Split (CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
+			return !string.IsNullOrEmpty (resultingAbi) || Array.Exists (supportedAbis, abi => !string.IsNullOrWhiteSpace (abi));
 		}
 	}
 }

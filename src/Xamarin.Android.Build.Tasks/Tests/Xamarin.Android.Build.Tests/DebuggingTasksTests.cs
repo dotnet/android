@@ -50,14 +50,31 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (expectedRid, task.RuntimeIdentifier);
 		}
 
-		[TestCase ("android-arm", "armeabi-v7a")]
-		[TestCase ("android-arm64", "arm64-v8a")]
-		public void SelectRuntimeIdentifierFromDeviceCache (string runtimeIdentifier, string expectedAbi)
+		[TestCase (null, "arm64-v8a", "armeabi-v7a", "arm64-v8a,armeabi-v7a")]
+		[TestCase ("", "arm64-v8a", "armeabi-v7a", "arm64-v8a,armeabi-v7a")]
+		[TestCase (" , ", "arm64-v8a", "armeabi-v7a", "arm64-v8a,armeabi-v7a")]
+		[TestCase ("", null, "armeabi-v7a", "armeabi-v7a")]
+		[TestCase ("", "arm64-v8a", null, "arm64-v8a")]
+		[TestCase ("", null, null, "")]
+		[TestCase ("", " ", "", "")]
+		[TestCase ("arm64-v8a", "arm64-v8a", "armeabi-v7a", "arm64-v8a")]
+		public void GetSupportedAbis (string reportedAbis, string primaryAbi, string secondaryAbi, string expectedAbis)
 		{
-			var doc = DeviceCache.Update (null, "device", "arm64-v8a", 36, "model:TestDevice", ["arm64-v8a", "armeabi-v7a"]);
+			var supportedAbis = GetPrimaryCpuAbi.GetSupportedAbis (reportedAbis?.Split (',') ?? [], primaryAbi, secondaryAbi);
+
+			CollectionAssert.AreEqual (expectedAbis.Split (',', StringSplitOptions.RemoveEmptyEntries), supportedAbis);
+		}
+
+		[TestCase ("arm64-v8a", "android-arm", "armeabi-v7a")]
+		[TestCase ("arm64-v8a", "android-arm64", "arm64-v8a")]
+		[TestCase (null, "android-arm", "armeabi-v7a")]
+		[TestCase ("", "android-arm64", "arm64-v8a")]
+		public void SelectRuntimeIdentifierFromDeviceCache (string deviceAbi, string runtimeIdentifier, string expectedAbi)
+		{
+			var doc = DeviceCache.Update (null, "device", deviceAbi, 36, "model:TestDevice", ["arm64-v8a", "armeabi-v7a"]);
 			doc = XDocument.Parse (doc.ToString ());
 			Assert.IsTrue (DeviceCache.TryGet (doc, "device", "model:TestDevice", out var abi, out var sdkVersion, out var supportedAbis));
-			Assert.AreEqual ("arm64-v8a", abi);
+			Assert.AreEqual (deviceAbi, abi);
 			Assert.AreEqual (36, sdkVersion);
 			CollectionAssert.AreEqual (new [] { "arm64-v8a", "armeabi-v7a" }, supportedAbis);
 
@@ -70,8 +87,17 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.AreEqual (expectedAbi, task.ResultingAbi);
 			Assert.AreEqual (runtimeIdentifier, task.RuntimeIdentifier);
-			Assert.AreEqual ("arm64-v8a", doc.Root?.Element ("Device")?.Element ("ResultingAbi")?.Value,
+			Assert.AreEqual (deviceAbi, doc.Root?.Element ("Device")?.Element ("ResultingAbi")?.Value,
 				"The cache must retain the device ABI, not the app ABI.");
+		}
+
+		[TestCase (null, "")]
+		[TestCase ("", " , ")]
+		public void DeviceCacheWithoutAnyAbiIsRefreshed (string deviceAbi, string supportedAbis)
+		{
+			var doc = DeviceCache.Update (null, "device", deviceAbi, 36, "model:TestDevice", supportedAbis.Split (','));
+
+			Assert.IsFalse (DeviceCache.TryGet (doc, "device", "model:TestDevice", out _, out _, out _));
 		}
 
 		[Test]
