@@ -25,7 +25,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.FastDeploy" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MoveSubfolder" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveXamarinAndroidTools" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.RunActivity" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.RunTests" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.WaitForAppDetection" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 
@@ -198,39 +197,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 	/>
 </Target>
 
-<Target Name="_Run"
-		DependsOnTargets="AndroidPrepareForBuild"
-		Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)">
-	<PropertyGroup>
-		<AndroidSdbTargetPort Condition="'$(AndroidSdbTargetPort)' == ''">10000</AndroidSdbTargetPort>
-		<AndroidSdbHostPort Condition="'$(AndroidSdbHostPort)' == ''">10000</AndroidSdbHostPort>
-		<AndroidAttachDebugger Condition="'$(AndroidAttachDebugger)' == ''">False</AndroidAttachDebugger>
-		<AndroidDebuggerServer Condition="'$(AndroidDebuggerServer)' == ''">True</AndroidDebuggerServer>
-		<_AndroidRunForceStop Condition="'$(_AndroidRunForceStop)' == ''">True</_AndroidRunForceStop>
-		<_AndroidAllowJavaDebugging Condition="'$(_AndroidAllowJavaDebugging)' == ''">False</_AndroidAllowJavaDebugging>
-	</PropertyGroup>
-	<Exec Command="&quot;$(_AndroidPlatformToolsDirectory)adb&quot; $(AdbTarget) forward tcp:$(AndroidSdbTargetPort) tcp:$(AndroidSdbHostPort)"
-		Condition="'$(AndroidAttachDebugger)' == 'True' And '$(AndroidDebuggerServer)' == 'True'" />
-	<GetAndroidActivityName
-			Condition=" '$(RunActivity)' == '' "
-			ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
-		<Output TaskParameter="ActivityName" PropertyName="RunActivity" />
-	</GetAndroidActivityName>
-	<RunActivity
-			ActivityName="$(RunActivity)"
-			AdbTarget="$(AdbTarget)"
-			PackageName="$(_AndroidPackage)"
-			AttachDebugger="$(AndroidAttachDebugger)"
-			Port="$(AndroidSdbTargetPort)"
-			UserID="$(AndroidDeviceUserId)"
-			Server="$(AndroidDebuggerServer)"
-			ForceStop="$(_AndroidRunForceStop)"
-			AllowJavaDebugging="$(_AndroidAllowJavaDebugging)"
-	/>
-</Target>
-
 <Target Name="_Gdb"
-		DependsOnTargets="AndroidPrepareForBuild;_GetPrimaryCpuAbi;_GetTargetSymbols;_PrepGdbConnection;_GetProjectNdkBuildSymbols;_Run"
+		DependsOnTargets="AndroidPrepareForBuild;_GetPrimaryCpuAbi;_GetTargetSymbols;_PrepGdbConnection;_GetProjectNdkBuildSymbols;Run"
 		Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)">
 	<Message Text="AndroidGdbSymbolsPath: $(AndroidGdbSymbolsPath)" />
 	<Message Text="  PackageOverridePath: $(_PackageOverridePath)" />

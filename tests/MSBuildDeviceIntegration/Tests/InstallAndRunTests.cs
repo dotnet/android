@@ -3318,19 +3318,23 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		}
 
 		[Test]
-		public void StartAndroidActivityRespectsAndroidDeviceUserId ()
+		public void RunTargetRespectsAndroidDeviceUserId ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 
-			// Run with AndroidDeviceUserId=0 (primary user, always available)
 			builder.BuildLogFile = "start-with-user.log";
-			Assert.IsTrue (builder.RunTarget (proj, "StartAndroidActivity", parameters: new [] { "AndroidDeviceUserId=0" }),
-				"StartAndroidActivity should have succeeded.");
+			Assert.IsTrue (builder.RunTarget (proj, "Run", parameters: new [] { "AndroidDeviceUserId=0", "_AndroidRunExtraArgs=--verbose" }),
+				"Run should have succeeded.");
 
 			StringAssertEx.ContainsRegex (@"am start.*--user 0", builder.LastBuildOutput,
 				"The 'am start' command should contain '--user 0' when AndroidDeviceUserId is set.");
+			Assert.IsTrue (builder.LastBuildOutput.ContainsText ("--no-wait"),
+				"The Run target should launch Microsoft.Android.Run without waiting for the app to exit.");
+			Assert.IsFalse (builder.LastBuildOutput.ContainsText ("--no-wake-device"),
+				"The Run target should wake the device before starting the app.");
+			Assert.IsTrue (builder.LastBuildOutput.ContainsText ("KEYCODE_WAKEUP"),
+				"The Run target should wake the device before starting the app.");
 		}
 
 		public enum MSTestPackageChannel
