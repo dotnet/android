@@ -57,21 +57,25 @@ for ($index = 2; $index -lt 4; ++$index) {
 # Real ZIP readers/hashers run against labeled synthetic packages, never treated as producer artifacts.
 $fixtureRoot = "$root\bin\guest-runtime-pack-fixtures"
 New-Item -ItemType Directory -Force $fixtureRoot | Out-Null
-function New-Fixture([string] $Name, [string] $Mode = 'valid') {
+function New-Fixture([string] $Name, [string] $Mode = 'valid', [string] $Rid = 'android-arm64') {
     $path = "$fixtureRoot\$Name.nupkg"
     $stream = [IO.File]::Open($path, [IO.FileMode]::Create)
     $zip = [IO.Compression.ZipArchive]::new($stream, [IO.Compression.ZipArchiveMode]::Create)
     try {
         $version = if ($Mode -eq 'held') { '36.1.69' } else { $plan.version }
         $items = [ordered]@{
-            'package.nuspec' = "<package><metadata><id>Microsoft.Android.Runtime.Mono.36.android-arm64</id><version>$version</version></metadata></package>"
+            'package.nuspec' = "<package><metadata><id>Microsoft.Android.Runtime.Mono.36.$Rid</id><version>$version</version></metadata></package>"
             'data/RuntimeList.xml' = '<FileList />'
         }
         foreach ($asset in @('libmono-android.debug.so', 'libmono-android.release.so', 'libxamarin-debug-app-helper.so',
             'libxamarin-native-tracing.so', 'libunwind_xamarin-debug.a', 'libunwind_xamarin-release.a',
             'libc.so', 'libdl.so', 'liblog.so', 'libm.so', 'libz.so', 'libarchive-dso-stub.so')) {
             if ($Mode -eq 'missing' -and $asset -eq 'libmono-android.debug.so') { continue }
-            $items["runtimes/android-arm64/native/$asset"] = 'synthetic-not-ELF'
+            $items["runtimes/$Rid/native/$asset"] = 'synthetic-not-ELF'
+        }
+        if ($Mode -in @('host-metadata', 'host-metadata-directories')) {
+            $items["runtimes/$Rid/lib/netstandard2.0/Microsoft.Android.Runtimes.deps.json"] = '{"fixture":"synthetic deps metadata"}'
+            $items["runtimes/$Rid/lib/netstandard2.0/Microsoft.Android.Runtimes.runtimeconfig.json"] = '{"runtimeOptions":{"tfm":"netstandard2.0"}}'
         }
         if ($Mode -eq 'traversal') { $items['../escape'] = 'bad' }
         if ($Mode -eq 'wrong-rid') { $items['runtimes/android-x64/native/wrong.so'] = 'bad' }
@@ -108,6 +112,17 @@ function New-Fixture([string] $Name, [string] $Mode = 'valid') {
             'signature-case' { '.SIGNATURE.P7S' }
             'signature-directory' { '.signature.p7s/' }
             'directories' { 'empty/'; 'runtimes/'; 'runtimes/android-arm64/'; 'runtimes/android-arm64/native/' }
+            'host-metadata-directories' { 'runtimes/'; "runtimes/$Rid/"; "runtimes/$Rid/lib/"; "runtimes/$Rid/lib/netstandard2.0/" }
+            'metadata-wrong-rid' { 'runtimes/android-x64/lib/netstandard2.0/Microsoft.Android.Runtimes.deps.json' }
+            'metadata-wrong-tfm' { "runtimes/$Rid/lib/net10.0/Microsoft.Android.Runtimes.deps.json" }
+            'metadata-wrong-case' { "runtimes/$Rid/lib/netstandard2.0/microsoft.Android.Runtimes.deps.json" }
+            'metadata-extra-json' { "runtimes/$Rid/lib/netstandard2.0/other.json" }
+            'metadata-managed-dll' { "runtimes/$Rid/lib/netstandard2.0/Microsoft.Android.dll" }
+            'metadata-nested' { "runtimes/$Rid/lib/netstandard2.0/other/Microsoft.Android.Runtimes.deps.json" }
+            'metadata-directory-leaf' { "runtimes/$Rid/lib/netstandard2.0/Microsoft.Android.Runtimes.deps.json/" }
+            'metadata-file-parent' { "runtimes/$Rid/lib/netstandard2.0" }
+            'metadata-foreign-directory' { 'runtimes/android-x64/lib/netstandard2.0/' }
+            'metadata-directory-data' { "runtimes/$Rid/lib/netstandard2.0/" }
             'entry-count' { for ($i = 14; $i -lt 20001; ++$i) { "empty-$i" } }
             'count-boundary' { for ($i = 14; $i -lt 20000; ++$i) { "empty-$i" } }
         }
@@ -115,7 +130,7 @@ function New-Fixture([string] $Name, [string] $Mode = 'valid') {
             $entry = $zip.CreateEntry($name)
             if ($Mode -eq 'symlink') { $entry.ExternalAttributes = 0xa1ff -shl 16 }
             if ($Mode -eq 'directory-flag') { $entry.ExternalAttributes = 0x10 }
-            if ($Mode -eq 'directory-data') {
+            if ($Mode -in @('directory-data', 'metadata-directory-data')) {
                 $writer = [IO.StreamWriter]::new($entry.Open())
                 try { $writer.Write('not empty') } finally { $writer.Dispose() }
             }
@@ -128,7 +143,7 @@ function New-Fixture([string] $Name, [string] $Mode = 'valid') {
     return $path
 }
 # Mutate real, small ZIP headers rather than mocking ZipArchiveEntry metadata.
-function Set-FixtureMetadata([string] $Path, [string] $Mode) {
+function Set-FixtureMetadata([string] $Path, [string] $Mode, [int] $TargetIndex = 0) {
     $bytes = [IO.File]::ReadAllBytes($Path)
     $end = $bytes.Length - 22
     Assert ([BitConverter]::ToUInt32($bytes, $end) -eq 0x06054b50) 'Fixture has an unambiguous EOCD'
@@ -147,7 +162,7 @@ function Set-FixtureMetadata([string] $Path, [string] $Mode) {
             $bytes[$local + 6] = $bytes[$local + 6] -bor 1
         }
         $length = $null
-        if ($Mode -eq 'entry-bytes' -and $index -eq 0) { $length = 536870913 }
+        if ($Mode -eq 'entry-bytes' -and $index -eq $TargetIndex) { $length = 536870913 }
         if ($Mode -eq 'entry-byte-boundary' -and $index -eq 0) { $length = 536870912 }
         if ($Mode -eq 'total-bytes' -and $index -lt 5) { $length = 536870912 }
         if ($Mode -eq 'total-byte-boundary' -and $index -lt 4) {
@@ -155,7 +170,7 @@ function Set-FixtureMetadata([string] $Path, [string] $Mode) {
         }
         if ($Mode -eq 'declared-size' -and $index -eq 0) { $length = [BitConverter]::ToUInt32($bytes, $offset + 24) + 1 }
         if ($Mode -eq 'declared-short' -and $index -eq 0) { $length = 1 }
-        if ($Mode -eq 'bad-crc' -and $index -eq 0) {
+        if ($Mode -eq 'bad-crc' -and $index -eq $TargetIndex) {
             $bytes[$offset + 16] = $bytes[$offset + 16] -bxor 1
             $bytes[$local + 14] = $bytes[$local + 14] -bxor 1
         }
@@ -202,6 +217,7 @@ $failureCases = [ordered]@{
     'parent-first' = 'Runtime pack file/directory collision.'
     'child-first' = 'Runtime pack file/directory collision.'
     'directory-data' = 'Noncanonical runtime pack directory.'
+    'metadata-directory-data' = 'Noncanonical runtime pack directory.'
     'directory-flag' = 'Noncanonical runtime pack directory.'
     'symlink' = 'Symbolic link runtime pack entry.'
     'signature-case' = 'Noncanonical runtime pack signature member.'
@@ -210,6 +226,10 @@ $failureCases = [ordered]@{
 }
 foreach ($mode in @('empty-component', 'dot', 'absolute', 'backslash', 'drive', 'control', 'del', 'path-length', 'trailing-space', 'trailing-dot', 'device')) {
     $failureCases[$mode] = 'Unsafe runtime pack entry path.'
+}
+foreach ($mode in @('metadata-wrong-rid', 'metadata-wrong-tfm', 'metadata-wrong-case', 'metadata-extra-json',
+    'metadata-managed-dll', 'metadata-nested', 'metadata-directory-leaf', 'metadata-file-parent', 'metadata-foreign-directory')) {
+    $failureCases[$mode] = 'Runtime pack contains assets outside the selected native RID.'
 }
 foreach ($case in $failureCases.GetEnumerator()) {
     $fixture = New-Fixture $case.Key $case.Key
@@ -229,6 +249,7 @@ foreach ($case in @(
     Set-FixtureMetadata $fixture $case.mode
     Expect-Failure { Read-GuestRuntimePackInventory $fixture 'android-arm64' $plan.version } $case.error
 }
+$streamingAssertions = 0
 foreach ($mode in @('directories', 'path-boundary', 'count-boundary', 'streaming')) {
     $fixture = New-Fixture $mode $mode
     $result = Read-GuestRuntimePackInventory $fixture 'android-arm64' $plan.version
@@ -240,8 +261,37 @@ foreach ($mode in @('directories', 'path-boundary', 'count-boundary', 'streaming
         $expected = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes('0123456789abcdef' * 16384))).ToLowerInvariant()
         $entry = $result.entries | Where-Object { $_.path -ceq 'multiple-blocks' }
         Assert ($entry.sizeBytes -eq 262144 -and $entry.sha256 -ceq $expected) 'Multi-buffer streamed content hash'
+        ++$streamingAssertions
     }
 }
+Assert ($streamingAssertions -eq 1) 'Existing streaming SHA assertion executes exactly once'
+$metadataCases = 0
+foreach ($rid in $plan.rids) {
+    foreach ($metadataMode in @('host-metadata', 'host-metadata-directories')) {
+        $fixture = New-Fixture "$rid-$metadataMode" $metadataMode $rid
+        $result = Read-GuestRuntimePackInventory $fixture $rid $plan.version
+        $zip = [IO.Compression.ZipFile]::OpenRead($fixture)
+        try {
+            foreach ($entry in $zip.Entries | Where-Object FullName -Match '\.(deps|runtimeconfig)\.json$') {
+                $stream = $entry.Open()
+                try { $digest = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($stream)).ToLowerInvariant() }
+                finally { $stream.Dispose() }
+                $record = @($result.entries | Where-Object path -CEQ $entry.FullName)
+                Assert ($record.Count -eq 1 -and $record[0].sha256 -ceq $digest -and $record[0].sizeBytes -eq $entry.Length) 'Host metadata fully inventoried, never skipped'
+            }
+        } finally { $zip.Dispose() }
+        Assert ($result.entries.Count -eq $(if ($metadataMode -eq 'host-metadata') { 16 } else { 20 })) 'Exact metadata files and canonical ancestor directories accepted'
+        ++$metadataCases
+    }
+    foreach ($fault in @('bad-crc', 'entry-bytes')) {
+        $fixture = New-Fixture "$rid-metadata-$fault" 'host-metadata' $rid
+        Set-FixtureMetadata $fixture $fault 15
+        $expectedError = if ($fault -eq 'bad-crc') { 'Runtime pack entry CRC mismatch.' } else { 'Runtime pack exceeds the entry byte bound.' }
+        Expect-Failure { Read-GuestRuntimePackInventory $fixture $rid $plan.version } $expectedError
+    }
+}
+Assert ($metadataCases -eq 4) 'Host metadata matrix executes once per RID and layout'
+Write-Host "PASS: streaming SHA assertions=$streamingAssertions; host metadata cases=$metadataCases."
 foreach ($case in @(
     @{ leaf = ('a' * 234) + '.nupkg'; valid = $true },
     @{ leaf = ('a' * 235) + '.nupkg'; valid = $false },

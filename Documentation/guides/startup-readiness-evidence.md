@@ -211,10 +211,26 @@ no package is extracted. Signature presence requires the exact `.signature.p7s`
 file name; case aliases and directory impostors fail validation. These checks
 do not establish signature trust or source/build provenance.
 
+For the selected RID, the native subtree also has exactly two permitted
+generated host-metadata paths under `runtimes/<RID>/lib/netstandard2.0/`:
+`Microsoft.Android.Runtimes.deps.json` and
+`Microsoft.Android.Runtimes.runtimeconfig.json`. The held SharedFramework SDK
+generates them even for Mono native-only packs; actual producer PackTask items
+and the held stock archive agree on those paths. Their bytes receive the same
+size, CRC and SHA256 checks as every other member. Only their canonical empty
+ancestor directories are additionally permitted, not arbitrary managed files,
+other JSON names/TFMs, case aliases or another RID.
+
 `test-runtime-pack-producer.ps1` exercises the real command-plan and bounded ZIP
 inventory helpers using actual malformed ZIP files, exact-limit cases, and
 explicitly synthetic packages. It also launches real child processes to check
 combined output, exit codes, invocation failures, and persisted log hashes.
+`test-stock-runtime-pack-layout.ps1 -StockPackage <held-x64-36.1.69.nupkg>`
+checks all 24 entries of the byte-unchanged stock archive. Only its temporary
+module copy models the expected-version predicate; the test verifies exactly one
+substitution and unchanged remaining code. Production rejects the held version
+both before and after. This validates layout/CRC/hashing, not diagnostic
+admission or signature trust.
 `test-producer-graph.py`
 uses PyYAML to parse the complete source-owned YAML and checks the selected
 normal package/version target shapes. Neither test is an Azure service preview
@@ -377,6 +393,12 @@ The diagnostic steps use the existing `1ES.PublishPipelineArtifact@1` publisher
 with `condition: always()` so failed command receipts remain available. The
 ordinary `PublishPipelineArtifact@1` task is not permitted by this 1ES envelope.
 Artifact names remain exact (no retry suffix) for the signing job's download.
+Before layout classification, Pack retains only the two exact expected runtime
+archive leaves, bounded to regular nonempty files of at most 2 GiB each.
+`unadmitted-runtime-candidates.json` records their sizes/hashes and explicitly
+labels them unadmitted. A failed layout/marker/signature check still fails the
+phase; retained raw bytes are failure evidence, never a substitute for a valid
+inventory or signing/admission evidence.
 Pack retains ordinary package hashes, complete native inventories, raw
 `buildtoolsinventory.csv`, `Configuration.props`, `Configuration.Generated.props`,
 and per-ABI Debug/Release `CMakeCache-<abi>-<configuration>.txt` plus

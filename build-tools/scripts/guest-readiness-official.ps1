@@ -57,6 +57,30 @@ function Get-VerifiedGuestBuildReceipt {
     }
     return $build
 }
+function Save-GuestRuntimePackCandidates {
+    param ([string] $Directory, [string] $Destination, [string] $BuildNumber, [string] $Attempt)
+    $expected = Get-GuestRuntimePackIdentity $BuildNumber $Attempt
+    $references = @(
+        foreach ($rid in @('android-arm64', 'android-x64')) {
+            $leaf = "Microsoft.Android.Runtime.Mono.36.$rid.$($expected.version).nupkg"
+            $source = Join-Path $Directory $leaf
+            $file = Get-Item -LiteralPath $source
+            if ($file.PSIsContainer -or ($file.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0 -or
+                $file.Length -lt 1 -or $file.Length -gt 2147483648) {
+                throw 'Runtime pack candidate must be a bounded regular archive file.'
+            }
+            Copy-GuestReceiptFile $source (Join-Path $Destination $leaf)
+        }
+    )
+    $sidecar = Join-Path $Destination 'unadmitted-runtime-candidates.json'
+    Write-GuestProducerReceipt ([pscustomobject]@{
+        schemaVersion = 1; kind = 'android-unadmitted-runtime-candidates'
+        status = 'unadmitted'; version = $expected.version; files = $references
+        notice = 'Raw normal pack outputs retained before layout, native-marker or signature validation. Not qualified packages.'
+    }) $sidecar
+    $references
+    Get-FileReference $sidecar
+}
 $root = [IO.Path]::GetFullPath("$PSScriptRoot/../..")
 $baseline = 'd549e1dc4e2a083b08b4f24cb5495e81b99d79b5'
 $identity = Get-GuestRuntimePackIdentity $env:BUILD_BUILDID $env:GUEST_ATTEMPT
@@ -190,6 +214,10 @@ try {
         } finally { $env:GRADLEARGS = $previousGradleArgs }
         if ($Phase -eq 'Pack') {
             $directory = Join-Path $root "bin/Build$env:GUEST_CONFIGURATION/nuget-unsigned"
+            foreach ($reference in Save-GuestRuntimePackCandidates $directory $out $env:BUILD_BUILDID $env:GUEST_ATTEMPT) {
+                $receipt.files.Add($reference)
+            }
+            Write-GuestProducerReceipt $receipt $receiptPath
             $receipt.files.Add((Copy-GuestReceiptFile (Join-Path $directory 'SignList.xml') (Join-Path $out 'SignList.xml')))
             $tools = Join-Path $root "bin/Build$env:GUEST_CONFIGURATION/buildtoolsinventory.csv"
             Copy-Item $tools (Join-Path $out 'buildtoolsinventory.csv')
@@ -205,7 +233,9 @@ try {
                 $receipt.packages.Add([pscustomobject]@{ id = $inventory.value.id; inventory = $inventory.reference })
             }
             foreach ($package in Get-ChildItem $directory -File -Filter '*.nupkg') {
-                $receipt.files.Add((Get-FileReference $package.FullName))
+                if ($receipt.files.fileName -cnotcontains $package.Name) {
+                    $receipt.files.Add((Get-FileReference $package.FullName))
+                }
             }
             $cacheFiles = @(Get-ChildItem (Join-Path $root 'src/native/obj') -Recurse -Filter CMakeCache.txt -File)
             foreach ($abi in @('arm64-v8a', 'x86_64')) {

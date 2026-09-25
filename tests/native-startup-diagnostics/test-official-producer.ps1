@@ -328,10 +328,48 @@ Assert (-not ($arguments -match 'NuGetAudit|IgnoreFailedSources|RestoreSources='
 $definitions = $ast.FindAll({
     param ($node)
     $node -is [Management.Automation.Language.FunctionDefinitionAst] -and
-        $node.Name -in @('Get-VerifiedGuestBuildReceipt', 'Copy-GuestReceiptFile')
+        $node.Name -in @('Get-VerifiedGuestBuildReceipt', 'Copy-GuestReceiptFile', 'Save-GuestRuntimePackCandidates', 'Get-FileReference')
 }, $false)
-Assert ($definitions.Count -eq 2) 'Production receipt helpers found'
+Assert ($definitions.Count -eq 4) 'Production receipt helpers found'
 foreach ($definition in $definitions) { . ([scriptblock]::Create($definition.Extent.Text)) }
+$candidateSource = Join-Path $out ('candidate source ' + [Guid]::NewGuid().ToString('N'))
+$candidateDestination = Join-Path $out ('candidate retention ' + [Guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory $candidateSource, $candidateDestination | Out-Null
+foreach ($rid in @('android-arm64', 'android-x64')) {
+    # Malformed raw outputs must be retained but never admitted by the inventory.
+    $leaf = "Microsoft.Android.Runtime.Mono.36.$rid.$($identity.version).nupkg"
+    [IO.File]::WriteAllBytes((Join-Path $candidateSource $leaf), [byte[]](1, 2, 3))
+}
+'not a candidate' | Set-Content (Join-Path $candidateSource 'unrelated.nupkg')
+$candidateRefs = @(Save-GuestRuntimePackCandidates $candidateSource $candidateDestination '12345' '1')
+Assert ($candidateRefs.Count -eq 3 -and @(Get-ChildItem $candidateDestination -File).Count -eq 3) 'Exactly two candidates and unadmitted sidecar retained, no broad collection'
+$candidateNote = Get-Content (Join-Path $candidateDestination 'unadmitted-runtime-candidates.json') -Raw | ConvertFrom-Json
+Assert ($candidateNote.status -ceq 'unadmitted' -and $candidateNote.files.Count -eq 2) 'Raw retention never claims inventory success'
+foreach ($reference in $candidateNote.files) {
+    Assert ($reference.sizeBytes -eq 3 -and
+        $reference.sha256 -ceq (Get-FileHash (Join-Path $candidateSource $reference.fileName)).Hash.ToLowerInvariant() -and
+        $reference.sha256 -ceq (Get-FileHash (Join-Path $candidateDestination $reference.fileName)).Hash.ToLowerInvariant()) 'Candidate bytes and hashes preserved'
+}
+$inventoryRejected = $false
+try { Read-GuestRuntimePackInventory (Join-Path $candidateDestination $candidateNote.files[0].fileName) 'android-arm64' $identity.version | Out-Null }
+catch { $inventoryRejected = $true }
+Assert $inventoryRejected 'Raw retention does not bypass malformed ZIP rejection'
+$firstCandidate = Join-Path $candidateSource $candidateNote.files[0].fileName
+foreach ($length in @(0L, 2147483649L)) {
+    $file = [IO.File]::OpenWrite($firstCandidate)
+    try { $file.SetLength($length) } finally { $file.Dispose() }
+    Reject { Save-GuestRuntimePackCandidates $candidateSource $candidateDestination '12345' '1' } 'Runtime pack candidate must be a bounded regular archive file.'
+}
+[IO.File]::WriteAllBytes($firstCandidate, [byte[]](4, 5, 6))
+Reject { Save-GuestRuntimePackCandidates $candidateSource $candidateDestination '12345' '1' } 'Retained receipt file collides with different bytes.'
+$packBlock = $ast.Find({
+    param ($node)
+    $node -is [Management.Automation.Language.IfStatementAst] -and
+        $node.Extent.Text.StartsWith("if (`$Phase -eq 'Pack')") -and
+        $node.Extent.Text.Contains('Save-GuestRuntimePackCandidates')
+}, $true)
+Assert ($null -ne $packBlock -and $packBlock.Extent.Text.IndexOf('Save-GuestRuntimePackCandidates') -lt
+    $packBlock.Extent.Text.IndexOf('Save-Inventory')) 'Candidate retention precedes actual inventory classification'
 $gradleScope = $ast.Find({
     param ($node)
     $node -is [Management.Automation.Language.TryStatementAst] -and

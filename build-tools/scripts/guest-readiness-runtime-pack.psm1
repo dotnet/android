@@ -119,6 +119,13 @@ namespace GuestRuntimePack {
         $entries = [Collections.Generic.List[object]]::new()
         $nuspec = $null
         [long] $total = 0
+        $nativeRoot = "runtimes/$Rid/native/"
+        # The held SharedFramework SDK emits these two host metadata files even for Mono native packs.
+        $hostMetadataRoot = "runtimes/$Rid/lib/netstandard2.0/"
+        $hostMetadataFiles = @(
+            "${hostMetadataRoot}Microsoft.Android.Runtimes.deps.json",
+            "${hostMetadataRoot}Microsoft.Android.Runtimes.runtimeconfig.json"
+        )
         # Validate the whole metadata set before opening any decompression stream.
         # Existing bootstrap ZIP helpers extract files; this inventory deliberately never extracts.
         foreach ($entry in $zip.Entries) {
@@ -154,9 +161,10 @@ namespace GuestRuntimePack {
             $total += $entry.Length
             if ($total -gt 2147483648) { throw 'Runtime pack exceeds the total byte bound.' }
             if ($name.StartsWith('runtimes/', [StringComparison]::OrdinalIgnoreCase)) {
-                $nativeRoot = "runtimes/$Rid/native/"
                 if (-not $name.StartsWith($nativeRoot, [StringComparison]::Ordinal) -and
-                    -not ($directory -and $nativeRoot.StartsWith($name, [StringComparison]::Ordinal))) {
+                    -not (-not $directory -and $hostMetadataFiles -ccontains $name) -and
+                    -not ($directory -and ($nativeRoot.StartsWith($name, [StringComparison]::Ordinal) -or
+                        $hostMetadataRoot.StartsWith($name, [StringComparison]::Ordinal)))) {
                     throw 'Runtime pack contains assets outside the selected native RID.'
                 }
             }
