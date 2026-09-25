@@ -39,6 +39,40 @@ namespace Xamarin.Android.Build.Tests {
 			AssertTrimmableTypeMapOutputs (intermediateDir);
 		}
 
+		[Test]
+		public void Build_TrimmableTypeMap_UsesMonoAndroidImplementationMetadata ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("RuntimeIdentifier", "android-arm64");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			var directoryBuildTargets = proj.Imports.Single (import => import.Project () == "Directory.Build.targets");
+			directoryBuildTargets.TextContent = () => """
+				<Project>
+				  <Target Name="_AssertTrimmableTypeMapMonoAndroidImplementation"
+				      AfterTargets="_GenerateTrimmableTypeMapInputs">
+				    <ItemGroup>
+				      <_InvalidMonoAndroidImplementation
+				          Include="@(_AndroidTrimmableTypeMapMonoAndroidImplementation)"
+				          Condition=" !$([System.String]::Copy('%(NuGetPackageId)').StartsWith('Microsoft.Android.Runtime.')) " />
+				    </ItemGroup>
+				    <Error
+				        Condition=" '@(_AndroidTrimmableTypeMapMonoAndroidImplementation->Count())' == '0' "
+				        Text="The trimmable typemap did not select the Mono.Android implementation assembly." />
+				    <Error
+				        Condition=" '@(_InvalidMonoAndroidImplementation->Count())' != '0' "
+				        Text="The trimmable typemap selected a Mono.Android assembly outside the runtime pack." />
+				  </Target>
+				</Project>
+				""";
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_AssertTrimmableTypeMapMonoAndroidImplementation");
+		}
+
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "APT2008", false)]
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "XA4258", true)]
 		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "XA4258", true)]

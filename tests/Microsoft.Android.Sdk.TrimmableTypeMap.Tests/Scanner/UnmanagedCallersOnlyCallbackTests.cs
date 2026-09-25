@@ -332,6 +332,24 @@ public class UnmanagedCallersOnlyCallbackTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Scanner_ImplementationAssemblyOverridesReferenceMetadata ()
+	{
+		var referencePath = Path.ChangeExtension (UcoFixtureAssemblyPath, ".ref.dll");
+		using var reference = new PEReader (File.OpenRead (referencePath));
+		using var implementation = new PEReader (File.OpenRead (UcoFixtureAssemblyPath));
+		using var fixtures = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
+		using var scanner = new JavaPeerScanner ();
+
+		var peers = scanner.Scan ([
+			MakeInput (reference),
+			MakeInput (implementation),
+			MakeInput (fixtures),
+		]);
+		var peer = peers.Single (candidate => candidate.ManagedTypeName == UcoWidget);
+		Assert.True (FindMarshalMethod (peer, "n_OnLayout_ZIIII").IsUnmanagedCallersOnlyCallback);
+	}
+
+	[Fact]
 	public void Scanner_QualifiedLegacyOwner_DoesNotRequireUcoMetadata ()
 	{
 		const string name = "Microsoft.Android.Sdk.TrimmableTypeMap.Tests.TestUcoFixtures.MyQualifiedLegacyWidget";
