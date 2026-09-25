@@ -34,7 +34,7 @@ public class GuestReadinessTestSourcesTests
 	}
 
 	[Test]
-	public void ExplicitWindowsGate ()
+	public void ExplicitWindowsAndLinuxGate ()
 	{
 		Assert.IsTrue (GuestReadinessTestSources.IsEnabled (PlatformID.Win32NT, "1"));
 		Assert.IsFalse (GuestReadinessTestSources.IsEnabled (PlatformID.Win32NT, null));
@@ -45,6 +45,12 @@ public class GuestReadinessTestSourcesTests
 			Assert.IsFalse (GuestReadinessTestSources.IsEnabled (host, "1"));
 			Assert.IsFalse (GuestReadinessTestSources.IsEnabled (host, "invalid"));
 		}
+		Assert.IsTrue (GuestReadinessTestSources.IsEnabled (PlatformID.Unix, "1", isLinux: true));
+		Assert.IsFalse (GuestReadinessTestSources.IsEnabled (PlatformID.Unix, null, isLinux: true));
+		Assert.IsFalse (GuestReadinessTestSources.IsEnabled (PlatformID.Unix, "", isLinux: true));
+		Assert.IsFalse (GuestReadinessTestSources.IsEnabled (PlatformID.MacOSX, "1", isLinux: true));
+		foreach (var invalid in new [] { "0", "true", " 1", "1 ", "2" })
+			Assert.Throws<InvalidOperationException> (() => GuestReadinessTestSources.IsEnabled (PlatformID.Unix, invalid, isLinux: true));
 	}
 
 	[Test]
@@ -55,7 +61,7 @@ public class GuestReadinessTestSourcesTests
 		Environment.SetEnvironmentVariable ("ANDROID_GUEST_READINESS_TEST_ACQUISITION", null);
 		Assert.AreEqual (source, GuestReadinessTestSources.GetDownloadUrl (source));
 		Environment.SetEnvironmentVariable ("ANDROID_GUEST_READINESS_TEST_ACQUISITION", "1");
-		Assert.AreEqual (Environment.OSVersion.Platform == PlatformID.Win32NT ? mirror : source, GuestReadinessTestSources.GetDownloadUrl (source));
+		Assert.AreEqual (OperatingSystem.IsWindows () || OperatingSystem.IsLinux () ? mirror : source, GuestReadinessTestSources.GetDownloadUrl (source));
 		foreach (var other in new [] {
 			"https://repo1.maven.org.evil/maven2/a.jar", "http://repo1.maven.org/maven2/a.jar",
 			"https://repo1.maven.org:444/maven2/a.jar", "https://user@repo1.maven.org/maven2/a.jar",
@@ -80,7 +86,7 @@ public class GuestReadinessTestSourcesTests
 		Assert.AreEqual (original.TargetFramework, configured.TargetFramework);
 		Assert.AreEqual (original.ReferenceAssemblyPackage, configured.ReferenceAssemblyPackage);
 		CollectionAssert.AreEqual (original.Packages, configured.Packages);
-		var expected = Environment.OSVersion.Platform == PlatformID.Win32NT ? config : original.NuGetConfigFilePath;
+		var expected = OperatingSystem.IsWindows () || OperatingSystem.IsLinux () ? config : original.NuGetConfigFilePath;
 		Assert.AreEqual (expected, configured.NuGetConfigFilePath);
 		var references = new [] {
 			new CSharpAnalyzerVerifier<EmptyAnalyzer>.Test ().ReferenceAssemblies,

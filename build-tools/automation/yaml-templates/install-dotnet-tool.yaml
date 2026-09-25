@@ -3,6 +3,7 @@ parameters:
   version: ''
   condition: succeeded()
   continueOnError: true
+  nugetConfigFile: ''
 
 steps:
 - powershell: dotnet tool uninstall ${{ parameters.toolName }} -g
@@ -17,9 +18,15 @@ steps:
   inputs:
     command: custom
     custom: tool
-    arguments: >-
-      update ${{ parameters.toolName }} -v:diag
-      --tool-path $(Agent.ToolsDirectory)
-      --version ${{ parameters.version }}
-      --add-source "https://api.nuget.org/v3/index.json"
-
+    ${{ if eq(parameters.nugetConfigFile, '') }}:
+      arguments: >-
+        update ${{ parameters.toolName }} -v:diag
+        --tool-path $(Agent.ToolsDirectory)
+        --version ${{ parameters.version }}
+        --add-source "https://api.nuget.org/v3/index.json"
+    ${{ else }}:
+      arguments: >-
+        update ${{ parameters.toolName }} -v:diag
+        --tool-path $(Agent.ToolsDirectory)
+        --version ${{ parameters.version }}
+        --configfile "${{ parameters.nugetConfigFile }}"

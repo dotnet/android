@@ -1,5 +1,8 @@
 # Runs smoke tests on Linux packages.
 
+parameters:
+  guestReadiness: false
+
 stages:
 - stage: linux_tests
   displayName: Linux Tests
@@ -10,6 +13,9 @@ stages:
   # Check - "Xamarin.Android (Linux Tests Linux > Tests > MSBuild)"
   - job: linux_tests_smoke_1
     displayName: Linux > Tests > MSBuild 1
+    ${{ if eq(parameters.guestReadiness, true) }}:
+      variables:
+        RestoreConfigFile: $(System.DefaultWorkingDirectory)/NuGet.config
     pool:
       name: MAUI-1ESPT
       image: $(LinuxPoolImage1ESPT)
@@ -19,11 +25,23 @@ stages:
       clean: all
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
+      ${{ if eq(parameters.guestReadiness, true) }}:
+        parameters:
+          apkDiffNuGetConfigFile: $(System.DefaultWorkingDirectory)/NuGet.config
 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - ${{ if eq(parameters.guestReadiness, true) }}:
+      - task: PowerShell@2
+        displayName: Configure diagnostic test acquisition
+        inputs:
+          pwsh: true
+          targetType: filePath
+          filePath: $(System.DefaultWorkingDirectory)/build-tools/scripts/guest-readiness-test-sources.ps1
+          arguments: -AllowLinux
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
@@ -40,6 +58,9 @@ stages:
 
   - job: linux_tests_smoke_2
     displayName: Linux > Tests > MSBuild 2
+    ${{ if eq(parameters.guestReadiness, true) }}:
+      variables:
+        RestoreConfigFile: $(System.DefaultWorkingDirectory)/NuGet.config
     pool:
       name: MAUI-1ESPT
       image: $(LinuxPoolImage1ESPT)
@@ -49,11 +70,23 @@ stages:
       clean: all
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
+      ${{ if eq(parameters.guestReadiness, true) }}:
+        parameters:
+          apkDiffNuGetConfigFile: $(System.DefaultWorkingDirectory)/NuGet.config
 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - ${{ if eq(parameters.guestReadiness, true) }}:
+      - task: PowerShell@2
+        displayName: Configure diagnostic test acquisition
+        inputs:
+          pwsh: true
+          targetType: filePath
+          filePath: $(System.DefaultWorkingDirectory)/build-tools/scripts/guest-readiness-test-sources.ps1
+          arguments: -AllowLinux
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:

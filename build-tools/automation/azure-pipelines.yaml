@@ -129,6 +129,8 @@ extends:
         macTestAgentsUseCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
 
     - template: /build-tools/automation/yaml-templates/stage-linux-tests.yaml@self
+      parameters:
+        guestReadiness: ${{ parameters.guestReadiness }}
 
     - template: /build-tools/automation/yaml-templates/stage-msbuild-tests.yaml@self
 
@@ -168,6 +170,8 @@ extends:
             androidSdkPlatforms: $(DefaultTestSdkPlatforms)
             dotnetVersion: $(DotNetPreviewSdkVersion)
             dotnetQuality: $(DotNetPreviewSdkQuality)
+            ${{ if eq(parameters.guestReadiness, true) }}:
+              apkDiffNuGetConfigFile: $(Build.SourcesDirectory)/android/NuGet.config
 
         - task: NuGetAuthenticate@1
           displayName: authenticate with azure artifacts

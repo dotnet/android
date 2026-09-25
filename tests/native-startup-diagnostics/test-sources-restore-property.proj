@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <RestoreConfigFile>project-local-unapproved.config</RestoreConfigFile>
+    <RestoreConfigFile Condition="'$(VerifyInheritedConfig)' != 'true'">project-local-unapproved.config</RestoreConfigFile>
   </PropertyGroup>
   <Target Name="Verify">
     <Error Condition="'$(RestoreConfigFile)' != '$(ExpectedConfig)'" Text="Root restore property was replaced." />

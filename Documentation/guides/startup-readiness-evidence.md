@@ -308,7 +308,58 @@ that bypass MSBuild/Gradle. The step requires the existing absolute root
 `RESTORECONFIGFILE` and uses the harness's `NUNIT_MSBUILD_ARGS` to pass its quoted
 path as a global restore property to nested builds. A pre-existing nonempty
 `NUNIT_MSBUILD_ARGS` fails rather than being discarded; malformed opt-in/config
-values fail explicitly. Other hosts and ordinary mode retain their existing paths.
+values fail explicitly. Ordinary mode and macOS retain their existing paths.
+
+The explicitly enabled diagnostic Linux test jobs `linux_tests_smoke_1` and
+`linux_tests_smoke_2` also run this setup, with `-AllowLinux` and their actual
+`$(System.DefaultWorkingDirectory)/NuGet.config`. This is an intentional extension
+of diagnostic test acquisition, not a claim that diagnostic Linux behavior is
+unchanged. The shared helper uses actual Linux identity, not `PlatformID.Unix`
+(which can also identify macOS). Linux root-path validation is case-sensitive;
+Windows retains case-insensitive validation. Default-off jobs get neither the
+new variables nor setup task. The changed helper is built into normal test
+assemblies by the producer; no downloaded assembly is replaced.
+
+`Builder` consumes `NUNIT_MSBUILD_ARGS`; `DotNetCLI` does not. Its fresh child
+process inherits `RESTORECONFIGFILE` as an MSBuild environment property. Separate
+Windows characterizations with the installed local `10.0.400-preview.0.26356.102`
+and exact held consumer `10.0.401` restored a genuine existing local package
+through both that environment route and the explicit property, retaining the
+intended config path with spaces in each actual dgspec. The held consumer check
+pins `global.json` with roll-forward disabled and records each child's actual
+SDK version/base path. These prove the Windows mechanisms, not actual Linux
+CI/producer SDK identity or global-property precedence: project properties can still
+override environment properties. No `DotNetCLI` wrapper change is made.
+
+The diagnostic Linux test setups and MAUI integration setup pass an explicit
+config only to the existing apkdiff installer. Linux uses the same root above;
+MAUI uses `$(Build.SourcesDirectory)/android/NuGet.config`, not the MAUI checkout.
+The installer replaces its ordinary `--add-source` argument with a quoted
+`--configfile` when the optional path is nonempty. Empty preserves all ordinary
+arguments, and test-slicer is untouched. `apkdiff` remains `0.0.17`; this exact
+version was listed by the already-approved `dotnet-public` feed. No global tool
+installation, new source, fallback, credential or package-version change is
+introduced by this plumbing.
+
+**Audit-data qualification remains blocked.** The failing Linux dgspecs record
+`enableAudit=true`, `auditLevel=low`, `auditMode=all`, and user-config nuget.org
+discovery. Their NU1900 warnings are real vulnerability-data acquisition
+failures, not cosmetic warnings. The unchanged repository config has no explicit
+`auditSources`; the observed `dotnet-public` service index advertises no
+`VulnerabilityInfo`. Warning-free restore from that mirror therefore does not
+prove auditing. Retain effective package sources, explicit audit sources or
+package-source fallback, audit settings, advertised resources and actual data
+retrieval outcomes separately. No audit disable, warning suppression,
+ignore-failed-source setting, fabricated data, or network-policy approval follows
+from these setup changes; test assertions remain unchanged.
+
+For this setup delta, compare the actual service preview against `01402b` using
+`--require-linux-test-setup --require-root-observer --expanded-preview <new>
+--baseline-preview <01402b-preview>`. Only the two Linux setup insertions/root
+variables and three apkdiff argument changes may differ. Existing tests cover
+source default-off graphs, exact quoted config paths, malformed inputs, host
+identity and inherited child properties. Hosted Linux results and audit-data
+qualification remain distinct from Windows local checks.
 
 `DownloadedCache` maps only the exact HTTPS Maven Central `/maven2/` origin with
 ordinary artifact path segments to the existing anonymous `dotnet-public-maven`

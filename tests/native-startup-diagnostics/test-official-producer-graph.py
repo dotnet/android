@@ -378,6 +378,52 @@ for forbidden in ("nuget-msi-convert", "push_signed_nugets", "PushToMaestro", "d
 stages = diagnostic["extends"]["parameters"]["stages"]
 windows_stage = next(item for item in stages if item.get("template") == f"/{windows_path}@self")
 assert windows_stage["parameters"] == {"guestReadiness": "${{ parameters.guestReadiness }}"}
+linux_template = "build-tools/automation/yaml-templates/stage-linux-tests.yaml"
+linux_stage = next(item for item in stages if item.get("template") == f"/{linux_template}@self")
+assert linux_stage["parameters"] == {"guestReadiness": "${{ parameters.guestReadiness }}"}
+linux_source = yaml.safe_load((ROOT / linux_template).read_text())
+linux_baseline = yaml.safe_load(subprocess.check_output(["git", "show", f"{BASELINE}:{linux_template}"], cwd=ROOT))
+assert remove_mode_parameters(expand(linux_source, False)) == linux_baseline
+linux_on = expand(linux_source, True)
+linux_configure = {
+    "task": "PowerShell@2", "displayName": "Configure diagnostic test acquisition",
+    "inputs": {"pwsh": True, "targetType": "filePath",
+               "filePath": "$(System.DefaultWorkingDirectory)/build-tools/scripts/guest-readiness-test-sources.ps1",
+               "arguments": "-AllowLinux"},
+}
+for before, after in zip(linux_baseline["stages"][0]["jobs"], linux_on["stages"][0]["jobs"]):
+    expected = copy.deepcopy(before)
+    expected["variables"] = {"RestoreConfigFile": "$(System.DefaultWorkingDirectory)/NuGet.config"}
+    expected["steps"][0]["parameters"] = {"apkDiffNuGetConfigFile": "$(System.DefaultWorkingDirectory)/NuGet.config"}
+    expected["steps"].insert(2, linux_configure)
+    assert expected == after, "Only the explicit Linux diagnostic acquisition setup may change"
+assert len(linux_on["stages"][0]["jobs"]) == 2
+
+installer_path = "build-tools/automation/yaml-templates/install-dotnet-tool.yaml"
+installer = yaml.safe_load((ROOT / installer_path).read_text())
+installer_baseline = yaml.safe_load(subprocess.check_output(["git", "show", f"{BASELINE}:{installer_path}"], cwd=ROOT))
+assert installer["parameters"].pop("nugetConfigFile") == ""
+tool_inputs = installer["steps"][1]["inputs"]
+default_args = tool_inputs.pop("${{ if eq(parameters.nugetConfigFile, '') }}")["arguments"]
+configured_args = tool_inputs.pop("${{ else }}")["arguments"]
+tool_inputs["arguments"] = default_args
+assert installer == installer_baseline, "Empty installer config must preserve every ordinary field"
+assert configured_args == default_args.replace('--add-source "https://api.nuget.org/v3/index.json"',
+                                               '--configfile "${{ parameters.nugetConfigFile }}"')
+assert configured_args.replace("${{ parameters.nugetConfigFile }}", "/source with spaces/NuGet.config").endswith(
+    '--configfile "/source with spaces/NuGet.config"')
+setup_path = "build-tools/automation/yaml-templates/setup-test-environment.yaml"
+setup = yaml.safe_load((ROOT / setup_path).read_text())
+setup_baseline = yaml.safe_load(subprocess.check_output(["git", "show", f"{BASELINE}:{setup_path}"], cwd=ROOT))
+assert setup["parameters"].pop("apkDiffNuGetConfigFile") == ""
+apk_call = next(s for s in setup["steps"] if "${{ if eq(parameters.installApkDiff, true) }}" in s)[
+    "${{ if eq(parameters.installApkDiff, true) }}"][0]
+assert apk_call["parameters"].pop("nugetConfigFile") == "${{ parameters.apkDiffNuGetConfigFile }}"
+assert setup == setup_baseline, "Only apkdiff config forwarding may change shared setup; slicer unchanged"
+maui = next(s for s in stages if s.get("stage") == "maui_tests")
+maui_setup = next(s for s in maui["jobs"][0]["steps"] if s.get("template") == f"/{setup_path}@self")
+assert maui_setup["parameters"]["apkDiffNuGetConfigFile"] == "$(Build.SourcesDirectory)/android/NuGet.config"
+print("PASS: explicit two-job Linux setup, MAUI Android-root apkdiff config, ordinary installer/default/Mac graph invariance.")
 prepare = next(x for x in stages if x.get("stage") == "dotnet_prepare_release")
 jobs = prepare["jobs"]
 signers = [x for x in jobs if x.get("template") == "sign-artifacts/jobs/v4.yml@yaml-templates"]
@@ -602,12 +648,52 @@ for mutation in ("policy", "count", "publisher"):
         raise AssertionError(f"Invalid alias {mutation} was accepted")
 print("PASS: modeled AntiMalware alias is bound to the unique Input publisher; other 48 tasks and every non-path field stay exact.")
 
+
+def assert_linux_setup_only_change(before, after):
+    """Undo only the approved setup delta, then compare every provider field."""
+    unchanged = copy.deepcopy(after)
+    old_jobs = {j["job"]: j for s in before["stages"] for j in s.get("jobs", []) if "job" in j}
+    new_jobs = {j["job"]: j for s in unchanged["stages"] for j in s.get("jobs", []) if "job" in j}
+    windows_configure = next(s for s in old_jobs["win_build_test"]["steps"]
+                             if s.get("displayName") == test_sources_configure["displayName"])
+    expected_configure = copy.deepcopy(windows_configure)
+    expected_configure["inputs"] = linux_configure["inputs"]
+    for name in ("linux_tests_smoke_1", "linux_tests_smoke_2", "maui_tests_integration"):
+        old, new = old_jobs[name], new_jobs[name]
+        is_linux = name.startswith("linux_tests_")
+        config = ("$(System.DefaultWorkingDirectory)/NuGet.config" if is_linux
+                  else "$(Build.SourcesDirectory)/android/NuGet.config")
+        assert new["pool"]["os"] == ("linux" if is_linux else "windows")
+        if is_linux:
+            variables = [v for v in new["variables"] if v.get("name", "").upper() == "RESTORECONFIGFILE"]
+            assert variables == [{"name": "RestoreConfigFile", "value": config}], "Expected one exact Linux root config variable"
+            new["variables"].remove(variables[0])
+            positions = [i for i, s in enumerate(new["steps"])
+                         if s.get("displayName") == test_sources_configure["displayName"]]
+            assert len(positions) == 1
+            position = positions[0]
+            assert new["steps"][position] == expected_configure
+            assert new["steps"][position + 1]["displayName"].startswith("run Xamarin.Android.Build.Tests - Linux ")
+            assert new["steps"][position - 1]["task"] == "DownloadPipelineArtifact@2"
+            new["steps"].pop(position)
+        old_installers = [s for s in old["steps"] if s.get("displayName", "").startswith("install apkdiff ")]
+        new_installers = [s for s in new["steps"] if s.get("displayName", "").startswith("install apkdiff ")]
+        assert len(old_installers) == len(new_installers) == 1
+        old_args = old_installers[0]["inputs"]["arguments"]
+        old_suffix = '--add-source "https://api.nuget.org/v3/index.json"'
+        assert old_args.endswith(old_suffix)
+        assert new_installers[0]["inputs"]["arguments"] == old_args.removesuffix(old_suffix) + f'--configfile "{config}"'
+        new_installers[0]["inputs"]["arguments"] = old_args
+    assert unchanged == before, "Only two Linux setups and three apkdiff config arguments may change"
+
+
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--expanded-preview", type=Path)
 parser.add_argument("--baseline-preview", type=Path)
 parser.add_argument("--require-root-observer", action="store_true")
 parser.add_argument("--require-spmi-output", action="store_true")
 parser.add_argument("--require-windows-retention", action="store_true")
+parser.add_argument("--require-linux-test-setup", action="store_true")
 args = parser.parse_args()
 if args.baseline_preview and not args.expanded_preview:
     parser.error("--baseline-preview requires --expanded-preview")
@@ -617,6 +703,9 @@ if args.require_spmi_output and not (args.expanded_preview and args.baseline_pre
     parser.error("--require-spmi-output requires --expanded-preview and --baseline-preview")
 if args.require_windows_retention and (not (args.expanded_preview and args.baseline_preview) or args.require_spmi_output):
     parser.error("--require-windows-retention requires both previews and cannot combine with the older --require-spmi-output delta")
+if args.require_linux_test_setup and (not (args.expanded_preview and args.baseline_preview)
+                                    or args.require_spmi_output or args.require_windows_retention):
+    parser.error("--require-linux-test-setup requires both previews and cannot combine with older variable-only deltas")
 if args.expanded_preview:
     preview = yaml.safe_load(args.expanded_preview.read_text(encoding="utf-8-sig"))
     sign_jobs = [job for stage in preview["stages"] for job in stage.get("jobs", [])
@@ -639,6 +728,29 @@ if args.expanded_preview:
         if args.require_windows_retention:
             assert_windows_evidence_variable_change(before, preview, retention_variable, "true")
             print("PASS: entire supplied provider graph differs only by diagnostic Windows retention (source string or observed provider true scalar); all existing guards and tasks are identical.")
+        if args.require_linux_test_setup:
+            assert_linux_setup_only_change(before, preview)
+            for mutation in ("alias", "mac", "audit", "condition", "version", "mixed-config"):
+                invalid = copy.deepcopy(preview)
+                job = next(j for s in invalid["stages"] for j in s.get("jobs", []) if j.get("job") == "linux_tests_smoke_1")
+                if mutation == "alias":
+                    next(v for v in job["variables"] if v.get("name") == "RestoreConfigFile")["name"] = "RESTORECONFIGFILE"
+                elif mutation == "mac":
+                    job["pool"]["os"] = "macOS"
+                elif mutation == "audit":
+                    job["variables"].append({"name": "NuGetAudit", "value": "false"})
+                elif mutation == "condition":
+                    job["steps"][0]["condition"] = "always()"
+                else:
+                    task = next(s for s in job["steps"] if s.get("displayName", "").startswith("install apkdiff "))
+                    task["inputs"]["arguments"] += ' --version 0.0.18' if mutation == "version" else ' --add-source "https://api.nuget.org/v3/index.json"'
+                try:
+                    assert_linux_setup_only_change(before, invalid)
+                except AssertionError:
+                    pass
+                else:
+                    raise AssertionError(f"Invalid setup delta accepted: {mutation}")
+            print("PASS: entire provider graph differs only by two Linux setups and three apkdiff config arguments; invalid scope/policy/version/aliases rejected.")
         old_jobs = [job for stage in before["stages"] for job in stage.get("jobs", [])
                     if job.get("job") == sign_jobs[0]["job"]]
         assert len(old_jobs) == 1

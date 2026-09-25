@@ -6,11 +6,12 @@ namespace Xamarin.ProjectTools
 	// Source-linked by both test harnesses; neither uses MSBuild to acquire these inputs.
 	internal static class GuestReadinessTestSources
 	{
-		internal static bool Enabled => IsEnabled (Environment.OSVersion.Platform, Environment.GetEnvironmentVariable ("ANDROID_GUEST_READINESS_TEST_ACQUISITION"));
+		internal static bool Enabled => IsEnabled (Environment.OSVersion.Platform, Environment.GetEnvironmentVariable ("ANDROID_GUEST_READINESS_TEST_ACQUISITION"), OperatingSystem.IsLinux ());
 
-		internal static bool IsEnabled (PlatformID platform, string optIn)
+		internal static bool IsEnabled (PlatformID platform, string optIn, bool isLinux = false)
 		{
-			if (platform != PlatformID.Win32NT || string.IsNullOrEmpty (optIn))
+			// PlatformID.Unix also describes macOS; only the actual Linux identity opts it in.
+			if ((platform != PlatformID.Win32NT && !(platform == PlatformID.Unix && isLinux)) || string.IsNullOrEmpty (optIn))
 				return false;
 			if (optIn != "1")
 				throw new InvalidOperationException ("ANDROID_GUEST_READINESS_TEST_ACQUISITION must be absent or exactly 1.");

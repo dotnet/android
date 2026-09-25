@@ -8,6 +8,7 @@ parameters:
   dotnetQuality: $(DotNetSdkQuality)
   installTestSlicer: false
   installApkDiff: true
+  apkDiffNuGetConfigFile: ''
   updateMono: false
   androidSdkPlatforms: $(DefaultTestSdkPlatforms)
   repositoryAlias: 'self'
@@ -84,6 +85,7 @@ steps:
     parameters:
       toolName: apkdiff
       version: $(ApkDiffToolVersion)
+      nugetConfigFile: ${{ parameters.apkDiffNuGetConfigFile }}
 
 - ${{ if eq(parameters.installTestSlicer, true) }}:
   - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
