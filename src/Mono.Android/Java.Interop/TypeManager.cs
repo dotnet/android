@@ -263,9 +263,12 @@ namespace Java.Interop {
 
 		static Type? GetJavaToManagedTypeCore (string class_name)
 		{
-			class_name = JniRemappingLookup.GetReverseType (class_name) ?? class_name;
-
 			if (TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out Type? type)) {
+				return type;
+			}
+
+			string lookupName = JniRemappingLookup.GetReverseType (class_name) ?? class_name;
+			if (TypeManagerMapDictionaries.JniToManaged.TryGetValue (lookupName, out type)) {
 				return type;
 			}
 
@@ -275,11 +278,11 @@ namespace Java.Interop {
 					$"{nameof (RuntimeFeature.TrimmableTypeMap)} is enabled. The trimmable path should resolve " +
 					$"types through {nameof (TrimmableTypeMapTypeManager)}.");
 			} else {
-				type = clr_typemap_java_to_managed (class_name);
+				type = clr_typemap_java_to_managed (lookupName);
 			}
 
 			if (type != null) {
-				TypeManagerMapDictionaries.JniToManaged.Add (class_name, type);
+				TypeManagerMapDictionaries.JniToManaged.Add (lookupName, type);
 				return type;
 			}
 
