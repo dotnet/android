@@ -414,7 +414,12 @@ and its byte-preserving snapshot still occur before signing, including on Input
 failure. All three uploads occur in the Output hook after the normal signing
 sequence: the supported 1ES publisher injects binary scans before each upload,
 so an early Input upload would scan signed-output targets before they exist.
-No scanner targets, coverage, conditions or policy settings are overridden.
+The artifact-bound AntiMalware target follows the exact byte-identical Input
+snapshot directory (`guest-readiness-sign` to `guest-readiness-sign-Input`).
+BinSkim and signing targets, scanner policy, conditions and intended coverage
+remain unchanged. The expanded-preview regression permits only that single
+Input-publisher-bound AntiMalware path transition; all other protected task
+fields and the other 48 protected steps must remain identical.
 For each package,
 they emit `input.inventory.<id>.json`, `output.inventory.<id>.json`,
 `output.signature.<id>.json`, `member-delta.<id>.json`,

@@ -242,7 +242,7 @@ print("PASS: default graph equality in four templates; diagnostic promotion omis
 print("PASS: existing 1ES publisher, Validate/Build/Pack retention matrix, always-on failure receipts and exact Darwin/Linux artifact names/sign input.")
 print("PASS: diagnostic-only 1esPipelines SDL inclusion; all existing SDL coverage and resolved-resource provenance checkout preserved.")
 print("PASS: Output checkout/capture/publication all run on failure; source is normal packed output, with separate retained-output directory and prior job status.")
-print("PASS: Input is captured before signing but all three supported uploads occur only in postSignSteps; no scanner policy or target override.")
+print("PASS: Input is captured before signing; post-sign publication preserves BinSkim/signing targets while Input-bound AntiMalware follows the snapshot.")
 print("PASS: diagnostic Official envelope is independent of unchanged Test/Real signing; both hosted Mac images explicitly use macOS-15 after baseline variables, with default-off selection unchanged.")
 print("PASS: all six Mac pool consumers resolve macOS-15 in diagnostic mode and original labels when off; stage/job scopes cannot silently shadow root images.")
 print("PASS: diagnostic Windows job selects its actual self checkout config without changing commands; default Windows graph and canonical Git NuGet.config casing preserved.")
@@ -296,6 +296,74 @@ for fixture, expected_error in (
         raise AssertionError("Invalid provider-shaped fixture was accepted")
 print("PASS: modeled provider-shaped ordering accepts five qualified/short scanners after signing; early and missing scanners fail distinct assertions.")
 
+
+def assert_protected_signing_tasks(before, after):
+    """Permit only the single artifact-bound AntiMalware Input snapshot relocation."""
+    protected = []
+    for steps in (before, after):
+        protected.append(Counter(json.dumps(step, sort_keys=True) for step in steps
+                                 if "Guardian:" in step.get("displayName", "")
+                                 or step.get("displayName") in ("Sign Package Contents", "Sign NuGet Packages",
+                                                               "Verify NuGet Packages", "Copy Signed Output")
+                                 or step.get("task", "").startswith("MicroBuildSigningPlugin@")))
+    if protected[0] == protected[1]:
+        return
+    assert [sum(tasks.values()) for tasks in protected] == [49, 49], "Protected task counts changed"
+    removed = list((protected[0] - protected[1]).elements())
+    added = list((protected[1] - protected[0]).elements())
+    assert len(removed) == len(added) == 1, "More than the single Input alias changed"
+    old_step, new_step = json.loads(removed[0]), json.loads(added[0])
+    assert old_step["task"] == "securedevelopmentteam.vss-secure-development-tools.build-task-antimalware.AntiMalware@4"
+    paths = ("$(Build.ArtifactStagingDirectory)/guest-readiness-sign",
+             "$(Build.ArtifactStagingDirectory)/guest-readiness-sign-Input")
+    for steps, scanner, path in zip((before, after), (old_step, new_step), paths):
+        publishers = [step for step in steps if step.get("task") == "PublishPipelineArtifact@1"
+                      and step.get("inputs", {}).get("artifactName") == "guest-readiness-sign-Input"]
+        assert len(publishers) == 1, "Input publisher must be unique"
+        assert publishers[0]["inputs"]["targetPath"] == path, "Input publisher alias differs"
+        assert scanner["inputs"]["FileDirPath"] == path, "AntiMalware target differs from exact Input alias"
+    old_step["inputs"]["FileDirPath"] = paths[1]
+    assert old_step == new_step, "Other AntiMalware policy or task fields changed"
+
+
+alias_before = [{"task": "securedevelopmentteam.vss-secure-development-tools.build-task-antimalware.AntiMalware@4",
+                 "displayName": "Guardian: AntiMalware Scanner (Binary)",
+                 "inputs": {"FileDirPath": "$(Build.ArtifactStagingDirectory)/guest-readiness-sign"}}]
+alias_before += [{"displayName": f"Guardian: unchanged fixture {i}"} for i in range(48)]
+alias_before += [{"task": "PublishPipelineArtifact@1",
+                  "inputs": {"artifactName": "guest-readiness-sign-Input",
+                             "targetPath": "$(Build.ArtifactStagingDirectory)/guest-readiness-sign"}}]
+alias_after = copy.deepcopy(alias_before)
+alias_after[0]["inputs"]["FileDirPath"] += "-Input"
+alias_after[-1]["inputs"]["targetPath"] += "-Input"
+assert_protected_signing_tasks(alias_before, alias_after)
+for invalid_path in ("$(Build.ArtifactStagingDirectory)",  # broader
+                     "$(Build.ArtifactStagingDirectory)/guest-readiness-sign-Input/subdir",  # narrower
+                     "$(Build.ArtifactStagingDirectory)/unrelated"):
+    invalid = copy.deepcopy(alias_after)
+    invalid[0]["inputs"]["FileDirPath"] = invalid[-1]["inputs"]["targetPath"] = invalid_path
+    try:
+        assert_protected_signing_tasks(alias_before, invalid)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError("Arbitrary/broader/narrower scanner alias was accepted")
+for mutation in ("policy", "count", "publisher"):
+    invalid = copy.deepcopy(alias_after)
+    if mutation == "policy":
+        invalid[0]["continueOnError"] = True
+    elif mutation == "count":
+        invalid.insert(0, copy.deepcopy(invalid[0]))
+    else:
+        invalid[-1]["inputs"]["targetPath"] = "different"
+    try:
+        assert_protected_signing_tasks(alias_before, invalid)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError(f"Invalid alias {mutation} was accepted")
+print("PASS: modeled AntiMalware alias is bound to the unique Input publisher; other 48 tasks and every non-path field stay exact.")
+
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--expanded-preview", type=Path)
 parser.add_argument("--baseline-preview", type=Path)
@@ -315,12 +383,5 @@ if args.expanded_preview:
         old_jobs = [job for stage in before["stages"] for job in stage.get("jobs", [])
                     if job.get("job") == sign_jobs[0]["job"]]
         assert len(old_jobs) == 1
-        protected = []
-        for job_steps in (old_jobs[0]["steps"], steps):
-            protected.append(Counter(json.dumps(step, sort_keys=True) for step in job_steps
-                                     if "Guardian:" in step.get("displayName", "")
-                                     or step.get("displayName") in ("Sign Package Contents", "Sign NuGet Packages",
-                                                                   "Verify NuGet Packages", "Copy Signed Output")
-                                     or step.get("task", "").startswith("MicroBuildSigningPlugin@")))
-        assert protected[0] == protected[1], "Expanded scanner/signing policy, targets or task counts changed"
+        assert_protected_signing_tasks(old_jobs[0]["steps"], steps)
     print("PASS: supplied service-expanded preview defers scans until after normal signing; all guest uploads remain always-on.")
