@@ -10,7 +10,7 @@ namespace generator.SourceWriters
 {
 	public class PeerMembersField : FieldWriter
 	{
-		// static readonly JniPeerMembers _members = new XAPeerMembers ("android/provider/ContactsContract$AggregationExceptions", typeof (AggregationExceptions));
+		// static readonly JniPeerMembers _members = new JniPeerMembers ("android/provider/ContactsContract$AggregationExceptions", typeof (AggregationExceptions));
 		public PeerMembersField (CodeGenerationOptions opt, string rawJniType, string declaringType, bool isInterface, string name = "_members")
 		{
 			Name = name;
@@ -20,9 +20,7 @@ namespace generator.SourceWriters
 			IsStatic = true;
 			IsReadonly = true;
 
-			var peer = opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1 ? "XAPeerMembers" : "JniPeerMembers";
-
-			Value = $"new {peer} (\"{rawJniType}\", typeof ({declaringType}){(isInterface ? ", isInterface: true" : string.Empty)})";
+			Value = $"new JniPeerMembers (\"{rawJniType}\", typeof ({declaringType}){(isInterface ? ", isInterface: true" : string.Empty)})";
 		}		
 	}
 }

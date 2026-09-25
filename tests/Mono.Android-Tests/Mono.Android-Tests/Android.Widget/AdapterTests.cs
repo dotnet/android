@@ -59,6 +59,91 @@ namespace Android.WidgetTests {
 			var adapter = view.Adapter;
 			view.Adapter = adapter;
 		}
+
+		[Test]
+		[Category ("ThresholdDispatch")]
+		public void AbsListView_SetAdapter ()
+		{
+			using (var view = new ListView (Application.Context)) {
+				AssertSetAdapterRoundTrips (view);
+			}
+			using (var view = new ManagedListView (Application.Context))
+			using (var adapter = new ArrayAdapter (Application.Context, 0)) {
+				view.CallBaseSetAdapter (adapter);
+				Assert.IsFalse (view.SetAdapterInvoked);
+				Assert.AreSame (adapter, view.Adapter);
+			}
+		}
+
+		static void AssertSetAdapterRoundTrips (ListView view)
+		{
+			using (var adapter = new ArrayAdapter (Application.Context, 0)) {
+#pragma warning disable 618
+				view.SetAdapter (adapter);
+#pragma warning restore 618
+				Assert.AreSame (adapter, view.Adapter);
+			}
+		}
+
+		[Test]
+		[Category ("ThresholdDispatch")]
+		public void AdapterViewAnimator_Adapter ()
+		{
+			using (var view = new AdapterViewFlipper (Application.Context)) {
+				AssertAdapterRoundTrips (view);
+			}
+			using (var view = new ManagedAdapterViewFlipper (Application.Context)) {
+				AssertAdapterRoundTrips (view);
+			}
+		}
+
+		static void AssertAdapterRoundTrips (AdapterViewAnimator view)
+		{
+			using (var adapter = new ArrayAdapter (Application.Context, 0)) {
+				view.Adapter = adapter;
+				Assert.AreSame (adapter, view.Adapter);
+			}
+		}
+	}
+
+	public class ManagedListView : ListView {
+
+		public ManagedListView (Context context)
+			: base (context)
+		{
+		}
+
+		protected ManagedListView (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		public bool SetAdapterInvoked { get; private set; }
+
+#pragma warning disable 618
+		public void CallBaseSetAdapter (IListAdapter adapter)
+		{
+			base.SetAdapter (adapter);
+		}
+
+		public override void SetAdapter (IListAdapter adapter)
+		{
+			SetAdapterInvoked = true;
+		}
+#pragma warning restore 618
+	}
+
+	public class ManagedAdapterViewFlipper : AdapterViewFlipper {
+
+		public ManagedAdapterViewFlipper (Context context)
+			: base (context)
+		{
+		}
+
+		protected ManagedAdapterViewFlipper (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
 	}
 
 	public class CanOverrideAbsListView_Adapter : AbsListView {

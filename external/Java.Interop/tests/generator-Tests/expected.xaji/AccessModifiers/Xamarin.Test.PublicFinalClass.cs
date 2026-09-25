@@ -18,7 +18,7 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='PublicFinalClass']"
 	[global::Android.Runtime.Register ("xamarin/test/PublicFinalClass", DoNotGenerateAcw=true)]
 	public sealed partial class PublicFinalClass : global::Xamarin.Test.BasePublicClass {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/PublicFinalClass", typeof (PublicFinalClass));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/PublicFinalClass", typeof (PublicFinalClass));
 
 		internal static new IntPtr class_ref {
 			get { return _members.JniPeerType.PeerReference.Handle; }
@@ -28,18 +28,6 @@ namespace Xamarin.Test {
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
 		}
 
 		internal PublicFinalClass (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)

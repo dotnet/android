@@ -7,7 +7,7 @@ namespace Android.Runtime {
 
 	public class XAPeerMembers : JniPeerMembers {
 
-		static  Dictionary<string,  JniPeerMembers>         LegacyPeerMembers = new Dictionary<string, JniPeerMembers> (StringComparer.Ordinal);
+		static readonly Dictionary<string, JniPeerMembers> LegacyPeerMembers = new Dictionary<string, JniPeerMembers> (StringComparer.Ordinal);
 
 		public XAPeerMembers (string jniPeerTypeName, Type managedPeerType)
 			: base (jniPeerTypeName, managedPeerType)
@@ -21,9 +21,11 @@ namespace Android.Runtime {
 
 		protected override bool UsesVirtualDispatch (IJavaPeerable value, Type? declaringType)
 		{
-			var peerType  = GetThresholdType (value);
-			if (peerType != null) {
-				return peerType == value.GetType ();
+			if (value.JniPeerMembers is XAPeerMembers) {
+				var peerType = GetThresholdType (value);
+				if (peerType != null) {
+					return peerType == value.GetType ();
+				}
 			}
 
 			return base.UsesVirtualDispatch (value, declaringType);
@@ -31,12 +33,16 @@ namespace Android.Runtime {
 
 		protected override JniPeerMembers GetPeerMembers (IJavaPeerable value)
 		{
+			if (value.JniPeerMembers is not XAPeerMembers) {
+				return base.GetPeerMembers (value);
+			}
+
 			var peerType = GetThresholdType (value);
 			if (peerType == null || value.JniPeerMembers.ManagedPeerType == peerType) {
 				return base.GetPeerMembers (value);
-			};
+			}
 
-			var jniClass  = Java.Interop.TypeManager.GetClassName (GetThresholdClass (value));
+			var jniClass = Java.Interop.TypeManager.GetClassName (GetThresholdClass (value));
 			lock (LegacyPeerMembers) {
 				if (!LegacyPeerMembers.TryGetValue (jniClass, out var members)) {
 					members = new XAPeerMembers (jniClass, peerType);
@@ -48,12 +54,10 @@ namespace Android.Runtime {
 
 		static Type? GetThresholdType (IJavaPeerable value)
 		{
-			var o = value as Java.Lang.Object;
-			if (o != null) {
+			if (value is Java.Lang.Object o) {
 				return o.GetThresholdType ();
 			}
-			var t = value as Java.Lang.Throwable;
-			if (t != null) {
+			if (value is Java.Lang.Throwable t) {
 				return t.GetThresholdType ();
 			}
 			return null;
@@ -61,12 +65,10 @@ namespace Android.Runtime {
 
 		static IntPtr GetThresholdClass (IJavaPeerable value)
 		{
-			var o = value as Java.Lang.Object;
-			if (o != null) {
+			if (value is Java.Lang.Object o) {
 				return o.GetThresholdClass ();
 			}
-			var t = value as Java.Lang.Throwable;
-			if (t != null) {
+			if (value is Java.Lang.Throwable t) {
 				return t.GetThresholdClass ();
 			}
 			return IntPtr.Zero;

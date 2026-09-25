@@ -19,7 +19,7 @@ namespace Xamarin.Test {
 	[global::Android.Runtime.Register ("xamarin/test/C", DoNotGenerateAcw=true)]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T extends xamarin.test.C"})]
 	public partial class C : global::Java.Lang.Object {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/C", typeof (C));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/C", typeof (C));
 
 		internal static new IntPtr class_ref {
 			get { return _members.JniPeerType.PeerReference.Handle; }
@@ -29,18 +29,6 @@ namespace Xamarin.Test {
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
 		}
 
 		protected C (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)

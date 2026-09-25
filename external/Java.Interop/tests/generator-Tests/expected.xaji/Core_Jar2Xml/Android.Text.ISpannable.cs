@@ -22,21 +22,9 @@ namespace Android.Text {
 			get { return _members_android_text_Spannable; }
 		}
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members_android_text_Spannable.JniPeerType.PeerReference.Handle; }
-		}
+		static readonly JniPeerMembers _members_android_text_Spannable = new JniPeerMembers ("android/text/Spannable", typeof (ISpannableInvoker));
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members_android_text_Spannable.ManagedPeerType; }
-		}
-
-		static readonly JniPeerMembers _members_android_text_Spannable = new XAPeerMembers ("android/text/Spannable", typeof (ISpannableInvoker));
-
-		static readonly JniPeerMembers _members_android_text_Spanned = new XAPeerMembers ("android/text/Spanned", typeof (ISpannableInvoker));
+		static readonly JniPeerMembers _members_android_text_Spanned = new JniPeerMembers ("android/text/Spanned", typeof (ISpannableInvoker));
 
 		public ISpannableInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

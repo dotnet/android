@@ -42,19 +42,7 @@ namespace Xamarin.Test {
 					get { return _members_xamarin_test_NotificationCompatBase_Action_Factory; }
 				}
 
-				[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-				[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-				protected override IntPtr ThresholdClass {
-					get { return _members_xamarin_test_NotificationCompatBase_Action_Factory.JniPeerType.PeerReference.Handle; }
-				}
-
-				[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-				[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-				protected override global::System.Type ThresholdType {
-					get { return _members_xamarin_test_NotificationCompatBase_Action_Factory.ManagedPeerType; }
-				}
-
-				static readonly JniPeerMembers _members_xamarin_test_NotificationCompatBase_Action_Factory = new XAPeerMembers ("xamarin/test/NotificationCompatBase$Action$Factory", typeof (IFactoryInvoker));
+				static readonly JniPeerMembers _members_xamarin_test_NotificationCompatBase_Action_Factory = new JniPeerMembers ("xamarin/test/NotificationCompatBase$Action$Factory", typeof (IFactoryInvoker));
 
 				public IFactoryInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 				{
@@ -91,7 +79,7 @@ namespace Xamarin.Test {
 
 			}
 
-			static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/NotificationCompatBase$Action", typeof (Action));
+			static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/NotificationCompatBase$Action", typeof (Action));
 
 			internal static new IntPtr class_ref {
 				get { return _members.JniPeerType.PeerReference.Handle; }
@@ -101,18 +89,6 @@ namespace Xamarin.Test {
 			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 			public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 				get { return _members; }
-			}
-
-			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-			protected override IntPtr ThresholdClass {
-				get { return _members.JniPeerType.PeerReference.Handle; }
-			}
-
-			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-			protected override global::System.Type ThresholdType {
-				get { return _members.ManagedPeerType; }
 			}
 
 			protected Action (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
@@ -127,7 +103,7 @@ namespace Xamarin.Test {
 			{
 			}
 
-			static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/NotificationCompatBase$Action", typeof (ActionInvoker));
+			static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/NotificationCompatBase$Action", typeof (ActionInvoker));
 
 			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -135,18 +111,12 @@ namespace Xamarin.Test {
 				get { return _members; }
 			}
 
-			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-			protected override global::System.Type ThresholdType {
-				get { return _members.ManagedPeerType; }
-			}
-
 		}
 
 		// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='NotificationCompatBase.InstanceInner']"
 		[global::Android.Runtime.Register ("xamarin/test/NotificationCompatBase$InstanceInner", DoNotGenerateAcw=true)]
 		public abstract partial class InstanceInner : global::Java.Lang.Object {
-			static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/NotificationCompatBase$InstanceInner", typeof (InstanceInner));
+			static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/NotificationCompatBase$InstanceInner", typeof (InstanceInner));
 
 			internal static new IntPtr class_ref {
 				get { return _members.JniPeerType.PeerReference.Handle; }
@@ -156,18 +126,6 @@ namespace Xamarin.Test {
 			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 			public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 				get { return _members; }
-			}
-
-			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-			protected override IntPtr ThresholdClass {
-				get { return _members.JniPeerType.PeerReference.Handle; }
-			}
-
-			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-			protected override global::System.Type ThresholdType {
-				get { return _members.ManagedPeerType; }
 			}
 
 			protected InstanceInner (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
@@ -199,7 +157,7 @@ namespace Xamarin.Test {
 			{
 			}
 
-			static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/NotificationCompatBase$InstanceInner", typeof (InstanceInnerInvoker));
+			static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/NotificationCompatBase$InstanceInner", typeof (InstanceInnerInvoker));
 
 			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -207,15 +165,9 @@ namespace Xamarin.Test {
 				get { return _members; }
 			}
 
-			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-			protected override global::System.Type ThresholdType {
-				get { return _members.ManagedPeerType; }
-			}
-
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/NotificationCompatBase", typeof (NotificationCompatBase));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/NotificationCompatBase", typeof (NotificationCompatBase));
 
 		internal static new IntPtr class_ref {
 			get { return _members.JniPeerType.PeerReference.Handle; }
@@ -225,18 +177,6 @@ namespace Xamarin.Test {
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
 		}
 
 		protected NotificationCompatBase (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
