@@ -148,11 +148,30 @@ public class TrimmableTypeMap
 	/// </summary>
 	object GetProxyCacheEntryForJniName (string jniName)
 	{
-		return _jniProxyCache.GetOrAdd (jniName, static (name, self) => {
-			var builder = new JniProxyCacheBuilder ();
-			self._typeMap.CollectProxyTypes (name, ref builder);
-			return builder.Build ();
-		}, this);
+		return _jniProxyCache.GetOrAdd (jniName, CreateJniProxyCacheEntry, this);
+	}
+
+	static object CreateJniProxyCacheEntry (string name, TrimmableTypeMap self)
+	{
+		if (!RuntimeFeature.EventSourceSupport) {
+			return CreateJniProxyCacheEntryCore (name, self);
+		}
+
+		bool emitStop = RuntimeEventSource.TypeMapLookupStart (RuntimeEventSource.JavaToManagedTypeMapDirection);
+		try {
+			return CreateJniProxyCacheEntryCore (name, self);
+		} finally {
+			if (emitStop) {
+				RuntimeEventSource.TypeMapLookupStop (RuntimeEventSource.JavaToManagedTypeMapDirection);
+			}
+		}
+	}
+
+	static object CreateJniProxyCacheEntryCore (string name, TrimmableTypeMap self)
+	{
+		var builder = new JniProxyCacheBuilder ();
+		self._typeMap.CollectProxyTypes (name, ref builder);
+		return builder.Build ();
 	}
 
 	internal static JavaPeerProxy[] GetProxyArrayCacheEntry (object cacheEntry)
@@ -217,14 +236,33 @@ public class TrimmableTypeMap
 			managedType = managedType.GetGenericTypeDefinition ();
 		}
 
-		var proxy = _proxyCache.GetOrAdd (managedType, static (type, self) => {
-			if (!self._typeMap.TryGetProxyType (type, out var proxyType)) {
-				return s_noPeerSentinel;
-			}
-
-			return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) ?? s_noPeerSentinel;
-		}, this);
+		var proxy = _proxyCache.GetOrAdd (managedType, CreateManagedProxyCacheEntry, this);
 		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
+	}
+
+	static JavaPeerProxy CreateManagedProxyCacheEntry (Type type, TrimmableTypeMap self)
+	{
+		if (!RuntimeFeature.EventSourceSupport) {
+			return CreateManagedProxyCacheEntryCore (type, self);
+		}
+
+		bool emitStop = RuntimeEventSource.TypeMapLookupStart (RuntimeEventSource.ManagedToJavaTypeMapDirection);
+		try {
+			return CreateManagedProxyCacheEntryCore (type, self);
+		} finally {
+			if (emitStop) {
+				RuntimeEventSource.TypeMapLookupStop (RuntimeEventSource.ManagedToJavaTypeMapDirection);
+			}
+		}
+	}
+
+	static JavaPeerProxy CreateManagedProxyCacheEntryCore (Type type, TrimmableTypeMap self)
+	{
+		if (!self._typeMap.TryGetProxyType (type, out var proxyType)) {
+			return s_noPeerSentinel;
+		}
+
+		return proxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) ?? s_noPeerSentinel;
 	}
 
 	internal bool TryGetJniNameForManagedType (Type managedType, [NotNullWhen (true)] out string? jniName)

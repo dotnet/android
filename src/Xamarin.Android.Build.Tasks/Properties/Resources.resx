@@ -233,10 +233,6 @@ Note: the Android Designer is incompatible with Java SDK 11.0: https://aka.ms/vs
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
 {0} - The library name.</comment>
   </data>
-  <data name="XA0104" xml:space="preserve">
-    <value>Invalid value for `$(AndroidSequencePointsMode)`: {0}</value>
-    <comment>The following are literal names and should not be translated: `$(AndroidSequencePointsMode)`</comment>
-  </data>
   <data name="XA0105" xml:space="preserve">
     <value>The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -297,10 +293,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>Using Fast Deployment and Android App Bundles at the same time is not currently supported. Use Fast Deployment for Debug configurations and Android App Bundles for Release configurations.</value>
     <comment>The following are literal names and should not be translated: Android App Bundles</comment>
   </data>
-  <data name="XA0119_AOT" xml:space="preserve">
-    <value>Using fast deployment and AOT at the same time is not recommended. Use fast deployment for Debug configurations and AOT for Release configurations.</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
-  </data>
   <data name="XA0119_LinkMode" xml:space="preserve">
     <value>Using fast deployment and the linker at the same time is not recommended. Use fast deployment for Debug configurations and the linker for Release configurations.</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
@@ -308,10 +300,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
   <data name="XA0119_LinkTool" xml:space="preserve">
     <value>Using fast deployment and a code shrinker at the same time is not recommended. Use fast deployment for Debug configurations and a code shrinker for Release configurations.</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
-  </data>
-  <data name="XA0119_Interpreter" xml:space="preserve">
-    <value>Disabling the interpreter; using the interpreter and AOT at the same time is not supported. Use the interpreter for hot reload support in Debug configurations and AOT for Release configurations.</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
   </data>
   <data name="XA0119_ReadyToRun" xml:space="preserve">
     <value>Using fast deployment and ReadyToRun at the same time is not recommended. Use fast deployment for Debug configurations and ReadyToRun for Release configurations.</value>
@@ -469,10 +457,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>Using the DX DEX Compiler is not supported. Please set the DEX compiler to 'd8' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidDexTool' MSBuild property to 'd8'.</value>
     <comment>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</comment>
   </data>
-  <data name="XA1025" xml:space="preserve">
-    <value>The experimental 'Hybrid' value for the 'AndroidAotMode' MSBuild property is not currently compatible with the armeabi-v7a target ABI. To continue using the experimental 'Hybrid' value for 'AndroidAotMode', deselect the armeabi-v7a target ABI in the Visual Studio project property pages or edit the project file in a text editor and remove 'armeabi-v7a' from the 'AndroidSupportedAbis' MSBuild property.</value>
-    <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
-  </data>
   <data name="XA1027" xml:space="preserve">
     <value>The 'EnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.</value>
     <comment>The following are literal names and should not be translated: 'EnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
@@ -505,13 +489,15 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 {0} - The minimum SDK version number
 {1} - The SupportedOSPlatformVersion property value</comment>
   </data>
+  <data name="XA1037" xml:space="preserve">
+    <value>Unsupported @(Reference) item: {0}</value>
+    <comment>The following are literal names and should not be translated: @(Reference)
+{0} - The unsupported reference item</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
-  </data>
-  <data name="XA2000_gcParams_bridgeImpl" xml:space="preserve">
-    <value>Support for the 'MONO_GC_PARAMS=bridge-implementation=old' value will be removed in .NET 7.</value>
   </data>
   <data name="XA2001" xml:space="preserve">
     <value>Source file '{0}' could not be found.</value>
@@ -557,14 +543,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
   <data name="APT2265" xml:space="preserve">
     <value>This could be caused by the project having non-ASCII characters in its filename or path. See https://learn.microsoft.com/dotnet/android/messages/apt2265 for details.</value>
     <comment>The following are literal names and should not be translated:</comment>
-  </data>
-  <data name="XA3001" xml:space="preserve">
-    <value>Could not AOT the assembly: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
-  </data>
-  <data name="XA3002" xml:space="preserve">
-    <value>Invalid AOT mode: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
   <data name="XA3004" xml:space="preserve">
     <value>Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. See https://code.google.com/p/android/issues/detail?id=161422.</value>
@@ -765,11 +743,6 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>The abbreviation "ABI" should not be translated.
 {0} - Comma-separated list of the ignored library file names.</comment>
   </data>
-  <data name="XA4302" xml:space="preserve">
-    <value>Unhandled exception merging `AndroidManifest.xml`: {0}</value>
-    <comment>The following are literal names and should not be translated: `AndroidManifest.xml`
-{0} - The exception message of the associated exception</comment>
-  </data>
   <data name="XA4303" xml:space="preserve">
     <value>Error extracting resources from "{0}": {1}</value>
     <comment>{0} - The file name
@@ -884,22 +857,23 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
-  <data name="XA4325" xml:space="preserve">
-    <value>Failed to rewrite managed JNI names for R8. {0}</value>
-    <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4325_* resources.</comment>
+  <data name="XA4327" xml:space="preserve">
+    <value>Could not extract Java type map keys from '{0}': {1}</value>
+    <comment>{0} - The input file path or representation name.
+{1} - The underlying parser or input/output failure. It is not localized.</comment>
   </data>
-  <data name="XA4325_AssemblyFailure" xml:space="preserve">
-    <value>Could not rewrite the JNI names in the assembly '{0}': {1}</value>
-    <comment>{0} - The path of the assembly which could not be rewritten.
-{1} - The underlying message describing why the assembly could not be rewritten. It is not localized.</comment>
+  <data name="XA4328" xml:space="preserve">
+    <value>Could not generate typemap ProGuard configuration from '{0}': {1}</value>
+    <comment>{0} - The input or output file path.
+{1} - The underlying failure, or a formatted XA4328_* resource.</comment>
   </data>
-  <data name="XA4325_SourceDestinationCount" xml:space="preserve">
-    <value>The 'SourceFiles' and 'DestinationFiles' item groups must contain the same number of items.</value>
-    <comment>The following are literal MSBuild item group names and should not be translated: 'SourceFiles', 'DestinationFiles'.</comment>
+  <data name="XA4328_NoInputs" xml:space="preserve">
+    <value>No retained Java type map key files were provided.</value>
   </data>
-  <data name="XA4326" xml:space="preserve">
-    <value>Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous JNIEnv.FindClass source.</value>
-    <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
+  <data name="XA4328_InvalidName" xml:space="preserve">
+    <value>Line {0} contains an invalid retained Java class name: '{1}'.</value>
+    <comment>{0} - The one-based line number.
+{1} - The invalid input record.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>
@@ -1121,8 +1095,8 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
 </comment>
   </data>
   <data name="XA1044" xml:space="preserve">
-    <value>The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"</value>
-    <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
+    <value>The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Remove the property.</value>
+    <comment>The following literal name should not be translated: MSBuild.
 {0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
@@ -1323,10 +1297,6 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
   </data>
   <data name="XA0146" xml:space="preserve">
     <value>Attempt to check whether '{0}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.</value>
-    <comment>{0} - The file path.</comment>
-  </data>
-  <data name="XA0147" xml:space="preserve">
-    <value>Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring AOT check for the file.</value>
     <comment>{0} - The file path.</comment>
   </data>
   <data name="XA0148" xml:space="preserve">

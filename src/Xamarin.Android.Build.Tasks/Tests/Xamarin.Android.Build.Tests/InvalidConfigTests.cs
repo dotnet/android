@@ -48,14 +48,11 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void UnsupportedJcwCodegenTargetIsRejected (
 			[Values ("XamarinAndroid", "JavaInterop1")] string codegenTarget,
-			[Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			var project = new XamarinAndroidApplicationProject {
 				IsRelease = runtime == AndroidRuntime.NativeAOT,
 			};
-			if (runtime == AndroidRuntime.MonoVM) {
-				project.SetProperty ("_DisableCheckForUnsupportedMonoMobileRuntime", "true");
-			}
 			project.SetRuntime (runtime);
 			project.SetProperty ("_AndroidJcwCodegenTarget", codegenTarget);
 			using (var builder = CreateApkBuilder ()) {
@@ -65,6 +62,25 @@ namespace Xamarin.Android.Build.Tests
 				StringAssertEx.Contains ("error XA4240:", builder.LastBuildOutput, "Build should fail with XA4240.");
 				StringAssertEx.Contains (codegenTarget, builder.LastBuildOutput, "Error should identify the unsupported code generation target.");
 			}
+		}
+
+		[Test]
+		[TestCase ("RunAOTCompilation")]
+		[TestCase ("EnableLLVM")]
+		public void UnsupportedMonoAotPropertyFailsBuild (string property)
+		{
+			var project = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			project.SetRuntime (AndroidRuntime.CoreCLR);
+			project.SetProperty (property, "true");
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (project), "Build should have failed.");
+			StringAssertEx.Contains ("error XA1044", builder.LastBuildOutput, "Build output should contain error XA1044");
+			StringAssertEx.Contains (property, builder.LastBuildOutput, $"Build output should mention {property}");
+			StringAssertEx.Contains ("CoreCLR", builder.LastBuildOutput, "Build output should mention CoreCLR");
 		}
 
 	}

@@ -5,6 +5,8 @@ using System.IO;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 using Java.Interop;
 
@@ -33,6 +35,14 @@ namespace Java.InteropTests {
 	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "JavaVMFixtureTypeManager intentionally uses reflection-backed type manager behavior for tests.")]
 	class JavaVMFixtureTypeManager : JniRuntime.ReflectionJniTypeManager {
 
+		[Flags]
+		enum ReplacementMethodStorage {
+			Strings       = 0,
+			TypeUtf8      = 1,
+			MethodUtf8    = 2,
+			SignatureUtf8 = 4,
+		}
+
 		Dictionary<string, Type> TypeMappings = new() {
 #if !NO_MARSHAL_MEMBER_BUILDER_SUPPORT
 			[TestType.JniTypeName]              = typeof (TestType),
@@ -52,9 +62,21 @@ namespace Java.InteropTests {
 			[MyDisposableObject.JniTypeName]                = typeof (JavaDisposedObject),
 			[MyJavaInterfaceImpl.JniTypeName]               = typeof (MyJavaInterfaceImpl),
 		};
+		readonly Dictionary<string, IntPtr> utf8Values = new (StringComparer.Ordinal);
+		readonly object utf8ValuesLock = new ();
 
 		public JavaVMFixtureTypeManager ()
 		{
+		}
+
+		protected override void Dispose (bool disposing)
+		{
+			lock (utf8ValuesLock) {
+				foreach (var value in utf8Values.Values)
+					Marshal.ZeroFreeCoTaskMemUTF8 (value);
+				utf8Values.Clear ();
+			}
+			base.Dispose (disposing);
 		}
 
 		protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
@@ -117,19 +139,48 @@ namespace Java.InteropTests {
 			["net/dot/jni/test/RenameClassBase1"] = "net/dot/jni/test/RenameClassBase2",
 		};
 
-		protected override string? GetReplacementTypeCore (string jniSimpleReference) =>
-			ReplacmentTypes.TryGetValue (jniSimpleReference, out var v)
-			? v
-			: null;
+		string? trackedReplacementType;
+		int replacementTypeStringLookupCount;
+		int replacementTypeUtf8LookupCount;
 
-		Dictionary<(string SourceType, string SourceName, string? SourceSignature), (string? TargetType, string? TargetName, string? TargetSignature, int? ParamCount, bool TurnStatic)> ReplacementMethods = new() {
-			[("java/lang/Object",                       "remappedToToString",       "()Ljava/lang/String;")]    = (null, "toString", null, null, false),
-			[("java/lang/Object",                       "remappedToStaticHashCode", null)]                      = ("net/dot/jni/test/ObjectHelper", "getHashCodeHelper", null, null, true),
-			[("java/lang/Runtime",                      "remappedToGetRuntime",     null)]                      = (null, "getRuntime", null, null, false),
+		public void TrackReplacementTypeLookups (string jniSimpleReference)
+		{
+			trackedReplacementType = jniSimpleReference;
+			replacementTypeStringLookupCount = 0;
+			replacementTypeUtf8LookupCount = 0;
+		}
+
+		public (int String, int Utf8) GetReplacementTypeLookupCounts ()
+			=> (replacementTypeStringLookupCount, replacementTypeUtf8LookupCount);
+
+		protected override string? GetReplacementTypeCore (string jniSimpleReference)
+		{
+			if (jniSimpleReference == trackedReplacementType)
+				Interlocked.Increment (ref replacementTypeStringLookupCount);
+			return ReplacmentTypes.TryGetValue (jniSimpleReference, out var value)
+				? value
+				: null;
+		}
+
+		protected override void GetReplacementTypeInfoCore (string jniSimpleReference, out string? replacement, out IntPtr replacementUtf8)
+		{
+			if (jniSimpleReference == trackedReplacementType)
+				Interlocked.Increment (ref replacementTypeUtf8LookupCount);
+			replacement = null;
+			replacementUtf8 = ReplacmentTypes.TryGetValue (jniSimpleReference, out var value)
+				? GetUtf8Value (value)
+				: IntPtr.Zero;
+		}
+
+		Dictionary<(string SourceType, string SourceName, string? SourceSignature), (string? TargetType, string? TargetName, string? TargetSignature, int? ParamCount, bool TurnStatic, ReplacementMethodStorage Storage)> ReplacementMethods = new() {
+			[("java/lang/Object",                       "remappedToToString",                  "()Ljava/lang/String;")]    = (null, "toString", null, null, false, ReplacementMethodStorage.TypeUtf8 | ReplacementMethodStorage.MethodUtf8),
+			[("java/lang/Object",                       "remappedToStringWithUtf8Signature",    "()Ljava/lang/String;")]    = (null, "toString", "()Ljava/lang/String;", null, false, ReplacementMethodStorage.SignatureUtf8),
+			[("java/lang/Object",                       "remappedToStaticHashCode",            null)]                      = ("net/dot/jni/test/ObjectHelper", "getHashCodeHelper", null, null, true, ReplacementMethodStorage.TypeUtf8 | ReplacementMethodStorage.MethodUtf8 | ReplacementMethodStorage.SignatureUtf8),
+			[("java/lang/Runtime",                      "remappedToGetRuntime",                null)]                      = (null, "getRuntime", null, null, false, ReplacementMethodStorage.Strings),
 
 			// NOTE: key must use *post-renamed* value, not pre-renamed value
 			// NOTE: SourceSignature lacking return type; "closer in spirit" to what `remapping-config.json` allows
-			[("net/dot/jni/test/RenameClassBase2",   "hashCode",                 "()")]                      = ("net/dot/jni/test/RenameClassBase2", "myNewHashCode", null, null, false),
+			[("net/dot/jni/test/RenameClassBase2",   "hashCode",                            "()")]                      = ("net/dot/jni/test/RenameClassBase2", "myNewHashCode", null, null, false, ReplacementMethodStorage.TypeUtf8 | ReplacementMethodStorage.MethodUtf8),
 		};
 
 		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
@@ -148,13 +199,16 @@ namespace Java.InteropTests {
 				paramCount++;
 			}
 			// Console.Error.WriteLine ($"# jonp: found replacement: ({GetValue (r.TargetType)}, {GetValue (r.TargetName)}, {GetValue (r.TargetSignature)}, {r.ParamCount?.ToString () ?? "null"}, {r.IsStatic})");
+			var targetType = r.TargetType ?? jniSourceType;
+			var targetName = r.TargetName ?? jniMethodName;
+			var targetSignature = r.Storage == ReplacementMethodStorage.Strings ? targetSig ?? jniMethodSignature : targetSig;
 			return new JniRuntime.ReplacementMethodInfo {
-					SourceJniType                   = jniSourceType,
-					SourceJniMethodName             = jniMethodName,
-					SourceJniMethodSignature        = jniMethodSignature,
-					TargetJniType                   = r.TargetType ?? jniSourceType,
-					TargetJniMethodName             = r.TargetName ?? jniMethodName,
-					TargetJniMethodSignature        = targetSig    ?? jniMethodSignature,
+					TargetJniType                   = r.Storage.HasFlag (ReplacementMethodStorage.TypeUtf8) ? null : targetType,
+					TargetJniMethodName             = r.Storage.HasFlag (ReplacementMethodStorage.MethodUtf8) ? null : targetName,
+					TargetJniMethodSignature        = r.Storage.HasFlag (ReplacementMethodStorage.SignatureUtf8) ? null : targetSignature,
+					TargetJniTypeUtf8               = r.Storage.HasFlag (ReplacementMethodStorage.TypeUtf8) ? GetUtf8Value (targetType) : IntPtr.Zero,
+					TargetJniMethodNameUtf8         = r.Storage.HasFlag (ReplacementMethodStorage.MethodUtf8) ? GetUtf8Value (targetName) : IntPtr.Zero,
+					TargetJniMethodSignatureUtf8    = r.Storage.HasFlag (ReplacementMethodStorage.SignatureUtf8) && targetSig != null ? GetUtf8Value (targetSig) : IntPtr.Zero,
 					TargetJniMethodParameterCount   = paramCount,
 					TargetJniMethodInstanceToStatic = r.TurnStatic,
 			};
@@ -169,6 +223,25 @@ namespace Java.InteropTests {
 			// {
 			// 	return value == null ? "null" : $"\"{value}\"";
 			// }
+		}
+
+		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (IntPtr jniSourceTypeUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+		{
+			var jniSourceType = Marshal.PtrToStringUTF8 (jniSourceTypeUtf8);
+			if (jniSourceType == null)
+				throw new InvalidOperationException ("The test remapping source type is null.");
+			return GetReplacementMethodInfoCore (jniSourceType, jniMethodName.ToString (), jniMethodSignature.ToString ());
+		}
+
+		IntPtr GetUtf8Value (string value)
+		{
+			lock (utf8ValuesLock) {
+				if (utf8Values.TryGetValue (value, out var pointer))
+					return pointer;
+				pointer = Marshal.StringToCoTaskMemUTF8 (value);
+				utf8Values.Add (value, pointer);
+				return pointer;
+			}
 		}
 	}
 }

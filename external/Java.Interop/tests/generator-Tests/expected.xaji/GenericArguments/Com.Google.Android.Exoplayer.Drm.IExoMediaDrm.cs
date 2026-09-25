@@ -17,10 +17,6 @@ namespace Com.Google.Android.Exoplayer.Drm {
 
 	[global::Android.Runtime.Register ("com/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener", DoNotGenerateAcw=true)]
 	internal partial class IExoMediaDrmOnEventListenerInvoker : global::Java.Lang.Object, IExoMediaDrmOnEventListener {
-		static IntPtr java_class_ref {
-			get { return _members_com_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -191,10 +187,6 @@ namespace Com.Google.Android.Exoplayer.Drm {
 
 	[global::Android.Runtime.Register ("com/google/android/exoplayer/drm/ExoMediaDrm", DoNotGenerateAcw=true)]
 	internal partial class IExoMediaDrmInvoker : global::Java.Lang.Object, IExoMediaDrm {
-		static IntPtr java_class_ref {
-			get { return _members_com_google_android_exoplayer_drm_ExoMediaDrm.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -243,13 +235,10 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		public unsafe void SetOnEventListener (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener p0)
 		{
 			const string __id = "setOnEventListener.(Lcom/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener;)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((p0 == null) ? IntPtr.Zero : ((global::Java.Lang.Object) p0).Handle);
-				_members_com_google_android_exoplayer_drm_ExoMediaDrm.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-			} finally {
-				global::System.GC.KeepAlive (p0);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue ((p0 == null) ? IntPtr.Zero : ((global::Java.Lang.Object) p0).Handle);
+			_members_com_google_android_exoplayer_drm_ExoMediaDrm.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			global::System.GC.KeepAlive (p0);
 		}
 
 	}

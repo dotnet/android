@@ -12,7 +12,6 @@
     -->
     <AndroidUseInstrumentation Condition=" '$(AndroidUseInstrumentation)' == '' and '$(EnableMSTestRunner)' == 'true' ">true</AndroidUseInstrumentation>
     <AndroidUseInstrumentation Condition=" '$(AndroidUseInstrumentation)' == '' ">false</AndroidUseInstrumentation>
-    <AndroidEnableSGenConcurrent Condition=" '$(AndroidEnableSGenConcurrent)' == '' ">true</AndroidEnableSGenConcurrent>
     <AndroidGenerateResourceDesigner Condition=" '$(AndroidGenerateResourceDesigner)' == '' ">true</AndroidGenerateResourceDesigner>
     <AndroidUseDesignerAssembly Condition=" '$(AndroidUseDesignerAssembly)' == '' ">true</AndroidUseDesignerAssembly>
     <AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseDesignerAssembly)' == 'True' ">false</AndroidUseIntermediateDesignerFile>
@@ -31,7 +30,6 @@
     <_GetChildProjectCopyToPublishDirectoryItems>false</_GetChildProjectCopyToPublishDirectoryItems>
     <!-- PublishAot enables analyzers for every build, but NativeAOT compilation only applies to publish or optimized builds. -->
     <_AndroidRuntime Condition=" '$(_AndroidRuntime)' == '' and '$(PublishAot)' == 'true' and ('$(_IsPublishing)' == 'true' or '$(Optimize)' == 'true') ">NativeAOT</_AndroidRuntime>
-    <_AndroidRuntime Condition=" '$(_AndroidRuntime)' == '' and '$(UseMonoRuntime)' == 'true' ">MonoVM</_AndroidRuntime>
     <_AndroidRuntime Condition=" '$(_AndroidRuntime)' == '' ">CoreCLR</_AndroidRuntime>
     <NativeCompilationDuringPublish Condition=" '$(NativeCompilationDuringPublish)' == '' and '$(PublishAot)' == 'true' and '$(_AndroidRuntime)' != 'NativeAOT' ">false</NativeCompilationDuringPublish>
     <PublishAotUsingRuntimePack Condition=" '$(PublishAotUsingRuntimePack)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">true</PublishAotUsingRuntimePack>
@@ -54,10 +52,11 @@
     <AndroidEnableRestrictToAttributes Condition=" '$(AndroidEnableRestrictToAttributes)' == '' ">obsolete</AndroidEnableRestrictToAttributes>
     <GenerateDocumentationFile Condition=" '$(GenerateDocumentationFile)' == '' ">true</GenerateDocumentationFile>
 
-    <!-- Mono components -->
+    <!-- Legacy alias retained for compatibility; no Mono profiler component is packaged. -->
     <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == '' ">$(EnableDiagnostics)</AndroidEnableProfiler>
     <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == '' and ('$(DiagnosticConfiguration)' != '' or '$(DiagnosticAddress)' != '' or '$(DiagnosticPort)' != '' or '$(DiagnosticSuspend)' != '' or '$(DiagnosticListenMode)' != '') ">true</AndroidEnableProfiler>
     <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == '' ">false</AndroidEnableProfiler>
+    <_AndroidEnableDiagnostics Condition=" '$(AndroidEnableProfiler)' == 'true' ">true</_AndroidEnableDiagnostics>
 
     <!--
         Android package (apt/aab) alignment, expressed as the page size in kilobytes.  Two values are supported: 4 and 16.
@@ -68,7 +67,7 @@
     <AndroidZipAlignment Condition=" '$(AndroidZipAlignment)' == '' ">16</AndroidZipAlignment>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(AndroidEnableProfiler)' == 'true' and '$(DiagnosticConfiguration)' == '' ">
+  <PropertyGroup Condition=" '$(_AndroidEnableDiagnostics)' == 'true' and '$(DiagnosticConfiguration)' == '' ">
     <DiagnosticAddress Condition=" '$(DiagnosticAddress)' == '' ">127.0.0.1</DiagnosticAddress>
     <DiagnosticPort Condition=" '$(DiagnosticPort)' == '' ">9000</DiagnosticPort>
     <DiagnosticSuspend Condition=" '$(DiagnosticSuspend)' == '' ">false</DiagnosticSuspend>
@@ -81,7 +80,6 @@
   <!--  User-facing configuration-specific defaults -->
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>
-    <UseInterpreter Condition=" '$(UseInterpreter)' == '' and '$(AndroidUseInterpreter)' == '' and '$(_AndroidRuntime)' == 'MonoVM' ">true</UseInterpreter>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <AndroidEnableFastDeployment Condition=" '$(AndroidEnableFastDeployment)' == '' ">false</AndroidEnableFastDeployment>
@@ -98,7 +96,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' ">
     <UseAppHost>false</UseAppHost>
-    <!-- see: https://github.com/xamarin/xamarin-macios/blob/a6eb528197854c074d9dd5847328c096890337be/dotnet/targets/Xamarin.Shared.Sdk.props#L38-L52 -->
+    <!-- see: https://github.com/dotnet/macios/blob/a6eb528197854c074d9dd5847328c096890337be/dotnet/targets/Xamarin.Shared.Sdk.props#L38-L52 -->
     <_RuntimeIdentifierUsesAppHost>false</_RuntimeIdentifierUsesAppHost>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <PublishReferencesDocumentationFiles Condition=" '$(PublishReferencesDocumentationFiles)' == '' ">false</PublishReferencesDocumentationFiles>
@@ -117,19 +115,11 @@
     <RuntimeIdentifiers Condition=" '$(RuntimeIdentifier)' == '' And '$(RuntimeIdentifiers)' == '' ">android-arm64;android-x64</RuntimeIdentifiers>
     <RuntimeIdentifier  Condition=" '$(RuntimeIdentifiers)' != '' And '$(RuntimeIdentifier)' != '' " />
     <GenerateApplicationManifest Condition=" '$(GenerateApplicationManifest)' == '' ">true</GenerateApplicationManifest>
-    <!-- Default to Mono's AOT in Release mode -->
-    <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == '' and '$(Configuration)' == 'Release' and '$(_AndroidRuntime)' == 'MonoVM' ">true</RunAOTCompilation>
-    <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == 'true' ">true</RunAOTCompilation>
-    <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' ">false</RunAOTCompilation>
-    <!-- Error and reset Mono-specific properties when the runtime is not MonoVM -->
-    <_AndroidXA1044_RunAOTCompilation Condition=" '$(RunAOTCompilation)' == 'true' and '$(_AndroidRuntime)' != 'MonoVM' ">true</_AndroidXA1044_RunAOTCompilation>
-    <_AndroidXA1044_EnableLLVM Condition=" '$(EnableLLVM)' == 'true' and '$(_AndroidRuntime)' != 'MonoVM' ">true</_AndroidXA1044_EnableLLVM>
+    <!-- Error and reset unsupported Mono-specific properties. -->
+    <_AndroidXA1044_RunAOTCompilation Condition=" '$(RunAOTCompilation)' == 'true' ">true</_AndroidXA1044_RunAOTCompilation>
+    <_AndroidXA1044_EnableLLVM Condition=" '$(EnableLLVM)' == 'true' ">true</_AndroidXA1044_EnableLLVM>
     <RunAOTCompilation Condition=" '$(_AndroidXA1044_RunAOTCompilation)' == 'true' ">false</RunAOTCompilation>
     <EnableLLVM Condition=" '$(_AndroidXA1044_EnableLLVM)' == 'true' ">false</EnableLLVM>
-    <_AndroidXA1029 Condition=" '$(AotAssemblies)' != '' ">true</_AndroidXA1029>
-    <_AndroidXA1030 Condition=" '$(RunAOTCompilation)' == 'true' and '$(PublishTrimmed)' == 'false' ">true</_AndroidXA1030>
-    <AotAssemblies>$(RunAOTCompilation)</AotAssemblies>
-    <AndroidEnableProfiledAot Condition=" '$(AndroidEnableProfiledAot)' == '' and '$(RunAOTCompilation)' == 'true' ">true</AndroidEnableProfiledAot>
 
     <!--
       Runtime libraries feature switches defaults
@@ -157,8 +147,8 @@
     <!-- XA feature switches defaults -->
     <AndroidUseNegotiateAuthentication Condition="'$(AndroidUseNegotiateAuthentication)' == ''">false</AndroidUseNegotiateAuthentication>
 
-    <!-- profiler won't work without internet permission, we must thus force it -->
-    <AndroidNeedsInternetPermission Condition=" '$(AndroidEnableProfiler)' == 'true' ">True</AndroidNeedsInternetPermission>
+    <!-- TCP diagnostic ports require internet permission. -->
+    <AndroidNeedsInternetPermission Condition=" '$(_AndroidEnableDiagnostics)' == 'true' ">True</AndroidNeedsInternetPermission>
   </PropertyGroup>
   <!-- Trimmer switches that default to OFF in Release mode -->
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' and '$(Optimize)' == 'true' ">
@@ -167,8 +157,8 @@
     <StartupHookSupport Condition=" '$(StartupHookSupport)' == '' ">false</StartupHookSupport>
     <HttpActivityPropagationSupport Condition=" '$(HttpActivityPropagationSupport)' == '' ">false</HttpActivityPropagationSupport>
     <!-- Only set if *not* using $(EnableDiagnostics) -->
-    <MetricsSupport Condition=" '$(MetricsSupport)' == '' and '$(AndroidEnableProfiler)' != 'true' ">false</MetricsSupport>
-    <EventSourceSupport Condition=" '$(EventSourceSupport)' == '' and '$(AndroidEnableProfiler)' != 'true' ">false</EventSourceSupport>
+    <MetricsSupport Condition=" '$(MetricsSupport)' == '' and '$(_AndroidEnableDiagnostics)' != 'true' ">false</MetricsSupport>
+    <EventSourceSupport Condition=" '$(EventSourceSupport)' == '' and '$(_AndroidEnableDiagnostics)' != 'true' ">false</EventSourceSupport>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' and '$(GenerateApplicationManifest)' == 'true' ">
     <!-- Default to 1, if blank -->

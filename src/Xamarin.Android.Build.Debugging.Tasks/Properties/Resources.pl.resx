@@ -140,22 +140,6 @@ ABI - is an acronym for Application Binary Interface.
 {0} - the target name the user supplied
     </comment>
   </data>
-  <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
-    <value>Nie można skopiować narzędzi szybkiego wdrażania do folderu „{0}/{1}” na urządzeniu docelowym.
-To urządzenie może nie być zgodne z szybkim wdrażaniem.
-Ustaw właściwość MSBuild „EmbedAssembliesIntoApk” na wartość „true”, aby wyłączyć szybkie wdrażanie na stronach właściwości projektu programu Visual Studio, lub edytuj plik projektu w edytorze tekstów.</value>
-    <comment>The following are literal names and should not be translated:
-{0} - A device path
-{1} - A filename</comment>
-  </data>
-  <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
-    <value>Błąd podczas wdrażania elementu „{0}” przy użyciu elementu „{1}: {2}„.
-Ustaw właściwość MSBuild „EmbedAssembliesIntoApk” na wartość „true”, aby wyłączyć szybkie wdrażanie na stronach właściwości projektu programu Visual Studio, lub edytuj plik projektu w edytorze tekstów.</value>
-<comment>The following are literal names and should not be translated:
-{0} - A filename
-{1} - The tool that was used to deploy the file.
-{2} - The actual error that occured.</comment>
-  </data>
   <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
     <value>Właściwość systemu Android „log.redirect-stdio” jest ustawiona na wartość „true” na urządzeniu docelowym lub emulatorze.
 Aby włączyć zgodność z szybkim wdrażaniem, ustaw właściwość na wartość „false” lub uruchom ponownie urządzenie lub emulator, aby wyczyścić wartość.</value>
@@ -165,10 +149,6 @@ Aby włączyć zgodność z szybkim wdrażaniem, ustaw właściwość na wartoś
 Ustaw właściwość MSBuild „EmbedAssembliesIntoApk” na wartość „true”, aby wyłączyć szybkie wdrażanie na stronach właściwości projektu programu Visual Studio, lub edytuj plik projektu w edytorze tekstów.</value>
     <comment>The following are literal names and should not be translated:
 {0} - A filename</comment>
-  </data>
-  <data name="XA0130_FastDevNotSupported" xml:space="preserve">
-    <value>Przepraszamy. Szybkie wdrażanie jest obsługiwane tylko na urządzeniach z systemem Android 5.0 (poziom 21 interfejsu API) lub nowszym.
-Ustaw właściwość MSBuild „EmbedAssembliesIntoApk” na wartość „true”, aby wyłączyć szybkie wdrażanie na stronach właściwości projektu programu Visual Studio, lub edytuj plik projektu w edytorze tekstów.</value>
   </data>
   <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
     <value>Narzędzie „run-as” zostało wyłączone na tym urządzeniu. Włącz je, aktywując opcje dewelopera na urządzeniu lub ustawiając „ro.boot.disable_runas na wartość „false”.</value>

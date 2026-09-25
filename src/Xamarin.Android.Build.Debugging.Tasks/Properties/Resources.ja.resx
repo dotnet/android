@@ -140,22 +140,6 @@ ABI - is an acronym for Application Binary Interface.
 {0} - the target name the user supplied
     </comment>
   </data>
-  <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
-    <value>高速展開ツールをターゲット デバイスの '{0}/{1}' にコピーできません。
-このデバイスは Fast Deployment と互換性がない可能性があります。
-'EmbedAssembliesIntoApk' MSBuild プロパティを 'true' に設定して、Visual Studio プロジェクト プロパティ ページで高速展開を無効にするか、テキスト エディターでプロジェクト ファイルを編集してください。</value>
-    <comment>The following are literal names and should not be translated:
-{0} - A device path
-{1} - A filename</comment>
-  </data>
-  <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
-    <value>'{1}:{2}' を使用して '{0}' を展開中にエラーが発生しました。
-'EmbedAssembliesIntoApk' MSBuild プロパティを 'true' に設定して、Visual Studio プロジェクト プロパティ ページで高速展開を無効にするか、テキスト エディターでプロジェクト ファイルを編集してください。</value>
-<comment>The following are literal names and should not be translated:
-{0} - A filename
-{1} - The tool that was used to deploy the file.
-{2} - The actual error that occured.</comment>
-  </data>
   <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
     <value>ターゲット デバイスまたはエミュレーターで、'log.redirect-stdio' Android システム プロパティが 'true' に設定されています。
 高速展開との互換性を有効にするには、プロパティを 'false' に設定するか、デバイスまたはエミュレーターを再起動して値をクリアします。</value>
@@ -165,10 +149,6 @@ ABI - is an acronym for Application Binary Interface.
 'EmbedAssembliesIntoApk' MSBuild プロパティを 'true' に設定して、Visual Studio プロジェクト プロパティ ページで高速展開を無効にするか、テキスト エディターでプロジェクト ファイルを編集してください。</value>
     <comment>The following are literal names and should not be translated:
 {0} - A filename</comment>
-  </data>
-  <data name="XA0130_FastDevNotSupported" xml:space="preserve">
-    <value>申し訳ありません。Fast Deployment は、Android 5.0 (API レベル 21) 以上を実行しているデバイスでのみサポートされます。
-'EmbedAssembliesIntoApk' MSBuild プロパティを 'true' に設定して、Visual Studio プロジェクト プロパティ ページで高速展開を無効にするか、テキスト エディターでプロジェクト ファイルを編集してください。</value>
   </data>
   <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
     <value>このデバイスで 'run-as' ツールが無効になっています。デバイスの開発者オプションをアクティブ化するか、'ro.boot.disable_runas' を 'false' に設定して有効にします。</value>

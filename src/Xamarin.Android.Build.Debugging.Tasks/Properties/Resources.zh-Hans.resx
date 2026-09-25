@@ -140,22 +140,6 @@ ABI - is an acronym for Application Binary Interface.
 {0} - the target name the user supplied
     </comment>
   </data>
-  <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
-    <value>无法将快速部署工具复制到目标设备上的“{0}/{1}”。
-此设备可能与快速部署不兼容。
-请将 "EmbedAssembliesIntoApk" MSBuild 属性设置为 "true"，以在 Visual Studio 项目属性页中禁用快速部署，或在文本编辑器中编辑项目文件。</value>
-    <comment>The following are literal names and should not be translated:
-{0} - A device path
-{1} - A filename</comment>
-  </data>
-  <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
-    <value>使用“{1}: {2}”部署“{0}”时出错。
-请将 "EmbedAssembliesIntoApk" MSBuild 属性设置为 "true"，以在 Visual Studio 项目属性页中禁用快速部署，或在文本编辑器中编辑项目文件。</value>
-<comment>The following are literal names and should not be translated:
-{0} - A filename
-{1} - The tool that was used to deploy the file.
-{2} - The actual error that occured.</comment>
-  </data>
   <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
     <value>在目标设备或模拟器上，Android 系统属性 "log.redirect-stdio" 设置为 "true"。
 为实现与快速部署的兼容性，请将该属性设置为 "false"，或者重启设备或模拟器以清除该值。</value>
@@ -165,10 +149,6 @@ ABI - is an acronym for Application Binary Interface.
 请将 "EmbedAssembliesIntoApk" MSBuild 属性设置为 "true"，以在 Visual Studio 项目属性页中禁用快速部署，或在文本编辑器中编辑项目文件。</value>
     <comment>The following are literal names and should not be translated:
 {0} - A filename</comment>
-  </data>
-  <data name="XA0130_FastDevNotSupported" xml:space="preserve">
-    <value>抱歉。快速部署仅在运行 Android 5.0 (API 级别 21)或更高版本的设备上受支持。
-请将 "EmbedAssembliesIntoApk" MSBuild 属性设置为 "true"，以在 Visual Studio 项目属性页中禁用快速部署，或在文本编辑器中编辑项目文件。</value>
   </data>
   <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
     <value>此设备已禁用 "run-as" 工具。请激活设备上的开发人员选项或将 "ro.boot.disable_runas" 设置为 "false" 来启用它。</value>

@@ -82,8 +82,16 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 
 	initArgs->logCategories = log_categories;
 	initArgs->grefGcThreshold = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
+	initArgs->maxGrefCount = static_cast<int>(AndroidSystem::get_max_gref_count ());
 	initArgs->grefIGCUserPeer = env->NewGlobalRef (lrefIGCUserPeer);
 	initArgs->grefGCUserPeerable = env->NewGlobalRef (lrefGCUserPeerable);
+	initArgs->grefLogPath = Logger::gref_log_path ();
+	initArgs->lrefLogPath = Logger::lref_log_path ();
+	initArgs->referenceLogDirectory = Logger::reference_log_directory ();
+	initArgs->lightGref = Logger::light_gref_enabled () ? 1 : 0;
+	initArgs->lightLref = Logger::light_lref_enabled () ? 1 : 0;
+	initArgs->grefToLogcat = Logger::gref_to_logcat () ? 1 : 0;
+	initArgs->lrefToLogcat = Logger::lref_to_logcat () ? 1 : 0;
 
 	env->DeleteLocalRef (lrefIGCUserPeer);
 	env->DeleteLocalRef (lrefGCUserPeerable);

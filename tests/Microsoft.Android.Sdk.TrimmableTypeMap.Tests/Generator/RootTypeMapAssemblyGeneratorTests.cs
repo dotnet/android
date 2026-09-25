@@ -11,11 +11,20 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 {
-	static MemoryStream GenerateRootAssembly (IReadOnlyList<string> perAssemblyNames, bool useSharedTypemapUniverse = false, string? assemblyName = null)
+	static MemoryStream GenerateRootAssembly (
+		IReadOnlyList<string> perAssemblyNames,
+		bool useSharedTypemapUniverse = false,
+		string? assemblyName = null,
+		bool includeBuiltInValueTypeUniverses = true)
 	{
 		var stream = new MemoryStream ();
 		var generator = new RootTypeMapAssemblyGenerator (new Version (11, 0, 0, 0));
-		generator.Generate (perAssemblyNames, useSharedTypemapUniverse, stream, assemblyName);
+		generator.Generate (
+			perAssemblyNames,
+			useSharedTypemapUniverse,
+			stream,
+			assemblyName,
+			includeBuiltInValueTypeUniverses: includeBuiltInValueTypeUniverses);
 		stream.Position = 0;
 		return stream;
 	}
@@ -102,13 +111,22 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_EmptyList_ProducesValidAssemblyWithNoTargetAttributes ()
+	public void Generate_EmptyList_ProducesValueTypeDictionaryTargetAttribute ()
 	{
 		using var stream = GenerateRootAssembly ([]);
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
-		var targetAttrs = GetTypeMapAssemblyTargetAttributes (reader);
-		Assert.Empty (targetAttrs);
+		var targetAttrs = GetTypeMapAssemblyTargetAttributeTargets (reader);
+		Assert.Equal (new [] { ("Mono.Android", "Mono.Android") }, targetAttrs);
+	}
+
+	[Fact]
+	public void Generate_CoreClr_OmitsValueTypeDictionaryTargetAttribute ()
+	{
+		using var stream = GenerateRootAssembly ([], includeBuiltInValueTypeUniverses: false);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+		Assert.Empty (GetTypeMapAssemblyTargetAttributes (reader));
 	}
 
 	[Fact]
@@ -119,7 +137,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
 		var targetAttrs = GetTypeMapAssemblyTargetAttributes (reader);
-		Assert.Equal (3, targetAttrs.Count);
+		Assert.Equal (4, targetAttrs.Count);
 	}
 
 	[Fact]
@@ -134,9 +152,10 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 			.Select (target => target.TargetName)
 			.ToList ();
 
-		Assert.Equal (2, attrValues.Count);
+		Assert.Equal (3, attrValues.Count);
 		Assert.Contains ("_App.TypeMap", attrValues);
 		Assert.Contains ("_Mono.Android.TypeMap", attrValues);
+		Assert.Contains ("Mono.Android", attrValues);
 	}
 
 	[Fact]
@@ -152,6 +171,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Equal (new [] {
 			("_App.TypeMap", "_App.TypeMap"),
 			("_Mono.Android.TypeMap", "_Mono.Android.TypeMap"),
+			("Mono.Android", "Mono.Android"),
 		}, targetAttributes);
 	}
 
@@ -168,6 +188,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Equal (new [] {
 			("_App.TypeMap", "Mono.Android"),
 			("_Mono.Android.TypeMap", "Mono.Android"),
+			("Mono.Android", "Mono.Android"),
 		}, targetAttributes);
 	}
 
@@ -269,7 +290,7 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		// Both modes should have assembly target attributes
 		var targetAttrs = GetTypeMapAssemblyTargetAttributes (reader);
-		Assert.Equal (2, targetAttrs.Count);
+		Assert.Equal (3, targetAttrs.Count);
 	}
 
 	[Fact]

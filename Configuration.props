@@ -17,7 +17,7 @@
     <_StandardLibraryPath Condition=" '$(TargetFrameworkVersion)' == '' ">$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPathToStandardLibraries('.NETFramework', 'v4.7.2', ''))</_StandardLibraryPath>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(UsingMicrosoftNETSdk)' != 'true' And '$(_StandardLibraryPath)' != '' ">v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(UsingMicrosoftNETSdk)' != 'true' ">v4.7.1</TargetFrameworkVersion>
-    <!-- The min API level supported by Microsoft.Android.Sdk, for all runtimes (MonoVM, CoreCLR, NativeAOT).
+    <!-- The min API level supported by Microsoft.Android.Sdk, for all runtimes (CoreCLR and NativeAOT).
          Must match $(AndroidApiLevelMin) in dotnet/runtime's Directory.Build.props. -->
     <AndroidMinimumDotNetApiLevel Condition="'$(AndroidMinimumDotNetApiLevel)' == ''">24</AndroidMinimumDotNetApiLevel>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
@@ -100,14 +100,10 @@
     <GradleHome Condition=" '$(GradleHome)' == '' ">$(MSBuildThisFileDirectory)build-tools\gradle</GradleHome>
     <GradleWPath Condition=" '$(GradleWPath)' == '' ">$(GradleHome)\gradlew</GradleWPath>
     <GradleArgs Condition=" '$(GradleArgs)' == '' ">--stacktrace --no-daemon</GradleArgs>
-    <AndroidSupportedTargetAotAbis Condition=" '$(AndroidSupportedTargetAotAbis)' == ''  And '$(HostOS)' == 'Windows' ">armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64</AndroidSupportedTargetAotAbis>
-    <AndroidSupportedTargetAotAbis Condition=" '$(AndroidSupportedTargetAotAbis)' == '' ">armeabi-v7a:arm64:x86:x86_64</AndroidSupportedTargetAotAbis>
     <AndroidSupportedTargetJitAbis Condition=" '$(AndroidSupportedTargetJitAbis)' == '' ">armeabi-v7a:arm64-v8a:x86:x86_64</AndroidSupportedTargetJitAbis>
     <JavaInteropSourceDirectory Condition=" '$(JavaInteropSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\Java.Interop</JavaInteropSourceDirectory>
     <MonoSourceDirectory>$(MSBuildThisFileDirectory)external\mono</MonoSourceDirectory>
     <SqliteSourceDirectory Condition=" '$(SqliteSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\sqlite</SqliteSourceDirectory>
-    <LibUnwindSourceDirectory Condition=" '$(LibUnwindSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\libunwind</LibUnwindSourceDirectory>
-    <LibUnwindGeneratedHeadersDirectory Condition=" '$(LibUnwindGeneratedHeadersDirectory)' == '' ">$(BootstrapOutputDirectory)\libunwind</LibUnwindGeneratedHeadersDirectory>
     <XamarinAndroidSourcePath>$(MSBuildThisFileDirectory)</XamarinAndroidSourcePath>
     <ThirdPartySourcePath>$(MSBuildThisFileDirectory)src-ThirdParty\</ThirdPartySourcePath>
     <AllSupported32BitTargetAndroidAbis>armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
@@ -172,9 +168,6 @@
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' == 'Windows'">$(userprofile)\.nuget\packages</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' != 'Windows'">$(HOME)/.nuget/packages</XAPackagesDir>
     <PathSeparator>$([System.IO.Path]::PathSeparator)</PathSeparator>
-    <_TestsAotName Condition=" '$(AotAssemblies)' == 'true' ">-Aot</_TestsAotName>
-    <_TestsProfiledAotName Condition=" '$(AndroidEnableProfiledAot)' == 'true' ">-Profiled</_TestsProfiledAotName>
-    <TestsFlavor>$(_TestsProfiledAotName)$(_TestsAotName)</TestsFlavor>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Default to Java 17 for desktop, projects targeting Android should use 1.8 -->
@@ -187,8 +180,6 @@
     <JavaInteropFullPath>$([System.IO.Path]::GetFullPath ('$(JavaInteropSourceDirectory)'))</JavaInteropFullPath>
     <MonoSourceFullPath>$([System.IO.Path]::GetFullPath ('$(MonoSourceDirectory)'))</MonoSourceFullPath>
     <SqliteSourceFullPath>$([System.IO.Path]::GetFullPath ('$(SqliteSourceDirectory)'))</SqliteSourceFullPath>
-    <LibUnwindSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LibUnwindSourceDirectory)'))</LibUnwindSourceFullPath>
-    <LibUnwindGeneratedHeadersFullPath>$([System.IO.Path]::GetFullPath ('$(LibUnwindGeneratedHeadersDirectory)'))</LibUnwindGeneratedHeadersFullPath>
     <JavaInteropTargetFrameworkVersion>net10.0</JavaInteropTargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup>
@@ -222,13 +213,6 @@
     <AndroidSupportedTargetJitAbisForConditionalChecks Condition=" !$(AndroidSupportedTargetJitAbisForConditionalChecks.EndsWith (':')) "   >$(AndroidSupportedTargetJitAbisForConditionalChecks):</AndroidSupportedTargetJitAbisForConditionalChecks>
     <AndroidSupportedTargetJitAbisForConditionalChecks Condition=" !$(AndroidSupportedTargetJitAbisForConditionalChecks.StartsWith (':')) " >:$(AndroidSupportedTargetJitAbisForConditionalChecks)</AndroidSupportedTargetJitAbisForConditionalChecks>
     <AndroidSupportedTargetJitAbisSplit>$(AndroidSupportedTargetJitAbis.Split(':'))</AndroidSupportedTargetJitAbisSplit>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <AndroidSupportedTargetAotAbisForConditionalChecks>$(AndroidSupportedTargetAotAbis)</AndroidSupportedTargetAotAbisForConditionalChecks>
-    <AndroidSupportedTargetAotAbisForConditionalChecks Condition=" !$(AndroidSupportedTargetAotAbisForConditionalChecks.EndsWith (':')) "   >$(AndroidSupportedTargetAotAbisForConditionalChecks):</AndroidSupportedTargetAotAbisForConditionalChecks>
-    <AndroidSupportedTargetAotAbisForConditionalChecks Condition=" !$(AndroidSupportedTargetAotAbisForConditionalChecks.StartsWith (':')) " >:$(AndroidSupportedTargetAotAbisForConditionalChecks)</AndroidSupportedTargetAotAbisForConditionalChecks>
-    <AndroidSupportedTargetAotAbisSplit>$(AndroidSupportedTargetAotAbis.Split(':'))</AndroidSupportedTargetAotAbisSplit>
   </PropertyGroup>
 
   <!-- Noise generators -->
@@ -265,9 +249,6 @@
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\Ndk.targets" />
   <ItemGroup>
     <AndroidAbiAndRuntimeFlavor
-        Include="@(AndroidSupportedTargetJitAbi->WithMetadataValue('SupportMonoVM', 'True'))"
-        AndroidRuntime="Mono" />
-    <AndroidAbiAndRuntimeFlavor
         Include="@(AndroidSupportedTargetJitAbi->WithMetadataValue('SupportNativeAOT', 'True'))"
         AndroidRuntime="NativeAOT" />
     <AndroidAbiAndRuntimeFlavor
@@ -278,7 +259,6 @@
   <!-- These properties serve the purpose of not duplicating the strings used by
        package creation tools -->
   <PropertyGroup>
-    <_MonoRuntimeFlavorDirName>mono</_MonoRuntimeFlavorDirName>
     <_CLRRuntimeFlavorDirName>clr</_CLRRuntimeFlavorDirName>
     <_NativeAotRuntimeFlavorDirName>nativeaot</_NativeAotRuntimeFlavorDirName>
   </PropertyGroup>

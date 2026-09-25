@@ -140,22 +140,6 @@ ABI - is an acronym for Application Binary Interface.
 {0} - the target name the user supplied
     </comment>
   </data>
-  <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
-    <value>Não é possível copiar as ferramentas de Implantação Rápida para "{0}/{1}" no dispositivo de destino.
-Este dispositivo pode não ser compatível com a Implantação Rápida.
-Defina a propriedade MSBuild "EmbedAssembliesIntoApk" como "true" para desabilitar a Implantação Rápida nas páginas de propriedades do projeto do Visual Studio ou edite o arquivo do projeto em um editor de texto.</value>
-    <comment>The following are literal names and should not be translated:
-{0} - A device path
-{1} - A filename</comment>
-  </data>
-  <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
-    <value>Erro ao implantar "{0}" usando "{1}: {2}".
-Defina a propriedade MSBuild "EmbedAssembliesIntoApk" como "true" para desabilitar a Implantação Rápida nas páginas de propriedades do projeto do Visual Studio ou edite o arquivo do projeto em um editor de texto.</value>
-<comment>The following are literal names and should not be translated:
-{0} - A filename
-{1} - The tool that was used to deploy the file.
-{2} - The actual error that occured.</comment>
-  </data>
   <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
     <value>A propriedade do sistema Android "log.redirect-stdio" está definida como "true" no dispositivo de destino ou no emulador.
 Para habilitar a compatibilidade com a Implantação Rápida, defina a propriedade como "false" ou reinicie o dispositivo ou o emulador para limpar o valor.</value>
@@ -165,10 +149,6 @@ Para habilitar a compatibilidade com a Implantação Rápida, defina a proprieda
 Defina a propriedade MSBuild "EmbedAssembliesIntoApk" como "true" para desabilitar a Implantação Rápida nas páginas de propriedades do projeto do Visual Studio ou edite o arquivo do projeto em um editor de texto.</value>
     <comment>The following are literal names and should not be translated:
 {0} - A filename</comment>
-  </data>
-  <data name="XA0130_FastDevNotSupported" xml:space="preserve">
-    <value>Desculpe. A Implantação Rápida só tem suporte em dispositivos Android 5.0 (nível de API 21) ou superior.
-Defina a propriedade MSBuild "EmbedAssembliesIntoApk" como "true" para desabilitar a Implantação Rápida nas páginas de propriedades do projeto do Visual Studio ou edite o arquivo do projeto em um editor de texto.</value>
   </data>
   <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
     <value>A ferramenta 'executar como' foi desabilitada neste dispositivo. Habilite-a ativando as opções de desenvolvedor no dispositivo ou definindo `ro.boot.disable_runas` como `false`.</value>

@@ -9,11 +9,19 @@ namespace generatortests.SourceWriters
 	public class PeerMembersFieldTests : SourceWritersTestBase
 	{
 		[Test]
-		public void PeerMembersField_Class ()
+		public void PeerMembersField_JavaInteropClass ()
 		{
 			var field = new PeerMembersField (new CodeGenerationOptions { CodeGenerationTarget = CodeGenerationTarget.JavaInterop1 }, "B", "MyJavaType", false);
 
 			Assert.AreEqual ("static readonly JniPeerMembers _members = new JniPeerMembers (\"B\", typeof (MyJavaType));", GetOutput (field).Trim ());
+		}
+
+		[Test]
+		public void PeerMembersField_XamarinAndroidClass ()
+		{
+			var field = new PeerMembersField (new CodeGenerationOptions { CodeGenerationTarget = CodeGenerationTarget.XAJavaInterop1 }, "B", "MyJavaType", false);
+
+			Assert.AreEqual ("static readonly JniPeerMembers _members = new XAPeerMembers (\"B\", typeof (MyJavaType));", GetOutput (field).Trim ());
 		}
 
 		[Test]

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -15,6 +16,29 @@ sealed class JavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
 	static readonly Type[] XAConstructorSignature = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
+	static readonly Type[] JIConstructorSignature = new Type [] { typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions) };
+	static readonly ConcurrentDictionary<Type, ActivationConstructor> ActivationConstructorCache = new ConcurrentDictionary<Type, ActivationConstructor> (1, 3);
+
+	enum ActivationConstructorKind
+	{
+		Missing,
+		XA,
+		JI,
+	}
+
+	readonly record struct ActivationConstructor (ConstructorInfo? Constructor, ActivationConstructorKind Kind);
+
+	// The GetOrAdd factory's key parameter cannot carry constructor-preservation annotations.
+	readonly struct AnnotatedType
+	{
+		public AnnotatedType ([DynamicallyAccessedMembers (Constructors)] Type type)
+		{
+			Type = type;
+		}
+
+		[DynamicallyAccessedMembers (Constructors)]
+		public Type Type { get; }
+	}
 
 	public JavaMarshalValueManager ()
 	{
@@ -43,6 +67,7 @@ sealed class JavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 
 	public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 	{
+		EnsureNotDisposed ();
 		return JavaMarshalRegisteredPeers.PeekPeer (reference);
 	}
 
@@ -76,8 +101,12 @@ sealed class JavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 			[DynamicallyAccessedMembers (Constructors)]
 			Type type)
 	{
-		var c = type.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
-		if (c != null) {
+		var activation = GetActivationConstructor (type);
+		var c = activation.Constructor;
+		if (c == null)
+			return false;
+
+		if (activation.Kind == ActivationConstructorKind.XA) {
 			var args = new object[] {
 				reference.Handle,
 				JniHandleOwnership.DoNotTransfer,
@@ -86,7 +115,28 @@ sealed class JavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 			JniObjectReference.Dispose (ref reference, options);
 			return true;
 		}
-		return base.TryConstructPeer (self, ref reference, options, type);
+
+		// Preserve ReflectionJniValueManager's JI fallback, including ref argument copy-back.
+		var jiArgs = new object[] { reference, options };
+		c.Invoke (self, jiArgs);
+		reference = (JniObjectReference) jiArgs [0];
+		JniObjectReference.Dispose (ref reference, options);
+		return true;
+	}
+
+	static ActivationConstructor GetActivationConstructor ([DynamicallyAccessedMembers (Constructors)] Type type)
+	{
+		return ActivationConstructorCache.GetOrAdd (type,
+				static (_, state) => {
+					var constructor = state.Type.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
+					if (constructor != null)
+						return new ActivationConstructor (constructor, ActivationConstructorKind.XA);
+
+					constructor = state.Type.GetConstructor (ActivationConstructorBindingFlags, null, JIConstructorSignature, null);
+					return new ActivationConstructor (
+						constructor,
+						constructor == null ? ActivationConstructorKind.Missing : ActivationConstructorKind.JI);
+				}, new AnnotatedType (type));
 	}
 
 	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)] out object? result)

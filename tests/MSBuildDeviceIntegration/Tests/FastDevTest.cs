@@ -39,17 +39,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCase ("FastDeploy")]
-		[TestCase ("FastDeploy2")]
-		public void FastDeployUpdatesTypeMapAfterAssemblyEdit (string strategy)
+		public void FastDeployUpdatesTypeMapAfterAssemblyEdit ()
 		{
 			const string logcatMessage = "FAST_DEPLOY_TYPEMAP_TEST_MESSAGE";
 
 			var proj = new XamarinAndroidApplicationProject {
-				PackageName = $"com.xamarin.fastdeploy_typemap_{strategy.ToLowerInvariant ()}",
+				PackageName = "com.xamarin.fastdeploy_typemap",
 			};
 			proj.SetDefaultTargetDevice ();
-			proj.SetProperty ("_AndroidFastDevStrategy", strategy);
 
 			// Fast deployment only syncs managed assemblies, so anything that changes the set of
 			// Java-callable types has to go through a new .apk: new Java stubs, a new .dex, a new
@@ -260,46 +257,10 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploymentStrategyCanBeChanged ()
+		public void FastDeployRestoresMissingRemoteDirectory ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
-				PackageName = "com.xamarin.fastdeployment_strategy_change",
-			};
-			proj.MainActivity = proj.DefaultMainActivity;
-			proj.SetDefaultTargetDevice ();
-			proj.SetProperty ("_AndroidFastDevStrategy", "FastDeploy2");
-			using (var builder = CreateApkBuilder ()) {
-				builder.Verbosity = LoggerVerbosity.Detailed;
-				Assert.IsTrue (builder.Install (proj), "FastDeploy2 install should have succeeded.");
-
-				string assemblyPath = $"files/.__override__/{DeviceAbi}/UnnamedProject.dll";
-				Assert.AreEqual ("symlink", GetOverrideFileKind (proj.PackageName, assemblyPath));
-				RunAdbCommand ($"shell run-as {proj.PackageName} sh -c 'echo preserved > files/fastdeploy-strategy-marker'");
-				Assert.IsTrue (builder.Clean (proj), "clean should have succeeded.");
-
-				proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
-				proj.Touch ("MainActivity.cs");
-				proj.SetProperty ("_AndroidFastDevStrategy", "FastDeploy");
-				Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true), "FastDeploy install should have succeeded after FastDeploy2.");
-				Assert.AreEqual ("regular", GetOverrideFileKind (proj.PackageName, assemblyPath));
-				Assert.AreEqual ("preserved", RunAdbCommand ($"shell run-as {proj.PackageName} cat files/fastdeploy-strategy-marker").Trim ());
-
-				proj.MainActivity = proj.MainActivity.Replace ("CLICKS", "Clicks");
-				proj.Touch ("MainActivity.cs");
-				proj.SetProperty ("_AndroidFastDevStrategy", "FastDeploy2");
-				Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true), "FastDeploy2 install should have succeeded after FastDeploy.");
-				Assert.AreEqual ("symlink", GetOverrideFileKind (proj.PackageName, assemblyPath));
-				Assert.AreEqual ("preserved", RunAdbCommand ($"shell run-as {proj.PackageName} cat files/fastdeploy-strategy-marker").Trim ());
-
-				Assert.IsTrue (builder.Uninstall (proj), "uninstall should have succeeded.");
-			}
-		}
-
-		[Test]
-		public void FastDeploy2RestoresMissingRemoteDirectory ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				PackageName = "com.xamarin.fastdeploy2_restore_remote",
+				PackageName = "com.xamarin.fastdeploy_restore_remote",
 			};
 			proj.MainActivity = proj.DefaultMainActivity;
 			proj.SetDefaultTargetDevice ();
@@ -307,7 +268,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (builder.Install (proj), "initial install should have succeeded.");
 
-				string remoteDirectory = $"/data/local/tmp/fastdeploy2/{proj.PackageName}/0/{DeviceAbi}";
+				string remoteDirectory = $"/data/local/tmp/fastdeploy/{proj.PackageName}/0/{DeviceAbi}";
 				RunAdbCommand ($"shell rm -rf {remoteDirectory}");
 
 				proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
@@ -322,27 +283,26 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploy2CleansOrphanStagingDirectoriesAfterApkInstall ()
+		public void FastDeployCleansOrphanStagingDirectoriesAfterApkInstall ()
 		{
 			string [] orphanDirectories = {
-				"/data/local/tmp/fastdeploy2/com.xamarin.fastdeploy2_cleanup_one/0",
-				"/data/local/tmp/fastdeploy2/com.xamarin.fastdeploy2_cleanup_two/0",
+				"/data/local/tmp/fastdeploy/com.xamarin.fastdeploy_cleanup_one/0",
+				"/data/local/tmp/fastdeploy/com.xamarin.fastdeploy_cleanup_two/0",
 			};
-			string incrementalOrphanDirectory = "/data/local/tmp/fastdeploy2/com.xamarin.fastdeploy2_cleanup_incremental/0";
-			string symlinkDirectory = "/data/local/tmp/fastdeploy2/com.xamarin.fastdeploy2_cleanup_symlink";
-			string symlinkTargetDirectory = "/data/local/tmp/fastdeploy2_cleanup_symlink_target/0";
+			string incrementalOrphanDirectory = "/data/local/tmp/fastdeploy/com.xamarin.fastdeploy_cleanup_incremental/0";
+			string symlinkDirectory = "/data/local/tmp/fastdeploy/com.xamarin.fastdeploy_cleanup_symlink";
+			string symlinkTargetDirectory = "/data/local/tmp/fastdeploy_cleanup_symlink_target/0";
 			var proj = new XamarinAndroidApplicationProject {
-				PackageName = "com.xamarin.fastdeploy2_cleanup",
+				PackageName = "com.xamarin.fastdeploy_cleanup",
 			};
 			proj.MainActivity = proj.DefaultMainActivity;
 			proj.SetDefaultTargetDevice ();
-			proj.SetProperty ("_AndroidFastDevStrategy", "FastDeploy2");
 			var installedProj = new XamarinAndroidApplicationProject {
-				PackageName = "com.xamarin.fastdeploy2_cleanup_installed",
-				ProjectName = "FastDeploy2CleanupInstalled",
+				PackageName = "com.xamarin.fastdeploy_cleanup_installed",
+				ProjectName = "FastDeployCleanupInstalled",
 			};
 			installedProj.SetDefaultTargetDevice ();
-			string installedDirectory = $"/data/local/tmp/fastdeploy2/{installedProj.PackageName}/0";
+			string installedDirectory = $"/data/local/tmp/fastdeploy/{installedProj.PackageName}/0";
 
 			using (var installedBuilder = CreateApkBuilder (Path.Combine ("temp", TestName, installedProj.ProjectName)))
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName, proj.ProjectName))) {
@@ -359,7 +319,7 @@ namespace Xamarin.Android.Build.Tests
 					RunAdbCommand ($"shell touch {symlinkTargetDirectory}/outside.txt");
 					RunAdbCommand ($"shell ln -s {Path.GetDirectoryName (symlinkTargetDirectory).Replace ('\\', '/')} {symlinkDirectory}");
 
-					Assert.IsTrue (builder.Install (proj), "FastDeploy2 install should have succeeded.");
+					Assert.IsTrue (builder.Install (proj), "FastDeploy install should have succeeded.");
 
 					foreach (string directory in orphanDirectories) {
 						Assert.AreEqual ("missing", RunAdbCommand ($"shell if test -e {directory}; then echo exists; else echo missing; fi").Trim (),
@@ -374,7 +334,7 @@ namespace Xamarin.Android.Build.Tests
 					RunAdbCommand ($"shell touch {incrementalOrphanDirectory}/orphan.txt");
 					proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
 					proj.Touch ("MainActivity.cs");
-					Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true, saveProject: false), "Incremental FastDeploy2 install should have succeeded.");
+					Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true, saveProject: false), "Incremental FastDeploy install should have succeeded.");
 					Assert.IsFalse (builder.Output.IsApkInstalled, "The APK should not have been reinstalled.");
 					Assert.AreEqual ("exists", RunAdbCommand ($"shell if test -f {incrementalOrphanDirectory}/orphan.txt; then echo exists; else echo missing; fi").Trim (),
 						"Cleanup should not run during an incremental deployment that skips APK installation.");

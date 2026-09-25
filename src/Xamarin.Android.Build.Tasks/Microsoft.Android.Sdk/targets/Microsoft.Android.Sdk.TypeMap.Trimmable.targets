@@ -61,8 +61,7 @@
     <!-- On NativeAOT, ensure ILC's dynamic build properties (e.g. RuntimeIdentifier-derived
          paths) are computed before the typemap is generated. -->
     <_GenerateTrimmableTypeMapDependsOn Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">$(IlcDynamicBuildPropertyDependencies)</_GenerateTrimmableTypeMapDependsOn>
-    <!-- _GetLibraryImports populates @(ExtractedManifestDocuments) (the extracted library .aar
-         AndroidManifest.xml files) that the legacy manifest merger merges into the app manifest. -->
+    <!-- _GetLibraryImports populates @(ExtractedManifestDocuments) for _ManifestMerger. -->
     <_GenerateTrimmableTypeMapDependsOn>$(_GenerateTrimmableTypeMapDependsOn);_GetLibraryImports;_ConvertResourcesCases</_GenerateTrimmableTypeMapDependsOn>
     <IncrementalCleanDependsOn>
       _RecordTrimmableTypeMapFileWrites;
@@ -82,6 +81,8 @@
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap"
         Value="true" Trim="true" />
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.UseTypeMapAttributesForJavaDictionaryValueTypeLookups"
+        Value="$([MSBuild]::ValueOrDefault('$(PublishAot)', 'false'))" Trim="true" />
     <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
         Value="$(_TypeMapAssemblyName)" />
     <!-- [Export] metadata is still needed at compile time, but the legacy runtime helper
@@ -126,6 +127,11 @@
       Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);@(ExtractedManifestDocuments);@(_AndroidTrimmableTypeMapExtraFrameworkAssembly);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_CustomViewMapFile);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_TrimmableTypeMapOutputStamp)">
 
+    <PropertyGroup>
+      <_AndroidIncludeBuiltInValueTypeUniverses>false</_AndroidIncludeBuiltInValueTypeUniverses>
+      <_AndroidIncludeBuiltInValueTypeUniverses Condition=" '$(PublishAot)' == 'true' ">true</_AndroidIncludeBuiltInValueTypeUniverses>
+    </PropertyGroup>
+
     <ItemGroup>
       <_TypeMapInputAssemblies Include="@(ReferencePath)" />
       <_TypeMapInputAssemblies Include="@(ResolvedAssemblies)" />
@@ -142,9 +148,6 @@
       <_TypeMapFrameworkAssemblies Include="@(_AndroidTrimmableTypeMapExtraFrameworkAssembly)" />
       <_TypeMapInputAssemblies Include="$(IntermediateOutputPath)$(TargetFileName)"
           Condition="Exists('$(IntermediateOutputPath)$(TargetFileName)')" />
-      <!-- Library (.aar) manifests to merge into the app manifest. Only on the legacy manifest
-           merger path; manifestmerger.jar merges these downstream in the _ManifestMerger target. -->
-      <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
     </ItemGroup>
 
     <GenerateTrimmableTypeMap
@@ -157,7 +160,6 @@
         ManifestTemplate="$(_AndroidManifestAbs)"
         CustomViewMapFile="$(_CustomViewMapFile)"
         MergedAndroidManifestOutput="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
-        MergedManifestDocuments="@(_MergedManifestDocuments)"
         PackageName="$(_AndroidPackage)"
         ApplicationLabel="$(_ApplicationLabel)"
         VersionCode="$(_AndroidVersionCode)"
@@ -173,6 +175,7 @@
         CheckedBuild="$(_AndroidCheckedBuild)"
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"
         ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
+        IncludeBuiltInValueTypeUniverses="$(_AndroidIncludeBuiltInValueTypeUniverses)"
         GeneratedAssembliesListFile="$(_TypeMapAssembliesListFile)"
         TypeMapFingerprintsFile="$(_TrimmableTypeMapFingerprintsFile)"
         AcwMapOutputFile="$(_PreTrimTypeMapAcwMapOutputFile)"
@@ -449,23 +452,13 @@
         OutputDirectory="$(IntermediateOutputPath)android"
         TargetName="$(TargetName)"
         Environments="@(_EnvironmentFiles)"
-        AdditionalProviderSources="@(_AdditionalProviderSources)"
-        EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)" />
+        AdditionalProviderSources="@(_AdditionalProviderSources)" />
 
     <!-- Copy generated manifest to expected location -->
     <Copy SourceFiles="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
         DestinationFiles="$(IntermediateOutputPath)AndroidManifest.xml"
         SkipUnchangedFiles="true"
         Condition="Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml')" />
-
-    <!-- The manifestmerger.jar path runs _ManifestMerger to produce android\AndroidManifest.xml from the
-         generated manifest. The legacy merger has no equivalent step, so on the trimmable path (where the
-         merged manifest was already produced, placeholders included, by _GenerateTrimmableTypeMap) copy it
-         into place directly; otherwise _ReadAndroidManifest and downstream packaging cannot find it. -->
-    <Copy SourceFiles="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
-        DestinationFiles="$(IntermediateOutputPath)android\AndroidManifest.xml"
-        SkipUnchangedFiles="true"
-        Condition=" '$(AndroidManifestMerger)' != 'manifestmerger.jar' and Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml') " />
 
     <!-- acw-map.txt is populated by _GenerateTrimmableTypeMap with real managed→Java mappings.
          If that target was skipped (e.g., no input assemblies), create an empty placeholder so
@@ -476,8 +469,6 @@
     <ItemGroup>
       <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" />
       <FileWrites Include="$(IntermediateOutputPath)AndroidManifest.xml" />
-      <FileWrites Include="$(IntermediateOutputPath)android\AndroidManifest.xml"
-          Condition=" '$(AndroidManifestMerger)' != 'manifestmerger.jar' " />
       <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" />
     </ItemGroup>
 

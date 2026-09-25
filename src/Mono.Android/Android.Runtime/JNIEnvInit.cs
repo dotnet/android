@@ -36,6 +36,14 @@ namespace Android.Runtime
 			public IntPtr          grefGCUserPeerable;
 			public IntPtr          propagateUncaughtExceptionFn;
 			public IntPtr          registerJniNativesFn;
+			public IntPtr          grefLogPath;
+			public IntPtr          lrefLogPath;
+			public IntPtr          referenceLogDirectory;
+			public byte            lightGref;
+			public byte            lightLref;
+			public byte            grefToLogcat;
+			public byte            lrefToLogcat;
+			public int             maxGrefCount;
 		}
 #pragma warning restore 0649
 
@@ -44,9 +52,11 @@ namespace Android.Runtime
 		internal static bool PropagateExceptions;
 		internal static BoundExceptionType BoundExceptionType;
 		internal static int gref_gc_threshold;
+		internal static int max_gref_count;
 		internal static IntPtr grefIGCUserPeer_class;
 		internal static IntPtr grefGCUserPeerable_class;
 		internal static IntPtr java_class_loader;
+		internal static ReferenceLoggingConfiguration ReferenceLoggingConfiguration;
 
 		internal static JniRuntime? androidRuntime;
 
@@ -82,48 +92,52 @@ namespace Android.Runtime
 			androidRuntime.TypeManager.RegisterNativeMembers (jniType, type, methods);
 		}
 
-		// This must be called by NativeAOT before InitializeJniRuntime, as early as possible
-		internal static void NativeAotInitializeMaxGrefGet ()
-		{
-			gref_gc_threshold = RuntimeNativeMethods._monodroid_max_gref_get ();
-			if (gref_gc_threshold != int.MaxValue) {
-				gref_gc_threshold = checked((gref_gc_threshold * 9) / 10);
-			}
-		}
-
 		internal static void InitializeBeforeRuntimeCreation (JnienvInitializeArgs args)
 		{
 			InitializeCommonState (args);
 			InitializeTrimmableTypeMapDataIfNeeded ();
 		}
 
+		internal static void InitializeMaxGrefCounts (JnienvInitializeArgs args)
+		{
+			gref_gc_threshold = args.grefGcThreshold;
+			max_gref_count = args.maxGrefCount;
+		}
+
 		// NOTE: should have different name than `Initialize` to avoid:
 		// * Assertion at /__w/1/s/src/mono/mono/metadata/icall.c:6258, condition `!only_unmanaged_callers_only' not met
-		// Only used for NativeAOT after the runtime has been created. MonoVM and CoreCLR use Initialize().
+		// Only used for NativeAOT after the runtime has been created. CoreCLR uses Initialize().
 		internal static void InitializeNativeAotRuntime (JniRuntime runtime, JnienvInitializeArgs args)
 		{
 			if (!RuntimeFeature.IsNativeAotRuntime) {
 				throw new NotSupportedException ("JNIEnvInit.InitializeNativeAotRuntime can only be used to initialize NativeAOT.");
 			}
-			if (RuntimeFeature.IsMonoRuntime || RuntimeFeature.IsCoreClrRuntime) {
-				throw new NotSupportedException ("Internal error: NativeAOT cannot be enabled with MonoVM or CoreCLR.");
+			if (RuntimeFeature.IsCoreClrRuntime) {
+				throw new NotSupportedException ("Internal error: NativeAOT cannot be enabled with CoreCLR.");
 			}
 
+			if (RuntimeFeature.StartupNoGCRegion) {
+				StartupNoGCRegion.Start ();
+			}
 			androidRuntime = runtime;
 			JniRuntime.SetCurrent (runtime);
 			RegisterTrimmableTypeMapNativeMethodsIfNeeded ();
 			SetSynchronizationContext ();
 		}
 
-		// Only used for MonoVM and CoreCLR. NativeAOT uses InitializeNativeAotRuntime().
+		// Only used for CoreCLR. NativeAOT uses InitializeNativeAotRuntime().
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
 			if (RuntimeFeature.IsNativeAotRuntime) {
 				throw new NotSupportedException ("JNIEnvInit.Initialize cannot be used to initialize NativeAOT.");
 			}
-			if (RuntimeFeature.IsMonoRuntime == RuntimeFeature.IsCoreClrRuntime) {
-				throw new NotSupportedException ("Internal error: exactly one of RuntimeFeature.IsMonoRuntime or RuntimeFeature.IsCoreClrRuntime must be enabled.");
+			if (!RuntimeFeature.IsCoreClrRuntime) {
+				throw new NotSupportedException ("Internal error: CoreCLR must be enabled.");
+			}
+
+			if (RuntimeFeature.StartupNoGCRegion) {
+				StartupNoGCRegion.Start ();
 			}
 
 			IntPtr total_timing_sequence = IntPtr.Zero;
@@ -177,34 +191,18 @@ namespace Android.Runtime
 				return new TrimmableTypeMapValueManager ();
 			}
 
-			if (RuntimeFeature.IsMonoRuntime) {
-				return CreateAndroidValueManager ();
-			}
-
-			if (RuntimeFeature.IsCoreClrRuntime) {
-				return CreateJavaMarshalValueManager ();
-			}
-
-			if (RuntimeFeature.IsNativeAotRuntime) {
-				return CreateJavaMarshalValueManager ();
-			}
-
-			throw new NotSupportedException ("Internal error: unknown runtime not supported");
+			return CreateJavaMarshalValueManager ();
 
 			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "CoreCLR value manager is preserved by the MarkJavaObjects trimmer step.")]
 			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
 			JniRuntime.JniValueManager CreateJavaMarshalValueManager () => new JavaMarshalValueManager ();
-
-			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Mono value manager is preserved by the MarkJavaObjects trimmer step.")]
-			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
-			JniRuntime.JniValueManager CreateAndroidValueManager () => new AndroidValueManager ();
 		}
 
 		static void InitializeCommonState (JnienvInitializeArgs args)
 		{
 			Logger.SetLogCategories ((LogCategories)args.logCategories);
 
-			gref_gc_threshold = args.grefGcThreshold;
+			InitializeMaxGrefCounts (args);
 			jniRemappingInUse = args.jniRemappingInUse;
 			MarshalMethodsEnabled = args.marshalMethodsEnabled;
 			java_class_loader = args.grefLoader;
@@ -213,6 +211,14 @@ namespace Android.Runtime
 			grefIGCUserPeer_class = args.grefIGCUserPeer;
 			grefGCUserPeerable_class = args.grefGCUserPeerable;
 			PropagateExceptions = args.brokenExceptionTransitions == 0;
+			ReferenceLoggingConfiguration = new ReferenceLoggingConfiguration (
+				Marshal.PtrToStringUTF8 (args.grefLogPath),
+				Marshal.PtrToStringUTF8 (args.lrefLogPath),
+				Marshal.PtrToStringUTF8 (args.referenceLogDirectory),
+				args.lightGref != 0,
+				args.lightLref != 0,
+				args.grefToLogcat != 0,
+				args.lrefToLogcat != 0);
 
 			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args.packageNamingPolicy;
 		}

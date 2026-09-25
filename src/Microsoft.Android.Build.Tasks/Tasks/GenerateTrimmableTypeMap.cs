@@ -46,8 +46,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogMessage (MessageImportance.Low, $"Rooting manifest-referenced type '{javaTypeName}' ({managedTypeName}) as unconditional.");
 		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
 			log.LogCodedWarning ("XA4250", Properties.Resources.XA4250, javaTypeName);
-		public void LogLibraryManifestMergeWarning (string message) =>
-			log.LogCodedWarning ("XA4302", Properties.Resources.XA4302, message);
 		public void LogInvalidManifestPlaceholderWarning (string placeholders) =>
 			log.LogCodedWarning ("XA1010", Properties.Resources.XA1010, placeholders);
 		public void LogUnresolvableJavaPeerSkippedWarning (
@@ -116,13 +114,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 	public string? MergedAndroidManifestOutput { get; set; }
 
-	/// <summary>
-	/// Absolute paths to extracted library (.aar) <c>AndroidManifest.xml</c> documents that must be
-	/// merged into the application manifest. Only populated on the legacy manifest-merger path;
-	/// <c>manifestmerger.jar</c> handles this downstream in the <c>_ManifestMerger</c> target.
-	/// </summary>
-	public string []? MergedManifestDocuments { get; set; }
-
 	public string? PackageName { get; set; }
 	public string? ApplicationLabel { get; set; }
 	public string? VersionCode { get; set; }
@@ -139,6 +130,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
 	public bool GenerateTypeMapAssemblies { get; set; } = true;
+	public bool IncludeBuiltInValueTypeUniverses { get; set; }
 	public bool CleanJavaSourceOutputDirectory { get; set; }
 
 	/// <summary>
@@ -231,8 +223,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 					EmbedAssemblies: EmbedAssemblies,
 					ManifestPlaceholders: ManifestPlaceholders,
 					CheckedBuild: CheckedBuild,
-					ApplicationJavaClass: ApplicationJavaClass,
-					LibraryManifests: MergedManifestDocuments);
+					ApplicationJavaClass: ApplicationJavaClass);
 			}
 
 			var generator = new TrimmableTypeMapGenerator (new MSBuildTrimmableTypeMapLogger (Log));
@@ -257,6 +248,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				errorOnCustomJavaObject: ErrorOnCustomJavaObject,
 				customViewTypeNames: customViewTypeNames,
 				collectMarshalMethodsForNonAcw: false,
+				includeBuiltInValueTypeUniverses: IncludeBuiltInValueTypeUniverses,
 				shouldGenerateTypeMapAssembly: TypeMapFingerprintsFile.IsNullOrEmpty () ? null : ShouldGenerateTypeMapAssembly);
 			if (Log.HasLoggedErrors) {
 				return false;

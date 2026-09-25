@@ -14,8 +14,6 @@ public class LinkNativeRuntime : AsyncTask
 {
 	public override string TaskPrefix => "LNR";
 
-	public ITaskItem[]? MonoComponents { get; set; }
-
 	[Required]
 	public string AndroidBinUtilsDirectory { get; set; } = "";
 

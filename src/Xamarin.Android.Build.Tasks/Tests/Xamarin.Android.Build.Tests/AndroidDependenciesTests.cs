@@ -465,57 +465,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		static IEnumerable<object[]> Get_GetDependencyNdkRequiredConditionsData ()
-		{
-			var ret = new List<object[]> ();
-
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData ("AotAssemblies", false, runtime);
-				AddTestData ("AndroidEnableProfiledAot", false, runtime);
-				AddTestData ("EnableLLVM", true, runtime);
-			}
-
-			return ret;
-
-			void AddTestData (string property, bool ndkRequired, AndroidRuntime runtime)
-			{
-				ret.Add (new object[] {
-					property,
-					ndkRequired,
-					runtime,
-				});
-			}
-		}
-
 		[Test]
-		[TestCaseSource (nameof (Get_GetDependencyNdkRequiredConditionsData))]
-		public void GetDependencyNdkRequiredConditions (string property, bool ndkRequired, AndroidRuntime runtime)
+		public void CoreClrDoesNotRequireNdk ()
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			// CoreCLR doesn't support AOT so it doesn't ever need the NDK and it doesn't support profiled AOT
-			if (runtime == AndroidRuntime.CoreCLR && (ndkRequired || property == "AndroidEnableProfiledAot")) {
-				Assert.Ignore ("CoreCLR doesn't support AOT, it doesn't ever require the NDK");
-			}
-
-			// NativeAOT doesn't support profiled AOT or EnableLLVM (Mono concepts)
-			if (runtime == AndroidRuntime.NativeAOT && property == "AndroidEnableProfiledAot") {
-				Assert.Ignore ("NativeAOT doesn't support profiled AOT");
-			}
-
-			if (runtime == AndroidRuntime.NativeAOT && property == "EnableLLVM") {
-				Assert.Ignore ("EnableLLVM is not applicable to NativeAOT");
-			}
-
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.AotAssemblies = runtime == AndroidRuntime.MonoVM;
-			proj.SetProperty (property, "true");
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			using (var builder = CreateApkBuilder ()) {
 				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.Target = "GetAndroidDependencies";
@@ -524,11 +478,33 @@ namespace Xamarin.Android.Build.Tests
 					.Select (x => x.Trim ())
 					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
 					.SkipWhile (x => !x.StartsWith ("Output Item(s):", StringComparison.Ordinal))
-					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal));
-				if (ndkRequired)
-					StringAssertEx.Contains ("ndk-bundle", taskOutput, "ndk-bundle should be a dependency.");
-				else
-					StringAssertEx.DoesNotContain ("ndk-bundle", taskOutput, "ndk-bundle should not be a dependency.");
+					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
+					.ToArray ();
+				Assert.IsNotEmpty (taskOutput, "CalculateProjectDependencies should log its output items.");
+				StringAssertEx.DoesNotContain ("ndk-bundle", taskOutput, "ndk-bundle should not be a dependency for CoreCLR.");
+			}
+		}
+
+		[Test]
+		public void NativeAotDoesNotRequireNdk_WhenWorkloadLinkerEnabled ()
+		{
+			// Do not set _AndroidUseWorkloadNativeLinker: this test intentionally verifies its default.
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			using (var builder = CreateApkBuilder ()) {
+				builder.Verbosity = LoggerVerbosity.Detailed;
+				builder.Target = "GetAndroidDependencies";
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				IEnumerable<string> taskOutput = builder.LastBuildOutput
+					.Select (x => x.Trim ())
+					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
+					.SkipWhile (x => !x.StartsWith ("Output Item(s):", StringComparison.Ordinal))
+					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
+					.ToArray ();
+				Assert.IsNotEmpty (taskOutput, "CalculateProjectDependencies should log its output items.");
+				StringAssertEx.DoesNotContain ("ndk-bundle", taskOutput, "ndk-bundle should not be a dependency for NativeAOT with the workload linker.");
 			}
 		}
 

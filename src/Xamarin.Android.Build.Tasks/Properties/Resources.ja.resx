@@ -297,10 +297,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>Fast Deployment および Android App Bundles を同時に使用することは、現在サポートされていません。デバッグ構成には Fast Deployment を使用し、リリース構成には Android App Bundles を使用してください。</value>
     <comment>The following are literal names and should not be translated: Android App Bundles</comment>
   </data>
-  <data name="XA0119_AOT" xml:space="preserve">
-    <value>高速展開と AOT を同時に使用することはお勧めしません。Debug 構成には高速展開、Release 構成には AOT を使用してください。</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
-  </data>
   <data name="XA0119_LinkMode" xml:space="preserve">
     <value>高速展開とリンカーを同時に使用することはお勧めできません。Debug 構成には高速展開、Release 構成にはリンカーを使用してください。</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
@@ -308,10 +304,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
   <data name="XA0119_LinkTool" xml:space="preserve">
     <value>高速展開とコード シュリンカーを同時に使用することはお勧めできません。Debug 構成には高速展開、Release 構成にはコード シュリンカーを使用してください。</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
-  </data>
-  <data name="XA0119_Interpreter" xml:space="preserve">
-    <value>インタープリターを無効にしているため、インタープリターと AOT の同時使用はサポートされていません。デバッグ構成でサポートするホット リロードのインタープリターとリリース構成の AOT を使用します。</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
   </data>
   <data name="XA0119_ReadyToRun" xml:space="preserve">
     <value>高速展開と ReadyToRun を同時に使用することはおすすめしません。高速展開は Debug 構成で、ReadyToRun は Release 構成でお使いください。</value>
@@ -469,10 +461,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>DX DEX コンパイラはサポートされなくなりました。Visual Studio プロジェクトのプロパティ ページで DEX コンパイラを 'd8' に設定するか、テキスト エディターでプロジェクト ファイルを編集して 'AndroidDexTool' MSBuild プロパティを 'd8' に設定してください。</value>
     <comment>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</comment>
   </data>
-  <data name="XA1025" xml:space="preserve">
-    <value>'AndroidAotMode' MSBuild プロパティの試験的な 'Hybrid' 値は、現在、armeabi-v7a ターゲット ABI と互換性がありません。'AndroidAotMode' の試験的な 'Hybrid' 値を継続して使用するには、Visual Studio プロジェクト プロパティ ページで armeabi-v7a ターゲット ABI の選択を解除するか、テキスト エディターでプロジェクト ファイルを編集して、'AndroidSupportedAbis' MSBuild プロパティから 'armeabi-v7a' を削除します。</value>
-    <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
-  </data>
   <data name="XA1027" xml:space="preserve">
     <value>'EnableProguard' MSBuild プロパティが 'true' に設定されており、'AndroidLinkTool' MSBuild プロパティが空であるため、'AndroidLinkTool' の既定値は 'proguard' になります。</value>
     <comment>The following are literal names and should not be translated: 'EnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
@@ -480,14 +468,6 @@ In this message, the term "binding" means a piece of generated code that makes i
   <data name="XA1028" xml:space="preserve">
     <value>MSBuild の 'AndroidEnableProguard' プロパティが 'true' に設定されており、MSBuild の 'AndroidLinkTool' プロパティが空であるため、'AndroidLinkTool' の既定値は 'proguard' になります。</value>
     <comment>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
-  </data>
-  <data name="XA1029" xml:space="preserve">
-    <value>'AotAssemblies' MSBuild プロパティは非推奨です。テキスト エディターでプロジェクト ファイルを編集してこのプロパティを削除し、代わりに 'RunAOTCompilation' MSBuild プロパティを使用してください。</value>
-    <comment>The following are literal names and should not be translated: 'AotAssemblies', 'RunAOTCompilation'</comment>
-  </data>
-  <data name="XA1030" xml:space="preserve">
-    <value>'RunAOTCompilation' MSBuild プロパティは、トリミングが有効な場合にのみサポートされます。テキスト エディターでプロジェクト ファイルを編集して、このビルド構成の 'PublishTrimmed' を 'true' に設定します。</value>
-    <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
   </data>
   <data name="XA1034" xml:space="preserve">
     <value>プロジェクトは `_Microsoft.Android.Resource.Designer` アセンブリを使用する '{0}' を参照していますが、この機能を有効にしていません。プロジェクト ファイルで `AndroidUseDesignerAssembly` MSBuild プロパティを `true` に設定してください。</value>
@@ -504,6 +484,11 @@ $(SupportedOSPlatformVersion) 値に一致するように AndroidManifest.xml �
     <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
 {0} - The minimum SDK version number
 {1} - The SupportedOSPlatformVersion property value</comment>
+  </data>
+  <data name="XA1037" xml:space="preserve">
+    <value>サポートされていない @(Reference) 項目: {0}</value>
+    <comment>The following are literal names and should not be translated: @(Reference)
+{0} - The unsupported reference item</comment>
   </data>
   <data name="XA2000" xml:space="preserve">
     <value>アセンブリ {0} で AppDomain.CreateDomain() が使用されていることが検出されました。.NET 6 以降では単一の AppDomain のみがサポートされる予定のため、.NET 6 がリリースされるとこの API は .NET for Android では使用できなくなります。</value>
@@ -557,14 +542,6 @@ $(SupportedOSPlatformVersion) 値に一致するように AndroidManifest.xml �
   <data name="APT2265" xml:space="preserve">
     <value>これは、プロジェクトのファイル名またはパスに ASCII 以外の文字が含まれている場合に発生する可能性があります。詳細については、「https://learn.microsoft.com/dotnet/android/messages/apt2265」を参照してください。</value>
     <comment>The following are literal names and should not be translated:</comment>
-  </data>
-  <data name="XA3001" xml:space="preserve">
-    <value>アセンブリを AOT できませんでした: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
-  </data>
-  <data name="XA3002" xml:space="preserve">
-    <value>無効な AOT モード: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
   <data name="XA3004" xml:space="preserve">
     <value>Android NDK r10d にはバグがあるため、互換性のない x86_64 libm.so が提供されます。https://code.google.com/p/android/issues/detail?id=161422 をご覧ください。</value>
@@ -884,22 +861,23 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
-  <data name="XA4325" xml:space="preserve">
-    <value>R8 のマネージド JNI 名を書き換えることができませんでした。{0}</value>
-    <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4325_* resources.</comment>
+  <data name="XA4327" xml:space="preserve">
+    <value>'{0}' から Java 型マップ キーを抽出できませんでした: {1}</value>
+    <comment>{0} - The input file path or representation name.
+{1} - The underlying parser or input/output failure. It is not localized.</comment>
   </data>
-  <data name="XA4325_AssemblyFailure" xml:space="preserve">
-    <value>アセンブリ '{0}' の JNI 名を書き換えられませんでした: {1}</value>
-    <comment>{0} - The path of the assembly which could not be rewritten.
-{1} - The underlying message describing why the assembly could not be rewritten. It is not localized.</comment>
+  <data name="XA4328" xml:space="preserve">
+    <value>'{0}' から typemap の ProGuard 構成を生成できませんでした: {1}</value>
+    <comment>{0} - The input or output file path.
+{1} - The underlying failure, or a formatted XA4328_* resource.</comment>
   </data>
-  <data name="XA4325_SourceDestinationCount" xml:space="preserve">
-    <value>'SourceFiles' と 'DestinationFiles' の項目グループには、同じ数の項目が含まれている必要があります。</value>
-    <comment>The following are literal MSBuild item group names and should not be translated: 'SourceFiles', 'DestinationFiles'.</comment>
+  <data name="XA4328_NoInputs" xml:space="preserve">
+    <value>保持されている Java 型マップ キー ファイルが提供されていません。</value>
   </data>
-  <data name="XA4326" xml:space="preserve">
-    <value>クラス ハンドルに構造的に一意な JNIEnv.FindClass のソースがないため、JNI メンバー検索を安全に書き換えられません。</value>
-    <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
+  <data name="XA4328_InvalidName" xml:space="preserve">
+    <value>行 {0} に無効な保持 Java クラス名が含まれています: '{1}'。</value>
+    <comment>{0} - The one-based line number.
+{1} - The invalid input record.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>Android NDK のツールチェーン ディレクトリ '{0}' がありません。Android NDK をインストールしてください。</value>
@@ -1121,8 +1099,8 @@ In this message, the term "handheld app" means "app for handheld devices."
 </comment>
   </data>
   <data name="XA1044" xml:space="preserve">
-    <value>MSBuild プロパティ '{0}' は {1} ランタイムと互換性がありません。このプロパティが有効な間はビルドを続行できません。プロパティを削除するか、次の条件で保護してください: Condition="'$(UseMonoRuntime)' == 'true'"</value>
-    <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
+    <value>MSBuild プロパティ '{0}' は、{1} ランタイムと互換性がありません。このプロパティが有効になっている間は、ビルドを続行できません。プロパティを削除します。</value>
+    <comment>The following literal name should not be translated: MSBuild.
 {0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
@@ -1323,10 +1301,6 @@ In this message, the term "handheld app" means "app for handheld devices."
   </data>
   <data name="XA0146" xml:space="preserve">
     <value>'{0}' が正しく配置された ELF ファイルであるかどうかをチェックしようとしましたが、例外が発生して失敗しました。このファイルの配置チェックは無視されます。</value>
-    <comment>{0} - The file path.</comment>
-  </data>
-  <data name="XA0147" xml:space="preserve">
-    <value>'{0}' が有効な ELF ファイルであるかどうかをチェックしようとしましたが、例外が発生して失敗しました。このファイルの AOT チェックは無視されます。</value>
     <comment>{0} - The file path.</comment>
   </data>
   <data name="XA0148" xml:space="preserve">

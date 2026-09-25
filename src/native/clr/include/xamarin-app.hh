@@ -37,7 +37,7 @@ static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-end
 static constexpr uint8_t  MODULE_FORMAT_VERSION = 2;       // Keep in sync with the value in src/Xamarin.Android.Build.Tasks/Utilities/TypeMapGenerator.cs
 
 #if defined (DEBUG)
-// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
+// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
 //
 // If any of the members is set to maximum uint32_t value it means the entry is ignored (treated
 // as equivalent to `nullptr` if the member was a pointer). The reasoning is that no string could
@@ -49,14 +49,14 @@ struct TypeMapEntry
 	const uint32_t to;
 };
 
-// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
+// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
 struct TypeMapManagedTypeInfo
 {
 	const uint32_t assembly_name_index;
 	const uint32_t managed_type_token_id;
 };
 
-// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
+// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
 struct TypeMap
 {
 	uint32_t             entry_count;
@@ -199,11 +199,10 @@ struct AssemblyStoreSingleAssemblyRuntimeData final
 };
 
 // Keep in strict sync with:
-//   src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfigCLR.cs
+//   src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfig.cs
 //   src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Utilities/EnvironmentHelper.cs
 struct ApplicationConfig
 {
-	bool uses_assembly_preload;
 	bool jni_add_native_method_registration_attribute_present;
 	bool marshal_methods_enabled;
 	bool ignore_split_configs;
@@ -281,7 +280,7 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const uint64_t format_tag;
 
 #if defined (DEBUG)
-	[[gnu::visibility("default")]] extern const TypeMap type_map; // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
+	[[gnu::visibility("default")]] extern const TypeMap type_map; // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
 	[[gnu::visibility("default")]] extern const TypeMapManagedTypeInfo type_map_managed_type_info[];
 	[[gnu::visibility("default")]] extern const char type_map_assembly_names[];
 	[[gnu::visibility("default")]] extern const char type_map_managed_type_names[];
@@ -309,9 +308,6 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const char app_environment_variable_contents[];
 	[[gnu::visibility("default")]] extern const AppEnvironmentVariable app_system_properties[];
 	[[gnu::visibility("default")]] extern const char app_system_property_contents[];
-
-	[[gnu::visibility("default")]] extern const char* const mono_aot_mode_name;
-
 
 	[[gnu::visibility("default")]] extern AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[];
 	[[gnu::visibility("default")]] extern AssemblyStoreRuntimeData assembly_store;

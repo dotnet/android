@@ -1641,6 +1641,38 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void Build_WithTrimmableTypeMap_KeepsNativeAotGcBridgeTemporaryPeer ()
+		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				LinkTool = "r8",
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var dexDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin"));
+			var dexFiles = Directory.GetFiles (dexDirectory, "classes*.dex");
+			Assert.IsNotEmpty (dexFiles, "R8 should produce DEX files.");
+			foreach (var (method, signature) in new [] {
+				("<init>", "()V"),
+				("monodroidAddReference", "(Ljava/lang/Object;)V"),
+				("monodroidClearReferences", "()V"),
+			}) {
+				Assert.IsTrue (dexFiles.Any (dex => DexUtils.ContainsClassWithMethod (
+					"Lmono/android/GCUserPeer;", method, signature, dex, AndroidSdkPath)),
+					$"R8 must preserve GCUserPeer.{method}{signature} for the native GC bridge.");
+			}
+		}
+
+		[Test]
 		public void Build_WithTrimmableTypeMap_DeletesStaleGeneratedJavaSources ()
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
@@ -2079,7 +2111,6 @@ namespace Xamarin.Android.Build.Tests {
 			var packagedTypeMapEntries = helper.ListArchiveContents ("lib/", arch: AndroidTargetArch.Arm64)
 				.Where (entry => entry.StartsWith ("lib/arm64-v8a/lib__", StringComparison.Ordinal) &&
 					entry.EndsWith (".dll.so", StringComparison.Ordinal) &&
-					!entry.EndsWith (".ni.dll.so", StringComparison.Ordinal) &&
 					entry.Contains ("TypeMap", StringComparison.Ordinal))
 				.ToArray ();
 			Assert.AreEqual (
@@ -2892,7 +2923,7 @@ namespace UnnamedProject {
 			Assert.IsNotNull (explorer, $"{apkPath} should contain an {targetArch} assembly store.");
 
 			return explorer.Assemblies
-				.Where (a => !a.Ignore && a.Name.EndsWith (".dll", StringComparison.OrdinalIgnoreCase) && !a.Name.EndsWith (".ni.dll", StringComparison.OrdinalIgnoreCase))
+				.Where (a => !a.Ignore && a.Name.EndsWith (".dll", StringComparison.OrdinalIgnoreCase))
 				.Select (a => a.Name)
 				.ToHashSet (StringComparer.Ordinal);
 		}

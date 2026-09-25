@@ -21,10 +21,6 @@ namespace Java.Lang {
 	public abstract partial class Enum : global::Java.Lang.Object, global::Java.Lang.IComparable {
 		static readonly JniPeerMembers _members = new XAPeerMembers ("java/lang/Enum", typeof (Enum));
 
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {

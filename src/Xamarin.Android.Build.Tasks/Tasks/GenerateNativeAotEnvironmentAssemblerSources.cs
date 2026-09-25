@@ -19,7 +19,7 @@ public class GenerateNativeAotEnvironmentAssemblerSources : AndroidTask
 
 	public override bool RunTask ()
 	{
-		var envBuilder = new EnvironmentBuilder (Log);
+		var envBuilder = new EnvironmentBuilder ();
 		envBuilder.Read (Environments);
 
 		// Environment variables are set by Java (code generated in the GenerateAdditionalProviderSources task)

@@ -41,10 +41,6 @@ namespace Test.ME {
 
 		static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementation));
 
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -76,12 +72,9 @@ namespace Test.ME {
 			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
-			try {
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
-			} finally {
-			}
+			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
 		}
 
 		static Delegate cb_getSpanFlags_GetSpanFlags_Ljava_lang_Object__I;
@@ -204,14 +197,12 @@ namespace Test.ME {
 		public override unsafe int GetSpanFlags (global::Java.Lang.Object tag)
 		{
 			const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((tag == null) ? IntPtr.Zero : ((global::Java.Lang.Object) tag).Handle);
-				var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
-				return __rm;
-			} finally {
-				global::System.GC.KeepAlive (tag);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue ((tag == null) ? IntPtr.Zero : ((global::Java.Lang.Object) tag).Handle);
+			var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
+			var __result = __rm;
+			global::System.GC.KeepAlive (tag);
+			return __result;
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/method[@name='append' and count(parameter)=1 and parameter[1][@type='java.lang.CharSequence']]"

@@ -140,22 +140,6 @@ ABI - is an acronym for Application Binary Interface.
 {0} - the target name the user supplied
     </comment>
   </data>
-  <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
-    <value>Unable to copy Fast Deployment tools to '{0}/{1}' on the target device.
-This device might not be compatible with Fast Deployment.
-Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.</value>
-    <comment>The following are literal names and should not be translated:
-{0} - A device path
-{1} - A filename</comment>
-  </data>
-  <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
-    <value>Error deploying '{0}' using '{1}: {2}'.
-Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.</value>
-<comment>The following are literal names and should not be translated:
-{0} - A filename
-{1} - The tool that was used to deploy the file.
-{2} - The actual error that occured.</comment>
-  </data>
   <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
     <value>The 'log.redirect-stdio' Android system property is set to 'true' on the target device or emulator.
 To enable compatibility with Fast Deployment, set the property to 'false' or reboot the device or emulator to clear the value.</value>
@@ -165,10 +149,6 @@ To enable compatibility with Fast Deployment, set the property to 'false' or reb
 Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.</value>
     <comment>The following are literal names and should not be translated:
 {0} - A filename</comment>
-  </data>
-  <data name="XA0130_FastDevNotSupported" xml:space="preserve">
-    <value>Sorry. Fast Deployment is only supported on devices running Android 5.0 (API level 21) or higher.
-Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.</value>
   </data>
   <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
     <value>The 'run-as' tool has been disabled on this device. Either enable it by activating the developer options on the device or by setting `ro.boot.disable_runas` to `false`.</value>
@@ -250,15 +230,5 @@ If all of that fails please set the 'EmbedAssembliesIntoApk' MSBuild property to
 {0} - A filename
 {1} - The tool that was used to deploy the file.
 {2} - The actual error that occured.</comment>
-  </data>
-  <data name="StartDebugger_ipAddress_port" xml:space="preserve">
-    <value>  Starting Debugger on {0}:{1}
-Start sdb then run the following command
-  connect {0} {1}
-    </value>
-    <comment>The following are literal names and should not be translated:
-{0} - An ip address of  a computer.
-{1} - An interger value describing the port to use.
-    </comment>
   </data>
 </root>

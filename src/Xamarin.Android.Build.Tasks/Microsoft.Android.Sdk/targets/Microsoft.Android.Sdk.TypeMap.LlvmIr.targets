@@ -42,17 +42,12 @@
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
     <PropertyGroup>
-      <_ManifestOutput Condition=" '$(AndroidManifestMerger)' == 'legacy' ">$(IntermediateOutputPath)android\AndroidManifest.xml</_ManifestOutput>
-      <_ManifestOutput Condition=" '$(AndroidManifestMerger)' != 'legacy' ">$(IntermediateOutputPath)AndroidManifest.xml</_ManifestOutput>
+      <_ManifestOutput>$(IntermediateOutputPath)AndroidManifest.xml</_ManifestOutput>
       <_LinkingEnabled Condition=" '$(AndroidLinkMode)' != 'None'">True</_LinkingEnabled>
       <_LinkingEnabled Condition=" '$(AndroidLinkMode)' == 'None'">False</_LinkingEnabled>
       <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' != '' ">True</_HaveMultipleRIDs>
       <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' == '' ">False</_HaveMultipleRIDs>
     </PropertyGroup>
-    <ItemGroup>
-      <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
-    </ItemGroup>
-
     <GenerateJavaCallableWrappers
         CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
         OutputDirectory="$(IntermediateOutputPath)android\src"
@@ -86,7 +81,6 @@
 
     <RewriteMarshalMethods
         Condition=" '$(_AndroidUseMarshalMethods)' == 'true' And '$(AndroidIncludeDebugSymbols)' == 'false' "
-        Environments="@(_EnvironmentFiles)"
         IntermediateOutputDirectory="$(IntermediateOutputPath)">
     </RewriteMarshalMethods>
 
@@ -118,7 +112,6 @@
         ManifestPlaceholders="$(AndroidManifestPlaceholders)"
         ManifestTemplate="$(_AndroidManifestAbs)"
         MergedAndroidManifestOutput="$(_ManifestOutput)"
-        MergedManifestDocuments="@(_MergedManifestDocuments)"
         NeedsInternet="$(AndroidNeedsInternetPermission)"
         PackageName="$(_AndroidPackage)"
         ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
@@ -133,7 +126,6 @@
         AdditionalProviderSources="@(_AdditionalProviderSources)"
         AndroidRuntime="$(_AndroidRuntime)"
         Environments="@(_EnvironmentFiles)"
-        EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
         CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
         IntermediateOutputDirectory="$(IntermediateOutputPath)"
         OutputDirectory="$(IntermediateOutputPath)android"
@@ -389,9 +381,8 @@
     `$(_AndroidLinkFlag)` tracks ILLink, while @(_ResolvedAssemblies) tracks the later in-place
     rewrites that the link flag cannot observe. The assembly hash also invalidates the target when
     the resolved assembly set changes. Without the final assemblies as inputs, the shrunk copies
-    could go stale while @(_ResolvedAssemblies) moved on, so mono-aot-cross compiled the rewritten
-    assemblies while packaging shipped the pre-rewrite copies. Their metadata field tables then
-    disagreed, and AOT `SFLDA` patches resolved to the wrong MonoClassField at runtime. This mirrors
+    could go stale while @(_ResolvedAssemblies) moved on, so downstream build steps could consume
+    the rewritten assemblies while packaging shipped the pre-rewrite copies. This mirrors
     `_RemoveRegisterAttributeCoreClr` in Microsoft.Android.Sdk.TypeMap.Trimmable.targets.
   -->
   <Target Name="_RemoveRegisterAttribute"

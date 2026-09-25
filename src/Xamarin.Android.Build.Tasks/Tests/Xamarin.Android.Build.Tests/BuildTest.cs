@@ -27,7 +27,7 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("SmokeTests")]
 		[TestCaseSource (nameof (DotNetBuildSource))]
 		[NonParallelizable] // On MacOS, parallel /restore causes issues
-		public void DotNetBuild (string runtimeIdentifiers, bool isRelease, bool aot, bool usesAssemblyStore, AndroidRuntime runtime)
+		public void DotNetBuild (string runtimeIdentifiers, bool isRelease, bool usesAssemblyStore, AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -66,7 +66,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity")
 				.Replace ("//${AFTER_ONCREATE}", @"button.Text = Resource.CancelButton;");
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStore.ToString ());
-			proj.SetProperty ("RunAOTCompilation", aot.ToString ());
 			proj.OtherBuildItems.Add (new AndroidItem.InputJar ("javaclasses.jar") {
 				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 			});
@@ -183,9 +182,7 @@ namespace Xamarin.Android.Build.Tests
 				helper.AssertContainsEntry ($"assemblies/de-DE/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
 			}
 			foreach (var abi in rids.Select (AndroidRidAbiHelper.RuntimeIdentifierToAbi)) {
-				if (runtime == AndroidRuntime.MonoVM) {
-					helper.AssertContainsEntry ($"lib/{abi}/libmonosgen-2.0.so");
-				} else if (runtime == AndroidRuntime.CoreCLR) {
+				if (runtime == AndroidRuntime.CoreCLR) {
 					helper.AssertContainsEntry ($"lib/{abi}/libcoreclr.so");
 				} else if (runtime == AndroidRuntime.NativeAOT) {
 					helper.AssertContainsEntry ($"lib/{abi}/lib{proj.ProjectName}.so");
@@ -196,10 +193,6 @@ namespace Xamarin.Android.Build.Tests
 					helper.AssertContainsEntry ($"assemblies/{abi}/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				} else {
 					helper.AssertContainsEntry ("assemblies/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
-				}
-				if (aot) {
-					helper.AssertContainsEntry ($"lib/{abi}/libaot-{proj.ProjectName}.dll.so");
-					helper.AssertContainsEntry ($"lib/{abi}/libaot-Mono.Android.dll.so");
 				}
 			}
 
@@ -245,7 +238,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 			if (perAbi) {
 				proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, true);
-				proj.SetProperty (proj.ReleaseProperties, KnownProperties.RunAOTCompilation, false);
 				proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
 				proj.Imports.Add (new Import (() => "ApplicationArtifactPerAbi.targets") {
 					TextContent = () => """
@@ -417,19 +409,12 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable]
-		public void CheckAssemblyCounts ([Values (true, false)] bool isRelease, [Values (true, false)] bool aot,
+		public void CheckAssemblyCounts ([Values (true, false)] bool isRelease,
 				                 [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (isRelease == false && aot == true) {
-				Assert.Ignore ("Not testing AOT with Debug builds");
-				return;
-			}
-
-			bool aotAssemblies = aot && runtime == AndroidRuntime.MonoVM;
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 				EmbedAssembliesIntoApk = true,
-				AotAssemblies = aotAssemblies,
 			};
 			proj.SetRuntime (runtime);
 
@@ -444,22 +429,12 @@ namespace Xamarin.Android.Build.Tests
 				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 
 				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
-				EnvironmentHelper.IApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles, runtime);
+				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
-
-				if (aotAssemblies) {
-					foreach (var env in envFiles) {
-						StringAssert.Contains ("libaot-Mono.Android.dll.so", File.ReadAllText (env.Path));
-					}
-				}
 
 				string apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
-				uint numberOfAssembliesInApk = runtime switch {
-					AndroidRuntime.MonoVM  => ((EnvironmentHelper.ApplicationConfig_MonoVM)app_config).number_of_assemblies_in_apk,
-					AndroidRuntime.CoreCLR => ((EnvironmentHelper.ApplicationConfig_CoreCLR)app_config).number_of_assemblies_in_apk,
-					_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
-				};
+				uint numberOfAssembliesInApk = app_config.number_of_assemblies_in_apk;
 
 				foreach (AndroidTargetArch arch in targetArches) {
 					Assert.AreEqual (
@@ -471,16 +446,10 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		// DotNet fails, see https://github.com/dotnet/runtime/issues/65484
-		// Enable the commented out signature (and AOT) once the above is fixed
 		[Test]
-		public void SmokeTestBuildWithSpecialCharacters ([Values (false, true)] bool forms, [Values (false, true)] bool aot, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void SmokeTestBuildWithSpecialCharacters ([Values (false, true)] bool forms, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, aot: aot, release: true)) {
-				return;
-			} else if (!aot && runtime == AndroidRuntime.NativeAOT) {
-				// Just saving time, aot && !aot would be identical tests with NativeAOT runtime
-				Assert.Ignore ("NativeAOT always uses AOT, obviously");
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
 			}
 
@@ -493,10 +462,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (runtime);
 			proj.ProjectName = testName;
 			proj.IsRelease = true;
-
-			if (runtime == AndroidRuntime.MonoVM) {
-				proj.AotAssemblies = aot;
-			}
 
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -837,13 +802,11 @@ public class Test
 		}
 
 		[Test]
-		[Category ("AOT")]
 		[NonParallelizable]
 		public void BuildApplicationWithSpacesInPath ([Values (true, false)] bool enableMultiDex, [Values ("", "r8")] string linkTool, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
-			bool aotAssemblies = runtime == AndroidRuntime.MonoVM;
-			if (IgnoreUnsupportedConfiguration (runtime, aot: aotAssemblies, release: isRelease)) {
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
@@ -856,7 +819,6 @@ public class Test
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
-				AotAssemblies = aotAssemblies,
 				LinkTool = linkTool,
 				References = { new BuildItem ("ProjectReference", $"..\\{TestName}Library1\\Library1.csproj") },
 			};
@@ -877,18 +839,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			if (enableMultiDex)
 				proj.SetProperty ("AndroidEnableMultiDex", "True");
 
-			proj.Imports.Add (new Import ("foo.targets") {
-				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
-<Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
-<Target Name=""_Foo"" AfterTargets=""_SetLatestTargetFrameworkVersion"">
-	<PropertyGroup>
-		<AotAssemblies Condition=""!Exists('$(MonoAndroidBinDirectory)" + Path.DirectorySeparatorChar + @"cross-arm')"">False</AotAssemblies>
-	</PropertyGroup>
-	<Message Text=""$(AotAssemblies)"" />
-</Target>
-</Project>
-",
-			});
 			using (var libb = CreateDllBuilder (Path.Combine ("temp", $"{folderName}Library1")))
 			using (var b = CreateApkBuilder (Path.Combine ("temp", folderName))) {
 				libb.Build (lib);
@@ -1718,27 +1668,32 @@ namespace UnnamedProject
 			var ret = new List<object[]> ();
 
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData ("LowercaseMD5", "", runtime, runtime == AndroidRuntime.CoreCLR);
-				AddTestData ("LowercaseCrc64", "", runtime, false);
-				AddTestData ("", "127.0.0.1:9000,suspend,connect", runtime, false);
+				AddTestData ("LowercaseMD5", "", runtime, runtime == AndroidRuntime.CoreCLR, enableDiagnostics: false, androidEnableProfiler: "");
+				AddTestData ("LowercaseCrc64", "", runtime, enableCrashReport: false, enableDiagnostics: false, androidEnableProfiler: "");
+				AddTestData ("", "127.0.0.1:9000,suspend,connect", runtime, enableCrashReport: false, enableDiagnostics: false, androidEnableProfiler: "");
+				AddTestData ("", "", runtime, enableCrashReport: false, enableDiagnostics: true, androidEnableProfiler: "");
+				AddTestData ("", "", runtime, enableCrashReport: false, enableDiagnostics: false, androidEnableProfiler: "true");
+				AddTestData ("", "", runtime, enableCrashReport: false, enableDiagnostics: true, androidEnableProfiler: "false");
 			}
 
 			return ret;
 
-			void AddTestData (string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport)
+			void AddTestData (string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport, bool enableDiagnostics, string androidEnableProfiler)
 			{
 				ret.Add (new object[] {
 					packageNamingPolicy,
 					diagnosticConfiguration,
 					runtime,
 					enableCrashReport,
+					enableDiagnostics,
+					androidEnableProfiler,
 				});
 			}
 		}
 
 		[Test]
 		[TestCaseSource (nameof (Get_EnvironmentVariablesData))]
-		public void EnvironmentVariables (string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport)
+		public void EnvironmentVariables (string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport, bool enableDiagnostics, string androidEnableProfiler)
 		{
 			// NativeAOT does not support debug builds, but environment file creation and contents are relevant to NativeAOT too.
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
@@ -1756,6 +1711,9 @@ namespace UnnamedProject
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("EnableCrashReport", enableCrashReport.ToString ());
+			proj.SetProperty ("EnableDiagnostics", enableDiagnostics.ToString ());
+			if (!string.IsNullOrEmpty (androidEnableProfiler))
+				proj.SetProperty ("AndroidEnableProfiler", androidEnableProfiler);
 			if (!string.IsNullOrEmpty (packageNamingPolicy))
 				proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
 			if (!string.IsNullOrEmpty (diagnosticConfiguration))
@@ -1764,13 +1722,13 @@ namespace UnnamedProject
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var environment = b.Output.GetIntermediaryPath (Path.Combine ("__environment__.txt"));
 				FileAssert.Exists (environment);
-				var values = new List<string> {
-					"mono.enable_assembly_preload=0",
-				};
+				var values = new List<string> ();
 				if (!isRelease)
 					values.Add ("DOTNET_MODIFIABLE_ASSEMBLIES=Debug");
 				if (!string.IsNullOrEmpty (diagnosticConfiguration))
 					values.Add ($"DOTNET_DiagnosticPorts={diagnosticConfiguration}");
+				else if (androidEnableProfiler == "true" || (enableDiagnostics && androidEnableProfiler != "false"))
+					values.Add ("DOTNET_DiagnosticPorts=127.0.0.1:9000,connect,nosuspend");
 				if (enableCrashReport)
 					values.Add ("DOTNET_EnableCrashReport=1");
 				Assert.AreEqual (string.Join (Environment.NewLine, values), File.ReadAllText (environment).Trim ());
@@ -2304,7 +2262,6 @@ public class ToolbarEx {
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR)]
-		[TestCase (AndroidRuntime.MonoVM)]
 		public void BuildDoesNotModifyNuGetPackageCache (AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -2333,9 +2290,6 @@ public class ToolbarEx {
 				},
 			};
 			proj.SetRuntime (runtime);
-			if (runtime == AndroidRuntime.MonoVM) {
-				proj.SetProperty ("_DisableCheckForUnsupportedMonoMobileRuntime", "true");
-			}
 			proj.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
 			proj.SetProperty (KnownProperties.PublishTrimmed, true.ToString ());
 			proj.MainActivity = proj.DefaultMainActivity
@@ -2386,10 +2340,8 @@ public class ToolbarEx {
 		// TODO: [TestCase (false, AndroidRuntime.NativeAOT)]
 		public void SimilarAndroidXAssemblyNames (bool publishTrimmed, AndroidRuntime runtime)
 		{
-			bool aotAssemblies = runtime == AndroidRuntime.MonoVM && publishTrimmed;
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
-				AotAssemblies = aotAssemblies,
 				PackageReferences = {
 					new Package { Id = "Xamarin.AndroidX.CustomView", Version = "1.1.0.17" },
 					new Package { Id = "Xamarin.AndroidX.CustomView.PoolingContainer", Version = "1.0.0.4" },

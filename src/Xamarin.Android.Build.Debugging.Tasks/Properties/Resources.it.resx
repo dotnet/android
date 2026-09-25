@@ -140,22 +140,6 @@ ABI - is an acronym for Application Binary Interface.
 {0} - the target name the user supplied
     </comment>
   </data>
-  <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
-    <value>Non è possibile copiare gli strumenti di distribuzione rapida in '{0}/{1}' nel dispositivo di destinazione.
-Questo dispositivo potrebbe non essere compatibile con la distribuzione rapida.
-Impostare la proprietà MSBuild 'EmbedAssembliesIntoApk' su 'true' per disabilitare la distribuzione rapida nelle pagine delle proprietà del progetto Visual Studio o modificare il file di progetto in un editor di testo.</value>
-    <comment>The following are literal names and should not be translated:
-{0} - A device path
-{1} - A filename</comment>
-  </data>
-  <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
-    <value>Errore durante la distribuzione di '{0}' con '{1}: {2}'.
-Impostare la proprietà MSBuild 'EmbedAssembliesIntoApk' su 'true' per disabilitare la distribuzione rapida nelle pagine delle proprietà del progetto Visual Studio o modificare il file di progetto in un editor di testo.</value>
-<comment>The following are literal names and should not be translated:
-{0} - A filename
-{1} - The tool that was used to deploy the file.
-{2} - The actual error that occured.</comment>
-  </data>
   <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
     <value>La proprietà del sistema Android 'log.redirect-stdio' è impostata su 'true' nell'emulatore o nel dispositivo di destinazione.
 Per abilitare la compatibilità con la distribuzione rapida, impostare la proprietà su 'false' o riavviare il dispositivo o l'emulatore per cancellare il valore.</value>
@@ -165,10 +149,6 @@ Per abilitare la compatibilità con la distribuzione rapida, impostare la propri
 Impostare la proprietà MSBuild 'EmbedAssembliesIntoApk' su 'true' per disabilitare la distribuzione rapida nelle pagine delle proprietà del progetto Visual Studio o modificare il file di progetto in un editor di testo.</value>
     <comment>The following are literal names and should not be translated:
 {0} - A filename</comment>
-  </data>
-  <data name="XA0130_FastDevNotSupported" xml:space="preserve">
-    <value>Siamo spiacenti. La distribuzione rapida è supportata solo nei dispositivi con Android 5.0 (livello API 21) o versione successiva.
-Impostare la proprietà MSBuild 'EmbedAssembliesIntoApk' su 'true' per disabilitare la distribuzione rapida nelle pagine delle proprietà del progetto Visual Studio o modificare il file di progetto in un editor di testo.</value>
   </data>
   <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
     <value>Lo strumento 'run-as' è stato disabilitato in questo dispositivo. Abilitarlo attivando le opzioni per sviluppatori sul dispositivo o impostando 'ro.boot.disable_runas' su 'false'.</value>

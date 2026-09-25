@@ -499,7 +499,7 @@ namespace Xamarin.Java.Interop
 		static readonly Dictionary<string, TypeInfo> types = new Dictionary<string, TypeInfo> () {
 			{ "jvalue*",                    new BuiltinTypeInfo ("jvalue*",                 "JniArgumentValue*") },
 			{ "jbyte",                      new BuiltinTypeInfo ("jbyte",                   "sbyte") },
-			{ "jchar",                      new BuiltinTypeInfo ("jchar",                   "char") },
+			{ "jchar",                      new CharTypeInfo ("jchar") },
 			{ "jchar*",                     new BuiltinTypeInfo ("jchar*",                  "char*") },
 			{ "jshort",                     new BuiltinTypeInfo ("jshort",                  "short") },
 			{ "jsize",                      new BuiltinTypeInfo ("jsize",                   "int") },
@@ -677,6 +677,34 @@ namespace Xamarin.Java.Interop
 		public override string GetManagedToMarshalExpression (string variable)
 		{
 			return string.Format ("({0} ? (byte) 1 : (byte) 0)", variable);
+		}
+	}
+
+	class CharTypeInfo : TypeInfo {
+
+		public CharTypeInfo (string jni)
+			: base (jni)
+		{
+		}
+
+		public override string GetMarshalType (bool isReturn, bool isPinvoke)
+		{
+			return isPinvoke ? "ushort" : "char";
+		}
+
+		public override string GetManagedType (bool isReturn, bool isPinvoke)
+		{
+			return "char";
+		}
+
+		public override string GetManagedToMarshalExpression (string variable)
+		{
+			return $"(ushort) {variable}";
+		}
+
+		public override string[] GetMarshalToManagedStatements (string variable, JniFunction entry)
+		{
+			return [$"return (char) {variable};"];
 		}
 	}
 

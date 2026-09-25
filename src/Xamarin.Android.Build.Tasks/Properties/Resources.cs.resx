@@ -297,10 +297,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>Používání rychlého nasazení a Android App Bundles zároveň se v současné době nepodporuje. Pro konfigurace Debug použijte rychlé nasazení, pro konfigurace Release pak Android App Bundles.</value>
     <comment>The following are literal names and should not be translated: Android App Bundles</comment>
   </data>
-  <data name="XA0119_AOT" xml:space="preserve">
-    <value>Používání rychlého nasazení a AOT najednou se nedoporučuje. Pro konfigurace Debug použijte rychlé nasazení, pro konfigurace Release pak AOT.</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
-  </data>
   <data name="XA0119_LinkMode" xml:space="preserve">
     <value>Používání rychlého nasazení a linkeru najednou se nedoporučuje. Pro konfigurace Debug použijte rychlé nasazení, pro konfigurace Release pak linker.</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
@@ -308,10 +304,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
   <data name="XA0119_LinkTool" xml:space="preserve">
     <value>Používání rychlého nasazení a nástroje pro zmenšování kódu najednou se nedoporučuje. Pro konfigurace Debug použijte rychlé nasazení, pro konfigurace Release pak nástroj pro zmenšování kódu.</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
-  </data>
-  <data name="XA0119_Interpreter" xml:space="preserve">
-    <value>Zakázání interpreta; použití interpretu a AOT ve stejnou dobu není podporováno. Použijte interpret pro podporu opětovného načítání za provozu v konfiguracích ladění a AOT pro konfigurace release.</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
   </data>
   <data name="XA0119_ReadyToRun" xml:space="preserve">
     <value>Používání rychlého nasazení a ReadyToRun najednou se nedoporučuje. Pro konfigurace Debug použijte rychlé nasazení, pro konfigurace Release pak ReadyToRun.</value>
@@ -469,10 +461,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>Použití kompilátoru DX DEX není podporováno. Nastavte kompilátor DEX na 'd8' na stránkách vlastností projektu Visual Studio nebo upravte soubor projektu v textovém editoru a nastavte vlastnost Microsoft Build Engine AndroidDexTool na 'd8'.</value>
     <comment>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</comment>
   </data>
-  <data name="XA1025" xml:space="preserve">
-    <value>Experimentální hodnota Hybrid pro vlastnost MSBuildu AndroidAotMode není v tuto chvíli kompatibilní s cílovým ABI armeabi-v7a. Pokud chcete i nadále používat experimentální hodnotu Hybrid pro AndroidAotMode, zrušte výběr cílového ABI armeabi-v7a na stránkách vlastností projektu sady Visual Studio, nebo upravte soubor projektu v textovém editoru a odeberte z vlastnosti MSBuild AndroidSupportedAbis možnost armeabi-v7a.</value>
-    <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
-  </data>
   <data name="XA1027" xml:space="preserve">
     <value>Vlastnost MSBuildu EnableProguard je nastavená na true a vlastnost MSBuildu AndroidLinkTool je prázdná, proto se AndroidLinkTool nastaví na výchozí možnost proguard.</value>
     <comment>The following are literal names and should not be translated: 'EnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
@@ -480,14 +468,6 @@ In this message, the term "binding" means a piece of generated code that makes i
   <data name="XA1028" xml:space="preserve">
     <value>Vlastnost MSBuildu AndroidEnableProguard je nastavená na true a vlastnost MSBuildu AndroidLinkTool je prázdná, proto se AndroidLinkTool nastaví na výchozí možnost proguard.</value>
     <comment>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
-  </data>
-  <data name="XA1029" xml:space="preserve">
-    <value>Vlastnost MSBuild „AotAssemblies“ je zastaralá. Upravte soubor projektu v textovém editoru, aby se tato vlastnost odebrala, a místo toho použijte vlastnost MSBuild „RunAOTCompilation“.</value>
-    <comment>The following are literal names and should not be translated: 'AotAssemblies', 'RunAOTCompilation'</comment>
-  </data>
-  <data name="XA1030" xml:space="preserve">
-    <value>Vlastnost MSBuild RunAOTCompilation se podporuje jen tehdy, když je povolené trimování. Upravte soubor projektu v textovém editoru, aby se vlastnost PublishTrimmed pro tuto konfiguraci sestavení nastavila na true.</value>
-    <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
   </data>
   <data name="XA1034" xml:space="preserve">
     <value>Váš projekt odkazuje na literál {0}, který používá sestavení _Microsoft.Android.Resource.Designer, ale tuto funkci nemáte povolenou. Nastavte vlastnost MSBuild AndroidUseDesignerAssembly v souboru projektu na hodnotu true.</value>
@@ -504,6 +484,11 @@ Buď změňte hodnotu v souboru AndroidManifest.xml tak, aby odpovídala hodnot�
     <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
 {0} - The minimum SDK version number
 {1} - The SupportedOSPlatformVersion property value</comment>
+  </data>
+  <data name="XA1037" xml:space="preserve">
+    <value>Nepodporovaná položka @(Reference): {0}</value>
+    <comment>The following are literal names and should not be translated: @(Reference)
+{0} - The unsupported reference item</comment>
   </data>
   <data name="XA2000" xml:space="preserve">
     <value>Použití funkce AppDomain.CreateDomain() zjištěné v sestavení: {0}. .NET 6 a vyšší bude podporovat jenom jednu doménu AppDomain, takže toto rozhraní API po vydání .NET 6 už v .NET pro Android nebude dostupné.</value>
@@ -557,14 +542,6 @@ Buď změňte hodnotu v souboru AndroidManifest.xml tak, aby odpovídala hodnot�
   <data name="APT2265" xml:space="preserve">
     <value>Příčinou může být to, že projekt má v názvu souboru nebo cestě jiné znaky než ASCII. Podrobnosti najdete tady: https://learn.microsoft.com/dotnet/android/messages/apt2265.</value>
     <comment>The following are literal names and should not be translated:</comment>
-  </data>
-  <data name="XA3001" xml:space="preserve">
-    <value>Sestavení se nepovedlo zkompilovat AOT: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
-  </data>
-  <data name="XA3002" xml:space="preserve">
-    <value>Neplatný režim AOT: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
   <data name="XA3004" xml:space="preserve">
     <value>Android NDK r10d obsahuje chyby a poskytuje nekompatibilní knihovnu libm.so pro architekturu x86_64. Viz https://code.google.com/p/android/issues/detail?id=161422.</value>
@@ -884,22 +861,23 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
-  <data name="XA4325" xml:space="preserve">
-    <value>Nepovedlo se přepsat spravované názvy JNI pro R8. {0}</value>
-    <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4325_* resources.</comment>
+  <data name="XA4327" xml:space="preserve">
+    <value>Could not extract Java type map keys from '{0}': {1}</value>
+    <comment>{0} - The input file path or representation name.
+{1} - The underlying parser or input/output failure. It is not localized.</comment>
   </data>
-  <data name="XA4325_AssemblyFailure" xml:space="preserve">
-    <value>Nepodařilo se přepsat názvy JNI v sestavení {0}: {1}</value>
-    <comment>{0} - The path of the assembly which could not be rewritten.
-{1} - The underlying message describing why the assembly could not be rewritten. It is not localized.</comment>
+  <data name="XA4328" xml:space="preserve">
+    <value>Could not generate typemap ProGuard configuration from '{0}': {1}</value>
+    <comment>{0} - The input or output file path.
+{1} - The underlying failure, or a formatted XA4328_* resource.</comment>
   </data>
-  <data name="XA4325_SourceDestinationCount" xml:space="preserve">
-    <value>Skupiny položek SourceFiles a DestinationFiles musí obsahovat stejný počet položek.</value>
-    <comment>The following are literal MSBuild item group names and should not be translated: 'SourceFiles', 'DestinationFiles'.</comment>
+  <data name="XA4328_NoInputs" xml:space="preserve">
+    <value>No retained Java type map key files were provided.</value>
   </data>
-  <data name="XA4326" xml:space="preserve">
-    <value>Vyhledání člena JNI nelze bezpečně přepsat, protože jeho popisovač třídy nemá jediný strukturálně jednoznačný zdroj JNIEnv.FindClass.</value>
-    <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
+  <data name="XA4328_InvalidName" xml:space="preserve">
+    <value>Line {0} contains an invalid retained Java class name: '{1}'.</value>
+    <comment>{0} - The one-based line number.
+{1} - The invalid input record.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>Chybí adresář sady nástrojů Android NDK {0}. Nainstalujte prosím sadu Android NDK.</value>
@@ -1121,8 +1099,8 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 </comment>
   </data>
   <data name="XA1044" xml:space="preserve">
-    <value>Vlastnost MSBuild {0} není kompatibilní s modulem runtime {1}. Sestavení nemůže pokračovat, pokud je tato vlastnost povolena. Odeberte vlastnost nebo ji ošetřete podmínkou: Condition="'$(UseMonoRuntime)' == 'true'"</value>
-    <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
+    <value>Vlastnost MSBuild '{0}' není kompatibilní s modulem runtime {1}. Dokud je tato vlastnost povolená, nemůže sestavení pokračovat. Odeberte vlastnost.</value>
+    <comment>The following literal name should not be translated: MSBuild.
 {0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
@@ -1323,10 +1301,6 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
   </data>
   <data name="XA0146" xml:space="preserve">
     <value>Pokus o kontrolu, zda je „{0}“ správně přidruženým souborem ELF, selhal s výjimkou. Kontrola přidružení tohoto souboru bude ignorována.</value>
-    <comment>{0} - The file path.</comment>
-  </data>
-  <data name="XA0147" xml:space="preserve">
-    <value>Pokus o kontrolu, zda je „{0}“ platný soubor ELF, selhal s výjimkou. Kontrola AOT pro tento soubor bude ignorována.</value>
     <comment>{0} - The file path.</comment>
   </data>
   <data name="XA0148" xml:space="preserve">

@@ -23,7 +23,7 @@ applications targeting .NET 10 and earlier use Mono by default. Setting
 or optimized builds and takes precedence over `$(UseMonoRuntime)`.
 
 `$(UseMonoRuntime)=true` is not a .NET 11 escape hatch. The .NET 11 SDK
-rejects it with [NETSDK1242](https://learn.microsoft.com/dotnet/core/tools/sdk-errors/netsdk1242).
+rejects it with [NETSDK1242](/dotnet/core/tools/sdk-errors/netsdk1242).
 Use the .NET 10-and-earlier Mono guidance only when targeting a framework where
 Mono is supported.
 
@@ -202,7 +202,7 @@ and `as`, the native assembler. These tools are included in the
 
 The default value is `$(MonoAndroidBinDirectory)\binutils\bin\`.
 
-[binutils]: https://github.com/xamarin/xamarin-android-binutils/
+[binutils]: https://github.com/dotnet/android-native-tools/
 
 ## AndroidBoundExceptionType
 
@@ -395,7 +395,7 @@ The default value is `d8`. See our
 documentation on [D8 and R8][d8-r8].
 
 [dex]: https://source.android.com/devices/tech/dalvik/dalvik-bytecode
-[d8-r8]: https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/D8andR8.md
+[d8-r8]: https://github.com/dotnet/android/blob/main/Documentation/guides/D8andR8.md
 
 ## AndroidEnableDesugar
 
@@ -446,9 +446,7 @@ A bool property, that determines whether or not LLVM marshal methods are enabled
 LLVM marshal methods are an app startup optimization which uses native entry points
 for Java `native` method registration.
 
-This property defaults to `True` for Mono applications unless the project uses
-Razor or [`$(PublishReadyToRun)`](#publishreadytorun). It defaults to `False`
-otherwise.
+This property defaults to `False`.
 
 This property cannot be set to `true` when
 [`$(PublishReadyToRun)`](#publishreadytorun) is `true`. Setting both properties
@@ -870,7 +868,7 @@ used for Java code. The default value is an empty string, or
 `proguard` if `$(AndroidEnableProguard)` is `True`. See our documentation on
 [D8 and R8][d8-r8].
 
-[d8-r8]: https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/D8andR8.md
+[d8-r8]: https://github.com/dotnet/android/blob/main/Documentation/guides/D8andR8.md
 
 ## AndroidLintEnabled
 
@@ -1572,9 +1570,11 @@ Deprecated in .NET 7. For supported .NET 10-and-earlier projects that use
 Mono, migrate to the
 [`$(RunAOTCompilation)`](#runaotcompilation) MSBuild property instead.
 Specifying `$(AotAssemblies)`, including setting it to `false`, emits
-warning XA1029. Setting it to `true` for CoreCLR or NativeAOT also causes
-the build-stopping [XA1044](../messages/xa1044.md) error because the value
-is forwarded to `$(RunAOTCompilation)`.
+the [XA1029](../messages/xa1029.md) warning.
+Setting it to `true` for CoreCLR or NativeAOT causes the build-stopping
+[XA1044](../messages/xa1044.md) error when `$(RunAOTCompilation)` is
+unset (or otherwise evaluates to `true`), because the defaulting logic
+forwards `$(AotAssemblies)` to `$(RunAOTCompilation)`.
 
 For .NET 11 CoreCLR projects, remove `$(AotAssemblies)` without adding
 `$(RunAOTCompilation)`. CoreCLR does not use the Mono AOT pipeline.
@@ -1801,7 +1801,7 @@ Setting this property to `true` for CoreCLR or NativeAOT resets it to
 ## EnableMSTestRunner
 
 A boolean property that enables the
-[MSTest runner](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-running-tests)
+[MSTest runner](/dotnet/core/testing/unit-testing-mstest-running-tests)
 for Android test projects. When set to `true`, `dotnet run` will launch the
 application via `am instrument` instead of `am start`, allowing test results
 to be reported through Android's instrumentation protocol.
@@ -1833,7 +1833,7 @@ functioning, but at the benefit of reduced application size.
 Set to `false` by default in `Release` mode, unless
 `$(EnableDiagnostics)` or `$(AndroidEnableProfiler)` are enabled.
 
-[eventsource]: https://learn.microsoft.com/dotnet/core/diagnostics/eventsource
+[eventsource]: /dotnet/core/diagnostics/eventsource
 
 ## GenerateApplicationManifest
 
@@ -1939,7 +1939,7 @@ but at the benefit of reduced application size.
 Set to `false` by default in `Release` mode, unless
 `$(EnableDiagnostics)` or `$(AndroidEnableProfiler)` are enabled.
 
-[dotnetmetrics]: https://learn.microsoft.com/dotnet/core/diagnostics/metrics
+[dotnetmetrics]: /dotnet/core/diagnostics/metrics
 
 ## MonoAndroidAssetPrefix
 
@@ -2006,7 +2006,7 @@ full ReadyToRun.
 For more information, see
 [Runtimes and compilation in .NET MAUI][maui-runtimes-compilation].
 
-[ready-to-run]: https://learn.microsoft.com/dotnet/core/deploying/ready-to-run
+[ready-to-run]: /dotnet/core/deploying/ready-to-run
 
 ## PublishReadyToRunComposite
 
@@ -2049,19 +2049,19 @@ publish or optimized builds when set to `true`.
 This property defaults to `true` in .NET 10 and earlier, so Android
 applications use Mono. In .NET 11 and later, it defaults to `false`, so
 Android applications use CoreCLR, and an explicit `true` value is rejected
-with [NETSDK1242](https://learn.microsoft.com/dotnet/core/tools/sdk-errors/netsdk1242).
+with [NETSDK1242](/dotnet/core/tools/sdk-errors/netsdk1242).
 
 For more information, see
 [Runtimes and compilation in .NET MAUI][maui-runtimes-compilation].
 
-[maui-runtimes-compilation]: https://learn.microsoft.com/dotnet/maui/deployment/runtimes-compilation
+[maui-runtimes-compilation]: /dotnet/maui/deployment/runtimes-compilation
 
 ## WaitForExit
 
 A boolean property that controls the behavior of `dotnet run` when launching
 Android applications.
 
-When `$(WaitForExit)` not `false` (the default), `dotnet run` will:
+When `$(WaitForExit)` is not `false` (the default), `dotnet run` will:
 
 * Launch the Android application
 * Stream `logcat` output filtered to the application's process

@@ -10,7 +10,7 @@
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <NoWarn>0618;0809;0108;0114;0465;8609;8610;8614;8617;8613;8764;8765;8766;8767;RS0041</NoWarn>
+    <NoWarn>0618;0809;0108;0114;0465;8764;8765;8766;8767;RS0041</NoWarn>
     <WarningsAsErrors>$(WarningsAsErrors);CS2002</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);JAVA_INTEROP</DefineConstants>
@@ -224,6 +224,7 @@
     <Compile Include="Android.Opengl\GLSurfaceView.cs" />
     <Compile Include="Android.Preferences\CheckBoxPreference.cs" />
     <Compile Include="Android.Runtime\AndroidEnvironment.cs" />
+    <Compile Include="Android.Runtime\ManagedObjectReferenceManager.cs" />
     <Compile Include="Android.Runtime\AndroidRuntime.cs" />
     <Compile Include="Android.Runtime\AndroidRuntimeInternal.cs" />
     <Compile Include="Android.Runtime\AnnotationAttribute.cs" />
@@ -248,6 +249,7 @@
     <Compile Include="Android.Runtime\JNIEnv.g.cs" />
     <Compile Include="Android.Runtime\JNIEnvInit.cs" />
     <Compile Include="Android.Runtime\JniHandleOwnership.cs" />
+    <Compile Include="Android.Runtime\JniPeerMembersExtensions.cs" />
     <Compile Include="Android.Runtime\JNINativeWrapper.cs" />
     <Compile Include="Android.Runtime\JNINativeWrapper.g.cs">
       <DesignTime>True</DesignTime>
@@ -269,6 +271,7 @@
     <Compile Include="Android.Runtime\RuntimeConstants.cs" />
     <Compile Include="Android.Runtime\ResourceIdManager.cs" />
     <Compile Include="Android.Runtime\RuntimeNativeMethods.cs" />
+    <Compile Include="Android.Runtime\StartupNoGCRegion.cs" />
     <Compile Include="Android.Runtime\StringDefAttribute.cs" />
     <Compile Include="Android.Runtime\TimingLogger.cs" />
     <Compile Include="Android.Runtime\TypeManager.cs" />
@@ -327,6 +330,7 @@
     <Compile Include="Java.Interop\SafeJavaCollectionFactory.cs" />
     <Compile Include="Java.Interop\TypeManager.cs" />
     <Compile Include="Java.Interop\ValueTypeFactory.cs" />
+    <Compile Include="Java.Interop\ValueTypeDictionaryFactory.cs" />
     <Compile Include="Java.Lang\Boolean.cs" />
     <Compile Include="Java.Lang\Byte.cs" />
     <Compile Include="Java.Lang\Character.cs" />
@@ -367,6 +371,7 @@
     <Compile Include="Microsoft.Android.Runtime\JavaMarshalRegisteredPeers.cs" />
     <Compile Include="Microsoft.Android.Runtime\JavaMarshalValueManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\PrimitiveArrayInfo.cs" />
+    <Compile Include="Microsoft.Android.Runtime\RuntimeEventSource.cs" />
     <Compile Include="Microsoft.Android.Runtime\SingleUniverseTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\TrimmableTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\TrimmableTypeMapTypeManager.cs" />

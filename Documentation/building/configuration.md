@@ -11,7 +11,7 @@
 
 The .NET for Android build is heavily dependent on MSBuild, with the *intention*
 that it should (eventually?) be possible to build the project simply by
-checking out the repo, loading `Xamarin.Android.slnx` into an IDE, and Building
+checking out the repo, loading `Microsoft.Android.slnx` into an IDE, and Building
 the solution. (This isn't currently possible, and may never be, but it's
 the *vision*.)
 
@@ -69,12 +69,6 @@ Overridable MSBuild properties include:
   * `$(AndroidPlatformId)`: The "Platform ID" for the `android.jar` to use when
     building `src/Mono.Android`. This is usually the same value as
     `$(AndroidApiLevel)`, but may differ with Android Preview releases.
-
-  * `$(AndroidSupportedTargetAotAbis)`: The Android ABIs for which to build the
-    Mono AOT compilers. The AOT compilers are required in order to set the
-    [`$(RunAOTCompilation)`][runaotcompilation] app configuration property to True.
-
-    [runaotcompilation]: https://developer.xamarin.com/guides/android/under_the_hood/build_process/#RunAOTCompilation
 
   * `$(AndroidSupportedTargetJitAbis)`: The Android ABIs for which to build the
     the Mono JIT for inclusion within apps. This is a `:`-separated list of

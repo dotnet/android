@@ -18,6 +18,27 @@ namespace Java.InteropTests
 			JniPeerMembers.Dispose (members);
 		}
 
+#if !ANDROID    // Android doesn't allow providing a custom TypeManager
+		[Test]
+		[NonParallelizable]
+		public void HandledReplacementTypeMissDoesNotUseStringFallback ()
+		{
+			var typeManager = JavaVMFixture.TypeManager;
+			Assert.IsNotNull (typeManager);
+			typeManager.TrackReplacementTypeLookups ("java/lang/Double");
+			try {
+				var members = new JniPeerMembers ("java/lang/Double", typeof (MyString));
+				JniPeerMembers.Dispose (members);
+
+				var counts = typeManager.GetReplacementTypeLookupCounts ();
+				Assert.AreEqual (1, counts.Utf8);
+				Assert.AreEqual (0, counts.String);
+			} finally {
+				typeManager.TrackReplacementTypeLookups ("");
+			}
+		}
+#endif  // !ANDROID
+
 		[Test]
 		[Category ("TrimmableTypeMapUnsupported")]
 		public void VirtualInvokeOnBaseInvokesMostDerivedJavaMethod ()
@@ -227,6 +248,16 @@ namespace Java.InteropTests
 
 		[Test]
 		[Category ("NativeAOTIgnore")]
+		public void ReplaceInstanceMethodWithUtf8Signature ()
+		{
+			using var o = new JavaLangRemappingTestObject ();
+			// Shouldn't throw; should instead invoke Object.toString()
+			var r = o.remappedToStringWithUtf8Signature ();
+			JniObjectReference.Dispose (ref r);
+		}
+
+		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void ReplaceStaticMethodName ()
 		{
 			var r = JavaLangRemappingTestRuntime.remappedToGetRuntime ();
@@ -342,6 +373,12 @@ namespace Java.InteropTests
 		public unsafe JniObjectReference remappedToToString ()
 		{
 			const string id = "remappedToToString.()Ljava/lang/String;";
+			return _members.InstanceMethods.InvokeNonvirtualObjectMethod (id, this, null);
+		}
+
+		public unsafe JniObjectReference remappedToStringWithUtf8Signature ()
+		{
+			const string id = "remappedToStringWithUtf8Signature.()Ljava/lang/String;";
 			return _members.InstanceMethods.InvokeNonvirtualObjectMethod (id, this, null);
 		}
 

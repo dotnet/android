@@ -22,12 +22,10 @@ namespace Xamarin.Android.RuntimeTests
 			get {
 				var categories = new List<string> ();
 
-				if (!Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime) {
-					// CoreCLR-specific exclusions
-					// TODO: https://github.com/dotnet/android/issues/10069
-					categories.Add ("CoreCLRIgnore");
-					categories.Add ("NTLM");
-				}
+				// CoreCLR-specific exclusions
+				// TODO: https://github.com/dotnet/android/issues/10069
+				categories.Add ("CoreCLRIgnore");
+				categories.Add ("NTLM");
 
 				if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
 					categories.Add ("NativeTypeMap");
@@ -45,15 +43,6 @@ namespace Xamarin.Android.RuntimeTests
 					if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
 						categories.Add ("Export");
 					}
-				}
-
-				if (HasAppContextSwitch ("EnableLLVM")) {
-					// FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190
-					categories.Add ("LLVMIgnore");
-					// InetAccess: https://github.com/dotnet/runtime/issues/73304
-					categories.Add ("InetAccess");
-					// NetworkInterfaces: https://github.com/dotnet/runtime/issues/75155
-					categories.Add ("NetworkInterfaces");
 				}
 
 				// Process-wide reference counts are only stable in the dedicated filtered run.

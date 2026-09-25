@@ -236,8 +236,7 @@ public class ManifestGeneratorTests
 	[Fact]
 	public void Activity_AttributesAreSortedAlphabetically ()
 	{
-		// The legacy ManifestDocumentElement sorts attributes alphabetically; the trimmable
-		// generator must match so the 'legacy' AndroidManifestMerger path is byte-compatible.
+		// The trimmable generator matches ManifestDocumentElement's attribute ordering.
 		var gen = CreateDefaultGenerator ();
 		var peer = CreatePeer ("com/example/app/MyActivity", new ComponentInfo {
 			Kind = ComponentKind.Activity,
@@ -1128,8 +1127,7 @@ public class ManifestGeneratorTests
 	public void ApplicationIdPlaceholder_ReplacedWithPackageName ()
 	{
 		// ${applicationId} is a built-in placeholder (not a user key=value entry) that resolves
-		// to the application package name. It appears in merged library-manifest content such as
-		// a <permission> name or a <provider> authority (see MergeLibraryManifest).
+		// to the application package name, including in <permission> names and <provider> authorities.
 		var gen = CreateDefaultGenerator ();
 
 		var template = ParseTemplate (
@@ -1151,77 +1149,6 @@ public class ManifestGeneratorTests
 		var provider = doc.Root?.Element ("application")?.Elements ("provider")
 			.FirstOrDefault (p => (string?)p.Attribute (AndroidNs + "name") == "com.example.FacebookInitProvider");
 		Assert.Equal ("com.example.app.FacebookInitProvider", (string?)provider?.Attribute (AndroidNs + "authorities"));
-	}
-
-	[Fact]
-	public void LibraryManifest_MergedAndRelativeNamesQualified ()
-	{
-		// Mirrors MergeLibraryManifest: a library (.aar) manifest's top-level elements are merged
-		// into the app manifest, relative component names ('.Foo') are qualified with the library's
-		// own package, and ${applicationId} resolves to the application package.
-		var gen = CreateDefaultGenerator ();
-		var libManifest = Path.GetTempFileName ();
-		try {
-			File.WriteAllText (libManifest,
-				"""
-				<?xml version="1.0"?>
-				<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.lib.test">
-				  <permission android:name="${applicationId}.permission.C2D_MESSAGE" android:protectionLevel="signature" />
-				  <application>
-				    <provider android:name=".internal.LibProvider" android:authorities="${applicationId}.LibProvider" android:exported="false" />
-				  </application>
-				</manifest>
-				""");
-			gen.LibraryManifests = [libManifest];
-
-			var doc = GenerateAndLoad (gen);
-
-			var permission = doc.Root?.Elements ("permission").FirstOrDefault ();
-			Assert.Equal ("com.example.app.permission.C2D_MESSAGE", (string?)permission?.Attribute (AndroidNs + "name"));
-
-			var provider = doc.Root?.Element ("application")?.Elements ("provider")
-				.FirstOrDefault (p => (string?)p.Attribute (AndroidNs + "authorities") == "com.example.app.LibProvider");
-			Assert.NotNull (provider);
-			// Relative name qualified with the library's own package, not the app package.
-			Assert.Equal ("com.lib.test.internal.LibProvider", (string?)provider.Attribute (AndroidNs + "name"));
-		} finally {
-			File.Delete (libManifest);
-		}
-	}
-
-	[Fact]
-	public void LibraryManifest_PlaceholderEquivalentElementIsDeduplicated ()
-	{
-		var gen = CreateDefaultGenerator ();
-		var libManifest = Path.GetTempFileName ();
-		try {
-			File.WriteAllText (libManifest, """
-				<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.lib.test">
-				  <application>
-				    <provider
-				        android:name="${applicationId}.DuplicateProvider"
-				        android:authorities="${applicationId}.duplicate" />
-				  </application>
-				</manifest>
-				""");
-			gen.LibraryManifests = [libManifest];
-			var template = ParseTemplate ("""
-				<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
-				  <application>
-				    <provider
-				        android:name="com.example.app.DuplicateProvider"
-				        android:authorities="com.example.app.duplicate" />
-				  </application>
-				</manifest>
-				""");
-
-			var doc = GenerateAndLoad (gen, template: template);
-			var providers = doc.Root?.Element ("application")?.Elements ("provider")
-				.Where (element => (string?) element.Attribute (AndroidNs + "name") == "com.example.app.DuplicateProvider");
-			Assert.Single (providers ?? []);
-		} finally {
-			File.Delete (libManifest);
-		}
 	}
 
 	[Fact]
@@ -1535,88 +1462,4 @@ public class ManifestGeneratorTests
 		Assert.Equal ("com.example.app.ManageActivity", (string?)app?.Attribute (AndroidNs + "manageSpaceActivity"));
 	}
 
-	[Fact]
-	public void LibraryManifests_MergedWithApplicationIdAndRelativeNamesResolved ()
-	{
-		// Mirrors ManifestTest.MergeLibraryManifest: a library (.aar) manifest is merged into the
-		// app manifest, ${applicationId} resolves to the app package, and relative component names
-		// (".Type") are qualified with the library's own package attribute.
-		var libManifest = Path.Combine (Path.GetTempPath (), $"lib-manifest-{Path.GetRandomFileName ()}.xml");
-		File.WriteAllText (libManifest, """
-			<?xml version='1.0'?>
-			<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.xamarin.test'>
-			    <uses-sdk android:minSdkVersion='16'/>
-			    <permission android:name='${applicationId}.permission.C2D_MESSAGE' android:protectionLevel='signature' />
-			    <application>
-			        <activity android:name='.signin.internal.SignInHubActivity' />
-			        <provider
-			            android:authorities='${applicationId}.FacebookInitProvider'
-			            android:name='.internal.FacebookInitProvider'
-			            android:exported='false' />
-			        <meta-data android:name='android.support.VERSION' android:value='25.4.0' />
-			        <meta-data android:name='android.support.VERSION' android:value='25.4.0' />
-			    </application>
-			</manifest>
-			""");
-		try {
-			var gen = CreateDefaultGenerator ();
-			gen.PackageName = "com.xamarin.manifest";
-			gen.LibraryManifests = [libManifest];
-			var template = ParseTemplate ("""
-				<?xml version="1.0" encoding="utf-8"?>
-				<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.xamarin.manifest">
-				  <uses-sdk />
-				  <application android:label="App" />
-				</manifest>
-				""");
-
-			var doc = GenerateAndLoad (gen, template: template);
-
-			// ${applicationId} resolves to the app package on the merged permission.
-			var permission = doc.Root?.Elements ("permission")
-				.FirstOrDefault (e => (string?) e.Attribute (AttName) == "com.xamarin.manifest.permission.C2D_MESSAGE");
-			Assert.NotNull (permission);
-
-			var app = doc.Root?.Element ("application");
-			Assert.NotNull (app);
-
-			// Relative ".Type" names are qualified with the library package (com.xamarin.test).
-			var activity = app?.Elements ("activity")
-				.FirstOrDefault (e => (string?) e.Attribute (AttName) == "com.xamarin.test.signin.internal.SignInHubActivity");
-			Assert.NotNull (activity);
-
-			var provider = app?.Elements ("provider")
-				.FirstOrDefault (e => (string?) e.Attribute (AttName) == "com.xamarin.test.internal.FacebookInitProvider");
-			Assert.NotNull (provider);
-			// authorities uses ${applicationId} -> app package.
-			Assert.Equal ("com.xamarin.manifest.FacebookInitProvider", (string?) provider?.Attribute (AndroidNs + "authorities"));
-
-			// The two identical meta-data elements collapse to a single element.
-			var versionMeta = app?.Elements ("meta-data")
-				.Where (e => (string?) e.Attribute (AttName) == "android.support.VERSION")
-				.ToList ();
-			Assert.NotNull (versionMeta);
-			Assert.Single (versionMeta);
-		} finally {
-			File.Delete (libManifest);
-		}
-	}
-
-	[Fact]
-	public void LibraryManifests_MissingFileIgnored ()
-	{
-		// A non-existent library manifest path is skipped without throwing.
-		var gen = CreateDefaultGenerator ();
-		gen.LibraryManifests = [Path.Combine (Path.GetTempPath (), $"does-not-exist-{Path.GetRandomFileName ()}.xml")];
-		var template = ParseTemplate ("""
-			<?xml version="1.0" encoding="utf-8"?>
-			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
-			  <uses-sdk />
-			  <application android:label="App" />
-			</manifest>
-			""");
-
-		var doc = GenerateAndLoad (gen, template: template);
-		Assert.NotNull (doc.Root?.Element ("application"));
-	}
 }

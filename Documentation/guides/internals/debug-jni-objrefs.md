@@ -54,7 +54,7 @@ In particular, `adb logcat` has a `MissingMethodException` mentioning that a con
 with the signature `(IntPtr, JniHandleOwnership)` could not be found.
 
 If you see a `NotSupportedException` with
-[*anything else* as the inner exception](https://github.com/xamarin/xamarin-android/issues/7324),
+[*anything else* as the inner exception](https://github.com/dotnet/android/issues/7324),
 then this is *not* due to JNI object references, and the rest of this guide will not help you.
 You will need to examine the inner exception to determine the original cause of the exception.
 
@@ -149,9 +149,9 @@ To collect *complete* JNI object reference logs, your app must be "debuggable": 
 within `AndroidManifest.xml` must have the value `true`. This is typically the case for Debug configuration builds, and
 *not* for Release configuration builds. (The Google Play Store requires that submitted apps *not* be debuggable.)
 
-Enable JNI Global Reference log collection by setting the `debug.mono.log` system property to a value which contains `gref`:
+Enable JNI Global Reference log collection by setting the `debug.dotnet.log` system property to a value which contains `gref`:
 
-	adb shell setprop debug.mono.log gref
+	adb shell setprop debug.dotnet.log gref
 
 Then run your app again and trigger the crash. Once tha app has exited, run:
 
@@ -160,11 +160,11 @@ Then run your app again and trigger the crash. Once tha app has exited, run:
 where `@PACKAGE-NAME@` is the value of the [`/manifest/@package` attribute](https://developer.android.com/guide/topics/manifest/manifest-element#package)
 within `AndroidManifest.xml`. This is generally the filename before `-Signed.apk` in your `bin` directory.
 
-To collect JNI Local Reference logs, the `debug.mono.log` system property should contain `lref`, and the required file is `lrefs.txt`.
+To collect JNI Local Reference logs, the `debug.dotnet.log` system property should contain `lref`, and the required file is `lrefs.txt`.
 
 Both Local and Global JNI Object References can be collected at the same time:
 
-	adb shell setprop debug.mono.log lref,gref
+	adb shell setprop debug.dotnet.log lref,gref
 
 	# run the app, then
 
@@ -177,10 +177,10 @@ Both Local and Global JNI Object References can be collected at the same time:
 
 Complete JNI Object Reference log collection can only be done for debuggable apps. If your app isn't debuggable,
 or the crash doesn't reproduce in a debuggable app, then you will need to try for "Best Effort" collection by
-setting the `debug.mono.log` system property to contain either/both `gref+` for Global References and
+setting the `debug.dotnet.log` system property to contain either/both `gref+` for Global References and
 `lref+` for Local References:
 
-	adb shell setprop debug.mono.log lref+,gref+
+	adb shell setprop debug.dotnet.log lref+,gref+
 
 Then, begin collecting `adb logcat` *before* launching your app:
 
@@ -192,7 +192,7 @@ Once your app crashes, `log.txt` will contain the JNI Object Reference logs.
 *However*, the output *may* be incomplete. It is not unusual for information to be missing, because *so much*
 data is written to `adb logcat`.
 
-The `lref+` and `gref+` values to the `debug.mono.log` system property *also* create `lrefs.txt` and `grefs.txt` files.
+The `lref+` and `gref+` values to the `debug.dotnet.log` system property *also* create `lrefs.txt` and `grefs.txt` files.
 However, those files will not be readable if the app is not debuggable.
 
 
@@ -339,7 +339,7 @@ java_vm_ext.cc:579] JNI DETECTED ERROR IN APPLICATION: JNI ERROR (app bug): jobj
 Of note is that the abort message mentions *local*, in "an invalid local reference". This is a sign that we need to collect the JNI Local Reference logs:
 
 ```sh
-adb shell setprop debug.mono.log lref,gref
+adb shell setprop debug.dotnet.log lref,gref
 
 # run the app…
 

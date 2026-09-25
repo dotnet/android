@@ -23,7 +23,7 @@ namespace Xamarin.Android.Tools.Tests;
 ///   - MapAdbStateToStatus: used internally by ParseAdbDevicesOutput, public for extensibility
 ///   - ListDevicesAsync: used by MAUI DevTools Adb provider (Providers/Android/Adb.cs)
 ///   - WaitForDeviceAsync: used by MAUI DevTools Adb provider
-///   - WaitForPackageManagerAsync: used by dotnet/android FastDeploy2 install recovery
+///   - WaitForPackageManagerAsync: used by dotnet/android FastDeploy install recovery
 ///   - StopEmulatorAsync: used by MAUI DevTools Adb provider
 ///   - GetEmulatorAvdNameAsync: internal, used by ListDevicesAsync only
 /// </summary>

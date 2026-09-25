@@ -69,7 +69,7 @@ steps:
     CONFIGURATION: ${{ parameters.configuration }}
 
 - task: DotNetCoreCLI@2
-  displayName: prepare .NET workloads
+  displayName: restore CoreCLR Android runtime packs
   inputs:
     projects: ${{ parameters.xaSourcePath }}/src/workloads/workloads.csproj
     arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/workloads.binlog

@@ -36,13 +36,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		public interface IApplicationConfig
-		{};
-
 		// This must be identical to the ApplicationConfig structure in src/native/clr/include/xamarin-app.hh
-		public sealed class ApplicationConfig_CoreCLR : IApplicationConfig
+		public sealed class ApplicationConfig
 		{
-			public bool   uses_assembly_preload;
 			public bool   jni_add_native_method_registration_attribute_present;
 			public bool   marshal_methods_enabled;
 			public bool   ignore_split_configs;
@@ -63,49 +59,15 @@ namespace Xamarin.Android.Build.Tests
 			public bool   have_assembly_store;
 		}
 
-		const uint ApplicationConfigFieldCount_CoreCLR = 19;
+		const uint ApplicationConfigFieldCount_CoreCLR = 18;
 
-		// This must be identical to the ApplicationConfig structure in src/native/mono/xamarin-app-stub/xamarin-app.hh
-		public sealed class ApplicationConfig_MonoVM : IApplicationConfig
-		{
-			public bool   uses_mono_llvm;
-			public bool   uses_mono_aot;
-			public bool   aot_lazy_load;
-			public bool   uses_assembly_preload;
-			public bool   broken_exception_transitions;
-			public bool   jni_add_native_method_registration_attribute_present;
-			public bool   have_runtime_config_blob;
-			public bool   have_assemblies_blob;
-			public bool   marshal_methods_enabled;
-			public bool   ignore_split_configs;
-			public byte   bound_stream_io_exception_type;
-			public uint   package_naming_policy;
-			public uint   environment_variable_count;
-			public uint   system_property_count;
-			public uint   number_of_assemblies_in_apk;
-			public uint   bundled_assembly_name_width;
-			public uint   number_of_dso_cache_entries;
-			public uint   number_of_aot_cache_entries;
-			public uint   number_of_shared_libraries;
-			public uint   android_runtime_jnienv_class_token;
-			public uint   jnienv_initialize_method_token;
-			public uint   jnienv_registerjninatives_method_token;
-			public uint   jni_remapping_replacement_type_count;
-			public uint   jni_remapping_replacement_method_index_entry_count;
-			public uint   mono_components_mask;
-			public string android_package_name = String.Empty;
-		}
-
-		// This is shared between MonoVM and CoreCLR hosts, not used by NativeAOT
-		public sealed class DSOCacheEntry64
+		public sealed class DSOCacheEntry
 		{
 			// Hardcoded, by design - we want to know if there are any changes in the
 			// native assembly layout.
-			public const uint NativeSize_CoreCLR = 24;
-			public const uint NativeSize_MonoVM = 40;
+			public const uint NativeSize = 24;
 
-			public ulong hash;
-			public ulong real_name_hash;
+			public uint hash;
 			public bool ignore;
 			public bool is_jni_library;
 			public string name; // real structure has an index here, we fetch the string to make it easier
@@ -126,8 +88,6 @@ namespace Xamarin.Android.Build.Tests
 			public List<JniPreloadsEntry> Entries;
 			public string SourceFile;
 		}
-
-		const uint ApplicationConfigFieldCount_MonoVM = 26;
 
 		const string ApplicationConfigSymbolName = "application_config";
 		const string AppEnvironmentVariablesSymbolName = "app_environment_variables";
@@ -160,19 +120,6 @@ namespace Xamarin.Android.Build.Tests
 		static readonly HashSet <string> expectedUInt64Types = new HashSet <string> (StringComparer.Ordinal) {
 			".xword",
 			".quad",
-		};
-
-		static readonly string[] requiredSharedLibrarySymbolsMonoVM = {
-			AppEnvironmentVariablesSymbolName,
-			"app_system_properties",
-			ApplicationConfigSymbolName,
-			"format_tag",
-			"map_modules",
-			"map_module_count",
-			"java_type_count",
-			"map_java_hashes",
-			"map_java",
-			"mono_aot_mode_name",
 		};
 
 		static readonly string[] requiredSharedLibrarySymbolsCoreCLR = {
@@ -260,30 +207,21 @@ namespace Xamarin.Android.Build.Tests
 
 		// Reads all the environment files, makes sure they all have identical contents in the
 		// `application_config` structure and returns the config if the condition is true
-		public static IApplicationConfig ReadApplicationConfig (List<EnvironmentFile> envFilePaths, AndroidRuntime runtime)
+		public static ApplicationConfig ReadApplicationConfig (List<EnvironmentFile> envFilePaths)
 		{
 			if (envFilePaths.Count == 0)
 				return null;
 
-			IApplicationConfig app_config = ReadApplicationConfig (envFilePaths [0], runtime);
+			ApplicationConfig app_config = ReadApplicationConfig (envFilePaths [0]);
 
 			for (int i = 1; i < envFilePaths.Count; i++) {
-				AssertApplicationConfigIsIdentical (app_config, envFilePaths [0].Path, ReadApplicationConfig (envFilePaths[i], runtime), envFilePaths[i].Path, runtime);
+				AssertApplicationConfigIsIdentical (app_config, envFilePaths [0].Path, ReadApplicationConfig (envFilePaths[i]), envFilePaths[i].Path);
 			}
 
 			return app_config;
 		}
 
-		static IApplicationConfig ReadApplicationConfig (EnvironmentFile envFile, AndroidRuntime runtime)
-		{
-			return runtime switch {
-				AndroidRuntime.MonoVM => ReadApplicationConfig_MonoVM (envFile),
-				AndroidRuntime.CoreCLR => ReadApplicationConfig_CoreCLR (envFile),
-				_ => throw new InvalidOperationException ($"Unsupported runtime '{runtime}'")
-			};
-		}
-
-		static IApplicationConfig ReadApplicationConfig_CoreCLR (EnvironmentFile envFile)
+		static ApplicationConfig ReadApplicationConfig (EnvironmentFile envFile)
 		{
 			NativeAssemblyParser parser = CreateAssemblyParser (envFile);
 
@@ -294,7 +232,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (appConfigSymbol.Size != 0, $"{ApplicationConfigSymbolName} size as specified in the '.size' directive must not be 0");
 
 			var pointers = new List <string> ();
-			var ret = new ApplicationConfig_CoreCLR ();
+			var ret = new ApplicationConfig ();
 			uint fieldCount = 0;
 			string[] field;
 
@@ -306,97 +244,92 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				switch (fieldCount) {
-					case 0: // uses_assembly_preload: bool / .byte
-						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.uses_assembly_preload = ConvertFieldToBool ("uses_assembly_preload", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 1: // jni_add_native_method_registration_attribute_present: bool / .byte
+					case 0: // jni_add_native_method_registration_attribute_present: bool / .byte
 						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
 						ret.jni_add_native_method_registration_attribute_present = ConvertFieldToBool ("jni_add_native_method_registration_attribute_present", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 2: // marshal_methods_enabled: bool / .byte
+					case 1: // marshal_methods_enabled: bool / .byte
 						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
 						ret.marshal_methods_enabled = ConvertFieldToBool ("marshal_methods_enabled", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 3: // ignore_split_configs: bool / .byte
+					case 2: // ignore_split_configs: bool / .byte
 						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
 						ret.ignore_split_configs = ConvertFieldToBool ("ignore_split_configs", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 4: // number_of_runtime_properties: uint32_t / .word | .long
+					case 3: // number_of_runtime_properties: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.number_of_runtime_properties = ConvertFieldToByte ("number_of_runtime_properties", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 5: // package_naming_policy: uint32_t / .word | .long
+					case 4: // package_naming_policy: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.package_naming_policy = ConvertFieldToUInt32 ("package_naming_policy", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 6: // environment_variable_count: uint32_t / .word | .long
+					case 5: // environment_variable_count: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.environment_variable_count = ConvertFieldToUInt32 ("environment_variable_count", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 7: // system_property_count: uint32_t / .word | .long
+					case 6: // system_property_count: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.system_property_count = ConvertFieldToUInt32 ("system_property_count", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 8: // number_of_assemblies_in_apk: uint32_t / .word | .long
+					case 7: // number_of_assemblies_in_apk: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.number_of_assemblies_in_apk = ConvertFieldToUInt32 ("number_of_assemblies_in_apk", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 9: // bundled_assembly_name_width: uint32_t / .word | .long
+					case 8: // bundled_assembly_name_width: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.bundled_assembly_name_width = ConvertFieldToUInt32 ("bundled_assembly_name_width", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 10: // number_of_dso_cache_entries: uint32_t / .word | .long
+					case 9: // number_of_dso_cache_entries: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.number_of_dso_cache_entries = ConvertFieldToUInt32 ("number_of_dso_cache_entries", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 11: // number_of_shared_libraries: uint32_t / .word | .long
+					case 10: // number_of_shared_libraries: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.number_of_shared_libraries = ConvertFieldToUInt32 ("number_of_shared_libraries", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 12: // android_runtime_jnienv_class_token: uint32_t / .word | .long
+					case 11: // android_runtime_jnienv_class_token: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.android_runtime_jnienv_class_token = ConvertFieldToUInt32 ("android_runtime_jnienv_class_token", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 13: // jnienv_initialize_method_token: uint32_t / .word | .long
+					case 12: // jnienv_initialize_method_token: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.jnienv_initialize_method_token = ConvertFieldToUInt32 ("jnienv_initialize_method_token", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 14: // jnienv_registerjninatives_method_token: uint32_t / .word | .long
+					case 13: // jnienv_registerjninatives_method_token: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.jnienv_registerjninatives_method_token = ConvertFieldToUInt32 ("jnienv_registerjninatives_method_token", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 15: // jni_remapping_replacement_type_count: uint32_t / .word | .long
+					case 14: // jni_remapping_replacement_type_count: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.jni_remapping_replacement_type_count = ConvertFieldToUInt32 ("jni_remapping_replacement_type_count", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 16: // jni_remapping_replacement_method_index_entry_count: uint32_t / .word | .long
+					case 15: // jni_remapping_replacement_method_index_entry_count: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.jni_remapping_replacement_method_index_entry_count = ConvertFieldToUInt32 ("jni_remapping_replacement_method_index_entry_count", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 17: // android_package_name: string / [pointer type]
+					case 16: // android_package_name: string / [pointer type]
 						Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						pointers.Add (field [1].Trim ());
 						break;
 
-					case 18: // have_assembly_store: bool / .byte
+					case 17: // have_assembly_store: bool / .byte
 						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
 						ret.have_assembly_store = ConvertFieldToBool ("have_assembly_store", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
@@ -411,174 +344,6 @@ namespace Xamarin.Android.Build.Tests
 			ret.android_package_name = GetStringContents (androidPackageNameSymbol, envFile, parser);
 
 			Assert.AreEqual (ApplicationConfigFieldCount_CoreCLR, fieldCount, $"Invalid 'application_config' field count in environment file '{envFile.Path}'");
-			Assert.IsFalse (String.IsNullOrEmpty (ret.android_package_name), $"Package name field in 'application_config' in environment file '{envFile.Path}' must not be null or empty");
-
-			return ret;
-		}
-
-		static IApplicationConfig ReadApplicationConfig_MonoVM (EnvironmentFile envFile)
-		{
-			NativeAssemblyParser parser = CreateAssemblyParser (envFile);
-
-			if (!parser.Symbols.TryGetValue (ApplicationConfigSymbolName, out NativeAssemblyParser.AssemblerSymbol appConfigSymbol)) {
-				Assert.Fail ($"Symbol '{ApplicationConfigSymbolName}' not found in LLVM IR file '{envFile.Path}'");
-			}
-
-			Assert.IsTrue (appConfigSymbol.Size != 0, $"{ApplicationConfigSymbolName} size as specified in the '.size' directive must not be 0");
-
-			var pointers = new List <string> ();
-			var ret = new ApplicationConfig_MonoVM ();
-			uint fieldCount = 0;
-			string[] field;
-
-			foreach (NativeAssemblyParser.AssemblerSymbolItem item in appConfigSymbol.Contents) {
-				field = GetField (envFile.Path, parser.SourceFilePath, item.Contents, item.LineNumber);
-
-				if (String.Compare (".zero", field[0], StringComparison.Ordinal) == 0) {
-					continue; // padding, we can safely ignore it
-				}
-
-				switch (fieldCount) {
-					case 0: // uses_mono_llvm: bool / .byte
-						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.uses_mono_llvm = ConvertFieldToBool ("uses_mono_llvm", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 1: // uses_mono_aot: bool / .byte
-						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.uses_mono_aot = ConvertFieldToBool ("uses_mono_aot", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 2:
-						// aot_lazy_load: bool / .byte
-						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.aot_lazy_load = ConvertFieldToBool ("aot_lazy_load", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 3: // uses_assembly_preload: bool / .byte
-						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.uses_assembly_preload = ConvertFieldToBool ("uses_assembly_preload", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 4: // broken_exception_transitions: bool / .byte
-						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.broken_exception_transitions = ConvertFieldToBool ("broken_exception_transitions", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 5: // jni_add_native_method_registration_attribute_present: bool / .byte
-						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.jni_add_native_method_registration_attribute_present = ConvertFieldToBool ("jni_add_native_method_registration_attribute_present", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 6: // have_runtime_config_blob: bool / .byte
-						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.have_runtime_config_blob = ConvertFieldToBool ("have_runtime_config_blob", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 7: // have_assemblies_blob: bool / .byte
-						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.have_assemblies_blob = ConvertFieldToBool ("have_assemblies_blob", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 8: // marshal_methods_enabled: bool / .byte
-						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.marshal_methods_enabled = ConvertFieldToBool ("marshal_methods_enabled", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 9: // ignore_split_configs: bool / .byte
-						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.ignore_split_configs = ConvertFieldToBool ("ignore_split_configs", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 10: // bound_stream_io_exception_type: byte / .byte
-						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.bound_stream_io_exception_type = ConvertFieldToByte ("bound_stream_io_exception_type", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 11: // package_naming_policy: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
-						ret.package_naming_policy = ConvertFieldToUInt32 ("package_naming_policy", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 12: // environment_variable_count: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
-						ret.environment_variable_count = ConvertFieldToUInt32 ("environment_variable_count", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 13: // system_property_count: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
-						ret.system_property_count = ConvertFieldToUInt32 ("system_property_count", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 14: // number_of_assemblies_in_apk: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
-						ret.number_of_assemblies_in_apk = ConvertFieldToUInt32 ("number_of_assemblies_in_apk", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 15: // bundled_assembly_name_width: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
-						ret.bundled_assembly_name_width = ConvertFieldToUInt32 ("bundled_assembly_name_width", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 16: // number_of_dso_cache_entries: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
-						ret.number_of_dso_cache_entries = ConvertFieldToUInt32 ("number_of_dso_cache_entries", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 17: // number_of_aot_cache_entries: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
-						ret.number_of_aot_cache_entries = ConvertFieldToUInt32 ("number_of_aot_cache_entries", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 18: // number_of_shared_libraries: uint32_t / .word | long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
-						ret.number_of_shared_libraries = ConvertFieldToUInt32 ("number_of_shared_libraries", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 19: // android_runtime_jnienv_class_token: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
-						ret.android_runtime_jnienv_class_token = ConvertFieldToUInt32 ("android_runtime_jnienv_class_token", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 20: // jnienv_initialize_method_token: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
-						ret.jnienv_initialize_method_token = ConvertFieldToUInt32 ("jnienv_initialize_method_token", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 21: // jnienv_registerjninatives_method_token: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
-						ret.jnienv_registerjninatives_method_token = ConvertFieldToUInt32 ("jnienv_registerjninatives_method_token", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 22: // jni_remapping_replacement_type_count: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
-						ret.jni_remapping_replacement_type_count = ConvertFieldToUInt32 ("jni_remapping_replacement_type_count", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 23: // jni_remapping_replacement_method_index_entry_count: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
-						ret.jni_remapping_replacement_method_index_entry_count = ConvertFieldToUInt32 ("jni_remapping_replacement_method_index_entry_count", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 24: // mono_components_mask: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
-						ret.mono_components_mask = ConvertFieldToUInt32 ("mono_components_mask", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 25: // android_package_name: string / [pointer type]
-						Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
-						pointers.Add (field [1].Trim ());
-						break;
-				}
-				fieldCount++;
-			}
-
-			Assert.AreEqual (1, pointers.Count, $"Invalid number of string pointers in 'application_config' structure in environment file '{envFile.Path}'");
-
-			NativeAssemblyParser.AssemblerSymbol androidPackageNameSymbol = GetRequiredSymbol (pointers[0], envFile, parser);
-			ret.android_package_name = GetStringContents (androidPackageNameSymbol, envFile, parser);
-
-			Assert.AreEqual (ApplicationConfigFieldCount_MonoVM, fieldCount, $"Invalid 'application_config' field count in environment file '{envFile.Path}'");
 			Assert.IsFalse (String.IsNullOrEmpty (ret.android_package_name), $"Package name field in 'application_config' in environment file '{envFile.Path}' must not be null or empty");
 
 			return ret;
@@ -605,7 +370,6 @@ namespace Xamarin.Android.Build.Tests
 		static Dictionary<string, string> ReadEnvironmentVariables (EnvironmentFile envFile, AndroidRuntime runtime)
 		{
 			return runtime switch {
-				AndroidRuntime.MonoVM => ReadEnvironmentVariables_MonoVM (envFile),
 				AndroidRuntime.CoreCLR => ReadEnvironmentVariables_CoreCLR_NativeAOT (envFile, AppEnvironmentVariablesSymbolName, AppEnvironmentVariableContentsSymbolName),
 				AndroidRuntime.NativeAOT => ReadEnvironmentVariables_CoreCLR_NativeAOT (envFile, AppEnvironmentVariablesNativeAOTSymbolName, AppEnvironmentVariableContentsNativeAOTSymbolName),
 				_ => throw new InvalidOperationException ($"Unsupported runtime '{runtime}'")
@@ -665,43 +429,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		static Dictionary<string, string> ReadEnvironmentVariables_MonoVM (EnvironmentFile envFile)
-		{
-			NativeAssemblyParser parser = CreateAssemblyParser (envFile);
-
-			if (!parser.Symbols.TryGetValue (AppEnvironmentVariablesSymbolName, out NativeAssemblyParser.AssemblerSymbol appEnvvarsSymbol)) {
-				Assert.Fail ($"Symbol '{AppEnvironmentVariablesSymbolName}' not found in LLVM IR file '{envFile.Path}'");
-			}
-
-			Assert.IsTrue (appEnvvarsSymbol.Size != 0, $"{AppEnvironmentVariablesSymbolName} size as specified in the '.size' directive must not be 0");
-
-			string[] field;
-			var pointers = new List <string> ();
-			foreach (NativeAssemblyParser.AssemblerSymbolItem item in appEnvvarsSymbol.Contents) {
-				field = GetField (envFile.Path, parser.SourceFilePath, item.Contents, item.LineNumber);
-
-				Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{parser.SourceFilePath}:{item.LineNumber}': {field [0]}. File generated from '{envFile.Path}'");
-				pointers.Add (field [1].Trim ());
-			}
-
-			var ret = new Dictionary <string, string> (StringComparer.Ordinal);
-			if (pointers.Count == 0)
-				return ret;
-
-			Assert.IsTrue (pointers.Count % 2 == 0, "Environment variable array must have an even number of elements");
-			for (int i = 0; i < pointers.Count; i += 2) {
-				NativeAssemblyParser.AssemblerSymbol symbol = GetRequiredSymbol (pointers[i], envFile, parser);
-				string name = GetStringContents (symbol, envFile, parser);
-
-				symbol = GetRequiredSymbol (pointers[i + 1], envFile, parser);
-				string value = GetStringContents (symbol, envFile, parser, minimumLength: 0);
-
-				ret [name] = value;
-			}
-
-			return ret;
-		}
-
 		static string[] GetField (string llvmAssemblerFile, string nativeAssemblerFile, string line, ulong lineNumber)
 		{
 			string[] ret = line?.Trim ()?.Split ('\t');
@@ -727,49 +454,13 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		static void AssertApplicationConfigIsIdentical (IApplicationConfig firstAppConfig, string firstEnvFile, IApplicationConfig secondAppConfig, string secondEnvFile, AndroidRuntime runtime)
+		static void AssertApplicationConfigIsIdentical (ApplicationConfig firstAppConfig, string firstEnvFile, ApplicationConfig secondAppConfig, string secondEnvFile)
 		{
-			switch (runtime) {
-				case AndroidRuntime.MonoVM:
-					AssertApplicationConfigIsIdentical (
-						(ApplicationConfig_MonoVM)firstAppConfig,
-						firstEnvFile,
-						(ApplicationConfig_MonoVM)secondAppConfig,
-						secondEnvFile
-					);
-					break;
-
-				case AndroidRuntime.CoreCLR:
-					AssertApplicationConfigIsIdentical (
-						(ApplicationConfig_CoreCLR)firstAppConfig,
-						firstEnvFile,
-						(ApplicationConfig_CoreCLR)secondAppConfig,
-						secondEnvFile
-					);
-					break;
-
-				default:
-					throw new NotSupportedException ($"Unsupported runtime '{runtime}'");
-			}
-		}
-
-		static void AssertApplicationConfigIsIdentical (ApplicationConfig_CoreCLR firstAppConfig, string firstEnvFile, ApplicationConfig_CoreCLR secondAppConfig, string secondEnvFile)
-		{
-			Assert.AreEqual (firstAppConfig.uses_assembly_preload, secondAppConfig.uses_assembly_preload, $"Field 'uses_assembly_preload' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 			Assert.AreEqual (firstAppConfig.marshal_methods_enabled, secondAppConfig.marshal_methods_enabled, $"Field 'marshal_methods_enabled' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 			Assert.AreEqual (firstAppConfig.environment_variable_count, secondAppConfig.environment_variable_count, $"Field 'environment_variable_count' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 			Assert.AreEqual (firstAppConfig.system_property_count, secondAppConfig.system_property_count, $"Field 'system_property_count' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 			Assert.AreEqual (firstAppConfig.android_package_name, secondAppConfig.android_package_name, $"Field 'android_package_name' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 			Assert.AreEqual (firstAppConfig.have_assembly_store, secondAppConfig.have_assembly_store, $"Field 'have_assembly_store' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
-		}
-
-		static void AssertApplicationConfigIsIdentical (ApplicationConfig_MonoVM firstAppConfig, string firstEnvFile, ApplicationConfig_MonoVM secondAppConfig, string secondEnvFile)
-		{
-			Assert.AreEqual (firstAppConfig.uses_mono_llvm, secondAppConfig.uses_mono_llvm, $"Field 'uses_mono_llvm' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
-			Assert.AreEqual (firstAppConfig.uses_mono_aot, secondAppConfig.uses_mono_aot, $"Field 'uses_mono_aot' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
-			Assert.AreEqual (firstAppConfig.environment_variable_count, secondAppConfig.environment_variable_count, $"Field 'environment_variable_count' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
-			Assert.AreEqual (firstAppConfig.system_property_count, secondAppConfig.system_property_count, $"Field 'system_property_count' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
-			Assert.AreEqual (firstAppConfig.android_package_name, secondAppConfig.android_package_name, $"Field 'android_package_name' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 		}
 
 		// TODO: remove the default from the `runtime` parameter once all tests are updated
@@ -898,7 +589,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				string[] requiredSharedLibrarySymbols = runtime switch {
-					AndroidRuntime.MonoVM  => requiredSharedLibrarySymbolsMonoVM,
 					AndroidRuntime.CoreCLR => requiredSharedLibrarySymbolsCoreCLR,
 					_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 				};
@@ -928,24 +618,18 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		public static List<JniPreloads> ReadJniPreloads (List<EnvironmentFile> envFilePaths, uint expectedDsoCacheEntryCount, AndroidRuntime runtime)
+		public static List<JniPreloads> ReadJniPreloads (List<EnvironmentFile> envFilePaths, uint expectedDsoCacheEntryCount)
 		{
 			var ret = new List<JniPreloads> ();
 
 			foreach (EnvironmentFile envFile in envFilePaths) {
-				JniPreloads preloads = runtime switch {
-					AndroidRuntime.CoreCLR => ReadJniPreloads_CoreCLR (envFile, expectedDsoCacheEntryCount),
-					AndroidRuntime.MonoVM  => ReadJniPreloads_MonoVM (envFile, expectedDsoCacheEntryCount),
-					_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
-				};
-
-				ret.Add (preloads);
+				ret.Add (ReadJniPreloads (envFile, expectedDsoCacheEntryCount));
 			}
 
 			return ret;
 		}
 
-		delegate List<DSOCacheEntry64> ReadDsoCacheFn (NativeAssemblyParser parser, EnvironmentFile envFile, NativeAssemblyParser.AssemblerSymbol dsoCacheSym);
+		delegate List<DSOCacheEntry> ReadDsoCacheFn (NativeAssemblyParser parser, EnvironmentFile envFile, NativeAssemblyParser.AssemblerSymbol dsoCacheSym);
 
 		static JniPreloads ReadJniPreloads_Common (EnvironmentFile envFile, uint expectedDsoCacheEntryCount, uint dsoCacheEntrySize, ReadDsoCacheFn dsoReader)
 		{
@@ -958,7 +642,7 @@ namespace Xamarin.Android.Build.Tests
 			uint calculatedDsoCacheEntrySize = (uint)(dsoCacheEntrySize * expectedDsoCacheEntryCount);
 			Assert.IsTrue (calculatedDsoCacheEntrySize == dsoCache.Size, $"Calculated DSO cache size should be {dsoCache.Size} but was {calculatedDsoCacheEntrySize} instead.");
 
-			List<DSOCacheEntry64> dsoCacheEntries = dsoReader (parser, envFile, dsoCache);
+			List<DSOCacheEntry> dsoCacheEntries = dsoReader (parser, envFile, dsoCache);
 			Assert.IsTrue ((uint)dsoCacheEntries.Count == expectedDsoCacheEntryCount, $"DSO cache read from the source should have {expectedDsoCacheEntryCount} entries, it had {dsoCacheEntries.Count} instead.");
 
 			NativeAssemblyParser.AssemblerSymbol dsoJniPreloadsIdxStride = GetNonEmptyRequiredSymbol (parser, envFile, DsoJniPreloadsIdxStrideSymbolName);
@@ -1019,88 +703,12 @@ namespace Xamarin.Android.Build.Tests
 			return symbol;
 		}
 
-		static JniPreloads ReadJniPreloads_MonoVM (EnvironmentFile envFile, uint expectedDsoCacheEntryCount)
+		static JniPreloads ReadJniPreloads (EnvironmentFile envFile, uint expectedDsoCacheEntryCount)
 		{
 			return ReadJniPreloads_Common (
 				envFile,
 				expectedDsoCacheEntryCount,
-				DSOCacheEntry64.NativeSize_MonoVM,
-				(NativeAssemblyParser parser, EnvironmentFile envFile, NativeAssemblyParser.AssemblerSymbol dsoCacheSym) => {
-					return ReadDsoCache64_MonoVM (envFile, parser, dsoCacheSym);
-				}
-			);
-		}
-
-		static List<DSOCacheEntry64> ReadDsoCache64_MonoVM (EnvironmentFile envFile, NativeAssemblyParser parser, NativeAssemblyParser.AssemblerSymbol dsoCache)
-		{
-			var ret = new List<DSOCacheEntry64> ();
-
-			// This follows a VERY strict format, by design. If anything changes in the generated source this is supposed
-			// to break.
-			//
-			// The code is almost identical to that of CoreCLR, but it is kept completely separate on purpose - it makes the code simpler, since
-			// it doesn't have to account for the small differences between runtimes and it also provides for independence of the two runtime
-			// hosts.
-			const int itemsPerEntry = 7; // Includes padding entries
-			for (int i = 0; i < dsoCache.Contents.Count; i += itemsPerEntry) {
-				ulong lineNumber;
-				string value;
-				int index = i;
-
-				// uint64_t hash
-				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt64Types);
-				ulong hash = ConvertFieldToUInt64 ("hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
-
-				// uint64_t real_name_hash
-				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt64Types);
-				ulong real_name_hash = ConvertFieldToUInt64 ("real_name_hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
-
-				// bool ignore
-				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, ".byte");
-				bool ignore = ConvertFieldToBool ("ignore", envFile.Path, parser.SourceFilePath, lineNumber, value);
-
-				// bool is_jni_library
-				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, ".byte");
-				bool is_jni_library = ConvertFieldToBool ("is_jni_library", envFile.Path, parser.SourceFilePath, lineNumber, value);
-
-				// padding, 6 bytes
-				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index, ".zero");
-				uint padding1 = ConvertFieldToUInt32 ("padding1", envFile.Path, parser.SourceFilePath, lineNumber, value);
-				Assert.IsTrue (padding1 == 6, $"Padding field #1 at index {index} of symbol '{dsoCache.Name}' should have had a value of 6, instead it was set to {padding1}");
-				index++;
-
-				// .pointer_type SYMBOL_NAME
-				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt64Types);
-				NativeAssemblyParser.AssemblerSymbol dsoLibNameSymbol = GetRequiredSymbol (value, envFile, parser);
-
-				// void* handle
-				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index, expectedUInt64Types);
-				ulong handle = ConvertFieldToUInt64 ("handle", envFile.Path, parser.SourceFilePath, lineNumber, value);
-				Assert.IsTrue (handle == 0, $"Handle field at index {index} of symbol '{dsoCache.Name}' should have had a value of 0, instead it was set to {handle}");
-
-				string name = GetStringContents (dsoLibNameSymbol, envFile, parser);
-
-				ret.Add (
-					new DSOCacheEntry64 {
-						hash = hash,
-						real_name_hash = real_name_hash,
-						ignore = ignore,
-						is_jni_library = is_jni_library,
-						name = name,
-						handle = IntPtr.Zero,
-					}
-				);
-			}
-
-			return ret;
-		}
-
-		static JniPreloads ReadJniPreloads_CoreCLR (EnvironmentFile envFile, uint expectedDsoCacheEntryCount)
-		{
-			return ReadJniPreloads_Common (
-				envFile,
-				expectedDsoCacheEntryCount,
-				DSOCacheEntry64.NativeSize_CoreCLR,
+				DSOCacheEntry.NativeSize,
 				(NativeAssemblyParser parser, EnvironmentFile envFile, NativeAssemblyParser.AssemblerSymbol dsoCacheSym) => {
 					NativeAssemblyParser.AssemblerSymbol dsoNamesData = GetNonEmptyRequiredSymbol (parser, envFile, DsoNamesDataSymbolName);
 					Assert.IsTrue (dsoNamesData.Size > 0, "DSO names data must have size larger than zero");
@@ -1108,14 +716,14 @@ namespace Xamarin.Android.Build.Tests
 					string dsoNames = ReadStringBlob (envFile, dsoNamesData, parser);
 					Assert.IsTrue (dsoNames.Length > 0, "DSO names read from source mustn't be empty");
 
-					return ReadDsoCache64_CoreCLR (envFile, parser, dsoCacheSym, dsoNames);
+					return ReadDsoCache (envFile, parser, dsoCacheSym, dsoNames);
 				}
 			);
 		}
 
-		static List<DSOCacheEntry64> ReadDsoCache64_CoreCLR (EnvironmentFile envFile, NativeAssemblyParser parser, NativeAssemblyParser.AssemblerSymbol dsoCache, string dsoNamesBlob)
+		static List<DSOCacheEntry> ReadDsoCache (EnvironmentFile envFile, NativeAssemblyParser parser, NativeAssemblyParser.AssemblerSymbol dsoCache, string dsoNamesBlob)
 		{
-			var ret = new List<DSOCacheEntry64> ();
+			var ret = new List<DSOCacheEntry> ();
 
 			// This follows a VERY strict format, by design. If anything changes in the generated source this is supposed
 			// to break.
@@ -1127,7 +735,7 @@ namespace Xamarin.Android.Build.Tests
 
 				// uint32_t hash
 				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt32Types);
-				ulong hash = ConvertFieldToUInt32 ("hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
+				uint hash = ConvertFieldToUInt32 ("hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
 
 				// bool ignore
 				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, ".byte");
@@ -1160,7 +768,7 @@ namespace Xamarin.Android.Build.Tests
 
 				string name = GetStringFromBlobContents ("DSO JNI preloads", dsoNamesBlob, name_index);
 				ret.Add (
-					new DSOCacheEntry64 {
+					new DSOCacheEntry {
 						hash = hash,
 						ignore = ignore,
 						is_jni_library = is_jni_library,

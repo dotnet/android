@@ -19,6 +19,7 @@
     <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
     <WarningsAsErrors>IL2037</WarningsAsErrors>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
+    <EventSourceSupport>true</EventSourceSupport>
     <AndroidNdkDirectory></AndroidNdkDirectory>
   </PropertyGroup>
 
@@ -37,12 +38,6 @@
     <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
     <RuntimeHostConfigurationOption Include="PublishAot" Value="true" Condition=" '$(PublishAot)' == 'true' " />
     <!--
-      FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190
-      InetAccess excluded: https://github.com/dotnet/runtime/issues/73304
-      NetworkInterfaces excluded: https://github.com/dotnet/runtime/issues/75155
-    -->
-    <RuntimeHostConfigurationOption Include="EnableLLVM" Value="true" Condition=" '$(EnableLLVM)' == 'true' " />
-    <!--
       $(IncludeCategories) is set from the pipeline (e.g. -p:IncludeCategories=Intune)
       to restrict the on-device test run to a comma-separated list of NUnit [Category]
       names. Used by lanes like `Mono.Android.NET_Tests-IsAssignableFrom` which only
@@ -52,7 +47,6 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <UseMonoRuntime Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishAot)' != 'true' ">false</UseMonoRuntime>
     <TestsFlavor Condition=" '$(TestsFlavor)' == '' and '$(AndroidTypeMapImplementation)' == 'trimmable' ">CoreCLRTrimmable</TestsFlavor>
   </PropertyGroup>
 
@@ -127,16 +121,20 @@
     <Compile Include="Android.Content\SharedPreferencesTest.cs" />
     <Compile Include="Android.Graphics\NinePatchTests.cs" />
     <Compile Include="Android.OS\BundleTest.cs" />
+    <Compile Include="Android.OS\AidlProxyTests.cs" />
     <Compile Include="Android.OS\HandlerTest.cs" />
     <Compile Include="Android.Runtime\CharSequenceTest.cs" />
+    <Compile Include="Android.Runtime\ManagedObjectReferenceManagerTests.cs" />
     <Compile Include="Android.Runtime\InputStreamInvokerTest.cs" />
     <Compile Include="Android.Runtime\JavaCollectionTest.cs" />
     <Compile Include="Android.Runtime\JnienvArrayMarshaling.cs" />
+    <Compile Include="Android.Runtime\RuntimeEventSourceTests.cs" />
     <Compile Include="Android.Runtime\XmlReaderPullParserTest.cs" />
     <Compile Include="Android.Runtime\XmlReaderResourceParserTest.cs" />
     <Compile Include="Android.Views\LayoutInflaterTest.cs" />
     <Compile Include="Android.Widget\AdapterTests.cs" />
     <Compile Include="Android.Widget\CustomWidgetTests.cs" />
+    <Compile Include="Java.Interop\ActivationConstructorCacheTests.cs" />
     <Compile Include="Java.Interop\ConstructorActivationTests.cs" />
     <Compile Include="Java.Interop\ExportTests.cs" />
     <Compile Include="Java.Interop\InterfaceCollectionMarshallingTests.cs" />
@@ -145,6 +143,7 @@
     <Compile Include="Java.Interop\JavaListTest.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensionsTests.cs" />
     <Compile Include="Java.Interop\ManagedObjectProxyTests.cs" />
+    <Compile Include="Java.Interop\PeerIdentityTests.cs" />
     <Compile Include="Java.Interop\JnienvTest.cs" />
     <Compile Include="Java.Interop\RawInterfaceCollectionHolder.cs" />
     <Compile Include="Java.Interop\TrimmableTypeMapRuntimeCoverageTests.cs" />
@@ -193,6 +192,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AndroidInterfaceDescription Include="Android.OS\IAidlProxyTest.aidl" />
     <AndroidJavaSource Include="java/net/dot/android/test/*.java" />
     <AndroidJavaSource Update="java/net/dot/android/test/InterfaceCollectionFixture.java" Bind="false" />
   </ItemGroup>
@@ -294,8 +294,6 @@
     <RuntimeHostConfigurationOption Include="test_bool"    Value="true" />
     <RuntimeHostConfigurationOption Include="test_integer" Value="42" />
     <RuntimeHostConfigurationOption Include="test_string"  Value="foo" />
-    <!-- Set STARTUP_HOOKS via RuntimeHostConfigurationOption for MonoVM (read via AppContext.GetData) -->
-    <RuntimeHostConfigurationOption Include="STARTUP_HOOKS" Value="StartupHook" Condition=" '$(UseMonoRuntime)' == 'true' " />
   </ItemGroup>
 
 </Project>

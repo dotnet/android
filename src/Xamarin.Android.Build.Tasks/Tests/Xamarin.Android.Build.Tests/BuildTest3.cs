@@ -210,7 +210,7 @@ public partial class BuildTest3 : BaseTest
 			Assert.IsTrue (preloads.IndexStride == (uint)ExpectedJniPreloadIndexStride, $"JNI preloads index stride should be {ExpectedJniPreloadIndexStride}, was {preloads.IndexStride} instead. Source file: {preloads.SourceFile}");
 			Assert.IsTrue (preloads.Entries.Count == ExpectedEntryCount, $"JNI preloads index entry count should be {ExpectedEntryCount}, was {preloads.Entries.Count} instead. Source file: {preloads.SourceFile}");
 
-			// DSO cache entries are sorted based on their **mutated name's** 64-bit xxHash, which
+			// DSO cache entries are sorted based on their name's CRC32 hash, which
 			// won't change but builds may add/remove libraries and, thus, change the indexes after
 			// sorting. For that reason we don't verify the index values and use them just for reporting.
 			//
@@ -274,13 +274,9 @@ public partial class BuildTest3 : BaseTest
 			true
 		);
 
-		EnvironmentHelper.IApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles, runtime);
-		uint numberOfDsoCacheEntries = runtime switch {
-			AndroidRuntime.MonoVM  => ((EnvironmentHelper.ApplicationConfig_MonoVM)app_config).number_of_dso_cache_entries,
-			AndroidRuntime.CoreCLR => ((EnvironmentHelper.ApplicationConfig_CoreCLR)app_config).number_of_dso_cache_entries,
-			_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
-		};
+		EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
+		uint numberOfDsoCacheEntries = app_config.number_of_dso_cache_entries;
 
-		return EnvironmentHelper.ReadJniPreloads (envFiles, numberOfDsoCacheEntries, runtime);
+		return EnvironmentHelper.ReadJniPreloads (envFiles, numberOfDsoCacheEntries);
 	}
 }

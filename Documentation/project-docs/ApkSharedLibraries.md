@@ -6,9 +6,8 @@ have different purposes and come from different sources:
 
   1. .NET PAL (Platform Abstraction Layer), used by various Base Class Library
      assemblies.
-  2. .NET runtime (`libmonosgen-2.0.so` containing the Mono VM)
-  3. AOT images (`libaot*.so`, containing pre-JITed **data** which is loaded by
-     MonoVM at runtime and processed to turn into executable code)
+  2. .NET runtime
+  3. ReadyToRun images
   4. .NET for Android runtime and support libraries
   5. .NET for Android data payload libraries
 
@@ -70,18 +69,16 @@ will become a requirement for submission to the Play Store.  This made us suspec
 be actually verified to be valid ELF images at some point and we decided to proactively turn our data files shipped in
 those directories into actual ELF shared libraries.  The way it is done is described in the following section.
 
-## Data payload stub library
+## Discrete data payload stub library
 
-> **Note:** there are currently two payload-library layouts. The **MonoVM** layout described in this section
-> (a stub with a non-loadable `payload` section, located by scanning the APK ZIP and `mmap`ed by hand) and the
-> **CoreCLR** layout (a real shared library loaded via `dlopen()`+`dlsym()`), described in
-> [CoreCLR: dlopen-based payload library](#coreclr-dlopen-based-payload-library). Everything below this note
-> describes the MonoVM layout unless stated otherwise.
+> **Note:** this layout is used for discrete managed payload files.
+> Assembly stores use a loadable shared library instead, as described
+> in [Assembly store payload library](#assembly-store-payload-library).
 
 ELF binaries consist of a number of sections, which contain code, data (read-only and read-write), debug symbols etc.
 However, the ELF specification doesn't dictate names of any of those sections and, thus, developers are free to lay out
 ELF binaries any way they see fit, as long as the binary conforms to the ELF specification and the operating system
-requirements.  This gave us the idea of placing our data files (assemblies, assembly stores, debug data, config files etc)
+requirements.  This gave us the idea of placing discrete data files (assemblies, debug data, config files etc)
 in a custom section inside the ELF image.  The resulting file would pass any verification Android will perform at some
 point and, at the same time, it won't slow down our operation because we can still load data directly from the shared
 library (by using the `mmap(2)` Unix call) without having to load the ELF image into memory.
@@ -100,13 +97,9 @@ One downside of this approach is that if one were to run the `llvm-strip` or `st
 shared libray, the `payload` section (as it uses a "non-standard" name) would be considered by the strip utility
 to be unnecessary and summarily removed.
 
-The layout described above (a non-loadable `payload` section that the runtime finds by parsing the ELF section
-headers itself) is used by the **MonoVM** runtime, which also locates the wrapper library by scanning the APK/AAB
-ZIP central directory and then `mmap`s it.
+### Assembly store payload library
 
-### CoreCLR: dlopen-based payload library
-
-The **CoreCLR** runtime uses a different, simpler mechanism.  Its prebuilt native host (`libmonodroid.so`) is
+The runtime uses a different, simpler mechanism for assembly stores. Its prebuilt native host (`libmonodroid.so`) is
 shared by every application and build configuration, so it cannot rely on a baked-in `DT_NEEDED` dependency on the
 assembly store (Debug/FastDev builds don't ship one).  Instead, the assembly store wrapper library is produced so
 that the store payload lives in a **loadable** ELF section (`SHF_ALLOC`, covered by a `PT_LOAD` segment) that is
@@ -114,34 +107,32 @@ pointed at by an exported dynamic symbol named `_assembly_store`.  At runtime th
 `dlopen("libassembly-store.so", …)` followed by `dlsym(handle, "_assembly_store")` and lets the dynamic linker
 locate and map the payload out of the APK — there is no ZIP scanning and no manual ELF section-header parsing.
 
-Because the section is allocatable and referenced by a dynamic symbol, this layout survives `strip`/`llvm-strip`,
-unlike the MonoVM `payload` section described above.
+Because the section is allocatable and referenced by a dynamic symbol, this layout survives `strip`/`llvm-strip`.
 
 This wrapper is produced by
 [`DlopenAssemblyStoreGenerator`](../../src/Xamarin.Android.Build.Tasks/Utilities/DlopenAssemblyStoreGenerator.cs)
-(rather than `DSOWrapperGenerator`), which assembles a tiny `.incbin` stub with `llvm-mc` and links it into a
+(rather than the discrete-payload `DSOWrapperGenerator`), which assembles a tiny `.incbin` stub with `llvm-mc` and links it into a
 shared object with `ld` (no `llvm-objcopy` and no clang are involved).  The section is still named `payload`, so
-the extraction command (`llvm-objcopy --dump-section=payload=…`) shown below works for both layouts; the two
-layouts are compared in detail in [Layout of the CoreCLR (dlopen) payload library](#layout-of-the-coreclr-dlopen-payload-library).
+the extraction command (`llvm-objcopy --dump-section=payload=…`) shown below works for both layouts.
 
-### Layout of the MonoVM (stub) payload library
+### Layout of the discrete (stub) payload library
 
-> **Note:** the sample output in this section is the MonoVM stub layout, produced by `DSOWrapperGenerator`.
+> **Note:** the sample output in this section is the discrete payload layout, produced by `DSOWrapperGenerator`.
 > Its `payload` section is **non-loadable** (no `A` flag, `Address` `0`) and there is no `_assembly_store`
-> dynamic symbol. For the CoreCLR layout see the [next section](#layout-of-the-coreclr-dlopen-payload-library).
+> dynamic symbol. For the assembly store layout see the [next section](#layout-of-the-assembly-store-payload-library).
 
 In order to examine content of our "payload" ELF shared library, one can run the `llvm-readelf` utility which is
 shipped with the Android NDK (and also part of native developer tools on macOS and Linux distributions which have
 the LLVM Clang toolchain installed), or the `readelf` utility which is part of GNU binutils.
 
-File used in the samples below is the `.NET for Android` assembly store, wrapped in an ELF image for the Arm64
+File used in the samples below is a discrete managed assembly, wrapped in an ELF image for the Arm64
 (`AArch64`) architecture.
 
 The first command verifies that the file is a valid ELF image and shows the header information, including the
 target platform/abi/machine:
 
 ```shell
-$ llvm-readelf --file-header libassembly-store.so
+$ llvm-readelf --file-header lib_Test.dll.so
 ELF Header:
   Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
   Class:                             ELF64
@@ -168,7 +159,7 @@ The second command lists the sections contained within the ELF image, their alig
 into the file where the sections begin:
 
 ```shell
-$ llvm-readelf --section-headers libassembly-store.so
+$ llvm-readelf --section-headers lib_Test.dll.so
 There are 11 section headers, starting at offset 0xcf648:
 
 Section Headers:
@@ -201,7 +192,7 @@ shared library.
 In order to extract payload from the ELF image, one can use the following command:
 
 ```shell
-$ llvm-objcopy --dump-section=payload=payload.bin libassembly-store.so
+$ llvm-objcopy --dump-section=payload=payload.bin lib_Test.dll.so
 $ ls -gG payload.bin
 -rw-rw-r-- 1 833095 Sep 12 11:32 payload.bin
 ```
@@ -214,18 +205,15 @@ $ printf "%d\n" 0x0cb647
 833095
 ```
 
-In this case, the payload file is an assembly store, which should have its first 4 bytes read
-`XABA`, we can verify this with the following command:
+The extracted payload should match the original assembly:
 
 ```shell
-$ hexdump -c -n 4 payload.bin
-0000000   X   A   B   A
-0000004
+$ cmp payload.bin Test.dll
 ```
 
-### Layout of the CoreCLR (dlopen) payload library
+### Layout of the assembly store payload library
 
-The CoreCLR wrapper differs from the MonoVM stub in two ways that matter to the runtime:
+The assembly store wrapper differs from the discrete payload stub in two ways that matter to the runtime:
 
   1. The `payload` section is **allocatable** (`SHF_ALLOC`, shown as the `A` flag) and is assigned a
      virtual address, so it is covered by a `PT_LOAD` program header and mapped into memory by the
@@ -234,7 +222,7 @@ The CoreCLR wrapper differs from the MonoVM stub in two ways that matter to the 
      can retrieve the payload address with a single `dlsym()` call.
 
 The section header listing shows the `payload` section carrying the `A` flag and a non-zero address (compare
-with the MonoVM listing above, where `payload` has no flags and address `0`):
+with the discrete payload listing above, where `payload` has no flags and address `0`):
 
 ```shell
 $ llvm-readelf --section-headers libassembly-store.so
@@ -278,9 +266,9 @@ Symbol table '.dynsym' contains 2 entries:
 
 (The offsets and sizes above come from a tiny sample payload; a real assembly store's `payload` section will
 be much larger, but the flags, `PT_LOAD` membership and the `_assembly_store` symbol are what identify a valid
-CoreCLR wrapper.)
+assembly store wrapper.)
 
-Extraction works the same as for the MonoVM layout, since the section is still called `payload`:
+Extraction works the same as for the discrete payload layout, since the section is still called `payload`:
 
 ```shell
 $ llvm-objcopy --dump-section=payload=payload.bin libassembly-store.so

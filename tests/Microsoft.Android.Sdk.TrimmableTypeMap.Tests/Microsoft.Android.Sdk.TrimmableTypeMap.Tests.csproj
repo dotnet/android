@@ -25,10 +25,12 @@
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
+    <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="$(MicrosoftNETILLinkPackageVersion)" PrivateAssets="all" GeneratePathProperty="true" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.Android.Build.Tasks\Microsoft.Android.Build.Tasks.csproj" />
     <ProjectReference Include="TestAttributeFixtures\TestAttributeFixtures.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
@@ -42,6 +44,10 @@
     <ProjectReference Include="LookalikeConstructorTypes\LookalikeConstructorTypes.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="ILLinkPath" Value="$(PkgMicrosoft_NET_ILLink_Tasks)\tools\net\illink.dll" />
   </ItemGroup>
 
   <!-- Copy TestFixtures output to our output directory so tests can find it -->

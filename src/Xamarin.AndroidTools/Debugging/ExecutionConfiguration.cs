@@ -44,7 +44,7 @@ namespace Xamarin.AndroidTools.Debugging
 		public DebuggerOptions Debugger { get; private set; }
 
 		/// <summary>
-		/// Gets or sets a value indicating whether Java debugging is allowed. Defaults to true, but will be available to be toggled off via -p:_AndroidAllowJavaDebugging=false.
+		/// Gets or sets a value indicating whether Java debugging is allowed. Defaults to true.
 		/// </summary>
 		public bool AllowJavaDebugging { get; set; } = true;
 

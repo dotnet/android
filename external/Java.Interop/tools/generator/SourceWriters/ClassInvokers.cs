@@ -7,42 +7,6 @@ using Xamarin.SourceWriter;
 
 namespace generator.SourceWriters
 {
-	public class ClassHandleGetter : PropertyWriter
-	{
-		// internal static new IntPtr class_ref {
-		//   get { return _members.JniPeerType.PeerReference.Handle; }
-		// }
-		public ClassHandleGetter (bool requireNew)
-		{
-			Name = "class_ref";
-			PropertyType = TypeReferenceWriter.IntPtr;
-
-			IsInternal = true;
-			IsStatic = true;
-			IsShadow = requireNew;
-
-			HasGet = true;
-			GetBody.Add ("return _members.JniPeerType.PeerReference.Handle;");
-		}
-	}
-
-	public class InterfaceHandleGetter : PropertyWriter
-	{
-		// static IntPtr java_class_ref {
-		//   get { return _members.JniPeerType.PeerReference.Handle; }
-		// }
-		public InterfaceHandleGetter (string members)
-		{
-			Name = "java_class_ref";
-			PropertyType = TypeReferenceWriter.IntPtr;
-
-			IsStatic = true;
-
-			HasGet = true;
-			GetBody.Add ($"return {members}.JniPeerType.PeerReference.Handle;");
-		}
-	}
-
 	public class JniPeerMembersGetter : PropertyWriter
 	{
 		// [DebuggerBrowsable (DebuggerBrowsableState.Never)]
@@ -94,7 +58,7 @@ namespace generator.SourceWriters
 		// [DebuggerBrowsable (DebuggerBrowsableState.Never)]
 		// [EditorBrowsable (EditorBrowsableState.Never)]
 		// protected override IntPtr ThresholdClass {
-		// 	get { return class_ref; }
+		// 	get { return _members.JniPeerType.PeerReference.Handle; }
 		// }
 		public InterfaceThresholdClassGetter (string getExpression)
 		{

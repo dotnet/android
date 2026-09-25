@@ -297,10 +297,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>当前不支持同时使用快速部署和 Android 应用程序包。请使用快速部署进行调试配置，使用 Android 应用程序包进行发布配置。</value>
     <comment>The following are literal names and should not be translated: Android App Bundles</comment>
   </data>
-  <data name="XA0119_AOT" xml:space="preserve">
-    <value>建议不要同时使用快速部署和 AOT。请对调试配置使用快速部署，对发布配置使用 AOT。</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
-  </data>
   <data name="XA0119_LinkMode" xml:space="preserve">
     <value>建议不要同时使用快速部署和链接器。请对调试配置使用快速部署，对发布配置使用链接器。</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
@@ -308,10 +304,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
   <data name="XA0119_LinkTool" xml:space="preserve">
     <value>建议不要同时使用快速部署和代码 Shrinker。请对调试配置使用快速部署，对发布配置使用代码 Shrinker。</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
-  </data>
-  <data name="XA0119_Interpreter" xml:space="preserve">
-    <value>禁用解释器；不支持同时使用解释器和 AOT。使用解释器在调试配置和 AOT for Release 配置中进行热重载支持。</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
   </data>
   <data name="XA0119_ReadyToRun" xml:space="preserve">
     <value>不建议同时使用快速部署和 ReadyToRun。调试配置请使用快速部署，发布配置请使用 ReadyToRun。</value>
@@ -469,10 +461,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>已不支持 DX DEX 编译器。请在 Visual Studio 项目属性页中将 DEX 编译器设置为 "d8"，或者在文本编辑器中编辑项目文件，并将 "AndroidDexTool" MSBuild 属性设置为 "d8"。</value>
     <comment>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</comment>
   </data>
-  <data name="XA1025" xml:space="preserve">
-    <value>"AndroidAotMode" MSBuild 属性的实验性“混合”值当前与 armeabi-v7a 目标 ABI 不兼容。若要继续使用 "AndroidAotMode" 的实验性“混合”值，请在 Visual Studio 项目属性页中取消选择 armeabi-v7a 目标 ABI，或在文本编辑器中编辑项目文件，并从 "AndroidSupportedAbis' MSBuild" 属性中删除 "armeabi-v7a"。</value>
-    <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
-  </data>
   <data name="XA1027" xml:space="preserve">
     <value>"EnableProguard" MSBuild 属性设置为 "true"，并且 "AndroidLinkTool" MSBuild 属性为空，因此 "AndroidLinkTool" 将默认为 "proguard"。</value>
     <comment>The following are literal names and should not be translated: 'EnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
@@ -480,14 +468,6 @@ In this message, the term "binding" means a piece of generated code that makes i
   <data name="XA1028" xml:space="preserve">
     <value>"AndroidEnableProguard" MSBuild 属性设置为 "true"，并且 "AndroidLinkTool" MSBuild 属性为空，因此 "AndroidLinkTool" 将默认为 "proguard"。</value>
     <comment>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
-  </data>
-  <data name="XA1029" xml:space="preserve">
-    <value>"AotAssemblies" MSBuild 属性已弃用。在文本编辑器中编辑项目文件以删除此属性，并改用 "RunAOTCompilation" MSBuild 属性。</value>
-    <comment>The following are literal names and should not be translated: 'AotAssemblies', 'RunAOTCompilation'</comment>
-  </data>
-  <data name="XA1030" xml:space="preserve">
-    <value>仅当启用剪裁时，才支持 “RunAOTCompilation” MSBuild 属性。在文本编辑器中编辑项目文件，以将此生成配置的 “PublishTrimmed” 设置为 “true”。</value>
-    <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
   </data>
   <data name="XA1034" xml:space="preserve">
     <value>你的项目引用了 "{0}"，它使用 `_Microsoft.Android.Resource.Designer` 程序集，但未启用此功能。请在项目文件中将 `AndroidUseDesignerAssembly` MSBuild 属性设置为 "true"。</value>
@@ -504,6 +484,11 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
 {0} - The minimum SDK version number
 {1} - The SupportedOSPlatformVersion property value</comment>
+  </data>
+  <data name="XA1037" xml:space="preserve">
+    <value>不支持的 @(Reference) 项: {0}</value>
+    <comment>The following are literal names and should not be translated: @(Reference)
+{0} - The unsupported reference item</comment>
   </data>
   <data name="XA2000" xml:space="preserve">
     <value>在程序集 {0} 中检测到使用了 AppDomain.CreateDomain()。.NET 6 及更高版本将仅支持单个 AppDomain，因此，.NET 6 发布后，将无法再在 .NET for Android 中使用此 API。</value>
@@ -557,14 +542,6 @@ In this message, the term "binding" means a piece of generated code that makes i
   <data name="APT2265" xml:space="preserve">
     <value>这可能是由于项目的文件名或路径中包含非 ASCII 字符。有关详细信息，请参阅 https://learn.microsoft.com/dotnet/android/messages/apt2265。</value>
     <comment>The following are literal names and should not be translated:</comment>
-  </data>
-  <data name="XA3001" xml:space="preserve">
-    <value>无法 AOT 程序集: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
-  </data>
-  <data name="XA3002" xml:space="preserve">
-    <value>AOT 模式无效: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
   </data>
   <data name="XA3004" xml:space="preserve">
     <value>Android NDK r10d 有 bug，且提供了不兼容的 x86_64 libm.so。请参阅 https://code.google.com/p/android/issues/detail?id=161422。</value>
@@ -884,22 +861,23 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
-  <data name="XA4325" xml:space="preserve">
-    <value>未能重写 R8 的托管 JNI 名称。{0}</value>
-    <comment>{0} - A sentence describing the specific failure. It is supplied by one of the XA4325_* resources.</comment>
+  <data name="XA4327" xml:space="preserve">
+    <value>无法从“{0}”提取 Java 类型映射键: {1}</value>
+    <comment>{0} - The input file path or representation name.
+{1} - The underlying parser or input/output failure. It is not localized.</comment>
   </data>
-  <data name="XA4325_AssemblyFailure" xml:space="preserve">
-    <value>无法重写程序集“{0}”中的 JNI 名称: {1}</value>
-    <comment>{0} - The path of the assembly which could not be rewritten.
-{1} - The underlying message describing why the assembly could not be rewritten. It is not localized.</comment>
+  <data name="XA4328" xml:space="preserve">
+    <value>无法从“{0}”生成类型映射 ProGuard 配置: {1}</value>
+    <comment>{0} - The input or output file path.
+{1} - The underlying failure, or a formatted XA4328_* resource.</comment>
   </data>
-  <data name="XA4325_SourceDestinationCount" xml:space="preserve">
-    <value>'SourceFiles' 和 'DestinationFiles' 项组必须包含相同数量的项。</value>
-    <comment>The following are literal MSBuild item group names and should not be translated: 'SourceFiles', 'DestinationFiles'.</comment>
+  <data name="XA4328_NoInputs" xml:space="preserve">
+    <value>未提供保留的 Java 类型映射键文件。</value>
   </data>
-  <data name="XA4326" xml:space="preserve">
-    <value>无法安全地重写 JNI 成员查找，因为其类句柄没有结构上无歧义的 JNIEnv.FindClass 源。</value>
-    <comment>The following are literal API names and should not be translated: JNI, JNIEnv.FindClass.</comment>
+  <data name="XA4328_InvalidName" xml:space="preserve">
+    <value>第 {0} 行包含无效的保留 Java 类名:“{1}”。</value>
+    <comment>{0} - The one-based line number.
+{1} - The invalid input record.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>缺少 Android NDK 工具链目录“{0}”。请安装 Android NDK。</value>
@@ -1121,8 +1099,8 @@ In this message, the term "handheld app" means "app for handheld devices."
 </comment>
   </data>
   <data name="XA1044" xml:space="preserve">
-    <value>MSBuild 属性“{0}”与 {1} 运行时不兼容。启用此属性时，无法继续生成。移除属性或使用条件保护它: Condition="'$(UseMonoRuntime)' == 'true'"</value>
-    <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
+    <value>MSBuild 属性“{0}”与 {1} 运行时不兼容。启用此属性时，无法继续生成。请移除该属性。</value>
+    <comment>The following literal name should not be translated: MSBuild.
 {0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
@@ -1323,10 +1301,6 @@ In this message, the term "handheld app" means "app for handheld devices."
   </data>
   <data name="XA0146" xml:space="preserve">
     <value>尝试检查“{0}”是否为正确对齐的 ELF 文件时失败并出现异常，忽略此文件的对齐检查。</value>
-    <comment>{0} - The file path.</comment>
-  </data>
-  <data name="XA0147" xml:space="preserve">
-    <value>尝试检查“{0}”是否为有效 ELF 文件时失败并出现异常，忽略此文件的 AOT 检查。</value>
     <comment>{0} - The file path.</comment>
   </data>
   <data name="XA0148" xml:space="preserve">

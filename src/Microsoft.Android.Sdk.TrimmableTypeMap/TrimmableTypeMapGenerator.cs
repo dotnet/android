@@ -22,7 +22,7 @@ public class TrimmableTypeMapGenerator
 
 	/// <summary>
 	/// Runs the full generation pipeline: scan assemblies, generate typemap
-	/// assemblies, generate JCW Java sources, and optionally generate a merged manifest.
+	/// assemblies, generate JCW Java sources, and optionally generate an application manifest.
 	/// No file IO is performed — all results are returned in memory.
 	/// </summary>
 	/// <param name="collectMarshalMethodsForNonAcw">
@@ -48,6 +48,7 @@ public class TrimmableTypeMapGenerator
 		bool errorOnCustomJavaObject = true,
 		IReadOnlyCollection<string>? customViewTypeNames = null,
 		bool collectMarshalMethodsForNonAcw = true,
+		bool includeBuiltInValueTypeUniverses = false,
 		Func<string, byte [], bool>? shouldGenerateTypeMapAssembly = null)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
@@ -79,7 +80,12 @@ public class TrimmableTypeMapGenerator
 		}
 
 		var generatedAssemblies = generateTypeMapAssemblies
-			? GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, shouldGenerateTypeMapAssembly)
+			? GenerateTypeMapAssemblies (
+				allPeers,
+				systemRuntimeVersion,
+				useSharedTypemapUniverse,
+				shouldGenerateTypeMapAssembly,
+				includeBuiltInValueTypeUniverses)
 			: [];
 		var jcwPeers = allPeers.Where (ShouldGenerateJcw).ToList ();
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
@@ -376,14 +382,7 @@ public class TrimmableTypeMapGenerator
 			ForceExtractNativeLibs = forceDebuggable,
 			ManifestPlaceholders = config.ManifestPlaceholders,
 			ApplicationJavaClass = config.ApplicationJavaClass,
-			Warn = (code, message) => {
-				if (code == ManifestGenerator.LibraryManifestMergeWarningCode)
-					logger.LogLibraryManifestMergeWarning (message);
-				// Other codes (e.g. unresolvable type properties) are not yet assigned XA codes
-				// and are intentionally not surfaced here.
-			},
 			WarnInvalidPlaceholder = placeholders => logger.LogInvalidManifestPlaceholderWarning (placeholders),
-			LibraryManifests = config.LibraryManifests ?? [],
 		};
 
 		var (doc, providerNames) = generator.Generate (manifestTemplate, allPeers, assemblyManifestInfo);
@@ -413,7 +412,8 @@ public class TrimmableTypeMapGenerator
 		List<JavaPeerInfo> allPeers,
 		Version systemRuntimeVersion,
 		bool useSharedTypemapUniverse,
-		Func<string, byte [], bool>? shouldGenerateTypeMapAssembly = null)
+		Func<string, byte [], bool>? shouldGenerateTypeMapAssembly = null,
+		bool includeBuiltInValueTypeUniverses = false)
 	{
 		List<(string AssemblyName, List<JavaPeerInfo> Peers)> peersByAssembly;
 
@@ -459,12 +459,19 @@ public class TrimmableTypeMapGenerator
 		const string rootAssemblyName = "_Microsoft.Android.TypeMaps";
 		bool generateRoot = true;
 		if (shouldGenerateTypeMapAssembly is not null) {
-			var rootFingerprint = MetadataHelper.ComputeRootIncrementalFingerprint (perAssemblyNames, systemRuntimeVersion, useSharedTypemapUniverse);
+			var rootFingerprint = MetadataHelper.ComputeRootIncrementalFingerprint (
+				perAssemblyNames,
+				systemRuntimeVersion,
+				useSharedTypemapUniverse,
+				includeBuiltInValueTypeUniverses);
 			generateRoot = shouldGenerateTypeMapAssembly (rootAssemblyName, rootFingerprint);
 		}
 		if (generateRoot) {
 			var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
-			var rootStream = rootGenerator.GenerateToStream (perAssemblyNames, useSharedTypemapUniverse);
+			var rootStream = rootGenerator.GenerateToStream (
+				perAssemblyNames,
+				useSharedTypemapUniverse,
+				includeBuiltInValueTypeUniverses);
 			generatedAssemblies.Add (new GeneratedAssembly (rootAssemblyName, rootStream));
 			logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
 		}

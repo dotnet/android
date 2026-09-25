@@ -20,10 +20,6 @@ namespace Xamarin.Test {
 	public partial class SomeObject : global::Java.Lang.Object, global::Xamarin.Test.II1, global::Xamarin.Test.II2 {
 		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/SomeObject", typeof (SomeObject));
 
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -71,10 +67,7 @@ namespace Xamarin.Test {
 		public virtual unsafe void Close ()
 		{
 			const string __id = "close.()V";
-			try {
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 		}
 
 	}

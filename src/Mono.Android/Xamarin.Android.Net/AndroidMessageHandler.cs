@@ -328,7 +328,7 @@ namespace Xamarin.Android.Net
 			}
 
 			/// <summary>
-			/// Void counterpart of <see cref="RunOperation{T}"/>, for operations that return no value.
+			/// Void counterpart of <see cref="RunOperation{T}(Func{CancellationToken,Task{T}},CancellationToken,string)"/>, for operations that return no value.
 			/// Delegates to the generic overload so the BeginUse/try/finally/EndUse bracket lives in exactly
 			/// one place.
 			/// </summary>
@@ -336,7 +336,7 @@ namespace Xamarin.Android.Net
 				RunOperation<bool> (async operationToken => { await operation (operationToken).ConfigureAwait (false); return true; }, callerToken, canceledMessage);
 
 			/// <summary>
-			/// Synchronous, value-returning wrapper over <see cref="RunOperation{T}"/> for the synchronous
+			/// Synchronous, value-returning wrapper over <see cref="RunOperation{T}(Func{CancellationToken,Task{T}},CancellationToken,string)"/> for the synchronous
 			/// <see cref="Stream"/> overrides, which carry no caller token. It uses the drain-safety bracket
 			/// directly rather than allocating a completed task.
 			/// </summary>
@@ -507,13 +507,9 @@ namespace Xamarin.Android.Net
 			"Last-Modified"
 		};
 
-		static readonly List <IAndroidAuthenticationModule> authModules = new List <IAndroidAuthenticationModule> {
-			new AuthModuleBasic (),
-			new AuthModuleDigest ()
-		};
-
 		CookieContainer? _cookieContainer;
 		DecompressionMethods _decompressionMethods;
+		IAndroidAuthenticationModule []? authModules;
 
 		bool disposed;
 		bool started;
@@ -759,7 +755,20 @@ namespace Xamarin.Android.Net
 		/// </para>
 		/// </summary>
 		/// <value>The pre authentication data.</value>
-		public AuthenticationData? PreAuthenticationData { get; set; }
+		public AuthenticationData? PreAuthenticationData {
+			get;
+			set {
+				// Keep these constructor references in the setter so apps that never configure pre-authentication can trim the built-in modules.
+				if (value != null && authModules == null) {
+					authModules = [
+						new AuthModuleBasic (),
+						new AuthModuleDigest ()
+					];
+				}
+
+				field = value;
+			}
+		}
 
 		/// <summary>
 		/// If the website requires authentication, this property will contain data about each scheme supported
@@ -1188,7 +1197,7 @@ namespace Xamarin.Android.Net
 					// There's also no way to send content using GET (except in the URL, of course), so discarding
 					// request.Content is what we should do.
 					//
-					// See https://github.com/xamarin/xamarin-android/issues/1282
+					// See https://github.com/dotnet/android/issues/1282
 					if (redirectState.Method == HttpMethod.Get) {
 						if (Logger.LogNet)
 							Logger.Log (LogLevel.Info, LOG_APP, $"Discarding content on redirect");
@@ -1768,14 +1777,14 @@ namespace Xamarin.Android.Net
 				return;
 			}
 
-			var auth = data.Scheme == AuthenticationScheme.Unsupported ? data.AuthModule : authModules.Find (m => m?.Scheme == data.Scheme);
+			var auth = data.Scheme == AuthenticationScheme.Unsupported ? data.AuthModule : authModules?.FirstOrDefault (m => m.Scheme == data.Scheme);
 			if (auth == null) {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"Authentication module for scheme '{data.Scheme}' not found. No authentication will be performed");
 				return;
 			}
 
-			Authorization authorization = auth.Authenticate (data.Challenge!, httpConnection, creds);
+			Authorization? authorization = auth.Authenticate (data.Challenge!, httpConnection, creds);
 			if (authorization == null) {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"Authorization module {auth.GetType ()} for scheme {data.Scheme} returned no authorization");

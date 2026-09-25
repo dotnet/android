@@ -68,8 +68,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.ProjectModel.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Protocol.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Versioning.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)startup.aotprofile" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)startup-xf.aotprofile" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)r8.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)bundletool.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime.jar" />
@@ -184,7 +182,6 @@
   <Import Project="unix-binutils.projitems" />
   <ItemGroup>
     <_MSBuildFilesUnix Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\illinkanalyzer" Permission="755" />
-    <_MSBuildFilesUnix Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\jit-times" Permission="755" />
     <_MSBuildFilesUnix Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\mono.config" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\aapt2" />
     <_MSBuildFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)libZipSharpNative-*.$(LibExtension)" />
@@ -192,7 +189,7 @@
   </ItemGroup>
   <!-- monodroid: in-tree installer/debugging projects under src/Xamarin.Installer.*,
        src/Mono.AndroidTools, src/Xamarin.AndroidTools,
-       src/Xamarin.Android.Build.Debugging.Tasks, and tools/fastdev. -->
+       and src/Xamarin.Android.Build.Debugging.Tasks. -->
   <ItemGroup>
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ICSharpCode.SharpZipLib.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ICSharpCode.SharpZipLib.pdb" />
@@ -214,10 +211,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Installer.Common.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Installer.Common.props" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Installer.Common.targets" />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidSdkOutDir)lib\%(Identity)\xamarin.sync')" />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidSdkOutDir)lib\%(Identity)\xamarin.find')" />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidSdkOutDir)lib\%(Identity)\xamarin.stat')" />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidSdkOutDir)lib\%(Identity)\xamarin.cp')" />
   </ItemGroup>
   <!-- end monodroid -->
   <Target Name="ConstructInstallerItems"

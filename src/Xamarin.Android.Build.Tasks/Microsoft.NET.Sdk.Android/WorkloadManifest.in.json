@@ -8,10 +8,6 @@
         "Microsoft.Android.Sdk.net10",
         "Microsoft.Android.Ref.37",
         "Microsoft.Android.Runtime.37.android",
-        "Microsoft.Android.Runtime.Mono.37.android-arm",
-        "Microsoft.Android.Runtime.Mono.37.android-arm64",
-        "Microsoft.Android.Runtime.Mono.37.android-x86",
-        "Microsoft.Android.Runtime.Mono.37.android-x64",
         "Microsoft.Android.Runtime.CoreCLR.37.android-arm",
         "Microsoft.Android.Runtime.CoreCLR.37.android-arm64",
         "Microsoft.Android.Runtime.CoreCLR.37.android-x64",
@@ -21,11 +17,9 @@
         "Microsoft.Android.Templates"
       ],
       "platforms": [ "win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64" ],
-      "extends" : [
-        "microsoft-net-runtime-android-net10",
-        "microsoft-net-runtime-android-aot-net10",
-        "microsoft-net-runtime-android",
-        "microsoft-net-runtime-android-aot"
+      "extends": [
+        "microsoft-net-runtime-mono-tooling-net10",
+        "microsoft-net-runtime-mono-tooling"
       ]
     }
   },
@@ -77,22 +71,6 @@
       "version": "@WORKLOAD_VERSION@"
     },
     "Microsoft.Android.Runtime.37.android": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.Mono.37.android-arm": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.Mono.37.android-arm64": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.Mono.37.android-x86": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.Mono.37.android-x64": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },

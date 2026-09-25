@@ -26,7 +26,6 @@ Contains code to build and link the native runtime at application build time.
     </ItemGroup>
 
     <GetNativeRuntimeComponents
-        MonoComponents="@(_MonoComponent)"
         ResolvedNativeObjectFiles="@(_ResolvedNativeObjectFile)"
         ResolvedNativeArchives="@(_ResolvedNativeArchive)">
       <Output TaskParameter="NativeArchives" ItemName="_SelectedNativeArchive" />
@@ -43,10 +42,9 @@ Contains code to build and link the native runtime at application build time.
           Outputs="@(_UnifiedNativeRuntime)"
           Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' ">
 
-    <!-- AndroidApiLevel must be set to the same version our runtime, MonoVM and CoreCLR are built
+    <!-- AndroidApiLevel must be set to the same version our CoreCLR runtime is built
          against -->
     <LinkNativeRuntime
-        MonoComponents="@(_MonoComponent)"
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
         IntermediateOutputPath="$(IntermediateOutputPath)"
         NativeArchives="@(_SelectedNativeArchive)"

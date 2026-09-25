@@ -110,6 +110,13 @@ namespace Android.Runtime
 
 		[LibraryImport (RuntimeConstants.InternalDllName)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial void _monodroid_register_reference_logging_callbacks (
+			delegate* unmanaged<int, IntPtr, byte, IntPtr, byte, IntPtr, int, IntPtr, void> referenceLogCallback,
+			delegate* unmanaged<IntPtr, void> referenceLogMessageCallback,
+			byte logReferenceMetadata);
+
+		[LibraryImport (RuntimeConstants.InternalDllName)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial IntPtr monodroid_TypeManager_get_java_class_name (IntPtr klass);
 
 		[LibraryImport (RuntimeConstants.InternalDllName)]
@@ -131,11 +138,6 @@ namespace Android.Runtime
 			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridge_processing_started_callback,
 			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridge_processing_finished_callback);
 
-		[MethodImplAttribute(MethodImplOptions.InternalCall)]
-		internal static extern void monodroid_unhandled_exception (Exception javaException);
-
-		[MethodImplAttribute(MethodImplOptions.InternalCall)]
-		internal static extern unsafe void monodroid_debugger_unhandled_exception (Exception e);
 	}
 }
 #endif // INSIDE_MONO_ANDROID_RUNTIME

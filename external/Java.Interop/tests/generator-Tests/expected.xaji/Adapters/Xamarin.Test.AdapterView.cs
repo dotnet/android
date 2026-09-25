@@ -21,10 +21,6 @@ namespace Xamarin.Test {
 	public abstract partial class AdapterView : global::Java.Lang.Object {
 		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/AdapterView", typeof (AdapterView));
 
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -125,11 +121,8 @@ namespace Xamarin.Test {
 			[Register ("getAdapter", "()Lxamarin/test/Adapter;", "GetGetAdapterHandler")]
 			get {
 				const string __id = "getAdapter.()Lxamarin/test/Adapter;";
-				try {
-					var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
-					return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-				} finally {
-				}
+				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+				return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='AdapterView']/method[@name='setAdapter' and count(parameter)=1 and parameter[1][@type='T']]"
 			[Register ("setAdapter", "(Lxamarin/test/Adapter;)V", "GetSetAdapter_Lxamarin_test_Adapter_Handler")]

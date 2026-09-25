@@ -151,9 +151,12 @@ namespace xamarin::android
 			log_debugf (LOG_ASSEMBLY, "monodroid_dlopen: hash match %sfound, DSO name is '%.*s'", dso == nullptr ? "not " : "", static_cast<int>(dso_name_for_log.length ()), dso_name_for_log.data ());
 
 			if (dso == nullptr) {
-				// DSO not known at build time, try to load it. Since we don't know whether or not the library uses
-				// JNI, we're going to assume it does and thus use System.loadLibrary eventually.
-				return DsoLoader::load (name, flags, true /* is_jni */);
+				// Packaged libraries have build-time JNI metadata in the DSO cache.  A cache miss is therefore
+				// assumed to be a platform or other non-JNI library, avoiding a synchronous System.loadLibrary
+				// dispatch to the main thread.
+				constexpr bool IsJniLibrary = false;
+				constexpr bool SkipExistsCheck = true;
+				return DsoLoader::load<SkipExistsCheck> (name, flags, IsJniLibrary);
 			} else if (dso->handle != nullptr) {
 				log_debugf (LOG_ASSEMBLY, "monodroid_dlopen: library %.*s already loaded, returning handle %p", static_cast<int>(name.length ()), name.data (), dso->handle);
 				return dso->handle;

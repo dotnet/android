@@ -2,6 +2,7 @@
 
 #include <jni.h>
 #include <ifaddrs.h>
+#include <managed-interface.hh>
 
 #include <host/gc-bridge.hh>
 #include <xamarin-app.hh>
@@ -12,12 +13,6 @@ namespace xamarin::android {
 }
 
 extern "C" {
-	int _monodroid_gref_get () noexcept;
-	int _monodroid_gref_inc () noexcept;
-	int _monodroid_gref_dec () noexcept;
-	void _monodroid_gref_log (const char *message) noexcept;
-	int _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable) noexcept;
-	void _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable) noexcept;
 	const char* clr_typemap_managed_to_java (const char *typeName, const char *assemblyFullName, const uint8_t *mvid) noexcept;
 	bool clr_typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept;
 	BridgeProcessingFtn clr_initialize_gc_bridge (
@@ -31,15 +26,7 @@ extern "C" {
 	xamarin::android::managed_timing_sequence* monodroid_timing_start (const char *message);
 	void monodroid_timing_stop (xamarin::android::managed_timing_sequence *sequence, const char *message);
 
-	void _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable) noexcept;
-	int _monodroid_weak_gref_get () noexcept;
-	int _monodroid_weak_gref_inc () noexcept;
-	int _monodroid_weak_gref_dec () noexcept;
-	int _monodroid_max_gref_get () noexcept;
-	void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable) noexcept;
-
-	void _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable);
-	void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char  *from, int from_writable);
+	void _monodroid_register_reference_logging_callbacks (xamarin::android::reference_log_fn log_callback, xamarin::android::reference_log_message_fn message_callback, uint8_t log_reference_metadata) noexcept;
 	void _monodroid_gc_wait_for_bridge_processing ();
 	void _monodroid_detect_cpu_and_architecture (unsigned short *built_for_cpu, unsigned short *running_on_cpu, unsigned char *is64bit);
 }

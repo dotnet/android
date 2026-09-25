@@ -36,13 +36,10 @@ namespace Xamarin.Test {
 		{
 			const string __id = "setA.(Ljava/lang/Object;)V";
 			var native_adapter = (adapter?.PeerReference ?? default);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_adapter);
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			} finally {
-				global::System.GC.KeepAlive (adapter);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (native_adapter);
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+			global::System.GC.KeepAlive (adapter);
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='A']/method[@name='listTest' and count(parameter)=1 and parameter[1][@type='java.util.List&lt;java.lang.Integer&gt;']]"
@@ -50,13 +47,10 @@ namespace Xamarin.Test {
 		public virtual unsafe void ListTest (global::Java.Util.IList p0)
 		{
 			const string __id = "listTest.(Ljava/util/List;)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (p0);
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			} finally {
-				global::System.GC.KeepAlive (p0);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (p0);
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+			global::System.GC.KeepAlive (p0);
 		}
 
 	}
