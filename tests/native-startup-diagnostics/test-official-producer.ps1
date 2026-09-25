@@ -269,6 +269,11 @@ $env:GUEST_SIGN_RECEIPT_DIRECTORY = Join-Path $caseRoot 'accepted-input'
 & "$root\build-tools\scripts\guest-readiness-official.ps1" -Phase Input
 $inputReceipt = Get-Content (Join-Path $env:GUEST_SIGN_RECEIPT_DIRECTORY 'input-receipt.json') -Raw | ConvertFrom-Json
 Assert ($inputReceipt.packages.Count -eq 2 -and $inputReceipt.status -ceq 'completed-unadmitted') 'Actual expected signed-job input filename collection'
+$inputSnapshot = "$env:GUEST_SIGN_RECEIPT_DIRECTORY-Input"
+foreach ($file in Get-ChildItem -LiteralPath $env:GUEST_SIGN_RECEIPT_DIRECTORY -File) {
+    $hash = (Get-FileHash -LiteralPath $file.FullName).Hash
+    Assert ((Get-FileHash -LiteralPath (Join-Path $inputSnapshot $file.Name)).Hash -ceq $hash) 'Deferred Input snapshot preserves exact pre-sign bytes'
+}
 foreach ($package in $inputReceipt.packages) {
     $original = Join-Path $buildDirectory "build.inventory.$($package.id).json"
     $collected = Join-Path $env:GUEST_SIGN_RECEIPT_DIRECTORY $package.inventory.fileName
@@ -287,6 +292,8 @@ $env:GUEST_SIGN_RECEIPT_DIRECTORY = Join-Path $caseRoot 'rejected-input'
 Reject { & "$root\build-tools\scripts\guest-readiness-official.ps1" -Phase Input } 'Unsigned package differs from build output.'
 $failedReceipt = Get-Content (Join-Path $env:GUEST_SIGN_RECEIPT_DIRECTORY 'input-receipt.json') -Raw | ConvertFrom-Json
 Assert ($failedReceipt.status -ceq 'failed' -and $failedReceipt.commands.Count -eq 2) 'Failure persists source command ledger'
+Assert ((Get-FileHash (Join-Path "$env:GUEST_SIGN_RECEIPT_DIRECTORY-Input" 'input-receipt.json')).Hash -ceq
+    (Get-FileHash (Join-Path $env:GUEST_SIGN_RECEIPT_DIRECTORY 'input-receipt.json')).Hash) 'Failed Input snapshot retains failed root for deferred publication'
 
 # Run the standard verifier, unchanged trust, on an intentionally invalid signature.
 # The test-local SDK selection avoids the repository build SDK pin; production uses the signer staging cwd.
@@ -551,7 +558,13 @@ $env:GUEST_SIGNING_OUTPUT_DIRECTORY = $packed
 $env:GUEST_RETAINED_OUTPUT_DIRECTORY = $retained
 $env:GUEST_SIGNING_JOB_STATUS = 'Failed'
 & "$root\build-tools\scripts\guest-readiness-official.ps1" -Phase Input
+$preSignHashes = @{}
+foreach ($file in Get-ChildItem "$signReceiptDirectory-Input" -File) { $preSignHashes[$file.Name] = (Get-FileHash $file.FullName).Hash }
 Reject { & "$root\build-tools\scripts\guest-readiness-official.ps1" -Phase Output } 'Normal output retained, but standard verification failed; no policy admission.'
+foreach ($file in Get-ChildItem "$signReceiptDirectory-Input" -File) {
+    Assert ($preSignHashes[$file.Name] -ceq (Get-FileHash $file.FullName).Hash) 'Output cannot change the deferred Input snapshot'
+}
+Assert (@(Get-ChildItem "$signReceiptDirectory-Input" -File).Count -eq $preSignHashes.Count) 'Output cannot add files to the Input snapshot'
 $captured = Get-Content (Join-Path $signReceiptDirectory 'output-receipt.json') -Raw | ConvertFrom-Json
 Assert ($captured.status -ceq 'produced-verification-failed' -and $captured.failure.stage -ceq 'prior-signing-job') 'Original failed job remains failed with actual post-verifier failures'
 $contextRef = @($captured.files | Where-Object { $_.fileName -ceq 'output-signing-context.json' })
@@ -618,6 +631,26 @@ Reject { & "$root\build-tools\scripts\guest-readiness-official.ps1" -Phase Outpu
 Assert (@(Get-ChildItem $env:GUEST_RETAINED_OUTPUT_DIRECTORY -File).Count -eq 0) 'No unsigned fallback when normal outputs are missing'
 $missing = Get-Content (Join-Path $env:GUEST_SIGN_RECEIPT_DIRECTORY 'output-receipt.json') -Raw | ConvertFrom-Json
 Assert ($missing.status -ceq 'failed' -and $missing.failure.message.Contains('Prior signing job status: Failed')) 'Missing output retains explicit failed provenance'
+$missingCandidates = Get-Content (Join-Path $env:GUEST_SIGN_RECEIPT_DIRECTORY 'unadmitted-runtime-candidates.json') -Raw | ConvertFrom-Json
+Assert ($missingCandidates.files.Count -eq 0 -and $missingCandidates.missing.Count -eq 2) 'Absent normal outputs are explicitly observed, not invented'
+
+foreach ($present in @($false, $true)) {
+    $env:GUEST_SIGN_RECEIPT_DIRECTORY = Join-Path $failureRoot "missing-template-$present"
+    $env:GUEST_RETAINED_OUTPUT_DIRECTORY = Join-Path $failureRoot "missing-template-retained-$present"
+    $env:GUEST_TEMPLATE_CHECKOUT = Join-Path $failureRoot 'nonexistent-yaml-templates'
+    $env:GUEST_SIGNING_OUTPUT_DIRECTORY = if ($present) { $packed } else { Join-Path $failureRoot 'missing-packed' }
+    Reject { & "$root\build-tools\scripts\guest-readiness-official.ps1" -Phase Output } 'Producer command failed: output-sign-template-commit (invocation-failed).'
+    $failed = Get-Content (Join-Path $env:GUEST_SIGN_RECEIPT_DIRECTORY 'output-receipt.json') -Raw | ConvertFrom-Json
+    $raw = Get-Content (Join-Path $env:GUEST_SIGN_RECEIPT_DIRECTORY 'unadmitted-runtime-candidates.json') -Raw | ConvertFrom-Json
+    Assert ($failed.status -ceq 'failed' -and $failed.packages.Count -eq 0 -and -not $failed.packageAdmission) 'Unavailable template cannot create success or admission'
+    Assert ($raw.status -ceq 'unadmitted' -and $raw.files.Count -eq $(if ($present) { 2 } else { 0 })) 'Exact existing candidates survive missing template; absent bytes stay absent'
+    foreach ($file in $raw.files) {
+        Assert ($file.sha256 -ceq (Get-FileHash (Join-Path $packed $file.fileName)).Hash.ToLowerInvariant() -and
+            $file.sha256 -ceq (Get-FileHash (Join-Path $env:GUEST_SIGN_RECEIPT_DIRECTORY $file.fileName)).Hash.ToLowerInvariant()) 'Early raw candidate hash is independently checked'
+    }
+    Assert (@(Get-ChildItem $env:GUEST_RETAINED_OUTPUT_DIRECTORY -File).Count -eq 0) 'Raw candidates never enter signed-output retention without validation'
+}
+$env:GUEST_TEMPLATE_CHECKOUT = $templateRoot
 
 # A normal packed candidate without a signature is observed and verified, never copied as signed output.
 $unsignedPacked = Join-Path $failureRoot 'unsigned-packed'
@@ -639,6 +672,7 @@ Assert (@(Get-ChildItem $env:GUEST_RETAINED_OUTPUT_DIRECTORY -File).Count -eq 0)
 $unsignedSignature = Get-Content (Join-Path $env:GUEST_SIGN_RECEIPT_DIRECTORY 'output.signature.Microsoft.Android.Runtime.Mono.36.android-arm64.json') -Raw | ConvertFrom-Json
 Assert ($unsignedSignature.classification -ceq 'unsigned' -and $unsignedSignature.verificationExitCode -ne 0) 'Unsigned failure classification and actual verifier result retained'
 Write-Output 'PASS: actual Output failure path with absent normal signed directory, two retained invalid-signature archives, original failed status, missing-packed and unsigned-output rejection.'
+Write-Output 'PASS: pre-sign Input snapshot remains byte-identical after Output; missing template retains exact unadmitted candidates or explicit absence without success/signature claims.'
 Write-Output 'PASS: Build-to-Pack source/command/log binding, byte-identical distinct receipt alias and SignList retention/collision.'
 Write-Output 'PASS: Mac-style LF/non-ASCII inventory through actual Input collector; deterministic UTF-8/no-BOM/LF/terminal newline and independent archive hash; raw Build/Pack/SignList copies unchanged.'
 Write-Output 'PASS: exact manual gates, real nested MSBuild OFF/ON/rejections, real ZIP native metadata/deltas, synthetic post-sign constructors and actual standard verification failure.'

@@ -409,7 +409,13 @@ not reconstructed property summaries.
 
 The signing hooks retain `guest-readiness-sign-Input`,
 `guest-readiness-sign-Output`, and `guest-readiness-signed-output`, including
-produced archives when subsequent standard verification fails. For each package,
+produced archives when subsequent standard verification fails. Input capture
+and its byte-preserving snapshot still occur before signing, including on Input
+failure. All three uploads occur in the Output hook after the normal signing
+sequence: the supported 1ES publisher injects binary scans before each upload,
+so an early Input upload would scan signed-output targets before they exist.
+No scanner targets, coverage, conditions or policy settings are overridden.
+For each package,
 they emit `input.inventory.<id>.json`, `output.inventory.<id>.json`,
 `output.signature.<id>.json`, `member-delta.<id>.json`,
 `native-provenance.<id>.json`, and `postsign.<id>.json`. Shared inventory/signature
@@ -435,6 +441,13 @@ Fresh standard-verifier results and logs are retained, without inventing the
 earlier task's exit code. A prior job status other than `Succeeded` remains a
 failure even if fresh verification succeeds. The ordinary signer, verification,
 and copy steps are unchanged.
+Before template/tool provenance checks, Output also retains the two exact
+bounded raw normal-packed candidates in the **evidence** directory, with
+`unadmitted-runtime-candidates.json`; these raw copies are not published as
+signed output. The sidecar explicitly lists missing candidates, including both
+when signing never produced any archives. Missing provenance still fails the
+root without creating package/admission records; it no longer prevents retaining
+existing raw bytes. Unsigned inputs are never used as a fallback.
 `output-signing-context.json`, referenced by the Output root's existing `files`,
 records the exact pre-hook `Agent.JobStatus`, observation phase and UTC time.
 This is not the final provider job result; the owner must qualify that from the

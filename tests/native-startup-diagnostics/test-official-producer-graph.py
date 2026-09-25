@@ -1,6 +1,9 @@
 """Source-owned conditional expansion, not an Azure/1ES service preview."""
 import copy
+import argparse
+from collections import Counter
 import json
+import re
 from pathlib import Path
 import subprocess
 import xml.etree.ElementTree as ET
@@ -172,7 +175,6 @@ for target in ("CreateAllPacks", "_CreatePreviewPacks", "_CreateDefaultRefPack")
 sdk = ET.parse(ROOT / "build-tools/create-packs/Microsoft.Android.Sdk.proj").getroot()
 assert any("SignList.xml" in x.attrib.get("Include", "") for x in sdk.iter())
 sign = yaml.safe_load((ROOT / "build-tools/automation/yaml-templates/guest-readiness-sign.yaml").read_text())
-assert any(x.get("condition") == "always()" for x in sign["steps"])
 assert sign["steps"][0]["${{ if eq(parameters.phase, 'Output') }}"][0] == {
     "checkout": "1esPipelines", "path": "s/guest-readiness-1es", "persistCredentials": False,
     "condition": "always()",
@@ -182,7 +184,23 @@ assert capture["${{ if eq(parameters.phase, 'Output') }}"] == {"condition": "alw
 assert "condition" not in capture and "continueOnError" not in capture
 assert capture["env"]["GUEST_SIGNING_OUTPUT_DIRECTORY"] == "$(Agent.TempDirectory)/artifact-signing/packed"
 assert capture["env"]["GUEST_SIGNING_JOB_STATUS"] == "$(Agent.JobStatus)"
-retained_output = sign["steps"][-1]["${{ if eq(parameters.phase, 'Output') }}"][0]
+output_uploads = sign["steps"][-1]["${{ if eq(parameters.phase, 'Output') }}"]
+assert len(output_uploads) == 3
+assert not any(step.get("task") == "1ES.PublishPipelineArtifact@1" for step in sign["steps"]), "No pre-sign upload may trigger scans before their targets exist"
+assert output_uploads[0] == {
+    "task": "1ES.PublishPipelineArtifact@1", "condition": "always()",
+    "inputs": {"targetPath": "$(Build.ArtifactStagingDirectory)/guest-readiness-sign-Input",
+               "artifactName": "guest-readiness-sign-Input"},
+}
+assert output_uploads[1]["inputs"] == {
+    "targetPath": capture["env"]["GUEST_SIGN_RECEIPT_DIRECTORY"],
+    "artifactName": "guest-readiness-sign-Output",
+}
+assert all(step["condition"] == "always()" for step in output_uploads)
+mac_signer = signers[0]["parameters"]
+assert mac_signer["preSignSteps"][0]["parameters"]["phase"] == "Input"
+assert mac_signer["postSignSteps"][0]["parameters"]["phase"] == "Output"
+retained_output = output_uploads[2]
 assert retained_output["condition"] == "always()"
 assert retained_output["inputs"]["targetPath"] == capture["env"]["GUEST_RETAINED_OUTPUT_DIRECTORY"]
 assert retained_output["inputs"]["targetPath"] != capture["env"]["GUEST_SIGNING_OUTPUT_DIRECTORY"]
@@ -224,6 +242,85 @@ print("PASS: default graph equality in four templates; diagnostic promotion omis
 print("PASS: existing 1ES publisher, Validate/Build/Pack retention matrix, always-on failure receipts and exact Darwin/Linux artifact names/sign input.")
 print("PASS: diagnostic-only 1esPipelines SDL inclusion; all existing SDL coverage and resolved-resource provenance checkout preserved.")
 print("PASS: Output checkout/capture/publication all run on failure; source is normal packed output, with separate retained-output directory and prior job status.")
+print("PASS: Input is captured before signing but all three supported uploads occur only in postSignSteps; no scanner policy or target override.")
 print("PASS: diagnostic Official envelope is independent of unchanged Test/Real signing; both hosted Mac images explicitly use macOS-15 after baseline variables, with default-off selection unchanged.")
 print("PASS: all six Mac pool consumers resolve macOS-15 in diagnostic mode and original labels when off; stage/job scopes cannot silently shadow root images.")
 print("PASS: diagnostic Windows job selects its actual self checkout config without changing commands; default Windows graph and canonical Git NuGet.config casing preserved.")
+
+def assert_signing_order(steps):
+    """Share the actual-preview assertions with deterministic provider-shaped cases."""
+    positions = {}
+    for name in ("Guest readiness signing Input evidence", "Sign Package Contents",
+                 "Verify NuGet Packages", "Copy Signed Output", "Guest readiness signing Output evidence"):
+        matches = [i for i, step in enumerate(steps) if step.get("displayName") == name]
+        assert len(matches) == 1, f"Missing or repeated normal signing step: {name}"
+        positions[name] = matches[0]
+    assert list(positions.values()) == sorted(positions.values()), "Normal signing/capture order changed"
+    scans = [i for i, step in enumerate(steps) if re.search(r"(?:^|\.)BinSkim@[0-9]+$", step.get("task", ""))]
+    assert len(scans) == 5, f"Expected five BinSkim tasks, found {len(scans)}"
+    assert min(scans) > positions["Copy Signed Output"], "Binary scans precede normal signed-output production"
+    for artifact in ("guest-readiness-sign-Input", "guest-readiness-sign-Output", "guest-readiness-signed-output"):
+        uploads = [(i, step) for i, step in enumerate(steps)
+                   if step.get("task") == "PublishPipelineArtifact@1"
+                   and step.get("inputs", {}).get("artifactName") == artifact]
+        assert len(uploads) == 1 and uploads[0][0] > positions["Guest readiness signing Output evidence"], artifact
+        assert uploads[0][1]["condition"] == "always()", artifact
+
+
+qualified_binskim = "securedevelopmentteam.vss-secure-development-tools.build-task-binskim.BinSkim@4"
+ordered_fixture = [{"displayName": name} for name in (
+    "Guest readiness signing Input evidence", "Sign Package Contents",
+    "Verify NuGet Packages", "Copy Signed Output", "Guest readiness signing Output evidence")]
+ordered_fixture += [{"task": qualified_binskim} for _ in range(5)]
+ordered_fixture += [{"task": "PublishPipelineArtifact@1", "condition": "always()",
+                     "inputs": {"artifactName": name}} for name in (
+                         "guest-readiness-sign-Input", "guest-readiness-sign-Output", "guest-readiness-signed-output")]
+assert_signing_order(ordered_fixture)
+short_fixture = copy.deepcopy(ordered_fixture)
+for step in short_fixture:
+    if step.get("task") == qualified_binskim:
+        step["task"] = "BinSkim@4"
+assert_signing_order(short_fixture)
+early_fixture = copy.deepcopy(ordered_fixture)
+early_fixture.insert(1, early_fixture.pop(5))
+for fixture, expected_error in (
+    (early_fixture, "Binary scans precede normal signed-output production"),
+    ([step for step in ordered_fixture if step.get("task") != qualified_binskim],
+     "Expected five BinSkim tasks, found 0"),
+):
+    try:
+        assert_signing_order(fixture)
+    except AssertionError as error:
+        assert str(error) == expected_error
+    else:
+        raise AssertionError("Invalid provider-shaped fixture was accepted")
+print("PASS: modeled provider-shaped ordering accepts five qualified/short scanners after signing; early and missing scanners fail distinct assertions.")
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--expanded-preview", type=Path)
+parser.add_argument("--baseline-preview", type=Path)
+args = parser.parse_args()
+if args.baseline_preview and not args.expanded_preview:
+    parser.error("--baseline-preview requires --expanded-preview")
+if args.expanded_preview:
+    preview = yaml.safe_load(args.expanded_preview.read_text(encoding="utf-8-sig"))
+    sign_jobs = [job for stage in preview["stages"] for job in stage.get("jobs", [])
+                 if any(step.get("displayName") == "Guest readiness signing Input evidence"
+                        for step in job.get("steps", []))]
+    assert len(sign_jobs) == 1, "Exactly one diagnostic signing job required"
+    steps = sign_jobs[0]["steps"]
+    assert_signing_order(steps)
+    if args.baseline_preview:
+        before = yaml.safe_load(args.baseline_preview.read_text(encoding="utf-8-sig"))
+        old_jobs = [job for stage in before["stages"] for job in stage.get("jobs", [])
+                    if job.get("job") == sign_jobs[0]["job"]]
+        assert len(old_jobs) == 1
+        protected = []
+        for job_steps in (old_jobs[0]["steps"], steps):
+            protected.append(Counter(json.dumps(step, sort_keys=True) for step in job_steps
+                                     if "Guardian:" in step.get("displayName", "")
+                                     or step.get("displayName") in ("Sign Package Contents", "Sign NuGet Packages",
+                                                                   "Verify NuGet Packages", "Copy Signed Output")
+                                     or step.get("task", "").startswith("MicroBuildSigningPlugin@")))
+        assert protected[0] == protected[1], "Expanded scanner/signing policy, targets or task counts changed"
+    print("PASS: supplied service-expanded preview defers scans until after normal signing; all guest uploads remain always-on.")

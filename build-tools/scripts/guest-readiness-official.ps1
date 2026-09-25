@@ -58,12 +58,17 @@ function Get-VerifiedGuestBuildReceipt {
     return $build
 }
 function Save-GuestRuntimePackCandidates {
-    param ([string] $Directory, [string] $Destination, [string] $BuildNumber, [string] $Attempt)
+    param ([string] $Directory, [string] $Destination, [string] $BuildNumber, [string] $Attempt, [switch] $ObserveMissing)
     $expected = Get-GuestRuntimePackIdentity $BuildNumber $Attempt
+    $missing = [Collections.Generic.List[string]]::new()
     $references = @(
         foreach ($rid in @('android-arm64', 'android-x64')) {
             $leaf = "Microsoft.Android.Runtime.Mono.36.$rid.$($expected.version).nupkg"
             $source = Join-Path $Directory $leaf
+            if ($ObserveMissing -and -not (Test-Path -LiteralPath $source)) {
+                $missing.Add($leaf)
+                continue
+            }
             $file = Get-Item -LiteralPath $source
             if ($file.PSIsContainer -or ($file.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0 -or
                 $file.Length -lt 1 -or $file.Length -gt 2147483648) {
@@ -76,6 +81,7 @@ function Save-GuestRuntimePackCandidates {
     Write-GuestProducerReceipt ([pscustomobject]@{
         schemaVersion = 1; kind = 'android-unadmitted-runtime-candidates'
         status = 'unadmitted'; version = $expected.version; files = $references
+        missing = @($missing.ToArray())
         notice = 'Raw normal pack outputs retained before layout, native-marker or signature validation. Not qualified packages.'
     }) $sidecar
     $references
@@ -170,6 +176,11 @@ try {
             notice = 'Pre-hook Agent.JobStatus environment observation, not the final provider job result. Individual earlier task results were not collected.'
         } | ConvertTo-Json -Depth 4 | Set-Content $contextPath -Encoding utf8
         $receipt.files.Add((Get-FileReference $contextPath))
+        # Preserve exact raw candidates even if template/tool provenance is unavailable.
+        # These remain in the evidence artifact, never the admitted signing-output path.
+        foreach ($reference in @(Save-GuestRuntimePackCandidates $env:GUEST_SIGNING_OUTPUT_DIRECTORY $out $env:BUILD_BUILDID $env:GUEST_ATTEMPT -ObserveMissing)) {
+            $receipt.files.Add($reference)
+        }
         Write-GuestProducerReceipt $receipt $receiptPath
     }
     $patch = Join-Path $out "$($Phase.ToLowerInvariant()).source.patch"
@@ -425,6 +436,15 @@ try {
     }
     Write-GuestProducerReceipt $receipt $receiptPath
     throw
+} finally {
+    if ($Phase -eq 'Input') {
+        # Output adds evidence to $out; its deferred Input upload must keep pre-sign bytes.
+        $snapshot = "$out-Input"
+        New-Item -ItemType Directory $snapshot | Out-Null
+        foreach ($file in Get-ChildItem -LiteralPath $out -File) {
+            Copy-GuestReceiptFile $file.FullName (Join-Path $snapshot $file.Name) | Out-Null
+        }
+    }
 }
 if ($verificationFailed) { Write-Error 'Normal output retained, but standard verification failed; no policy admission.' }
 if ($priorSigningFailed) { Write-Error "Normal output retained, but prior signing job status was $priorJobStatus; no policy admission." }
