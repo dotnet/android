@@ -10,11 +10,11 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 static partial class NativeAotObjectTestFixture
 {
-	public static string WriteObject (string directory, string name, string llvmReadObjPath, params string [] keys)
-		=> WriteObjectGroups (directory, name, llvmReadObjPath, ("_ZTV29Mono_Android_Java_Lang_Object", keys));
+	public static string WriteObject (string directory, string name, string llvmReadObjPath, string targetTriple, params string [] keys)
+		=> WriteObjectGroups (directory, name, llvmReadObjPath, targetTriple, ("_ZTV29Mono_Android_Java_Lang_Object", keys));
 
 	public static string WriteObjectGroups (
-		string directory, string name, string llvmReadObjPath, params (string Symbol, string [] Keys) [] groups)
+		string directory, string name, string llvmReadObjPath, string targetTriple, params (string Symbol, string [] Keys) [] groups)
 	{
 		string? toolDirectory = Path.GetDirectoryName (llvmReadObjPath);
 		if (string.IsNullOrEmpty (toolDirectory)) {
@@ -65,7 +65,7 @@ static partial class NativeAotObjectTestFixture
 		using var stdout = new StringWriter (CultureInfo.InvariantCulture);
 		using var stderr = new StringWriter (CultureInfo.InvariantCulture);
 		var startInfo = ProcessUtils.CreateProcessStartInfo (clang,
-			"--target=aarch64-linux-android", "-c", "-x", "assembler", sourcePath, "-o", objectPath);
+			"--target=" + targetTriple, "-c", "-x", "assembler", sourcePath, "-o", objectPath);
 		int exitCode = ProcessUtils.StartProcess (startInfo, stdout, stderr, CancellationToken.None).GetAwaiter ().GetResult ();
 		if (exitCode != 0) {
 			throw new InvalidOperationException ($"clang exited with code {exitCode}: {stderr}{stdout}");
