@@ -675,6 +675,18 @@ def assert_linux_setup_only_change(before, after):
             assert new["steps"][position] == expected_configure
             assert new["steps"][position + 1]["displayName"].startswith("run Xamarin.Android.Build.Tests - Linux ")
             assert new["steps"][position - 1]["task"] == "DownloadPipelineArtifact@2"
+            assert not any(s.get("displayName") == test_sources_configure["displayName"] for s in old["steps"])
+            assert len(new["steps"]) == len(old["steps"]) + 1
+            old_prejobs = [s for s in old["steps"] if s.get("inputs", {}).get("path") == "one_es_pt_pre_job/oneESPTPreJob.ps1"]
+            new_prejobs = [s for s in new["steps"] if s.get("inputs", {}).get("path") == "one_es_pt_pre_job/oneESPTPreJob.ps1"]
+            assert len(old_prejobs) == len(new_prejobs) == 1
+            old_count = {"linux_tests_smoke_1": 23, "linux_tests_smoke_2": 32}[name]
+            old_prejob_args = old_prejobs[0]["inputs"]["arguments"]
+            assert re.findall(r"(?:^|\s)-StepsLength (\d+)(?=\s|$)", old_prejob_args) == [str(old_count)]
+            # The one verified Configure insertion changes only this derived provider argument.
+            assert new_prejobs[0]["inputs"]["arguments"] == old_prejob_args.replace(
+                f"-StepsLength {old_count} ", f"-StepsLength {old_count + 1} ", 1)
+            new_prejobs[0]["inputs"]["arguments"] = old_prejob_args
             new["steps"].pop(position)
         old_installers = [s for s in old["steps"] if s.get("displayName", "").startswith("install apkdiff ")]
         new_installers = [s for s in new["steps"] if s.get("displayName", "").startswith("install apkdiff ")]
@@ -684,7 +696,7 @@ def assert_linux_setup_only_change(before, after):
         assert old_args.endswith(old_suffix)
         assert new_installers[0]["inputs"]["arguments"] == old_args.removesuffix(old_suffix) + f'--configfile "{config}"'
         new_installers[0]["inputs"]["arguments"] = old_args
-    assert unchanged == before, "Only two Linux setups and three apkdiff config arguments may change"
+    assert unchanged == before, "Only two Linux setups, their exact derived +1 counts and three apkdiff config arguments may change"
 
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -730,7 +742,9 @@ if args.expanded_preview:
             print("PASS: entire supplied provider graph differs only by diagnostic Windows retention (source string or observed provider true scalar); all existing guards and tasks are identical.")
         if args.require_linux_test_setup:
             assert_linux_setup_only_change(before, preview)
-            for mutation in ("alias", "mac", "audit", "condition", "version", "mixed-config"):
+            for mutation in ("alias", "mac", "audit", "condition", "version", "mixed-config",
+                             "count-unchanged", "count-plus-two", "other-job-count", "prejob-argument",
+                             "prejob-target", "prejob-task", "prejob-guard", "duplicate-configure"):
                 invalid = copy.deepcopy(preview)
                 job = next(j for s in invalid["stages"] for j in s.get("jobs", []) if j.get("job") == "linux_tests_smoke_1")
                 if mutation == "alias":
@@ -741,6 +755,31 @@ if args.expanded_preview:
                     job["variables"].append({"name": "NuGetAudit", "value": "false"})
                 elif mutation == "condition":
                     job["steps"][0]["condition"] = "always()"
+                elif mutation == "duplicate-configure":
+                    job["steps"].append(copy.deepcopy(next(s for s in job["steps"]
+                        if s.get("displayName") == test_sources_configure["displayName"])))
+                elif mutation.startswith("count-") or mutation.startswith("prejob-") or mutation == "other-job-count":
+                    if mutation == "other-job-count":
+                        job = next(j for s in invalid["stages"] for j in s.get("jobs", []) if j.get("job") == "maui_tests_integration")
+                    prejob = next(s for s in job["steps"] if s.get("inputs", {}).get("path") == "one_es_pt_pre_job/oneESPTPreJob.ps1")
+                    if mutation == "prejob-target":
+                        prejob["target"] = {"container": "different"}
+                    elif mutation == "prejob-task":
+                        prejob["task"] = "different@1"
+                    elif mutation == "prejob-guard":
+                        prejob["condition"] = "always()"
+                    else:
+                        arguments = prejob["inputs"]["arguments"]
+                        if mutation == "count-unchanged":
+                            arguments = arguments.replace("-StepsLength 24 ", "-StepsLength 23 ")
+                        elif mutation == "count-plus-two":
+                            arguments = arguments.replace("-StepsLength 24 ", "-StepsLength 25 ")
+                        elif mutation == "other-job-count":
+                            arguments = arguments.replace("-StepsLength 31 ", "-StepsLength 32 ")
+                        else:
+                            arguments += " -UnexpectedArgument true"
+                        assert arguments != prejob["inputs"]["arguments"]
+                        prejob["inputs"]["arguments"] = arguments
                 else:
                     task = next(s for s in job["steps"] if s.get("displayName", "").startswith("install apkdiff "))
                     task["inputs"]["arguments"] += ' --version 0.0.18' if mutation == "version" else ' --add-source "https://api.nuget.org/v3/index.json"'
@@ -750,7 +789,7 @@ if args.expanded_preview:
                     pass
                 else:
                     raise AssertionError(f"Invalid setup delta accepted: {mutation}")
-            print("PASS: entire provider graph differs only by two Linux setups and three apkdiff config arguments; invalid scope/policy/version/aliases rejected.")
+            print("PASS: entire provider graph differs only by two Linux setups, exact derived counts 23->24/32->33 and three apkdiff config arguments; wrong counts/other-job/prejob mutations rejected.")
         old_jobs = [job for stage in before["stages"] for job in stage.get("jobs", [])
                     if job.get("job") == sign_jobs[0]["job"]]
         assert len(old_jobs) == 1

@@ -356,7 +356,13 @@ from these setup changes; test assertions remain unchanged.
 For this setup delta, compare the actual service preview against `01402b` using
 `--require-linux-test-setup --require-root-observer --expanded-preview <new>
 --baseline-preview <01402b-preview>`. Only the two Linux setup insertions/root
-variables and three apkdiff argument changes may differ. Existing tests cover
+variables, their derived pre-job `StepsLength` changes (23 to 24 for
+`linux_tests_smoke_1`, 32 to 33 for `linux_tests_smoke_2`), and three apkdiff
+argument changes may differ. Each count increase requires exactly one verified
+Configure task insertion in that named job. Every other pre-job argument, task,
+target, guard and graph object remains exact; counts in other jobs are not
+normalized. Actual service-preview validation establishes this derived metadata;
+the corresponding model is not itself a service preview. Existing tests cover
 source default-off graphs, exact quoted config paths, malformed inputs, host
 identity and inherited child properties. Hosted Linux results and audit-data
 qualification remain distinct from Windows local checks.
