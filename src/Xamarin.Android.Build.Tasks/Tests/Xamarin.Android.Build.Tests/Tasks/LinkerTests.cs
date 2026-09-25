@@ -23,15 +23,18 @@ namespace Xamarin.Android.Build.Tests
 		void Logger (TraceLevel level, string message) =>
 			TestContext.WriteLine ($"{level}: {message}");
 
-		[TestCase (false)]
-		[TestCase (true)]
-		public void LinkAssembliesNoShrinkLegacyCompatibilityFixups (bool enabled)
+		[TestCase (false, true, true)]
+		[TestCase (true, false, false)]
+		[TestCase (true, true, false)]
+		[TestCase (true, false, true)]
+		[TestCase (true, true, true)]
+		public void LinkAssembliesNoShrinkLegacyCompatibilityFixups (bool enabled, bool addKeepAlives, bool useDesignerAssembly)
 		{
 			var task = new TestableLinkAssembliesNoShrink {
-				AddKeepAlives = true,
+				AddKeepAlives = addKeepAlives,
 				BuildEngine = new MockBuildEngine (TestContext.Out),
 				EnableLegacyCompatibilityAssemblyFixups = enabled,
-				UseDesignerAssembly = true,
+				UseDesignerAssembly = useDesignerAssembly,
 			};
 			var resolver = new DirectoryAssemblyResolver (Logger, false);
 			using var pipeline = new AssemblyPipeline (resolver);
@@ -39,12 +42,9 @@ namespace Xamarin.Android.Build.Tests
 
 			task.BuildPipelineForTest (pipeline, context);
 
-			Assert.AreEqual (enabled, pipeline.Steps.Any (step => step is FixAbstractMethodsStep),
-				$"{nameof (FixAbstractMethodsStep)} presence should match the compatibility fixup setting.");
-			Assert.AreEqual (enabled, pipeline.Steps.Any (step => step is FixLegacyResourceDesignerStep),
-				$"{nameof (FixLegacyResourceDesignerStep)} presence should match the compatibility fixup setting.");
-			Assert.AreEqual (enabled, pipeline.Steps.Any (step => step is AddKeepAlivesStep),
-				$"{nameof (AddKeepAlivesStep)} presence should match the compatibility fixup setting.");
+			Assert.AreEqual (enabled, pipeline.Steps.Any (step => step is FixAbstractMethodsStep));
+			Assert.AreEqual (enabled && useDesignerAssembly, pipeline.Steps.Any (step => step is FixLegacyResourceDesignerStep));
+			Assert.AreEqual (enabled && addKeepAlives, pipeline.Steps.Any (step => step is AddKeepAlivesStep));
 			Assert.IsTrue (pipeline.Steps.Any (step => step is FindJavaObjectsStep), $"{nameof (FindJavaObjectsStep)} should always run.");
 			Assert.IsTrue (pipeline.Steps.Any (step => step is SaveChangedAssemblyStep), $"{nameof (SaveChangedAssemblyStep)} should always run.");
 			Assert.IsTrue (pipeline.Steps.Any (step => step is FindTypeMapObjectsStep), $"{nameof (FindTypeMapObjectsStep)} should always run.");
@@ -54,6 +54,13 @@ namespace Xamarin.Android.Build.Tests
 		{
 			public void BuildPipelineForTest (AssemblyPipeline pipeline, MSBuildLinkContext context) =>
 				BuildPipeline (pipeline, context);
+		}
+
+		[Test]
+		public void LegacyCompatibilityAssemblyFixupsDefaultOff ()
+		{
+			Assert.IsFalse (new LinkAssembliesNoShrink ().EnableLegacyCompatibilityAssemblyFixups);
+			Assert.IsFalse (new PostTrimmingPipeline ().EnableLegacyCompatibilityAssemblyFixups);
 		}
 
 		[TestCase (false)]
@@ -518,13 +525,16 @@ $@"			var myButton = new AttributedButtonStub (this);
 				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: false, setLinkModeNone: false, shouldAddKeepAlives: false, runtime);
 
 				// Debug configuration, AndroidAddKeepAlives=true
-				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true,  setLinkModeNone: false, shouldAddKeepAlives: true,  runtime);
+				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true,  setLinkModeNone: false, shouldAddKeepAlives: false, runtime);
+				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true,  setLinkModeNone: false, shouldAddKeepAlives: true,  runtime, enableLegacyCompatibilityAssemblyFixups: true);
 
 				// Release configuration
-				AddTestData (isRelease: true,  setAndroidAddKeepAlivesTrue: false, setLinkModeNone: false, shouldAddKeepAlives: true,  runtime);
+				AddTestData (isRelease: true,  setAndroidAddKeepAlivesTrue: false, setLinkModeNone: false, shouldAddKeepAlives: false, runtime);
+				AddTestData (isRelease: true,  setAndroidAddKeepAlivesTrue: false, setLinkModeNone: false, shouldAddKeepAlives: true,  runtime, enableLegacyCompatibilityAssemblyFixups: true);
 
 				// Release configuration, AndroidLinkMode=None
-				AddTestData (isRelease: true,  setAndroidAddKeepAlivesTrue: false, setLinkModeNone: true,  shouldAddKeepAlives: true,  runtime);
+				AddTestData (isRelease: true,  setAndroidAddKeepAlivesTrue: false, setLinkModeNone: true,  shouldAddKeepAlives: false, runtime);
+				AddTestData (isRelease: true,  setAndroidAddKeepAlivesTrue: false, setLinkModeNone: true,  shouldAddKeepAlives: true,  runtime, enableLegacyCompatibilityAssemblyFixups: true);
 			}
 
 			AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true, setLinkModeNone: false,

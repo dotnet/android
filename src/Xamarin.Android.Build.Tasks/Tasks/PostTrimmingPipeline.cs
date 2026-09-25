@@ -16,7 +16,7 @@ namespace Xamarin.Android.Tasks;
 /// This opens each assembly once (via DirectoryAssemblyResolver with ReadWrite) and
 /// runs all registered steps on it, then writes modified assemblies in-place. Currently
 /// runs CheckForObsoletePreserveAttributeStep, StripEmbeddedLibrariesStep and
-/// (optionally) AddKeepAlivesStep.
+/// (when enabled) compatibility assembly fixups.
 ///
 /// Runs in the inner build after ILLink but before ReadyToRun/crossgen2 compilation,
 /// so that R2R images are generated from the already-modified assemblies.
@@ -33,6 +33,8 @@ public class PostTrimmingPipeline : AndroidTask
 	public bool AndroidLinkResources { get; set; }
 
 	public bool Deterministic { get; set; }
+
+	public bool EnableLegacyCompatibilityAssemblyFixups { get; set; }
 
 	public override bool RunTask ()
 	{
@@ -78,10 +80,11 @@ public class PostTrimmingPipeline : AndroidTask
 			steps.Add (new PostTrimmingFixAbstractMethodsStep (cache,
 				() => monoAndroidAssembly,
 				(msg) => Log.LogDebugMessage (msg),
-				(msg) => Log.LogCodedWarning ("XA2000", msg)));
+				(msg) => Log.LogCodedWarning ("XA2000", msg),
+				fixAbstractMethods: EnableLegacyCompatibilityAssemblyFixups));
 		}
 
-		if (AddKeepAlives) {
+		if (EnableLegacyCompatibilityAssemblyFixups && AddKeepAlives) {
 			// Memoize the corlib resolution so the attempt (and any error logging) happens at most once,
 			// regardless of how many assemblies/methods need KeepAlive injection.
 			AssemblyDefinition? corlibAssembly = null;
