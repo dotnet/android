@@ -33,6 +33,8 @@ stages:
         # MSBuild and child processes inherit the single-repository checkout's config.
         RestoreConfigFile: $(Build.Repository.LocalPath)\NuGet.config
         GradleArgs: --stacktrace --no-daemon --init-script "$(Build.Repository.LocalPath)\build-tools\scripts\guest-readiness-repositories.gradle"
+        # Guardian's directory-valued task default otherwise becomes a checkout-root .sarif copy.
+        GDNP_1ESSECRETSCANNING_OUTPUT: $(Agent.TempDirectory)\guest-readiness-spmi.sarif
     steps:
     - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
       parameters:

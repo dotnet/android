@@ -397,6 +397,40 @@ The graph regression's `--require-root-observer --expanded-preview <file>`
 also enforces the placement in an actual service-expanded preview; source and
 modeled graph checks alone do not claim hosted execution.
 
+DIAGWindows also fixes the single SPMI task's optional user-copy destination with
+`GDNP_1ESSECRETSCANNING_OUTPUT=$(Agent.TempDirectory)\guest-readiness-spmi.sarif`.
+The retained `1ESSecretScanning` 1.86.0 task defaults its **file** Output input
+to the checkout directory with a trailing separator. Exact Guardian
+0.293.26265.1 metadata/IL shows that it preserves this input as a user-copy
+location, gives the scanner its normal `.gdn\.r\...\sarifpatternmatcher.sarif`
+path, and later changes the copy destination's extension to `.sarif`.
+For the directory-valued default, this produces checkout-root `.sarif`.
+The explicit filename changes only that optional copy; scan targets, arguments,
+raw results, normal SDL processing/publication and the clean gate are unchanged.
+This mechanism explains the filename, not historical process attribution:
+the observed root hash matched none of the 156 published SDL files.
+
+This is a closed diagnostic experiment, not a general override-preservation
+feature. The task preserves an existing environment value, including empty,
+but Azure job variables shadow inherited stage/root/UI values before execution.
+Before queueing, inspect definition/queue variables and referenced groups for
+the name and aliases normalized by uppercasing and replacing periods with
+underscores; an existing conflict or required unreadable group blocks admission.
+The retained rendered baseline has no such override and exactly one Windows
+SPMI invocation. Multiple invocations sharing this filename are not supported:
+Guardian's duplicate-name suffix can converge again during extension replacement.
+Existing filesystem collision/overwrite behavior is not changed or bypassed.
+Default-off Windows and Mac/Linux do not receive the variable.
+
+`test-spmi-output-path.ps1 -TaskDirectory <retained-exact-task>
+-GuardianProofDirectory <retained-output-proof>` checks retained source facts,
+actual Windows `Path` values and explicitly modeled environment precedence;
+it never executes acquired task/Guardian code. Use the graph regression with
+`--require-spmi-output --require-root-observer --expanded-preview <new>
+--baseline-preview <0cbc-preview>` to require whole-provider-object equality
+after removing only this one Windows job variable. Source/model checks are not
+hosted proof. Any later root absence remains a point-in-time observation.
+
 `test-roslyn-output.ps1 -GuardianTargets <retained-injector-target>
 -GuardianCli <existing-1.24.0-cli>` runs three real concurrent SDK Csc invocations,
 checks NuGet restore traversal, explicit/OFF behavior and bounded capture. The

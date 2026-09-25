@@ -76,9 +76,12 @@ old_windows = yaml.safe_load(subprocess.check_output(["git", "show", f"{BASELINE
 assert remove_mode_parameters(expand(windows, False)) == old_windows, "Default Windows graph changed"
 diagnostic_windows = expand(windows, True)
 windows_job = diagnostic_windows["stages"][0]["jobs"][0]
+spmi_output_variable = "GDNP_1ESSECRETSCANNING_OUTPUT"
+spmi_output_value = r"$(Agent.TempDirectory)\guest-readiness-spmi.sarif"
 assert windows_job["variables"] == {
     "RestoreConfigFile": r"$(Build.Repository.LocalPath)\NuGet.config",
     "GradleArgs": r'--stacktrace --no-daemon --init-script "$(Build.Repository.LocalPath)\build-tools\scripts\guest-readiness-repositories.gradle"',
+    spmi_output_variable: spmi_output_value,
 }
 roslyn_configure = {
     "task": "PowerShell@2",
@@ -177,6 +180,67 @@ for mutation in ("observer-failure", "clean-condition", "early-observer", "early
     else:
         raise AssertionError(f"Invalid observer graph accepted: {mutation}")
 print("PASS: diagnostic observer alone continues on error immediately before unchanged clean; SDL log publication remains later.")
+
+
+def assert_spmi_output_only_change(before, after):
+    """Check the complete rendered objects, not a normalized scanner-policy subset."""
+    unchanged = copy.deepcopy(after)
+    jobs = [job for stage in unchanged["stages"] for job in stage.get("jobs", [])
+            if any(step.get("displayName") == root_observer["displayName"] for step in job.get("steps", []))]
+    assert len(jobs) == 1, "Expected one diagnostic Windows observer job"
+    job = jobs[0]
+    assert job["pool"]["os"] == "windows", "Output override must be Windows-only"
+    variables = job["variables"]
+    assert isinstance(variables, list), "Expected provider-expanded variable list"
+    overrides = [variable for variable in variables
+                 if variable.get("name", "").replace(".", "_").upper() == spmi_output_variable]
+    assert overrides == [{"name": spmi_output_variable, "value": spmi_output_value}], "Expected one exact fixed FILE output variable"
+    scanners = [step for step in job["steps"]
+                if re.search(r"(?:^|\.)1ESSecretScanning@", step.get("task", ""))]
+    assert len(scanners) == 1, "Shared fixed user-copy destination requires exactly one Windows scanner"
+    assert not any(key.casefold() == "output" for key in scanners[0].get("inputs", {})), "Unexpected explicit task Output"
+    assert not any(key.replace(".", "_").upper() == spmi_output_variable
+                   for key in scanners[0].get("env", {})), "Unexpected task environment override"
+    variables.remove(overrides[0])
+    assert unchanged == before, "Only one diagnostic Windows job variable may change in the entire provider graph"
+
+
+spmi_before = {"stages": [{"jobs": [{
+    "pool": {"os": "windows"}, "variables": [],
+    "steps": [{"task": "1ESSecretScanning@1", "inputs": {"Target": "unchanged"}},
+              copy.deepcopy(root_observer)],
+}]}]}
+spmi_after = copy.deepcopy(spmi_before)
+spmi_after["stages"][0]["jobs"][0]["variables"].append({"name": spmi_output_variable, "value": spmi_output_value})
+assert_spmi_output_only_change(spmi_before, spmi_after)
+for mutation in ("directory", "duplicate-variable", "duplicate-scanner", "target", "condition", "task-output", "task-env", "other-host", "other-job"):
+    invalid = copy.deepcopy(spmi_after)
+    job = invalid["stages"][0]["jobs"][0]
+    if mutation == "directory":
+        job["variables"][0]["value"] = "$(Build.SourcesDirectory)\\"
+    elif mutation == "duplicate-variable":
+        job["variables"].append({"name": spmi_output_variable.lower().replace("_", "."), "value": spmi_output_value})
+    elif mutation == "duplicate-scanner":
+        job["steps"].append(copy.deepcopy(job["steps"][0]))
+    elif mutation == "target":
+        job["steps"][0]["inputs"]["Target"] = "different"
+    elif mutation == "condition":
+        job["steps"][0]["condition"] = "always()"
+    elif mutation == "task-output":
+        job["steps"][0]["inputs"]["Output"] = spmi_output_value
+    elif mutation == "task-env":
+        job["steps"][0]["env"] = {spmi_output_variable: "different"}
+    elif mutation == "other-host":
+        job["pool"]["os"] = "linux"
+    else:
+        invalid["stages"][0]["jobs"].append({"variables": [{"name": spmi_output_variable, "value": spmi_output_value}]})
+    try:
+        assert_spmi_output_only_change(spmi_before, invalid)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError(f"Invalid SPMI output-only graph accepted: {mutation}")
+print("PASS: modeled SPMI output change is one Windows job variable; duplicate scanners/aliases and any other provider changes are rejected.")
 tracked_root_files = subprocess.check_output(
     ["git", "ls-tree", "--name-only", BASELINE], cwd=ROOT, text=True).splitlines()
 assert [name for name in tracked_root_files if name.casefold() == "nuget.config"] == ["NuGet.config"]
@@ -464,11 +528,14 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--expanded-preview", type=Path)
 parser.add_argument("--baseline-preview", type=Path)
 parser.add_argument("--require-root-observer", action="store_true")
+parser.add_argument("--require-spmi-output", action="store_true")
 args = parser.parse_args()
 if args.baseline_preview and not args.expanded_preview:
     parser.error("--baseline-preview requires --expanded-preview")
 if args.require_root_observer and not args.expanded_preview:
     parser.error("--require-root-observer requires --expanded-preview")
+if args.require_spmi_output and not (args.expanded_preview and args.baseline_preview):
+    parser.error("--require-spmi-output requires --expanded-preview and --baseline-preview")
 if args.expanded_preview:
     preview = yaml.safe_load(args.expanded_preview.read_text(encoding="utf-8-sig"))
     sign_jobs = [job for stage in preview["stages"] for job in stage.get("jobs", [])
@@ -485,6 +552,9 @@ if args.expanded_preview:
         print("PASS: supplied expanded graph places metadata observation after SDL analysis/Build Results and before unchanged clean.")
     if args.baseline_preview:
         before = yaml.safe_load(args.baseline_preview.read_text(encoding="utf-8-sig"))
+        if args.require_spmi_output:
+            assert_spmi_output_only_change(before, preview)
+            print("PASS: entire supplied provider graph differs only by the fixed diagnostic Windows SPMI user-copy variable.")
         old_jobs = [job for stage in before["stages"] for job in stage.get("jobs", [])
                     if job.get("job") == sign_jobs[0]["job"]]
         assert len(old_jobs) == 1
