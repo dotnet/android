@@ -209,7 +209,13 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			foreach (var (path, isFrameworkAssembly) in assemblyInputs) {
 				var peReader = new PEReader (File.OpenRead (path));
 				peReaders.Add (peReader);
+				if (!peReader.HasMetadata) {
+					continue;
+				}
 				var mdReader = peReader.GetMetadataReader ();
+				if (!mdReader.IsAssembly) {
+					continue;
+				}
 				var assemblyName = mdReader.GetString (mdReader.GetAssemblyDefinition ().Name);
 				assemblies.Add (new AssemblyInput (assemblyName, path, peReader));
 				if (isFrameworkAssembly) {

@@ -42,11 +42,8 @@ namespace Xamarin.Android.Build.Tests {
 		[Test]
 		public void Build_TrimmableTypeMap_UsesMonoAndroidImplementationMetadata ()
 		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
+			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("RuntimeIdentifier", "android-arm64");
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			var directoryBuildTargets = proj.Imports.Single (import => import.Project () == "Directory.Build.targets");
 			directoryBuildTargets.TextContent = () => """
@@ -54,16 +51,13 @@ namespace Xamarin.Android.Build.Tests {
 				  <Target Name="_AssertTrimmableTypeMapMonoAndroidImplementation"
 				      AfterTargets="_GenerateTrimmableTypeMapInputs">
 				    <ItemGroup>
-				      <_InvalidMonoAndroidImplementation
-				          Include="@(_AndroidTrimmableTypeMapMonoAndroidImplementation)"
-				          Condition=" !$([System.String]::Copy('%(NuGetPackageId)').StartsWith('Microsoft.Android.Runtime.')) " />
+				      <_MonoAndroidImplementation
+				          Include="@(_AndroidTrimmableTypeMapExtraFrameworkAssembly)"
+				          Condition=" '%(Filename)' == 'Mono.Android' and $([System.String]::Copy('%(FullPath)').Contains('Microsoft.Android.Runtime.')) " />
 				    </ItemGroup>
 				    <Error
-				        Condition=" '@(_AndroidTrimmableTypeMapMonoAndroidImplementation->Count())' == '0' "
+				        Condition=" '@(_MonoAndroidImplementation->Count())' == '0' "
 				        Text="The trimmable typemap did not select the Mono.Android implementation assembly." />
-				    <Error
-				        Condition=" '@(_InvalidMonoAndroidImplementation->Count())' != '0' "
-				        Text="The trimmable typemap selected a Mono.Android assembly outside the runtime pack." />
 				  </Target>
 				</Project>
 				""";
@@ -71,6 +65,94 @@ namespace Xamarin.Android.Build.Tests {
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 			builder.Output.AssertTargetIsNotSkipped ("_AssertTrimmableTypeMapMonoAndroidImplementation");
+
+			var frameworkImplementations = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "framework-implementation-assemblies.txt"));
+			var referenceImplementations = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "reference-implementation-assemblies.txt"));
+			FileAssert.Exists (frameworkImplementations);
+			FileAssert.Exists (referenceImplementations);
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Incremental build should have succeeded.");
+			builder.Output.AssertTargetIsSkipped ("_ResolveImplementationAssembliesForTrimmableTypeMap");
+			FileAssert.Exists (frameworkImplementations);
+			FileAssert.Exists (referenceImplementations);
+		}
+
+		[Test]
+		public void BindingCallbackFormatRequiresTrimmableConsumer ()
+		{
+			var testRoot = Path.Combine ("temp", $"{TestName}_{Guid.NewGuid ():N}");
+			var binding = new XamarinAndroidBindingProject {
+				ProjectName = "UcoBinding",
+				Jars = {
+					new AndroidItem.AndroidLibrary ("javaclasses.jar") {
+						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
+					},
+				},
+			};
+			binding.SetRuntime (AndroidRuntime.CoreCLR);
+			binding.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			binding.SetProperty ("_AndroidEnableUnmanagedCallersOnlyCallbacks", "true");
+			binding.SetProperty ("ProduceReferenceAssembly", "true");
+			binding.SetProperty ("ProduceReferenceAssemblyInOutDir", "true");
+			var bindingDirectoryBuildTargets = binding.Imports.Single (import => import.Project () == "Directory.Build.targets");
+			bindingDirectoryBuildTargets.TextContent = () => """
+				<Project>
+				  <PropertyGroup>
+				    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddReferenceAssemblyToPackage</TargetsForTfmSpecificContentInPackage>
+				  </PropertyGroup>
+				  <Target Name="_AddReferenceAssemblyToPackage">
+				    <ItemGroup>
+				      <TfmSpecificPackageFile Include="$(OutputPath)ref\$(AssemblyName).dll">
+				        <PackagePath>ref\$(TargetFramework)$(TargetPlatformVersion)</PackagePath>
+				      </TfmSpecificPackageFile>
+				    </ItemGroup>
+				  </Target>
+				</Project>
+				""";
+
+			using var bindingBuilder = CreateDllBuilder (Path.Combine (testRoot, binding.ProjectName));
+			bindingBuilder.Target = "Pack";
+			Assert.IsTrue (bindingBuilder.Build (binding), "UCO binding package should have succeeded.");
+			var packageDirectory = Path.Combine (Root, bindingBuilder.ProjectDirectory, binding.OutputPath);
+			var packagePath = Path.Combine (packageDirectory, $"{binding.ProjectName}.1.0.0.nupkg");
+			FileAssert.Exists (packagePath);
+			using (var package = System.IO.Compression.ZipFile.OpenRead (packagePath)) {
+				Assert.IsTrue (package.Entries.Any (entry => entry.FullName.StartsWith ("ref/", StringComparison.Ordinal) && entry.Name == $"{binding.ProjectName}.dll"));
+				Assert.IsTrue (package.Entries.Any (entry => entry.FullName.StartsWith ("lib/", StringComparison.Ordinal) && entry.Name == $"{binding.ProjectName}.dll"));
+			}
+
+			var trimmableApp = new XamarinAndroidApplicationProject {
+				ProjectName = "TrimmableApp",
+			};
+			trimmableApp.SetRuntime (AndroidRuntime.CoreCLR);
+			trimmableApp.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			trimmableApp.SetProperty ("RestoreAdditionalProjectSources", packageDirectory);
+			trimmableApp.PackageReferences.Add (new Package {
+				Id = binding.ProjectName,
+				Version = "1.0.0",
+			});
+
+			using (var builder = CreateApkBuilder (Path.Combine (testRoot, trimmableApp.ProjectName))) {
+				Assert.IsTrue (builder.Build (trimmableApp), "Trimmable app should consume the UCO binding implementation.");
+			}
+
+			var legacyApp = new XamarinAndroidApplicationProject {
+				ProjectName = "LegacyApp",
+			};
+			legacyApp.SetRuntime (AndroidRuntime.CoreCLR);
+			legacyApp.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
+			legacyApp.SetProperty ("RestoreAdditionalProjectSources", packageDirectory);
+			legacyApp.PackageReferences.Add (new Package {
+				Id = binding.ProjectName,
+				Version = "1.0.0",
+			});
+
+			using (var builder = CreateApkBuilder (Path.Combine (testRoot, legacyApp.ProjectName))) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (legacyApp), "Legacy typemap should reject a UCO binding.");
+				StringAssertEx.Contains ("error XA4265:", builder.LastBuildOutput);
+				StringAssertEx.Contains ("UcoBinding.dll", builder.LastBuildOutput);
+			}
 		}
 
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "APT2008", false)]
