@@ -78,10 +78,12 @@ diagnostic_windows = expand(windows, True)
 windows_job = diagnostic_windows["stages"][0]["jobs"][0]
 spmi_output_variable = "GDNP_1ESSECRETSCANNING_OUTPUT"
 spmi_output_value = r"$(Agent.TempDirectory)\guest-readiness-spmi.sarif"
+retention_variable = "XA.PublishAllLogs"
 assert windows_job["variables"] == {
     "RestoreConfigFile": r"$(Build.Repository.LocalPath)\NuGet.config",
     "GradleArgs": r'--stacktrace --no-daemon --init-script "$(Build.Repository.LocalPath)\build-tools\scripts\guest-readiness-repositories.gradle"',
     spmi_output_variable: spmi_output_value,
+    retention_variable: "true",
 }
 roslyn_configure = {
     "task": "PowerShell@2",
@@ -182,7 +184,7 @@ for mutation in ("observer-failure", "clean-condition", "early-observer", "early
 print("PASS: diagnostic observer alone continues on error immediately before unchanged clean; SDL log publication remains later.")
 
 
-def assert_spmi_output_only_change(before, after):
+def assert_windows_evidence_variable_change(before, after, variable=spmi_output_variable, value=spmi_output_value):
     """Check the complete rendered objects, not a normalized scanner-policy subset."""
     unchanged = copy.deepcopy(after)
     jobs = [job for stage in unchanged["stages"] for job in stage.get("jobs", [])
@@ -192,15 +194,22 @@ def assert_spmi_output_only_change(before, after):
     assert job["pool"]["os"] == "windows", "Output override must be Windows-only"
     variables = job["variables"]
     assert isinstance(variables, list), "Expected provider-expanded variable list"
-    overrides = [variable for variable in variables
-                 if variable.get("name", "").replace(".", "_").upper() == spmi_output_variable]
-    assert overrides == [{"name": spmi_output_variable, "value": spmi_output_value}], "Expected one exact fixed FILE output variable"
+    overrides = [item for item in variables
+                 if item.get("name", "").replace(".", "_").upper() == variable.replace(".", "_").upper()]
+    assert overrides == [{"name": variable, "value": value}], f"Expected one exact string variable: {variable}"
+    assert [item for item in variables if item.get("name", "").replace(".", "_").upper() == spmi_output_variable] == [
+        {"name": spmi_output_variable, "value": spmi_output_value}
+    ], "Reviewed SPMI output must remain exact and unique"
     scanners = [step for step in job["steps"]
                 if re.search(r"(?:^|\.)1ESSecretScanning@", step.get("task", ""))]
     assert len(scanners) == 1, "Shared fixed user-copy destination requires exactly one Windows scanner"
     assert not any(key.casefold() == "output" for key in scanners[0].get("inputs", {})), "Unexpected explicit task Output"
     assert not any(key.replace(".", "_").upper() == spmi_output_variable
                    for key in scanners[0].get("env", {})), "Unexpected task environment override"
+    if variable == retention_variable:
+        assert_root_observer_order(job["steps"])
+        consumers = [step for step in job["steps"] if retention_variable in step.get("condition", "")]
+        assert len(consumers) == 15, "Expected all 15 existing Windows retention conditions"
     variables.remove(overrides[0])
     assert unchanged == before, "Only one diagnostic Windows job variable may change in the entire provider graph"
 
@@ -212,7 +221,7 @@ spmi_before = {"stages": [{"jobs": [{
 }]}]}
 spmi_after = copy.deepcopy(spmi_before)
 spmi_after["stages"][0]["jobs"][0]["variables"].append({"name": spmi_output_variable, "value": spmi_output_value})
-assert_spmi_output_only_change(spmi_before, spmi_after)
+assert_windows_evidence_variable_change(spmi_before, spmi_after)
 for mutation in ("directory", "duplicate-variable", "duplicate-scanner", "target", "condition", "task-output", "task-env", "other-host", "other-job"):
     invalid = copy.deepcopy(spmi_after)
     job = invalid["stages"][0]["jobs"][0]
@@ -235,12 +244,51 @@ for mutation in ("directory", "duplicate-variable", "duplicate-scanner", "target
     else:
         invalid["stages"][0]["jobs"].append({"variables": [{"name": spmi_output_variable, "value": spmi_output_value}]})
     try:
-        assert_spmi_output_only_change(spmi_before, invalid)
+        assert_windows_evidence_variable_change(spmi_before, invalid)
     except AssertionError:
         pass
     else:
         raise AssertionError(f"Invalid SPMI output-only graph accepted: {mutation}")
 print("PASS: modeled SPMI output change is one Windows job variable; duplicate scanners/aliases and any other provider changes are rejected.")
+
+retention_condition = "or(ne(variables['Agent.JobStatus'], 'Succeeded'), eq(variables['XA.PublishAllLogs'], 'true'))"
+retention_before = copy.deepcopy(spmi_after)
+retention_job = retention_before["stages"][0]["jobs"][0]
+retention_job["steps"] = [{"task": "1ESSecretScanning@1", "condition": retention_condition}]
+retention_job["steps"] += [{"task": "provider.Unchanged", "condition": retention_condition} for _ in range(14)]
+retention_job["steps"] += copy.deepcopy(observer_fixture)
+retention_after = copy.deepcopy(retention_before)
+retention_after["stages"][0]["jobs"][0]["variables"].append({"name": retention_variable, "value": "true"})
+assert_windows_evidence_variable_change(retention_before, retention_after, retention_variable, "true")
+for mutation in ("bool", "false", "alias", "duplicate", "spmi-output", "condition", "active-flag", "other-host"):
+    invalid = copy.deepcopy(retention_after)
+    job = invalid["stages"][0]["jobs"][0]
+    if mutation in ("bool", "false"):
+        job["variables"][-1]["value"] = True if mutation == "bool" else "false"
+    elif mutation == "alias":
+        job["variables"][-1]["name"] = "XA_PUBLISHALLLOGS"
+    elif mutation == "duplicate":
+        job["variables"].append({"name": "xa_publishalllogs", "value": "true"})
+    elif mutation == "spmi-output":
+        job["variables"][0]["value"] = "different"
+    elif mutation == "condition":
+        job["steps"][0]["condition"] = "always()"
+    elif mutation == "active-flag":
+        job["variables"].append({"name": "ONEES_HASACTIVESDLTASK", "value": "True"})
+    else:
+        job["pool"]["os"] = "linux"
+    try:
+        assert_windows_evidence_variable_change(retention_before, invalid, retention_variable, "true")
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError(f"Invalid retention-only graph accepted: {mutation}")
+
+# Model only the existing inner retention predicate, never the full Azure scheduler.
+for status, expected_off in (("Succeeded", False), ("SucceededWithIssues", True), ("Failed", True), ("Canceled", True)):
+    for setting, expected in (("", expected_off), ("false", expected_off), ("true", True)):
+        assert (status != "Succeeded" or setting == "true") == expected
+print("PASS: modeled retention changes only healthy inner predicate; exact string/alias, 15 guards, SPMI output, observer and clean controls preserved.")
 tracked_root_files = subprocess.check_output(
     ["git", "ls-tree", "--name-only", BASELINE], cwd=ROOT, text=True).splitlines()
 assert [name for name in tracked_root_files if name.casefold() == "nuget.config"] == ["NuGet.config"]
@@ -529,6 +577,7 @@ parser.add_argument("--expanded-preview", type=Path)
 parser.add_argument("--baseline-preview", type=Path)
 parser.add_argument("--require-root-observer", action="store_true")
 parser.add_argument("--require-spmi-output", action="store_true")
+parser.add_argument("--require-windows-retention", action="store_true")
 args = parser.parse_args()
 if args.baseline_preview and not args.expanded_preview:
     parser.error("--baseline-preview requires --expanded-preview")
@@ -536,6 +585,8 @@ if args.require_root_observer and not args.expanded_preview:
     parser.error("--require-root-observer requires --expanded-preview")
 if args.require_spmi_output and not (args.expanded_preview and args.baseline_preview):
     parser.error("--require-spmi-output requires --expanded-preview and --baseline-preview")
+if args.require_windows_retention and (not (args.expanded_preview and args.baseline_preview) or args.require_spmi_output):
+    parser.error("--require-windows-retention requires both previews and cannot combine with the older --require-spmi-output delta")
 if args.expanded_preview:
     preview = yaml.safe_load(args.expanded_preview.read_text(encoding="utf-8-sig"))
     sign_jobs = [job for stage in preview["stages"] for job in stage.get("jobs", [])
@@ -553,8 +604,11 @@ if args.expanded_preview:
     if args.baseline_preview:
         before = yaml.safe_load(args.baseline_preview.read_text(encoding="utf-8-sig"))
         if args.require_spmi_output:
-            assert_spmi_output_only_change(before, preview)
+            assert_windows_evidence_variable_change(before, preview)
             print("PASS: entire supplied provider graph differs only by the fixed diagnostic Windows SPMI user-copy variable.")
+        if args.require_windows_retention:
+            assert_windows_evidence_variable_change(before, preview, retention_variable, "true")
+            print("PASS: entire supplied provider graph differs only by quoted-string diagnostic Windows retention; all existing guards and tasks are identical.")
         old_jobs = [job for stage in before["stages"] for job in stage.get("jobs", [])
                     if job.get("job") == sign_jobs[0]["job"]]
         assert len(old_jobs) == 1

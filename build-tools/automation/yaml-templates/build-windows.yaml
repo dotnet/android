@@ -35,6 +35,8 @@ stages:
         GradleArgs: --stacktrace --no-daemon --init-script "$(Build.Repository.LocalPath)\build-tools\scripts\guest-readiness-repositories.gradle"
         # Guardian's directory-valued task default otherwise becomes a checkout-root .sarif copy.
         GDNP_1ESSECRETSCANNING_OUTPUT: $(Agent.TempDirectory)\guest-readiness-spmi.sarif
+        # Retain evidence and run the attached normal SDL flow even when tests pass.
+        XA.PublishAllLogs: 'true'
     steps:
     - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
       parameters:

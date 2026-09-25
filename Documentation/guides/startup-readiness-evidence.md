@@ -431,6 +431,33 @@ it never executes acquired task/Guardian code. Use the graph regression with
 after removing only this one Windows job variable. Source/model checks are not
 hosted proof. Any later root absence remains a point-in-time observation.
 
+DIAGWindows sets the existing `XA.PublishAllLogs` control to the string `'true'`
+at job scope. Without it, healthy tests skip normal Build Results retention and
+its attached SDL scans: a clean checkout and absent root `.sarif` then do not
+exercise the SPMI copy correction. This setting enables the existing successful
+build retention path, including captured GUID evidence, without adding a
+publisher or changing artifact/scan inputs. All 15 existing retention conditions
+remain identical. Only their inner predicate changes for `Succeeded`;
+`SucceededWithIssues`, failure and cancellation already satisfy that predicate.
+Separate `succeeded()`, fork, enforced-tool and injected-ruleset guards remain,
+so this is not a promise that every scanner runs after failure or cancellation.
+`ONEES_HASACTIVESDLTASK` is not forced; normal final SDL publication still depends
+on actual activation. The late observer, clean gate and later publishers stay
+in place; Mac/Linux/signing and default-off Windows are unchanged.
+
+This closed diagnostic job constant intentionally takes precedence over inherited
+values. Before queueing, check definition, referenced-group and queue names for
+both `XA.PublishAllLogs` (normalized `XA_PUBLISHALLLOGS`) and the SPMI output
+variable. No existing root parameter or queue-override permission is assumed.
+For this delta, use `--require-windows-retention --require-root-observer
+--expanded-preview <new> --baseline-preview <36e62-preview>` instead of the older
+`--require-spmi-output` delta check. It requires whole-provider-object equality
+after removing only the retention variable, including unchanged pre-job length,
+one SPMI invocation and its fixed output, all guards and all other jobs.
+Predicate tests are models, not hosted execution. Qualification still requires
+actual scanner/report execution, published raw/processed evidence, and the
+point-in-time root observation plus unchanged clean result.
+
 `test-roslyn-output.ps1 -GuardianTargets <retained-injector-target>
 -GuardianCli <existing-1.24.0-cli>` runs three real concurrent SDK Csc invocations,
 checks NuGet restore traversal, explicit/OFF behavior and bounded capture. The
