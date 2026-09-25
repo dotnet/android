@@ -1,0 +1,7 @@
+{
+  "records": [
+    { "id": "s-old", "type": "Stage", "name": "MSBuild Emulator Tests", "refName": "msbuilddevice_tests", "state": "completed", "result": "failed", "attempt": 1 },
+    { "id": "p-old", "parentId": "s-old", "type": "Phase", "name": "macOS > Tests > MSBuild+Emulator", "refName": "msbuild_phase", "state": "completed", "result": "failed", "attempt": 1 },
+    { "id": "j-old", "parentId": "p-old", "type": "Job", "name": "macOS > Tests > MSBuild+Emulator 11", "refName": "Job11", "state": "completed", "result": "failed", "attempt": 1, "issues": [{ "message": "We stopped hearing from agent Azure Pipelines 77. Verify the agent machine is running." }] }
+  ]
+}

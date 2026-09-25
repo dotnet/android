@@ -1,0 +1,5 @@
+{
+  "401": [
+    { "automatedTestName": "Example.Tests.UnmappedTest.Fails", "outcome": "Failed", "completedDate": "2026-09-25T10:00:00Z", "errorMessage": "Expected: true But was: false" }
+  ]
+}

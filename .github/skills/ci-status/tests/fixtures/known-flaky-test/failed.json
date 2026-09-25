@@ -1,0 +1,7 @@
+[
+  {
+    "automatedTestName": "System.NetTests.SslTest.HttpsShouldWork",
+    "automatedTestStorage": "Mono.Android.NET-Tests.dll",
+    "runId": 101
+  }
+]

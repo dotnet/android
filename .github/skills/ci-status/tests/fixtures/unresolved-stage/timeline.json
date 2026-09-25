@@ -1,0 +1,8 @@
+{
+  "records": [
+    { "id": "s1", "type": "Stage", "name": "Build", "refName": "build_stage", "state": "completed", "result": "failed", "attempt": 1 },
+    { "id": "p1", "parentId": "s1", "type": "Phase", "name": "Build > Job", "refName": "build_phase", "state": "completed", "result": "failed", "attempt": 1 },
+    { "id": "j1", "parentId": "p1", "type": "Job", "name": "Build > Job", "refName": "Job1", "state": "completed", "result": "failed", "attempt": 1 },
+    { "id": "t1", "parentId": "j1", "type": "Task", "name": "Restore", "refName": "Restore1", "state": "completed", "result": "failed", "attempt": 1, "issues": [{ "message": "error NU1301: HTTP 500 Internal Server Error: request blocked due to ATCPU rate limit." }] }
+  ]
+}

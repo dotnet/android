@@ -1,0 +1,1 @@
+tests/Xamarin.Android.Build.Tests/FooTests.cs

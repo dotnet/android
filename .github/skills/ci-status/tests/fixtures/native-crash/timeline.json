@@ -1,0 +1,6 @@
+{
+  "records": [
+    { "id": "s1", "type": "Stage", "name": "Package Tests", "refName": "crash_stage", "state": "completed", "result": "failed", "attempt": 1 },
+    { "id": "p1", "parentId": "s1", "type": "Phase", "name": "macOS > Tests > APKs", "refName": "crash_phase", "state": "completed", "result": "failed", "attempt": 1 }
+  ]
+}

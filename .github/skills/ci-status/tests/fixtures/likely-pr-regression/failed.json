@@ -1,0 +1,12 @@
+[
+  {
+    "automatedTestName": "Xamarin.Android.Build.Tests.FooTests.ShouldWork",
+    "automatedTestStorage": "Xamarin.Android.Build.Tests.dll",
+    "runId": 201
+  },
+  {
+    "automatedTestName": "Xamarin.Android.Build.Tests.FooTests.ShouldWork",
+    "automatedTestStorage": "Xamarin.Android.Build.Tests.dll",
+    "runId": 202
+  }
+]

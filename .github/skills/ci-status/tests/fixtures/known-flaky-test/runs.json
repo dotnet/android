@@ -1,0 +1,5 @@
+[
+  { "id": 101, "name": "Mono.Android.NET_Tests-Debug", "phase": "apk_phase", "incompleteTests": 0 },
+  { "id": 103, "name": "Mono.Android.NET_Tests-Debug (Auto-Retry)", "phase": "apk_phase", "incompleteTests": 0 },
+  { "id": 102, "name": "Mono.Android.NET_Tests-Release", "phase": "apk_phase", "incompleteTests": 0 }
+]

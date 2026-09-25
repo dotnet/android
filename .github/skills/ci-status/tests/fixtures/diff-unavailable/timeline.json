@@ -1,0 +1,6 @@
+{
+  "records": [
+    { "id": "s1", "type": "Stage", "name": "Tests", "refName": "tests_stage", "state": "completed", "result": "failed", "attempt": 1 },
+    { "id": "p1", "parentId": "s1", "type": "Phase", "name": "Tests > Unit", "refName": "tests_phase", "state": "completed", "result": "failed", "attempt": 1 }
+  ]
+}

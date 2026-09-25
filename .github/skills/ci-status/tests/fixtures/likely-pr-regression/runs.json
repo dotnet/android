@@ -1,0 +1,4 @@
+[
+  { "id": 201, "name": "Xamarin.Android.Build.Tests - Linux-1 (Auto-Retry)", "phase": "msbuild_phase", "incompleteTests": 0 },
+  { "id": 202, "name": "Xamarin.Android.Build.Tests - Windows-1 (Auto-Retry)", "phase": "msbuild_phase", "incompleteTests": 0 }
+]

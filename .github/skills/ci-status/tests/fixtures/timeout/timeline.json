@@ -1,0 +1,7 @@
+{
+  "records": [
+    { "id": "s1", "type": "Stage", "name": "Long Tests", "refName": "timeout_stage", "state": "completed", "result": "canceled", "attempt": 1 },
+    { "id": "p1", "parentId": "s1", "type": "Phase", "name": "macOS > Long Tests", "refName": "timeout_phase", "state": "completed", "result": "canceled", "attempt": 1 },
+    { "id": "j1", "parentId": "p1", "type": "Job", "name": "macOS > Long Tests 1", "refName": "Job1", "state": "completed", "result": "canceled", "attempt": 1, "issues": [{ "message": "The job running on agent Azure Pipelines 12 ran longer than the maximum time of 240 minutes." }] }
+  ]
+}

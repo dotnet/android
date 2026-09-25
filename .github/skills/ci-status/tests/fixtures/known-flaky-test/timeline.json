@@ -1,0 +1,6 @@
+{
+  "records": [
+    { "id": "s1", "type": "Stage", "name": "Package Tests", "refName": "smoke_tests", "state": "completed", "result": "failed", "attempt": 1 },
+    { "id": "p1", "parentId": "s1", "type": "Phase", "name": "macOS > Tests > APKs", "refName": "apk_phase", "state": "completed", "result": "failed", "attempt": 1 }
+  ]
+}

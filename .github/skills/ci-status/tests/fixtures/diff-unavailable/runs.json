@@ -1,0 +1,4 @@
+[
+  { "id": 501, "name": "Example.Tests-Debug", "phase": "tests_phase", "incompleteTests": 0 },
+  { "id": 502, "name": "Example.Tests-Release", "phase": "tests_phase", "incompleteTests": 0 }
+]
