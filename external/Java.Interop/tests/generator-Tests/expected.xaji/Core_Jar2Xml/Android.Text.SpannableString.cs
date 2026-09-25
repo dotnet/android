@@ -20,10 +20,6 @@ namespace Android.Text {
 	public partial class SpannableString : global::Android.Text.SpannableStringInternal, global::Android.Text.ISpannable {
 		static readonly JniPeerMembers _members = new XAPeerMembers ("android/text/SpannableString", typeof (SpannableString));
 
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {

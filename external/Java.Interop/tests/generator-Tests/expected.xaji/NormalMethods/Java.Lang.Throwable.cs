@@ -20,9 +20,5 @@ namespace Java.Lang {
 	public partial class Throwable {
 		static readonly JniPeerMembers _members = new XAPeerMembers ("java/lang/Throwable", typeof (Throwable));
 
-		internal static IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
 	}
 }

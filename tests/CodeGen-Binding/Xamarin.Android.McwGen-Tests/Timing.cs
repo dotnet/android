@@ -21,7 +21,7 @@ namespace Com.Xamarin.Android {
 		public virtual unsafe void VirtualVoidMethod_Timing_Traditional ()
 		{
 			if (jonp_id_VirtualVoidMethod == IntPtr.Zero)
-				jonp_id_VirtualVoidMethod = JNIEnv.GetMethodID (class_ref, "VirtualVoidMethod", "()V");
+				jonp_id_VirtualVoidMethod = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "VirtualVoidMethod", "()V");
 
 			if (GetType () == ThresholdType)
 				JNIEnv.CallVoidMethod  (Handle, jonp_id_VirtualVoidMethod);
@@ -34,7 +34,7 @@ namespace Com.Xamarin.Android {
 		public virtual unsafe void VirtualVoidMethod_Timing_TraditionalWithCaching ()
 		{
 			if (jonp_id_VirtualVoidMethod == IntPtr.Zero)
-				jonp_id_VirtualVoidMethod = JNIEnv.GetMethodID (class_ref, "VirtualVoidMethod", "()V");
+				jonp_id_VirtualVoidMethod = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "VirtualVoidMethod", "()V");
 
 			if (GetType () == ThresholdType)
 				JNIEnv.CallVoidMethod  (Handle, jonp_id_VirtualVoidMethod);
@@ -50,7 +50,7 @@ namespace Com.Xamarin.Android {
 
 		public unsafe void VirtualVoidMethod_Timing_NoCache ()
 		{
-			var m = JNIEnv.GetMethodID (class_ref, "VirtualVoidMethod", "()V");
+			var m = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "VirtualVoidMethod", "()V");
 
 			if (GetType () == ThresholdType)
 				JNIEnv.CallVoidMethod  (Handle, m);
@@ -65,7 +65,7 @@ namespace Com.Xamarin.Android {
 			IntPtr m;
 			lock (dictInstanceMethods) {
 				if (!dictInstanceMethods.TryGetValue (id, out m))
-					dictInstanceMethods.Add (id, m = JNIEnv.GetMethodID (class_ref, "VirtualVoidMethod", "()V"));
+					dictInstanceMethods.Add (id, m = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "VirtualVoidMethod", "()V"));
 			}
 
 			if (GetType () == ThresholdType)
@@ -80,8 +80,8 @@ namespace Com.Xamarin.Android {
 			const string id = "VirtualVoidMethod.()V";
 
 			var m = concurrentInstanceMethods.AddOrUpdate (id,
-				s => JNIEnv.GetMethodID (class_ref, "VirtualVoidMethod", "()V"),
-				(s, c) => c != IntPtr.Zero ? c : JNIEnv.GetMethodID (class_ref, "VirtualVoidMethod", "()V"));
+				s => JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "VirtualVoidMethod", "()V"),
+				(s, c) => c != IntPtr.Zero ? c : JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "VirtualVoidMethod", "()V"));
 
 			if (GetType () == ThresholdType)
 				JNIEnv.CallVoidMethod  (Handle, m);
