@@ -110,11 +110,73 @@ test_sources_configure = {
     },
 }
 assert windows_steps.count(test_sources_configure) == 1
-assert [step for step in windows_steps if step not in (roslyn_configure, roslyn_capture, test_sources_configure)] == old_windows["stages"][0]["jobs"][0]["steps"], "Normal Windows command sequence changed"
+root_observer = {
+    "task": "PowerShell@2",
+    "displayName": "Observe diagnostic root SARIF metadata before clean gate",
+    "condition": "always()",
+    "continueOnError": True,
+    "inputs": {
+        "pwsh": True, "targetType": "filePath",
+        "filePath": "$(Build.Repository.LocalPath)/build-tools/scripts/guest-readiness-roslyn.ps1",
+        "arguments": "-Phase ObserveRoot",
+    },
+}
+assert windows_steps.count(root_observer) == 1
+assert [step for step in windows_steps if step not in (roslyn_configure, roslyn_capture, test_sources_configure, root_observer)] == old_windows["stages"][0]["jobs"][0]["steps"], "Normal Windows command sequence changed"
 assert windows_steps[windows_steps.index(test_sources_configure) + 1]["template"].endswith("/run-nunit-tests.yaml")
 assert windows_steps[windows_steps.index(roslyn_configure) + 1]["displayName"] == "Prepare Solution"
 assert windows_steps[windows_steps.index(roslyn_capture) - 1]["parameters"]["displayName"] == "Test PackDotNet"
 assert windows_steps[windows_steps.index(roslyn_capture) + 1]["template"].endswith("/upload-results.yaml")
+assert windows_steps[windows_steps.index(root_observer) - 1]["template"].endswith("/upload-results.yaml")
+assert windows_steps[windows_steps.index(root_observer) + 1]["template"].endswith("/fail-on-dirty-tree.yaml")
+clean_path = "build-tools/automation/yaml-templates/fail-on-dirty-tree.yaml"
+assert (ROOT / clean_path).read_text() == subprocess.check_output(
+    ["git", "show", f"{BASELINE}:{clean_path}"], cwd=ROOT, text=True), "Clean gate changed"
+
+
+def assert_root_observer_order(steps):
+    observers = [i for i, step in enumerate(steps) if step.get("displayName") == root_observer["displayName"]]
+    clean = [i for i, step in enumerate(steps) if step.get("displayName") == "Ensure no modified/untracked files"]
+    assert len(observers) == len(clean) == 1, "Expected one observer and one clean gate"
+    position = observers[0]
+    for key, value in root_observer.items():
+        assert steps[position].get(key) == value, f"Observer field changed: {key}"
+    assert position + 1 == clean[0], "Observer must immediately precede unchanged clean gate"
+    assert steps[clean[0]].get("condition") == "succeeded()", "Clean condition changed"
+    assert steps[position - 1].get("task") == "PublishPipelineArtifact@1", "Build Results publication must precede observation"
+    for identity in ("SdtReport", "PostAnalysis"):
+        positions = [i for i, step in enumerate(steps) if re.search(rf"(?:^|\.){identity}@", step.get("task", ""))]
+        assert len(positions) == 1 and positions[0] < position, f"{identity} must precede observation"
+    publishers = [i for i, step in enumerate(steps) if re.search(r"(?:^|\.)PublishSecurityAnalysisLogs@", step.get("task", ""))]
+    assert len(publishers) == 1 and publishers[0] > clean[0], "Normal SDL log publisher must remain after clean"
+
+
+observer_fixture = [
+    {"task": "provider.SdtReport@2"}, {"task": "provider.PostAnalysis@2"},
+    {"task": "PublishPipelineArtifact@1"}, copy.deepcopy(root_observer),
+    {"task": "PowerShell@2", "displayName": "Ensure no modified/untracked files", "condition": "succeeded()"},
+    {"task": "provider.PublishSecurityAnalysisLogs@3"},
+]
+assert_root_observer_order(observer_fixture)
+for mutation in ("observer-failure", "clean-condition", "early-observer", "early-publisher", "missing-observer"):
+    invalid = copy.deepcopy(observer_fixture)
+    if mutation == "observer-failure":
+        invalid[3]["continueOnError"] = False
+    elif mutation == "clean-condition":
+        invalid[4]["condition"] = "always()"
+    elif mutation == "early-observer":
+        invalid.insert(0, invalid.pop(3))
+    elif mutation == "early-publisher":
+        invalid.insert(0, invalid.pop(5))
+    else:
+        invalid.pop(3)
+    try:
+        assert_root_observer_order(invalid)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError(f"Invalid observer graph accepted: {mutation}")
+print("PASS: diagnostic observer alone continues on error immediately before unchanged clean; SDL log publication remains later.")
 tracked_root_files = subprocess.check_output(
     ["git", "ls-tree", "--name-only", BASELINE], cwd=ROOT, text=True).splitlines()
 assert [name for name in tracked_root_files if name.casefold() == "nuget.config"] == ["NuGet.config"]
@@ -401,9 +463,12 @@ print("PASS: modeled AntiMalware alias is bound to the unique Input publisher; o
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--expanded-preview", type=Path)
 parser.add_argument("--baseline-preview", type=Path)
+parser.add_argument("--require-root-observer", action="store_true")
 args = parser.parse_args()
 if args.baseline_preview and not args.expanded_preview:
     parser.error("--baseline-preview requires --expanded-preview")
+if args.require_root_observer and not args.expanded_preview:
+    parser.error("--require-root-observer requires --expanded-preview")
 if args.expanded_preview:
     preview = yaml.safe_load(args.expanded_preview.read_text(encoding="utf-8-sig"))
     sign_jobs = [job for stage in preview["stages"] for job in stage.get("jobs", [])
@@ -412,6 +477,12 @@ if args.expanded_preview:
     assert len(sign_jobs) == 1, "Exactly one diagnostic signing job required"
     steps = sign_jobs[0]["steps"]
     assert_signing_order(steps)
+    if args.require_root_observer:
+        observer_jobs = [job for stage in preview["stages"] for job in stage.get("jobs", [])
+                         if any(step.get("displayName") == root_observer["displayName"] for step in job.get("steps", []))]
+        assert len(observer_jobs) == 1, "Exactly one diagnostic root observer job required"
+        assert_root_observer_order(observer_jobs[0]["steps"])
+        print("PASS: supplied expanded graph places metadata observation after SDL analysis/Build Results and before unchanged clean.")
     if args.baseline_preview:
         before = yaml.safe_load(args.baseline_preview.read_text(encoding="utf-8-sig"))
         old_jobs = [job for stage in before["stages"] for job in stage.get("jobs", [])

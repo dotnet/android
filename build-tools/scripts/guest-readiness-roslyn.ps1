@@ -1,12 +1,25 @@
 #requires -Version 7.3
 param (
-    [Parameter(Mandatory)][ValidateSet('Configure', 'Capture')][string] $Phase,
+    [Parameter(Mandatory)][ValidateSet('Configure', 'Capture', 'ObserveRoot')][string] $Phase,
     [string] $Destination
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $root = [IO.Path]::GetFullPath("$PSScriptRoot/../..")
 if (-not $IsWindows) { throw 'Guest readiness Roslyn routing is Windows-only.' }
+function Assert-NoReparsePointAncestor ([string] $Path) {
+    # A missing leaf can still traverse an existing junction; inspect its complete ancestor chain.
+    $ancestor = [IO.DirectoryInfo]::new($Path)
+    while ($null -ne $ancestor) {
+        if (Test-Path -LiteralPath $ancestor.FullName -ErrorAction Stop) {
+            $item = Get-Item -LiteralPath $ancestor.FullName -Force -ErrorAction Stop
+            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+                throw [InvalidOperationException]::new('Roslyn evidence paths must not traverse reparse points.')
+            }
+        }
+        $ancestor = $ancestor.Parent
+    }
+}
 if ($Phase -eq 'Configure') {
     if (-not [string]::IsNullOrEmpty($env:CustomAfterMicrosoftCommonTargets)) {
         throw 'An existing CustomAfterMicrosoftCommonTargets must not be overwritten.'
@@ -16,22 +29,76 @@ if ($Phase -eq 'Configure') {
     Write-Output "##vso[task.setvariable variable=CustomAfterMicrosoftCommonTargets]$target"
     exit 0
 }
+$rootSarif = Join-Path $root '.sarif'
+if ($Phase -eq 'ObserveRoot') {
+    $observation = [ordered]@{
+        schemaVersion = 1; kind = 'android-diagnostic-root-sarif-metadata'
+        phase = 'post-sdl-analysis-pre-clean'; status = 'unavailable'; present = $null
+    }
+    $exitCode = 1
+    $reason = 'path-validation-failed'
+    try {
+        Assert-NoReparsePointAncestor $rootSarif
+        $reason = 'read-unavailable'
+        if (-not (Test-Path -LiteralPath $rootSarif -ErrorAction Stop)) {
+            $observation.status = 'observed'
+            $observation.present = $false
+            $exitCode = 0
+        } else {
+            $file = Get-Item -LiteralPath $rootSarif -Force -ErrorAction Stop
+            $reason = 'not-regular-file'
+            if ($file.PSIsContainer) { throw [InvalidOperationException]::new('Not a regular file.') }
+            $reason = 'too-large'
+            if ($file.Length -gt 67108864) { throw [InvalidOperationException]::new('File exceeds observation bound.') }
+            $reason = 'read-unavailable'
+            $source = [IO.File]::Open($rootSarif, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
+            try {
+                $reason = 'path-validation-failed'
+                Assert-NoReparsePointAncestor $rootSarif
+                $reason = 'read-unavailable'
+                $file.Refresh()
+                $length = $source.Length
+                $created = $file.CreationTimeUtc
+                $written = $file.LastWriteTimeUtc
+                $reason = 'too-large'
+                if ($length -gt 67108864) { throw [InvalidOperationException]::new('File exceeds observation bound.') }
+                $reason = 'changed-during-read'
+                if (-not $file.Exists -or $file.Length -ne $length) { throw [InvalidOperationException]::new('File metadata changed.') }
+                $reason = 'read-unavailable'
+                $hash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($source)).ToLowerInvariant()
+                $file.Refresh()
+                $reason = 'path-validation-failed'
+                Assert-NoReparsePointAncestor $rootSarif
+                $reason = 'changed-during-read'
+                if (-not $file.Exists -or $source.Position -ne $length -or $source.Length -ne $length -or
+                    $file.Length -ne $length -or $file.CreationTimeUtc -ne $created -or $file.LastWriteTimeUtc -ne $written) {
+                    throw [InvalidOperationException]::new('File metadata changed.')
+                }
+                $observation.status = 'observed'
+                $observation.present = $true
+                $observation.sizeBytes = $length
+                $observation.sha256 = $hash
+                $observation.creationTimeUtc = $created.ToString('O')
+                $observation.lastWriteTimeUtc = $written.ToString('O')
+                $exitCode = 0
+            } finally { $source.Dispose() }
+        }
+    } catch [IO.IOException], [UnauthorizedAccessException], [InvalidOperationException], [System.Management.Automation.ItemNotFoundException] {
+        # Fixed failure metadata only; the new CI task alone continues so the clean gate still runs.
+        $observation.status = 'unavailable'
+        $observation.present = $null
+        foreach ($key in @('sizeBytes', 'sha256', 'creationTimeUtc', 'lastWriteTimeUtc')) { $observation.Remove($key) }
+        $observation.reason = $reason
+        $exitCode = 1
+    }
+    Write-Output ($observation | ConvertTo-Json -Compress)
+    exit $exitCode
+}
 if ([string]::IsNullOrWhiteSpace($Destination)) { throw 'Roslyn evidence destination is required.' }
 $Destination = [IO.Path]::GetFullPath($Destination)
 $sourceDirectory = Join-Path $root 'bin/guest-readiness-roslyn'
-$rootSarif = Join-Path $root '.sarif'
 foreach ($path in @($Destination, $sourceDirectory, $rootSarif)) {
-    # A missing leaf can still traverse an existing junction; inspect its complete ancestor chain.
-    $ancestor = [IO.DirectoryInfo]::new($path)
-    while ($null -ne $ancestor) {
-        if (Test-Path -LiteralPath $ancestor.FullName) {
-            $item = Get-Item -LiteralPath $ancestor.FullName -Force
-            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
-                throw 'Roslyn evidence paths must not traverse reparse points.'
-            }
-        }
-        $ancestor = $ancestor.Parent
-    }
+    Assert-NoReparsePointAncestor $path
 }
 if ($Destination.StartsWith($sourceDirectory, [StringComparison]::OrdinalIgnoreCase) -or
     (Test-Path -LiteralPath $Destination)) {

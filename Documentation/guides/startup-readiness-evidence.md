@@ -371,8 +371,31 @@ before creating directories or copying files, including nonexistent descendants
 of junctions. The copies are observations, not claims of scanner processing. The
 unchanged collector still discovers the original GUID logs beneath the source
 root with its existing `*.csproj.*.sarif` wildcard. Historical bare `.sarif` bytes
-and their writer were absent from the two selected Windows artifacts; if it
-recurs, capture retains it but the ordinary clean-tree gate still fails.
+and their writer were absent from the two selected Windows artifacts; if present
+at capture, its bytes are retained but the ordinary clean-tree gate still fails.
+
+The early capture can miss a root `.sarif` created later. A separate DIAGWindows
+observation runs after SDL analysis and the existing Build Results publisher,
+immediately before the unchanged clean-tree check. It logs only presence,
+size, SHA-256, creation/write UTC times and a fixed phase/schema/health record
+for that exact file. It does not parse, print, copy or upload its contents, and
+creates no files. The same full ancestor reparse checks apply; a regular file
+of at most 64 MiB is hashed with writers/deletion denied, comparing size and
+timestamps before and after the read. Healthy absence describes only that
+observation, not the entire job lifetime.
+
+Unsafe, oversized, busy or changing files produce a fixed `unavailable` reason
+and nonzero process exit, without raw exception details. Only this new
+diagnostic task uses `continueOnError: true`: Azure's `SucceededWithIssues`
+still satisfies the existing clean check's `succeeded()` condition. An earlier
+failed task is not made successful, and no existing task condition is changed.
+The normal SDL log publisher remains **after** the clean check. A later hash
+match to those published bytes is content evidence, never proof of the creator.
+`test-root-sarif-observation.ps1` exercises the real process, exact JSON/exit
+contract, 64 MiB boundary, active writer and leaf/ancestor junction rejection.
+The graph regression's `--require-root-observer --expanded-preview <file>`
+also enforces the placement in an actual service-expanded preview; source and
+modeled graph checks alone do not claim hosted execution.
 
 `test-roslyn-output.ps1 -GuardianTargets <retained-injector-target>
 -GuardianCli <existing-1.24.0-cli>` runs three real concurrent SDK Csc invocations,

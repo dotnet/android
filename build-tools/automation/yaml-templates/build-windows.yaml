@@ -159,6 +159,17 @@ stages:
         artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
 
+    - ${{ if eq(parameters.guestReadiness, true) }}:
+      - task: PowerShell@2
+        displayName: Observe diagnostic root SARIF metadata before clean gate
+        condition: always()
+        continueOnError: true
+        inputs:
+          pwsh: true
+          targetType: filePath
+          filePath: $(Build.Repository.LocalPath)/build-tools/scripts/guest-readiness-roslyn.ps1
+          arguments: -Phase ObserveRoot
+
     - template: /build-tools/automation/yaml-templates/fail-on-dirty-tree.yaml
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
