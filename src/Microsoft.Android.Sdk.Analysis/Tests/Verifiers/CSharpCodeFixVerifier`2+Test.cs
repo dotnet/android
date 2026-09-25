@@ -11,6 +11,7 @@ public static partial class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
 	{
 		public Test ()
 		{
+			ReferenceAssemblies = CSharpVerifierHelper.ConfigureReferenceAssemblies (ReferenceAssemblies);
 			SolutionTransforms.Add ((solution, projectId) => {
 				var compilationOptions = solution.GetProject (projectId).CompilationOptions;
 				compilationOptions = compilationOptions.WithSpecificDiagnosticOptions (

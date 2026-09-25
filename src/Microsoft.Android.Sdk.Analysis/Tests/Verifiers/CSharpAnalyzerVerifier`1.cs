@@ -62,6 +62,11 @@ public static partial class CSharpSuppressorVerifier<TAnalyzer, TSuppressor>
 
 	public class Test : CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>
 	{
+		public Test ()
+		{
+			ReferenceAssemblies = CSharpVerifierHelper.ConfigureReferenceAssemblies (ReferenceAssemblies);
+		}
+
 		protected override IEnumerable<DiagnosticAnalyzer> GetDiagnosticAnalyzers ()
 			=> base.GetDiagnosticAnalyzers ().Concat (new[] { new TSuppressor () });
 	}

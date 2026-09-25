@@ -33,10 +33,6 @@ namespace Xamarin.Android.Build.Tests
 				ProjectName = "Test Me",
 				RootNamespace = "Test.Me",
 				EnableDefaultItems = true,
-				ExtraNuGetConfigSources = {
-					// Microsoft.AspNetCore.Components.WebView is not in dotnet-public
-					"https://api.nuget.org/v3/index.json",
-				},
 				PackageReferences = {
 					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.3.1.1" },
 					// Using * here, so we explicitly get newer packages
@@ -65,6 +61,10 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			if (!TestEnvironment.UseGuestReadinessTestSources) {
+				// Ordinary tests use nuget.org for WebView; diagnostic builds must qualify approved-feed availability.
+				proj.ExtraNuGetConfigSources.Add ("https://api.nuget.org/v3/index.json");
+			}
 			proj.SetRuntime (runtime);
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity")
 				.Replace ("//${AFTER_ONCREATE}", @"button.Text = Resource.CancelButton;");

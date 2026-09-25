@@ -302,6 +302,26 @@ Tests check the case-sensitive Git filename `NuGet.config`, ordinary nested
 MSBuild environment propagation, and real NuGet config selection; no global
 NuGet policy or Windows package-version override is introduced.
 
+Immediately before Smoke tests, diagnostic Windows also configures the exact
+`ANDROID_GUEST_READINESS_TEST_ACQUISITION=1` opt-in for test-process acquisitions
+that bypass MSBuild/Gradle. The step requires the existing absolute root
+`RESTORECONFIGFILE` and uses the harness's `NUNIT_MSBUILD_ARGS` to pass its quoted
+path as a global restore property to nested builds. A pre-existing nonempty
+`NUNIT_MSBUILD_ARGS` fails rather than being discarded; malformed opt-in/config
+values fail explicitly. Other hosts and ordinary mode retain their existing paths.
+
+`DownloadedCache` maps only the exact HTTPS Maven Central `/maven2/` origin with
+ordinary artifact path segments to the existing anonymous `dotnet-public-maven`
+mirror, preserving suffix/version, filename and cache behavior. Query/fragment,
+credentials, alternate origins/ports and encoded/traversal paths are not remapped.
+No retries or fallback sources are added. Diagnostic `DotNetBuild` does not append
+its ordinary nuget.org source. The analyzer, code-fix, refactoring and suppressor
+test wrappers use the held analyzer-testing 1.1.2
+`ReferenceAssemblies.WithNuGetConfigFilePath` API with that same root config,
+without changing reference packages/frameworks/versions. Unavailable packages,
+including the test's existing floating WebView requirement, remain real failures:
+there is no substitution, cache seeding, test skip or network-policy relaxation.
+
 The diagnostic Windows/Linux execution paths also pass
 `--init-script ".../guest-readiness-repositories.gradle"` through the existing
 `GradleArgs` environment/MSBuild property. The script routes Maven repositories

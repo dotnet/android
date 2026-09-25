@@ -93,6 +93,14 @@ stages:
         toolName: apkdiff
         version: $(ApkDiffToolVersion)
 
+    - ${{ if eq(parameters.guestReadiness, true) }}:
+      - task: PowerShell@2
+        displayName: Configure diagnostic test acquisition
+        inputs:
+          pwsh: true
+          targetType: filePath
+          filePath: $(Build.Repository.LocalPath)/build-tools/scripts/guest-readiness-test-sources.ps1
+
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Smoke MSBuild Tests - Windows Dotnet Build

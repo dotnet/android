@@ -35,7 +35,7 @@ namespace Xamarin.ProjectTools
 				if (File.Exists (filename))
 					return filename;
 				// FIXME: should be clever enough to resolve name conflicts.
-				using (var response = httpClient.GetAsync (url).GetAwaiter ().GetResult ()) {
+				using (var response = httpClient.GetAsync (GuestReadinessTestSources.GetDownloadUrl (url)).GetAwaiter ().GetResult ()) {
 					response.EnsureSuccessStatusCode ();
 					using (var fileStream = File.Create (filename))
 					using (var httpStream = response.Content.ReadAsStreamAsync ().GetAwaiter ().GetResult ()) {

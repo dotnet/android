@@ -5,6 +5,13 @@ using System.Collections.Immutable;
 
 internal static class CSharpVerifierHelper
 {
+	internal static Microsoft.CodeAnalysis.Testing.ReferenceAssemblies ConfigureReferenceAssemblies (Microsoft.CodeAnalysis.Testing.ReferenceAssemblies references)
+	{
+		return Xamarin.ProjectTools.GuestReadinessTestSources.Enabled
+			? references.WithNuGetConfigFilePath (Xamarin.ProjectTools.GuestReadinessTestSources.GetNuGetConfig ())
+			: references;
+	}
+
 	/// <summary>
 	/// By default, the compiler reports diagnostics for nullable reference types at
 	/// <see cref="DiagnosticSeverity.Warning"/>, and the analyzer test framework defaults to only validating

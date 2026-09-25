@@ -20,9 +20,11 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.Android.Sdk.Analysis.csproj" />
+    <Compile Include="..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Common\GuestReadinessTestSources.cs" Link="GuestReadinessTestSources.cs" />
   </ItemGroup>
   <Import Project="..\..\..\build-tools\scripts\NUnitReferences.projitems" />
   <ItemGroup>
+    <None Include="..\..\..\NuGet.config" Link="guest-readiness-root-NuGet.config" CopyToOutputDirectory="PreserveNewest" />
     <None Include="$(PkgMicrosoft_CodeAnalysis_CSharp_CodeStyle)\analyzers\dotnet\cs\*.dll">
       <Visible>False</Visible>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

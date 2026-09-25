@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <RestoreConfigFile>project-local-unapproved.config</RestoreConfigFile>
+  </PropertyGroup>
+  <Target Name="Verify">
+    <Error Condition="'$(RestoreConfigFile)' != '$(ExpectedConfig)'" Text="Root restore property was replaced." />
+    <WriteLinesToFile File="$(ReceiptDirectory)\$(Instance).txt" Lines="$(RestoreConfigFile)" Overwrite="true" />
+    <MSBuild Condition="'$(Instance)' == 'parent'" Projects="$(MSBuildProjectFullPath)" Targets="Verify"
+        Properties="Instance=child" />
+  </Target>
+</Project>

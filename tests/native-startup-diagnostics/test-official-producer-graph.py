@@ -101,7 +101,17 @@ roslyn_capture = {
 }
 windows_steps = windows_job["steps"]
 assert windows_steps.count(roslyn_configure) == windows_steps.count(roslyn_capture) == 1
-assert [step for step in windows_steps if step not in (roslyn_configure, roslyn_capture)] == old_windows["stages"][0]["jobs"][0]["steps"], "Normal Windows command sequence changed"
+test_sources_configure = {
+    "task": "PowerShell@2",
+    "displayName": "Configure diagnostic test acquisition",
+    "inputs": {
+        "pwsh": True, "targetType": "filePath",
+        "filePath": "$(Build.Repository.LocalPath)/build-tools/scripts/guest-readiness-test-sources.ps1",
+    },
+}
+assert windows_steps.count(test_sources_configure) == 1
+assert [step for step in windows_steps if step not in (roslyn_configure, roslyn_capture, test_sources_configure)] == old_windows["stages"][0]["jobs"][0]["steps"], "Normal Windows command sequence changed"
+assert windows_steps[windows_steps.index(test_sources_configure) + 1]["template"].endswith("/run-nunit-tests.yaml")
 assert windows_steps[windows_steps.index(roslyn_configure) + 1]["displayName"] == "Prepare Solution"
 assert windows_steps[windows_steps.index(roslyn_capture) - 1]["parameters"]["displayName"] == "Test PackDotNet"
 assert windows_steps[windows_steps.index(roslyn_capture) + 1]["template"].endswith("/upload-results.yaml")

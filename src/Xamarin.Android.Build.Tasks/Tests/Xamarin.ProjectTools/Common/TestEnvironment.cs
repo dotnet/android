@@ -49,6 +49,8 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
+		public static bool UseGuestReadinessTestSources => GuestReadinessTestSources.Enabled;
+
 		/// <summary>
 		/// Gets a value indicating whether the current platform is macOS.
 		/// </summary>

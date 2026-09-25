@@ -16,6 +16,7 @@ public static partial class CSharpAnalyzerVerifier<TAnalyzer>
 		public List<DiagnosticAnalyzer> Analyzers => analyzers;
 		public Test ()
 		{
+			ReferenceAssemblies = CSharpVerifierHelper.ConfigureReferenceAssemblies (ReferenceAssemblies);
 			SolutionTransforms.Add ((solution, projectId) => {
 				var project = solution.GetProject (projectId);
 				var compilationOptions = project.CompilationOptions;
