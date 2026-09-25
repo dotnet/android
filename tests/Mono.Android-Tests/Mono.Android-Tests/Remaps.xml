@@ -23,6 +23,9 @@
   <reverse-type
       from="net/dot/android/remap/IncomingDeclaredPeer"
       to="net/dot/android/remap/IncomingWrongPeer" />
+  <reverse-type
+      from="net/dot/android/remap/ExplicitRuntimePeer"
+      to="net/dot/android/remap/ExplicitMissingDeclaredPeer" />
   <replace-method
       source-type="java/lang/Object"
       source-method-name="remappedToToString"

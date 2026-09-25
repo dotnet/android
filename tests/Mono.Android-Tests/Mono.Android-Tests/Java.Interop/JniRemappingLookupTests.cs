@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
+using Android.Runtime;
 using Java.Interop;
 using NUnit.Framework;
 
@@ -41,6 +42,30 @@ namespace Java.InteropTests
 			try {
 				using var peer = Java.Lang.Object.GetObject<Java.Lang.Object> (handle, JniHandleOwnership.DoNotTransfer);
 				Assert.IsInstanceOf<IncomingDeclaredPeer> (peer);
+			} finally {
+				JNIEnv.DeleteLocalRef (handle);
+			}
+		}
+
+		[Test]
+		[NonParallelizable]
+		public void ExplicitRuntimeRegistrationPrecedesReverseTypeWithLlvmIrTypeMap ()
+		{
+			if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
+				Assert.Ignore ("This test validates the nontrimmable LLVM-IR typemap path.");
+
+			global::Java.Interop.TypeManager.RegisterType (
+				ExplicitRegisteredPeer.RuntimeJniName,
+				typeof (ExplicitRegisteredPeer));
+
+			Assert.AreEqual (
+				typeof (ExplicitRegisteredPeer),
+				JniEnvironment.Runtime.TypeManager.GetType (new JniTypeSignature (ExplicitRegisteredPeer.RuntimeJniName)));
+
+			var handle = JNIEnv.CreateInstance (ExplicitRegisteredPeer.RuntimeJniName, "()V");
+			try {
+				using var peer = Java.Lang.Object.GetObject<Java.Lang.Object> (handle, JniHandleOwnership.DoNotTransfer);
+				Assert.IsInstanceOf<ExplicitRegisteredPeer> (peer);
 			} finally {
 				JNIEnv.DeleteLocalRef (handle);
 			}
@@ -108,6 +133,17 @@ namespace Java.InteropTests
 	sealed class IncomingWrongPeer : Java.Lang.Object
 	{
 		public IncomingWrongPeer (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+	}
+
+	[Register ("net/dot/android/remap/ExplicitRegisteredPeer", DoNotGenerateAcw = true)]
+	sealed class ExplicitRegisteredPeer : Java.Lang.Object
+	{
+		public const string RuntimeJniName = "net/dot/android/remap/ExplicitRuntimePeer";
+
+		public ExplicitRegisteredPeer (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
 		}
