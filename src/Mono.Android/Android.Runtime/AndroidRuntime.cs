@@ -330,7 +330,9 @@ namespace Android.Runtime {
 
 		protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 		{
-			foreach (var ti in base.GetTypesForSimpleReference (jniSimpleReference))
+			string lookupReference = JniRemappingLookup.GetReverseType (jniSimpleReference) ?? jniSimpleReference;
+
+			foreach (var ti in base.GetTypesForSimpleReference (lookupReference))
 				yield return ti;
 
 			var t = Java.Interop.TypeManager.GetJavaToManagedType (jniSimpleReference);
@@ -340,7 +342,8 @@ namespace Android.Runtime {
 
 		protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 		{
-			var type = base.GetTypeForSimpleReference (jniSimpleReference);
+			string lookupReference = JniRemappingLookup.GetReverseType (jniSimpleReference) ?? jniSimpleReference;
+			var type = base.GetTypeForSimpleReference (lookupReference);
 			if (type != null) {
 				return type;
 			}
