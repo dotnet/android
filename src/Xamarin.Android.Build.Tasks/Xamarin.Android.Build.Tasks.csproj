@@ -99,11 +99,11 @@
     <Compile Include="..\Mono.Android\\Android.Content\GrantUriPermissionAttribute.cs">
       <Link>Mono.Android\GrantUriPermissionAttribute.cs</Link>
     </Compile>
-    <Compile Include="..\Mono.Android\Android.Runtime\IntDefinitionAttribute.cs">
-      <Link>Mono.Android\IntDefinitionAttribute.cs</Link>
-    </Compile>
     <Compile Include="..\Mono.Android\Android.Runtime\BoundExceptionType.cs">
       <Link>Mono.Android\BoundExceptionType.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\Android.Runtime\IntDefinitionAttribute.cs">
+      <Link>Mono.Android\IntDefinitionAttribute.cs</Link>
     </Compile>
     <Compile Include="..\..\external\Java.Interop\src\utils\StringRocks.cs">
       <Link>Utilities\StringRocks.cs</Link>

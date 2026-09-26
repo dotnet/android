@@ -14,4 +14,3 @@ namespace Android.Runtime
 		public string? JniField { get; set; }
 	}
 }
-
