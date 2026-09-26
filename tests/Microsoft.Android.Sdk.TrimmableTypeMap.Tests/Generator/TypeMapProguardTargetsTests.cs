@@ -395,7 +395,8 @@ public class TypeMapProguardTargetsTests : IDisposable
 	}
 
 	string WriteNativeObject (string name, params string [] keys) =>
-		NativeAotObjectTestFixture.WriteObject (directory, name, NativeAotObjectIntegrationTools.LlvmReadObjPath, keys);
+		NativeAotObjectTestFixture.WriteObject (
+			directory, name, NativeAotObjectIntegrationTools.LlvmReadObjPath, "aarch64-linux-android", keys);
 
 	static string NativeObjectItem (string output, string nativeObject) =>
 		$"""
