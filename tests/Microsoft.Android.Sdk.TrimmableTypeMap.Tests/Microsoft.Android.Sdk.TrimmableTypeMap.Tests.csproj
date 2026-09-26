@@ -48,6 +48,7 @@
 
   <ItemGroup>
     <AssemblyMetadata Include="ILLinkPath" Value="$(PkgMicrosoft_NET_ILLink_Tasks)\tools\net\illink.dll" />
+    <AssemblyMetadata Include="NativeAotLlvmReadObjPath" Value="$(_NativeAotLlvmReadObjPath)" />
   </ItemGroup>
 
   <!-- Copy TestFixtures output to our output directory so tests can find it -->
