@@ -233,10 +233,6 @@ In this message, the phrase "should not be reached" means that this error messag
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
 {0} - The library name.</comment>
   </data>
-  <data name="XA0104" xml:space="preserve">
-    <value>`$(AndroidSequencePointsMode)` 的无效值: {0}</value>
-    <comment>The following are literal names and should not be translated: `$(AndroidSequencePointsMode)`</comment>
-  </data>
   <data name="XA0105" xml:space="preserve">
     <value>{0} 的 $(TargetFrameworkVersion) ({1})大于应用程序项目的 $(TargetFrameworkVersion) ({2})。请增大应用程序项目的 $(TargetFrameworkVersion)。</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -475,8 +471,8 @@ In this message, the term "binding" means a piece of generated code that makes i
 {0} - The name of the assembly</comment>
   </data>
   <data name="XA1035" xml:space="preserve">
-    <value>“BundleAssemblies” 属性已弃用，它对应用程序生成没有影响。将由 “AndroidUseAssemblyStore” 和 “AndroidEnableAssemblyCompression” 属性实现等效功能。</value>
-    <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
+    <value>The 'BundleAssemblies' property is deprecated and no longer affects the build. Remove it. For supported .NET 10-and-earlier Mono projects, use 'AndroidUseAssemblyStore' with 'AndroidEnableAssemblyCompression' for the former behavior. .NET 11 CoreCLR controls packaged assembly-store behavior and needs no replacement setting.</value>
+    <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression', .NET, Mono, CoreCLR</comment>
   </data>
   <data name="XA1036" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion“{0}”与项目文件中的 $(SupportedOSPlatformVersion) 值“{1}”不匹配(如果项目文件中没有 $(SupportedOSPlatformVersion) 值，则已假定默认值)。
@@ -494,9 +490,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>在程序集 {0} 中检测到使用了 AppDomain.CreateDomain()。.NET 6 及更高版本将仅支持单个 AppDomain，因此，.NET 6 发布后，将无法再在 .NET for Android 中使用此 API。</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
-  </data>
-  <data name="XA2000_gcParams_bridgeImpl" xml:space="preserve">
-    <value>.NET 7 中将删除对 "MONO_GC_PARAMS=bridge-implementation=old" 值的支持。</value>
   </data>
   <data name="XA2001" xml:space="preserve">
     <value>未能找到源文件“{0}”。</value>
@@ -741,11 +734,6 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <value>无法确定某些本机库的 ABI。正在忽略这些库: {0}</value>
     <comment>The abbreviation "ABI" should not be translated.
 {0} - Comma-separated list of the ignored library file names.</comment>
-  </data>
-  <data name="XA4302" xml:space="preserve">
-    <value>合并 `AndroidManifest.xml` 时出现未经处理的异常: {0}</value>
-    <comment>The following are literal names and should not be translated: `AndroidManifest.xml`
-{0} - The exception message of the associated exception</comment>
   </data>
   <data name="XA4303" xml:space="preserve">
     <value>从 "{0}" 提取资源时出错: {1}</value>

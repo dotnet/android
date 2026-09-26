@@ -231,14 +231,4 @@ Visual Studio의 '도움말-&gt;피드백 보내기-&gt;문제 보고' 메뉴 �
 {1} - The tool that was used to deploy the file.
 {2} - The actual error that occured.</comment>
   </data>
-  <data name="StartDebugger_ipAddress_port" xml:space="preserve">
-    <value>  {0}에서 디버거를 시작하는 중:{1}
-sdb를 시작한 다음, 다음 명령을 실행합니다.
-  connect {0} {1}
-    </value>
-    <comment>The following are literal names and should not be translated:
-{0} - An ip address of  a computer.
-{1} - An interger value describing the port to use.
-    </comment>
-  </data>
 </root>

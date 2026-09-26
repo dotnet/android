@@ -231,14 +231,4 @@ Pokud se žádným z těchto způsobů nepovede problém vyřešit, nastavte vla
 {1} - The tool that was used to deploy the file.
 {2} - The actual error that occured.</comment>
   </data>
-  <data name="StartDebugger_ipAddress_port" xml:space="preserve">
-    <value>  Spouští se ladicí program na {0}:{1}
-Spusťte sdb a pak spusťte následující příkaz
-  connect {0} {1}
-    </value>
-    <comment>The following are literal names and should not be translated:
-{0} - An ip address of  a computer.
-{1} - An interger value describing the port to use.
-    </comment>
-  </data>
 </root>

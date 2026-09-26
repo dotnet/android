@@ -233,10 +233,6 @@ In this message, the phrase "should not be reached" means that this error messag
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
 {0} - The library name.</comment>
   </data>
-  <data name="XA0104" xml:space="preserve">
-    <value>'$(AndroidSequencePointsMode)'의 잘못된 값: {0}</value>
-    <comment>The following are literal names and should not be translated: `$(AndroidSequencePointsMode)`</comment>
-  </data>
   <data name="XA0105" xml:space="preserve">
     <value>{0}({1})의 $(TargetFrameworkVersion)이 애플리케이션 프로젝트({2})의 $(TargetFrameworkVersion)보다 큽니다. 애플리케이션 프로젝트의 $(TargetFrameworkVersion)을 늘리세요.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -475,8 +471,8 @@ In this message, the term "binding" means a piece of generated code that makes i
 {0} - The name of the assembly</comment>
   </data>
   <data name="XA1035" xml:space="preserve">
-    <value>'BundleAssemblies' 속성은 사용되지 않으며 애플리케이션 빌드에 영향을 주지 않습니다. 동일한 기능이 'AndroidUseAssemblyStore' 및 'AndroidEnableAssemblyCompression' 속성에 의해 구현됩니다.</value>
-    <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
+    <value>The 'BundleAssemblies' property is deprecated and no longer affects the build. Remove it. For supported .NET 10-and-earlier Mono projects, use 'AndroidUseAssemblyStore' with 'AndroidEnableAssemblyCompression' for the former behavior. .NET 11 CoreCLR controls packaged assembly-store behavior and needs no replacement setting.</value>
+    <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression', .NET, Mono, CoreCLR</comment>
   </data>
   <data name="XA1036" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}'이(가) 프로젝트 파일의 $(SupportedOSPlatformVersion) 값 '{1}'과(와) 일치하지 않습니다(프로젝트 파일에 $(SupportedOSPlatformVersion) 값이 없으면 기본값을 전제로 합니다).
@@ -494,9 +490,6 @@ AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변
     <value>어셈블리에서 AppDomain.CreateDomain() 사용이 검색되었습니다. {0}. .NET 6 이상에서는 단일 AppDomain만 지원하므로 .NET 6이 릴리스된 후에는 이 API를 Android용 .NET에서 더 이상 사용할 수 없습니다.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
-  </data>
-  <data name="XA2000_gcParams_bridgeImpl" xml:space="preserve">
-    <value>'MONO_GC_PARAMS=bridge-implementation=old' 값에 대한 지원은 .NET 7에서 제거됩니다.</value>
   </data>
   <data name="XA2001" xml:space="preserve">
     <value>'{0}' 소스 파일을 찾을 수 없습니다.</value>
@@ -741,11 +734,6 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <value>일부 네이티브 라이브러리의 ABI를 확인할 수 없습니다. {0}을(를) 무시합니다.</value>
     <comment>The abbreviation "ABI" should not be translated.
 {0} - Comma-separated list of the ignored library file names.</comment>
-  </data>
-  <data name="XA4302" xml:space="preserve">
-    <value>'AndroidManifest.xml'을(를) 병합하는 중 처리되지 않은 예외 발생: {0}</value>
-    <comment>The following are literal names and should not be translated: `AndroidManifest.xml`
-{0} - The exception message of the associated exception</comment>
   </data>
   <data name="XA4303" xml:space="preserve">
     <value>"{0}"에서 리소스를 추출하는 중 오류 발생: {1}</value>

@@ -233,10 +233,6 @@ Hinweis: Die Android Designer ist nicht mit Java SDK 11.0 kompatibel: https://ak
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
 {0} - The library name.</comment>
   </data>
-  <data name="XA0104" xml:space="preserve">
-    <value>Ungültiger Wert für "$(AndroidSequencePointsMode)": {0}</value>
-    <comment>The following are literal names and should not be translated: `$(AndroidSequencePointsMode)`</comment>
-  </data>
   <data name="XA0105" xml:space="preserve">
     <value>Die $(TargetFrameworkVersion) für "{0}" ({1}) ist höher als die $(TargetFrameworkVersion) für das Anwendungsprojekt ({2}). Erhöhen Sie die $(TargetFrameworkVersion) für das Anwendungsprojekt.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -475,8 +471,8 @@ In this message, the term "binding" means a piece of generated code that makes i
 {0} - The name of the assembly</comment>
   </data>
   <data name="XA1035" xml:space="preserve">
-    <value>Die Eigenschaft „BundleAssemblies“ ist veraltet und hat keine Auswirkungen auf den Anwendungs-Build. Die entsprechende Funktionalität wird durch die Eigenschaften „AndroidUseAssemblyStore“ und „AndroidEnableAssemblyCompression“ implementiert.</value>
-    <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
+    <value>The 'BundleAssemblies' property is deprecated and no longer affects the build. Remove it. For supported .NET 10-and-earlier Mono projects, use 'AndroidUseAssemblyStore' with 'AndroidEnableAssemblyCompression' for the former behavior. .NET 11 CoreCLR controls packaged assembly-store behavior and needs no replacement setting.</value>
+    <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression', .NET, Mono, CoreCLR</comment>
   </data>
   <data name="XA1036" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion "{0}" stimmt nicht mit dem $(SupportedOSPlatformVersion)-Wert "{1}" in der Projektdatei überein (wenn in der Projektdatei kein $(SupportedOSPlatformVersion)-Wert vorhanden ist, wurde ein Standardwert angenommen).
@@ -494,9 +490,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>Die Verwendung von AppDomain.CreateDomain() wurde in der Assembly {0} erkannt. .NET 6 und höher unterstützt nur eine einzelne AppDomain, sodass diese API nach der Veröffentlichung von .NET 6 nicht mehr in .NET für Android verfügbar ist.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
-  </data>
-  <data name="XA2000_gcParams_bridgeImpl" xml:space="preserve">
-    <value>Die Unterstützung für den Wert "MONO_GC_PARAMS=bridge-implementation=old" wird in .NET 7 entfernt.</value>
   </data>
   <data name="XA2001" xml:space="preserve">
     <value>Quelldatei "{0}" wurde nicht gefunden.</value>
@@ -741,11 +734,6 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <value>ABI konnte für einige native Bibliotheken nicht ermittelt werden. Diese werden ignoriert: {0}</value>
     <comment>The abbreviation "ABI" should not be translated.
 {0} - Comma-separated list of the ignored library file names.</comment>
-  </data>
-  <data name="XA4302" xml:space="preserve">
-    <value>Unbehandelte Ausnahme beim Zusammenführen von "AndroidManifest.xml": {0}</value>
-    <comment>The following are literal names and should not be translated: `AndroidManifest.xml`
-{0} - The exception message of the associated exception</comment>
   </data>
   <data name="XA4303" xml:space="preserve">
     <value>Fehler beim Extrahieren von Ressourcen aus "{0}": {1}</value>
