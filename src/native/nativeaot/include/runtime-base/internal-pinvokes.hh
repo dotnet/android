@@ -8,10 +8,6 @@
 #include <xamarin-app.hh>
 #include <runtime-base/logger.hh>
 
-namespace xamarin::android {
-	struct managed_timing_sequence;
-}
-
 extern "C" {
 	const char* clr_typemap_managed_to_java (const char *typeName, const char *assemblyFullName, const uint8_t *mvid) noexcept;
 	bool clr_typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept;
@@ -23,8 +19,6 @@ extern "C" {
 	void monodroid_free (void *ptr) noexcept;
 	const char* _monodroid_lookup_replacement_type (const char *jniSimpleReference);
 	const JniRemappingReplacementMethod* _monodroid_lookup_replacement_method_info (const char *jniSourceType, const char *jniMethodName, const char *jniMethodSignature);
-	xamarin::android::managed_timing_sequence* monodroid_timing_start (const char *message);
-	void monodroid_timing_stop (xamarin::android::managed_timing_sequence *sequence, const char *message);
 
 	void _monodroid_register_reference_logging_callbacks (xamarin::android::reference_log_fn log_callback, xamarin::android::reference_log_message_fn message_callback, uint8_t log_reference_metadata) noexcept;
 	void _monodroid_gc_wait_for_bridge_processing ();

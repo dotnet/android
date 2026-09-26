@@ -44,15 +44,3 @@ const JniRemappingReplacementMethod* _monodroid_lookup_replacement_method_info (
 {
 	pinvoke_unreachable ();
 }
-
-managed_timing_sequence* monodroid_timing_start ([[maybe_unused]] const char *message)
-{
-	pinvoke_unreachable ();
-}
-
-void monodroid_timing_stop (
-	[[maybe_unused]] managed_timing_sequence *sequence,
-	[[maybe_unused]] const char *message)
-{
-	pinvoke_unreachable ();
-}
