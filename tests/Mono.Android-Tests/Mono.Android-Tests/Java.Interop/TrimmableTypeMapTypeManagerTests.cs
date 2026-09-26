@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -61,7 +63,7 @@ namespace Java.InteropTests
 
 			var signature = new JniTypeSignature (jniName);
 			var manager = JniEnvironment.Runtime.TypeManager;
-			Type result = typeof (void);
+			Type? result = typeof (void);
 			for (int i = 0; i < iterationCount; i++) {
 				result = manager.GetType (signature);
 			}
@@ -270,7 +272,9 @@ namespace Java.InteropTests
 		{
 			AssumeTrimmableTypeMapEnabled ();
 
+#pragma warning disable CA1422 // Integer(int) constructor is obsolete since API 33.
 			using var value = new Java.Lang.Integer (42);
+#pragma warning restore CA1422
 			var proxy = TrimmableTypeMap.Instance.GetProxyForJavaObject (value.Handle, typeof (Java.Lang.String));
 
 			Assert.IsNull (proxy);
@@ -414,7 +418,8 @@ namespace Java.InteropTests
 							Assert.AreEqual (
 								JNIEnv.CallStaticIntMethod (systemClass.Handle, identityHashCode, new JValue (localProxy.Handle)),
 								JNIEnv.CallIntMethod (localProxy.Handle, hashCode));
-							var proxyString = JNIEnv.GetString (JNIEnv.CallObjectMethod (localProxy.Handle, toString), JniHandleOwnership.TransferLocalRef);
+							var proxyString = JNIEnv.GetString (JNIEnv.CallObjectMethod (localProxy.Handle, toString), JniHandleOwnership.TransferLocalRef)
+								?? throw new AssertionException ("Java proxy ToString returned null.");
 							Assert.IsTrue (
 								proxyString.StartsWith ("net.dot.jni.internal.TrimmableJavaProxyObject@", StringComparison.Ordinal),
 								proxyString);
@@ -505,7 +510,8 @@ namespace Java.InteropTests
 		static ConcurrentDictionary<Type, JavaPeerProxy> GetProxyCache (TrimmableTypeMap instance)
 		{
 			var field = typeof (TrimmableTypeMap).GetField ("_proxyCache", BindingFlags.Instance | BindingFlags.NonPublic);
-			Assert.IsNotNull (field);
+			if (field == null)
+				throw new AssertionException ("Unable to find TrimmableTypeMap proxy cache field.");
 
 			var value = field.GetValue (instance);
 			Assert.IsNotNull (value);
@@ -521,7 +527,8 @@ namespace Java.InteropTests
 		static ConcurrentDictionary<string, object> GetJniProxyCache (TrimmableTypeMap instance)
 		{
 			var field = typeof (TrimmableTypeMap).GetField ("_jniProxyCache", BindingFlags.Instance | BindingFlags.NonPublic);
-			Assert.IsNotNull (field);
+			if (field == null)
+				throw new AssertionException ("Unable to find TrimmableTypeMap JNI proxy cache field.");
 
 			var value = field.GetValue (instance);
 			Assert.IsNotNull (value);
@@ -698,6 +705,6 @@ namespace Java.InteropTests
 	[Register ("net/dot/android/test/TrimmableRegisteredGenericHolder")]
 	class TrimmableRegisteredGenericHolder<T> : Java.Lang.Object
 	{
-		public T Value { get; set; }
+		public T? Value { get; set; }
 	}
 }

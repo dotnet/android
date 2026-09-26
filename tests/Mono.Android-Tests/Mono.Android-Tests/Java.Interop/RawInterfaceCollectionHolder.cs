@@ -128,7 +128,11 @@ sealed class RawInterfaceCollectionHolder : IDisposable
 	}
 
 	[DynamicDependency ("FromJniHandle", "Java.Interop.JavaConvert", "Mono.Android")]
-	static T ConvertJavaValue<T> (IntPtr handle)
+	[UnconditionalSuppressMessage ("Trimming", "IL2111",
+		Justification = "T preserves the required constructors; reflection is needed by the shared NativeAOT probe without JavaConvert access.")]
+	static T ConvertJavaValue<
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		T> (IntPtr handle)
 	{
 		var javaConvert = typeof (Java.Lang.Object).Assembly.GetType ("Java.Interop.JavaConvert");
 		if (javaConvert == null) {

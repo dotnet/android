@@ -20,4 +20,10 @@
     </AndroidAsset>
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Keep generated bindings outside the Mono.Android friend assembly so compiler warnings remain actionable. -->
+    <InternalsVisibleTo Include="Mono.Android.NET-Tests" />
+    <AndroidJavaSource Update="java\net\dot\android\test\InterfaceCollectionFixture.java" Bind="false" />
+  </ItemGroup>
+
 </Project>

@@ -21,7 +21,7 @@
   </Target>
   <Target Name="BuildTestJarFile"
       DependsOnTargets="_GetJavacVersions;_GetJavaInteropJarPath"
-      Inputs="@(TestJarEntry)"
+      Inputs="$(MSBuildAllProjects);@(TestJarEntry)"
       Outputs="%(TestJarEntry.OutputFile)">
     <ItemGroup>
       <_JavacSource
@@ -31,7 +31,8 @@
     <PropertyGroup>
       <_Javac>"$(JavaCPath)"</_Javac>
       <_Jar>"$(JarPath)"</_Jar>
-      <_Targets>-source $(JavacSourceVersion) -target $(JavacTargetVersion)</_Targets>
+      <_Targets>--release $(JavacTargetVersion)</_Targets>
+      <_Targets Condition=" '$(JavacTargetVersion)' == '1.8' ">--release 8</_Targets>
       <_DestDir>$(IntermediateOutputPath)__CreateTestJarFile-bin</_DestDir>
       <_AndroidJar>-classpath "$(AndroidSdkDirectory)\platforms\android-$(_AndroidApiLevelName)\android.jar"</_AndroidJar>
       <_CP>-cp "$(_JavaInteropJarPath)"</_CP>

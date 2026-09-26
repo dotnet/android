@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -28,7 +30,7 @@ namespace Java.InteropTests
 				Assert.AreEqual (0x11223344, c);
 				var s = JNIEnv.GetMethodID(p.Class.Handle, "setColor", "(I)V");
 				JNIEnv.CallVoidMethod (p.Handle, s, new JValue (0x22331144));
-				Assert.AreEqual (0x22331144, p.SetColor.ToArgb ());
+				Assert.AreEqual (0x22331144, p.LastSetColor.ToArgb ());
 			}
 		}
 
@@ -55,7 +57,11 @@ namespace Java.InteropTests
 		[Test]
 		public void RegisterTypeOnNewNativeThread ()
 		{
-			int ret = rt_register_type_on_new_thread ("from.NewNativeThreadOne", Application.Context.ClassLoader.Handle);
+			var classLoader = Application.Context.ClassLoader;
+			if (classLoader == null)
+				throw new AssertionException ("Application context has no class loader");
+			int ret = rt_register_type_on_new_thread ("from.NewNativeThreadOne", classLoader.Handle);
+			GC.KeepAlive (classLoader);
 			Assert.AreEqual (0, ret, $"Java type registration on a new thread failed with code {ret}");
 		}
 
@@ -88,6 +94,7 @@ namespace Java.InteropTests
 		[Test]
 		public void ThreadReuse ()
 		{
+			bool missingObject = false;
 			CB cb = (env, instance) => {
 				// NOTE: this callback runs on a raw native pthread spawned by
 				// libreuse-threads.so and attached to the JVM. NUnit 3 replaces
@@ -105,11 +112,17 @@ namespace Java.InteropTests
 				if (instance == IntPtr.Zero)
 					return;
 				using (var o = Java.Lang.Object.GetObject<Java.Lang.Object>(env, instance, JniHandleOwnership.DoNotTransfer)) {
+					if (o == null) {
+						// Report on the test thread, not across the native callback boundary.
+						missingObject = true;
+						return;
+					}
 					Android.Util.Log.Info ("ThreadReuse", "CrossThreadObjectInteractions: o.Handle={0}", o.Handle.ToString ("x"));
 				}
 			};
 			rt_invoke_callback_on_new_thread (cb);
 			GC.KeepAlive (cb);
+			Assert.IsFalse (missingObject, "GetObject returned null for a nonzero callback instance");
 		}
 
 		[Test]
@@ -125,7 +138,7 @@ namespace Java.InteropTests
 			Console.WriteLine ("still alive!");
 		}
 
-		static  readonly  bool  HaveJavaInterop   = AppDomain.CurrentDomain.GetAssemblies ().Any (a => a.FullName.StartsWith ("Java.Interop,"));
+		static  readonly  bool  HaveJavaInterop   = AppDomain.CurrentDomain.GetAssemblies ().Any (a => a.FullName?.StartsWith ("Java.Interop,") == true);
 
 		[Test]
 		public void InvokingNullInstanceDoesNotCrashDalvik ()
@@ -144,7 +157,7 @@ namespace Java.InteropTests
 		public void NewOpenGenericTypeThrows ()
 		{
 			try {
-				var lrefInstance = JNIEnv.StartCreateInstance (typeof (GenericHolder<>), "()V");
+				var lrefInstance = JNIEnv.StartCreateInstance (typeof (JniEnvGenericHolder<>), "()V");
 				JNIEnv.FinishCreateInstance (lrefInstance, "()V");
 				Assert.Fail ("SHOULD NOT BE REACHED: creation of open generic types is not supported");
 			} catch (NotSupportedException) {
@@ -154,7 +167,7 @@ namespace Java.InteropTests
 		[Test]
 		public void NewClosedGenericTypeWorks ()
 		{
-			using (var holder = new GenericHolder<int>()) {
+			using (var holder = new JniEnvGenericHolder<int>()) {
 			}
 		}
 
@@ -162,16 +175,16 @@ namespace Java.InteropTests
 		[Category ("ConstructorParity")]
 		public void ExistingJavaObjectWrapsAsKnownClosedGenericType ()
 		{
-			GenericHolder<int>.ActivationConstructorInvocations = 0;
+			JniEnvGenericHolder<int>.ActivationConstructorInvocations = 0;
 
-			IntPtr handle = JNIEnv.CreateInstance (typeof (GenericHolder<int>), "()V");
+			IntPtr handle = JNIEnv.CreateInstance (typeof (JniEnvGenericHolder<int>), "()V");
 			try {
-				using var first = Java.Lang.Object.GetObject<GenericHolder<int>> (handle, JniHandleOwnership.DoNotTransfer);
-				var second = Java.Lang.Object.GetObject<GenericHolder<int>> (handle, JniHandleOwnership.DoNotTransfer);
+				using var first = Java.Lang.Object.GetObject<JniEnvGenericHolder<int>> (handle, JniHandleOwnership.DoNotTransfer);
+				var second = Java.Lang.Object.GetObject<JniEnvGenericHolder<int>> (handle, JniHandleOwnership.DoNotTransfer);
 				try {
 					Assert.IsNotNull (first);
 					Assert.AreSame (first, second);
-					Assert.AreEqual (1, GenericHolder<int>.ActivationConstructorInvocations);
+					Assert.AreEqual (1, JniEnvGenericHolder<int>.ActivationConstructorInvocations);
 				} finally {
 					if (!ReferenceEquals (first, second))
 						second?.Dispose ();
@@ -206,7 +219,7 @@ namespace Java.InteropTests
 		[Test]
 		public void NewObjectArrayWithNullElement ()
 		{
-			var array = JNIEnv.NewObjectArray<Java.Lang.String> (new Java.Lang.String [1]);
+			var array = JNIEnv.NewObjectArray<Java.Lang.String?> (new Java.Lang.String? [1]);
 			Assert.AreNotEqual (IntPtr.Zero, array, "#2");
 			Assert.AreEqual (1, JNIEnv.GetArrayLength (array), "#3");
 			Assert.AreEqual ("[Ljava/lang/String;", JNIEnv.GetClassNameFromInstance (array), "#4");
@@ -261,14 +274,14 @@ namespace Java.InteropTests
 			try {
 				JNIEnv.NewObjectArray (-1, JNIEnv.FindClass (typeof (Java.Lang.Object)));
 				Assert.Fail ("Must throw");
-			} catch (Java.Lang.OutOfMemoryError e) {
+			} catch (Java.Lang.OutOfMemoryError) {
 				//XXX shouldn't this exception be an ArgumentException?
 			}
 
 			try {
 				JNIEnv.NewObjectArray (1, IntPtr.Zero);
 				Assert.Fail ("Must throw");
-			} catch (Java.Lang.NullPointerException e) {
+			} catch (Java.Lang.NullPointerException) {
 				//XXX shouldn't this exception be an ArgumentException?
 			}
 		}
@@ -277,7 +290,9 @@ namespace Java.InteropTests
 		public void NewObjectArray_UsesOnlyTypeParameter ()
 		{
 			using (var s = new Java.Lang.String ("foo"))
+#pragma warning disable CA1422 // Integer(int) constructor is obsolete since API 33.
 			using (var i = new Java.Lang.Integer (42)) {
+#pragma warning restore CA1422
 				var array = JNIEnv.NewObjectArray<Java.Lang.Object> (s, i);
 				Assert.AreNotEqual (IntPtr.Zero, array, "#1");
 				Assert.AreEqual ("[Ljava/lang/Object;", JNIEnv.GetClassNameFromInstance (array), "#2");
@@ -335,7 +350,8 @@ namespace Java.InteropTests
 				GC.WaitForPendingFinalizers ();
 
 				var v = Java.Lang.Object.GetObject<ContainsExportedMethods>(o, JniHandleOwnership.TransferLocalRef);
-				Assert.IsNotNull (v);
+				if (v == null)
+					throw new AssertionException ("GetObject returned null for ContainsExportedMethods");
 				Assert.IsTrue (v.Constructed);
 				v.Dispose ();
 			}
@@ -357,7 +373,8 @@ namespace Java.InteropTests
 				GC.WaitForPendingFinalizers ();
 
 				var v = Java.Lang.Object.GetObject<ThrowableActivatedFromJava>(o, JniHandleOwnership.TransferLocalRef);
-				Assert.IsNotNull (v);
+				if (v == null)
+					throw new AssertionException ("GetObject returned null for ThrowableActivatedFromJava");
 				Assert.IsTrue (v.Constructed);
 				v.Dispose ();
 			}
@@ -385,10 +402,13 @@ namespace Java.InteropTests
 				GC.WaitForPendingFinalizers ();
 
 				var v = Java.Lang.Object.GetObject<ThrowableCauseActivatedFromJava> (o, JniHandleOwnership.TransferLocalRef);
-				Assert.IsNotNull (v);
+				if (v == null)
+					throw new AssertionException ("GetObject returned null for ThrowableCauseActivatedFromJava");
 				Assert.IsTrue (v.Constructed, "user-visible ctor body did not run");
-				Assert.IsNotNull (v.ReceivedCause, "throwable arg not forwarded");
-				Assert.AreEqual ("a-cause", v.ReceivedCause!.Message);
+				var receivedCause = v.ReceivedCause;
+				if (receivedCause == null)
+					throw new AssertionException ("throwable arg not forwarded");
+				Assert.AreEqual ("a-cause", receivedCause.Message);
 				v.Dispose ();
 			}
 		}
@@ -403,7 +423,8 @@ namespace Java.InteropTests
 					var o = JNIEnv.StartCreateInstance (klass.Handle, ctor);
 					JNIEnv.FinishCreateInstance (o, klass.Handle, ctor);
 					var v = Java.Lang.Object.GetObject<MultiCtorActivatedFromJava> (o, JniHandleOwnership.TransferLocalRef);
-					Assert.IsNotNull (v);
+					if (v == null)
+						throw new AssertionException ("GetObject returned null for MultiCtorActivatedFromJava");
 					Assert.AreEqual (0, v.CtorIndex, "()V dispatched to wrong ctor");
 					v.Dispose ();
 				}
@@ -413,10 +434,13 @@ namespace Java.InteropTests
 					var o = JNIEnv.StartCreateInstance (klass.Handle, ctor, new JValue (cause.Handle));
 					JNIEnv.FinishCreateInstance (o, klass.Handle, ctor, new JValue (cause.Handle));
 					var v = Java.Lang.Object.GetObject<MultiCtorActivatedFromJava> (o, JniHandleOwnership.TransferLocalRef);
-					Assert.IsNotNull (v);
+					if (v == null)
+						throw new AssertionException ("GetObject returned null for MultiCtorActivatedFromJava");
 					Assert.AreEqual (1, v.CtorIndex, "(Throwable) dispatched to wrong ctor");
-					Assert.IsNotNull (v.ReceivedCause);
-					Assert.AreEqual ("only-cause", v.ReceivedCause!.Message);
+					var receivedCause = v.ReceivedCause;
+					if (receivedCause == null)
+						throw new AssertionException ("throwable arg not forwarded");
+					Assert.AreEqual ("only-cause", receivedCause.Message);
 					v.Dispose ();
 				}
 			}
@@ -429,11 +453,12 @@ namespace Java.InteropTests
 			IntPtr grefJliArray = JNIEnv.NewGlobalRef (lrefJliArray);
 			JNIEnv.DeleteLocalRef (lrefJliArray);
 
-			Java.Lang.Object[] jarray = (Java.Lang.Object[])
-				JNIEnv.GetArray (grefJliArray, JniHandleOwnership.DoNotTransfer, typeof(Java.Lang.Object));
+			Java.Lang.Object [] jarray = (Java.Lang.Object []) (
+				JNIEnv.GetArray (grefJliArray, JniHandleOwnership.DoNotTransfer, typeof (Java.Lang.Object))
+					?? throw new AssertionException ("GetArray returned null"));
 
-			Exception ignore_t1 = null;
-			Exception ignore_t2 = null;
+			Exception? ignore_t1 = null;
+			Exception? ignore_t2 = null;
 
 			var t1 = new Thread (() => {
 				int[] output_array1 = new int[1];
@@ -466,7 +491,7 @@ namespace Java.InteropTests
 
 			for (int i = 0; i < jarray.Length; ++i) {
 				jarray [i].Dispose ();
-				jarray [i]  = null;
+				Array.Clear (jarray, i, 1);
 			}
 
 			JNIEnv.DeleteGlobalRef (grefJliArray);
@@ -482,8 +507,8 @@ namespace Java.InteropTests
 			IntPtr grefJliArray = JNIEnv.NewGlobalRef (lrefJliArray);
 			JNIEnv.DeleteLocalRef (lrefJliArray);
 
-			Exception ignore_t1 = null;
-			Exception ignore_t2 = null;
+			Exception? ignore_t1 = null;
+			Exception? ignore_t2 = null;
 
 			var t1 = new Thread (() => {
 				int[] output_array1 = new int[1];
@@ -523,7 +548,7 @@ namespace Java.InteropTests
 		[Test]
 		public void JavaToManagedTypeMapping ()
 		{
-			Type m = JniRuntime.CurrentRuntime.TypeManager.GetType (new JniTypeSignature ("android/content/res/Resources"));
+			Type? m = JniRuntime.CurrentRuntime.TypeManager.GetType (new JniTypeSignature ("android/content/res/Resources"));
 			Assert.AreNotEqual (null, m);
 			m = JniRuntime.CurrentRuntime.TypeManager.GetType (new JniTypeSignature ("this/type/does/not/exist"));
 			Assert.AreEqual (null, m);
@@ -533,7 +558,7 @@ namespace Java.InteropTests
 		public void ManagedToJavaTypeMapping ()
 		{
 			Type type = typeof(Activity);
-			string m = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (type).SimpleReference;
+			string? m = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (type).SimpleReference;
 			Assert.AreNotEqual (null, m, "`Activity` subclasses Java.Lang.Object, it should be in the typemap!");
 
 			type = typeof (JnienvTest);
@@ -579,6 +604,7 @@ namespace Java.InteropTests
 
 		[Test, Category ("GCBridge")]
 		[Ignore ("Failing in NativeAOT: https://github.com/dotnet/android/issues/11690")]
+#pragma warning disable CS0618 // The wrapper filters live peers and creates weak-reference snapshots; this GC test intentionally retains its existing semantics.
 		public void DoNotLeakWeakReferences ()
 		{
 			GC.Collect ();
@@ -597,8 +623,8 @@ namespace Java.InteropTests
 			// requiring an exact count -- a real leak would dwarf this.
 			const int tolerance = 10;
 
-			WeakReference r = null;
-			Exception threadException = null;
+			WeakReference? r = null;
+			Exception? threadException = null;
 			var t = new Thread (() => {
 				try {
 					var c = new MyCb ();
@@ -623,6 +649,7 @@ namespace Java.InteropTests
 			Assert.That (surfaced.Count, Is.EqualTo (startCount).Within (tolerance), "#3");
 			Assert.IsTrue (surfaced.All (s => s.Target != null), "#4");
 		}
+#pragma warning restore CS0618
 	}
 
 	[Register ("from/NewNativeThreadOne")]
@@ -639,7 +666,7 @@ namespace Java.InteropTests
 
 	class MyRegistrationThread : Java.Lang.Thread
 	{
-		public RegisterMeOnNewThreadTwo Instance { get; private set; }
+		public RegisterMeOnNewThreadTwo? Instance { get; private set; }
 
 		public override void Run ()
 		{
@@ -719,28 +746,28 @@ namespace Java.InteropTests
 		}
 	}
 
-	class GenericHolder<T> : Java.Lang.Object {
+	class JniEnvGenericHolder<T> : Java.Lang.Object {
 
 		public static int ActivationConstructorInvocations;
 
-		public GenericHolder ()
+		public JniEnvGenericHolder ()
 		{
 		}
 
-		protected GenericHolder (IntPtr handle, JniHandleOwnership transfer)
+		protected JniEnvGenericHolder (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
 			ActivationConstructorInvocations++;
 		}
 
-		public T Value {get; set;}
+		public T? Value {get; set;}
 
 	}
 
 	#region BXC_374
 	class MyPaint : Paint {
 
-		public Color SetColor;
+		public Color LastSetColor;
 
 		public override Color Color {
 			get {
@@ -749,7 +776,7 @@ namespace Java.InteropTests
 			}
 			set {
 				Console.WriteLine ("set_Color({0})", value.ToArgb ());
-				SetColor = value;
+				LastSetColor = value;
 				base.Color = value;
 			}
 		}

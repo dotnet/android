@@ -14,7 +14,7 @@ namespace Android.OSTests
 		{
 			using (var binder = new TrackingBinder ())
 			using (var proxy = new IAidlProxyTestStub.Proxy (binder)) {
-				proxy.Notify ();
+				proxy.SendNotification ();
 
 				Assert.IsNull (binder.Reply, "A one-way Proxy call should not use a reply Parcel.");
 				Assert.AreEqual (TransactionFlags.Oneway, binder.Flags, "A one-way Proxy call should use the one-way transaction flag.");
