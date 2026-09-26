@@ -309,11 +309,24 @@ namespace Xamarin.Android.Build.Tests
 						"GetObjectRefType",
 						"GetThreadName",
 						"WriteReference",
+						"LogReferenceFromNative",
+						"LogMessageFromNative",
 					];
 					foreach (string methodName in loggingMethods) {
 						Assert.IsNull (
 							referenceManager.Methods.FirstOrDefault (method => method.Name == methodName),
 							$"Disabled reference logging should trim {methodName} from Mono.Android.dll.");
+					}
+					Assert.IsNull (
+						referenceManager.Fields.FirstOrDefault (field => field.Name == "gcBridgeReferenceStackTrace"),
+						"Disabled reference logging should trim gcBridgeReferenceStackTrace from Mono.Android.dll.");
+
+					var bridge = monoAndroid.MainModule.GetType ("Microsoft.Android.Runtime.JavaMarshalGCBridge");
+					Assert.IsNotNull (bridge, "The managed GC bridge should survive linking.");
+					foreach (string methodName in new [] { "LogArguments", "LogSummary" }) {
+						Assert.IsNull (
+							bridge.Methods.FirstOrDefault (method => method.Name == methodName),
+							$"Disabled GC bridge logging should trim {methodName} from Mono.Android.dll.");
 					}
 				}
 

@@ -1,5 +1,6 @@
 #include <host/host-common.hh>
 #include <host/os-bridge.hh>
+#include <shared/log_functions.hh>
 
 using namespace xamarin::android;
 

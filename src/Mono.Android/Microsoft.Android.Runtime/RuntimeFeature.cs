@@ -13,6 +13,7 @@ static class RuntimeFeature
 	const bool TrimmableTypeMapEnabledByDefault = false;
 	const bool UseTypeMapAttributesForJavaDictionaryValueTypeLookupsEnabledByDefault = false;
 	const bool ObjectReferenceLoggingEnabledByDefault = false;
+	const bool GCBridgeLoggingEnabledByDefault = true;
 	const bool ManagedToJavaUsesAssemblyFullNameEnabledByDefault = false;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
@@ -51,6 +52,10 @@ static class RuntimeFeature
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ObjectReferenceLogging)}")]
 	internal static bool ObjectReferenceLogging { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (ObjectReferenceLogging)}", out bool isEnabled) ? isEnabled : ObjectReferenceLoggingEnabledByDefault;
+
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (GCBridgeLogging)}")]
+	internal static bool GCBridgeLogging { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (GCBridgeLogging)}", out bool isEnabled) ? isEnabled : GCBridgeLoggingEnabledByDefault;
 
 	[FeatureSwitchDefinition (EventSourceSupportSwitch)]
 	internal static bool EventSourceSupport { get; } =
