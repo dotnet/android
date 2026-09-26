@@ -828,6 +828,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The &apos;AotAssemblies&apos; MSBuild property is deprecated. Remove it. For supported .NET 10-and-earlier projects that use Mono, use the &apos;RunAOTCompilation&apos; MSBuild property instead. CoreCLR and NativeAOT do not use this property..
+        /// </summary>
+        public static string XA1029 {
+            get {
+                return ResourceManager.GetString("XA1029", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;RunAOTCompilation&apos; MSBuild property is only supported when trimming is enabled. Edit the project file in a text editor to set &apos;PublishTrimmed&apos; to &apos;true&apos; for this build configuration..
+        /// </summary>
+        public static string XA1030 {
+            get {
+                return ResourceManager.GetString("XA1030", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Your project references &apos;{0}&apos; which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file..
         /// </summary>
         public static string XA1034 {
