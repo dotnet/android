@@ -231,14 +231,4 @@ Si se produce un error en todo esto, establezca la propiedad MSBuild "EmbedAssem
 {1} - The tool that was used to deploy the file.
 {2} - The actual error that occured.</comment>
   </data>
-  <data name="StartDebugger_ipAddress_port" xml:space="preserve">
-    <value>  Iniciando depurador en {0}:{1}
-Inicie sdb y ejecute el siguiente comando
-  conectar {0} {1}
-    </value>
-    <comment>The following are literal names and should not be translated:
-{0} - An ip address of  a computer.
-{1} - An interger value describing the port to use.
-    </comment>
-  </data>
 </root>

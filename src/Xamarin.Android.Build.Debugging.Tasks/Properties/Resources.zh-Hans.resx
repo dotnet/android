@@ -231,14 +231,4 @@ android:debuggable - An attribute in a xml file.
 {1} - The tool that was used to deploy the file.
 {2} - The actual error that occured.</comment>
   </data>
-  <data name="StartDebugger_ipAddress_port" xml:space="preserve">
-    <value>  在 {0}:{1} 上启动调试器
-启动 sdb，然后运行以下命令
-  connect {0} {1}
-    </value>
-    <comment>The following are literal names and should not be translated:
-{0} - An ip address of  a computer.
-{1} - An interger value describing the port to use.
-    </comment>
-  </data>
 </root>
