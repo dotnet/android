@@ -1,0 +1,281 @@
+parameters:
+  targetMinutes: 15
+  workItemTimeout: '00:30:00'
+  helixQueue: Ubuntu.2204.Amd64.Android.29.Open
+  workItemOS: linux
+  testCases:
+  - name: debug
+    displayName: Mono.Android.NET_Tests-Debug
+    configuration: Debug
+    project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+    artifactSource: bin/TestDebug/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+    packageName: Mono.Android.NET_Tests
+    instrumentation: xamarin.android.runtimetests.TestInstrumentation
+    isolatedTest: Java.InteropTests.JniTypeUtf8Test.TryFindClass_String_DoesNotLeakGlobalRefs
+    extraBuildArguments: '-p:EmbedAssembliesIntoApk=true'
+  - name: release
+    displayName: Mono.Android.NET_Tests-Release
+    configuration: $(XA.Build.Configuration)
+    project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+    artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+    packageName: Mono.Android.NET_Tests
+    instrumentation: xamarin.android.runtimetests.TestInstrumentation
+    isolatedTest: Java.InteropTests.JniTypeUtf8Test.TryFindClass_String_DoesNotLeakGlobalRefs
+    extraBuildArguments: ''
+  - name: no-aab
+    displayName: Mono.Android.NET_Tests-NoAab
+    configuration: $(XA.Build.Configuration)
+    project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+    artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+    packageName: Mono.Android.NET_Tests
+    instrumentation: xamarin.android.runtimetests.TestInstrumentation
+    isolatedTest: Java.InteropTests.JniTypeUtf8Test.TryFindClass_String_DoesNotLeakGlobalRefs
+    extraBuildArguments: '-p:TestsFlavor=NoAab'
+  - name: coreclr
+    displayName: Mono.Android.NET_Tests-CoreCLR
+    configuration: $(XA.Build.Configuration)
+    project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+    artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+    packageName: Mono.Android.NET_Tests
+    instrumentation: xamarin.android.runtimetests.TestInstrumentation
+    isolatedTest: Java.InteropTests.JniTypeUtf8Test.TryFindClass_String_DoesNotLeakGlobalRefs
+    extraBuildArguments: '-p:TestsFlavor=CoreCLR -p:UseMonoRuntime=false'
+  - name: mono
+    displayName: Mono.Android.NET_Tests-Mono
+    configuration: $(XA.Build.Configuration)
+    project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+    artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+    packageName: Mono.Android.NET_Tests
+    instrumentation: xamarin.android.runtimetests.TestInstrumentation
+    isolatedTest: Java.InteropTests.JniTypeUtf8Test.TryFindClass_String_DoesNotLeakGlobalRefs
+    extraBuildArguments: '-p:UseMonoRuntime=true -p:_DisableCheckForUnsupportedMonoMobileRuntime=true'
+  - name: coreclr-trimmable
+    displayName: Mono.Android.NET_Tests-CoreCLRTrimmable
+    configuration: $(XA.Build.Configuration)
+    project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+    artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+    packageName: Mono.Android.NET_Tests
+    instrumentation: xamarin.android.runtimetests.TestInstrumentation
+    isolatedTest: Java.InteropTests.JniTypeUtf8Test.TryFindClass_String_DoesNotLeakGlobalRefs
+    extraBuildArguments: '-p:TestsFlavor=CoreCLRTrimmable -p:AndroidTypeMapImplementation=trimmable -p:UseMonoRuntime=false'
+  - name: nativeaot
+    displayName: Mono.Android.NET_Tests-NativeAOT
+    configuration: $(XA.Build.Configuration)
+    project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+    artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
+    packageName: Mono.Android.NET_Tests
+    instrumentation: xamarin.android.runtimetests.TestInstrumentation
+    isolatedTest: Java.InteropTests.JniTypeUtf8Test.TryFindClass_String_DoesNotLeakGlobalRefs
+    extraBuildArguments: '-p:TestsFlavor=NativeAOT -p:PublishAot=true'
+  - name: jcwgen
+    displayName: Xamarin.Android.JcwGen_Tests
+    configuration: $(XA.Build.Configuration)
+    project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
+    artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.JcwGen_Tests-Signed.apk
+    packageName: Xamarin.Android.JcwGen_Tests
+    instrumentation: xamarin.android.jcwgentests.TestInstrumentation
+    isolatedTest: Xamarin.Android.JcwGenTests.BindingTests.JavaSideActivation
+    extraBuildArguments: ''
+
+steps:
+- template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
+  parameters:
+    useAgentJdkPath: false
+    use1ESTemplate: false
+
+- pwsh: |
+    $ErrorActionPreference = 'Stop'
+    $androidSdk = @(
+      $env:ANDROID_HOME
+      $env:ANDROID_SDK_ROOT
+      $env:AndroidSdkDirectory
+      $(if ($env:USERPROFILE) { Join-Path $env:USERPROFILE 'android-toolchain\sdk' })
+      $(if ($env:HOME) { Join-Path $env:HOME 'android-toolchain/sdk' })
+    ) | Where-Object { $_ -and (Test-Path (Join-Path $_ 'platform-tools')) } | Select-Object -First 1
+    if (-not $androidSdk) {
+      throw 'Could not locate the prepared Android SDK.'
+    }
+    New-Item -ItemType Directory -Force -Path '$(Build.StagingDirectory)/apk-tests-helix/results' | Out-Null
+    Write-Host "##vso[task.setvariable variable=ApkTestsAndroidSdkDirectory]$androidSdk"
+  displayName: Resolve APK test build paths
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: $(TestAssembliesArtifactName)
+    downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+- task: DotNetCoreCLI@2
+  displayName: Build BootstrapTasks Debug
+  inputs:
+    projects: $(System.DefaultWorkingDirectory)/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+    arguments: -c Debug -bl:$(Build.StagingDirectory)/apk-tests-helix/BootstrapTasks-Debug.binlog
+
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+  parameters:
+    project: Xamarin.Android.slnx
+    arguments: -t:PrepareJavaInterop -c Debug --no-restore
+    displayName: Prepare Java.Interop Debug
+    continueOnError: false
+
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+  parameters:
+    project: Xamarin.Android.slnx
+    arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
+    displayName: Prepare Java.Interop $(XA.Build.Configuration)
+    continueOnError: false
+
+- ${{ each testCase in parameters.testCases }}:
+  - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+    parameters:
+      command: build
+      project: ${{ testCase.project }}
+      arguments: >-
+        -t:Clean
+        -c ${{ testCase.configuration }}
+        -p:AndroidSdkDirectory="$(ApkTestsAndroidSdkDirectory)"
+        -p:JavaSdkDirectory="$(JAVA_HOME)"
+        ${{ testCase.extraBuildArguments }}
+      displayName: Clean APK payload - ${{ testCase.displayName }}
+      continueOnError: false
+
+  - pwsh: |
+      $apk = '$(System.DefaultWorkingDirectory)\${{ testCase.artifactSource }}'
+      Remove-Item -LiteralPath $apk -Force -ErrorAction Ignore
+    displayName: Remove stale APK - ${{ testCase.displayName }}
+
+  - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+    parameters:
+      command: build
+      project: ${{ testCase.project }}
+      arguments: >-
+        -t:SignAndroidPackage
+        -c ${{ testCase.configuration }}
+        -p:AndroidPackageFormat=apk
+        -p:CustomAfterMicrosoftCommonTargets="$(System.DefaultWorkingDirectory)/build-tools/automation/apk-tests-helix/ApkTestsHelix.Manifest.targets"
+        -p:ApkTestsHelixManifestScript="$(System.DefaultWorkingDirectory)/build-tools/automation/apk-tests-helix/inject-apk-test-manifest.ps1"
+        -p:_AndroidHelixPackageName="${{ testCase.packageName }}"
+        -p:_AndroidHelixInstrumentation="${{ testCase.instrumentation }}"
+        -p:AndroidSdkDirectory="$(ApkTestsAndroidSdkDirectory)"
+        -p:JavaSdkDirectory="$(JAVA_HOME)"
+        ${{ testCase.extraBuildArguments }}
+        -bl:$(Build.StagingDirectory)/apk-tests-helix/results/build-${{ testCase.name }}.binlog
+      displayName: Build APK payload - ${{ testCase.displayName }}
+      continueOnError: false
+
+  - pwsh: |
+      $ErrorActionPreference = 'Stop'
+      $payloadDirectory = '$(Build.StagingDirectory)/apk-tests-helix/work-items/${{ testCase.name }}'
+      New-Item -ItemType Directory -Force -Path $payloadDirectory | Out-Null
+      $apk = '$(System.DefaultWorkingDirectory)/${{ testCase.artifactSource }}'
+      if (-not (Test-Path -LiteralPath $apk -PathType Leaf)) {
+        throw "Could not find APK '$apk' for ${{ testCase.displayName }}."
+      }
+      Copy-Item -LiteralPath $apk -Destination (Join-Path $payloadDirectory 'app.apk')
+
+      $aapt = Get-ChildItem '$(ApkTestsAndroidSdkDirectory)\build-tools' -Recurse -Filter 'aapt.exe' |
+        Sort-Object FullName -Descending |
+        Select-Object -First 1
+      if (-not $aapt) {
+        throw 'Could not locate aapt.exe to inspect the APK manifest.'
+      }
+      $badging = @(& $aapt.FullName dump badging $apk)
+      $diagnosticsDirectory = '$(Build.StagingDirectory)/apk-tests-helix/results/${{ testCase.name }}'
+      New-Item -ItemType Directory -Force -Path $diagnosticsDirectory | Out-Null
+      $badging | Set-Content -LiteralPath (Join-Path $diagnosticsDirectory 'aapt-badging.txt') -Encoding utf8NoBOM
+      if ($LASTEXITCODE -ne 0) {
+        throw "aapt dump badging failed with exit code $LASTEXITCODE."
+      }
+      $manifestTree = @(& $aapt.FullName dump xmltree $apk AndroidManifest.xml)
+      $manifestTree | Set-Content -LiteralPath (Join-Path $diagnosticsDirectory 'aapt-manifest.txt') -Encoding utf8NoBOM
+      if ($LASTEXITCODE -ne 0) {
+        throw "aapt dump xmltree failed with exit code $LASTEXITCODE."
+      }
+      $projectDirectory = Split-Path -Parent '$(System.DefaultWorkingDirectory)\${{ testCase.project }}'
+      $generatedManifest = Join-Path $projectDirectory 'obj\${{ testCase.configuration }}\$(DotNetTargetFramework)-android\android\AndroidManifest.xml'
+      if (Test-Path -LiteralPath $generatedManifest -PathType Leaf) {
+        Copy-Item -LiteralPath $generatedManifest -Destination (Join-Path $diagnosticsDirectory 'AndroidManifest.xml')
+      }
+      $manifestText = $manifestTree -join "`n"
+      if ($manifestText -notmatch '(?m)^\s*E: instrumentation\b' -or
+          -not $manifestText.Contains('"${{ testCase.instrumentation }}"') -or
+          -not $manifestText.Contains('"${{ testCase.packageName }}"')) {
+        $manifestTree | Write-Host
+        throw "APK '$apk' does not contain the expected instrumentation entry."
+      }
+      $packageName = '${{ testCase.packageName }}'
+      $instrumentation = '${{ testCase.instrumentation }}'
+      Write-Host "APK instrumentation: $packageName/$instrumentation"
+
+      [pscustomobject]@{
+        name = '${{ testCase.name }}'
+        displayName = '${{ testCase.displayName }}'
+        packageName = $packageName
+        instrumentation = $instrumentation
+        isolatedTest = '${{ testCase.isolatedTest }}'
+      } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $payloadDirectory 'case.json') -Encoding utf8NoBOM
+    displayName: Stage APK payload - ${{ testCase.displayName }}
+
+  - pwsh: |
+      $dotnet = '$(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\dotnet.exe'
+      & $dotnet build-server shutdown
+      exit $LASTEXITCODE
+    displayName: Shut down build servers - ${{ testCase.displayName }}
+
+- pwsh: |
+    $ErrorActionPreference = 'Stop'
+    $platformTools = Join-Path '$(ApkTestsAndroidSdkDirectory)' 'platform-tools'
+    if (-not (Test-Path -LiteralPath $platformTools -PathType Container)) {
+      throw 'Could not locate Android platform-tools.'
+    }
+    & '$(System.DefaultWorkingDirectory)/build-tools/automation/apk-tests-helix/prepare-apk-test-helix-submission.ps1' `
+      -WorkItemsDirectory '$(Build.StagingDirectory)/apk-tests-helix/work-items' `
+      -ItemsPropsPath '$(Build.StagingDirectory)/apk-tests-helix/work-items.props' `
+      -ResultsDirectory '$(Build.StagingDirectory)/apk-tests-helix/results' `
+      -PlatformToolsDirectory $platformTools `
+      -WorkItemOS ${{ parameters.workItemOS }} `
+      -TargetMinutes ${{ parameters.targetMinutes }}
+  displayName: Prepare APK test Helix submission
+
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+  parameters:
+    command: msbuild
+    project: $(System.DefaultWorkingDirectory)/build-tools/automation/ApkTestsHelix.proj
+    arguments: >-
+      /restore
+      /t:Test
+      /p:TreatWarningsAsErrors=false
+      /bl:$(Build.StagingDirectory)/apk-tests-helix/results/send-to-helix.binlog
+    displayName: Submit APK tests to Helix
+    continueOnError: false
+    taskTimeoutInMinutes: 180
+    env:
+      ApkTestsHelixItemsProps: $(ApkTestsHelixItemsProps)
+      ApkTestsHelixWorkItemTimeout: ${{ parameters.workItemTimeout }}
+      HelixResultsDestinationDir: $(Build.StagingDirectory)/apk-tests-helix/results
+      HelixSource: pr/dotnet/android
+      HelixType: tests/android/apk-tests/
+      HelixBuild: $(Build.BuildNumber)
+      HelixConfiguration: apk-tests
+      HelixTargetQueueForItem: ${{ parameters.helixQueue }}
+      ApkTestsHelixWorkItemOS: ${{ parameters.workItemOS }}
+      HelixTestRunName: Android APK Tests - Helix Prototype
+      HelixAccessToken: ''
+      WaitForWorkItemCompletion: 'true'
+      Creator: dotnet-android
+
+- task: PublishTestResults@2
+  displayName: Publish APK Helix TRX results
+  condition: always()
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: '**/*.trx'
+    searchFolder: $(Build.StagingDirectory)/apk-tests-helix/results
+    mergeTestResults: false
+    testRunTitle: Android APK Tests - Helix Prototype
+
+- task: PublishPipelineArtifact@1
+  displayName: Publish APK Helix diagnostics
+  condition: always()
+  inputs:
+    artifactName: APK Test Helix Results
+    targetPath: $(Build.StagingDirectory)/apk-tests-helix/results
