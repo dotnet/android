@@ -19,13 +19,15 @@ public class ValidateJavaPeerCallbackFormats : AndroidTask
 
 	public override bool RunTask ()
 	{
-		var validatedAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+		var validatedPaths = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+		var reportedAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 		foreach (var item in ResolvedAssemblies) {
+			var fullPath = Path.GetFullPath (item.ItemSpec);
 			var assemblyName = Path.GetFileName (item.ItemSpec);
-			if (!validatedAssemblyNames.Add (assemblyName) || !File.Exists (item.ItemSpec))
+			if (!validatedPaths.Add (fullPath) || !File.Exists (fullPath))
 				continue;
 
-			using var pe = new PEReader (File.OpenRead (item.ItemSpec));
+			using var pe = new PEReader (File.OpenRead (fullPath));
 			if (!pe.HasMetadata)
 				continue;
 
@@ -42,7 +44,7 @@ public class ValidateJavaPeerCallbackFormats : AndroidTask
 				bool supported = blob.RemainingBytes >= 8 &&
 					blob.ReadUInt16 () == 1 &&
 					blob.ReadInt32 () == 1;
-				if (!supported)
+				if (!supported && reportedAssemblyNames.Add (assemblyName))
 					Log.LogCodedError ("XA4265", Properties.Resources.XA4265, assemblyName);
 				break;
 			}

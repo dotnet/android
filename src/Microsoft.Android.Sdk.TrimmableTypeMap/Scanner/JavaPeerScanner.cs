@@ -254,6 +254,27 @@ public sealed class JavaPeerScanner : IDisposable
 	{
 		foreach (var assembly in assemblies) {
 			var index = AssemblyIndex.Create (assembly.Reader, assembly.Name, assembly.Path);
+			if (assemblyCache.TryGetValue (index.AssemblyName, out var existingIndex)) {
+				if (!existingIndex.IsReferenceAssembly && !index.IsReferenceAssembly) {
+					if ((existingIndex.UsesUnmanagedCallersOnlyCallbacks || index.UsesUnmanagedCallersOnlyCallbacks) &&
+					    !HasEquivalentCallbackMetadata (existingIndex, index)) {
+						if (logger is not null) {
+							logger.LogRidSpecificCallbackMetadataMismatchError (
+								index.AssemblyName,
+								existingIndex.AssemblyPath,
+								index.AssemblyPath);
+							return [];
+						}
+						throw new InvalidOperationException (
+							$"Assembly '{index.AssemblyName}' has different Java peer callback metadata across runtime-specific implementations " +
+							$"'{existingIndex.AssemblyPath}' and '{index.AssemblyPath}'. A shared trimmable typemap requires equivalent callback metadata for every RuntimeIdentifier.");
+					}
+					continue;
+				}
+				if (!existingIndex.IsReferenceAssembly && index.IsReferenceAssembly) {
+					continue;
+				}
+			}
 			assemblyCache [index.AssemblyName] = index;
 			resolvabilityCache [index.AssemblyName] = new ResolvabilityResult? [index.Reader.TypeDefinitions.Count + 1];
 			AnyUnmanagedCallersOnlyAssembly |= index.UsesUnmanagedCallersOnlyCallbacks;
@@ -268,6 +289,24 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 		ForceUnconditionalCrossReferences (resultsByQualifiedName, assemblyCache);
 		return new List<JavaPeerInfo> (resultsByQualifiedName.Values);
+	}
+
+	static bool HasEquivalentCallbackMetadata (AssemblyIndex left, AssemblyIndex right)
+	{
+		if (left.CallbackFormatVersion != right.CallbackFormatVersion) {
+			return false;
+		}
+		var leftMetadata = left.GetCallbackMetadata ();
+		var rightMetadata = right.GetCallbackMetadata ();
+		if (leftMetadata.Count != rightMetadata.Count) {
+			return false;
+		}
+		for (int i = 0; i < leftMetadata.Count; i++) {
+			if (!string.Equals (leftMetadata [i], rightMetadata [i], StringComparison.Ordinal)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/// <summary>

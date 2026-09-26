@@ -48,6 +48,21 @@ namespace Xamarin.Android.Build.Tests {
 			var directoryBuildTargets = proj.Imports.Single (import => import.Project () == "Directory.Build.targets");
 			directoryBuildTargets.TextContent = () => """
 				<Project>
+				  <Target Name="_AddRidSpecificTypeMapImplementation"
+				      Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' and '$(RuntimeIdentifier)' != '' "
+				      AfterTargets="ResolveReferences">
+				    <ItemGroup>
+				      <_MonoAndroidRuntimePack Include="@(RuntimePackAsset)" Condition=" '%(Filename)' == 'Mono.Android' " />
+				    </ItemGroup>
+				    <PropertyGroup>
+				      <_RidSpecificTypeMapImplementation>$(IntermediateOutputPath)rid-specific\$(RuntimeIdentifier)\RidSpecific.dll</_RidSpecificTypeMapImplementation>
+				    </PropertyGroup>
+				    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(_RidSpecificTypeMapImplementation)'))" />
+				    <Copy SourceFiles="@(_MonoAndroidRuntimePack)" DestinationFiles="$(_RidSpecificTypeMapImplementation)" />
+				    <ItemGroup>
+				      <ReferenceCopyLocalPaths Include="$(_RidSpecificTypeMapImplementation)" />
+				    </ItemGroup>
+				  </Target>
 				  <Target Name="_AssertTrimmableTypeMapMonoAndroidImplementation"
 				      AfterTargets="_GenerateTrimmableTypeMapInputs">
 				    <ItemGroup>
@@ -70,6 +85,11 @@ namespace Xamarin.Android.Build.Tests {
 			var referenceImplementations = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "reference-implementation-assemblies.txt"));
 			FileAssert.Exists (frameworkImplementations);
 			FileAssert.Exists (referenceImplementations);
+			var referenceImplementationPaths = File.ReadAllLines (referenceImplementations);
+			Assert.IsTrue (referenceImplementationPaths.Any (path => path.Contains ("android-arm64", StringComparison.OrdinalIgnoreCase)),
+				"The trimmable typemap should resolve package implementations for android-arm64.");
+			Assert.IsTrue (referenceImplementationPaths.Any (path => path.Contains ("android-x64", StringComparison.OrdinalIgnoreCase)),
+				"The trimmable typemap should resolve package implementations for android-x64.");
 
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Incremental build should have succeeded.");
 			builder.Output.AssertTargetIsSkipped ("_ResolveImplementationAssembliesForTrimmableTypeMap");

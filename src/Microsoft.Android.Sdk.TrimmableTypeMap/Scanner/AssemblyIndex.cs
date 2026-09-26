@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using System.Text;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -27,11 +29,13 @@ sealed class AssemblyIndex : IDisposable
 	readonly TypeRefData? [] valueTypeReferences;
 	readonly Dictionary<EntityHandle, string?> customAttributeNames = new ();
 	readonly Dictionary<EntityHandle, int> constructorParameterCounts = new ();
+	IReadOnlyList<string>? callbackMetadata;
 
 	public MetadataReader Reader { get; }
 	public string AssemblyName { get; }
 	public string MetadataAssemblyName { get; }
 	public string AssemblyPath { get; }
+	public bool IsReferenceAssembly { get; private set; }
 	internal TypeRefSignatureTypeProvider TypeRefSignatureProvider { get; }
 
 	/// <summary>
@@ -137,7 +141,7 @@ sealed class AssemblyIndex : IDisposable
 			}
 		}
 
-		ReadCallbackFormatVersion ();
+		ReadAssemblyMetadata ();
 
 		foreach (var typeHandle in Reader.TypeDefinitions) {
 			var typeDef = Reader.GetTypeDefinition (typeHandle);
@@ -434,18 +438,25 @@ sealed class AssemblyIndex : IDisposable
 	}
 
 	/// <summary>
-	/// Reads <c>[assembly: Java.Interop.JavaPeerCallbackFormat (version)]</c>, which declares the
-	/// shape of the assembly's generated binding callbacks.
+	/// Reads assembly-level metadata that affects duplicate assembly handling.
 	/// </summary>
-	void ReadCallbackFormatVersion ()
+	void ReadAssemblyMetadata ()
 	{
 		if (!Reader.IsAssembly) {
 			return;
 		}
 
+		bool callbackFormatRead = false;
 		foreach (var caHandle in Reader.GetAssemblyDefinition ().GetCustomAttributes ()) {
 			var ca = Reader.GetCustomAttribute (caHandle);
+			if (IsCustomAttributeMatch (ca, Reader, "System.Runtime.CompilerServices", "ReferenceAssemblyAttribute")) {
+				IsReferenceAssembly = true;
+				continue;
+			}
 			if (!IsCustomAttributeMatch (ca, Reader, "Java.Interop", "JavaPeerCallbackFormatAttribute")) {
+				continue;
+			}
+			if (callbackFormatRead) {
 				continue;
 			}
 
@@ -461,8 +472,140 @@ sealed class AssemblyIndex : IDisposable
 					$"Supported versions are '{JavaPeerCallbackFormat.ConnectorDelegates}' and '{JavaPeerCallbackFormat.UnmanagedCallersOnlyCallbacks}'.");
 			}
 			CallbackFormatVersion = version;
-			return;
+			callbackFormatRead = true;
 		}
+	}
+
+	IReadOnlyList<string> BuildCallbackMetadata ()
+	{
+		var entries = new List<string> ();
+		foreach (var typeHandle in Reader.TypeDefinitions) {
+			var typeDef = Reader.GetTypeDefinition (typeHandle);
+			var typeName = GetTypeFullName (typeHandle);
+
+			if (RegisterInfoByType.TryGetValue (typeHandle, out var typeRegister)) {
+				entries.Add (CreateCallbackMetadataEntry ("type", typeName, null, null, typeRegister));
+			}
+
+			foreach (var methodHandle in typeDef.GetMethods ()) {
+				var methodDef = Reader.GetMethodDefinition (methodHandle);
+				var methodName = Reader.GetString (methodDef.Name);
+				RegisterInfo? register = null;
+				bool isUnmanagedCallersOnly = false;
+				List<string>? registrationAttributes = null;
+				foreach (var attributeHandle in methodDef.GetCustomAttributes ()) {
+					var attribute = Reader.GetCustomAttribute (attributeHandle);
+					var attributeName = GetCustomAttributeName (attribute);
+					if (attributeName == "RegisterAttribute" && register is null) {
+						register = ParseRegisterAttribute (attribute);
+					}
+					if (attributeName == "RegisterAttribute" ||
+					    attributeName == "JniConstructorSignatureAttribute" ||
+					    IsCustomAttributeMatch (attribute, Reader, "Java.Interop", "ExportAttribute") ||
+					    IsCustomAttributeMatch (attribute, Reader, "Java.Interop", "ExportFieldAttribute")) {
+						registrationAttributes ??= new List<string> ();
+						registrationAttributes.Add ($"{attributeName}:{Convert.ToHexString (Reader.GetBlobBytes (attribute.Value))}");
+					}
+					if (IsCustomAttributeMatch (attribute, Reader, "System.Runtime.InteropServices", "UnmanagedCallersOnlyAttribute")) {
+						isUnmanagedCallersOnly = true;
+					}
+				}
+
+				if (register is null && registrationAttributes is null && !isUnmanagedCallersOnly && !methodName.StartsWith ("n_", StringComparison.Ordinal)) {
+					continue;
+				}
+
+				registrationAttributes?.Sort (StringComparer.Ordinal);
+				var parameterAttributes = new List<string> ();
+				foreach (var parameterHandle in methodDef.GetParameters ()) {
+					var parameter = Reader.GetParameter (parameterHandle);
+					foreach (var attributeHandle in parameter.GetCustomAttributes ()) {
+						var attribute = Reader.GetCustomAttribute (attributeHandle);
+						if (!IsCustomAttributeMatch (attribute, Reader, "Java.Interop", "ExportParameterAttribute")) {
+							continue;
+						}
+						parameterAttributes.Add (
+							$"{parameter.SequenceNumber.ToString (CultureInfo.InvariantCulture)}:{Convert.ToHexString (Reader.GetBlobBytes (attribute.Value))}");
+					}
+				}
+				parameterAttributes.Sort (StringComparer.Ordinal);
+				var signature = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
+				var signatureText = string.Join (":",
+					signature.Header.RawValue.ToString (CultureInfo.InvariantCulture),
+					signature.GenericParameterCount.ToString (CultureInfo.InvariantCulture),
+					signature.ReturnType,
+					string.Join (",", signature.ParameterTypes));
+				entries.Add (CreateCallbackMetadataEntry (
+					"method",
+					typeName,
+					methodName,
+					signatureText,
+					register,
+					((int) methodDef.Attributes).ToString (CultureInfo.InvariantCulture),
+					isUnmanagedCallersOnly.ToString (),
+					registrationAttributes is null ? null : string.Join (",", registrationAttributes),
+					parameterAttributes.Count == 0 ? null : string.Join (",", parameterAttributes)));
+			}
+
+			foreach (var propertyHandle in typeDef.GetProperties ()) {
+				var property = Reader.GetPropertyDefinition (propertyHandle);
+				foreach (var attributeHandle in property.GetCustomAttributes ()) {
+					var attribute = Reader.GetCustomAttribute (attributeHandle);
+					if (GetCustomAttributeName (attribute) != "RegisterAttribute") {
+						continue;
+					}
+					entries.Add (CreateCallbackMetadataEntry (
+						"property",
+						typeName,
+						Reader.GetString (property.Name),
+						null,
+						ParseRegisterAttribute (attribute)));
+					break;
+				}
+			}
+		}
+		entries.Sort (StringComparer.Ordinal);
+		return entries;
+	}
+
+	internal IReadOnlyList<string> GetCallbackMetadata ()
+		=> callbackMetadata ??= BuildCallbackMetadata ();
+
+	static string CreateCallbackMetadataEntry (
+		string kind,
+		string typeName,
+		string? memberName,
+		string? signature,
+		RegisterInfo? register,
+		string? methodAttributes = null,
+		string? isUnmanagedCallersOnly = null,
+		string? registrationAttributes = null,
+		string? parameterAttributes = null)
+	{
+		var builder = new StringBuilder ();
+		AppendField (builder, kind);
+		AppendField (builder, typeName);
+		AppendField (builder, memberName);
+		AppendField (builder, signature);
+		AppendField (builder, register?.JniName);
+		AppendField (builder, register?.Signature);
+		AppendField (builder, register?.Connector);
+		AppendField (builder, register?.DoNotGenerateAcw.ToString ());
+		AppendField (builder, register?.IsFromJniTypeSignature.ToString ());
+		AppendField (builder, register?.IsArrayType.ToString ());
+		AppendField (builder, register?.InvokerTypeName);
+		AppendField (builder, methodAttributes);
+		AppendField (builder, isUnmanagedCallersOnly);
+		AppendField (builder, registrationAttributes);
+		AppendField (builder, parameterAttributes);
+		return builder.ToString ();
+	}
+
+	static void AppendField (StringBuilder builder, string? value)
+	{
+		builder.Append (value?.Length ?? -1);
+		builder.Append (':');
+		builder.Append (value);
 	}
 
 	internal static string? GetCustomAttributeName (CustomAttribute ca, MetadataReader reader)
