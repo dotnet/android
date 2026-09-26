@@ -527,11 +527,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA1035"
       Condition=" '$(BundleAssemblies)' == 'true' "
   />
-  <AndroidWarning Code="XA1040"
-      ResourceName="XA1040"
-      FormatArguments="$(_AndroidRuntime)"
-      Condition=" '$(_AndroidRuntime)' == 'NativeAOT' and '$(EnablePreviewFeatures)' != 'true' "
-  />
 </Target>
 
 <Target Name="_CheckNonIdealConfigurations"
