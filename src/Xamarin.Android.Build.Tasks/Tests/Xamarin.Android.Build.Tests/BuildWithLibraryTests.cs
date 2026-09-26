@@ -407,12 +407,14 @@ namespace Xamarin.Android.Build.Tests
 			var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
 			FileAssert.Exists (dexFile);
 
-			// NOTE: the crc hashes here might change one day, but if we used [Android.Runtime.Register("")]
+			// Resolve the generated names from the map: if we used [Android.Runtime.Register("")]
 			// LibraryB.dll would have a reference to Mono.Android.dll, which invalidates the test.
-			string className = "Lcrc6414a4b78410c343a2/Bar;";
-			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
-			className = "Lcrc646d2d82b4d8b39bd8/Foo;";
-			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+			var mappings = File.ReadAllLines (Path.Combine (intermediate, "acw-map.txt"));
+			foreach (var managedName in new [] { $"Bar, {libC.ProjectName}", $"Foo, {libB.ProjectName}" }) {
+				var mapping = mappings.Single (line => line.StartsWith ($"{managedName};", StringComparison.Ordinal));
+				var className = $"L{mapping.Split (';') [1].Replace ('.', '/')};";
+				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+			}
 		}
 
 		[Test]
@@ -618,10 +620,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
-		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
-		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
-		public void DuplicateJCWNames (string typemapImplementation, AndroidRuntime runtime)
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
+		public void DuplicateJCWNames (AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -679,7 +680,6 @@ namespace Xamarin.Android.Build.Tests
 				},
 			};
 			app.SetRuntime (runtime);
-			app.SetProperty ("AndroidTypeMapImplementation", typemapImplementation);
 			var projectPath = Path.Combine ("temp", $"{TestName}_{Guid.NewGuid ():N}");
 			using var lib1b = CreateDllBuilder (Path.Combine (projectPath, library1.ProjectName), cleanupAfterSuccessfulBuild: false);
 			using var lib2b = CreateDllBuilder (Path.Combine (projectPath, library2.ProjectName), cleanupAfterSuccessfulBuild: false);
@@ -690,8 +690,8 @@ namespace Xamarin.Android.Build.Tests
 			using var appb = CreateApkBuilder (Path.Combine (projectPath, app.ProjectName), cleanupAfterSuccessfulBuild: false);
 			appb.ThrowOnBuildFailure = false;
 			Assert.IsFalse (appb.Build (app), "Build of App1 should have failed");
-var errors = appb.LastBuildOutput.Where (x => x.Contains ("error XA4215")).ToList ();
-Assert.IsNotEmpty (errors, "Error should be XA4215");
+			var errors = appb.LastBuildOutput.Where (x => x.Contains ("error XA4215")).ToList ();
+			Assert.IsNotEmpty (errors, "Error should be XA4215");
 			StringAssertEx.Contains ("examplelib.DuplicatePeer", errors, "Error should mention the conflicting Java type name");
 			StringAssertEx.Contains ("Library1.FirstPeer", errors, "Error should mention the first conflicting managed type");
 			StringAssertEx.Contains ("Library2.SecondPeer", errors, "Error should mention the second conflicting managed type");
@@ -699,19 +699,13 @@ Assert.IsNotEmpty (errors, "Error should be XA4215");
 				"Distinct managed type names should not produce XA4214.");
 
 			var acwMapFile = appb.Output.GetIntermediaryPath ("acw-map.txt");
-			if (typemapImplementation == "llvm-ir") {
-				var javaFile = appb.Output.GetIntermediaryPath (Path.Combine ("android", "src", "examplelib", "DuplicatePeer.java"));
-				FileAssert.Exists (javaFile, "llvm-ir generates JCW sources before XA4215 is detected.");
-				FileAssert.DoesNotExist (acwMapFile, "llvm-ir should not write an ambiguous acw-map.");
-			} else {
-				var typemapDirectory = appb.Output.GetIntermediaryPath ("typemap");
-				var javaFile = Path.Combine (typemapDirectory, "java", "examplelib", "DuplicatePeer.java");
-				FileAssert.DoesNotExist (javaFile, "A failed trimmable typemap build should not write an ambiguous JCW source.");
-				FileAssert.DoesNotExist (acwMapFile, "A failed trimmable typemap build should not write an ambiguous acw-map.");
-				if (Directory.Exists (typemapDirectory)) {
-					Assert.IsEmpty (Directory.GetFiles (typemapDirectory, "*.dll"),
-						"A failed trimmable typemap build should not write typemap assemblies.");
-				}
+			var typemapDirectory = appb.Output.GetIntermediaryPath ("typemap");
+			var javaFile = Path.Combine (typemapDirectory, "java", "examplelib", "DuplicatePeer.java");
+			FileAssert.DoesNotExist (javaFile, "A failed trimmable typemap build should not write an ambiguous JCW source.");
+			FileAssert.DoesNotExist (acwMapFile, "A failed trimmable typemap build should not write an ambiguous acw-map.");
+			if (Directory.Exists (typemapDirectory)) {
+				Assert.IsEmpty (Directory.GetFiles (typemapDirectory, "*.dll"),
+					"A failed trimmable typemap build should not write typemap assemblies.");
 			}
 		}
 
@@ -723,9 +717,9 @@ Assert.IsNotEmpty (errors, "Error should be XA4215");
 				return;
 			}
 
-			// TODO: NativeAOT should warn about the duplicate types
+			// NativeAOT removes these unreferenced Java peers.
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT doesn't warn about the duplicate managed types");
+				Assert.Ignore ("NativeAOT removes the unreferenced Java peers.");
 			}
 
 			var source = @"public class EmptyClass : Java.Lang.Object { }";
@@ -768,11 +762,17 @@ Assert.IsNotEmpty (errors, "Error should be XA4215");
 			using var appb = CreateApkBuilder (Path.Combine (projectPath, app.ProjectName));
 			appb.ThrowOnBuildFailure = false;
 			Assert.IsTrue (appb.Build (app), "Build of App1 should have succeeded");
-			IEnumerable<string> warnings = appb.LastBuildOutput.Where (x => x.Contains ("warning XA4214"));
-			Assert.NotNull (warnings, "Warning should be XA4214");
-			StringAssertEx.Contains ("EmptyClass", warnings, "Warning should mention the conflicting type name");
-			StringAssertEx.Contains ("Library1", warnings, "Warning should mention all of the assemblies with conflicts");
-			StringAssertEx.Contains ("Library2", warnings, "Warning should mention all of the assemblies with conflicts");
+			var mappings = File.ReadAllLines (appb.Output.GetIntermediaryPath ("acw-map.txt"));
+			var javaNames = new [] { library1.ProjectName, library2.ProjectName }
+				.Select (assembly => mappings.Single (line => line.StartsWith ($"EmptyClass, {assembly};", StringComparison.Ordinal)).Split (';') [1])
+				.ToArray ();
+			Assert.AreNotEqual (javaNames [0], javaNames [1], "Assembly-qualified managed names should map to distinct Java Callable Wrappers.");
+			var dexFile = appb.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			FileAssert.Exists (dexFile);
+			foreach (var javaName in javaNames) {
+				var className = $"L{javaName.Replace ('.', '/')};";
+				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+			}
 		}
 
 		[Test]

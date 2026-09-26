@@ -1773,9 +1773,9 @@ namespace UnnamedProject {
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
-				var customAppJavaDirectory = runtime == AndroidRuntime.NativeAOT ?
-					Path.Combine ("typemap", "java") :
-					Path.Combine ("android", "src");
+				var customAppJavaDirectory = runtime == AndroidRuntime.CoreCLR && isRelease ?
+					Path.Combine ("typemap", "linked-java") :
+					Path.Combine ("typemap", "java");
 				var customAppJava = b.Output.GetIntermediaryPath (Path.Combine (customAppJavaDirectory, "com", "foxsports", "test", "CustomApp.java"));
 				var customAppContent = File.ReadAllText (customAppJava);
 				Assert.IsTrue (customAppContent.Contains ("extends android.support.multidex.MultiDexApplication"),
@@ -2180,11 +2180,13 @@ namespace App1
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-			var dexFile = Path.Combine (intermediate, "android", "bin", "classes2.dex"); // NOTE: there is so much Java code, multidex is being used
-			FileAssert.Exists (dexFile);
-
-			const string className = "Lcrc64467b05f37239e7a6/StreamMediaDataSource;";
-			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+			var mapping = File.ReadAllLines (Path.Combine (intermediate, "acw-map.txt"))
+				.Single (line => line.StartsWith ("Plugin.Maui.Audio.StreamMediaDataSource, Plugin.Maui.Audio;", StringComparison.Ordinal));
+			var className = $"L{mapping.Split (';') [1].Replace ('.', '/')};";
+			var dexFiles = Directory.GetFiles (Path.Combine (intermediate, "android", "bin"), "classes*.dex");
+			Assert.IsNotEmpty (dexFiles, "The application should contain DEX files.");
+			Assert.IsTrue (dexFiles.Any (dexFile => DexUtils.ContainsClass (className, dexFile, AndroidSdkPath)),
+				$"The application DEX files should include `{className}`!");
 		}
 
 		[Test]

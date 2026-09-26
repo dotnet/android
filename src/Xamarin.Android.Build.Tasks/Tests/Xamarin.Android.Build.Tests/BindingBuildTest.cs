@@ -71,7 +71,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void UnmanagedCallersOnlyCallbacksRequireTrimmableTypeMap ()
+		public void UnmanagedCallersOnlyCallbacksUseDefaultTypeMap ()
 		{
 			var proj = new XamarinAndroidBindingProject {
 				Jars = {
@@ -81,14 +81,9 @@ namespace Xamarin.Android.Build.Tests
 				},
 			};
 			proj.SetProperty ("_AndroidEnableUnmanagedCallersOnlyCallbacks", "true");
-			proj.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
 
 			using var builder = CreateDllBuilder ();
-			builder.ThrowOnBuildFailure = false;
-			Assert.IsFalse (builder.Build (proj), "The experimental callback format should require the trimmable typemap.");
-			StringAssertEx.Contains (
-				"Experimental [UnmanagedCallersOnly] binding callbacks require AndroidTypeMapImplementation=trimmable, but 'llvm-ir' was selected.",
-				builder.LastBuildOutput);
+			Assert.IsTrue (builder.Build (proj), "The experimental callback format should work with the default trimmable typemap.");
 		}
 
 		[Test]

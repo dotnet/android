@@ -13,6 +13,7 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <RootNamespace>Xamarin.Android.JcwGenTests</RootNamespace>
     <OutputPath>$(XamarinAndroidSourcePath)bin\Test$(Configuration)</OutputPath>
+    <AndroidEnableLegacyCompatibilityAssemblyFixups>true</AndroidEnableLegacyCompatibilityAssemblyFixups>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
@@ -34,6 +35,8 @@
   <ItemGroup>
     <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
     <RuntimeHostConfigurationOption Include="IncludeCategories" Value="$(IncludeCategories)" Condition=" '$(IncludeCategories)' != '' " />
+    <!-- NUnit discovers fixtures through reflection, not through the application's call graph. -->
+    <TrimmerRootAssembly Include="$(AssemblyName)" RootMode="All" />
   </ItemGroup>
 
   <ItemGroup>
