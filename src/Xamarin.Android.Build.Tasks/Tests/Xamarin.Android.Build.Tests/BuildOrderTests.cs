@@ -112,9 +112,10 @@ namespace Xamarin.Android.Build.Tests
 			var setupTargets = new Import (() => "SetupRunWithLogging.targets") {
 				TextContent = () => """
 <Project>
-  <PropertyGroup>
-    <RunLogDelayInMS>0</RunLogDelayInMS>
-  </PropertyGroup>
+  <Target Name="ReportRunWithLoggingProperties" DependsOnTargets="_PrepareRunWithLogging">
+    <Message Text="RuntimeLogProperty=$(_AndroidRuntimeLogProperty)" Importance="high" />
+    <Message Text="RuntimeLog=$(_AndroidRuntimeLog)" Importance="high" />
+  </Target>
 </Project>
 """
 			};
@@ -122,17 +123,13 @@ namespace Xamarin.Android.Build.Tests
 				Imports = { setupTargets },
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("AndroidLaunchActivity", "com.example.MainActivity");
-			proj.SetProperty ("_AndroidPackage", "com.example");
-			proj.SetProperty ("AdbToolPath", "/usr/bin");
-			proj.SetProperty ("AdbToolExe", "true");
 
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "Build should succeed.");
-			builder.Target = "RunWithLogging";
+			builder.Target = "ReportRunWithLoggingProperties";
 			builder.Verbosity = LoggerVerbosity.Detailed;
-			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, parameters: ["_RunWithLoggingDependsOn="]), "RunWithLogging should succeed.");
-			StringAssertEx.Contains ("Setting the debug.dotnet.log property to: default,assembly,timing", builder.LastBuildOutput);
+			Assert.IsTrue (builder.Build (proj), "ReportRunWithLoggingProperties should succeed.");
+			StringAssertEx.Contains ("RuntimeLogProperty=debug.dotnet.log", builder.LastBuildOutput);
+			StringAssertEx.Contains ("RuntimeLog=default,assembly,timing", builder.LastBuildOutput);
 		}
 
 	}
