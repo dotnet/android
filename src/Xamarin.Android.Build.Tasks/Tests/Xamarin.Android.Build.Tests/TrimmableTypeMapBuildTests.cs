@@ -45,6 +45,7 @@ namespace Xamarin.Android.Build.Tests {
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty (KnownProperties.RuntimeIdentifiers, "android-arm64;android-x64");
 			var directoryBuildTargets = proj.Imports.Single (import => import.Project () == "Directory.Build.targets");
 			directoryBuildTargets.TextContent = () => """
 				<Project>
@@ -78,7 +79,11 @@ namespace Xamarin.Android.Build.Tests {
 				""";
 
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			Assert.IsTrue (builder.Restore (proj), "Restore should have succeeded.");
+			builder.AutomaticNuGetRestore = false;
+			Assert.IsTrue (
+				builder.Build (proj, doNotCleanupOnUpdate: true, parameters: ["RuntimeIdentifiers=android-arm64"], saveProject: false),
+				"Single-RID build should have succeeded.");
 			builder.Output.AssertTargetIsNotSkipped ("_AssertTrimmableTypeMapMonoAndroidImplementation");
 
 			var frameworkImplementations = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "framework-implementation-assemblies.txt"));
@@ -88,11 +93,31 @@ namespace Xamarin.Android.Build.Tests {
 			var referenceImplementationPaths = File.ReadAllLines (referenceImplementations);
 			Assert.IsTrue (referenceImplementationPaths.Any (path => path.Contains ("android-arm64", StringComparison.OrdinalIgnoreCase)),
 				"The trimmable typemap should resolve package implementations for android-arm64.");
+			Assert.IsFalse (referenceImplementationPaths.Any (path => path.Contains ("android-x64", StringComparison.OrdinalIgnoreCase)),
+				"The single-RID build should not resolve package implementations for android-x64.");
+
+			Assert.IsTrue (
+				builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false),
+				"Multi-RID build should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_ResolveImplementationAssembliesForTrimmableTypeMap");
+			referenceImplementationPaths = File.ReadAllLines (referenceImplementations);
 			Assert.IsTrue (referenceImplementationPaths.Any (path => path.Contains ("android-x64", StringComparison.OrdinalIgnoreCase)),
 				"The trimmable typemap should resolve package implementations for android-x64.");
 
-			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Incremental build should have succeeded.");
+			Assert.IsTrue (
+				builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false),
+				"Incremental build should have succeeded.");
 			builder.Output.AssertTargetIsSkipped ("_ResolveImplementationAssembliesForTrimmableTypeMap");
+
+			Assert.IsTrue (
+				builder.Build (proj, doNotCleanupOnUpdate: true, parameters: ["RuntimeIdentifier=android-arm64"], saveProject: false),
+				"Build with conflicting global RID properties should have succeeded.");
+			var conflictingReferenceImplementations = builder.Output.GetIntermediaryPath (
+				Path.Combine ("android-arm64", "typemap", "reference-implementation-assemblies.txt"));
+			FileAssert.Exists (conflictingReferenceImplementations);
+			referenceImplementationPaths = File.ReadAllLines (conflictingReferenceImplementations);
+			Assert.IsTrue (referenceImplementationPaths.Any (path => path.Contains ("android-x64", StringComparison.OrdinalIgnoreCase)),
+				"RuntimeIdentifiers should take precedence over RuntimeIdentifier, matching the packaging RID set.");
 			FileAssert.Exists (frameworkImplementations);
 			FileAssert.Exists (referenceImplementations);
 		}

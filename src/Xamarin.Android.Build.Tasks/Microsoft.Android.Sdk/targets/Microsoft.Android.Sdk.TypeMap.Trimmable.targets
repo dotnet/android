@@ -33,9 +33,9 @@
     <_PostTrimTypeMapJavaOutputDirectory>$(_PostTrimTypeMapJavaBaseOutputDir)typemap/linked-java</_PostTrimTypeMapJavaOutputDirectory>
     <_PostTrimTypeMapJavaFilesList>$(_PostTrimTypeMapJavaBaseOutputDir)typemap/linked-java-files.txt</_PostTrimTypeMapJavaFilesList>
     <!-- _GetPrimaryCpuAbi selects the first RID and clears RuntimeIdentifiers before CoreCompile.
-         Preserve the original list so the pre-trim typemap can validate every RID implementation. -->
-    <_TrimmableTypeMapRuntimeIdentifier>$(RuntimeIdentifier)</_TrimmableTypeMapRuntimeIdentifier>
-    <_TrimmableTypeMapRuntimeIdentifiers>$(RuntimeIdentifiers)</_TrimmableTypeMapRuntimeIdentifiers>
+         Preserve the RID set using the same plural-property precedence as _ResolveAssemblies. -->
+    <_TrimmableTypeMapConfiguredRuntimeIdentifiers Condition=" '$(RuntimeIdentifiers)' != '' ">$(RuntimeIdentifiers)</_TrimmableTypeMapConfiguredRuntimeIdentifiers>
+    <_TrimmableTypeMapConfiguredRuntimeIdentifiers Condition=" '$(_TrimmableTypeMapConfiguredRuntimeIdentifiers)' == '' ">$(RuntimeIdentifier)</_TrimmableTypeMapConfiguredRuntimeIdentifiers>
     <_PostTrimTypeMapFirstRuntimeIdentifier Condition=" '$(RuntimeIdentifiers)' != '' ">$([System.String]::Copy('$(RuntimeIdentifiers)').Split(';')[0])</_PostTrimTypeMapFirstRuntimeIdentifier>
     <_PostTrimTypeMapFirstRuntimeIdentifier Condition=" '$(_PostTrimTypeMapFirstRuntimeIdentifier)' == '' ">$(RuntimeIdentifier)</_PostTrimTypeMapFirstRuntimeIdentifier>
     <_TypeMapJavaStubsSourceDirectory Condition=" '$(_TypeMapJavaStubsSourceDirectory)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' ">$(_PostTrimTypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
@@ -114,16 +114,28 @@
     <Error Text="AndroidPackageNamingPolicy value '$(AndroidPackageNamingPolicy)' is not supported with the trimmable typemap. Supported values are 'Crc64' (default) and 'LowercaseCrc64'." />
   </Target>
 
+  <Target Name="_SetTrimmableTypeMapProperties"
+      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' "
+      BeforeTargets="_CreatePropertiesCache">
+    <PropertyGroup>
+      <_TrimmableTypeMapEffectiveRuntimeIdentifiers>$(_TrimmableTypeMapConfiguredRuntimeIdentifiers)</_TrimmableTypeMapEffectiveRuntimeIdentifiers>
+      <_TrimmableTypeMapEffectiveRuntimeIdentifiers Condition=" '$(_TrimmableTypeMapEffectiveRuntimeIdentifiers)' == '' ">$(RuntimeIdentifier)</_TrimmableTypeMapEffectiveRuntimeIdentifiers>
+    </PropertyGroup>
+    <ItemGroup>
+      <_PropertyCacheItems Include="TrimmableTypeMapRuntimeIdentifiers=$(_TrimmableTypeMapEffectiveRuntimeIdentifiers)" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_ResolveImplementationAssembliesForTrimmableTypeMap"
       Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(_OuterIntermediateOutputPath)' == '' and '$(DesignTimeBuild)' != 'true' "
+      DependsOnTargets="_SetTrimmableTypeMapProperties"
       Inputs="$(ProjectAssetsFile);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_TypeMapOutputDirectory)framework-implementation-assemblies.txt;$(_TypeMapOutputDirectory)reference-implementation-assemblies.txt">
     <PropertyGroup>
       <_TrimmableTypeMapResolveProperties>_ComputeFilesToPublishForRuntimeIdentifiers=true;SelfContained=true;DesignTimeBuild=$(DesignTimeBuild);AppendRuntimeIdentifierToOutputPath=true;ResolveAssemblyReferencesFindRelatedSatellites=false;SkipCompilerExecution=true;_OuterIntermediateAssembly=@(IntermediateAssembly);_OuterOutputPath=$(OutputPath);_OuterIntermediateOutputPath=$(IntermediateOutputPath);_AndroidNdkDirectory=$(_AndroidNdkDirectory)</_TrimmableTypeMapResolveProperties>
     </PropertyGroup>
     <ItemGroup>
-      <_TrimmableTypeMapResolveRid Include="$(_TrimmableTypeMapRuntimeIdentifier)" Condition=" '$(_TrimmableTypeMapRuntimeIdentifier)' != '' " />
-      <_TrimmableTypeMapResolveRid Include="$(_TrimmableTypeMapRuntimeIdentifiers)" Condition=" '$(_TrimmableTypeMapRuntimeIdentifier)' == '' and '$(_TrimmableTypeMapRuntimeIdentifiers)' != '' " />
+      <_TrimmableTypeMapResolveRid Include="$(_TrimmableTypeMapEffectiveRuntimeIdentifiers)" />
     </ItemGroup>
     <MSBuild
         Condition=" '@(_TrimmableTypeMapResolveRid->Count())' != '0' "
