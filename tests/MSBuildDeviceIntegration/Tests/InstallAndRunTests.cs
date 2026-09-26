@@ -36,11 +36,8 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData (true, "llvm-ir", runtime);
-				AddTestData (false, "llvm-ir", runtime);
-			}
-
+			AddTestData (true, "llvm-ir", AndroidRuntime.CoreCLR);
+			AddTestData (false, "llvm-ir", AndroidRuntime.CoreCLR);
 			AddTestData (true, "trimmable", AndroidRuntime.CoreCLR);
 			AddTestData (false, "trimmable", AndroidRuntime.CoreCLR);
 			AddTestData (true, "trimmable", AndroidRuntime.NativeAOT);
@@ -61,14 +58,6 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (Get_DotNetRun_Data))]
 		public void DotNetRun (bool isRelease, string typemapImplementation, AndroidRuntime runtime)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			if (runtime == AndroidRuntime.NativeAOT && typemapImplementation == "llvm-ir") {
-				Assert.Ignore ("NativeAOT doesn't work with LLVM-IR typemaps");
-			}
-
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease
 			};
@@ -826,11 +815,9 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
-		public void DeployToDevice ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void DeployToDevice ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease
@@ -869,11 +856,9 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
-		public void ActivityAliasRuns ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void ActivityAliasRuns ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease
@@ -901,17 +886,9 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
-		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values] bool enableMarshalMethods, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values] bool enableMarshalMethods, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT doesn't support individual assemblies");
-			}
-
 			if (enableMarshalMethods && runtime == AndroidRuntime.CoreCLR) {
 				// This currently fails with the following exception:
 				//
@@ -973,11 +950,9 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
-		public void GlobalLayoutEvent_ShouldRegisterAndFire_OnActivityLaunch ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void GlobalLayoutEvent_ShouldRegisterAndFire_OnActivityLaunch ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 
 			string expectedLogcatOutput = "Bug 29730: GlobalLayout event handler called!";
 
@@ -1522,11 +1497,9 @@ namespace Library1 {
 		}
 
 		[Test]
-		public void JsonDeserializationCreatesJavaHandle ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void JsonDeserializationCreatesJavaHandle ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 			};
@@ -1652,11 +1625,9 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void AppWithStyleableUsageRuns ([Values] bool isRelease, [Values] bool linkResources, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void AppWithStyleableUsageRuns ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values] bool linkResources)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 
 			// TODO: fix this for NativeAOT
 			if (runtime == AndroidRuntime.NativeAOT && isRelease) {
@@ -2102,16 +2073,8 @@ namespace Styleable.Library {
 		}
 
 		[Test]
-		public void SkiaSharpCanvasBasedAppRuns ([Values] bool isRelease, [Values] bool addResource, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void SkiaSharpCanvasBasedAppRuns ([Values] bool isRelease, [Values] bool addResource, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			if (IgnoreOnNativeAot (runtime, "the legacy resource-designer fix (FixLegacyResourceDesignerStep, which emits XA8000 for the unresolved SkiaSharp @styleable/SKCanvasView) is intentionally not run on the trimmable typemap path, which is the NativeAOT default.")) {
-				return;
-			}
-
 			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, "SkiaSharpCanvasTest")) {
 				IsRelease = isRelease,
 				PackageReferences = {
@@ -2491,11 +2454,9 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void TypeAndMemberRemapping ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void TypeAndMemberRemapping ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 
 			// TODO: fix for NativeAOT, if possible
 			if (runtime == AndroidRuntime.NativeAOT) {
@@ -2788,17 +2749,8 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void FastDeployEnvironmentFiles ([Values] bool isRelease, [Values] bool embedAssembliesIntoApk, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void FastDeployEnvironmentFiles ([Values] bool isRelease, [Values] bool embedAssembliesIntoApk, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			// FastDeploy is used only in Debug builds, NativeAOT is used only in Release builds
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT doesn't support FastDeploy");
-			}
-
 			if (!isRelease && !embedAssembliesIntoApk) {
 				Assert.Ignore ("Not a FastDev configuration");
 			}
@@ -3031,11 +2983,9 @@ CUSTOM_ENVIRONMENT_VALUE=custom",
 		}
 
 		[Test]
-		public void FixLegacyResourceDesignerStep ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void FixLegacyResourceDesignerStep ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			string previousTargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android";
 
 			// Don't call SetRuntime on library projects (at least until "previous" framework bumps to at least 10.0)
@@ -3130,11 +3080,9 @@ CUSTOM_ENVIRONMENT_VALUE=custom",
 		}
 
 		[Test]
-		public void GradleFBProj ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void GradleFBProj ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 
 			const string facebookVersion = "18.3.0";
 			var moduleName = "Library";

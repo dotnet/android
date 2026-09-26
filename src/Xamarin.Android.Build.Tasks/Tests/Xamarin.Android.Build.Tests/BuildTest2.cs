@@ -40,11 +40,9 @@ namespace Xamarin.Android.Build.Tests
 		};
 
 		[Test]
-		public void BuildBasicApplication ([Values] bool isRelease, [Values ("", "en_US.UTF-8", "sv_SE.UTF-8")] string langEnvironmentVariable, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildBasicApplication ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values ("", "en_US.UTF-8", "sv_SE.UTF-8")] string langEnvironmentVariable)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -179,11 +177,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildBasicApplicationThenMoveIt ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildBasicApplicationThenMoveIt ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 
 			string path = Path.Combine (Root, "temp", TestName, "App1");
 			var proj = new XamarinAndroidApplicationProject {
@@ -247,24 +243,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildReleaseArm64 ([Values] bool forms, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime, [Values] bool r8)
+		public void BuildReleaseArm64 ([Values] bool forms, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime, [Values] bool r8)
 		{
 			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
-				return;
-			}
-
-			// NativeAOT already defaults to $(AndroidLinkTool)=r8, so the r8 dimension only adds
-			// a new configuration for the runtimes that default to no Java code shrinking.
-			if (r8 && runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT enables r8 by default; covered by the non-r8 test case.");
-				return;
-			}
-
 			var proj = forms ?
 				new XamarinFormsAndroidApplicationProject () :
 				new XamarinAndroidApplicationProject ();
@@ -419,19 +400,21 @@ namespace Xamarin.Android.Build.Tests
 			var ret = new List<object[]> ();
 
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData (
-					isRelease: false,
-					multidex: false,
-					packageFormat: "apk",
-					runtime
-				);
+				if (runtime == AndroidRuntime.CoreCLR) {
+					AddTestData (
+						isRelease: false,
+						multidex: false,
+						packageFormat: "apk",
+						runtime
+					);
 
-				AddTestData (
-					isRelease: false,
-					multidex: true,
-					packageFormat: "apk",
-					runtime
-				);
+					AddTestData (
+						isRelease: false,
+						multidex: true,
+						packageFormat: "apk",
+						runtime
+					);
+				}
 
 				AddTestData (
 					isRelease: true,
@@ -440,12 +423,14 @@ namespace Xamarin.Android.Build.Tests
 					runtime
 				);
 
-				AddTestData (
-					isRelease: false,
-					multidex: false,
-					packageFormat: "aab",
-					runtime
-				);
+				if (runtime == AndroidRuntime.CoreCLR) {
+					AddTestData (
+						isRelease: false,
+						multidex: false,
+						packageFormat: "aab",
+						runtime
+					);
+				}
 
 				AddTestData (
 					isRelease: true,
@@ -525,7 +510,9 @@ namespace Xamarin.Android.Build.Tests
 			var ret = new List<object[]> ();
 
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData (runtime, "", new string [0], false);
+				if (runtime == AndroidRuntime.CoreCLR) {
+					AddTestData (runtime, "", new string [0], false);
+				}
 
 				if (runtime == AndroidRuntime.NativeAOT) {
 					AddTestData (runtime, "", new [] { "IL2055", "IL3050" }, true, 2);
@@ -533,9 +520,13 @@ namespace Xamarin.Android.Build.Tests
 					AddTestData (runtime, "", new string [0], true);
 				}
 				AddTestData (runtime, "SuppressTrimAnalysisWarnings=false", new string [] { "IL2055" }, true, 2);
-				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, false, 1);
+				if (runtime == AndroidRuntime.CoreCLR) {
+					AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, false, 1);
+				}
 				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, true, 2);
-				AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, false);
+				if (runtime == AndroidRuntime.CoreCLR) {
+					AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, false);
+				}
 
 				if (runtime == AndroidRuntime.NativeAOT) {
 					AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, true, 2);
@@ -640,11 +631,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void XA0141ErrorIsRaised ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void XA0141ErrorIsRaised ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -1241,11 +1230,9 @@ namespace UnamedProject
 
 		[Test]
 		[NonParallelizable]
-		public void CheckTimestamps ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void CheckTimestamps ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 
 			var start = DateTime.UtcNow.AddSeconds (-1);
 			var proj = new XamarinFormsAndroidApplicationProject {
@@ -1306,11 +1293,9 @@ namespace UnamedProject
 
 		[Test]
 		[NonParallelizable] // On MacOS, parallel /restore causes issues
-		public void BuildApplicationAndClean ([Values] bool isRelease, [Values ("apk", "aab")] string packageFormat, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildApplicationAndClean ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values ("apk", "aab")] string packageFormat)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -1341,11 +1326,9 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void BuildApplicationWithLibraryAndClean ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildApplicationWithLibraryAndClean ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			var lib = new XamarinAndroidLibraryProject () {
 				IsRelease = isRelease,
 				ProjectName = "Library1",
@@ -1739,11 +1722,9 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void CustomApplicationClassAndMultiDex ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void CustomApplicationClassAndMultiDex ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.SetRuntime (runtime);
 			proj.IsRelease = isRelease;
@@ -1856,16 +1837,8 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 
 
 		[Test]
-		public void BuildBasicApplicationCheckPdb ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildBasicApplicationCheckPdb ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime)) {
-				return;
-			}
-
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("Test is irrelevant for NativeAOT, it doesn't support managed debug builds");
-			}
-
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
@@ -1878,16 +1851,8 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 		}
 
 		[Test]
-		public void BuildBasicApplicationCheckPdbRepeatBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildBasicApplicationCheckPdbRepeatBuild ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime)) {
-				return;
-			}
-
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("Test is irrelevant for NativeAOT, it doesn't support managed debug builds");
-			}
-
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (runtime);
 			using (var b = CreateApkBuilder ()) {
@@ -1908,12 +1873,8 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 		}
 
 		[Test]
-		public void BuildAppCheckDebugSymbols ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildAppCheckDebugSymbols ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime)) {
-				return;
-			}
-
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject () {
 				IsRelease = false,

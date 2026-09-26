@@ -316,11 +316,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void WarnAboutAppDomains ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void WarnAboutAppDomains ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			if (isRelease) {
 				// NOTE: trimmer warnings are hidden by default in .NET 7 rc1
 				Assert.Ignore("https://github.com/dotnet/linker/issues/2982");
@@ -513,7 +511,7 @@ $@"			var myButton = new AttributedButtonStub (this);
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR }) {
 				// Debug configuration
 				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: false, setLinkModeNone: false, shouldAddKeepAlives: false, runtime);
 
@@ -557,14 +555,6 @@ $@"			var myButton = new AttributedButtonStub (this);
 			bool shouldAddKeepAlives, AndroidRuntime runtime, string? typeMapImplementation,
 			bool enableLegacyCompatibilityAssemblyFixups)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
-				return;
-			}
-
 			if (runtime == AndroidRuntime.CoreCLR && isRelease && !setAndroidAddKeepAlivesTrue && setLinkModeNone && shouldAddKeepAlives) {
 				// This currently fails with the following exception:
 				//
@@ -709,17 +699,8 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void AndroidUseNegotiateAuthentication ([Values (true, false, null)] bool? useNegotiateAuthentication, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void AndroidUseNegotiateAuthentication ([Values (true, false, null)] bool? useNegotiateAuthentication, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
-				return;
-			}
-
 			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
 			proj.SetRuntime (runtime);
 			proj.AddReferences ("System.Net.Http");
@@ -751,15 +732,9 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void PreserveIX509TrustManagerSubclasses ([Values] bool hasServerCertificateCustomValidationCallback, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void PreserveIX509TrustManagerSubclasses ([Values] bool hasServerCertificateCustomValidationCallback, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
-				return;
-			}
 			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
 			proj.SetRuntime (runtime);
 			proj.AddReferences ("System.Net.Http");
@@ -793,17 +768,9 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void PreserveServices ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void PreserveServices ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
-				return;
-			}
-
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				TrimModeRelease = TrimMode.Full,
@@ -1009,17 +976,9 @@ public abstract class MyRunner {
 		}
 
 		[Test]
-		public void WarnWithReferenceToPreserveAttribute ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void WarnWithReferenceToPreserveAttribute ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			if (IgnoreOnNativeAot (runtime, "ILC does not run illink, so the obsolete-PreserveAttribute IL6001 warning is not emitted.")) {
-				return;
-			}
-
 			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
 			proj.SetRuntime (runtime);
 			proj.AddReferences ("System.Net.Http");
