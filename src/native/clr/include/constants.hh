@@ -31,22 +31,14 @@ namespace xamarin::android {
 		static constexpr bool is_release_build = false;
 		static constexpr bool is_debug_build = true;
 #endif
-		static constexpr std::string_view MANGLED_ASSEMBLY_NAME_EXT { ".so" };
 		static constexpr std::string_view dso_suffix { ".so" };
 		static constexpr std::string_view DSO_PREFIX { "lib" };
-
-	private:
-		static constexpr std::string_view RUNTIME_CONFIG_BLOB_BASE_NAME       { "libarc.bin" };
-		static constexpr size_t runtime_config_blob_name_size                 = calc_size (RUNTIME_CONFIG_BLOB_BASE_NAME, MANGLED_ASSEMBLY_NAME_EXT);
-		static constexpr auto RUNTIME_CONFIG_BLOB_NAME_ARRAY                  = concat_string_views<runtime_config_blob_name_size> (RUNTIME_CONFIG_BLOB_BASE_NAME, MANGLED_ASSEMBLY_NAME_EXT);
 
 	public:
 		static constexpr std::string_view NEWLINE { "\n" };
 		static constexpr std::string_view EMPTY { "" };
 		static constexpr std::string_view DIR_SEP { "/" };
 
-		// .data() must be used otherwise string_view length will include the trailing \0 in the array
-		static constexpr std::string_view RUNTIME_CONFIG_BLOB_NAME            { RUNTIME_CONFIG_BLOB_NAME_ARRAY.data () };
 		static constexpr std::string_view OVERRIDE_DIRECTORY_NAME             { ".__override__" };
 
 		static inline constexpr std::string_view DEBUG_DOTNET_LOG_PROPERTY          { "debug.dotnet.log" };

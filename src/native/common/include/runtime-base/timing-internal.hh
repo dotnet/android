@@ -73,7 +73,6 @@ namespace xamarin::android {
 		ManagedToJava             = 6,
 		ManagedRuntimeInit        = 7,
 		NativeToManagedTransition = 8,
-		RuntimeConfigBlob         = 9,
 		RuntimeRegister           = 10,
 		TotalRuntimeInit          = 11,
 		GetTimeOverhead           = 12,
@@ -551,9 +550,6 @@ namespace xamarin::android {
 
 				case TimingEventKind::NativeToManagedTransition:
 					return "Runtime.init: end native-to-managed transition";
-
-				case TimingEventKind::RuntimeConfigBlob:
-					return "Register runtimeconfig binary blob";
 
 				case TimingEventKind::RuntimeRegister:
 					return "Runtime.register: end time. Registered type: ";
