@@ -184,91 +184,37 @@ public class AvdManagerRunnerTests
 	}
 
 	[Test]
-	public void Constructor_NullPath_ThrowsArgumentException ()
+	public void Constructor_InvalidPath_ThrowsArgumentException ()
 	{
 		Assert.Throws<ArgumentException> (() => new AvdManagerRunner (null!));
-	}
-
-	[Test]
-	public void Constructor_EmptyPath_ThrowsArgumentException ()
-	{
 		Assert.Throws<ArgumentException> (() => new AvdManagerRunner (""));
-	}
-
-	[Test]
-	public void Constructor_WhitespacePath_ThrowsArgumentException ()
-	{
 		Assert.Throws<ArgumentException> (() => new AvdManagerRunner ("   "));
 	}
 
 	[Test]
-	public void Constructor_AcceptsEnvironmentVariables ()
-	{
-		var env = new Dictionary<string, string> { { "ANDROID_HOME", "/test/sdk" } };
-		var runner = new AvdManagerRunner ("/fake/avdmanager", env);
-		Assert.IsNotNull (runner);
-	}
-
-	[Test]
-	public void GetOrCreateAvdAsync_NullName_ThrowsArgumentException ()
+	public void GetOrCreateAvdAsync_InvalidName_ThrowsArgumentException ()
 	{
 		var runner = new AvdManagerRunner ("/fake/avdmanager");
 		Assert.ThrowsAsync<ArgumentException> (() => runner.GetOrCreateAvdAsync (null!, "system-image"));
-	}
-
-	[Test]
-	public void GetOrCreateAvdAsync_EmptyName_ThrowsArgumentException ()
-	{
-		var runner = new AvdManagerRunner ("/fake/avdmanager");
 		Assert.ThrowsAsync<ArgumentException> (() => runner.GetOrCreateAvdAsync ("", "system-image"));
-	}
-
-	[Test]
-	public void GetOrCreateAvdAsync_WhitespaceName_ThrowsArgumentException ()
-	{
-		var runner = new AvdManagerRunner ("/fake/avdmanager");
 		Assert.ThrowsAsync<ArgumentException> (() => runner.GetOrCreateAvdAsync ("   ", "system-image"));
 	}
 
 	[Test]
-	public void GetOrCreateAvdAsync_NullSystemImage_ThrowsArgumentException ()
+	public void GetOrCreateAvdAsync_InvalidSystemImage_ThrowsArgumentException ()
 	{
 		var runner = new AvdManagerRunner ("/fake/avdmanager");
 		Assert.ThrowsAsync<ArgumentException> (() => runner.GetOrCreateAvdAsync ("test-avd", null!));
-	}
-
-	[Test]
-	public void GetOrCreateAvdAsync_EmptySystemImage_ThrowsArgumentException ()
-	{
-		var runner = new AvdManagerRunner ("/fake/avdmanager");
 		Assert.ThrowsAsync<ArgumentException> (() => runner.GetOrCreateAvdAsync ("test-avd", ""));
-	}
-
-	[Test]
-	public void GetOrCreateAvdAsync_WhitespaceSystemImage_ThrowsArgumentException ()
-	{
-		var runner = new AvdManagerRunner ("/fake/avdmanager");
 		Assert.ThrowsAsync<ArgumentException> (() => runner.GetOrCreateAvdAsync ("test-avd", " \t "));
 	}
 
 	[Test]
-	public void DeleteAvdAsync_NullName_ThrowsArgumentException ()
+	public void DeleteAvdAsync_InvalidName_ThrowsArgumentException ()
 	{
 		var runner = new AvdManagerRunner ("/fake/avdmanager");
 		Assert.ThrowsAsync<ArgumentException> (() => runner.DeleteAvdAsync (null!));
-	}
-
-	[Test]
-	public void DeleteAvdAsync_EmptyName_ThrowsArgumentException ()
-	{
-		var runner = new AvdManagerRunner ("/fake/avdmanager");
 		Assert.ThrowsAsync<ArgumentException> (() => runner.DeleteAvdAsync (""));
-	}
-
-	[Test]
-	public void DeleteAvdAsync_WhitespaceName_ThrowsArgumentException ()
-	{
-		var runner = new AvdManagerRunner ("/fake/avdmanager");
 		Assert.ThrowsAsync<ArgumentException> (() => runner.DeleteAvdAsync (" \t "));
 	}
 

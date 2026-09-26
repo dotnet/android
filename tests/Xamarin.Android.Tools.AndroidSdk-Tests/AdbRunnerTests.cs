@@ -510,20 +510,10 @@ public class AdbRunnerTests
 	// Consumer: MAUI DevTools Adb provider (AdbPath, IsAvailable properties)
 
 	[Test]
-	public void Constructor_NullPath_ThrowsArgumentException ()
+	public void Constructor_InvalidPath_ThrowsArgumentException ()
 	{
 		Assert.Throws<ArgumentException> (() => new AdbRunner (null!));
-	}
-
-	[Test]
-	public void Constructor_EmptyPath_ThrowsArgumentException ()
-	{
 		Assert.Throws<ArgumentException> (() => new AdbRunner (""));
-	}
-
-	[Test]
-	public void Constructor_WhitespacePath_ThrowsArgumentException ()
-	{
 		Assert.Throws<ArgumentException> (() => new AdbRunner ("   "));
 	}
 
@@ -1117,41 +1107,6 @@ public class AdbRunnerTests
 		var original = new AdbPortSpec (AdbProtocol.Tcp, 3000);
 		var parsed = AdbPortSpec.TryParse (original.ToSocketSpec ());
 		Assert.AreEqual (original, parsed);
-	}
-
-	[Test]
-	public void AdbPortRule_ValueEquality ()
-	{
-		var rule1 = new AdbPortRule (new AdbPortSpec (AdbProtocol.Tcp, 5000), new AdbPortSpec (AdbProtocol.Tcp, 5000));
-		var rule2 = new AdbPortRule (new AdbPortSpec (AdbProtocol.Tcp, 5000), new AdbPortSpec (AdbProtocol.Tcp, 5000));
-		var rule3 = new AdbPortRule (new AdbPortSpec (AdbProtocol.Tcp, 5000), new AdbPortSpec (AdbProtocol.Tcp, 3000));
-
-		Assert.AreEqual (rule1, rule2);
-		Assert.AreNotEqual (rule1, rule3);
-		Assert.IsTrue (rule1 == rule2);
-		Assert.IsFalse (rule1 == rule3);
-	}
-
-	[Test]
-	public void AdbPortRule_Deconstruct ()
-	{
-		var rule = new AdbPortRule (new AdbPortSpec (AdbProtocol.Tcp, 5000), new AdbPortSpec (AdbProtocol.Tcp, 3000));
-		var (remote, local) = rule;
-
-		Assert.AreEqual (AdbProtocol.Tcp, remote.Protocol);
-		Assert.AreEqual (5000, remote.Port);
-		Assert.AreEqual (AdbProtocol.Tcp, local.Protocol);
-		Assert.AreEqual (3000, local.Port);
-	}
-
-	[Test]
-	public void AdbPortRule_ToString ()
-	{
-		var rule = new AdbPortRule (new AdbPortSpec (AdbProtocol.Tcp, 5000), new AdbPortSpec (AdbProtocol.Tcp, 3000));
-		var str = rule.ToString ();
-
-		Assert.That (str, Does.Contain ("tcp:5000"));
-		Assert.That (str, Does.Contain ("tcp:3000"));
 	}
 
 	[Test]

@@ -59,41 +59,19 @@ public class EmulatorRunnerTests
 	}
 
 	[Test]
-	public void Constructor_ThrowsOnNullPath ()
+	public void Constructor_ThrowsOnInvalidPath ()
 	{
 		Assert.Throws<ArgumentException> (() => new EmulatorRunner (null!));
-	}
-
-	[Test]
-	public void Constructor_ThrowsOnEmptyPath ()
-	{
 		Assert.Throws<ArgumentException> (() => new EmulatorRunner (""));
-	}
-
-	[Test]
-	public void Constructor_ThrowsOnWhitespacePath ()
-	{
 		Assert.Throws<ArgumentException> (() => new EmulatorRunner ("   "));
 	}
 
 	[Test]
-	public void LaunchEmulator_ThrowsOnNullAvdName ()
+	public void LaunchEmulator_ThrowsOnInvalidAvdName ()
 	{
 		var runner = new EmulatorRunner ("/fake/emulator");
 		Assert.Throws<ArgumentException> (() => runner.LaunchEmulator (null!));
-	}
-
-	[Test]
-	public void LaunchEmulator_ThrowsOnEmptyAvdName ()
-	{
-		var runner = new EmulatorRunner ("/fake/emulator");
 		Assert.Throws<ArgumentException> (() => runner.LaunchEmulator (""));
-	}
-
-	[Test]
-	public void LaunchEmulator_ThrowsOnWhitespaceAvdName ()
-	{
-		var runner = new EmulatorRunner ("/fake/emulator");
 		Assert.Throws<ArgumentException> (() => runner.LaunchEmulator ("   "));
 	}
 

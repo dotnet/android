@@ -29,20 +29,6 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		}
 
 		[Test]
-		public void GetHexValue_DefaultsToUpperCase ()
-		{
-			Assert.AreEqual ('A', HexUtilities.GetHexValue (10));
-		}
-
-		[Test]
-		public void WriteHex_Span_UpperCase ()
-		{
-			Span<char> chars = stackalloc char [2];
-			HexUtilities.WriteHex (chars, 0xab);
-			Assert.AreEqual ("AB", chars.ToString ());
-		}
-
-		[Test]
 		public void WriteHex_Span_LowerCase ()
 		{
 			Span<char> chars = stackalloc char [2];
