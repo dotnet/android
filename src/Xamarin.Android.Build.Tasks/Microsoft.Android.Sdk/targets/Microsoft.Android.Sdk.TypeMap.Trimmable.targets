@@ -68,7 +68,9 @@
     <_GenerateTrimmableTypeMapDependsOn Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">$(IlcDynamicBuildPropertyDependencies)</_GenerateTrimmableTypeMapDependsOn>
     <!-- _GetLibraryImports populates @(ExtractedManifestDocuments) for _ManifestMerger. -->
     <_GenerateTrimmableTypeMapDependsOn>$(_GenerateTrimmableTypeMapDependsOn);_GetLibraryImports;_ConvertResourcesCases</_GenerateTrimmableTypeMapDependsOn>
+    <!-- Finalize linked packaging inputs before adding pre-trim typemap items. -->
     <IncrementalCleanDependsOn>
+      _PrepareAssemblies;
       _RemoveRegisterAttribute;
       _RecordTrimmableTypeMapFileWrites;
       $(IncrementalCleanDependsOn);
