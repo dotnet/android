@@ -11,7 +11,7 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.PreTrimmingFixLegacyDesigner" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
-    <AndroidEnableLegacyCompatibilityAssemblyFixups Condition=" '$(AndroidEnableLegacyCompatibilityAssemblyFixups)' == '' ">true</AndroidEnableLegacyCompatibilityAssemblyFixups>
+    <AndroidEnableLegacyCompatibilityAssemblyFixups Condition=" '$(AndroidEnableLegacyCompatibilityAssemblyFixups)' == '' ">false</AndroidEnableLegacyCompatibilityAssemblyFixups>
     <_RemoveRegisterFlag>$(MonoAndroidIntermediateAssemblyDir)shrunk\shrunk.flag</_RemoveRegisterFlag>
     <!-- Inject typemap-specific targets into build dependency chains -->
     <_BeforeAddStaticResources>$(_BeforeAddStaticResources);_GetMonoPlatformJarPath</_BeforeAddStaticResources>
@@ -218,7 +218,7 @@
   <Target Name="_CollectPreTrimmingAssemblies"
       AfterTargets="ComputeResolvedFilesToPublishList"
       DependsOnTargets="_ComputeAssembliesToPostprocessOnPublish"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' ">
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' and '$(AndroidEnableLegacyCompatibilityAssemblyFixups)' == 'true' ">
     <ItemGroup>
       <_PreTrimmingAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' and '%(ResolvedFileToPublish.PostprocessAssembly)' == 'true' " />
     </ItemGroup>
@@ -227,8 +227,8 @@
   <Target Name="_PreTrimmingFixLegacyDesigner"
       AfterTargets="ComputeResolvedFilesToPublishList"
       DependsOnTargets="_CollectPreTrimmingAssemblies"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' "
-      Inputs="@(_PreTrimmingAssembly)"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' and '$(AndroidEnableLegacyCompatibilityAssemblyFixups)' == 'true' "
+      Inputs="@(_PreTrimmingAssembly);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_AndroidStampDirectory)_PreTrimmingFixLegacyDesigner.stamp">
     <MakeDir Directories="$(_AndroidStampDirectory)" />
     <PreTrimmingFixLegacyDesigner
@@ -252,7 +252,7 @@
   <Target Name="_PreTrimmingFixLegacyDesignerUpdateItems"
       AfterTargets="ComputeResolvedFilesToPublishList"
       DependsOnTargets="_PreTrimmingFixLegacyDesigner"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' ">
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidUseDesignerAssembly)' == 'True' and '$(AndroidEnableLegacyCompatibilityAssemblyFixups)' == 'true' ">
     <ItemGroup>
       <_PreTrimmingSwappableItem Include="@(ResolvedFileToPublish)"
           Condition=" '%(Extension)' == '.dll' and Exists('$(IntermediateOutputPath)prelink/%(Filename)%(Extension)') " />
@@ -293,6 +293,7 @@
     <PostTrimmingPipeline
         Assemblies="@(_PostTrimmingAssembly)"
         AddKeepAlives="$(AndroidAddKeepAlives)"
+        EnableLegacyCompatibilityAssemblyFixups="$(AndroidEnableLegacyCompatibilityAssemblyFixups)"
         AndroidLinkResources="$(AndroidLinkResources)"
         Deterministic="$(Deterministic)" />
     <MakeDir Directories="$(_AndroidStampDirectory)" />
