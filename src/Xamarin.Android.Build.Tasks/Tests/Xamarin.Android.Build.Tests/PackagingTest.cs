@@ -184,10 +184,13 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				"System.Console.dll",
 				"System.Private.CoreLib.dll",
 				"System.Runtime.dll",
-				"System.Runtime.InteropServices.dll",
 				"System.Linq.dll",
 				"UnnamedProject.dll",
 				"_Microsoft.Android.Resource.Designer.dll",
+				"_Microsoft.Android.TypeMaps.dll",
+				"_UnnamedProject.TypeMap.dll",
+				"_Mono.Android.TypeMap.dll",
+				"_Java.Interop.TypeMap.dll",
 				"Humanizer.dll",
 				"es/Humanizer.resources.dll",
 				"System.Collections.dll",
@@ -433,11 +436,6 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				return;
 			}
 
-			// TODO: NativeAOT doesn't create obj/Release/android/src/foo/Bar.java, instead it creates obj/Release/android/src/crc64dca3aed1e0ff8a1a/Bar.java
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT doesn't follow the explicit package naming policy");
-			}
-
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -445,11 +443,13 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			proj.Sources.Add (new BuildItem.Source ("Bar.cs") {
 				TextContent = () => "namespace Foo { class Bar : Java.Lang.Object { } }"
 			});
-			proj.SetProperty (proj.DebugProperties, "AndroidPackageNamingPolicy", "Lowercase");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "System.GC.KeepAlive (new Foo.Bar ());");
+			proj.SetProperty ("AndroidPackageNamingPolicy", "LowercaseCrc64");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build failed");
-				var text = b.Output.GetIntermediaryAsText (b.Output.IntermediateOutputPath, Path.Combine ("android", "src", "foo", "Bar.java"));
-				Assert.IsTrue (text.Contains ("package foo;"), "expected package not found in the source.");
+				var javaSource = b.Output.GetIntermediaryPath (Path.Combine ("typemap", "java", "crc64dca3aed1e0ff8a1a", "Bar.java"));
+				FileAssert.Exists (javaSource);
+				StringAssert.Contains ("package crc64dca3aed1e0ff8a1a;", File.ReadAllText (javaSource));
 			}
 		}
 
@@ -483,7 +483,6 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				}
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty (proj.DebugProperties, "AndroidPackageNamingPolicy", "Lowercase");
 			foreach (var package in packages)
 				proj.PackageReferences.Add (package);
 			using (var b = CreateApkBuilder ()) {

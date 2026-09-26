@@ -85,10 +85,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
-    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" />
+    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
     <TrimmerRootAssembly Include="StartupHook" RootMode="All" Condition=" '$(StartupHookSupport)' == 'true' " />
-    <TrimmerRootDescriptor Include="TrimmerRoots.xml" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootDescriptor Include="TrimmerRoots.xml" />
     <_AndroidRemapMembers Include="Remaps.xml" />
     <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
     <ProguardConfiguration Include="proguard.cfg" />

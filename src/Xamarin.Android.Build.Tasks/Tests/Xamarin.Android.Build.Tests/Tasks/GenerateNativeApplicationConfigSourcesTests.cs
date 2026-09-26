@@ -40,4 +40,34 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		var config = EnvironmentHelper.ReadApplicationConfig (environmentFiles);
 		Assert.AreEqual (haveAssemblyStore, config.have_assembly_store);
 	}
+
+	[Test]
+	public void TypeMapAssemblyIsCountedOnceAcrossResolvedAssemblyLists ()
+	{
+		string outputRoot = Path.Combine (Root, "temp", TestName);
+		string monoAndroidPath = Path.Combine (TestEnvironment.MonoAndroidFrameworkDirectory, "Mono.Android.dll");
+		FileAssert.Exists (monoAndroidPath);
+		string typeMapPath = Path.Combine (outputRoot, "typemap", "_Test.TypeMap.dll");
+		var typeMap = new TaskItem (typeMapPath);
+		typeMap.SetMetadata ("Abi", "arm64-v8a");
+		typeMap.SetMetadata ("DestinationSubDirectory", "arm64-v8a/");
+		typeMap.SetMetadata ("RelativePath", "_Test.TypeMap.dll");
+
+		var task = new GenerateNativeApplicationConfigSources {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			ResolvedAssemblies = [new TaskItem (monoAndroidPath), typeMap],
+			AdditionalResolvedAssemblies = [new TaskItem (typeMapPath)],
+			EnvironmentOutputDirectory = Path.Combine (outputRoot, "android"),
+			SupportedAbis = ["arm64-v8a"],
+			AndroidPackageName = "com.microsoft.android.typemapcounttest",
+			AndroidRuntime = "CoreCLR",
+			UseAssemblyStore = true,
+		};
+
+		Assert.IsTrue (task.Execute (), "GenerateNativeApplicationConfigSources should succeed.");
+		var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (
+			outputRoot, "arm64-v8a", required: true, runtime: AndroidRuntime.CoreCLR);
+		var config = EnvironmentHelper.ReadApplicationConfig (environmentFiles);
+		Assert.AreEqual (2u, config.number_of_assemblies_in_apk, "The type map must not be counted again as a satellite assembly.");
+	}
 }

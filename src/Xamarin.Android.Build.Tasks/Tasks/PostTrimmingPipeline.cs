@@ -16,7 +16,7 @@ namespace Xamarin.Android.Tasks;
 /// This opens each assembly once (via DirectoryAssemblyResolver with ReadWrite) and
 /// runs all registered steps on it, then writes modified assemblies in-place. Currently
 /// runs CheckForObsoletePreserveAttributeStep, StripEmbeddedLibrariesStep and
-/// (optionally) AddKeepAlivesStep.
+/// (optionally) AddKeepAlivesStep and legacy abstract-method fixups.
 ///
 /// Runs in the inner build after ILLink but before ReadyToRun/crossgen2 compilation,
 /// so that R2R images are generated from the already-modified assemblies.
@@ -33,6 +33,8 @@ public class PostTrimmingPipeline : AndroidTask
 	public bool AndroidLinkResources { get; set; }
 
 	public bool Deterministic { get; set; }
+
+	public bool EnableLegacyCompatibilityAssemblyFixups { get; set; } = true;
 
 	public override bool RunTask ()
 	{
@@ -66,8 +68,7 @@ public class PostTrimmingPipeline : AndroidTask
 			steps.Add (new RemoveResourceDesignerStep (allAssemblies, (msg) => Log.LogDebugMessage (msg)));
 		}
 
-		// FixAbstractMethods — resolve Mono.Android once up front. If resolution fails, log
-		// the error and skip running the fix step entirely to avoid later unhandled exceptions.
+		// Resolve Mono.Android once for AppDomain warnings and optional legacy abstract-method fixups.
 		AssemblyDefinition? monoAndroidAssembly = null;
 		try {
 			monoAndroidAssembly = resolver.Resolve (AssemblyNameReference.Parse ("Mono.Android"));
@@ -78,7 +79,8 @@ public class PostTrimmingPipeline : AndroidTask
 			steps.Add (new PostTrimmingFixAbstractMethodsStep (cache,
 				() => monoAndroidAssembly,
 				(msg) => Log.LogDebugMessage (msg),
-				(msg) => Log.LogCodedWarning ("XA2000", msg)));
+				(msg) => Log.LogCodedWarning ("XA2000", msg),
+				EnableLegacyCompatibilityAssemblyFixups));
 		}
 
 		if (AddKeepAlives) {
