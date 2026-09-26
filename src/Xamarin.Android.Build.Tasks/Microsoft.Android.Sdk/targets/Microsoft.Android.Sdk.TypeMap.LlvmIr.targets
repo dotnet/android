@@ -9,6 +9,7 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.PostTrimmingPipeline" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.PreTrimmingFixLegacyDesigner" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ValidateJavaPeerCallbackFormats" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <AndroidEnableLegacyCompatibilityAssemblyFixups Condition=" '$(AndroidEnableLegacyCompatibilityAssemblyFixups)' == '' ">true</AndroidEnableLegacyCompatibilityAssemblyFixups>
@@ -32,9 +33,14 @@
       _PrepareAssemblies;
       _PrepareNativeAssemblySources;
       $(_AfterPrepareAssemblies);
+      _ValidateJavaPeerCallbackFormats;
       _GetGenerateJavaStubsInputs;
     </_GenerateJavaStubsDependsOnTargets>
   </PropertyGroup>
+
+  <Target Name="_ValidateJavaPeerCallbackFormats">
+    <ValidateJavaPeerCallbackFormats ResolvedAssemblies="@(_ResolvedAssemblies)" />
+  </Target>
 
   <Target Name="_GenerateJavaStubs"
       DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest)"

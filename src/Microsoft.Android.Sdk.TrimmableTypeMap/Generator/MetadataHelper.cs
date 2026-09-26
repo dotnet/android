@@ -215,6 +215,7 @@ static class MetadataHelper
 		WriteOptionalStrings (writer, sink, method.CallbackParameterTypeNames);
 		writer.WriteOptionalString (sink, method.CallbackReturnTypeName);
 		WriteExportMethodDispatch (writer, sink, method.ExportMethodDispatch);
+		writer.WriteBoolean (sink, method.IsDirectUnmanagedCallersOnlyCallback);
 	}
 
 	static void WriteOptionalStrings (FingerprintWriter writer, Sink sink, IReadOnlyList<string>? values)
@@ -274,5 +275,9 @@ static class MetadataHelper
 		writer.WriteString (sink, registration.WrapperTarget.TypeNamespace);
 		writer.WriteString (sink, registration.WrapperTarget.TypeName);
 		writer.WriteString (sink, registration.WrapperTarget.MethodName);
+		writer.WriteBoolean (sink, registration.DirectCallback is not null);
+		if (registration.DirectCallback is not null) {
+			WriteUcoMethod (writer, sink, registration.DirectCallback);
+		}
 	}
 }

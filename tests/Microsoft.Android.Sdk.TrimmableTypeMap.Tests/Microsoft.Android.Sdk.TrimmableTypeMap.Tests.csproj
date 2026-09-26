@@ -19,6 +19,7 @@
     <Compile Remove="LookalikeConstructorTypes\**" />
     <Compile Remove="ActivationStubs.Java.Interop\**" />
     <Compile Remove="ActivationStubs.Mono.Android\**" />
+    <Compile Remove="TestUcoFixtures\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,6 +45,9 @@
     <ProjectReference Include="LookalikeConstructorTypes\LookalikeConstructorTypes.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="TestUcoFixtures\TestUcoFixtures.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -60,8 +64,11 @@
       <_TestFixtureFiles Include="LookalikeConstructorTypes\bin\$(Configuration)\$(DotNetStableTargetFramework)\LookalikeConstructorTypes.dll" />
       <_TestFixtureFiles Include="ActivationStubs.Java.Interop\bin\$(Configuration)\$(DotNetStableTargetFramework)\Java.Interop.dll" />
       <_TestFixtureFiles Include="ActivationStubs.Mono.Android\bin\$(Configuration)\$(DotNetStableTargetFramework)\Mono.Android.dll" />
+      <_TestFixtureFiles Include="TestUcoFixtures\bin\$(Configuration)\$(DotNetStableTargetFramework)\TestUcoFixtures.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(_TestFixtureFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="TestUcoFixtures\bin\$(Configuration)\$(DotNetStableTargetFramework)\ref\TestUcoFixtures.dll"
+        DestinationFiles="$(OutputPath)TestUcoFixtures.ref.dll" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

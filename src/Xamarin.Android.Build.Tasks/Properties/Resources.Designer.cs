@@ -1653,6 +1653,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; uses a Java peer callback format that requires AndroidTypeMapImplementation=trimmable..
+        /// </summary>
+        public static string XA4265 {
+            get {
+                return ResourceManager.GetString("XA4265", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; has different Java peer callback metadata in runtime-specific implementations &apos;{1}&apos; and &apos;{2}&apos;. All RuntimeIdentifiers must provide equivalent callback metadata when AndroidTypeMapImplementation=trimmable..
+        /// </summary>
+        public static string XA4266 {
+            get {
+                return ResourceManager.GetString("XA4266", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
         /// </summary>
         public static string XA4300 {

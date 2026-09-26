@@ -32,6 +32,7 @@ class NoOpTrimmableTypeMapLogger : ITrimmableTypeMapLogger
 	public virtual void LogUnsupportedConstructorParameterTypeError (string managedTypeName, string parameterType) { }
 	public virtual void LogMissingBaseConstructorError (string managedTypeName, string jniSignature) { }
 	public virtual void LogInvalidSuperArgumentsStringError (string managedTypeName, string superArgumentsString) { }
+	public virtual void LogRidSpecificCallbackMetadataMismatchError (string assemblyName, string firstPath, string secondPath) { }
 	public virtual void LogCustomJavaObjectError (string managedTypeName) { }
 	public virtual void LogCustomJavaObjectWarning (string managedTypeName) { }
 }
