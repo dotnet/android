@@ -21,16 +21,21 @@ namespace Java.Interop
 
 		internal void Dispose ()
 		{
-			Clear (ref staticMethods);
+			Clear (ref staticMethods, static method => method.StaticRedirect?.Dispose ());
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
-			return StaticMethods.GetOrAdd (encodedMember, static (member, methods) => {
-				ReadOnlySpan<char> method, signature;
-				JniPeerMembers.GetNameAndSignature (member, out method, out signature);
-				return methods.GetMethodInfo (method, signature);
-			}, this);
+			return GetOrAdd (
+				StaticMethods,
+				encodedMember,
+				static (member, methods) => {
+					ReadOnlySpan<char> method, signature;
+					JniPeerMembers.GetNameAndSignature (member, out method, out signature);
+					return methods.GetMethodInfo (method, signature);
+				},
+				this,
+				static method => method.StaticRedirect?.Dispose ());
 		}
 
 		JniMethodInfo GetMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
@@ -39,13 +44,33 @@ namespace Java.Interop
 			var newMethod      = Members.GetReplacementMethodInfo (method, signature);
 			if (newMethod.HasValue) {
 				var info = newMethod.Value;
-				using var t = CreateTargetType (info, Members);
-				if (TryGetStaticMethod (t, info, method, signature, out m)) {
-					return m;
+				JniType? t = CreateTargetType (info, Members);
+				try {
+					if (TryGetStaticMethod (t, info, method, signature, out m)) {
+						m.StaticRedirect = t;
+						t = null;
+						return m;
+					}
+				} finally {
+					t?.Dispose ();
 				}
 			}
 			if (Members.JniPeerType.TryGetStaticMethod (method, signature, out m)) {
 				return m;
+			}
+			newMethod = JniPeerMembers.GetBaseReplacementMethodInfo (Members.ManagedPeerType, method, signature);
+			if (newMethod.HasValue) {
+				var info = newMethod.Value;
+				JniType? t = CreateTargetType (info, Members);
+				try {
+					if (TryGetStaticMethod (t, info, method, signature, out m)) {
+						m.StaticRedirect = t;
+						t = null;
+						return m;
+					}
+				} finally {
+					t?.Dispose ();
+				}
 			}
 			m   = FindInFallbackTypes (method, signature);
 			if (m != null) {

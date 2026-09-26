@@ -21,8 +21,6 @@ extern "C" {
 	void monodroid_log (xamarin::android::LogLevel level, LogCategories category, const char *message) noexcept;
 	char* monodroid_TypeManager_get_java_class_name (jclass klass) noexcept;
 	void monodroid_free (void *ptr) noexcept;
-	const char* _monodroid_lookup_replacement_type (const char *jniSimpleReference);
-	const JniRemappingReplacementMethod* _monodroid_lookup_replacement_method_info (const char *jniSourceType, const char *jniMethodName, const char *jniMethodSignature);
 	xamarin::android::managed_timing_sequence* monodroid_timing_start (const char *message);
 	void monodroid_timing_stop (xamarin::android::managed_timing_sequence *sequence, const char *message);
 

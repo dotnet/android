@@ -31,6 +31,7 @@ set(XAMARIN_MONODROID_SOURCES
   host-environment.cc
   host-jni.cc
   internal-pinvoke-stubs.cc
+  jni-remapping-data-stub.cc
 
   ../runtime-base/android-system.cc
 

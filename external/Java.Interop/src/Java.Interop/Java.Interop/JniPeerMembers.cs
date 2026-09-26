@@ -40,6 +40,8 @@ namespace Java.Interop {
 
 		static JniPeerTypeNameInfo GetReplacementType (string jniPeerTypeName)
 		{
+			if (jniPeerTypeName == null)
+				throw new ArgumentNullException (nameof (jniPeerTypeName));
 			var typeManager = JniEnvironment.Runtime.TypeManager;
 			typeManager.GetReplacementTypeInfo (jniPeerTypeName, out var replacement, out var replacementUtf8);
 			return new JniPeerTypeNameInfo (jniPeerTypeName, replacement, replacementUtf8);
@@ -83,7 +85,7 @@ namespace Java.Interop {
 
 		static JniPeerMembers CreatePeerMembers (string jniPeerTypeName, Type managedPeerType)
 		{
-			return new JniPeerMembers (new JniPeerTypeNameInfo (jniPeerTypeName, null, IntPtr.Zero), managedPeerType, checkManagedPeerType: false);
+			return new JniPeerMembers (GetReplacementType (jniPeerTypeName), managedPeerType, checkManagedPeerType: false);
 		}
 
 		JniType?            jniPeerType;
@@ -144,6 +146,25 @@ namespace Java.Interop {
 			return Interlocked.CompareExchange (ref dictionary, candidate, null) ?? candidate;
 		}
 
+		static TValue GetOrAdd<TKey, TValue, TState> (
+			ConcurrentDictionary<TKey, TValue> dictionary,
+			TKey key,
+			Func<TKey, TState, TValue> valueFactory,
+			TState state,
+			Action<TValue> dispose)
+			where TKey : notnull
+			where TValue : class
+		{
+			if (dictionary.TryGetValue (key, out var value))
+				return value;
+
+			var candidate = valueFactory (key, state);
+			value = dictionary.GetOrAdd (key, candidate);
+			if (!ReferenceEquals (value, candidate))
+				dispose (candidate);
+			return value;
+		}
+
 		static void Clear<TKey, TValue> (ref ConcurrentDictionary<TKey, TValue>? dictionary, Action<TValue>? dispose = null)
 			where TKey : notnull
 		{
@@ -159,14 +180,14 @@ namespace Java.Interop {
 
 		protected virtual void Dispose (bool disposing)
 		{
-			if (!disposing || jniPeerType == null)
+			if (!disposing)
 				return;
 
 			instanceMethods.Dispose ();
 			instanceFields.Dispose ();
 			staticMethods.Dispose ();
 			staticFields.Dispose ();
-			jniPeerType.Dispose ();
+			jniPeerType?.Dispose ();
 
 			jniPeerType     = null;
 		}
@@ -199,13 +220,16 @@ namespace Java.Interop {
 
 		static JniType CreateTargetType (JniRuntime.ReplacementMethodInfo info, JniPeerMembers fallback)
 		{
+			return CreateTargetType (info, fallback.JniPeerTypeName);
+		}
+
+		static JniType CreateTargetType (JniRuntime.ReplacementMethodInfo info, string fallbackTypeName)
+		{
 			if (info.TargetJniTypeUtf8 != IntPtr.Zero)
 				return new JniType (info.TargetJniTypeUtf8);
 			if (info.TargetJniType != null)
 				return new JniType (info.TargetJniType);
-			return fallback.jniPeerTypeNameUtf8 != IntPtr.Zero
-				? new JniType (fallback.jniPeerTypeNameUtf8)
-				: new JniType (fallback.jniPeerTypeName ?? fallback.sourceJniPeerTypeName);
+			return new JniType (fallbackTypeName);
 		}
 
 		static bool TryGetInstanceMethod (
@@ -280,6 +304,71 @@ namespace Java.Interop {
 			if (info.TargetJniMethodSignature != null)
 				return info.TargetJniMethodSignature;
 			return fallback.ToString ();
+		}
+
+		// Member keys use the replaced type name but retain the managed member name and signature.
+		internal static JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfo (
+			string jniTypeName,
+			ReadOnlySpan<char> method,
+			ReadOnlySpan<char> signature)
+		{
+			return JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (jniTypeName, method, signature);
+		}
+
+		static string? GetEffectiveBaseTypeName (JniRuntime.JniTypeManager typeManager, Type baseType)
+		{
+			var baseSignature = typeManager.GetTypeSignature (baseType);
+			string? effectiveBaseType = baseSignature.SimpleReference;
+			if (effectiveBaseType == null)
+				return null;
+
+			// Type managers may return either the declared or runtime JNI name. The extra lookup
+			// supports declared names; remapping producers must emit single-hop final targets.
+			return typeManager.GetReplacementType (effectiveBaseType) ?? effectiveBaseType;
+		}
+
+		internal static JniRuntime.ReplacementMethodInfo? GetBaseReplacementMethodInfo (
+			Type managedPeerType,
+			ReadOnlySpan<char> method,
+			ReadOnlySpan<char> signature)
+		{
+			var typeManager = JniEnvironment.Runtime.TypeManager;
+			for (Type? baseType = managedPeerType.BaseType; baseType != null; baseType = baseType.BaseType) {
+				string? effectiveBaseType = GetEffectiveBaseTypeName (typeManager, baseType);
+				if (effectiveBaseType == null)
+					continue;
+				var info = typeManager.GetReplacementMethodInfo (effectiveBaseType, method, signature);
+				if (info != null) {
+					return info;
+				}
+			}
+			return null;
+		}
+
+		internal static JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfo (
+			string jniTypeName,
+			ReadOnlySpan<char> field,
+			ReadOnlySpan<char> signature)
+		{
+			return JniEnvironment.Runtime.TypeManager.GetReplacementFieldInfo (jniTypeName, field, signature);
+		}
+
+		internal static JniRuntime.ReplacementFieldInfo? GetBaseReplacementFieldInfo (
+			Type managedPeerType,
+			ReadOnlySpan<char> field,
+			ReadOnlySpan<char> signature)
+		{
+			var typeManager = JniEnvironment.Runtime.TypeManager;
+			for (Type? baseType = managedPeerType.BaseType; baseType != null; baseType = baseType.BaseType) {
+				string? effectiveBaseType = GetEffectiveBaseTypeName (typeManager, baseType);
+				if (effectiveBaseType == null)
+					continue;
+				var info = typeManager.GetReplacementFieldInfo (effectiveBaseType, field, signature);
+				if (info != null) {
+					return info;
+				}
+			}
+			return null;
 		}
 
 		internal static void AssertSelf (IJavaPeerable self)

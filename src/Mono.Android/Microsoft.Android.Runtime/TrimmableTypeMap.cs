@@ -192,6 +192,7 @@ public class TrimmableTypeMap
 	/// </summary>
 	JavaPeerProxy? GetProxyForJniClass (string className, Type? targetType)
 	{
+		className = JniRemappingLookup.GetReverseType (className) ?? className;
 		var cacheEntry = GetProxyCacheEntryForJniName (className);
 		if (cacheEntry is JavaPeerProxy singleProxy) {
 			return targetType is null || TargetTypeMatches (targetType, singleProxy.TargetType)
@@ -305,7 +306,8 @@ public class TrimmableTypeMap
 
 		var targetClass = default (JniObjectReference);
 		try {
-			targetClass = JniEnvironment.Types.FindClass (targetProxy.JniName);
+			string runtimeJniName = JniRemappingLookup.GetReplacementType (targetProxy.JniName) ?? targetProxy.JniName;
+			targetClass = JniEnvironment.Types.FindClass (runtimeJniName);
 			var reference = new JniObjectReference (handle);
 			if (JniEnvironment.Types.IsInstanceOf (reference, targetClass)) {
 				proxy = targetProxy;
@@ -441,7 +443,8 @@ public class TrimmableTypeMap
 		try {
 			objClass = JniEnvironment.Types.GetObjectClass (selfRef);
 			try {
-				targetClass = JniEnvironment.Types.FindClass (targetJniName);
+				string runtimeJniName = JniRemappingLookup.GetReplacementType (targetJniName) ?? targetJniName;
+				targetClass = JniEnvironment.Types.FindClass (runtimeJniName);
 			} catch (Java.Lang.ClassNotFoundException) {
 				// FindClass throws for managed types whose Java peer class is
 				// not present in the APK (e.g. test types annotated with
@@ -593,6 +596,7 @@ public class TrimmableTypeMap
 				return;
 			}
 
+			className = JniRemappingLookup.GetReverseType (className) ?? className;
 			var cacheEntry = s_instance.GetProxyCacheEntryForJniName (className);
 			if (cacheEntry is JavaPeerProxy[] proxies && proxies.Length == 0) {
 				return;
