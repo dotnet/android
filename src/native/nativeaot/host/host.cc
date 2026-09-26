@@ -1,4 +1,3 @@
-#include <host/gc-bridge.hh>
 #include <host/host-environment-naot.hh>
 #include <host/host-nativeaot.hh>
 #include <host/os-bridge.hh>
@@ -24,10 +23,7 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept -> jint
 	HostEnvironment::init ();
 	jvm = vm;
 
-	JNIEnv *env = nullptr;
-	vm->GetEnv ((void**)&env, JNI_VERSION_1_6);
-	OSBridge::initialize_on_onload (vm, env);
-	GCBridge::initialize_on_onload (env);
+	OSBridge::initialize_on_onload (vm);
 	AndroidSystem::init_max_gref_count ();
 
 	if (__jni_on_load_handler_count > 0) {
@@ -52,14 +48,10 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 	abort_if_invalid_pointer_argument (initArgs, "initArgs");
 
 	JNIEnv *env = OSBridge::ensure_jnienv ();
-	jclass runtimeClass = env->FindClass ("mono/android/Runtime");
 
 	AndroidSystem::set_primary_override_dir (files_dir);
 	HostEnvironment::setup_environment (language, files_dir, cache_dir);
 	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
-
-	OSBridge::initialize_on_runtime_init (env, runtimeClass);
-	GCBridge::initialize_on_runtime_init (env, runtimeClass);
 
 	// We expect the struct to be initialized by the managed land the way it sees fit, we set only the
 	// fields we support.
@@ -84,7 +76,21 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 	initArgs->grefGcThreshold = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
 	initArgs->maxGrefCount = static_cast<int>(AndroidSystem::get_max_gref_count ());
 	initArgs->grefIGCUserPeer = env->NewGlobalRef (lrefIGCUserPeer);
+	if (initArgs->grefIGCUserPeer == nullptr) [[unlikely]] {
+		if (env->ExceptionCheck ()) {
+			env->ExceptionDescribe ();
+			env->ExceptionClear ();
+		}
+		abort_unless (false, "Failed to create a global reference for mono/android/IGCUserPeer");
+	}
 	initArgs->grefGCUserPeerable = env->NewGlobalRef (lrefGCUserPeerable);
+	if (initArgs->grefGCUserPeerable == nullptr) [[unlikely]] {
+		if (env->ExceptionCheck ()) {
+			env->ExceptionDescribe ();
+			env->ExceptionClear ();
+		}
+		abort_unless (false, "Failed to create a global reference for net/dot/jni/GCUserPeerable");
+	}
 	initArgs->grefLogPath = Logger::gref_log_path ();
 	initArgs->lrefLogPath = Logger::lref_log_path ();
 	initArgs->referenceLogDirectory = Logger::reference_log_directory ();

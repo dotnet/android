@@ -31,9 +31,6 @@ namespace {
 		if (entrypoint_name == "monodroid_free"sv) {
 			return reinterpret_cast<void*> (&monodroid_free);
 		}
-		if (entrypoint_name == "_monodroid_gc_wait_for_bridge_processing"sv) {
-			return reinterpret_cast<void*> (&_monodroid_gc_wait_for_bridge_processing);
-		}
 		if (entrypoint_name == "monodroid_log"sv) {
 			return reinterpret_cast<void*> (&monodroid_log);
 		}
@@ -42,9 +39,6 @@ namespace {
 		}
 		if (entrypoint_name == "_monodroid_lookup_replacement_method_info"sv) {
 			return reinterpret_cast<void*> (&_monodroid_lookup_replacement_method_info);
-		}
-		if (entrypoint_name == "_monodroid_register_reference_logging_callbacks"sv) {
-			return reinterpret_cast<void*> (&_monodroid_register_reference_logging_callbacks);
 		}
 		if (entrypoint_name == "monodroid_TypeManager_get_java_class_name"sv) {
 			return reinterpret_cast<void*> (&monodroid_TypeManager_get_java_class_name);
