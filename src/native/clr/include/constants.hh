@@ -44,8 +44,6 @@ namespace xamarin::android {
 		static inline constexpr std::string_view DEBUG_DOTNET_LOG_PROPERTY          { "debug.dotnet.log" };
 		static inline constexpr std::string_view DEBUG_DOTNET_MAX_GREFC             { "debug.dotnet.max_grefc" };
 		static inline constexpr std::string_view DEBUG_DOTNET_PROFILE_PROPERTY      { "debug.dotnet.profile" };
-		static constexpr std::string_view DEBUG_DOTNET_TIMING                       { "debug.dotnet.timing" };
-
 		static constexpr std::string_view LOG_CATEGORY_NAME_NONE                  { "*none*" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID             { "monodroid" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_ASSEMBLY    { "monodroid-assembly" };

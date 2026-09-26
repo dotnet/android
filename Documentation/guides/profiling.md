@@ -32,46 +32,20 @@ a user when launching the app.
 
 You can also run `adb logcat -c` to clear the log at any point.
 
-## Native runtime timing
+## Runtime timing
 
-Enable native .NET for Android timing messages with `debug.dotnet.log`:
+Runtime, JIT, and loader timing data is collected through EventPipe. The
+Android-specific GC bridge and type-map timings are published by the
+`Microsoft.Android.Runtime` EventSource provider. See the
+[tracing guide](tracing.md) for how to collect both with `dotnet-trace`.
+
+The `timing` log category remains only for the obsolete
+`Android.Runtime.TimingLogger` managed API, which writes messages tagged
+`monodroid-timing` to `logcat`:
 
 ```sh
-adb shell setprop debug.dotnet.log timing=bare
-```
-
-Launch the application and inspect the timing category:
-
-```sh
+adb shell setprop debug.dotnet.log timing
 adb logcat -d | grep monodroid-timing
-```
-
-For buffered CoreCLR timing with lower measurement overhead, build and install
-with `-p:_AndroidFastTiming=True`. This private build property adds the
-`mono.android.app.DumpTimingData` broadcast receiver to a CoreCLR application:
-
-```sh
-dotnet build -t:Install -p:_AndroidFastTiming=True
-adb shell setprop debug.dotnet.log timing=fast-bare
-adb shell am start -S -W PACKAGE_NAME/ACTIVITY_NAME
-adb shell am broadcast -a mono.android.app.DUMP_TIMING_DATA \
-  -n PACKAGE_NAME/mono.android.app.DumpTimingData
-adb logcat -d | grep monodroid-timing
-```
-
-NativeAOT does not support this buffered timing and broadcast workflow.
-
-The optional `debug.dotnet.timing` property controls fast-timing file output:
-
-```sh
-adb shell setprop debug.dotnet.timing to-file,filename=fast-timing.txt
-```
-
-Clear the settings when finished:
-
-```sh
-adb shell setprop debug.dotnet.log "''"
-adb shell setprop debug.dotnet.timing "''"
 ```
 
 ## Managed runtime profiling

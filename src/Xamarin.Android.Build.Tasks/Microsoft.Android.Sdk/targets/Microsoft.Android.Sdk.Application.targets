@@ -161,20 +161,22 @@ This file contains targets specific for Android application projects.
     <RunLogVerbose Condition=" '$(RunLogVerbose)' == '' ">false</RunLogVerbose>
   </PropertyGroup>
 
+  <Target Name="_PrepareRunWithLogging">
+    <PropertyGroup>
+      <_AndroidRuntimeLogProperty>debug.dotnet.log</_AndroidRuntimeLogProperty>
+      <_AndroidRuntimeLog>default,assembly,timing</_AndroidRuntimeLog>
+      <_AndroidRuntimeLog Condition=" '$(RunLogVerbose)' != 'false' ">all</_AndroidRuntimeLog>
+      <RunLogDelayInMS>1000</RunLogDelayInMS> <!-- milliseconds -->
+    </PropertyGroup>
+  </Target>
+
   <Target Name="RunWithLogging"
-          DependsOnTargets="$(_RunWithLoggingDependsOn)">
+          DependsOnTargets="$(_RunWithLoggingDependsOn);_PrepareRunWithLogging">
     <GetAndroidActivityName
         Condition=" '$(AndroidLaunchActivity)' == '' "
         ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
       <Output TaskParameter="ActivityName" PropertyName="AndroidLaunchActivity" />
     </GetAndroidActivityName>
-
-    <PropertyGroup>
-      <_AndroidRuntimeLogProperty>debug.dotnet.log</_AndroidRuntimeLogProperty>
-      <_AndroidRuntimeLog>default,assembly,timing=bare</_AndroidRuntimeLog>
-      <_AndroidRuntimeLog Condition=" '$(RunLogVerbose)' != 'false' ">all</_AndroidRuntimeLog>
-      <RunLogDelayInMS>1000</RunLogDelayInMS> <!-- milliseconds -->
-    </PropertyGroup>
 
     <Message Text="Preparing application to log more information" Importance="High" />
     <Message Text="Setting the $(_AndroidRuntimeLogProperty) property to: $(_AndroidRuntimeLog)" Importance="High" />

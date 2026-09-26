@@ -9,7 +9,6 @@
 #include <runtime-base/util.hh>
 #include <runtime-base/search.hh>
 #include <runtime-base/startup-aware-lock.hh>
-#include <runtime-base/timing-internal.hh>
 #include <runtime-base/zstd.hh>
 
 using namespace xamarin::android;
@@ -53,10 +52,6 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(e.image_data);
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
 		log_debugf (LOG_ASSEMBLY, "Resolving compressed assembly '%.*s' from the assembly store", static_cast<int>(name.length ()), name.data ());
-
-		if (FastTiming::enabled ()) [[unlikely]] {
-			internal_timing.start_event (TimingEventKind::AssemblyDecompression);
-		}
 
 		if (compressed_assembly_count == 0) [[unlikely]] {
 			Helpers::abort_application (LOG_ASSEMBLY, "Compressed assembly found but no descriptor defined"sv);
@@ -108,11 +103,6 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 
 			if (is_loaded ()) {
 				set_assembly_data_and_size (data_buffer, cad.uncompressed_file_size, assembly_data, assembly_data_size);
-
-				if (FastTiming::enabled ()) [[unlikely]] {
-					internal_timing.end_event (true /* uses_more_info */);
-					internal_timing.add_more_info (name, " (decompressed in another thread)"sv);
-				}
 				return {assembly_data, assembly_data_size};
 			}
 
@@ -161,10 +151,6 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			}
 
 			__atomic_store_n (&cad.loaded, true, __ATOMIC_RELEASE);
-			if (FastTiming::enabled ()) [[unlikely]] {
-				internal_timing.end_event (true /* uses_more_info */);
-				internal_timing.add_more_info (name);
-			}
 		}
 
 		set_assembly_data_and_size (data_buffer, cad.uncompressed_file_size, assembly_data, assembly_data_size);
@@ -178,17 +164,8 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 		// the assembly data to a read-write area.
 		log_debugf (LOG_ASSEMBLY, "Copying assembly data to an r/w memory area");
 
-		if (FastTiming::enabled ()) [[unlikely]] {
-			internal_timing.start_event (TimingEventKind::AssemblyLoad);
-		}
-
 		uint8_t *rw_pointer = static_cast<uint8_t*>(malloc (e.descriptor->data_size));
 		memcpy (rw_pointer, e.image_data, e.descriptor->data_size);
-
-		if (FastTiming::enabled ()) [[unlikely]] {
-			internal_timing.end_event (true /* uses more info */);
-			internal_timing.add_more_info (name, " (memcpy to r/w area, part of assembly load time)"sv);
-		}
 
 		set_assembly_data_and_size (rw_pointer, e.descriptor->data_size, assembly_data, assembly_data_size);
 		// HACK! END
