@@ -950,7 +950,6 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="_AndroidUseMarshalMethods=$(_AndroidUseMarshalMethods)" />
 		<_PropertyCacheItems Include="_AndroidJcwCodegenTarget=$(_AndroidJcwCodegenTarget)" />
 		<_PropertyCacheItems Include="_AndroidAssemblyStoreCompressionLevel=$(_AndroidAssemblyStoreCompressionLevel)" />
-		<_PropertyCacheItems Include="_AndroidFastTiming=$(_AndroidFastTiming)" />
 	</ItemGroup>
 	<WriteLinesToFile
 			File="$(_AndroidBuildPropertiesCache)"
@@ -1528,12 +1527,6 @@ because xbuild doesn't support framework reference assemblies.
     Inputs="$(IntermediateOutputPath)AndroidManifest.xml;@(ExtractedManifestDocuments);@(AndroidManifestOverlay);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
     Outputs="$(IntermediateOutputPath)android\AndroidManifest.xml"
   >
-  <ItemGroup>
-    <AndroidManifestOverlay
-        Include="$(MSBuildThisFileDirectory)\ManifestOverlays\Timing.xml"
-        Condition=" '$(_AndroidFastTiming)' == 'True' and '$(_AndroidRuntime)' == 'CoreCLR' "
-    />
-  </ItemGroup>
   <ManifestMerger
       ToolPath="$(JavaToolPath)"
       JavaOptions="$(JavaOptions)"
