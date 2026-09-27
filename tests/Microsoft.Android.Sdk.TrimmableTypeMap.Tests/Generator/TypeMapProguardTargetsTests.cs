@@ -193,15 +193,17 @@ public class TypeMapProguardTargetsTests : IDisposable
 	}
 
 	[Theory]
-	[InlineData ("MonoVM", "trimmable", "true", "r8", "true", false)]
-	[InlineData ("CoreCLR", "trimmable", "false", "r8", "true", false)]
-	[InlineData ("CoreCLR", "trimmable", "true", "", "true", false)]
-	[InlineData ("CoreCLR", "trimmable", "true", "r8", "false", false)]
-	[InlineData ("NativeAOT", "trimmable", "true", "r8", "false", false)]
-	[InlineData ("NativeAOT", "trimmable", "true", "r8", "", false)]
-	[InlineData ("CoreCLR", "trimmable", "true", "r8", "true", true)]
+	[InlineData ("MonoVM", "trimmable", "true", "r8", "true", false, "")]
+	[InlineData ("CoreCLR", "trimmable", "false", "r8", "true", false, "")]
+	[InlineData ("CoreCLR", "trimmable", "true", "", "true", false, "")]
+	[InlineData ("CoreCLR", "trimmable", "true", "r8", "false", false, "")]
+	[InlineData ("NativeAOT", "trimmable", "true", "r8", "false", false, "")]
+	[InlineData ("NativeAOT", "trimmable", "true", "r8", "", false, "")]
+	[InlineData ("CoreCLR", "trimmable", "true", "r8", "true", true, "")]
+	[InlineData ("CoreCLR", "trimmable", "true", "r8", "true", false, "custom.cfg")]
+	[InlineData ("NativeAOT", "trimmable", "true", "r8", "false", false, "custom.cfg")]
 	public void InactivePathsNeedNoTypemapInputsOrModernTasks (
-		string runtime, string representation, string trimmed, string linkTool, string enabled, bool innerBuild)
+		string runtime, string representation, string trimmed, string linkTool, string enabled, bool innerBuild, string proguardConfigFiles)
 	{
 		Write ("acw-map.txt", "App.Live, App;test.Live\n");
 		var project = CreateProject (runtime, representation);
@@ -210,9 +212,13 @@ public class TypeMapProguardTargetsTests : IDisposable
 			$"-p:AndroidLinkTool={linkTool}",
 			$"-p:_AndroidEnableTypemapR8Trimming={enabled}",
 			$"-p:_ComputeFilesToPublishForRuntimeIdentifiers={innerBuild}",
+			$"-p:ProguardConfigFiles={proguardConfigFiles}",
 			"-p:_MicrosoftAndroidBuildTasksAssembly=missing.dll");
 		Assert.False (File.Exists (Path.Combine (directory, "obj", "typemap.keys.txt")));
 		Assert.False (File.Exists (Path.Combine (directory, "obj", "proguard", "proguard_typemap_members.cfg")));
+		if (proguardConfigFiles != "") {
+			Assert.False (File.Exists (Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg")));
+		}
 		Assert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
 	}
 
@@ -250,7 +256,7 @@ public class TypeMapProguardTargetsTests : IDisposable
 			  <Target Name="_CreatePropertiesCache">
 			    <WriteLinesToFile File="$(_AndroidBuildPropertiesCache)" Lines="ProductionCacheContent" Overwrite="true" WriteOnlyWhenDifferent="true" />
 			  </Target>
-			  <Target Name="Build" DependsOnTargets="_CreatePropertiesCache;_CalculateProguardConfigurationFiles;_AndroidGenerateTypeMapProguardConfiguration">
+			  <Target Name="Build" DependsOnTargets="_CreatePropertiesCache;_CalculateProguardConfigurationFiles;_AndroidGenerateTypeMapProguardConfiguration;_AndroidGenerateTypeMapMemberProguardConfiguration">
 			    <WriteLinesToFile File="$(MSBuildProjectDirectory)/writes.txt" Lines="@(FileWrites);UseTypeMap=$(_AndroidUseTypeMapProguardConfiguration);@(_ProguardConfiguration->'Members=%(Identity)')" Overwrite="true" />
 			  </Target>
 			  <Target Name="_CompileToDalvik"
