@@ -248,7 +248,7 @@ public class TypeMapProguardTargetsTests : IDisposable
 			  </Target>
 			  <Target Name="_CalculateProguardConfigurationFiles" />
 			  <Target Name="_CreatePropertiesCache">
-			    <WriteLinesToFile File="$(_AndroidBuildPropertiesCache)" Lines="Enabled=$(_AndroidEnableTypemapR8Trimming)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+			    <WriteLinesToFile File="$(_AndroidBuildPropertiesCache)" Lines="ProductionCacheContent" Overwrite="true" WriteOnlyWhenDifferent="true" />
 			  </Target>
 			  <Target Name="Build" DependsOnTargets="_CreatePropertiesCache;_CalculateProguardConfigurationFiles;_AndroidGenerateTypeMapProguardConfiguration">
 			    <WriteLinesToFile File="$(MSBuildProjectDirectory)/writes.txt" Lines="@(FileWrites);UseTypeMap=$(_AndroidUseTypeMapProguardConfiguration);@(_ProguardConfiguration->'Members=%(Identity)')" Overwrite="true" />
