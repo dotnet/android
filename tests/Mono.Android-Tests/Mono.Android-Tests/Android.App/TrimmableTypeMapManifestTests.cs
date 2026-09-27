@@ -4,6 +4,8 @@ using System.Threading;
 using Android.App;
 using Android.Content;
 
+using Mono.Android_Test.Library;
+
 using NUnit.Framework;
 
 namespace Android.AppTests
@@ -18,13 +20,9 @@ namespace Android.AppTests
 		[Test]
 		public void ManifestOnlyLibraryActivity_SurvivesTrimmingAndRunsManagedOnCreate ()
 		{
-			var context = Application.Context;
-			using var preferences = context.GetSharedPreferences ("TrimmableManifestOnlyActivity", FileCreationMode.Private);
-			using (var editor = preferences.Edit ()) {
-				editor.Remove ("created");
-				Assert.IsTrue (editor.Commit (), "Could not clear the activity's previous result.");
-			}
+			Interlocked.Exchange (ref TrimmableManifestActivityState.OnCreateCount, 0);
 
+			var context = Application.Context;
 			using var component = new ComponentName (context.PackageName, ActivityName);
 			using var intent = new Intent ();
 			intent.SetComponent (component);
@@ -32,12 +30,12 @@ namespace Android.AppTests
 			context.StartActivity (intent);
 
 			var deadline = DateTime.UtcNow.AddSeconds (10);
-			while (!preferences.GetBoolean ("created", false) && DateTime.UtcNow < deadline) {
+			while (Volatile.Read (ref TrimmableManifestActivityState.OnCreateCount) == 0 && DateTime.UtcNow < deadline) {
 				Thread.Sleep (100);
 			}
 
-			Assert.IsTrue (preferences.GetBoolean ("created", false),
-				$"Managed OnCreate did not run for manifest-only component '{ActivityName}'.");
+			Assert.AreEqual (1, Volatile.Read (ref TrimmableManifestActivityState.OnCreateCount),
+				$"Managed OnCreate did not run exactly once for manifest-only component '{ActivityName}'.");
 		}
 	}
 }

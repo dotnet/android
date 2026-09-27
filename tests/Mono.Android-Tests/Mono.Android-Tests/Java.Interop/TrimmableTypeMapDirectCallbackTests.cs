@@ -4,6 +4,8 @@ using NUnit.Framework;
 
 using TrimmableTypeMapCallbacks;
 
+using static Java.InteropTests.TrimmableTypeMapTestHelpers;
+
 namespace Java.InteropTests
 {
 	[TestFixture]
@@ -17,8 +19,8 @@ namespace Java.InteropTests
 			DirectCallbackBase.LastLongValue = 0;
 
 			using var peer = new DirectCallbackPeer ();
-			var intMethod = JNIEnv.GetMethodID (peer.Class.Handle, "remove", "(I)V");
-			var longMethod = JNIEnv.GetMethodID (peer.Class.Handle, "remove", "(J)V");
+			var intMethod = GetRequiredMethodID (peer.Class.Handle, "remove", "(I)V");
+			var longMethod = GetRequiredMethodID (peer.Class.Handle, "remove", "(J)V");
 
 			JNIEnv.CallVoidMethod (peer.Handle, intMethod, new JValue (42));
 			JNIEnv.CallVoidMethod (peer.Handle, longMethod, new JValue (3_000_000_000L));
@@ -33,7 +35,7 @@ namespace Java.InteropTests
 			QualifiedCallbackHost.Invocations = 0;
 
 			using var peer = new DirectCallbackPeer ();
-			var method = JNIEnv.GetMethodID (peer.Class.Handle, "qualified", "(I)I");
+			var method = GetRequiredMethodID (peer.Class.Handle, "qualified", "(I)I");
 
 			Assert.AreEqual (142, JNIEnv.CallIntMethod (peer.Handle, method, new JValue (42)));
 			Assert.AreEqual (1, QualifiedCallbackHost.Invocations);

@@ -152,6 +152,7 @@
     <Compile Include="Java.Interop\TrimmableTypeMapDirectCallbackTests.cs" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
     <Compile Include="Java.Interop\TrimmableTypeMapExportTests.cs" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
     <Compile Include="Java.Interop\TrimmableTypeMapRuntimeCoverageTests.cs" />
+    <Compile Include="Java.Interop\TrimmableTypeMapTestHelpers.cs" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
     <Compile Include="Java.Interop\TrimmableTypeMapTypeManagerTests.cs" />
     <Compile Include="Java.Interop\VirtualCallbackConstructorTests.cs" />
     <Compile Include="Java.Lang\ObjectArrayMarshaling.cs" />
@@ -201,6 +202,7 @@
     <AndroidJavaSource Include="java/net/dot/android/test/*.java" />
     <AndroidJavaSource Update="java/net/dot/android/test/InterfaceCollectionFixture.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/test/TrimmableDirectCallbackBase.java" Bind="false" />
+    <AndroidJavaSource Update="java/net/dot/android/test/TrimmableSuperArgsBase.java" Bind="false" />
   </ItemGroup>
 
   <ItemGroup>

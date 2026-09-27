@@ -8,6 +8,8 @@ using Java.Interop;
 
 using NUnit.Framework;
 
+using static Java.InteropTests.TrimmableTypeMapTestHelpers;
+
 namespace Java.InteropTests
 {
 	[TestFixture]
@@ -21,9 +23,9 @@ namespace Java.InteropTests
 			using var peer = new TrimmableExportOverloadPeer ();
 			using var argument = new Java.Lang.String ("hello");
 
-			var intMethod = JNIEnv.GetMethodID (peer.Class.Handle, "call", "(I)I");
-			var stringMethod = JNIEnv.GetMethodID (peer.Class.Handle, "call", "(Ljava/lang/String;)Ljava/lang/String;");
-			var renamedMethod = JNIEnv.GetMethodID (peer.Class.Handle, "javaSideName", "()I");
+			var intMethod = GetRequiredMethodID (peer.Class.Handle, "call", "(I)I");
+			var stringMethod = GetRequiredMethodID (peer.Class.Handle, "call", "(Ljava/lang/String;)Ljava/lang/String;");
+			var renamedMethod = GetRequiredMethodID (peer.Class.Handle, "javaSideName", "()I");
 
 			Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, intMethod, new JValue (41)));
 			var result = JNIEnv.CallObjectMethod (peer.Handle, stringMethod, new JValue (argument.Handle));
@@ -40,7 +42,7 @@ namespace Java.InteropTests
 		{
 			using var peer = new TrimmableExportDerivedPeer ();
 
-			var method = JNIEnv.GetMethodID (peer.Class.Handle, "ping", "()I");
+			var method = GetRequiredMethodID (peer.Class.Handle, "ping", "()I");
 			Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, method));
 		}
 
@@ -50,8 +52,8 @@ namespace Java.InteropTests
 			using var listener = new TrimmableExportClickListener ();
 			using var view = new View (Android.App.Application.Context);
 
-			var interfaceMethod = JNIEnv.GetMethodID (listener.Class.Handle, "onClick", "(Landroid/view/View;)V");
-			var exportedMethod = JNIEnv.GetMethodID (listener.Class.Handle, "onClickRenamed", "(Landroid/view/View;)V");
+			var interfaceMethod = GetRequiredMethodID (listener.Class.Handle, "onClick", "(Landroid/view/View;)V");
+			var exportedMethod = GetRequiredMethodID (listener.Class.Handle, "onClickRenamed", "(Landroid/view/View;)V");
 
 			JNIEnv.CallVoidMethod (listener.Handle, interfaceMethod, new JValue (view.Handle));
 			JNIEnv.CallVoidMethod (listener.Handle, exportedMethod, new JValue (view.Handle));
@@ -65,8 +67,8 @@ namespace Java.InteropTests
 		{
 			using var peer = new TrimmableExportEnumPeer ();
 
-			var intMethod = JNIEnv.GetMethodID (peer.Class.Handle, "nextInt", "(I)I");
-			var longMethod = JNIEnv.GetMethodID (peer.Class.Handle, "nextLong", "(J)J");
+			var intMethod = GetRequiredMethodID (peer.Class.Handle, "nextInt", "(I)I");
+			var longMethod = GetRequiredMethodID (peer.Class.Handle, "nextLong", "(J)J");
 
 			Assert.AreEqual (2, JNIEnv.CallIntMethod (peer.Handle, intMethod, new JValue (1)));
 			Assert.AreEqual (long.MaxValue, JNIEnv.CallLongMethod (peer.Handle, longMethod, new JValue (1L)));
@@ -78,7 +80,8 @@ namespace Java.InteropTests
 			using var peer = new TrimmableExportReferencePeer ();
 			using var argument = new Java.Lang.String ("managed");
 
-			var echo = JNIEnv.GetMethodID (peer.Class.Handle, "echoCharSequence", "(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;");
+			var echo = GetRequiredMethodID (
+				peer.Class.Handle, "echoCharSequence", "(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;");
 			var echoed = JNIEnv.CallObjectMethod (peer.Handle, echo, new JValue (argument.Handle));
 			try {
 				Assert.AreEqual ("managed", JNIEnv.GetString (echoed, JniHandleOwnership.DoNotTransfer));
@@ -86,7 +89,7 @@ namespace Java.InteropTests
 				JNIEnv.DeleteLocalRef (echoed);
 			}
 
-			var makeList = JNIEnv.GetMethodID (peer.Class.Handle, "makeList", "()Ljava/util/List;");
+			var makeList = GetRequiredMethodID (peer.Class.Handle, "makeList", "()Ljava/util/List;");
 			var listHandle = JNIEnv.CallObjectMethod (peer.Handle, makeList);
 			using var list = Java.Lang.Object.GetObject<JavaList> (listHandle, JniHandleOwnership.TransferLocalRef);
 			Assert.IsNotNull (list);
@@ -106,7 +109,7 @@ namespace Java.InteropTests
 				Assert.IsNotNull (arrayName);
 				StringAssert.EndsWith ("/TrimmableExportUserPeer;", arrayName);
 
-				var method = JNIEnv.GetMethodID (peer.Class.Handle, "echoUserPeers", $"({arrayName}){arrayName}");
+				var method = GetRequiredMethodID (peer.Class.Handle, "echoUserPeers", $"({arrayName}){arrayName}");
 				var output = JNIEnv.CallObjectMethod (peer.Handle, method, new JValue (input));
 				try {
 					Assert.AreEqual (arrayName, JNIEnv.GetClassNameFromInstance (output));
@@ -141,7 +144,7 @@ namespace Java.InteropTests
 			using var peer = new TrimmableExportStreamPeer ();
 			using var input = new Java.IO.ByteArrayInputStream (new byte [] { 42, 43 });
 
-			var method = JNIEnv.GetMethodID (peer.Class.Handle, "readStream", "(Ljava/io/InputStream;)I");
+			var method = GetRequiredMethodID (peer.Class.Handle, "readStream", "(Ljava/io/InputStream;)I");
 			Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, method, new JValue (input.Handle)));
 		}
 
@@ -150,8 +153,8 @@ namespace Java.InteropTests
 		{
 			using var peer = new TrimmableExportNonPublicPeer ();
 
-			var protectedMethod = JNIEnv.GetMethodID (peer.Class.Handle, "protectedCall", "(I)I");
-			var privateMethod = JNIEnv.GetMethodID (peer.Class.Handle, "privateCall", "(I)I");
+			var protectedMethod = GetRequiredMethodID (peer.Class.Handle, "protectedCall", "(I)I");
+			var privateMethod = GetRequiredMethodID (peer.Class.Handle, "privateCall", "(I)I");
 
 			Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, protectedMethod, new JValue (21)));
 			Assert.AreEqual (43, JNIEnv.CallIntMethod (peer.Handle, privateMethod, new JValue (21)));
@@ -169,7 +172,7 @@ namespace Java.InteropTests
 				using var peer = Java.Lang.Object.GetObject<TrimmableExportSuperArgsPeer> (handle, JniHandleOwnership.DoNotTransfer);
 				Assert.IsNotNull (peer);
 
-				var method = JNIEnv.GetMethodID (peer.Class.Handle, "getSuperValue", "()I");
+				var method = GetRequiredMethodID (peer.Class.Handle, "getSuperValue", "()I");
 				Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, method));
 				Assert.AreEqual (1, TrimmableExportSuperArgsPeer.ConstructorInvocations);
 			} finally {

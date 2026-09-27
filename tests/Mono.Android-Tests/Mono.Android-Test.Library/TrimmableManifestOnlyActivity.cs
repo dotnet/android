@@ -1,7 +1,7 @@
 using System;
+using System.Threading;
 
 using Android.App;
-using Android.Content;
 using Android.OS;
 using Android.Runtime;
 
@@ -24,10 +24,7 @@ namespace Mono.Android_Test.Library
 		{
 			base.OnCreate (savedInstanceState);
 
-			var preferences = GetSharedPreferences ("TrimmableManifestOnlyActivity", FileCreationMode.Private);
-			using var editor = preferences.Edit ();
-			editor.PutBoolean ("created", true);
-			editor.Apply ();
+			Interlocked.Increment (ref TrimmableManifestActivityState.OnCreateCount);
 			Finish ();
 		}
 	}
