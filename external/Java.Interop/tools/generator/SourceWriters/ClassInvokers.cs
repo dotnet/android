@@ -29,5 +29,4 @@ namespace generator.SourceWriters
 			GetBody.Add ($"return {name};");
 		}		
 	}
-
 }
