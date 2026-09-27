@@ -1,7 +1,6 @@
 <!-- Retained typemap keys supply managed-peer class roots on the shrinking CoreCLR/NativeAOT path. -->
 <Project>
   <UsingTask TaskName="Microsoft.Android.Tasks.ExtractTypeMapKeysFromNativeAotObject" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Microsoft.Android.Tasks.ExtractTypeMapKeysFromLlvmIr" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Microsoft.Android.Tasks.ExtractTypeMapKeysFromAssemblies" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateTypeMapProguardConfiguration" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateTypeMapMemberProguardConfiguration" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
@@ -14,7 +13,7 @@
        linker must remain usable without an NDK. CoreCLR adapters need no native tools. -->
   <Target Name="_AndroidConfigureTypeMapProguard"
       BeforeTargets="_CalculateProguardConfigurationFiles"
-      Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and ('$(_AndroidRuntime)' == 'CoreCLR' or ('$(_AndroidRuntime)' == 'NativeAOT' and '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(_AndroidEnableTypemapR8Trimming)' == 'true')) ">
+      Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and '$(AndroidTypeMapImplementation)' == 'trimmable' and ('$(_AndroidRuntime)' == 'CoreCLR' or ('$(_AndroidRuntime)' == 'NativeAOT' and '$(_AndroidEnableTypemapR8Trimming)' == 'true')) ">
     <PropertyGroup>
       <_ProguardProjectConfiguration>$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
       <_AndroidTypeMapProguardConfiguration>$(_ProguardProjectConfiguration)</_AndroidTypeMapProguardConfiguration>
@@ -29,6 +28,7 @@
     <PropertyGroup>
       <_ProguardProjectConfiguration>$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
       <_AndroidTypeMapProguardConfiguration>$(_ProguardProjectConfiguration)</_AndroidTypeMapProguardConfiguration>
+      <_CompileToDalvikInputs>$(_CompileToDalvikInputs);$(_AndroidTypeMapProguardConfiguration)</_CompileToDalvikInputs>
     </PropertyGroup>
   </Target>
 
@@ -56,8 +56,7 @@
       <_AndroidTypeMapKeysInputsFile>$(IntermediateOutputPath)typemap.keys.inputs</_AndroidTypeMapKeysInputsFile>
       <_AndroidTypeMapTasksAssemblyFile>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '$(_MicrosoftAndroidBuildTasksAssembly)'))</_AndroidTypeMapTasksAssemblyFile>
       <_AndroidTypeMapKeysKind Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">native-object</_AndroidTypeMapKeysKind>
-      <_AndroidTypeMapKeysKind Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(AndroidTypeMapImplementation)' != 'trimmable' ">llvm-ir</_AndroidTypeMapKeysKind>
-      <_AndroidTypeMapKeysKind Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(AndroidTypeMapImplementation)' == 'trimmable' ">assemblies</_AndroidTypeMapKeysKind>
+      <_AndroidTypeMapKeysKind Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">assemblies</_AndroidTypeMapKeysKind>
       <_AndroidTypeMapLinkedAssemblies>@(ResolvedFileToPublish->'%(AndroidTypeMapLinkedAssemblies)'->Distinct())</_AndroidTypeMapLinkedAssemblies>
       <_AndroidTypeMapLlvmReadObjPath />
       <_AndroidTypeMapLlvmReadObjPath Condition=" '$(_AndroidTypeMapKeysKind)' == 'native-object' ">@(ResolvedFileToPublish->'%(AndroidTypeMapLlvmReadObjPath)'->Distinct())</_AndroidTypeMapLlvmReadObjPath>
@@ -70,8 +69,6 @@
            Keep missing files in the list so extraction fails instead of silently losing a RID. -->
       <_AndroidTypeMapKeySource Include="@(ResolvedFileToPublish->'%(AndroidTypeMapNativeObject)'->Distinct())"
           Condition=" '$(_AndroidTypeMapKeysKind)' == 'native-object' " />
-      <_AndroidTypeMapKeySource Include="@(_TypeMapAssemblySource->Distinct())"
-          Condition=" '$(_AndroidTypeMapKeysKind)' == 'llvm-ir' " />
       <_AndroidTypeMapKeySource Include="$(_AndroidTypeMapLinkedAssemblies)"
           Condition=" '$(_AndroidTypeMapKeysKind)' == 'assemblies' " />
       <_AndroidTypeMapKeysState Remove="@(_AndroidTypeMapKeysState)" />
@@ -96,10 +93,6 @@
         NativeObjectFiles="@(_AndroidTypeMapKeySource)"
         LlvmReadObjPath="$(_AndroidTypeMapLlvmReadObjPath)"
         OutputFile="$(_AndroidTypeMapKeysFile)" />
-    <ExtractTypeMapKeysFromLlvmIr
-        Condition=" '$(_AndroidTypeMapKeysKind)' == 'llvm-ir' "
-        LlvmIrFiles="@(_AndroidTypeMapKeySource)"
-        OutputFile="$(_AndroidTypeMapKeysFile)" />
     <ExtractTypeMapKeysFromAssemblies
         Condition=" '$(_AndroidTypeMapKeysKind)' == 'assemblies' "
         LinkedAssemblies="@(_AndroidTypeMapKeySource)"
@@ -111,6 +104,9 @@
 
   <Target Name="_AndroidGenerateTypeMapProguardConfigurationInputs"
       DependsOnTargets="_AndroidExtractTypeMapKeys">
+    <PropertyGroup>
+      <_CompileToDalvikInputs>$(_CompileToDalvikInputs);$(_AndroidTypeMapKeysInputsFile);$(_AndroidTypeMapKeysFile);$(_AndroidTypeMapProguardConfiguration)</_CompileToDalvikInputs>
+    </PropertyGroup>
     <ItemGroup>
       <_AndroidTypeMapKeyFile Remove="@(_AndroidTypeMapKeyFile)" />
       <_AndroidTypeMapKeyFile Include="$(_AndroidTypeMapKeysFile)" />
@@ -119,7 +115,7 @@
 
   <Target Name="_AndroidGenerateTypeMapProguardConfiguration"
       DependsOnTargets="_AndroidGenerateTypeMapProguardConfigurationInputs"
-      Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and ('$(_AndroidRuntime)' == 'CoreCLR' or ('$(_AndroidRuntime)' == 'NativeAOT' and '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(_AndroidEnableTypemapR8Trimming)' == 'true')) "
+      Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and '$(AndroidTypeMapImplementation)' == 'trimmable' and ('$(_AndroidRuntime)' == 'CoreCLR' or ('$(_AndroidRuntime)' == 'NativeAOT' and '$(_AndroidEnableTypemapR8Trimming)' == 'true')) "
       Inputs="@(_AndroidTypeMapKeyFile);$(_AndroidTypeMapTasksAssemblyFile);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_ProguardProjectConfiguration)">
     <GenerateTypeMapProguardConfiguration
@@ -134,6 +130,7 @@
       DependsOnTargets="_AndroidGenerateTypeMapProguardConfigurationInputs">
     <PropertyGroup>
       <_AndroidTypeMapMemberProguardConfiguration>$(IntermediateOutputPath)proguard\proguard_typemap_members.cfg</_AndroidTypeMapMemberProguardConfiguration>
+      <_CompileToDalvikInputs>$(_CompileToDalvikInputs);$(_AndroidTypeMapMemberProguardConfiguration)</_CompileToDalvikInputs>
     </PropertyGroup>
   </Target>
 

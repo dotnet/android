@@ -105,6 +105,37 @@ public class TypeMapProguardTargetsTests : IDisposable
 		Assert.Contains ("XA4327", Build (project, expectSuccess: false));
 	}
 
+	[Fact]
+	public void LinkedTypeMapChangeInvalidatesCompileToDalvik ()
+	{
+		string EmitMap (string key)
+		{
+			var path = Path.Combine (directory, "app.dll");
+			var model = new TypeMapAssemblyData { AssemblyName = "app", ModuleName = "app.dll" };
+			model.Entries.Add (new TypeMapAttributeData {
+				MapKey = key,
+				ProxyTypeReference = "System.Object, System.Runtime",
+			});
+			using var stream = File.Create (path);
+			new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0)).Emit (model, stream);
+			return path;
+		}
+
+		var map = EmitMap ("test/First");
+		var project = CreateProject ("CoreCLR", "trimmable",
+			$"""<ResolvedFileToPublish Include="app.dll" AndroidTypeMapLinkedAssemblies="{SecurityElement.Escape (map)}" />""");
+		Build (project, "-t:_CompileToDalvik");
+		var stamp = Path.Combine (directory, "dalvik.stamp");
+		var firstTime = File.GetLastWriteTimeUtc (stamp);
+		Build (project, "-t:_CompileToDalvik");
+		Assert.Equal (firstTime, File.GetLastWriteTimeUtc (stamp));
+
+		EmitMap ("test/Second");
+		File.SetLastWriteTimeUtc (map, DateTime.UtcNow.AddSeconds (1));
+		Build (project, "-t:_CompileToDalvik");
+		Assert.NotEqual (firstTime, File.GetLastWriteTimeUtc (stamp));
+	}
+
 	[Theory]
 	[InlineData ("NativeAOT", "true", "custom-object/retained.o")]
 	[InlineData ("NativeAOT", "false", "custom-object/retained.o")]
@@ -162,10 +193,9 @@ public class TypeMapProguardTargetsTests : IDisposable
 	}
 
 	[Theory]
-	[InlineData ("MonoVM", "llvm-ir", "true", "r8", "true", false)]
-	[InlineData ("CoreCLR", "llvm-ir", "false", "r8", "true", false)]
-	[InlineData ("CoreCLR", "llvm-ir", "true", "", "true", false)]
-	[InlineData ("CoreCLR", "llvm-ir", "true", "r8", "false", false)]
+	[InlineData ("MonoVM", "trimmable", "true", "r8", "true", false)]
+	[InlineData ("CoreCLR", "trimmable", "false", "r8", "true", false)]
+	[InlineData ("CoreCLR", "trimmable", "true", "", "true", false)]
 	[InlineData ("CoreCLR", "trimmable", "true", "r8", "false", false)]
 	[InlineData ("NativeAOT", "trimmable", "true", "r8", "false", false)]
 	[InlineData ("NativeAOT", "trimmable", "true", "r8", "", false)]
@@ -222,6 +252,12 @@ public class TypeMapProguardTargetsTests : IDisposable
 			  </Target>
 			  <Target Name="Build" DependsOnTargets="_CreatePropertiesCache;_CalculateProguardConfigurationFiles;_AndroidGenerateTypeMapProguardConfiguration">
 			    <WriteLinesToFile File="$(MSBuildProjectDirectory)/writes.txt" Lines="@(FileWrites);UseTypeMap=$(_AndroidUseTypeMapProguardConfiguration);@(_ProguardConfiguration->'Members=%(Identity)')" Overwrite="true" />
+			  </Target>
+			  <Target Name="_CompileToDalvik"
+			      DependsOnTargets="$(_CompileToDalvikDependsOnTargets)"
+			      Inputs="$(_CompileToDalvikInputs)"
+			      Outputs="$(MSBuildProjectDirectory)/dalvik.stamp">
+			    <Touch Files="$(MSBuildProjectDirectory)/dalvik.stamp" AlwaysCreate="true" />
 			  </Target>
 			</Project>
 			""");
