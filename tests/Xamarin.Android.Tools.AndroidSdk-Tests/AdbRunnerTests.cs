@@ -509,12 +509,12 @@ public class AdbRunnerTests
 
 	// Consumer: MAUI DevTools Adb provider (AdbPath, IsAvailable properties)
 
-	[Test]
-	public void Constructor_InvalidPath_ThrowsArgumentException ()
+	[TestCase (null)]
+	[TestCase ("")]
+	[TestCase ("   ")]
+	public void Constructor_InvalidPath_ThrowsArgumentException (string path)
 	{
-		Assert.Throws<ArgumentException> (() => new AdbRunner (null!));
-		Assert.Throws<ArgumentException> (() => new AdbRunner (""));
-		Assert.Throws<ArgumentException> (() => new AdbRunner ("   "));
+		Assert.Throws<ArgumentException> (() => new AdbRunner (path));
 	}
 
 	[Test]

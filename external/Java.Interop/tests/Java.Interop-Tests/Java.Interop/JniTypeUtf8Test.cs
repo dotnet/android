@@ -169,20 +169,28 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void GetMemberIDs_Utf8_MatchStringOverloads ()
+		public void GetMethodID_Utf8_MatchesStringOverload ()
 		{
 			using (var Object_class = new JniType ("java/lang/Object"u8)) {
 				var fromString = JniEnvironment.InstanceMethods.GetMethodID (Object_class.PeerReference, "hashCode", "()I");
 				var fromUtf8   = JniEnvironment.InstanceMethods.GetMethodID (Object_class.PeerReference, "hashCode"u8, "()I"u8);
 				Assert.AreEqual (fromString.ID, fromUtf8.ID);
 			}
+		}
 
+		[Test]
+		public void GetStaticMethodID_Utf8_MatchesStringOverload ()
+		{
 			using (var System_class = new JniType ("java/lang/System"u8)) {
 				var fromString = JniEnvironment.StaticMethods.GetStaticMethodID (System_class.PeerReference, "currentTimeMillis", "()J");
 				var fromUtf8   = JniEnvironment.StaticMethods.GetStaticMethodID (System_class.PeerReference, "currentTimeMillis"u8, "()J"u8);
 				Assert.AreEqual (fromString.ID, fromUtf8.ID);
 			}
+		}
 
+		[Test]
+		public void GetFieldID_Utf8_MatchesStringOverload ()
+		{
 			// Integer.value is private and blocked by ART hidden API restrictions.
 			// StreamTokenizer.ttype is a public instance field available on both JVM and Android.
 			using (var StreamTokenizer_class = new JniType ("java/io/StreamTokenizer"u8)) {
@@ -190,7 +198,11 @@ namespace Java.InteropTests
 				var fromUtf8   = JniEnvironment.InstanceFields.GetFieldID (StreamTokenizer_class.PeerReference, "ttype"u8, "I"u8);
 				Assert.AreEqual (fromString.ID, fromUtf8.ID);
 			}
+		}
 
+		[Test]
+		public void GetStaticFieldID_Utf8_MatchesStringOverload ()
+		{
 			using (var System_class = new JniType ("java/lang/System"u8)) {
 				var fromString = JniEnvironment.StaticFields.GetStaticFieldID (System_class.PeerReference, "in", "Ljava/io/InputStream;");
 				var fromUtf8   = JniEnvironment.StaticFields.GetStaticFieldID (System_class.PeerReference, "in"u8, "Ljava/io/InputStream;"u8);

@@ -183,39 +183,39 @@ public class AvdManagerRunnerTests
 		Assert.IsNull (path);
 	}
 
-	[Test]
-	public void Constructor_InvalidPath_ThrowsArgumentException ()
+	[TestCase (null)]
+	[TestCase ("")]
+	[TestCase ("   ")]
+	public void Constructor_InvalidPath_ThrowsArgumentException (string path)
 	{
-		Assert.Throws<ArgumentException> (() => new AvdManagerRunner (null!));
-		Assert.Throws<ArgumentException> (() => new AvdManagerRunner (""));
-		Assert.Throws<ArgumentException> (() => new AvdManagerRunner ("   "));
+		Assert.Throws<ArgumentException> (() => new AvdManagerRunner (path));
 	}
 
-	[Test]
-	public void GetOrCreateAvdAsync_InvalidName_ThrowsArgumentException ()
+	[TestCase (null)]
+	[TestCase ("")]
+	[TestCase ("   ")]
+	public void GetOrCreateAvdAsync_InvalidName_ThrowsArgumentException (string name)
 	{
 		var runner = new AvdManagerRunner ("/fake/avdmanager");
-		Assert.ThrowsAsync<ArgumentException> (() => runner.GetOrCreateAvdAsync (null!, "system-image"));
-		Assert.ThrowsAsync<ArgumentException> (() => runner.GetOrCreateAvdAsync ("", "system-image"));
-		Assert.ThrowsAsync<ArgumentException> (() => runner.GetOrCreateAvdAsync ("   ", "system-image"));
+		Assert.ThrowsAsync<ArgumentException> (() => runner.GetOrCreateAvdAsync (name, "system-image"));
 	}
 
-	[Test]
-	public void GetOrCreateAvdAsync_InvalidSystemImage_ThrowsArgumentException ()
+	[TestCase (null)]
+	[TestCase ("")]
+	[TestCase (" \t ")]
+	public void GetOrCreateAvdAsync_InvalidSystemImage_ThrowsArgumentException (string systemImage)
 	{
 		var runner = new AvdManagerRunner ("/fake/avdmanager");
-		Assert.ThrowsAsync<ArgumentException> (() => runner.GetOrCreateAvdAsync ("test-avd", null!));
-		Assert.ThrowsAsync<ArgumentException> (() => runner.GetOrCreateAvdAsync ("test-avd", ""));
-		Assert.ThrowsAsync<ArgumentException> (() => runner.GetOrCreateAvdAsync ("test-avd", " \t "));
+		Assert.ThrowsAsync<ArgumentException> (() => runner.GetOrCreateAvdAsync ("test-avd", systemImage));
 	}
 
-	[Test]
-	public void DeleteAvdAsync_InvalidName_ThrowsArgumentException ()
+	[TestCase (null)]
+	[TestCase ("")]
+	[TestCase (" \t ")]
+	public void DeleteAvdAsync_InvalidName_ThrowsArgumentException (string name)
 	{
 		var runner = new AvdManagerRunner ("/fake/avdmanager");
-		Assert.ThrowsAsync<ArgumentException> (() => runner.DeleteAvdAsync (null!));
-		Assert.ThrowsAsync<ArgumentException> (() => runner.DeleteAvdAsync (""));
-		Assert.ThrowsAsync<ArgumentException> (() => runner.DeleteAvdAsync (" \t "));
+		Assert.ThrowsAsync<ArgumentException> (() => runner.DeleteAvdAsync (name));
 	}
 
 	[Test]

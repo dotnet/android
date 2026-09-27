@@ -58,21 +58,21 @@ public class EmulatorRunnerTests
 		Assert.AreEqual (2, avds.Count);
 	}
 
-	[Test]
-	public void Constructor_ThrowsOnInvalidPath ()
+	[TestCase (null)]
+	[TestCase ("")]
+	[TestCase ("   ")]
+	public void Constructor_ThrowsOnInvalidPath (string path)
 	{
-		Assert.Throws<ArgumentException> (() => new EmulatorRunner (null!));
-		Assert.Throws<ArgumentException> (() => new EmulatorRunner (""));
-		Assert.Throws<ArgumentException> (() => new EmulatorRunner ("   "));
+		Assert.Throws<ArgumentException> (() => new EmulatorRunner (path));
 	}
 
-	[Test]
-	public void LaunchEmulator_ThrowsOnInvalidAvdName ()
+	[TestCase (null)]
+	[TestCase ("")]
+	[TestCase ("   ")]
+	public void LaunchEmulator_ThrowsOnInvalidAvdName (string avdName)
 	{
 		var runner = new EmulatorRunner ("/fake/emulator");
-		Assert.Throws<ArgumentException> (() => runner.LaunchEmulator (null!));
-		Assert.Throws<ArgumentException> (() => runner.LaunchEmulator (""));
-		Assert.Throws<ArgumentException> (() => runner.LaunchEmulator ("   "));
+		Assert.Throws<ArgumentException> (() => runner.LaunchEmulator (avdName));
 	}
 
 	[Test]
