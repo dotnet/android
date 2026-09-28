@@ -193,13 +193,18 @@ Run these tests with `dotnet test` from each test project directory listed above
 
 ## Trimmable Type Map Coverage
 
-The trimmable typemap is exercised by the on-device runtime tests above and by
-`TrimmableTypeMapBuildTests` (host-side build integration) and
-`GenerateTrimmableTypeMapTests` (standalone build-task tests). The direct callback
-fixture has its own assembly (`TrimmableTypeMapCallbacks`) because the UCO format
-marker is assembly-wide. The manifest-only Activity lives in the library assembly,
-which is not rooted wholesale by the test app. To run on-device
-tests with the trimmable typemap, pass the same property to both commands:
+The trimmable typemap is exercised by the on-device runtime tests above,
+`TrimmableTypeMapBuildTests` (host-side build integration), and
+`GenerateTrimmableTypeMapTests`, `TrimmableTypeMapIncrementalTests`, and
+`ExtractTypeMapKeysFromNativeAotObjectTests` (standalone build-task tests).
+The host tests cover incremental typemap invalidation and NativeAOT object
+extraction failure paths that cannot be exercised by a successful device run.
+The object-extraction tests use synthetic metadata, so they need no NDK tools.
+The direct callback fixture has its own assembly (`TrimmableTypeMapCallbacks`)
+because the UCO format marker is assembly-wide. The manifest-only Activity
+lives in the library assembly, which is not rooted wholesale by the test app.
+To run on-device tests with the trimmable typemap, pass the same property to
+both commands:
 
 ```bash
 ./dotnet-local.sh build -t:Install -c Release tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj -p:AndroidTypeMapImplementation=trimmable
