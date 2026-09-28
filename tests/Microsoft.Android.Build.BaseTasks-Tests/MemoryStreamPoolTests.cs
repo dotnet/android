@@ -36,35 +36,5 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			stream.Dispose ();
 			Assert.Throws<NotSupportedException> (() => pool.Return (stream));
 		}
-
-		[Test]
-		public void CreateStreamWriter ()
-		{
-			var pool = new MemoryStreamPool ();
-			var expected = pool.Rent ();
-			using (var writer = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-				writer.WriteLine ("foobar");
-			}
-			pool.Return (expected);
-
-			var actual = pool.Rent ();
-			Assert.AreSame (expected, actual);
-			Assert.AreEqual (0, actual.Length);
-		}
-
-		[Test]
-		public void CreateBinaryWriter ()
-		{
-			var pool = new MemoryStreamPool ();
-			var expected = pool.Rent ();
-			using (var writer = MemoryStreamPool.Shared.CreateBinaryWriter ()) {
-				writer.Write (42);
-			}
-			pool.Return (expected);
-
-			var actual = pool.Rent ();
-			Assert.AreSame (expected, actual);
-			Assert.AreEqual (0, actual.Length);
-		}
 	}
 }

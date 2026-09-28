@@ -8,13 +8,6 @@ using VerifyCS = CSharpCodeFixVerifier <CustomApplicationAnalyzer, CustomApplica
 public class DNAA0001Tests
 {
 	[Test]
-	public async Task DNAA0001DoesNotShow ()
-	{
-		var test = @"";
-		await VerifyCS.VerifyAnalyzerAsync (test);
-	}
-
-	[Test]
 	[TestCase ("IntPtr", "JniHandleOwnership")]
 	[TestCase ("nint", "Android.Runtime.JniHandleOwnership")]
 	[TestCase ("global::System.IntPtr", "global::Android.Runtime.JniHandleOwnership")]

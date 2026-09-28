@@ -16,49 +16,41 @@ public partial class BuildTest3 : BaseTest
 	const string JniPreloadSourceLibraryName = "libtest-jni-library.so";
 
 	[Test]
-	public void NativeLibraryJniPreload_NoDuplicates ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	public void NativeLibraryJniPreload_NoDuplicates ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
 		const string MyLibKeep1 = "libMyStuffKeep.so";
 		const string MyLibKeep2 = "libMyStuffKeep.so";
 
-		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
+		List<EnvironmentHelper.JniPreloads> allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
 			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
 				NativeLibraryJniPreload_AddNativeLibraries (proj, supportedArches, MyLibKeep1, MyLibKeep2);
 			}
 		);
-		if (allPreloads == null) {
-			return;
-		}
-
 		NativeLibraryJniPreload_VerifyLibs (allPreloads, new List<string> { MyLibKeep1 });
 	}
 
 	[Test]
-	public void NativeLibraryJniPreload_IncludeCustomLibraries ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	public void NativeLibraryJniPreload_IncludeCustomLibraries ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
 		const string MyLib = "libMyStuff.so";
 
-		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
+		List<EnvironmentHelper.JniPreloads> allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
 			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
 				NativeLibraryJniPreload_AddNativeLibraries (proj, supportedArches, MyLib);
 			}
 		);
-		if (allPreloads == null) {
-			return;
-		}
-
 		NativeLibraryJniPreload_VerifyLibs (allPreloads, new List<string> { MyLib });
 	}
 
 	[Test]
-	public void NativeLibraryJniPreload_ExcludeSomeCustomLibraries ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	public void NativeLibraryJniPreload_ExcludeSomeCustomLibraries ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
 		const string MyLibKeep = "libMyStuffKeep.so";
 		const string MyLibExempt = "libMyStuffExempt.so";
 
-		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
+		List<EnvironmentHelper.JniPreloads> allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
 			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
 				NativeLibraryJniPreload_AddNativeLibraries (proj, supportedArches, MyLibKeep, MyLibExempt);
@@ -67,20 +59,16 @@ public partial class BuildTest3 : BaseTest
 				);
 			}
 		);
-		if (allPreloads == null) {
-			return;
-		}
-
 		NativeLibraryJniPreload_VerifyLibs (allPreloads, new List<string> { MyLibKeep });
 	}
 
 	[Test]
-	public void NativeLibraryJniPreload_ExcludeAllCustomLibraries ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	public void NativeLibraryJniPreload_ExcludeAllCustomLibraries ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
 		const string MyLibExempt1 = "libMyStuffExempt1.so";
 		const string MyLibExempt2 = "libMyStuffExempt2.so";
 
-		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
+		List<EnvironmentHelper.JniPreloads> allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
 			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
 				NativeLibraryJniPreload_AddNativeLibraries (proj, supportedArches, MyLibExempt1, MyLibExempt2);
@@ -92,38 +80,30 @@ public partial class BuildTest3 : BaseTest
 				);
 			}
 		);
-		if (allPreloads == null) {
-			return;
-		}
-
 		NativeLibraryJniPreload_VerifyDefaults (allPreloads);
 	}
 
 	[Test]
-	public void NativeLibraryJniPreload_AddSomeCustomLibrariesAndIgnoreAll ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	public void NativeLibraryJniPreload_AddSomeCustomLibrariesAndIgnoreAll ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
-		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
+		List<EnvironmentHelper.JniPreloads> allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
 			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
 				NativeLibraryJniPreload_AddNativeLibraries (proj, supportedArches, "libMyStuffOne.so", "libMyStuffTwo.so");
 				proj.SetProperty ("AndroidIgnoreAllJniPreload", "true");
 			}
 		);
-		if (allPreloads == null) {
-			return;
-		}
-
 		// With `$(AndroidIgnoreAllJniPreload)=true` we still must have the defaults in the generated code.
 		NativeLibraryJniPreload_VerifyDefaults (allPreloads);
 	}
 
 	[Test]
-	public void NativeLibraryJniPreload_AddSomeCustomLibrariesAndIgnoreAllByName ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	public void NativeLibraryJniPreload_AddSomeCustomLibrariesAndIgnoreAllByName ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
 		const string MyLibExemptOne = "libMyStuffExemptOne.so";
 		const string MyLibExemptTwo = "libMyStuffExemptTwo.so";
 
-		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
+		List<EnvironmentHelper.JniPreloads> allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
 			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
 				NativeLibraryJniPreload_AddNativeLibraries (proj, supportedArches, MyLibExemptOne, MyLibExemptTwo);
@@ -135,10 +115,6 @@ public partial class BuildTest3 : BaseTest
 				);
 			}
 		);
-		if (allPreloads == null) {
-			return;
-		}
-
 		// With all custom libraries ignored, we still must have the defaults in the generated code.
 		NativeLibraryJniPreload_VerifyDefaults (allPreloads);
 	}
@@ -169,9 +145,9 @@ public partial class BuildTest3 : BaseTest
 	}
 
 	[Test]
-	public void NativeLibraryJniPreload_IgnoreAll_PreservesRequired ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	public void NativeLibraryJniPreload_IgnoreAll_PreservesRequired ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
-		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
+		List<EnvironmentHelper.JniPreloads> allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
 			(XamarinAndroidApplicationProject proj, AndroidTargetArch[] supportedArches) => {
 				proj.SetProperty ("AndroidIgnoreAllJniPreload", "true");
@@ -183,23 +159,19 @@ public partial class BuildTest3 : BaseTest
 	}
 
 	[Test]
-	public void NativeLibraryJniPreload_DefaultsWork ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	public void NativeLibraryJniPreload_DefaultsWork ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 	{
-		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (runtime);
+		List<EnvironmentHelper.JniPreloads> allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (runtime);
 		NativeLibraryJniPreload_VerifyDefaults (allPreloads);
 	}
 
-	void NativeLibraryJniPreload_VerifyDefaults (List<EnvironmentHelper.JniPreloads>? allPreloads)
+	void NativeLibraryJniPreload_VerifyDefaults (List<EnvironmentHelper.JniPreloads> allPreloads)
 	{
 		NativeLibraryJniPreload_VerifyLibs (allPreloads, additionalLibs: null);
 	}
 
-	void NativeLibraryJniPreload_VerifyLibs (List<EnvironmentHelper.JniPreloads>? allPreloads, List<string>? additionalLibs)
+	void NativeLibraryJniPreload_VerifyLibs (List<EnvironmentHelper.JniPreloads> allPreloads, List<string>? additionalLibs)
 	{
-		if (allPreloads == null) {
-			return;
-		}
-
 		int numberOfLibs = 1;
 		if (additionalLibs != null) {
 			numberOfLibs += additionalLibs.Count;
@@ -241,17 +213,9 @@ public partial class BuildTest3 : BaseTest
 		}
 	}
 
-	List<EnvironmentHelper.JniPreloads>? NativeLibraryJniPreload_CommonInitAndGetPreloads (AndroidRuntime runtime, Action<XamarinAndroidApplicationProject, AndroidTargetArch[]>? configureProject = null)
+	List<EnvironmentHelper.JniPreloads> NativeLibraryJniPreload_CommonInitAndGetPreloads (AndroidRuntime runtime, Action<XamarinAndroidApplicationProject, AndroidTargetArch[]>? configureProject = null)
 	{
 		const bool isRelease = true;
-		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-			return null;
-		}
-
-		if (runtime == AndroidRuntime.NativeAOT) {
-			Assert.Ignore ("NativeAOT doesn't use JNI preload");
-		}
-
 		AndroidTargetArch[] supportedArches = new [] {
 			AndroidTargetArch.Arm64,
 			AndroidTargetArch.X86_64,

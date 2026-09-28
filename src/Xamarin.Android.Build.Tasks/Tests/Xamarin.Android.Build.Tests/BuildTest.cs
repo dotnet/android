@@ -476,11 +476,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckItemMetadata ([Values (true, false)] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void CheckItemMetadata ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
@@ -520,11 +518,9 @@ namespace Xamarin.Android.Build.Tests
 
 		// Context https://bugzilla.xamarin.com/show_bug.cgi?id=29706
 		[Test]
-		public void CheckLogicalNamePathSeperators ([Values (false, true)] bool isRelease, [Values (false, true)] bool useDesignerAssembly, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void CheckLogicalNamePathSeperators ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values (false, true)] bool useDesignerAssembly)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 
 			var illegalSeperator = IsWindows ? "/" : @"\";
 			var dll = new XamarinAndroidLibraryProject () {
@@ -571,12 +567,8 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ApplicationJavaClassProperties ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void ApplicationJavaClassProperties ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime)) {
-				return;
-			}
-
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidApplicationJavaClass", "android.test.mock.MockApplication");
@@ -588,12 +580,8 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ApplicationIdPlaceholder ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void ApplicationIdPlaceholder ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime)) {
-				return;
-			}
-
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (runtime);
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</application>", "<provider android:name='${applicationId}' android:authorities='example' /></application>");
@@ -1124,11 +1112,9 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void Desugar ([Values (true, false)] bool isRelease, [Values ("", "r8")] string linkTool, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void Desugar ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values ("", "r8")] string linkTool)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
@@ -1668,7 +1654,9 @@ namespace UnnamedProject
 			var ret = new List<object[]> ();
 
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData ("LowercaseMD5", "", runtime, runtime == AndroidRuntime.CoreCLR, enableDiagnostics: false, androidEnableProfiler: "");
+				if (runtime == AndroidRuntime.CoreCLR) {
+					AddTestData ("LowercaseMD5", "", runtime, enableCrashReport: true, enableDiagnostics: false, androidEnableProfiler: "");
+				}
 				AddTestData ("LowercaseCrc64", "", runtime, enableCrashReport: false, enableDiagnostics: false, androidEnableProfiler: "");
 				AddTestData ("", "127.0.0.1:9000,suspend,connect", runtime, enableCrashReport: false, enableDiagnostics: false, androidEnableProfiler: "");
 				AddTestData ("", "", runtime, enableCrashReport: false, enableDiagnostics: true, androidEnableProfiler: "");
@@ -1698,11 +1686,6 @@ namespace UnnamedProject
 			// NativeAOT does not support debug builds, but environment file creation and contents are relevant to NativeAOT too.
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			if (runtime == AndroidRuntime.NativeAOT && packageNamingPolicy == "LowercaseMD5") {
-				Assert.Ignore ("NativeAOT does not support the 'LowercaseMD5' package naming policy.");
 				return;
 			}
 
@@ -2091,11 +2074,9 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void BuildApplicationWithJavaSourceUsingAndroidX ([Values(true, false)] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildApplicationWithJavaSourceUsingAndroidX ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
