@@ -41,9 +41,17 @@ public class AdbRunner
 	{
 		if (string.IsNullOrWhiteSpace (adbPath))
 			throw new ArgumentException ("Path to adb must not be empty.", nameof (adbPath));
-		this.adbPath = adbPath;
+		this.adbPath = Path.GetDirectoryName (adbPath) is { Length: > 0 } ? Path.GetFullPath (adbPath) : adbPath;
 		this.environmentVariables = environmentVariables;
 		this.logger = logger ?? RunnerDefaults.NullLogger;
+	}
+
+	ProcessStartInfo CreateAdbProcessStartInfo (params string[] args)
+	{
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, args);
+		// The adb server can outlive its client and retain its working directory on Windows.
+		psi.WorkingDirectory = Path.GetTempPath ();
+		return psi;
 	}
 
 	/// <summary>
@@ -64,7 +72,7 @@ public class AdbRunner
 	{
 		using var stdout = new StringWriter ();
 		using var stderr = new StringWriter ();
-		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "devices", "-l");
+		var psi = CreateAdbProcessStartInfo ("devices", "-l");
 		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
 
 		ProcessUtils.ThrowIfFailed (exitCode, "adb devices -l", stderr, stdout);
@@ -113,7 +121,7 @@ public class AdbRunner
 		// Try 2: Console command (fallback for older emulators where getprop may not be available)
 		try {
 			using var stdout = new StringWriter ();
-			var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "emu", "avd", "name");
+			var psi = CreateAdbProcessStartInfo ("-s", serial, "emu", "avd", "name");
 			await ProcessUtils.StartProcess (psi, stdout, null, cancellationToken, environmentVariables).ConfigureAwait (false);
 
 			foreach (var line in stdout.ToString ().Split ('\n')) {
@@ -143,7 +151,7 @@ public class AdbRunner
 			? new [] { "-s", s, "wait-for-device" }
 			: new [] { "wait-for-device" };
 
-		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, args);
+		var psi = CreateAdbProcessStartInfo (args);
 
 		using var cts = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
 		cts.CancelAfter (effectiveTimeout);
@@ -223,7 +231,7 @@ public class AdbRunner
 		if (string.IsNullOrWhiteSpace (serial))
 			throw new ArgumentException ("Serial must not be empty.", nameof (serial));
 
-		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "emu", "kill");
+		var psi = CreateAdbProcessStartInfo ("-s", serial, "emu", "kill");
 		using var stderr = new StringWriter ();
 		var exitCode = await ProcessUtils.StartProcess (psi, null, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
 		ProcessUtils.ThrowIfFailed (exitCode, $"adb -s {serial} emu kill", stderr);
@@ -237,7 +245,7 @@ public class AdbRunner
 	{
 		using var stdout = new StringWriter ();
 		using var stderr = new StringWriter ();
-		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "shell", "getprop", propertyName);
+		var psi = CreateAdbProcessStartInfo ("-s", serial, "shell", "getprop", propertyName);
 		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
 		if (exitCode != 0) {
 			var stderrText = stderr.ToString ().Trim ();
@@ -261,7 +269,7 @@ public class AdbRunner
 	{
 		using var stdout = new StringWriter ();
 		using var stderr = new StringWriter ();
-		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "shell", command);
+		var psi = CreateAdbProcessStartInfo ("-s", serial, "shell", command);
 		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
 		if (exitCode != 0) {
 			var stderrText = stderr.ToString ().Trim ();
@@ -293,7 +301,7 @@ public class AdbRunner
 		allArgs [2] = "shell";
 		allArgs [3] = command;
 		Array.Copy (args, 0, allArgs, 4, args.Length);
-		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, allArgs);
+		var psi = CreateAdbProcessStartInfo (allArgs);
 		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
 		if (exitCode != 0) {
 			var stderrText = stderr.ToString ().Trim ();
@@ -316,7 +324,7 @@ public class AdbRunner
 		Array.Copy (args, 0, allArgs, 4, args.Length);
 		using var stdout = new StringWriter ();
 		using var stderr = new StringWriter ();
-		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, allArgs);
+		var psi = CreateAdbProcessStartInfo (allArgs);
 		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
 		ProcessUtils.ThrowIfFailed (exitCode, $"adb -s {serial} shell {command}", stderr, stdout);
 		return stdout.ToString ().Trim ();
@@ -326,7 +334,7 @@ public class AdbRunner
 	{
 		using var stdout = new StringWriter ();
 		using var stderr = new StringWriter ();
-		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, args);
+		var psi = CreateAdbProcessStartInfo (args);
 		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
 		return new AdbCommandResult (exitCode, stdout.ToString ().Trim (), stderr.ToString ().Trim ());
 	}
@@ -388,7 +396,7 @@ public class AdbRunner
 		if (local.Port <= 0 || local.Port > 65535)
 			throw new ArgumentOutOfRangeException (nameof (local), local.Port, "Port must be between 1 and 65535.");
 
-		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "reverse", remote.ToSocketSpec (), local.ToSocketSpec ());
+		var psi = CreateAdbProcessStartInfo ("-s", serial, "reverse", remote.ToSocketSpec (), local.ToSocketSpec ());
 		using var stderr = new StringWriter ();
 		var exitCode = await ProcessUtils.StartProcess (psi, null, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
 		ProcessUtils.ThrowIfFailed (exitCode, $"adb -s {serial} reverse {remote} {local}", stderr);
@@ -410,7 +418,7 @@ public class AdbRunner
 		if (remote.Port <= 0 || remote.Port > 65535)
 			throw new ArgumentOutOfRangeException (nameof (remote), remote.Port, "Port must be between 1 and 65535.");
 
-		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "reverse", "--remove", remote.ToSocketSpec ());
+		var psi = CreateAdbProcessStartInfo ("-s", serial, "reverse", "--remove", remote.ToSocketSpec ());
 		using var stderr = new StringWriter ();
 		var exitCode = await ProcessUtils.StartProcess (psi, null, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
 		ProcessUtils.ThrowIfFailed (exitCode, $"adb -s {serial} reverse --remove {remote}", stderr);
@@ -425,7 +433,7 @@ public class AdbRunner
 		if (string.IsNullOrWhiteSpace (serial))
 			throw new ArgumentException ("Serial must not be empty.", nameof (serial));
 
-		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "reverse", "--remove-all");
+		var psi = CreateAdbProcessStartInfo ("-s", serial, "reverse", "--remove-all");
 		using var stderr = new StringWriter ();
 		var exitCode = await ProcessUtils.StartProcess (psi, null, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
 		ProcessUtils.ThrowIfFailed (exitCode, $"adb -s {serial} reverse --remove-all", stderr);
@@ -442,7 +450,7 @@ public class AdbRunner
 
 		using var stdout = new StringWriter ();
 		using var stderr = new StringWriter ();
-		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "reverse", "--list");
+		var psi = CreateAdbProcessStartInfo ("-s", serial, "reverse", "--list");
 		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
 		ProcessUtils.ThrowIfFailed (exitCode, $"adb -s {serial} reverse --list", stderr, stdout);
 
@@ -501,7 +509,7 @@ public class AdbRunner
 		if (remote.Port <= 0 || remote.Port > 65535)
 			throw new ArgumentOutOfRangeException (nameof (remote), remote.Port, "Port must be between 1 and 65535.");
 
-		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "forward", local.ToSocketSpec (), remote.ToSocketSpec ());
+		var psi = CreateAdbProcessStartInfo ("-s", serial, "forward", local.ToSocketSpec (), remote.ToSocketSpec ());
 		using var stdout = new StringWriter ();
 		using var stderr = new StringWriter ();
 		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
@@ -524,7 +532,7 @@ public class AdbRunner
 		if (local.Port <= 0 || local.Port > 65535)
 			throw new ArgumentOutOfRangeException (nameof (local), local.Port, "Port must be between 1 and 65535.");
 
-		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "forward", "--remove", local.ToSocketSpec ());
+		var psi = CreateAdbProcessStartInfo ("-s", serial, "forward", "--remove", local.ToSocketSpec ());
 		using var stdout = new StringWriter ();
 		using var stderr = new StringWriter ();
 		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
@@ -568,7 +576,7 @@ public class AdbRunner
 
 		using var stdout = new StringWriter ();
 		using var stderr = new StringWriter ();
-		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "forward", "--list");
+		var psi = CreateAdbProcessStartInfo ("forward", "--list");
 		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
 		ProcessUtils.ThrowIfFailed (exitCode, $"adb forward --list", stderr, stdout);
 

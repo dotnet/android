@@ -1607,4 +1607,39 @@ public class AdbRunnerTests
 			CleanupFakeAdb (adbPath);
 		}
 	}
+
+	[Test]
+	public async Task AdbCommandsUseStableWorkingDirectory ()
+	{
+		var adbPath = CreateFakeAdb ("""
+			pwd > "$0.cwd"
+			if [[ "$1" == "devices" ]]; then
+			    echo "List of devices attached"
+			else
+			    echo "package:com.example.app"
+			fi
+			""", """
+			cd > "%~f0.cwd"
+			if "%1"=="devices" (
+			    echo List of devices attached
+			) else (
+			    echo package:com.example.app
+			)
+			""");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			await runner.ListDevicesWithoutAvdNamesAsync ();
+			var expected = Path.GetFullPath (Path.GetTempPath ()).TrimEnd (Path.DirectorySeparatorChar);
+			Assert.IsTrue (string.Equals (expected, File.ReadAllText (adbPath + ".cwd").Trim (),
+				OS.IsWindows ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal));
+
+			await runner.ExecuteShellCommandAsync ("emulator-5554", "pm", new [] { "list", "packages" });
+			Assert.IsTrue (string.Equals (expected, File.ReadAllText (adbPath + ".cwd").Trim (),
+				OS.IsWindows ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal));
+		} finally {
+			File.Delete (adbPath + ".cwd");
+			CleanupFakeAdb (adbPath);
+		}
+	}
 }

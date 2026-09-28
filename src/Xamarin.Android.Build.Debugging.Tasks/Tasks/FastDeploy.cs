@@ -730,6 +730,8 @@ namespace Xamarin.Android.Tasks
 		async Task<AdbCommandResult> RunAdbCommand (string [] arguments, Dictionary<string, string> environmentVariables)
 		{
 			string adb = ResolveAdbPath ();
+			if (!string.IsNullOrEmpty (Path.GetDirectoryName (adb)))
+				adb = Path.GetFullPath (adb);
 			var adbArguments = new List<string> ();
 			if (!string.IsNullOrEmpty (DeviceId) && !string.Equals (DeviceId, "any", StringComparison.OrdinalIgnoreCase)) {
 				adbArguments.Add ("-s");
@@ -738,6 +740,7 @@ namespace Xamarin.Android.Tasks
 			adbArguments.AddRange (arguments);
 
 			var psi = ProcessUtils.CreateProcessStartInfo (adb, adbArguments.ToArray ());
+			psi.WorkingDirectory = Path.GetTempPath ();
 			psi.WindowStyle = ProcessWindowStyle.Hidden;
 
 			// psi.Arguments holds the exact, correctly quoted command line whenever ProcessUtils
