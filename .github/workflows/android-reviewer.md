@@ -53,11 +53,7 @@ tools:
     - c++ *
     - cat
     - dotnet *
-    - git branch *
-    - git diff *
-    - git log *
-    - git merge-base *
-    - git status *
+    - git *
     - grep
     - head
     - jq
