@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
@@ -13,7 +14,6 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
 using Properties = Xamarin.Android.Tasks.Properties;
-using Xamarin.Tools.Zip;
 
 namespace Microsoft.Android.Tasks;
 
@@ -629,9 +629,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 		var names = new HashSet<string> (StringComparer.Ordinal);
 		using var stream = File.OpenRead (PreGeneratedJcwJar);
-		using var jar = ZipArchive.Open (stream);
-		foreach (var entry in jar) {
-			if (!entry.IsDirectory && entry.FullName.EndsWith (".class", StringComparison.Ordinal)) {
+		using var jar = new ZipArchive (stream, ZipArchiveMode.Read);
+		foreach (var entry in jar.Entries) {
+			if (entry.Name.Length > 0 && entry.FullName.EndsWith (".class", StringComparison.Ordinal)) {
 				names.Add (entry.FullName.Substring (0, entry.FullName.Length - ".class".Length));
 			}
 		}

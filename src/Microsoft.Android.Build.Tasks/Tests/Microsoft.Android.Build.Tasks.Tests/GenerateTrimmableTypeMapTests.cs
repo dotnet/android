@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
@@ -233,6 +234,31 @@ namespace Xamarin.Android.Build.Tests {
 				new [] { rootPath },
 				secondTask.GeneratedAssemblies.Select (item => item.ItemSpec).ToArray (),
 				"Only the existing root should be reported when every scanned assembly uses a pre-generated typemap.");
+		}
+
+		[Test]
+		public void Execute_ReadsPreGeneratedJcwNamesFromStandardZipArchive ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var outputDir = Path.Combine (path, "typemap");
+			var javaDir = Path.Combine (path, "java");
+			var jcwJar = Path.Combine (path, "framework-jcws.jar");
+			Directory.CreateDirectory (path);
+			using (var stream = File.Create (jcwJar))
+			using (var archive = new ZipArchive (stream, ZipArchiveMode.Create)) {
+				archive.CreateEntry ("android/app/Activity.class");
+				archive.CreateEntry ("META-INF/");
+			}
+
+			var task = CreateTask ([], outputDir, javaDir);
+			task.Debug = true;
+			task.PreGeneratedTypeMapAssemblies = [new TaskItem ("Mono.Android.dll")];
+			task.PreGeneratedJcwJar = jcwJar;
+
+			Assert.IsTrue (task.Execute (), "The task should read pre-generated JCW names without external ZIP dependencies.");
+			CollectionAssert.AreEqual (
+				new [] { Path.Combine (outputDir, "_Microsoft.Android.TypeMaps.dll") },
+				task.GeneratedAssemblies.Select (item => item.ItemSpec).ToArray ());
 		}
 
 		[Test]
