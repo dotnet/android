@@ -14,11 +14,9 @@ namespace Xamarin.Android.Build.Tests
 	{
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildLibraryWithAssetPack ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildLibraryWithAssetPack ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				IsRelease = isRelease,
@@ -41,11 +39,9 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPackThatHasInvalidName ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildApplicationWithAssetPackThatHasInvalidName ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -69,11 +65,9 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPackOutsideProjectDirectory ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildApplicationWithAssetPackOutsideProjectDirectory ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
@@ -118,11 +112,9 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPackOverrides ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildApplicationWithAssetPackOverrides ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
@@ -160,11 +152,9 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPack ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildApplicationWithAssetPack ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			var path = Path.Combine ("temp", TestName);
 			var asset3 = new AndroidItem.AndroidAsset ("Assets\\asset3.txt") {
 				TextContent = () => "Asset3",

@@ -46,11 +46,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ApplicationRunsWithoutDebugger ([Values] bool isRelease, [Values] bool extractNativeLibs, [Values] bool useEmbeddedDex, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void ApplicationRunsWithoutDebugger ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values] bool extractNativeLibs, [Values] bool useEmbeddedDex)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 
 			// TODO: NativeAOT fails with the following exception:
 			//

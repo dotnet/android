@@ -87,6 +87,41 @@ The [tracing guide](tracing.md) documents `EnableDiagnostics`,
 `DiagnosticListenMode`. These properties generate `DOTNET_DiagnosticPorts`
 without requiring a runtime-specific profiler component.
 
+## Profiling the Mono AOT compiler
+
+This section applies to supported .NET 10-and-earlier applications that
+use Mono. The generated `.aprof` file is a Mono AOT profile; it is not a
+CoreCLR MIBC profile or dynamic PGO input.
+
+The application needs to be built with the embedded AOT profiler and run
+on a device or emulator. Use the `BuildAndStartAotProfiling` target:
+
+```sh
+msbuild /t:BuildAndStartAotProfiling <your.csproj>
+```
+
+`$(AndroidAotProfilerPort)` selects the socket port for the profiler.
+The default is 9999. Once the application starts, collect the profile:
+
+```sh
+msbuild /t:FinishAotProfiling <your.csproj>
+```
+
+`FinishAotProfiling` uses `$(AndroidAotProfilerPort)` and writes the profile
+to `$(AndroidAotCustomProfilePath)`, which defaults to `custom.aprof`.
+Add the profile to `@(AndroidAotProfile)` and enable profiled AOT in your
+project file. You can also disable the default AOT profile:
+
+```xml
+<ItemGroup>
+  <AndroidAotProfile Include="$(MSBuildThisFileDirectory)custom.aprof" />
+</ItemGroup>
+<PropertyGroup>
+  <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
+  <AndroidUseDefaultAotProfile>false</AndroidUseDefaultAotProfile>
+</PropertyGroup>
+```
+
 ## Native code profiling
 
 Use Android's [`simpleperf`](https://developer.android.com/ndk/guides/simpleperf)

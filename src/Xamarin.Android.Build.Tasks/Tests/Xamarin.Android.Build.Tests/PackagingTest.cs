@@ -664,11 +664,9 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void CheckAppBundle ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void CheckAppBundle ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
@@ -696,16 +694,9 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void MissingSatelliteAssemblyInLibrary ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void MissingSatelliteAssemblyInLibrary ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT builds don't package satellite assemblies");
-			}
-
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				IsRelease = isRelease,

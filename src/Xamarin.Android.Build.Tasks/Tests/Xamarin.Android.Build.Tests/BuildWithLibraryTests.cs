@@ -314,17 +314,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ProjectDependencies ([Values] bool projectReference, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void ProjectDependencies ([Values] bool projectReference, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			if (IgnoreOnNativeAot (runtime, "the trimmable typemap trims Java Callable Wrappers for library types that are never instantiated, so the unused LibraryB JCWs are intentionally absent from classes.dex.")) {
-				return;
-			}
-
 			// Setup dependencies App A -> Lib B -> Lib C
 			var path = Path.Combine ("temp", TestName);
 
@@ -419,11 +411,9 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable]
-		public void BuildWithNativeLibraries ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildWithNativeLibraries ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 
 			var dll = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
@@ -856,11 +846,9 @@ namespace Xamarin.Android.Build.Tests
 		/// <summary>
 		/// Reference https://bugzilla.xamarin.com/show_bug.cgi?id=29568
 		/// </summary>
-		public void BuildLibraryWhichUsesResources ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildLibraryWhichUsesResources ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			var proj = new XamarinAndroidLibraryProject { IsRelease = isRelease };
 			proj.SetRuntime (runtime);
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
@@ -1127,12 +1115,8 @@ namespace Xamarin.Android.Build.Tests
 		/// and producing empty .jlo.xml files.
 		/// </summary>
 		[Test]
-		public void MultiTfmTransitiveReference ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void MultiTfmTransitiveReference ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: false)) {
-				return;
-			}
-
 			var path = Path.Combine ("temp", TestName);
 			var dotnetVersion = XABuildConfig.LatestDotNetTargetFramework;
 
