@@ -192,7 +192,9 @@ public class TrimmableTypeMap
 	/// </summary>
 	JavaPeerProxy? GetProxyForJniClass (string className, Type? targetType)
 	{
-		className = JniRemappingLookup.GetReverseType (className) ?? className;
+		if (RuntimeFeature.JniRemapping) {
+			className = JniRemappingLookup.GetReverseType (className) ?? className;
+		}
 		var cacheEntry = GetProxyCacheEntryForJniName (className);
 		if (cacheEntry is JavaPeerProxy singleProxy) {
 			return targetType is null || TargetTypeMatches (targetType, singleProxy.TargetType)
@@ -306,7 +308,9 @@ public class TrimmableTypeMap
 
 		var targetClass = default (JniObjectReference);
 		try {
-			string runtimeJniName = JniRemappingLookup.GetReplacementType (targetProxy.JniName) ?? targetProxy.JniName;
+			string runtimeJniName = RuntimeFeature.JniRemapping
+				? JniRemappingLookup.GetReplacementType (targetProxy.JniName) ?? targetProxy.JniName
+				: targetProxy.JniName;
 			targetClass = JniEnvironment.Types.FindClass (runtimeJniName);
 			var reference = new JniObjectReference (handle);
 			if (JniEnvironment.Types.IsInstanceOf (reference, targetClass)) {
@@ -443,7 +447,9 @@ public class TrimmableTypeMap
 		try {
 			objClass = JniEnvironment.Types.GetObjectClass (selfRef);
 			try {
-				string runtimeJniName = JniRemappingLookup.GetReplacementType (targetJniName) ?? targetJniName;
+				string runtimeJniName = RuntimeFeature.JniRemapping
+					? JniRemappingLookup.GetReplacementType (targetJniName) ?? targetJniName
+					: targetJniName;
 				targetClass = JniEnvironment.Types.FindClass (runtimeJniName);
 			} catch (Java.Lang.ClassNotFoundException) {
 				// FindClass throws for managed types whose Java peer class is
@@ -596,7 +602,9 @@ public class TrimmableTypeMap
 				return;
 			}
 
-			className = JniRemappingLookup.GetReverseType (className) ?? className;
+			if (RuntimeFeature.JniRemapping) {
+				className = JniRemappingLookup.GetReverseType (className) ?? className;
+			}
 			var cacheEntry = s_instance.GetProxyCacheEntryForJniName (className);
 			if (cacheEntry is JavaPeerProxy[] proxies && proxies.Length == 0) {
 				return;

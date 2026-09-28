@@ -228,6 +228,10 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 	static string? GetOriginalSimpleReference (string jniSimpleReference)
 	{
+		if (!RuntimeFeature.JniRemapping) {
+			return null;
+		}
+
 		var original = JniRemappingLookup.GetReverseType (jniSimpleReference);
 		if (original is null || string.Equals (original, jniSimpleReference, StringComparison.Ordinal)) {
 			return null;
@@ -290,7 +294,9 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 			while (currentType is not null) {
 				if (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (currentType, out var jniName)) {
-					string runtimeJniName = JniRemappingLookup.GetReplacementType (jniName) ?? jniName;
+					string runtimeJniName = RuntimeFeature.JniRemapping
+						? JniRemappingLookup.GetReplacementType (jniName) ?? jniName
+						: jniName;
 					return new (runtimeJniName, rank, keyword: false);
 				}
 
@@ -393,31 +399,45 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 	// Remapping APIs, used by the Intune/MAM mapping and generated JNI runtime remapping
 
 	protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
-		=> JniRemappingLookup.GetStaticMethodFallbackTypes (jniSimpleReference, useReplacementTypes: true);
+		=> RuntimeFeature.JniRemapping
+			? JniRemappingLookup.GetStaticMethodFallbackTypes (jniSimpleReference, useReplacementTypes: true)
+			: JniStaticMethodFallback.GetTypes (jniSimpleReference);
 
 	protected override string? GetReplacementTypeCore (string jniSimpleReference)
-		=> JniRemappingLookup.GetReplacementType (jniSimpleReference);
+		=> RuntimeFeature.JniRemapping ? JniRemappingLookup.GetReplacementType (jniSimpleReference) : null;
 
 	protected override void GetReplacementTypeInfoCore (string jniSimpleReference, out string? replacement, out IntPtr replacementUtf8)
 	{
 		replacement = null;
-		replacementUtf8 = JniRemappingLookup.GetReplacementTypeUtf8 (jniSimpleReference);
+		replacementUtf8 = RuntimeFeature.JniRemapping
+			? JniRemappingLookup.GetReplacementTypeUtf8 (jniSimpleReference)
+			: IntPtr.Zero;
 	}
 
 	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
-		=> JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
+		=> RuntimeFeature.JniRemapping
+			? JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature)
+			: null;
 
 	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
-		=> JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
+		=> RuntimeFeature.JniRemapping
+			? JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature)
+			: null;
 
 	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (IntPtr jniSourceTypeUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
-		=> JniRemappingLookup.GetReplacementMethodInfo (jniSourceTypeUtf8, jniMethodName, jniMethodSignature);
+		=> RuntimeFeature.JniRemapping
+			? JniRemappingLookup.GetReplacementMethodInfo (jniSourceTypeUtf8, jniMethodName, jniMethodSignature)
+			: null;
 
 	protected override JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSourceType, string jniFieldName, string jniFieldSignature)
-		=> JniRemappingLookup.GetReplacementFieldInfo (jniSourceType, jniFieldName, jniFieldSignature);
+		=> RuntimeFeature.JniRemapping
+			? JniRemappingLookup.GetReplacementFieldInfo (jniSourceType, jniFieldName, jniFieldSignature)
+			: null;
 
 	protected override JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSourceType, ReadOnlySpan<char> jniFieldName, ReadOnlySpan<char> jniFieldSignature)
-		=> JniRemappingLookup.GetReplacementFieldInfo (jniSourceType, jniFieldName, jniFieldSignature);
+		=> RuntimeFeature.JniRemapping
+			? JniRemappingLookup.GetReplacementFieldInfo (jniSourceType, jniFieldName, jniFieldSignature)
+			: null;
 
 	// The rest of the APIs are unsupported - they are not needed internally anywhere anyway
 

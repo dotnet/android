@@ -188,7 +188,9 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			var instanceClass = JniEnvironment.Types.GetObjectClass (reference);
 			JniObjectReference targetClass = default;
 			try {
-				string runtimeJniName = JniRemappingLookup.GetReplacementType (targetJniName) ?? targetJniName;
+				string runtimeJniName = RuntimeFeature.JniRemapping
+					? JniRemappingLookup.GetReplacementType (targetJniName) ?? targetJniName
+					: targetJniName;
 				targetClass = JniEnvironment.Types.FindClass (runtimeJniName);
 
 				if (!JniEnvironment.Types.IsAssignableFrom (instanceClass, targetClass)) {

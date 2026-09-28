@@ -11,6 +11,19 @@ using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
 
+static class JniStaticMethodFallback
+{
+	internal static IReadOnlyList<string> GetTypes (string jniSimpleReference)
+	{
+		int slash = jniSimpleReference.LastIndexOf ('/');
+		var desugarType = slash > 0
+			? $"{jniSimpleReference.Substring (0, slash + 1)}Desugar{jniSimpleReference.Substring (slash + 1)}"
+			: $"Desugar{jniSimpleReference}";
+
+		return [$"{desugarType}$_CC", $"{jniSimpleReference}$-CC"];
+	}
+}
+
 static class JniRemappingLookup
 {
 	const int AsciiComparisonChunkSize = 16;
@@ -89,7 +102,8 @@ static class JniRemappingLookup
 	internal static unsafe void Initialize (IntPtr data)
 	{
 		reverseTypes.Clear ();
-		if (data == IntPtr.Zero) {
+		if (!RuntimeFeature.JniRemapping || data == IntPtr.Zero) {
+			nativeData = null;
 			isInUse = false;
 			return;
 		}
@@ -108,13 +122,9 @@ static class JniRemappingLookup
 			jniSimpleReference = GetReverseType (jniSimpleReference) ?? jniSimpleReference;
 		}
 
-		int slash = jniSimpleReference.LastIndexOf ('/');
-		var desugarType = slash > 0
-			? $"{jniSimpleReference.Substring (0, slash + 1)}Desugar{jniSimpleReference.Substring (slash + 1)}"
-			: $"Desugar{jniSimpleReference}";
-
-		var typeWithPrefix = $"{desugarType}$_CC";
-		var typeWithSuffix = $"{jniSimpleReference}$-CC";
+		var fallbackTypes = JniStaticMethodFallback.GetTypes (jniSimpleReference);
+		string typeWithPrefix = fallbackTypes [0];
+		string typeWithSuffix = fallbackTypes [1];
 		var replacements = new[] {
 			useReplacementTypes ? GetReplacementType (typeWithPrefix) ?? typeWithPrefix : typeWithPrefix,
 			useReplacementTypes ? GetReplacementType (typeWithSuffix) ?? typeWithSuffix : typeWithSuffix,
@@ -136,7 +146,7 @@ static class JniRemappingLookup
 
 	internal static unsafe IntPtr GetReplacementTypeUtf8 (string? jniSimpleReference)
 	{
-		if (jniSimpleReference is null || !isInUse || jniSimpleReference.Length == 0)
+		if (!RuntimeFeature.JniRemapping || jniSimpleReference is null || !isInUse || jniSimpleReference.Length == 0)
 			return IntPtr.Zero;
 
 		NativeJniRemappingData* data = nativeData;
@@ -148,7 +158,7 @@ static class JniRemappingLookup
 
 	internal static unsafe string? GetReverseType (string? jniSimpleReference)
 	{
-		if (jniSimpleReference is null || !isInUse || jniSimpleReference.Length == 0)
+		if (!RuntimeFeature.JniRemapping || jniSimpleReference is null || !isInUse || jniSimpleReference.Length == 0)
 			return null;
 
 		string replacement = reverseTypes.GetOrAdd (jniSimpleReference, static source => LookupReverseType (source));
@@ -206,7 +216,7 @@ static class JniRemappingLookup
 		ReadOnlySpan<char> jniMethodName,
 		ReadOnlySpan<char> jniMethodSignature)
 	{
-		if (!isInUse)
+		if (!RuntimeFeature.JniRemapping || !isInUse)
 			return null;
 
 		NativeJniRemappingData* data = nativeData;
@@ -272,7 +282,7 @@ static class JniRemappingLookup
 		ReadOnlySpan<char> jniFieldName,
 		ReadOnlySpan<char> jniFieldSignature)
 	{
-		if (!isInUse)
+		if (!RuntimeFeature.JniRemapping || !isInUse)
 			return null;
 
 		NativeJniRemappingData* data = nativeData;

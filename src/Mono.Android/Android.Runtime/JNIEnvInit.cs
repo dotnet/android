@@ -204,7 +204,9 @@ namespace Android.Runtime
 			Logger.SetLogCategories ((LogCategories)args.logCategories);
 
 			InitializeMaxGrefCounts (args);
-			JniRemappingLookup.Initialize (args.jniRemappingData);
+			if (RuntimeFeature.JniRemapping) {
+				JniRemappingLookup.Initialize (args.jniRemappingData);
+			}
 			MarshalMethodsEnabled = args.marshalMethodsEnabled;
 			java_class_loader = args.grefLoader;
 

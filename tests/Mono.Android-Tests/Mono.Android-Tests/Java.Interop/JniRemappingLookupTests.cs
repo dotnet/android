@@ -10,6 +10,12 @@ namespace Java.InteropTests
 	[Category ("NativeAOTIgnore")]
 	public class JniRemappingLookupTests
 	{
+		[Test]
+		public void RuntimeFeatureIsEnabledForRemappingInputs ()
+		{
+			Assert.IsTrue (Microsoft.Android.Runtime.RuntimeFeature.JniRemapping);
+		}
+
 		[TestCase ("net/dot/android/remap/AsciiFirst", "net/dot/android/remap/TargetFirst")]
 		[TestCase ("net/dot/android/remap/Middle", "net/dot/android/remap/TargetMiddle")]
 		[TestCase ("net/dot/android/remap/Zebra", "net/dot/android/remap/TargetLast")]

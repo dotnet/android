@@ -330,7 +330,9 @@ namespace Android.Runtime {
 
 		protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 		{
-			string lookupReference = JniRemappingLookup.GetReverseType (jniSimpleReference) ?? jniSimpleReference;
+			string lookupReference = RuntimeFeature.JniRemapping
+				? JniRemappingLookup.GetReverseType (jniSimpleReference) ?? jniSimpleReference
+				: jniSimpleReference;
 
 			foreach (var ti in base.GetTypesForSimpleReference (lookupReference))
 				yield return ti;
@@ -342,7 +344,9 @@ namespace Android.Runtime {
 
 		protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 		{
-			string lookupReference = JniRemappingLookup.GetReverseType (jniSimpleReference) ?? jniSimpleReference;
+			string lookupReference = RuntimeFeature.JniRemapping
+				? JniRemappingLookup.GetReverseType (jniSimpleReference) ?? jniSimpleReference
+				: jniSimpleReference;
 			var type = base.GetTypeForSimpleReference (lookupReference);
 			if (type != null) {
 				return type;
@@ -355,7 +359,7 @@ namespace Android.Runtime {
 		{
 			string? j = JNIEnv.TypemapManagedToJava (type);
 			if (j != null) {
-				return GetReplacementTypeCore (j) ?? j;
+				return RuntimeFeature.JniRemapping ? GetReplacementTypeCore (j) ?? j : j;
 			}
 			// Intentionally don't call base.GetSimpleReference(type): Android's
 			// non-trimmable runtime uses the generated/registered typemap, not
@@ -366,7 +370,9 @@ namespace Android.Runtime {
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
 		{
 			string? j = JNIEnv.TypemapManagedToJava (type);
-			j	   = GetReplacementTypeCore (j) ?? j;
+			if (RuntimeFeature.JniRemapping) {
+				j = GetReplacementTypeCore (j) ?? j;
+			}
 
 			if (j != null) {
 				return [j];
@@ -377,43 +383,57 @@ namespace Android.Runtime {
 
 		protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
 		{
-			return JniRemappingLookup.GetStaticMethodFallbackTypes (jniSimpleReference, useReplacementTypes: true);
+			return RuntimeFeature.JniRemapping
+				? JniRemappingLookup.GetStaticMethodFallbackTypes (jniSimpleReference, useReplacementTypes: true)
+				: JniStaticMethodFallback.GetTypes (jniSimpleReference);
 		}
 
 		protected override string? GetReplacementTypeCore (string? jniSimpleReference)
 		{
-			return JniRemappingLookup.GetReplacementType (jniSimpleReference);
+			return RuntimeFeature.JniRemapping ? JniRemappingLookup.GetReplacementType (jniSimpleReference) : null;
 		}
 
 		protected override void GetReplacementTypeInfoCore (string jniSimpleReference, out string? replacement, out IntPtr replacementUtf8)
 		{
 			replacement = null;
-			replacementUtf8 = JniRemappingLookup.GetReplacementTypeUtf8 (jniSimpleReference);
+			replacementUtf8 = RuntimeFeature.JniRemapping
+				? JniRemappingLookup.GetReplacementTypeUtf8 (jniSimpleReference)
+				: IntPtr.Zero;
 		}
 
 		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
 		{
-			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
+			return RuntimeFeature.JniRemapping
+				? JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature)
+				: null;
 		}
 
 		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 		{
-			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
+			return RuntimeFeature.JniRemapping
+				? JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature)
+				: null;
 		}
 
 		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (IntPtr jniSourceTypeUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
 		{
-			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceTypeUtf8, jniMethodName, jniMethodSignature);
+			return RuntimeFeature.JniRemapping
+				? JniRemappingLookup.GetReplacementMethodInfo (jniSourceTypeUtf8, jniMethodName, jniMethodSignature)
+				: null;
 		}
 
 		protected override JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSourceType, string jniFieldName, string jniFieldSignature)
 		{
-			return JniRemappingLookup.GetReplacementFieldInfo (jniSourceType, jniFieldName, jniFieldSignature);
+			return RuntimeFeature.JniRemapping
+				? JniRemappingLookup.GetReplacementFieldInfo (jniSourceType, jniFieldName, jniFieldSignature)
+				: null;
 		}
 
 		protected override JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSourceType, ReadOnlySpan<char> jniFieldName, ReadOnlySpan<char> jniFieldSignature)
 		{
-			return JniRemappingLookup.GetReplacementFieldInfo (jniSourceType, jniFieldName, jniFieldSignature);
+			return RuntimeFeature.JniRemapping
+				? JniRemappingLookup.GetReplacementFieldInfo (jniSourceType, jniFieldName, jniFieldSignature)
+				: null;
 		}
 
 		protected override Type? GetInvokerTypeCore (Type type)

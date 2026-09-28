@@ -32,7 +32,7 @@
       "Size": 2396
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 9625608
+      "Size": 9525272
     },
     "lib/arm64-v8a/libclrjit.so": {
       "Size": 2819768
@@ -2213,5 +2213,5 @@
       "Size": 794696
     }
   },
-  "PackageSize": 18373574
+  "PackageSize": 18273238
 }

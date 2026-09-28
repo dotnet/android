@@ -309,6 +309,10 @@ namespace Xamarin.Android.Build.Tests
 							bridge.Methods.FirstOrDefault (method => method.Name == methodName),
 							$"Disabled GC bridge logging should trim {methodName} from Mono.Android.dll.");
 					}
+
+					Assert.IsNull (
+						monoAndroid.MainModule.GetType ("Microsoft.Android.Runtime.JniRemappingLookup"),
+						"Apps without remapping inputs should trim the managed JNI remapping implementation.");
 				}
 
 				const int ApkSizeThreshold = 5 * 1024;

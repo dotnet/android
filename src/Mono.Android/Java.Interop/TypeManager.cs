@@ -280,7 +280,9 @@ namespace Java.Interop {
 				return type;
 			}
 
-			string lookupName = JniRemappingLookup.GetReverseType (class_name) ?? class_name;
+			string lookupName = RuntimeFeature.JniRemapping
+				? JniRemappingLookup.GetReverseType (class_name) ?? class_name
+				: class_name;
 			if (TypeManagerMapDictionaries.RegisteredJniToManaged.TryGetValue (lookupName, out type)) {
 				return type;
 			}

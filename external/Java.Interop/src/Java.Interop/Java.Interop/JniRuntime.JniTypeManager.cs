@@ -358,6 +358,12 @@ namespace Java.Interop {
 				AssertValid ();
 				AssertSimpleReference (jniSimpleReference, nameof (jniSimpleReference));
 
+				if (!RuntimeFeature.JniRemapping) {
+					replacement = null;
+					replacementUtf8 = IntPtr.Zero;
+					return;
+				}
+
 				GetReplacementTypeInfoCore (jniSimpleReference, out replacement, out replacementUtf8);
 				if (replacementUtf8 != IntPtr.Zero)
 					replacement = null;
@@ -401,6 +407,9 @@ namespace Java.Interop {
 					throw new ArgumentNullException (nameof (jniMethodSignature));
 				}
 
+				if (!RuntimeFeature.JniRemapping)
+					return null;
+
 				return GetReplacementMethodInfoCore (jniSimpleReference, jniMethodName, jniMethodSignature);
 			}
 
@@ -415,6 +424,9 @@ namespace Java.Interop {
 				if (jniMethodSignature.IsEmpty)
 					throw new ArgumentNullException (nameof (jniMethodSignature));
 
+				if (!RuntimeFeature.JniRemapping)
+					return null;
+
 				return GetReplacementMethodInfoCore (jniSimpleReference, jniMethodName, jniMethodSignature);
 			}
 
@@ -427,6 +439,9 @@ namespace Java.Interop {
 					throw new ArgumentNullException (nameof (jniMethodName));
 				if (jniMethodSignature.IsEmpty)
 					throw new ArgumentNullException (nameof (jniMethodSignature));
+
+				if (!RuntimeFeature.JniRemapping)
+					return null;
 
 				return GetReplacementMethodInfoCore (jniSimpleReferenceUtf8, jniMethodName, jniMethodSignature);
 			}
@@ -455,6 +470,9 @@ namespace Java.Interop {
 					throw new ArgumentNullException (nameof (jniFieldSignature));
 				}
 
+				if (!RuntimeFeature.JniRemapping)
+					return null;
+
 				return GetReplacementFieldInfoCore (jniSimpleReference, jniFieldName, jniFieldSignature);
 			}
 
@@ -468,6 +486,9 @@ namespace Java.Interop {
 					throw new ArgumentNullException (nameof (jniFieldName));
 				if (jniFieldSignature.IsEmpty)
 					throw new ArgumentNullException (nameof (jniFieldSignature));
+
+				if (!RuntimeFeature.JniRemapping)
+					return null;
 
 				return GetReplacementFieldInfoCore (jniSimpleReference, jniFieldName, jniFieldSignature);
 			}
