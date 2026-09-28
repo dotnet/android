@@ -144,10 +144,11 @@ namespace Xamarin.Android.Build.Tests
 			using var assembly = AssemblyDefinition.ReadAssembly (linkedRuntimeAssembly);
 			var eventSourceType = assembly.MainModule.GetType ("Microsoft.Android.Runtime.RuntimeEventSource");
 			var registeredPeersType = assembly.MainModule.GetType ("Microsoft.Android.Runtime.JavaMarshalRegisteredPeers");
+			var bridgeType = assembly.MainModule.GetType ("Microsoft.Android.Runtime.JavaMarshalGCBridge");
 			Assert.IsNotNull (registeredPeersType);
+			Assert.IsNotNull (bridgeType);
 			var initializeIfNeeded = registeredPeersType.Methods.Single (method => method.Name == "InitializeIfNeeded");
-			var bridgeProcessingStarted = registeredPeersType.Methods.Single (method => method.Name == "BridgeProcessingStarted");
-			var bridgeProcessingFinished = registeredPeersType.Methods.Single (method => method.Name == "BridgeProcessingFinished");
+			var processBridge = bridgeType.Methods.Single (method => method.Name == "ProcessBridge");
 			var trimmableTypeMapType = assembly.MainModule.GetType ("Microsoft.Android.Runtime.TrimmableTypeMap");
 			Assert.IsNotNull (trimmableTypeMapType);
 			var createJniProxyCacheEntry = trimmableTypeMapType.Methods.Single (method => method.Name == "CreateJniProxyCacheEntry");
@@ -156,24 +157,25 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsNotNull (eventSourceType, "the enabled synthetic call path should retain the runtime EventSource facade");
 				var implementationType = eventSourceType.NestedTypes.FirstOrDefault (type => type.Name == "RuntimeEventSourceImplementation");
 				Assert.IsNotNull (implementationType, "the enabled runtime EventSource implementation should remain in the linked assembly");
-				Assert.IsTrue (CallsRuntimeEventSource (initializeIfNeeded), "the enabled build should initialize the runtime EventSource before GC bridge processing");
-				Assert.IsTrue (CallsRuntimeEventSource (bridgeProcessingStarted), "the enabled build should retain the GC bridge Start call site");
-				Assert.IsTrue (CallsRuntimeEventSource (bridgeProcessingFinished), "the enabled build should retain the GC bridge Stop call site");
+				Assert.IsTrue (CallsRuntimeEventSource (initializeIfNeeded, "Initialize"), "the enabled build should initialize the runtime EventSource before GC bridge processing");
+				Assert.IsTrue (CallsRuntimeEventSource (processBridge, "GCBridgeStart"), "the enabled build should retain the GC bridge Start call site");
+				Assert.IsTrue (CallsRuntimeEventSource (processBridge, "GCBridgeStop"), "the enabled build should retain the GC bridge Stop call site");
 				Assert.IsTrue (CallsRuntimeEventSource (createJniProxyCacheEntry), "the enabled build should retain the Java-to-managed type-map timing call sites");
 				Assert.IsTrue (CallsRuntimeEventSource (createManagedProxyCacheEntry), "the enabled build should retain the managed-to-Java type-map timing call sites");
 			} else {
 				Assert.IsNull (eventSourceType, "the disabled synthetic call path and runtime EventSource should be removed from the linked assembly");
-				Assert.IsFalse (CallsRuntimeEventSource (initializeIfNeeded), "the disabled build should remove runtime EventSource initialization");
-				Assert.IsFalse (CallsRuntimeEventSource (bridgeProcessingStarted), "the disabled build should remove the GC bridge Start call site");
-				Assert.IsFalse (CallsRuntimeEventSource (bridgeProcessingFinished), "the disabled build should remove the GC bridge Stop call site");
+				Assert.IsFalse (CallsRuntimeEventSource (initializeIfNeeded, "Initialize"), "the disabled build should remove runtime EventSource initialization");
+				Assert.IsFalse (CallsRuntimeEventSource (processBridge, "GCBridgeStart"), "the disabled build should remove the GC bridge Start call site");
+				Assert.IsFalse (CallsRuntimeEventSource (processBridge, "GCBridgeStop"), "the disabled build should remove the GC bridge Stop call site");
 				Assert.IsFalse (CallsRuntimeEventSource (createJniProxyCacheEntry), "the disabled build should remove the Java-to-managed type-map timing call sites");
 				Assert.IsFalse (CallsRuntimeEventSource (createManagedProxyCacheEntry), "the disabled build should remove the managed-to-Java type-map timing call sites");
 			}
 
-			static bool CallsRuntimeEventSource (MethodDefinition method) =>
+			static bool CallsRuntimeEventSource (MethodDefinition method, string? methodName = null) =>
 				method.HasBody && method.Body.Instructions.Any (instruction =>
 					instruction.Operand is MethodReference reference &&
-					reference.DeclaringType.FullName == "Microsoft.Android.Runtime.RuntimeEventSource");
+					reference.DeclaringType.FullName == "Microsoft.Android.Runtime.RuntimeEventSource" &&
+					(methodName == null || reference.Name == methodName));
 		}
 
 		[Test]

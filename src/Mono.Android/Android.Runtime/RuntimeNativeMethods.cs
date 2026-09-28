@@ -102,13 +102,6 @@ namespace Android.Runtime
 
 		[LibraryImport (RuntimeConstants.InternalDllName)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial void _monodroid_register_reference_logging_callbacks (
-			delegate* unmanaged<int, IntPtr, byte, IntPtr, byte, IntPtr, int, IntPtr, void> referenceLogCallback,
-			delegate* unmanaged<IntPtr, void> referenceLogMessageCallback,
-			byte logReferenceMetadata);
-
-		[LibraryImport (RuntimeConstants.InternalDllName)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial IntPtr monodroid_TypeManager_get_java_class_name (IntPtr klass);
 
 		[LibraryImport (RuntimeConstants.InternalDllName)]
@@ -124,11 +117,10 @@ namespace Android.Runtime
 		[return: MarshalAs (UnmanagedType.U1)]
 		internal static partial bool clr_typemap_java_to_managed (string java_type_name, out IntPtr managed_assembly_name, out uint managed_type_token_id);
 
-		[LibraryImport (RuntimeConstants.InternalDllName)]
+		[LibraryImport (RuntimeConstants.InternalDllName, EntryPoint = "clr_initialize_gc_bridge")]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial delegate* unmanaged<MarkCrossReferencesArgs*, void> clr_initialize_gc_bridge (
-			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridge_processing_started_callback,
-			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridge_processing_finished_callback);
+			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridgeProcessingCallback);
 
 	}
 }
