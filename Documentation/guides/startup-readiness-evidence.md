@@ -129,6 +129,57 @@ packs for both app ABIs; do not replace individual ELF files or extend a host SD
 file overlay. This instrumentation does not authorize publication, installation,
 or relaxation of signing/release policy.
 
+## Isolated Real-signing diagnostic (not yet authorized to run)
+
+The existing DevDiv definition 11410 (`build-tools/automation/azure-pipelines.yaml`)
+now has a separate manual-only, default-off (`realDiagnosticSign: false`)
+stage imported from
+`build-tools/automation/yaml-templates/stage-guest-readiness-real-sign.yaml`.
+When enabled, it compiles **only** that stage, not any normal build, release,
+signing, or publication stages. With the switch off, the ordinary stage graph
+is unchanged. The route does not change the normal release signing predicate
+or the diagnostic Test-signing route. It
+downloads only the `guest-readiness-Darwin-Pack` PipelineArtifact from
+DevDiv definition 11410, run 15457266, source
+`c10a5463cc66cc2c3f5513110353b48bf4f75203`. Although that original
+run failed elsewhere, its completed Pack receipt and unsigned inputs are
+checked before staging. The script checks its producer identity, archive
+inventories, embedded native build marker, unsigned state, frozen SHA256,
+and original `SignList.xml`. Only these two archives and that SignList are
+handed to the existing `sign-artifacts/steps/v4.yml` template:
+
+| RID | Exact original unsigned archive | SHA256 |
+|---|---|---|
+| android-arm64 | `Microsoft.Android.Runtime.Mono.36.android-arm64.36.1.69-guest.15457266.1.nupkg` | `b6f89ce67d01e8f99c14718e3d16138e1dae91e1edc5f066984b26bfc798d816` |
+| android-x64 | `Microsoft.Android.Runtime.Mono.36.android-x64.36.1.69-guest.15457266.1.nupkg` | `28a2edcb90afb766bc1599dc36165c3822662315eebb92095a85569d34fc50d2` |
+
+The 1ES Official job requests its production MicroBuild signing context
+(`signType: Real`, `signWithProd: true`), normal v4 extraction, NuGet repack,
+signature verification, and 1ES SDL scanning. Input validates resolved
+`DevDiv/Xamarin.yaml-templates` main at
+`19fa9b5addc2c2d99a6e09492a60b3b2f01e799b` and
+`1ESPipelineTemplates/MicroBuildTemplate` release at
+`76ca628b0f2f914dd9a2fa37b54bffe2778f7f81`; template drift fails
+before any signing. The job cannot start without
+an explicit `enable: true` manual invocation on a committed non-release
+branch. It has no release stage, MSI conversion, feed push, Maestro, BAR,
+Darc, symbol promotion, installation, or trust-store changes. The only
+published artifacts are the **unadmitted** signed output (or explicit failure
+status) and its input/output or failure receipts, in that pipeline run. The
+output capture and both 1ES artifact publishers run even after a signing
+failure; an absent input or failed sign produces only failure status, never
+a success-shaped receipt. An Azure preview and signing
+service authorization must be reviewed before queueing; the normal signer
+may be blocked by service policy without any override.
+
+Signing output receipt `produced-policy-unqualified` records hashes and
+ZIP-member deltas, **not** trust or admission. Before any candidate is
+installed, independently inspect the signing service and scanner results,
+the normal NuGet verifier result, and the actual Intel Mac SDK 10.0.401
+`dotnet nuget verify --all` output against its unmodified trusted roots.
+Neither a NuGet signature entry nor a successful provider preview establishes
+the ordinary signing chain is accepted on that Mac.
+
 ## Manual artifact-only producer
 
 `build-tools\automation\azure-pipelines-guest-readiness.yaml` is a separate

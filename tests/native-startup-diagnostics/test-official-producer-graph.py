@@ -15,6 +15,37 @@ BASELINE = "d549e1dc4e2a083b08b4f24cb5495e81b99d79b5"
 # Fresh publication clones do not contain the original private local implementation history.
 subprocess.run(["git", "merge-base", "--is-ancestor", BASELINE, "HEAD"], cwd=ROOT, check=True)
 
+def without_real_signing(node):
+    """Resolve only the new default-off route, retaining old guest-mode expressions."""
+    rewrite = {
+        "${{ if or(eq(parameters.guestReadiness, true), eq(parameters.realDiagnosticSign, true)) }}":
+            "${{ if eq(parameters.guestReadiness, true) }}",
+        "${{ if and(eq(parameters.guestReadiness, false), eq(parameters.realDiagnosticSign, false)) }}":
+            "${{ if eq(parameters.guestReadiness, false) }}",
+        "${{ if and(eq('${{ parameters.Skip1ESComplianceTasks }}', 'true'), eq(parameters.realDiagnosticSign, false)) }}":
+            "${{ if eq('${{ parameters.Skip1ESComplianceTasks }}', 'true') }}",
+    }
+    off = "${{ if eq(parameters.realDiagnosticSign, false) }}"
+    on = "${{ if eq(parameters.realDiagnosticSign, true) }}"
+    if isinstance(node, list):
+        result = []
+        for item in node:
+            if isinstance(item, dict) and len(item) == 1:
+                key = next(iter(item))
+                if key == on:
+                    continue
+                if key == off:
+                    result.extend(without_real_signing(item[key]))
+                    continue
+            if isinstance(item, dict) and item.get("name") == "realDiagnosticSign":
+                continue
+            result.append(without_real_signing(item))
+        return result
+    if isinstance(node, dict):
+        return {rewrite.get(key, key): without_real_signing(value)
+                for key, value in node.items() if key != on}
+    return node
+
 
 def expand(node, enabled):
     """Evaluate only our mode conditions, preserving unrelated Azure expressions."""
@@ -67,7 +98,7 @@ paths = ["build-tools/automation/azure-pipelines.yaml"] + [
 for path in paths:
     old = yaml.safe_load(subprocess.check_output(
         ["git", "show", f"{BASELINE}:{path}"], cwd=ROOT))
-    new = yaml.safe_load((ROOT / path).read_text())
+    new = without_real_signing(yaml.safe_load((ROOT / path).read_text()))
     assert remove_mode_parameters(expand(new, False)) == old, f"Default graph changed: {path}"
 
 windows_path = "build-tools/automation/yaml-templates/build-windows.yaml"
@@ -325,7 +356,7 @@ assert [name for name in tracked_root_files if name.casefold() == "nuget.config"
 official_source = (ROOT / "build-tools/scripts/guest-readiness-official.ps1").read_text()
 assert "$restoreConfig = Join-Path $root 'NuGet.config'" in official_source
 
-root = yaml.safe_load((ROOT / paths[0]).read_text())
+root = without_real_signing(yaml.safe_load((ROOT / paths[0]).read_text()))
 parameters = {x["name"]: x for x in root["parameters"]}
 assert parameters["guestReadiness"]["default"] is False
 diagnostic = expand(root, True)

@@ -1,0 +1,89 @@
+# This stage is imported only by the manual, opt-in, artifact-only branch of definition 11410.
+stages:
+    - stage: diagnostic_real_sign
+      displayName: Sign frozen Android diagnostic archives only
+      jobs:
+      - job: sign_android_diagnostic
+        condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'), eq(variables['System.DefinitionId'], '11410'), eq(variables['Build.Repository.Name'], 'dotnet/android'), startsWith(variables['Build.SourceBranch'], 'refs/heads/'), ne(variables['Build.SourceBranch'], 'refs/heads/main'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))
+        timeoutInMinutes: 120
+        pool:
+          name: VSEngSS-MicroBuild2022-1ES
+          demands:
+          - msbuild
+        templateContext:
+          mb:
+            signing:
+              enabled: true
+              signType: Real
+              signWithProd: true
+          sdl:
+            binskim:
+              analyzeTargetGlob: '$(Build.ArtifactStagingDirectory)\android-diagnostic-real-output\signed\*'
+        steps:
+        - checkout: self
+          clean: true
+          persistCredentials: false
+          path: s/android
+        - task: DownloadPipelineArtifact@2
+          displayName: Download frozen unsigned Pack evidence
+          inputs:
+            buildType: specific
+            project: DevDiv
+            definition: '11410'
+            buildVersionToDownload: specific
+            pipelineId: '15457266'
+            allowFailedBuilds: true
+            artifactName: guest-readiness-Darwin-Pack
+            targetPath: $(Agent.TempDirectory)\android-diagnostic-original
+        - task: PowerShell@2
+          displayName: Validate frozen source and stage exactly two unsigned packs
+          inputs:
+            pwsh: true
+            targetType: filePath
+            filePath: $(Pipeline.Workspace)\s\android\build-tools\scripts\guest-readiness-real-sign.ps1
+            arguments: -Phase Input -SourceDirectory "$(Agent.TempDirectory)\android-diagnostic-original" -DestinationDirectory "$(Agent.TempDirectory)\android-diagnostic-unsigned" -EvidenceDirectory "$(Build.ArtifactStagingDirectory)\android-diagnostic-real-evidence"
+          env:
+            DIAGNOSTIC_SOURCE_VERSION: $(Build.SourceVersion)
+            DIAGNOSTIC_SOURCE_BRANCH: $(Build.SourceBranch)
+            DIAGNOSTIC_BUILD_REASON: $(Build.Reason)
+            DIAGNOSTIC_REPOSITORY: $(Build.Repository.Name)
+            DIAGNOSTIC_SIGNING_TEMPLATE_VERSION: $(DiagnosticSigningTemplateVersion)
+            DIAGNOSTIC_1ES_VERSION: $(Diagnostic1ESVersion)
+        - template: sign-artifacts/steps/v4.yml@yaml-templates
+          parameters:
+            sourceFolder: $(Agent.TempDirectory)\android-diagnostic-unsigned
+            targetFolder: $(Build.ArtifactStagingDirectory)\android-diagnostic-real-output\signed
+            workingDirectory: $(Agent.TempDirectory)\android-diagnostic-real-working
+            signType: Real
+            teamName: Maui
+            handleUnmappedFiles: fail
+            uploadBinlogs: true
+            uploadPrefix: android-diagnostic-real-
+        - task: PowerShell@2
+          displayName: Retain unadmitted signed package receipts
+          condition: always()
+          inputs:
+            pwsh: true
+            targetType: filePath
+            filePath: $(Pipeline.Workspace)\s\android\build-tools\scripts\guest-readiness-real-sign.ps1
+            arguments: -Phase Output -SourceDirectory "$(Build.ArtifactStagingDirectory)\android-diagnostic-real-output\signed" -DestinationDirectory "$(Agent.TempDirectory)\android-diagnostic-unsigned" -EvidenceDirectory "$(Build.ArtifactStagingDirectory)\android-diagnostic-real-evidence"
+          env:
+            DIAGNOSTIC_SOURCE_VERSION: $(Build.SourceVersion)
+            DIAGNOSTIC_SOURCE_BRANCH: $(Build.SourceBranch)
+            DIAGNOSTIC_BUILD_REASON: $(Build.Reason)
+            DIAGNOSTIC_REPOSITORY: $(Build.Repository.Name)
+            DIAGNOSTIC_SIGNING_TEMPLATE_VERSION: $(DiagnosticSigningTemplateVersion)
+            DIAGNOSTIC_1ES_VERSION: $(Diagnostic1ESVersion)
+            DIAGNOSTIC_SIGNING_JOB_STATUS: $(Agent.JobStatus)
+        - task: 1ES.PublishPipelineArtifact@1
+          displayName: Retain diagnostic output or explicit failure status
+          condition: always()
+          inputs:
+            artifactName: android-diagnostic-real-output-unadmitted
+            targetPath: $(Build.ArtifactStagingDirectory)\android-diagnostic-real-output
+        - task: 1ES.PublishPipelineArtifact@1
+          displayName: Retain diagnostic signing evidence
+          condition: always()
+          inputs:
+            artifactName: android-diagnostic-real-evidence
+            targetPath: $(Build.ArtifactStagingDirectory)\android-diagnostic-real-evidence
