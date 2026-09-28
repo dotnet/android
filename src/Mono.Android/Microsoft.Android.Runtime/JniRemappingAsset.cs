@@ -165,7 +165,7 @@ internal sealed class JniRemappingAsset
 			ValidateString (sourceSignature, required: false);
 			ValidateString (ReadStringRef (position + 24), required: true);
 			ValidateString (ReadStringRef (position + 32), required: true);
-			ValidateString (ReadStringRef (position + 40), required: false, optional: true);
+			ValidateString (ReadStringRef (position + 40), required: true, optional: true);
 			if (methods && (ReadUInt32 (bytes, position + 48) & ~1u) != 0)
 				throw new InvalidDataException ("JNI remapping method entry has unsupported flags.");
 

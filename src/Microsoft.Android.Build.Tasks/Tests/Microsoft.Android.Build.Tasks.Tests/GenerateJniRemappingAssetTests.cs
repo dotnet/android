@@ -70,6 +70,8 @@ public class GenerateJniRemappingAssetTests : BaseTest
 			  <replace-method source-type="a/B" source-method-name="run" source-method-signature="(Ljava/lang/String;)V"
 			      target-type="x/Y" target-method-name="moved"
 			      target-method-signature="(La/B;Ljava/lang/String;)V" target-method-instance-to-static="true" />
+			  <replace-method source-type="a/B" source-method-name="&lt;init&gt;"
+			      target-type="x/Y" target-method-name="factory" target-method-instance-to-static="true" />
 			  <replace-field source-type="a/B" source-field-name="value"
 			      target-type="x/Y" target-field-name="anyValue" />
 			  <replace-field source-type="a/B" source-field-name="value" source-field-signature="I"
@@ -104,6 +106,10 @@ public class GenerateJniRemappingAssetTests : BaseTest
 		Assert.IsTrue (moved.HasValue);
 		Assert.IsTrue (moved.GetValueOrDefault ().IsStatic);
 		Assert.AreEqual ("(La/B;Ljava/lang/String;)V", asset.ReadString (moved.GetValueOrDefault ().TargetSignature));
+		var factory = asset.FindMethod ("a/B", "<init>", "()V");
+		Assert.IsTrue (factory.HasValue);
+		Assert.IsTrue (factory.GetValueOrDefault ().IsStatic);
+		Assert.IsTrue (factory.GetValueOrDefault ().TargetSignature.IsMissing);
 
 		var field = asset.FindField ("a/B", "value", "I");
 		Assert.IsTrue (field.HasValue);
@@ -131,6 +137,27 @@ public class GenerateJniRemappingAssetTests : BaseTest
 		Assert.IsNull (asset.FindReplacementType ("test/\u0179rodla"));
 	}
 
+	[Test]
+	public void Utf8MethodAndFieldKeysUseTheSameBinaryOrdering ()
+	{
+		byte [] bytes = Produce ("<replacements>" +
+			"<replace-method source-type=\"test/\u0179rodlo\" source-method-name=\"r\u00e9sum\u00e9\" source-method-signature=\"()V\"" +
+			" target-type=\"test/\u00c9cho\" target-method-name=\"a\" target-method-instance-to-static=\"false\" />" +
+			"<replace-field source-type=\"test/\u0179rodlo\" source-field-name=\"v\u00e4lue\" source-field-signature=\"I\"" +
+			" target-type=\"test/\u00c9cho\" target-field-name=\"b\" target-field-signature=\"J\" />" +
+			"</replacements>");
+		var asset = new JniRemappingAsset (bytes);
+		var method = asset.FindMethod (Encoding.UTF8.GetBytes ("test/\u0179rodlo"), "r\u00e9sum\u00e9", "()V");
+		var field = asset.FindField ("test/\u0179rodlo", "v\u00e4lue", "I");
+
+		Assert.IsTrue (method.HasValue);
+		Assert.AreEqual ("a", asset.ReadString (method.GetValueOrDefault ().TargetName));
+		Assert.IsTrue (field.HasValue);
+		Assert.AreEqual ("b", asset.ReadString (field.GetValueOrDefault ().TargetName));
+		Assert.IsNull (asset.FindMethod ("test/\u0179rodlo", "resume", "()V"));
+		Assert.IsNull (asset.FindField ("test/\u0179rodlo", "value", "I"));
+	}
+
 	[TestCase ("truncated-header")]
 	[TestCase ("magic")]
 	[TestCase ("version")]
@@ -146,6 +173,7 @@ public class GenerateJniRemappingAssetTests : BaseTest
 	[TestCase ("invalid-utf8")]
 	[TestCase ("method-flags")]
 	[TestCase ("optional-string-length")]
+	[TestCase ("empty-optional-string")]
 	public void RejectsMalformedAsset (string corruption)
 	{
 		byte [] bytes = Produce ("""
@@ -174,6 +202,7 @@ public class GenerateJniRemappingAssetTests : BaseTest
 			case "invalid-utf8": bytes [(int)sourceOffset] = 0xff; break;
 			case "method-flags": JniRemappingAsset.WriteUInt32 (bytes, methodOffset + 48, 2); break;
 			case "optional-string-length": JniRemappingAsset.WriteUInt32 (bytes, methodOffset + 44, 1); break;
+			case "empty-optional-string": JniRemappingAsset.WriteUInt32 (bytes, methodOffset + 40, 0); break;
 			default: throw new AssertionException ($"Unrecognized corruption: {corruption}");
 		}
 
@@ -224,6 +253,43 @@ public class GenerateJniRemappingAssetTests : BaseTest
 		Assert.IsFalse (task.Execute ());
 		Assert.AreEqual ("XA4331", errors.Single ().Code);
 		FileAssert.DoesNotExist (task.OutputFile);
+	}
+
+	[Test]
+	public void InvalidXmlRootAndEmptyTargetSignatureCannotProduceAnAsset ()
+	{
+		string directory = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (directory);
+		string input = Path.Combine (directory, "remap.xml");
+		string output = Path.Combine (directory, "asset.bin");
+		var errors = new List<BuildErrorEventArgs> ();
+		var task = new GenerateJniRemappingAsset {
+			BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			RemappingXmlFilePath = input,
+			OutputFile = output,
+		};
+
+		File.WriteAllText (input, "<unrelated />");
+		Assert.IsFalse (task.Execute ());
+		Assert.AreEqual ("XA1045", errors.Single ().Code);
+		FileAssert.DoesNotExist (output);
+
+		errors.Clear ();
+		task = new GenerateJniRemappingAsset {
+			BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			RemappingXmlFilePath = input,
+			OutputFile = output,
+		};
+		File.WriteAllText (input, """
+			<replacements>
+			  <replace-method source-type="a/B" source-method-name="run" source-method-signature="()V"
+			      target-type="a/B" target-method-name="renamed" target-method-signature=""
+			      target-method-instance-to-static="false" />
+			</replacements>
+			""");
+		Assert.IsFalse (task.Execute ());
+		Assert.AreEqual ("XA4331", errors.Single ().Code);
+		FileAssert.DoesNotExist (output);
 	}
 
 	[Test]
