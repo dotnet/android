@@ -231,14 +231,4 @@ Se tudo falhar, defina a propriedade MSBuild "EmbedAssembliesIntoApk" como "true
 {1} - The tool that was used to deploy the file.
 {2} - The actual error that occured.</comment>
   </data>
-  <data name="StartDebugger_ipAddress_port" xml:space="preserve">
-    <value>  Iniciando o Depurador em {0}:{1}
-Inicie o sdb e depois execute o seguinte comando
-  conectar {0} {1}
-    </value>
-    <comment>The following are literal names and should not be translated:
-{0} - An ip address of  a computer.
-{1} - An interger value describing the port to use.
-    </comment>
-  </data>
 </root>
