@@ -267,6 +267,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4328](xa4328.md): Could not generate typemap ProGuard configuration from '{0}': {1}
 + [XA4329](xa4329.md): Failed to generate the R8 JNI remapping data. {detail}
 + [XA4330](xa4330.md): The R8 JNI remapping data is incomplete. {detail}
++ [XA4331](xa4331.md): Could not generate JNI remapping asset from '{input}' to '{output}': {detail}
 
 ## XA5xxx: GCC and toolchain
 

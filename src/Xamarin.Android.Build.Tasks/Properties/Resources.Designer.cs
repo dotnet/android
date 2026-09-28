@@ -2022,6 +2022,12 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4330_UnsupportedSignature", resourceCulture);
             }
         }
+
+        public static string XA4331 {
+            get {
+                return ResourceManager.GetString("XA4331", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Could not extract Java type map keys from &apos;{0}&apos;: {1}.

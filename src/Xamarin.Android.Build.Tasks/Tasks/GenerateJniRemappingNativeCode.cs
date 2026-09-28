@@ -2,11 +2,8 @@
 
 using System;
 using System.IO;
-using System.Collections.Generic;
-using System.Xml;
 
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -69,24 +66,13 @@ namespace Xamarin.Android.Tasks
 
 		void Generate (string remappingXmlFilePath)
 		{
-			var typeReplacements = new List<JniRemappingTypeReplacement> ();
-			var reverseTypeReplacements = new List<JniRemappingTypeReplacement> ();
-			var methodReplacements = new List<JniRemappingMethodReplacement> ();
-			var fieldReplacements = new List<JniRemappingFieldReplacement> ();
-
-			var readerSettings = new XmlReaderSettings {
-				XmlResolver = null,
-			};
-
-			using (var reader = XmlReader.Create (File.OpenRead (remappingXmlFilePath), readerSettings)) {
-				if (reader.MoveToContent () != XmlNodeType.Element || reader.LocalName != "replacements") {
-					Log.LogCodedError ("XA1045", Properties.Resources.XA1045, remappingXmlFilePath);
-				} else {
-					ReadXml (reader, typeReplacements, reverseTypeReplacements, methodReplacements, fieldReplacements, remappingXmlFilePath);
-				}
+			var entries = JniRemappingXmlReader.Read (remappingXmlFilePath, Log);
+			if (Log.HasLoggedErrors) {
+				return;
 			}
 
-			Generate (new JniRemappingNativeCodeGenerator (Log, typeReplacements, reverseTypeReplacements, methodReplacements, fieldReplacements));
+			Generate (new JniRemappingNativeCodeGenerator (
+				Log, entries.TypeReplacements, entries.ReverseTypeReplacements, entries.MethodReplacements, entries.FieldReplacements));
 		}
 
 		void Generate (JniRemappingNativeCodeGenerator jniRemappingComposer)
@@ -116,95 +102,6 @@ namespace Xamarin.Android.Tasks
 				NativeCodeInfo,
 				RegisteredTaskObjectLifetime.Build
 			);
-		}
-
-		void ReadXml (XmlReader reader, List<JniRemappingTypeReplacement> typeReplacements,
-		              List<JniRemappingTypeReplacement> reverseTypeReplacements,
-		              List<JniRemappingMethodReplacement> methodReplacements,
-		              List<JniRemappingFieldReplacement> fieldReplacements,
-		              string remappingXmlFilePath)
-		{
-			bool haveAllAttributes;
-
-			while (reader.Read ()) {
-				if (reader.NodeType != XmlNodeType.Element) {
-					continue;
-				}
-
-				haveAllAttributes = true;
-				if (MonoAndroidHelper.StringEquals ("replace-type", reader.LocalName)) {
-					haveAllAttributes &= GetRequiredAttribute ("from", out string from);
-					haveAllAttributes &= GetRequiredAttribute ("to", out string to);
-					if (!haveAllAttributes) {
-						continue;
-					}
-
-					typeReplacements.Add (new JniRemappingTypeReplacement (from, to));
-				} else if (MonoAndroidHelper.StringEquals ("reverse-type", reader.LocalName)) {
-					haveAllAttributes &= GetRequiredAttribute ("from", out string from);
-					haveAllAttributes &= GetRequiredAttribute ("to", out string to);
-					if (!haveAllAttributes) {
-						continue;
-					}
-					reverseTypeReplacements.Add (new JniRemappingTypeReplacement (from, to));
-				} else if (MonoAndroidHelper.StringEquals ("replace-method", reader.LocalName)) {
-					haveAllAttributes &= GetRequiredAttribute ("source-type", out string sourceType);
-					haveAllAttributes &= GetRequiredAttribute ("source-method-name", out string sourceMethodName);
-					haveAllAttributes &= GetRequiredAttribute ("target-type", out string targetType);
-					haveAllAttributes &= GetRequiredAttribute ("target-method-name", out string targetMethodName);
-					haveAllAttributes &= GetRequiredAttribute ("target-method-instance-to-static", out string targetIsStatic);
-
-					if (!haveAllAttributes) {
-						continue;
-					}
-
-					if (!Boolean.TryParse (targetIsStatic, out bool isStatic)) {
-						Log.LogCodedError ("XA1046", Properties.Resources.XA1046, "target-method-instance-to-static", reader.LocalName, targetIsStatic, remappingXmlFilePath, GetCurrentLineNumber ());
-						continue;
-					}
-
-					string sourceMethodSignature = reader.GetAttribute ("source-method-signature") ?? "";
-					// Optional: inputs which predate it (for example the Intune/MAM mapping) keep
-					// the source signature on the target method.
-					string? targetMethodSignature = reader.GetAttribute ("target-method-signature");
-					methodReplacements.Add (
-						new JniRemappingMethodReplacement (
-							sourceType, sourceMethodName, sourceMethodSignature,
-							targetType, targetMethodName, targetMethodSignature, isStatic
-						)
-					);
-				} else if (MonoAndroidHelper.StringEquals ("replace-field", reader.LocalName)) {
-					haveAllAttributes &= GetRequiredAttribute ("source-type", out string sourceType);
-					haveAllAttributes &= GetRequiredAttribute ("source-field-name", out string sourceFieldName);
-					haveAllAttributes &= GetRequiredAttribute ("target-type", out string targetType);
-					haveAllAttributes &= GetRequiredAttribute ("target-field-name", out string targetFieldName);
-					if (!haveAllAttributes) {
-						continue;
-					}
-
-					string sourceFieldSignature = reader.GetAttribute ("source-field-signature") ?? "";
-					string? targetFieldSignature = reader.GetAttribute ("target-field-signature");
-					fieldReplacements.Add (
-						new JniRemappingFieldReplacement (
-							sourceType, sourceFieldName, sourceFieldSignature,
-							targetType, targetFieldName, targetFieldSignature
-						)
-					);
-				}
-			}
-
-			bool GetRequiredAttribute (string attributeName, out string attributeValue)
-			{
-				attributeValue = reader.GetAttribute (attributeName);
-				if (!String.IsNullOrEmpty (attributeValue)) {
-					return true;
-				}
-
-				Log.LogCodedError ("XA1047", Properties.Resources.XA1047, attributeName, reader.LocalName, remappingXmlFilePath, GetCurrentLineNumber ());
-				return false;
-			}
-
-			int GetCurrentLineNumber () => ((IXmlLineInfo)reader).LineNumber;
 		}
 	}
 }

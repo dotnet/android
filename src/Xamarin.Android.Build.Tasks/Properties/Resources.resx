@@ -958,6 +958,13 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
 {0} - The member the entry describes.
 {1} - The Java signature which could not be converted.</comment>
   </data>
+  <data name="XA4331" xml:space="preserve">
+    <value>Could not generate JNI remapping asset from '{0}' to '{1}': {2}</value>
+    <comment>The following is a literal name and should not be translated: JNI.
+{0} - The merged remapping XML input file.
+{1} - The binary asset output file.
+{2} - The specific input, format, or I/O failure.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
