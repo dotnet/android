@@ -828,24 +828,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;AotAssemblies&apos; MSBuild property is deprecated. Remove it. For supported .NET 10-and-earlier projects that use Mono, use the &apos;RunAOTCompilation&apos; MSBuild property instead. CoreCLR and NativeAOT do not use this property..
-        /// </summary>
-        public static string XA1029 {
-            get {
-                return ResourceManager.GetString("XA1029", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;RunAOTCompilation&apos; MSBuild property is only supported when trimming is enabled. Edit the project file in a text editor to set &apos;PublishTrimmed&apos; to &apos;true&apos; for this build configuration..
-        /// </summary>
-        public static string XA1030 {
-            get {
-                return ResourceManager.GetString("XA1030", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Your project references &apos;{0}&apos; which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file..
         /// </summary>
         public static string XA1034 {
@@ -855,7 +837,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;BundleAssemblies&apos; property is deprecated and no longer affects the build. Remove it. For supported .NET 10-and-earlier Mono projects, use &apos;AndroidUseAssemblyStore&apos; with &apos;AndroidEnableAssemblyCompression&apos; for the former behavior. .NET 11 CoreCLR controls packaged assembly-store behavior and needs no replacement setting..
+        ///   Looks up a localized string similar to The &apos;BundleAssemblies&apos; property is deprecated and no longer affects the build. Remove it. CoreCLR and NativeAOT do not use Mono&apos;s mkbundle..
         /// </summary>
         public static string XA1035 {
             get {
@@ -1077,24 +1059,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA2008 {
             get {
                 return ResourceManager.GetString("XA2008", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. See https://code.google.com/p/android/issues/detail?id=161422..
-        /// </summary>
-        public static string XA3004 {
-            get {
-                return ResourceManager.GetString("XA3004", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The detected Android NDK version is incompatible with the targeted LLVM configuration. Please upgrade to NDK r10d or newer..
-        /// </summary>
-        public static string XA3005 {
-            get {
-                return ResourceManager.GetString("XA3005", resourceCulture);
             }
         }
         

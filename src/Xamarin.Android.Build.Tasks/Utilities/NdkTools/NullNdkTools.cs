@@ -18,8 +18,6 @@ namespace Xamarin.Android.Tasks
 
 		public override string GetToolPath (string name, AndroidTargetArch arch, int apiLevel) => throw new NotImplementedException ();
 
-		public override bool ValidateNdkPlatform (Action<string> logMessage, Action<string, string> logError, AndroidTargetArch arch, bool enableLLVM) => throw new NotImplementedException ();
-
 		protected override string GetPlatformIncludeDirPath (AndroidTargetArch arch, int apiLevel) => throw new NotImplementedException ();
 	}
 }
