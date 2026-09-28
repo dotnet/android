@@ -2,6 +2,7 @@ using Microsoft.Build.Framework;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -153,6 +154,42 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (expected, AndroidHelper.SelectDevice (devices, target)?.Serial);
 			Assert.IsNull (AndroidHelper.SelectDevice (devices, "-s missing"));
 			Assert.IsNull (AndroidHelper.SelectDevice (devices, "invalid"));
+		}
+
+		[Test]
+		public void BuilderDoesNotWaitForInheritedRedirectedOutput ()
+		{
+			if (!IsWindows)
+				Assert.Ignore ("This test reproduces a Windows child process inheriting redirected output.");
+
+			var psi = new ProcessStartInfo (Environment.GetEnvironmentVariable ("ComSpec") ?? "cmd.exe",
+				"/c start \"\" /b powershell -NoProfile -Command \"Start-Sleep -Seconds 8\"") {
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				CreateNoWindow = true,
+			};
+			using var process = new Process { StartInfo = psi };
+			var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			process.OutputDataReceived += (_, e) => {
+				if (e.Data == null)
+					outputDone.TrySetResult (true);
+			};
+			process.ErrorDataReceived += (_, e) => {
+				if (e.Data == null)
+					errorDone.TrySetResult (true);
+			};
+			Assert.IsTrue (process.Start ());
+			process.BeginOutputReadLine ();
+			process.BeginErrorReadLine ();
+			Assert.IsTrue (process.WaitForExit (5000), "The parent process should exit promptly.");
+
+			var stopwatch = Stopwatch.StartNew ();
+			Assert.IsFalse (Builder.WaitForRedirectedOutput (outputDone.Task, errorDone.Task));
+			Assert.Less (stopwatch.Elapsed, TimeSpan.FromSeconds (6), "Inherited output handles must not hold the test runner indefinitely.");
+			Assert.IsTrue (outputDone.Task.Wait (TimeSpan.FromSeconds (10)));
+			Assert.IsTrue (errorDone.Task.Wait (TimeSpan.FromSeconds (10)));
 		}
 
 		[Test]
