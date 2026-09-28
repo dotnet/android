@@ -18,6 +18,7 @@ namespace Java.Interop {
 	static class TypeManagerMapDictionaries
 	{
 		static Dictionary<string, Type>? _jniToManaged;
+		static Dictionary<string, Type>? _registeredJniToManaged;
 		static Dictionary<Type, string>? _managedToJni;
 
 		public static readonly object AccessLock = new object ();
@@ -30,6 +31,14 @@ namespace Java.Interop {
 				if (_jniToManaged == null)
 					_jniToManaged = new Dictionary<string, Type> (StringComparer.Ordinal);
 				return _jniToManaged;
+			}
+		}
+
+		public static Dictionary<string, Type> RegisteredJniToManaged {
+			get {
+				if (_registeredJniToManaged == null)
+					_registeredJniToManaged = new Dictionary<string, Type> (StringComparer.Ordinal);
+				return _registeredJniToManaged;
 			}
 		}
 
@@ -263,12 +272,16 @@ namespace Java.Interop {
 
 		static Type? GetJavaToManagedTypeCore (string class_name)
 		{
-			if (TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out Type? type)) {
+			if (TypeManagerMapDictionaries.RegisteredJniToManaged.TryGetValue (class_name, out Type? type)) {
+				return type;
+			}
+
+			if (TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out type)) {
 				return type;
 			}
 
 			string lookupName = JniRemappingLookup.GetReverseType (class_name) ?? class_name;
-			if (TypeManagerMapDictionaries.JniToManaged.TryGetValue (lookupName, out type)) {
+			if (TypeManagerMapDictionaries.RegisteredJniToManaged.TryGetValue (lookupName, out type)) {
 				return type;
 			}
 
@@ -282,7 +295,7 @@ namespace Java.Interop {
 			}
 
 			if (type != null) {
-				TypeManagerMapDictionaries.JniToManaged.Add (lookupName, type);
+				TypeManagerMapDictionaries.JniToManaged.Add (class_name, type);
 				return type;
 			}
 
@@ -490,8 +503,8 @@ namespace Java.Interop {
 		{
 			string jniFromType = JNIEnv.GetJniName (t);
 			lock (TypeManagerMapDictionaries.AccessLock) {
-				if (!TypeManagerMapDictionaries.JniToManaged.TryGetValue (java_class, out var lookup)) {
-					TypeManagerMapDictionaries.JniToManaged.Add (java_class, t);
+				if (!TypeManagerMapDictionaries.RegisteredJniToManaged.TryGetValue (java_class, out var lookup)) {
+					TypeManagerMapDictionaries.RegisteredJniToManaged.Add (java_class, t);
 					if (String.Compare (jniFromType, java_class, StringComparison.OrdinalIgnoreCase) != 0) {
 						TypeManagerMapDictionaries.ManagedToJni.Add (t, java_class);
 					}

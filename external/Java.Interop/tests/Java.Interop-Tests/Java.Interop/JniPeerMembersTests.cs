@@ -701,6 +701,7 @@ namespace Java.InteropTests
 	class FieldRemapBase : JavaObject {
 		internal    const    string         JniTypeName = "net/dot/jni/test/FieldRemapBase";
 		internal    const    string         RuntimeJniTypeName = "net/dot/jni/test/FieldRemapRenamedBase";
+		internal    const    string         FinalJniTypeName = "net/dot/jni/test/FieldRemapFinalBase";
 		static      readonly JniPeerMembers _members = new JniPeerMembers (JniTypeName, typeof (FieldRemapBase));
 
 		public override JniPeerMembers JniPeerMembers => _members;

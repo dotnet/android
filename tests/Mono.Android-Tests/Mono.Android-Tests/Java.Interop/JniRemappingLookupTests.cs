@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
 
 using Android.Runtime;
 using Java.Interop;
@@ -37,13 +36,20 @@ namespace Java.InteropTests
 			Assert.AreEqual (
 				typeof (IncomingDeclaredPeer),
 				JniEnvironment.Runtime.TypeManager.GetType (new JniTypeSignature (IncomingDeclaredPeer.RuntimeJniName)));
+			Assert.AreEqual (
+				typeof (IncomingWrongPeer),
+				JniEnvironment.Runtime.TypeManager.GetType (new JniTypeSignature (IncomingDeclaredPeer.DeclaredJniName)));
 
-			var handle = JNIEnv.CreateInstance (IncomingDeclaredPeer.RuntimeJniName, "()V");
+			var renamedHandle = JNIEnv.CreateInstance (IncomingDeclaredPeer.RuntimeJniName, "()V");
+			var overlappingHandle = JNIEnv.CreateInstance (IncomingDeclaredPeer.DeclaredJniName, "()V");
 			try {
-				using var peer = Java.Lang.Object.GetObject<Java.Lang.Object> (handle, JniHandleOwnership.DoNotTransfer);
-				Assert.IsInstanceOf<IncomingDeclaredPeer> (peer);
+				using var renamedPeer = Java.Lang.Object.GetObject<Java.Lang.Object> (renamedHandle, JniHandleOwnership.DoNotTransfer);
+				using var overlappingPeer = Java.Lang.Object.GetObject<Java.Lang.Object> (overlappingHandle, JniHandleOwnership.DoNotTransfer);
+				Assert.IsInstanceOf<IncomingDeclaredPeer> (renamedPeer);
+				Assert.IsInstanceOf<IncomingWrongPeer> (overlappingPeer);
 			} finally {
-				JNIEnv.DeleteLocalRef (handle);
+				JNIEnv.DeleteLocalRef (renamedHandle);
+				JNIEnv.DeleteLocalRef (overlappingHandle);
 			}
 		}
 
@@ -85,13 +91,13 @@ namespace Java.InteropTests
 			var replacement = info.GetValueOrDefault ();
 			Assert.AreEqual (
 				"net/dot/android/remap/ManagedTarget",
-				GetString (replacement.TargetJniType, replacement.TargetJniTypeUtf8));
+				replacement.TargetJniType);
 			Assert.AreEqual (
 				targetName,
-				GetString (replacement.TargetJniMethodName, replacement.TargetJniMethodNameUtf8));
+				replacement.TargetJniMethodName);
 			Assert.AreEqual (
 				targetSignature,
-				GetString (replacement.TargetJniMethodSignature, replacement.TargetJniMethodSignatureUtf8) ?? sourceSignature);
+				replacement.TargetJniMethodSignature);
 			Assert.AreEqual ("net/dot/android/remap/ManagedLookup", replacement.SourceJniType);
 			Assert.AreEqual ("overload", replacement.SourceJniMethodName);
 			Assert.AreEqual (sourceSignature, replacement.SourceJniMethodSignature);
@@ -113,8 +119,6 @@ namespace Java.InteropTests
 			Assert.AreEqual (targetSignature, replacement.TargetJniFieldSignature);
 		}
 
-		static string GetString (string value, IntPtr utf8)
-			=> utf8 == IntPtr.Zero ? value : Marshal.PtrToStringUTF8 (utf8);
 	}
 
 	[Register (DeclaredJniName, DoNotGenerateAcw = true)]

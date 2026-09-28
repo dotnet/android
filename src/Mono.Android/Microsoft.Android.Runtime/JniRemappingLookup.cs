@@ -179,6 +179,14 @@ static class JniRemappingLookup
 		info.SourceJniType = jniSourceType;
 		info.SourceJniMethodName = jniMethodName;
 		info.SourceJniMethodSignature = jniMethodSignature;
+		info.TargetJniType = Marshal.PtrToStringUTF8 (info.TargetJniTypeUtf8)
+			?? throw new InvalidOperationException ("JNI remapping target type is not valid UTF-8.");
+		info.TargetJniMethodName = Marshal.PtrToStringUTF8 (info.TargetJniMethodNameUtf8)
+			?? throw new InvalidOperationException ("JNI remapping target method name is not valid UTF-8.");
+		info.TargetJniMethodSignature ??= info.TargetJniMethodSignatureUtf8 == IntPtr.Zero
+			? jniMethodSignature
+			: Marshal.PtrToStringUTF8 (info.TargetJniMethodSignatureUtf8)
+				?? throw new InvalidOperationException ("JNI remapping target method signature is not valid UTF-8.");
 		return info;
 	}
 

@@ -138,6 +138,7 @@ namespace Java.InteropTests {
 		Dictionary<string, string> ReplacmentTypes = new() {
 			["net/dot/jni/test/RenameClassBase1"] = "net/dot/jni/test/RenameClassBase2",
 			[FieldRemapBase.JniTypeName] = FieldRemapBase.RuntimeJniTypeName,
+			[FieldRemapBase.RuntimeJniTypeName] = FieldRemapBase.FinalJniTypeName,
 		};
 
 		string? trackedReplacementType;

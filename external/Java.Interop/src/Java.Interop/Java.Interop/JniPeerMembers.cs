@@ -322,8 +322,12 @@ namespace Java.Interop {
 			if (effectiveBaseType == null)
 				return null;
 
-			// Type managers may return either the declared or runtime JNI name. The extra lookup
-			// supports declared names; remapping producers must emit single-hop final targets.
+			var declaredSignature = baseType.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
+			if (declaredSignature == null ||
+					!string.Equals (declaredSignature.SimpleReference, effectiveBaseType, StringComparison.Ordinal)) {
+				return effectiveBaseType;
+			}
+
 			return typeManager.GetReplacementType (effectiveBaseType) ?? effectiveBaseType;
 		}
 
