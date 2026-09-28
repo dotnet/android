@@ -27,6 +27,21 @@ rejects it with [NETSDK1242](/dotnet/core/tools/sdk-errors/netsdk1242).
 Use the .NET 10-and-earlier Mono guidance only when targeting a framework where
 Mono is supported.
 
+.NET 11 Android applications require Android API level 24 or later.
+`$(SupportedOSPlatformVersion)` sets the application's deployment minimum and
+maps to `//uses-sdk/@android:minSdkVersion` in the Android manifest. It does not
+select the target SDK or represent Google Play policy.
+
+The .NET 11 CoreCLR runtime packs support the following .NET runtime identifiers
+(RIDs) and corresponding Android application binary interfaces (ABIs):
+
+- `android-arm`: `armeabi-v7a`
+- `android-arm64`: `arm64-v8a`
+- `android-x64`: `x86_64`
+
+Android NativeAOT is experimental and supports the same three RIDs. RIDs are
+distinct from Android ABI names and emulator system-image architectures.
+
 ## AdbTarget
 
 The `$(AdbTarget)` property specifies the Android target device the
@@ -299,9 +314,10 @@ The default value is `XAJavaInterop1`.
 
 ## AndroidCreatePackagePerAbi
 
-A boolean property that determines if a *set* of files--one per ABI
-specified in [`$(AndroidSupportedAbis)`](#androidsupportedabis)--should
-be created instead of having support for all ABIs in a single `.apk`.
+A boolean property that determines whether to create one `.apk` per selected
+Android ABI (such as `arm64-v8a`) instead of only a single `.apk` supporting
+all selected ABIs. The RIDs in `$(RuntimeIdentifiers)` select those ABIs;
+APKs are produced per ABI, not per RID.
 
 See also the [Building ABI-Specific APKs](/xamarin/android/deploy-test/building-apps/abi-specific-apks)
 guide.
@@ -1303,16 +1319,18 @@ The default value is `false` and the debug symbols, if any, will be preserved wh
 
 ## AndroidSupportedAbis
 
-A string property that contains a
-semicolon (`;`)-delimited list of ABIs which should be included
-into the `.apk`.
+This property is no longer supported in .NET 6 and later. Remove it and use
+`$(RuntimeIdentifier)` or `$(RuntimeIdentifiers)` with .NET RIDs rather than
+Android ABI names.
 
-Supported values include:
+For example, the following .NET 11 setting includes all supported CoreCLR
+architectures:
 
-- `armeabi-v7a`
-- `x86`
-- `arm64-v8a`
-- `x86_64`
+```xml
+<PropertyGroup>
+  <RuntimeIdentifiers>android-arm;android-arm64;android-x64</RuntimeIdentifiers>
+</PropertyGroup>
+```
 
 ## AndroidTlsProvider
 
