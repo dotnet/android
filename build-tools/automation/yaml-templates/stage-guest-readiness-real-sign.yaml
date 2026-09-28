@@ -41,7 +41,7 @@ stages:
             pwsh: true
             targetType: filePath
             filePath: $(Pipeline.Workspace)\s\android\build-tools\scripts\guest-readiness-real-sign.ps1
-            arguments: -Phase Input -SourceDirectory "$(Agent.TempDirectory)\android-diagnostic-original" -DestinationDirectory "$(Agent.TempDirectory)\android-diagnostic-unsigned" -EvidenceDirectory "$(Build.ArtifactStagingDirectory)\android-diagnostic-real-evidence"
+            arguments: -Phase Input -SourceDirectory "$(Agent.TempDirectory)\android-diagnostic-original" -DestinationDirectory "$(Agent.TempDirectory)\android-diagnostic-unsigned" -EvidenceDirectory "$(Build.ArtifactStagingDirectory)\android-diagnostic-real-evidence" -WorkingDirectory "$(Agent.TempDirectory)\android-diagnostic-real-working"
           env:
             DIAGNOSTIC_SOURCE_VERSION: $(Build.SourceVersion)
             DIAGNOSTIC_SOURCE_BRANCH: $(Build.SourceBranch)

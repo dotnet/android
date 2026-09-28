@@ -62,6 +62,11 @@ def test_artifact_only_route():
             for step in steps if step.get("task") == "PowerShell@2"] == [
                 ["Input", "-SourceDirectory"], ["Output", "-SourceDirectory"]
             ]
+    input_arguments = next(step["inputs"]["arguments"] for step in steps
+                           if step.get("displayName") == "Validate frozen source and stage exactly two unsigned packs")
+    assert '-WorkingDirectory "$(Agent.TempDirectory)\\android-diagnostic-real-working"' in input_arguments
+    assert templates[0]["parameters"]["workingDirectory"] == r"$(Agent.TempDirectory)\android-diagnostic-real-working"
+    assert "New-Item -ItemType Directory -Path $WorkingDirectory -ErrorAction Stop" in SIGNER.read_text()
     script = SIGNER.read_text()
     for hash_ in ("b6f89ce67d01e8f99c14718e3d16138e1dae91e1edc5f066984b26bfc798d816",
                   "28a2edcb90afb766bc1599dc36165c3822662315eebb92095a85569d34fc50d2",

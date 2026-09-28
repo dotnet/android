@@ -3,7 +3,8 @@ param (
     [Parameter(Mandatory)][ValidateSet('Input', 'Output')][string] $Phase,
     [Parameter(Mandatory)][string] $SourceDirectory,
     [Parameter(Mandatory)][string] $DestinationDirectory,
-    [Parameter(Mandatory)][string] $EvidenceDirectory
+    [Parameter(Mandatory)][string] $EvidenceDirectory,
+    [string] $WorkingDirectory = ''
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -66,6 +67,13 @@ function Get-Package([string] $Directory, [string] $Rid) {
 }
 
 if ($Phase -eq 'Input') {
+    if ([string]::IsNullOrWhiteSpace($WorkingDirectory) -or
+        [IO.Path]::GetFullPath($WorkingDirectory) -ieq [IO.Path]::GetFullPath($SourceDirectory) -or
+        [IO.Path]::GetFullPath($WorkingDirectory) -ieq [IO.Path]::GetFullPath($DestinationDirectory) -or
+        [IO.Path]::GetFullPath($WorkingDirectory) -ieq [IO.Path]::GetFullPath($EvidenceDirectory) -or
+        (Test-Path -LiteralPath $WorkingDirectory)) {
+        throw 'A fresh, isolated normal signing working directory is required.'
+    }
     $receiptPath = Join-Path $SourceDirectory 'pack-receipt.json'
     $receipt = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
     if ($receipt.schema -ne 2 -or $receipt.kind -cne 'android-official-guest-readiness-phase' -or
@@ -103,6 +111,8 @@ if ($Phase -eq 'Input') {
     )
     if (Test-Path -LiteralPath $DestinationDirectory) { throw 'Signing input destination already exists.' }
     if (Test-Path -LiteralPath $EvidenceDirectory) { throw 'Signing evidence destination already exists.' }
+    # The approved v4 Extract step uses this path as its process working directory before creating its own output.
+    New-Item -ItemType Directory -Path $WorkingDirectory -ErrorAction Stop | Out-Null
     New-Item -ItemType Directory $DestinationDirectory, $EvidenceDirectory | Out-Null
     foreach ($input in $inputs) {
         $destination = Join-Path $DestinationDirectory $input.inventory.fileName

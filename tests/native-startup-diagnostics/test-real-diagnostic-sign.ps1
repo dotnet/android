@@ -38,12 +38,27 @@ try {
     }
     if ($OriginalPackDirectory) {
         $case = Join-Path $scratch 'original'
+        $working = Join-Path $case 'working'
         & $script -Phase Input -SourceDirectory $OriginalPackDirectory -DestinationDirectory (Join-Path $case 'unsigned') `
-            -EvidenceDirectory (Join-Path $case 'evidence')
+            -EvidenceDirectory (Join-Path $case 'evidence') -WorkingDirectory $working
         if (-not $?) { throw 'Original frozen unsigned input was rejected.' }
         $receipt = Get-Content (Join-Path $case 'evidence/input-receipt.json') -Raw | ConvertFrom-Json
-        if ($receipt.status -cne 'staged-unadmitted' -or @($receipt.packages).Count -ne 2) {
+        if ($receipt.status -cne 'staged-unadmitted' -or @($receipt.packages).Count -ne 2 -or
+            -not (Test-Path -LiteralPath $working -PathType Container) -or
+            @(Get-ChildItem -LiteralPath $working -Force).Count -ne 0) {
             throw 'Original input receipt omitted a frozen archive.'
+        }
+        $collision = Join-Path $scratch 'existing-working'
+        New-Item -ItemType Directory -Path $collision | Out-Null
+        $rejected = $false
+        try {
+            & $script -Phase Input -SourceDirectory $OriginalPackDirectory -DestinationDirectory (Join-Path $scratch 'never-staged') `
+                -EvidenceDirectory (Join-Path $scratch 'never-evidence') -WorkingDirectory $collision | Out-Null
+        } catch {
+            $rejected = $true
+        }
+        if (-not $rejected -or (Test-Path (Join-Path $scratch 'never-staged'))) {
+            throw 'Pre-existing working directory was not rejected before staging.'
         }
     }
     'PASS: failed signing and missing input remain unadmitted with publishable failure evidence.'

@@ -148,6 +148,10 @@ inventories, embedded native build marker, unsigned state, frozen SHA256,
 and original `SignList.xml`. Only these two archives and that SignList are
 handed to the existing `sign-artifacts/steps/v4.yml` template:
 
+The Input phase also creates a fresh, empty, isolated template working directory
+before v4's `Extract Archive Packages` step uses it as the task's process
+working directory. A pre-existing working directory is rejected before staging.
+
 | RID | Exact original unsigned archive | SHA256 |
 |---|---|---|
 | android-arm64 | `Microsoft.Android.Runtime.Mono.36.android-arm64.36.1.69-guest.15457266.1.nupkg` | `b6f89ce67d01e8f99c14718e3d16138e1dae91e1edc5f066984b26bfc798d816` |
