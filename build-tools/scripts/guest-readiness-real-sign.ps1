@@ -158,17 +158,17 @@ if ($Phase -eq 'Input') {
     if ($files.Count -ne 2) { throw 'Signed output must contain exactly two archive files.' }
     $outputs = @(
         foreach ($rid in $expected.Keys) {
-            $input = Get-Package $DestinationDirectory $rid
-            if ($input.sha256 -cne $expected[$rid] -or $input.signatureEntryPresent) { throw 'Staged input changed during signing.' }
+            $unsignedPackage = Get-Package $DestinationDirectory $rid
+            if ($unsignedPackage.sha256 -cne $expected[$rid] -or $unsignedPackage.signatureEntryPresent) { throw 'Staged input changed during signing.' }
             $output = Get-Package $SourceDirectory $rid
-            if (-not $output.signatureEntryPresent -or $output.sha256 -ceq $input.sha256) {
+            if (-not $output.signatureEntryPresent -or $output.sha256 -ceq $unsignedPackage.sha256) {
                 throw 'No distinct signed runtime package was produced.'
             }
-            $inputRecord = @($inputReceipt.packages | Where-Object { $_.fileName -ceq $input.fileName })
+            $inputRecord = @($inputReceipt.packages | Where-Object { $_.fileName -ceq $unsignedPackage.fileName })
             if ($inputRecord.Count -ne 1) { throw 'Input receipt does not uniquely bind the package.' }
-            Assert-Reference (Join-Path $DestinationDirectory $input.fileName) $inputRecord[0]
+            Assert-Reference (Join-Path $DestinationDirectory $unsignedPackage.fileName) $inputRecord[0]
             [pscustomobject]@{ input = $inputRecord[0]; output = (Get-Reference (Join-Path $SourceDirectory $output.fileName))
-                changes = @(Get-GuestRuntimePackMemberDelta $input $output) }
+                changes = @(Get-GuestRuntimePackMemberDelta $unsignedPackage $output) }
         }
     )
     Write-GuestProducerReceipt ([pscustomobject]@{
