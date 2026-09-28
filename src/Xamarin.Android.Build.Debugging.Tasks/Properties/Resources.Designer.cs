@@ -58,18 +58,6 @@ namespace Xamarin.Android.Build.Debugging.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   Starting Debugger on {0}:{1}
-        ///Start sdb then run the following command
-        ///  connect {0} {1}
-        ///    .
-        /// </summary>
-        internal static string StartDebugger_ipAddress_port {
-            get {
-                return ResourceManager.GetString("StartDebugger_ipAddress_port", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to adb is not running. {0}.
         /// </summary>
         internal static string XA0010_Adb {

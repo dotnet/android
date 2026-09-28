@@ -181,7 +181,6 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 	StructureInfo? assemblyStoreRuntimeDataStructureInfo;
 	StructureInfo? appEnvironmentVariableStructureInfo;
 
-	public bool UsesAssemblyPreload { get; set; }
 	public string AndroidPackageName { get; set; } = "";
 	public int NumberOfAssembliesInApk { get; set; }
 	public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
@@ -264,7 +263,6 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 
 		DsoCacheState dsoState = InitDSOCache ();
 		var app_cfg = new ApplicationConfig {
-			uses_assembly_preload = UsesAssemblyPreload,
 			marshal_methods_enabled = MarshalMethodsEnabled,
 			ignore_split_configs = IgnoreSplitConfigs,
 			number_of_runtime_properties = (uint)(runtimeProperties == null ? 0 : runtimeProperties.Count),

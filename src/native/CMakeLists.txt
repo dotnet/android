@@ -157,14 +157,6 @@ include("${XA_BUILD_DIR}/xa_build_configuration.cmake")
 #
 # Paths
 #
-macro(temp_configure_mono_runtime_dir)
-  # TEMPORARY: for now JI needs to build with MonoVM embedding APIs
-  set(TEMP_NETCORE_RUNTIME_DIR_ARM64  "${NETCORE_APP_RUNTIME_DIR_ARM64}")
-  set(TEMP_NETCORE_RUNTIME_DIR_ARM    "${NETCORE_APP_RUNTIME_DIR_ARM}")
-  set(TEMP_NETCORE_RUNTIME_DIR_X86_64 "${NETCORE_APP_RUNTIME_DIR_X86_64}")
-  set(TEMP_NETCORE_RUNTIME_DIR_X86    "${NETCORE_APP_RUNTIME_DIR_X86}")
-endmacro()
-
 if(IS_CLR_RUNTIME)
   if(LOCAL_CORECLR_PATH)
     set(CLR_PACKAGE_NAME_STEM "microsoft.netcore.app.runtime.android")
@@ -181,30 +173,19 @@ if(IS_CLR_RUNTIME)
     set(RUNTIME_DIR_X86_64 "${CORECLR_APP_RUNTIME_DIR_X86_64}")
   endif()
 
-  temp_configure_mono_runtime_dir()
-elseif(IS_NAOT_RUNTIME)
-  temp_configure_mono_runtime_dir()
 endif()
 
 if(ANDROID_ABI MATCHES "^arm64-v8a")
   set(NET_RUNTIME_DIR "${RUNTIME_DIR_ARM64}")
-  # TEMPORARY: for now JI needs to build with MonoVM embedding APIs
-  set(TEMP_NETCORE_NET_RUNTIME_DIR "${TEMP_NETCORE_RUNTIME_DIR_ARM64}")
   set(TOOLCHAIN_TRIPLE "${NDK_ABI_arm64-v8a_TRIPLE}")
 elseif(ANDROID_ABI MATCHES "^armeabi-v7a")
   set(NET_RUNTIME_DIR "${RUNTIME_DIR_ARM}")
-  # TEMPORARY: for now JI needs to build with MonoVM embedding APIs
-  set(TEMP_NETCORE_NET_RUNTIME_DIR "${TEMP_NETCORE_RUNTIME_DIR_ARM}")
   set(TOOLCHAIN_TRIPLE "${NDK_ABI_armeabi-v7a_TRIPLE}")
 elseif(ANDROID_ABI MATCHES "^x86_64")
   set(NET_RUNTIME_DIR "${RUNTIME_DIR_X86_64}")
-  # TEMPORARY: for now JI needs to build with MonoVM embedding APIs
-  set(TEMP_NETCORE_NET_RUNTIME_DIR "${TEMP_NETCORE_RUNTIME_DIR_X86_64}")
   set(TOOLCHAIN_TRIPLE "${NDK_ABI_x86_64_TRIPLE}")
 elseif(ANDROID_ABI MATCHES "^x86")
   set(NET_RUNTIME_DIR "${RUNTIME_DIR_X86}")
-  # TEMPORARY: for now JI needs to build with MonoVM embedding APIs
-  set(TEMP_NETCORE_NET_RUNTIME_DIR "${TEMP_NETCORE_RUNTIME_DIR_X86}")
   set(TOOLCHAIN_TRIPLE "${NDK_ABI_x86_TRIPLE}")
 else()
   message(FATAL "${ANDROID_ABI} is not supported for .NET 6+ builds")
@@ -219,14 +200,13 @@ set(JAVA_INTEROP_SRC_PATH "${EXTERNAL_DIR}/Java.Interop/src/java-interop")
 #
 set(SYSROOT_CXX_INCLUDE_DIR ${CMAKE_SYSROOT}/usr/include/c++/v1)
 
-# TEMPORARY: for now JI needs to build with MonoVM embedding APIs
-set(TEMP_MONO_RUNTIME_INCLUDE_DIR ${TEMP_NETCORE_NET_RUNTIME_DIR}/native/include/mono-2.0)
-
-if(LOCAL_CORECLR_PATH)
-  set(CLR_REPO_ROOT_PATH "${LOCAL_CORECLR_PATH}/../..")
-  set(RUNTIME_INCLUDE_DIR "${CLR_REPO_ROOT_PATH}/src/native/corehost;${CLR_REPO_ROOT_PATH}/src/coreclr/hosts/inc")
-else()
-  set(RUNTIME_INCLUDE_DIR ${REPO_ROOT_DIR}/src-ThirdParty/dotnet/runtime)
+if(IS_CLR_RUNTIME)
+  if(LOCAL_CORECLR_PATH)
+    set(CLR_REPO_ROOT_PATH "${LOCAL_CORECLR_PATH}/../..")
+    set(RUNTIME_INCLUDE_DIR "${CLR_REPO_ROOT_PATH}/src/native/corehost;${CLR_REPO_ROOT_PATH}/src/coreclr/hosts/inc")
+  else()
+    set(RUNTIME_INCLUDE_DIR ${REPO_ROOT_DIR}/src-ThirdParty/dotnet/runtime)
+  endif()
 endif()
 
 set(JAVA_INTEROP_INCLUDE_DIR ${JAVA_INTEROP_SRC_PATH})
@@ -254,7 +234,6 @@ elseif(IS_NAOT_RUNTIME)
         ${TARGET}
         PRIVATE
         ${XA_RUNTIME_INCLUDE_DIR}
-        ${RUNTIME_INCLUDE_DIR}
         ${CLR_INCLUDE_DIR}
      )
   endmacro()

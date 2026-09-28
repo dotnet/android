@@ -140,47 +140,9 @@ namespace Xamarin.Android.Build.Tests
 		{
 			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			var envFiles = EnvironmentHelper.GatherEnvironmentFiles (objDirPath, "arm64-v8a;x86_64", required: true, runtime: AndroidRuntime.CoreCLR);
-			var appConfig = (EnvironmentHelper.ApplicationConfig) EnvironmentHelper.ReadApplicationConfig (envFiles, AndroidRuntime.CoreCLR);
+			var appConfig = EnvironmentHelper.ReadApplicationConfig (envFiles);
 			Assert.AreEqual (expectedTypeCount, appConfig.jni_remapping_replacement_type_count, "jni_remapping_replacement_type_count should be preserved.");
 			Assert.AreEqual (expectedMethodCount, appConfig.jni_remapping_replacement_method_index_entry_count, "jni_remapping_replacement_method_index_entry_count should be preserved.");
-		}
-
-		[Test]
-		public void NoChangeBuildPreservesJniAddNativeMethodRegistrationAttributePresent ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				OtherBuildItems = {
-					new AndroidItem._AndroidRemapMembers ("Remap.xml") {
-						Encoding = Encoding.UTF8,
-						TextContent = () => """
-<replacements>
-  <replace-type from="android/app/Activity" to="example/RemapActivity" />
-</replacements>
-""",
-					},
-				},
-			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetRuntimeIdentifiers (new [] { "arm64-v8a" });
-			proj.SetProperty ("_SkipJniAddNativeMethodRegistrationAttributeScan", "true");
-
-			using (var builder = CreateApkBuilder ()) {
-				Assert.IsTrue (builder.Build (proj), "first build should have succeeded.");
-				AssertJniAddNativeMethodRegistrationAttributePresent (proj, builder);
-
-				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
-				builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
-				builder.Output.AssertTargetIsSkipped ("_GeneratePackageManagerJava");
-				AssertJniAddNativeMethodRegistrationAttributePresent (proj, builder);
-			}
-		}
-
-		void AssertJniAddNativeMethodRegistrationAttributePresent (XamarinAndroidApplicationProject proj, ProjectBuilder builder)
-		{
-			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-			var envFiles = EnvironmentHelper.GatherEnvironmentFiles (objDirPath, string.Join (";", proj.GetRuntimeIdentifiersAsAbis ()), required: true, runtime: AndroidRuntime.CoreCLR);
-			var appConfig = (EnvironmentHelper.ApplicationConfig) EnvironmentHelper.ReadApplicationConfig (envFiles, AndroidRuntime.CoreCLR);
-			Assert.IsTrue (appConfig.jni_add_native_method_registration_attribute_present, "JNI native method registration should remain enabled.");
 		}
 
 		Dictionary<string, DateTime> GetJniRemappingSourceTimestamps (XamarinAndroidApplicationProject proj, ProjectBuilder builder)
@@ -805,6 +767,38 @@ namespace Lib2
 				// Build with no changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build should succeed");
 				b.Output.AssertTargetIsSkipped ("_ManifestMerger");
+			}
+		}
+
+		[Test]
+		public void FastTimingManifestIncremental ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				ManifestMerger = "manifestmerger.jar"
+			};
+			proj.SetRuntime (runtime);
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should succeed");
+				string manifest = b.Output.GetIntermediaryAsText ("android/AndroidManifest.xml");
+				StringAssert.DoesNotContain ("mono.android.app.DumpTimingData", manifest);
+
+				proj.SetProperty ("_AndroidFastTiming", "True");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should succeed");
+				b.Output.AssertTargetIsNotSkipped ("_ManifestMerger");
+
+				manifest = b.Output.GetIntermediaryAsText ("android/AndroidManifest.xml");
+				if (runtime == AndroidRuntime.CoreCLR) {
+					StringAssert.Contains ("mono.android.app.DumpTimingData", manifest);
+					StringAssert.Contains ("mono.android.app.DUMP_TIMING_DATA", manifest);
+				} else {
+					StringAssert.DoesNotContain ("mono.android.app.DumpTimingData", manifest);
+					StringAssert.DoesNotContain ("mono.android.app.DUMP_TIMING_DATA", manifest);
+				}
 			}
 		}
 

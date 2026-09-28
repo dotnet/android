@@ -19,7 +19,6 @@ uint8_t uncompressed_assemblies_data_buffer[] = {};
 //
 constexpr char android_package_name[] = "com.xamarin.test";
 const ApplicationConfig application_config = {
-	.uses_assembly_preload = false,
 	.marshal_methods_enabled = false,
 	.ignore_split_configs = false,
 	.number_of_runtime_properties = 3,

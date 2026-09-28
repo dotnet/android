@@ -12,7 +12,6 @@ class NoOpTrimmableTypeMapLogger : ITrimmableTypeMapLogger
 	public virtual void LogGeneratedJcwFilesInfo (int sourceCount) { }
 	public virtual void LogRootingManifestReferencedTypeInfo (string javaTypeName, string managedTypeName) { }
 	public virtual void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) { }
-	public virtual void LogLibraryManifestMergeWarning (string message) { }
 	public virtual void LogInvalidManifestPlaceholderWarning (string placeholders) { }
 	public virtual void LogUnresolvableJavaPeerSkippedWarning (
 		string managedTypeName,
@@ -33,6 +32,7 @@ class NoOpTrimmableTypeMapLogger : ITrimmableTypeMapLogger
 	public virtual void LogUnsupportedConstructorParameterTypeError (string managedTypeName, string parameterType) { }
 	public virtual void LogMissingBaseConstructorError (string managedTypeName, string jniSignature) { }
 	public virtual void LogInvalidSuperArgumentsStringError (string managedTypeName, string superArgumentsString) { }
+	public virtual void LogRidSpecificCallbackMetadataMismatchError (string assemblyName, string firstPath, string secondPath) { }
 	public virtual void LogCustomJavaObjectError (string managedTypeName) { }
 	public virtual void LogCustomJavaObjectWarning (string managedTypeName) { }
 }

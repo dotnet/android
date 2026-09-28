@@ -1419,11 +1419,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.ToList ();
 	}
 
-	static List<int> ReadLdftnTokens (byte [] ilBytes)
-	{
-		return ReadInlineMetadataTokens (ilBytes, 0xFE, 0x06);
-	}
-
 	static List<int> ReadMethodCallTokens (PEReader pe, MetadataReader reader, string methodNamePrefix)
 	{
 		var method = reader.MethodDefinitions

@@ -2409,6 +2409,9 @@ namespace UnnamedProject
 				[Values ("net10.0-android36.1")] string targetFramework,
 				[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
+			if (isRelease && targetFramework == "net10.0-android36.1" && runtime == AndroidRuntime.CoreCLR) {
+				Assert.Ignore ("https://github.com/dotnet/android/issues/12923");
+			}
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
@@ -2786,7 +2789,7 @@ namespace UnnamedProject
 						TextContent = () => @"Foo=Bar
 Bar34=Foo55
 Empty=
-MONO_GC_PARAMS=bridge-implementation=new",
+CUSTOM_ENVIRONMENT_VALUE=custom",
 					}
 				}
 			};
@@ -2799,7 +2802,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		Console.WriteLine (""Foo="" + Environment.GetEnvironmentVariable(""Foo""));
 		Console.WriteLine (""Bar34="" + Environment.GetEnvironmentVariable(""Bar34""));
 		Console.WriteLine (""Empty="" + Environment.GetEnvironmentVariable(""Empty""));
-		Console.WriteLine (""MONO_GC_PARAMS="" + Environment.GetEnvironmentVariable(""MONO_GC_PARAMS""));
+		Console.WriteLine (""CUSTOM_ENVIRONMENT_VALUE="" + Environment.GetEnvironmentVariable(""CUSTOM_ENVIRONMENT_VALUE""));
 		Console.WriteLine (""DOTNET_MODIFIABLE_ASSEMBLIES="" + Environment.GetEnvironmentVariable(""DOTNET_MODIFIABLE_ASSEMBLIES""));
 		Console.WriteLine (""DOTNET_DiagnosticPorts="" + Environment.GetEnvironmentVariable(""DOTNET_DiagnosticPorts""));
 		");
@@ -2831,9 +2834,9 @@ MONO_GC_PARAMS=bridge-implementation=new",
 					"The Environment variable \"Empty\" was not set."
 			);
 			StringAssert.Contains (
-					"MONO_GC_PARAMS=bridge-implementation=new",
+					"CUSTOM_ENVIRONMENT_VALUE=custom",
 					logcatOutput,
-					"The Environment variable \"MONO_GC_PARAMS\" was not set to expected value \"bridge-implementation=new\"."
+					"The environment variable \"CUSTOM_ENVIRONMENT_VALUE\" was not set to the expected value \"custom\"."
 			);
 			StringAssert.Contains (
 					"DOTNET_DiagnosticPorts=127.0.0.1:9000,connect,nosuspend",
@@ -3290,19 +3293,23 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		}
 
 		[Test]
-		public void StartAndroidActivityRespectsAndroidDeviceUserId ()
+		public void RunTargetRespectsAndroidDeviceUserId ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 
-			// Run with AndroidDeviceUserId=0 (primary user, always available)
 			builder.BuildLogFile = "start-with-user.log";
-			Assert.IsTrue (builder.RunTarget (proj, "StartAndroidActivity", parameters: new [] { "AndroidDeviceUserId=0" }),
-				"StartAndroidActivity should have succeeded.");
+			Assert.IsTrue (builder.RunTarget (proj, "Run", parameters: new [] { "AndroidDeviceUserId=0", "_AndroidRunExtraArgs=--verbose" }),
+				"Run should have succeeded.");
 
 			StringAssertEx.ContainsRegex (@"am start.*--user 0", builder.LastBuildOutput,
 				"The 'am start' command should contain '--user 0' when AndroidDeviceUserId is set.");
+			Assert.IsTrue (builder.LastBuildOutput.ContainsText ("--no-wait"),
+				"The Run target should launch Microsoft.Android.Run without waiting for the app to exit.");
+			Assert.IsFalse (builder.LastBuildOutput.ContainsText ("--no-wake-device"),
+				"The Run target should wake the device before starting the app.");
+			Assert.IsTrue (builder.LastBuildOutput.ContainsText ("KEYCODE_WAKEUP"),
+				"The Run target should wake the device before starting the app.");
 		}
 
 		public enum MSTestPackageChannel

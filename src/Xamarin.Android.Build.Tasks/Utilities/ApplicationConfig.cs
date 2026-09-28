@@ -25,7 +25,6 @@ namespace Xamarin.Android.Tasks;
 // (they will be used only to generate comments in the native code)
 sealed class ApplicationConfig
 {
-	public bool   uses_assembly_preload;
 	public bool   marshal_methods_enabled;
 	public bool   ignore_split_configs;
 	public uint   number_of_runtime_properties;

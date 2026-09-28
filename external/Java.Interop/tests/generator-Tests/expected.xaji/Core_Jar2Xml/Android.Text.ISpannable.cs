@@ -12,10 +12,6 @@ namespace Android.Text {
 
 	[global::Android.Runtime.Register ("android/text/Spannable", DoNotGenerateAcw=true)]
 	internal partial class ISpannableInvoker : global::Java.Lang.Object, ISpannable {
-		static IntPtr java_class_ref {
-			get { return _members_android_text_Spannable.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {

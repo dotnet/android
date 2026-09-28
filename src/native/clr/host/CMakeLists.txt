@@ -33,7 +33,6 @@ set(XAMARIN_MONODROID_SOURCES
   host-jni.cc
   host-shared.cc
   host-util.cc
-  internal-pinvokes-clr.cc
   internal-pinvokes-shared.cc
   os-bridge.cc
   runtime-environment.cc
@@ -124,7 +123,6 @@ macro(lib_target_options TARGET_NAME)
     SYSTEM PRIVATE
     ${SYSROOT_CXX_INCLUDE_DIR}
     ${RUNTIME_INCLUDE_DIR}
-    ${TEMP_MONO_RUNTIME_INCLUDE_DIR}
     ${NATIVE_TRACING_INCLUDE_DIRS}
   )
 

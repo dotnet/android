@@ -69,6 +69,7 @@
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/MonoAndroidFixture/MonoAndroidFixture.csproj" />
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/TestAttributeFixtures/TestAttributeFixtures.csproj" />
     <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/TestFixtures/TestFixtures.csproj" />
+    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/TestUcoFixtures/TestUcoFixtures.csproj" />
     <Project Path="tests/MSBuildDeviceIntegration/MSBuildDeviceIntegration.csproj" />
     <Project Path="tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj" />
     <Project Path="tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj" />
@@ -85,7 +86,6 @@
     <Project Path="external/Java.Interop/tools/class-parse/class-parse.csproj" />
     <Project Path="external/Java.Interop/tools/java-source-utils/java-source-utils.csproj" />
     <Project Path="external/Java.Interop/tools/jcw-gen/jcw-gen.csproj" />
-    <Project Path="tools/jit-times/jit-times.csproj" />
     <Project Path="tools/relnote-gen/relnote-gen.csproj" />
     <Project Path="tools/tmt/tmt.csproj">
       <Platform Solution="*|Any CPU" Project="anycpu" />

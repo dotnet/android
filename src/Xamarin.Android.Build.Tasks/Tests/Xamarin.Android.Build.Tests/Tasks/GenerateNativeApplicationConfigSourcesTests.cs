@@ -25,7 +25,6 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			EnvironmentOutputDirectory = Path.Combine (outputRoot, "android"),
 			SupportedAbis = ["arm64-v8a"],
 			AndroidPackageName = "com.microsoft.android.assemblystoretest",
-			EnablePreloadAssembliesDefault = false,
 			AndroidRuntime = "CoreCLR",
 			UseAssemblyStore = haveAssemblyStore,
 		};
@@ -38,10 +37,11 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			required: true,
 			runtime: AndroidRuntime.CoreCLR
 		);
-		var config = (EnvironmentHelper.ApplicationConfig)EnvironmentHelper.ReadApplicationConfig (environmentFiles, AndroidRuntime.CoreCLR);
+		var config = EnvironmentHelper.ReadApplicationConfig (environmentFiles);
 		Assert.AreEqual (haveAssemblyStore, config.have_assembly_store);
 
 		string source = File.ReadAllText (Path.Combine (outputRoot, "android", "environment.arm64-v8a.ll"));
+		Assert.That (source, Does.Not.Contain ("uses_assembly_preload"));
 		Assert.That (source, Does.Not.Contain ("jni_add_native_method_registration_attribute_present"));
 		Assert.That (source, Does.Not.Contain ("jnienv_registerjninatives_method_token"));
 	}
@@ -65,7 +65,6 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			EnvironmentOutputDirectory = Path.Combine (outputRoot, "android"),
 			SupportedAbis = ["arm64-v8a"],
 			AndroidPackageName = "com.microsoft.android.typemapcounttest",
-			EnablePreloadAssembliesDefault = false,
 			AndroidRuntime = "CoreCLR",
 			UseAssemblyStore = true,
 		};

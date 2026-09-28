@@ -862,20 +862,20 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
   <data name="XA4327" xml:space="preserve">
-    <value>Could not extract Java type map keys from '{0}': {1}</value>
+    <value>'{0}' から Java 型マップ キーを抽出できませんでした: {1}</value>
     <comment>{0} - The input file path or representation name.
 {1} - The underlying parser or input/output failure. It is not localized.</comment>
   </data>
   <data name="XA4328" xml:space="preserve">
-    <value>Could not generate typemap ProGuard configuration from '{0}': {1}</value>
+    <value>'{0}' から typemap の ProGuard 構成を生成できませんでした: {1}</value>
     <comment>{0} - The input or output file path.
 {1} - The underlying failure, or a formatted XA4328_* resource.</comment>
   </data>
   <data name="XA4328_NoInputs" xml:space="preserve">
-    <value>No retained Java type map key files were provided.</value>
+    <value>保持されている Java 型マップ キー ファイルが提供されていません。</value>
   </data>
   <data name="XA4328_InvalidName" xml:space="preserve">
-    <value>Line {0} contains an invalid retained Java class name: '{1}'.</value>
+    <value>行 {0} に無効な保持 Java クラス名が含まれています: '{1}'。</value>
     <comment>{0} - The one-based line number.
 {1} - The invalid input record.</comment>
   </data>
@@ -1099,7 +1099,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 </comment>
   </data>
   <data name="XA1044" xml:space="preserve">
-    <value>The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Remove the property.</value>
+    <value>MSBuild プロパティ '{0}' は、{1} ランタイムと互換性がありません。このプロパティが有効になっている間は、ビルドを続行できません。プロパティを削除します。</value>
     <comment>The following literal name should not be translated: MSBuild.
 {0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).

@@ -206,7 +206,6 @@
   </PropertyGroup>
   <ItemGroup>
     <_MonoScript Include="illinkanalyzer" />
-    <_MonoScript Include="jit-times" />
     <_MonoScriptSource Include="@(_MonoScript->'$(_MonoScriptSourceDirectory)\%(Identity)')" />
     <_MonoScriptSource Include="mono.config" />
     <_MonoScriptDestination Include="@(_MonoScript->'$(_MonoScriptDestinationDirectory)\%(Identity)')" />

@@ -1099,7 +1099,7 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 </comment>
   </data>
   <data name="XA1044" xml:space="preserve">
-    <value>The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Remove the property.</value>
+    <value>Vlastnost MSBuild '{0}' není kompatibilní s modulem runtime {1}. Dokud je tato vlastnost povolená, nemůže sestavení pokračovat. Odeberte vlastnost.</value>
     <comment>The following literal name should not be translated: MSBuild.
 {0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).

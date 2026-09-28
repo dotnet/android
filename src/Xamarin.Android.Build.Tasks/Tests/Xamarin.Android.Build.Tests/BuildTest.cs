@@ -429,15 +429,12 @@ namespace Xamarin.Android.Build.Tests
 				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 
 				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
-				EnvironmentHelper.IApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles, runtime);
+				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
 
 				string apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
-				uint numberOfAssembliesInApk = runtime switch {
-					AndroidRuntime.CoreCLR => ((EnvironmentHelper.ApplicationConfig)app_config).number_of_assemblies_in_apk,
-					_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
-				};
+				uint numberOfAssembliesInApk = app_config.number_of_assemblies_in_apk;
 
 				foreach (AndroidTargetArch arch in targetArches) {
 					Assert.AreEqual (
@@ -1671,27 +1668,32 @@ namespace UnnamedProject
 			var ret = new List<object[]> ();
 
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData ("LowercaseMD5", "", runtime, runtime == AndroidRuntime.CoreCLR);
-				AddTestData ("LowercaseCrc64", "", runtime, false);
-				AddTestData ("", "127.0.0.1:9000,suspend,connect", runtime, false);
+				AddTestData ("LowercaseMD5", "", runtime, runtime == AndroidRuntime.CoreCLR, enableDiagnostics: false, androidEnableProfiler: "");
+				AddTestData ("LowercaseCrc64", "", runtime, enableCrashReport: false, enableDiagnostics: false, androidEnableProfiler: "");
+				AddTestData ("", "127.0.0.1:9000,suspend,connect", runtime, enableCrashReport: false, enableDiagnostics: false, androidEnableProfiler: "");
+				AddTestData ("", "", runtime, enableCrashReport: false, enableDiagnostics: true, androidEnableProfiler: "");
+				AddTestData ("", "", runtime, enableCrashReport: false, enableDiagnostics: false, androidEnableProfiler: "true");
+				AddTestData ("", "", runtime, enableCrashReport: false, enableDiagnostics: true, androidEnableProfiler: "false");
 			}
 
 			return ret;
 
-			void AddTestData (string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport)
+			void AddTestData (string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport, bool enableDiagnostics, string androidEnableProfiler)
 			{
 				ret.Add (new object[] {
 					packageNamingPolicy,
 					diagnosticConfiguration,
 					runtime,
 					enableCrashReport,
+					enableDiagnostics,
+					androidEnableProfiler,
 				});
 			}
 		}
 
 		[Test]
 		[TestCaseSource (nameof (Get_EnvironmentVariablesData))]
-		public void EnvironmentVariables (string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport)
+		public void EnvironmentVariables (string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport, bool enableDiagnostics, string androidEnableProfiler)
 		{
 			// NativeAOT does not support debug builds, but environment file creation and contents are relevant to NativeAOT too.
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
@@ -1709,6 +1711,9 @@ namespace UnnamedProject
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("EnableCrashReport", enableCrashReport.ToString ());
+			proj.SetProperty ("EnableDiagnostics", enableDiagnostics.ToString ());
+			if (!string.IsNullOrEmpty (androidEnableProfiler))
+				proj.SetProperty ("AndroidEnableProfiler", androidEnableProfiler);
 			if (!string.IsNullOrEmpty (packageNamingPolicy))
 				proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
 			if (!string.IsNullOrEmpty (diagnosticConfiguration))
@@ -1717,13 +1722,13 @@ namespace UnnamedProject
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var environment = b.Output.GetIntermediaryPath (Path.Combine ("__environment__.txt"));
 				FileAssert.Exists (environment);
-				var values = new List<string> {
-					"mono.enable_assembly_preload=0",
-				};
+				var values = new List<string> ();
 				if (!isRelease)
 					values.Add ("DOTNET_MODIFIABLE_ASSEMBLIES=Debug");
 				if (!string.IsNullOrEmpty (diagnosticConfiguration))
 					values.Add ($"DOTNET_DiagnosticPorts={diagnosticConfiguration}");
+				else if (androidEnableProfiler == "true" || (enableDiagnostics && androidEnableProfiler != "false"))
+					values.Add ("DOTNET_DiagnosticPorts=127.0.0.1:9000,connect,nosuspend");
 				if (enableCrashReport)
 					values.Add ("DOTNET_EnableCrashReport=1");
 				Assert.AreEqual (string.Join (Environment.NewLine, values), File.ReadAllText (environment).Trim ());

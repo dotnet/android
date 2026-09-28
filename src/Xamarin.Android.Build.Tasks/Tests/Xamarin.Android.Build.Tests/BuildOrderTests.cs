@@ -92,6 +92,13 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.Contains ("--no-wake-device", builder.LastBuildOutput);
 			StringAssertEx.Contains ("--forward-port \"12345:54321\"", builder.LastBuildOutput);
 
+			proj.SetProperty ("WaitForExit", "true");
+			proj.SetProperty ("_AndroidRunTarget", "true");
+			Assert.IsTrue (builder.Build (proj), "ComputeRunArguments should succeed for the Run target.");
+			StringAssertEx.Contains ("--no-wait", builder.LastBuildOutput);
+			Assert.IsFalse (builder.LastBuildOutput.ContainsText ("--no-wake-device"), "The Run target should wake the device.");
+			StringAssertEx.Contains ("--forward-port \"12345:54321\"", builder.LastBuildOutput);
+
 			proj.SetProperty ("AndroidDebuggerServer", "false");
 			Assert.IsTrue (builder.Build (proj), "ComputeRunArguments should succeed for a debugger client.");
 			StringAssertEx.Contains ("RunCommand=dotnet", builder.LastBuildOutput);

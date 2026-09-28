@@ -20,10 +20,6 @@ namespace Test.ME {
 	public partial class GenericImplementation : global::Java.Lang.Object, global::Test.ME.IGenericInterface {
 		static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/GenericImplementation", typeof (GenericImplementation));
 
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {

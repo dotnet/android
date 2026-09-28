@@ -29,10 +29,6 @@ namespace Xamarin.Test {
 
 		[global::Android.Runtime.Register ("xamarin/test/PublicClass$ProtectedInterface", DoNotGenerateAcw=true)]
 		internal partial class IProtectedInterfaceInvoker : global::Java.Lang.Object, IProtectedInterface {
-			static IntPtr java_class_ref {
-				get { return _members_xamarin_test_PublicClass_ProtectedInterface.JniPeerType.PeerReference.Handle; }
-			}
-
 			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 			public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -86,10 +82,6 @@ namespace Xamarin.Test {
 		}
 
 		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/PublicClass", typeof (PublicClass));
-
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

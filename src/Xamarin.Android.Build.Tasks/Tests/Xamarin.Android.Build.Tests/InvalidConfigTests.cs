@@ -98,8 +98,8 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.DoesNotExist (builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "typemap-assemblies.txt")));
 		}
 
-		[TestCase (true, "llvm-ir", "XA4265")]
-		[TestCase (false, "llvm-ir", "XA4265")]
+		[TestCase (true, "llvm-ir", "XA4267")]
+		[TestCase (false, "llvm-ir", "XA4267")]
 		[TestCase (true, "unsupported", "Invalid value for AndroidTypeMapImplementation")]
 		[TestCase (false, "unsupported", "Invalid value for AndroidTypeMapImplementation")]
 		public void UnsupportedTypeMapIsRejected (bool isApplication, string typeMapImplementation, string expectedError)
@@ -136,7 +136,7 @@ namespace Xamarin.Android.Build.Tests
 			builder.Target = target;
 			builder.ThrowOnBuildFailure = false;
 			Assert.IsFalse (builder.Build (project), "Legacy type maps should be rejected before generation.");
-			StringAssertEx.Contains ("error XA4265:", builder.LastBuildOutput);
+			StringAssertEx.Contains ("error XA4267:", builder.LastBuildOutput);
 		}
 
 		[Test]

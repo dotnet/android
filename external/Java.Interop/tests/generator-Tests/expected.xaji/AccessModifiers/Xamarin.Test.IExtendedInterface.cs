@@ -20,10 +20,6 @@ namespace Xamarin.Test {
 
 	[global::Android.Runtime.Register ("xamarin/test/ExtendedInterface", DoNotGenerateAcw=true)]
 	internal partial class IExtendedInterfaceInvoker : global::Java.Lang.Object, IExtendedInterface {
-		static IntPtr java_class_ref {
-			get { return _members_xamarin_test_ExtendedInterface.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
