@@ -2163,6 +2163,88 @@ namespace Xamarin.Android.Build.Tests {
 			AssertPostTrimR8InputsExcludeDeadFrameworkImplementor (dexFile, javaSourceDirectory, acwMapPath, proguardPrimaryPath);
 		}
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public void ReleaseCoreClrTrimmableTypeMap_RemovesUnreferencedBindingOutputs (bool readyToRun)
+		{
+			const string removedTypeMap = "_RemovedBinding.TypeMap.dll";
+			var testRoot = Path.Combine ("temp", TestName);
+			var binding = new XamarinAndroidLibraryProject {
+				IsRelease = true,
+				ProjectName = "RemovedBinding",
+				Sources = {
+					new BuildItem.Source ("RemovedPeer.cs") {
+						TextContent = () => """
+							namespace RemovedBinding {
+								[Android.Runtime.Register ("com/example/RemovedPeer")]
+								public class RemovedPeer : Java.Lang.Object { }
+							}
+							""",
+					},
+				},
+			};
+			binding.SetRuntime (AndroidRuntime.CoreCLR);
+			using var bindingBuilder = CreateDllBuilder (Path.Combine (testRoot, binding.ProjectName), cleanupAfterSuccessfulBuild: false);
+			Assert.IsTrue (bindingBuilder.Build (binding), "The binding should build.");
+
+			var app = new XamarinAndroidApplicationProject { IsRelease = true };
+			app.SetRuntime (AndroidRuntime.CoreCLR);
+			app.SetRuntimeIdentifiers (["arm64-v8a", "x86_64"]);
+			app.SetProperty ("PublishReadyToRun", readyToRun.ToString ());
+			var reference = new BuildItem.ProjectReference ($"..\\{binding.ProjectName}\\{binding.ProjectName}.csproj", binding.ProjectName, binding.ProjectGuid);
+			app.References.Add (reference);
+			app.MainActivity = app.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}", "System.GC.KeepAlive (new RemovedBinding.RemovedPeer ());");
+
+			using var builder = CreateApkBuilder (Path.Combine (testRoot, app.ProjectName));
+			Assert.IsTrue (builder.Build (app), "The app should build with the binding.");
+			var apk = FindOutputFile (builder, app, $"{app.PackageName}-Signed.apk");
+			var architectures = new [] { AndroidTargetArch.Arm64, AndroidTargetArch.X86_64 };
+			foreach (var arch in architectures) {
+				CollectionAssert.Contains (ReadPackagedManagedAssemblyNames (apk, arch), removedTypeMap);
+			}
+			foreach (var rid in app.GetRuntimeIdentifiers ()) {
+				FileAssert.Exists (builder.Output.GetIntermediaryPath (Path.Combine (rid, "linked", removedTypeMap)));
+				if (readyToRun) {
+					FileAssert.Exists (builder.Output.GetIntermediaryPath (Path.Combine (rid, "R2R", removedTypeMap)));
+				}
+			}
+
+			app.References.Remove (reference);
+			app.MainActivity = app.DefaultMainActivity;
+			app.Touch ("MainActivity.cs");
+			Assert.IsTrue (builder.Build (app, doNotCleanupOnUpdate: true), "Removing the binding should build incrementally.");
+			var inventory = File.ReadAllLines (builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "typemap-assemblies.txt")))
+				.Select (Path.GetFileName).ToArray ();
+			CollectionAssert.DoesNotContain (inventory, removedTypeMap);
+			var incrementalTypeMaps = new Dictionary<AndroidTargetArch, string []> ();
+			foreach (var arch in architectures) {
+				var typeMaps = ReadPackagedManagedAssemblyNames (apk, arch).Where (IsTypeMapAssemblyName).ToArray ();
+				CollectionAssert.DoesNotContain (typeMaps, removedTypeMap, "Removed bindings must not leave packaged typemaps.");
+				CollectionAssert.AreEquivalent (inventory, typeMaps, "Only current typemap assemblies should be packaged.");
+				incrementalTypeMaps.Add (arch, typeMaps);
+			}
+			foreach (var rid in app.GetRuntimeIdentifiers ()) {
+				foreach (var directory in new [] { "linked", "R2R" }) {
+					FileAssert.DoesNotExist (builder.Output.GetIntermediaryPath (Path.Combine (rid, directory, removedTypeMap)),
+						"Obsolete intermediate typemap images should be removed.");
+				}
+			}
+
+			Assert.IsTrue (builder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "A no-change rebuild should succeed.");
+			foreach (var arch in architectures) {
+				CollectionAssert.AreEquivalent (incrementalTypeMaps [arch],
+					ReadPackagedManagedAssemblyNames (apk, arch).Where (IsTypeMapAssemblyName));
+			}
+			Assert.IsTrue (builder.Clean (app, doNotCleanupOnUpdate: true));
+			Assert.IsTrue (builder.Build (app, doNotCleanupOnUpdate: true), "A clean build without the binding should succeed.");
+			foreach (var arch in architectures) {
+				CollectionAssert.AreEquivalent (incrementalTypeMaps [arch],
+					ReadPackagedManagedAssemblyNames (apk, arch).Where (IsTypeMapAssemblyName),
+					"Clean and incremental builds should package the same typemap inventory.");
+			}
+		}
+
 		[Test]
 		public void ReleaseCoreClrTrimmableTypeMap_TrimsUnusedBindingListenerImplementors ()
 		{

@@ -2986,7 +2986,7 @@ because xbuild doesn't support framework reference assemblies.
     <AndroidError Code="XA4267"
         ResourceName="XA4267"
         Condition=" '$(AndroidTypeMapImplementation)' == 'llvm-ir' " />
-    <Error Condition=" '$(AndroidTypeMapImplementation)' != '' and '$(AndroidTypeMapImplementation)' != 'llvm-ir' and '$(AndroidTypeMapImplementation)' != 'trimmable' "
+    <Error Condition=" '$(AndroidTypeMapImplementation)' != 'llvm-ir' and '$(AndroidTypeMapImplementation)' != 'trimmable' "
            Text="Invalid value for AndroidTypeMapImplementation: '$(AndroidTypeMapImplementation)'. The only supported value is: trimmable." />
   </Target>
 

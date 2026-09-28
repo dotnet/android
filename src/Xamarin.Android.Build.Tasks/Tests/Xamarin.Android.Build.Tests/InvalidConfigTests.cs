@@ -139,6 +139,29 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.Contains ("error XA4267:", builder.LastBuildOutput);
 		}
 
+		[TestCase (true, "_CheckForInvalidConfigurationAndPlatform")]
+		[TestCase (false, "_CheckForInvalidConfigurationAndPlatform")]
+		[TestCase (true, "Build")]
+		[TestCase (false, "Build")]
+		[TestCase (true, "Publish")]
+		[TestCase (false, "Publish")]
+		[TestCase (true, "_GenerateJavaStubs")]
+		[TestCase (true, "_PrepareLinking")]
+		public void EmptyGlobalTypeMapIsRejected (bool isApplication, string target)
+		{
+			XamarinProject project = isApplication
+				? new XamarinAndroidApplicationProject ()
+				: new XamarinAndroidLibraryProject ();
+			project.SetProperty ("PublishTrimmed", "true");
+
+			using var builder = isApplication ? CreateApkBuilder () : CreateDllBuilder ();
+			builder.Target = target;
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (project, parameters: ["AndroidTypeMapImplementation="]),
+				"An empty global property must not select the legacy type map.");
+			StringAssertEx.Contains ("Invalid value for AndroidTypeMapImplementation: ''.", builder.LastBuildOutput);
+		}
+
 		[Test]
 		[TestCase ("RunAOTCompilation")]
 		[TestCase ("EnableLLVM")]

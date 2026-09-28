@@ -1346,6 +1346,8 @@ The only supported value is `trimmable`. Setting this property to `llvm-ir`
 causes error [XA4267](../messages/xa4267.md).
 
 The default value is `trimmable` for all Android projects.
+An explicitly empty command-line value (`-p:AndroidTypeMapImplementation=`) is
+invalid. Omit the property to use the default, or set it to `trimmable`.
 
 ## AndroidUseApkSigner
 

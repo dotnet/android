@@ -303,7 +303,19 @@
       BeforeTargets="CreateReadyToRunImages"
       DependsOnTargets="_ReadGeneratedTrimmableTypeMapAssemblies">
     <ItemGroup>
-      <_TrimmableTypeMapLinkedAssemblies Include="$(IntermediateOutputPath)linked\_*.TypeMap.dll;$(IntermediateOutputPath)linked\_Microsoft.Android.TypeMap*.dll" />
+      <!-- Directory contents can include images for references removed since the last build.
+           Use the current generator inventory for publication and prune only orphaned typemaps. -->
+      <_AndroidObsoleteTypeMapImages Include="$(IntermediateOutputPath)linked/_*.TypeMap.dll;$(IntermediateOutputPath)linked/_Microsoft.Android.TypeMap*.dll" />
+      <_AndroidObsoleteTypeMapImages Include="$(IntermediateOutputPath)R2R/_*.TypeMap.dll;$(IntermediateOutputPath)R2R/_Microsoft.Android.TypeMap*.dll" />
+      <_AndroidObsoleteTypeMapImages Remove="@(_GeneratedTypeMapAssembliesFromList)" MatchOnMetadata="Filename;Extension" />
+      <_AndroidObsoleteTypeMapOutputs Include="@(_AndroidObsoleteTypeMapImages);@(_AndroidObsoleteTypeMapImages->'%(RootDir)%(Directory)%(Filename).pdb')" />
+      <ResolvedFileToPublish Remove="@(_AndroidObsoleteTypeMapOutputs)" />
+      <FileWrites Remove="@(_AndroidObsoleteTypeMapOutputs)" />
+    </ItemGroup>
+    <Delete Files="@(_AndroidObsoleteTypeMapOutputs)" />
+    <ItemGroup>
+      <_TrimmableTypeMapLinkedAssemblies Include="@(_GeneratedTypeMapAssembliesFromList->'$(IntermediateOutputPath)linked/%(Filename)%(Extension)')" />
+      <_TrimmableTypeMapLinkedAssemblies Remove="@(_TrimmableTypeMapLinkedAssemblies)" Condition="!Exists('%(_TrimmableTypeMapLinkedAssemblies.Identity)')" />
       <_TrimmableTypeMapAssembliesToPublish Include="@(_TrimmableTypeMapLinkedAssemblies)" />
       <_TrimmableTypeMapAssembliesToPublish Include="@(_GeneratedTypeMapAssembliesFromList)" Condition=" '@(_TrimmableTypeMapLinkedAssemblies->Count())' == '0' " />
       <ResolvedFileToPublish Include="@(_TrimmableTypeMapAssembliesToPublish)">
@@ -322,10 +334,10 @@
       Condition=" '$(RuntimeIdentifier)' != '' and '$(PublishReadyToRun)' == 'true' "
       AfterTargets="CreateReadyToRunImages">
     <ItemGroup>
-      <_TrimmableTypeMapLinkedAssemblies Include="$(IntermediateOutputPath)linked\_*.TypeMap.dll;$(IntermediateOutputPath)linked\_Microsoft.Android.TypeMap*.dll" />
-      <_TrimmableTypeMapReadyToRunAssemblies Include="$(IntermediateOutputPath)R2R\_*.TypeMap.dll;$(IntermediateOutputPath)R2R\_Microsoft.Android.TypeMap*.dll" />
-      <ResolvedFileToPublish Remove="@(_TrimmableTypeMapLinkedAssemblies)" />
-      <ResolvedFileToPublish Remove="@(_TrimmableTypeMapReadyToRunAssemblies)" />
+      <_AndroidOtherReadyToRunFiles Include="@(_ReadyToRunFilesToPublish)" />
+      <_AndroidOtherReadyToRunFiles Remove="@(_GeneratedTypeMapAssembliesFromList)" MatchOnMetadata="Filename;Extension" />
+      <_TrimmableTypeMapReadyToRunAssemblies Include="@(_ReadyToRunFilesToPublish)" Exclude="@(_AndroidOtherReadyToRunFiles)" />
+      <ResolvedFileToPublish Remove="@(_TrimmableTypeMapReadyToRunAssemblies)" MatchOnMetadata="Filename;Extension" />
       <ResolvedFileToPublish Include="@(_TrimmableTypeMapReadyToRunAssemblies)">
         <RelativePath>%(Filename)%(Extension)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
