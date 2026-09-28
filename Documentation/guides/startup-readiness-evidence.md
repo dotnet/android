@@ -129,7 +129,7 @@ packs for both app ABIs; do not replace individual ELF files or extend a host SD
 file overlay. This instrumentation does not authorize publication, installation,
 or relaxation of signing/release policy.
 
-## Isolated Real-signing diagnostic (not yet authorized to run)
+## Isolated Real-signing diagnostic (unadmitted)
 
 The existing DevDiv definition 11410 (`build-tools/automation/azure-pipelines.yaml`)
 now has a separate manual-only, default-off (`realDiagnosticSign: false`)
@@ -183,6 +183,28 @@ the normal NuGet verifier result, and the actual Intel Mac SDK 10.0.401
 `dotnet nuget verify --all` output against its unmodified trusted roots.
 Neither a NuGet signature entry nor a successful provider preview establishes
 the ordinary signing chain is accepted on that Mac.
+
+### Observed hosted runs (not consumer admission)
+
+Two earlier manual attempts retained fail-closed evidence: run 15490795
+validated the frozen unsigned inputs but failed when v4 extraction found its
+working directory missing; run 15491087 passed normal Real signing and NuGet
+verification but failed Output receipt binding, retaining the two signed
+archives with a failure receipt instead of admitting them. After those fixes,
+run 15491573 at source `463c755320c00bb9341ef548bde3dfa04d436512`
+completed successfully, including normal Real Sign/Verify, the Output receipt,
+both artifact publishers, and the separate SDLSources scans. Its output receipt
+has SHA256 `cd5e2148e9ca15f7c8e645e7964892f261245fe212e0ab13cd13466bee21569f`;
+the two signed archives are:
+
+| RID | Signed size (bytes) | Signed SHA256 |
+|---|---:|---|
+| android-x64 | 2806044 | `79ade45aa2c4cba3d74a7435a3fd364df1da1f003c0a43804a88c8d886a99c91` |
+| android-arm64 | 2960314 | `1f004f2ce33f158580ded1c4b20a8c4b7d975119a7862b1127db9ba9c114d71b` |
+
+The receipt binds both original unsigned hashes above; each RID has six ZIP
+member changes and no native member changes. These hosted results do not
+establish trust on the actual Intel Mac, guest execution, or package admission.
 
 ## Manual artifact-only producer
 
