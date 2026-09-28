@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 
-using Microsoft.Build.Framework;
-
 namespace Xamarin.Android.Tasks;
 
 class NativeRuntimeComponents
@@ -72,16 +70,13 @@ class NativeRuntimeComponents
 		}
 	}
 
-	readonly ITaskItem[]? monoComponents;
-
 	public readonly List<Archive> KnownArchives;
 	public readonly List<string> NativeLibraries;
 	public readonly List<string> LinkStartFiles;
 	public readonly List<string> LinkEndFiles;
 
-	public NativeRuntimeComponents (ITaskItem[]? monoComponents)
+	public NativeRuntimeComponents ()
 	{
-		this.monoComponents = monoComponents;
 		KnownArchives = new () {
 			// CoreCLR runtime + BCL
 			new ClrArchive ("libcoreclr_static.a"),

@@ -34,7 +34,6 @@ public class GenerateMainAndroidManifest : AndroidTask
 	public string []? ManifestPlaceholders { get; set; }
 	public string? ManifestTemplate { get; set; }
 	public string? MergedAndroidManifestOutput { get; set; }
-	public string []? MergedManifestDocuments { get; set; }
 	public bool NeedsInternet { get; set; }
 	public string? PackageName { get; set; }
 	[Required]
@@ -65,7 +64,7 @@ public class GenerateMainAndroidManifest : AndroidTask
 
 		androidRuntime = MonoAndroidHelper.ParseAndroidRuntime (AndroidRuntime);
 
-		// Generate the merged manifest
+		// Generate the application manifest for the Java manifest merger
 		var additionalProviders = MergeManifest (templateCodeGenState, GenerateJavaStubs.MaybeGetArchAssemblies (userAssembliesPerArch, templateCodeGenState.TargetArch));
 
 		AdditionalProviderSources = additionalProviders.ToArray ();
@@ -131,7 +130,7 @@ public class GenerateMainAndroidManifest : AndroidTask
 			manifest.ForceExtractNativeLibs = true;
 		}
 
-		IList<string> additionalProviders = manifest.Merge (Log, codeGenState.TypeCache, codeGenState.AllJavaTypes, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
+		IList<string> additionalProviders = manifest.Merge (Log, codeGenState.TypeCache, codeGenState.AllJavaTypes, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName);
 
 		// Only write the new manifest if it actually changed
 		if (manifest.SaveIfChanged (Log, MergedAndroidManifestOutput)) {

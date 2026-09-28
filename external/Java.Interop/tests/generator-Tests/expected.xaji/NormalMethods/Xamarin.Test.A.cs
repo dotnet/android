@@ -24,10 +24,6 @@ namespace Xamarin.Test {
 		public partial class B : global::Java.Lang.Object {
 			static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/A$B", typeof (B));
 
-			internal static new IntPtr class_ref {
-				get { return _members.JniPeerType.PeerReference.Handle; }
-			}
-
 			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 			public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -84,10 +80,6 @@ namespace Xamarin.Test {
 		}
 
 		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/A", typeof (A));
-
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

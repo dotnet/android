@@ -24,6 +24,12 @@ namespace Xamarin.Android.Build.Tests
 		public static ConcurrentDictionary<string, string> TestOutputDirectories = new ConcurrentDictionary<string, string> ();
 		public static ConcurrentDictionary<string, string> TestPackageNames = new ConcurrentDictionary<string, string> ();
 
+		public static IEnumerable<(bool isRelease, AndroidRuntime runtime)> ValidRuntimeConfigurations => [
+			(false, AndroidRuntime.CoreCLR),
+			(true, AndroidRuntime.CoreCLR),
+			(true, AndroidRuntime.NativeAOT),
+		];
+
 		protected bool IsWindows => TestEnvironment.IsWindows;
 
 		public string Root => Path.GetFullPath (XABuildPaths.TestOutputDirectory);
@@ -631,20 +637,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				Assert.Ignore ($"NativeAOT: unsupported configuration (release == {release})");
-				return true;
-			}
-
-			return false;
-		}
-
-		// NativeAOT trims with ILC and does not emit illink's `obj/<config>/<rid>/linked/` output.
-		// Tests that inspect the `linked/` directory (e.g. to verify trimming or type-map behavior)
-		// therefore cannot run as-is on NativeAOT.
-		// TODO: add DGML-based counterparts to verify these behaviors on NativeAOT (follow-up issue).
-		protected bool IgnoreNativeAotLinkedAssemblyChecks (AndroidRuntime runtime)
-		{
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT does not produce illink's `linked/` output; skipping `linked/` assembly inspection (DGML counterpart tracked as a follow-up).");
 				return true;
 			}
 

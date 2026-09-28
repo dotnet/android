@@ -20,9 +20,5 @@ namespace Java.Lang {
 	public partial class Object {
 		static readonly JniPeerMembers _members = new XAPeerMembers ("java/lang/Object", typeof (Object));
 
-		internal static IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
 	}
 }

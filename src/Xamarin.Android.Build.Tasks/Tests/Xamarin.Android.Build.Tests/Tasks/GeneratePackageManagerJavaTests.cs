@@ -84,7 +84,6 @@ namespace Xamarin.Android.Build.Tests
 				EnvironmentOutputDirectory = Path.Combine (path, "env"),
 				SupportedAbis = new string [] { "x86" , "arm64-v8a" },
 				AndroidPackageName = "com.microsoft.net6.helloandroid",
-				EnablePreloadAssembliesDefault = false,
 				Environments = new ITaskItem [] { new TaskItem (Path.Combine (path, "myenv.txt")) },
 			};
 
@@ -129,7 +128,6 @@ namespace Xamarin.Android.Build.Tests
 				EnvironmentOutputDirectory = Path.Combine (path, "env"),
 				SupportedAbis = ["arm64-v8a"],
 				AndroidPackageName = "com.microsoft.net6.helloandroid",
-				EnablePreloadAssembliesDefault = false,
 				Environments = [new TaskItem (Path.Combine (path, "myenv.txt"))],
 			};
 

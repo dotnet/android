@@ -17,9 +17,6 @@ class ManifestGenerator
 	static readonly XName AttName = ManifestConstants.AttName;
 	static readonly char [] PlaceholderSeparators = [';'];
 
-	/// <summary>Warning code for library-manifest merge failures (maps to XA4302).</summary>
-	internal const int LibraryManifestMergeWarningCode = 4302;
-
 	int appInitOrder = 2000000000;
 
 	public string PackageName { get; set; } = "";
@@ -39,29 +36,10 @@ class ManifestGenerator
 	public Action<int, string>? Warn { get; set; }
 	public Action<string>? WarnInvalidPlaceholder { get; set; }
 
-	/// <summary>
-	/// Absolute paths to extracted library (.aar) manifests that must be merged into the
-	/// application manifest. Only used by the legacy manifest merger; manifestmerger.jar handles
-	/// this downstream in the _ManifestMerger target. Mirrors the legacy ManifestDocument merge.
-	/// </summary>
-	public IReadOnlyList<string> LibraryManifests { get; set; } = [];
-
 	static readonly XNamespace ToolsNs = "http://schemas.android.com/tools";
 
-	// Attributes whose values are component names that must be qualified with the library's
-	// own package when they are relative (start with '.'). Mirrors ManifestDocument.ManifestAttributeFixups.
-	static readonly Dictionary<string, string []> ManifestAttributeFixups = new (StringComparer.Ordinal) {
-		{ "activity", ["name"] },
-		{ "activity-alias", ["name", "targetActivity"] },
-		{ "application", ["backupAgent"] },
-		{ "instrumentation", ["name"] },
-		{ "provider", ["name"] },
-		{ "receiver", ["name"] },
-		{ "service", ["name"] },
-	};
-
 	/// <summary>
-	/// Generates the merged manifest from an optional pre-loaded template and writes it to <paramref name="outputPath"/>.
+	/// Generates the application manifest from an optional pre-loaded template.
 	/// Returns the list of additional content provider names (for ApplicationRegistration.java).
 	/// </summary>
 	public (XDocument Document, IList<string> ProviderNames) Generate (
@@ -76,8 +54,7 @@ class ManifestGenerator
 		}
 
 		EnsureManifestAttributes (manifest);
-		// Template component names must be resolved before compat-name rewriting. Apply again
-		// after library-manifest merging so placeholders introduced by libraries are also covered.
+		// Template component names must be resolved before compat-name rewriting.
 		ApplyPlaceholders (doc, ManifestPlaceholders, PackageName);
 		var app = EnsureApplicationElement (manifest);
 		var targetSdkVersionValue = GetTargetSdkVersionValue (manifest);
@@ -163,10 +140,6 @@ class ManifestGenerator
 			AssemblyLevelElementBuilder.AddInternetPermission (manifest);
 		}
 
-		// Merge extracted library (.aar) manifests (legacy merger only — manifestmerger.jar does
-		// this downstream). Mirrors ManifestDocument: merge, then dedup, then strip node="remove",
-		// all before placeholder substitution so ${applicationId} resolves in merged content.
-		MergeLibraryManifests (manifest);
 		RemoveDuplicateElements (doc);
 		RemoveNodes (doc);
 
@@ -174,67 +147,6 @@ class ManifestGenerator
 		ApplyPlaceholders (doc, ManifestPlaceholders, PackageName, WarnInvalidPlaceholder);
 
 		return (doc, providerNames);
-	}
-
-	/// <summary>
-	/// Merges each library manifest's top-level elements into the application manifest, mirroring
-	/// ManifestDocument.MergeLibraryManifest: elements with a matching android:name append their
-	/// children to the existing element, otherwise the element is added; relative component names
-	/// are qualified with the library's own package.
-	/// </summary>
-	void MergeLibraryManifests (XElement manifest)
-	{
-		foreach (var path in LibraryManifests) {
-			if (path.IsNullOrEmpty () || !File.Exists (path)) {
-				continue;
-			}
-
-			XDocument libDoc;
-			try {
-				libDoc = XDocument.Load (path);
-			} catch (Exception ex) {
-				Warn?.Invoke (LibraryManifestMergeWarningCode, $"Unable to merge library manifest '{path}': {ex.Message}");
-				continue;
-			}
-
-			if (libDoc.Root is not { } libRoot) {
-				continue;
-			}
-
-			ApplyPlaceholders (libDoc, ManifestPlaceholders, PackageName);
-			var package = (string?) libRoot.Attribute ("package") ?? "";
-			foreach (var top in libRoot.Elements ().ToList ()) {
-				var name = (string?) top.Attribute (AndroidNs + "name");
-				XElement? existing = name is not null
-					? manifest.Elements (top.Name).FirstOrDefault (e => (string?) e.Attribute (AndroidNs + "name") == name)
-					: manifest.Elements (top.Name).FirstOrDefault ();
-
-				if (existing is not null) {
-					// Append the library element's children to the matching element.
-					existing.Add (FixupNameElements (package, top.Nodes ()));
-				} else {
-					manifest.Add (FixupNameElements (package, [top]));
-				}
-			}
-		}
-	}
-
-	/// <summary>
-	/// Qualifies relative component names (those starting with '.') with the supplied package,
-	/// mirroring ManifestDocument.FixupNameElements.
-	/// </summary>
-	static IEnumerable<XNode> FixupNameElements (string packageName, IEnumerable<XNode> nodes)
-	{
-		var nodeList = nodes.ToList ();
-		foreach (var element in nodeList.OfType<XElement> ().Where (x => ManifestAttributeFixups.ContainsKey (x.Name.LocalName))) {
-			var attributes = ManifestAttributeFixups [element.Name.LocalName];
-			foreach (var attr in element.Attributes ().Where (x => attributes.Contains (x.Name.LocalName))) {
-				if (attr.Value.StartsWith (".", StringComparison.Ordinal)) {
-					attr.Value = packageName + attr.Value;
-				}
-			}
-		}
-		return nodeList;
 	}
 
 	/// <summary>

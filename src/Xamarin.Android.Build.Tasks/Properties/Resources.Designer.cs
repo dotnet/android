@@ -331,15 +331,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid value for `$(AndroidSequencePointsMode)`: {0}.
-        /// </summary>
-        public static string XA0104 {
-            get {
-                return ResourceManager.GetString("XA0104", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project..
         /// </summary>
         public static string XA0105 {
@@ -837,6 +828,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The &apos;AotAssemblies&apos; MSBuild property is deprecated. Remove it. For supported .NET 10-and-earlier projects that use Mono, use the &apos;RunAOTCompilation&apos; MSBuild property instead. CoreCLR and NativeAOT do not use this property..
+        /// </summary>
+        public static string XA1029 {
+            get {
+                return ResourceManager.GetString("XA1029", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;RunAOTCompilation&apos; MSBuild property is only supported when trimming is enabled. Edit the project file in a text editor to set &apos;PublishTrimmed&apos; to &apos;true&apos; for this build configuration..
+        /// </summary>
+        public static string XA1030 {
+            get {
+                return ResourceManager.GetString("XA1030", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Your project references &apos;{0}&apos; which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file..
         /// </summary>
         public static string XA1034 {
@@ -846,7 +855,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;BundleAssemblies&apos; property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the &apos;AndroidUseAssemblyStore&apos; and &apos;AndroidEnableAssemblyCompression&apos; properties..
+        ///   Looks up a localized string similar to The &apos;BundleAssemblies&apos; property is deprecated and no longer affects the build. Remove it. For supported .NET 10-and-earlier Mono projects, use &apos;AndroidUseAssemblyStore&apos; with &apos;AndroidEnableAssemblyCompression&apos; for the former behavior. .NET 11 CoreCLR controls packaged assembly-store behavior and needs no replacement setting..
         /// </summary>
         public static string XA1035 {
             get {
@@ -996,15 +1005,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA2000 {
             get {
                 return ResourceManager.GetString("XA2000", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Support for the &apos;MONO_GC_PARAMS=bridge-implementation=old&apos; value will be removed in .NET 7..
-        /// </summary>
-        public static string XA2000_gcParams_bridgeImpl {
-            get {
-                return ResourceManager.GetString("XA2000_gcParams_bridgeImpl", resourceCulture);
             }
         }
         
@@ -1671,6 +1671,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; uses a Java peer callback format that requires AndroidTypeMapImplementation=trimmable..
+        /// </summary>
+        public static string XA4265 {
+            get {
+                return ResourceManager.GetString("XA4265", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; has different Java peer callback metadata in runtime-specific implementations &apos;{1}&apos; and &apos;{2}&apos;. All RuntimeIdentifiers must provide equivalent callback metadata when AndroidTypeMapImplementation=trimmable..
+        /// </summary>
+        public static string XA4266 {
+            get {
+                return ResourceManager.GetString("XA4266", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
         /// </summary>
         public static string XA4300 {
@@ -1712,15 +1730,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4301_ABI_NuGet {
             get {
                 return ResourceManager.GetString("XA4301_ABI_NuGet", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unhandled exception merging `AndroidManifest.xml`: {0}.
-        /// </summary>
-        public static string XA4302 {
-            get {
-                return ResourceManager.GetString("XA4302", resourceCulture);
             }
         }
         

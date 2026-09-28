@@ -85,6 +85,7 @@ namespace Xamarin.Android.Binder
 				UseObsoletedOSPlatformAttributes = options.UseObsoletedOSPlatformAttributes,
 				UseRestrictToAttributes = options.UseRestrictToAttributes,
 				FixObsoleteOverrides = options.FixObsoleteOverrides,
+				UseUnmanagedCallersOnlyCallbacks = options.UseUnmanagedCallersOnlyCallbacks,
 			};
 			var resolverCache       = new TypeDefinitionCache ();
 

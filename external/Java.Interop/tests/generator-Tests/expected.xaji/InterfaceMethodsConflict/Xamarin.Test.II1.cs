@@ -16,10 +16,6 @@ namespace Xamarin.Test {
 
 	[global::Android.Runtime.Register ("xamarin/test/I1", DoNotGenerateAcw=true)]
 	internal partial class II1Invoker : global::Java.Lang.Object, II1 {
-		static IntPtr java_class_ref {
-			get { return _members_xamarin_test_I1.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {

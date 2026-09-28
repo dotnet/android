@@ -1,19 +1,31 @@
 using System;
+using System.Diagnostics;
 
 namespace Android.Runtime
 {
 	/// <summary>
-	///   A class which uses the native .NET for Android runtime to accurately measure (to the nanosecond level) time
-	///   spent executing a portion of code bracketed with calls to <see cref="Start"/> (or the constructor, by
-	///   default) and <see cref="Stop"/>.
+	///   A class which uses a monotonic managed timer to measure time spent executing a portion of code bracketed
+	///   with calls to <see cref="Start"/> (or the constructor, by default) and <see cref="Stop"/>.
 	///   Timing messages are logged with the <c>Info</c> priority and the <c>monodroid-timing</c> tag in the
-	///   device's logcat buffer.
+	///   device's logcat buffer when the <c>timing</c> managed log category is enabled.
 	/// </summary>
+	/// <remarks>
+	///   This API is obsolete. Use <see cref="Stopwatch"/> for local duration measurement or
+	///   <see cref="System.Diagnostics.Tracing.EventSource"/> for trace integration.
+	/// </remarks>
+	[Obsolete ("Android.Runtime.TimingLogger is obsolete. Use System.Diagnostics.Stopwatch for local duration measurement or System.Diagnostics.Tracing.EventSource for trace integration.")]
 	public class TimingLogger : IDisposable
 	{
+		const string DefaultMessage = "Managed Timing";
+		const string LogTag = "monodroid-timing";
+
 		bool disposed = false;
-		IntPtr sequence;
+		bool active;
+		long startTimestamp;
 		string? initStartMessage;
+
+		internal bool IsActive => active;
+		internal long StartTimestamp => startTimestamp;
 
 		/// <summary>
 		///   Construct a TimeLogger instance and start measuring time immediately, if the <paramref
@@ -26,7 +38,6 @@ namespace Android.Runtime
 				Start (startMessage);
 			else {
 				initStartMessage = startMessage;
-				sequence = IntPtr.Zero;
 			}
 		}
 
@@ -42,10 +53,15 @@ namespace Android.Runtime
 		/// </summary>
 		public void Start (string? startMessage = null)
 		{
-			if (sequence != IntPtr.Zero)
+			if (active || disposed || !Logger.LogTiming)
 				return;
 
-			sequence = RuntimeNativeMethods.monodroid_timing_start (startMessage ?? initStartMessage);
+			string? message = startMessage ?? initStartMessage;
+			if (message != null)
+				Logger.Log (LogLevel.Info, LogTag, message);
+
+			startTimestamp = Stopwatch.GetTimestamp ();
+			active = true;
 		}
 
 		/// <summary>
@@ -54,19 +70,37 @@ namespace Android.Runtime
 		///   Timing"</c>. Time is reported in the following format:
 		///
 		/// <para>
-		///   <c>stopMessage; elapsed: %lis:%lu::%lu</c>
+		///   <c>stopMessage; elapsed: seconds:milliseconds::nanoseconds</c>
 		/// </para>
 		/// <para>
-		///   The <c>elapsed</c> fields are defined as follows: <c>seconds:milliseconds::nanoseconds</c>
+		///   The seconds and milliseconds fields are totals for the entire elapsed duration. The nanoseconds field
+		///   is the remainder within the final millisecond.
 		/// </para>
 		/// </summary>
 		public void Stop (string stopMessage)
 		{
-			if (sequence == IntPtr.Zero)
+			StopCore (stopMessage);
+		}
+
+		void StopCore (string? stopMessage)
+		{
+			if (!active)
 				return;
 
-			RuntimeNativeMethods.monodroid_timing_stop (sequence, stopMessage);
-			sequence = IntPtr.Zero;
+			TimeSpan elapsed = Stopwatch.GetElapsedTime (startTimestamp);
+			active = false;
+			startTimestamp = 0;
+			Logger.Log (LogLevel.Info, LogTag, FormatMessage (stopMessage, elapsed));
+		}
+
+		internal static string FormatMessage (string? message, TimeSpan elapsed)
+		{
+			long elapsedTicks = elapsed.Ticks;
+			long seconds = elapsedTicks / TimeSpan.TicksPerSecond;
+			long milliseconds = elapsedTicks / TimeSpan.TicksPerMillisecond;
+			long nanoseconds = (elapsedTicks % TimeSpan.TicksPerMillisecond) * 100;
+
+			return FormattableString.Invariant ($"{message ?? DefaultMessage}; elapsed: {seconds}:{milliseconds}::{nanoseconds}");
 		}
 
 		/// <summary>
@@ -85,13 +119,8 @@ namespace Android.Runtime
 		protected virtual void Dispose (bool disposing)
 		{
 			if (!disposed) {
-				if (sequence != IntPtr.Zero) {
-					RuntimeNativeMethods.monodroid_timing_stop (sequence, null);
-					sequence = IntPtr.Zero;
-				}
-
+				StopCore (null);
 				disposed = true;
-
 			}
 		}
 	}

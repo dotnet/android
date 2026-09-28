@@ -46,12 +46,6 @@ namespace {
 		if (entrypoint_name == "_monodroid_register_reference_logging_callbacks"sv) {
 			return reinterpret_cast<void*> (&_monodroid_register_reference_logging_callbacks);
 		}
-		if (entrypoint_name == "monodroid_timing_start"sv) {
-			return reinterpret_cast<void*> (&monodroid_timing_start);
-		}
-		if (entrypoint_name == "monodroid_timing_stop"sv) {
-			return reinterpret_cast<void*> (&monodroid_timing_stop);
-		}
 		if (entrypoint_name == "monodroid_TypeManager_get_java_class_name"sv) {
 			return reinterpret_cast<void*> (&monodroid_TypeManager_get_java_class_name);
 		}

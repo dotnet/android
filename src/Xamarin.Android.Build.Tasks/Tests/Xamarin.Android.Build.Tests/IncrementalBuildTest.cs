@@ -616,15 +616,9 @@ namespace Lib2
 		//https://github.com/dotnet/android/issues/2247
 		[Test]
 		[NonParallelizable] // Do not run timing sensitive tests in parallel
-		public void AppProjectTargetsDoNotBreak ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void AppProjectTargetsDoNotBreak ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
-				return;
-			}
 			var targets = new List<(string target, bool ignoreOnNAOT)> {
 				("_GeneratePackageManagerJava", true), // TODO: NativeAOT doesn't skip this target on 3rd attempt, check if that's ok?
 				("_ResolveLibraryProjectImports", false),
@@ -806,6 +800,38 @@ namespace Lib2
 				// Build with no changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build should succeed");
 				b.Output.AssertTargetIsSkipped ("_ManifestMerger");
+			}
+		}
+
+		[Test]
+		public void FastTimingManifestIncremental ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				ManifestMerger = "manifestmerger.jar"
+			};
+			proj.SetRuntime (runtime);
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should succeed");
+				string manifest = b.Output.GetIntermediaryAsText ("android/AndroidManifest.xml");
+				StringAssert.DoesNotContain ("mono.android.app.DumpTimingData", manifest);
+
+				proj.SetProperty ("_AndroidFastTiming", "True");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should succeed");
+				b.Output.AssertTargetIsNotSkipped ("_ManifestMerger");
+
+				manifest = b.Output.GetIntermediaryAsText ("android/AndroidManifest.xml");
+				if (runtime == AndroidRuntime.CoreCLR) {
+					StringAssert.Contains ("mono.android.app.DumpTimingData", manifest);
+					StringAssert.Contains ("mono.android.app.DUMP_TIMING_DATA", manifest);
+				} else {
+					StringAssert.DoesNotContain ("mono.android.app.DumpTimingData", manifest);
+					StringAssert.DoesNotContain ("mono.android.app.DUMP_TIMING_DATA", manifest);
+				}
 			}
 		}
 
@@ -999,15 +1025,9 @@ namespace Lib2
 		}
 
 		[Test]
-		public void LinkAssembliesNoShrink ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void LinkAssembliesNoShrink ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
-				return;
-			}
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -1385,11 +1405,9 @@ namespace Lib2
 		}
 
 		[Test]
-		public void GenerateJavaStubsAndAssembly ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void GenerateJavaStubsAndAssembly ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			// TODO: NativeAOT build doesn't add android/environment.arm64-v8a.o to file writes
 			if (runtime == AndroidRuntime.NativeAOT) {
 				Assert.Ignore ("NativeAOT doesn't currently add android/environment.arm64-v8a.o to file writes");
@@ -1608,17 +1626,9 @@ namespace Lib2
 		}
 
 		[Test]
-		public void ChangePackageNamingPolicy ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void ChangePackageNamingPolicy ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			if (IgnoreOnNativeAot (runtime, "the 'Lowercase' $(AndroidPackageNamingPolicy) is intentionally unsupported with the trimmable typemap (only Crc64 and LowercaseCrc64 are supported).")) {
-				return;
-			}
-
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -1952,16 +1962,9 @@ namespace Lib2
 		}
 
 		[Test]
-		public void AfterILLinkAdditionalStepsIsSkippedOnSecondBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void AfterILLinkAdditionalStepsIsSkippedOnSecondBuild ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			if (IgnoreOnNativeAot (runtime, "the trimmable typemap (the NativeAOT default) generates the typemap at compile time, so `_RunAfterILLinkAdditionalSteps` is intentionally skipped and no `afterlink/` output is produced.")) {
-				return;
-			}
-
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};

@@ -25,7 +25,6 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			EnvironmentOutputDirectory = Path.Combine (outputRoot, "android"),
 			SupportedAbis = ["arm64-v8a"],
 			AndroidPackageName = "com.microsoft.android.assemblystoretest",
-			EnablePreloadAssembliesDefault = false,
 			AndroidRuntime = "CoreCLR",
 			UseAssemblyStore = haveAssemblyStore,
 		};

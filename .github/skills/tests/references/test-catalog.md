@@ -39,6 +39,13 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 
 ---
 
+The NativeAOT object/MSBuild integration cases in the trimmable type map suite
+also require the NDK `llvm-readobj` and adjacent `llvm-objdump` and `clang` executables. Pass
+`-p:_NativeAotLlvmReadObjPath=/path/to/ndk/toolchains/llvm/prebuilt/<host>/bin/llvm-readobj`
+(with `.exe` on Windows) to execute those cases; without it, those cases are
+reported as skipped. The NativeFormat parser and other typemap unit tests do
+not require native tools.
+
 ## Host-Side MSBuild Tests (full-build — requires local SDK)
 
 Assembly: `bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll`

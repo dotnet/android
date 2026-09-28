@@ -33,10 +33,6 @@ public sealed class GenerateAdditionalProviderSources : AndroidTask
 
 	public ITaskItem[]? Environments { get; set; }
 
-	// We need to pass this to the environment builder, otherwise not used
-	// by this task. See also GenerateNativeApplicationSources.cs
-	public bool EnableSGenConcurrent { get; set; }
-
 	AndroidRuntime androidRuntime;
 	JavaPeerStyle codeGenerationTarget;
 
@@ -71,7 +67,7 @@ public sealed class GenerateAdditionalProviderSources : AndroidTask
 
 		// For NativeAOT, generate JavaInteropRuntime.java and NativeAotEnvironmentVars.java
 		if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
-			GenerateNativeAotBootstrapFiles (Log, OutputDirectory, TargetName, Environments, EnableSGenConcurrent);
+			GenerateNativeAotBootstrapFiles (Log, OutputDirectory, TargetName, Environments);
 		}
 
 		// Create additional application java sources.
@@ -146,8 +142,7 @@ public sealed class GenerateAdditionalProviderSources : AndroidTask
 		Microsoft.Build.Utilities.TaskLoggingHelper log,
 		string outputDirectory,
 		string targetName,
-		ITaskItem []? environments,
-		bool enableSGenConcurrent)
+		ITaskItem []? environments)
 	{
 		GenerateJavaSource (
 			"JavaInteropRuntime.java",
@@ -157,9 +152,8 @@ public sealed class GenerateAdditionalProviderSources : AndroidTask
 		);
 
 		// We care only about environment variables here
-		var envBuilder = new EnvironmentBuilder (log);
+		var envBuilder = new EnvironmentBuilder ();
 		envBuilder.Read (environments);
-		GenerateNativeApplicationConfigSources.AddDefaultEnvironmentVariables (envBuilder, enableSGenConcurrent);
 
 		var envVarNames = new StringBuilder ();
 		var envVarValues = new StringBuilder ();
