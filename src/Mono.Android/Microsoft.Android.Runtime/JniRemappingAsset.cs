@@ -90,10 +90,19 @@ internal sealed class JniRemappingAsset
 	internal byte [] Storage => bytes;
 	internal bool IsEmpty => typeCount == 0 && reverseTypeCount == 0 && methodCount == 0 && fieldCount == 0;
 
-	internal JniRemappingAsset (byte [] data)
+	internal JniRemappingAsset (byte [] data) : this (RequireData (data))
+	{
+	}
+
+	static ReadOnlySpan<byte> RequireData (byte [] data)
 	{
 		ArgumentNullException.ThrowIfNull (data);
-		bytes = (byte [])data.Clone ();
+		return data;
+	}
+
+	internal JniRemappingAsset (ReadOnlySpan<byte> data)
+	{
+		bytes = data.ToArray ();
 		if (bytes.Length < HeaderSize)
 			throw new InvalidDataException ("JNI remapping asset header is truncated.");
 		if (ReadUInt32 (bytes, 0) != Magic)

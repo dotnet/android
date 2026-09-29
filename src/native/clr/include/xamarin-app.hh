@@ -7,7 +7,6 @@
 #include <jni.h>
 #include <runtime-base/crc32.hh>
 
-static constexpr uint64_t FORMAT_TAG = 0x00045E6972616D58; // 'Xmari^XY' where XY is the format version
 static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x535A4158; // 'XAZS', little-endian
 static constexpr uint32_t ASSEMBLY_STORE_MAGIC = 0x41424158; // 'XABA', little-endian
 
@@ -136,103 +135,12 @@ struct AssemblyStoreSingleAssemblyRuntimeData final
 	const AssemblyStoreEntryDescriptor *descriptor;
 };
 
-// Keep in strict sync with:
-//   src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfig.cs
-//   src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Utilities/EnvironmentHelper.cs
 struct ApplicationConfig
 {
-	bool marshal_methods_enabled;
-	bool ignore_split_configs;
 	uint32_t number_of_runtime_properties;
 	uint32_t package_naming_policy;
-	uint32_t environment_variable_count;
-	uint32_t system_property_count;
-	uint32_t number_of_assemblies_in_apk;
-	uint32_t bundled_assembly_name_width;
-	uint32_t number_of_dso_cache_entries;
-	uint32_t number_of_shared_libraries;
-	uint32_t android_runtime_jnienv_class_token;
-	uint32_t jnienv_initialize_method_token;
-	uint32_t jni_remapping_replacement_type_count;
-	uint32_t jni_remapping_replacement_method_index_entry_count;
 	const char *android_package_name;
 	bool have_assembly_store;
 };
 
-struct DSOCacheEntry
-{
-	const xamarin::android::hash_t hash;
-	const bool      ignore;
-	const bool      is_jni_library;
-	const uint32_t  name_index;
-	void           *handle;
-};
-
-struct JniRemappingString
-{
-	const uint32_t  length;
-	const char     *str;
-};
-
-struct JniRemappingReplacementMethod
-{
-	const char    *target_type;
-	const char    *target_name;
-	const char    *target_signature;
-	const bool     is_static;
-};
-
-struct JniRemappingIndexMethodEntry
-{
-	const JniRemappingString            name;
-	const JniRemappingString            signature;
-	const JniRemappingReplacementMethod replacement;
-};
-
-struct JniRemappingIndexTypeEntry
-{
-	const JniRemappingString            name;
-	const uint32_t             method_count;
-	const JniRemappingIndexMethodEntry *methods;
-};
-
-struct JniRemappingTypeReplacementEntry
-{
-	const JniRemappingString  name;
-	const char      *replacement;
-};
-
-struct AppEnvironmentVariable
-{
-	const uint32_t name_index;
-	const uint32_t value_index;
-};
-
-extern "C" {
-	[[gnu::visibility("default")]] extern const JniRemappingIndexTypeEntry jni_remapping_method_replacement_index[];
-	[[gnu::visibility("default")]] extern const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[];
-
-	[[gnu::visibility("default")]] extern const uint64_t format_tag;
-
-	[[gnu::visibility("default")]] extern uint32_t compressed_assembly_count;
-	[[gnu::visibility("default")]] extern CompressedAssemblyDescriptor compressed_assembly_descriptors[];
-	[[gnu::visibility("default")]] extern uint32_t uncompressed_assemblies_data_size;
-	[[gnu::visibility("default")]] extern uint8_t uncompressed_assemblies_data_buffer[];
-	[[gnu::visibility("default")]] extern const ApplicationConfig application_config;
-	[[gnu::visibility("default")]] extern const AppEnvironmentVariable app_environment_variables[];
-	[[gnu::visibility("default")]] extern const char app_environment_variable_contents[];
-	[[gnu::visibility("default")]] extern const AppEnvironmentVariable app_system_properties[];
-	[[gnu::visibility("default")]] extern const char app_system_property_contents[];
-
-	[[gnu::visibility("default")]] extern AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[];
-	[[gnu::visibility("default")]] extern AssemblyStoreRuntimeData assembly_store;
-
-	[[gnu::visibility("default")]] extern DSOCacheEntry dso_cache[];
-	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx_stride;
-	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx_count;
-	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx[];
-	[[gnu::visibility("default")]] extern const char dso_names_data[];
-
-	[[gnu::visibility("default")]] extern const char *init_runtime_property_names[];
-	[[gnu::visibility("default")]] extern char *init_runtime_property_values[];
-}
+extern AssemblyStoreRuntimeData assembly_store;

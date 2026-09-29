@@ -39,10 +39,13 @@
       BeforeTargets="Build"
       DependsOnTargets="_ExtractBinutils">
     <ItemGroup>
-      <_HostBinutilsBinFiles Include="$(_BinutilsExtractDir)\$(_BinutilsHostOS)\bin\*" />
+      <_HostBinutilsBinFiles Include="$(_BinutilsExtractDir)\$(_BinutilsHostOS)\bin\*"
+          Exclude="$(_BinutilsExtractDir)\$(_BinutilsHostOS)\bin\llc;$(_BinutilsExtractDir)\$(_BinutilsHostOS)\bin\llc.exe;$(_BinutilsExtractDir)\$(_BinutilsHostOS)\bin\llc.pdb" />
       <_HostBinutilsLibFiles Include="$(_BinutilsExtractDir)\$(_BinutilsHostOS)\lib\*" />
-      <_WindowsBinutilsBinFiles Include="$(_BinutilsExtractDir)\windows\bin\*" Exclude="$(_BinutilsExtractDir)\windows\bin\*.pdb" />
-      <_WindowsBinutilsPdbFiles Include="$(_BinutilsExtractDir)\windows\bin\*.pdb" />
+      <_WindowsBinutilsBinFiles Include="$(_BinutilsExtractDir)\windows\bin\*"
+          Exclude="$(_BinutilsExtractDir)\windows\bin\*.pdb;$(_BinutilsExtractDir)\windows\bin\llc.exe" />
+      <_WindowsBinutilsPdbFiles Include="$(_BinutilsExtractDir)\windows\bin\*.pdb"
+          Exclude="$(_BinutilsExtractDir)\windows\bin\llc.pdb" />
       <_WindowsBinutilsExeForPdb Include="@(_WindowsBinutilsPdbFiles->'$(_BinutilsExtractDir)\windows\bin\%(Filename).exe')" Condition="Exists('%(RootDir)%(Directory)%(Filename).exe')" />
     </ItemGroup>
     <!-- Install host binutils -->

@@ -9,5 +9,7 @@ public class MonoPackageManager_Resources {
 	};
 	public static String[] Dependencies = new String[]{
 	};
+	public static void applyEnvironment (android.content.Context context)
+	{
+	}
 }
-

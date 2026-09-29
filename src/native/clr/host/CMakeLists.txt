@@ -142,7 +142,6 @@ macro(lib_target_options TARGET_NAME)
 
   target_link_libraries(
     ${TARGET_NAME}
-    xa::xamarin-app
     ${SHARED_LIB_NAME}
     xa::runtime-base
     xa::java-interop

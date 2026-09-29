@@ -13,6 +13,10 @@ static partial class JavaInteropRuntime
 	[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 	private static partial int XA_Host_NativeAOT_JNI_OnLoad (IntPtr vm, IntPtr reserved, ref JNIEnvInit.JnienvInitializeArgs initArgs);
 
+	[LibraryImport ("System.Security.Cryptography.Native.Android", EntryPoint = "AndroidCryptoNative_InitLibraryOnLoad")]
+	[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+	private static partial int AndroidCryptoNative_InitLibraryOnLoad (IntPtr vm, IntPtr reserved);
+
 	[UnmanagedCallersOnly (EntryPoint="JNI_OnLoad")]
 	static int JNI_OnLoad (IntPtr vm, IntPtr reserved)
 	{
@@ -20,6 +24,8 @@ static partial class JavaInteropRuntime
 			AndroidLog.Print (AndroidLogLevel.Info, "JavaInteropRuntime", "JNI_OnLoad()");
 			var initArgs = new JNIEnvInit.JnienvInitializeArgs ();
 			XA_Host_NativeAOT_JNI_OnLoad (vm, reserved, ref initArgs);
+			// The crypto handler caches Java classes while JNI_OnLoad has the app's class loader.
+			AndroidCryptoNative_InitLibraryOnLoad (vm, reserved);
 			JNIEnvInit.InitializeMaxGrefCounts (initArgs);
 			LogcatTextWriter.Init ();
 			return (int) JniVersion.v1_6;

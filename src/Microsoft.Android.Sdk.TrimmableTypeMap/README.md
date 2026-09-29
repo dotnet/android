@@ -9,9 +9,8 @@ and the `GenerateTrimmableTypeMap` MSBuild task.
 
 ## Background
 
-The legacy typemap implementations (`llvm-ir`, `managed`) embed the
-managed&nbsp;↔&nbsp;Java type mapping into native binaries. The **trimmable**
-implementation instead generates a set of small managed *TypeMap assemblies*
+The **trimmable** implementation is the only supported type map. It generates
+a set of small managed *TypeMap assemblies*
 (one per input assembly, plus a `_Microsoft.Android.TypeMaps` root) and the Java
 Callable Wrapper (JCW) `*.java` sources from the same scan. This keeps the
 mapping trimmer-friendly: unused entries are removed by the IL linker.
@@ -41,9 +40,9 @@ _GenerateJavaStubs                          (prepares manifest and native config
 ```
 
 `_GenerateJavaStubs` **overrides** the legacy target of the same name from
-`BuildOrder.targets`; in the trimmable path the JCWs already exist and are
-compiled in place from the generator output directory. This target wires up
-the manifest and native config.
+`BuildOrder.targets`; the JCWs already exist and are compiled in place from
+the generator output directory. This target wires up the manifest and Java
+bootstrap configuration.
 
 For `CoreCLR` + `PublishTrimmed=true`, a second pass
 (`_GeneratePostTrimTrimmableTypeMapJavaSources`, in the CoreCLR targets)

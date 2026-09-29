@@ -64,6 +64,8 @@ public class MonoPackageManager {
 				String[] appDirs = new String[] {filesDir, cacheDir, dataDir};
 				boolean haveSplitApks = runtimePackage.splitSourceDirs != null && runtimePackage.splitSourceDirs.length > 0;
 
+				MonoPackageManager_Resources.applyEnvironment (context);
+
 				NativeLibraryHelper.loadLibrary ("monodroid", runtimePackage, apks);
 
 				Runtime.initInternal (

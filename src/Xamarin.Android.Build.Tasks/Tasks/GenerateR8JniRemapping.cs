@@ -57,6 +57,9 @@ namespace Xamarin.Android.Tasks
 			}
 
 			ReadExistingEntries ();
+			if (Log.HasLoggedErrors) {
+				return false;
+			}
 
 			HashSet<string>? requiredEntries;
 			if (NativeAot) {
@@ -348,7 +351,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				if (!File.Exists (file)) {
-					Log.LogDebugMessage ($"Existing remapping input `{file}` does not exist yet.");
+					LogR8JniRemappingError (string.Format (Properties.Resources.XA4329_ExistingRemapNotFound, file));
 					continue;
 				}
 
@@ -357,7 +360,7 @@ namespace Xamarin.Android.Tasks
 					using var reader = XmlReader.Create (stream, readerSettings);
 					ReadExistingEntries (reader);
 				} catch (Exception ex) when (ex is XmlException || ex is IOException || ex is UnauthorizedAccessException) {
-					Log.LogDebugMessage ($"Existing remapping input `{file}` could not be read: {ex.Message}");
+					LogR8JniRemappingError (string.Format (Properties.Resources.XA4329_ExistingRemapReadFailure, file, ex.Message));
 				}
 			}
 		}

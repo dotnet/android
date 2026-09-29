@@ -52,7 +52,9 @@ set(LIB_ALIAS xa::runtime-base)
 set(XA_RUNTIME_BASE_SOURCES
   android-system.cc
   android-system-shared.cc
+  app-bootstrap-properties.cc
   cpu-arch-detect.cc
+  java-app-config.cc
   logger.cc
   util.cc
 )
@@ -99,7 +101,6 @@ target_link_libraries(
   PRIVATE
   xa::runtime-base-common
   xa::shared
-  xa::xamarin-app
 )
 
 xa_add_compile_definitions(${LIB_NAME})

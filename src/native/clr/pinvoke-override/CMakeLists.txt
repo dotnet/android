@@ -48,7 +48,6 @@ macro(create_library _libname _alias _sources)
     ${_libname}
     PRIVATE
     ${SHARED_LIB_NAME}
-    xa::xamarin-app
     xa::runtime-base
   )
 

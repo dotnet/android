@@ -40,7 +40,7 @@ internal static class GenerateAdditionalProviderSources
 	}
 
 	/// <summary>
-	/// Generates JavaInteropRuntime.java and NativeAotEnvironmentVars.java for NativeAOT apps.
+	/// Generates JavaInteropRuntime.java and the shared AppBootstrapConfig.java for NativeAOT apps.
 	/// </summary>
 	internal static void GenerateNativeAotBootstrapFiles (
 		Microsoft.Build.Utilities.TaskLoggingHelper log,
@@ -55,33 +55,10 @@ internal static class GenerateAdditionalProviderSources
 			}
 		);
 
-		// We care only about environment variables here
-		var envBuilder = new EnvironmentBuilder ();
-		envBuilder.Read (environments);
-
-		var envVarNames = new StringBuilder ();
-		var envVarValues = new StringBuilder ();
-		foreach (var kvp in envBuilder.EnvironmentVariables) {
-			// All the strings already have double-quotes properly quoted, EnvironmentBuilder took care of that
-			AppendEnvVarEntry (envVarNames, kvp.Key);
-			AppendEnvVarEntry (envVarValues, kvp.Value);
-		}
-
-		var envVars = new Dictionary<string, string> (StringComparer.Ordinal) {
-			{ "@ENVIRONMENT_VAR_NAMES@", envVarNames.ToString () },
-			{ "@ENVIRONMENT_VAR_VALUES@", envVarValues.ToString () },
-		};
-
-		GenerateJavaSource (
-			"NativeAotEnvironmentVars.java",
-			envVars
-		);
-
-		void AppendEnvVarEntry (StringBuilder sb, string value)
-		{
-			sb.Append ("\t\t\"");
-			sb.Append (value);
-			sb.Append ("\",\n");
+		GenerateJavaApplicationConfig.WriteNativeAotSource (outputDirectory, environments);
+		string obsoleteEnvironment = Path.Combine (outputDirectory, "src", "net", "dot", "jni", "nativeaot", "NativeAotEnvironmentVars.java");
+		if (File.Exists (obsoleteEnvironment)) {
+			File.Delete (obsoleteEnvironment);
 		}
 
 		void GenerateJavaSource (string fileName, Dictionary<string, string> replacements)

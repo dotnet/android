@@ -313,15 +313,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unknown mode: {0}.
-        /// </summary>
-        public static string XA0037 {
-            get {
-                return ResourceManager.GetString("XA0037", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to EmbeddedNativeLibrary &apos;{0}&apos; is invalid in Android Application projects. Please use AndroidNativeLibrary instead..
         /// </summary>
         public static string XA0100 {
@@ -980,6 +971,24 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA1050", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The AndroidStaticJniInitFunction MSBuild item is not supported with NativeAOT. Remove it from the project or use a NativeAOT-compatible version of the library that adds it..
+        /// </summary>
+        public static string XA1051 {
+            get {
+                return ResourceManager.GetString("XA1051", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Native runtime linking is no longer supported. Remove the &apos;_AndroidEnableNativeRuntimeLinking&apos; MSBuild property or set it to &apos;false&apos;..
+        /// </summary>
+        public static string XA1052 {
+            get {
+                return ResourceManager.GetString("XA1052", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released..
@@ -1077,15 +1086,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA3005 {
             get {
                 return ResourceManager.GetString("XA3005", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not compile native assembly file: {0}{1}.
-        /// </summary>
-        public static string XA3006 {
-            get {
-                return ResourceManager.GetString("XA3006", resourceCulture);
             }
         }
         
@@ -1544,7 +1544,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Type &apos;{0}&apos; uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the &apos;llvm-ir&apos; type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it..
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. Please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it..
         /// </summary>
         public static string XA4251 {
             get {
@@ -1948,6 +1948,18 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4329_MappingDataFailure {
             get {
                 return ResourceManager.GetString("XA4329_MappingDataFailure", resourceCulture);
+            }
+        }
+
+        public static string XA4329_ExistingRemapNotFound {
+            get {
+                return ResourceManager.GetString("XA4329_ExistingRemapNotFound", resourceCulture);
+            }
+        }
+
+        public static string XA4329_ExistingRemapReadFailure {
+            get {
+                return ResourceManager.GetString("XA4329_ExistingRemapReadFailure", resourceCulture);
             }
         }
 

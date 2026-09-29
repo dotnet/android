@@ -224,10 +224,6 @@ Note: the Android Designer is incompatible with Java SDK 11.0: https://aka.ms/vs
     <value>The 'AndroidSupportedAbis' MSBuild property is no longer supported. Edit the project file in a text editor, remove any uses of 'AndroidSupportedAbis', and use the 'RuntimeIdentifiers' MSBuild property instead.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
-  <data name="XA0037" xml:space="preserve">
-    <value>Unknown mode: {0}</value>
-    <comment>{0} - The unknown mode string value</comment>
-  </data>
   <data name="XA0100" xml:space="preserve">
     <value>EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
@@ -545,10 +541,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
     <value>The detected Android NDK version is incompatible with the targeted LLVM configuration. Please upgrade to NDK r10d or newer.</value>
     <comment>The following are literal names and should not be translated: NDK, LLVM, r10d
 "r10d" is the version of the NDK.</comment>
-  </data>
-  <data name="XA3006" xml:space="preserve">
-    <value>Could not compile native assembly file: {0}{1}</value>
-    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces). The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA3007" xml:space="preserve">
     <value>Could not link native shared library: {0}{1}</value>
@@ -883,6 +875,17 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
 {0} - The path of the mapping file.
 {1} - The exception message.</comment>
   </data>
+  <data name="XA4329_ExistingRemapNotFound" xml:space="preserve">
+    <value>The existing JNI remapping input '{0}' was not found.</value>
+    <comment>The following is a literal name and should not be translated: JNI.
+{0} - The path of the missing remapping XML file.</comment>
+  </data>
+  <data name="XA4329_ExistingRemapReadFailure" xml:space="preserve">
+    <value>The existing JNI remapping input '{0}' could not be read: {1}</value>
+    <comment>The following is a literal name and should not be translated: JNI.
+{0} - The path of the remapping XML file.
+{1} - The exception message.</comment>
+  </data>
   <data name="XA4329_AssemblyReadFailure" xml:space="preserve">
     <value>The linked managed assembly '{0}' could not be read: {1}</value>
     <comment>{0} - The path of the managed assembly.
@@ -1205,6 +1208,14 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
     <value>The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value of '{0}'. Valid values are 'disabled' and 'private-members'.</value>
     <comment>The following are literal names and should not be translated: AndroidR8ObfuscationMode, MSBuild, disabled, private-members.
 {0} - The invalid value of the AndroidR8ObfuscationMode MSBuild property.</comment>
+  </data>
+  <data name="XA1051" xml:space="preserve">
+    <value>The AndroidStaticJniInitFunction MSBuild item is not supported with NativeAOT. Remove it from the project or use a NativeAOT-compatible version of the library that adds it.</value>
+    <comment>The following are literal names and should not be translated: AndroidStaticJniInitFunction, MSBuild, NativeAOT.</comment>
+  </data>
+  <data name="XA1052" xml:space="preserve">
+    <value>Native runtime linking is no longer supported. Remove the '_AndroidEnableNativeRuntimeLinking' MSBuild property or set it to 'false'.</value>
+    <comment>The following are literal names and should not be translated: _AndroidEnableNativeRuntimeLinking, MSBuild, false.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>Java dependency '{0}' is not satisfied.</value>

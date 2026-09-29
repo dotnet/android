@@ -1,53 +1,31 @@
 #include <host/gc-bridge.hh>
-#include <host/host-environment-naot.hh>
 #include <host/host-nativeaot.hh>
 #include <host/os-bridge.hh>
 #include <runtime-base/android-system.hh>
+#include <runtime-base/app-bootstrap-properties.hh>
 #include <runtime-base/logger.hh>
 
 using namespace xamarin::android;
 
-using JniOnLoadHandler = jint (*) (JavaVM *vm, void *reserved);
-
-//
-// These external functions are generated during application build (see obj/${CONFIG}/${FRAMEWORK}-android/${RID}/android/jni_init_funcs*.ll)
-//
-extern "C" {
-		extern const uint32_t __jni_on_load_handler_count;
-		extern const JniOnLoadHandler __jni_on_load_handlers[];
-		extern const char* __jni_on_load_handler_names[];
-}
-
-auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, void *reserved) noexcept -> jint
+auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
 {
-	Logger::init_logging_categories ();
-	HostEnvironment::init ();
-	jvm = vm;
-
 	JNIEnv *env = nullptr;
 	vm->GetEnv ((void**)&env, JNI_VERSION_1_6);
+	AppBootstrapProperties::initialize (env);
+
+	Logger::init_logging_categories ();
+	jvm = vm;
+
 	OSBridge::initialize_on_onload (vm, env);
 	GCBridge::initialize_on_onload (env);
 	AndroidSystem::init_max_gref_count ();
-
-	if (__jni_on_load_handler_count > 0) {
-		for (uint32_t i = 0; i < __jni_on_load_handler_count; i++) {
-			log_debugf (
-				LOG_ASSEMBLY,
-				"Calling JNI on-load init func '%s' (%p)",
-				optional_string (__jni_on_load_handler_names[i]),
-				reinterpret_cast<void*>(__jni_on_load_handlers[i])
-			);
-			__jni_on_load_handlers[i] (vm, reserved);
-		}
-	}
 
 	return JNI_VERSION_1_6;
 }
 
 // Be VERY careful with what we do here - the managed runtime is not fully initialized
 // at the point this method is called.
-void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstring_wrapper &cache_dir, JnienvInitializeArgs *initArgs) noexcept
+void Host::OnInit ([[maybe_unused]] jstring_wrapper &language, jstring_wrapper &files_dir, [[maybe_unused]] jstring_wrapper &cache_dir, JnienvInitializeArgs *initArgs) noexcept
 {
 	abort_if_invalid_pointer_argument (initArgs, "initArgs");
 
@@ -55,7 +33,6 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 	jclass runtimeClass = env->FindClass ("mono/android/Runtime");
 
 	AndroidSystem::set_primary_override_dir (files_dir);
-	HostEnvironment::setup_environment (language, files_dir, cache_dir);
 	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
 
 	OSBridge::initialize_on_runtime_init (env, runtimeClass);
@@ -81,6 +58,9 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 	}
 
 	initArgs->logCategories = log_categories;
+	auto remapping_data = AppBootstrapProperties::remapping_data ();
+	initArgs->jniRemappingData = remapping_data.data ();
+	initArgs->jniRemappingDataLength = static_cast<int32_t>(remapping_data.size ());
 	initArgs->grefGcThreshold = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
 	initArgs->maxGrefCount = static_cast<int>(AndroidSystem::get_max_gref_count ());
 	initArgs->grefIGCUserPeer = env->NewGlobalRef (lrefIGCUserPeer);

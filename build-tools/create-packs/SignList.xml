@@ -33,7 +33,6 @@
     <MacDeveloperSignHarden Include="Darwin/aapt2" />
     <MacDeveloperSignHarden Include="Darwin/binutils/bin/*as" />
     <MacDeveloperSignHarden Include="Darwin/binutils/bin/*ld" />
-    <MacDeveloperSignHarden Include="Darwin/binutils/bin/llc" />
     <MacDeveloperSignHarden Include="Darwin/binutils/bin/llvm-mc" />
     <MacDeveloperSignHarden Include="Darwin/binutils/bin/*strip" />
   </ItemGroup>

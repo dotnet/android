@@ -31,6 +31,9 @@ public class GeneratePackageManagerJava : AndroidTask
 			pkgmgr.WriteLine ("\t\t/* \"{0}\" should be the only entry in this list. */", mainFileName);
 			pkgmgr.WriteLine ("\t\t\"" + mainFileName + "\",");
 			pkgmgr.WriteLine ("\t};");
+			pkgmgr.WriteLine ("\tpublic static void applyEnvironment (android.content.Context context) {");
+			pkgmgr.WriteLine ("\t\tnet.dot.android.AppBootstrapConfig.applyEnvironment (context);");
+			pkgmgr.WriteLine ("\t}");
 
 			pkgmgr.WriteLine ("}");
 			pkgmgr.Flush ();

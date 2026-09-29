@@ -2,11 +2,13 @@ using Microsoft.Build.Framework;
 using Mono.Cecil;
 using NUnit.Framework;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 using Microsoft.Android.Build.Tasks;
 
@@ -123,49 +125,136 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntime (runtime);
 
+			var targetArches = new [] { AndroidTargetArch.Arm64, AndroidTargetArch.X86_64 };
+			proj.SetRuntimeIdentifiers (targetArches);
+
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build failed");
-				AssertJniRemappingCounts (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
-				var remapSourceTimestamps = GetJniRemappingSourceTimestamps (proj, b);
+				Dictionary<string, byte[]> firstAssets = AssertJniRemappingAssets (proj, b, targetArches);
 
-				proj.MainActivity += Environment.NewLine + "// Force an incremental C# rebuild.";
+				proj.MainActivity = proj.DefaultMainActivity + Environment.NewLine + "// Force an incremental C# rebuild.";
 				proj.Touch ("MainActivity.cs");
+				b.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build failed");
-				AssertJniRemappingCounts (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
-				AssertJniRemappingSourceTimestamps (remapSourceTimestamps);
+				Dictionary<string, byte[]> secondAssets = AssertJniRemappingAssets (proj, b, targetArches);
+
+				// The remapping data itself didn't change between the two builds (only MainActivity.cs
+				// did), so the packaged JNI remapping assets must survive the incremental build unchanged.
+				foreach (var kvp in firstAssets) {
+					CollectionAssert.AreEqual (
+						kvp.Value,
+						secondAssets [kvp.Key],
+						$"'{kvp.Key}' should have identical contents across an app-only incremental build."
+					);
+				}
 			}
 		}
 
-		void AssertJniRemappingCounts (XamarinAndroidApplicationProject proj, ProjectBuilder builder, uint expectedTypeCount, uint expectedMethodCount)
+		// Builds the packaged JNI remapping asset path for each target architecture, asserts it is
+		// present in the built APK, that it parses as a well-formed versioned binary asset (see
+		// JniRemappingAsset/JniRemappingAssetWriter in Microsoft.Android.Build.Tasks), and that it
+		// contains the user-supplied type and method replacements. Returns the raw asset contents so
+		// callers can compare them across builds.
+		Dictionary<string, byte[]> AssertJniRemappingAssets (XamarinAndroidApplicationProject proj, ProjectBuilder builder, AndroidTargetArch[] targetArches)
 		{
-			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-			var envFiles = EnvironmentHelper.GatherEnvironmentFiles (objDirPath, "arm64-v8a;x86_64", required: true, runtime: AndroidRuntime.CoreCLR);
-			var appConfig = EnvironmentHelper.ReadApplicationConfig (envFiles);
-			Assert.AreEqual (expectedTypeCount, appConfig.jni_remapping_replacement_type_count, "jni_remapping_replacement_type_count should be preserved.");
-			Assert.AreEqual (expectedMethodCount, appConfig.jni_remapping_replacement_method_index_entry_count, "jni_remapping_replacement_method_index_entry_count should be preserved.");
-		}
+			string apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk);
 
-		Dictionary<string, DateTime> GetJniRemappingSourceTimestamps (XamarinAndroidApplicationProject proj, ProjectBuilder builder)
-		{
-			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android");
-			var timestamps = new Dictionary<string, DateTime> (StringComparer.Ordinal);
-			foreach (string abi in new [] { "arm64-v8a", "x86_64" }) {
-				string path = Path.Combine (objDirPath, $"jni_remap.{abi}.ll");
-				FileAssert.Exists (path);
-				timestamps.Add (path, File.GetLastWriteTimeUtc (path));
-			}
-			return timestamps;
-		}
+			var assets = new Dictionary<string, byte[]> (StringComparer.Ordinal);
+			foreach (AndroidTargetArch arch in targetArches) {
+				string rid = MonoAndroidHelper.ArchToRid (arch);
+				string assetPath = $"assets/xa-internal/jni-remap.{rid}.bin";
+				byte[] data = ZipHelper.ReadFileFromZip (apk, assetPath);
+				Assert.IsNotNull (data, $"'{assetPath}' should be present in '{apk}'.");
 
-		void AssertJniRemappingSourceTimestamps (Dictionary<string, DateTime> expectedTimestamps)
-		{
-			foreach (var expectedTimestamp in expectedTimestamps) {
-				Assert.AreEqual (
-					expectedTimestamp.Value,
-					File.GetLastWriteTimeUtc (expectedTimestamp.Key),
-					$"{expectedTimestamp.Key} should not be touched when regenerated with unchanged contents."
+				JniRemappingAssetInfo info = ParseJniRemappingAsset (data, assetPath);
+				// R8 obfuscates private members by default and can contribute its own valid type/method
+				// remaps alongside the user-supplied one, so assert presence and a lower bound rather
+				// than an exact count.
+				Assert.IsTrue (info.TypeCount >= 1, $"'{assetPath}' should contain at least 1 replacement type.");
+				Assert.IsTrue (info.MethodCount >= 1, $"'{assetPath}' should contain at least 1 replacement method.");
+				Assert.IsTrue (
+					info.Types.Contains (("android/app/Activity", "example/RemapActivity")),
+					$"'{assetPath}' should map 'android/app/Activity' to 'example/RemapActivity'."
 				);
+				Assert.IsTrue (
+					info.Methods.Exists (m => m.SourceType == "example/RemapActivity" && m.SourceMethod == "onCreate" &&
+						m.TargetType == "example/RemapActivity" && m.TargetMethod == "onMyCreate"),
+					$"'{assetPath}' should map the user-supplied 'onCreate' method replacement."
+				);
+
+				assets [assetPath] = data;
 			}
+
+			return assets;
+		}
+
+		sealed class JniRemappingAssetInfo
+		{
+			public uint TypeCount;
+			public uint MethodCount;
+			public List<(string From, string To)> Types = new ();
+			public List<(string SourceType, string SourceMethod, string TargetType, string TargetMethod)> Methods = new ();
+		}
+
+		// Manually parses the versioned JNI remapping binary asset (see JniRemappingAsset in
+		// Microsoft.Android.Runtime / Microsoft.Android.Build.Tasks) without depending on those
+		// internal, other-assembly types: 64-byte little-endian header with magic/version/header
+		// size/file size, four (offset, count) table sections (types, reverse types, methods,
+		// fields), and a (offset, length) string pool.
+		static JniRemappingAssetInfo ParseJniRemappingAsset (byte[] data, string assetPath)
+		{
+			const uint Magic = 0x524a4158; // "XAJR"
+			const int HeaderSize = 64;
+			const int TypeEntrySize = 16;
+			const int MethodEntrySize = 52;
+
+			// The asset format is little-endian by definition; read it explicitly rather than with
+			// host-endian BitConverter (tests only run on little-endian hosts today, but this keeps
+			// the parser correct regardless).
+			static uint ReadUInt32 (byte[] buffer, int offset) => BinaryPrimitives.ReadUInt32LittleEndian (buffer.AsSpan (offset, 4));
+
+			Assert.IsTrue (data.Length >= HeaderSize, $"'{assetPath}' must contain at least the {HeaderSize}-byte header.");
+			Assert.AreEqual (Magic, ReadUInt32 (data, 0), $"'{assetPath}' must start with the 'XAJR' magic number.");
+			Assert.AreEqual ((uint) HeaderSize, ReadUInt32 (data, 8), $"'{assetPath}' header size must be {HeaderSize} bytes.");
+			Assert.AreEqual ((uint) data.Length, ReadUInt32 (data, 12), $"'{assetPath}' file size field must match the actual data length.");
+
+			uint typeOffset = ReadUInt32 (data, 16);
+			uint typeCount = ReadUInt32 (data, 20);
+			uint methodOffset = ReadUInt32 (data, 32);
+			uint methodCount = ReadUInt32 (data, 36);
+
+			string ReadString (uint offset, uint length)
+			{
+				if (offset == uint.MaxValue || length == 0) {
+					return "";
+				}
+				Assert.IsTrue (offset + length <= (uint) data.Length, $"'{assetPath}' has a string reference out of bounds.");
+				return Encoding.UTF8.GetString (data, (int) offset, (int) length);
+			}
+
+			var info = new JniRemappingAssetInfo {
+				TypeCount = typeCount,
+				MethodCount = methodCount,
+			};
+
+			for (uint i = 0; i < typeCount; i++) {
+				int position = (int) (typeOffset + i * TypeEntrySize);
+				string from = ReadString (ReadUInt32 (data, position), ReadUInt32 (data, position + 4));
+				string to = ReadString (ReadUInt32 (data, position + 8), ReadUInt32 (data, position + 12));
+				info.Types.Add ((from, to));
+			}
+
+			for (uint i = 0; i < methodCount; i++) {
+				int position = (int) (methodOffset + i * MethodEntrySize);
+				string sourceType = ReadString (ReadUInt32 (data, position), ReadUInt32 (data, position + 4));
+				string sourceMethod = ReadString (ReadUInt32 (data, position + 8), ReadUInt32 (data, position + 12));
+				string targetType = ReadString (ReadUInt32 (data, position + 24), ReadUInt32 (data, position + 28));
+				string targetMethod = ReadString (ReadUInt32 (data, position + 32), ReadUInt32 (data, position + 36));
+				info.Methods.Add ((sourceType, sourceMethod, targetType, targetMethod));
+			}
+
+			return info;
 		}
 
 		[Test]
@@ -1444,8 +1533,6 @@ namespace Lib2
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "fourth build should have succeeded.");
 
 					b.Output.AssertTargetIsNotSkipped ("CoreCompile");
-					b.Output.AssertTargetIsSkipped ("_CompileNativeAssemblySources");
-					b.Output.AssertTargetIsSkipped ("_CreateApplicationSharedLibraries");
 					b.Output.AssertTargetIsSkipped ("_BuildApkFastDev");
 					b.Output.AssertTargetIsSkipped ("_Sign");
 					Assert.AreEqual (apkWriteTime, File.GetLastWriteTimeUtc (apk), $"{apk} should not be rewritten for an incremental C# change.");
@@ -1454,10 +1541,15 @@ namespace Lib2
 			}
 		}
 
+		// The default CoreCLR trimmable build uses the Java bootstrap (AppBootstrapConfig.java)
+		// instead of the old LLVM IR environment sources, and always generates the (possibly
+		// empty) JNI remapping binary asset - see
+		// `_AndroidGenerateJniRemappingAsset`/`GenerateJniRemappingAsset` in
+		// Xamarin.Android.Common.targets. Neither is ABI-specific for CoreCLR (a single asset is
+		// shared across every RID), so these paths don't need an `@ABI@` substitution.
 		readonly string [] ExpectedAssemblyFiles = new [] {
-			Path.Combine ("android", "environment.@ABI@.o"),
-			Path.Combine ("android", "environment.@ABI@.ll"),
-			Path.Combine ("app_shared_libraries", "@ABI@", "libxamarin-app.so")
+			Path.Combine ("android", "src", "net", "dot", "android", "AppBootstrapConfig.java"),
+			Path.Combine ("android", "jni-remap", "jni-remap.bin"),
 		};
 
 		void AssertAssemblyFilesInFileWrites (XamarinAndroidApplicationProject proj, ProjectBuilder b, string abi, AndroidRuntime runtime)
@@ -1478,7 +1570,8 @@ namespace Lib2
 			CollectionAssert.Contains (lines, typeMapAssembly, "The managed type map assembly should be in FileWrites.");
 			FileAssert.Exists (typeMapAssembly);
 
-			foreach (var obsoleteSource in new [] { $"typemap.{abi}.ll", $"marshal_methods.{abi}.ll" }) {
+			// The old LLVM IR sources must not be regenerated by the Java bootstrap path.
+			foreach (var obsoleteSource in new [] { $"environment.{abi}.o", $"environment.{abi}.ll", $"typemap.{abi}.ll", $"marshal_methods.{abi}.ll" }) {
 				FileAssert.DoesNotExist (Path.Combine (intermediate, "android", obsoleteSource));
 			}
 		}

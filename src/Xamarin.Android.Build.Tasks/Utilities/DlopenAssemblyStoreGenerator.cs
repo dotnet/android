@@ -13,6 +13,7 @@ namespace Xamarin.Android.Tasks;
 /// Produces the assembly-store wrapper shared library, whose payload lives in a
 /// *loadable* ELF section (SHF_ALLOC, covered by a PT_LOAD segment) and is
 /// pointed at by an exported dynamic symbol (<c>_assembly_store</c>).
+/// A second symbol (<c>_assembly_store_end</c>) provides the payload length.
 ///
 /// With this layout the runtime simply
 /// <c>dlopen("libassembly-store.so")</c> + <c>dlsym("_assembly_store")</c>
@@ -25,6 +26,7 @@ namespace Xamarin.Android.Tasks;
 static class DlopenAssemblyStoreGenerator
 {
 	public const string PayloadStartSymbol = "_assembly_store";
+	public const string PayloadEndSymbol = "_assembly_store_end";
 	const string WrappedSubDirectory = "wrapped-assembly-store";
 
 	// Section name that holds the payload. Must match the name `read-assembly-store`
@@ -71,6 +73,8 @@ static class DlopenAssemblyStoreGenerator
 				.globl {PayloadStartSymbol}
 			{PayloadStartSymbol}:
 				.incbin "{incbinPath}"
+				.globl {PayloadEndSymbol}
+			{PayloadEndSymbol}:
 
 			""";
 		File.WriteAllText (asmFile, asm);
@@ -97,6 +101,7 @@ static class DlopenAssemblyStoreGenerator
 			$"-z max-page-size={toolInfo.MaxPageSize}",
 			"--build-id=sha1",
 			$"--export-dynamic-symbol={PayloadStartSymbol}",
+			$"--export-dynamic-symbol={PayloadEndSymbol}",
 			$"-o {MonoAndroidHelper.QuoteFileNameArgument (outputFile)}",
 			MonoAndroidHelper.QuoteFileNameArgument (objFile),
 		];

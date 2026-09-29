@@ -205,6 +205,24 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
+		[Test]
+		public void Build_WithNativeRuntimeLinkingEnabled_Fails ()
+		{
+			// `_AndroidEnableNativeRuntimeLinking` selected the experimental "unified" CoreCLR
+			// native runtime, which depended on the same app-generated/app-compiled LLVM IR
+			// bootstrap (environment, type map, compressed assemblies, JNI remapping) that
+			// trimmable CoreCLR builds no longer produce. It must be rejected outright rather
+			// than falling back to that removed code path.
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("_AndroidEnableNativeRuntimeLinking", "true");
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), "Native runtime linking is no longer supported.");
+			StringAssertEx.Contains ("error XA1052:", builder.LastBuildOutput);
+		}
+
 		[TestCase (AndroidRuntime.CoreCLR)]
 		[TestCase (AndroidRuntime.NativeAOT)]
 		public void Build_JavaTypeOnlyIdentifierStarts_MatchManifestLimitation (AndroidRuntime runtime)
@@ -1956,22 +1974,22 @@ namespace Xamarin.Android.Build.Tests {
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
-			var environmentFiles = Directory.GetFiles (builder.Output.GetIntermediaryPath ("android"), "environment.*.ll");
-			Assert.IsNotEmpty (environmentFiles, "Expected generated environment.<abi>.ll files.");
+			var androidIntermediate = builder.Output.GetIntermediaryPath ("android");
+			FileAssert.Exists (Path.Combine (androidIntermediate, "src", "net", "dot", "android", "AppBootstrapConfig.java"));
+			Assert.IsEmpty (Directory.GetFiles (androidIntermediate, "*.ll"), "CoreCLR trimmable builds should not generate LLVM IR.");
 
-			foreach (var environmentFile in environmentFiles) {
-				var abi = Path.GetFileNameWithoutExtension (environmentFile).Substring ("environment.".Length);
+			foreach (var abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 				var manifestFile = builder.Output.GetIntermediaryPath (Path.Combine ("app_shared_libraries", abi, "assembly-store.so.manifest"));
 
 				if (!File.Exists (manifestFile)) {
 					continue;
 				}
 
-				var environmentText = File.ReadAllText (environmentFile);
-				var runtimeDataMatch = Regex.Match (environmentText, @"assembly_store_bundled_assemblies.*\[(\d+)\s+x");
-				Assert.IsTrue (runtimeDataMatch.Success, $"{environmentFile} should declare assembly_store_bundled_assemblies.");
-
-				var runtimeDataCount = int.Parse (runtimeDataMatch.Groups [1].Value);
+				var storeFile = builder.Output.GetIntermediaryPath (Path.Combine ("app_shared_libraries", abi, "assembly-store.so"));
+				using var store = new BinaryReader (File.OpenRead (storeFile));
+				Assert.AreEqual (0x41424158u, store.ReadUInt32 (), "Assembly store magic should be valid.");
+				store.ReadUInt32 (); // format version
+				var entryCount = store.ReadUInt32 ();
 				var maxMappingIndex = File.ReadLines (manifestFile)
 					.Select (line => Regex.Match (line, @"\bmi:(\d+)\b"))
 					.Where (match => match.Success)
@@ -1979,10 +1997,159 @@ namespace Xamarin.Android.Build.Tests {
 					.Max ();
 
 				Assert.That (
-					runtimeDataCount,
+					entryCount,
 					Is.GreaterThan (maxMappingIndex),
-					$"{Path.GetFileName (environmentFile)} should allocate enough runtime slots for {Path.GetFileName (manifestFile)}.");
+					$"{Path.GetFileName (storeFile)} should provide enough runtime slots for {Path.GetFileName (manifestFile)}.");
 			}
+		}
+
+		[Test]
+		public void Build_WithTrimmableTypeMap_JavaConfigPreservesInputs ()
+		{
+			string environmentContents = "POC_STARTUP=from-build\ndebug.dotnet.log=assembly";
+			string remappingContents = """
+				<replacements>
+				  <replace-type from="example/OldClass" to="example/NewClass" />
+				  <replace-method source-type="example/OldClass" source-method-name="old"
+				    target-type="example/NewClass" target-method-name="new"
+				    target-method-instance-to-static="false" />
+				</replacements>
+				""";
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				OtherBuildItems = {
+					new AndroidItem.AndroidEnvironment ("bootstrap.env") {
+						TextContent = () => environmentContents,
+					},
+					new AndroidItem._AndroidRemapMembers ("Remap.xml") {
+						Encoding = Encoding.UTF8,
+						TextContent = () => remappingContents,
+					},
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			string androidIntermediate = builder.Output.GetIntermediaryPath ("android");
+			string javaConfig = File.ReadAllText (Path.Combine (androidIntermediate, "src", "net", "dot", "android", "AppBootstrapConfig.java"));
+			StringAssert.Contains ("\"POC_STARTUP\"", javaConfig);
+			StringAssert.Contains ("\"from-build\"", javaConfig);
+			StringAssert.Contains ("\"debug.dotnet.log\"", javaConfig);
+			Assert.IsEmpty (Directory.GetFiles (androidIntermediate, "*.ll"), "JNI remapping should not generate LLVM IR.");
+
+			// JNI remapping no longer flows through Java string arrays in AppBootstrapConfig.java;
+			// the shared Java/native reader loads it directly from the versioned binary asset at
+			// assets/xa-internal/jni-remap.<rid>.bin.
+			string apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk);
+			byte [] remapAsset = ZipHelper.ReadFileFromZip (apk, "assets/xa-internal/jni-remap.android-arm64.bin");
+			Assert.IsNotNull (remapAsset, "The packaged apk should contain assets/xa-internal/jni-remap.android-arm64.bin.");
+			string remapAssetText = Encoding.UTF8.GetString (remapAsset);
+			StringAssert.Contains ("example/OldClass", remapAssetText);
+			StringAssert.Contains ("example/NewClass", remapAssetText);
+
+			environmentContents = "POC_STARTUP=updated\ndebug.dotnet.log=assembly";
+			remappingContents = remappingContents.Replace ("example/NewClass", "example/UpdatedClass");
+			proj.Touch ("bootstrap.env");
+			proj.Touch ("Remap.xml");
+			builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Incremental build should have succeeded.");
+
+			javaConfig = File.ReadAllText (Path.Combine (androidIntermediate, "src", "net", "dot", "android", "AppBootstrapConfig.java"));
+			StringAssert.Contains ("\"updated\"", javaConfig);
+
+			remapAsset = ZipHelper.ReadFileFromZip (apk, "assets/xa-internal/jni-remap.android-arm64.bin");
+			Assert.IsNotNull (remapAsset, "The packaged apk should still contain assets/xa-internal/jni-remap.android-arm64.bin.");
+			remapAssetText = Encoding.UTF8.GetString (remapAsset);
+			StringAssert.Contains ("example/UpdatedClass", remapAssetText);
+			StringAssert.DoesNotContain ("example/NewClass", remapAssetText);
+			Assert.IsEmpty (Directory.GetFiles (androidIntermediate, "*.ll"), "Incremental build should remain LLVM-free.");
+		}
+
+		[Test]
+		public void Build_WithTrimmableTypeMap_DisablingR8DropsStaleRemaps ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
+			proj.SetProperty ("AndroidLinkTool", "r8");
+			proj.SetProperty ("AndroidCreateProguardMappingFile", "true");
+			proj.SetProperty ("AndroidR8ObfuscationMode", "private-members");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "R8-enabled build should succeed.");
+
+			string intermediate = builder.Output.GetIntermediaryPath (Path.Combine ("android", "jni-remap"));
+			string r8Xml = Path.Combine (intermediate, "r8-jni-remap.xml");
+			FileAssert.Exists (r8Xml);
+			File.WriteAllText (r8Xml, """
+				<replacements>
+				  <replace-type from="test/StaleR8Type" to="test/ShouldNotShip" />
+				</replacements>
+				""");
+
+			proj.SetProperty ("AndroidR8ObfuscationMode", "disabled");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Disabling R8 obfuscation should succeed incrementally.");
+
+			string apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			byte [] asset = ZipHelper.ReadFileFromZip (apk, "assets/xa-internal/jni-remap.android-arm64.bin");
+			Assert.IsNotNull (asset);
+			StringAssert.DoesNotContain ("test/StaleR8Type", Encoding.UTF8.GetString (asset),
+				"Stale R8 remappings must not survive when obfuscation is disabled.");
+		}
+
+		[Test]
+		public void Build_WithTrimmableTypeMap_JavaConfigChangePreservesAaptRules ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			string environment = "PROGUARD_ENV=initial";
+			var proj = new XamarinFormsAndroidApplicationProject {
+				IsRelease = true,
+				OtherBuildItems = {
+					new AndroidItem.AndroidEnvironment ("bootstrap.env") {
+						TextContent = () => environment,
+					},
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
+			proj.SetProperty ("AndroidLinkTool", "r8");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "The initial R8 build should succeed.");
+
+			string rules = builder.Output.GetIntermediaryPath ("aapt_rules.txt");
+			FileAssert.Exists (rules);
+			StringAssert.Contains ("androidx.startup.InitializationProvider", File.ReadAllText (rules));
+
+			environment = "PROGUARD_ENV=updated";
+			proj.Touch ("bootstrap.env");
+			builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The incremental R8 build should succeed.");
+
+			builder.Output.AssertTargetIsSkipped ("_CreateBaseApk");
+			builder.Output.AssertTargetIsNotSkipped ("_CompileToDalvik");
+			FileAssert.Exists (rules, "IncrementalClean must retain AAPT2's manifest and layout keep rules.");
+			string javaConfig = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", "net", "dot", "android", "AppBootstrapConfig.java"));
+			StringAssert.Contains ("\"updated\"", File.ReadAllText (javaConfig));
+			string dex = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			FileAssert.Exists (dex);
+			Assert.IsTrue (DexUtils.ContainsClass ("Landroidx/startup/InitializationProvider;", dex, AndroidSdkPath),
+				"R8 must retain the provider referenced by the manifest on Java-only incremental builds.");
+
+			File.Delete (rules);
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Missing AAPT2 keep rules should be regenerated.");
+			builder.Output.AssertTargetIsNotSkipped ("_CreateBaseApk");
+			FileAssert.Exists (rules);
 		}
 
 		[Test]

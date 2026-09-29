@@ -13,6 +13,7 @@ using System.Xml.XPath;
 using Microsoft.Build.Framework;
 using Mono.Cecil;
 using NUnit.Framework;
+using Xamarin.Android.AssemblyStore;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
@@ -419,28 +420,32 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (runtime);
 
 			var targetArches = new [] { AndroidTargetArch.Arm64, AndroidTargetArch.X86_64 };
-			var abis = targetArches.Select (arch => MonoAndroidHelper.ArchToAbi (arch));
 
 			proj.SetRuntimeIdentifiers (targetArches);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseAssemblyStore", "True");
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-
-				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
-				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
-				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
 
 				string apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
-				uint numberOfAssembliesInApk = app_config.number_of_assemblies_in_apk;
+
+				(IList<AssemblyStoreExplorer>? explorers, string? errorMessage) = AssemblyStoreExplorer.Open (apk);
+				Assert.IsNull (errorMessage, $"Failed to open the assembly stores in '{apk}': {errorMessage}");
+				Assert.IsNotNull (explorers, $"No assembly stores were found in '{apk}'");
+				Assert.IsNotEmpty (explorers, $"No assembly stores were found in '{apk}'");
 
 				foreach (AndroidTargetArch arch in targetArches) {
+					AssemblyStoreExplorer? explorer = explorers.FirstOrDefault (e => e.TargetArch == arch);
+					Assert.IsNotNull (explorer, $"Assembly store for architecture {arch} (ABI: {MonoAndroidHelper.ArchToAbi (arch)}) was not found in '{apk}'");
+
+					// The assembly count declared in the store's own manifest/header must match the number of
+					// managed assembly entries the archive actually contains for that architecture. This guards
+					// against the store manifest and the packaged payload getting out of sync.
 					Assert.AreEqual (
-						numberOfAssembliesInApk,
-						helper.GetNumberOfAssemblies (arch: arch),
-						$"Assembly count must be equal between ApplicationConfig and the archive contents for architecture {arch} (ABI: {MonoAndroidHelper.ArchToAbi (arch)})"
+						explorer.AssemblyCount,
+						(uint) helper.GetNumberOfAssemblies (arch: arch),
+						$"Assembly count must be equal between the assembly store manifest and the archive contents for architecture {arch} (ABI: {MonoAndroidHelper.ArchToAbi (arch)})"
 					);
 				}
 			}

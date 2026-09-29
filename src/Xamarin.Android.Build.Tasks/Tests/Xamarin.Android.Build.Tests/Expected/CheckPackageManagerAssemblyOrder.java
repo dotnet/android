@@ -4,4 +4,7 @@ public class MonoPackageManager_Resources {
 		/* "HelloAndroid.dll" should be the only entry in this list. */
 		"HelloAndroid.dll",
 	};
+	public static void applyEnvironment (android.content.Context context) {
+		net.dot.android.AppBootstrapConfig.applyEnvironment (context);
+	}
 }

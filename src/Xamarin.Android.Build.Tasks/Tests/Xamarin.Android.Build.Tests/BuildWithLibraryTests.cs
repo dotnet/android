@@ -288,19 +288,14 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.Exists (androidManifest);
 			var doc = XDocument.Load (androidManifest);
 			Assert.IsNotNull(doc.Element ("manifest")?.Element ("queries")?.Element ("package"), $"There should be 1 package in the queries in {androidManifest}.");
-			// Check environment variable
+			// Check environment variable. The generated AppBootstrapConfig.java is a single file shared
+			// across ABIs/RIDs, so there is no need to look it up under a RID-specific subdirectory.
 			if (isRelease) {
-				string envFilesDir;
-				if (runtime == AndroidRuntime.NativeAOT) {
-					envFilesDir = Path.Combine (intermediate, "android-x64");
-				} else {
-					envFilesDir = intermediate;
-				}
-
-				var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (envFilesDir, "x86_64", required: true);
-				var environmentVariables = EnvironmentHelper.ReadEnvironmentVariables (environmentFiles, runtime);
-				Assert.IsTrue (environmentVariables.TryGetValue (env_var, out string actual), $"Environment should contain {env_var}");
-				Assert.AreEqual (env_val, actual, $"{env_var} should be {env_val}");
+				string[] javaConfigFiles = Directory.GetFiles (Path.Combine (intermediate, "android"), "AppBootstrapConfig.java", SearchOption.AllDirectories);
+				Assert.IsNotEmpty (javaConfigFiles, "AppBootstrapConfig.java should have been generated.");
+				string javaConfig = File.ReadAllText (javaConfigFiles[0]);
+				StringAssert.Contains ($"\"{env_var}\"", javaConfig, $"Environment should contain {env_var}");
+				StringAssert.Contains ($"\"{env_val}\"", javaConfig, $"Environment should contain the value {env_val}");
 			}
 
 			// Check Resource.designer.cs

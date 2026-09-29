@@ -152,6 +152,31 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.AreEqual ("XA4329", Errors.Single ().Code);
 		}
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public void InvalidExistingRemapReportsXA4329 (bool malformed)
+		{
+			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
+			string existingRemap = Path.Combine (TestDirectory, "existing-remap.xml");
+			string outputFile = Path.Combine (TestDirectory, "r8-remap.xml");
+			File.WriteAllText (mappingFile, "com.contoso.Peer -> a.b:\n");
+			if (malformed) {
+				File.WriteAllText (existingRemap, "<replacements>");
+			}
+
+			var task = new GenerateR8JniRemapping {
+				BuildEngine = engine,
+				MappingFile = mappingFile,
+				OutputFile = outputFile,
+				ExistingRemapXmlFiles = [new TaskItem (existingRemap)],
+			};
+
+			Assert.IsFalse (task.Execute ());
+			Assert.AreEqual ("XA4329", Errors.Single ().Code);
+			StringAssert.Contains (existingRemap, Errors.Single ().Message);
+			FileAssert.DoesNotExist (outputFile);
+		}
+
 		[Test]
 		public void UnsupportedMethodSignatureWarningIncludesReturnType ()
 		{

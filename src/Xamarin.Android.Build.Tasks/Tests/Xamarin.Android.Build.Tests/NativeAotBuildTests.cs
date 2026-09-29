@@ -62,12 +62,64 @@ namespace Xamarin.Android.Build.Tests
 			string intermediateDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			string [] responseFiles = Directory.GetFiles (intermediateDirectory, "ld.*.rsp", SearchOption.AllDirectories);
 			Assert.IsNotEmpty (responseFiles, "Native linker response files should be generated.");
+			Assert.IsEmpty (Directory.GetFiles (intermediateDirectory, "*.ll", SearchOption.AllDirectories),
+				"NativeAOT app builds should not generate LLVM IR.");
+			Assert.IsNotEmpty (Directory.GetFiles (intermediateDirectory, "AppBootstrapConfig.java", SearchOption.AllDirectories));
+			string [] dexFiles = Directory.GetFiles (intermediateDirectory, "classes*.dex", SearchOption.AllDirectories);
+			Assert.IsNotEmpty (dexFiles);
+			Assert.IsTrue (dexFiles.Any (file => DexUtils.GetDexDump (file, AndroidSdkPath)
+				.Any (line => line.Contains ("name          : 'SystemProperties'", StringComparison.Ordinal))),
+				"R8 must preserve application bootstrap fields read by the NativeAOT host.");
+			// The native host calls AppBootstrapConfig.readRemappingAsset(String) through JNI at
+			// JNI_OnLoad to load the binary JNI remapping asset; if R8 strips this method the app
+			// aborts before managed startup even runs. proguard_trimmable_nativeaot.cfg keeps the
+			// whole class, but assert on the DEX directly so a regression there is caught here too.
+			Assert.IsTrue (dexFiles.Any (file => DexUtils.ContainsClassWithMethod (
+					"Lnet/dot/android/AppBootstrapConfig;", "readRemappingAsset", "(Ljava/lang/String;)[B",
+					DexUtils.GetDexDump (file, AndroidSdkPath))),
+				"R8 must preserve AppBootstrapConfig.readRemappingAsset(String), which the NativeAOT host calls through JNI at JNI_OnLoad.");
 			foreach (string responseFile in responseFiles) {
 				string response = File.ReadAllText (responseFile);
 				StringAssert.Contains ("libnaot-android.release-static-release.a", response, responseFile);
+				StringAssert.Contains ("libSystem.Security.Cryptography.Native.Android.a", response, responseFile);
+				StringAssert.DoesNotContain ($"environment.{abi}.o", response, responseFile);
+				StringAssert.DoesNotContain ($"jni_init_funcs.{abi}.o", response, responseFile);
 				foreach (string archiveName in CPlusPlusArchiveNames) {
 					StringAssert.DoesNotContain (archiveName, response, responseFile);
 				}
+			}
+
+			string rid = AbiUtils.AbiToRuntimeIdentifier (abi);
+			string apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk);
+			byte [] remapAsset = ZipHelper.ReadFileFromZip (apk, $"assets/xa-internal/jni-remap.{rid}.bin");
+			Assert.IsNotNull (remapAsset, $"The packaged apk should contain assets/xa-internal/jni-remap.{rid}.bin, or the native host aborts before managed startup.");
+		}
+
+		[Test]
+		public void BuildNativeAotWithMultipleRuntimeIdentifiers ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			proj.SetRuntimeIdentifiers (["arm64-v8a", "armeabi-v7a"]);
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "The multi-RID NativeAOT build should succeed.");
+
+			string intermediateDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			Assert.IsEmpty (Directory.GetFiles (intermediateDirectory, "*.ll", SearchOption.AllDirectories));
+			string [] fileWrites = File.ReadAllLines (Path.Combine (intermediateDirectory, $"{proj.ProjectName}.csproj.FileListAbsolute.txt"));
+
+			string apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk);
+			foreach (string rid in new [] { "android-arm64", "android-arm" }) {
+				byte [] asset = ZipHelper.ReadFileFromZip (apk, $"assets/xa-internal/jni-remap.{rid}.bin");
+				Assert.IsNotNull (asset, $"NativeAOT must package a separate JNI remapping asset for {rid}.");
+				Assert.GreaterOrEqual (asset.Length, 64, $"The {rid} asset must contain a valid binary header.");
+				string assetFile = Path.Combine (intermediateDirectory, "android", "jni-remap", $"jni-remap.{rid}.bin");
+				CollectionAssert.Contains (fileWrites, assetFile, $"The {rid} asset must be tracked for incremental clean.");
 			}
 		}
 

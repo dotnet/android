@@ -1,10 +1,9 @@
 package net.dot.jni.nativeaot;
 
 import java.util.Locale;
-import android.system.ErrnoException;
-import android.system.Os;
 import android.util.Log;
 import net.dot.android.ApplicationRegistration;
+import net.dot.android.AppBootstrapConfig;
 
 public class NativeAotRuntimeProvider
     extends android.content.ContentProvider
@@ -13,7 +12,6 @@ public class NativeAotRuntimeProvider
 
     public NativeAotRuntimeProvider() {
         Log.d(TAG, "NativeAotRuntimeProvider()");
-        NativeAotEnvironmentVars.Initialize ();
     }
 
     @Override
@@ -36,6 +34,7 @@ public class NativeAotRuntimeProvider
         String cacheDir = context.getCacheDir().getAbsolutePath();
 
         // Initialize .NET runtime
+        AppBootstrapConfig.applyEnvironment(context);
         JavaInteropRuntime.loadLibrary(context);
         JavaInteropRuntime.init(loader, language, filesDir, cacheDir);
         // NOTE: only required for custom applications

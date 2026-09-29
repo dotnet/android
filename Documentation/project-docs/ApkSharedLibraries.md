@@ -31,11 +31,13 @@ library images, as required by the Android Linux kernel.
 
 ## .NET for Android runtime, libraries and data
 
-`.NET for Android` runtime is composed of two libraries, one being the pre-compiled runtime
-itself (`libmonodroid.so` in the APK) and another library being built together with the
-application, containing application-specific dynamically generated code (`libxamarin-app.so`
-in the APK).  These two libraries together contain all the code and data to make the application
-run properly on all the supported targets.
+CoreCLR applications use the prebuilt native host (`libmonodroid.so` in the APK) and generated
+Java bootstrap configuration (`AppBootstrapConfig.java`). Application-specific environment and
+runtime properties, native-library preload settings, and the presence of an assembly store are
+supplied through this Java configuration; JNI remappings are packaged in a versioned binary
+asset. CoreCLR does not build or package an application-specific `libxamarin-app.so`. NativeAOT
+applications still link their managed code into an application library through ILC, but do not
+generate a separate Android bootstrap native library.
 
 In addition to the above, `.NET for Android` ships a number of managed assemblies.  For a number
 of years (starting with `Mono for Android`, through `Xamarin.Android`), all the assemblies had

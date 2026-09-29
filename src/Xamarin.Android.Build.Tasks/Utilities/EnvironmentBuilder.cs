@@ -30,10 +30,14 @@ class EnvironmentBuilder
 
 	public void AddEnvironmentVariable (string name, string value)
 	{
+		if (name.IsNullOrEmpty ()) {
+			throw new ArgumentException ("Environment variable name must not be empty", nameof (name));
+		}
+
 		if (Char.IsUpper(name [0]) || !Char.IsLetter(name [0])) {
-			environmentVariables [ValidAssemblerString (name)] = ValidAssemblerString (value);
+			environmentVariables [name] = value;
 		} else {
-			systemProperties [ValidAssemblerString (name)] = ValidAssemblerString (value);
+			systemProperties [name] = value;
 		}
 	}
 
@@ -47,6 +51,4 @@ class EnvironmentBuilder
 		string[] nv = line.Split (new char[]{'='}, 2);
 		AddEnvironmentVariable (nv[0].Trim (), nv.Length < 2 ? String.Empty : nv[1].Trim ());
 	}
-
-	static string ValidAssemblerString (string s) => s.Replace ("\\", "\\\\").Replace ("\"", "\\\"");
 }

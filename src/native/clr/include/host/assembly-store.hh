@@ -16,11 +16,11 @@ namespace xamarin::android {
 		static auto open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*;
 
 		// Configure the store directly from an in-memory payload pointer (obtained via
-		// dlopen()+dlsym() of the `_assembly_store` dynamic symbol). The payload is mapped
+		// dlopen()+dlsym() of the `_assembly_store` and `_assembly_store_end` symbols). The payload is mapped
 		// read-only and is never modified, so it (and every pointer derived from it) is `const`.
 		// `store_path` is used only in diagnostic messages and may be `nullptr` - every use of it
 		// goes through `optional_string ()`.
-		static void configure_from_payload (const void *payload_start, const char *store_path) noexcept;
+		static void configure_from_payload (const void *payload_start, size_t payload_size, const char *store_path) noexcept;
 
 	private:
 		static void set_assembly_data_and_size (uint8_t* source_assembly_data, uint32_t source_assembly_data_size, uint8_t*& dest_assembly_data, uint32_t& dest_assembly_data_size) noexcept;
@@ -31,6 +31,11 @@ namespace xamarin::android {
 
 	private:
 		static inline const AssemblyStoreIndexEntry *assembly_store_hashes = nullptr;
+		static inline AssemblyStoreSingleAssemblyRuntimeData *runtime_assemblies = nullptr;
+		static inline CompressedAssemblyDescriptor *compressed_descriptors = nullptr;
+		static inline uint8_t *uncompressed_buffer = nullptr;
+		static inline uint32_t compressed_count = 0;
+		static inline uint32_t uncompressed_size = 0;
 		// Assembly names indexed by `AssemblyStoreIndexEntry::descriptor_index`, used to disambiguate
 		// CRC32 hash collisions in the store index. Built once when the store is mapped.
 		static inline std::string_view *assembly_store_names = nullptr;

@@ -40,7 +40,6 @@ target_link_libraries(
   ${LIB_NAME}
   PRIVATE
   xa::shared
-  xa::xamarin-app
   xa::runtime-base
 )
 

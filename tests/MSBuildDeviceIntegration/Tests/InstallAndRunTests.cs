@@ -2471,11 +2471,6 @@ namespace UnnamedProject
 				return;
 			}
 
-			// TODO: fix for NativeAOT, if possible
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("Type and member mapping is currently unsupported under NativeAOT");
-			}
-
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				EnableDefaultItems = true,

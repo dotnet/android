@@ -52,11 +52,6 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 	public ITaskItem [] NativeLibraries { get; set; } = [];
 
 	/// <summary>
-	/// Additional object files to link (e.g., jni_init_funcs.o, environment.o, libbootstrapperdll.o)
-	/// </summary>
-	public ITaskItem []? AdditionalObjectFiles { get; set; }
-
-	/// <summary>
 	/// CRT start files (e.g., crtbegin_so.o) — linked first
 	/// </summary>
 	public ITaskItem []? CrtStartFiles { get; set; }
@@ -175,8 +170,7 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 		// 1. ILC object file
 		// 2. Native libraries (.a archives from ILC runtime pack)
 		// 3. System libraries (-ldl, -lz, -llog, -lm, -lc)
-		// 4. Additional object files (jni_init, environment, etc.)
-		// 5. Compiler-rt and unwinder libraries
+		// 4. Compiler-rt and unwinder libraries
 		var linkItems = new List<ITaskItem> ();
 
 		linkItems.Add (CopyItemWithAbi (NativeObject, abi));
@@ -192,12 +186,6 @@ public class LinkNativeAotSharedLibrary : AndroidTask
 		if (SystemLibraries != null) {
 			foreach (var lib in SystemLibraries) {
 				linkItems.Add (NativeLinker.MakeLibraryItem (lib.ItemSpec, abi));
-			}
-		}
-
-		if (AdditionalObjectFiles != null) {
-			foreach (var obj in AdditionalObjectFiles) {
-				linkItems.Add (CopyItemWithAbi (obj, abi));
 			}
 		}
 

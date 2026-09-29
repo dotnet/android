@@ -92,13 +92,9 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
 				$"ReadyToRun image not found in {assemblyName}.dll! ManagedNativeHeaderDirectory should not be empty!");
 
-			var compressedAssembliesSource = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, rid, "android", $"compressed_assemblies.{abi}.ll");
-			FileAssert.Exists (compressedAssembliesSource);
-			var compressedAssembliesSourceText = File.ReadAllText (compressedAssembliesSource);
-			StringAssert.Contains ("@compressed_assembly_count = dso_local local_unnamed_addr constant i32 0, align 4", compressedAssembliesSourceText);
-			StringAssert.Contains ("@compressed_assembly_descriptors = dso_local local_unnamed_addr global [0 x %struct.CompressedAssemblyDescriptor] zeroinitializer, align 4", compressedAssembliesSourceText);
-			StringAssert.Contains ("@uncompressed_assemblies_data_size = dso_local local_unnamed_addr constant i32 0, align 4", compressedAssembliesSourceText);
-			StringAssert.Contains ("@uncompressed_assemblies_data_buffer = dso_local local_unnamed_addr global [0 x i8] zeroinitializer, align 1", compressedAssembliesSourceText);
+			var androidIntermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, rid, "android");
+			Assert.IsEmpty (Directory.GetFiles (androidIntermediate, "*.ll", SearchOption.AllDirectories),
+				"ReadyToRun builds should not generate application LLVM IR even when assembly compression is disabled.");
 		}
 
 		[Test]
@@ -512,8 +508,6 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				b.AssertHasNoWarnings ();
-				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
-					"Should not get a warning from the <CompileNativeAssembly/> task.");
 				var lockFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, ".__lock");
 				FileAssert.DoesNotExist (lockFile);
 			}
@@ -2176,8 +2170,9 @@ namespace App1
 			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 		}
 
-		[Test]
-		public void InvalidCustomJniInitFunctionName ()
+		[TestCase (false)]
+		[TestCase (true)]
+		public void NativeAotRejectsCustomJniInitFunctions (bool invalidName)
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: true)) {
 				return;
@@ -2188,16 +2183,15 @@ namespace App1
 			};
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
 
-			// A malicious NuGet package could inject LLVM IR via a function name containing
-			// newlines or non-identifier characters (VULN-341/342).  The build must reject
-			// names that are not valid C identifiers.
-			proj.OtherBuildItems.Add (new BuildItem ("AndroidStaticJniInitFunction", "valid_name"));
-			proj.OtherBuildItems.Add (new BuildItem ("AndroidStaticJniInitFunction", "evil\ndefine void @injected()"));
+			// Test names become directory names, so keep the injected newline out of the test case name.
+			string name = invalidName ? "evil\ndefine void @injected()" : "valid_name";
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidStaticJniInitFunction", name));
 
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
-				Assert.IsFalse (b.Build (proj), "Build should have failed due to invalid CustomJniInitFunctions names.");
-				StringAssertEx.ContainsRegex (@"is not a valid C identifier", b.LastBuildOutput, "Expected an error about invalid C identifier");
+				Assert.IsFalse (b.Build (proj), "NativeAOT must reject all AndroidStaticJniInitFunction items.");
+				StringAssertEx.Contains ("error XA1051", b.LastBuildOutput);
+				StringAssertEx.Contains ("AndroidStaticJniInitFunction", b.LastBuildOutput);
 			}
 		}
 	}

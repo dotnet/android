@@ -6,8 +6,8 @@ namespace Xamarin.Android.Tasks;
 
 /// <summary>
 /// Generates NativeAOT bootstrap Java sources: JavaInteropRuntime.java (loads the native
-/// library and exposes the runtime init entry point) and NativeAotEnvironmentVars.java
-/// (bakes in environment variable names/values for the native runtime).
+/// library and exposes the runtime init entry point) and AppBootstrapConfig.java
+/// (bakes in application environment and property values).
 ///
 /// These files are needed by NativeAotRuntimeProvider.java.
 ///

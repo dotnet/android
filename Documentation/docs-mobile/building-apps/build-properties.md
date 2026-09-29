@@ -1320,6 +1320,17 @@ causes error [XA4267](../messages/xa4267.md).
 
 The default value is `trimmable` for all Android projects.
 
+For CoreCLR and NativeAOT applications, `trimmable` generates Java bootstrap
+configuration instead of app-specific LLVM IR: no app-specific native library
+is generated, linked, copied, or packaged for CoreCLR (the native CoreCLR host
+itself owns the remaining runtime data previously supplied by
+`libxamarin-app.so`), except for the data-only `assembly-store.so` when
+assembly stores are enabled. Experimental native runtime linking
+(`$(_AndroidEnableNativeRuntimeLinking)`) depended on that removed LLVM IR
+bootstrap and is no longer supported; setting it to `true` causes error
+[XA1052](../messages/xa1052.md). Marshal methods are similarly unsupported;
+see [`$(AndroidEnableMarshalMethods)`](#androidenablemarshalmethods).
+
 ## AndroidUseApkSigner
 
 A bool property that allows the developer to

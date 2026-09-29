@@ -30,7 +30,7 @@ namespace Android.Runtime
 			public int             packageNamingPolicy;
 			public byte            ioExceptionType;
 			public IntPtr          jniRemappingData;
-			public bool            marshalMethodsEnabled;
+			public int             jniRemappingDataLength;
 			public IntPtr          grefGCUserPeerable;
 			public IntPtr          propagateUncaughtExceptionFn;
 			public IntPtr          grefLogPath;
@@ -44,7 +44,6 @@ namespace Android.Runtime
 		}
 #pragma warning restore 0649
 
-		internal static bool MarshalMethodsEnabled;
 		internal static bool PropagateExceptions;
 		internal static BoundExceptionType BoundExceptionType;
 		internal static int gref_gc_threshold;
@@ -131,13 +130,15 @@ namespace Android.Runtime
 			SetSynchronizationContext ();
 		}
 
-		static void InitializeCommonState (JnienvInitializeArgs args)
+		static unsafe void InitializeCommonState (JnienvInitializeArgs args)
 		{
 			Logger.SetLogCategories ((LogCategories)args.logCategories);
 
 			InitializeMaxGrefCounts (args);
-			JniRemappingLookup.Initialize (args.jniRemappingData);
-			MarshalMethodsEnabled = args.marshalMethodsEnabled;
+			if (args.jniRemappingData == IntPtr.Zero || args.jniRemappingDataLength <= 0) {
+				throw new InvalidOperationException ("JNI remapping asset was not loaded.");
+			}
+			JniRemappingLookup.Initialize (new ReadOnlySpan<byte> ((void*)args.jniRemappingData, args.jniRemappingDataLength));
 			java_class_loader = args.grefLoader;
 
 			BoundExceptionType = (BoundExceptionType)args.ioExceptionType;

@@ -179,6 +179,7 @@ namespace Xamarin.Android.Build.Tests
 				"res/layout/main.xml",
 				"resources.pb",
 			};
+			var notExpectedFiles = new List<string> ();
 
 			string blobEntryPrefix = ArchiveAssemblyHelper.DefaultAssemblyStoreEntryPrefix;
 
@@ -210,7 +211,9 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				expectedFiles.Add ($"lib/{abi}/libmonodroid.so");
-				expectedFiles.Add ($"lib/{abi}/libxamarin-app.so");
+				// The CoreCLR native host defines its own `assembly_store` symbol and has no
+				// libxamarin-app.so DT_NEEDED anymore; the stub is no longer built or packaged.
+				notExpectedFiles.Add ($"lib/{abi}/libxamarin-app.so");
 				if (usesAssemblyBlobs) {
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
 				} else {
@@ -221,6 +224,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 			foreach (var expected in expectedFiles) {
 				CollectionAssert.Contains (contents, expected, $"`{baseZip}` did not contain `{expected}`");
+			}
+			foreach (var notExpected in notExpectedFiles) {
+				CollectionAssert.DoesNotContain (contents, notExpected, $"`{baseZip}` should not contain `{notExpected}`");
 			}
 		}
 
@@ -248,6 +254,7 @@ namespace Xamarin.Android.Build.Tests
 				"base/resources.pb",
 				"BundleConfig.pb",
 			};
+			var notExpectedFiles = new List<string> ();
 
 			string blobEntryPrefix = ArchiveAssemblyHelper.DefaultAssemblyStoreEntryPrefix;
 
@@ -279,7 +286,9 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				expectedFiles.Add ($"base/lib/{abi}/libmonodroid.so");
-				expectedFiles.Add ($"base/lib/{abi}/libxamarin-app.so");
+				// The CoreCLR native host defines its own `assembly_store` symbol and has no
+				// libxamarin-app.so DT_NEEDED anymore; the stub is no longer built or packaged.
+				notExpectedFiles.Add ($"base/lib/{abi}/libxamarin-app.so");
 				if (usesAssemblyBlobs) {
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
 				} else {
@@ -290,6 +299,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 			foreach (var expected in expectedFiles) {
 				CollectionAssert.Contains (contents, expected, $"`{aab}` did not contain `{expected}`");
+			}
+			foreach (var notExpected in notExpectedFiles) {
+				CollectionAssert.DoesNotContain (contents, notExpected, $"`{aab}` should not contain `{notExpected}`");
 			}
 		}
 

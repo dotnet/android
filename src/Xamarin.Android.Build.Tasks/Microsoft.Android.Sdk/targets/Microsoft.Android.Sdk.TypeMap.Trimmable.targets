@@ -371,23 +371,7 @@
   </Target>
 
   <!--
-    Populates @(_AdditionalNativeConfigResolvedAssemblies) with the trimmable TypeMap DLLs
-    so that GenerateNativeApplicationConfigSources (in _GeneratePackageManagerJava) accounts
-    for them.  This must NOT live inside _GenerateJavaStubs because that target can be
-    skipped on incremental builds, which would leave the item group empty.
-  -->
-  <Target Name="_PrepareTrimmableNativeConfigAssemblies"
-      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' "
-      BeforeTargets="_GeneratePackageManagerJava"
-      DependsOnTargets="_ReadGeneratedTrimmableTypeMapAssemblies">
-    <ItemGroup>
-      <_AdditionalNativeConfigResolvedAssemblies Remove="@(_AdditionalNativeConfigResolvedAssemblies)" />
-      <_AdditionalNativeConfigResolvedAssemblies Include="@(_GeneratedTypeMapAssembliesFromList)" />
-    </ItemGroup>
-  </Target>
-
-  <!--
-    Populate the TypeMap assembly items used by packaging and native config from
+    Populate the TypeMap assembly items used by packaging from
     the generated files on disk.  This must NOT live inside _GenerateJavaStubs
     because that target can be skipped on incremental builds, which would leave
     the item groups empty for targets such as Install.
@@ -405,9 +389,8 @@
       <_TypeMapFirstRid Condition=" '$(_TypeMapFirstAbi)' == 'x86' ">android-x86</_TypeMapFirstRid>
     </PropertyGroup>
 
-    <!-- Add TypeMap DLLs to _ResolvedAssemblies and _ShrunkAssemblies so they are counted by
-         GenerateNativeApplicationConfigSources (in _GeneratePackageManagerJava),
-         included in the assembly store hash table, and keep _RemoveRegisterAttribute
+    <!-- Add TypeMap DLLs to _ResolvedAssemblies and _ShrunkAssemblies so they are
+         included in the assembly store hash table and keep _RemoveRegisterAttribute
          source/destination counts in sync. -->
     <ItemGroup>
       <_TrimmableTypeMapResolvedAssemblies Remove="@(_TrimmableTypeMapResolvedAssemblies)" />

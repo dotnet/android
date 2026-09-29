@@ -31,7 +31,6 @@
       <_ConfigureRuntimesInputs  Include="clr\host\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="clr\runtime-base\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="clr\shared\CMakeLists.txt" />
-      <_ConfigureRuntimesInputs  Include="clr\xamarin-app-stub\CMakeLists.txt" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
@@ -160,7 +159,6 @@
       <_RuntimeSources Include="clr\include\**\*.hh" />
       <_RuntimeSources Include="clr\host\*.cc;clr\host\*.hh" />
       <_RuntimeSources Include="clr\startup\*.cc;clr\startup\*.hh" />
-      <_RuntimeSources Include="clr\xamarin-app-stub\*.cc;clr\xamarin-app-stub\*.hh" />
       <_RuntimeSources Include="clr\runtime-base\*.cc;clr\runtime-base\*.hh" />
       <_RuntimeSources Include="clr\shared\*.cc;clr\shared\*.hh" />
     </ItemGroup>
@@ -168,6 +166,8 @@
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
       <_RuntimeSources Include="clr\include\constants.hh" />
       <_RuntimeSources Include="clr\include\runtime-base\android-system.hh" />
+      <_RuntimeSources Include="clr\include\runtime-base\app-bootstrap-properties.hh" />
+      <_RuntimeSources Include="clr\runtime-base\app-bootstrap-properties.cc" />
       <_RuntimeSources Include="clr\runtime-base\android-system-shared.cc" />
       <_RuntimeSources Include="clr\runtime-base\logger.cc" />
       <_RuntimeSources Include="nativeaot\include\**\*.hh" />
@@ -182,11 +182,6 @@
       <_BuildAndroidRuntimesInputs  Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-Release\CMakeCache.txt')" />
       <_BuildAndroidRuntimesInputs  Include="@(_RuntimeSources)" />
       <_BuildAndroidRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
-    </ItemGroup>
-
-    <ItemGroup Condition= " '$(CMakeRuntimeFlavor)' != 'NativeAOT' ">
-      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Debug\libxamarin-app.so')" />
-      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Release\libxamarin-app.so')" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
