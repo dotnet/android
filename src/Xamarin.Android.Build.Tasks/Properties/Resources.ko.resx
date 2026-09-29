@@ -465,13 +465,21 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>'AndroidEnableProguard' MSBuild 속성이 'true'로 설정되어 있고 'AndroidLinkTool' MSBuild 속성이 비어 있으므로 'AndroidLinkTool'이 기본값적으로 'proguard'로 설정됩니다.</value>
     <comment>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
   </data>
+  <data name="XA1029" xml:space="preserve">
+    <value>The 'AotAssemblies' MSBuild property is deprecated. Remove it. For supported .NET 10-and-earlier projects that use Mono, use the 'RunAOTCompilation' MSBuild property instead. CoreCLR and NativeAOT do not use this property.</value>
+    <comment>The following are literal names and should not be translated: 'AotAssemblies', 'RunAOTCompilation', .NET, Mono, CoreCLR, NativeAOT</comment>
+  </data>
+  <data name="XA1030" xml:space="preserve">
+    <value>The 'RunAOTCompilation' MSBuild property is only supported when trimming is enabled. Edit the project file in a text editor to set 'PublishTrimmed' to 'true' for this build configuration.</value>
+    <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
+  </data>
   <data name="XA1034" xml:space="preserve">
     <value>프로젝트에서 `_Microsoft.Android.Resource.Designer` 어셈블리를 사용하는 '{0}'을(를) 참조하지만 이 기능이 활성화되지 않았습니다. 프로젝트 파일에서 `AndroidUseDesignerAssembly` MSBuild 속성을 `true`로 설정하세요.</value>
     <comment>The following are literal names and should not be translated: '_Microsoft.Android.Resource.Desinger', 'AndroidUseDesignerAssembly', 'true'
 {0} - The name of the assembly</comment>
   </data>
   <data name="XA1035" xml:space="preserve">
-    <value>The 'BundleAssemblies' property is deprecated and no longer affects the build. Remove it. For supported .NET 10-and-earlier Mono projects, use 'AndroidUseAssemblyStore' with 'AndroidEnableAssemblyCompression' for the former behavior. .NET 11 CoreCLR controls packaged assembly-store behavior and needs no replacement setting.</value>
+    <value>'BundleAssemblies' 속성은 더 이상 사용되지 않으며 빌드에 영향을 주지 않습니다. 제거하세요. 지원되는 .NET 10 이하 Mono 프로젝트의 경우 전자의 동작에 대해 'AndroidUseAssemblyStore'와 함께 'AndroidEnableAssemblyCompression'을 사용합니다. .NET 11 CoreCLR은 패키지된 어셈블리 저장소 동작을 제어하며 대체 설정이 필요하지 않습니다.</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression', .NET, Mono, CoreCLR</comment>
   </data>
   <data name="XA1036" xml:space="preserve">
@@ -1267,12 +1275,12 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
   <data name="XA4265" xml:space="preserve">
-    <value>Assembly '{0}' uses a Java peer callback format that requires AndroidTypeMapImplementation=trimmable.</value>
+    <value>어셈블리 '{0}'는 AndroidTypeMapImplementation=trimmable을 요구하는 Java 피어 콜백 형식을 사용합니다.</value>
     <comment>The following are literal names and should not be translated: Java, AndroidTypeMapImplementation, trimmable.
 {0} - Assembly path</comment>
   </data>
   <data name="XA4266" xml:space="preserve">
-    <value>Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata when AndroidTypeMapImplementation=trimmable.</value>
+    <value>어셈블리 '{0}'의 런타임별 구현 '{1}' 및 '{2}'에서 Java 피어 콜백 메타데이터가 다릅니다. AndroidTypeMapImplementation=trimmable인 경우 모든 RuntimeIdentifiers는 동등한 콜백 메타데이터를 제공해야 합니다.</value>
     <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers, AndroidTypeMapImplementation, trimmable.
 {0} - Assembly name
 {1} - First runtime-specific assembly path
