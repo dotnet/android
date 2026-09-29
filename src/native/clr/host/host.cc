@@ -485,9 +485,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 
 	log_infof (LOG_GC, "GREF GC Threshold: %d", init.grefGcThreshold);
 
-	OSBridge::initialize_on_runtime_init (env, runtimeClass);
-	GCBridge::initialize_on_runtime_init (env, runtimeClass);
-
 	log_debugf (LOG_ASSEMBLY, "Creating UCO delegate to %s.Initialize", Constants::JNIENVINIT_FULL_TYPE_NAME.data ());
 	void *delegate = create_delegate (Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "Initialize"sv);
 	auto initialize = reinterpret_cast<jnienv_initialize_fn> (delegate);
