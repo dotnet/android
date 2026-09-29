@@ -27,7 +27,8 @@ public class TypeMapProguardTargetsTests : IDisposable
 		Build (project, "-p:_AndroidEnableTypemapR8Trimming=true");
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
 		Assert.Equal (TypeRules ("test.Live", "test.Outer$Inner", "test.Second"), File.ReadAllText (rules));
-		Assert.False (File.Exists (Path.Combine (directory, "obj", "proguard", "proguard_typemap_members.cfg")));
+		Assert.Equal (MemberRules ("test.Live", "test.Outer$Inner", "test.Second"),
+			File.ReadAllText (Path.Combine (directory, "obj", "proguard", "proguard_typemap_members.cfg")));
 		Build (project, "-p:_AndroidEnableTypemapR8Trimming=false");
 		Assert.Contains ("legacy ACW configuration", File.ReadAllText (rules));
 		File.Delete (second);
@@ -36,7 +37,7 @@ public class TypeMapProguardTargetsTests : IDisposable
 	}
 
 	[NativeAotObjectFact]
-	public void EnablingDisablingAndUnsettingCannotReuseLegacyRules ()
+	public void NativeAotModeRoundTripsCannotReuseWrongRules ()
 	{
 		var nativeObject = WriteNativeObject ("app", "test/Live");
 		Write ("acw-map.txt", "App.Live, App;test.Live\n");
@@ -44,21 +45,33 @@ public class TypeMapProguardTargetsTests : IDisposable
 			NativeObjectItem ("app.so", nativeObject));
 		var keys = Path.Combine (directory, "obj", "typemap.keys.txt");
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
-		foreach (var enabled in new [] { "true", "" }) {
-			Build (project, "-p:_AndroidEnableTypemapR8Trimming=true");
-			var keysTime = File.GetLastWriteTimeUtc (keys);
-			Build (project, "-p:_AndroidEnableTypemapR8Trimming=false");
-			Assert.Equal (keysTime, File.GetLastWriteTimeUtc (keys));
+		Build (project, "-p:_AndroidEnableTypemapR8Trimming=false");
+		AssertLegacyRules ();
+		Build (project, "-p:_AndroidEnableTypemapR8Trimming=true");
+		AssertModernRules ();
+		var keysTime = File.GetLastWriteTimeUtc (keys);
+		Build (project, "-p:_AndroidEnableTypemapR8Trimming=false");
+		Assert.Equal (keysTime, File.GetLastWriteTimeUtc (keys));
+		AssertLegacyRules ();
+		Build (project, "-p:_AndroidEnableTypemapR8Trimming=true");
+		AssertModernRules ();
+		Build (project, "-p:_AndroidEnableTypemapR8Trimming=");
+		AssertLegacyRules ();
+
+		void AssertLegacyRules ()
+		{
+			Assert.Contains ("legacy ACW configuration", File.ReadAllText (rules));
 			Assert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
-			Assert.DoesNotContain ("-keep class test.Live", File.ReadAllText (rules));
-			Build (project, "-p:_AndroidEnableTypemapR8Trimming=" + enabled);
-			if (enabled == "") {
-				Assert.Contains ("legacy ACW configuration", File.ReadAllText (rules));
-				Assert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
-			} else {
-				Assert.Equal (TypeRules ("test.Live"), File.ReadAllText (rules));
-				Assert.Contains ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
-			}
+		}
+
+		void AssertModernRules ()
+		{
+			Assert.Equal (TypeRules ("test.Live"), File.ReadAllText (rules));
+			Assert.Equal (MemberRules ("test.Live"),
+				File.ReadAllText (Path.Combine (directory, "obj", "proguard", "proguard_typemap_members.cfg")));
+			var writes = File.ReadAllText (Path.Combine (directory, "writes.txt"));
+			Assert.Contains ("UseTypeMap=true", writes);
+			Assert.Contains ("Members=", writes);
 		}
 	}
 
@@ -224,6 +237,9 @@ public class TypeMapProguardTargetsTests : IDisposable
 
 	static string TypeRules (params string [] names) =>
 		string.Concat (names.Select (name => $"-keep class {name}\n-keep interface {name}\n"));
+
+	static string MemberRules (params string [] names) =>
+		string.Concat (names.Select (name => $"-keepclassmembers class {name} {{ *; }}\n-keepclassmembers interface {name} {{ *; }}\n"));
 
 	string CreateProject (string runtime, string representation, params string [] sourceItems)
 	{
