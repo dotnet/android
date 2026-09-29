@@ -31,7 +31,13 @@ namespace Xamarin.Android.Tools
 		public static void DiscoverInstallationPaths (out string? androidSdkPath, out string[] allAndroidSdkPaths, out string? javaSdkPath,
 			string? preferredAndroidSdkPath = null, string? preferredJavaSdkPath = null, Action<TraceLevel, string>? logger = null)
 		{
-			var sdk = CreateSdk (logger ?? DefaultConsoleLogger);
+			DiscoverInstallationPaths (CreateSdk (logger ?? DefaultConsoleLogger), out androidSdkPath, out allAndroidSdkPaths,
+				out javaSdkPath, preferredAndroidSdkPath, preferredJavaSdkPath);
+		}
+
+		internal static void DiscoverInstallationPaths (AndroidSdkBase sdk, out string? androidSdkPath, out string[] allAndroidSdkPaths,
+			out string? javaSdkPath, string? preferredAndroidSdkPath = null, string? preferredJavaSdkPath = null)
+		{
 			sdk.Initialize (preferredAndroidSdkPath, javaSdkPath: preferredJavaSdkPath);
 			androidSdkPath = sdk.AndroidSdkPath;
 			allAndroidSdkPaths = sdk.AllAndroidSdks;
