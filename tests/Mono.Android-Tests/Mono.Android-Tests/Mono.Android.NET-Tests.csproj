@@ -198,6 +198,7 @@
 
   <ItemGroup>
     <AndroidInterfaceDescription Include="Android.OS\IAidlProxyTest.aidl" />
+    <AndroidJavaSource Update="java\net\dot\android\test\InterfaceCollectionFixture.java" Bind="false" />
   </ItemGroup>
 
   <ItemGroup>
