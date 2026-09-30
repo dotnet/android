@@ -21,9 +21,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 	<!-- If the user is using the shared runtime, we are going to
 		partially override their supported Abis and support x86 as well -->
 	<AndroidSupportedAbis Condition=" '$(AndroidSupportedAbis)' == '' And '$(EmbedAssembliesIntoApk)' != 'True' And '$(UsingAndroidNETSdk)' != 'True' ">arm64-v8a;armeabi-v7a;x86;x86_64</AndroidSupportedAbis>
-	<AndroidGdbTargetPort>9999</AndroidGdbTargetPort>
-	<AndroidGdbHostPort>9999</AndroidGdbHostPort>
-	<AndroidGdbSymbolsPath>$(ProjectDir)\gdb-symbols</AndroidGdbSymbolsPath>
 	<AndroidPreserveUserData Condition=" '$(AndroidPreserveUserData)' == '' ">True</AndroidPreserveUserData>
 	<LaunchFlags Condition="!($(LaunchFlags.Contains ('user'))) And '$(AndroidDeviceUserId)' != '' " >--user $(AndroidDeviceUserId)</LaunchFlags>
 </PropertyGroup>
