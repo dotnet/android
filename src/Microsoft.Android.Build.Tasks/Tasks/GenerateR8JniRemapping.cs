@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
@@ -11,9 +12,11 @@ using System.Xml;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tasks.JniRemapping;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	/// <summary>
 	/// Converts an R8 mapping file into runtime JNI remapping XML without modifying managed
@@ -44,7 +47,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			if (!File.Exists (MappingFile)) {
-				LogR8JniRemappingError (string.Format (Properties.Resources.XA4325_MappingNotFound, MappingFile));
+				LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_MappingNotFound, MappingFile));
 				return false;
 			}
 
@@ -52,7 +55,7 @@ namespace Xamarin.Android.Tasks
 			try {
 				mapping = R8Mapping.Load (MappingFile);
 			} catch (Exception ex) when (ex is FormatException || ex is IOException || ex is UnauthorizedAccessException) {
-				LogR8JniRemappingError (string.Format (Properties.Resources.XA4325_MappingDataFailure, MappingFile, ex.Message));
+				LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_MappingDataFailure, MappingFile, ex.Message));
 				return false;
 			}
 
@@ -61,13 +64,13 @@ namespace Xamarin.Android.Tasks
 			HashSet<string>? requiredEntries;
 			if (NativeAot) {
 				if (NativeAotObjectFile.IsNullOrEmpty () || !File.Exists (NativeAotObjectFile)) {
-					LogR8JniRemappingError (string.Format (Properties.Resources.XA4325_NativeAotObjectRequired, NativeAotObjectFile ?? ""));
+					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_NativeAotObjectRequired, NativeAotObjectFile ?? ""));
 					return false;
 				}
 				try {
 					requiredEntries = NativeAotJniRetention.GetRequiredEntries (NativeAotObjectFile, mapping);
 				} catch (Exception ex) when (ex is IOException || ex is InvalidDataException || ex is UnauthorizedAccessException) {
-					LogR8JniRemappingError (string.Format (Properties.Resources.XA4325_NativeAotObjectReadFailure, NativeAotObjectFile, ex.Message));
+					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_NativeAotObjectReadFailure, NativeAotObjectFile, ex.Message));
 					return false;
 				}
 				Log.LogDebugMessage ($"Post-ILC NativeAOT JNI retention selected {requiredEntries.Count} mapping entries.");
@@ -110,7 +113,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				if (!File.Exists (path)) {
-					LogR8JniRemappingError (string.Format (Properties.Resources.XA4325_AssemblyNotFound, path));
+					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_AssemblyNotFound, path));
 					continue;
 				}
 
@@ -118,14 +121,14 @@ namespace Xamarin.Android.Tasks
 					using var stream = File.OpenRead (path);
 					using var peReader = new PEReader (stream);
 					if (!peReader.HasMetadata) {
-						LogR8JniRemappingError (string.Format (Properties.Resources.XA4325_AssemblyHasNoMetadata, path));
+						LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_AssemblyHasNoMetadata, path));
 						continue;
 					}
 					JniRemappingAssemblyScanner.Scan (peReader, peReader.GetMetadataReader (), mapping, Log);
 				} catch (BadImageFormatException ex) {
-					LogR8JniRemappingError (string.Format (Properties.Resources.XA4325_AssemblyReadFailure, path, ex.Message));
+					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_AssemblyReadFailure, path, ex.Message));
 				} catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) {
-					LogR8JniRemappingError (string.Format (Properties.Resources.XA4325_AssemblyReadFailure, path, ex.Message));
+					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_AssemblyReadFailure, path, ex.Message));
 				}
 			}
 		}
@@ -246,6 +249,7 @@ namespace Xamarin.Android.Tasks
 				sourceSignature = JniDescriptorText.JavaSourceTypeToJniTypeToken (field.JavaFieldType);
 			} catch (ArgumentException) {
 				LogR8JniRemappingWarning (string.Format (
+					CultureInfo.InvariantCulture,
 					Properties.Resources.XA4326_UnsupportedSignature,
 					$"{classMapping.OriginalJniName}.{field.OriginalName}",
 					field.JavaFieldType));
@@ -282,6 +286,7 @@ namespace Xamarin.Android.Tasks
 				sourceSignature = JniDescriptorText.JavaSourceTypesToMethodDescriptor (method.JavaParameterTypes, method.JavaReturnType);
 			} catch (ArgumentException) {
 				LogR8JniRemappingWarning (string.Format (
+					CultureInfo.InvariantCulture,
 					Properties.Resources.XA4326_UnsupportedSignature,
 					$"{classMapping.OriginalJniName}.{method.OriginalName}",
 					R8Mapping.BuildMethodKey (method.OriginalName, method.JavaParameterTypes, method.JavaReturnType)));
@@ -326,6 +331,7 @@ namespace Xamarin.Android.Tasks
 
 			if (!preexistingEntryKeys.Contains (key)) {
 				LogR8JniRemappingError (string.Format (
+					CultureInfo.InvariantCulture,
 					Properties.Resources.XA4325_AmbiguousEntry,
 					elementName,
 					key.Replace ('\t', ' '),
@@ -335,6 +341,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			LogR8JniRemappingWarning (string.Format (
+				CultureInfo.InvariantCulture,
 				Properties.Resources.XA4326_ConflictingEntry,
 				elementName,
 				key.Replace ('\t', ' '),

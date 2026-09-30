@@ -37,12 +37,14 @@
   -->
   <Target Name="_CopyDotNetPackageDependencies" AfterTargets="ResolveAssemblyReferences">
     <ItemGroup>
-      <ReferenceCopyLocalPaths Include="@(ReferencePath)" Condition=" '%(Filename)' == 'System.IO.Hashing' " />
+      <ReferenceCopyLocalPaths Include="@(ReferencePath)"
+          Condition=" '%(Filename)' == 'ELFSharp' Or '%(Filename)' == 'System.IO.Hashing' " />
     </ItemGroup>
   </Target>
 
   <!-- Microsoft.Build.* references flow transitively from Microsoft.Android.Build.BaseTasks. -->
   <ItemGroup>
+    <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
     <Compile Remove="Tests\**" />
     <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
     <ProjectReference Include="..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />

@@ -5,11 +5,11 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 
 using Microsoft.Build.Utilities;
+using Microsoft.Android.Tasks;
 using Cecil = Mono.Cecil;
 using Mono.Cecil.Cil;
 using NUnit.Framework;
 
-using Xamarin.Android.Tasks;
 using Xamarin.Android.Tasks.JniRemapping;
 
 namespace Xamarin.Android.Build.Tests
