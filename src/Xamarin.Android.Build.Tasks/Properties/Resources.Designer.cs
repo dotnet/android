@@ -1975,6 +1975,18 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
 
+        public static string XA4325_AssemblyNotFound {
+            get {
+                return ResourceManager.GetString("XA4325_AssemblyNotFound", resourceCulture);
+            }
+        }
+
+        public static string XA4325_AssemblyHasNoMetadata {
+            get {
+                return ResourceManager.GetString("XA4325_AssemblyHasNoMetadata", resourceCulture);
+            }
+        }
+
         public static string XA4325_AmbiguousEntry {
             get {
                 return ResourceManager.GetString("XA4325_AmbiguousEntry", resourceCulture);
