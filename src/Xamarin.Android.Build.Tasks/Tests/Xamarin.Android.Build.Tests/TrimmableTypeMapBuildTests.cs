@@ -2222,11 +2222,11 @@ namespace Xamarin.Android.Build.Tests {
 				"Microsoft.Android.Sdk",
 				"targets",
 				"Microsoft.Android.Sdk.TypeMap.Proguard.targets");
-			var buildTasksAssembly = Directory.GetFiles (
-				Path.Combine (XABuildPaths.PrefixDirectory, "lib", "packs"),
-				"Microsoft.Android.Build.Tasks.dll",
-				SearchOption.AllDirectories)
-				.Single (path => Path.GetFileName (Path.GetDirectoryName (path)) == "net");
+			var buildTasksAssembly = Path.Combine (
+				TestEnvironment.AndroidMSBuildDirectory,
+				"net",
+				"Microsoft.Android.Build.Tasks.dll");
+			FileAssert.Exists (buildTasksAssembly);
 			var directoryBuildTargets = proj.Imports.Single (import => import.Project () == "Directory.Build.targets");
 			directoryBuildTargets.TextContent = () => $"""
 				<Project>
