@@ -195,10 +195,12 @@ Run these tests with `dotnet test` from each test project directory listed above
 
 The trimmable typemap is exercised by the on-device runtime tests above,
 `TrimmableTypeMapBuildTests` (host-side build integration), and
-`GenerateTrimmableTypeMapTests`, `TrimmableTypeMapIncrementalTests`, and
+`GenerateTrimmableTypeMapTests`, `TrimmableTypeMapIncrementalTests`,
+`TrimmableTypeMapManifestAliasTests`, `TrimmableTypeMapRidCallbackTests`, and
 `ExtractTypeMapKeysFromNativeAotObjectTests` (standalone build-task tests).
-The host tests cover incremental typemap invalidation and NativeAOT object
-extraction failure paths that cannot be exercised by a successful device run.
+The host tests cover incremental typemap invalidation, activity-alias rewriting,
+cross-RID callback metadata mismatches, and NativeAOT object extraction failures
+that cannot be exercised by a successful device run.
 The object-extraction tests use synthetic metadata, so they need no NDK tools.
 The direct callback fixture has its own assembly (`TrimmableTypeMapCallbacks`)
 because the UCO format marker is assembly-wide. The manifest-only Activity
