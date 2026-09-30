@@ -270,6 +270,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4326](xa4326.md): The R8 JNI remapping data is incomplete. {0}
 + [XA4327](xa4327.md): Could not extract Java type map keys from '{0}': {1}
 + [XA4328](xa4328.md): Could not generate typemap ProGuard configuration from '{0}': {1}
++ [XA4329](xa4329.md): Invalid or unsupported R8 obfuscation configuration.
 
 ## XA5xxx: GCC and toolchain
 
