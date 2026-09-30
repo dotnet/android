@@ -11,7 +11,6 @@
     <ThirdParty Include="Irony.dll" />
     <ThirdParty Include="K4os.Compression.LZ4.dll" />
     <ThirdParty Include="ELFSharp.dll" />
-    <ThirdParty Include="Newtonsoft.Json.dll" />
     <ThirdParty Include="protobuf-net.dll" />
     <ThirdParty Include="SgmlReaderDll.dll" />
     <ThirdParty Include="aapt2.exe" />

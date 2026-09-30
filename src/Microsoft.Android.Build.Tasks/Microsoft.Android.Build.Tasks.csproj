@@ -3,9 +3,9 @@
 
   <!--
     This assembly hosts MSBuild tasks that require .NET (net11.0) APIs that are not available in
-    netstandard2.0, so they cannot live in Xamarin.Android.Build.Tasks.dll (which multi-targets
-    netstandard2.0 to run on both .NET Framework and .NET MSBuild). Tasks here are imported with
-    <UsingTask ... Runtime="NET" /> so they run on .NET.
+    netstandard2.0, so they cannot live in Xamarin.Android.Build.Tasks.dll (which targets
+    netstandard2.0 to run on both .NET Framework and .NET MSBuild). Tasks here either require
+    .NET MSBuild or are imported with <UsingTask ... Runtime="NET" /> so they run on .NET.
     Keep this assembly small and self-contained: link only the minimal helpers it needs.
   -->
   <PropertyGroup>
@@ -31,23 +31,25 @@
   </PropertyGroup>
 
   <!--
-    Package assets are not copied wholesale (see CopyLocalLockFileAssemblies), so deposit the
-    .NET flavor of System.IO.Hashing that Microsoft.Android.Sdk.TrimmableTypeMap.dll compiles
-    against alongside it.
+    Package assets are not copied wholesale (see CopyLocalLockFileAssemblies), so deposit
+    System.IO.Hashing for the trimmable type map and NuGet.Versioning for Java dependency
+    verification alongside the task assembly.
   -->
   <Target Name="_CopyDotNetPackageDependencies" AfterTargets="ResolveAssemblyReferences">
     <ItemGroup>
-      <ReferenceCopyLocalPaths Include="@(ReferencePath)" Condition=" '%(Filename)' == 'System.IO.Hashing' " />
+      <ReferenceCopyLocalPaths Include="@(ReferencePath)" Condition=" '%(Filename)' == 'System.IO.Hashing' or '%(Filename)' == 'NuGet.Versioning' " />
     </ItemGroup>
   </Target>
 
   <!-- Microsoft.Build.* references flow transitively from Microsoft.Android.Build.BaseTasks. -->
   <ItemGroup>
+    <PackageReference Include="NuGet.Versioning" Version="$(NuGetApiPackageVersion)" />
     <Compile Remove="Tests\**" />
     <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
     <ProjectReference Include="..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
     <ProjectReference Include="..\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Localization\Java.Interop.Localization.csproj" />
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Maven\Java.Interop.Tools.Maven.csproj" />
     <InternalsVisibleTo Include="Microsoft.Android.Build.Tasks.Tests" Key="0024000004800000940000000602000000240000525341310004000011000000438ac2a5acfbf16cbd2b2b47a62762f273df9cb2795ceccdf77d10bf508e69e7a362ea7a45455bbf3ac955e1f2e2814f144e5d817efc4c6502cc012df310783348304e3ae38573c6d658c234025821fda87a0be8a0d504df564e2c93b2b878925f42503e9d54dfef9f9586d9e6f38a305769587b1de01f6c0410328b2c9733db" />
   </ItemGroup>
 
@@ -56,6 +58,8 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MetadataExtensions.cs" Link="Utilities\MetadataExtensions.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\DummyCustomAttributeProvider.cs" Link="Utilities\DummyCustomAttributeProvider.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ManifestPlaceholderResolver.cs" Link="Utilities\ManifestPlaceholderResolver.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ITaskItemExtensions.cs" Link="Utilities\ITaskItemExtensions.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MavenExtensions.cs" Link="Utilities\MavenExtensions.cs" />
   </ItemGroup>
 
   <!--

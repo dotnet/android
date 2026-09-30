@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Xml;
 using Java.Interop.Tools.Maven.Models;
+using Microsoft.Android.Tasks;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;

@@ -160,7 +160,7 @@ static class MavenExtensions
 		var error_builder = new StringBuilder ();
 
 		foreach (var error in results)
-			error_builder.AppendLine ($"- {Path.GetFileName (error.file)}: {error.error}");
+			error_builder.Append ("- ").Append (Path.GetFileName (error.file)).Append (": ").AppendLine (error.error);
 
 		log.LogCodedError ("XA4236", Properties.Resources.XA4236, artifact.GroupId, artifact.Id, error_builder.ToString ().TrimEnd ());
 
