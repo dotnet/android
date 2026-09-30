@@ -18,6 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
+    <AssemblyMetadata Include="AndroidNdkDirectory" Value="$(AndroidNdkDirectory)" />
     <ProjectReference Include="..\..\Microsoft.Android.Build.Tasks.csproj" />
     <ProjectReference Include="..\..\..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
   </ItemGroup>
