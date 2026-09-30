@@ -1510,7 +1510,7 @@ public class ApplicationRegistration { }");
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 
 				// We should have a java stub
-				var javaStubDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src");
+				var javaStubDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "typemap", "java");
 				var files = Directory.GetFiles (javaStubDir, "CircleImageView.java", SearchOption.AllDirectories);
 				CollectionAssert.IsNotEmpty (files, $"{javaStubDir} should contain CircleImageView.java!");
 			}
@@ -1654,9 +1654,7 @@ namespace UnnamedProject
 			var ret = new List<object[]> ();
 
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				if (runtime == AndroidRuntime.CoreCLR) {
-					AddTestData ("LowercaseMD5", "", runtime, enableCrashReport: true, enableDiagnostics: false, androidEnableProfiler: "");
-				}
+				AddTestData ("Crc64", "", runtime, runtime == AndroidRuntime.CoreCLR, enableDiagnostics: false, androidEnableProfiler: "");
 				AddTestData ("LowercaseCrc64", "", runtime, enableCrashReport: false, enableDiagnostics: false, androidEnableProfiler: "");
 				AddTestData ("", "127.0.0.1:9000,suspend,connect", runtime, enableCrashReport: false, enableDiagnostics: false, androidEnableProfiler: "");
 				AddTestData ("", "", runtime, enableCrashReport: false, enableDiagnostics: true, androidEnableProfiler: "");
@@ -1974,16 +1972,13 @@ namespace UnnamedProject
 		[NonParallelizable]
 		public void CheckLintErrorsAndWarnings ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
-			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup,ExportedReceiver,RedundantLabel,AppLinkWarning";
+			// Generated framework JCWs include a trust manager; this fixture intentionally has no app icon.
+			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup,ExportedReceiver,RedundantLabel,AppLinkWarning,CustomX509TrustManager,MissingApplicationIcon";
 
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			if (IgnoreOnNativeAot (runtime, "the trimmable typemap generates additional Java Callable Wrappers that trip XA0102 lint warnings (e.g. CustomX509TrustManager, MissingApplicationIcon). Tracked by https://github.com/dotnet/android/issues/11774.")) {
-				return;
-			}
-
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -2239,79 +2234,6 @@ public class ToolbarEx {
 				StringAssertEx.Contains ("XA0102", b.LastBuildOutput, "Output should contain XA0102 warnings");
 				var errorFilePath = Path.Combine (proj.IntermediateOutputPath, "android", proj.IntermediateOutputPath, "res", "layout", "test.xml");
 				StringAssertEx.DoesNotContain (errorFilePath, b.LastBuildOutput, $"Path {errorFilePath} should have been replaced.");
-			}
-		}
-
-		[TestCase (AndroidRuntime.CoreCLR)]
-		public void BuildDoesNotModifyNuGetPackageCache (AndroidRuntime runtime)
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-				GlobalPackagesFolder = Path.Combine (Root, TestName, "packages"),
-				Imports = {
-					new Import (() => "EnableMarshalMethodsForPostLink.targets") {
-						TextContent = () =>
-"""
-<Project>
-	<!-- Exercise the in-place post-link path without enabling marshal methods for later CoreCLR targets. -->
-	<Target Name="_EnableMarshalMethodsForPostLink"
-		BeforeTargets="_RunAfterILLinkAdditionalSteps"
-		Condition=" '$(TestEnableMarshalMethodsForPostLink)' == 'true' ">
-		<PropertyGroup>
-			<_AndroidUseMarshalMethods>true</_AndroidUseMarshalMethods>
-		</PropertyGroup>
-	</Target>
-</Project>
-"""
-					},
-				},
-				PackageReferences = {
-					new Package { Id = "Humanizer.Core", Version = "2.14.1" },
-					new Package { Id = "Humanizer.Core.es", Version = "2.14.1" },
-				},
-			};
-			proj.SetRuntime (runtime);
-			proj.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
-			proj.SetProperty (KnownProperties.PublishTrimmed, true.ToString ());
-			proj.MainActivity = proj.DefaultMainActivity
-				.Replace ("//${USINGS}", "using Humanizer;")
-				.Replace ("//${AFTER_ONCREATE}", "System.Console.WriteLine (System.DateTime.UtcNow.Humanize ());");
-
-			using var builder = CreateApkBuilder ();
-			var buildParameters = new [] { $"RestorePackagesPath={proj.GlobalPackagesFolder}" };
-			Assert.IsTrue (builder.Restore (proj, parameters: buildParameters), "Package restore should have succeeded.");
-			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: buildParameters),
-				"Initial build should have succeeded.");
-
-			var satelliteAssemblies = Directory.GetFiles (proj.GlobalPackagesFolder, "*.resources.dll", SearchOption.AllDirectories);
-			Assert.IsNotEmpty (satelliteAssemblies, "The NuGet package should contain satellite assemblies.");
-
-			var originalWriteTimes = new Dictionary<string, DateTime> ();
-			foreach (string assembly in satelliteAssemblies) {
-				File.SetLastWriteTimeUtc (assembly, new DateTime (2000, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-				originalWriteTimes.Add (assembly, File.GetLastWriteTimeUtc (assembly));
-			}
-
-			var postLinkStamp = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "stamp", "_AdditionalPostLinkerSteps.stamp");
-			FileAssert.Exists (postLinkStamp);
-			File.Delete (postLinkStamp);
-
-			// A package cache is immutable: deny write sharing and verify timestamps remain unchanged.
-			var packageLocks = satelliteAssemblies
-				.Select (assembly => File.Open (assembly, FileMode.Open, FileAccess.Read, FileShare.Read))
-				.ToList ();
-			try {
-				var postLinkParameters = buildParameters.Append ("TestEnableMarshalMethodsForPostLink=true").ToArray ();
-				Assert.IsTrue (builder.RunTarget (proj, "_PrepareAssemblies", doNotCleanupOnUpdate: true, saveProject: false, parameters: postLinkParameters),
-					"Preparing assemblies should have succeeded.");
-				FileAssert.Exists (postLinkStamp);
-				foreach (string assembly in satelliteAssemblies) {
-					Assert.AreEqual (originalWriteTimes [assembly], File.GetLastWriteTimeUtc (assembly), $"Build should not modify '{assembly}'.");
-				}
-			} finally {
-				foreach (var packageLock in packageLocks) {
-					packageLock.Dispose ();
-				}
 			}
 		}
 

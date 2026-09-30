@@ -87,11 +87,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
-    <TrimmerRootAssembly Include="Mono.Android-Test.Library.NET" RootMode="All" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
-    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" />
+    <TrimmerRootAssembly Include="Mono.Android-Test.Library.NET" RootMode="All" />
+    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
     <TrimmerRootAssembly Include="StartupHook" RootMode="All" Condition=" '$(StartupHookSupport)' == 'true' " />
-    <TrimmerRootDescriptor Include="TrimmerRoots.xml" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootDescriptor Include="TrimmerRoots.xml" />
     <_AndroidRemapMembers Include="Remaps.xml" />
     <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
     <ProguardConfiguration Include="proguard.cfg" />
@@ -120,6 +120,7 @@
   <ItemGroup>
     <Compile Include="Android.App\ApplicationTest.cs" />
     <Compile Include="Android.Content.Res\AssetManagerTest.cs" />
+    <Compile Include="Android.Content\CursorLoaderTest.cs" />
     <Compile Include="Android.Content\IntentTest.cs" />
     <Compile Include="Android.Content\SharedPreferencesTest.cs" />
     <Compile Include="Android.Graphics\NinePatchTests.cs" />
@@ -155,6 +156,7 @@
     <Compile Include="Java.Interop\VirtualCallbackConstructorTests.cs" />
     <Compile Include="Java.Lang\ObjectArrayMarshaling.cs" />
     <Compile Include="Java.Lang\ObjectTest.cs" />
+    <Compile Include="Java.Net\InetAddressTest.cs" />
     <Compile Include="Localization\LocalizationTests.cs" />
     <Compile Include="System\AppContextTests.cs" />
     <Compile Include="System\AppDomainTest.cs" />

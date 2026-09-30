@@ -203,7 +203,7 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 	if constexpr (Constants::is_debug_build) {
 		// In fastdev mode we might not have any assembly store.
 		if (assembly_store_hashes == nullptr) {
-			log_warnf (LOG_ASSEMBLY, "Assembly store not registered. Unable to look up assembly '%.*s'", static_cast<int>(name.length ()), name.data ());
+			log_debugf (LOG_ASSEMBLY, "Skipping assembly store lookup for '%.*s': no assembly store is registered (normal with FastDev)", static_cast<int>(name.length ()), name.data ());
 			return nullptr;
 		}
 	}
