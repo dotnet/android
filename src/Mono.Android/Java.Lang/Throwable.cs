@@ -80,6 +80,7 @@ namespace Java.Lang {
 			return ThresholdClass;
 		}
 
+		// Used only to preserve virtual dispatch for legacy bindings.
 		internal System.Type GetThresholdType ()
 		{
 			return ThresholdType;

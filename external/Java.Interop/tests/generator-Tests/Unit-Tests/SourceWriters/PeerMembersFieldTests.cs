@@ -21,15 +21,15 @@ namespace generatortests.SourceWriters
 		{
 			var field = new PeerMembersField (new CodeGenerationOptions { CodeGenerationTarget = CodeGenerationTarget.XAJavaInterop1 }, "B", "MyJavaType", false);
 
-			Assert.AreEqual ("static readonly JniPeerMembers _members = new XAPeerMembers (\"B\", typeof (MyJavaType));", GetOutput (field).Trim ());
+			Assert.AreEqual ("static readonly JniPeerMembers _members = new JniPeerMembers (\"B\", typeof (MyJavaType));", GetOutput (field).Trim ());
 		}
 
 		[Test]
-		public void WeakImplementorField_Interface ()
+		public void PeerMembersField_XAInterface ()
 		{
 			var field = new PeerMembersField (new CodeGenerationOptions { CodeGenerationTarget = CodeGenerationTarget.XAJavaInterop1 }, "B", "IMyJavaType", true);
 
-			Assert.AreEqual ("private static readonly JniPeerMembers _members = new XAPeerMembers (\"B\", typeof (IMyJavaType), isInterface: true);", GetOutput (field).Trim ());
+			Assert.AreEqual ("private static readonly JniPeerMembers _members = new JniPeerMembers (\"B\", typeof (IMyJavaType), isInterface: true);", GetOutput (field).Trim ());
 		}
 	}
 }

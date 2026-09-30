@@ -16,6 +16,8 @@ namespace Com.Xamarin.Android {
 
 	public partial class Timing {
 
+		static IntPtr timingClass => _members.JniPeerType.PeerReference.Handle;
+
 		static IntPtr jonp_id_VirtualVoidMethod;
 		[Register ("VirtualVoidMethod", "()V", "GetVirtualVoidMethodHandler")]
 		public virtual unsafe void VirtualVoidMethod_Timing_Traditional ()
@@ -23,10 +25,10 @@ namespace Com.Xamarin.Android {
 			if (jonp_id_VirtualVoidMethod == IntPtr.Zero)
 				jonp_id_VirtualVoidMethod = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "VirtualVoidMethod", "()V");
 
-			if (GetType () == ThresholdType)
+			if (GetType () == typeof (Timing))
 				JNIEnv.CallVoidMethod  (Handle, jonp_id_VirtualVoidMethod);
 			else {
-				JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "VirtualVoidMethod", "()V"));
+				JNIEnv.CallNonvirtualVoidMethod  (Handle, timingClass, JNIEnv.GetMethodID (timingClass, "VirtualVoidMethod", "()V"));
 			}
 		}
 
@@ -36,15 +38,15 @@ namespace Com.Xamarin.Android {
 			if (jonp_id_VirtualVoidMethod == IntPtr.Zero)
 				jonp_id_VirtualVoidMethod = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "VirtualVoidMethod", "()V");
 
-			if (GetType () == ThresholdType)
+			if (GetType () == typeof (Timing))
 				JNIEnv.CallVoidMethod  (Handle, jonp_id_VirtualVoidMethod);
 			else {
 				IntPtr m;
 				lock (vvmMethodCache) {
-					if (!vvmMethodCache.TryGetValue (ThresholdClass, out m))
-						vvmMethodCache.Add (ThresholdClass, m = JNIEnv.GetMethodID (ThresholdClass, "VirtualVoidMethod", "()V"));
+					if (!vvmMethodCache.TryGetValue (timingClass, out m))
+						vvmMethodCache.Add (timingClass, m = JNIEnv.GetMethodID (timingClass, "VirtualVoidMethod", "()V"));
 				}
-				JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, m);
+				JNIEnv.CallNonvirtualVoidMethod  (Handle, timingClass, m);
 			}
 		}
 
@@ -52,10 +54,10 @@ namespace Com.Xamarin.Android {
 		{
 			var m = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "VirtualVoidMethod", "()V");
 
-			if (GetType () == ThresholdType)
+			if (GetType () == typeof (Timing))
 				JNIEnv.CallVoidMethod  (Handle, m);
 			else
-				JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "VirtualVoidMethod", "()V"));
+				JNIEnv.CallNonvirtualVoidMethod  (Handle, timingClass, JNIEnv.GetMethodID (timingClass, "VirtualVoidMethod", "()V"));
 		}
 
 		static Dictionary<string, IntPtr> dictInstanceMethods = new Dictionary<string, IntPtr>();
@@ -68,10 +70,10 @@ namespace Com.Xamarin.Android {
 					dictInstanceMethods.Add (id, m = JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "VirtualVoidMethod", "()V"));
 			}
 
-			if (GetType () == ThresholdType)
+			if (GetType () == typeof (Timing))
 				JNIEnv.CallVoidMethod  (Handle, m);
 			else
-				JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "VirtualVoidMethod", "()V"));
+				JNIEnv.CallNonvirtualVoidMethod  (Handle, timingClass, JNIEnv.GetMethodID (timingClass, "VirtualVoidMethod", "()V"));
 		}
 
 		static ConcurrentDictionary<string, IntPtr> concurrentInstanceMethods = new ConcurrentDictionary<string, IntPtr>();
@@ -83,13 +85,13 @@ namespace Com.Xamarin.Android {
 				s => JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "VirtualVoidMethod", "()V"),
 				(s, c) => c != IntPtr.Zero ? c : JNIEnv.GetMethodID (_members.JniPeerType.PeerReference.Handle, "VirtualVoidMethod", "()V"));
 
-			if (GetType () == ThresholdType)
+			if (GetType () == typeof (Timing))
 				JNIEnv.CallVoidMethod  (Handle, m);
 			else
-				JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "VirtualVoidMethod", "()V"));
+				JNIEnv.CallNonvirtualVoidMethod  (Handle, timingClass, JNIEnv.GetMethodID (timingClass, "VirtualVoidMethod", "()V"));
 		}
 
-		internal     static  readonly    JniPeerMembers  _jonp_members    = new XAPeerMembers ("com/xamarin/android/Timing", typeof (Timing));
+		internal     static  readonly    JniPeerMembers  _jonp_members    = new JniPeerMembers ("com/xamarin/android/Timing", typeof (Timing));
 		public unsafe void VirtualVoidMethod_Timing_JniPeerMembers ()
 		{
 			const string id = "VirtualVoidMethod.()V";
