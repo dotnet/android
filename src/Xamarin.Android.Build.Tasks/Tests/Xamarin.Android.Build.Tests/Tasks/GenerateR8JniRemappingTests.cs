@@ -161,7 +161,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 				""");
 
-			Assert.AreEqual ("XA4328", Warnings.Single ().Code);
+			Assert.AreEqual ("XA4326", Warnings.Single ().Code);
 			StringAssert.Contains ("run( ):void", Warnings [0].Message);
 		}
 
