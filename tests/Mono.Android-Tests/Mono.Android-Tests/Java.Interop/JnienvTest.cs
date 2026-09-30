@@ -40,10 +40,12 @@ namespace Java.InteropTests
 			const char expected = '\uFFFF';
 
 			// Setting Value covers jchar input through SetCharField; reading it back covers GetCharField.
+#pragma warning disable CA1422 // MutableChar is obsolete since API 28; retain JNI jchar field regression coverage.
 			using (var value = new Android.Util.MutableChar ('\0')) {
 				value.Value = expected;
 				Assert.AreEqual (expected, value.Value);
 			}
+#pragma warning restore CA1422
 		}
 
 		[DllImport ("reuse-threads")]
