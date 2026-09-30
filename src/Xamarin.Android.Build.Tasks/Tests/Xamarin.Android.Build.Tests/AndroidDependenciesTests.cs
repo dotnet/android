@@ -514,7 +514,6 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.AotAssemblies = runtime == AndroidRuntime.MonoVM;
 			proj.SetProperty (property, "true");
 			using (var builder = CreateApkBuilder ()) {
 				builder.Verbosity = LoggerVerbosity.Detailed;

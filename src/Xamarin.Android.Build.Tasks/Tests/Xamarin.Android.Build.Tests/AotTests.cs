@@ -100,9 +100,11 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				ProjectName = testName,
 				IsRelease = isRelease,
-				AotAssemblies = aot,
 			};
 			proj.SetRuntime (runtime);
+			if (runtime == AndroidRuntime.MonoVM) {
+				proj.AotAssemblies = aot;
+			}
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 			}
@@ -122,7 +124,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 			var app1 = new XamarinFormsMapsApplicationProject {
 				ProjectName = "App1",
-				AotAssemblies = runtime == AndroidRuntime.MonoVM,
 				IsRelease = true,
 			};
 			app1.SetRuntime (runtime);

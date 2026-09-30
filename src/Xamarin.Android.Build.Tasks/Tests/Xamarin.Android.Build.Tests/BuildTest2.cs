@@ -270,7 +270,6 @@ namespace Xamarin.Android.Build.Tests
 				new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (runtime);
 			proj.IsRelease = isRelease;
-			proj.AotAssemblies = false; // Release defaults to Profiled AOT for .NET 6
 			proj.SetRuntimeIdentifiers (new[] { "arm64-v8a" });
 			proj.SetProperty ("LinkerDumpDependencies", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", "False");
@@ -791,9 +790,11 @@ class MemTest {
 			var proj = new XamarinAndroidApplicationProject {
 				Language = XamarinAndroidProjectLanguage.FSharp,
 				IsRelease = isRelease,
-				AotAssemblies = aot,
 			};
 			proj.SetRuntime (runtime);
+			if (runtime == AndroidRuntime.MonoVM) {
+				proj.AotAssemblies = aot;
+			}
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 		}
