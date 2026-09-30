@@ -292,11 +292,8 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 	return assembly_data;
 }
 
-void AssemblyStore::configure_from_payload (const void *payload_start, size_t payload_size, const char *store_path) noexcept
+void AssemblyStore::configure_from_payload (const void *payload_start, const char *store_path) noexcept
 {
-	if (payload_size < sizeof (AssemblyStoreHeader)) {
-		Helpers::abort_application (LOG_ASSEMBLY, "Assembly store payload is too small");
-	}
 	auto header = static_cast<const AssemblyStoreHeader*>(payload_start);
 
 	if (header->magic != ASSEMBLY_STORE_MAGIC) {
@@ -322,15 +319,16 @@ void AssemblyStore::configure_from_payload (const void *payload_start, size_t pa
 	constexpr size_t header_size = sizeof(AssemblyStoreHeader);
 	size_t index_size = Helpers::multiply_with_overflow_check<size_t> (header->index_entry_count, sizeof (AssemblyStoreIndexEntry));
 	size_t descriptor_size = Helpers::multiply_with_overflow_check<size_t> (header->entry_count, sizeof (AssemblyStoreEntryDescriptor));
-	if (header->index_size != index_size || index_size > payload_size - header_size ||
-		descriptor_size > payload_size - header_size - index_size) {
-		Helpers::abort_application (LOG_ASSEMBLY, "Invalid assembly store index or descriptor size");
+	if (header->index_size != index_size) {
+		Helpers::abort_application (LOG_ASSEMBLY, "Invalid assembly store index size");
 	}
+	size_t descriptors_offset = Helpers::add_with_overflow_check<size_t> (header_size, index_size);
+	size_t names_offset = Helpers::add_with_overflow_check<size_t> (descriptors_offset, descriptor_size);
 
 	assembly_store.data_start = static_cast<const uint8_t*>(payload_start);
 	assembly_store.assembly_count = header->entry_count;
 	assembly_store.index_entry_count = header->index_entry_count;
-	assembly_store.assemblies = reinterpret_cast<const AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + index_size);
+	assembly_store.assemblies = reinterpret_cast<const AssemblyStoreEntryDescriptor*>(assembly_store.data_start + descriptors_offset);
 	assembly_store_hashes = reinterpret_cast<const AssemblyStoreIndexEntry*>(assembly_store.data_start + header_size);
 
 	// Build a lookup of assembly names indexed by descriptor index, used to disambiguate CRC32 hash
@@ -338,8 +336,7 @@ void AssemblyStore::configure_from_payload (const void *payload_start, size_t pa
 	// `entry_count` length-prefixed (uint32 length followed by the UTF-8 bytes) records, stored in
 	// descriptor-index order. The `free` guards against a leak should the (single) store ever be
 	// re-mapped; `assembly_store_names` is nullptr on first call, for which it is a no-op.
-	const uint8_t *names_cursor = assembly_store.data_start + header_size + index_size + descriptor_size;
-	const uint8_t *payload_end = assembly_store.data_start + payload_size;
+	const uint8_t *names_cursor = assembly_store.data_start + names_offset;
 	std::free (assembly_store_names);
 	assembly_store_names = header->entry_count == 0 ? nullptr :
 		static_cast<std::string_view*>(std::calloc (header->entry_count, sizeof (std::string_view)));
@@ -348,15 +345,9 @@ void AssemblyStore::configure_from_payload (const void *payload_start, size_t pa
 	}
 
 	for (uint32_t i = 0; i < header->entry_count; i++) {
-		if (static_cast<size_t>(payload_end - names_cursor) < sizeof (uint32_t)) {
-			Helpers::abort_application (LOG_ASSEMBLY, "Truncated assembly store name length");
-		}
 		uint32_t name_length;
 		memcpy (&name_length, names_cursor, sizeof (name_length));
 		names_cursor += sizeof (name_length);
-		if (name_length > static_cast<size_t>(payload_end - names_cursor)) {
-			Helpers::abort_application (LOG_ASSEMBLY, "Truncated assembly store name");
-		}
 		assembly_store_names[i] = std::string_view (reinterpret_cast<const char*>(names_cursor), name_length);
 		names_cursor += name_length;
 	}
@@ -380,9 +371,8 @@ void AssemblyStore::configure_from_payload (const void *payload_start, size_t pa
 		if (entry.data_size == 0) {
 			continue;
 		}
-		if (entry.mapping_index >= header->entry_count ||
-			entry.data_offset > payload_size || entry.data_size > payload_size - entry.data_offset) {
-			Helpers::abort_application (LOG_ASSEMBLY, "Invalid assembly store data offset or mapping index");
+		if (entry.mapping_index >= header->entry_count) {
+			Helpers::abort_application (LOG_ASSEMBLY, "Invalid assembly store runtime mapping index");
 		}
 		if (entry.data_size < sizeof (CompressedAssemblyHeader)) {
 			continue;

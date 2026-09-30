@@ -16,11 +16,12 @@ namespace xamarin::android {
 		static auto open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*;
 
 		// Configure the store directly from an in-memory payload pointer (obtained via
-		// dlopen()+dlsym() of the `_assembly_store` and `_assembly_store_end` symbols). The payload is mapped
+		// dlopen()+dlsym() of the `_assembly_store` symbol). The payload is mapped
 		// read-only and is never modified, so it (and every pointer derived from it) is `const`.
+		// The store is trusted build-generated data; no external payload length is available.
 		// `store_path` is used only in diagnostic messages and may be `nullptr` - every use of it
 		// goes through `optional_string ()`.
-		static void configure_from_payload (const void *payload_start, size_t payload_size, const char *store_path) noexcept;
+		static void configure_from_payload (const void *payload_start, const char *store_path) noexcept;
 
 	private:
 		static void set_assembly_data_and_size (uint8_t* source_assembly_data, uint32_t source_assembly_data_size, uint8_t*& dest_assembly_data, uint32_t& dest_assembly_data_size) noexcept;

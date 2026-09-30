@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 
+using ELFSharp.ELF;
+using ELFSharp.ELF.Sections;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
@@ -43,6 +45,41 @@ namespace Xamarin.Android.Build.Tests
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), $"CoreCLR app build should succeed for {abi} with the prebuilt runtime.");
 			builder.Output.AssertTargetIsSkipped ("_LinkNativeRuntime", defaultIfNotUsed: true);
+		}
+
+		[TestCase ("apk")]
+		[TestCase ("aab")]
+		public void BuildCoreClrWithManagedAssemblyStoreWrappers (string packageFormat)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers (["armeabi-v7a", "arm64-v8a", "x86_64"]);
+			proj.SetProperty ("AndroidUseAssemblyStore", "true");
+			proj.SetProperty ("AndroidPackageFormat", packageFormat);
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), $"The three-RID {packageFormat} build should succeed.");
+			string package = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.{packageFormat}");
+			FileAssert.Exists (package);
+			string prefix = packageFormat == "aab" ? "base/" : "";
+			foreach (var (abi, machine) in new [] {
+				("armeabi-v7a", Machine.ARM),
+				("arm64-v8a", Machine.AArch64),
+				("x86_64", Machine.AMD64),
+			}) {
+				byte [] store = ZipHelper.ReadFileFromZip (package, $"{prefix}lib/{abi}/libassembly-store.so");
+				Assert.IsNotNull (store, $"The {abi} store must be in the ABI-targeted library directory.");
+				using var stream = new MemoryStream (store);
+				using IELF elf = ELFReader.Load (stream, shouldOwnStream: false);
+				Assert.AreEqual (machine, elf.Machine);
+				Assert.AreEqual (FileType.SharedObject, elf.Type);
+				var symbols = (ISymbolTable)elf.GetSection (".dynsym");
+				CollectionAssert.AreEquivalent (new [] { "", "_assembly_store" }, symbols.Entries.Select (s => s.Name));
+				byte [] payload = elf.GetSection ("payload").GetContents ();
+				CollectionAssert.AreEqual (new byte [] { 0x58, 0x41, 0x42, 0x41 }, payload.Take (4));
+			}
 		}
 
 		[TestCase ("armeabi-v7a")]

@@ -109,12 +109,29 @@ pointed at by an exported dynamic symbol named `_assembly_store`.  At runtime th
 `dlopen("libassembly-store.so", …)` followed by `dlsym(handle, "_assembly_store")` and lets the dynamic linker
 locate and map the payload out of the APK — there is no ZIP scanning and no manual ELF section-header parsing.
 
+Only the `_assembly_store` payload symbol is required. The runtime treats the store as trusted,
+build-generated application data: it checks the format and internal metadata, but does not use an
+exported end pointer to validate offsets against the payload length.
+
 Because the section is allocatable and referenced by a dynamic symbol, this layout survives `strip`/`llvm-strip`.
 
 This wrapper is produced by
 [`DlopenAssemblyStoreGenerator`](../../src/Xamarin.Android.Build.Tasks/Utilities/DlopenAssemblyStoreGenerator.cs)
-(rather than the discrete-payload `DSOWrapperGenerator`), which assembles a tiny `.incbin` stub with `llvm-mc` and links it into a
-shared object with `ld` (no `llvm-objcopy` and no clang are involved).  The section is still named `payload`, so
+(rather than the discrete-payload `DSOWrapperGenerator`), using the managed
+[`AssemblyStoreElfWriter`](../../src/Xamarin.Android.Build.Tasks/Utilities/AssemblyStoreElfWriter.cs).
+It writes the ELF headers, a dynamic symbol/string table, a small SysV hash table and a dynamic
+table directly, then streams the existing store bytes into the `payload` section. No assembly
+source, object file, compiler, assembler or linker is needed. The image contains no relocations,
+library dependencies, executable segments or writable load segments. Non-allocated section names
+and section headers follow the payload, outside the load segment, so tools can rewrite them when
+stripping the file.
+
+The writer emits little-endian ELF32 for ARM/x86 and ELF64 for ARM64/x64. The load segment and
+payload use 16 KiB alignment on 64-bit ABIs (compatible with both 4 KiB and 16 KiB devices) and
+4 KiB alignment on 32-bit ABIs. APK entry alignment and uncompressed `.so` packaging remain
+separate responsibilities of the packaging tools.
+
+The section is still named `payload`, so
 the extraction command (`llvm-objcopy --dump-section=payload=…`) shown below works for both layouts.
 
 ### Layout of the discrete (stub) payload library
@@ -231,10 +248,9 @@ $ llvm-readelf --section-headers libassembly-store.so
 Section Headers:
   [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al
   ...
-  [ 5] .dynstr           STRTAB          0000000000000290 000290 000026 00   A  0   0  1
-  [ 6] payload           PROGBITS        0000000000004000 004000 001004 00   A  0   0 16384
-  [ 7] .text             PROGBITS        0000000000009004 005004 000000 00  AX  0   0  4
-  [ 8] .dynamic          DYNAMIC         000000000000d008 005008 000080 10  WA  5   0  8
+  [ 2] .dynstr           STRTAB          0000000000000150 000150 000026 00   A  0   0  1
+  [ 4] .dynamic          DYNAMIC         0000000000000190 000190 000070 10   A  2   0  8
+  [ 5] payload           PROGBITS        0000000000004000 004000 001000 00   A  0   0 16384
   ...
 ```
 
@@ -246,24 +262,26 @@ $ llvm-readelf --program-headers libassembly-store.so
 Program Headers:
   Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align
   ...
-  LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x005004 0x005004 R   0x4000
+  LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x005000 0x005000 R   0x4000
   ...
 
  Section to Segment mapping:
   Segment Sections...
-   01     .note.gnu.build-id .dynsym .gnu.hash .hash .dynstr payload
+   01     .dynsym .dynstr .hash .dynamic payload
   ...
 ```
 
 Finally, the dynamic symbol table exposes `_assembly_store`, whose value (`0x4000`) is the virtual address of
-the `payload` section — this is exactly what `dlsym(handle, "_assembly_store")` returns at runtime:
+the `payload` section relative to the library's load bias. `dlsym(handle, "_assembly_store")` returns its
+relocated process address. The symbol size describes the payload for inspection tools; the runtime only
+uses its address:
 
 ```shell
 $ llvm-readelf --dyn-symbols libassembly-store.so
 Symbol table '.dynsym' contains 2 entries:
    Num:    Value          Size Type    Bind   Vis       Ndx Name
      0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT   UND
-     1: 0000000000004000     0 NOTYPE  GLOBAL DEFAULT     6 _assembly_store
+     1: 0000000000004000  4096 OBJECT  GLOBAL DEFAULT     5 _assembly_store
 ```
 
 (The offsets and sizes above come from a tiny sample payload; a real assembly store's `payload` section will

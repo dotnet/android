@@ -199,20 +199,8 @@ void Host::map_assembly_store_via_dlopen (const char *store_path) noexcept
 		);
 	}
 
-	void *payload_end = ::dlsym (handle, DLOPEN_ASSEMBLY_STORE_END_SYMBOL.data ());
-	if (payload_end == nullptr || reinterpret_cast<uintptr_t>(payload_end) <= reinterpret_cast<uintptr_t>(payload)) [[unlikely]] {
-		Helpers::abort_applicationf (
-			LOG_ASSEMBLY,
-			std::source_location::current (),
-			"Assembly store '%s' does not export a valid '%s' symbol",
-			optional_string (store_path),
-			DLOPEN_ASSEMBLY_STORE_END_SYMBOL.data ()
-		);
-	}
-
 	log_debugf (LOG_ASSEMBLY, "Assembly store payload via dynamic symbol: %p (%s)", payload, optional_string (store_path));
-	size_t payload_size = reinterpret_cast<uintptr_t>(payload_end) - reinterpret_cast<uintptr_t>(payload);
-	AssemblyStore::configure_from_payload (payload, payload_size, store_path);
+	AssemblyStore::configure_from_payload (payload, store_path);
 	found_assembly_store = true;
 }
 

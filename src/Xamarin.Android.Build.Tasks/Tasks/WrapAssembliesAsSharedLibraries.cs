@@ -70,7 +70,7 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 
 			var arch = MonoAndroidHelper.AbiToTargetArch (abi);
 			var archive_path = MakeArchiveLibPath (abi, "lib" + Path.GetFileName (store_path));
-			var wrapped_source_path = DlopenAssemblyStoreGenerator.WrapIt (Log, AndroidBinUtilsDirectory, IntermediateOutputPath, arch, store_path, Path.GetFileName (archive_path));
+			var wrapped_source_path = DlopenAssemblyStoreGenerator.WrapIt (Log, IntermediateOutputPath, arch, store_path, Path.GetFileName (archive_path));
 
 			files.AddItem (wrapped_source_path, archive_path);
 		}
