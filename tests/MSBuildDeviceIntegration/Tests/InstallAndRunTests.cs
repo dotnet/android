@@ -36,8 +36,6 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var ret = new List<object[]> ();
 
-			AddTestData (true, "llvm-ir", AndroidRuntime.CoreCLR);
-			AddTestData (false, "llvm-ir", AndroidRuntime.CoreCLR);
 			AddTestData (true, "trimmable", AndroidRuntime.CoreCLR);
 			AddTestData (false, "trimmable", AndroidRuntime.CoreCLR);
 			AddTestData (true, "trimmable", AndroidRuntime.NativeAOT);
@@ -97,7 +95,6 @@ namespace Xamarin.Android.Build.Tests
 			StartActivityAndAssert (proj);
 		}
 
-		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
 		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
 		public void UnicodeJavaIdentifierActivityActivates (string typeMapImplementation, AndroidRuntime runtime)
@@ -1760,7 +1757,6 @@ namespace Styleable.Library {
 			Assert.IsTrue (didStart, "Activity should have started.");
 		}
 
-		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
 		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
 		public void AppCompatJavaAliasCastsAndInflation (
@@ -2015,7 +2011,7 @@ namespace Styleable.Library {
 				}
 				""".Replace (
 					"__ALLOW_REGISTERED_ALIAS_INFLATION__",
-					typemapImplementation == "llvm-ir" ? "true" : "false");
+					"false");
 			using var builder = CreateApkBuilder (packageName: packageName);
 			Assert.AreEqual (proj.PackageName, TestPackageNames [packageName], "Teardown should track the installed package.");
 			RunAdbCommand ($"uninstall {proj.PackageName}");
@@ -2054,6 +2050,8 @@ namespace Styleable.Library {
 			};
 			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
+			proj.SetDefaultTargetDevice ();
+			proj.SetProperty ("AndroidEnableLegacyCompatibilityAssemblyFixups", "true");
 			var builder = CreateApkBuilder (packageName: packageName);
 
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -2085,6 +2083,7 @@ namespace Styleable.Library {
 				},
 			};
 			app.SetRuntime (runtime);
+			app.SetProperty ("AndroidEnableLegacyCompatibilityAssemblyFixups", "true");
 			app.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\styles.xml") {
 				TextContent = () => @"<resources><style name='AppTheme' parent='Theme.AppCompat.Light.DarkActionBar'/></resources>",
 			});
@@ -2504,15 +2503,13 @@ namespace UnnamedProject
 
 		static IEnumerable<TestCaseData> GetInterfaceMethodDesugaringData ()
 		{
-			foreach (var typemapImplementation in new [] { "llvm-ir", "trimmable" }) {
-				foreach (var useR8 in new [] { false, true }) {
-					foreach (var apiNative in new [] { true, false }) {
-						yield return CreateTestCase (
-							typemapImplementation,
-							AndroidRuntime.CoreCLR,
-							apiNative,
-							useR8);
-					}
+			foreach (var useR8 in new [] { false, true }) {
+				foreach (var apiNative in new [] { true, false }) {
+					yield return CreateTestCase (
+						"trimmable",
+						AndroidRuntime.CoreCLR,
+						apiNative,
+						useR8);
 				}
 			}
 
