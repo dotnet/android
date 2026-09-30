@@ -768,6 +768,24 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA1029" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'AotAssemblies' MSBuild property is deprecated. Remove it. For supported .NET 10-and-earlier projects that use Mono, use the 'RunAOTCompilation' MSBuild property instead. CoreCLR and NativeAOT do not use this property.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Vlastnost MSBuild „AotAssemblies“ je zastaralá. Odeberte ji. U podporovaných projektů .NET 10 a starších, které používají Mono, použijte místo ní vlastnost MSBuildu „RunAOTCompilation“. CoreCLR a NativeAOT tuto vlastnost nepoužívají.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA1030" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'RunAOTCompilation' MSBuild property is only supported when trimming is enabled. Edit the project file in a text editor to set 'PublishTrimmed' to 'true' for this build configuration.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Vlastnost MSBuild RunAOTCompilation se podporuje jen tehdy, když je povolené trimování. Upravte soubor projektu v textovém editoru, aby se vlastnost PublishTrimmed pro tuto konfiguraci sestavení nastavila na true.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA1034" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Your project references '{0}' which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file.]]></Val>
