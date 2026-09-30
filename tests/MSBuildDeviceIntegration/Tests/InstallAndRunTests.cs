@@ -3020,6 +3020,7 @@ CUSTOM_ENVIRONMENT_VALUE=custom",
 				ProjectName = "MyApp",
 			};
 			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidEnableLegacyCompatibilityAssemblyFixups", "true");
 			proj.AddReference (library2);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "Console.WriteLine(Foo.Hello);");
 
