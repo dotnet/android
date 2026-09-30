@@ -117,6 +117,7 @@
   <ItemGroup>
     <Compile Include="Android.App\ApplicationTest.cs" />
     <Compile Include="Android.Content.Res\AssetManagerTest.cs" />
+    <Compile Include="Android.Content\CursorLoaderTest.cs" />
     <Compile Include="Android.Content\IntentTest.cs" />
     <Compile Include="Android.Content\SharedPreferencesTest.cs" />
     <Compile Include="Android.Graphics\NinePatchTests.cs" />
@@ -152,6 +153,7 @@
     <Compile Include="Java.Interop\VirtualCallbackConstructorTests.cs" />
     <Compile Include="Java.Lang\ObjectArrayMarshaling.cs" />
     <Compile Include="Java.Lang\ObjectTest.cs" />
+    <Compile Include="Java.Net\InetAddressTest.cs" />
     <Compile Include="Localization\LocalizationTests.cs" />
     <Compile Include="System\AppContextTests.cs" />
     <Compile Include="System\AppDomainTest.cs" />

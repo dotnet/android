@@ -3,14 +3,10 @@ internal partial class MyClassInvoker : MyClass {
 
 	public MyClassInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
 
-	static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/MyClass", typeof (MyClassInvoker));
+	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/MyClass", typeof (MyClassInvoker));
 
 	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 		get { return _members; }
-	}
-
-	protected override global::System.Type ThresholdType {
-		get { return _members.ManagedPeerType; }
 	}
 
 	public override unsafe int AbstractCount {
@@ -49,4 +45,3 @@ internal partial class MyClassInvoker : MyClass {
 	}
 
 }
-
