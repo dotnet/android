@@ -100,8 +100,6 @@ Logger::set_category (const char *name, const char *arg, size_t arg_length, unsi
 void
 Logger::init_logging_categories () noexcept
 {
-	_log_timing_categories = LogTimingCategories::Default;
-
 	char value[Constants::PROPERTY_VALUE_BUFFER_LEN];
 	const char *categories = AndroidSystem::monodroid_get_system_property (Constants::DEBUG_DOTNET_LOG_PROPERTY.data (), value, sizeof (value));
 	if (categories == nullptr) {
@@ -179,18 +177,6 @@ Logger::init_logging_categories () noexcept
 			_lref_to_logcat = true;
 			param = next;
 			continue;
-		}
-
-		if (param_matches (param, param_length, "timing=fast-bare", true /* prefix_only */)) {
-			log_categories |= LOG_TIMING;
-			_log_timing_categories |= LogTimingCategories::FastBare;
-			param = next;
-			continue;
-		}
-
-		if (param_matches (param, param_length, "timing=bare", true /* prefix_only */)) {
-			log_categories |= LOG_TIMING;
-			_log_timing_categories |= LogTimingCategories::Bare;
 		}
 
 		param = next;
