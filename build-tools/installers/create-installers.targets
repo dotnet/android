@@ -105,11 +105,19 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Build.Tasks.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Sdk.TrimmableTypeMap.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Sdk.TrimmableTypeMap.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\ELFSharp.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Mono.Cecil.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\System.IO.Hashing.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Build.BaseTasks.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Build.BaseTasks.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Localization.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Localization.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Tools.Cecil.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Tools.Cecil.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Tools.Diagnostics.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Tools.Diagnostics.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Tools.TypeNameMappings.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Tools.TypeNameMappings.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Xamarin.Android.Tools.AndroidSdk.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Xamarin.Android.Tools.AndroidSdk.pdb" />
     <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MicrosoftAndroidSdkOutDir)net\%(Identity)\Microsoft.Android.Build.BaseTasks.resources.dll')" />
@@ -152,33 +160,12 @@
     <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)arm64\libZipSharpNative-*.dll" />
     <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)arm64\libZipSharpNative-*.pdb" />
     <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)aapt2.exe" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\as.exe" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\ld.exe" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\llvm-mc.exe" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\llvm-objcopy.exe" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\llvm-strip.exe" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\aarch64-linux-android-as.cmd" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\aarch64-linux-android-ld.cmd" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\aarch64-linux-android-strip.cmd" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\arm-linux-androideabi-as.cmd" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\arm-linux-androideabi-ld.cmd" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\arm-linux-androideabi-strip.cmd" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\i686-linux-android-as.cmd" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\i686-linux-android-ld.cmd" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\i686-linux-android-strip.cmd" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\x86_64-linux-android-as.cmd" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\x86_64-linux-android-ld.cmd" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\x86_64-linux-android-strip.cmd" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <_MSBuildFilesUnixSignAndHarden>
       <Permission>755</Permission>
     </_MSBuildFilesUnixSignAndHarden>
-    <_BinUtilsFilesUnixSignAndHarden>
-      <Permission>755</Permission>
-    </_BinUtilsFilesUnixSignAndHarden>
   </ItemDefinitionGroup>
-  <Import Project="unix-binutils.projitems" />
   <ItemGroup>
     <_MSBuildFilesUnix Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\illinkanalyzer" Permission="755" />
     <_MSBuildFilesUnix Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\mono.config" />
@@ -221,7 +208,7 @@
       <MSBuildItemsWin Include="@(_MSBuildTargetsSrcFiles)">
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildTargetsSrcDir), %(FullPath)))</RelativePath>
       </MSBuildItemsWin>
-      <MSBuildItemsUnix Include="@(_MSBuildFiles);@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden);@(_BinUtilsFilesUnixSign);@(_BinUtilsFilesUnixSignAndHarden)">
+      <MSBuildItemsUnix Include="@(_MSBuildFiles);@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)">
         <RelativePath>$([MSBuild]::MakeRelative($(MicrosoftAndroidSdkOutDir), %(FullPath)))</RelativePath>
       </MSBuildItemsUnix>
       <MSBuildItemsUnix Include="@(_MSBuildTargetsSrcFiles)">

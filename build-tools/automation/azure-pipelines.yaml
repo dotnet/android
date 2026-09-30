@@ -389,11 +389,6 @@ extends:
         # Download symbols to be published to the symbols artifact drop declared above
         - task: DownloadPipelineArtifact@2
           inputs:
-            artifactName: $(WindowsToolchainPdbArtifactName)
-            downloadPath: $(Build.StagingDirectory)\symbols
-
-        - task: DownloadPipelineArtifact@2
-          inputs:
             artifactName: nuget-unsigned-symbols
             downloadPath: $(Build.StagingDirectory)\symbols
 

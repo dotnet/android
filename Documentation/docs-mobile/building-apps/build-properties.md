@@ -180,14 +180,11 @@ Added in .NET 8.
 
 ## AndroidBinUtilsPath
 
-A path to a directory containing
-the Android [binutils][binutils] such as `ld`, the native linker,
-and `as`, the native assembler. These tools are included in the
-.NET for Android workload.
-
-The default value is `$(MonoAndroidBinDirectory)\binutils\bin\`.
-
-[binutils]: https://github.com/dotnet/android-native-tools/
+This legacy property is no longer used in .NET 11 and later. The workload no
+longer bundles a native assembler or linker. Ordinary CoreCLR builds need
+neither the Android NDK nor native build tools. NativeAOT and opt-in native
+library stripping use the official Android NDK, configured through
+[`$(AndroidNdkDirectory)`](#androidndkdirectory).
 
 ## AndroidBoundExceptionType
 
@@ -1015,6 +1012,16 @@ dotnet build -p:AndroidNdkDirectory=/path/to/android-ndk
 If this property is not set, .NET for Android locates the NDK from the
 configured Android development environment.
 
+In .NET 11 and later, the NDK is required for NativeAOT builds
+(`$(PublishAot)=true`) and when
+[`$(AndroidStripNativeLibraries)`](#androidstripnativelibraries) is `true`.
+Ordinary CoreCLR builds do not require the NDK, including Release builds,
+assembly stores, ReadyToRun, and APK/AAB packaging.
+
+NativeAOT uses the NDK linker, object-copy utility, CRT objects, system-library
+stubs, and compiler runtime. These are not redistributed in the .NET for Android
+workload. A missing NDK produces [XA5104](../messages/xa5104.md).
+
 ## AndroidPackageFormat
 
 An enum-style property with valid
@@ -1294,6 +1301,14 @@ Experimental support for this property was added in .NET 8, removed in .NET 10.
 A bool property which tells the packaging process to strip debug symbols from the native shared libraries (`.so` files).
 
 The default value is `false` and the debug symbols, if any, will be preserved when packaging.
+
+In .NET 11 and later, enabling this property requires the official Android NDK
+and uses its `llvm-strip` tool. Set
+[`$(AndroidNdkDirectory)`](#androidndkdirectory) if the NDK is installed outside
+the configured Android development environment. The build fails if the NDK or
+tool is missing, or if stripping fails; it does not silently package the original
+library after a stripping failure. Input libraries are not modified: stripped
+copies are written to the application's intermediate output directory.
 
 ## AndroidSupportedAbis
 

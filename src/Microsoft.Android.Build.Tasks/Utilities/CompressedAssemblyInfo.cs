@@ -1,0 +1,48 @@
+#nullable enable
+using System;
+using System.IO;
+using Microsoft.Build.Framework;
+
+using Xamarin.Android.Tools;
+using Xamarin.Android.Tasks;
+
+namespace Microsoft.Android.Tasks
+{
+	class CompressedAssemblyInfo
+	{
+		const string CompressedAssembliesInfoKey = "__CompressedAssembliesInfo";
+
+		public uint FileSize                { get; }
+		public uint DescriptorIndex         { get; }
+		public AndroidTargetArch TargetArch { get; }
+		public string AssemblyName          { get; }
+
+		public CompressedAssemblyInfo (uint fileSize, uint descriptorIndex, AndroidTargetArch targetArch, string assemblyName)
+		{
+			FileSize = fileSize;
+			DescriptorIndex = descriptorIndex;
+			TargetArch = targetArch;
+			AssemblyName = assemblyName;
+		}
+
+		public static string GetKey (string projectFullPath)
+		{
+			if (projectFullPath.IsNullOrEmpty ())
+				throw new ArgumentException ("must be a non-empty string", nameof (projectFullPath));
+
+			return $"{CompressedAssembliesInfoKey}:{projectFullPath}";
+		}
+
+		public static string GetDictionaryKey (ITaskItem assembly)
+		{
+			// Prefer %(DestinationSubPath) if set
+			var path = assembly.GetMetadata ("DestinationSubPath");
+			if (!path.IsNullOrEmpty ()) {
+				return path;
+			}
+			// MSBuild sometimes only sets %(DestinationSubDirectory)
+			var subDirectory = assembly.GetMetadata ("DestinationSubDirectory");
+			return Path.Combine (subDirectory, Path.GetFileName (assembly.ItemSpec));
+		}
+	}
+}

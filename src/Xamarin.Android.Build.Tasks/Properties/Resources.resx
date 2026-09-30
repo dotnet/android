@@ -532,16 +532,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
     <value>This could be caused by the project having non-ASCII characters in its filename or path. See https://learn.microsoft.com/dotnet/android/messages/apt2265 for details.</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
-  <data name="XA3004" xml:space="preserve">
-    <value>Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. See https://code.google.com/p/android/issues/detail?id=161422.</value>
-    <comment>The following are literal names and should not be translated: NDK, r10d, x86_64, libm.so
-"r10d" is the problematic version of the NDK. "x86_64" is the architecture of the libm.so file.</comment>
-  </data>
-  <data name="XA3005" xml:space="preserve">
-    <value>The detected Android NDK version is incompatible with the targeted LLVM configuration. Please upgrade to NDK r10d or newer.</value>
-    <comment>The following are literal names and should not be translated: NDK, LLVM, r10d
-"r10d" is the version of the NDK.</comment>
-  </data>
   <data name="XA3007" xml:space="preserve">
     <value>Could not link native shared library: {0}{1}</value>
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
@@ -960,24 +950,14 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
   </data>
-  <data name="XA5101_C_Compiler" xml:space="preserve">
-    <value>C compiler for target {0} was not found. Tried paths: "{1}"</value>
-    <comment>The following are literal names and should not be translated: C
-{0} - The target architecture, such as Arm, Arm64, or X86_64
-{1} - Semicolon-separated list of the paths searched</comment>
-  </data>
-  <data name="XA5101_Toolchain" xml:space="preserve">
-    <value>Toolchain directory for target {0} was not found.</value>
-    <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
-  </data>
   <data name="XA5104" xml:space="preserve">
     <value>Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path.</value>
     <comment>The following are literal names and should not be translated: $(AndroidNdkDirectory)</comment>
   </data>
   <data name="XA5105" xml:space="preserve">
     <value>Toolchain utility '{0}' for target {1} was not found. Tried in path: "{2}"</value>
-    <comment>{0} - The missing utility name, such as gcc or clang
-{1} - The target architecture, such as Arm, Arm64, or X86_64
+    <comment>{0} - The missing utility name, such as ld.lld, llvm-objcopy, or llvm-strip
+{1} - The host toolchain identifier or target ABI
 {2} - The path of the directory that was searched</comment>
   </data>
   <data name="XA5205" xml:space="preserve">

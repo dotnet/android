@@ -70,7 +70,6 @@ used by all .NET Android projects.
       <Output TaskParameter="MonoAndroidToolsPath"      PropertyName="MonoAndroidToolsDirectory" />
       <Output TaskParameter="MonoAndroidBinPath"        PropertyName="MonoAndroidBinDirectory" />
       <Output TaskParameter="MonoAndroidLibPath"        PropertyName="MonoAndroidLibDirectory" />
-      <Output TaskParameter="AndroidBinUtilsPath"       PropertyName="AndroidBinUtilsDirectory" Condition=" '$(AndroidBinUtilsDirectory)' == '' " />
     </ResolveSdks>
     <!-- Allow tests to suppress NDK resolution.  ResolveSdks always discovers
          NDK through its fallback chain (SDK dir, env vars, PATH), so the only

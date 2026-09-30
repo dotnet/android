@@ -1072,24 +1072,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. See https://code.google.com/p/android/issues/detail?id=161422..
-        /// </summary>
-        public static string XA3004 {
-            get {
-                return ResourceManager.GetString("XA3004", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The detected Android NDK version is incompatible with the targeted LLVM configuration. Please upgrade to NDK r10d or newer..
-        /// </summary>
-        public static string XA3005 {
-            get {
-                return ResourceManager.GetString("XA3005", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Could not link native shared library: {0}{1}.
         /// </summary>
         public static string XA3007 {
@@ -2083,24 +2065,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA5101 {
             get {
                 return ResourceManager.GetString("XA5101", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to C compiler for target {0} was not found. Tried paths: &quot;{1}&quot;.
-        /// </summary>
-        public static string XA5101_C_Compiler {
-            get {
-                return ResourceManager.GetString("XA5101_C_Compiler", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Toolchain directory for target {0} was not found..
-        /// </summary>
-        public static string XA5101_Toolchain {
-            get {
-                return ResourceManager.GetString("XA5101_Toolchain", resourceCulture);
             }
         }
         

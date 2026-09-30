@@ -178,8 +178,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 
 + XA3001: Could not AOT the assembly: {assembly}
 + XA3002: Invalid AOT mode: {mode}
-+ XA3004: Android NDK r10d is buggy and provides an incompatible x86_64 libm.so.
-+ XA3005: The detected Android NDK version is incompatible with the targeted LLVM configuration.
 + XA3007: Could not link native shared library: {library}
 + XA3008: Failed to extract debug info from '{library}'
 
@@ -273,11 +271,11 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 
 ## XA5xxx: GCC and toolchain
 
-+ XA5101: Missing Android NDK toolchains directory '{path}'. Please install the Android NDK.
++ [XA5101](xa5101.md): Missing Android NDK toolchains directory '{path}'. Please install the Android NDK.
 + XA5102: Conversion from assembly to native code failed. Exit code {exitCode}
 + XA5103: NDK C compiler exited with an error. Exit code {0}
-+ XA5104: Could not locate the Android NDK.
-+ XA5105: Toolchain utility '{utility}' for target {arch} was not found. Tried in path: "{path}"
++ [XA5104](xa5104.md): Could not locate the Android NDK.
++ [XA5105](xa5105.md): Toolchain utility '{utility}' for target {arch} was not found. Tried in path: "{path}"
 + XA5201: NDK linker exited with an error. Exit code {0}
 + [XA5205](xa5205.md): Cannot find `{ToolName}` in the Android SDK.
 + [XA5207](xa5207.md): Could not find android.jar for API level `{compileSdk}`.

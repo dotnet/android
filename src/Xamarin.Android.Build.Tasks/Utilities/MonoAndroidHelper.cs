@@ -613,16 +613,6 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-		public static string GetAssemblyAbi (ITaskItem asmItem)
-		{
-			string? abi = asmItem.GetMetadata ("Abi");
-			if (String.IsNullOrEmpty (abi)) {
-				throw new InvalidOperationException ($"Internal error: assembly '{asmItem}' lacks ABI metadata");
-			}
-
-			return abi;
-		}
-
 		public static string GetAssemblyRid (ITaskItem asmItem)
 		{
 			string? abi = asmItem.GetMetadata ("RuntimeIdentifier");
@@ -633,9 +623,6 @@ namespace Xamarin.Android.Tasks
 			return abi;
 		}
 
-		public static AndroidTargetArch GetTargetArch (ITaskItem asmItem) => AbiToTargetArch (GetAssemblyAbi (asmItem));
-
-
 		public static AndroidTargetArch GetRequiredValidArchitecture (ITaskItem item)
 		{
 			AndroidTargetArch ret = GetTargetArch (item);
@@ -645,38 +632,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return ret;
-		}
-#endif // MSBUILD
-
-		static string GetToolsRootDirectoryRelativePath (string androidBinUtilsDirectory)
-		{
-			// We need to link against libc and libm, but since NDK is not in use, the linker won't be able to find the actual Android libraries.
-			// Therefore, we will use their stubs to satisfy the linker. At runtime they will, of course, use the actual Android libraries.
-			string relPath = Path.Combine ("..", "..");
-			if (!OS.IsWindows) {
-				// the `binutils` directory is one level down (${OS}/binutils) than the Windows one
-				relPath = Path.Combine (relPath, "..");
-			}
-
-			return relPath;
-		}
-
-#if MSBUILD
-		public static string? GetRuntimePackNativeLibDir (AndroidTargetArch arch, IEnumerable<ITaskItem> runtimePackLibDirs)
-		{
-			foreach (ITaskItem item in runtimePackLibDirs) {
-				string? rid = item.GetMetadata ("RuntimeIdentifier");
-				if (String.IsNullOrEmpty (rid)) {
-					continue;
-				}
-
-				AndroidTargetArch itemArch = RidToArch (rid);
-				if (itemArch == arch) {
-					return item.ItemSpec;
-				}
-			}
-
-			return null;
 		}
 #endif // MSBUILD
 
@@ -712,117 +667,11 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		/// <summary>
-		/// Process a collection of assembly `ITaskItem` objects, splitting it on the assembly architecture (<see cref="GetTargetArch"/>) while, at the same time, ignoring
-		/// all assemblies which are **not** in the <paramref name="supportedAbis"/> collection.  If necessary, the selection can be further controlled by passing a qualifier
-		/// function in <paramref name="shouldSkip"/> which returns `true` if the assembly passed to it should be **skipped**.
-		///
-		/// This method is necessary because sometimes our tasks will be given assemblies for more architectures than indicated as supported in their `SupportedAbis` properties.
-		/// One such example is the `ApplicationBuildTests.BuildAMassiveApp` test, which passes around a set of assemblies for all the supported architectures, but it supports only two ABIs
-		/// via the `SupportedAbis` property.
-		/// </summary>
-		public static Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> GetPerArchAssemblies (IEnumerable<ITaskItem> input, ICollection<string> supportedAbis, bool validate, Func<ITaskItem, bool>? shouldSkip = null)
-		{
-			var supportedTargetArches = new HashSet<AndroidTargetArch> ();
-			foreach (string abi in supportedAbis) {
-				supportedTargetArches.Add (AbiToTargetArch (abi));
-			}
-
-			return GetPerArchAssemblies (
-				input,
-				supportedTargetArches,
-				validate,
-				shouldSkip
-			);
-		}
-
-		public static string GetAssemblyNameWithCulture (ITaskItem assemblyItem)
-		{
-			string name = Path.GetFileNameWithoutExtension (assemblyItem.ItemSpec);
-			string? culture = assemblyItem.GetMetadata ("Culture");
-			if (!String.IsNullOrEmpty (culture)) {
-				return $"{culture}/{name}";
-			}
-			return name;
-		}
-
-		static Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> GetPerArchAssemblies (IEnumerable<ITaskItem> input, HashSet<AndroidTargetArch> supportedTargetArches, bool validate, Func<ITaskItem, bool>? shouldSkip = null)
-		{
-			bool filterByTargetArches = supportedTargetArches.Count > 0;
-			var assembliesPerArch = new Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> ();
-			foreach (ITaskItem assembly in input) {
-				if (shouldSkip != null && shouldSkip (assembly)) {
-					continue;
-				}
-
-				AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (assembly);
-				if (filterByTargetArches && !supportedTargetArches.Contains (arch)) {
-					continue;
-				}
-
-				if (!assembliesPerArch.TryGetValue (arch, out Dictionary<string, ITaskItem> assemblies)) {
-					assemblies = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
-					assembliesPerArch.Add (arch, assemblies);
-				}
-
-				assemblies.Add (GetAssemblyNameWithCulture (assembly), assembly);
-			}
-
-			// It's possible some assembly collections will be empty (e.g. `ResolvedUserAssemblies`), which
-			// isn't a problem and such empty collections should not be validated, as it will end in the "should never happen" exception below being
-			// thrown as a false negative.
-			if (assembliesPerArch.Count == 0 || !validate) {
-				return assembliesPerArch;
-			}
-
-			Dictionary<string, ITaskItem>? firstArchAssemblies = null;
-			AndroidTargetArch firstArch = AndroidTargetArch.None;
-			foreach (var kvp in assembliesPerArch) {
-				if (firstArchAssemblies == null) {
-					firstArchAssemblies = kvp.Value;
-					firstArch = kvp.Key;
-					continue;
-				}
-
-				EnsureDictionariesHaveTheSameEntries (firstArchAssemblies, kvp.Value, kvp.Key);
-			}
-
-			// Should "never" happen...
-			if (firstArch == AndroidTargetArch.None) {
-				throw new InvalidOperationException ("Internal error: no per-architecture assemblies found?");
-			}
-
-			return assembliesPerArch;
-
-			void EnsureDictionariesHaveTheSameEntries (Dictionary<string, ITaskItem> template, Dictionary<string, ITaskItem> dict, AndroidTargetArch arch)
-			{
-				if (dict.Count != template.Count) {
-					throw new InvalidOperationException ($"Internal error: architecture '{arch}' should have {template.Count} assemblies, however it has {dict.Count}");
-				}
-
-				foreach (var kvp in template) {
-					if (!dict.ContainsKey (kvp.Key)) {
-						throw new InvalidOperationException ($"Internal error: architecture '{arch}' does not have assembly '{kvp.Key}'");
-					}
-				}
-			}
-		}
-
-		public static uint ZipAlignmentToPageSize (int alignment) => ZipAlignmentToMaskOrPageSize (alignment, needMask: false);
-
-		static uint ZipAlignmentToMaskOrPageSize (int alignment, bool needMask)
-		{
-			const uint pageSize4k = 4096;
-			const uint pageMask4k = 3;
-			const uint pageSize16k = 16384;
-			const uint pageMask16k = 15;
-
-			return alignment switch {
-				4  => needMask ? pageMask4k : pageSize4k,
-				16 => needMask ? pageMask16k : pageSize16k,
-				_  => throw new InvalidOperationException ($"Internal error: unsupported zip page alignment value {alignment}")
-			};
-		}
+		public static uint ZipAlignmentToPageSize (int alignment) => alignment switch {
+			4 => 4096,
+			16 => 16384,
+			_ => throw new InvalidOperationException ($"Internal error: unsupported zip page alignment value {alignment}")
+		};
 
 		public static string QuoteFileNameArgument (string? fileName)
 		{
@@ -874,28 +723,5 @@ namespace Xamarin.Android.Tasks
 			return minValue;
 		}
 
-		/// <summary>
-		/// Takes `libItem.ItemSpec` and transforms it to a file name of a native library. It will
-		/// remove any paths from `ItemSpec` and will make sure that the file ends with the `.so`
-		/// extension. Empty string is returned if there's nothing to process. String comparisons
-		/// are ordinal and case-insensitive.
-		/// </summary>
-		public static string GetNormalizedNativeLibraryName (ITaskItem libItem)
-		{
-			if (String.IsNullOrEmpty (libItem.ItemSpec)) {
-				return String.Empty;
-			}
-
-			string ret = Path.GetFileName (libItem.ItemSpec);
-			if (String.IsNullOrEmpty (ret)) {
-				return String.Empty;
-			}
-
-			if (!String.Equals (Path.GetExtension (ret), ".so", StringComparison.OrdinalIgnoreCase)) {
-				return $"{ret}.so";
-			}
-
-			return ret;
-		}
 	}
 }

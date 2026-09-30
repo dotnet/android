@@ -465,15 +465,27 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void CoreClrDoesNotRequireNdk ()
+		[TestCase (AndroidRuntime.CoreCLR, false, false, false)]
+		[TestCase (AndroidRuntime.CoreCLR, true, false, false)]
+		[TestCase (AndroidRuntime.CoreCLR, false, true, true)]
+		[TestCase (AndroidRuntime.CoreCLR, true, true, true)]
+		[TestCase (AndroidRuntime.NativeAOT, true, false, true)]
+		[TestCase (AndroidRuntime.NativeAOT, true, true, true)]
+		[TestCase (AndroidRuntime.NativeAOT, false, false, false)]
+		[TestCase (AndroidRuntime.NativeAOT, false, true, true)]
+		public void NdkDependencyUsesEffectiveRuntime (AndroidRuntime runtime, bool isRelease, bool stripNativeLibraries, bool ndkRequired)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntime (runtime);
+			// PublishAot remains true in Debug, but the effective runtime is CoreCLR.
+			proj.IsRelease = isRelease;
+			proj.SetProperty ("AndroidStripNativeLibraries", stripNativeLibraries.ToString ());
+			proj.SetProperty ("_SkipNdkResolution", "true");
+
 			using (var builder = CreateApkBuilder ()) {
 				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.Target = "GetAndroidDependencies";
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (builder.Build (proj), "Dependency discovery should succeed without an installed NDK.");
 				IEnumerable<string> taskOutput = builder.LastBuildOutput
 					.Select (x => x.Trim ())
 					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
@@ -481,52 +493,11 @@ namespace Xamarin.Android.Build.Tests
 					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
 					.ToArray ();
 				Assert.IsNotEmpty (taskOutput, "CalculateProjectDependencies should log its output items.");
-				StringAssertEx.DoesNotContain ("ndk-bundle", taskOutput, "ndk-bundle should not be a dependency for CoreCLR.");
-			}
-		}
-
-		[Test]
-		public void NativeAotDoesNotRequireNdk_WhenWorkloadLinkerEnabled ()
-		{
-			// Do not set _AndroidUseWorkloadNativeLinker: this test intentionally verifies its default.
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			using (var builder = CreateApkBuilder ()) {
-				builder.Verbosity = LoggerVerbosity.Detailed;
-				builder.Target = "GetAndroidDependencies";
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				IEnumerable<string> taskOutput = builder.LastBuildOutput
-					.Select (x => x.Trim ())
-					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
-					.SkipWhile (x => !x.StartsWith ("Output Item(s):", StringComparison.Ordinal))
-					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
-					.ToArray ();
-				Assert.IsNotEmpty (taskOutput, "CalculateProjectDependencies should log its output items.");
-				StringAssertEx.DoesNotContain ("ndk-bundle", taskOutput, "ndk-bundle should not be a dependency for NativeAOT with the workload linker.");
-			}
-		}
-
-		[Test]
-		public void NativeAotRequiresNdk_WhenWorkloadLinkerDisabled ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			proj.SetProperty ("_AndroidUseWorkloadNativeLinker", "false");
-			proj.SetProperty ("_SkipNdkResolution", "false");
-			using (var builder = CreateApkBuilder ()) {
-				builder.Verbosity = LoggerVerbosity.Detailed;
-				builder.Target = "GetAndroidDependencies";
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				IEnumerable<string> taskOutput = builder.LastBuildOutput
-					.Select (x => x.Trim ())
-					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
-					.SkipWhile (x => !x.StartsWith ("Output Item(s):", StringComparison.Ordinal))
-					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal));
-				StringAssertEx.Contains ("ndk-bundle", taskOutput, "ndk-bundle should be a dependency for NativeAOT without workload linker.");
+				if (ndkRequired) {
+					StringAssertEx.Contains ("ndk-bundle", taskOutput, "NativeAOT and optional native library stripping require the NDK.");
+				} else {
+					StringAssertEx.DoesNotContain ("ndk-bundle", taskOutput, "Ordinary CoreCLR builds should not require the NDK.");
+				}
 			}
 		}
 

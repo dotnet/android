@@ -88,9 +88,9 @@ Same assembly as above. These test individual MSBuild tasks in isolation with `M
 | **d8/dex** | `--filter "FullyQualifiedName~D8Tests"` | D8 dexing task |
 | **filter assemblies** | `--filter "FullyQualifiedName~FilterAssembliesTests"` | Assembly filtering |
 | **resource generation** | `--filter "FullyQualifiedName~GenerateResourceCaseMapTests"` | Resource case map generation |
-| **package manager** | `--filter "FullyQualifiedName~GeneratePackageManagerJavaTests"` | Package manager Java generation |
+| **package manager** | `--filter "FullyQualifiedName~GeneratePackageManagerJavaTests"` | Standalone modern Android build task tests, not this assembly |
 | **key tool** | `--filter "FullyQualifiedName~KeyToolTests"` | Keystore/signing tasks |
-| **ndk** | `--filter "FullyQualifiedName~NdkUtilTests"` | NDK utility tasks |
+| **ndk** | `--filter "FullyQualifiedName~ResolveAndroidNdkTests"` | Standalone modern Android build task tests, not this assembly |
 
 ---
 

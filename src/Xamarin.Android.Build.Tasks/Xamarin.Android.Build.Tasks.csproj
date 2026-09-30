@@ -39,6 +39,7 @@
 
   <ItemGroup>
     <Compile Remove="MSBuild\**" />
+    <Compile Include="..\Microsoft.Android.Build.Tasks\Utilities\MonoAndroidHelper.Assemblies.cs" Link="Utilities\MonoAndroidHelper.Assemblies.cs" />
     <Compile Remove="Resources\**" />
     <Compile Remove="Tests\**" />
     <EmbeddedResource Remove="Tests\**" />
@@ -247,9 +248,6 @@
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\bundletool\bundletool.csproj">
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\binutils\binutils.csproj">
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />

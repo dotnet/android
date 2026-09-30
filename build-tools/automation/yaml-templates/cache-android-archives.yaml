@@ -2,7 +2,7 @@
 # Caches downloads under $(AndroidToolchainCacheDirectory) (default:
 # $HOME/android-archives) between pipeline runs to avoid transient
 # network failures when downloading from dl.google.com, aka.ms, and
-# github.com (binutils, bundletool).
+# github.com (bundletool).
 #
 # Downloads are SHA-256 verified before their validation stamps are written.
 # A cached archive can become corrupt after validation; androidsdk.targets
@@ -35,7 +35,7 @@ steps:
   displayName: cache Android toolchain archives
   condition: ${{ parameters.condition }}
   inputs:
-    key: '"android-archives" | "v2" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/Configuration.props | ${{ parameters.xaSourcePath }}/src/androidsdk/androidsdk.targets | ${{ parameters.xaSourcePath }}/src/openjdk/openjdk.targets | ${{ parameters.xaSourcePath }}/src/binutils/binutils.targets | ${{ parameters.xaSourcePath }}/src/aapt2/aapt2.targets | ${{ parameters.xaSourcePath }}/src/bundletool/bundletool.targets'
+    key: '"android-archives" | "v2" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/Configuration.props | ${{ parameters.xaSourcePath }}/src/androidsdk/androidsdk.targets | ${{ parameters.xaSourcePath }}/src/openjdk/openjdk.targets | ${{ parameters.xaSourcePath }}/src/aapt2/aapt2.targets | ${{ parameters.xaSourcePath }}/src/bundletool/bundletool.targets'
     restoreKeys: |
       "android-archives" | "v2" | "$(Agent.OS)"
       "android-archives" | "v1" | "$(Agent.OS)"

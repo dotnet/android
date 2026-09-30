@@ -21,7 +21,6 @@
     <Project Path="src/aapt2/aapt2.csproj" />
     <Project Path="src/AndroidBuildConfig/AndroidBuildConfig.csproj" />
     <Project Path="src/androidsdk/androidsdk.csproj" />
-    <Project Path="src/binutils/binutils.csproj" />
     <Project Path="src/bundletool/bundletool.csproj" />
     <Project Path="src/java-runtime/java-runtime.csproj" />
     <Project Path="src/manifestmerger/manifestmerger.csproj" />

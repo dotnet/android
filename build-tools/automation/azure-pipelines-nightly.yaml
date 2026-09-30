@@ -293,24 +293,12 @@ stages:
       parameters:
         installApkDiff: false
 
-    - task: DownloadPipelineArtifact@2
-      displayName: Download binutils pdbs
-      inputs:
-        artifactName: $(WindowsToolchainPdbArtifactName)
-        downloadPath: $(Build.StagingDirectory)\binutils-pdb
-
-    - powershell: |
-        Expand-Archive "$(Build.StagingDirectory)\binutils-pdb\$(WindowsToolchainPdbArtifactName).zip" "$(System.DefaultWorkingDirectory)\binutils-pdb"
-        Get-ChildItem -Path "$(System.DefaultWorkingDirectory)\binutils-pdb" -Recurse
-      displayName: Extract binutils pdbs
-
     ### Copy .dll, .exe, .pdb files for APIScan
     - task: CopyFiles@2
       displayName: Collect Files for APIScan
       inputs:
         Contents: |
           $(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\packs\Microsoft.Android*\**\?(*.dll|*.exe|*.pdb)
-          $(System.DefaultWorkingDirectory)\binutils-pdb\*.pdb
         TargetFolder: $(Agent.TempDirectory)\T
         OverWrite: true
         flattenFolders: true

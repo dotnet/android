@@ -15,13 +15,6 @@
     <ThirdParty Include="protobuf-net.dll" />
     <ThirdParty Include="SgmlReaderDll.dll" />
     <ThirdParty Include="aapt2.exe" />
-    <ThirdParty Include="llvm-mc.exe" />
-    <ThirdParty Include="llvm-objcopy.exe" />
-    <ThirdParty Include="llvm-strip.exe" />
-    <ThirdParty Include="aarch64-linux-android-ld.exe" />
-    <ThirdParty Include="arm-linux-androideabi-ld.exe" />
-    <ThirdParty Include="i686-linux-android-ld.exe" />
-    <ThirdParty Include="x86_64-linux-android-ld.exe" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,9 +24,5 @@
     <FirstParty Include="*.jar" />
     <MacDeveloperSign Include="*.dylib" />
     <MacDeveloperSignHarden Include="Darwin/aapt2" />
-    <MacDeveloperSignHarden Include="Darwin/binutils/bin/*as" />
-    <MacDeveloperSignHarden Include="Darwin/binutils/bin/*ld" />
-    <MacDeveloperSignHarden Include="Darwin/binutils/bin/llvm-mc" />
-    <MacDeveloperSignHarden Include="Darwin/binutils/bin/*strip" />
   </ItemGroup>
 </Project>

@@ -23,7 +23,9 @@ public class CollectNativeFilesForArchive : AndroidTask
 
 	public override string TaskPrefix => "CNF";
 
-	public string AndroidNdkDirectory { get; set; } = "";
+	public string? StripToolPath { get; set; }
+
+	public string? ClangRuntimeDirectory { get; set; }
 
 	[Required]
 	public string ApkOutputPath { get; set; } = "";
@@ -53,12 +55,6 @@ public class CollectNativeFilesForArchive : AndroidTask
 	public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
 
 	[Required]
-	public string AndroidBinUtilsDirectory { get; set; } = "";
-
-	[Required]
-	public ITaskItem[] RuntimePackLibraryDirectories { get; set; } = [];
-
-	[Required]
 	public string IntermediateOutputPath { get; set; } = "";
 
 	[Output]
@@ -68,24 +64,22 @@ public class CollectNativeFilesForArchive : AndroidTask
 	public ITaskItem[] FilesToAddToArchive { get; set; } = [];
 
 	[Output]
-	public ITaskItem [] DSODirectoriesToDelete { get; set; } = [];
+	public ITaskItem [] StrippedLibraries { get; set; } = [];
 
-	string? stripPath;
+	readonly List<ITaskItem> strippedLibraries = new ();
 
 	public override bool RunTask ()
 	{
+		strippedLibraries.Clear ();
 		var apk = new PackageFileListBuilder ();
-		var dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, RuntimePackLibraryDirectories, IntermediateOutputPath);
 
 		var outputFiles = new List<string> {
 			ApkOutputPath
 		};
 
-		if (StripNativeLibraries) {
-			stripPath = Path.Combine (AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (AndroidBinUtilsDirectory, "llvm-strip"));
-			if (String.IsNullOrEmpty (stripPath)) {
-				Log.LogDebugMessage ("Stripping of native libraries enabled but llvm-strip not found. Libraries won't be stripped.");
-			}
+		if (StripNativeLibraries && !File.Exists (StripToolPath)) {
+			Log.LogCodedError ("XA5105", Properties.Resources.XA5105, "llvm-strip", string.Join (";", SupportedAbis), StripToolPath ?? "");
+			return false;
 		}
 
 		var files = new ArchiveFileList ();
@@ -103,27 +97,26 @@ public class CollectNativeFilesForArchive : AndroidTask
 		// Task output parameters
 		FilesToAddToArchive = apk.ToArray ();
 		OutputFiles = outputFiles.Select (a => new TaskItem (a)).ToArray ();
-		DSODirectoriesToDelete = DSOWrapperGenerator.GetDirectoriesToCleanUp (dsoWrapperConfig)
-			.Concat (DlopenAssemblyStoreGenerator.GetDirectoriesToCleanUp (IntermediateOutputPath, SupportedAbis))
-			.Select (d => new TaskItem (d))
-			.ToArray ();
-
+		StrippedLibraries = strippedLibraries.ToArray ();
 		return !Log.HasLoggedErrors;
 	}
 
-	string StripNativeLibIfNecessary (string filesystemPath, string abi)
+	string? StripNativeLibIfNecessary (string filesystemPath, string abi)
 	{
-		if (!StripNativeLibraries || String.IsNullOrEmpty (stripPath)) {
+		if (!StripNativeLibraries) {
 			return filesystemPath;
 		}
 
-		if (filesystemPath.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase)) {
-			// Wrapped assemblies have no debug info here.
+		if (IsWrapperScript (filesystemPath, null)) {
 			return filesystemPath;
+		}
+
+		if (StripToolPath.IsNullOrEmpty ()) {
+			throw new InvalidOperationException ("The Android NDK strip tool must be resolved before collecting native libraries.");
 		}
 
 		ELFInfo? info = ELFHelper.GetInfo (Log, filesystemPath);
-		if (info == null || !info.HasDebugInfo) {
+		if (info != null && !info.HasDebugInfo) {
 			return filesystemPath;
 		}
 
@@ -138,12 +131,12 @@ public class CollectNativeFilesForArchive : AndroidTask
 		};
 
 		Log.LogDebugMessage ($"Stripping native library: '{filesystemPath}' to '{outputFilePath}'");
-		int ret = MonoAndroidHelper.RunProcess ("llvm-strip", stripPath, String.Join (" ", args), Log);
+		int ret = MonoAndroidHelper.RunProcess ("llvm-strip", StripToolPath, String.Join (" ", args), Log);
 		if (ret != 0) {
-			Log.LogDebugMessage ($"Library '{filesystemPath}' not stripped, will package the original file.");
-			return filesystemPath;
+			return null; // RunProcess logged XA0142; do not package an unstripped fallback.
 		}
 
+		strippedLibraries.Add (new TaskItem (outputFilePath));
 		return outputFilePath;
 	}
 
@@ -152,7 +145,10 @@ public class CollectNativeFilesForArchive : AndroidTask
 		string archivePath = MakeArchiveLibPath (abi, inArchiveFileName);
 		Log.LogDebugMessage ($"Adding native library: {filesystemPath} (APK path: {archivePath})");
 		ELFHelper.AssertValidLibraryAlignment (Log, ZipAlignmentPages, filesystemPath, taskItem);
-		apk.AddItem (StripNativeLibIfNecessary (filesystemPath, abi), archivePath);
+		string? path = StripNativeLibIfNecessary (filesystemPath, abi);
+		if (path != null) {
+			apk.AddItem (path, archivePath);
+		}
 	}
 
 	void AddRuntimeLibraries (PackageFileListBuilder apk, string [] supportedAbis)
@@ -185,7 +181,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 		}
 
 		if (Path.DirectorySeparatorChar == '/') {
-			link = link!.Replace ('\\', '/');
+			link = link.Replace ('\\', '/');
 		}
 
 		return string.Compare (Path.GetFileName (link), "wrap.sh", StringComparison.Ordinal) == 0;
@@ -261,12 +257,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 			return;
 		}
 
-		NdkTools ndk = NdkTools.Create (AndroidNdkDirectory, logErrors: false, log: Log);
-		if (Log.HasLoggedErrors) {
-			return; // NdkTools.Create will log appropriate error
-		}
-
-		string clangDir = ndk.GetClangDeviceLibraryPath ();
+		string? clangDir = ClangRuntimeDirectory;
 		if (clangDir.IsNullOrEmpty ()) {
 			LogSanitizerError ($"Unable to find the clang compiler directory. Is NDK installed?");
 			return;
@@ -313,7 +304,9 @@ public class CollectNativeFilesForArchive : AndroidTask
 		libs = libs.Where (lib => lib.Abi != null);
 		libs = libs.Where (lib => supportedAbis.Contains (lib.Abi));
 		foreach (var info in libs) {
-			AddNativeLibrary (files, info.Path, info.Abi!, info.ArchiveFileName, info.Item);
+			if (info.Abi != null) {
+				AddNativeLibrary (files, info.Path, info.Abi, info.ArchiveFileName, info.Item);
+			}
 		}
 	}
 
@@ -336,7 +329,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 
 	void AddNativeLibrary (ArchiveFileList files, string path, string abi, string? archiveFileName, ITaskItem? taskItem = null)
 	{
-		string fileName = archiveFileName.IsNullOrEmpty () ? Path.GetFileName (path) : archiveFileName!;
+		string fileName = archiveFileName.IsNullOrEmpty () ? Path.GetFileName (path) : archiveFileName;
 		var item = (filePath: path, archivePath: MakeArchiveLibPath (abi, fileName));
 		if (files.Any (x => x.archivePath == item.archivePath)) {
 			Log.LogCodedWarning ("XA4301", path, 0, Properties.Resources.XA4301, item.archivePath);
@@ -344,8 +337,11 @@ public class CollectNativeFilesForArchive : AndroidTask
 		}
 
 		ELFHelper.AssertValidLibraryAlignment (Log, ZipAlignmentPages, path, taskItem);
-		item.filePath = StripNativeLibIfNecessary (item.filePath, abi);
-		files.Add (item);
+		string? strippedPath = StripNativeLibIfNecessary (item.filePath, abi);
+		if (strippedPath != null) {
+			item.filePath = strippedPath;
+			files.Add (item);
+		}
 	}
 
 	// This method is used only for internal warnings which will never be shown to the end user, therefore there's
