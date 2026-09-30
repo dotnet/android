@@ -46,7 +46,8 @@ namespace Xamarin.Android.Build.Tests
 				$"{nameof (FixLegacyResourceDesignerStep)} presence should match the compatibility fixup setting.");
 			Assert.AreEqual (enabled, pipeline.Steps.Any (step => step is AddKeepAlivesStep),
 				$"{nameof (AddKeepAlivesStep)} presence should match the compatibility fixup setting.");
-			Assert.IsTrue (pipeline.Steps.Any (step => step is FindJavaObjectsStep), $"{nameof (FindJavaObjectsStep)} should always run.");
+			Assert.AreEqual (enabled ? 4 : 1, pipeline.Steps.Count,
+				"Only requested compatibility fixups and the assembly-copy step should run; JCW generation is handled by the trimmable generator.");
 			Assert.IsTrue (pipeline.Steps.Any (step => step is SaveChangedAssemblyStep), $"{nameof (SaveChangedAssemblyStep)} should always run.");
 		}
 
@@ -54,6 +55,61 @@ namespace Xamarin.Android.Build.Tests
 		{
 			public void BuildPipelineForTest (AssemblyPipeline pipeline, MSBuildLinkContext context) =>
 				BuildPipeline (pipeline, context);
+		}
+
+		[Test]
+		public void LinkAssembliesNoShrinkCopiesJavaPeersWithoutLegacyImport ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (path);
+			try {
+				var androidPath = Path.Combine (path, "Mono.Android.dll");
+				var assemblyPath = Path.Combine (path, "App.dll");
+				var destinationPath = Path.Combine (path, "linked", "App.dll");
+				using (var android = CreateFauxMonoAndroidAssembly ())
+				using (var assembly = AssemblyDefinition.CreateAssembly (new AssemblyNameDefinition ("App", new Version ()), "App", ModuleKind.Dll)) {
+					android.Write (androidPath);
+					var module = assembly.MainModule;
+					var peer = new TypeDefinition ("Example", "Peer", TypeAttributes.Public,
+						module.ImportReference (android.MainModule.GetType ("Java.Lang.Object")));
+					module.Types.Add (peer);
+					var method = new MethodDefinition ("Callback", MethodAttributes.Public | MethodAttributes.Virtual, module.TypeSystem.Void);
+					method.Body.Instructions.Add (Instruction.Create (OpCodes.Ret));
+					var registerType = new TypeReference ("Android.Runtime", "RegisterAttribute", module, peer.BaseType.Scope);
+					var registerConstructor = new MethodReference (".ctor", module.TypeSystem.Void, registerType) { HasThis = true };
+					registerConstructor.Parameters.Add (new ParameterDefinition (module.TypeSystem.String));
+					var register = new CustomAttribute (registerConstructor);
+					register.ConstructorArguments.Add (new CustomAttributeArgument (module.TypeSystem.String, "callback"));
+					method.CustomAttributes.Add (register);
+					peer.Methods.Add (method);
+					assembly.Write (assemblyPath);
+				}
+
+				var source = new TaskItem (assemblyPath);
+				source.SetMetadata ("Abi", "arm64-v8a");
+				source.SetMetadata ("TargetFrameworkIdentifier", "MonoAndroid");
+				var destination = new TaskItem (destinationPath);
+				destination.SetMetadata ("Abi", "arm64-v8a");
+				var androidItem = new TaskItem (androidPath);
+				androidItem.SetMetadata ("Abi", "arm64-v8a");
+				var task = new LinkAssembliesNoShrink {
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+					CodeGenerationTarget = "XAJavaInterop1",
+					DestinationFiles = [destination],
+					EnableLegacyCompatibilityAssemblyFixups = false,
+					ResolvedAssemblies = [source, androidItem],
+					ResolvedUserAssemblies = [source],
+					SourceFiles = [source],
+					TargetName = "App",
+				};
+
+				Assert.IsTrue (task.Execute (), "Assembly copying must not reimport Java peers using legacy JNI signatures or connectors.");
+				CollectionAssert.AreEqual (File.ReadAllBytes (assemblyPath), File.ReadAllBytes (destinationPath));
+				Assert.IsFalse (File.Exists (Path.ChangeExtension (destinationPath, ".jlo.xml")),
+					"Legacy Java-object XML should not be generated.");
+			} finally {
+				Directory.Delete (path, recursive: true);
+			}
 		}
 
 		[Test]

@@ -1111,8 +1111,7 @@ namespace Xamarin.Android.Build.Tests
 		/// And MultiTfmLib contains Java-interop types (e.g. BroadcastReceiver) that only
 		/// exist in the net11.0-android TFM, the build tasks must load the Android-TFM assembly
 		/// and generate JCWs for those types. Previously, the net11.0 (non-Android) assembly
-		/// could be loaded instead, causing FindJavaObjectsStep to report "Found 0 Java types"
-		/// and producing empty .jlo.xml files.
+		/// could be loaded instead, omitting Android-only types from the managed type map.
 		/// </summary>
 		[Test]
 		public void MultiTfmTransitiveReference ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
@@ -1209,18 +1208,12 @@ namespace MultiTfmLib
 			using var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName));
 			Assert.IsTrue (appBuilder.Build (app), $"{app.ProjectName} should build");
 
-			// Verify: MultiTfmLib.jlo.xml should NOT be empty (i.e. the assembly was scanned as an Android assembly)
-			var jloXml = appBuilder.Output.GetIntermediaryPath (
-				Path.Combine ("android", "assets", "arm64-v8a", "MultiTfmLib.jlo.xml"));
-			FileAssert.Exists (jloXml);
-
-			var jloXmlInfo = new FileInfo (jloXml);
-			Assert.IsTrue (jloXmlInfo.Length > 0,
-				"MultiTfmLib.jlo.xml should not be empty — the Android-TFM assembly was not loaded (wrong TFM loaded instead)");
-
-			var jloContent = File.ReadAllText (jloXml);
-			Assert.IsTrue (jloContent.Contains ("MyReceiver"),
-				$"MultiTfmLib.jlo.xml should contain the MyReceiver JCW type, but got: {jloContent}");
+			var typeMapPath = appBuilder.Output.GetIntermediaryPath (
+				Path.Combine ("typemap", "_MultiTfmLib.TypeMap.dll"));
+			FileAssert.Exists (typeMapPath, "The Android-TFM library should have a managed type map.");
+			using var typeMap = Mono.Cecil.AssemblyDefinition.ReadAssembly (typeMapPath);
+			Assert.IsTrue (typeMap.MainModule.GetTypeReferences ().Any (type => type.FullName == "MultiTfmLib.MyReceiver"),
+				"The managed type map should reference the Android-only MyReceiver type.");
 		}
 
 	}

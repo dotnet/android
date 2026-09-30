@@ -1377,10 +1377,8 @@ because xbuild doesn't support framework reference assemblies.
     Inputs="@(ResolvedAssemblies);$(_AndroidBuildPropertiesCache)"
     Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')">
   <LinkAssembliesNoShrink
-      ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(AndroidCodegenTarget)"
       Debug="$(AndroidIncludeDebugSymbols)"
-      ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       ResolvedAssemblies="@(_AllResolvedAssemblies)"
       ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
@@ -2869,7 +2867,7 @@ because xbuild doesn't support framework reference assemblies.
   </Target>
 
   <Target Name="_ValidateAndroidTypeMapImplementation"
-      BeforeTargets="_CheckForInvalidConfigurationAndPlatform;_GenerateJavaStubs;_PrepareLinking;Build;Publish">
+      BeforeTargets="_CheckForInvalidConfigurationAndPlatform;_GenerateJavaStubs;Build;Publish">
     <AndroidError Code="XA4267"
         ResourceName="XA4267"
         Condition=" '$(AndroidTypeMapImplementation)' == 'llvm-ir' " />

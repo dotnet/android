@@ -186,11 +186,16 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
+			// This test relocates build inputs; no compiler/build server may retain them.
+			proj.SetProperty ("UseSharedCompilation", "false");
+			var environmentVariables = new Dictionary<string, string> {
+				["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0",
+			};
 			using (var b = CreateApkBuilder (path)) {
 				b.Target = "Build";
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (b.Build (proj, environmentVariables: environmentVariables), "Build should have succeeded.");
 				b.Target = "SignAndroidPackage";
-				Assert.IsTrue (b.Build (proj), "SignAndroidPackage should have succeeded.");
+				Assert.IsTrue (b.Build (proj, environmentVariables: environmentVariables), "SignAndroidPackage should have succeeded.");
 
 
 				string path2 = Path.Combine (Root, "temp", TestName, "App2");
@@ -201,11 +206,11 @@ namespace Xamarin.Android.Build.Tests
 				foreach (var r in proj.AndroidResources)
 					r.Timestamp = DateTime.UtcNow;
 				b.Target = "Build";
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Build should have succeeded.");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, environmentVariables: environmentVariables), "Build should have succeeded.");
 				Assert.IsTrue (!b.Output.IsTargetSkipped ("_CleanIntermediateIfNeeded"), "_CleanIntermediateIfNeeded should be built.");
 				Assert.IsTrue (!b.Output.IsTargetSkipped ("_CompileResources"), "_CompileResources Should have built.");
 				b.Target = "SignAndroidPackage";
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "SignAndroidPackage should have succeeded.");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, environmentVariables: environmentVariables), "SignAndroidPackage should have succeeded.");
 
 			}
 		}
