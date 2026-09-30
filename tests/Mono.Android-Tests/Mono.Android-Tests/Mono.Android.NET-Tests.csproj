@@ -152,6 +152,7 @@
     <Compile Include="Java.Interop\VirtualCallbackConstructorTests.cs" />
     <Compile Include="Java.Lang\ObjectArrayMarshaling.cs" />
     <Compile Include="Java.Lang\ObjectTest.cs" />
+    <Compile Include="Java.Net\InetAddressTest.cs" />
     <Compile Include="Localization\LocalizationTests.cs" />
     <Compile Include="System\AppContextTests.cs" />
     <Compile Include="System\AppDomainTest.cs" />

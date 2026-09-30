@@ -72,6 +72,20 @@ namespace Android.WidgetTests {
 
 		[Test]
 		[Category ("ThresholdDispatch")]
+		public void DerivedArrayAdapterInListView ()
+		{
+			using var adapter = new DerivedStringArrayAdapter (Application.Context);
+			using var view = new ListView (Application.Context);
+
+			adapter.Add ("first");
+			view.Adapter = adapter;
+
+			Assert.AreSame (adapter, view.Adapter);
+			Assert.AreEqual ("first", view.GetItemAtPosition (0)?.ToString ());
+		}
+
+		[Test]
+		[Category ("ThresholdDispatch")]
 		public void AbsListView_SetAdapter ()
 		{
 			using (var view = new ListView (Application.Context)) {
@@ -113,6 +127,19 @@ namespace Android.WidgetTests {
 				view.Adapter = adapter;
 				Assert.AreSame (adapter, view.Adapter);
 			}
+		}
+	}
+
+	public class DerivedStringArrayAdapter : ArrayAdapter<string> {
+
+		public DerivedStringArrayAdapter (Context context)
+			: base (context, Android.Resource.Layout.SimpleListItem1)
+		{
+		}
+
+		protected DerivedStringArrayAdapter (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
 		}
 	}
 
