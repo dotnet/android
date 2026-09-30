@@ -258,15 +258,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA0104" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Invalid value for `$(AndroidSequencePointsMode)`: {0}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Nieprawidłowa wartość parametru „$(AndroidSequencePointsMode)”: {0}]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA0105" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project.]]></Val>
@@ -371,24 +362,6 @@
           <Val><![CDATA[Using Fast Deployment and Android App Bundles at the same time is not currently supported. Use Fast Deployment for Debug configurations and Android App Bundles for Release configurations.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Jednoczesne używanie opcji Fast Deployment i pakietów Android App Bundles nie jest obecnie obsługiwane. Używaj opcji Fast Deployment w przypadku konfiguracji debugowania, a pakietów Android App Bundles na potrzeby konfiguracji wydania.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0119_AOT" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Using fast deployment and AOT at the same time is not recommended. Use fast deployment for Debug configurations and AOT for Release configurations.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[W tym samym czasie nie zaleca się korzystania z funkcji szybkiego wdrażania i drzewa obiektów aplikacji (AOT). Użyj szybkiego wdrażania do konfiguracji debugowania, a drzewa AOT do konfiguracji wydania.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0119_Interpreter" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Disabling the interpreter; using the interpreter and AOT at the same time is not supported. Use the interpreter for hot reload support in Debug configurations and AOT for Release configurations.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Wyłączanie interpretera; używanie jednocześnie interpretera i obiektu AOT nie jest obsługiwane. Użyj interpretera do obsługi przeładowywania na gorąco w konfiguracjach debugowania i AOT dla konfiguracji wydania.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -548,15 +521,6 @@
           <Val><![CDATA[Attempt to check whether '{0}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Sprawdzenie, czy „{0}” jest poprawnie wyrównanym plikiem ELF, nie powiodła się z powodu wyjątku, ignorując sprawdzanie wyrównania pliku.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0147" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring AOT check for the file.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Sprawdzenie, czy „{0}” jest prawidłowym plikiem ELF, zakończyło się wyjątkiem, więc pomijane jest sprawdzanie AOT dla tego pliku.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -786,15 +750,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA1025" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The experimental 'Hybrid' value for the 'AndroidAotMode' MSBuild property is not currently compatible with the armeabi-v7a target ABI. To continue using the experimental 'Hybrid' value for 'AndroidAotMode', deselect the armeabi-v7a target ABI in the Visual Studio project property pages or edit the project file in a text editor and remove 'armeabi-v7a' from the 'AndroidSupportedAbis' MSBuild property.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Eksperymentalna wartość „Hybrid” dla właściwości programu MSBuild „AndroidAotMode” jest obecnie niezgodna z docelowym interfejsem ABI armeabi-v7a. Aby nadal używać eksperymentalnej wartości „Hybrid” dla właściwości „AndroidAotMode”, usuń zaznaczenie docelowego interfejsu ABI armeabi-v7a na stronach właściwości projektu w programie Visual Studio albo zmodyfikuj plik projektu w edytorze tekstów, usuwając wartość „armeabi-v7a” z właściwości programu MSBuild „AndroidSupportedAbis”.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA1027" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The 'EnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.]]></Val>
@@ -813,24 +768,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA1029" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The 'AotAssemblies' MSBuild property is deprecated. Edit the project file in a text editor to remove this property, and use the 'RunAOTCompilation' MSBuild property instead.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Właściwość „AotAssemblies” programu MSBuild jest przestarzała. Edytuj plik projektu w edytorze tekstu, aby usunąć tę właściwość, a zamiast tego użyj właściwości „RunAOTCompilation” programu MSBuild.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA1030" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The 'RunAOTCompilation' MSBuild property is only supported when trimming is enabled. Edit the project file in a text editor to set 'PublishTrimmed' to 'true' for this build configuration.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Właściwość „RunAOTCompilation” programu MSBuild jest obsługiwana tylko wtedy, gdy jest włączone przycinanie. Edytuj plik projektu w edytorze tekstu, aby ustawić właściwość „PublishTrimmed” na wartość „true” dla tej konfiguracji kompilacji.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA1034" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Your project references '{0}' which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file.]]></Val>
@@ -842,10 +779,13 @@
       </Item>
       <Item ItemId=";XA1035" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The 'BundleAssemblies' property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the 'AndroidUseAssemblyStore' and 'AndroidEnableAssemblyCompression' properties.]]></Val>
+          <Val><![CDATA[The 'BundleAssemblies' property is deprecated and no longer affects the build. Remove it. For supported .NET 10-and-earlier Mono projects, use 'AndroidUseAssemblyStore' with 'AndroidEnableAssemblyCompression' for the former behavior. .NET 11 CoreCLR controls packaged assembly-store behavior and needs no replacement setting.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Właściwość „BundleAssemblies” jest przestarzała i nie ma wpływu na kompilację aplikacji. Równoważna funkcjonalność jest implementowana przez właściwości „AndroidUseAssemblyStore” i „AndroidEnableAssemblyCompression”.]]></Val>
+            <Val><![CDATA[Właściwość „BundleAssemblies” została wycofana i nie ma już wpływu na proces kompilacji. Usuń to. W przypadku obsługiwanych projektów Mono opartych na platformie .NET 10 i starszych należy użyć ustawienia „AndroidUseAssemblyStore” wraz z „AndroidEnableAssemblyCompression”, aby uzyskać poprzednie zachowanie. Platforma .NET 11 CoreCLR sama kontroluje zachowanie magazynu zestawów i nie wymaga żadnego ustawienia zamiennego.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The 'BundleAssemblies' property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the 'AndroidUseAssemblyStore' and 'AndroidEnableAssemblyCompression' properties.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -854,6 +794,15 @@
           <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' does not match the $(SupportedOSPlatformVersion) value '{1}' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).]D;]A;Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Plik AndroidManifest.xml //uses-sdk/@android:minSdkVersion „{0}” nie pasuje do wartości $ (SupportedOSPlatformVersion) „{1}” w pliku projektu (jeśli w pliku projektu nie ma wartości $ (SupportedOSPlatformVersion), oznacza to, że została ustawiona wartość domyślna tak jak przyjęto).]D;]A;Zmień wartość w pliku AndroidManifest.xml, aby odpowiadała wartości $(SupportedOSPlatformVersion) lub usuń wartość w pliku AndroidManifest.xml (i dodaj wartość $(SupportedOSPlatformVersion) do pliku projektu, jeśli jeszcze nie istnieje).]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA1037" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unsupported @(Reference) item: {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nieobsługiwany element @(Reference): {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -917,12 +866,12 @@
       </Item>
       <Item ItemId=";XA1044" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
+          <Val><![CDATA[The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Remove the property.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Właściwość MSBuild „{0}” nie jest zgodna ze środowiskiem uruchomieniowym {1}. Nie można kontynuować kompilacji, gdy ta właściwość jest włączona. Usuń właściwość lub zapewnij ochronę za pomocą warunku: Condition="$(UseMonoRuntime)" == "true""]]></Val>
+            <Val><![CDATA[Właściwość programu MSBuild '{0}' nie jest zgodna ze środowiskiem uruchomieniowym {1}. Nie można kontynuować kompilacji, gdy ta właściwość jest włączona. Usuń właściwość.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[The MSBuild property '{0}' is not compatible with the {1} runtime and will be ignored. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
+            <Val><![CDATA[The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -990,15 +939,6 @@
           <Prev Cat="Text">
             <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET Android once .NET 6 is released.]]></Val>
           </Prev>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA2000_gcParams_bridgeImpl" ItemType="0;.resx" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Support for the 'MONO_GC_PARAMS=bridge-implementation=old' value will be removed in .NET 7.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Obsługa wartości „MONO_GC_PARAMS=bridge-implementation=old” zostanie usunięta na platformie .NET 7.]]></Val>
-          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1073,24 +1013,6 @@
           <Val><![CDATA[Assembly {0} does not exist.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Zestaw {0} nie istnieje.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA3001" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not AOT the assembly: {0}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Nie można utworzyć widoku AOT zestawu: {0}]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA3002" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Invalid AOT mode: {0}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Nieprawidłowy tryb AOT: {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1710,6 +1632,24 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA4265" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Assembly '{0}' uses a Java peer callback format that requires AndroidTypeMapImplementation=trimmable.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Zestaw '{0}' używa formatu wywołania zwrotnego elementu równorzędnego języka Java, który wymaga parametru AndroidTypeMapImplementation=trimmable.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4266" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata when AndroidTypeMapImplementation=trimmable.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Zestaw „{0}” ma różne metadane wywołania zwrotnego elementu równorzędnego Java w implementacjach specyficznych dla środowiska uruchomieniowego „{1}” i „{2}”. Wszystkie elementy RuntimeIdentifiers muszą udostępniać równoważne metadane wywołania zwrotnego, gdy AndroidTypeMapImplementation=trimmable.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA4300" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Native library '{0}' will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as 'libs/armeabi-v7a/'.]]></Val>
@@ -1751,15 +1691,6 @@
           <Val><![CDATA[Cannot determine ABI of native library '{0}'. Remove the '{1}' NuGet package, or notify the library author.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Nie można określić instrukcji ABI natywnej biblioteki „{0}”. Usuń pakiet NuGet „{1}” lub powiadom autora biblioteki.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA4302" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Unhandled exception merging `AndroidManifest.xml`: {0}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Nieobsługiwany wyjątek podczas scalania pliku „AndroidManifest.xml”: {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1974,38 +1905,38 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA4325" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";XA4327" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Failed to rewrite managed JNI names for R8. {0}]]></Val>
+          <Val><![CDATA[Could not extract Java type map keys from '{0}': {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Nie można zmodyfikować zarządzanych nazw JNI dla kompilatora R8. {0}]]></Val>
+            <Val><![CDATA[Nie można wyodrębnić kluczy mapy typów Java z '{0}': {1}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA4325_AssemblyFailure" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";XA4328" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Could not rewrite the JNI names in the assembly '{0}': {1}]]></Val>
+          <Val><![CDATA[Could not generate typemap ProGuard configuration from '{0}': {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Nie można zmodyfikować nazw JNI w zestawie „{0}”: {1}]]></Val>
+            <Val><![CDATA[Nie udało się wygenerować mapy typów dla konfiguracji ProGuard na podstawie „{0}”: {1}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA4325_SourceDestinationCount" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";XA4328_InvalidName" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The 'SourceFiles' and 'DestinationFiles' item groups must contain the same number of items.]]></Val>
+          <Val><![CDATA[Line {0} contains an invalid retained Java class name: '{1}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Grupy elementów „SourceFiles” i „DestinationFiles” muszą zawierać taką samą liczbę elementów.]]></Val>
+            <Val><![CDATA[Wiersz {0} zawiera nieprawidłową zachowaną nazwę klasy Java: „{1}” .]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA4326" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";XA4328_NoInputs" ItemType="0;.resx" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous JNIEnv.FindClass source.]]></Val>
+          <Val><![CDATA[No retained Java type map key files were provided.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Nie można bezpiecznie zmodyfikować wyszukiwania składowej JNI, ponieważ jego dojście do klasy nie ma jednego strukturalnie jednoznacznego źródła JNIEnv.FindClass.]]></Val>
+            <Val><![CDATA[Nie podano zachowanych plików kluczy mapy typu Java.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

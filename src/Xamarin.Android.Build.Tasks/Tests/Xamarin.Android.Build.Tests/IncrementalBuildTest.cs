@@ -55,22 +55,13 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		// TODO: fix for CoreCLR, currently fails with
-		//
-		//   The target _Sign should have *not* been skipped.
-		//
-		// TODO: fix for NativeAOT, currently fails with
-		//   The target _RunILLink should have been skipped.
-		//
 		[Test]
+		[Ignore ("FIXME: https://github.com/dotnet/android/issues/12879")]
 		public void BasicApplicationRepetitiveReleaseBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
-			}
-			if (runtime != AndroidRuntime.MonoVM) { // temporarily
-				Assert.Ignore ("Runtimes other than MonoVM are currently broken here.");
 			}
 
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = isRelease };
@@ -149,7 +140,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			var envFiles = EnvironmentHelper.GatherEnvironmentFiles (objDirPath, "arm64-v8a;x86_64", required: true, runtime: AndroidRuntime.CoreCLR);
-			var appConfig = (EnvironmentHelper.ApplicationConfig_CoreCLR) EnvironmentHelper.ReadApplicationConfig (envFiles, AndroidRuntime.CoreCLR);
+			var appConfig = EnvironmentHelper.ReadApplicationConfig (envFiles);
 			Assert.AreEqual (expectedTypeCount, appConfig.jni_remapping_replacement_type_count, "jni_remapping_replacement_type_count should be preserved.");
 			Assert.AreEqual (expectedMethodCount, appConfig.jni_remapping_replacement_method_index_entry_count, "jni_remapping_replacement_method_index_entry_count should be preserved.");
 		}
@@ -188,7 +179,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			var envFiles = EnvironmentHelper.GatherEnvironmentFiles (objDirPath, string.Join (";", proj.GetRuntimeIdentifiersAsAbis ()), required: true, runtime: AndroidRuntime.CoreCLR);
-			var appConfig = (EnvironmentHelper.ApplicationConfig_CoreCLR) EnvironmentHelper.ReadApplicationConfig (envFiles, AndroidRuntime.CoreCLR);
+			var appConfig = EnvironmentHelper.ReadApplicationConfig (envFiles);
 			Assert.IsTrue (appConfig.jni_add_native_method_registration_attribute_present, "JNI native method registration should remain enabled.");
 		}
 
@@ -289,7 +280,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			// do a release build
-			// change one of the properties (say AotAssemblies)
+			// Change one of the build properties.
 			// do another build. it should NOT hose the resource directory.
 			var proj = new XamarinAndroidApplicationProject () {
 				ProjectName = "App1",
@@ -434,18 +425,10 @@ namespace Xamarin.Android.Build.Tests
 				MaxCpuCount = 4,
 			};
 
-			bool aotAssemblies = runtime switch {
-				AndroidRuntime.MonoVM  => true,
-				AndroidRuntime.CoreCLR => false,
-				AndroidRuntime.NativeAOT => false,
-				_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
-			};
-
 			for (int i=1; i <= 4; i++) {
 				var app1 = new XamarinAndroidApplicationProject () {
 					ProjectName = $"App{i}",
 					PackageName = $"com.companyname.App{i}",
-					AotAssemblies = aotAssemblies,
 					IsRelease = isRelease,
 					EnableMarshalMethods = true,
 				};
@@ -516,7 +499,6 @@ public class TestMe {
 			}
 
 			string abi = runtime switch {
-				AndroidRuntime.MonoVM => "armeabi-v7a",
 				AndroidRuntime.CoreCLR => "arm64-v8a",
 				AndroidRuntime.NativeAOT => "arm64-v8a",
 				_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
@@ -598,13 +580,7 @@ namespace Lib2
 					};
 					app.SetRuntime (runtime);
 
-					if (runtime == AndroidRuntime.MonoVM) {
-						// Using `SetRuntimeIdentifier` would change the intermediate path (by adding the RID component to it) and, thus, the way this test used to work.
-						// Keep it as it was.
-						app.SetRuntimeIdentifiers (new[] { abi });
-					} else {
-						app.SetRuntimeIdentifier (abi);
-					}
+					app.SetRuntimeIdentifier (abi);
 
 					using (var builder = CreateApkBuilder (Path.Combine (path, "App"))) {
 						Assert.IsTrue (builder.Build (app), "app 1st. build failed");
@@ -640,15 +616,9 @@ namespace Lib2
 		//https://github.com/dotnet/android/issues/2247
 		[Test]
 		[NonParallelizable] // Do not run timing sensitive tests in parallel
-		public void AppProjectTargetsDoNotBreak ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void AppProjectTargetsDoNotBreak ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
-				return;
-			}
 			var targets = new List<(string target, bool ignoreOnNAOT)> {
 				("_GeneratePackageManagerJava", true), // TODO: NativeAOT doesn't skip this target on 3rd attempt, check if that's ok?
 				("_ResolveLibraryProjectImports", false),
@@ -1023,15 +993,9 @@ namespace Lib2
 		}
 
 		[Test]
-		public void LinkAssembliesNoShrink ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void LinkAssembliesNoShrink ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
-				return;
-			}
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -1409,11 +1373,9 @@ namespace Lib2
 		}
 
 		[Test]
-		public void GenerateJavaStubsAndAssembly ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void GenerateJavaStubsAndAssembly ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			// TODO: NativeAOT build doesn't add android/environment.arm64-v8a.o to file writes
 			if (runtime == AndroidRuntime.NativeAOT) {
 				Assert.Ignore ("NativeAOT doesn't currently add android/environment.arm64-v8a.o to file writes");
@@ -1429,18 +1391,11 @@ namespace Lib2
 			proj.SetRuntime (runtime);
 
 			string abi = runtime switch {
-				AndroidRuntime.MonoVM => "armeabi-v7a",
 				AndroidRuntime.CoreCLR => "arm64-v8a",
 				AndroidRuntime.NativeAOT => "arm64-v8a",
 				_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 			};
-			if (runtime == AndroidRuntime.MonoVM) {
-				// Using `SetRuntimeIdentifier` would change the intermediate path (by adding the RID component to it) and, thus, the way this test used to work.
-				// Keep it as it was.
-				proj.SetRuntimeIdentifiers (new[] { abi });
-			} else {
-				proj.SetRuntimeIdentifier (abi);
-			}
+			proj.SetRuntimeIdentifier (abi);
 
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidEnvironment ("Foo.txt") {
 				TextContent = () => "Foo=Bar",
@@ -1639,17 +1594,9 @@ namespace Lib2
 		}
 
 		[Test]
-		public void ChangePackageNamingPolicy ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void ChangePackageNamingPolicy ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			if (IgnoreOnNativeAot (runtime, "the 'Lowercase' $(AndroidPackageNamingPolicy) is intentionally unsupported with the trimmable typemap (only Crc64 and LowercaseCrc64 are supported).")) {
-				return;
-			}
-
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -1880,14 +1827,12 @@ namespace Lib2
 			proj.SetRuntime (runtime);
 
 			string supportedAbi = runtime switch {
-				AndroidRuntime.MonoVM => "armeabi-v7a",
 				AndroidRuntime.CoreCLR => "arm64-v8a",
 				AndroidRuntime.NativeAOT => "arm64-v8a",
 				_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 			};
 
 			string alternativeRid = runtime switch {
-				AndroidRuntime.MonoVM => "x86",
 				AndroidRuntime.CoreCLR => "x64",
 				AndroidRuntime.NativeAOT => "x64",
 				_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
@@ -1985,16 +1930,9 @@ namespace Lib2
 		}
 
 		[Test]
-		public void AfterILLinkAdditionalStepsIsSkippedOnSecondBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void AfterILLinkAdditionalStepsIsSkippedOnSecondBuild ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			if (IgnoreOnNativeAot (runtime, "the trimmable typemap (the NativeAOT default) generates the typemap at compile time, so `_RunAfterILLinkAdditionalSteps` is intentionally skipped and no `afterlink/` output is produced.")) {
-				return;
-			}
-
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};

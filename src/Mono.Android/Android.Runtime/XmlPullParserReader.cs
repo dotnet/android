@@ -73,8 +73,8 @@ namespace Android.Runtime
 		public XmlPullParserReader (IJavaObject source)
 		{
 			this.source = (IXmlPullParser) source;
-			supports_ns = this.source.GetFeature (XmlPullParser.FeatureProcessNamespaces);
-			supports_ns_report_as_attr = this.source.GetFeature (XmlPullParser.FeatureReportNamespaceAttributes);
+			supports_ns = this.source.GetFeature (IXmlPullParser.FeatureProcessNamespaces);
+			supports_ns_report_as_attr = this.source.GetFeature (IXmlPullParser.FeatureReportNamespaceAttributes);
 		}
 		
 		public IntPtr Handle {
@@ -125,6 +125,7 @@ namespace Android.Runtime
 			get { return source.EventType == XmlPullParserNode.EndDocument; }
 		}
 
+#pragma warning disable CS8764 // Preserve the legacy nullable annotations while implementing XmlReader.
 		public override string? GetAttribute (int i)
 		{
 			if (i < source.AttributeCount)
@@ -381,6 +382,7 @@ namespace Android.Runtime
 					return source.GetNamespaceUri (attr_pos - source.AttributeCount + ns_index);
 			}
 		}
+#pragma warning restore CS8764
 
 		public static XmlReader? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
@@ -396,4 +398,3 @@ namespace Android.Runtime
 		}
 	}
 }
-

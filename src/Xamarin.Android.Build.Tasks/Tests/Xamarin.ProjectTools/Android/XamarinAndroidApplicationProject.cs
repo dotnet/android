@@ -119,16 +119,6 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (KnownProperties.SupportedOSPlatformVersion, value); }
 		}
 
-		public bool AotAssemblies {
-			get { return string.Equals (GetProperty (KnownProperties.RunAOTCompilation), "True", StringComparison.OrdinalIgnoreCase); }
-			set { SetProperty (KnownProperties.RunAOTCompilation, value.ToString ()); }
-		}
-
-		public bool AndroidEnableProfiledAot {
-			get { return string.Equals (GetProperty (KnownProperties.AndroidEnableProfiledAot), "True", StringComparison.OrdinalIgnoreCase); }
-			set { SetProperty (KnownProperties.AndroidEnableProfiledAot, value.ToString ()); }
-		}
-
 		public bool EnableDesugar {
 			get { return string.Equals (GetProperty (KnownProperties.AndroidEnableDesugar), "True", StringComparison.OrdinalIgnoreCase); }
 			set { SetProperty (KnownProperties.AndroidEnableDesugar, value.ToString ()); }

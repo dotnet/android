@@ -25,8 +25,6 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			EnvironmentOutputDirectory = Path.Combine (outputRoot, "android"),
 			SupportedAbis = ["arm64-v8a"],
 			AndroidPackageName = "com.microsoft.android.assemblystoretest",
-			EnablePreloadAssembliesDefault = false,
-			TargetsCLR = true,
 			AndroidRuntime = "CoreCLR",
 			UseAssemblyStore = haveAssemblyStore,
 		};
@@ -39,7 +37,7 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			required: true,
 			runtime: AndroidRuntime.CoreCLR
 		);
-		var config = (EnvironmentHelper.ApplicationConfig_CoreCLR)EnvironmentHelper.ReadApplicationConfig (environmentFiles, AndroidRuntime.CoreCLR);
+		var config = EnvironmentHelper.ReadApplicationConfig (environmentFiles);
 		Assert.AreEqual (haveAssemblyStore, config.have_assembly_store);
 	}
 }

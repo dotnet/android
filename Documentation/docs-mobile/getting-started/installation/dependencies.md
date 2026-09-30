@@ -86,7 +86,7 @@ You might find it necessary to install the Android SDK manually:
 For example, to install the latest platform and platform tools, use:
 
 ```console
-sdkmanager "platforms;android-34" "platform-tools" "build-tools;34.0.0" "emulator" "system-images;android-34;default;x86_64" "cmdline-tools;11.0" --sdk_root=c:\android-sdk
+sdkmanager "platforms;android-34" "platform-tools" "build-tools;34.0.0" "emulator" "system-images;android-34;default;x86_64" "cmdline-tools;latest" --sdk_root=c:\android-sdk
 ```
 
 Note that double-quotes should be used liberally to enclose the semicolon `;`, which is part of the component names.

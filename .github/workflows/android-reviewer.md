@@ -25,6 +25,10 @@ permissions:
 model: gpt-5.6-sol
 engine:
   id: copilot
+  # Pinned to the gh-aw compiler-tested Copilot CLI version. Bump manually
+  # (and re-run `gh aw compile`) when gh-aw updates its tested/cached version,
+  # or if this version starts failing to install/run.
+  version: 1.0.80
   env:
     COPILOT_GITHUB_TOKEN: |
       ${{ case(
@@ -48,7 +52,8 @@ tools:
     - az *
     - c++ *
     - cat
-    - git diff *
+    - dotnet *
+    - git *
     - grep
     - head
     - jq
@@ -95,6 +100,7 @@ A maintainer commented `/review` on this pull request. Perform a thorough code r
 - Don't flag what CI catches (compiler errors, linter issues).
 - Avoid false positives — verify concerns given the full file context and project configuration (TargetFramework, references, available APIs).
 - If Azure DevOps is needed, run each `az devops invoke` as a standalone shell call with literal arguments; do not use variable preambles, chaining, pipes, or redirection.
+- Run local Git inspection commands separately; do not chain shell commands or use command substitution. Compare changes with `git diff origin/main...HEAD` when the range is available; otherwise use the GitHub pull request diff.
 - **Always submit the review as a COMMENT event.** Never APPROVE or REQUEST_CHANGES — surface issues in the comment body instead.
 - Prioritize: bugs > safety > performance > missing tests > duplication > consistency > documentation.
 - **Post suggestions as inline comments, not just in the summary.** If a suggestion can't be posted inline, omit it.

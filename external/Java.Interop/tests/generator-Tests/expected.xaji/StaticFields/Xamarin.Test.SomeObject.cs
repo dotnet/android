@@ -43,10 +43,7 @@ namespace Xamarin.Test {
 			set {
 				const string __id = "Value2.I";
 
-				try {
-					_members.StaticFields.SetValue (__id, value);
-				} finally {
-				}
+				_members.StaticFields.SetValue (__id, value);
 			}
 		}
 
@@ -63,10 +60,7 @@ namespace Xamarin.Test {
 			set {
 				const string __id = "BooleanValue.Z";
 
-				try {
-					_members.StaticFields.SetValue (__id, value);
-				} finally {
-				}
+				_members.StaticFields.SetValue (__id, value);
 			}
 		}
 
@@ -83,18 +77,11 @@ namespace Xamarin.Test {
 			set {
 				const string __id = "CharValue.C";
 
-				try {
-					_members.StaticFields.SetValue (__id, value);
-				} finally {
-				}
+				_members.StaticFields.SetValue (__id, value);
 			}
 		}
 
 		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/SomeObject", typeof (SomeObject));
-
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]

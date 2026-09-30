@@ -13,6 +13,14 @@
       target-method-name="toString" target-method-instance-to-static="false" />
   <replace-method
       source-type="java/lang/Object"
+      source-method-name="remappedToStringWithUtf8Signature"
+      source-method-signature="()Ljava/lang/String;"
+      target-type="java/lang/Object"
+      target-method-name="toString"
+      target-method-signature="()Ljava/lang/String;"
+      target-method-instance-to-static="false" />
+  <replace-method
+      source-type="java/lang/Object"
       source-method-name="remappedToStaticHashCode"
       target-type="net/dot/jni/test/ObjectHelper"
       target-method-name="getHashCodeHelper" target-method-instance-to-static="true" />

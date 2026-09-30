@@ -12,6 +12,7 @@
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <RootNamespace>Microsoft.Android.Tasks</RootNamespace>
     <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <WarningsAsErrors>Nullable</WarningsAsErrors>
     <!--
       Deliberately *not* the shared tools\ directory. MSBuild probes a task assembly's own
@@ -52,6 +53,8 @@
 
   <ItemGroup>
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\NullableExtensions.cs" Link="Utilities\NullableExtensions.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MetadataExtensions.cs" Link="Utilities\MetadataExtensions.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\DummyCustomAttributeProvider.cs" Link="Utilities\DummyCustomAttributeProvider.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ManifestPlaceholderResolver.cs" Link="Utilities\ManifestPlaceholderResolver.cs" />
   </ItemGroup>
 

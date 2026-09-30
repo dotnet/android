@@ -31,27 +31,6 @@ namespace {
 		if (entrypoint_name == "monodroid_free"sv) {
 			return reinterpret_cast<void*> (&monodroid_free);
 		}
-		if (entrypoint_name == "_monodroid_gc_wait_for_bridge_processing"sv) {
-			return reinterpret_cast<void*> (&_monodroid_gc_wait_for_bridge_processing);
-		}
-		if (entrypoint_name == "_monodroid_gref_dec"sv) {
-			return reinterpret_cast<void*> (&_monodroid_gref_dec);
-		}
-		if (entrypoint_name == "_monodroid_gref_get"sv) {
-			return reinterpret_cast<void*> (&_monodroid_gref_get);
-		}
-		if (entrypoint_name == "_monodroid_gref_inc"sv) {
-			return reinterpret_cast<void*> (&_monodroid_gref_inc);
-		}
-		if (entrypoint_name == "_monodroid_gref_log"sv) {
-			return reinterpret_cast<void*> (&_monodroid_gref_log);
-		}
-		if (entrypoint_name == "_monodroid_gref_log_delete"sv) {
-			return reinterpret_cast<void*> (&_monodroid_gref_log_delete);
-		}
-		if (entrypoint_name == "_monodroid_gref_log_new"sv) {
-			return reinterpret_cast<void*> (&_monodroid_gref_log_new);
-		}
 		if (entrypoint_name == "monodroid_log"sv) {
 			return reinterpret_cast<void*> (&monodroid_log);
 		}
@@ -60,21 +39,6 @@ namespace {
 		}
 		if (entrypoint_name == "_monodroid_lookup_replacement_method_info"sv) {
 			return reinterpret_cast<void*> (&_monodroid_lookup_replacement_method_info);
-		}
-		if (entrypoint_name == "_monodroid_lref_log_delete"sv) {
-			return reinterpret_cast<void*> (&_monodroid_lref_log_delete);
-		}
-		if (entrypoint_name == "_monodroid_lref_log_new"sv) {
-			return reinterpret_cast<void*> (&_monodroid_lref_log_new);
-		}
-		if (entrypoint_name == "_monodroid_max_gref_get"sv) {
-			return reinterpret_cast<void*> (&_monodroid_max_gref_get);
-		}
-		if (entrypoint_name == "monodroid_timing_start"sv) {
-			return reinterpret_cast<void*> (&monodroid_timing_start);
-		}
-		if (entrypoint_name == "monodroid_timing_stop"sv) {
-			return reinterpret_cast<void*> (&monodroid_timing_stop);
 		}
 		if (entrypoint_name == "monodroid_TypeManager_get_java_class_name"sv) {
 			return reinterpret_cast<void*> (&monodroid_TypeManager_get_java_class_name);
@@ -87,21 +51,6 @@ namespace {
 		}
 		if (entrypoint_name == "clr_initialize_gc_bridge"sv) {
 			return reinterpret_cast<void*> (&clr_initialize_gc_bridge);
-		}
-		if (entrypoint_name == "_monodroid_weak_gref_dec"sv) {
-			return reinterpret_cast<void*> (&_monodroid_weak_gref_dec);
-		}
-		if (entrypoint_name == "_monodroid_weak_gref_delete"sv) {
-			return reinterpret_cast<void*> (&_monodroid_weak_gref_delete);
-		}
-		if (entrypoint_name == "_monodroid_weak_gref_get"sv) {
-			return reinterpret_cast<void*> (&_monodroid_weak_gref_get);
-		}
-		if (entrypoint_name == "_monodroid_weak_gref_inc"sv) {
-			return reinterpret_cast<void*> (&_monodroid_weak_gref_inc);
-		}
-		if (entrypoint_name == "_monodroid_weak_gref_new"sv) {
-			return reinterpret_cast<void*> (&_monodroid_weak_gref_new);
 		}
 		if (entrypoint_name == "xamarin_app_init"sv) {
 			return reinterpret_cast<void*> (&xamarin_app_init);

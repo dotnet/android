@@ -19,7 +19,6 @@ namespace Xamarin.Android.Tasks
 
 		// Order of fields and their type must correspond *exactly* to that in:
 		//
-		// src/native/mono/xamarin-app-stub/xamarin-app.hh CompressedAssemblyDescriptor structure
 		// src/native/clr/include/xamarin-app.hh CompressedAssemblyDescriptor structure
 		//
 		//[NativeAssemblerStructContextDataProvider (typeof (CompressedAssemblyDescriptorContextDataProvider))]

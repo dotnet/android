@@ -20,11 +20,9 @@ namespace Xamarin.Android.Build.Tests {
 	public class TrimmableTypeMapBuildTests : BaseTest {
 
 		[Test]
-		public void Build_WithTrimmableTypeMap_Succeeds ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void Build_WithTrimmableTypeMap_Succeeds ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -37,6 +35,167 @@ namespace Xamarin.Android.Build.Tests {
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
 			AssertTrimmableTypeMapOutputs (intermediateDir);
+		}
+
+		[Test]
+		public void Build_TrimmableTypeMap_UsesMonoAndroidImplementationMetadata ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty (KnownProperties.RuntimeIdentifiers, "android-arm64;android-x64");
+			var directoryBuildTargets = proj.Imports.Single (import => import.Project () == "Directory.Build.targets");
+			directoryBuildTargets.TextContent = () => """
+				<Project>
+				  <Target Name="_AddRidSpecificTypeMapImplementation"
+				      Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' and '$(RuntimeIdentifier)' != '' "
+				      AfterTargets="ResolveReferences">
+				    <ItemGroup>
+				      <_MonoAndroidRuntimePack Include="@(RuntimePackAsset)" Condition=" '%(Filename)' == 'Mono.Android' " />
+				    </ItemGroup>
+				    <PropertyGroup>
+				      <_RidSpecificTypeMapImplementation>$(IntermediateOutputPath)rid-specific\$(RuntimeIdentifier)\RidSpecific.dll</_RidSpecificTypeMapImplementation>
+				    </PropertyGroup>
+				    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(_RidSpecificTypeMapImplementation)'))" />
+				    <Copy SourceFiles="@(_MonoAndroidRuntimePack)" DestinationFiles="$(_RidSpecificTypeMapImplementation)" />
+				    <ItemGroup>
+				      <ReferenceCopyLocalPaths Include="$(_RidSpecificTypeMapImplementation)" />
+				    </ItemGroup>
+				  </Target>
+				  <Target Name="_AssertTrimmableTypeMapMonoAndroidImplementation"
+				      AfterTargets="_GenerateTrimmableTypeMapInputs">
+				    <ItemGroup>
+				      <_MonoAndroidImplementation
+				          Include="@(_AndroidTrimmableTypeMapExtraFrameworkAssembly)"
+				          Condition=" '%(Filename)' == 'Mono.Android' and $([System.String]::Copy('%(FullPath)').Contains('Microsoft.Android.Runtime.')) " />
+				    </ItemGroup>
+				    <Error
+				        Condition=" '@(_MonoAndroidImplementation->Count())' == '0' "
+				        Text="The trimmable typemap did not select the Mono.Android implementation assembly." />
+				  </Target>
+				</Project>
+				""";
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Restore (proj), "Restore should have succeeded.");
+			builder.AutomaticNuGetRestore = false;
+			Assert.IsTrue (
+				builder.Build (proj, doNotCleanupOnUpdate: true, parameters: ["RuntimeIdentifiers=android-arm64"], saveProject: false),
+				"Single-RID build should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_AssertTrimmableTypeMapMonoAndroidImplementation");
+
+			var frameworkImplementations = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "framework-implementation-assemblies.txt"));
+			var referenceImplementations = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "reference-implementation-assemblies.txt"));
+			FileAssert.Exists (frameworkImplementations);
+			FileAssert.Exists (referenceImplementations);
+			var referenceImplementationPaths = File.ReadAllLines (referenceImplementations);
+			Assert.IsTrue (referenceImplementationPaths.Any (path => path.Contains ("android-arm64", StringComparison.OrdinalIgnoreCase)),
+				"The trimmable typemap should resolve package implementations for android-arm64.");
+			Assert.IsFalse (referenceImplementationPaths.Any (path => path.Contains ("android-x64", StringComparison.OrdinalIgnoreCase)),
+				"The single-RID build should not resolve package implementations for android-x64.");
+
+			Assert.IsTrue (
+				builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false),
+				"Multi-RID build should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_ResolveImplementationAssembliesForTrimmableTypeMap");
+			referenceImplementationPaths = File.ReadAllLines (referenceImplementations);
+			Assert.IsTrue (referenceImplementationPaths.Any (path => path.Contains ("android-x64", StringComparison.OrdinalIgnoreCase)),
+				"The trimmable typemap should resolve package implementations for android-x64.");
+
+			Assert.IsTrue (
+				builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false),
+				"Incremental build should have succeeded.");
+			builder.Output.AssertTargetIsSkipped ("_ResolveImplementationAssembliesForTrimmableTypeMap");
+
+			Assert.IsTrue (
+				builder.Build (proj, doNotCleanupOnUpdate: true, parameters: ["RuntimeIdentifier=android-arm64"], saveProject: false),
+				"Build with conflicting global RID properties should have succeeded.");
+			var conflictingReferenceImplementations = builder.Output.GetIntermediaryPath (
+				Path.Combine ("android-arm64", "typemap", "reference-implementation-assemblies.txt"));
+			FileAssert.Exists (conflictingReferenceImplementations);
+			referenceImplementationPaths = File.ReadAllLines (conflictingReferenceImplementations);
+			Assert.IsTrue (referenceImplementationPaths.Any (path => path.Contains ("android-x64", StringComparison.OrdinalIgnoreCase)),
+				"RuntimeIdentifiers should take precedence over RuntimeIdentifier, matching the packaging RID set.");
+			FileAssert.Exists (frameworkImplementations);
+			FileAssert.Exists (referenceImplementations);
+		}
+
+		[Test]
+		public void BindingCallbackFormatRequiresTrimmableConsumer ()
+		{
+			var testRoot = Path.Combine ("temp", $"{TestName}_{Guid.NewGuid ():N}");
+			var binding = new XamarinAndroidBindingProject {
+				ProjectName = "UcoBinding",
+				Jars = {
+					new AndroidItem.AndroidLibrary ("javaclasses.jar") {
+						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
+					},
+				},
+			};
+			binding.SetRuntime (AndroidRuntime.CoreCLR);
+			binding.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			binding.SetProperty ("_AndroidEnableUnmanagedCallersOnlyCallbacks", "true");
+			binding.SetProperty ("ProduceReferenceAssembly", "true");
+			binding.SetProperty ("ProduceReferenceAssemblyInOutDir", "true");
+			var bindingDirectoryBuildTargets = binding.Imports.Single (import => import.Project () == "Directory.Build.targets");
+			bindingDirectoryBuildTargets.TextContent = () => """
+				<Project>
+				  <PropertyGroup>
+				    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddReferenceAssemblyToPackage</TargetsForTfmSpecificContentInPackage>
+				  </PropertyGroup>
+				  <Target Name="_AddReferenceAssemblyToPackage">
+				    <ItemGroup>
+				      <TfmSpecificPackageFile Include="$(OutputPath)ref\$(AssemblyName).dll">
+				        <PackagePath>ref\$(TargetFramework)$(TargetPlatformVersion)</PackagePath>
+				      </TfmSpecificPackageFile>
+				    </ItemGroup>
+				  </Target>
+				</Project>
+				""";
+
+			using var bindingBuilder = CreateDllBuilder (Path.Combine (testRoot, binding.ProjectName));
+			bindingBuilder.Target = "Pack";
+			Assert.IsTrue (bindingBuilder.Build (binding), "UCO binding package should have succeeded.");
+			var packageDirectory = Path.Combine (Root, bindingBuilder.ProjectDirectory, binding.OutputPath);
+			var packagePath = Path.Combine (packageDirectory, $"{binding.ProjectName}.1.0.0.nupkg");
+			FileAssert.Exists (packagePath);
+			using (var package = System.IO.Compression.ZipFile.OpenRead (packagePath)) {
+				Assert.IsTrue (package.Entries.Any (entry => entry.FullName.StartsWith ("ref/", StringComparison.Ordinal) && entry.Name == $"{binding.ProjectName}.dll"));
+				Assert.IsTrue (package.Entries.Any (entry => entry.FullName.StartsWith ("lib/", StringComparison.Ordinal) && entry.Name == $"{binding.ProjectName}.dll"));
+			}
+
+			var trimmableApp = new XamarinAndroidApplicationProject {
+				ProjectName = "TrimmableApp",
+			};
+			trimmableApp.SetRuntime (AndroidRuntime.CoreCLR);
+			trimmableApp.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			trimmableApp.SetProperty ("RestoreAdditionalProjectSources", packageDirectory);
+			trimmableApp.PackageReferences.Add (new Package {
+				Id = binding.ProjectName,
+				Version = "1.0.0",
+			});
+
+			using (var builder = CreateApkBuilder (Path.Combine (testRoot, trimmableApp.ProjectName))) {
+				Assert.IsTrue (builder.Build (trimmableApp), "Trimmable app should consume the UCO binding implementation.");
+			}
+
+			var legacyApp = new XamarinAndroidApplicationProject {
+				ProjectName = "LegacyApp",
+			};
+			legacyApp.SetRuntime (AndroidRuntime.CoreCLR);
+			legacyApp.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
+			legacyApp.SetProperty ("RestoreAdditionalProjectSources", packageDirectory);
+			legacyApp.PackageReferences.Add (new Package {
+				Id = binding.ProjectName,
+				Version = "1.0.0",
+			});
+
+			using (var builder = CreateApkBuilder (Path.Combine (testRoot, legacyApp.ProjectName))) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (legacyApp), "Legacy typemap should reject a UCO binding.");
+				StringAssertEx.Contains ("error XA4265:", builder.LastBuildOutput);
+				StringAssertEx.Contains ("UcoBinding.dll", builder.LastBuildOutput);
+			}
 		}
 
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "APT2008", false)]
@@ -1471,11 +1630,9 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		public void Build_WithTrimmableTypeMap_IncrementalBuild ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void Build_WithTrimmableTypeMap_IncrementalBuild ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -1638,6 +1795,38 @@ namespace Xamarin.Android.Build.Tests {
 			// name is CRC-hashed (e.g. `scrc64...UncaughtExceptionMarshaler`), so match on the type name suffix.
 			Assert.IsTrue (DexUtils.ContainsClass ("UncaughtExceptionMarshaler;", dexFile, AndroidSdkPath),
 				$"`{dexFile}` should include the UncaughtExceptionMarshaler runtime ACW.");
+		}
+
+		[Test]
+		public void Build_WithTrimmableTypeMap_KeepsNativeAotGcBridgeTemporaryPeer ()
+		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				LinkTool = "r8",
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var dexDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin"));
+			var dexFiles = Directory.GetFiles (dexDirectory, "classes*.dex");
+			Assert.IsNotEmpty (dexFiles, "R8 should produce DEX files.");
+			foreach (var (method, signature) in new [] {
+				("<init>", "()V"),
+				("monodroidAddReference", "(Ljava/lang/Object;)V"),
+				("monodroidClearReferences", "()V"),
+			}) {
+				Assert.IsTrue (dexFiles.Any (dex => DexUtils.ContainsClassWithMethod (
+					"Lmono/android/GCUserPeer;", method, signature, dex, AndroidSdkPath)),
+					$"R8 must preserve GCUserPeer.{method}{signature} for the native GC bridge.");
+			}
 		}
 
 		[Test]

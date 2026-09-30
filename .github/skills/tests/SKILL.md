@@ -64,7 +64,7 @@ dotnet test <project>.csproj -v minimal --filter "Name~TestName"
 ```bash
 ./dotnet-local.sh test bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll
 ./dotnet-local.sh test bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --filter "Name~BuildBasicApplication"
-./dotnet-local.sh test bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --filter "FullyQualifiedName~AotTests"
+./dotnet-local.sh test bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --filter "FullyQualifiedName~NativeAotBuildTests"
 ```
 
 ### Device integration tests (full-build + device)

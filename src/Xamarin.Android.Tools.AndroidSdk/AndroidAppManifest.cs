@@ -353,8 +353,8 @@ namespace Xamarin.Android.Tools
 		{
 			return GetLaunchableActivities ()
 				.Select (a => (string?) a.Attribute (aName))
-				.Where (name => !string.IsNullOrEmpty (name) && name != "mono.android.__FastDevLauncher")
-				.Select (name => name!);
+				.OfType<string> ()
+				.Where (name => !string.IsNullOrEmpty (name) && name != "mono.android.__FastDevLauncher");
 		}
 	}
 }

@@ -8,22 +8,16 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 		[Register ("get_Value", "()I", "")]
 		get {
 			const string __id = "get_Value.()I";
-			try {
-				var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
-				return __rm;
-			} finally {
-			}
+			var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+			return __rm;
 		}
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='set_Value' and count(parameter)=1 and parameter[1][@type='int']]"
 		[Register ("set_Value", "(I)V", "")]
 		set {
 			const string __id = "set_Value.(I)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (value);
-				_members.StaticMethods.InvokeVoidMethod (__id, __args);
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (value);
+			_members.StaticMethods.InvokeVoidMethod (__id, __args);
 		}
 	}
 
@@ -31,10 +25,6 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 
 [global::Android.Runtime.Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
 internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
-	static IntPtr java_class_ref {
-		get { return _members_java_code_IMyInterface.JniPeerType.PeerReference.Handle; }
-	}
-
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	public override global::Java.Interop.JniPeerMembers JniPeerMembers {

@@ -18,10 +18,6 @@ using Java.Interop;
 public abstract partial class ClassWithoutNamespace : global::Java.Lang.Object, IInterfaceWithoutNamespace {
 	static readonly JniPeerMembers _members = new XAPeerMembers ("ClassWithoutNamespace", typeof (ClassWithoutNamespace));
 
-	internal static new IntPtr class_ref {
-		get { return _members.JniPeerType.PeerReference.Handle; }
-	}
-
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -53,12 +49,9 @@ public abstract partial class ClassWithoutNamespace : global::Java.Lang.Object, 
 		if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 			return;
 
-		try {
-			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
-		} finally {
-		}
+		var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+		SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+		_members.InstanceMethods.FinishCreateInstance (__id, this, null);
 	}
 
 	static Delegate cb_Foo_Foo_V;
@@ -112,10 +105,7 @@ internal partial class ClassWithoutNamespaceInvoker : ClassWithoutNamespace {
 	public override unsafe void Foo ()
 	{
 		const string __id = "Foo.()V";
-		try {
-			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-		} finally {
-		}
+		_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 	}
 
 }

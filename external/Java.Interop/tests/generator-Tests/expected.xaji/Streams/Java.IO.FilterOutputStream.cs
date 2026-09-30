@@ -20,10 +20,6 @@ namespace Java.IO {
 	public partial class FilterOutputStream : global::Java.IO.OutputStream {
 		static readonly JniPeerMembers _members = new XAPeerMembers ("java/io/FilterOutputStream", typeof (FilterOutputStream));
 
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -93,12 +89,9 @@ namespace Java.IO {
 		public override unsafe void Write (int oneByte)
 		{
 			const string __id = "write.(I)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (oneByte);
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (oneByte);
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 		}
 
 	}

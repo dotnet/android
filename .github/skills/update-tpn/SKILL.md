@@ -56,11 +56,9 @@ Read `.gitmodules` for all submodules. Current submodules and their license file
 | Submodule | URL | License File |
 |-----------|-----|-------------|
 | Java.Interop | https://github.com/dotnet/java-interop | `external/Java.Interop/LICENSE` |
-| lz4 | https://github.com/dotnet/lz4 (fork of https://github.com/lz4/lz4) | `external/lz4/lib/LICENSE` |
 | xxHash | https://github.com/Cyan4973/xxHash | `external/xxHash/LICENSE` |
 | constexpr-xxh3 | https://github.com/chys87/constexpr-xxh3 | `external/constexpr-xxh3/LICENSE` |
 | robin-map | https://github.com/xamarin/robin-map (fork of https://github.com/Tessil/robin-map) | `external/robin-map/LICENSE` |
-| libunwind | https://github.com/libunwind/libunwind | `external/libunwind/LICENSE` |
 | android-api-docs | https://github.com/dotnet/android-api-docs | (not a third-party dep) |
 
 #### Vendored Source (`src-ThirdParty/`)
@@ -99,7 +97,7 @@ The `src/Xamarin.Android.Build.Tasks/Linker/External/` directory contains vendor
 | Linker/External/ | mono/linker | https://github.com/mono/linker/ (MIT) |
 
 #### Native Libraries (from CMakeLists.txt)
-Check `src/native/` CMakeLists.txt files for references to external native code. The submodules above (lz4, xxHash, libunwind, robin-map) are compiled into native libraries.
+Check `src/native/` CMakeLists.txt files for references to external native code. The submodules above (xxHash, robin-map) are compiled into native libraries.
 
 #### Android SDK Tools
 These are downloaded and shipped with the SDK:

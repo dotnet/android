@@ -19,6 +19,14 @@
   
   <PropertyGroup>
     <_ApiXmlLocation>Profiles\</_ApiXmlLocation>
+    <_MonoAndroidUnmanagedCallersOnlyCallbacksState Condition=" '$(_MonoAndroidEnableUnmanagedCallersOnlyCallbacks)' == 'true' ">true</_MonoAndroidUnmanagedCallersOnlyCallbacksState>
+    <_MonoAndroidUnmanagedCallersOnlyCallbacksState Condition=" '$(_MonoAndroidUnmanagedCallersOnlyCallbacksState)' == '' ">false</_MonoAndroidUnmanagedCallersOnlyCallbacksState>
+    <_MonoAndroidUnmanagedCallersOnlyCallbacksTrueStamp>$(IntermediateOutputPath)mono-android-uco-callbacks-true.stamp</_MonoAndroidUnmanagedCallersOnlyCallbacksTrueStamp>
+    <_MonoAndroidUnmanagedCallersOnlyCallbacksFalseStamp>$(IntermediateOutputPath)mono-android-uco-callbacks-false.stamp</_MonoAndroidUnmanagedCallersOnlyCallbacksFalseStamp>
+    <_MonoAndroidUnmanagedCallersOnlyCallbacksStamp Condition=" '$(_MonoAndroidUnmanagedCallersOnlyCallbacksState)' == 'true' ">$(_MonoAndroidUnmanagedCallersOnlyCallbacksTrueStamp)</_MonoAndroidUnmanagedCallersOnlyCallbacksStamp>
+    <_MonoAndroidUnmanagedCallersOnlyCallbacksStamp Condition=" '$(_MonoAndroidUnmanagedCallersOnlyCallbacksState)' != 'true' ">$(_MonoAndroidUnmanagedCallersOnlyCallbacksFalseStamp)</_MonoAndroidUnmanagedCallersOnlyCallbacksStamp>
+    <_MonoAndroidOtherUnmanagedCallersOnlyCallbacksStamp Condition=" '$(_MonoAndroidUnmanagedCallersOnlyCallbacksState)' == 'true' ">$(_MonoAndroidUnmanagedCallersOnlyCallbacksFalseStamp)</_MonoAndroidOtherUnmanagedCallersOnlyCallbacksStamp>
+    <_MonoAndroidOtherUnmanagedCallersOnlyCallbacksStamp Condition=" '$(_MonoAndroidUnmanagedCallersOnlyCallbacksState)' != 'true' ">$(_MonoAndroidUnmanagedCallersOnlyCallbacksTrueStamp)</_MonoAndroidOtherUnmanagedCallersOnlyCallbacksStamp>
   </PropertyGroup>
   
   <!-- Creates 'AssemblyInfo.cs' with appropriate version information -->
@@ -99,13 +107,19 @@
     />
 
   </Target>
+
+  <Target Name="_ValidateMonoAndroidUnmanagedCallersOnlyCallbacks"
+      Condition=" '$(_MonoAndroidEnableUnmanagedCallersOnlyCallbacks)' == 'true' and '$(AndroidTypeMapImplementation)' != 'trimmable' "
+      BeforeTargets="_GenerateBinding">
+    <Error Text="Experimental [UnmanagedCallersOnly] binding callbacks require AndroidTypeMapImplementation=trimmable, but '$(AndroidTypeMapImplementation)' was selected." />
+  </Target>
   
   <!-- Runs 'generator' -->
   <Target Name="_GenerateBinding"
       BeforeTargets="CoreCompile"
       DependsOnTargets="_CopyXmlLocal"
       Inputs="$(MSBuildThisFileFullPath);metadata;enumflags;map.csv;methodmap.csv;$(IntermediateOutputPath)mcw\api-$(AndroidPlatformId).xml"
-      Outputs="$(IntermediateOutputPath)mcw\Mono.Android.projitems">
+      Outputs="$(IntermediateOutputPath)mcw\Mono.Android.projitems;$(_MonoAndroidUnmanagedCallersOnlyCallbacksStamp)">
     <PropertyGroup>
       <_PlatformIdVersions>$(AndroidSdkDirectory)\platforms\android-$(AndroidPlatformId)\data\api-versions.xml</_PlatformIdVersions>
       <_AndroidPlatformAnnotations>$(AndroidSdkDirectory)/platforms/android-$(AndroidPlatformId)/data/annotations.zip</_AndroidPlatformAnnotations>
@@ -143,6 +157,11 @@
       <_LangFeatures>--lang-features=nullable-reference-types</_LangFeatures>
       <_LangFeatures Condition="$(AndroidApiLevel) &gt;= 30">$(_LangFeatures),default-interface-methods,nested-interface-types,interface-constants</_LangFeatures>
       <_LangFeatures Condition=" $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '7.0')) ">$(_LangFeatures),obsoleted-platform-attributes</_LangFeatures>
+      <!--
+        Internal, off-by-default switch for the experimental [UnmanagedCallersOnly] binding
+        callback format. It requires the trimmable typemap, so it must never be enabled by default.
+      -->
+      <_LangFeatures Condition=" '$(_MonoAndroidEnableUnmanagedCallersOnlyCallbacks)' == 'true' ">$(_LangFeatures),unmanaged-callers-only-callbacks</_LangFeatures>
     </PropertyGroup>
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; $(Generator) $(_GenFlags) $(_ApiLevel) $(_MinimumApiLevel) $(_Out) $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_LangFeatures) $(_Dirs) $(_Api) $(_WithJavadocXml)"
@@ -160,6 +179,11 @@
     <PropertyGroup>
       <DefineConstants>$(DefineConstants);$([System.String]::Copy('$(_GeneratedDefineConstants)').Replace ('%24(DefineConstants);', ''))</DefineConstants>
     </PropertyGroup>
+    <Delete Files="$(_MonoAndroidOtherUnmanagedCallersOnlyCallbacksStamp)" />
+    <Touch Files="$(_MonoAndroidUnmanagedCallersOnlyCallbacksStamp)" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_MonoAndroidUnmanagedCallersOnlyCallbacksTrueStamp);$(_MonoAndroidUnmanagedCallersOnlyCallbacksFalseStamp)" />
+    </ItemGroup>
   </Target>
   <ItemGroup>
     <JavaCallableWrapperSource Include="java\**\*.java" />
@@ -205,6 +229,13 @@
   <!-- Runs ApiCompat to prevent API breakage -->
   <PropertyGroup>
     <ApiCompatibilityDir>../../tests/api-compatibility</ApiCompatibilityDir>
+    <!--
+      The experimental [UnmanagedCallersOnly] callback format renames the generated callback
+      infrastructure, which is observable through the Connector value of [Register].  That value is
+      an implementation detail rather than public API, but ApiCompat compares attribute arguments,
+      so the check is skipped while the experiment is enabled.  It still runs for a default build.
+    -->
+    <DisableApiCompatibilityCheck Condition=" '$(_MonoAndroidEnableUnmanagedCallersOnlyCallbacks)' == 'true' ">True</DisableApiCompatibilityCheck>
   </PropertyGroup>
   <ItemGroup>
     <ApiCompatibilityFiles Include="$(ApiCompatibilityDir)/acceptable-breakages-v*.txt" />

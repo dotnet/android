@@ -24,10 +24,6 @@ namespace Xamarin.Test {
 		public partial class B : global::Java.Lang.Object {
 			static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/A$B", typeof (B));
 
-			internal static new IntPtr class_ref {
-				get { return _members.JniPeerType.PeerReference.Handle; }
-			}
-
 			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 			public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -75,22 +71,15 @@ namespace Xamarin.Test {
 			public virtual unsafe global::Java.Lang.Object SetCustomDimension (int index)
 			{
 				const string __id = "setCustomDimension.(I)Lxamarin/test/A$B;";
-				try {
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue (index);
-					var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
-					return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-				} finally {
-				}
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (index);
+				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
+				return (global::Java.Lang.Object) global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 
 		}
 
 		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/A", typeof (A));
-
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -139,11 +128,8 @@ namespace Xamarin.Test {
 		public virtual unsafe int GetHandle ()
 		{
 			const string __id = "getHandle.()I";
-			try {
-				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
-				return __rm;
-			} finally {
-			}
+			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+			return __rm;
 		}
 
 	}

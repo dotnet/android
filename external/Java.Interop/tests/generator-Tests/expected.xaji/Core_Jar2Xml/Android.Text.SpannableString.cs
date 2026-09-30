@@ -20,10 +20,6 @@ namespace Android.Text {
 	public partial class SpannableString : global::Android.Text.SpannableStringInternal, global::Android.Text.ISpannable {
 		static readonly JniPeerMembers _members = new XAPeerMembers ("android/text/SpannableString", typeof (SpannableString));
 
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -116,14 +112,12 @@ namespace Android.Text {
 		public override unsafe global::Android.Text.SpanTypes GetSpanFlags (global::Java.Lang.Object what)
 		{
 			const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((what == null) ? IntPtr.Zero : ((global::Java.Lang.Object) what).Handle);
-				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
-				return (global::Android.Text.SpanTypes) __rm;
-			} finally {
-				global::System.GC.KeepAlive (what);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue ((what == null) ? IntPtr.Zero : ((global::Java.Lang.Object) what).Handle);
+			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
+			var __result = (global::Android.Text.SpanTypes) __rm;
+			global::System.GC.KeepAlive (what);
+			return __result;
 		}
 
 	}

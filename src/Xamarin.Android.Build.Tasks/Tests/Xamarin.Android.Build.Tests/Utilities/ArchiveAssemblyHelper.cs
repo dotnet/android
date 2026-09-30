@@ -300,7 +300,7 @@ namespace Xamarin.Android.Build.Tests
 			List<string> contents = ListArchiveContents (assembliesRootDir, forceRefresh, arch);
 
 			// We must count only .dll.so entries starting with the '-' and '_' characters, as they are the actual managed assemblies.
-			// Other entries in `lib/{arch}` might be AOT shared libraries, which will also have the .dll.so extension.
+			// Other .dll.so entries are not assembly-store payloads and must not contribute to this count.
 			var dlls = contents.Where (x => {
 				string fileName = Path.GetFileName (x);
 				if (!fileName.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase)) {

@@ -1,7 +1,7 @@
 ---
 title: Binding a Java Library from Maven
 description: <AndroidMavenLibrary> allows a Maven artifact to be specified which will automatically be downloaded and added to a .NET for Android binding project. This can be useful to simplify maintenance of .NET for Android bindings for artifacts hosted in Maven.
-ms.author: jopobst
+ms.author: jopepper
 ms.date: 05/11/2024
 ---
 

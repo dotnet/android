@@ -46,13 +46,10 @@ namespace Xamarin.Test {
 				public unsafe global::Xamarin.Test.NotificationCompatBase.Action Build (int p0)
 				{
 					const string __id = "build.(I)Lxamarin/test/NotificationCompatBase$Action;";
-					try {
-						JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-						__args [0] = new JniArgumentValue (p0);
-						var __rm = _members_xamarin_test_NotificationCompatBase_Action_Factory.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
-						return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Xamarin.Test.NotificationCompatBase.Action> (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
-					} finally {
-					}
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (p0);
+					var __rm = _members_xamarin_test_NotificationCompatBase_Action_Factory.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
+					return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Xamarin.Test.NotificationCompatBase.Action> (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 				}
 
 			}
@@ -111,15 +108,12 @@ namespace Xamarin.Test {
 				if (PeerReference.IsValid)
 					return;
 
-				try {
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue (__self);
-					var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
-					Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
-					_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
-				} finally {
-					global::System.GC.KeepAlive (__self);
-				}
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (__self);
+				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
+				Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
+				_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
+				global::System.GC.KeepAlive (__self);
 			}
 
 		}

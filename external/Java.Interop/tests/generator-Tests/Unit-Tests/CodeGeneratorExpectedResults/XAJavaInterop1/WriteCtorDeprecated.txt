@@ -2,7 +2,6 @@
 [Register (".ctor", "", "")]
 [Obsolete (@"This constructor is obsolete")]
 [MyAttribute]
-[global::Android.Runtime.IntDefinition (null, JniField = "xamarin/test/SomeObject.SOME_VALUE")]
  unsafe Object ()
 	: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 {

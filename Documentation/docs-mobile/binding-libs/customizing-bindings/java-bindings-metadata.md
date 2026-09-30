@@ -1,7 +1,7 @@
 ---
 title: "Java Bindings Metadata"
 description: "C# code in .NET for Android calls Java libraries through bindings, which are a mechanism that abstracts the low-level details that are specified in Java Native Interface (JNI). .NET for Android provides a tool that generates these bindings. This tooling lets the developer control how a binding is created by using metadata, which allows procedures such as modifying namespaces and renaming members. This document discusses how metadata works, summarizes the attributes that metadata supports, and explains how to resolve binding problems by modifying this metadata."
-ms.author: jopobst
+ms.author: jopepper
 ms.date: 05/09/2024
 ---
 

@@ -39,6 +39,13 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 
 ---
 
+The NativeAOT object/MSBuild integration cases in the trimmable type map suite
+also require the NDK `llvm-readobj` and adjacent `llvm-objdump` and `clang` executables. Pass
+`-p:_NativeAotLlvmReadObjPath=/path/to/ndk/toolchains/llvm/prebuilt/<host>/bin/llvm-readobj`
+(with `.exe` on Windows) to execute those cases; without it, those cases are
+reported as skipped. The NativeFormat parser and other typemap unit tests do
+not require native tools.
+
 ## Host-Side MSBuild Tests (full-build — requires local SDK)
 
 Assembly: `bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll`
@@ -49,8 +56,7 @@ Device: No
 |-----------|--------|---------------------|
 | **build** (general) | `--filter "FullyQualifiedName~BuildTest"` | `BuildTest`, `BuildTest2`, `BuildTest3` — core build pipeline tests |
 | **smoke** | `--filter "cat=SmokeTests"` | Quick subset of build, packaging, and asset pack tests |
-| **aot** | `--filter "cat=AOT"` | `AotTests` + AOT-related tests in `BuildTest`, `IncrementalBuildTest` |
-| **llvm** | `--filter "cat=LLVM"` | LLVM-specific AOT compilation tests |
+| **native aot** | `--filter "FullyQualifiedName~NativeAotBuildTests"` | NativeAOT build and packaging tests |
 | **bindings** | `--filter "FullyQualifiedName~BindingBuildTest"` | Java binding generation and build tests |
 | **packaging** | `--filter "FullyQualifiedName~PackagingTest"` | APK/AAB packaging, signing, zipalign |
 | **incremental build** | `--filter "FullyQualifiedName~IncrementalBuildTest"` | Incremental build correctness tests |
@@ -104,7 +110,6 @@ Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 | **localization** | `--filter "cat=Localization"` | Locale/culture device tests |
 | **timezone** | `--filter "cat=TimeZoneInfo"` | Time zone handling on device |
 | **wear** | `--filter "cat=WearOS"` | Wear OS device tests |
-| **aot profile** | `--filter "cat=ProfiledAOT"` | AOT profiling on device |
 | **export** | `--filter "FullyQualifiedName~MonoAndroidExportTest"` | `[Export]` attribute tests |
 | **bundletool** | `--filter "FullyQualifiedName~BundleToolTests"` | AAB bundle tool tests |
 | **uncaught exceptions** | `--filter "FullyQualifiedName~UncaughtExceptionTests"` | Unhandled exception behavior |
@@ -141,7 +146,6 @@ Device: **Yes**
 The `Mono.Android.NET-Tests.csproj` dynamically excludes categories based on runtime:
 - **CoreCLR runtime**: Excludes `CoreCLRIgnore`, `NTLM`
 - **NativeAOT runtime**: Excludes `NativeAOTIgnore`, `SSL`, `NTLM`, `Export`, `NativeTypeMap`
-- **LLVM**: Excludes `LLVMIgnore`, `InetAccess`, `NetworkInterfaces`
 
 Other categories: `SSL`, `InetAccess`, `JavaList`, `RuntimeConfig`, `Intune`, `NTLM`
 
@@ -154,7 +158,7 @@ Command:
 )
 ```
 
-Results are `.trx` files under `bin/TestDebug/TestResults/` and are published as VSTest results in CI. Always pass the same configuration and MSBuild properties to the install and `dotnet test --no-build` commands (for example, `-c Release -p:UseMonoRuntime=false`).
+Results are `.trx` files under `bin/TestDebug/TestResults/` and are published as VSTest results in CI. Always pass the same configuration and MSBuild properties to the install and `dotnet test --no-build` commands (for example, `-c Release -p:AndroidTypeMapImplementation=trimmable`).
 
 For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/`:
 ```bash

@@ -16,10 +16,6 @@ namespace Xamarin.Test {
 
 	[global::Android.Runtime.Register ("xamarin/test/I2", DoNotGenerateAcw=true)]
 	internal partial class II2Invoker : global::Java.Lang.Object, II2 {
-		static IntPtr java_class_ref {
-			get { return _members_xamarin_test_I2.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -67,10 +63,7 @@ namespace Xamarin.Test {
 		public unsafe void Close ()
 		{
 			const string __id = "close.()V";
-			try {
-				_members_xamarin_test_I2.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members_xamarin_test_I2.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 		}
 
 	}

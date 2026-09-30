@@ -425,7 +425,7 @@ namespace Xamarin.Android.JcwGenTests {
 		{
 			DefaultConstructorInvoked = true;
 
-			// Ensure that CallMethodFromCtor.class_ref is initialized
+			// Ensure the Java class handle is initialized.
 			var ignore  = ThresholdClass;
 			ignore      = ignore;
 		}

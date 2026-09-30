@@ -407,6 +407,7 @@ namespace Java.InteropTests
 		public static int DisposeInvocations;
 		public static JniObjectReferenceOptions Options;
 		public static volatile Barrier ActivationBarrier;
+		public static Action<TrimmableRuntimeJavaInteropPeer> PeerCreated;
 
 		public TrimmableRuntimeJavaInteropPeer (ref JniObjectReference reference, JniObjectReferenceOptions options)
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
@@ -416,6 +417,7 @@ namespace Java.InteropTests
 			Interlocked.Increment (ref ConstructorInvocations);
 			Options = options;
 			Construct (ref reference, options);
+			PeerCreated?.Invoke (this);
 			var barrier = ActivationBarrier;
 			if (barrier != null && !barrier.SignalAndWait (TimeSpan.FromSeconds (10))) {
 				throw new TimeoutException ("Timed out waiting for concurrent peer activation.");
@@ -436,6 +438,7 @@ namespace Java.InteropTests
 			DisposeInvocations = 0;
 			Options = JniObjectReferenceOptions.None;
 			ActivationBarrier = null;
+			PeerCreated = null;
 		}
 	}
 }

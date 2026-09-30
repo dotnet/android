@@ -24,6 +24,12 @@ namespace Xamarin.Android.Build.Tests
 		public static ConcurrentDictionary<string, string> TestOutputDirectories = new ConcurrentDictionary<string, string> ();
 		public static ConcurrentDictionary<string, string> TestPackageNames = new ConcurrentDictionary<string, string> ();
 
+		public static IEnumerable<(bool isRelease, AndroidRuntime runtime)> ValidRuntimeConfigurations => [
+			(false, AndroidRuntime.CoreCLR),
+			(true, AndroidRuntime.CoreCLR),
+			(true, AndroidRuntime.NativeAOT),
+		];
+
 		protected bool IsWindows => TestEnvironment.IsWindows;
 
 		public string Root => Path.GetFullPath (XABuildPaths.TestOutputDirectory);
@@ -95,10 +101,23 @@ namespace Xamarin.Android.Build.Tests
 
 		protected static string RunAdbCommand (string command, bool ignoreErrors = true, int timeout = 30)
 		{
+			var (_, stdOutput, stdError) = RunAdbCommandWithExitCode (command, timeout);
+			return stdOutput + stdError;
+		}
+
+		protected static (int code, string stdOutput, string stdError) RunAdbCommandWithExitCode (string command, int timeout = 30)
+		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
 			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
 			string adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
-			return RunProcess (adb, $"{adbTarget} {command}", timeout);
+			return RunProcessWithExitCode (adb, $"{adbTarget} {command}", timeout);
+		}
+
+		protected static (int code, string stdOutput, string stdError) RunAdbCommandWithExitCode (string [] command, int timeout = 30)
+		{
+			var arguments = new Microsoft.Build.Utilities.CommandLineBuilder ();
+			arguments.AppendSwitchIfNotNull ("", command, " ");
+			return RunAdbCommandWithExitCode (arguments.ToString (), timeout);
 		}
 
 		protected static (int code, string stdOutput, string stdError) RunApkDiffCommand (string args, string logFilePath)
@@ -609,7 +628,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		protected bool IgnoreUnsupportedConfiguration (AndroidRuntime runtime, bool aot = false, bool release = false)
+		protected bool IgnoreUnsupportedConfiguration (AndroidRuntime runtime, bool release = false)
 		{
 			if (runtime == AndroidRuntime.NativeAOT) {
 				// NativeAOT is release-only, AOT is always implied
@@ -618,31 +637,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				Assert.Ignore ($"NativeAOT: unsupported configuration (release == {release})");
-				return true;
-			}
-
-			if (runtime == AndroidRuntime.CoreCLR) {
-				// CoreCLR doesn't support AOT
-				if (!aot) {
-					return false;
-				}
-
-				Assert.Ignore ($"CoreCLR: unsupported configuration (aot == {aot})");
-				return true;
-			}
-
-			// MonoVM supports all the combinations
-			return false;
-		}
-
-		// NativeAOT trims with ILC and does not emit illink's `obj/<config>/<rid>/linked/` output.
-		// Tests that inspect the `linked/` directory (e.g. to verify trimming or type-map behavior)
-		// therefore cannot run as-is on NativeAOT.
-		// TODO: add DGML-based counterparts to verify these behaviors on NativeAOT (follow-up issue).
-		protected bool IgnoreNativeAotLinkedAssemblyChecks (AndroidRuntime runtime)
-		{
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT does not produce illink's `linked/` output; skipping `linked/` assembly inspection (DGML counterpart tracked as a follow-up).");
 				return true;
 			}
 

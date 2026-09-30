@@ -47,17 +47,7 @@ JavaDoc parsers are used for generic Java Binding projects.
 
 (JavaDocScraper in this context had been implemented in Java in jar2xml before, and now it is rewritten in C# in class-parse.)
 
-(3) JavaDoc to C# Documentation converter (javadoc-to-mdoc)
-
-Apart from JavaDocScraper for parameter names, we still have another reason to parse JavaDocs and DroidDocs. Bindings need API documentation, and they should be in our .NET API manner. It helps IDEs provide API information.
-
-That means, we need almost entire API information including details.
-
-It has been implemented in mono/mcs/tools/javadoc-to-mdoc. And it had been used only to generate Xamarin.Android API documentation i.e. it supported only DroidDocs. It was extended to support JavaDocs when we brought in this feature to xamarin-android to support any Java Binding projects. Yet, that is limited to the standard doclets for exactly the same reason as JavaDocScraper for method parameter names.
-
-(Nowadays there should be almost no reason to have different JavaDoc scrapers, but as explained above, JavaDocScraper used to be Java, while javadoc-to-mdoc has been C# since its beginning.)
-
-(4) DroidDoc parser for parameter names
+(3) DroidDoc parser for parameter names
 
 JavaDocScraper for parameter names is problematic, not only because it always needs to renew the implementation whenever DroidDocs are updated, but also because it is not efficient to parse HTML docs every time we build the bindings. And that annoyed our Components team because unlike Xamarin.Android itself, they have to run JavaDoc Scraper every time (we don't run class-parse and api-xml-adjuster every time; we generate api-XY.xml.in only when new APIs get released).
 
@@ -67,7 +57,7 @@ It was part of Xamarin private repo, but now it is extracted at https://github.c
 
 It is limited to DroidDoc as it was only for Android Components (support libraries and Google Play services). And it's not ready for xamarin-android that needs to build and run on Linux (this doesn't).
 
-(5) Java stub API source parser for parameter names
+(4) Java stub API source parser for parameter names
 
 DroidDoc support has been getting more and more problematic as Google stopped shipping "docs" SDK components anymore, and new API documentations are available only via the web.
 
@@ -77,9 +67,9 @@ It is part of xamarin-android-docimporter-ng in Java.Interop.
 
 The stub sources are expected to have full type names almost everywhere so that we don't have to "resolve" type names (although we have detected that "@Deprecated" is used without "java.lang." which smells... hopefully not any more). It is safer scheme that we use it only to generate parameter names, not the entire API structure. That task can still be done by class-parse.
 
-(6) DroidDoc parser for parameter names, reimplemented
+(5) DroidDoc parser for parameter names, reimplemented
 
-The implementation at (4) was quite incomplete and did not try to parse all Android API, which exposes various issues. Thus it was rewritten to try to do better thing. The new DroidDoc scraper at https://github.com/atsushieno/xamarin-android-docimporter-ng generates the same parameter name description file as Java stub parser. It only targets Android API up to 23 because (5) covers the rest.
+The implementation at (3) was quite incomplete and did not try to parse all Android API, which exposes various issues. Thus it was rewritten to try to do better thing. The new DroidDoc scraper at https://github.com/atsushieno/xamarin-android-docimporter-ng generates the same parameter name description file as Java stub parser. It only targets Android API up to 23 because (4) covers the rest.
 
 However this exposes further issues - some API documentations cannot be parsed because of Google's buggy HTML generation (e.g. android/content/ContentProvider.html significantly breaks its documentation structure. We parse the docs in extraneous way (e.g. inspecting descendants of certain elements instead of just children).
 
@@ -94,10 +84,7 @@ It is part of xamarin-android-docimporter-ng in Java.Interop.
 |class-parse+api-xml-adjuster | entire API definition | all | all ages | every build
 |JavaDocScraper | parameter names | all | all ages | android.jar - every API release
 |JavaDocScraper | parameter names | all | all ages | others - every build
-|javadoc-to-mdoc | docs | all | latest | android.jar - every API release
-|javadoc-to-mdoc | docs | all | latest | others - every release build
 |xamarin-android-docimporter | parameter names | support/GPS | latest | every components release
 |java-stub-parser | parameter names | android.jar | API 24 or later | every API release
 |new DroidDoc parser | parameter names | android.jar | API 23 or earlier | only once, or every parser bugfixes
-
 

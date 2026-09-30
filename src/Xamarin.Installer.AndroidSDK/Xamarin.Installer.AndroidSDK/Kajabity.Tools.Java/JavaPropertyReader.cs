@@ -303,7 +303,7 @@ namespace Kajabity.Tools.Java
         public void Parse( Stream stream, Encoding encoding )
         {
             var bufferedStream = new BufferedStream( stream, bufferSize );
-            // the default encoding ISO-8859-1 (codepabe 28592) will be used if we do not pass explicitly different encoding
+            // the default encoding ISO-8859-1 (code page 28591) will be used if we do not pass explicitly different encoding
             var parserEncoding = encoding ?? JavaProperties.DefaultEncoding;
             reader = new BinaryReader( bufferedStream, parserEncoding );
 

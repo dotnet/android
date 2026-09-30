@@ -194,8 +194,8 @@ namespace Android.Runtime
 		public bool GetFeature (string? name)
 		{
 			switch (name) {
-			case XmlPullParser.FeatureProcessNamespaces:
-			case XmlPullParser.FeatureReportNamespaceAttributes:
+			case IXmlPullParser.FeatureProcessNamespaces:
+			case IXmlPullParser.FeatureReportNamespaceAttributes:
 				return true;
 			}
 			return false;
@@ -343,8 +343,8 @@ namespace Android.Runtime
 		public void SetFeature (string? name, bool state)
 		{
 			switch (name) {
-			case XmlPullParser.FeatureProcessNamespaces:
-			case XmlPullParser.FeatureReportNamespaceAttributes:
+			case IXmlPullParser.FeatureProcessNamespaces:
+			case IXmlPullParser.FeatureReportNamespaceAttributes:
 				if (state)
 					return;
 				break;

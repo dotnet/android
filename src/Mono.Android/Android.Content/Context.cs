@@ -22,11 +22,15 @@ namespace Android.Content {
 		// Add correctly enumified overloads
 		[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android26.0")]
 		public Intent? RegisterReceiver (BroadcastReceiver? receiver, IntentFilter? filter, ReceiverFlags flags)
+#pragma warning disable CS0618 // Delegate to the legacy overload that has the underlying Java signature.
 			=> RegisterReceiver (receiver, filter, (ActivityFlags)flags);
+#pragma warning restore CS0618
 
 		[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android26.0")]
 		public Intent? RegisterReceiver (BroadcastReceiver? receiver, IntentFilter? filter, string? broadcastPermission, Handler? scheduler, ReceiverFlags flags)
+#pragma warning disable CS0618 // Delegate to the legacy overload that has the underlying Java signature.
 			=> RegisterReceiver (receiver, filter, broadcastPermission, scheduler, (ActivityFlags)flags);
+#pragma warning restore CS0618
 #endif
 	}
 }

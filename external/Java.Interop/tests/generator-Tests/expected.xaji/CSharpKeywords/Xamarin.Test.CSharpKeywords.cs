@@ -20,10 +20,6 @@ namespace Xamarin.Test {
 	public partial class CSharpKeywords : global::Java.Lang.Object {
 		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/CSharpKeywords", typeof (CSharpKeywords));
 
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -71,13 +67,10 @@ namespace Xamarin.Test {
 		public virtual unsafe string UsePartial (int partial)
 		{
 			const string __id = "usePartial.(I)Ljava/lang/String;";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (partial);
-				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
-				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (partial);
+			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
+			return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='CSharpKeywords']/method[@name='useThis' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"

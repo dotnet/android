@@ -17,10 +17,6 @@ namespace Java.Util {
 
 	[global::Android.Runtime.Register ("java/util/Deque", DoNotGenerateAcw=true)]
 	internal partial class IDequeInvoker : global::Java.Lang.Object, IDeque {
-		static IntPtr java_class_ref {
-			get { return _members_java_util_Deque.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -109,10 +105,7 @@ namespace Java.Util {
 		public unsafe void Clear ()
 		{
 			const string __id = "clear.()V";
-			try {
-				_members_java_util_Collection.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members_java_util_Collection.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 		}
 
 	}

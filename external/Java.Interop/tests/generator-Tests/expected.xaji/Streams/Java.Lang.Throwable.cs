@@ -20,10 +20,6 @@ namespace Java.Lang {
 	public partial class Throwable {
 		static readonly JniPeerMembers _members = new XAPeerMembers ("java/lang/Throwable", typeof (Throwable));
 
-		internal static IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
 		static Delegate cb_getMessage_GetMessage_Ljava_lang_String_;
 #pragma warning disable 0169
 		static Delegate GetGetMessageHandler ()
@@ -49,11 +45,8 @@ namespace Java.Lang {
 			[Register ("getMessage", "()Ljava/lang/String;", "GetGetMessageHandler")]
 			get {
 				const string __id = "getMessage.()Ljava/lang/String;";
-				try {
-					var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-					return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-				} finally {
-				}
+				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 		}
 

@@ -138,14 +138,6 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		// This call is very specific as it needs to return full path to the location where the arch-prefixed tools
-		// reside, but WITHOUT the actual tool name. This is required by Mono's AOT LLVM backend.
-		public string GetNdkToolPrefixForAOT (AndroidTargetArch arch, int apiLevel)
-		{
-			string path = GetToolPath (NdkToolKind.Assembler, arch, apiLevel);
-			return path.Substring (0, path.LastIndexOf ("-", StringComparison.Ordinal) + 1);;
-		}
-
 		// Work around for a bug in NDK r19 before its 'c' release. See NdkToolsWithClangWithPlatforms.ctor
 		public virtual string GetCompilerTargetParameters (AndroidTargetArch arch, int apiLevel, bool forCPlusPlus = false)
 		{

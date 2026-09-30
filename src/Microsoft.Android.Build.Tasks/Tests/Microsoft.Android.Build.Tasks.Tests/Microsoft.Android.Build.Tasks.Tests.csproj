@@ -19,9 +19,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Microsoft.Android.Build.Tasks.csproj" />
-    <ProjectReference Include="..\..\..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj">
-      <Aliases>xamarinbuildtasks</Aliases>
-    </ProjectReference>
   </ItemGroup>
 
 </Project>

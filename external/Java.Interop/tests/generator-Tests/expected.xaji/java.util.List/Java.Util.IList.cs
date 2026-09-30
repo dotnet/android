@@ -13,10 +13,6 @@ namespace Java.Util {
 
 	[global::Android.Runtime.Register ("java/util/List", DoNotGenerateAcw=true)]
 	internal partial class IListInvoker : global::Java.Lang.Object, IList {
-		static IntPtr java_class_ref {
-			get { return _members_java_util_List.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {

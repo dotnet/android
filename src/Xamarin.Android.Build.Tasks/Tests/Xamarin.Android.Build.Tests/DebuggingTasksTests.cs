@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Xamarin.Android.Build;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
@@ -19,6 +20,125 @@ namespace Xamarin.Android.Build.Tests
 		[OneTimeSetUp]
 		public void SetUp ()
 		{
+		}
+
+		[TestCase ("arm64-v8a", "arm64-v8a,armeabi-v7a,armeabi", "android-arm", "armeabi-v7a", "android-arm")]
+		[TestCase ("arm64-v8a", "arm64-v8a,armeabi-v7a", "android-arm;android-arm64", "arm64-v8a", "android-arm64")]
+		[TestCase ("arm64-v8a", "arm64-v8a,armeabi-v7a", "android-x64;android-arm", "armeabi-v7a", "android-arm")]
+		[TestCase ("arm64-v8a", "arm64-v8a", "android-arm", "arm64-v8a", null)]
+		[TestCase ("armeabi-v7a", "armeabi-v7a,armeabi", "android-arm", "armeabi-v7a", "android-arm")]
+		[TestCase ("x86_64", "x86_64,x86", "android-x86", "x86", "android-x86")]
+		[TestCase ("x86_64", "x86_64,x86", "android-x86;android-x64", "x86_64", "android-x64")]
+		[TestCase ("x86_64", "x86_64,arm64-v8a,armeabi-v7a", "android-arm;android-arm64", "arm64-v8a", "android-arm64")]
+		[TestCase ("arm64-v8a", "armeabi-v7a,arm64-v8a", "android-arm;android-arm64", "arm64-v8a", "android-arm64")]
+		[TestCase ("arm64-v8a", "arm64-v8a, armeabi-v7a ", "android-arm", "armeabi-v7a", "android-arm")]
+		[TestCase ("arm64-v8a", "", "android-arm64", "arm64-v8a", "android-arm64")]
+		[TestCase ("arm64-v8a", "arm64-v8a,armeabi-v7a", null, "arm64-v8a", null)]
+		[TestCase ("arm64-v8a", "arm64-v8a,armeabi-v7a", "", "arm64-v8a", null)]
+		[TestCase (null, "", "invalid", null, null)]
+		public void SelectRuntimeIdentifier (string deviceAbi, string supportedAbis, string runtimeIdentifiers, string expectedAbi, string expectedRid)
+		{
+			var task = new GetPrimaryCpuAbi {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				ResultingAbi = deviceAbi,
+				RuntimeIdentifiers = runtimeIdentifiers?.Split (';'),
+			};
+
+			task.SelectRuntimeIdentifier (supportedAbis.Split (','));
+
+			Assert.AreEqual (expectedAbi, task.ResultingAbi);
+			Assert.AreEqual (expectedRid, task.RuntimeIdentifier);
+		}
+
+		[TestCase (null, "arm64-v8a", "armeabi-v7a", "arm64-v8a,armeabi-v7a")]
+		[TestCase ("", "arm64-v8a", "armeabi-v7a", "arm64-v8a,armeabi-v7a")]
+		[TestCase (" , ", "arm64-v8a", "armeabi-v7a", "arm64-v8a,armeabi-v7a")]
+		[TestCase ("", null, "armeabi-v7a", "armeabi-v7a")]
+		[TestCase ("", "arm64-v8a", null, "arm64-v8a")]
+		[TestCase ("", null, null, "")]
+		[TestCase ("", " ", "", "")]
+		[TestCase ("arm64-v8a", "arm64-v8a", "armeabi-v7a", "arm64-v8a")]
+		public void GetSupportedAbis (string reportedAbis, string primaryAbi, string secondaryAbi, string expectedAbis)
+		{
+			var supportedAbis = GetPrimaryCpuAbi.GetSupportedAbis (reportedAbis?.Split (',') ?? [], primaryAbi, secondaryAbi);
+
+			CollectionAssert.AreEqual (expectedAbis.Split (',', StringSplitOptions.RemoveEmptyEntries), supportedAbis);
+		}
+
+		[TestCase ("arm64-v8a", "android-arm", "armeabi-v7a")]
+		[TestCase ("arm64-v8a", "android-arm64", "arm64-v8a")]
+		[TestCase (null, "android-arm", "armeabi-v7a")]
+		[TestCase ("", "android-arm64", "arm64-v8a")]
+		public void SelectRuntimeIdentifierFromDeviceCache (string deviceAbi, string runtimeIdentifier, string expectedAbi)
+		{
+			var doc = DeviceCache.Update (null, "device", deviceAbi, 36, "model:TestDevice", ["arm64-v8a", "armeabi-v7a"]);
+			doc = XDocument.Parse (doc.ToString ());
+			Assert.IsTrue (DeviceCache.TryGet (doc, "device", "model:TestDevice", out var abi, out var sdkVersion, out var supportedAbis));
+			Assert.AreEqual (deviceAbi, abi);
+			Assert.AreEqual (36, sdkVersion);
+			CollectionAssert.AreEqual (new [] { "arm64-v8a", "armeabi-v7a" }, supportedAbis);
+
+			var task = new GetPrimaryCpuAbi {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				ResultingAbi = abi,
+				RuntimeIdentifiers = [runtimeIdentifier],
+			};
+			task.SelectRuntimeIdentifier (supportedAbis);
+
+			Assert.AreEqual (expectedAbi, task.ResultingAbi);
+			Assert.AreEqual (runtimeIdentifier, task.RuntimeIdentifier);
+			Assert.AreEqual (deviceAbi, doc.Root?.Element ("Device")?.Element ("ResultingAbi")?.Value,
+				"The cache must retain the device ABI, not the app ABI.");
+		}
+
+		[TestCase (null, "")]
+		[TestCase ("", " , ")]
+		public void DeviceCacheWithoutAnyAbiIsRefreshed (string deviceAbi, string supportedAbis)
+		{
+			var doc = DeviceCache.Update (null, "device", deviceAbi, 36, "model:TestDevice", supportedAbis.Split (','));
+
+			Assert.IsFalse (DeviceCache.TryGet (doc, "device", "model:TestDevice", out _, out _, out _));
+		}
+
+		[Test]
+		public void DeviceCacheWithoutSupportedAbisIsRefreshed ()
+		{
+			var doc = XDocument.Parse (
+				"""
+				<Devices>
+				  <Device id="device">
+				    <ResultingAbi>arm64-v8a</ResultingAbi>
+				    <SdkVersion>36</SdkVersion>
+				    <LongOutput>model:TestDevice</LongOutput>
+				  </Device>
+				</Devices>
+				""");
+
+			Assert.IsFalse (DeviceCache.TryGet (doc, "device", "model:TestDevice", out _, out _, out _));
+		}
+
+		[Test]
+		public void DeviceCacheWithNoAdditionalAbisIsValid ()
+		{
+			var doc = DeviceCache.Update (null, "device", "armeabi-v7a", 19, "model:TestDevice", []);
+
+			Assert.IsTrue (DeviceCache.TryGet (doc, "device", "model:TestDevice", out var abi, out _, out var supportedAbis));
+			Assert.AreEqual ("armeabi-v7a", abi);
+			Assert.IsEmpty (supportedAbis);
+		}
+
+		[Test]
+		public void GetPrimaryCpuAbiHonorsAdbTargetArchitecture ()
+		{
+			var task = new GetPrimaryCpuAbi {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				AdbTargetArchitecture = "armeabi-v7a",
+				RuntimeIdentifiers = ["android-arm64", "android-arm"],
+			};
+
+			Assert.IsTrue (task.Execute ());
+			Assert.AreEqual ("armeabi-v7a", task.ResultingAbi);
+			Assert.AreEqual ("android-arm", task.RuntimeIdentifier);
 		}
 
 		// https://github.com/xamarin/monodroid/blob/63bbeb076d809c74811a8001d38bf2e9e8672627/tests/msbuild/nunit/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests/ResolveXamarinAndroidToolsTests.cs
@@ -91,18 +211,18 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploy2ParsesWarmStateProbe ()
+		public void FastDeployParsesWarmStateProbe ()
 		{
-			var state = FastDeploy2.ParseWarmStateProbeOutput (
+			var state = FastDeploy.ParseWarmStateProbeOutput (
 				"""
-				__XA_FD2_REDIRECT__=
-				__XA_FD2_RUN_AS_DISABLED__=
-				__XA_FD2_REMOTE_HASH__=remote-hash
-				__XA_FD2_PID__=123 456
-				__XA_FD2_PATH__=/data/user/0/com.example
-				__XA_FD2_OVERRIDE_HASH__=override-hash
-				__XA_FD2_RUN_AS_STATUS__=0
-				__XA_FD2_FORCE_STOP_STATUS__=0
+				__XA_FD_REDIRECT__=
+				__XA_FD_RUN_AS_DISABLED__=
+				__XA_FD_REMOTE_HASH__=remote-hash
+				__XA_FD_PID__=123 456
+				__XA_FD_PATH__=/data/user/0/com.example
+				__XA_FD_OVERRIDE_HASH__=override-hash
+				__XA_FD_RUN_AS_STATUS__=0
+				__XA_FD_FORCE_STOP_STATUS__=0
 				""");
 
 			Assert.IsTrue (state.HasRequiredState);
@@ -115,12 +235,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploy2RejectsIncompleteWarmStateProbe ()
+		public void FastDeployRejectsIncompleteWarmStateProbe ()
 		{
-			var state = FastDeploy2.ParseWarmStateProbeOutput (
+			var state = FastDeploy.ParseWarmStateProbeOutput (
 				"""
-				__XA_FD2_REDIRECT__=
-				__XA_FD2_RUN_AS_DISABLED__=true
+				__XA_FD_REDIRECT__=
+				__XA_FD_RUN_AS_DISABLED__=true
 				run-as: package not debuggable
 				""");
 
@@ -130,7 +250,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploy2PlansOnlyNewStagingDirectories ()
+		public void FastDeployPlansOnlyNewStagingDirectories ()
 		{
 			var previousFiles = new [] {
 				"arm64-v8a/App.dll",
@@ -143,7 +263,7 @@ namespace Xamarin.Android.Build.Tests
 				"arm64-v8a/fr/App.resources.dll",
 			};
 
-			HashSet<string> files = FastDeploy2.GetFilesRequiringStagingDirectories (currentFiles, previousFiles);
+			HashSet<string> files = FastDeploy.GetFilesRequiringStagingDirectories (currentFiles, previousFiles);
 
 			CollectionAssert.AreEquivalent (
 				new [] { "arm64-v8a/fr/App.resources.dll" },
@@ -151,7 +271,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploy2PlansAllStagingDirectoriesAfterReset ()
+		public void FastDeployPlansAllStagingDirectoriesAfterReset ()
 		{
 			var currentFiles = new [] {
 				"App.dll",
@@ -159,7 +279,7 @@ namespace Xamarin.Android.Build.Tests
 				"arm64-v8a/fr/App.resources.dll",
 			};
 
-			HashSet<string> files = FastDeploy2.GetFilesRequiringStagingDirectories (currentFiles, previousFiles: null);
+			HashSet<string> files = FastDeploy.GetFilesRequiringStagingDirectories (currentFiles, previousFiles: null);
 
 			CollectionAssert.AreEquivalent (currentFiles, files);
 		}
@@ -167,15 +287,15 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("adb: error: failed to copy: No such file or directory")]
 		[TestCase ("adb: error: target '/data/local/tmp/app/arm64-v8a' is not a directory")]
 		[TestCase ("remote couldn't create file: Is a directory")]
-		public void FastDeploy2DetectsInvalidRemoteFilesystem (string output)
+		public void FastDeployDetectsInvalidRemoteFilesystem (string output)
 		{
-			Assert.IsTrue (FastDeploy2.IsUnexpectedRemoteFilesystemError (output));
+			Assert.IsTrue (FastDeploy.IsUnexpectedRemoteFilesystemError (output));
 		}
 
 		[Test]
-		public void FastDeploy2DoesNotResetForUnrelatedPushFailure ()
+		public void FastDeployDoesNotResetForUnrelatedPushFailure ()
 		{
-			Assert.IsFalse (FastDeploy2.IsUnexpectedRemoteFilesystemError ("adb: error: device offline"));
+			Assert.IsFalse (FastDeploy.IsUnexpectedRemoteFilesystemError ("adb: error: device offline"));
 		}
 
 		[TestCase ("adb: error: device offline", false)]
@@ -183,15 +303,15 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("adb: failed to install app.apk: Broken pipe (32)", false)]
 		[TestCase ("cmd: Failure calling service package: Security exception", false)]
 		[TestCase ("Failure [INSTALL_FAILED_INSUFFICIENT_STORAGE]", false)]
-		public void FastDeploy2ClassifiesOnlyKnownTransientInstallFailures (string output, bool expected)
+		public void FastDeployClassifiesOnlyKnownTransientInstallFailures (string output, bool expected)
 		{
-			Assert.AreEqual (expected, FastDeploy2.IsTransientInstallFailure (output));
+			Assert.AreEqual (expected, FastDeploy.IsTransientInstallFailure (output));
 		}
 
 		[Test]
-		public async Task FastDeploy2RetriesTransientInstallOnce ()
+		public async Task FastDeployRetriesTransientInstallOnce ()
 		{
-			var task = new TestFastDeploy2 (
+			var task = new TestFastDeploy (
 				CreateAdbResult (1, "adb: failed to install app.apk: cmd: Failure calling service package: Broken pipe (32)"),
 				CreateAdbResult (0, "Success"));
 
@@ -202,9 +322,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public async Task FastDeploy2RetriesTransientInstallAfterUninstall ()
+		public async Task FastDeployRetriesTransientInstallAfterUninstall ()
 		{
-			var task = new TestFastDeploy2 (
+			var task = new TestFastDeploy (
 				CreateAdbResult (1, "Failure [INSTALL_FAILED_ALREADY_EXISTS]"),
 				CreateAdbResult (1, "adb: failed to install app.apk: cmd: Failure calling service package: Broken pipe (32)"),
 				CreateAdbResult (0, "Success"));
@@ -217,9 +337,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploy2DoesNotRetryTransientInstallTwiceAcrossUninstall ()
+		public void FastDeployDoesNotRetryTransientInstallTwiceAcrossUninstall ()
 		{
-			var task = new TestFastDeploy2 (
+			var task = new TestFastDeploy (
 				CreateAdbResult (1, "first failure: cmd: Failure calling service package: Broken pipe (32)"),
 				CreateAdbResult (1, "Failure [INSTALL_FAILED_ALREADY_EXISTS]"),
 				CreateAdbResult (1, "third failure: cmd: Failure calling service package: Broken pipe (32)"));
@@ -242,9 +362,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploy2DoesNotRetrySemanticInstallFailure ()
+		public void FastDeployDoesNotRetrySemanticInstallFailure ()
 		{
-			var task = new TestFastDeploy2 (
+			var task = new TestFastDeploy (
 				CreateAdbResult (1, "Failure [INSTALL_FAILED_INSUFFICIENT_STORAGE]"));
 
 			var exception = Assert.ThrowsAsync<FastDeployInstallException> (
@@ -257,9 +377,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploy2PreservesBothTransientInstallAttempts ()
+		public void FastDeployPreservesBothTransientInstallAttempts ()
 		{
-			var task = new TestFastDeploy2 (
+			var task = new TestFastDeploy (
 				CreateAdbResult (1, "first failure: cmd: Failure calling service package: Broken pipe (32)"),
 				CreateAdbResult (1, "second failure: cmd: Failure calling service package: Broken pipe (32)"));
 
@@ -278,9 +398,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploy2PreservesOriginalFailureWhenRecoveryFails ()
+		public void FastDeployPreservesOriginalFailureWhenRecoveryFails ()
 		{
-			var task = new TestFastDeploy2 (
+			var task = new TestFastDeploy (
 				new InvalidOperationException ("package manager still unavailable"),
 				CreateAdbResult (1, "cmd: Failure calling service package: Broken pipe (32)"));
 
@@ -294,16 +414,16 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, task.RecoveryAttempts);
 		}
 
-		static FastDeploy2.AdbCommandResult CreateAdbResult (int exitCode, string output)
+		static FastDeploy.AdbCommandResult CreateAdbResult (int exitCode, string output)
 		{
-			return new FastDeploy2.AdbCommandResult {
+			return new FastDeploy.AdbCommandResult {
 				ExitCode = exitCode,
 				StandardOutput = output,
 				StandardError = "",
 			};
 		}
 
-		sealed class TestFastDeploy2 : FastDeploy2
+		sealed class TestFastDeploy : FastDeploy
 		{
 			readonly Queue<AdbCommandResult> results;
 			readonly Exception recoveryException;
@@ -312,12 +432,12 @@ namespace Xamarin.Android.Build.Tests
 			public int UninstallAttempts { get; private set; }
 			public int RecoveryAttempts { get; private set; }
 
-			public TestFastDeploy2 (params AdbCommandResult [] results)
+			public TestFastDeploy (params AdbCommandResult [] results)
 				: this (recoveryException: null, results)
 			{
 			}
 
-			public TestFastDeploy2 (Exception recoveryException, params AdbCommandResult [] results)
+			public TestFastDeploy (Exception recoveryException, params AdbCommandResult [] results)
 			{
 				this.results = new Queue<AdbCommandResult> (results);
 				this.recoveryException = recoveryException;
@@ -346,68 +466,4 @@ namespace Xamarin.Android.Build.Tests
 
 	}
 
-	/// <summary>
-	/// Unit tests for <see cref="FastDeploy"/> helper methods that do not require a device.
-	/// </summary>
-	[TestFixture]
-	public class FastDeployTests
-	{
-		// Canonical transient race output produced by the Android run-as tool when
-		// the per-user data directory has not yet materialized after pm install.
-		static readonly string [] TransientRaceOutputs = {
-			"run-as: couldn't stat /data/user/0/com.example.app: No such file or directory",
-			"run-as: couldn't stat /data/user/10/com.example.app: No such file or directory",
-			// Verify case-insensitivity of the detection.
-			"run-as: Couldn't Stat /data/user/0/com.example.app: No Such File Or Directory",
-			// Extra surrounding whitespace / newlines as they may appear in raw adb output.
-			"  run-as: couldn't stat /data/user/0/com.example.app: No such file or directory\n",
-		};
-
-		// Genuine run-as failures that must NOT be swallowed by the retry loop.
-		static readonly string [] NonTransientOutputs = {
-			// Null / empty — first guard in the implementation.
-			null,
-			"",
-			// Successful pwd output — the data directory already exists.
-			"/data/user/0/com.example.app",
-			// Package not debuggable.
-			"run-as: package 'com.example.app' is not debuggable",
-			// Package not installed.
-			"run-as: package 'com.example.app' is unknown",
-			// Permission denied (SELinux / policy).
-			"run-as: couldn't stat /data/user/0/com.example.app: Permission denied",
-			// Only one of the two required substrings — must not match.
-			"run-as: couldn't stat /data/user/0/com.example.app",
-			"No such file or directory",
-		};
-
-		[TestCaseSource (nameof (TransientRaceOutputs))]
-		public void IsTransientRunAsStatRace_ReturnsTrueForRaceSignature (string output)
-		{
-			Assert.IsTrue (FastDeploy.IsTransientRunAsStatRace (output),
-				$"Expected transient-race detection for: {output}");
-		}
-
-		[TestCaseSource (nameof (NonTransientOutputs))]
-		public void IsTransientRunAsStatRace_ReturnsFalseForNonTransientOutput (string output)
-		{
-			Assert.IsFalse (FastDeploy.IsTransientRunAsStatRace (output),
-				$"Expected no transient-race detection for: {output}");
-		}
-
-		[TestCase ("package:/data/app/~~hash/com.example.app-base/base.apk")]
-		[TestCase ("package:/data/app/~~hash/com.example.app-base/base.apk\npackage:/data/app/~~hash/com.example.app-split/split_config.en.apk")]
-		public void IsPackageInstalledOutput_ReturnsTrueForPackagePaths (string output)
-		{
-			Assert.IsTrue (FastDeploy.IsPackageInstalledOutput (output));
-		}
-
-		[TestCase (null)]
-		[TestCase ("")]
-		[TestCase ("Error: package com.example.app was not found")]
-		public void IsPackageInstalledOutput_ReturnsFalseWithoutPackagePath (string output)
-		{
-			Assert.IsFalse (FastDeploy.IsPackageInstalledOutput (output));
-		}
-	}
 }
