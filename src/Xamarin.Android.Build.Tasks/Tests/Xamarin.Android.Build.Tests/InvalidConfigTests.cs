@@ -65,23 +65,65 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCase ("RunAOTCompilation")]
-		[TestCase ("EnableLLVM")]
-		public void UnsupportedMonoAotPropertyFailsBuild (string property)
+		[TestCase ("RunAOTCompilation", "true", false)]
+		[TestCase ("RunAOTCompilation", "true", true)]
+		[TestCase ("RunAOTCompilation", "false", false)]
+		[TestCase ("RunAOTCompilation", "false", true)]
+		[TestCase ("EnableLLVM", "true", false)]
+		[TestCase ("EnableLLVM", "true", true)]
+		public void UnsupportedMonoAotPropertyFailsBuild (string property, string value, bool isRelease)
 		{
 			var project = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
 			project.SetRuntime (AndroidRuntime.CoreCLR);
-			project.SetProperty (property, "true");
+			project.SetProperty (property, value);
 
 			using var builder = CreateApkBuilder ();
+			builder.Target = "_CheckNonIdealAppConfigurations";
 			builder.ThrowOnBuildFailure = false;
 			Assert.IsFalse (builder.Build (project), "Build should have failed.");
 			StringAssertEx.Contains ("error XA1044", builder.LastBuildOutput, "Build output should contain error XA1044");
 			StringAssertEx.Contains (property, builder.LastBuildOutput, $"Build output should mention {property}");
 			StringAssertEx.Contains ("CoreCLR", builder.LastBuildOutput, "Build output should mention CoreCLR");
+			if (property == "RunAOTCompilation" && value == "false") {
+				StringAssertEx.Contains ("The build cannot continue while this property is set to 'false'.", builder.LastBuildOutput, "Error should identify the explicitly disabled property.");
+				StringAssertEx.Contains ("Starting with .NET 11", builder.LastBuildOutput, "Error should identify the .NET version.");
+				StringAssertEx.Contains ("'PublishReadyToRun' to 'false'", builder.LastBuildOutput, "Error should explain how to disable ReadyToRun.");
+			} else {
+				StringAssertEx.Contains ("The build cannot continue while this property is enabled.", builder.LastBuildOutput, "Error should identify the explicitly enabled property.");
+				StringAssertEx.DoesNotContain ("The build cannot continue while this property is set to 'false'.", builder.LastBuildOutput, "Enabled properties should not produce the disabled-property error.");
+			}
 		}
 
+		[Test]
+		public void ReadyToRunWithoutMonoAotProperty (
+			[Values ("", "true", "false")] string publishReadyToRun,
+			[Values] bool isRelease)
+		{
+			var project = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			project.SetRuntime (AndroidRuntime.CoreCLR);
+			project.SetProperty ("PublishReadyToRun", publishReadyToRun);
+
+			using var builder = CreateApkBuilder ();
+			builder.Target = "_CheckNonIdealAppConfigurations";
+			Assert.IsTrue (builder.Build (project), "Configuration should be valid without RunAOTCompilation.");
+		}
+
+		[Test]
+		public void RunAotCompilationFalseAllowedForNativeAot ()
+		{
+			var project = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			project.SetRuntime (AndroidRuntime.NativeAOT);
+			project.SetProperty ("RunAOTCompilation", "false");
+
+			using var builder = CreateApkBuilder ();
+			builder.Target = "_CheckNonIdealAppConfigurations";
+			Assert.IsTrue (builder.Build (project), "RunAOTCompilation=false should remain valid for NativeAOT.");
+		}
 	}
 }

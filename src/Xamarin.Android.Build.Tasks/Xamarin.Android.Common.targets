@@ -508,7 +508,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidError Code="XA1044"
       ResourceName="XA1044"
       FormatArguments="RunAOTCompilation;$(_AndroidRuntime)"
-      Condition=" '$(_AndroidXA1044_RunAOTCompilation)' == 'true' "
+      Condition=" '$(_AndroidXA1044_RunAOTCompilationEnabled)' == 'true' "
+  />
+  <AndroidError Code="XA1044"
+      ResourceName="XA1044_RunAOTCompilationDisabled"
+      Condition=" '$(_AndroidXA1044_RunAOTCompilationDisabled)' == 'true' "
   />
   <AndroidError Code="XA1044"
       ResourceName="XA1044"
