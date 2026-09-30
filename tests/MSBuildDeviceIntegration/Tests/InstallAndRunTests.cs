@@ -3012,6 +3012,10 @@ MONO_GC_PARAMS=bridge-implementation=new",
 
 			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
 			StringAssert.Contains ("#STACKTRACE-BEGIN#", logcatOutput, "Stack trace start marker not found in logcat");
+			StringAssert.Contains ("FastDev: Found ", logcatOutput, "FastDev assembly discovery should be logged.");
+			StringAssert.Contains ("Loading assemblies from disk is normal during Fast Deployment.", logcatOutput, "FastDev disk loading should be described as normal.");
+			StringAssert.DoesNotContain ("not found in FastDev override directory", logcatOutput, "Deferring to CoreCLR's disk loader should not report missing FastDev assemblies.");
+			StringAssert.DoesNotContain ("Assembly store not registered. Unable to look up assembly", logcatOutput, "A missing assembly store is normal with FastDev.");
 
 			// Expect a frame in MainActivity.OnCreate to include
 			// "in <path>MainActivity.cs:line <N>" on a single line.
