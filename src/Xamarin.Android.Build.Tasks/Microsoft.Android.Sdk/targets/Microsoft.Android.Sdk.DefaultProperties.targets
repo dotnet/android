@@ -124,10 +124,11 @@
     <RuntimeIdentifiers Condition=" '$(RuntimeIdentifier)' == '' And '$(RuntimeIdentifiers)' == '' ">android-arm64;android-x64</RuntimeIdentifiers>
     <RuntimeIdentifier  Condition=" '$(RuntimeIdentifiers)' != '' And '$(RuntimeIdentifier)' != '' " />
     <GenerateApplicationManifest Condition=" '$(GenerateApplicationManifest)' == '' ">true</GenerateApplicationManifest>
-    <!-- Error and reset unsupported Mono-specific properties. -->
-    <_AndroidXA1044_RunAOTCompilation Condition=" '$(RunAOTCompilation)' == 'true' ">true</_AndroidXA1044_RunAOTCompilation>
+    <!-- Capture explicit Mono AOT settings before resetting unsupported enabled properties. -->
+    <_AndroidXA1044_RunAOTCompilationEnabled Condition=" '$(RunAOTCompilation)' == 'true' ">true</_AndroidXA1044_RunAOTCompilationEnabled>
+    <_AndroidXA1044_RunAOTCompilationDisabled Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(RunAOTCompilation)' == 'false' ">true</_AndroidXA1044_RunAOTCompilationDisabled>
     <_AndroidXA1044_EnableLLVM Condition=" '$(EnableLLVM)' == 'true' ">true</_AndroidXA1044_EnableLLVM>
-    <RunAOTCompilation Condition=" '$(_AndroidXA1044_RunAOTCompilation)' == 'true' ">false</RunAOTCompilation>
+    <RunAOTCompilation Condition=" '$(_AndroidXA1044_RunAOTCompilationEnabled)' == 'true' ">false</RunAOTCompilation>
     <EnableLLVM Condition=" '$(_AndroidXA1044_EnableLLVM)' == 'true' ">false</EnableLLVM>
 
     <!--
