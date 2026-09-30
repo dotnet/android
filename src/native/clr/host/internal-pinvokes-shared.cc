@@ -1,6 +1,5 @@
 #include <host/gc-bridge.hh>
 #include <host/host-common.hh>
-#include <host/os-bridge.hh>
 #include <host/typemap.hh>
 #include <runtime-base/cpu-arch.hh>
 #include <runtime-base/internal-pinvokes.hh>
@@ -8,11 +7,9 @@
 
 using namespace xamarin::android;
 
-BridgeProcessingFtn clr_initialize_gc_bridge (
-	BridgeProcessingStartedFtn bridge_processing_started_callback,
-	BridgeProcessingFinishedFtn bridge_processing_finished_callback) noexcept
+BridgeProcessingFtn clr_initialize_gc_bridge (BridgeProcessingFtn bridge_processing_callback) noexcept
 {
-	return GCBridge::initialize_callback (bridge_processing_started_callback, bridge_processing_finished_callback);
+	return GCBridge::initialize_callback (bridge_processing_callback);
 }
 
 void monodroid_log (LogLevel level, LogCategories category, const char *message) noexcept
@@ -56,17 +53,6 @@ char* monodroid_TypeManager_get_java_class_name (jclass klass) noexcept
 void monodroid_free (void *ptr) noexcept
 {
 	free (ptr);
-}
-
-void _monodroid_register_reference_logging_callbacks (reference_log_fn log_callback, reference_log_message_fn message_callback, uint8_t log_reference_metadata) noexcept
-{
-	OSBridge::set_reference_logging_callbacks (log_callback, message_callback, log_reference_metadata != 0);
-}
-
-void _monodroid_gc_wait_for_bridge_processing ()
-{
-	// TODO do we need this method?
-	Helpers::abort_application (LOG_DEFAULT, "The method _monodroid_gc_wait_for_bridge_processing is not implemented. This is a stub and should not be called."sv);
 }
 
 void _monodroid_detect_cpu_and_architecture (uint16_t *built_for_cpu, uint16_t *running_on_cpu, unsigned char *is64bit)

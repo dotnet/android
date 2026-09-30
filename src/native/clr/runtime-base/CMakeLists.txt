@@ -98,7 +98,6 @@ target_include_directories(
 target_link_libraries(
   ${LIB_NAME}
   PRIVATE
-  xa::runtime-base-common
   xa::shared
   xa::xamarin-app
 )

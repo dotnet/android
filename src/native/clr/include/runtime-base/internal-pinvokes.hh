@@ -11,16 +11,12 @@
 extern "C" {
 	const char* clr_typemap_managed_to_java (const char *typeName, const char *assemblyFullName, const uint8_t *mvid) noexcept;
 	bool clr_typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept;
-	BridgeProcessingFtn clr_initialize_gc_bridge (
-		BridgeProcessingStartedFtn bridge_processing_started_callback,
-		BridgeProcessingFinishedFtn mark_cross_references_callback) noexcept;
+	BridgeProcessingFtn clr_initialize_gc_bridge (BridgeProcessingFtn bridge_processing_callback) noexcept;
 	void monodroid_log (xamarin::android::LogLevel level, LogCategories category, const char *message) noexcept;
 	char* monodroid_TypeManager_get_java_class_name (jclass klass) noexcept;
 	void monodroid_free (void *ptr) noexcept;
 	const char* _monodroid_lookup_replacement_type (const char *jniSimpleReference);
 	const JniRemappingReplacementMethod* _monodroid_lookup_replacement_method_info (const char *jniSourceType, const char *jniMethodName, const char *jniMethodSignature);
 
-	void _monodroid_register_reference_logging_callbacks (xamarin::android::reference_log_fn log_callback, xamarin::android::reference_log_message_fn message_callback, uint8_t log_reference_metadata) noexcept;
-	void _monodroid_gc_wait_for_bridge_processing ();
 	void _monodroid_detect_cpu_and_architecture (unsigned short *built_for_cpu, unsigned short *running_on_cpu, unsigned char *is64bit);
 }

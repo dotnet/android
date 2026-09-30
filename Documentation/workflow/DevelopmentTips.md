@@ -509,7 +509,7 @@ the target should wait before creating the log file.
 Set `debug.dotnet.log` to a comma-separated list of runtime categories:
 
 ```bash
-$ adb shell setprop debug.dotnet.log default,timing=bare,assembly,gc,debugger
+$ adb shell setprop debug.dotnet.log default,timing,assembly,gc,debugger
 ```
 
 Use `all` to enable every category:

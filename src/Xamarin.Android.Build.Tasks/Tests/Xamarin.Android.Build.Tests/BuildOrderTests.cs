@@ -4,6 +4,7 @@ using Microsoft.Build.Framework;
 
 using NUnit.Framework;
 
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -103,6 +104,32 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (proj), "ComputeRunArguments should succeed for a debugger client.");
 			StringAssertEx.Contains ("RunCommand=dotnet", builder.LastBuildOutput);
 			Assert.IsFalse (builder.LastBuildOutput.ContainsText ("--forward-port"), "A debugger client should connect without adb forwarding.");
+		}
+
+		[Test]
+		public void RunWithLoggingEnablesManagedTimingLogger ()
+		{
+			var setupTargets = new Import (() => "SetupRunWithLogging.targets") {
+				TextContent = () => """
+<Project>
+  <Target Name="ReportRunWithLoggingProperties" DependsOnTargets="_PrepareRunWithLogging">
+    <Message Text="RuntimeLogProperty=$(_AndroidRuntimeLogProperty)" Importance="high" />
+    <Message Text="RuntimeLog=$(_AndroidRuntimeLog)" Importance="high" />
+  </Target>
+</Project>
+"""
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				Imports = { setupTargets },
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+
+			using var builder = CreateApkBuilder ();
+			builder.Target = "ReportRunWithLoggingProperties";
+			builder.Verbosity = LoggerVerbosity.Detailed;
+			Assert.IsTrue (builder.Build (proj), "ReportRunWithLoggingProperties should succeed.");
+			StringAssertEx.Contains ("RuntimeLogProperty=debug.dotnet.log", builder.LastBuildOutput);
+			StringAssertEx.Contains ("RuntimeLog=default,assembly,timing", builder.LastBuildOutput);
 		}
 
 	}

@@ -13,11 +13,6 @@ namespace xamarin::android {
 		static auto reference_log_directory () noexcept -> const char*;
 		static auto light_gref_enabled () noexcept -> bool;
 		static auto light_lref_enabled () noexcept -> bool;
-		static auto log_timing_categories () noexcept -> LogTimingCategories
-		{
-			return _log_timing_categories;
-		}
-
 		static void set_gc_spew_enabled (bool yesno) noexcept
 		{
 			_gc_spew_enabled = yesno;
@@ -42,7 +37,6 @@ namespace xamarin::android {
 		static bool set_category (const char *name, const char *arg, size_t arg_length, unsigned int entry, bool arg_starts_with_name = false) noexcept;
 
 	private:
-		static inline LogTimingCategories _log_timing_categories;
 		static inline bool  _gc_spew_enabled = false;
 		static inline bool  _gref_to_logcat = false;
 		static inline bool  _lref_to_logcat = false;
