@@ -950,7 +950,6 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="_AndroidUseMarshalMethods=$(_AndroidUseMarshalMethods)" />
 		<_PropertyCacheItems Include="_AndroidJcwCodegenTarget=$(_AndroidJcwCodegenTarget)" />
 		<_PropertyCacheItems Include="_AndroidAssemblyStoreCompressionLevel=$(_AndroidAssemblyStoreCompressionLevel)" />
-		<_PropertyCacheItems Include="_AndroidFastTiming=$(_AndroidFastTiming)" />
 	</ItemGroup>
 	<WriteLinesToFile
 			File="$(_AndroidBuildPropertiesCache)"
@@ -1528,12 +1527,6 @@ because xbuild doesn't support framework reference assemblies.
     Inputs="$(IntermediateOutputPath)AndroidManifest.xml;@(ExtractedManifestDocuments);@(AndroidManifestOverlay);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
     Outputs="$(IntermediateOutputPath)android\AndroidManifest.xml"
   >
-  <ItemGroup>
-    <AndroidManifestOverlay
-        Include="$(MSBuildThisFileDirectory)\ManifestOverlays\Timing.xml"
-        Condition=" '$(_AndroidFastTiming)' == 'True' and '$(_AndroidRuntime)' == 'CoreCLR' "
-    />
-  </ItemGroup>
   <ManifestMerger
       ToolPath="$(JavaToolPath)"
       JavaOptions="$(JavaOptions)"
@@ -2982,9 +2975,12 @@ because xbuild doesn't support framework reference assemblies.
   </Target>
 
   <Target Name="_ValidateAndroidTypeMapImplementation"
-      BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
-    <Error Condition=" '$(AndroidTypeMapImplementation)' != '' and '$(AndroidTypeMapImplementation)' != 'llvm-ir' and '$(AndroidTypeMapImplementation)' != 'trimmable' "
-           Text="Invalid value for AndroidTypeMapImplementation: '$(AndroidTypeMapImplementation)'. Valid values are: llvm-ir, trimmable." />
+      BeforeTargets="_CheckForInvalidConfigurationAndPlatform;_GenerateJavaStubs;_PrepareLinking;Build;Publish">
+    <AndroidError Code="XA4267"
+        ResourceName="XA4267"
+        Condition=" '$(AndroidTypeMapImplementation)' == 'llvm-ir' " />
+    <Error Condition=" '$(AndroidTypeMapImplementation)' != 'llvm-ir' and '$(AndroidTypeMapImplementation)' != 'trimmable' "
+           Text="Invalid value for AndroidTypeMapImplementation: '$(AndroidTypeMapImplementation)'. The only supported value is: trimmable." />
   </Target>
 
   <Target Name="_LinkAssemblies"
@@ -2993,7 +2989,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <!-- TypeMap imports must be last so their target overrides (e.g. _RemoveRegisterAttribute) take precedence -->
 <Import Project="$(MSBuildThisFileDirectory)..\targets\Microsoft.Android.Sdk.TypeMap.Trimmable.targets"
-    Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
+    Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(AndroidApplication)' == 'true' " />
 <Import Project="$(MSBuildThisFileDirectory)..\targets\Microsoft.Android.Sdk.TypeMap.LlvmIr.targets"
     Condition=" '$(AndroidTypeMapImplementation)' != 'trimmable' " />
 

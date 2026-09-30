@@ -27,9 +27,8 @@ comma-separated list of `NAME[=VALUE]` categories:
 * `gref`, `gref=FILE`, and `gref+` enable global JNI reference logging.
 * `lref`, `lref=FILE`, and `lref+` enable local JNI reference logging.
 * `network` and `netlink` log native network activity.
-* `timing=bare` logs native timing events immediately.
-* `timing=fast-bare` buffers native timing events until the
-  `mono.android.app.DUMP_TIMING_DATA` broadcast is received.
+* `timing` enables the `monodroid-timing` category used by the obsolete
+  managed `Android.Runtime.TimingLogger` API.
 
 NativeAOT supports `gref`, `gref=FILE`, `lref`, `lref=FILE`, and `all` for
 managed JNI reference logging. Bare `gref` and `lref` values log to logcat;
@@ -67,28 +66,7 @@ Configure CoreCLR diagnostic ports with the `DiagnosticConfiguration`,
 `DiagnosticListenMode` MSBuild properties. These settings generate the
 standard `DOTNET_DiagnosticPorts` environment variable.
 
-## debug.dotnet.timing
-
-Configures fast timing output for CoreCLR. NativeAOT does not support the
-buffered timing and broadcast workflow. Supported comma-separated options are:
-
-* `to-file`
-* `filename=FILE`
-* `duration=MILLISECONDS`
-
-Example:
-
-```sh
-dotnet build -t:Install -p:_AndroidFastTiming=True
-adb shell setprop debug.dotnet.log timing=fast-bare
-adb shell setprop debug.dotnet.timing to-file,filename=fast-timing.txt
-```
-
-The private `_AndroidFastTiming` build property adds the
-`mono.android.app.DumpTimingData` receiver to CoreCLR applications. After the
-application starts, request buffered timing output from that receiver:
-
-```sh
-adb shell am broadcast -a mono.android.app.DUMP_TIMING_DATA \
-  -n PACKAGE_NAME/mono.android.app.DumpTimingData
-```
+The native runtime no longer emits timing events of its own. Runtime, JIT, and
+loader timing data is available through EventPipe, and Android-specific GC
+bridge and type-map timings are published by the `Microsoft.Android.Runtime`
+EventSource provider.

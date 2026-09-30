@@ -68,6 +68,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidEnableLegacyCompatibilityAssemblyFixups", "true");
 			if (isRelease) {
 				proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			}

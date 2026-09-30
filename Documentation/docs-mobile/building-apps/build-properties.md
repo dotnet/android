@@ -432,9 +432,12 @@ A boolean property that controls whether untrimmed builds modify referenced
 assemblies to support legacy binding and resource designer behavior. These
 modifications include adding missing abstract interface methods, updating
 legacy resource designer references, and inserting `GC.KeepAlive()` calls into
-older Xamarin.Android binding assemblies. Trimmed builds using the `trimmable`
-type map do not run these compatibility fixups, and setting this property to
-`True` does not enable them for trimmed builds.
+older Xamarin.Android binding assemblies. For trimmed CoreCLR builds, this
+property repairs missing abstract methods and legacy resource designer references
+in project-local assembly copies before trimming, so the trimmer can preserve
+their dependencies.
+Other shared post-trimming steps, including `GC.KeepAlive()` insertion, are
+controlled separately.
 
 The default value is `False` when
 [`$(AndroidTypeMapImplementation)`](#androidtypemapimplementation) is
@@ -499,9 +502,8 @@ will be loaded during process startup, before any application code is invoked.
 When set to `False`, assemblies will only be loaded on an as-needed basis.
 Loading assemblies on an as-needed basis allows applications to launch faster,
 and is also more consistent with desktop .NET semantics.
-To see the time savings, set the `debug.mono.log`
-System Property to include `timing`, and look for the
-`Finished loading assemblies: preloaded` message within `adb logcat`.
+To inspect assembly loading, set the `debug.dotnet.log` System Property to
+include `assembly` and review the assembly load messages within `adb logcat`.
 
 Applications or libraries, which use dependency injection may *require* that
 this property be `True` if they in turn require that
@@ -1339,10 +1341,12 @@ This property is obsolete and should not be used.
 ## AndroidTypeMapImplementation
 
 An enum-style property that selects the type map implementation.
-Valid values are `llvm-ir` and `trimmable`.
+The only supported value is `trimmable`. Setting this property to `llvm-ir`
+causes error [XA4267](../messages/xa4267.md).
 
-The default value is `trimmable` when `$(PublishAot)` is `true` and `llvm-ir`
-otherwise.
+The default value is `trimmable` for all Android projects.
+An explicitly empty command-line value (`-p:AndroidTypeMapImplementation=`) is
+invalid. Omit the property to use the default, or set it to `trimmable`.
 
 ## AndroidUseApkSigner
 

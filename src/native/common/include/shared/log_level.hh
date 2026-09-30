@@ -3,13 +3,6 @@
 #include <cstdint>
 
 namespace xamarin::android {
-	enum class LogTimingCategories : uint32_t
-	{
-		Default  = 0,
-		Bare     = 1 << 0,
-		FastBare = 1 << 1,
-	};
-
 	// Keep in sync with LogLevel defined in JNIEnv.cs
 	enum class LogLevel : unsigned int
 	{
