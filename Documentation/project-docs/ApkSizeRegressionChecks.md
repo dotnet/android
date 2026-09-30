@@ -9,8 +9,11 @@ the size differences against reference sizes and fails when
 they are larger than given thresholds. The test result file contains
 details about apk size and apk entries size differences.
 
-Note that the size decrease is also reported as regression. We
-do that to keep the reference files up-to-date.
+Size decreases beyond the thresholds make the test inconclusive, rather
+than failing, when no size increases exceed the thresholds. The test still
+reports the size differences and attaches the current `.apkdesc` file so
+the reference files can be kept up-to-date. Size increases beyond the
+thresholds and errors running `apkdiff` still fail the test.
 
 Also note that the new reference files need to be obtained
 using Xamarin Android build, built with Release configuration.
