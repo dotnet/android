@@ -1611,15 +1611,17 @@ public class AdbRunnerTests
 	[Test]
 	public async Task AdbCommandsUseStableWorkingDirectory ()
 	{
-		var adbPath = CreateFakeAdb ("""
-			pwd > "$0.cwd"
+		var markerName = $"adb-cwd-{Guid.NewGuid ():N}.marker";
+		var markerPath = Path.Combine (Path.GetTempPath (), markerName);
+		var adbPath = CreateFakeAdb ($"""
+			echo launched > "{markerName}"
 			if [[ "$1" == "devices" ]]; then
 			    echo "List of devices attached"
 			else
 			    echo "package:com.example.app"
 			fi
-			""", """
-			cd > "%~f0.cwd"
+			""", $"""
+			echo launched > "{markerName}"
 			if "%1"=="devices" (
 			    echo List of devices attached
 			) else (
@@ -1630,15 +1632,13 @@ public class AdbRunnerTests
 		try {
 			var runner = new AdbRunner (adbPath);
 			await runner.ListDevicesWithoutAvdNamesAsync ();
-			var expected = Path.GetFullPath (Path.GetTempPath ()).TrimEnd (Path.DirectorySeparatorChar);
-			Assert.IsTrue (string.Equals (expected, File.ReadAllText (adbPath + ".cwd").Trim (),
-				OS.IsWindows ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal));
+			Assert.IsTrue (File.Exists (markerPath), "Device listing should run in the system temp directory.");
 
+			File.Delete (markerPath);
 			await runner.ExecuteShellCommandAsync ("emulator-5554", "pm", new [] { "list", "packages" });
-			Assert.IsTrue (string.Equals (expected, File.ReadAllText (adbPath + ".cwd").Trim (),
-				OS.IsWindows ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal));
+			Assert.IsTrue (File.Exists (markerPath), "Shell commands should run in the system temp directory.");
 		} finally {
-			File.Delete (adbPath + ".cwd");
+			File.Delete (markerPath);
 			CleanupFakeAdb (adbPath);
 		}
 	}
