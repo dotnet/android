@@ -138,6 +138,53 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		}
 
 		[Test]
+		public void MissingLinkedAssemblyReportsXA4325 ()
+		{
+			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
+			string outputFile = Path.Combine (TestDirectory, "output.xml");
+			File.WriteAllText (mappingFile, "com.contoso.Peer -> a.b:\n");
+			var task = new GenerateR8JniRemapping {
+				BuildEngine = engine,
+				MappingFile = mappingFile,
+				OutputFile = outputFile,
+				LinkedAssemblies = [new TaskItem (Path.Combine (TestDirectory, "missing.dll"))],
+			};
+
+			Assert.IsFalse (task.Execute ());
+			Assert.AreEqual ("XA4325", Errors.Single ().Code);
+			FileAssert.DoesNotExist (outputFile);
+		}
+
+		[Test]
+		public void IdenticalExistingTypeMappingDoesNotSuppressMembers ()
+		{
+			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
+			string existingFile = Path.Combine (TestDirectory, "existing.xml");
+			string outputFile = Path.Combine (TestDirectory, "output.xml");
+			File.WriteAllText (mappingFile, """
+				com.contoso.Peer -> a.b:
+				    void run() -> c
+
+				""");
+			File.WriteAllText (existingFile, """
+				<replacements>
+				  <replace-type from="com/contoso/Peer" to="a/b" />
+				</replacements>
+				""");
+			var task = new GenerateR8JniRemapping {
+				BuildEngine = engine,
+				MappingFile = mappingFile,
+				OutputFile = outputFile,
+				ExistingRemapXmlFiles = [new TaskItem (existingFile)],
+			};
+
+			Assert.IsTrue (task.Execute (), string.Join ("; ", Errors.Select (error => error.Message)));
+			string xml = File.ReadAllText (outputFile);
+			StringAssert.DoesNotContain ("replace-type", xml);
+			StringAssert.Contains ("source-method-name=\"run\"", xml);
+		}
+
+		[Test]
 		public void MalformedMappingReportsXA4325 ()
 		{
 			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");

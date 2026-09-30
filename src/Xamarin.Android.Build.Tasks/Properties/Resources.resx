@@ -860,6 +860,14 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
     <comment>{0} - The path of the managed assembly.
 {1} - The exception message.</comment>
   </data>
+  <data name="XA4325_AssemblyNotFound" xml:space="preserve">
+    <value>The linked managed assembly '{0}' was not found.</value>
+    <comment>{0} - The path of the missing managed assembly.</comment>
+  </data>
+  <data name="XA4325_AssemblyHasNoMetadata" xml:space="preserve">
+    <value>The linked managed assembly '{0}' does not contain managed metadata.</value>
+    <comment>{0} - The path of the input file.</comment>
+  </data>
   <data name="XA4325_AmbiguousEntry" xml:space="preserve">
     <value>The generated '{0}' entries for '{1}' have conflicting runtime targets '{2}' and '{3}', which cannot be represented by the JNI remapping tables.</value>
     <comment>The following is a literal name and should not be translated: JNI.

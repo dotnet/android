@@ -106,7 +106,11 @@ namespace Xamarin.Android.Tasks
 			var seen = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 			foreach (ITaskItem assembly in LinkedAssemblies) {
 				string path = assembly.ItemSpec;
-				if (!seen.Add (path) || !File.Exists (path)) {
+				if (!seen.Add (path)) {
+					continue;
+				}
+				if (!File.Exists (path)) {
+					LogR8JniRemappingError (string.Format (Properties.Resources.XA4325_AssemblyNotFound, path));
 					continue;
 				}
 
@@ -114,11 +118,12 @@ namespace Xamarin.Android.Tasks
 					using var stream = File.OpenRead (path);
 					using var peReader = new PEReader (stream);
 					if (!peReader.HasMetadata) {
+						LogR8JniRemappingError (string.Format (Properties.Resources.XA4325_AssemblyHasNoMetadata, path));
 						continue;
 					}
 					JniRemappingAssemblyScanner.Scan (peReader, peReader.GetMetadataReader (), mapping, Log);
 				} catch (BadImageFormatException ex) {
-					Log.LogDebugMessage ($"Could not read assembly '{path}': {ex.Message}");
+					LogR8JniRemappingError (string.Format (Properties.Resources.XA4325_AssemblyReadFailure, path, ex.Message));
 				} catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) {
 					LogR8JniRemappingError (string.Format (Properties.Resources.XA4325_AssemblyReadFailure, path, ex.Message));
 				}
@@ -197,7 +202,12 @@ namespace Xamarin.Android.Tasks
 		{
 			bool ownedExternally = externallyOwnedTypes.Contains (BuildTypeKey (classMapping.OriginalJniName));
 			if (classMapping.IsRenamed) {
-				if (TryClaimEntry ("replace-type", BuildTypeKey (classMapping.OriginalJniName), classMapping.ObfuscatedJniName)) {
+				string key = BuildTypeKey (classMapping.OriginalJniName);
+				if (existingEntries.TryGetValue (key, out string? existingTarget) &&
+						string.Equals (existingTarget, classMapping.ObfuscatedJniName, StringComparison.Ordinal)) {
+					Log.LogDebugMessage ($"Skipping duplicate `replace-type` entry for `{key.Replace ('\t', ' ')}`.");
+					ownedExternally = false;
+				} else if (TryClaimEntry ("replace-type", key, classMapping.ObfuscatedJniName)) {
 					writer.WriteStartElement ("replace-type");
 					writer.WriteAttributeString ("from", classMapping.OriginalJniName);
 					writer.WriteAttributeString ("to", classMapping.ObfuscatedJniName);
