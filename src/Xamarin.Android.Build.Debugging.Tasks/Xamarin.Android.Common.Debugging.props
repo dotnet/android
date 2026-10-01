@@ -16,14 +16,9 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 <PropertyGroup>
-	<BundleAssemblies Condition="'$(BundleAssemblies)' == ''">False</BundleAssemblies>
-	<AndroidSupportedAbis Condition=" '$(AndroidSupportedAbis)' == '' And '$(BundleAssemblies)' == 'True' And '$(EmbedAssembliesIntoApk)' != 'True' And '$(UsingAndroidNETSdk)' != 'True' ">arm64-v8a;armeabi-v7a;x86</AndroidSupportedAbis>
 	<!-- If the user is using the shared runtime, we are going to
 		partially override their supported Abis and support x86 as well -->
 	<AndroidSupportedAbis Condition=" '$(AndroidSupportedAbis)' == '' And '$(EmbedAssembliesIntoApk)' != 'True' And '$(UsingAndroidNETSdk)' != 'True' ">arm64-v8a;armeabi-v7a;x86;x86_64</AndroidSupportedAbis>
-	<AndroidGdbTargetPort>9999</AndroidGdbTargetPort>
-	<AndroidGdbHostPort>9999</AndroidGdbHostPort>
-	<AndroidGdbSymbolsPath>$(ProjectDir)\gdb-symbols</AndroidGdbSymbolsPath>
 	<AndroidPreserveUserData Condition=" '$(AndroidPreserveUserData)' == '' ">True</AndroidPreserveUserData>
 	<LaunchFlags Condition="!($(LaunchFlags.Contains ('user'))) And '$(AndroidDeviceUserId)' != '' " >--user $(AndroidDeviceUserId)</LaunchFlags>
 </PropertyGroup>

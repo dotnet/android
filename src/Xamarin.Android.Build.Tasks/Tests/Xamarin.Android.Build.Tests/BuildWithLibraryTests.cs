@@ -1214,6 +1214,16 @@ namespace MultiTfmLib
 			using var typeMap = Mono.Cecil.AssemblyDefinition.ReadAssembly (typeMapPath);
 			Assert.IsTrue (typeMap.MainModule.GetTypeReferences ().Any (type => type.FullName == "MultiTfmLib.MyReceiver"),
 				"The managed type map should reference the Android-only MyReceiver type.");
+
+			var acwMapFile = appBuilder.Output.GetIntermediaryPath ("acw-map.txt");
+			FileAssert.Exists (acwMapFile);
+			var mappings = File.ReadAllLines (acwMapFile);
+			var mapping = mappings.Single (line => line.StartsWith ("MultiTfmLib.MyReceiver, MultiTfmLib;", StringComparison.Ordinal));
+			var className = $"L{mapping.Split (';') [1].Replace ('.', '/')};";
+			var dexFile = appBuilder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			FileAssert.Exists (dexFile);
+			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath),
+				"The Android-TFM MyReceiver JCW should be compiled into classes.dex.");
 		}
 
 	}

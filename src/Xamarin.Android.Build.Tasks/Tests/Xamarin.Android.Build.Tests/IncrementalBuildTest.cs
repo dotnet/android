@@ -16,6 +16,64 @@ namespace Xamarin.Android.Build.Tests
 	public class IncrementalBuildTest : BaseTest
 	{
 		[Test]
+		public void AaptRulesRemainInR8ConfigurationAfterIncrementalBuild ()
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				Imports = {
+					new Import (() => "CheckAaptRules.targets") {
+						TextContent = () => """
+							<Project>
+							  <Target Name="_ReportAaptRulesInR8Configuration" AfterTargets="_CalculateProguardConfigurationFiles">
+							    <Message Importance="high" Text="AaptRulesInR8Configuration=@(_ProguardConfiguration->WithMetadataValue('Filename', 'aapt_rules'))" />
+							  </Target>
+							</Project>
+							""",
+					},
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
+			proj.SetProperty (proj.ReleaseProperties, "TrimMode", "full");
+			var javaSource = "public class Extra { }";
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidJavaSource ("Extra.java") {
+				TextContent = () => javaSource,
+				Encoding = Encoding.ASCII,
+				MetadataValues = "Bind=False",
+			});
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Initial build should succeed.");
+			var rulesFile = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "aapt_rules.txt");
+			FileAssert.Exists (rulesFile);
+			Assert.IsTrue (builder.LastBuildOutput.Any (line => line.Contains ("AaptRulesInR8Configuration=") && line.Contains ("aapt_rules.txt")),
+				"The initial R8 configuration should contain the merged AAPT2 rules.");
+
+			javaSource = "public class Extra { public static final int Value = 1; }";
+			proj.Touch ("Extra.java");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Incremental build should succeed.");
+			builder.Output.AssertTargetIsSkipped ("_CreateBaseApk");
+			builder.Output.AssertTargetIsNotSkipped ("_CompileJava");
+			builder.Output.AssertTargetIsNotSkipped ("_CompileToDalvik");
+			Assert.IsTrue (builder.LastBuildOutput.Any (line => line.Contains ("AaptRulesInR8Configuration=") && line.Contains ("aapt_rules.txt")),
+				"The incremental R8 configuration should still contain the merged AAPT2 rules.");
+			FileAssert.Exists (rulesFile, "IncrementalClean should preserve the merged AAPT2 rules.");
+
+			javaSource = "public class Extra { public static final int Value = 2; }";
+			proj.Touch ("Extra.java");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Subsequent incremental build should succeed.");
+			builder.Output.AssertTargetIsSkipped ("_CreateBaseApk");
+			builder.Output.AssertTargetIsNotSkipped ("_CompileToDalvik");
+			Assert.IsTrue (builder.LastBuildOutput.Any (line => line.Contains ("AaptRulesInR8Configuration=") && line.Contains ("aapt_rules.txt")),
+				"Subsequent R8 builds should still receive the merged AAPT2 rules.");
+		}
+
+		[Test]
 		[Ignore ("Flaky timing-based test. Disabled while investigating incremental build regressions. See: https://github.com/dotnet/android/issues/11792")]
 		public void BasicApplicationRepetitiveBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
