@@ -45,12 +45,6 @@
         },
         {
           "CopyOption": "LangIDOnName",
-          "SourceFile": ".\\src\\Xamarin.AndroidTools\\Properties\\Resources.resx",
-          "OutputPath": ".\\src\\Xamarin.AndroidTools\\Properties\\",
-          "LclFile": "Localize\\loc\\{Lang}\\Xamarin.AndroidTools\\Properties\\Resources.resx.lcl"
-        },
-        {
-          "CopyOption": "LangIDOnName",
           "SourceFile": ".\\src\\Xamarin.Android.Build.Debugging.Tasks\\Properties\\Resources.resx",
           "OutputPath": ".\\src\\Xamarin.Android.Build.Debugging.Tasks\\Properties\\",
           "LclFile": "Localize\\loc\\{Lang}\\tools\\msbuild\\Properties\\Resources.resx.lcl"
