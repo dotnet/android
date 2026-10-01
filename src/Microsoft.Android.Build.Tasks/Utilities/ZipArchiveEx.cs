@@ -45,7 +45,7 @@ sealed class ZipArchiveEx : IDisposable
 			return false;
 
 		var file = new FileInfo (filename);
-		if (entry.Length != file.Length)
+		if (!TryGetEntryLength (entry, out var length) || length != file.Length)
 			return false;
 
 		var fileTime = ToDosTime (file.LastWriteTimeUtc);
@@ -60,6 +60,18 @@ sealed class ZipArchiveEx : IDisposable
 		var crc = new System.IO.Hashing.Crc32 ();
 		crc.Append (stream);
 		return crc.GetCurrentHashAsUInt32 () == entry.Crc32;
+	}
+
+	internal static bool TryGetEntryLength (ZipArchiveEntry entry, out long length)
+	{
+		try {
+			length = entry.Length;
+			return true;
+		} catch (InvalidOperationException) {
+			// Entries already written during this update no longer expose their stored length.
+			length = 0;
+			return false;
+		}
 	}
 
 	public bool AddFileIfChanged (TaskLoggingHelper log, string filename, string archivePath, CompressionLevel compression)

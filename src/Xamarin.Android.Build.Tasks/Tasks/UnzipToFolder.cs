@@ -19,6 +19,13 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
+			if (Sources == null)
+				throw new ArgumentNullException (nameof (Sources));
+			if (DestinationDirectories == null)
+				throw new ArgumentNullException (nameof (DestinationDirectories));
+			if (Sources.Length != DestinationDirectories.Length)
+				throw new ArgumentException ("Each source archive must have a destination directory.", nameof (DestinationDirectories));
+
 			foreach (var pair in Sources.Zip (DestinationDirectories, (s, d) => new { Source = s, Destination = d })) {
 				if (!Directory.Exists (pair.Destination.ItemSpec))
 					Directory.CreateDirectory (pair.Destination.ItemSpec);
@@ -26,30 +33,42 @@ namespace Xamarin.Android.Tasks
 					if (Files == null || Files.Length == 0) {
 						Microsoft.Android.Build.Tasks.Files.ExtractAll (z, pair.Destination.ItemSpec, deleteCallback: _ => false, log: Log);
 					} else {
-						foreach (var file in Files) {
+						var entries = Files.Select (file => {
 							var entry = z.GetEntry (file.ItemSpec);
 							if (entry == null) {
-								Log.LogDebugMessage ($"Skipping not existant file {file.ItemSpec}");
+								Log.LogDebugMessage ($"Skipping nonexistent file {file.ItemSpec}");
+								return (Entry: entry, OutputName: "", OutputPath: "", IsDirectory: false);
+							}
+							var isDirectory = entry.FullName.EndsWith ("/", StringComparison.Ordinal) || entry.FullName.EndsWith ("\\", StringComparison.Ordinal);
+							Microsoft.Android.Build.Tasks.Files.GetArchiveExtractionPath (pair.Destination.ItemSpec, entry.FullName, isDirectory);
+							var name = file.GetMetadata ("DestinationFileName");
+							if (name.IsNullOrEmpty ())
+								name = file.ItemSpec;
+							return (Entry: entry, OutputName: name,
+								OutputPath: Microsoft.Android.Build.Tasks.Files.GetArchiveExtractionPath (pair.Destination.ItemSpec, name, isDirectory), IsDirectory: isDirectory);
+						}).ToArray ();
+						foreach (var (entry, outputName, outputPath, isDirectory) in entries) {
+							if (entry == null) {
 								continue;
 							}
-							string destinationFileName = file.GetMetadata ("DestinationFileName");
-							if (destinationFileName.IsNullOrEmpty ())
-								destinationFileName = file.ItemSpec;
-							var fullDestination = Path.GetFullPath (pair.Destination.ItemSpec + Path.DirectorySeparatorChar);
-							var outputPath = Path.GetFullPath (Path.Combine (fullDestination, destinationFileName.Replace ('\\', Path.DirectorySeparatorChar)));
-							if (!outputPath.StartsWith (fullDestination, StringComparison.OrdinalIgnoreCase)) {
-								Log.LogDebugMessage ($"Skipping archive entry '{file.ItemSpec}': resolves outside target directory.");
+							Microsoft.Android.Build.Tasks.Files.GetArchiveExtractionPath (pair.Destination.ItemSpec, outputName, isDirectory);
+							Log.LogDebugMessage ($"Extracting {entry.FullName} to {outputPath}");
+							if (isDirectory) {
+								Directory.CreateDirectory (outputPath);
 								continue;
 							}
-							Log.LogDebugMessage ($"Extracting {file.ItemSpec} to {destinationFileName}");
-							Directory.CreateDirectory (Path.GetDirectoryName (outputPath));
-							entry.ExtractToFile (outputPath, overwrite: true);
+							var parent = Path.GetDirectoryName (outputPath);
+							if (parent == null)
+								throw new InvalidDataException ($"Archive entry '{entry.FullName}' has no destination directory.");
+							Directory.CreateDirectory (parent);
+							File.Delete (outputPath);
+							entry.ExtractToFile (outputPath);
 						}
 					}
 				}
 			}
 
-			return true;
+			return !Log.HasLoggedErrors;
 		}
 	}
 }

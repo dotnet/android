@@ -700,7 +700,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		}
 
 		[Test]
-		public void ExtractAll_SkipsPathTraversal ()
+		public void ExtractAll_RejectsPathTraversal ()
 		{
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
 				WriteEntry (zip, "a.txt", "a");
@@ -710,14 +710,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			stream.Position = 0;
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
 				// modifyCallback introduces a path traversal
-				bool changes = Files.ExtractAll (zip, destinationDir, modifyCallback: e => "../" + e);
-				Assert.IsFalse (changes, "ExtractAll should not report changes for skipped entries.");
+				Assert.Throws<InvalidDataException> (() => Files.ExtractAll (zip, destinationDir, modifyCallback: e => "../" + e));
 			}
 			FileAssert.DoesNotExist (Path.Combine (tempDir, "a.txt"));
 		}
 
 		[Test]
-		public void ExtractAll_SkipsPathTraversal_ExtractsValidEntries ()
+		public void ExtractAll_RejectsTraversalBeforeWritingValidEntries ()
 		{
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
 				WriteEntry (zip, "good.txt", "good");
@@ -728,17 +727,16 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			stream.Position = 0;
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
 				// Only relative.txt gets a traversal prefix
-				bool changes = Files.ExtractAll (zip, destinationDir, modifyCallback: e =>
-					e == "relative.txt" ? "../" + e : e);
-				Assert.IsTrue (changes, "ExtractAll should report changes for the valid entry.");
+				Assert.Throws<InvalidDataException> (() => Files.ExtractAll (zip, destinationDir, modifyCallback: e =>
+					e == "relative.txt" ? "../" + e : e));
 			}
-			AssertFile (Path.Combine ("dest", "good.txt"), "good");
+			FileAssert.DoesNotExist (Path.Combine (destinationDir, "good.txt"));
 			FileAssert.DoesNotExist (Path.Combine (tempDir, "relative.txt"));
 		}
 
 		[TestCase ("../../")]
 		[TestCase ("foo/../../../")]
-		public void ExtractAll_SkipsPathTraversal_ForwardSlash (string prefix)
+		public void ExtractAll_RejectsPathTraversal_ForwardSlash (string prefix)
 		{
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
 				WriteEntry (zip, "a.txt", "a");
@@ -747,15 +745,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			var destinationDir = Path.Combine (tempDir, "dest");
 			stream.Position = 0;
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
-				bool changes = Files.ExtractAll (zip, destinationDir, modifyCallback: e => prefix + e);
-				Assert.IsFalse (changes, $"Entry with prefix '{prefix}' should be skipped.");
+				Assert.Throws<InvalidDataException> (() => Files.ExtractAll (zip, destinationDir, modifyCallback: e => prefix + e));
 			}
 		}
 
 		[TestCase ("..\\")]
 		[TestCase ("..\\..\\")]
-		[Platform ("Win")]
-		public void ExtractAll_SkipsPathTraversal_BackSlash (string prefix)
+		public void ExtractAll_RejectsPathTraversal_BackSlash (string prefix)
 		{
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
 				WriteEntry (zip, "a.txt", "a");
@@ -764,8 +760,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			var destinationDir = Path.Combine (tempDir, "dest");
 			stream.Position = 0;
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
-				bool changes = Files.ExtractAll (zip, destinationDir, modifyCallback: e => prefix + e);
-				Assert.IsFalse (changes, $"Entry with prefix '{prefix}' should be skipped.");
+				Assert.Throws<InvalidDataException> (() => Files.ExtractAll (zip, destinationDir, modifyCallback: e => prefix + e));
 			}
 		}
 

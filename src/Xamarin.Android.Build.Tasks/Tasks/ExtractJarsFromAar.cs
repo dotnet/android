@@ -47,51 +47,42 @@ namespace Xamarin.Android.Tasks
 
 		void ExtractLibraries (string []? libraries, string outputJarsDirectory, string outputAnnotationsDirectory, MemoryStream memoryStream)
 		{
-			var jars = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-			var annotations = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			var comparer = Path.DirectorySeparatorChar == '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+			var jars = new HashSet<string> (comparer);
+			var annotations = new HashSet<string> (comparer);
 			if (libraries != null) {
 				foreach (var library in libraries) {
 					bool isAar = library.EndsWith (".aar", StringComparison.OrdinalIgnoreCase);
 					var jarOutputDirectory = Path.Combine (outputJarsDirectory, Path.GetFileName (library));
 					var annotationOutputDirectory = Path.Combine (outputAnnotationsDirectory, Path.GetFileName (library));
 					using (var zip = MonoAndroidHelper.ReadZipFile (library)) {
+						var entries = new List<(ZipArchiveEntry Entry, string Path, bool IsAnnotation)> ();
 						foreach (var entry in zip.Entries) {
 							if (entry.IsDirectory ())
 								continue;
 							var entryFullName = entry.FullName.Replace ('\\', '/');
 							var fileName = Path.GetFileName (entryFullName);
 							if (string.Equals (fileName, "annotations.zip", StringComparison.OrdinalIgnoreCase)) {
-								var path = Path.GetFullPath (Path.Combine (annotationOutputDirectory, entryFullName));
-								if (!IsUnderDirectory (path, annotationOutputDirectory, entryFullName, library))
-									continue;
-								Extract (entry, memoryStream, path);
-								annotations.Add (path);
+								entries.Add ((entry, Files.GetArchiveExtractionPath (annotationOutputDirectory, entryFullName), true));
 							} else if (!entryFullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) {
 								continue;
-							} else if (isAar && Files.ShouldSkipEntryInAar (entryFullName)) {
-								continue;
 							} else {
-								var path = Path.GetFullPath (Path.Combine (jarOutputDirectory, entryFullName));
-								if (!IsUnderDirectory (path, jarOutputDirectory, entryFullName, library))
+								var path = Files.GetArchiveExtractionPath (jarOutputDirectory, entryFullName);
+								if (isAar && Files.ShouldSkipEntryInAar (entryFullName))
 									continue;
-								Extract (entry, memoryStream, path);
-								jars.Add (path);
+								entries.Add ((entry, path, false));
 							}
+						}
+						foreach (var (entry, path, isAnnotation) in entries) {
+							Files.GetArchiveExtractionPath (isAnnotation ? annotationOutputDirectory : jarOutputDirectory, entry.FullName);
+							Extract (entry, memoryStream, path);
+							(isAnnotation ? annotations : jars).Add (path);
 						}
 					}
 				}
 			}
 			DeleteUnknownFiles (outputJarsDirectory, jars);
 			DeleteUnknownFiles (outputAnnotationsDirectory, annotations);
-		}
-
-		bool IsUnderDirectory (string resolvedPath, string targetDirectory, string entryName, string archivePath)
-		{
-			var normalizedDir = Path.GetFullPath (targetDirectory) + Path.DirectorySeparatorChar;
-			if (resolvedPath.StartsWith (normalizedDir, StringComparison.OrdinalIgnoreCase))
-				return true;
-			Log.LogDebugMessage ($"Skipping archive entry '{entryName}' in '{archivePath}': resolves outside target directory.");
-			return false;
 		}
 
 		static void Extract (ZipArchiveEntry entry, MemoryStream stream, string destination)
@@ -107,8 +98,12 @@ namespace Xamarin.Android.Tasks
 		{
 			if (!Directory.Exists (directory))
 				return;
+			var prefix = Path.GetFullPath (directory);
+			if (!prefix.EndsWith (Path.DirectorySeparatorChar.ToString (), StringComparison.Ordinal))
+				prefix += Path.DirectorySeparatorChar;
 			foreach (var file in Directory.GetFiles (directory, "*", SearchOption.AllDirectories)) {
-				var path = Path.GetFullPath (file);
+				var fullPath = Path.GetFullPath (file);
+				var path = Files.GetArchiveExtractionPath (directory, fullPath.Substring (prefix.Length));
 				if (!knownFiles.Contains (path)) {
 					Log.LogDebugMessage ($"Deleting unknown file: {path}");
 					File.Delete (path);

@@ -356,14 +356,33 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 		static string GetSafeOutputFile (string outputDirectory, string relativePath)
 		{
 			string root = Path.GetFullPath (outputDirectory);
-			string outputFile = Path.GetFullPath (Path.Combine (root, relativePath.Replace ('/', Path.DirectorySeparatorChar)));
-			string relativeOutput = Path.GetRelativePath (root, outputFile);
-			if (
-				Path.IsPathRooted (relativeOutput) ||
-				relativeOutput == ".." ||
-				relativeOutput.StartsWith ($"..{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
-			) {
+			string normalizedPath = relativePath.Replace ('\\', Path.DirectorySeparatorChar).Replace ('/', Path.DirectorySeparatorChar);
+			if (Path.IsPathRooted (normalizedPath) || normalizedPath.IndexOf (':') >= 0) {
 				throw new InvalidDataException ($"Assembly path '{relativePath}' escapes output directory '{root}'");
+			}
+			foreach (string component in normalizedPath.Split (Path.DirectorySeparatorChar)) {
+				if (component == ".." ||
+					(Path.DirectorySeparatorChar == '\\' && component != "." &&
+						(component.EndsWith (" ", StringComparison.Ordinal) || component.EndsWith (".", StringComparison.Ordinal)))) {
+					throw new InvalidDataException ($"Assembly path '{relativePath}' escapes output directory '{root}'");
+				}
+			}
+			string prefix = root.EndsWith (Path.DirectorySeparatorChar) ? root : root + Path.DirectorySeparatorChar;
+			string outputFile = Path.GetFullPath (Path.Combine (root, normalizedPath));
+			var comparison = Path.DirectorySeparatorChar == '\\' ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+			if (!outputFile.StartsWith (prefix, comparison))
+				throw new InvalidDataException ($"Assembly path '{relativePath}' escapes output directory '{root}'");
+			string current = root;
+			foreach (string component in outputFile.Substring (prefix.Length).Split (Path.DirectorySeparatorChar)) {
+				current = Path.Combine (current, component);
+				try {
+					if ((File.GetAttributes (current) & FileAttributes.ReparsePoint) != 0)
+						throw new InvalidDataException ($"Assembly path '{relativePath}' follows a link beneath output directory '{root}'");
+				} catch (FileNotFoundException) {
+					break;
+				} catch (DirectoryNotFoundException) {
+					break;
+				}
 			}
 			return outputFile;
 		}

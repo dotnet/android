@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Files = Microsoft.Android.Build.Tasks.Files;
 
 namespace Xamarin.Android.Tools.BootstrapTasks
 {
@@ -136,15 +137,20 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				foreach (var zipFile in zipFiles) {
 					var zipDateTime = File.GetLastWriteTimeUtc (zipFile);
 					using (var zip = ZipFile.OpenRead (zipFile)) {
-						foreach (var entry in zip.Entries) {
-							var path = Path.Combine (referenceContractPath.FullName, entry.FullName.Replace ('/', Path.DirectorySeparatorChar).Replace ('\\', Path.DirectorySeparatorChar));
-							if (path.EndsWith (Path.DirectorySeparatorChar)) {
+						var entries = zip.Entries.Select (entry => {
+							var isDirectory = entry.FullName.EndsWith ("/", StringComparison.Ordinal) || entry.FullName.EndsWith ("\\", StringComparison.Ordinal);
+							return (Entry: entry, Path: Files.GetArchiveExtractionPath (referenceContractPath.FullName, entry.FullName, isDirectory), IsDirectory: isDirectory);
+						}).ToArray ();
+						foreach (var (entry, path, isDirectory) in entries) {
+							Files.GetArchiveExtractionPath (referenceContractPath.FullName, entry.FullName, isDirectory);
+							if (isDirectory) {
 								Directory.CreateDirectory (path);
 								continue;
 							}
 							if (!File.Exists (path) || File.GetLastWriteTimeUtc (path) < zipDateTime) {
 								Log.LogMessage ($"Extracting: {path}");
 								Directory.CreateDirectory (Path.GetDirectoryName (path));
+								File.Delete (path);
 								using (var entryStream = entry.Open ())
 								using (var fileStream = File.Create (path)) {
 									entryStream.CopyTo (fileStream);

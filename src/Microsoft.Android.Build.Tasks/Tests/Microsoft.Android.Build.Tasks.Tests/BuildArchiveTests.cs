@@ -296,6 +296,60 @@ public class BuildArchiveTests : BaseTest
 		AssertEntryContents (archive, "duplicate.txt", "first");
 	}
 
+	[TestCase (false, false)]
+	[TestCase (false, true)]
+	[TestCase (true, false)]
+	[TestCase (true, true)]
+	public void DuplicateDiskPathsReplaceEarlierEntries (bool existingArchive, bool stored)
+	{
+		var apk = Path.Combine (TempDirectory, "app.apk");
+		if (existingArchive)
+			CreateArchive (apk, ("assets/duplicate.txt", "original"));
+		var first = Path.Combine (TempDirectory, "first.txt");
+		var second = Path.Combine (TempDirectory, "second.txt");
+		File.WriteAllText (first, "first");
+		File.WriteAllText (second, "last!");
+		var firstItem = new TaskItem (first);
+		var secondItem = new TaskItem (second);
+		firstItem.SetMetadata ("ArchivePath", "assets/duplicate.txt");
+		secondItem.SetMetadata ("ArchivePath", "assets/duplicate.txt");
+		var task = new BuildArchive {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			ApkOutputPath = apk,
+			FilesToAddToArchive = [firstItem, secondItem],
+			UncompressedFileExtensions = stored ? ".txt" : "",
+		};
+
+		Assert.IsTrue (task.RunTask ());
+
+		using var archive = ZipFile.OpenRead (apk);
+		Assert.AreEqual (1, archive.Entries.Count);
+		AssertEntryContents (archive, "assets/duplicate.txt", "last!");
+		AssertCompression (archive.Entries [0], !stored);
+	}
+
+	[Test]
+	public void DuplicateResourceEntriesCanBeRefreshedInOneUpdate ()
+	{
+		var input = Path.Combine (TempDirectory, "resources.apk");
+		var output = Path.Combine (TempDirectory, "app.apk");
+		CreateArchive (input, ("assets/duplicate.txt", "first"), ("assets/duplicate.txt", "last"));
+		CreateArchive (output, ("assets/duplicate.txt", "original"));
+		File.SetLastWriteTimeUtc (output, new DateTime (2026, 1, 1, 12, 0, 0, DateTimeKind.Utc));
+		File.SetLastWriteTimeUtc (input, new DateTime (2026, 1, 1, 12, 0, 10, DateTimeKind.Utc));
+		var task = new BuildArchive {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			ApkInputPath = input,
+			ApkOutputPath = output,
+		};
+
+		Assert.IsTrue (task.RunTask ());
+
+		using var archive = ZipFile.OpenRead (output);
+		Assert.AreEqual (1, archive.Entries.Count);
+		AssertEntryContents (archive, "assets/duplicate.txt", "last");
+	}
+
 	static TaskItem JavaArchiveItem (string path, string entryName)
 	{
 		var item = new TaskItem ($"{path}#{entryName}");

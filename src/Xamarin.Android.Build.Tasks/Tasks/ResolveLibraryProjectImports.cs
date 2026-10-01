@@ -267,7 +267,7 @@ namespace Xamarin.Android.Tasks
 						else if (name.EndsWith (".jar", StringComparison.InvariantCultureIgnoreCase)) {
 							using (var stream = pe.GetEmbeddedResourceStream (resource)) {
 								AddJar (jars, importsDir, name, assemblyPath, nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
-								updated |= Files.CopyIfStreamChanged (stream, Path.Combine (importsDir, name));
+								updated |= Files.CopyIfStreamChanged (stream, Files.GetArchiveExtractionPath (importsDir, name));
 							}
 						}
 						// embedded native libraries
@@ -437,7 +437,7 @@ namespace Xamarin.Android.Tasks
 								AddJar (jars, importsDir, entryFullName, aarFullPath, nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
 							} else if (entryFullName.StartsWith (".net/env/", StringComparison.OrdinalIgnoreCase) ||
 									entryFullName.StartsWith (".net\\env\\", StringComparison.OrdinalIgnoreCase)) {
-								var fullPath = Path.GetFullPath (Path.Combine (importsDir, entryFullName));
+								var fullPath = Files.GetArchiveExtractionPath (importsDir, entryFullName);
 								resolvedEnvironments.Add (new TaskItem (fullPath, new Dictionary<string, string> {
 									[OriginalFile] = aarFile.ItemSpec,
 									[NuGetPackageId] = nuGetPackageId,
@@ -488,7 +488,7 @@ namespace Xamarin.Android.Tasks
 
 		static void AddJar (IDictionary<string, ITaskItem> jars, string destination, string path, string? originalFile = null, string? nuGetPackageId = null, string? nuGetPackageVersion = null)
 		{
-			var fullPath = Path.GetFullPath (Path.Combine (destination, path));
+			var fullPath = Files.GetArchiveExtractionPath (destination, path);
 			AddJar (jars, fullPath, originalFile: originalFile, nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
 		}
 

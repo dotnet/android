@@ -466,6 +466,68 @@ namespace Microsoft.Android.Build.Tasks
 			return ZipFile.OpenRead (filename);
 		}
 
+		/// <summary>
+		/// Resolves a relative archive path under the destination, rejecting parent traversal, rooted names and linked descendants.
+		/// The caller-selected destination itself may be a junction or symbolic link.
+		/// </summary>
+		public static string GetArchiveExtractionPath (string destinationDirectory, string relativePath, bool isDirectory = false)
+		{
+			if (destinationDirectory == null)
+				throw new ArgumentNullException (nameof (destinationDirectory));
+			if (relativePath == null)
+				throw new ArgumentNullException (nameof (relativePath));
+			if (destinationDirectory.Length == 0)
+				throw new ArgumentException ("The destination directory must not be empty.", nameof (destinationDirectory));
+
+			var root = Path.GetFullPath (destinationDirectory);
+			var volumeRoot = Path.GetPathRoot (root);
+			if (volumeRoot != null && root.Length > volumeRoot.Length)
+				root = root.TrimEnd (Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+			var normalizedPath = relativePath.Replace ('\\', Path.DirectorySeparatorChar).Replace ('/', Path.DirectorySeparatorChar);
+			if (normalizedPath.Length == 0 || Path.IsPathRooted (normalizedPath) || normalizedPath.IndexOf (':') >= 0 || normalizedPath.IndexOf ('\0') >= 0)
+				throw UnsafeArchiveEntry (relativePath, root);
+			if (!isDirectory && normalizedPath.EndsWith (Path.DirectorySeparatorChar.ToString (), StringComparison.Ordinal))
+				throw UnsafeArchiveEntry (relativePath, root);
+
+			foreach (var component in normalizedPath.Split (Path.DirectorySeparatorChar)) {
+				if (component == ".." ||
+						(Path.DirectorySeparatorChar == '\\' && component != "." &&
+							(component.EndsWith (" ", StringComparison.Ordinal) || component.EndsWith (".", StringComparison.Ordinal))))
+					throw UnsafeArchiveEntry (relativePath, root);
+			}
+
+			var path = Path.GetFullPath (Path.Combine (root, normalizedPath));
+			var pathRoot = Path.GetPathRoot (path);
+			if (pathRoot != null && path.Length > pathRoot.Length)
+				path = path.TrimEnd (Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+			var comparison = Path.DirectorySeparatorChar == '\\' ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+			var prefix = root.EndsWith (Path.DirectorySeparatorChar.ToString (), StringComparison.Ordinal) ? root : root + Path.DirectorySeparatorChar;
+			var isRootDirectoryEntry = isDirectory && path.Equals (root, comparison);
+			if (!isRootDirectoryEntry && !path.StartsWith (prefix, comparison))
+				throw UnsafeArchiveEntry (relativePath, root);
+
+			if (isRootDirectoryEntry)
+				return path;
+
+			// The caller-selected root may be a junction, but archive-controlled descendants must not follow links.
+			var current = root;
+			foreach (var component in path.Substring (prefix.Length).Split (Path.DirectorySeparatorChar)) {
+				current = Path.Combine (current, component);
+				try {
+					if ((File.GetAttributes (current) & FileAttributes.ReparsePoint) != 0)
+						throw UnsafeArchiveEntry (relativePath, root);
+				} catch (FileNotFoundException) {
+					break;
+				} catch (DirectoryNotFoundException) {
+					break;
+				}
+			}
+			return path;
+		}
+
+		static InvalidDataException UnsafeArchiveEntry (string entryName, string destination) =>
+			new InvalidDataException (string.Format (CultureInfo.CurrentCulture, Properties.Resources.UnsafeArchiveEntry, entryName, destination));
+
 		public static IEnumerable<(string FilePath, string ArchivePath)> EnumerateArchiveFiles (string folder)
 		{
 			folder = Path.GetFullPath (folder.Replace ('\\', Path.DirectorySeparatorChar).Replace ('/', Path.DirectorySeparatorChar));
@@ -501,13 +563,16 @@ namespace Microsoft.Android.Build.Tasks
 			int i = 0;
 			int total = zip.Entries.Count;
 			bool updated = false;
-			var files = new HashSet<string> ();
+			var files = new HashSet<string> (Path.DirectorySeparatorChar == '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 			var memoryStream = MemoryStreamPool.Shared.Rent ();
-			var fullDestination = Path.GetFullPath (destination + Path.DirectorySeparatorChar);
+			var fullDestination = Path.GetFullPath (destination);
+			if (!fullDestination.EndsWith (Path.DirectorySeparatorChar.ToString (), StringComparison.Ordinal))
+				fullDestination += Path.DirectorySeparatorChar;
 			try {
+				var entries = new List<(ZipArchiveEntry Entry, string OutputPath)> ();
 				foreach (var entry in zip.Entries) {
 					progressCallback?.Invoke (i++, total);
-					if (entry.FullName.EndsWith ("/", StringComparison.Ordinal))
+					if (entry.FullName.EndsWith ("/", StringComparison.Ordinal) || entry.FullName.EndsWith ("\\", StringComparison.Ordinal))
 						continue;
 					if (entry.FullName.Contains ("/__MACOSX/") ||
 							entry.FullName.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
@@ -516,13 +581,13 @@ namespace Microsoft.Android.Build.Tasks
 						continue;
 					if (skipCallback != null && skipCallback (entry.FullName))
 						continue;
-					var fullName = (modifyCallback?.Invoke (entry.FullName) ?? entry.FullName)
-						.Replace ('\\', Path.DirectorySeparatorChar).Replace ('/', Path.DirectorySeparatorChar);
-					var outfile = Path.GetFullPath (Path.Combine (destination, fullName));
-					if (!outfile.StartsWith (fullDestination, StringComparison.OrdinalIgnoreCase)) {
-						log?.LogDebugMessage ($"Skipping zip entry \"{entry.FullName}\" (resolved as \"{fullName}\") because it would extract outside the destination directory: \"{outfile}\".");
-						continue;
-					}
+					GetArchiveExtractionPath (destination, entry.FullName);
+					var fullName = modifyCallback?.Invoke (entry.FullName) ?? entry.FullName;
+					entries.Add ((entry, GetArchiveExtractionPath (destination, fullName)));
+				}
+
+				foreach (var (entry, outputPath) in entries) {
+					var outfile = GetArchiveExtractionPath (destination, outputPath.Substring (fullDestination.Length));
 					files.Add (outfile);
 					memoryStream.SetLength (0); //Reuse the stream
 					using (var entryStream = entry.Open ())
@@ -531,7 +596,7 @@ namespace Microsoft.Android.Build.Tasks
 					try {
 						updated |= CopyIfStreamChanged (memoryStream, outfile);
 					} catch (PathTooLongException) {
-						throw new PathTooLongException ($"Could not extract \"{fullName}\" to \"{outfile}\". Path is too long.");
+						throw new PathTooLongException ($"Could not extract \"{entry.FullName}\" to \"{outfile}\". Path is too long.");
 					}
 				}
 			} finally {
@@ -539,7 +604,8 @@ namespace Microsoft.Android.Build.Tasks
 			}
 			if (Directory.Exists (destination)) {
 				foreach (var file in Directory.GetFiles (destination, "*", SearchOption.AllDirectories)) {
-					var outfile = Path.GetFullPath (file);
+					var fullPath = Path.GetFullPath (file);
+					var outfile = GetArchiveExtractionPath (destination, fullPath.Substring (fullDestination.Length));
 					if (outfile.Contains ("/__MACOSX/") ||
 							outfile.EndsWith (".flat", StringComparison.OrdinalIgnoreCase) ||
 							outfile.EndsWith ("files.cache", StringComparison.OrdinalIgnoreCase) ||

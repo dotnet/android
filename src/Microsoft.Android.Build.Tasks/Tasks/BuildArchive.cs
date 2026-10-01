@@ -102,7 +102,7 @@ public class BuildArchive : AndroidTask
 					if (apk.ContainsEntry (entryName)) {
 						var e = apk.GetEntry (entryName);
 						// check the CRC values as the ModifiedDate is always 01/01/1980 in the aapt generated file.
-						if (entry.Crc32 == e.Crc32 && entry.CompressedLength == e.CompressedLength) {
+						if (ZipArchiveEx.TryGetEntryLength (e, out _) && entry.Crc32 == e.Crc32 && entry.CompressedLength == e.CompressedLength) {
 							Log.LogDebugMessage ($"Skipping {entryName} from {ApkInputPath} as its up to date.");
 							continue;
 						}
