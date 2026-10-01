@@ -16,7 +16,7 @@ public class BaseTest
 			foreach (var c in InvalidChars.Concat (Path.GetInvalidPathChars ()).Concat (Path.GetInvalidFileNameChars ())) {
 				result = result.Replace (c, '_');
 			}
-			return result.Replace ("_", "");
+			return result.Replace ("_", "").TrimEnd (' ', '.');
 		}
 	}
 
