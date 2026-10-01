@@ -3,11 +3,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
-using Xamarin.Tools.Zip;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -48,9 +48,9 @@ namespace Xamarin.Android.Tasks
 			Directory.CreateDirectory (Path.GetDirectoryName (OutputFile));
 
 			using (var stream = File.Create (OutputFile))
-			using (var aar = ZipArchive.Open (stream)) {
+			using (var aar = new ZipArchive (stream, ZipArchiveMode.Update)) {
 				var existingEntries = new HashSet<string> (StringComparer.Ordinal);
-				foreach (var entry in aar) {
+				foreach (var entry in aar.Entries) {
 					Log.LogDebugMessage ("Existing entry: " + entry.FullName);
 					existingEntries.Add (entry.FullName);
 				}
@@ -63,7 +63,7 @@ namespace Xamarin.Android.Tasks
 						}
 						var relative = MonoAndroidHelper.GetRelativePathForAndroidAsset (AssetDirectory, asset);
 						var archivePath = "assets/" + relative.Replace ('\\', '/');
-						aar.AddStream (File.OpenRead (asset.ItemSpec), archivePath);
+						AddFile (aar, asset.ItemSpec, archivePath);
 						existingEntries.Remove (archivePath);
 					}
 				}
@@ -78,7 +78,7 @@ namespace Xamarin.Android.Tasks
 						var directory = Path.GetDirectoryName (resource.ItemSpec);
 						var resourcePath = Path.GetFileName (directory) + "/" + Path.GetFileName (resource.ItemSpec);
 						var archivePath = "res/" + resourcePath;
-						aar.AddStream (File.OpenRead (resource.ItemSpec), archivePath);
+						AddFile (aar, resource.ItemSpec, archivePath);
 						existingEntries.Remove (archivePath);
 
 						nameCaseMap.Append (resource.GetMetadata ("LogicalName").Replace ('\\', '/'));
@@ -87,14 +87,14 @@ namespace Xamarin.Android.Tasks
 					}
 					if (nameCaseMap.Length > 0) {
 						var archivePath = ".net/__res_name_case_map.txt";
-						aar.AddEntry (archivePath, nameCaseMap.ToString (), Files.UTF8withoutBOM);
+						AddEntry (aar, archivePath, nameCaseMap.ToString ());
 						existingEntries.Remove (archivePath);
 					}
 				}
 				if (AndroidEnvironment != null) {
 					foreach (var env in AndroidEnvironment) {
 						var archivePath = $".net/env/{GetHashedFileName (env)}.env";
-						aar.AddStream (File.OpenRead (env.ItemSpec), archivePath);
+						AddFile (aar, env.ItemSpec, archivePath);
 						existingEntries.Remove (archivePath);
 					}
 				}
@@ -106,7 +106,7 @@ namespace Xamarin.Android.Tasks
 							continue;
 						}
 						var archivePath = $"libs/{GetHashedFileName (jar)}.jar";
-						aar.AddStream (File.OpenRead (jar.ItemSpec), archivePath);
+						AddFile (aar, jar.ItemSpec, archivePath);
 						existingEntries.Remove (archivePath);
 					}
 				}
@@ -118,7 +118,7 @@ namespace Xamarin.Android.Tasks
 							continue;
 						}
 						var archivePath = "jni/" + abi + "/" + Path.GetFileName (lib.ItemSpec);
-						aar.AddStream (File.OpenRead (lib.ItemSpec), archivePath);
+						AddFile (aar, lib.ItemSpec, archivePath);
 						existingEntries.Remove (archivePath);
 					}
 				}
@@ -127,20 +127,20 @@ namespace Xamarin.Android.Tasks
 					foreach (var file in ProguardConfigurationFiles) {
 						sb.AppendLine (File.ReadAllText (file.ItemSpec));
 					}
-					aar.AddEntry ("proguard.txt", sb.ToString (), Files.UTF8withoutBOM);
+					AddEntry (aar, "proguard.txt", sb.ToString ());
 				}
 				if (AndroidManifest != null && File.Exists (AndroidManifest.ItemSpec)) {
 					var manifest = File.ReadAllText (AndroidManifest.ItemSpec);
 					var doc = XDocument.Parse(manifest);
 					if (!(doc.Element ("manifest")?.Attribute ("package")?.Value).IsNullOrEmpty ()) {
-						aar.AddEntry ("AndroidManifest.xml", manifest, Files.UTF8withoutBOM);
+						AddEntry (aar, "AndroidManifest.xml", manifest);
 					} else {
 						Log.LogDebugMessage ($"Skipping {AndroidManifest.ItemSpec}. The `manifest` does not have a `package` attribute.");
 					}
 				}
 				foreach (var entry in existingEntries) {
 					Log.LogDebugMessage ($"Removing {entry} as it is not longer required.");
-					aar.DeleteEntry (entry);
+					aar.GetEntry (entry)?.Delete ();
 				}
 			}
 
@@ -150,6 +150,20 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return !Log.HasLoggedErrors;
+		}
+
+		static void AddFile (ZipArchive archive, string filename, string archivePath)
+		{
+			archive.GetEntry (archivePath)?.Delete ();
+			archive.CreateEntryFromFile (filename, archivePath);
+		}
+
+		static void AddEntry (ZipArchive archive, string archivePath, string contents)
+		{
+			archive.GetEntry (archivePath)?.Delete ();
+			var entry = archive.CreateEntry (archivePath);
+			using var writer = new StreamWriter (entry.Open (), Files.UTF8withoutBOM);
+			writer.Write (contents);
 		}
 
 		/// <summary>

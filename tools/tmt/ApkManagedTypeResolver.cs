@@ -1,36 +1,38 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 
 using Mono.Cecil;
 using Xamarin.Android.AssemblyStore;
 using Xamarin.Android.AssemblyStore.V1;
-using Xamarin.Tools.Zip;
 
 namespace tmt
 {
 	class ApkManagedTypeResolver : ManagedTypeResolver
 	{
-		readonly Dictionary<string, ZipEntry>? individualAssemblies;
+		readonly Dictionary<string, string>? individualAssemblies;
 		readonly Dictionary<string, AssemblyStoreAssembly>? blobAssemblies;
-		readonly ZipArchive apk;
+		readonly string apkPath;
 		readonly AssemblyStoreExplorer? assemblyStoreExplorer;
 
-		public ApkManagedTypeResolver (ZipArchive apk, string assemblyEntryPrefix)
+		public ApkManagedTypeResolver (string apkPath, ZipArchive apk, string assemblyEntryPrefix)
 		{
-			this.apk = apk;
+			this.apkPath = Path.GetFullPath (apkPath);
 
-			if (apk.ContainsEntry ($"{assemblyEntryPrefix}assemblies.blob")) {
-				blobAssemblies = new Dictionary<string, AssemblyStoreAssembly> (StringComparer.Ordinal);
+			if (apk.GetEntry ($"{assemblyEntryPrefix}assemblies.blob") != null) {
+				var assemblies = new Dictionary<string, AssemblyStoreAssembly> (StringComparer.Ordinal);
+				blobAssemblies = assemblies;
 				assemblyStoreExplorer = new AssemblyStoreExplorer (apk, assemblyEntryPrefix, keepStoreInMemory: true);
-				LoadAssemblyBlobs (apk, assemblyEntryPrefix, assemblyStoreExplorer);
+				LoadAssemblyBlobs (assemblyStoreExplorer, assemblies);
 			} else {
-				individualAssemblies = new Dictionary<string, ZipEntry> (StringComparer.Ordinal);
-				LoadIndividualAssemblies (apk, assemblyEntryPrefix);
+				var assemblies = new Dictionary<string, string> (StringComparer.Ordinal);
+				individualAssemblies = assemblies;
+				LoadIndividualAssemblies (apk, assemblyEntryPrefix, assemblies);
 			}
 		}
 
-		void LoadAssemblyBlobs (ZipArchive apkArchive, string assemblyEntryPrefix, AssemblyStoreExplorer explorer)
+		void LoadAssemblyBlobs (AssemblyStoreExplorer explorer, Dictionary<string, AssemblyStoreAssembly> assemblies)
 		{
 			foreach (AssemblyStoreAssembly assembly in explorer.Assemblies) {
 				string assemblyName = assembly.Name;
@@ -41,14 +43,14 @@ namespace tmt
 					dllName = $"{assembly.Store.Arch}/{dllName}";
 				}
 
-				blobAssemblies!.Add (assemblyName, assembly);
-				blobAssemblies!.Add (dllName, assembly);
+				assemblies.Add (assemblyName, assembly);
+				assemblies.Add (dllName, assembly);
 			}
 		}
 
-		void LoadIndividualAssemblies (ZipArchive apkArchive, string assemblyEntryPrefix)
+		void LoadIndividualAssemblies (ZipArchive apkArchive, string assemblyEntryPrefix, Dictionary<string, string> assemblies)
 		{
-			foreach (ZipEntry entry in apkArchive) {
+			foreach (ZipArchiveEntry entry in apkArchive.Entries) {
 				if (!entry.FullName.StartsWith (assemblyEntryPrefix, StringComparison.Ordinal)) {
 					continue;
 				}
@@ -64,8 +66,8 @@ namespace tmt
 					name = $"{dir}/{name}";
 				}
 
-				individualAssemblies!.Add (name, entry);
-				individualAssemblies.Add (entry.FullName, entry);
+				assemblies.Add (name, entry.FullName);
+				assemblies.Add (entry.FullName, entry.FullName);
 			}
 		}
 
@@ -76,11 +78,11 @@ namespace tmt
 					return null;
 				}
 
-				if (!individualAssemblies.TryGetValue (assemblyName, out ZipEntry? entry) || entry == null) {
+				if (!individualAssemblies.TryGetValue (assemblyName, out string? entryName)) {
 					return null;
 				}
 
-				return entry.FullName;
+				return entryName;
 			}
 
 			if (blobAssemblies == null || !blobAssemblies.TryGetValue (assemblyName, out AssemblyStoreAssembly? assembly) || assembly == null) {
@@ -92,37 +94,43 @@ namespace tmt
 
 		Stream GetAssemblyStream (string assemblyPath)
 		{
-			MemoryStream? stream = null;
 			if (individualAssemblies != null) {
-				if (!individualAssemblies.TryGetValue (assemblyPath, out ZipEntry? entry) || entry == null) {
+				if (!individualAssemblies.TryGetValue (assemblyPath, out string? entryName)) {
 					// Should "never" happen - if the assembly wasn't there, FindAssembly should have returned `null`
 					throw new InvalidOperationException ($"Should not happen: assembly '{assemblyPath}' not found in the APK archive.");
 				}
 
-				stream = new MemoryStream ();
-				entry.Extract (stream);
-				return PrepStream (stream);
+				// Managed names are resolved after Loader has disposed its archive.
+				using ZipArchive apk = ZipFile.OpenRead (apkPath);
+				ZipArchiveEntry entry = apk.GetEntry (entryName) ??
+					throw new InvalidOperationException ($"Assembly '{assemblyPath}' not found in the APK archive.");
+				using Stream input = entry.Open ();
+				var output = new MemoryStream ();
+				var ownsOutput = false;
+				try {
+					input.CopyTo (output);
+					output.Seek (0, SeekOrigin.Begin);
+					ownsOutput = true;
+					return output;
+				} finally {
+					if (!ownsOutput)
+						output.Dispose ();
+				}
 			}
 
 			if (blobAssemblies == null) {
 				throw new InvalidOperationException ("Internal error: blobAssemblies shouldn't be null");
 			}
 
-			if (blobAssemblies == null || !blobAssemblies.TryGetValue (assemblyPath, out AssemblyStoreAssembly? assembly) || assembly == null) {
+			if (!blobAssemblies.TryGetValue (assemblyPath, out AssemblyStoreAssembly? assembly) || assembly == null) {
 				// Should "never" happen - if the assembly wasn't there, FindAssembly should have returned `null`
 				throw new InvalidOperationException ($"Should not happen: assembly '{assemblyPath}' not found in the assembly blob.");
 			}
 
-			stream = new MemoryStream ();
-                        assembly.ExtractImage (stream);
-
-			return PrepStream (stream);
-
-			Stream PrepStream (Stream stream)
-			{
-				stream.Seek (0, SeekOrigin.Begin);
-				return stream;
-			}
+			var stream = new MemoryStream ();
+			assembly.ExtractImage (stream);
+			stream.Seek (0, SeekOrigin.Begin);
+			return stream;
 		}
 
 		protected override AssemblyDefinition ReadAssembly (string assemblyPath)

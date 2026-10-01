@@ -9,7 +9,7 @@ using System.Xml.Linq;
 using Xamarin.ProjectTools;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
-using Xamarin.Tools.Zip;
+using System.IO.Compression;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
@@ -604,13 +604,14 @@ namespace Foo {
 
 				var nupkgPath = Path.Combine (Root, bindingBuilder.ProjectDirectory, binding.OutputPath, "UnnamedProject.1.0.0.nupkg");
 				FileAssert.Exists (nupkgPath);
-				using (var nupkg = ZipArchive.Open (nupkgPath, FileMode.Open)) {
-					var aarEntry = nupkg.Single (entry => entry.FullName.EndsWith ("/UnnamedProject.aar", StringComparison.Ordinal));
+				using (var nupkg = ZipFile.OpenRead (nupkgPath)) {
+					var aarEntry = nupkg.Entries.Single (entry => entry.FullName.EndsWith ("/UnnamedProject.aar", StringComparison.Ordinal));
 					using var aarStream = new MemoryStream ();
-					aarEntry.Extract (aarStream);
+					using (var source = aarEntry.Open ())
+						source.CopyTo (aarStream);
 					aarStream.Position = 0;
-					using var aar = ZipArchive.Open (aarStream);
-					Assert.AreEqual (1, aar.Count (entry => entry.FullName.StartsWith ("libs/", StringComparison.Ordinal) && entry.FullName.EndsWith (".jar", StringComparison.Ordinal)),
+					using var aar = new ZipArchive (aarStream, ZipArchiveMode.Read, leaveOpen: true);
+					Assert.AreEqual (1, aar.Entries.Count (entry => entry.FullName.StartsWith ("libs/", StringComparison.Ordinal) && entry.FullName.EndsWith (".jar", StringComparison.Ordinal)),
 						"The generated AAR should contain only the Bind='false', Pack='true' JAR.");
 				}
 			}
@@ -686,8 +687,9 @@ public class UsesDependency {
 		static byte [] CreateAar (byte [] classesJar)
 		{
 			using var stream = new MemoryStream ();
-			using (var aar = ZipArchive.Open (stream)) {
-				aar.AddStream (new MemoryStream (classesJar), "classes.jar");
+			using (var aar = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				using var entryStream = aar.CreateEntry ("classes.jar").Open ();
+				entryStream.Write (classesJar, 0, classesJar.Length);
 			}
 			return stream.ToArray ();
 		}

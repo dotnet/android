@@ -5,10 +5,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 
 using Xamarin.Android.AssemblyStore;
 using Xamarin.Android.Tools;
-using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Tools.DecompressAssemblies
 {
@@ -79,7 +79,7 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 		{
 			bool retVal = true;
 			int assemblyCount = 0;
-			foreach (ZipEntry entry in apk) {
+			foreach (ZipArchiveEntry entry in apk.Entries) {
 				if (!TryGetAssemblyOutputPath (entry.FullName, assembliesPath, nativeLibrariesPath, out string assemblyName)) {
 					continue;
 				}
@@ -87,7 +87,9 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 				assemblyCount++;
 
 				using (var stream = new MemoryStream ()) {
-					entry.Extract (stream);
+					using (Stream entryStream = entry.Open ()) {
+						entryStream.CopyTo (stream);
+					}
 					stream.Seek (0, SeekOrigin.Begin);
 					string outputFile = GetSafeOutputFile (outputDirectory, assemblyName);
 					using var payload = new MemoryStream ();
@@ -166,15 +168,15 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 
 		static bool HasAssemblyStore (ZipArchive apk, string assembliesPath, string nativeLibrariesPath)
 		{
-			if (apk.ContainsEntry ($"{assembliesPath}assemblies.blob")) {
+			if (apk.GetEntry ($"{assembliesPath}assemblies.blob") != null) {
 				return true;
 			}
 
 			foreach (AndroidTargetArch arch in targetArchitectures) {
 				string abi = GetAndroidAbi (arch);
 				if (
-					apk.ContainsEntry ($"{nativeLibrariesPath}{abi}/libassembly-store.so") ||
-					apk.ContainsEntry ($"{nativeLibrariesPath}{abi}/libassemblies.{abi}.blob.so")
+					apk.GetEntry ($"{nativeLibrariesPath}{abi}/libassembly-store.so") != null ||
+					apk.GetEntry ($"{nativeLibrariesPath}{abi}/libassemblies.{abi}.blob.so") != null
 				) {
 					return true;
 				}
@@ -185,7 +187,7 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 
 		static bool ExtractFromArchive (string filePath, string assembliesPath, string nativeLibrariesPath, string outputDirectory)
 		{
-			using (ZipArchive apk = ZipArchive.Open (filePath, FileMode.Open)) {
+			using (ZipArchive apk = ZipFile.OpenRead (filePath)) {
 				if (HasAssemblyStore (apk, assembliesPath, nativeLibrariesPath)) {
 					return ExtractAssemblyStores (filePath, outputDirectory);
 				}

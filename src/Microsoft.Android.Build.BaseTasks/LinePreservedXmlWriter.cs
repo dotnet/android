@@ -46,14 +46,14 @@ namespace Microsoft.Android.Build.Tasks
 			this.nav = bak;
 		}
 		
-		public override void WriteStartAttribute (string prefix, string localName, string namespaceUri)
+		public override void WriteStartAttribute (string? prefix, string localName, string? namespaceUri)
 		{
 			if (nav != null)
 				Proceed (nav as IXmlLineInfo);
 			base.WriteStartAttribute (prefix, localName, namespaceUri);
 		}
 		
-		public override void WriteStartElement (string prefix, string localName, string namespaceUri)
+		public override void WriteStartElement (string? prefix, string localName, string? namespaceUri)
 		{
 			if (nav != null)
 				Proceed (nav as IXmlLineInfo);
@@ -123,9 +123,11 @@ namespace Microsoft.Android.Build.Tasks
 			}
 		}
 		
-		public override void Write (string value)
+		public override void Write (string? value)
 		{
 			w.Write (value);
+			if (value == null)
+				return;
 			int next = 0;
 			while (next < value.Length) {
 				int idx = value.IndexOf ('\n', next);
@@ -143,4 +145,3 @@ namespace Microsoft.Android.Build.Tasks
 		}
 	}
 }
-
