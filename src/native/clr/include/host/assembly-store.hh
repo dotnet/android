@@ -30,7 +30,13 @@ namespace xamarin::android {
 		static auto find_assembly_store_entry (std::string_view const& name, hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept -> const AssemblyStoreIndexEntry*;
 
 	private:
+		static inline AssemblyStoreRuntimeData assembly_store {};
 		static inline const AssemblyStoreIndexEntry *assembly_store_hashes = nullptr;
+		static inline AssemblyStoreSingleAssemblyRuntimeData *runtime_assemblies = nullptr;
+		static inline CompressedAssemblyDescriptor *compressed_descriptors = nullptr;
+		static inline uint8_t *uncompressed_buffer = nullptr;
+		static inline uint32_t compressed_count = 0;
+		static inline uint32_t uncompressed_size = 0;
 		// Assembly names indexed by `AssemblyStoreIndexEntry::descriptor_index`, used to disambiguate
 		// CRC32 hash collisions in the store index. Built once when the store is mapped.
 		static inline std::string_view *assembly_store_names = nullptr;

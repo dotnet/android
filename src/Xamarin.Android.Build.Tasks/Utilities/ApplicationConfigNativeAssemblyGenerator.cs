@@ -66,50 +66,6 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 		public IntPtr handle = IntPtr.Zero;
 	}
 
-	// Order of fields and their type must correspond *exactly* to that in
-	// src/monodroid/jni/xamarin-app.hh AssemblyStoreAssemblyDescriptor structure
-	sealed class AssemblyStoreAssemblyDescriptor
-	{
-		public uint data_offset;
-		public uint data_size;
-
-		public uint debug_data_offset;
-		public uint debug_data_size;
-
-		public uint config_data_offset;
-		public uint config_data_size;
-	}
-
-	// Order of fields and their type must correspond *exactly* to that in
-	// src/monodroid/jni/xamarin-app.hh AssemblyStoreSingleAssemblyRuntimeData structure
-	sealed class AssemblyStoreSingleAssemblyRuntimeData
-	{
-		[NativePointer]
-		public byte image_data;
-
-		[NativePointer]
-		public byte debug_info_data;
-
-		[NativePointer]
-		public byte config_data;
-
-		[NativePointer]
-		public AssemblyStoreAssemblyDescriptor? descriptor;
-	}
-
-	// Order of fields and their type must correspond *exactly* to that in
-	// src/native/clr/include/xamarin-app.hh AssemblyStoreRuntimeData structure
-	sealed class AssemblyStoreRuntimeData
-	{
-		[NativePointer (IsNull = true)]
-		public byte data_start;
-		public uint assembly_count;
-		public uint index_entry_count;
-
-		[NativePointer (IsNull = true)]
-		public AssemblyStoreAssemblyDescriptor? assemblies;
-	}
-
 	sealed class XamarinAndroidBundledAssemblyContextDataProvider : NativeAssemblerStructContextDataProvider
 	{
 		public override ulong GetBufferSize (object data, string fieldName)
@@ -177,8 +133,6 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 	StructureInfo? applicationConfigStructureInfo;
 	StructureInfo? dsoCacheEntryStructureInfo;
 	StructureInfo? xamarinAndroidBundledAssemblyStructureInfo;
-	StructureInfo? assemblyStoreSingleAssemblyRuntimeDataStructureinfo;
-	StructureInfo? assemblyStoreRuntimeDataStructureInfo;
 	StructureInfo? appEnvironmentVariableStructureInfo;
 
 	public string AndroidPackageName { get; set; } = "";
@@ -354,29 +308,6 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 		};
 		module.Add (init_runtime_property_values);
 
-		AddAssemblyStores (module);
-	}
-
-	void AddAssemblyStores (LlvmIrModule module)
-	{
-		ulong itemCount = (ulong)(NumberOfAssembliesInApk);
-		var assembly_store_bundled_assemblies = new LlvmIrGlobalVariable (typeof(List<StructureInstance<AssemblyStoreSingleAssemblyRuntimeData>>), "assembly_store_bundled_assemblies", LlvmIrVariableOptions.GlobalWritable) {
-			ZeroInitializeArray = true,
-			ArrayItemCount = itemCount,
-		};
-		module.Add (assembly_store_bundled_assemblies);
-
-		var storeRuntimeData = new AssemblyStoreRuntimeData {
-			data_start = 0,
-			assembly_count = 0,
-		};
-
-		var assembly_store = new LlvmIrGlobalVariable (
-			new StructureInstance<AssemblyStoreRuntimeData>(assemblyStoreRuntimeDataStructureInfo, storeRuntimeData),
-			"assembly_store",
-			LlvmIrVariableOptions.GlobalWritable
-		);
-		module.Add (assembly_store);
 	}
 
 	string? GetPreloadIndicesLibraryName (LlvmIrVariable v, LlvmIrModuleTarget target, ulong index, object? value, object? callerState)
@@ -540,9 +471,6 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 	void MapStructures (LlvmIrModule module)
 	{
 		applicationConfigStructureInfo = module.MapStructure<ApplicationConfig> ();
-		module.MapStructure<AssemblyStoreAssemblyDescriptor> ();
-		assemblyStoreSingleAssemblyRuntimeDataStructureinfo = module.MapStructure<AssemblyStoreSingleAssemblyRuntimeData> ();
-		assemblyStoreRuntimeDataStructureInfo = module.MapStructure<AssemblyStoreRuntimeData> ();
 		xamarinAndroidBundledAssemblyStructureInfo = module.MapStructure<XamarinAndroidBundledAssembly> ();
 		dsoCacheEntryStructureInfo = module.MapStructure<DSOCacheEntry> ();
 		appEnvironmentVariableStructureInfo = module.MapStructure<LlvmIrHelpers.AppEnvironmentVariable> ();

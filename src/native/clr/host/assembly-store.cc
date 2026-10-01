@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
@@ -14,6 +15,19 @@
 using namespace xamarin::android;
 
 namespace {
+#if defined (RELEASE)
+	auto read_compressed_header (const uint8_t *data, uint32_t size, CompressedAssemblyHeader &header) noexcept -> bool
+	{
+		if (size < sizeof (header)) {
+			return false;
+		}
+
+		// Store data follows variable-length names and need not be naturally aligned.
+		std::memcpy (&header, data, sizeof (header));
+		return header.magic == COMPRESSED_DATA_MAGIC;
+	}
+#endif
+
 	// The assembly store index contains two entries per assembly: one hashed from the name with its
 	// file extension (e.g. `Foo.dll`) and one from the name without it (e.g. `Foo`). The names section,
 	// however, stores only the full name, so a requested name matches a stored name if it is either
@@ -49,51 +63,47 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 	uint32_t assembly_data_size = 0;
 
 #if defined (RELEASE)
-	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(e.image_data);
-	if (header->magic == COMPRESSED_DATA_MAGIC) {
+	CompressedAssemblyHeader header;
+	if (read_compressed_header (e.image_data, e.descriptor->data_size, header)) {
 		log_debugf (LOG_ASSEMBLY, "Resolving compressed assembly '%.*s' from the assembly store", static_cast<int>(name.length ()), name.data ());
 
-		if (compressed_assembly_count == 0) [[unlikely]] {
+		if (compressed_count == 0) [[unlikely]] {
 			Helpers::abort_application (LOG_ASSEMBLY, "Compressed assembly found but no descriptor defined"sv);
 		}
-		if (header->descriptor_index >= compressed_assembly_count) [[unlikely]] {
+		if (header.descriptor_index >= compressed_count) [[unlikely]] {
 			Helpers::abort_applicationf (
 				LOG_ASSEMBLY,
 				std::source_location::current (),
 				"Invalid compressed assembly descriptor index %u",
-				header->descriptor_index
+				header.descriptor_index
 			);
 		}
 
-		CompressedAssemblyDescriptor &cad = compressed_assembly_descriptors[header->descriptor_index];
+		CompressedAssemblyDescriptor &cad = compressed_descriptors[header.descriptor_index];
 		assembly_data_size = e.descriptor->data_size - sizeof(CompressedAssemblyHeader);
 
-		if (cad.buffer_offset >= uncompressed_assemblies_data_size) [[unlikely]] {
+		if (cad.buffer_offset >= uncompressed_size) [[unlikely]] {
 			Helpers::abort_applicationf (
 				LOG_ASSEMBLY,
 				std::source_location::current (),
 				"Invalid compressed assembly buffer offset %u. Must be smaller than %u",
 				cad.buffer_offset,
-				uncompressed_assemblies_data_size
+				uncompressed_size
 			);
 		}
 
-		// This is not a perfect check, since we might be still within the buffer size and yet
-		// have the tail end of this assembly's data overwritten by the next assembly's data, but
-		// that will cause the app to crash when one or the the other assembly is loaded, so it's
-		// OK to accept that risk. The whole situation is very, very unlikely.
-		if (cad.uncompressed_file_size > uncompressed_assemblies_data_size - cad.buffer_offset) [[unlikely]] {
+		if (cad.uncompressed_file_size > uncompressed_size - cad.buffer_offset) [[unlikely]] {
 			Helpers::abort_applicationf (
 				LOG_ASSEMBLY,
 				std::source_location::current (),
 				"Invalid compressed assembly buffer size %u at offset %u. Must not exceed %u",
 				cad.uncompressed_file_size,
 				cad.buffer_offset,
-				uncompressed_assemblies_data_size - cad.buffer_offset
+				uncompressed_size - cad.buffer_offset
 			);
 		}
 
-		uint8_t *data_buffer = uncompressed_assemblies_data_buffer + cad.buffer_offset;
+		uint8_t *data_buffer = uncompressed_buffer + cad.buffer_offset;
 		auto is_loaded = [&cad]() noexcept -> bool {
 			return __atomic_load_n (&cad.loaded, __ATOMIC_ACQUIRE);
 		};
@@ -104,23 +114,6 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			if (is_loaded ()) {
 				set_assembly_data_and_size (data_buffer, cad.uncompressed_file_size, assembly_data, assembly_data_size);
 				return {assembly_data, assembly_data_size};
-			}
-
-			if (header->uncompressed_length != cad.uncompressed_file_size) {
-				if (header->uncompressed_length > cad.uncompressed_file_size) {
-					Helpers::abort_applicationf (
-						LOG_ASSEMBLY,
-						std::source_location::current (),
-						"Compressed assembly '%.*s' is larger than when the application was built (expected at most %u, got %u). Assemblies don't grow just like that!",
-						static_cast<int>(name.length ()),
-						name.data (),
-						cad.uncompressed_file_size,
-						header->uncompressed_length
-					);
-				} else {
-					log_debugf (LOG_ASSEMBLY, "Compressed assembly '%.*s' is smaller than when the application was built. Adjusting accordingly.", static_cast<int>(name.length ()), name.data ());
-				}
-				cad.uncompressed_file_size = header->uncompressed_length;
 			}
 
 			const char *data_start = pointer_add<const char*>(e.image_data, sizeof(CompressedAssemblyHeader));
@@ -165,6 +158,9 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 		log_debugf (LOG_ASSEMBLY, "Copying assembly data to an r/w memory area");
 
 		uint8_t *rw_pointer = static_cast<uint8_t*>(malloc (e.descriptor->data_size));
+		if (rw_pointer == nullptr) [[unlikely]] {
+			Helpers::abort_application (LOG_ASSEMBLY, "Unable to allocate writable assembly data");
+		}
 		memcpy (rw_pointer, e.image_data, e.descriptor->data_size);
 
 		set_assembly_data_and_size (rw_pointer, e.descriptor->data_size, assembly_data, assembly_data_size);
@@ -232,31 +228,12 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 	}
 
 	const AssemblyStoreEntryDescriptor &store_entry = assembly_store.assemblies[hash_entry->descriptor_index];
-	AssemblyStoreSingleAssemblyRuntimeData &assembly_runtime_info = assembly_store_bundled_assemblies[store_entry.mapping_index];
-
-	if (assembly_runtime_info.image_data == nullptr) {
-		// The assignments here don't need to be atomic, the value will always be the same, so even if two threads
-		// arrive here at the same time, nothing bad will happen.
-		assembly_runtime_info.image_data = assembly_store.data_start + store_entry.data_offset;
-		assembly_runtime_info.descriptor = &store_entry;
-		if (store_entry.debug_data_offset != 0) {
-			assembly_runtime_info.debug_info_data = assembly_store.data_start + store_entry.debug_data_offset;
-		}
-
-		log_debugf (
-			LOG_ASSEMBLY,
-			"Mapped: image_data == %p; debug_info_data == %p; config_data == %p; descriptor == %p; data size == %u; debug data size == %u; config data size == %u; name == '%.*s'",
-			static_cast<const void*>(assembly_runtime_info.image_data),
-			static_cast<const void*>(assembly_runtime_info.debug_info_data),
-			static_cast<const void*>(assembly_runtime_info.config_data),
-			static_cast<const void*>(assembly_runtime_info.descriptor),
-			assembly_runtime_info.descriptor->data_size,
-			assembly_runtime_info.descriptor->debug_data_size,
-			assembly_runtime_info.descriptor->config_data_size,
-			static_cast<int>(name.length ()),
-			name.data ()
-		);
+	if (store_entry.data_size == 0) {
+		size = 0;
+		log_debugf (LOG_ASSEMBLY, "Assembly '%.*s' has no data in the assembly store", static_cast<int>(name.length ()), name.data ());
+		return nullptr;
 	}
+	AssemblyStoreSingleAssemblyRuntimeData const& assembly_runtime_info = runtime_assemblies[store_entry.mapping_index];
 
 	auto [assembly_data, assembly_data_size] = get_assembly_data (assembly_runtime_info, name);
 	size = assembly_data_size;
@@ -288,11 +265,14 @@ void AssemblyStore::configure_from_payload (const void *payload_start, const cha
 	}
 
 	constexpr size_t header_size = sizeof(AssemblyStoreHeader);
+	size_t descriptors_offset = Helpers::add_with_overflow_check<size_t> (header_size, header->index_size);
+	size_t descriptors_size = Helpers::multiply_with_overflow_check<size_t> (header->entry_count, sizeof (AssemblyStoreEntryDescriptor));
+	size_t names_offset = Helpers::add_with_overflow_check<size_t> (descriptors_offset, descriptors_size);
 
 	assembly_store.data_start = static_cast<const uint8_t*>(payload_start);
 	assembly_store.assembly_count = header->entry_count;
 	assembly_store.index_entry_count = header->index_entry_count;
-	assembly_store.assemblies = reinterpret_cast<const AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + header->index_size);
+	assembly_store.assemblies = reinterpret_cast<const AssemblyStoreEntryDescriptor*>(assembly_store.data_start + descriptors_offset);
 	assembly_store_hashes = reinterpret_cast<const AssemblyStoreIndexEntry*>(assembly_store.data_start + header_size);
 
 	// Build a lookup of assembly names indexed by descriptor index, used to disambiguate CRC32 hash
@@ -300,11 +280,11 @@ void AssemblyStore::configure_from_payload (const void *payload_start, const cha
 	// `entry_count` length-prefixed (uint32 length followed by the UTF-8 bytes) records, stored in
 	// descriptor-index order. The `free` guards against a leak should the (single) store ever be
 	// re-mapped; `assembly_store_names` is nullptr on first call, for which it is a no-op.
-	const uint8_t *names_cursor = assembly_store.data_start + header_size + header->index_size +
-		(static_cast<size_t>(header->entry_count) * sizeof (AssemblyStoreEntryDescriptor));
+	const uint8_t *names_cursor = assembly_store.data_start + names_offset;
 	std::free (assembly_store_names);
-	assembly_store_names = static_cast<std::string_view*>(std::calloc (header->entry_count, sizeof (std::string_view)));
-	if (assembly_store_names == nullptr) [[unlikely]] {
+	size_t names_size = Helpers::multiply_with_overflow_check<size_t> (header->entry_count, sizeof (std::string_view));
+	assembly_store_names = names_size == 0 ? nullptr : static_cast<std::string_view*>(std::calloc (1, names_size));
+	if (names_size != 0 && assembly_store_names == nullptr) [[unlikely]] {
 		Helpers::abort_application (LOG_ASSEMBLY, "Unable to allocate memory for the assembly store name table");
 	}
 
@@ -316,5 +296,88 @@ void AssemblyStore::configure_from_payload (const void *payload_start, const cha
 		names_cursor += name_length;
 	}
 
+	std::free (runtime_assemblies);
+	size_t runtime_size = Helpers::multiply_with_overflow_check<size_t> (header->entry_count, sizeof (AssemblyStoreSingleAssemblyRuntimeData));
+	runtime_assemblies = runtime_size == 0 ? nullptr :
+		static_cast<AssemblyStoreSingleAssemblyRuntimeData*>(std::calloc (1, runtime_size));
+	if (runtime_size != 0 && runtime_assemblies == nullptr) [[unlikely]] {
+		Helpers::abort_application (LOG_ASSEMBLY, "Unable to allocate assembly store runtime data");
+	}
+
+	std::free (compressed_descriptors);
+	compressed_descriptors = nullptr;
+	compressed_count = 0;
+	uncompressed_size = 0;
+	// CoreCLR can retain returned assembly data for the lifetime of the app. If the store is
+	// reconfigured, keep the previous decompression buffer alive, like the mapped payload itself.
+	uncompressed_buffer = nullptr;
+
+	for (uint32_t i = 0; i < header->entry_count; i++) {
+		const AssemblyStoreEntryDescriptor &entry = assembly_store.assemblies[i];
+		if (entry.data_size == 0) {
+			continue;
+		}
+		if (entry.mapping_index >= header->entry_count) [[unlikely]] {
+			Helpers::abort_application (LOG_ASSEMBLY, "Invalid assembly store runtime mapping index");
+		}
+
+		// Populate pointers during configuration, before probes can run concurrently.
+		AssemblyStoreSingleAssemblyRuntimeData &runtime = runtime_assemblies[entry.mapping_index];
+		runtime.image_data = assembly_store.data_start + entry.data_offset;
+		runtime.descriptor = &entry;
+		if (entry.debug_data_offset != 0) {
+			runtime.debug_info_data = assembly_store.data_start + entry.debug_data_offset;
+		}
+		if (entry.config_data_offset != 0) {
+			runtime.config_data = assembly_store.data_start + entry.config_data_offset;
+		}
+
+#if defined (RELEASE)
+		CompressedAssemblyHeader compressed_header;
+		if (read_compressed_header (runtime.image_data, entry.data_size, compressed_header)) {
+			if (compressed_header.uncompressed_length == 0) [[unlikely]] {
+				Helpers::abort_application (LOG_ASSEMBLY, "Invalid compressed assembly length");
+			}
+			// Compression indices come from the pre-trimming assembly list. They can have
+			// gaps, and the largest index can exceed this store's entry_count.
+			uint32_t capacity = Helpers::add_with_overflow_check<uint32_t> (compressed_header.descriptor_index, 1u);
+			compressed_count = std::max (compressed_count, capacity);
+		}
+#endif
+	}
+
+#if defined (RELEASE)
+	if (compressed_count != 0) {
+		size_t compressed_size = Helpers::multiply_with_overflow_check<size_t> (compressed_count, sizeof (CompressedAssemblyDescriptor));
+		compressed_descriptors = static_cast<CompressedAssemblyDescriptor*>(std::calloc (1, compressed_size));
+		if (compressed_descriptors == nullptr) [[unlikely]] {
+			Helpers::abort_application (LOG_ASSEMBLY, "Unable to allocate compressed assembly descriptors");
+		}
+
+		for (uint32_t i = 0; i < header->entry_count; i++) {
+			const AssemblyStoreEntryDescriptor &entry = assembly_store.assemblies[i];
+			CompressedAssemblyHeader compressed_header;
+			if (!read_compressed_header (assembly_store.data_start + entry.data_offset, entry.data_size, compressed_header)) {
+				continue;
+			}
+
+			CompressedAssemblyDescriptor &descriptor = compressed_descriptors[compressed_header.descriptor_index];
+			if (descriptor.uncompressed_file_size != 0) [[unlikely]] {
+				Helpers::abort_application (LOG_ASSEMBLY, "Duplicate compressed assembly descriptor index");
+			}
+			descriptor.uncompressed_file_size = compressed_header.uncompressed_length;
+			descriptor.buffer_offset = uncompressed_size;
+			uncompressed_size = Helpers::add_with_overflow_check<uint32_t> (uncompressed_size, compressed_header.uncompressed_length);
+		}
+
+		uncompressed_buffer = static_cast<uint8_t*>(std::calloc (uncompressed_size, 1));
+		if (uncompressed_buffer == nullptr) [[unlikely]] {
+			Helpers::abort_application (LOG_ASSEMBLY, "Unable to allocate assembly decompression buffer");
+		}
+	}
+#endif
+
+	log_debugf (LOG_ASSEMBLY, "Assembly store runtime data: %u entries, %u compressed descriptor slots, %u bytes for decompression",
+		assembly_store.assembly_count, compressed_count, uncompressed_size);
 	log_debugf (LOG_ASSEMBLY, "Mapped assembly store %s", optional_string (store_path));
 }

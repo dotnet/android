@@ -1939,10 +1939,12 @@ namespace Xamarin.Android.Build.Tests {
 				}
 
 				var environmentText = File.ReadAllText (environmentFile);
-				var runtimeDataMatch = Regex.Match (environmentText, @"assembly_store_bundled_assemblies.*\[(\d+)\s+x");
-				Assert.IsTrue (runtimeDataMatch.Success, $"{environmentFile} should declare assembly_store_bundled_assemblies.");
-
-				var runtimeDataCount = int.Parse (runtimeDataMatch.Groups [1].Value);
+				StringAssert.DoesNotContain ("@assembly_store_bundled_assemblies", environmentText);
+				StringAssert.DoesNotContain ("@assembly_store =", environmentText);
+				using var storeReader = new BinaryReader (File.OpenRead (Path.ChangeExtension (manifestFile, null)));
+				Assert.AreEqual (0x41424158u, storeReader.ReadUInt32 ());
+				storeReader.ReadUInt32 (); // format version
+				uint runtimeDataCount = storeReader.ReadUInt32 ();
 				var maxMappingIndex = File.ReadLines (manifestFile)
 					.Select (line => Regex.Match (line, @"\bmi:(\d+)\b"))
 					.Where (match => match.Success)
@@ -1952,7 +1954,7 @@ namespace Xamarin.Android.Build.Tests {
 				Assert.That (
 					runtimeDataCount,
 					Is.GreaterThan (maxMappingIndex),
-					$"{Path.GetFileName (environmentFile)} should allocate enough runtime slots for {Path.GetFileName (manifestFile)}.");
+					$"{Path.GetFileName (manifestFile)} should describe enough runtime-owned slots for its mapping indices.");
 			}
 		}
 
