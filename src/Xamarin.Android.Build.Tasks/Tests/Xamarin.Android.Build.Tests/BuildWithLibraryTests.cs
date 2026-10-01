@@ -1209,18 +1209,15 @@ namespace MultiTfmLib
 			using var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName));
 			Assert.IsTrue (appBuilder.Build (app), $"{app.ProjectName} should build");
 
-			// Verify: MultiTfmLib.jlo.xml should NOT be empty (i.e. the assembly was scanned as an Android assembly)
-			var jloXml = appBuilder.Output.GetIntermediaryPath (
-				Path.Combine ("android", "assets", "arm64-v8a", "MultiTfmLib.jlo.xml"));
-			FileAssert.Exists (jloXml);
-
-			var jloXmlInfo = new FileInfo (jloXml);
-			Assert.IsTrue (jloXmlInfo.Length > 0,
-				"MultiTfmLib.jlo.xml should not be empty — the Android-TFM assembly was not loaded (wrong TFM loaded instead)");
-
-			var jloContent = File.ReadAllText (jloXml);
-			Assert.IsTrue (jloContent.Contains ("MyReceiver"),
-				$"MultiTfmLib.jlo.xml should contain the MyReceiver JCW type, but got: {jloContent}");
+			var acwMapFile = appBuilder.Output.GetIntermediaryPath ("acw-map.txt");
+			FileAssert.Exists (acwMapFile);
+			var mappings = File.ReadAllLines (acwMapFile);
+			var mapping = mappings.Single (line => line.StartsWith ("MultiTfmLib.MyReceiver, MultiTfmLib;", StringComparison.Ordinal));
+			var className = $"L{mapping.Split (';') [1].Replace ('.', '/')};";
+			var dexFile = appBuilder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			FileAssert.Exists (dexFile);
+			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath),
+				"The Android-TFM MyReceiver JCW should be compiled into classes.dex.");
 		}
 
 	}

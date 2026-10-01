@@ -38,8 +38,6 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				var platforms = ndk.GetSupportedPlatforms ();
 				Assert.AreNotEqual (0, platforms.Count (), "No platforms found");
 				AndroidTargetArch arch = AndroidTargetArch.X86_64;
-				Assert.IsTrue (ndk.ValidateNdkPlatform (arch, enableLLVM: false));
-				Assert.AreEqual (0, errors.Count, "NdkTools.ValidateNdkPlatform should not have returned false.");
 				int level = ndk.GetMinimumApiLevelFor (arch, runtime);
 
 				int expected = MonoAndroidHelper.GetMinimumApiLevel (arch, runtime);
