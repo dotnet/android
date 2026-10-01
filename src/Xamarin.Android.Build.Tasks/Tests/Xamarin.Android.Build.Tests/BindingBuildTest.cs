@@ -806,7 +806,7 @@ public class UsesDependency {
 				FileAssert.Exists (packagePath);
 				using var package = ZipHelper.OpenZip (packagePath);
 				Assert.IsFalse (
-					package.Any (entry => entry.FullName.EndsWith ($"/{binding.ProjectName}.xml", StringComparison.OrdinalIgnoreCase)),
+					package.Entries.Any (entry => entry.FullName.EndsWith ($"/{binding.ProjectName}.xml", StringComparison.OrdinalIgnoreCase)),
 					$"{packagePath} should not contain an XML documentation file");
 			}
 		}
