@@ -22,7 +22,7 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
     <_AndroidManagedRuntimePackId Condition=" '$(_AndroidManagedRuntimePackId)' == '' ">$(_AndroidTargetingPackId)</_AndroidManagedRuntimePackId>
     <_AndroidManagedRuntimePackId Condition="!$(_AndroidSupportedApiLevels.Contains(',$(_AndroidManagedRuntimePackId),'))">$(_AndroidLatestStableApiLevel)</_AndroidManagedRuntimePackId>
     <_AndroidRuntimePackId Condition=" '$(_AndroidRuntimePackId)' == '' ">$(_AndroidLatestStableApiLevel)</_AndroidRuntimePackId>
-    <_AndroidRuntimePackRuntime Condition=" '$(_AndroidRuntimePackRuntime)' == '' ">Mono</_AndroidRuntimePackRuntime>
+    <_AndroidRuntimePackRuntime Condition=" '$(_AndroidRuntimePackRuntime)' == '' ">CoreCLR</_AndroidRuntimePackRuntime>
   </PropertyGroup>
   <ItemGroup>
     <KnownFrameworkReference

@@ -7,6 +7,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.XPath;
 using System.Xml.Linq;
 
@@ -31,6 +32,14 @@ namespace Xamarin.ProjectTools
 		const string SigSegvError = "Got a SIGSEGV while executing native code";
 		const string ConsoleLoggerError = "[ERROR] FATAL UNHANDLED EXCEPTION: System.ArgumentException: is negative";
 		const int DefaultBuildTimeOut = 30;
+		const int OutputDrainTimeoutSeconds = 2;
+
+		public static bool WaitForRedirectedOutput (Task outputDone, Task errorDone)
+		{
+			bool outputDrained = outputDone.Wait (TimeSpan.FromSeconds (OutputDrainTimeoutSeconds));
+			bool errorDrained = errorDone.Wait (TimeSpan.FromSeconds (OutputDrainTimeoutSeconds));
+			return outputDrained && errorDrained;
+		}
 
 		string root;
 		string buildLogFullPath;
@@ -328,8 +337,8 @@ namespace Xamarin.ProjectTools
 			bool result = false;
 			bool ranToCompletion = false;
 			int attempts = 1;
-			ManualResetEvent err = new ManualResetEvent (false);
-			ManualResetEvent stdout = new ManualResetEvent (false);
+			var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 			for (int attempt = 0; attempt < attempts; attempt++) {
 				if (processLog != null)
 					File.AppendAllText (processLog, psi.FileName + " " + args.ToString () + Environment.NewLine);
@@ -345,7 +354,7 @@ namespace Xamarin.ProjectTools
 							}
 						}
 						if (e.Data == null)
-							err.Set ();
+							errorDone.TrySetResult (true);
 					};
 					p.OutputDataReceived += (sender, e) => {
 						if (e.Data != null && !string.IsNullOrEmpty (processLog)) {
@@ -358,7 +367,7 @@ namespace Xamarin.ProjectTools
 							}
 						}
 						if (e.Data == null)
-							stdout.Set ();
+							outputDone.TrySetResult (true);
 					};
 					p.StartInfo = psi;
 					Console.WriteLine ($"{psi.FileName} {psi.Arguments}");
@@ -366,10 +375,11 @@ namespace Xamarin.ProjectTools
 					p.BeginOutputReadLine ();
 					p.BeginErrorReadLine ();
 					ranToCompletion = p.WaitForExit ((int)new TimeSpan (0, DefaultBuildTimeOut, 0).TotalMilliseconds);
-					if (psi.RedirectStandardOutput)
-						stdout.WaitOne ();
-					if (psi.RedirectStandardError)
-						err.WaitOne ();
+					if (!ranToCompletion && !p.HasExited)
+						p.Kill (entireProcessTree: true);
+					// ADB can leave a server process holding the build's redirected handles after dotnet exits.
+					if (!WaitForRedirectedOutput (outputDone.Task, errorDone.Task))
+						Console.WriteLine ($"Build process {p.Id} exited or timed out with redirected output still open after {OutputDrainTimeoutSeconds} seconds.");
 					result = ranToCompletion && p.ExitCode == 0;
 					if (processLog != null) {
 						if (ranToCompletion) {

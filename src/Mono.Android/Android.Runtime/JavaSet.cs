@@ -107,9 +107,11 @@ namespace Android.Runtime {
 			get { return false; }
 		}
 
+#pragma warning disable CS8766 // Preserve the legacy nullable API and null SyncRoot behavior.
 		public object? SyncRoot {
 			get { return null; }
 		}
+#pragma warning restore CS8766
 
 		//
 		// Exception audit:

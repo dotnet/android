@@ -1,7 +1,7 @@
 ---
 title: Overview
 description: "The Android community has many Java libraries that you may want to use in your app; this guide explains how to incorporate Java libraries into your .NET for Android application by creating a Bindings Library."
-ms.author: jopobst
+ms.author: jopepper
 ms.date: 05/08/2024
 ---
 

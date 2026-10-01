@@ -173,8 +173,7 @@ namespace Xamarin.Android.Tasks
 			data.ManagedToJavaMap.Sort ((TypeMapDebugEntry a, TypeMapDebugEntry b) => String.Compare (a.ManagedName, b.ManagedName, StringComparison.Ordinal));
 
 			LLVMIR.LlvmIrComposer composer = runtime switch {
-				AndroidRuntime.MonoVM => new TypeMappingDebugNativeAssemblyGenerator (log, data),
-				AndroidRuntime.CoreCLR => new TypeMappingDebugNativeAssemblyGeneratorCLR (log, data),
+				AndroidRuntime.CoreCLR => new TypeMappingDebugNativeAssemblyGenerator (log, data),
 				_ => throw new NotSupportedException ($"Internal error: unsupported runtime {runtime}")
 			};
 			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
@@ -199,8 +198,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			LLVMIR.LlvmIrComposer composer = runtime switch {
-				AndroidRuntime.MonoVM => new TypeMappingReleaseNativeAssemblyGenerator (log, new NativeTypeMappingData (log, modules)),
-				AndroidRuntime.CoreCLR => new TypeMappingReleaseNativeAssemblyGeneratorCLR (log, new NativeTypeMappingData (log, modules)),
+				AndroidRuntime.CoreCLR => new TypeMappingReleaseNativeAssemblyGenerator (log, new NativeTypeMappingData (log, modules)),
 				_ => throw new NotSupportedException ($"Internal error: unsupported runtime {runtime}")
 			};
 

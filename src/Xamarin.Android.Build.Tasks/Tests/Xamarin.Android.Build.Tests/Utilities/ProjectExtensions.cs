@@ -41,13 +41,9 @@ public static class ProjectExtensions
 	{
 		switch (runtime) {
 			case AndroidRuntime.CoreCLR:
-				project.SetProperty ("UseMonoRuntime", "false");
 				break;
 			case AndroidRuntime.NativeAOT:
 				project.SetProperty ("PublishAot", "true");
-				break;
-			case AndroidRuntime.MonoVM:
-				project.SetProperty ("UseMonoRuntime", "true");
 				break;
 
 			default:

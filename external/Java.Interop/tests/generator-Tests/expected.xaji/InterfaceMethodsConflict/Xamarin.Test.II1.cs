@@ -16,29 +16,13 @@ namespace Xamarin.Test {
 
 	[global::Android.Runtime.Register ("xamarin/test/I1", DoNotGenerateAcw=true)]
 	internal partial class II1Invoker : global::Java.Lang.Object, II1 {
-		static IntPtr java_class_ref {
-			get { return _members_xamarin_test_I1.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members_xamarin_test_I1; }
 		}
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members_xamarin_test_I1.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members_xamarin_test_I1.ManagedPeerType; }
-		}
-
-		static readonly JniPeerMembers _members_xamarin_test_I1 = new XAPeerMembers ("xamarin/test/I1", typeof (II1Invoker));
+		static readonly JniPeerMembers _members_xamarin_test_I1 = new JniPeerMembers ("xamarin/test/I1", typeof (II1Invoker));
 
 		public II1Invoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
@@ -67,10 +51,7 @@ namespace Xamarin.Test {
 		public unsafe void Close ()
 		{
 			const string __id = "close.()V";
-			try {
-				_members_xamarin_test_I1.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members_xamarin_test_I1.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 		}
 
 	}

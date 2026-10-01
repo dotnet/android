@@ -24,8 +24,7 @@ namespace Xamarin.Android.Tasks;
 /// 2. **P/Invoke Preservation** (when EnableNativeRuntimeLinking=true): Generates additional 
 ///    code to preserve P/Invoke methods that would otherwise be removed by native linking.
 /// 
-/// 3. **Runtime-Specific Code**: Adapts the generated code for the target runtime (MonoVM or CoreCLR),
-///    handling differences in runtime linking and method resolution.
+/// 3. **Runtime-Specific Code**: Adapts the generated code for CoreCLR runtime linking and method resolution.
 /// 
 /// 4. **Architecture Support**: Generates separate code files for each supported Android ABI
 ///    (arm64-v8a, armeabi-v7a, x86_64, x86).
@@ -55,12 +54,6 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 	public bool EnableNativeRuntimeLinking { get; set; }
 
 	/// <summary>
-	/// Gets or sets the Mono runtime components to include in the build.
-	/// Used for P/Invoke preservation when native linking is enabled.
-	/// </summary>
-	public ITaskItem[] MonoComponents { get; set; } = [];
-
-	/// <summary>
 	/// Gets or sets the output directory for environment files.
 	/// Generated LLVM IR files are written to this directory.
 	/// </summary>
@@ -82,7 +75,7 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 	public ITaskItem [] ResolvedAssemblies { get; set; } = [];
 
 	/// <summary>
-	/// Gets or sets the target Android runtime (MonoVM or CoreCLR).
+	/// Gets or sets the target Android runtime.
 	/// Determines which runtime-specific code generator to use.
 	/// </summary>
 	[Required]
@@ -114,7 +107,7 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 	/// <remarks>
 	/// The execution flow is:
 	/// 
-	/// 1. Parse the Android runtime type (MonoVM or CoreCLR)
+	/// 1. Parse the Android runtime type
 	/// 2. Retrieve native code generation state from previous pipeline stages (if marshal methods enabled)
 	/// 3. Generate LLVM IR files for each supported ABI
 	/// 4. Handle both marshal methods and P/Invoke preservation code as needed
@@ -177,19 +170,18 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 		var pinvokePreserveBaseAsmFilePath = EnableNativeRuntimeLinking ? Path.Combine (EnvironmentOutputDirectory, $"pinvoke_preserve.{targetAbi}") : null;
 		var marshalMethodsLlFilePath = $"{marshalMethodsBaseAsmFilePath}.ll";
 		var pinvokePreserveLlFilePath = pinvokePreserveBaseAsmFilePath != null ? $"{pinvokePreserveBaseAsmFilePath}.ll" : null;
-		var (assemblyCount, uniqueAssemblyNames) = GetAssemblyCountAndUniqueNames ();
+		var (_, uniqueAssemblyNames) = GetAssemblyCountAndUniqueNames ();
 
 		// Create the appropriate runtime-specific generator
 		MarshalMethodsNativeAssemblyGenerator marshalMethodsAsmGen = androidRuntime switch {
-			Tasks.AndroidRuntime.MonoVM => MakeMonoGenerator (),
-			Tasks.AndroidRuntime.CoreCLR => MakeCoreCLRGenerator (),
+			Tasks.AndroidRuntime.CoreCLR => MakeGenerator (),
 			_ => throw new NotSupportedException ($"Internal error: unsupported runtime type '{androidRuntime}'")
 		};
 
 		// Generate P/Invoke preservation code if native linking is enabled
 		bool fileFullyWritten;
 		if (EnableNativeRuntimeLinking) {
-			var pinvokePreserveGen = new PreservePinvokesNativeAssemblyGenerator (Log, EnsureCodeGenState (nativeCodeGenStates, targetArch), MonoComponents);
+			var pinvokePreserveGen = new PreservePinvokesNativeAssemblyGenerator (Log, EnsureCodeGenState (nativeCodeGenStates, targetArch));
 			LLVMIR.LlvmIrModule pinvokePreserveModule = pinvokePreserveGen.Construct ();
 			using var pinvokePreserveWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
 			fileFullyWritten = false;
@@ -224,39 +216,14 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 		}
 
 		/// <summary>
-		/// Creates a MonoVM-specific marshal methods generator.
-		/// Handles both enabled and disabled marshal methods scenarios.
-		/// </summary>
-		/// <returns>A configured MonoVM marshal methods generator.</returns>
-		MarshalMethodsNativeAssemblyGenerator MakeMonoGenerator ()
-		{
-			if (EnableMarshalMethods) {
-				return new MarshalMethodsNativeAssemblyGeneratorMonoVM (
-					Log,
-					assemblyCount,
-					uniqueAssemblyNames,
-					EnsureCodeGenState (nativeCodeGenStates, targetArch)
-				);
-			}
-
-			// Generate empty/minimal code when marshal methods are disabled
-			return new MarshalMethodsNativeAssemblyGeneratorMonoVM (
-				Log,
-				targetArch,
-				assemblyCount,
-				uniqueAssemblyNames
-			);
-		}
-
-		/// <summary>
 		/// Creates a CoreCLR-specific marshal methods generator.
 		/// Handles both enabled and disabled marshal methods scenarios.
 		/// </summary>
 		/// <returns>A configured CoreCLR marshal methods generator.</returns>
-		MarshalMethodsNativeAssemblyGenerator MakeCoreCLRGenerator ()
+		MarshalMethodsNativeAssemblyGenerator MakeGenerator ()
 		{
 			if (EnableMarshalMethods) {
-				return new MarshalMethodsNativeAssemblyGeneratorCoreCLR (
+				return new MarshalMethodsNativeAssemblyGenerator (
 					Log,
 					uniqueAssemblyNames,
 					EnsureCodeGenState (nativeCodeGenStates, targetArch)
@@ -264,7 +231,7 @@ public class GenerateNativeMarshalMethodSources : AndroidTask
 			}
 
 			// Generate empty/minimal code when marshal methods are disabled
-			return new MarshalMethodsNativeAssemblyGeneratorCoreCLR (
+			return new MarshalMethodsNativeAssemblyGenerator (
 				Log,
 				targetArch,
 				uniqueAssemblyNames

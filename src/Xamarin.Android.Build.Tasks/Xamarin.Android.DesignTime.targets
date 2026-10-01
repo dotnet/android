@@ -46,7 +46,9 @@ This file is used by all project types, including binding projects.
       <_AndroidLibraryImportsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidLibraryImportsCache)') ">$(_AndroidLibraryImportsDesignTimeCache)</_AndroidLibraryImportsCache>
       <_AndroidLibraryProjectImportsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidLibraryProjectImportsCache)') ">$(_AndroidLibraryProjectImportsDesignTimeCache)</_AndroidLibraryProjectImportsCache>
       <_AndroidBuildPropertiesCache Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidDesignTimeBuildPropertiesCache)</_AndroidBuildPropertiesCache>
-      <_GeneratorStampFile Condition=" '$(DesignTimeBuild)' == 'true' And !Exists('$(_GeneratorStampFile)') ">$(_AndroidIntermediateDesignTimeStampDirectory)generator.stamp</_GeneratorStampFile>
+      <_GeneratorStampFile Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidIntermediateDesignTimeStampDirectory)generator-uco-callbacks-$(_AndroidUnmanagedCallersOnlyCallbacksState).stamp</_GeneratorStampFile>
+      <_OtherGeneratorStampFile Condition=" '$(DesignTimeBuild)' == 'true' And '$(_AndroidUnmanagedCallersOnlyCallbacksState)' == 'true' ">$(_AndroidIntermediateDesignTimeStampDirectory)generator-uco-callbacks-false.stamp</_OtherGeneratorStampFile>
+      <_OtherGeneratorStampFile Condition=" '$(DesignTimeBuild)' == 'true' And '$(_AndroidUnmanagedCallersOnlyCallbacksState)' != 'true' ">$(_AndroidIntermediateDesignTimeStampDirectory)generator-uco-callbacks-true.stamp</_OtherGeneratorStampFile>
       <_AndroidResgenFlagFile Condition=" '$(DesignTimeBuild)' == 'true' And !Exists('$(_AndroidResgenFlagFile)') ">$(_AndroidIntermediateDesignTimeBuildDirectory)R.cs.flag</_AndroidResgenFlagFile>
     </PropertyGroup>
     <MakeDir

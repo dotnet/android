@@ -64,7 +64,7 @@ static class UtilityExtensions
 		if (value.IsNullOrWhiteSpace ())
 			throw new InvalidOperationException ($"Missing required attribute '{name}'");
 
-		return value!;  // NRT - Guarded by IsNullOrWhiteSpace check above
+		return value;
 	}
 
 	public static void WriteAttributeStringIfNotDefault (this XmlWriter xml, string name, string? value)

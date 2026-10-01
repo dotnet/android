@@ -176,7 +176,7 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		/// <remarks>
 		/// <para>This scans the build output for the <c>Installed Package</c> message written by the
-		/// <c>FastDeploy</c> and <c>FastDeploy2</c> tasks. Both write it with
+		/// <c>FastDeploy</c> task. It writes the message with
 		/// <see cref="Microsoft.Build.Framework.MessageImportance.Low"/>, so it is only present in the
 		/// build output at <see cref="Microsoft.Build.Framework.LoggerVerbosity.Detailed"/> or higher.</para>
 		/// <para>At a lower verbosity this property would silently return <c>false</c> no matter what the

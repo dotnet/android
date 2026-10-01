@@ -30,8 +30,6 @@ Novell
 *.keystore
 /omnisharp.json
 src/native/CMakePresets.json
-src/native/mono/pinvoke-override/generate-pinvoke-tables
-src/native/mono/pinvoke-override/pinvoke-tables.include.generated
 dotnet-install.ps1
 *.gdn.sarif
 BenchmarkDotNet.Artifacts/

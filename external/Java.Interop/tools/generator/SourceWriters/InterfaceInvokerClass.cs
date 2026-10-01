@@ -36,16 +36,7 @@ namespace generator.SourceWriters
 
 			string members = $"_members_{iface.JavaFullNameId}";
 
-			if (!ji) {
-				Properties.Add (new InterfaceHandleGetter (members));
-			}
-
 			Properties.Add (new JniPeerMembersGetter (members));
-
-			if (!ji) {
-				Properties.Add (new InterfaceThresholdClassGetter ($"{members}.JniPeerType.PeerReference.Handle"));
-				Properties.Add (new ThresholdTypeGetter (members));
-			}
 
 			foreach (var i in GetCompleteImplementedInterfaces (new (), iface).OrderBy (x => x.JavaFullNameId)) {
 				var mi = new PeerMembersField (opt, i.RawJniName, $"{iface.Name}Invoker", isInterface:false, name: $"_members_{i.JavaFullNameId}");

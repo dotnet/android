@@ -103,13 +103,19 @@
         EnvironmentVariables="NUGET_PACKAGES=$(_TempDirectory);DOTNET_MULTILEVEL_LOOKUP=0"
     />
     <ItemGroup>
-      <_WLManifestPack Include="$(MauiPackagePath)\Microsoft.NET.Sdk.Maui.Manifest-$(MauiVersionBand.Substring (0,3))*.nupkg" />
+      <_WLManifestPack Condition=" '$(MauiUseLocalPacks)' == 'true' " Include="$(MauiPackagePath)\Microsoft.NET.Sdk.Maui.Manifest-*.nupkg" />
     </ItemGroup>
+    <Error
+        Condition=" '$(MauiUseLocalPacks)' == 'true' and '@(_WLManifestPack->Count())' != '1' "
+        Text="Expected exactly one local .NET MAUI workload manifest package in '$(MauiPackagePath)', found @(_WLManifestPack->Count())." />
     <Unzip
         Condition=" '$(MauiUseLocalPacks)' == 'true' "
         SourceFiles="@(_WLManifestPack)"
         DestinationFolder="$(_TempDirectory)"
     />
+    <Error
+        Condition=" '$(MauiUseLocalPacks)' == 'true' and !Exists('$(_TempDirectory)\data\WorkloadManifest.json') "
+        Text="The local .NET MAUI manifest package '@(_WLManifestPack)' does not contain data\WorkloadManifest.json." />
 
     <!-- Copy WorkloadManifest.* files-->
     <ItemGroup>

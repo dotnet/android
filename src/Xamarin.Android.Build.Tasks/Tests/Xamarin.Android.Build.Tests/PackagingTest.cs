@@ -112,7 +112,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckDebugModeWithTrimming ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void CheckDebugModeWithTrimming ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime, [Values] bool readyToRun)
 		{
 			bool usesAssemblyStores = runtime == AndroidRuntime.CoreCLR;
 			var proj = new XamarinAndroidApplicationProject {
@@ -122,19 +122,34 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("PublishTrimmed", "true");
+			proj.SetProperty ("PublishReadyToRun", readyToRun.ToString ());
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
 
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 
-			var apk = Path.Combine (Root, b.ProjectDirectory,
-				proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-			var helper = new ArchiveAssemblyHelper (apk, usesAssemblyStores);
-			helper.Contains (["Mono.Android.dll", $"{proj.ProjectName}.dll"], out _, out var missingFiles, out _, [AndroidTargetArch.Arm64, AndroidTargetArch.X86_64]);
+			AssertPackagedAssemblies ();
+			Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "incremental build should have succeeded.");
+			AssertPackagedAssemblies ();
 
-			Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
-				string.Format ("The following Expected files are missing. {0}",
-				string.Join (Environment.NewLine, missingFiles)));
+			void AssertPackagedAssemblies ()
+			{
+				var apk = Path.Combine (Root, b.ProjectDirectory,
+					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+				var helper = new ArchiveAssemblyHelper (apk, usesAssemblyStores);
+				helper.Contains ([
+					"Mono.Android.dll",
+					$"{proj.ProjectName}.dll",
+					"_Microsoft.Android.TypeMaps.dll",
+					$"_{proj.ProjectName}.TypeMap.dll",
+					"_Java.Interop.TypeMap.dll",
+					"_Mono.Android.TypeMap.dll",
+				], out _, out var missingFiles, out _, [AndroidTargetArch.Arm64, AndroidTargetArch.X86_64]);
+
+				Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
+					string.Format ("The following Expected files are missing. {0}",
+					string.Join (Environment.NewLine, missingFiles)));
+			}
 		}
 
 		[Test]
@@ -152,7 +167,6 @@ namespace Xamarin.Android.Build.Tests
 
 			AndroidTargetArch[] supportedArches = new[] {
 				runtime switch {
-					AndroidRuntime.MonoVM => AndroidTargetArch.Arm,
 					AndroidRuntime.CoreCLR => AndroidTargetArch.Arm64,
 					_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 				}
@@ -185,19 +199,18 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				"System.Console.dll",
 				"System.Private.CoreLib.dll",
 				"System.Runtime.dll",
-				"System.Runtime.InteropServices.dll",
 				"System.Linq.dll",
 				"UnnamedProject.dll",
 				"_Microsoft.Android.Resource.Designer.dll",
+				"_Microsoft.Android.TypeMaps.dll",
+				"_UnnamedProject.TypeMap.dll",
+				"_Mono.Android.TypeMap.dll",
+				"_Java.Interop.TypeMap.dll",
 				"Humanizer.dll",
 				"es/Humanizer.resources.dll",
 				"System.Collections.dll",
 				"System.Text.RegularExpressions.dll",
 			};
-
-			if (runtime == AndroidRuntime.MonoVM) {
-				expectedFiles.Add ("libarc.bin.so");
-			}
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
@@ -438,11 +451,6 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				return;
 			}
 
-			// TODO: NativeAOT doesn't create obj/Release/android/src/foo/Bar.java, instead it creates obj/Release/android/src/crc64dca3aed1e0ff8a1a/Bar.java
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT doesn't follow the explicit package naming policy");
-			}
-
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -450,11 +458,13 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			proj.Sources.Add (new BuildItem.Source ("Bar.cs") {
 				TextContent = () => "namespace Foo { class Bar : Java.Lang.Object { } }"
 			});
-			proj.SetProperty (proj.DebugProperties, "AndroidPackageNamingPolicy", "Lowercase");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "System.GC.KeepAlive (new Foo.Bar ());");
+			proj.SetProperty ("AndroidPackageNamingPolicy", "LowercaseCrc64");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build failed");
-				var text = b.Output.GetIntermediaryAsText (b.Output.IntermediateOutputPath, Path.Combine ("android", "src", "foo", "Bar.java"));
-				Assert.IsTrue (text.Contains ("package foo;"), "expected package not found in the source.");
+				var javaSource = b.Output.GetIntermediaryPath (Path.Combine ("typemap", "java", "crc64dca3aed1e0ff8a1a", "Bar.java"));
+				FileAssert.Exists (javaSource);
+				StringAssert.Contains ("package crc64dca3aed1e0ff8a1a;", File.ReadAllText (javaSource));
 			}
 		}
 
@@ -488,7 +498,6 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				}
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty (proj.DebugProperties, "AndroidPackageNamingPolicy", "Lowercase");
 			foreach (var package in packages)
 				proj.PackageReferences.Add (package);
 			using (var b = CreateApkBuilder ()) {
@@ -599,11 +608,7 @@ namespace UnnamedProject {
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningStorePass", Uri.EscapeDataString (pass));
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
 			if (perAbiApk) {
-				if (runtime == AndroidRuntime.MonoVM) {
-					proj.SetRuntimeIdentifiers (new[] { "armeabi-v7a", "x86", "arm64-v8a", "x86_64" });
-				} else {
-					proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
-				}
+				proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
 			} else {
 				proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
 			}
@@ -624,21 +629,12 @@ namespace UnnamedProject {
 				// Make sure the APKs have unique version codes
 				if (perAbiApk) {
 					var versionList = new List<int> ();
-					int armManifestCode = Int32.MinValue;
-					int x86ManifestCode = Int32.MinValue;
-					if (runtime == AndroidRuntime.MonoVM) {
-						armManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "armeabi-v7a", "AndroidManifest.xml"));
-						x86ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "x86", "AndroidManifest.xml"));
-						versionList.Add (armManifestCode);
-						versionList.Add (x86ManifestCode);
-					}
-
 					int arm64ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "arm64-v8a", "AndroidManifest.xml"));
 					int x86_64ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "x86_64", "AndroidManifest.xml"));
 					versionList.Add (arm64ManifestCode);
 					versionList.Add (x86_64ManifestCode);
 					Assert.True (versionList.Distinct ().Count () == versionList.Count,
-						$"APK version codes were not unique - armeabi-v7a: {armManifestCode}, x86: {x86ManifestCode}, arm64-v8a: {arm64ManifestCode}, x86_64: {x86_64ManifestCode}");
+						$"APK version codes were not unique - arm64-v8a: {arm64ManifestCode}, x86_64: {x86_64ManifestCode}");
 				}
 
 				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
@@ -668,11 +664,9 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void CheckAppBundle ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void CheckAppBundle ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
@@ -700,16 +694,9 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void MissingSatelliteAssemblyInLibrary ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void MissingSatelliteAssemblyInLibrary ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT builds don't package satellite assemblies");
-			}
-
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				IsRelease = isRelease,
@@ -765,9 +752,7 @@ namespace UnnamedProject {
 				return;
 			}
 
-			// PublishAot is NativeAOT but it doesn't support assemblies, so when `publishAot` is `true`, we run only
-			// the Mono test.
-			if (publishAot && runtime != AndroidRuntime.MonoVM) {
+			if (publishAot) {
 				Assert.Ignore ("NativeAOT and CoreCLR don't support PublishAot with satellite assemblies");
 			}
 

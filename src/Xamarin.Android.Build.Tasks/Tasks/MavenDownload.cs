@@ -22,7 +22,7 @@ public class MavenDownload : AsyncTask
 	/// The cache directory to use for Maven artifacts.
 	/// </summary>
 	[Required]
-	public string MavenCacheDirectory { get; set; } = null!; // NRT enforced by [Required]
+	public string MavenCacheDirectory { get; set; } = "";
 
 	/// <summary>
 	/// The set of Maven libraries that we are being asked to acquire.

@@ -27,7 +27,7 @@ namespace Test.ME {
 			}
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/TestInterface", typeof (TestInterface));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("test/me/TestInterface", typeof (TestInterface));
 
 	}
 
@@ -78,29 +78,13 @@ namespace Test.ME {
 
 	[global::Android.Runtime.Register ("test/me/TestInterface", DoNotGenerateAcw=true)]
 	internal partial class ITestInterfaceInvoker : global::Java.Lang.Object, ITestInterface {
-		static IntPtr java_class_ref {
-			get { return _members_test_me_TestInterface.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members_test_me_TestInterface; }
 		}
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members_test_me_TestInterface.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members_test_me_TestInterface.ManagedPeerType; }
-		}
-
-		static readonly JniPeerMembers _members_test_me_TestInterface = new XAPeerMembers ("test/me/TestInterface", typeof (ITestInterfaceInvoker));
+		static readonly JniPeerMembers _members_test_me_TestInterface = new JniPeerMembers ("test/me/TestInterface", typeof (ITestInterfaceInvoker));
 
 		public ITestInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
@@ -131,14 +115,12 @@ namespace Test.ME {
 		public unsafe int GetSpanFlags (global::Java.Lang.Object tag)
 		{
 			const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((tag == null) ? IntPtr.Zero : ((global::Java.Lang.Object) tag).Handle);
-				var __rm = _members_test_me_TestInterface.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
-				return __rm;
-			} finally {
-				global::System.GC.KeepAlive (tag);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue ((tag == null) ? IntPtr.Zero : ((global::Java.Lang.Object) tag).Handle);
+			var __rm = _members_test_me_TestInterface.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
+			var __result = __rm;
+			global::System.GC.KeepAlive (tag);
+			return __result;
 		}
 
 		static Delegate cb_append_Append_Ljava_lang_CharSequence__V;

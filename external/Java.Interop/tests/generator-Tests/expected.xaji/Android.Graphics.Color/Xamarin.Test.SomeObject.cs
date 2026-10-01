@@ -31,35 +31,16 @@ namespace Xamarin.Test {
 			set {
 				const string __id = "backColor.I";
 
-				try {
-					_members.InstanceFields.SetValue (__id, this, value.ToArgb ());
-				} finally {
-				}
+				_members.InstanceFields.SetValue (__id, this, value.ToArgb ());
 			}
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/SomeObject", typeof (SomeObject));
-
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
+		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SomeObject", typeof (SomeObject));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
 		}
 
 		protected SomeObject (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
@@ -125,7 +106,7 @@ namespace Xamarin.Test {
 		{
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/SomeObject", typeof (SomeObjectInvoker));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SomeObject", typeof (SomeObjectInvoker));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -133,33 +114,21 @@ namespace Xamarin.Test {
 			get { return _members; }
 		}
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
-		}
-
 		public override unsafe global::Android.Graphics.Color SomeColor {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeColor' and count(parameter)=0]"
 			[Register ("getSomeColor", "()I", "GetGetSomeColorHandler")]
 			get {
 				const string __id = "getSomeColor.()I";
-				try {
-					var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
-					return new global::Android.Graphics.Color (__rm);
-				} finally {
-				}
+				var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
+				return new global::Android.Graphics.Color (__rm);
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeColor' and count(parameter)=1 and parameter[1][@type='Android.Graphics.Color']]"
 			[Register ("setSomeColor", "(I)V", "GetSetSomeColor_IHandler")]
 			set {
 				const string __id = "setSomeColor.(I)V";
-				try {
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue (value.ToArgb ());
-					_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-				} finally {
-				}
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value.ToArgb ());
+				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
 			}
 		}
 

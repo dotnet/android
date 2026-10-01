@@ -18,15 +18,8 @@ namespace Xamarin.Android.Build.Tests
 		public void MonoAndroidExportReferencedAppStarts (
 			[Values] bool embedAssemblies,
 			[Values] bool isRelease,
-			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+			[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT does not support Mono.Android.Export");
-			}
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				References = {
@@ -87,7 +80,7 @@ namespace UnnamedProject
 				b.LatestTargetFrameworkVersion (out string apiLevel);
 				proj.SupportedOSPlatformVersion = "24.0";
 				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""${proj.PackageName}"">
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
 	<uses-sdk android:targetSdkVersion=""{apiLevel}"" />
 	<application android:label=""${{PROJECT_NAME}}"">
 	</application >
@@ -107,15 +100,8 @@ namespace UnnamedProject
 		[Test]
 		public void ExportedMembersSurviveGarbageCollection (
 			[Values] bool isRelease,
-			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+			[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT does not support Mono.Android.Export");
-			}
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				References = {

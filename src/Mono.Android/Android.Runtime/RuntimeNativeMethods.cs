@@ -24,14 +24,6 @@ namespace Android.Runtime
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial void monodroid_log (LogLevel level, LogCategories category, string message);
 
-		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial IntPtr monodroid_timing_start (string? message);
-
-		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial void monodroid_timing_stop (IntPtr sequence, string? message);
-
 		[LibraryImport (RuntimeConstants.InternalDllName)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial void monodroid_free (IntPtr ptr);
@@ -125,17 +117,11 @@ namespace Android.Runtime
 		[return: MarshalAs (UnmanagedType.U1)]
 		internal static partial bool clr_typemap_java_to_managed (string java_type_name, out IntPtr managed_assembly_name, out uint managed_type_token_id);
 
-		[LibraryImport (RuntimeConstants.InternalDllName)]
+		[LibraryImport (RuntimeConstants.InternalDllName, EntryPoint = "clr_initialize_gc_bridge")]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial delegate* unmanaged<MarkCrossReferencesArgs*, void> clr_initialize_gc_bridge (
-			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridge_processing_started_callback,
-			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridge_processing_finished_callback);
+			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridgeProcessingCallback);
 
-		[MethodImplAttribute(MethodImplOptions.InternalCall)]
-		internal static extern void monodroid_unhandled_exception (Exception javaException);
-
-		[MethodImplAttribute(MethodImplOptions.InternalCall)]
-		internal static extern unsafe void monodroid_debugger_unhandled_exception (Exception e);
 	}
 }
 #endif // INSIDE_MONO_ANDROID_RUNTIME

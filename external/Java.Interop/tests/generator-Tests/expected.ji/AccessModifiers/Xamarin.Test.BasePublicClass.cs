@@ -34,10 +34,7 @@ namespace Xamarin.Test {
 		public virtual unsafe void BaseMethod ()
 		{
 			const string __id = "baseMethod.()V";
-			try {
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 		}
 
 	}

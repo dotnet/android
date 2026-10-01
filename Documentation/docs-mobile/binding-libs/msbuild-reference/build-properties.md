@@ -1,7 +1,7 @@
 ---
 title: Binding Projects MSBuild Properties
 description: This guide documents the various MSBuild properties available for bindings projects.
-ms.author: jopobst
+ms.author: jopepper
 ms.date: 05/08/2024
 ---
 

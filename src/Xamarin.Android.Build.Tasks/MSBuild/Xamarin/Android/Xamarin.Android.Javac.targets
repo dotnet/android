@@ -52,7 +52,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
   </Target>
 
   <Target Name="_DetermineJavaLibrariesToCompile"
-      DependsOnTargets="_CollectJavaSourceForBinding;_CompileBindingJava">
+      DependsOnTargets="_CategorizeAndroidLibraries;_CollectJavaSourceForBinding;_CompileBindingJava">
 
     <DetermineJavaLibrariesToCompile
         MonoPlatformJarPaths="$(MonoPlatformJarPath);$(_RuntimeJar)"
