@@ -36,6 +36,136 @@ namespace Xamarin.Android.Build.Tests {
 			AssertTrimmableTypeMapOutputs (intermediateDir);
 		}
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public void DebugTrimmableExportsSkipLegacyScanning (bool enableCompatibilityFixups)
+		{
+			var testRoot = Path.Combine ("temp", TestName);
+			string exportSource = """
+				using System.Collections;
+				using Android.Runtime;
+				using Java.Interop;
+
+				namespace TrimmableExports;
+
+				[Register ("com/example/DebugExportPeer")]
+				public class ExportPeer : Java.Lang.Object
+				{
+					[Export ("makeList")]
+					public IList MakeList () => new ArrayList { "alpha" };
+
+					[Register ("equals", "(Ljava/lang/Object;)Z", "")]
+					public bool SameObject (Java.Lang.Object value) => Equals (value);
+				}
+				""";
+			var library = new XamarinAndroidLibraryProject {
+				ProjectName = "TrimmableExports",
+				Sources = {
+					new BuildItem.Source ("ExportPeer.cs") { TextContent = () => exportSource },
+				},
+			};
+			library.SetRuntime (AndroidRuntime.CoreCLR);
+			// Model a legacy binding so the opted-in keep-alive rewrite actually changes its MVID.
+			library.SetProperty ("GenerateAssemblyInfo", "false");
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers (["arm64-v8a", "x86_64"]);
+			proj.SetProperty ("PublishTrimmed", "false");
+			proj.SetProperty ("AndroidEnableLegacyCompatibilityAssemblyFixups", enableCompatibilityFixups.ToString ());
+			proj.SetProperty ("AndroidAddKeepAlives", "true");
+			proj.AddReference (library);
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				"using var peer = new TrimmableExports.ExportPeer (); System.GC.KeepAlive (peer.MakeList ());");
+
+			using var libraryBuilder = CreateDllBuilder (Path.Combine (testRoot, library.ProjectName));
+			Assert.IsTrue (libraryBuilder.Build (library), "The export library should build.");
+			using var builder = CreateApkBuilder (Path.Combine (testRoot, proj.ProjectName));
+			Assert.IsTrue (builder.Build (proj), "Untrimmed Debug should support trimmable-only IList exports.");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
+			builder.Output.AssertTargetIsNotSkipped (KnownTargets.LinkAssembliesNoShrink);
+
+			var typeMapDirectory = builder.Output.GetIntermediaryPath ("typemap");
+			AssertTrimmableTypeMapOutputs (typeMapDirectory);
+			var typeMapAssembly = Path.Combine (typeMapDirectory, $"_{library.ProjectName}.TypeMap.dll");
+			var javaSource = Path.Combine (typeMapDirectory, "java", "com", "example", "DebugExportPeer.java");
+			FileAssert.Exists (javaSource);
+			StringAssert.Contains ("java.util.List", File.ReadAllText (javaSource));
+			StringAssert.Contains ("makeList", File.ReadAllText (javaSource));
+			AssertFinalAssemblies ();
+			var typeMapWriteTime = File.GetLastWriteTimeUtc (typeMapAssembly);
+			var stagedWriteTimes = GetStagedLibraries ().ToDictionary (path => path, File.GetLastWriteTimeUtc);
+
+			Assert.IsTrue (builder.Build (proj), "The unchanged Debug build should succeed.");
+			builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap");
+			builder.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink);
+			Assert.AreEqual (typeMapWriteTime, File.GetLastWriteTimeUtc (typeMapAssembly));
+			foreach (var pair in stagedWriteTimes) {
+				Assert.AreEqual (pair.Value, File.GetLastWriteTimeUtc (pair.Key));
+			}
+			AssertFinalAssemblies ();
+
+			exportSource = exportSource.Replace ("\"alpha\"", "\"beta\"");
+			library.Touch ("ExportPeer.cs");
+			Assert.IsTrue (libraryBuilder.Build (library, doNotCleanupOnUpdate: true), "The changed library should build.");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "A changed assembly should build without legacy scanning.");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
+			builder.Output.AssertTargetIsPartiallyBuilt (KnownTargets.LinkAssembliesNoShrink);
+			Assert.AreEqual (typeMapWriteTime, File.GetLastWriteTimeUtc (typeMapAssembly),
+				"A body-only change should not rewrite the trimmable typemap.");
+			AssertFinalAssemblies ();
+
+			exportSource = exportSource.Replace ("makeList", "updatedList");
+			library.Touch ("ExportPeer.cs");
+			Assert.IsTrue (libraryBuilder.Build (library, doNotCleanupOnUpdate: true), "The changed export should build.");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "A changed export should regenerate modern outputs.");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
+			var updatedJavaSource = File.ReadAllText (javaSource);
+			StringAssert.Contains ("updatedList", updatedJavaSource);
+			StringAssert.DoesNotContain ("makeList", updatedJavaSource);
+			Assert.AreNotEqual (typeMapWriteTime, File.GetLastWriteTimeUtc (typeMapAssembly),
+				"A changed export name should regenerate the trimmable callback metadata.");
+			AssertFinalAssemblies ();
+
+			string [] GetStagedLibraries () =>
+				Directory.GetFiles (builder.Output.GetIntermediaryPath (Path.Combine ("android", "assets")),
+					$"{library.ProjectName}.dll", SearchOption.AllDirectories);
+
+			void AssertFinalAssemblies ()
+			{
+				var libraryOutput = Path.Combine (Root, libraryBuilder.ProjectDirectory, library.OutputPath, $"{library.ProjectName}.dll");
+				using var original = AssemblyDefinition.ReadAssembly (libraryOutput);
+				var stagedLibraries = GetStagedLibraries ();
+				Assert.IsNotEmpty (stagedLibraries, "The processed export library must be staged for packaging.");
+				foreach (var stagedPath in stagedLibraries) {
+					var stagedDirectory = Path.GetDirectoryName (stagedPath);
+					using var resolver = new DefaultAssemblyResolver ();
+					resolver.AddSearchDirectory (stagedDirectory);
+					using var staged = AssemblyDefinition.ReadAssembly (stagedPath);
+					var sameObject = staged.MainModule.GetType ("TrimmableExports.ExportPeer").Methods.Single (method => method.Name == "SameObject");
+					Assert.AreEqual (enableCompatibilityFixups, sameObject.Body.Instructions.Any (instruction =>
+						instruction.Operand is MethodReference method && method.DeclaringType.FullName == "System.GC" && method.Name == "KeepAlive"));
+					Assert.AreEqual (enableCompatibilityFixups, original.MainModule.Mvid != staged.MainModule.Mvid,
+						"Copying must preserve the MVID; opted-in rewriting must save the changed assembly.");
+
+					using var typeMap = AssemblyDefinition.ReadAssembly (typeMapAssembly, new ReaderParameters { AssemblyResolver = resolver });
+					var owner = typeMap.MainModule.AssemblyReferences.Single (reference => reference.Name == library.ProjectName);
+					Assert.AreEqual (staged.Name.FullName, owner.FullName, "The typemap should reference the final assembly identity, not its pre-rewrite MVID.");
+					var export = typeMap.MainModule.GetMemberReferences ().OfType<MethodReference> ().Single (
+						method => method.DeclaringType.FullName == "TrimmableExports.ExportPeer" && method.Name == "MakeList");
+					var finalExport = export.Resolve ();
+					Assert.IsNotNull (finalExport, "The generated callback should resolve against the final staged assembly.");
+					Assert.AreEqual (Path.GetFullPath (stagedPath), finalExport.Module.FileName);
+					Assert.AreEqual (staged.MainModule.Mvid, finalExport.Module.Mvid);
+					Assert.AreEqual ("System.Collections.IList", finalExport.ReturnType.FullName);
+
+					Assert.IsEmpty (Directory.GetFiles (stagedDirectory, "*.jlo.xml"), "The legacy JCW scanner must not run.");
+					Assert.IsEmpty (Directory.GetFiles (stagedDirectory, "*.typemap.xml"), "The legacy typemap scanner must not run.");
+				}
+			}
+		}
+
 		[Test]
 		public void Build_TrimmableTypeMap_UsesMonoAndroidImplementationMetadata ()
 		{

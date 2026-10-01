@@ -130,32 +130,13 @@ public class AssemblyModifierPipeline : AndroidTask
 
 	protected virtual void BuildPipeline (AssemblyPipeline pipeline, MSBuildLinkContext context)
 	{
-		// FindJavaObjectsStep
-		var findJavaObjectsStep = new FindJavaObjectsStep (Log) {
-			ApplicationJavaClass = ApplicationJavaClass,
-			ErrorOnCustomJavaObject = ErrorOnCustomJavaObject,
-			UseMarshalMethods = EnableMarshalMethods,
-		};
-
-		findJavaObjectsStep.Initialize (context);
-		pipeline.Steps.Add (findJavaObjectsStep);
-
-		// SaveChangedAssemblyStep
+		// Java peer scanning belongs to the trimmable typemap generator.
 		var writerParameters = new WriterParameters {
 			DeterministicMvid = Deterministic,
 		};
 
 		var saveChangedAssemblyStep = new SaveChangedAssemblyStep (Log, writerParameters);
 		pipeline.Steps.Add (saveChangedAssemblyStep);
-
-		// FindTypeMapObjectsStep - this must be run after the assembly has been saved, as saving changes the MVID
-		var findTypeMapObjectsStep = new FindTypeMapObjectsStep (Log) {
-			ErrorOnCustomJavaObject = ErrorOnCustomJavaObject,
-			Debug = Debug,
-		};
-
-		findTypeMapObjectsStep.Initialize (context);
-		pipeline.Steps.Add (findTypeMapObjectsStep);
 	}
 
 	void RunPipeline (AssemblyPipeline pipeline, ITaskItem source, ITaskItem destination)

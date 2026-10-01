@@ -46,9 +46,36 @@ namespace Xamarin.Android.Build.Tests
 				$"{nameof (FixLegacyResourceDesignerStep)} presence should match the compatibility fixup setting.");
 			Assert.AreEqual (enabled, pipeline.Steps.Any (step => step is AddKeepAlivesStep),
 				$"{nameof (AddKeepAlivesStep)} presence should match the compatibility fixup setting.");
-			Assert.IsTrue (pipeline.Steps.Any (step => step is FindJavaObjectsStep), $"{nameof (FindJavaObjectsStep)} should always run.");
+			Assert.IsFalse (pipeline.Steps.Any (step => step is FindJavaObjectsStep),
+				$"{nameof (FindJavaObjectsStep)} must not run alongside the trimmable typemap generator.");
 			Assert.IsTrue (pipeline.Steps.Any (step => step is SaveChangedAssemblyStep), $"{nameof (SaveChangedAssemblyStep)} should always run.");
-			Assert.IsTrue (pipeline.Steps.Any (step => step is FindTypeMapObjectsStep), $"{nameof (FindTypeMapObjectsStep)} should always run.");
+			Assert.IsFalse (pipeline.Steps.Any (step => step is FindTypeMapObjectsStep),
+				$"{nameof (FindTypeMapObjectsStep)} must not run alongside the trimmable typemap generator.");
+			Assert.IsInstanceOf<SaveChangedAssemblyStep> (pipeline.Steps.Last (), "Assembly saving must run after compatibility fixups.");
+		}
+
+		[Test]
+		public void AssemblyModifierPipelineOnlySavesAssemblies ()
+		{
+			var task = new TestableAssemblyModifierPipeline {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+			};
+			var resolver = new DirectoryAssemblyResolver (Logger, false);
+			using var pipeline = new AssemblyPipeline (resolver);
+			var context = new MSBuildLinkContext (resolver, task.Log);
+
+			task.BuildPipelineForTest (pipeline, context);
+
+			CollectionAssert.AreEqual (
+				new [] { typeof (SaveChangedAssemblyStep) },
+				pipeline.Steps.Select (step => step.GetType ()),
+				"Direct task callers must not run either legacy scanner.");
+		}
+
+		sealed class TestableAssemblyModifierPipeline : AssemblyModifierPipeline
+		{
+			public void BuildPipelineForTest (AssemblyPipeline pipeline, MSBuildLinkContext context) =>
+				BuildPipeline (pipeline, context);
 		}
 
 		sealed class TestableLinkAssembliesNoShrink : LinkAssembliesNoShrink
