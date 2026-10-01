@@ -113,12 +113,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="ManifestOverlays\Timing.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
   <Target Name="_GenerateMonoAndroidEnums"
       BeforeTargets="CoreCompile"
       Inputs="..\Mono.Android\obj\$(Configuration)\android-$(AndroidLatestStableApiLevel)\mcw\api.xml"

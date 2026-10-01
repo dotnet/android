@@ -209,7 +209,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <PropertyGroup>
     <_ProtobufFormat Condition=" '$(AndroidPackageFormat)' == 'aab' ">True</_ProtobufFormat>
     <_ProtobufFormat Condition=" '$(_ProtobufFormat)' == '' ">False</_ProtobufFormat>
-    <_Aapt2ProguardRules Condition=" '$(AndroidLinkTool)' != '' ">$(IntermediateOutputPath)aapt_rules.txt</_Aapt2ProguardRules>
     <_OutputFileDir>$([System.IO.Path]::GetDirectoryName ('$(_PackagedResources)'))</_OutputFileDir>
   </PropertyGroup>
   <MakeDir Directories="$(_OutputFileDir)" Condition=" !Exists ('$(_OutputFileDir)') " />
@@ -244,10 +243,5 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
       ProguardRuleOutput="$(_Aapt2ProguardRules)"
   />
-  <ItemGroup Condition=" '$(_Aapt2ProguardRules)' != '' And Exists('$(_Aapt2ProguardRules)') ">
-    <ProguardConfiguration Include="$(_Aapt2ProguardRules)" />
-    <FileWrites Include="$(_Aapt2ProguardRules)" />
-    <FileWrites Include="$(IntermediateOutputPath)android\*\aapt_rules.txt" />
-  </ItemGroup>
 </Target>
 </Project>

@@ -229,7 +229,8 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4253](xa4253.md): Generated Java callable wrapper code changed: '{path}'
 + [XA4254](xa4254.md): Trimmable type map Java source input directory '{input}' and output directory '{output}' must be different.
 + [XA4255](xa4255.md): Generated trimmable type map Java source '{path}' was not found.
-+ [XA4256](xa4256.md): Skipping Java peer type '{type}' from assembly '{assembly}' because referenced type '{referencedType}' from assembly '{referencedAssembly}' could not be resolved in '{path}'. This type will not be included in the trimmable type map.
++ [XA4256](xa4256.md): Only one '{name}' is allowed for '{itemType}' item '{item}'.
++ [XA4257](xa4257.md): Skipping Java peer type '{type}' from assembly '{assembly}' because referenced type '{referencedType}' from assembly '{referencedAssembly}' could not be resolved in '{path}'. This type will not be included in the trimmable type map.
 + [XA4258](xa4258.md): Java name '{name}' contains invalid or unsupported Java identifier '{identifier}'. Change the package or type name.
 + [XA4259](xa4259.md): Type '{type}' has multiple managed constructors that map to the same Java Native Interface (JNI) signature '{signature}'.
 + [XA4260](xa4260.md): Type '{type}' has a constructor parameter type '{parameterType}' that cannot be represented in a Java constructor.
@@ -239,6 +240,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4264](xa4264.md): Java callable wrapper XML file '{path}' was not found.
 + [XA4265](xa4265.md): Assembly '{assembly}' uses a Java peer callback format that requires AndroidTypeMapImplementation=trimmable.
 + [XA4266](xa4266.md): Assembly '{assembly}' has different Java peer callback metadata across runtime-specific implementations.
++ [XA4267](xa4267.md): The 'llvm-ir' type map implementation is no longer supported. Remove the AndroidTypeMapImplementation property or set it to 'trimmable'.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}

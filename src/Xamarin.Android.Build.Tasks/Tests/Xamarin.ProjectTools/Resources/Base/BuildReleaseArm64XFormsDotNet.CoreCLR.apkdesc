@@ -2,13 +2,10 @@
   "Comment": null,
   "Entries": {
     "AndroidManifest.xml": {
-      "Size": 6652
+      "Size": 6768
     },
     "classes.dex": {
-      "Size": 9449044
-    },
-    "classes2.dex": {
-      "Size": 85024
+      "Size": 9090928
     },
     "kotlin/annotation/annotation.kotlin_builtins": {
       "Size": 928
@@ -32,7 +29,7 @@
       "Size": 2396
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 9538880
+      "Size": 9828704
     },
     "lib/arm64-v8a/libclrjit.so": {
       "Size": 2819768
@@ -41,7 +38,7 @@
       "Size": 4844368
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 151488
+      "Size": 120288
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 72432
@@ -56,7 +53,7 @@
       "Size": 171584
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 119744
+      "Size": 13152
     },
     "META-INF/androidx.activity_activity.version": {
       "Size": 6
@@ -1904,7 +1901,7 @@
       "Size": 496
     },
     "res/layout/flyoutcontent.xml": {
-      "Size": 776
+      "Size": 780
     },
     "res/layout/image_frame.xml": {
       "Size": 1088
@@ -2213,5 +2210,5 @@
       "Size": 794696
     }
   },
-  "PackageSize": 18287558
+  "PackageSize": 18418572
 }

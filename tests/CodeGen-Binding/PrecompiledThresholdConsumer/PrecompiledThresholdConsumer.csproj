@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <AssemblyName>LegacyThresholdConsumer</AssemblyName>
+  </PropertyGroup>
+
+  <Target Name="RequirePreviousAndroidReference" BeforeTargets="ResolveReferences"
+      Condition="!Exists('$(PreviousAndroidReferenceDir)/Mono.Android.dll') or !Exists('$(PreviousAndroidReferenceDir)/Java.Interop.dll')">
+    <Error Text="Set PreviousAndroidReferenceDir to Microsoft.Android.Ref.37/37.0.0-preview.7.2131/ref/net11.0 to rebuild the checked-in binary fixture." />
+  </Target>
+
+  <ItemGroup>
+    <Reference Include="Mono.Android" HintPath="$(PreviousAndroidReferenceDir)/Mono.Android.dll" />
+    <Reference Include="Java.Interop" HintPath="$(PreviousAndroidReferenceDir)/Java.Interop.dll" />
+  </ItemGroup>
+</Project>
