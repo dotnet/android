@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -7,47 +8,57 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Microsoft.Android.Tasks;
-using Xunit;
+using NUnit.Framework;
 using TaskItem = Microsoft.Build.Utilities.TaskItem;
 
-namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
+namespace Xamarin.Android.Build.Tests;
 
-public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
+[TestFixture]
+[Parallelizable]
+public class ExtractTypeMapKeysFromNativeAotObjectCoverageTests : IDisposable
 {
 	const int SectionOffset = 128;
 	const int SymbolOffset = 17;
-	readonly string directory = Path.Combine (AppContext.BaseDirectory, nameof (ExtractTypeMapKeysFromNativeAotObjectTests), Guid.NewGuid ().ToString ("N"));
+	readonly string directory = Path.Combine (AppContext.BaseDirectory, nameof (ExtractTypeMapKeysFromNativeAotObjectCoverageTests), Guid.NewGuid ().ToString ("N"));
 	readonly Dictionary<string, JsonArray> metadata = new (StringComparer.Ordinal);
 
-	public ExtractTypeMapKeysFromNativeAotObjectTests ()
+	[SetUp]
+	public void SetUp ()
 	{
+		metadata.Clear ();
 		Directory.CreateDirectory (directory);
 		File.WriteAllBytes (Path.Combine (directory, "llvm-readobj-placeholder"), []);
 	}
 
-	public void Dispose () => Directory.Delete (directory, recursive: true);
-
-	[Fact]
-	public void TaskLivesInModernBuildTasksAssembly ()
+	[TearDown]
+	public void Dispose ()
 	{
-		Assert.Equal ("Microsoft.Android.Tasks.ExtractTypeMapKeysFromNativeAotObject", typeof (ExtractTypeMapKeysFromNativeAotObject).FullName);
-		Assert.Equal ("Microsoft.Android.Build.Tasks", typeof (ExtractTypeMapKeysFromNativeAotObject).Assembly.GetName ().Name);
+		if (Directory.Exists (directory)) {
+			Directory.Delete (directory, recursive: true);
+		}
 	}
 
-	[Fact]
+	[Test]
+	public void TaskLivesInModernBuildTasksAssembly ()
+	{
+		Assert.AreEqual ("Microsoft.Android.Tasks.ExtractTypeMapKeysFromNativeAotObject", typeof (ExtractTypeMapKeysFromNativeAotObject).FullName);
+		Assert.AreEqual ("Microsoft.Android.Build.Tasks", typeof (ExtractTypeMapKeysFromNativeAotObject).Assembly.GetName ().Name);
+	}
+
+	[Test]
 	public void CapturedIlcArm64BlobContainsOnlyRetainedCanonicalKeys ()
 	{
 		// Microsoft.DotNet.ILCompiler 11.0.0-rc.2.26461.115, Android ARM64, optimized with --scanreflection.
 		byte [] blob = Convert.FromBase64String ("AAIFXbUBGnNhbXBsZS9BbHdheXMEFnNhbXBsZS9MaXZlAkJzYW1wbGUvTGl2ZVsxMjM0NTY3ODkwMTIzNDU2Nzg5MF0CNGNvbS/DqXhhbXBsZS9QZWVyzpQkTmVzdGVkBBxzYW1wbGUvTGl2ZVswXQIAAgACD06t/lxt/qPIpx3+zIY=");
 		var (task, engine) = CreateTask (WriteObject ("captured-ilc-arm64", blob));
 
-		Assert.True (task.Execute ());
-		Assert.Empty (engine.Errors);
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (engine.Errors);
 		byte [] expected = new UTF8Encoding (false).GetBytes ("com/\u00e9xample/Peer\u0394$Nested\nsample/Always\nsample/Live\n");
-		Assert.Equal (expected, File.ReadAllBytes (task.OutputFile));
+		Assert.AreEqual (expected, File.ReadAllBytes (task.OutputFile));
 	}
 
-	[Fact]
+	[Test]
 	public void ExtractsOnlySymbolPayloadAndUnionsEveryJavaGroupAndObject ()
 	{
 		string arm64 = WriteObject ("arm64", NativeAotObjectTestFixture.CreateGroups (
@@ -63,25 +74,24 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		Directory.CreateDirectory (Path.GetDirectoryName (task.OutputFile) ?? throw new InvalidOperationException ());
 		File.WriteAllText (task.OutputFile, "stale/sentinel\n");
 
-		Assert.True (task.Execute ());
-		Assert.Empty (engine.Errors);
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (engine.Errors);
 		byte [] expected = new UTF8Encoding (false).GetBytes (
 			"test/Alias\ntest/Alpha\ntest/A\u0301\ntest/FromOtherGroup\ntest/Outer$Inner\ntest/Zebra\ntest/a\ntest/\u00e9clair\ntest/\u2160Peer\ntest/\U00010400Peer\n");
-		Assert.Equal (expected, File.ReadAllBytes (task.OutputFile));
+		Assert.AreEqual (expected, File.ReadAllBytes (task.OutputFile));
 
 		File.SetLastWriteTimeUtc (task.OutputFile, new DateTime (2000, 1, 1));
 		var (reordered, reorderedEngine) = CreateTask (x64, arm64);
-		Assert.True (reordered.Execute ());
-		Assert.Empty (reorderedEngine.Errors);
-		Assert.Equal (expected, File.ReadAllBytes (reordered.OutputFile));
-		Assert.True (File.GetLastWriteTimeUtc (reordered.OutputFile).Year > 2000);
+		Assert.IsTrue (reordered.Execute ());
+		Assert.IsEmpty (reorderedEngine.Errors);
+		Assert.AreEqual (expected, File.ReadAllBytes (reordered.OutputFile));
+		Assert.IsTrue (File.GetLastWriteTimeUtc (reordered.OutputFile).Year > 2000);
 	}
 
-	[Theory]
-	[InlineData ("elf32-littlearm", "arm", "32bit")]
-	[InlineData ("elf64-littleaarch64", "aarch64", "64bit")]
-	[InlineData ("elf64-x86-64", "x86_64", "64bit")]
-	[InlineData ("elf32-i386", "i386", "32bit")]
+	[TestCase ("elf32-littlearm", "arm", "32bit")]
+	[TestCase ("elf64-littleaarch64", "aarch64", "64bit")]
+	[TestCase ("elf64-x86-64", "x86_64", "64bit")]
+	[TestCase ("elf32-i386", "i386", "32bit")]
 	public void AcceptsSupportedRelocatableElfArchitectures (string format, string arch, string addressSize)
 	{
 		string path = WriteObject ("map", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -90,27 +100,26 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		Summary (path) ["AddressSize"] = addressSize;
 		var (task, engine) = CreateTask (path);
 
-		Assert.True (task.Execute ());
-		Assert.Empty (engine.Errors);
-		Assert.Equal ("test/Live\n", File.ReadAllText (task.OutputFile));
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (engine.Errors);
+		Assert.AreEqual ("test/Live\n", File.ReadAllText (task.OutputFile));
 	}
 
-	[Theory]
-	[InlineData ("test/A[123]", "test/A")]
-	[InlineData ("test/A[000]", "test/A")]
-	[InlineData ("test/A[9999999999999999999999999999999]", "test/A")]
-	[InlineData ("test/Outer$Inner[2]", "test/Outer$Inner")]
-	[InlineData ("test/\u2160[1]", "test/\u2160")]
+	[TestCase ("test/A[123]", "test/A")]
+	[TestCase ("test/A[000]", "test/A")]
+	[TestCase ("test/A[9999999999999999999999999999999]", "test/A")]
+	[TestCase ("test/Outer$Inner[2]", "test/Outer$Inner")]
+	[TestCase ("test/\u2160[1]", "test/\u2160")]
 	public void RemovesOneTerminalNonemptyAsciiDecimalAlias (string key, string expected)
 	{
 		var (task, engine) = CreateTask (WriteObject ("map", NativeAotObjectTestFixture.CreateBlob (key)));
 
-		Assert.True (task.Execute ());
-		Assert.Empty (engine.Errors);
-		Assert.Equal (new UTF8Encoding (false).GetBytes (expected + "\n"), File.ReadAllBytes (task.OutputFile));
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (engine.Errors);
+		Assert.AreEqual (new UTF8Encoding (false).GetBytes (expected + "\n"), File.ReadAllBytes (task.OutputFile));
 	}
 
-	[Fact]
+	[Test]
 	public void ObjectArraysContributeOnlyCanonicalElementClasses ()
 	{
 		byte [] blob = NativeAotObjectTestFixture.CreateBlob (
@@ -118,24 +127,24 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 			"test/Outer$Inner", "[I[0]");
 		var (task, engine) = CreateTask (WriteObject ("arrays", blob));
 
-		Assert.True (task.Execute ());
-		Assert.Empty (engine.Errors);
-		Assert.Equal ("java/lang/Object\ntest/Outer$Inner\n", File.ReadAllText (task.OutputFile));
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (engine.Errors);
+		Assert.AreEqual ("java/lang/Object\ntest/Outer$Inner\n", File.ReadAllText (task.OutputFile));
 	}
 
-	[Fact]
+	[Test]
 	public void PrimitiveArraysContributeNoClasses ()
 	{
 		byte [] blob = NativeAotObjectTestFixture.CreateBlob ("[Z", "[B", "[C", "[S", "[I", "[J", "[F", "[D", "[[I", "[[[D");
 		var (task, engine) = CreateTask (WriteObject ("primitive-arrays", blob));
 
-		Assert.True (task.Execute ());
-		Assert.Empty (engine.Errors);
-		Assert.True (File.Exists (task.OutputFile));
-		Assert.Empty (File.ReadAllBytes (task.OutputFile));
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (engine.Errors);
+		Assert.IsTrue (File.Exists (task.OutputFile));
+		Assert.IsEmpty (File.ReadAllBytes (task.OutputFile));
 	}
 
-	[Fact]
+	[Test]
 	public void SelectsJavaGroupsByFixupsRatherThanKeyAppearance ()
 	{
 		string path = WriteObject ("mixed-universes", NativeAotObjectTestFixture.CreateGroups (
@@ -149,18 +158,17 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 			"_ZTV29Mono_Android_Java_Lang_Object",
 			"_ZTV37_Mono_Android_TypeMap___TypeMapAnchor");
 
-		Assert.True (task.Execute ());
-		Assert.Empty (engine.Errors);
-		Assert.Equal ("test/Alias\ntest/PerAssembly\ntest/Shared\n", File.ReadAllText (task.OutputFile));
-		Assert.Equal (".rela.rodata", task.RelocationSection);
-		Assert.Equal (12, task.RelocationEnd - task.RelocationStart);
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (engine.Errors);
+		Assert.AreEqual ("test/Alias\ntest/PerAssembly\ntest/Shared\n", File.ReadAllText (task.OutputFile));
+		Assert.AreEqual (".rela.rodata", task.RelocationSection);
+		Assert.AreEqual (12, task.RelocationEnd - task.RelocationStart);
 	}
 
-	[Theory]
-	[InlineData ("aarch64", "R_AARCH64_PREL32", "SHT_RELA", ".rela.rodata")]
-	[InlineData ("arm", "R_ARM_REL32", "SHT_REL", ".rel.rodata")]
-	[InlineData ("x86_64", "R_X86_64_PC32", "SHT_RELA", ".rela.rodata")]
-	[InlineData ("i386", "R_386_PC32", "SHT_REL", ".rel.rodata")]
+	[TestCase ("aarch64", "R_AARCH64_PREL32", "SHT_RELA", ".rela.rodata")]
+	[TestCase ("arm", "R_ARM_REL32", "SHT_REL", ".rel.rodata")]
+	[TestCase ("x86_64", "R_X86_64_PC32", "SHT_RELA", ".rela.rodata")]
+	[TestCase ("i386", "R_386_PC32", "SHT_REL", ".rel.rodata")]
 	public void ResolvesGroupSlotsUsingTargetRelocationKind (string arch, string kind, string sectionType, string sectionName)
 	{
 		string path = WriteObject ("abi-group", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -173,13 +181,13 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		relocationSection ["Name"] = new JsonObject { ["Name"] = sectionName, ["Value"] = 0 };
 		relocationSection ["Type"] = new JsonObject { ["Name"] = sectionType, ["Value"] = 0 };
 
-		Assert.True (task.Execute ());
-		Assert.Empty (engine.Errors);
-		Assert.Equal ("test/Live\n", File.ReadAllText (task.OutputFile));
-		Assert.Equal (sectionName, task.RelocationSection);
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (engine.Errors);
+		Assert.AreEqual ("test/Live\n", File.ReadAllText (task.OutputFile));
+		Assert.AreEqual (sectionName, task.RelocationSection);
 	}
 
-	[Fact]
+	[Test]
 	public void ResolvesCompilationPrefixedMapAndFixupSymbols ()
 	{
 		string path = WriteObject ("prefixed", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -188,12 +196,12 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		task.UseGroupMetadata = true;
 		task.RelocationOutput = AddGroupMetadata (path, "Compilation_123__ZTV29Mono_Android_Java_Lang_Object");
 
-		Assert.True (task.Execute ());
-		Assert.Empty (engine.Errors);
-		Assert.Equal ("test/Live\n", File.ReadAllText (task.OutputFile));
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (engine.Errors);
+		Assert.AreEqual ("test/Live\n", File.ReadAllText (task.OutputFile));
 	}
 
-	[Fact]
+	[Test]
 	public void MalformedSelectedJavaKeyStillFails ()
 	{
 		string path = WriteObject ("invalid-java-group", NativeAotObjectTestFixture.CreateGroups (
@@ -207,11 +215,10 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		AssertFailure (task, engine);
 	}
 
-	[Theory]
-	[InlineData ("_ZTV43Mono_Android_Android_Runtime_JavaDictionary")]
-	[InlineData ("_ZTV29Mono_Android_Java_Lang_ObjectExtra")]
-	[InlineData ("_ZTV30ThirdParty_TypeMap___TypeMapAnchor")]
-	[InlineData ("_ZTV30_Other_TypeMap___TypeMapAnchorExtra")]
+	[TestCase ("_ZTV43Mono_Android_Android_Runtime_JavaDictionary")]
+	[TestCase ("_ZTV29Mono_Android_Java_Lang_ObjectExtra")]
+	[TestCase ("_ZTV30ThirdParty_TypeMap___TypeMapAnchor")]
+	[TestCase ("_ZTV30_Other_TypeMap___TypeMapAnchorExtra")]
 	public void MissingRecognizedJavaGroupIsNotAnEmptySuccess (string groupSymbol)
 	{
 		string path = WriteObject ("foreign-only", NativeAotObjectTestFixture.CreateBlob ("test/LooksLikeJava"));
@@ -222,17 +229,16 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		AssertFailure (task, engine);
 	}
 
-	[Theory]
-	[InlineData ("missing-fixups")]
-	[InlineData ("duplicate-fixups")]
-	[InlineData ("bad-fixup-size")]
-	[InlineData ("missing-relocation-section")]
-	[InlineData ("ambiguous-relocation-section")]
-	[InlineData ("wrong-target-section")]
-	[InlineData ("missing-relocation")]
-	[InlineData ("duplicate-relocation")]
-	[InlineData ("wrong-relocation-kind")]
-	[InlineData ("nonzero-addend")]
+	[TestCase ("missing-fixups")]
+	[TestCase ("duplicate-fixups")]
+	[TestCase ("bad-fixup-size")]
+	[TestCase ("missing-relocation-section")]
+	[TestCase ("ambiguous-relocation-section")]
+	[TestCase ("wrong-target-section")]
+	[TestCase ("missing-relocation")]
+	[TestCase ("duplicate-relocation")]
+	[TestCase ("wrong-relocation-kind")]
+	[TestCase ("nonzero-addend")]
 	public void InvalidGroupMetadataFails (string defect)
 	{
 		string path = WriteObject ("invalid-group-metadata", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -278,7 +284,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		AssertFailure (task, engine);
 	}
 
-	[Fact]
+	[Test]
 	public void OutOfRangeGroupFixupFails ()
 	{
 		byte [] group = NativeAotObjectTestFixture.CreateGroup (
@@ -289,51 +295,49 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		task.RelocationOutput = AddGroupMetadata (path, "_ZTV29Mono_Android_Java_Lang_Object");
 
 		AssertFailure (task, engine);
-		Assert.Null (task.RelocationSection);
+		Assert.IsNull (task.RelocationSection);
 	}
 
-	[Fact]
+	[Test]
 	public void EmptyOuterTableDoesNotRequireGroupRelocations ()
 	{
 		var (task, engine) = CreateTask (WriteObject ("empty-groups", NativeAotObjectTestFixture.CreateGroups ()));
 		task.UseGroupMetadata = true;
 
-		Assert.True (task.Execute ());
-		Assert.Empty (engine.Errors);
-		Assert.Empty (File.ReadAllBytes (task.OutputFile));
-		Assert.Null (task.RelocationSection);
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (engine.Errors);
+		Assert.IsEmpty (File.ReadAllBytes (task.OutputFile));
+		Assert.IsNull (task.RelocationSection);
 	}
 
-	[Theory]
-	[InlineData (true)]
-	[InlineData (false)]
+	[TestCase (true)]
+	[TestCase (false)]
 	public void EmptyOuterOrInnerTableOverwritesWithZeroByteFile (bool emptyOuter)
 	{
 		byte [] blob = emptyOuter ? NativeAotObjectTestFixture.CreateGroups () : NativeAotObjectTestFixture.CreateBlob ();
 		string path = WriteObject ("empty", blob);
 		var (task, engine) = CreateTask (path);
 
-		Assert.True (task.Execute ());
-		Assert.Empty (engine.Errors);
-		Assert.True (File.Exists (task.OutputFile));
-		Assert.Empty (File.ReadAllBytes (task.OutputFile));
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (engine.Errors);
+		Assert.IsTrue (File.Exists (task.OutputFile));
+		Assert.IsEmpty (File.ReadAllBytes (task.OutputFile));
 
 		File.WriteAllText (task.OutputFile, "stale/Key\n");
 		for (int run = 0; run < 2; run++) {
 			File.SetLastWriteTimeUtc (task.OutputFile, new DateTime (2000, 1, 1));
 			var (repeat, repeatEngine) = CreateTask (path);
-			Assert.True (repeat.Execute ());
-			Assert.Empty (repeatEngine.Errors);
-			Assert.Empty (File.ReadAllBytes (repeat.OutputFile));
-			Assert.True (File.GetLastWriteTimeUtc (repeat.OutputFile).Year > 2000);
+			Assert.IsTrue (repeat.Execute ());
+			Assert.IsEmpty (repeatEngine.Errors);
+			Assert.IsEmpty (File.ReadAllBytes (repeat.OutputFile));
+			Assert.IsTrue (File.GetLastWriteTimeUtc (repeat.OutputFile).Year > 2000);
 		}
 	}
 
-	[Theory]
-	[InlineData (1, 0)]
-	[InlineData (1, 2)]
-	[InlineData (2, 1)]
-	[InlineData (4, 3)]
+	[TestCase (1, 0)]
+	[TestCase (1, 2)]
+	[TestCase (2, 1)]
+	[TestCase (4, 3)]
 	public void ReadsBucketIndexWidthsAndMultipleBuckets (int indexWidth, int bucketShift)
 	{
 		byte [] inner = NativeAotObjectTestFixture.CreateTable (
@@ -343,22 +347,21 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		byte [] blob = NativeAotObjectTestFixture.CreateTable ([group, group], indexWidth, bucketShift);
 		var (task, engine) = CreateTask (WriteObject ("buckets", blob));
 
-		Assert.True (task.Execute ());
-		Assert.Empty (engine.Errors);
-		Assert.Equal ("test/A\ntest/M\ntest/Z\n", File.ReadAllText (task.OutputFile));
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (engine.Errors);
+		Assert.AreEqual ("test/A\ntest/M\ntest/Z\n", File.ReadAllText (task.OutputFile));
 	}
 
-	[Theory]
-	[InlineData (1, false)]
-	[InlineData (2, false)]
-	[InlineData (3, false)]
-	[InlineData (4, false)]
-	[InlineData (5, false)]
-	[InlineData (1, true)]
-	[InlineData (2, true)]
-	[InlineData (3, true)]
-	[InlineData (4, true)]
-	[InlineData (5, true)]
+	[TestCase (1, false)]
+	[TestCase (2, false)]
+	[TestCase (3, false)]
+	[TestCase (4, false)]
+	[TestCase (5, false)]
+	[TestCase (1, true)]
+	[TestCase (2, true)]
+	[TestCase (3, true)]
+	[TestCase (4, true)]
+	[TestCase (5, true)]
 	public void RelativeOffsetsUseTheIntegerAddressAndCanPointBackwards (int relativeWidth, bool backwards)
 	{
 		byte [] inner = NativeAotObjectTestFixture.CreateTable (
@@ -367,54 +370,51 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 			[NativeAotObjectTestFixture.CreateGroup (inner)], relativeWidth: relativeWidth, backwards: backwards);
 		var (task, engine) = CreateTask (WriteObject ("relative", blob));
 
-		Assert.True (task.Execute ());
-		Assert.Empty (engine.Errors);
-		Assert.Equal ("test/Live\n", File.ReadAllText (task.OutputFile));
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (engine.Errors);
+		Assert.AreEqual ("test/Live\n", File.ReadAllText (task.OutputFile));
 	}
 
-	[Theory]
-	[InlineData (0u)]
-	[InlineData (128u)]
-	[InlineData (16384u)]
-	[InlineData (2097152u)]
-	[InlineData (268435456u)]
-	[InlineData (uint.MaxValue)]
+	[TestCase (0u)]
+	[TestCase (128u)]
+	[TestCase (16384u)]
+	[TestCase (2097152u)]
+	[TestCase (268435456u)]
+	[TestCase (uint.MaxValue)]
 	public void ReadsAllUnsignedCompactIntegerWidths (uint typeIndex)
 	{
 		byte [] inner = NativeAotObjectTestFixture.CreateTable ([NativeAotObjectTestFixture.CreateKey ("test/Live", typeIndex)]);
 		byte [] blob = NativeAotObjectTestFixture.CreateTable ([NativeAotObjectTestFixture.CreateGroup (inner, typeIndex: typeIndex)]);
 		var (task, engine) = CreateTask (WriteObject ("indices", blob));
 
-		Assert.True (task.Execute ());
-		Assert.Empty (engine.Errors);
-		Assert.Equal ("test/Live\n", File.ReadAllText (task.OutputFile));
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (engine.Errors);
+		Assert.AreEqual ("test/Live\n", File.ReadAllText (task.OutputFile));
 	}
 
-	[Theory]
-	[InlineData (127)]
-	[InlineData (128)]
-	[InlineData (16384)]
-	[InlineData (2097152)]
+	[TestCase (127)]
+	[TestCase (128)]
+	[TestCase (16384)]
+	[TestCase (2097152)]
 	public void ReadsMultibyteStringLengthsWithoutTruncatingKeys (int byteLength)
 	{
 		string key = "test/" + new string ('A', byteLength - 5);
 		var (task, engine) = CreateTask (WriteObject ("length", NativeAotObjectTestFixture.CreateBlob (key)));
 
-		Assert.True (task.Execute ());
-		Assert.Empty (engine.Errors);
-		Assert.Equal (new UTF8Encoding (false).GetBytes (key + "\n"), File.ReadAllBytes (task.OutputFile));
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (engine.Errors);
+		Assert.AreEqual (new UTF8Encoding (false).GetBytes (key + "\n"), File.ReadAllBytes (task.OutputFile));
 	}
 
-	[Fact]
+	[Test]
 	public void MissingObjectInputsFail ()
 	{
 		var (task, engine) = CreateTask ();
 		AssertFailure (task, engine);
 	}
 
-	[Theory]
-	[InlineData ("missing")]
-	[InlineData ("directory")]
+	[TestCase ("missing")]
+	[TestCase ("directory")]
 	public void MissingOrUnreadableObjectFailsWithFileContext (string kind)
 	{
 		string path = Path.Combine (directory, "invalid.o");
@@ -425,9 +425,8 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		AssertFailure (task, engine, path);
 	}
 
-	[Theory]
-	[InlineData (0)]
-	[InlineData (128)]
+	[TestCase (0)]
+	[TestCase (128)]
 	public void TruncatedObjectFailsAgainstActualFileBounds (int length)
 	{
 		string path = WriteObject ("truncated", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -438,9 +437,8 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		AssertFailure (task, engine, path);
 	}
 
-	[Theory]
-	[InlineData ("")]
-	[InlineData ("missing-llvm-readobj")]
+	[TestCase ("")]
+	[TestCase ("missing-llvm-readobj")]
 	public void MissingToolFailsWithCodedError (string tool)
 	{
 		var engine = new TypeMapTaskBuildEngine ();
@@ -453,14 +451,13 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		AssertFailure (task, engine, task.LlvmReadObjPath);
 	}
 
-	[Theory]
-	[InlineData ("")]
-	[InlineData ("not JSON")]
-	[InlineData ("{}")]
-	[InlineData ("[]")]
-	[InlineData ("[{},{}]")]
-	[InlineData ("[null]")]
-	[InlineData ("[{}]")]
+	[TestCase ("")]
+	[TestCase ("not JSON")]
+	[TestCase ("{}")]
+	[TestCase ("[]")]
+	[TestCase ("[{},{}]")]
+	[TestCase ("[null]")]
+	[TestCase ("[{}]")]
 	public void MalformedToolJsonFailsWithFileContext (string json)
 	{
 		string path = WriteObject ("map", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -469,11 +466,10 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		AssertFailure (task, engine, path);
 	}
 
-	[Theory]
-	[InlineData ("FileSummary")]
-	[InlineData ("ElfHeader")]
-	[InlineData ("Sections")]
-	[InlineData ("Symbols")]
+	[TestCase ("FileSummary")]
+	[TestCase ("ElfHeader")]
+	[TestCase ("Sections")]
+	[TestCase ("Symbols")]
 	public void MissingRequiredMetadataFails (string property)
 	{
 		string path = WriteObject ("map", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -482,27 +478,26 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		AssertFailure (task, engine, path);
 	}
 
-	[Theory]
-	[InlineData ("format")]
-	[InlineData ("architecture")]
-	[InlineData ("dynamic")]
-	[InlineData ("executable")]
-	[InlineData ("big-endian")]
-	[InlineData ("missing-encoding")]
-	[InlineData ("no-symbol")]
-	[InlineData ("suffix-not-terminal")]
-	[InlineData ("undefined-symbol")]
-	[InlineData ("no-sections")]
-	[InlineData ("nobits-section")]
-	[InlineData ("duplicate-section")]
-	[InlineData ("negative-offset")]
-	[InlineData ("section-past-file")]
-	[InlineData ("section-overruns-file")]
-	[InlineData ("symbol-past-section")]
-	[InlineData ("symbol-overruns-section")]
-	[InlineData ("empty-symbol")]
-	[InlineData ("huge-symbol")]
-	[InlineData ("wrong-number-type")]
+	[TestCase ("format")]
+	[TestCase ("architecture")]
+	[TestCase ("dynamic")]
+	[TestCase ("executable")]
+	[TestCase ("big-endian")]
+	[TestCase ("missing-encoding")]
+	[TestCase ("no-symbol")]
+	[TestCase ("suffix-not-terminal")]
+	[TestCase ("undefined-symbol")]
+	[TestCase ("no-sections")]
+	[TestCase ("nobits-section")]
+	[TestCase ("duplicate-section")]
+	[TestCase ("negative-offset")]
+	[TestCase ("section-past-file")]
+	[TestCase ("section-overruns-file")]
+	[TestCase ("symbol-past-section")]
+	[TestCase ("symbol-overruns-section")]
+	[TestCase ("empty-symbol")]
+	[TestCase ("huge-symbol")]
+	[TestCase ("wrong-number-type")]
 	public void InvalidObjectMetadataFails (string defect)
 	{
 		string path = WriteObject ("map", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -537,8 +532,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		AssertFailure (task, engine, path);
 	}
 
-	[Theory]
-	[MemberData (nameof (MalformedTables))]
+	[TestCaseSource (nameof (MalformedTables))]
 	public void MalformedOuterOrInnerTableFails (string defect, byte [] table)
 	{
 		foreach (bool inner in new [] { false, true }) {
@@ -566,10 +560,9 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		yield return ["invalid-integer-tag", new byte [] { 0, 2, 4, 42, 31 }];
 	}
 
-	[Theory]
-	[InlineData (0u)]
-	[InlineData (2u)]
-	[InlineData (uint.MaxValue)]
+	[TestCase (0u)]
+	[TestCase (2u)]
+	[TestCase (uint.MaxValue)]
 	public void InvalidGroupStateIsNotAnEmptyMap (uint state)
 	{
 		byte [] group = NativeAotObjectTestFixture.CreateGroup (NativeAotObjectTestFixture.CreateTable ([]), state);
@@ -577,20 +570,18 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		AssertFailure (task, engine);
 	}
 
-	[Theory]
-	[InlineData (new byte [] { })]
-	[InlineData (new byte [] { 0 })]
-	[InlineData (new byte [] { 0, 2 })]
-	[InlineData (new byte [] { 31 })]
-	[InlineData (new byte [] { 0, 31 })]
+	[TestCase (new byte [] { })]
+	[TestCase (new byte [] { 0 })]
+	[TestCase (new byte [] { 0, 2 })]
+	[TestCase (new byte [] { 31 })]
+	[TestCase (new byte [] { 0, 31 })]
 	public void TruncatedOrMalformedGroupTupleFails (byte [] group)
 	{
 		var (task, engine) = CreateTask (WriteObject ("invalid-group", NativeAotObjectTestFixture.CreateTable ([group])));
 		AssertFailure (task, engine);
 	}
 
-	[Theory]
-	[MemberData (nameof (MalformedKeyTuples))]
+	[TestCaseSource (nameof (MalformedKeyTuples))]
 	public void MalformedKeyTupleFails (string defect, byte [] tuple)
 	{
 		byte [] inner = NativeAotObjectTestFixture.CreateTable ([tuple]);
@@ -616,42 +607,41 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		yield return ["invalid-utf8-continuation", new byte [] { 2, 128, 0 }];
 	}
 
-	[Theory]
-	[InlineData ("")]
-	[InlineData ("test/Invalid\nName")]
-	[InlineData ("test/Invalid\rName")]
-	[InlineData ("test/Invalid\0Name")]
-	[InlineData ("test/A[]")]
-	[InlineData ("test/A[-1]")]
-	[InlineData ("test/A[1x]")]
-	[InlineData ("test/A[1]Extra")]
-	[InlineData ("test/A[1")]
-	[InlineData ("test/A[")]
-	[InlineData ("[0]")]
-	[InlineData ("test/A[\u0661]")]
-	[InlineData ("test/A[1][2]")]
-	[InlineData ("test.Invalid")]
-	[InlineData ("test/*")]
-	[InlineData ("test/")]
-	[InlineData ("/test")]
-	[InlineData ("test//Invalid")]
-	[InlineData ("test/Invalid\u200bName")]
-	[InlineData ("[L;")]
-	[InlineData ("[V")]
-	[InlineData ("[Q")]
-	[InlineData ("[Iextra")]
-	[InlineData ("[Ljava.lang.Object;")]
-	[InlineData ("[Ljava/lang/Object")]
-	[InlineData ("[Ljava/lang/Object;;")]
-	[InlineData ("[Ltest/A[0];")]
-	[InlineData ("[[")]
+	[TestCase ("")]
+	[TestCase ("test/Invalid\nName")]
+	[TestCase ("test/Invalid\rName")]
+	[TestCase ("test/Invalid\0Name")]
+	[TestCase ("test/A[]")]
+	[TestCase ("test/A[-1]")]
+	[TestCase ("test/A[1x]")]
+	[TestCase ("test/A[1]Extra")]
+	[TestCase ("test/A[1")]
+	[TestCase ("test/A[")]
+	[TestCase ("[0]")]
+	[TestCase ("test/A[\u0661]")]
+	[TestCase ("test/A[1][2]")]
+	[TestCase ("test.Invalid")]
+	[TestCase ("test/*")]
+	[TestCase ("test/")]
+	[TestCase ("/test")]
+	[TestCase ("test//Invalid")]
+	[TestCase ("test/Invalid\u200bName")]
+	[TestCase ("[L;")]
+	[TestCase ("[V")]
+	[TestCase ("[Q")]
+	[TestCase ("[Iextra")]
+	[TestCase ("[Ljava.lang.Object;")]
+	[TestCase ("[Ljava/lang/Object")]
+	[TestCase ("[Ljava/lang/Object;;")]
+	[TestCase ("[Ltest/A[0];")]
+	[TestCase ("[[")]
 	public void InvalidCanonicalKeysOrAliasesFail (string key)
 	{
 		var (task, engine) = CreateTask (WriteObject ("invalid-key", NativeAotObjectTestFixture.CreateBlob (key)));
 		AssertFailure (task, engine);
 	}
 
-	[Fact]
+	[Test]
 	public void InvalidSecondObjectDoesNotWritePartialOutput ()
 	{
 		string valid = WriteObject ("valid", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -660,7 +650,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		AssertFailure (task, engine, invalid);
 	}
 
-	[Fact]
+	[Test]
 	public void InvalidLaterGroupDoesNotWritePartialOutput ()
 	{
 		byte [] valid = NativeAotObjectTestFixture.CreateGroup (
@@ -670,7 +660,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		AssertFailure (task, engine);
 	}
 
-	[Fact]
+	[Test]
 	public void MetadataReadFailureIsReportedWithoutPartialOutput ()
 	{
 		string path = WriteObject ("map", NativeAotObjectTestFixture.CreateBlob ("test/Live"));
@@ -679,7 +669,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		AssertFailure (task, engine, path);
 	}
 
-	[Fact]
+	[Test]
 	public void OutputWriteFailureIsReported ()
 	{
 		var (task, engine) = CreateTask (WriteObject ("map", NativeAotObjectTestFixture.CreateBlob ("test/Live")));
@@ -690,10 +680,10 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 	static void AssertFailure (ExtractTypeMapKeysFromNativeAotObject task, TypeMapTaskBuildEngine engine, string? file = null)
 	{
 		file ??= task.NativeObjectFiles.Length == 0 ? nameof (task.NativeObjectFiles) : task.NativeObjectFiles [0].ItemSpec;
-		Assert.False (task.Execute ());
-		Assert.Contains (engine.Errors, error => error.Code == "XA4327" &&
-			(file.Length == 0 || error.Message != null && error.Message.Contains (file, StringComparison.Ordinal)));
-		Assert.False (File.Exists (task.OutputFile));
+		Assert.IsFalse (task.Execute ());
+		Assert.IsTrue (engine.Errors.Any (error => error.Code == "XA4327" &&
+			(file.Length == 0 || error.Message != null && error.Message.Contains (file, StringComparison.Ordinal))));
+		Assert.IsFalse (File.Exists (task.OutputFile));
 	}
 
 	(MetadataTask task, TypeMapTaskBuildEngine engine) CreateTask (params string [] paths)
@@ -764,7 +754,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : IDisposable
 		});
 		var relocations = new StringBuilder ("RELOCATION RECORDS FOR [.rodata]:\nOFFSET TYPE VALUE\n");
 		for (int i = 0; i < groupSymbols.Length; i++) {
-			relocations.Append ($"{value + i * 4:x16} R_AARCH64_PREL32 {groupSymbols [i]}\n");
+			relocations.Append (CultureInfo.InvariantCulture, $"{value + i * 4:x16} R_AARCH64_PREL32 {groupSymbols [i]}\n");
 		}
 		return relocations.ToString ();
 	}

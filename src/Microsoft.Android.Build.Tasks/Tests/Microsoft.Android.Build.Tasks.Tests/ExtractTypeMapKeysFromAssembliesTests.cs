@@ -10,21 +10,31 @@ using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Android.Tasks;
 using Xamarin.Android.Tasks;
-using Xunit;
+using NUnit.Framework;
 using TaskItem = Microsoft.Build.Utilities.TaskItem;
 
-namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
+namespace Xamarin.Android.Build.Tests;
 
+[TestFixture]
+[Parallelizable]
 public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 {
 	static readonly Version RuntimeVersion = new (11, 0, 0, 0);
 	readonly string directory = Path.Combine (Path.GetTempPath (), nameof (ExtractTypeMapKeysFromAssembliesTests), Guid.NewGuid ().ToString ("N"));
 
-	public ExtractTypeMapKeysFromAssembliesTests () => Directory.CreateDirectory (directory);
+	[SetUp]
+	public void SetUp () => Directory.CreateDirectory (directory);
 
-	public void Dispose () => Directory.Delete (directory, recursive: true);
+	[TearDown]
+	public void Dispose ()
+	{
+		if (Directory.Exists (directory)) {
+			Directory.Delete (directory, recursive: true);
+		}
+	}
 
 	static TypeMapAttributeData Entry (string key, string? target = null) => new () {
 		MapKey = key,
@@ -56,7 +66,7 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 		}, engine);
 	}
 
-	[Fact]
+	[Test]
 	public void UnionsAllAssembliesAndRidsWithExactCanonicalEncoding ()
 	{
 		string arm64 = Emit ("android-arm64/_Bindings.TypeMap",
@@ -65,71 +75,68 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 			Entry ("test/Alpha", "System.String, System.Runtime"), Entry ("test/Outer$Inner"), Entry ("test/Alias[1]"));
 		var (task, _) = CreateTask (arm64, x64, arm64);
 
-		Assert.True (task.Execute ());
+		Assert.IsTrue (task.Execute ());
 		byte [] expected = new UTF8Encoding (false).GetBytes ("test/Alias\ntest/Alpha\ntest/Outer$Inner\ntest/Zebra\ntest/\u00e9clair\n");
-		Assert.Equal (expected, File.ReadAllBytes (task.OutputFile));
+		Assert.AreEqual (expected, File.ReadAllBytes (task.OutputFile));
 
 		File.SetLastWriteTimeUtc (task.OutputFile, new DateTime (2000, 1, 1));
 		task.LinkedAssemblies = task.LinkedAssemblies.Reverse ().ToArray ();
-		Assert.True (task.Execute ());
-		Assert.Equal (expected, File.ReadAllBytes (task.OutputFile));
-		Assert.True (File.GetLastWriteTimeUtc (task.OutputFile).Year > 2000);
+		Assert.IsTrue (task.Execute ());
+		Assert.AreEqual (expected, File.ReadAllBytes (task.OutputFile));
+		Assert.IsTrue (File.GetLastWriteTimeUtc (task.OutputFile).Year > 2000);
 	}
 
-	[Theory]
-	[InlineData ("test/A[123]", "test/A")]
-	[InlineData ("test/A[000]", "test/A")]
-	[InlineData ("test/A[9999999999999999999999999999999]", "test/A")]
-	[InlineData ("test/Outer$Inner[2]", "test/Outer$Inner")]
-	[InlineData ("test/\u2160[1]", "test/\u2160")]
+	[TestCase ("test/A[123]", "test/A")]
+	[TestCase ("test/A[000]", "test/A")]
+	[TestCase ("test/A[9999999999999999999999999999999]", "test/A")]
+	[TestCase ("test/Outer$Inner[2]", "test/Outer$Inner")]
+	[TestCase ("test/\u2160[1]", "test/\u2160")]
 	public void NormalizesOnlyFinalNonemptyAsciiDecimalAlias (string key, string expected)
 	{
 		var (task, _) = CreateTask (Emit ("Map", Entry (key)));
-		Assert.True (task.Execute ());
-		Assert.Equal (expected + "\n", File.ReadAllText (task.OutputFile));
+		Assert.IsTrue (task.Execute ());
+		Assert.AreEqual (expected + "\n", File.ReadAllText (task.OutputFile));
 	}
 
-	[Theory]
-	[InlineData ("[Ljava/lang/Object;", "java/lang/Object\n")]
-	[InlineData ("[[Ltest/Outer$Inner;", "test/Outer$Inner\n")]
-	[InlineData ("[Ltest/Outer$Inner;[000]", "test/Outer$Inner\n")]
-	[InlineData ("[B", "")]
-	[InlineData ("[[Z", "")]
-	[InlineData ("[I[0]", "")]
+	[TestCase ("[Ljava/lang/Object;", "java/lang/Object\n")]
+	[TestCase ("[[Ltest/Outer$Inner;", "test/Outer$Inner\n")]
+	[TestCase ("[Ltest/Outer$Inner;[000]", "test/Outer$Inner\n")]
+	[TestCase ("[B", "")]
+	[TestCase ("[[Z", "")]
+	[TestCase ("[I[0]", "")]
 	public void ArrayEntriesKeepOnlyTheirObjectElementClass (string key, string expected)
 	{
 		var (task, engine) = CreateTask (Emit ("Map", Entry (key)));
-		Assert.True (task.Execute ());
-		Assert.Empty (engine.Errors);
-		Assert.Equal (new UTF8Encoding (false).GetBytes (expected), File.ReadAllBytes (task.OutputFile));
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (engine.Errors);
+		Assert.AreEqual (new UTF8Encoding (false).GetBytes (expected), File.ReadAllBytes (task.OutputFile));
 	}
 
-	[Fact]
+	[Test]
 	public void EmptyStubsAndOrdinaryManagedAssembliesContributeNoKeys ()
 	{
 		string stub = EmitStub ("Stub");
-		string fixtures = Path.Combine (AppContext.BaseDirectory, "TestFixtures.dll");
-		var (task, _) = CreateTask (stub, fixtures);
-		Assert.True (task.Execute ());
-		Assert.Empty (File.ReadAllBytes (task.OutputFile));
+		var (task, _) = CreateTask (stub, typeof (TaskItem).Assembly.Location);
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (File.ReadAllBytes (task.OutputFile));
 
 		task.LinkedAssemblies = [new TaskItem (Emit ("Map", Entry ("test/Present")))];
-		Assert.True (task.Execute ());
+		Assert.IsTrue (task.Execute ());
 		task.LinkedAssemblies = [new TaskItem (stub)];
-		Assert.True (task.Execute ());
-		Assert.Empty (File.ReadAllBytes (task.OutputFile));
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (File.ReadAllBytes (task.OutputFile));
 	}
 
-	[Fact]
+	[Test]
 	public void MissingAssemblyInputsFail ()
 	{
 		var (task, engine) = CreateTask ();
-		Assert.False (task.Execute ());
-		Assert.Contains (engine.Errors, e => e.Code == "XA4327");
-		Assert.False (File.Exists (task.OutputFile));
+		Assert.IsFalse (task.Execute ());
+		Assert.IsTrue (engine.Errors.Any (e => e.Code == "XA4327"));
+		Assert.IsFalse (File.Exists (task.OutputFile));
 	}
 
-	[Fact]
+	[Test]
 	public void IgnoresAliasArraysAssociationsAssemblyTargetsAndUnrelatedAttributes ()
 	{
 		var model = new TypeMapAssemblyData { AssemblyName = "Map", ModuleName = "Map.dll" };
@@ -150,15 +157,14 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 			new RootTypeMapAssemblyGenerator (RuntimeVersion).Generate (["Map"], useSharedTypemapUniverse: false, stream);
 		}
 		var (task, _) = CreateTask (root, map);
-		Assert.True (task.Execute ());
-		Assert.Equal ("test/Retained\n", File.ReadAllText (task.OutputFile));
+		Assert.IsTrue (task.Execute ());
+		Assert.AreEqual ("test/Retained\n", File.ReadAllText (task.OutputFile));
 	}
 
-	[Theory]
-	[InlineData ("missing")]
-	[InlineData ("malformed")]
-	[InlineData ("zero-byte")]
-	[InlineData ("directory")]
+	[TestCase ("missing")]
+	[TestCase ("malformed")]
+	[TestCase ("zero-byte")]
+	[TestCase ("directory")]
 	public void BadRequiredAssemblyFailsWithoutWritingOutput (string kind)
 	{
 		string path = Path.Combine (directory, "bad.dll");
@@ -170,43 +176,42 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 			Directory.CreateDirectory (path);
 		}
 		var (task, engine) = CreateTask (Emit ("Valid", Entry ("test/Valid")), path);
-		Assert.False (task.Execute ());
-		Assert.Contains (engine.Errors, e => e.Code == "XA4327" && e.Message != null && e.Message.Contains (path, StringComparison.Ordinal));
-		Assert.False (File.Exists (task.OutputFile));
+		Assert.IsFalse (task.Execute ());
+		Assert.IsTrue (engine.Errors.Any (e => e.Code == "XA4327" && e.Message != null && e.Message.Contains (path, StringComparison.Ordinal)));
+		Assert.IsFalse (File.Exists (task.OutputFile));
 	}
 
-	[Theory]
-	[InlineData ("")]
-	[InlineData ("test/Invalid\nName")]
-	[InlineData ("test/Invalid\rName")]
-	[InlineData ("test/Invalid\0Name")]
-	[InlineData ("test/A[]")]
-	[InlineData ("test/A[-1]")]
-	[InlineData ("test/A[1x]")]
-	[InlineData ("test/A[1]Extra")]
-	[InlineData ("test/A[1")]
-	[InlineData ("test/A[")]
-	[InlineData ("[0]")]
-	[InlineData ("test/A[\u0661]")]
-	[InlineData ("test/A[1][2]")]
-	[InlineData ("test.Invalid")]
-	[InlineData ("test/*")]
-	[InlineData ("test/")]
-	[InlineData ("/test")]
-	[InlineData ("test//Invalid")]
-	[InlineData ("test/Invalid\u200bName")]
-	[InlineData ("[L;")]
-	[InlineData ("[V")]
-	[InlineData ("[Ltest/A")]
-	[InlineData ("[[")]
+	[TestCase ("")]
+	[TestCase ("test/Invalid\nName")]
+	[TestCase ("test/Invalid\rName")]
+	[TestCase ("test/Invalid\0Name")]
+	[TestCase ("test/A[]")]
+	[TestCase ("test/A[-1]")]
+	[TestCase ("test/A[1x]")]
+	[TestCase ("test/A[1]Extra")]
+	[TestCase ("test/A[1")]
+	[TestCase ("test/A[")]
+	[TestCase ("[0]")]
+	[TestCase ("test/A[\u0661]")]
+	[TestCase ("test/A[1][2]")]
+	[TestCase ("test.Invalid")]
+	[TestCase ("test/*")]
+	[TestCase ("test/")]
+	[TestCase ("/test")]
+	[TestCase ("test//Invalid")]
+	[TestCase ("test/Invalid\u200bName")]
+	[TestCase ("[L;")]
+	[TestCase ("[V")]
+	[TestCase ("[Ltest/A")]
+	[TestCase ("[[")]
 	public void InvalidKeyFails (string key)
 	{
 		var (task, engine) = CreateTask (Emit ("Map", Entry (key)));
-		Assert.False (task.Execute ());
-		Assert.Contains (engine.Errors, e => e.Code == "XA4327");
+		Assert.IsFalse (task.Execute ());
+		Assert.IsTrue (engine.Errors.Any (e => e.Code == "XA4327"));
 	}
 
-	[Fact]
+	[Test]
 	public void NetmoduleIsNotAValidAssemblyInput ()
 	{
 		var metadata = new MetadataBuilder ();
@@ -221,47 +226,45 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 			image.WriteContentTo (stream);
 		}
 		var (task, engine) = CreateTask (path);
-		Assert.False (task.Execute ());
-		Assert.Contains (engine.Errors, e => e.Code == "XA4327");
+		Assert.IsFalse (task.Execute ());
+		Assert.IsTrue (engine.Errors.Any (e => e.Code == "XA4327"));
 	}
 
-	[Fact]
+	[Test]
 	public void OutputWriteFailureIsReported ()
 	{
 		var (task, engine) = CreateTask (Emit ("Map", Entry ("test/Valid")));
 		task.OutputFile = directory;
-		Assert.False (task.Execute ());
-		Assert.Contains (engine.Errors, e => e.Code == "XA4327");
+		Assert.IsFalse (task.Execute ());
+		Assert.IsTrue (engine.Errors.Any (e => e.Code == "XA4327"));
 	}
 
-	[Theory]
-	[InlineData ("prolog")]
-	[InlineData ("null-key")]
-	[InlineData ("null-type")]
-	[InlineData ("missing-type")]
-	[InlineData ("named-arguments")]
-	[InlineData ("trailing-bytes")]
-	[InlineData ("argument-count")]
-	[InlineData ("key-type")]
-	[InlineData ("type-parameter")]
-	[InlineData ("static-method")]
-	[InlineData ("method-name")]
+	[TestCase ("prolog")]
+	[TestCase ("null-key")]
+	[TestCase ("null-type")]
+	[TestCase ("missing-type")]
+	[TestCase ("named-arguments")]
+	[TestCase ("trailing-bytes")]
+	[TestCase ("argument-count")]
+	[TestCase ("key-type")]
+	[TestCase ("type-parameter")]
+	[TestCase ("static-method")]
+	[TestCase ("method-name")]
 	public void MalformedTypeMapAttributeFails (string defect)
 	{
 		var (task, engine) = CreateTask (EmitAttribute (defect));
-		Assert.False (task.Execute ());
-		Assert.Contains (engine.Errors, e => e.Code == "XA4327");
-		Assert.False (File.Exists (task.OutputFile));
+		Assert.IsFalse (task.Execute ());
+		Assert.IsTrue (engine.Errors.Any (e => e.Code == "XA4327"));
+		Assert.IsFalse (File.Exists (task.OutputFile));
 	}
 
-	[Theory]
-	[InlineData ("type-attribute")]
-	[InlineData ("other-namespace")]
+	[TestCase ("type-attribute")]
+	[TestCase ("other-namespace")]
 	public void OnlyAssemblyTypeMapAttributesAreEntries (string kind)
 	{
 		var (task, _) = CreateTask (EmitAttribute (kind));
-		Assert.True (task.Execute ());
-		Assert.Empty (File.ReadAllBytes (task.OutputFile));
+		Assert.IsTrue (task.Execute ());
+		Assert.IsEmpty (File.ReadAllBytes (task.OutputFile));
 	}
 
 	string EmitAttribute (string kind)
@@ -313,7 +316,7 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 		return path;
 	}
 
-	[Fact]
+	[Test]
 	public async Task RealILLinkRetainsOnlyLiveTypeMapAttributes ()
 	{
 		// Resolve unused emitter references and optional host-runtime facades without
@@ -333,16 +336,16 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 			Entry ("test/Alias[1]", "Targets.Removed, Targets"));
 		string root = EmitLinkerRoot ("_Bindings.TypeMap");
 		var (before, _) = CreateTask (input);
-		Assert.True (before.Execute ());
-		Assert.Contains ("test/Removed\n", File.ReadAllText (before.OutputFile), StringComparison.Ordinal);
+		Assert.IsTrue (before.Execute ());
+		StringAssert.Contains ("test/Removed\n", File.ReadAllText (before.OutputFile));
 
 		string linkedDirectory = Path.Combine (directory, "linked");
 		await RunLinker (root, linkedDirectory);
 		string linked = Path.Combine (linkedDirectory, "_Bindings.TypeMap.dll");
-		Assert.True (File.Exists (linked));
+		Assert.IsTrue (File.Exists (linked));
 		var (after, _) = CreateTask (linked);
-		Assert.True (after.Execute ());
-		Assert.Equal ("test/Alias\ntest/Surviving\ntest/Unconditional\n", File.ReadAllText (after.OutputFile));
+		Assert.IsTrue (after.Execute ());
+		Assert.AreEqual ("test/Alias\ntest/Surviving\ntest/Unconditional\n", File.ReadAllText (after.OutputFile));
 
 		using var pe = new PEReader (File.OpenRead (linked));
 		var reader = pe.GetMetadataReader ();
@@ -352,13 +355,13 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 			if (reader.GetCustomAttributeFullName (attribute, after.Log) != "System.Runtime.InteropServices.TypeMapAttribute`1") {
 				continue;
 			}
-			Assert.Equal (HandleKind.MemberReference, attribute.Constructor.Kind);
-			Assert.Equal (HandleKind.TypeSpecification, reader.GetMemberReference ((MemberReferenceHandle) attribute.Constructor).Parent.Kind);
+			Assert.AreEqual (HandleKind.MemberReference, attribute.Constructor.Kind);
+			Assert.AreEqual (HandleKind.TypeSpecification, reader.GetMemberReference ((MemberReferenceHandle) attribute.Constructor).Parent.Kind);
 			var blob = reader.GetBlobReader (attribute.Value);
-			Assert.Equal (1, blob.ReadUInt16 ());
+			Assert.AreEqual (1, blob.ReadUInt16 ());
 			keys.Add (blob.ReadSerializedString () ?? throw new InvalidOperationException ());
 		}
-		Assert.Equal (new [] { "test/Alias[0]", "test/Surviving", "test/Unconditional" }, keys.OrderBy (k => k, StringComparer.Ordinal));
+		Assert.AreEqual (new [] { "test/Alias[0]", "test/Surviving", "test/Unconditional" }, keys.OrderBy (k => k, StringComparer.Ordinal));
 	}
 
 	string EmitStub (string name)
@@ -449,7 +452,7 @@ public class ExtractTypeMapKeysFromAssembliesTests : IDisposable
 			process.Kill (entireProcessTree: true);
 			throw;
 		}
-		Assert.True (process.ExitCode == 0, await stdout + await stderr);
+		Assert.IsTrue (process.ExitCode == 0, await stdout + await stderr);
 	}
 
 }

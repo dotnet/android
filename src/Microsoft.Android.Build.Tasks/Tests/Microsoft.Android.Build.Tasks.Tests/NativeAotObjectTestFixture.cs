@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
+namespace Xamarin.Android.Build.Tests;
 
 internal static partial class NativeAotObjectTestFixture
 {
