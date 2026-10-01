@@ -19,6 +19,7 @@
     <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
     <WarningsAsErrors>IL2037</WarningsAsErrors>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
+    <EventSourceSupport>true</EventSourceSupport>
     <AndroidNdkDirectory></AndroidNdkDirectory>
   </PropertyGroup>
 
@@ -37,12 +38,6 @@
     <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
     <RuntimeHostConfigurationOption Include="PublishAot" Value="true" Condition=" '$(PublishAot)' == 'true' " />
     <!--
-      FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190
-      InetAccess excluded: https://github.com/dotnet/runtime/issues/73304
-      NetworkInterfaces excluded: https://github.com/dotnet/runtime/issues/75155
-    -->
-    <RuntimeHostConfigurationOption Include="EnableLLVM" Value="true" Condition=" '$(EnableLLVM)' == 'true' " />
-    <!--
       $(IncludeCategories) is set from the pipeline (e.g. -p:IncludeCategories=Intune)
       to restrict the on-device test run to a comma-separated list of NUnit [Category]
       names. Used by lanes like `Mono.Android.NET_Tests-IsAssignableFrom` which only
@@ -52,7 +47,6 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <UseMonoRuntime Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishAot)' != 'true' ">false</UseMonoRuntime>
     <TestsFlavor Condition=" '$(TestsFlavor)' == '' and '$(AndroidTypeMapImplementation)' == 'trimmable' ">CoreCLRTrimmable</TestsFlavor>
   </PropertyGroup>
 
@@ -86,15 +80,17 @@
     <ProjectReference Include="..\..\StartupHook\StartupHook.csproj" />
     <ProjectReference Include="..\Java.Interop-Tests\Java.Interop-Tests.NET.csproj" />
     <ProjectReference Include="..\Mono.Android-Test.Library\Mono.Android-Test.Library.NET.csproj" />
+    <!-- The callback format is assembly-wide; keep UCO fixtures separate from the legacy bindings above. -->
+    <ProjectReference Include="..\TrimmableTypeMapCallbacks\TrimmableTypeMapCallbacks.csproj" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
     <!-- Required for [Export] / [ExportField] runtime support (ExportTests.cs) on the LLVM-IR typemap path -->
     <Reference Include="Mono.Android.Export" Condition=" '$(AndroidTypeMapImplementation)' != 'trimmable' " />
   </ItemGroup>
 
   <ItemGroup>
-    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
-    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" />
+    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
     <TrimmerRootAssembly Include="StartupHook" RootMode="All" Condition=" '$(StartupHookSupport)' == 'true' " />
-    <TrimmerRootDescriptor Include="TrimmerRoots.xml" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootDescriptor Include="TrimmerRoots.xml" />
     <_AndroidRemapMembers Include="Remaps.xml" />
     <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
     <ProguardConfiguration Include="proguard.cfg" />
@@ -122,7 +118,9 @@
 
   <ItemGroup>
     <Compile Include="Android.App\ApplicationTest.cs" />
+    <Compile Include="Android.App\TrimmableTypeMapManifestTests.cs" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
     <Compile Include="Android.Content.Res\AssetManagerTest.cs" />
+    <Compile Include="Android.Content\CursorLoaderTest.cs" />
     <Compile Include="Android.Content\IntentTest.cs" />
     <Compile Include="Android.Content\SharedPreferencesTest.cs" />
     <Compile Include="Android.Graphics\NinePatchTests.cs" />
@@ -130,14 +128,17 @@
     <Compile Include="Android.OS\AidlProxyTests.cs" />
     <Compile Include="Android.OS\HandlerTest.cs" />
     <Compile Include="Android.Runtime\CharSequenceTest.cs" />
+    <Compile Include="Android.Runtime\ManagedObjectReferenceManagerTests.cs" />
     <Compile Include="Android.Runtime\InputStreamInvokerTest.cs" />
     <Compile Include="Android.Runtime\JavaCollectionTest.cs" />
     <Compile Include="Android.Runtime\JnienvArrayMarshaling.cs" />
+    <Compile Include="Android.Runtime\RuntimeEventSourceTests.cs" />
     <Compile Include="Android.Runtime\XmlReaderPullParserTest.cs" />
     <Compile Include="Android.Runtime\XmlReaderResourceParserTest.cs" />
     <Compile Include="Android.Views\LayoutInflaterTest.cs" />
     <Compile Include="Android.Widget\AdapterTests.cs" />
     <Compile Include="Android.Widget\CustomWidgetTests.cs" />
+    <Compile Include="Java.Interop\ActivationConstructorCacheTests.cs" />
     <Compile Include="Java.Interop\ConstructorActivationTests.cs" />
     <Compile Include="Java.Interop\ExportTests.cs" />
     <Compile Include="Java.Interop\InterfaceCollectionMarshallingTests.cs" />
@@ -146,13 +147,19 @@
     <Compile Include="Java.Interop\JavaListTest.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensionsTests.cs" />
     <Compile Include="Java.Interop\ManagedObjectProxyTests.cs" />
+    <Compile Include="Java.Interop\JavaMarshalGCBridgeTests.cs" />
+    <Compile Include="Java.Interop\PeerIdentityTests.cs" />
     <Compile Include="Java.Interop\JnienvTest.cs" />
     <Compile Include="Java.Interop\RawInterfaceCollectionHolder.cs" />
+    <Compile Include="Java.Interop\TrimmableTypeMapDirectCallbackTests.cs" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
+    <Compile Include="Java.Interop\TrimmableTypeMapExportTests.cs" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
     <Compile Include="Java.Interop\TrimmableTypeMapRuntimeCoverageTests.cs" />
+    <Compile Include="Java.Interop\TrimmableTypeMapTestHelpers.cs" Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
     <Compile Include="Java.Interop\TrimmableTypeMapTypeManagerTests.cs" />
     <Compile Include="Java.Interop\VirtualCallbackConstructorTests.cs" />
     <Compile Include="Java.Lang\ObjectArrayMarshaling.cs" />
     <Compile Include="Java.Lang\ObjectTest.cs" />
+    <Compile Include="Java.Net\InetAddressTest.cs" />
     <Compile Include="Localization\LocalizationTests.cs" />
     <Compile Include="System\AppContextTests.cs" />
     <Compile Include="System\AppDomainTest.cs" />
@@ -197,6 +204,8 @@
     <AndroidInterfaceDescription Include="Android.OS\IAidlProxyTest.aidl" />
     <AndroidJavaSource Include="java/net/dot/android/test/*.java" />
     <AndroidJavaSource Update="java/net/dot/android/test/InterfaceCollectionFixture.java" Bind="false" />
+    <AndroidJavaSource Update="java/net/dot/android/test/TrimmableDirectCallbackBase.java" Bind="false" />
+    <AndroidJavaSource Update="java/net/dot/android/test/TrimmableSuperArgsBase.java" Bind="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -296,8 +305,6 @@
     <RuntimeHostConfigurationOption Include="test_bool"    Value="true" />
     <RuntimeHostConfigurationOption Include="test_integer" Value="42" />
     <RuntimeHostConfigurationOption Include="test_string"  Value="foo" />
-    <!-- Set STARTUP_HOOKS via RuntimeHostConfigurationOption for MonoVM (read via AppContext.GetData) -->
-    <RuntimeHostConfigurationOption Include="STARTUP_HOOKS" Value="StartupHook" Condition=" '$(UseMonoRuntime)' == 'true' " />
   </ItemGroup>
 
 </Project>

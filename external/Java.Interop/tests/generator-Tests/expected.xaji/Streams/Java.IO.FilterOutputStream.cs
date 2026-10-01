@@ -18,28 +18,12 @@ namespace Java.IO {
 	// Metadata.xml XPath class reference: path="/api/package[@name='java.io']/class[@name='FilterOutputStream']"
 	[global::Android.Runtime.Register ("java/io/FilterOutputStream", DoNotGenerateAcw=true)]
 	public partial class FilterOutputStream : global::Java.IO.OutputStream {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("java/io/FilterOutputStream", typeof (FilterOutputStream));
-
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
+		static readonly JniPeerMembers _members = new JniPeerMembers ("java/io/FilterOutputStream", typeof (FilterOutputStream));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
 		}
 
 		protected FilterOutputStream (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
@@ -93,12 +77,9 @@ namespace Java.IO {
 		public override unsafe void Write (int oneByte)
 		{
 			const string __id = "write.(I)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (oneByte);
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (oneByte);
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 		}
 
 	}

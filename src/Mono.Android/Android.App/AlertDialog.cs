@@ -212,6 +212,7 @@ namespace Android.App {
 			SetButton (whichButton, text, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 		}
 
+#pragma warning disable CS0618 // These overloads preserve the deprecated Java APIs with EventHandler-based callbacks.
 		public void SetButton (Java.Lang.ICharSequence text, EventHandler<Android.Content.DialogClickEventArgs> handler)
 		{
 			SetButton (text, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
@@ -241,7 +242,7 @@ namespace Android.App {
 		{
 			SetButton3 (text, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 		}
+#pragma warning restore CS0618
 
 	}
 }
-

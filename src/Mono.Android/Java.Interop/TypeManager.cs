@@ -225,14 +225,6 @@ namespace Java.Interop {
 				return new JavaLocationException (loc.ToString ());
 		}
 
-		[MethodImplAttribute(MethodImplOptions.InternalCall)]
-		static extern Type monodroid_typemap_java_to_managed (string java_type_name);
-
-		static Type monovm_typemap_java_to_managed (string java_type_name)
-		{
-			return monodroid_typemap_java_to_managed (java_type_name);
-		}
-
 		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Value of java_type_name isn't statically known.")]
 		static Type? clr_typemap_java_to_managed (string java_type_name)
 		{
@@ -280,12 +272,8 @@ namespace Java.Interop {
 					$"{nameof (TypeManager)}.{nameof (GetJavaToManagedTypeCore)} should not be used when " +
 					$"{nameof (RuntimeFeature.TrimmableTypeMap)} is enabled. The trimmable path should resolve " +
 					$"types through {nameof (TrimmableTypeMapTypeManager)}.");
-			} else if (RuntimeFeature.IsMonoRuntime) {
-				type = monovm_typemap_java_to_managed (class_name);
-			} else if (RuntimeFeature.IsCoreClrRuntime) {
-				type = clr_typemap_java_to_managed (class_name);
 			} else {
-				throw new NotSupportedException ("Internal error: unknown runtime not supported");
+				type = clr_typemap_java_to_managed (class_name);
 			}
 
 			if (type != null) {

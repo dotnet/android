@@ -10,6 +10,19 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 sealed class ExportMethodDispatchEmitterContext
 {
+	readonly PEAssemblyBuilder _pe;
+
+	TypeReferenceHandle _systemXmlReaderRef;
+	MemberReferenceHandle _xmlPullParserReaderFromJniHandleRef;
+	MemberReferenceHandle _xmlResourceParserReaderFromJniHandleRef;
+	MemberReferenceHandle _xmlReaderPullParserToLocalJniHandleRef;
+	MemberReferenceHandle _xmlReaderResourceParserToLocalJniHandleRef;
+
+	ExportMethodDispatchEmitterContext (PEAssemblyBuilder pe)
+	{
+		_pe = pe;
+	}
+
 	public static ExportMethodDispatchEmitterContext Create (
 		PEAssemblyBuilder pe,
 		TypeReferenceHandle iJavaPeerableRef,
@@ -35,9 +48,6 @@ sealed class ExportMethodDispatchEmitterContext
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Array"));
 		var systemStreamRef = metadata.AddTypeReference (pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System.IO"), metadata.GetOrAddString ("Stream"));
-		var systemXmlRef = pe.FindOrAddAssemblyRef ("System.Xml.ReaderWriter");
-		var systemXmlReaderRef = metadata.AddTypeReference (systemXmlRef,
-			metadata.GetOrAddString ("System.Xml"), metadata.GetOrAddString ("XmlReader"));
 		var inputStreamInvokerRef = metadata.AddTypeReference (pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("InputStreamInvoker"));
 		var outputStreamInvokerRef = metadata.AddTypeReference (pe.MonoAndroidRef,
@@ -46,14 +56,6 @@ sealed class ExportMethodDispatchEmitterContext
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("InputStreamAdapter"));
 		var outputStreamAdapterRef = metadata.AddTypeReference (pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("OutputStreamAdapter"));
-		var xmlPullParserReaderRef = metadata.AddTypeReference (pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("XmlPullParserReader"));
-		var xmlResourceParserReaderRef = metadata.AddTypeReference (pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("XmlResourceParserReader"));
-		var xmlReaderPullParserRef = metadata.AddTypeReference (pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("XmlReaderPullParser"));
-		var xmlReaderResourceParserRef = metadata.AddTypeReference (pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("XmlReaderResourceParser"));
 		var charSequenceRef = metadata.AddTypeReference (pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("CharSequence"));
 		var iCharSequenceRef = metadata.AddTypeReference (pe.MonoAndroidRef,
@@ -71,8 +73,9 @@ sealed class ExportMethodDispatchEmitterContext
 		var systemCollectionsICollectionRef = metadata.AddTypeReference (pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System.Collections"), metadata.GetOrAddString ("ICollection"));
 
-		return new ExportMethodDispatchEmitterContext {
+		return new ExportMethodDispatchEmitterContext (pe) {
 			IJavaObjectRef = iJavaObjectRef,
+			JniHandleOwnershipRef = jniHandleOwnershipRef,
 			GetTypeFromHandleRef = getTypeFromHandleRef,
 			JniEnvGetStringRef = pe.AddMemberRef (jniEnvRef, "GetString",
 				sig => sig.MethodSignature ().Parameters (2,
@@ -142,28 +145,6 @@ sealed class ExportMethodDispatchEmitterContext
 				sig => sig.MethodSignature ().Parameters (1,
 					rt => rt.Type ().IntPtr (),
 					p => p.AddParameter ().Type ().Type (systemStreamRef, false))),
-			XmlPullParserReaderFromJniHandleRef = pe.AddMemberRef (xmlPullParserReaderRef, "FromJniHandle",
-				sig => sig.MethodSignature ().Parameters (2,
-					rt => rt.Type ().Type (systemXmlReaderRef, false),
-					p => {
-						p.AddParameter ().Type ().IntPtr ();
-						p.AddParameter ().Type ().Type (jniHandleOwnershipRef, true);
-					})),
-			XmlResourceParserReaderFromJniHandleRef = pe.AddMemberRef (xmlResourceParserReaderRef, "FromJniHandle",
-				sig => sig.MethodSignature ().Parameters (2,
-					rt => rt.Type ().Type (systemXmlReaderRef, false),
-					p => {
-						p.AddParameter ().Type ().IntPtr ();
-						p.AddParameter ().Type ().Type (jniHandleOwnershipRef, true);
-					})),
-			XmlReaderPullParserToLocalJniHandleRef = pe.AddMemberRef (xmlReaderPullParserRef, "ToLocalJniHandle",
-				sig => sig.MethodSignature ().Parameters (1,
-					rt => rt.Type ().IntPtr (),
-					p => p.AddParameter ().Type ().Type (systemXmlReaderRef, false))),
-			XmlReaderResourceParserToLocalJniHandleRef = pe.AddMemberRef (xmlReaderResourceParserRef, "ToLocalJniHandle",
-				sig => sig.MethodSignature ().Parameters (1,
-					rt => rt.Type ().IntPtr (),
-					p => p.AddParameter ().Type ().Type (systemXmlReaderRef, false))),
 			CharSequenceToLocalJniHandleRef = pe.AddMemberRef (charSequenceRef, "ToLocalJniHandle",
 				sig => sig.MethodSignature ().Parameters (1,
 					rt => rt.Type ().IntPtr (),
@@ -191,6 +172,89 @@ sealed class ExportMethodDispatchEmitterContext
 		};
 	}
 
+	TypeReferenceHandle GetSystemXmlReaderRef ()
+	{
+		if (!_systemXmlReaderRef.IsNil) {
+			return _systemXmlReaderRef;
+		}
+
+		var metadata = _pe.Metadata;
+		var systemXmlRef = _pe.FindOrAddAssemblyRef ("System.Xml.ReaderWriter");
+		_systemXmlReaderRef = metadata.AddTypeReference (systemXmlRef,
+			metadata.GetOrAddString ("System.Xml"), metadata.GetOrAddString ("XmlReader"));
+		return _systemXmlReaderRef;
+	}
+
+	public MemberReferenceHandle GetXmlPullParserReaderFromJniHandleRef ()
+	{
+		if (!_xmlPullParserReaderFromJniHandleRef.IsNil) {
+			return _xmlPullParserReaderFromJniHandleRef;
+		}
+
+		var metadata = _pe.Metadata;
+		var xmlPullParserReaderRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("XmlPullParserReader"));
+		_xmlPullParserReaderFromJniHandleRef = _pe.AddMemberRef (xmlPullParserReaderRef, "FromJniHandle",
+			sig => sig.MethodSignature ().Parameters (2,
+				rt => rt.Type ().Type (GetSystemXmlReaderRef (), false),
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (JniHandleOwnershipRef, true);
+				}));
+		return _xmlPullParserReaderFromJniHandleRef;
+	}
+
+	public MemberReferenceHandle GetXmlResourceParserReaderFromJniHandleRef ()
+	{
+		if (!_xmlResourceParserReaderFromJniHandleRef.IsNil) {
+			return _xmlResourceParserReaderFromJniHandleRef;
+		}
+
+		var metadata = _pe.Metadata;
+		var xmlResourceParserReaderRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("XmlResourceParserReader"));
+		_xmlResourceParserReaderFromJniHandleRef = _pe.AddMemberRef (xmlResourceParserReaderRef, "FromJniHandle",
+			sig => sig.MethodSignature ().Parameters (2,
+				rt => rt.Type ().Type (GetSystemXmlReaderRef (), false),
+				p => {
+					p.AddParameter ().Type ().IntPtr ();
+					p.AddParameter ().Type ().Type (JniHandleOwnershipRef, true);
+				}));
+		return _xmlResourceParserReaderFromJniHandleRef;
+	}
+
+	public MemberReferenceHandle GetXmlReaderPullParserToLocalJniHandleRef ()
+	{
+		if (!_xmlReaderPullParserToLocalJniHandleRef.IsNil) {
+			return _xmlReaderPullParserToLocalJniHandleRef;
+		}
+
+		var metadata = _pe.Metadata;
+		var xmlReaderPullParserRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("XmlReaderPullParser"));
+		_xmlReaderPullParserToLocalJniHandleRef = _pe.AddMemberRef (xmlReaderPullParserRef, "ToLocalJniHandle",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Type ().IntPtr (),
+				p => p.AddParameter ().Type ().Type (GetSystemXmlReaderRef (), false)));
+		return _xmlReaderPullParserToLocalJniHandleRef;
+	}
+
+	public MemberReferenceHandle GetXmlReaderResourceParserToLocalJniHandleRef ()
+	{
+		if (!_xmlReaderResourceParserToLocalJniHandleRef.IsNil) {
+			return _xmlReaderResourceParserToLocalJniHandleRef;
+		}
+
+		var metadata = _pe.Metadata;
+		var xmlReaderResourceParserRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("XmlReaderResourceParser"));
+		_xmlReaderResourceParserToLocalJniHandleRef = _pe.AddMemberRef (xmlReaderResourceParserRef, "ToLocalJniHandle",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Type ().IntPtr (),
+				p => p.AddParameter ().Type ().Type (GetSystemXmlReaderRef (), false)));
+		return _xmlReaderResourceParserToLocalJniHandleRef;
+	}
+
 	public required TypeReferenceHandle IJavaObjectRef { get; init; }
 	public required MemberReferenceHandle GetTypeFromHandleRef { get; init; }
 	public required MemberReferenceHandle JniEnvGetStringRef { get; init; }
@@ -204,10 +268,6 @@ sealed class ExportMethodDispatchEmitterContext
 	public required MemberReferenceHandle OutputStreamInvokerFromJniHandleRef { get; init; }
 	public required MemberReferenceHandle InputStreamAdapterToLocalJniHandleRef { get; init; }
 	public required MemberReferenceHandle OutputStreamAdapterToLocalJniHandleRef { get; init; }
-	public required MemberReferenceHandle XmlPullParserReaderFromJniHandleRef { get; init; }
-	public required MemberReferenceHandle XmlResourceParserReaderFromJniHandleRef { get; init; }
-	public required MemberReferenceHandle XmlReaderPullParserToLocalJniHandleRef { get; init; }
-	public required MemberReferenceHandle XmlReaderResourceParserToLocalJniHandleRef { get; init; }
 	public required MemberReferenceHandle CharSequenceToLocalJniHandleRef { get; init; }
 	public required MemberReferenceHandle JavaListToLocalJniHandleRef { get; init; }
 	public required MemberReferenceHandle JavaDictionaryToLocalJniHandleRef { get; init; }
@@ -225,4 +285,5 @@ sealed class ExportMethodDispatchEmitterContext
 	public required MemberReferenceHandle BeginMarshalMethodRef { get; init; }
 	public required MemberReferenceHandle EndMarshalMethodRef { get; init; }
 	public required MemberReferenceHandle OnUserUnhandledExceptionRef { get; init; }
+	public required TypeReferenceHandle JniHandleOwnershipRef { get; init; }
 }

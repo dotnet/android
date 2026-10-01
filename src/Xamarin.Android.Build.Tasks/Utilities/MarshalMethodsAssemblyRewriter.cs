@@ -17,7 +17,6 @@ namespace Xamarin.Android.Tasks
 	{
 		sealed class AssemblyImports
 		{
-			public MethodReference? MonoUnhandledExceptionMethod;
 			public TypeReference? SystemException;
 			public MethodReference? UnhandledExceptionMethod;
 			public CustomAttribute? UnmanagedCallersOnlyAttribute;
@@ -37,8 +36,7 @@ namespace Xamarin.Android.Tasks
 			this.resolver = resolver ?? throw new ArgumentNullException (nameof (resolver));;
 		}
 
-		// TODO: do away with broken exception transitions, there's no point in supporting them
-		public void Rewrite (bool brokenExceptionTransitions)
+		public void Rewrite ()
 		{
 			AssemblyDefinition? monoAndroidRuntime = resolver.Resolve ("Mono.Android.Runtime");
 			if (monoAndroidRuntime == null) {
@@ -59,13 +57,6 @@ namespace Xamarin.Android.Tasks
 			if (unhandledExceptionMethod == null)
 				throw new ArgumentNullException (nameof (unhandledExceptionMethod));
 
-			TypeDefinition? runtimeNativeMethods = FindType (monoAndroidRuntime, "Android.Runtime.RuntimeNativeMethods", required: true);
-			if (runtimeNativeMethods == null)
-				throw new ArgumentNullException (nameof (runtimeNativeMethods));
-			MethodDefinition? monoUnhandledExceptionMethod = FindMethod (runtimeNativeMethods, "monodroid_debugger_unhandled_exception", required: true);
-			if (monoUnhandledExceptionMethod == null)
-				throw new ArgumentNullException (nameof (monoUnhandledExceptionMethod));
-
 			AssemblyDefinition? corlib = resolver.Resolve ("System.Private.CoreLib");
 			if (corlib == null)
 				throw new ArgumentNullException (nameof (corlib));
@@ -78,7 +69,6 @@ namespace Xamarin.Android.Tasks
 			var assemblyImports = new Dictionary<AssemblyDefinition, AssemblyImports> ();
 			foreach (AssemblyDefinition asm in classifier.AssembliesWithMarshalMethods) {
 				var imports = new AssemblyImports {
-					MonoUnhandledExceptionMethod  = asm.MainModule.ImportReference (monoUnhandledExceptionMethod),
 					SystemException               = asm.MainModule.ImportReference (systemException),
 					UnhandledExceptionMethod      = asm.MainModule.ImportReference (unhandledExceptionMethod),
 					UnmanagedCallersOnlyAttribute = CreateImportedUnmanagedCallersOnlyAttribute (asm, unmanagedCallersOnlyAttributeCtor),
@@ -105,7 +95,7 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 
-					method.NativeCallbackWrapper = GenerateWrapper (method, assemblyImports, brokenExceptionTransitions);
+					method.NativeCallbackWrapper = GenerateWrapper (method, assemblyImports);
 					if (method.Connector != null) {
 						if (method.Connector.IsStatic && method.Connector.IsPrivate) {
 							log.LogDebugMessage ($"[{targetArch}] Removing connector method {method.Connector.FullName}");
@@ -213,7 +203,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		MethodDefinition GenerateWrapper (MarshalMethodEntry method, Dictionary<AssemblyDefinition, AssemblyImports> assemblyImports, bool brokenExceptionTransitions)
+		MethodDefinition GenerateWrapper (MarshalMethodEntry method, Dictionary<AssemblyDefinition, AssemblyImports> assemblyImports)
 		{
 			MethodDefinition callback = method.NativeCallback;
 			AssemblyImports imports = assemblyImports [callback.Module.Assembly];
@@ -303,15 +293,10 @@ namespace Xamarin.Android.Tasks
 			body.Instructions.Add (Instruction.Create (OpCodes.Ldarg_0));
 			body.Instructions.Add (Instruction.Create (OpCodes.Ldloc, exceptionVar));
 
-			if (brokenExceptionTransitions) {
-				body.Instructions.Add (Instruction.Create (OpCodes.Call, imports.MonoUnhandledExceptionMethod));
-				body.Instructions.Add (Instruction.Create (OpCodes.Throw));
-			} else {
-				body.Instructions.Add (Instruction.Create (OpCodes.Call, imports.UnhandledExceptionMethod));
+			body.Instructions.Add (Instruction.Create (OpCodes.Call, imports.UnhandledExceptionMethod));
 
-				if (hasReturnValue) {
-					AddSetDefaultValueInstructions (body, retType, retval!);
-				}
+			if (hasReturnValue) {
+				AddSetDefaultValueInstructions (body, retType, retval!);
 			}
 
 			body.Instructions.Add (Instruction.Create (OpCodes.Leave_S, leaveTarget));

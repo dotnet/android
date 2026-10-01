@@ -167,15 +167,7 @@
 			<url host-os="windows" host-bits="0" size="6304111" checksum-type="sha1" checksum="2d7599f59b54f02c4ecd33d656091a3c1e55ad9c">https://dl.google.com/android/repository/platform-tools_r33.0.2-windows.zip</url>
 		</urls>
 	</platform-tools>
-	<cmdline-tools revision="22.0" path="cmdline-tools;22.0" filesystem-path="cmdline-tools/latest" manifest-url="https://dl.google.com/android/repository/repository2-3.xml" description="Android SDK Command-line Tools (latest)" obsolete="False" preview="False" license="android-sdk-license" original-type="generic:genericDetailsType">
-		<urls>
-			<url host-os="linux" host-bits="0" size="181833628" checksum-type="sha1" checksum="040d3996a65543d22ec4bf73e4c37aa37a8d4af4">https://dl.google.com/android/repository/commandlinetools-linux-15859902_latest.zip</url>
-			<url host-os="macosx" host-arch="x64" host-bits="0" size="156281494" checksum-type="sha1" checksum="1a79e61677b99cb0ce622792713cbea7ff2dc5de">https://dl.google.com/android/repository/commandlinetools-mac_x86_64-15859902_latest.zip</url>
-			<url host-os="macosx" host-arch="aarch64" host-bits="0" size="156083281" checksum-type="sha1" checksum="c4e0dbc53f1a4ce04fc2b11d4e2c4675001a95af">https://dl.google.com/android/repository/commandlinetools-mac_arm64-15859902_latest.zip</url>
-			<url host-os="windows" host-bits="0" size="155655386" checksum-type="sha1" checksum="b9862337a13e2809a5159dc3a08d058091bd59f6">https://dl.google.com/android/repository/commandlinetools-win-15859902_latest.zip</url>
-		</urls>
-	</cmdline-tools>
-	<cmdline-tools revision="21.0" path="cmdline-tools;21.0" filesystem-path="cmdline-tools/21.0" manifest-url="https://dl.google.com/android/repository/repository2-3.xml" description="Android SDK Command-line Tools" obsolete="False" preview="False" license="android-sdk-license" original-type="generic:genericDetailsType">
+	<cmdline-tools revision="21.0" path="cmdline-tools;21.0" filesystem-path="cmdline-tools/latest" manifest-url="https://dl.google.com/android/repository/repository2-3.xml" description="Android SDK Command-line Tools (latest)" obsolete="False" preview="False" license="android-sdk-license" original-type="generic:genericDetailsType">
 		<urls>
 			<url host-os="linux" host-bits="0" size="174244366" checksum-type="sha1" checksum="63523a02a975a81102238566f2a16c057d52301e">https://dl.google.com/android/repository/commandlinetools-linux-15641748_latest.zip</url>
 			<url host-os="macosx" host-bits="0" size="152127646" checksum-type="sha1" checksum="b62a5d8cf63ded173b47be867be4ee058ceda6df">https://dl.google.com/android/repository/commandlinetools-mac-15641748_latest.zip</url>

@@ -27,7 +27,7 @@ namespace generator.SourceWriters
 			IsStatic = method.IsStatic;
 
 			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-				method_callback = new MethodCallback (iface, method, opt, null, method.IsReturnCharSequence);
+				method_callback = new MethodCallback (iface, method, opt, null, method.IsReturnCharSequence, iface.FullName + "Invoker");
 			}
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 

@@ -16,28 +16,12 @@ using Java.Interop;
 // Metadata.xml XPath class reference: path="/api/package[@name='']/class[@name='ClassWithoutNamespace']"
 [global::Android.Runtime.Register ("ClassWithoutNamespace", DoNotGenerateAcw=true)]
 public abstract partial class ClassWithoutNamespace : global::Java.Lang.Object, IInterfaceWithoutNamespace {
-	static readonly JniPeerMembers _members = new XAPeerMembers ("ClassWithoutNamespace", typeof (ClassWithoutNamespace));
-
-	internal static new IntPtr class_ref {
-		get { return _members.JniPeerType.PeerReference.Handle; }
-	}
+	static readonly JniPeerMembers _members = new JniPeerMembers ("ClassWithoutNamespace", typeof (ClassWithoutNamespace));
 
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 		get { return _members; }
-	}
-
-	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-	protected override IntPtr ThresholdClass {
-		get { return _members.JniPeerType.PeerReference.Handle; }
-	}
-
-	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-	protected override global::System.Type ThresholdType {
-		get { return _members.ManagedPeerType; }
 	}
 
 	protected ClassWithoutNamespace (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
@@ -53,12 +37,9 @@ public abstract partial class ClassWithoutNamespace : global::Java.Lang.Object, 
 		if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 			return;
 
-		try {
-			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
-		} finally {
-		}
+		var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+		SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+		_members.InstanceMethods.FinishCreateInstance (__id, this, null);
 	}
 
 	static Delegate cb_Foo_Foo_V;
@@ -93,7 +74,7 @@ internal partial class ClassWithoutNamespaceInvoker : ClassWithoutNamespace {
 	{
 	}
 
-	static readonly JniPeerMembers _members = new XAPeerMembers ("ClassWithoutNamespace", typeof (ClassWithoutNamespaceInvoker));
+	static readonly JniPeerMembers _members = new JniPeerMembers ("ClassWithoutNamespace", typeof (ClassWithoutNamespaceInvoker));
 
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -101,21 +82,12 @@ internal partial class ClassWithoutNamespaceInvoker : ClassWithoutNamespace {
 		get { return _members; }
 	}
 
-	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-	protected override global::System.Type ThresholdType {
-		get { return _members.ManagedPeerType; }
-	}
-
 	// Metadata.xml XPath method reference: path="/api/package[@name='']/interface[@name='InterfaceWithoutNamespace']/method[@name='Foo' and count(parameter)=0]"
 	[Register ("Foo", "()V", "GetFooHandler")]
 	public override unsafe void Foo ()
 	{
 		const string __id = "Foo.()V";
-		try {
-			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-		} finally {
-		}
+		_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 	}
 
 }

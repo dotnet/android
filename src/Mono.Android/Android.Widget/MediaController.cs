@@ -13,17 +13,17 @@ namespace Android.Widget {
 		WeakReference? weak_implementor_NextClick;
 		public event EventHandler NextClick {
 			add {
-				AndroidEventHelper.AddEventHandler<View.IOnClickListener, View.IOnClickListenerImplementor>(
+				EventHelper.AddEventHandler<View.IOnClickListener, View.IOnClickListenerImplementor>(
 						ref weak_implementor_NextClick,
 						CreateClickImplementor,
 						SetNextClickListener,
 						__h => __h.Handler += value);
 			}
 			remove {
-				AndroidEventHelper.RemoveEventHandler<View.IOnClickListener, View.IOnClickListenerImplementor>(
+				EventHelper.RemoveEventHandler<View.IOnClickListener, View.IOnClickListenerImplementor>(
 						ref weak_implementor_NextClick,
 						View.IOnClickListenerImplementor.__IsEmpty,
-						SetNextClickListener,
+						__h => SetNextClickListener (null),
 						__h => __h.Handler -= value);
 			}
 		}
@@ -43,17 +43,17 @@ namespace Android.Widget {
 		WeakReference? weak_implementor_PrevClick;
 		public event EventHandler PreviousClick {
 			add {
-				AndroidEventHelper.AddEventHandler<View.IOnClickListener, View.IOnClickListenerImplementor>(
+				EventHelper.AddEventHandler<View.IOnClickListener, View.IOnClickListenerImplementor>(
 						ref weak_implementor_PrevClick,
 						CreateClickImplementor,
 						SetPrevClickListener,
 						__h => __h.Handler += value);
 			}
 			remove {
-				AndroidEventHelper.RemoveEventHandler<View.IOnClickListener, View.IOnClickListenerImplementor>(
+				EventHelper.RemoveEventHandler<View.IOnClickListener, View.IOnClickListenerImplementor>(
 						ref weak_implementor_PrevClick,
 						View.IOnClickListenerImplementor.__IsEmpty,
-						SetPrevClickListener,
+						__h => SetPrevClickListener (null),
 						__h => __h.Handler -= value);
 			}
 		}
@@ -69,4 +69,3 @@ namespace Android.Widget {
 		}
 	}
 }
-

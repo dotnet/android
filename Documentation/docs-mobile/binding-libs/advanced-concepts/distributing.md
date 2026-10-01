@@ -1,7 +1,7 @@
 ---
 title: Distributing bindings libraries
 description: Once a Java library has been bound, it may be desirable to distribute it internally or via NuGet for consumption.
-ms.author: jopobst
+ms.author: jopepper
 ms.date: 05/08/2024
 ---
 

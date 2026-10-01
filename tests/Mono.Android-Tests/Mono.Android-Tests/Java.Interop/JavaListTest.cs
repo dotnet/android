@@ -31,6 +31,7 @@ namespace Java.InteropTests
 		public void Add ()
 		{
 			list.Add ("foo");
+			Assert.AreEqual (1, list.Count);
 			Assert.AreEqual ("foo", list [0]);
 
 			// Ensure duplicates are allowed.
@@ -57,13 +58,6 @@ namespace Java.InteropTests
 			Assert.AreEqual ("Cherry", list [3]);
 			Assert.AreEqual ("Fig", list [4]);
 			Assert.AreEqual ("Grape", list [5]);
-		}
-
-		[Test]
-		public void Count ()
-		{
-			list.Add ("foo");
-			Assert.AreEqual (1, list.Count);
 		}
 
 		[Test]
@@ -137,9 +131,10 @@ namespace Java.InteropTests
 		public void RemoveAt ()
 		{
 			list.Add ("foo");
-			list.Insert (0, "bar");
+			list.Add ("bar");
+			list.RemoveAt (0);
+			Assert.AreEqual (1, list.Count);
 			Assert.AreEqual ("bar", list [0]);
-			Assert.AreEqual ("foo", list [1]);
 		}
 
 		[Test]

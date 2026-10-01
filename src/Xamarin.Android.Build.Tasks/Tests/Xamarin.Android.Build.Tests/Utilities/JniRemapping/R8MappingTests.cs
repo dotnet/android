@@ -590,17 +590,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void NestedDescriptorTypeMatchesMappingKey ()
+		public void NestedClassTypeMatchesMappingKey ()
 		{
 			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
 				acme.orig.MyView -> a.b.C:
 				    void m(acme.Outer$Inner) -> a
 
 				"""));
-			var parameterTypes = JniDescriptorText.MethodDescriptorToJavaParameterTypes ("(Lacme/Outer$Inner;)V");
 
-			CollectionAssert.AreEqual (new [] { "acme.Outer$Inner" }, parameterTypes);
-			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "m", parameterTypes, "void", out string renamed));
+			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "m", new [] { "acme.Outer$Inner" }, "void", out string renamed));
 			Assert.AreEqual ("a", renamed);
 		}
 

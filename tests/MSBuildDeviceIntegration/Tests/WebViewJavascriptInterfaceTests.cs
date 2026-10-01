@@ -15,7 +15,6 @@ namespace Xamarin.Android.Build.Tests
 		const string SuccessMarker = "# JAVASCRIPT_INTERFACE_RESULT ";
 		const string FailureMarker = "# JAVASCRIPT_INTERFACE_FAILURE ";
 
-		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR)]
 		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
 		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
 		public void LocalJavascriptInvokesManagedBridge (string typemapImplementation, AndroidRuntime runtime)

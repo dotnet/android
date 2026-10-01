@@ -214,13 +214,15 @@ namespace Xamarin.ProjectTools
 		{
 			var runtimeInfo = new List<RuntimeInfo> ();
 			var runtimeDirs = new HashSet<string> ();
-			var rootRuntimeDirs = Directory.GetDirectories (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Runtime.{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}.*");
+			var targetPlatform = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
+			var versionString = targetPlatform.Minor == 0 ? $"{targetPlatform.Major}" : $"{targetPlatform.Major}.{targetPlatform.Minor}";
+			var rootRuntimeDirs = Directory.GetDirectories (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Runtime.CoreCLR.{versionString}.*");
 			foreach (var dir in rootRuntimeDirs) {
 				runtimeDirs.Add (Directory.GetDirectories (dir).LastOrDefault ());
 			}
 
 			foreach (var runtimeDir in runtimeDirs) {
-				foreach (var file in Directory.EnumerateFiles (runtimeDir, "libmono-android.*.so", SearchOption.AllDirectories)) {
+				foreach (var file in Directory.EnumerateFiles (runtimeDir, "libnet-android.*.so", SearchOption.AllDirectories)) {
 					string fullFilePath = Path.GetFullPath (file);
 					DirectoryInfo parentDir = Directory.GetParent (fullFilePath);
 					if (parentDir == null)

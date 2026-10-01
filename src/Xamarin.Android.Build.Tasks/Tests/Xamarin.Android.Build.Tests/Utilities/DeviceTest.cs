@@ -319,11 +319,6 @@ namespace Xamarin.Android.Build.Tests
 			return RunAdbCommand ("logcat -c");
 		}
 
-		protected static string ClearDebugProperty ()
-		{
-			return ClearShellProp ("debug.mono.extra");
-		}
-
 		protected static string ClearShellProp (string propName)
 		{
 			return RunAdbCommand ($"shell setprop {propName} \"''\"");

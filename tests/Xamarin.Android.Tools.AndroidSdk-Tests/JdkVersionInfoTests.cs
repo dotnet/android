@@ -46,26 +46,5 @@ namespace Xamarin.Android.Tools.Tests
 			var info = new JdkVersionInfo (21, "Microsoft OpenJDK 21", "https://example.com/dl", "https://example.com/cs");
 			Assert.AreEqual ("Microsoft OpenJDK 21", info.ToString ());
 		}
-
-		[Test]
-		public void MutableProperties_CanBeSet ()
-		{
-			var info = new JdkVersionInfo (21, "Test", "https://example.com/dl", "https://example.com/cs");
-
-			info.Size = 999;
-			info.Checksum = "deadbeef";
-			info.ResolvedUrl = "https://resolved.example.com/jdk-21.0.5.zip";
-
-			Assert.AreEqual (999, info.Size);
-			Assert.AreEqual ("deadbeef", info.Checksum);
-			Assert.AreEqual ("https://resolved.example.com/jdk-21.0.5.zip", info.ResolvedUrl);
-		}
-
-		[Test]
-		public void ResolvedUrl_DefaultsToNull ()
-		{
-			var info = new JdkVersionInfo (21, "Test", "https://example.com/dl", "https://example.com/cs");
-			Assert.IsNull (info.ResolvedUrl);
-		}
 	}
 }

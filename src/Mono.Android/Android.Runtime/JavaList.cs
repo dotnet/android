@@ -10,7 +10,7 @@ namespace Android.Runtime {
 	// java.util.ArrayList allows null values
 	public partial class JavaList : Java.Lang.Object, System.Collections.IList {
 
-		internal static readonly JniPeerMembers list_members = new XAPeerMembers ("java/util/List", typeof (JavaList), isInterface: true);
+		internal static readonly JniPeerMembers list_members = new JniPeerMembers ("java/util/List", typeof (JavaList), isInterface: true);
 
 		//
 		// Exception audit:
@@ -171,9 +171,11 @@ namespace Android.Runtime {
 			get { return false; }
 		}
 
+#pragma warning disable CS8766 // Preserve the legacy nullable API and null SyncRoot behavior.
 		public object? SyncRoot {
 			get { return null; }
 		}
+#pragma warning restore CS8766
 
 		public object? this [int index] {
 			get {
@@ -879,10 +881,12 @@ namespace Android.Runtime {
 			return GetEnumerator ()!;
 		}
 
+#pragma warning disable CS8613 // Java lists can contain null elements even when T is non-nullable.
 		public new IEnumerator<T?> GetEnumerator ()
 		{
 			return System.Linq.Extensions.ToEnumerator_Dispose<T> (Iterator ());
 		}
+#pragma warning restore CS8613
 
 		//
 		// Exception audit:

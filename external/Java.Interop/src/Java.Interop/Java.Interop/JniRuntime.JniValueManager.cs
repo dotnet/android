@@ -153,7 +153,7 @@ namespace Java.Interop
 				if (o != null && object.ReferenceEquals (o, value))
 					return;
 
-				DisposePeer (h, value);
+				DisposePeer (value);
 			}
 
 			public object? PeekValue (JniObjectReference reference)
@@ -206,7 +206,21 @@ namespace Java.Interop
 							targetType.IsAssignableFrom (peeked.GetType ()))) {
 					return peeked;
 				}
-				return CreatePeer (ref reference, JniObjectReferenceOptions.Copy, targetType);
+				var peer = CreatePeer (ref reference, JniObjectReferenceOptions.Copy, targetType);
+				if (peer == null)
+					return null;
+
+				// Activation can reenter or race with another lookup. CreatePeer() must
+				// create a new wrapper, but GetPeer() should return the registry winner.
+				peeked = PeekPeer (reference);
+				if (peeked != null &&
+						!object.ReferenceEquals (peer, peeked) &&
+						(targetType == null ||
+							targetType.IsAssignableFrom (peeked.GetType ()))) {
+					peer.DisposeUnlessReferenced ();
+					return peeked;
+				}
+				return peer;
 			}
 
 			public abstract IJavaPeerable? CreatePeer (

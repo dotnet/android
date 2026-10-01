@@ -4,15 +4,11 @@
 # network failures when downloading from dl.google.com, aka.ms, and
 # github.com (binutils, bundletool).
 #
-# Cache safety: every download under this directory is verified after
-# extraction by the corresponding MSBuild target (see
-# src/androidsdk/androidsdk.targets, src/openjdk/openjdk.targets,
-# src/binutils/binutils.targets, src/aapt2/aapt2.targets,
-# src/bundletool/bundletool.targets). Most targets check the downloaded
-# file's SHA-256 against a hash hardcoded in Configuration.props; openjdk
-# instead downloads Microsoft's published .sha256sum.txt and verifies
-# against that. In all cases a corrupt/stale archive is deleted, the
-# build is failed, and the next run re-downloads the file fresh.
+# Downloads are SHA-256 verified before their validation stamps are written.
+# A cached archive can become corrupt after validation; androidsdk.targets
+# detects extraction failures and removes mismatches so the existing CI task
+# retry downloads a fresh copy. Change the cache namespace when an immutable
+# cache needs to be discarded.
 #
 # See: https://learn.microsoft.com/azure/devops/pipelines/release/caching
 
@@ -39,7 +35,8 @@ steps:
   displayName: cache Android toolchain archives
   condition: ${{ parameters.condition }}
   inputs:
-    key: '"android-archives" | "v1" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/Configuration.props | ${{ parameters.xaSourcePath }}/src/androidsdk/androidsdk.targets | ${{ parameters.xaSourcePath }}/src/openjdk/openjdk.targets | ${{ parameters.xaSourcePath }}/src/binutils/binutils.targets | ${{ parameters.xaSourcePath }}/src/aapt2/aapt2.targets | ${{ parameters.xaSourcePath }}/src/bundletool/bundletool.targets'
+    key: '"android-archives" | "v2" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/Configuration.props | ${{ parameters.xaSourcePath }}/src/androidsdk/androidsdk.targets | ${{ parameters.xaSourcePath }}/src/openjdk/openjdk.targets | ${{ parameters.xaSourcePath }}/src/binutils/binutils.targets | ${{ parameters.xaSourcePath }}/src/aapt2/aapt2.targets | ${{ parameters.xaSourcePath }}/src/bundletool/bundletool.targets'
     restoreKeys: |
+      "android-archives" | "v2" | "$(Agent.OS)"
       "android-archives" | "v1" | "$(Agent.OS)"
     path: $(ANDROID_ARCHIVES_DIR)

@@ -33,10 +33,6 @@ public sealed class GenerateAdditionalProviderSources : AndroidTask
 
 	public ITaskItem[]? Environments { get; set; }
 
-	// We need to pass this to the environment builder, otherwise not used
-	// by this task. See also GenerateNativeApplicationSources.cs
-	public bool EnableSGenConcurrent { get; set; }
-
 	AndroidRuntime androidRuntime;
 	JavaPeerStyle codeGenerationTarget;
 
@@ -65,17 +61,13 @@ public sealed class GenerateAdditionalProviderSources : AndroidTask
 	void Generate (NativeCodeGenStateObject codeGenState)
 	{
 		// Create additional runtime provider java sources.
-		bool isMonoVM = androidRuntime switch {
-			Xamarin.Android.Tasks.AndroidRuntime.MonoVM => true,
-			Xamarin.Android.Tasks.AndroidRuntime.CoreCLR => true,
-			_ => false,
-		};
+		bool isCoreCLR = androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.CoreCLR;
 
-		WriteAdditionalRuntimeProviderSources (OutputDirectory, isMonoVM, AdditionalProviderSources);
+		WriteAdditionalRuntimeProviderSources (OutputDirectory, isCoreCLR, AdditionalProviderSources);
 
 		// For NativeAOT, generate JavaInteropRuntime.java and NativeAotEnvironmentVars.java
 		if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
-			GenerateNativeAotBootstrapFiles (Log, OutputDirectory, TargetName, Environments, EnableSGenConcurrent);
+			GenerateNativeAotBootstrapFiles (Log, OutputDirectory, TargetName, Environments);
 		}
 
 		// Create additional application java sources.
@@ -117,18 +109,18 @@ public sealed class GenerateAdditionalProviderSources : AndroidTask
 	/// by cloning the runtime provider template for each name. Shared between the legacy (ILLink) and
 	/// trimmable build paths so both emit the extra providers a multi-process app declares in its manifest.
 	/// </summary>
-	internal static void WriteAdditionalRuntimeProviderSources (string outputDirectory, bool isMonoVM, string [] additionalProviderSources)
+	internal static void WriteAdditionalRuntimeProviderSources (string outputDirectory, bool isCoreCLR, string [] additionalProviderSources)
 	{
 		if (additionalProviderSources.Length == 0) {
 			return;
 		}
-		string providerTemplateFile = isMonoVM ?
+		string providerTemplateFile = isCoreCLR ?
 			"MonoRuntimeProvider.Bundled.java" :
 			"NativeAotRuntimeProvider.java";
 		string providerTemplate = GetResource (providerTemplateFile);
 		foreach (var provider in additionalProviderSources) {
-			var contents = providerTemplate.Replace (isMonoVM ? "MonoRuntimeProvider" : "NativeAotRuntimeProvider", provider);
-			var realProvider = isMonoVM ?
+			var contents = providerTemplate.Replace (isCoreCLR ? "MonoRuntimeProvider" : "NativeAotRuntimeProvider", provider);
+			var realProvider = isCoreCLR ?
 				Path.Combine (outputDirectory, "src", "mono", provider + ".java") :
 				Path.Combine (outputDirectory, "src", "net", "dot", "jni", "nativeaot", provider + ".java");
 			Files.CopyIfStringChanged (contents, realProvider);
@@ -150,8 +142,7 @@ public sealed class GenerateAdditionalProviderSources : AndroidTask
 		Microsoft.Build.Utilities.TaskLoggingHelper log,
 		string outputDirectory,
 		string targetName,
-		ITaskItem []? environments,
-		bool enableSGenConcurrent)
+		ITaskItem []? environments)
 	{
 		GenerateJavaSource (
 			"JavaInteropRuntime.java",
@@ -161,9 +152,8 @@ public sealed class GenerateAdditionalProviderSources : AndroidTask
 		);
 
 		// We care only about environment variables here
-		var envBuilder = new EnvironmentBuilder (log);
+		var envBuilder = new EnvironmentBuilder ();
 		envBuilder.Read (environments);
-		GenerateNativeApplicationConfigSources.AddDefaultEnvironmentVariables (envBuilder, enableSGenConcurrent);
 
 		var envVarNames = new StringBuilder ();
 		var envVarValues = new StringBuilder ();

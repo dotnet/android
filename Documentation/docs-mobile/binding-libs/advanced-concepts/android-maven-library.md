@@ -1,7 +1,7 @@
 ---
 title: AndroidMavenLibrary Build Action .NET for Android
 description: AndroidMavenLibrary Build Action .NET for Android
-ms.author: jopobst
+ms.author: jopepper
 ms.date: 05/11/2024
 ---
 # AndroidMavenLibrary

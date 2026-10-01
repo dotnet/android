@@ -20,31 +20,15 @@ namespace Xamarin.Test {
 
 	[global::Android.Runtime.Register ("xamarin/test/ExtendedInterface", DoNotGenerateAcw=true)]
 	internal partial class IExtendedInterfaceInvoker : global::Java.Lang.Object, IExtendedInterface {
-		static IntPtr java_class_ref {
-			get { return _members_xamarin_test_ExtendedInterface.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members_xamarin_test_ExtendedInterface; }
 		}
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members_xamarin_test_ExtendedInterface.JniPeerType.PeerReference.Handle; }
-		}
+		static readonly JniPeerMembers _members_xamarin_test_BaseInterface = new JniPeerMembers ("xamarin/test/BaseInterface", typeof (IExtendedInterfaceInvoker));
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members_xamarin_test_ExtendedInterface.ManagedPeerType; }
-		}
-
-		static readonly JniPeerMembers _members_xamarin_test_BaseInterface = new XAPeerMembers ("xamarin/test/BaseInterface", typeof (IExtendedInterfaceInvoker));
-
-		static readonly JniPeerMembers _members_xamarin_test_ExtendedInterface = new XAPeerMembers ("xamarin/test/ExtendedInterface", typeof (IExtendedInterfaceInvoker));
+		static readonly JniPeerMembers _members_xamarin_test_ExtendedInterface = new JniPeerMembers ("xamarin/test/ExtendedInterface", typeof (IExtendedInterfaceInvoker));
 
 		public IExtendedInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
@@ -73,10 +57,7 @@ namespace Xamarin.Test {
 		public unsafe void ExtendedMethod ()
 		{
 			const string __id = "extendedMethod.()V";
-			try {
-				_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 		}
 
 		static Delegate cb_baseMethod_BaseMethod_V;
@@ -102,10 +83,7 @@ namespace Xamarin.Test {
 		public unsafe void BaseMethod ()
 		{
 			const string __id = "baseMethod.()V";
-			try {
-				_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 		}
 
 	}

@@ -70,12 +70,6 @@ Overridable MSBuild properties include:
     building `src/Mono.Android`. This is usually the same value as
     `$(AndroidApiLevel)`, but may differ with Android Preview releases.
 
-  * `$(AndroidSupportedTargetAotAbis)`: The Android ABIs for which to build the
-    Mono AOT compilers. The AOT compilers are required in order to set the
-    [`$(RunAOTCompilation)`][runaotcompilation] app configuration property to True.
-
-    [runaotcompilation]: https://developer.xamarin.com/guides/android/under_the_hood/build_process/#RunAOTCompilation
-
   * `$(AndroidSupportedTargetJitAbis)`: The Android ABIs for which to build the
     the Mono JIT for inclusion within apps. This is a `:`-separated list of
     ABIs to build. Supported values are:

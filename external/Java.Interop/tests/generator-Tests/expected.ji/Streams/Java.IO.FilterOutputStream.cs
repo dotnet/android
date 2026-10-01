@@ -38,15 +38,12 @@ namespace Java.IO {
 			if (PeerReference.IsValid)
 				return;
 
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (@out);
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
-				Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
-				_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
-			} finally {
-				global::System.GC.KeepAlive (@out);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (@out);
+			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
+			Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
+			_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
+			global::System.GC.KeepAlive (@out);
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.io']/class[@name='FilterOutputStream']/method[@name='write' and count(parameter)=1 and parameter[1][@type='int']]"
@@ -54,12 +51,9 @@ namespace Java.IO {
 		public override unsafe void Write (int oneByte)
 		{
 			const string __id = "write.(I)V";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (oneByte);
-				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (oneByte);
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 		}
 
 	}

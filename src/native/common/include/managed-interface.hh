@@ -37,6 +37,14 @@ namespace xamarin::android {
 		jobject         grefGCUserPeerable;
 		jnienv_propagate_uncaught_exception_fn propagateUncaughtExceptionFn;
 		jnienv_register_jni_natives_fn registerJniNativesFn;
+		const char      *grefLogPath;
+		const char      *lrefLogPath;
+		const char      *referenceLogDirectory;
+		uint8_t         lightGref;
+		uint8_t         lightLref;
+		uint8_t         grefToLogcat;
+		uint8_t         lrefToLogcat;
+		int              maxGrefCount;
 	};
 
 	// Keep the enum values in sync with those in src/Mono.Android/AndroidRuntime/BoundExceptionType.cs
