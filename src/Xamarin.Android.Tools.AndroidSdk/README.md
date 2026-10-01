@@ -5,6 +5,12 @@ used by [.NET for Android](https://github.com/dotnet/android). Shared MSBuild
 task infrastructure is in
 [`src/Microsoft.Android.Build.BaseTasks`](../Microsoft.Android.Build.BaseTasks).
 
+`Mono.AndroidTools.dll` and `Xamarin.AndroidTools.dll` are no longer built or
+included in the workload SDK pack. This is a breaking change for tools that
+reference those assemblies directly. Use this library's `AndroidSdkInfo`,
+`AdbRunner`, and `ProcessUtils` APIs instead; installers can use
+`AndroidSdkInfo.DiscoverInstallationPaths` before an SDK or JDK is installed.
+
 ## Build
 
 From the repository root:

@@ -46,10 +46,8 @@
   <Folder Name="/src/">
     <Project Path="src/Microsoft.Android.Build.Tasks/Microsoft.Android.Build.Tasks.csproj" />
     <Project Path="src/Microsoft.Android.Sdk.Analysis/Microsoft.Android.Sdk.Analysis.csproj" />
-    <Project Path="src/Mono.AndroidTools/Mono.AndroidTools.csproj" />
     <Project Path="src/proguard-android/proguard-android.csproj" />
     <Project Path="src/Xamarin.Android.Build.Debugging.Tasks/Xamarin.Android.Build.Debugging.Tasks.csproj" />
-    <Project Path="src/Xamarin.AndroidTools/Xamarin.AndroidTools.csproj" />
     <Project Path="src/Xamarin.Installer.AndroidSDK/Xamarin.Installer.AndroidSDK.csproj" />
     <Project Path="src/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Build.Tasks.csproj" />
     <Project Path="src/Xamarin.Installer.Common/Xamarin.Installer.Common.csproj" />
