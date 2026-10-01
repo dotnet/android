@@ -20,10 +20,11 @@ namespace Microsoft.Android.Runtime;
 /// <para>
 /// This is a process-wide, static type. <see cref="InitializeIfNeeded"/> performs a
 /// process-global, one-shot GC-bridge initialization (<c>clr_initialize_gc_bridge</c>),
-/// which spawns a detached bridge-processing thread and aborts the process if it runs more
+/// which starts a native bridge-processing thread and aborts the process if it runs more
 /// than once. <see cref="InitializeIfNeeded"/> is idempotent: the first call performs the
-/// initialization and any subsequent call returns immediately, so it is safe to call from
-/// every value manager (e.g. the <c>llvm-ir</c> and <c>trimmable-typemap</c> implementations).
+/// initialization and any subsequent call returns immediately. The call must occur after the
+/// <c>JniRuntime</c> has been created and published, because bridge processing uses its JNI
+/// reference manager.
 /// </para>
 /// <para>
 /// The GC-bridge registration lives for the entire lifetime of the process and is never torn
@@ -38,9 +39,6 @@ static class JavaMarshalRegisteredPeers
 
 	static readonly object initializeLock = new ();
 	static bool initialized;
-
-	// The native GC bridge serializes rounds on one dedicated processing thread.
-	static bool gcBridgeEventEnabled;
 
 	/// <summary>
 	/// Performs the one-shot, process-global GC-bridge initialization the first time it is
@@ -58,13 +56,17 @@ static class JavaMarshalRegisteredPeers
 			}
 
 			unsafe {
-				var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (
-					&BridgeProcessingStarted, &BridgeProcessingFinished);
+				var mark_cross_references_ftn = JavaMarshalGCBridge.Initialize ();
 				JavaMarshal.Initialize (mark_cross_references_ftn);
 			}
 
 			initialized = true;
 		}
+	}
+
+	internal static void QueueCollectedContext (IntPtr context)
+	{
+		CollectedContexts.Enqueue (context);
 	}
 
 	public static void CollectPeers ()
@@ -408,199 +410,4 @@ static class JavaMarshalRegisteredPeers
 			GC.KeepAlive (target);
 		}
 	}
-
-	[StructLayout (LayoutKind.Sequential)]
-	unsafe struct HandleContext
-	{
-		static readonly nuint Size = (nuint)Marshal.SizeOf<HandleContext> ();
-		static readonly Dictionary<IntPtr, GCHandle> referenceTrackingHandles = new ();
-
-		int identityHashCode;
-		IntPtr controlBlock;
-
-		public int PeerIdentityHashCode => identityHashCode;
-		public bool IsCollected
-		{
-			get
-			{
-				if (controlBlock == IntPtr.Zero)
-					throw new InvalidOperationException ("HandleContext control block is not initialized.");
-
-				return ((JniObjectReferenceControlBlock*) controlBlock)->handle == IntPtr.Zero;
-			}
-		}
-
-		// This is an internal mirror of the Java.Interop.JniObjectReferenceControlBlock
-		[StructLayout (LayoutKind.Sequential)]
-		private struct JniObjectReferenceControlBlock
-		{
-			public IntPtr handle;
-			public int handle_type;
-			public int refs_added;
-		}
-
-		public static GCHandle GetAssociatedGCHandle (HandleContext* context)
-		{
-			lock (referenceTrackingHandles) {
-				if (!referenceTrackingHandles.TryGetValue ((IntPtr) context, out GCHandle handle)) {
-					throw new InvalidOperationException ("Unknown reference tracking handle.");
-				}
-
-				return handle;
-			}
-		}
-
-		public static unsafe void EnsureAllContextsAreOurs (MarkCrossReferencesArgs* mcr)
-		{
-// This call site is reachable on all platforms. 'MarkCrossReferencesArgs.ComponentCount' is only supported on: 'android'.
-// This call site is reachable on all platforms. 'MarkCrossReferencesArgs.Components' is only supported on: 'android'.
-// This call site is reachable on all platforms. 'StronglyConnectedComponent.Count' is only supported on: 'android'.
-// This call site is reachable on all platforms. 'StronglyConnectedComponent.Contexts' is only supported on: 'android'.
-#pragma warning disable CA1416
-
-			lock (referenceTrackingHandles) {
-				for (nuint i = 0; i < mcr->ComponentCount; i++) {
-					StronglyConnectedComponent component = mcr->Components [i];
-					EnsureAllContextsInComponentAreOurs (component);
-				}
-			}
-
-			static void EnsureAllContextsInComponentAreOurs (StronglyConnectedComponent component)
-			{
-				for (nuint i = 0; i < component.Count; i++) {
-					EnsureContextIsOurs ((IntPtr)component.Contexts [i]);
-				}
-			}
-
-			static void EnsureContextIsOurs (IntPtr context)
-			{
-				if (!referenceTrackingHandles.ContainsKey (context)) {
-					throw new InvalidOperationException ("Unknown reference tracking handle.");
-				}
-			}
-
-#pragma warning restore CA1416
-		}
-
-		public static HandleContext* Alloc (IJavaPeerable peer)
-		{
-			var context = (HandleContext*) NativeMemory.AllocZeroed (1, Size);
-			if (context == null) {
-				throw new OutOfMemoryException ("Failed to allocate memory for HandleContext.");
-			}
-
-			context->identityHashCode = peer.JniIdentityHashCode;
-			context->controlBlock = peer.JniObjectReferenceControlBlock;
-
-			GCHandle handle = JavaMarshal.CreateReferenceTrackingHandle (peer, context);
-			lock (referenceTrackingHandles) {
-				referenceTrackingHandles [(IntPtr) context] = handle;
-			}
-
-			return context;
-		}
-
-		public static void Free (ref HandleContext* context)
-		{
-			if (context == null) {
-				return;
-			}
-
-			lock (referenceTrackingHandles) {
-				referenceTrackingHandles.Remove ((IntPtr)context);
-			}
-
-			NativeMemory.Free (context);
-			context = null;
-		}
-	}
-
-	[UnmanagedCallersOnly]
-	static unsafe void BridgeProcessingStarted (MarkCrossReferencesArgs* mcr)
-	{
-		if (mcr == null) {
-			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
-		}
-
-		if (RuntimeFeature.EventSourceSupport) {
-			gcBridgeEventEnabled = RuntimeEventSource.GCBridgeStart ();
-		}
-
-		HandleContext.EnsureAllContextsAreOurs (mcr);
-	}
-
-	[UnmanagedCallersOnly]
-	static unsafe void BridgeProcessingFinished (MarkCrossReferencesArgs* mcr)
-	{
-		if (mcr == null) {
-			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
-		}
-
-		CompleteBridgeProcessing (mcr);
-		if (!RuntimeFeature.EventSourceSupport) {
-			return;
-		}
-
-		if (gcBridgeEventEnabled) {
-			RuntimeEventSource.GCBridgeStop ();
-			gcBridgeEventEnabled = false;
-		}
-	}
-
-	static unsafe void CompleteBridgeProcessing (MarkCrossReferencesArgs* mcr)
-	{
-		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
-
-// This call site is reachable on all platforms. 'JavaMarshal.FinishCrossReferenceProcessing(MarkCrossReferencesArgs*, ReadOnlySpan<GCHandle>)' is only supported on: 'android'.
-#pragma warning disable CA1416
-		JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
-#pragma warning restore CA1416
-
-		AndroidRuntimeInternal.NotifyBridgeProcessingFinished ();
-	}
-
-	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
-	{
-		List<GCHandle> handlesToFree = [];
-
-// This call site is reachable on all platforms. 'MarkCrossReferencesArgs.ComponentCount' is only supported on: 'android'.
-// This call site is reachable on all platforms. 'MarkCrossReferencesArgs.Components' is only supported on: 'android'.
-// This call site is reachable on all platforms. 'StronglyConnectedComponent.Count' is only supported on: 'android'.
-// This call site is reachable on all platforms. 'StronglyConnectedComponent.Contexts' is only supported on: 'android'.
-#pragma warning disable CA1416
-
-		for (int i = 0; (nuint)i < mcr->ComponentCount; i++) {
-			StronglyConnectedComponent component = mcr->Components [i];
-			for (int j = 0; (nuint)j < component.Count; j++) {
-				ProcessContext ((HandleContext*)component.Contexts [j]);
-			}
-		}
-
-#pragma warning restore CA1416
-
-		void ProcessContext (HandleContext* context)
-		{
-			if (context == null) {
-				throw new ArgumentNullException (nameof (context), "HandleContext should never be null.");
-			}
-
-			// Ignore contexts which were not collected
-			if (!context->IsCollected) {
-				return;
-			}
-
-			GCHandle handle = HandleContext.GetAssociatedGCHandle (context);
-
-			// Note: modifying the RegisteredInstances dictionary while processing the collected contexts
-			// is tricky and can lead to deadlocks, so we remember which contexts were collected and we will free
-			// them later outside of the bridge processing loop.
-			CollectedContexts.Enqueue ((IntPtr)context);
-
-			// important: we must not free the handle before passing it to JavaMarshal.FinishCrossReferenceProcessing
-			handlesToFree.Add (handle);
-		}
-
-		return CollectionsMarshal.AsSpan (handlesToFree);
-	}
-
 }

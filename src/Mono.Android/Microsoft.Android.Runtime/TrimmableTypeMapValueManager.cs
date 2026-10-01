@@ -15,11 +15,6 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	const JniObjectReferenceOptions DoNotRegisterTarget = JniObjectReferenceOptions.CopyAndDoNotRegister & ~JniObjectReferenceOptions.Copy;
 
-	public TrimmableTypeMapValueManager ()
-	{
-		JavaMarshalRegisteredPeers.InitializeIfNeeded ();
-	}
-
 	public override void WaitForGCBridgeProcessing ()
 	{
 		// Intentionally empty. The Mono runtime's own implementation acknowledges this

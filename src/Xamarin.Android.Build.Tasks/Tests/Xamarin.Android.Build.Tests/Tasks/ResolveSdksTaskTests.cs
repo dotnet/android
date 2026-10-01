@@ -123,7 +123,6 @@ namespace Xamarin.Android.Build.Tests {
 				AndroidSdkPath = androidSdkPath,
 				TargetFrameworkVersion = targetFrameworkVersion,
 				AndroidSdkBuildToolsVersion = buildtools,
-				SequencePointsMode = "None",
 				AndroidApplication = true,
 			};
 			Assert.AreEqual (expectedTaskResult, resolveSdks.Execute () && validateJavaVersion.Execute () && androidTooling.Execute (), $"Tasks should have {(expectedTaskResult ? "succeeded" : "failed" )}.");
@@ -176,7 +175,6 @@ namespace Xamarin.Android.Build.Tests {
 				AndroidSdkPath = androidSdkPath,
 				TargetFrameworkVersion = "v8.0",
 				AndroidSdkBuildToolsVersion = "26.0.3",
-				SequencePointsMode = "None",
 				AndroidApplication = true,
 			};
 			var start = DateTime.UtcNow;
@@ -206,7 +204,6 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (androidTooling.AndroidSdkBuildToolsPath, expected, $"AndroidSdkBuildToolsPath should be {expected}");
 			Assert.AreEqual (androidTooling.AndroidSdkBuildToolsBinPath, expected, "AndroidSdkBuildToolsBinPath should be {expected}");
 			Assert.AreEqual (androidTooling.ZipAlignPath, expected, "ZipAlignPath should be {expected}");
-			Assert.AreEqual (androidTooling.AndroidSequencePointsMode, "None", "AndroidSequencePointsMode should be None");
 			expected = Path.Combine (androidSdkPath, "tools");
 			Assert.AreEqual (androidTooling.LintToolPath, expected, $"LintToolPath should be {expected}");
 			expected = Path.Combine (androidSdkPath, "build-tools", "26.0.3", "lib", "apksigner.jar");
@@ -232,7 +229,6 @@ namespace Xamarin.Android.Build.Tests {
 					AndroidSdkPath = path,
 					AndroidSdkBuildToolsVersion = "36.0.0",
 					TargetPlatformVersion = "37.0",
-					SequencePointsMode = "None",
 					AndroidApplication = true,
 				};
 

@@ -331,15 +331,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid value for `$(AndroidSequencePointsMode)`: {0}.
-        /// </summary>
-        public static string XA0104 {
-            get {
-                return ResourceManager.GetString("XA0104", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project..
         /// </summary>
         public static string XA0105 {
@@ -846,7 +837,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;BundleAssemblies&apos; property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the &apos;AndroidUseAssemblyStore&apos; and &apos;AndroidEnableAssemblyCompression&apos; properties..
+        ///   Looks up a localized string similar to The &apos;BundleAssemblies&apos; property is deprecated and no longer affects the build. Remove it. CoreCLR and NativeAOT do not use Mono&apos;s mkbundle..
         /// </summary>
         public static string XA1035 {
             get {
@@ -937,6 +928,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The MSBuild property &apos;RunAOTCompilation&apos; is not compatible with the CoreCLR runtime. The build cannot continue while this property is set to &apos;false&apos;. Remove the property. Starting with .NET 11, set &apos;PublishReadyToRun&apos; to &apos;false&apos; to disable ReadyToRun (R2R) AOT compilation..
+        /// </summary>
+        public static string XA1044_RunAOTCompilationDisabled {
+            get {
+                return ResourceManager.GetString("XA1044_RunAOTCompilationDisabled", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Input file `{0}` does not start with `&lt;replacements/&gt;`..
         /// </summary>
         public static string XA1045 {
@@ -996,15 +996,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA2000 {
             get {
                 return ResourceManager.GetString("XA2000", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Support for the &apos;MONO_GC_PARAMS=bridge-implementation=old&apos; value will be removed in .NET 7..
-        /// </summary>
-        public static string XA2000_gcParams_bridgeImpl {
-            get {
-                return ResourceManager.GetString("XA2000_gcParams_bridgeImpl", resourceCulture);
             }
         }
         
@@ -1077,24 +1068,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA2008 {
             get {
                 return ResourceManager.GetString("XA2008", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. See https://code.google.com/p/android/issues/detail?id=161422..
-        /// </summary>
-        public static string XA3004 {
-            get {
-                return ResourceManager.GetString("XA3004", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The detected Android NDK version is incompatible with the targeted LLVM configuration. Please upgrade to NDK r10d or newer..
-        /// </summary>
-        public static string XA3005 {
-            get {
-                return ResourceManager.GetString("XA3005", resourceCulture);
             }
         }
         
@@ -1671,6 +1644,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; uses a Java peer callback format that requires AndroidTypeMapImplementation=trimmable..
+        /// </summary>
+        public static string XA4265 {
+            get {
+                return ResourceManager.GetString("XA4265", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; has different Java peer callback metadata in runtime-specific implementations &apos;{1}&apos; and &apos;{2}&apos;. All RuntimeIdentifiers must provide equivalent callback metadata when AndroidTypeMapImplementation=trimmable..
+        /// </summary>
+        public static string XA4266 {
+            get {
+                return ResourceManager.GetString("XA4266", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
         /// </summary>
         public static string XA4300 {
@@ -1712,15 +1703,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4301_ABI_NuGet {
             get {
                 return ResourceManager.GetString("XA4301_ABI_NuGet", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unhandled exception merging `AndroidManifest.xml`: {0}.
-        /// </summary>
-        public static string XA4302 {
-            get {
-                return ResourceManager.GetString("XA4302", resourceCulture);
             }
         }
         

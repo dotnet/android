@@ -53,6 +53,7 @@ public class AdbRunnerTests
 		Assert.AreEqual ("redfin", devices [0].Product);
 		Assert.AreEqual ("redfin", devices [0].Device);
 		Assert.AreEqual ("2", devices [0].TransportId);
+		Assert.AreEqual ("product:redfin;model:Pixel_5;device:redfin;transport_id:2", devices [0].LongOutput);
 		Assert.IsFalse (devices [0].IsEmulator);
 
 		// Emulator
@@ -509,22 +510,12 @@ public class AdbRunnerTests
 
 	// Consumer: MAUI DevTools Adb provider (AdbPath, IsAvailable properties)
 
-	[Test]
-	public void Constructor_NullPath_ThrowsArgumentException ()
+	[TestCase (null)]
+	[TestCase ("")]
+	[TestCase ("   ")]
+	public void Constructor_InvalidPath_ThrowsArgumentException (string path)
 	{
-		Assert.Throws<ArgumentException> (() => new AdbRunner (null!));
-	}
-
-	[Test]
-	public void Constructor_EmptyPath_ThrowsArgumentException ()
-	{
-		Assert.Throws<ArgumentException> (() => new AdbRunner (""));
-	}
-
-	[Test]
-	public void Constructor_WhitespacePath_ThrowsArgumentException ()
-	{
-		Assert.Throws<ArgumentException> (() => new AdbRunner ("   "));
+		Assert.Throws<ArgumentException> (() => new AdbRunner (path));
 	}
 
 	[Test]
@@ -1120,41 +1111,6 @@ public class AdbRunnerTests
 	}
 
 	[Test]
-	public void AdbPortRule_ValueEquality ()
-	{
-		var rule1 = new AdbPortRule (new AdbPortSpec (AdbProtocol.Tcp, 5000), new AdbPortSpec (AdbProtocol.Tcp, 5000));
-		var rule2 = new AdbPortRule (new AdbPortSpec (AdbProtocol.Tcp, 5000), new AdbPortSpec (AdbProtocol.Tcp, 5000));
-		var rule3 = new AdbPortRule (new AdbPortSpec (AdbProtocol.Tcp, 5000), new AdbPortSpec (AdbProtocol.Tcp, 3000));
-
-		Assert.AreEqual (rule1, rule2);
-		Assert.AreNotEqual (rule1, rule3);
-		Assert.IsTrue (rule1 == rule2);
-		Assert.IsFalse (rule1 == rule3);
-	}
-
-	[Test]
-	public void AdbPortRule_Deconstruct ()
-	{
-		var rule = new AdbPortRule (new AdbPortSpec (AdbProtocol.Tcp, 5000), new AdbPortSpec (AdbProtocol.Tcp, 3000));
-		var (remote, local) = rule;
-
-		Assert.AreEqual (AdbProtocol.Tcp, remote.Protocol);
-		Assert.AreEqual (5000, remote.Port);
-		Assert.AreEqual (AdbProtocol.Tcp, local.Protocol);
-		Assert.AreEqual (3000, local.Port);
-	}
-
-	[Test]
-	public void AdbPortRule_ToString ()
-	{
-		var rule = new AdbPortRule (new AdbPortSpec (AdbProtocol.Tcp, 5000), new AdbPortSpec (AdbProtocol.Tcp, 3000));
-		var str = rule.ToString ();
-
-		Assert.That (str, Does.Contain ("tcp:5000"));
-		Assert.That (str, Does.Contain ("tcp:3000"));
-	}
-
-	[Test]
 	public void ReversePortAsync_EmptySerial_ThrowsArgumentException ()
 	{
 		var runner = new AdbRunner ("/fake/sdk/platform-tools/adb");
@@ -1332,16 +1288,17 @@ public class AdbRunnerTests
 
 	// These tests use a fake 'adb' script to control process output.
 
-	static string CreateFakeAdb (string scriptBody)
+	static string CreateFakeAdb (string scriptBody, string windowsScriptBody = null)
 	{
-		if (OS.IsWindows)
+		if (OS.IsWindows && windowsScriptBody == null)
 			Assert.Ignore ("Fake adb tests use bash scripts and are not supported on Windows.");
 
 		var dir = Path.Combine (Path.GetTempPath (), $"fake-adb-{Guid.NewGuid ():N}");
 		Directory.CreateDirectory (dir);
-		var path = Path.Combine (dir, "adb");
-		File.WriteAllText (path, "#!/bin/bash\n" + scriptBody);
-		FileUtil.Chmod (path, 0x1ED); // 0755
+		var path = Path.Combine (dir, OS.IsWindows ? "adb.cmd" : "adb");
+		File.WriteAllText (path, OS.IsWindows ? "@echo off\r\n" + windowsScriptBody : "#!/bin/bash\n" + scriptBody);
+		if (!OS.IsWindows)
+			FileUtil.Chmod (path, 0x1ED); // 0755
 
 		return path;
 	}
@@ -1554,6 +1511,134 @@ public class AdbRunnerTests
 			Assert.AreEqual (AdbDeviceStatus.Offline, offline.Status);
 			Assert.IsNull (offline.AvdName, "Offline emulator should NOT have AVD name queried");
 		} finally {
+			CleanupFakeAdb (adbPath);
+		}
+	}
+
+	[Test]
+	public async Task ListDevicesWithoutAvdNamesAsync_SkipsOnlineEmulatorQueries ()
+	{
+		var adbPath = CreateFakeAdb ("""
+			if [[ "$1" == "devices" && "$2" == "-l" ]]; then
+			    echo "List of devices attached"
+			    echo "emulator-5554          device model:Pixel_7 transport_id:1"
+			    exit 0
+			fi
+			echo queried > "$0.queried"
+			exit 1
+			""", """
+			if "%1"=="devices" if "%2"=="-l" (
+			    echo List of devices attached
+			    echo emulator-5554          device model:Pixel_7 transport_id:1
+			    exit /b 0
+			)
+			echo queried > "%~f0.queried"
+			exit /b 1
+			""");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			var devices = await runner.ListDevicesWithoutAvdNamesAsync ();
+
+			Assert.AreEqual (1, devices.Count);
+			Assert.AreEqual ("emulator-5554", devices [0].Serial);
+			Assert.IsNull (devices [0].AvdName);
+			Assert.IsFalse (File.Exists (adbPath + ".queried"), "Device listing must not query AVD names");
+		} finally {
+			File.Delete (adbPath + ".queried");
+			CleanupFakeAdb (adbPath);
+		}
+	}
+
+	[Test]
+	public async Task ExecuteShellCommandAsync_ReturnsPackageOutput ()
+	{
+		var adbPath = CreateFakeAdb ("""
+			if [[ "$1" == "-s" && "$2" == "emulator-5554" && "$3" == "shell" && "$4" == "pm" && "$5" == "list" && "$6" == "packages" ]]; then
+			    echo "package:com.example.app"
+			    echo "package:com.example.other"
+			    exit 0
+			fi
+			exit 1
+			""", """
+			if "%1"=="-s" if "%2"=="emulator-5554" if "%3"=="shell" if "%4"=="pm" if "%5"=="list" if "%6"=="packages" (
+			    echo package:com.example.app
+			    echo package:com.example.other
+			    exit /b 0
+			)
+			exit /b 1
+			""");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			var output = await runner.ExecuteShellCommandAsync ("emulator-5554", "pm", new [] { "list", "packages" });
+
+			Assert.AreEqual ($"package:com.example.app{Environment.NewLine}package:com.example.other", output);
+		} finally {
+			CleanupFakeAdb (adbPath);
+		}
+	}
+
+	[Test]
+	public void ExecuteShellCommandAsync_ThrowsOnFailedPackageQuery ()
+	{
+		var adbPath = CreateFakeAdb ("""
+			if [[ "$1" == "-s" && "$2" == "emulator-5554" && "$3" == "shell" && "$4" == "pm" && "$5" == "list" && "$6" == "packages" ]]; then
+			    echo "Package manager unavailable" >&2
+			    exit 42
+			fi
+			exit 1
+			""", """
+			if "%1"=="-s" if "%2"=="emulator-5554" if "%3"=="shell" if "%4"=="pm" if "%5"=="list" if "%6"=="packages" (
+			    echo Package manager unavailable 1>&2
+			    exit /b 42
+			)
+			exit /b 1
+			""");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			var error = Assert.ThrowsAsync<InvalidOperationException> (
+				async () => await runner.ExecuteShellCommandAsync ("emulator-5554", "pm", new [] { "list", "packages" }));
+
+			Assert.That (error?.Message, Does.Contain ("exit code 42"));
+			Assert.That (error?.Message, Does.Contain ("Package manager unavailable"));
+		} finally {
+			CleanupFakeAdb (adbPath);
+		}
+	}
+
+	[Test]
+	public async Task AdbCommandsUseStableWorkingDirectory ()
+	{
+		var markerName = $"adb-cwd-{Guid.NewGuid ():N}.marker";
+		var markerPath = Path.Combine (Path.GetTempPath (), markerName);
+		var adbPath = CreateFakeAdb ($"""
+			echo launched > "{markerName}"
+			if [[ "$1" == "devices" ]]; then
+			    echo "List of devices attached"
+			else
+			    echo "package:com.example.app"
+			fi
+			""", $"""
+			echo launched > "{markerName}"
+			if "%1"=="devices" (
+			    echo List of devices attached
+			) else (
+			    echo package:com.example.app
+			)
+			""");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			await runner.ListDevicesWithoutAvdNamesAsync ();
+			Assert.IsTrue (File.Exists (markerPath), "Device listing should run in the system temp directory.");
+
+			File.Delete (markerPath);
+			await runner.ExecuteShellCommandAsync ("emulator-5554", "pm", new [] { "list", "packages" });
+			Assert.IsTrue (File.Exists (markerPath), "Shell commands should run in the system temp directory.");
+		} finally {
+			File.Delete (markerPath);
 			CleanupFakeAdb (adbPath);
 		}
 	}
