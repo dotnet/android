@@ -566,6 +566,20 @@ namespace Java.Interop {
 			return method != null;
 		}
 
+		internal bool TryGetInstanceField (ReadOnlySpan<char> name, ReadOnlySpan<char> signature, [NotNullWhen (true)] out JniFieldInfo? field)
+		{
+			var id = GetMemberID (name, signature, MemberKind.InstanceField, throwOnError: false);
+			field = id == IntPtr.Zero ? null : CreateFieldInfo (name, signature, id, isStatic: false);
+			return field != null;
+		}
+
+		internal bool TryGetStaticField (ReadOnlySpan<char> name, ReadOnlySpan<char> signature, [NotNullWhen (true)] out JniFieldInfo? field)
+		{
+			var id = GetMemberID (name, signature, MemberKind.StaticField, throwOnError: false);
+			field = id == IntPtr.Zero ? null : CreateFieldInfo (name, signature, id, isStatic: true);
+			return field != null;
+		}
+
 		static JniMethodInfo CreateMethodInfo (ReadOnlySpan<char> name, ReadOnlySpan<char> signature, IntPtr id, bool isStatic)
 		{
 #if DEBUG

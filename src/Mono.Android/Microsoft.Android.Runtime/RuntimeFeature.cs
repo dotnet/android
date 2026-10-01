@@ -15,6 +15,7 @@ static class RuntimeFeature
 	const bool ObjectReferenceLoggingEnabledByDefault = false;
 	const bool GCBridgeLoggingEnabledByDefault = true;
 	const bool ManagedToJavaUsesAssemblyFullNameEnabledByDefault = false;
+	const bool JniRemappingEnabledByDefault = true;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
 	const string EventSourceSupportSwitch = "System.Diagnostics.Tracing.EventSource.IsSupported";
@@ -65,4 +66,8 @@ static class RuntimeFeature
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ManagedToJavaUsesAssemblyFullName)}")]
 	internal static bool ManagedToJavaUsesAssemblyFullName { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (ManagedToJavaUsesAssemblyFullName)}", out bool isEnabled) ? isEnabled : ManagedToJavaUsesAssemblyFullNameEnabledByDefault;
+
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (JniRemapping)}")]
+	internal static bool JniRemapping { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (JniRemapping)}", out bool isEnabled) ? isEnabled : JniRemappingEnabledByDefault;
 }
