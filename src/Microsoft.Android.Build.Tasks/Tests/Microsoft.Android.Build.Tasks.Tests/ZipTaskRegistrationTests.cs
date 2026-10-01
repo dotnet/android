@@ -28,6 +28,15 @@ public class ZipTaskRegistrationTests : BaseTest
 		Directory.CreateDirectory (TestDirectory);
 	}
 
+	[Test]
+	public void SharedHelpersUseBootstrapCompatibleFrameworks ()
+	{
+		var document = LoadRepositoryFile ("src/Microsoft.Android.Build.BaseTasks/Microsoft.Android.Build.BaseTasks.csproj");
+		var frameworks = document.Descendants ("TargetFrameworks").Single ().Value.Split (';');
+		CollectionAssert.AreEqual (new [] { "netstandard2.0", "$(DotNetStableTargetFramework)" }, frameworks,
+			"Bootstrap restores all shared-helper targets with the stable SDK, not just the selected target.");
+	}
+
 	[TestCase ("BuildArchive", CommonTargets, 2)]
 	[TestCase ("CreateJavaArchive", JavacTargets, 1)]
 	[TestCase ("FixupAssetPackArchive", AssetsTargets, 1)]
@@ -170,13 +179,16 @@ public class ZipTaskRegistrationTests : BaseTest
 		Assert.AreEqual (0, process.ExitCode, $"{taskName} failed through its shipped registration/invocation:\n{await output}\n{await errors}");
 	}
 
-	static XDocument LoadTargets (string relativePath)
+	static XDocument LoadTargets (string relativePath) =>
+		LoadRepositoryFile ("src/Xamarin.Android.Build.Tasks/" + relativePath);
+
+	static XDocument LoadRepositoryFile (string relativePath)
 	{
 		var directory = new DirectoryInfo (TestContext.CurrentContext.WorkDirectory);
 		while (directory != null) {
 			var sourceDirectory = Path.Combine (directory.FullName, "src", "Xamarin.Android.Build.Tasks");
 			if (File.Exists (Path.Combine (sourceDirectory, CommonTargets)))
-				return XDocument.Load (Path.Combine (sourceDirectory, relativePath.Replace ('/', Path.DirectorySeparatorChar)));
+				return XDocument.Load (Path.Combine (directory.FullName, relativePath.Replace ('/', Path.DirectorySeparatorChar)));
 			directory = directory.Parent;
 		}
 		throw new DirectoryNotFoundException ("Could not locate the shipped Android task targets in the checkout.");
