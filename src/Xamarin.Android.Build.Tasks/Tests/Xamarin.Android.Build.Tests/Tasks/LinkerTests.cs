@@ -24,15 +24,21 @@ namespace Xamarin.Android.Build.Tests
 		void Logger (TraceLevel level, string message) =>
 			TestContext.WriteLine ($"{level}: {message}");
 
-		[TestCase (false)]
-		[TestCase (true)]
-		public void LinkAssembliesNoShrinkLegacyCompatibilityFixups (bool enabled)
+		[TestCase (false, null)]
+		[TestCase (false, "llvm-ir")]
+		[TestCase (false, "trimmable")]
+		[TestCase (false, "TRIMMABLE")]
+		[TestCase (true, null)]
+		[TestCase (true, "llvm-ir")]
+		[TestCase (true, "trimmable")]
+		public void LinkAssembliesNoShrinkLegacyCompatibilityFixups (bool enabled, string? typeMapImplementation)
 		{
 			var task = new TestableLinkAssembliesNoShrink {
 				AddKeepAlives = true,
 				BuildEngine = new MockBuildEngine (TestContext.Out),
 				EnableLegacyCompatibilityAssemblyFixups = enabled,
 				UseDesignerAssembly = true,
+				AndroidTypeMapImplementation = typeMapImplementation,
 			};
 			var resolver = new DirectoryAssemblyResolver (Logger, false);
 			using var pipeline = new AssemblyPipeline (resolver);
@@ -46,9 +52,11 @@ namespace Xamarin.Android.Build.Tests
 				$"{nameof (FixLegacyResourceDesignerStep)} presence should match the compatibility fixup setting.");
 			Assert.AreEqual (enabled, pipeline.Steps.Any (step => step is AddKeepAlivesStep),
 				$"{nameof (AddKeepAlivesStep)} presence should match the compatibility fixup setting.");
-			Assert.IsTrue (pipeline.Steps.Any (step => step is FindJavaObjectsStep), $"{nameof (FindJavaObjectsStep)} should always run.");
+			Assert.AreEqual (!string.Equals (typeMapImplementation, "trimmable", StringComparison.OrdinalIgnoreCase), pipeline.Steps.Any (step => step is FindJavaObjectsStep),
+				$"{nameof (FindJavaObjectsStep)} should only run for the legacy typemap.");
 			Assert.IsTrue (pipeline.Steps.Any (step => step is SaveChangedAssemblyStep), $"{nameof (SaveChangedAssemblyStep)} should always run.");
-			Assert.IsTrue (pipeline.Steps.Any (step => step is FindTypeMapObjectsStep), $"{nameof (FindTypeMapObjectsStep)} should always run.");
+			Assert.AreEqual (!string.Equals (typeMapImplementation, "trimmable", StringComparison.OrdinalIgnoreCase), pipeline.Steps.Any (step => step is FindTypeMapObjectsStep),
+				$"{nameof (FindTypeMapObjectsStep)} should only run for the legacy typemap.");
 		}
 
 		sealed class TestableLinkAssembliesNoShrink : LinkAssembliesNoShrink
