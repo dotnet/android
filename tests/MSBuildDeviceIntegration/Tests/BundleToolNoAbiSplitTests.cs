@@ -1,6 +1,5 @@
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xamarin.Android.Tasks;
@@ -127,14 +126,15 @@ namespace Xamarin.Android.Build.Tests
 			bin = Path.Combine (projectDir, app.OutputPath);
 
 			string objPath = Path.Combine (Root, appBuilder.ProjectDirectory, app.IntermediateOutputPath);
-                        List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (
-                                objPath,
-                                String.Join (";", Abis),
-                                true,
-				runtime
-                        );
-
-			if (runtime != AndroidRuntime.NativeAOT) { // NAOT doesn't have ApplicationConfig
+			if (runtime == AndroidRuntime.NativeAOT) {
+				EnvironmentHelper.ReadNativeAotEnvironmentVariables (objPath);
+			} else {
+				var envFiles = EnvironmentHelper.GatherEnvironmentFiles (
+					objPath,
+					String.Join (";", Abis),
+					true,
+					runtime
+				);
 				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
 
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");

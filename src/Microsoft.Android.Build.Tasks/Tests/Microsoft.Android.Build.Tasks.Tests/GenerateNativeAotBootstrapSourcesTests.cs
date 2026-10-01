@@ -109,7 +109,7 @@ public class GenerateNativeAotBootstrapSourcesTests : BaseTest
 		Assert.IsTrue (task.Execute ());
 		Assert.AreEqual (2, task.GeneratedSources.Length);
 		string source = File.ReadAllText (task.GeneratedSources [1]);
-		StringAssert.Contains ("static final String[] systemProperties = new String[] {\n\n\t};", source);
+		StringAssert.Contains ("static final String[] systemProperties = new String[] {\n\n\t};", source.ReplaceLineEndings ("\n"));
 		StringAssert.DoesNotContain ("@SYSTEM_PROPERTIES@", source);
 	}
 
