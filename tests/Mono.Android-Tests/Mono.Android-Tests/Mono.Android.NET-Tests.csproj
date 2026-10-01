@@ -9,7 +9,6 @@
     <OutputType>Exe</OutputType>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(XamarinAndroidSourcePath)product.snk</AssemblyOriginatorKeyFile>
-    <_SkipJniAddNativeMethodRegistrationAttributeScan>True</_SkipJniAddNativeMethodRegistrationAttributeScan>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>$(XamarinAndroidSourcePath)bin\Test$(Configuration)</OutputPath>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
@@ -87,15 +86,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" />
-    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
     <TrimmerRootAssembly Include="StartupHook" RootMode="All" Condition=" '$(StartupHookSupport)' == 'true' " />
-    <TrimmerRootDescriptor Include="TrimmerRoots.xml" />
     <_AndroidRemapMembers Include="Remaps.xml" />
     <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
     <ProguardConfiguration Include="proguard.cfg" />
     <ProguardConfiguration Include="InterfaceCollection.proguard.cfg" />
   </ItemGroup>
+
+  <!-- NUnit discovers these tests by reflection even when the type map default is set late. -->
+  <Target Name="_AndroidRootRuntimeTests"
+      BeforeTargets="PrepareForILLink;_RunILLink">
+    <ItemGroup>
+      <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" />
+      <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
+      <TrimmerRootDescriptor Include="TrimmerRoots.xml" />
+    </ItemGroup>
+  </Target>
 
   <!--
     NativeAOT trims the closed-generic-instantiation metadata for IEquatable<T>,

@@ -138,8 +138,7 @@ Device: **Yes**
 
 The `Mono.Android.NET-Tests.csproj` dynamically excludes categories based on runtime:
 - **CoreCLR runtime**: Excludes `CoreCLRIgnore`, `NTLM`
-- **NativeAOT runtime**: Excludes `NativeAOTIgnore`, `SSL`, `NTLM`; excludes `Export` only when the trimmable typemap is off
-- **Trimmable typemap**: Excludes `NativeTypeMap`, `TrimmableTypeMapUnsupported`
+- **NativeAOT runtime**: Excludes `NativeAOTIgnore`, `SSL`, `NTLM`
 
 Other categories: `SSL`, `InetAccess`, `JavaList`, `RuntimeConfig`, `Intune`, `NTLM`
 

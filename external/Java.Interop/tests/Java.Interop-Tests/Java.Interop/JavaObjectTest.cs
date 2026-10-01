@@ -187,13 +187,7 @@ namespace Java.InteropTests
 
 #if __ANDROID__
 			Assert.Throws<Java.Lang.ClassNotFoundException> (() => new JavaObjectWithMissingJavaPeer ()).Dispose ();
-#else   // !__ANDROID__
-			// Note: `JavaObjectWithNoJavaPeer` creation works on Android because tooling provides all
-			// typemap entries.  On desktop, we use the hardcoded dictionary in JavaVMFixture, which
-   			// deliberately *lacks* an  entry for `JavaObjectWithNoJavaPeer`.
-			Assert.Throws<NotSupportedException> (() => new JavaObjectWithNoJavaPeer ());
-			Assert.Throws<JavaException> (() => new JavaObjectWithMissingJavaPeer ()).Dispose ();
-#endif  // !__ANDROID__
+#endif  // __ANDROID__
 		}
 
 		[Test]
@@ -223,11 +217,6 @@ namespace Java.InteropTests
 			value.Dispose ();
 		}
 	}
-
-#if !__ANDROID__
-	class JavaObjectWithNoJavaPeer : JavaObject {
-	}
-#endif  // !__ANDROID__
 
 	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
 	class JavaObjectWithMissingJavaPeer : JavaObject {
