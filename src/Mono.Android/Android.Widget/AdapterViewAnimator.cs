@@ -26,9 +26,9 @@ namespace Android.Widget {
 		{
 			if (GetType () == typeof (AdapterViewAnimator<T>)) {
 				if (id_ctor_Landroid_content_Context_ == IntPtr.Zero)
-					id_ctor_Landroid_content_Context_ = JNIEnv.GetMethodID (class_ref, "<init>", "(Landroid/content/Context;)V");
+					id_ctor_Landroid_content_Context_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "<init>", "(Landroid/content/Context;)V");
 				SetHandle (
-						JNIEnv.NewObject (class_ref, id_ctor_Landroid_content_Context_, new JValue (context)),
+						JNIEnv.NewObject (_members.GetPeerTypeHandle (), id_ctor_Landroid_content_Context_, new JValue (context)),
 						JniHandleOwnership.TransferLocalRef);
 			} else {
 				SetHandle (
@@ -44,9 +44,9 @@ namespace Android.Widget {
 		{
 			if (GetType () == typeof (AdapterViewAnimator<T>)) {
 				if (id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_ == IntPtr.Zero)
-					id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_ = JNIEnv.GetMethodID (class_ref, "<init>", "(Landroid/content/Context;Landroid/util/AttributeSet;)V");
+					id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_ = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "<init>", "(Landroid/content/Context;Landroid/util/AttributeSet;)V");
 				SetHandle (
-						JNIEnv.NewObject (class_ref, id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_, new JValue (context), new JValue (attrs)),
+						JNIEnv.NewObject (_members.GetPeerTypeHandle (), id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_, new JValue (context), new JValue (attrs)),
 						JniHandleOwnership.TransferLocalRef);
 			} else {
 				SetHandle (
@@ -62,9 +62,9 @@ namespace Android.Widget {
 		{
 			if (GetType () == typeof (AdapterViewAnimator<T>)) {
 				if (id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I == IntPtr.Zero)
-					id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I = JNIEnv.GetMethodID (class_ref, "<init>", "(Landroid/content/Context;Landroid/util/AttributeSet;I)V");
+					id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I = JNIEnv.GetMethodID (_members.GetPeerTypeHandle (), "<init>", "(Landroid/content/Context;Landroid/util/AttributeSet;I)V");
 				SetHandle (
-						JNIEnv.NewObject (class_ref, id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I, new JValue (context), new JValue (attrs), new JValue (defStyle)),
+						JNIEnv.NewObject (_members.GetPeerTypeHandle (), id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I, new JValue (context), new JValue (attrs), new JValue (defStyle)),
 						JniHandleOwnership.TransferLocalRef);
 			} else {
 				SetHandle (
@@ -79,43 +79,29 @@ namespace Android.Widget {
 			set { Adapter = JavaConvert.FromJavaObject<Android.Widget.IAdapter>(value); }
 		}
 
-                static IntPtr id_getAdapter;
-                static IntPtr id_setAdapter_Landroid_widget_Adapter_;
-                public Android.Widget.IAdapter? Adapter {
-                        [Register ("getAdapter", "()Landroid/widget/Adapter;", "GetGetAdapterHandler")]
-                        get {
-                                if (id_getAdapter == IntPtr.Zero)
-                                        id_getAdapter = JNIEnv.GetMethodID (class_ref, "getAdapter", "()Landroid/widget/Adapter;");
-                                Android.Widget.IAdapter? result;
-                                if (GetType () == ThresholdType)
-                                        result = Java.Lang.Object.GetObject<Android.Widget.IAdapter> (JNIEnv.CallObjectMethod  (Handle, id_getAdapter), JniHandleOwnership.TransferLocalRef);
-                                else
-                                        result = Java.Lang.Object.GetObject<Android.Widget.IAdapter> (
-                                                JNIEnv.CallNonvirtualObjectMethod  (
-                                                    Handle,
-                                                    ThresholdClass,
-                                                    JNIEnv.GetMethodID (ThresholdClass, "getAdapter", "()Landroid/widget/Adapter;")),
-                                                JniHandleOwnership.TransferLocalRef);
-                                GC.KeepAlive (this);
-                                return result;
-                        }
-                        set {
-                                if (id_setAdapter_Landroid_widget_Adapter_ == IntPtr.Zero)
-                                        id_setAdapter_Landroid_widget_Adapter_ = JNIEnv.GetMethodID (class_ref, "setAdapter", "(Landroid/widget/Adapter;)V");
-
-                                if (GetType () == ThresholdType)
-                                        JNIEnv.CallVoidMethod  (Handle, id_setAdapter_Landroid_widget_Adapter_, new JValue (JNIEnv.ToJniHandle (value)));
-                                else
-                                        JNIEnv.CallNonvirtualVoidMethod  (
-                                                Handle,
-                                                ThresholdClass,
-                                                JNIEnv.GetMethodID (ThresholdClass, "setAdapter", "(Landroid/widget/Adapter;)V"),
-                                                new JValue (JNIEnv.ToJniHandle ((IJavaObject?) value)));
-                               GC.KeepAlive (value);
-                               GC.KeepAlive (this);
-                        }
-
-                }
+		public unsafe Android.Widget.IAdapter? Adapter {
+			[Register ("getAdapter", "()Landroid/widget/Adapter;", "GetGetAdapterHandler")]
+			get {
+				const string id = "getAdapter.()Landroid/widget/Adapter;";
+				try {
+					var reference = _members.InstanceMethods.InvokeVirtualObjectMethod (id, this, null);
+					return Java.Lang.Object.GetObject<Android.Widget.IAdapter> (reference.Handle, JniHandleOwnership.TransferLocalRef);
+				} finally {
+					GC.KeepAlive (this);
+				}
+			}
+			set {
+				const string id = "setAdapter.(Landroid/widget/Adapter;)V";
+				try {
+					JniArgumentValue* args = stackalloc JniArgumentValue [1];
+					args [0] = new JniArgumentValue (value);
+					_members.InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
+				} finally {
+					GC.KeepAlive (value);
+					GC.KeepAlive (this);
+				}
+			}
+		}
 	}
 }
 

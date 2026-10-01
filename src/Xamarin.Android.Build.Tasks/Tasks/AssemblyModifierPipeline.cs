@@ -26,8 +26,6 @@ public class AssemblyModifierPipeline : AndroidTask
 {
 	public override string TaskPrefix => "AMP";
 
-	public string ApplicationJavaClass { get; set; } = "";
-
 	public string CodeGenerationTarget { get; set; } = "";
 
 	public bool Debug { get; set; }
@@ -36,8 +34,6 @@ public class AssemblyModifierPipeline : AndroidTask
 	public ITaskItem [] DestinationFiles { get; set; } = [];
 
 	public bool Deterministic { get; set; }
-
-	public bool ErrorOnCustomJavaObject { get; set; }
 
 	public string? PackageNamingPolicy { get; set; }
 
@@ -128,15 +124,6 @@ public class AssemblyModifierPipeline : AndroidTask
 
 	protected virtual void BuildPipeline (AssemblyPipeline pipeline, MSBuildLinkContext context)
 	{
-		// FindJavaObjectsStep
-		var findJavaObjectsStep = new FindJavaObjectsStep (Log) {
-			ApplicationJavaClass = ApplicationJavaClass,
-			ErrorOnCustomJavaObject = ErrorOnCustomJavaObject,
-		};
-
-		findJavaObjectsStep.Initialize (context);
-		pipeline.Steps.Add (findJavaObjectsStep);
-
 		// SaveChangedAssemblyStep
 		var writerParameters = new WriterParameters {
 			DeterministicMvid = Deterministic,
@@ -144,7 +131,6 @@ public class AssemblyModifierPipeline : AndroidTask
 
 		var saveChangedAssemblyStep = new SaveChangedAssemblyStep (Log, writerParameters);
 		pipeline.Steps.Add (saveChangedAssemblyStep);
-
 	}
 
 	void RunPipeline (AssemblyPipeline pipeline, ITaskItem source, ITaskItem destination)

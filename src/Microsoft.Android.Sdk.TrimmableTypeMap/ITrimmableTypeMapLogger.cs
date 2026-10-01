@@ -12,7 +12,6 @@ public interface ITrimmableTypeMapLogger
 	void LogGeneratedJcwFilesInfo (int sourceCount);
 	void LogRootingManifestReferencedTypeInfo (string javaTypeName, string managedTypeName);
 	void LogManifestReferencedTypeNotFoundWarning (string javaTypeName);
-	void LogLibraryManifestMergeWarning (string message);
 	void LogInvalidManifestPlaceholderWarning (string placeholders);
 	void LogUnresolvableJavaPeerSkippedWarning (
 		string managedTypeName,
@@ -33,6 +32,7 @@ public interface ITrimmableTypeMapLogger
 	void LogUnsupportedConstructorParameterTypeError (string managedTypeName, string parameterType);
 	void LogMissingBaseConstructorError (string managedTypeName, string jniSignature);
 	void LogInvalidSuperArgumentsStringError (string managedTypeName, string superArgumentsString);
+	void LogRidSpecificCallbackMetadataMismatchError (string assemblyName, string firstPath, string secondPath);
 	void LogCustomJavaObjectError (string managedTypeName);
 	void LogCustomJavaObjectWarning (string managedTypeName);
 }

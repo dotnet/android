@@ -24,7 +24,6 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			EnvironmentOutputDirectory = Path.Combine (outputRoot, "android"),
 			SupportedAbis = ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"],
 			AndroidPackageName = "com.microsoft.android.llvmassemblytest",
-			EnablePreloadAssembliesDefault = false,
 			AndroidRuntime = "CoreCLR",
 			UseAssemblyStore = true,
 		};
@@ -48,7 +47,7 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			Assert.That (source, Does.Contain ("@assembly_store = "), abi);
 			Assert.That (source, Does.Contain ("@dso_cache = "), abi);
 			Assert.That (source, Does.Contain ("!llvm.module.flags = "), abi);
-			Assert.That (source, Does.Contain ("i1, ; bool uses_assembly_preload"), abi);
+			Assert.That (source, Does.Contain ("i1, ; bool marshal_methods_enabled"), abi);
 			Assert.That (source, Does.Contain ("; Application environment variables"), abi);
 		}
 	}
@@ -67,7 +66,6 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			EnvironmentOutputDirectory = Path.Combine (outputRoot, "android"),
 			SupportedAbis = ["arm64-v8a"],
 			AndroidPackageName = "com.microsoft.android.assemblystoretest",
-			EnablePreloadAssembliesDefault = false,
 			AndroidRuntime = "CoreCLR",
 			UseAssemblyStore = haveAssemblyStore,
 		};
@@ -80,7 +78,7 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			required: true,
 			runtime: AndroidRuntime.CoreCLR
 		);
-		var config = (EnvironmentHelper.ApplicationConfig)EnvironmentHelper.ReadApplicationConfig (environmentFiles, AndroidRuntime.CoreCLR);
+		var config = EnvironmentHelper.ReadApplicationConfig (environmentFiles);
 		Assert.AreEqual (haveAssemblyStore, config.have_assembly_store);
 
 		string source = File.ReadAllText (Path.Combine (outputRoot, "android", "environment.arm64-v8a.ll"));
@@ -107,7 +105,6 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 			EnvironmentOutputDirectory = Path.Combine (outputRoot, "android"),
 			SupportedAbis = ["arm64-v8a"],
 			AndroidPackageName = "com.microsoft.android.typemapcounttest",
-			EnablePreloadAssembliesDefault = false,
 			AndroidRuntime = "CoreCLR",
 			UseAssemblyStore = true,
 		};
@@ -115,7 +112,7 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		Assert.IsTrue (task.Execute (), "GenerateNativeApplicationConfigSources should succeed.");
 		var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (
 			outputRoot, "arm64-v8a", required: true, runtime: AndroidRuntime.CoreCLR);
-		var config = (EnvironmentHelper.ApplicationConfig)EnvironmentHelper.ReadApplicationConfig (environmentFiles, AndroidRuntime.CoreCLR);
+		var config = EnvironmentHelper.ReadApplicationConfig (environmentFiles);
 		Assert.AreEqual (2u, config.number_of_assemblies_in_apk, "The type map must not be counted again as a satellite assembly.");
 	}
 }

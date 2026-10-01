@@ -3,7 +3,6 @@ set(LIB_ALIAS xa::java-interop)
 
 set(JAVA_INTEROP_SOURCES
   ${JAVA_INTEROP_SRC_PATH}/java-interop-dlfcn.cc
-  ${JAVA_INTEROP_SRC_PATH}/java-interop-mono.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop.cc
@@ -30,8 +29,6 @@ target_include_directories(
   ${LIB_NAME}
   SYSTEM PRIVATE
   ${SYSROOT_CXX_INCLUDE_DIR}
-  ${RUNTIME_INCLUDE_DIR}
-  ${TEMP_MONO_RUNTIME_INCLUDE_DIR}
 )
 
 target_compile_options(

@@ -25,7 +25,7 @@ class ApplicationConfigNativeAssemblyGenerator
 	// src/native/clr/include/xamarin-app.hh.  Data sizes are the sums of sizes of all the non-pointer
 	// members (see LlvmIrTarget.GetAggregateAlignment).  All of the structures contain pointers, and
 	// their non-pointer members don't need alignment higher than NonPointerMemberAlignment
-	const ulong ApplicationConfigDataSize = 52;
+	const ulong ApplicationConfigDataSize = 51;
 	const ulong AssemblyStoreRuntimeDataDataSize = 8;
 	const ulong AssemblyStoreSingleAssemblyRuntimeDataDataSize = 0;
 	const ulong DSOCacheEntryDataSize = 10;
@@ -76,7 +76,6 @@ class ApplicationConfigNativeAssemblyGenerator
 	readonly SortedDictionary <string, string> runtimeProperties;
 	State? state;
 
-	public bool UsesAssemblyPreload { get; set; }
 	public string AndroidPackageName { get; set; } = "";
 	public int NumberOfAssembliesInApk { get; set; }
 	public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
@@ -140,7 +139,6 @@ class ApplicationConfigNativeAssemblyGenerator
 		InitDSOCache (ret);
 
 		ret.ApplicationConfig = new ApplicationConfig {
-			uses_assembly_preload = UsesAssemblyPreload,
 			marshal_methods_enabled = MarshalMethodsEnabled,
 			ignore_split_configs = IgnoreSplitConfigs,
 			number_of_runtime_properties = (uint)runtimeProperties.Count,
@@ -197,7 +195,6 @@ class ApplicationConfigNativeAssemblyGenerator
 		w.Write ($$"""
 
 			%struct.ApplicationConfig = type {
-				i1, ; bool uses_assembly_preload
 				i1, ; bool marshal_methods_enabled
 				i1, ; bool ignore_split_configs
 				i32, ; uint32_t number_of_runtime_properties
@@ -267,7 +264,6 @@ class ApplicationConfigNativeAssemblyGenerator
 		ApplicationConfig cfg = data.ApplicationConfig;
 		w.WriteGlobal ("application_config", LlvmIrWriter.GlobalConstant, "%struct.ApplicationConfig", $$"""
 			{
-				i1 {{(cfg.uses_assembly_preload ? "true" : "false")}}, ; bool uses_assembly_preload
 				i1 {{(cfg.marshal_methods_enabled ? "true" : "false")}}, ; bool marshal_methods_enabled
 				i1 {{(cfg.ignore_split_configs ? "true" : "false")}}, ; bool ignore_split_configs
 				i32 {{cfg.number_of_runtime_properties}}, ; uint32_t number_of_runtime_properties

@@ -46,8 +46,7 @@ internal static class GenerateAdditionalProviderSources
 		Microsoft.Build.Utilities.TaskLoggingHelper log,
 		string outputDirectory,
 		string targetName,
-		ITaskItem []? environments,
-		bool enableSGenConcurrent)
+		ITaskItem []? environments)
 	{
 		GenerateJavaSource (
 			"JavaInteropRuntime.java",
@@ -57,9 +56,8 @@ internal static class GenerateAdditionalProviderSources
 		);
 
 		// We care only about environment variables here
-		var envBuilder = new EnvironmentBuilder (log);
+		var envBuilder = new EnvironmentBuilder ();
 		envBuilder.Read (environments);
-		GenerateNativeApplicationConfigSources.AddDefaultEnvironmentVariables (envBuilder, enableSGenConcurrent);
 
 		var envVarNames = new StringBuilder ();
 		var envVarValues = new StringBuilder ();

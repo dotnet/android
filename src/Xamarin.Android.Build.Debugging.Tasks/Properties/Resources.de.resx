@@ -231,14 +231,4 @@ Wenn all dies fehlschlägt, legen Sie die MSBuild-Eigenschaft „EmbedAssemblies
 {1} - The tool that was used to deploy the file.
 {2} - The actual error that occured.</comment>
   </data>
-  <data name="StartDebugger_ipAddress_port" xml:space="preserve">
-    <value>  Debugger wird auf {0} gestartet:{1}
-Starten Sie „sdb“, und führen Sie dann den folgenden Befehl aus:
-  verbinden {0} {1}
-    </value>
-    <comment>The following are literal names and should not be translated:
-{0} - An ip address of  a computer.
-{1} - An interger value describing the port to use.
-    </comment>
-  </data>
 </root>

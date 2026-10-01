@@ -25,7 +25,6 @@ namespace Xamarin.Android.Tasks;
 // Names should be the same as in the above struct
 sealed class ApplicationConfig
 {
-	public bool   uses_assembly_preload;
 	public bool   marshal_methods_enabled;
 	public bool   ignore_split_configs;
 	public uint   number_of_runtime_properties;

@@ -113,12 +113,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="ManifestOverlays\Timing.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
   <Target Name="_GenerateMonoAndroidEnums"
       BeforeTargets="CoreCompile"
       Inputs="..\Mono.Android\obj\$(Configuration)\android-$(AndroidLatestStableApiLevel)\mcw\api.xml"
@@ -206,7 +200,6 @@
   </PropertyGroup>
   <ItemGroup>
     <_MonoScript Include="illinkanalyzer" />
-    <_MonoScript Include="jit-times" />
     <_MonoScriptSource Include="@(_MonoScript->'$(_MonoScriptSourceDirectory)\%(Identity)')" />
     <_MonoScriptSource Include="mono.config" />
     <_MonoScriptDestination Include="@(_MonoScript->'$(_MonoScriptDestinationDirectory)\%(Identity)')" />

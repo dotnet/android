@@ -17,29 +17,6 @@ namespace Xamarin.Android.Tasks
 			NdkToolNames[NdkToolKind.CompilerCPlusPlus] = "g++";
 		}
 
-		public override bool ValidateNdkPlatform (Action<string> logMessage, Action<string, string> logError, AndroidTargetArch arch, bool enableLLVM)
-		{
-			// Check that we have a compatible NDK version for the targeted ABIs.
-			if (IsNdk64BitArch (arch) && Version.Main.Major < 10) {
-				logMessage (
-					"The detected Android NDK version is incompatible with the targeted 64-bit architecture, " +
-					"please upgrade to NDK r14 or newer.");
-			}
-
-			// NDK r10d is buggy and cannot link x86_64 ABI shared libraries because they are 32-bits.
-			// See https://code.google.com/p/android/issues/detail?id=161421
-			if (enableLLVM && Version.Main.Major == 10 && Version.Main.Minor == 4 && arch == AndroidTargetArch.X86_64) {
-				logError ("XA3004", Properties.Resources.XA3004);
-				return false;
-			}
-
-			if (enableLLVM && (Version.Main.Major < 10 || (Version.Main.Major == 10 && Version.Main.Minor < 4))) {
-				logError ("XA3005", Properties.Resources.XA3005);
-			}
-
-			return true;
-		}
-
 		public override int GetMinimumApiLevelFor (AndroidTargetArch arch, AndroidRuntime runtime)
 		{
 			int minValue = MonoAndroidHelper.GetMinimumApiLevel (arch, runtime);

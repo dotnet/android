@@ -47,36 +47,18 @@ namespace Xamarin.Android.Tasks
 		public string AndroidPackageName { get; set; } = "";
 
 		[Required]
-		public bool EnablePreloadAssembliesDefault { get; set; }
-
-		[Required]
 		public string AndroidRuntime { get; set; } = "";
 
 		public string ProjectRuntimeConfigFilePath { get; set; } = String.Empty;
 		public string? ProjectRuntimeConfigDevFilePath { get; set; }
 
 		public string? PackageNamingPolicy { get; set; }
-		public string? Debug { get; set; }
 		public ITaskItem[]? Environments { get; set; }
-		public string? AndroidSequencePointsMode { get; set; }
-		public bool EnableSGenConcurrent { get; set; }
 		public string? CustomBundleConfigFile { get; set; }
-
-		bool _Debug {
-			get {
-				return string.Equals (Debug, "true", StringComparison.OrdinalIgnoreCase);
-			}
-		}
 
 		static internal AndroidTargetArch GetAndroidTargetArchForAbi (string abi) => MonoAndroidHelper.AbiToTargetArch (abi);
 
 		AndroidRuntime androidRuntime;
-
-		internal static void AddDefaultEnvironmentVariables (EnvironmentBuilder envBuilder, bool enableSGenConcurrent)
-		{
-			envBuilder.AddDefaultMonoDebug ();
-			envBuilder.AddMonoGcParams (enableSGenConcurrent);
-		}
 
 		public override bool RunTask ()
 		{
@@ -86,21 +68,11 @@ namespace Xamarin.Android.Tasks
 				pnp = PackageNamingPolicyEnum.LowercaseCrc64;
 			}
 
-			SequencePointsMode sequencePointsMode;
-			if (!SequencePointsModeParser.TryParse (AndroidSequencePointsMode, out sequencePointsMode))
-				sequencePointsMode = SequencePointsMode.None;
-
 			// Include generated environment files from the later stages of the build.
-			var envBuilder = new EnvironmentBuilder (Log, EnablePreloadAssembliesDefault, sequencePointsMode);
+			var envBuilder = new EnvironmentBuilder ();
 			envBuilder.Read (Environments);
 
-			if (_Debug) {
-				envBuilder.AddDefaultDebugBuildLogLevel ();
-			}
-
-			if (androidRuntime != Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
-				AddDefaultEnvironmentVariables (envBuilder, EnableSGenConcurrent);
-			} else {
+			if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
 				// NativeAOT sets all the environment variables from Java, we don't want to repeat that
 				// process in the native code. This is just a precaution, because NativeAOT builds should
 				// not even use this task.
@@ -221,7 +193,6 @@ namespace Xamarin.Android.Tasks
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
 			Dictionary<string, string>? runtimeProperties = RuntimePropertiesParser.ParseConfig (ProjectRuntimeConfigFilePath, ProjectRuntimeConfigDevFilePath);
 			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, runtimeProperties, Log) {
-				UsesAssemblyPreload = envBuilder.Parser.UsesAssemblyPreload,
 				AndroidPackageName = AndroidPackageName,
 				PackageNamingPolicy = pnp,
 				NumberOfAssembliesInApk = assemblyCount,

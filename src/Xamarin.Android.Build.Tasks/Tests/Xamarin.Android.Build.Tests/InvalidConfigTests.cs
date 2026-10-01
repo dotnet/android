@@ -98,8 +98,8 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.DoesNotExist (builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "typemap-assemblies.txt")));
 		}
 
-		[TestCase (true, "llvm-ir", "XA4265")]
-		[TestCase (false, "llvm-ir", "XA4265")]
+		[TestCase (true, "llvm-ir", "XA4267")]
+		[TestCase (false, "llvm-ir", "XA4267")]
 		[TestCase (true, "unsupported", "Invalid value for AndroidTypeMapImplementation")]
 		[TestCase (false, "unsupported", "Invalid value for AndroidTypeMapImplementation")]
 		public void UnsupportedTypeMapIsRejected (bool isApplication, string typeMapImplementation, string expectedError)
@@ -120,43 +120,105 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase (false, "Build")]
 		[TestCase (true, "Publish")]
 		[TestCase (false, "Publish")]
-		[TestCase (true, "_GenerateJavaStubs")]
-		[TestCase (true, "_PrepareLinking")]
+		[TestCase (true, "_ValidateAndroidTypeMapImplementation")]
+		[TestCase (false, "_ValidateAndroidTypeMapImplementation")]
 		public void LegacyTypeMapIsRejectedBeforeBuildTargets (bool isApplication, string target)
 		{
 			XamarinProject project = isApplication
 				? new XamarinAndroidApplicationProject ()
 				: new XamarinAndroidLibraryProject ();
 			project.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
-			if (target == "_PrepareLinking") {
-				project.SetProperty ("PublishTrimmed", "true");
-			}
 
 			using var builder = isApplication ? CreateApkBuilder () : CreateDllBuilder ();
 			builder.Target = target;
 			builder.ThrowOnBuildFailure = false;
 			Assert.IsFalse (builder.Build (project), "Legacy type maps should be rejected before generation.");
-			StringAssertEx.Contains ("error XA4265:", builder.LastBuildOutput);
+			StringAssertEx.Contains ("error XA4267:", builder.LastBuildOutput);
+		}
+
+		[TestCase (true, "_CheckForInvalidConfigurationAndPlatform")]
+		[TestCase (false, "_CheckForInvalidConfigurationAndPlatform")]
+		[TestCase (true, "Build")]
+		[TestCase (false, "Build")]
+		[TestCase (true, "Publish")]
+		[TestCase (false, "Publish")]
+		[TestCase (true, "_ValidateAndroidTypeMapImplementation")]
+		[TestCase (false, "_ValidateAndroidTypeMapImplementation")]
+		public void EmptyGlobalTypeMapIsRejected (bool isApplication, string target)
+		{
+			XamarinProject project = isApplication
+				? new XamarinAndroidApplicationProject ()
+				: new XamarinAndroidLibraryProject ();
+			project.SetProperty ("PublishTrimmed", "true");
+
+			using var builder = isApplication ? CreateApkBuilder () : CreateDllBuilder ();
+			builder.Target = target;
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (project, parameters: ["AndroidTypeMapImplementation="]),
+				"An empty global property must not select the legacy type map.");
+			StringAssertEx.Contains ("Invalid value for AndroidTypeMapImplementation: ''.", builder.LastBuildOutput);
 		}
 
 		[Test]
-		[TestCase ("RunAOTCompilation")]
-		[TestCase ("EnableLLVM")]
-		public void UnsupportedMonoAotPropertyFailsBuild (string property)
+		[TestCase ("RunAOTCompilation", "true", false)]
+		[TestCase ("RunAOTCompilation", "true", true)]
+		[TestCase ("RunAOTCompilation", "false", false)]
+		[TestCase ("RunAOTCompilation", "false", true)]
+		[TestCase ("EnableLLVM", "true", false)]
+		[TestCase ("EnableLLVM", "true", true)]
+		public void UnsupportedMonoAotPropertyFailsBuild (string property, string value, bool isRelease)
 		{
 			var project = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
 			project.SetRuntime (AndroidRuntime.CoreCLR);
-			project.SetProperty (property, "true");
+			project.SetProperty (property, value);
 
 			using var builder = CreateApkBuilder ();
+			builder.Target = "_CheckNonIdealAppConfigurations";
 			builder.ThrowOnBuildFailure = false;
 			Assert.IsFalse (builder.Build (project), "Build should have failed.");
 			StringAssertEx.Contains ("error XA1044", builder.LastBuildOutput, "Build output should contain error XA1044");
 			StringAssertEx.Contains (property, builder.LastBuildOutput, $"Build output should mention {property}");
 			StringAssertEx.Contains ("CoreCLR", builder.LastBuildOutput, "Build output should mention CoreCLR");
+			if (property == "RunAOTCompilation" && value == "false") {
+				StringAssertEx.Contains ("The build cannot continue while this property is set to 'false'.", builder.LastBuildOutput, "Error should identify the explicitly disabled property.");
+				StringAssertEx.Contains ("Starting with .NET 11", builder.LastBuildOutput, "Error should identify the .NET version.");
+				StringAssertEx.Contains ("'PublishReadyToRun' to 'false'", builder.LastBuildOutput, "Error should explain how to disable ReadyToRun.");
+			} else {
+				StringAssertEx.Contains ("The build cannot continue while this property is enabled.", builder.LastBuildOutput, "Error should identify the explicitly enabled property.");
+				StringAssertEx.DoesNotContain ("The build cannot continue while this property is set to 'false'.", builder.LastBuildOutput, "Enabled properties should not produce the disabled-property error.");
+			}
 		}
 
+		[Test]
+		public void ReadyToRunWithoutMonoAotProperty (
+			[Values ("", "true", "false")] string publishReadyToRun,
+			[Values] bool isRelease)
+		{
+			var project = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			project.SetRuntime (AndroidRuntime.CoreCLR);
+			project.SetProperty ("PublishReadyToRun", publishReadyToRun);
+
+			using var builder = CreateApkBuilder ();
+			builder.Target = "_CheckNonIdealAppConfigurations";
+			Assert.IsTrue (builder.Build (project), "Configuration should be valid without RunAOTCompilation.");
+		}
+
+		[Test]
+		public void RunAotCompilationFalseAllowedForNativeAot ()
+		{
+			var project = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			project.SetRuntime (AndroidRuntime.NativeAOT);
+			project.SetProperty ("RunAOTCompilation", "false");
+
+			using var builder = CreateApkBuilder ();
+			builder.Target = "_CheckNonIdealAppConfigurations";
+			Assert.IsTrue (builder.Build (project), "RunAOTCompilation=false should remain valid for NativeAOT.");
+		}
 	}
 }
