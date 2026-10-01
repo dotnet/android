@@ -66,7 +66,9 @@ namespace Xamarin.Android.Build.Tests
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity")
 				.Replace ("//${AFTER_ONCREATE}", @"button.Text = Resource.CancelButton;");
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStore.ToString ());
-			proj.SetProperty ("RunAOTCompilation", aot.ToString ());
+			if (runtime != AndroidRuntime.CoreCLR) {
+				proj.SetProperty ("RunAOTCompilation", aot.ToString ());
+			}
 			proj.OtherBuildItems.Add (new AndroidItem.InputJar ("javaclasses.jar") {
 				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 			});
@@ -245,7 +247,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 			if (perAbi) {
 				proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, true);
-				proj.SetProperty (proj.ReleaseProperties, KnownProperties.RunAOTCompilation, false);
 				proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
 				proj.Imports.Add (new Import (() => "ApplicationArtifactPerAbi.targets") {
 					TextContent = () => """
@@ -429,9 +430,11 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 				EmbedAssembliesIntoApk = true,
-				AotAssemblies = aotAssemblies,
 			};
 			proj.SetRuntime (runtime);
+			if (runtime == AndroidRuntime.MonoVM) {
+				proj.AotAssemblies = aotAssemblies;
+			}
 
 			var targetArches = new [] { AndroidTargetArch.Arm64, AndroidTargetArch.X86_64 };
 			var abis = targetArches.Select (arch => MonoAndroidHelper.ArchToAbi (arch));
@@ -856,7 +859,6 @@ public class Test
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
-				AotAssemblies = aotAssemblies,
 				LinkTool = linkTool,
 				References = { new BuildItem ("ProjectReference", $"..\\{TestName}Library1\\Library1.csproj") },
 			};
@@ -2386,10 +2388,8 @@ public class ToolbarEx {
 		// TODO: [TestCase (false, AndroidRuntime.NativeAOT)]
 		public void SimilarAndroidXAssemblyNames (bool publishTrimmed, AndroidRuntime runtime)
 		{
-			bool aotAssemblies = runtime == AndroidRuntime.MonoVM && publishTrimmed;
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
-				AotAssemblies = aotAssemblies,
 				PackageReferences = {
 					new Package { Id = "Xamarin.AndroidX.CustomView", Version = "1.1.0.17" },
 					new Package { Id = "Xamarin.AndroidX.CustomView.PoolingContainer", Version = "1.0.0.4" },

@@ -70,7 +70,6 @@ namespace Xamarin.Android.Build.Tests
 
 			app = new XamarinFormsMapsApplicationProject {
 				IsRelease = true,
-				AotAssemblies = false, // Release defaults to Profiled AOT for .NET 6
 				PackageName = "com.xamarin.bundletoolnoabisplittests",
 			};
 			app.SetRuntime (runtime);

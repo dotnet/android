@@ -991,6 +991,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The MSBuild property &apos;RunAOTCompilation&apos; is not compatible with the CoreCLR runtime. The build cannot continue while this property is set to &apos;false&apos;. Remove the property. Starting with .NET 11, set &apos;PublishReadyToRun&apos; to &apos;false&apos; to disable ReadyToRun (R2R) AOT compilation..
+        /// </summary>
+        public static string XA1044_RunAOTCompilationDisabled {
+            get {
+                return ResourceManager.GetString("XA1044_RunAOTCompilationDisabled", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Input file `{0}` does not start with `&lt;replacements/&gt;`..
         /// </summary>
         public static string XA1045 {

@@ -1983,6 +1983,14 @@ This MSBuild property replaces the
 [`$(AotAssemblies)`](#aotassemblies) MSBuild property from
 Xamarin.Android. This is the same property used for [Blazor WASM][blazor].
 
+Setting it to `true` for CoreCLR or NativeAOT resets it to `false` and
+stops the build with [XA1044](../messages/xa1044.md). Setting it to
+`false` for CoreCLR also stops the build with XA1044 instead of silently
+ignoring the property. Starting with .NET 11, remove
+`$(RunAOTCompilation)` and set
+[`$(PublishReadyToRun)`](#publishreadytorun) to `false` to disable
+ReadyToRun (R2R) AOT compilation.
+
 [blazor]: /aspnet/core/blazor/host-and-deploy/webassembly/#ahead-of-time-aot-compilation
 
 ## UseMonoRuntime
