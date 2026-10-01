@@ -37,6 +37,37 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void Build_TrimmableTypeMap_WithCollectionExport_Succeeds ([Values (false, true)] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				Sources = {
+					new BuildItem.Source ("CollectionExport.cs") {
+						TextContent = () => """
+							using System.Collections;
+							using Java.Interop;
+
+							public class CollectionExport : Java.Lang.Object
+							{
+								[Export ("makeList")]
+								public IList MakeList () => new ArrayList { "alpha" };
+							}
+							""",
+					},
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "using var peer = new CollectionExport ();");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build with an IList export should have succeeded.");
+
+			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
+			AssertTrimmableTypeMapOutputs (intermediateDir);
+		}
+
+		[Test]
 		public void Build_TrimmableTypeMap_UsesMonoAndroidImplementationMetadata ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -998,12 +1029,11 @@ namespace Xamarin.Android.Build.Tests {
 			AssertNoExportOutputs (builder, "InvalidConstructor");
 		}
 
-		[TestCase ("trimmable", AndroidRuntime.CoreCLR, "XALNS7003")]
-		[TestCase ("trimmable", AndroidRuntime.NativeAOT, "success")]
-		public void Build_ExplicitExportConstructorAttributeOrders_MatchLegacyPipeline (
+		[TestCase ("trimmable", AndroidRuntime.CoreCLR)]
+		[TestCase ("trimmable", AndroidRuntime.NativeAOT)]
+		public void Build_ExplicitExportConstructorAttributeOrders_PreserveJniSignatures (
 			string typeMapImplementation,
-			AndroidRuntime runtime,
-			string expectedCode)
+			AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1043,13 +1073,13 @@ namespace Xamarin.Android.Build.Tests {
 			});
 
 			using var builder = CreateApkBuilder ();
-			builder.ThrowOnBuildFailure = false;
-			var succeeded = builder.Build (proj);
-			if (expectedCode == "success") {
-				Assert.IsTrue (succeeded, $"{runtime}/{typeMapImplementation} should preserve explicit constructor metadata.");
-			} else {
-				Assert.IsFalse (succeeded, $"{runtime}/{typeMapImplementation} should reject the unsupported constructor metadata.");
-				StringAssertEx.Contains ($"error {expectedCode}", builder.LastBuildOutput);
+			Assert.IsTrue (builder.Build (proj), $"{runtime}/{typeMapImplementation} should preserve explicit constructor metadata.");
+			var javaDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "java", "my", "app"));
+			foreach (var typeName in new [] { "RegisterFirst", "ExportFirst" }) {
+				var javaFile = Path.Combine (javaDirectory, $"{typeName}.java");
+				FileAssert.Exists (javaFile);
+				StringAssert.Contains ($"public {typeName} (int p0)", File.ReadAllText (javaFile),
+					$"{typeName} should use the explicit (I)V JNI constructor signature.");
 			}
 		}
 
