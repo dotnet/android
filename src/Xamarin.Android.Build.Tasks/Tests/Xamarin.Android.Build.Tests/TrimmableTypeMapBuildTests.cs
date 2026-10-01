@@ -37,6 +37,37 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void Build_TrimmableTypeMap_WithCollectionExport_Succeeds ([Values (false, true)] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				Sources = {
+					new BuildItem.Source ("CollectionExport.cs") {
+						TextContent = () => """
+							using System.Collections;
+							using Java.Interop;
+
+							public class CollectionExport : Java.Lang.Object
+							{
+								[Export ("makeList")]
+								public IList MakeList () => new ArrayList { "alpha" };
+							}
+							""",
+					},
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "using var peer = new CollectionExport ();");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build with an IList export should have succeeded.");
+
+			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
+			AssertTrimmableTypeMapOutputs (intermediateDir);
+		}
+
+		[Test]
 		public void Build_TrimmableTypeMap_UsesMonoAndroidImplementationMetadata ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
