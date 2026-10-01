@@ -34,11 +34,10 @@ set(XAMARIN_MONODROID_SOURCES
 
   ../runtime-base/android-system.cc
 
-  # Sources from CoreCLR host
-  ${CLR_SOURCES_PATH}/host/bridge-processing.cc
-  ${CLR_SOURCES_PATH}/host/gc-bridge.cc
+  # Sources shared with the CoreCLR host
   ${CLR_SOURCES_PATH}/host/host-shared.cc
   ${CLR_SOURCES_PATH}/host/internal-pinvokes-shared.cc
+  ${CLR_SOURCES_PATH}/host/gc-bridge.cc
   ${CLR_SOURCES_PATH}/host/os-bridge.cc
   ${CLR_SOURCES_PATH}/host/runtime-util.cc
   ${CLR_SOURCES_PATH}/runtime-base/android-system-shared.cc
@@ -110,14 +109,6 @@ macro(lib_target_options TARGET_NAME)
     ${TARGET_NAME}
     SYSTEM PRIVATE
     ${SYSROOT_CXX_INCLUDE_DIR}
-    ${RUNTIME_INCLUDE_DIR}
-    ${TEMP_MONO_RUNTIME_INCLUDE_DIR}
-  )
-
-  target_link_directories(
-    ${TARGET_NAME}
-    PRIVATE
-    ${NET_RUNTIME_DIR}/native
   )
 
   target_link_options(

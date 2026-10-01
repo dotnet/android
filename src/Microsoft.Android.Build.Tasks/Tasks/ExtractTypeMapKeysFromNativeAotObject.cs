@@ -58,13 +58,24 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 			if (!string.IsNullOrEmpty (directory)) {
 				Directory.CreateDirectory (directory);
 			}
-			using var writer = new StreamWriter (OutputFile, append: false, new UTF8Encoding (false, true)) { NewLine = "\n" };
-			foreach (string key in keys) {
-				writer.WriteLine (key);
+			string temporaryOutputFile = OutputFile + "." + Guid.NewGuid ().ToString ("N") + ".tmp";
+			try {
+				WriteOutputFile (temporaryOutputFile, keys);
+				File.Move (temporaryOutputFile, OutputFile, overwrite: true);
+			} finally {
+				File.Delete (temporaryOutputFile);
 			}
 		} catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is BadImageFormatException ||
 			e is JsonException || e is InvalidOperationException || e is FormatException || e is ArgumentException || e is Win32Exception) {
 			LogCodedError ("XA4327", Properties.Resources.XA4327, currentFile, e.Message);
+		}
+	}
+
+	protected virtual void WriteOutputFile (string outputFile, IReadOnlyCollection<string> keys)
+	{
+		using var writer = new StreamWriter (outputFile, append: false, new UTF8Encoding (false, true)) { NewLine = "\n" };
+		foreach (string key in keys) {
+			writer.WriteLine (key);
 		}
 	}
 

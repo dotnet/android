@@ -224,6 +224,7 @@
     <Compile Include="Android.Opengl\GLSurfaceView.cs" />
     <Compile Include="Android.Preferences\CheckBoxPreference.cs" />
     <Compile Include="Android.Runtime\AndroidEnvironment.cs" />
+    <Compile Include="Android.Runtime\ManagedObjectReferenceManager.cs" />
     <Compile Include="Android.Runtime\AndroidRuntime.cs" />
     <Compile Include="Android.Runtime\AndroidRuntimeInternal.cs" />
     <Compile Include="Android.Runtime\AnnotationAttribute.cs" />
@@ -248,6 +249,7 @@
     <Compile Include="Android.Runtime\JNIEnv.g.cs" />
     <Compile Include="Android.Runtime\JNIEnvInit.cs" />
     <Compile Include="Android.Runtime\JniHandleOwnership.cs" />
+    <Compile Include="Android.Runtime\JniPeerMembersExtensions.cs" />
     <Compile Include="Android.Runtime\JNINativeWrapper.cs" />
     <Compile Include="Android.Runtime\JNINativeWrapper.g.cs">
       <DesignTime>True</DesignTime>
@@ -321,8 +323,10 @@
     <Compile Include="Java.Interop\JavaLibraryReferenceAttribute.cs" />
     <Compile Include="Java.Interop\JavaLocationException.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensions.cs" />
+    <Compile Include="Java.Interop\JavaPeerCallbackFormatAttribute.cs" />
     <Compile Include="Java.Interop\JavaPeerProxy.cs" />
     <Compile Include="Java.Interop\JavaTypeParametersAttribute.cs" />
+    <Compile Include="Java.Interop\JniMarshalTyped.cs" />
     <Compile Include="Java.Interop\Runtime.cs" />
     <Compile Include="Java.Interop\SafeArrayFactory.cs" />
     <Compile Include="Java.Interop\SafeJavaCollectionFactory.cs" />
@@ -364,8 +368,11 @@
     <Compile Include="Java.Util.Concurrent.Atomic\AtomicLong.cs" />
     <Compile Include="Javax.Microedition.Khronos.Egl\EGLContext.cs" />
     <Compile Include="Microsoft.Android.Runtime\AggregateTypeMap.cs" />
+    <Compile Include="Microsoft.Android.Runtime\HandleContext.cs" />
     <Compile Include="Microsoft.Android.Runtime\ITypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\JniRemappingLookup.cs" />
+    <Compile Include="Microsoft.Android.Runtime\JavaMarshalGCBridge.cs" />
+    <Compile Include="Microsoft.Android.Runtime\JavaMarshalGCBridgeJni.cs" />
     <Compile Include="Microsoft.Android.Runtime\JavaMarshalRegisteredPeers.cs" />
     <Compile Include="Microsoft.Android.Runtime\JavaMarshalValueManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\PrimitiveArrayInfo.cs" />

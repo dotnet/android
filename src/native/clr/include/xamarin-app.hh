@@ -199,11 +199,10 @@ struct AssemblyStoreSingleAssemblyRuntimeData final
 };
 
 // Keep in strict sync with:
-//   src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfigCLR.cs
+//   src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfig.cs
 //   src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Utilities/EnvironmentHelper.cs
 struct ApplicationConfig
 {
-	bool uses_assembly_preload;
 	bool jni_add_native_method_registration_attribute_present;
 	bool marshal_methods_enabled;
 	bool ignore_split_configs;
@@ -309,9 +308,6 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const char app_environment_variable_contents[];
 	[[gnu::visibility("default")]] extern const AppEnvironmentVariable app_system_properties[];
 	[[gnu::visibility("default")]] extern const char app_system_property_contents[];
-
-	[[gnu::visibility("default")]] extern const char* const mono_aot_mode_name;
-
 
 	[[gnu::visibility("default")]] extern AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[];
 	[[gnu::visibility("default")]] extern AssemblyStoreRuntimeData assembly_store;

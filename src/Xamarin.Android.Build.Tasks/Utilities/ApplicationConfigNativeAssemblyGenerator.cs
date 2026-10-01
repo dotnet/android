@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 
 using Java.Interop.Tools.TypeNameMappings;
@@ -182,7 +181,6 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 	StructureInfo? assemblyStoreRuntimeDataStructureInfo;
 	StructureInfo? appEnvironmentVariableStructureInfo;
 
-	public bool UsesAssemblyPreload { get; set; }
 	public string AndroidPackageName { get; set; } = "";
 	public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
 	public int NumberOfAssembliesInApk { get; set; }
@@ -267,7 +265,6 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 
 		DsoCacheState dsoState = InitDSOCache ();
 		var app_cfg = new ApplicationConfig {
-			uses_assembly_preload = UsesAssemblyPreload,
 			jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
 			marshal_methods_enabled = MarshalMethodsEnabled,
 			ignore_split_configs = IgnoreSplitConfigs,
@@ -450,7 +447,7 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 
 	DsoCacheState InitDSOCache ()
 	{
-		var dsos = new List<(string name, string nameLabel, bool ignore, ITaskItem item)> ();
+		var dsos = new List<(string name, ITaskItem item)> ();
 		var nameCache = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
 		foreach (ITaskItem item in NativeLibraries) {
@@ -464,7 +461,7 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 				continue;
 			}
 
-			dsos.Add ((name, $"dsoName{dsos.Count.ToString (CultureInfo.InvariantCulture)}", ELFHelper.IsEmptyAOTLibrary (Log, item.ItemSpec), item));
+			dsos.Add ((name, item));
 		}
 
 		var dsoCache = new List<StructureInstance<DSOCacheEntry>> ();
@@ -476,14 +473,10 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 
 		for (int i = 0; i < dsos.Count; i++) {
 			string name = dsos[i].name;
-			if (name.StartsWith ("libaot-", StringComparison.OrdinalIgnoreCase)) {
-				throw new InvalidOperationException ($"Internal error: CoreCLR native library configuration must not use AOT DSO cache entries ('{name}').");
-			}
 
 			(int nameOffset, _) = dsoNamesBlob.Add (name);
 
 			bool isJniLibrary = ELFHelper.IsJniLibrary (Log, dsos[i].item.ItemSpec);
-			bool ignore = dsos[i].ignore;
 			bool ignore_for_preload = ShouldIgnoreForJniPreload (Log, ignorePreload, dsos[i].item);
 
 			nameMutations.Clear();
@@ -499,7 +492,7 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 					RealName = name,
 
 					hash = 0, // Hash is arch-specific, we compute it before writing
-					ignore = ignore,
+					ignore = false,
 					is_jni_library = isJniLibrary,
 					name_index = (uint)nameOffset,
 				};
@@ -532,11 +525,6 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 			if (name.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase)) {
 				string nameNoExt = Path.GetFileNameWithoutExtension (Path.GetFileNameWithoutExtension (name))!;
 				nameMutations.Add (nameNoExt);
-
-				// This helps us at runtime, because sometimes MonoVM will ask for "AssemblyName" and sometimes for "AssemblyName.dll".
-				// In the former case, the runtime would ask for the "libaot-AssemblyName.so" image, which doesn't exist - we have
-				// "libaot-AssemblyName.dll.so" instead and, thus, we are forced to check for and append the missing ".dll" extension when
-				// loading the assembly, unnecessarily wasting time.
 				nameMutations.Add ($"{nameNoExt}.so");
 			} else {
 				nameMutations.Add (Path.GetFileNameWithoutExtension (name)!);

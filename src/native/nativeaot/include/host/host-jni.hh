@@ -5,6 +5,6 @@
 
 extern "C" {
 	[[gnu::visibility("default")]]
-	auto XA_Host_NativeAOT_JNI_OnLoad (JavaVM *vm, void *reserved) -> int;
+	auto XA_Host_NativeAOT_JNI_OnLoad (JavaVM *vm, void *reserved, xamarin::android::JnienvInitializeArgs *initArgs) -> int;
 	void XA_Host_NativeAOT_OnInit (jstring language, jstring filesDir, jstring cacheDir, xamarin::android::JnienvInitializeArgs *initArgs);
 }

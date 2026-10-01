@@ -112,7 +112,7 @@ namespace Android.Runtime {
 			EnvironmentPointer      = jnienv;
 			ClassLoader             = new JniObjectReference (classLoader, JniObjectReferenceType.Global);
 			InvocationPointer       = vm;
-			ObjectReferenceManager  = new AndroidObjectReferenceManager ();
+			ObjectReferenceManager  = new ManagedObjectReferenceManager ();
 			TypeManager             = typeManager;
 			ValueManager            = valueManager;
 			JniAddNativeMethodRegistrationAttributePresent = jniAddNativeMethodRegistrationAttributePresent;

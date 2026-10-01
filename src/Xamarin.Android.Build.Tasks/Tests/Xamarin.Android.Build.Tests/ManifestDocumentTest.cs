@@ -49,7 +49,7 @@ public class ManifestDocumentTest : BaseTest
 
 			var engine = new MockBuildEngine (TestContext.Out);
 			var log = new TaskLoggingHelper (engine, nameof (ManifestDocumentTest));
-			manifest.Merge (log, new TypeDefinitionCache (), new List<TypeDefinition> (), applicationClass: null, embed: false, bundledWearApplicationName: null, mergedManifestDocuments: null);
+			manifest.Merge (log, new TypeDefinitionCache (), new List<TypeDefinition> (), applicationClass: null, embed: false, bundledWearApplicationName: null);
 
 			var writer = new StringWriter ();
 			manifest.Save ((code, message) => { }, writer);

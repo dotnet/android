@@ -233,10 +233,6 @@ Uwaga: Android Designer jest niezgodny z zestawem Java SDK 11.0: https://aka.ms/
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
 {0} - The library name.</comment>
   </data>
-  <data name="XA0104" xml:space="preserve">
-    <value>Nieprawidłowa wartość parametru „$(AndroidSequencePointsMode)”: {0}</value>
-    <comment>The following are literal names and should not be translated: `$(AndroidSequencePointsMode)`</comment>
-  </data>
   <data name="XA0105" xml:space="preserve">
     <value>Parametr $(TargetFrameworkVersion) dla elementu {0} ({1}) jest większy niż parametr $(TargetFrameworkVersion) dla projektu aplikacji ({2}). Zwiększ wartość parametru $(TargetFrameworkVersion) dla projektu aplikacji.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -297,10 +293,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>Jednoczesne używanie opcji Fast Deployment i pakietów Android App Bundles nie jest obecnie obsługiwane. Używaj opcji Fast Deployment w przypadku konfiguracji debugowania, a pakietów Android App Bundles na potrzeby konfiguracji wydania.</value>
     <comment>The following are literal names and should not be translated: Android App Bundles</comment>
   </data>
-  <data name="XA0119_AOT" xml:space="preserve">
-    <value>W tym samym czasie nie zaleca się korzystania z funkcji szybkiego wdrażania i drzewa obiektów aplikacji (AOT). Użyj szybkiego wdrażania do konfiguracji debugowania, a drzewa AOT do konfiguracji wydania.</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
-  </data>
   <data name="XA0119_LinkMode" xml:space="preserve">
     <value>W tym samym czasie nie zaleca się używania funkcji szybkiego wdrażania i konsolidatora. Użyj szybkiego wdrażania do konfiguracji debugowania, a konsolidatora do konfiguracji wydania.</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
@@ -308,10 +300,6 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
   <data name="XA0119_LinkTool" xml:space="preserve">
     <value>W tym samym czasie nie zaleca się korzystania z funkcji szybkiego wdrażania i zmniejszania kodu. Użyj szybkiego wdrażania do konfiguracji debugowania, a zmniejszania kodu do konfiguracji wydania.</value>
     <comment>The following are literal names and should not be translated: Debug, Release.</comment>
-  </data>
-  <data name="XA0119_Interpreter" xml:space="preserve">
-    <value>Wyłączanie interpretera; używanie jednocześnie interpretera i obiektu AOT nie jest obsługiwane. Użyj interpretera do obsługi przeładowywania na gorąco w konfiguracjach debugowania i AOT dla konfiguracji wydania.</value>
-    <comment>The following are literal names and should not be translated: AOT, Debug, Release.</comment>
   </data>
   <data name="XA0119_ReadyToRun" xml:space="preserve">
     <value>W tym samym czasie nie zaleca się korzystania z funkcji szybkiego wdrażania i ReadyToRun. Użyj funkcji szybkiego wdrażania do konfiguracji debugowania oraz funkcji ReadyToRun do konfiguracji wydania.</value>
@@ -469,10 +457,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>Używanie kompilatora DX DEX nie jest obsługiwane. Ustaw kompilator DEX na „d8” na stronach właściwości projektu w programie Visual Studio lub edytuj plik projektu w edytorze tekstów i ustaw właściwość „AndroidDexTool” MSBuild na wartość „d8”.</value>
     <comment>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</comment>
   </data>
-  <data name="XA1025" xml:space="preserve">
-    <value>Eksperymentalna wartość „Hybrid” dla właściwości programu MSBuild „AndroidAotMode” jest obecnie niezgodna z docelowym interfejsem ABI armeabi-v7a. Aby nadal używać eksperymentalnej wartości „Hybrid” dla właściwości „AndroidAotMode”, usuń zaznaczenie docelowego interfejsu ABI armeabi-v7a na stronach właściwości projektu w programie Visual Studio albo zmodyfikuj plik projektu w edytorze tekstów, usuwając wartość „armeabi-v7a” z właściwości programu MSBuild „AndroidSupportedAbis”.</value>
-    <comment>The following are literal names and should not be translated: 'Hybrid', 'AndroidAotMode', armeabi-v7a,  'AndroidSupportedAbis'</comment>
-  </data>
   <data name="XA1027" xml:space="preserve">
     <value>Właściwość programu MSBuild „EnableProguard” ma wartość „true”, a właściwość programu MSBuild „AndroidLinkTool” jest pusta, dlatego właściwość „AndroidLinkTool” zostanie ustawiona na wartość domyślną „proguard”.</value>
     <comment>The following are literal names and should not be translated: 'EnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
@@ -481,22 +465,14 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>Właściwość programu MSBuild „AndroidEnableProguard” ma wartość „true”, a właściwość programu MSBuild „AndroidLinkTool” jest pusta, dlatego właściwość „AndroidLinkTool” zostanie ustawiona na wartość domyślną „proguard”.</value>
     <comment>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
   </data>
-  <data name="XA1029" xml:space="preserve">
-    <value>Właściwość „AotAssemblies” programu MSBuild jest przestarzała. Edytuj plik projektu w edytorze tekstu, aby usunąć tę właściwość, a zamiast tego użyj właściwości „RunAOTCompilation” programu MSBuild.</value>
-    <comment>The following are literal names and should not be translated: 'AotAssemblies', 'RunAOTCompilation'</comment>
-  </data>
-  <data name="XA1030" xml:space="preserve">
-    <value>Właściwość „RunAOTCompilation” programu MSBuild jest obsługiwana tylko wtedy, gdy jest włączone przycinanie. Edytuj plik projektu w edytorze tekstu, aby ustawić właściwość „PublishTrimmed” na wartość „true” dla tej konfiguracji kompilacji.</value>
-    <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
-  </data>
   <data name="XA1034" xml:space="preserve">
     <value>Projekt odwołuje się do elementu „{0}”, który używa zestawu „_Microsoft.Android.Resource.Designer”, ale ta funkcja nie jest włączona. Ustaw właściwość MSBuild „AndroidUseDesignerAssembly” na wartość „true” w pliku projektu.</value>
     <comment>The following are literal names and should not be translated: '_Microsoft.Android.Resource.Desinger', 'AndroidUseDesignerAssembly', 'true'
 {0} - The name of the assembly</comment>
   </data>
   <data name="XA1035" xml:space="preserve">
-    <value>Właściwość „BundleAssemblies” jest przestarzała i nie ma wpływu na kompilację aplikacji. Równoważna funkcjonalność jest implementowana przez właściwości „AndroidUseAssemblyStore” i „AndroidEnableAssemblyCompression”.</value>
-    <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
+    <value>The 'BundleAssemblies' property is deprecated and no longer affects the build. Remove it. CoreCLR and NativeAOT do not use Mono's mkbundle.</value>
+    <comment>The following are literal names and should not be translated: 'BundleAssemblies', CoreCLR, NativeAOT, Mono, mkbundle</comment>
   </data>
   <data name="XA1036" xml:space="preserve">
     <value>Plik AndroidManifest.xml //uses-sdk/@android:minSdkVersion „{0}” nie pasuje do wartości $ (SupportedOSPlatformVersion) „{1}” w pliku projektu (jeśli w pliku projektu nie ma wartości $ (SupportedOSPlatformVersion), oznacza to, że została ustawiona wartość domyślna tak jak przyjęto).
@@ -514,9 +490,6 @@ Zmień wartość w pliku AndroidManifest.xml, aby odpowiadała wartości $(Suppo
     <value>Wykryto użycie AppDomain.CreateDomain() w zestawie: {0}. Platforma .NET 6 lub nowsza wersja obsługuje tylko jedną domenę aplikacji, dlatego ten interfejs API nie będzie już dostępny na platformie .NET dla systemu Android po wydaniu platformy .NET 6.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
-  </data>
-  <data name="XA2000_gcParams_bridgeImpl" xml:space="preserve">
-    <value>Obsługa wartości „MONO_GC_PARAMS=bridge-implementation=old” zostanie usunięta na platformie .NET 7.</value>
   </data>
   <data name="XA2001" xml:space="preserve">
     <value>Nie można znaleźć pliku źródłowego „{0}”.</value>
@@ -562,24 +535,6 @@ Zmień wartość w pliku AndroidManifest.xml, aby odpowiadała wartości $(Suppo
   <data name="APT2265" xml:space="preserve">
     <value>Może to być spowodowane tym, że projekt zawiera znaki inne niż ASCII w nazwie pliku lub ścieżce. Aby uzyskać szczegółowe informacje, zobacz stronę https://learn.microsoft.com/dotnet/android/messages/apt2265.</value>
     <comment>The following are literal names and should not be translated:</comment>
-  </data>
-  <data name="XA3001" xml:space="preserve">
-    <value>Nie można utworzyć widoku AOT zestawu: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
-  </data>
-  <data name="XA3002" xml:space="preserve">
-    <value>Nieprawidłowy tryb AOT: {0}</value>
-    <comment>The abbreviation "AOT" should not be translated.</comment>
-  </data>
-  <data name="XA3004" xml:space="preserve">
-    <value>Zestaw Android NDK r10d zawiera wiele usterek i dostarcza niezgodną bibliotekę libm.so dla architektury x86_64. Zobacz https://code.google.com/p/android/issues/detail?id=161422.</value>
-    <comment>The following are literal names and should not be translated: NDK, r10d, x86_64, libm.so
-"r10d" is the problematic version of the NDK. "x86_64" is the architecture of the libm.so file.</comment>
-  </data>
-  <data name="XA3005" xml:space="preserve">
-    <value>Wykryta wersja zestawu Android NDK jest niezgodna z docelową konfiguracją programu LLVM. Uaktualnij do zestawu NDK r10d lub nowszego.</value>
-    <comment>The following are literal names and should not be translated: NDK, LLVM, r10d
-"r10d" is the version of the NDK.</comment>
   </data>
   <data name="XA3006" xml:space="preserve">
     <value>Nie można skompilować natywnego pliku zestawu: {0}{1}</value>
@@ -770,11 +725,6 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>The abbreviation "ABI" should not be translated.
 {0} - Comma-separated list of the ignored library file names.</comment>
   </data>
-  <data name="XA4302" xml:space="preserve">
-    <value>Nieobsługiwany wyjątek podczas scalania pliku „AndroidManifest.xml”: {0}</value>
-    <comment>The following are literal names and should not be translated: `AndroidManifest.xml`
-{0} - The exception message of the associated exception</comment>
-  </data>
   <data name="XA4303" xml:space="preserve">
     <value>Błąd podczas wyodrębniania zasobów z pliku „{0}”: {1}</value>
     <comment>{0} - The file name
@@ -888,6 +838,24 @@ Usuń odwołanie „{0}” z projektu i zamiast niego dodaj pakiet NuGet „{1}�
     <value>[{0}] Nie można usunąć pliku źródłowego „{1}”</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
+  </data>
+  <data name="XA4327" xml:space="preserve">
+    <value>Nie można wyodrębnić kluczy mapy typów Java z '{0}': {1}</value>
+    <comment>{0} - The input file path or representation name.
+{1} - The underlying parser or input/output failure. It is not localized.</comment>
+  </data>
+  <data name="XA4328" xml:space="preserve">
+    <value>Nie udało się wygenerować mapy typów dla konfiguracji ProGuard na podstawie „{0}”: {1}</value>
+    <comment>{0} - The input or output file path.
+{1} - The underlying failure, or a formatted XA4328_* resource.</comment>
+  </data>
+  <data name="XA4328_NoInputs" xml:space="preserve">
+    <value>Nie podano zachowanych plików kluczy mapy typu Java.</value>
+  </data>
+  <data name="XA4328_InvalidName" xml:space="preserve">
+    <value>Wiersz {0} zawiera nieprawidłową zachowaną nazwę klasy Java: „{1}” .</value>
+    <comment>{0} - The one-based line number.
+{1} - The invalid input record.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>Brak katalogu łańcuchów narzędzi zestawu Android NDK „{0}”. Zainstaluj zestaw Android NDK.</value>
@@ -1109,11 +1077,15 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
 </comment>
   </data>
   <data name="XA1044" xml:space="preserve">
-    <value>Właściwość MSBuild „{0}” nie jest zgodna ze środowiskiem uruchomieniowym {1}. Nie można kontynuować kompilacji, gdy ta właściwość jest włączona. Usuń właściwość lub zapewnij ochronę za pomocą warunku: Condition="$(UseMonoRuntime)" == "true""</value>
-    <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
+    <value>Właściwość programu MSBuild '{0}' nie jest zgodna ze środowiskiem uruchomieniowym {1}. Nie można kontynuować kompilacji, gdy ta właściwość jest włączona. Usuń właściwość.</value>
+    <comment>The following literal name should not be translated: MSBuild.
 {0} - The MSBuild property name (e.g. RunAOTCompilation, EnableLLVM).
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
+  </data>
+  <data name="XA1044_RunAOTCompilationDisabled" xml:space="preserve">
+    <value>The MSBuild property 'RunAOTCompilation' is not compatible with the CoreCLR runtime. The build cannot continue while this property is set to 'false'. Remove the property. Starting with .NET 11, set 'PublishReadyToRun' to 'false' to disable ReadyToRun (R2R) AOT compilation.</value>
+    <comment>The following are literal names and should not be translated: RunAOTCompilation, MSBuild, CoreCLR, .NET, PublishReadyToRun, false, ReadyToRun, R2R, AOT.</comment>
   </data>
   <data name="XA1045" xml:space="preserve">
     <value>Plik wejściowy `{0}` nie rozpoczyna się od elementu `&lt;replacements/&gt;`.</value>
@@ -1208,8 +1180,8 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
 {0} - Java type name from AndroidManifest.xml</comment>
   </data>
   <data name="XA4251" xml:space="preserve">
-    <value>Typ „{0}” używa [JniAddNativeMethodRegistrationAttribute], co nie jest obsługiwane przez mapę typów z możliwością przycinania. Aby obejść ten problem, nie korzystaj z mapy typów z możliwością przycinania (na przykład przez przejście na implementację mapy typów „llvm-ir”) i zgłoś ten scenariusz na https://github.com/dotnet/android/issues, aby zespół mógł ocenić, czy warto dodać dla niego obsługę.</value>
-    <comment>The following are literal names and should not be translated: JniAddNativeMethodRegistrationAttribute, llvm-ir.
+    <value>Type '{0}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. Please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.</value>
+    <comment>The following is a literal name and should not be translated: JniAddNativeMethodRegistrationAttribute.
 {0} - Fully-qualified managed type name</comment>
   </data>
   <data name="XA4252" xml:space="preserve">
@@ -1288,6 +1260,22 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
     <comment>The following are literal names and should not be translated: Java, XML.
 {0} - Full path to the Java callable wrapper XML file</comment>
   </data>
+  <data name="XA4265" xml:space="preserve">
+    <value>Zestaw '{0}' używa formatu wywołania zwrotnego elementu równorzędnego języka Java, który wymaga parametru AndroidTypeMapImplementation=trimmable.</value>
+    <comment>The following are literal names and should not be translated: Java, AndroidTypeMapImplementation, trimmable.
+{0} - Assembly path</comment>
+  </data>
+  <data name="XA4266" xml:space="preserve">
+    <value>Zestaw „{0}” ma różne metadane wywołania zwrotnego elementu równorzędnego Java w implementacjach specyficznych dla środowiska uruchomieniowego „{1}” i „{2}”. Wszystkie elementy RuntimeIdentifiers muszą udostępniać równoważne metadane wywołania zwrotnego, gdy AndroidTypeMapImplementation=trimmable.</value>
+    <comment>The following are literal names and should not be translated: Java, RuntimeIdentifiers, AndroidTypeMapImplementation, trimmable.
+{0} - Assembly name
+{1} - First runtime-specific assembly path
+{2} - Second runtime-specific assembly path</comment>
+  </data>
+  <data name="XA4267" xml:space="preserve">
+    <value>The 'llvm-ir' type map implementation is no longer supported. Remove the AndroidTypeMapImplementation property or set it to 'trimmable'.</value>
+    <comment>The following are literal names and should not be translated: llvm-ir, AndroidTypeMapImplementation, trimmable.</comment>
+  </data>
   <data name="XA0142" xml:space="preserve">
     <value>Wykonanie polecenia „{0}” nie powiodło się.\n{1}</value>
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>
@@ -1311,10 +1299,6 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
   </data>
   <data name="XA0146" xml:space="preserve">
     <value>Sprawdzenie, czy „{0}” jest poprawnie wyrównanym plikiem ELF, nie powiodła się z powodu wyjątku, ignorując sprawdzanie wyrównania pliku.</value>
-    <comment>{0} - The file path.</comment>
-  </data>
-  <data name="XA0147" xml:space="preserve">
-    <value>Sprawdzenie, czy „{0}” jest prawidłowym plikiem ELF, zakończyło się wyjątkiem, więc pomijane jest sprawdzanie AOT dla tego pliku.</value>
     <comment>{0} - The file path.</comment>
   </data>
   <data name="XA0148" xml:space="preserve">

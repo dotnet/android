@@ -40,11 +40,6 @@ sealed class JavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 		public Type Type { get; }
 	}
 
-	public JavaMarshalValueManager ()
-	{
-		JavaMarshalRegisteredPeers.InitializeIfNeeded ();
-	}
-
 	public override void WaitForGCBridgeProcessing ()
 	{
 		// Intentionally empty. The Mono runtime's own implementation acknowledges this
@@ -67,6 +62,7 @@ sealed class JavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 
 	public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 	{
+		EnsureNotDisposed ();
 		return JavaMarshalRegisteredPeers.PeekPeer (reference);
 	}
 

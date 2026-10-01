@@ -12,7 +12,6 @@
     -->
     <AndroidUseInstrumentation Condition=" '$(AndroidUseInstrumentation)' == '' and '$(EnableMSTestRunner)' == 'true' ">true</AndroidUseInstrumentation>
     <AndroidUseInstrumentation Condition=" '$(AndroidUseInstrumentation)' == '' ">false</AndroidUseInstrumentation>
-    <AndroidEnableSGenConcurrent Condition=" '$(AndroidEnableSGenConcurrent)' == '' ">true</AndroidEnableSGenConcurrent>
     <AndroidGenerateResourceDesigner Condition=" '$(AndroidGenerateResourceDesigner)' == '' ">true</AndroidGenerateResourceDesigner>
     <AndroidUseDesignerAssembly Condition=" '$(AndroidUseDesignerAssembly)' == '' ">true</AndroidUseDesignerAssembly>
     <AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseDesignerAssembly)' == 'True' ">false</AndroidUseIntermediateDesignerFile>
@@ -45,18 +44,28 @@
     <AndroidClassParser>class-parse</AndroidClassParser>
     <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
     <_AndroidJcwCodegenTarget Condition=" '$(_AndroidJcwCodegenTarget)' == '' ">XAJavaInterop1</_AndroidJcwCodegenTarget>
-    <AndroidTypeMapImplementation Condition=" '$(AndroidTypeMapImplementation)' == '' and '$(PublishAot)' == 'true' ">trimmable</AndroidTypeMapImplementation>
+    <AndroidTypeMapImplementation Condition=" '$(AndroidTypeMapImplementation)' == '' ">trimmable</AndroidTypeMapImplementation>
     <AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods Condition=" '$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)' == '' ">true</AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods>
     <AndroidBoundInterfacesContainTypes Condition=" '$(AndroidBoundInterfacesContainTypes)' == '' ">true</AndroidBoundInterfacesContainTypes>
     <AndroidBoundInterfacesContainConstants Condition=" '$(AndroidBoundInterfacesContainConstants)' == '' ">true</AndroidBoundInterfacesContainConstants>
     <AndroidEnableObsoleteOverrideInheritance Condition=" '$(AndroidEnableObsoleteOverrideInheritance)' == '' ">true</AndroidEnableObsoleteOverrideInheritance>
+
+    <!--
+      Experimental, for internal use only.  When 'true', binding callbacks are emitted as
+      [UnmanagedCallersOnly] methods forwarding to a shared typed marshaling helper, and the
+      cb_* delegate cache fields and Get*Handler () connector methods are omitted.  This shape
+      requires the trimmable typemap, which binds RegisterNatives directly to the callbacks.
+      The default is deliberately unchanged.
+    -->
+    <_AndroidEnableUnmanagedCallersOnlyCallbacks Condition=" '$(_AndroidEnableUnmanagedCallersOnlyCallbacks)' == '' ">false</_AndroidEnableUnmanagedCallersOnlyCallbacks>
     <AndroidEnableRestrictToAttributes Condition=" '$(AndroidEnableRestrictToAttributes)' == '' ">obsolete</AndroidEnableRestrictToAttributes>
     <GenerateDocumentationFile Condition=" '$(GenerateDocumentationFile)' == '' ">true</GenerateDocumentationFile>
 
-    <!-- Mono components -->
+    <!-- Legacy alias retained for compatibility; no Mono profiler component is packaged. -->
     <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == '' ">$(EnableDiagnostics)</AndroidEnableProfiler>
     <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == '' and ('$(DiagnosticConfiguration)' != '' or '$(DiagnosticAddress)' != '' or '$(DiagnosticPort)' != '' or '$(DiagnosticSuspend)' != '' or '$(DiagnosticListenMode)' != '') ">true</AndroidEnableProfiler>
     <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == '' ">false</AndroidEnableProfiler>
+    <_AndroidEnableDiagnostics Condition=" '$(AndroidEnableProfiler)' == 'true' ">true</_AndroidEnableDiagnostics>
 
     <!--
         Android package (apt/aab) alignment, expressed as the page size in kilobytes.  Two values are supported: 4 and 16.
@@ -67,7 +76,7 @@
     <AndroidZipAlignment Condition=" '$(AndroidZipAlignment)' == '' ">16</AndroidZipAlignment>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(AndroidEnableProfiler)' == 'true' and '$(DiagnosticConfiguration)' == '' ">
+  <PropertyGroup Condition=" '$(_AndroidEnableDiagnostics)' == 'true' and '$(DiagnosticConfiguration)' == '' ">
     <DiagnosticAddress Condition=" '$(DiagnosticAddress)' == '' ">127.0.0.1</DiagnosticAddress>
     <DiagnosticPort Condition=" '$(DiagnosticPort)' == '' ">9000</DiagnosticPort>
     <DiagnosticSuspend Condition=" '$(DiagnosticSuspend)' == '' ">false</DiagnosticSuspend>
@@ -115,17 +124,12 @@
     <RuntimeIdentifiers Condition=" '$(RuntimeIdentifier)' == '' And '$(RuntimeIdentifiers)' == '' ">android-arm64;android-x64</RuntimeIdentifiers>
     <RuntimeIdentifier  Condition=" '$(RuntimeIdentifiers)' != '' And '$(RuntimeIdentifier)' != '' " />
     <GenerateApplicationManifest Condition=" '$(GenerateApplicationManifest)' == '' ">true</GenerateApplicationManifest>
-    <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' and '$(AotAssemblies)' == 'true' ">true</RunAOTCompilation>
-    <RunAOTCompilation Condition=" '$(RunAOTCompilation)' == '' ">false</RunAOTCompilation>
-    <!-- Error and reset unsupported Mono-specific properties. -->
-    <_AndroidXA1044_RunAOTCompilation Condition=" '$(RunAOTCompilation)' == 'true' ">true</_AndroidXA1044_RunAOTCompilation>
+    <!-- Capture explicit Mono AOT settings before resetting unsupported enabled properties. -->
+    <_AndroidXA1044_RunAOTCompilationEnabled Condition=" '$(RunAOTCompilation)' == 'true' ">true</_AndroidXA1044_RunAOTCompilationEnabled>
+    <_AndroidXA1044_RunAOTCompilationDisabled Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(RunAOTCompilation)' == 'false' ">true</_AndroidXA1044_RunAOTCompilationDisabled>
     <_AndroidXA1044_EnableLLVM Condition=" '$(EnableLLVM)' == 'true' ">true</_AndroidXA1044_EnableLLVM>
-    <RunAOTCompilation Condition=" '$(_AndroidXA1044_RunAOTCompilation)' == 'true' ">false</RunAOTCompilation>
+    <RunAOTCompilation Condition=" '$(_AndroidXA1044_RunAOTCompilationEnabled)' == 'true' ">false</RunAOTCompilation>
     <EnableLLVM Condition=" '$(_AndroidXA1044_EnableLLVM)' == 'true' ">false</EnableLLVM>
-    <_AndroidXA1029 Condition=" '$(AotAssemblies)' != '' ">true</_AndroidXA1029>
-    <_AndroidXA1030 Condition=" '$(RunAOTCompilation)' == 'true' and '$(PublishTrimmed)' == 'false' ">true</_AndroidXA1030>
-    <AotAssemblies>$(RunAOTCompilation)</AotAssemblies>
-    <AndroidEnableProfiledAot Condition=" '$(AndroidEnableProfiledAot)' == '' and '$(RunAOTCompilation)' == 'true' ">true</AndroidEnableProfiledAot>
 
     <!--
       Runtime libraries feature switches defaults
@@ -153,8 +157,8 @@
     <!-- XA feature switches defaults -->
     <AndroidUseNegotiateAuthentication Condition="'$(AndroidUseNegotiateAuthentication)' == ''">false</AndroidUseNegotiateAuthentication>
 
-    <!-- profiler won't work without internet permission, we must thus force it -->
-    <AndroidNeedsInternetPermission Condition=" '$(AndroidEnableProfiler)' == 'true' ">True</AndroidNeedsInternetPermission>
+    <!-- TCP diagnostic ports require internet permission. -->
+    <AndroidNeedsInternetPermission Condition=" '$(_AndroidEnableDiagnostics)' == 'true' ">True</AndroidNeedsInternetPermission>
   </PropertyGroup>
   <!-- Trimmer switches that default to OFF in Release mode -->
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' and '$(Optimize)' == 'true' ">
@@ -163,8 +167,8 @@
     <StartupHookSupport Condition=" '$(StartupHookSupport)' == '' ">false</StartupHookSupport>
     <HttpActivityPropagationSupport Condition=" '$(HttpActivityPropagationSupport)' == '' ">false</HttpActivityPropagationSupport>
     <!-- Only set if *not* using $(EnableDiagnostics) -->
-    <MetricsSupport Condition=" '$(MetricsSupport)' == '' and '$(AndroidEnableProfiler)' != 'true' ">false</MetricsSupport>
-    <EventSourceSupport Condition=" '$(EventSourceSupport)' == '' and '$(AndroidEnableProfiler)' != 'true' ">false</EventSourceSupport>
+    <MetricsSupport Condition=" '$(MetricsSupport)' == '' and '$(_AndroidEnableDiagnostics)' != 'true' ">false</MetricsSupport>
+    <EventSourceSupport Condition=" '$(EventSourceSupport)' == '' and '$(_AndroidEnableDiagnostics)' != 'true' ">false</EventSourceSupport>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' and '$(GenerateApplicationManifest)' == 'true' ">
     <!-- Default to 1, if blank -->

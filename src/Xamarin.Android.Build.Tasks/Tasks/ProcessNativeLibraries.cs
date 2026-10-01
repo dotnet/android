@@ -15,8 +15,6 @@ namespace Xamarin.Android.Tasks
 	/// </summary>
 	public class ProcessNativeLibraries : AndroidTask
 	{
-		const string MonoComponentPrefix = "libmono-component-";
-
 		public override string TaskPrefix => "PRNL";
 
 		static readonly HashSet<string> DebugNativeLibraries = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
@@ -32,7 +30,6 @@ namespace Xamarin.Android.Tasks
 		/// Assumed to be .so files only
 		/// </summary>
 		public ITaskItem []? InputLibraries { get; set; }
-		public ITaskItem []? Components { get; set; }
 		public string []? ExcludedLibraries { get; set; }
 
 		public bool IncludeDebugSymbols { get; set; }
@@ -45,13 +42,6 @@ namespace Xamarin.Android.Tasks
 		{
 			if (InputLibraries == null || InputLibraries.Length == 0)
 				return true;
-
-			var wantedComponents = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-			if (Components != null && Components.Length > 0) {
-				foreach (ITaskItem item in Components) { ;
-					wantedComponents.Add ($"{MonoComponentPrefix}{item.ItemSpec}");
-				}
-			}
 
 			foreach (ITaskItem lib in KnownRuntimeNativeLibraries) {
 				RuntimeNativeLibraryNames.Add (Path.GetFileName (lib.ItemSpec));
@@ -100,10 +90,9 @@ namespace Xamarin.Android.Tasks
 						Log.LogDebugMessage ($"Excluding '{library.ItemSpec}' for release builds.");
 						continue;
 					}
-				} else if (fileName.StartsWith (MonoComponentPrefix, StringComparison.OrdinalIgnoreCase)) {
-					if (!wantedComponents.Contains (fileName)) {
-						continue;
-					}
+				} else if (fileName.StartsWith ("libmono-component-", StringComparison.OrdinalIgnoreCase)) {
+					Log.LogDebugMessage ($"Excluding obsolete Mono runtime component '{library.ItemSpec}'.");
+					continue;
 				}
 
 				if (!IgnoreLibraryWhenLinkingRuntime (library)) {

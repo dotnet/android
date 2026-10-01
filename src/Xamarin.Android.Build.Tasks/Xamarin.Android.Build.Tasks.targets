@@ -113,12 +113,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="ManifestOverlays\Timing.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
   <Target Name="_GenerateMonoAndroidEnums"
       BeforeTargets="CoreCompile"
       Inputs="..\Mono.Android\obj\$(Configuration)\android-$(AndroidLatestStableApiLevel)\mcw\api.xml"
@@ -206,8 +200,6 @@
   </PropertyGroup>
   <ItemGroup>
     <_MonoScript Include="illinkanalyzer" />
-    <_MonoScript Include="jit-times" />
-    <_MonoScript Include="aprofutil" />
     <_MonoScriptSource Include="@(_MonoScript->'$(_MonoScriptSourceDirectory)\%(Identity)')" />
     <_MonoScriptSource Include="mono.config" />
     <_MonoScriptDestination Include="@(_MonoScript->'$(_MonoScriptDestinationDirectory)\%(Identity)')" />
@@ -323,7 +315,6 @@
     <ItemGroup>
       <_SdkDirFiles Include="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\Sdk\**" />
       <_SdkTargetsDirFiles Include="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\targets\**" />
-      <_SdkTargetsDirFiles Include="$(XamarinAndroidSourcePath)src\profiled-aot\dotnet.aotprofile" />
     </ItemGroup>
     <Copy
         SourceFiles="@(_SdkDirFiles)"

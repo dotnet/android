@@ -27,7 +27,7 @@ namespace Xamarin.Android.Tools
 					dirs.Add (AndroidSdkPath);
 					dirs.AddRange (GetAllAvailableAndroidSdks ());
 					allAndroidSdks = dirs.Where (d => ValidateAndroidSdkLocation ("AllAndroidSdks", d))
-						.Select (d => d!)
+						.OfType<string> ()
 						.Distinct ()
 						.ToArray ();
 				}
@@ -241,7 +241,7 @@ namespace Xamarin.Android.Tools
 			get { return IsNdk64Bit ? NdkHostPlatform64Bit : NdkHostPlatform32Bit; }
 		}
 
-		IEnumerable<string> GetJavaSdkPaths ()
+		protected virtual IEnumerable<string> GetJavaSdkPaths ()
 		{
 			return JdkInfo.GetKnownSystemJdkInfos (Logger)
 				.Select (jdk => jdk.HomePath);

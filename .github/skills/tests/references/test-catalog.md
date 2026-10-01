@@ -21,7 +21,6 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | Test Area | Project | Command |
 |-----------|---------|---------|
 | **assembly store reader** | `.github/skills/read-assembly-store/tests/AssemblyStore.Tests/` | `dotnet test .github/skills/read-assembly-store/tests/AssemblyStore.Tests/AssemblyStore.Tests.csproj -v minimal` |
-| **trimmable type map** (unit) | `tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/` | `dotnet test tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests.csproj -v minimal` |
 | **modern Android build tasks** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal` |
 | **aidl** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj -v minimal` |
 | **source writer** | `external/Java.Interop/tests/Xamarin.SourceWriter-Tests/` | `dotnet test external/Java.Interop/tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -v minimal` |
@@ -39,12 +38,12 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 
 ---
 
-The NativeAOT object/MSBuild integration cases in the trimmable type map suite
-also require the NDK `llvm-readobj` and adjacent `llvm-objdump` and `clang` executables. Pass
+The `TypeMapProguardTargetsTests` NativeAOT cases in the modern build-task suite
+also require the NDK `llvm-readobj` and adjacent `llvm-objdump` and `clang`
+executables. Pass
 `-p:_NativeAotLlvmReadObjPath=/path/to/ndk/toolchains/llvm/prebuilt/<host>/bin/llvm-readobj`
-(with `.exe` on Windows) to execute those cases; without it, those cases are
-reported as skipped. The NativeFormat parser and other typemap unit tests do
-not require native tools.
+(with `.exe` on Windows) to execute them; without it, those cases are reported as
+skipped. Other target regression cases do not require native tools.
 
 ## Host-Side MSBuild Tests (full-build — requires local SDK)
 
@@ -56,8 +55,7 @@ Device: No
 |-----------|--------|---------------------|
 | **build** (general) | `--filter "FullyQualifiedName~BuildTest"` | `BuildTest`, `BuildTest2`, `BuildTest3` — core build pipeline tests |
 | **smoke** | `--filter "cat=SmokeTests"` | Quick subset of build, packaging, and asset pack tests |
-| **aot** | `--filter "cat=AOT"` | `AotTests` + AOT-related tests in `BuildTest`, `IncrementalBuildTest` |
-| **llvm** | `--filter "cat=LLVM"` | LLVM-specific AOT compilation tests |
+| **native aot** | `--filter "FullyQualifiedName~NativeAotBuildTests"` | NativeAOT build and packaging tests |
 | **bindings** | `--filter "FullyQualifiedName~BindingBuildTest"` | Java binding generation and build tests |
 | **packaging** | `--filter "FullyQualifiedName~PackagingTest"` | APK/AAB packaging, signing, zipalign |
 | **incremental build** | `--filter "FullyQualifiedName~IncrementalBuildTest"` | Incremental build correctness tests |
@@ -111,7 +109,6 @@ Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 | **localization** | `--filter "cat=Localization"` | Locale/culture device tests |
 | **timezone** | `--filter "cat=TimeZoneInfo"` | Time zone handling on device |
 | **wear** | `--filter "cat=WearOS"` | Wear OS device tests |
-| **aot profile** | `--filter "cat=ProfiledAOT"` | AOT profiling on device |
 | **export** | `--filter "FullyQualifiedName~MonoAndroidExportTest"` | `[Export]` attribute tests |
 | **bundletool** | `--filter "FullyQualifiedName~BundleToolTests"` | AAB bundle tool tests |
 | **uncaught exceptions** | `--filter "FullyQualifiedName~UncaughtExceptionTests"` | Unhandled exception behavior |
@@ -132,6 +129,7 @@ Device: **Yes**
 | Test Area | Project | Notes |
 |-----------|---------|-------|
 | **runtime** (all) | `tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj` | Core runtime tests |
+| **trimmable type map** | Same project, built with `-p:AndroidTypeMapImplementation=trimmable` | Java-driven activation, direct UCO callbacks, exports, manifest-only rooting, and typemap lookups (`TrimmableTypeMapRuntimeCoverageTests`, `TrimmableTypeMapDirectCallbackTests`, `TrimmableTypeMapExportTests`, `TrimmableTypeMapManifestTests`, `ExportTests`, `ConstructorActivationTests`, `JavaConvertTest`) |
 | **networking** | Same project — tests in `Xamarin.Android.Net/` and `System.Net/` | `AndroidMessageHandlerTests`, `AndroidMessageHandlerIntegrationTests` |
 | **java interop (on-device)** | Same project — tests in `Java.Interop/` | `JnienvTest`, `JavaListTest` |
 | **android app** | Same project — tests in `Android.App/` | `Application`, `Activity` tests |
@@ -147,8 +145,8 @@ Device: **Yes**
 
 The `Mono.Android.NET-Tests.csproj` dynamically excludes categories based on runtime:
 - **CoreCLR runtime**: Excludes `CoreCLRIgnore`, `NTLM`
-- **NativeAOT runtime**: Excludes `NativeAOTIgnore`, `SSL`, `NTLM`, `Export`, `NativeTypeMap`
-- **LLVM**: Excludes `LLVMIgnore`, `InetAccess`, `NetworkInterfaces`
+- **NativeAOT runtime**: Excludes `NativeAOTIgnore`, `SSL`, `NTLM`; excludes `Export` only when the trimmable typemap is off
+- **Trimmable typemap**: Excludes `NativeTypeMap`, `TrimmableTypeMapUnsupported`
 
 Other categories: `SSL`, `InetAccess`, `JavaList`, `RuntimeConfig`, `Intune`, `NTLM`
 
@@ -200,12 +198,30 @@ Run these tests with `dotnet test` from each test project directory listed above
 
 ---
 
-## Trimmable Type Map Tests (xUnit) — Mixed Tiers
+## Trimmable Type Map Coverage
 
-| Test Area | Tier | Assembly | Notes |
-|-----------|------|----------|-------|
-| **trimmable type map** (unit) | **Standalone** | `tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/` | Scanner + generator unit tests — `dotnet test` on `.csproj` |
-| **trimmable type map** (integration) | **Full-build** | `tests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests/` | End-to-end with Mono.Android + build tasks |
+The trimmable typemap is exercised by the on-device runtime tests above,
+`TrimmableTypeMapBuildTests` (host-side build integration), and
+`GenerateTrimmableTypeMapTests`, `TrimmableTypeMapIncrementalTests`,
+`TrimmableTypeMapManifestAliasTests`, `TrimmableTypeMapRidCallbackTests`, and
+`ExtractTypeMapKeysFromNativeAotObjectTests` (standalone build-task tests).
+The host tests cover incremental typemap invalidation, activity-alias rewriting,
+cross-RID callback metadata mismatches, and NativeAOT object extraction failures
+that cannot be exercised by a successful device run.
+The object-extraction tests use synthetic metadata, so they need no NDK tools.
+The direct callback fixture has its own assembly (`TrimmableTypeMapCallbacks`)
+because the UCO format marker is assembly-wide. The manifest-only Activity
+lives in the library assembly, which is not rooted wholesale by the test app.
+To run on-device tests with the trimmable typemap, pass the same property to
+both commands:
+
+```bash
+./dotnet-local.sh build -t:Install -c Release tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj -p:AndroidTypeMapImplementation=trimmable
+(
+  cd tests/Mono.Android-Tests/Mono.Android-Tests
+  ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release -p:AndroidTypeMapImplementation=trimmable --report-trx --results-directory ../../../bin/TestRelease/TestResults
+)
+```
 
 ---
 
