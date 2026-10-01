@@ -52,6 +52,8 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 			  <application>
 			    <provider android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_1" />
+			    <provider android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_2/../../../../../escaped" />
+			    <provider android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_3\..\..\..\..\..\escaped" />
 			  </application>
 			</manifest>
 			""").Save (manifestFile);
@@ -83,6 +85,10 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 					?? throw new InvalidOperationException ("FileWrites item has no identity"))).ToArray ();
 			CollectionAssert.Contains (files, sourceFile);
 			CollectionAssert.Contains (files, Path.Combine (sourceDirectory, "NativeAotRuntimeProvider_1.java"));
+			Assert.AreEqual (3, files.Length, "Only the bootstrap files and legitimate provider belong in FileWrites.");
+			foreach (string file in files) {
+				Assert.AreEqual (Path.GetFullPath (sourceDirectory), Path.GetDirectoryName (file));
+			}
 		}
 
 		var second = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:_FindJavaStubFiles", "-v:quiet", "-nr:false");

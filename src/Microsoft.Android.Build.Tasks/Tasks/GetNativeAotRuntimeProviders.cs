@@ -31,10 +31,24 @@ public sealed class GetNativeAotRuntimeProviders : AndroidTask
 		AdditionalProviderSources = XDocument.Load (reader).Descendants ("provider")
 			.Select (provider => provider.Attribute (android + "name")?.Value)
 			.OfType<string> ()
-			.Where (name => name.StartsWith (ProviderPrefix, StringComparison.Ordinal))
+			.Where (IsGeneratedRuntimeProvider)
 			.Select (name => name.Substring (PackagePrefix.Length))
 			.Distinct (StringComparer.Ordinal)
 			.ToArray ();
 		return !Log.HasLoggedErrors;
+	}
+
+	static bool IsGeneratedRuntimeProvider (string name)
+	{
+		if (name.Length <= ProviderPrefix.Length || !name.StartsWith (ProviderPrefix, StringComparison.Ordinal)) {
+			return false;
+		}
+		// Both manifest generators append a decimal process counter, never a user-provided path.
+		for (int i = ProviderPrefix.Length; i < name.Length; i++) {
+			if (name [i] is < '0' or > '9') {
+				return false;
+			}
+		}
+		return true;
 	}
 }
