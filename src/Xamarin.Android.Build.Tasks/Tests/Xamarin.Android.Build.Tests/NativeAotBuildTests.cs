@@ -74,10 +74,10 @@ namespace Xamarin.Android.Build.Tests
 			string [] responseFiles = Directory.GetFiles (intermediateDirectory, "ld.*.rsp", SearchOption.AllDirectories);
 			Assert.IsNotEmpty (responseFiles, "Native linker response files should be generated.");
 			foreach (string responseFile in responseFiles) {
-				string response = File.ReadAllText (responseFile);
+				string response = File.ReadAllText (responseFile).Replace ('\\', '/');
 				StringAssert.Contains ("libnaot-android.release-static-release.a", response, responseFile);
-				StringAssert.Contains (Path.Combine (toolchain, "sysroot", "usr", "lib"), response, "CRT and system libraries must come from the NDK.");
-				StringAssert.Contains (Path.Combine (toolchain, "lib", "clang"), response, "Compiler runtime must come from the NDK.");
+				StringAssert.Contains (Path.Combine (toolchain, "sysroot", "usr", "lib").Replace ('\\', '/'), response, "CRT and system libraries must come from the NDK.");
+				StringAssert.Contains (Path.Combine (toolchain, "lib", "clang").Replace ('\\', '/'), response, "Compiler runtime must come from the NDK.");
 				string projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
 				string [] linkedObjects = File.ReadAllLines (responseFile)
 					.Select (line => line.Trim ('"'))
