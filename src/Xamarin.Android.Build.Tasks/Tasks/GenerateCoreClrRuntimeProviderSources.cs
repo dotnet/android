@@ -16,7 +16,7 @@ public sealed class GenerateCoreClrRuntimeProviderSources : AndroidTask
 
 	public override bool RunTask ()
 	{
-		GenerateAdditionalProviderSources.WriteAdditionalRuntimeProviderSources (OutputDirectory, isCoreCLR: true, AdditionalProviderSources);
+		RuntimeProviderSourceGenerator.WriteAdditionalRuntimeProviderSources (OutputDirectory, isCoreCLR: true, AdditionalProviderSources);
 		return !Log.HasLoggedErrors;
 	}
 }

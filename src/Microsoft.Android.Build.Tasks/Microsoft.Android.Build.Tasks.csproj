@@ -52,6 +52,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Resources\JavaInteropRuntime.java;..\Xamarin.Android.Build.Tasks\Resources\NativeAotEnvironmentVars.java;..\Xamarin.Android.Build.Tasks\Resources\NativeAotRuntimeProvider.java">
+      <LogicalName>%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\NullableExtensions.cs" Link="Utilities\NullableExtensions.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MetadataExtensions.cs" Link="Utilities\MetadataExtensions.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\DummyCustomAttributeProvider.cs" Link="Utilities\DummyCustomAttributeProvider.cs" />

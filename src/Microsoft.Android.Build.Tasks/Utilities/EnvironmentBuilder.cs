@@ -9,14 +9,16 @@ class EnvironmentBuilder
 {
 	readonly Dictionary<string, string> environmentVariables;
 	readonly Dictionary<string, string> systemProperties;
+	readonly bool escapeValues;
 
 	public IDictionary<string, string> EnvironmentVariables => environmentVariables;
 	public IDictionary<string, string> SystemProperties => systemProperties;
 
-	public EnvironmentBuilder ()
+	public EnvironmentBuilder (bool escapeValues = true)
 	{
 		environmentVariables = new Dictionary<string, string> (StringComparer.Ordinal);
 		systemProperties = new Dictionary<string, string> (StringComparer.Ordinal);
+		this.escapeValues = escapeValues;
 	}
 
 	public void Read (ITaskItem[]? envItems)
@@ -30,10 +32,19 @@ class EnvironmentBuilder
 
 	public void AddEnvironmentVariable (string name, string value)
 	{
+		if (name.Length == 0) {
+			throw new ArgumentException ("Environment variable name must not be empty", nameof (name));
+		}
+		if (!escapeValues && (name.IndexOf ('\0') >= 0 || value.IndexOf ('\0') >= 0)) {
+			throw new ArgumentException ("Environment variables and system properties must not contain NUL characters");
+		}
+
+		string key = escapeValues ? ValidAssemblerString (name) : name;
+		string contents = escapeValues ? ValidAssemblerString (value) : value;
 		if (Char.IsUpper(name [0]) || !Char.IsLetter(name [0])) {
-			environmentVariables [ValidAssemblerString (name)] = ValidAssemblerString (value);
+			environmentVariables [key] = contents;
 		} else {
-			systemProperties [ValidAssemblerString (name)] = ValidAssemblerString (value);
+			systemProperties [key] = contents;
 		}
 	}
 
@@ -45,7 +56,7 @@ class EnvironmentBuilder
 		}
 
 		string[] nv = line.Split (new char[]{'='}, 2);
-		AddEnvironmentVariable (nv[0].Trim (), nv.Length < 2 ? String.Empty : nv[1].Trim ());
+		AddEnvironmentVariable (nv[0].Trim (), nv.Length < 2 ? "" : nv[1].Trim ());
 	}
 
 	static string ValidAssemblerString (string s) => s.Replace ("\\", "\\\\").Replace ("\"", "\\\"");
