@@ -52,7 +52,9 @@ namespace Xamarin.Android.Build.Tests
 					stream.Position = 0;
 					using var document = JsonDocument.Parse (stream);
 					var options = document.RootElement.GetProperty ("options");
-					Assert.AreEqual (obfuscationMode == "private-members", options.GetProperty ("isOptimizationsEnabled").GetBoolean ());
+					Assert.AreEqual (
+						runtime == AndroidRuntime.CoreCLR || obfuscationMode == "private-members",
+						options.GetProperty ("isOptimizationsEnabled").GetBoolean ());
 				}
 
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
