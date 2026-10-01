@@ -35,6 +35,7 @@
     <Compile Remove="Resources\ApacheHttpClient.cs" />
     <Compile Remove="Expected\**" />
     <Compile Include="..\..\..\Microsoft.Android.Build.Tasks\Tests\Microsoft.Android.Build.Tasks.Tests\NativeToolTestHelper.cs" Link="Utilities\NativeToolTestHelper.cs" />
+    <Compile Include="..\..\..\Microsoft.Android.Build.Tasks\Tests\Microsoft.Android.Build.Tasks.Tests\NativeToolTestHelperTests.cs" Link="NativeToolTestHelperTests.cs" />
     <Compile Include="..\..\..\..\.github\skills\read-assembly-store\src\AssemblyStore\*.cs" />
     <Compile Include="..\..\..\..\.github\skills\read-assembly-store\src\AssemblyStore\V1\*.cs" />
     <Content Include="Expected\GenerateDesignerFileExpected.cs">

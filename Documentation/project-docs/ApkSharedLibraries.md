@@ -123,6 +123,9 @@ The writer's ELF inspection tests use the Android NDK's `llvm-readobj`, `llvm-nm
 `llvm-strip`, and `llvm-objcopy`, with no additional managed ELF parser dependency.
 These tests require `$(AndroidNdkDirectory)` to point at an installed NDK and are
 categorized as `RequiresAndroidNdk`; the stream/input-validation tests need no native tools.
+The .NET 11 test runner uses `Process.RunAndCaptureText` to drain stdout and stderr
+together, with one timeout covering output capture and process exit. The shared
+.NET 10 packaging tests use cancellation-aware concurrent reads with the same bound.
 
 The wrapper is a little-endian `ET_DYN` image with a single read-only `PT_LOAD` segment,
 a read-only `PT_DYNAMIC` segment, `PT_PHDR`, and a non-executable `PT_GNU_STACK`.

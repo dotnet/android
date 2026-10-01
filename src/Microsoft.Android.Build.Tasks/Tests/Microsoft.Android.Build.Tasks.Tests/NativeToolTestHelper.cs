@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace Xamarin.Android.Build.Tests;
@@ -29,29 +31,50 @@ static class NativeToolTestHelper
 
 	public static string Run (string name, params string [] arguments)
 	{
-		string executable = GetToolPath (name);
-		using var process = new Process {
-			StartInfo = new ProcessStartInfo (executable) {
-				UseShellExecute = false,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-			},
+		var startInfo = new ProcessStartInfo (GetToolPath (name)) {
+			UseShellExecute = false,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
 		};
 		foreach (string argument in arguments) {
-			process.StartInfo.ArgumentList.Add (argument);
+			startInfo.ArgumentList.Add (argument);
 		}
+		var result = Capture (startInfo, TimeSpan.FromSeconds (30));
+		Assert.AreEqual (0, result.ExitCode, $"{name} failed for {string.Join (" ", arguments)}:\n{result.StandardError}\n{result.StandardOutput}");
+		return result.StandardOutput;
+	}
+
+	internal static (int ExitCode, string StandardOutput, string StandardError) Capture (ProcessStartInfo startInfo, TimeSpan timeout)
+	{
+#if NET11_0_OR_GREATER
+		ProcessTextOutput result;
+		try {
+			result = Process.RunAndCaptureText (startInfo, timeout);
+		} catch (TimeoutException ex) {
+			throw new TimeoutException ($"Native tool timed out: {startInfo.FileName}", ex);
+		}
+		if (result.ExitStatus.Canceled) {
+			throw new TimeoutException ($"Native tool timed out: {startInfo.FileName}");
+		}
+		return (result.ExitStatus.ExitCode, result.StandardOutput, result.StandardError);
+#else // !NET11_0_OR_GREATER
+		// This helper is also compiled into the net10.0 packaging tests.
+		using var cancellation = new CancellationTokenSource (timeout);
+		using var process = new Process { StartInfo = startInfo };
 		process.Start ();
-		var output = process.StandardOutput.ReadToEndAsync ();
-		var error = process.StandardError.ReadToEndAsync ();
-		if (!process.WaitForExit (30000)) {
-			process.Kill (entireProcessTree: true);
-			process.WaitForExit ();
-			Assert.Fail ($"Native tool timed out: {executable}");
+		var output = process.StandardOutput.ReadToEndAsync (cancellation.Token);
+		var error = process.StandardError.ReadToEndAsync (cancellation.Token);
+		try {
+			Task.WhenAll (output, error, process.WaitForExitAsync (cancellation.Token))
+				.WaitAsync (cancellation.Token).GetAwaiter ().GetResult ();
+		} catch (OperationCanceledException ex) {
+			if (!process.HasExited) {
+				process.Kill (entireProcessTree: true);
+			}
+			throw new TimeoutException ($"Native tool timed out: {startInfo.FileName}", ex);
 		}
-		string standardOutput = output.GetAwaiter ().GetResult ();
-		string standardError = error.GetAwaiter ().GetResult ();
-		Assert.AreEqual (0, process.ExitCode, $"{name} failed for {string.Join (" ", arguments)}:\n{standardError}\n{standardOutput}");
-		return standardOutput;
+		return (process.ExitCode, output.GetAwaiter ().GetResult (), error.GetAwaiter ().GetResult ());
+#endif // NET11_0_OR_GREATER
 	}
 
 	public static JsonDocument ReadElf (string library) => JsonDocument.Parse (Run (
