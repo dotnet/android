@@ -58,7 +58,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 	public override void ActivatePeer (JniObjectReference reference, Type type, ConstructorInfo cinfo, object?[]? argumentValues)
 	{
-		throw new PlatformNotSupportedException ("Activating Java peers through the value manager is not supported when TrimmableTypeMap is enabled.");
+		throw new PlatformNotSupportedException ("Activating Java peers through the value manager is not supported.");
 	}
 
 	protected override void ConstructPeerCore (
@@ -176,7 +176,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 			throw new NotSupportedException (
 				$"No generated {nameof (JavaPeerProxy)} was found for Java type '{javaType}' " +
-				$"with targetType '{targetName}' while {nameof (RuntimeFeature.TrimmableTypeMap)} is enabled. " +
+				$"with targetType '{targetName}'. " +
 				$"This indicates a missing trimmable typemap proxy or association and should be fixed in the generator.");
 		}
 
