@@ -48,8 +48,8 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetDefaultTargetDevice ();
 
-			// A new Java-callable type changes the managed type map and Java sources. Its new
-			// class must be compiled into the DEX and installed with a new signed package.
+			// A new Java-callable type changes the managed type map and Java sources.
+			// Its new class must be compiled into the DEX and installed in a new package.
 			var typeMapTargets = new [] {
 				"_GenerateTrimmableTypeMap",
 				"_GenerateJavaStubs",
@@ -68,7 +68,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Output.IsApkInstalled, "The .apk should have been installed by the initial build.");
 			AssertActivityStarts ("MainActivity", "initial-launch.log");
 			var typeMapAssembly = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "_UnnamedProject.TypeMap.dll"));
-			FileAssert.Exists (typeMapAssembly, "Initial build should generate the managed application type map.");
+			FileAssert.Exists (typeMapAssembly, "The managed application type map should be generated.");
 			byte [] originalTypeMap = File.ReadAllBytes (typeMapAssembly);
 
 			// 2. A C#-only change that adds a new Java-callable type, so the type map *must* be updated.
@@ -92,17 +92,16 @@ namespace Xamarin.Android.Build.Tests
 			foreach (var target in typeMapTargets) {
 				builder.Output.AssertTargetIsNotSkipped (target, occurrence: 2);
 			}
-			FileAssert.Exists (typeMapAssembly, "New activity should regenerate the managed application type map.");
 			byte [] updatedTypeMap = File.ReadAllBytes (typeMapAssembly);
-			Assert.IsFalse (originalTypeMap.SequenceEqual (updatedTypeMap), "Adding a Java-callable activity should change the managed type map.");
-			string javaSourceDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "java"));
+			CollectionAssert.AreNotEqual (originalTypeMap, updatedTypeMap, "Adding a Java-callable activity should change the managed type map.");
+			var javaSourceDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "java"));
 			Assert.AreEqual (1, Directory.GetFiles (javaSourceDirectory, "SecondActivity.java", SearchOption.AllDirectories).Length,
-				"Adding a Java-callable activity should generate its Java source.");
+				"The new activity should have a generated Java source.");
 			Assert.IsTrue (builder.Output.IsApkInstalled, "The .apk should have been reinstalled after adding a new activity.");
 			AssertActivityStarts ("SecondActivity", "new-activity-launch.log");
 
-			// 3. A C#-only change that leaves the Java-callable types alone keeps the managed
-			// type map and DEX unchanged; only the updated assembly is fast deployed.
+			// 3. A C#-only change that leaves the Java-callable types alone. The type map is unchanged,
+			// so the .apk is neither rebuilt nor reinstalled and only the assembly is fast deployed.
 			proj.MainActivity = proj.MainActivity.Replace ("//${SECOND_ACTIVITY_ONCREATE}", $"Console.WriteLine (\"{logcatMessage}\");");
 			proj.Touch ("MainActivity.cs");
 			Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true, saveProject: false), "Incremental install should have succeeded.");

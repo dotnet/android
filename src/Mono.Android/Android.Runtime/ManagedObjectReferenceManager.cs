@@ -59,7 +59,10 @@ namespace Android.Runtime {
 			UnixFileMode.GroupWrite |
 			UnixFileMode.OtherRead;
 
-		static ManagedObjectReferenceManager? current;
+		[ThreadStatic]
+		static bool gcBridgeReferenceOperation;
+		[ThreadStatic]
+		static string? gcBridgeReferenceStackTrace;
 
 		readonly object grefLock = new object ();
 		readonly object lrefLock = new object ();
@@ -77,19 +80,28 @@ namespace Android.Runtime {
 		public override bool LogGlobalReferenceMessages => GlobalReferenceLoggingEnabled;
 		public override bool LogLocalReferenceMessages => LocalReferenceLoggingEnabled;
 
+		internal static void BeginGCBridgeReferenceOperation (string? stackTrace)
+		{
+			gcBridgeReferenceOperation = true;
+			if (RuntimeFeature.ObjectReferenceLogging) {
+				gcBridgeReferenceStackTrace = stackTrace;
+			}
+		}
+
+		internal static void EndGCBridgeReferenceOperation ()
+		{
+			gcBridgeReferenceOperation = false;
+			if (RuntimeFeature.ObjectReferenceLogging) {
+				gcBridgeReferenceStackTrace = null;
+			}
+		}
+
 		static bool GlobalReferenceLoggingEnabled => RuntimeFeature.ObjectReferenceLogging && Logger.LogGlobalRef;
 		static bool LocalReferenceLoggingEnabled => RuntimeFeature.ObjectReferenceLogging && Logger.LogLocalRef;
 
 		public ManagedObjectReferenceManager ()
 			: this (JNIEnvInit.ReferenceLoggingConfiguration)
 		{
-			Volatile.Write (ref current, this);
-			unsafe {
-				RuntimeNativeMethods._monodroid_register_reference_logging_callbacks (
-					&LogReferenceFromNative,
-					&LogMessageFromNative,
-					GlobalReferenceLoggingEnabled ? (byte) 1 : (byte) 0);
-			}
 		}
 
 		ManagedObjectReferenceManager (ReferenceLoggingConfiguration configuration)
@@ -283,6 +295,9 @@ namespace Android.Runtime {
 		public override JniObjectReference CreateGlobalReference (JniObjectReference value)
 		{
 			var reference = base.CreateGlobalReference (value);
+			if (!reference.IsValid) {
+				return reference;
+			}
 			int count;
 			if (RuntimeFeature.ObjectReferenceLogging) {
 				if (Logger.LogGlobalRef) {
@@ -294,7 +309,7 @@ namespace Android.Runtime {
 						GetObjectRefType (reference.Type),
 						GetThreadName (),
 						Environment.CurrentManagedThreadId,
-						new StackTrace (true).ToString ());
+						gcBridgeReferenceStackTrace ?? new StackTrace (true).ToString ());
 				} else {
 					count = UpdateReferenceCount (ReferenceLogEvent.GlobalCreated, out _);
 				}
@@ -302,7 +317,7 @@ namespace Android.Runtime {
 				count = UpdateReferenceCount (ReferenceLogEvent.GlobalCreated, out _);
 			}
 
-			if (count >= JNIEnvInit.gref_gc_threshold) {
+			if (!gcBridgeReferenceOperation && count >= JNIEnvInit.gref_gc_threshold) {
 				Logger.Log (LogLevel.Warn, "monodroid-gc", count + " outstanding GREFs. Performing a full GC!");
 				GC.WaitForPendingFinalizers ();
 				GC.Collect ();
@@ -327,7 +342,7 @@ namespace Android.Runtime {
 						(byte) 'I',
 						GetThreadName (),
 						Environment.CurrentManagedThreadId,
-						new StackTrace (true).ToString ());
+						gcBridgeReferenceStackTrace ?? new StackTrace (true).ToString ());
 				} else {
 					UpdateReferenceCount (ReferenceLogEvent.GlobalDeleted, out _);
 				}
@@ -340,6 +355,9 @@ namespace Android.Runtime {
 		public override JniObjectReference CreateWeakGlobalReference (JniObjectReference value)
 		{
 			var reference = base.CreateWeakGlobalReference (value);
+			if (!reference.IsValid) {
+				return reference;
+			}
 			if (RuntimeFeature.ObjectReferenceLogging) {
 				if (Logger.LogGlobalRef) {
 					LogReference (
@@ -350,7 +368,7 @@ namespace Android.Runtime {
 						GetObjectRefType (reference.Type),
 						GetThreadName (),
 						Environment.CurrentManagedThreadId,
-						new StackTrace (true).ToString ());
+						gcBridgeReferenceStackTrace ?? new StackTrace (true).ToString ());
 				} else {
 					UpdateReferenceCount (ReferenceLogEvent.WeakGlobalCreated, out _);
 				}
@@ -376,7 +394,7 @@ namespace Android.Runtime {
 						(byte) 'I',
 						GetThreadName (),
 						Environment.CurrentManagedThreadId,
-						new StackTrace (true).ToString ());
+						gcBridgeReferenceStackTrace ?? new StackTrace (true).ToString ());
 				} else {
 					UpdateReferenceCount (ReferenceLogEvent.WeakGlobalDeleted, out _);
 				}
@@ -500,6 +518,9 @@ namespace Android.Runtime {
 
 		static string GetThreadName ()
 		{
+			if (gcBridgeReferenceOperation) {
+				return "finalizer";
+			}
 			return Thread.CurrentThread.Name ?? "<null>";
 		}
 
@@ -534,65 +555,6 @@ namespace Android.Runtime {
 					writer.Flush ();
 				} catch (Exception e) when (e is IOException || e is ObjectDisposedException || e is UnauthorizedAccessException || e is SecurityException) {
 					Logger.Log (LogLevel.Error, logTag, $"Could not write reference log: {e.Message}");
-				}
-			}
-		}
-
-		[UnmanagedCallersOnly]
-		internal static void LogReferenceFromNative (
-				int kind,
-				IntPtr currentHandle,
-				byte currentType,
-				IntPtr newHandle,
-				byte newType,
-				IntPtr threadName,
-				int threadId,
-				IntPtr stackTrace)
-		{
-			var manager = Volatile.Read (ref current);
-			if (manager == null) {
-				RuntimeNativeMethods.monodroid_log (LogLevel.Error, LogCategories.Default, "Native GC bridge reference event arrived before the managed reference manager was initialized.");
-				return;
-			}
-
-			try {
-				var eventKind = (ReferenceLogEvent) kind;
-				if (RuntimeFeature.ObjectReferenceLogging) {
-					if (Logger.LogGlobalRef) {
-						manager.LogReference (
-							eventKind,
-							currentHandle,
-							currentType,
-							newHandle,
-							newType,
-							Marshal.PtrToStringUTF8 (threadName),
-							threadId,
-							Marshal.PtrToStringUTF8 (stackTrace));
-						return;
-					}
-				}
-				manager.UpdateReferenceCount (eventKind, out _);
-			} catch (Exception e) {
-				RuntimeNativeMethods.monodroid_log (LogLevel.Error, LogCategories.Default, $"Managed native reference callback failed: {e}");
-			}
-		}
-
-		[UnmanagedCallersOnly]
-		internal static void LogMessageFromNative (IntPtr message)
-		{
-			var manager = Volatile.Read (ref current);
-			if (manager == null) {
-				RuntimeNativeMethods.monodroid_log (LogLevel.Error, LogCategories.Default, "Native GC bridge diagnostic arrived before the managed reference manager was initialized.");
-				return;
-			}
-
-			if (RuntimeFeature.ObjectReferenceLogging) {
-				if (Logger.LogGlobalRef) {
-					try {
-						manager.WriteGlobalReferenceLine (Marshal.PtrToStringUTF8 (message) ?? "");
-					} catch (Exception e) {
-						RuntimeNativeMethods.monodroid_log (LogLevel.Error, LogCategories.Default, $"Managed native reference message callback failed: {e}");
-					}
 				}
 			}
 		}

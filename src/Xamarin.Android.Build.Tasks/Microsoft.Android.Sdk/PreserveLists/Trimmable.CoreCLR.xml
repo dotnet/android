@@ -5,7 +5,7 @@
     <type fullname="Android.Runtime.JNIEnvInit">
       <method name="Initialize" />
     </type>
-    <!-- DataContractJsonSerializer invokes this callback through reflection. -->
+    <!-- DataContractJsonSerializer discovers this callback through reflection. -->
     <type fullname="Java.Lang.Object">
       <method name="SetHandleOnDeserialized" />
     </type>

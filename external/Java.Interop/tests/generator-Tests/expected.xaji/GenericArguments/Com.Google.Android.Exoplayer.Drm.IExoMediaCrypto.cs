@@ -16,29 +16,13 @@ namespace Com.Google.Android.Exoplayer.Drm {
 
 	[global::Android.Runtime.Register ("com/google/android/exoplayer/drm/ExoMediaCrypto", DoNotGenerateAcw=true)]
 	internal partial class IExoMediaCryptoInvoker : global::Java.Lang.Object, IExoMediaCrypto {
-		static IntPtr java_class_ref {
-			get { return _members_com_google_android_exoplayer_drm_ExoMediaCrypto.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members_com_google_android_exoplayer_drm_ExoMediaCrypto; }
 		}
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members_com_google_android_exoplayer_drm_ExoMediaCrypto.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members_com_google_android_exoplayer_drm_ExoMediaCrypto.ManagedPeerType; }
-		}
-
-		static readonly JniPeerMembers _members_com_google_android_exoplayer_drm_ExoMediaCrypto = new XAPeerMembers ("com/google/android/exoplayer/drm/ExoMediaCrypto", typeof (IExoMediaCryptoInvoker));
+		static readonly JniPeerMembers _members_com_google_android_exoplayer_drm_ExoMediaCrypto = new JniPeerMembers ("com/google/android/exoplayer/drm/ExoMediaCrypto", typeof (IExoMediaCryptoInvoker));
 
 		public IExoMediaCryptoInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{

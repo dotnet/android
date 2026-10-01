@@ -137,11 +137,10 @@ struct AssemblyStoreSingleAssemblyRuntimeData final
 };
 
 // Keep in strict sync with:
-//   src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfigCLR.cs
+//   src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfig.cs
 //   src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Utilities/EnvironmentHelper.cs
 struct ApplicationConfig
 {
-	bool uses_assembly_preload;
 	bool marshal_methods_enabled;
 	bool ignore_split_configs;
 	uint32_t number_of_runtime_properties;

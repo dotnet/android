@@ -23,18 +23,6 @@ namespace Xamarin.Android.Tasks
 			UsesClang = true;
 		}
 
-		public override bool ValidateNdkPlatform (Action<string> logMessage, Action<string, string> logError, AndroidTargetArch arch, bool enableLLVM)
-		{
-			// Check that we have a compatible NDK version for the targeted ABIs.
-			if (Version.Main.Major < 19) {
-				logMessage (
-					"The detected Android NDK version is incompatible with this version of .NET for Android, " +
-					"please upgrade to NDK r19 or newer.");
-			}
-
-			return true;
-		}
-
 		public override int GetMinimumApiLevelFor (AndroidTargetArch arch, AndroidRuntime runtime)
 		{
 			return MonoAndroidHelper.GetMinimumApiLevel (arch, runtime);

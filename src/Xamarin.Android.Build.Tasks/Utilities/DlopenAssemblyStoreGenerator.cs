@@ -10,16 +10,11 @@ using Xamarin.Android.Tools;
 namespace Xamarin.Android.Tasks;
 
 /// <summary>
-/// Produces the CoreCLR assembly-store wrapper shared library, whose payload lives in a
+/// Produces the assembly-store wrapper shared library, whose payload lives in a
 /// *loadable* ELF section (SHF_ALLOC, covered by a PT_LOAD segment) and is
 /// pointed at by an exported dynamic symbol (<c>_assembly_store</c>).
 ///
-/// This differs from <see cref="DSOWrapperGenerator"/> (used by MonoVM), which injects the
-/// payload with <c>llvm-objcopy --add-section</c> into a *non-loadable* section
-/// and requires the runtime to locate the store inside the APK (ZIP central
-/// directory parsing), mmap it and walk the ELF section headers by hand.
-///
-/// With this layout the CoreCLR runtime simply
+/// With this layout the runtime simply
 /// <c>dlopen("libassembly-store.so")</c> + <c>dlsym("_assembly_store")</c>
 /// and lets the dynamic linker locate + map the payload.
 ///
@@ -30,6 +25,7 @@ namespace Xamarin.Android.Tasks;
 static class DlopenAssemblyStoreGenerator
 {
 	public const string PayloadStartSymbol = "_assembly_store";
+	const string WrappedSubDirectory = "wrapped-assembly-store";
 
 	// Section name that holds the payload. Must match the name `read-assembly-store`
 	// (Utils.FindELFPayloadSectionOffsetAndSize) looks for and the one `DSOWrapperGenerator` uses.
@@ -52,11 +48,11 @@ static class DlopenAssemblyStoreGenerator
 	/// Wraps <paramref name="payloadFilePath"/> (the raw assembly-store blob) into a loadable-symbol
 	/// shared library and returns the path to the produced .so.
 	/// </summary>
-	public static string WrapIt (TaskLoggingHelper log, DSOWrapperGenerator.Config config, AndroidTargetArch targetArch, string payloadFilePath, string outputFileName)
+	public static string WrapIt (TaskLoggingHelper log, string androidBinUtilsDirectory, string baseOutputDirectory, AndroidTargetArch targetArch, string payloadFilePath, string outputFileName)
 	{
 		var toolInfo = GetArchToolInfo (targetArch);
 
-		string outputDir = Path.Combine (config.BaseOutputDirectory, MonoAndroidHelper.ArchToRid (targetArch), DSOWrapperGenerator.WrappedDlopenSubDirectory);
+		string outputDir = GetArchOutputPath (baseOutputDirectory, targetArch);
 		Directory.CreateDirectory (outputDir);
 
 		string outputFile = Path.Combine (outputDir, outputFileName);
@@ -66,8 +62,8 @@ static class DlopenAssemblyStoreGenerator
 		log.LogDebugMessage ($"[{targetArch}] Wrapping '{payloadFilePath}' into loadable-symbol shared library '{outputFile}'");
 
 		// The `.incbin` uses an absolute path so we don't depend on the assembler's working directory.
-		// The section is named `payload` (no leading dot) to match the name the MonoVM
-		// `DSOWrapperGenerator` uses and that `read-assembly-store` looks for.
+		// The section is named `payload` (no leading dot) to match the assembly-store
+		// inspection tools.
 		string incbinPath = payloadFilePath.Replace ("\\", "\\\\").Replace ("\"", "\\\"");
 		string asm = $"""
 				.section {PayloadSectionName}, "a"
@@ -79,7 +75,7 @@ static class DlopenAssemblyStoreGenerator
 			""";
 		File.WriteAllText (asmFile, asm);
 
-		string llvmMc = Path.Combine (config.AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (config.AndroidBinUtilsDirectory, "llvm-mc"));
+		string llvmMc = Path.Combine (androidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (androidBinUtilsDirectory, "llvm-mc"));
 		List<string> mcArgs = [
 			"--filetype=obj",
 			$"-triple={toolInfo.Triple}",
@@ -93,7 +89,7 @@ static class DlopenAssemblyStoreGenerator
 			return outputFile;
 		}
 
-		string ld = Path.Combine (config.AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (config.AndroidBinUtilsDirectory, "ld"));
+		string ld = Path.Combine (androidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (androidBinUtilsDirectory, "ld"));
 		List<string> ldArgs = [
 			"--shared",
 			$"-soname {MonoAndroidHelper.QuoteFileNameArgument (outputFileName)}",
@@ -112,5 +108,20 @@ static class DlopenAssemblyStoreGenerator
 		}
 
 		return outputFile;
+	}
+
+	public static IEnumerable<string> GetDirectoriesToCleanUp (string baseOutputDirectory, IEnumerable<string> supportedAbis)
+	{
+		foreach (string abi in supportedAbis) {
+			string outputDir = GetArchOutputPath (baseOutputDirectory, MonoAndroidHelper.AbiToTargetArch (abi));
+			if (Directory.Exists (outputDir)) {
+				yield return outputDir;
+			}
+		}
+	}
+
+	static string GetArchOutputPath (string baseOutputDirectory, AndroidTargetArch targetArch)
+	{
+		return Path.Combine (baseOutputDirectory, MonoAndroidHelper.ArchToRid (targetArch), WrappedSubDirectory);
 	}
 }

@@ -25,6 +25,14 @@ namespace MonoDroid.Generation
 				sw.WriteLine ();
 
 				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
+					// Only the experimental format is marked: the absence of the attribute means
+					// JavaPeerCallbackFormatAttribute.ConnectorDelegates, so existing bindings and
+					// existing consumers are unaffected.
+					if (opt.UseUnmanagedCallersOnlyCallbacks) {
+						sw.WriteLine ("[assembly:global::Java.Interop.JavaPeerCallbackFormat (global::Java.Interop.JavaPeerCallbackFormatAttribute.UnmanagedCallersOnlyCallbacks)]");
+						sw.WriteLine ();
+					}
+
 					foreach (var p in mappings) {
 						sw.WriteLine ($"[assembly:global::Android.Runtime.NamespaceMapping (Java = \"{p.Key}\", Managed=\"{p.Value}\")]");
 					}

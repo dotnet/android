@@ -17,29 +17,13 @@ namespace Android.Text {
 
 	[global::Android.Runtime.Register ("android/text/Spanned", DoNotGenerateAcw=true)]
 	internal partial class ISpannedInvoker : global::Java.Lang.Object, ISpanned {
-		static IntPtr java_class_ref {
-			get { return _members_android_text_Spanned.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members_android_text_Spanned; }
 		}
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members_android_text_Spanned.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members_android_text_Spanned.ManagedPeerType; }
-		}
-
-		static readonly JniPeerMembers _members_android_text_Spanned = new XAPeerMembers ("android/text/Spanned", typeof (ISpannedInvoker));
+		static readonly JniPeerMembers _members_android_text_Spanned = new JniPeerMembers ("android/text/Spanned", typeof (ISpannedInvoker));
 
 		public ISpannedInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
