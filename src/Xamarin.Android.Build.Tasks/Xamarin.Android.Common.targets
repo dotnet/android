@@ -1799,6 +1799,9 @@ because xbuild doesn't support framework reference assemblies.
       $(_AndroidBuildPropertiesCache);
     </_CreateBaseApkInputs>
   </PropertyGroup>
+  <!-- AAPT2 must relink if an older build or cleanup removed its keep rules. -->
+  <Delete Files="$(_PackagedResources)"
+      Condition=" '$(AndroidApplication)' == 'true' And '$(DesignTimeBuild)' != 'true' And '$(_Aapt2ProguardRules)' != '' And Exists('$(_PackagedResources)') And !Exists('$(_Aapt2ProguardRules)') " />
 </Target>
 
 <Target Name="_PrepareCreateBaseApk"
