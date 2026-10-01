@@ -142,12 +142,12 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			var device = AndroidHelper.ParseTarget (AdbTarget, LogMessage, LogCodedError, logErrors: true, engine4: BuildEngine4);
+			var device = AndroidHelper.ParseTarget (AdbTarget, LogMessage, LogCodedError, logErrors: true, engine4: BuildEngine4, adbToolPath: AdbToolPath, adbToolExe: AdbToolExe);
 			if (device == null) {
 				PrintDiagnostics ();
 				return false;
 			}
-			DeviceId = device.ID ?? "";
+			DeviceId = device.Serial;
 			LogMessage ($"Found device: {DeviceId}");
 
 			if (string.IsNullOrEmpty (PrimaryCpuAbi) && !EmbedAssembliesIntoApk) {
@@ -435,21 +435,22 @@ namespace Xamarin.Android.Tasks
 		{
 			var preTrimTargets = new HashSet<string> (StringComparer.Ordinal);
 			foreach (var file in fastDevFiles) {
-				if (file.GetMetadata ("_AndroidPreTrimTypeMapCandidate") == "true") {
-					if (!string.IsNullOrEmpty (file.GetMetadata ("TargetPath"))) {
-						preTrimTargets.Add (GetAdbPushTargetPath (file));
-					}
+				if (file.GetMetadata ("_AndroidPreTrimTypeMapCandidate") == "true" &&
+				    !string.IsNullOrEmpty (file.GetMetadata ("TargetPath"))) {
+					preTrimTargets.Add (GetAdbPushTargetPath (file));
 				}
 			}
 			if (preTrimTargets.Count == 0) {
 				return fastDevFiles;
 			}
 
+			// A pre-trim DLL must not overwrite the linked/R2R image compiled into the application.
 			var finalTargets = new HashSet<string> (StringComparer.Ordinal);
 			foreach (var file in fastDevFiles) {
 				if (file.GetMetadata ("_AndroidPreTrimTypeMapCandidate") != "true" &&
 				    !string.IsNullOrEmpty (file.GetMetadata ("TargetPath")) &&
-				    preTrimTargets.Contains (GetAdbPushTargetPath (file)) && File.Exists (file.ItemSpec)) {
+				    preTrimTargets.Contains (GetAdbPushTargetPath (file)) &&
+				    File.Exists (GetFullPath (file.ItemSpec))) {
 					finalTargets.Add (GetAdbPushTargetPath (file));
 				}
 			}
@@ -756,6 +757,8 @@ namespace Xamarin.Android.Tasks
 		async Task<AdbCommandResult> RunAdbCommand (string [] arguments, Dictionary<string, string> environmentVariables)
 		{
 			string adb = ResolveAdbPath ();
+			if (!string.IsNullOrEmpty (Path.GetDirectoryName (adb)))
+				adb = Path.GetFullPath (adb);
 			var adbArguments = new List<string> ();
 			if (!string.IsNullOrEmpty (DeviceId) && !string.Equals (DeviceId, "any", StringComparison.OrdinalIgnoreCase)) {
 				adbArguments.Add ("-s");
@@ -764,6 +767,7 @@ namespace Xamarin.Android.Tasks
 			adbArguments.AddRange (arguments);
 
 			var psi = ProcessUtils.CreateProcessStartInfo (adb, adbArguments.ToArray ());
+			psi.WorkingDirectory = Path.GetTempPath ();
 			psi.WindowStyle = ProcessWindowStyle.Hidden;
 
 			// psi.Arguments holds the exact, correctly quoted command line whenever ProcessUtils
@@ -860,8 +864,20 @@ namespace Xamarin.Android.Tasks
 
 		string ResolveAdbPath ()
 		{
-			var exe = string.IsNullOrEmpty (AdbToolExe) ? "adb" : AdbToolExe;
-			return string.IsNullOrEmpty (AdbToolPath) ? exe : Path.Combine (AdbToolPath, exe);
+			var exe = string.IsNullOrEmpty (AdbToolExe) ? (OS.IsWindows ? "adb.exe" : "adb") : AdbToolExe;
+			if (!string.IsNullOrEmpty (AdbToolPath)) {
+				return Path.Combine (AdbToolPath, exe);
+			}
+			try {
+				var sdk = new AndroidSdkInfo ((_, message) => LogDiagnostic (message));
+				string sdkAdb = Path.Combine (sdk.AndroidSdkPath, "platform-tools", exe);
+				if (File.Exists (sdkAdb)) {
+					return sdkAdb;
+				}
+			} catch (Exception ex) {
+				LogDiagnostic ($"Could not locate adb in the Android SDK: {ex.Message}");
+			}
+			return exe;
 		}
 
 		string GetRemoteAdbPushStagingPath ()

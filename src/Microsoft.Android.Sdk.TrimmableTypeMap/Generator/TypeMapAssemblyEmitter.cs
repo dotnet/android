@@ -151,6 +151,8 @@ sealed class TypeMapAssemblyEmitter
 	// Cached open TypeMapAttribute`1 ref shared across closed TypeSpecs.
 	TypeReferenceHandle _typeMapAttrOpenRef;
 
+	readonly Dictionary<string, MemberReferenceHandle> _callbackMemberRefs = new (StringComparer.Ordinal);
+
 	/// <summary>
 	/// Creates a new emitter.
 	/// </summary>
@@ -234,7 +236,7 @@ sealed class TypeMapAssemblyEmitter
 			validRegistrations.Select (registration => registration.JniMethodName));
 
 		// Track wrapper targets → handles for RegisterNatives.
-		var wrapperHandles = new Dictionary<UcoWrapperTargetData, MethodDefinitionHandle> ();
+		var wrapperHandles = new Dictionary<UcoWrapperTargetData, EntityHandle> ();
 
 		foreach (var proxy in OrderProxiesForWrapperTargets (model.ProxyTypes)) {
 			EmitProxyType (proxy, wrapperHandles);
@@ -273,7 +275,7 @@ sealed class TypeMapAssemblyEmitter
 				continue;
 			}
 			foreach (var registration in proxy.NativeRegistrations) {
-				if (wrapperTargets.Contains (registration.WrapperTarget)) {
+				if (registration.DirectCallback is not null || wrapperTargets.Contains (registration.WrapperTarget)) {
 					registrations.Add (registration);
 				}
 			}
@@ -672,7 +674,7 @@ sealed class TypeMapAssemblyEmitter
 		return _exportMethodDispatchEmitter;
 	}
 
-	void EmitProxyType (JavaPeerProxyData proxy, Dictionary<UcoWrapperTargetData, MethodDefinitionHandle> wrapperHandles)
+	void EmitProxyType (JavaPeerProxyData proxy, Dictionary<UcoWrapperTargetData, EntityHandle> wrapperHandles)
 	{
 		var metadata = _pe.Metadata;
 		var targetTypeRef = _pe.ResolveTypeRef (proxy.TargetType);
@@ -736,6 +738,15 @@ sealed class TypeMapAssemblyEmitter
 		foreach (var uco in proxy.UcoConstructors) {
 			var handle = EmitUcoConstructor (uco, proxy);
 			wrapperHandles [UcoWrapperTargetData.From (proxy, uco.WrapperName)] = handle;
+		}
+
+		// Callbacks which are already [UnmanagedCallersOnly] in their own assembly have no wrapper:
+		// RegisterNatives ldftn's them directly. Emitting a forwarder would be illegal, because a
+		// UCO method cannot be called from managed code.
+		foreach (var reg in proxy.NativeRegistrations) {
+			if (reg.DirectCallback is not null) {
+				wrapperHandles [reg.WrapperTarget] = CreateCallbackMemberRef (reg.DirectCallback);
+			}
 		}
 
 		// RegisterNatives
@@ -1081,30 +1092,36 @@ sealed class TypeMapAssemblyEmitter
 		return _pe.Metadata.AddMemberReference (declaringTypeRef, _pe.Metadata.GetOrAddString (".ctor"), _pe.Metadata.GetOrAddBlob (blob));
 	}
 
-	MethodDefinitionHandle EmitUcoMethod (UcoMethodData uco, JavaPeerProxyData proxy)
+	/// <summary>
+	/// Builds a MemberRef for the real MCW <c>n_*</c> callback, mirroring its signature. JNI boolean
+	/// and char are ambiguous (bool/sbyte, char/ushort) across generator versions, so when we could
+	/// read the real <c>n_*</c> method's signature (NuGet binding implementation assemblies, e.g.
+	/// AndroidX) we use it exactly. When we couldn't — framework callbacks, because the generator
+	/// scans the compile-time *reference* assemblies (Microsoft.Android.Ref) which strip the private
+	/// static <c>n_*</c> methods — we fall back to the blittable encoding (sbyte/ushort). That is
+	/// correct for those callbacks because framework bindings are always produced by the current
+	/// (post-#1296) generator.
+	/// </summary>
+	MemberReferenceHandle CreateCallbackMemberRef (UcoMethodData uco)
 	{
+		var cacheKey = string.Join ("\u001f", new [] {
+			GetTypeRefCacheKey (uco.CallbackType),
+			uco.CallbackMethodName,
+			uco.JniSignature,
+			uco.CallbackReturnTypeName ?? "",
+			uco.CallbackParameterTypeNames is null
+				? "\u0000"
+				: string.Join ("\u001e", uco.CallbackParameterTypeNames),
+		});
+		if (_callbackMemberRefs.TryGetValue (cacheKey, out var existing)) {
+			return existing;
+		}
+
 		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
 		var returnKind = JniSignatureHelper.ParseReturnType (uco.JniSignature);
 		int paramCount = 2 + jniParams.Count;
 		bool isVoid = returnKind == JniParamKind.Void;
 
-		// UCO wrapper signature: uses JNI ABI types (byte for boolean)
-		Action<BlobEncoder> encodeSig = sig => sig.MethodSignature ().Parameters (paramCount,
-			rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrType (rt.Type (), returnKind); },
-			p => {
-				p.AddParameter ().Type ().IntPtr ();
-				p.AddParameter ().Type ().IntPtr ();
-				for (int j = 0; j < jniParams.Count; j++)
-					JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
-			});
-
-		// Callback member reference: mirror the real MCW n_* method's signature. JNI boolean and char
-		// are ambiguous (bool/sbyte, char/ushort) across generator versions, so when we could read the
-		// real n_* method's signature (NuGet binding implementation assemblies, e.g. AndroidX) we use it
-		// exactly. When we couldn't — framework callbacks, because the generator scans the compile-time
-		// *reference* assemblies (Microsoft.Android.Ref) which strip the private static n_* methods — we
-		// fall back to the blittable encoding (sbyte/ushort). That is correct for those callbacks because
-		// framework bindings are always produced by the current (post-#1296) generator.
 		var capturedParameterTypeNames = uco.CallbackParameterTypeNames;
 		var capturedReturnTypeName = uco.CallbackReturnTypeName;
 		bool hasCapturedCallbackSignature = capturedParameterTypeNames is not null &&
@@ -1134,6 +1151,37 @@ sealed class TypeMapAssemblyEmitter
 
 		var callbackTypeHandle = _pe.ResolveTypeRef (uco.CallbackType);
 		var callbackRef = _pe.AddMemberRef (callbackTypeHandle, uco.CallbackMethodName, encodeCallbackSig);
+		_callbackMemberRefs.Add (cacheKey, callbackRef);
+		return callbackRef;
+	}
+
+	static string GetTypeRefCacheKey (TypeRefData typeRef)
+	{
+		var typeKind = typeRef.EncodeAsValueType ? "valuetype" : "class";
+		if (typeRef.GenericArguments.Count == 0) {
+			return $"{typeKind}:{typeRef.AssemblyName}:{typeRef.ManagedTypeName}";
+		}
+		return $"{typeKind}:{typeRef.AssemblyName}:{typeRef.ManagedTypeName}<{string.Join (",", typeRef.GenericArguments.Select (GetTypeRefCacheKey))}>";
+	}
+
+	MethodDefinitionHandle EmitUcoMethod (UcoMethodData uco, JavaPeerProxyData proxy)
+	{
+		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
+		var returnKind = JniSignatureHelper.ParseReturnType (uco.JniSignature);
+		int paramCount = 2 + jniParams.Count;
+		bool isVoid = returnKind == JniParamKind.Void;
+
+		// UCO wrapper signature: uses JNI ABI types (byte for boolean)
+		Action<BlobEncoder> encodeSig = sig => sig.MethodSignature ().Parameters (paramCount,
+			rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrType (rt.Type (), returnKind); },
+			p => {
+				p.AddParameter ().Type ().IntPtr ();
+				p.AddParameter ().Type ().IntPtr ();
+				for (int j = 0; j < jniParams.Count; j++)
+					JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
+			});
+
+		var callbackRef = CreateCallbackMemberRef (uco);
 
 		var handle = _pe.EmitBody (uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
@@ -1657,11 +1705,11 @@ sealed class TypeMapAssemblyEmitter
 	}
 
 	void EmitRegisterNatives (JavaPeerProxyData proxy,
-		Dictionary<UcoWrapperTargetData, MethodDefinitionHandle> wrapperHandles)
+		Dictionary<UcoWrapperTargetData, EntityHandle> wrapperHandles)
 	{
 		// Filter to only registrations that have corresponding wrapper methods
 		var registrations = proxy.NativeRegistrations;
-		var validRegs = new List<(NativeRegistrationData Reg, MethodDefinitionHandle Wrapper)> (registrations.Count);
+		var validRegs = new List<(NativeRegistrationData Reg, EntityHandle Wrapper)> (registrations.Count);
 		foreach (var reg in registrations) {
 			if (wrapperHandles.TryGetValue (reg.WrapperTarget, out var wrapperHandle)) {
 				validRegs.Add ((reg, wrapperHandle));

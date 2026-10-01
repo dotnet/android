@@ -38,9 +38,8 @@
       the desktop-JVM static initializer (net.dot.jni.ManagedPeer.registerNativeMembers /
       ManagedPeer.construct) that is only registered by the Java.Interop test
       JVM and throws UnsatisfiedLinkError on Android. Both files declare
-      `public class net.dot.jni.test.GetThis`, so include only the Android variant.
-      Android apps use the trimmable type map by default, but this referenced
-      library does not inherit the app's AndroidTypeMapImplementation property.
+      `public class net.dot.jni.test.GetThis`, so always select the Android
+      variant, even before the default type map property has been evaluated.
       The trimmable variant lives in this
       project (not the submodule) and in a parallel directory because javac
       requires the file name match the public class name.

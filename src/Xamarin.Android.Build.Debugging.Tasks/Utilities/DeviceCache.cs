@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Build.Utilities;
@@ -9,6 +10,8 @@ namespace Xamarin.Android.Tasks
 	/// </summary>
 	public static class DeviceCache
 	{
+		static readonly char [] CommaSeparator = [','];
+
 		/// <summary>
 		/// Updates or adds a device entry in the cache document.
 		/// </summary>
@@ -17,8 +20,9 @@ namespace Xamarin.Android.Tasks
 		/// <param name="resultingAbi">The device's ABI.</param>
 		/// <param name="sdkVersion">The SDK version.</param>
 		/// <param name="longOutput">The long output string from adb.</param>
+		/// <param name="supportedAbis">The device's supported ABIs in preference order.</param>
 		/// <returns>The updated or newly created XDocument.</returns>
-		public static XDocument Update (XDocument doc, string deviceId, string resultingAbi, int sdkVersion, string longOutput)
+		public static XDocument Update (XDocument doc, string deviceId, string resultingAbi, int sdkVersion, string longOutput, string [] supportedAbis)
 		{
 			XElement devices;
 			if (doc == null) {
@@ -44,6 +48,7 @@ namespace Xamarin.Android.Tasks
 			deviceElement.SetElementValue ("ResultingAbi", resultingAbi);
 			deviceElement.SetElementValue ("SdkVersion", sdkVersion);
 			deviceElement.SetElementValue ("LongOutput", longOutput);
+			deviceElement.SetElementValue ("SupportedAbis", string.Join (",", supportedAbis));
 
 			return doc;
 		}
@@ -56,12 +61,14 @@ namespace Xamarin.Android.Tasks
 		/// <param name="longOutput">The expected long output to validate the cache entry.</param>
 		/// <param name="resultingAbi">The cached ABI if found and valid.</param>
 		/// <param name="sdkVersion">The cached SDK version if found and valid.</param>
+		/// <param name="supportedAbis">The cached supported ABIs if found and valid.</param>
 		/// <param name="log">Optional logger for debug messages.</param>
 		/// <returns>True if a valid cache entry was found, false otherwise.</returns>
-		public static bool TryGet (XDocument doc, string deviceId, string longOutput, out string resultingAbi, out int sdkVersion, TaskLoggingHelper log = null)
+		public static bool TryGet (XDocument doc, string deviceId, string longOutput, out string resultingAbi, out int sdkVersion, out string [] supportedAbis, TaskLoggingHelper log = null)
 		{
 			resultingAbi = null;
 			sdkVersion = 0;
+			supportedAbis = [];
 
 			if (doc == null)
 				return false;
@@ -70,6 +77,10 @@ namespace Xamarin.Android.Tasks
 				.FirstOrDefault (a => a.Attribute ("id")?.Value == deviceId);
 
 			if (element == null)
+				return false;
+
+			var supportedAbisElement = element.Element ("SupportedAbis");
+			if (supportedAbisElement == null)
 				return false;
 
 			string cachedLongOutput = element.Element ("LongOutput")?.Value ?? string.Empty;
@@ -86,7 +97,8 @@ namespace Xamarin.Android.Tasks
 			if (!int.TryParse (element.Element ("SdkVersion")?.Value, out sdkVersion))
 				return false;
 
-			return !string.IsNullOrEmpty (resultingAbi);
+			supportedAbis = supportedAbisElement.Value.Split (CommaSeparator, StringSplitOptions.RemoveEmptyEntries);
+			return !string.IsNullOrEmpty (resultingAbi) || Array.Exists (supportedAbis, abi => !string.IsNullOrWhiteSpace (abi));
 		}
 	}
 }

@@ -2,6 +2,8 @@ using System;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 
 using NUnit.Framework;
 
@@ -103,6 +105,12 @@ namespace Xamarin.Android.JcwGenTests {
 		public void JavaSideActivation ()
 		{
 			using (var c = Java.Lang.Class.FromType (typeof (ConstructorTest))) {
+				// `CallMethodFromCtor`'s peer type and JCW registration each take a one-time
+				// GREF on first instantiation. Construct and release one instance first so
+				// that only the per-instance references are measured below; a real per-instance
+				// leak still shows up.
+				var warmup = Com.Xamarin.Android.CallMethodFromCtor.NewInstance (c);
+				warmup.Dispose ();
 				AssertNoSustainedGlobalReferenceGrowth (() => AssertJavaSideActivation (c));
 			}
 		}
@@ -235,6 +243,99 @@ namespace Xamarin.Android.JcwGenTests {
 				d2.Method ();
 				Assert.IsTrue (((CallNonvirtualDerived) d2).MethodInvoked);
 				Assert.IsFalse (((CallNonvirtualBase) d2).MethodInvoked);
+			}
+		}
+
+		[Test]
+		public void LegacyVirtualMethodBinding ()
+		{
+			using (var b = new LegacyThresholdBinding.LegacyThresholdBase ()) {
+				b.Method ();
+				Assert.IsTrue (b.MethodInvoked);
+			}
+			using (var d = new LegacyThresholdBinding.LegacyThresholdDerived ()) {
+				d.Method ();
+				Assert.IsFalse (d.MethodInvoked);
+				Assert.IsTrue (d.DerivedMethodInvoked);
+			}
+			using (var d = new ManagedLegacyThresholdDerived ()) {
+				d.Method ();
+				Assert.IsFalse (d.MethodInvoked);
+				Assert.IsTrue (d.DerivedMethodInvoked);
+			}
+		}
+
+		[Test]
+		public void LegacyCustomThresholdTargetsBaseClass ()
+		{
+			using (var d = new LegacyCustomThresholdDerived ()) {
+				d.Method ();
+				Assert.IsTrue (d.MethodInvoked);
+				Assert.IsFalse (d.DerivedMethodInvoked);
+			}
+		}
+
+		[Test]
+		public void LegacyThrowableVirtualMethodBinding ()
+		{
+			using (var b = new LegacyThresholdBinding.LegacyThresholdThrowable ()) {
+				b.Method ();
+				Assert.IsTrue (b.MethodInvoked);
+			}
+			using (var d = new LegacyThresholdBinding.LegacyThresholdThrowableDerived ()) {
+				d.Method ();
+				Assert.IsFalse (d.MethodInvoked);
+				Assert.IsTrue (d.DerivedMethodInvoked);
+			}
+			using (var d = new ManagedLegacyThresholdThrowableDerived ()) {
+				d.Method ();
+				Assert.IsFalse (d.MethodInvoked);
+				Assert.IsTrue (d.DerivedMethodInvoked);
+			}
+		}
+
+		[Test]
+		public void PrecompiledConsumerReferencesRemovedConcreteThresholdGetters ()
+		{
+			using var stream = typeof (BindingTests).Assembly.GetManifestResourceStream ("Xamarin.Android.JcwGenTests.LegacyThresholdConsumer.dll")
+				?? throw new InvalidOperationException ("The precompiled threshold consumer fixture is missing.");
+			using var assembly = new PEReader (stream);
+			var metadata = assembly.GetMetadataReader ();
+			var getterNames = new HashSet<string> ();
+
+			foreach (var handle in metadata.MemberReferences) {
+				var member = metadata.GetMemberReference (handle);
+				if (member.Parent.Kind != HandleKind.TypeReference)
+					continue;
+
+				var owner = metadata.GetTypeReference ((TypeReferenceHandle) member.Parent);
+				if (metadata.GetString (owner.Namespace) == "Android.App" && metadata.GetString (owner.Name) == "Activity")
+					getterNames.Add (metadata.GetString (member.Name));
+			}
+
+			Assert.That (getterNames, Is.SupersetOf (new [] { "get_ThresholdType", "get_ThresholdClass" }));
+			const BindingFlags declaredInstanceGetters = BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic;
+			Assert.IsNull (typeof (global::Android.App.Activity).GetMethod ("get_ThresholdType", declaredInstanceGetters));
+			Assert.IsNull (typeof (global::Android.App.Activity).GetMethod ("get_ThresholdClass", declaredInstanceGetters));
+		}
+
+		// A binding generated *after* the threshold overrides were removed, deriving from a
+		// binding generated before. The derived type inherits the base's `ThresholdType`, so
+		// honoring it would dispatch nonvirtually to the Java base and skip `ModernThresholdDerived.method()`.
+		[Test]
+		public void ModernDerivedFromLegacyBinding ()
+		{
+			using (var d = new ModernThresholdDerived ()) {
+				d.Method ();
+				Assert.IsFalse (d.MethodInvoked);
+				Assert.IsFalse (d.DerivedMethodInvoked);
+				Assert.IsTrue (d.ModernMethodInvoked);
+			}
+			using (var d = new ManagedModernThresholdDerived ()) {
+				d.Method ();
+				Assert.IsFalse (d.MethodInvoked);
+				Assert.IsFalse (d.DerivedMethodInvoked);
+				Assert.IsTrue (d.ModernMethodInvoked);
 			}
 		}
 
@@ -425,9 +526,8 @@ namespace Xamarin.Android.JcwGenTests {
 		{
 			DefaultConstructorInvoked = true;
 
-			// Ensure that CallMethodFromCtor.class_ref is initialized
-			var ignore  = ThresholdClass;
-			ignore      = ignore;
+			// Ensure that CallMethodFromCtor's JNI peer type is initialized.
+			_ = JniPeerMembers.JniPeerType.PeerReference.Handle;
 		}
 
 		public bool DefaultConstructorInvoked;
@@ -440,6 +540,12 @@ namespace Xamarin.Android.JcwGenTests {
 	}
 
 	public class CallNonvirtualDerived2 : CallNonvirtualDerived {
+	}
+
+	public class ManagedLegacyThresholdDerived : LegacyThresholdBinding.LegacyThresholdDerived {
+	}
+
+	public class ManagedLegacyThresholdThrowableDerived : LegacyThresholdBinding.LegacyThresholdThrowableDerived {
 	}
 
 	public class Default : Java.Lang.Object {

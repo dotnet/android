@@ -114,8 +114,7 @@ namespace xamarin::android {
 				 */
 				char value[Constants::PROPERTY_VALUE_BUFFER_LEN];
 				if (log_categories == 0 &&
-				    monodroid_get_system_property (Constants::DEBUG_DOTNET_PROFILE_PROPERTY.data (), value, sizeof (value)) == nullptr &&
-				    monodroid_get_system_property (Constants::LEGACY_DEBUG_MONO_PROFILE_PROPERTY.data (), value, sizeof (value)) == nullptr) [[likely]] {
+				    monodroid_get_system_property (Constants::DEBUG_DOTNET_PROFILE_PROPERTY.data (), value, sizeof (value)) == nullptr) [[likely]] {
 					return;
 				}
 			}

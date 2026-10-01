@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 
 using Microsoft.Android.Build.Tasks;
-using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using Xamarin.Android.Tasks.LLVMIR;
@@ -73,14 +72,11 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 
 	readonly AndroidTargetArch targetArch;
 	readonly List<PinvokeScanner.PinvokeEntryInfo> pinvokeInfos;
-	readonly ITaskItem[] monoComponents;
-
-	public PreservePinvokesNativeAssemblyGenerator (TaskLoggingHelper log, AndroidTargetArch targetArch, List<PinvokeScanner.PinvokeEntryInfo> pinvokeInfos, ITaskItem[] monoComponents)
+	public PreservePinvokesNativeAssemblyGenerator (TaskLoggingHelper log, AndroidTargetArch targetArch, List<PinvokeScanner.PinvokeEntryInfo> pinvokeInfos)
 		: base (log)
 	{
 		this.targetArch = targetArch;
 		this.pinvokeInfos = pinvokeInfos ?? throw new ArgumentNullException (nameof (pinvokeInfos));
-		this.monoComponents = monoComponents;
 	}
 
 	protected override void Construct (LlvmIrModule module)
@@ -96,7 +92,7 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 		var componentNames = new HashSet<string> (StringComparer.Ordinal);
 		var componentLoadHandlers = new Dictionary<string, string> (StringComparer.Ordinal);
 		var componentPreservedSymbols = new Dictionary<string, HashSet<LlvmIrGlobalVariableReference>> (StringComparer.Ordinal);
-		var nativeComponents = new NativeRuntimeComponents (monoComponents);
+		var nativeComponents = new NativeRuntimeComponents ();
 		foreach (NativeRuntimeComponents.Archive archiveItem in nativeComponents.KnownArchives) {
 			if (!archiveItem.Include) {
 				continue;

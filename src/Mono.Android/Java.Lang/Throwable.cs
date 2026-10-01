@@ -66,7 +66,7 @@ namespace Java.Lang {
 		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		protected virtual IntPtr ThresholdClass {
-			get { return class_ref; }
+			get { return _members.GetPeerTypeHandle (); }
 		}
 
 		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
@@ -80,6 +80,7 @@ namespace Java.Lang {
 			return ThresholdClass;
 		}
 
+		// Used only to preserve virtual dispatch for legacy bindings.
 		internal System.Type GetThresholdType ()
 		{
 			return ThresholdType;

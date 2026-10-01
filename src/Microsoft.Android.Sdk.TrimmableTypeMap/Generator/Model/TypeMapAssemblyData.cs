@@ -302,6 +302,13 @@ sealed record UcoMethodData
 	/// True when this wrapper performs the managed direct-dispatch path.
 	/// </summary>
 	public bool UsesExportMethodDispatch => ExportMethodDispatch != null;
+
+	/// <summary>
+	/// True when the callback is already an <c>[UnmanagedCallersOnly]</c> method in its own
+	/// assembly. No wrapper is emitted for such a callback: RegisterNatives takes its address
+	/// directly through a MemberRef, because managed code must never call it.
+	/// </summary>
+	public bool IsDirectUnmanagedCallersOnlyCallback { get; init; }
 }
 
 sealed record UcoWrapperTargetData
@@ -440,6 +447,13 @@ sealed record NativeRegistrationData
 	/// same base callback.
 	/// </summary>
 	public required UcoWrapperTargetData WrapperTarget { get; init; }
+
+	/// <summary>
+	/// When set, RegisterNatives binds this external <c>[UnmanagedCallersOnly]</c> callback
+	/// directly and no wrapper is emitted for it. <see cref="WrapperTarget" /> is then only a
+	/// lookup key.
+	/// </summary>
+	public UcoMethodData? DirectCallback { get; init; }
 }
 
 /// <summary>

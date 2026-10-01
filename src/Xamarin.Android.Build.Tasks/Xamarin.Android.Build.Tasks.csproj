@@ -47,7 +47,6 @@
     <!-- Include only the linker sources required for the build tasks (LinkAssembliesNoShrink and PostTrimmingPipeline) -->
     <!-- These include: AddKeepAlivesStep, AddKeepAlivesHelper, CheckForObsoletePreserveAttributeStep, StripEmbeddedLibrariesStep, PostTrimmingAddKeepAlivesStep, FixAbstractMethodsStep, FixLegacyResourceDesignerStep, LinkDesignerBase -->
     <Compile Remove="Linker\**" />
-    <Compile Include="Linker\MonoDroid.Tuner\FindJavaObjectsStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\AddKeepAlivesStep.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\AddKeepAlivesHelper.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\CheckForObsoletePreserveAttributeStep.cs" />
@@ -98,11 +97,11 @@
     <Compile Include="..\Mono.Android\\Android.Content\GrantUriPermissionAttribute.cs">
       <Link>Mono.Android\GrantUriPermissionAttribute.cs</Link>
     </Compile>
-    <Compile Include="..\Mono.Android\Android.Runtime\IntDefinitionAttribute.cs">
-      <Link>Mono.Android\IntDefinitionAttribute.cs</Link>
-    </Compile>
     <Compile Include="..\Mono.Android\Android.Runtime\BoundExceptionType.cs">
       <Link>Mono.Android\BoundExceptionType.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\Android.Runtime\IntDefinitionAttribute.cs">
+      <Link>Mono.Android\IntDefinitionAttribute.cs</Link>
     </Compile>
     <Compile Include="..\..\external\Java.Interop\src\utils\StringRocks.cs">
       <Link>Utilities\StringRocks.cs</Link>

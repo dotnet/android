@@ -111,6 +111,8 @@ namespace Xamarin.Android.Tools.Tests
 				return;
 			}
 
+			Assert.That (versions.Select (v => v.MajorVersion), Does.Contain (21), "Should contain JDK 21");
+
 			// Verify structure of returned info
 			foreach (var v in versions) {
 				Assert.Greater (v.MajorVersion, 0, "MajorVersion should be positive");
@@ -118,27 +120,6 @@ namespace Xamarin.Android.Tools.Tests
 				Assert.IsNotEmpty (v.DownloadUrl, "DownloadUrl should not be empty");
 				Assert.That (v.DownloadUrl, Does.Contain ("aka.ms/download-jdk"), "DownloadUrl should use Microsoft OpenJDK");
 			}
-		}
-
-		[Test]
-		public async Task DiscoverAsync_ContainsExpectedMajorVersions ()
-		{
-			IReadOnlyList<JdkVersionInfo> versions;
-			try {
-				versions = await installer.DiscoverAsync ();
-			}
-			catch (Exception ex) when (ex is System.Net.Http.HttpRequestException || ex is TaskCanceledException) {
-				Assert.Ignore ($"Network unavailable: {ex.Message}");
-				return;
-			}
-
-			if (versions.Count == 0) {
-				Assert.Ignore ("No versions returned.");
-				return;
-			}
-
-			var majorVersions = versions.Select (v => v.MajorVersion).Distinct ().ToList ();
-			Assert.That (majorVersions, Does.Contain (21), "Should contain JDK 21");
 		}
 
 		[Test]

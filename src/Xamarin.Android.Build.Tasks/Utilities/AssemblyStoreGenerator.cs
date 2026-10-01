@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tasks;
 //  [INDEX_SIZE]         uint; index size in bytes
 //
 // INDEX (variable size, HEADER.ENTRY_COUNT*2 entries, for assembly names with and without the extension)
-//  [NAME_HASH]          uint CRC32 for CoreCLR; uint/ulong xxhash for MonoVM depending on target bitness
+//  [NAME_HASH]          uint CRC32
 //  [DESCRIPTOR_INDEX]   uint; index into in-store assembly descriptor array
 //  [IGNORE]             byte; if set to anything other than 0, the assembly is to be ignored when loading
 //
@@ -53,10 +53,8 @@ partial class AssemblyStoreGenerator
 	const uint ASSEMBLY_STORE_MAGIC = 0x41424158; // 'XABA', little-endian, must match the BUNDLED_ASSEMBLIES_BLOB_MAGIC native constant
 
 	// Bit 31 is set for 64-bit platforms, cleared for the 32-bit ones
-	const uint ASSEMBLY_STORE_FORMAT_VERSION_MONOVM_64BIT = 0x80000003; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
-	const uint ASSEMBLY_STORE_FORMAT_VERSION_MONOVM_32BIT = 0x00000003;
-	const uint ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_64BIT = 0x80000003; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
-	const uint ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_32BIT = 0x00000003;
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_64BIT = 0x80000003; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_32BIT = 0x00000003;
 
 	const uint ASSEMBLY_STORE_ABI_AARCH64 = 0x00010000;
 	const uint ASSEMBLY_STORE_ABI_ARM = 0x00020000;
@@ -65,12 +63,10 @@ partial class AssemblyStoreGenerator
 
 	readonly TaskLoggingHelper log;
 	readonly Dictionary<AndroidTargetArch, List<AssemblyStoreAssemblyInfo>> assemblies;
-	readonly AndroidRuntime targetRuntime;
 
-	public AssemblyStoreGenerator (TaskLoggingHelper log, AndroidRuntime targetRuntime)
+	public AssemblyStoreGenerator (TaskLoggingHelper log)
 	{
 		this.log = log;
-		this.targetRuntime = targetRuntime;
 		assemblies = new Dictionary<AndroidTargetArch, List<AssemblyStoreAssemblyInfo>> ();
 	}
 
@@ -114,9 +110,6 @@ partial class AssemblyStoreGenerator
 		string storePath = Path.Combine (outputDir, "assembly-store.so");
 		var index = new List<AssemblyStoreIndexEntry> ();
 		var descriptors = new List<AssemblyStoreEntryDescriptor> ();
-		bool useCrc32NameHashes = targetRuntime == AndroidRuntime.CoreCLR;
-		bool use64BitNameHashes = is64Bit && !useCrc32NameHashes;
-		uint indexEntrySize = use64BitNameHashes ? AssemblyStoreIndexEntry.NativeSize64 : AssemblyStoreIndexEntry.NativeSize32;
 		ulong namesSize = 0;
 
 		foreach (AssemblyStoreAssemblyInfo info in infos) {
@@ -124,7 +117,7 @@ partial class AssemblyStoreGenerator
 			namesSize += sizeof (uint);
 		}
 
-		ulong assemblyDataStart = (infoCount * indexEntrySize * 2) + (AssemblyStoreEntryDescriptor.NativeSize * infoCount) + AssemblyStoreHeader.NativeSize + namesSize;
+		ulong assemblyDataStart = (infoCount * AssemblyStoreIndexEntry.NativeSize * 2) + (AssemblyStoreEntryDescriptor.NativeSize * infoCount) + AssemblyStoreHeader.NativeSize + namesSize;
 		// We'll start writing to the stream after we seek to the position just after the header, index, descriptors and name data.
 		ulong curPos = assemblyDataStart;
 
@@ -147,8 +140,8 @@ partial class AssemblyStoreGenerator
 				throw new InvalidOperationException ($"Internal error: corrupted store '{storePath}' stream");
 			}
 
-			ulong name_with_ext_hash = HashAssemblyName (info.AssemblyNameBytes, useCrc32NameHashes, use64BitNameHashes);
-			ulong name_no_ext_hash = HashAssemblyName (info.AssemblyNameNoExtBytes, useCrc32NameHashes, use64BitNameHashes);
+			uint name_with_ext_hash = TypeMapHelper.HashBytesForCLR (info.AssemblyNameBytes);
+			uint name_no_ext_hash = TypeMapHelper.HashBytesForCLR (info.AssemblyNameNoExtBytes);
 			index.Add (new AssemblyStoreIndexEntry (info.AssemblyName, name_with_ext_hash, entryIndex, info.Ignored));
 			index.Add (new AssemblyStoreIndexEntry (info.AssemblyNameNoExt, name_no_ext_hash, entryIndex, info.Ignored));
 
@@ -163,18 +156,18 @@ partial class AssemblyStoreGenerator
 		fs.Flush ();
 		fs.Seek (0, SeekOrigin.Begin);
 
-		uint storeVersion = GetAssemblyStoreFormatVersion (is64Bit);
-		var header = new AssemblyStoreHeader (storeVersion | abiFlag, infoCount, (uint)index.Count, (uint)(index.Count * indexEntrySize));
+		uint storeVersion = is64Bit ? ASSEMBLY_STORE_FORMAT_VERSION_64BIT : ASSEMBLY_STORE_FORMAT_VERSION_32BIT;
+		var header = new AssemblyStoreHeader (storeVersion | abiFlag, infoCount, (uint)index.Count, (uint)(index.Count * AssemblyStoreIndexEntry.NativeSize));
 		using var writer = new BinaryWriter (fs);
 		WriteHeader (writer, header);
 
 		using var manifestFs = File.Open ($"{storePath}.manifest", FileMode.Create, FileAccess.Write, FileShare.Read);
 		using var mw = new StreamWriter (manifestFs, new System.Text.UTF8Encoding (false));
-		WriteIndex (writer, mw, index, descriptors, use64BitNameHashes);
+		WriteIndex (writer, mw, index, descriptors);
 		mw.Flush ();
 
 		log.LogDebugMessage ($"Number of descriptors: {descriptors.Count}; index entries: {index.Count}");
-		log.LogDebugMessage ($"Header size: {AssemblyStoreHeader.NativeSize}; index entry size: {indexEntrySize}; descriptor size: {AssemblyStoreEntryDescriptor.NativeSize}");
+		log.LogDebugMessage ($"Header size: {AssemblyStoreHeader.NativeSize}; index entry size: {AssemblyStoreIndexEntry.NativeSize}; descriptor size: {AssemblyStoreEntryDescriptor.NativeSize}");
 
 		WriteDescriptors (writer, descriptors);
 		WriteNames (writer, infos);
@@ -186,24 +179,6 @@ partial class AssemblyStoreGenerator
 		}
 
 		return storePath;
-	}
-
-	static ulong HashAssemblyName (byte[] assemblyNameBytes, bool useCrc32NameHashes, bool use64BitNameHashes)
-	{
-		if (useCrc32NameHashes) {
-			return TypeMapHelper.HashBytesForCLR (assemblyNameBytes);
-		}
-
-		return MonoAndroidHelper.GetXxHash (assemblyNameBytes, use64BitNameHashes);
-	}
-
-	uint GetAssemblyStoreFormatVersion (bool is64Bit)
-	{
-		if (targetRuntime == AndroidRuntime.CoreCLR) {
-			return is64Bit ? ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_64BIT : ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_32BIT;
-		}
-
-		return is64Bit ? ASSEMBLY_STORE_FORMAT_VERSION_MONOVM_64BIT : ASSEMBLY_STORE_FORMAT_VERSION_MONOVM_32BIT;
 	}
 
 	void CopyData (FileInfo? src, Stream dest, string storePath)
@@ -263,32 +238,13 @@ partial class AssemblyStoreGenerator
 		writer.Write (header.index_entry_count);
 		writer.Write (header.index_size);
 	}
-#if XABT_TESTS
-	AssemblyStoreHeader ReadHeader (BinaryReader reader)
-	{
-		reader.BaseStream.Seek (0, SeekOrigin.Begin);
-		uint magic             = reader.ReadUInt32 ();
-		uint version           = reader.ReadUInt32 ();
-		uint entry_count       = reader.ReadUInt32 ();
-		uint index_entry_count = reader.ReadUInt32 ();
-		uint index_size        = reader.ReadUInt32 ();
-
-		return new AssemblyStoreHeader (magic, version, entry_count, index_entry_count, index_size);
-	}
-#endif
-
-	void WriteIndex (BinaryWriter writer, StreamWriter manifestWriter, List<AssemblyStoreIndexEntry> index, List<AssemblyStoreEntryDescriptor> descriptors, bool use64BitNameHashes)
+	void WriteIndex (BinaryWriter writer, StreamWriter manifestWriter, List<AssemblyStoreIndexEntry> index, List<AssemblyStoreEntryDescriptor> descriptors)
 	{
 		index.Sort ((AssemblyStoreIndexEntry a, AssemblyStoreIndexEntry b) => a.name_hash.CompareTo (b.name_hash));
 
 		foreach (AssemblyStoreIndexEntry entry in index) {
-			if (use64BitNameHashes) {
-				writer.Write (entry.name_hash);
-				manifestWriter.Write ($"0x{entry.name_hash:x}");
-			} else {
-				writer.Write ((uint)entry.name_hash);
-				manifestWriter.Write ($"0x{(uint)entry.name_hash:x}");
-			}
+			writer.Write (entry.name_hash);
+			manifestWriter.Write ($"0x{entry.name_hash:x}");
 			writer.Write (entry.descriptor_index);
 			writer.Write ((byte)(entry.ignore ? 1 : 0));
 
@@ -309,48 +265,6 @@ partial class AssemblyStoreGenerator
 		}
 	}
 
-	List<AssemblyStoreIndexEntry> ReadIndex (BinaryReader reader, AssemblyStoreHeader header)
-	{
-		if (header.index_entry_count > Int32.MaxValue) {
-			throw new InvalidOperationException ("Assembly store index is too big");
-		}
-
-		var index = new List<AssemblyStoreIndexEntry> ((int)header.index_entry_count);
-		reader.BaseStream.Seek (AssemblyStoreHeader.NativeSize, SeekOrigin.Begin);
-
-		uint indexEntrySize = GetIndexEntrySize (header);
-		for (int i = 0; i < (int)header.index_entry_count; i++) {
-			ulong name_hash;
-			if (indexEntrySize == AssemblyStoreIndexEntry.NativeSize64) {
-				name_hash = reader.ReadUInt64 ();
-			} else if (indexEntrySize == AssemblyStoreIndexEntry.NativeSize32) {
-				name_hash = reader.ReadUInt32 ();
-			} else {
-				throw new InvalidOperationException ($"Assembly store index entry size {indexEntrySize} is not supported");
-			}
-
-			uint descriptor_index = reader.ReadUInt32 ();
-			bool ignored = reader.ReadByte () != 0;
-
-			index.Add (new AssemblyStoreIndexEntry (String.Empty, name_hash, descriptor_index, ignored));
-		}
-
-		return index;
-	}
-
-	static uint GetIndexEntrySize (AssemblyStoreHeader header)
-	{
-		if (header.index_entry_count == 0) {
-			return 0;
-		}
-
-		if (header.index_size % header.index_entry_count != 0) {
-			throw new InvalidOperationException ($"Assembly store index is corrupted: index size {header.index_size} is not evenly divisible by entry count {header.index_entry_count}.");
-		}
-
-		return header.index_size / header.index_entry_count;
-	}
-
 	void WriteDescriptors (BinaryWriter writer, List<AssemblyStoreEntryDescriptor> descriptors)
 	{
 		foreach (AssemblyStoreEntryDescriptor desc in descriptors) {
@@ -362,39 +276,6 @@ partial class AssemblyStoreGenerator
 			writer.Write (desc.config_data_offset);
 			writer.Write (desc.config_data_size);
 		}
-	}
-
-	List<AssemblyStoreEntryDescriptor> ReadDescriptors (BinaryReader reader, AssemblyStoreHeader header)
-	{
-		if (header.entry_count > Int32.MaxValue) {
-			throw new InvalidOperationException ("Assembly store descriptor table is too big");
-		}
-
-		var descriptors = new List<AssemblyStoreEntryDescriptor> ();
-		reader.BaseStream.Seek (AssemblyStoreHeader.NativeSize + header.index_size, SeekOrigin.Begin);
-
-		for (int i = 0; i < (int)header.entry_count; i++) {
-			uint mapping_index      = reader.ReadUInt32 ();
-			uint data_offset        = reader.ReadUInt32 ();
-			uint data_size          = reader.ReadUInt32 ();
-			uint debug_data_offset  = reader.ReadUInt32 ();
-			uint debug_data_size    = reader.ReadUInt32 ();
-			uint config_data_offset = reader.ReadUInt32 ();
-			uint config_data_size   = reader.ReadUInt32 ();
-
-			var desc = new AssemblyStoreEntryDescriptor {
-				mapping_index      = mapping_index,
-				data_offset        = data_offset,
-				data_size          = data_size,
-				debug_data_offset  = debug_data_offset,
-				debug_data_size    = debug_data_size,
-				config_data_offset = config_data_offset,
-				config_data_size   = config_data_size,
-			};
-			descriptors.Add (desc);
-		}
-
-		return descriptors;
 	}
 
 	void WriteNames (BinaryWriter writer, List<AssemblyStoreAssemblyInfo> infos)

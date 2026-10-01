@@ -18,28 +18,12 @@ namespace Com.Google.Android.Exoplayer.Drm {
 	// Metadata.xml XPath class reference: path="/api/package[@name='com.google.android.exoplayer.drm']/class[@name='FrameworkMediaCrypto']"
 	[global::Android.Runtime.Register ("com/google/android/exoplayer/drm/FrameworkMediaCrypto", DoNotGenerateAcw=true)]
 	public sealed partial class FrameworkMediaCrypto : global::Java.Lang.Object, global::Com.Google.Android.Exoplayer.Drm.IExoMediaCrypto {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("com/google/android/exoplayer/drm/FrameworkMediaCrypto", typeof (FrameworkMediaCrypto));
-
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
+		static readonly JniPeerMembers _members = new JniPeerMembers ("com/google/android/exoplayer/drm/FrameworkMediaCrypto", typeof (FrameworkMediaCrypto));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
 		}
 
 		internal FrameworkMediaCrypto (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)

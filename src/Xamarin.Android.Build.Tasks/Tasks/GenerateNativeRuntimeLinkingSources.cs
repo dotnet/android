@@ -23,12 +23,6 @@ public class GenerateNativeRuntimeLinkingSources : AndroidTask
 	public override string TaskPrefix => "GNM";
 
 	/// <summary>
-	/// Gets or sets the Mono runtime components to include in the build.
-	/// Used for P/Invoke preservation.
-	/// </summary>
-	public ITaskItem[] MonoComponents { get; set; } = [];
-
-	/// <summary>
 	/// Gets or sets the output directory for environment files.
 	/// Generated LLVM IR files are written to this directory.
 	/// </summary>
@@ -80,7 +74,7 @@ public class GenerateNativeRuntimeLinkingSources : AndroidTask
 		var targetArch = MonoAndroidHelper.AbiToTargetArch (abi);
 		var pinvokePreserveLlFilePath = Path.Combine (EnvironmentOutputDirectory, $"pinvoke_preserve.{targetAbi}.ll");
 
-		var pinvokePreserveGen = new PreservePinvokesNativeAssemblyGenerator (Log, targetArch, ScanPInvokes (targetArch), MonoComponents);
+		var pinvokePreserveGen = new PreservePinvokesNativeAssemblyGenerator (Log, targetArch, ScanPInvokes (targetArch));
 		LLVMIR.LlvmIrModule pinvokePreserveModule = pinvokePreserveGen.Construct ();
 		using var pinvokePreserveWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
 		bool fileFullyWritten = false;
