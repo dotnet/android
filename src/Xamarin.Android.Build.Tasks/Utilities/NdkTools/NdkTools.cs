@@ -114,12 +114,6 @@ namespace Xamarin.Android.Tasks
 		public abstract string GetToolPath (NdkToolKind kind, AndroidTargetArch arch, int apiLevel);
 		public abstract string GetToolPath (string name, AndroidTargetArch arch, int apiLevel);
 		public abstract int GetMinimumApiLevelFor (AndroidTargetArch arch, AndroidRuntime runtime);
-		public abstract bool ValidateNdkPlatform (Action<string> logMessage, Action<string, string> logError, AndroidTargetArch arch, bool enableLLVM);
-
-		public bool ValidateNdkPlatform (AndroidTargetArch arch, bool enableLLVM)
-		{
-			return ValidateNdkPlatform ((m) => Log?.LogMessage (m), (c, m) => Log?.LogCodedError (c, m), arch, enableLLVM);
-		}
 
 		public string GetArchDirName (AndroidTargetArch arch)
 		{
@@ -173,11 +167,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return $"{triple}-";
-		}
-
-		public bool IsNdk64BitArch (AndroidTargetArch arch)
-		{
-			return arch == AndroidTargetArch.Arm64 || arch == AndroidTargetArch.X86_64;
 		}
 
 		public string GetDirectoryPath (NdkToolchainDir dir, AndroidTargetArch arch, int apiLevel)
