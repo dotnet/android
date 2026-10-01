@@ -3,7 +3,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
-using System.Xml.Linq;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
@@ -208,13 +207,15 @@ public class NuGetPackageVersionFinderTests : BaseTest
 	{
 		var directory = Path.Combine (cache, PackagePath);
 		Directory.CreateDirectory (directory);
-		XNamespace ns = xmlNamespace;
-		var metadata = new XElement (ns + "metadata",
-			new XElement (ns + "id", PackageName),
-			new XElement (ns + "version", "1.0.0"));
-		if (tags is not null)
-			metadata.Add (new XElement (ns + "tags", tags));
-
-		new XDocument (new XElement (ns + "package", metadata)).Save (Path.Combine (directory, NuspecFile));
+		var tagsElement = tags is null ? "" : $"<tags>{tags}</tags>";
+		File.WriteAllText (Path.Combine (directory, NuspecFile), $"""
+			<package xmlns="{xmlNamespace}">
+				<metadata>
+					<id>{PackageName}</id>
+					<version>1.0.0</version>
+					{tagsElement}
+				</metadata>
+			</package>
+			""");
 	}
 }
