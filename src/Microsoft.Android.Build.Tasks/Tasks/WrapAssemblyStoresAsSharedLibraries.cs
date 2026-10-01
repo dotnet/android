@@ -37,7 +37,7 @@ public class WrapAssemblyStoresAsSharedLibraries : AndroidTask
 		var directories = new HashSet<string> (StringComparer.Ordinal);
 		foreach (var store in ResolvedAssemblies) {
 			if (!store.TryGetRequiredMetadata ("ResolvedAssemblies", "Abi", Log, out var abi)) {
-				return false;
+				break;
 			}
 			var arch = MonoAndroidHelper.AbiToTargetArch (abi);
 			string name = "lib" + Path.GetFileName (store.ItemSpec);

@@ -89,6 +89,36 @@ public class WrapAssemblyStoresAsSharedLibrariesTests : BaseTest
 		Assert.IsEmpty (Directory.GetFiles (directory, "libassembly-store.so", SearchOption.AllDirectories));
 	}
 
+	[Test]
+	public void MissingAbiPreservesEarlierWrapperAndCleanupOutputs ()
+	{
+		string directory = Path.Combine (Root, "temp", TestName);
+		var first = CreateStore (directory, "arm64-v8a");
+		var invalid = CreateStore (directory, "armeabi-v7a");
+		invalid.RemoveMetadata ("Abi");
+		var last = CreateStore (directory, "x86_64");
+		var errors = new List<BuildErrorEventArgs> ();
+		var task = new WrapAssemblyStoresAsSharedLibraries {
+			BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			IntermediateOutputPath = directory,
+			ResolvedAssemblies = [first, invalid, last],
+		};
+
+		Assert.IsFalse (task.Execute ());
+		Assert.AreEqual (1, errors.Count);
+		Assert.AreEqual ("XA4234", errors [0].Code);
+		StringAssert.Contains (invalid.ItemSpec, errors [0].Message);
+		Assert.AreEqual (1, task.WrappedAssemblies.Length, "The wrapper written before the error must remain tracked.");
+		var library = task.WrappedAssemblies [0];
+		FileAssert.Exists (library.ItemSpec);
+		Assert.AreEqual ("lib/arm64-v8a/libassembly-store.so", library.GetMetadata ("ArchivePath"));
+		Assert.AreEqual (1, task.DirectoriesToDelete.Length, "The partial wrapper directory must remain available for cleanup.");
+		Assert.AreEqual (Path.GetDirectoryName (library.ItemSpec), task.DirectoriesToDelete [0].ItemSpec);
+		Assert.IsFalse (Directory.Exists (Path.Combine (directory, "android-arm", "wrapped-assembly-store")));
+		Assert.IsFalse (Directory.Exists (Path.Combine (directory, "android-x64", "wrapped-assembly-store")),
+			"The task should stop at the invalid item, not continue wrapping later stores.");
+	}
+
 	static TaskItem CreateStore (string directory, string abi)
 	{
 		string storeDirectory = Path.Combine (directory, abi);
