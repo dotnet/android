@@ -75,6 +75,11 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	// the resulting bare-filename `Assembly.Location` does not matter.
 	constexpr std::string_view corelib_name { "System.Private.CoreLib.dll" };
 	if (tpa_in_use && name != corelib_name) {
+		log_debugf (
+			LOG_ASSEMBLY,
+			"Deferring assembly '%.*s' to CoreCLR's FastDev disk loader; this is expected",
+			static_cast<int>(name.length ()), name.data ()
+		);
 		return nullptr;
 	}
 
@@ -254,6 +259,13 @@ auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 	// CoreCLR's `.r2r.dll` probes aren't compatible with our TPA path.
 	if (count > 0 && found_corelib && !found_r2r) {
 		tpa_in_use = true;
+		log_writef (
+			LOG_ASSEMBLY,
+			LogLevel::Info,
+			"FastDev: Found %zu assemblies in '%s'. Loading assemblies from disk is normal during Fast Deployment.",
+			count,
+			override_dir_path
+		);
 		return tpa_list.data;
 	}
 	std::free (tpa_list.data);

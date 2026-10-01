@@ -64,12 +64,6 @@ bool Host::clr_external_assembly_probe (const char *path, void **data_start, int
 		if (*data_start != nullptr && *size > 0) {
 			return log_and_return (path, *data_start, *size);
 		}
-
-		log_warnf (
-			LOG_ASSEMBLY,
-			"Assembly '%s' not found in FastDev override directory. Attempting to load from assembly store",
-			optional_string (path)
-		);
 	}
 
 	*data_start = AssemblyStore::open_assembly (path, *size);

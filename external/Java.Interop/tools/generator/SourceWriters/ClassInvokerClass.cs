@@ -60,9 +60,6 @@ namespace generator.SourceWriters
 			// ClassInvokerHandle
 			Fields.Add (new PeerMembersField (opt, klass.RawJniName, $"{klass.Name}Invoker", false));
 			Properties.Add (new JniPeerMembersGetter ());
-			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-				Properties.Add (new ThresholdTypeGetter ());
-			}
 
 			AddMemberInvokers (klass, opt, new HashSet<string> (), klass.SkippedInvokerMethods);
 		}

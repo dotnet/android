@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
@@ -174,13 +175,19 @@ namespace Xamarin.Android.Build.Tests
 			};
 			using (var proc = new Process ()) {
 				StringBuilder standardOutput = new StringBuilder (), errorOutput = new StringBuilder ();
+				var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+				var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 				proc.StartInfo = info;
 				proc.OutputDataReceived += new DataReceivedEventHandler ((sender, e) => {
-					if (!string.IsNullOrEmpty (e.Data))
+					if (e.Data == null)
+						outputDone.TrySetResult (true);
+					else if (!string.IsNullOrEmpty (e.Data))
 						standardOutput.AppendLine (e.Data);
 				});
 				proc.ErrorDataReceived += new DataReceivedEventHandler ((sender, e) => {
-					if (!string.IsNullOrEmpty (e.Data))
+					if (e.Data == null)
+						errorDone.TrySetResult (true);
+					else if (!string.IsNullOrEmpty (e.Data))
 						errorOutput.AppendLine (e.Data);
 				});
 
@@ -189,12 +196,17 @@ namespace Xamarin.Android.Build.Tests
 				proc.BeginErrorReadLine ();
 
 				if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (timeoutInSeconds).TotalMilliseconds)) {
-					proc.Kill ();
+					if (!proc.HasExited)
+						proc.Kill (entireProcessTree: true);
 					TestContext.Out.WriteLine ($"{nameof (RunProcess)} timed out: {exe} {args}");
 					return (-1, null, null); //Don't try to read stdout/stderr
 				}
 
-				proc.WaitForExit ();
+				// A child process can keep the redirected handles open after adb exits.
+				bool outputDrained = outputDone.Task.Wait (TimeSpan.FromSeconds (2));
+				bool errorDrained = errorDone.Task.Wait (TimeSpan.FromSeconds (2));
+				if (!outputDrained || !errorDrained)
+					TestContext.Out.WriteLine ($"{nameof (RunProcess)}: {exe} exited with redirected output still open.");
 
 				return (proc.ExitCode, standardOutput.ToString ().Trim (), errorOutput.ToString ().Trim ());
 			}

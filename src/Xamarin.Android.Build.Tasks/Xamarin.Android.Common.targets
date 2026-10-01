@@ -181,7 +181,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	>False</AndroidUseDebugRuntime>
 	<AndroidUseDebugRuntime Condition="'$(AndroidUseDebugRuntime)' == ''" >True</AndroidUseDebugRuntime>
 
-	<BundleAssemblies Condition="'$(BundleAssemblies)' == ''">False</BundleAssemblies>
 	<DeployExternal Condition="'$(DeployExternal)' == ''">False</DeployExternal>
 
 	<!-- Obsolete build property: should be removed in the future releases -->
@@ -209,9 +208,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidDebugKeyAlgorithm Condition=" '$(AndroidDebugKeyAlgorithm)' == '' ">RSA</AndroidDebugKeyAlgorithm>
 	<AndroidDebugKeyValidity Condition=" '$(AndroidDebugKeyValidity)' == '' ">10950</AndroidDebugKeyValidity>
 	<AndroidDebugStoreType Condition=" '$(AndroidDebugStoreType)' == '' ">pkcs12</AndroidDebugStoreType>
-
-	<!-- Obsolete -->
-	<AndroidGdbDebugServer>None</AndroidGdbDebugServer>
 
 	<_AndroidLayoutBindingsDependencyCache>$(IntermediateOutputPath)layout-binding-deps.cache</_AndroidLayoutBindingsDependencyCache>
 	<_AndroidAapt2VersionFile>$(IntermediateOutputPath)aapt2.version</_AndroidAapt2VersionFile>
@@ -508,7 +504,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidError Code="XA1044"
       ResourceName="XA1044"
       FormatArguments="RunAOTCompilation;$(_AndroidRuntime)"
-      Condition=" '$(_AndroidXA1044_RunAOTCompilation)' == 'true' "
+      Condition=" '$(_AndroidXA1044_RunAOTCompilationEnabled)' == 'true' "
+  />
+  <AndroidError Code="XA1044"
+      ResourceName="XA1044_RunAOTCompilationDisabled"
+      Condition=" '$(_AndroidXA1044_RunAOTCompilationDisabled)' == 'true' "
   />
   <AndroidError Code="XA1044"
       ResourceName="XA1044"
@@ -1421,6 +1421,7 @@ because xbuild doesn't support framework reference assemblies.
       TargetName="$(TargetName)"
       AddKeepAlives="$(AndroidAddKeepAlives)"
       UseDesignerAssembly="$(AndroidUseDesignerAssembly)"
+      AndroidTypeMapImplementation="$(AndroidTypeMapImplementation)"
       Deterministic="$(Deterministic)"
       ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)">
   </LinkAssembliesNoShrink>
@@ -1788,6 +1789,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CreateBaseApkInputs">
   <PropertyGroup>
+    <_Aapt2ProguardRules Condition=" '$(AndroidLinkTool)' != '' ">$(IntermediateOutputPath)aapt_rules.txt</_Aapt2ProguardRules>
     <_CreateBaseApkInputs>
       $(_CreateBaseApkInputs);
       @(_AndroidMSBuildAllProjects);
@@ -1866,6 +1868,11 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <FileWrites Include="$(_PackagedResources)" />
     <FileWrites Include="$(_GeneratedPrimaryJavaResgenFile)" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(_Aapt2ProguardRules)' != '' And Exists('$(_Aapt2ProguardRules)') ">
+    <ProguardConfiguration Include="$(_Aapt2ProguardRules)" />
+    <FileWrites Include="$(_Aapt2ProguardRules)" />
+    <FileWrites Include="$(IntermediateOutputPath)android\*\aapt_rules.txt" />
   </ItemGroup>
 </Target>
 
@@ -2975,9 +2982,12 @@ because xbuild doesn't support framework reference assemblies.
   </Target>
 
   <Target Name="_ValidateAndroidTypeMapImplementation"
-      BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
-    <Error Condition=" '$(AndroidTypeMapImplementation)' != '' and '$(AndroidTypeMapImplementation)' != 'llvm-ir' and '$(AndroidTypeMapImplementation)' != 'trimmable' "
-           Text="Invalid value for AndroidTypeMapImplementation: '$(AndroidTypeMapImplementation)'. Valid values are: llvm-ir, trimmable." />
+      BeforeTargets="_CheckForInvalidConfigurationAndPlatform;_GenerateJavaStubs;_PrepareLinking;Build;Publish">
+    <AndroidError Code="XA4267"
+        ResourceName="XA4267"
+        Condition=" '$(AndroidTypeMapImplementation)' == 'llvm-ir' " />
+    <Error Condition=" '$(AndroidTypeMapImplementation)' != 'llvm-ir' and '$(AndroidTypeMapImplementation)' != 'trimmable' "
+           Text="Invalid value for AndroidTypeMapImplementation: '$(AndroidTypeMapImplementation)'. The only supported value is: trimmable." />
   </Target>
 
   <Target Name="_LinkAssemblies"
@@ -2986,7 +2996,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <!-- TypeMap imports must be last so their target overrides (e.g. _RemoveRegisterAttribute) take precedence -->
 <Import Project="$(MSBuildThisFileDirectory)..\targets\Microsoft.Android.Sdk.TypeMap.Trimmable.targets"
-    Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' " />
+    Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(AndroidApplication)' == 'true' " />
 <Import Project="$(MSBuildThisFileDirectory)..\targets\Microsoft.Android.Sdk.TypeMap.LlvmIr.targets"
     Condition=" '$(AndroidTypeMapImplementation)' != 'trimmable' " />
 

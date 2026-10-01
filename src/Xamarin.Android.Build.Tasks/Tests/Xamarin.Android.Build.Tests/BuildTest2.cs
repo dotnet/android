@@ -328,7 +328,7 @@ namespace Xamarin.Android.Build.Tests
 					}
 
 					var message = new StringBuilder ();
-					message.AppendLine ($"apkdiff regression test failed with exit code: {code}.");
+					message.AppendLine ($"apkdiff regression check exited with code: {code}.");
 					message.AppendLine ();
 					message.AppendLine ("== apkdiff output ==");
 					if (!stdOut.IsNullOrEmpty ()) {
@@ -349,9 +349,41 @@ namespace Xamarin.Android.Build.Tests
 					}
 					message.AppendLine ();
 					message.AppendLine ($"If this change is intended, update the reference '{apkDescFilename}' with the current '.apkdesc' above (or attached to this test), or run build-tools/scripts/UpdateApkSizeReference.sh.");
-					Assert.Fail (message.ToString ());
+					AssertApkSizeRegression (code, () => {
+						var (increaseCode, _, _) = RunApkDiffCommand ($"{regressionCheckArgs} {apkDescReferencePath} {apkFile}", Path.Combine (Root, b.ProjectDirectory, "apkdiff-increases.log"));
+						return increaseCode;
+					}, message.ToString ());
 				}
 			}
+		}
+
+		static void AssertApkSizeRegression (int code, Func<int> checkForIncreases, string message)
+		{
+			// apkdiff returns 3 for threshold violations; tool errors must still fail the test.
+			if (code == 3 && checkForIncreases () == 0) {
+				Assert.Inconclusive ($"Only size decreases exceeded the thresholds. Update the reference sizes.\n{message}");
+			}
+			Assert.Fail (message);
+		}
+
+		[TestCase (3, 0, true)]
+		[TestCase (3, 3, false)]
+		[TestCase (3, 2, false)]
+		[TestCase (3, -1, false)]
+		[TestCase (2, 0, false)]
+		[TestCase (99, 0, false)]
+		[TestCase (-1, 0, false)]
+		public void ApkSizeRegressionResult (int code, int increaseCode, bool inconclusive)
+		{
+			bool checkedIncreases = false;
+			var exception = Assert.Throws (inconclusive ? typeof (InconclusiveException) : typeof (AssertionException), () =>
+				AssertApkSizeRegression (code, () => {
+					checkedIncreases = true;
+					return increaseCode;
+				}, "Size difference details."));
+
+			Assert.AreEqual (code == 3, checkedIncreases, "Only threshold violations should be checked for size increases.");
+			StringAssert.Contains ("Size difference details.", exception.Message);
 		}
 
 		static string GetApkDescDiff (string referencePath, string currentPath)
@@ -1767,9 +1799,9 @@ namespace UnnamedProject {
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
-				var customAppJavaDirectory = runtime == AndroidRuntime.NativeAOT ?
-					Path.Combine ("typemap", "java") :
-					Path.Combine ("android", "src");
+				var customAppJavaDirectory = runtime == AndroidRuntime.CoreCLR && isRelease ?
+					Path.Combine ("typemap", "linked-java") :
+					Path.Combine ("typemap", "java");
 				var customAppJava = b.Output.GetIntermediaryPath (Path.Combine (customAppJavaDirectory, "com", "foxsports", "test", "CustomApp.java"));
 				var customAppContent = File.ReadAllText (customAppJava);
 				Assert.IsTrue (customAppContent.Contains ("extends android.support.multidex.MultiDexApplication"),
@@ -2154,11 +2186,13 @@ namespace App1
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-			var dexFile = Path.Combine (intermediate, "android", "bin", "classes2.dex"); // NOTE: there is so much Java code, multidex is being used
-			FileAssert.Exists (dexFile);
-
-			const string className = "Lcrc64467b05f37239e7a6/StreamMediaDataSource;";
-			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+			var mapping = File.ReadAllLines (Path.Combine (intermediate, "acw-map.txt"))
+				.Single (line => line.StartsWith ("Plugin.Maui.Audio.StreamMediaDataSource, Plugin.Maui.Audio;", StringComparison.Ordinal));
+			var className = $"L{mapping.Split (';') [1].Replace ('.', '/')};";
+			var dexFiles = Directory.GetFiles (Path.Combine (intermediate, "android", "bin"), "classes*.dex");
+			Assert.IsNotEmpty (dexFiles, "The application should contain DEX files.");
+			Assert.IsTrue (dexFiles.Any (dexFile => DexUtils.ContainsClass (className, dexFile, AndroidSdkPath)),
+				$"The application DEX files should include `{className}`!");
 		}
 
 		[Test]

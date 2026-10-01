@@ -432,9 +432,12 @@ A boolean property that controls whether untrimmed builds modify referenced
 assemblies to support legacy binding and resource designer behavior. These
 modifications include adding missing abstract interface methods, updating
 legacy resource designer references, and inserting `GC.KeepAlive()` calls into
-older Xamarin.Android binding assemblies. Trimmed builds using the `trimmable`
-type map do not run these compatibility fixups, and setting this property to
-`True` does not enable them for trimmed builds.
+older Xamarin.Android binding assemblies. For trimmed CoreCLR builds, this
+property repairs missing abstract methods and legacy resource designer references
+in project-local assembly copies before trimming, so the trimmer can preserve
+their dependencies.
+Other shared post-trimming steps, including `GC.KeepAlive()` insertion, are
+controlled separately.
 
 The default value is `False` when
 [`$(AndroidTypeMapImplementation)`](#androidtypemapimplementation) is
@@ -1338,10 +1341,12 @@ This property is obsolete and should not be used.
 ## AndroidTypeMapImplementation
 
 An enum-style property that selects the type map implementation.
-Valid values are `llvm-ir` and `trimmable`.
+The only supported value is `trimmable`. Setting this property to `llvm-ir`
+causes error [XA4267](../messages/xa4267.md).
 
-The default value is `trimmable` when `$(PublishAot)` is `true` and `llvm-ir`
-otherwise.
+The default value is `trimmable` for all Android projects.
+An explicitly empty command-line value (`-p:AndroidTypeMapImplementation=`) is
+invalid. Omit the property to use the default, or set it to `trimmable`.
 
 ## AndroidUseApkSigner
 
@@ -2034,6 +2039,12 @@ Xamarin.Android. This is the same property used for [Blazor WASM][blazor].
 This property does not enable ReadyToRun or NativeAOT. Setting it to
 `true` for CoreCLR or NativeAOT resets it to `false` and stops the build
 with [XA1044](../messages/xa1044.md).
+
+Setting it to `false` for CoreCLR also stops the build with XA1044
+instead of silently ignoring the property. Starting with .NET 11,
+remove `$(RunAOTCompilation)` and set
+[`$(PublishReadyToRun)`](#publishreadytorun) to `false` to disable
+ReadyToRun (R2R) AOT compilation.
 
 [blazor]: /aspnet/core/blazor/host-and-deploy/webassembly/#ahead-of-time-aot-compilation
 
