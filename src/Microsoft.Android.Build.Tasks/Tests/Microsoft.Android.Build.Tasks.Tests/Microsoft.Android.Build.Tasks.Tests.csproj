@@ -16,11 +16,16 @@
   <ItemGroup>
     <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\MockBuildEngine.cs" Link="MockBuildEngine.cs" />
     <None Update="Resources\NativeAotBootstrap\**" CopyToOutputDirectory="PreserveNewest" />
+    <AssemblyMetadata Include="ILLinkPath" Value="$(PkgMicrosoft_NET_ILLink_Tasks)\tools\net\illink.dll" />
     <AssemblyMetadata Include="NativeAotLlvmReadObjPath" Value="$(_NativeAotLlvmReadObjPath)" />
+    <AssemblyMetadata Include="AndroidNdkDirectory" Value="$(AndroidNdkDirectory)" />
   </ItemGroup>
 
   <ItemGroup>
-    <AssemblyMetadata Include="AndroidNdkDirectory" Value="$(AndroidNdkDirectory)" />
+    <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="$(MicrosoftNETILLinkPackageVersion)" PrivateAssets="all" GeneratePathProperty="true" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Microsoft.Android.Build.Tasks.csproj" />
     <ProjectReference Include="..\..\..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
   </ItemGroup>
