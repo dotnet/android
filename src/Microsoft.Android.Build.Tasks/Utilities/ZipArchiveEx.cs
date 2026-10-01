@@ -9,13 +9,9 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.Android.Tasks;
 
-public sealed class ZipArchiveEx : IDisposable
+sealed class ZipArchiveEx : IDisposable
 {
 	public ZipArchive Archive { get; }
-
-	public ZipArchiveEx (string archive) : this (archive, FileMode.CreateNew)
-	{
-	}
 
 	public ZipArchiveEx (string archive, FileMode mode)
 	{
@@ -77,12 +73,6 @@ public sealed class ZipArchiveEx : IDisposable
 		Archive.CreateEntryFromFile (filename, archivePath, compression);
 		log.LogDebugMessage ($"Adding {filename} as the archive file is out of date.");
 		return true;
-	}
-
-	public void AddEntry (byte [] data, string archivePath)
-	{
-		using var stream = new MemoryStream (data, writable: false);
-		AddEntry (stream, archivePath, CompressionLevel.Optimal);
 	}
 
 	public void AddEntry (Stream stream, string archivePath, CompressionLevel compression)

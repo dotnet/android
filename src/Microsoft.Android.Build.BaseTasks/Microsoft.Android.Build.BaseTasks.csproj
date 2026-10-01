@@ -6,8 +6,7 @@
   <Import Project="..\..\build-tools\scripts\Xamarin.Android.Tools.Versioning.targets" />
 
   <PropertyGroup>
-    <!-- Bootstrap tools restore this project with the stable SDK before product tasks are built. -->
-    <TargetFrameworks>netstandard2.0;$(DotNetStableTargetFramework)</TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Microsoft.Android.Build.Tasks</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>true</SignAssembly>

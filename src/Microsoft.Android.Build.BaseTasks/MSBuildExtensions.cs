@@ -242,7 +242,7 @@ namespace Microsoft.Android.Build.Tasks
 			var targetfile = file;
 			if (resourceDir != null && targetfile.StartsWith (resourceDir, StringComparison.InvariantCultureIgnoreCase)) {
 				targetfile = file.Substring (resourceDir.Length).TrimStart (Path.DirectorySeparatorChar);
-				if (resourceNameCaseMap.TryGetValue (targetfile, out var temp))
+				if (resourceNameCaseMap.TryGetValue (targetfile, out string temp))
 					targetfile = temp;
 				targetfile = Path.Combine ("Resources", targetfile);
 			}

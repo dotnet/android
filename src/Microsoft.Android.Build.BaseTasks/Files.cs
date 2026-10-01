@@ -29,13 +29,11 @@ namespace Microsoft.Android.Build.Tasks
 		// NOTE: System.IO.Hashing.Crc64 produces different output than the Crc64 class in this repo
 		const int CRC64_SIZE_IN_BYTES = 8;
 
-#if NETSTANDARD2_0
 		// Use the public CRC getter when netstandard callers are hosted by modern .NET.
 		static readonly Func<ZipArchiveEntry, uint>? getStoredZipCrc32 =
 			typeof (ZipArchiveEntry).GetProperty ("Crc32")?.GetMethod is { } getter
 				? (Func<ZipArchiveEntry, uint>) getter.CreateDelegate (typeof (Func<ZipArchiveEntry, uint>))
 				: null;
-#endif
 
 		static int fileWriteRetry = -1;
 		static int fileWriteRetryDelay = -1;
@@ -455,16 +453,12 @@ namespace Microsoft.Android.Build.Tasks
 		{
 			if (entry == null)
 				throw new ArgumentNullException (nameof (entry));
-#if NET
-			return entry.Crc32;
-#else
 			if (getStoredZipCrc32 is not null)
 				return getStoredZipCrc32 (entry);
 			var crc = new System.IO.Hashing.Crc32 ();
 			using var stream = entry.Open ();
 			crc.Append (stream);
 			return crc.GetCurrentHashAsUInt32 ();
-#endif
 		}
 
 		public static ZipArchive ReadZipFile (string filename)

@@ -32,9 +32,9 @@ public class ZipTaskRegistrationTests : BaseTest
 	public void SharedHelpersUseBootstrapCompatibleFrameworks ()
 	{
 		var document = LoadRepositoryFile ("src/Microsoft.Android.Build.BaseTasks/Microsoft.Android.Build.BaseTasks.csproj");
-		var frameworks = document.Descendants ("TargetFrameworks").Single ().Value.Split (';');
-		CollectionAssert.AreEqual (new [] { "netstandard2.0", "$(DotNetStableTargetFramework)" }, frameworks,
+		Assert.AreEqual ("netstandard2.0", document.Descendants ("TargetFramework").Single ().Value,
 			"Bootstrap restores all shared-helper targets with the stable SDK, not just the selected target.");
+		Assert.IsEmpty (document.Descendants ("TargetFrameworks"));
 	}
 
 	[TestCase ("BuildArchive", CommonTargets, 2)]
@@ -58,75 +58,50 @@ public class ZipTaskRegistrationTests : BaseTest
 		}
 	}
 
-	[Test]
-	public async Task CreateJavaArchiveRunsThroughShippedInvocation ()
+	[TestCase ("BuildArchive", CommonTargets)]
+	[TestCase ("CreateJavaArchive", JavacTargets)]
+	[TestCase ("FixupAssetPackArchive", AssetsTargets)]
+	public async Task ArchiveTaskRunsThroughShippedInvocation (string taskName, string targetsFile)
 	{
-		var classes = Path.Combine (TestDirectory, "classes");
-		Directory.CreateDirectory (classes);
-		var contents = new byte [] { 0xca, 0xfe, 0xba, 0xbe };
-		File.WriteAllBytes (Path.Combine (classes, "Main.class"), contents);
-		var output = Path.Combine (TestDirectory, "classes.jar");
-		var properties = new XElement (MSBuildNamespace + "PropertyGroup",
-			new XElement (MSBuildNamespace + "_AndroidIntermediateBindingJavaClassDirectory", classes),
-			new XElement (MSBuildNamespace + "_AndroidIntermediateBindingClassesZip", output));
-		var items = new XElement (MSBuildNamespace + "ItemGroup",
-			new XElement (MSBuildNamespace + "_JavaBindingSource", new XAttribute ("Include", "Main.java")));
-
-		await RunShippedInvocation ("CreateJavaArchive", JavacTargets, properties, items);
-
-		using var archive = ZipFile.OpenRead (output);
-		var entry = archive.GetEntry ("Main.class") ?? throw new InvalidOperationException ("The registered task did not create Main.class.");
-		Assert.AreEqual (ZipCompressionMethod.Stored, entry.CompressionMethod);
-		using var stream = entry.Open ();
-		using var result = new MemoryStream ();
-		stream.CopyTo (result);
-		CollectionAssert.AreEqual (contents, result.ToArray ());
-	}
-
-	[Test]
-	public async Task FixupAssetPackArchiveRunsThroughShippedInvocation ()
-	{
-		var output = Path.Combine (TestDirectory, "assetpack.zip");
-		using (var archive = ZipFile.Open (output, ZipArchiveMode.Create)) {
+		var sourceDirectory = Path.Combine (TestDirectory, "classes");
+		Directory.CreateDirectory (sourceDirectory);
+		var file = Path.Combine (sourceDirectory, "Main.class");
+		File.WriteAllText (file, "contents");
+		var output = Path.Combine (TestDirectory, "archive.zip");
+		if (taskName == "FixupAssetPackArchive") {
+			using var archive = ZipFile.Open (output, ZipArchiveMode.Create);
 			WriteEntry (archive, "AndroidManifest.xml", "manifest");
 			WriteEntry (archive, "resources.pb", "unused resources");
 			WriteEntry (archive, @"assets\contents.dat", "contents");
 		}
-		var items = new XElement (MSBuildNamespace + "ItemGroup",
-			new XElement (MSBuildNamespace + "_AssetPacks", new XAttribute ("Include", "assetpack"),
-				new XElement (MSBuildNamespace + "AssetPackOutput", output)));
-
-		await RunShippedInvocation ("FixupAssetPackArchive", AssetsTargets, new XElement (MSBuildNamespace + "PropertyGroup"), items);
-
-		using var result = ZipFile.OpenRead (output);
-		CollectionAssert.AreEquivalent (new [] { "manifest/AndroidManifest.xml", "assets/contents.dat" },
-			result.Entries.Select (entry => entry.FullName));
-		foreach (var entry in result.Entries)
-			Assert.AreEqual (ZipCompressionMethod.Stored, entry.CompressionMethod);
-	}
-
-	[Test]
-	public async Task BuildArchiveRunsThroughShippedInvocation ()
-	{
-		var file = Path.Combine (TestDirectory, "contents.dat");
-		File.WriteAllText (file, "contents");
-		var output = Path.Combine (TestDirectory, "app.apk");
 		var properties = new XElement (MSBuildNamespace + "PropertyGroup",
 			new XElement (MSBuildNamespace + "AndroidPackageFormat", "apk"),
-			new XElement (MSBuildNamespace + "_PackagedResources", ""),
 			new XElement (MSBuildNamespace + "_ApkOutputPath", output),
-			new XElement (MSBuildNamespace + "AndroidStoreUncompressedFileExtensions", ".dat"));
+			new XElement (MSBuildNamespace + "AndroidStoreUncompressedFileExtensions", ".class"),
+			new XElement (MSBuildNamespace + "_AndroidIntermediateBindingJavaClassDirectory", sourceDirectory),
+			new XElement (MSBuildNamespace + "_AndroidIntermediateBindingClassesZip", output));
 		var items = new XElement (MSBuildNamespace + "ItemGroup",
+			new XElement (MSBuildNamespace + "_JavaBindingSource", new XAttribute ("Include", "Main.java")),
+			new XElement (MSBuildNamespace + "_AssetPacks", new XAttribute ("Include", "assetpack"),
+				new XElement (MSBuildNamespace + "AssetPackOutput", output)),
 			new XElement (MSBuildNamespace + "FilesToAddToArchive", new XAttribute ("Include", file),
 				new XElement (MSBuildNamespace + "ArchivePath", "assets/contents.dat")));
 
-		await RunShippedInvocation ("BuildArchive", CommonTargets, properties, items);
+		await RunShippedInvocation (taskName, targetsFile, properties, items);
 
-		using var archive = ZipFile.OpenRead (output);
-		var entry = archive.GetEntry ("assets/contents.dat") ?? throw new InvalidOperationException ("The registered task did not package contents.dat.");
-		Assert.AreEqual (ZipCompressionMethod.Stored, entry.CompressionMethod);
-		using var reader = new StreamReader (entry.Open ());
-		Assert.AreEqual ("contents", reader.ReadToEnd ());
+		using var result = ZipFile.OpenRead (output);
+		var expectedEntries = taskName switch {
+			"CreateJavaArchive" => new [] { "Main.class" },
+			"FixupAssetPackArchive" => new [] { "manifest/AndroidManifest.xml", "assets/contents.dat" },
+			_ => new [] { "assets/contents.dat" },
+		};
+		CollectionAssert.AreEquivalent (expectedEntries, result.Entries.Select (entry => entry.FullName));
+		foreach (var entry in result.Entries) {
+			Assert.AreEqual (ZipCompressionMethod.Stored, entry.CompressionMethod, entry.FullName);
+			using var reader = new StreamReader (entry.Open ());
+			Assert.AreEqual (entry.FullName.EndsWith ("AndroidManifest.xml", StringComparison.Ordinal) ? "manifest" : "contents",
+				reader.ReadToEnd (), entry.FullName);
+		}
 	}
 
 	async Task RunShippedInvocation (string taskName, string targetsFile, XElement properties, XElement items)

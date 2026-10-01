@@ -26,7 +26,7 @@ namespace Microsoft.Android.Build.Tasks
 
 		public virtual T Rent ()
 		{
-			if (bag.TryTake (out var item))
+			if (bag.TryTake (out T item))
 				return item;
 			return generator ();
 		}

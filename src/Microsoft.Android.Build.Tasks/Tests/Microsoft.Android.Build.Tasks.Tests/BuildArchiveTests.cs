@@ -32,9 +32,7 @@ public class BuildArchiveTests : BaseTest
 		CreateArchive (apk, ("AndroidManifest.xml", "manifest"), ("commonMain/default/manifest", "existing"), ("stale.txt", "stale"));
 		CreateArchive (jar, ("commonMain/default/manifest", "current"));
 
-		var item = new TaskItem ($"{jar}#commonMain/default/manifest");
-		item.SetMetadata ("ArchivePath", "commonMain/default/manifest");
-		item.SetMetadata ("JavaArchiveEntry", "commonMain/default/manifest");
+		var item = JavaArchiveItem (jar, "commonMain/default/manifest");
 		string? previousSnapshot = null;
 
 		for (var build = 1; build <= 3; build++) {
@@ -67,9 +65,7 @@ public class BuildArchiveTests : BaseTest
 		CreateArchive (apk, ("commonMain/default/manifest", "current"));
 		CreateArchive (jar, ("commonMain/default/manifest", "current"));
 
-		var item = new TaskItem ($"{jar}#commonMain/default/manifest");
-		item.SetMetadata ("ArchivePath", "commonMain/default/manifest");
-		item.SetMetadata ("JavaArchiveEntry", "commonMain/default/manifest");
+		var item = JavaArchiveItem (jar, "commonMain/default/manifest");
 		var messages = new List<BuildMessageEventArgs> ();
 
 		var task = new BuildArchive {
@@ -98,12 +94,8 @@ public class BuildArchiveTests : BaseTest
 		CreateArchive (firstJar, ("commonMain/default/manifest", "first"));
 		CreateArchive (secondJar, ("commonMain/default/manifest", "second"));
 
-		var firstItem = new TaskItem ($"{firstJar}#commonMain/default/manifest");
-		firstItem.SetMetadata ("ArchivePath", "commonMain/default/manifest");
-		firstItem.SetMetadata ("JavaArchiveEntry", "commonMain/default/manifest");
-		var secondItem = new TaskItem ($"{secondJar}#commonMain/default/manifest");
-		secondItem.SetMetadata ("ArchivePath", "commonMain/default/manifest");
-		secondItem.SetMetadata ("JavaArchiveEntry", "commonMain/default/manifest");
+		var firstItem = JavaArchiveItem (firstJar, "commonMain/default/manifest");
+		var secondItem = JavaArchiveItem (secondJar, "commonMain/default/manifest");
 		var messages = new List<BuildMessageEventArgs> ();
 
 		var task = new BuildArchive {
@@ -131,9 +123,7 @@ public class BuildArchiveTests : BaseTest
 		CreateArchive (apk, ("commonMain/default/manifest", "existing"));
 		CreateArchive (jar, ("other-entry.txt", "contents"));
 
-		var item = new TaskItem ($"{jar}#commonMain/default/manifest");
-		item.SetMetadata ("ArchivePath", "commonMain/default/manifest");
-		item.SetMetadata ("JavaArchiveEntry", "commonMain/default/manifest");
+		var item = JavaArchiveItem (jar, "commonMain/default/manifest");
 		var messages = new List<BuildMessageEventArgs> ();
 
 		var task = new BuildArchive {

@@ -294,7 +294,7 @@ namespace Microsoft.Android.Build.Tasks
 		{
 			lock (queue.SyncRoot) {
 				while (queue.Count > 0) {
-					var args = (T) (queue.Dequeue () ?? throw new InvalidOperationException ("The task message queue contains a null item."));
+					var args = (T) queue.Dequeue ();
 					action (args);
 				}
 				resetEvent.Reset ();
