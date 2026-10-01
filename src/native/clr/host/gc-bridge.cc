@@ -1,13 +1,7 @@
 #include <cerrno>
-#include <cinttypes>
-#include <pthread.h>
 #include <semaphore.h>
 
 #include <host/gc-bridge.hh>
-#include <host/bridge-processing.hh>
-#include <host/os-bridge.hh>
-#include <host/host-common.hh>
-#include <runtime-base/util.hh>
 #include <shared/helpers.hh>
 
 using namespace xamarin::android;
@@ -30,7 +24,9 @@ void GCBridge::start_bridge_processing_thread () noexcept
 
 void GCBridge::publish_shared_args (MarkCrossReferencesArgs *args) noexcept
 {
-	__atomic_store_n (&shared_args, args, __ATOMIC_RELEASE);
+	MarkCrossReferencesArgs *expected = nullptr;
+	bool published = __atomic_compare_exchange_n (&shared_args, &expected, args, false, __ATOMIC_RELEASE, __ATOMIC_RELAXED);
+	abort_unless (published, "A GC bridge argument block is already pending");
 
 	int ret = sem_post (&shared_args_semaphore);
 	abort_unless (ret == 0, "Failed to release GC bridge semaphore");
@@ -44,48 +40,10 @@ auto GCBridge::wait_for_shared_args () noexcept -> MarkCrossReferencesArgs*
 	} while (ret == -1 && errno == EINTR);
 	abort_unless (ret == 0, "Failed to acquire GC bridge semaphore");
 
-	return __atomic_load_n (&shared_args, __ATOMIC_ACQUIRE);
-}
+	MarkCrossReferencesArgs *args = __atomic_exchange_n (&shared_args, nullptr, __ATOMIC_ACQUIRE);
+	abort_unless (args != nullptr, "GC bridge semaphore was released without an argument block");
 
-void GCBridge::initialize_on_onload (JNIEnv *env) noexcept
-{
-	abort_if_invalid_pointer_argument (env, "env");
-
-	jclass Runtime_class = env->FindClass ("java/lang/Runtime");
-	abort_unless (Runtime_class != nullptr, "Failed to look up java/lang/Runtime class.");
-
-	jmethodID Runtime_getRuntime = env->GetStaticMethodID (Runtime_class, "getRuntime", "()Ljava/lang/Runtime;");
-	abort_unless (Runtime_getRuntime != nullptr, "Failed to look up the Runtime.getRuntime() method.");
-
-	Runtime_gc = env->GetMethodID (Runtime_class, "gc", "()V");
-	abort_unless (Runtime_gc != nullptr, "Failed to look up the Runtime.gc() method.");
-
-	Runtime_instance = OSBridge::lref_to_gref (env, env->CallStaticObjectMethod (Runtime_class, Runtime_getRuntime));
-	abort_unless (Runtime_instance != nullptr, "Failed to obtain Runtime instance.");
-
-	env->DeleteLocalRef (Runtime_class);
-}
-
-void GCBridge::initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept
-{
-	abort_if_invalid_pointer_argument (env, "env");
-	abort_if_invalid_pointer_argument (runtimeClass, "runtimeClass");
-
-	BridgeProcessing::initialize_on_runtime_init (env, runtimeClass);
-}
-
-void GCBridge::trigger_java_gc (JNIEnv *env) noexcept
-{
-	abort_if_invalid_pointer_argument (env, "env");
-
-	env->CallVoidMethod (Runtime_instance, Runtime_gc);
-	if (!env->ExceptionCheck ()) [[likely]] {
-		return;
-	}
-
-	env->ExceptionDescribe ();
-	env->ExceptionClear ();
-	log_errorf (LOG_DEFAULT, "Java GC failed");
+	return args;
 }
 
 void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept
@@ -93,26 +51,17 @@ void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept
 	abort_if_invalid_pointer_argument (args, "args");
 	abort_unless (args->Components != nullptr || args->ComponentCount == 0, "Components must not be null if ComponentCount is greater than 0");
 	abort_unless (args->CrossReferences != nullptr || args->CrossReferenceCount == 0, "CrossReferences must not be null if CrossReferenceCount is greater than 0");
-	log_mark_cross_references_args_if_enabled (args);
 
 	publish_shared_args (args);
 }
 
 void GCBridge::bridge_processing () noexcept
 {
-	abort_unless (bridge_processing_started_callback != nullptr, "GC bridge processing started callback is not set");
-	abort_unless (bridge_processing_finished_callback != nullptr, "GC bridge processing finished callback is not set");
+	abort_unless (bridge_processing_callback != nullptr, "GC bridge processing callback is not set");
 
 	while (true) {
-		// wait until mark cross references args are set by the GC callback
 		MarkCrossReferencesArgs *args = wait_for_shared_args ();
-
-		bridge_processing_started_callback (args);
-
-		BridgeProcessing bridge_processing {args};
-		bridge_processing.process ();
-
-		bridge_processing_finished_callback (args);
+		bridge_processing_callback (args);
 	}
 }
 
@@ -120,52 +69,4 @@ auto GCBridge::bridge_processing_thread_entry ([[maybe_unused]] void *arg) noexc
 {
 	bridge_processing ();
 	return nullptr;
-}
-
-[[gnu::always_inline]]
-void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArgs *args) noexcept
-{
-	if (!Logger::gc_spew_enabled ()) [[likely]] {
-		return;
-	}
-
-	log_infof (LOG_GC, "cross references callback invoked with %zu sccs and %zu xrefs.", args->ComponentCount, args->CrossReferenceCount);
-
-	JNIEnv *env = OSBridge::ensure_jnienv ();
-	
-	for (size_t i = 0; i < args->ComponentCount; ++i) {
-		const StronglyConnectedComponent &scc = args->Components [i];
-		log_infof (LOG_GC, "group %zu with %zu objects", i, scc.Count);
-		for (size_t j = 0; j < scc.Count; ++j) {
-			log_handle_context (env, scc.Contexts [j]);
-		}
-	}
-
-	if (!Util::should_log (LOG_GC)) {
-		return;
-	}
-
-	for (size_t i = 0; i < args->CrossReferenceCount; ++i) {
-		size_t source_index = args->CrossReferences [i].SourceGroupIndex;
-		size_t dest_index = args->CrossReferences [i].DestinationGroupIndex;
-		log_writef (LOG_GC, LogLevel::Info, "xref [%zu] %zu -> %zu", i, source_index, dest_index);
-	}
-}
-
-[[gnu::always_inline]]
-void GCBridge::log_handle_context (JNIEnv *env, HandleContext *ctx) noexcept
-{
-	abort_unless (ctx != nullptr, "Context must not be null");
-	abort_unless (ctx->control_block != nullptr, "Control block must not be null");
-
-	jobject handle = ctx->control_block->handle;
-	jclass java_class = env->GetObjectClass (handle);
-	if (java_class != nullptr) {
-		char *class_name = HostCommon::get_java_class_name_for_TypeManager (java_class);
-		log_infof (LOG_GC, "gref 0x%" PRIxPTR " [%s]", reinterpret_cast<uintptr_t> (handle), optional_string (class_name));
-		free (class_name);
-		env->DeleteLocalRef (java_class);
-	} else {
-		log_infof (LOG_GC, "gref 0x%" PRIxPTR " [unknown class]", reinterpret_cast<uintptr_t> (handle));
-	}
 }

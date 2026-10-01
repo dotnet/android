@@ -70,6 +70,63 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test]
+		public void UnmanagedCallersOnlyCallbacksUseDefaultTypeMap ()
+		{
+			var proj = new XamarinAndroidBindingProject {
+				Jars = {
+					new AndroidItem.AndroidLibrary ("javaclasses.jar") {
+						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
+					},
+				},
+			};
+			proj.SetProperty ("_AndroidEnableUnmanagedCallersOnlyCallbacks", "true");
+
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (proj), "The experimental callback format should work with the default trimmable typemap.");
+		}
+
+		[Test]
+		public void UnmanagedCallersOnlyCallbacksInvalidateGeneratedBindings ()
+		{
+			var proj = new XamarinAndroidBindingProject {
+				Jars = {
+					new AndroidItem.AndroidLibrary ("javaclasses.jar") {
+						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
+					},
+				},
+			};
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (proj, parameters: ["_AndroidEnableUnmanagedCallersOnlyCallbacks=false"]),
+				"Initial binding build should succeed.");
+			Assert.IsTrue (builder.Build (proj,
+				parameters: ["_AndroidEnableUnmanagedCallersOnlyCallbacks=false"],
+				doNotCleanupOnUpdate: true,
+				saveProject: false),
+				"An unchanged callback format should preserve incremental generation.");
+			builder.Output.AssertTargetIsSkipped ("GenerateBindings");
+			Assert.IsTrue (builder.Build (proj,
+				parameters: ["_AndroidEnableUnmanagedCallersOnlyCallbacks=true"],
+				doNotCleanupOnUpdate: true,
+				saveProject: false),
+				"Changing the callback format should regenerate the binding.");
+			builder.Output.AssertTargetIsNotSkipped ("GenerateBindings");
+			Assert.IsTrue (builder.Build (proj,
+				parameters: ["_AndroidEnableUnmanagedCallersOnlyCallbacks=true"],
+				doNotCleanupOnUpdate: true,
+				saveProject: false),
+				"An unchanged enabled callback format should preserve incremental generation.");
+			builder.Output.AssertTargetIsSkipped ("GenerateBindings");
+			Assert.IsTrue (builder.Build (proj,
+				parameters: ["_AndroidEnableUnmanagedCallersOnlyCallbacks=false"],
+				doNotCleanupOnUpdate: true,
+				saveProject: false),
+				"Switching back to the legacy callback format should regenerate the binding.");
+			builder.Output.AssertTargetIsNotSkipped ("GenerateBindings");
+		}
+
 		static IEnumerable<object[]> Get_ClassParseOptions ()
 		{
 			var ret = new List<object[]> ();

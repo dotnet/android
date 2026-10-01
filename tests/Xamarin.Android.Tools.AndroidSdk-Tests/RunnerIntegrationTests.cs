@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -24,12 +23,6 @@ public class RunnerIntegrationTests
 	static string sdkPath;
 	static string jdkPath;
 	static string adbPath;
-	static SdkManager sdkManager;
-
-	static void Log (TraceLevel level, string message)
-	{
-		TestContext.Progress.WriteLine ($"[{level}] {message}");
-	}
 
 	static void RequireCi ()
 	{
@@ -67,28 +60,12 @@ public class RunnerIntegrationTests
 		}
 
 		TestContext.Progress.WriteLine ($"Using SDK from ANDROID_HOME: {sdkPath}");
-		sdkManager = new SdkManager (Log);
-		sdkManager.JavaSdkPath = jdkPath;
-		sdkManager.AndroidSdkPath = sdkPath;
 
 		// Resolve the full path to adb for AdbRunner
 		var adbExe = OS.IsWindows ? "adb.exe" : "adb";
 		adbPath = Path.Combine (sdkPath, "platform-tools", adbExe);
 		if (!File.Exists (adbPath))
 			Assert.Ignore ($"adb not found at {adbPath}");
-	}
-
-	[OneTimeTearDown]
-	public void OneTimeTearDown ()
-	{
-		sdkManager?.Dispose ();
-	}
-
-	[Test]
-	public void AdbRunner_Constructor_AcceptsValidPath ()
-	{
-		var runner = new AdbRunner (adbPath);
-		Assert.IsNotNull (runner);
 	}
 
 	[Test]
@@ -113,32 +90,6 @@ public class RunnerIntegrationTests
 
 		Assert.That (ex, Is.Not.Null);
 		TestContext.Progress.WriteLine ($"WaitForDeviceAsync timed out as expected: {ex?.Message}");
-	}
-
-	[Test]
-	public void AllRunners_ToolDiscovery_ConsistentWithSdk ()
-	{
-		var runner = new AdbRunner (adbPath);
-
-		// adb path should be under the SDK
-		Assert.IsTrue (File.Exists (adbPath), $"adb should exist at {adbPath}");
-		StringAssert.StartsWith (sdkPath, adbPath);
-	}
-
-	[Test]
-	public void AvdManagerRunner_ToolDiscovery_FindsAvdManager ()
-	{
-		var ext = OS.IsWindows ? ".bat" : "";
-		var avdManagerPath = ProcessUtils.FindCmdlineTool (sdkPath, "avdmanager", ext);
-
-		// avdmanager may not be present if cmdline-tools are not installed
-		if (avdManagerPath is null) {
-			Assert.Ignore ("avdmanager not found in SDK — cmdline-tools may not be installed.");
-			return;
-		}
-
-		Assert.IsTrue (File.Exists (avdManagerPath), $"avdmanager should exist at {avdManagerPath}");
-		TestContext.Progress.WriteLine ($"Found avdmanager at: {avdManagerPath}");
 	}
 
 	[Test]

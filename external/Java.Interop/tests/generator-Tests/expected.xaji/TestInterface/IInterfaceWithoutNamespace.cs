@@ -14,29 +14,13 @@ public partial interface IInterfaceWithoutNamespace : IJavaObject, IJavaPeerable
 
 [global::Android.Runtime.Register ("InterfaceWithoutNamespace", DoNotGenerateAcw=true)]
 internal partial class IInterfaceWithoutNamespaceInvoker : global::Java.Lang.Object, IInterfaceWithoutNamespace {
-	static IntPtr java_class_ref {
-		get { return _members__InterfaceWithoutNamespace.JniPeerType.PeerReference.Handle; }
-	}
-
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 		get { return _members__InterfaceWithoutNamespace; }
 	}
 
-	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-	protected override IntPtr ThresholdClass {
-		get { return _members__InterfaceWithoutNamespace.JniPeerType.PeerReference.Handle; }
-	}
-
-	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-	protected override global::System.Type ThresholdType {
-		get { return _members__InterfaceWithoutNamespace.ManagedPeerType; }
-	}
-
-	static readonly JniPeerMembers _members__InterfaceWithoutNamespace = new XAPeerMembers ("InterfaceWithoutNamespace", typeof (IInterfaceWithoutNamespaceInvoker));
+	static readonly JniPeerMembers _members__InterfaceWithoutNamespace = new JniPeerMembers ("InterfaceWithoutNamespace", typeof (IInterfaceWithoutNamespaceInvoker));
 
 	public IInterfaceWithoutNamespaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{

@@ -31,8 +31,6 @@ namespace Xamarin.Android.Tasks
 
 		public string? ProjectFilePath { get; set; }
 
-		public string? SequencePointsMode { get; set; }
-
 		public bool AndroidApplication { get; set; } = true;
 
 		[Output]
@@ -49,9 +47,6 @@ namespace Xamarin.Android.Tasks
 
 		[Output]
 		public string? ZipAlignPath { get; set; }
-
-		[Output]
-		public string? AndroidSequencePointsMode { get; set; }
 
 		[Output]
 		public string? LintToolPath { get; set; }
@@ -187,11 +182,6 @@ namespace Xamarin.Android.Tasks
 			if (!Validate ())
 				return false;
 
-			SequencePointsMode mode;
-			if (!SequencePointsModeParser.TryParse (SequencePointsMode ?? "None", out mode))
-				Log.LogCodedError ("XA0104", Properties.Resources.XA0104, SequencePointsMode ?? "");
-			AndroidSequencePointsMode = mode.ToString ();
-
 			AndroidApiLevelName = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (AndroidApiLevel);
 
 			LogOutputs ();
@@ -209,7 +199,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ($"  {nameof (AndroidSdkBuildToolsPath)}: {AndroidSdkBuildToolsPath}");
 			Log.LogDebugMessage ($"  {nameof (AndroidSdkBuildToolsBinPath)}: {AndroidSdkBuildToolsBinPath}");
 			Log.LogDebugMessage ($"  {nameof (ZipAlignPath)}: {ZipAlignPath}");
-			Log.LogDebugMessage ($"  {nameof (AndroidSequencePointsMode)}: {AndroidSequencePointsMode}");
 			Log.LogDebugMessage ($"  {nameof (LintToolPath)}: {LintToolPath}");
 			Log.LogDebugMessage ($"  {nameof (ApkSignerJar)}: {ApkSignerJar}");
 			Log.LogDebugMessage ($"  {nameof (AndroidUseApkSigner)}: {AndroidUseApkSigner}");

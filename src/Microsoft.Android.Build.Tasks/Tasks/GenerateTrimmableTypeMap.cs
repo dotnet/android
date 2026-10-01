@@ -46,8 +46,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogMessage (MessageImportance.Low, $"Rooting manifest-referenced type '{javaTypeName}' ({managedTypeName}) as unconditional.");
 		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
 			log.LogCodedWarning ("XA4250", Properties.Resources.XA4250, javaTypeName);
-		public void LogLibraryManifestMergeWarning (string message) =>
-			log.LogCodedWarning ("XA4302", Properties.Resources.XA4302, message);
 		public void LogInvalidManifestPlaceholderWarning (string placeholders) =>
 			log.LogCodedWarning ("XA1010", Properties.Resources.XA1010, placeholders);
 		public void LogUnresolvableJavaPeerSkippedWarning (
@@ -83,6 +81,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogCodedError ("XA4261", Properties.Resources.XA4261, managedTypeName, jniSignature);
 		public void LogInvalidSuperArgumentsStringError (string managedTypeName, string superArgumentsString) =>
 			log.LogCodedError ("XA4262", Properties.Resources.XA4262, managedTypeName, superArgumentsString);
+		public void LogRidSpecificCallbackMetadataMismatchError (string assemblyName, string firstPath, string secondPath) =>
+			log.LogCodedError ("XA4266", Properties.Resources.XA4266, assemblyName, firstPath, secondPath);
 		public void LogCustomJavaObjectError (string managedTypeName) =>
 			log.LogError ("{0}", $"XA4212: {string.Format (CultureInfo.CurrentCulture, Properties.Resources.XA4212, managedTypeName)}");
 		public void LogCustomJavaObjectWarning (string managedTypeName) =>
@@ -115,13 +115,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public string? CustomViewMapFile { get; set; }
 
 	public string? MergedAndroidManifestOutput { get; set; }
-
-	/// <summary>
-	/// Absolute paths to extracted library (.aar) <c>AndroidManifest.xml</c> documents that must be
-	/// merged into the application manifest. Only populated on the legacy manifest-merger path;
-	/// <c>manifestmerger.jar</c> handles this downstream in the <c>_ManifestMerger</c> target.
-	/// </summary>
-	public string []? MergedManifestDocuments { get; set; }
 
 	public string? PackageName { get; set; }
 	public string? ApplicationLabel { get; set; }
@@ -209,7 +202,13 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			foreach (var (path, isFrameworkAssembly) in assemblyInputs) {
 				var peReader = new PEReader (File.OpenRead (path));
 				peReaders.Add (peReader);
+				if (!peReader.HasMetadata) {
+					continue;
+				}
 				var mdReader = peReader.GetMetadataReader ();
+				if (!mdReader.IsAssembly) {
+					continue;
+				}
 				var assemblyName = mdReader.GetString (mdReader.GetAssemblyDefinition ().Name);
 				assemblies.Add (new AssemblyInput (assemblyName, path, peReader));
 				if (isFrameworkAssembly) {
@@ -232,8 +231,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 					EmbedAssemblies: EmbedAssemblies,
 					ManifestPlaceholders: ManifestPlaceholders,
 					CheckedBuild: CheckedBuild,
-					ApplicationJavaClass: ApplicationJavaClass,
-					LibraryManifests: MergedManifestDocuments);
+					ApplicationJavaClass: ApplicationJavaClass);
 			}
 
 			var generator = new TrimmableTypeMapGenerator (new MSBuildTrimmableTypeMapLogger (Log));

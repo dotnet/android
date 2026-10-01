@@ -12,13 +12,6 @@ extern "C" {
 
 	/*
 	 * Class:     mono_android_Runtime
-	 * Method:    dumpTimingData
-	 * Signature: ()V
-	 */
-	JNIEXPORT void JNICALL Java_mono_android_Runtime_dumpTimingData (JNIEnv *, jclass);
-
-	/*
-	 * Class:     mono_android_Runtime
 	 * Method:    initInternal
 	 * Signature: (Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;ILjava/lang/ClassLoader;[Ljava/lang/String;IZZ)V
 	 */

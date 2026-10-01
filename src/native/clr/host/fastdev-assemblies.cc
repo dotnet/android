@@ -6,7 +6,6 @@
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
-#include <limits>
 
 #include <constants.hh>
 #include <host/fastdev-assemblies.hh>
@@ -76,6 +75,11 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	// the resulting bare-filename `Assembly.Location` does not matter.
 	constexpr std::string_view corelib_name { "System.Private.CoreLib.dll" };
 	if (tpa_in_use && name != corelib_name) {
+		log_debugf (
+			LOG_ASSEMBLY,
+			"Deferring assembly '%.*s' to CoreCLR's FastDev disk loader; this is expected",
+			static_cast<int>(name.length ()), name.data ()
+		);
 		return nullptr;
 	}
 
@@ -116,17 +120,6 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	if (!file_size) [[unlikely]] {
 		log_warnf (LOG_ASSEMBLY, "Unable to determine FastDev assembly '%.*s' file size", static_cast<int>(name.length ()), name.data ());
 		return nullptr;
-	}
-
-	constexpr size_t MAX_SIZE = std::numeric_limits<std::remove_reference_t<decltype(size)>>::max ();
-	if (file_size.value () > MAX_SIZE) [[unlikely]] {
-		Helpers::abort_applicationf (
-			LOG_ASSEMBLY,
-			std::source_location::current (),
-			"FastDev assembly '%.*s' size exceeds the maximum supported value of %zu",
-			static_cast<int>(name.length ()), name.data (),
-			MAX_SIZE
-		);
 	}
 
 	size = static_cast<int64_t>(file_size.value ());
@@ -266,6 +259,13 @@ auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 	// CoreCLR's `.r2r.dll` probes aren't compatible with our TPA path.
 	if (count > 0 && found_corelib && !found_r2r) {
 		tpa_in_use = true;
+		log_writef (
+			LOG_ASSEMBLY,
+			LogLevel::Info,
+			"FastDev: Found %zu assemblies in '%s'. Loading assemblies from disk is normal during Fast Deployment.",
+			count,
+			override_dir_path
+		);
 		return tpa_list.data;
 	}
 	std::free (tpa_list.data);

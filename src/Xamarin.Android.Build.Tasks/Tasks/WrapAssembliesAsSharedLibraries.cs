@@ -33,14 +33,6 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 
 	public bool UseAssemblyStore { get; set; }
 
-	/// <summary>
-	/// When true (always the case for CoreCLR), the assembly store is wrapped into a shared library
-	/// whose payload is exported via the <c>_assembly_store</c> dynamic symbol, so the runtime
-	/// can locate it with <c>dlopen</c>+<c>dlsym</c> instead of parsing the APK ZIP directory.
-	/// When false (MonoVM), the classic <see cref="DSOWrapperGenerator"/> layout is used instead.
-	/// </summary>
-	public bool UseDlopenAssemblyStore { get; set; }
-
 	[Required]
 	public ITaskItem [] ResolvedAssemblies { get; set; } = [];
 
@@ -52,20 +44,21 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 
 	public override bool RunTask ()
 	{
-		var wrapper_config = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, RuntimePackLibraryDirectories, IntermediateOutputPath);
 		var files = new PackageFileListBuilder ();
 
 		if (UseAssemblyStore)
-			WrapAssemblyStores (wrapper_config, files);
-		else
+			WrapAssemblyStores (files);
+		else {
+			var wrapper_config = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, RuntimePackLibraryDirectories, IntermediateOutputPath);
 			AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedAssemblies, (TaskLoggingHelper log, AndroidTargetArch arch, ITaskItem assembly) => WrapAssembly (log, arch, assembly, wrapper_config, files));
+		}
 
 		WrappedAssemblies = files.ToArray ();
 
 		return !Log.HasLoggedErrors;
 	}
 
-	void WrapAssemblyStores (DSOWrapperGenerator.Config dsoWrapperConfig, PackageFileListBuilder files)
+	void WrapAssemblyStores (PackageFileListBuilder files)
 	{
 		foreach (var store in ResolvedAssemblies) {
 			var store_path = store.ItemSpec;
@@ -77,9 +70,7 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 
 			var arch = MonoAndroidHelper.AbiToTargetArch (abi);
 			var archive_path = MakeArchiveLibPath (abi, "lib" + Path.GetFileName (store_path));
-			var wrapped_source_path = UseDlopenAssemblyStore
-				? DlopenAssemblyStoreGenerator.WrapIt (Log, dsoWrapperConfig, arch, store_path, Path.GetFileName (archive_path))
-				: DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, arch, store_path, Path.GetFileName (archive_path));
+			var wrapped_source_path = DlopenAssemblyStoreGenerator.WrapIt (Log, AndroidBinUtilsDirectory, IntermediateOutputPath, arch, store_path, Path.GetFileName (archive_path));
 
 			files.AddItem (wrapped_source_path, archive_path);
 		}

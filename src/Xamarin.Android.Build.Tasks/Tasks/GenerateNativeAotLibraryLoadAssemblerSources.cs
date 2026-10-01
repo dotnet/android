@@ -92,7 +92,7 @@ public class GenerateNativeAotLibraryLoadAssemblerSources : AndroidTask
 
 		// Take library names, match against NativeRuntimeComponents to see whether a
 		// component has an init function associated with it.
-		var bclComponents = new NativeRuntimeComponents (monoComponents: null);
+		var bclComponents = new NativeRuntimeComponents ();
 		var bclInitFunctions = new List<string> ();
 
 		seen = new HashSet<string> (StringComparer.Ordinal);

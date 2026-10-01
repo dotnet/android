@@ -3,7 +3,6 @@
 using System;
 using System.Linq;
 using System.IO;
-using System.Reflection;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
@@ -163,11 +162,6 @@ namespace Xamarin.Android.Tasks
 		protected override string GenerateFullPathToTool ()
 		{
 			return Path.Combine (JavaSdkDirectory, "bin", ToolExe);
-		}
-
-		private string GetMsBuildDirectory ()
-		{
-			return Path.GetDirectoryName (Assembly.GetExecutingAssembly ().Location);
 		}
 	}
 }
