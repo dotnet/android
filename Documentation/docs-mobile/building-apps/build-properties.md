@@ -1039,6 +1039,11 @@ dotnet build -p:AndroidNdkDirectory=/path/to/android-ndk
 If this property is not set, .NET for Android locates the NDK from the
 configured Android development environment.
 
+In .NET 11 and later, NativeAOT builds require an installed Android NDK.
+The final native link uses the NDK's `ld.lld`, `llvm-objcopy`, CRT objects,
+sysroot libraries, and compiler runtime. CoreCLR builds do not require an NDK
+unless native library stripping or a checked build is enabled.
+
 ## AndroidPackageFormat
 
 An enum-style property with valid
@@ -1318,6 +1323,13 @@ Experimental support for this property was added in .NET 8, removed in .NET 10.
 A bool property which tells the packaging process to strip debug symbols from the native shared libraries (`.so` files).
 
 The default value is `false` and the debug symbols, if any, will be preserved when packaging.
+
+In .NET 11 and later, setting this property to `true` requires an installed
+Android NDK and uses its `llvm-strip` tool for APK and AAB packaging, including
+Debug and Fast Deployment builds. Libraries are stripped into intermediate
+copies; the original project files and installed runtime packs are not modified.
+Missing NDK tools or a failed strip operation fail the build instead of
+packaging an unstripped fallback.
 
 ## AndroidSupportedAbis
 

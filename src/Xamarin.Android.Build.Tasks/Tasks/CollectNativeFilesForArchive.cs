@@ -43,6 +43,8 @@ public class CollectNativeFilesForArchive : AndroidTask
 
 	public bool StripNativeLibraries { get; set; }
 
+	public string? StripToolPath { get; set; }
+
 	[Required]
 	public string [] SupportedAbis { get; set; } = [];
 
@@ -70,67 +72,85 @@ public class CollectNativeFilesForArchive : AndroidTask
 	[Output]
 	public ITaskItem [] DSODirectoriesToDelete { get; set; } = [];
 
-	string? stripPath;
+	[Output]
+	public ITaskItem [] StrippedLibraries { get; set; } = [];
+
+	readonly List<ITaskItem> strippedLibraries = new ();
 
 	public override bool RunTask ()
 	{
-		var apk = new PackageFileListBuilder ();
-		var dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, RuntimePackLibraryDirectories, IntermediateOutputPath);
+		strippedLibraries.Clear ();
+		StrippedLibraries = [];
+		if (StripNativeLibraries && !File.Exists (StripToolPath)) {
+			Log.LogCodedError ("XA5105", Properties.Resources.XA5105, "llvm-strip", string.Join (";", SupportedAbis), StripToolPath ?? "");
+			return false;
+		}
 
-		var outputFiles = new List<string> {
-			ApkOutputPath
-		};
+		bool success = false;
+		try {
+			var apk = new PackageFileListBuilder ();
+			var dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, RuntimePackLibraryDirectories, IntermediateOutputPath);
 
-		if (StripNativeLibraries) {
-			stripPath = Path.Combine (AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (AndroidBinUtilsDirectory, "llvm-strip"));
-			if (String.IsNullOrEmpty (stripPath)) {
-				Log.LogDebugMessage ("Stripping of native libraries enabled but llvm-strip not found. Libraries won't be stripped.");
+			var outputFiles = new List<string> {
+				ApkOutputPath
+			};
+
+			var files = new ArchiveFileList ();
+			AddRuntimeLibraries (apk, SupportedAbis);
+			AddNativeLibraries (files, SupportedAbis);
+			AddAdditionalNativeLibraries (files, SupportedAbis);
+
+			foreach (var file in files) {
+				var item = Path.Combine (file.archivePath.Replace (Path.DirectorySeparatorChar, '/'));
+				Log.LogDebugMessage ("\tAdding {0}", file.filePath);
+				apk.AddItem (file.filePath, item);
+			}
+
+			// Task output parameters
+			FilesToAddToArchive = apk.ToArray ();
+			OutputFiles = outputFiles.Select (a => new TaskItem (a)).ToArray ();
+			DSODirectoriesToDelete = DSOWrapperGenerator.GetDirectoriesToCleanUp (dsoWrapperConfig)
+				.Concat (DlopenAssemblyStoreGenerator.GetDirectoriesToCleanUp (IntermediateOutputPath, SupportedAbis))
+				.Select (d => new TaskItem (d))
+				.ToArray ();
+			StrippedLibraries = strippedLibraries.ToArray ();
+			success = !Log.HasLoggedErrors;
+			return success;
+		} finally {
+			if (!success) {
+				foreach (var library in strippedLibraries) {
+					File.Delete (library.ItemSpec);
+				}
+				StrippedLibraries = [];
+				FilesToAddToArchive = [];
 			}
 		}
-
-		var files = new ArchiveFileList ();
-
-		AddRuntimeLibraries (apk, SupportedAbis);
-		AddNativeLibraries (files, SupportedAbis);
-		AddAdditionalNativeLibraries (files, SupportedAbis);
-
-		foreach (var file in files) {
-			var item = Path.Combine (file.archivePath.Replace (Path.DirectorySeparatorChar, '/'));
-			Log.LogDebugMessage ("\tAdding {0}", file.filePath);
-			apk.AddItem (file.filePath, item);
-		}
-
-		// Task output parameters
-		FilesToAddToArchive = apk.ToArray ();
-		OutputFiles = outputFiles.Select (a => new TaskItem (a)).ToArray ();
-		DSODirectoriesToDelete = DSOWrapperGenerator.GetDirectoriesToCleanUp (dsoWrapperConfig)
-			.Concat (DlopenAssemblyStoreGenerator.GetDirectoriesToCleanUp (IntermediateOutputPath, SupportedAbis))
-			.Select (d => new TaskItem (d))
-			.ToArray ();
-
-		return !Log.HasLoggedErrors;
 	}
 
-	string StripNativeLibIfNecessary (string filesystemPath, string abi)
+	string? StripNativeLibIfNecessary (string filesystemPath, string abi, string archiveFileName)
 	{
-		if (!StripNativeLibraries || String.IsNullOrEmpty (stripPath)) {
+		if (!StripNativeLibraries) {
 			return filesystemPath;
 		}
 
-		if (filesystemPath.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase)) {
-			// Wrapped assemblies have no debug info here.
+		if (filesystemPath.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase) || IsWrapperScript (filesystemPath, null)) {
+			// Wrapped assemblies and wrapper scripts have no native debug info.
 			return filesystemPath;
+		}
+
+		if (StripToolPath.IsNullOrEmpty ()) {
+			throw new InvalidOperationException ("The Android NDK strip tool must be resolved before collecting native libraries.");
 		}
 
 		ELFInfo? info = ELFHelper.GetInfo (Log, filesystemPath);
-		if (info == null || !info.HasDebugInfo) {
+		if (info != null && !info.HasDebugInfo) {
 			return filesystemPath;
 		}
 
 		string outputDir = Path.Combine (IntermediateOutputPath, MonoAndroidHelper.AbiToRid (abi), "stripped");
 		Directory.CreateDirectory (outputDir);
 
-		string outputFilePath = Path.Combine (outputDir, Path.GetFileName (filesystemPath));
+		string outputFilePath = Path.Combine (outputDir, Path.GetFileName (archiveFileName));
 		var args = new List<string> {
 			"-o",
 			MonoAndroidHelper.QuoteFileNameArgument (outputFilePath),
@@ -138,13 +158,19 @@ public class CollectNativeFilesForArchive : AndroidTask
 		};
 
 		Log.LogDebugMessage ($"Stripping native library: '{filesystemPath}' to '{outputFilePath}'");
-		int ret = MonoAndroidHelper.RunProcess ("llvm-strip", stripPath, String.Join (" ", args), Log);
-		if (ret != 0) {
-			Log.LogDebugMessage ($"Library '{filesystemPath}' not stripped, will package the original file.");
-			return filesystemPath;
+		bool success = false;
+		try {
+			if (MonoAndroidHelper.RunProcess ("llvm-strip", StripToolPath, String.Join (" ", args), Log) != 0) {
+				return null; // RunProcess logged XA0142; never package an unstripped fallback.
+			}
+			strippedLibraries.Add (new TaskItem (outputFilePath));
+			success = true;
+			return outputFilePath;
+		} finally {
+			if (!success) {
+				File.Delete (outputFilePath);
+			}
 		}
-
-		return outputFilePath;
 	}
 
 	void AddNativeLibraryToArchive (PackageFileListBuilder apk, string abi, string filesystemPath, string inArchiveFileName, ITaskItem taskItem)
@@ -152,7 +178,10 @@ public class CollectNativeFilesForArchive : AndroidTask
 		string archivePath = MakeArchiveLibPath (abi, inArchiveFileName);
 		Log.LogDebugMessage ($"Adding native library: {filesystemPath} (APK path: {archivePath})");
 		ELFHelper.AssertValidLibraryAlignment (Log, ZipAlignmentPages, filesystemPath, taskItem);
-		apk.AddItem (StripNativeLibIfNecessary (filesystemPath, abi), archivePath);
+		string? path = StripNativeLibIfNecessary (filesystemPath, abi, inArchiveFileName);
+		if (path != null) {
+			apk.AddItem (path, archivePath);
+		}
 	}
 
 	void AddRuntimeLibraries (PackageFileListBuilder apk, string [] supportedAbis)
@@ -344,8 +373,11 @@ public class CollectNativeFilesForArchive : AndroidTask
 		}
 
 		ELFHelper.AssertValidLibraryAlignment (Log, ZipAlignmentPages, path, taskItem);
-		item.filePath = StripNativeLibIfNecessary (item.filePath, abi);
-		files.Add (item);
+		string? strippedPath = StripNativeLibIfNecessary (item.filePath, abi, fileName);
+		if (strippedPath != null) {
+			item.filePath = strippedPath;
+			files.Add (item);
+		}
 	}
 
 	// This method is used only for internal warnings which will never be shown to the end user, therefore there's
