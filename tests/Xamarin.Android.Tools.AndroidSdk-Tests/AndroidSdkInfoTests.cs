@@ -67,6 +67,77 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
+		public void DiscoverInstallationPaths_WithMissingPreferredJdk ()
+		{
+			CreateSdks (out string root, out string jdk, out _, out string sdk);
+			Directory.Delete (jdk, recursive: true);
+			try {
+				AndroidSdkInfo.DiscoverInstallationPaths (out var sdkPath, out var allSdkPaths, out _,
+					preferredAndroidSdkPath: sdk, preferredJavaSdkPath: jdk);
+
+				Assert.AreEqual (sdk, sdkPath);
+				CollectionAssert.Contains (allSdkPaths, sdk);
+			} finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		[Test]
+		public void DiscoverInstallationPaths_WithMissingPreferredAndroidSdk ()
+		{
+			CreateSdks (out string root, out string jdk, out _, out string sdk);
+			Directory.Delete (sdk, recursive: true);
+			try {
+				AndroidSdkInfo.DiscoverInstallationPaths (out _, out var allSdkPaths, out var javaSdkPath,
+					preferredAndroidSdkPath: sdk, preferredJavaSdkPath: jdk);
+
+				Assert.AreEqual (jdk, javaSdkPath);
+				CollectionAssert.DoesNotContain (allSdkPaths, sdk);
+			} finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		[Test]
+		public void DiscoverInstallationPaths_WithoutSdkOrJdk ()
+		{
+			var root = CreateRoot ();
+			try {
+				var sdk = Path.Combine (root, "missing-sdk");
+				var jdk = Path.Combine (root, "missing-jdk");
+
+				AndroidSdkInfo.DiscoverInstallationPaths (new EmptyAndroidSdk (), out var sdkPath, out var allSdkPaths,
+					out var javaSdkPath, preferredAndroidSdkPath: sdk, preferredJavaSdkPath: jdk);
+
+				Assert.IsNull (sdkPath);
+				Assert.IsEmpty (allSdkPaths);
+				Assert.IsNull (javaSdkPath);
+			} finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		sealed class EmptyAndroidSdk : AndroidSdkBase
+		{
+			public EmptyAndroidSdk () : base ((_, _) => { }) { }
+
+			public override string NdkHostPlatform32Bit => "";
+			public override string NdkHostPlatform64Bit => "";
+			public override string PreferedAndroidSdkPath => null;
+			public override string PreferedAndroidNdkPath => null;
+			public override string PreferedJavaSdkPath => null;
+
+			protected override IEnumerable<string> GetAllAvailableAndroidSdks () => [];
+			protected override IEnumerable<string> GetAllAvailableAndroidNdks () => [];
+			protected override IEnumerable<string> GetJavaSdkPaths () => [];
+			protected override string GetShortFormPath (string path) => path;
+
+			public override void SetPreferredAndroidSdkPath (string path) => throw new NotSupportedException ();
+			public override void SetPreferredAndroidNdkPath (string path) => throw new NotSupportedException ();
+			public override void SetPreferredJavaSdkPath (string path) => throw new NotSupportedException ();
+		}
+
+		[Test]
 		public void Ndk_MultipleNdkVersionsInSdk ()
 		{
 			// Must match like-named constants in AndroidSdkBase
