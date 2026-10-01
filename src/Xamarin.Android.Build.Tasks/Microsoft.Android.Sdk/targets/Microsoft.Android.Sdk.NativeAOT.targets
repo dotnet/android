@@ -7,7 +7,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 -->
 <Project>
 
-  <UsingTask TaskName="Microsoft.Android.Tasks.SetIlcToolchainPath" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotLibraryLoadAssemblerSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotEnvironmentAssemblerSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Microsoft.Android.Tasks.LinkNativeAotSharedLibrary" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
@@ -87,42 +86,31 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
            Windows-specific .cmd ones. We must use the latter since end users might not have bash
            installed on Windows -->
       <_NdkWrapperScriptExt Condition=" $([MSBuild]::IsOSPlatform('windows')) ">.cmd</_NdkWrapperScriptExt>
+      <_NdkToolExecutableExt Condition=" $([MSBuild]::IsOSPlatform('windows')) ">.exe</_NdkToolExecutableExt>
       <_NdkSysrootDir>$(_AndroidNdkToolchainDirectory)/sysroot/usr/lib/$(_NdkSysrootAbi)/</_NdkSysrootDir>
-      <_NdkBinDir>$(_AndroidNdkToolchainDirectory)/bin/</_NdkBinDir>
+      <_NdkBinDir>$([MSBuild]::NormalizeDirectory('$(_AndroidNdkToolchainDirectory)', 'bin'))</_NdkBinDir>
 
       <!--
           Don't call `clang` directly, use the wrapper scripts instead since they properly pass
           arguments required to link the application using the right API level libraries.
-          Using the script also makes it certain that we're not invoking a random `clang` in
-          from the system but rather the NDK one.
-
-          Also, we cannot use $(_NdkBinDir) here because, on Windows, the `Exec` task will get
-          confused by the forward slash in the path (even though it's a valid path separator
-          character on Windows) and signal the following error:
-
-            SetupOSSpecificProps:
-              where /Q "C:\Android\android-sdk\ndk\29.0.14206865\toolchains/llvm/prebuilt/windows-x86_64/bin/clang++"
-            1>EXEC : error : Invalid pattern is specified in "path:pattern".
-            The command "where /Q "C:\Android\android-sdk\ndk\29.0.14206865\toolchains/llvm/prebuilt/windows-x86_64/bin/clang++"" exited with code 2.
-
-          This could be fixed by making sure $(_NdkBinDir) path is fixed-up to use the canonical
-          form of path separation for the host OS, but it's simpler to just use the NDK-specific
-          compiler/linker wrapper script name.
+          Canonical absolute paths also work with the Windows `where` probe without changing
+          the MSBuild process's PATH.
 
           Also, do NOT use `clang++` here because it will link the dynamic libc++ library into the
           application. If, for some reason, `clang++` has to be used, `<LinkerArgs>` need to be
           added to pass `-nostdlib++` to it.
       -->
-      <CppCompilerAndLinker>$(_NdkClangPrefix)$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppCompilerAndLinker>
-      <CppLinker>$(_NdkClangPrefix)$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppLinker>
-      <ObjCopyName>llvm-objcopy</ObjCopyName>
+      <CppCompilerAndLinker>$([MSBuild]::NormalizePath('$(_NdkBinDir)', '$(_NdkClangPrefix)$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)'))</CppCompilerAndLinker>
+      <CppLinker>$(CppCompilerAndLinker)</CppLinker>
+      <CppLibCreator>$([MSBuild]::NormalizePath('$(_NdkBinDir)', 'llvm-ar$(_NdkToolExecutableExt)'))</CppLibCreator>
+      <ObjCopyName>$(_AndroidNdkObjcopyToolPath)</ObjCopyName>
+      <_AndroidIlcToolchainPath>$(_NdkBinDir)$([System.IO.Path]::PathSeparator)$([System.Environment]::GetEnvironmentVariable('PATH'))</_AndroidIlcToolchainPath>
+      <_IlcEnvironmentVariables>$(_IlcEnvironmentVariables);PATH=$([MSBuild]::Escape($(_AndroidIlcToolchainPath)))</_IlcEnvironmentVariables>
 
       <!-- We must ensure this is `false`, so that the compiler driver does not add libc++,
            which NativeAOT applications do not link. -->
       <LinkStandardCPlusPlusLibrary>false</LinkStandardCPlusPlusLibrary>
     </PropertyGroup>
-
-    <SetIlcToolchainPath ToolchainBinDirectory="$(_NdkBinDir)" />
   </Target>
 
   <Target Name="_AndroidComputeIlcCompileInputs">
@@ -285,6 +273,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       Inputs="$(NativeObject);@(_NativeAotLinkLibraries);@(_NativeAotAdditionalObjects);@(_NativeAotCrtStartFiles);@(_NativeAotCrtEndFiles);@(_NativeAotCompilerRtLibs);$(ExportsFile);$(_AndroidNdkLinkerToolPath);$(_AndroidNdkObjcopyToolPath);$(_AndroidBuildPropertiesCache);$(MSBuildThisFileFullPath)"
       Outputs="@(_AndroidNativeAotLinkOutputs)">
     <LinkNativeAotSharedLibrary
+        MSBuildRuntime="NET"
         LinkerToolPath="$(_AndroidNdkLinkerToolPath)"
         ObjcopyToolPath="$(_AndroidNdkObjcopyToolPath)"
         IntermediateOutputPath="$(NativeIntermediateOutputPath)"

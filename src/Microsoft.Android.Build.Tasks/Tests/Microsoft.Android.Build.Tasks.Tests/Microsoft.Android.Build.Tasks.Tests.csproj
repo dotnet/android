@@ -15,6 +15,9 @@
 
   <ItemGroup>
     <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\MockBuildEngine.cs" Link="MockBuildEngine.cs" />
+    <AssemblyMetadata Include="DotNetToolPath" Value="$(DotNetPreviewTool)" />
+    <Content Include="..\..\..\Xamarin.Android.Build.Tasks\Xamarin.Android.Common.targets" Link="TargetInputs\Xamarin.Android.Common.targets" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\..\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.NativeAOT.targets" Link="TargetInputs\Microsoft.Android.Sdk.NativeAOT.targets" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

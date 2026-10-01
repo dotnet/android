@@ -2114,6 +2114,7 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_ResolveSdks"
     Condition=" '$(DesignTimeBuild)' != 'true' and ('$(_AndroidRuntime)' == 'NativeAOT' or '$(_AndroidStripNativeLibraries)' == 'true' or '$(_AndroidCheckedBuild)' != '') ">
   <ResolveAndroidNdk
+      MSBuildRuntime="NET"
       AndroidNdkDirectory="$(_AndroidNdkDirectory)"
       AndroidRuntime="$(_AndroidRuntime)"
       StripNativeLibraries="$(_AndroidStripNativeLibraries)"
