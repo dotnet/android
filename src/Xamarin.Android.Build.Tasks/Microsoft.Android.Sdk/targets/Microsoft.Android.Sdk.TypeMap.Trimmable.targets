@@ -230,6 +230,7 @@
     </ItemGroup>
 
     <GenerateTrimmableTypeMap
+        MSBuildRuntime="NET"
         ResolvedAssemblies="@(_TypeMapInputAssemblies)"
         ResolvedFrameworkAssemblies="@(_TypeMapFrameworkAssemblies)"
         FrameworkAssemblyNames="@(_TypeMapFrameworkAssemblies->'%(Filename)')"

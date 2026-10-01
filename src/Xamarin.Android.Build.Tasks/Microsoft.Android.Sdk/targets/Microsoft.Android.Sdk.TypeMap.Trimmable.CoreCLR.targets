@@ -232,6 +232,7 @@
       Outputs="$(_PostTrimTrimmableTypeMapJavaStamp)">
 
     <GenerateTrimmableTypeMap
+        MSBuildRuntime="NET"
         ResolvedAssemblies="@(_PostTrimTrimmableTypeMapInputAssemblies)"
         FrameworkAssemblyNames="@(ResolvedFrameworkAssemblies->'%(Filename)')"
         OutputDirectory="$(_TypeMapOutputDirectory)"
@@ -288,6 +289,7 @@
       BeforeTargets="_AddTrimmableTypeMapToResolvedFileToPublish;CreateReadyToRunImages">
     <GenerateMissingTypeMapStubs
         Condition="Exists('$(IntermediateOutputPath)linked')"
+        MSBuildRuntime="NET"
         TypeMapDirectory="$(_TypeMapOutputDirectory)"
         LinkedAssembliesDirectory="$(IntermediateOutputPath)linked"
         RootTypeMapAssemblyName="$(_TypeMapAssemblyName)"

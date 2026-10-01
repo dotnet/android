@@ -578,6 +578,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       Condition=" '$(_AndroidManifestAbs)' != '' and !Exists ('$(_AndroidManifestAbs)') "
   />
   <GetAndroidPackageName
+      MSBuildRuntime="NET"
       ManifestFile="$(_AndroidManifestAbs)"
       AssemblyName="$(AssemblyName)"
       ManifestPlaceholders="$(AndroidManifestPlaceholders)"
@@ -2154,6 +2155,7 @@ because xbuild doesn't support framework reference assemblies.
     Condition="'$(EmbedAssembliesIntoApk)' == 'True' ">
 
     <CompressAssemblies
+        MSBuildRuntime="NET"
         AssembliesToCompress="@(_AssembliesToCompress)"
         CompressionLevel="$(_AndroidAssemblyStoreCompressionLevel)">
       <Output TaskParameter="FailedToCompressAssembliesOutput" ItemName="_FailedToCompressAssemblies" />
