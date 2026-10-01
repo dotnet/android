@@ -5,8 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
-using ELFSharp.ELF;
-using ELFSharp.ELF.Sections;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -20,6 +18,7 @@ namespace Xamarin.Android.Build.Tests
 	public class PackagingTest : BaseTest
 	{
 		[Test]
+		[Category ("RequiresAndroidNdk")]
 		public void ManagedAssemblyStoreElfWrappers ([Values ("apk", "aab")] string packageFormat)
 		{
 			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
@@ -66,22 +65,28 @@ namespace Xamarin.Android.Build.Tests
 					string abi = MonoAndroidHelper.ArchToAbi (arch);
 					string entryName = $"{prefix}{abi}/libassembly-store.so";
 					Assert.IsTrue (zip.ContainsEntry (entryName), $"The package must preserve the ABI split path '{entryName}'.");
-					using var stream = new MemoryStream ();
-					zip.ReadEntry (entryName).Extract (stream);
-					stream.Position = 0;
-					using var elf = ELFReader.Load (stream, shouldOwnStream: false);
-					Assert.AreEqual (FileType.SharedObject, elf.Type);
+					string directory = builder.Output.GetIntermediaryPath (Path.Combine ("elf-inspection", abi));
+					Directory.CreateDirectory (directory);
+					string library = Path.Combine (directory, "libassembly-store.so");
+					using (var stream = File.Create (library)) {
+						zip.ReadEntry (entryName).Extract (stream);
+					}
+					using var document = NativeToolTestHelper.ReadElf (library);
+					var elf = document.RootElement [0];
+					var header = elf.GetProperty ("ElfHeader");
+					Assert.AreEqual ("SharedObject (0x3)", header.GetProperty ("Type").GetString ());
 					Assert.AreEqual (arch switch {
-						AndroidTargetArch.Arm => Machine.ARM,
-						AndroidTargetArch.Arm64 => Machine.AArch64,
-						AndroidTargetArch.X86_64 => Machine.AMD64,
+						AndroidTargetArch.Arm => 40,
+						AndroidTargetArch.Arm64 => 183,
+						AndroidTargetArch.X86_64 => 62,
 						_ => throw new NotSupportedException ($"Unexpected test architecture: {arch}"),
-					}, elf.Machine);
-					var symbols = (ISymbolTable)elf.GetSection (".dynsym");
-					Assert.AreEqual (2, symbols.Entries.Count ());
-					Assert.AreEqual (SymbolType.Object, symbols.Entries.Single (symbol => symbol.Name == "_assembly_store").Type);
-					Assert.IsFalse (symbols.Entries.Any (symbol => symbol.Name == "_assembly_store_end"));
-					byte [] store = elf.GetSection ("payload").GetContents ();
+					}, header.GetProperty ("Machine").GetProperty ("Value").GetInt32 ());
+					var symbols = elf.GetProperty ("DynamicSymbols").EnumerateArray ().Select (item => item.GetProperty ("Symbol")).ToArray ();
+					Assert.AreEqual (2, symbols.Length);
+					Assert.AreEqual (1, symbols.Single (symbol => symbol.GetProperty ("Name").GetProperty ("Name").GetString () == "_assembly_store")
+						.GetProperty ("Type").GetProperty ("Value").GetInt32 ());
+					Assert.IsFalse (symbols.Any (symbol => symbol.GetProperty ("Name").GetProperty ("Name").GetString () == "_assembly_store_end"));
+					byte [] store = NativeToolTestHelper.ReadSection (library, "payload");
 					string rawStore = builder.Output.GetIntermediaryPath (Path.Combine ("app_shared_libraries", abi, "assembly-store.so"));
 					CollectionAssert.AreEqual (File.ReadAllBytes (rawStore), store, "Wrapping must preserve every raw store byte.");
 					using var payload = new BinaryReader (new MemoryStream (store));

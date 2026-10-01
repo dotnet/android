@@ -1,8 +1,10 @@
 #nullable enable
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using NUnit.Framework;
 
 namespace Xamarin.Android.Build.Tests;
@@ -13,9 +15,7 @@ static class NativeToolTestHelper
 	{
 		string directory = typeof (NativeToolTestHelper).Assembly.GetCustomAttributes<AssemblyMetadataAttribute> ()
 			.Single (attribute => attribute.Key == "AndroidNdkDirectory").Value ?? "";
-		if (!Directory.Exists (directory)) {
-			Assert.Ignore ("An Android NDK is required for native tool validation. Set AndroidNdkDirectory when building this test project.");
-		}
+		DirectoryAssert.Exists (directory, "An Android NDK is required for native tool validation. Set AndroidNdkDirectory when building this test project.");
 
 		string host = OperatingSystem.IsMacOS () ? "darwin-x86_64" :
 			OperatingSystem.IsLinux () ? "linux-x86_64" :
@@ -25,5 +25,50 @@ static class NativeToolTestHelper
 		string path = Path.Combine (directory, "toolchains", "llvm", "prebuilt", host, "bin", executable);
 		FileAssert.Exists (path, "The configured NDK must contain the host's LLVM inspection tools.");
 		return path;
+	}
+
+	public static string Run (string name, params string [] arguments)
+	{
+		string executable = GetToolPath (name);
+		using var process = new Process {
+			StartInfo = new ProcessStartInfo (executable) {
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+			},
+		};
+		foreach (string argument in arguments) {
+			process.StartInfo.ArgumentList.Add (argument);
+		}
+		process.Start ();
+		var output = process.StandardOutput.ReadToEndAsync ();
+		var error = process.StandardError.ReadToEndAsync ();
+		if (!process.WaitForExit (30000)) {
+			process.Kill (entireProcessTree: true);
+			process.WaitForExit ();
+			Assert.Fail ($"Native tool timed out: {executable}");
+		}
+		string standardOutput = output.GetAwaiter ().GetResult ();
+		string standardError = error.GetAwaiter ().GetResult ();
+		Assert.AreEqual (0, process.ExitCode, $"{name} failed for {string.Join (" ", arguments)}:\n{standardError}\n{standardOutput}");
+		return standardOutput;
+	}
+
+	public static JsonDocument ReadElf (string library) => JsonDocument.Parse (Run (
+		"llvm-readobj", "--elf-output-style=JSON", "--file-headers", "--program-headers", "--sections", "--dyn-symbols", library));
+
+	public static byte [] ReadSection (string library, string section)
+	{
+		string directory = Path.GetDirectoryName (library) ?? throw new InvalidOperationException ("The test library directory is missing.");
+		string sectionFile = Path.Combine (directory, Path.GetRandomFileName ());
+		string copy = Path.Combine (directory, Path.GetRandomFileName ());
+		try {
+			// Always supply an output copy: objcopy must not rewrite the library under inspection.
+			Run ("llvm-objcopy", $"--dump-section={section}={sectionFile}", library, copy);
+			return File.ReadAllBytes (sectionFile);
+		} finally {
+			File.Delete (sectionFile);
+			File.Delete (copy);
+		}
 	}
 }

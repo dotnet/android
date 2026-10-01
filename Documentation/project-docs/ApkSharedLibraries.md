@@ -119,6 +119,11 @@ The existing assembly-store setting selects this task unconditionally for stores
 continue to use `DSOWrapperGenerator` and `llvm-objcopy`. Other application-specific LLVM generation
 and bundled native tools are unaffected.
 
+The writer's ELF inspection tests use the Android NDK's `llvm-readobj`, `llvm-nm`,
+`llvm-strip`, and `llvm-objcopy`, with no additional managed ELF parser dependency.
+These tests require `$(AndroidNdkDirectory)` to point at an installed NDK and are
+categorized as `RequiresAndroidNdk`; the stream/input-validation tests need no native tools.
+
 The wrapper is a little-endian `ET_DYN` image with a single read-only `PT_LOAD` segment,
 a read-only `PT_DYNAMIC` segment, `PT_PHDR`, and a non-executable `PT_GNU_STACK`.
 The payload and load segment use 16 KiB alignment on 64-bit ABIs and 4 KiB on 32-bit ABIs.

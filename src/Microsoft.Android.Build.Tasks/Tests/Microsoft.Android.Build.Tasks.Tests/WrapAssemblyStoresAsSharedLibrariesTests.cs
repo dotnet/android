@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-using ELFSharp.ELF;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -19,6 +18,7 @@ public class WrapAssemblyStoresAsSharedLibrariesTests : BaseTest
 	[TestCase ("arm64-v8a", "android-arm64")]
 	[TestCase ("x86", "android-x86")]
 	[TestCase ("x86_64", "android-x64")]
+	[Category ("RequiresAndroidNdk")]
 	public void WrapsStoreWithArchivePathAndCleanupDirectory (string abi, string rid)
 	{
 		string directory = Path.Combine (Root, "temp", TestName);
@@ -39,13 +39,13 @@ public class WrapAssemblyStoresAsSharedLibrariesTests : BaseTest
 		Assert.AreEqual (1, task.DirectoriesToDelete.Length);
 		Assert.AreEqual (outputDirectory, task.DirectoriesToDelete [0].ItemSpec);
 
-		using var elf = ELFReader.Load (library.ItemSpec);
-		CollectionAssert.AreEqual (File.ReadAllBytes (store.ItemSpec), elf.GetSection ("payload").GetContents ());
+		CollectionAssert.AreEqual (File.ReadAllBytes (store.ItemSpec), NativeToolTestHelper.ReadSection (library.ItemSpec, "payload"));
 		Assert.IsEmpty (Directory.GetFiles (directory, "*.S", SearchOption.AllDirectories));
 		Assert.IsEmpty (Directory.GetFiles (directory, "*.o", SearchOption.AllDirectories));
 	}
 
 	[Test]
+	[Category ("RequiresAndroidNdk")]
 	public void PerAbiStoresRemainSeparateForAppBundleSplitting ()
 	{
 		string directory = Path.Combine (Root, "temp", TestName);
@@ -64,9 +64,8 @@ public class WrapAssemblyStoresAsSharedLibrariesTests : BaseTest
 		Assert.AreEqual (abis.Length, task.DirectoriesToDelete.Length);
 		foreach (var library in task.WrappedAssemblies) {
 			string abi = library.GetMetadata ("ArchivePath").Split ('/') [1];
-			using var elf = ELFReader.Load (library.ItemSpec);
 			CollectionAssert.AreEqual (File.ReadAllBytes (stores.Single (item => item.GetMetadata ("Abi") == abi).ItemSpec),
-				elf.GetSection ("payload").GetContents ());
+				NativeToolTestHelper.ReadSection (library.ItemSpec, "payload"));
 		}
 	}
 

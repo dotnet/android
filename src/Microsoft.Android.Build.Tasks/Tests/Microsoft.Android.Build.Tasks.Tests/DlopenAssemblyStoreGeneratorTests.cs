@@ -1,14 +1,10 @@
 #nullable enable
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 
-using ELFSharp.ELF;
-using ELFSharp.ELF.Sections;
 using NUnit.Framework;
 using Microsoft.Android.Tasks;
 using Xamarin.Android.Tools;
@@ -22,6 +18,7 @@ public class DlopenAssemblyStoreGeneratorTests : BaseTest
 	[TestCase (AndroidTargetArch.Arm64)]
 	[TestCase (AndroidTargetArch.X86)]
 	[TestCase (AndroidTargetArch.X86_64)]
+	[Category ("RequiresAndroidNdk")]
 	public void DataOnlyStoreExportsPayloadStart (AndroidTargetArch arch)
 	{
 		string directory = Path.Combine (Root, "temp", TestName);
@@ -35,11 +32,11 @@ public class DlopenAssemblyStoreGeneratorTests : BaseTest
 		string library = DlopenAssemblyStoreGenerator.WrapIt (task.Log, directory, arch, payload, "libassembly-store.so");
 
 		FileAssert.Exists (library);
-		using var elf = ELFReader.Load (library);
-		var symbols = (ISymbolTable)elf.GetSection (".dynsym");
-		Assert.IsTrue (symbols.Entries.Any (symbol => symbol.Name == DlopenAssemblyStoreGenerator.PayloadStartSymbol));
-		Assert.IsFalse (symbols.Entries.Any (symbol => symbol.Name == "_assembly_store_end"));
-		CollectionAssert.AreEqual (File.ReadAllBytes (payload), elf.GetSection ("payload").GetContents ());
+		using var document = NativeToolTestHelper.ReadElf (library);
+		var symbols = document.RootElement [0].GetProperty ("DynamicSymbols").EnumerateArray ()
+			.Select (item => item.GetProperty ("Symbol").GetProperty ("Name").GetProperty ("Name").GetString ()).ToArray ();
+		CollectionAssert.AreEqual (new [] { "", DlopenAssemblyStoreGenerator.PayloadStartSymbol }, symbols);
+		CollectionAssert.AreEqual (File.ReadAllBytes (payload), NativeToolTestHelper.ReadSection (library, "payload"));
 		Assert.IsEmpty (Directory.GetFiles (directory, "*.S", SearchOption.AllDirectories));
 		Assert.IsEmpty (Directory.GetFiles (directory, "*.o", SearchOption.AllDirectories));
 	}
@@ -64,15 +61,12 @@ public class DlopenAssemblyStoreGeneratorTests : BaseTest
 
 		if (stripped) {
 			string strippedLibrary = Path.Combine (directory, "stripped.so");
-			var (stripExitCode, _, stripError) = RunProcessWithExitCode (
-				NativeToolTestHelper.GetToolPath ("llvm-strip"), "--strip-all", "-o", strippedLibrary, library);
-			Assert.AreEqual (0, stripExitCode, $"llvm-strip failed: {stripError}");
+			NativeToolTestHelper.Run ("llvm-strip", "--strip-all", "-o", strippedLibrary, library);
 			library = strippedLibrary;
 		}
 
-		var (nmExitCode, symbols, nmError) = RunProcessWithExitCode (
-			NativeToolTestHelper.GetToolPath ("llvm-nm"), "--dynamic", "--defined-only", "--print-size", "--format=posix", "--radix=x", library);
-		Assert.AreEqual (0, nmExitCode, $"llvm-nm failed: {nmError}");
+		string symbols = NativeToolTestHelper.Run (
+			"llvm-nm", "--dynamic", "--defined-only", "--print-size", "--format=posix", "--radix=x", library);
 		var matches = Regex.Matches (symbols, @"^_assembly_store\s+R\s+([0-9a-fA-F]+)\s+([0-9a-fA-F]+)\s*$", RegexOptions.Multiline);
 		Assert.AreEqual (1, matches.Count, $"Expected one global read-only payload symbol: {symbols}");
 		StringAssert.DoesNotContain ("_assembly_store_end", symbols);
@@ -80,10 +74,7 @@ public class DlopenAssemblyStoreGeneratorTests : BaseTest
 		ulong symbolSize = ulong.Parse (matches [0].Groups [2].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
 		Assert.AreEqual (expected.Length, symbolSize);
 
-		var (readObjExitCode, headers, readObjError) = RunProcessWithExitCode (
-			NativeToolTestHelper.GetToolPath ("llvm-readobj"), "--elf-output-style=JSON", "--program-headers", library);
-		Assert.AreEqual (0, readObjExitCode, $"llvm-readobj failed: {readObjError}");
-		using var document = JsonDocument.Parse (headers);
+		using var document = NativeToolTestHelper.ReadElf (library);
 		var segments = document.RootElement [0].GetProperty ("ProgramHeaders").EnumerateArray ()
 			.Select (item => item.GetProperty ("ProgramHeader"))
 			.Where (header => header.GetProperty ("Type").GetProperty ("Value").GetUInt32 () == 1)
@@ -104,30 +95,7 @@ public class DlopenAssemblyStoreGeneratorTests : BaseTest
 		byte [] actual = reader.ReadBytes (checked ((int)symbolSize));
 		CollectionAssert.AreEqual (expected, actual, "Symbol-based extraction must reproduce arbitrary input bytes exactly.");
 
-		using var elf = ELFReader.Load (library);
-		CollectionAssert.AreEqual (expected, elf.GetSection ("payload").GetContents (), "Section-based inspection must also work after stripping.");
-	}
-
-	static (int Code, string Output, string Error) RunProcessWithExitCode (string executable, params string [] arguments)
-	{
-		FileAssert.Exists (executable);
-		using var process = new Process {
-			StartInfo = new ProcessStartInfo (executable) {
-				UseShellExecute = false,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-			},
-		};
-		foreach (string argument in arguments) {
-			process.StartInfo.ArgumentList.Add (argument);
-		}
-		process.Start ();
-		var output = process.StandardOutput.ReadToEndAsync ();
-		var error = process.StandardError.ReadToEndAsync ();
-		if (!process.WaitForExit (30000)) {
-			process.Kill (entireProcessTree: true);
-			Assert.Fail ($"Native tool timed out: {executable}");
-		}
-		return (process.ExitCode, output.GetAwaiter ().GetResult (), error.GetAwaiter ().GetResult ());
+		CollectionAssert.AreEqual (expected, NativeToolTestHelper.ReadSection (library, "payload"),
+			"Section-based inspection must also work after stripping.");
 	}
 }
