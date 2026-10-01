@@ -70,7 +70,9 @@ namespace Java.InteropTests
 		public void Export_Method_PeerArg_RoundTrip ()
 		{
 			using var e = new ExportPeerArg ();
+#pragma warning disable CA1422 // Integer(int) constructor is obsolete since API 33.
 			using var arg = new Java.Lang.Integer (42);
+#pragma warning restore CA1422
 			var m = JNIEnv.GetMethodID (e.Class.Handle, "GetClassName", "(Ljava/lang/Object;)Ljava/lang/String;");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for GetClassName not found");
 			IntPtr resultHandle = JNIEnv.CallObjectMethod (e.Handle, m, new JValue (arg.Handle));
@@ -134,9 +136,11 @@ namespace Java.InteropTests
 		public void Export_Method_PeerArray_RoundTrip ()
 		{
 			using var e = new ExportPeerArray ();
+#pragma warning disable CA1422 // Integer(int) constructor is obsolete since API 33.
 			using var a = new Java.Lang.Integer (1);
 			using var b = new Java.Lang.Integer (2);
 			using var c = new Java.Lang.Integer (3);
+#pragma warning restore CA1422
 
 			var m = JNIEnv.GetMethodID (e.Class.Handle, "Tail", "([Ljava/lang/Object;)[Ljava/lang/Object;");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for Tail not found");
@@ -348,7 +352,9 @@ namespace Java.InteropTests
 		public static int GetAnswer () => 42;
 
 		[ExportField ("OBJECT_ANSWER")]
+#pragma warning disable CA1422 // Integer(int) constructor is obsolete since API 33.
 		public static Java.Lang.Integer GetObjectAnswer () => new Java.Lang.Integer (43);
+#pragma warning restore CA1422
 	}
 
 	class ExportInstanceField : Java.Lang.Object

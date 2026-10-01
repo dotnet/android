@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
 using Android.Text;
@@ -259,7 +260,9 @@ namespace Java.InteropTests
 			JNIEnv.CallBooleanMethod (arrayList.Handle, add, new JValue (handle));
 		}
 
-		static T CreateFromJava<T> ()
+		static T CreateFromJava<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T> ()
 			where T : Java.Lang.Object
 		{
 			var instance = JNIEnv.StartCreateInstance (typeof (T), "()V");

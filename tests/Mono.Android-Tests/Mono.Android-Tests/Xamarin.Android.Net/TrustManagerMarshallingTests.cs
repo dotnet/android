@@ -1,3 +1,5 @@
+#nullable enable
+
 using System.Linq;
 using Android.Runtime;
 using Java.Security;
@@ -14,10 +16,13 @@ namespace Xamarin.Android.NetTests
 		public void TrustManagerFactory_GetTrustManagers_ReturnsIX509TrustManager ()
 		{
 			var tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
+			if (tmf == null)
+				throw new AssertionException ("TrustManagerFactory.GetInstance returned null");
 			tmf.Init ((KeyStore?) null);
 
 			var trustManagers = tmf.GetTrustManagers ();
-			Assert.IsNotNull (trustManagers, "GetTrustManagers returned null");
+			if (trustManagers == null)
+				throw new AssertionException ("GetTrustManagers returned null");
 			Assert.IsTrue (trustManagers.Length > 0, "GetTrustManagers returned empty array");
 
 			bool foundX509 = false;
@@ -40,7 +45,8 @@ namespace Xamarin.Android.NetTests
 			// Mirrors API 21-23 TrustManagerImpl: the Java signature returns the
 			// base interface, but the concrete object advertises a derived interface.
 			using var provider = global::Net.Dot.Android.Test.InterfaceMarshalling.ExtendedValueProviderAsValueProvider;
-			Assert.IsNotNull (provider, "Expected Java fixture to return a ValueProvider instance.");
+			if (provider == null)
+				throw new AssertionException ("Expected Java fixture to return a ValueProvider instance.");
 
 			if (provider is not global::Net.Dot.Android.Test.IExtendedValueProvider extendedProvider) {
 				Assert.Fail ($"Expected ValueProvider to be marshalled as IExtendedValueProvider. Type found: {provider.GetType ().FullName}");
