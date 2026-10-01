@@ -146,11 +146,10 @@ public class GenerateNativeAotLibraryLoadAssemblerSources : AndroidTask
 
 		string jniInitFuncsLlFilePath = outputFile.ItemSpec;
 		var generator = new NativeAotJniInitNativeAssemblyGenerator (Log, bclInitFunctions, customInitFunctions);
-		LLVMIR.LlvmIrModule jniInitFuncsModule = generator.Construct ();
 		using var jniInitFuncsWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
 		bool fileFullyWritten = false;
 		try {
-			generator.Generate (jniInitFuncsModule, targetArch, jniInitFuncsWriter, jniInitFuncsLlFilePath!);
+			generator.Generate (targetArch, jniInitFuncsWriter, jniInitFuncsLlFilePath!);
 			jniInitFuncsWriter.Flush ();
 			Files.CopyIfStreamChanged (jniInitFuncsWriter.BaseStream, jniInitFuncsLlFilePath!);
 			fileFullyWritten = true;

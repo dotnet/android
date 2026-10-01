@@ -2,197 +2,141 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 using Microsoft.Build.Utilities;
 
-using Xamarin.Android.Tasks.LLVMIR;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	partial class CompressedAssembliesNativeAssemblyGenerator : LlvmIrComposer
+	class CompressedAssembliesNativeAssemblyGenerator
 	{
 		const string DescriptorsArraySymbolName = "compressed_assembly_descriptors";
 		const string CompressedAssemblyCountSymbolName = "compressed_assembly_count";
 		const string UncompressedAssembliesBufferSymbolName = "uncompressed_assemblies_data_buffer";
 		const string UncompressedAssembliesBufferSizeSymbolName = "uncompressed_assemblies_data_size";
 
-		// Order of fields and their type must correspond *exactly* to that in:
-		//
-		// src/native/clr/include/xamarin-app.hh CompressedAssemblyDescriptor structure
-		//
-		//[NativeAssemblerStructContextDataProvider (typeof (CompressedAssemblyDescriptorContextDataProvider))]
+		// The %struct.CompressedAssemblyDescriptor declaration below must be identical to the
+		// CompressedAssemblyDescriptor structure in src/native/clr/include/xamarin-app.hh
+		// See LlvmIrTarget.GetAggregateAlignment for the meaning of the "data size"
+		const ulong DescriptorDataSize = 9;
+		const ulong DescriptorAlignment = 4;
+
 		sealed class CompressedAssemblyDescriptor
 		{
-			[NativeAssembler (Ignore = true)]
 			public uint Index;
+			public string AssemblyName = "";
 
-			[NativeAssembler (Ignore = true)]
-			public string? AssemblyName;
-
-			public uint   uncompressed_file_size;
-			public bool   loaded;
-			public uint   buffer_offset;
-		};
-
-		IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? archAssemblies;
-		StructureInfo? compressedAssemblyDescriptorStructureInfo;
-		Dictionary<AndroidTargetArch, List<StructureInstance<CompressedAssemblyDescriptor>>> archData = new Dictionary<AndroidTargetArch, List<StructureInstance<CompressedAssemblyDescriptor>>> ();
-
-		public CompressedAssembliesNativeAssemblyGenerator (TaskLoggingHelper log, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? archAssemblies)
-			: base (log)
-		{
-			this.archAssemblies = archAssemblies;
+			public uint uncompressed_file_size;
+			public uint buffer_offset;
 		}
 
-		void InitCompressedAssemblies (out List<LlvmIrGlobalVariable>? compressedAssemblies,
-		                               out List<LlvmIrGlobalVariable>? compressedAssemblyDescriptors,
-		                               out List<LlvmIrGlobalVariable>? buffers)
+		readonly Dictionary<AndroidTargetArch, List<CompressedAssemblyDescriptor>> archDescriptors = new ();
+		readonly Dictionary<AndroidTargetArch, uint> archBufferSizes = new ();
+
+		public CompressedAssembliesNativeAssemblyGenerator (TaskLoggingHelper log, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? archAssemblies)
 		{
+			if (log == null) {
+				throw new ArgumentNullException (nameof (log));
+			}
+
 			if (archAssemblies == null || archAssemblies.Count == 0) {
-				compressedAssemblies = null;
-				compressedAssemblyDescriptors = null;
-				buffers = null;
 				return;
 			}
 
-			buffers = new ();
 			foreach (var kvpArch in archAssemblies) {
 				uint bufferSize = 0;
 
 				foreach (var kvp in kvpArch.Value) {
 					CompressedAssemblyInfo info = kvp.Value;
 
-					if (!archData.TryGetValue (info.TargetArch, out List<StructureInstance<CompressedAssemblyDescriptor>> descriptors)) {
-						descriptors = new List<StructureInstance<CompressedAssemblyDescriptor>> ();
-						archData.Add (info.TargetArch, descriptors);
+					if (!archDescriptors.TryGetValue (info.TargetArch, out List<CompressedAssemblyDescriptor>? descriptors)) {
+						descriptors = new List<CompressedAssemblyDescriptor> ();
+						archDescriptors.Add (info.TargetArch, descriptors);
 					}
 
-					var descriptor = new CompressedAssemblyDescriptor {
+					descriptors.Add (new CompressedAssemblyDescriptor {
 						Index = info.DescriptorIndex,
 						AssemblyName = info.AssemblyName,
 						uncompressed_file_size = info.FileSize,
-						loaded = false,
 						buffer_offset = bufferSize,
-					};
+					});
 					bufferSize += info.FileSize;
-					descriptors.Add (new StructureInstance<CompressedAssemblyDescriptor> (compressedAssemblyDescriptorStructureInfo, descriptor));
 				}
 
-				var variable = new LlvmIrGlobalVariable (typeof(uint), UncompressedAssembliesBufferSizeSymbolName) {
-					Options = LlvmIrVariableOptions.GlobalConstant,
-					TargetArch = kvpArch.Key,
-					Value = bufferSize,
-				};
-				buffers.Add (variable);
-
-				variable = new LlvmIrGlobalVariable (typeof(List<byte>), UncompressedAssembliesBufferSymbolName, LlvmIrVariableOptions.GlobalWritable) {
-					ArrayItemCount = bufferSize,
-					TargetArch = kvpArch.Key,
-					ZeroInitializeArray = true,
-				};
-				buffers.Add (variable);
+				archBufferSizes [kvpArch.Key] = bufferSize;
 			}
 
-			compressedAssemblies = new List<LlvmIrGlobalVariable> ();
-			compressedAssemblyDescriptors = new List<LlvmIrGlobalVariable> ();
-			foreach (var kvp in archData) {
-				List<StructureInstance<CompressedAssemblyDescriptor>> descriptors = kvp.Value;
-				descriptors.Sort ((StructureInstance<CompressedAssemblyDescriptor> a, StructureInstance<CompressedAssemblyDescriptor> b) => {
-					if (a.Instance == null || b.Instance == null) return 0;
-					return a.Instance.Index.CompareTo (b.Instance.Index);
-				});
-
-				var variable = new LlvmIrGlobalVariable (typeof(uint), CompressedAssemblyCountSymbolName) {
-					Options = LlvmIrVariableOptions.GlobalConstant,
-					TargetArch = kvp.Key,
-					Value = (uint)descriptors.Count,
-				};
-				compressedAssemblies.Add (variable);
-
-				variable = new LlvmIrGlobalVariable (typeof(List<StructureInstance<CompressedAssemblyDescriptor>>), DescriptorsArraySymbolName) {
-					GetArrayItemCommentCallback = GetCompressedAssemblyDescriptorsItemComment,
-					Options = LlvmIrVariableOptions.GlobalWritable,
-					TargetArch = kvp.Key,
-					Value = descriptors,
-				};
-				compressedAssemblyDescriptors.Add (variable);
+			foreach (var kvp in archDescriptors) {
+				kvp.Value.Sort ((CompressedAssemblyDescriptor a, CompressedAssemblyDescriptor b) => a.Index.CompareTo (b.Index));
 			}
 		}
 
-		protected override void Construct (LlvmIrModule module)
+		public void Generate (AndroidTargetArch arch, TextWriter output, string fileName)
 		{
-			module.DefaultStringGroup = "cas";
+			using var w = new LlvmIrWriter (output, LlvmIrTarget.Get (arch));
+			w.WriteHeader (fileName);
+			w.Write ($$"""
 
-			MapStructures (module);
+				%struct.CompressedAssemblyDescriptor = type {
+					i32, ; uint32_t uncompressed_file_size
+					i1, ; bool loaded
+					i32 ; uint32_t buffer_offset
+				}
 
-			InitCompressedAssemblies (
-				out List<LlvmIrGlobalVariable>? compressedAssemblies,
-				out List<LlvmIrGlobalVariable>? compressedAssemblyDescriptors,
-				out List<LlvmIrGlobalVariable>? buffers
+				""");
+
+			if (archDescriptors.Count == 0) {
+				WriteCount (w, 0);
+				WriteDescriptors (w, []);
+				WriteBuffer (w, 0);
+			} else {
+				if (archDescriptors.TryGetValue (arch, out List<CompressedAssemblyDescriptor>? descriptors)) {
+					WriteCount (w, (uint)descriptors.Count);
+					WriteDescriptors (w, descriptors);
+				}
+
+				if (archBufferSizes.TryGetValue (arch, out uint bufferSize)) {
+					WriteBuffer (w, bufferSize);
+				}
+			}
+
+			w.WriteMetadata ();
+			output.Flush ();
+		}
+
+		static void WriteCount (LlvmIrWriter w, uint count)
+		{
+			w.WriteGlobal (CompressedAssemblyCountSymbolName, LlvmIrWriter.GlobalConstant, "i32", count.ToString (), 4);
+		}
+
+		static void WriteDescriptors (LlvmIrWriter w, List<CompressedAssemblyDescriptor> descriptors)
+		{
+			var elements = new List<string> (descriptors.Count);
+			foreach (CompressedAssemblyDescriptor d in descriptors) {
+				elements.Add ($$"""
+						%struct.CompressedAssemblyDescriptor {
+							i32 {{d.uncompressed_file_size}}, ; uint32_t uncompressed_file_size
+							i1 false, ; bool loaded
+							i32 {{d.buffer_offset}}; uint32_t buffer_offset
+						}
+					""");
+			}
+
+			w.WriteGlobal (
+				DescriptorsArraySymbolName,
+				LlvmIrWriter.GlobalWritable,
+				$"[{descriptors.Count} x %struct.CompressedAssemblyDescriptor]",
+				w.ArrayValue (elements, i => $" {i}: {descriptors [i].AssemblyName}"),
+				w.GetAggregateAlignment (DescriptorAlignment, (ulong)descriptors.Count * DescriptorDataSize)
 			);
-
-			if (archData.Count == 0) {
-				var emptyCountVar = new LlvmIrGlobalVariable (typeof(uint), CompressedAssemblyCountSymbolName) {
-					Options = LlvmIrVariableOptions.GlobalConstant,
-					Value = 0u,
-				};
-				module.Add (emptyCountVar);
-
-				var emptyDescriptorsVar = new LlvmIrGlobalVariable (typeof(List<StructureInstance<CompressedAssemblyDescriptor>>), DescriptorsArraySymbolName) {
-					Options = LlvmIrVariableOptions.GlobalWritable,
-					Value = new List<StructureInstance<CompressedAssemblyDescriptor>> (),
-				};
-				module.Add (emptyDescriptorsVar);
-
-				var emptyBufferSizeVar = new LlvmIrGlobalVariable (typeof(uint), UncompressedAssembliesBufferSizeSymbolName) {
-					Options = LlvmIrVariableOptions.GlobalConstant,
-					Value = 0u,
-				};
-				module.Add (emptyBufferSizeVar);
-
-				var emptyBufferVar = new LlvmIrGlobalVariable (typeof(List<byte>), UncompressedAssembliesBufferSymbolName, LlvmIrVariableOptions.GlobalWritable) {
-					ArrayItemCount = 0,
-					ZeroInitializeArray = true,
-				};
-				module.Add (emptyBufferVar);
-				return;
-			}
-
-			if (compressedAssemblies != null) {
-				module.Add (compressedAssemblies);
-			}
-			if (compressedAssemblyDescriptors != null) {
-				module.Add (compressedAssemblyDescriptors);
-			}
-			if (buffers != null) {
-				module.Add (buffers);
-			}
 		}
 
-		string? GetCompressedAssemblyDescriptorsItemComment (LlvmIrVariable v, LlvmIrModuleTarget target, ulong index, object? value, object? callerState)
+		static void WriteBuffer (LlvmIrWriter w, uint bufferSize)
 		{
-			List<StructureInstance<CompressedAssemblyDescriptor>> descriptors = GetArchDescriptors (target);
-			if ((int)index >= descriptors.Count) {
-				throw new InvalidOperationException ($"Internal error: index {index} is too big for variable '{v.Name}'");
-			}
-			StructureInstance<CompressedAssemblyDescriptor> desc = descriptors[(int)index];
-
-			return $" {index}: {desc.Instance?.AssemblyName ?? ""}";
-		}
-
-		List<StructureInstance<CompressedAssemblyDescriptor>> GetArchDescriptors (LlvmIrModuleTarget target)
-		{
-			if (!archData.TryGetValue (target.TargetArch, out List<StructureInstance<CompressedAssemblyDescriptor>> descriptors)) {
-				throw new InvalidOperationException ($"Internal error: missing compressed descriptors data for architecture '{target.TargetArch}'");
-			}
-
-			return descriptors;
-		}
-
-		void MapStructures (LlvmIrModule module)
-		{
-			compressedAssemblyDescriptorStructureInfo = module.MapStructure<CompressedAssemblyDescriptor> ();
+			w.WriteGlobal (UncompressedAssembliesBufferSizeSymbolName, LlvmIrWriter.GlobalConstant, "i32", bufferSize.ToString (), 4);
+			w.WriteGlobal (UncompressedAssembliesBufferSymbolName, LlvmIrWriter.GlobalWritable, $"[{bufferSize} x i8]", "zeroinitializer", w.GetAggregateAlignment (1, bufferSize));
 		}
 	}
 }

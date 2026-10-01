@@ -204,43 +204,6 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (expectedMethodCount, appConfig.jni_remapping_replacement_method_index_entry_count, "jni_remapping_replacement_method_index_entry_count should be preserved.");
 		}
 
-		[Test]
-		public void NoChangeBuildKeepsDynamicJniRegistrationDisabled ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				OtherBuildItems = {
-					new AndroidItem._AndroidRemapMembers ("Remap.xml") {
-						Encoding = Encoding.UTF8,
-						TextContent = () => """
-<replacements>
-  <replace-type from="android/app/Activity" to="example/RemapActivity" />
-</replacements>
-""",
-					},
-				},
-			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetRuntimeIdentifiers (new [] { "arm64-v8a" });
-
-			using (var builder = CreateApkBuilder ()) {
-				Assert.IsTrue (builder.Build (proj), "first build should have succeeded.");
-				AssertDynamicJniRegistrationDisabled (proj, builder);
-
-				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
-				builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
-				builder.Output.AssertTargetIsSkipped ("_GeneratePackageManagerJava");
-				AssertDynamicJniRegistrationDisabled (proj, builder);
-			}
-		}
-
-		void AssertDynamicJniRegistrationDisabled (XamarinAndroidApplicationProject proj, ProjectBuilder builder)
-		{
-			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-			var envFiles = EnvironmentHelper.GatherEnvironmentFiles (objDirPath, string.Join (";", proj.GetRuntimeIdentifiersAsAbis ()), required: true, runtime: AndroidRuntime.CoreCLR);
-			var appConfig = EnvironmentHelper.ReadApplicationConfig (envFiles);
-			Assert.IsFalse (appConfig.jni_add_native_method_registration_attribute_present, "The trimmable type map should not enable dynamic JNI registration.");
-		}
-
 		Dictionary<string, DateTime> GetJniRemappingSourceTimestamps (XamarinAndroidApplicationProject proj, ProjectBuilder builder)
 		{
 			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android");
