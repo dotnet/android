@@ -181,7 +181,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	>False</AndroidUseDebugRuntime>
 	<AndroidUseDebugRuntime Condition="'$(AndroidUseDebugRuntime)' == ''" >True</AndroidUseDebugRuntime>
 
-	<BundleAssemblies Condition="'$(BundleAssemblies)' == ''">False</BundleAssemblies>
 	<DeployExternal Condition="'$(DeployExternal)' == ''">False</DeployExternal>
 
 	<!-- Obsolete build property: should be removed in the future releases -->
@@ -209,9 +208,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidDebugKeyAlgorithm Condition=" '$(AndroidDebugKeyAlgorithm)' == '' ">RSA</AndroidDebugKeyAlgorithm>
 	<AndroidDebugKeyValidity Condition=" '$(AndroidDebugKeyValidity)' == '' ">10950</AndroidDebugKeyValidity>
 	<AndroidDebugStoreType Condition=" '$(AndroidDebugStoreType)' == '' ">pkcs12</AndroidDebugStoreType>
-
-	<!-- Obsolete -->
-	<AndroidGdbDebugServer>None</AndroidGdbDebugServer>
 
 	<_AndroidLayoutBindingsDependencyCache>$(IntermediateOutputPath)layout-binding-deps.cache</_AndroidLayoutBindingsDependencyCache>
 	<_AndroidAapt2VersionFile>$(IntermediateOutputPath)aapt2.version</_AndroidAapt2VersionFile>
@@ -1425,6 +1421,7 @@ because xbuild doesn't support framework reference assemblies.
       TargetName="$(TargetName)"
       AddKeepAlives="$(AndroidAddKeepAlives)"
       UseDesignerAssembly="$(AndroidUseDesignerAssembly)"
+      AndroidTypeMapImplementation="$(AndroidTypeMapImplementation)"
       Deterministic="$(Deterministic)"
       ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)">
   </LinkAssembliesNoShrink>
