@@ -13,7 +13,7 @@ namespace Microsoft.Android.Tasks;
 ///
 /// This task lives in Microsoft.Android.Build.Tasks.dll (net11.0) because it uses
 /// System.IO.Compression.ZstandardEncoder, which is not available in netstandard2.0.
-/// It executes in .NET MSBuild or a .NET task host.
+/// It is imported with &lt;UsingTask ... Runtime="NET" TaskFactory="TaskHostFactory" /&gt;.
 /// </summary>
 public class CompressAssemblies : AndroidTask
 {

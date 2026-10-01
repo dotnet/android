@@ -25,7 +25,6 @@ that Java binding dependencies are satisfied.
     
     <!-- Use downloaded POM files to ensure all Java dependencies are met. -->
     <JavaDependencyVerification
-        MSBuildRuntime="NET"
         AndroidLibraries="@(AndroidLibrary)"
         AdditionalManifests="@(AndroidAdditionalJavaManifest)"
         PackageReferences="@(PackageReference)"

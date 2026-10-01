@@ -2,9 +2,10 @@
   <Import Project="..\..\Configuration.props" />
 
   <!--
-    Tasks are migrated here from Xamarin.Android.Build.Tasks to use .NET (net11.0) APIs
-    instead of netstandard2.0. Calls request .NET execution, either in .NET MSBuild or
-    a .NET task host when the parent MSBuild process uses a different runtime.
+    This assembly hosts MSBuild tasks that require .NET (net11.0) APIs that are not available in
+    netstandard2.0, so they cannot live in Xamarin.Android.Build.Tasks.dll (which targets
+    netstandard2.0 to run on both .NET Framework and .NET MSBuild). Tasks here either require
+    .NET MSBuild or are imported with <UsingTask ... Runtime="NET" /> so they run on .NET.
     Keep this assembly small and self-contained: link only the minimal helpers it needs.
   -->
   <PropertyGroup>

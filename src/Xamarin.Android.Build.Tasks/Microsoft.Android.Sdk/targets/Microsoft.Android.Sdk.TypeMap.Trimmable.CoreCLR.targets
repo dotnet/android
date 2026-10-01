@@ -1,7 +1,8 @@
 <!-- Trimmable typemap: CoreCLR-specific (ILLink integration). -->
 <Project>
 
-  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateMissingTypeMapStubs" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateMissingTypeMapStubs" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateMissingTypeMapStubs" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
   <UsingTask TaskName="Xamarin.Android.Tasks.PreTrimmingFixLegacyBindings" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.PostTrimmingPipeline" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
@@ -232,7 +233,6 @@
       Outputs="$(_PostTrimTrimmableTypeMapJavaStamp)">
 
     <GenerateTrimmableTypeMap
-        MSBuildRuntime="NET"
         ResolvedAssemblies="@(_PostTrimTrimmableTypeMapInputAssemblies)"
         FrameworkAssemblyNames="@(ResolvedFrameworkAssemblies->'%(Filename)')"
         OutputDirectory="$(_TypeMapOutputDirectory)"
@@ -289,7 +289,6 @@
       BeforeTargets="_AddTrimmableTypeMapToResolvedFileToPublish;CreateReadyToRunImages">
     <GenerateMissingTypeMapStubs
         Condition="Exists('$(IntermediateOutputPath)linked')"
-        MSBuildRuntime="NET"
         TypeMapDirectory="$(_TypeMapOutputDirectory)"
         LinkedAssembliesDirectory="$(IntermediateOutputPath)linked"
         RootTypeMapAssemblyName="$(_TypeMapAssemblyName)"

@@ -9,8 +9,8 @@ ms.date: 05/11/2024
 
 > [!NOTE]
 > This feature is only available in .NET 9+.
-> Starting with .NET 11, the build task targets .NET 11 and requests .NET task execution.
-> A parent MSBuild process using a different runtime uses a .NET task host.
+> Starting with .NET 11, Java dependency verification requires .NET MSBuild
+> (for example, `dotnet build`), not the .NET Framework `MSBuild.exe`.
 
 A common problem when creating Java binding libraries for .NET for Android is not providing the required Java dependencies. The binding process ignores API that requires missing dependencies, so this can result in large portions of desired API not being bound.
 
