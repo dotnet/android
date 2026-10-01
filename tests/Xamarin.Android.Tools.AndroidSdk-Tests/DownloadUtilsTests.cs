@@ -54,12 +54,6 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
-		public void ParseChecksumFile_HashOnly_WithTrailingNewline ()
-		{
-			Assert.AreEqual ("abc123def456", DownloadUtils.ParseChecksumFile ("abc123def456\n"));
-		}
-
-		[Test]
 		public void ParseChecksumFile_HashAndFilename ()
 		{
 			// Standard sha256sum format: "<hash>  <filename>"

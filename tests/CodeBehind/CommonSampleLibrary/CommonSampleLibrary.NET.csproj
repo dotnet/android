@@ -4,7 +4,6 @@
     <RootNamespace>CommonSampleLibrary</RootNamespace>
     <AssemblyName>CommonSampleLibrary</AssemblyName>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <UseMonoRuntime>@UseMonoRuntime@</UseMonoRuntime>
     <PublishAot>@PublishAot@</PublishAot>
     <Configuration>@Configuration@</Configuration>
   </PropertyGroup>

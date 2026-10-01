@@ -20,21 +20,18 @@
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
     <PackageReference Include="Polly" Version="$(PollyVersion)" />
     <PackageReference Include="SharpZipLib" Version="$(SharpZipLibVersion)" />
-    <Reference Include="Xamarin.Android.Build.Debugging.Tasks" Condition="Exists('$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Debugging.Tasks.dll')">
-      <HintPath>$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Debugging.Tasks.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj" />
     <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks.csproj" />
+    <ProjectReference Include="..\..\..\Xamarin.Android.Build.Debugging.Tasks\Xamarin.Android.Build.Debugging.Tasks.csproj" />
     <ProjectReference Include="..\..\..\Xamarin.Installer.AndroidSDK\Xamarin.Installer.AndroidSDK.csproj" />
     <ProjectReference Include="..\..\..\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
     <ProjectReference Include="..\..\..\AndroidBuildConfig\AndroidBuildConfig.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="DebuggingTasksTests.cs" Condition="!Exists('$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Debugging.Tasks.dll')" />
     <Compile Remove="Resources\ApacheHttpClient.cs" />
     <Compile Remove="Expected\**" />
     <Compile Include="..\..\..\..\.github\skills\read-assembly-store\src\AssemblyStore\*.cs" />

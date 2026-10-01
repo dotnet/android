@@ -158,6 +158,7 @@
   <attr api-since="11" path="/api/package[@name='android.animation']/interface[@name='TypeEvaluator']/method[@name='evaluate']/parameter[@name='endValue']" name="type">java.lang.Object</attr>
   <attr path="/api/package[@name='android.accessibilityservice']" name="managedName">Android.AccessibilityServices</attr>
   <attr api-since="11" path="/api/package[@name='android.app']/class[@name='ActionBar.LayoutParams']/field[@name='gravity']" name="type">Android.Views.GravityFlags</attr>
+  <remove-node path="/api/package[@name='android.app']/class[@name='Activity']/method[@name='reportFullyDrawn']" />
   <attr path="/api/package[@name='android.app']/class[@name='Dialog']/method[@name='setOnKeyListener']" name="eventName">KeyPress</attr>
   <attr path="/api/package[@name='android.app']/interface[@name='DatePickerDialog.OnDateSetListener']/method[@name='onDateSet']/parameter[@name='view']" name="sender">true</attr>
   <attr path="/api/package[@name='android.app']/interface[@name='TimePickerDialog.OnTimeSetListener']/method[@name='onTimeSet']/parameter[@name='view']" name="sender">true</attr>

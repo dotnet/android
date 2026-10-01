@@ -43,10 +43,7 @@ namespace Xamarin.Test {
 			set {
 				const string __id = "Value2.I";
 
-				try {
-					_members.StaticFields.SetValue (__id, value);
-				} finally {
-				}
+				_members.StaticFields.SetValue (__id, value);
 			}
 		}
 
@@ -63,10 +60,7 @@ namespace Xamarin.Test {
 			set {
 				const string __id = "BooleanValue.Z";
 
-				try {
-					_members.StaticFields.SetValue (__id, value);
-				} finally {
-				}
+				_members.StaticFields.SetValue (__id, value);
 			}
 		}
 
@@ -83,35 +77,16 @@ namespace Xamarin.Test {
 			set {
 				const string __id = "CharValue.C";
 
-				try {
-					_members.StaticFields.SetValue (__id, value);
-				} finally {
-				}
+				_members.StaticFields.SetValue (__id, value);
 			}
 		}
 
-		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/SomeObject", typeof (SomeObject));
-
-		internal static new IntPtr class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
+		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SomeObject", typeof (SomeObject));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
 		}
 
 		protected SomeObject (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)

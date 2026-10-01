@@ -457,10 +457,17 @@ namespace generatortests
 			var xml = @"<api>
 			  <package name='java.lang' jni-name='java/lang'>
 			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' final='true' name='String' static='false' visibility='public' jni-signature='Ljava/lang/String;' />
 			  </package>
 			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
 			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
 			      <method abstract='true' deprecated='not deprecated' final='true' name='DoStuff' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' compatVirtualMethod='true'></method>
+			      <method abstract='true' deprecated='not deprecated' final='true' name='DoStuffWithObject' jni-signature='(Ljava/lang/Object;)I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' compatVirtualMethod='true'>
+			        <parameter name='value' type='java.lang.Object' jni-type='Ljava/lang/Object;' />
+			      </method>
+			      <method abstract='true' deprecated='not deprecated' final='true' name='DoStuffWithString' jni-signature='(Ljava/lang/String;)I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' compatVirtualMethod='true'>
+			        <parameter name='value' type='java.lang.String' jni-type='Ljava/lang/String;' />
+			      </method>
 			    </class>
 			  </package>
 			</api>";
@@ -472,7 +479,29 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("catch (Java.Lang.NoSuchMethodError) { throw new Java.Lang.AbstractMethodError (__id); }".NormalizeLineEndings ()), $"was: `{writer}`");
+			var generated = writer.ToString ();
+			Assert.True (generated.NormalizeLineEndings ().Contains ("catch (Java.Lang.NoSuchMethodError) { throw new Java.Lang.AbstractMethodError (__id); }".NormalizeLineEndings ()), $"was: `{writer}`");
+			Assert.That (generated.NormalizeLineEndings (), Does.Contain ("""
+				var __result = __rm;
+				global::System.GC.KeepAlive (value);
+				return __result;
+			}
+			catch (Java.Lang.NoSuchMethodError) {
+				global::System.GC.KeepAlive (value);
+				throw new Java.Lang.AbstractMethodError (__id);
+			}
+			""".NormalizeLineEndings ()), generated);
+			Assert.That (generated.NormalizeLineEndings (), Does.Contain ("""
+			}
+			catch (Java.Lang.NoSuchMethodError) {
+				throw new Java.Lang.AbstractMethodError (__id);
+			} finally {
+			""".NormalizeLineEndings ()), generated);
+			var expectedStringCleanup = Target == CodeGenerationTarget.JavaInterop1
+				? "global::Java.Interop.JniObjectReference.Dispose (ref native_value);"
+				: "JNIEnv.DeleteLocalRef (native_value);";
+			Assert.That (generated, Does.Contain (expectedStringCleanup));
+			Assert.AreEqual (generated.Count (c => c == '{'), generated.Count (c => c == '}'), generated);
 		}
 
 		[Test]
@@ -1376,12 +1405,8 @@ namespace generatortests
 		protected override CodeGenerationTarget Target => CodeGenerationTarget.XAJavaInterop1;
 
 		[Test]
-		public void WriteClassExternalBase ()
+		public void WriteClassPeerMembers ()
 		{
-			// Tests the case where a class inherits from a class that is not in the same assembly.
-			// Specifically, the internal class_ref field does NOT need the new modifier.
-			//  - This prevents a CS0109 warning from being generated.
-
 			options.SymbolTable.AddType (new TestClass (null, "Java.Lang.Object"));
 
 			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options, "Java.Lang.Object");
@@ -1392,33 +1417,26 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			var result = writer.ToString ().NormalizeLineEndings ();
-			Assert.True (result.Contains ("internal static IntPtr class_ref".NormalizeLineEndings ()));
-			Assert.False (result.Contains ("internal static new IntPtr class_ref".NormalizeLineEndings ()));
+			Assert.True (result.Contains ("static readonly JniPeerMembers _members".NormalizeLineEndings ()));
+			Assert.False (result.Contains ("class_ref".NormalizeLineEndings ()));
 		}
 
 		[Test]
-		public void WriteClassInternalBase ()
+		public void WriteFinalClassPeerMembers ()
 		{
-			// Tests the case where a class inherits from Java.Lang.Object and is in the same assembly.
-			// Specifically, the internal class_ref field does need the new modifier.
-			// - This prevents a CS0108 warning from being generated.
-
 			options.SymbolTable.AddType (new TestClass (null, "Java.Lang.Object"));
 
 			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options, "Java.Lang.Object");
+			@class.IsFinal = true;
 			@class.Validate (options, new GenericParameterDefinitionList (), generator.Context);
-
-			// FromXml is set to true when a class is set to true when the api.xml contains an entry for the class.
-			// Therefore, if a class's base has FromXml set to true, the class and its base will be in the same C# assembly.
-			@class.BaseGen.FromXml = true;
 
 			generator.Context.ContextTypes.Push (@class);
 			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
 			var result = writer.ToString ().NormalizeLineEndings ();
-			Assert.True (result.Contains ("internal static new IntPtr class_ref".NormalizeLineEndings ()));
-			Assert.False (result.Contains ("internal static IntPtr class_ref".NormalizeLineEndings ()));
+			Assert.True (result.Contains ("static readonly JniPeerMembers _members".NormalizeLineEndings ()));
+			Assert.False (result.Contains ("class_ref".NormalizeLineEndings ()));
 		}
 
 		[Test]

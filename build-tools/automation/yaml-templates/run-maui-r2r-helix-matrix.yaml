@@ -125,7 +125,6 @@ steps:
       [xml] $xml = Get-Content $caseProject
       Set-Property $xml 'ApplicationId' $case.ApplicationId
       Set-Property $xml 'RuntimeIdentifier' $case.RuntimeIdentifier
-      Set-Property $xml 'UseMonoRuntime' 'false'
       Set-Property $xml 'PublishReadyToRun' 'true'
       Set-Property $xml 'PublishReadyToRunComposite' 'true'
       Set-Property $xml 'AndroidPackageFormat' 'apk'

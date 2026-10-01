@@ -222,10 +222,6 @@ namespace Xamarin.ProjectTools
 			Id = "Xamarin.Jetbrains.Annotations",
 			Version = "24.1.0.1",
 		};
-		public static Package Mono_AotProfiler_Android  = new Package {
-			Id = "Mono.AotProfiler.Android",
-			Version = "9.0.0-preview1",
-		};
 		public static Package SkiaSharp = new Package () {
 			Id = "SkiaSharp",
 			Version = "2.88.3",
@@ -240,4 +236,3 @@ namespace Xamarin.ProjectTools
 		};
 	}
 }
-

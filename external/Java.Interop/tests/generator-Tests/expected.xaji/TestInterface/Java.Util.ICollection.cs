@@ -21,29 +21,13 @@ namespace Java.Util {
 
 	[global::Android.Runtime.Register ("java/util/Collection", DoNotGenerateAcw=true)]
 	internal partial class ICollectionInvoker : global::Java.Lang.Object, ICollection {
-		static IntPtr java_class_ref {
-			get { return _members_java_util_Collection.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members_java_util_Collection; }
 		}
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members_java_util_Collection.JniPeerType.PeerReference.Handle; }
-		}
-
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members_java_util_Collection.ManagedPeerType; }
-		}
-
-		static readonly JniPeerMembers _members_java_util_Collection = new XAPeerMembers ("java/util/Collection", typeof (ICollectionInvoker));
+		static readonly JniPeerMembers _members_java_util_Collection = new JniPeerMembers ("java/util/Collection", typeof (ICollectionInvoker));
 
 		public ICollectionInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
@@ -109,10 +93,7 @@ namespace Java.Util {
 		public unsafe void Clear ()
 		{
 			const string __id = "clear.()V";
-			try {
-				_members_java_util_Collection.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members_java_util_Collection.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 		}
 
 	}

@@ -1,7 +1,7 @@
 ---
 title: Java Dependency Verification in .NET for Android
 description: Java Dependency Verification in .NET for Android
-ms.author: jopobst
+ms.author: jopepper
 ms.date: 05/11/2024
 ---
 

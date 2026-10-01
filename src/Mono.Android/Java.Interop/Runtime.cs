@@ -21,11 +21,11 @@ namespace Java.Interop {
 		}
 
 		public static int MaxGlobalReferenceCount {
-			get {return RuntimeNativeMethods._monodroid_max_gref_get ();}
+			get {return JNIEnvInit.max_gref_count;}
 		}
 
 		public static int GlobalReferenceCount {
-			get {return RuntimeNativeMethods._monodroid_gref_get ();}
+			get {return JniEnvironment.Runtime.GlobalReferenceCount;}
 		}
 
 		public static int LocalReferenceCount {

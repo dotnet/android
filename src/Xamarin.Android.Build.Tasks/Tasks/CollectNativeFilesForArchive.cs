@@ -103,7 +103,10 @@ public class CollectNativeFilesForArchive : AndroidTask
 		// Task output parameters
 		FilesToAddToArchive = apk.ToArray ();
 		OutputFiles = outputFiles.Select (a => new TaskItem (a)).ToArray ();
-		DSODirectoriesToDelete = DSOWrapperGenerator.GetDirectoriesToCleanUp (dsoWrapperConfig).Select (d => new TaskItem (d)).ToArray ();
+		DSODirectoriesToDelete = DSOWrapperGenerator.GetDirectoriesToCleanUp (dsoWrapperConfig)
+			.Concat (DlopenAssemblyStoreGenerator.GetDirectoriesToCleanUp (IntermediateOutputPath, SupportedAbis))
+			.Select (d => new TaskItem (d))
+			.ToArray ();
 
 		return !Log.HasLoggedErrors;
 	}
@@ -115,9 +118,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 		}
 
 		if (filesystemPath.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase)) {
-			// Either AOT or wrapped assemblies, they will have no debug info here.
-			// AOT libs might have debug info, but it is stripped in the AOT builder
-			// task, so we can ignore them here.
+			// Wrapped assemblies have no debug info here.
 			return filesystemPath;
 		}
 
@@ -343,12 +344,8 @@ public class CollectNativeFilesForArchive : AndroidTask
 		}
 
 		ELFHelper.AssertValidLibraryAlignment (Log, ZipAlignmentPages, path, taskItem);
-		if (!ELFHelper.IsEmptyAOTLibrary (Log, item.filePath)) {
-			item.filePath = StripNativeLibIfNecessary (item.filePath, abi);
-			files.Add (item);
-		} else {
-			Log.LogDebugMessage ($"{item.filePath} is an empty (no executable code) AOT assembly, not including it in the archive");
-		}
+		item.filePath = StripNativeLibIfNecessary (item.filePath, abi);
+		files.Add (item);
 	}
 
 	// This method is used only for internal warnings which will never be shown to the end user, therefore there's

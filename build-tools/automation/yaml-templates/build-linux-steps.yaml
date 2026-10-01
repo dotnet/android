@@ -170,10 +170,11 @@ steps:
 # repo working tree (bin/obj) lives on the large /mnt volume, NOT on '/', so deleting it
 # does not help. Every pipeline artifact has already been uploaded by this point, so
 # reclaim space on '/' by deleting everything under $HOME that the build no longer needs.
-# The only things we must keep are the two post-job cache sources: $HOME/android-archives
-# (saved by 'cache Android toolchain archives') and $HOME/.gradle (saved by 'cache Gradle
-# downloads'). Everything else is disposable here, most importantly $HOME/android-toolchain
-# (the extracted SDK/NDK/JDK, ~9 GB) and the NuGet global packages cache.
+# The only post-job cache source under $HOME that we must keep is $HOME/android-archives
+# (saved by 'cache Android toolchain archives'). Gradle uses an isolated user home under
+# Agent.TempDirectory. Everything else is disposable here, most importantly
+# $HOME/android-toolchain (the extracted SDK/NDK/JDK, ~9 GB) and the NuGet global packages
+# cache.
 # Public-only: the 1ES pipeline runs on agents that do not have this small-disk problem.
 - ${{ if ne(parameters.use1ESTemplate, true) }}:
   - bash: |

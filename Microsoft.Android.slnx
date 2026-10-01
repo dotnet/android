@@ -32,7 +32,6 @@
     <Project Path="src/Mono.Android/Mono.Android.csproj" />
     <Project Path="src/native/cmake-config/cmake-config.csproj" />
     <Project Path="src/native/native-clr.csproj" />
-    <Project Path="src/native/native-mono.csproj" />
     <Project Path="src/native/native-nativeaot.csproj" />
     <Project Path="src/openjdk/openjdk.csproj" />
     <Project Path="src/r8/r8.csproj" />
@@ -54,23 +53,11 @@
     <Project Path="src/Xamarin.Installer.AndroidSDK/Xamarin.Installer.AndroidSDK.csproj" />
     <Project Path="src/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Build.Tasks.csproj" />
     <Project Path="src/Xamarin.Installer.Common/Xamarin.Installer.Common.csproj" />
-    <Project Path="tools/fastdev/fastdevtools.csproj" />
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj" />
     <Project Path="src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj" />
     <Project Path="src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Xamarin.ProjectTools.csproj" />
-    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests.csproj" />
-    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests/SpecialTypeCollisionFixture/SpecialTypeCollisionFixture.csproj" />
-    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests/UserTypesFixture/UserTypesFixture.csproj" />
-    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/ActivationStubs.Java.Interop/ActivationStubs.Java.Interop.csproj" />
-    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/ActivationStubs.Mono.Android/ActivationStubs.Mono.Android.csproj" />
-    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/InvalidConstructorFixtures/InvalidConstructorFixtures.csproj" />
-    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/LookalikeConstructorTypes/LookalikeConstructorTypes.csproj" />
-    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests.csproj" />
-    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/MonoAndroidFixture/MonoAndroidFixture.csproj" />
-    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/TestAttributeFixtures/TestAttributeFixtures.csproj" />
-    <Project Path="tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/TestFixtures/TestFixtures.csproj" />
     <Project Path="tests/MSBuildDeviceIntegration/MSBuildDeviceIntegration.csproj" />
     <Project Path="tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj" />
     <Project Path="tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj" />
@@ -87,7 +74,6 @@
     <Project Path="external/Java.Interop/tools/class-parse/class-parse.csproj" />
     <Project Path="external/Java.Interop/tools/java-source-utils/java-source-utils.csproj" />
     <Project Path="external/Java.Interop/tools/jcw-gen/jcw-gen.csproj" />
-    <Project Path="tools/jit-times/jit-times.csproj" />
     <Project Path="tools/relnote-gen/relnote-gen.csproj" />
     <Project Path="tools/tmt/tmt.csproj">
       <Platform Solution="*|Any CPU" Project="anycpu" />

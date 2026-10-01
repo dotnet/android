@@ -162,19 +162,9 @@ stages:
         configuration: Debug
         testName: Mono.Android.NET_Tests-JniReferenceLeaks
         project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
-        extraBuildArgs: -p:TestsFlavor=JniReferenceLeaks -p:IncludeCategories=JniReferenceLeak -p:UseMonoRuntime=false
+        extraBuildArgs: -p:TestsFlavor=JniReferenceLeaks -p:IncludeCategories=JniReferenceLeak
         artifactSource: bin/TestDebug/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
         artifactFolder: $(DotNetTargetFramework)-JniReferenceLeaks
-
-    # Smoke coverage that the test app still builds and runs under Mono.
-    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(XA.Build.Configuration)
-        testName: Mono.Android.NET_Tests-Mono
-        project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
-        extraBuildArgs: -p:UseMonoRuntime=true -p:_DisableCheckForUnsupportedMonoMobileRuntime=true
-        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
-        artifactFolder: $(DotNetTargetFramework)-Mono
 
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -182,7 +172,7 @@ stages:
         testName: Mono.Android.NET_Tests-CoreCLRTrimmable
         project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)CoreCLRTrimmable.xml
-        extraBuildArgs: -p:AndroidTypeMapImplementation=trimmable -p:UseMonoRuntime=false
+        extraBuildArgs: -p:AndroidTypeMapImplementation=trimmable
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-CoreCLRTrimmable
 

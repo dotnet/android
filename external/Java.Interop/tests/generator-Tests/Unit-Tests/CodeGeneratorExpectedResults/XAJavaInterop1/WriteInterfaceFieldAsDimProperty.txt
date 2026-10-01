@@ -21,14 +21,11 @@ public abstract class MyInterface : Java.Lang.Object {
 		set {
 			const string __id = "EGL_NO_SURFACE.I";
 
-			try {
-				_members.StaticFields.SetValue (__id, value);
-			} finally {
-			}
+			_members.StaticFields.SetValue (__id, value);
 		}
 	}
 
-	static readonly JniPeerMembers _members = new XAPeerMembers ("com/xamarin/android/MyInterface", typeof (MyInterface));
+	static readonly JniPeerMembers _members = new JniPeerMembers ("com/xamarin/android/MyInterface", typeof (MyInterface));
 
 }
 
@@ -44,7 +41,7 @@ public abstract class MyInterfaceConsts : MyInterface {
 // Metadata.xml XPath interface reference: path="/api/package[@name='com.xamarin.android']/interface[@name='MyInterface']"
 [Register ("com/xamarin/android/MyInterface", "", "Com.Xamarin.Android.IMyInterfaceInvoker")]
 public partial interface IMyInterface : IJavaObject, IJavaPeerable {
-	private static readonly JniPeerMembers _members = new XAPeerMembers ("com/xamarin/android/MyInterface", typeof (IMyInterface), isInterface: true);
+	private static readonly JniPeerMembers _members = new JniPeerMembers ("com/xamarin/android/MyInterface", typeof (IMyInterface), isInterface: true);
 
 
 	// Metadata.xml XPath field reference: path="/api/package[@name='com.xamarin.android']/interface[@name='MyInterface']/field[@name='EGL_NO_SURFACE']"
@@ -59,10 +56,7 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 		set {
 			const string __id = "EGL_NO_SURFACE.I";
 
-			try {
-				_members.StaticFields.SetValue (__id, value);
-			} finally {
-			}
+			_members.StaticFields.SetValue (__id, value);
 		}
 	}
 
@@ -70,29 +64,13 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 
 [global::Android.Runtime.Register ("com/xamarin/android/MyInterface", DoNotGenerateAcw=true)]
 internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
-	static IntPtr java_class_ref {
-		get { return _members_com_xamarin_android_MyInterface.JniPeerType.PeerReference.Handle; }
-	}
-
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 		get { return _members_com_xamarin_android_MyInterface; }
 	}
 
-	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-	protected override IntPtr ThresholdClass {
-		get { return _members_com_xamarin_android_MyInterface.JniPeerType.PeerReference.Handle; }
-	}
-
-	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-	protected override global::System.Type ThresholdType {
-		get { return _members_com_xamarin_android_MyInterface.ManagedPeerType; }
-	}
-
-	static readonly JniPeerMembers _members_com_xamarin_android_MyInterface = new XAPeerMembers ("com/xamarin/android/MyInterface", typeof (IMyInterfaceInvoker));
+	static readonly JniPeerMembers _members_com_xamarin_android_MyInterface = new JniPeerMembers ("com/xamarin/android/MyInterface", typeof (IMyInterfaceInvoker));
 
 	public IMyInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{

@@ -170,7 +170,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", "apk");
 
 			string[] abis = runtimeType switch {
-				AndroidRuntime.MonoVM => new [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" },
 				AndroidRuntime.CoreCLR => new [] { "arm64-v8a", "x86_64" },
 				_ => throw new NotSupportedException ($"Unsupported runtime {runtimeType}")
 			};

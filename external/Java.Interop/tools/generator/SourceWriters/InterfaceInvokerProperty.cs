@@ -32,12 +32,12 @@ namespace generator.SourceWriters
 
 			if (property.Getter != null) {
 				HasGet = true;
-				getter_callback = new MethodCallback (iface, property.Getter, opt, property.AdjustedName, false);
+				getter_callback = new MethodCallback (iface, property.Getter, opt, property.AdjustedName, false, iface.FullName + "Invoker");
 			}
 
 			if (property.Setter != null) {
 				HasSet = true;
-				setter_callback = new MethodCallback (iface, property.Setter, opt, property.AdjustedName, false);
+				setter_callback = new MethodCallback (iface, property.Setter, opt, property.AdjustedName, false, iface.FullName + "Invoker");
 			}
 
 			if (HasGet) {

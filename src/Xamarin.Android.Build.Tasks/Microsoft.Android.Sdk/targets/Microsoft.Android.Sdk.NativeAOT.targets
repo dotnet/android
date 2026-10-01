@@ -43,10 +43,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
   <!-- Default feature switches -->
   <ItemGroup>
-    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime"
-        Value="false"
-        Trim="true"
-    />
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime"
         Value="false"
         Trim="true"

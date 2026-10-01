@@ -15,7 +15,7 @@ This message indicates that the Java `jarsigner` command line tool used by
 
 Errors reported by `jarsigner` and other Android command line tooling are
 outside of .NET for Android's control, so a general error code of
-ANDJS0000 is used reporting the exact message.
+ANDJS0000 is used to report the exact message.
 
 ## Solution
 

@@ -258,15 +258,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA0104" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Invalid value for `$(AndroidSequencePointsMode)`: {0}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[`$(AndroidSequencePointsMode)` için geçersiz değer: {0}]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA0105" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project.]]></Val>
@@ -371,24 +362,6 @@
           <Val><![CDATA[Using Fast Deployment and Android App Bundles at the same time is not currently supported. Use Fast Deployment for Debug configurations and Android App Bundles for Release configurations.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Hızlı Dağıtım ve Android Uygulama Paketlerinin aynı anda kullanılması şu anda desteklenmiyor. Hata Ayıklama yapılandırmaları için Hızlı Dağıtımı, Sürüm yapılandırmaları için Android Uygulama Paketlerini kullanın.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0119_AOT" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Using fast deployment and AOT at the same time is not recommended. Use fast deployment for Debug configurations and AOT for Release configurations.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Hızlı dağıtımın ve AOT'nin aynı anda kullanılması önerilmez. Hata ayıklama yapılandırmaları için hızlı dağıtımı, Yayın yapılandırmaları için AOT'yi kullanın.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0119_Interpreter" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Disabling the interpreter; using the interpreter and AOT at the same time is not supported. Use the interpreter for hot reload support in Debug configurations and AOT for Release configurations.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Yorumlayıcı devre dışı bırakılıyor. Yorumlayıcıyı ve AOT'yi aynı anda kullanma desteklenmemektdir. Yorumlayıcıyı Hata Ayıklama yapılandırmalarında ve Yayınlama için AOT yapılandırmalarında yeniden yükleme desteği için kullanın.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -548,15 +521,6 @@
           <Val><![CDATA[Attempt to check whether '{0}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA['{0}' dosyasının doğru hizalanmış BIR DOSYA olup olmadığını denetleme denemesi, dosya için hizalama denetimi yoksayıldığında özel durumla başarısız oldu.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0147" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring AOT check for the file.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' dosyasının geçerli bir ELF dosyası olup olmadığını denetleme girişimi, özel durum nedeniyle başarısız oldu ve dosya için AOT denetimi yoksayıldı.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -786,15 +750,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA1025" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The experimental 'Hybrid' value for the 'AndroidAotMode' MSBuild property is not currently compatible with the armeabi-v7a target ABI. To continue using the experimental 'Hybrid' value for 'AndroidAotMode', deselect the armeabi-v7a target ABI in the Visual Studio project property pages or edit the project file in a text editor and remove 'armeabi-v7a' from the 'AndroidSupportedAbis' MSBuild property.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['AndroidAotMode' MSBuild özelliği için deneysel 'Hybrid' değeri şu anda armeabi-v7a hedef ABI ile uyumlu değil. 'AndroidAotMode' için deneysel 'Hybrid' değerini kullanmaya devam etmek için Visual Studio projesinin özellik sayfalarındaki armeabi-v7a hedef ABI seçimini kaldırın veya metin düzenleyicisinde proje dosyasını düzenleyerek 'AndroidSupportedAbis' MSBuild özelliğinden 'armeabi-v7a' öğesini kaldırın.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA1027" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The 'EnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.]]></Val>
@@ -815,9 +770,9 @@
       </Item>
       <Item ItemId=";XA1029" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The 'AotAssemblies' MSBuild property is deprecated. Edit the project file in a text editor to remove this property, and use the 'RunAOTCompilation' MSBuild property instead.]]></Val>
+          <Val><![CDATA[The 'AotAssemblies' MSBuild property is deprecated. Remove it. For supported .NET 10-and-earlier projects that use Mono, use the 'RunAOTCompilation' MSBuild property instead. CoreCLR and NativeAOT do not use this property.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['AotAssemblies' MSBuild özelliği kullanım dışı bırakıldı. Bu özelliği kaldırmak için proje dosyasını bir metin düzenleyicisinde düzenleyin ve bunun yerine 'RunAOTCompilation' MSBuild özelliğini kullanın.]]></Val>
+            <Val><![CDATA['AotAssemblies' MSBuild özelliği kullanım dışı. Kaldırın. Mono kullanan desteklenen .NET 10 ve önceki sürümler için bunun yerine 'RunAOTCompilation' MSBuild özelliğini kullanın. CoreCLR ve NativeAOT bu özelliği kullanmaz.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -842,10 +797,13 @@
       </Item>
       <Item ItemId=";XA1035" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The 'BundleAssemblies' property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the 'AndroidUseAssemblyStore' and 'AndroidEnableAssemblyCompression' properties.]]></Val>
+          <Val><![CDATA[The 'BundleAssemblies' property is deprecated and no longer affects the build. Remove it. For supported .NET 10-and-earlier Mono projects, use 'AndroidUseAssemblyStore' with 'AndroidEnableAssemblyCompression' for the former behavior. .NET 11 CoreCLR controls packaged assembly-store behavior and needs no replacement setting.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['BundleAssemblies' özelliği kullanım dışıdır ve uygulama derlemesi üzerinde etkisi yoktur. Eşdeğer işlev 'AndroidUseAssemblyStore' ve 'AndroidEnableAssemblyCompression' özellikleri ile uygulanmalıdır.]]></Val>
+            <Val><![CDATA['BundleAssemblies' özelliğinin kullanımı kaldırılmıştır ve artık derlemeyi etkilemez. Kaldır. Desteklenen .NET 10 ve önceki Mono projelerinde önceki davranışı kullanmak için 'AndroidUseAssemblyStore' ile 'AndroidEnableAssemblyCompression' özelliklerini kullanın. .NET 11 CoreCLR, paketlenmiş derleme deposu davranışını denetler ve yerine başka bir ayar kullanılması gerekmez.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The 'BundleAssemblies' property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the 'AndroidUseAssemblyStore' and 'AndroidEnableAssemblyCompression' properties.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -926,12 +884,12 @@
       </Item>
       <Item ItemId=";XA1044" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
+          <Val><![CDATA[The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Remove the property.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' MSBuild özelliği {1} çalışma zamanıyla uyumlu değil. Bu özellik etkin durumdayken derleme devam edemez. Özelliği kaldırın veya şu koşulla koruyun: Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
+            <Val><![CDATA[MSBuild özelliği '{0}' {1} çalışma zamanı ile uyumlu değil. Bu özellik etkin olduğunda derleme devam edemez. Özelliği kaldırın.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[The MSBuild property '{0}' is not compatible with the {1} runtime and will be ignored. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
+            <Val><![CDATA[The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -999,15 +957,6 @@
           <Prev Cat="Text">
             <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET Android once .NET 6 is released.]]></Val>
           </Prev>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA2000_gcParams_bridgeImpl" ItemType="0;.resx" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Support for the 'MONO_GC_PARAMS=bridge-implementation=old' value will be removed in .NET 7.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['MONO_GC_PARAMS=bridge-implementation=old' değeri için destek .NET 7'de kaldırılacaktır.]]></Val>
-          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1082,24 +1031,6 @@
           <Val><![CDATA[Assembly {0} does not exist.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[{0} derlemesi yok.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA3001" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not AOT the assembly: {0}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Bütünleştirilmiş koda AOT uygulanamadı: {0}]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA3002" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Invalid AOT mode: {0}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Geçersiz AOT modu: {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1719,6 +1650,24 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA4265" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Assembly '{0}' uses a Java peer callback format that requires AndroidTypeMapImplementation=trimmable.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' derlemesi, AndroidTypeMapImplementation=trimmable gerektiren bir Java eş geri çağırma biçimi kullanıyor.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4266" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata when AndroidTypeMapImplementation=trimmable.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' derlemesinde çalışma zamanına özgü '{1}' ve '{2}' uygulamalarında farklı Java eş geri çağırma meta verileri var. AndroidTypeMapImplementation=trimmable olduğunda tüm RuntimeIdentifiers eşdeğer geri çağırma meta verileri sağlamalıdır.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA4300" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Native library '{0}' will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as 'libs/armeabi-v7a/'.]]></Val>
@@ -1760,15 +1709,6 @@
           <Val><![CDATA[Cannot determine ABI of native library '{0}'. Remove the '{1}' NuGet package, or notify the library author.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA['{0}' yerel kitaplığının ABI'si belirlenemiyor. '{1}' NuGet paketini kaldırın veya kitaplık yazarına bildirin.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA4302" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Unhandled exception merging `AndroidManifest.xml`: {0}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[`AndroidManifest.xml` birleştirilirken işlenmeyen özel durum oluştu: {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1983,38 +1923,38 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA4325" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";XA4327" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Failed to rewrite managed JNI names for R8. {0}]]></Val>
+          <Val><![CDATA[Could not extract Java type map keys from '{0}': {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[R8 için yönetilen JNI adları yeniden yazılamadı. {0}]]></Val>
+            <Val><![CDATA['{0}' dosyasından Java türü eşleme anahtarları ayıklanamadı: {1}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA4325_AssemblyFailure" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";XA4328" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Could not rewrite the JNI names in the assembly '{0}': {1}]]></Val>
+          <Val><![CDATA[Could not generate typemap ProGuard configuration from '{0}': {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[“{0}” derlemesindeki JNI adları yeniden yazılamadı: {1}]]></Val>
+            <Val><![CDATA[Tür haritası ProGuard yapılandırması '{0}' oluşturulamadı: {1}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA4325_SourceDestinationCount" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";XA4328_InvalidName" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The 'SourceFiles' and 'DestinationFiles' item groups must contain the same number of items.]]></Val>
+          <Val><![CDATA[Line {0} contains an invalid retained Java class name: '{1}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[“SourceFiles” ve “DestinationFiles” öğe grupları aynı sayıda öğe içermelidir.]]></Val>
+            <Val><![CDATA[Satır {0} korunmuş geçersiz bir Java sınıfı adı içeriyor: '{1}'.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA4326" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";XA4328_NoInputs" ItemType="0;.resx" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Unable to safely rewrite a JNI member lookup because its class handle does not have one structurally unambiguous JNIEnv.FindClass source.]]></Val>
+          <Val><![CDATA[No retained Java type map key files were provided.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[JNI üye aramasını güvenli bir şekilde yeniden yazmak mümkün değil; çünkü sınıf tanıtıcısının yapısal olarak belirsiz olmayan bir JNIEnv.FindClass kaynağı yok.]]></Val>
+            <Val><![CDATA[Saklanan Java türü eşleme anahtarı dosyası sağlanmadı.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

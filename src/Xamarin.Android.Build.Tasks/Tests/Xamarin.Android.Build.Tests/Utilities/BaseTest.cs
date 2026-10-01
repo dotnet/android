@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
@@ -23,6 +24,12 @@ namespace Xamarin.Android.Build.Tests
 	{
 		public static ConcurrentDictionary<string, string> TestOutputDirectories = new ConcurrentDictionary<string, string> ();
 		public static ConcurrentDictionary<string, string> TestPackageNames = new ConcurrentDictionary<string, string> ();
+
+		public static IEnumerable<(bool isRelease, AndroidRuntime runtime)> ValidRuntimeConfigurations => [
+			(false, AndroidRuntime.CoreCLR),
+			(true, AndroidRuntime.CoreCLR),
+			(true, AndroidRuntime.NativeAOT),
+		];
 
 		protected bool IsWindows => TestEnvironment.IsWindows;
 
@@ -168,13 +175,19 @@ namespace Xamarin.Android.Build.Tests
 			};
 			using (var proc = new Process ()) {
 				StringBuilder standardOutput = new StringBuilder (), errorOutput = new StringBuilder ();
+				var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+				var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 				proc.StartInfo = info;
 				proc.OutputDataReceived += new DataReceivedEventHandler ((sender, e) => {
-					if (!string.IsNullOrEmpty (e.Data))
+					if (e.Data == null)
+						outputDone.TrySetResult (true);
+					else if (!string.IsNullOrEmpty (e.Data))
 						standardOutput.AppendLine (e.Data);
 				});
 				proc.ErrorDataReceived += new DataReceivedEventHandler ((sender, e) => {
-					if (!string.IsNullOrEmpty (e.Data))
+					if (e.Data == null)
+						errorDone.TrySetResult (true);
+					else if (!string.IsNullOrEmpty (e.Data))
 						errorOutput.AppendLine (e.Data);
 				});
 
@@ -183,12 +196,17 @@ namespace Xamarin.Android.Build.Tests
 				proc.BeginErrorReadLine ();
 
 				if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (timeoutInSeconds).TotalMilliseconds)) {
-					proc.Kill ();
+					if (!proc.HasExited)
+						proc.Kill (entireProcessTree: true);
 					TestContext.Out.WriteLine ($"{nameof (RunProcess)} timed out: {exe} {args}");
 					return (-1, null, null); //Don't try to read stdout/stderr
 				}
 
-				proc.WaitForExit ();
+				// A child process can keep the redirected handles open after adb exits.
+				bool outputDrained = outputDone.Task.Wait (TimeSpan.FromSeconds (2));
+				bool errorDrained = errorDone.Task.Wait (TimeSpan.FromSeconds (2));
+				if (!outputDrained || !errorDrained)
+					TestContext.Out.WriteLine ($"{nameof (RunProcess)}: {exe} exited with redirected output still open.");
 
 				return (proc.ExitCode, standardOutput.ToString ().Trim (), errorOutput.ToString ().Trim ());
 			}
@@ -622,7 +640,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		protected bool IgnoreUnsupportedConfiguration (AndroidRuntime runtime, bool aot = false, bool release = false)
+		protected bool IgnoreUnsupportedConfiguration (AndroidRuntime runtime, bool release = false)
 		{
 			if (runtime == AndroidRuntime.NativeAOT) {
 				// NativeAOT is release-only, AOT is always implied
@@ -631,31 +649,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				Assert.Ignore ($"NativeAOT: unsupported configuration (release == {release})");
-				return true;
-			}
-
-			if (runtime == AndroidRuntime.CoreCLR) {
-				// CoreCLR doesn't support AOT
-				if (!aot) {
-					return false;
-				}
-
-				Assert.Ignore ($"CoreCLR: unsupported configuration (aot == {aot})");
-				return true;
-			}
-
-			// MonoVM supports all the combinations
-			return false;
-		}
-
-		// NativeAOT trims with ILC and does not emit illink's `obj/<config>/<rid>/linked/` output.
-		// Tests that inspect the `linked/` directory (e.g. to verify trimming or type-map behavior)
-		// therefore cannot run as-is on NativeAOT.
-		// TODO: add DGML-based counterparts to verify these behaviors on NativeAOT (follow-up issue).
-		protected bool IgnoreNativeAotLinkedAssemblyChecks (AndroidRuntime runtime)
-		{
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT does not produce illink's `linked/` output; skipping `linked/` assembly inspection (DGML counterpart tracked as a follow-up).");
 				return true;
 			}
 

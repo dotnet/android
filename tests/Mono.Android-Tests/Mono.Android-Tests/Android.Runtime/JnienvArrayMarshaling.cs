@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -515,7 +516,7 @@ namespace Android.RuntimeTests {
 
 		[Test]
 		[Category ("JNIObjectArray")]
-		public async Task GetObjectArray_AfterConcurrentPeerLookup ()
+		public async Task GetPeer_ConcurrentLookup_ReturnsRegisteredPeer ()
 		{
 			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
 				Assert.Ignore ("This test exercises trimmable type map peer creation.");
@@ -526,8 +527,10 @@ namespace Android.RuntimeTests {
 
 			Java.InteropTests.TrimmableRuntimeJavaInteropPeer first = null;
 			Java.InteropTests.TrimmableRuntimeJavaInteropPeer second = null;
+			var createdPeers = new ConcurrentQueue<Java.InteropTests.TrimmableRuntimeJavaInteropPeer> ();
 			using var activationBarrier = new Barrier (2);
 			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ActivationBarrier = activationBarrier;
+			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.PeerCreated = createdPeers.Enqueue;
 			try {
 				var firstTask = Task.Factory.StartNew (
 					() => manager.GetPeer (reference, typeof (Java.InteropTests.TrimmableRuntimeJavaInteropPeer)),
@@ -542,23 +545,23 @@ namespace Android.RuntimeTests {
 				first = firstPeer;
 				second = secondPeer;
 
-				// GetPeer() creates via CreatePeer(), which is contractually required to
-				// return a new peer even when a compatible one is already registered, so
-				// the caller which loses the race receives an unregistered alias.
-				Assert.AreNotSame (first, second, "Each CreatePeer() caller should receive its own peer.");
+				// CreatePeer() still constructs distinct replaceable peers, but GetPeer()
+				// must return the peer which won registration to both callers.
+				Assert.AreSame (first, second, "Both GetPeer() callers should receive the registered peer.");
+				Assert.IsTrue (first.PeerReference.IsValid, "The returned registered peer must remain usable.");
 				Assert.AreEqual (2, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ConstructorInvocations,
 					"Both callers should have raced through peer activation.");
-				Assert.AreEqual (0, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.DisposeInvocations,
-					"A peer handed back to a caller should not be disposed.");
+				Assert.AreEqual (1, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.DisposeInvocations,
+					"The losing alias should receive its managed disposal callback.");
 
-				// The race must not corrupt the registry: exactly one peer keeps the Java
-				// instance's identity. Before the fix the peer created second registered
-				// itself before it was marked Replaceable, so it evicted the first,
-				// leaving the first caller holding a peer the runtime no longer knew about.
 				var registered = Java.Interop.JniRuntime.CurrentRuntime.ValueManager.PeekPeer (reference);
 				Assert.IsNotNull (registered, "One of the racing peers should have won registration.");
-				Assert.IsTrue (ReferenceEquals (registered, first) || ReferenceEquals (registered, second),
-					$"The registered peer should be one of the racing peers, but was {registered.GetType ()}.");
+				Assert.AreSame (registered, first, "GetPeer() should return the peer which won registration.");
+				Assert.AreEqual (2, createdPeers.Count);
+				foreach (var peer in createdPeers) {
+					Assert.AreEqual (ReferenceEquals (peer, registered), peer.PeerReference.IsValid,
+						"Only the returned registered peer should retain a JNI reference.");
+				}
 
 				using (var objectArray = new Java.Lang.Object (
 						JNIEnv.NewArray (new [] { first }, typeof (Java.Lang.Object)),
@@ -569,9 +572,9 @@ namespace Android.RuntimeTests {
 				}
 			} finally {
 				Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ActivationBarrier = null;
-				if (!ReferenceEquals (first, second))
-					second?.Dispose ();
-				first?.Dispose ();
+				Java.InteropTests.TrimmableRuntimeJavaInteropPeer.PeerCreated = null;
+				foreach (var peer in createdPeers)
+					peer.Dispose ();
 				Java.Interop.JniObjectReference.Dispose (ref reference);
 			}
 		}
@@ -589,8 +592,11 @@ namespace Android.RuntimeTests {
 
 			Java.InteropTests.TrimmableRuntimeJavaInteropPeer first = null;
 			Java.InteropTests.TrimmableRuntimeJavaInteropPeer second = null;
+			var createdPeers = new ConcurrentQueue<Java.InteropTests.TrimmableRuntimeJavaInteropPeer> ();
 			using var activationBarrier = new Barrier (2);
 			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ActivationBarrier = activationBarrier;
+			// Retain both peers to check that the losing alias is released without waiting for GC.
+			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.PeerCreated = createdPeers.Enqueue;
 			try {
 				var firstTask = Task.Factory.StartNew (
 					() => JNIEnv.GetObjectArray (arrayReference.Handle, new [] { typeof (Java.InteropTests.TrimmableRuntimeJavaInteropPeer) }) [0],
@@ -605,27 +611,30 @@ namespace Android.RuntimeTests {
 				first = firstPeer;
 				second = secondPeer;
 
-				// Each GetObjectArray() caller converts through CreatePeer(), which is
-				// contractually required to return a new peer even when a compatible one is
-				// already registered, so the caller which loses the race gets an alias.
-				Assert.AreNotSame (first, second, "Each converting caller should receive its own peer.");
+				// Both callers create peers, but high-level lookup must return the registered
+				// peer rather than handing the losing caller an unregistered alias.
+				Assert.AreSame (first, second, "Both converting callers should receive the registered peer.");
 				Assert.AreEqual (2, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ConstructorInvocations,
 					"Both callers should have raced through peer activation.");
-				Assert.AreEqual (0, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.DisposeInvocations,
-					"A peer handed back to a caller should not be disposed.");
+				Assert.AreEqual (1, Java.InteropTests.TrimmableRuntimeJavaInteropPeer.DisposeInvocations,
+					"The losing alias should receive its managed disposal callback.");
 
 				// The race must not corrupt the registry: exactly one peer keeps the Java
 				// instance's identity. Before the fix the peer created second registered
 				// itself before it was marked Replaceable, so it evicted the first.
 				var registered = Java.Interop.JniRuntime.CurrentRuntime.ValueManager.PeekPeer (reference);
 				Assert.IsNotNull (registered, "One of the racing peers should have won registration.");
-				Assert.IsTrue (ReferenceEquals (registered, first) || ReferenceEquals (registered, second),
-					$"The registered peer should be one of the racing peers, but was {registered.GetType ()}.");
+				Assert.AreSame (registered, first, "Array marshaling should return the peer which won registration.");
+				Assert.AreEqual (2, createdPeers.Count);
+				foreach (var peer in createdPeers) {
+					Assert.AreEqual (ReferenceEquals (peer, registered), peer.PeerReference.IsValid,
+						"Only the returned registered peer should retain a JNI reference.");
+				}
 			} finally {
 				Java.InteropTests.TrimmableRuntimeJavaInteropPeer.ActivationBarrier = null;
-				if (!ReferenceEquals (first, second))
-					second?.Dispose ();
-				first?.Dispose ();
+				Java.InteropTests.TrimmableRuntimeJavaInteropPeer.PeerCreated = null;
+				foreach (var peer in createdPeers)
+					peer.Dispose ();
 				Java.Interop.JniObjectReference.Dispose (ref arrayReference);
 				Java.Interop.JniObjectReference.Dispose (ref reference);
 			}

@@ -32,6 +32,18 @@ namespace Java.InteropTests
 			}
 		}
 
+		[Test]
+		public void CharFieldPreservesNonAsciiCharacters ()
+		{
+			const char expected = '\uFFFF';
+
+			// Setting Value covers jchar input through SetCharField; reading it back covers GetCharField.
+			using (var value = new Android.Util.MutableChar ('\0')) {
+				value.Value = expected;
+				Assert.AreEqual (expected, value.Value);
+			}
+		}
+
 		[DllImport ("reuse-threads")]
 		static extern int rt_register_type_on_new_thread (string java_type_namem, IntPtr class_loader);
 

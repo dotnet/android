@@ -971,6 +971,7 @@ extends:
             arguments: >-
               -f $(DotNetTargetFramework)-android -c Debug
               --configfile $(Build.SourcesDirectory)/maui/NuGet.config
+              -p:RestoreAdditionalProjectSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet12/nuget/v3/index.json
               -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Debug.binlog
             xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Build MAUI template - Debug
@@ -981,21 +982,10 @@ extends:
             arguments: >-
               -f $(DotNetTargetFramework)-android -c Release
               --configfile $(Build.SourcesDirectory)/maui/NuGet.config
+              -p:RestoreAdditionalProjectSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet12/nuget/v3/index.json
               -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Release.binlog
             xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Build MAUI template - Release
-
-        - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
-          parameters:
-            project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
-            arguments: >-
-              -f $(DotNetTargetFramework)-android -c Release
-              -p:UseMonoRuntime=true
-              -p:_DisableCheckForUnsupportedMonoMobileRuntime=true
-              --configfile $(Build.SourcesDirectory)/maui/NuGet.config
-              -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Mono.binlog
-            xaSourcePath: $(Build.SourcesDirectory)/android
-            displayName: Build MAUI template - Mono
 
         - task: CopyFiles@2
           displayName: copy build logs

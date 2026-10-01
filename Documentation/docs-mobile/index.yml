@@ -9,10 +9,11 @@ brand: dotnet
 metadata:
   title: .NET for Android
   description: The .NET for Android guide has everything you need to learn .NET on the Android platform.
-  ms.service: dotnet-android
+  ms.service: dotnet-mobile-development
+  ms.subservice: dotnet-android
   ms.topic: hub-page
-  author: jonpryor
-  ms.author: jopryo
+  author: jonathanpeppers
+  ms.author: jopepper
   ms.date: 04/18/2024
 
 # highlightedContent section (Optional; Remove if not applicable.)

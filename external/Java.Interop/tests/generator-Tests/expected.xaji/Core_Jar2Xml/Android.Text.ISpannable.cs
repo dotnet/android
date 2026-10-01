@@ -12,31 +12,15 @@ namespace Android.Text {
 
 	[global::Android.Runtime.Register ("android/text/Spannable", DoNotGenerateAcw=true)]
 	internal partial class ISpannableInvoker : global::Java.Lang.Object, ISpannable {
-		static IntPtr java_class_ref {
-			get { return _members_android_text_Spannable.JniPeerType.PeerReference.Handle; }
-		}
-
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members_android_text_Spannable; }
 		}
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override IntPtr ThresholdClass {
-			get { return _members_android_text_Spannable.JniPeerType.PeerReference.Handle; }
-		}
+		static readonly JniPeerMembers _members_android_text_Spannable = new JniPeerMembers ("android/text/Spannable", typeof (ISpannableInvoker));
 
-		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
-		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
-		protected override global::System.Type ThresholdType {
-			get { return _members_android_text_Spannable.ManagedPeerType; }
-		}
-
-		static readonly JniPeerMembers _members_android_text_Spannable = new XAPeerMembers ("android/text/Spannable", typeof (ISpannableInvoker));
-
-		static readonly JniPeerMembers _members_android_text_Spanned = new XAPeerMembers ("android/text/Spanned", typeof (ISpannableInvoker));
+		static readonly JniPeerMembers _members_android_text_Spanned = new JniPeerMembers ("android/text/Spanned", typeof (ISpannableInvoker));
 
 		public ISpannableInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
@@ -67,14 +51,12 @@ namespace Android.Text {
 		public unsafe global::Android.Text.SpanTypes GetSpanFlags (global::Java.Lang.Object tag)
 		{
 			const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((tag == null) ? IntPtr.Zero : ((global::Java.Lang.Object) tag).Handle);
-				var __rm = _members_android_text_Spanned.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
-				return (global::Android.Text.SpanTypes) __rm;
-			} finally {
-				global::System.GC.KeepAlive (tag);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue ((tag == null) ? IntPtr.Zero : ((global::Java.Lang.Object) tag).Handle);
+			var __rm = _members_android_text_Spanned.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
+			var __result = (global::Android.Text.SpanTypes) __rm;
+			global::System.GC.KeepAlive (tag);
+			return __result;
 		}
 
 	}
