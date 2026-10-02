@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Xamarin.ProjectTools
 {
@@ -124,90 +122,36 @@ namespace Xamarin.ProjectTools
 					WindowStyle = ProcessWindowStyle.Hidden,
 					RedirectStandardError = true,
 					RedirectStandardOutput = true,
+					InheritedHandles = [],
 				};
 
-				return CachedNugetGlobalPackageFolder = FindNugetGlobalPackageFolder (psi, 60000);
-			}
-
-			return String.Empty;
-		}
-
-		static string FindNugetGlobalPackageFolder (ProcessStartInfo psi, int timeoutMilliseconds)
-		{
-			var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-			var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-			var stdout_lines = new List<string> ();
-			var stderr_lines = new List<string> ();
-			var outputLock = new object ();
-			bool acceptingOutput = true;
-
-			using (var p = new Process { StartInfo = psi }) {
-				p.ErrorDataReceived += (sender, e) => {
-					if (e.Data == null) {
-						errorDone.TrySetResult (true);
-					} else {
-						lock (outputLock) {
-							if (acceptingOutput)
-								stderr_lines.Add (e.Data);
-						}
-					}
-				};
-
-				p.OutputDataReceived += (sender, e) => {
-					if (e.Data == null) {
-						outputDone.TrySetResult (true);
-					} else {
-						lock (outputLock) {
-							if (acceptingOutput)
-								stdout_lines.Add (e.Data);
-						}
-					}
-				};
-
-				bool completed;
+				ProcessTextOutput result;
 				try {
-					p.Start ();
-					p.BeginOutputReadLine ();
-					p.BeginErrorReadLine ();
-					completed = p.WaitForExit (timeoutMilliseconds);
-					if (!completed) {
-						Console.Error.WriteLine ($"Process `{psi.FileName} {psi.Arguments}` timed out after {timeoutMilliseconds}ms.");
-						if (!p.HasExited) {
-							try {
-								p.Kill (entireProcessTree: true);
-							} catch (InvalidOperationException) when (p.HasExited) {
-								// The process exited before the kill request.
-							}
-							if (!p.WaitForExit (30000))
-								Console.Error.WriteLine ($"Process {p.Id} did not exit after termination.");
-						}
-					}
-					if (!Builder.WaitForRedirectedOutput (outputDone.Task, errorDone.Task))
-						Console.Error.WriteLine ($"Process {p.Id} exited or timed out with redirected output still open.");
-				} finally {
-					lock (outputLock) {
-						acceptingOutput = false;
-					}
+					result = Process.RunAndCaptureText (psi, TimeSpan.FromSeconds (60));
+				} catch (TimeoutException ex) {
+					Console.Error.WriteLine ($"Process `{psi.FileName} {psi.Arguments}` timed out: {ex.Message}");
+					return CachedNugetGlobalPackageFolder = GetDefaultPackagesPath ();
+				}
+				if (result.ExitStatus.Canceled || result.ExitStatus.ExitCode != 0) {
+					Console.Error.WriteLine ($"Process `{psi.FileName} {psi.Arguments}` exited with value {result.ExitStatus.ExitCode}, canceled: {result.ExitStatus.Canceled}.");
+					Console.Error.WriteLine (result.StandardError);
+					Console.Error.WriteLine (result.StandardOutput);
+					return CachedNugetGlobalPackageFolder = GetDefaultPackagesPath ();
 				}
 
-				if (!completed || p.ExitCode != 0) {
-					if (completed)
-						Console.Error.WriteLine ($"Process `{psi.FileName} {psi.Arguments}` exited with value {p.ExitCode}.");
-					foreach (string line in stderr_lines)
-						Console.Error.WriteLine (line);
-					return GetDefaultPackagesPath ();
+				using var reader = new StringReader (result.StandardOutput);
+				var firstLine = reader.ReadLine ();
+				if (firstLine == null)
+					return CachedNugetGlobalPackageFolder = GetDefaultPackagesPath ();
+				string [] parts = firstLine.Split (NugetFieldSeparator, 2);
+				if (parts.Length < 2) {
+					Console.Error.WriteLine ($"Process `{psi.FileName} {psi.Arguments}` did not return expected output, using default nuget package cache path.");
+					return CachedNugetGlobalPackageFolder = GetDefaultPackagesPath ();
 				}
+				return CachedNugetGlobalPackageFolder = parts [1].Trim ();
 			}
 
-			if (stdout_lines.Count == 0)
-				return GetDefaultPackagesPath ();
-			string [] parts = stdout_lines [0].Split (NugetFieldSeparator, 2);
-			if (parts.Length < 2) {
-				Console.Error.WriteLine ($"Process `{psi.FileName} {psi.Arguments}` did not return expected output, using default nuget package cache path.");
-				return GetDefaultPackagesPath ();
-			}
-
-			return parts [1].Trim ();
+			return "";
 
 			string GetDefaultPackagesPath ()
 			{

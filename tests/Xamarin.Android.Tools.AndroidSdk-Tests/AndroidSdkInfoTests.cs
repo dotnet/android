@@ -611,18 +611,10 @@ namespace Xamarin.Android.Tools.Tests
 				WindowStyle             = ProcessWindowStyle.Hidden,
 
 			};
-			using var proc = Process.Start (psi) ?? throw new InvalidOperationException ($"Failed to start '{exe}'.");
-			if (!proc.WaitForExit ((int) TimeSpan.FromSeconds(30).TotalMilliseconds)) {
-				try {
-					if (!proc.HasExited)
-						proc.Kill (entireProcessTree: true);
-				} catch (InvalidOperationException) when (proc.HasExited) {
-					// The process exited before the kill request.
-				}
-				Assert.IsTrue (proc.WaitForExit (30000), $"{exe} did not exit after termination.");
-				Assert.Fail ($"{exe} timed out.");
-			}
-			Assert.AreEqual (0, proc.ExitCode, $"{exe} failed.");
+			psi.InheritedHandles = [];
+			var status = Process.Run (psi, TimeSpan.FromSeconds (30));
+			Assert.IsFalse (status.Canceled, $"{exe} timed out.");
+			Assert.AreEqual (0, status.ExitCode, $"{exe} failed.");
 		}
 
 		[Test]

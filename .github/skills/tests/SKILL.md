@@ -52,7 +52,7 @@ Present results as: **Must run** → **Should run** → **Consider running**, wi
 
 ## Running tests
 
-The `${TFM}` placeholder = `DotNetStableTargetFramework` from `Directory.Build.props` (currently `net10.0`).
+The `${TFM}` placeholder = `DotNetStableTargetFramework` for suites that use it (currently `net10.0`). The host/build and device integration harnesses and the Android SDK fixtures explicitly require .NET 11; their paths below use `net11.0`.
 
 ### Standalone
 ```bash
@@ -62,15 +62,15 @@ dotnet test <project>.csproj -v minimal --filter "Name~TestName"
 
 ### Host-side MSBuild tests (full-build)
 ```bash
-./dotnet-local.sh test bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll
-./dotnet-local.sh test bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --filter "Name~BuildBasicApplication"
-./dotnet-local.sh test bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --filter "FullyQualifiedName~NativeAotBuildTests"
+./dotnet-local.sh test bin/TestDebug/net11.0/Xamarin.Android.Build.Tests.dll
+./dotnet-local.sh test bin/TestDebug/net11.0/Xamarin.Android.Build.Tests.dll --filter "Name~BuildBasicApplication"
+./dotnet-local.sh test bin/TestDebug/net11.0/Xamarin.Android.Build.Tests.dll --filter "FullyQualifiedName~NativeAotBuildTests"
 ```
 
 ### Device integration tests (full-build + device)
 ```bash
-./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll
-./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
+./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/net11.0/MSBuildDeviceIntegration.dll
+./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/net11.0/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
 ```
 
 ### On-device runtime tests (stock NUnit/MTP, full-build + device)

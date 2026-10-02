@@ -1,138 +1,153 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using NUnit.Framework;
+using Xamarin.ProjectTools;
 
-namespace Xamarin.Android.Build.Tests
+namespace Xamarin.Android.Build.Tests;
+
+[TestFixture, NonParallelizable]
+[Platform (Exclude = "Win")]
+public class BaseTestProcessTests : BaseTest
 {
-	[TestFixture]
-	[NonParallelizable]
-	[Platform (Exclude = "Win")]
-	public class BaseTestProcessTests : HostProcessFixture
+	string directory = "";
+
+	[SetUp]
+	public void CreateProcessDirectory ()
 	{
-		sealed class Harness : BaseTest
-		{
-			public void VerifySignature (string apk) => AssertApkIsSigned (apk);
-			public (int code, string stdout, string stderr) Capture (string command) => RunProcessWithExitCode (command, "", 10);
-		}
+		directory = Path.Combine (Path.GetTempPath (), $"base-process-{Guid.NewGuid ():N}");
+		Directory.CreateDirectory (directory);
+	}
 
-		[TestCase (0)]
-		[TestCase (7)]
-		public void CommandDrainsBothStreams (int exitCode)
-		{
-			string script = CreateScript ("command", LargeOutput + $"\nexit {exitCode}");
-			using var output = new StringWriter ();
-			var previous = Console.Out;
-			try {
-				Console.SetOut (output);
-				Assert.AreEqual (exitCode == 0, WithDeadline (() => Invoke<bool> (typeof (BaseTest), "RunCommand", null,
-					[typeof (string), typeof (string), typeof (int)], script, "", 10000)));
-			} finally {
-				Console.SetOut (previous);
-			}
-			AssertOutput (output.ToString ());
-		}
-
-		[Test]
-		public void NativeToolCapturesBothStreams ()
-		{
-			string script = CreateScript ("native", LargeOutput);
-			var (stdout, stderr) = WithDeadline (() => Invoke<(List<string>, List<string>)> (typeof (EnvironmentHelper), "RunCommand", null,
-				[typeof (string), typeof (string), typeof (int)], script, "", 10000));
-			AssertOutput (string.Join (Environment.NewLine, stdout) + Environment.NewLine + string.Join (Environment.NewLine, stderr));
-		}
-
-		[Test]
-		public void NativeToolPreservesNonzeroAssertion ()
-		{
-			string script = CreateScript ("native-error", "echo nonzero-stdout\necho nonzero-stderr >&2\nexit 7");
-			var failure = Assert.Throws<AssertionException> (() => WithDeadline (() => Invoke<(List<string>, List<string>)> (
-				typeof (EnvironmentHelper), "RunCommand", null, [typeof (string), typeof (string), typeof (int)], script, "", 10000)));
-			Assert.IsNotNull (failure);
-			StringAssert.Contains (script, failure.Message);
-		}
-
-		[TestCase (false)]
-		[TestCase (true)]
-		public void CommandTimeoutTerminatesProcessTree (bool nativeTool)
-		{
-			string childPidFile = Path.Combine (directory, "child.pid");
-			processIds.Add (childPidFile);
-			string script = CreateScript ("timeout", $$"""
-				sleep 120 &
-				echo $! > {{Quote (childPidFile)}}
-				echo timeout-stdout
-				echo timeout-stderr >&2
-				wait
-				""");
-			var timer = Stopwatch.StartNew ();
-			if (nativeTool) {
-				Assert.Throws<AssertionException> (() => WithDeadline (() => Invoke<(List<string>, List<string>)> (
-					typeof (EnvironmentHelper), "RunCommand", null, [typeof (string), typeof (string), typeof (int)], script, "", 500)));
-			} else {
-				Assert.IsFalse (WithDeadline (() => Invoke<bool> (typeof (BaseTest), "RunCommand", null,
-					[typeof (string), typeof (string), typeof (int)], script, "", 500)));
-			}
-			Assert.Less (timer.Elapsed, TimeSpan.FromSeconds (10));
-			Assert.IsTrue (File.Exists (childPidFile));
-			AssertProcessExited (childPidFile);
-		}
-
-		[TestCase (0)]
-		[TestCase (7)]
-		public void ApkSignerDrainsBothStreams (int exitCode)
-		{
-			CreateScript ("sdk/build-tools/99.0.0/apksigner", LargeOutput + $"\nexit {exitCode}");
-			var previous = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
-			try {
-				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", Path.Combine (directory, "sdk"));
-				var harness = new Harness ();
-				if (exitCode == 0) {
-					WithDeadline (() => { harness.VerifySignature ("test.apk"); return true; });
-				} else {
-					var failure = Assert.Throws<AssertionException> (() => WithDeadline (() => { harness.VerifySignature ("test.apk"); return true; }));
-					Assert.IsNotNull (failure);
-					StringAssert.Contains ("stdout-tail", failure.Message);
-					StringAssert.Contains ("stderr-tail", failure.Message);
+	[TearDown]
+	public void DeleteProcessDirectory ()
+	{
+		foreach (var file in Directory.EnumerateFiles (directory, "*.pid")) {
+			int pid = int.Parse (File.ReadAllText (file), CultureInfo.InvariantCulture);
+			if (Process.TryGetProcessById (pid, out var child)) {
+				using (child) {
+					child.Kill (entireProcessTree: true);
+					Assert.IsTrue (child.WaitForExit (5000), "The fixture child did not exit after cleanup.");
 				}
-			} finally {
-				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", previous);
 			}
 		}
+		FileSystemUtils.DeleteDirectoryWithRetry (directory);
+	}
 
-		[Test]
-		public void ExistingProcessCaptureRetainsTrailingOutput ()
-		{
-			string script = CreateScript ("capture", LargeOutput);
-			var (code, stdout, stderr) = WithDeadline (() => new Harness ().Capture (script));
-			Assert.AreEqual (0, code);
-			AssertOutput (stdout + Environment.NewLine + stderr);
+	string Script (string contents)
+	{
+		if (OperatingSystem.IsWindows ())
+			throw new PlatformNotSupportedException ("Shell fixtures require Unix.");
+		string path = Path.Combine (directory, "command");
+		using (var writer = new StreamWriter (path)) {
+			writer.WriteLine ("#!/bin/sh");
+			writer.WriteLine (contents);
 		}
+		File.SetUnixFileMode (path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+		return path;
+	}
 
-		[TestCase (0)]
-		[TestCase (7)]
-		public void ChmodFixtureDrainsBothStreams (int exitCode)
-		{
-			CreateScript ("chmod", LargeOutput + (exitCode == 0 ? "\nexec /bin/chmod \"$@\"" : "\nexit 7"));
-			var harness = new Harness ();
-			string path = Path.Combine (directory, "fixture-script");
-			if (exitCode == 0) {
-				WithDeadline (() => {
-					InvokeRaw (typeof (BaseTest), "CreateShellScript", harness, [typeof (string), typeof (string)], path, "echo fixture");
-					return true;
-				});
-				Assert.IsTrue (File.Exists (path));
-			} else {
-				var failure = Assert.Throws<AssertionException> (() => WithDeadline (() => {
-					InvokeRaw (typeof (BaseTest), "CreateShellScript", harness, [typeof (string), typeof (string)], path, "echo fixture");
-					return true;
-				}));
-				Assert.IsNotNull (failure);
-				StringAssert.Contains ("chmod failed", failure.Message);
-				StringAssert.Contains ("stdout-tail", failure.Message);
-				StringAssert.Contains ("stderr-tail", failure.Message);
-			}
+	[TestCase (0)]
+	[TestCase (7)]
+	public void ProcessCapturePreservesExitCodeAndTrailingDiagnostics (int exitCode)
+	{
+		string command = Script ($"printf 'stdout\\n\\nstdout-tail'; printf 'stderr\\n\\nstderr-tail' >&2; exit {exitCode}");
+		var (code, stdout, stderr) = RunProcessWithExitCode (command, "", 5);
+		Assert.AreEqual (exitCode, code);
+		Assert.AreEqual ("stdout" + Environment.NewLine + "stdout-tail", stdout);
+		Assert.AreEqual ("stderr" + Environment.NewLine + "stderr-tail", stderr);
+	}
+
+	[Test]
+	public void ProcessTimeoutTerminatesOwnedTree ()
+	{
+		string pidFile = Path.Combine (directory, "child.pid");
+		string command = Script ($"sleep 120 &\necho $! > '{pidFile}'\nwait");
+		var stopwatch = Stopwatch.StartNew ();
+		var (code, stdout, stderr) = RunProcessWithExitCode (command, "", 1);
+		Assert.AreEqual (-1, code);
+		Assert.IsNull (stdout);
+		Assert.IsNull (stderr);
+		Assert.Less (stopwatch.Elapsed, TimeSpan.FromSeconds (5));
+		int pid = int.Parse (File.ReadAllText (pidFile), CultureInfo.InvariantCulture);
+		Assert.IsFalse (Process.TryGetProcessById (pid, out var child), $"Fixture child {pid} survived the timeout.");
+		child?.Dispose ();
+	}
+
+	[Test]
+	public void InheritedOutputDoesNotExtendExecutionDeadline ()
+	{
+		string pidFile = Path.Combine (directory, "child.pid");
+		string command = Script ($"sleep 20 &\necho $! > '{pidFile}'\necho stdout-tail\necho stderr-tail >&2");
+		var stopwatch = Stopwatch.StartNew ();
+		var (code, stdout, stderr) = RunProcessWithExitCode (command, "", 1);
+		Assert.AreEqual (0, code, "The process exited successfully; only the separate EOF deadline should expire.");
+		Assert.AreEqual ("stdout-tail", stdout);
+		Assert.AreEqual ("stderr-tail", stderr);
+		Assert.Less (stopwatch.Elapsed, TimeSpan.FromSeconds (5));
+	}
+
+	[Test]
+	public void CommandStreamsDiagnosticsAndReturnsFailure ()
+	{
+		string command = Script ("echo stdout-line; echo stderr-line >&2; exit 7");
+		using var output = new StringWriter ();
+		var previous = Console.Out;
+		try {
+			Console.SetOut (output);
+			Assert.IsFalse (RunCommand (command, ""));
+		} finally {
+			Console.SetOut (previous);
+		}
+		StringAssert.Contains ("stdout-line", output.ToString ());
+		StringAssert.Contains ("stderr-line", output.ToString ());
+	}
+
+	[TestCase (0)]
+	[TestCase (7)]
+	public void ApkDiffPreservesRawDiagnosticsAndLogShape (int exitCode)
+	{
+		File.Move (Script ($"printf 'stdout\\r\\nraw-tail'; printf 'stderr\\r\\nraw-tail' >&2; exit {exitCode}"),
+			Path.Combine (directory, "apkdiff"));
+		string previous = Environment.GetEnvironmentVariable ("PATH");
+		string logPath = Path.Combine (directory, "apkdiff.log");
+		try {
+			Environment.SetEnvironmentVariable ("PATH", directory + Path.PathSeparator + previous);
+			var (code, stdout, stderr) = RunApkDiffCommand ("fixture", logPath);
+			Assert.AreEqual (exitCode, code);
+			Assert.AreEqual ("stdout\r\nraw-tail", stdout);
+			Assert.AreEqual ("stderr\r\nraw-tail", stderr);
+			string log = File.ReadAllText (logPath);
+			StringAssert.Contains ($"apkdiff exited with code: {exitCode}", log);
+			StringAssert.Contains ("\nstdOut:\n" + stdout + "\nstdErr:\n" + stderr, log);
+		} finally {
+			Environment.SetEnvironmentVariable ("PATH", previous);
+		}
+	}
+
+	[Test]
+	public void ApkDiffTimeoutKeepsRawPartialDiagnosticsAndTerminatesTree ()
+	{
+		string pidFile = Path.Combine (directory, "child.pid");
+		File.Move (Script ($"printf 'stdout\\r\\npartial'; printf 'stderr\\r\\npartial' >&2\nsleep 180 &\necho $! > '{pidFile}'\nwait"),
+			Path.Combine (directory, "apkdiff"));
+		string previous = Environment.GetEnvironmentVariable ("PATH");
+		int timeout = TestEnvironment.IsRunningOnCI ? 120 : 30;
+		try {
+			Environment.SetEnvironmentVariable ("PATH", directory + Path.PathSeparator + previous);
+			var stopwatch = Stopwatch.StartNew ();
+			var (code, stdout, stderr) = RunApkDiffCommand ("fixture", Path.Combine (directory, "apkdiff.log"));
+			Assert.AreEqual (-1, code);
+			Assert.AreEqual ("stdout\r\npartial", stdout);
+			StringAssert.Contains ("stderr\r\npartial", stderr);
+			StringAssert.Contains ($"apkdiff timed out after {timeout} seconds", stderr);
+			Assert.Less (stopwatch.Elapsed, TimeSpan.FromSeconds (timeout + 5));
+			int pid = int.Parse (File.ReadAllText (pidFile), CultureInfo.InvariantCulture);
+			Assert.IsFalse (Process.TryGetProcessById (pid, out var child), $"Fixture child {pid} survived the timeout.");
+			child?.Dispose ();
+		} finally {
+			Environment.SetEnvironmentVariable ("PATH", previous);
 		}
 	}
 }

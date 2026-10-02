@@ -54,14 +54,16 @@ namespace Xamarin.Android.Tools.VSWhere
 				Arguments = args,
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
+				RedirectStandardError = true,
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
+				InheritedHandles = [],
 			};
-			using (var p = Process.Start (info)) {
-				string output = p?.StandardOutput.ReadToEnd ();
-				p?.WaitForExit ();
-				return output?.Trim () ?? String.Empty;
-			}
+			var result = Process.RunAndCaptureText (info, TimeSpan.FromSeconds (30));
+			if (result.ExitStatus.Canceled || result.ExitStatus.ExitCode != 0)
+				throw new InvalidOperationException ($"'{fileName}' failed: exit code {result.ExitStatus.ExitCode}, canceled: {result.ExitStatus.Canceled}{Environment.NewLine}" +
+					result.StandardError + Environment.NewLine + result.StandardOutput);
+			return result.StandardOutput.Trim ();
 		}
 	}
 }

@@ -6,7 +6,6 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -802,7 +801,7 @@ namespace Xamarin.Android.Build.Tests
 			return (item.LineNumber, field[1]);
 		}
 
-		static (List<string> stdout, List<string> stderr) RunCommand (string executablePath, string arguments = null, int timeoutMilliseconds = 60000)
+		static (List<string> stdout, List<string> stderr) RunCommand (string executablePath, string arguments = null)
 		{
 			var psi = new ProcessStartInfo {
 				FileName = executablePath,
@@ -812,92 +811,36 @@ namespace Xamarin.Android.Build.Tests
 				UseShellExecute = false,
 				RedirectStandardError = true,
 				RedirectStandardOutput = true,
+				InheritedHandles = [],
 			};
 
 			psi.StandardOutputEncoding = Encoding.UTF8;
 			psi.StandardErrorEncoding = Encoding.UTF8;
 
-			var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-			var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-			var stdout_lines = new List <string> ();
-			var stderr_lines = new List <string> ();
-			var outputLock = new object ();
-			bool acceptingOutput = true;
-
-			using (var process = new Process ()) {
-				process.StartInfo = psi;
-				process.OutputDataReceived += (s, e) => {
-					if (e.Data == null) {
-						outputDone.TrySetResult (true);
-					} else {
-						lock (outputLock) {
-							if (acceptingOutput)
-								stdout_lines.Add (e.Data);
-						}
-					}
-				};
-
-				process.ErrorDataReceived += (s, e) => {
-					if (e.Data == null) {
-						errorDone.TrySetResult (true);
-					} else {
-						lock (outputLock) {
-							if (acceptingOutput)
-								stderr_lines.Add (e.Data);
-						}
-					}
-				};
-
-				bool exited;
-				try {
-					process.Start ();
-					process.BeginOutputReadLine ();
-					process.BeginErrorReadLine ();
-					exited = process.WaitForExit (timeoutMilliseconds);
-					if (!exited) {
-						TestContext.Out.WriteLine ($"{psi.FileName} {psi.Arguments} timed out");
-						if (!process.HasExited) {
-							try {
-								process.Kill (entireProcessTree: true);
-							} catch (InvalidOperationException) when (process.HasExited) {
-								// The process exited before the kill request.
-							}
-							if (!process.WaitForExit (30000))
-								TestContext.Out.WriteLine ($"Process {process.Id} did not exit after termination.");
-						}
-					}
-					if (!outputDone.Task.Wait (TimeSpan.FromSeconds (30)))
-						TestContext.Out.WriteLine ($"{psi.FileName} stdout did not drain.");
-					if (!errorDone.Task.Wait (TimeSpan.FromSeconds (30)))
-						TestContext.Out.WriteLine ($"{psi.FileName} stderr did not drain.");
-				} finally {
-					lock (outputLock) {
-						acceptingOutput = false;
-					}
-				}
-
-				if (exited && process.ExitCode != 0)
-					TestContext.Out.WriteLine ($"{psi.FileName} {psi.Arguments} returned with error code {process.ExitCode}");
-
-				if (!exited || process.ExitCode != 0) {
-					DumpLines ("stdout", stdout_lines);
-					DumpLines ("stderr", stderr_lines);
-					Assert.Fail ($"Command '{psi.FileName} {psi.Arguments}' failed to run or exited with error code");
-				}
+			ProcessTextOutput result;
+			try {
+				result = Process.RunAndCaptureText (psi, TimeSpan.FromSeconds (60));
+			} catch (TimeoutException ex) {
+				Assert.Fail ($"Command '{psi.FileName} {psi.Arguments}' timed out: {ex.Message}");
+				throw;
 			}
+			if (result.ExitStatus.Canceled || result.ExitStatus.ExitCode != 0) {
+				TestContext.Out.WriteLine ($"{psi.FileName} {psi.Arguments} returned with error code {result.ExitStatus.ExitCode}, canceled: {result.ExitStatus.Canceled}");
+				TestContext.Out.WriteLine ($"stdout:{Environment.NewLine}{result.StandardOutput}");
+				TestContext.Out.WriteLine ($"stderr:{Environment.NewLine}{result.StandardError}");
+				Assert.Fail ($"Command '{psi.FileName} {psi.Arguments}' failed to run or exited with error code");
+			}
+
+			var stdout_lines = new List<string> ();
+			var stderr_lines = new List<string> ();
+			using var stdout = new StringReader (result.StandardOutput);
+			using var stderr = new StringReader (result.StandardError);
+			while (stdout.ReadLine () is string line)
+				stdout_lines.Add (line);
+			while (stderr.ReadLine () is string line)
+				stderr_lines.Add (line);
 
 			return (stdout_lines, stderr_lines);
-		}
-
-		static void DumpLines (string streamName, List <string> lines)
-		{
-			if (lines == null || lines.Count == 0)
-				return;
-
-			TestContext.Out.WriteLine ($"{streamName}:");
-			foreach (string line in lines) {
-				TestContext.Out.WriteLine (line);
-			}
 		}
 
 		static bool ConvertFieldToBool (string fieldName, string llvmAssemblerEnvFile, string nativeAssemblerEnvFile, ulong fileLine, string value)

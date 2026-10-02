@@ -117,28 +117,9 @@ namespace Xamarin.Android.Tools.Tests
 			}
 			if (OS.IsWindows)
 				return;
-			var chmod = new ProcessStartInfo {
-				FileName                    = "chmod",
-				Arguments                   = $"+x \"{path}\"",
-				UseShellExecute             = false,
-				RedirectStandardInput       = false,
-				RedirectStandardOutput      = false,
-				RedirectStandardError       = false,
-				CreateNoWindow              = true,
-				WindowStyle                 = ProcessWindowStyle.Hidden,
-			};
-			using var p = Process.Start (chmod) ?? throw new InvalidOperationException ("Failed to start chmod.");
-			if (!p.WaitForExit (30000)) {
-				try {
-					if (!p.HasExited)
-						p.Kill (entireProcessTree: true);
-				} catch (InvalidOperationException) when (p.HasExited) {
-					// The process exited before the kill request.
-				}
-				Assert.IsTrue (p.WaitForExit (30000), "chmod did not exit after termination.");
-				Assert.Fail ($"chmod timed out for '{path}'.");
-			}
-			Assert.AreEqual (0, p.ExitCode, $"chmod failed for '{path}'.");
+			var status = Process.Run ("chmod", ["+x", path], timeout: TimeSpan.FromSeconds (30));
+			Assert.IsFalse (status.Canceled, $"chmod timed out for '{path}'.");
+			Assert.AreEqual (0, status.ExitCode, $"chmod failed for '{path}'.");
 		}
 
 		[Test]

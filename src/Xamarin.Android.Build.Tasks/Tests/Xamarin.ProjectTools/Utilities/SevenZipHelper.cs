@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Xamarin.ProjectTools {
@@ -14,71 +15,57 @@ namespace Xamarin.ProjectTools {
 
 		public bool ExtractAll (string destinationDir)
 		{
-			return ExtractAll (destinationDir, 15 * 60 * 1000);
+			return ExtractAllAsync (destinationDir).GetAwaiter ().GetResult ();
 		}
 
-		bool ExtractAll (string destinationDir, int timeoutMilliseconds)
+		async Task<bool> ExtractAllAsync (string destinationDir)
 		{
-			var outputLock = new object ();
-			bool acceptingOutput = true;
-			using (var p = new Process ()) {
-				var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-				var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-				p.StartInfo.FileName = Path.Combine ("7z");
-				p.StartInfo.ArgumentList.Add ("x");
-				p.StartInfo.ArgumentList.Add (ArchivePath);
-				p.StartInfo.ArgumentList.Add ($"-o{destinationDir}");
-				p.StartInfo.CreateNoWindow = true;
-				p.StartInfo.UseShellExecute = false;
-				p.StartInfo.RedirectStandardOutput = true;
-				p.StartInfo.RedirectStandardError = true;
-				p.ErrorDataReceived += (sender, e) => {
-					if (e.Data == null)
-						errorDone.TrySetResult (true);
-					else
-						WriteOutput (e.Data);
-				};
-				p.OutputDataReceived += (sender, e) => {
-					if (e.Data == null)
-						outputDone.TrySetResult (true);
-					else
-						WriteOutput (e.Data);
-				};
-
-				void WriteOutput (string line)
-				{
-					lock (outputLock) {
-						if (acceptingOutput)
-							Console.WriteLine (line);
-					}
-				}
-
+			var psi = new ProcessStartInfo ("7z", ["x", ArchivePath, $"-o{destinationDir}"]) {
+				CreateNoWindow = true,
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				InheritedHandles = [],
+			};
+			using var executionDeadline = new CancellationTokenSource (TimeSpan.FromMinutes (15));
+			using var outputDeadline = CancellationTokenSource.CreateLinkedTokenSource (executionDeadline.Token);
+			using var process = Process.Start (psi) ?? throw new InvalidOperationException ("Failed to start '7z'.");
+			async Task LimitOutputDrainAsync ()
+			{
+				await process.WaitForExitAsync (executionDeadline.Token).ConfigureAwait (false);
+				executionDeadline.CancelAfter (Timeout.InfiniteTimeSpan);
+				outputDeadline.CancelAfter (TimeSpan.FromSeconds (2));
+			}
+			var exited = LimitOutputDrainAsync ();
+			try {
+				await foreach (var line in process.ReadAllLinesAsync (outputDeadline.Token).ConfigureAwait (false))
+					Console.WriteLine (line.Content);
+				await exited.ConfigureAwait (false);
+			} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
+				Console.Error.WriteLine ("7z timed out after 15 minutes.");
+				return false;
+			} catch (OperationCanceledException) when (outputDeadline.IsCancellationRequested) {
+				Console.Error.WriteLine ("7z exited with redirected output still open after 2 seconds.");
+			} finally {
+				using var stdoutReader = process.StandardOutput;
+				using var stderrReader = process.StandardError;
+				executionDeadline.Cancel ();
 				try {
-					p.Start ();
-					p.BeginOutputReadLine ();
-					p.BeginErrorReadLine ();
-					bool completed = p.WaitForExit (timeoutMilliseconds);
-					if (!completed) {
-						Console.Error.WriteLine ($"7z timed out after {timeoutMilliseconds}ms.");
-						if (!p.HasExited) {
-							try {
-								p.Kill (entireProcessTree: true);
-							} catch (InvalidOperationException) when (p.HasExited) {
-								// The process exited before the kill request.
-							}
-							if (!p.WaitForExit (30000))
-								Console.Error.WriteLine ("7z did not exit after termination.");
-						}
+					await exited.ConfigureAwait (false);
+				} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
+					// The execution deadline owns this exit observer.
+				}
+				if (!process.HasExited) {
+					try {
+						process.Kill (entireProcessTree: true);
+					} catch (InvalidOperationException) when (process.HasExited) {
+						// The process exited before the kill request.
 					}
-					if (!Builder.WaitForRedirectedOutput (outputDone.Task, errorDone.Task))
-						Console.Error.WriteLine ("7z exited or timed out with redirected output still open.");
-					return completed && p.ExitCode == 0;
-				} finally {
-					lock (outputLock) {
-						acceptingOutput = false;
-					}
+					if (!process.WaitForExit (30000))
+						throw new TimeoutException ($"7z process {process.Id} did not exit after termination.");
 				}
 			}
+			return process.ExitCode == 0;
 		}
 
 		public void Dispose ()
