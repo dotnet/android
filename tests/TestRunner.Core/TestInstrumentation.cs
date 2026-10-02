@@ -150,6 +150,16 @@ public abstract class TestInstrumentation : Instrumentation
 			filterElements.Add (includes.Count == 1 ? orElement.Elements ().First () : orElement);
 		}
 
+		var includedTests = GetListExtra ("test");
+		if (includedTests.Count > 0) {
+			var orElement = new XElement ("or");
+			foreach (var test in includedTests) {
+				orElement.Add (new XElement ("test", test));
+				Log.Info (LogTag, $"Including test: {test}");
+			}
+			filterElements.Add (includedTests.Count == 1 ? orElement.Elements ().First () : orElement);
+		}
+
 		if (!noExclusions) {
 			if (ExcludedCategories is not null) {
 				foreach (var cat in ExcludedCategories) {
@@ -163,6 +173,10 @@ public abstract class TestInstrumentation : Instrumentation
 					filterElements.Add (new XElement ("not", new XElement ("test", name)));
 					Log.Info (LogTag, $"Excluding test: {name}");
 				}
+			}
+			foreach (var name in GetListExtra ("exclude-test")) {
+				filterElements.Add (new XElement ("not", new XElement ("test", name)));
+				Log.Info (LogTag, $"Excluding test: {name}");
 			}
 		} else {
 			Log.Info (LogTag, "Skipping built-in exclusions due to noexclusions=true");
