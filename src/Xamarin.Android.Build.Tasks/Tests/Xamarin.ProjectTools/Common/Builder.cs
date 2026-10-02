@@ -335,60 +335,9 @@ namespace Xamarin.ProjectTools
 
 			bool nativeCrashDetected = false;
 			bool result = false;
-			bool ranToCompletion = false;
 			int attempts = 1;
-			var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-			var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 			for (int attempt = 0; attempt < attempts; attempt++) {
-				if (processLog != null)
-					File.AppendAllText (processLog, psi.FileName + " " + args.ToString () + Environment.NewLine);
-				using (var p = new Process ()) {
-					p.ErrorDataReceived += (sender, e) => {
-						if (e.Data != null && !string.IsNullOrEmpty (processLog)) {
-							File.AppendAllText (processLog, e.Data + Environment.NewLine);
-							if (e.Data.StartsWith (SigSegvError, StringComparison.OrdinalIgnoreCase)) {
-								nativeCrashDetected = true;
-							}
-							if (e.Data.StartsWith (ConsoleLoggerError, StringComparison.OrdinalIgnoreCase)) {
-								nativeCrashDetected = true;
-							}
-						}
-						if (e.Data == null)
-							errorDone.TrySetResult (true);
-					};
-					p.OutputDataReceived += (sender, e) => {
-						if (e.Data != null && !string.IsNullOrEmpty (processLog)) {
-							File.AppendAllText (processLog, e.Data + Environment.NewLine);
-							if (e.Data.StartsWith (SigSegvError, StringComparison.OrdinalIgnoreCase)) {
-								nativeCrashDetected = true;
-							}
-							if (e.Data.StartsWith (ConsoleLoggerError, StringComparison.OrdinalIgnoreCase)) {
-								nativeCrashDetected = true;
-							}
-						}
-						if (e.Data == null)
-							outputDone.TrySetResult (true);
-					};
-					p.StartInfo = psi;
-					Console.WriteLine ($"{psi.FileName} {psi.Arguments}");
-					p.Start ();
-					p.BeginOutputReadLine ();
-					p.BeginErrorReadLine ();
-					ranToCompletion = p.WaitForExit ((int)new TimeSpan (0, DefaultBuildTimeOut, 0).TotalMilliseconds);
-					if (!ranToCompletion && !p.HasExited)
-						p.Kill (entireProcessTree: true);
-					// ADB can leave a server process holding the build's redirected handles after dotnet exits.
-					if (!WaitForRedirectedOutput (outputDone.Task, errorDone.Task))
-						Console.WriteLine ($"Build process {p.Id} exited or timed out with redirected output still open after {OutputDrainTimeoutSeconds} seconds.");
-					result = ranToCompletion && p.ExitCode == 0;
-					if (processLog != null) {
-						if (ranToCompletion) {
-							File.AppendAllText (processLog, $"ExitCode: {p.ExitCode}{Environment.NewLine}");
-						} else {
-							File.AppendAllText (processLog, $"Build Timed Out!{Environment.ExitCode}");
-						}
-					}
-				}
+				result = RunBuildProcess (psi, processLog, (int) TimeSpan.FromMinutes (DefaultBuildTimeOut).TotalMilliseconds, out nativeCrashDetected);
 
 				LastBuildTime = DateTime.UtcNow - start;
 
@@ -428,6 +377,74 @@ namespace Xamarin.ProjectTools
 			}
 
 			return result;
+		}
+
+		static bool RunBuildProcess (ProcessStartInfo psi, string processLog, int timeoutMilliseconds, out bool nativeCrashDetected)
+		{
+			var outputLock = new object ();
+			bool acceptingOutput = true;
+			bool crashDetected = false;
+			var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+
+			using (var writer = processLog == null ? null : new StreamWriter (processLog, append: true) { AutoFlush = true })
+			using (var p = new Process { StartInfo = psi }) {
+				writer?.WriteLine ($"{psi.FileName} {psi.Arguments}");
+				void WriteOutput (string line)
+				{
+					lock (outputLock) {
+						if (!acceptingOutput || writer == null)
+							return;
+						writer.WriteLine (line);
+						if (line.StartsWith (SigSegvError, StringComparison.OrdinalIgnoreCase) ||
+							line.StartsWith (ConsoleLoggerError, StringComparison.OrdinalIgnoreCase))
+							crashDetected = true;
+					}
+				}
+
+				p.ErrorDataReceived += (sender, e) => {
+					if (e.Data == null)
+						errorDone.TrySetResult (true);
+					else
+						WriteOutput (e.Data);
+				};
+				p.OutputDataReceived += (sender, e) => {
+					if (e.Data == null)
+						outputDone.TrySetResult (true);
+					else
+						WriteOutput (e.Data);
+				};
+
+				bool completed;
+				try {
+					Console.WriteLine ($"{psi.FileName} {psi.Arguments}");
+					p.Start ();
+					p.BeginOutputReadLine ();
+					p.BeginErrorReadLine ();
+					completed = p.WaitForExit (timeoutMilliseconds);
+					if (!completed && !p.HasExited) {
+						try {
+							p.Kill (entireProcessTree: true);
+						} catch (InvalidOperationException) when (p.HasExited) {
+							// The process exited before the kill request.
+						}
+						if (!p.WaitForExit (2000))
+							Console.Error.WriteLine ($"Build process {p.Id} did not exit after termination.");
+					}
+					// ADB can leave a server holding the build's redirected handles after dotnet exits.
+					if (!WaitForRedirectedOutput (outputDone.Task, errorDone.Task))
+						Console.WriteLine ($"Build process {p.Id} exited or timed out with redirected output still open after {OutputDrainTimeoutSeconds} seconds.");
+				} finally {
+					// Exclude in-flight and late callbacks before disposing the single log writer.
+					lock (outputLock) {
+						acceptingOutput = false;
+					}
+				}
+
+				writer?.WriteLine (completed ? $"ExitCode: {p.ExitCode}" : "Build Timed Out!");
+				nativeCrashDetected = crashDetected;
+				return completed && p.ExitCode == 0;
+			}
 		}
 
 		bool IsRunningInIDE {

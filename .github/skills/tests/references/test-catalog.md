@@ -35,6 +35,13 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **bytecode** | `external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/` | `dotnet test external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/Xamarin.Android.Tools.Bytecode-Tests.csproj -v minimal` ⚠️ Requires `javac` |
 | **base tasks** | `tests/Microsoft.Android.Build.BaseTasks-Tests/` | `dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj -v minimal` |
 | **android sdk tools** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0` |
+| **host process harness** | `src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools.Tests/` | `dotnet test src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools.Tests/Xamarin.ProjectTools.Tests.csproj -v minimal` |
+
+The host process harness tests require the small bootstrap task assembly, not a built
+Android SDK. On a fresh checkout, first run
+`dotnet build build-tools/xa-prep-tasks/xa-prep-tasks.csproj -v minimal`.
+The subprocess fixtures run on macOS/Linux; the JAR integration case requires a JDK
+and accepts `HOST_PROCESS_TEST_JDK` to select one explicitly.
 
 ---
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Xamarin.ProjectTools
 {
@@ -125,79 +126,93 @@ namespace Xamarin.ProjectTools
 					RedirectStandardOutput = true,
 				};
 
-				var stderr_completed = new ManualResetEvent (false);
-				var stdout_completed = new ManualResetEvent (false);
-				var stdout_lines = new List<string> ();
-				var stderr_lines = new List<string> ();
+				return CachedNugetGlobalPackageFolder = FindNugetGlobalPackageFolder (psi, 60000);
+			}
 
-				var p = new Process () {
-					StartInfo   = psi,
-				};
+			return String.Empty;
+		}
 
+		static string FindNugetGlobalPackageFolder (ProcessStartInfo psi, int timeoutMilliseconds)
+		{
+			var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var stdout_lines = new List<string> ();
+			var stderr_lines = new List<string> ();
+			var outputLock = new object ();
+			bool acceptingOutput = true;
+
+			using (var p = new Process { StartInfo = psi }) {
 				p.ErrorDataReceived += (sender, e) => {
 					if (e.Data == null) {
-						stderr_completed.Set ();
+						errorDone.TrySetResult (true);
 					} else {
-						stderr_lines.Add (e.Data);
+						lock (outputLock) {
+							if (acceptingOutput)
+								stderr_lines.Add (e.Data);
+						}
 					}
 				};
 
 				p.OutputDataReceived += (sender, e) => {
 					if (e.Data == null) {
-						stdout_completed.Set ();
+						outputDone.TrySetResult (true);
 					} else {
-						stdout_lines.Add (e.Data);
+						lock (outputLock) {
+							if (acceptingOutput)
+								stdout_lines.Add (e.Data);
+						}
 					}
 				};
 
-				bool gotOutput = false;
-				using (p) {
-					p.StartInfo = psi;
+				bool completed;
+				try {
 					p.Start ();
 					p.BeginOutputReadLine ();
 					p.BeginErrorReadLine ();
-
-					bool success = p.WaitForExit (60000);
-
-					// We need to call the parameter-less WaitForExit only if any of the standard
-					// streams have been redirected (see
-					// https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexit?view=netframework-4.7.2#System_Diagnostics_Process_WaitForExit)
-					//
-					p.WaitForExit ();
-					stderr_completed.WaitOne (TimeSpan.FromSeconds (60));
-					stdout_completed.WaitOne (TimeSpan.FromSeconds (60));
-
-					if (!success || p.ExitCode != 0) {
-						Console.Error.WriteLine ($"Process `{psi.FileName} {psi.Arguments}` exited with value {p.ExitCode}.");
-						if (stderr_lines.Count > 0) {
-							foreach (string line in stderr_lines) {
-								Console.Error.WriteLine (line);
+					completed = p.WaitForExit (timeoutMilliseconds);
+					if (!completed) {
+						Console.Error.WriteLine ($"Process `{psi.FileName} {psi.Arguments}` timed out after {timeoutMilliseconds}ms.");
+						if (!p.HasExited) {
+							try {
+								p.Kill (entireProcessTree: true);
+							} catch (InvalidOperationException) when (p.HasExited) {
+								// The process exited before the kill request.
 							}
+							if (!p.WaitForExit (30000))
+								Console.Error.WriteLine ($"Process {p.Id} did not exit after termination.");
 						}
-					} else if (stdout_lines.Count > 0) {
-						gotOutput = true;
+					}
+					if (!Builder.WaitForRedirectedOutput (outputDone.Task, errorDone.Task))
+						Console.Error.WriteLine ($"Process {p.Id} exited or timed out with redirected output still open.");
+				} finally {
+					lock (outputLock) {
+						acceptingOutput = false;
 					}
 				}
 
-				if (!gotOutput) {
-					return CachedNugetGlobalPackageFolder = GetDefaultPackagesPath ();
-				}
-
-				string[] parts = stdout_lines[0].Split (NugetFieldSeparator, 2);
-				if (parts.Length < 2) {
-					Console.Error.WriteLine ($"Process `{psi.FileName} {psi.Arguments}` did not return expected output, using default nuget package cache path.");
-					return CachedNugetGlobalPackageFolder = GetDefaultPackagesPath ();
-				}
-
-				return CachedNugetGlobalPackageFolder = parts [1].Trim ();
-
-				string GetDefaultPackagesPath ()
-				{
-					return Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), ".nuget", "packages");
+				if (!completed || p.ExitCode != 0) {
+					if (completed)
+						Console.Error.WriteLine ($"Process `{psi.FileName} {psi.Arguments}` exited with value {p.ExitCode}.");
+					foreach (string line in stderr_lines)
+						Console.Error.WriteLine (line);
+					return GetDefaultPackagesPath ();
 				}
 			}
 
-			return String.Empty;
+			if (stdout_lines.Count == 0)
+				return GetDefaultPackagesPath ();
+			string [] parts = stdout_lines [0].Split (NugetFieldSeparator, 2);
+			if (parts.Length < 2) {
+				Console.Error.WriteLine ($"Process `{psi.FileName} {psi.Arguments}` did not return expected output, using default nuget package cache path.");
+				return GetDefaultPackagesPath ();
+			}
+
+			return parts [1].Trim ();
+
+			string GetDefaultPackagesPath ()
+			{
+				return Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), ".nuget", "packages");
+			}
 		}
 	}
 }

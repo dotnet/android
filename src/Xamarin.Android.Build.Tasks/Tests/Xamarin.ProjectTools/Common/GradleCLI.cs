@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Xamarin.ProjectTools
 {
@@ -18,6 +19,11 @@ namespace Xamarin.ProjectTools
 
 		public bool Execute (params string [] args)
 		{
+			return Execute (5 * 60 * 1000, args);
+		}
+
+		bool Execute (int timeoutMilliseconds, params string [] args)
+		{
 			if (!File.Exists (GradlePath)) {
 				throw new FileNotFoundException ($"Gradle tool was not found at {GradlePath}.");
 			}
@@ -28,9 +34,20 @@ namespace Xamarin.ProjectTools
 			}
 
 			var procOutput = new StringBuilder ();
+			var outputLock = new object ();
+			bool acceptingOutput = true;
+			void WriteOutput (string line)
+			{
+				lock (outputLock) {
+					if (acceptingOutput)
+						procOutput.AppendLine (line);
+				}
+			}
 			bool succeeded;
 
 			using (var p = new Process ()) {
+				var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+				var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 				p.StartInfo.FileName = GradlePath;
 				p.StartInfo.Arguments = string.Join (" ", args);
 				p.StartInfo.Arguments += $" --no-daemon";
@@ -46,23 +63,48 @@ namespace Xamarin.ProjectTools
 				};
 
 				p.ErrorDataReceived += (sender, e) => {
-					if (e.Data != null) {
-						procOutput.AppendLine (e.Data);
-					}
+					if (e.Data == null)
+						errorDone.TrySetResult (true);
+					else
+						WriteOutput (e.Data);
 				};
-				p.ErrorDataReceived += (sender, e) => {
-					if (e.Data != null) {
-						procOutput.AppendLine (e.Data);
-					}
+				p.OutputDataReceived += (sender, e) => {
+					if (e.Data == null)
+						outputDone.TrySetResult (true);
+					else
+						WriteOutput (e.Data);
 				};
 
-				procOutput.AppendLine ($"Running: {p.StartInfo.FileName} {p.StartInfo.Arguments}");
-				p.Start ();
-				p.BeginOutputReadLine ();
-				p.BeginErrorReadLine ();
-				bool completed = p.WaitForExit ((int) new TimeSpan (0, 5, 0).TotalMilliseconds);
-				succeeded = completed && p.ExitCode == 0;
-				procOutput.AppendLine ($"Exit Code: {p.ExitCode}");
+				try {
+					WriteOutput ($"Running: {p.StartInfo.FileName} {p.StartInfo.Arguments}");
+					p.Start ();
+					p.BeginOutputReadLine ();
+					p.BeginErrorReadLine ();
+					bool completed = p.WaitForExit (timeoutMilliseconds);
+					if (!completed) {
+						WriteOutput ($"Process timed out after {timeoutMilliseconds}ms.");
+						if (!p.HasExited) {
+							try {
+								p.Kill (entireProcessTree: true);
+							} catch (InvalidOperationException) when (p.HasExited) {
+								// The process exited before the kill request.
+							}
+							if (!p.WaitForExit (30000))
+								WriteOutput ("Process did not exit after termination.");
+						}
+					}
+					if (!Builder.WaitForRedirectedOutput (outputDone.Task, errorDone.Task))
+						WriteOutput ("Process exited or timed out with redirected output still open.");
+					succeeded = completed && p.ExitCode == 0;
+					lock (outputLock) {
+						acceptingOutput = false;
+						procOutput.AppendLine (completed ? $"Exit Code: {p.ExitCode}" : "Exit Code: <timed out>");
+					}
+				} finally {
+					lock (outputLock) {
+						acceptingOutput = false;
+					}
+				}
 			}
 
 			File.WriteAllText (ProcessLogFile, procOutput.ToString ());

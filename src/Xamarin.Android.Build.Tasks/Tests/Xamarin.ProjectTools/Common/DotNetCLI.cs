@@ -84,14 +84,32 @@ namespace Xamarin.ProjectTools
 				ProcessLogFile = Path.Combine (ProjectDirectory, $"dotnet{DateTime.Now.ToString ("yyyyMMddHHmmssff")}-process.log");
 			}
 
-			var locker = new Lock ();
 			var procOutput = new StringBuilder ();
 			bool succeeded;
-			const int timeoutMilliseconds = 15 * 60 * 1000;
-			const int streamDrainTimeoutMilliseconds = 30 * 1000;
-			const int killTimeoutMilliseconds = 30 * 1000;
 
 			using (var p = ExecuteProcess (args)) {
+				succeeded = ReadOutput (p, procOutput, 15 * 60 * 1000, 30 * 1000);
+			}
+
+			File.WriteAllText (ProcessLogFile, procOutput.ToString ());
+			return succeeded;
+		}
+
+		static bool ReadOutput (Process p, StringBuilder procOutput, int timeoutMilliseconds, int streamDrainTimeoutMilliseconds)
+		{
+			var locker = new Lock ();
+			bool acceptingOutput = true;
+			void WriteOutput (string line)
+			{
+				lock (locker) {
+					if (acceptingOutput)
+						procOutput.AppendLine (line);
+				}
+			}
+
+			const int killTimeoutMilliseconds = 30 * 1000;
+
+			try {
 				var stderrCompleted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 				var stdoutCompleted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -99,62 +117,64 @@ namespace Xamarin.ProjectTools
 					if (e.Data == null) {
 						stderrCompleted.TrySetResult (true);
 					} else {
-						lock (locker)
-							procOutput.AppendLine (e.Data);
+						WriteOutput (e.Data);
 					}
 				};
 				p.OutputDataReceived += (sender, e) => {
 					if (e.Data == null) {
 						stdoutCompleted.TrySetResult (true);
 					} else {
-						lock (locker)
-							procOutput.AppendLine (e.Data);
+						WriteOutput (e.Data);
 					}
 				};
 
-				procOutput.AppendLine ($"Running: {p.StartInfo.FileName} {p.StartInfo.Arguments}");
+				WriteOutput ($"Running: {p.StartInfo.FileName} {p.StartInfo.Arguments}");
 				p.BeginOutputReadLine ();
 				p.BeginErrorReadLine ();
 
 				bool completed = p.WaitForExit (timeoutMilliseconds);
 				if (!completed) {
-					procOutput.AppendLine ($"Process timed out after {timeoutMilliseconds}ms.");
-					TryKillProcess (p, procOutput);
+					WriteOutput ($"Process timed out after {timeoutMilliseconds}ms.");
+					TryKillProcess (p, WriteOutput);
 					completed = p.WaitForExit (killTimeoutMilliseconds);
 					if (!completed) {
-						procOutput.AppendLine ($"Process did not exit within {killTimeoutMilliseconds}ms after kill request.");
+						WriteOutput ($"Process did not exit within {killTimeoutMilliseconds}ms after kill request.");
 					}
 				}
 
 				if (!stdoutCompleted.Task.Wait (streamDrainTimeoutMilliseconds)) {
-					procOutput.AppendLine ($"Timed out waiting for stdout to drain after {streamDrainTimeoutMilliseconds}ms.");
+					WriteOutput ($"Timed out waiting for stdout to drain after {streamDrainTimeoutMilliseconds}ms.");
 				}
 				if (!stderrCompleted.Task.Wait (streamDrainTimeoutMilliseconds)) {
-					procOutput.AppendLine ($"Timed out waiting for stderr to drain after {streamDrainTimeoutMilliseconds}ms.");
+					WriteOutput ($"Timed out waiting for stderr to drain after {streamDrainTimeoutMilliseconds}ms.");
 				}
 
-				succeeded = completed && p.ExitCode == 0;
-				procOutput.AppendLine (completed ? $"Exit Code: {p.ExitCode}" : "Exit Code: <not available>");
+				lock (locker) {
+					acceptingOutput = false;
+					procOutput.AppendLine (completed ? $"Exit Code: {p.ExitCode}" : "Exit Code: <not available>");
+				}
+				return completed && p.ExitCode == 0;
+			} finally {
+				lock (locker) {
+					acceptingOutput = false;
+				}
 			}
-
-			File.WriteAllText (ProcessLogFile, procOutput.ToString ());
-			return succeeded;
 		}
 
-		static void TryKillProcess (Process process, StringBuilder procOutput)
+		static void TryKillProcess (Process process, Action<string> writeOutput)
 		{
 			try {
 				if (process.HasExited) {
 					return;
 				}
 				process.Kill (entireProcessTree: true);
-				procOutput.AppendLine ("Issued kill request for process tree.");
+				writeOutput ("Issued kill request for process tree.");
 			} catch (InvalidOperationException) {
 				// Process has already exited.
 			} catch (Win32Exception ex) {
-				procOutput.AppendLine ($"Failed to kill process tree: {ex.GetType ().Name}: {ex.Message}");
+				writeOutput ($"Failed to kill process tree: {ex.GetType ().Name}: {ex.Message}");
 			} catch (NotSupportedException ex) {
-				procOutput.AppendLine ($"Failed to kill process tree: {ex.GetType ().Name}: {ex.Message}");
+				writeOutput ($"Failed to kill process tree: {ex.GetType ().Name}: {ex.Message}");
 			}
 		}
 

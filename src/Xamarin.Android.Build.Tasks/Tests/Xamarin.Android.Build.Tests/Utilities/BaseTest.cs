@@ -392,18 +392,8 @@ namespace Xamarin.Android.Build.Tests
 			}
 			if (IsWindows)
 				return;
-			var chmod = new ProcessStartInfo {
-				FileName                    = "chmod",
-				Arguments                   = $"+x \"{path}\"",
-				UseShellExecute             = false,
-				RedirectStandardInput       = false,
-				RedirectStandardOutput      = true,
-				RedirectStandardError       = true,
-				CreateNoWindow              = true,
-				WindowStyle                 = ProcessWindowStyle.Hidden,
-			};
-			var p = Process.Start (chmod);
-			p.WaitForExit ();
+			var (exitCode, stdout, stderr) = RunProcessWithExitCode ("chmod", $"+x \"{path}\"");
+			Assert.AreEqual (0, exitCode, $"chmod failed for '{path}': {stderr}{stdout}");
 		}
 
 		void CreateFauxExecutable (string exeFullPath, StringBuilder sb) {
@@ -521,19 +511,9 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
-			var psi = new ProcessStartInfo {
-				FileName = apksignerExe,
-				Arguments = $"verify \"{apkPath}\"",
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				UseShellExecute = false,
-				CreateNoWindow = true,
-			};
-			using var proc = Process.Start (psi) ?? throw new InvalidOperationException ($"Failed to start '{apksignerExe}'.");
-			string stdout = proc.StandardOutput.ReadToEnd ();
-			string stderr = proc.StandardError.ReadToEnd ();
-			proc.WaitForExit ();
-			Assert.AreEqual (0, proc.ExitCode, $"APK file `{apkPath}` is not signed! apksigner verify failed:\n{stderr}\n{stdout}");
+			var (exitCode, stdout, stderr) = RunProcessWithExitCode (apksignerExe, $"verify \"{apkPath}\"");
+			Assert.AreNotEqual (-1, exitCode, $"apksigner verify timed out for '{apkPath}'.");
+			Assert.AreEqual (0, exitCode, $"APK file `{apkPath}` is not signed! apksigner verify failed:\n{stderr}\n{stdout}");
 		}
 
 		protected string GetResourceDesignerPath (ProjectBuilder builder, XamarinAndroidProject project)
@@ -583,6 +563,11 @@ namespace Xamarin.Android.Build.Tests
 
 		protected bool RunCommand (string command, string arguments)
 		{
+			return RunCommand (command, arguments, 60000);
+		}
+
+		static bool RunCommand (string command, string arguments, int timeoutMilliseconds)
+		{
 			var psi = new ProcessStartInfo () {
 				FileName		= command,
 				Arguments		= arguments,
@@ -594,49 +579,68 @@ namespace Xamarin.Android.Build.Tests
 				WindowStyle		= ProcessWindowStyle.Hidden,
 			};
 
-			var stderr_completed = new ManualResetEvent (false);
-			var stdout_completed = new ManualResetEvent (false);
+			var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var outputLock = new object ();
+			bool acceptingOutput = true;
 
-			var p = new Process () {
+			using var p = new Process () {
 				StartInfo   = psi,
 			};
 
+			void WriteOutput (string line)
+			{
+				lock (outputLock) {
+					if (acceptingOutput)
+						Console.WriteLine (line);
+				}
+			}
+
 			p.ErrorDataReceived += (sender, e) => {
 				if (e.Data == null)
-					stderr_completed.Set ();
+					errorDone.TrySetResult (true);
 				else
-					Console.WriteLine (e.Data);
+					WriteOutput (e.Data);
 			};
 
 			p.OutputDataReceived += (sender, e) => {
 				if (e.Data == null)
-					stdout_completed.Set ();
+					outputDone.TrySetResult (true);
 				else
-					Console.WriteLine (e.Data);
+					WriteOutput (e.Data);
 			};
 
-			using (p) {
-				p.StartInfo = psi;
+			try {
 				p.Start ();
 				p.BeginOutputReadLine ();
 				p.BeginErrorReadLine ();
 
-				bool success = p.WaitForExit (60000);
-
-				// We need to call the parameter-less WaitForExit only if any of the standard
-				// streams have been redirected (see
-				// https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexit?view=netframework-4.7.2#System_Diagnostics_Process_WaitForExit)
-				//
-				p.WaitForExit ();
-				stderr_completed.WaitOne (TimeSpan.FromSeconds (60));
-				stdout_completed.WaitOne (TimeSpan.FromSeconds (60));
-
-				if (!success || p.ExitCode != 0) {
-					Console.Error.WriteLine ($"Process `{command} {arguments}` exited with value {p.ExitCode}.");
+				bool completed = p.WaitForExit (timeoutMilliseconds);
+				if (!completed) {
+					Console.Error.WriteLine ($"Process `{command} {arguments}` timed out after {timeoutMilliseconds}ms.");
+					if (!p.HasExited) {
+						try {
+							p.Kill (entireProcessTree: true);
+						} catch (InvalidOperationException) when (p.HasExited) {
+							// The process exited before the kill request.
+						}
+						if (!p.WaitForExit (30000))
+							Console.Error.WriteLine ($"Process {p.Id} did not exit after termination.");
+					}
+				}
+				if (!Builder.WaitForRedirectedOutput (outputDone.Task, errorDone.Task))
+					Console.Error.WriteLine ($"Process {p.Id} exited or timed out with redirected output still open.");
+				if (!completed || p.ExitCode != 0) {
+					if (completed)
+						Console.Error.WriteLine ($"Process `{command} {arguments}` exited with value {p.ExitCode}.");
 					return false;
 				}
 
 				return true;
+			} finally {
+				lock (outputLock) {
+					acceptingOutput = false;
+				}
 			}
 		}
 

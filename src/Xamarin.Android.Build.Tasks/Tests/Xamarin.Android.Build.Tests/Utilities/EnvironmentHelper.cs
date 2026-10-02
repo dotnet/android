@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -801,7 +802,7 @@ namespace Xamarin.Android.Build.Tests
 			return (item.LineNumber, field[1]);
 		}
 
-		static (List<string> stdout, List<string> stderr) RunCommand (string executablePath, string arguments = null)
+		static (List<string> stdout, List<string> stderr) RunCommand (string executablePath, string arguments = null, int timeoutMilliseconds = 60000)
 		{
 			var psi = new ProcessStartInfo {
 				FileName = executablePath,
@@ -816,37 +817,66 @@ namespace Xamarin.Android.Build.Tests
 			psi.StandardOutputEncoding = Encoding.UTF8;
 			psi.StandardErrorEncoding = Encoding.UTF8;
 
-			var stdout_completed = new ManualResetEventSlim (false);
-			var stderr_completed = new ManualResetEventSlim (false);
+			var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 			var stdout_lines = new List <string> ();
 			var stderr_lines = new List <string> ();
+			var outputLock = new object ();
+			bool acceptingOutput = true;
 
 			using (var process = new Process ()) {
 				process.StartInfo = psi;
 				process.OutputDataReceived += (s, e) => {
-					if (e.Data != null)
-						stdout_lines.Add (e.Data);
-					else
-						stdout_completed.Set ();
+					if (e.Data == null) {
+						outputDone.TrySetResult (true);
+					} else {
+						lock (outputLock) {
+							if (acceptingOutput)
+								stdout_lines.Add (e.Data);
+						}
+					}
 				};
 
 				process.ErrorDataReceived += (s, e) => {
-					if (e.Data != null)
-						stderr_lines.Add (e.Data);
-					else
-						stderr_completed.Set ();
+					if (e.Data == null) {
+						errorDone.TrySetResult (true);
+					} else {
+						lock (outputLock) {
+							if (acceptingOutput)
+								stderr_lines.Add (e.Data);
+						}
+					}
 				};
 
-				process.Start ();
-				process.BeginOutputReadLine ();
-				process.BeginErrorReadLine ();
-				bool exited = process.WaitForExit ((int)TimeSpan.FromSeconds (60).TotalMilliseconds);
-				bool stdout_done = stdout_completed.Wait (TimeSpan.FromSeconds (30));
-				bool stderr_done = stderr_completed.Wait (TimeSpan.FromSeconds (30));
+				bool exited;
+				try {
+					process.Start ();
+					process.BeginOutputReadLine ();
+					process.BeginErrorReadLine ();
+					exited = process.WaitForExit (timeoutMilliseconds);
+					if (!exited) {
+						TestContext.Out.WriteLine ($"{psi.FileName} {psi.Arguments} timed out");
+						if (!process.HasExited) {
+							try {
+								process.Kill (entireProcessTree: true);
+							} catch (InvalidOperationException) when (process.HasExited) {
+								// The process exited before the kill request.
+							}
+							if (!process.WaitForExit (30000))
+								TestContext.Out.WriteLine ($"Process {process.Id} did not exit after termination.");
+						}
+					}
+					if (!outputDone.Task.Wait (TimeSpan.FromSeconds (30)))
+						TestContext.Out.WriteLine ($"{psi.FileName} stdout did not drain.");
+					if (!errorDone.Task.Wait (TimeSpan.FromSeconds (30)))
+						TestContext.Out.WriteLine ($"{psi.FileName} stderr did not drain.");
+				} finally {
+					lock (outputLock) {
+						acceptingOutput = false;
+					}
+				}
 
-				if (!exited)
-					TestContext.Out.WriteLine ($"{psi.FileName} {psi.Arguments} timed out");
-				if (process.ExitCode != 0)
+				if (exited && process.ExitCode != 0)
 					TestContext.Out.WriteLine ($"{psi.FileName} {psi.Arguments} returned with error code {process.ExitCode}");
 
 				if (!exited || process.ExitCode != 0) {

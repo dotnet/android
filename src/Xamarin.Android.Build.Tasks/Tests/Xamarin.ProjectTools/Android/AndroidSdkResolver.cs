@@ -75,10 +75,12 @@ namespace Xamarin.ProjectTools
 					UseShellExecute = false,
 				};
 				var output = new StringBuilder ();
-				using (var p = Process.Start (psi)) {
+				using (var p = Process.Start (psi) ?? throw new InvalidOperationException ($"Failed to start '{javaPath}'.")) {
+					var stdout = p.StandardOutput.ReadToEndAsync ();
+					var stderr = p.StandardError.ReadToEndAsync ();
 					p.WaitForExit ();
-					output.AppendLine (p.StandardOutput.ReadToEnd ());
-					output.AppendLine (p.StandardError.ReadToEnd ());
+					output.AppendLine (stdout.GetAwaiter ().GetResult ());
+					output.AppendLine (stderr.GetAwaiter ().GetResult ());
 					JavaSdkVersionString = output.ToString ();
 				}
 			}
@@ -97,9 +99,16 @@ namespace Xamarin.ProjectTools
 				UseShellExecute = false,
 				WorkingDirectory = XABuildPaths.TestAssemblyOutputDirectory,
 			};
-			using (var p = Process.Start (psi)) {
+			return ReadPath (psi);
+		}
+
+		static string ReadPath (ProcessStartInfo psi)
+		{
+			using (var p = Process.Start (psi) ?? throw new InvalidOperationException ($"Failed to start '{psi.FileName}'.")) {
+				var output = p.StandardOutput.ReadToEndAsync ();
 				p.WaitForExit ();
-				string path = p.StandardOutput.ReadLine ().Trim ();
+				using var reader = new StringReader (output.GetAwaiter ().GetResult ());
+				string path = reader.ReadLine ()?.Trim ();
 				return Directory.Exists (path) ? path : null;
 			}
 		}
