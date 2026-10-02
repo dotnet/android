@@ -60,7 +60,9 @@ public class EmulatorRunner
 
 		ProcessStartInfo psi;
 		if (OS.IsWindows) {
-			psi = ProcessUtils.CreateProcessStartInfo (emulatorPath, args.ToArray ());
+			psi = new ProcessStartInfo (emulatorPath) { UseShellExecute = false, CreateNoWindow = true };
+			foreach (var argument in args)
+				psi.ArgumentList.Add (argument);
 		} else {
 			// On Unix, launch through a shell that ignores SIGINT before exec'ing
 			// the emulator. This prevents Ctrl+C in the parent terminal from killing
@@ -73,12 +75,16 @@ public class EmulatorRunner
 				shellCmd.Append (' ');
 				shellCmd.Append (ShellQuote (arg));
 			}
-			psi = ProcessUtils.CreateProcessStartInfo ("/bin/sh", "-c", shellCmd.ToString ());
+			psi = new ProcessStartInfo ("/bin/sh") {
+				ArgumentList = { "-c", shellCmd.ToString () },
+				UseShellExecute = false,
+				CreateNoWindow = true,
+			};
 		}
 
 		if (environmentVariables != null) {
 			foreach (var kvp in environmentVariables)
-				psi.EnvironmentVariables[kvp.Key] = kvp.Value;
+				psi.Environment [kvp.Key] = kvp.Value;
 		}
 
 		// Redirect stdout/stderr so the emulator process doesn't inherit the
@@ -116,15 +122,25 @@ public class EmulatorRunner
 
 	public async Task<IReadOnlyList<string>> ListAvdNamesAsync (CancellationToken cancellationToken = default)
 	{
-		using var stdout = new StringWriter ();
-		using var stderr = new StringWriter ();
-		var psi = ProcessUtils.CreateProcessStartInfo (emulatorPath, "-list-avds");
+		cancellationToken.ThrowIfCancellationRequested ();
+		var psi = new ProcessStartInfo (emulatorPath) {
+			ArgumentList = { "-list-avds" },
+			UseShellExecute = false,
+			CreateNoWindow = true,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+		};
+		if (environmentVariables != null) {
+			foreach (var variable in environmentVariables)
+				psi.Environment [variable.Key] = variable.Value;
+		}
 
 		logger.Invoke (TraceLevel.Verbose, "Running: emulator -list-avds");
-		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
-		ProcessUtils.ThrowIfFailed (exitCode, "emulator -list-avds", stderr, stdout);
-
-		return ParseListAvdsOutput (stdout.ToString ());
+		var result = await Process.RunAndCaptureTextAsync (psi, cancellationToken).ConfigureAwait (false);
+		cancellationToken.ThrowIfCancellationRequested ();
+		if (result.ExitStatus.ExitCode != 0)
+			throw new InvalidOperationException ($"'emulator -list-avds' failed with exit code {result.ExitStatus.ExitCode}. stderr:{Environment.NewLine}{result.StandardError} stdout:{Environment.NewLine}{result.StandardOutput}");
+		return ParseListAvdsOutput (result.StandardOutput);
 	}
 
 	internal static List<string> ParseListAvdsOutput (string output)
@@ -337,4 +353,3 @@ public class EmulatorRunner
 	/// Wraps in single quotes and escapes embedded single quotes.
 	static string ShellQuote (string arg) => "'" + arg.Replace ("'", "'\\''") + "'";
 }
-

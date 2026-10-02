@@ -17,7 +17,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <TargetFramework>$(TargetFrameworkNETStandard)</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <RootNamespace>Xamarin.Android.Tools</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>

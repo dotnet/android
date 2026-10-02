@@ -5,13 +5,9 @@
   <Import Project="..\..\build-tools\scripts\Xamarin.Android.Tools.Versioning.targets" />
 
   <PropertyGroup>
-    <AndroidToolsDisableMultiTargeting Condition=" '$(AndroidToolsDisableMultiTargeting)' == '' ">true</AndroidToolsDisableMultiTargeting>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(AndroidToolsDisableMultiTargeting)' != 'true' ">$(TargetFrameworks);$(DotNetTargetFramework)</TargetFrameworks>
+    <TargetFramework>net11.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <DefineConstants>INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
-    <UseProjectNullableAttributes>true</UseProjectNullableAttributes>
     <NoWarn>$(NoWarn);CA1305;CA5350</NoWarn>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
@@ -33,12 +29,12 @@
     <OutputPath>$(BuildOutputDirectory)</OutputPath>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' != 'netstandard2.0' ">
+  <PropertyGroup>
     <IsTrimmable>true</IsTrimmable>
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.0' ">
+  <ItemGroup>
     <Compile Remove="NullableAttributes.cs" />
     <Compile Remove="IsExternalInit.cs" />
   </ItemGroup>
@@ -49,7 +45,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0" PrivateAssets="All" />
-    <PackageReference Include="System.Buffers" Version="4.6.1" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
   </ItemGroup>
 
   <ItemGroup>

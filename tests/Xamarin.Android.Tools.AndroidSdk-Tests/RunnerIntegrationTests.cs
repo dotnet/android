@@ -96,7 +96,7 @@ public class RunnerIntegrationTests
 	public async Task AvdManagerRunner_ListAvdsAsync_ReturnsWithoutError ()
 	{
 		var ext = OS.IsWindows ? ".bat" : "";
-		var avdManagerPath = ProcessUtils.FindCmdlineTool (sdkPath, "avdmanager", ext);
+		var avdManagerPath = CommandLineToolsResolver.Find (sdkPath, "avdmanager", ext)?.Path;
 
 		if (avdManagerPath is null) {
 			Assert.Ignore ("avdmanager not found in SDK — cmdline-tools may not be installed.");
