@@ -91,8 +91,20 @@ stages:
         command: test
         projects: |
           $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
-          $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
         arguments: -c Debug $(XatBuildProperties)
+
+    - task: UseDotNet@2
+      displayName: Use .NET 11 for Android SDK fixtures
+      inputs:
+        version: 11.0.x
+        includePreviewVersions: true
+
+    - task: DotNetCoreCLI@2
+      displayName: Run Android SDK fixture tests
+      inputs:
+        command: test
+        projects: $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
+        arguments: -c Debug -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=11.0
 
     - ${{ if eq(parameters.use1ESTemplate, false) }}:
       - task: PublishBuildArtifacts@1
@@ -143,8 +155,20 @@ stages:
         command: test
         projects: |
           $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
-          $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
         arguments: -c Debug $(XatBuildProperties)
+
+    - task: UseDotNet@2
+      displayName: Use .NET 11 for Android SDK fixtures
+      inputs:
+        version: 11.0.x
+        includePreviewVersions: true
+
+    - task: DotNetCoreCLI@2
+      displayName: Run Android SDK fixture tests
+      inputs:
+        command: test
+        projects: $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
+        arguments: -c Debug -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=11.0
 
     - ${{ if eq(parameters.use1ESTemplate, false) }}:
       - task: PublishBuildArtifacts@1
