@@ -44,8 +44,8 @@ stages:
   condition: ${{ parameters.condition }}
   variables:
     # Variables consumed by external/Java.Interop/build-tools/automation/templates/*.yaml.
-    # Java.Interop requires the .NET 11 compiler and runtime for extended layout.
-    DotNetCoreVersion: 11.0.x
+    # Java.Interop requires compiler and runtime support for extended layout.
+    DotNetCoreVersion: $(DotNetPreviewSdkVersion).x
     NetCoreTargetFrameworkPathSuffix: -$(DotNetTargetFramework)
     Build.Configuration: Release
     RunningOnCI: true
