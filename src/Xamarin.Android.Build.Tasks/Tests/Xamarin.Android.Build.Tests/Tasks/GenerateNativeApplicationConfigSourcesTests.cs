@@ -39,6 +39,9 @@ public class GenerateNativeApplicationConfigSourcesTests : BaseTest
 		);
 		var config = EnvironmentHelper.ReadApplicationConfig (environmentFiles);
 		Assert.AreEqual (haveAssemblyStore, config.have_assembly_store);
+		string environmentSource = File.ReadAllText (Path.Combine (outputRoot, "android", "environment.arm64-v8a.ll"));
+		StringAssert.DoesNotContain ("@assembly_store_bundled_assemblies", environmentSource);
+		StringAssert.DoesNotContain ("@assembly_store =", environmentSource);
 	}
 
 	[Test]

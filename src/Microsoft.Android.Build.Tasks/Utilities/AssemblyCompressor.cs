@@ -12,8 +12,7 @@ namespace Microsoft.Android.Tasks;
 /// Compresses assemblies with Zstandard before they are placed in the AssemblyStore.
 /// The native runtime decompresses them at assembly load time. The 12-byte header
 /// (magic / descriptor index / uncompressed length) is read back by the runtime and by
-/// the diagnostic tools; the reader-side helpers live in <c>AssemblyCompression</c> in
-/// Xamarin.Android.Build.Tasks.
+/// the diagnostic tools.
 /// </summary>
 static class AssemblyCompressor
 {

@@ -2,18 +2,19 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks;
+namespace Microsoft.Android.Tasks;
 
 /// <summary>
-/// This task figures out the compression/assembly store/wrapping operations that need to
-/// be performed on the assemblies before they are added to the APK. This is done "ahead of time"
-/// so that the actual work can be done in an incremental way.
+/// Selects assemblies to compress before packaging, retaining the descriptor indices assigned
+/// to the untrimmed assembly list so that unchanged compressed files can be reused.
 /// </summary>
 public class CollectAssemblyFilesToCompress : AndroidTask
 {
@@ -62,7 +63,7 @@ public class CollectAssemblyFilesToCompress : AndroidTask
 		var assemblies_to_compress = new List<ITaskItem> ();
 		var compressed_assemblies_info = GetCompressedAssemblyInfo ();
 
-		// Get all the user and framework assemblies we may need to compresss
+		// Get all the user and framework assemblies we may need to compress
 		var assemblies = ResolvedFrameworkAssemblies.Concat (ResolvedUserAssemblies).Where (asm => !(ShouldSkipAssembly (asm))).ToArray ();
 		var per_arch_assemblies = MonoAndroidHelper.GetPerArchAssemblies (assemblies, SupportedAbis, true);
 
@@ -99,7 +100,7 @@ public class CollectAssemblyFilesToCompress : AndroidTask
 	{
 		var item = new TaskItem (sourceAssembly);
 		item.SetMetadata ("DestinationPath", destinationAssembly);
-		item.SetMetadata ("DescriptorIndex", descriptorIndex.ToString ());
+		item.SetMetadata ("DescriptorIndex", descriptorIndex.ToString (CultureInfo.InvariantCulture));
 
 		return item;
 	}
@@ -120,7 +121,7 @@ public class CollectAssemblyFilesToCompress : AndroidTask
 
 	bool ShouldSkipAssembly (ITaskItem asm)
 	{
-		var should_skip = asm.GetMetadataOrDefault ("AndroidSkipAddToPackage", false);
+		bool should_skip = bool.TryParse (asm.GetMetadata ("AndroidSkipAddToPackage"), out bool skip) && skip;
 
 		if (should_skip)
 			Log.LogDebugMessage ($"Skipping {asm.ItemSpec} due to 'AndroidSkipAddToPackage' == 'true' ");

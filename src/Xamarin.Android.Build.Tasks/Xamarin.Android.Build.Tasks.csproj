@@ -38,6 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Microsoft.Android.Build.Tasks\Utilities\MonoAndroidHelper.Assemblies.cs" Link="Utilities\MonoAndroidHelper.Assemblies.cs" />
     <Compile Remove="MSBuild\**" />
     <Compile Remove="Resources\**" />
     <Compile Remove="Tests\**" />

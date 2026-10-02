@@ -37,11 +37,6 @@ const TypeMapJava java_to_managed_map[] = {};
 const xamarin::android::hash_t java_to_managed_hashes[] = {};
 #endif
 
-uint32_t compressed_assembly_count = 0;
-CompressedAssemblyDescriptor compressed_assembly_descriptors[] = {};
-uint32_t uncompressed_assemblies_data_size = 0;
-uint8_t uncompressed_assemblies_data_buffer[] = {};
-
 //
 // Config settings below **must** be valid for Desktop builds as the default `libxamarin-app.{dll,dylib,so}` is used by
 // the Designer
@@ -73,33 +68,6 @@ const AppEnvironmentVariable app_environment_variables[] = {};
 const char app_environment_variable_contents[] = {};
 const AppEnvironmentVariable app_system_properties[] = {};
 const char app_system_property_contents[] = {};
-
-
-
-
-AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[] = {
-	{
-		.image_data = nullptr,
-		.debug_info_data = nullptr,
-		.config_data = nullptr,
-		.descriptor = nullptr,
-	},
-
-	{
-		.image_data = nullptr,
-		.debug_info_data = nullptr,
-		.config_data = nullptr,
-		.descriptor = nullptr,
-	},
-};
-
-AssemblyStoreRuntimeData assembly_store = {
-	.data_start = nullptr,
-	.assembly_count = 0,
-	.index_entry_count = 0,
-	.assemblies = nullptr,
-};
-
 constexpr char fake_dso_name[] = "libSome.Library.so";
 constexpr char fake_dso_name2[] = "libAnother.Library.so";
 
