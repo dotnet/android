@@ -44,11 +44,9 @@ stages:
   condition: ${{ parameters.condition }}
   variables:
     # Variables consumed by external/Java.Interop/build-tools/automation/templates/*.yaml.
-    # Defined at stage scope so they don't conflict with dotnet/android-wide
-    # variables (e.g. DotNetTargetFramework=net11.0).
-    DotNetCoreVersion: $(DotNetSdkVersion).x
-    DotNetTargetFramework: $(DotNetStableTargetFramework)
-    NetCoreTargetFrameworkPathSuffix: -$(DotNetStableTargetFramework)
+    # Java.Interop requires the .NET 11 compiler and runtime for extended layout.
+    DotNetCoreVersion: 11.0.x
+    NetCoreTargetFrameworkPathSuffix: -$(DotNetTargetFramework)
     Build.Configuration: Release
     RunningOnCI: true
     # Cap the JDK that external/Java.Interop's Prepare.targets picks when it
