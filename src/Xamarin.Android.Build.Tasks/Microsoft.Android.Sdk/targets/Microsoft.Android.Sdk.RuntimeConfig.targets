@@ -64,4 +64,25 @@ MSBuild logic related to *.runtimeconfig.json files.
     />
   </ItemGroup>
 
+  <Target Name="_AndroidConfigureJniRemappingRuntimeFeature"
+      BeforeTargets="_PrepareTrimConfiguration;_GenerateRuntimeConfigurationFilesInputCache"
+      DependsOnTargets="_ConvertAndroidMamMappingFileToXml">
+    <PropertyGroup>
+      <_AndroidJniRemappingEnabled Condition=" '$(_AndroidJniRemappingEnabled)' == '' and '@(_AndroidRemapMembers->Count())' != '0' ">true</_AndroidJniRemappingEnabled>
+      <_AndroidJniRemappingEnabled Condition=" '$(_AndroidJniRemappingEnabled)' == '' ">false</_AndroidJniRemappingEnabled>
+    </PropertyGroup>
+    <ItemGroup>
+      <RuntimeHostConfigurationOption Remove="Java.Interop.RuntimeFeature.JniRemapping" />
+      <RuntimeHostConfigurationOption Remove="Microsoft.Android.Runtime.RuntimeFeature.JniRemapping" />
+      <RuntimeHostConfigurationOption Include="Java.Interop.RuntimeFeature.JniRemapping"
+          Value="$(_AndroidJniRemappingEnabled)"
+          Trim="true"
+      />
+      <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.JniRemapping"
+          Value="$(_AndroidJniRemappingEnabled)"
+          Trim="true"
+      />
+    </ItemGroup>
+  </Target>
+
 </Project>
