@@ -1987,17 +1987,18 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
-		[Test]
-		public void NativeAotTrimmableTypeMap_PreservesJniOnlyConstructorThroughR8 ()
+		[TestCase (AndroidRuntime.NativeAOT)]
+		[TestCase (AndroidRuntime.CoreCLR)]
+		public void TrimmableTypeMap_PreservesJniOnlyConstructorThroughR8 (AndroidRuntime runtime)
 		{
-			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: true)) {
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
 			}
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
-			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("AndroidLinkTool", "r8");
 			proj.SetProperty ("_AndroidEnableTypemapR8Trimming", "true");

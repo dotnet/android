@@ -13,7 +13,7 @@
        linker must remain usable without an NDK. CoreCLR adapters need no native tools. -->
   <Target Name="_AndroidConfigureTypeMapProguard"
       BeforeTargets="_CalculateProguardConfigurationFiles"
-      Condition=" '$(ProguardConfigFiles)' == '' and '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and '$(AndroidTypeMapImplementation)' == 'trimmable' and ('$(_AndroidRuntime)' == 'CoreCLR' or ('$(_AndroidRuntime)' == 'NativeAOT' and '$(_AndroidEnableTypemapR8Trimming)' == 'true')) ">
+      Condition=" '$(ProguardConfigFiles)' == '' and '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and '$(AndroidTypeMapImplementation)' == 'trimmable' and (('$(_AndroidRuntime)' == 'CoreCLR' and '$(RunILLink)' != 'false') or ('$(_AndroidRuntime)' == 'NativeAOT' and '$(_AndroidEnableTypemapR8Trimming)' == 'true')) ">
     <PropertyGroup>
       <_ProguardProjectConfiguration>$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
       <_AndroidTypeMapProguardConfiguration>$(_ProguardProjectConfiguration)</_AndroidTypeMapProguardConfiguration>
@@ -123,7 +123,7 @@
   </Target>
 
   <Target Name="_AndroidGenerateTypeMapProguardConfiguration"
-      Condition=" '$(ProguardConfigFiles)' == '' and '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and '$(AndroidTypeMapImplementation)' == 'trimmable' and ('$(_AndroidRuntime)' == 'CoreCLR' or ('$(_AndroidRuntime)' == 'NativeAOT' and '$(_AndroidEnableTypemapR8Trimming)' == 'true')) "
+      Condition=" '$(ProguardConfigFiles)' == '' and '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' == 'r8' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' and '$(AndroidTypeMapImplementation)' == 'trimmable' and (('$(_AndroidRuntime)' == 'CoreCLR' and '$(RunILLink)' != 'false') or ('$(_AndroidRuntime)' == 'NativeAOT' and '$(_AndroidEnableTypemapR8Trimming)' == 'true')) "
       DependsOnTargets="_AndroidGenerateTypeMapProguardConfigurationInputs"
       Inputs="@(_AndroidTypeMapKeyFile);$(_AndroidTypeMapTasksAssemblyFile);$(_AndroidBuildPropertiesCache);$(_AndroidTypeMapProguardModeFile)"
       Outputs="$(_ProguardProjectConfiguration)">

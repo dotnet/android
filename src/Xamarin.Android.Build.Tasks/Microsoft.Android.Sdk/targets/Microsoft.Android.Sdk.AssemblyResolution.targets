@@ -83,7 +83,7 @@ _ResolveAssemblies MSBuild target.
             AndroidTypeMapLlvmReadObjPath="$(_AndroidTypeMapLlvmReadObjPath)"
             AndroidTypeMapLlvmObjDumpPath="$(_AndroidTypeMapLlvmObjDumpPath)" />
         <_AndroidLinkedTypeMapKeySource Include="@(_GeneratedTypeMapAssembliesFromList->'$(IntermediateOutputPath)linked\%(Filename)%(Extension)')"
-            Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' " />
+            Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(RunILLink)' != 'false' " />
         <!-- The root carries the complete generator-known inventory, including trimmed maps
              replaced by empty stubs. Do not discover maps from publish globs or drop missing files. -->
         <ResolvedFileToPublish Update="@(ResolvedFileToPublish)"

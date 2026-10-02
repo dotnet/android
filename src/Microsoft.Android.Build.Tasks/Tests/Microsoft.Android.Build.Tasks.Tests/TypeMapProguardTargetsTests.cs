@@ -79,15 +79,17 @@ public class TypeMapProguardTargetsTests : BaseTest
 		}
 	}
 
-	[Test]
-	public void UnoptimizedNativeAotReadsObjectWithoutGraphs ()
+	[TestCase ("")]
+	[TestCase ("false")]
+	public void UnoptimizedNativeAotReadsObjectWithoutGraphs (string runILLink)
 	{
 		var nativeObject = WriteNativeObject ("app", "test/Live");
 		var project = CreateProject ("NativeAOT", "trimmable",
 			NativeObjectItem ("app.so", nativeObject));
 		var keys = Path.Combine (directory, "obj", "typemap.keys.txt");
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
-		Build (project, "-p:Optimize=false", "-p:_AndroidEnableTypemapR8Trimming=true");
+		Build (project, "-p:Optimize=false", "-p:_AndroidEnableTypemapR8Trimming=true",
+			$"-p:RunILLink={runILLink}");
 		Assert.AreEqual ("test/Live\n", File.ReadAllText (keys));
 		Assert.AreEqual (TypeRules ("test.Live"), File.ReadAllText (rules));
 	}
@@ -153,10 +155,13 @@ public class TypeMapProguardTargetsTests : BaseTest
 		Assert.AreNotEqual (firstTime, File.GetLastWriteTimeUtc (stamp));
 	}
 
-	[TestCase ("NativeAOT", "true", "custom-object/retained.o")]
-	[TestCase ("NativeAOT", "false", "custom-object/retained.o")]
-	[TestCase ("CoreCLR", "true", "obj/linked/_Binding.TypeMap.dll")]
-	public void InnerBuildReturnsExactProducerPaths (string runtime, string optimize, string expected)
+	[TestCase ("NativeAOT", "true", "", "custom-object/retained.o")]
+	[TestCase ("NativeAOT", "false", "", "custom-object/retained.o")]
+	[TestCase ("NativeAOT", "true", "false", "custom-object/retained.o")]
+	[TestCase ("CoreCLR", "true", "", "obj/linked/_Binding.TypeMap.dll")]
+	[TestCase ("CoreCLR", "true", "true", "obj/linked/_Binding.TypeMap.dll")]
+	[TestCase ("CoreCLR", "true", "false", "")]
+	public void InnerBuildReturnsExactProducerPaths (string runtime, string optimize, string runILLink, string expected)
 	{
 		var project = CreateProject (runtime, "trimmable");
 		var assemblyResolutionTargets = Path.Combine (RepositoryDirectory (), "src", "Xamarin.Android.Build.Tasks", "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.AssemblyResolution.targets");
@@ -198,14 +203,30 @@ public class TypeMapProguardTargetsTests : BaseTest
 				</Project>
 				""", StringComparison.Ordinal);
 		File.WriteAllText (project, contents);
-		Build (project);
-		Assert.AreEqual (Path.Combine (directory, expected).Replace ('\\', '/'),
+		Build (project, $"-p:RunILLink={runILLink}");
+		Assert.AreEqual (expected == "" ? "" : Path.Combine (directory, expected).Replace ('\\', '/'),
 			File.ReadAllText (Path.Combine (directory, "producer.txt")).Trim ().Replace ('\\', '/'));
 		if (runtime == "NativeAOT") {
 			var executable = OperatingSystem.IsWindows () ? "llvm-readobj.exe" : "llvm-readobj";
 			Assert.AreEqual (Path.Combine (directory, "custom-ndk-bin", executable).Replace ('\\', '/'),
 				File.ReadAllText (Path.Combine (directory, "readobj.txt")).Trim ().Replace ('\\', '/'));
 		}
+	}
+
+	[TestCase ("")]
+	[TestCase ("true")]
+	public void CoreClrWithoutILLinkNeedsNoLinkedInputsOrModernTasks (string enabled)
+	{
+		var project = CreateProject ("CoreCLR", "trimmable",
+			"""<ResolvedFileToPublish Include="generated/root.dll" AndroidTypeMapLinkedAssemblies="$(MSBuildProjectDirectory)/obj/linked/missing.dll" />""");
+		Assert.IsFalse (Directory.Exists (Path.Combine (directory, "obj", "linked")));
+		Build (project, "-p:RunILLink=false", $"-p:_AndroidEnableTypemapR8Trimming={enabled}",
+			"-p:_MicrosoftAndroidBuildTasksAssembly=missing.dll");
+		foreach (var output in new [] { "typemap.keys.inputs", "typemap.keys.txt",
+			"proguard/proguard_project_references.cfg", "proguard/proguard_typemap_members.cfg" }) {
+			Assert.IsFalse (File.Exists (Path.Combine (directory, "obj", output)), output);
+		}
+		StringAssert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (Path.Combine (directory, "writes.txt")));
 	}
 
 	[TestCase ("MonoVM", "trimmable", "true", "r8", "true", false, "")]
