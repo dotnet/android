@@ -27,18 +27,3 @@ reviews.
 | **Typos in user-visible strings** | Users copy-paste error messages into bug reports. Get them right. (Postmortem `#61`) |
 | **Filler words in docs** | "So" at the start of a sentence adds nothing. Be direct. (Postmortem `#71`) |
 | **Ignoring trimmer/AOT** | AI uses `Type.GetType()`, `Activator.CreateInstance()`, or reflection APIs without `[DynamicallyAccessedMembers]` annotations. These break silently under trimming and NativeAOT. Prefer direct type references or typemap lookups; use `[UnconditionalSuppressMessage]` (not `#pragma`) when a suppression is genuinely required. |
-
----
-
-## Refactoring & API Migrations
-
-Distilled from the archive API migration review in [#12963](https://github.com/dotnet/android/pull/12963).
-
-| Check | What to look for |
-|-------|-----------------|
-| **Keep scope proportional** | Every changed helper, framework target, and caller should be needed for the requested replacement or a demonstrated coupled bug. Avoid unrelated nullable cleanup, speculative compatibility layers, and new infrastructure. A large diff needs concrete reasons, not more scaffolding. |
-| **Preserve contracts, not method names** | Verify the old API's actual version and defaults against the replacement: entry names, overwrite/duplicate handling, compression, timestamps, permissions, errors, and stream ownership. An append API is not a replacement API. State intentional differences; do not claim byte-identical output without evidence. |
-| **Make relocated behavior traceable** | Map the removed block to the new call, including its inputs, outputs, ordering, and conditions. For a new MSBuild task, explain which existing operation moved and why its runtime boundary is necessary. |
-| **Check real compatibility requirements** | Inspect framework targets, consumers, and bootstrap hosts before adding or removing fallbacks. Move only the modern-API operation when possible; do not retarget a shared library just to make one caller simpler. |
-| **Make non-obvious machinery explainable** | Names or a brief purpose comment should expose the contract behind an index map, preflight pass, or batch boundary. For example, selecting the last duplicate before streaming a ZIP preserves last-input-wins behavior. Do not add forwarding-only helpers to hide complexity. |
-| **Simplify without weakening guarantees** | Prefer supported BCL APIs and existing focused helpers, but preserve proven traversal protection, duplicate replacement, and memory bounds. Review buffering and disposal semantics: ZIP Update mode can retain changed payloads; streaming Create mode cannot replace an already written entry. |
