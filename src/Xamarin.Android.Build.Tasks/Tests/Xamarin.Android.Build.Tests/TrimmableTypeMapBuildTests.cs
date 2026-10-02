@@ -183,7 +183,9 @@ namespace Xamarin.Android.Build.Tests {
 
 			using var builder = CreateApkBuilder ();
 			builder.Target = "Compile;_GeneratePackageManagerJava";
-			Assert.IsTrue (builder.Build (proj), "Trimmed multi-RID native sources should be generated with combined typemap inputs.");
+			// Compile defaults to design-time mode, but native-source generation requires a normal build.
+			Assert.IsTrue (builder.Build (proj, parameters: ["DesignTimeBuild=false"]),
+				"Trimmed multi-RID native sources should be generated with combined typemap inputs.");
 			builder.Output.AssertTargetIsNotSkipped ("_AndroidAssertCombinedNativeLinkingTypeMaps");
 			foreach (var abi in new [] { "arm64-v8a", "x86_64" }) {
 				var nativeSource = builder.Output.GetIntermediaryPath (Path.Combine ("android", $"pinvoke_preserve.{abi}.ll"));
