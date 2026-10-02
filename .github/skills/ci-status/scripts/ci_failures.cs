@@ -238,7 +238,7 @@ void SectionXref (JsonArray failed, string repo, string pr)
 		}
 	if (names.Count == 0)
 		return;
-	var (code, stdout, stderr) = Run ("gh", "pr", "diff", pr, "--repo", repo, "--name-only");
+	var (code, stdout, stderr) = Run ("gh", ["pr", "diff", pr, "--repo", repo, "--name-only"]);
 	if (code != 0) {
 		Console.Error.Write ($"gh diff failed: {Trunc (stderr, 200)}\n");
 		return;
@@ -278,7 +278,7 @@ void SectionXref (JsonArray failed, string repo, string pr)
 // ---------------- helpers ----------------
 JsonNode? AzJson (string url)
 {
-	var (code, stdout, stderr) = Run ("az", "rest", "--method", "get", "--resource", RES, "--url", url, "-o", "json");
+	var (code, stdout, stderr) = Run ("az", ["rest", "--method", "get", "--resource", RES, "--url", url, "-o", "json"]);
 	if (code != 0) {
 		Console.Error.Write ($"az error {url}\n{Trunc (stderr, 300)}\n");
 		return null;
@@ -328,7 +328,7 @@ static string BaseOf (string name)
 	return b;
 }
 
-static (int code, string stdout, string stderr) Run (string file, params string [] cliArgs)
+static (int code, string stdout, string stderr) Run (string file, string [] cliArgs, TimeSpan? timeout = null)
 {
 	var psi = new ProcessStartInfo (file) {
 		RedirectStandardOutput = true,
@@ -338,14 +338,10 @@ static (int code, string stdout, string stderr) Run (string file, params string 
 	};
 	foreach (var a in cliArgs)
 		psi.ArgumentList.Add (a);
-	return CaptureCommand (psi, TimeSpan.FromMinutes (5));
-}
-
-static (int code, string stdout, string stderr) CaptureCommand (ProcessStartInfo psi, TimeSpan timeout)
-{
+	timeout ??= TimeSpan.FromMinutes (5);
 	var result = Process.RunAndCaptureText (psi, timeout);
 	if (result.ExitStatus.Canceled)
-		throw new TimeoutException ($"'{psi.FileName}' did not complete within {timeout}.");
+		throw new TimeoutException ($"'{file}' did not complete within {timeout}.");
 	return (result.ExitStatus.ExitCode, result.StandardOutput, result.StandardError);
 }
 

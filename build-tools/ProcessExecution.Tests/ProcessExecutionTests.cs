@@ -294,7 +294,7 @@ namespace Xamarin.Android.BuildTools.Tests
 		[TestCase (7)]
 		public void CiCapturePreservesExactTextAndExitStatus (int exitCode)
 		{
-			var capture = CiCapture ("Run", 0, "duplex", exitCode.ToString ());
+			var capture = CiCapture (0, "duplex", exitCode.ToString ());
 			Assert.That (capture.Code, Is.Zero, capture.Error);
 			using var result = JsonDocument.Parse (capture.Output);
 			Assert.That (result.RootElement.GetProperty ("Code").GetInt32 (), Is.EqualTo (exitCode));
@@ -308,7 +308,7 @@ namespace Xamarin.Android.BuildTools.Tests
 		public void CiCaptureSupportsSixConcurrentCommands ()
 		{
 			var captures = new (int Code, string Output, string Error) [6];
-			Parallel.For (0, captures.Length, i => captures [i] = CiCapture ("Run", 0, "duplex", "0"));
+			Parallel.For (0, captures.Length, i => captures [i] = CiCapture (0, "duplex", "0"));
 			foreach (var capture in captures) {
 				Assert.That (capture.Code, Is.Zero, capture.Error);
 				using var result = JsonDocument.Parse (capture.Output);
@@ -320,7 +320,7 @@ namespace Xamarin.Android.BuildTools.Tests
 		[Test]
 		public void CiCaptureDoesNotNormalizeText ()
 		{
-			var capture = CiCapture ("Run", 0, "exact");
+			var capture = CiCapture (0, "exact");
 			Assert.That (capture.Code, Is.Zero, capture.Error);
 			using var result = JsonDocument.Parse (capture.Output);
 			Assert.That (result.RootElement.GetProperty ("Stdout").GetString (), Is.EqualTo (" leading\r\n\ntrailing\u00e9\0"));
@@ -333,7 +333,7 @@ namespace Xamarin.Android.BuildTools.Tests
 		public void CiDeadlineCoversBothExitAndEof (string mode)
 		{
 			var watch = Stopwatch.StartNew ();
-			var capture = CiCapture ("CaptureCommand", 1000, mode, Path.Combine (directory, "holder.pid"));
+			var capture = CiCapture (1000, mode, Path.Combine (directory, "holder.pid"));
 			Assert.That (capture.Code, Is.EqualTo (70));
 			Assert.That (capture.Error, Does.Contain ("TimeoutException"));
 			Assert.That (watch.Elapsed, Is.LessThan (TimeSpan.FromSeconds (5)));
@@ -374,9 +374,9 @@ namespace Xamarin.Android.BuildTools.Tests
 			return info;
 		}
 
-		(int Code, string Output, string Error) CiCapture (string method, int timeout, params string [] args)
+		(int Code, string Output, string Error) CiCapture (int timeout, params string [] args)
 		{
-			var cli = new [] { "invoke-ci", ciAssembly, method, timeout.ToString () }.Concat (args).ToArray ();
+			var cli = new [] { "invoke-ci", ciAssembly, timeout.ToString () }.Concat (args).ToArray ();
 			var info = Child (cli);
 			info.FileName = CiDotNet;
 			using var process = new Process { StartInfo = info };
