@@ -14,10 +14,6 @@
        is the dotnet/android commit. No submodules contribute version info
        anymore, so there is no _GetSubmodulesVersionInfo target. -->
   <Target Name="GetXAVersionInfo">
-    <Error
-        Condition=" $([System.Environment]::Version.Major) &lt; 11 "
-        Text="Repository version tasks require MSBuild running on .NET 11 or later. Use the SDK provisioned by eng/install-dotnet and dotnet-local."
-    />
     <PropertyGroup>
       <_AndroidAllowMissingGitStartCommit>false</_AndroidAllowMissingGitStartCommit>
       <_AndroidAllowMissingGitStartCommit Condition=" '$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)' != '' ">true</_AndroidAllowMissingGitStartCommit>
