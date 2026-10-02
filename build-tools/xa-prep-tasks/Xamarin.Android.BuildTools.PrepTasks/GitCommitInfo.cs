@@ -5,11 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Task = Microsoft.Build.Utilities.Task;
 
 using IOFile = System.IO.File;
 
@@ -271,24 +269,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 			using var p = Process.Start (si) ?? throw new InvalidOperationException ($"Could not start '{commandPath}'.");
 			using var readCancellation = new CancellationTokenSource ();
-			async System.Threading.Tasks.Task ReadOutputAsync ()
-			{
-				try {
-					await foreach (var line in p.ReadAllLinesAsync (readCancellation.Token).ConfigureAwait (false)) {
-						var destination = line.StandardError ? stderrLines : stdoutLines;
-						if (destination != null) {
-							destination.Add (line.Content);
-						} else {
-							(line.StandardError ? Console.Error : Console.Out).WriteLine (line.Content);
-						}
-					}
-				} catch {
-					p.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.Zero);
-					throw;
-				}
-			}
-
-			var output = ReadOutputAsync ();
+			var output = p.ReadAllLinesAsync (readCancellation.Token).ToListAsync (readCancellation.Token).AsTask ();
 			try {
 				var status = ProcessTimeout > 0
 					? p.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.FromSeconds (ProcessTimeout))
@@ -296,7 +277,10 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				if (status.Canceled) {
 					Log.LogWarning ($"Process '{commandPath} {string.Join (" ", arguments)}' failed to exit within {ProcessTimeout}s.");
 				}
-				output.WaitAsync (TimeSpan.FromSeconds (OutputTimeout <= 0 ? 1 : OutputTimeout)).GetAwaiter ().GetResult ();
+				var lines = output.WaitAsync (TimeSpan.FromSeconds (OutputTimeout <= 0 ? 1 : OutputTimeout)).GetAwaiter ().GetResult ();
+				foreach (var line in lines) {
+					(line.StandardError ? stderrLines : stdoutLines).Add (line.Content);
+				}
 				return status.Canceled ? -1 : status.ExitCode;
 			} catch (TimeoutException ex) {
 				Log.LogWarning (ex.Message);
