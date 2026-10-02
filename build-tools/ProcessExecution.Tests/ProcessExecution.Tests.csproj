@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <_AndroidProcessChildOutputDirectory>ProcessTestChild\bin\$(Configuration)\$(TargetFramework)\</_AndroidProcessChildOutputDirectory>
+    <_AndroidProcessChildExecutableExtension Condition=" '$(HostOS)' == 'Windows' ">.exe</_AndroidProcessChildExecutableExtension>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
+    <ProjectReference Include="ProcessTestChild\ProcessTestChild.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="ProcessTestChild\**\*.cs" />
+    <Compile Include="..\ProcessRunner.cs" Link="ProcessRunner.cs" />
+    <Compile Include="..\xa-prep-tasks\Xamarin.Android.BuildTools.PrepTasks\GitCommitInfo.cs" Link="GitCommitInfo.cs" />
+    <Compile Include="..\xa-prep-tasks\Xamarin.Android.BuildTools.PrepTasks\Which.cs" Link="Which.cs" />
+    <Compile Include="..\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks\CheckApiCompatibility.cs" Link="CheckApiCompatibility.cs" />
+    <Compile Include="..\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks\CodeGenDiff.cs" Link="CodeGenDiff.cs" />
+    <Compile Include="..\..\external\Java.Interop\tools\generator\Utilities\ProcessRocks.cs" Link="ProcessRocks.cs" />
+    <None Include="..\..\.github\skills\ci-status\scripts\ci_failures.cs" Link="Sources\ci_failures.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(_AndroidProcessChildOutputDirectory)ProcessTestChild.dll" Link="ProcessTestChild.dll" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(_AndroidProcessChildOutputDirectory)ProcessTestChild.runtimeconfig.json" Link="ProcessTestChild.runtimeconfig.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(_AndroidProcessChildOutputDirectory)ProcessTestChild$(_AndroidProcessChildExecutableExtension)" Link="ProcessTestChild$(_AndroidProcessChildExecutableExtension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

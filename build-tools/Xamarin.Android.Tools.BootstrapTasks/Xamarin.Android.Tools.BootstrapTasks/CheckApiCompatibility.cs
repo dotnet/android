@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Xamarin.Android.BuildTools;
 using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Tools.BootstrapTasks
@@ -209,38 +210,35 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					genApiProcess.StartInfo.CreateNoWindow = true;
 					genApiProcess.StartInfo.RedirectStandardOutput = true;
 					genApiProcess.StartInfo.RedirectStandardError = true;
-					genApiProcess.EnableRaisingEvents = true;
-
 					var lines = new List<string> ();
 					var processHasCrashed = false;
-					void dataReceived (object sender, DataReceivedEventArgs args)
+					void dataReceived (string data, bool standardError)
 					{
-						if (!string.IsNullOrWhiteSpace (args.Data)) {
-							lines.Add (args.Data.Trim ());
+						if (!string.IsNullOrWhiteSpace (data)) {
+							lines.Add (data.Trim ());
 
-							if (args.Data.IndexOf ("Native Crash Reporting", StringComparison.Ordinal) != -1) {
+							if (data.IndexOf ("Native Crash Reporting", StringComparison.Ordinal) != -1) {
 								processHasCrashed = true;
 							}
 						}
 					}
 
-					genApiProcess.OutputDataReceived += dataReceived;
-					genApiProcess.ErrorDataReceived += dataReceived;
-
 					// Get api definition for previous Api
 					compatApiCommand = $"CompatApi command: {genApiProcess.StartInfo.FileName} {genApiProcess.StartInfo.Arguments}";
 					Log.LogMessage (MessageImportance.High, compatApiCommand);
 
-					genApiProcess.Start ();
-					genApiProcess.BeginOutputReadLine ();
-					genApiProcess.BeginErrorReadLine ();
-
-					genApiProcess.WaitForExit ();
-
-					genApiProcess.CancelOutputRead ();
-					genApiProcess.CancelErrorRead ();
+					int exitCode;
+					try {
+						exitCode = ProcessRunner.Run (genApiProcess, dataReceived, TimeSpan.FromMinutes (5), TimeSpan.FromSeconds (30));
+					} catch (TimeoutException ex) {
+						LogError (ex.Message);
+						return;
+					}
 
 					if (lines.Count == 0) {
+						if (exitCode != 0) {
+							LogError ($"ApiCompat failed with exit code {exitCode}.");
+						}
 						return;
 					}
 
@@ -256,19 +254,15 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 						}
 					}
 
-					// It is expected to have at least one line of output form ApiCompat, if we don't have it, somethign wrong happened.
-					if (!lines.Any ()) {
-						LogError ($"Unable to run ApiCompat correctly. Argument values may be incorrectly.{Environment.NewLine}{compatApiCommand}");
-						return;
-					}
-
-					if (lines [0].Equals ("Total issues: 0", StringComparison.OrdinalIgnoreCase)) {
+					if (exitCode == 0 && lines [0].Equals ("Total issues: 0", StringComparison.OrdinalIgnoreCase)) {
 						Log.LogMessage (MessageImportance.High, lines [0]);
 						return;
 					}
 
 					LogError ($"CheckApiCompatibility found nonacceptable Api breakages for ApiLevel: {ApiLevel}.{Environment.NewLine}{string.Join (Environment.NewLine, lines)}");
-					ReportMissingLines (acceptableIssuesFile.FullName, lines);
+					if (acceptableIssuesFile != null) {
+						ReportMissingLines (acceptableIssuesFile.FullName, lines);
+					}
 
 					var missingItems = CodeGenDiff.GenerateMissingItems (CodeGenPath, contractAssembly.FullName, implementationAssembly.FullName, CreateTaskLogger (this));
 					if (missingItems.Any ()) {

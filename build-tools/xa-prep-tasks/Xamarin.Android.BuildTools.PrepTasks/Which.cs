@@ -162,20 +162,20 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			};
 			string curVersion = null;
 			using (var p = new Process { StartInfo = psi }) {
-				p.OutputDataReceived += (sender, e) => {
-					if (string.IsNullOrEmpty (e.Data) || curVersion != null)
+				int exitCode = ProcessRunner.Run (p, (line, standardError) => {
+					if (string.IsNullOrEmpty (line) || curVersion != null)
 						return;
-					var m = VersionMatch.Match (e.Data);
+					var m = VersionMatch.Match (line);
 					if (!m.Success)
 						return;
 					curVersion = m.Groups ["version"].Value;
-                                        if (!curVersion.Contains (".")) {
-                                                curVersion      += ".0";
-                                        }
-				};
-				p.Start ();
-				p.BeginOutputReadLine ();
-				p.WaitForExit ();
+					if (!curVersion.Contains (".")) {
+						curVersion += ".0";
+					}
+				}, TimeSpan.FromSeconds (30), TimeSpan.FromSeconds (30));
+				if (exitCode != 0) {
+					throw new InvalidOperationException ($"Version command '{command}' failed with exit code {exitCode}.");
+				}
 			}
 			return curVersion == null
 				? new Version ()
@@ -194,4 +194,3 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		}
 	}
 }
-

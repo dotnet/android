@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Xamarin.Android.BuildTools;
 
 namespace Xamarin.Android.Tools.BootstrapTasks
 {
@@ -80,14 +81,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				genApiProcess.StartInfo.CreateNoWindow = true;
 				genApiProcess.StartInfo.RedirectStandardOutput = true;
 				genApiProcess.StartInfo.RedirectStandardError = true;
-				genApiProcess.EnableRaisingEvents = true;
-
-				var line = 0;
-
-				void dataReceived (object sender, DataReceivedEventArgs args)
+				void dataReceived (string data, bool standardError)
 				{
-					line++;
-					var content = args.Data?.Trim ();
+					var content = data.Trim ();
 
 					if (string.IsNullOrWhiteSpace (content) || content.StartsWith ("//", StringComparison.OrdinalIgnoreCase) || content.StartsWith ("Unable to resolve assembly", StringComparison.OrdinalIgnoreCase)) {
 						return;
@@ -153,18 +149,10 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				}
 
 
-				genApiProcess.OutputDataReceived += dataReceived;
-				genApiProcess.ErrorDataReceived += dataReceived;
-
-				genApiProcess.Start ();
-				genApiProcess.BeginOutputReadLine ();
-				genApiProcess.BeginErrorReadLine ();
-
-				genApiProcess.WaitForExit ();
-
-				genApiProcess.CancelOutputRead ();
-				genApiProcess.CancelErrorRead ();
-
+				int exitCode = ProcessRunner.Run (genApiProcess, dataReceived, TimeSpan.FromMinutes (5), TimeSpan.FromSeconds (30));
+				if (exitCode != 0) {
+					throw new InvalidOperationException ($"GenAPI failed with exit code {exitCode} for '{assembly}'.");
+				}
 			}
 
 			return currentObject;

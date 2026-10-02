@@ -11,6 +11,8 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 const string ORG = "https://dev.azure.com/dnceng-public";
 const string PROJECT = "public";
@@ -335,13 +337,47 @@ static (int code, string stdout, string stderr) Run (string file, params string 
 	};
 	foreach (var a in cliArgs)
 		psi.ArgumentList.Add (a);
+	return CaptureCommand (psi, TimeSpan.FromMinutes (5));
+}
+
+static (int code, string stdout, string stderr) CaptureCommand (ProcessStartInfo psi, TimeSpan timeout)
+{
+	using var cancellation = new CancellationTokenSource (timeout);
 	using var proc = Process.Start (psi);
 	if (proc is null)
-		return (-1, "", $"failed to start {file}");
-	string stdout = proc.StandardOutput.ReadToEnd ();
-	string stderr = proc.StandardError.ReadToEnd ();
-	proc.WaitForExit ();
-	return (proc.ExitCode, stdout, stderr);
+		return (-1, "", $"failed to start {psi.FileName}");
+	using var stdoutReader = proc.StandardOutput;
+	using var stderrReader = proc.StandardError;
+	var stdout = stdoutReader.ReadToEndAsync (cancellation.Token);
+	var stderr = stderrReader.ReadToEndAsync (cancellation.Token);
+	var readers = Task.WhenAll (stdout, stderr);
+	var exit = proc.WaitForExitAsync (cancellation.Token);
+	try {
+		Task.WhenAny (exit, readers).GetAwaiter ().GetResult ();
+		if (readers.IsCompleted)
+			readers.GetAwaiter ().GetResult ();
+		Task.WhenAll (exit, readers).GetAwaiter ().GetResult ();
+		return (proc.ExitCode, stdout.GetAwaiter ().GetResult (), stderr.GetAwaiter ().GetResult ());
+	} catch (OperationCanceledException ex) when (cancellation.IsCancellationRequested) {
+		throw new TimeoutException ($"'{psi.FileName}' did not complete within {timeout}.", ex);
+	} finally {
+		cancellation.Cancel ();
+		try {
+			if (!proc.HasExited) {
+				try {
+					proc.Kill (entireProcessTree: true);
+				} catch (InvalidOperationException) when (proc.HasExited) {
+				}
+				if (!proc.WaitForExit (5000))
+					throw new TimeoutException ($"'{psi.FileName}' did not exit after being killed.");
+			}
+		} finally {
+			try {
+				Task.WhenAll (exit, readers).WaitAsync (TimeSpan.FromSeconds (5)).GetAwaiter ().GetResult ();
+			} catch (OperationCanceledException) when (cancellation.IsCancellationRequested) {
+			}
+		}
+	}
 }
 
 static JsonArray GetArray (JsonNode? root, string key)
