@@ -84,6 +84,10 @@ Device: No
 | **dependencies** | `--filter "FullyQualifiedName~AndroidDependenciesTests"` | Android SDK/NDK dependency resolution |
 | **trimmable type map (build)** | `--filter "FullyQualifiedName~TrimmableTypeMapBuildTests"` | Trimmable type map build integration |
 
+The Builder/DotNetCLI high-volume logging cases run on all host platforms.
+Only shell-script-dependent cases exclude Windows. APK diff coverage verifies raw
+partial diagnostics and the completed process status when the separate EOF deadline expires.
+
 ### Task-level unit tests
 
 Same assembly as above. These test individual MSBuild tasks in isolation with `MockBuildEngine`.

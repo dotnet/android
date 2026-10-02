@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Xamarin.ProjectTools
 {
@@ -18,6 +20,11 @@ namespace Xamarin.ProjectTools
 
 		public bool Execute (params string [] args)
 		{
+			return ExecuteAsync (args).GetAwaiter ().GetResult ();
+		}
+
+		async Task<bool> ExecuteAsync (string [] args)
+		{
 			if (!File.Exists (GradlePath)) {
 				throw new FileNotFoundException ($"Gradle tool was not found at {GradlePath}.");
 			}
@@ -28,43 +35,59 @@ namespace Xamarin.ProjectTools
 			}
 
 			var procOutput = new StringBuilder ();
-			bool succeeded;
-
-			using (var p = new Process ()) {
-				p.StartInfo.FileName = GradlePath;
-				p.StartInfo.Arguments = string.Join (" ", args);
-				p.StartInfo.Arguments += $" --no-daemon";
-
-				p.StartInfo.CreateNoWindow = true;
-				p.StartInfo.UseShellExecute = false;
-				p.StartInfo.RedirectStandardOutput = true;
-				p.StartInfo.RedirectStandardError = true;
-				p.StartInfo.SetEnvironmentVariable ("JAVA_HOME", JavaSdkPath);
-
-				if (Directory.Exists (ProjectDirectory)) {
-					p.StartInfo.WorkingDirectory = ProjectDirectory;
-				};
-
-				p.ErrorDataReceived += (sender, e) => {
-					if (e.Data != null) {
-						procOutput.AppendLine (e.Data);
+			var psi = new ProcessStartInfo (GradlePath, string.Join (" ", args) + " --no-daemon") {
+				CreateNoWindow = true,
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				InheritedHandles = [],
+			};
+			psi.Environment ["JAVA_HOME"] = JavaSdkPath;
+			if (Directory.Exists (ProjectDirectory))
+				psi.WorkingDirectory = ProjectDirectory;
+			procOutput.AppendLine ($"Running: {psi.FileName} {psi.Arguments}");
+			bool succeeded = false;
+			using var executionDeadline = new CancellationTokenSource (TimeSpan.FromMinutes (5));
+			using var outputDeadline = CancellationTokenSource.CreateLinkedTokenSource (executionDeadline.Token);
+			using var process = Process.Start (psi) ?? throw new InvalidOperationException ($"Failed to start '{GradlePath}'.");
+			async Task LimitOutputDrainAsync ()
+			{
+				await process.WaitForExitAsync (executionDeadline.Token).ConfigureAwait (false);
+				executionDeadline.CancelAfter (Timeout.InfiniteTimeSpan);
+				outputDeadline.CancelAfter (TimeSpan.FromSeconds (2));
+			}
+			var exited = LimitOutputDrainAsync ();
+			try {
+				await foreach (var line in process.ReadAllLinesAsync (outputDeadline.Token).ConfigureAwait (false))
+					procOutput.AppendLine (line.Content);
+				await exited.ConfigureAwait (false);
+				succeeded = process.ExitCode == 0;
+			} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
+				procOutput.AppendLine ("Process timed out after 5 minutes.");
+			} catch (OperationCanceledException) when (outputDeadline.IsCancellationRequested) {
+				procOutput.AppendLine ("Process exited with redirected output still open after 2 seconds.");
+				succeeded = process.ExitCode == 0;
+			} finally {
+				using var stdoutReader = process.StandardOutput;
+				using var stderrReader = process.StandardError;
+				executionDeadline.Cancel ();
+				try {
+					await exited.ConfigureAwait (false);
+				} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
+					// The execution deadline owns this exit observer.
+				}
+				if (!process.HasExited) {
+					try {
+						process.Kill (entireProcessTree: true);
+					} catch (InvalidOperationException) when (process.HasExited) {
+						// The process exited before the kill request.
 					}
-				};
-				p.ErrorDataReceived += (sender, e) => {
-					if (e.Data != null) {
-						procOutput.AppendLine (e.Data);
-					}
-				};
-
-				procOutput.AppendLine ($"Running: {p.StartInfo.FileName} {p.StartInfo.Arguments}");
-				p.Start ();
-				p.BeginOutputReadLine ();
-				p.BeginErrorReadLine ();
-				bool completed = p.WaitForExit ((int) new TimeSpan (0, 5, 0).TotalMilliseconds);
-				succeeded = completed && p.ExitCode == 0;
-				procOutput.AppendLine ($"Exit Code: {p.ExitCode}");
+					if (!process.WaitForExit (30000))
+						throw new TimeoutException ($"Process {process.Id} did not exit after termination.");
+				}
 			}
 
+			procOutput.AppendLine ($"Exit Code: {process.ExitCode}");
 			File.WriteAllText (ProcessLogFile, procOutput.ToString ());
 			return succeeded;
 		}
