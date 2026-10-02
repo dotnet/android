@@ -2,18 +2,3 @@
     path = external/android-api-docs
     url = https://github.com/dotnet/android-api-docs
     branch = main
-[submodule "external/constexpr-xxh3"]
-    path = external/constexpr-xxh3
-    url = https://github.com/chys87/constexpr-xxh3.git
-    branch = main
-[submodule "external/robin-map"]
-    path = external/robin-map
-    url = https://github.com/xamarin/robin-map
-    branch = master
-[submodule "external/xxHash"]
-    path = external/xxHash
-    url = https://github.com/Cyan4973/xxHash.git
-    branch = release
-[submodule "external/termux-elf-cleaner"]
-	path = external/termux-elf-cleaner
-	url = https://github.com/termux/termux-elf-cleaner

@@ -91,6 +91,7 @@ void Host::OnInit (jstring_wrapper &language, jstring_wrapper &files_dir, jstrin
 		}
 		abort_unless (false, "Failed to create a global reference for net/dot/jni/GCUserPeerable");
 	}
+	initArgs->jniRemappingData = &jni_remapping_data;
 	initArgs->grefLogPath = Logger::gref_log_path ();
 	initArgs->lrefLogPath = Logger::lref_log_path ();
 	initArgs->referenceLogDirectory = Logger::reference_log_directory ();

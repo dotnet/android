@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <stdlib.h>
 
+#include <managed-interface.hh>
 #include <xamarin-app.hh>
 
 // This file MUST have "valid" values everywhere - the DSO it is compiled into is loaded by the
@@ -151,6 +152,7 @@ static const JniRemappingIndexMethodEntry some_java_type_one_methods[] = {
 		.replacement = {
 			.target_type = "some/java/target_type_one",
 			.target_name = "new_method_name",
+			.target_signature = nullptr,
 			.is_static = false,
 		}
 	},
@@ -171,6 +173,7 @@ static const JniRemappingIndexMethodEntry some_java_type_two_methods[] = {
 		.replacement = {
 			.target_type = "some/java/target_type_two",
 			.target_name = "new_method_name",
+			.target_signature = nullptr,
 			.is_static = true,
 		}
 	},
@@ -212,6 +215,17 @@ const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[] = {
 		},
 		.replacement = "another/replacement/java/type",
 	},
+};
+
+extern "C" const xamarin::android::JniRemappingData jni_remapping_data {
+	.type_replacements = jni_remapping_type_replacements,
+	.reverse_type_replacements = nullptr,
+	.method_replacement_index = jni_remapping_method_replacement_index,
+	.field_replacement_index = nullptr,
+	.type_replacement_count = 2,
+	.reverse_type_replacement_count = 0,
+	.method_replacement_index_count = 2,
+	.field_replacement_index_count = 0,
 };
 
 const char *init_runtime_property_names[] = {

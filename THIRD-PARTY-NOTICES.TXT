@@ -12,24 +12,21 @@ implication, estoppel or otherwise.
 1.  Android API documentation (https://developer.android.com/license)
 2.  android/platform/tools/base (https://android.googlesource.com/platform/tools/base/+/refs/heads/main/sdk-common/NOTICE)
 3.  brutaldev/StrongNameSigner (https://github.com/brutaldev/StrongNameSigner/)
-4.  chys87/constexpr-xxh3 (https://github.com/chys87/constexpr-xxh3/)
-5.  Cyan4973/xxHash (https://github.com/Cyan4973/xxHash/)
-6.  dotnet/java-interop (https://github.com/dotnet/java-interop/)
-7.  force-net/crc32.net (https://github.com/force-net/Crc32.NET)
-8.  gnu/binutils (https://sourceware.org/git/?p=binutils-gdb.git;a=tree;hb=HEAD)
-9.  google/aapt2 (https://mvnrepository.com/artifact/com.android.tools.build/aapt2)
-10.  google/bionic (https://android.googlesource.com/platform/bionic/)
-11. google/bundletool (https://github.com/google/bundletool)
-12. google/r8 (https://r8.googlesource.com/r8/)
-13. IronyProject/Irony (https://github.com/IronyProject/Irony)
-14. JamesNK/Newtonsoft.Json (https://github.com/JamesNK/Newtonsoft.Json)
-15. KonradKuczynski/ELFSharp (https://elfsharp.it/)
-16. lovettchris/SgmlReader (https://github.com/lovettchris/SgmlReader/)
-17. MiloszKrajewski/K4os.Compression.LZ4 (https://github.com/MiloszKrajewski/K4os.Compression.LZ4/)
-18. mono/cecil (https://github.com/mono/cecil/)
-19. mono/linker (https://github.com/mono/linker/)
-20. NuGet/NuGet.Client (https://github.com/NuGet/NuGet.Client)
-21. tessil/robin-map (https://github.com/Tessil/robin-map)
+4.  dotnet/java-interop (https://github.com/dotnet/java-interop/)
+5.  force-net/crc32.net (https://github.com/force-net/Crc32.NET)
+6.  gnu/binutils (https://sourceware.org/git/?p=binutils-gdb.git;a=tree;hb=HEAD)
+7.  google/aapt2 (https://mvnrepository.com/artifact/com.android.tools.build/aapt2)
+8.  google/bionic (https://android.googlesource.com/platform/bionic/)
+9. google/bundletool (https://github.com/google/bundletool)
+10. google/r8 (https://r8.googlesource.com/r8/)
+11. IronyProject/Irony (https://github.com/IronyProject/Irony)
+12. JamesNK/Newtonsoft.Json (https://github.com/JamesNK/Newtonsoft.Json)
+13. KonradKuczynski/ELFSharp (https://elfsharp.it/)
+14. lovettchris/SgmlReader (https://github.com/lovettchris/SgmlReader/)
+15. MiloszKrajewski/K4os.Compression.LZ4 (https://github.com/MiloszKrajewski/K4os.Compression.LZ4/)
+16. mono/cecil (https://github.com/mono/cecil/)
+17. mono/linker (https://github.com/mono/linker/)
+18. NuGet/NuGet.Client (https://github.com/NuGet/NuGet.Client)
 
 %% Android API documentation NOTICES AND INFORMATION BEGIN HERE
 ================================================================
@@ -649,74 +646,6 @@ and limitations under the License.
 
 ================================================================
 END OF brutaldev/StrongNameSigner NOTICES AND INFORMATION
-
-
-%% chys87/constexpr-xxh3 NOTICES AND INFORMATION BEGIN HERE
-===========================================================
-BSD 2-Clause License
-
-constexpr-xxh3 - C++20 constexpr implementation of the XXH3 64-bit variant of xxHash
-Copyright (c) 2021-2023, chys <admin@chys.info> <chys87@github>
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-===========================================================
-END OF chys87/constexpr-xxh3 NOTICES AND INFORMATION
-
-
-%% Cyan4973/xxHash NOTICES AND INFORMATION BEGIN HERE
-=====================================================
-xxHash Library
-Copyright (c) 2012-2021 Yann Collet
-All rights reserved.
-
-BSD 2-Clause License (https://www.opensource.org/licenses/bsd-license.php)
-
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright notice, this
-  list of conditions and the following disclaimer in the documentation and/or
-  other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-=====================================================
-END OF Cyan4973/xxHash NOTICES AND INFORMATION
 
 
 %% dotnet/java-interop NOTICES AND INFORMATION BEGIN HERE
@@ -2360,33 +2289,3 @@ Copyright (c) .NET Foundation and Contributors.
 
 ========================================================
 END OF NuGet/NuGet.Client NOTICES AND INFORMATION
-
-
-
-%% tessil/robin-map NOTICES AND INFORMATION BEGIN HERE
-======================================================
-MIT License
-
-Copyright (c) 2017 Thibaut Goetghebuer-Planchon <tessil@gmx.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-
-======================================================
-END OF tessil/robin-map NOTICES AND INFORMATION
