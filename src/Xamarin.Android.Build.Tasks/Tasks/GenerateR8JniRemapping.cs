@@ -121,7 +121,7 @@ namespace Xamarin.Android.Tasks
 						LogR8JniRemappingError (string.Format (Properties.Resources.XA4325_AssemblyHasNoMetadata, path));
 						continue;
 					}
-					JniRemappingAssemblyScanner.Scan (peReader, peReader.GetMetadataReader (), mapping, Log);
+					JniRemappingAssemblyScanner.Scan (peReader.GetMetadataReader (), mapping, Log);
 				} catch (BadImageFormatException ex) {
 					LogR8JniRemappingError (string.Format (Properties.Resources.XA4325_AssemblyReadFailure, path, ex.Message));
 				} catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) {

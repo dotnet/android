@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
@@ -40,7 +41,7 @@ namespace Xamarin.Android.Build.Tests
 			using var stream = File.OpenRead (path);
 			using var peReader = new PEReader (stream);
 			var reader = peReader.GetMetadataReader ();
-			JniRemappingAssemblyScanner.Scan (peReader, reader, mapping, new TaskLoggingHelper (task));
+			JniRemappingAssemblyScanner.Scan (reader, mapping, new TaskLoggingHelper (task));
 
 			CollectionAssert.AreEquivalent (new [] {
 				"C\tcom/contoso/Peer",
@@ -50,12 +51,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void JavaPeerProxyRetainsItsGeneratedMappings ()
+		public void TypeMapAttributeRetainsGeneratedMappings ()
 		{
 			string directory = Path.Combine (Root, "temp", TestName);
 			string path = Path.Combine (directory, "TypeMap.dll");
 			Directory.CreateDirectory (directory);
-			CreateProxyFixture (path);
+			CreateTypeMapFixture (path);
 
 			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
 				com.contoso.ProxyPeer -> a.b:
@@ -69,13 +70,75 @@ namespace Xamarin.Android.Build.Tests
 
 			using var stream = File.OpenRead (path);
 			using var peReader = new PEReader (stream);
-			JniRemappingAssemblyScanner.Scan (peReader, peReader.GetMetadataReader (), mapping, new TaskLoggingHelper (task));
+			JniRemappingAssemblyScanner.Scan (peReader.GetMetadataReader (), mapping, new TaskLoggingHelper (task));
 
 			CollectionAssert.AreEquivalent (new [] {
 				"C\tcom/contoso/ProxyPeer",
 				"M\tcom/contoso/ProxyPeer\tcallback():void",
 				"F\tcom/contoso/ProxyPeer\tvalue",
 			}, mapping.AccessedEntries);
+		}
+
+		[TestCase ("com/contoso/ProxyPeer[+1]", true)]
+		[TestCase ("com/contoso/ProxyPeer[ 1]", true)]
+		[TestCase ("com/contoso/ProxyPeer[1]", false)]
+		public void TypeMapAttributeValidatesAliasSuffix (string key, bool throws)
+		{
+			string directory = Path.Combine (Root, "temp", TestName);
+			string path = Path.Combine (directory, "TypeMap.dll");
+			Directory.CreateDirectory (directory);
+			CreateTypeMapFixture (path, key);
+			R8Mapping mapping = R8Mapping.Parse (new StringReader ("com.contoso.ProxyPeer -> a.b:\n"));
+			var task = new GenerateR8JniRemapping {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+			};
+
+			using var stream = File.OpenRead (path);
+			using var peReader = new PEReader (stream);
+			void Scan () => JniRemappingAssemblyScanner.Scan (peReader.GetMetadataReader (), mapping, new TaskLoggingHelper (task));
+
+			if (throws) {
+				Assert.Throws<BadImageFormatException> (Scan);
+			} else {
+				Assert.DoesNotThrow (Scan);
+			}
+		}
+
+		[Test]
+		public void TypeMapAttributeValidatesConstructorSignature ()
+		{
+			string directory = Path.Combine (Root, "temp", TestName);
+			string path = Path.Combine (directory, "TypeMap.dll");
+			Directory.CreateDirectory (directory);
+			CreateTypeMapFixture (path, "com/contoso/ProxyPeer", includeTypeArgument: false);
+			R8Mapping mapping = R8Mapping.Parse (new StringReader ("com.contoso.ProxyPeer -> a.b:\n"));
+			var task = new GenerateR8JniRemapping {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+			};
+
+			using var stream = File.OpenRead (path);
+			using var peReader = new PEReader (stream);
+			Assert.Throws<BadImageFormatException> (() =>
+				JniRemappingAssemblyScanner.Scan (peReader.GetMetadataReader (), mapping, new TaskLoggingHelper (task)));
+		}
+
+		[Test]
+		public void IgnoresUserDefinedTypeMapAttribute ()
+		{
+			string directory = Path.Combine (Root, "temp", TestName);
+			string path = Path.Combine (directory, "TypeMap.dll");
+			Directory.CreateDirectory (directory);
+			CreateUserTypeMapFixture (path);
+			R8Mapping mapping = R8Mapping.Parse (new StringReader ("com.contoso.ProxyPeer -> a.b:\n"));
+			var task = new GenerateR8JniRemapping {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+			};
+
+			using var stream = File.OpenRead (path);
+			using var peReader = new PEReader (stream);
+			Assert.DoesNotThrow (() =>
+				JniRemappingAssemblyScanner.Scan (peReader.GetMetadataReader (), mapping, new TaskLoggingHelper (task)));
+			CollectionAssert.IsEmpty (mapping.AccessedEntries);
 		}
 
 		static void CreateFixture (string path)
@@ -107,27 +170,87 @@ namespace Xamarin.Android.Build.Tests
 			assembly.Write (path);
 		}
 
-		static void CreateProxyFixture (string path)
+		static void CreateTypeMapFixture (string path, string key = "com/contoso/ProxyPeer[1]", bool includeTypeArgument = true)
 		{
 			using var assembly = Cecil.AssemblyDefinition.CreateAssembly (
 				new Cecil.AssemblyNameDefinition ("TypeMap", new System.Version (1, 0)),
 				"TypeMap",
 				Cecil.ModuleKind.Dll);
 			Cecil.ModuleDefinition module = assembly.MainModule;
-			var proxyBase = new Cecil.TypeReference ("Java.Interop", "JavaPeerProxy", module, module.TypeSystem.CoreLibrary);
-			var proxy = new Cecil.TypeDefinition ("Generated", "ProxyPeer",
-				Cecil.TypeAttributes.Public | Cecil.TypeAttributes.Sealed | Cecil.TypeAttributes.Class,
-				proxyBase);
-			module.Types.Add (proxy);
+			var systemRuntime = new Cecil.AssemblyNameReference ("System.Runtime", new Version (11, 0, 0, 0));
+			var systemRuntimeInteropServices = new Cecil.AssemblyNameReference ("System.Runtime.InteropServices", new Version (11, 0, 0, 0));
+			module.AssemblyReferences.Add (systemRuntime);
+			module.AssemblyReferences.Add (systemRuntimeInteropServices);
+			var attributeType = new Cecil.TypeReference (
+				"System.Runtime.InteropServices",
+				"TypeMapAttribute`1",
+				module,
+				systemRuntimeInteropServices);
+			var closedAttribute = new Cecil.GenericInstanceType (attributeType);
+			var systemObject = new Cecil.TypeReference ("System", "Object", module, systemRuntime);
+			var systemType = new Cecil.TypeReference ("System", "Type", module, systemRuntime);
+			closedAttribute.GenericArguments.Add (systemObject);
+			var constructor = new Cecil.MethodReference (".ctor", module.TypeSystem.Void, closedAttribute) {
+				HasThis = true,
+			};
+			constructor.Parameters.Add (new Cecil.ParameterDefinition (module.TypeSystem.String));
+			if (includeTypeArgument) {
+				constructor.Parameters.Add (new Cecil.ParameterDefinition (systemType));
+			}
+			var attribute = new Cecil.CustomAttribute (constructor);
+			attribute.ConstructorArguments.Add (new Cecil.CustomAttributeArgument (module.TypeSystem.String, key));
+			if (includeTypeArgument) {
+				attribute.ConstructorArguments.Add (new Cecil.CustomAttributeArgument (
+					systemType,
+					systemObject));
+			}
+			assembly.CustomAttributes.Add (attribute);
+			assembly.Write (path);
+		}
 
-			var constructor = new Cecil.MethodDefinition (".ctor",
+		static void CreateUserTypeMapFixture (string path)
+		{
+			using var assembly = Cecil.AssemblyDefinition.CreateAssembly (
+				new Cecil.AssemblyNameDefinition ("TypeMap", new Version (1, 0)),
+				"TypeMap",
+				Cecil.ModuleKind.Dll);
+			Cecil.ModuleDefinition module = assembly.MainModule;
+			var attribute = new Cecil.TypeDefinition (
+				"System.Runtime.InteropServices",
+				"TypeMapAttribute`1",
+				Cecil.TypeAttributes.Public | Cecil.TypeAttributes.Class,
+				module.ImportReference (typeof (Attribute)));
+			attribute.GenericParameters.Add (new Cecil.GenericParameter ("T", attribute));
+			module.Types.Add (attribute);
+			var constructor = new Cecil.MethodDefinition (
+				".ctor",
 				Cecil.MethodAttributes.Public | Cecil.MethodAttributes.SpecialName | Cecil.MethodAttributes.RTSpecialName,
 				module.TypeSystem.Void);
+			constructor.Parameters.Add (new Cecil.ParameterDefinition (module.TypeSystem.String));
+			constructor.Parameters.Add (new Cecil.ParameterDefinition (module.ImportReference (typeof (Type))));
 			var il = constructor.Body.GetILProcessor ();
-			il.Append (Instruction.Create (OpCodes.Ldstr, "com/contoso/ProxyPeer"));
-			il.Append (Instruction.Create (OpCodes.Pop));
+			il.Append (Instruction.Create (OpCodes.Ldarg_0));
+			il.Append (Instruction.Create (OpCodes.Call, module.ImportReference (typeof (Attribute).GetConstructor (
+				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
+				null,
+				Type.EmptyTypes,
+				null))));
 			il.Append (Instruction.Create (OpCodes.Ret));
-			proxy.Methods.Add (constructor);
+			attribute.Methods.Add (constructor);
+
+			var closedAttribute = new Cecil.GenericInstanceType (attribute);
+			closedAttribute.GenericArguments.Add (module.TypeSystem.Object);
+			var constructorRef = new Cecil.MethodReference (".ctor", module.TypeSystem.Void, closedAttribute) {
+				HasThis = true,
+			};
+			constructorRef.Parameters.Add (new Cecil.ParameterDefinition (module.TypeSystem.String));
+			constructorRef.Parameters.Add (new Cecil.ParameterDefinition (module.ImportReference (typeof (Type))));
+			var customAttribute = new Cecil.CustomAttribute (constructorRef);
+			customAttribute.ConstructorArguments.Add (new Cecil.CustomAttributeArgument (module.TypeSystem.String, "com/contoso/ProxyPeer"));
+			customAttribute.ConstructorArguments.Add (new Cecil.CustomAttributeArgument (
+				module.ImportReference (typeof (Type)),
+				module.TypeSystem.Object));
+			assembly.CustomAttributes.Add (customAttribute);
 			assembly.Write (path);
 		}
 
