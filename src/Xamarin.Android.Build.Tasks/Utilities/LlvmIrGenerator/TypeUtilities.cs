@@ -156,7 +156,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public static Type GetArrayElementType (this Type type)
 		{
 			if (type.IsArray) {
-				return type.GetElementType ();
+				return type.GetElementType () ?? throw WrongTypeException ();
 			}
 
 			if (!type.IsGenericType) {

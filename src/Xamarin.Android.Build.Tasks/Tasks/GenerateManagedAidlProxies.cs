@@ -66,7 +66,7 @@ namespace Xamarin.Android.Tasks
 					var dst = Path.GetFullPath (Path.Combine (outPath, Path.ChangeExtension (file, ".cs")));
 					if (!dst.StartsWith (outPath, StringComparison.OrdinalIgnoreCase))
 						dst = Path.Combine (outPath, Path.ChangeExtension (Path.GetFileName (file), ".cs"));
-					string dstdir = Path.GetDirectoryName (dst);
+					string dstdir = Path.GetDirectoryName (dst) ?? throw new InvalidOperationException ($"AIDL output path has no directory: {dst}");
 					if (!Directory.Exists (dstdir))
 						Directory.CreateDirectory (dstdir);
 					fsw.WriteLine (dst);

@@ -14,7 +14,7 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "DJL";
 
 		[Required]
-		public ITaskItem[]? MonoPlatformJarPaths { get; set; }
+		public ITaskItem[] MonoPlatformJarPaths { get; set; } = [];
 
 		public ITaskItem[]? JavaSourceFiles { get; set; }
 
@@ -81,8 +81,10 @@ namespace Xamarin.Android.Tasks
 	class TaskItemComparer : IEqualityComparer<ITaskItem> {
 		public static readonly TaskItemComparer     DefaultComparer     = new TaskItemComparer ();
 
-		public bool Equals (ITaskItem a, ITaskItem b)
+		public bool Equals (ITaskItem? a, ITaskItem? b)
 		{
+			if (a == null || b == null)
+				return ReferenceEquals (a, b);
 			return string.Compare (a.ItemSpec, b.ItemSpec, StringComparison.OrdinalIgnoreCase) == 0;
 		}
 

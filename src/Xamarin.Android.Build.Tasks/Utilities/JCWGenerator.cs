@@ -232,7 +232,7 @@ class JCWGenerator
 
 			logger.LogDebugMessage ($"Comparing marshal method '{key}' in architecture '{templateState.TargetArch}', with {methods.Count} overloads, against architecture '{state.TargetArch}'");
 
-			if (!templateClassifier.MarshalMethods.TryGetValue (key, out IList<MarshalMethodEntry> templateMethods)) {
+			if (!templateClassifier.MarshalMethods.TryGetValue (key, out var templateMethods)) {
 				logger.LogDebugMessage ($"Architecture '{state.TargetArch}' has marshal method '{key}' which does not exist in architecture '{templateState.TargetArch}'");
 				foundMismatches = true;
 				continue;

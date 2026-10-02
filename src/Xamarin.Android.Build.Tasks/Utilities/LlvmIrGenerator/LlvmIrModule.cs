@@ -132,7 +132,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				functions = new Dictionary<LlvmIrFunction, LlvmIrFunction> ();
 			}
 
-			if (functions.TryGetValue (func, out LlvmIrFunction existingFunc)) {
+			if (functions.TryGetValue (func, out var existingFunc)) {
 				throw new InvalidOperationException ($"Internal error: identical function has already been added (\"{func.Signature.Name}\")");
 			}
 
@@ -629,7 +629,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				attributeSets = new Dictionary<LlvmIrFunctionAttributeSet, LlvmIrFunctionAttributeSet> ();
 			}
 
-			if (attributeSets.TryGetValue (attrSet, out LlvmIrFunctionAttributeSet existingSet)) {
+			if (attributeSets.TryGetValue (attrSet, out var existingSet)) {
 				return existingSet;
 			}
 			attrSet.Number = (uint)attributeSets.Count;
@@ -649,7 +649,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				externalFunctions = new Dictionary<LlvmIrFunction, LlvmIrFunction> ();
 			}
 
-			if (externalFunctions.TryGetValue (func, out LlvmIrFunction existingFunc)) {
+			if (externalFunctions.TryGetValue (func, out var existingFunc)) {
 				return existingFunc;
 			}
 
@@ -681,7 +681,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				throw new InvalidOperationException ($"{t} must be a class or a struct");
 			}
 
-			if (structures.TryGetValue (t, out StructureInfo sinfo)) {
+			if (structures.TryGetValue (t, out var sinfo)) {
 				return (StructureInfo)sinfo;
 			}
 

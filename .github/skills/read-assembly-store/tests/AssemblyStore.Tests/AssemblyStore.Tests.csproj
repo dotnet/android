@@ -3,7 +3,7 @@
   <Import Project="..\..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(DotNetStableTargetFramework);$(DotNetTargetFramework)</TargetFrameworks>
+    <TargetFramework>net11.0</TargetFramework>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <RootNamespace>Xamarin.Android.AssemblyStore.Tests</RootNamespace>

@@ -46,8 +46,10 @@ namespace Android.App {
 		internal class UsesPermissionComparer : IEqualityComparer<UsesPermissionAttribute>
 		{
 			#region IEqualityComparer<UsesPermissionAttribute> Members
-			public bool Equals (UsesPermissionAttribute x, UsesPermissionAttribute y)
+			public bool Equals (UsesPermissionAttribute? x, UsesPermissionAttribute? y)
 			{
+				if (x == null || y == null)
+					return ReferenceEquals (x, y);
 				return x.Name == y.Name;
 			}
 

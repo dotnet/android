@@ -158,7 +158,7 @@ namespace Xamarin.Android.Tools
 
 		string RequireExecutableInDirectory (string binPath, string fileName)
 		{
-			var file = ProcessUtils.FindExecutablesInDirectory (binPath, fileName).FirstOrDefault ();
+			var file = FileUtil.FindExecutablesInDirectory (binPath, fileName).FirstOrDefault ();
 
 			ValidateFile (fileName, file);
 
@@ -237,7 +237,7 @@ namespace Xamarin.Android.Tools
 		{
 			return GetJavaProperties (
 					logger,
-					ProcessUtils.FindExecutablesInDirectory (Path.Combine (HomePath, "bin"), "java").First ());
+					FileUtil.FindExecutablesInDirectory (Path.Combine (HomePath, "bin"), "java").First ());
 		}
 
 		static bool AnySystemJavasInstalled ()
@@ -262,6 +262,10 @@ namespace Xamarin.Android.Tools
 			var javaProps   = new ProcessStartInfo {
 				FileName    = java,
 				Arguments   = "-XshowSettings:properties -version",
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				CreateNoWindow = true,
 			};
 
 			var     props   = new Dictionary<string, List<string>> ();
@@ -275,42 +279,45 @@ namespace Xamarin.Android.Tools
 			const string PropertySettings = "Property settings:";
 
 			try {
-				ProcessUtils.Exec (javaProps, (o, e) => {
+				var result = Process.RunAndCaptureText (javaProps, TimeSpan.FromSeconds (30));
+				if (result.ExitStatus.Canceled)
+					throw new TimeoutException ($"Timed out retrieving Java properties from '{java}'.");
+				using var reader = new StringReader (result.StandardOutput + Environment.NewLine + result.StandardError);
+				string? line;
+				while ((line = reader.ReadLine ()) != null) {
 					const string ContinuedValuePrefix   = "        ";
 					const string NewValuePrefix         = "    ";
 					const string NameValueDelim         = " = ";
-					lock (output) {
-						output.AppendLine (e.Data);
-					}
-					if (string.IsNullOrEmpty (e.Data))
-						return;
-					if (e.Data.StartsWith (PropertySettings, StringComparison.Ordinal)) {
+					output.AppendLine (line);
+					if (string.IsNullOrEmpty (line))
+						continue;
+					if (line.StartsWith (PropertySettings, StringComparison.Ordinal)) {
 						foundPS = true;
-						return;
+						continue;
 					}
 					if (!foundPS) {
-						return;
+						continue;
 					}
-					if (e.Data.StartsWith (ContinuedValuePrefix, StringComparison.Ordinal)) {
+					if (line.StartsWith (ContinuedValuePrefix, StringComparison.Ordinal)) {
 						if (curKey == null) {
-							logger (TraceLevel.Error, $"No Java property previously seen for continued value `{e.Data}`.");
-							return;
+							logger (TraceLevel.Error, $"No Java property previously seen for continued value `{line}`.");
+							continue;
 						}
-						props [curKey].Add (e.Data.Substring (ContinuedValuePrefix.Length));
-						return;
+						props [curKey].Add (line.Substring (ContinuedValuePrefix.Length));
+						continue;
 					}
-					if (e.Data.StartsWith (NewValuePrefix, StringComparison.Ordinal)) {
-						var delim = e.Data.IndexOf (NameValueDelim, StringComparison.Ordinal);
+					if (line.StartsWith (NewValuePrefix, StringComparison.Ordinal)) {
+						var delim = line.IndexOf (NameValueDelim, StringComparison.Ordinal);
 						if (delim <= 0)
-							return;
-						curKey      = e.Data.Substring (NewValuePrefix.Length, delim - NewValuePrefix.Length);
-						var value   = e.Data.Substring (delim + NameValueDelim.Length);
+							continue;
+						curKey      = line.Substring (NewValuePrefix.Length, delim - NewValuePrefix.Length);
+						var value   = line.Substring (delim + NameValueDelim.Length);
 						List<string>? values;
-						if (!props.TryGetValue (curKey!, out values))
+						if (!props.TryGetValue (curKey, out values))
 							props.Add (curKey, values = new List<string> ());
 						values.Add (value);
 					}
-				});
+				}
 			}
 			catch (Exception e) {
 				logger (TraceLevel.Error, $"Error retrieving Java properties by running `{javaProps.FileName} {javaProps.Arguments}`: {e.Message}");
@@ -404,17 +411,18 @@ namespace Xamarin.Android.Tools
 			var jhp = new ProcessStartInfo {
 				FileName    = java_home,
 				Arguments   = "-X",
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				CreateNoWindow = true,
 			};
-			var xml = new StringBuilder ();
-			ProcessUtils.Exec (jhp, (o, e) => {
-					if (string.IsNullOrEmpty (e.Data))
-						return;
-					xml.Append (e.Data);
-			}, includeStderr: false);
+			var result = Process.RunAndCaptureText (jhp, TimeSpan.FromSeconds (30));
+			if (result.ExitStatus.Canceled)
+				throw new TimeoutException ("Timed out querying /usr/libexec/java_home.");
 
 			XElement plist;
 			try {
-				plist = XElement.Parse (xml.ToString ());
+				plist = XElement.Parse (result.StandardOutput);
 			} catch (XmlException e) {
 				logger (TraceLevel.Warning, string.Format (Resources.InvalidXmlLibExecJdk_path_args_message, jhp.FileName, jhp.Arguments, e.Message));
 				yield break;
@@ -454,18 +462,27 @@ namespace Xamarin.Android.Tools
 			var psi     = new ProcessStartInfo {
 				FileName    = alternatives,
 				Arguments   = "-l",
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				CreateNoWindow = true,
 			};
 			var paths   = new List<string> ();
-			ProcessUtils.Exec (psi, (o, e) => {
-					if (string.IsNullOrWhiteSpace (e.Data))
-						return;
+			var result = Process.RunAndCaptureText (psi, TimeSpan.FromSeconds (30));
+			if (result.ExitStatus.Canceled)
+				throw new TimeoutException ("Timed out querying update-java-alternatives.");
+			using var reader = new StringReader (result.StandardOutput);
+			string? line;
+			while ((line = reader.ReadLine ()) != null) {
+					if (string.IsNullOrWhiteSpace (line))
+						continue;
 					// Example line:
 					//  java-1.8.0-openjdk-amd64       1081       /usr/lib/jvm/java-1.8.0-openjdk-amd64
-					var columns = e.Data.Split (new[]{ ' ' }, StringSplitOptions.RemoveEmptyEntries);
+					var columns = line.Split (new[]{ ' ' }, StringSplitOptions.RemoveEmptyEntries);
 					if (columns.Length <= 2)
-						return;
+						continue;
 					paths.Add (columns [2]);
-			});
+			}
 			return paths;
 		}
 
@@ -480,7 +497,7 @@ namespace Xamarin.Android.Tools
 
 		static IEnumerable<string> GetPathEnvironmentJdkPaths (Action<TraceLevel, string> logger)
 		{
-			foreach (var java in ProcessUtils.FindExecutablesInPath ("java")) {
+			foreach (var java in FileUtil.FindExecutablesInPath ("java")) {
 				var props   = GetJavaProperties (logger, java);
 				if (props.TryGetValue ("java.home", out var java_homes)) {
 					var java_home   = java_homes [0];

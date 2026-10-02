@@ -6,3 +6,9 @@ steps:
   displayName: Use .NET $(DotNetCoreVersion)
   inputs:
     version: $(DotNetCoreVersion)
+
+- task: UseDotNet@2
+  displayName: Use .NET 11 for native SDK discovery/bootstrap consumers
+  inputs:
+    version: 11.0.x
+    includePreviewVersions: true

@@ -7,29 +7,22 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
-    <_Runtime Condition=" '$(RUNTIME)' != '' ">$(RUNTIME)</_Runtime>
-    <_Runtime Condition=" '$(RUNTIME)' == '' And '$(OS)' != 'Windows_NT' ">mono --debug</_Runtime>
-    <_NUnit>$(_Runtime) $(PkgNUnit_ConsoleRunner)/tools/nunit3-console.exe</_NUnit>
-    <_Run Condition=" '$(RUN)' != '' ">--run=&quot;$(RUN)&quot;</_Run>
+    <DotnetToolPath Condition=" '$(DotnetToolPath)' == '' ">dotnet</DotnetToolPath>
+    <_Run Condition=" '$(RUN)' != '' ">--filter &quot;FullyQualifiedName~$(RUN)&quot;</_Run>
   </PropertyGroup>
   <Import
       Condition=" Exists('..\..\bin\Build$(Configuration)\JdkInfo.props') "
       Project="..\..\bin\Build$(Configuration)\JdkInfo.props"
   />
-  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll" TaskName="Java.Interop.BootstrapTasks.SetEnvironmentVariable" />
   <ItemGroup>
-    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\*-*Tests.dll" Condition=" '$(TestAssembly)' == '' " />
+    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)-net10.0\*-*Tests.dll;$(_TopDir)\bin\Test$(Configuration)-net11.0\*-*Tests.dll" Condition=" '$(TestAssembly)' == '' " />
     <_TestAssembly Include="$(TestAssembly)" Condition=" '$(TestAssembly)' != '' " />
   </ItemGroup>
   <Target Name="RunTests"
       Outputs="$(_TopDir)\TestResult-%(_TestAssembly.Filename).xml">
-    <SetEnvironmentVariable Name="ANDROID_SDK_PATH"      Value="$(AndroidSdkDirectory)" Condition=" '$(AndroidSdkDirectory)' != '' " />
-    <SetEnvironmentVariable Name="MONO_TRACE_LISTENER"   Value="Console.Out" />
-    <SetEnvironmentVariable Name="JAVA_INTEROP_GREF_LOG" Value="bin\Test$(Configuration)\g-%(_TestAssembly.Filename).txt" />
-    <SetEnvironmentVariable Name="JAVA_INTEROP_LREF_LOG" Value="bin\Test$(Configuration)\l-%(_TestAssembly.Filename).txt" />
-    <SetEnvironmentVariable Name="JI_JVM_PATH"           Value="$(JdkJvmPath)" />
     <Exec
-        Command="$(_NUnit) $(NUNIT_EXTRA) %(_TestAssembly.Identity) $(_Run) --result=&quot;TestResult-%(Filename).xml&quot; --output=&quot;bin\Test$(Configuration)\TestOutput-%(Filename).txt&quot;"
+        Command="&quot;$(DotnetToolPath)&quot; test &quot;%(_TestAssembly.Identity)&quot; $(NUNIT_EXTRA) $(_Run) --logger &quot;trx;LogFileName=TestResult-%(_TestAssembly.Filename).trx&quot; --results-directory &quot;%(_TestAssembly.RootDir)%(_TestAssembly.Directory)&quot;"
+        EnvironmentVariables="ANDROID_SDK_PATH=$(AndroidSdkDirectory);MONO_TRACE_LISTENER=Console.Out;JAVA_INTEROP_GREF_LOG=%(_TestAssembly.RootDir)%(_TestAssembly.Directory)g-%(_TestAssembly.Filename).txt;JAVA_INTEROP_LREF_LOG=%(_TestAssembly.RootDir)%(_TestAssembly.Directory)l-%(_TestAssembly.Filename).txt;JI_JVM_PATH=$(JdkJvmPath)"
         WorkingDirectory="$(_TopDir)"
         ContinueOnError="ErrorAndContinue"
     />

@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -51,6 +52,7 @@ namespace Xamarin.Android.Tasks
 				cmd.AppendSwitch (OutputDocDirectory);
 				return cmd.ToString ();
 			} else {
+				ArgumentNullException.ThrowIfNull (References);
 				var refPaths = References.Select (Path.GetDirectoryName).Distinct ();
 				var cmd = new CommandLineBuilder ();
 				cmd.AppendSwitch ("--debug");

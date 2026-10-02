@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Company>Microsoft Corporation</Company>
     <Copyright>2026 Microsoft Corporation</Copyright>
-    <TargetFrameworks>$(DotNetStableTargetFramework);$(DotNetTargetFramework)</TargetFrameworks>
+    <TargetFramework>net11.0</TargetFramework>
     <AssemblyName>Xamarin.Android.AssemblyStore</AssemblyName>
     <RootNamespace>Xamarin.Android.AssemblyStore</RootNamespace>
     <ImplicitUsings>disable</ImplicitUsings>

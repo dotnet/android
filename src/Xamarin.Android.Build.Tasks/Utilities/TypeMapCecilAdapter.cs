@@ -100,14 +100,13 @@ class TypeMapCecilAdapter
 		// We must NOT use Guid here! The reason is that Guid sort order is different than its corresponding
 		// byte array representation and on the runtime we need the latter in order to be able to binary search
 		// through the module array.
-		byte [] moduleUUID;
-		if (!genState.MvidCache.TryGetValue (td.Module.Mvid, out moduleUUID)) {
+		if (!genState.MvidCache.TryGetValue (td.Module.Mvid, out var moduleUUID)) {
 			moduleUUID = td.Module.Mvid.ToByteArray ();
 			genState.MvidCache.Add (td.Module.Mvid, moduleUUID);
 		}
 
 		Dictionary<byte [], ModuleReleaseData> tempModules = genState.TempModules;
-		if (!tempModules.TryGetValue (moduleUUID, out ModuleReleaseData moduleData)) {
+		if (!tempModules.TryGetValue (moduleUUID, out var moduleData)) {
 			moduleData = new ModuleReleaseData {
 				Mvid = td.Module.Mvid,
 				MvidBytes = moduleUUID,
@@ -193,9 +192,7 @@ class TypeMapCecilAdapter
 
 	static void HandleDebugDuplicates (Dictionary<string, List<TypeMapDebugEntry>> javaDuplicates, TypeMapDebugEntry entry, TypeDefinition td, TypeDefinitionCache cache)
 	{
-		List<TypeMapDebugEntry> duplicates;
-
-		if (!javaDuplicates.TryGetValue (entry.JavaName, out duplicates)) {
+		if (!javaDuplicates.TryGetValue (entry.JavaName, out var duplicates)) {
 			javaDuplicates.Add (entry.JavaName, new List<TypeMapDebugEntry> { entry });
 		} else {
 			TypeMapDebugEntry oldEntry = duplicates [0];

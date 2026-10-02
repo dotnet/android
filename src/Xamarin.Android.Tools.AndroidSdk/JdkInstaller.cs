@@ -100,7 +100,7 @@ namespace Xamarin.Android.Tools
 				throw new ArgumentNullException (nameof (targetPath));
 
 			// When elevated and a platform installer is available, use it and let the installer handle paths
-			if (ProcessUtils.IsElevated () && FileUtil.GetInstallerExtension () is not null) {
+			if (Environment.IsPrivilegedProcess && FileUtil.GetInstallerExtension () is not null) {
 				logger (TraceLevel.Info, "Running elevated — using platform installer (.msi/.pkg).");
 				await InstallWithPlatformInstallerAsync (majorVersion, progress, cancellationToken).ConfigureAwait (false);
 				return;
@@ -227,18 +227,23 @@ namespace Xamarin.Android.Tools
 
 		async Task RunPlatformInstallerAsync (string installerPath, CancellationToken cancellationToken)
 		{
-			var psi = OS.IsWindows
-				? ProcessUtils.CreateProcessStartInfo ("msiexec", "/i", installerPath, "/quiet", "/norestart")
-				: ProcessUtils.CreateProcessStartInfo ("/usr/sbin/installer", "-pkg", installerPath, "-target", "/");
-
-			using var stdout = new StringWriter ();
-			using var stderr = new StringWriter ();
-			var exitCode = await ProcessUtils.StartProcess (psi, stdout: stdout, stderr: stderr, cancellationToken).ConfigureAwait (false);
-
-			if (exitCode != 0) {
-				var errorOutput = stderr.ToString ();
-				logger (TraceLevel.Error, $"Installer failed (exit code {exitCode}): {errorOutput}");
-				throw new InvalidOperationException ($"Platform installer failed with exit code {exitCode}: {errorOutput}");
+			cancellationToken.ThrowIfCancellationRequested ();
+			var psi = new ProcessStartInfo (OS.IsWindows ? "msiexec" : "/usr/sbin/installer") {
+				UseShellExecute = false,
+				CreateNoWindow = true,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+			};
+			foreach (var argument in OS.IsWindows
+				? new [] { "/i", installerPath, "/quiet", "/norestart" }
+				: new [] { "-pkg", installerPath, "-target", "/" })
+				psi.ArgumentList.Add (argument);
+			var result = await Process.RunAndCaptureTextAsync (psi, cancellationToken).ConfigureAwait (false);
+			cancellationToken.ThrowIfCancellationRequested ();
+			if (result.ExitStatus.ExitCode != 0) {
+				var errorOutput = result.StandardError;
+				logger (TraceLevel.Error, $"Installer failed (exit code {result.ExitStatus.ExitCode}): {errorOutput}");
+				throw new InvalidOperationException ($"Platform installer failed with exit code {result.ExitStatus.ExitCode}: {errorOutput}");
 			}
 		}
 

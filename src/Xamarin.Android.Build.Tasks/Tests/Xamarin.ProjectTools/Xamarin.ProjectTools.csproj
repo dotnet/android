@@ -3,7 +3,7 @@
   <PropertyGroup>
     <ProjectGuid>{2DD1EE75-6D8D-4653-A800-0A24367F7F38}</ProjectGuid>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
-    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\..\product.snk</AssemblyOriginatorKeyFile>
     <NoWarn>$(NoWarn);CA1305</NoWarn>

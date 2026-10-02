@@ -119,7 +119,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				if (Path.IsPathRooted (rel)) {
-					var root = Path.GetPathRoot (rel);
+					var root = Path.GetPathRoot (rel) ?? throw new ArgumentException ("A rooted resource path must have a root.", nameof (rel));
 					rel = rel.Substring (root.Length);
 				}
 

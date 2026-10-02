@@ -107,7 +107,7 @@ public class AssemblyModifierPipeline : AndroidTask
 				// Add SearchDirectories for the current architecture's ResolvedAssemblies
 				foreach (var kvp in perArchAssemblies [sourceArch]) {
 					ITaskItem assembly = kvp.Value;
-					var path = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec));
+					var path = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec) ?? throw new InvalidOperationException ($"Assembly path has no directory: {assembly.ItemSpec}"));
 					if (!resolver.SearchDirectories.Contains (path)) {
 						resolver.SearchDirectories.Add (path);
 					}
@@ -120,7 +120,7 @@ public class AssemblyModifierPipeline : AndroidTask
 				BuildPipeline (pipeline, context);
 			}
 
-			Directory.CreateDirectory (Path.GetDirectoryName (destination.ItemSpec));
+			Directory.CreateDirectory (Path.GetDirectoryName (destination.ItemSpec) ?? throw new InvalidOperationException ($"Destination path has no directory: {destination.ItemSpec}"));
 
 			RunPipeline (pipeline!, source, destination);
 		}
@@ -202,7 +202,8 @@ class SaveChangedAssemblyStep : IAssemblyModifierPipelineStep
 	{
 		if (context.IsAssemblyModified) {
 			Log.LogDebugMessage ($"Saving modified assembly: {context.Destination.ItemSpec}");
-			Directory.CreateDirectory (Path.GetDirectoryName (context.Destination.ItemSpec));
+			Directory.CreateDirectory (Path.GetDirectoryName (context.Destination.ItemSpec) ??
+				throw new InvalidOperationException ($"Destination path has no directory: {context.Destination.ItemSpec}"));
 			WriterParameters.WriteSymbols = assembly.MainModule.HasSymbols;
 			assembly.Write (context.Destination.ItemSpec, WriterParameters);
 		} else {

@@ -63,7 +63,7 @@ namespace Xamarin.Android.Tasks
 				foreach (var kvp in kvpArch.Value) {
 					CompressedAssemblyInfo info = kvp.Value;
 
-					if (!archData.TryGetValue (info.TargetArch, out List<StructureInstance<CompressedAssemblyDescriptor>> descriptors)) {
+					if (!archData.TryGetValue (info.TargetArch, out var descriptors)) {
 						descriptors = new List<StructureInstance<CompressedAssemblyDescriptor>> ();
 						archData.Add (info.TargetArch, descriptors);
 					}
@@ -183,7 +183,7 @@ namespace Xamarin.Android.Tasks
 
 		List<StructureInstance<CompressedAssemblyDescriptor>> GetArchDescriptors (LlvmIrModuleTarget target)
 		{
-			if (!archData.TryGetValue (target.TargetArch, out List<StructureInstance<CompressedAssemblyDescriptor>> descriptors)) {
+			if (!archData.TryGetValue (target.TargetArch, out var descriptors)) {
 				throw new InvalidOperationException ($"Internal error: missing compressed descriptors data for architecture '{target.TargetArch}'");
 			}
 

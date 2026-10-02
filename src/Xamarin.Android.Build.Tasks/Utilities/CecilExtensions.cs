@@ -26,7 +26,7 @@ static class CecilExtensions
 	}
 
 	static readonly string [] MethodRegistrationAttributes = new []{
-		typeof (RegisterAttribute).FullName,
+		typeof (RegisterAttribute).FullName ?? throw new InvalidOperationException ("Register attribute type name is unavailable."),
 		"Java.Interop.JniConstructorSignatureAttribute",
 		"Java.Interop.JniMethodSignatureAttribute",
 	};

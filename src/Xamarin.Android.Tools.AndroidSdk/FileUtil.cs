@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -9,6 +10,28 @@ namespace Xamarin.Android.Tools
 {
 	class FileUtil
 	{
+		internal static IEnumerable<string> FindExecutablesInPath (string executable)
+		{
+			foreach (var directory in (Environment.GetEnvironmentVariable (EnvironmentVariableNames.Path) ?? "").Split (Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)) {
+				foreach (var path in FindExecutablesInDirectory (directory, executable))
+					yield return path;
+			}
+		}
+
+		internal static IEnumerable<string> FindExecutablesInDirectory (string directory, string executable)
+		{
+			if (!Directory.Exists (directory))
+				yield break;
+			foreach (var extension in (Environment.GetEnvironmentVariable (EnvironmentVariableNames.PathExt) ?? "").Split (Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)) {
+				var path = Path.Combine (directory, Path.ChangeExtension (executable, extension));
+				if (File.Exists (path))
+					yield return path;
+			}
+			var unextended = Path.Combine (directory, executable);
+			if (File.Exists (unextended))
+				yield return unextended;
+		}
+
 		public static string GetTempFilenameForWrite (string fileName)
 		{
 			return Path.GetDirectoryName (fileName) + Path.DirectorySeparatorChar + ".#" + Path.GetFileName (fileName);
@@ -215,9 +238,7 @@ namespace Xamarin.Android.Tools
 
 
 		/// <summary>
-		/// Sets Unix file permissions. Uses File.SetUnixFileMode on net7.0+ (see
-		/// https://learn.microsoft.com/dotnet/api/system.io.file.setunixfilemode),
-		/// falls back to libc P/Invoke on netstandard2.0.
+		/// Sets Unix file permissions with File.SetUnixFileMode.
 		/// </summary>
 		internal static bool Chmod (string path, int mode)
 		{
@@ -225,17 +246,11 @@ namespace Xamarin.Android.Tools
 				return true; // No-op on Windows
 
 			try {
-#if NET7_0_OR_GREATER
-				// Managed API avoids P/Invoke overhead and works on all .NET 7+ Unix platforms.
-				// See https://learn.microsoft.com/dotnet/api/system.io.file.setunixfilemode
 				if (!OperatingSystem.IsWindows ()) {
 					File.SetUnixFileMode (path, (UnixFileMode) mode);
 					return true;
 				}
 				return true;
-#else
-				return chmod (path, mode) == 0;
-#endif
 			}
 			catch {
 				return false;
@@ -244,35 +259,26 @@ namespace Xamarin.Android.Tools
 
 		/// <summary>
 		/// Sets executable permissions on all files in the bin/ subdirectory.
-		/// Uses File.SetUnixFileMode on net7.0+, falls back to chmod process on netstandard2.0.
+		/// Uses File.SetUnixFileMode and reports permission failures to the caller.
 		/// </summary>
-		internal static async Task SetExecutablePermissionsAsync (string directory, Action<TraceLevel, string> logger, CancellationToken cancellationToken = default)
+		internal static Task SetExecutablePermissionsAsync (string directory, Action<TraceLevel, string> logger, CancellationToken cancellationToken = default)
 		{
 			var binDir = Path.Combine (directory, "bin");
 			if (!Directory.Exists (binDir))
-				return;
+				return Task.CompletedTask;
 
 			foreach (var file in Directory.GetFiles (binDir)) {
 				cancellationToken.ThrowIfCancellationRequested ();
 				if (!Chmod (file, 0x1ED)) { // 0755 C# does not have octal literals
-					// Managed chmod failed, fall back to process
-					var psi = ProcessUtils.CreateProcessStartInfo ("chmod", "+x", file);
-					int exitCode = await ProcessUtils.StartProcess (psi, null, null, cancellationToken)
-						.ConfigureAwait (false);
-					if (exitCode != 0) {
-						logger (TraceLevel.Error, $"Failed to set executable permission on '{file}' (exit code {exitCode}).");
-						throw new InvalidOperationException ($"chmod failed for '{file}' with exit code {exitCode}.");
-					}
+					logger (TraceLevel.Error, $"Failed to set executable permission on '{file}'.");
+					throw new InvalidOperationException ($"Could not set executable permission on '{file}'.");
 				}
 			}
+			return Task.CompletedTask;
 		}
 
 		[DllImport ("libc", SetLastError=true)]
 		static extern int rename (string old, string @new);
 
-#if !NET7_0_OR_GREATER
-		[DllImport ("libc", SetLastError = true)]
-		static extern int chmod (string pathname, int mode);
-#endif
 	}
 }

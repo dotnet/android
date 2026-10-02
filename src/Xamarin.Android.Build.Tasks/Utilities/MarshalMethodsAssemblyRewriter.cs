@@ -84,7 +84,7 @@ namespace Xamarin.Android.Tasks
 			foreach (IList<MarshalMethodEntry> methodList in classifier.MarshalMethods.Values) {
 				foreach (MarshalMethodEntry method in methodList) {
 					string fullNativeCallbackName = method.NativeCallback.FullName;
-					if (processedMethods.TryGetValue (fullNativeCallbackName, out MethodDefinition nativeCallbackWrapper)) {
+					if (processedMethods.TryGetValue (fullNativeCallbackName, out var nativeCallbackWrapper)) {
 						method.NativeCallbackWrapper = nativeCallbackWrapper;
 						continue;
 					}
@@ -131,7 +131,7 @@ namespace Xamarin.Android.Tasks
 					WriteSymbols = havePdb,
 				};
 
-				string directory = Path.Combine (Path.GetDirectoryName (path), "new");
+				string directory = Path.Combine (Path.GetDirectoryName (path) ?? throw new InvalidOperationException ($"Assembly path has no directory: {path}"), "new");
 				Directory.CreateDirectory (directory);
 				string output = Path.Combine (directory, Path.GetFileName (path));
 				log.LogDebugMessage ($"[{targetArch}] Writing new version of '{path}' assembly: {output}");

@@ -40,7 +40,7 @@ and merge conflicts.
 | Check | What to look for |
 |-------|-----------------|
 | **Use existing utilities** | Check `MonoAndroidHelper`, `FileUtil`, `PathUtil`, `ITaskItemExtensions`, and other utilities before writing new helpers. Duplicating existing logic is the most expensive AI pattern. |
-| **Use Android tools utilities** | In the shared Android tooling under `src/`, process execution should go through `ProcessUtils`, file extraction/download/checksum/path helpers through `FileUtil`, and repeated buffers/streams through `ObjectPool<T>` or `MemoryStreamPool` where applicable. |
+| **Use owner-specific utilities** | Use purpose-built .NET 11 process APIs at the SDK tool/command owner, not a generic execution facade. Reuse `FileUtil` for file extraction/download/checksum/path helpers and existing pools for repeated buffers/streams where applicable. |
 | **`Log.LogDebugMessage` for diagnostics** | Use `Log.LogDebugMessage(…)` for verbose/debug output, not `Console.WriteLine` or `Debug.WriteLine`. Don't spam logcat with messages that fire on every type lookup miss. (Postmortem `#9`) |
 | **Android tools logger delegate** | SDK/JDK discovery helpers in `src/Xamarin.Android.Tools.AndroidSdk/` commonly use `Action<TraceLevel, string>? logger` (see `AndroidSdkInfo.DefaultConsoleLogger`) so callers can route diagnostics into MSBuild or IDE logs. Don't replace this with `Console.WriteLine` or `Debug.WriteLine`. |
 | **Return `IReadOnlyList<T>`** | Public methods should return `IReadOnlyList<T>` or `IReadOnlyCollection<T>` instead of mutable `List<T>`. |

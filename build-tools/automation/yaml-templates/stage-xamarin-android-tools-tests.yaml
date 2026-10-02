@@ -80,9 +80,7 @@ stages:
       inputs:
         command: build
         projects: |
-          $(System.DefaultWorkingDirectory)/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
           $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.Benchmarks/Xamarin.Android.Tools.Benchmarks.csproj
-          $(System.DefaultWorkingDirectory)/tools/ls-jdks/ls-jdks.csproj
         arguments: -c Debug $(XatBuildProperties) -bl:$(Build.ArtifactStagingDirectory)/build-windows.binlog
 
     - task: DotNetCoreCLI@2
@@ -91,8 +89,29 @@ stages:
         command: test
         projects: |
           $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
-          $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
         arguments: -c Debug $(XatBuildProperties)
+
+    - task: UseDotNet@2
+      displayName: Use .NET 11 for Android SDK fixtures
+      inputs:
+        version: 11.0.x
+        includePreviewVersions: true
+
+    - task: DotNetCoreCLI@2
+      displayName: Build Android SDK tools with .NET 11
+      inputs:
+        command: build
+        projects: |
+          $(System.DefaultWorkingDirectory)/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
+          $(System.DefaultWorkingDirectory)/tools/ls-jdks/ls-jdks.csproj
+        arguments: -c Debug -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=11.0 -bl:$(Build.ArtifactStagingDirectory)/sdk-build-windows.binlog
+
+    - task: DotNetCoreCLI@2
+      displayName: Run Android SDK fixture tests
+      inputs:
+        command: test
+        projects: $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
+        arguments: -c Debug -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=11.0
 
     - ${{ if eq(parameters.use1ESTemplate, false) }}:
       - task: PublishBuildArtifacts@1
@@ -132,9 +151,7 @@ stages:
       inputs:
         command: build
         projects: |
-          $(System.DefaultWorkingDirectory)/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
           $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.Benchmarks/Xamarin.Android.Tools.Benchmarks.csproj
-          $(System.DefaultWorkingDirectory)/tools/ls-jdks/ls-jdks.csproj
         arguments: -c Debug $(XatBuildProperties) -bl:$(Build.ArtifactStagingDirectory)/build-mac.binlog
 
     - task: DotNetCoreCLI@2
@@ -143,8 +160,29 @@ stages:
         command: test
         projects: |
           $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
-          $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
         arguments: -c Debug $(XatBuildProperties)
+
+    - task: UseDotNet@2
+      displayName: Use .NET 11 for Android SDK fixtures
+      inputs:
+        version: 11.0.x
+        includePreviewVersions: true
+
+    - task: DotNetCoreCLI@2
+      displayName: Build Android SDK tools with .NET 11
+      inputs:
+        command: build
+        projects: |
+          $(System.DefaultWorkingDirectory)/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
+          $(System.DefaultWorkingDirectory)/tools/ls-jdks/ls-jdks.csproj
+        arguments: -c Debug -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=11.0 -bl:$(Build.ArtifactStagingDirectory)/sdk-build-mac.binlog
+
+    - task: DotNetCoreCLI@2
+      displayName: Run Android SDK fixture tests
+      inputs:
+        command: test
+        projects: $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
+        arguments: -c Debug -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=11.0
 
     - ${{ if eq(parameters.use1ESTemplate, false) }}:
       - task: PublishBuildArtifacts@1

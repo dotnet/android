@@ -31,7 +31,8 @@ namespace Xamarin.Android.Tasks
 				foreach (var assemblyDir in Directory.GetDirectories (libProjects)) {
 					foreach (var importBaseDir in new string [] { LibraryProjectImportsDirectoryName, "library_project_imports", }) {
 						string importsDir = Path.Combine (assemblyDir, importBaseDir);
-						string? libpkg = GetPackageNameForLibrary (importsDir, Path.GetDirectoryName (assemblyDir));
+						string? libpkg = GetPackageNameForLibrary (importsDir, Path.GetDirectoryName (assemblyDir) ??
+							throw new InvalidOperationException ($"Assembly path has no directory: {assemblyDir}"));
 						if (libpkg != null)
 							extraPackages.Add (libpkg);
 					}
@@ -56,7 +57,8 @@ namespace Xamarin.Android.Tasks
 			foreach (var file in new string [] {Path.Combine (path, "bin", manifest), Path.Combine (path, manifest)}) {
 				try {
 					if (File.Exists (file))
-						return XDocument.Load (file).Element (XName.Get ("manifest")).Attribute (XName.Get ("package")).Value;
+						return (string?) XDocument.Load (file).Element (XName.Get ("manifest"))?.Attribute (XName.Get ("package")) ??
+							throw new InvalidOperationException ($"Library manifest is missing its package attribute: {file}");
 				} catch (Exception ex) {
 					throw new InvalidOperationException ("Failed to read 'package' attribute in 'manifest' element in AndroidManifest.xml from LibraryProject resource in {0}" + assemblyName, ex);
 				}

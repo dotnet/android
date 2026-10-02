@@ -31,7 +31,7 @@ class LlvmIrFunctionAttributeSet : IEnumerable<LlvmIrFunctionAttribute>, IEquata
 
 	public IList<LlvmIrFunctionAttribute>? GetPrivateTargetAttributes (AndroidTargetArch targetArch)
 	{
-		if (privateTargetSpecificAttributes == null || !privateTargetSpecificAttributes.TryGetValue (targetArch, out List<LlvmIrFunctionAttribute> list)) {
+		if (privateTargetSpecificAttributes == null || !privateTargetSpecificAttributes.TryGetValue (targetArch, out var list)) {
 			return null;
 		}
 

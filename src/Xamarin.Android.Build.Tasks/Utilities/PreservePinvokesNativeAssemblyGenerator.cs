@@ -159,13 +159,13 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 			Log.LogDebugMessage ("      must be preserved");
 
 			if (!componentName.IsNullOrEmpty ()) {
-				if (haveLoadHandlers  && componentLoadHandlers.TryGetValue (componentName!, out string jniOnLoadName)) {
+				if (haveLoadHandlers  && componentLoadHandlers.TryGetValue (componentName, out var jniOnLoadName)) {
 					if (jniOnLoadNames.Add (jniOnLoadName)) {
 						Log.LogDebugMessage ($"      component '{componentName}' registers a load handler '{jniOnLoadName}'");
 					}
 				}
 
-				if (havePreservedSymbols && componentPreservedSymbols.TryGetValue (componentName!, out HashSet<LlvmIrGlobalVariableReference> preservedSymbols)) {
+				if (havePreservedSymbols && componentPreservedSymbols.TryGetValue (componentName, out var preservedSymbols)) {
 					foreach (LlvmIrGlobalVariableReference vref in preservedSymbols) {
 						LlvmIrHelpers.DeclareDummyFunction (module, vref);
 						symbolsToExplicitlyPreserve.Add (vref);
