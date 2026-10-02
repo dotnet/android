@@ -20,7 +20,9 @@ Flag severity clearly in every comment:
 - ⚠️ **warning** — Should fix. Performance issues, missing validation, inconsistency with patterns.
 - 💡 **suggestion** — Consider changing. Style, readability, optional improvements.
 
-**Every review should produce at least one inline comment.** Even clean PRs have opportunities for improvement — code consolidation, missing edge-case tests, perf micro-optimizations, or documentation gaps. Use 💡 suggestions for these. A review with zero inline comments appears superficial and misses the chance to share knowledge. Only omit inline comments if the PR is truly trivial (e.g., a 1-line typo fix or dependency bump). **Do NOT summarize suggestions only in the review body — post them as inline comments on the relevant line.** If a suggestion cannot be posted inline (e.g., it's about pre-existing code or missing code), either find the closest relevant changed line to attach it to, or omit it entirely rather than burying it in the summary.
+**There is no comment quota.** A clean PR may have no inline findings. Do not invent abstractions, extra tests, or speculative optimizations to make a review look thorough. Each finding should identify a concrete risk or explain a specific improvement within the requested scope.
+
+Post actionable findings inline on the relevant changed lines, rather than only in the review body. Before proposing more code for a refactor, identify the existing contract it must preserve; consult the refactoring checks in `references/ai-pitfalls.md`.
 
 ## Workflow
 
@@ -121,7 +123,7 @@ Post your findings directly:
 - **Inline comments** on specific lines of the diff with the severity, category, and explanation.
 - **Review summary** with the overall verdict (✅ LGTM, ⚠️ Needs Changes, or ❌ Reject), issue counts by severity, and positive callouts.
 
-If no issues found **and CI is green**, submit with at most one or two 💡 suggestions and a positive summary. Truly trivial PRs (dependency bumps, 1-line typo fixes) may have no inline comments.
+If no issues found **and CI is green**, submit a positive summary. Include 💡 suggestions only when they have a specific benefit, not to satisfy a minimum number of comments.
 
 **Copilot-authored PRs:** If the PR author is `Copilot` (the GitHub Copilot coding agent) and the verdict is ⚠️ Needs Changes or ❌ Reject, prefix the review summary with `@copilot ` so the comment automatically triggers Copilot to address the feedback. Do NOT add the prefix for ✅ LGTM verdicts.
 
