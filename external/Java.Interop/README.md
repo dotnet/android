@@ -23,8 +23,14 @@ and [Architecture][architecture] pages.
 
 ## Building
 
-- The `main` branch is configured to build with .NET 10, available [here][net-10].
+- The `main` branch is configured to build with .NET 11, available [here][net-11].
 - The [`release/6.0.3xx`][net-6] branch is configured to build with .NET 6.
+
+`JniArgumentValue` uses [`ExtendedLayout`][extended-layout] with
+[`ExtendedLayoutKind.CUnion`][extended-layout-kind] to match JNI's native
+`jvalue` union. This requires a compiler and runtime supporting .NET 11
+extended layout. The local proof of concept targets .NET 11; adoption in
+.NET for Android is intended for the .NET 12 release.
 
 `Java.Interop.slnx` must first run some "preparatory" tasks before it can be built:
 
@@ -38,8 +44,10 @@ Once `Java.Interop.slnx` has been prepared, it can be built in Visual Studio 202
 dotnet build
 ```
 
-[net-10]: https://dotnet.microsoft.com/en-us/download/dotnet/10.0
+[net-11]: https://dotnet.microsoft.com/en-us/download/dotnet/11.0
 [net-6]: https://github.com/dotnet/java-interop/tree/release/6.0.3xx
+[extended-layout]: https://learn.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.extendedlayoutattribute?view=net-11.0
+[extended-layout-kind]: https://learn.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.extendedlayoutkind?view=net-11.0
 
 Additional build options are documented [here][build-configuration].
 
