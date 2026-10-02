@@ -59,7 +59,7 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\DummyCustomAttributeProvider.cs" Link="Utilities\DummyCustomAttributeProvider.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ManifestPlaceholderResolver.cs" Link="Utilities\ManifestPlaceholderResolver.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ITaskItemExtensions.cs" Link="Utilities\ITaskItemExtensions.cs" />
-    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MavenExtensions.cs" Link="Utilities\MavenExtensions.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MavenDependencyExtensions.cs" Link="Utilities\MavenDependencyExtensions.cs" />
   </ItemGroup>
 
   <!--
