@@ -356,11 +356,11 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 		static string GetSafeOutputFile (string outputDirectory, string relativePath)
 		{
 			string root = Path.GetFullPath (outputDirectory);
-			string normalizedPath = relativePath.Replace ('\\', Path.DirectorySeparatorChar).Replace ('/', Path.DirectorySeparatorChar);
+			string normalizedPath = relativePath.Replace ('\\', '/');
 			if (Path.IsPathRooted (normalizedPath) || normalizedPath.IndexOf (':') >= 0) {
 				throw new InvalidDataException ($"Assembly path '{relativePath}' escapes output directory '{root}'");
 			}
-			foreach (string component in normalizedPath.Split (Path.DirectorySeparatorChar)) {
+			foreach (string component in normalizedPath.Split ('/')) {
 				if (component == ".." ||
 					(Path.DirectorySeparatorChar == '\\' && component != "." &&
 						(component.EndsWith (" ", StringComparison.Ordinal) || component.EndsWith (".", StringComparison.Ordinal)))) {
@@ -372,17 +372,9 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 			var comparison = Path.DirectorySeparatorChar == '\\' ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 			if (!outputFile.StartsWith (prefix, comparison))
 				throw new InvalidDataException ($"Assembly path '{relativePath}' escapes output directory '{root}'");
-			string current = root;
-			foreach (string component in outputFile.Substring (prefix.Length).Split (Path.DirectorySeparatorChar)) {
-				current = Path.Combine (current, component);
-				try {
-					if ((File.GetAttributes (current) & FileAttributes.ReparsePoint) != 0)
-						throw new InvalidDataException ($"Assembly path '{relativePath}' follows a link beneath output directory '{root}'");
-				} catch (FileNotFoundException) {
-					break;
-				} catch (DirectoryNotFoundException) {
-					break;
-				}
+			for (string? current = outputFile; current != null && current.Length > root.Length; current = Path.GetDirectoryName (current)) {
+				if (new FileInfo (current).LinkTarget != null)
+					throw new InvalidDataException ($"Assembly path '{relativePath}' follows a link beneath output directory '{root}'");
 			}
 			return outputFile;
 		}
