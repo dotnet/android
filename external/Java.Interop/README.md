@@ -32,6 +32,11 @@ and [Architecture][architecture] pages.
 extended layout. The local proof of concept targets .NET 11; adoption in
 .NET for Android is intended for the .NET 12 release.
 
+Native JNI method registration, VM/vtable, and reference-control-block structs
+use `ExtendedLayoutKind.CStruct` for their C ABI. Extended C layouts require
+unmanaged instance fields and use a blittable representation, including
+one-byte `bool` fields rather than the default marshaller's four-byte `BOOL`.
+
 `Java.Interop.slnx` must first run some "preparatory" tasks before it can be built:
 
 ```console
