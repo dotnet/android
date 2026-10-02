@@ -34,10 +34,7 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **generator** | `external/Java.Interop/tests/generator-Tests/` | `dotnet test external/Java.Interop/tests/generator-Tests/generator-Tests.csproj -v minimal` |
 | **bytecode** | `external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/` | `dotnet test external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/Xamarin.Android.Tools.Bytecode-Tests.csproj -v minimal` ⚠️ Requires `javac` |
 | **base tasks** | `tests/Microsoft.Android.Build.BaseTasks-Tests/` | `dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj -v minimal` |
-| **repository process execution** | `build-tools/ProcessExecution.Tests/` | `dotnet test build-tools/ProcessExecution.Tests/ProcessExecution.Tests.csproj -v minimal` |
 | **android sdk tools** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0` |
-
-Repository process tests target .NET 10 and require a **.NET 11 SDK on `PATH`** to compile and execute the real CI file-based app, which explicitly targets `net11.0`. When using separate SDK installations, set `DOTNET_CI_HOST_PATH` to the .NET 11 `dotnet` executable so the .NET 10 test host can use its own SDK without retargeting the maintainer tasks. Tests use synthetic children for dual-pipe capture, API parsing, exit codes, timeouts, and stream ownership; no Azure login, network CI calls, prepared Android SDK, or device is needed.
 
 ---
 
