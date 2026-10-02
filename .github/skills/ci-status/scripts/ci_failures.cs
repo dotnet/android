@@ -1,6 +1,5 @@
 #!/usr/bin/env dotnet
 #:property TargetFramework=net11.0
-#:property PublishAot=false
 // Enriched failure analysis for one dnceng-public `dotnet-android` build:
 //   1. cross-config matrix per failed test (failed/passed/retried configs) + stack/asserts
 //   2. crashed / incomplete lanes (started-but-not-finished culprit lives in logcat)

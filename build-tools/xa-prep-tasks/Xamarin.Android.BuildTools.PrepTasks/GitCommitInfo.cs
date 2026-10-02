@@ -54,7 +54,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 			var stdoutLines = new List<string> ();
 			var stderrLines = new List<string> ();
-			if (!RunGit ("log -n 1 --pretty=%D HEAD", stdoutLines, stderrLines)) {
+			if (!RunGit (["log", "-n", "1", "--pretty=%D", "HEAD"], stdoutLines, stderrLines)) {
 				goto outOfHere;
 			}
 
@@ -81,7 +81,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				Log.LogMessage (MessageImportance.Low, "  Detached HEAD, no branch information");
 				// Detached HEAD without branch information
 				if (isSubmodule) {
-					if (!RunGit ($"config -f {gitModules} --get \"submodule.{SubmoduleName}.branch\"", stdoutLines, stderrLines)) {
+					if (!RunGit (["config", "-f", gitModules, "--get", $"submodule.{SubmoduleName}.branch"], stdoutLines, stderrLines)) {
 						goto outOfHere;
 					}
 					branch = stdoutLines [0];
@@ -120,7 +120,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			}
 
 			Log.LogMessage (MessageImportance.Low, $"  Branch: {branch}");
-			if (!RunGit ("log -n 1 --pretty=%h HEAD", stdoutLines, stderrLines)) {
+			if (!RunGit (["log", "-n", "1", "--pretty=%h", "HEAD"], stdoutLines, stderrLines)) {
 				goto outOfHere;
 			}
 			string commit = stdoutLines [0].Trim ();
@@ -128,13 +128,13 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 			string url;
 			if (isSubmodule) {
-				if (!RunGit ($"config -f {gitModules} --get \"submodule.{SubmoduleName}.url\"", stdoutLines, stderrLines)) {
+				if (!RunGit (["config", "-f", gitModules, "--get", $"submodule.{SubmoduleName}.url"], stdoutLines, stderrLines)) {
 					goto outOfHere;
 				}
 				url = stdoutLines [0].Trim ();
 			} else {
 				string remoteName = String.IsNullOrEmpty (GitRemoteName) ? "origin" : GitRemoteName;
-				if (!RunGit ($"config --local --get \"remote.{remoteName}.url\"", stdoutLines, stderrLines)) {
+				if (!RunGit (["config", "--local", "--get", $"remote.{remoteName}.url"], stdoutLines, stderrLines)) {
 					goto outOfHere;
 				}
 
@@ -223,17 +223,18 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			return true;
 		}
 
-		bool RunGit (string arguments, List<string> stdoutLines, List<string> stderrLines)
+		bool RunGit (string [] arguments, List<string> stdoutLines, List<string> stderrLines)
 		{
 			stdoutLines?.Clear ();
 			stderrLines?.Clear ();
 
 			bool canContinue = true;
+			var command = $"{GitPath} {string.Join (" ", arguments)}";
 			int exitCode = RunCommand (GitPath, arguments, stdoutLines, stderrLines);
 
 			if (exitCode != 0) {
 				canContinue = false;
-				Log.LogError ($"'{GitPath} {arguments}' exited with code {exitCode}");
+				Log.LogError ($"'{command}' exited with code {exitCode}");
 			}
 
 			if (stderrLines.Count > 0) {
@@ -245,13 +246,13 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 			if (stdoutLines.Count == 0) {
 				canContinue = false;
-				Log.LogError ($"'{GitPath} {arguments}' produced no output");
+				Log.LogError ($"'{command}' produced no output");
 			}
 
 			return canContinue;
 		}
 
-		int RunCommand (string commandPath, string arguments, List<string> stdoutLines, List<string> stderrLines)
+		int RunCommand (string commandPath, string [] arguments, List<string> stdoutLines, List<string> stderrLines)
 		{
 			var si = new ProcessStartInfo (commandPath) {
 				UseShellExecute = false,
@@ -262,8 +263,10 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				InheritedHandles = [],
 				StandardOutputEncoding = Encoding.Default,
 				StandardErrorEncoding = Encoding.Default,
-				Arguments = arguments,
 			};
+			foreach (var argument in arguments) {
+				si.ArgumentList.Add (argument);
+			}
 			si.EnvironmentVariables.Add ("LC_LANG", "C");
 
 			using var p = Process.Start (si) ?? throw new InvalidOperationException ($"Could not start '{commandPath}'.");
@@ -291,7 +294,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 					? p.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.FromSeconds (ProcessTimeout))
 					: p.SafeHandle.WaitForExit ();
 				if (status.Canceled) {
-					Log.LogWarning ($"Process '{commandPath} {arguments}' failed to exit within {ProcessTimeout}s.");
+					Log.LogWarning ($"Process '{commandPath} {string.Join (" ", arguments)}' failed to exit within {ProcessTimeout}s.");
 				}
 				output.WaitAsync (TimeSpan.FromSeconds (OutputTimeout <= 0 ? 1 : OutputTimeout)).GetAwaiter ().GetResult ();
 				return status.Canceled ? -1 : status.ExitCode;

@@ -1,6 +1,5 @@
 #!/usr/bin/env dotnet
 #:property TargetFramework=net11.0
-#:property PublishAot=false
 #:property Nullable=disable
 
 using System;

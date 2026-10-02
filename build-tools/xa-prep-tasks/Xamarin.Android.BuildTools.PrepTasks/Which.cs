@@ -152,16 +152,20 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 		internal static Version GetProgramVersion (string hostOS, string command)
 		{
-			string shell, format;
-			GetShell (hostOS, out shell, out format);
-
-			var psi = new ProcessStartInfo (shell, string.Format (format, command)) {
+			bool windows = string.Equals (hostOS, "Windows", StringComparison.OrdinalIgnoreCase);
+			var psi = new ProcessStartInfo (windows ? "cmd.exe" : "/bin/sh") {
 				CreateNoWindow = true,
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
 				InheritedHandles = [],
 			};
+			if (windows) {
+				psi.Arguments = $"/c \"{command}\"";
+			} else {
+				psi.ArgumentList.Add ("-c");
+				psi.ArgumentList.Add (command);
+			}
 			var result = Process.RunAndCaptureText (psi, TimeSpan.FromSeconds (30));
 			Console.Error.Write (result.StandardError);
 			if (result.ExitStatus.Canceled) {
@@ -171,34 +175,16 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				throw new InvalidOperationException ($"Version command '{command}' failed with exit code {result.ExitStatus.ExitCode}.");
 			}
 
-			string curVersion = null;
-			using (var reader = new StringReader (result.StandardOutput)) {
-				string line;
-				while ((line = reader.ReadLine ()) != null) {
-					var m = VersionMatch.Match (line);
-					if (!m.Success)
-						continue;
-					curVersion = m.Groups ["version"].Value;
-					if (!curVersion.Contains (".")) {
-						curVersion += ".0";
-					}
-					break;
-				}
+			using var reader = new StringReader (result.StandardOutput);
+			string line;
+			while ((line = reader.ReadLine ()) != null) {
+				var match = VersionMatch.Match (line);
+				if (!match.Success)
+					continue;
+				var version = match.Groups ["version"].Value;
+				return new Version (version.Contains (".") ? version : version + ".0");
 			}
-			return curVersion == null
-				? new Version ()
-				: new Version (curVersion);
-		}
-
-		static void GetShell (string hostOS, out string shell, out string format)
-		{
-			if (string.Equals (hostOS, "Windows", StringComparison.OrdinalIgnoreCase)) {
-				shell = "cmd.exe";
-				format = "/c \"{0}\"";
-				return;
-			}
-			shell = "/bin/sh";
-			format = "-c \"{0}\"";
+			return new Version ();
 		}
 	}
 }

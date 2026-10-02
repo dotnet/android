@@ -166,6 +166,8 @@ steps:
       if [ "$SKILL_NAME" = "update-androidsdk-packages" ]; then
         bash eng/install-dotnet.sh
         bin/Debug/dotnet/dotnet build build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj -v:minimal
+        echo "$PWD/bin/Debug/dotnet" >> "$GITHUB_PATH"
+        echo "DOTNET_ROOT=$PWD/bin/Debug/dotnet" >> "$GITHUB_ENV"
       fi
 description: Weekly (or on-demand) runner that executes a selectable repository Copilot skill end to end, opens a PR for validated changes, and always reports outcome/errors on a tracking issue
 model: gpt-5.6-sol

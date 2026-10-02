@@ -177,10 +177,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 					var apiCompat = new FileInfo (Path.Combine (ApiCompatPath, "..", "netcoreapp3.1", "Microsoft.DotNet.ApiCompat.dll"));
 					genApiProcess.StartInfo.FileName = "dotnet";
-					genApiProcess.StartInfo.Arguments = $"\"{apiCompat}\" ";
-
-					genApiProcess.StartInfo.Arguments += $"\"{contractAssembly.FullName}\" -i \"{TargetImplementationPath}\" --allow-default-interface-methods ";
-
+					genApiProcess.StartInfo.ArgumentList.Add (apiCompat.FullName);
+					genApiProcess.StartInfo.ArgumentList.Add (contractAssembly.FullName);
+					genApiProcess.StartInfo.ArgumentList.Add ("-i");
+					genApiProcess.StartInfo.ArgumentList.Add (TargetImplementationPath);
+					genApiProcess.StartInfo.ArgumentList.Add ("--allow-default-interface-methods");
 
 					// Verify if there is a file with acceptable issues.
 					var acceptableIssuesFiles = new[]{
@@ -191,13 +192,16 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 						.Where (v => v.Exists)
 						.FirstOrDefault ();
 					if (acceptableIssuesFile != null) {
-						genApiProcess.StartInfo.Arguments += $"--baseline \"{acceptableIssuesFile.FullName}\" --validate-baseline ";
+						genApiProcess.StartInfo.ArgumentList.Add ("--baseline");
+						genApiProcess.StartInfo.ArgumentList.Add (acceptableIssuesFile.FullName);
+						genApiProcess.StartInfo.ArgumentList.Add ("--validate-baseline");
 					}
 
 					// Verify if there is an exclusion list
 					var excludeAttributes = new FileInfo (Path.Combine (ApiCompatibilityPath, $"api-compat-exclude-attributes.txt"));
 					if (excludeAttributes.Exists) {
-						genApiProcess.StartInfo.Arguments += $"--exclude-attributes \"{excludeAttributes.FullName}\" ";
+						genApiProcess.StartInfo.ArgumentList.Add ("--exclude-attributes");
+						genApiProcess.StartInfo.ArgumentList.Add (excludeAttributes.FullName);
 					}
 
 					genApiProcess.StartInfo.UseShellExecute = false;
@@ -207,19 +211,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					genApiProcess.StartInfo.InheritedHandles = [];
 					var lines = new List<string> ();
 					var processHasCrashed = false;
-					void dataReceived (string data, bool standardError)
-					{
-						if (!string.IsNullOrWhiteSpace (data)) {
-							lines.Add (data.Trim ());
-
-							if (data.IndexOf ("Native Crash Reporting", StringComparison.Ordinal) != -1) {
-								processHasCrashed = true;
-							}
-						}
-					}
-
 					// Get api definition for previous Api
-					compatApiCommand = $"CompatApi command: {genApiProcess.StartInfo.FileName} {genApiProcess.StartInfo.Arguments}";
+					compatApiCommand = $"CompatApi command: dotnet {string.Join (" ", genApiProcess.StartInfo.ArgumentList.Select (a => $"\"{a}\""))}";
 					Log.LogMessage (MessageImportance.High, compatApiCommand);
 
 					int exitCode;
@@ -228,7 +221,13 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					genApiProcess.Start ();
 					try {
 						foreach (var line in genApiProcess.ReadAllLines (timeout)) {
-							dataReceived (line.Content, line.StandardError);
+							if (string.IsNullOrWhiteSpace (line.Content)) {
+								continue;
+							}
+							lines.Add (line.Content.Trim ());
+							if (line.Content.IndexOf ("Native Crash Reporting", StringComparison.Ordinal) != -1) {
+								processHasCrashed = true;
+							}
 						}
 						var remaining = timeout - timer.Elapsed;
 						var status = genApiProcess.SafeHandle.WaitForExitOrKillOnTimeout (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero);
