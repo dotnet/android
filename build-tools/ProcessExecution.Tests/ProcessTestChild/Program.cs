@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,11 +36,20 @@ namespace Xamarin.Android.BuildTools.Tests
 				}
 			}
 
-			if (args [0] == "hang" || args [0] == "hold-pipes") {
+			if (args [0] == "hang" || args [0] == "hold-pipes" || args [0] == "closed-pipes") {
 				if (args.Length > 1) {
 					File.WriteAllText (args [1], Environment.ProcessId.ToString ());
 				}
 				Console.WriteLine ($"pid:{Environment.ProcessId}");
+				if (args [0] == "closed-pipes") {
+					if (OperatingSystem.IsWindows ()) {
+						if (!CloseHandle (GetStdHandle (-11)) || !CloseHandle (GetStdHandle (-12))) {
+							throw new System.ComponentModel.Win32Exception (Marshal.GetLastWin32Error ());
+						}
+					} else if (Close (1) != 0 || Close (2) != 0) {
+						throw new System.ComponentModel.Win32Exception (Marshal.GetLastWin32Error ());
+					}
+				}
 				Thread.Sleep (60000);
 				return 0;
 			}
@@ -163,5 +173,14 @@ namespace Xamarin.Android.BuildTools.Tests
 				writer.WriteLine (padding == "" ? prefix : $"{prefix}-{i:D5}:{padding ?? Padding}");
 			}
 		}
+
+		[DllImport ("kernel32.dll")]
+		static extern IntPtr GetStdHandle (int handle);
+
+		[DllImport ("kernel32.dll", SetLastError = true)]
+		static extern bool CloseHandle (IntPtr handle);
+
+		[DllImport ("libc", EntryPoint = "close", SetLastError = true)]
+		static extern int Close (int descriptor);
 	}
 }

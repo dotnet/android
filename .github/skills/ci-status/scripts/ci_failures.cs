@@ -1,18 +1,18 @@
 #!/usr/bin/env dotnet
+#:property TargetFramework=net11.0
+#:property PublishAot=false
 // Enriched failure analysis for one dnceng-public `dotnet-android` build:
 //   1. cross-config matrix per failed test (failed/passed/retried configs) + stack/asserts
 //   2. crashed / incomplete lanes (started-but-not-finished culprit lives in logcat)
 //   3. branch cross-reference (PR changes that name a failing test's class/namespace/assembly)
 //
-// Needs `az login`. Usage: dotnet run ci_failures.cs -- --build-id N [--pr N] [--repo dotnet/android]
+// Needs a .NET 11 SDK and `az login`. Usage: dotnet run ci_failures.cs -- --build-id N [--pr N] [--repo dotnet/android]
 
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 const string ORG = "https://dev.azure.com/dnceng-public";
 const string PROJECT = "public";
@@ -334,6 +334,7 @@ static (int code, string stdout, string stderr) Run (string file, params string 
 		RedirectStandardOutput = true,
 		RedirectStandardError = true,
 		UseShellExecute = false,
+		InheritedHandles = [],
 	};
 	foreach (var a in cliArgs)
 		psi.ArgumentList.Add (a);
@@ -342,42 +343,10 @@ static (int code, string stdout, string stderr) Run (string file, params string 
 
 static (int code, string stdout, string stderr) CaptureCommand (ProcessStartInfo psi, TimeSpan timeout)
 {
-	using var cancellation = new CancellationTokenSource (timeout);
-	using var proc = Process.Start (psi);
-	if (proc is null)
-		return (-1, "", $"failed to start {psi.FileName}");
-	using var stdoutReader = proc.StandardOutput;
-	using var stderrReader = proc.StandardError;
-	var stdout = stdoutReader.ReadToEndAsync (cancellation.Token);
-	var stderr = stderrReader.ReadToEndAsync (cancellation.Token);
-	var readers = Task.WhenAll (stdout, stderr);
-	var exit = proc.WaitForExitAsync (cancellation.Token);
-	try {
-		Task.WhenAny (exit, readers).GetAwaiter ().GetResult ();
-		if (readers.IsCompleted)
-			readers.GetAwaiter ().GetResult ();
-		Task.WhenAll (exit, readers).GetAwaiter ().GetResult ();
-		return (proc.ExitCode, stdout.GetAwaiter ().GetResult (), stderr.GetAwaiter ().GetResult ());
-	} catch (OperationCanceledException ex) when (cancellation.IsCancellationRequested) {
-		throw new TimeoutException ($"'{psi.FileName}' did not complete within {timeout}.", ex);
-	} finally {
-		cancellation.Cancel ();
-		try {
-			if (!proc.HasExited) {
-				try {
-					proc.Kill (entireProcessTree: true);
-				} catch (InvalidOperationException) when (proc.HasExited) {
-				}
-				if (!proc.WaitForExit (5000))
-					throw new TimeoutException ($"'{psi.FileName}' did not exit after being killed.");
-			}
-		} finally {
-			try {
-				Task.WhenAll (exit, readers).WaitAsync (TimeSpan.FromSeconds (5)).GetAwaiter ().GetResult ();
-			} catch (OperationCanceledException) when (cancellation.IsCancellationRequested) {
-			}
-		}
-	}
+	var result = Process.RunAndCaptureText (psi, timeout);
+	if (result.ExitStatus.Canceled)
+		throw new TimeoutException ($"'{psi.FileName}' did not complete within {timeout}.");
+	return (result.ExitStatus.ExitCode, result.StandardOutput, result.StandardError);
 }
 
 static JsonArray GetArray (JsonNode? root, string key)
