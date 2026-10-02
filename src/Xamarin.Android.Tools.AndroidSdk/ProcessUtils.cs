@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +16,8 @@ namespace Xamarin.Android.Tools
 	public static class ProcessUtils
 	{
 		static string[] ExecutableFileExtensions;
+		static readonly TimeSpan OutputDrainTimeout = TimeSpan.FromSeconds (30);
+		static readonly TimeSpan ShutdownTimeout = TimeSpan.FromSeconds (5);
 
 		static ProcessUtils ()
 		{
@@ -40,126 +43,254 @@ namespace Xamarin.Android.Tools
 
 		public static async Task<int> StartProcess (ProcessStartInfo psi, TextWriter? stdout, TextWriter? stderr, CancellationToken cancellationToken, IDictionary<string, string>? environmentVariables, Action<Process>? onStarted)
 		{
+			if (psi == null)
+				throw new ArgumentNullException (nameof (psi));
 			cancellationToken.ThrowIfCancellationRequested ();
+			if (psi.RedirectStandardOutput && stdout == null)
+				throw new ArgumentException ("A writer is required for redirected standard output.", nameof (stdout));
+			if (psi.RedirectStandardError && stderr == null)
+				throw new ArgumentException ("A writer is required for redirected standard error.", nameof (stderr));
+
 			psi.UseShellExecute = false;
 			psi.RedirectStandardOutput |= stdout != null;
 			psi.RedirectStandardError |= stderr != null;
 
 			if (environmentVariables != null) {
 				foreach (var kvp in environmentVariables)
-					psi.EnvironmentVariables[kvp.Key] = kvp.Value;
+					psi.EnvironmentVariables [kvp.Key] = kvp.Value;
 			}
 
-			var process = new Process {
+			using var process = new Process {
 				StartInfo = psi,
 				EnableRaisingEvents = true,
 			};
-
-			Task output = Task.FromResult (true);
-			Task error = Task.FromResult (true);
 			Task exit = WaitForExitAsync (process);
-			using (process) {
-				process.Start ();
-				if (onStarted != null)
-					onStarted (process);
+			process.Start ();
+			using var input = psi.RedirectStandardInput ? process.StandardInput : null;
+			using var outputReader = psi.RedirectStandardOutput ? process.StandardOutput : null;
+			using var errorReader = psi.RedirectStandardError ? process.StandardError : null;
+			using var readCancellation = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
 
-				// If the token is cancelled while we're running, kill the process.
-				// Otherwise once we finish the Task.WhenAll we can remove this registration
-				// as there is no longer any need to Kill the process.
-				//
-				// We wrap `stdout` and `stderr` in syncronized wrappers for safety in case they
-				// end up writing to the same buffer, or they are the same object.
-				using (cancellationToken.Register (() => KillProcess (process))) {
-					if (psi.RedirectStandardOutput)
-						output = ReadStreamAsync (process.StandardOutput, TextWriter.Synchronized (stdout!));
+			var outputWriter = stdout == null ? null : TextWriter.Synchronized (stdout);
+			var errorWriter = ReferenceEquals (stdout, stderr)
+				? outputWriter
+				: stderr == null ? null : TextWriter.Synchronized (stderr);
+			Task output = Task.CompletedTask;
+			Task error = Task.CompletedTask;
+			if (outputReader != null && outputWriter != null)
+				output = Task.Run (() => ReadStreamAsync (outputReader, outputWriter, readCancellation.Token));
+			if (errorReader != null && errorWriter != null)
+				error = Task.Run (() => ReadStreamAsync (errorReader, errorWriter, readCancellation.Token));
 
-					if (psi.RedirectStandardError)
-						error = ReadStreamAsync (process.StandardError, TextWriter.Synchronized (stderr!));
-
-					await Task.WhenAll (new [] { output, error, exit }).ConfigureAwait (false);
-				}
-				// If we invoke 'KillProcess' our output, error and exit tasks will all complete normally.
-				// To protected against passing the user incomplete data we have to call
-				// `cancellationToken.ThrowIfCancellationRequested ()` here.
-				cancellationToken.ThrowIfCancellationRequested ();
-				return process.ExitCode;
+			var started = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var completion = CompleteProcessAsync (process, exit, output, error, started.Task, readCancellation, cancellationToken);
+			try {
+				onStarted?.Invoke (process);
+				started.TrySetResult (true);
+			} catch (Exception ex) {
+				started.TrySetException (ex);
 			}
+			return await completion.ConfigureAwait (false);
 		}
 
 		static void KillProcess (Process p)
 		{
+			if (p.HasExited)
+				return;
 			try {
 				p.Kill ();
-			} catch (InvalidOperationException) {
-				// If the process has already exited this could happen
+			} catch (InvalidOperationException) when (p.HasExited) {
+				// The owned root exited between checking and terminating it.
 			}
 		}
 
 		static Task WaitForExitAsync (Process process)
 		{
-			var exitDone = new TaskCompletionSource<bool> ();
+			var exitDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 			process.Exited += (o, e) => exitDone.TrySetResult (true);
 			return exitDone.Task;
 		}
 
-		static async Task ReadStreamAsync (StreamReader stream, TextWriter destination)
+		static async Task<int> CompleteProcessAsync (Process process, Task exit, Task output, Task error, Task started,
+			CancellationTokenSource readCancellation, CancellationToken cancellationToken)
 		{
-			int read;
+			var failures = new List<Exception> ();
+			using var timerCancellation = new CancellationTokenSource ();
+			var canceled = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			using (cancellationToken.Register (() => canceled.TrySetResult (true))) {
+				try {
+					var pending = new List<Task> { output, error, started, exit };
+					Task? drainTimeout = null;
+					while (pending.Count > 0) {
+						var waits = new List<Task> (pending) { canceled.Task };
+						if (drainTimeout != null && (!output.IsCompleted || !error.IsCompleted))
+							waits.Add (drainTimeout);
+						var completed = await Task.WhenAny (waits).ConfigureAwait (false);
+						if (completed == canceled.Task || (completed.IsCanceled && cancellationToken.IsCancellationRequested))
+							cancellationToken.ThrowIfCancellationRequested ();
+						if (completed == drainTimeout)
+							throw new TimeoutException ($"Process '{process.StartInfo.FileName}' exited, but its redirected output did not close within {OutputDrainTimeout.TotalSeconds} seconds.");
+						await completed.ConfigureAwait (false);
+						pending.Remove (completed);
+						if (completed == exit && (!output.IsCompleted || !error.IsCompleted))
+							drainTimeout = Task.Delay (OutputDrainTimeout, timerCancellation.Token);
+					}
+					cancellationToken.ThrowIfCancellationRequested ();
+				} catch (Exception ex) {
+					failures.Add (ex);
+				}
+			}
+
+			timerCancellation.Cancel ();
+			readCancellation.Cancel ();
+			if (failures.Count > 0) {
+				try {
+					KillProcess (process);
+				} catch (Exception ex) {
+					failures.Add (ex);
+				}
+			}
+
+			var shutdown = Task.WhenAll (output, error, started, exit);
+			if (!shutdown.IsCompleted) {
+				using var shutdownTimer = new CancellationTokenSource ();
+				if (await Task.WhenAny (shutdown, Task.Delay (ShutdownTimeout, shutdownTimer.Token)).ConfigureAwait (false) != shutdown)
+					failures.Add (new TimeoutException ($"Process '{process.StartInfo.FileName}' or its output consumers did not stop within {ShutdownTimeout.TotalSeconds} seconds."));
+				shutdownTimer.Cancel ();
+			}
+			foreach (var task in new [] { output, error, started, exit }) {
+				if (task.Exception is { } exceptions) {
+					foreach (var ex in exceptions.InnerExceptions) {
+						// A real consumer failure must not be hidden by concurrent execution cancellation.
+						if (task != exit && failures.Count > 0 && failures [0] is OperationCanceledException && cancellationToken.IsCancellationRequested)
+							failures [0] = ex;
+						if (!failures.Contains (ex))
+							failures.Add (ex);
+					}
+				}
+				ObserveFailure (task);
+			}
+			ObserveFailure (shutdown);
+			if (failures.Count == 1)
+				ExceptionDispatchInfo.Capture (failures [0]).Throw ();
+			if (failures.Count > 1)
+				throw new AggregateException (failures);
+			return process.ExitCode;
+		}
+
+		static void ObserveFailure (Task task)
+		{
+			if (task.IsCompleted) {
+				_ = task.Exception;
+				return;
+			}
+			task.ContinueWith (t => { _ = t.Exception; }, CancellationToken.None,
+				TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+		}
+
+		static async Task ReadStreamAsync (StreamReader stream, TextWriter destination, CancellationToken cancellationToken)
+		{
+			// The netstandard2.0 StreamReader overload cannot pass cancellation to its byte stream.
+			using var source = new CancellableReadStream (stream.BaseStream, cancellationToken);
+			using var reader = new StreamReader (source, stream.CurrentEncoding, detectEncodingFromByteOrderMarks: true, bufferSize: 4096, leaveOpen: true);
 			var buffer = new char [4096];
-			while ((read = await stream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false)) > 0)
+			int read;
+			while ((read = await reader.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false)) > 0) {
+				cancellationToken.ThrowIfCancellationRequested ();
 				destination.Write (buffer, 0, read);
+			}
+		}
+
+		sealed class CancellableReadStream : Stream
+		{
+			readonly Stream source;
+			readonly CancellationToken cancellationToken;
+			readonly TaskCompletionSource<bool> canceled = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			readonly CancellationTokenRegistration registration;
+
+			public CancellableReadStream (Stream source, CancellationToken cancellationToken)
+			{
+				this.source = source;
+				this.cancellationToken = cancellationToken;
+				registration = cancellationToken.Register (() => canceled.TrySetResult (true));
+			}
+
+			public override bool CanRead => source.CanRead;
+			public override bool CanSeek => false;
+			public override bool CanWrite => false;
+			public override long Length => throw new NotSupportedException ();
+			public override long Position {
+				get => throw new NotSupportedException ();
+				set => throw new NotSupportedException ();
+			}
+
+			public override int Read (byte[] buffer, int offset, int count)
+			{
+				cancellationToken.ThrowIfCancellationRequested ();
+				return source.Read (buffer, offset, count);
+			}
+
+			public override async Task<int> ReadAsync (byte[] buffer, int offset, int count, CancellationToken token)
+			{
+				cancellationToken.ThrowIfCancellationRequested ();
+				var read = source.ReadAsync (buffer, offset, count, cancellationToken);
+				if (await Task.WhenAny (read, canceled.Task).ConfigureAwait (false) != read) {
+					// Older streams may not interrupt an in-flight read. Never deliver its late data.
+					ObserveFailure (read);
+					cancellationToken.ThrowIfCancellationRequested ();
+				}
+				if (cancellationToken.IsCancellationRequested) {
+					ObserveFailure (read);
+					cancellationToken.ThrowIfCancellationRequested ();
+				}
+				return await read.ConfigureAwait (false);
+			}
+
+			public override void Flush () => throw new NotSupportedException ();
+			public override long Seek (long offset, SeekOrigin origin) => throw new NotSupportedException ();
+			public override void SetLength (long value) => throw new NotSupportedException ();
+			public override void Write (byte[] buffer, int offset, int count) => throw new NotSupportedException ();
+
+			protected override void Dispose (bool disposing)
+			{
+				if (disposing) {
+					registration.Dispose ();
+					source.Dispose ();
+				}
+				base.Dispose (disposing);
+			}
 		}
 
 		/// <summary>
 		/// Executes an Android Sdk tool and returns a result. The result is based on a function of the command output.
 		/// </summary>
-		public static Task<TResult> ExecuteToolAsync<TResult> (string exe, Func<string, TResult> result, CancellationToken token, Action<Process>? onStarted = null)
+		public static async Task<TResult> ExecuteToolAsync<TResult> (string exe, Func<string, TResult> result, CancellationToken token, Action<Process>? onStarted = null)
 		{
-			var tcs = new TaskCompletionSource<TResult> ();
-
-			var log = new StringWriter ();
-			var error = new StringWriter ();
+			if (result == null)
+				throw new ArgumentNullException (nameof (result));
+			using var log = new StringWriter ();
+			using var error = new StringWriter ();
 
 			var psi = new ProcessStartInfo (exe);
 			psi.CreateNoWindow = true;
 			psi.RedirectStandardInput = onStarted != null;
 
-			var processTask = ProcessUtils.StartProcess (psi, log, error, token, null, onStarted);
+			var exitCode = await StartProcess (psi, log, error, token, null, onStarted).ConfigureAwait (false);
 			var exeName = Path.GetFileName (exe);
-
-			processTask.ContinueWith (t => {
-				var output = log.ToString ();
-				var errorOutput = error.ToString ();
-				log.Dispose ();
-				error.Dispose ();
-
-				if (t.IsCanceled) {
-					tcs.TrySetCanceled ();
-					return;
-				}
-
-				if (t.IsFaulted) {
-					tcs.TrySetException (t.Exception?.Flatten ()?.InnerException ?? t.Exception!);
-					return;
-				}
-
-				if (t.Result == 0) {
-					tcs.TrySetResult (result != null ? result (output) : default (TResult)!);
-				} else {
-					var errorMessage = !string.IsNullOrEmpty (errorOutput) ? errorOutput : output;
-					errorMessage = string.IsNullOrEmpty (errorMessage)
-						? $"`{exeName}` returned non-zero exit code"
-						: $"{t.Result} : {errorMessage}";
-
-					tcs.TrySetException (new InvalidOperationException (errorMessage));
-				}
-			}, TaskContinuationOptions.ExecuteSynchronously);
-
-			return tcs.Task;
+			if (exitCode == 0)
+				return result (log.ToString ());
+			var errorMessage = error.ToString ();
+			if (errorMessage.Length == 0)
+				errorMessage = log.ToString ();
+			throw new InvalidOperationException (errorMessage.Length == 0
+				? $"`{exeName}` returned non-zero exit code"
+				: $"{exitCode} : {errorMessage}");
 		}
 
 		internal static void Exec (ProcessStartInfo processStartInfo, DataReceivedEventHandler output, bool includeStderr = true)
 		{
+			if (output == null)
+				throw new ArgumentNullException (nameof (output));
 			processStartInfo.UseShellExecute         = false;
 			processStartInfo.RedirectStandardInput   = false;
 			processStartInfo.RedirectStandardOutput  = true;
@@ -167,19 +298,48 @@ namespace Xamarin.Android.Tools
 			processStartInfo.CreateNoWindow          = true;
 			processStartInfo.WindowStyle             = ProcessWindowStyle.Hidden;
 
-			var p = new Process () {
+			using var p = new Process () {
 				StartInfo   = processStartInfo,
+				EnableRaisingEvents = true,
 			};
-			p.OutputDataReceived    += output;
-			if (includeStderr) {
-				p.ErrorDataReceived   += output;
-			}
+			using var readCancellation = new CancellationTokenSource ();
+			var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var started = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var callbackLock = new object ();
+			p.OutputDataReceived += (sender, e) => Receive (sender, e, outputDone, include: true);
+			p.ErrorDataReceived += (sender, e) => Receive (sender, e, errorDone, includeStderr);
 
-			using (p) {
-				p.Start ();
+			using var stopReading = readCancellation.Token.Register (() => {
+				outputDone.TrySetCanceled ();
+				errorDone.TrySetCanceled ();
+			});
+			var exit = WaitForExitAsync (p);
+			p.Start ();
+			var completion = CompleteProcessAsync (p, exit, outputDone.Task, errorDone.Task, started.Task, readCancellation, CancellationToken.None);
+			try {
 				p.BeginOutputReadLine ();
 				p.BeginErrorReadLine ();
-				p.WaitForExit ();
+				started.TrySetResult (true);
+			} catch (Exception ex) {
+				started.TrySetException (ex);
+			}
+			completion.GetAwaiter ().GetResult ();
+
+			void Receive (object sender, DataReceivedEventArgs e, TaskCompletionSource<bool> done, bool include)
+			{
+				lock (callbackLock) {
+					if (readCancellation.IsCancellationRequested || outputDone.Task.IsFaulted || errorDone.Task.IsFaulted)
+						return;
+					try {
+						if (include)
+							output (sender, e);
+						if (e.Data == null)
+							done.TrySetResult (true);
+					} catch (Exception ex) {
+						done.TrySetException (ex);
+					}
+				}
 			}
 		}
 
