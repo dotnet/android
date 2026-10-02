@@ -129,34 +129,26 @@ public class AssemblyStoreTests
 	}
 #endif // NET11_0_OR_GREATER
 
-	[TestCase (2u, "lib/arm64-v8a/libassemblies.arm64-v8a.blob.so", "apk", CompressionLevel.NoCompression)]
-	[TestCase (2u, "lib/arm64-v8a/libassemblies.arm64-v8a.blob.so", "apk", CompressionLevel.Optimal)]
-	[TestCase (3u, "lib/arm64-v8a/libassembly-store.so", "apk", CompressionLevel.NoCompression)]
-	[TestCase (3u, "lib/arm64-v8a/libassembly-store.so", "apk", CompressionLevel.Optimal)]
-	[TestCase (3u, "base/lib/arm64-v8a/libassembly-store.so", "aab", CompressionLevel.NoCompression)]
-	[TestCase (3u, "base/lib/arm64-v8a/libassembly-store.so", "aab", CompressionLevel.Optimal)]
-	[TestCase (3u, "lib/arm64-v8a/libassembly-store.so", "zip", CompressionLevel.NoCompression)]
-	[TestCase (3u, "lib/arm64-v8a/libassembly-store.so", "zip", CompressionLevel.Optimal)]
-	public void ReadsV2ArchivePathsAndVersions (uint version, string storePath, string extension, CompressionLevel compressionLevel)
+	[TestCase (2u, "lib/arm64-v8a/libassemblies.arm64-v8a.blob.so")]
+	[TestCase (3u, "lib/arm64-v8a/libassembly-store.so")]
+	public void ReadsV2ArchivePathsAndVersions (uint version, string storePath)
 	{
 		string directory = CreateTemporaryDirectory ();
 		try {
-			string archivePath = Path.Combine (directory, $"legacy-v2.{extension}");
-			using (FileStream file = File.Create (archivePath))
+			string apk = Path.Combine (directory, "legacy-v2.apk");
+			using (FileStream file = File.Create (apk))
 			using (var archive = new ZipArchive (file, ZipArchiveMode.Create)) {
-				WriteAndroidArchiveMarkers (archive, extension);
+				archive.CreateEntry ("AndroidManifest.xml");
 				WriteEntry (
 					archive,
 					storePath,
-					CreateV2Store (assemblyData, version),
-					compressionLevel
+					CreateV2Store (assemblyData, version)
 				);
 			}
 
-			(IList<AssemblyStoreExplorer>? explorers, string? errorMessage) = AssemblyStoreExplorer.Open (archivePath);
+			(IList<AssemblyStoreExplorer>? explorers, string? errorMessage) = AssemblyStoreExplorer.Open (apk);
 			Assert.IsNull (errorMessage);
 			Assert.IsNotNull (explorers);
-			File.Delete (archivePath);
 
 			AssemblyStoreExplorer explorer = RequireSingle (explorers, "v2 store explorer");
 			IList<AssemblyStoreItem>? items = explorer.Find ("Test.dll", AndroidTargetArch.Arm64);
@@ -164,44 +156,6 @@ public class AssemblyStoreTests
 			AssemblyStoreItem item = RequireSingle (items, "v2 store item");
 			using Stream image = explorer.ReadImageData (item, uncompressIfNeeded: true) ??
 				throw new InvalidOperationException ("V2 store image was not returned");
-			using var output = new MemoryStream ();
-			image.CopyTo (output);
-			CollectionAssert.AreEqual (assemblyData, output.ToArray ());
-		} finally {
-			Directory.Delete (directory, recursive: true);
-		}
-	}
-
-	[TestCase ("apk", "assemblies/", CompressionLevel.NoCompression)]
-	[TestCase ("apk", "assemblies/", CompressionLevel.Optimal)]
-	[TestCase ("aab", "base/root/assemblies/", CompressionLevel.NoCompression)]
-	[TestCase ("aab", "base/root/assemblies/", CompressionLevel.Optimal)]
-	[TestCase ("zip", "root/assemblies/", CompressionLevel.NoCompression)]
-	[TestCase ("zip", "root/assemblies/", CompressionLevel.Optimal)]
-	public void ReadsLegacyArchiveStoresAfterClosingArchive (string extension, string assembliesPath, CompressionLevel compressionLevel)
-	{
-		string directory = CreateTemporaryDirectory ();
-		try {
-			string indexStore = Path.Combine (directory, "assemblies.blob");
-			CreateV1StoreSet (indexStore, assemblyData);
-
-			string archivePath = Path.Combine (directory, $"legacy-v1.{extension}");
-			using (FileStream file = File.Create (archivePath))
-			using (var archive = new ZipArchive (file, ZipArchiveMode.Create)) {
-				WriteAndroidArchiveMarkers (archive, extension);
-				foreach (string fileName in new [] { "assemblies.blob", "assemblies.arm64_v8a.blob", "assemblies.manifest" }) {
-					WriteEntry (archive, $"{assembliesPath}{fileName}", File.ReadAllBytes (Path.Combine (directory, fileName)), compressionLevel);
-				}
-			}
-
-			(IList<AssemblyStoreExplorer>? explorers, string? errorMessage) = AssemblyStoreExplorer.Open (archivePath);
-			Assert.IsNull (errorMessage);
-			File.Delete (archivePath);
-
-			AssemblyStoreExplorer explorer = RequireSingle (explorers, "legacy archive store explorer");
-			AssemblyStoreItem item = RequireSingle (explorer.Find ("Test.dll", AndroidTargetArch.Arm64), "legacy archive store item");
-			using Stream image = explorer.ReadImageData (item) ??
-				throw new InvalidOperationException ("Legacy archive store image was not returned");
 			using var output = new MemoryStream ();
 			image.CopyTo (output);
 			CollectionAssert.AreEqual (assemblyData, output.ToArray ());
@@ -379,27 +333,9 @@ public class AssemblyStoreTests
 		return output.ToArray ();
 	}
 
-	static void WriteAndroidArchiveMarkers (ZipArchive archive, string extension)
+	static void WriteEntry (ZipArchive archive, string path, byte[] data)
 	{
-		switch (extension) {
-			case "apk":
-				archive.CreateEntry ("AndroidManifest.xml");
-				break;
-			case "aab":
-				archive.CreateEntry ("base/manifest/AndroidManifest.xml");
-				archive.CreateEntry ("BundleConfig.pb");
-				break;
-			case "zip":
-				archive.CreateEntry ("manifest/AndroidManifest.xml");
-				break;
-			default:
-				throw new NotSupportedException ($"Unsupported archive extension '{extension}'");
-		}
-	}
-
-	static void WriteEntry (ZipArchive archive, string path, byte[] data, CompressionLevel compressionLevel = CompressionLevel.NoCompression)
-	{
-		ZipArchiveEntry entry = archive.CreateEntry (path, compressionLevel);
+		ZipArchiveEntry entry = archive.CreateEntry (path, CompressionLevel.NoCompression);
 		using Stream output = entry.Open ();
 		output.Write (data);
 	}

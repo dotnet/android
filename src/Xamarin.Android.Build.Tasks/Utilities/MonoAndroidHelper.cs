@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.IO;
+using System.IO.Compression;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Text;
@@ -427,6 +428,15 @@ namespace Xamarin.Android.Tasks
 			return changed;
 		}
 
+		public static ZipArchive ReadZipFile (string filename)
+		{
+			try {
+				return Files.ReadZipFile (filename);
+			} catch (InvalidDataException ex) {
+				throw new InvalidDataException ($"There was an error opening {filename}. The file is probably corrupt. Try deleting it and building again. {ex.Message}", ex);
+			}
+		}
+
 #if MSBUILD
 		public static bool IsFrameworkAssembly (ITaskItem assembly)
 		{
@@ -557,6 +567,23 @@ namespace Xamarin.Android.Tasks
 			}
 			return string.Empty;
 		}
+
+		static readonly char [] DirectorySeparators = new [] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+#if MSBUILD
+		/// <summary>
+		/// Returns the relative path that should be used for an @(AndroidAsset) item
+		/// </summary>
+		public static string GetRelativePathForAndroidAsset (string assetsDirectory, ITaskItem androidAsset)
+		{
+			var path = androidAsset.GetMetadata ("Link");
+			path = !string.IsNullOrWhiteSpace (path) ? path : androidAsset.ItemSpec;
+			var head = string.Join ("\\", path.Split (DirectorySeparators).TakeWhile (s => !s.Equals (assetsDirectory, StringComparison.OrdinalIgnoreCase)));
+			path = head.Length == path.Length ? path : path.Substring ((head.Length == 0 ? 0 : head.Length + 1) + assetsDirectory.Length).TrimStart (DirectorySeparators);
+			return path;
+		}
+#endif // MSBUILD
+
+
 
 		/// <summary>
 		/// Converts $(SupportedOSPlatformVersion) to an API level, as it can be a version (21.0), or an int (21).

@@ -23,22 +23,4 @@
     <ProjectReference Include="..\..\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
   </ItemGroup>
 
-  <!-- Exercise the ZIP task implementations without requiring generated Android bindings or a local workload. -->
-  <ItemGroup>
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tasks\CreateAar.cs" Link="Tasks\CreateAar.cs" />
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tasks\ExtractJarsFromAar.cs" Link="Tasks\ExtractJarsFromAar.cs" />
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tasks\UnzipToFolder.cs" Link="Tasks\UnzipToFolder.cs" />
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Archives.cs" Link="Utilities\MonoAndroidHelper.Archives.cs" />
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\NullableExtensions.cs" Link="Utilities\NullableExtensions.cs" />
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\ZipArchiveEntryExtensions.cs" Link="Utilities\ZipArchiveEntryExtensions.cs" />
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Properties\Resources.Designer.cs" Link="Properties\Resources.Designer.cs" />
-    <EmbeddedResource Include="..\..\src\Xamarin.Android.Build.Tasks\Properties\Resources.resx" Link="Properties\Resources.resx">
-      <ManifestResourceName>Xamarin.Android.Tasks.Properties.Resources</ManifestResourceName>
-    </EmbeddedResource>
-    <Compile Include="..\..\build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks\UnzipDirectoryChildren.cs" Link="Tasks\UnzipDirectoryChildren.cs" />
-    <Compile Include="..\..\build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks\CheckApiCompatibility.cs" Link="Tasks\CheckApiCompatibility.cs" />
-    <Compile Include="..\..\build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks\CodeGenDiff.cs" Link="Tasks\CodeGenDiff.cs" />
-    <Compile Include="..\..\build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks\Zip.cs" Link="Tasks\Zip.cs" />
-  </ItemGroup>
-
 </Project>

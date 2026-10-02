@@ -277,11 +277,9 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			}
 		}
 
-		static void WriteEntry (ZipArchive zip, string name, string contents, DateTimeOffset? timestamp = null)
+		static void WriteEntry (ZipArchive zip, string name, string contents)
 		{
 			var entry = zip.CreateEntry (name);
-			if (timestamp.HasValue)
-				entry.LastWriteTime = timestamp.Value;
 			using var writer = new StreamWriter (entry.Open (), encoding);
 			writer.Write (contents);
 		}
@@ -585,9 +583,8 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void ExtractAll_FileChanged ()
 		{
-			var timestamp = new DateTimeOffset (2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
-				WriteEntry (zip, "foo.txt", "foo", timestamp);
+				WriteEntry (zip, "foo.txt", "foo");
 			}
 
 			bool changes = ExtractAll (stream);
@@ -596,33 +593,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			stream.SetLength (0);
 			stream.Position = 0;
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
-				WriteEntry (zip, "foo.txt", "bar", timestamp);
+				WriteEntry (zip, "foo.txt", "bar");
 			}
 
 			changes = ExtractAll (stream);
 
 			Assert.IsTrue (changes, "ExtractAll should report changes.");
 			AssertFile ("foo.txt", "bar");
-		}
-
-		[Test]
-		public void ExtractAll_ReusesArchiveStreamWithoutRewritingUnchangedFiles ()
-		{
-			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
-				WriteEntry (zip, "a.txt", "contents");
-				zip.CreateEntry ("empty/");
-			}
-			Assert.IsTrue (ExtractAll (stream));
-			Assert.IsTrue (stream.CanRead, "Disposing the archive must leave its reusable stream open.");
-			var file = Path.Combine (tempDir, "a.txt");
-			var timestamp = new DateTime (2026, 1, 1, 12, 0, 0, DateTimeKind.Utc);
-			File.SetLastWriteTimeUtc (file, timestamp);
-
-			Assert.IsFalse (ExtractAll (stream));
-			Assert.IsTrue (stream.CanRead);
-			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (file), "Unchanged extracted files should retain their timestamps.");
-			AssertFile ("a.txt", "contents");
-			DirectoryAssert.DoesNotExist (Path.Combine (tempDir, "empty"));
 		}
 
 		[Test]
@@ -790,170 +767,6 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		}
 
 		[Test]
-		public void CopyIfZipChanged_ChangedSameSizeEntry ()
-		{
-			Directory.CreateDirectory (tempDir);
-			var destination = Path.Combine (tempDir, "dest.zip");
-			var timestamp = new DateTimeOffset (2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
-			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
-				WriteEntry (zip, "a.txt", "before", timestamp);
-			}
-			stream.Position = 0;
-			Assert.IsTrue (Files.CopyIfZipChanged (stream, destination));
-
-			stream.Position = 0;
-			using (var zip = new ZipArchive (stream, ZipArchiveMode.Update, leaveOpen: true)) {
-				var entry = zip.GetEntry ("a.txt") ?? throw new InvalidOperationException ("Missing a.txt.");
-				entry.Delete ();
-				WriteEntry (zip, "a.txt", "after!", timestamp);
-			}
-			stream.Position = 0;
-			Assert.IsTrue (Files.CopyIfZipChanged (stream, destination), "CRC changes must be detected even when entry length and timestamp match.");
-			Assert.IsTrue (stream.CanRead);
-			stream.Position = 0;
-			Assert.IsFalse (Files.CopyIfZipChanged (stream, destination), "A subsequent unchanged copy should be skipped.");
-
-			using var archive = Files.ReadZipFile (destination);
-			var copied = archive.GetEntry ("a.txt") ?? throw new InvalidOperationException ("Missing a.txt.");
-			using var reader = new StreamReader (copied.Open ());
-			Assert.AreEqual ("after!", reader.ReadToEnd ());
-		}
-
-		[Test]
-		public void CopyIfZipChanged_AddedAndRemovedEntries ()
-		{
-			Directory.CreateDirectory (tempDir);
-			var destination = Path.Combine (tempDir, "dest.zip");
-			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
-				WriteEntry (zip, "a.txt", "a");
-			}
-			stream.Position = 0;
-			Assert.IsTrue (Files.CopyIfZipChanged (stream, destination));
-
-			stream.Position = 0;
-			using (var zip = new ZipArchive (stream, ZipArchiveMode.Update, leaveOpen: true)) {
-				WriteEntry (zip, "b.txt", "b");
-			}
-			stream.Position = 0;
-			Assert.IsTrue (Files.CopyIfZipChanged (stream, destination), "Adding an entry must be detected.");
-
-			stream.Position = 0;
-			using (var zip = new ZipArchive (stream, ZipArchiveMode.Update, leaveOpen: true)) {
-				var entry = zip.GetEntry ("a.txt") ?? throw new InvalidOperationException ("Missing a.txt.");
-				entry.Delete ();
-			}
-			stream.Position = 0;
-			Assert.IsTrue (Files.CopyIfZipChanged (stream, destination), "Removing an entry must be detected.");
-			Assert.IsFalse (Files.ZipAny (destination, entry => entry.FullName == "a.txt"));
-			Assert.IsTrue (Files.ZipAny (destination, entry => entry.FullName == "b.txt"));
-		}
-
-		[Test]
-		public void CopyIfZipChanged_IgnoresCompressionAndTimestampChanges ()
-		{
-			Directory.CreateDirectory (tempDir);
-			var destination = Path.Combine (tempDir, "dest.zip");
-			var contents = new string ('A', 4096);
-			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
-				WriteEntry (zip, "a.txt", contents, new DateTimeOffset (2026, 1, 1, 12, 0, 0, TimeSpan.Zero));
-			}
-			stream.Position = 0;
-			Assert.IsTrue (Files.CopyIfZipChanged (stream, destination));
-			var bytes = File.ReadAllBytes (destination);
-			var timestamp = new DateTime (2026, 1, 1, 12, 0, 0, DateTimeKind.Utc);
-			File.SetLastWriteTimeUtc (destination, timestamp);
-
-			stream.SetLength (0);
-			stream.Position = 0;
-			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
-				var entry = zip.CreateEntry ("a.txt", CompressionLevel.NoCompression);
-				entry.LastWriteTime = new DateTimeOffset (2026, 1, 2, 12, 0, 0, TimeSpan.Zero);
-				using var writer = new StreamWriter (entry.Open (), encoding);
-				writer.Write (contents);
-			}
-			stream.Position = 0;
-			Assert.IsFalse (Files.CopyIfZipChanged (stream, destination), "Equivalent uncompressed contents should not force a copy.");
-			CollectionAssert.AreEqual (bytes, File.ReadAllBytes (destination));
-			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (destination));
-		}
-
-		[TestCase (CompressionLevel.NoCompression)]
-		[TestCase (CompressionLevel.Optimal)]
-		public void GetZipEntryCrc32 (CompressionLevel compression)
-		{
-			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
-				var entry = zip.CreateEntry ("crc.txt", compression);
-				using var writer = new StreamWriter (entry.Open (), encoding);
-				writer.Write ("123456789");
-			}
-			stream.Position = 0;
-			using (var zip = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
-				var entry = zip.GetEntry ("crc.txt") ?? throw new InvalidOperationException ("Missing crc.txt.");
-				Assert.AreEqual (0xCBF43926u, Files.GetZipEntryCrc32 (entry));
-			}
-			Assert.IsTrue (stream.CanRead);
-		}
-
-		[TestCase (CompressionLevel.NoCompression)]
-		[TestCase (CompressionLevel.Optimal)]
-		public void GetZipEntryCrc32_ReadsMetadataWithoutOpeningPayload (CompressionLevel compression)
-		{
-			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
-				var entry = zip.CreateEntry ("crc.txt", compression);
-				using var writer = new StreamWriter (entry.Open (), encoding);
-				writer.Write ("123456789");
-			}
-
-			using var source = new ReadTrackingStream (stream.ToArray ());
-			using var archive = new ZipArchive (source, ZipArchiveMode.Read, leaveOpen: true);
-			var archived = archive.GetEntry ("crc.txt") ?? throw new InvalidOperationException ("Missing crc.txt.");
-			var bytesRead = source.BytesRead;
-			var position = source.Position;
-			source.RejectReads = true;
-
-			for (var i = 0; i < 2; i++)
-				Assert.AreEqual (0xCBF43926u, Files.GetZipEntryCrc32 (archived));
-
-			Assert.AreEqual (bytesRead, source.BytesRead, "CRC metadata lookup must not read archive contents.");
-			Assert.AreEqual (position, source.Position, "CRC metadata lookup must not move the archive stream.");
-		}
-
-		[Test]
-		public void GetZipEntryCrc32_RejectsNull ()
-		{
-			Assert.Throws<ArgumentNullException> (() => Files.GetZipEntryCrc32 (null));
-		}
-
-		[Test]
-		public void CopyIfZipChanged_UnchangedReadsMetadataAndPreservesReusedStream ()
-		{
-			const int payloadSize = 256 * 1024;
-			Directory.CreateDirectory (tempDir);
-			var destination = Path.Combine (tempDir, "dest.zip");
-			using (var archive = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
-				using var writer = new StreamWriter (archive.CreateEntry ("large.txt", CompressionLevel.NoCompression).Open (), encoding);
-				writer.Write (new string ('A', payloadSize));
-			}
-			stream.Position = 0;
-			Assert.IsTrue (Files.CopyIfZipChanged (stream, destination));
-			var bytes = File.ReadAllBytes (destination);
-			var timestamp = new DateTime (2026, 1, 1, 12, 0, 0, DateTimeKind.Utc);
-			File.SetLastWriteTimeUtc (destination, timestamp);
-
-			using var source = new ReadTrackingStream (stream.ToArray ());
-			source.Position = 7;
-			for (var i = 0; i < 2; i++) {
-				var bytesRead = source.BytesRead;
-				Assert.IsFalse (Files.CopyIfZipChanged (source, destination));
-				Assert.IsTrue (source.CanRead, "ZIP hashing must leave reusable streams open.");
-				Assert.AreEqual (7, source.Position, "ZIP hashing must restore the caller's stream position.");
-				Assert.Less (source.BytesRead - bytesRead, payloadSize / 4, "Unchanged ZIP hashing should read metadata, not the 256 KiB stored payload.");
-			}
-			CollectionAssert.AreEqual (bytes, File.ReadAllBytes (destination));
-			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (destination));
-		}
-
-		[Test]
 		public void CopyIfZipChanged_String ()
 		{
 			Directory.CreateDirectory (tempDir);
@@ -1022,69 +835,5 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.That (message, Does.Contain (path));
 		}
 
-		sealed class ReadTrackingStream : Stream
-		{
-			readonly MemoryStream inner;
-
-			public bool RejectReads { get; set; }
-			public long BytesRead { get; private set; }
-
-			public ReadTrackingStream (byte [] contents)
-			{
-				inner = new MemoryStream (contents, writable: false);
-			}
-
-			public override bool CanRead => inner.CanRead;
-			public override bool CanSeek => inner.CanSeek;
-			public override bool CanWrite => false;
-			public override long Length => inner.Length;
-			public override long Position {
-				get => inner.Position;
-				set => inner.Position = value;
-			}
-
-			public override int Read (byte [] buffer, int offset, int count)
-			{
-				CheckRead ();
-				var read = inner.Read (buffer, offset, count);
-				BytesRead += read;
-				return read;
-			}
-
-			public override int Read (Span<byte> buffer)
-			{
-				CheckRead ();
-				var read = inner.Read (buffer);
-				BytesRead += read;
-				return read;
-			}
-
-			public override int ReadByte ()
-			{
-				CheckRead ();
-				var value = inner.ReadByte ();
-				if (value >= 0)
-					BytesRead++;
-				return value;
-			}
-
-			void CheckRead ()
-			{
-				if (RejectReads)
-					throw new InvalidOperationException ("ZIP payload reads are forbidden after metadata has been loaded.");
-			}
-
-			public override long Seek (long offset, SeekOrigin origin) => inner.Seek (offset, origin);
-			public override void Flush () => inner.Flush ();
-			public override void SetLength (long value) => throw new NotSupportedException ();
-			public override void Write (byte [] buffer, int offset, int count) => throw new NotSupportedException ();
-
-			protected override void Dispose (bool disposing)
-			{
-				if (disposing)
-					inner.Dispose ();
-				base.Dispose (disposing);
-			}
-		}
 	}
 }

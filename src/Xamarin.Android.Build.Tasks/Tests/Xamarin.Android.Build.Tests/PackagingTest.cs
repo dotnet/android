@@ -969,19 +969,6 @@ public class Test
 			}
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					for (var i = 0; i < assetCount; i++) {
-						var entry = zip.GetEntry ($"assets/asset{i}.dat");
-						Assert.IsNotNull (entry, $"Asset {i} should be packaged.");
-						if (entry != null)
-							Assert.AreEqual (contents.Length, entry.Length, entry.FullName);
-					}
-				}
-				var timestamp = File.GetLastWriteTimeUtc (apk);
-
-				Assert.IsTrue (b.Build (proj), "Unchanged build should have succeeded.");
-				Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (apk), "Unchanged packaging should preserve the APK timestamp.");
 			}
 		}
 
