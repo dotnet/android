@@ -131,7 +131,7 @@ namespace Xamarin.Android.Tasks {
 								sb.AppendLine (line);
 						}
 					}
-					Files.CopyIfStringChanged (sb.ToString (), ProguardRuleOutput);
+					Files.CopyIfStringChanged (sb.ToString (), GetFullPath (ProguardRuleOutput));
 				}
 				if (!ResourceSymbolsTextFile.IsNullOrEmpty ())
 					Files.CopyIfChanged (resourceSymbolsTextFileTemp, GetFullPath (ResourceSymbolsTextFile));
@@ -325,7 +325,7 @@ namespace Xamarin.Android.Tasks {
 			// Add min SDK version from AndroidManifestFile if available
 			string? minSdkVersion = null;
 			if (AndroidManifestFile is { ItemSpec.Length: > 0 }) {
-				var doc = AndroidAppManifest.Load (AndroidManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
+				var doc = AndroidAppManifest.Load (GetFullPath (AndroidManifestFile.ItemSpec), MonoAndroidHelper.SupportedVersions);
 				if (doc.MinSdkVersion.HasValue) {
 					minSdkVersion = doc.MinSdkVersion.Value.ToString (CultureInfo.InvariantCulture);
 				}
@@ -351,9 +351,13 @@ namespace Xamarin.Android.Tasks {
 
 		bool ManifestIsUpToDate (string manifestFile)
 		{
-			return !String.IsNullOrEmpty (AndroidComponentResgenFlagFile) &&
-				File.Exists (AndroidComponentResgenFlagFile) && File.Exists (manifestFile) &&
-				File.GetLastWriteTime (AndroidComponentResgenFlagFile) > File.GetLastWriteTime (manifestFile);
+			if (AndroidComponentResgenFlagFile.IsNullOrEmpty ())
+				return false;
+
+			var flagFile = GetFullPath (AndroidComponentResgenFlagFile);
+			manifestFile = GetFullPath (manifestFile);
+			return File.Exists (flagFile) && File.Exists (manifestFile) &&
+				File.GetLastWriteTime (flagFile) > File.GetLastWriteTime (manifestFile);
 		}
 
 		void ProcessManifest (ITaskItem manifestFile)
