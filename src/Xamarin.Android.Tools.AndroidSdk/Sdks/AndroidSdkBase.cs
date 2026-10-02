@@ -160,7 +160,7 @@ namespace Xamarin.Android.Tools
 		protected virtual IEnumerable<string> GetAllAvailableAndroidNdks ()
 		{
 			// Look in PATH
-			foreach (var ndkStack in ProcessUtils.FindExecutablesInPath (NdkStack)) {
+			foreach (var ndkStack in FileUtil.FindExecutablesInPath (NdkStack)) {
 				var ndkDir  = Path.GetDirectoryName (ndkStack);
 				if (string.IsNullOrEmpty (ndkDir))
 					continue;
@@ -253,9 +253,9 @@ namespace Xamarin.Android.Tools
 		public bool ValidateAndroidSdkLocation (string locator, [NotNullWhen (true)] string? loc)
 		{
 			bool result = !string.IsNullOrEmpty (loc);
-			if (result) {
+			if (!string.IsNullOrEmpty (loc)) {
 				bool foundAdb = false;
-				foreach (var p in ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc!, "platform-tools"), Adb)) {
+				foreach (var p in FileUtil.FindExecutablesInDirectory (Path.Combine (loc, "platform-tools"), Adb)) {
 					Logger (TraceLevel.Verbose, $"{nameof (ValidateAndroidSdkLocation)}: for locator={locator}, path=`{loc}`, found adb `{p}`");
 					foundAdb = true;
 				}
@@ -271,9 +271,9 @@ namespace Xamarin.Android.Tools
 		public virtual bool ValidateJavaSdkLocation (string locator, [NotNullWhen (true)] string? loc)
 		{
 			bool result = !string.IsNullOrEmpty (loc);
-			if (result) {
+			if (!string.IsNullOrEmpty (loc)) {
 				bool foundSigner = false;
-				foreach (var p in ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc!, "bin"), JarSigner)) {
+				foreach (var p in FileUtil.FindExecutablesInDirectory (Path.Combine (loc, "bin"), JarSigner)) {
 					Logger (TraceLevel.Verbose, $"{nameof (ValidateJavaSdkLocation)}: for locator={locator}, path=`{loc}`, found jarsigner `{p}`");
 					foundSigner = true;
 				}
@@ -289,7 +289,7 @@ namespace Xamarin.Android.Tools
 		public bool ValidateAndroidNdkLocation (string locator, [NotNullWhen (true)] string? loc)
 		{
 			bool result = !string.IsNullOrEmpty (loc) &&
-				ProcessUtils.FindExecutablesInDirectory (loc!, NdkStack).Any ();
+				FileUtil.FindExecutablesInDirectory (loc, NdkStack).Any ();
 			Logger (TraceLevel.Verbose, $"{nameof (ValidateAndroidNdkLocation)}: for locator={locator}, path=`{loc}`, result={result}");
 			return result;
 		}
@@ -307,15 +307,8 @@ namespace Xamarin.Android.Tools
 			if (string.IsNullOrEmpty (dir))
 				return exe;
 
-			foreach (var e in ProcessUtils.ExecutableFiles (exe)) {
-				try {
-					if (File.Exists (Path.Combine (dir, e)))
-						return e;
-				} catch (ArgumentException) {
-					continue;
-				}
-			}
-			return exe;
+			var path = FileUtil.FindExecutablesInDirectory (dir, exe).FirstOrDefault ();
+			return path == null ? exe : Path.GetFileName (path);
 		}
 	}
 }

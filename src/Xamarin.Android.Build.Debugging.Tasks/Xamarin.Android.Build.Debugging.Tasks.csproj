@@ -7,7 +7,7 @@
 
   <PropertyGroup>
     <LangVersion>12</LangVersion>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <DefineConstants>$(DefineConstants);MSBUILD</DefineConstants>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
@@ -71,9 +71,5 @@
       <Version>$(ProductVersion).$(PackVersionCommitCount)</Version>
     </PropertyGroup>
   </Target>
-
-  <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="8.0.6" />
-  </ItemGroup>
 
 </Project>

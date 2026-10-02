@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -441,13 +442,11 @@ public class EmulatorRunnerTests
 			process = runner.LaunchEmulator ("TestAVD");
 
 			Assert.IsFalse (process.HasExited, "Process should be running after launch");
+			Assert.IsTrue (WaitForFileAsync (emuPath + ".ready", TimeSpan.FromSeconds (5)).GetAwaiter ().GetResult (),
+				"The fake emulator must be running after the SIGINT-ignoring shell has exec'd it.");
 
 			// Send SIGINT to the emulator process
-			var killPsi = ProcessUtils.CreateProcessStartInfo ("kill", "-INT", process.Id.ToString ());
-			using var kill = new Process { StartInfo = killPsi };
-			kill.Start ();
-			Assert.IsTrue (kill.WaitForExit (5000), "kill command should exit promptly");
-			Assert.AreEqual (0, kill.ExitCode, "kill -INT should succeed");
+			Assert.IsTrue (process.SafeHandle.Signal (PosixSignal.SIGINT), "SIGINT should be delivered to the owned emulator.");
 
 			// Give the signal a moment to be delivered
 			Thread.Sleep (500);
@@ -502,11 +501,8 @@ public class EmulatorRunnerTests
 
 		var emuPath = Path.Combine (emulatorDir, "emulator");
 		File.WriteAllText (emuPath, "#!/bin/sh\nsleep 60\n");
-		var psi = ProcessUtils.CreateProcessStartInfo ("chmod", "+x", emuPath);
-		using (var chmod = new Process { StartInfo = psi }) {
-			chmod.Start ();
-			Assert.IsTrue (chmod.WaitForExit (5000), "chmod should exit promptly");
-		}
+		if (!OperatingSystem.IsWindows ())
+			File.SetUnixFileMode (emuPath, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 
 		Process? process = null;
 		try {
@@ -535,12 +531,10 @@ public class EmulatorRunnerTests
 			var command = keepRunning ? "ping -n 60 127.0.0.1 >nul" : "exit /b 0";
 			File.WriteAllText (emuPath, $"@echo off\r\n{command}\r\n");
 		} else {
-			var command = keepRunning ? "sleep 60" : "exit 0";
+			var command = keepRunning ? "printf ready > \"$0.ready\"\nsleep 60" : "exit 0";
 			File.WriteAllText (emuPath, $"#!/bin/sh\n{command}\n");
-			var psi = ProcessUtils.CreateProcessStartInfo ("chmod", "+x", emuPath);
-			using var chmod = new Process { StartInfo = psi };
-			chmod.Start ();
-			chmod.WaitForExit ();
+			if (!OperatingSystem.IsWindows ())
+				File.SetUnixFileMode (emuPath, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 		}
 
 		return (tempDir, emuPath);

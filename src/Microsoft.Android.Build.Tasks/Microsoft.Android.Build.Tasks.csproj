@@ -2,10 +2,8 @@
   <Import Project="..\..\Configuration.props" />
 
   <!--
-    This assembly hosts MSBuild tasks that require .NET (net11.0) APIs that are not available in
-    netstandard2.0, so they cannot live in Xamarin.Android.Build.Tasks.dll (which multi-targets
-    netstandard2.0 to run on both .NET Framework and .NET MSBuild). Tasks here are imported with
-    <UsingTask ... Runtime="NET" /> so they run on .NET.
+    This assembly hosts focused .NET 11 MSBuild tasks in an isolated dependency directory.
+    The Android build tools require a .NET 11 or later MSBuild host.
     Keep this assembly small and self-contained: link only the minimal helpers it needs.
   -->
   <PropertyGroup>
@@ -16,11 +14,8 @@
     <WarningsAsErrors>Nullable</WarningsAsErrors>
     <!--
       Deliberately *not* the shared tools\ directory. MSBuild probes a task assembly's own
-      directory before anything else, and tools\ holds the netstandard2.0 flavors of packages
-      such as System.IO.Hashing that Xamarin.Android.Build.Tasks.dll deposits. Those bind their
-      Span<T> to System.Memory, so a net11.0 caller resolving them fails with
-      MissingMethodException. Living in our own directory means this assembly and its
-      dependencies always resolve to their .NET flavors.
+      directory before anything else. Keeping these tasks isolated prevents package dependencies
+      copied by another tool from changing which assembly versions they resolve.
     -->
     <OutputPath>$(MicrosoftAndroidSdkOutDir)net\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

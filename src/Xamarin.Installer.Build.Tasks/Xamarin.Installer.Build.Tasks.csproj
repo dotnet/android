@@ -4,7 +4,7 @@
     <NoWarn>$(NoWarn);CA1305</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <LangVersion>12</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <DefineConstants Condition=" '$(OS)' == 'Windows_NT' ">WINDOWS</DefineConstants>
@@ -20,7 +20,7 @@
     <None Update="Xamarin.Installer.Common.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(PkgSharpZipLib)\lib\$(TargetFramework)\ICSharpCode.SharpZipLib.pdb">
+    <None Include="$(PkgSharpZipLib)\lib\netstandard2.0\ICSharpCode.SharpZipLib.pdb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -1309,6 +1310,63 @@ public class AdbRunnerTests
 		if (dir is { Length: > 0 }) {
 			File.Delete (adbPath);
 			Directory.Delete (dir);
+		}
+	}
+
+	[Test]
+	public async Task GetShellPropertyAsync_CancellationReleasesInheritedPipesWithoutKillingServer ()
+	{
+		var adbPath = CreateFakeAdb ("""
+			sleep 60 &
+			echo $! > "$0.server"
+			echo ready
+			exit 0
+			""");
+		int serverPid = 0;
+		try {
+			using var cancellation = new CancellationTokenSource ();
+			var runner = new AdbRunner (adbPath);
+			var run = runner.GetShellPropertyAsync ("test-device", "test.property", cancellation.Token);
+			var deadline = Stopwatch.StartNew ();
+			while ((!File.Exists (adbPath + ".server") || !File.ReadAllText (adbPath + ".server").EndsWith ("\n", StringComparison.Ordinal)) &&
+				deadline.Elapsed < TimeSpan.FromSeconds (5))
+				await Task.Delay (10);
+			serverPid = int.Parse (File.ReadAllText (adbPath + ".server").Trim ());
+			using var server = Process.GetProcessById (serverPid);
+			Assert.IsFalse (run.IsCompleted, "The server should retain the client output handles.");
+			cancellation.Cancel ();
+			var exception = Assert.CatchAsync<OperationCanceledException> (async () => await run.WaitAsync (TimeSpan.FromSeconds (5)));
+			Assert.IsNotNull (exception);
+			Assert.AreEqual (cancellation.Token, exception.CancellationToken);
+			Assert.IsFalse (server.HasExited, "Cancellation must stop only the owned adb client, not its persistent server.");
+		} finally {
+			if (serverPid > 0) {
+				using var server = Process.GetProcessById (serverPid);
+				server.Kill ();
+				Assert.IsTrue (server.WaitForExit (5000));
+			}
+			File.Delete (adbPath + ".server");
+			CleanupFakeAdb (adbPath);
+		}
+	}
+
+	[Test]
+	public async Task GetShellPropertyAsync_PreservesStructuredArgumentsAndEnvironment ()
+	{
+		var adbPath = CreateFakeAdb ("""
+			printf '%s\n' "$@" > "$0.arguments"
+			printf '%s\n' "$ADB_OWNER_VALUE"
+			""");
+		try {
+			var runner = new AdbRunner (adbPath, new Dictionary<string, string> { ["ADB_OWNER_VALUE"] = "owner environment" });
+			var property = await runner.GetShellPropertyAsync ("serial with spaces", "property \"quoted\"");
+			Assert.AreEqual ("owner environment", property);
+			CollectionAssert.AreEqual (
+				new [] { "-s", "serial with spaces", "shell", "getprop", "property \"quoted\"" },
+				File.ReadAllLines (adbPath + ".arguments"));
+		} finally {
+			File.Delete (adbPath + ".arguments");
+			CleanupFakeAdb (adbPath);
 		}
 	}
 
