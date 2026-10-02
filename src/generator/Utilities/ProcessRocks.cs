@@ -12,10 +12,10 @@ namespace MonoDroid.Utils {
 
 		public static IEnumerable<string> ReadStandardOutput (IEnumerable<string> commandLine, bool printCommandLine)
 		{
-			var psi = new ProcessStartInfo () {
-				FileName                = commandLine.First (),
-				Arguments               = "\"" + string.Join ("\" \"", commandLine.Skip (1).ToArray ()) + "\"",
-			};
+			var psi = new ProcessStartInfo (commandLine.First ());
+			foreach (var argument in commandLine.Skip (1)) {
+				psi.ArgumentList.Add (argument);
+			}
 			return ReadStandardOutput (psi, printCommandLine);
 		}
 
@@ -24,10 +24,13 @@ namespace MonoDroid.Utils {
 			psi.RedirectStandardError = true;
 			psi.RedirectStandardOutput = true;
 			psi.UseShellExecute = false;
-			psi.InheritedHandles = [];
+			psi.InheritedHandles ??= [];
+			var arguments = psi.ArgumentList.Count > 0
+				? string.Join (" ", psi.ArgumentList.Select (argument => $"\"{argument}\""))
+				: psi.Arguments;
 			
 			if (printCommandLine)
-				Console.WriteLine ("Running command: {0} {1}", psi.FileName, psi.Arguments);
+				Console.WriteLine ("Running command: {0} {1}", psi.FileName, arguments);
 			
 			var timer = Stopwatch.StartNew ();
 			using (Process p = Process.Start (psi) ?? throw new InvalidOperationException ($"Could not start '{psi.FileName}'.")) {
@@ -48,7 +51,7 @@ namespace MonoDroid.Utils {
 						throw new TimeoutException ($"'{psi.FileName}' did not complete within {timeout}.");
 					}
 					if (status.ExitCode != 0) {
-						throw new CommandFailedException (psi.FileName, psi.Arguments, stderr.ToString (), status.ExitCode);
+						throw new CommandFailedException (psi.FileName, arguments, stderr.ToString (), status.ExitCode);
 					}
 				} finally {
 					p.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.Zero);

@@ -1,8 +1,8 @@
 # Building .NET for Android on Linux and macOS
 
-Building .NET for Android on Linux and macOS relies on GNU make and
-MSBuild via the `msbuild` command (within Mono). MSBuild via `xbuild`
-can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
+Building .NET for Android on Linux and macOS uses GNU make and the
+repository's provisioned .NET SDK. Internal prep/bootstrap tasks require
+MSBuild running on .NET 11 or later, not Mono's `msbuild` or `xbuild`.
 
 # Building .NET for Android
 
@@ -19,8 +19,6 @@ can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
  5. Prepare the project:
 
         make prepare
-        # -or-
-        make prepare MSBUILD=msbuild
 
     This will ensure that the build dependencies are installed, perform
     `git submodule update`, download NuGet dependencies, and other
@@ -34,8 +32,6 @@ can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
  7. Build the project:
 
         make
-        # -or-
-        make MSBUILD=msbuild
 
     The default `make all` target builds a *subset* of everything, in
     the interests of build speed: it builds only one
@@ -47,8 +43,6 @@ can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
     then use the `make jenkins` target:
 
         make jenkins
-        # -or-
-        make jenkins MSBUILD=msbuild
 
 @jonathanpeppers gave a talk at [Xamarin Developer Summit
 2019][xamdevsummit] with a full walkthrough. Even though the demo was
