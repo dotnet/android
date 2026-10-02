@@ -3,11 +3,6 @@ parameters:
 
 steps:
 - task: UseDotNet@2
-  displayName: Use .NET $(DotNetSdkVersion).x for bootstrap projects
-  inputs:
-    version: $(DotNetSdkVersion).x
-
-- task: UseDotNet@2
   displayName: Use .NET $(DotNetCoreVersion)
   inputs:
     version: $(DotNetCoreVersion)

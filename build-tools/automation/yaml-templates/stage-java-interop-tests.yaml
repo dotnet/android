@@ -45,7 +45,7 @@ stages:
   variables:
     # Variables consumed by external/Java.Interop/build-tools/automation/templates/*.yaml.
     # Java.Interop requires compiler and runtime support for extended layout.
-    DotNetCoreVersion: $(DotNetPreviewSdkVersion).x
+    DotNetCoreVersion: $(DotNetSdkVersion).x
     NetCoreTargetFrameworkPathSuffix: -$(DotNetTargetFramework)
     Build.Configuration: Release
     RunningOnCI: true

@@ -29,11 +29,6 @@ steps:
   parameters:
     remove_dotnet: true
 
-- template: /build-tools/automation/yaml-templates/use-dot-net.yaml
-  parameters:
-    version: $(DotNetPreviewSdkVersion)
-    quality: $(DotNetPreviewSdkQuality)
-
 - task: NuGetAuthenticate@1
   displayName: authenticate with azure artifacts
   inputs:
