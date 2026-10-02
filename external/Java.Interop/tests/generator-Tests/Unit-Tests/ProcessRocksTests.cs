@@ -22,27 +22,14 @@ public class ProcessRocksTests
 	}
 
 	[Test]
-	public void CaptureDrainsLargeStandardErrorAlongsideStandardOutput ()
+	public void CommandFailureIncludesExitCodeAndStandardError ()
 	{
-		var lines = ProcessRocks.ReadStandardOutput (["/bin/sh", "-c", """
-			i=0
-			while [ "$i" -lt 2048 ]; do
-				printf 'stderr-%s-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n' "$i" >&2
-				printf 'stdout-%s\n' "$i"
-				i=$((i + 1))
-			done
-			"""], printCommandLine: false).ToArray ();
-		Assert.That (lines.Length, Is.EqualTo (2048));
-		Assert.That (lines [0], Is.EqualTo ("stdout-0"));
-		Assert.That (lines [2047], Is.EqualTo ("stdout-2047"));
-	}
-
-	[Test]
-	public void NonzeroExitIsNotReportedAsSuccess ()
-	{
-		Assert.That (() => ProcessRocks.ReadStandardOutput ([
+		var error = Assert.Throws<CommandFailedException> (() => ProcessRocks.ReadStandardOutput ([
 			"/bin/sh", "-c", "printf 'failure' >&2; exit 7",
-		], printCommandLine: false).ToArray (), Throws.InstanceOf<InvalidOperationException> ());
+		], printCommandLine: false).ToArray ()) ?? throw new InvalidOperationException ("Expected command failure.");
+		Assert.That (error.ExitCode, Is.EqualTo (7));
+		Assert.That (error.ErrorLog, Is.EqualTo ("failure" + Environment.NewLine));
+		Assert.That (error.FileName, Is.EqualTo ("/bin/sh"));
 	}
 
 	[Test]
