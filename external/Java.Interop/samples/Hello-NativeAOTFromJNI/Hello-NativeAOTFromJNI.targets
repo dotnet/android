@@ -25,15 +25,21 @@
     <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)hello-from-java.jar&quot; -C &quot;$(IntermediateOutputPath)h-classes&quot; ." />
   </Target>
 
-  <Target Name="_NativeLibRequiresLibPrefix"
-      AfterTargets="Publish">
-    <Copy
-        Condition=" '$(OS)' != 'Windows_NT' "
-        SourceFiles="$(PublishDir)$(AssemblyName).dylib"
-        DestinationFiles="$(PublishDir)lib$(AssemblyName).dylib"
-    />
-    <Copy SourceFiles="$(OutputPath)hello-from-java.jar" DestinationFolder="$(PublishDir)" />
-    <Copy SourceFiles="$(OutputPath)java-interop.jar" DestinationFolder="$(PublishDir)" />
+  <Target Name="_AndroidPublishJavaDependenciesInputs">
+    <ItemGroup>
+      <_AndroidJavaDependency Include="$(OutputPath)hello-from-java.jar;$(OutputPath)java-interop.jar" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidPublishJavaDependencies"
+      AfterTargets="Publish"
+      DependsOnTargets="_AndroidPublishJavaDependenciesInputs"
+      Inputs="@(_AndroidJavaDependency)"
+      Outputs="@(_AndroidJavaDependency->'$(PublishDir)%(Filename)%(Extension)')">
+    <Copy SourceFiles="@(_AndroidJavaDependency)" DestinationFolder="$(PublishDir)" />
+    <ItemGroup>
+      <FileWrites Include="@(_AndroidJavaDependency->'$(PublishDir)%(Filename)%(Extension)')" />
+    </ItemGroup>
   </Target>
 
   <Target Name="RunJavaSample">
