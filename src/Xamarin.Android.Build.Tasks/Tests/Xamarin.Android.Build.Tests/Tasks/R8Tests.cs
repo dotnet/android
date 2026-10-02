@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 
@@ -44,6 +46,63 @@ namespace Xamarin.Android.Build.Tests
 			try {
 				File.WriteAllText (path, content);
 				Assert.AreEqual (expected, R8.ReadJavaPackage (path));
+			} finally {
+				File.Delete (path);
+			}
+		}
+
+		[TestCase ("disabled", true, false)]
+		[TestCase ("private-members", false, false)]
+		[TestCase ("runtime-remapping", false, false)]
+		[TestCase ("disabled", true, true)]
+		[TestCase ("private-members", false, true)]
+		[TestCase ("runtime-remapping", false, true)]
+		public void GenerateCommonXamarinConfiguration_RespectsObfuscationMode (string obfuscationMode, bool expectDontObfuscate, bool nativeAot)
+		{
+			var path = Path.GetTempFileName ();
+			try {
+				var task = new R8 {
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+					ObfuscationMode = obfuscationMode,
+					UseTrimmableNativeAotProguardConfiguration = nativeAot,
+					ProguardCommonXamarinConfiguration = path,
+				};
+				task.GenerateCommonXamarinConfiguration ();
+
+				var lines = File.ReadAllLines (path);
+				Assert.AreEqual (expectDontObfuscate, lines.Any (l => l.Trim () == "-dontobfuscate"),
+					"Only disabled mode should prevent all obfuscation.");
+				Assert.IsTrue (lines.Any (l => l.Contains ("-keep class net.dot.jni.")),
+					"Shared bootstrap rules must survive.");
+				Assert.AreEqual (obfuscationMode == "private-members",
+					lines.Contains ("-keep,allowshrinking,allowoptimization class **"));
+				Assert.AreEqual (obfuscationMode == "runtime-remapping",
+					lines.Contains ("-keepclassmembernames interface * { *; }"),
+					"Remapping-specific rules must not change the existing modes.");
+				CollectionAssert.Contains (lines, "-keep class net.dot.android.ApplicationRegistration { *; }");
+				if (nativeAot) {
+					CollectionAssert.Contains (lines, "-keep class mono.android.IGCUserPeer { *; }");
+					if (obfuscationMode == "runtime-remapping") {
+						CollectionAssert.Contains (lines, "-keep class mono.android.Runtime { *; }");
+						CollectionAssert.Contains (lines, "-keep class mono.android.GCUserPeer { <init>(); }");
+					}
+				}
+			} finally {
+				File.Delete (path);
+			}
+		}
+
+		[Test]
+		public void GenerateCommonXamarinConfiguration_RejectsUnknownObfuscationMode ()
+		{
+			var path = Path.GetTempFileName ();
+			var task = new R8 {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				ObfuscationMode = "unknown",
+				ProguardCommonXamarinConfiguration = path,
+			};
+			try {
+				Assert.Throws<InvalidOperationException> (() => task.GenerateCommonXamarinConfiguration ());
 			} finally {
 				File.Delete (path);
 			}
