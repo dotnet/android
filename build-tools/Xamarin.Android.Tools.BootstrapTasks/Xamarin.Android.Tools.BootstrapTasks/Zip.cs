@@ -55,9 +55,13 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					if (prefix != null && entryDir.StartsWith (prefix, StringComparison.OrdinalIgnoreCase)) {
 						zipDir = entryDir.Substring (prefix.Length);
 					}
-					var entryName = string.IsNullOrEmpty (zipDir)
+					var entryName = (string.IsNullOrEmpty (zipDir)
 						? Path.GetFileName (entryPath)
-						: Path.Combine (zipDir, Path.GetFileName (entryPath)).Replace ('\\', '/');
+						: Path.Combine (zipDir, Path.GetFileName (entryPath))).Replace ('\\', '/');
+					if (Path.IsPathRooted (entryName) || entryName.IndexOf (':') >= 0 || entryName.Split ('/').Contains ("..")) {
+						Log.LogError ($"Cannot add file '{entryPath}' to '{File.ItemSpec}': archive entry '{entryName}' is not a safe relative path.");
+						return false;
+					}
 					foreach (var existingEntry in zip.Entries.Where (item => item.FullName == entryName).ToArray ())
 						existingEntry.Delete ();
 					zip.CreateEntryFromFile (entryPath, entryName);
