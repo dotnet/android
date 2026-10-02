@@ -47,7 +47,13 @@ steps:
 - ${{ if eq(parameters.retryFailedTests, 'true') }}:
   # We need a custom dotnet test invocation here that does not trigger a task failure on failed tests
   - pwsh: |
-      dotnet `
+      $dotnetPath = "dotnet"
+      if ("${{ parameters.testAssembly }}" -match '(Xamarin\.Android\.Build\.Tests|MSBuildDeviceIntegration)\.dll$') {
+          $dotnetRoot = "${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet"
+          $env:PATH = "$dotnetRoot$([IO.Path]::PathSeparator)$env:PATH"
+          $dotnetPath = Join-Path $dotnetRoot $(if ($IsWindows) { "dotnet.exe" } else { "dotnet" })
+      }
+      & $dotnetPath `
         test `
         ${{ parameters.testAssembly }} `
         --settings "${{ parameters.testAssembly }}.runsettings" `

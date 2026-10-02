@@ -33,7 +33,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux BuildTest
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net11.0/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = BuildTest"
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
@@ -63,19 +63,19 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux PackagingTest
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net11.0/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = PackagingTest"
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux XASdkTests
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net11.0/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = XASdkTests & Name != XamarinLegacySdk"
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux AndroidDependenciesTests
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net11.0/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = AndroidDependenciesTests"
 
     - task: ShellScript@2
