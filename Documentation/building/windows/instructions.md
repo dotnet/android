@@ -4,7 +4,10 @@ Building .NET for Android on Windows requires .NET and the `dotnet` command
 be available within the Command-Line environment.
 (The **Developer Command Prompt** that Visual Studio installs is sufficient.)
 
-.NET 9 SDK or later is required at the time of writing.
+Internal prep/bootstrap tasks require MSBuild running on .NET 11 or later.
+`build.cmd Prepare` installs and uses the repository's pinned SDK. Repository
+version tasks load in-process, so a .NET 10 MSBuild host cannot load them even
+if a newer runtime is installed separately.
 
 ## Building .NET for Android
 
@@ -20,7 +23,7 @@ be available within the Command-Line environment.
 
  5. In a [Developer Command Prompt][developer-prompt], prepare the project:
 
-        dotnet msbuild Microsoft.Android.slnx -t:Prepare
+        build.cmd Prepare
 
     This will ensure that the build dependencies are installed, perform
     `git submodule update`, download NuGet dependencies, and other
@@ -60,7 +63,7 @@ Visual Studio Code instead and build via the command-line.
 
 ## Creating a local .NET for Android Workload
 
-`dotnet msbuild Microsoft.Android.slnx -t:Prepare` provisions a
+`build.cmd Prepare` provisions a
 specific build of .NET to `bin\$(Configuration)\dotnet`.
 
 Once the prepare target is complete, you can set up a local

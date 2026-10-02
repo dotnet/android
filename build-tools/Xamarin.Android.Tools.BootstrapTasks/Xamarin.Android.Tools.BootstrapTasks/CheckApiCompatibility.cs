@@ -7,7 +7,6 @@ using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Files = Microsoft.Android.Build.Tasks.Files;
-using Xamarin.Android.BuildTools;
 
 namespace Xamarin.Android.Tools.BootstrapTasks
 {
@@ -225,6 +224,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					genApiProcess.StartInfo.CreateNoWindow = true;
 					genApiProcess.StartInfo.RedirectStandardOutput = true;
 					genApiProcess.StartInfo.RedirectStandardError = true;
+					genApiProcess.StartInfo.InheritedHandles = [];
 					var lines = new List<string> ();
 					var processHasCrashed = false;
 					void dataReceived (string data, bool standardError)
@@ -243,11 +243,24 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					Log.LogMessage (MessageImportance.High, compatApiCommand);
 
 					int exitCode;
+					var timeout = TimeSpan.FromMinutes (5);
+					var timer = Stopwatch.StartNew ();
+					genApiProcess.Start ();
 					try {
-						exitCode = ProcessRunner.Run (genApiProcess, dataReceived, TimeSpan.FromMinutes (5), TimeSpan.FromSeconds (30));
+						foreach (var line in genApiProcess.ReadAllLines (timeout)) {
+							dataReceived (line.Content, line.StandardError);
+						}
+						var remaining = timeout - timer.Elapsed;
+						var status = genApiProcess.SafeHandle.WaitForExitOrKillOnTimeout (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero);
+						if (status.Canceled) {
+							throw new TimeoutException ($"ApiCompat failed to exit within {timeout}.");
+						}
+						exitCode = status.ExitCode;
 					} catch (TimeoutException ex) {
 						LogError (ex.Message);
 						return;
+					} finally {
+						genApiProcess.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.Zero);
 					}
 
 					if (lines.Count == 0) {

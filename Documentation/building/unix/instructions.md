@@ -26,6 +26,11 @@ can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
     `git submodule update`, download NuGet dependencies, and other
     "preparatory" and pre-build tasks that need to be performed.
 
+    Internal prep/bootstrap tasks require MSBuild running on .NET 11 or later.
+    `make prepare` uses the provisioned SDK; use `./dotnet-local.sh` for direct
+    repository builds rather than a system .NET 10 SDK. Repository version
+    tasks load in-process and therefore require the newer MSBuild host too.
+
  7. Build the project:
 
         make
