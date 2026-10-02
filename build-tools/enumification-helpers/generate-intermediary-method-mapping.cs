@@ -1,9 +1,13 @@
+#!/usr/bin/env dotnet
+#:property TargetFramework=net11.0
+#:property PublishAot=false
+#:property Nullable=disable
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Xml;
 
 public class SourceEntry
@@ -96,17 +100,16 @@ public class MethodMapGen
 	XmlDocument GetDocument (string file)
 	{
 		string abs = Path.Combine (Path.GetFullPath (doc_base), file);
-		string outfile = Path.Combine (Directory.GetParent (new Uri (Assembly.GetEntryAssembly ().CodeBase).LocalPath).ToString (), "tmp.xml");
-		string args = "--html --nsclean --insert --debugent --nonet --noent --recover --dropdtd --nocatalogs --output " + outfile + " --xmlout " + abs;
-		// FIXME: I cannot enable RedirectStandardError = true due to some mono bug.
-		using (Process proc = Process.Start (new ProcessStartInfo ("xmllint", args) { /*RedirectStandardError = true,*/ UseShellExecute = false })) {
-			proc.WaitForExit ();
-			if (proc.ExitCode != 0)
-				throw new Exception ("xmllint failed");
-		}
+		string outfile = Path.Combine (AppContext.BaseDirectory, "tmp.xml");
+		var status = Process.Run ("xmllint", [
+			"--html", "--nsclean", "--insert", "--debugent", "--nonet", "--noent", "--recover", "--dropdtd", "--nocatalogs",
+			"--output", outfile, "--xmlout", abs,
+		]);
+		if (status.ExitCode != 0)
+			throw new Exception ("xmllint failed");
 
 		var doc = new XmlDocument ();
-		string s = File.ReadAllText ("tmp.xml");
+		string s = File.ReadAllText (outfile);
 		s = s.Replace ("<html>", "<html xmlns:android='dummy'>");
 		s = s.Replace ("<!-- /New Search>", "<!-- /New Search -->"); // Why, Google. Why
 		s = s.Replace ("<application ...=\"\">", "<application xxx=\"\">");
