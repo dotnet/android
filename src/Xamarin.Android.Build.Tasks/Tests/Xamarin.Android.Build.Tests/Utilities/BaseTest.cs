@@ -175,6 +175,8 @@ namespace Xamarin.Android.Build.Tests
 			} catch (OperationCanceledException) when (outputDeadline.IsCancellationRequested) {
 				stdError = $"apkdiff exited or timed out with redirected output still open after 2 seconds (PID {process.Id}).";
 			} finally {
+				using var stdoutReader = process.StandardOutput;
+				using var stderrReader = process.StandardError;
 				executionDeadline.Cancel ();
 				await exited.ConfigureAwait (false);
 			}
