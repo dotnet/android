@@ -301,7 +301,7 @@ public class EmulatorRunnerTests
 	{
 		// Verify that AdditionalArgs from EmulatorBootOptions are forwarded
 		// to the emulator process. We use a fake emulator script that logs
-		// its arguments so we can inspect them after the boot times out.
+		// its arguments before reporting that the emulator is online.
 		var (tempDir, emuPath) = CreateFakeEmulatorSdk ();
 		var argsLogPath = Path.Combine (tempDir, "args.log");
 
@@ -315,19 +315,29 @@ public class EmulatorRunnerTests
 		try {
 			var devices = new List<AdbDeviceInfo> ();
 			var mockAdb = new MockAdbRunner (devices);
+			mockAdb.ShellProperties ["sys.boot_completed"] = "1";
+			mockAdb.ShellCommands ["pm path android"] = "package:/system/framework/framework-res.apk";
+			mockAdb.OnListDevices = () => {
+				if (devices.Count == 0 && File.Exists (argsLogPath) && IsFileUnlocked (emuPath)) {
+					devices.Add (new AdbDeviceInfo {
+						Serial = "emulator-5554",
+						Type = AdbDeviceType.Emulator,
+						Status = AdbDeviceStatus.Online,
+						AvdName = "Test_AVD",
+					});
+				}
+			};
 
 			var runner = new EmulatorRunner (emuPath);
 			var options = new EmulatorBootOptions {
-				BootTimeout = TimeSpan.FromMilliseconds (500),
+				BootTimeout = TimeSpan.FromSeconds (10),
 				PollInterval = TimeSpan.FromMilliseconds (50),
 				AdditionalArgs = new List<string> { "-gpu", "auto", "-no-audio" },
 			};
 
-			// Boot will time out (no device appears), but the emulator process
-			// should have been launched with the additional args.
 			var result = await runner.BootEmulatorAsync ("Test_AVD", mockAdb, options);
 
-			Assert.IsFalse (result.Success, "Boot should time out");
+			Assert.IsTrue (result.Success, result.ErrorMessage);
 
 			Assert.IsTrue (await WaitForFileAsync (argsLogPath, TimeSpan.FromSeconds (5)), "The fake emulator should log its arguments");
 			var logged = File.ReadAllText (argsLogPath);
@@ -393,17 +403,29 @@ public class EmulatorRunnerTests
 		try {
 			var devices = new List<AdbDeviceInfo> ();
 			var mockAdb = new MockAdbRunner (devices);
+			mockAdb.ShellProperties ["sys.boot_completed"] = "1";
+			mockAdb.ShellCommands ["pm path android"] = "package:/system/framework/framework-res.apk";
+			mockAdb.OnListDevices = () => {
+				if (devices.Count == 0 && File.Exists (argsLogPath) && IsFileUnlocked (emuPath)) {
+					devices.Add (new AdbDeviceInfo {
+						Serial = "emulator-5554",
+						Type = AdbDeviceType.Emulator,
+						Status = AdbDeviceStatus.Online,
+						AvdName = "Test_AVD",
+					});
+				}
+			};
 
 			var runner = new EmulatorRunner (emuPath);
 			var options = new EmulatorBootOptions {
-				BootTimeout = TimeSpan.FromMilliseconds (500),
+				BootTimeout = TimeSpan.FromSeconds (10),
 				PollInterval = TimeSpan.FromMilliseconds (50),
 				ColdBoot = true,
 			};
 
 			var result = await runner.BootEmulatorAsync ("Test_AVD", mockAdb, options);
 
-			Assert.IsFalse (result.Success, "Boot should time out");
+			Assert.IsTrue (result.Success, result.ErrorMessage);
 			Assert.IsTrue (await WaitForFileAsync (argsLogPath, TimeSpan.FromSeconds (5)), "The fake emulator should log its arguments");
 			var logged = File.ReadAllText (argsLogPath);
 			Assert.That (logged, Does.Contain ("-no-snapshot-load"), "ColdBoot should pass -no-snapshot-load");
