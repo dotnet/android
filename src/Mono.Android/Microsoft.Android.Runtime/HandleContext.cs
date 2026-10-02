@@ -6,7 +6,7 @@ using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
 
-[StructLayout (LayoutKind.Sequential)]
+[ExtendedLayout (ExtendedLayoutKind.CStruct)]
 internal struct HandleContext
 {
 	static readonly nuint Size = (nuint)Marshal.SizeOf<HandleContext> ();
@@ -77,7 +77,7 @@ internal struct HandleContext
 	}
 
 	// This is an internal mirror of the Java.Interop.JniObjectReferenceControlBlock
-	[StructLayout (LayoutKind.Sequential)]
+	[ExtendedLayout (ExtendedLayoutKind.CStruct)]
 	internal struct JniObjectReferenceControlBlock
 	{
 		public IntPtr handle;

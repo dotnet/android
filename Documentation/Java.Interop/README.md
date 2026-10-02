@@ -43,6 +43,11 @@ dotnet build Java.Interop.slnx
 `jvalue` union. This requires compiler and runtime support for .NET 11
 extended layout; adoption in .NET for Android is intended for .NET 12.
 
+Native JNI method registration, VM/vtable, and reference-control-block structs
+use `ExtendedLayoutKind.CStruct` for their C ABI. Extended C layouts require
+unmanaged instance fields and use a blittable representation, including
+one-byte `bool` fields rather than the default marshaller's four-byte `BOOL`.
+
 [net-11]: https://dotnet.microsoft.com/en-us/download/dotnet/11.0
 [net-6]: https://github.com/dotnet/java-interop/tree/release/6.0.3xx
 [extended-layout]: https://learn.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.extendedlayoutattribute?view=net-11.0
