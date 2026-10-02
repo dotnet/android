@@ -29,7 +29,7 @@ namespace Microsoft.Android.Tasks
 				throw new InvalidOperationException ($"Internal error: compression assembly info for architecture {arch} not available");
 			}
 
-			if (!assembliesInfo.TryGetValue (key, out var info)) {
+			if (!assembliesInfo.TryGetValue (key, out var info) || info == null) {
 				log.LogDebugMessage ($"Assembly missing from {nameof (CompressedAssemblyInfo)}: {key}");
 				return false;
 			}

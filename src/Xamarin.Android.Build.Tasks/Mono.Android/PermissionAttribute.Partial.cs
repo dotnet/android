@@ -38,8 +38,10 @@ namespace Android.App {
 
 		internal class PermissionAttributeComparer : IEqualityComparer<PermissionAttribute>
 		{
-			public bool Equals (PermissionAttribute x, PermissionAttribute y)
+			public bool Equals (PermissionAttribute? x, PermissionAttribute? y)
 			{
+				if (x == null || y == null)
+					return ReferenceEquals (x, y);
 				return
 					x.Description == y.Description &&
 						x.Icon == y.Icon &&

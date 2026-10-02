@@ -39,8 +39,10 @@ namespace Android.App {
 		internal class PermissionGroupAttributeComparer : IEqualityComparer<PermissionGroupAttribute>
 		{
 			#region IEqualityComparer<PermissionGroupAttribute> Members
-			public bool Equals (PermissionGroupAttribute x, PermissionGroupAttribute y)
+			public bool Equals (PermissionGroupAttribute? x, PermissionGroupAttribute? y)
 			{
+				if (x == null || y == null)
+					return ReferenceEquals (x, y);
 				return
 					x.Description == y.Description &&
 						x.Icon == y.Icon &&

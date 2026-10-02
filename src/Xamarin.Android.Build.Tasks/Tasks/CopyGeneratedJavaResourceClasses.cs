@@ -57,4 +57,3 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 }
-
