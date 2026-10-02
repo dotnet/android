@@ -396,7 +396,7 @@ List<string> LoadPrFiles ()
 		fetchErrors.Add ("The PR number could not be derived; PR diff evidence is unavailable.");
 		return [];
 	}
-	var (code, stdout, stderr) = Run ("gh", "pr", "diff", pr, "--repo", repo, "--name-only");
+	var (code, stdout, stderr) = Run ("gh", ["pr", "diff", pr, "--repo", repo, "--name-only"]);
 	if (code != 0) {
 		Console.Error.WriteLine ($"gh diff failed: {Trunc (stderr, 200)}");
 		fetchErrors.Add ($"GitHub PR diff could not be loaded for PR #{pr}.");
@@ -995,7 +995,7 @@ string [] Lines (string value)
 
 JsonNode? AzJson (string url)
 {
-	var (code, stdout, stderr) = Run ("az", "rest", "--method", "get", "--resource", RES, "--url", url, "-o", "json");
+	var (code, stdout, stderr) = Run ("az", ["rest", "--method", "get", "--resource", RES, "--url", url, "-o", "json"]);
 	if (code != 0) {
 		Console.Error.WriteLine ($"az error {url}\n{Trunc (stderr, 500)}");
 		fetchErrors.Add ($"Azure request failed: {url}");
@@ -1044,7 +1044,7 @@ string AzText (string url)
 	return stdout;
 }
 
-static (int code, string stdout, string stderr) Run (string file, params string [] cliArgs)
+static (int code, string stdout, string stderr) Run (string file, string [] cliArgs, TimeSpan? timeout = null)
 {
 	var psi = new ProcessStartInfo (file) {
 		RedirectStandardOutput = true,
@@ -1054,14 +1054,10 @@ static (int code, string stdout, string stderr) Run (string file, params string 
 	};
 	foreach (var a in cliArgs)
 		psi.ArgumentList.Add (a);
-	return CaptureCommand (psi, TimeSpan.FromMinutes (5));
-}
-
-static (int code, string stdout, string stderr) CaptureCommand (ProcessStartInfo psi, TimeSpan timeout)
-{
+	timeout ??= TimeSpan.FromMinutes (5);
 	var result = Process.RunAndCaptureText (psi, timeout);
 	if (result.ExitStatus.Canceled)
-		throw new TimeoutException ($"'{psi.FileName}' did not complete within {timeout}.");
+		throw new TimeoutException ($"'{file}' did not complete within {timeout}.");
 	return (result.ExitStatus.ExitCode, result.StandardOutput, result.StandardError);
 }
 

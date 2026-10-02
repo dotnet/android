@@ -21,12 +21,12 @@ namespace Xamarin.Android.BuildTools.Tests
 				var assembly = Assembly.LoadFrom (args [1]);
 				var program = assembly.GetType ("Program") ?? throw new InvalidOperationException ("Missing CI program.");
 				var method = program.GetMethods (BindingFlags.Static | BindingFlags.NonPublic)
-					.Single (m => m.Name.Contains ($"g__{args [2]}|", StringComparison.Ordinal));
-				var child = StartInfo (args.Skip (4).ToArray ());
+					.Single (m => m.Name.Contains ("g__Run|", StringComparison.Ordinal));
+				var child = StartInfo (args.Skip (3).ToArray ());
+				int timeoutMilliseconds = int.Parse (args [2]);
+				TimeSpan? timeout = timeoutMilliseconds > 0 ? TimeSpan.FromMilliseconds (timeoutMilliseconds) : null;
 				try {
-					object result = args [2] == "Run"
-						? method.Invoke (null, new object [] { child.FileName, child.ArgumentList.ToArray () })
-						: method.Invoke (null, new object [] { child, TimeSpan.FromMilliseconds (int.Parse (args [3])) });
+					object result = method.Invoke (null, new object [] { child.FileName, child.ArgumentList.ToArray (), timeout });
 					var capture = ((int Code, string Stdout, string Stderr)) result;
 					Console.Write (JsonSerializer.Serialize (new { capture.Code, capture.Stdout, capture.Stderr }));
 					return 0;
