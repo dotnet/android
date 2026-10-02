@@ -169,11 +169,16 @@ namespace Xamarin.Android.Build.Tests {
 				      DependsOnTargets="_PrepareTrimmableTypeMapAssemblies">
 				    <ItemGroup>
 				      <_AndroidPreTrimRoot Include="@(_ResolvedAssemblies)"
-				          Condition=" '%(Filename)' == '_Microsoft.Android.TypeMaps' and '%(Abi)' == 'arm64-v8a' and '%(_AndroidPreTrimTypeMapCandidate)' == 'true' " />
+				          Condition=" '%(_ResolvedAssemblies.Filename)' == '_Microsoft.Android.TypeMaps'
+				              and '%(_ResolvedAssemblies.Abi)' == 'arm64-v8a'
+				              and '%(_ResolvedAssemblies._AndroidPreTrimTypeMapCandidate)' == 'true' " />
 				      <_AndroidFinalArm64Root Include="@(_ResolvedAssemblies)"
-				          Condition=" '%(Filename)' == '_Microsoft.Android.TypeMaps' and '%(Abi)' == 'arm64-v8a' and '%(_AndroidPreTrimTypeMapCandidate)' != 'true' " />
+				          Condition=" '%(_ResolvedAssemblies.Filename)' == '_Microsoft.Android.TypeMaps'
+				              and '%(_ResolvedAssemblies.Abi)' == 'arm64-v8a'
+				              and '%(_ResolvedAssemblies._AndroidPreTrimTypeMapCandidate)' != 'true' " />
 				      <_AndroidFinalX64Root Include="@(_ResolvedAssemblies)"
-				          Condition=" '%(Filename)' == '_Microsoft.Android.TypeMaps' and '%(Abi)' == 'x86_64' " />
+				          Condition=" '%(_ResolvedAssemblies.Filename)' == '_Microsoft.Android.TypeMaps'
+				              and '%(_ResolvedAssemblies.Abi)' == 'x86_64' " />
 				    </ItemGroup>
 				    <Error Condition=" '@(_AndroidPreTrimRoot->Count())' == '0' or '@(_AndroidFinalArm64Root->Count())' == '0' or '@(_AndroidFinalX64Root->Count())' == '0' "
 				        Text="The native linking regression requires both pre-trim and final per-ABI root typemaps." />
