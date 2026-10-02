@@ -83,6 +83,7 @@ namespace Xamarin.Android.Tasks
 
 			string assemblyName = Path.GetFileNameWithoutExtension (OutputFile.ItemSpec);
 
+			ArgumentNullException.ThrowIfNull (CaseMapFile);
 			resource_fixup = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (CaseMapFile), StringComparer.OrdinalIgnoreCase);
 			// Generate an assembly which contains all the values in the provided
 			// R.txt file.
@@ -129,7 +130,7 @@ namespace Xamarin.Android.Tasks
 			MethodReference generatedCodeConstructor = ImportCustomAttributeConstructor (cache, "System.CodeDom.Compiler.GeneratedCodeAttribute", module, netstandardDef.MainModule, argCount: 2);
 			var generatedCodeAttr = new CustomAttribute (generatedCodeConstructor);
 			generatedCodeAttr.ConstructorArguments.Add (new CustomAttributeArgument (module.TypeSystem.String, nameof(GenerateResourceDesignerAssembly)));
-			var version = typeof(GenerateResourceDesignerAssembly).Assembly.GetName().Version;
+			var version = typeof(GenerateResourceDesignerAssembly).Assembly.GetName().Version ?? throw new InvalidOperationException ("Resource designer assembly version is missing.");
 			generatedCodeAttr.ConstructorArguments.Add (new CustomAttributeArgument (module.TypeSystem.String, version.ToString ()));
 
 			var att = TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.Public | TypeAttributes.BeforeFieldInit;
@@ -372,7 +373,8 @@ namespace Xamarin.Android.Tasks
 
 		void StrongNameAssembly (AssemblyNameDefinition name)
 		{
-			using (Stream stream = typeof (GenerateResourceDesignerAssembly).Assembly.GetManifestResourceStream ("Resource.Designer.snk")) {
+			using (Stream stream = typeof (GenerateResourceDesignerAssembly).Assembly.GetManifestResourceStream ("Resource.Designer.snk") ??
+				throw new InvalidOperationException ("Resource designer signing key is missing.")) {
 				byte[] publicKey = new byte[stream.Length];
 				_ = stream.Read (publicKey, 0, publicKey.Length);
 				name.HashAlgorithm = AssemblyHashAlgorithm.SHA1;

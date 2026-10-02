@@ -122,7 +122,8 @@ namespace Xamarin.Android.Tasks
 
 		public void RemoveFile (string folder, string file)
 		{
-			var archiveName = ArchiveNameForFile (file, Path.Combine (folder, Path.GetDirectoryName (file)));
+			var archiveName = ArchiveNameForFile (file, Path.Combine (folder, Path.GetDirectoryName (file) ??
+				throw new ArgumentException ("Archive file path must have a directory.", nameof (file))));
 			long index = -1;
 			if (zip.ContainsEntry (archiveName, out index))
 				zip.DeleteEntry ((ulong)index);

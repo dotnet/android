@@ -46,7 +46,8 @@ namespace Xamarin.Android.Tasks
 			var retval = base.RunTask ();
 
 			try {
-				File.Delete (TemporarySourceListFile);
+				if (TemporarySourceListFile != null)
+					File.Delete (TemporarySourceListFile);
 			} catch (Exception) {
 				// Ignore exception, a tiny temp file will get left on the user's system
 			}

@@ -112,7 +112,7 @@ namespace Xamarin.Android.Tasks
 			// ...as well as this
 			Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> userAssembliesPerArch = MonoAndroidHelper.GetPerArchAssemblies (ResolvedUserAssemblies, SupportedAbis, validate: true);
 			foreach (var kvp in userAssembliesPerArch) {
-				if (!allAssembliesPerArch.TryGetValue (kvp.Key, out Dictionary<string, ITaskItem> allAssemblies)) {
+				if (!allAssembliesPerArch.TryGetValue (kvp.Key, out var allAssemblies)) {
 					throw new InvalidOperationException ($"Internal error: found user assemblies for architecture '{kvp.Key}' which isn't found in ResolvedAssemblies");
 				}
 
@@ -193,7 +193,7 @@ namespace Xamarin.Android.Tasks
 
 		internal static Dictionary<string, ITaskItem> MaybeGetArchAssemblies (Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> dict, AndroidTargetArch arch)
 		{
-			if (!dict.TryGetValue (arch, out Dictionary<string, ITaskItem> archDict)) {
+			if (!dict.TryGetValue (arch, out var archDict)) {
 				return new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
 			}
 

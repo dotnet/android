@@ -42,14 +42,14 @@ namespace Xamarin.Android.Tasks {
 				var value = kvp.Value;
 				if (key == value)
 					continue;
-				if (customViewMap.TryGetValue (key, out HashSet<string> resourceFiles)) {
+				if (customViewMap.TryGetValue (key, out var resourceFiles)) {
 					foreach (var file in resourceFiles) {
 						if (processed.Contains (file))
 							continue;
 						if (!File.Exists (file))
 							continue;
 						var document = XDocument.Load (file, options : LoadOptions.SetLineInfo);
-						var e = document.Root;
+						var e = document.Root ?? throw new System.Xml.XmlException ($"Resource XML has no root element: {file}");
 						bool update = false;
 						foreach (var elem in AndroidResource.GetElements (e).Prepend (e)) {
 							update |= TryFixCustomView (elem, acw_map, (level, message) => {
@@ -115,10 +115,11 @@ namespace Xamarin.Android.Tasks {
 			 * try to convert those like for TryFixCustomView
 			 */
 			if (attr.Name != (res_auto + "layout_behavior") &&                            // For custom CoordinatorLayout behavior
-			    		(attr.Parent.Name != "transition" || attr.Name.LocalName != "class")) // For custom transitions
+				((attr.Parent ?? throw new InvalidOperationException ("Custom view attributes must belong to an element.")).Name != "transition" ||
+					attr.Name.LocalName != "class")) // For custom transitions
 				return false;
 
-			if (!acwMap.TryGetValue (attr.Value, out string mappedValue))
+			if (!acwMap.TryGetValue (attr.Value, out var mappedValue))
 				return false;
 
 			attr.Value = mappedValue;
@@ -131,11 +132,11 @@ namespace Xamarin.Android.Tasks {
 			//   <fragment class="My.DotNet.Class"
 			//   <fragment android:name="My.DotNet.Class" ...
 			// and tries to change it to the ACW name
-			if (attr.Parent.Name != "fragment")
+			if ((attr.Parent ?? throw new InvalidOperationException ("Custom view attributes must belong to an element.")).Name != "fragment")
 				return false;
 
 			if (attr.Name == "class" || attr.Name == android + "name") {
-				if (acwMap.TryGetValue (attr.Value, out string mappedValue)) {
+				if (acwMap.TryGetValue (attr.Value, out var mappedValue)) {
 					attr.Value = mappedValue;
 
 					return true;
@@ -158,7 +159,7 @@ namespace Xamarin.Android.Tasks {
 			// Looks for any <My.DotNet.Class ...
 			// and tries to change it to the ACW name
 			string name = elem.Name.ToString ();
-			if (acwMap.TryGetValue (name, out string mappedValue)) {
+			if (acwMap.TryGetValue (name, out var mappedValue)) {
 				elem.Name = mappedValue;
 				return true;
 			}

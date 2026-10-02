@@ -80,7 +80,7 @@ namespace Xamarin.Android.Tasks {
 				if (resourceFile.IsNullOrEmpty ())
 					resourceFile = resource.ItemSpec;
 				var fileName = Path.GetFileName (resourceFile);
-				var directory = Path.GetFileName (Path.GetDirectoryName (resourceFile));
+				var directory = Path.GetFileName (Path.GetDirectoryName (resourceFile) ?? throw new InvalidOperationException ($"Resource path has no directory: {resourceFile}"));
 				char firstChar = fileName [0];
 				bool isValidFirstChar = ('a' <= firstChar && firstChar <= 'z') || ('A' <= firstChar && firstChar <= 'Z') || firstChar == '_';
 				if (!isValidFirstChar) {

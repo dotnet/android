@@ -150,7 +150,7 @@ namespace Xamarin.Android.Tasks
 
 		bool GetVersionFromFile (string javaExe, out Version version)
 		{
-			var path = Path.Combine (Path.GetDirectoryName (javaExe), "..", "release");
+			var path = Path.Combine (Path.GetDirectoryName (javaExe) ?? throw new ArgumentException ("Java executable path must have a directory.", nameof (javaExe)), "..", "release");
 			if (!File.Exists (path) && !JavaSdkPath.IsNullOrEmpty ()) {
 				path = Path.Combine (JavaSdkPath, "release");
 			}
@@ -173,7 +173,8 @@ namespace Xamarin.Android.Tasks
 					if (index != -1) {
 						versionString = versionString.Substring (0, index);
 					}
-					if (Version.TryParse (versionString, out version)) {
+					if (Version.TryParse (versionString, out var parsedVersion)) {
+						version = parsedVersion;
 						Log.LogDebugMessage ($"{path} contains JAVA_VERSION.");
 						return true;
 					}

@@ -267,6 +267,7 @@ namespace Xamarin.Android.Tasks
 				if (loc == null)
 					return;
 
+				ArgumentNullException.ThrowIfNull (loc.FilePath);
 				var relativePath = PathUtil.GetRelativePath (codebehindDir, Path.GetFullPath (loc.FilePath));
 				WriteLineIndent (state, $"#line {loc.Line} \"{relativePath}\"");
 				state.WriteLine ();

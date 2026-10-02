@@ -25,7 +25,7 @@ namespace Xamarin.Android.Tasks
 		{
 			// Find Mono.Android.dll
 			var mono_android = ShrunkFrameworkAssemblies.First (f => Path.GetFileNameWithoutExtension (f.ItemSpec) == "Mono.Android").ItemSpec;
-			var path = Path.GetFullPath (Path.GetDirectoryName (mono_android));
+			var path = Path.GetFullPath (Path.GetDirectoryName (mono_android) ?? throw new InvalidOperationException ("Mono.Android assembly path must have a directory."));
 			using var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false, loadReaderParameters: new ReaderParameters { ReadWrite = true });
 			resolver.SearchDirectories.Add (path);
 			

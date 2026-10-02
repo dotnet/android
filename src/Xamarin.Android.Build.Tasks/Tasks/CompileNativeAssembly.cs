@@ -56,7 +56,7 @@ namespace Xamarin.Android.Tasks
 				WorkingDirectory = WorkingDirectory,
 			};
 
-			string assemblerName = Path.GetFileName (config.AssemblerPath);
+			string assemblerName = Path.GetFileName (config.AssemblerPath) ?? throw new InvalidOperationException ("Assembler path is required.");
 			LogDebugMessage ($"[LLVM llc] {psi.FileName} {psi.Arguments}");
 
 			var stdoutLines = new List<string> ();
@@ -94,7 +94,8 @@ namespace Xamarin.Android.Tasks
 
 				if (proc.ExitCode != 0) {
 					var sb = MonoAndroidHelper.MergeStdoutAndStderrMessages (stdoutLines, stderrLines);
-					LogCodedError ("XA3006", Properties.Resources.XA3006, Path.GetFileName (config.InputSource), sb.ToString ());
+					LogCodedError ("XA3006", Properties.Resources.XA3006,
+						Path.GetFileName (config.InputSource) ?? throw new InvalidOperationException ("Assembly source path is required."), sb.ToString ());
 					Cancel ();
 				}
 			}
@@ -115,7 +116,7 @@ namespace Xamarin.Android.Tasks
 				// We don't need the directory since our WorkingDirectory is where all the sources are
 				string sourceFile = Path.GetFileName (item.ItemSpec);
 				string outputFile = QuoteFileName (sourceFile.Replace (".ll", ".o"));
-				string executableDir = Path.GetDirectoryName (llcPath);
+				string executableDir = Path.GetDirectoryName (llcPath) ?? throw new InvalidOperationException ("LLVM compiler path must have a directory.");
 				string executableName = MonoAndroidHelper.GetExecutablePath (executableDir, Path.GetFileName (llcPath));
 
 				yield return new Config {

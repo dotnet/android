@@ -426,7 +426,7 @@ namespace Xamarin.Android.Tasks
 					try {
 						updated |= Files.ExtractAll (zip, importsDir, modifyCallback: (entryFullName) => {
 							var entryFileName = Path.GetFileName (entryFullName);
-							var entryPath = Path.GetDirectoryName (entryFullName);
+							var entryPath = Path.GetDirectoryName (entryFullName) ?? throw new InvalidOperationException ($"Archive entry path has no directory: {entryFullName}");
 							if (entryFileName.StartsWith ("internal_impl", StringComparison.InvariantCulture)) {
 								var hash = Files.HashString (entryFileName);
 								var jar = Path.Combine (entryPath, $"internal_impl-{hash}.jar");

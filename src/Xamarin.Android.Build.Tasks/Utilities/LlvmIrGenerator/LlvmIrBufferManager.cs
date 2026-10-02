@@ -60,11 +60,11 @@ partial class LlvmIrModule
 				return null;
 			}
 
-			if (!bufferVariableNames.TryGetValue (structure.Obj, out Dictionary<string, string> members)) {
+			if (!bufferVariableNames.TryGetValue (structure.Obj, out var members)) {
 				return null;
 			}
 
-			if (!members.TryGetValue (MakeUniqueMemberId (structure, smi), out string bufferVariableName)) {
+			if (!members.TryGetValue (MakeUniqueMemberId (structure, smi), out var bufferVariableName)) {
 				return null;
 			}
 
@@ -88,7 +88,7 @@ partial class LlvmIrModule
 				throw new ArgumentException ("Structure instance object cannot be null", nameof (structure));
 			}
 
-			if (!bufferVariableNames.TryGetValue (structure.Obj, out Dictionary<string, string> members)) {
+			if (!bufferVariableNames.TryGetValue (structure.Obj, out var members)) {
 				members = new Dictionary<string, string> (StringComparer.Ordinal);
 				bufferVariableNames.Add (structure.Obj, members);
 			}

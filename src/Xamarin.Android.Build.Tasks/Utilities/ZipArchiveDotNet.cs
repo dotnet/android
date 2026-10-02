@@ -208,7 +208,8 @@ class ZipArchiveDotNet : IZipArchive
 		if (crc_field is null)
 			throw new NotSupportedException ("This method is not supported on this platform.");
 
-		return (uint) crc_field.GetValue (entry);
+		return crc_field.GetValue (entry) is uint value ? value :
+			throw new NotSupportedException ("The archive entry CRC value is unavailable.");
 	}
 
 	static CompressionLevel GetCompressionLevel (ZipArchiveEntry entry)
@@ -216,7 +217,7 @@ class ZipArchiveDotNet : IZipArchive
 		if (comp_field is null)
 			throw new NotSupportedException ("This method is not supported on this platform.");
 
-		var level = comp_field.GetValue (entry).ToString ();
+		var level = (comp_field.GetValue (entry) ?? throw new NotSupportedException ("The archive entry compression value is unavailable.")).ToString ();
 
 		switch (level) {
 			case "Stored":

@@ -41,7 +41,7 @@ class ACWMapGenerator
 			acw_map.Write (javaKey);
 			acw_map.WriteLine ();
 
-			ACWMapEntry conflict;
+			ACWMapEntry? conflict;
 			bool hasConflict = false;
 
 			if (managed.TryGetValue (managedKey, out conflict)) {

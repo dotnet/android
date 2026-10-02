@@ -62,7 +62,7 @@ namespace MonoDroid.Tuner
 				var found = false;
 				for (int off = Math.Max (0, instructions.Count - 6); off < instructions.Count; off++) {
 					var current = instructions [off];
-					if (current.OpCode == OpCodes.Call && current.Operand.ToString ().Contains ("System.GC::KeepAlive")) {
+					if (current.OpCode == OpCodes.Call && current.Operand.ToString () is { } operand && operand.Contains ("System.GC::KeepAlive")) {
 						found = true;
 						break;
 					}

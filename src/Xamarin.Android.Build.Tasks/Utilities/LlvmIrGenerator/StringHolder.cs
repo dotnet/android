@@ -62,7 +62,7 @@ class StringHolder : IComparable, IComparable<StringHolder>, IEquatable<StringHo
 	/// </summary>
 	/// <param name="obj">The object to compare to.</param>
 	/// <returns>A signed integer that indicates the relative values of this instance and value.</returns>
-	public int CompareTo (object obj) => CompareTo (obj as StringHolder);
+	public int CompareTo (object? obj) => CompareTo (obj as StringHolder);
 
 	/// <summary>
 	/// Compares this StringHolder to another StringHolder.
@@ -117,7 +117,7 @@ class StringHolder : IComparable, IComparable<StringHolder>, IEquatable<StringHo
 	/// </summary>
 	/// <param name="obj">The object to compare with the current StringHolder.</param>
 	/// <returns>true if the specified object is equal to the current StringHolder; otherwise, false.</returns>
-	public override bool Equals (object obj) => Equals (obj as StringHolder);
+	public override bool Equals (object? obj) => Equals (obj as StringHolder);
 
 	/// <summary>
 	/// Determines whether the specified StringHolder is equal to the current StringHolder.

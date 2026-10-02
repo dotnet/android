@@ -73,7 +73,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			// This should be 31.0, 32.0, etc.
-			if (Version.TryParse (TargetPlatformVersion, out Version v)) {
+			if (Version.TryParse (TargetPlatformVersion, out var v)) {
 				if (v.Minor == 0) {
 					AndroidApiLevel = v.Major.ToString (CultureInfo.InvariantCulture);
 				} else {
@@ -116,7 +116,7 @@ namespace Xamarin.Android.Tasks
 					Path.Combine (dir, "bin"),
 				};
 
-				string aapt = toolsPaths.FirstOrDefault (x => File.Exists (Path.Combine (x, MonoAndroidHelper.GetExecutablePath (x, Aapt2))));
+				string? aapt = toolsPaths.FirstOrDefault (x => File.Exists (Path.Combine (x, MonoAndroidHelper.GetExecutablePath (x, Aapt2))));
 				if (aapt.IsNullOrEmpty ()) {
 					Log.LogDebugMessage ("Could not find `{0}`; tried: {1}", Aapt2,
 						string.Join (Path.PathSeparator.ToString (), toolsPaths.Select (x => Path.Combine (x, Aapt2))));
@@ -125,7 +125,7 @@ namespace Xamarin.Android.Tasks
 				AndroidSdkBuildToolsPath = Path.GetFullPath (dir);
 				AndroidSdkBuildToolsBinPath = Path.GetFullPath (aapt);
 
-				string zipalign = toolsPaths.FirstOrDefault (x => File.Exists (Path.Combine (x, ZipAlign)));
+				string? zipalign = toolsPaths.FirstOrDefault (x => File.Exists (Path.Combine (x, ZipAlign)));
 				if (findZipAlign && zipalign.IsNullOrEmpty ()) {
 					Log.LogDebugMessage ("Could not find `{0}`; tried: {1}", ZipAlign,
 						string.Join (Path.PathSeparator.ToString (), toolsPaths.Select (x => Path.Combine (x, ZipAlign))));
@@ -140,6 +140,7 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
+			ArgumentNullException.ThrowIfNull (AndroidSdkBuildToolsBinPath);
 			ApkSignerJar = Path.Combine (AndroidSdkBuildToolsBinPath, "lib", ApkSigner);
 			AndroidUseApkSigner = File.Exists (ApkSignerJar);
 
@@ -213,6 +214,7 @@ namespace Xamarin.Android.Tasks
 		bool GetAapt2Version (string aapt2Exe)
 		{
 			var sb = new StringBuilder ();
+			ArgumentNullException.ThrowIfNull (Aapt2ToolPath);
 			var aapt2Tool = Path.Combine (Aapt2ToolPath, aapt2Exe);
 
 			// Try to use a cached value for Aapt2Version
@@ -242,7 +244,7 @@ namespace Xamarin.Android.Tasks
 			var versionInfo = sb.ToString ();
 			var versionNumberMatch = Aapt2VersionRegex.Match (versionInfo);
 			Log.LogDebugMessage ($"`{aapt2Tool} version` returned: ```{versionInfo}```");
-			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value.Replace (":", "."), out Version versionNumber)) {
+			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value.Replace (":", "."), out var versionNumber)) {
 				Aapt2Version = versionNumber.ToString ();
 				BuildEngine4.RegisterTaskObject (key, Aapt2Version, RegisteredTaskObjectLifetime.AppDomain, allowEarlyCollection: false);
 				return true;
