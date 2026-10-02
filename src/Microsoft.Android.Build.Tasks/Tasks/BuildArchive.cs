@@ -113,7 +113,7 @@ public class BuildArchive : AndroidTask
 
 					using var stream = entry.Open ();
 					Log.LogDebugMessage ($"Refreshing {entryName} from {ApkInputPath}");
-					apk.AddEntry (stream, entryName, ZipArchiveEx.GetCompressionLevel (entry));
+					apk.AddEntry (stream, entryName, ZipArchiveEx.GetCompressionLevel (entry), entry.Length);
 				}
 			}
 		}
@@ -168,7 +168,7 @@ public class BuildArchive : AndroidTask
 
 					Log.LogDebugMessage ($"Adding {jar_entry_name} from {jar_file_path} as the archive file is out of date.");
 					using var jarStream = jar_item.Open ();
-					apk.AddEntry (jarStream, apk_path, CompressionLevel.Optimal);
+					apk.AddEntry (jarStream, apk_path, CompressionLevel.Optimal, jar_item.Length);
 				}
 
 				continue;

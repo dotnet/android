@@ -11,11 +11,20 @@ namespace Microsoft.Android.Tasks;
 
 sealed class ZipArchiveEx : IDisposable
 {
-	public ZipArchive Archive { get; }
+	const long BufferedSizeLimit = 100 * 1024 * 1024;
+	const int BufferedFilesLimit = 512;
+
+	readonly string archivePath;
+	long bufferedSize;
+	int bufferedFiles;
+	bool modified;
+
+	public ZipArchive Archive { get; private set; }
 
 	public ZipArchiveEx (string archive, FileMode mode)
 	{
-		var stream = new FileStream (archive, mode, FileAccess.ReadWrite);
+		archivePath = Path.GetFullPath (archive);
+		var stream = new FileStream (archivePath, mode, FileAccess.ReadWrite);
 		var ownsStream = false;
 		try {
 			Archive = new ZipArchive (stream, ZipArchiveMode.Update);
@@ -32,9 +41,45 @@ sealed class ZipArchiveEx : IDisposable
 			var archivePath = Path.Combine (folderInArchive, relativePath).Replace ('\\', '/').TrimStart ('/');
 			if (SkipExistingFile (filename, archivePath, method))
 				continue;
-			DeleteEntry (archivePath);
-			Archive.CreateEntryFromFile (filename, archivePath, method);
+			AddFile (filename, archivePath, method);
 		}
+	}
+
+	void PrepareWrite (long? size)
+	{
+		if (bufferedFiles > 0 && (size is null || size.Value > BufferedSizeLimit - bufferedSize))
+			Flush ();
+	}
+
+	void RecordWrite (long size)
+	{
+		modified = true;
+		bufferedSize += size;
+		bufferedFiles++;
+		if (bufferedSize >= BufferedSizeLimit || bufferedFiles >= BufferedFilesLimit)
+			Flush ();
+	}
+
+	void Flush ()
+	{
+		if (!modified)
+			return;
+
+		// Update mode retains changed uncompressed payloads until the archive is disposed.
+		Archive.Dispose ();
+		Archive = ZipFile.Open (archivePath, ZipArchiveMode.Update);
+		bufferedSize = 0;
+		bufferedFiles = 0;
+		modified = false;
+	}
+
+	void AddFile (string filename, string archivePath, CompressionLevel compression)
+	{
+		var size = new FileInfo (filename).Length;
+		PrepareWrite (size);
+		DeleteEntry (archivePath);
+		Archive.CreateEntryFromFile (filename, archivePath, compression);
+		RecordWrite (size);
 	}
 
 	public bool SkipExistingFile (string filename, string archivePath, CompressionLevel compression)
@@ -81,18 +126,25 @@ sealed class ZipArchiveEx : IDisposable
 			return false;
 		}
 
-		DeleteEntry (archivePath);
-		Archive.CreateEntryFromFile (filename, archivePath, compression);
+		AddFile (filename, archivePath, compression);
 		log.LogDebugMessage ($"Adding {filename} as the archive file is out of date.");
 		return true;
 	}
 
-	public void AddEntry (Stream stream, string archivePath, CompressionLevel compression)
+	public void AddEntry (Stream stream, string archivePath, CompressionLevel compression, long? uncompressedSize = null)
 	{
+		if (uncompressedSize < 0)
+			throw new ArgumentOutOfRangeException (nameof (uncompressedSize));
+		var size = uncompressedSize ?? (stream.CanSeek ? Math.Max (0, stream.Length - stream.Position) : (long?) null);
+		PrepareWrite (size);
 		DeleteEntry (archivePath);
 		var entry = Archive.CreateEntry (archivePath, compression);
-		using var destination = entry.Open ();
-		stream.CopyTo (destination);
+		long written;
+		using (var destination = entry.Open ()) {
+			stream.CopyTo (destination);
+			written = destination.Length;
+		}
+		RecordWrite (written);
 	}
 
 	public bool ContainsEntry (string archivePath) => Archive.GetEntry (archivePath) is not null;
@@ -100,12 +152,16 @@ sealed class ZipArchiveEx : IDisposable
 	public ZipArchiveEntry GetEntry (string archivePath) =>
 		Archive.GetEntry (archivePath) ?? throw new ArgumentOutOfRangeException (nameof (archivePath));
 
-	public IEnumerable<string> GetAllEntryNames () => Archive.Entries.Select (entry => entry.FullName);
+	public IEnumerable<string> GetAllEntryNames () => Archive.Entries.Select (entry => entry.FullName).Distinct (StringComparer.Ordinal).ToArray ();
 
 	public void DeleteEntry (string archivePath)
 	{
-		while (Archive.GetEntry (archivePath) is ZipArchiveEntry entry)
+		if (Archive.GetEntry (archivePath) is null)
+			return;
+		foreach (var entry in Archive.Entries.Where (item => item.FullName == archivePath).ToArray ()) {
 			entry.Delete ();
+			modified = true;
+		}
 	}
 
 	public bool MoveEntry (string oldPath, string newPath)
@@ -116,9 +172,18 @@ sealed class ZipArchiveEx : IDisposable
 		if (oldPath == newPath)
 			return true;
 
+		if (!TryGetEntryLength (entry, out var size)) {
+			Flush ();
+			entry = GetEntry (oldPath);
+			size = entry.Length;
+		}
 		var compression = GetCompressionLevel (entry);
 		var lastWriteTime = entry.LastWriteTime;
 		var attributes = entry.ExternalAttributes;
+		// Moving an entry buffers both its old and new uncompressed contents.
+		var bufferedBytes = checked (size * 2);
+		PrepareWrite (bufferedBytes);
+		entry = GetEntry (oldPath);
 		DeleteEntry (newPath);
 		var replacement = Archive.CreateEntry (newPath, compression);
 		replacement.LastWriteTime = lastWriteTime;
@@ -126,16 +191,18 @@ sealed class ZipArchiveEx : IDisposable
 		using (var source = entry.Open ())
 		using (var destination = replacement.Open ())
 			source.CopyTo (destination);
-		entry.Delete ();
+		DeleteEntry (oldPath);
+		RecordWrite (bufferedBytes);
 		return true;
 	}
 
 	public void FixupWindowsPathSeparators (Action<string, string> onRename)
 	{
-		foreach (var entry in Archive.Entries.Where (entry => entry.FullName.Contains ('\\')).ToArray ()) {
-			var name = entry.FullName.Replace ('\\', '/');
-			onRename (entry.FullName, name);
-			MoveEntry (entry.FullName, name);
+		var malformedNames = Archive.Entries.Select (entry => entry.FullName).Where (name => name.Contains ('\\')).ToArray ();
+		foreach (var oldName in malformedNames) {
+			var name = oldName.Replace ('\\', '/');
+			onRename (oldName, name);
+			MoveEntry (oldName, name);
 		}
 	}
 

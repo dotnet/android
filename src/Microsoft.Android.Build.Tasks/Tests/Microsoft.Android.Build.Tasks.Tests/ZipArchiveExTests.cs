@@ -333,6 +333,124 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("contents", reader.ReadToEnd ());
 		}
 
+		[TestCase (false, CompressionLevel.NoCompression)]
+		[TestCase (false, CompressionLevel.Optimal)]
+		[TestCase (true, CompressionLevel.NoCompression)]
+		[TestCase (true, CompressionLevel.Optimal)]
+		[NonParallelizable]
+		public void ChangedPayloadIsReleasedInBoundedBatches (bool streamed, CompressionLevel compression)
+		{
+			const int entrySize = 8 * 1024 * 1024;
+			const int entryCount = 16;
+			const long batchLimit = 100 * 1024 * 1024;
+			var filename = Path.Combine (TestPath, "payload.bin");
+			using (var file = File.Create (filename))
+				file.SetLength (entrySize);
+			var crc = new System.IO.Hashing.Crc32 ();
+			using (var source = File.OpenRead (filename))
+				crc.Append (source);
+			var expectedCrc = crc.GetCurrentHashAsUInt32 ();
+			var task = new BuildArchive { BuildEngine = new MockBuildEngine (TestContext.Out) };
+			var baseline = GC.GetTotalMemory (forceFullCollection: true);
+
+			using (var archive = new ZipArchiveEx (Zip, FileMode.Create)) {
+				for (var i = 0; i < entryCount; i++) {
+					var name = $"payload/{i}.bin";
+					if (streamed) {
+						using var source = File.OpenRead (filename);
+						archive.AddEntry (source, name, compression);
+					} else {
+						Assert.IsTrue (archive.AddFileIfChanged (task.Log, filename, name, compression));
+					}
+				}
+
+				Assert.Less (GC.GetTotalMemory (forceFullCollection: true) - baseline, batchLimit,
+					"The archive must release earlier batches instead of retaining the entire 128 MiB changed payload.");
+				Assert.AreEqual (entrySize, archive.GetEntry ("payload/0.bin").Length,
+					"An earlier batch should already have been committed and reopened.");
+			}
+
+			using var result = ZipFile.OpenRead (Zip);
+			Assert.AreEqual (entryCount, result.Entries.Count);
+			foreach (var entry in result.Entries) {
+				Assert.AreEqual (entrySize, entry.Length, entry.FullName);
+				Assert.AreEqual (expectedCrc, entry.Crc32, entry.FullName);
+				AssertCompression (entry, compression != CompressionLevel.NoCompression);
+				using var contents = entry.Open ();
+				contents.CopyTo (Stream.Null);
+			}
+		}
+
+		[Test]
+		public void SmallEntriesAreCommittedAfterFileLimit ()
+		{
+			using var archive = new ZipArchiveEx (Zip, FileMode.Create);
+			for (var i = 0; i < 512; i++) {
+				using var source = new MemoryStream (new byte [] { 1, 2, 3 });
+				archive.AddEntry (source, $"files/{i}.bin", CompressionLevel.NoCompression);
+			}
+
+			Assert.AreEqual (3, archive.GetEntry ("files/0.bin").Length,
+				"The 512-entry limit must commit small payloads even when the size limit is not reached.");
+		}
+
+		[TestCase (CompressionLevel.NoCompression)]
+		[TestCase (CompressionLevel.Optimal)]
+		public void PathFixupSurvivesReopeningAcrossTheFileLimit (CompressionLevel compression)
+		{
+			const int entryCount = 520;
+			var timestamp = new DateTimeOffset (2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
+			using (var archive = ZipFile.Open (Zip, ZipArchiveMode.Create)) {
+				for (var i = 0; i < entryCount; i++) {
+					var entry = archive.CreateEntry ($"assets\\{i}.txt", compression);
+					entry.LastWriteTime = timestamp;
+					entry.ExternalAttributes = 0x12340000;
+					using var writer = new StreamWriter (entry.Open (), new UTF8Encoding (false));
+					writer.Write ($"contents {i}");
+				}
+			}
+
+			var renamed = 0;
+			using (var archive = new ZipArchiveEx (Zip, FileMode.Open))
+				archive.FixupWindowsPathSeparators ((_, _) => renamed++);
+
+			Assert.AreEqual (entryCount, renamed);
+			using var result = ZipFile.OpenRead (Zip);
+			Assert.AreEqual (entryCount, result.Entries.Count);
+			for (var i = 0; i < entryCount; i++) {
+				var entry = result.GetEntry ($"assets/{i}.txt") ?? throw new InvalidOperationException ($"Missing normalized entry {i}.");
+				Assert.AreEqual (compression == CompressionLevel.NoCompression ? ZipCompressionMethod.Stored : ZipCompressionMethod.Deflate,
+					entry.CompressionMethod, entry.FullName);
+				Assert.AreEqual (timestamp.DateTime, entry.LastWriteTime.DateTime, entry.FullName);
+				Assert.AreEqual (0x12340000, entry.ExternalAttributes, entry.FullName);
+				using var reader = new StreamReader (entry.Open ());
+				Assert.AreEqual ($"contents {i}", reader.ReadToEnd (), entry.FullName);
+			}
+		}
+
+		[Test]
+		public void NonSeekableInputsReleaseEarlierWritesBeforeBuffering ()
+		{
+			var inputPath = Path.Combine (TestDirectory, "input.zip");
+			using (var input = ZipFile.Open (inputPath, ZipArchiveMode.Create)) {
+				using var writer = new StreamWriter (input.CreateEntry ("payload", CompressionLevel.Optimal).Open ());
+				writer.Write ("streamed contents");
+			}
+			using var inputArchive = ZipFile.OpenRead (inputPath);
+			var inputEntry = inputArchive.GetEntry ("payload") ?? throw new InvalidOperationException ("Missing input payload.");
+			using var archive = new ZipArchiveEx (Zip, FileMode.Create);
+			for (var i = 0; i < 2; i++) {
+				using var source = inputEntry.Open ();
+				Assert.IsFalse (source.CanSeek);
+				archive.AddEntry (source, $"payload/{i}", CompressionLevel.Optimal);
+			}
+
+			var first = archive.GetEntry ("payload/0");
+			Assert.AreEqual (Encoding.UTF8.GetByteCount ("streamed contents"), first.Length);
+			using var reader = new StreamReader (first.Open ());
+			Assert.AreEqual ("streamed contents", reader.ReadToEnd ());
+		}
+
 		static void AssertCompression (ZipArchiveEntry entry, bool compressed)
 		{
 			Assert.AreEqual (compressed ? ZipCompressionMethod.Deflate : ZipCompressionMethod.Stored, entry.CompressionMethod);

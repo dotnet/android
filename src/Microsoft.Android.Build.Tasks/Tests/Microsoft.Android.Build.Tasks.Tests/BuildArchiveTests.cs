@@ -350,6 +350,28 @@ public class BuildArchiveTests : BaseTest
 		AssertEntryContents (archive, "assets/duplicate.txt", "last");
 	}
 
+	[Test]
+	public void ReplacingPreExistingDuplicatePathsKeepsOneUpdatedEntry ()
+	{
+		var apk = Path.Combine (TempDirectory, "app.apk");
+		CreateArchive (apk, ("assets/duplicate.txt", "first stale entry"), ("assets/duplicate.txt", "second stale entry"));
+		var filename = Path.Combine (TempDirectory, "current.txt");
+		File.WriteAllText (filename, "current");
+		var item = new TaskItem (filename);
+		item.SetMetadata ("ArchivePath", "assets/duplicate.txt");
+		var task = new BuildArchive {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			ApkOutputPath = apk,
+			FilesToAddToArchive = [item],
+		};
+
+		Assert.IsTrue (task.RunTask ());
+
+		using var archive = ZipFile.OpenRead (apk);
+		Assert.AreEqual (1, archive.Entries.Count);
+		AssertEntryContents (archive, "assets/duplicate.txt", "current");
+	}
+
 	static TaskItem JavaArchiveItem (string path, string entryName)
 	{
 		var item = new TaskItem ($"{path}#{entryName}");

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -57,7 +58,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					var entryName = string.IsNullOrEmpty (zipDir)
 						? Path.GetFileName (entryPath)
 						: Path.Combine (zipDir, Path.GetFileName (entryPath)).Replace ('\\', '/');
-					zip.GetEntry (entryName)?.Delete ();
+					foreach (var existingEntry in zip.Entries.Where (item => item.FullName == entryName).ToArray ())
+						existingEntry.Delete ();
 					zip.CreateEntryFromFile (entryPath, entryName);
 				}
 			}
