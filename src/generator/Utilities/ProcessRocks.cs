@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MonoDroid.Utils {
 
@@ -29,50 +31,66 @@ namespace MonoDroid.Utils {
 				Console.WriteLine ("Running command: {0} {1}", psi.FileName, psi.Arguments);
 			
 			var timer = Stopwatch.StartNew ();
-			using (Process p = Process.Start (psi)) {
-				var stderr = new StringBuilder ();
-				Func<string> readStderrLine = p.StandardError.ReadLine;
-				AsyncCallback appendStderr = null;
-				IAsyncResult r;
-				appendStderr = ar => {
-					try {
-						string l = readStderrLine.EndInvoke (ar);
-						if (l == null) {
-							r = null;
-							return;
+			using (Process p = Process.Start (psi) ?? throw new InvalidOperationException ($"Could not start '{psi.FileName}'.")) {
+				using var stdout = p.StandardOutput;
+				using var stderr = p.StandardError;
+				var timeout = TimeSpan.FromMinutes (5);
+				using var cancellation = new CancellationTokenSource (timeout);
+				var error = ReadStandardErrorAsync (stderr, cancellation.Token);
+				try {
+					while (true) {
+						string line;
+						try {
+							line = stdout.ReadLineAsync (cancellation.Token).AsTask ().GetAwaiter ().GetResult ();
+						} catch (OperationCanceledException ex) when (cancellation.IsCancellationRequested) {
+							throw new TimeoutException ($"'{psi.FileName}' did not complete within {timeout}.", ex);
 						}
-						stderr.Append (l).Append (Environment.NewLine);
-						r = readStderrLine.BeginInvoke (appendStderr, null);
+						if (line == null)
+							break;
+						yield return line;
 					}
-					catch (ObjectDisposedException) {
-						r = null;
-						// ignore; 'p' was disposed while we were blocking on stderr.
+
+					var remaining = timeout - timer.Elapsed;
+					if (!p.WaitForExit ((int) Math.Max (0, remaining.TotalMilliseconds))) {
+						throw new TimeoutException ($"'{psi.FileName}' did not complete within {timeout}.");
 					}
-				};
-				r = readStderrLine.BeginInvoke (appendStderr, null);
-
-				string line;
-				while ((line = p.StandardOutput.ReadLine ()) != null) {
-					yield return line;
-				}
-
-				IAsyncResult _r;
-				while ((_r = r) != null && !_r.IsCompleted)
-					_r.AsyncWaitHandle.WaitOne ();
-
-				p.WaitForExit ();
-				if (p.ExitCode != 0) {
-					_r = r;
-					if (_r != null && !_r.IsCompleted)
-						_r.AsyncWaitHandle.WaitOne ();
-					string e = stderr.ToString ();
-					
-					throw new CommandFailedException (psi.FileName, psi.Arguments, e, p.ExitCode);
+					var errorLog = error.GetAwaiter ().GetResult ();
+					if (p.ExitCode != 0) {
+						throw new CommandFailedException (psi.FileName, psi.Arguments, errorLog, p.ExitCode);
+					}
+				} finally {
+					cancellation.Cancel ();
+					try {
+						if (!p.HasExited) {
+							try {
+								p.Kill (entireProcessTree: true);
+							} catch (InvalidOperationException) when (p.HasExited) {
+							}
+							if (!p.WaitForExit (5000)) {
+								throw new TimeoutException ($"'{psi.FileName}' did not exit after being killed.");
+							}
+						}
+					} finally {
+						try {
+							error.WaitAsync (TimeSpan.FromSeconds (5)).GetAwaiter ().GetResult ();
+						} catch (OperationCanceledException) when (cancellation.IsCancellationRequested) {
+						}
+					}
 				}
 			}
 			timer.Stop ();
 			if (printCommandLine)
 				Console.WriteLine ("\tProcess executed in: {0}", timer.Elapsed);
+		}
+
+		static async Task<string> ReadStandardErrorAsync (StreamReader reader, CancellationToken cancellationToken)
+		{
+			var stderr = new StringBuilder ();
+			string line;
+			while ((line = await reader.ReadLineAsync (cancellationToken).ConfigureAwait (false)) != null) {
+				stderr.AppendLine (line);
+			}
+			return stderr.ToString ();
 		}
 	}
 	
@@ -184,4 +202,3 @@ namespace MonoDroid.Utils {
 		}
 	}
 }
-

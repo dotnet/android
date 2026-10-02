@@ -28,10 +28,11 @@ public class Driver
 		string outfile = Path.Combine (Directory.GetParent (new Uri (Assembly.GetEntryAssembly ().CodeBase).LocalPath).ToString (), "tmp.xml");
 		string args = "--html --nsclean --insert --debugent --nonet --noent --recover --dropdtd --nocatalogs --output " + outfile + " --xmlout " + abs;
 		// FIXME: I cannot enable RedirectStandardError = true due to some mono bug.
-		Process proc = Process.Start (new ProcessStartInfo ("xmllint", args) { /*RedirectStandardError = true,*/ UseShellExecute = false });
-		proc.WaitForExit ();
-		if (proc.ExitCode != 0)
-			throw new Exception ("xmllint failed");
+		using (Process proc = Process.Start (new ProcessStartInfo ("xmllint", args) { /*RedirectStandardError = true,*/ UseShellExecute = false })) {
+			proc.WaitForExit ();
+			if (proc.ExitCode != 0)
+				throw new Exception ("xmllint failed");
+		}
 
 		var doc = new XmlDocument ();
 		string s = File.ReadAllText ("tmp.xml");

@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -263,73 +262,23 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			};
 			si.EnvironmentVariables.Add ("LC_LANG", "C");
 
-			ManualResetEvent stdout_completed = null;
 			if (!si.RedirectStandardError)
 				si.StandardErrorEncoding = null;
-			else
-				stdout_completed = new ManualResetEvent (false);
 
-			ManualResetEvent stderr_completed = null;
 			if (!si.RedirectStandardOutput)
 				si.StandardOutputEncoding = null;
-			else
-				stderr_completed = new ManualResetEvent (false);
 
-			var p = new Process {
+			using var p = new Process {
 				StartInfo = si
 			};
-			p.Start ();
-
-			var outputLock = new Object ();
-
-			if (si.RedirectStandardOutput) {
-				p.OutputDataReceived += (sender, e) => {
-					if (e.Data != null)
-						stdoutLines.Add (e.Data);
-					else
-						stdout_completed.Set ();
-				};
-				p.BeginOutputReadLine ();
+			try {
+				return ProcessRunner.Run (p, (line, standardError) => {
+					(standardError ? stderrLines : stdoutLines).Add (line);
+				}, ProcessTimeout > 0 ? TimeSpan.FromSeconds (ProcessTimeout) : null, TimeSpan.FromSeconds (OutputTimeout <= 0 ? 1 : OutputTimeout));
+			} catch (TimeoutException ex) {
+				Log.LogWarning (ex.Message);
+				return -1;
 			}
-
-			if (si.RedirectStandardError) {
-				p.ErrorDataReceived += (sender, e) => {
-					if (e.Data != null)
-						stderrLines.Add (e.Data);
-					else
-						stderr_completed.Set ();
-				};
-				p.BeginErrorReadLine ();
-			}
-
-			TimeSpan outputTimeout = TimeSpan.FromSeconds (OutputTimeout <= 0 ? 1 : OutputTimeout);
-			int processTimeout = ProcessTimeout < 0 ? -1 : ProcessTimeout * 1000;
-			bool needToWait = true;
-			bool exited = true;
-			if (processTimeout > 0) {
-				exited = p.WaitForExit (processTimeout);
-				if (!exited) {
-					Log.LogWarning ($"  Process '{commandPath} {si.Arguments}' failed to exit within the timeout of {ProcessTimeout}s, killing the process");
-					p.Kill ();
-				}
-
-				// We need to call the parameter-less WaitForExit only if any of the standard output
-				// streams have been redirected (see
-				// https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexit?view=netframework-4.7.2#System_Diagnostics_Process_WaitForExit)
-				//
-				if (!si.RedirectStandardOutput && !si.RedirectStandardError)
-					needToWait = false;
-			}
-
-			if (needToWait)
-				p.WaitForExit ();
-
-			if (si.RedirectStandardError && stderr_completed != null)
-				stderr_completed.WaitOne (outputTimeout);
-			if (si.RedirectStandardOutput && stdout_completed != null)
-				stdout_completed.WaitOne (outputTimeout);
-
-			return exited ? p.ExitCode : -1;
 		}
 	}
 }

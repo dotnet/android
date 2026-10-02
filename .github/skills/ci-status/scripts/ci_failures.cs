@@ -13,6 +13,8 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 const string ORG = "https://dev.azure.com/dnceng-public";
 const string PROJECT = "public";
@@ -1048,26 +1050,49 @@ static (int code, string stdout, string stderr) Run (string file, params string 
 		RedirectStandardError = true,
 		UseShellExecute = false,
 	};
-	foreach (var arg in cliArgs)
-		psi.ArgumentList.Add (arg);
-	using var process = Process.Start (psi);
-	if (process is null)
-		return (-1, "", $"failed to start {file}");
-	var stdoutTask = process.StandardOutput.ReadToEndAsync ();
-	var stderrTask = process.StandardError.ReadToEndAsync ();
-	using var timeout = new CancellationTokenSource (TimeSpan.FromMinutes (5));
+	foreach (var a in cliArgs)
+		psi.ArgumentList.Add (a);
+	return CaptureCommand (psi, TimeSpan.FromMinutes (5));
+}
+
+static (int code, string stdout, string stderr) CaptureCommand (ProcessStartInfo psi, TimeSpan timeout)
+{
+	using var cancellation = new CancellationTokenSource (timeout);
+	using var proc = Process.Start (psi);
+	if (proc is null)
+		return (-1, "", $"failed to start {psi.FileName}");
+	using var stdoutReader = proc.StandardOutput;
+	using var stderrReader = proc.StandardError;
+	var stdout = stdoutReader.ReadToEndAsync (cancellation.Token);
+	var stderr = stderrReader.ReadToEndAsync (cancellation.Token);
+	var readers = Task.WhenAll (stdout, stderr);
+	var exit = proc.WaitForExitAsync (cancellation.Token);
 	try {
-		process.WaitForExitAsync (timeout.Token).GetAwaiter ().GetResult ();
-	} catch (OperationCanceledException) {
-		if (!process.HasExited)
-			process.Kill (entireProcessTree: true);
-		Task.WhenAll (stdoutTask, stderrTask).GetAwaiter ().GetResult ();
-		return (-1, stdoutTask.Result, $"{stderrTask.Result}\n{file} timed out after 5 minutes.");
+		Task.WhenAny (exit, readers).GetAwaiter ().GetResult ();
+		if (readers.IsCompleted)
+			readers.GetAwaiter ().GetResult ();
+		Task.WhenAll (exit, readers).GetAwaiter ().GetResult ();
+		return (proc.ExitCode, stdout.GetAwaiter ().GetResult (), stderr.GetAwaiter ().GetResult ());
+	} catch (OperationCanceledException ex) when (cancellation.IsCancellationRequested) {
+		throw new TimeoutException ($"'{psi.FileName}' did not complete within {timeout}.", ex);
+	} finally {
+		cancellation.Cancel ();
+		try {
+			if (!proc.HasExited) {
+				try {
+					proc.Kill (entireProcessTree: true);
+				} catch (InvalidOperationException) when (proc.HasExited) {
+				}
+				if (!proc.WaitForExit (5000))
+					throw new TimeoutException ($"'{psi.FileName}' did not exit after being killed.");
+			}
+		} finally {
+			try {
+				Task.WhenAll (exit, readers).WaitAsync (TimeSpan.FromSeconds (5)).GetAwaiter ().GetResult ();
+			} catch (OperationCanceledException) when (cancellation.IsCancellationRequested) {
+			}
+		}
 	}
-	Task.WhenAll (stdoutTask, stderrTask).GetAwaiter ().GetResult ();
-	string stdout = stdoutTask.Result;
-	string stderr = stderrTask.Result;
-	return (process.ExitCode, stdout, stderr);
 }
 
 static JsonArray GetArray (JsonNode? root, string key)
