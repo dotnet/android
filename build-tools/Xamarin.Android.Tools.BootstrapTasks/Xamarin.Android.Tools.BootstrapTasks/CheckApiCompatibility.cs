@@ -139,10 +139,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					using (var zip = ZipFile.OpenRead (zipFile)) {
 						var entries = zip.Entries.Select (entry => {
 							var isDirectory = entry.FullName.EndsWith ("/", StringComparison.Ordinal) || entry.FullName.EndsWith ("\\", StringComparison.Ordinal);
-							return (Entry: entry, Path: Files.GetArchiveExtractionPath (referenceContractPath.FullName, entry.FullName, isDirectory), IsDirectory: isDirectory);
-						}).ToArray ();
-						foreach (var (entry, path, isDirectory) in entries) {
 							Files.GetArchiveExtractionPath (referenceContractPath.FullName, entry.FullName, isDirectory);
+							return (Entry: entry, IsDirectory: isDirectory);
+						}).ToArray ();
+						foreach (var (entry, isDirectory) in entries) {
+							var path = Files.GetArchiveExtractionPath (referenceContractPath.FullName, entry.FullName, isDirectory);
 							if (isDirectory) {
 								Directory.CreateDirectory (path);
 								continue;

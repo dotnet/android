@@ -59,7 +59,7 @@ namespace Xamarin.Android.Tasks
 					}
 					var relative = MonoAndroidHelper.GetRelativePathForAndroidAsset (AssetDirectory, asset);
 					var archivePath = "assets/" + relative.Replace ('\\', '/');
-					AddFile (entries, asset.ItemSpec, archivePath);
+					entries.Add ((archivePath, asset.ItemSpec, null));
 				}
 			}
 			if (AndroidResources != null) {
@@ -73,7 +73,7 @@ namespace Xamarin.Android.Tasks
 					var directory = Path.GetDirectoryName (resource.ItemSpec);
 					var resourcePath = Path.GetFileName (directory) + "/" + Path.GetFileName (resource.ItemSpec);
 					var archivePath = "res/" + resourcePath;
-					AddFile (entries, resource.ItemSpec, archivePath);
+					entries.Add ((archivePath, resource.ItemSpec, null));
 
 					nameCaseMap.Append (resource.GetMetadata ("LogicalName").Replace ('\\', '/'));
 					nameCaseMap.Append (';');
@@ -81,13 +81,13 @@ namespace Xamarin.Android.Tasks
 				}
 				if (nameCaseMap.Length > 0) {
 					var archivePath = ".net/__res_name_case_map.txt";
-					AddEntry (entries, archivePath, nameCaseMap.ToString ());
+					entries.Add ((archivePath, null, nameCaseMap.ToString ()));
 				}
 			}
 			if (AndroidEnvironment != null) {
 				foreach (var env in AndroidEnvironment) {
 					var archivePath = $".net/env/{GetHashedFileName (env)}.env";
-					AddFile (entries, env.ItemSpec, archivePath);
+					entries.Add ((archivePath, env.ItemSpec, null));
 				}
 			}
 			if (JarFiles != null) {
@@ -98,7 +98,7 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 					var archivePath = $"libs/{GetHashedFileName (jar)}.jar";
-					AddFile (entries, jar.ItemSpec, archivePath);
+					entries.Add ((archivePath, jar.ItemSpec, null));
 				}
 			}
 			if (NativeLibraries != null) {
@@ -109,7 +109,7 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 					var archivePath = "jni/" + abi + "/" + Path.GetFileName (lib.ItemSpec);
-					AddFile (entries, lib.ItemSpec, archivePath);
+					entries.Add ((archivePath, lib.ItemSpec, null));
 				}
 			}
 			if (ProguardConfigurationFiles != null) {
@@ -117,13 +117,13 @@ namespace Xamarin.Android.Tasks
 				foreach (var file in ProguardConfigurationFiles) {
 					sb.AppendLine (File.ReadAllText (file.ItemSpec));
 				}
-				AddEntry (entries, "proguard.txt", sb.ToString ());
+				entries.Add (("proguard.txt", null, sb.ToString ()));
 			}
 			if (AndroidManifest != null && File.Exists (AndroidManifest.ItemSpec)) {
 				var manifest = File.ReadAllText (AndroidManifest.ItemSpec);
 				var doc = XDocument.Parse(manifest);
 				if (!(doc.Element ("manifest")?.Attribute ("package")?.Value).IsNullOrEmpty ()) {
-					AddEntry (entries, "AndroidManifest.xml", manifest);
+					entries.Add (("AndroidManifest.xml", null, manifest));
 				} else {
 					Log.LogDebugMessage ($"Skipping {AndroidManifest.ItemSpec}. The `manifest` does not have a `package` attribute.");
 				}
@@ -156,12 +156,6 @@ namespace Xamarin.Android.Tasks
 
 			return !Log.HasLoggedErrors;
 		}
-
-		static void AddFile (List<(string Name, string? Filename, string? Contents)> entries, string filename, string archivePath) =>
-			entries.Add ((archivePath, filename, null));
-
-		static void AddEntry (List<(string Name, string? Filename, string? Contents)> entries, string archivePath, string contents) =>
-			entries.Add ((archivePath, null, contents));
 
 		/// <summary>
 		/// Hash the path to an ITaskItem to get a unique file name.

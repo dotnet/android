@@ -565,11 +565,8 @@ namespace Microsoft.Android.Build.Tasks
 			bool updated = false;
 			var files = new HashSet<string> (Path.DirectorySeparatorChar == '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 			var memoryStream = MemoryStreamPool.Shared.Rent ();
-			var fullDestination = Path.GetFullPath (destination);
-			if (!fullDestination.EndsWith (Path.DirectorySeparatorChar.ToString (), StringComparison.Ordinal))
-				fullDestination += Path.DirectorySeparatorChar;
 			try {
-				var entries = new List<(ZipArchiveEntry Entry, string OutputPath)> ();
+				var entries = new List<(ZipArchiveEntry Entry, string OutputName)> ();
 				foreach (var entry in zip.Entries) {
 					progressCallback?.Invoke (i++, total);
 					if (entry.FullName.EndsWith ("/", StringComparison.Ordinal) || entry.FullName.EndsWith ("\\", StringComparison.Ordinal))
@@ -583,11 +580,13 @@ namespace Microsoft.Android.Build.Tasks
 						continue;
 					GetArchiveExtractionPath (destination, entry.FullName);
 					var fullName = modifyCallback?.Invoke (entry.FullName) ?? entry.FullName;
-					entries.Add ((entry, GetArchiveExtractionPath (destination, fullName)));
+					if (fullName != entry.FullName)
+						GetArchiveExtractionPath (destination, fullName);
+					entries.Add ((entry, fullName));
 				}
 
-				foreach (var (entry, outputPath) in entries) {
-					var outfile = GetArchiveExtractionPath (destination, outputPath.Substring (fullDestination.Length));
+				foreach (var (entry, outputName) in entries) {
+					var outfile = GetArchiveExtractionPath (destination, outputName);
 					files.Add (outfile);
 					memoryStream.SetLength (0); //Reuse the stream
 					using (var entryStream = entry.Open ())
@@ -603,6 +602,9 @@ namespace Microsoft.Android.Build.Tasks
 				MemoryStreamPool.Shared.Return (memoryStream);
 			}
 			if (Directory.Exists (destination)) {
+				var fullDestination = Path.GetFullPath (destination);
+				if (!fullDestination.EndsWith (Path.DirectorySeparatorChar.ToString (), StringComparison.Ordinal))
+					fullDestination += Path.DirectorySeparatorChar;
 				foreach (var file in Directory.GetFiles (destination, "*", SearchOption.AllDirectories)) {
 					var fullPath = Path.GetFullPath (file);
 					var outfile = GetArchiveExtractionPath (destination, fullPath.Substring (fullDestination.Length));

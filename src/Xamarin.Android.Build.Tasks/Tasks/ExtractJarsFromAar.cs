@@ -56,25 +56,26 @@ namespace Xamarin.Android.Tasks
 					var jarOutputDirectory = Path.Combine (outputJarsDirectory, Path.GetFileName (library));
 					var annotationOutputDirectory = Path.Combine (outputAnnotationsDirectory, Path.GetFileName (library));
 					using (var zip = MonoAndroidHelper.ReadZipFile (library)) {
-						var entries = new List<(ZipArchiveEntry Entry, string Path, bool IsAnnotation)> ();
+						var entries = new List<(ZipArchiveEntry Entry, bool IsAnnotation)> ();
 						foreach (var entry in zip.Entries) {
 							if (entry.IsDirectory ())
 								continue;
 							var entryFullName = entry.FullName.Replace ('\\', '/');
 							var fileName = Path.GetFileName (entryFullName);
 							if (string.Equals (fileName, "annotations.zip", StringComparison.OrdinalIgnoreCase)) {
-								entries.Add ((entry, Files.GetArchiveExtractionPath (annotationOutputDirectory, entryFullName), true));
+								Files.GetArchiveExtractionPath (annotationOutputDirectory, entryFullName);
+								entries.Add ((entry, true));
 							} else if (!entryFullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) {
 								continue;
 							} else {
-								var path = Files.GetArchiveExtractionPath (jarOutputDirectory, entryFullName);
+								Files.GetArchiveExtractionPath (jarOutputDirectory, entryFullName);
 								if (isAar && Files.ShouldSkipEntryInAar (entryFullName))
 									continue;
-								entries.Add ((entry, path, false));
+								entries.Add ((entry, false));
 							}
 						}
-						foreach (var (entry, path, isAnnotation) in entries) {
-							Files.GetArchiveExtractionPath (isAnnotation ? annotationOutputDirectory : jarOutputDirectory, entry.FullName);
+						foreach (var (entry, isAnnotation) in entries) {
+							var path = Files.GetArchiveExtractionPath (isAnnotation ? annotationOutputDirectory : jarOutputDirectory, entry.FullName);
 							Extract (entry, memoryStream, path);
 							(isAnnotation ? annotations : jars).Add (path);
 						}

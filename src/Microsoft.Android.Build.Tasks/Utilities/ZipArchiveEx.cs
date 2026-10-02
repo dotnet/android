@@ -152,7 +152,7 @@ sealed class ZipArchiveEx : IDisposable
 	public ZipArchiveEntry GetEntry (string archivePath) =>
 		Archive.GetEntry (archivePath) ?? throw new ArgumentOutOfRangeException (nameof (archivePath));
 
-	public IEnumerable<string> GetAllEntryNames () => Archive.Entries.Select (entry => entry.FullName).Distinct (StringComparer.Ordinal).ToArray ();
+	public IEnumerable<string> GetAllEntryNames () => Archive.Entries.Select (entry => entry.FullName).ToArray ();
 
 	public void DeleteEntry (string archivePath)
 	{

@@ -59,12 +59,12 @@ public class BuildArchive : AndroidTask
 
 		// If we're modifying an existing APK we need to track what entries we started
 		// with so we can remove any existing entries that are no longer used.
-		var existingEntries = new List<string> ();
+		var existingEntries = new HashSet<string> (StringComparer.Ordinal);
 
 		if (refresh) {
 			foreach (var entry in apk.GetAllEntryNames ()) {
-				Log.LogDebugMessage ($"Registering item {entry}");
-				existingEntries.Add (entry);
+				if (existingEntries.Add (entry))
+					Log.LogDebugMessage ($"Registering item {entry}");
 			}
 		}
 
@@ -106,9 +106,6 @@ public class BuildArchive : AndroidTask
 							Log.LogDebugMessage ($"Skipping {entryName} from {ApkInputPath} as its up to date.");
 							continue;
 						}
-
-						// Delete the existing entry so we can replace it with the new one.
-						apk.DeleteEntry (entryName);
 					}
 
 					using var stream = entry.Open ();
@@ -146,8 +143,7 @@ public class BuildArchive : AndroidTask
 					continue;
 				}
 
-				using (var stream = File.OpenRead (jar_file_path))
-				using (var jar = new ZipArchive (stream, ZipArchiveMode.Read)) {
+				using (var jar = ZipFile.OpenRead (jar_file_path)) {
 					var jar_item = jar.GetEntry (jar_entry_name);
 					if (jar_item is null) {
 						Log.LogDebugMessage ("Failed to add jar entry {0} from {1}: entry not found in jar.", jar_entry_name, jar_file_path);
@@ -162,8 +158,6 @@ public class BuildArchive : AndroidTask
 							Log.LogDebugMessage ("Skipping {0} from {1} as it is up to date.", jar_entry_name, jar_file_path);
 							continue;
 						}
-
-						apk.DeleteEntry (apk_path);
 					}
 
 					Log.LogDebugMessage ($"Adding {jar_entry_name} from {jar_file_path} as the archive file is out of date.");
@@ -174,7 +168,9 @@ public class BuildArchive : AndroidTask
 				continue;
 			}
 
-			AddFileToArchiveIfNewer (apk, disk_path, apk_path, file, existingEntries);
+			var compression = UncompressedFileExtensionsSet.Contains (Path.GetExtension (disk_path)) ? uncompressedMethod : CompressionLevel.Optimal;
+			existingEntries.Remove (apk_path);
+			apk.AddFileIfChanged (Log, disk_path, apk_path, compression);
 		}
 
 		// Clean up Removed files.
@@ -193,14 +189,6 @@ public class BuildArchive : AndroidTask
 		return !Log.HasLoggedErrors;
 	}
 
-	bool AddFileToArchiveIfNewer (ZipArchiveEx apk, string file, string inArchivePath, ITaskItem item, List<string> existingEntries)
-	{
-		var compressionMethod = GetCompressionLevel (item);
-		existingEntries.Remove (inArchivePath.Replace (Path.DirectorySeparatorChar, '/'));
-
-		return apk.AddFileIfChanged (Log, file, inArchivePath, compressionMethod);
-	}
-
 	/// <summary>
 	/// aapt2 is putting AndroidManifest.xml in the root of the archive instead of at manifest/AndroidManifest.xml that bundletool expects.
 	/// I see no way to change this behavior, so we can move the file for now:
@@ -215,15 +203,7 @@ public class BuildArchive : AndroidTask
 
 		Log.LogDebugMessage ($"Fixing up AndroidManifest.xml to be manifest/AndroidManifest.xml.");
 
-		if (zip.ContainsEntry ("manifest/AndroidManifest.xml"))
-			zip.DeleteEntry ("manifest/AndroidManifest.xml");
-
 		zip.MoveEntry ("AndroidManifest.xml", "manifest/AndroidManifest.xml");
-	}
-
-	CompressionLevel GetCompressionLevel (ITaskItem item)
-	{
-		return UncompressedFileExtensionsSet.Contains (Path.GetExtension (item.ItemSpec)) ? uncompressedMethod : CompressionLevel.Optimal;
 	}
 
 	HashSet<string> ParseUncompressedFileExtensions ()
