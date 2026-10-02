@@ -23,7 +23,11 @@ and [Architecture][architecture] pages.
 
 ## Building
 
-- The `main` branch is configured to build with .NET 10, available [here][net-10].
+- Most libraries on `main` target .NET 10, available [here][net-10].
+- The shipped `generator` tool and `generator-Tests` require a .NET 11 or later
+  SDK and host runtime. Their framework and output paths are `net11.0`; the
+  generator's packaged runtime configuration declares that host requirement.
+  This does not change Android app targets or the remaining Java.Interop libraries.
 - The [`release/6.0.3xx`][net-6] branch is configured to build with .NET 6.
 
 `Java.Interop.slnx` must first run some "preparatory" tasks before it can be built:

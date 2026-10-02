@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Xamarin.Android.BuildTools;
 
 namespace Xamarin.Android.Tools.BootstrapTasks
 {
@@ -81,6 +80,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				genApiProcess.StartInfo.CreateNoWindow = true;
 				genApiProcess.StartInfo.RedirectStandardOutput = true;
 				genApiProcess.StartInfo.RedirectStandardError = true;
+				genApiProcess.StartInfo.InheritedHandles = [];
 				void dataReceived (string data, bool standardError)
 				{
 					var content = data.Trim ();
@@ -149,9 +149,23 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				}
 
 
-				int exitCode = ProcessRunner.Run (genApiProcess, dataReceived, TimeSpan.FromMinutes (5), TimeSpan.FromSeconds (30));
-				if (exitCode != 0) {
-					throw new InvalidOperationException ($"GenAPI failed with exit code {exitCode} for '{assembly}'.");
+				var timeout = TimeSpan.FromMinutes (5);
+				var timer = Stopwatch.StartNew ();
+				genApiProcess.Start ();
+				try {
+					foreach (var line in genApiProcess.ReadAllLines (timeout)) {
+						dataReceived (line.Content, line.StandardError);
+					}
+					var remaining = timeout - timer.Elapsed;
+					var status = genApiProcess.SafeHandle.WaitForExitOrKillOnTimeout (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero);
+					if (status.Canceled) {
+						throw new TimeoutException ($"GenAPI failed to exit within {timeout} for '{assembly}'.");
+					}
+					if (status.ExitCode != 0) {
+						throw new InvalidOperationException ($"GenAPI failed with exit code {status.ExitCode} for '{assembly}'.");
+					}
+				} finally {
+					genApiProcess.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.Zero);
 				}
 			}
 

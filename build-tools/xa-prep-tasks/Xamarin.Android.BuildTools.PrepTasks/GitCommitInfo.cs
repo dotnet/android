@@ -4,9 +4,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Task = Microsoft.Build.Utilities.Task;
 
 using IOFile = System.IO.File;
 
@@ -254,30 +257,53 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				UseShellExecute = false,
 				CreateNoWindow = true,
 				WorkingDirectory = WorkingDirectory,
-				RedirectStandardOutput = stdoutLines != null,
-				RedirectStandardError = stderrLines != null,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				InheritedHandles = [],
 				StandardOutputEncoding = Encoding.Default,
 				StandardErrorEncoding = Encoding.Default,
 				Arguments = arguments,
 			};
 			si.EnvironmentVariables.Add ("LC_LANG", "C");
 
-			if (!si.RedirectStandardError)
-				si.StandardErrorEncoding = null;
+			using var p = Process.Start (si) ?? throw new InvalidOperationException ($"Could not start '{commandPath}'.");
+			using var readCancellation = new CancellationTokenSource ();
+			async System.Threading.Tasks.Task ReadOutputAsync ()
+			{
+				try {
+					await foreach (var line in p.ReadAllLinesAsync (readCancellation.Token).ConfigureAwait (false)) {
+						var destination = line.StandardError ? stderrLines : stdoutLines;
+						if (destination != null) {
+							destination.Add (line.Content);
+						} else {
+							(line.StandardError ? Console.Error : Console.Out).WriteLine (line.Content);
+						}
+					}
+				} catch {
+					p.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.Zero);
+					throw;
+				}
+			}
 
-			if (!si.RedirectStandardOutput)
-				si.StandardOutputEncoding = null;
-
-			using var p = new Process {
-				StartInfo = si
-			};
+			var output = ReadOutputAsync ();
 			try {
-				return ProcessRunner.Run (p, (line, standardError) => {
-					(standardError ? stderrLines : stdoutLines).Add (line);
-				}, ProcessTimeout > 0 ? TimeSpan.FromSeconds (ProcessTimeout) : null, TimeSpan.FromSeconds (OutputTimeout <= 0 ? 1 : OutputTimeout));
+				var status = ProcessTimeout > 0
+					? p.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.FromSeconds (ProcessTimeout))
+					: p.SafeHandle.WaitForExit ();
+				if (status.Canceled) {
+					Log.LogWarning ($"Process '{commandPath} {arguments}' failed to exit within {ProcessTimeout}s.");
+				}
+				output.WaitAsync (TimeSpan.FromSeconds (OutputTimeout <= 0 ? 1 : OutputTimeout)).GetAwaiter ().GetResult ();
+				return status.Canceled ? -1 : status.ExitCode;
 			} catch (TimeoutException ex) {
 				Log.LogWarning (ex.Message);
 				return -1;
+			} finally {
+				readCancellation.Cancel ();
+				try {
+					output.WaitAsync (TimeSpan.FromSeconds (5)).GetAwaiter ().GetResult ();
+				} catch (OperationCanceledException) when (readCancellation.IsCancellationRequested) {
+				}
 			}
 		}
 	}

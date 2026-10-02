@@ -159,22 +159,30 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				CreateNoWindow = true,
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				InheritedHandles = [],
 			};
+			var result = Process.RunAndCaptureText (psi, TimeSpan.FromSeconds (30));
+			Console.Error.Write (result.StandardError);
+			if (result.ExitStatus.Canceled) {
+				throw new TimeoutException ($"Version command '{command}' did not complete within 30 seconds.");
+			}
+			if (result.ExitStatus.ExitCode != 0) {
+				throw new InvalidOperationException ($"Version command '{command}' failed with exit code {result.ExitStatus.ExitCode}.");
+			}
+
 			string curVersion = null;
-			using (var p = new Process { StartInfo = psi }) {
-				int exitCode = ProcessRunner.Run (p, (line, standardError) => {
-					if (string.IsNullOrEmpty (line) || curVersion != null)
-						return;
+			using (var reader = new StringReader (result.StandardOutput)) {
+				string line;
+				while ((line = reader.ReadLine ()) != null) {
 					var m = VersionMatch.Match (line);
 					if (!m.Success)
-						return;
+						continue;
 					curVersion = m.Groups ["version"].Value;
 					if (!curVersion.Contains (".")) {
 						curVersion += ".0";
 					}
-				}, TimeSpan.FromSeconds (30), TimeSpan.FromSeconds (30));
-				if (exitCode != 0) {
-					throw new InvalidOperationException ($"Version command '{command}' failed with exit code {exitCode}.");
+					break;
 				}
 			}
 			return curVersion == null

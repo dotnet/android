@@ -5,8 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace MonoDroid.Utils {
 
@@ -26,71 +24,39 @@ namespace MonoDroid.Utils {
 			psi.RedirectStandardError = true;
 			psi.RedirectStandardOutput = true;
 			psi.UseShellExecute = false;
+			psi.InheritedHandles = [];
 			
 			if (printCommandLine)
 				Console.WriteLine ("Running command: {0} {1}", psi.FileName, psi.Arguments);
 			
 			var timer = Stopwatch.StartNew ();
 			using (Process p = Process.Start (psi) ?? throw new InvalidOperationException ($"Could not start '{psi.FileName}'.")) {
-				using var stdout = p.StandardOutput;
-				using var stderr = p.StandardError;
+				var stderr = new StringBuilder ();
 				var timeout = TimeSpan.FromMinutes (5);
-				using var cancellation = new CancellationTokenSource (timeout);
-				var error = ReadStandardErrorAsync (stderr, cancellation.Token);
 				try {
-					while (true) {
-						string line;
-						try {
-							line = stdout.ReadLineAsync (cancellation.Token).AsTask ().GetAwaiter ().GetResult ();
-						} catch (OperationCanceledException ex) when (cancellation.IsCancellationRequested) {
-							throw new TimeoutException ($"'{psi.FileName}' did not complete within {timeout}.", ex);
+					foreach (var line in p.ReadAllLines (timeout)) {
+						if (line.StandardError) {
+							stderr.AppendLine (line.Content);
+						} else {
+							yield return line.Content;
 						}
-						if (line == null)
-							break;
-						yield return line;
 					}
 
 					var remaining = timeout - timer.Elapsed;
-					if (!p.WaitForExit ((int) Math.Max (0, remaining.TotalMilliseconds))) {
+					var status = p.SafeHandle.WaitForExitOrKillOnTimeout (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero);
+					if (status.Canceled) {
 						throw new TimeoutException ($"'{psi.FileName}' did not complete within {timeout}.");
 					}
-					var errorLog = error.GetAwaiter ().GetResult ();
-					if (p.ExitCode != 0) {
-						throw new CommandFailedException (psi.FileName, psi.Arguments, errorLog, p.ExitCode);
+					if (status.ExitCode != 0) {
+						throw new CommandFailedException (psi.FileName, psi.Arguments, stderr.ToString (), status.ExitCode);
 					}
 				} finally {
-					cancellation.Cancel ();
-					try {
-						if (!p.HasExited) {
-							try {
-								p.Kill (entireProcessTree: true);
-							} catch (InvalidOperationException) when (p.HasExited) {
-							}
-							if (!p.WaitForExit (5000)) {
-								throw new TimeoutException ($"'{psi.FileName}' did not exit after being killed.");
-							}
-						}
-					} finally {
-						try {
-							error.WaitAsync (TimeSpan.FromSeconds (5)).GetAwaiter ().GetResult ();
-						} catch (OperationCanceledException) when (cancellation.IsCancellationRequested) {
-						}
-					}
+					p.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.Zero);
 				}
 			}
 			timer.Stop ();
 			if (printCommandLine)
 				Console.WriteLine ("\tProcess executed in: {0}", timer.Elapsed);
-		}
-
-		static async Task<string> ReadStandardErrorAsync (StreamReader reader, CancellationToken cancellationToken)
-		{
-			var stderr = new StringBuilder ();
-			string line;
-			while ((line = await reader.ReadLineAsync (cancellationToken).ConfigureAwait (false)) != null) {
-				stderr.AppendLine (line);
-			}
-			return stderr.ToString ();
 		}
 	}
 	

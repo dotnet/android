@@ -424,12 +424,13 @@ extends:
             buildNumber: $(ReleaseDropPrefix)/nugets
             destinationPath: $(Build.StagingDirectory)\nuget-signed
 
-        - task: DotNetCoreCLI@2
-          displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
-          inputs:
-            projects: $(System.DefaultWorkingDirectory)\build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
+        - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+          parameters:
+            displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
+            project: $(System.DefaultWorkingDirectory)\build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
             arguments: -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\bootstrap.binlog
-          condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
+            condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
+            continueOnError: false
 
         - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android') }}:
           - task: AzureCLI@2
