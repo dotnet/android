@@ -26,6 +26,7 @@ namespace Xamarin.Android.BuildTools.Tests
 		string ciAssembly;
 		string ChildAssembly => Path.Combine (TestContext.CurrentContext.TestDirectory, "ProcessTestChild.dll");
 		string ChildExecutable => Path.Combine (TestContext.CurrentContext.TestDirectory, OperatingSystem.IsWindows () ? "ProcessTestChild.exe" : "ProcessTestChild");
+		string CiDotNet => Environment.GetEnvironmentVariable ("DOTNET_CI_HOST_PATH") ?? "dotnet";
 		string HostOS => OperatingSystem.IsWindows () ? "Windows" : "Unix";
 
 		[OneTimeSetUp]
@@ -33,14 +34,18 @@ namespace Xamarin.Android.BuildTools.Tests
 		{
 			ciDirectory = Path.Combine (Path.GetTempPath (), "repo-ci-capture-" + Guid.NewGuid ().ToString ("N"));
 			Directory.CreateDirectory (ciDirectory);
-			var info = new ProcessStartInfo (Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet") {
+			var info = new ProcessStartInfo (CiDotNet) {
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
 			};
+			// SDK selection for the skill must not inherit the .NET 10 test host's MSBuild paths.
+			foreach (var name in new [] { "MSBuildSDKsPath", "MSBUILD_EXE_PATH", "MSBuildExtensionsPath", "DOTNET_HOST_PATH" }) {
+				info.Environment.Remove (name);
+			}
 			foreach (var arg in new [] {
 				"run", "--file", Path.Combine (TestContext.CurrentContext.TestDirectory, "Sources", "ci_failures.cs"),
-				"-p:TargetFramework=net10.0", "-p:OutputPath=" + ciDirectory + Path.DirectorySeparatorChar, "--",
+				"-p:UseAppHost=false", "-p:OutputPath=" + ciDirectory + Path.DirectorySeparatorChar, "--",
 			}) {
 				info.ArgumentList.Add (arg);
 			}
@@ -324,6 +329,7 @@ namespace Xamarin.Android.BuildTools.Tests
 
 		[TestCase ("hang")]
 		[TestCase ("orphan")]
+		[TestCase ("closed-pipes")]
 		public void CiDeadlineCoversBothExitAndEof (string mode)
 		{
 			var watch = Stopwatch.StartNew ();
@@ -371,7 +377,9 @@ namespace Xamarin.Android.BuildTools.Tests
 		(int Code, string Output, string Error) CiCapture (string method, int timeout, params string [] args)
 		{
 			var cli = new [] { "invoke-ci", ciAssembly, method, timeout.ToString () }.Concat (args).ToArray ();
-			using var process = new Process { StartInfo = Child (cli) };
+			var info = Child (cli);
+			info.FileName = CiDotNet;
+			using var process = new Process { StartInfo = info };
 			var output = new List<string> ();
 			var error = new List<string> ();
 			int code = ProcessRunner.Run (process, (line, standardError) => (standardError ? error : output).Add (line),
