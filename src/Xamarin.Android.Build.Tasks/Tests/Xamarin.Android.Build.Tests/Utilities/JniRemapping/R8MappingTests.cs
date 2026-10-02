@@ -617,5 +617,43 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (mapping.TryGetRenamedMethod ("acme/orig/MyView", "value", [], "java.lang.String", out string stringMethod));
 			Assert.AreEqual ("b", stringMethod);
 		}
+
+		[Test]
+		public void EnumeratesFieldTypesAndMembersDeterministically ()
+		{
+			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
+				com.contoso.Zebra -> a.z:
+				    java.lang.String[] values -> b
+				    void run(int) -> c
+				com.contoso.Apple -> a.a:
+				    int count -> d
+
+				"""));
+
+			var classes = new System.Collections.Generic.List<R8ClassMapping> (mapping.EnumerateClassMappings ());
+
+			Assert.AreEqual (2, classes.Count);
+			Assert.AreEqual ("com/contoso/Apple", classes [0].OriginalJniName);
+			Assert.AreEqual ("int", classes [0].Fields [0].JavaFieldType);
+			Assert.AreEqual ("com/contoso/Zebra", classes [1].OriginalJniName);
+			Assert.AreEqual ("java.lang.String[]", classes [1].Fields [0].JavaFieldType);
+			Assert.AreEqual ("run", classes [1].Methods [0].OriginalName);
+			CollectionAssert.AreEqual (new [] { "int" }, classes [1].Methods [0].JavaParameterTypes);
+		}
+
+		[TestCase ("run(int):void", true)]
+		[TestCase ("run():java.lang.String", true)]
+		[TestCase ("missing", false)]
+		public void SplitsMethodKeys (string key, bool expected)
+		{
+			bool result = R8Mapping.TrySplitMethodKey (key, out string name, out string [] parameters, out string returnType);
+
+			Assert.AreEqual (expected, result);
+			if (expected) {
+				Assert.AreEqual ("run", name);
+				Assert.That (returnType, Is.Not.Empty);
+				Assert.That (parameters, Is.Not.Null);
+			}
+		}
 	}
 }
