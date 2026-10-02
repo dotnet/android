@@ -121,8 +121,13 @@ and bundled native tools are unaffected.
 
 The writer's ELF inspection tests use the Android NDK's `llvm-readobj`, `llvm-nm`,
 `llvm-strip`, and `llvm-objcopy`, with no additional managed ELF parser dependency.
-These tests require `$(AndroidNdkDirectory)` to point at an installed NDK and are
-categorized as `RequiresAndroidNdk`; the stream/input-validation tests need no native tools.
+These tests are categorized as `RequiresAndroidNdk` and resolve the NDK on the
+executing host: `TEST_ANDROID_NDK_PATH`, then `ANDROID_NDK_LATEST_HOME`, then
+`android-toolchain/ndk` under that host's user profile. A build-time
+`$(AndroidNdkDirectory)` is only a final fallback if it still exists there.
+The existing CI setup installs the NDK before these tests; no additional install
+step is required. A missing toolchain still fails explicitly rather than silently
+skipping inspection, while the stream/input-validation tests need no native tools.
 The .NET 11 test runner uses `Process.RunAndCaptureText` to drain stdout and stderr
 together, with one timeout covering output capture and process exit. The shared
 .NET 10 packaging tests use cancellation-aware concurrent reads with the same bound.

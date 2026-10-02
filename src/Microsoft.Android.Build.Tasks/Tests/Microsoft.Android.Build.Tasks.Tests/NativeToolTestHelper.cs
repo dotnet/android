@@ -15,9 +15,15 @@ static class NativeToolTestHelper
 {
 	public static string GetToolPath (string name)
 	{
-		string directory = typeof (NativeToolTestHelper).Assembly.GetCustomAttributes<AssemblyMetadataAttribute> ()
-			.Single (attribute => attribute.Key == "AndroidNdkDirectory").Value ?? "";
-		DirectoryAssert.Exists (directory, "An Android NDK is required for native tool validation. Set AndroidNdkDirectory when building this test project.");
+		string? runtimeDirectory = Environment.GetEnvironmentVariable ("TEST_ANDROID_NDK_PATH");
+		if (string.IsNullOrWhiteSpace (runtimeDirectory)) {
+			runtimeDirectory = Environment.GetEnvironmentVariable ("ANDROID_NDK_LATEST_HOME");
+		}
+		string? buildDirectory = typeof (NativeToolTestHelper).Assembly.GetCustomAttributes<AssemblyMetadataAttribute> ()
+			.Single (attribute => attribute.Key == "AndroidNdkDirectory").Value;
+		string directory = ResolveNdkDirectory (
+			runtimeDirectory, Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), buildDirectory);
+		DirectoryAssert.Exists (directory, "The configured NDK must exist on the executing test host.");
 
 		string host = OperatingSystem.IsMacOS () ? "darwin-x86_64" :
 			OperatingSystem.IsLinux () ? "linux-x86_64" :
@@ -27,6 +33,19 @@ static class NativeToolTestHelper
 		string path = Path.Combine (directory, "toolchains", "llvm", "prebuilt", host, "bin", executable);
 		FileAssert.Exists (path, "The configured NDK must contain the host's LLVM inspection tools.");
 		return path;
+	}
+
+	internal static string ResolveNdkDirectory (string? runtimeDirectory, string homeDirectory, string? buildDirectory)
+	{
+		if (!string.IsNullOrWhiteSpace (runtimeDirectory)) {
+			return runtimeDirectory;
+		}
+		string defaultDirectory = Path.Combine (homeDirectory, "android-toolchain", "ndk");
+		if (Directory.Exists (defaultDirectory)) {
+			return defaultDirectory;
+		}
+		// Test assemblies can be built on one host and executed on another.
+		return buildDirectory != null && Directory.Exists (buildDirectory) ? buildDirectory : defaultDirectory;
 	}
 
 	public static string Run (string name, params string [] arguments)

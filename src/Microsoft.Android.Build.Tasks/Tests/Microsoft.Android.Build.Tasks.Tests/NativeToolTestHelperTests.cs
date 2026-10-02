@@ -13,6 +13,57 @@ namespace Xamarin.Android.Build.Tests;
 public class NativeToolTestHelperTests : BaseTest
 {
 	[Test]
+	public void RuntimeNdkOverridesBuildHostPath ()
+	{
+		string directory = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (directory);
+
+		Assert.AreEqual (directory, NativeToolTestHelper.ResolveNdkDirectory (
+			directory, Path.Combine (directory, "home"), Path.Combine (directory, "missing-build-host-ndk")));
+	}
+
+	[Test]
+	public void ExecutingHostNdkOverridesExistingBuildHostPath ()
+	{
+		string directory = Path.Combine (Root, "temp", TestName);
+		string homeDirectory = Path.Combine (directory, "home");
+		string runtimeNdk = Path.Combine (homeDirectory, "android-toolchain", "ndk");
+		string buildNdk = Path.Combine (directory, "build-host-ndk");
+		Directory.CreateDirectory (runtimeNdk);
+		Directory.CreateDirectory (buildNdk);
+
+		Assert.AreEqual (runtimeNdk, NativeToolTestHelper.ResolveNdkDirectory (null, homeDirectory, buildNdk));
+	}
+
+	[Test]
+	public void StaleBuildHostPathUsesExecutingHostConvention ()
+	{
+		string homeDirectory = Path.Combine (Root, "temp", TestName, "home");
+		string missingBuildNdk = Path.Combine (Root, "temp", TestName, "missing-build-host-ndk");
+
+		Assert.AreEqual (Path.Combine (homeDirectory, "android-toolchain", "ndk"),
+			NativeToolTestHelper.ResolveNdkDirectory (null, homeDirectory, missingBuildNdk));
+	}
+
+	[Test]
+	public void ExplicitRuntimeConfigurationIsNotSilentlyIgnored ()
+	{
+		string missingDirectory = Path.Combine (Root, "temp", TestName, "missing-runtime-ndk");
+
+		Assert.AreEqual (missingDirectory, NativeToolTestHelper.ResolveNdkDirectory (
+			missingDirectory, Path.Combine (Root, "temp", TestName, "home"), null));
+	}
+
+	[Test]
+	public void ExistingBuildHostNdkRemainsUsableLocally ()
+	{
+		string directory = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (directory);
+
+		Assert.AreEqual (directory, NativeToolTestHelper.ResolveNdkDirectory ("", Path.Combine (directory, "home"), directory));
+	}
+
+	[Test]
 	public void CapturesBothStreamsBeyondPipeCapacity ()
 	{
 		const int lines = 1024;
