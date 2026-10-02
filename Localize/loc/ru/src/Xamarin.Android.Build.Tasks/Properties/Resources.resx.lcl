@@ -768,24 +768,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA1029" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The 'AotAssemblies' MSBuild property is deprecated. Remove it. For supported .NET 10-and-earlier projects that use Mono, use the 'RunAOTCompilation' MSBuild property instead. CoreCLR and NativeAOT do not use this property.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Свойство MSBuild "AotAssemblies" является нерекомендуемым. Удалите его. Для поддерживаемых проектов .NET 10 и более ранних версий, использующих Mono, вместо него используйте свойство MSBuild RunAOTCompilation. CoreCLR и NativeAOT не используют это свойство.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA1030" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The 'RunAOTCompilation' MSBuild property is only supported when trimming is enabled. Edit the project file in a text editor to set 'PublishTrimmed' to 'true' for this build configuration.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Свойство MSBuild "RunAOTCompilation" поддерживается только при включенной обрезке. Измените файл проекта в текстовом редакторе и установите значение "true" для свойства "PublishTrimmed" для этой конфигурации сборки.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA1034" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Your project references '{0}' which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file.]]></Val>
@@ -797,12 +779,12 @@
       </Item>
       <Item ItemId=";XA1035" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The 'BundleAssemblies' property is deprecated and no longer affects the build. Remove it. For supported .NET 10-and-earlier Mono projects, use 'AndroidUseAssemblyStore' with 'AndroidEnableAssemblyCompression' for the former behavior. .NET 11 CoreCLR controls packaged assembly-store behavior and needs no replacement setting.]]></Val>
+          <Val><![CDATA[The 'BundleAssemblies' property is deprecated and no longer affects the build. Remove it. CoreCLR and NativeAOT do not use Mono's mkbundle.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Свойство BundleAssemblies является нерекомендуемым и больше не влияет на сборку. Удалите его. Для поддерживаемых проектов Mono на .NET 10 и более ранних версиях используйте AndroidUseAssemblyStore вместе с AndroidEnableAssemblyCompression, чтобы сохранить прежнее поведение. .NET 11 CoreCLR управляет поведением хранилища сборок в пакете, поэтому заменяющий параметр не требуется.]]></Val>
+            <Val><![CDATA[Свойство BundleAssemblies является нерекомендуемым и больше не влияет на сборку. Удалите его. CoreCLR и NativeAOT не используют mkbundle из Mono.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[The 'BundleAssemblies' property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the 'AndroidUseAssemblyStore' and 'AndroidEnableAssemblyCompression' properties.]]></Val>
+            <Val><![CDATA[The 'BundleAssemblies' property is deprecated and no longer affects the build. Remove it. For supported .NET 10-and-earlier Mono projects, use 'AndroidUseAssemblyStore' with 'AndroidEnableAssemblyCompression' for the former behavior. .NET 11 CoreCLR controls packaged assembly-store behavior and needs no replacement setting.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -891,6 +873,15 @@
           <Prev Cat="Text">
             <Val><![CDATA[The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
           </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA1044_RunAOTCompilationDisabled" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The MSBuild property 'RunAOTCompilation' is not compatible with the CoreCLR runtime. The build cannot continue while this property is set to 'false'. Remove the property. Starting with .NET 11, set 'PublishReadyToRun' to 'false' to disable ReadyToRun (R2R) AOT compilation.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Свойство MSBuild "RunAOTCompilation" несовместимо со средой выполнения CoreCLR. Сборка не может продолжаться, пока этому свойству задано значение false. Удалите свойство. Начиная с .NET 11, задайте для свойства PublishReadyToRun значение false, чтобы отключить AOT-компиляцию ReadyToRun (R2R).]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1031,24 +1022,6 @@
           <Val><![CDATA[Assembly {0} does not exist.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Сборка {0} не существует.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA3004" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. See https://code.google.com/p/android/issues/detail?id=161422.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Android NDK r10d содержит ошибки и предоставляет несовместимый пакет x86_64 libm.so. См. https://code.google.com/p/android/issues/detail?id=161422.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA3005" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The detected Android NDK version is incompatible with the targeted LLVM configuration. Please upgrade to NDK r10d or newer.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Обнаруженная версия Android NDK несовместима с целевой конфигурацией LLVM. Выполните обновление до NDK r10d или более поздней версии.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1523,10 +1496,13 @@
       </Item>
       <Item ItemId=";XA4251" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Type '{0}' uses [JniAddNativeMethodRegistrationAttribute]5D;, which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the 'llvm-ir' type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.]]></Val>
+          <Val><![CDATA[Type '{0}' uses [JniAddNativeMethodRegistrationAttribute]5D;, which is not supported by the trimmable type map. Please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[В типе"{0}" используется атрибут [JniAddNativeMethodRegistrationAttribute]5D;, который не поддерживается картой типов с возможностью обрезки. Чтобы обойти эту проблему, не нацеливайтесь на карту типов с возможностью обрезки (например, переключившись на реализацию карты типа "llvm-ir"), и сообщите об этом случае на странице https://github.com/dotnet/android/issues, чтобы команда разработчиков могла решить, стоит ли добавлять поддержку этой функции.]]></Val>
+            <Val><![CDATA[В типе "{0}" используется атрибут [JniAddNativeMethodRegistrationAttribute]5D;, который не поддерживается картой типов с возможностью обрезки. Сообщите об этом случае на странице https://github.com/dotnet/android/issues, чтобы команда могла оценить возможность добавить поддержку этого сценария.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Type '{0}' uses [JniAddNativeMethodRegistrationAttribute]5D;, which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the 'llvm-ir' type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1664,6 +1640,15 @@
           <Val><![CDATA[Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata when AndroidTypeMapImplementation=trimmable.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[В сборке "{0}" метаданные обратного вызова Java одноранговых узлов различаются в реализациях "{1}" и "{2}", специфичных для конкретной среды выполнения.. Все идентификаторы среды выполнения должны предоставлять эквивалентные метаданные обратного вызова, когда AndroidTypeMapImplementation=trimmable.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4267" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'llvm-ir' type map implementation is no longer supported. Remove the AndroidTypeMapImplementation property or set it to 'trimmable'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Реализация сопоставления типов llvm-ir больше не поддерживается. Удалите свойство AndroidTypeMapImplementation или установите для него значение trimmable.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
