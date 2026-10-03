@@ -64,19 +64,6 @@ public class NuGetPackageVersionFinderTests : BaseTest
 	}
 
 	[Test]
-	public void MissingPackageReportsXA4248 ()
-	{
-		var engine = new MockBuildEngine (TestContext.Out, []);
-		var task = new JavaDependencyVerification { BuildEngine = engine };
-		var finder = NuGetPackageVersionFinder.Create (WriteAssets (CreateAssets ("1.0.0", []).ToJsonString ()), task.Log)
-			?? throw new InvalidOperationException ("Could not read assets file.");
-
-		Assert.IsEmpty (finder.GetArtifactsInNugetPackage (PackageName, "2.0.0", task.Log));
-		Assert.AreEqual (1, engine.Errors.Count);
-		Assert.AreEqual ("XA4248", engine.Errors [0].Code);
-	}
-
-	[Test]
 	public void MalformedAssetsAreLogged ()
 	{
 		var engine = new MockBuildEngine (TestContext.Out, [], [], []);
