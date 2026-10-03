@@ -10,6 +10,7 @@ steps:
   parameters:
     testRunTitle: generator (${{ parameters.platformName }})
     testAssemblyName: generator-Tests
+    targetFrameworkPathSuffix: -net11.0
 
 - template: run-dotnet-test.yaml
   parameters:

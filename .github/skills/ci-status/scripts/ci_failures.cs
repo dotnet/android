@@ -1,10 +1,11 @@
 #!/usr/bin/env dotnet
+#:property TargetFramework=net11.0
 // Enriched failure analysis for one dnceng-public `dotnet-android` build:
 //   1. cross-config matrix per failed test (failed/passed/retried configs) + stack/asserts
 //   2. crashed / incomplete lanes (started-but-not-finished culprit lives in logcat)
 //   3. branch cross-reference (PR changes that name a failing test's class/namespace/assembly)
 //
-// Needs `az login`. Usage: dotnet run ci_failures.cs -- --build-id N [--pr N] [--repo dotnet/android]
+// Needs a .NET 11 SDK and `az login`. Usage: dotnet run ci_failures.cs -- --build-id N [--pr N] [--repo dotnet/android]
 
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -332,16 +333,14 @@ static (int code, string stdout, string stderr) Run (string file, params string 
 		RedirectStandardOutput = true,
 		RedirectStandardError = true,
 		UseShellExecute = false,
+		InheritedHandles = [],
 	};
 	foreach (var a in cliArgs)
 		psi.ArgumentList.Add (a);
-	using var proc = Process.Start (psi);
-	if (proc is null)
-		return (-1, "", $"failed to start {file}");
-	string stdout = proc.StandardOutput.ReadToEnd ();
-	string stderr = proc.StandardError.ReadToEnd ();
-	proc.WaitForExit ();
-	return (proc.ExitCode, stdout, stderr);
+	var result = Process.RunAndCaptureText (psi, TimeSpan.FromMinutes (5));
+	if (result.ExitStatus.Canceled)
+		throw new TimeoutException ($"'{file}' did not complete within five minutes.");
+	return (result.ExitStatus.ExitCode, result.StandardOutput, result.StandardError);
 }
 
 static JsonArray GetArray (JsonNode? root, string key)

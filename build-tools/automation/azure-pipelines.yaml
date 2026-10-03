@@ -385,8 +385,8 @@ extends:
 
         - template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
           parameters:
-            version: $(DotNetSdkVersion)
-            quality: $(DotNetSdkQuality)
+            version: 11.0
+            quality: preview
 
         # Download symbols to be published to the symbols artifact drop declared above
         - task: DownloadPipelineArtifact@2

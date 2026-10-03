@@ -3,7 +3,7 @@
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
   <PropertyGroup>
-    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <OutputPath>$(BootstrapOutputDirectory)</OutputPath>
   </PropertyGroup>

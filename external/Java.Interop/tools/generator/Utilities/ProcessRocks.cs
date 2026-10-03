@@ -12,10 +12,10 @@ namespace MonoDroid.Utils {
 
 		public static IEnumerable<string> ReadStandardOutput (IEnumerable<string> commandLine, bool printCommandLine)
 		{
-			var psi = new ProcessStartInfo () {
-				FileName                = commandLine.First (),
-				Arguments               = "\"" + string.Join ("\" \"", commandLine.Skip (1).ToArray ()) + "\"",
-			};
+			var psi = new ProcessStartInfo (commandLine.First ());
+			foreach (var argument in commandLine.Skip (1)) {
+				psi.ArgumentList.Add (argument);
+			}
 			return ReadStandardOutput (psi, printCommandLine);
 		}
 
@@ -24,50 +24,37 @@ namespace MonoDroid.Utils {
 			psi.RedirectStandardError = true;
 			psi.RedirectStandardOutput = true;
 			psi.UseShellExecute = false;
+			psi.InheritedHandles ??= [];
+			var arguments = psi.ArgumentList.Count > 0
+				? string.Join (" ", psi.ArgumentList.Select (argument => $"\"{argument}\""))
+				: psi.Arguments;
 			
 			if (printCommandLine)
-				Console.WriteLine ("Running command: {0} {1}", psi.FileName, psi.Arguments);
+				Console.WriteLine ("Running command: {0} {1}", psi.FileName, arguments);
 			
 			var timer = Stopwatch.StartNew ();
-			using (Process p = Process.Start (psi)) {
+			using (Process p = Process.Start (psi) ?? throw new InvalidOperationException ($"Could not start '{psi.FileName}'.")) {
 				var stderr = new StringBuilder ();
-				Func<string> readStderrLine = p.StandardError.ReadLine;
-				AsyncCallback appendStderr = null;
-				IAsyncResult r;
-				appendStderr = ar => {
-					try {
-						string l = readStderrLine.EndInvoke (ar);
-						if (l == null) {
-							r = null;
-							return;
+				var timeout = TimeSpan.FromMinutes (5);
+				try {
+					foreach (var line in p.ReadAllLines (timeout)) {
+						if (line.StandardError) {
+							stderr.AppendLine (line.Content);
+						} else {
+							yield return line.Content;
 						}
-						stderr.Append (l).Append (Environment.NewLine);
-						r = readStderrLine.BeginInvoke (appendStderr, null);
 					}
-					catch (ObjectDisposedException) {
-						r = null;
-						// ignore; 'p' was disposed while we were blocking on stderr.
+
+					var remaining = timeout - timer.Elapsed;
+					var status = p.SafeHandle.WaitForExitOrKillOnTimeout (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero);
+					if (status.Canceled) {
+						throw new TimeoutException ($"'{psi.FileName}' did not complete within {timeout}.");
 					}
-				};
-				r = readStderrLine.BeginInvoke (appendStderr, null);
-
-				string line;
-				while ((line = p.StandardOutput.ReadLine ()) != null) {
-					yield return line;
-				}
-
-				IAsyncResult _r;
-				while ((_r = r) != null && !_r.IsCompleted)
-					_r.AsyncWaitHandle.WaitOne ();
-
-				p.WaitForExit ();
-				if (p.ExitCode != 0) {
-					_r = r;
-					if (_r != null && !_r.IsCompleted)
-						_r.AsyncWaitHandle.WaitOne ();
-					string e = stderr.ToString ();
-					
-					throw new CommandFailedException (psi.FileName, psi.Arguments, e, p.ExitCode);
+					if (status.ExitCode != 0) {
+						throw new CommandFailedException (psi.FileName, arguments, stderr.ToString (), status.ExitCode);
+					}
+				} finally {
+					p.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.Zero);
 				}
 			}
 			timer.Stop ();
@@ -184,4 +171,3 @@ namespace MonoDroid.Utils {
 		}
 	}
 }
-

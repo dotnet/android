@@ -74,11 +74,14 @@ steps:
     projects: ${{ parameters.xaSourcePath }}/src/workloads/workloads.csproj
     arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/workloads.binlog
 
-- task: DotNetCoreCLI@2
-  displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
-  inputs:
-    projects: ${{ parameters.xaSourcePath }}/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+  parameters:
+    displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
+    configuration: ${{ parameters.configuration }}
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+    project: ${{ parameters.xaSourcePath }}/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
     arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
+    continueOnError: false
 
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
