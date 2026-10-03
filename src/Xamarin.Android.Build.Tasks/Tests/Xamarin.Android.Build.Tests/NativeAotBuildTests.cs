@@ -65,10 +65,20 @@ namespace Xamarin.Android.Build.Tests
 			foreach (string responseFile in responseFiles) {
 				string response = File.ReadAllText (responseFile);
 				StringAssert.Contains ("libnaot-android.release-static-release.a", response, responseFile);
+				StringAssert.DoesNotContain ("jni_init_funcs.", response, responseFile);
+				StringAssert.DoesNotContain ("environment.", response, responseFile);
 				foreach (string archiveName in CPlusPlusArchiveNames) {
 					StringAssert.DoesNotContain (archiveName, response, responseFile);
 				}
 			}
+			string nativeObject = Path.Combine (intermediateDirectory, MonoAndroidHelper.AbiToRid (abi), "native", proj.ProjectName + ".o");
+			NdkTools ndk = NdkTools.Create (AndroidNdkPath);
+			ndk.OSBinPath = TestEnvironment.OSBinDirectory;
+			string llvmNm = ndk.GetToolPath ("llvm-nm", MonoAndroidHelper.AbiToTargetArch (abi), 0);
+			var (exitCode, standardOutput, standardError) = RunProcessWithExitCode (llvmNm, $"--undefined-only \"{nativeObject}\"");
+			Assert.AreEqual (0, exitCode, $"llvm-nm failed:{Environment.NewLine}{standardError}");
+			CollectionAssert.Contains (standardOutput.Split ('\n').Select (line => line.Trim ()), "U AndroidCryptoNative_InitLibraryOnLoad",
+				"The managed JNI_OnLoad must retain a direct crypto initializer reference even without application crypto calls.");
 		}
 
 		[Test]

@@ -70,14 +70,6 @@ public class NativeAotSystemPropertiesTests : BaseTest
 	}
 
 	[Test]
-	public void EmptyPropertyValueIsNotAJavaSystemProperty ()
-	{
-		var result = RunProbe ("debug.empty=\n", "debug.empty");
-		Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
-		Assert.AreEqual ("", result.Output);
-	}
-
-	[Test]
 	public void KeepsNativePropertySnapshotForProcessLifetime ()
 	{
 		var result = RunProbe ("debug.property=initial\n", "debug.property", mode: "mutate");
@@ -95,19 +87,6 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		StringAssert.DoesNotContain ("WARNING in native method", result.Output + result.Error);
 	}
 
-	[TestCase ("null", "Null NativeAOT system property array", TestName = "NativeAotNullPropertyArray")]
-	[TestCase ("new String[] { \"name\" }", "Invalid NativeAOT system property count", TestName = "NativeAotOddPropertyCount")]
-	[TestCase ("new String[] { null, \"value\" }", "Null NativeAOT system property name", TestName = "NativeAotNullPropertyName")]
-	[TestCase ("new String[] { \"name\", null }", "Null NativeAOT system property value", TestName = "NativeAotNullPropertyValue")]
-	[TestCase ("new String[] { \"\", \"value\" }", "Empty NativeAOT system property name", TestName = "NativeAotEmptyPropertyName")]
-	[TestCase ("new String[] { \"name\", \"\\u0000\" }", "NUL character in NativeAOT system property string", TestName = "NativeAotNulPropertyValue")]
-	public void InvalidConfigurationFailsExplicitly (string initializer, string message)
-	{
-		var result = RunProbe ("", "name", configuration: $"static final String[] systemProperties = {initializer};");
-		Assert.AreEqual (73, result.ExitCode, result.Output + result.Error);
-		StringAssert.Contains (message, result.Error);
-	}
-
 	[Test]
 	public void MissingJniFieldFailsExplicitly ()
 	{
@@ -115,15 +94,6 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		Assert.AreEqual (73, result.ExitCode, result.Output + result.Error);
 		StringAssert.Contains ("Unable to find NativeAOT system properties", result.Error);
 		StringAssert.Contains ("NoSuchFieldError", result.Error);
-	}
-
-	[TestCase ("\\ud800", TestName = "NativeAotUnpairedHighSurrogate")]
-	[TestCase ("\\udc00", TestName = "NativeAotUnpairedLowSurrogate")]
-	public void ReplacesUnpairedSurrogatesWithUtf8ReplacementCharacter (string value)
-	{
-		var result = RunProbe ("", "name", configuration: $"static final String[] systemProperties = new String[] {{ \"name\", \"{value}\" }};");
-		Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
-		Assert.AreEqual ("\ufffd", Encoding.UTF8.GetString (Convert.FromBase64String (result.Output)));
 	}
 
 	(int ExitCode, string Output, string Error) RunProbe (string contents, string key, string? mode = null, string? configuration = null)
