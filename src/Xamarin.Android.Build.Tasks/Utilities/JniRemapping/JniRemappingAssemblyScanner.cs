@@ -21,7 +21,6 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		const string JniTypeSignatureAttributeFullName = "Java.Interop.JniTypeSignatureAttribute";
 		const string JniMethodSignatureAttributeFullName = "Java.Interop.JniMethodSignatureAttribute";
 		const string JniConstructorSignatureAttributeFullName = "Java.Interop.JniConstructorSignatureAttribute";
-		const string TypeMapAttributeFullName = "System.Runtime.InteropServices.TypeMapAttribute`1";
 
 		public static void Scan (MetadataReader reader, R8Mapping mapping, TaskLoggingHelper log)
 		{
@@ -157,9 +156,43 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					blob.ReadCompressedInteger () != 1) {
 				return false;
 			}
-			blob.ReadByte (); // SignatureTypeKind of the generic anchor type.
-			blob.ReadTypeHandle ();
-			return blob.RemainingBytes == 0;
+			if (blob.ReadSignatureTypeCode () != SignatureTypeCode.TypeHandle) {
+				return false;
+			}
+			EntityHandle group = blob.ReadTypeHandle ();
+			return blob.RemainingBytes == 0 && IsJavaTypeMapGroup (reader, group);
+		}
+
+		static bool IsJavaTypeMapGroup (MetadataReader reader, EntityHandle group)
+		{
+			string ns;
+			string name;
+			string assemblyName;
+			if (group.Kind == HandleKind.TypeReference) {
+				var type = reader.GetTypeReference ((TypeReferenceHandle) group);
+				if (type.ResolutionScope.Kind != HandleKind.AssemblyReference) {
+					return false;
+				}
+				ns = reader.GetString (type.Namespace);
+				name = reader.GetString (type.Name);
+				var assembly = reader.GetAssemblyReference ((AssemblyReferenceHandle) type.ResolutionScope);
+				assemblyName = reader.GetString (assembly.Name);
+			} else if (group.Kind == HandleKind.TypeDefinition) {
+				var type = reader.GetTypeDefinition ((TypeDefinitionHandle) group);
+				if (!type.GetDeclaringType ().IsNil) {
+					return false;
+				}
+				ns = reader.GetString (type.Namespace);
+				name = reader.GetString (type.Name);
+				assemblyName = reader.GetString (reader.GetAssemblyDefinition ().Name);
+			} else {
+				return false;
+			}
+
+			return (ns == "Java.Lang" && name == "Object" && assemblyName == "Mono.Android") ||
+				(ns == "" && name == "__TypeMapAnchor" &&
+					assemblyName.StartsWith ("_", StringComparison.Ordinal) &&
+					assemblyName.EndsWith (".TypeMap", StringComparison.Ordinal));
 		}
 
 		static int GetArgumentCount (MetadataReader reader, CustomAttribute attribute)
@@ -207,7 +240,8 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				return false;
 			}
 			var assembly = reader.GetAssemblyReference ((AssemblyReferenceHandle) type.ResolutionScope);
-			return reader.GetString (assembly.Name) == expectedAssembly;
+			string assemblyName = reader.GetString (assembly.Name);
+			return assemblyName == expectedAssembly || assemblyName == "System.Private.CoreLib";
 		}
 
 		static string NormalizeAliasKey (string key)
@@ -285,12 +319,13 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 		static void RecordAllMappings (R8Mapping mapping, string ownerJniName)
 		{
+			mapping.TryGetRenamedClass (ownerJniName, out _);
 			foreach (R8ClassMapping type in mapping.EnumerateClassMappings ()) {
 				if (type.OriginalJniName != ownerJniName) {
 					continue;
 				}
 				foreach (R8FieldMapping field in type.Fields) {
-					mapping.TryGetRenamedField (ownerJniName, field.OriginalName, out _);
+					mapping.RecordFieldAccess (ownerJniName, field.OriginalName);
 				}
 				foreach (R8MethodMapping method in type.Methods) {
 					mapping.TryGetRenamedMethod (
@@ -315,6 +350,10 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			foreach (CustomAttributeHandle attributeHandle in method.GetCustomAttributes ()) {
 				CustomAttribute attribute = reader.GetCustomAttribute (attributeHandle);
 				string? name = reader.GetCustomAttributeFullName (attribute, log);
+				if (name != RegisterAttributeFullName && name != JniMethodSignatureAttributeFullName &&
+						name != JniConstructorSignatureAttributeFullName) {
+					continue;
+				}
 				var arguments = attribute.GetCustomAttributeArguments ().FixedArguments;
 				string? methodName;
 				string? descriptor;
@@ -358,7 +397,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				}
 				var arguments = attribute.GetCustomAttributeArguments ().FixedArguments;
 				if (arguments.Length > 0 && arguments [0].Value is string fieldName && fieldName.Length > 0) {
-					mapping.TryGetRenamedField (ownerJniName, fieldName, out _);
+					mapping.RecordFieldAccess (ownerJniName, fieldName);
 				}
 			}
 		}
