@@ -556,7 +556,7 @@ namespace UnnamedProject
 			}
 		}
 
-		void CheckCustomView (Xamarin.Tools.Zip.ZipArchive zip, params string [] paths)
+		void CheckCustomView (System.IO.Compression.ZipArchive zip, params string [] paths)
 		{
 			var customViewPath = Path.Combine (paths);
 			FileAssert.Exists (customViewPath, $"custom_text.xml should exist at {customViewPath}");
@@ -569,13 +569,12 @@ namespace UnnamedProject
 
 			//Now check the zip
 			var customViewInZip = "res/layout/" + Path.GetFileName (customViewPath);
-			var entry = zip.ReadEntry (customViewInZip);
+			var entry = zip.GetEntry (customViewInZip);
 			Assert.IsNotNull (entry, $"`{customViewInZip}` should exist in packaged_resources!");
+			if (entry == null)
+				return;
 
-			using (var stream = new MemoryStream ()) {
-				entry.Extract (stream);
-				stream.Position = 0;
-
+			using (var stream = entry.Open ()) {
 				using (var reader = new StreamReader (stream)) {
 					//NOTE: This is a binary format, but we can still look for text within.
 					//      Don't use `StringAssert` because `contents` make the failure message unreadable.

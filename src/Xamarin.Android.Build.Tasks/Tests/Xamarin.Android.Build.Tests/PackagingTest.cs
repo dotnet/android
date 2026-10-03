@@ -10,7 +10,7 @@ using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
-using Xamarin.Tools.Zip;
+using System.IO.Compression;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -44,12 +44,12 @@ namespace Xamarin.Android.Build.Tests
 				var aab = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.aab");
 				FileAssert.Exists (aab, $"'{aab}' should have been generated.");
 				using (var zip = ZipHelper.OpenZip (aab)) {
-					Assert.IsTrue (zip.Any (e => e.FullName == "BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map"), $"AAB file `{aab}` should contain the ProGuard mapping.");
-					var metadata = zip.SingleOrDefault (e => e.FullName == "BUNDLE-METADATA/com.android.tools/r8.json");
+					Assert.IsTrue (zip.Entries.Any (e => e.FullName == "BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map"), $"AAB file `{aab}` should contain the ProGuard mapping.");
+					var metadata = zip.Entries.SingleOrDefault (e => e.FullName == "BUNDLE-METADATA/com.android.tools/r8.json");
 					Assert.IsNotNull (metadata, $"AAB file `{aab}` should contain the R8 build metadata.");
-					using var stream = new MemoryStream ();
-					metadata.Extract (stream);
-					stream.Position = 0;
+					if (metadata == null)
+						return;
+					using var stream = metadata.Open ();
 					using var document = JsonDocument.Parse (stream);
 					var options = document.RootElement.GetProperty ("options");
 					Assert.AreEqual (obfuscationMode == "private-members", options.GetProperty ("isOptimizationsEnabled").GetBoolean ());
@@ -291,7 +291,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsTrue (zip.ContainsEntry ("classes.dex"), "Apk should contain classes.dex");
+					Assert.IsNotNull (zip.GetEntry ("classes.dex"), "Apk should contain classes.dex");
 				}
 			}
 		}
@@ -316,13 +316,12 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				Assert.IsTrue (b.Build (proj), "build failed");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				CompressionMethod method = compressNativeLibraries ? CompressionMethod.Deflate : CompressionMethod.Store;
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					var libFiles = zip.Where (x => x.FullName.StartsWith("lib/", StringComparison.Ordinal) && !x.FullName.Equals("lib/", StringComparison.InvariantCultureIgnoreCase));
+					var libFiles = zip.Entries.Where (x => x.FullName.StartsWith("lib/", StringComparison.Ordinal) && !x.FullName.Equals("lib/", StringComparison.InvariantCultureIgnoreCase));
 					var abiPaths = new string[] { "lib/x86_64/" };
 					foreach (var file in libFiles) {
 						Assert.IsTrue (abiPaths.Any (x => file.FullName.Contains (x)), $"Apk contains an unnesscary lib file: {file.FullName}");
-						Assert.IsTrue (file.CompressionMethod == method, $"{file.FullName} should have been CompressionMethod.{method} in the apk, but was CompressionMethod.{file.CompressionMethod}");
+						AssertCompression (file, compressNativeLibraries);
 					}
 				}
 			}
@@ -373,7 +372,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			Assert.That (RunCommand (zipAlignPath, $"-c -v -p 4 {apk}"), Is.True, $"{apk} does not contain page-aligned .so files");
 
 			using (var zip = ZipHelper.OpenZip (apk)) {
-				foreach (var entry in zip) {
+				foreach (var entry in zip.Entries) {
 					if (entry.FullName.EndsWith (".so", StringComparison.Ordinal)) {
 						AssertCompression (entry, compressed: false);
 					}
@@ -381,14 +380,12 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			}
 		}
 
-		void AssertCompression (ZipEntry entry, bool compressed)
+		void AssertCompression (ZipArchiveEntry entry, bool compressed)
 		{
 			if (compressed) {
-				Assert.AreNotEqual (CompressionMethod.Store, entry.CompressionMethod, $"`{entry.FullName}` should be compressed!");
-				Assert.AreNotEqual (entry.Size, entry.CompressedSize, $"`{entry.FullName}` should be compressed!");
+				Assert.AreNotEqual (entry.Length, entry.CompressedLength, $"`{entry.FullName}` should be compressed!");
 			} else {
-				Assert.AreEqual (CompressionMethod.Store, entry.CompressionMethod, $"`{entry.FullName}` should be uncompressed!");
-				Assert.AreEqual (entry.Size, entry.CompressedSize, $"`{entry.FullName}` should be uncompressed!");
+				Assert.AreEqual (entry.Length, entry.CompressedLength, $"`{entry.FullName}` should be uncompressed!");
 			}
 		}
 
@@ -417,7 +414,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				FileAssert.Exists (apk);
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					foreach (var entry in zip) {
+					foreach (var entry in zip.Entries) {
 						if (entry.FullName.EndsWith (".so", StringComparison.Ordinal) || entry.FullName.EndsWith (".bar", StringComparison.Ordinal)) {
 							AssertCompression (entry, compressed: true);
 						}
@@ -434,7 +431,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 
 				FileAssert.Exists (apk);
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					foreach (var entry in zip) {
+					foreach (var entry in zip.Entries) {
 						if (entry.FullName.EndsWith (".so", StringComparison.Ordinal) || entry.FullName.EndsWith (".bar", StringComparison.Ordinal)) {
 							AssertCompression (entry, compressed: false);
 						}
@@ -514,7 +511,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
 					using (var zip = ZipHelper.OpenZip (apk)) {
 						foreach (var package in packages) {
-							Assert.IsFalse (zip.Any (e => e.FullName == $"assemblies/{package.Id}.dll"), $"APK file `{apk}` should not contain {package.Id}");
+							Assert.IsFalse (zip.Entries.Any (e => e.FullName == $"assemblies/{package.Id}.dll"), $"APK file `{apk}` should not contain {package.Id}");
 						}
 					}
 				}
@@ -682,7 +679,7 @@ namespace UnnamedProject {
 				// Make sure the AAB is signed
 				var aab = Path.Combine (bin, $"{proj.PackageName}-Signed.aab");
 				using (var zip = ZipHelper.OpenZip (aab)) {
-					Assert.IsTrue (zip.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"AAB file `{aab}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
+					Assert.IsTrue (zip.Entries.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"AAB file `{aab}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
 				}
 
 				// Build with no changes
@@ -838,7 +835,7 @@ public class Test
 			using (var builder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
 				Assert.IsTrue (builder.Build (lib), "Build of jar should have succeeded.");
 				using (var zip = ZipHelper.OpenZip (Path.Combine (path, "java", "test.jar"))) {
-					Assert.IsTrue (zip.ContainsEntry ($"AndroidManifest.xml"), "Jar should contain AndroidManifest.xml");
+					Assert.IsNotNull (zip.GetEntry ($"AndroidManifest.xml"), "Jar should contain AndroidManifest.xml");
 				}
 				using (var b = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 					b.Verbosity = LoggerVerbosity.Detailed;
@@ -880,7 +877,7 @@ public class Test
 				using (var zip = ZipHelper.OpenZip (archive)) {
 					foreach (var excludedFile in excludedFiles) {
 						Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Ignoring jar entry '{excludedFile}'"), $"{excludedFile} should have been ignored.");
-						Assert.IsFalse (zip.ContainsEntry (prefix + excludedFile), $"{prefix + excludedFile} should have been ignored.");
+						Assert.IsNull (zip.GetEntry (prefix + excludedFile), $"{prefix + excludedFile} should have been ignored.");
 					}
 				}
 			}
@@ -906,7 +903,7 @@ public class Test
 				string expected = $"Ignoring jar entry 'kotlin/Error.kotlin_metadata'";
 				Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), $"Error.kotlin_metadata should have been ignored.");
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsFalse (zip.ContainsEntry ("kotlin/Error.kotlin_metadata"), "Error.kotlin_metadata should have been ignored.");
+					Assert.IsNull (zip.GetEntry ("kotlin/Error.kotlin_metadata"), "Error.kotlin_metadata should have been ignored.");
 				}
 				proj.OtherBuildItems.Add (new BuildItem ("AndroidPackagingOptionsExclude") {
 					Remove = () => "$([MSBuild]::Escape('*.kotlin*'))",
@@ -914,7 +911,7 @@ public class Test
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsTrue (zip.ContainsEntry ("kotlin/Error.kotlin_metadata"), "Error.kotlin_metadata should have been included.");
+					Assert.IsNotNull (zip.GetEntry ("kotlin/Error.kotlin_metadata"), "Error.kotlin_metadata should have been included.");
 				}
 			}
 		}
@@ -936,44 +933,24 @@ public class Test
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsTrue (zip.ContainsEntry ("kotlin/reflect/reflect.kotlin_builtins"), "reflect.kotlin_builtins should have been included.");
+					Assert.IsNotNull (zip.GetEntry ("kotlin/reflect/reflect.kotlin_builtins"), "reflect.kotlin_builtins should have been included.");
 				}
 			}
 		}
 
-		static IEnumerable<object[]> Get_BuildApkWithZipFlushLimits_Data ()
+		static IEnumerable<object[]> Get_BuildApkWithManyAssets_Data ()
 		{
-			var ret = new List<object[]> ();
-
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData (1, -1, runtime);
-				AddTestData (5, -1, runtime);
-				AddTestData (50, -1, runtime);
-				AddTestData (100, -1, runtime);
-				AddTestData (512, -1, runtime);
-				AddTestData (1024, -1, runtime);
-				AddTestData (-1, 1, runtime);
-				AddTestData (-1, 5, runtime);
-				AddTestData (-1, 10, runtime);
-				AddTestData (-1, 100, runtime);
-				AddTestData (-1, 200, runtime);
-			}
-
-			return ret;
-
-			void AddTestData (int filesLimit, int sizeLimit, AndroidRuntime runtime)
-			{
-				ret.Add (new object[] {
-					filesLimit,
-					sizeLimit,
-					runtime,
-				});
+				foreach (var assetCount in new [] { 1, 5, 50, 100, 512, 1024 })
+					yield return new object [] { assetCount, 1, runtime };
+				foreach (var assetSizeKb in new [] { 2, 5, 10, 100, 200 })
+					yield return new object [] { 1, assetSizeKb, runtime };
 			}
 		}
 
 		[Test]
-		[TestCaseSource (nameof (Get_BuildApkWithZipFlushLimits_Data))]
-		public void BuildApkWithZipFlushLimits (int filesLimit, int sizeLimit, AndroidRuntime runtime)
+		[TestCaseSource (nameof (Get_BuildApkWithManyAssets_Data))]
+		public void BuildApkWithManyAssets (int assetCount, int assetSizeKb, AndroidRuntime runtime)
 		{
 			const bool isRelease = false;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -984,13 +961,14 @@ public class Test
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("EmbedAssembliesIntoApk", "true");
-			if (filesLimit > 0)
-				proj.SetProperty ("_ZipFlushFilesLimit", filesLimit.ToString ());
-			if (sizeLimit > 0)
-				proj.SetProperty ("_ZipFlushSizeLimit", (sizeLimit * 1024 * 1024).ToString ());
+			var contents = new byte [assetSizeKb * 1024];
+			for (var i = 0; i < assetCount; i++) {
+				proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ($"Assets/asset{i}.dat") {
+					BinaryContent = () => contents,
+				});
+			}
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-
 			}
 		}
 
@@ -1021,7 +999,7 @@ public class Test
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					foreach (var entry in zip) {
+					foreach (var entry in zip.Entries) {
 						if (entry.FullName.EndsWith (".so", StringComparison.Ordinal)) {
 							AssertCompression (entry, compressed: true);
 						}
