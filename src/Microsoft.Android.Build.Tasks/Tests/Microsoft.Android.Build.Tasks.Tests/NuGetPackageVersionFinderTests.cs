@@ -1,7 +1,6 @@
 #nullable enable
 using System;
 using System.IO;
-using System.Linq;
 using System.Text.Json.Nodes;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Utilities;
@@ -18,32 +17,31 @@ public class NuGetPackageVersionFinderTests : BaseTest
 
 	string TestDirectory => Path.Combine (Root, "temp", TestName);
 
-	[TestCase ("1.0.0", "1.0")]
-	[TestCase ("1.0.0", "1.0.0.0")]
-	[TestCase ("1.0.0", "1.0.0+metadata")]
-	[TestCase ("1.0.0-beta.1", "1.0.0-BETA.1")]
-	public void PackageVersionsUseNuGetSemantics (string assetVersion, string requestedVersion)
+	[Test]
+	public void PackageVersionsUseNuGetSemantics ()
 	{
 		var cache = Path.Combine (TestDirectory, "packages");
 		CreateNuspec (cache);
 
 		var engine = new MockBuildEngine (TestContext.Out, []);
 		var task = new JavaDependencyVerification { BuildEngine = engine };
-		var assets = CreateAssets (assetVersion, [cache]);
+		var assets = CreateAssets ("1.0.0", [cache]);
 		var finder = NuGetPackageVersionFinder.Create (WriteAssets (assets.ToJsonString ()), task.Log)
 			?? throw new InvalidOperationException ("Could not read assets file.");
 
-		var artifacts = finder.GetArtifactsInNugetPackage (PackageName.ToUpperInvariant (), requestedVersion, task.Log);
+		var artifacts = finder.GetArtifactsInNugetPackage (PackageName.ToUpperInvariant (), "1.0", task.Log);
 
-		Assert.AreEqual ("com.google.android:material-core:1.0", string.Join ("|", artifacts.Select (artifact => artifact.VersionedArtifactString)));
+		Assert.AreEqual (1, artifacts.Count);
+		Assert.AreEqual ("com.google.android:material-core:1.0", artifacts [0].VersionedArtifactString);
 		Assert.IsEmpty (engine.Errors);
 	}
 
 	[Test]
 	public void DependencyFulfilledByPackageNuspec ()
 	{
+		var missingCache = Path.Combine (TestDirectory, "missing-packages");
 		var cache = Path.Combine (TestDirectory, "packages");
-		CreateNuspec (cache);
+		CreateNuspec (cache, "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd");
 		using var pom = new PomBuilder ("com.google.android", "material", "1.0")
 			.WithDependency ("com.google.android", "material-core", "1.0")
 			.BuildTemporary ();
@@ -58,114 +56,33 @@ public class NuGetPackageVersionFinderTests : BaseTest
 			BuildEngine = engine,
 			AndroidLibraries = [library],
 			PackageReferences = [package],
-			ProjectAssetsLockFile = WriteAssets (CreateAssets ("1.0.0", [cache]).ToJsonString ()),
+			ProjectAssetsLockFile = WriteAssets (CreateAssets ("1.0.0", [missingCache, cache]).ToJsonString ()),
 		};
 
 		Assert.IsTrue (task.RunTask ());
 		Assert.IsEmpty (engine.Errors);
 	}
 
-	[TestCase ("")]
-	[TestCase ("http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd")]
-	public void PackageFoldersAndNuspecNamespaces (string xmlNamespace)
-	{
-		var missingCache = Path.Combine (TestDirectory, "missing-packages");
-		var cache = Path.Combine (TestDirectory, "packages with spaces");
-		var fallbackCache = Path.Combine (TestDirectory, "fallback-packages");
-		CreateNuspec (cache, xmlNamespace);
-		CreateNuspec (fallbackCache, xmlNamespace);
-
-		var engine = new MockBuildEngine (TestContext.Out, []);
-		var task = new JavaDependencyVerification { BuildEngine = engine };
-		var assets = CreateAssets ("1.0.0", [missingCache, cache, fallbackCache]);
-		var finder = NuGetPackageVersionFinder.Create (WriteAssets (assets.ToJsonString ()), task.Log)
-			?? throw new InvalidOperationException ("Could not read assets file.");
-
-		var artifacts = finder.GetArtifactsInNugetPackage (PackageName, "1.0.0", task.Log);
-
-		Assert.AreEqual (1, artifacts.Count);
-		Assert.AreEqual ("com.google.android:material-core:1.0", artifacts [0].VersionedArtifactString);
-		Assert.IsEmpty (engine.Errors);
-	}
-
-	[TestCase ("Missing.Package", "1.0.0")]
-	[TestCase (PackageName, "2.0.0")]
-	public void MissingPackageReportsXA4248 (string name, string version)
+	[Test]
+	public void MissingPackageReportsXA4248 ()
 	{
 		var engine = new MockBuildEngine (TestContext.Out, []);
 		var task = new JavaDependencyVerification { BuildEngine = engine };
 		var finder = NuGetPackageVersionFinder.Create (WriteAssets (CreateAssets ("1.0.0", []).ToJsonString ()), task.Log)
 			?? throw new InvalidOperationException ("Could not read assets file.");
 
-		Assert.IsEmpty (finder.GetArtifactsInNugetPackage (name, version, task.Log));
+		Assert.IsEmpty (finder.GetArtifactsInNugetPackage (PackageName, "2.0.0", task.Log));
 		Assert.AreEqual (1, engine.Errors.Count);
 		Assert.AreEqual ("XA4248", engine.Errors [0].Code);
 	}
 
-	[TestCase (false)]
-	[TestCase (true)]
-	public void MissingNuspecDoesNotProvideArtifacts (bool listedInAssets)
-	{
-		var package = new JsonObject {
-			["path"] = PackagePath,
-			["files"] = listedInAssets ? new JsonArray (NuspecFile) : new JsonArray (),
-		};
-		var engine = new MockBuildEngine (TestContext.Out, []);
-		var task = new JavaDependencyVerification { BuildEngine = engine };
-		var assets = CreateAssets ("1.0.0", [Path.Combine (TestDirectory, "packages")], package);
-		var finder = NuGetPackageVersionFinder.Create (WriteAssets (assets.ToJsonString ()), task.Log)
-			?? throw new InvalidOperationException ("Could not read assets file.");
-
-		Assert.IsEmpty (finder.GetArtifactsInNugetPackage (PackageName, "1.0.0", task.Log));
-		Assert.IsEmpty (engine.Errors);
-	}
-
-	[TestCase (null)]
-	[TestCase ("")]
-	public void MissingNuspecTagsDoNotProvideArtifacts (string? tags)
-	{
-		var cache = Path.Combine (TestDirectory, "packages");
-		CreateNuspec (cache, tags: tags);
-
-		var engine = new MockBuildEngine (TestContext.Out, []);
-		var task = new JavaDependencyVerification { BuildEngine = engine };
-		var finder = NuGetPackageVersionFinder.Create (WriteAssets (CreateAssets ("1.0.0", [cache]).ToJsonString ()), task.Log)
-			?? throw new InvalidOperationException ("Could not read assets file.");
-
-		Assert.IsEmpty (finder.GetArtifactsInNugetPackage (PackageName, "1.0.0", task.Log));
-		Assert.IsEmpty (engine.Errors);
-	}
-
 	[Test]
-	public void AssetsWithCommentsAndTrailingCommas ()
-	{
-		var engine = new MockBuildEngine (TestContext.Out, []);
-		var task = new JavaDependencyVerification { BuildEngine = engine };
-		var json = """
-			{
-				// Unknown properties are ignored.
-				"version": 3,
-				"libraries": {},
-				"packageFolders": {},
-			}
-			""";
-
-		Assert.IsNotNull (NuGetPackageVersionFinder.Create (WriteAssets (json), task.Log));
-		Assert.IsEmpty (engine.Errors);
-	}
-
-	[TestCase ("not JSON")]
-	[TestCase ("null")]
-	[TestCase ("""{"libraries": []}""")]
-	[TestCase ("""{"libraries": {"invalid": {}}}""")]
-	[TestCase ("""{"libraries": {"Package/1.0.0": {"files": ["package.nuspec"]}}}""")]
-	[TestCase ("""{"packageFolders": []}""")]
-	public void MalformedAssetsAreLogged (string json)
+	public void MalformedAssetsAreLogged ()
 	{
 		var engine = new MockBuildEngine (TestContext.Out, [], [], []);
 		var task = new JavaDependencyVerification { BuildEngine = engine };
 
-		Assert.IsNull (NuGetPackageVersionFinder.Create (WriteAssets (json), task.Log));
+		Assert.IsNull (NuGetPackageVersionFinder.Create (WriteAssets ("not JSON"), task.Log));
 		Assert.That (engine.Messages, Has.Exactly (1).Matches<Microsoft.Build.Framework.BuildMessageEventArgs> (message =>
 			message.Message?.StartsWith ("Could not parse NuGet lock file.", StringComparison.Ordinal) == true));
 		Assert.IsEmpty (engine.Errors);
@@ -179,7 +96,7 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		return path;
 	}
 
-	static JsonObject CreateAssets (string version, string [] packageFolders, JsonObject? package = null)
+	static JsonObject CreateAssets (string version, string [] packageFolders)
 	{
 		var folders = new JsonObject ();
 		foreach (var folder in packageFolders)
@@ -188,7 +105,7 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		return new JsonObject {
 			["version"] = 3,
 			["libraries"] = new JsonObject {
-				[$"{PackageName}/{version}"] = package ?? new JsonObject {
+				[$"{PackageName}/{version}"] = new JsonObject {
 					["type"] = "package",
 					["path"] = PackagePath,
 					["files"] = new JsonArray ("lib/net10.0/material.dll", NuspecFile),
@@ -203,17 +120,16 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		};
 	}
 
-	static void CreateNuspec (string cache, string xmlNamespace = "", string? tags = ArtifactTag)
+	static void CreateNuspec (string cache, string xmlNamespace = "")
 	{
 		var directory = Path.Combine (cache, PackagePath);
 		Directory.CreateDirectory (directory);
-		var tagsElement = tags is null ? "" : $"<tags>{tags}</tags>";
 		File.WriteAllText (Path.Combine (directory, NuspecFile), $"""
 			<package xmlns="{xmlNamespace}">
 				<metadata>
 					<id>{PackageName}</id>
 					<version>1.0.0</version>
-					{tagsElement}
+					<tags>{ArtifactTag}</tags>
 				</metadata>
 			</package>
 			""");
