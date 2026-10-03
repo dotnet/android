@@ -252,6 +252,15 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsNotNull (registeredPeersType);
 			Assert.IsNotNull (bridgeType);
 			var initializeIfNeeded = registeredPeersType.Methods.Single (method => method.Name == "InitializeIfNeeded");
+			var jniEnvInitType = assembly.MainModule.GetType ("Android.Runtime.JNIEnvInit");
+			Assert.IsNotNull (jniEnvInitType);
+			var initialize = jniEnvInitType.Methods.Single (method => method.Name == "Initialize");
+			Assert.IsTrue (
+				initialize.HasBody && initialize.Body.Instructions.Any (instruction =>
+					instruction.Operand is MethodReference reference &&
+					reference.DeclaringType.FullName == registeredPeersType.FullName &&
+					reference.Name == "InitializeIfNeeded"),
+				"runtime startup should initialize the GC bridge regardless of EventSourceSupport");
 			var processBridge = bridgeType.Methods.Single (method => method.Name == "ProcessBridge");
 			var trimmableTypeMapType = assembly.MainModule.GetType ("Microsoft.Android.Runtime.TrimmableTypeMap");
 			Assert.IsNotNull (trimmableTypeMapType);

@@ -27,6 +27,9 @@ namespace Xamarin.Android.RuntimeTests
 				categories.Add ("CoreCLRIgnore");
 				categories.Add ("NTLM");
 
+				categories.Add ("NativeTypeMap");
+				categories.Add ("TrimmableTypeMapUnsupported");
+
 				// Build-time flags flow in via runtimeconfig.json properties
 				// (see <RuntimeHostConfigurationOption> entries in Mono.Android.NET-Tests.csproj).
 				if (HasAppContextSwitch ("PublishAot")) {

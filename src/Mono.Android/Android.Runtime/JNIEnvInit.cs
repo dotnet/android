@@ -85,6 +85,7 @@ namespace Android.Runtime
 			}
 			androidRuntime = runtime;
 			JniRuntime.SetCurrent (runtime);
+			JavaMarshalRegisteredPeers.InitializeIfNeeded ();
 			TrimmableTypeMap.RegisterNativeMethods ();
 			SetSynchronizationContext ();
 		}
@@ -114,6 +115,7 @@ namespace Android.Runtime
 					new TrimmableTypeMapValueManager ()
 			);
 			JniRuntime.SetCurrent (androidRuntime);
+			JavaMarshalRegisteredPeers.InitializeIfNeeded ();
 			TrimmableTypeMap.RegisterNativeMethods ();
 
 			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
