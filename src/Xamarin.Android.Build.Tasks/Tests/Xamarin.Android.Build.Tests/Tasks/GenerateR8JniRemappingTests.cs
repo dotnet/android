@@ -287,8 +287,8 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		public void RejectedExistingXmlCannotClaimMappings (bool malformed)
 		{
 			string existingXml = malformed
-				? "<replacements><replace-type from=\"com/contoso/Peer\" to=\"a/b\" /></broken>"
-				: "<ignored><replace-type from=\"com/contoso/Peer\" to=\"a/b\" /></ignored>";
+				? "<replacements><replace-type from=\"com/contoso/Peer\" to=\"conflicting/Peer\" /></broken>"
+				: "<ignored><replace-type from=\"com/contoso/Peer\" to=\"conflicting/Peer\" /></ignored>";
 			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
 			string existingFile = Path.Combine (TestDirectory, "existing.xml");
 			string outputFile = Path.Combine (TestDirectory, "remap.xml");
@@ -309,7 +309,12 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				OutputFile = new TaskItem (mergedFile),
 			};
 			Assert.IsTrue (merge.Execute ());
-			StringAssert.Contains ("""<replace-type from="com/contoso/Peer" to="a/b" />""", File.ReadAllText (mergedFile));
+			var mergedRoot = XDocument.Load (mergedFile).Root ?? throw new AssertionException ("Merged XML has no root.");
+			var replacements = mergedRoot.Elements ("replace-type")
+				.Where (element => (string?) element.Attribute ("from") == "com/contoso/Peer").ToArray ();
+			Assert.AreEqual (1, replacements.Length, "Rejected input must not leave a partial conflicting mapping.");
+			Assert.AreEqual ("a/b", (string?) replacements [0].Attribute ("to"));
+			Assert.AreEqual (malformed ? "XA4318" : "XA4317", Warnings.Single ().Code);
 		}
 
 		[Test]
