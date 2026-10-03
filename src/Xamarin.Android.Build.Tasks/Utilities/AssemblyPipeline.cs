@@ -54,7 +54,6 @@ public class StepContext
 {
 	public JavaPeerStyle CodeGenerationTarget { get; set; }
 	public ITaskItem Destination { get; }
-	public bool EnableMarshalMethods { get; set; }
 	public bool IsAndroidAssembly { get; set; }
 	public bool IsAssemblyModified { get; set; }
 	public bool IsDebug { get; set; }

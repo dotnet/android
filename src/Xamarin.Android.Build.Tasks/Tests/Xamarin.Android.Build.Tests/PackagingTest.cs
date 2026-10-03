@@ -18,6 +18,99 @@ namespace Xamarin.Android.Build.Tests
 	public class PackagingTest : BaseTest
 	{
 		[Test]
+		[Category ("RequiresAndroidNdk")]
+		public void ManagedAssemblyStoreElfWrappers ([Values ("apk", "aab")] string packageFormat)
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			AndroidTargetArch [] arches = [AndroidTargetArch.Arm, AndroidTargetArch.Arm64, AndroidTargetArch.X86_64];
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (arches);
+			proj.SetProperty ("AndroidPackageFormat", packageFormat);
+			proj.SetProperty ("AndroidUseAssemblyStore", "true");
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "true");
+			proj.SetProperty ("PublishReadyToRun", "false");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "The compressed-store build should succeed.");
+			string archive = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.{packageFormat}");
+			AssertArchive ();
+			DateTime archiveTimestamp = File.GetLastWriteTimeUtc (archive);
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The unchanged build should succeed.");
+			Assert.IsTrue (builder.Output.IsTargetSkipped ("_BuildApkEmbed"), "An unchanged build must not rewrite assembly-store wrappers.");
+			Assert.AreEqual (archiveTimestamp, File.GetLastWriteTimeUtc (archive), "The package should remain unchanged.");
+
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "System.Console.WriteLine (\"assembly-store update\");");
+			proj.Touch ("MainActivity.cs");
+			builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The changed-assembly build should succeed.");
+			Assert.IsFalse (builder.Output.IsTargetSkipped ("_BuildApkEmbed"), "Changing an assembly must refresh the packaged stores.");
+			AssertArchive ();
+
+			void AssertArchive ()
+			{
+				FileAssert.Exists (archive);
+				string prefix = packageFormat == "aab" ? "base/lib/" : "lib/";
+				using var zip = ZipHelper.OpenZip (archive);
+				Assert.AreEqual (arches.Length, zip.Count (entry => entry.FullName.EndsWith ("/libassembly-store.so", StringComparison.Ordinal)));
+				var assemblies = new ArchiveAssemblyHelper (archive, useAssemblyStores: true);
+				foreach (var arch in arches) {
+					string abi = MonoAndroidHelper.ArchToAbi (arch);
+					string entryName = $"{prefix}{abi}/libassembly-store.so";
+					Assert.IsTrue (zip.ContainsEntry (entryName), $"The package must preserve the ABI split path '{entryName}'.");
+					string directory = builder.Output.GetIntermediaryPath (Path.Combine ("elf-inspection", abi));
+					Directory.CreateDirectory (directory);
+					string library = Path.Combine (directory, "libassembly-store.so");
+					using (var stream = File.Create (library)) {
+						zip.ReadEntry (entryName).Extract (stream);
+					}
+					using var document = NativeToolTestHelper.ReadElf (library);
+					var elf = document.RootElement [0];
+					var header = elf.GetProperty ("ElfHeader");
+					Assert.AreEqual ("SharedObject (0x3)", header.GetProperty ("Type").GetString ());
+					Assert.AreEqual (arch switch {
+						AndroidTargetArch.Arm => 40,
+						AndroidTargetArch.Arm64 => 183,
+						AndroidTargetArch.X86_64 => 62,
+						_ => throw new NotSupportedException ($"Unexpected test architecture: {arch}"),
+					}, header.GetProperty ("Machine").GetProperty ("Value").GetInt32 ());
+					var symbols = elf.GetProperty ("DynamicSymbols").EnumerateArray ().Select (item => item.GetProperty ("Symbol")).ToArray ();
+					Assert.AreEqual (2, symbols.Length);
+					Assert.AreEqual (1, symbols.Single (symbol => symbol.GetProperty ("Name").GetProperty ("Name").GetString () == "_assembly_store")
+						.GetProperty ("Type").GetProperty ("Value").GetInt32 ());
+					Assert.IsFalse (symbols.Any (symbol => symbol.GetProperty ("Name").GetProperty ("Name").GetString () == "_assembly_store_end"));
+					byte [] store = NativeToolTestHelper.ReadSection (library, "payload");
+					string rawStore = builder.Output.GetIntermediaryPath (Path.Combine ("app_shared_libraries", abi, "assembly-store.so"));
+					CollectionAssert.AreEqual (File.ReadAllBytes (rawStore), store, "Wrapping must preserve every raw store byte.");
+					using var payload = new BinaryReader (new MemoryStream (store));
+					Assert.AreEqual (0x41424158u, payload.ReadUInt32 (), "The raw XABA store must remain unchanged.");
+					Assert.AreEqual (3u, payload.ReadUInt32 () & 0xffffu, "The raw store format must remain version 3.");
+
+					using var compressed = assemblies.ReadEntry ("System.Private.CoreLib.dll", arch);
+					Assert.IsNotNull (compressed, "The store should contain the runtime assembly.");
+					using var compressedReader = new BinaryReader (compressed);
+					Assert.AreEqual (0x535a4158u, compressedReader.ReadUInt32 (), "The assembly should retain its XAZS compression header.");
+					compressedReader.ReadUInt32 (); // Descriptor index.
+					Assert.Greater (compressedReader.ReadUInt32 (), 0, "The compression header should record the uncompressed length.");
+					Assert.AreEqual (0xfd2fb528u, compressedReader.ReadUInt32 (), "The compressed bytes should begin with a Zstandard frame.");
+				}
+
+				string intermediate = builder.Output.GetIntermediaryPath ("");
+				Assert.IsEmpty (Directory.GetFiles (intermediate, "libassembly-store.so.S", SearchOption.AllDirectories));
+				Assert.IsEmpty (Directory.GetFiles (intermediate, "libassembly-store.so.o", SearchOption.AllDirectories));
+				Assert.IsEmpty (Directory.GetDirectories (intermediate, "wrapped-assembly-store", SearchOption.AllDirectories),
+					"Temporary wrapper directories should be removed after packaging.");
+			}
+		}
+
+		[Test]
 		public void CheckR8MetadataFilesExist (
 			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime,
 			[Values ("disabled", "private-members")] string obfuscationMode)

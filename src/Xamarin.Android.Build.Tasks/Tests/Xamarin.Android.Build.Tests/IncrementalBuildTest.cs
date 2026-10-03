@@ -26,15 +26,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 				Imports = {
-					new Import (() => "CheckAaptRules.targets") {
-						TextContent = () => """
-							<Project>
-							  <Target Name="_ReportAaptRulesInR8Configuration" AfterTargets="_CalculateProguardConfigurationFiles">
-							    <Message Importance="high" Text="AaptRulesInR8Configuration=@(_ProguardConfiguration->WithMetadataValue('Filename', 'aapt_rules'))" />
-							  </Target>
-							</Project>
-							""",
-					},
+					CreateAaptRulesImport (),
 				},
 			};
 			proj.SetRuntime (runtime);
@@ -71,6 +63,148 @@ namespace Xamarin.Android.Build.Tests
 			builder.Output.AssertTargetIsNotSkipped ("_CompileToDalvik");
 			Assert.IsTrue (builder.LastBuildOutput.Any (line => line.Contains ("AaptRulesInR8Configuration=") && line.Contains ("aapt_rules.txt")),
 				"Subsequent R8 builds should still receive the merged AAPT2 rules.");
+		}
+
+		[Test]
+		public void AaptRulesAreRegeneratedAfterDeletion ([Values] bool updateJavaSource)
+		{
+			var path = Path.Combine ("temp", TestName);
+			var library = new XamarinAndroidBindingProject {
+				IsRelease = true,
+				ProjectName = "JavaLibrary",
+				OtherBuildItems = {
+					new AndroidItem.AndroidJavaSource ("KeptActivity.java") {
+						TextContent = () => """
+							package example;
+							public class KeptActivity extends android.app.Activity { }
+							""",
+						Encoding = Encoding.ASCII,
+						MetadataValues = "Bind=True",
+					},
+					new AndroidItem.AndroidJavaSource ("KeptView.java") {
+						TextContent = () => """
+							package example;
+							public class KeptView extends android.widget.Button {
+								public KeptView (android.content.Context context, android.util.AttributeSet attributes) {
+									super (context, attributes);
+								}
+							}
+							""",
+						Encoding = Encoding.ASCII,
+						MetadataValues = "Bind=True",
+					},
+				},
+			};
+			library.SetRuntime (AndroidRuntime.CoreCLR);
+			using var libraryBuilder = CreateDllBuilder (Path.Combine (path, library.ProjectName));
+			Assert.IsTrue (libraryBuilder.Build (library), "The Java library build should succeed.");
+			var libraryJar = libraryBuilder.Output.GetIntermediaryPath (Path.Combine ("binding", "bin", $"{library.ProjectName}.jar"));
+			FileAssert.Exists (libraryJar);
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				Imports = {
+					CreateAaptRulesImport (),
+				},
+				LayoutMain = """
+					<example.KeptView xmlns:android="http://schemas.android.com/apk/res/android"
+					    android:id="@+id/myButton"
+					    android:layout_width="match_parent"
+					    android:layout_height="match_parent" />
+					""",
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
+			proj.SetProperty (proj.ReleaseProperties, "TrimMode", "full");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("</application>",
+				"""<activity android:name="example.KeptActivity" android:exported="false" /></application>""");
+			// Include only the JAR so generated keeps for managed peers or app-authored Java cannot root these types.
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("JavaLibrary.jar") {
+				BinaryContent = () => File.ReadAllBytes (libraryJar),
+				MetadataValues = "Bind=False",
+			});
+			var javaSource = "public class Extra { }";
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidJavaSource ("Extra.java") {
+				TextContent = () => javaSource,
+				Encoding = Encoding.ASCII,
+				MetadataValues = "Bind=False",
+			});
+
+			using var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName));
+			builder.BuildLogFile = "initial-build.log";
+			Assert.IsTrue (builder.Build (proj), "Initial build should succeed.");
+			var rulesFile = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "aapt_rules.txt");
+			var packagedResources = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "packaged_resources"));
+			AssertRulesAndJavaMembers ();
+
+			builder.BuildLogFile = "unchanged-build.log";
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "An unchanged build should succeed.");
+			builder.Output.AssertTargetIsSkipped ("_CreateBaseApk");
+			builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
+			File.Delete (rulesFile);
+
+			if (updateJavaSource) {
+				javaSource = "public class Extra { public static final int Value = 1; }";
+				proj.Touch ("Extra.java");
+			}
+			builder.BuildLogFile = "recovery-build.log";
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The damaged incremental build should succeed.");
+			FileAssert.Exists (rulesFile, "Missing AAPT2 rules should be regenerated even when resources have not changed.");
+			builder.Output.AssertTargetIsNotSkipped ("_PrepareCreateBaseApk");
+			builder.Output.AssertTargetIsNotSkipped ("_CreateBaseApk");
+			builder.Output.AssertTargetIsNotSkipped ("_CompileToDalvik");
+			AssertRulesAndJavaMembers ();
+
+			var repairedRulesTimestamp = File.GetLastWriteTimeUtc (rulesFile);
+			var repairedResourcesTimestamp = File.GetLastWriteTimeUtc (packagedResources);
+			builder.BuildLogFile = "recovered-no-change-build.log";
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "An unchanged build after recovery should succeed.");
+			builder.Output.AssertTargetIsSkipped ("_PrepareCreateBaseApk");
+			builder.Output.AssertTargetIsSkipped ("_CreateBaseApk");
+			builder.Output.AssertTargetIsSkipped ("_CompileJava");
+			builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
+			Assert.AreEqual (repairedRulesTimestamp, File.GetLastWriteTimeUtc (rulesFile), "Recovery should not repeatedly regenerate keep rules.");
+			Assert.AreEqual (repairedResourcesTimestamp, File.GetLastWriteTimeUtc (packagedResources), "Recovery should not repeatedly relink resources.");
+
+			File.Delete (rulesFile);
+			foreach (var parameter in new [] { "AndroidLinkTool=", "AndroidApplication=false", "DesignTimeBuild=true" }) {
+				builder.BuildLogFile = $"excluded-{parameter.Split ('=') [0]}.log";
+				Assert.IsTrue (builder.RunTarget (proj, "_CreateBaseApkInputs", doNotCleanupOnUpdate: true, parameters: [parameter], saveProject: false),
+					$"Collecting inputs with {parameter} should succeed.");
+				FileAssert.Exists (packagedResources, $"{parameter} should not invalidate packaged resources.");
+				Assert.AreEqual (repairedResourcesTimestamp, File.GetLastWriteTimeUtc (packagedResources),
+					$"{parameter} should not touch packaged resources.");
+				FileAssert.DoesNotExist (rulesFile, $"{parameter} should not regenerate keep rules.");
+			}
+
+			void AssertRulesAndJavaMembers ()
+			{
+				FileAssert.Exists (rulesFile);
+				var rules = File.ReadAllText (rulesFile);
+				StringAssert.Contains ("example.KeptActivity", rules, "AAPT2 should keep the manifest-only activity.");
+				StringAssert.Contains ("example.KeptView", rules, "AAPT2 should keep the layout-only view.");
+				Assert.IsTrue (builder.LastBuildOutput.Any (line => line.Contains ("AaptRulesInR8Configuration=") && line.Contains ("aapt_rules.txt")),
+					"R8 should receive the merged AAPT2 rules.");
+				var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+				var dexDump = DexUtils.GetDexDump (dexFile, AndroidSdkPath);
+				Assert.IsTrue (DexUtils.ContainsClass ("Lexample/KeptActivity;", dexDump), "R8 should preserve the manifest-only activity.");
+				Assert.IsTrue (DexUtils.ContainsClassWithMethod ("Lexample/KeptView;", "<init>", "(Landroid/content/Context;Landroid/util/AttributeSet;)V", dexDump),
+					"R8 should preserve the layout-only view and its inflation constructor.");
+			}
+		}
+
+		static Import CreateAaptRulesImport ()
+		{
+			return new Import (() => "CheckAaptRules.targets") {
+				TextContent = () => """
+					<Project>
+					  <Target Name="_ReportAaptRulesInR8Configuration" AfterTargets="_CalculateProguardConfigurationFiles">
+					    <Message Importance="high" Text="AaptRulesInR8Configuration=@(_ProguardConfiguration->WithMetadataValue('Filename', 'aapt_rules'))" />
+					  </Target>
+					</Project>
+					""",
+			};
 		}
 
 		[Test]
@@ -488,7 +622,6 @@ namespace Xamarin.Android.Build.Tests
 					ProjectName = $"App{i}",
 					PackageName = $"com.companyname.App{i}",
 					IsRelease = isRelease,
-					EnableMarshalMethods = true,
 				};
 
 				app1.SetRuntime (runtime);

@@ -24,12 +24,16 @@ namespace Java.Interop
 							declaringType.FullName));
 
 			DeclaringType   = declaringType;
-			jniPeerType     = new JniType (info.Name);
+			targetJniTypeName   = info.Name;
+			jniPeerType     = new JniType (targetJniTypeName);
 			jniPeerType.RegisterWithRuntime ();
 		}
 
 		JniPeerMembers?                                     members;
 		JniType?                                            jniPeerType;
+		readonly string?                                    targetJniTypeName;
+
+		string TargetJniTypeName => targetJniTypeName ?? Members.JniPeerTypeName;
 
 		internal    JniPeerMembers                          Members => members ?? throw new InvalidOperationException ();
 
@@ -47,7 +51,7 @@ namespace Java.Interop
 
 		internal void Dispose ()
 		{
-			Clear (ref instanceMethods);
+			Clear (ref instanceMethods, static method => method.StaticRedirect?.Dispose ());
 			Clear (ref subclassConstructors, static value => value.Dispose ());
 
 			if (jniPeerType != null)
@@ -60,7 +64,22 @@ namespace Java.Interop
 			if (signature == null)
 				throw new ArgumentNullException (nameof (signature));
 			return InstanceMethods.GetOrAdd (signature, static (member, methods) =>
-					methods.JniPeerType.GetConstructor (member.AsSpan ()), this);
+					methods.GetConstructorCore (member), this);
+		}
+
+		JniMethodInfo GetConstructorCore (string signature)
+		{
+			// Constructors are never renamed, but their parameter types can be, so the descriptor
+			// still has to be translated.
+			var newMethod = JniPeerMembers.GetReplacementMethodInfo (TargetJniTypeName, "<init>", signature);
+			if (newMethod.HasValue) {
+				var info = newMethod.Value;
+				using var t = CreateTargetType (info, TargetJniTypeName);
+				if (TryGetInstanceMethod (t, info, "<init>", signature, out var m)) {
+					return m;
+				}
+			}
+			return JniPeerType.GetConstructor (signature.AsSpan ());
 		}
 
 		internal JniInstanceMethods GetConstructorsForType (Type declaringType)
@@ -90,16 +109,26 @@ namespace Java.Interop
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods..ctor(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 27
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.GetConstructorsForType(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 77
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(String constructorSignature, Type declaringType, JniArgumentValue* parameters) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 146
-			return SubclassConstructors.GetOrAdd (declaringType, static type => new JniInstanceMethods (type));
+			return GetOrAdd (
+				SubclassConstructors,
+				declaringType,
+				static (type, _) => new JniInstanceMethods (type),
+				this,
+				static value => value.Dispose ());
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
-			return InstanceMethods.GetOrAdd (encodedMember, static (member, methods) => {
-				ReadOnlySpan<char> method, signature;
-				JniPeerMembers.GetNameAndSignature (member, out method, out signature);
-				return methods.GetMethodInfo (method, signature);
-			}, this);
+			return GetOrAdd (
+				InstanceMethods,
+				encodedMember,
+				static (member, methods) => {
+					ReadOnlySpan<char> method, signature;
+					JniPeerMembers.GetNameAndSignature (member, out method, out signature);
+					return methods.GetMethodInfo (method, signature);
+				},
+				this,
+				static method => method.StaticRedirect?.Dispose ());
 		}
 
 		JniMethodInfo GetMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
@@ -108,21 +137,48 @@ namespace Java.Interop
 			var newMethod      = Members.GetReplacementMethodInfo (method, signature);
 			if (newMethod.HasValue) {
 				var info = newMethod.Value;
-				using var t = CreateTargetType (info, Members);
-				if (info.TargetJniMethodInstanceToStatic &&
-						TryGetStaticMethod (t, info, method, signature, out m)) {
-					m.ParameterCount = info.TargetJniMethodParameterCount;
-					m.StaticRedirect = CreateTargetType (info, Members);
-					return m;
-				}
-				if (TryGetInstanceMethod (t, info, method, signature, out m)) {
-					return m;
+				JniType? t = CreateTargetType (info, Members);
+				try {
+					if (info.TargetJniMethodInstanceToStatic &&
+							TryGetStaticMethod (t, info, method, signature, out m)) {
+						m.ParameterCount = info.TargetJniMethodParameterCount;
+						m.StaticRedirect = t;
+						t = null;
+						return m;
+					}
+					if (TryGetInstanceMethod (t, info, method, signature, out m)) {
+						return m;
+					}
+				} finally {
+					t?.Dispose ();
 				}
 				var targetType = GetTargetTypeNameForDiagnostics (info, Members);
 				var targetName = GetTargetMethodNameForDiagnostics (info, method);
 				var targetSignature = GetTargetMethodSignatureForDiagnostics (info, signature);
 				Console.Error.WriteLine ($"warning: For declared method `{Members.JniPeerTypeName}.{method}.{signature}`, could not find requested method `{targetType}.{targetName}.{targetSignature}`!");
 			}
+			if (JniPeerType.TryGetInstanceMethod (method, signature, out m))
+				return m;
+
+			newMethod = JniPeerMembers.GetBaseReplacementMethodInfo (DeclaringType, method, signature);
+			if (newMethod.HasValue) {
+				var info = newMethod.Value;
+				JniType? t = CreateTargetType (info, TargetJniTypeName);
+				try {
+					if (info.TargetJniMethodInstanceToStatic &&
+							TryGetStaticMethod (t, info, method, signature, out m)) {
+						m.ParameterCount = info.TargetJniMethodParameterCount;
+						m.StaticRedirect = t;
+						t = null;
+						return m;
+					}
+					if (TryGetInstanceMethod (t, info, method, signature, out m))
+						return m;
+				} finally {
+					t?.Dispose ();
+				}
+			}
+
 			return JniPeerType.GetInstanceMethod (method, signature);
 		}
 

@@ -62,13 +62,13 @@ namespace Java.Interop {
 		public <#= info.ReturnType #> Get<#= info.ManagedType #>Value (string encodedMember)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			return JniEnvironment.StaticFields.GetStatic<#= info.JniCallType #>Field (Members.JniPeerType.PeerReference, f);
+			return JniEnvironment.StaticFields.GetStatic<#= info.JniCallType #>Field (GetFieldDeclaringType (f).PeerReference, f);
 		}
 
 		public void SetValue (string encodedMember, <#= info.ParameterType #> value)
 		{
 			var f   = GetFieldInfo (encodedMember);
-			JniEnvironment.StaticFields.SetStatic<#= info.JniCallType #>Field (Members.JniPeerType.PeerReference, f, value);
+			JniEnvironment.StaticFields.SetStatic<#= info.JniCallType #>Field (GetFieldDeclaringType (f).PeerReference, f, value);
 		}
 <#
 	}

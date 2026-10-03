@@ -18,6 +18,7 @@ namespace xamarin::android {
 		// Configure the store directly from an in-memory payload pointer (obtained via
 		// dlopen()+dlsym() of the `_assembly_store` dynamic symbol). The payload is mapped
 		// read-only and is never modified, so it (and every pointer derived from it) is `const`.
+		// The XABA store is trusted build-generated data; no external payload length is available.
 		// `store_path` is used only in diagnostic messages and may be `nullptr` - every use of it
 		// goes through `optional_string ()`.
 		static void configure_from_payload (const void *payload_start, const char *store_path) noexcept;

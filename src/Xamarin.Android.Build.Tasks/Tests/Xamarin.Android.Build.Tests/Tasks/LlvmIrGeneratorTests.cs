@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using Microsoft.Build.Utilities;
-using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tasks.LLVMIR;
@@ -83,25 +83,24 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		}
 
 		[Test]
-		public void TypeMapAssemblyFullNameUsesRuntimeEscaping ()
+		public void EmptyMarshalMethodsSourceRetainsNativeHostEntryPoint ()
 		{
-			var assemblyName = new AssemblyNameDefinition ("Comma,Name", new Version (1, 2, 3, 4));
+			var log = new TaskLoggingHelper (new MockBuildEngine (TestContext.Out, [], [], []), "test");
+			var generator = new MarshalMethodsNativeAssemblyGenerator (log);
+			var module = generator.Construct ();
 
-			Assert.That (
-				TypeMapCecilAdapter.GetRuntimeAssemblyFullName (assemblyName),
-				Is.EqualTo (@"Comma\,Name, Version=1.2.3.4, Culture=neutral, PublicKeyToken=null")
-			);
+			using var stream = new MemoryStream ();
+			using (var writer = new StreamWriter (stream, new UTF8Encoding (false), 1024, leaveOpen: true)) {
+				generator.Generate (module, AndroidTargetArch.Arm64, writer, "marshal_methods.arm64-v8a.ll");
+			}
+
+			stream.Position = 0;
+			using var reader = new StreamReader (stream);
+			string output = reader.ReadToEnd ();
+			Assert.That (output, Does.Contain ("@xamarin_app_init"));
+			Assert.That (output, Does.Contain ("@get_function_pointer"));
+			Assert.That (output, Does.Not.Contain ("@Java_"));
 		}
 
-		[Test]
-		public void TypeMapAssemblyFullNameMatchesStrongNamedRuntimeAssembly ()
-		{
-			string assemblyPath = typeof (TypeMapCecilAdapter).Assembly.Location;
-			using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
-			string? runtimeFullName = System.Reflection.AssemblyName.GetAssemblyName (assemblyPath).FullName;
-
-			Assert.That (runtimeFullName, Does.Not.EndWith ("PublicKeyToken=null"));
-			Assert.That (TypeMapCecilAdapter.GetRuntimeAssemblyFullName (assembly.Name), Is.EqualTo (runtimeFullName));
-		}
 	}
 }

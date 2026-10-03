@@ -150,6 +150,55 @@ namespace Xamarin.Android.Build.Tests {
 			FileAssert.Exists (referenceImplementations);
 		}
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public void TrimmedNativeLinkingScansCombinedTypeMapInputs (bool readyToRun)
+		{
+			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("PublishTrimmed", "true");
+			proj.SetProperty ("PublishReadyToRun", readyToRun.ToString ());
+			proj.SetProperty ("_AndroidEnableNativeRuntimeLinking", "true");
+			proj.SetProperty (KnownProperties.RuntimeIdentifiers, "android-arm64;android-x64");
+			var directoryBuildTargets = proj.Imports.Single (import => import.Project () == "Directory.Build.targets");
+			directoryBuildTargets.TextContent = () => """
+				<Project>
+				  <Target Name="_AndroidAssertCombinedNativeLinkingTypeMaps"
+				      BeforeTargets="_GeneratePackageManagerJava"
+				      DependsOnTargets="_PrepareTrimmableTypeMapAssemblies">
+				    <ItemGroup>
+				      <_AndroidPreTrimRoot Include="@(_ResolvedAssemblies)"
+				          Condition=" '%(_ResolvedAssemblies.Filename)' == '_Microsoft.Android.TypeMaps'
+				              and '%(_ResolvedAssemblies.Abi)' == 'arm64-v8a'
+				              and '%(_ResolvedAssemblies._AndroidPreTrimTypeMapCandidate)' == 'true' " />
+				      <_AndroidFinalArm64Root Include="@(_ResolvedAssemblies)"
+				          Condition=" '%(_ResolvedAssemblies.Filename)' == '_Microsoft.Android.TypeMaps'
+				              and '%(_ResolvedAssemblies.Abi)' == 'arm64-v8a'
+				              and '%(_ResolvedAssemblies._AndroidPreTrimTypeMapCandidate)' != 'true' " />
+				      <_AndroidFinalX64Root Include="@(_ResolvedAssemblies)"
+				          Condition=" '%(_ResolvedAssemblies.Filename)' == '_Microsoft.Android.TypeMaps'
+				              and '%(_ResolvedAssemblies.Abi)' == 'x86_64' " />
+				    </ItemGroup>
+				    <Error Condition=" '@(_AndroidPreTrimRoot->Count())' == '0' or '@(_AndroidFinalArm64Root->Count())' == '0' or '@(_AndroidFinalX64Root->Count())' == '0' "
+				        Text="The native linking regression requires both pre-trim and final per-ABI root typemaps." />
+				  </Target>
+				</Project>
+				""";
+
+			using var builder = CreateApkBuilder ();
+			builder.Target = "Compile;_GeneratePackageManagerJava";
+			// Compile defaults to design-time mode, but native-source generation requires a normal build.
+			Assert.IsTrue (builder.Build (proj, parameters: ["DesignTimeBuild=false"]),
+				"Trimmed multi-RID native sources should be generated with combined typemap inputs.");
+			builder.Output.AssertTargetIsNotSkipped ("_AndroidAssertCombinedNativeLinkingTypeMaps");
+			foreach (var abi in new [] { "arm64-v8a", "x86_64" }) {
+				var nativeSource = builder.Output.GetIntermediaryPath (Path.Combine ("android", $"pinvoke_preserve.{abi}.ll"));
+				FileAssert.Exists (nativeSource);
+				StringAssert.Contains ("@find_pinvoke", File.ReadAllText (nativeSource));
+			}
+		}
+
 		[Test]
 		public void BindingCallbackFormatSupportsDefaultConsumer ()
 		{
