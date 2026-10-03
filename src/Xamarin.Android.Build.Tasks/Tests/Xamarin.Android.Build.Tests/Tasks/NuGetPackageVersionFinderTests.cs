@@ -41,7 +41,7 @@ public class NuGetPackageVersionFinderTests : BaseTest
 	{
 		var missingCache = Path.Combine (TestDirectory, "missing-packages");
 		var cache = Path.Combine (TestDirectory, "packages");
-		CreateNuspec (cache, "http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd");
+		CreateNuspec (cache, metadataNamespace: "http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd");
 		using var pom = new PomBuilder ("com.google.android", "material", "1.0")
 			.WithDependency ("com.google.android", "material-core", "1.0")
 			.BuildTemporary ();
@@ -120,13 +120,13 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		};
 	}
 
-	static void CreateNuspec (string cache, string xmlNamespace = "")
+	static void CreateNuspec (string cache, string packageNamespace = "", string metadataNamespace = "")
 	{
 		var directory = Path.Combine (cache, PackagePath);
 		Directory.CreateDirectory (directory);
 		File.WriteAllText (Path.Combine (directory, NuspecFile), $"""
-			<package xmlns="{xmlNamespace}">
-				<metadata>
+			<package xmlns="{packageNamespace}">
+				<metadata xmlns="{metadataNamespace}">
 					<id>{PackageName}</id>
 					<version>1.0.0</version>
 					<tags>{ArtifactTag}</tags>
