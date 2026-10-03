@@ -31,14 +31,17 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				_ => throw new AssertionException ("Unknown fixture kind."),
 			};
 			var warnings = new List<BuildWarningEventArgs> ();
-			XElement root = Merge (warnings, malformed, """
+			XElement root = Merge (warnings,
+				"""<replacements><replace-type from="before" to="a" /></replacements>""",
+				malformed, """
 				<replacements><replace-type from="example/Peer" to="generated/Peer" /></replacements>
 				""");
 
 			var replacements = root.Elements ("replace-type").ToArray ();
-			Assert.AreEqual (1, replacements.Length);
-			Assert.AreEqual ("example/Peer", (string?) replacements [0].Attribute ("from"));
-			Assert.AreEqual ("generated/Peer", (string?) replacements [0].Attribute ("to"));
+			CollectionAssert.AreEqual (new [] { "before", "example/Peer" },
+				replacements.Select (node => (string?) node.Attribute ("from")).ToArray ());
+			CollectionAssert.AreEqual (new [] { "a", "generated/Peer" },
+				replacements.Select (node => (string?) node.Attribute ("to")).ToArray ());
 			Assert.AreEqual ("XA4318", warnings.Single ().Code);
 		}
 
@@ -47,6 +50,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		{
 			var warnings = new List<BuildWarningEventArgs> ();
 			XElement root = Merge (warnings,
+				"<replacements />",
 				"""<replacements><replace-type from="example/Peer" to="a/b" />"""
 				+ """<replace-method source-type="a/b" source-method-name="run" source-method-signature="(Ljava/lang/String;)V" """
 				+ """ target-type="a/b" target-method-name="c" target-method-instance-to-static="false" note="&lt;one&gt; &amp; &quot;two&quot;" />"""
@@ -66,20 +70,6 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		}
 
 		[Test]
-		public void InvalidInputDoesNotRemoveEarlierMappings ()
-		{
-			var warnings = new List<BuildWarningEventArgs> ();
-			XElement root = Merge (warnings,
-				"""<replacements><replace-type from="before" to="a" /></replacements>""",
-				"""<replacements><replace-type from="rejected" to="b" /></broken>""",
-				"""<replacements><replace-type from="after" to="c" /></replacements>""");
-
-			CollectionAssert.AreEqual (new [] { "before", "after" },
-				root.Elements ("replace-type").Select (node => (string?) node.Attribute ("from")).ToArray ());
-			Assert.AreEqual ("XA4318", warnings.Single ().Code);
-		}
-
-		[Test]
 		public void ValidInputPreservesInheritedNamespacesAndNestedContent ()
 		{
 			var warnings = new List<BuildWarningEventArgs> ();
@@ -94,17 +84,6 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.AreEqual ("b", (string?) group.Elements (ns + "replace-type").Single ().Attribute ("to"));
 			Assert.AreEqual (" retained ", group.Nodes ().OfType<XComment> ().Single ().Value);
 			Assert.AreEqual ("text & more", group.Value);
-			Assert.IsEmpty (warnings);
-		}
-
-		[Test]
-		public void EmptyInputDoesNotSuppressFollowingInputs ()
-		{
-			var warnings = new List<BuildWarningEventArgs> ();
-			XElement root = Merge (warnings, "<replacements />",
-				"""<replacements><replace-type from="a" to="b" /></replacements>""");
-
-			Assert.AreEqual (1, root.Elements ().Count ());
 			Assert.IsEmpty (warnings);
 		}
 

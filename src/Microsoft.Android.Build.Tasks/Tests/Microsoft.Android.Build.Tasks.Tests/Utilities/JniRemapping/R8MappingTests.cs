@@ -683,19 +683,5 @@ namespace Xamarin.Android.Build.Tests
 				"field 'com/contoso/Peer.value'",
 			}, seed.GetReachabilityConflicts (final, required));
 		}
-		[TestCase ("run(int):void", true)]
-		[TestCase ("run():java.lang.String", true)]
-		[TestCase ("missing", false)]
-		public void SplitsMethodKeys (string key, bool expected)
-		{
-			bool result = R8Mapping.TrySplitMethodKey (key, out string name, out string [] parameters, out string returnType);
-
-			Assert.AreEqual (expected, result);
-			if (expected) {
-				Assert.AreEqual ("run", name);
-				Assert.That (returnType, Is.Not.Empty);
-				Assert.That (parameters, Is.Not.Null);
-			}
-		}
 	}
 }

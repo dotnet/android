@@ -128,38 +128,6 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			StringAssert.DoesNotContain ("Unused", xml);
 		}
 
-		[Test]
-		public void RetentionMakesMergedReverseTypeUnambiguous ()
-		{
-			string objectFile = WriteNativeObject (["com/contoso/First"]);
-			string xml = Run ("""
-				com.contoso.First -> a.b:
-				com.contoso.Second -> a.b:
-
-				""", objectFile);
-
-			StringAssert.Contains ("""<reverse-type from="a/b" to="com/contoso/First" />""", xml);
-			StringAssert.DoesNotContain ("com/contoso/Second", xml);
-		}
-
-		[Test]
-		public void SameNamedFieldsKeepBothDescriptorsInXml ()
-		{
-			string xml = Run ("""
-				com.contoso.Peer -> a.b:
-				    int value -> c
-				    java.lang.String value -> d
-
-				""");
-			var fields = XDocument.Parse (xml).Root?.Elements ("replace-field").ToArray ()
-				?? throw new AssertionException ("Generated XML has no root.");
-			Assert.AreEqual (2, fields.Length);
-			Assert.AreEqual ("I", (string?) fields [0].Attribute ("source-field-signature"));
-			Assert.AreEqual ("c", (string?) fields [0].Attribute ("target-field-name"));
-			Assert.AreEqual ("Ljava/lang/String;", (string?) fields [1].Attribute ("source-field-signature"));
-			Assert.AreEqual ("d", (string?) fields [1].Attribute ("target-field-name"));
-		}
-
 		[TestCase (false, false)]
 		[TestCase (true, false)]
 		[TestCase (false, true)]

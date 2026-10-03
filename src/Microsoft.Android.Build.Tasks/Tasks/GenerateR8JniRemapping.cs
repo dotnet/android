@@ -42,7 +42,6 @@ namespace Microsoft.Android.Tasks
 
 		readonly Dictionary<string, string> existingEntries = new Dictionary<string, string> (StringComparer.Ordinal);
 		readonly HashSet<string> preexistingEntryKeys = new HashSet<string> (StringComparer.Ordinal);
-		readonly HashSet<string> externallyOwnedTypes = new HashSet<string> (StringComparer.Ordinal);
 
 		public override bool RunTask ()
 		{
@@ -203,7 +202,7 @@ namespace Microsoft.Android.Tasks
 
 		bool WriteClass (XmlWriter writer, R8ClassMapping classMapping, Dictionary<string, string?> requiredOriginalClasses)
 		{
-			bool ownedExternally = externallyOwnedTypes.Contains (BuildTypeKey (classMapping.OriginalJniName));
+			bool ownedExternally = preexistingEntryKeys.Contains (BuildTypeKey (classMapping.OriginalJniName));
 			if (classMapping.IsRenamed) {
 				string key = BuildTypeKey (classMapping.OriginalJniName);
 				if (existingEntries.TryGetValue (key, out string? existingTarget) &&
@@ -378,7 +377,7 @@ namespace Microsoft.Android.Tasks
 					}
 					var entries = ReadExistingEntries (reader);
 					foreach (var entry in entries) {
-						AddExistingEntry (entry.Key, entry.Target, entry.ExternallyOwnedType);
+						AddExistingEntry (entry.Key, entry.Target);
 					}
 				} catch (Exception ex) when (ex is XmlException || ex is IOException || ex is UnauthorizedAccessException) {
 					Log.LogDebugMessage ($"Existing remapping input `{file}` could not be read: {ex.Message}");
@@ -386,9 +385,9 @@ namespace Microsoft.Android.Tasks
 			}
 		}
 
-		List<(string Key, string? Target, bool ExternallyOwnedType)> ReadExistingEntries (XmlReader reader)
+		List<(string Key, string? Target)> ReadExistingEntries (XmlReader reader)
 		{
-			var entries = new List<(string Key, string? Target, bool ExternallyOwnedType)> ();
+			var entries = new List<(string Key, string? Target)> ();
 			while (reader.Read ()) {
 				if (reader.NodeType != XmlNodeType.Element) {
 					continue;
@@ -396,36 +395,33 @@ namespace Microsoft.Android.Tasks
 
 				switch (reader.LocalName) {
 				case "replace-type":
-					entries.Add ((BuildTypeKey (reader.GetAttribute ("from")), reader.GetAttribute ("to"), true));
+					entries.Add ((BuildTypeKey (reader.GetAttribute ("from")), reader.GetAttribute ("to")));
 					break;
 				case "reverse-type":
-					entries.Add ((BuildReverseTypeKey (reader.GetAttribute ("from")), reader.GetAttribute ("to"), false));
+					entries.Add ((BuildReverseTypeKey (reader.GetAttribute ("from")), reader.GetAttribute ("to")));
 					break;
 				case "replace-field":
 					entries.Add ((
 						BuildFieldKey (reader.GetAttribute ("source-type"), reader.GetAttribute ("source-field-name"), reader.GetAttribute ("source-field-signature")),
-						$"{reader.GetAttribute ("target-type")}\t{reader.GetAttribute ("target-field-name")}\t{reader.GetAttribute ("target-field-signature")}", false));
+						$"{reader.GetAttribute ("target-type")}\t{reader.GetAttribute ("target-field-name")}\t{reader.GetAttribute ("target-field-signature")}"));
 					break;
 				case "replace-method":
 					entries.Add ((
 						BuildMethodKey (reader.GetAttribute ("source-type"), reader.GetAttribute ("source-method-name"), reader.GetAttribute ("source-method-signature")),
-						$"{reader.GetAttribute ("target-type")}\t{reader.GetAttribute ("target-method-name")}\t{reader.GetAttribute ("target-method-signature")}", false));
+						$"{reader.GetAttribute ("target-type")}\t{reader.GetAttribute ("target-method-name")}\t{reader.GetAttribute ("target-method-signature")}"));
 					break;
 				}
 			}
 			return entries;
 		}
 
-		void AddExistingEntry (string key, string? target, bool externallyOwnedType = false)
+		void AddExistingEntry (string key, string? target)
 		{
 			if (key.Length == 0) {
 				return;
 			}
 			existingEntries [key] = target ?? "";
 			preexistingEntryKeys.Add (key);
-			if (externallyOwnedType) {
-				externallyOwnedTypes.Add (key);
-			}
 		}
 
 		static string BuildTypeKey (string? from) => from.IsNullOrEmpty () ? "" : $"T\t{from}";
