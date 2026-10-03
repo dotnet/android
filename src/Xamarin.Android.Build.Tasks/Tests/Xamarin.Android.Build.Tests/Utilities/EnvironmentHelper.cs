@@ -811,63 +811,36 @@ namespace Xamarin.Android.Build.Tests
 				UseShellExecute = false,
 				RedirectStandardError = true,
 				RedirectStandardOutput = true,
+				InheritedHandles = [],
 			};
 
 			psi.StandardOutputEncoding = Encoding.UTF8;
 			psi.StandardErrorEncoding = Encoding.UTF8;
 
-			var stdout_completed = new ManualResetEventSlim (false);
-			var stderr_completed = new ManualResetEventSlim (false);
-			var stdout_lines = new List <string> ();
-			var stderr_lines = new List <string> ();
-
-			using (var process = new Process ()) {
-				process.StartInfo = psi;
-				process.OutputDataReceived += (s, e) => {
-					if (e.Data != null)
-						stdout_lines.Add (e.Data);
-					else
-						stdout_completed.Set ();
-				};
-
-				process.ErrorDataReceived += (s, e) => {
-					if (e.Data != null)
-						stderr_lines.Add (e.Data);
-					else
-						stderr_completed.Set ();
-				};
-
-				process.Start ();
-				process.BeginOutputReadLine ();
-				process.BeginErrorReadLine ();
-				bool exited = process.WaitForExit ((int)TimeSpan.FromSeconds (60).TotalMilliseconds);
-				bool stdout_done = stdout_completed.Wait (TimeSpan.FromSeconds (30));
-				bool stderr_done = stderr_completed.Wait (TimeSpan.FromSeconds (30));
-
-				if (!exited)
-					TestContext.Out.WriteLine ($"{psi.FileName} {psi.Arguments} timed out");
-				if (process.ExitCode != 0)
-					TestContext.Out.WriteLine ($"{psi.FileName} {psi.Arguments} returned with error code {process.ExitCode}");
-
-				if (!exited || process.ExitCode != 0) {
-					DumpLines ("stdout", stdout_lines);
-					DumpLines ("stderr", stderr_lines);
-					Assert.Fail ($"Command '{psi.FileName} {psi.Arguments}' failed to run or exited with error code");
-				}
+			ProcessTextOutput result;
+			try {
+				result = Process.RunAndCaptureText (psi, TimeSpan.FromSeconds (60));
+			} catch (TimeoutException ex) {
+				Assert.Fail ($"Command '{psi.FileName} {psi.Arguments}' timed out: {ex.Message}");
+				throw;
 			}
+			if (result.ExitStatus.Canceled || result.ExitStatus.ExitCode != 0) {
+				TestContext.Out.WriteLine ($"{psi.FileName} {psi.Arguments} returned with error code {result.ExitStatus.ExitCode}, canceled: {result.ExitStatus.Canceled}");
+				TestContext.Out.WriteLine ($"stdout:{Environment.NewLine}{result.StandardOutput}");
+				TestContext.Out.WriteLine ($"stderr:{Environment.NewLine}{result.StandardError}");
+				Assert.Fail ($"Command '{psi.FileName} {psi.Arguments}' failed to run or exited with error code");
+			}
+
+			var stdout_lines = new List<string> ();
+			var stderr_lines = new List<string> ();
+			using var stdout = new StringReader (result.StandardOutput);
+			using var stderr = new StringReader (result.StandardError);
+			while (stdout.ReadLine () is string line)
+				stdout_lines.Add (line);
+			while (stderr.ReadLine () is string line)
+				stderr_lines.Add (line);
 
 			return (stdout_lines, stderr_lines);
-		}
-
-		static void DumpLines (string streamName, List <string> lines)
-		{
-			if (lines == null || lines.Count == 0)
-				return;
-
-			TestContext.Out.WriteLine ($"{streamName}:");
-			foreach (string line in lines) {
-				TestContext.Out.WriteLine (line);
-			}
 		}
 
 		static bool ConvertFieldToBool (string fieldName, string llvmAssemblerEnvFile, string nativeAssemblerEnvFile, ulong fileLine, string value)

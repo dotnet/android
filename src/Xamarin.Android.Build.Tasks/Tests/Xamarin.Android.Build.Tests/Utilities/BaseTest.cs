@@ -123,31 +123,65 @@ namespace Xamarin.Android.Build.Tests
 
 		protected static (int code, string stdOutput, string stdError) RunApkDiffCommand (string args, string logFilePath)
 		{
+			return RunApkDiffCommandAsync (args, logFilePath).GetAwaiter ().GetResult ();
+		}
+
+		static async Task<(int code, string stdOutput, string stdError)> RunApkDiffCommandAsync (string args, string logFilePath)
+		{
 			var executableName = OperatingSystem.IsWindows () ? "apkdiff.exe" : "apkdiff";
 			var info = new ProcessStartInfo (executableName, $"--verbose {args}") {
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				InheritedHandles = [],
 			};
-			using var stdOutput = new StringWriter ();
-			using var stdError = new StringWriter ();
 			int timeoutInSeconds = TestEnvironment.IsRunningOnCI ? 120 : 30;
-			using var cancellationTokenSource = new CancellationTokenSource (TimeSpan.FromSeconds (timeoutInSeconds));
-			int processId = -1;
-			int exitCode;
+			using var executionDeadline = new CancellationTokenSource (TimeSpan.FromSeconds (timeoutInSeconds));
+			using var outputDeadline = new CancellationTokenSource ();
+			using var process = Process.Start (info) ?? throw new InvalidOperationException ("Failed to start apkdiff.");
+			// Killing on the execution deadline lets the native raw-text reader retain partial diagnostics.
+			async Task<bool> ObserveExitAsync ()
+			{
+				try {
+					await process.WaitForExitAsync (executionDeadline.Token).ConfigureAwait (false);
+					return true;
+				} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
+					if (!process.HasExited) {
+						try {
+							process.Kill (entireProcessTree: true);
+						} catch (InvalidOperationException) when (process.HasExited) {
+							// The process exited before the kill request.
+						}
+						if (!process.WaitForExit (30000))
+							throw new TimeoutException ($"apkdiff process {process.Id} did not exit after termination.");
+					}
+					return false;
+				} finally {
+					outputDeadline.CancelAfter (TimeSpan.FromSeconds (2));
+				}
+			}
+			var exited = ObserveExitAsync ();
+			string stdOutput = "", stdError = "";
+			int exitCode = -1;
 			try {
-				exitCode = Xamarin.Android.Tools.ProcessUtils.StartProcess (
-					info,
-					stdOutput,
-					stdError,
-					cancellationTokenSource.Token,
-					onStarted: process => processId = process.Id
-				).GetAwaiter ().GetResult ();
-			} catch (OperationCanceledException) {
-				exitCode = -1;
-				stdError.WriteLine ($"apkdiff timed out after {timeoutInSeconds} seconds (PID {processId}).");
+				(stdOutput, stdError) = await process.ReadAllTextAsync (outputDeadline.Token).ConfigureAwait (false);
+				bool completed = await exited.ConfigureAwait (false);
+				if (completed)
+					exitCode = process.ExitCode;
+				else
+					stdError += $"{Environment.NewLine}apkdiff timed out after {timeoutInSeconds} seconds (PID {process.Id}).";
+			} catch (OperationCanceledException) when (outputDeadline.IsCancellationRequested) {
+				stdError = $"apkdiff exited or timed out with redirected output still open after 2 seconds (PID {process.Id}).";
+			} finally {
+				using var stdoutReader = process.StandardOutput;
+				using var stderrReader = process.StandardError;
+				executionDeadline.Cancel ();
+				await exited.ConfigureAwait (false);
 			}
 
-			var result = (code: exitCode, stdOutput: stdOutput.ToString ().Trim (), stdError: stdError.ToString ().Trim ());
+			var result = (code: exitCode, stdOutput: stdOutput.Trim (), stdError: stdError.Trim ());
 			var logContent = $"apkdiff exited with code: {exitCode}" +
 				$"\ncontext: https://github.com/dotnet/android/blob/main/Documentation/project-docs/ApkSizeRegressionChecks.md" +
 				$"\nstdOut:\n{result.stdOutput}\nstdErr:\n{result.stdError}";
@@ -165,6 +199,12 @@ namespace Xamarin.Android.Build.Tests
 
 		protected static (int code, string stdOutput, string stdError) RunProcessWithExitCode (string exe, string args, int timeoutInSeconds = 30)
 		{
+			return RunProcessWithExitCodeAsync (exe, args, timeoutInSeconds).GetAwaiter ().GetResult ();
+		}
+
+		static async Task<(int code, string stdOutput, string stdError)> RunProcessWithExitCodeAsync (
+			string exe, string args, int timeoutInSeconds, Action<ProcessOutputLine>? onOutput = null)
+		{
 			TestContext.Out.WriteLine ($"{nameof(RunProcess)}: {exe} {args}");
 			var info = new ProcessStartInfo (exe, args) {
 				RedirectStandardOutput = true,
@@ -172,44 +212,53 @@ namespace Xamarin.Android.Build.Tests
 				UseShellExecute = false,
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
+				InheritedHandles = [],
 			};
-			using (var proc = new Process ()) {
-				StringBuilder standardOutput = new StringBuilder (), errorOutput = new StringBuilder ();
-				var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-				var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-				proc.StartInfo = info;
-				proc.OutputDataReceived += new DataReceivedEventHandler ((sender, e) => {
-					if (e.Data == null)
-						outputDone.TrySetResult (true);
-					else if (!string.IsNullOrEmpty (e.Data))
-						standardOutput.AppendLine (e.Data);
-				});
-				proc.ErrorDataReceived += new DataReceivedEventHandler ((sender, e) => {
-					if (e.Data == null)
-						errorDone.TrySetResult (true);
-					else if (!string.IsNullOrEmpty (e.Data))
-						errorOutput.AppendLine (e.Data);
-				});
-
-				proc.Start ();
-				proc.BeginOutputReadLine ();
-				proc.BeginErrorReadLine ();
-
-				if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (timeoutInSeconds).TotalMilliseconds)) {
-					if (!proc.HasExited)
-						proc.Kill (entireProcessTree: true);
-					TestContext.Out.WriteLine ($"{nameof (RunProcess)} timed out: {exe} {args}");
-					return (-1, null, null); //Don't try to read stdout/stderr
-				}
-
-				// A child process can keep the redirected handles open after adb exits.
-				bool outputDrained = outputDone.Task.Wait (TimeSpan.FromSeconds (2));
-				bool errorDrained = errorDone.Task.Wait (TimeSpan.FromSeconds (2));
-				if (!outputDrained || !errorDrained)
-					TestContext.Out.WriteLine ($"{nameof (RunProcess)}: {exe} exited with redirected output still open.");
-
-				return (proc.ExitCode, standardOutput.ToString ().Trim (), errorOutput.ToString ().Trim ());
+			var standardOutput = new StringBuilder ();
+			var errorOutput = new StringBuilder ();
+			using var executionDeadline = new CancellationTokenSource (TimeSpan.FromSeconds (timeoutInSeconds));
+			using var outputDeadline = CancellationTokenSource.CreateLinkedTokenSource (executionDeadline.Token);
+			using var process = Process.Start (info) ?? throw new InvalidOperationException ($"Failed to start '{exe}'.");
+			async Task LimitOutputDrainAsync ()
+			{
+				await process.WaitForExitAsync (executionDeadline.Token).ConfigureAwait (false);
+				executionDeadline.CancelAfter (Timeout.InfiniteTimeSpan);
+				outputDeadline.CancelAfter (TimeSpan.FromSeconds (2));
 			}
+			var exited = LimitOutputDrainAsync ();
+			try {
+				await foreach (var line in process.ReadAllLinesAsync (outputDeadline.Token).ConfigureAwait (false)) {
+					if (onOutput != null)
+						onOutput (line);
+					else if (line.Content.Length > 0)
+						(line.StandardError ? errorOutput : standardOutput).AppendLine (line.Content);
+				}
+				await exited.ConfigureAwait (false);
+			} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
+				TestContext.Out.WriteLine ($"{nameof (RunProcess)} timed out: {exe} {args}");
+				return (-1, null, null);
+			} catch (OperationCanceledException) when (outputDeadline.IsCancellationRequested) {
+				TestContext.Out.WriteLine ($"{nameof (RunProcess)}: {exe} exited with redirected output still open.");
+			} finally {
+				using var stdoutReader = process.StandardOutput;
+				using var stderrReader = process.StandardError;
+				executionDeadline.Cancel ();
+				try {
+					await exited.ConfigureAwait (false);
+				} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
+					// The execution deadline owns this exit observer.
+				}
+				if (!process.HasExited) {
+					try {
+						process.Kill (entireProcessTree: true);
+					} catch (InvalidOperationException) when (process.HasExited) {
+						// The process exited before the kill request.
+					}
+					if (!process.WaitForExit (30000))
+						throw new TimeoutException ($"Process {process.Id} did not exit after termination.");
+				}
+			}
+			return (process.ExitCode, standardOutput.ToString ().Trim (), errorOutput.ToString ().Trim ());
 		}
 
 		protected string CreateFauxAndroidNdkDirectory (string path)
@@ -392,18 +441,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 			if (IsWindows)
 				return;
-			var chmod = new ProcessStartInfo {
-				FileName                    = "chmod",
-				Arguments                   = $"+x \"{path}\"",
-				UseShellExecute             = false,
-				RedirectStandardInput       = false,
-				RedirectStandardOutput      = true,
-				RedirectStandardError       = true,
-				CreateNoWindow              = true,
-				WindowStyle                 = ProcessWindowStyle.Hidden,
-			};
-			var p = Process.Start (chmod);
-			p.WaitForExit ();
+			var status = Process.Run ("chmod", ["+x", path], timeout: TimeSpan.FromSeconds (30));
+			Assert.IsFalse (status.Canceled, $"chmod timed out for '{path}'.");
+			Assert.AreEqual (0, status.ExitCode, $"chmod failed for '{path}'.");
 		}
 
 		void CreateFauxExecutable (string exeFullPath, StringBuilder sb) {
@@ -521,19 +561,16 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
-			var psi = new ProcessStartInfo {
-				FileName = apksignerExe,
-				Arguments = $"verify \"{apkPath}\"",
+			var psi = new ProcessStartInfo (apksignerExe, ["verify", apkPath]) {
+				CreateNoWindow = true,
+				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
-				UseShellExecute = false,
-				CreateNoWindow = true,
+				InheritedHandles = [],
 			};
-			using var proc = Process.Start (psi) ?? throw new InvalidOperationException ($"Failed to start '{apksignerExe}'.");
-			string stdout = proc.StandardOutput.ReadToEnd ();
-			string stderr = proc.StandardError.ReadToEnd ();
-			proc.WaitForExit ();
-			Assert.AreEqual (0, proc.ExitCode, $"APK file `{apkPath}` is not signed! apksigner verify failed:\n{stderr}\n{stdout}");
+			var result = Process.RunAndCaptureText (psi, TimeSpan.FromSeconds (30));
+			Assert.IsFalse (result.ExitStatus.Canceled, $"apksigner verify timed out for '{apkPath}'.");
+			Assert.AreEqual (0, result.ExitStatus.ExitCode, $"APK file `{apkPath}` is not signed! apksigner verify failed:\n{result.StandardError}\n{result.StandardOutput}");
 		}
 
 		protected string GetResourceDesignerPath (ProjectBuilder builder, XamarinAndroidProject project)
@@ -583,61 +620,10 @@ namespace Xamarin.Android.Build.Tests
 
 		protected bool RunCommand (string command, string arguments)
 		{
-			var psi = new ProcessStartInfo () {
-				FileName		= command,
-				Arguments		= arguments,
-				UseShellExecute		= false,
-				RedirectStandardInput	= false,
-				RedirectStandardOutput	= true,
-				RedirectStandardError	= true,
-				CreateNoWindow		= true,
-				WindowStyle		= ProcessWindowStyle.Hidden,
-			};
-
-			var stderr_completed = new ManualResetEvent (false);
-			var stdout_completed = new ManualResetEvent (false);
-
-			var p = new Process () {
-				StartInfo   = psi,
-			};
-
-			p.ErrorDataReceived += (sender, e) => {
-				if (e.Data == null)
-					stderr_completed.Set ();
-				else
-					Console.WriteLine (e.Data);
-			};
-
-			p.OutputDataReceived += (sender, e) => {
-				if (e.Data == null)
-					stdout_completed.Set ();
-				else
-					Console.WriteLine (e.Data);
-			};
-
-			using (p) {
-				p.StartInfo = psi;
-				p.Start ();
-				p.BeginOutputReadLine ();
-				p.BeginErrorReadLine ();
-
-				bool success = p.WaitForExit (60000);
-
-				// We need to call the parameter-less WaitForExit only if any of the standard
-				// streams have been redirected (see
-				// https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexit?view=netframework-4.7.2#System_Diagnostics_Process_WaitForExit)
-				//
-				p.WaitForExit ();
-				stderr_completed.WaitOne (TimeSpan.FromSeconds (60));
-				stdout_completed.WaitOne (TimeSpan.FromSeconds (60));
-
-				if (!success || p.ExitCode != 0) {
-					Console.Error.WriteLine ($"Process `{command} {arguments}` exited with value {p.ExitCode}.");
-					return false;
-				}
-
-				return true;
-			}
+			var (exitCode, _, _) = RunProcessWithExitCodeAsync (command, arguments, 60, line => Console.WriteLine (line.Content)).GetAwaiter ().GetResult ();
+			if (exitCode != 0)
+				Console.Error.WriteLine ($"Process `{command} {arguments}` exited with value {exitCode}.");
+			return exitCode == 0;
 		}
 
 		protected bool IgnoreUnsupportedConfiguration (AndroidRuntime runtime, bool release = false)

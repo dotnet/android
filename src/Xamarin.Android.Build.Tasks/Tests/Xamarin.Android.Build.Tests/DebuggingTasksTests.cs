@@ -159,37 +159,65 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BuilderDoesNotWaitForInheritedRedirectedOutput ()
 		{
-			if (!IsWindows)
-				Assert.Ignore ("This test reproduces a Windows child process inheriting redirected output.");
-
-			var psi = new ProcessStartInfo (Environment.GetEnvironmentVariable ("ComSpec") ?? "cmd.exe",
-				"/c start \"\" /b powershell -NoProfile -Command \"Start-Sleep -Seconds 8\"") {
-				UseShellExecute = false,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				CreateNoWindow = true,
+			var project = new XamarinAndroidLibraryProject {
+				TargetFramework = "net11.0",
+				Imports = {
+					new Import ("InheritedOutput.targets") {
+						TextContent = () => """
+							<Project>
+							  <UsingTask TaskName="StartInheritedOutput" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
+							    <ParameterGroup>
+							      <SpawnChild ParameterType="System.Boolean" Required="true" />
+							      <PidFile ParameterType="System.String" Required="true" />
+							    </ParameterGroup>
+							    <Task>
+							      <Code Type="Fragment" Language="cs"><![CDATA[
+							        if (SpawnChild) {
+							          bool windows = System.Environment.OSVersion.Platform == System.PlatformID.Win32NT;
+							          using (var child = System.Diagnostics.Process.Start (new System.Diagnostics.ProcessStartInfo (
+							            windows ? "powershell" : "/bin/sh",
+							            windows ? "-NoProfile -Command \"Start-Sleep -Seconds 20\"" : "-c \"sleep 20\"") { UseShellExecute = false })) {
+							            System.IO.File.WriteAllText (PidFile, child.Id.ToString (System.Globalization.CultureInfo.InvariantCulture));
+							          }
+							        }
+							        System.Console.WriteLine ("build-stdout");
+							        System.Console.Error.WriteLine ("build-stderr");
+							        return true;
+							      ]]></Code>
+							    </Task>
+							  </UsingTask>
+							  <Target Name="SpawnOutput" Inputs="$(MSBuildProjectFullPath)" Outputs="$(ChildPidFile)">
+							    <StartInheritedOutput SpawnChild="$(SpawnChild)" PidFile="$(ChildPidFile)" />
+							  </Target>
+							</Project>
+							""",
+					},
+				},
 			};
-			using var process = new Process { StartInfo = psi };
-			var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-			var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-			process.OutputDataReceived += (_, e) => {
-				if (e.Data == null)
-					outputDone.TrySetResult (true);
-			};
-			process.ErrorDataReceived += (_, e) => {
-				if (e.Data == null)
-					errorDone.TrySetResult (true);
-			};
-			Assert.IsTrue (process.Start ());
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
-			Assert.IsTrue (process.WaitForExit (5000), "The parent process should exit promptly.");
-
-			var stopwatch = Stopwatch.StartNew ();
-			Assert.IsFalse (Builder.WaitForRedirectedOutput (outputDone.Task, errorDone.Task));
-			Assert.Less (stopwatch.Elapsed, TimeSpan.FromSeconds (6), "Inherited output handles must not hold the test runner indefinitely.");
-			Assert.IsTrue (outputDone.Task.Wait (TimeSpan.FromSeconds (10)));
-			Assert.IsTrue (errorDone.Task.Wait (TimeSpan.FromSeconds (10)));
+			using var builder = CreateDllBuilder ();
+			builder.AutomaticNuGetRestore = false;
+			builder.MaxCpuCount = 1;
+			string pidFile = Path.GetFullPath (Path.Combine (Root, builder.ProjectDirectory, "child.pid"));
+			string processLog = Path.Combine (Path.GetDirectoryName (pidFile), "process.log");
+			try {
+				Assert.IsTrue (builder.RunTarget (project, "SpawnOutput", parameters: ["SpawnChild=false", $"ChildPidFile=\"{pidFile}\""]));
+				var stopwatch = Stopwatch.StartNew ();
+				Assert.IsTrue (builder.RunTarget (project, "SpawnOutput", parameters: ["SpawnChild=true", $"ChildPidFile=\"{pidFile}\""]));
+				Assert.Less (stopwatch.Elapsed, TimeSpan.FromSeconds (10), "Inherited output must not delay the build until the child exits.");
+				StringAssert.Contains ("build-stdout", File.ReadAllText (processLog));
+				StringAssert.Contains ("build-stderr", File.ReadAllText (processLog));
+				using var log = File.Open (processLog, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+			} finally {
+				if (File.Exists (pidFile)) {
+					int pid = int.Parse (File.ReadAllText (pidFile), System.Globalization.CultureInfo.InvariantCulture);
+					if (Process.TryGetProcessById (pid, out var child)) {
+						using (child) {
+							child.Kill (entireProcessTree: true);
+							Assert.IsTrue (child.WaitForExit (5000), "The fixture child did not exit after cleanup.");
+						}
+					}
+				}
+			}
 		}
 
 		[Test]

@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -38,38 +37,37 @@ namespace Xamarin.ProjectTools
 		/// <returns>A started Process instance. Caller is responsible for disposing.</returns>
 		protected Process ExecuteProcess (string [] args, string workingDirectory = null)
 		{
-			var p = new Process ();
-			p.StartInfo.FileName = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
-			p.StartInfo.Arguments = string.Join (" ", args);
-			p.StartInfo.CreateNoWindow = true;
-			p.StartInfo.UseShellExecute = false;
-			p.StartInfo.RedirectStandardOutput = true;
-			p.StartInfo.RedirectStandardError = true;
+			var psi = new ProcessStartInfo (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet"), string.Join (" ", args)) {
+				CreateNoWindow = true,
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				InheritedHandles = [],
+			};
 			if (!string.IsNullOrEmpty (workingDirectory)) {
-				p.StartInfo.WorkingDirectory = workingDirectory;
+				psi.WorkingDirectory = workingDirectory;
 			}
-			p.StartInfo.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
+			psi.Environment ["DOTNET_MULTILEVEL_LOOKUP"] = "0";
 			// Workaround for dotnet/msbuild#13175: the MSBuild app host needs DOTNET_HOST_PATH
 			// to bootstrap the .NET runtime when spawning TaskHostFactory task hosts (e.g. ILLink).
 			// Without this, builds fail with MSB4221 when using a locally-installed SDK.
-			p.StartInfo.SetEnvironmentVariable ("DOTNET_HOST_PATH", p.StartInfo.FileName);
-			p.StartInfo.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
+			psi.Environment ["DOTNET_HOST_PATH"] = psi.FileName;
+			psi.Environment ["PATH"] = TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH");
 			if (TestEnvironment.UseLocalBuildOutput) {
-				p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
-				p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
+				psi.Environment ["DOTNETSDK_WORKLOAD_MANIFEST_ROOTS"] = TestEnvironment.WorkloadManifestOverridePath;
+				psi.Environment ["DOTNETSDK_WORKLOAD_PACK_ROOTS"] = TestEnvironment.WorkloadPackOverridePath;
 			}
 			if (Directory.Exists (AndroidSdkPath)) {
-				p.StartInfo.SetEnvironmentVariable ("AndroidSdkDirectory", AndroidSdkPath.TrimEnd ('\\'));
+				psi.Environment ["AndroidSdkDirectory"] = AndroidSdkPath.TrimEnd ('\\');
 			}
 			if (Directory.Exists (JavaSdkPath)) {
-				p.StartInfo.SetEnvironmentVariable ("JavaSdkDirectory", JavaSdkPath.TrimEnd ('\\'));
+				psi.Environment ["JavaSdkDirectory"] = JavaSdkPath.TrimEnd ('\\');
 			}
 			foreach (var variable in EnvironmentVariables) {
-				p.StartInfo.SetEnvironmentVariable (variable.Key, variable.Value);
+				psi.Environment [variable.Key] = variable.Value;
 			}
 
-			p.Start ();
-			return p;
+			return Process.Start (psi) ?? throw new InvalidOperationException ($"Failed to start '{psi.FileName}'.");
 		}
 
 		/// <summary>
@@ -79,83 +77,63 @@ namespace Xamarin.ProjectTools
 		/// <returns>Whether or not the command succeeded.</returns>
 		protected bool Execute (params string [] args)
 		{
+			return ExecuteAsync (args).GetAwaiter ().GetResult ();
+		}
+
+		async Task<bool> ExecuteAsync (string [] args)
+		{
 			if (string.IsNullOrEmpty (ProcessLogFile)) {
 				Directory.CreateDirectory (ProjectDirectory);
 				ProcessLogFile = Path.Combine (ProjectDirectory, $"dotnet{DateTime.Now.ToString ("yyyyMMddHHmmssff")}-process.log");
 			}
 
-			var locker = new Lock ();
 			var procOutput = new StringBuilder ();
-			bool succeeded;
-			const int timeoutMilliseconds = 15 * 60 * 1000;
-			const int streamDrainTimeoutMilliseconds = 30 * 1000;
-			const int killTimeoutMilliseconds = 30 * 1000;
-
-			using (var p = ExecuteProcess (args)) {
-				var stderrCompleted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-				var stdoutCompleted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-
-				p.ErrorDataReceived += (sender, e) => {
-					if (e.Data == null) {
-						stderrCompleted.TrySetResult (true);
-					} else {
-						lock (locker)
-							procOutput.AppendLine (e.Data);
-					}
-				};
-				p.OutputDataReceived += (sender, e) => {
-					if (e.Data == null) {
-						stdoutCompleted.TrySetResult (true);
-					} else {
-						lock (locker)
-							procOutput.AppendLine (e.Data);
-					}
-				};
-
-				procOutput.AppendLine ($"Running: {p.StartInfo.FileName} {p.StartInfo.Arguments}");
-				p.BeginOutputReadLine ();
-				p.BeginErrorReadLine ();
-
-				bool completed = p.WaitForExit (timeoutMilliseconds);
-				if (!completed) {
-					procOutput.AppendLine ($"Process timed out after {timeoutMilliseconds}ms.");
-					TryKillProcess (p, procOutput);
-					completed = p.WaitForExit (killTimeoutMilliseconds);
-					if (!completed) {
-						procOutput.AppendLine ($"Process did not exit within {killTimeoutMilliseconds}ms after kill request.");
-					}
+			bool succeeded = false;
+			using var executionDeadline = new CancellationTokenSource (TimeSpan.FromMinutes (15));
+			using var outputDeadline = CancellationTokenSource.CreateLinkedTokenSource (executionDeadline.Token);
+			using var process = ExecuteProcess (args);
+			procOutput.AppendLine ($"Running: {process.StartInfo.FileName} {process.StartInfo.Arguments}");
+			async Task LimitOutputDrainAsync ()
+			{
+				await process.WaitForExitAsync (executionDeadline.Token).ConfigureAwait (false);
+				executionDeadline.CancelAfter (Timeout.InfiniteTimeSpan);
+				outputDeadline.CancelAfter (TimeSpan.FromSeconds (30));
+			}
+			var exited = LimitOutputDrainAsync ();
+			try {
+				await foreach (var line in process.ReadAllLinesAsync (outputDeadline.Token).ConfigureAwait (false))
+					procOutput.AppendLine (line.Content);
+				await exited.ConfigureAwait (false);
+				succeeded = process.ExitCode == 0;
+			} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
+				procOutput.AppendLine ("Process timed out after 15 minutes.");
+			} catch (OperationCanceledException) when (outputDeadline.IsCancellationRequested) {
+				procOutput.AppendLine ("Timed out waiting for redirected output to drain after 30 seconds.");
+				succeeded = process.ExitCode == 0;
+			} finally {
+				using var stdoutReader = process.StandardOutput;
+				using var stderrReader = process.StandardError;
+				executionDeadline.Cancel ();
+				try {
+					await exited.ConfigureAwait (false);
+				} catch (OperationCanceledException) when (executionDeadline.IsCancellationRequested) {
+					// The execution deadline owns this exit observer.
 				}
-
-				if (!stdoutCompleted.Task.Wait (streamDrainTimeoutMilliseconds)) {
-					procOutput.AppendLine ($"Timed out waiting for stdout to drain after {streamDrainTimeoutMilliseconds}ms.");
+				if (!process.HasExited) {
+					try {
+						process.Kill (entireProcessTree: true);
+					} catch (InvalidOperationException) when (process.HasExited) {
+						// The process exited before the kill request.
+					}
+					if (!process.WaitForExit (30000))
+						throw new TimeoutException ($"Process {process.Id} did not exit after termination.");
+					procOutput.AppendLine ("Issued kill request for process tree.");
 				}
-				if (!stderrCompleted.Task.Wait (streamDrainTimeoutMilliseconds)) {
-					procOutput.AppendLine ($"Timed out waiting for stderr to drain after {streamDrainTimeoutMilliseconds}ms.");
-				}
-
-				succeeded = completed && p.ExitCode == 0;
-				procOutput.AppendLine (completed ? $"Exit Code: {p.ExitCode}" : "Exit Code: <not available>");
 			}
 
+			procOutput.AppendLine ($"Exit Code: {process.ExitCode}");
 			File.WriteAllText (ProcessLogFile, procOutput.ToString ());
 			return succeeded;
-		}
-
-		static void TryKillProcess (Process process, StringBuilder procOutput)
-		{
-			try {
-				if (process.HasExited) {
-					return;
-				}
-				process.Kill (entireProcessTree: true);
-				procOutput.AppendLine ("Issued kill request for process tree.");
-			} catch (InvalidOperationException) {
-				// Process has already exited.
-			} catch (Win32Exception ex) {
-				procOutput.AppendLine ($"Failed to kill process tree: {ex.GetType ().Name}: {ex.Message}");
-			} catch (NotSupportedException ex) {
-				procOutput.AppendLine ($"Failed to kill process tree: {ex.GetType ().Name}: {ex.Message}");
-			}
 		}
 
 		public bool New (string template, string output = null, bool noRestore = false)

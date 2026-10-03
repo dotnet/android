@@ -611,11 +611,10 @@ namespace Xamarin.Android.Tools.Tests
 				WindowStyle             = ProcessWindowStyle.Hidden,
 
 			};
-			var proc    = Process.Start (psi);
-			if (!proc.WaitForExit ((int) TimeSpan.FromSeconds(30).TotalMilliseconds)) {
-				proc.Kill ();
-				proc.WaitForExit ();
-			}
+			psi.InheritedHandles = [];
+			var status = Process.Run (psi, TimeSpan.FromSeconds (30));
+			Assert.IsFalse (status.Canceled, $"{exe} timed out.");
+			Assert.AreEqual (0, status.ExitCode, $"{exe} failed.");
 		}
 
 		[Test]
