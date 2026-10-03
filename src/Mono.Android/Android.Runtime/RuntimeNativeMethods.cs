@@ -30,80 +30,11 @@ namespace Android.Runtime
 
 		[LibraryImport (RuntimeConstants.InternalDllName)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial int _monodroid_gref_get ();
-
-		[LibraryImport (RuntimeConstants.InternalDllName)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial int _monodroid_gref_inc ();
-
-		[LibraryImport (RuntimeConstants.InternalDllName)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial int _monodroid_gref_dec ();
-
-		[LibraryImport (RuntimeConstants.InternalDllName)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial int _monodroid_weak_gref_get ();
-
-		[LibraryImport (RuntimeConstants.InternalDllName)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial int _monodroid_weak_gref_inc ();
-
-		[LibraryImport (RuntimeConstants.InternalDllName)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial int _monodroid_weak_gref_dec ();
-
-		[LibraryImport (RuntimeConstants.InternalDllName)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial void _monodroid_detect_cpu_and_architecture (ref ushort built_for_cpu, ref ushort running_on_cpu, ref byte is64bit);
 
 		[LibraryImport (RuntimeConstants.InternalDllName)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial void _monodroid_gc_wait_for_bridge_processing ();
-
-		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial int _monodroid_gref_log (string message);
-
-		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial int _monodroid_gref_log_new (IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string? threadName, int threadId, string? from, int from_writable);
-
-		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial void _monodroid_gref_log_delete (IntPtr handle, byte type, string? threadName, int threadId, string? from, int from_writable);
-
-		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial void _monodroid_weak_gref_new (IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string? threadName, int threadId, string? from, int from_writable);
-
-		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial void _monodroid_weak_gref_delete (IntPtr handle, byte type, string? threadName, int threadId, string? from, int from_writable);
-
-		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial int _monodroid_lref_log_new (int lrefc, IntPtr handle, byte type, string? threadName, int threadId, string from, int from_writable);
-
-		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial void _monodroid_lref_log_delete (int lrefc, IntPtr handle, byte type, string? threadName, int threadId, string from, int from_writable);
-
-		[LibraryImport (RuntimeConstants.InternalDllName)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial IntPtr monodroid_TypeManager_get_java_class_name (IntPtr klass);
-
-		[LibraryImport (RuntimeConstants.InternalDllName)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial int _monodroid_max_gref_get ();
-
-		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial IntPtr clr_typemap_managed_to_java (string fullName, string? assemblyFullName, IntPtr mvid);
-
-		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		[return: MarshalAs (UnmanagedType.U1)]
-		internal static partial bool clr_typemap_java_to_managed (string java_type_name, out IntPtr managed_assembly_name, out uint managed_type_token_id);
 
 		[LibraryImport (RuntimeConstants.InternalDllName, EntryPoint = "clr_initialize_gc_bridge")]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]

@@ -25,7 +25,6 @@ namespace Xamarin.Android.Tasks;
 // (they will be used only to generate comments in the native code)
 sealed class ApplicationConfig
 {
-	public bool   jni_add_native_method_registration_attribute_present;
 	public bool   marshal_methods_enabled;
 	public bool   ignore_split_configs;
 	public uint   number_of_runtime_properties;
@@ -44,7 +43,6 @@ sealed class ApplicationConfig
 	public uint   jnienv_initialize_method_token;
 
 	[NativeAssembler (NumberFormat = LLVMIR.LlvmIrVariableNumberFormat.Hexadecimal)]
-	public uint   jnienv_registerjninatives_method_token;
 	public uint   jni_remapping_replacement_type_count;
 	public uint   jni_remapping_replacement_method_index_entry_count;
 	public string android_package_name = String.Empty;

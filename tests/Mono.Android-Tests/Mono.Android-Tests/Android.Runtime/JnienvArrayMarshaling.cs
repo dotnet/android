@@ -477,9 +477,6 @@ namespace Android.RuntimeTests {
 		[Category ("JNIObjectArray")]
 		public void GetObjectArray_AfterStalePeerLookup ()
 		{
-			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
-				Assert.Ignore ("This test exercises trimmable type map peer creation.");
-
 			var manager = Java.Interop.JniRuntime.CurrentRuntime.ValueManager;
 			IntPtr constructor = JNIEnv.GetMethodID (Java.Lang.Class.Object, "<init>", "()V");
 			IntPtr handle = JNIEnv.NewObject (Java.Lang.Class.Object, constructor);
@@ -518,9 +515,6 @@ namespace Android.RuntimeTests {
 		[Category ("JNIObjectArray")]
 		public async Task GetPeer_ConcurrentLookup_ReturnsRegisteredPeer ()
 		{
-			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
-				Assert.Ignore ("This test exercises trimmable type map peer creation.");
-
 			var manager = Java.Interop.JniRuntime.CurrentRuntime.ValueManager;
 			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.Reset ();
 			var reference = CreateTrimmableRuntimeJavaInteropPeerReference ();
@@ -583,9 +577,6 @@ namespace Android.RuntimeTests {
 		[Category ("JNIObjectArray")]
 		public async Task GetObjectArray_DuringConcurrentPeerLookup ()
 		{
-			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
-				Assert.Ignore ("This test exercises trimmable type map peer creation.");
-
 			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.Reset ();
 			var reference = CreateTrimmableRuntimeJavaInteropPeerReference ();
 			var arrayReference = CreateObjectArrayReference (reference);
