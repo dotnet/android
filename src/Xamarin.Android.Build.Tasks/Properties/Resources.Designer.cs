@@ -1997,6 +1997,13 @@ namespace Xamarin.Android.Tasks.Properties {
             get {
                 return ResourceManager.GetString("XA4325_NativeAotMissingSections", resourceCulture);
             }
+
+        }
+
+        public static string XA4325_NativeAotInvalidDehydration {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotInvalidDehydration", resourceCulture);
+            }
         }
 
         public static string XA4326 {
