@@ -13,8 +13,6 @@ namespace Xamarin.Android.Tasks
 {
 	public class GenerateJniRemappingNativeCode : AndroidTask
 	{
-		internal const string JniRemappingNativeCodeInfoKey = ".:!JniRemappingNativeCodeInfo!:.";
-
 		internal sealed class JniRemappingNativeCodeInfo
 		{
 			public int ReplacementTypeCount             { get; }
@@ -109,12 +107,6 @@ namespace Xamarin.Android.Tasks
 				jniRemappingComposer.ReplacementMethodIndexEntryCount,
 				jniRemappingComposer.ReverseTypeCount,
 				jniRemappingComposer.ReplacementFieldIndexEntryCount
-			);
-
-			BuildEngine4.RegisterTaskObjectAssemblyLocal (
-				ProjectSpecificTaskObjectKey (JniRemappingNativeCodeInfoKey),
-				NativeCodeInfo,
-				RegisteredTaskObjectLifetime.Build
 			);
 		}
 

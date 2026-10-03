@@ -34,11 +34,8 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void IncomingRenamedPeerUsesReverseTypeWithLlvmIrTypeMap ()
+		public void IncomingRenamedPeerUsesReverseTypeWithTrimmableTypeMap ()
 		{
-			if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
-				Assert.Ignore ("This test validates the nontrimmable LLVM-IR typemap path.");
-
 			Assert.AreEqual (
 				typeof (IncomingDeclaredPeer),
 				JniEnvironment.Runtime.TypeManager.GetType (new JniTypeSignature (IncomingDeclaredPeer.RuntimeJniName)));
@@ -60,27 +57,11 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		[NonParallelizable]
-		public void ExplicitRuntimeRegistrationPrecedesReverseTypeWithLlvmIrTypeMap ()
+		public void ExplicitRuntimeRegistrationIsNotSupported ()
 		{
-			if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
-				Assert.Ignore ("This test validates the nontrimmable LLVM-IR typemap path.");
-
-			global::Java.Interop.TypeManager.RegisterType (
+			Assert.Throws<NotSupportedException> (() => global::Java.Interop.TypeManager.RegisterType (
 				ExplicitRegisteredPeer.RuntimeJniName,
-				typeof (ExplicitRegisteredPeer));
-
-			Assert.AreEqual (
-				typeof (ExplicitRegisteredPeer),
-				JniEnvironment.Runtime.TypeManager.GetType (new JniTypeSignature (ExplicitRegisteredPeer.RuntimeJniName)));
-
-			var handle = JNIEnv.CreateInstance (ExplicitRegisteredPeer.RuntimeJniName, "()V");
-			try {
-				using var peer = Java.Lang.Object.GetObject<Java.Lang.Object> (handle, JniHandleOwnership.DoNotTransfer);
-				Assert.IsInstanceOf<ExplicitRegisteredPeer> (peer);
-			} finally {
-				JNIEnv.DeleteLocalRef (handle);
-			}
+				typeof (ExplicitRegisteredPeer)));
 		}
 
 		[TestCase ("(I)I", "exact", "(I)I")]

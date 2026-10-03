@@ -185,10 +185,6 @@
       <FileWrites Include="$(_MonoAndroidUnmanagedCallersOnlyCallbacksTrueStamp);$(_MonoAndroidUnmanagedCallersOnlyCallbacksFalseStamp)" />
     </ItemGroup>
   </Target>
-  <ItemGroup>
-    <JavaCallableWrapperSource Include="java\**\*.java" />
-  </ItemGroup>
-  
   <!-- Generates 'AndroidApiInfo.xml' file -->
   <Target Name="_GenerateAndroidApiInfo"
       BeforeTargets="GetTargetFrameworkProperties;GetReferenceAssemblyPaths;ResolveReferences"
