@@ -241,7 +241,35 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			StringAssert.Contains ("@mm_0", ll);
 			StringAssert.Contains ("@mm_1", ll);
 			StringAssert.Contains ("@mf_0", ll);
+			AssertCompilesLlvm ();
+		}
 
+		[Test]
+		public void DescriptorDistinctR8FieldsReachNativeTables ()
+		{
+			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
+			string xmlFile = Path.Combine (TestDirectory, "r8.xml");
+			File.WriteAllText (mappingFile, """
+				com.contoso.Peer -> a.b:
+				    int value -> integerTarget
+				    java.lang.String value -> stringTarget
+
+				""");
+			var generate = new GenerateR8JniRemapping {
+				BuildEngine = engine, MappingFile = mappingFile, OutputFile = xmlFile,
+			};
+			Assert.IsTrue (generate.Execute ());
+			string ll = RunTask (File.ReadAllText (xmlFile));
+			StringAssert.Contains ("[2 x %struct.JniRemappingIndexFieldEntry]", ll);
+			StringAssert.Contains ("integerTarget", ll);
+			StringAssert.Contains ("stringTarget", ll);
+			StringAssert.Contains ("Ljava/lang/String;", ll);
+			Assert.AreEqual (1, Info.ReplacementFieldIndexEntryCount);
+			AssertCompilesLlvm ();
+		}
+
+		void AssertCompilesLlvm ()
+		{
 			string binUtils = Path.Combine (TestEnvironment.OSBinDirectory, "binutils", "bin");
 			var compile = new CompileNativeAssembly {
 				BuildEngine = engine,
