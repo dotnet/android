@@ -27,6 +27,8 @@ and [Architecture][architecture] pages.
 - The shipped `generator` tool and `generator-Tests` require a .NET 11 or later
   SDK and host runtime. Their framework and output paths are `net11.0`; the
   generator's packaged runtime configuration declares that host requirement.
+  Its .NET 11 targeting pack and runtime are selected explicitly so the
+  repository's preview SDK cannot raise the shipped tool's runtime requirement.
   This does not change Android app targets or the remaining Java.Interop libraries.
 - The [`release/6.0.3xx`][net-6] branch is configured to build with .NET 6.
 
