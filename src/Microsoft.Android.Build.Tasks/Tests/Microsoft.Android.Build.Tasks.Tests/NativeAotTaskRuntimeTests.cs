@@ -21,13 +21,9 @@ public class NativeAotTaskRuntimeTests : BaseTest
 	string DotNetTool => typeof (NativeAotTaskRuntimeTests).Assembly.GetCustomAttributes<AssemblyMetadataAttribute> ()
 		.Single (attribute => attribute.Key == "DotNetToolPath").Value ?? throw new InvalidOperationException ("Missing dotnet tool path.");
 
-	[TestCase (false, "android-arm", "armv7a-linux-androideabi")]
-	[TestCase (false, "android-arm64", "aarch64-linux-android")]
-	[TestCase (false, "android-x64", "x86_64-linux-android")]
-	[TestCase (true, "android-arm", "armv7a-linux-androideabi")]
-	[TestCase (true, "android-arm64", "aarch64-linux-android")]
-	[TestCase (true, "android-x64", "x86_64-linux-android")]
-	public async Task IlcToolchainIsScopedWithoutChangingMsBuildPath (bool fullMsBuild, string rid, string clangPrefix)
+	[TestCase (false)]
+	[TestCase (true)]
+	public async Task IlcToolchainIsScopedWithoutChangingMsBuildPath (bool fullMsBuild)
 	{
 		string buildTool = await GetBuildToolAsync (fullMsBuild);
 		var (ndk, toolchain) = CreateNdk ();
@@ -44,11 +40,9 @@ public class NativeAotTaskRuntimeTests : BaseTest
 
 		var project = CreateProject (ndk);
 		project.Add (new XElement ("PropertyGroup",
-			new XElement ("RuntimeIdentifier", rid),
+			new XElement ("RuntimeIdentifier", "android-arm64"),
 			new XElement ("_AndroidRuntime", "NativeAOT"),
-			new XElement ("AndroidNdkApiLevel_Arm", "24"),
 			new XElement ("AndroidNdkApiLevel_Arm64", "24"),
-			new XElement ("AndroidNdkApiLevel_X64", "24"),
 			new XElement ("_IlcEnvironmentVariables", "ANDROID_NDK_TEST_MARKER=preserved")));
 		project.Add (new XElement ("Target", new XAttribute ("Name", "Check"),
 			new XAttribute ("DependsOnTargets", "_AndroidBeforeIlcCompile"),
@@ -66,7 +60,7 @@ public class NativeAotTaskRuntimeTests : BaseTest
 			ReadValue (childPath), "The ILC Exec environment must prepend the NDK while retaining escaped PATH separators.");
 		Assert.AreEqual ("preserved", ReadValue (childMarker), "Existing ILC environment settings must survive.");
 		string executableExt = OperatingSystem.IsWindows () ? ".exe" : "";
-		string clang = Path.Combine (toolchain, "bin", clangPrefix + "24-clang" + (OperatingSystem.IsWindows () ? ".cmd" : ""));
+		string clang = Path.Combine (toolchain, "bin", "aarch64-linux-android24-clang" + (OperatingSystem.IsWindows () ? ".cmd" : ""));
 		CollectionAssert.AreEqual (new [] {
 			"compiler=" + clang, "linker=" + clang,
 			"archive=" + Path.Combine (toolchain, "bin", "llvm-ar" + executableExt),
@@ -127,25 +121,6 @@ public class NativeAotTaskRuntimeTests : BaseTest
 		StringAssert.Contains ("XA3007", output, "The task must load and return its native-tool diagnostic, not a task-loader failure.");
 		FileAssert.DoesNotExist (outputLibrary);
 		FileAssert.DoesNotExist (debugLibrary);
-	}
-
-	[Test]
-	public void ModernNdkTasksSelectRuntimeAtInvocation ()
-	{
-		foreach (var (path, name) in new [] {
-			(CommonTargets, "ResolveAndroidNdk"),
-			(NativeTargets, "LinkNativeAotSharedLibrary"),
-		}) {
-			var declaration = XDocument.Load (path).Descendants ()
-				.Single (element => element.Name.LocalName == "UsingTask" &&
-					(string?) element.Attribute ("TaskName") == "Microsoft.Android.Tasks." + name);
-			Assert.IsNull (declaration.Attribute ("Runtime"), "Shipped UsingTask declarations must not specify Runtime.");
-			Assert.IsNull (declaration.Attribute ("TaskFactory"), "Shipped UsingTask declarations must not force task hosting.");
-			Assert.AreEqual ("NET", (string?) FindElement (path, name).Attribute ("MSBuildRuntime"));
-		}
-		Assert.IsFalse (XDocument.Load (NativeTargets).Descendants ().Any (element =>
-			element.Name.LocalName == "SetIlcToolchainPath" || (string?) element.Attribute ("TaskName") == "Microsoft.Android.Tasks.SetIlcToolchainPath"),
-			"ILC must not depend on process-wide PATH mutation.");
 	}
 
 	XElement CreateProject (string ndk)

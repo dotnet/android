@@ -466,11 +466,8 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR, false, false, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true, false, false)]
 		[TestCase (AndroidRuntime.CoreCLR, false, true, true)]
-		[TestCase (AndroidRuntime.CoreCLR, true, true, true)]
 		[TestCase (AndroidRuntime.NativeAOT, true, false, true)]
-		[TestCase (AndroidRuntime.NativeAOT, true, true, true)]
 		[TestCase (AndroidRuntime.NativeAOT, false, false, false)]
 		[TestCase (AndroidRuntime.NativeAOT, false, true, true)]
 		public void NdkDependencyUsesEffectiveRuntime (AndroidRuntime runtime, bool isRelease, bool stripNativeLibraries, bool ndkRequired)

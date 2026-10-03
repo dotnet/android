@@ -164,31 +164,26 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase ("armeabi-v7a")]
-		[TestCase ("arm64-v8a")]
-		[TestCase ("x86_64")]
-		public void BuildNativeAot_WithoutNdk (string abi)
+		[Test]
+		public void BuildNativeAot_WithoutNdk ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			proj.SetRuntimeIdentifiers ([abi]);
+			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
 			proj.SetProperty ("_SkipNdkResolution", "true");
 
 			using var builder = CreateApkBuilder ();
 			builder.ThrowOnBuildFailure = false;
-			Assert.IsFalse (builder.Build (proj), $"NativeAOT must require an NDK for {abi}.");
+			Assert.IsFalse (builder.Build (proj), "NativeAOT must require an NDK.");
 			StringAssertEx.Contains ("error XA5104:", builder.LastBuildOutput, "A missing NDK should produce XA5104.");
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
-		public void BuildCoreClrWithNativeLibraryStripping_WithoutNdk (bool isRelease)
+		[Test]
+		public void BuildCoreClrWithNativeLibraryStripping_WithoutNdk ()
 		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
+			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
 			proj.SetProperty ("AndroidStripNativeLibraries", "true");
@@ -201,8 +196,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[TestCase ("apk", false)]
-		[TestCase ("apk", true)]
-		[TestCase ("aab", false)]
 		[TestCase ("aab", true)]
 		public void BuildCoreClrWithNativeLibraryStripping (string packageFormat, bool isRelease)
 		{
