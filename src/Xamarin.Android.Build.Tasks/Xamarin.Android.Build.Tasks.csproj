@@ -177,6 +177,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Microsoft.Android.Build.Tasks\Utilities\EnvironmentBuilder.cs" Link="Utilities\EnvironmentBuilder.cs" />
+    <Compile Include="..\Microsoft.Android.Build.Tasks\Utilities\RuntimeProviderSourceGenerator.cs" Link="Utilities\RuntimeProviderSourceGenerator.cs" />
     <Compile Include="..\..\src-ThirdParty\android-platform-tools-base\PackagingUtils.cs">
       <Link>Utilities\%(Filename)%(Extension)</Link>
     </Compile>

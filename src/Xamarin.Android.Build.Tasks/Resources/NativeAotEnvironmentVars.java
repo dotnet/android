@@ -17,6 +17,11 @@ public class NativeAotEnvironmentVars
 @ENVIRONMENT_VAR_VALUES@
 	};
 
+	// Read by the native host before logging and JNI reference limits are initialized.
+	static final String[] systemProperties = new String[] {
+@SYSTEM_PROPERTIES@
+	};
+
 	public static void Initialize ()
 	{
 		Log.d (TAG, "Initializing environment variables");

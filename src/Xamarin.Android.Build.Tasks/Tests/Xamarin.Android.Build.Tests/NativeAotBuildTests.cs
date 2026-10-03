@@ -65,10 +65,129 @@ namespace Xamarin.Android.Build.Tests
 			foreach (string responseFile in responseFiles) {
 				string response = File.ReadAllText (responseFile);
 				StringAssert.Contains ("libnaot-android.release-static-release.a", response, responseFile);
+				StringAssert.DoesNotContain ("jni_init_funcs.", response, responseFile);
+				StringAssert.DoesNotContain ("environment.", response, responseFile);
 				foreach (string archiveName in CPlusPlusArchiveNames) {
 					StringAssert.DoesNotContain (archiveName, response, responseFile);
 				}
 			}
+			string nativeObject = Path.Combine (intermediateDirectory, MonoAndroidHelper.AbiToRid (abi), "native", proj.ProjectName + ".o");
+			NdkTools ndk = NdkTools.Create (AndroidNdkPath);
+			ndk.OSBinPath = TestEnvironment.OSBinDirectory;
+			string llvmNm = ndk.GetToolPath ("llvm-nm", MonoAndroidHelper.AbiToTargetArch (abi), 0);
+			var (exitCode, standardOutput, standardError) = RunProcessWithExitCode (llvmNm, $"--undefined-only \"{nativeObject}\"");
+			Assert.AreEqual (0, exitCode, $"llvm-nm failed:{Environment.NewLine}{standardError}");
+			CollectionAssert.Contains (standardOutput.Split ('\n').Select (line => line.Trim ()), "U AndroidCryptoNative_InitLibraryOnLoad",
+				"The managed JNI_OnLoad must retain a direct crypto initializer reference even without application crypto calls.");
+		}
+
+		[Test]
+		public void BuildNativeAotBundleWithoutAbiSplits ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				OtherBuildItems = {
+					new BuildItem ("None", "buildConfig.config") {
+						TextContent = () => """
+							{
+							  "optimizations": {
+							    "splitsConfig": {
+							      "splitDimension": [
+							        { "value": "ABI", "negate": true }
+							      ]
+							    }
+							  }
+							}
+							""",
+					},
+					new BuildItem ("AndroidEnvironment", "environment.txt") {
+						TextContent = () => "BOOTSTRAP_TEST=preserved",
+					},
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			proj.SetRuntimeIdentifiers (["arm64-v8a", "x86_64"]);
+			proj.SetProperty ("AndroidPackageFormat", "aab");
+			proj.SetProperty ("AndroidBundleConfigurationFile", "buildConfig.config");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "NativeAOT bundle build without ABI splits should succeed.");
+
+			string intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			var environment = EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate);
+			Assert.AreEqual ("preserved", environment ["BOOTSTRAP_TEST"]);
+			Assert.IsEmpty (Directory.GetFiles (intermediate, "environment.*.ll", SearchOption.AllDirectories));
+		}
+
+		[Test]
+		public void BootstrapLibraryNameChangesWithAssemblyName ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				PackageName = "com.xamarin.bootstraprename",
+				MainActivity = """
+					[Activity (Name = "my.app.MainActivity", MainLauncher = true)]
+					public class MainActivity : Activity
+					{
+						protected override void OnCreate (Bundle? bundle)
+						{
+							base.OnCreate (bundle);
+						}
+					}
+					""",
+				OtherBuildItems = {
+					new BuildItem ("AndroidEnvironment", "environment.txt") {
+						TextContent = () => "BOOTSTRAP_TEST=unchanged",
+					},
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
+			proj.SetProperty ("AndroidPackageFormat", "apk");
+
+			using var builder = CreateApkBuilder ();
+			string [] firstParameters = ["AssemblyName=BootstrapOriginal"];
+			string [] renamedParameters = ["AssemblyName=BootstrapRenamed"];
+			Assert.IsTrue (builder.Build (proj, parameters: firstParameters));
+			builder.AutomaticNuGetRestore = false;
+
+			string projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
+			string intermediate = Path.Combine (projectDirectory, proj.IntermediateOutputPath);
+			string sourceFile = Path.Combine (intermediate, "android", "src", "net", "dot", "jni", "nativeaot", "JavaInteropRuntime.java");
+			string [] inputs = [
+				Path.Combine (projectDirectory, proj.ProjectFilePath),
+				Path.Combine (projectDirectory, "environment.txt"),
+				Path.Combine (intermediate, "AndroidManifest.xml"),
+				Path.Combine (intermediate, "build.props"),
+				Path.GetFullPath (Path.Combine (intermediate, "..", "project.assets.json")),
+			];
+			var inputTimestamps = inputs.Select (File.GetLastWriteTimeUtc).ToArray ();
+			StringAssert.Contains ("NativeLibraryHelper.loadLibrary(\"BootstrapOriginal\", context);", File.ReadAllText (sourceFile));
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, parameters: renamedParameters, saveProject: false));
+			StringAssert.Contains ("NativeLibraryHelper.loadLibrary(\"BootstrapRenamed\", context);", File.ReadAllText (sourceFile));
+			builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateNativeAotBootstrapSources");
+			CollectionAssert.AreEqual (inputTimestamps, inputs.Select (File.GetLastWriteTimeUtc),
+				"The manifest, environment and project must stay unchanged during the command-line AssemblyName change.");
+
+			string packagePath = Path.Combine (projectDirectory, proj.OutputPath, proj.PackageName + "-Signed.apk");
+			using (var package = ZipHelper.OpenZip (packagePath)) {
+				Assert.IsNotNull (package);
+				package.AssertContainsEntry (packagePath, "lib/arm64-v8a/libBootstrapRenamed.so");
+				package.AssertDoesNotContainEntry (packagePath, "lib/arm64-v8a/libBootstrapOriginal.so");
+			}
+
+			string fingerprint = Path.Combine (intermediate, "nativeaot-bootstrap.inputs");
+			FileAssert.Exists (fingerprint);
+			DateTime fingerprintTimestamp = File.GetLastWriteTimeUtc (fingerprint);
+			DateTime sourceTimestamp = File.GetLastWriteTimeUtc (sourceFile);
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, parameters: renamedParameters, saveProject: false));
+			builder.Output.AssertTargetIsSkipped ("_AndroidGenerateNativeAotBootstrapSources");
+			Assert.AreEqual (fingerprintTimestamp, File.GetLastWriteTimeUtc (fingerprint));
+			Assert.AreEqual (sourceTimestamp, File.GetLastWriteTimeUtc (sourceFile));
+
+			Assert.IsTrue (builder.RunTarget (proj, "Clean", doNotCleanupOnUpdate: true, parameters: renamedParameters, saveProject: false));
+			FileAssert.DoesNotExist (fingerprint);
 		}
 
 		[Test]

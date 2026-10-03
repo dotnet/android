@@ -4,7 +4,6 @@
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateEmptyTypemapStub" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotBootstrapSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateCoreClrRuntimeProviderSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
@@ -531,14 +530,6 @@
     <!-- The generated Java Callable Wrappers are compiled in place from
          @(_AdditionalJavaStubDirectory) (see _CompileJava / _FindJavaStubFiles); they are no
          longer copied into android/src. -->
-
-    <!-- NativeAOT bootstrap Java sources depend on environment files, so include them as inputs -->
-    <GenerateNativeAotBootstrapSources
-        Condition=" '$(_AndroidRuntime)' == 'NativeAOT' "
-        OutputDirectory="$(IntermediateOutputPath)android"
-        TargetName="$(TargetName)"
-        Environments="@(_EnvironmentFiles)"
-        AdditionalProviderSources="@(_AdditionalProviderSources)" />
 
     <GenerateCoreClrRuntimeProviderSources
         Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '@(_AdditionalProviderSources->Count())' != '0' "
