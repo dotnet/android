@@ -11,8 +11,7 @@ that Java binding dependencies are satisfied.
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <UsingTask TaskName="Xamarin.Android.Tasks.GetMicrosoftNuGetPackagesMap" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Microsoft.Android.Tasks.JavaDependencyVerification" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
-  <UsingTask TaskName="Microsoft.Android.Tasks.JavaDependencyVerification" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
+  <UsingTask TaskName="Xamarin.Android.Tasks.JavaDependencyVerification" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <Target Name="_VerifyJavaDependencies"
       Condition=" '@(AndroidLibrary->Count())' != '0' "

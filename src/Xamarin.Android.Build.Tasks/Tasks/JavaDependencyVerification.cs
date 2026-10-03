@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using System.Xml;
 using System.Xml.Linq;
 using Java.Interop.Tools.Maven;
 using Java.Interop.Tools.Maven.Models;
@@ -15,10 +14,8 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NuGet.Versioning;
-using Xamarin.Android.Tasks;
-using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Microsoft.Android.Tasks;
+namespace Xamarin.Android.Tasks;
 
 public class JavaDependencyVerification : AndroidTask
 {
@@ -380,10 +377,10 @@ public class NuGetPackageVersionFinder
 
 		foreach (var entry in entries.EnumerateObject ()) {
 			var separator = entry.Name.LastIndexOf ('/');
-			if (separator <= 0 || !NuGetVersion.TryParse (entry.Name [(separator + 1)..], out var version) || version is null)
+			if (separator <= 0 || !NuGetVersion.TryParse (entry.Name.Substring (separator + 1), out var version) || version is null)
 				throw new JsonException ($"Invalid NuGet library '{entry.Name}' in assets file.");
 
-			var name = entry.Name [..separator];
+			var name = entry.Name.Substring (0, separator);
 			var path = entry.Value.TryGetProperty ("path", out var package_path) ? package_path.GetString () : null;
 			var nuspec = entry.Value.TryGetProperty ("files", out var files)
 				? files.EnumerateArray ().Select (file => file.GetString ()).FirstOrDefault (file => file?.EndsWith (".nuspec", StringComparison.OrdinalIgnoreCase) == true)
@@ -397,7 +394,8 @@ public class NuGetPackageVersionFinder
 				libraries.Add (name, versions);
 			}
 
-			versions.TryAdd (version, new Package (path, nuspec));
+			if (!versions.ContainsKey (version))
+				versions.Add (version, new Package (path, nuspec));
 		}
 	}
 
@@ -442,8 +440,7 @@ public class NuGetPackageVersionFinder
 		if (!File.Exists (nuspec))
 			return;
 
-		using var reader = XmlReader.Create (nuspec);
-		var root = XDocument.Load (reader).Root ?? throw new InvalidDataException ($"Missing root element in NuGet specification '{nuspec}'.");
+		var root = XDocument.Load (nuspec).Root ?? throw new InvalidDataException ($"Missing root element in NuGet specification '{nuspec}'.");
 		var ns = root.Name.Namespace;
 		var tags = root.Element (ns + "metadata")?.Element (ns + "tags")?.Value ?? "";
 
@@ -452,7 +449,17 @@ public class NuGetPackageVersionFinder
 		// TODO: Define a well-known file that can be included in the package like "java-package.txt"
 	}
 
-	sealed record Package (string? Path, string? Nuspec);
+	sealed class Package
+	{
+		public Package (string? path, string? nuspec)
+		{
+			Path = path;
+			Nuspec = nuspec;
+		}
+
+		public string? Path { get; }
+		public string? Nuspec { get; }
+	}
 
 	public static void AddArtifactsFromNuspecTags (List<Artifact> artifacts, string tags)
 	{

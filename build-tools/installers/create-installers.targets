@@ -59,6 +59,7 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Options.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Options.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)MULTIDEX_JAR_LICENSE" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Versioning.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)r8.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)bundletool.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime.jar" />
@@ -103,9 +104,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Localization.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Xamarin.Android.Tools.AndroidSdk.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Xamarin.Android.Tools.AndroidSdk.pdb" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Tools.Maven.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Tools.Maven.pdb" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\NuGet.Versioning.dll" />
     <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MicrosoftAndroidSdkOutDir)net\%(Identity)\Microsoft.Android.Build.BaseTasks.resources.dll')" />
     <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MicrosoftAndroidSdkOutDir)net\%(Identity)\Microsoft.Android.Build.Tasks.resources.dll')" />
     <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MicrosoftAndroidSdkOutDir)net\%(Identity)\Java.Interop.Localization.resources.dll')" />

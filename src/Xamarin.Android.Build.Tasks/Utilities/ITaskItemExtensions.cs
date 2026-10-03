@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Android.Build.Tasks;
@@ -34,7 +33,7 @@ namespace Xamarin.Android.Tasks
 			if (value.IsNullOrWhiteSpace ())
 				return defaultValue;
 
-			return (T?)Convert.ChangeType (value, typeof (T), CultureInfo.CurrentCulture);
+			return (T?)Convert.ChangeType (value, typeof (T));
 		}
 
 		public static string? GetRequiredMetadata (this ITaskItem item, string itemName, string name, TaskLoggingHelper log)
@@ -42,7 +41,7 @@ namespace Xamarin.Android.Tasks
 			var value = item.GetMetadata (name);
 
 			if (value.IsNullOrWhiteSpace ()) {
-				log.LogCodedError ("XA4234", Properties.Resources.XA4234, itemName, item.ToString () ?? item.ItemSpec, name);
+				log.LogCodedError ("XA4234", Properties.Resources.XA4234, itemName, item.ToString (), name);
 				return null;
 			}
 
@@ -54,7 +53,7 @@ namespace Xamarin.Android.Tasks
 			value = item.GetMetadata (name);
 
 			if (value.IsNullOrWhiteSpace ()) {
-				log.LogCodedError ("XA4234", Properties.Resources.XA4234, itemName, item.ToString () ?? item.ItemSpec, name);
+				log.LogCodedError ("XA4234", Properties.Resources.XA4234, itemName, item.ToString (), name);
 				return false;
 			}
 

@@ -33,6 +33,7 @@
     <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataPackageVersion)" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+    <PackageReference Include="NuGet.Versioning" Version="$(NuGetApiPackageVersion)" />
     <PackageReference Include="System.Text.Json" Version="8.0.6" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
   </ItemGroup>
