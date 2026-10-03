@@ -6,7 +6,7 @@
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateTypeMapMemberProguardConfiguration" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
-    <_CompileToDalvikDependsOnTargets>$(_CompileToDalvikDependsOnTargets);_AndroidGenerateTypeMapProguardConfiguration;_AndroidGenerateTypeMapMemberProguardConfiguration</_CompileToDalvikDependsOnTargets>
+    <_CompileToDalvikDependsOnTargets>$(_CompileToDalvikDependsOnTargets);_AndroidGenerateCoreClrProguardConfigurationInputs;_AndroidGenerateTypeMapProguardConfiguration;_AndroidGenerateTypeMapMemberProguardConfiguration</_CompileToDalvikDependsOnTargets>
   </PropertyGroup>
 
   <!-- NativeAOT is opt-in until llvm-readobj ships with the workload: the default workload
@@ -21,6 +21,25 @@
       <_AndroidUseTypeMapProguardConfiguration Condition=" '$(ProguardConfigFiles)' == '' ">true</_AndroidUseTypeMapProguardConfiguration>
       <_AndroidUseScopedTypeMapMembers Condition=" '$(_AndroidUseTypeMapProguardConfiguration)' == 'true' ">true</_AndroidUseScopedTypeMapMembers>
     </PropertyGroup>
+  </Target>
+
+  <!-- Removing generated rules from the selected configuration is itself a Dalvik input
+       change, even when no linked assembly or production cache timestamp changes. -->
+  <Target Name="_AndroidGenerateCoreClrProguardConfigurationInputs"
+      Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
+      DependsOnTargets="_AndroidConfigureTypeMapProguard">
+    <PropertyGroup>
+      <_AndroidTypeMapProguardModeFile>$(IntermediateOutputPath)typemap.proguard-mode.inputs</_AndroidTypeMapProguardModeFile>
+      <_CompileToDalvikInputs>$(_CompileToDalvikInputs);$(_AndroidTypeMapProguardModeFile)</_CompileToDalvikInputs>
+    </PropertyGroup>
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <WriteLinesToFile File="$(_AndroidTypeMapProguardModeFile)"
+        Lines="UseTypeMap=$(_AndroidUseTypeMapProguardConfiguration)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidTypeMapProguardModeFile)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_AndroidGenerateNativeAotProguardConfigurationInputs"
@@ -59,7 +78,7 @@
   </Target>
 
   <Target Name="_AndroidExtractTypeMapKeysInputs"
-      DependsOnTargets="_GenerateJavaStubs;_AndroidConfigureTypeMapProguard;_AndroidGenerateNativeAotProguardConfigurationInputs">
+      DependsOnTargets="_GenerateJavaStubs;_AndroidConfigureTypeMapProguard;_AndroidGenerateCoreClrProguardConfigurationInputs;_AndroidGenerateNativeAotProguardConfigurationInputs">
     <PropertyGroup>
       <_AndroidTypeMapKeysFile>$(IntermediateOutputPath)typemap.keys.txt</_AndroidTypeMapKeysFile>
       <_AndroidTypeMapKeysInputsFile>$(IntermediateOutputPath)typemap.keys.inputs</_AndroidTypeMapKeysInputsFile>

@@ -155,6 +155,64 @@ public class TypeMapProguardTargetsTests : BaseTest
 		Assert.AreNotEqual (firstTime, File.GetLastWriteTimeUtc (stamp));
 	}
 
+	[TestCase ("-p:_AndroidEnableTypemapR8Trimming=false")]
+	[TestCase ("-p:RunILLink=false")]
+	[TestCase ("-p:ProguardConfigFiles=custom.cfg")]
+	public void CoreClrModeRoundTripsInvalidateCompileToDalvik (string disableArgument)
+	{
+		var map = Path.Combine (directory, "app.dll");
+		var model = new TypeMapAssemblyData { AssemblyName = "app", ModuleName = "app.dll" };
+		model.Entries.Add (new TypeMapAttributeData {
+			MapKey = "test/Live",
+			ProxyTypeReference = "System.Object, System.Runtime",
+		});
+		using (var stream = File.Create (map)) {
+			new TypeMapAssemblyEmitter (new Version (11, 0, 0, 0)).Emit (model, stream);
+		}
+		var project = CreateProject ("CoreCLR", "trimmable",
+			$"""<ResolvedFileToPublish Include="app.dll" AndroidTypeMapLinkedAssemblies="{SecurityElement.Escape (map)}" />""");
+		var stamp = Path.Combine (directory, "dalvik.stamp");
+		var policy = Path.Combine (directory, "dalvik-policy.txt");
+		var cache = Path.Combine (directory, "obj", "build.props.cache");
+		var keys = Path.Combine (directory, "obj", "typemap.keys.txt");
+		var mode = Path.Combine (directory, "obj", "typemap.proguard-mode.inputs");
+		var mapTime = File.GetLastWriteTimeUtc (map);
+
+		Build (project, "-t:_CompileToDalvik", "-p:_AndroidEnableTypemapR8Trimming=true");
+		StringAssert.Contains ("UseTypeMap=true", File.ReadAllText (policy));
+		var cacheTime = File.GetLastWriteTimeUtc (cache);
+		var keysTime = File.GetLastWriteTimeUtc (keys);
+		AssertIncremental ("true");
+		var enabledTime = File.GetLastWriteTimeUtc (stamp);
+
+		Build (project, "-t:_CompileToDalvik", disableArgument,
+			"-p:_MicrosoftAndroidBuildTasksAssembly=missing.dll");
+		Assert.AreNotEqual (enabledTime, File.GetLastWriteTimeUtc (stamp), "Opt-out must invalidate Dalvik.");
+		StringAssert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (policy));
+		StringAssert.DoesNotContain ("Members=", File.ReadAllText (policy));
+		StringAssert.DoesNotContain ("UseTypeMap=true", File.ReadAllText (mode));
+		Assert.AreEqual (keysTime, File.GetLastWriteTimeUtc (keys), "Opt-out must not extract keys.");
+		AssertIncremental ("", disableArgument, "-p:_MicrosoftAndroidBuildTasksAssembly=missing.dll");
+		var disabledTime = File.GetLastWriteTimeUtc (stamp);
+
+		Build (project, "-t:_CompileToDalvik", "-p:_AndroidEnableTypemapR8Trimming=true");
+		Assert.AreNotEqual (disabledTime, File.GetLastWriteTimeUtc (stamp), "Re-enabling must invalidate Dalvik.");
+		StringAssert.Contains ("UseTypeMap=true", File.ReadAllText (policy));
+		StringAssert.Contains ("Members=", File.ReadAllText (policy));
+		AssertIncremental ("true");
+		Assert.AreEqual (mapTime, File.GetLastWriteTimeUtc (map));
+		Assert.AreEqual (cacheTime, File.GetLastWriteTimeUtc (cache));
+
+		void AssertIncremental (string enabled, params string [] arguments)
+		{
+			var before = File.GetLastWriteTimeUtc (stamp);
+			var modeTime = File.GetLastWriteTimeUtc (mode);
+			Build (project, new [] { "-t:_CompileToDalvik", $"-p:_AndroidEnableTypemapR8Trimming={enabled}" }.Concat (arguments).ToArray ());
+			Assert.AreEqual (before, File.GetLastWriteTimeUtc (stamp), "An unchanged mode should skip Dalvik.");
+			Assert.AreEqual (modeTime, File.GetLastWriteTimeUtc (mode), "An unchanged policy must preserve the state timestamp.");
+		}
+	}
+
 	[TestCase ("NativeAOT", "true", "", "custom-object/retained.o")]
 	[TestCase ("NativeAOT", "false", "", "custom-object/retained.o")]
 	[TestCase ("NativeAOT", "true", "false", "custom-object/retained.o")]
@@ -284,6 +342,8 @@ public class TypeMapProguardTargetsTests : BaseTest
 			    <IntermediateOutputPath>$(MSBuildProjectDirectory)/obj/</IntermediateOutputPath>
 			    <_AndroidBuildPropertiesCache>$(MSBuildProjectDirectory)/obj/build.props.cache</_AndroidBuildPropertiesCache>
 			    <_AcwMapFile>$(MSBuildProjectDirectory)/acw-map.txt</_AcwMapFile>
+			    <_CompileToDalvikDependsOnTargets>_CreatePropertiesCache;_CalculateProguardConfigurationFiles</_CompileToDalvikDependsOnTargets>
+			    <_CompileToDalvikInputs>$(_AndroidBuildPropertiesCache);@(ProguardConfiguration)</_CompileToDalvikInputs>
 			  </PropertyGroup>
 			  <Import Project="{SecurityElement.Escape (targets)}" />
 			  <Target Name="_GenerateJavaStubs">
@@ -302,6 +362,7 @@ public class TypeMapProguardTargetsTests : BaseTest
 			      DependsOnTargets="$(_CompileToDalvikDependsOnTargets)"
 			      Inputs="$(_CompileToDalvikInputs)"
 			      Outputs="$(MSBuildProjectDirectory)/dalvik.stamp">
+			    <WriteLinesToFile File="$(MSBuildProjectDirectory)/dalvik-policy.txt" Lines="UseTypeMap=$(_AndroidUseTypeMapProguardConfiguration);@(_ProguardConfiguration->'Members=%(Identity)')" Overwrite="true" />
 			    <Touch Files="$(MSBuildProjectDirectory)/dalvik.stamp" AlwaysCreate="true" />
 			  </Target>
 			</Project>
