@@ -20,17 +20,13 @@ namespace Android.Runtime
 			public IntPtr          javaVm;
 			public IntPtr          env;
 			public IntPtr          grefLoader;
-			public IntPtr          Loader_loadClass;
-			public IntPtr          grefClass; // TODO: remove, not needed anymore
 			public uint            logCategories;
-			public int             version; // TODO: remove, not needed anymore
 			public int             grefGcThreshold;
 			public IntPtr          grefIGCUserPeer;
 			public byte            brokenExceptionTransitions;
 			public int             packageNamingPolicy;
 			public byte            ioExceptionType;
 			public IntPtr          jniRemappingData;
-			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
 			public IntPtr          propagateUncaughtExceptionFn;
 			public IntPtr          grefLogPath;
@@ -44,14 +40,12 @@ namespace Android.Runtime
 		}
 #pragma warning restore 0649
 
-		internal static bool MarshalMethodsEnabled;
 		internal static bool PropagateExceptions;
 		internal static BoundExceptionType BoundExceptionType;
 		internal static int gref_gc_threshold;
 		internal static int max_gref_count;
 		internal static IntPtr grefIGCUserPeer_class;
 		internal static IntPtr grefGCUserPeerable_class;
-		internal static IntPtr java_class_loader;
 		internal static ReferenceLoggingConfiguration ReferenceLoggingConfiguration;
 
 		internal static JniRuntime? androidRuntime;
@@ -77,7 +71,7 @@ namespace Android.Runtime
 		// NOTE: should have different name than `Initialize` to avoid:
 		// * Assertion at /__w/1/s/src/mono/mono/metadata/icall.c:6258, condition `!only_unmanaged_callers_only' not met
 		// Only used for NativeAOT after the runtime has been created. CoreCLR uses Initialize().
-		internal static void InitializeNativeAotRuntime (JniRuntime runtime, JnienvInitializeArgs args)
+		internal static void InitializeNativeAotRuntime (JniRuntime runtime)
 		{
 			if (!RuntimeFeature.IsNativeAotRuntime) {
 				throw new NotSupportedException ("JNIEnvInit.InitializeNativeAotRuntime can only be used to initialize NativeAOT.");
@@ -110,9 +104,6 @@ namespace Android.Runtime
 				StartupNoGCRegion.Start ();
 			}
 
-			IntPtr total_timing_sequence = IntPtr.Zero;
-			IntPtr partial_timing_sequence = IntPtr.Zero;
-
 			InitializeBeforeRuntimeCreation (*args);
 
 			androidRuntime = new AndroidRuntime (
@@ -139,9 +130,6 @@ namespace Android.Runtime
 			if (RuntimeFeature.JniRemapping) {
 				JniRemappingLookup.Initialize (args.jniRemappingData);
 			}
-			MarshalMethodsEnabled = args.marshalMethodsEnabled;
-			java_class_loader = args.grefLoader;
-
 			BoundExceptionType = (BoundExceptionType)args.ioExceptionType;
 			grefIGCUserPeer_class = args.grefIGCUserPeer;
 			grefGCUserPeerable_class = args.grefGCUserPeerable;

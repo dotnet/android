@@ -6,18 +6,6 @@ using System.Runtime.InteropServices.Java;
 
 namespace Android.Runtime
 {
-	// NOTE: Keep this in sync with the native side in src/native/common/include/managed-interface.hh
-	[Flags]
-	enum TraceKind : uint
-	{
-		Java    = 0x01,
-		Managed = 0x02,
-		Native  = 0x04,
-		Signals = 0x08,
-
-		All     = Java | Managed | Native | Signals,
-	}
-
 	internal unsafe static partial class RuntimeNativeMethods
 	{
 		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]

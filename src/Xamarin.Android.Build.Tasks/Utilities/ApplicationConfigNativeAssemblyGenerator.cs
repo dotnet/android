@@ -184,15 +184,10 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 	public string AndroidPackageName { get; set; } = "";
 	public int NumberOfAssembliesInApk { get; set; }
 	public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
-	public int AndroidRuntimeJNIEnvToken { get; set; }
-	public int JNIEnvInitializeToken { get; set; }
-	public int JniRemappingReplacementTypeCount { get; set; }
-	public int JniRemappingReplacementMethodIndexEntryCount { get; set; }
 	public PackageNamingPolicy PackageNamingPolicy { get; set; }
 	public List<ITaskItem> NativeLibraries { get; set; } = [];
 	public ICollection<ITaskItem>? NativeLibrariesNoJniPreload { get; set; }
 	public ICollection<ITaskItem>? NativeLibrariesAlwaysJniPreload { get; set; }
-	public bool MarshalMethodsEnabled { get; set; }
 	public bool IgnoreSplitConfigs { get; set; }
 	public bool HaveAssemblyStore { get; set; }
 
@@ -263,7 +258,6 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 
 		DsoCacheState dsoState = InitDSOCache ();
 		var app_cfg = new ApplicationConfig {
-			marshal_methods_enabled = MarshalMethodsEnabled,
 			ignore_split_configs = IgnoreSplitConfigs,
 			number_of_runtime_properties = (uint)(runtimeProperties == null ? 0 : runtimeProperties.Count),
 			package_naming_policy = (uint)PackageNamingPolicy,
@@ -273,10 +267,6 @@ class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 			number_of_shared_libraries = (uint)NativeLibraries.Count,
 			bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,
 			number_of_dso_cache_entries = (uint)dsoState.DsoCache.Count,
-			android_runtime_jnienv_class_token = (uint)AndroidRuntimeJNIEnvToken,
-			jnienv_initialize_method_token = (uint)JNIEnvInitializeToken,
-			jni_remapping_replacement_type_count = (uint)JniRemappingReplacementTypeCount,
-			jni_remapping_replacement_method_index_entry_count = (uint)JniRemappingReplacementMethodIndexEntryCount,
 			android_package_name = AndroidPackageName,
 			have_assembly_store = HaveAssemblyStore,
 		};

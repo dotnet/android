@@ -19,7 +19,6 @@ uint8_t uncompressed_assemblies_data_buffer[] = {};
 //
 constexpr char android_package_name[] = "com.xamarin.test";
 const ApplicationConfig application_config = {
-	.marshal_methods_enabled = false,
 	.ignore_split_configs = false,
 	.number_of_runtime_properties = 3,
 	.package_naming_policy = 0,
@@ -29,10 +28,6 @@ const ApplicationConfig application_config = {
 	.bundled_assembly_name_width = 0,
 	.number_of_dso_cache_entries = 2,
 	.number_of_shared_libraries = 2,
-	.android_runtime_jnienv_class_token = 1,
-	.jnienv_initialize_method_token = 2,
-	.jni_remapping_replacement_type_count = 2,
-	.jni_remapping_replacement_method_index_entry_count = 2,
 	.android_package_name = android_package_name,
 	.have_assembly_store = false,
 };
