@@ -64,7 +64,7 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateEmpty ()
 		{
-			Generate (new JniRemappingAssemblyGenerator (Log));
+			Generate (new JniRemappingNativeCodeGenerator (Log));
 		}
 
 		void Generate (string remappingXmlFilePath)
@@ -86,10 +86,10 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			Generate (new JniRemappingAssemblyGenerator (Log, typeReplacements, reverseTypeReplacements, methodReplacements, fieldReplacements));
+			Generate (new JniRemappingNativeCodeGenerator (Log, typeReplacements, reverseTypeReplacements, methodReplacements, fieldReplacements));
 		}
 
-		void Generate (JniRemappingAssemblyGenerator jniRemappingComposer)
+		void Generate (JniRemappingNativeCodeGenerator jniRemappingComposer)
 		{
 			LLVMIR.LlvmIrModule module =  jniRemappingComposer.Construct ();
 
@@ -146,7 +146,6 @@ namespace Xamarin.Android.Tasks
 					if (!haveAllAttributes) {
 						continue;
 					}
-
 					reverseTypeReplacements.Add (new JniRemappingTypeReplacement (from, to));
 				} else if (MonoAndroidHelper.StringEquals ("replace-method", reader.LocalName)) {
 					haveAllAttributes &= GetRequiredAttribute ("source-type", out string sourceType);
@@ -164,10 +163,10 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 
-					string sourceMethodSignature = reader.GetAttribute ("source-method-signature");
+					string sourceMethodSignature = reader.GetAttribute ("source-method-signature") ?? "";
 					// Optional: inputs which predate it (for example the Intune/MAM mapping) keep
 					// the source signature on the target method.
-					string targetMethodSignature = reader.GetAttribute ("target-method-signature");
+					string? targetMethodSignature = reader.GetAttribute ("target-method-signature");
 					methodReplacements.Add (
 						new JniRemappingMethodReplacement (
 							sourceType, sourceMethodName, sourceMethodSignature,
@@ -179,13 +178,12 @@ namespace Xamarin.Android.Tasks
 					haveAllAttributes &= GetRequiredAttribute ("source-field-name", out string sourceFieldName);
 					haveAllAttributes &= GetRequiredAttribute ("target-type", out string targetType);
 					haveAllAttributes &= GetRequiredAttribute ("target-field-name", out string targetFieldName);
-
 					if (!haveAllAttributes) {
 						continue;
 					}
 
-					string sourceFieldSignature = reader.GetAttribute ("source-field-signature");
-					string targetFieldSignature = reader.GetAttribute ("target-field-signature");
+					string sourceFieldSignature = reader.GetAttribute ("source-field-signature") ?? "";
+					string? targetFieldSignature = reader.GetAttribute ("target-field-signature");
 					fieldReplacements.Add (
 						new JniRemappingFieldReplacement (
 							sourceType, sourceFieldName, sourceFieldSignature,
