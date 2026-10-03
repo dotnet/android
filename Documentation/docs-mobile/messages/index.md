@@ -268,6 +268,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4324](xa4324.md): [{arch}] Unable to delete source file '{file}'.
 + [XA4327](xa4327.md): Could not extract Java type map keys from '{0}': {1}
 + [XA4328](xa4328.md): Could not generate typemap ProGuard configuration from '{0}': {1}
++ [XA4329](xa4329.md): Type map XML file '{path}' was not found.
 
 ## XA5xxx: GCC and toolchain
 

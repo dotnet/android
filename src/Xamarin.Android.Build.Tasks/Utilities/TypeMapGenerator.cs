@@ -339,7 +339,7 @@ namespace Xamarin.Android.Tasks
 				var typeMapPath = TypeMapObjectsXmlFile.GetTypeMapObjectsXmlFilePath (assembly);
 
 				if (!File.Exists (typeMapPath)) {
-					log.LogError ($"'{typeMapPath}' not found.");
+					log.LogCodedError ("XA4329", Properties.Resources.XA4329, typeMapPath);
 					return null;
 				}
 
