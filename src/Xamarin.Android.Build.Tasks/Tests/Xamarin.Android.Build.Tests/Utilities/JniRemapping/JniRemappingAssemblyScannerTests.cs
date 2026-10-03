@@ -23,27 +23,15 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void RecordsOnlyMappingsReferencedBySurvivingMetadata ()
 		{
-			string path = Path.Combine (Root, "temp", TestName, "Linked.dll");
-			Directory.CreateDirectory (Path.Combine (Root, "temp", TestName));
-			CreateFixture (path);
-
-			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
+			string path = CreateAssembly (p => CreateFixture (p));
+			R8Mapping mapping = Scan (path, """
 				com.contoso.Peer -> a.b:
 				    void onClick() -> c
 				    int value -> d
 				com.contoso.Unused -> a.e:
 				    void unused() -> f
 
-				"""));
-			var engine = new MockBuildEngine (TestContext.Out);
-			var task = new GenerateR8JniRemapping {
-				BuildEngine = engine,
-			};
-
-			using var stream = File.OpenRead (path);
-			using var peReader = new PEReader (stream);
-			var reader = peReader.GetMetadataReader ();
-			JniRemappingAssemblyScanner.Scan (reader, mapping, new TaskLoggingHelper (task));
+				""");
 
 			CollectionAssert.AreEquivalent (new [] {
 				"C\tcom/contoso/Peer",
@@ -59,24 +47,14 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("System.Private.CoreLib", "System.Runtime", true)]
 		public void TypeMapAttributeRetainsGeneratedMappings (string attributeAssembly, string typeAssembly, bool localAnchor)
 		{
-			string directory = Path.Combine (Root, "temp", TestName);
-			string path = Path.Combine (directory, "TypeMap.dll");
-			Directory.CreateDirectory (directory);
-			CreateTypeMapFixture (path, attributeAssembly: attributeAssembly, typeAssembly: typeAssembly, localAnchor: localAnchor);
-
-			R8Mapping mapping = R8Mapping.Parse (new StringReader ("""
+			string path = CreateAssembly (p => CreateTypeMapFixture (p,
+				attributeAssembly: attributeAssembly, typeAssembly: typeAssembly, localAnchor: localAnchor));
+			R8Mapping mapping = Scan (path, """
 				com.contoso.ProxyPeer -> a.b:
 				    void callback() -> c
 				    int value -> d
 
-				"""));
-			var task = new GenerateR8JniRemapping {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-			};
-
-			using var stream = File.OpenRead (path);
-			using var peReader = new PEReader (stream);
-			JniRemappingAssemblyScanner.Scan (peReader.GetMetadataReader (), mapping, new TaskLoggingHelper (task));
+				""");
 
 			CollectionAssert.AreEquivalent (new [] {
 				"C\tcom/contoso/ProxyPeer",
@@ -92,24 +70,10 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("System.Private.CoreLib", "System.Private.CoreLib", true)]
 		public void SurvivingClassOnlyTypeMapProducesBothDirections (string attributeAssembly, string typeAssembly, bool localAnchor)
 		{
-			string directory = Path.Combine (Root, "temp", TestName);
-			Directory.CreateDirectory (directory);
-			string path = Path.Combine (directory, "TypeMap.dll");
-			CreateTypeMapFixture (path, "com/contoso/Marker", attributeAssembly: attributeAssembly,
-				typeAssembly: typeAssembly, localAnchor: localAnchor);
+			string path = CreateAssembly (p => CreateTypeMapFixture (p, "com/contoso/Marker",
+				attributeAssembly: attributeAssembly, typeAssembly: typeAssembly, localAnchor: localAnchor));
 			byte [] originalBytes = File.ReadAllBytes (path);
-			string mappingFile = Path.Combine (directory, "mapping.txt");
-			File.WriteAllText (mappingFile, "com.contoso.Marker -> a.b:\n");
-			string outputFile = Path.Combine (directory, "remap.xml");
-			var task = new GenerateR8JniRemapping {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				MappingFile = mappingFile,
-				OutputFile = outputFile,
-				LinkedAssemblies = [new Microsoft.Build.Utilities.TaskItem (path)],
-			};
-
-			Assert.IsTrue (task.Execute ());
-			string xml = File.ReadAllText (outputFile);
+			string xml = Generate (path, "com.contoso.Marker -> a.b:\n");
 			StringAssert.Contains ("""<replace-type from="com/contoso/Marker" to="a/b" />""", xml);
 			StringAssert.Contains ("""<reverse-type from="a/b" to="com/contoso/Marker" />""", xml);
 			CollectionAssert.AreEqual (originalBytes, File.ReadAllBytes (path));
@@ -119,60 +83,31 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("System.Private.CoreLib", "System.Private.CoreLib")]
 		public void UnrelatedTypeMapUniverseIsNotParsedAsJni (string attributeAssembly, string typeAssembly)
 		{
-			string directory = Path.Combine (Root, "temp", TestName);
-			Directory.CreateDirectory (directory);
-			string path = Path.Combine (directory, "TypeMap.dll");
-			CreateTypeMapFixture (path, "System.Collections.Generic.IDictionary`2[System.Boolean,System.Boolean]",
-				attributeAssembly: attributeAssembly, typeAssembly: typeAssembly, groupName: "JavaDictionary");
-			var mapping = R8Mapping.Parse (new StringReader ("com.contoso.ProxyPeer -> a.b:\n"));
-			var task = new GenerateR8JniRemapping { BuildEngine = new MockBuildEngine (TestContext.Out) };
-			using var stream = File.OpenRead (path);
-			using var peReader = new PEReader (stream);
-
-			Assert.DoesNotThrow (() => JniRemappingAssemblyScanner.Scan (
-				peReader.GetMetadataReader (), mapping, new TaskLoggingHelper (task)));
+			string path = CreateAssembly (p => CreateTypeMapFixture (p,
+				"System.Collections.Generic.IDictionary`2[System.Boolean,System.Boolean]",
+				attributeAssembly: attributeAssembly, typeAssembly: typeAssembly, groupName: "JavaDictionary"));
+			var mapping = Scan (path, "com.contoso.ProxyPeer -> a.b:\n");
 			CollectionAssert.IsEmpty (mapping.AccessedEntries);
 		}
 
 		[Test]
 		public void UnrelatedMethodAttributesAreNotDecoded ()
 		{
-			string directory = Path.Combine (Root, "temp", TestName);
-			Directory.CreateDirectory (directory);
-			string path = Path.Combine (directory, "Linked.dll");
-			CreateFixture (path, unrelatedAttributes: true);
-			var mapping = R8Mapping.Parse (new StringReader ("com.contoso.Peer -> a.b:\n    void onClick() -> c\n"));
-			var task = new GenerateR8JniRemapping { BuildEngine = new MockBuildEngine (TestContext.Out) };
-			using var stream = File.OpenRead (path);
-			using var peReader = new PEReader (stream);
-
-			Assert.DoesNotThrow (() => JniRemappingAssemblyScanner.Scan (
-				peReader.GetMetadataReader (), mapping, new TaskLoggingHelper (task)));
+			string path = CreateAssembly (p => CreateFixture (p, unrelatedAttributes: true));
+			var mapping = Scan (path, "com.contoso.Peer -> a.b:\n    void onClick() -> c\n");
 			CollectionAssert.Contains (mapping.AccessedEntries, "M\tcom/contoso/Peer\tonClick():void");
 		}
 
 		[Test]
 		public void NameOnlyFieldMetadataRetainsEveryDescriptorVariant ()
 		{
-			string directory = Path.Combine (Root, "temp", TestName);
-			Directory.CreateDirectory (directory);
-			string path = Path.Combine (directory, "Linked.dll");
-			CreateFixture (path);
-			string mappingFile = Path.Combine (directory, "mapping.txt");
-			File.WriteAllText (mappingFile, """
+			string path = CreateAssembly (p => CreateFixture (p));
+			string xml = Generate (path, """
 				com.contoso.Peer -> a.b:
 				    int value -> c
 				    java.lang.String value -> d
 
 				""");
-			string outputFile = Path.Combine (directory, "remap.xml");
-			var task = new GenerateR8JniRemapping {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				MappingFile = mappingFile, OutputFile = outputFile,
-				LinkedAssemblies = [new Microsoft.Build.Utilities.TaskItem (path)],
-			};
-			Assert.IsTrue (task.Execute ());
-			string xml = File.ReadAllText (outputFile);
 			StringAssert.Contains ("source-field-signature=\"I\"", xml);
 			StringAssert.Contains ("source-field-signature=\"Ljava/lang/String;\"", xml);
 			StringAssert.Contains ("target-field-name=\"c\"", xml);
@@ -189,11 +124,8 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Ignore ("Supply ILLinkPath and ILLinkFrameworkDirectory to exercise actual linked metadata.");
 				return;
 			}
-			string directory = Path.Combine (Root, "temp", TestName);
-			Directory.CreateDirectory (directory);
-			string path = Path.Combine (directory, "_Fixture.TypeMap.dll");
-			CreateTypeMapFixture (path, "com/contoso/Marker", localAnchor: true);
-			string linkedDirectory = Path.Combine (directory, "linked");
+			string path = CreateAssembly (p => CreateTypeMapFixture (p, "com/contoso/Marker", localAnchor: true), "_Fixture.TypeMap.dll");
+			string linkedDirectory = Path.Combine (Path.GetDirectoryName (path) ?? throw new AssertionException ("Fixture has no directory."), "linked");
 			var (code, output, error) = RunProcessWithExitCode (
 				Path.Combine (TestEnvironment.DotNetPreviewDirectory, TestEnvironment.IsWindows ? "dotnet.exe" : "dotnet"),
 				$"\"{linker}\" -reference \"{path}\" -a _Fixture.TypeMap all -d \"{frameworkDirectory}\" " +
@@ -206,16 +138,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual ("System.Private.CoreLib", attribute.AttributeType.GetElementType ().Scope.Name);
 				Assert.AreEqual ("System.Private.CoreLib", attribute.Constructor.Parameters [1].ParameterType.Scope.Name);
 			}
-			string mappingFile = Path.Combine (directory, "mapping.txt");
-			File.WriteAllText (mappingFile, "com.contoso.Marker -> a.b:\n");
-			string outputFile = Path.Combine (directory, "remap.xml");
-			var task = new GenerateR8JniRemapping {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				MappingFile = mappingFile, OutputFile = outputFile,
-				LinkedAssemblies = [new Microsoft.Build.Utilities.TaskItem (linkedFile)],
-			};
-			Assert.IsTrue (task.Execute ());
-			string xml = File.ReadAllText (outputFile);
+			string xml = Generate (linkedFile, "com.contoso.Marker -> a.b:\n");
 			StringAssert.Contains ("""<replace-type from="com/contoso/Marker" to="a/b" />""", xml);
 			StringAssert.Contains ("""<reverse-type from="a/b" to="com/contoso/Marker" />""", xml);
 		}
@@ -225,61 +148,63 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("com/contoso/ProxyPeer[1]", false)]
 		public void TypeMapAttributeValidatesAliasSuffix (string key, bool throws)
 		{
-			string directory = Path.Combine (Root, "temp", TestName);
-			string path = Path.Combine (directory, "TypeMap.dll");
-			Directory.CreateDirectory (directory);
-			CreateTypeMapFixture (path, key);
-			R8Mapping mapping = R8Mapping.Parse (new StringReader ("com.contoso.ProxyPeer -> a.b:\n"));
-			var task = new GenerateR8JniRemapping {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-			};
-
-			using var stream = File.OpenRead (path);
-			using var peReader = new PEReader (stream);
-			void Scan () => JniRemappingAssemblyScanner.Scan (peReader.GetMetadataReader (), mapping, new TaskLoggingHelper (task));
+			string path = CreateAssembly (p => CreateTypeMapFixture (p, key));
+			void ScanFixture () => Scan (path, "com.contoso.ProxyPeer -> a.b:\n");
 
 			if (throws) {
-				Assert.Throws<BadImageFormatException> (Scan);
+				Assert.Throws<BadImageFormatException> (ScanFixture);
 			} else {
-				Assert.DoesNotThrow (Scan);
+				Assert.DoesNotThrow (ScanFixture);
 			}
 		}
 
 		[Test]
 		public void TypeMapAttributeValidatesConstructorSignature ()
 		{
-			string directory = Path.Combine (Root, "temp", TestName);
-			string path = Path.Combine (directory, "TypeMap.dll");
-			Directory.CreateDirectory (directory);
-			CreateTypeMapFixture (path, "com/contoso/ProxyPeer", includeTypeArgument: false);
-			R8Mapping mapping = R8Mapping.Parse (new StringReader ("com.contoso.ProxyPeer -> a.b:\n"));
-			var task = new GenerateR8JniRemapping {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-			};
-
-			using var stream = File.OpenRead (path);
-			using var peReader = new PEReader (stream);
-			Assert.Throws<BadImageFormatException> (() =>
-				JniRemappingAssemblyScanner.Scan (peReader.GetMetadataReader (), mapping, new TaskLoggingHelper (task)));
+			string path = CreateAssembly (p => CreateTypeMapFixture (p, "com/contoso/ProxyPeer", includeTypeArgument: false));
+			Assert.Throws<BadImageFormatException> (() => Scan (path, "com.contoso.ProxyPeer -> a.b:\n"));
 		}
 
-		[Test]
-		public void IgnoresUserDefinedTypeMapAttribute ()
+		[TestCase (false)]
+		[TestCase (true)]
+		public void IgnoresUserDefinedTypeMapAttribute (bool localDefinition)
+		{
+			string path = CreateAssembly (p => CreateTypeMapFixture (p, attributeAssembly: "User", userDefinedAttribute: localDefinition));
+			var mapping = Scan (path, "com.contoso.ProxyPeer -> a.b:\n");
+			CollectionAssert.IsEmpty (mapping.AccessedEntries);
+		}
+
+		string CreateAssembly (Action<string> createFixture, string fileName = "Linked.dll")
 		{
 			string directory = Path.Combine (Root, "temp", TestName);
-			string path = Path.Combine (directory, "TypeMap.dll");
 			Directory.CreateDirectory (directory);
-			CreateUserTypeMapFixture (path);
-			R8Mapping mapping = R8Mapping.Parse (new StringReader ("com.contoso.ProxyPeer -> a.b:\n"));
-			var task = new GenerateR8JniRemapping {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-			};
+			string path = Path.Combine (directory, fileName);
+			createFixture (path);
+			return path;
+		}
 
+		R8Mapping Scan (string path, string mappingText)
+		{
+			var mapping = R8Mapping.Parse (new StringReader (mappingText));
+			var task = new GenerateR8JniRemapping { BuildEngine = new MockBuildEngine (TestContext.Out) };
 			using var stream = File.OpenRead (path);
 			using var peReader = new PEReader (stream);
-			Assert.DoesNotThrow (() =>
-				JniRemappingAssemblyScanner.Scan (peReader.GetMetadataReader (), mapping, new TaskLoggingHelper (task)));
-			CollectionAssert.IsEmpty (mapping.AccessedEntries);
+			JniRemappingAssemblyScanner.Scan (peReader.GetMetadataReader (), mapping, new TaskLoggingHelper (task));
+			return mapping;
+		}
+
+		string Generate (string path, string mappingText)
+		{
+			string directory = Path.GetDirectoryName (path) ?? throw new AssertionException ("Fixture has no directory.");
+			string mappingFile = Path.Combine (directory, "mapping.txt");
+			File.WriteAllText (mappingFile, mappingText);
+			string outputFile = Path.Combine (directory, "remap.xml");
+			var task = new GenerateR8JniRemapping {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				MappingFile = mappingFile, OutputFile = outputFile, LinkedAssemblies = [new TaskItem (path)],
+			};
+			Assert.IsTrue (task.Execute ());
+			return File.ReadAllText (outputFile);
 		}
 
 		static void CreateFixture (string path, bool unrelatedAttributes = false)
@@ -328,7 +253,7 @@ namespace Xamarin.Android.Build.Tests
 
 		static void CreateTypeMapFixture (string path, string key = "com/contoso/ProxyPeer[1]", bool includeTypeArgument = true,
 			string attributeAssembly = "System.Runtime.InteropServices", string typeAssembly = "System.Runtime",
-			bool localAnchor = false, string groupName = "Object")
+			bool localAnchor = false, string groupName = "Object", bool userDefinedAttribute = false)
 		{
 			using var assembly = Cecil.AssemblyDefinition.CreateAssembly (
 				new Cecil.AssemblyNameDefinition ("_Fixture.TypeMap", new System.Version (1, 0)),
@@ -339,14 +264,20 @@ namespace Xamarin.Android.Build.Tests
 			var systemRuntimeInteropServices = new Cecil.AssemblyNameReference (attributeAssembly, new Version (11, 0, 0, 0));
 			module.AssemblyReferences.Add (systemRuntime);
 			module.AssemblyReferences.Add (systemRuntimeInteropServices);
-			var attributeType = new Cecil.TypeReference (
-				"System.Runtime.InteropServices",
-				"TypeMapAttribute`1",
-				module,
-				systemRuntimeInteropServices);
-			var closedAttribute = new Cecil.GenericInstanceType (attributeType);
 			var systemObject = new Cecil.TypeReference ("System", "Object", module, systemRuntime);
 			var systemType = new Cecil.TypeReference ("System", "Type", module, systemRuntime);
+			Cecil.TypeReference attributeType;
+			if (userDefinedAttribute) {
+				var definition = AddAttribute (module, module.ImportReference (typeof (System.Attribute)),
+					"System.Runtime.InteropServices", "TypeMapAttribute`1", 1);
+				definition.GenericParameters.Add (new Cecil.GenericParameter ("T", definition));
+				definition.Methods [0].Parameters.Add (new Cecil.ParameterDefinition (systemType));
+				attributeType = definition;
+			} else {
+				attributeType = new Cecil.TypeReference (
+					"System.Runtime.InteropServices", "TypeMapAttribute`1", module, systemRuntimeInteropServices);
+			}
+			var closedAttribute = new Cecil.GenericInstanceType (attributeType);
 			Cecil.TypeReference group;
 			if (localAnchor) {
 				var anchor = new Cecil.TypeDefinition ("", "__TypeMapAnchor",
@@ -374,52 +305,6 @@ namespace Xamarin.Android.Build.Tests
 					systemObject));
 			}
 			assembly.CustomAttributes.Add (attribute);
-			assembly.Write (path);
-		}
-
-		static void CreateUserTypeMapFixture (string path)
-		{
-			using var assembly = Cecil.AssemblyDefinition.CreateAssembly (
-				new Cecil.AssemblyNameDefinition ("TypeMap", new Version (1, 0)),
-				"TypeMap",
-				Cecil.ModuleKind.Dll);
-			Cecil.ModuleDefinition module = assembly.MainModule;
-			var attribute = new Cecil.TypeDefinition (
-				"System.Runtime.InteropServices",
-				"TypeMapAttribute`1",
-				Cecil.TypeAttributes.Public | Cecil.TypeAttributes.Class,
-				module.ImportReference (typeof (Attribute)));
-			attribute.GenericParameters.Add (new Cecil.GenericParameter ("T", attribute));
-			module.Types.Add (attribute);
-			var constructor = new Cecil.MethodDefinition (
-				".ctor",
-				Cecil.MethodAttributes.Public | Cecil.MethodAttributes.SpecialName | Cecil.MethodAttributes.RTSpecialName,
-				module.TypeSystem.Void);
-			constructor.Parameters.Add (new Cecil.ParameterDefinition (module.TypeSystem.String));
-			constructor.Parameters.Add (new Cecil.ParameterDefinition (module.ImportReference (typeof (Type))));
-			var il = constructor.Body.GetILProcessor ();
-			il.Append (Instruction.Create (OpCodes.Ldarg_0));
-			il.Append (Instruction.Create (OpCodes.Call, module.ImportReference (typeof (Attribute).GetConstructor (
-				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
-				null,
-				Type.EmptyTypes,
-				null))));
-			il.Append (Instruction.Create (OpCodes.Ret));
-			attribute.Methods.Add (constructor);
-
-			var closedAttribute = new Cecil.GenericInstanceType (attribute);
-			closedAttribute.GenericArguments.Add (module.TypeSystem.Object);
-			var constructorRef = new Cecil.MethodReference (".ctor", module.TypeSystem.Void, closedAttribute) {
-				HasThis = true,
-			};
-			constructorRef.Parameters.Add (new Cecil.ParameterDefinition (module.TypeSystem.String));
-			constructorRef.Parameters.Add (new Cecil.ParameterDefinition (module.ImportReference (typeof (Type))));
-			var customAttribute = new Cecil.CustomAttribute (constructorRef);
-			customAttribute.ConstructorArguments.Add (new Cecil.CustomAttributeArgument (module.TypeSystem.String, "com/contoso/ProxyPeer"));
-			customAttribute.ConstructorArguments.Add (new Cecil.CustomAttributeArgument (
-				module.ImportReference (typeof (Type)),
-				module.TypeSystem.Object));
-			assembly.CustomAttributes.Add (customAttribute);
 			assembly.Write (path);
 		}
 

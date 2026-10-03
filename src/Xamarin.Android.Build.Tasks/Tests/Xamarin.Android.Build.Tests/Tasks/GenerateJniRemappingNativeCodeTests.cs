@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 
 using Microsoft.Build.Framework;
 using NUnit.Framework;
@@ -259,6 +260,10 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				BuildEngine = engine, MappingFile = mappingFile, OutputFile = xmlFile,
 			};
 			Assert.IsTrue (generate.Execute ());
+			var fields = XDocument.Load (xmlFile).Root?.Elements ("replace-field")
+				.Select (field => ((string?) field.Attribute ("source-field-signature"), (string?) field.Attribute ("target-field-name"))).ToArray ()
+				?? throw new AssertionException ("Generated XML has no root.");
+			CollectionAssert.AreEqual (new [] { ("I", "integerTarget"), ("Ljava/lang/String;", "stringTarget") }, fields);
 			string ll = RunTask (File.ReadAllText (xmlFile));
 			StringAssert.Contains ("[2 x %struct.JniRemappingIndexFieldEntry]", ll);
 			StringAssert.Contains ("integerTarget", ll);

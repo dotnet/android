@@ -158,27 +158,6 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		public static bool IsValidMethodDescriptor (string descriptor)
 			=> TryParseMethodDescriptor (descriptor, out _, out _);
 
-		public static bool IsValidFieldDescriptor (string descriptor)
-		{
-			int i = 0;
-			return descriptor.Length > 0 && TryScanSingleToken (descriptor, ref i, allowVoid: false) && i == descriptor.Length;
-		}
-
-		public static string JniTypeTokenToJavaSource (string token)
-		{
-			int tokenEnd = 0;
-			if (!TryScanSingleToken (token, ref tokenEnd, allowVoid: true) || tokenEnd != token.Length) {
-				throw new ArgumentException ($"Malformed JNI type token '{token}'.", nameof (token));
-			}
-
-			int arrayDepth = 0;
-			while (arrayDepth < token.Length && token [arrayDepth] == '[') {
-				arrayDepth++;
-			}
-
-			return JniTypeTokenToJavaSource (token, arrayDepth);
-		}
-
 		static string JniTypeTokenToJavaSource (string token, int arrayDepth)
 		{
 			string elementJavaName = token [arrayDepth] switch {
@@ -205,12 +184,6 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				result.Append ("[]");
 			}
 			return result.ToString ();
-		}
-
-		public static List<string> MethodDescriptorToJavaParameterTypes (string descriptor)
-		{
-			MethodDescriptorToJavaTypes (descriptor, out var parameterTypes, out _);
-			return parameterTypes;
 		}
 
 		public static void MethodDescriptorToJavaTypes (string descriptor, out List<string> parameterTypes, out string returnType)

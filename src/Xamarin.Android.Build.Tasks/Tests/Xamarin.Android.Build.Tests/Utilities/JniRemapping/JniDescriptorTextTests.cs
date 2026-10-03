@@ -1,4 +1,3 @@
-using System;
 using NUnit.Framework;
 using Xamarin.Android.Tasks.JniRemapping;
 
@@ -54,47 +53,14 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (expected, JniDescriptorText.IsValidMethodDescriptor (descriptor));
 		}
 
-		[TestCase ("I", true)]
-		[TestCase ("[I", true)]
-		[TestCase ("Ljava/lang/Object;", true)]
-		[TestCase ("V", false)]
-		[TestCase ("[V", false)]
-		[TestCase ("L;", false)]
-		[TestCase ("[L;", false)]
-		[TestCase ("Ljava.lang.Object;", false)]
-		[TestCase ("Lfoo[Bar;", false)]
-		[TestCase ("Lfoo//Bar;", false)]
-		[TestCase ("()V", false)]
-		[TestCase ("", false)]
-		public void ValidatesFieldDescriptors (string descriptor, bool expected)
-		{
-			Assert.AreEqual (expected, JniDescriptorText.IsValidFieldDescriptor (descriptor));
-		}
-
 		[Test]
-		public void ConvertsMethodDescriptorToJavaParameterTypes ()
+		public void ConvertsMethodDescriptorToJavaTypes ()
 		{
-			var parameters = JniDescriptorText.MethodDescriptorToJavaParameterTypes ("(Landroid/os/Bundle;I[Ljava/lang/String;)V");
+			JniDescriptorText.MethodDescriptorToJavaTypes ("(Landroid/os/Bundle;I[Ljava/lang/String;)Z",
+				out var parameters, out string returnType);
 
 			CollectionAssert.AreEqual (new [] { "android.os.Bundle", "int", "java.lang.String[]" }, parameters);
-		}
-
-		[Test]
-		public void ConvertsSingleTypeTokenToJavaSource ()
-		{
-			Assert.AreEqual ("boolean", JniDescriptorText.JniTypeTokenToJavaSource ("Z"));
-			Assert.AreEqual ("int[]", JniDescriptorText.JniTypeTokenToJavaSource ("[I"));
-			Assert.AreEqual ("java.lang.Object", JniDescriptorText.JniTypeTokenToJavaSource ("Ljava/lang/Object;"));
-		}
-
-		[TestCase ("")]
-		[TestCase ("[")]
-		[TestCase ("L;")]
-		[TestCase ("Ljava.lang.Object;")]
-		[TestCase ("Lfoo[Bar;")]
-		public void RejectsMalformedSingleTypeToken (string token)
-		{
-			Assert.Throws<ArgumentException> (() => JniDescriptorText.JniTypeTokenToJavaSource (token));
+			Assert.AreEqual ("boolean", returnType);
 		}
 	}
 }
