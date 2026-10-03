@@ -76,7 +76,14 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       DependsOnTargets="_GenerateJavaStubs;_GetGenerateJavaStubsInputs">
     <PropertyGroup>
       <_AndroidNativeAotBootstrapDirectory>$(IntermediateOutputPath)android</_AndroidNativeAotBootstrapDirectory>
+      <_AndroidNativeAotBootstrapInputsFile>$(IntermediateOutputPath)nativeaot-bootstrap.inputs</_AndroidNativeAotBootstrapInputsFile>
     </PropertyGroup>
+    <!-- Command-line AssemblyName changes leave the Java paths and other file inputs unchanged. -->
+    <WriteLinesToFile
+        File="$(_AndroidNativeAotBootstrapInputsFile)"
+        Lines="TargetName=$(TargetName)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
     <!-- Task-generated provider names are not inferred when the typemap generator is skipped. -->
     <GetNativeAotRuntimeProviders ManifestFile="$(IntermediateOutputPath)AndroidManifest.xml">
       <Output TaskParameter="AdditionalProviderSources" ItemName="_AndroidNativeAotRuntimeProvider" />
@@ -91,7 +98,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   <Target Name="_AndroidGenerateNativeAotBootstrapSources"
       BeforeTargets="_FindJavaStubFiles"
       DependsOnTargets="_AndroidGenerateNativeAotBootstrapSourcesInputs"
-      Inputs="@(_EnvironmentFiles);$(IntermediateOutputPath)AndroidManifest.xml;$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
+      Inputs="$(_AndroidNativeAotBootstrapInputsFile);@(_EnvironmentFiles);$(IntermediateOutputPath)AndroidManifest.xml;$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
       Outputs="@(_AndroidNativeAotBootstrapSource)">
     <GenerateNativeAotBootstrapSources
         OutputDirectory="$(_AndroidNativeAotBootstrapDirectory)"
@@ -100,6 +107,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
         AdditionalProviderSources="@(_AndroidNativeAotRuntimeProvider)" />
     <ItemGroup>
       <FileWrites Include="@(_AndroidNativeAotBootstrapSource)" />
+      <FileWrites Include="$(_AndroidNativeAotBootstrapInputsFile)" />
     </ItemGroup>
   </Target>
 

@@ -110,6 +110,77 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BootstrapLibraryNameChangesWithAssemblyName ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				PackageName = "com.xamarin.bootstraprename",
+				MainActivity = """
+					[Activity (Name = "my.app.MainActivity", MainLauncher = true)]
+					public class MainActivity : Activity
+					{
+						protected override void OnCreate (Bundle? bundle)
+						{
+							base.OnCreate (bundle);
+						}
+					}
+					""",
+				OtherBuildItems = {
+					new BuildItem ("AndroidEnvironment", "environment.txt") {
+						TextContent = () => "BOOTSTRAP_TEST=unchanged",
+					},
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
+			proj.SetProperty ("AndroidPackageFormat", "apk");
+
+			using var builder = CreateApkBuilder ();
+			string [] firstParameters = ["AssemblyName=BootstrapOriginal"];
+			string [] renamedParameters = ["AssemblyName=BootstrapRenamed"];
+			Assert.IsTrue (builder.Build (proj, parameters: firstParameters));
+			builder.AutomaticNuGetRestore = false;
+
+			string projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
+			string intermediate = Path.Combine (projectDirectory, proj.IntermediateOutputPath);
+			string sourceFile = Path.Combine (intermediate, "android", "src", "net", "dot", "jni", "nativeaot", "JavaInteropRuntime.java");
+			string [] inputs = [
+				Path.Combine (projectDirectory, proj.ProjectFilePath),
+				Path.Combine (projectDirectory, "environment.txt"),
+				Path.Combine (intermediate, "AndroidManifest.xml"),
+				Path.Combine (intermediate, "build.props"),
+				Path.GetFullPath (Path.Combine (intermediate, "..", "project.assets.json")),
+			];
+			var inputTimestamps = inputs.Select (File.GetLastWriteTimeUtc).ToArray ();
+			StringAssert.Contains ("NativeLibraryHelper.loadLibrary(\"BootstrapOriginal\", context);", File.ReadAllText (sourceFile));
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, parameters: renamedParameters, saveProject: false));
+			StringAssert.Contains ("NativeLibraryHelper.loadLibrary(\"BootstrapRenamed\", context);", File.ReadAllText (sourceFile));
+			builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateNativeAotBootstrapSources");
+			CollectionAssert.AreEqual (inputTimestamps, inputs.Select (File.GetLastWriteTimeUtc),
+				"The manifest, environment and project must stay unchanged during the command-line AssemblyName change.");
+
+			string packagePath = Path.Combine (projectDirectory, proj.OutputPath, proj.PackageName + "-Signed.apk");
+			using (var package = ZipHelper.OpenZip (packagePath)) {
+				Assert.IsNotNull (package);
+				package.AssertContainsEntry (packagePath, "lib/arm64-v8a/libBootstrapRenamed.so");
+				package.AssertDoesNotContainEntry (packagePath, "lib/arm64-v8a/libBootstrapOriginal.so");
+			}
+
+			string fingerprint = Path.Combine (intermediate, "nativeaot-bootstrap.inputs");
+			FileAssert.Exists (fingerprint);
+			DateTime fingerprintTimestamp = File.GetLastWriteTimeUtc (fingerprint);
+			DateTime sourceTimestamp = File.GetLastWriteTimeUtc (sourceFile);
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, parameters: renamedParameters, saveProject: false));
+			builder.Output.AssertTargetIsSkipped ("_AndroidGenerateNativeAotBootstrapSources");
+			Assert.AreEqual (fingerprintTimestamp, File.GetLastWriteTimeUtc (fingerprint));
+			Assert.AreEqual (sourceTimestamp, File.GetLastWriteTimeUtc (sourceFile));
+
+			Assert.IsTrue (builder.RunTarget (proj, "Clean", doNotCleanupOnUpdate: true, parameters: renamedParameters, saveProject: false));
+			FileAssert.DoesNotExist (fingerprint);
+		}
+
+		[Test]
 		public void RestoreNativeAot_AndroidArmRuntimePack ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
