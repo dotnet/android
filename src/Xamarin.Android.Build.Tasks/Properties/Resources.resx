@@ -907,6 +907,10 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
     <value>The NativeAOT object must contain allocated __managedcode and initialized data sections.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, __managedcode.</comment>
   </data>
+  <data name="XA4325_NativeAotInvalidDehydration" xml:space="preserve">
+    <value>The NativeAOT object contains an invalid data dehydration stream.</value>
+    <comment>The following is a literal name and should not be translated: NativeAOT.</comment>
+  </data>
   <data name="XA4326" xml:space="preserve">
     <value>The R8 JNI remapping data is incomplete. {0}</value>
     <comment>The following are literal names and should not be translated: R8, JNI.

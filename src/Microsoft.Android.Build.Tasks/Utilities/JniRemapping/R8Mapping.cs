@@ -27,11 +27,11 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		// original classes to one residual class, so reverse lookup must disambiguate this list.
 		readonly Dictionary<string, List<string>> originalClasses = new Dictionary<string, List<string>> (StringComparer.Ordinal);
 
-		// Original JNI class name -> (original field name -> obfuscated field name).
+		// Name-only lookup index. An empty target denotes descriptor-distinct ambiguous renames.
 		readonly Dictionary<string, Dictionary<string, string>> fields = new Dictionary<string, Dictionary<string, string>> (StringComparer.Ordinal);
 
-		// Original JNI class name -> (original field name -> declared field type, in Java source form).
-		readonly Dictionary<string, Dictionary<string, string>> fieldTypes = new Dictionary<string, Dictionary<string, string>> (StringComparer.Ordinal);
+		// Full JVM field identity includes the declared type, not just the field name.
+		readonly Dictionary<string, Dictionary<(string Name, string Type), string>> typedFields = new (StringComparer.Ordinal);
 
 		// Original JNI class name -> ("name(javaParam,javaParam,...):javaReturn" -> obfuscated method name).
 		readonly Dictionary<string, Dictionary<string, string>> methods = new Dictionary<string, Dictionary<string, string>> (StringComparer.Ordinal);
@@ -138,11 +138,20 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					if (!mapping.fields.TryGetValue (currentOriginalClass, out var classFields)) {
 						mapping.fields [currentOriginalClass] = classFields = new Dictionary<string, string> (StringComparer.Ordinal);
 					}
-					classFields [memberName] = obfuscatedName;
-					if (!mapping.fieldTypes.TryGetValue (currentOriginalClass, out var classFieldTypes)) {
-						mapping.fieldTypes [currentOriginalClass] = classFieldTypes = new Dictionary<string, string> (StringComparer.Ordinal);
+					if (classFields.TryGetValue (memberName, out string? existing) && existing != obfuscatedName) {
+						classFields [memberName] = "";
+					} else if (existing == null) {
+						classFields [memberName] = obfuscatedName;
 					}
-					classFieldTypes [memberName] = javaReturnType ?? "";
+					if (!mapping.typedFields.TryGetValue (currentOriginalClass, out var classTypedFields)) {
+						mapping.typedFields [currentOriginalClass] = classTypedFields = new ();
+					}
+					var fieldKey = (memberName, javaReturnType ?? "");
+					if (classTypedFields.TryGetValue (fieldKey, out string? existingField) && existingField != obfuscatedName) {
+						classTypedFields [fieldKey] = "";
+					} else if (existingField == null) {
+						classTypedFields [fieldKey] = obfuscatedName;
+					}
 				} else {
 					string key = BuildMethodKey (memberName, javaParameterTypes, javaReturnType ?? "");
 					if (positionRange == null) {
@@ -199,14 +208,19 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 		void BuildReverseMemberIndexes ()
 		{
-			foreach (var classEntry in fields) {
+			foreach (var classEntry in typedFields) {
 				var reverse = new Dictionary<string, List<string>> (StringComparer.Ordinal);
 				originalFields [classEntry.Key] = reverse;
 				foreach (var field in classEntry.Value) {
+					if (field.Value.Length == 0) {
+						continue;
+					}
 					if (!reverse.TryGetValue (field.Value, out var originalNames)) {
 						reverse [field.Value] = originalNames = new List<string> ();
 					}
-					originalNames.Add (field.Key);
+					if (!originalNames.Contains (field.Key.Name)) {
+						originalNames.Add (field.Key.Name);
+					}
 				}
 			}
 
@@ -296,11 +310,18 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			return true;
 		}
 
+		internal void RecordFieldAccess (string owningJniClassName, string originalFieldName)
+		{
+			if (fields.TryGetValue (owningJniClassName, out var classFields) && classFields.ContainsKey (originalFieldName)) {
+				RecordAccess (BuildClassEntry (owningJniClassName), BuildFieldEntry (owningJniClassName, originalFieldName));
+			}
+		}
+
 		internal bool TryPeekRenamedField (string owningJniClassName, string originalFieldName, out string obfuscatedFieldName)
 		{
 			obfuscatedFieldName = "";
 			if (!fields.TryGetValue (owningJniClassName, out var classFields) ||
-					!classFields.TryGetValue (originalFieldName, out string? renamed)) {
+					!classFields.TryGetValue (originalFieldName, out string? renamed) || renamed.Length == 0) {
 				return false;
 			}
 			obfuscatedFieldName = renamed;
@@ -395,12 +416,15 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					break;
 				case "F" when parts.Length == 3:
 					if (!finalMapping.IsRemovedClass (parts [1]) &&
-							fields.TryGetValue (parts [1], out var seedFields) &&
-							seedFields.TryGetValue (parts [2], out string? seedFieldName) &&
-							finalMapping.fields.TryGetValue (parts [1], out var finalFields) &&
-							finalFields.TryGetValue (parts [2], out string? finalFieldName) &&
-							!String.Equals (seedFieldName, finalFieldName, StringComparison.Ordinal)) {
-						yield return $"field '{parts [1]}.{parts [2]}': seed name '{seedFieldName}', final name '{finalFieldName}'";
+							typedFields.TryGetValue (parts [1], out var seedFields) &&
+							finalMapping.typedFields.TryGetValue (parts [1], out var finalFields)) {
+						foreach (var field in seedFields) {
+							if (field.Key.Name == parts [2] && field.Value.Length != 0 &&
+									finalFields.TryGetValue (field.Key, out string? finalName) && finalName.Length != 0 &&
+									!String.Equals (field.Value, finalName, StringComparison.Ordinal)) {
+								yield return $"field '{parts [1]}.{parts [2]}': seed name '{field.Value}', final name '{finalName}'";
+							}
+						}
 					}
 					break;
 				case "M" when parts.Length == 3:
@@ -450,7 +474,14 @@ namespace Xamarin.Android.Tasks.JniRemapping
 						}
 						continue;
 					}
-					if (!finalMapping.fields.TryGetValue (parts [1], out var finalFields) || !finalFields.ContainsKey (parts [2])) {
+					bool missingField = !finalMapping.typedFields.TryGetValue (parts [1], out var finalFields);
+					foreach (var field in typedFields [parts [1]]) {
+						if (field.Key.Name == parts [2] && field.Value.Length != 0 &&
+								(finalFields == null || !finalFields.TryGetValue (field.Key, out string? finalName) || finalName.Length == 0)) {
+							missingField = true;
+						}
+					}
+					if (missingField) {
 						yield return $"field '{parts [1]}.{parts [2]}'";
 					}
 					break;
@@ -500,17 +531,19 @@ namespace Xamarin.Android.Tasks.JniRemapping
 		List<R8FieldMapping> EnumerateFieldMappings (string originalClassName)
 		{
 			var result = new List<R8FieldMapping> ();
-			if (!fields.TryGetValue (originalClassName, out var classFields)) {
+			if (!typedFields.TryGetValue (originalClassName, out var classFields)) {
 				return result;
 			}
 
-			var fieldNames = new List<string> (classFields.Keys);
-			fieldNames.Sort (StringComparer.Ordinal);
-			fieldTypes.TryGetValue (originalClassName, out var classFieldTypes);
-			foreach (string fieldName in fieldNames) {
-				string? javaFieldType = null;
-				classFieldTypes?.TryGetValue (fieldName, out javaFieldType);
-				result.Add (new R8FieldMapping (fieldName, classFields [fieldName], javaFieldType ?? ""));
+			var fieldKeys = new List<(string Name, string Type)> (classFields.Keys);
+			fieldKeys.Sort ((left, right) => {
+				int comparison = StringComparer.Ordinal.Compare (left.Name, right.Name);
+				return comparison != 0 ? comparison : StringComparer.Ordinal.Compare (left.Type, right.Type);
+			});
+			foreach (var key in fieldKeys) {
+				if (classFields [key].Length != 0) {
+					result.Add (new R8FieldMapping (key.Name, classFields [key], key.Type));
+				}
 			}
 			return result;
 		}

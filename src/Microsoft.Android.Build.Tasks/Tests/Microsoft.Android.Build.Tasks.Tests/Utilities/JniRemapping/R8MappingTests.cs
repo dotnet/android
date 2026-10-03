@@ -641,6 +641,48 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.AreEqual (new [] { "int" }, classes [1].Methods [0].JavaParameterTypes);
 		}
 
+		[Test]
+		public void PreservesSameNamedFieldsWithDistinctDescriptors ()
+		{
+			var mapping = R8Mapping.Parse (new StringReader ("""
+				com.contoso.Peer -> a.b:
+				    int value -> a
+				    java.lang.String value -> b
+
+				"""));
+			var classes = new System.Collections.Generic.List<R8ClassMapping> (mapping.EnumerateClassMappings ());
+
+			Assert.AreEqual (2, classes [0].Fields.Count);
+			Assert.AreEqual ("int", classes [0].Fields [0].JavaFieldType);
+			Assert.AreEqual ("a", classes [0].Fields [0].ObfuscatedName);
+			Assert.AreEqual ("java.lang.String", classes [0].Fields [1].JavaFieldType);
+			Assert.AreEqual ("b", classes [0].Fields [1].ObfuscatedName);
+			Assert.IsFalse (mapping.TryGetRenamedField ("com/contoso/Peer", "value", out _),
+				"A name-only lookup must not choose an arbitrary descriptor's target.");
+		}
+
+		[Test]
+		public void FieldCompatibilityAndReachabilityUseDescriptorIdentity ()
+		{
+			var seed = R8Mapping.Parse (new StringReader ("""
+				com.contoso.Peer -> a.b:
+				    int value -> a
+				    java.lang.String value -> b
+
+				"""));
+			var final = R8Mapping.Parse (new StringReader ("""
+				com.contoso.Peer -> a.b:
+				    int value -> c
+
+				"""));
+			string [] required = ["F\tcom/contoso/Peer\tvalue"];
+			CollectionAssert.AreEqual (new [] {
+				"field 'com/contoso/Peer.value': seed name 'a', final name 'c'",
+			}, seed.GetCompatibilityConflicts (final, required));
+			CollectionAssert.AreEqual (new [] {
+				"field 'com/contoso/Peer.value'",
+			}, seed.GetReachabilityConflicts (final, required));
+		}
 		[TestCase ("run(int):void", true)]
 		[TestCase ("run():java.lang.String", true)]
 		[TestCase ("missing", false)]

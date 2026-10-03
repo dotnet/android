@@ -124,7 +124,7 @@ namespace Microsoft.Android.Tasks
 						LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_AssemblyHasNoMetadata, path));
 						continue;
 					}
-					JniRemappingAssemblyScanner.Scan (peReader, peReader.GetMetadataReader (), mapping, Log);
+					JniRemappingAssemblyScanner.Scan (peReader.GetMetadataReader (), mapping, Log);
 				} catch (BadImageFormatException ex) {
 					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_AssemblyReadFailure, path, ex.Message));
 				} catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) {
@@ -372,15 +372,23 @@ namespace Microsoft.Android.Tasks
 				try {
 					using var stream = File.OpenRead (file);
 					using var reader = XmlReader.Create (stream, readerSettings);
-					ReadExistingEntries (reader);
+					if (reader.MoveToContent () != XmlNodeType.Element || reader.LocalName != "replacements") {
+						Log.LogDebugMessage ($"Existing remapping input `{file}` has no replacements root; MergeRemapXml will ignore it.");
+						continue;
+					}
+					var entries = ReadExistingEntries (reader);
+					foreach (var entry in entries) {
+						AddExistingEntry (entry.Key, entry.Target, entry.ExternallyOwnedType);
+					}
 				} catch (Exception ex) when (ex is XmlException || ex is IOException || ex is UnauthorizedAccessException) {
 					Log.LogDebugMessage ($"Existing remapping input `{file}` could not be read: {ex.Message}");
 				}
 			}
 		}
 
-		void ReadExistingEntries (XmlReader reader)
+		List<(string Key, string? Target, bool ExternallyOwnedType)> ReadExistingEntries (XmlReader reader)
 		{
+			var entries = new List<(string Key, string? Target, bool ExternallyOwnedType)> ();
 			while (reader.Read ()) {
 				if (reader.NodeType != XmlNodeType.Element) {
 					continue;
@@ -388,23 +396,24 @@ namespace Microsoft.Android.Tasks
 
 				switch (reader.LocalName) {
 				case "replace-type":
-					AddExistingEntry (BuildTypeKey (reader.GetAttribute ("from")), reader.GetAttribute ("to"), externallyOwnedType: true);
+					entries.Add ((BuildTypeKey (reader.GetAttribute ("from")), reader.GetAttribute ("to"), true));
 					break;
 				case "reverse-type":
-					AddExistingEntry (BuildReverseTypeKey (reader.GetAttribute ("from")), reader.GetAttribute ("to"));
+					entries.Add ((BuildReverseTypeKey (reader.GetAttribute ("from")), reader.GetAttribute ("to"), false));
 					break;
 				case "replace-field":
-					AddExistingEntry (
+					entries.Add ((
 						BuildFieldKey (reader.GetAttribute ("source-type"), reader.GetAttribute ("source-field-name"), reader.GetAttribute ("source-field-signature")),
-						$"{reader.GetAttribute ("target-type")}\t{reader.GetAttribute ("target-field-name")}\t{reader.GetAttribute ("target-field-signature")}");
+						$"{reader.GetAttribute ("target-type")}\t{reader.GetAttribute ("target-field-name")}\t{reader.GetAttribute ("target-field-signature")}", false));
 					break;
 				case "replace-method":
-					AddExistingEntry (
+					entries.Add ((
 						BuildMethodKey (reader.GetAttribute ("source-type"), reader.GetAttribute ("source-method-name"), reader.GetAttribute ("source-method-signature")),
-						$"{reader.GetAttribute ("target-type")}\t{reader.GetAttribute ("target-method-name")}\t{reader.GetAttribute ("target-method-signature")}");
+						$"{reader.GetAttribute ("target-type")}\t{reader.GetAttribute ("target-method-name")}\t{reader.GetAttribute ("target-method-signature")}", false));
 					break;
 				}
 			}
+			return entries;
 		}
 
 		void AddExistingEntry (string key, string? target, bool externallyOwnedType = false)
