@@ -1952,6 +1952,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Type map XML file &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4329 {
+            get {
+                return ResourceManager.GetString("XA4329", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>
         public static string XA5101 {
