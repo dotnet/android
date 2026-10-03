@@ -10,6 +10,10 @@ Mapping of test area keywords to assemblies, filters, and build prerequisites.
   - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `./dotnet-local.sh build Microsoft.Android.slnx -c Debug` or `make prepare && make all`.
 - **Device**: Whether an Android device/emulator is required.
 
+The native process harnesses, SDK fixtures, and `vswhere` select the
+`11.0.0-rtm.26479.103` runtime and targeting pack explicitly. This keeps the pinned
+.NET 12 CI SDK from silently raising the requirement behind their `net11.0` paths.
+
 ---
 
 ## Standalone Tests — No Local SDK Required
