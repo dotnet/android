@@ -4,6 +4,8 @@
 
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <RuntimeFrameworkVersion Condition=" '$(TargetFramework)' == 'net11.0' ">11.0.0-rtm.26479.103</RuntimeFrameworkVersion>
+    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet11/nuget/v3/index.json</RestoreAdditionalProjectSources>
     <OutputPath>..\..\..\..\bin\Test$(Configuration)</OutputPath>
     <IsPackable>false</IsPackable>
     <SignAssembly>true</SignAssembly>
@@ -14,6 +16,7 @@
   <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
 
   <ItemGroup>
+    <FrameworkReference Update="Microsoft.NETCore.App" TargetingPackVersion="$(RuntimeFrameworkVersion)" Condition=" '$(TargetFramework)' == 'net11.0' " />
     <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\MockBuildEngine.cs" Link="MockBuildEngine.cs" />
   </ItemGroup>
 

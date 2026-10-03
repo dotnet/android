@@ -63,6 +63,13 @@ Installer.Common, Java.Interop libraries, and repository publishing tools keep
 their own target frameworks. The selected Java.Interop bootstrap/test consumers
 use truthful .NET 11 paths, not .NET 10 aliases.
 
+These owners explicitly select the .NET 11 runtime and targeting pack
+`11.0.0-rtm.26479.103`. The repository's pinned .NET 12 preview SDK otherwise
+maps even `net11.0` to its own .NET 12 runtime and reference pack. A target
+framework label alone is not a runtime floor: shipped tooling must also load
+on the declared .NET 11 host. The settings and restore feed are owner-scoped;
+global SDK pins and unrelated frameworks are unchanged.
+
 ## Contributing
 
 Follow the repository's [contribution guidelines](../../CONTRIBUTING.md).
