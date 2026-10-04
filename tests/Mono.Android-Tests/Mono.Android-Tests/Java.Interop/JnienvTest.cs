@@ -116,7 +116,7 @@ namespace Java.InteropTests
 				using (var o = Java.Lang.Object.GetObject<Java.Lang.Object>(env, instance, JniHandleOwnership.DoNotTransfer)) {
 					if (o == null) {
 						// Report on the test thread, not across the native callback boundary.
-						missingObject = true;
+						Volatile.Write (ref missingObject, true);
 						return;
 					}
 					Android.Util.Log.Info ("ThreadReuse", "CrossThreadObjectInteractions: o.Handle={0}", o.Handle.ToString ("x"));
@@ -124,7 +124,7 @@ namespace Java.InteropTests
 			};
 			rt_invoke_callback_on_new_thread (cb);
 			GC.KeepAlive (cb);
-			Assert.IsFalse (missingObject, "GetObject returned null for a nonzero callback instance");
+			Assert.IsFalse (Volatile.Read (ref missingObject), "GetObject returned null for a nonzero callback instance");
 		}
 
 		[Test]
