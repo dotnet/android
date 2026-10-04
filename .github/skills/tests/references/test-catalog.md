@@ -13,6 +13,10 @@ Mapping of test area keywords to assemblies, filters, and build prerequisites.
 The native process harnesses, SDK fixtures, and `vswhere` select the
 `11.0.0-rtm.26479.103` runtime and targeting pack explicitly. This keeps the pinned
 .NET 12 CI SDK from silently raising the requirement behind their `net11.0` paths.
+SDK fixture CI jobs provision that pinned SDK before building or launching tests;
+an arbitrary .NET 11 preview host may be older than the declared runtime floor.
+The host/device suites declare their own LZ4 dependency for the linked
+assembly-store inspection sources, independently of the shared MSBuild imports.
 
 ---
 
