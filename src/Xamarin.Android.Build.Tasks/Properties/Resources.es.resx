@@ -1106,8 +1106,8 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 </comment>
   </data>
   <data name="XA1049" xml:space="preserve">
-    <value>Las propiedades de MSBuild "AndroidEnableMarshalMethods" y "PublishReadyToRun" no se pueden establecer a la vez en "true". Establezca una propiedad en "false".</value>
-    <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
+    <value>The 'AndroidEnableMarshalMethods' MSBuild property is no longer supported. Remove it or set it to 'false'.</value>
+    <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, MSBuild, false.</comment>
   </data>
   <data name="XA1050" xml:space="preserve">
     <value>La propiedad "AndroidR8ObfuscationMode" de MSBuild tiene un valor no válido de '{0}'. Los valores válidos son "disabled" y "private-members".</value>
