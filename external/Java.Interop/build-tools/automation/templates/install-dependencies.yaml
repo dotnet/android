@@ -7,8 +7,16 @@ steps:
   inputs:
     version: $(DotNetCoreVersion)
 
-- task: UseDotNet@2
-  displayName: Use .NET 11 for native SDK discovery/bootstrap consumers
-  inputs:
-    version: 11.0.x
-    includePreviewVersions: true
+- pwsh: |
+    $dotnetRoot = "$(System.DefaultWorkingDirectory)/bin/$(Build.Configuration)/dotnet"
+    if ($IsWindows) {
+        & "$(System.DefaultWorkingDirectory)/eng/install-dotnet.ps1" -configuration "$(Build.Configuration)"
+        $dotnetPath = Join-Path $dotnetRoot "dotnet.exe"
+    } else {
+        $env:CONFIGURATION = "$(Build.Configuration)"
+        & bash "$(System.DefaultWorkingDirectory)/eng/install-dotnet.sh"
+        $dotnetPath = Join-Path $dotnetRoot "dotnet"
+    }
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Write-Host "##vso[task.setvariable variable=JavaInteropDotNetTool]$dotnetPath"
+  displayName: Install pinned .NET SDK for native Java.Interop consumers
