@@ -70,6 +70,11 @@ framework label alone is not a runtime floor: shipped tooling must also load
 on the declared .NET 11 host. The settings and restore feed are owner-scoped;
 global SDK pins and unrelated frameworks are unchanged.
 
+SDK fixture CI provisions the repository-pinned SDK with the existing
+`eng/install-dotnet` scripts and explicitly selects that executable for VSTest.
+A wildcard .NET 11 preview installation may be older than the required runtime.
+Benchmark and BaseTasks jobs keep their own host selection.
+
 ## Contributing
 
 Follow the repository's [contribution guidelines](../../CONTRIBUTING.md).
