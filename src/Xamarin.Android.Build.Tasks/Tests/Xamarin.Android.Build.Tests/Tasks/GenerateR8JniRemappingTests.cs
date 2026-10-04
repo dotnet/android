@@ -127,9 +127,9 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		[TestCase (false, false)]
 		[TestCase (true, false)]
 		[TestCase (false, true)]
-		public void NativeAotNestedNameDoesNotRetainMergedParent (bool utf8, bool dehydrated)
+		public void NativeAotNestedNameDoesNotRetainMergedParent (bool utf8, bool commandStream)
 		{
-			string objectFile = WriteNativeObject (["com/contoso/Peer$Inner"], utf8, dehydrated);
+			string objectFile = WriteNativeObject (["com/contoso/Peer$Inner"], utf8, commandStream: commandStream);
 			string xml = Run ("""
 				com.contoso.Peer -> a.b:
 				com.contoso.Peer$Inner -> a.b:
@@ -145,13 +145,13 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		[TestCase (false, false)]
 		[TestCase (true, false)]
 		[TestCase (false, true)]
-		public void NativeAotRetainsCompleteClassAndDescriptorTokens (bool utf8, bool dehydrated)
+		public void NativeAotRetainsCompleteClassAndDescriptorTokens (bool utf8, bool commandStream)
 		{
 			string objectFile = WriteNativeObject (
 				["com.contoso.Peer$Inner", "run.([Lcom/contoso/Argument;)Lcom/contoso/Result;",
 					"(ILcom/contoso/Argument;[[I)Lcom/contoso/Result;",
 					"com/contoso/LongerPeer", "othercom/contoso/Suffix", "OtherLcom/contoso/Suffix;",
-					"com/contoso/PrefixedExtra"], utf8, dehydrated);
+					"com/contoso/PrefixedExtra"], utf8, commandStream: commandStream);
 			string xml = Run ("""
 				com.contoso.Peer$Inner -> a.b:
 				    com.contoso.Result run(com.contoso.Argument[]) -> c
@@ -174,9 +174,9 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		[TestCase (false, false)]
 		[TestCase (true, false)]
 		[TestCase (false, true)]
-		public void NativeAotTrulyRetainedMergedTypesRemainAmbiguous (bool utf8, bool dehydrated)
+		public void NativeAotTrulyRetainedMergedTypesRemainAmbiguous (bool utf8, bool commandStream)
 		{
-			string objectFile = WriteNativeObject (["com/contoso/Peer", "com/contoso/Peer$Inner"], utf8, dehydrated);
+			string objectFile = WriteNativeObject (["com/contoso/Peer", "com/contoso/Peer$Inner"], utf8, commandStream: commandStream);
 			string xml = Run ("""
 				com.contoso.Peer -> a.b:
 				com.contoso.Peer$Inner -> a.b:
@@ -190,9 +190,9 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		[TestCase (false, false)]
 		[TestCase (true, false)]
 		[TestCase (false, true)]
-		public void NativeAotRetainsUnicodeClasses (bool utf8, bool dehydrated)
+		public void NativeAotRetainsUnicodeClasses (bool utf8, bool commandStream)
 		{
-			string objectFile = WriteNativeObject (["com/contoso/\u0100Peer", "run.()V"], utf8, dehydrated);
+			string objectFile = WriteNativeObject (["com/contoso/\u0100Peer", "run.()V"], utf8, commandStream: commandStream);
 			string xml = Run ("com.contoso.\u0100Peer -> a.b:\n    void run() -> c\n", objectFile);
 			StringAssert.Contains ("from=\"com/contoso/\u0100Peer\"", xml);
 			StringAssert.Contains ("source-method-name=\"run\"", xml);
@@ -201,15 +201,65 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		[TestCase (false, false)]
 		[TestCase (true, false)]
 		[TestCase (false, true)]
-		public void NativeAotUnicodeBoundariesDoNotCreateSuffixOrParentMatches (bool utf8, bool dehydrated)
+		public void NativeAotUnicodeBoundariesDoNotCreateSuffixOrParentMatches (bool utf8, bool commandStream)
 		{
-			string objectFile = WriteNativeObject (["\u0100Peer$Inner", "Other\u0100Suffix"], utf8, dehydrated);
+			string objectFile = WriteNativeObject (["\u0100Peer$Inner", "Other\u0100Suffix"], utf8, commandStream: commandStream);
 			string xml = Run (
 				"\u0100Peer -> a.b:\n\u0100Peer$Inner -> a.b:\n\u0100Suffix -> a.c:\n", objectFile);
 			var types = XDocument.Parse (xml).Root?.Elements ("replace-type").ToArray ()
 				?? throw new AssertionException ("Generated XML has no root.");
 			Assert.AreEqual (1, types.Length);
 			Assert.AreEqual ("\u0100Peer$Inner", (string?) types [0].Attribute ("from"));
+		}
+
+		[TestCase (false, false)]
+		[TestCase (false, true)]
+		[TestCase (true, false)]
+		[TestCase (true, true)]
+		public void NativeAotUtf16ClassEdgesPreserveIdentity (bool commandStream, bool elf32)
+		{
+			string trailingName = "Pee\u0172";
+			string leadingName = "\u0120Peer";
+			string objectFile = WriteNativeObject (
+				["com/contoso/" + trailingName, leadingName, "run.()V", "value", "I"],
+				commandStream: commandStream, elf32: elf32);
+			string mapping = $"""
+				com.contoso.Peer -> a.b:
+				com.contoso.{trailingName} -> a.b:
+				{'\u0100'}Peer -> c.d:
+				{leadingName} -> c.d:
+
+				""";
+			var root = XDocument.Parse (Run (mapping, objectFile)).Root
+				?? throw new AssertionException ("Generated XML has no root.");
+			CollectionAssert.AreEquivalent (new [] { "com/contoso/Pee\u0172", "\u0120Peer" },
+				root.Elements ("replace-type").Select (type => (string?) type.Attribute ("from")).ToArray ());
+			CollectionAssert.AreEquivalent (new [] { ("a/b", "com/contoso/Pee\u0172"), ("c/d", "\u0120Peer") },
+				root.Elements ("reverse-type").Select (type => ((string?) type.Attribute ("from"), (string?) type.Attribute ("to"))).ToArray ());
+
+			string members = Run ($"""
+				com.contoso.Peer -> a.b:
+				    void run() -> absentMethod
+				    int value -> absentField
+				com.contoso.{trailingName} -> a.b:
+				    void run() -> retainedMethod
+				    int value -> retainedField
+
+				""", objectFile);
+			StringAssert.Contains ("target-method-name=\"retainedMethod\"", members);
+			StringAssert.Contains ("target-field-name=\"retainedField\"", members);
+			Assert.IsEmpty (Errors, "A phantom class must not cause a conflicting-member XA4325 error.");
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void NativeAotRelocationsDoNotCompleteUtf16CodeUnits (bool elf32)
+		{
+			string objectFile = WriteNativeObject (["com/contoso/Peer"],
+				commandStream: true, elf32: elf32, zeroFillAfterLiteral: false);
+			var root = XDocument.Parse (Run ("com.contoso.Peer -> a.b:\n", objectFile)).Root
+				?? throw new AssertionException ("Generated XML has no root.");
+			Assert.IsEmpty (root.Elements (), "A truncated UTF-16 code unit cannot be completed by an unknown relocation.");
 		}
 
 		[TestCase (false, false)]
@@ -383,17 +433,15 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			StringAssert.Contains ("run( ):void", Warnings [0].Message);
 		}
 
-		string WriteNativeObject (string [] literals, bool utf8 = false, bool dehydrated = false,
-			bool commandStream = false, bool invalidCommand = false, bool elf32 = false)
+		string WriteNativeObject (string [] literals, bool utf8 = false,
+			bool commandStream = false, bool invalidCommand = false, bool elf32 = false, bool zeroFillAfterLiteral = true)
 		{
 			byte [] Encode ()
 			{
 				using var data = new MemoryStream ();
 				foreach (string value in literals) {
 					byte [] bytes = (utf8 ? Encoding.UTF8 : Encoding.Unicode).GetBytes (value);
-					int start = dehydrated && bytes [0] == 0 ? 1 : 0;
-					int end = bytes.Length - (dehydrated && bytes [bytes.Length - 1] == 0 ? 1 : 0);
-					data.Write (bytes, start, end - start);
+					data.Write (bytes, 0, bytes.Length);
 					data.WriteByte (0xFF);
 					data.WriteByte (0xFF);
 				}
@@ -424,10 +472,43 @@ namespace Xamarin.Android.Build.Tests.Tasks
 					Command (3, 0); // PtrReloc(0).
 					byte [] bytes = (utf8 ? Encoding.UTF8 : Encoding.Unicode).GetBytes (value);
 					int count = bytes.Length - (bytes [bytes.Length - 1] == 0 ? 1 : 0);
-					Command (invalidCommand ? 6 : 0, count + 4);
-					commands.Write (value.Length);
-					commands.Write (bytes, 0, count);
-					Command (1, 13); // 69 03 follows: ZeroFill(13), PtrReloc(0), not U+0369.
+					using var literal = new MemoryStream ();
+					using (var writer = new BinaryWriter (literal, Encoding.UTF8, leaveOpen: true)) {
+						writer.Write (value.Length);
+						writer.Write (bytes, 0, count);
+					}
+					byte [] contents = literal.ToArray ();
+					int position = 0;
+					while (position < contents.Length) {
+						int copyLength = 0;
+						int zeros = 0;
+						for (int i = position; i < contents.Length; i++) {
+							if (contents [i] == 0) {
+								zeros++;
+							} else if (zeros >= 4) {
+								break;
+							} else {
+								copyLength += zeros + 1;
+								zeros = 0;
+							}
+						}
+						if (zeros < 4) {
+							copyLength += zeros;
+							zeros = 0;
+						}
+						if (copyLength > 0) {
+							Command (invalidCommand ? 6 : 0, copyLength);
+							commands.Write (contents, position, copyLength);
+							position += copyLength;
+						}
+						if (zeros > 0) {
+							Command (1, zeros);
+							position += zeros;
+						}
+					}
+					if (zeroFillAfterLiteral) {
+						Command (1, 13); // 69 03 follows: ZeroFill(13), PtrReloc(0), not U+0369.
+					}
 					Command (3, 0);
 				}
 				uint length = (uint) image.Length;

@@ -159,8 +159,6 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			int end = start + (int) length;
 			int position = start + 8;
 			using var literal = new MemoryStream ();
-			literal.WriteByte (0);
-			literal.WriteByte (0);
 			while (position < end) {
 				byte instruction = contents [position++];
 				int command = instruction & 7;
@@ -182,11 +180,20 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					literal.Write (contents, position, payload);
 					position += payload;
 					break;
-				case 1: // ZeroFill; legal JNI identifiers contain no NULs.
+				case 1: // ZeroFill
 					if (payload == 0) {
 						throw InvalidDehydration ();
 					}
-					FlushLiteral ();
+					for (int i = 0; i < Math.Min (payload, 2); i++) {
+						literal.WriteByte (0);
+					}
+					// A UTF-16 identifier can contain two adjacent zero bytes, but not three.
+					// Preserve genuine edge zeros without expanding arbitrarily long padding.
+					if (payload > 2) {
+						FlushLiteral ();
+						literal.WriteByte (0);
+						literal.WriteByte (0);
+					}
 					break;
 				case 2: // RelPtr32Reloc
 				case 3: // PtrReloc
@@ -222,14 +229,10 @@ namespace Xamarin.Android.Tasks.JniRemapping
 
 			void FlushLiteral ()
 			{
-				if (literal.Length > 2) {
-					literal.WriteByte (0);
-					literal.WriteByte (0);
+				if (literal.Length > 0) {
 					data.Add (literal.ToArray ());
 				}
 				literal.SetLength (0);
-				literal.WriteByte (0);
-				literal.WriteByte (0);
 			}
 		}
 
@@ -258,18 +261,13 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				public int Length { get; }
 				public bool Utf16 { get; }
 				public bool Descriptor { get; }
-				public bool TrimmedLeadingZero { get; }
-				public bool TrimmedTrailingZero { get; }
 
-				public Pattern (string text, int length, bool utf16, bool descriptor,
-					bool trimmedLeadingZero = false, bool trimmedTrailingZero = false)
+				public Pattern (string text, int length, bool utf16, bool descriptor)
 				{
 					Text = text;
 					Length = length;
 					Utf16 = utf16;
 					Descriptor = descriptor;
-					TrimmedLeadingZero = trimmedLeadingZero;
-					TrimmedTrailingZero = trimmedTrailingZero;
 				}
 			}
 
@@ -310,13 +308,7 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				byte [] utf8 = Encoding.UTF8.GetBytes (encoded);
 				Add (utf8, new Pattern (pattern, utf8.Length, utf16: false, descriptor));
 				byte [] utf16 = Encoding.Unicode.GetBytes (encoded);
-				int start = utf16 [0] == 0 ? 1 : 0;
-				int length = utf16.Length - start - (utf16 [utf16.Length - 1] == 0 ? 1 : 0);
-				var payload = new byte [length];
-				Buffer.BlockCopy (utf16, start, payload, 0, length);
-				Add (payload, new Pattern (pattern, payload.Length, utf16: true, descriptor,
-					trimmedLeadingZero: start != 0,
-					trimmedTrailingZero: utf16 [utf16.Length - 1] == 0));
+				Add (utf16, new Pattern (pattern, utf16.Length, utf16: true, descriptor));
 			}
 
 			void Add (byte [] bytes, Pattern pattern)
@@ -406,16 +398,10 @@ namespace Xamarin.Android.Tasks.JniRemapping
 			static bool HasClassBoundaries (byte [] section, int end, Pattern pattern)
 			{
 				int start = end - pattern.Length + 1;
-				if (pattern.Utf16 && pattern.TrimmedLeadingZero && start > 0 && section [start - 1] == 0) {
-					start--;
-				}
 				if (pattern.Descriptor) {
 					return HasDescriptorPrefix (section, start + (pattern.Utf16 ? 2 : 1), pattern.Utf16);
 				}
 				int after = end + 1;
-				if (pattern.Utf16 && pattern.TrimmedTrailingZero && after < section.Length && section [after] == 0) {
-					after++;
-				}
 				int beforeValue = pattern.Utf16 ? ReadUtf16 (section, start - 2) : ReadByte (section, start - 1);
 				int afterValue = pattern.Utf16 ? ReadUtf16 (section, after) : ReadByte (section, after);
 
