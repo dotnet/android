@@ -21,6 +21,7 @@
   <ItemGroup>
     <!-- The pinned .NET 12 SDK also maps net11.0 to its .NET 12 targeting pack. -->
     <FrameworkReference Update="Microsoft.NETCore.App" TargetingPackVersion="$(RuntimeFrameworkVersion)" />
+    <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
     <PackageReference Include="Polly" Version="$(PollyVersion)" />
     <PackageReference Include="SharpZipLib" Version="$(SharpZipLibVersion)" />
