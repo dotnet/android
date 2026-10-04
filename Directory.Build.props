@@ -51,7 +51,7 @@
     <ELFSharpVersion>2.17.3</ELFSharpVersion>
     <HumanizerVersion>2.14.1</HumanizerVersion>
     <MdocPackageVersion Condition=" '$(MdocPackageVersion)' == '' ">5.9.3</MdocPackageVersion>
-    <!-- Used by the installer-side projects under src/Xamarin.Installer.*, src/Mono.AndroidTools, src/Xamarin.AndroidTools -->
+    <!-- Used by the installer-side projects under src/Xamarin.Installer.* -->
     <GitInfoVersion>2.3.0</GitInfoVersion>
     <IniParserNetstandardVersion>2.5.2</IniParserNetstandardVersion>
     <MicrosoftWin32RegistryVersion>5.0.0</MicrosoftWin32RegistryVersion>

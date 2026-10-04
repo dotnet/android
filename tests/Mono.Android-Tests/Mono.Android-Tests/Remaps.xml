@@ -5,6 +5,27 @@
   <replace-type
       from="net/dot/jni/test/AndroidInterface"
       to="net/dot/jni/test/DesugarAndroidInterface$_CC" />
+  <replace-type
+      from="net/dot/android/remap/AsciiFirst"
+      to="net/dot/android/remap/TargetFirst" />
+  <replace-type
+      from="net/dot/android/remap/Middle"
+      to="net/dot/android/remap/TargetMiddle" />
+  <replace-type
+      from="net/dot/android/remap/Zebra"
+      to="net/dot/android/remap/TargetLast" />
+  <replace-type
+      from="net/dot/android/remap/Źródło"
+      to="net/dot/android/remap/UnicodeTarget" />
+  <reverse-type
+      from="net/dot/android/remap/IncomingRenamedPeer"
+      to="net/dot/android/remap/IncomingDeclaredPeer" />
+  <reverse-type
+      from="net/dot/android/remap/IncomingDeclaredPeer"
+      to="net/dot/android/remap/IncomingWrongPeer" />
+  <reverse-type
+      from="net/dot/android/remap/ExplicitRuntimePeer"
+      to="net/dot/android/remap/ExplicitMissingDeclaredPeer" />
   <replace-method
       source-type="java/lang/Object"
       source-method-name="remappedToToString"
@@ -35,4 +56,38 @@
       source-method-signature="()"
       target-type="net/dot/jni/test/RenameClassBase2"
       target-method-name="myNewHashCode" target-method-instance-to-static="false" />
+  <replace-method
+      source-type="net/dot/android/remap/ManagedLookup"
+      source-method-name="overload"
+      source-method-signature="(I)I"
+      target-type="net/dot/android/remap/ManagedTarget"
+      target-method-name="exact"
+      target-method-signature="(I)I"
+      target-method-instance-to-static="false" />
+  <replace-method
+      source-type="net/dot/android/remap/ManagedLookup"
+      source-method-name="overload"
+      source-method-signature="(I)"
+      target-type="net/dot/android/remap/ManagedTarget"
+      target-method-name="parameters"
+      target-method-signature="(I)V"
+      target-method-instance-to-static="false" />
+  <replace-method
+      source-type="net/dot/android/remap/ManagedLookup"
+      source-method-name="overload"
+      target-type="net/dot/android/remap/ManagedTarget"
+      target-method-name="wildcard"
+      target-method-instance-to-static="false" />
+  <replace-field
+      source-type="net/dot/android/remap/ManagedLookup"
+      source-field-name="value"
+      source-field-signature="I"
+      target-type="net/dot/android/remap/ManagedTarget"
+      target-field-name="exactValue"
+      target-field-signature="J" />
+  <replace-field
+      source-type="net/dot/android/remap/ManagedLookup"
+      source-field-name="value"
+      target-type="net/dot/android/remap/ManagedTarget"
+      target-field-name="wildcardValue" />
 </replacements>

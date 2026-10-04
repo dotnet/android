@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -148,6 +149,55 @@ namespace Xamarin.Android.Build.Tests {
 				"RuntimeIdentifiers should take precedence over RuntimeIdentifier, matching the packaging RID set.");
 			FileAssert.Exists (frameworkImplementations);
 			FileAssert.Exists (referenceImplementations);
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void TrimmedNativeLinkingScansCombinedTypeMapInputs (bool readyToRun)
+		{
+			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("PublishTrimmed", "true");
+			proj.SetProperty ("PublishReadyToRun", readyToRun.ToString ());
+			proj.SetProperty ("_AndroidEnableNativeRuntimeLinking", "true");
+			proj.SetProperty (KnownProperties.RuntimeIdentifiers, "android-arm64;android-x64");
+			var directoryBuildTargets = proj.Imports.Single (import => import.Project () == "Directory.Build.targets");
+			directoryBuildTargets.TextContent = () => """
+				<Project>
+				  <Target Name="_AndroidAssertCombinedNativeLinkingTypeMaps"
+				      BeforeTargets="_GeneratePackageManagerJava"
+				      DependsOnTargets="_PrepareTrimmableTypeMapAssemblies">
+				    <ItemGroup>
+				      <_AndroidPreTrimRoot Include="@(_ResolvedAssemblies)"
+				          Condition=" '%(_ResolvedAssemblies.Filename)' == '_Microsoft.Android.TypeMaps'
+				              and '%(_ResolvedAssemblies.Abi)' == 'arm64-v8a'
+				              and '%(_ResolvedAssemblies._AndroidPreTrimTypeMapCandidate)' == 'true' " />
+				      <_AndroidFinalArm64Root Include="@(_ResolvedAssemblies)"
+				          Condition=" '%(_ResolvedAssemblies.Filename)' == '_Microsoft.Android.TypeMaps'
+				              and '%(_ResolvedAssemblies.Abi)' == 'arm64-v8a'
+				              and '%(_ResolvedAssemblies._AndroidPreTrimTypeMapCandidate)' != 'true' " />
+				      <_AndroidFinalX64Root Include="@(_ResolvedAssemblies)"
+				          Condition=" '%(_ResolvedAssemblies.Filename)' == '_Microsoft.Android.TypeMaps'
+				              and '%(_ResolvedAssemblies.Abi)' == 'x86_64' " />
+				    </ItemGroup>
+				    <Error Condition=" '@(_AndroidPreTrimRoot->Count())' == '0' or '@(_AndroidFinalArm64Root->Count())' == '0' or '@(_AndroidFinalX64Root->Count())' == '0' "
+				        Text="The native linking regression requires both pre-trim and final per-ABI root typemaps." />
+				  </Target>
+				</Project>
+				""";
+
+			using var builder = CreateApkBuilder ();
+			builder.Target = "Compile;_GeneratePackageManagerJava";
+			// Compile defaults to design-time mode, but native-source generation requires a normal build.
+			Assert.IsTrue (builder.Build (proj, parameters: ["DesignTimeBuild=false"]),
+				"Trimmed multi-RID native sources should be generated with combined typemap inputs.");
+			builder.Output.AssertTargetIsNotSkipped ("_AndroidAssertCombinedNativeLinkingTypeMaps");
+			foreach (var abi in new [] { "arm64-v8a", "x86_64" }) {
+				var nativeSource = builder.Output.GetIntermediaryPath (Path.Combine ("android", $"pinvoke_preserve.{abi}.ll"));
+				FileAssert.Exists (nativeSource);
+				StringAssert.Contains ("@find_pinvoke", File.ReadAllText (nativeSource));
+			}
 		}
 
 		[Test]
@@ -1984,6 +2034,75 @@ namespace Xamarin.Android.Build.Tests {
 					Is.GreaterThan (maxMappingIndex),
 					$"{Path.GetFileName (environmentFile)} should allocate enough runtime slots for {Path.GetFileName (manifestFile)}.");
 			}
+		}
+
+		[TestCase (AndroidRuntime.NativeAOT)]
+		[TestCase (AndroidRuntime.CoreCLR)]
+		public void TrimmableTypeMap_PreservesJniOnlyConstructorThroughR8 (AndroidRuntime runtime)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidLinkTool", "r8");
+			proj.SetProperty ("_AndroidEnableTypemapR8Trimming", "true");
+			proj.SetProperty ("_SkipNdkResolution", "false");
+			proj.Sources.Add (new BuildItem.Source ("JniConstructorPeer.cs") {
+				TextContent = () => """
+					using Android.Runtime;
+
+					namespace UnnamedProject;
+
+					[Register ("example/JniConstructorPeer")]
+					public class JniConstructorPeer : Java.Lang.Object
+					{
+						public JniConstructorPeer (int value) { }
+					}
+					""",
+			});
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				"System.GC.KeepAlive (typeof (UnnamedProject.JniConstructorPeer));");
+			var typeMapProguardTargets = Path.Combine (
+				XABuildPaths.TopDirectory,
+				"src",
+				"Xamarin.Android.Build.Tasks",
+				"Microsoft.Android.Sdk",
+				"targets",
+				"Microsoft.Android.Sdk.TypeMap.Proguard.targets");
+			var buildTasksAssembly = Path.Combine (
+				TestEnvironment.AndroidMSBuildDirectory,
+				"net",
+				"Microsoft.Android.Build.Tasks.dll");
+			FileAssert.Exists (buildTasksAssembly);
+			var directoryBuildTargets = proj.Imports.Single (import => import.Project () == "Directory.Build.targets");
+			directoryBuildTargets.TextContent = () => $"""
+				<Project>
+				  <PropertyGroup>
+				    <_MicrosoftAndroidBuildTasksAssembly>{SecurityElement.Escape (buildTasksAssembly)}</_MicrosoftAndroidBuildTasksAssembly>
+				    <AfterMicrosoftNETSdkTargets>$(AfterMicrosoftNETSdkTargets);{SecurityElement.Escape (typeMapProguardTargets)}</AfterMicrosoftNETSdkTargets>
+				  </PropertyGroup>
+				</Project>
+				""";
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var memberRules = builder.Output.GetIntermediaryPath (
+				Path.Combine ("proguard", "proguard_typemap_members.cfg"));
+			FileAssert.Exists (memberRules);
+			StringAssert.Contains ("-keepclassmembers class example.JniConstructorPeer { *; }", File.ReadAllText (memberRules));
+
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			FileAssert.Exists (dexFile);
+			Assert.IsTrue (
+				DexUtils.ContainsClassWithMethod ("Lexample/JniConstructorPeer;", "<init>", "(I)V", dexFile, AndroidSdkPath),
+				$"`{dexFile}` should retain the JNI-only `example.JniConstructorPeer(int)` constructor.");
 		}
 
 		[Test]
