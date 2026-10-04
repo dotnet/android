@@ -120,17 +120,14 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase (false, "Build")]
 		[TestCase (true, "Publish")]
 		[TestCase (false, "Publish")]
-		[TestCase (true, "_GenerateJavaStubs")]
-		[TestCase (true, "_PrepareLinking")]
+		[TestCase (true, "_ValidateAndroidTypeMapImplementation")]
+		[TestCase (false, "_ValidateAndroidTypeMapImplementation")]
 		public void LegacyTypeMapIsRejectedBeforeBuildTargets (bool isApplication, string target)
 		{
 			XamarinProject project = isApplication
 				? new XamarinAndroidApplicationProject ()
 				: new XamarinAndroidLibraryProject ();
 			project.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
-			if (target == "_PrepareLinking") {
-				project.SetProperty ("PublishTrimmed", "true");
-			}
 
 			using var builder = isApplication ? CreateApkBuilder () : CreateDllBuilder ();
 			builder.Target = target;
@@ -145,8 +142,8 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase (false, "Build")]
 		[TestCase (true, "Publish")]
 		[TestCase (false, "Publish")]
-		[TestCase (true, "_GenerateJavaStubs")]
-		[TestCase (true, "_PrepareLinking")]
+		[TestCase (true, "_ValidateAndroidTypeMapImplementation")]
+		[TestCase (false, "_ValidateAndroidTypeMapImplementation")]
 		public void EmptyGlobalTypeMapIsRejected (bool isApplication, string target)
 		{
 			XamarinProject project = isApplication

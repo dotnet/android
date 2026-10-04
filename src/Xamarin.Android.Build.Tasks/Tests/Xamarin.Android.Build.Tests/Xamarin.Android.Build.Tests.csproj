@@ -38,6 +38,8 @@
   <ItemGroup>
     <Compile Remove="Resources\ApacheHttpClient.cs" />
     <Compile Remove="Expected\**" />
+    <Compile Include="..\..\..\Microsoft.Android.Build.Tasks\Tests\Microsoft.Android.Build.Tasks.Tests\NativeToolTestHelper.cs" Link="Utilities\NativeToolTestHelper.cs" />
+    <Compile Include="..\..\..\Microsoft.Android.Build.Tasks\Tests\Microsoft.Android.Build.Tasks.Tests\NativeToolTestHelperTests.cs" Link="NativeToolTestHelperTests.cs" />
     <Compile Include="..\..\..\..\.github\skills\read-assembly-store\src\AssemblyStore\*.cs" />
     <Compile Include="..\..\..\..\.github\skills\read-assembly-store\src\AssemblyStore\V1\*.cs" />
     <Content Include="Expected\GenerateDesignerFileExpected.cs">
@@ -59,6 +61,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AssemblyMetadata Include="AndroidNdkDirectory" Value="$(AndroidNdkDirectory)" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="7.2.1.6856" />
     <PackageReference Include="Humanizer" Version="$(HumanizerVersion)" />

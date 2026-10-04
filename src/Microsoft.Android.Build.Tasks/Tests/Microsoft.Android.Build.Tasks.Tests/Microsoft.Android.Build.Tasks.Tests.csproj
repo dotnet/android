@@ -18,9 +18,11 @@
   <ItemGroup>
     <FrameworkReference Update="Microsoft.NETCore.App" TargetingPackVersion="$(RuntimeFrameworkVersion)" Condition=" '$(TargetFramework)' == 'net11.0' " />
     <Compile Include="..\..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\MockBuildEngine.cs" Link="MockBuildEngine.cs" />
+    <AssemblyMetadata Include="NativeAotLlvmReadObjPath" Value="$(_NativeAotLlvmReadObjPath)" />
   </ItemGroup>
 
   <ItemGroup>
+    <AssemblyMetadata Include="AndroidNdkDirectory" Value="$(AndroidNdkDirectory)" />
     <ProjectReference Include="..\..\Microsoft.Android.Build.Tasks.csproj" />
     <ProjectReference Include="..\..\..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
   </ItemGroup>

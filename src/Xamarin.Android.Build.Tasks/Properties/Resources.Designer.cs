@@ -973,7 +973,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;AndroidEnableMarshalMethods&apos; and &apos;PublishReadyToRun&apos; MSBuild properties cannot both be set to &apos;true&apos;. Set one property to &apos;false&apos;..
+        ///   Looks up a localized string similar to The &apos;AndroidEnableMarshalMethods&apos; MSBuild property is no longer supported. Remove it or set it to &apos;false&apos;..
         /// </summary>
         public static string XA1049 {
             get {
