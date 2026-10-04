@@ -91,27 +91,46 @@ stages:
           $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
         arguments: -c Debug $(XatBuildProperties)
 
-    - task: UseDotNet@2
-      displayName: Use .NET 11 for Android SDK fixtures
-      inputs:
-        version: 11.0.x
-        includePreviewVersions: true
+    - pwsh: |
+        & "$(System.DefaultWorkingDirectory)/eng/install-dotnet.ps1" -configuration Debug
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      displayName: Install pinned .NET SDK for Android SDK fixtures
 
-    - task: DotNetCoreCLI@2
-      displayName: Build Android SDK tools with .NET 11
-      inputs:
-        command: build
-        projects: |
-          $(System.DefaultWorkingDirectory)/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
-          $(System.DefaultWorkingDirectory)/tools/ls-jdks/ls-jdks.csproj
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        configuration: Debug
+        project: src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
         arguments: -c Debug -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=11.0 -bl:$(Build.ArtifactStagingDirectory)/sdk-build-windows.binlog
+        displayName: Build Android SDK tools with the pinned SDK
+        continueOnError: false
 
-    - task: DotNetCoreCLI@2
-      displayName: Run Android SDK fixture tests
-      inputs:
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        configuration: Debug
+        project: tools/ls-jdks/ls-jdks.csproj
+        arguments: -c Debug -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=11.0 -bl:$(Build.ArtifactStagingDirectory)/sdk-jdks-windows.binlog
+        displayName: Build JDK discovery tool with the pinned SDK
+        continueOnError: false
+
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        configuration: Debug
         command: test
-        projects: $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
-        arguments: -c Debug -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=11.0
+        project: tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
+        arguments: >-
+          -c Debug -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=11.0
+          --logger trx --results-directory "$(Agent.TempDirectory)/android-sdk-fixtures-windows"
+          -- RunConfiguration.DotNetHostPath="$(System.DefaultWorkingDirectory)/bin/Debug/dotnet/dotnet.exe"
+        displayName: Run Android SDK fixture tests
+        continueOnError: false
+
+    - task: PublishTestResults@2
+      displayName: Publish Android SDK fixture results
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFormat: VSTest
+        testResultsFiles: "$(Agent.TempDirectory)/android-sdk-fixtures-windows/*.trx"
+        testRunTitle: Android SDK fixtures - Windows
 
     - ${{ if eq(parameters.use1ESTemplate, false) }}:
       - task: PublishBuildArtifacts@1
@@ -162,27 +181,46 @@ stages:
           $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
         arguments: -c Debug $(XatBuildProperties)
 
-    - task: UseDotNet@2
-      displayName: Use .NET 11 for Android SDK fixtures
-      inputs:
-        version: 11.0.x
-        includePreviewVersions: true
+    - bash: bash "$(System.DefaultWorkingDirectory)/eng/install-dotnet.sh"
+      displayName: Install pinned .NET SDK for Android SDK fixtures
+      env:
+        CONFIGURATION: Debug
 
-    - task: DotNetCoreCLI@2
-      displayName: Build Android SDK tools with .NET 11
-      inputs:
-        command: build
-        projects: |
-          $(System.DefaultWorkingDirectory)/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
-          $(System.DefaultWorkingDirectory)/tools/ls-jdks/ls-jdks.csproj
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        configuration: Debug
+        project: src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
         arguments: -c Debug -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=11.0 -bl:$(Build.ArtifactStagingDirectory)/sdk-build-mac.binlog
+        displayName: Build Android SDK tools with the pinned SDK
+        continueOnError: false
 
-    - task: DotNetCoreCLI@2
-      displayName: Run Android SDK fixture tests
-      inputs:
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        configuration: Debug
+        project: tools/ls-jdks/ls-jdks.csproj
+        arguments: -c Debug -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=11.0 -bl:$(Build.ArtifactStagingDirectory)/sdk-jdks-mac.binlog
+        displayName: Build JDK discovery tool with the pinned SDK
+        continueOnError: false
+
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        configuration: Debug
         command: test
-        projects: $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
-        arguments: -c Debug -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=11.0
+        project: tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
+        arguments: >-
+          -c Debug -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=11.0
+          --logger trx --results-directory "$(Agent.TempDirectory)/android-sdk-fixtures-mac"
+          -- RunConfiguration.DotNetHostPath="$(System.DefaultWorkingDirectory)/bin/Debug/dotnet/dotnet"
+        displayName: Run Android SDK fixture tests
+        continueOnError: false
+
+    - task: PublishTestResults@2
+      displayName: Publish Android SDK fixture results
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFormat: VSTest
+        testResultsFiles: "$(Agent.TempDirectory)/android-sdk-fixtures-mac/*.trx"
+        testRunTitle: Android SDK fixtures - macOS
 
     - ${{ if eq(parameters.use1ESTemplate, false) }}:
       - task: PublishBuildArtifacts@1
