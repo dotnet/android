@@ -1608,12 +1608,14 @@ namespace UnamedProject
 				FileAssert.Exists (dexFile);
 				var classes = new List<string> {
 					"Lmono/android/view/View_OnClickListenerImplementor;",
-					"Landroid/runtime/JavaProxyThrowable;",
 					$"L{toolbar_class.Replace ('.', '/')};"
 				};
+				// NativeAOT uses Java.Interop's exception proxy; CoreCLR uses Android.Runtime's.
 				if (runtime == AndroidRuntime.NativeAOT) {
+					classes.Add ("Lnet/dot/jni/internal/JavaProxyThrowable;");
 					classes.Add ("Lnet/dot/jni/nativeaot/NativeAotRuntimeProvider;");
 				} else {
+					classes.Add ("Landroid/runtime/JavaProxyThrowable;");
 					classes.Add ("Lmono/MonoRuntimeProvider;");
 				}
 
