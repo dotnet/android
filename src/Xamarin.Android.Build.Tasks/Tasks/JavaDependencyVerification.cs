@@ -441,8 +441,8 @@ public class NuGetPackageVersionFinder
 			return;
 
 		var root = XDocument.Load (nuspec).Root ?? throw new InvalidDataException ($"Missing root element in NuGet specification '{nuspec}'.");
-		var metadata = root.Elements ().FirstOrDefault (element => element.Name.LocalName == "metadata");
-		var tags = metadata?.Elements ().FirstOrDefault (element => element.Name.LocalName == "tags")?.Value ?? "";
+		var metadata = root.Elements ().FirstOrDefault (element => element.Name.LocalName.Equals ("metadata", StringComparison.OrdinalIgnoreCase));
+		var tags = metadata?.Elements ().FirstOrDefault (element => element.Name.LocalName.Equals ("tags", StringComparison.OrdinalIgnoreCase))?.Value ?? "";
 
 		AddArtifactsFromNuspecTags (artifacts, tags);
 

@@ -116,7 +116,7 @@ public class NuGetPackageVersionFinderTests : BaseTest
 				<metadata xmlns="{metadataNamespace}">
 					<id>{PackageName}</id>
 					<version>1.0.0</version>
-					<tags>{ArtifactTag}</tags>
+					<Tags>{ArtifactTag}</Tags>
 				</metadata>
 			</package>
 			""");
