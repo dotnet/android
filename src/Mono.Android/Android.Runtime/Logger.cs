@@ -36,10 +36,6 @@ namespace Android.Runtime {
 			get {return (Categories & LogCategories.Net) != 0;}
 		}
 
-		internal static bool LogNetlink {
-			get {return (Categories & LogCategories.Netlink) != 0;}
-		}
-
 		[LibraryImport ("liblog", StringMarshalling = StringMarshalling.Utf8)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		private static partial void __android_log_print (LogLevel level, string appname, string format, string args, IntPtr zero);

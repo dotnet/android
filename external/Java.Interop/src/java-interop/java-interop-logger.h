@@ -13,7 +13,7 @@ typedef enum _LogCategories {
 	LOG_TIMING    = 1 << 6,
 	LOG_BUNDLE    = 1 << 7,
 	LOG_NET       = 1 << 8,
-	LOG_NETLINK   = 1 << 9,
+	// Bit 9 is reserved for the removed netlink logging category.
 } LogCategories;
 
 extern unsigned int log_categories;

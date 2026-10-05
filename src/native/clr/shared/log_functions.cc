@@ -23,7 +23,7 @@ namespace {
 		Constants::LOG_CATEGORY_NAME_MONODROID_TIMING,
 		Constants::LOG_CATEGORY_NAME_MONODROID_BUNDLE,
 		Constants::LOG_CATEGORY_NAME_MONODROID_NETWORK,
-		Constants::LOG_CATEGORY_NAME_MONODROID_NETLINK,
+		Constants::LOG_CATEGORY_NAME_NONE, // Reserved for the removed netlink logging bit.
 		Constants::LOG_CATEGORY_NAME_ERROR,
 	};
 

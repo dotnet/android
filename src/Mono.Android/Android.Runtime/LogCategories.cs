@@ -17,7 +17,7 @@ namespace Android.Runtime
 		Timing    = 1 << 6,
 		Bundle    = 1 << 7,
 		Net       = 1 << 8,
-		Netlink   = 1 << 9,
+		// Bit 9 is reserved for the removed netlink logging category.
 	}
 }
 #endif // INSIDE_MONO_ANDROID_RUNTIME

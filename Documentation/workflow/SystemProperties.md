@@ -25,7 +25,7 @@ comma-separated list of `NAME[=VALUE]` categories:
 * `gc` logs garbage-collection and JNI reference messages.
 * `gref`, `gref=FILE`, and `gref+` enable global JNI reference logging.
 * `lref`, `lref=FILE`, and `lref+` enable local JNI reference logging.
-* `network` and `netlink` log native network activity.
+* `network` logs native network activity.
 * `timing` enables the `monodroid-timing` category used by the obsolete
   managed `Android.Runtime.TimingLogger` API.
 

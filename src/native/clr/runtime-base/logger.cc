@@ -125,8 +125,7 @@ Logger::init_logging_categories () noexcept
 		    set_category ("gref",     param, param_length, LOG_GREF) ||
 		    set_category ("lref",     param, param_length, LOG_LREF) ||
 		    set_category ("timing",   param, param_length, LOG_TIMING) ||
-		    set_category ("network",  param, param_length, LOG_NET) ||
-		    set_category ("netlink",  param, param_length, LOG_NETLINK)) {
+		    set_category ("network",  param, param_length, LOG_NET)) {
 			param = next;
 			continue;
 		}

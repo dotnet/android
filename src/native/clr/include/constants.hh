@@ -53,7 +53,6 @@ namespace xamarin::android {
 		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_TIMING      { "monodroid-timing" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_BUNDLE      { "monodroid-bundle" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_NETWORK     { "monodroid-network" };
-		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_NETLINK     { "monodroid-netlink" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_ERROR                 { "*error*" };
 
 #if defined(__arm__)
