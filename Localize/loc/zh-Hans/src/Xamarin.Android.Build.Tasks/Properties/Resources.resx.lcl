@@ -923,10 +923,13 @@
       </Item>
       <Item ItemId=";XA1049" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'. Set one property to 'false'.]]></Val>
+          <Val><![CDATA[The 'AndroidEnableMarshalMethods' MSBuild property is no longer supported. Remove it or set it to 'false'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[“AndroidEnableMarshalMethods” 和 “PublishReadyToRun” MSBuild 属性不能同时设置为 “true”。将一个属性设置为 “false”。]]></Val>
+            <Val><![CDATA[不再支持 “AndroidEnableMarshalMethods” MSBuild 属性。将其删除或设置为 “false”。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'. Set one property to 'false'.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
