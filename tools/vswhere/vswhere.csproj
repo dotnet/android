@@ -1,7 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <RuntimeFrameworkVersion>11.0.0-rtm.26479.103</RuntimeFrameworkVersion>
+    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet11/nuget/v3/index.json</RestoreAdditionalProjectSources>
     <RootNamespace>Xamarin.Android.Tools.VSWhere</RootNamespace>
     <AssemblyName>vswhere</AssemblyName>
     <SignAssembly>true</SignAssembly>
@@ -13,5 +15,10 @@
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The pinned .NET 12 SDK also maps net11.0 to its .NET 12 targeting pack. -->
+    <FrameworkReference Update="Microsoft.NETCore.App" TargetingPackVersion="$(RuntimeFrameworkVersion)" />
+  </ItemGroup>
 
 </Project>

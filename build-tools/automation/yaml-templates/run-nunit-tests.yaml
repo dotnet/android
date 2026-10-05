@@ -1,6 +1,7 @@
 parameters:
   testRunTitle: Xamarin Android Tests
   testAssembly: ''
+  xaSourcePath: $(System.DefaultWorkingDirectory)
   dotNetTestExtraArgs: ''
   workers: $(NUnit.NumberOfTestWorkers)
   condition: succeeded()
@@ -8,19 +9,44 @@ parameters:
   retryCountOnTaskFailure: 0
 
 steps:
-- task: DotNetCoreCLI@2
-  inputs:
-    command: test
-    projects: ${{ parameters.testAssembly }}
-    arguments: >-
-      ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
-    publishTestResults: true
-    testRunTitle: ${{ parameters.testRunTitle }}
-  displayName: run ${{ parameters.testRunTitle }}
-  condition: ${{ parameters.condition }}
-  continueOnError: true
-  timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
-  retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
+- ${{ if or(endsWith(parameters.testAssembly, 'Xamarin.Android.Build.Tests.dll'), endsWith(parameters.testAssembly, 'MSBuildDeviceIntegration.dll')) }}:
+  # These test owners require .NET 11; their jobs provision the pinned SDK during setup/build.
+  - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+    parameters:
+      command: test
+      project: '"${{ parameters.testAssembly }}"'
+      arguments: >-
+        ${{ parameters.dotNetTestExtraArgs }} --logger trx
+        --results-directory "$(Agent.TempDirectory)/native-nunit-${{ parameters.testRunTitle }}"
+        -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
+      xaSourcePath: ${{ parameters.xaSourcePath }}
+      displayName: run ${{ parameters.testRunTitle }}
+      condition: ${{ parameters.condition }}
+      continueOnError: true
+      taskTimeoutInMinutes: ${{ parameters.timeoutInMinutes }}
+      retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
+
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFormat: VSTest
+      testResultsFiles: "$(Agent.TempDirectory)/native-nunit-${{ parameters.testRunTitle }}/*.trx"
+      testRunTitle: ${{ parameters.testRunTitle }}
+    condition: ${{ parameters.condition }}
+
+- ${{ else }}:
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: test
+      projects: ${{ parameters.testAssembly }}
+      arguments: >-
+        ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
+      publishTestResults: true
+      testRunTitle: ${{ parameters.testRunTitle }}
+    displayName: run ${{ parameters.testRunTitle }}
+    condition: ${{ parameters.condition }}
+    continueOnError: true
+    timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
+    retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
 
 - template: /build-tools/automation/yaml-templates/diagnose-hanging-processes.yaml
 

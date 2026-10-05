@@ -3,12 +3,18 @@
 Mapping of test area keywords to assemblies, filters, and build prerequisites.
 
 **Legend:**
-- **Assembly**: The test DLL to pass to `dotnet test` (relative to repo root). `${TFM}` = current `DotNetStableTargetFramework` from `Directory.Build.props`.
+- **Assembly**: The test DLL to pass to `dotnet test` (relative to repo root). `${TFM}` = the project's evaluated framework: `DotNetTargetFramework` for the native host/build and device integration harnesses, or `DotNetStableTargetFramework` for stable suites.
 - **Filter**: The `--filter` argument for host-side `dotnet test`, or on-device MTP category/property notes.
 - **Build**: What must be built before running:
   - **Standalone** — Can run with plain `dotnet test <project>.csproj`. No local SDK needed.
   - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `./dotnet-local.sh build Microsoft.Android.slnx -c Debug` or `make prepare && make all`.
 - **Device**: Whether an Android device/emulator is required.
+
+The native process harnesses, SDK fixtures, and `vswhere` select the
+`11.0.0-rtm.26479.103` runtime and targeting pack explicitly. This keeps the pinned
+.NET 12 CI SDK from silently raising their minimum runtime. Use the SDK provisioned
+by `eng/install-dotnet.sh` or `eng/install-dotnet.ps1` to build and run these suites;
+SDK fixture CI jobs use the same installer and select its test host explicitly.
 
 The host/device suites declare their own LZ4 dependency for the linked
 assembly-store inspection sources, independently of the shared MSBuild imports.
