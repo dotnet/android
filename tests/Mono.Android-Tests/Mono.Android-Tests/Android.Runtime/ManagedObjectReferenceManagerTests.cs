@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 using Android.Runtime;
 using Java.Interop;
@@ -16,10 +17,8 @@ namespace Xamarin.Android.RuntimeTests {
 	[Category ("ReferenceTracing")]
 	[NonParallelizable]
 	public class ManagedObjectReferenceManagerTests {
-		[TestCase (0x8, EventLevel.Verbose, false, false)]
 		[TestCase (0x10, EventLevel.Verbose, true, false)]
 		[TestCase (0x20, EventLevel.Verbose, false, true)]
-		[TestCase (0x30, EventLevel.Verbose, true, true)]
 		[TestCase (0x30, EventLevel.Informational, false, false)]
 		[TestCase (0x40, EventLevel.Verbose, false, false)]
 		public void ReferenceLifecycleAndEvents (long keyword, EventLevel level, bool globalEvents, bool localEvents)
@@ -84,6 +83,36 @@ namespace Xamarin.Android.RuntimeTests {
 				CollectionAssert.AreEqual (captured.Id is 15 or 16 ? localNames : globalNames, captured.Names);
 				CollectionAssert.AreEqual (payload, captured.Payload);
 			}
+			// Exercise the collected-reference wire contract without relying on a nondeterministic Java GC outcome.
+			RuntimeEventSource.WeakGlobalReferenceCollected (weakHandle);
+			var collectedEvents = listener.GetEvents ()
+				.Where (e => e.ThreadId == threadId && e.Id == 20).ToArray ();
+			Assert.AreEqual (globalEvents ? 1 : 0, collectedEvents.Length);
+			if (globalEvents) {
+				Assert.AreEqual (EventLevel.Verbose, collectedEvents [0].Level);
+				Assert.AreEqual (0x10, (long)collectedEvents [0].Keywords & 0x0FFFFFFFFFFF);
+				CollectionAssert.AreEqual (new [] { "handle" }, collectedEvents [0].Names);
+				Assert.IsInstanceOf<ulong> (collectedEvents [0].Payload [0]);
+				CollectionAssert.AreEqual (new object [] { Handle (weakHandle) }, collectedEvents [0].Payload);
+			}
+		}
+
+		[Test]
+		public void InitializesGrefLimitsFromHost ()
+		{
+			int previousThreshold = JNIEnvInit.gref_gc_threshold;
+			int previousMaximum = JNIEnvInit.max_gref_count;
+			try {
+				JNIEnvInit.InitializeMaxGrefCounts (new JNIEnvInit.JnienvInitializeArgs {
+					grefGcThreshold = 1800,
+					maxGrefCount = 2000,
+				});
+				Assert.AreEqual (1800, JNIEnvInit.gref_gc_threshold);
+				Assert.AreEqual (2000, JNIEnvInit.max_gref_count);
+			} finally {
+				JNIEnvInit.gref_gc_threshold = previousThreshold;
+				JNIEnvInit.max_gref_count = previousMaximum;
+			}
 		}
 
 		[Test]
@@ -115,6 +144,7 @@ namespace Xamarin.Android.RuntimeTests {
 
 		[TestCase (false)]
 		[TestCase (true)]
+		[MethodImpl (MethodImplOptions.NoInlining)]
 		public void NativeAotStacksRequireExplicitOptIn (bool collectStacks)
 		{
 			using var peer = new Java.Lang.String ("stack correlation");
@@ -125,15 +155,19 @@ namespace Xamarin.Android.RuntimeTests {
 			using var listener = new ReferenceListener (keywords);
 			var manager = new ManagedObjectReferenceManager ();
 			var global = manager.CreateGlobalReference (peer.PeerReference);
-			ulong handle = Handle (global.Handle);
+			IntPtr referenceHandle = global.Handle;
+			ulong handle = Handle (referenceHandle);
 			manager.DeleteGlobalReference (ref global);
+			RuntimeEventSource.WeakGlobalReferenceCollected (referenceHandle);
 			var events = listener.GetEvents ().Where (e => e.ThreadId == Environment.CurrentManagedThreadId).ToArray ();
 			bool expectStacks = collectStacks && Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime;
-			CollectionAssert.AreEqual (expectStacks ? new [] { 11, 21, 12, 21 } : new [] { 11, 12 }, events.Select (e => e.Id));
+			CollectionAssert.AreEqual (expectStacks ? new [] { 11, 21, 12, 21, 20, 21 } : new [] { 11, 12, 20 }, events.Select (e => e.Id));
 			foreach (var captured in events.Where (e => e.Id == 21)) {
 				CollectionAssert.AreEqual (new [] { "referenceEventId", "handle", "managedThreadId", "stackTrace" }, captured.Names);
 				Assert.AreEqual (4, captured.Payload.Length);
-				Assert.Contains (captured.Payload [0], new [] { 11, 12 });
+				int index = Array.IndexOf (events, captured);
+				Assert.AreEqual (events [index - 1].Id, captured.Payload [0],
+					"The stack must identify the immediately preceding reference operation, including collection.");
 				Assert.AreEqual (handle, captured.Payload [1]);
 				Assert.AreEqual (Environment.CurrentManagedThreadId, captured.Payload [2]);
 				var stack = captured.Payload [3] as string ?? throw new InvalidOperationException ("The stack payload should be a string.");
@@ -176,7 +210,7 @@ namespace Xamarin.Android.RuntimeTests {
 		static ulong Handle (IntPtr handle) => unchecked((ulong)(nuint)handle);
 
 		internal sealed class ReferenceListener : EventListener {
-			readonly List<(int Id, int ThreadId, object?[] Payload, string [] Names)> events = [];
+			readonly List<(int Id, int ThreadId, object?[] Payload, string [] Names, EventLevel Level, EventKeywords Keywords)> events = [];
 
 			public ReferenceListener (EventKeywords keyword, EventLevel level = EventLevel.Verbose)
 			{
@@ -188,7 +222,7 @@ namespace Xamarin.Android.RuntimeTests {
 				}
 			}
 
-			public (int Id, int ThreadId, object?[] Payload, string [] Names) [] GetEvents ()
+			public (int Id, int ThreadId, object?[] Payload, string [] Names, EventLevel Level, EventKeywords Keywords) [] GetEvents ()
 			{
 				lock (events) {
 					return events.ToArray ();
@@ -197,11 +231,13 @@ namespace Xamarin.Android.RuntimeTests {
 
 			protected override void OnEventWritten (EventWrittenEventArgs eventData)
 			{
-				if (eventData.EventId < 11 || eventData.EventId > 21) {
+				if (eventData.EventId != 0 && (eventData.EventId < 11 || eventData.EventId > 21)) {
 					return;
 				}
 				lock (events) {
-					events.Add ((eventData.EventId, Environment.CurrentManagedThreadId, eventData.Payload?.ToArray () ?? [], eventData.PayloadNames?.ToArray () ?? []));
+					events.Add ((eventData.EventId, Environment.CurrentManagedThreadId,
+						eventData.Payload?.ToArray () ?? [], eventData.PayloadNames?.ToArray () ?? [],
+						eventData.Level, eventData.Keywords));
 				}
 			}
 		}

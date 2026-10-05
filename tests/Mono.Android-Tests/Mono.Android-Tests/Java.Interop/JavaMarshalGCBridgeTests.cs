@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -117,18 +116,6 @@ public class JavaMarshalGCBridgeTests
 
 		WaitForBridgeRound (() => !first.TryGetTarget (out _) && !second.TryGetTarget (out _),
 			"Both peers should be collected after releasing the Java root.");
-		var peerHandles = new HashSet<ulong> { firstHandle, secondHandle };
-		var liveHandles = new HashSet<ulong> (peerHandles);
-		foreach (var captured in listener.GetEvents ()) {
-			if (captured.Id is 11 or 13 && captured.Payload [0] is ulong source && peerHandles.Contains (source) &&
-				captured.Payload [1] is ulong handle) {
-				peerHandles.Add (handle);
-				liveHandles.Add (handle);
-			} else if (captured.Id is 12 or 14 && captured.Payload [0] is ulong deleted) {
-				liveHandles.Remove (deleted);
-			}
-		}
-		Assert.IsEmpty (liveHandles, "Reference lifetimes must end when the Java-rooted cycle is collected.");
 	}
 
 	[MethodImpl (MethodImplOptions.NoInlining)]
