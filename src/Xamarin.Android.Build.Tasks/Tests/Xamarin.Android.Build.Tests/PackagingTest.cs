@@ -59,17 +59,19 @@ namespace Xamarin.Android.Build.Tests
 				FileAssert.Exists (archive);
 				string prefix = packageFormat == "aab" ? "base/lib/" : "lib/";
 				using var zip = ZipHelper.OpenZip (archive);
-				Assert.AreEqual (arches.Length, zip.Count (entry => entry.FullName.EndsWith ("/libassembly-store.so", StringComparison.Ordinal)));
+				Assert.AreEqual (arches.Length, zip.Entries.Count (entry => entry.FullName.EndsWith ("/libassembly-store.so", StringComparison.Ordinal)));
 				var assemblies = new ArchiveAssemblyHelper (archive, useAssemblyStores: true);
 				foreach (var arch in arches) {
 					string abi = MonoAndroidHelper.ArchToAbi (arch);
 					string entryName = $"{prefix}{abi}/libassembly-store.so";
-					Assert.IsTrue (zip.ContainsEntry (entryName), $"The package must preserve the ABI split path '{entryName}'.");
+					var entry = zip.GetEntry (entryName);
+					Assert.IsNotNull (entry, $"The package must preserve the ABI split path '{entryName}'.");
 					string directory = builder.Output.GetIntermediaryPath (Path.Combine ("elf-inspection", abi));
 					Directory.CreateDirectory (directory);
 					string library = Path.Combine (directory, "libassembly-store.so");
+					using (var source = entry.Open ())
 					using (var stream = File.Create (library)) {
-						zip.ReadEntry (entryName).Extract (stream);
+						source.CopyTo (stream);
 					}
 					using var document = NativeToolTestHelper.ReadElf (library);
 					var elf = document.RootElement [0];
