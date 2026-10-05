@@ -262,7 +262,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (builder.Build (proj), "Build with an IList export should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
-			AssertTrimmableTypeMapOutputs (intermediateDir);
+			AssertTrimmableTypeMapOutputs (intermediateDir, usePreGeneratedFrameworkTypeMaps: !isRelease);
 		}
 
 		[Test]
