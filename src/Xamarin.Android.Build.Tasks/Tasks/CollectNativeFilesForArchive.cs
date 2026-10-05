@@ -132,7 +132,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 			return filesystemPath;
 		}
 
-		if (filesystemPath.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase) || IsWrapperScript (filesystemPath, null)) {
+		if (filesystemPath.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase) || IsWrapperScript (filesystemPath, archiveFileName)) {
 			// Wrapped assemblies and wrapper scripts have no native debug info.
 			return filesystemPath;
 		}

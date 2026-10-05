@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 
 using ELFSharp.ELF;
@@ -167,6 +168,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			string fixture = GetInstalledRuntimePackFile ("libnet-android.debug.so");
 			byte [] original = File.ReadAllBytes (fixture);
+			byte [] wrapper = Encoding.UTF8.GetBytes ("#!/system/bin/sh\nexec \"$@\"\n");
 			const string nativeLibrary = "native/arm64-v8a/libstrip-input.so";
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -174,12 +176,17 @@ namespace Xamarin.Android.Build.Tests
 					new AndroidItem.AndroidNativeLibrary (nativeLibrary) {
 						BinaryContent = () => original,
 					},
+					new AndroidItem.AndroidNativeLibrary ("arm64-wrap.sh") {
+						BinaryContent = () => wrapper,
+						MetadataValues = "Link=lib\\arm64-v8a\\wrap.sh",
+					},
 				},
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			proj.SetProperty ("AndroidStripNativeLibraries", "true");
+			proj.SetProperty ("AndroidIncludeWrapSh", "true");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), $"The {proj.Configuration} {packageFormat} build should strip native libraries using the NDK.");
@@ -189,6 +196,8 @@ namespace Xamarin.Android.Build.Tests
 			byte [] stripped = ZipHelper.ReadFileFromZip (package, archivePath);
 			Assert.IsNotNull (stripped, "The stripped native input should be packaged.");
 			Assert.Less (stripped.Length, original.Length, "The packaged native library should be smaller after stripping.");
+			CollectionAssert.AreEqual (wrapper, ZipHelper.ReadFileFromZip (package, $"{(packageFormat == "aab" ? "base/" : "")}lib/arm64-v8a/wrap.sh"),
+				"Linked wrapper scripts must be packaged unchanged.");
 			using (var stream = new MemoryStream (stripped)) {
 				using IELF elf = ELFReader.Load (stream, shouldOwnStream: false);
 				Assert.AreEqual (FileType.SharedObject, elf.Type);
