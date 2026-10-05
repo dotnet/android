@@ -95,7 +95,7 @@
 
   <!-- NUnit discovers these tests by reflection even when the type map default is set late. -->
   <Target Name="_AndroidRootRuntimeTests"
-      BeforeTargets="PrepareForILLink;_RunILLink">
+      BeforeTargets="PrepareForILLink;_RunILLink;WriteIlcRspFileForCompilation">
     <ItemGroup>
       <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" />
       <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
