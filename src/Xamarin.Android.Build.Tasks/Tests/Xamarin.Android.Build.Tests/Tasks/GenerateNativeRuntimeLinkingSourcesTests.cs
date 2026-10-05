@@ -10,7 +10,7 @@ using Xamarin.Android.Tasks;
 namespace Xamarin.Android.Build.Tests;
 
 [TestFixture]
-public class GenerateNativeMarshalMethodSourcesTests : BaseTest
+public class GenerateNativeRuntimeLinkingSourcesTests : BaseTest
 {
 	[TestCase ("linked")]
 	[TestCase ("R2R")]
@@ -40,10 +40,8 @@ public class GenerateNativeMarshalMethodSourcesTests : BaseTest
 			resolvedAssemblies.Add (userAssembly);
 			resolvedAssemblies.Add (userAssembly);
 			var errors = new List<BuildErrorEventArgs> ();
-			var task = new GenerateNativeMarshalMethodSources {
-				AndroidRuntime = "CoreCLR",
+			var task = new GenerateNativeRuntimeLinkingSources {
 				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
-				EnableNativeRuntimeLinking = true,
 				EnvironmentOutputDirectory = path,
 				ResolvedAssemblies = resolvedAssemblies.ToArray (),
 				SupportedAbis = ["arm64-v8a", "x86_64"],
@@ -63,7 +61,7 @@ public class GenerateNativeMarshalMethodSourcesTests : BaseTest
 				StringAssert.DoesNotContain ("@SystemNative_User", output);
 			}
 			foreach (var abi in task.SupportedAbis)
-				StringAssert.Contains ("@xamarin_app_init", File.ReadAllText (Path.Combine (path, $"marshal_methods.{abi}.ll")));
+				Assert.IsFalse (File.Exists (Path.Combine (path, $"marshal_methods.{abi}.ll")), "Legacy marshal-method stubs must not be generated.");
 		} finally {
 			Directory.Delete (path, recursive: true);
 		}

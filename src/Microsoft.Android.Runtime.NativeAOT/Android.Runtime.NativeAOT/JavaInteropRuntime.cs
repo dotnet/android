@@ -56,13 +56,13 @@ static partial class JavaInteropRuntime
 			var options = new NativeAotRuntimeOptions {
 				EnvironmentPointer = jnienv,
 				ClassLoader        = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
-				TypeManager        = JNIEnvInit.CreateTypeManager (initArgs),
-				ValueManager       = JNIEnvInit.CreateValueManager (),
+				TypeManager                 = new TrimmableTypeMapTypeManager (),
+				ValueManager                = new TrimmableTypeMapValueManager (),
 			};
 			runtime = options.CreateJreVM ();
 
 			// Entry point into Mono.Android.dll for NativeAOT-specific JNI runtime initialization.
-			JNIEnvInit.InitializeNativeAotRuntime (runtime, initArgs);
+			JNIEnvInit.InitializeNativeAotRuntime (runtime);
 
 			SetAppContextBaseDirectory (filesDir);
 

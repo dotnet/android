@@ -31,13 +31,11 @@ set(XAMARIN_MONODROID_SOURCES
   host-jni.cc
   host-shared.cc
   host-util.cc
-  internal-pinvokes-clr.cc
   internal-pinvokes-shared.cc
   gc-bridge.cc
   os-bridge.cc
   runtime-environment.cc
   runtime-util.cc
-  typemap.cc
 )
 
 if(DEBUG_BUILD)
