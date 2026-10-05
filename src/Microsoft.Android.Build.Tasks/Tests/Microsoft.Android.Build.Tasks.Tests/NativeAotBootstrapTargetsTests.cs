@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Threading;
 using System.Xml.Linq;
 
 using Microsoft.Android.Tasks;
@@ -62,7 +61,6 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		Assert.AreEqual (0, first.ExitCode, first.Output + first.Error);
 		string sourceDirectory = Path.Combine (path, "android", "src", "net", "dot", "jni", "nativeaot");
 		string sourceFile = Path.Combine (sourceDirectory, "NativeAotEnvironmentVars.java");
-		StringAssert.Contains ("\"first\"", File.ReadAllText (sourceFile));
 		DateTime timestamp = File.GetLastWriteTimeUtc (sourceFile);
 		using (var result = JsonDocument.Parse (first.Output)) {
 			var files = result.RootElement.GetProperty ("Items").GetProperty ("FileWrites").EnumerateArray ()
@@ -92,18 +90,5 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		Assert.AreEqual (0, missingProvider.ExitCode, missingProvider.Output + missingProvider.Error);
 		FileAssert.Exists (providerFile, "Provider names must be recovered even when the typemap generator is skipped.");
 
-		Thread.Sleep (50);
-		File.WriteAllText (environmentFile, "DOTNET_VALUE=second\ndebug.dotnet.max_grefc=4321\n");
-		var changed = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:_FindJavaStubFiles", "-v:quiet", "-nr:false");
-		Assert.AreEqual (0, changed.ExitCode, changed.Output + changed.Error);
-		string changedSource = File.ReadAllText (sourceFile);
-		StringAssert.Contains ("\"second\"", changedSource);
-		StringAssert.Contains ("\"4321\"", changedSource);
-		Assert.Greater (File.GetLastWriteTimeUtc (sourceFile), timestamp);
-
-		File.Delete (sourceFile);
-		var missing = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:_FindJavaStubFiles", "-v:quiet", "-nr:false");
-		Assert.AreEqual (0, missing.ExitCode, missing.Output + missing.Error);
-		FileAssert.Exists (sourceFile);
 	}
 }

@@ -12,7 +12,7 @@ using namespace xamarin::android;
 void Helpers::abort_application (LogCategories, const char *message, bool, std::source_location) noexcept
 {
 	std::fprintf (stderr, "%s\n", message);
-	std::exit (73);
+	std::exit (EXIT_FAILURE);
 }
 
 extern "C" JNIEXPORT jint JNICALL JNI_OnLoad (JavaVM *vm, void*)
@@ -23,11 +23,6 @@ extern "C" JNIEXPORT jint JNICALL JNI_OnLoad (JavaVM *vm, void*)
 	}
 	AppSystemProperties::initialize (env);
 	return JNI_VERSION_1_6;
-}
-
-extern "C" JNIEXPORT void JNICALL Java_net_dot_jni_nativeaot_BootstrapProbe_reinitialize (JNIEnv *env, jclass)
-{
-	AppSystemProperties::initialize (env);
 }
 
 extern "C" JNIEXPORT jbyteArray JNICALL Java_net_dot_jni_nativeaot_BootstrapProbe_lookup (JNIEnv *env, jclass, jbyteArray name)

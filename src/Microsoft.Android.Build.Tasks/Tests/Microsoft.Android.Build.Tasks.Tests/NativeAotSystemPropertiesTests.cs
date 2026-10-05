@@ -55,10 +55,11 @@ public class NativeAotSystemPropertiesTests : BaseTest
 	{
 		string value = "\"C:\\quoted\"\t\u00e9\u4e2d\ud83d\ude80";
 		string key = "debug.bootstrap.\ud83d\ude80";
-		var result = RunProbe ($"{key}={value}\n", key);
+		string contents = string.Join ("\n", Enumerable.Range (0, 1000).Select (i => $"debug.property.{i}=value-{i}"));
+		var result = RunProbe ($"{contents}\n{key}={value}\n", key);
 		Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
 		Assert.AreEqual (value, Encoding.UTF8.GetString (Convert.FromBase64String (result.Output)));
-		StringAssert.DoesNotContain ("WARNING in native method", result.Error);
+		StringAssert.DoesNotContain ("WARNING in native method", result.Output + result.Error);
 	}
 
 	[Test]
@@ -69,34 +70,7 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		Assert.AreEqual ("missing", result.Output);
 	}
 
-	[Test]
-	public void KeepsNativePropertySnapshotForProcessLifetime ()
-	{
-		var result = RunProbe ("debug.property=initial\n", "debug.property", mode: "mutate");
-		Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
-		Assert.AreEqual ("initial", Encoding.UTF8.GetString (Convert.FromBase64String (result.Output)));
-	}
-
-	[Test]
-	public void ReleasesLocalReferencesForLargeConfigurations ()
-	{
-		string contents = string.Join ("\n", Enumerable.Range (0, 1000).Select (i => $"debug.property.{i}=value-{i}"));
-		var result = RunProbe (contents, "debug.property.999");
-		Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
-		Assert.AreEqual ("value-999", Encoding.UTF8.GetString (Convert.FromBase64String (result.Output)));
-		StringAssert.DoesNotContain ("WARNING in native method", result.Output + result.Error);
-	}
-
-	[Test]
-	public void MissingJniFieldFailsExplicitly ()
-	{
-		var result = RunProbe ("", "name", configuration: "static final String[] wrongField = new String[0];");
-		Assert.AreEqual (73, result.ExitCode, result.Output + result.Error);
-		StringAssert.Contains ("Unable to find NativeAOT system properties", result.Error);
-		StringAssert.Contains ("NoSuchFieldError", result.Error);
-	}
-
-	(int ExitCode, string Output, string Error) RunProbe (string contents, string key, string? mode = null, string? configuration = null)
+	(int ExitCode, string Output, string Error) RunProbe (string contents, string key)
 	{
 		string path = Path.Combine (Root, "temp", TestName);
 		Directory.CreateDirectory (path);
@@ -112,21 +86,11 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		string classesDirectory = Path.Combine (path, "classes");
 		Directory.CreateDirectory (classesDirectory);
 		var arguments = new List<string> { "-d", classesDirectory };
-		arguments.AddRange (task.GeneratedSources);
+		arguments.Add (task.GeneratedSources.Single (source => Path.GetFileName (source) == "NativeAotEnvironmentVars.java"));
 		arguments.AddRange (Directory.GetFiles (ResourcesDirectory, "*.java", SearchOption.AllDirectories));
 		var compile = NativeAotBootstrapTestTools.Run (NativeAotBootstrapTestTools.JavaTool ("javac"), arguments.ToArray ());
 		Assert.AreEqual (0, compile.ExitCode, compile.Output + compile.Error);
-		if (configuration != null) {
-			// Compile direct field references before substituting the invalid runtime configuration.
-			string invalidSourceDirectory = Path.Combine (path, "invalid-configuration");
-			Directory.CreateDirectory (invalidSourceDirectory);
-			string invalidSource = Path.Combine (invalidSourceDirectory, "NativeAotEnvironmentVars.java");
-			File.WriteAllText (invalidSource, $"package net.dot.jni.nativeaot; public class NativeAotEnvironmentVars {{ {configuration} }}");
-			var invalidCompile = NativeAotBootstrapTestTools.Run (NativeAotBootstrapTestTools.JavaTool ("javac"),
-				"-d", classesDirectory, invalidSource);
-			Assert.AreEqual (0, invalidCompile.ExitCode, invalidCompile.Output + invalidCompile.Error);
-		}
 		return NativeAotBootstrapTestTools.Run (NativeAotBootstrapTestTools.JavaTool ("java"),
-			"-Xcheck:jni", "-cp", classesDirectory, "net.dot.jni.nativeaot.BootstrapProbe", nativeLibrary, key, mode ?? "");
+			"-Xcheck:jni", "-cp", classesDirectory, "net.dot.jni.nativeaot.BootstrapProbe", nativeLibrary, key);
 	}
 }

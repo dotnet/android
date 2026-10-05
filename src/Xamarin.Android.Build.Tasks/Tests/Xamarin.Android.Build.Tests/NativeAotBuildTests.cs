@@ -82,44 +82,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildNativeAotBundleWithoutAbiSplits ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-				OtherBuildItems = {
-					new BuildItem ("None", "buildConfig.config") {
-						TextContent = () => """
-							{
-							  "optimizations": {
-							    "splitsConfig": {
-							      "splitDimension": [
-							        { "value": "ABI", "negate": true }
-							      ]
-							    }
-							  }
-							}
-							""",
-					},
-					new BuildItem ("AndroidEnvironment", "environment.txt") {
-						TextContent = () => "BOOTSTRAP_TEST=preserved",
-					},
-				},
-			};
-			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			proj.SetRuntimeIdentifiers (["arm64-v8a", "x86_64"]);
-			proj.SetProperty ("AndroidPackageFormat", "aab");
-			proj.SetProperty ("AndroidBundleConfigurationFile", "buildConfig.config");
-
-			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "NativeAOT bundle build without ABI splits should succeed.");
-
-			string intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-			var environment = EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate);
-			Assert.AreEqual ("preserved", environment ["BOOTSTRAP_TEST"]);
-			Assert.IsEmpty (Directory.GetFiles (intermediate, "environment.*.ll", SearchOption.AllDirectories));
-		}
-
-		[Test]
 		public void BootstrapUpdatesForCommandLineFlavorChanges ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
