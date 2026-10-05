@@ -1,4 +1,5 @@
 #include <cstring>
+#include <string_view>
 
 #include <constants.hh>
 #include <host/host-common.hh>
@@ -17,34 +18,37 @@ void HostCommon::init_logging_categories () noexcept
 		return;
 	}
 
-	// The value may point at immortal bundled property data. Bound comparisons by the parameter length.
-	const char *param = categories;
-	while (param != nullptr && *param != '\0') {
-		const char *separator = strchr (param, ',');
-		size_t param_length = separator != nullptr ? static_cast<size_t>(separator - param) : strlen (param);
+	// The value may point at immortal bundled property data. Parse without modifying it.
+	std::string_view params { categories };
+	while (!params.empty ()) {
+		size_t separator = params.find (',');
+		std::string_view param = params.substr (0, separator);
 
-		if (param_length == 3 && strncmp (param, "all", param_length) == 0) {
+		if (param == "all") {
 			log_categories = 0xFFFFFFFF;
 			break;
 		}
 
-		if (param_length == 8 && strncmp (param, "assembly", param_length) == 0) {
+		if (param == "assembly") {
 			log_categories |= LOG_ASSEMBLY;
-		} else if (param_length == 7 && strncmp (param, "default", param_length) == 0) {
+		} else if (param == "default") {
 			log_categories |= LOG_DEFAULT;
-		} else if (param_length == 8 && strncmp (param, "debugger", param_length) == 0) {
+		} else if (param == "debugger") {
 			log_categories |= LOG_DEBUGGER;
-		} else if (param_length == 2 && strncmp (param, "gc", param_length) == 0) {
+		} else if (param == "gc") {
 			log_categories |= LOG_GC;
-		} else if (param_length == 6 && strncmp (param, "timing", param_length) == 0) {
+		} else if (param == "timing") {
 			log_categories |= LOG_TIMING;
-		} else if (param_length == 7 && strncmp (param, "network", param_length) == 0) {
+		} else if (param == "network") {
 			log_categories |= LOG_NET;
-		} else if (param_length == 7 && strncmp (param, "netlink", param_length) == 0) {
+		} else if (param == "netlink") {
 			log_categories |= LOG_NETLINK;
 		}
 
-		param = separator == nullptr ? nullptr : separator + 1;
+		if (separator == std::string_view::npos) {
+			break;
+		}
+		params.remove_prefix (separator + 1);
 	}
 }
 
