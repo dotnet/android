@@ -19,7 +19,8 @@ Consult `references/test-catalog.md` for the full mapping of test areas → asse
 
 Check for the local SDK in the configuration needed by the tests:
 ```bash
-ls bin/Debug/dotnet/dotnet 2>/dev/null || ls bin/Release/dotnet/dotnet 2>/dev/null
+CONFIGURATION=Debug # Set to Release for Release tests.
+test -x "bin/${CONFIGURATION}/dotnet/dotnet"
 ```
 
 **If the local SDK is missing, prepare and build it, then run the full-build tests.** On macOS/Linux, use `make prepare && make all`; on Windows, use `build.cmd`. For Release tests on macOS/Linux, use `make prepare CONFIGURATION=Release && make all CONFIGURATION=Release`. The presence of the `dotnet` executable only confirms provisioning, not that the SDK or test assemblies have been built. Rebuild after source changes so tests exercise the updated SDK.
