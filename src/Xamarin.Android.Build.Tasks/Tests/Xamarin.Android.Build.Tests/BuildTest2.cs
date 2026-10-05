@@ -244,7 +244,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntimeIdentifiers (new[] { "arm64-v8a" });
 			proj.SetProperty ("LinkerDumpDependencies", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", "False");
-			proj.SetProperty ("_AndroidEnableObjectReferenceLogging", "false");
 			if (r8) {
 				proj.SetProperty ("AndroidLinkTool", "r8");
 			}
@@ -265,32 +264,9 @@ namespace Xamarin.Android.Build.Tests
 				if (runtime == AndroidRuntime.CoreCLR) {
 					var monoAndroidPath = GetLinkedPath (b, true, "Mono.Android.dll");
 					using var monoAndroid = AssemblyDefinition.ReadAssembly (monoAndroidPath);
-					var referenceManager = monoAndroid.MainModule.GetType ("Android.Runtime.ManagedObjectReferenceManager");
-					if (referenceManager == null) {
-						Assert.Fail ($"{monoAndroidPath} should contain the managed reference manager.");
-						return;
-					}
-					string [] loggingMethods = [
-						"CreateLogWriter",
-						"TryCreateLogWriter",
-						"LogLocalReference",
-						"LogReference",
-						"FormatReferenceMessage",
-						"FormatHandle",
-						"GetObjectRefType",
-						"GetThreadName",
-						"WriteReference",
-						"LogReferenceFromNative",
-						"LogMessageFromNative",
-					];
-					foreach (string methodName in loggingMethods) {
-						Assert.IsNull (
-							referenceManager.Methods.FirstOrDefault (method => method.Name == methodName),
-							$"Disabled reference logging should trim {methodName} from Mono.Android.dll.");
-					}
 					Assert.IsNull (
-						referenceManager.Fields.FirstOrDefault (field => field.Name == "gcBridgeReferenceStackTrace"),
-						"Disabled reference logging should trim gcBridgeReferenceStackTrace from Mono.Android.dll.");
+						monoAndroid.MainModule.GetType ("Microsoft.Android.Runtime.RuntimeEventSource"),
+						"Disabled EventSource support should remove reference events.");
 
 					var bridge = monoAndroid.MainModule.GetType ("Microsoft.Android.Runtime.JavaMarshalGCBridge");
 					Assert.IsNotNull (bridge, "The managed GC bridge should survive linking.");

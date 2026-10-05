@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -82,6 +84,7 @@ public class JavaMarshalGCBridgeTests
 
 	[Test]
 	[Category ("GCBridge")]
+	[Category ("ReferenceTracing")]
 	public void ManagedPeerCycleSurvivesJavaRootAndIsCollectedAfterRelease ()
 	{
 		if (!Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime && !Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime)
@@ -89,22 +92,48 @@ public class JavaMarshalGCBridgeTests
 
 		WeakReference<BridgeCyclePeer> first;
 		WeakReference<BridgeCyclePeer> second;
+		using var listener = new ManagedObjectReferenceManagerTests.ReferenceListener (RuntimeEventSource.GlobalReferenceKeyword);
+		ulong firstHandle = 0, secondHandle = 0;
 		var roots = new JavaObjectArray<Java.Lang.Object> (1);
 		try {
-			CreatePeerCycle (roots, out first, out second);
+			CreatePeerCycle (roots, out first, out second, out firstHandle, out secondHandle);
 			WaitForBridgeRound (() => first.TryGetTarget (out _) && second.TryGetTarget (out _),
 				"Both peers in the managed cycle should survive while Java roots one peer.");
+			var weakHandles = listener.GetEvents ()
+				.Where (e => e.Id == 13 && Equals (e.Payload [7], (int)GCBridgeReferenceOperation.GlobalToWeak) &&
+					(Equals (e.Payload [0], firstHandle) || Equals (e.Payload [0], secondHandle)))
+				.Select (e => e.Payload [1])
+				.ToArray ();
+			Assert.IsNotEmpty (weakHandles, "The Java-rooted cycle must participate in global-to-weak bridge processing.");
+			var survivingHandles = listener.GetEvents ()
+				.Where (e => e.Id == 11 && Equals (e.Payload [7], (int)GCBridgeReferenceOperation.WeakToGlobal) &&
+					weakHandles.Contains (e.Payload [0]))
+				.Select (e => e.Payload [1] is ulong handle ? handle : throw new InvalidOperationException ("A global reference handle must be an unsigned integer."))
+				.ToArray ();
+			Assert.IsNotEmpty (survivingHandles, "Java-rooted peers must be promoted back to global references.");
 		} finally {
 			roots.Dispose ();
 		}
 
 		WaitForBridgeRound (() => !first.TryGetTarget (out _) && !second.TryGetTarget (out _),
 			"Both peers should be collected after releasing the Java root.");
+		var peerHandles = new HashSet<ulong> { firstHandle, secondHandle };
+		var liveHandles = new HashSet<ulong> (peerHandles);
+		foreach (var captured in listener.GetEvents ()) {
+			if (captured.Id is 11 or 13 && captured.Payload [0] is ulong source && peerHandles.Contains (source) &&
+				captured.Payload [1] is ulong handle) {
+				peerHandles.Add (handle);
+				liveHandles.Add (handle);
+			} else if (captured.Id is 12 or 14 && captured.Payload [0] is ulong deleted) {
+				liveHandles.Remove (deleted);
+			}
+		}
+		Assert.IsEmpty (liveHandles, "Reference lifetimes must end when the Java-rooted cycle is collected.");
 	}
 
 	[MethodImpl (MethodImplOptions.NoInlining)]
 	static void CreatePeerCycle (JavaObjectArray<Java.Lang.Object> roots,
-		out WeakReference<BridgeCyclePeer> first, out WeakReference<BridgeCyclePeer> second)
+		out WeakReference<BridgeCyclePeer> first, out WeakReference<BridgeCyclePeer> second, out ulong firstHandle, out ulong secondHandle)
 	{
 		var a = new BridgeCyclePeer ();
 		var b = new BridgeCyclePeer ();
@@ -113,6 +142,8 @@ public class JavaMarshalGCBridgeTests
 		roots [0] = a;
 		first = new WeakReference<BridgeCyclePeer> (a, trackResurrection: true);
 		second = new WeakReference<BridgeCyclePeer> (b, trackResurrection: true);
+		firstHandle = unchecked((ulong)(nuint)a.PeerReference.Handle);
+		secondHandle = unchecked((ulong)(nuint)b.PeerReference.Handle);
 	}
 
 	static void WaitForBridgeRound (Func<bool> predicate, string message)
