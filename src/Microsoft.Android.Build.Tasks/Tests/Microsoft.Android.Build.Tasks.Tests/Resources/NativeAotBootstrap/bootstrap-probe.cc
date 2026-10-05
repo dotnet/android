@@ -25,12 +25,12 @@ extern "C" JNIEXPORT jint JNICALL JNI_OnLoad (JavaVM *vm, void*)
 	return JNI_VERSION_1_6;
 }
 
-extern "C" JNIEXPORT void JNICALL Java_BootstrapProbe_reinitialize (JNIEnv *env, jclass)
+extern "C" JNIEXPORT void JNICALL Java_net_dot_jni_nativeaot_BootstrapProbe_reinitialize (JNIEnv *env, jclass)
 {
 	AppSystemProperties::initialize (env);
 }
 
-extern "C" JNIEXPORT jbyteArray JNICALL Java_BootstrapProbe_lookup (JNIEnv *env, jclass, jbyteArray name)
+extern "C" JNIEXPORT jbyteArray JNICALL Java_net_dot_jni_nativeaot_BootstrapProbe_lookup (JNIEnv *env, jclass, jbyteArray name)
 {
 	jsize length = env->GetArrayLength (name);
 	std::string key (static_cast<size_t>(length), '\0');

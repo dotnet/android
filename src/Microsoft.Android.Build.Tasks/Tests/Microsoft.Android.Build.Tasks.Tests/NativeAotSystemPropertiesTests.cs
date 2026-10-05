@@ -109,22 +109,24 @@ public class NativeAotSystemPropertiesTests : BaseTest
 			Environments = [new TaskItem (environmentFile)],
 		};
 		Assert.IsTrue (task.Execute ());
-		var sources = task.GeneratedSources.ToArray ();
-		if (configuration != null) {
-			string invalidSourceDirectory = Path.Combine (path, "invalid-configuration");
-			Directory.CreateDirectory (invalidSourceDirectory);
-			sources [1] = Path.Combine (invalidSourceDirectory, "NativeAotEnvironmentVars.java");
-			File.WriteAllText (sources [1], $"package net.dot.jni.nativeaot; public class NativeAotEnvironmentVars {{ {configuration} }}");
-		}
-
 		string classesDirectory = Path.Combine (path, "classes");
 		Directory.CreateDirectory (classesDirectory);
 		var arguments = new List<string> { "-d", classesDirectory };
-		arguments.AddRange (sources);
+		arguments.AddRange (task.GeneratedSources);
 		arguments.AddRange (Directory.GetFiles (ResourcesDirectory, "*.java", SearchOption.AllDirectories));
 		var compile = NativeAotBootstrapTestTools.Run (NativeAotBootstrapTestTools.JavaTool ("javac"), arguments.ToArray ());
 		Assert.AreEqual (0, compile.ExitCode, compile.Output + compile.Error);
+		if (configuration != null) {
+			// Compile direct field references before substituting the invalid runtime configuration.
+			string invalidSourceDirectory = Path.Combine (path, "invalid-configuration");
+			Directory.CreateDirectory (invalidSourceDirectory);
+			string invalidSource = Path.Combine (invalidSourceDirectory, "NativeAotEnvironmentVars.java");
+			File.WriteAllText (invalidSource, $"package net.dot.jni.nativeaot; public class NativeAotEnvironmentVars {{ {configuration} }}");
+			var invalidCompile = NativeAotBootstrapTestTools.Run (NativeAotBootstrapTestTools.JavaTool ("javac"),
+				"-d", classesDirectory, invalidSource);
+			Assert.AreEqual (0, invalidCompile.ExitCode, invalidCompile.Output + invalidCompile.Error);
+		}
 		return NativeAotBootstrapTestTools.Run (NativeAotBootstrapTestTools.JavaTool ("java"),
-			"-Xcheck:jni", "-cp", classesDirectory, "BootstrapProbe", nativeLibrary, key, mode ?? "");
+			"-Xcheck:jni", "-cp", classesDirectory, "net.dot.jni.nativeaot.BootstrapProbe", nativeLibrary, key, mode ?? "");
 	}
 }
