@@ -199,9 +199,9 @@ namespace Xamarin.Android.Build.Tests
 
 			int exitCode = completed ? process.ExitCode : -1;
 			if (!completed)
-				stdError.AppendLine ().Append ($"apkdiff timed out after {timeoutInSeconds} seconds (PID {process.Id}).");
+				stdError.AppendLine ().Append (CultureInfo.CurrentCulture, $"apkdiff timed out after {timeoutInSeconds} seconds (PID {process.Id}).");
 			if (outputTimedOut)
-				stdError.AppendLine ().Append ($"apkdiff exited or timed out with redirected output still open after 2 seconds (PID {process.Id}).");
+				stdError.AppendLine ().Append (CultureInfo.CurrentCulture, $"apkdiff exited or timed out with redirected output still open after 2 seconds (PID {process.Id}).");
 			var result = (code: exitCode, stdOutput: stdOutput.ToString ().Trim (), stdError: stdError.ToString ().Trim ());
 			var logContent = $"apkdiff exited with code: {exitCode}" +
 				$"\ncontext: https://github.com/dotnet/android/blob/main/Documentation/project-docs/ApkSizeRegressionChecks.md" +
