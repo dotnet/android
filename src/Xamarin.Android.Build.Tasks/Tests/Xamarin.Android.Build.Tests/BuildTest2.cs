@@ -25,21 +25,6 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public partial class BuildTest2 : BaseTest
 	{
-		static object [] MarshalMethodsDefaultStatusSource = new object [] {
-			new object[] {
-				/* isRelease */              true,
-				/* marshalMethodsEnabled */  false,
-			},
-			new object[] {
-				/* isRelease */              true,
-				/* marshalMethodsEnabled */  true,
-			},
-			new object[] {
-				/* isRelease */              false,
-				/* marshalMethodsEnabled */  true,
-			},
-		};
-
 		[Test]
 		public void BuildBasicApplication ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values ("", "en_US.UTF-8", "sv_SE.UTF-8")] string langEnvironmentVariable)
 		{
@@ -101,22 +86,21 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AndroidEnableMarshalMethodsWithReadyToRunFailsBuild ()
+		public void AndroidEnableMarshalMethodsFailsBuild ([Values (false, true)] bool publishReadyToRun)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 				EnableMarshalMethods = true,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("PublishReadyToRun", "true");
+			proj.SetProperty ("PublishReadyToRun", publishReadyToRun.ToString ());
 
 			using var b = CreateApkBuilder ();
 			b.ThrowOnBuildFailure = false;
 			Assert.IsFalse (b.Build (proj), "Build should have failed.");
 			StringAssertEx.Contains ("error XA1049", b.LastBuildOutput);
 			StringAssertEx.Contains ("AndroidEnableMarshalMethods", b.LastBuildOutput);
-			StringAssertEx.Contains ("PublishReadyToRun", b.LastBuildOutput);
-			StringAssertEx.DoesNotContain ("XARMM7015", b.LastBuildOutput, "Build should fail before rewriting ReadyToRun assemblies.");
+			StringAssertEx.Contains ("no longer supported", b.LastBuildOutput);
 		}
 
 		[Test]
@@ -188,11 +172,16 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
+			// This test relocates build inputs; no compiler/build server may retain them.
+			proj.SetProperty ("UseSharedCompilation", "false");
+			var environmentVariables = new Dictionary<string, string> {
+				["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0",
+			};
 			using (var b = CreateApkBuilder (path)) {
 				b.Target = "Build";
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (b.Build (proj, environmentVariables: environmentVariables), "Build should have succeeded.");
 				b.Target = "SignAndroidPackage";
-				Assert.IsTrue (b.Build (proj), "SignAndroidPackage should have succeeded.");
+				Assert.IsTrue (b.Build (proj, environmentVariables: environmentVariables), "SignAndroidPackage should have succeeded.");
 
 
 				string path2 = Path.Combine (Root, "temp", TestName, "App2");
@@ -203,11 +192,11 @@ namespace Xamarin.Android.Build.Tests
 				foreach (var r in proj.AndroidResources)
 					r.Timestamp = DateTime.UtcNow;
 				b.Target = "Build";
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Build should have succeeded.");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, environmentVariables: environmentVariables), "Build should have succeeded.");
 				Assert.IsTrue (!b.Output.IsTargetSkipped ("_CleanIntermediateIfNeeded"), "_CleanIntermediateIfNeeded should be built.");
 				Assert.IsTrue (!b.Output.IsTargetSkipped ("_CompileResources"), "_CompileResources Should have built.");
 				b.Target = "SignAndroidPackage";
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "SignAndroidPackage should have succeeded.");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, environmentVariables: environmentVariables), "SignAndroidPackage should have succeeded.");
 
 			}
 		}
@@ -1620,12 +1609,14 @@ namespace UnamedProject
 				FileAssert.Exists (dexFile);
 				var classes = new List<string> {
 					"Lmono/android/view/View_OnClickListenerImplementor;",
-					"Landroid/runtime/JavaProxyThrowable;",
 					$"L{toolbar_class.Replace ('.', '/')};"
 				};
+				// NativeAOT uses Java.Interop's exception proxy; CoreCLR uses Android.Runtime's.
 				if (runtime == AndroidRuntime.NativeAOT) {
+					classes.Add ("Lnet/dot/jni/internal/JavaProxyThrowable;");
 					classes.Add ("Lnet/dot/jni/nativeaot/NativeAotRuntimeProvider;");
 				} else {
+					classes.Add ("Landroid/runtime/JavaProxyThrowable;");
 					classes.Add ("Lmono/MonoRuntimeProvider;");
 				}
 
@@ -2198,72 +2189,6 @@ namespace App1
 			Assert.IsNotEmpty (dexFiles, "The application should contain DEX files.");
 			Assert.IsTrue (dexFiles.Any (dexFile => DexUtils.ContainsClass (className, dexFile, AndroidSdkPath)),
 				$"The application DEX files should include `{className}`!");
-		}
-
-		[Test]
-		public void MarshalMethodsUnhandledExceptionRuntimeFixUpWorks ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			switch (runtime) {
-				case AndroidRuntime.NativeAOT:
-					Assert.Ignore ("NativeAOT does not support marshal methods");
-					break;
-
-				case AndroidRuntime.CoreCLR:
-					Assert.Ignore ("CoreCLR currently doesn't work due to a bug in Mono.Cecil");
-					break;
-			}
-
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-				EnableMarshalMethods = true,
-			};
-			proj.SetRuntime (runtime);
-			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-
-			string monoAndroidRuntimePath = Path.Combine (
-				Root,
-				builder.ProjectDirectory,
-				proj.IntermediateOutputPath,
-				"android-arm64",
-				"linked",
-				"Mono.Android.Runtime.dll"
-			);
-			FileAssert.Exists (monoAndroidRuntimePath);
-
-			using var asm = AssemblyDefinition.ReadAssembly (monoAndroidRuntimePath);
-			const string TypeName = "Android.Runtime.AndroidEnvironmentInternal";
-			TypeDefinition? type = null;
-
-			foreach (ModuleDefinition module in asm.Modules) {
-				foreach (TypeDefinition t in module.Types) {
-					if (t.FullName.Equals (TypeName, StringComparison.Ordinal)) {
-						type = t;
-						break;
-					}
-				}
-			}
-
-			Assert.NotNull (type, $"Failed to find the '{TypeName}' type in '{monoAndroidRuntimePath}'");
-			Assert.IsTrue (type.IsPublic, $"Type '{TypeName}' should be public");
-
-			// Additionally verify that the UnhandledException method is also public
-			const string MethodName = "UnhandledException";
-			MethodDefinition? method = null;
-			foreach (MethodDefinition m in type.Methods) {
-				if (m.Name.Equals (MethodName, StringComparison.Ordinal)) {
-					method = m;
-					break;
-				}
-			}
-
-			Assert.NotNull (method, $"Failed to find the '{MethodName}' method in type '{TypeName}'");
-			Assert.IsTrue (method.IsPublic, $"Method '{MethodName}' should be public");
 		}
 
 		[Test]

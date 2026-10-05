@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
 
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -12,6 +15,113 @@ namespace Xamarin.Android.Build.Tests;
 [Category ("UsesDevice")]
 public class NativeLibraryLoadTests : DeviceTest
 {
+	[Test]
+	public void AssemblyStoreDlopenResolvesOriginalPayload ([Values] bool is64Bit, [Values] bool extractNativeLibs)
+	{
+		string abi = RunAdbCommand ("shell getprop ro.product.cpu.abilist").Trim ().Split (',')
+			.FirstOrDefault (value => is64Bit ? value is "arm64-v8a" or "x86_64" : value == "armeabi-v7a");
+		if (abi == null) {
+			Assert.Ignore ($"The target does not support a {(is64Bit ? 64 : 32)}-bit CoreCLR ABI.");
+			return;
+		}
+
+		string packageName = PackageUtils.MakePackageName (
+			AndroidRuntime.CoreCLR, $"assemblystore{(is64Bit ? 64 : 32)}{extractNativeLibs}");
+		var proj = new XamarinAndroidApplicationProject (packageName: packageName) {
+			IsRelease = true,
+		};
+		proj.SetRuntime (AndroidRuntime.CoreCLR);
+		proj.SetRuntimeIdentifiers ([abi]);
+		proj.SetDefaultTargetDevice ();
+		proj.SetProperty ("AdbTargetArchitecture", abi);
+		proj.SetProperty ("AndroidPackageFormat", "apk");
+		proj.SetProperty ("AndroidEnableAssemblyCompression", "true");
+		proj.SetProperty ("PublishReadyToRun", "false");
+		proj.AndroidManifest = proj.AndroidManifest.Replace (
+			"<application ", $"<application android:extractNativeLibs=\"{extractNativeLibs.ToString ().ToLowerInvariant ()}\" ");
+		proj.MainActivity = proj.DefaultMainActivity
+			.Replace ("//${USINGS}", "using System.IO;\nusing System.Runtime.InteropServices;\nusing System.Security.Cryptography;")
+			.Replace (
+				"//${AFTER_ONCREATE}",
+				"""
+				var intent = Intent ?? throw new InvalidOperationException ("The loader test intent is missing.");
+				int length = intent.GetIntExtra ("expected-store-length", 0);
+				string expectedHash = intent.GetStringExtra ("expected-store-sha256")
+					?? throw new InvalidOperationException ("The expected store digest is missing.");
+				if (length <= 0 || Environment.Is64BitProcess != intent.GetBooleanExtra ("expected-64-bit", false)) {
+					throw new InvalidOperationException ("The payload length or process ABI is incorrect.");
+				}
+
+				// Match Host::map_assembly_store_via_dlopen: RTLD_NOW | RTLD_LOCAL and the sole payload export.
+				IntPtr handle = AssemblyStoreNativeMethods.dlopen ("libassembly-store.so", 2);
+				if (handle == IntPtr.Zero) {
+					throw new InvalidOperationException ("dlopen: " + Marshal.PtrToStringAnsi (AssemblyStoreNativeMethods.dlerror ()));
+				}
+				try {
+					IntPtr address = AssemblyStoreNativeMethods.dlsym (handle, "_assembly_store");
+					if (address == IntPtr.Zero) {
+						throw new InvalidOperationException ("dlsym: " + Marshal.PtrToStringAnsi (AssemblyStoreNativeMethods.dlerror ()));
+					}
+					byte [] payload = new byte [length];
+					Marshal.Copy (address, payload, 0, payload.Length);
+					string actualHash = Convert.ToHexString (SHA256.HashData (payload));
+					if (actualHash != expectedHash) {
+						throw new InvalidDataException ($"Loaded assembly-store digest {actualHash} differs from {expectedHash}.");
+					}
+				} finally {
+					if (AssemblyStoreNativeMethods.dlclose (handle) != 0) {
+						throw new InvalidOperationException ("dlclose: " + Marshal.PtrToStringAnsi (AssemblyStoreNativeMethods.dlerror ()));
+					}
+				}
+				Android.Util.Log.Info ("AssemblyStoreLoader", $"ASSEMBLY_STORE_PAYLOAD_MATCH:{expectedHash}");
+				""")
+			.Replace (
+				"//${AFTER_MAINACTIVITY}",
+				"""
+				static class AssemblyStoreNativeMethods
+				{
+					[DllImport ("libdl")]
+					public static extern IntPtr dlopen (string name, int flags);
+
+					[DllImport ("libdl")]
+					public static extern IntPtr dlsym (IntPtr handle, string name);
+
+					[DllImport ("libdl")]
+					public static extern IntPtr dlerror ();
+
+					[DllImport ("libdl")]
+					public static extern int dlclose (IntPtr handle);
+				}
+				""");
+
+		using var builder = CreateApkBuilder (packageName: packageName);
+		Assert.IsTrue (builder.Install (proj), "The generated-store application should build and install.");
+		AssertExtractNativeLibs (builder.Output.GetIntermediaryPath (Path.Combine ("android", "AndroidManifest.xml")), extractNativeLibs);
+		string rawStore = builder.Output.GetIntermediaryPath (Path.Combine ("app_shared_libraries", abi, "assembly-store.so"));
+		FileAssert.Exists (rawStore);
+		byte [] expected = File.ReadAllBytes (rawStore);
+		Assert.Greater (expected.Length, 0);
+		string expectedHash = Convert.ToHexString (SHA256.HashData (expected));
+		string successMarker = $"ASSEMBLY_STORE_PAYLOAD_MATCH:{expectedHash}";
+
+		ClearAdbLogcat ();
+		Assert.IsTrue (MonitorAdbLogcat (
+			line => line.Contains (successMarker, StringComparison.Ordinal),
+			Path.Combine (Root, builder.ProjectDirectory, "assembly-store-loader.log"),
+			ActivityStartTimeoutInSeconds,
+			onMonitoringStarted: () => {
+				var (code, output, error) = RunAdbCommandWithExitCode ([
+					"shell", "am", "start", "-S", "-n", $"{proj.PackageName}/{proj.JavaPackageName}.MainActivity",
+					"--es", "expected-store-sha256", expectedHash,
+					"--ei", "expected-store-length", expected.Length.ToString (CultureInfo.InvariantCulture),
+					"--ez", "expected-64-bit", is64Bit.ToString ().ToLowerInvariant (),
+				]);
+				Assert.AreEqual (0, code, $"The loader test activity should start: {output}\n{error}");
+				StringAssert.Contains ("Starting: Intent {", output);
+			}),
+			"Android dlopen/dlsym must expose every byte of the generated assembly-store payload.");
+	}
+
 	[Test]
 	public void UnknownSystemLibraryLoadsWithoutMainThreadDispatch ()
 	{

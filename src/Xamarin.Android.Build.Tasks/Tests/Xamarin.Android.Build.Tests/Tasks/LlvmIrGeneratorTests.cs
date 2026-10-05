@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using Microsoft.Build.Utilities;
-using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tasks.LLVMIR;
@@ -82,26 +82,5 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.That (output, Does.Contain ("@test_function"), "Generated LLVM IR should contain the function name");
 		}
 
-		[Test]
-		public void TypeMapAssemblyFullNameUsesRuntimeEscaping ()
-		{
-			var assemblyName = new AssemblyNameDefinition ("Comma,Name", new Version (1, 2, 3, 4));
-
-			Assert.That (
-				TypeMapCecilAdapter.GetRuntimeAssemblyFullName (assemblyName),
-				Is.EqualTo (@"Comma\,Name, Version=1.2.3.4, Culture=neutral, PublicKeyToken=null")
-			);
-		}
-
-		[Test]
-		public void TypeMapAssemblyFullNameMatchesStrongNamedRuntimeAssembly ()
-		{
-			string assemblyPath = typeof (TypeMapCecilAdapter).Assembly.Location;
-			using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
-			string? runtimeFullName = System.Reflection.AssemblyName.GetAssemblyName (assemblyPath).FullName;
-
-			Assert.That (runtimeFullName, Does.Not.EndWith ("PublicKeyToken=null"));
-			Assert.That (TypeMapCecilAdapter.GetRuntimeAssemblyFullName (assembly.Name), Is.EqualTo (runtimeFullName));
-		}
 	}
 }

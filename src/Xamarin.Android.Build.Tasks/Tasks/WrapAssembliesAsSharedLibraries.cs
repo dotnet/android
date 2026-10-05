@@ -10,13 +10,12 @@ using Xamarin.Android.Tools;
 namespace Xamarin.Android.Tasks;
 
 /// <summary>
-/// In the "all assemblies are per-RID" world, assembly stores, assemblies, pdb and config are disguised as shared libraries (that is,
+/// In the "all assemblies are per-RID" world, discrete assemblies, pdb and config are disguised as shared libraries (that is,
 /// their names end with the .so extension) so that Android allows us to put them in the `lib/{ARCH}` directory.
 /// </summary>
 public class WrapAssembliesAsSharedLibraries : AndroidTask
 {
 	const string ArchiveAssembliesPath = "lib";
-	const string ArchiveLibPath = "lib";
 
 	public override string TaskPrefix => "WAS";
 
@@ -31,8 +30,6 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 	[Required]
 	public string IntermediateOutputPath { get; set; } = "";
 
-	public bool UseAssemblyStore { get; set; }
-
 	[Required]
 	public ITaskItem [] ResolvedAssemblies { get; set; } = [];
 
@@ -46,34 +43,12 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 	{
 		var files = new PackageFileListBuilder ();
 
-		if (UseAssemblyStore)
-			WrapAssemblyStores (files);
-		else {
-			var wrapper_config = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, RuntimePackLibraryDirectories, IntermediateOutputPath);
-			AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedAssemblies, (TaskLoggingHelper log, AndroidTargetArch arch, ITaskItem assembly) => WrapAssembly (log, arch, assembly, wrapper_config, files));
-		}
+		var wrapper_config = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, RuntimePackLibraryDirectories, IntermediateOutputPath);
+		AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedAssemblies, (TaskLoggingHelper log, AndroidTargetArch arch, ITaskItem assembly) => WrapAssembly (log, arch, assembly, wrapper_config, files));
 
 		WrappedAssemblies = files.ToArray ();
 
 		return !Log.HasLoggedErrors;
-	}
-
-	void WrapAssemblyStores (PackageFileListBuilder files)
-	{
-		foreach (var store in ResolvedAssemblies) {
-			var store_path = store.ItemSpec;
-			var abi = store.GetRequiredMetadata ("ResolvedAssemblies", "Abi", Log);
-
-			// An error will already have been logged in GetRequiredMetadata
-			if (abi is null)
-				return;
-
-			var arch = MonoAndroidHelper.AbiToTargetArch (abi);
-			var archive_path = MakeArchiveLibPath (abi, "lib" + Path.GetFileName (store_path));
-			var wrapped_source_path = DlopenAssemblyStoreGenerator.WrapIt (Log, AndroidBinUtilsDirectory, IntermediateOutputPath, arch, store_path, Path.GetFileName (archive_path));
-
-			files.AddItem (wrapped_source_path, archive_path);
-		}
 	}
 
 	void WrapAssembly (TaskLoggingHelper log, AndroidTargetArch arch, ITaskItem assembly, DSOWrapperGenerator.Config dsoWrapperConfig, PackageFileListBuilder files)
@@ -108,8 +83,6 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 		var wrappedSymbolsPath = DSOWrapperGenerator.WrapIt (log, dsoWrapperConfig, arch, symbols, Path.GetFileName (archiveSymbolsPath));
 		files.AddItem (wrappedSymbolsPath, archiveSymbolsPath);
 	}
-
-	static string MakeArchiveLibPath (string abi, string fileName) => MonoAndroidHelper.MakeZipArchivePath (ArchiveLibPath, abi, fileName);
 
 	/// <summary>
 	/// Returns the in-archive path for an assembly

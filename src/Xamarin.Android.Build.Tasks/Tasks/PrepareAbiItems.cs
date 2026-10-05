@@ -12,11 +12,9 @@ namespace Xamarin.Android.Tasks
 	public class PrepareAbiItems : AndroidTask
 	{
 		const string ArmV7a = "armeabi-v7a";
-		const string TypeMapBase = "typemaps";
 		const string EnvBase = "environment";
 		const string CompressedAssembliesBase = "compressed_assemblies";
 		const string JniRemappingBase = "jni_remap";
-		const string MarshalMethodsBase = "marshal_methods";
 		const string PinvokePreserveBase = "pinvoke_preserve";
 		const string JniInitFuncsBase = "jni_init_funcs";
 
@@ -46,16 +44,12 @@ namespace Xamarin.Android.Tasks
 			var includes = new List<ITaskItem> ();
 			string baseName;
 
-			if (MonoAndroidHelper.StringEquals ("typemap", Mode, StringComparison.OrdinalIgnoreCase)) {
-				baseName = TypeMapBase;
-			} else if (MonoAndroidHelper.StringEquals ("environment", Mode, StringComparison.OrdinalIgnoreCase)) {
+			if (MonoAndroidHelper.StringEquals ("environment", Mode, StringComparison.OrdinalIgnoreCase)) {
 				baseName = EnvBase;
 			} else if (MonoAndroidHelper.StringEquals ("compressed", Mode, StringComparison.OrdinalIgnoreCase)) {
 				baseName = CompressedAssembliesBase;
 			} else if (MonoAndroidHelper.StringEquals ("jniremap", Mode, StringComparison.OrdinalIgnoreCase)) {
 				baseName = JniRemappingBase;
-			} else if (MonoAndroidHelper.StringEquals ("marshal_methods", Mode, StringComparison.OrdinalIgnoreCase)) {
-				baseName = MarshalMethodsBase;
 			} else if (MonoAndroidHelper.StringEquals ("runtime_linking", Mode, StringComparison.OrdinalIgnoreCase)) {
 				baseName = PinvokePreserveBase;
 			} else if (MonoAndroidHelper.StringEquals ("jni_init", Mode, StringComparison.OrdinalIgnoreCase)) {

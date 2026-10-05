@@ -151,6 +151,51 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		Assert.AreEqual ("XA4328", errors [0].Code);
 	}
 
+	[Test]
+	public void MemberGeneratorScopesRulesToCanonicalKeys ()
+	{
+		var path = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (path);
+		var first = Path.Combine (path, "first.keys");
+		var second = Path.Combine (path, "second.keys");
+		File.WriteAllText (first, "test/Peer\ntest/Contract\n");
+		File.WriteAllText (second, "test/Peer\ntest/Base\n");
+		var task = new GenerateTypeMapMemberProguardConfiguration {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			TypeMapKeyFiles = [new TaskItem (first), new TaskItem (second)],
+			OutputFile = Path.Combine (path, "members.cfg"),
+		};
+
+		Assert.IsTrue (task.Execute ());
+		Assert.AreEqual (
+			"-keepclassmembers class test.Base { *; }\n-keepclassmembers interface test.Base { *; }\n" +
+			"-keepclassmembers class test.Contract { *; }\n-keepclassmembers interface test.Contract { *; }\n" +
+			"-keepclassmembers class test.Peer { *; }\n-keepclassmembers interface test.Peer { *; }\n",
+			File.ReadAllText (task.OutputFile));
+	}
+
+	[Test]
+	public void MemberGeneratorRejectsInvalidKeysWithoutOverwritingOutput ()
+	{
+		var path = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (path);
+		var input = Path.Combine (path, "invalid.keys");
+		var output = Path.Combine (path, "members.cfg");
+		File.WriteAllText (input, "test/Peer\ntest/*\n");
+		File.WriteAllText (output, "previous output");
+		var errors = new List<BuildErrorEventArgs> ();
+		var task = new GenerateTypeMapMemberProguardConfiguration {
+			BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			TypeMapKeyFiles = [new TaskItem (input)],
+			OutputFile = output,
+		};
+
+		Assert.IsFalse (task.Execute ());
+		Assert.AreEqual (1, errors.Count);
+		Assert.AreEqual ("XA4328", errors [0].Code);
+		Assert.AreEqual ("previous output", File.ReadAllText (output));
+	}
+
 	static GenerateTypeMapProguardConfiguration CreateTask (string input, string output) => new () {
 		BuildEngine = new MockBuildEngine (TestContext.Out),
 		TypeMapKeyFiles = [new TaskItem (input)],
