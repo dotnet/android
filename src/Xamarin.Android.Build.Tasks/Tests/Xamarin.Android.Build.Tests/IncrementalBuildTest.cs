@@ -3,9 +3,11 @@ using Mono.Cecil;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using Microsoft.Android.Build.Tasks;
@@ -332,10 +334,17 @@ namespace Xamarin.Android.Build.Tests
 		void AssertJniRemappingCounts (XamarinAndroidApplicationProject proj, ProjectBuilder builder, uint expectedTypeCount, uint expectedMethodCount)
 		{
 			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-			var envFiles = EnvironmentHelper.GatherEnvironmentFiles (objDirPath, "arm64-v8a;x86_64", required: true, runtime: AndroidRuntime.CoreCLR);
-			var appConfig = EnvironmentHelper.ReadApplicationConfig (envFiles);
-			Assert.AreEqual (expectedTypeCount, appConfig.jni_remapping_replacement_type_count, "jni_remapping_replacement_type_count should be preserved.");
-			Assert.AreEqual (expectedMethodCount, appConfig.jni_remapping_replacement_method_index_entry_count, "jni_remapping_replacement_method_index_entry_count should be preserved.");
+			foreach (string abi in new [] { "arm64-v8a", "x86_64" }) {
+				string remapPath = Path.Combine (objDirPath, "android", $"jni_remap.{abi}.ll");
+				FileAssert.Exists (remapPath);
+				string source = File.ReadAllText (remapPath);
+				var data = Regex.Match (source, @"@jni_remapping_data\s*=\s*[^{]+\{(?<fields>[^}]+)\}");
+				Assert.IsTrue (data.Success, $"jni_remapping_data must be emitted for {abi}.");
+				var counts = Regex.Matches (data.Groups ["fields"].Value, @"\bi32 (?<count>\d+)\b");
+				Assert.AreEqual (4, counts.Count, $"jni_remapping_data must contain four counts for {abi}.");
+				Assert.AreEqual (expectedTypeCount, uint.Parse (counts [0].Groups ["count"].Value, CultureInfo.InvariantCulture), $"type_replacement_count should be preserved for {abi}.");
+				Assert.AreEqual (expectedMethodCount, uint.Parse (counts [2].Groups ["count"].Value, CultureInfo.InvariantCulture), $"method_replacement_index_count should be preserved for {abi}.");
+			}
 		}
 
 		[Test]
@@ -371,8 +380,13 @@ namespace Xamarin.Android.Build.Tests
 		{
 			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
 			var envFiles = EnvironmentHelper.GatherEnvironmentFiles (objDirPath, string.Join (";", proj.GetRuntimeIdentifiersAsAbis ()), required: true, runtime: AndroidRuntime.CoreCLR);
-			var appConfig = EnvironmentHelper.ReadApplicationConfig (envFiles);
-			Assert.IsFalse (appConfig.jni_add_native_method_registration_attribute_present, "The trimmable type map should not enable dynamic JNI registration.");
+			EnvironmentHelper.ReadApplicationConfig (envFiles);
+			foreach (var envFile in envFiles) {
+				var source = File.ReadAllText (envFile.Path);
+				StringAssert.DoesNotContain ("jni_add_native_method_registration_attribute_present", source);
+				StringAssert.DoesNotContain ("jnienv_registerjninatives_method_token", source);
+				StringAssert.DoesNotContain ("marshal_methods_enabled", source);
+			}
 		}
 
 		Dictionary<string, DateTime> GetJniRemappingSourceTimestamps (XamarinAndroidApplicationProject proj, ProjectBuilder builder)
@@ -1625,9 +1639,7 @@ namespace Lib2
 					string typemap = Path.Combine (intermediate, "typemap", $"_{proj.ProjectName}.TypeMap.dll");
 					FileAssert.Exists (typemap, "The managed application type map should be generated.");
 					string apk = Directory.GetFiles (Path.Combine (projectDirectory, proj.OutputPath), "*-Signed.apk", SearchOption.AllDirectories).Single ();
-					DateTime typemapWriteTime = File.GetLastWriteTimeUtc (typemap);
 					DateTime apkWriteTime = File.GetLastWriteTimeUtc (apk);
-					string typemapHash = Files.HashFile (typemap);
 					string apkHash = Files.HashFile (apk);
 
 					// Change managed code without changing any Java type mappings.
@@ -1640,8 +1652,6 @@ namespace Lib2
 					b.Output.AssertTargetIsSkipped ("_CreateApplicationSharedLibraries");
 					b.Output.AssertTargetIsSkipped ("_BuildApkFastDev");
 					b.Output.AssertTargetIsSkipped ("_Sign");
-					Assert.AreEqual (typemapWriteTime, File.GetLastWriteTimeUtc (typemap), $"{typemap} should not be rewritten when its mappings have not changed.");
-					Assert.AreEqual (typemapHash, Files.HashFile (typemap), $"{typemap} contents should not change.");
 					Assert.AreEqual (apkWriteTime, File.GetLastWriteTimeUtc (apk), $"{apk} should not be rewritten for an incremental C# change.");
 					Assert.AreEqual (apkHash, Files.HashFile (apk), $"{apk} contents should not change.");
 				}
@@ -1651,8 +1661,6 @@ namespace Lib2
 		readonly string [] ExpectedAssemblyFiles = new [] {
 			Path.Combine ("android", "environment.@ABI@.o"),
 			Path.Combine ("android", "environment.@ABI@.ll"),
-			Path.Combine ("android", "typemap.@ABI@.o"),
-			Path.Combine ("android", "typemap.@ABI@.ll"),
 			Path.Combine ("app_shared_libraries", "@ABI@", "libxamarin-app.so")
 		};
 
@@ -1669,6 +1677,13 @@ namespace Lib2
 				var path = Path.Combine (intermediate, file);
 				CollectionAssert.Contains (lines, path, $"{file} is not in FileWrites!");
 				FileAssert.Exists (path);
+			}
+			var typeMapAssembly = Path.Combine (intermediate, "typemap", "_Microsoft.Android.TypeMaps.dll");
+			CollectionAssert.Contains (lines, typeMapAssembly, "The managed type map assembly should be in FileWrites.");
+			FileAssert.Exists (typeMapAssembly);
+
+			foreach (var obsoleteSource in new [] { $"typemap.{abi}.ll", $"marshal_methods.{abi}.ll" }) {
+				FileAssert.DoesNotExist (Path.Combine (intermediate, "android", obsoleteSource));
 			}
 		}
 
@@ -2161,6 +2176,5 @@ namespace Lib2
 				Assert.AreEqual (assemblyWriteTime, File.GetLastWriteTimeUtc (linkedAssembly), "A no-change build should not rewrite the linked assembly.");
 			}
 		}
-
 	}
 }

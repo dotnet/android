@@ -3,9 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection.Metadata;
-using System.Reflection.Metadata.Ecma335;
-using System.Reflection.PortableExecutable;
 using System.Text;
 using Microsoft.Build.Framework;
 
@@ -143,9 +140,6 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			int android_runtime_jnienv_class_token = -1;
-			int jnienv_initialize_method_token = -1;
-			int jnienv_registerjninatives_method_token = -1;
 			foreach (var assembly in ResolvedAssemblies) {
 				if (ShouldSkipAssembly (assembly)) {
 					continue;
@@ -153,16 +147,6 @@ namespace Xamarin.Android.Tasks
 
 				updateNameWidth (assembly);
 				updateAssemblyCount (assembly);
-
-				if (android_runtime_jnienv_class_token != -1) {
-					continue;
-				}
-
-				if (!assembly.ItemSpec.EndsWith ("Mono.Android.dll", StringComparison.OrdinalIgnoreCase)) {
-					continue;
-				}
-
-				GetRequiredTokens (assembly.ItemSpec, out android_runtime_jnienv_class_token, out jnienv_initialize_method_token, out jnienv_registerjninatives_method_token);
 			}
 
 			if (AdditionalResolvedAssemblies != null) {
@@ -198,23 +182,15 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
 			Dictionary<string, string>? runtimeProperties = RuntimePropertiesParser.ParseConfig (ProjectRuntimeConfigFilePath, ProjectRuntimeConfigDevFilePath);
 			LLVMIR.LlvmIrComposer appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, runtimeProperties, Log) {
 				AndroidPackageName = AndroidPackageName,
 				PackageNamingPolicy = pnp,
-				JniAddNativeMethodRegistrationAttributePresent = false,
 				NumberOfAssembliesInApk = assemblyCount,
 				BundledAssemblyNameWidth = assemblyNameWidth,
 				NativeLibraries = uniqueNativeLibraries,
 				NativeLibrariesNoJniPreload = NativeLibrariesNoJniPreload,
 				NativeLibrariesAlwaysJniPreload = NativeLibrariesAlwaysJniPreload,
-				AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
-				JNIEnvInitializeToken = jnienv_initialize_method_token,
-				JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
-				JniRemappingReplacementTypeCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementTypeCount,
-				JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
-				MarshalMethodsEnabled = false,
 				IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
 				HaveAssemblyStore = UseAssemblyStore,
 			};
@@ -248,83 +224,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return BundleConfigSplitConfigsChecker.ShouldIgnoreSplitConfigs (Log, CustomBundleConfigFile);
-		}
-
-		void GetRequiredTokens (string assemblyFilePath, out int android_runtime_jnienv_class_token, out int jnienv_initialize_method_token, out int jnienv_registerjninatives_method_token)
-		{
-			using (var pe = new PEReader (File.OpenRead (assemblyFilePath))) {
-				GetRequiredTokens (pe.GetMetadataReader (), out android_runtime_jnienv_class_token, out jnienv_initialize_method_token, out jnienv_registerjninatives_method_token);
-			}
-
-			if (android_runtime_jnienv_class_token == -1 || jnienv_initialize_method_token == -1 || jnienv_registerjninatives_method_token == -1) {
-
-				// In the trimmable typemap path (CoreCLR), some JNIEnvInit methods may be trimmed.
-				// Use token 0 for missing tokens — native code will skip them.
-				if (jnienv_registerjninatives_method_token == -1) {
-					jnienv_registerjninatives_method_token = 0;
-				}
-				if (jnienv_initialize_method_token == -1) {
-					jnienv_initialize_method_token = 0;
-				}
-				if (android_runtime_jnienv_class_token == -1) {
-					android_runtime_jnienv_class_token = 0;
-				}
-			}
-		}
-
-		void GetRequiredTokens (MetadataReader reader, out int android_runtime_jnienv_class_token, out int jnienv_initialize_method_token, out int jnienv_registerjninatives_method_token)
-		{
-			android_runtime_jnienv_class_token = -1;
-			jnienv_initialize_method_token = -1;
-			jnienv_registerjninatives_method_token = -1;
-
-			TypeDefinition? typeDefinition = null;
-
-			foreach (TypeDefinitionHandle typeHandle in reader.TypeDefinitions) {
-				TypeDefinition td = reader.GetTypeDefinition (typeHandle);
-				if (!TypeMatches (td)) {
-					continue;
-				}
-
-				typeDefinition = td;
-				android_runtime_jnienv_class_token = MetadataTokens.GetToken (reader, typeHandle);
-				break;
-			}
-
-			if (typeDefinition == null) {
-				return;
-			}
-
-			foreach (MethodDefinitionHandle methodHandle in typeDefinition.Value.GetMethods ()) {
-				MethodDefinition md = reader.GetMethodDefinition (methodHandle);
-				string name = reader.GetString (md.Name);
-
-				if (jnienv_initialize_method_token == -1 && MonoAndroidHelper.StringEquals (name, "Initialize")) {
-					jnienv_initialize_method_token = MetadataTokens.GetToken (reader, methodHandle);
-				} else if (jnienv_registerjninatives_method_token == -1 && MonoAndroidHelper.StringEquals (name, "RegisterJniNatives")) {
-					jnienv_registerjninatives_method_token = MetadataTokens.GetToken (reader, methodHandle);
-				}
-
-				if (jnienv_initialize_method_token != -1 && jnienv_registerjninatives_method_token != -1) {
-					break;
-				}
-			}
-
-
-			bool TypeMatches (TypeDefinition td)
-			{
-				string ns = reader.GetString (td.Namespace);
-				if (!MonoAndroidHelper.StringEquals (ns, "Android.Runtime")) {
-					return false;
-				}
-
-				string name = reader.GetString (td.Name);
-				if (!MonoAndroidHelper.StringEquals (name, "JNIEnvInit")) {
-					return false;
-				}
-
-				return true;
-			}
 		}
 	}
 }

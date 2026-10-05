@@ -108,8 +108,8 @@ namespace Java.InteropTests
 		[Category ("PeerManagerLifetime")]
 		public void PeekPeer_DisposedManager_Throws (bool registered)
 		{
-			// Use the runtime's factory without replacing or disposing its process-wide manager.
-			using var manager = JNIEnvInit.CreateValueManager ();
+			// Create an isolated manager without disposing the process-wide manager.
+			using var manager = new Microsoft.Android.Runtime.TrimmableTypeMapValueManager ();
 			manager.OnSetRuntime (JniRuntime.CurrentRuntime);
 			using var peer = new Java.Lang.String ("registered peer");
 			manager.AddPeer (peer);
