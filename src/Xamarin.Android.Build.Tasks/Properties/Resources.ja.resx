@@ -1106,8 +1106,8 @@ In this message, the term "handheld app" means "app for handheld devices."
 </comment>
   </data>
   <data name="XA1049" xml:space="preserve">
-    <value>'AndroidEnableMarshalMethods' と 'PublishReadyToRun' MSBuild プロパティの両方を 'true' に設定することはできません。1 つのプロパティを 'false' に設定します。</value>
-    <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, PublishReadyToRun, MSBuild, true, false.</comment>
+    <value>The 'AndroidEnableMarshalMethods' MSBuild property is no longer supported. Remove it or set it to 'false'.</value>
+    <comment>The following are literal names and should not be translated: AndroidEnableMarshalMethods, MSBuild, false.</comment>
   </data>
   <data name="XA1050" xml:space="preserve">
     <value>'AndroidR8ObfuscationMode' MSBuild プロパティの値 '{0}' が無効です。有効な値は 'disabled' と 'private-members' です。</value>
@@ -1180,7 +1180,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - Java type name from AndroidManifest.xml</comment>
   </data>
   <data name="XA4251" xml:space="preserve">
-    <value>Type '{0}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. Please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.</value>
+    <value>型 '{0}' は [JniAddNativeMethodRegistrationAttribute] を使用していますが、これはトリミング可能な型マップではサポートされていません。チームがサポートするかどうかを評価できるように、https://github.com/dotnet/android/issues でこのシナリオを報告してください。</value>
     <comment>The following is a literal name and should not be translated: JniAddNativeMethodRegistrationAttribute.
 {0} - Fully-qualified managed type name</comment>
   </data>
@@ -1273,7 +1273,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {2} - Second runtime-specific assembly path</comment>
   </data>
   <data name="XA4267" xml:space="preserve">
-    <value>The 'llvm-ir' type map implementation is no longer supported. Remove the AndroidTypeMapImplementation property or set it to 'trimmable'.</value>
+    <value>'llvm-ir' 型マップの実装はサポートされなくなりました。AndroidTypeMapImplementation プロパティを削除するか、'trimmable' に設定します。</value>
     <comment>The following are literal names and should not be translated: llvm-ir, AndroidTypeMapImplementation, trimmable.</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
