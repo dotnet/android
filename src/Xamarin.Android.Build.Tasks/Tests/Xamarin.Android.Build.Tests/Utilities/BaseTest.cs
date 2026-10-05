@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -163,17 +164,32 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 			var exited = ObserveExitAsync ();
-			string stdOutput = "", stdError = "";
-			int exitCode = -1;
+			var stdOutput = new StringBuilder ();
+			var stdError = new StringBuilder ();
+			// All-at-once capture loses its result on cancellation; apkdiff needs raw partial diagnostics.
+			async Task CaptureAsync (StreamReader reader, StringBuilder output)
+			{
+				char [] buffer = ArrayPool<char>.Shared.Rent (4096);
+				try {
+					int read;
+					while ((read = await reader.ReadAsync (buffer.AsMemory (), outputDeadline.Token).ConfigureAwait (false)) > 0)
+						output.Append (buffer, 0, read);
+				} finally {
+					ArrayPool<char>.Shared.Return (buffer);
+				}
+			}
+			bool outputTimedOut = false;
+			bool completed;
 			try {
-				(stdOutput, stdError) = await process.ReadAllTextAsync (outputDeadline.Token).ConfigureAwait (false);
-				bool completed = await exited.ConfigureAwait (false);
-				if (completed)
-					exitCode = process.ExitCode;
-				else
-					stdError += $"{Environment.NewLine}apkdiff timed out after {timeoutInSeconds} seconds (PID {process.Id}).";
-			} catch (OperationCanceledException) when (outputDeadline.IsCancellationRequested) {
-				stdError = $"apkdiff exited or timed out with redirected output still open after 2 seconds (PID {process.Id}).";
+				try {
+					await Task.WhenAll (
+						CaptureAsync (process.StandardOutput, stdOutput),
+						CaptureAsync (process.StandardError, stdError)
+					).ConfigureAwait (false);
+				} catch (OperationCanceledException) when (outputDeadline.IsCancellationRequested) {
+					outputTimedOut = true;
+				}
+				completed = await exited.ConfigureAwait (false);
 			} finally {
 				using var stdoutReader = process.StandardOutput;
 				using var stderrReader = process.StandardError;
@@ -181,7 +197,12 @@ namespace Xamarin.Android.Build.Tests
 				await exited.ConfigureAwait (false);
 			}
 
-			var result = (code: exitCode, stdOutput: stdOutput.Trim (), stdError: stdError.Trim ());
+			int exitCode = completed ? process.ExitCode : -1;
+			if (!completed)
+				stdError.AppendLine ().Append ($"apkdiff timed out after {timeoutInSeconds} seconds (PID {process.Id}).");
+			if (outputTimedOut)
+				stdError.AppendLine ().Append ($"apkdiff exited or timed out with redirected output still open after 2 seconds (PID {process.Id}).");
+			var result = (code: exitCode, stdOutput: stdOutput.ToString ().Trim (), stdError: stdError.ToString ().Trim ());
 			var logContent = $"apkdiff exited with code: {exitCode}" +
 				$"\ncontext: https://github.com/dotnet/android/blob/main/Documentation/project-docs/ApkSizeRegressionChecks.md" +
 				$"\nstdOut:\n{result.stdOutput}\nstdErr:\n{result.stdError}";
