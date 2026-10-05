@@ -9,17 +9,15 @@
 
 using namespace xamarin::android;
 
-namespace {
-	[[gnu::always_inline]] void
-	set_category (const char *name, const char *arg, size_t arg_length, unsigned int entry) noexcept
-	{
-		if ((log_categories & entry) == entry) {
-			return;
-		}
+[[gnu::always_inline]] static void
+set_category (const char *name, const char *arg, size_t arg_length, unsigned int entry) noexcept
+{
+	if ((log_categories & entry) == entry) {
+		return;
+	}
 
-		if (strlen (name) == arg_length && strncmp (arg, name, arg_length) == 0) {
-			log_categories |= entry;
-		}
+	if (strlen (name) == arg_length && strncmp (arg, name, arg_length) == 0) {
+		log_categories |= entry;
 	}
 }
 
