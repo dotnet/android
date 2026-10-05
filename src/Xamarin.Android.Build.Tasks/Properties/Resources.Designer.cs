@@ -212,15 +212,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not find mono.android.jar.
-        /// </summary>
-        public static string XA0002 {
-            get {
-                return ResourceManager.GetString("XA0002", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. It must be an integer value..
         /// </summary>
         public static string XA0003 {

@@ -1,9 +1,7 @@
 #nullable enable annotations
 
 using System;
-using System.Collections;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 
 using Android.App;
 using Android.Content;
@@ -20,62 +18,6 @@ namespace Java.InteropTests
 	[TestFixture]
 	public class ConstructorActivationTests
 	{
-		[Test]
-		[Category ("ReflectionCreateProxy")]
-		public void ReflectionCreateProxyCachesXAConstructor ()
-		{
-			AssumeReflectionActivation ();
-			ReflectionXAActivationPeer.Reset ();
-
-			Assert.IsFalse (IsReflectionActivationConstructorCached (typeof (ReflectionXAActivationPeer)));
-
-			using (CreateReflectionProxy<ReflectionXAActivationPeer> ())
-			using (CreateReflectionProxy<ReflectionXAActivationPeer> ()) {
-				Assert.AreEqual (2, ReflectionXAActivationPeer.XAConstructorInvocations);
-				Assert.AreEqual (0, ReflectionXAActivationPeer.JIConstructorInvocations);
-				Assert.IsTrue (IsReflectionActivationConstructorCached (typeof (ReflectionXAActivationPeer)));
-				var constructor = GetCachedReflectionActivationConstructor (typeof (ReflectionXAActivationPeer));
-				Assert.IsNotNull (constructor);
-				Assert.AreEqual (typeof (IntPtr), constructor.GetParameters () [0].ParameterType);
-			}
-		}
-
-		[Test]
-		[Category ("ReflectionCreateProxy")]
-		public void ReflectionCreateProxyCachesJIConstructorFallback ()
-		{
-			AssumeReflectionActivation ();
-			ReflectionJIActivationPeer.Reset ();
-
-			Assert.IsFalse (IsReflectionActivationConstructorCached (typeof (ReflectionJIActivationPeer)));
-
-			using (CreateReflectionProxy<ReflectionJIActivationPeer> ())
-			using (CreateReflectionProxy<ReflectionJIActivationPeer> ()) {
-				Assert.AreEqual (2, ReflectionJIActivationPeer.ConstructorInvocations);
-				Assert.AreEqual (JniObjectReferenceOptions.Copy, ReflectionJIActivationPeer.Options);
-				Assert.IsTrue (IsReflectionActivationConstructorCached (typeof (ReflectionJIActivationPeer)));
-				var constructor = GetCachedReflectionActivationConstructor (typeof (ReflectionJIActivationPeer));
-				Assert.IsNotNull (constructor);
-				Assert.IsTrue (constructor.GetParameters () [0].ParameterType.IsByRef);
-			}
-		}
-
-		[Test]
-		[Category ("ReflectionCreateProxy")]
-		public void ReflectionCreateProxyCachesMissingConstructor ()
-		{
-			AssumeReflectionActivation ();
-
-			Assert.IsFalse (IsReflectionActivationConstructorCached (typeof (ReflectionMissingActivationPeer)));
-
-			for (int i = 0; i < 2; i++) {
-				Assert.Throws<MissingMethodException> (() => CreateReflectionProxy<ReflectionMissingActivationPeer> ());
-			}
-
-			Assert.IsTrue (IsReflectionActivationConstructorCached (typeof (ReflectionMissingActivationPeer)));
-			Assert.IsNull (GetCachedReflectionActivationConstructor (typeof (ReflectionMissingActivationPeer)));
-		}
-
 		[Test]
 		public void JavaSideDefaultConstructorRunsOnceAndRegistersPeer ()
 		{
@@ -284,7 +226,6 @@ namespace Java.InteropTests
 		public void JavaSideShortConstructorForwardsValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(S)V", new JValue ((short) -1234))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
@@ -357,7 +298,6 @@ namespace Java.InteropTests
 		public void JavaSideStringConstructorForwardsValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var value = new Java.Lang.String ("hello constructor"))
 			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(Ljava/lang/String;)V", new JValue (value))) {
@@ -370,7 +310,6 @@ namespace Java.InteropTests
 		public void JavaSideStringConstructorForwardsNull ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(Ljava/lang/String;)V", JValue.Zero)) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
@@ -382,7 +321,6 @@ namespace Java.InteropTests
 		public void JavaSideTwoStringConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var first = new Java.Lang.String ("first"))
 			using (var second = new Java.Lang.String ("second"))
@@ -400,7 +338,6 @@ namespace Java.InteropTests
 		public void JavaSideTwoStringConstructorForwardsNullSecondValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var first = new Java.Lang.String ("first"))
 			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> (
@@ -417,7 +354,6 @@ namespace Java.InteropTests
 		public void JavaSideStringIntConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var text = new Java.Lang.String ("string-int"))
 			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> (
@@ -434,7 +370,6 @@ namespace Java.InteropTests
 		public void JavaSideIntArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
 					"([I)V",
@@ -448,7 +383,6 @@ namespace Java.InteropTests
 		public void JavaSideIntArrayConstructorForwardsEmptyArray ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
 					"([I)V",
@@ -463,7 +397,6 @@ namespace Java.InteropTests
 		public void JavaSideIntArrayConstructorForwardsNull ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("([I)V", JValue.Zero)) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
@@ -475,7 +408,6 @@ namespace Java.InteropTests
 		public void JavaSideStringIntArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var label = new Java.Lang.String ("string-array"))
 			{
@@ -499,7 +431,6 @@ namespace Java.InteropTests
 		public void JavaSideBooleanArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
 					"([Z)V",
@@ -513,7 +444,6 @@ namespace Java.InteropTests
 		public void JavaSideByteArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
 					"([B)V",
@@ -527,7 +457,6 @@ namespace Java.InteropTests
 		public void JavaSideStringArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
 					"([Ljava/lang/String;)V",
@@ -541,7 +470,6 @@ namespace Java.InteropTests
 		public void JavaSideStringArrayConstructorForwardsNullElement ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
 					"([Ljava/lang/String;)V",
@@ -555,7 +483,6 @@ namespace Java.InteropTests
 		public void JavaSideStringArrayConstructorForwardsNull ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("([Ljava/lang/String;)V", JValue.Zero)) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
@@ -567,7 +494,6 @@ namespace Java.InteropTests
 		public void JavaSideObjectArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var first = new Java.Lang.String ("object-array-value"))
 			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
@@ -585,7 +511,6 @@ namespace Java.InteropTests
 		public void JavaSideObjectArrayConstructorForwardsNull ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("([Ljava/lang/Object;)V", JValue.Zero)) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
@@ -597,7 +522,6 @@ namespace Java.InteropTests
 		public void JavaSideNestedIntArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
 					"([[I)V",
@@ -610,72 +534,6 @@ namespace Java.InteropTests
 				Assert.AreEqual (new [] { 1, 2 }, instance.NestedIntArrayValue [0]);
 				Assert.AreEqual (new [] { 3, 4, 5 }, instance.NestedIntArrayValue [1]);
 			}
-		}
-
-		static void AssumeTrimmableConstructorParameterMarshalling ()
-		{
-			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("Legacy TypeManager.n_Activate does not marshal string, short, or array constructor parameters; this case validates trimmable constructor UCO parameter marshalling.");
-			}
-		}
-
-		static void AssumeReflectionActivation ()
-		{
-			if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("This test validates the reflection-based TypeManager.CreateProxy activation path.");
-			}
-		}
-
-		static T CreateReflectionProxy<
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-			T> ()
-			where T : IJavaPeerable
-		{
-			IntPtr handle = JNIEnv.StartCreateInstance ("java/lang/Object", "()V");
-			JNIEnv.FinishCreateInstance (handle, "()V");
-			try {
-				var proxy = Java.Interop.TypeManager.CreateProxy (typeof (T), handle, JniHandleOwnership.TransferLocalRef);
-				handle = IntPtr.Zero;
-				if (proxy is not T result)
-					throw new InvalidOperationException ($"TypeManager.CreateProxy returned an unexpected peer for {typeof (T)}.");
-				return result;
-			} finally {
-				if (handle != IntPtr.Zero)
-					JNIEnv.DeleteLocalRef (handle);
-			}
-		}
-
-		static bool IsReflectionActivationConstructorCached (Type type)
-		{
-			return GetReflectionActivationConstructorCache ().Contains (type);
-		}
-
-		static ConstructorInfo? GetCachedReflectionActivationConstructor (Type type)
-		{
-			var activation = GetReflectionActivationConstructorCache () [type];
-			if (activation == null)
-				throw new InvalidOperationException ("The reflection activation constructor cache entry is null.");
-
-			var activationType = typeof (Java.Interop.TypeManager).GetNestedType ("ActivationConstructor", BindingFlags.NonPublic);
-			if (activationType == null)
-				throw new InvalidOperationException ("Could not find the reflection activation constructor cache entry type.");
-
-			var constructor = activationType.GetProperty ("Constructor");
-			if (constructor == null)
-				throw new InvalidOperationException ("Could not inspect the cached reflection activation constructor.");
-
-			return constructor.GetValue (activation) as ConstructorInfo;
-		}
-
-		static IDictionary GetReflectionActivationConstructorCache ()
-		{
-			const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Static;
-			var cacheField = typeof (Java.Interop.TypeManager).GetField ("ActivationConstructorCache", flags);
-			if (cacheField == null)
-				throw new InvalidOperationException ("Could not find the reflection activation constructor cache.");
-
-			return cacheField.GetValue (null) as IDictionary ??
-					throw new InvalidOperationException ("The reflection activation constructor cache is not a dictionary.");
 		}
 
 		static T CreateFromJava<
@@ -724,9 +582,7 @@ namespace Java.InteropTests
 			var registered = Java.Lang.Object.GetObject<T> (instance.Handle, JniHandleOwnership.DoNotTransfer);
 			try {
 				Assert.AreSame (instance, registered);
-				if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-					Assert.AreEqual (Java.Lang.JavaSystem.IdentityHashCode (instance), instance.JniIdentityHashCode);
-				}
+				Assert.AreEqual (Java.Lang.JavaSystem.IdentityHashCode (instance), instance.JniIdentityHashCode);
 			} finally {
 				if (registered != null && !object.ReferenceEquals (instance, registered))
 					registered.Dispose ();
@@ -740,58 +596,6 @@ namespace Java.InteropTests
 			Assert.IsTrue (
 				JniEnvironment.Types.IsSameObject (expected.PeerReference, actual.PeerReference),
 				$"Expected Java object identity to match. Expected handle: {expected.Handle}, actual handle: {actual.Handle}.");
-		}
-	}
-
-	sealed class ReflectionXAActivationPeer : Java.Lang.Object
-	{
-		public static int XAConstructorInvocations;
-		public static int JIConstructorInvocations;
-
-		public ReflectionXAActivationPeer (IntPtr handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
-		{
-			XAConstructorInvocations++;
-		}
-
-		public ReflectionXAActivationPeer (ref JniObjectReference reference, JniObjectReferenceOptions options)
-			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
-		{
-			JIConstructorInvocations++;
-			Construct (ref reference, options);
-		}
-
-		public static void Reset ()
-		{
-			XAConstructorInvocations = 0;
-			JIConstructorInvocations = 0;
-		}
-	}
-
-	sealed class ReflectionJIActivationPeer : Java.Lang.Object
-	{
-		public static int ConstructorInvocations;
-		public static JniObjectReferenceOptions Options;
-
-		public ReflectionJIActivationPeer (ref JniObjectReference reference, JniObjectReferenceOptions options)
-			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
-		{
-			ConstructorInvocations++;
-			Options = options;
-			Construct (ref reference, options);
-		}
-
-		public static void Reset ()
-		{
-			ConstructorInvocations = 0;
-			Options = JniObjectReferenceOptions.None;
-		}
-	}
-
-	sealed class ReflectionMissingActivationPeer : Java.Lang.Object
-	{
-		public ReflectionMissingActivationPeer ()
-		{
 		}
 	}
 

@@ -72,7 +72,6 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 
 	readonly AndroidTargetArch targetArch;
 	readonly List<PinvokeScanner.PinvokeEntryInfo> pinvokeInfos;
-
 	public PreservePinvokesNativeAssemblyGenerator (TaskLoggingHelper log, AndroidTargetArch targetArch, List<PinvokeScanner.PinvokeEntryInfo> pinvokeInfos)
 		: base (log)
 	{
