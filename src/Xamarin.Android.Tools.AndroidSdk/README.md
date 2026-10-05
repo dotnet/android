@@ -63,6 +63,12 @@ Installer.Common, Java.Interop libraries, and repository publishing tools keep
 their own target frameworks. The selected Java.Interop bootstrap/test consumers
 use truthful .NET 11 paths, not .NET 10 aliases.
 
+`System.Collections.Immutable` and `System.Reflection.Metadata` are supplied by
+the host framework, not copied into the workload's tooling directories. The
+installer manifest omits those obsolete support-package files. Dependencies
+still produced by unrelated owners, such as `System.Buffers` for BaseTasks and
+Installer.Common, remain packaged.
+
 ## Contributing
 
 Follow the repository's [contribution guidelines](../../CONTRIBUTING.md).
