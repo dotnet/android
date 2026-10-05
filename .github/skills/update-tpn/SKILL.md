@@ -82,8 +82,7 @@ Search `.csproj` files for `<PackageReference>` elements. Current third-party Nu
 | K4os.Compression.LZ4 | MiloszKrajewski/K4os.Compression.LZ4 | https://github.com/MiloszKrajewski/K4os.Compression.LZ4/ (MIT) |
 | Xamarin.LibZipSharp | xamarin/LibZipSharp | https://github.com/xamarin/LibZipSharp/ (MIT) |
 | Irony | IronyProject/Irony | https://github.com/IronyProject/Irony (MIT) |
-| Newtonsoft.Json | JamesNK/Newtonsoft.Json | https://github.com/JamesNK/Newtonsoft.Json (MIT) |
-| NuGet.ProjectModel | NuGet/NuGet.Client | https://github.com/NuGet/NuGet.Client (Apache 2.0) |
+| NuGet.Versioning | NuGet/NuGet.Client | https://github.com/NuGet/NuGet.Client (Apache 2.0) |
 | Mono.Cecil | mono/cecil | https://github.com/mono/cecil/ (MIT) |
 | Microsoft.Xml.SgmlReader | lovettchris/SgmlReader | https://github.com/lovettchris/SgmlReader/ (Apache 2.0) |
 

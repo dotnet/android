@@ -4,15 +4,16 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Java.Interop.Tools.Maven;
 using Java.Interop.Tools.Maven.Models;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using NuGet.ProjectModel;
+using NuGet.Versioning;
 
 namespace Xamarin.Android.Tasks;
 
@@ -120,8 +121,8 @@ class DependencyResolver
 	{
 		this.log = log;
 
-		if (File.Exists (lockFile))
-			finder = NuGetPackageVersionFinder.Create (lockFile!, log);
+		if (!lockFile.IsNullOrEmpty () && File.Exists (lockFile))
+			finder = NuGetPackageVersionFinder.Create (lockFile, log);
 	}
 
 	public bool EnsureDependencySatisfied (ResolvedDependency dependency, MicrosoftNuGetPackageFinder packages)
@@ -361,21 +362,53 @@ partial class MicrosoftNuGetPackageFinder
 
 public class NuGetPackageVersionFinder
 {
-	readonly LockFile lock_file;
+	readonly Dictionary<string, Dictionary<NuGetVersion, Package>> libraries = new (StringComparer.OrdinalIgnoreCase);
+	readonly string [] package_folders;
 	readonly static Regex tag = new Regex (@"artifact(?:_versioned)?=(?<GroupId>[^:\s;,]+):(?<ArtifactId>[^:\s;,]+):(?<Version>[^:\s;,]+)", RegexOptions.Compiled, TimeSpan.FromSeconds (5));
 
-	NuGetPackageVersionFinder (LockFile lockFile)
+	NuGetPackageVersionFinder (JsonElement lockFile)
 	{
-		lock_file = lockFile;
+		package_folders = lockFile.TryGetProperty ("packageFolders", out var folders)
+			? folders.EnumerateObject ().Select (folder => folder.Name).ToArray ()
+			: [];
+
+		if (!lockFile.TryGetProperty ("libraries", out var entries))
+			return;
+
+		foreach (var entry in entries.EnumerateObject ()) {
+			var separator = entry.Name.LastIndexOf ('/');
+			if (separator <= 0 || !NuGetVersion.TryParse (entry.Name.Substring (separator + 1), out var version) || version is null)
+				throw new JsonException ($"Invalid NuGet library '{entry.Name}' in assets file.");
+
+			var name = entry.Name.Substring (0, separator);
+			var path = entry.Value.TryGetProperty ("path", out var package_path) ? package_path.GetString () : null;
+			var nuspec = entry.Value.TryGetProperty ("files", out var files)
+				? files.EnumerateArray ().Select (file => file.GetString ()).FirstOrDefault (file => file?.EndsWith (".nuspec", StringComparison.OrdinalIgnoreCase) == true)
+				: null;
+
+			if (nuspec is not null && path is null)
+				throw new JsonException ($"Missing package path for NuGet library '{entry.Name}' in assets file.");
+
+			if (!libraries.TryGetValue (name, out var versions)) {
+				versions = new ();
+				libraries.Add (name, versions);
+			}
+
+			if (!versions.ContainsKey (version))
+				versions.Add (version, new Package (path, nuspec));
+		}
 	}
 
 	public static NuGetPackageVersionFinder? Create (string filename, TaskLoggingHelper log)
 	{
 		try {
-			var lock_file_format = new LockFileFormat ();
-			var lock_file = lock_file_format.Read (filename);
-			return new NuGetPackageVersionFinder (lock_file);
-		} catch (Exception e) {
+			using var stream = File.OpenRead (filename);
+			using var document = JsonDocument.Parse (stream, new JsonDocumentOptions {
+				AllowTrailingCommas = true,
+				CommentHandling = JsonCommentHandling.Skip,
+			});
+			return new NuGetPackageVersionFinder (document.RootElement);
+		} catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException or FormatException) {
 			log.LogMessage ("Could not parse NuGet lock file. Java dependencies fulfilled by NuGet packages may not be available: '{0}'.", e.Message);
 			return null;
 		}
@@ -385,39 +418,47 @@ public class NuGetPackageVersionFinder
 	{
 		var artifacts = new List<Artifact> ();
 
-		// Find the LockFileLibrary
-		var nuget = lock_file.GetLibrary (library, new NuGet.Versioning.NuGetVersion (version));
-
-		if (nuget is null) {
+		if (!libraries.TryGetValue (library, out var versions) || !versions.TryGetValue (new NuGetVersion (version), out var package)) {
 			log.LogCodedError ("XA4248", Properties.Resources.XA4248, library, version);
 			return artifacts;
 		}
 
-		foreach (var path in lock_file.PackageFolders)
-			AddArtifactsFromNuspec (artifacts, path.Path, nuget);
+		foreach (var path in package_folders)
+			AddArtifactsFromNuspec (artifacts, path, package);
 
 		return artifacts;
 	}
 
-	void AddArtifactsFromNuspec (List<Artifact> artifacts, string nugetPackagePath, LockFileLibrary package)
+	void AddArtifactsFromNuspec (List<Artifact> artifacts, string nugetPackagePath, Package package)
 	{
 		// Check NuGet tags
-		var nuspec = package.Files.FirstOrDefault (f => f.EndsWith (".nuspec", StringComparison.OrdinalIgnoreCase));
-
-		if (nuspec is null)
+		if (package.Path is not string path || package.Nuspec is not string filename)
 			return;
 
-		nuspec = Path.Combine (nugetPackagePath, package.Path, nuspec);
+		var nuspec = Path.Combine (nugetPackagePath, path, filename);
 
 		if (!File.Exists (nuspec))
 			return;
 
-		var reader = new NuGet.Packaging.NuspecReader (nuspec);
-		var tags = reader.GetTags ();
+		var root = XDocument.Load (nuspec).Root ?? throw new InvalidDataException ($"Missing root element in NuGet specification '{nuspec}'.");
+		var metadata = root.Elements ().FirstOrDefault (element => element.Name.LocalName.Equals ("metadata", StringComparison.OrdinalIgnoreCase));
+		var tags = metadata?.Elements ().FirstOrDefault (element => element.Name.LocalName.Equals ("tags", StringComparison.OrdinalIgnoreCase))?.Value ?? "";
 
 		AddArtifactsFromNuspecTags (artifacts, tags);
 
 		// TODO: Define a well-known file that can be included in the package like "java-package.txt"
+	}
+
+	sealed class Package
+	{
+		public Package (string? path, string? nuspec)
+		{
+			Path = path;
+			Nuspec = nuspec;
+		}
+
+		public string? Path { get; }
+		public string? Nuspec { get; }
 	}
 
 	public static void AddArtifactsFromNuspecTags (List<Artifact> artifacts, string tags)

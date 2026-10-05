@@ -55,18 +55,13 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateTemporaryDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FilterAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FindLayoutsToBind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GenerateACWMap" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GenerateAdditionalProviderSources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLayoutBindings" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLibraryResources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateManagedAidlProxies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeApplicationConfigSources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeMarshalMethodSources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeRuntimeLinkingSources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateResourceDesignerAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GenerateJavaCallableWrappers" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GenerateJavaStubs" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.GenerateMainAndroidManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GeneratePackageManagerJava" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidDefineConstants" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAppSettingsDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -82,7 +77,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.ProcessAssemblyCompressionFailures" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadAndroidManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.RewriteMarshalMethods" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetExtraPackages" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyGeneratedJavaResourceClasses" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.SplitProperty" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -92,6 +86,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.LinkApplicationSharedLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.PrepareAbiItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.WrapAssembliesAsSharedLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Microsoft.Android.Tasks.WrapAssemblyStoresAsSharedLibraries" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" />
 <UsingTask TaskName="Xamarin.Android.Tasks.WriteLockFile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="GenerateCompressedAssembliesNativeSourceFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.UnzipToFolder" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -265,7 +260,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 	<!-- If true it will cause all the assemblies in the apk to be preloaded on startup time -->
 	<_NativeAssemblySourceDir>$(IntermediateOutputPath)android\</_NativeAssemblySourceDir>
-	<_SkipJniAddNativeMethodRegistrationAttributeScan Condition=" '$(_SkipJniAddNativeMethodRegistrationAttributeScan)' == '' ">False</_SkipJniAddNativeMethodRegistrationAttributeScan>
 
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' And '$(EmbedAssembliesIntoApk)' == 'False' ">True</_AndroidFastDeployEnvironmentFiles>
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' ">False</_AndroidFastDeployEnvironmentFiles>
@@ -315,16 +309,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">
   <_AndroidUseAssemblyStore Condition="'$(EmbedAssembliesIntoApk)' == 'true' ">true</_AndroidUseAssemblyStore>
   <_AndroidUseAssemblyStore Condition="'$(EmbedAssembliesIntoApk)' != 'true' ">false</_AndroidUseAssemblyStore>
-</PropertyGroup>
-
-<PropertyGroup>
-  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(UsingMicrosoftNETSdkRazor)' == 'true') ">False</AndroidEnableMarshalMethods>
-  <!-- NOTE: temporarily disable for NativeAOT and CoreCLR for now -->
-  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' ">False</AndroidEnableMarshalMethods>
-
-  <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
-  <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
-
 </PropertyGroup>
 
 <!-- Do not resolve from the GAC under any circumstances in Mobile -->
@@ -491,7 +475,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   />
   <AndroidError Code="XA1049"
       ResourceName="XA1049"
-      Condition=" '$(AndroidEnableMarshalMethods)' == 'True' And '$(PublishReadyToRun)' == 'True' "
+      Condition=" '$(AndroidApplication)' == 'true' And '$(AndroidEnableMarshalMethods)' == 'True' "
   />
   <AndroidWarning Code="XA1027"
       ResourceName="XA1027"
@@ -887,8 +871,6 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidLinkFlag>$(IntermediateOutputPath)link.flag</_AndroidLinkFlag>
 	<_AndroidApkPerAbiFlagFile>$(IntermediateOutputPath)android\bin\apk_per_abi.flag</_AndroidApkPerAbiFlagFile>
 	<_AndroidDebugKeyStoreFlag>$(IntermediateOutputPath)android_debug_keystore.flag</_AndroidDebugKeyStoreFlag>
-	<_AdditionalPostLinkerStepsFlag>$(_AndroidStampDirectory)_AdditionalPostLinkerSteps.stamp</_AdditionalPostLinkerStepsFlag>
-	<_AfterILLinkOutputDir>$(IntermediateOutputPath)afterlink\</_AfterILLinkOutputDir>
 	<_AcwMapFile>$(IntermediateOutputPath)acw-map.txt</_AcwMapFile>
 	<_CustomViewMapFile>$(IntermediateOutputPath)customview-map.txt</_CustomViewMapFile>
 	<AndroidResgenNamespace Condition="'$(AndroidResgenNamespace)'==''" >$(RootNamespace)</AndroidResgenNamespace>
@@ -947,7 +929,6 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="ProjectFullPath=$(MSBuildProjectFullPath)" />
 		<_PropertyCacheItems Include="AndroidUseDesignerAssembly=$(AndroidUseDesignerAssembly)" />
 		<_PropertyCacheItems Include="AndroidTypeMapImplementation=$(AndroidTypeMapImplementation)" />
-		<_PropertyCacheItems Include="_AndroidUseMarshalMethods=$(_AndroidUseMarshalMethods)" />
 		<_PropertyCacheItems Include="_AndroidJcwCodegenTarget=$(_AndroidJcwCodegenTarget)" />
 		<_PropertyCacheItems Include="_AndroidAssemblyStoreCompressionLevel=$(_AndroidAssemblyStoreCompressionLevel)" />
 	</ItemGroup>
@@ -1350,21 +1331,15 @@ because xbuild doesn't support framework reference assemblies.
 <!-- Runtime jar selection.
      Trimmable jars replace JavaProxyObject/JavaProxyThrowable with non-native implementations. -->
 <Target Name="_CollectRuntimeJarFilenames">
-  <PropertyGroup Condition=" '$(_AndroidRuntime)' != 'CoreCLR' and '$(AndroidTypeMapImplementation)' != 'trimmable' ">
-    <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime.jar</_RuntimeJar>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' ">
-    <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_trimmable.jar</_RuntimeJar>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(AndroidTypeMapImplementation)' != 'trimmable' ">
-    <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_clr.jar</_RuntimeJar>
+  <PropertyGroup>
+    <_RuntimeJar Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' ">$(MSBuildThisFileDirectory)\java_runtime_trimmable.jar</_RuntimeJar>
+    <_RuntimeJar Condition=" '$(AndroidTypeMapImplementation)' != 'trimmable' and '$(_AndroidRuntime)' == 'CoreCLR' ">$(MSBuildThisFileDirectory)\java_runtime_clr.jar</_RuntimeJar>
+    <_RuntimeJar Condition=" '$(AndroidTypeMapImplementation)' != 'trimmable' and '$(_AndroidRuntime)' != 'CoreCLR' ">$(MSBuildThisFileDirectory)\java_runtime.jar</_RuntimeJar>
   </PropertyGroup>
 </Target>
 
 <Target Name="_AddStaticResources"
-		Inputs="$(MonoPlatformJarPath);$(_AndroidBuildPropertiesCache)"
+		Inputs="$(_RuntimeJar);$(_AndroidBuildPropertiesCache)"
 		Outputs="$(_AndroidStaticResourcesFlag)"
 		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources)">
   <CopyResource
@@ -1390,14 +1365,6 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <!-- We need this in its own item group so it isn't lost during a partial build -->
     <_AllResolvedAssemblies Include="@(ResolvedAssemblies)" />
-    <ResolvedAssemblies>
-      <JavaObjectsXmlFile
-          Condition=" '$(PublishTrimmed)' == 'true' And '$(AndroidTypeMapImplementation)' != 'trimmable' And $([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources')) "
-      >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</JavaObjectsXmlFile>
-      <TypeMapObjectsXmlFile
-          Condition=" '$(PublishTrimmed)' == 'true' And '$(AndroidTypeMapImplementation)' != 'trimmable' And $([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources')) "
-      >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</TypeMapObjectsXmlFile>
-    </ResolvedAssemblies>
   </ItemGroup>
 </Target>
 
@@ -1407,11 +1374,8 @@ because xbuild doesn't support framework reference assemblies.
     Inputs="@(ResolvedAssemblies);$(_AndroidBuildPropertiesCache)"
     Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')">
   <LinkAssembliesNoShrink
-      ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(AndroidCodegenTarget)"
       Debug="$(AndroidIncludeDebugSymbols)"
-      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-      ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       ResolvedAssemblies="@(_AllResolvedAssemblies)"
       ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
@@ -1421,84 +1385,12 @@ because xbuild doesn't support framework reference assemblies.
       TargetName="$(TargetName)"
       AddKeepAlives="$(AndroidAddKeepAlives)"
       UseDesignerAssembly="$(AndroidUseDesignerAssembly)"
-      AndroidTypeMapImplementation="$(AndroidTypeMapImplementation)"
       Deterministic="$(Deterministic)"
       ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)">
   </LinkAssembliesNoShrink>
 
   <ItemGroup>
     <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)**" />
-  </ItemGroup>
-</Target>
-
-<!-- Runs additional steps after ILLink runs (_LinkAssemblies).
-     Preserve the existing in-place rewrite behavior when marshal methods are explicitly enabled.
-     Otherwise, write to afterlink/ so linked/ stays unchanged and downstream incrementalism is
-     preserved. -->
-<Target Name="_RunAfterILLinkAdditionalSteps"
-    DependsOnTargets="_LinkAssembliesNoShrinkInputs"
-    Condition="'$(PublishTrimmed)' == 'true' and '$(AndroidTypeMapImplementation)' != 'trimmable'"
-    Inputs="$(_AndroidLinkFlag)"
-    Outputs="$(_AdditionalPostLinkerStepsFlag)">
-  <MakeDir Directories="$(_AfterILLinkOutputDir)" Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " />
-  <ItemGroup>
-    <_AfterILLinkSourceFiles Include="@(ResolvedAssemblies)"
-        Condition=" '$(_AndroidUseMarshalMethods)' != 'True' or !$([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources')) " />
-    <_AfterILLinkDestFiles Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " Include="@(_AfterILLinkSourceFiles->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
-    <_AfterILLinkDestFiles Condition=" '$(_AndroidUseMarshalMethods)' == 'True' " Include="@(_AfterILLinkSourceFiles)" />
-    <_AndroidScanMarkerFiles Include="@(ResolvedAssemblies->'%(JavaObjectsXmlFile)')" Condition=" '%(ResolvedAssemblies.JavaObjectsXmlFile)' != '' " />
-  </ItemGroup>
-  <AssemblyModifierPipeline
-      ApplicationJavaClass="$(AndroidApplicationJavaClass)"
-      CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
-      Debug="$(AndroidIncludeDebugSymbols)"
-      DestinationFiles="@(_AfterILLinkDestFiles)"
-      Deterministic="$(Deterministic)"
-      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-      ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
-      PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
-      ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)"
-      ResolvedAssemblies="@(_AllResolvedAssemblies)"
-      ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
-      SourceFiles="@(_AfterILLinkSourceFiles)"
-      TargetName="$(TargetName)">
-  </AssemblyModifierPipeline>
-  <MakeDir Directories="@(_AndroidScanMarkerFiles->'%(RootDir)%(Directory)')" />
-  <Touch Files="@(_AndroidScanMarkerFiles)" AlwaysCreate="true" />
-  <Touch Files="$(_AdditionalPostLinkerStepsFlag)" AlwaysCreate="true" />
-  <ItemGroup>
-    <FileWrites Include="@(_AndroidScanMarkerFiles)" />
-    <_AfterILLinkSourceFiles Remove="@(_AfterILLinkSourceFiles)" />
-    <_AfterILLinkDestFiles Remove="@(_AfterILLinkDestFiles)" />
-    <_AndroidScanMarkerFiles Remove="@(_AndroidScanMarkerFiles)" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">
-    <FileWrites Include="$(_AfterILLinkOutputDir)**" />
-  </ItemGroup>
-</Target>
-
-<!-- Updates assembly itemgroups to point to afterlink/ outputs.
-     When marshal methods are enabled, assemblies were modified in-place in linked/
-     so no redirection is needed, but the target still runs to trigger _RunAfterILLinkAdditionalSteps. -->
-<Target Name="_AfterILLinkAdditionalSteps"
-    DependsOnTargets="_RunAfterILLinkAdditionalSteps"
-    Condition="'$(PublishTrimmed)' == 'true' and '$(AndroidTypeMapImplementation)' != 'trimmable'">
-  <ItemGroup Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">
-    <_OrigResolvedAssemblies Include="@(ResolvedAssemblies)" />
-    <ResolvedAssemblies Remove="@(ResolvedAssemblies)" />
-    <ResolvedAssemblies Include="@(_OrigResolvedAssemblies->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
-
-    <_OrigResolvedUserAssemblies Include="@(ResolvedUserAssemblies)" />
-    <ResolvedUserAssemblies Remove="@(ResolvedUserAssemblies)" />
-    <ResolvedUserAssemblies Include="@(_OrigResolvedUserAssemblies->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
-
-    <_OrigResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies)" />
-    <ResolvedFrameworkAssemblies Remove="@(ResolvedFrameworkAssemblies)" />
-    <ResolvedFrameworkAssemblies Include="@(_OrigResolvedFrameworkAssemblies->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
-
-    <_OrigResolvedAssemblies Remove="@(_OrigResolvedAssemblies)" />
-    <_OrigResolvedUserAssemblies Remove="@(_OrigResolvedUserAssemblies)" />
-    <_OrigResolvedFrameworkAssemblies Remove="@(_OrigResolvedFrameworkAssemblies)" />
   </ItemGroup>
 </Target>
 
@@ -1596,13 +1488,6 @@ because xbuild doesn't support framework reference assemblies.
     Debug="$(AndroidIncludeDebugSymbols)"
     Mode="compressed">
       <Output TaskParameter="AssemblySources" ItemName="_CompressedAssembliesAssemblySource" />
-  </PrepareAbiItems>
-  <PrepareAbiItems
-    BuildTargetAbis="@(_BuildTargetAbis)"
-    NativeSourcesDir="$(_NativeAssemblySourceDir)"
-    Debug="$(AndroidIncludeDebugSymbols)"
-    Mode="marshal_methods">
-      <Output TaskParameter="AssemblySources" ItemName="_MarshalMethodsAssemblySource" />
   </PrepareAbiItems>
   <PrepareAbiItems
     Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' "
@@ -1760,7 +1645,6 @@ because xbuild doesn't support framework reference assemblies.
       AndroidPackageName="$(_AndroidPackage)"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       UseAssemblyStore="$(_AndroidUseAssemblyStore)"
-      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
       AndroidRuntime="$(_AndroidRuntime)"
       ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
@@ -1768,21 +1652,16 @@ because xbuild doesn't support framework reference assemblies.
       >
   </GenerateNativeApplicationConfigSources>
 
-  <GenerateNativeMarshalMethodSources
-      AndroidRuntime="$(_AndroidRuntime)"
-      EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-      EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)"
+  <GenerateNativeRuntimeLinkingSources
+      Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' "
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
-      IntermediateOutputDirectory="$(IntermediateOutputPath)"
       ResolvedAssemblies="@(_ResolvedAssemblies)"
-      SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
       SupportedAbis="@(_BuildTargetAbis)">
-  </GenerateNativeMarshalMethodSources>
+  </GenerateNativeRuntimeLinkingSources>
 
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
   <ItemGroup>
     <FileWrites Include="@(_EnvironmentAssemblySource)" />
-    <FileWrites Include="@(_MarshalMethodsAssemblySource)" />
     <FileWrites Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' " Include="@(_RuntimeLinkingAssemblySource)" />
   </ItemGroup>
 </Target>
@@ -1800,6 +1679,9 @@ because xbuild doesn't support framework reference assemblies.
       $(_AndroidBuildPropertiesCache);
     </_CreateBaseApkInputs>
   </PropertyGroup>
+  <!-- AAPT2 must relink if an older build or cleanup removed its keep rules. -->
+  <Delete Condition=" '$(AndroidApplication)' == 'true' And '$(DesignTimeBuild)' != 'true' And '$(_Aapt2ProguardRules)' != '' And Exists('$(_PackagedResources)') And !Exists('$(_Aapt2ProguardRules)') "
+      Files="$(_PackagedResources)" />
 </Target>
 
 <Target Name="_PrepareCreateBaseApk"
@@ -2000,9 +1882,6 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_PrepareNativeAssemblyItems" DependsOnTargets="_GenerateJavaStubs">
   <ItemGroup>
-    <_NativeAssemblyTarget Include="@(_TypeMapAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
-      <abi>%(_TypeMapAssemblySource.abi)</abi>
-    </_NativeAssemblyTarget>
     <_NativeAssemblyTarget Include="@(_EnvironmentAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
       <abi>%(_EnvironmentAssemblySource.abi)</abi>
     </_NativeAssemblyTarget>
@@ -2012,9 +1891,6 @@ because xbuild doesn't support framework reference assemblies.
     <_CompressedNativeAssemblyTarget Include="@(_CompressedAssembliesAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
       <abi>%(_CompressedAssembliesAssemblySource.abi)</abi>
     </_CompressedNativeAssemblyTarget>
-    <_NativeAssemblyTarget Include="@(_MarshalMethodsAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
-      <abi>%(_MarshalMethodsAssemblySource.abi)</abi>
-    </_NativeAssemblyTarget>
     <_NativeAssemblyTarget Include="@(_AndroidRemapAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
       <abi>%(_AndroidRemapAssemblySource.abi)</abi>
     </_NativeAssemblyTarget>
@@ -2042,10 +1918,10 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CompileNativeAssemblySources"
     DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles"
-    Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource);@(_RuntimeLinkingAssemblySource)"
+    Inputs="@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_AndroidRemapAssemblySource);@(_RuntimeLinkingAssemblySource)"
     Outputs="@(_NativeAssemblyTarget)">
   <CompileNativeAssembly
-      Sources="@(_TypeMapAssemblySource);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource);@(_RuntimeLinkingAssemblySource)"
+      Sources="@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_AndroidRemapAssemblySource);@(_RuntimeLinkingAssemblySource)"
       DebugBuild="$(AndroidIncludeDebugSymbols)"
       WorkingDirectory="$(_NativeAssemblySourceDir)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
@@ -2207,14 +2083,23 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="AssembliesToAddToArchive" ItemName="_BuildApkAssembliesToAddToArchive" />
   </CreateAssemblyStore>
 
+  <WrapAssemblyStoresAsSharedLibraries
+      MSBuildRuntime="NET"
+      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' and '$(_AndroidUseAssemblyStore)' == 'true' "
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      ResolvedAssemblies="@(_BuildApkAssembliesToAddToArchive)">
+    <Output TaskParameter="WrappedAssemblies" ItemName="FilesToAddToArchive" />
+    <Output TaskParameter="WrappedAssemblies" ItemName="FileWrites" />
+    <Output TaskParameter="DirectoriesToDelete" ItemName="DSODirectoriesToDelete" />
+  </WrapAssemblyStoresAsSharedLibraries>
+
   <WrapAssembliesAsSharedLibraries
-      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
+      Condition=" '$(_AndroidRuntime)' != 'NativeAOT' and '$(_AndroidUseAssemblyStore)' != 'true' "
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
       ResolvedAssemblies="@(_BuildApkAssembliesToAddToArchive)"
       SupportedAbis="@(_BuildTargetAbis)"
-      UseAssemblyStore="$(_AndroidUseAssemblyStore)"
       RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
     <Output TaskParameter="WrappedAssemblies" ItemName="FilesToAddToArchive" />
   </WrapAssembliesAsSharedLibraries>
@@ -2982,7 +2867,7 @@ because xbuild doesn't support framework reference assemblies.
   </Target>
 
   <Target Name="_ValidateAndroidTypeMapImplementation"
-      BeforeTargets="_CheckForInvalidConfigurationAndPlatform;_GenerateJavaStubs;_PrepareLinking;Build;Publish">
+      BeforeTargets="_CheckForInvalidConfigurationAndPlatform;_GenerateJavaStubs;Build;Publish">
     <AndroidError Code="XA4267"
         ResourceName="XA4267"
         Condition=" '$(AndroidTypeMapImplementation)' == 'llvm-ir' " />
@@ -2997,7 +2882,5 @@ because xbuild doesn't support framework reference assemblies.
 <!-- TypeMap imports must be last so their target overrides (e.g. _RemoveRegisterAttribute) take precedence -->
 <Import Project="$(MSBuildThisFileDirectory)..\targets\Microsoft.Android.Sdk.TypeMap.Trimmable.targets"
     Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(AndroidApplication)' == 'true' " />
-<Import Project="$(MSBuildThisFileDirectory)..\targets\Microsoft.Android.Sdk.TypeMap.LlvmIr.targets"
-    Condition=" '$(AndroidTypeMapImplementation)' != 'trimmable' " />
 
 </Project>
