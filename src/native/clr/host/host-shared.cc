@@ -9,18 +9,6 @@
 
 using namespace xamarin::android;
 
-[[gnu::always_inline]] static void
-set_category (const char *name, const char *arg, size_t arg_length, unsigned int entry) noexcept
-{
-	if ((log_categories & entry) == entry) {
-		return;
-	}
-
-	if (strlen (name) == arg_length && strncmp (arg, name, arg_length) == 0) {
-		log_categories |= entry;
-	}
-}
-
 void HostCommon::init_logging_categories () noexcept
 {
 	char value[Constants::PROPERTY_VALUE_BUFFER_LEN];
@@ -40,13 +28,21 @@ void HostCommon::init_logging_categories () noexcept
 			break;
 		}
 
-		set_category ("assembly", param, param_length, LOG_ASSEMBLY);
-		set_category ("default", param, param_length, LOG_DEFAULT);
-		set_category ("debugger", param, param_length, LOG_DEBUGGER);
-		set_category ("gc", param, param_length, LOG_GC);
-		set_category ("timing", param, param_length, LOG_TIMING);
-		set_category ("network", param, param_length, LOG_NET);
-		set_category ("netlink", param, param_length, LOG_NETLINK);
+		if (param_length == 8 && strncmp (param, "assembly", param_length) == 0) {
+			log_categories |= LOG_ASSEMBLY;
+		} else if (param_length == 7 && strncmp (param, "default", param_length) == 0) {
+			log_categories |= LOG_DEFAULT;
+		} else if (param_length == 8 && strncmp (param, "debugger", param_length) == 0) {
+			log_categories |= LOG_DEBUGGER;
+		} else if (param_length == 2 && strncmp (param, "gc", param_length) == 0) {
+			log_categories |= LOG_GC;
+		} else if (param_length == 6 && strncmp (param, "timing", param_length) == 0) {
+			log_categories |= LOG_TIMING;
+		} else if (param_length == 7 && strncmp (param, "network", param_length) == 0) {
+			log_categories |= LOG_NET;
+		} else if (param_length == 7 && strncmp (param, "netlink", param_length) == 0) {
+			log_categories |= LOG_NETLINK;
+		}
 
 		param = separator == nullptr ? nullptr : separator + 1;
 	}
