@@ -71,7 +71,7 @@ steps:
 - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
   parameters:
     testRunTitle: Smoke MSBuild Tests - Windows Dotnet Build
-    testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\$(DotNetTargetFramework)\Xamarin.Android.Build.Tests.dll
+    testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\$(DotNetStableTargetFramework)\Xamarin.Android.Build.Tests.dll
     dotNetTestExtraArgs: --filter "TestCategory = SmokeTests"
 
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self

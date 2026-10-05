@@ -52,7 +52,7 @@ Present results as: **Must run** → **Should run** → **Consider running**, wi
 
 ## Running tests
 
-The `${TFM}` placeholder is the project's evaluated framework. The native host/build and device integration harnesses use `DotNetTargetFramework`; stable suites use `DotNetStableTargetFramework`. See the catalog for prerequisites.
+The `${TFM}` placeholder = `DotNetStableTargetFramework` from `Directory.Build.props` (currently `net10.0`).
 
 ### Standalone
 ```bash

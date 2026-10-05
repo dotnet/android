@@ -63,7 +63,7 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
-        testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetTargetFramework)/MSBuildDeviceIntegration.dll
+        testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: $(ExcludedNightlyNUnitCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
         xaSourcePath: ${{ parameters.xaSourcePath }}
