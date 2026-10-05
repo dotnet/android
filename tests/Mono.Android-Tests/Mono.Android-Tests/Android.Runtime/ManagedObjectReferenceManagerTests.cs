@@ -171,7 +171,10 @@ namespace Xamarin.Android.RuntimeTests {
 				Assert.AreEqual (handle, captured.Payload [1]);
 				Assert.AreEqual (Environment.CurrentManagedThreadId, captured.Payload [2]);
 				var stack = captured.Payload [3] as string ?? throw new InvalidOperationException ("The stack payload should be a string.");
-				StringAssert.Contains (nameof (NativeAotStacksRequireExplicitOptIn), stack);
+				StringAssert.Contains (nameof (NativeAotStacksRequireExplicitOptIn), stack,
+					$"Reference event {captured.Payload [0]} must retain the caller even when runtime wrappers are inlined.");
+				StringAssert.DoesNotContain ("RuntimeEventSource.GetReferenceStackTrace", stack,
+					"The stack capture helper itself should be omitted.");
 			}
 		}
 

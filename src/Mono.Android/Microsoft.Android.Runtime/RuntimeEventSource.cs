@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Tracing;
+using System.Runtime.CompilerServices;
 using Android.Runtime;
 using Java.Interop;
 
@@ -184,8 +185,15 @@ internal static class RuntimeEventSource
 			return;
 		}
 		if (RuntimeEventSourceHolder.Instance.IsEnabled (EventLevel.Verbose, ReferenceStackTraceKeyword)) {
-			RuntimeEventSourceHolder.Instance.ReferenceStackTrace (referenceEventId, handle, managedThreadId, new StackTrace (skipFrames: 2, fNeedFileInfo: false).ToString ());
+			RuntimeEventSourceHolder.Instance.ReferenceStackTrace (referenceEventId, handle, managedThreadId, GetReferenceStackTrace ());
 		}
+	}
+
+	[MethodImpl (MethodImplOptions.NoInlining)]
+	static string GetReferenceStackTrace ()
+	{
+		// Only skip this guaranteed frame; NativeAOT may inline the callers.
+		return new StackTrace (skipFrames: 1, fNeedFileInfo: false).ToString ();
 	}
 
 	static class RuntimeEventSourceHolder

@@ -416,8 +416,9 @@ dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtim
 `ReferenceStackTrace` carries `referenceEventId`, `handle`, `managedThreadId`,
 and `stackTrace`. It follows the corresponding reference operation on the same
 thread. This opt-in fallback allocates and formats a managed stack string;
-ordinary reference collection does not. Keyword `0x40` alone does not enable
-reference operations, and CoreCLR never emits this fallback event. NativeAOT
+ordinary reference collection does not. The capture helper is omitted, but other
+runtime frames may appear depending on compiler inlining. Keyword `0x40` alone
+does not enable reference operations, and CoreCLR never emits this fallback event. NativeAOT
 applications must also retain standard `StackTraceSupport` (enabled by default)
 to obtain useful stacks.
 
