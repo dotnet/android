@@ -70,6 +70,12 @@ framework label alone is not a runtime floor: shipped tooling must also load
 on the declared .NET 11 host. The settings and restore feed are owner-scoped;
 global SDK pins and unrelated frameworks are unchanged.
 
+`System.Collections.Immutable` and `System.Reflection.Metadata` are supplied by
+the host framework, not copied into the workload's tooling directories. The
+installer manifest omits those obsolete support-package files. Dependencies
+still produced by unrelated owners, such as `System.Buffers` for BaseTasks and
+Installer.Common, remain packaged.
+
 SDK fixture CI provisions the repository-pinned SDK with the existing
 `eng/install-dotnet` scripts and explicitly selects that executable for VSTest.
 A wildcard .NET 11 preview installation may be older than the required runtime.
