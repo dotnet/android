@@ -202,7 +202,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux BuildTest
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net11.0/Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = BuildTest"
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
@@ -236,19 +236,19 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux PackagingTest
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net11.0/Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = PackagingTest"
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux XASdkTests
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net11.0/Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = XASdkTests & Name != XamarinLegacySdk"
 
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux AndroidDependenciesTests
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net11.0/Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "Name = AndroidDependenciesTests"
 
     - task: ShellScript@2
@@ -305,7 +305,7 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net11.0/Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         testFilter: ''
         testRunTitle: Xamarin.Android.Build.Tests - macOS
         retryFailedTests: false
@@ -357,7 +357,7 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net11.0/Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         testFilter: ''
         testRunTitle: Xamarin.Android.Build.Tests - Windows
         retryFailedTests: false
@@ -418,7 +418,7 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/net11.0/MSBuildDeviceIntegration.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: $(ExcludedNightlyNUnitCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
 

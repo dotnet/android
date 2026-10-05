@@ -3,9 +3,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <TargetFramework>net11.0</TargetFramework>
-    <RuntimeFrameworkVersion>11.0.0-rtm.26479.103</RuntimeFrameworkVersion>
-    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet11/nuget/v3/index.json</RestoreAdditionalProjectSources>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <IsPackable>false</IsPackable>
@@ -15,8 +13,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- The pinned .NET 12 SDK also maps net11.0 to its .NET 12 targeting pack. -->
-    <FrameworkReference Update="Microsoft.NETCore.App" TargetingPackVersion="$(RuntimeFrameworkVersion)" />
     <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
     <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />

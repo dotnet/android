@@ -162,7 +162,7 @@ stages:
       - template: run-nunit-tests.yaml
         parameters:
           testRunTitle: SystemApplicationTests On Device - macOS
-          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/net11.0/MSBuildDeviceIntegration.dll
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
           dotNetTestExtraArgs: --filter "Name=SystemApplicationTests"
 
 
@@ -206,7 +206,7 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/net11.0/MSBuildDeviceIntegration.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: method == CheckTimeZoneInfoIsCorrectWithSlicer
         testRunTitle: CheckTimeZoneInfoIsCorrectNode On Device - macOS
 
@@ -258,7 +258,7 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/net11.0/MSBuildDeviceIntegration.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: method == CheckLocalizationIsCorrectWithSlicer
         testRunTitle: CheckLocalizationIsCorrect On Device - macOS
 

@@ -3,18 +3,13 @@
 Mapping of test area keywords to assemblies, filters, and build prerequisites.
 
 **Legend:**
-- **Assembly**: The test DLL to pass to `dotnet test` (relative to repo root). `${TFM}` = current `DotNetStableTargetFramework` for suites that use it; host/build and device integration harnesses explicitly require `net11.0`.
+- **Assembly**: The test DLL to pass to `dotnet test` (relative to repo root). `${TFM}` = current `DotNetStableTargetFramework` from `Directory.Build.props`.
 - **Filter**: The `--filter` argument for host-side `dotnet test`, or on-device MTP category/property notes.
 - **Build**: What must be built before running:
   - **Standalone** — Can run with plain `dotnet test <project>.csproj`. No local SDK needed.
   - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `./dotnet-local.sh build Microsoft.Android.slnx -c Debug` or `make prepare && make all`.
 - **Device**: Whether an Android device/emulator is required.
 
-The native process harnesses, SDK fixtures, and `vswhere` select the
-`11.0.0-rtm.26479.103` runtime and targeting pack explicitly. This keeps the pinned
-.NET 12 CI SDK from silently raising the requirement behind their `net11.0` paths.
-SDK fixture CI jobs provision that pinned SDK before building or launching tests;
-an arbitrary .NET 11 preview host may be older than the declared runtime floor.
 The host/device suites declare their own LZ4 dependency for the linked
 assembly-store inspection sources, independently of the shared MSBuild imports.
 
@@ -42,13 +37,13 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **generator** | `external/Java.Interop/tests/generator-Tests/` | `dotnet test external/Java.Interop/tests/generator-Tests/generator-Tests.csproj -v minimal` |
 | **bytecode** | `external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/` | `dotnet test external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/Xamarin.Android.Tools.Bytecode-Tests.csproj -v minimal` ⚠️ Requires `javac` |
 | **base tasks** | `tests/Microsoft.Android.Build.BaseTasks-Tests/` | `dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj -v minimal` |
-| **android sdk tools** (.NET 11 SDK) | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false` |
+| **android sdk tools** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false` |
 
 ---
 
 ## Host-Side MSBuild Tests (full-build — requires local SDK)
 
-Assembly: `bin/TestDebug/net11.0/Xamarin.Android.Build.Tests.dll` (.NET 11 host)
+Assembly: `bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll`
 Build: Full-build — `./dotnet-local.sh build Microsoft.Android.slnx -c Debug` or `make prepare && make all`
 Device: No
 
@@ -101,7 +96,7 @@ Same assembly as above. These test individual MSBuild tasks in isolation with `M
 
 ## Device Integration Tests (full-build — requires local SDK + device)
 
-Assembly: `bin/TestDebug/MSBuildDeviceIntegration/net11.0/MSBuildDeviceIntegration.dll` (.NET 11 host)
+Assembly: `bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll`
 Build: Full-build + device/emulator connected
 Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 
