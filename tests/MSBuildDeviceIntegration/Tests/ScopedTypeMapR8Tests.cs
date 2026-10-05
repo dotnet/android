@@ -100,6 +100,15 @@ public class ScopedTypeMapR8Tests : DeviceTest
 			installed = builder.Install (proj);
 			Assert.IsTrue (installed, "The scoped-retention app should install.");
 			var projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
+			var memberRuleFiles = Directory.GetFiles (
+				Path.Combine (projectDirectory, proj.IntermediateOutputPath),
+				"proguard_typemap_members.cfg",
+				SearchOption.AllDirectories);
+			Assert.AreEqual (1, memberRuleFiles.Length, "CoreCLR should generate one scoped typemap member configuration.");
+			var memberRules = File.ReadAllText (memberRuleFiles [0]);
+			StringAssert.Contains ("-keepclassmembers class example.ScopedBase { *; }", memberRules);
+			StringAssert.Contains ("-keepclassmembers interface example.ScopedContract { *; }", memberRules);
+			StringAssert.Contains ("-keepclassmembers class example.ScopedPeer { *; }", memberRules);
 			var dexFiles = Directory.GetFiles (Path.Combine (projectDirectory, proj.IntermediateOutputPath), "classes*.dex", SearchOption.AllDirectories);
 			Assert.IsNotEmpty (dexFiles);
 			Assert.IsTrue (dexFiles.Any (dex => DexUtils.ContainsClassWithMethod ("Lexample/ScopedPeer;", "keptMethod", "()I", dex, AndroidSdkPath)),
