@@ -17,6 +17,7 @@
   <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
 
   <ItemGroup>
+    <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
     <PackageReference Include="Polly" Version="$(PollyVersion)" />
     <PackageReference Include="SharpZipLib" Version="$(SharpZipLibVersion)" />

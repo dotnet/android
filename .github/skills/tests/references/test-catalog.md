@@ -10,6 +10,9 @@ Mapping of test area keywords to assemblies, filters, and build prerequisites.
   - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `./dotnet-local.sh build Microsoft.Android.slnx -c Debug` or `make prepare && make all`.
 - **Device**: Whether an Android device/emulator is required.
 
+The host/device suites declare their own LZ4 dependency for the linked
+assembly-store inspection sources, independently of the shared MSBuild imports.
+
 ---
 
 ## Standalone Tests — No Local SDK Required
@@ -34,7 +37,7 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **generator** | `external/Java.Interop/tests/generator-Tests/` | `dotnet test external/Java.Interop/tests/generator-Tests/generator-Tests.csproj -v minimal` |
 | **bytecode** | `external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/` | `dotnet test external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/Xamarin.Android.Tools.Bytecode-Tests.csproj -v minimal` ⚠️ Requires `javac` |
 | **base tasks** | `tests/Microsoft.Android.Build.BaseTasks-Tests/` | `dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj -v minimal` |
-| **android sdk tools** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0` |
+| **android sdk tools** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false` |
 
 ---
 
@@ -76,6 +79,11 @@ Device: No
 | **environment** | `--filter "FullyQualifiedName~EnvironmentContentTests"` | Environment variable injection tests |
 | **dependencies** | `--filter "FullyQualifiedName~AndroidDependenciesTests"` | Android SDK/NDK dependency resolution |
 | **trimmable type map (build)** | `--filter "FullyQualifiedName~TrimmableTypeMapBuildTests"` | Trimmable type map build integration |
+| **host process policies** | `--filter "FullyQualifiedName~ProjectToolsProcessTests|FullyQualifiedName~BaseTestProcessTests|Name~BuilderDoesNotWaitForInheritedRedirectedOutput"` | Logging, diagnostics, single JAR invocation, owned timeouts and bounded inherited output |
+
+The Builder/DotNetCLI high-volume logging cases run on all host platforms.
+Only shell-script-dependent cases exclude Windows. APK diff coverage verifies raw
+partial diagnostics and the completed process status when the separate EOF deadline expires.
 
 ### Task-level unit tests
 
