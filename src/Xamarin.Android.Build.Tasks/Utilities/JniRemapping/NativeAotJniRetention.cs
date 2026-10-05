@@ -188,18 +188,41 @@ namespace Xamarin.Android.Tasks.JniRemapping
 					}
 				}
 			}
+			const string frozenSegmentSuffix = "__FrozenSegmentStart";
+			var frozenSegments = symbols.Where (symbol => symbol.Name.EndsWith (frozenSegmentSuffix, StringComparison.Ordinal)).ToArray ();
+			foreach (var segment in frozenSegments) {
+				if (SymbolValue (segment) > SectionSize (segment.PointedSection) ||
+						SymbolSize (segment) > SectionSize (segment.PointedSection) - SymbolValue (segment)) {
+					throw InvalidDehydration ();
+				}
+			}
+			var frozenStringsBySection = frozenSegments.Select (segment => (
+					Prefix: segment.Name.Substring (0, segment.Name.Length - frozenSegmentSuffix.Length) + "__Str_", Segment: segment))
+				.ToLookup (entry => entry.Segment.PointedSection);
 			foreach (var symbol in symbols) {
 				ISection section = symbol.PointedSection;
 				if ((section.Flags & SectionFlags.Executable) != 0) {
 					continue;
 				}
-				if (symbol.Name.IndexOf ("__Str_", StringComparison.Ordinal) >= 0) {
+				// FrozenStringNode uses the same compilation-unit prefix as its containing
+				// ArrayOfFrozenObjectsNode. A managed type name can contain "__Str_" too.
+				var frozenSegment = frozenStringsBySection [section].FirstOrDefault (entry =>
+					symbol.Name.StartsWith (entry.Prefix, StringComparison.Ordinal) &&
+					SymbolValue (symbol) >= SymbolValue (entry.Segment) &&
+					SymbolValue (symbol) - SymbolValue (entry.Segment) >= (elf.Class == Class.Bit64 ? 8UL : 4UL) &&
+					SymbolValue (symbol) - SymbolValue (entry.Segment) < SymbolSize (entry.Segment)).Segment;
+				if (frozenSegment != null) {
 					// FrozenStringNode symbols point at the MethodTable, followed by Int32
 					// length and exactly that many UTF-16 code units (then a terminator).
-					ulong offset = checked (SymbolValue (symbol) + (elf.Class == Class.Bit64 ? 8UL : 4UL));
+					ulong pointerSize = elf.Class == Class.Bit64 ? 8UL : 4UL;
+					ulong remaining = SymbolSize (frozenSegment) - (SymbolValue (symbol) - SymbolValue (frozenSegment));
+					if (remaining < pointerSize + 4) {
+						throw InvalidDehydration ();
+					}
+					ulong offset = checked (SymbolValue (symbol) + pointerSize);
 					byte [] header = ReadLiteral (section, offset, 4);
 					uint length = ReadUInt32 (header, 0);
-					if (length > int.MaxValue / 2 - 1) {
+					if (length > int.MaxValue / 2 - 1 || ((ulong) length + 1) * 2 > remaining - pointerSize - 4) {
 						throw InvalidDehydration ();
 					}
 					byte [] payload = ReadLiteral (section, offset + 4, checked (((int) length + 1) * 2));
@@ -241,12 +264,12 @@ namespace Xamarin.Android.Tasks.JniRemapping
 				if (count < 0 || offset > SectionSize (section) || (ulong) count > SectionSize (section) - offset) {
 					throw InvalidDehydration ();
 				}
-				if (sectionData.TryGetValue (section, out var bytes)) {
-					var payload = new byte [count];
-					Buffer.BlockCopy (bytes, checked ((int) offset), payload, 0, count);
-					return payload;
-				}
 				if (!hydrated.TryGetValue (section, out var regions)) {
+					if (sectionData.TryGetValue (section, out var bytes)) {
+						var payload = new byte [count];
+						Buffer.BlockCopy (bytes, checked ((int) offset), payload, 0, count);
+						return payload;
+					}
 					throw InvalidDehydration ();
 				}
 				var result = new byte [count];

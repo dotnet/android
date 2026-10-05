@@ -314,12 +314,14 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.AreEqual (javaGroup ? 1 : 0, root.Elements ("reverse-type").Count ());
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
-		public void NativeAotRelocationsDoNotCompleteUtf16CodeUnits (bool elf32)
+		[TestCase (false, false)]
+		[TestCase (true, false)]
+		[TestCase (false, true)]
+		[TestCase (true, true)]
+		public void NativeAotRelocationsDoNotCompleteUtf16CodeUnits (bool elf32, bool hydrationFileBacked)
 		{
 			string objectFile = WriteNativeObject (["com/contoso/Peer"],
-				commandStream: true, elf32: elf32, zeroFillAfterLiteral: false);
+				commandStream: true, elf32: elf32, zeroFillAfterLiteral: false, hydrationFileBacked: hydrationFileBacked);
 			string mappingFile = Path.Combine (TestDirectory, "mapping.txt");
 			string outputFile = Path.Combine (TestDirectory, "remap.xml");
 			File.WriteAllText (mappingFile, "com.contoso.Peer -> a.b:\n");
@@ -331,6 +333,25 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.AreEqual ("XA4325", Errors.Single ().Code,
 				"A named frozen string truncated by an unknown relocation must fail closed.");
 			FileAssert.DoesNotExist (outputFile);
+		}
+
+		[TestCase (false, false)]
+		[TestCase (true, false)]
+		[TestCase (false, true)]
+		[TestCase (true, true)]
+		public void NativeAotMethodTableMarkerIsNotFrozenString (bool elf32, bool hydrationFileBacked)
+		{
+			string objectFile = WriteNativeObject (["com/contoso/Peer", "run.()V"],
+				commandStream: true, elf32: elf32, methodTableMarker: true, hydrationFileBacked: hydrationFileBacked);
+			var root = XDocument.Parse (Run ("""
+				com.contoso.Peer -> a.b:
+				    void run() -> c
+
+				""", objectFile)).Root ?? throw new AssertionException ("Generated XML has no root.");
+			Assert.AreEqual ("com/contoso/Peer", (string?) root.Elements ("replace-type").Single ().Attribute ("from"));
+			Assert.AreEqual ("com/contoso/Peer", (string?) root.Elements ("reverse-type").Single ().Attribute ("to"));
+			Assert.AreEqual ("c", (string?) root.Elements ("replace-method").Single ().Attribute ("target-method-name"));
+			Assert.IsEmpty (Errors, "An unrelated managed type must not be decoded as a frozen string.");
 		}
 
 		[TestCase (false)]
@@ -504,11 +525,13 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 		string WriteNativeObject (string [] literals, bool utf8 = false,
 			bool commandStream = false, bool invalidCommand = false, bool elf32 = false, bool zeroFillAfterLiteral = true,
-			bool unrelatedBytes = false, bool typeMap = false, bool javaGroup = true)
+			bool unrelatedBytes = false, bool typeMap = false, bool javaGroup = true, bool methodTableMarker = false, bool hydrationFileBacked = false)
 		{
 			int pointerSize = elf32 ? 4 : 8;
 			var stringOffsets = new List<ulong> ();
 			ulong hydratedSize = 0;
+			ulong frozenSize = 0;
+			ulong methodTableOffset = 0;
 			byte [] Encode ()
 			{
 				using var data = new MemoryStream ();
@@ -599,6 +622,17 @@ namespace Xamarin.Android.Build.Tests.Tasks
 					Command (3, 0);
 					hydratedSize += (ulong) pointerSize;
 				}
+				frozenSize = hydratedSize;
+				if (methodTableMarker) {
+					methodTableOffset = hydratedSize;
+					Command (0, 8);
+					commands.Write (0U); // Component size and flags.
+					commands.Write (24U); // BaseSize, not a string length.
+					Command (3, 0); // Related-type relocation.
+					hydratedSize += 8 + (ulong) pointerSize;
+					Command (1, 64);
+					hydratedSize += 64;
+				}
 				uint length = (uint) image.Length;
 				commands.Write (0U); // Fixup-table relocation placeholder.
 				image.Position = 4;
@@ -624,7 +658,8 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				(Name: ".shstrtab", Flags: 0UL, Type: 3U, Bytes: new byte [0]),
 				(Name: "__managedcode", Flags: 6UL, Type: 1U, Bytes: codeBytes),
 				(Name: ".rodata", Flags: utf8 && !commandStream ? 0x32UL : 2UL, Type: 1U, Bytes: objectData),
-				(Name: ".bss", Flags: 3UL, Type: 8U, Bytes: new byte [0]),
+				(Name: hydrationFileBacked ? ".hydrated" : ".bss", Flags: 3UL,
+					Type: hydrationFileBacked ? 1U : 8U, Bytes: hydrationFileBacked ? new byte [checked ((int) hydratedSize)] : []),
 			};
 			if (!utf8 || commandStream || typeMap) {
 				using var symbolData = new MemoryStream ();
@@ -653,8 +688,16 @@ namespace Xamarin.Android.Build.Tests.Tasks
 					Symbol ("fixture__dehydrated_data", 0, mapOffset, 3);
 					Symbol ("fixture__hydrated", 0, hydratedSize, 4);
 				}
+				if (stringOffsets.Count > 0) {
+					Symbol ("fixture__FrozenSegmentStart", 0, commandStream ? frozenSize : (ulong) objectData.Length,
+						commandStream ? (ushort) 4 : (ushort) 3);
+				}
 				for (int i = 0; i < stringOffsets.Count; i++) {
 					Symbol ($"fixture__Str_{i}", stringOffsets [i], 0, commandStream ? (ushort) 4 : (ushort) 3);
+				}
+				if (methodTableMarker) {
+					Symbol ("_ZTV18App_N___Str_Helper", methodTableOffset, 8 + (ulong) pointerSize + 64, 4);
+					Symbol ("fixture__Str_Helper", methodTableOffset, 8 + (ulong) pointerSize + 64, 4);
 				}
 				int groupSymbol = 0;
 				if (typeMap) {
