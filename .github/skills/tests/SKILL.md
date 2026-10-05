@@ -17,12 +17,14 @@ Consult `references/test-catalog.md` for the full mapping of test areas → asse
 - **Standalone** — `dotnet test <project>.csproj`. No local SDK needed.
 - **Full-build** — requires the local SDK at `bin/Debug/dotnet/dotnet` (or Release). Use `./dotnet-local.sh` (macOS/Linux) or `dotnet-local.cmd` (Windows).
 
-Check for the local SDK:
+Check for the local SDK in the configuration needed by the tests:
 ```bash
 ls bin/Debug/dotnet/dotnet 2>/dev/null || ls bin/Release/dotnet/dotnet 2>/dev/null
 ```
 
-**If the local SDK is missing and full-build tests are requested, use `ask_user` before building.** Never silently skip tests. Present the choice: build with `make prepare && make all` (slow) or skip full-build tests.
+**If the local SDK is missing, prepare and build it, then run the full-build tests.** On macOS/Linux, use `make prepare && make all`; on Windows, use `build.cmd`. For Release tests on macOS/Linux, use `make prepare CONFIGURATION=Release && make all CONFIGURATION=Release`. The presence of the `dotnet` executable only confirms provisioning, not that the SDK or test assemblies have been built. Rebuild after source changes so tests exercise the updated SDK.
+
+**Validate code changes locally before pushing.** Full SDK builds and relevant host/device tests are expected development work. Do not label them prohibitively slow, ask whether to skip them solely because of presumed duration, or rely on CI as the first validation. Start with focused tests while iterating and expand coverage as needed for the affected components. Never silently skip tests: if the user explicitly limits validation or an actual environment constraint blocks it, report the exact command, failure or missing prerequisite, and remaining unvalidated coverage. Include commands and outcomes in the handoff.
 
 ## Workflow
 
