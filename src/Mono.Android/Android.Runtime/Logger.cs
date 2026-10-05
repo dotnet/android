@@ -28,10 +28,6 @@ namespace Android.Runtime {
 			get {return (Categories & LogCategories.Timing) != 0;}
 		}
 
-		internal static bool LogBundle {
-			get {return (Categories & LogCategories.Bundle) != 0;}
-		}
-
 		internal static bool LogNet {
 			get {return (Categories & LogCategories.Net) != 0;}
 		}

@@ -11,7 +11,7 @@ typedef enum _LogCategories {
 	LOG_GREF      = 1 << 4,
 	LOG_LREF      = 1 << 5,
 	LOG_TIMING    = 1 << 6,
-	LOG_BUNDLE    = 1 << 7,
+	// Bit 7 is reserved for the removed bundle logging category.
 	LOG_NET       = 1 << 8,
 	// Bit 9 is reserved for the removed netlink logging category.
 } LogCategories;

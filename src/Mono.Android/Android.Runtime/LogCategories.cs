@@ -15,7 +15,7 @@ namespace Android.Runtime
 		GlobalRef = 1 << 4,
 		LocalRef  = 1 << 5,
 		Timing    = 1 << 6,
-		Bundle    = 1 << 7,
+		// Bit 7 is reserved for the removed bundle logging category.
 		Net       = 1 << 8,
 		// Bit 9 is reserved for the removed netlink logging category.
 	}
