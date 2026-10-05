@@ -78,10 +78,10 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_AndroidNativeAotBootstrapDirectory>$(IntermediateOutputPath)android</_AndroidNativeAotBootstrapDirectory>
       <_AndroidNativeAotBootstrapInputsFile>$(IntermediateOutputPath)nativeaot-bootstrap.inputs</_AndroidNativeAotBootstrapInputsFile>
     </PropertyGroup>
-    <!-- Command-line AssemblyName changes leave the Java paths and other file inputs unchanged. -->
+    <!-- Command-line library names and environment selection/order can change without newer file inputs. -->
     <WriteLinesToFile
         File="$(_AndroidNativeAotBootstrapInputsFile)"
-        Lines="TargetName=$(TargetName)"
+        Lines="TargetName=$(TargetName);@(_EnvironmentFiles->'EnvironmentFile=%(FullPath)')"
         Overwrite="true"
         WriteOnlyWhenDifferent="true" />
     <!-- Task-generated provider names are not inferred when the typemap generator is skipped. -->

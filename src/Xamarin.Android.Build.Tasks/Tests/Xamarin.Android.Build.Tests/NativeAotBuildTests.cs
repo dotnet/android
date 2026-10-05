@@ -120,7 +120,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BootstrapLibraryNameChangesWithAssemblyName ()
+		public void BootstrapUpdatesForCommandLineFlavorChanges ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
@@ -132,37 +132,86 @@ namespace Xamarin.Android.Build.Tests
 						protected override void OnCreate (Bundle? bundle)
 						{
 							base.OnCreate (bundle);
+					#if BOOTSTRAP_FIRST
+							Android.Util.Log.Info ("BootstrapFlavor", "first");
+					#else
+							Android.Util.Log.Info ("BootstrapFlavor", "second");
+					#endif
 						}
 					}
 					""",
 				OtherBuildItems = {
-					new BuildItem ("AndroidEnvironment", "environment.txt") {
-						TextContent = () => "BOOTSTRAP_TEST=unchanged",
+					new BuildItem ("None", "first-environment.txt") {
+						TextContent = () => "BOOTSTRAP_TEST=first\ndebug.dotnet.max_grefc=1234",
+					},
+					new BuildItem ("None", "second-environment.txt") {
+						TextContent = () => "BOOTSTRAP_TEST=second\ndebug.dotnet.max_grefc=5678",
 					},
 				},
 			};
+			proj.Imports.Add (new Import ("BootstrapEnvironment.targets") {
+				TextContent = () => """
+					<Project>
+					  <ItemGroup>
+					    <AndroidEnvironment Include="first-environment.txt" Condition=" '$(_BootstrapEnvironmentFlavor)' == 'first' or '$(_BootstrapEnvironmentFlavor)' == 'forward' " />
+					    <AndroidEnvironment Include="second-environment.txt"
+					        Condition=" '$(_BootstrapEnvironmentFlavor)' == 'second' or '$(_BootstrapEnvironmentFlavor)' == 'forward' or '$(_BootstrapEnvironmentFlavor)' == 'reverse' " />
+					    <AndroidEnvironment Include="first-environment.txt" Condition=" '$(_BootstrapEnvironmentFlavor)' == 'reverse' " />
+					  </ItemGroup>
+					</Project>
+					""",
+			});
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
 			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
 			proj.SetProperty ("AndroidPackageFormat", "apk");
 
 			using var builder = CreateApkBuilder ();
-			string [] firstParameters = ["AssemblyName=BootstrapOriginal"];
-			string [] renamedParameters = ["AssemblyName=BootstrapRenamed"];
+			string [] firstParameters = ["AssemblyName=BootstrapOriginal", "_BootstrapEnvironmentFlavor=first", "DefineConstants=BOOTSTRAP_FIRST"];
+			string [] renamedParameters = ["AssemblyName=BootstrapRenamed", "_BootstrapEnvironmentFlavor=reverse", "DefineConstants=BOOTSTRAP_SECOND"];
 			Assert.IsTrue (builder.Build (proj, parameters: firstParameters));
 			builder.AutomaticNuGetRestore = false;
 
 			string projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
 			string intermediate = Path.Combine (projectDirectory, proj.IntermediateOutputPath);
 			string sourceFile = Path.Combine (intermediate, "android", "src", "net", "dot", "jni", "nativeaot", "JavaInteropRuntime.java");
+			string environmentSource = Path.Combine (Path.GetDirectoryName (sourceFile), "NativeAotEnvironmentVars.java");
 			string [] inputs = [
 				Path.Combine (projectDirectory, proj.ProjectFilePath),
-				Path.Combine (projectDirectory, "environment.txt"),
+				Path.Combine (projectDirectory, "BootstrapEnvironment.targets"),
+				Path.Combine (projectDirectory, "first-environment.txt"),
+				Path.Combine (projectDirectory, "second-environment.txt"),
 				Path.Combine (intermediate, "AndroidManifest.xml"),
 				Path.Combine (intermediate, "build.props"),
 				Path.GetFullPath (Path.Combine (intermediate, "..", "project.assets.json")),
 			];
 			var inputTimestamps = inputs.Select (File.GetLastWriteTimeUtc).ToArray ();
 			StringAssert.Contains ("NativeLibraryHelper.loadLibrary(\"BootstrapOriginal\", context);", File.ReadAllText (sourceFile));
+			string nativeObject = Path.Combine (intermediate, "android-arm64", "native", "BootstrapOriginal.o");
+			DateTime nativeObjectTimestamp = File.GetLastWriteTimeUtc (nativeObject);
+			Assert.Less (File.GetLastWriteTimeUtc (inputs [3]), File.GetLastWriteTimeUtc (environmentSource),
+				"The alternate environment file must predate the bootstrap outputs.");
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: [
+				"AssemblyName=BootstrapOriginal", "_BootstrapEnvironmentFlavor=second", "DefineConstants=BOOTSTRAP_SECOND",
+			]));
+			Assert.Greater (File.GetLastWriteTimeUtc (nativeObject), nativeObjectTimestamp, "The managed build flavor must recompile.");
+			CollectionAssert.AreEqual (inputTimestamps, inputs.Select (File.GetLastWriteTimeUtc),
+				"Selecting a pre-existing environment file must not change the other bootstrap inputs.");
+			Assert.AreEqual ("second", EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate) ["BOOTSTRAP_TEST"]);
+			StringAssert.Contains ("\"debug.dotnet.max_grefc\",\n\t\t\"5678\"", File.ReadAllText (environmentSource));
+			builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateNativeAotBootstrapSources");
+
+			foreach (var (flavor, expectedValue) in new [] { ("forward", "second"), ("reverse", "first") }) {
+				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: [
+					"AssemblyName=BootstrapOriginal", "_BootstrapEnvironmentFlavor=" + flavor, "DefineConstants=BOOTSTRAP_SECOND",
+				]));
+				Assert.AreEqual (expectedValue, EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate) ["BOOTSTRAP_TEST"]);
+				string expectedProperty = expectedValue == "first" ? "1234" : "5678";
+				StringAssert.Contains ($"\"debug.dotnet.max_grefc\",\n\t\t\"{expectedProperty}\"", File.ReadAllText (environmentSource));
+				CollectionAssert.AreEqual (inputTimestamps, inputs.Select (File.GetLastWriteTimeUtc),
+					"Reordering pre-existing files must update override precedence without changing their timestamps.");
+				builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateNativeAotBootstrapSources");
+			}
 
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, parameters: renamedParameters, saveProject: false));
 			StringAssert.Contains ("NativeLibraryHelper.loadLibrary(\"BootstrapRenamed\", context);", File.ReadAllText (sourceFile));
