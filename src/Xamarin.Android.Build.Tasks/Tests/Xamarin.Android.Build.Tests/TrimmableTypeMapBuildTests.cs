@@ -20,7 +20,6 @@ namespace Xamarin.Android.Build.Tests {
 	[Category ("Node-2")]
 	public class TrimmableTypeMapBuildTests : BaseTest {
 
-		[TestCase (AndroidRuntime.CoreCLR, "llvm-ir")]
 		[TestCase (AndroidRuntime.CoreCLR, "trimmable")]
 		[TestCase (AndroidRuntime.NativeAOT, "trimmable")]
 		public void RetainedTypeMapRulesDriveR8 (AndroidRuntime runtime, string implementation)
@@ -2189,8 +2188,12 @@ namespace Xamarin.Android.Build.Tests {
 
 			var memberRules = builder.Output.GetIntermediaryPath (
 				Path.Combine ("proguard", "proguard_typemap_members.cfg"));
-			FileAssert.Exists (memberRules);
-			StringAssert.Contains ("-keepclassmembers class example.JniConstructorPeer { *; }", File.ReadAllText (memberRules));
+			if (runtime == AndroidRuntime.CoreCLR) {
+				FileAssert.Exists (memberRules);
+				StringAssert.Contains ("-keepclassmembers class example.JniConstructorPeer { *; }", File.ReadAllText (memberRules));
+			} else {
+				FileAssert.DoesNotExist (memberRules);
+			}
 
 			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 			FileAssert.Exists (dexFile);

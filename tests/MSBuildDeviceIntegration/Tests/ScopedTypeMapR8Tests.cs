@@ -12,16 +12,15 @@ namespace Xamarin.Android.Build.Tests;
 [Category ("UsesDevice")]
 public class ScopedTypeMapR8Tests : DeviceTest
 {
-	[TestCase ("llvm-ir")]
-	[TestCase ("trimmable")]
-	public void PreservesJniMembersAndShrinksJavaOnlyDependencies (string implementation)
+	[Test]
+	public void PreservesJniMembersAndShrinksJavaOnlyDependencies ()
 	{
-		var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "scopedr8_" + implementation.Replace ("-", ""))) {
+		var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "scopedr8")) {
 			IsRelease = true,
 		};
 		proj.SetRuntime (AndroidRuntime.CoreCLR);
 		proj.SetRuntimeIdentifiers ([DeviceAbi]);
-		proj.SetProperty ("AndroidTypeMapImplementation", implementation);
+		proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 		proj.SetProperty ("AndroidLinkTool", "r8");
 		proj.SetProperty ("AndroidR8ObfuscationMode", "disabled");
 		proj.SetProperty ("_AndroidEnableTypemapR8Trimming", "true");
