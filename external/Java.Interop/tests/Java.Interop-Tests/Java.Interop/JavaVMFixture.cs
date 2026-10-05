@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 using Java.Interop;
 
@@ -48,12 +47,6 @@ namespace Java.InteropTests {
 			[TestType.JniTypeName]              = typeof (TestType),
 #endif  // !NO_MARSHAL_MEMBER_BUILDER_SUPPORT
 			[GenericHolder<int>.JniTypeName]    = typeof (GenericHolder<>),
-			[RenameClassBase.JniTypeName]       = typeof (RenameClassBase),
-			[RenameClassDerived.JniTypeName]    = typeof (RenameClassDerived),
-			[AnotherJavaInterfaceImpl.JniTypeName]          = typeof (AnotherJavaInterfaceImpl),
-			[CallVirtualFromConstructorBase.JniTypeName]    = typeof (CallVirtualFromConstructorBase),
-			[CallVirtualFromConstructorDerived.JniTypeName] = typeof (CallVirtualFromConstructorDerived),
-			[CrossReferenceBridge.JniTypeName]              = typeof (CrossReferenceBridge),
 			[GetThis.JniTypeName]                           = typeof (GetThis),
 			[IAndroidInterface.JniTypeName]                 = typeof (IAndroidInterface),
 			[IJavaInterface.JniTypeName]                    = typeof (IJavaInterface),
@@ -115,10 +108,8 @@ namespace Java.InteropTests {
 			}
 		}
 
-		public string? RequestedFallbackTypesForSimpleReference;
 		protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
 		{
-			RequestedFallbackTypesForSimpleReference = jniSimpleReference;
 			Debug.WriteLine ($"# GetStaticMethodFallbackTypes (jniSimpleReference={jniSimpleReference})");
 
 			var slash       = jniSimpleReference.LastIndexOf ('/');
@@ -136,29 +127,12 @@ namespace Java.InteropTests {
 		}
 
 		Dictionary<string, string> ReplacmentTypes = new() {
-			["net/dot/jni/test/RenameClassBase1"] = "net/dot/jni/test/RenameClassBase2",
 			[FieldRemapBase.JniTypeName] = FieldRemapBase.RuntimeJniTypeName,
 			[FieldRemapBase.RuntimeJniTypeName] = FieldRemapBase.FinalJniTypeName,
 		};
 
-		string? trackedReplacementType;
-		int replacementTypeStringLookupCount;
-		int replacementTypeUtf8LookupCount;
-
-		public void TrackReplacementTypeLookups (string jniSimpleReference)
-		{
-			trackedReplacementType = jniSimpleReference;
-			replacementTypeStringLookupCount = 0;
-			replacementTypeUtf8LookupCount = 0;
-		}
-
-		public (int String, int Utf8) GetReplacementTypeLookupCounts ()
-			=> (replacementTypeStringLookupCount, replacementTypeUtf8LookupCount);
-
 		protected override string? GetReplacementTypeCore (string jniSimpleReference)
 		{
-			if (jniSimpleReference == trackedReplacementType)
-				Interlocked.Increment (ref replacementTypeStringLookupCount);
 			return ReplacmentTypes.TryGetValue (jniSimpleReference, out var value)
 				? value
 				: null;
@@ -166,8 +140,6 @@ namespace Java.InteropTests {
 
 		protected override void GetReplacementTypeInfoCore (string jniSimpleReference, out string? replacement, out IntPtr replacementUtf8)
 		{
-			if (jniSimpleReference == trackedReplacementType)
-				Interlocked.Increment (ref replacementTypeUtf8LookupCount);
 			replacement = null;
 			replacementUtf8 = ReplacmentTypes.TryGetValue (jniSimpleReference, out var value)
 				? GetUtf8Value (value)
@@ -180,10 +152,6 @@ namespace Java.InteropTests {
 			[("java/lang/Object",                       "remappedToStaticHashCode",            null)]                      = ("net/dot/jni/test/ObjectHelper", "getHashCodeHelper", null, null, true, ReplacementMethodStorage.TypeUtf8 | ReplacementMethodStorage.MethodUtf8 | ReplacementMethodStorage.SignatureUtf8),
 			[("java/lang/Object",                       "remappedStaticAbs",                   "(I)I")]                    = ("java/lang/Math", "abs", null, null, false, ReplacementMethodStorage.Strings),
 			[("java/lang/Runtime",                      "remappedToGetRuntime",                null)]                      = (null, "getRuntime", null, null, false, ReplacementMethodStorage.Strings),
-
-			// NOTE: key must use *post-renamed* value, not pre-renamed value
-			// NOTE: SourceSignature lacking return type; "closer in spirit" to what `remapping-config.json` allows
-			[("net/dot/jni/test/RenameClassBase2",   "hashCode",                            "()")]                      = ("net/dot/jni/test/RenameClassBase2", "myNewHashCode", null, null, false, ReplacementMethodStorage.TypeUtf8 | ReplacementMethodStorage.MethodUtf8),
 
 			// Renamed parameter types: the target descriptor is pinned explicitly, which is what
 			// `target-method-signature` carries.
