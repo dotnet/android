@@ -58,6 +58,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
 			proj.SetRuntimeIdentifiers ([abi]);
+			proj.SetProperty ("DebugSymbols", "false");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), $"NativeAOT build should succeed for {abi} without libc++ or libunwind.");

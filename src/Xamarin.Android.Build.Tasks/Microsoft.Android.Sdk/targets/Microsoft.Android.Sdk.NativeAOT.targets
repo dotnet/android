@@ -35,7 +35,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   <!-- Default property values for NativeAOT Debug configuration -->
   <PropertyGroup Condition="'$(DebugSymbols)' == 'true'">
     <NativeDebugSymbols>true</NativeDebugSymbols>
-    <StripSymbols>false</StripSymbols>
     <CompressSymbols>false</CompressSymbols>
   </PropertyGroup>
 
@@ -93,8 +92,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!--
           Don't call `clang` directly, use the wrapper scripts instead since they properly pass
           arguments required to link the application using the right API level libraries.
-          Canonical absolute paths also work with the Windows `where` probe without changing
-          the MSBuild process's PATH.
+          Explicit tool paths avoid changing the MSBuild process's PATH.
 
           Also, do NOT use `clang++` here because it will link the dynamic libc++ library into the
           application. If, for some reason, `clang++` has to be used, `<LinkerArgs>` need to be
@@ -106,6 +104,10 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <ObjCopyName>$(_AndroidNdkObjcopyToolPath)</ObjCopyName>
       <_AndroidIlcToolchainPath>$(_NdkBinDir)$([System.IO.Path]::PathSeparator)$([System.Environment]::GetEnvironmentVariable('PATH'))</_AndroidIlcToolchainPath>
       <_IlcEnvironmentVariables>$(_IlcEnvironmentVariables);PATH=$([MSBuild]::Escape($(_AndroidIlcToolchainPath)))</_IlcEnvironmentVariables>
+
+      <!-- Android owns the final link, stripping, and debug sidecars. Disable ILC's unused
+           stripping phase and its Windows tool probe, which rejects absolute tool paths. -->
+      <StripSymbols>false</StripSymbols>
 
       <!-- We must ensure this is `false`, so that the compiler driver does not add libc++,
            which NativeAOT applications do not link. -->
