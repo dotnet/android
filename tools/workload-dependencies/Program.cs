@@ -1,9 +1,10 @@
 ﻿using System.Net.Http;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Xml.Linq;
 
 using Mono.Options;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 const string AppName = "workload-dependencies";
 
@@ -99,7 +100,7 @@ catch (System.Xml.XmlException e) {
 	return;
 }
 
-var PackageCreators = new Dictionary<string, Func<XDocument, IEnumerable<JObject>>> {
+var PackageCreators = new Dictionary<string, Func<XDocument, IEnumerable<JsonObject>>> {
 	["build-tool"]      = doc => CreatePackageEntries (doc, "build-tool",       BuildToolsVersion),
 	["emulator"]        = doc => CreatePackageEntries (doc, "emulator",         null,                   optional: true),
 	["cmdline-tools"]   = doc => CreatePackageEntries (doc, "cmdline-tools",    CmdlineToolsVersion),
@@ -110,19 +111,26 @@ var PackageCreators = new Dictionary<string, Func<XDocument, IEnumerable<JObject
 	// ndk
 };
 
-var release = new JObject {
-	new JProperty ("microsoft.net.sdk.android", new JObject {
-		CreateWorkloadProperty (doc),
-		CreateJdkProperty (doc),
-		new JProperty ("androidsdk", new JObject {
-			new JProperty ("packages", CreatePackagesArray (doc)),
-		}),
-	}),
+var release = new JsonObject {
+	["microsoft.net.sdk.android"] = new JsonObject {
+		["workload"] = CreateWorkload (),
+		["jdk"] = CreateJdk (doc),
+		["androidsdk"] = new JsonObject {
+			["packages"] = CreatePackagesArray (doc),
+		},
+	},
 };
 
-using var writer = CreateWriter ();
-release.WriteTo (writer);
-writer.Flush ();
+var json = release.ToJsonString (new JsonSerializerOptions {
+	WriteIndented = true,
+	Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+});
+
+if (string.IsNullOrEmpty (output)) {
+	Console.Write (json);
+} else {
+	File.WriteAllText (output, json);
+}
 
 async Task<string> GetFeedContents (string feed)
 {
@@ -142,35 +150,28 @@ async Task<string> GetFeedContentsFromUri (Uri feed)
 	return await response.Content.ReadAsStringAsync ();
 }
 
-JsonWriter CreateWriter ()
+JsonObject CreateWorkload ()
 {
-	var w = string.IsNullOrEmpty (output)
-		? new JsonTextWriter (Console.Out) { CloseOutput = false}
-		: new JsonTextWriter (File.CreateText (output)) { CloseOutput = true };
-	w.Formatting = Formatting.Indented;
-	return w;
-}
-
-JProperty CreateWorkloadProperty (XDocument doc)
-{
-	var contents = new JObject (
-		new JProperty ("alias", new JArray ("android")));
+	var contents = new JsonObject {
+		["alias"] = new JsonArray ("android"),
+	};
 	if (!string.IsNullOrEmpty (WorkloadVersion))
-		contents.Add (new JProperty ("version", WorkloadVersion));
-	return new JProperty ("workload", contents);
+		contents ["version"] = WorkloadVersion;
+	return contents;
 }
 
-JProperty CreateJdkProperty (XDocument doc)
+JsonObject CreateJdk (XDocument doc)
 {
 	var v               = new Version (JdkVersion ?? "17.0");
 	var start           = new Version (v.Major, v.Minor);
 	var end             = GetMaxJdkVersion (v);
 	var latestRevision  = GetLatestRevision (doc, "jdk", start, new Version (end));
-	var contents        = new JObject (
-		new JProperty ("version", $"[{start},{end})"));
+	var contents        = new JsonObject {
+		["version"] = $"[{start},{end})",
+	};
 	if (!string.IsNullOrEmpty (latestRevision))
-		contents.Add (new JProperty ("recommendedVersion", latestRevision));
-	return new JProperty ("jdk", contents);
+		contents ["recommendedVersion"] = latestRevision;
+	return contents;
 }
 
 string GetMaxJdkVersion (Version v)
@@ -213,7 +214,7 @@ string? GetLatestRevision (XDocument doc, string element, Version minimumVersion
 		.Revision;
 }
 
-IEnumerable<JObject> CreatePackageEntries (XDocument doc, string element, string? revision, bool optional = false)
+IEnumerable<JsonObject> CreatePackageEntries (XDocument doc, string element, string? revision, bool optional = false)
 {
 	var item    = GetElementRevision (doc, element, revision);
 	if (item == null) {
@@ -221,18 +222,18 @@ IEnumerable<JObject> CreatePackageEntries (XDocument doc, string element, string
 	}
 	var path        = item.ReqAttr ("path");
 	var reqRev      = item.ReqAttr ("revision");
-	var sdkPackage  = new JObject {
-			new JProperty ("id",        path),
+	var sdkPackage  = new JsonObject {
+		["id"] = path,
 	};
 
 	// special-case platform-tools, which doesn't have a revision
 	if (!path.Contains (reqRev)) {
-		sdkPackage.Add (new JProperty ("recommendedVersion",    reqRev));
+		sdkPackage ["recommendedVersion"] = reqRev;
 	}
-	var entry       = new JObject {
-		new JProperty ("desc",          item.ReqAttr ("description")),
-		new JProperty ("sdkPackage",    sdkPackage),
-		new JProperty ("optional",      optional.ToString ().ToLowerInvariant ()),
+	var entry       = new JsonObject {
+		["desc"] = item.ReqAttr ("description"),
+		["sdkPackage"] = sdkPackage,
+		["optional"] = optional.ToString ().ToLowerInvariant (),
 	};
 	yield return entry;
 }
@@ -256,7 +257,7 @@ XElement? GetElementRevision (XDocument doc, string element, string? revision)
 	return entry;
 }
 
-IEnumerable<JObject> CreatePlatformPackageEntries (XDocument doc)
+IEnumerable<JsonObject> CreatePlatformPackageEntries (XDocument doc)
 {
 	string?     reqVersion  = PlatformVersion != null
 		? $"platforms;{PlatformVersion}"
@@ -277,12 +278,12 @@ IEnumerable<JObject> CreatePlatformPackageEntries (XDocument doc)
 	if (entry == null) {
 		yield break;
 	}
-	var platform    = new JObject {
-		new JProperty ("desc",          entry.ReqAttr ("description")),
-		new JProperty ("sdkPackage", new JObject {
-			new JProperty ("id",    entry.ReqAttr ("path")),
-		}),
-		new JProperty ("optional",      "false"),
+	var platform    = new JsonObject {
+		["desc"] = entry.ReqAttr ("description"),
+		["sdkPackage"] = new JsonObject {
+			["id"] = entry.ReqAttr ("path"),
+		},
+		["optional"] = "false",
 	};
 	yield return platform;
 
@@ -290,17 +291,17 @@ IEnumerable<JObject> CreatePlatformPackageEntries (XDocument doc)
 		var previewPath = $"platforms;android-{previewPlatformVersion}";
 		var previewEntry = doc.Elements ("platform")
 			.FirstOrDefault (e => e.ReqAttr ("path") == previewPath);
-		yield return new JObject {
-			new JProperty ("desc",          previewEntry?.ReqAttr ("description") ?? $"Android SDK Platform {previewPlatformVersion} (Preview)"),
-			new JProperty ("sdkPackage", new JObject {
-				new JProperty ("id",    previewPath),
-			}),
-			new JProperty ("optional",      "true"),
+		yield return new JsonObject {
+			["desc"] = previewEntry?.ReqAttr ("description") ?? $"Android SDK Platform {previewPlatformVersion} (Preview)",
+			["sdkPackage"] = new JsonObject {
+				["id"] = previewPath,
+			},
+			["optional"] = "true",
 		};
 	}
 }
 
-IEnumerable<JObject> CreateSystemImagePackageEntries (XDocument doc)
+IEnumerable<JsonObject> CreateSystemImagePackageEntries (XDocument doc)
 {
 	// path="system-images;android-21;default;armeabi-v7a"
 	var images      = from image in GetSupportedElements (doc, "system-image")
@@ -327,31 +328,32 @@ IEnumerable<JObject> CreateSystemImagePackageEntries (XDocument doc)
 		yield break;
 	}
 
-	var id          = new JObject ();
+	var id          = new JsonObject ();
 	if (x64 != null) {
-		id.Add (new JProperty ("win-x64",       x64.Path));
-		id.Add (new JProperty ("mac-x64",       x64.Path));
-		id.Add (new JProperty ("linux-x64",     x64.Path));
+		id ["win-x64"] = x64.Path;
+		id ["mac-x64"] = x64.Path;
+		id ["linux-x64"] = x64.Path;
 	}
 	if (arm64 != null) {
-		id.Add (new JProperty ("mac-arm64",     arm64.Path));
-		id.Add (new JProperty ("linux-arm64",   arm64.Path));
+		id ["mac-arm64"] = arm64.Path;
+		id ["linux-arm64"] = arm64.Path;
 	}
 
-	var entry       = new JObject {
-		new JProperty ("desc",          maxImages.First ().Element.ReqAttr ("description")),
-		new JProperty ("sdkPackage",    new JObject {
-			new JProperty ("id",    id),
-		}),
-		new JProperty ("optional",      "true"),
+	var entry       = new JsonObject {
+		["desc"] = maxImages.First ().Element.ReqAttr ("description"),
+		["sdkPackage"] = new JsonObject {
+			["id"] = id,
+		},
+		["optional"] = "true",
 	};
 	yield return entry;
 }
 
-JArray CreatePackagesArray (XDocument doc)
+JsonArray CreatePackagesArray (XDocument doc)
 {
-	var packages    = new JArray ();
-	var names       = doc.Root!.Elements ()
+	var packages    = new JsonArray ();
+	var root        = doc.Root ?? throw new InvalidOperationException ("Missing root element in XML feed.");
+	var names       = root.Elements ()
 		.Select (e => e.Name.LocalName)
 		.Distinct ()
 		.OrderBy (e => e);
