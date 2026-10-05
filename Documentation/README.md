@@ -23,6 +23,7 @@
   * [`.axml` CodeBehind Support](docs-mobile/features/layout-code-behind/index.md)
   * [MSBuild Best Practices](guides/MSBuildBestPractices.md)
   * [D8 and R8 Integration](guides/D8andR8.md)
+  * [Java and managed interoperability](guides/internals/JavaJNI_Interop.md)
   * [Profiling Startup](guides/profiling.md)
 
 
