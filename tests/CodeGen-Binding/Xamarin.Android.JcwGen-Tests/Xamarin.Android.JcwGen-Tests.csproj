@@ -37,16 +37,9 @@
   <ItemGroup>
     <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
     <RuntimeHostConfigurationOption Include="IncludeCategories" Value="$(IncludeCategories)" Condition=" '$(IncludeCategories)' != '' " />
+    <!-- NUnit discovers fixtures through reflection, not through the application's call graph. -->
+    <TrimmerRootAssembly Include="$(AssemblyName)" RootMode="All" />
   </ItemGroup>
-
-  <!-- NUnit discovers these fixtures by reflection, including when the type map default is set late. -->
-  <Target Name="_AndroidRootJcwGenTests"
-      BeforeTargets="PrepareForILLink;_RunILLink"
-      Condition=" '$(Configuration)' == 'Release' and '$(PublishTrimmed)' == 'true' ">
-    <ItemGroup>
-      <TrimmerRootAssembly Include="$(AssemblyName)" RootMode="All" />
-    </ItemGroup>
-  </Target>
 
   <ItemGroup>
     <ProjectReference Include="..\..\TestRunner.Core\TestRunner.Core.NET.csproj" />
