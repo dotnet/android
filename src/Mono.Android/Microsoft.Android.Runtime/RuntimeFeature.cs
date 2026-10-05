@@ -13,6 +13,7 @@ static class RuntimeFeature
 	const bool UseTypeMapAttributesForJavaDictionaryValueTypeLookupsEnabledByDefault = false;
 	const bool ObjectReferenceLoggingEnabledByDefault = false;
 	const bool GCBridgeLoggingEnabledByDefault = true;
+	const bool JniRemappingEnabledByDefault = true;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
 	const string EventSourceSupportSwitch = "System.Diagnostics.Tracing.EventSource.IsSupported";
@@ -55,4 +56,7 @@ static class RuntimeFeature
 	internal static bool EventSourceSupport { get; } =
 		!AppContext.TryGetSwitch (EventSourceSupportSwitch, out bool isEnabled) || isEnabled;
 
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (JniRemapping)}")]
+	internal static bool JniRemapping { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (JniRemapping)}", out bool isEnabled) ? isEnabled : JniRemappingEnabledByDefault;
 }

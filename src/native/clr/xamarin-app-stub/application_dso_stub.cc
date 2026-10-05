@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <stdlib.h>
 
+#include <managed-interface.hh>
 #include <xamarin-app.hh>
 
 // This file MUST have "valid" values everywhere - the DSO it is compiled into is loaded by the
@@ -18,7 +19,6 @@ uint8_t uncompressed_assemblies_data_buffer[] = {};
 //
 constexpr char android_package_name[] = "com.xamarin.test";
 const ApplicationConfig application_config = {
-	.marshal_methods_enabled = false,
 	.ignore_split_configs = false,
 	.number_of_runtime_properties = 3,
 	.package_naming_policy = 0,
@@ -28,10 +28,6 @@ const ApplicationConfig application_config = {
 	.bundled_assembly_name_width = 0,
 	.number_of_dso_cache_entries = 2,
 	.number_of_shared_libraries = 2,
-	.android_runtime_jnienv_class_token = 1,
-	.jnienv_initialize_method_token = 2,
-	.jni_remapping_replacement_type_count = 2,
-	.jni_remapping_replacement_method_index_entry_count = 2,
 	.android_package_name = android_package_name,
 	.have_assembly_store = false,
 };
@@ -112,6 +108,7 @@ static const JniRemappingIndexMethodEntry some_java_type_one_methods[] = {
 		.replacement = {
 			.target_type = "some/java/target_type_one",
 			.target_name = "new_method_name",
+			.target_signature = nullptr,
 			.is_static = false,
 		}
 	},
@@ -132,6 +129,7 @@ static const JniRemappingIndexMethodEntry some_java_type_two_methods[] = {
 		.replacement = {
 			.target_type = "some/java/target_type_two",
 			.target_name = "new_method_name",
+			.target_signature = nullptr,
 			.is_static = true,
 		}
 	},
@@ -173,6 +171,17 @@ const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[] = {
 		},
 		.replacement = "another/replacement/java/type",
 	},
+};
+
+extern "C" const xamarin::android::JniRemappingData jni_remapping_data {
+	.type_replacements = jni_remapping_type_replacements,
+	.reverse_type_replacements = nullptr,
+	.method_replacement_index = jni_remapping_method_replacement_index,
+	.field_replacement_index = nullptr,
+	.type_replacement_count = 2,
+	.reverse_type_replacement_count = 0,
+	.method_replacement_index_count = 2,
+	.field_replacement_index_count = 0,
 };
 
 const char *init_runtime_property_names[] = {

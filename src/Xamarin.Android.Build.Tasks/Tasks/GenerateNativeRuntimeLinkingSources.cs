@@ -92,14 +92,13 @@ public class GenerateNativeRuntimeLinkingSources : AndroidTask
 
 	List<PinvokeScanner.PinvokeEntryInfo> ScanPInvokes (AndroidTargetArch arch)
 	{
-		// Generated trimmable type map assemblies are attached only to the first ABI.
-		var assemblies = MonoAndroidHelper.GetPerArchAssemblies (ResolvedAssemblies, SupportedAbis, validate: false);
+		// Exclude generated typemap copies before indexing by assembly name and ABI.
+		var assemblies = MonoAndroidHelper.GetPerArchAssemblies (ResolvedAssemblies, SupportedAbis, validate: false,
+			shouldSkip: assembly => !bool.TryParse (assembly.GetMetadata ("FrameworkAssembly"), out bool isFramework) || !isFramework);
 		if (!assemblies.TryGetValue (arch, out var archAssemblies)) {
 			throw new InvalidOperationException ($"No resolved assemblies for architecture '{arch}'.");
 		}
-		var frameworkAssemblies = archAssemblies.Values
-			.Where (assembly => bool.TryParse (assembly.GetMetadata ("FrameworkAssembly"), out bool isFramework) && isFramework)
-			.ToList ();
+		var frameworkAssemblies = archAssemblies.Values.ToList ();
 		using var resolver = MonoAndroidHelper.MakeResolver (Log, arch, archAssemblies, loadDebugSymbols: false);
 		return new PinvokeScanner (Log).Scan (arch, resolver, frameworkAssemblies);
 	}

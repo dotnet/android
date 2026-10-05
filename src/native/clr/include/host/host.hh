@@ -18,13 +18,7 @@ namespace xamarin::android {
 		static void Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
 			jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
 			jobjectArray assembliesJava, jboolean isEmulator, jboolean haveSplitApks) noexcept;
-		static void Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept;
 		static void propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException) noexcept;
-
-		static auto get_java_class_TimeZone () noexcept -> jclass
-		{
-			return java_TimeZone;
-		}
 
 	private:
 		// Must match `DlopenAssemblyStoreGenerator.PayloadStartSymbol` in the build tasks.
@@ -49,8 +43,6 @@ namespace xamarin::android {
 		static inline unsigned int domain_id = 0;
 		static inline bool found_assembly_store = false;
 		static inline jnienv_propagate_uncaught_exception_fn jnienv_propagate_uncaught_exception = nullptr;
-
-		static inline jclass java_TimeZone = nullptr;
 
 		static inline host_runtime_contract runtime_contract{
 			.size = sizeof(host_runtime_contract),

@@ -110,10 +110,41 @@ locate and map the payload out of the APK — there is no ZIP scanning and no ma
 Because the section is allocatable and referenced by a dynamic symbol, this layout survives `strip`/`llvm-strip`.
 
 This wrapper is produced by
-[`DlopenAssemblyStoreGenerator`](../../src/Xamarin.Android.Build.Tasks/Utilities/DlopenAssemblyStoreGenerator.cs)
-(rather than the discrete-payload `DSOWrapperGenerator`), which assembles a tiny `.incbin` stub with `llvm-mc` and links it into a
-shared object with `ld` (no `llvm-objcopy` and no clang are involved).  The section is still named `payload`, so
-the extraction command (`llvm-objcopy --dump-section=payload=…`) shown below works for both layouts.
+[`WrapAssemblyStoresAsSharedLibraries`](../../src/Microsoft.Android.Build.Tasks/Tasks/WrapAssemblyStoresAsSharedLibraries.cs)
+in the modern `Microsoft.Android.Build.Tasks` assembly. Its
+[`AssemblyStoreElfWriter`](../../src/Microsoft.Android.Build.Tasks/Utilities/AssemblyStoreElfWriter.cs)
+writes the ELF headers and dynamic metadata directly in managed code and stream-copies the raw store
+bytes unchanged. No assembler, linker, native dependency or executable code is needed for this wrapper.
+The existing assembly-store setting selects this task unconditionally for stores; discrete files
+continue to use `DSOWrapperGenerator` and `llvm-objcopy`. Other application-specific LLVM generation
+and bundled native tools are unaffected.
+
+The writer's ELF inspection tests use the Android NDK's `llvm-readobj`, `llvm-nm`,
+`llvm-strip`, and `llvm-objcopy`, with no additional managed ELF parser dependency.
+These tests are categorized as `RequiresAndroidNdk` and resolve the NDK on the
+executing host: `TEST_ANDROID_NDK_PATH`, then `ANDROID_NDK_LATEST_HOME`, then
+`android-toolchain/ndk` under that host's user profile. A build-time
+`$(AndroidNdkDirectory)` is only a final fallback if it still exists there.
+The existing CI setup installs the NDK before these tests; no additional install
+step is required. A missing toolchain still fails explicitly rather than silently
+skipping inspection, while the stream/input-validation tests need no native tools.
+The .NET 11 test runner uses `Process.RunAndCaptureText` to drain stdout and stderr
+together, with one timeout covering output capture and process exit. The shared
+.NET 10 packaging tests use cancellation-aware concurrent reads with the same bound.
+
+The wrapper is a little-endian `ET_DYN` image with a single read-only `PT_LOAD` segment,
+a read-only `PT_DYNAMIC` segment, `PT_PHDR`, and a non-executable `PT_GNU_STACK`.
+The payload and load segment use 16 KiB alignment on 64-bit ABIs and 4 KiB on 32-bit ABIs.
+For `armeabi-v7a`, ELF flags `0x05000200` specify EABI5 and the base (softfp) calling convention,
+not an ARMv5 instruction-set requirement. ZIP-entry alignment is a separate packaging concern.
+
+Only `_assembly_store` is exported, as a default-visible global object symbol. Its standard ELF
+symbol size describes the payload for inspection; the runtime does not read it.
+The existing native API trusts the build-generated XABA v3 store: there is no `_assembly_store_end`,
+external payload length, replacement size field, or runtime ELF-header walk. Existing format,
+descriptor and decompression checks remain unchanged; this is not a parser for untrusted store bytes.
+The section is still named `payload`, so the extraction command
+(`llvm-objcopy --dump-section=payload=...`) shown below works for both layouts.
 
 ### Layout of the discrete (stub) payload library
 
@@ -228,13 +259,17 @@ with the discrete payload listing above, where `payload` has no flags and addres
 $ llvm-readelf --section-headers libassembly-store.so
 Section Headers:
   [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al
-  ...
-  [ 5] .dynstr           STRTAB          0000000000000290 000290 000026 00   A  0   0  1
-  [ 6] payload           PROGBITS        0000000000004000 004000 001004 00   A  0   0 16384
-  [ 7] .text             PROGBITS        0000000000009004 005004 000000 00  AX  0   0  4
-  [ 8] .dynamic          DYNAMIC         000000000000d008 005008 000080 10  WA  5   0  8
-  ...
+  [ 0]                   NULL            0000000000000000 000000 000000 00      0   0  0
+  [ 1] .dynsym           DYNSYM          0000000000000120 000120 000030 18   A  2   1  8
+  [ 2] .dynstr           STRTAB          0000000000000150 000150 000026 00   A  0   0  1
+  [ 3] .hash             HASH            0000000000000178 000178 000014 04   A  1   0  4
+  [ 4] .dynamic          DYNAMIC         0000000000000190 000190 000070 10   A  2   0  8
+  [ 5] payload           PROGBITS        0000000000004000 004000 000004 00   A  0   0 16384
+  [ 6] .shstrtab         STRTAB          0000000000000000 004004 000032 00      0   0  1
 ```
+
+The non-allocated section names and section headers follow the payload, outside `PT_LOAD`,
+so `llvm-strip` can rebuild them without moving or corrupting the loadable bytes.
 
 The program headers confirm that the `payload` section is part of a read-only `PT_LOAD` segment, i.e. the
 dynamic linker maps it for us:
@@ -243,14 +278,15 @@ dynamic linker maps it for us:
 $ llvm-readelf --program-headers libassembly-store.so
 Program Headers:
   Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align
-  ...
-  LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x005004 0x005004 R   0x4000
-  ...
+  PHDR           0x000040 0x0000000000000040 0x0000000000000040 0x0000e0 0x0000e0 R   0x8
+  LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x004004 0x004004 R   0x4000
+  DYNAMIC        0x000190 0x0000000000000190 0x0000000000000190 0x000070 0x000070 R   0x8
+  GNU_STACK      0x000000 0x0000000000000000 0x0000000000000000 0x000000 0x000000 RW  0x8
 
  Section to Segment mapping:
   Segment Sections...
-   01     .note.gnu.build-id .dynsym .gnu.hash .hash .dynstr payload
-  ...
+   01     .dynsym .dynstr .hash .dynamic payload
+   02     .dynamic
 ```
 
 Finally, the dynamic symbol table exposes `_assembly_store`, whose value (`0x4000`) is the virtual address of
@@ -261,7 +297,7 @@ $ llvm-readelf --dyn-symbols libassembly-store.so
 Symbol table '.dynsym' contains 2 entries:
    Num:    Value          Size Type    Bind   Vis       Ndx Name
      0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT   UND
-     1: 0000000000004000     0 NOTYPE  GLOBAL DEFAULT     6 _assembly_store
+     1: 0000000000004000     4 OBJECT  GLOBAL DEFAULT     5 _assembly_store
 ```
 
 (The offsets and sizes above come from a tiny sample payload; a real assembly store's `payload` section will

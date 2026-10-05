@@ -5,7 +5,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Kajabity.Tools.Java;
 
-using Xamarin.AndroidTools;
+using Xamarin.Android.Tools;
 using Xamarin.Installer.AndroidSDK.Common;
 using Xamarin.Installer.AndroidSDK.Xamarin;
 using Xamarin.Installer.AndroidSDK.GoogleV2;
@@ -30,6 +30,10 @@ namespace Xamarin.Installer.AndroidSDK
 		Uri _googleAddonsListURL;
 		Uri _googleRepositoryBaseURL;
 		bool _useManifestCaching;
+		string defaultAndroidSdkPath;
+		string[] allAndroidSdkPaths;
+		string defaultJavaSdkPath;
+		bool installationPathsDiscovered;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AndroidSDKInstaller"/> class. The caller is
@@ -60,6 +64,16 @@ namespace Xamarin.Installer.AndroidSDK
 
 			filesystemComparer = helpers.IsCaseSensitiveFileSystem ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
 			filesystemComparison = helpers.IsCaseSensitiveFileSystem ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+		}
+
+		void EnsureInstallationPathsDiscovered ()
+		{
+			if (installationPathsDiscovered)
+				return;
+
+			AndroidSdkInfo.DiscoverInstallationPaths (out defaultAndroidSdkPath, out allAndroidSdkPaths, out defaultJavaSdkPath,
+				logger: (level, message) => Logger.Debug ($"[{level}] {message}"));
+			installationPathsDiscovered = true;
 		}
 		
 		public Repository Repository { get; private set; }
@@ -138,7 +152,10 @@ namespace Xamarin.Installer.AndroidSDK
 		/// <param name="forPath">Full path for which to find a corresponding SDK instance. If null, default path will be used.</param>
 		public AndroidSdkInstance FindInstance (string forPath)
 		{
-			forPath = forPath ?? AndroidSdk.AndroidSdkPath;
+			if (forPath == null) {
+				EnsureInstallationPathsDiscovered ();
+				forPath = defaultAndroidSdkPath;
+			}
 			
 			if (String.IsNullOrEmpty (forPath))
 				throw new ArgumentException ("must not be an empty string", nameof (forPath));
@@ -197,7 +214,7 @@ namespace Xamarin.Installer.AndroidSDK
 		/// <summary>
 		/// Downloads the current Android SDK repository manifest (<see cref="RepositoryManifestURL"/>) and uses it to disover/detect
 		/// all instances of Android SDK on the system. It uses the system-dependent default location as well as the locations stored
-		/// in <see cref="AndroidSdk.AllAndroidSdkPaths"/>. Additionally, it can include extra paths passed in
+		/// in the paths discovered by <see cref="AndroidSdkInfo.DiscoverInstallationPaths"/>. Additionally, it can include extra paths passed in
 		/// the <paramref name="sdkLocations"/> list. If no Android SDK instance is detected on the system a default one will be created.
 		/// All the discovered instances are returned by the <see cref="DiscoveredSdkInstances"/> property.
 		/// 
@@ -238,10 +255,8 @@ namespace Xamarin.Installer.AndroidSDK
 
 			var sdkPaths = new List <string> ();
 
-#pragma warning disable CS0612 // Type or member is obsolete
-			if (AndroidSdk.AllAndroidSdkPaths != null)
-				sdkPaths.AddRange (AndroidSdk.AllAndroidSdkPaths);
-#pragma warning restore CS0612 // Type or member is obsolete
+			EnsureInstallationPathsDiscovered ();
+			sdkPaths.AddRange (allAndroidSdkPaths);
 
 			if (sdkLocations != null)
 				sdkPaths.AddRange (sdkLocations);
@@ -249,7 +264,7 @@ namespace Xamarin.Installer.AndroidSDK
 
 			sdkPaths = sdkPaths.Distinct ().ToList ();
 
-			string defaultPath = AndroidSdk.AndroidSdkPath ?? sdkPaths.FirstOrDefault ();
+			string defaultPath = defaultAndroidSdkPath ?? sdkPaths.FirstOrDefault ();
 			foreach (string path in sdkPaths) {
 				if (String.IsNullOrEmpty (path))
 					continue;
@@ -754,7 +769,11 @@ namespace Xamarin.Installer.AndroidSDK
 		{
 			if (instance != null) {
 				var androidSdkPath = instance.Path;
-				var javaPath = string.IsNullOrEmpty(javaSdkPath) ? AndroidSdk.JavaSdkPath : javaSdkPath;
+				var javaPath = javaSdkPath;
+				if (string.IsNullOrEmpty (javaPath)) {
+					EnsureInstallationPathsDiscovered ();
+					javaPath = defaultJavaSdkPath;
+				}
 
 				// try use the preferred cmdline-tools
 				var cmdlineToolsRoot = Path.Combine(androidSdkPath, Constants.ComponentPaths.Tools);
@@ -780,4 +799,3 @@ namespace Xamarin.Installer.AndroidSDK
 		}
 	}
 }
-

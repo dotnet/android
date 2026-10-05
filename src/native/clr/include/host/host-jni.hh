@@ -24,11 +24,4 @@ extern "C" {
 	 */
 	JNIEXPORT void JNICALL Java_mono_android_Runtime_propagateUncaughtException (JNIEnv *, jclass, jobject, jthrowable);
 
-	/*
-	 * Class:     mono_android_Runtime
-	 * Method:    register
-	 * Signature: (Ljava/lang/String;Ljava/lang/Class;Ljava/lang/String;)V
-	 */
-	JNIEXPORT void JNICALL Java_mono_android_Runtime_register (JNIEnv *, jclass, jstring, jclass, jstring);
-
 }
