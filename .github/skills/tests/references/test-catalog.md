@@ -43,6 +43,13 @@ require an Android device or a locally built Android SDK.
 
 ---
 
+The `TypeMapProguardTargetsTests` NativeAOT cases in the modern build-task suite
+also require the NDK `llvm-readobj` and adjacent `llvm-objdump` and `clang`
+executables. Pass
+`-p:_NativeAotLlvmReadObjPath=/path/to/ndk/toolchains/llvm/prebuilt/<host>/bin/llvm-readobj`
+(with `.exe` on Windows) to execute them; without it, those cases are reported as
+skipped. Other target regression cases do not require native tools.
+
 ## Host-Side MSBuild Tests (full-build — requires local SDK)
 
 Assembly: `bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll`
