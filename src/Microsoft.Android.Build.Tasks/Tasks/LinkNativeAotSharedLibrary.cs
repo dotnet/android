@@ -133,7 +133,7 @@ public class LinkNativeAotSharedLibrary : AsyncTask
 			"--add-gnu-debuglink=" + debugFile, OutputSharedLibrary).ConfigureAwait (false);
 	}
 
-	internal void WriteResponseFile (string path, IEnumerable<ITaskItem> libraries)
+	void WriteResponseFile (string path, IEnumerable<ITaskItem> libraries)
 	{
 		using var writer = new StreamWriter (path, append: false, new UTF8Encoding (false));
 		foreach (string arg in new [] {
@@ -209,7 +209,9 @@ public class LinkNativeAotSharedLibrary : AsyncTask
 		LogDebugMessage ("{0} {1}", tool, string.Join (" ", arguments));
 		int exitCode;
 		try {
-			exitCode = await ExecuteToolAsync (tool, arguments, stdout, stderr).ConfigureAwait (false);
+			exitCode = await ProcessUtils.StartProcess (
+				ProcessUtils.CreateProcessStartInfo (tool, arguments), stdout, stderr, CancellationToken
+			).ConfigureAwait (false);
 		} catch (Win32Exception e) {
 			LogCodedError (errorCode, errorMessage, Path.GetFileName (OutputSharedLibrary), Environment.NewLine + e.Message);
 			return false;
@@ -223,9 +225,6 @@ public class LinkNativeAotSharedLibrary : AsyncTask
 		LogDebugMessage (stderr.ToString ());
 		return true;
 	}
-
-	protected virtual Task<int> ExecuteToolAsync (string tool, string [] arguments, TextWriter stdout, TextWriter stderr)
-		=> ProcessUtils.StartProcess (ProcessUtils.CreateProcessStartInfo (tool, arguments), stdout, stderr, CancellationToken);
 
 	static string QuoteFileName (string name)
 	{

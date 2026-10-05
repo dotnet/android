@@ -1,7 +1,11 @@
 using System;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
@@ -9,6 +13,7 @@ using Microsoft.Build.Framework;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
+using Xamarin.Android.Tools.VSWhere;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -95,6 +100,53 @@ namespace Xamarin.Android.Build.Tests
 					AssertArmEhabiSymbolsPromoted (builder, proj);
 				}
 			}
+		}
+
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
+		[Platform ("Win")]
+		public async Task BuildWithNdkUsingFullMsBuild (AndroidRuntime runtime)
+		{
+			string msbuild = MSBuildLocator.QueryLatest ().MSBuildPath;
+			if (FileVersionInfo.GetVersionInfo (msbuild).FileMajorPart < 18) {
+				Assert.Ignore ("Full MSBuild 18 or later is required for the .NET task host.");
+			}
+
+			byte [] original = File.ReadAllBytes (GetInstalledRuntimePackFile ("libnet-android.debug.so"));
+			var proj = new XamarinAndroidApplicationProject {
+				OtherBuildItems = {
+					new AndroidItem.AndroidNativeLibrary ("native/arm64-v8a/libstrip-input.so") {
+						BinaryContent = () => original,
+					},
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
+			proj.SetProperty ("AndroidStripNativeLibraries", "true");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Restore (proj), "Restore should succeed before the Full MSBuild build.");
+			string directory = Path.Combine (Root, builder.ProjectDirectory);
+			var startInfo = ProcessUtils.CreateProcessStartInfo (msbuild,
+				Path.Combine (directory, proj.ProjectFilePath), "-t:Build,SignAndroidPackage", "-nr:false", "-v:minimal",
+				"@" + Path.Combine (directory, "project.rsp"));
+			startInfo.WorkingDirectory = directory;
+			startInfo.Environment ["DOTNET_MSBUILD_SDK_RESOLVER_CLI_DIR"] = TestEnvironment.DotNetPreviewDirectory;
+			startInfo.Environment ["DOTNET_HOST_PATH"] = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet.exe");
+			if (TestEnvironment.UseLocalBuildOutput) {
+				startInfo.Environment ["DOTNETSDK_WORKLOAD_MANIFEST_ROOTS"] = TestEnvironment.WorkloadManifestOverridePath;
+				startInfo.Environment ["DOTNETSDK_WORKLOAD_PACK_ROOTS"] = TestEnvironment.WorkloadPackOverridePath;
+			}
+			using var stdout = new StringWriter (CultureInfo.InvariantCulture);
+			using var stderr = new StringWriter (CultureInfo.InvariantCulture);
+			using var cancellation = new CancellationTokenSource (TimeSpan.FromMinutes (10));
+			int exitCode = await ProcessUtils.StartProcess (startInfo, stdout, stderr, cancellation.Token);
+			Assert.AreEqual (0, exitCode, $"{stdout}{stderr}");
+
+			string apk = Path.Combine (directory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk, "Full MSBuild should produce a signed app.");
+			Assert.Less (ZipHelper.ReadFileFromZip (apk, "lib/arm64-v8a/libstrip-input.so").Length, original.Length,
+				"Full MSBuild should package the NDK-stripped native library.");
 		}
 
 		[Test]
