@@ -12,7 +12,8 @@ internal static class GenerateAdditionalProviderSources
 {
 	static string GetResource (string resource)
 	{
-		using (var stream = typeof (GenerateAdditionalProviderSources).Assembly.GetManifestResourceStream (resource))
+		using (var stream = typeof (GenerateAdditionalProviderSources).Assembly.GetManifestResourceStream (resource) ??
+			throw new InvalidOperationException ($"Provider resource was not found: {resource}"))
 		using (var reader = new StreamReader (stream))
 			return reader.ReadToEnd ();
 	}

@@ -73,7 +73,7 @@ namespace Xamarin.Android.Tasks
 				if (!AndroidIncludeDebugSymbols) {
 					var shrunkAssemblies = new List<ITaskItem> (OutputAssemblies.Length);
 					foreach (var assembly in OutputAssemblies) {
-						var dir = Path.GetDirectoryName (assembly.ItemSpec);
+						var dir = Path.GetDirectoryName (assembly.ItemSpec) ?? throw new InvalidOperationException ($"Assembly path has no directory: {assembly.ItemSpec}");
 						var file = Path.GetFileName (assembly.ItemSpec);
 						shrunkAssemblies.Add (new TaskItem (assembly) {
 							ItemSpec = Path.Combine (dir, "shrunk", file),

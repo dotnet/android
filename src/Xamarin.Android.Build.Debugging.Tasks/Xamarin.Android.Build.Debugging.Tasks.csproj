@@ -7,7 +7,9 @@
 
   <PropertyGroup>
     <LangVersion>12</LangVersion>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
+    <RuntimeFrameworkVersion>11.0.0-rtm.26479.103</RuntimeFrameworkVersion>
+    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet11/nuget/v3/index.json</RestoreAdditionalProjectSources>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <DefineConstants>$(DefineConstants);MSBUILD</DefineConstants>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
@@ -22,6 +24,7 @@
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
 
   <ItemGroup>
+    <FrameworkReference Update="Microsoft.NETCore.App" TargetingPackVersion="$(RuntimeFrameworkVersion)" />
     <Compile Remove="external\**" />
     <Compile Remove="Linker\**" />
     <Compile Remove="Mono.Android\**" />
@@ -71,9 +74,5 @@
       <Version>$(ProductVersion).$(PackVersionCommitCount)</Version>
     </PropertyGroup>
   </Target>
-
-  <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="8.0.6" />
-  </ItemGroup>
 
 </Project>

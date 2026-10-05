@@ -10,6 +10,10 @@ Mapping of test area keywords to assemblies, filters, and build prerequisites.
   - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `./dotnet-local.sh build Microsoft.Android.slnx -c Debug` or `make prepare && make all`.
 - **Device**: Whether an Android device/emulator is required.
 
+The native process harnesses, SDK fixtures, and `vswhere` select the
+`11.0.0-rtm.26479.103` runtime and targeting pack explicitly. This keeps the pinned
+.NET 12 CI SDK from silently raising the requirement behind their `net11.0` paths.
+
 ---
 
 ## Standalone Tests — No Local SDK Required
@@ -34,7 +38,7 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **generator** | `external/Java.Interop/tests/generator-Tests/` | `dotnet test external/Java.Interop/tests/generator-Tests/generator-Tests.csproj -v minimal` |
 | **bytecode** | `external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/` | `dotnet test external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/Xamarin.Android.Tools.Bytecode-Tests.csproj -v minimal` ⚠️ Requires `javac` |
 | **base tasks** | `tests/Microsoft.Android.Build.BaseTasks-Tests/` | `dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj -v minimal` |
-| **android sdk tools** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0` |
+| **android sdk tools (.NET 11)** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal` |
 
 ---
 

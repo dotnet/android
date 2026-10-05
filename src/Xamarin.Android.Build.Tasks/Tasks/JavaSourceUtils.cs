@@ -62,7 +62,8 @@ namespace Xamarin.Android.Tasks
 				return base.RunTask ();
 			}
 			finally {
-				File.Delete (responseFilePath);
+				if (responseFilePath != null)
+					File.Delete (responseFilePath);
 			}
 		}
 

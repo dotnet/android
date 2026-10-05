@@ -67,7 +67,7 @@ namespace Xamarin.Android.Tasks
 				foreach (var kvp in resolvedArchAssemblies) {
 					ITaskItem assembly = kvp.Value;
 
-					if (!archAssemblies.TryGetValue (arch, out Dictionary<string, CompressedAssemblyInfo> assemblies)) {
+					if (!archAssemblies.TryGetValue (arch, out var assemblies)) {
 						assemblies = new Dictionary<string, CompressedAssemblyInfo> (StringComparer.OrdinalIgnoreCase);
 						archAssemblies.Add (arch, assemblies);
 					}

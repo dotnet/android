@@ -2,25 +2,22 @@
   <Import Project="..\..\Configuration.props" />
 
   <!--
-    This assembly hosts MSBuild tasks that require .NET (net11.0) APIs that are not available in
-    netstandard2.0, so they cannot live in Xamarin.Android.Build.Tasks.dll (which multi-targets
-    netstandard2.0 to run on both .NET Framework and .NET MSBuild). Tasks here must run on .NET,
-    with the runtime selected by the task registration or invocation.
+    This assembly hosts focused .NET 11 MSBuild tasks in an isolated dependency directory.
+    The Android build tools require a .NET 11 or later MSBuild host.
     Keep this assembly small and self-contained: link only the minimal helpers it needs.
   -->
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <RuntimeFrameworkVersion Condition=" '$(TargetFramework)' == 'net11.0' ">11.0.0-rtm.26479.103</RuntimeFrameworkVersion>
+    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet11/nuget/v3/index.json</RestoreAdditionalProjectSources>
     <RootNamespace>Microsoft.Android.Tasks</RootNamespace>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <WarningsAsErrors>Nullable</WarningsAsErrors>
     <!--
       Deliberately *not* the shared tools\ directory. MSBuild probes a task assembly's own
-      directory before anything else, and tools\ holds the netstandard2.0 flavors of packages
-      such as System.IO.Hashing that Xamarin.Android.Build.Tasks.dll deposits. Those bind their
-      Span<T> to System.Memory, so a net11.0 caller resolving them fails with
-      MissingMethodException. Living in our own directory means this assembly and its
-      dependencies always resolve to their .NET flavors.
+      directory before anything else. Keeping these tasks isolated prevents package dependencies
+      copied by another tool from changing which assembly versions they resolve.
     -->
     <OutputPath>$(MicrosoftAndroidSdkOutDir)net\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -43,6 +40,7 @@
 
   <!-- Microsoft.Build.* references flow transitively from Microsoft.Android.Build.BaseTasks. -->
   <ItemGroup>
+    <FrameworkReference Update="Microsoft.NETCore.App" TargetingPackVersion="$(RuntimeFrameworkVersion)" Condition=" '$(TargetFramework)' == 'net11.0' " />
     <Compile Remove="Tests\**" />
     <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
     <ProjectReference Include="..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />

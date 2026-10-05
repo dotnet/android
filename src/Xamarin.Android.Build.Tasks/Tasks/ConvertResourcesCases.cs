@@ -106,8 +106,7 @@ namespace Xamarin.Android.Tasks
 					}, registerCustomView : (e, filename) => {
 					if (customViewMap == null)
 						return;
-					HashSet<string> set;
-					if (!customViewMap.TryGetValue (e, out set))
+					if (!customViewMap.TryGetValue (e, out var set))
 						customViewMap.Add (e, set = new HashSet<string> ());
 					set.Add (filename);
 				});

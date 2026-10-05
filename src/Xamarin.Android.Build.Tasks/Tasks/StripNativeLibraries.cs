@@ -47,7 +47,8 @@ namespace Xamarin.Android.Tasks
 				}
 
 				triple = GetNdkTripleFromAbi (abi);
-				Directory.CreateDirectory (Path.GetDirectoryName (destination.ItemSpec));
+				Directory.CreateDirectory (Path.GetDirectoryName (destination.ItemSpec) ??
+					throw new InvalidOperationException ($"Native library destination has no directory: {destination.ItemSpec}"));
 
 				// This runs the tool
 				base.RunTask ();

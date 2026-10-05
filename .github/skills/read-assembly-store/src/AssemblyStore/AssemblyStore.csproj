@@ -4,7 +4,9 @@
   <PropertyGroup>
     <Company>Microsoft Corporation</Company>
     <Copyright>2026 Microsoft Corporation</Copyright>
-    <TargetFrameworks>$(DotNetStableTargetFramework);$(DotNetTargetFramework)</TargetFrameworks>
+    <TargetFramework>net11.0</TargetFramework>
+    <RuntimeFrameworkVersion>11.0.0-rtm.26479.103</RuntimeFrameworkVersion>
+    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet11/nuget/v3/index.json</RestoreAdditionalProjectSources>
     <AssemblyName>Xamarin.Android.AssemblyStore</AssemblyName>
     <RootNamespace>Xamarin.Android.AssemblyStore</RootNamespace>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -12,6 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Update="Microsoft.NETCore.App" TargetingPackVersion="$(RuntimeFrameworkVersion)" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />

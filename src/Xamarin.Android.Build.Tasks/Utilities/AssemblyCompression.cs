@@ -26,11 +26,11 @@ namespace Xamarin.Android.Tasks
 			var key = CompressedAssemblyInfo.GetDictionaryKey (assembly);
 			var arch = MonoAndroidHelper.GetTargetArch (assembly);
 
-			if (!compressedAssembliesInfo.TryGetValue (arch, out Dictionary<string, CompressedAssemblyInfo> assembliesInfo)) {
+			if (!compressedAssembliesInfo.TryGetValue (arch, out var assembliesInfo)) {
 				throw new InvalidOperationException ($"Internal error: compression assembly info for architecture {arch} not available");
 			}
 
-			if (!assembliesInfo.TryGetValue (key, out CompressedAssemblyInfo info) || info == null) {
+			if (!assembliesInfo.TryGetValue (key, out var info) || info == null) {
 				log.LogDebugMessage ($"Assembly missing from {nameof (CompressedAssemblyInfo)}: {key}");
 				return false;
 			}

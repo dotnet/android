@@ -5,18 +5,35 @@ parameters:
   condition: succeededOrFailed()
   retryCount: 0
   extraArguments: ''
+  targetFrameworkPathSuffix: $(NetCoreTargetFrameworkPathSuffix)
 
 steps:
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: ${{ parameters.testRunTitle }}'
-  condition: ${{ parameters.condition }}
-  inputs:
-    command: test
-    publishTestResults: false
-    arguments: --logger "trx;LogFileName=${{ parameters.testAssemblyName }}${{ parameters.trxSuffix }}.trx" --results-directory $(Agent.TempDirectory) ${{ parameters.extraArguments }} bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/${{ parameters.testAssemblyName }}.dll
-    workingDirectory: external/Java.Interop
-  continueOnError: true
-  retryCountOnTaskFailure: ${{ parameters.retryCount }}
+- ${{ if eq(parameters.targetFrameworkPathSuffix, '-net11.0') }}:
+  - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+    parameters:
+      configuration: $(Build.Configuration)
+      command: test
+      project: '"external/Java.Interop/bin/Test$(Build.Configuration)${{ parameters.targetFrameworkPathSuffix }}/${{ parameters.testAssemblyName }}.dll"'
+      arguments: >-
+        --logger "trx;LogFileName=${{ parameters.testAssemblyName }}${{ parameters.trxSuffix }}.trx"
+        --results-directory "$(Agent.TempDirectory)" ${{ parameters.extraArguments }}
+        -- RunConfiguration.DotNetHostPath="$(JavaInteropDotNetTool)"
+      displayName: 'Tests: ${{ parameters.testRunTitle }}'
+      condition: ${{ parameters.condition }}
+      continueOnError: true
+      retryCountOnTaskFailure: ${{ parameters.retryCount }}
+
+- ${{ else }}:
+  - task: DotNetCoreCLI@2
+    displayName: 'Tests: ${{ parameters.testRunTitle }}'
+    condition: ${{ parameters.condition }}
+    inputs:
+      command: test
+      publishTestResults: false
+      arguments: --logger "trx;LogFileName=${{ parameters.testAssemblyName }}${{ parameters.trxSuffix }}.trx" --results-directory $(Agent.TempDirectory) ${{ parameters.extraArguments }} bin/Test$(Build.Configuration)${{ parameters.targetFrameworkPathSuffix }}/${{ parameters.testAssemblyName }}.dll
+      workingDirectory: external/Java.Interop
+    continueOnError: true
+    retryCountOnTaskFailure: ${{ parameters.retryCount }}
 
 - task: PublishTestResults@2
   displayName: 'Publish: ${{ parameters.testRunTitle }}'

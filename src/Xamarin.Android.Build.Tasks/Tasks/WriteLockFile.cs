@@ -29,7 +29,7 @@ namespace Xamarin.Android.Tasks
 					if (File.Exists (path)) {
 						Log.LogCodedWarning ("XA5302", Properties.Resources.XA5302, path);
 					} else {
-						Directory.CreateDirectory (Path.GetDirectoryName (path));
+						Directory.CreateDirectory (Path.GetDirectoryName (path) ?? throw new InvalidOperationException ($"Lock file path has no directory: {path}"));
 						File.WriteAllText (path, "");
 					}
 

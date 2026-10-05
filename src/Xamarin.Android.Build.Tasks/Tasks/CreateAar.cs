@@ -45,7 +45,7 @@ namespace Xamarin.Android.Tasks
 				Log.LogCodedError ("XA1041", message: Properties.Resources.XA1041, PrefixProperty, AssetDirectory);
 				return false;
 			}
-			Directory.CreateDirectory (Path.GetDirectoryName (OutputFile));
+			Directory.CreateDirectory (Path.GetDirectoryName (OutputFile) ?? throw new InvalidOperationException ("AAR output path must have a directory."));
 
 			using (var stream = File.Create (OutputFile))
 			using (var aar = ZipArchive.Open (stream)) {

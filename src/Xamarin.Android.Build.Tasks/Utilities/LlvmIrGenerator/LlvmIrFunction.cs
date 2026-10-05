@@ -322,7 +322,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return hc;
 		}
 
-		public override bool Equals (object obj)
+		public override bool Equals (object? obj)
 		{
 			var sig = obj as LlvmIrFunctionSignature;
 			if (sig == null) {
@@ -332,7 +332,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return Equals (sig);
 		}
 
-		public bool Equals (LlvmIrFunctionSignature other)
+		public bool Equals (LlvmIrFunctionSignature? other)
 		{
 			if (other == null) {
 				return false;
@@ -511,7 +511,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return Signature.GetHashCode ();
 		}
 
-		public override bool Equals (object obj)
+		public override bool Equals (object? obj)
 		{
 			var func = obj as LlvmIrFunction;
 			if (func == null) {
@@ -521,7 +521,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return Equals (func);
 		}
 
-	        public bool Equals (LlvmIrFunction other)
+	        public bool Equals (LlvmIrFunction? other)
 		{
 			if (other == null) {
 				return false;

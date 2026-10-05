@@ -39,8 +39,10 @@ namespace Android.App {
 		internal class PermissionTreeAttributeComparer : IEqualityComparer<PermissionTreeAttribute>
 		{
 			#region IEqualityComparer<PermissionTreeAttribute> Members
-			public bool Equals (PermissionTreeAttribute x, PermissionTreeAttribute y)
+			public bool Equals (PermissionTreeAttribute? x, PermissionTreeAttribute? y)
 			{
+				if (x == null || y == null)
+					return ReferenceEquals (x, y);
 				return
 						x.Icon == y.Icon &&
 						x.Label == y.Label &&

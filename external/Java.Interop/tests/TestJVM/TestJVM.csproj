@@ -9,6 +9,11 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net11.0' ">
+    <RuntimeFrameworkVersion>11.0.0-rtm.26479.103</RuntimeFrameworkVersion>
+    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet11/nuget/v3/index.json</RestoreAdditionalProjectSources>
+  </PropertyGroup>
+
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
 
   <PropertyGroup>
@@ -16,6 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Update="Microsoft.NETCore.App" TargetingPackVersion="$(RuntimeFrameworkVersion)" Condition=" '$(TargetFramework)' == 'net11.0' " />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Mono.Options" />
     <PackageReference Include="nunit" />

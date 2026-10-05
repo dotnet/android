@@ -8,8 +8,8 @@ General C# guidance applicable to any .NET repository.
 
 | Check | What to look for |
 |-------|-----------------|
-| **Oldest TFM must compile** | Code under `src/Microsoft.Android.Build.BaseTasks/` and `src/Xamarin.Android.Tools.AndroidSdk/` may target `netstandard2.0` and modern .NET. Verify every API and overload against the oldest target framework; common traps include cancellation-token overloads such as `HttpContent.ReadAsStringAsync(CancellationToken)`, modern `ProcessStartInfo.ArgumentList` usage without the existing fallback helpers, and newer language/BCL features that need `#if` guards or polyfills. |
-| **Prefer existing compatibility helpers** | Use repository helpers such as `ProcessUtils`, `FileUtil`, and nullable extension methods instead of direct modern-BCL calls when they provide `netstandard2.0` fallbacks or better annotations. |
+| **Verify the owner's target framework** | BaseTasks still support `netstandard2.0`; the Android SDK tools require .NET 11. Check APIs against each actual owner rather than imposing unrelated product/legacy constraints. |
+| **Prefer purpose-built APIs** | SDK command owners should use native execution, capture, and streaming APIs directly. Do not introduce older-runtime adapters or a generic process facade. Keep compatible APIs only where the actual project still targets older frameworks. |
 
 ---
 

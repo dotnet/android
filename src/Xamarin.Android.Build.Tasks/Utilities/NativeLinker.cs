@@ -154,7 +154,8 @@ class NativeLinker
 		EnsureCorrectAbi (linkStartFiles);
 		EnsureCorrectAbi (linkEndFiles);
 
-		Directory.CreateDirectory (Path.GetDirectoryName (outputLibraryPath.ItemSpec));
+		Directory.CreateDirectory (Path.GetDirectoryName (outputLibraryPath.ItemSpec) ??
+			throw new InvalidOperationException ($"Native linker output has no directory: {outputLibraryPath.ItemSpec}"));
 
 		string libBaseName = Path.GetFileNameWithoutExtension (outputLibraryPath.ItemSpec);
 		string respFilePath = Path.Combine (intermediateDir, $"ld.{libBaseName}.{abi}.rsp");
@@ -324,6 +325,7 @@ class NativeLinker
 	string GetAbiNdkRootDir ()
 	{
 		// Let it throw if invalid
+		ArgumentNullException.ThrowIfNull (NdkApiLevel);
 		int apiLevel = Int32.Parse (NdkApiLevel);
 		NdkTools ndk = NdkTools.Create (NdkRootPath, logErrors: true, log: log);
 
@@ -359,7 +361,9 @@ class NativeLinker
 
 		string sourceLib = outputSharedLibrary.ItemSpec;
 		string sourceLibQuoted = MonoAndroidHelper.QuoteFileNameArgument (sourceLib);
-		string destLib = Path.Combine (Path.GetDirectoryName (sourceLib), $"{Path.GetFileNameWithoutExtension (sourceLib)}.dbg.so");
+		string destLib = Path.Combine (
+			Path.GetDirectoryName (sourceLib) ?? throw new InvalidOperationException ($"Native library path has no directory: {sourceLib}"),
+			$"{Path.GetFileNameWithoutExtension (sourceLib)}.dbg.so");
 		string destLibQuoted = MonoAndroidHelper.QuoteFileNameArgument (destLib);
 
 		var args = new List<string> {

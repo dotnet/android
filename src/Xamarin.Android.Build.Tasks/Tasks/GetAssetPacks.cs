@@ -43,7 +43,7 @@ namespace Xamarin.Android.Tasks
 					Log.LogCodedError ("XA0140", string.Format (Properties.Resources.XA0140, asset.ItemSpec, assetPack));
 					continue;
 				}
-				if (!assetPacks.TryGetValue (assetPack, out ITaskItem item)) {
+				if (!assetPacks.TryGetValue (assetPack, out var item)) {
 					item = new TaskItem (assetPack);
 					item.SetMetadata ("AssetPack", assetPack);
 					item.SetMetadata ("AssetPackCacheFile", Path.Combine (IntermediateDir.ItemSpec, assetPack, "assetpack.cache"));

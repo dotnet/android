@@ -56,7 +56,8 @@ namespace Xamarin.Android.Tasks
 				AddRename (name.Replace ('/', Path.DirectorySeparatorChar), logical_name.Replace ('/', Path.DirectorySeparatorChar));
 			}
 			foreach (var additionalDir in AdditionalResourceDirectories ?? []) {
-				var dir = Path.Combine (ProjectDir, Path.GetDirectoryName (additionalDir.ItemSpec));
+				var dir = Path.Combine (ProjectDir, Path.GetDirectoryName (additionalDir.ItemSpec) ??
+					throw new InvalidOperationException ($"Resource path has no directory: {additionalDir.ItemSpec}"));
 				var file = Path.Combine (dir, "__res_name_case_map.txt");
 				if (!File.Exists (file)) {
 					// .NET 6 .aar files place the file in a sub-directory
@@ -93,7 +94,7 @@ namespace Xamarin.Android.Tasks
 						}
 						ms.Position = 0;
 						using (var reader = new StreamReader (ms, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 4096, leaveOpen: true)) {
-							string line;
+							string? line;
 							// Read each line until the end of the file
 							while ((line = reader.ReadLine()) != null) {
 								if (line.IsNullOrEmpty ())
@@ -130,12 +131,10 @@ namespace Xamarin.Android.Tasks
 			from = NormalizeAlternative (from);
 			to = NormalizeAlternative (to);
 
-			string curTo;
-
-			if (resource_fixup.TryGetValue (from, out curTo)) {
+			if (resource_fixup.TryGetValue (from, out var curTo)) {
 				if (string.Compare (to, curTo, StringComparison.OrdinalIgnoreCase) != 0) {
 					var ext = Path.GetExtension (android);
-					var dir = Path.GetDirectoryName (user);
+					var dir = Path.GetDirectoryName (user) ?? throw new InvalidOperationException ($"Resource path has no directory: {user}");
 
 					Log.LogDebugMessage ("Resource target names differ; got '{0}', expected '{1}'.",
 						Path.Combine (dir, Path.GetFileName (to) + ext),

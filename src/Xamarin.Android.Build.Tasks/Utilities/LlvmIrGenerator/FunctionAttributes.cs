@@ -142,7 +142,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return value;
 		}
 
-		public int CompareTo (object obj)
+		public int CompareTo (object? obj)
 		{
 			var attr = obj as LlvmIrFunctionAttribute;
 			if (obj == null) {
@@ -172,7 +172,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				HasValueAsignment.GetHashCode ();
 		}
 
-		public override bool Equals (object obj)
+		public override bool Equals (object? obj)
 		{
 			var attr = obj as LlvmIrFunctionAttribute;
 			if (attr == null) {
@@ -182,7 +182,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return Equals (attr);
 		}
 
-		public virtual bool Equals (LlvmIrFunctionAttribute other)
+		public virtual bool Equals (LlvmIrFunctionAttribute? other)
 		{
 			if (other == null) {
 				return false;
@@ -246,7 +246,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			sb.Append (alignment.ToString (CultureInfo.InvariantCulture));
 		}
 
-		public override bool Equals (LlvmIrFunctionAttribute other)
+		public override bool Equals (LlvmIrFunctionAttribute? other)
 		{
 			if (!base.Equals (other)) {
 				return false;
@@ -281,7 +281,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			sb.Append (family);
 		}
 
-		public override bool Equals (LlvmIrFunctionAttribute other)
+		public override bool Equals (LlvmIrFunctionAttribute? other)
 		{
 			if (!base.Equals (other)) {
 				return false;
@@ -318,7 +318,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			sb.Append ('"');
 		}
 
-		public override bool Equals (LlvmIrFunctionAttribute other)
+		public override bool Equals (LlvmIrFunctionAttribute? other)
 		{
 			if (!base.Equals (other)) {
 				return false;
@@ -361,7 +361,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			sb.Append (numberOfElements.Value.ToString (CultureInfo.InvariantCulture));
 		}
 
-		public override bool Equals (LlvmIrFunctionAttribute other)
+		public override bool Equals (LlvmIrFunctionAttribute? other)
 		{
 			if (!base.Equals (other)) {
 				return false;
@@ -458,7 +458,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (fpMode);
 
-		public override bool Equals (LlvmIrFunctionAttribute other)
+		public override bool Equals (LlvmIrFunctionAttribute? other)
 		{
 			if (!base.Equals (other)) {
 				return false;
@@ -579,7 +579,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			};
 		}
 
-		public override bool Equals (LlvmIrFunctionAttribute other)
+		public override bool Equals (LlvmIrFunctionAttribute? other)
 		{
 			if (!base.Equals (other)) {
 				return false;
@@ -965,7 +965,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			sb.Append (isSync.Value ? "sync" : "async");
 		}
 
-		public override bool Equals (LlvmIrFunctionAttribute other)
+		public override bool Equals (LlvmIrFunctionAttribute? other)
 		{
 			if (!base.Equals (other)) {
 				return false;
@@ -1018,7 +1018,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (threshold);
 
-		public override bool Equals (LlvmIrFunctionAttribute other)
+		public override bool Equals (LlvmIrFunctionAttribute? other)
 		{
 			if (!base.Equals (other)) {
 				return false;
@@ -1061,7 +1061,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			sb.Append (max.Value.ToString (CultureInfo.InvariantCulture));
 		}
 
-		public override bool Equals (LlvmIrFunctionAttribute other)
+		public override bool Equals (LlvmIrFunctionAttribute? other)
 		{
 			if (!base.Equals (other)) {
 				return false;
@@ -1093,7 +1093,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (size.ToString (CultureInfo.InvariantCulture));
 
-		public override bool Equals (LlvmIrFunctionAttribute other)
+		public override bool Equals (LlvmIrFunctionAttribute? other)
 		{
 			if (!base.Equals (other)) {
 				return false;
@@ -1125,7 +1125,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (size.ToString (CultureInfo.InvariantCulture));
 
-		public override bool Equals (LlvmIrFunctionAttribute other)
+		public override bool Equals (LlvmIrFunctionAttribute? other)
 		{
 			if (!base.Equals (other)) {
 				return false;
@@ -1157,7 +1157,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (cpu);
 
-		public override bool Equals (LlvmIrFunctionAttribute other)
+		public override bool Equals (LlvmIrFunctionAttribute? other)
 		{
 			if (!base.Equals (other)) {
 				return false;
@@ -1189,7 +1189,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (cpu);
 
-		public override bool Equals (LlvmIrFunctionAttribute other)
+		public override bool Equals (LlvmIrFunctionAttribute? other)
 		{
 			if (!base.Equals (other)) {
 				return false;
@@ -1221,7 +1221,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (features);
 
-		public override bool Equals (LlvmIrFunctionAttribute other)
+		public override bool Equals (LlvmIrFunctionAttribute? other)
 		{
 			if (!base.Equals (other)) {
 				return false;
@@ -1253,7 +1253,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (yesno.ToString ().ToLowerInvariant ());
 
-		public override bool Equals (LlvmIrFunctionAttribute other)
+		public override bool Equals (LlvmIrFunctionAttribute? other)
 		{
 			if (!base.Equals (other)) {
 				return false;

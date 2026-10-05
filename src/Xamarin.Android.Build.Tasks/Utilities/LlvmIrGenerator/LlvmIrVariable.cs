@@ -217,7 +217,7 @@ abstract class LlvmIrVariable : LlvmIrVariableReference, IEquatable<LlvmIrVariab
 	/// </summary>
 	/// <param name="obj">The object to compare with the current variable.</param>
 	/// <returns>true if the specified object is equal to the current variable; otherwise, false.</returns>
-	public override bool Equals (object obj)
+	public override bool Equals (object? obj)
 	{
 		var irVar = obj as LlvmIrVariable;
 		if (irVar == null) {
@@ -232,7 +232,7 @@ abstract class LlvmIrVariable : LlvmIrVariableReference, IEquatable<LlvmIrVariab
 	/// </summary>
 	/// <param name="other">The LLVM IR variable to compare with the current variable.</param>
 	/// <returns>true if the specified variable is equal to the current variable; otherwise, false.</returns>
-	public virtual bool Equals (LlvmIrVariable other)
+	public virtual bool Equals (LlvmIrVariable? other)
 	{
 		if (other == null) {
 			return false;

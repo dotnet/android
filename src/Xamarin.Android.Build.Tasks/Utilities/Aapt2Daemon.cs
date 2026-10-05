@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
-using System.Reflection;
 using Microsoft.Build.Framework;
 using TPL = System.Threading.Tasks;
 using Xamarin.Android.Tools;
@@ -16,7 +15,7 @@ namespace Xamarin.Android.Tasks
 {
 	internal class Aapt2Daemon : IDisposable
 	{
-		static readonly string TypeFullName = typeof (Aapt2Daemon).FullName;
+		static readonly string TypeFullName = typeof (Aapt2Daemon).FullName ?? throw new InvalidOperationException ("AAPT2 daemon type name is unavailable.");
 
 		internal static object RegisterTaskObjectKey => TypeFullName;
 
@@ -58,7 +57,6 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		readonly object lockObject = new object ();
 		readonly BlockingCollection<Job> pendingJobs = new BlockingCollection<Job> ();
 		readonly ConcurrentDictionary<long, Job> jobs = new ConcurrentDictionary<long, Job> ();
 		readonly CancellationTokenSource tcs = new CancellationTokenSource ();
@@ -156,33 +154,6 @@ namespace Xamarin.Android.Tasks
 			pendingJobs.CompleteAdding ();
 		}
 
-		private bool SetConsoleInputEncoding (Encoding encoding)
-		{
-			try {
-				if (Console.InputEncoding != encoding) {
-					Console.InputEncoding = encoding;
-					return true;
-				}
-			} catch (IOException) {
-				//In a DesignTime Build on VS Windows sometimes this exception is raised.
-				//We should catch it, but there is nothing we can do about it.
-			}
-			return false;
-		}
-
-		private bool SetProcessInputEncoding (ProcessStartInfo info, Encoding encoding)
-		{
-			Type type = info.GetType ();
-			PropertyInfo prop = type.GetRuntimeProperty ("StandardInputEncoding");
-			if (prop == null)
-				prop = type.GetProperty ("StandardInputEncoding", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-			if(prop?.CanWrite ?? false) {
-				prop.SetValue (info, encoding, null);
-				return true;
-			}
-			return false;
-		}
-
 		private void Aapt2DaemonStart ()
 		{
 			ProcessStartInfo info = new ProcessStartInfo (Aapt2)
@@ -200,23 +171,10 @@ namespace Xamarin.Android.Tasks
 				// We need to FORCE the StandardInput to be UTF8 so we can use
 				// accented characters. Also DONT INCLUDE A BOM!!
 				// otherwise aapt2 will try to interpret the BOM as an argument.
-				// Cant use this cos its netstandard 2.1 only
-				// and we are using netstandard 2.0
-				//StandardInputEncoding = Files.UTF8withoutBOM,
+				StandardInputEncoding = Files.UTF8withoutBOM,
 			};
-			Process aapt2;
-			Encoding currentEncoding = Console.InputEncoding;
- 			lock (lockObject) {
-				try {
-					if (!SetProcessInputEncoding (info, Files.UTF8withoutBOM))
-						SetConsoleInputEncoding (Files.UTF8withoutBOM);
-					aapt2 = new Process ();
-					aapt2.StartInfo = info;
-					aapt2.Start ();
-				} finally {
-					SetConsoleInputEncoding (currentEncoding);
-				}
-			}
+			Process aapt2 = new Process { StartInfo = info };
+			aapt2.Start ();
 			try {
 				foreach (var job in pendingJobs.GetConsumingEnumerable (tcs.Token)) {
 					Interlocked.Add (ref jobsRunning, 1);
@@ -230,7 +188,7 @@ namespace Xamarin.Android.Tasks
 							writer.WriteLine ();
 							writer.Flush ();
 						}
-						string line;
+						string? line;
 
 						Queue<string> stdError = new Queue<string> ();
 						while ((line = aapt2.StandardError.ReadLine ()) != null) {

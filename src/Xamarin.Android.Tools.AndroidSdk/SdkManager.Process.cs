@@ -15,48 +15,81 @@ public partial class SdkManager
 		string sdkManagerPath, string[] arguments, bool acceptLicenses = false, CancellationToken cancellationToken = default)
 	{
 		var argumentsStr = string.Join (" ", arguments);
-
-		// On macOS/Linux the sdkmanager shell script uses 'save()'/'eval' which
-		// concatenates individually-quoted arguments. Pass as a single Arguments
-		// string so the script receives them correctly.
-		var psi = OS.IsWindows
-			? ProcessUtils.CreateProcessStartInfo (sdkManagerPath, arguments)
-			: new ProcessStartInfo {
-				FileName = sdkManagerPath,
-				Arguments = argumentsStr,
-				UseShellExecute = false,
-				CreateNoWindow = true,
-			};
-		psi.RedirectStandardInput = acceptLicenses;
-
+		cancellationToken.ThrowIfCancellationRequested ();
+		var interactive = acceptLicenses || Array.IndexOf (arguments, "--licenses") >= 0;
+		var psi = new ProcessStartInfo (sdkManagerPath) {
+			UseShellExecute = false,
+			CreateNoWindow = true,
+			RedirectStandardInput = interactive,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+		};
+		foreach (var argument in arguments)
+			psi.ArgumentList.Add (argument);
 		var envVars = AndroidEnvironmentHelper.GetEnvironmentVariables (AndroidSdkPath, JavaSdkPath);
-
-		using var stdout = new StringWriter ();
-		using var stderr = new StringWriter ();
-
-		Action<Process>? onStarted = null;
-		if (acceptLicenses) {
-			onStarted = process => {
-				// Feed "y\n" continuously for license prompts
-				Task.Run (async () => {
-					try {
-						while (!process.HasExited && !cancellationToken.IsCancellationRequested) {
-							process.StandardInput.WriteLine ("y");
-							await Task.Delay (StdinPollDelayMs, cancellationToken).ConfigureAwait (false);
-						}
-					}
-					catch (Exception ex) {
-						// Process may have exited or cancellation requested - expected behavior
-						logger (TraceLevel.Verbose, $"Auto-accept loop ended: {ex.GetType ().Name}");
-					}
-				}, cancellationToken);
-			};
-		}
+		foreach (var variable in envVars)
+			psi.Environment [variable.Key] = variable.Value;
 
 		logger (TraceLevel.Verbose, $"Running: {sdkManagerPath} {argumentsStr}");
 		int exitCode;
+		string stdoutStr, stderrStr;
 		try {
-			exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, envVars, onStarted).ConfigureAwait (false);
+			if (!interactive) {
+				var result = await Process.RunAndCaptureTextAsync (psi, cancellationToken).ConfigureAwait (false);
+				cancellationToken.ThrowIfCancellationRequested ();
+				exitCode = result.ExitStatus.ExitCode;
+				stdoutStr = result.StandardOutput;
+				stderrStr = result.StandardError;
+			} else {
+				using var process = new Process { StartInfo = psi };
+				process.Start ();
+				using var execution = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
+				var exit = process.SafeHandle.WaitForExitOrKillOnCancellationAsync (execution.Token);
+				var capture = process.ReadAllTextAsync (execution.Token);
+				using var stdout = process.StandardOutput;
+				using var stderr = process.StandardError;
+				using var input = process.StandardInput;
+				var answers = AnswerLicensesAsync ();
+				try {
+					var status = await exit.WaitAsync (cancellationToken).ConfigureAwait (false);
+					execution.CancelAfter (TimeSpan.FromSeconds (30));
+					var result = await capture.ConfigureAwait (false);
+					cancellationToken.ThrowIfCancellationRequested ();
+					exitCode = status.ExitCode;
+					stdoutStr = result.StandardOutput;
+					stderrStr = result.StandardError;
+				} catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) {
+					if (answers.IsFaulted)
+						await answers.ConfigureAwait (false);
+					throw new TimeoutException ("sdkmanager exited, but its redirected output did not close within 30 seconds.");
+				} catch (OperationCanceledException ex) {
+					throw new OperationCanceledException (ex.Message, ex, cancellationToken);
+				} finally {
+					execution.Cancel ();
+					try {
+						await answers.ConfigureAwait (false);
+						await capture.ConfigureAwait (false);
+					} catch (OperationCanceledException) when (execution.IsCancellationRequested) {
+						// Stop the owned license-input loop and native readers when the command finishes.
+					}
+					await exit.WaitAsync (TimeSpan.FromSeconds (5)).ConfigureAwait (false);
+				}
+
+				async Task AnswerLicensesAsync ()
+				{
+					try {
+						while (!exit.IsCompleted) {
+							await input.WriteLineAsync ((acceptLicenses ? "y" : "n").AsMemory (), execution.Token).ConfigureAwait (false);
+							await Task.Delay (StdinPollDelayMs, execution.Token).ConfigureAwait (false);
+						}
+					} catch (IOException) when (process.HasExited) {
+						// The child can close stdin just before its native exit wait completes.
+					} catch {
+						execution.Cancel ();
+						throw;
+					}
+				}
+			}
 		}
 		catch (OperationCanceledException) {
 			throw;
@@ -66,9 +99,6 @@ public partial class SdkManager
 			logger (TraceLevel.Verbose, ex.ToString ());
 			throw;
 		}
-
-		var stdoutStr = stdout.ToString ();
-		var stderrStr = stderr.ToString ();
 
 		if (exitCode != 0) {
 			logger (TraceLevel.Warning, $"sdkmanager exited with code {exitCode}");

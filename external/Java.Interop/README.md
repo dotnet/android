@@ -26,6 +26,12 @@ and [Architecture][architecture] pages.
 - The `main` branch is configured to build with .NET 10, available [here][net-10].
 - The [`release/6.0.3xx`][net-6] branch is configured to build with .NET 6.
 
+In the dotnet/android checkout, SDK-consuming bootstrap and test assemblies
+require the explicit .NET 11 runtime floor. CI provisions the repository-pinned
+SDK for solution preparation/builds and selects that executable for the two
+native .NET 11 test owners. Unrelated .NET 10 tests keep their own host; a wildcard
+.NET 11 preview installation can be older than the required runtime.
+
 `Java.Interop.slnx` must first run some "preparatory" tasks before it can be built:
 
 ```console
