@@ -30,13 +30,6 @@ namespace Xamarin.Android.Tasks
 			get { return OS.IsWindows ? "javac.exe" : "javac"; }
 		}
 
-		private bool IsRunningInsideVS {
-			get {
-				var vside = false;
-				return bool.TryParse(Environment.GetEnvironmentVariable("VSIDE"), out vside) && vside;
-			}
-		}
-
 		internal string? TemporarySourceListFile;
 
 		public override bool RunTask ()

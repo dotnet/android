@@ -1,6 +1,7 @@
 #nullable enable annotations
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 using Android.App;
 using Android.Content;
@@ -535,7 +536,9 @@ namespace Java.InteropTests
 			}
 		}
 
-		static T CreateFromJava<T> (string constructorSignature, params JValue [] arguments)
+		static T CreateFromJava<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T> (string constructorSignature, params JValue [] arguments)
 			where T : Java.Lang.Object
 		{
 			var instance = JNIEnv.StartCreateInstance (typeof (T), constructorSignature, arguments);
@@ -545,7 +548,9 @@ namespace Java.InteropTests
 			return result;
 		}
 
-		static T CreateFromJavaWithLocalArray<T> (string constructorSignature, IntPtr array)
+		static T CreateFromJavaWithLocalArray<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T> (string constructorSignature, IntPtr array)
 			where T : Java.Lang.Object
 		{
 			try {
@@ -569,7 +574,9 @@ namespace Java.InteropTests
 			}
 		}
 
-		static void AssertRegisteredSame<T> (T instance)
+		static void AssertRegisteredSame<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T> (T instance)
 			where T : Java.Lang.Object
 		{
 			var registered = Java.Lang.Object.GetObject<T> (instance.Handle, JniHandleOwnership.DoNotTransfer);

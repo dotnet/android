@@ -82,7 +82,7 @@ namespace Xamarin.Android.Build.Tests
 			var path = Path.Combine ("java", "net", "dot", "android", "test", fileName);
 			return new AndroidItem.AndroidJavaSource (path) {
 				Encoding = Encoding.ASCII,
-				TextContent = () => ReadRuntimeFixture (path),
+				TextContent = () => ReadRuntimeJavaFixture (path, bind),
 				Metadata = {
 					{ "Bind", bind.ToString () },
 				},
@@ -243,6 +243,13 @@ namespace Xamarin.Android.Build.Tests
 		{
 			return File.ReadAllText (
 				Path.Combine (XABuildPaths.TopDirectory, "tests", "Mono.Android-Tests", "Mono.Android-Tests", fileName));
+		}
+
+		static string ReadRuntimeJavaFixture (string fileName, bool bind)
+		{
+			var projectDirectory = bind ? "Mono.Android-Test.Library" : "Mono.Android-Tests";
+			return File.ReadAllText (
+				Path.Combine (XABuildPaths.TopDirectory, "tests", "Mono.Android-Tests", projectDirectory, fileName));
 		}
 
 		sealed class RootingChain
