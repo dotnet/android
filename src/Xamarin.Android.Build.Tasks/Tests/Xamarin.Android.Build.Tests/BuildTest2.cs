@@ -2190,8 +2190,9 @@ namespace App1
 				$"The application DEX files should include `{className}`!");
 		}
 
-		[Test]
-		public void InvalidCustomJniInitFunctionName ()
+		[TestCase ("valid_name", TestName = "NativeAotRejectsValidCustomJniInitFunction")]
+		[TestCase ("evil\ndefine void @injected()", TestName = "NativeAotRejectsInvalidCustomJniInitFunctionName")]
+		public void UnsupportedCustomJniInitFunction (string functionName)
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: true)) {
 				return;
@@ -2202,16 +2203,13 @@ namespace App1
 			};
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
 
-			// A malicious NuGet package could inject LLVM IR via a function name containing
-			// newlines or non-identifier characters (VULN-341/342).  The build must reject
-			// names that are not valid C identifiers.
-			proj.OtherBuildItems.Add (new BuildItem ("AndroidStaticJniInitFunction", "valid_name"));
-			proj.OtherBuildItems.Add (new BuildItem ("AndroidStaticJniInitFunction", "evil\ndefine void @injected()"));
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidStaticJniInitFunction", functionName));
 
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
-				Assert.IsFalse (b.Build (proj), "Build should have failed due to invalid CustomJniInitFunctions names.");
-				StringAssertEx.ContainsRegex (@"is not a valid C identifier", b.LastBuildOutput, "Expected an error about invalid C identifier");
+				Assert.IsFalse (b.Build (proj), "NativeAOT should reject custom JNI initializers, including valid C identifiers.");
+				StringAssertEx.Contains ("error XA1051", b.LastBuildOutput, "Expected the unsupported custom JNI initializer diagnostic.");
+				b.Output.AssertTargetIsSkipped ("IlcCompile", defaultIfNotUsed: true);
 			}
 		}
 	}
