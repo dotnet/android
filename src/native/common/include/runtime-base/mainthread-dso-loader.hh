@@ -13,10 +13,10 @@
 
 #include <android/looper.h>
 
-#include <runtime-base/logger.hh>
 #include <runtime-base/runtime-environment.hh>
 #include <runtime-base/system-loadlibrary-wrapper.hh>
 #include <shared/helpers.hh>
+#include <shared/log_functions.hh>
 
 namespace xamarin::android {
 	// This class is **strictly** one-shot-per-instance! That is, the `load` method mustn't be called on the

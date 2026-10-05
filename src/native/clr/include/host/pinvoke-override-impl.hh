@@ -5,8 +5,8 @@
 #endif
 
 #include "pinvoke-override.hh"
-#include "../runtime-base/logger.hh"
 #include "../runtime-base/monodroid-dl.hh"
+#include <shared/log_functions.hh>
 
 namespace xamarin::android {
 	PINVOKE_OVERRIDE_INLINE
