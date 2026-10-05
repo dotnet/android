@@ -120,7 +120,8 @@ The analyzer:
 - follows `previousAttempts` so original failures remain visible while targeted retries run;
 - associates tasks/jobs/tests with the ancestor stage and stable stage `refName`;
 - reads failed task logs when timeline issues are generic;
-- builds failed-test cross-configuration/retry evidence;
+- matches cross-configuration/retry evidence by test name and assembly, keeping normalized error signatures separate;
+- suppresses the synthetic `fail if any issues occurred` gate only when the same stage/attempt has underlying test or incomplete-run evidence;
 - emits normalized fingerprints, classification/confidence, issue-search terms, and a stage-safe retry plan;
 - never PATCHes Azure or mutates GitHub.
 
@@ -149,6 +150,8 @@ If a stage contains any regression/unknown root, the analyzer excludes that mixe
 ### 4. Search for an existing flaky-CI issue
 
 For retryable classifications, use each failure's `fingerprint` and `issueSearchTerms` with [references/flaky-issues.md](references/flaky-issues.md).
+
+Also search for an exact tracker when an `unknown` test failure has sibling passes but no retry/history evidence. Sibling passes alone do not establish flakiness; keep it out of the automatic retry plan unless independent evidence corroborates the signature.
 
 Run separate exact searches, merge/deduplicate candidates, and score them:
 

@@ -54,7 +54,7 @@ Use `known-flaky-test` when at least one applies:
 - The exact test changes from `Failed` to `Passed` on retry without a code change.
 - The same signature recurs across unrelated PRs or appears as a non-gating failure in otherwise-green builds.
 
-A one-platform failure with sibling passes is medium evidence (`0.60`–`0.79`), not proof by itself. Search for a tracker before calling it known.
+A one-platform failure with sibling passes is a lead, not proof by itself. Without an exact tracker or retry/history corroboration, emit `unknown` below `0.60` and exclude it from the retry plan. A configuration-specific regression can pass every sibling lane.
 
 ### Transient infrastructure
 
@@ -80,6 +80,7 @@ A generic canceled job without timeout/crash evidence is `unknown`.
 ## Conflicts and retry safety
 
 - If a stage contains both a retryable root and a likely regression/unknown root, mark the stage **mixed** and exclude it from the automatic retry plan. Azure retries failed jobs at stage granularity.
+- The synthetic `fail if any issues occurred` task propagates earlier `continueOnError` failures; suppress it only when test-result or incomplete-run evidence accounts for the same stage/attempt. Keep the gate as an unknown root when that evidence is absent, and retain independent task failures.
 - Do not recommend retry merely because a failure is red. Require category confidence of at least `0.60` and no conflicting regression/unknown root in that stage.
 - A successful retry is evidence of flakiness, but it does not erase the original occurrence; retain it for issue tracking.
 - If the selected stage already advanced to another attempt, is running, or failed again after a targeted retry, do not recommend another automatic retry.

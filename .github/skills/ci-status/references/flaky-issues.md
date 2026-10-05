@@ -6,7 +6,7 @@ Use this reference after classifying a failure as `known-flaky-test`, `transient
 
 Build a stable fingerprint before searching:
 
-- **Test:** fully-qualified test name, assembly, normalized first assertion/error, OS/flavor.
+- **Test:** fully-qualified test name, assembly, normalized first assertion/error; retain OS/flavor as configuration evidence. Group failures by all three identity fields, not test name or error code alone. Only use passes from the same test and assembly as sibling/retry evidence; keep different normalized error signatures separate.
 - **Infrastructure:** provider/service token, HTTP/error code, failed task, stage/OS.
 - **Crash/timeout:** signal or timeout cap, lane/test family, last-started test when known.
 
@@ -15,7 +15,7 @@ Remove volatile values: build/activity IDs, GUIDs, timestamps, agent numbers, ab
 Examples:
 
 ```text
-test|system-nettests-ssltest-httpsshouldwork|http-504
+test|System.NetTests.SslTest.HttpsShouldWork|Mono.Android.NET-Tests.dll|http 504 gateway timeout
 azure-artifacts|atcpu|http-500|prepare-solution
 hosted-agent|disconnect|msbuild-emulator-11
 azure-job-timeout|240m|macos-build

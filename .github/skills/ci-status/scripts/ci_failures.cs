@@ -69,9 +69,9 @@ var prFiles = LoadPrFiles ();
 var runResults = new ConcurrentDictionary<int, JsonArray> ();
 var failures = new List<Failure> ();
 
-AnalyzeTimelineFailures ();
 AnalyzeFailedTests ();
 AnalyzeIncompleteRuns ();
+AnalyzeTimelineFailures ();
 
 failures = failures
 	.GroupBy (f => $"{f.Stage.RefName}|{f.Fingerprint}", StringComparer.Ordinal)
@@ -115,6 +115,18 @@ void AnalyzeTimelineFailures ()
 			if (type != "Task" && type != "Job")
 				continue;
 
+			var stage = StageFor (record, records);
+			if (stage is null)
+				continue;
+			// This task only propagates continueOnError failures; keep the underlying test roots.
+			if (type == "Task" && Str (record ["name"]) == "fail if any issues occurred" &&
+					failures.Any (failure =>
+						(failure.Test is not null || failure.Fingerprint.StartsWith ("incomplete-run|", StringComparison.Ordinal)) &&
+						failure.Stage.RefName.Length > 0 && failure.Stage.RefName == Str (stage ["refName"]) &&
+						failure.Stage.Attempt == Math.Max (1, ToInt (stage ["attempt"])) &&
+						failure.Stage.IsCurrent == timeline.IsCurrent))
+				continue;
+
 			var messages = IssueMessages (record);
 			if (type == "Task" && NeedsTaskLog (messages)) {
 				var logText = TaskLog (record);
@@ -122,9 +134,6 @@ void AnalyzeTimelineFailures ()
 					messages.Add (line);
 			}
 			messages = DistinctMeaningful (messages);
-			var stage = StageFor (record, records);
-			if (stage is null)
-				continue;
 			var job = JobFor (record, records);
 			if (messages.Count == 0) {
 				if (type == "Task" && job is not null && IssueMessages (job).Count > 0)
@@ -171,21 +180,36 @@ void AnalyzeFailedTests ()
 		if (run is not null)
 			runById [ToInt (run ["id"])] = run;
 
-	var failedByName = new Dictionary<string, List<JsonNode>> (StringComparer.Ordinal);
+	var failedByIdentity = new Dictionary<(string name, string storage, string error), List<JsonNode>> ();
 	foreach (var failed in failedTests) {
 		if (failed is null)
 			continue;
 		var name = Str (failed ["automatedTestName"]);
 		if (name.Length == 0)
 			continue;
-		if (!failedByName.TryGetValue (name, out var list))
-			failedByName [name] = list = [];
-		list.Add (failed);
+		var storage = Str (failed ["automatedTestStorage"]);
+		var result = failed;
+		if (Str (failed ["errorMessage"]).Length == 0) {
+			var details = ResultsForRun (ToInt (failed ["runId"]))
+				.FirstOrDefault (row => row is not null &&
+					ToInt (failed ["id"]) > 0 &&
+					ToInt (row ["id"]) == ToInt (failed ["id"]) &&
+					Str (row ["automatedTestName"]) == name &&
+					Str (row ["automatedTestStorage"]) == storage);
+			if (details is not null) {
+				result = details.DeepClone ();
+				result ["runId"] = ToInt (failed ["runId"]);
+			}
+		}
+		var identity = (name, storage, NormalizeVolatile (FirstLine (Str (result ["errorMessage"]))));
+		if (!failedByIdentity.TryGetValue (identity, out var list))
+			failedByIdentity [identity] = list = [];
+		list.Add (result);
 	}
 
-	foreach (var (testName, rows) in failedByName) {
+	foreach (var (identity, rows) in failedByIdentity) {
+		var (testName, storage, errorSignature) = identity;
 		var failedRunIds = rows.Select (r => ToInt (r ["runId"])).Where (id => id > 0).ToHashSet ();
-		var storage = rows.Select (r => Str (r ["automatedTestStorage"])).FirstOrDefault (s => s.Length > 0) ?? "";
 		var family = "";
 		foreach (var runId in failedRunIds)
 			if (runById.TryGetValue (runId, out var run)) {
@@ -198,15 +222,18 @@ void AnalyzeFailedTests ()
 			.Cast<JsonNode> ()
 			.ToList ();
 		var configRows = new Dictionary<string, List<(string completed, string outcome, bool autoRetry, int order)>> (StringComparer.Ordinal);
-		string error = "";
-		string stack = "";
+		var error = FirstLine (Str (rows [0] ["errorMessage"]));
+		var stack = string.Join ("\n", Lines (Str (rows [0] ["stackTrace"])).Take (6));
 		int observationOrder = 0;
 
 		foreach (var run in candidates) {
 			var runId = ToInt (run ["id"]);
 			var results = ResultsForRun (runId);
 			var matches = results
-				.Where (row => row is not null && Str (row ["automatedTestName"]) == testName)
+				.Where (row => row is not null && Str (row ["automatedTestName"]) == testName &&
+					Str (row ["automatedTestStorage"]) == storage &&
+					(Str (row ["outcome"]) != "Failed" ||
+						NormalizeVolatile (FirstLine (Str (row ["errorMessage"]))) == errorSignature))
 				.Cast<JsonNode> ()
 				.OrderBy (row => Str (row ["completedDate"]), StringComparer.Ordinal)
 				.ToList ();
@@ -224,10 +251,6 @@ void AnalyzeFailedTests ()
 				var outcome = Str (row ["outcome"]);
 				if (outcome.Length > 0)
 					observations.Add ((Str (row ["completedDate"]), outcome, autoRetry, observationOrder++));
-				if (error.Length == 0 && Str (row ["errorMessage"]).Length > 0) {
-					error = FirstLine (Str (row ["errorMessage"]));
-					stack = string.Join ("\n", Lines (Str (row ["stackTrace"])).Take (6));
-				}
 			}
 		}
 
@@ -243,11 +266,9 @@ void AnalyzeFailedTests ()
 		var retryPassed = configs.Any (c => FailedBeforePassed (c.Outcomes));
 		var failedAfterAutoRetry = configRows.Values.SelectMany (values => values).Any (value => value.autoRetry && value.outcome == "Failed");
 		var xref = FindXref (testName, prFiles);
-		var classification = ClassifyTest (failedConfigs, passedConfigs, retryPassed, failedAfterAutoRetry, xref.Count > 0, prDiffAvailable);
-		var firstRun = rows.Select (r => ToInt (r ["runId"])).FirstOrDefault ();
-		var stage = StageForRun (runById.TryGetValue (firstRun, out var firstRunNode) ? firstRunNode : null);
-		if (stage is null)
-			stage = UnknownStage ();
+		var classification = storage.Length == 0 || errorSignature.Length == 0
+			? new Classification ("unknown", 0.45, "The test assembly or root error is unavailable; retry evidence cannot be matched reliably.")
+			: ClassifyTest (failedConfigs, passedConfigs, retryPassed, failedAfterAutoRetry, xref.Count > 0, prDiffAvailable);
 		var evidence = new List<string> ();
 		if (retryPassed)
 			evidence.Add ("The same test changed from Failed to Passed on retry.");
@@ -265,29 +286,36 @@ void AnalyzeFailedTests ()
 			evidence.Add (error);
 
 		var retryable = IsRetryable (classification.Category, classification.Confidence);
-		failures.Add (new Failure {
-			Fingerprint = TestFingerprint (testName, error),
-			Stage = stage,
-			Job = StageJobForRun (firstRunNode),
-			Classification = classification.Category,
-			Confidence = classification.Confidence,
-			Gating = stage.Result == "failed" || stage.Result == "canceled",
-			Evidence = evidence,
-			IssueSearchTerms = new List<string> { testName, ShortTestName (testName), FirstErrorToken (error) }.Where (s => s.Length > 0).Distinct ().ToList (),
-			Retry = new RetryRecommendation {
-				Recommended = retryable,
-				Safe = retryable,
-				Reason = classification.Reason,
-			},
-			Test = new TestFailure {
-				Name = testName,
-				Assembly = storage,
-				Error = error,
-				Stack = stack,
-				Configurations = configs,
-				ChangedFiles = xref,
-			},
-		});
+		var failedStages = rows.Select (row => {
+			runById.TryGetValue (ToInt (row ["runId"]), out var run);
+			return (run, stage: StageForRun (run) ?? UnknownStage ());
+		}).GroupBy (value => (value.stage.RefName, value.stage.Attempt, value.stage.IsCurrent));
+		foreach (var group in failedStages) {
+			var (run, stage) = group.First ();
+			failures.Add (new Failure {
+				Fingerprint = TestFingerprint (testName, storage, error),
+				Stage = stage,
+				Job = StageJobForRun (run),
+				Classification = classification.Category,
+				Confidence = classification.Confidence,
+				Gating = stage.Result == "failed" || stage.Result == "canceled",
+				Evidence = evidence,
+				IssueSearchTerms = new List<string> { testName, storage, ShortTestName (testName), FirstErrorToken (error) }.Where (s => s.Length > 0).Distinct ().ToList (),
+				Retry = new RetryRecommendation {
+					Recommended = retryable,
+					Safe = retryable,
+					Reason = classification.Reason,
+				},
+				Test = new TestFailure {
+					Name = testName,
+					Assembly = storage,
+					Error = error,
+					Stack = stack,
+					Configurations = configs,
+					ChangedFiles = xref,
+				},
+			});
+		}
 	}
 }
 
@@ -547,7 +575,8 @@ Classification ClassifyTest (int failedConfigs, int passedConfigs, bool retryPas
 	if (!diffAvailable)
 		return new Classification ("unknown", 0.45, "The PR diff was unavailable, so absence of overlap cannot be used as flake evidence.");
 	if (failedConfigs >= 1 && passedConfigs >= 1 && !changedFileOverlap)
-		return new Classification ("known-flaky-test", 0.72, "The failure is isolated while sibling configurations pass; search for an exact tracker.");
+		return new Classification ("unknown", 0.55,
+			"Sibling configurations pass, but a configuration-specific regression is still possible; require an exact tracker or retry/history evidence.");
 	if (failedConfigs >= 1 && changedFileOverlap)
 		return new Classification ("likely-pr-regression", 0.68, "The failing test overlaps the PR diff, but broader reproduction evidence is still missing.");
 	return new Classification ("unknown", 0.45, "The isolated test assertion has no retry, history, or direct PR-causality evidence.");
@@ -796,8 +825,8 @@ string RootFingerprint (List<string> messages, string task, string job)
 	return $"root|{Slug (FirstRootLine (messages))}|{suffix}";
 }
 
-string TestFingerprint (string name, string error)
-	=> $"test|{Slug (name)}|{Slug (FirstErrorToken (error))}";
+string TestFingerprint (string name, string storage, string error)
+	=> $"test|{name}|{storage}|{NormalizeVolatile (FirstLine (error))}";
 
 List<string> SearchTerms (List<string> messages, string task, string job)
 {
