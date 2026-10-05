@@ -73,7 +73,7 @@ public class GenerateNativeAotLibraryLoadAssemblerSources : AndroidTask
 			assemblies.Add (name, item);
 		}
 
-		XAAssemblyResolver resolver = MonoAndroidHelper.MakeResolver (Log, useMarshalMethods: false, targetArch, assemblies, loadDebugSymbols: false);
+		XAAssemblyResolver resolver = MonoAndroidHelper.MakeResolver (Log, targetArch, assemblies, loadDebugSymbols: false);
 		var pinvokeScanner = new PinvokeScanner (Log, debugLogging: false);
 		List<PinvokeScanner.PinvokeEntryInfo> pinfos = pinvokeScanner.Scan (targetArch, resolver, ResolvedAssemblies);
 

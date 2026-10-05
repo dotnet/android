@@ -8,7 +8,7 @@ using Properties = Xamarin.Android.Tasks.Properties;
 namespace Microsoft.Android.Tasks;
 
 /// <summary>
-/// Minimal <see cref="ITaskItem"/> helpers, duplicated
+/// Minimal <see cref="ITaskItem"/> helpers for modern build tasks, duplicated
 /// here to keep this net11.0 assembly self-contained (the full versions live in
 /// <c>ITaskItemExtensions</c> in Xamarin.Android.Build.Tasks).
 /// </summary>

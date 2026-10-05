@@ -101,8 +101,6 @@ namespace Android.RuntimeTests
 		[Category ("TypeMap")]
 		public void JavaToManagedTypeMapLookup_EmitsOnlyForCachePopulation ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			const string jniName = "net/dot/android/test/RuntimeEventSourceMappedPeer";
 			var instance = TrimmableTypeMap.Instance;
 			GetJniProxyCache (instance).TryRemove (jniName, out _);
@@ -129,8 +127,6 @@ namespace Android.RuntimeTests
 		[Category ("TypeMap")]
 		public void ManagedToJavaTypeMapLookup_EmitsOnlyForCachePopulation ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			var managedType = typeof (RuntimeEventSourceMappedPeer);
 			var instance = TrimmableTypeMap.Instance;
 			GetProxyCache (instance).TryRemove (managedType, out _);
@@ -157,8 +153,6 @@ namespace Android.RuntimeTests
 		[Category ("TypeMap")]
 		public void FailedTypeMapLookups_EmitMatchedPairs ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			const string missingJniName = "net/dot/android/test/RuntimeEventSourceMissingType";
 			var missingManagedType = typeof (RuntimeEventSourceTests);
 			var instance = TrimmableTypeMap.Instance;
@@ -189,8 +183,6 @@ namespace Android.RuntimeTests
 		[Category ("TypeMap")]
 		public void ThrowingTypeMapLookups_EmitMatchedPairsAndPropagate ()
 		{
-			AssumeTrimmableTypeMapEnabled ();
-
 			var instance = CreateTrimmableTypeMap (new ThrowingTypeMap ());
 			var eventSourceType = GetRuntimeEventSourceType ();
 			int startEventId = GetConstant<int> (eventSourceType, "TypeMapLookupStartEventId");
@@ -292,13 +284,6 @@ namespace Android.RuntimeTests
 				modifiers: null)
 				?? throw new InvalidOperationException ("Could not find the TrimmableTypeMap constructor.");
 			return (TrimmableTypeMap) constructor.Invoke ([typeMap]);
-		}
-
-		static void AssumeTrimmableTypeMapEnabled ()
-		{
-			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
-			}
 		}
 
 		static T GetConstant<T> (Type type, string name)

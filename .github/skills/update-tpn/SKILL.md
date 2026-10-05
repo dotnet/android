@@ -55,11 +55,11 @@ Read `.gitmodules` for all submodules. Current submodules and their license file
 
 | Submodule | URL | License File |
 |-----------|-----|-------------|
-| Java.Interop | https://github.com/dotnet/java-interop | `external/Java.Interop/LICENSE` |
-| xxHash | https://github.com/Cyan4973/xxHash | `external/xxHash/LICENSE` |
-| constexpr-xxh3 | https://github.com/chys87/constexpr-xxh3 | `external/constexpr-xxh3/LICENSE` |
-| robin-map | https://github.com/xamarin/robin-map (fork of https://github.com/Tessil/robin-map) | `external/robin-map/LICENSE` |
 | android-api-docs | https://github.com/dotnet/android-api-docs | (not a third-party dep) |
+
+#### Vendored Java.Interop (`external/Java.Interop/`)
+Java.Interop is vendored source, not a submodule. Keep its `dotnet/java-interop`
+notice; its license is in `external/Java.Interop/LICENSE`.
 
 #### Vendored Source (`src-ThirdParty/`)
 List contents of `src-ThirdParty/` directory. Current vendored code and license sources:
@@ -97,7 +97,9 @@ The `src/Xamarin.Android.Build.Tasks/Linker/External/` directory contains vendor
 | Linker/External/ | mono/linker | https://github.com/mono/linker/ (MIT) |
 
 #### Native Libraries (from CMakeLists.txt)
-Check `src/native/` CMakeLists.txt files for references to external native code. The submodules above (xxHash, robin-map) are compiled into native libraries.
+Check `src/native/` CMakeLists.txt files and their source/header dependencies for
+references to external native code. Do not assume that every submodule is
+compiled into native libraries; confirm which dependencies are actually used.
 
 #### Android SDK Tools
 These are downloaded and shipped with the SDK:
