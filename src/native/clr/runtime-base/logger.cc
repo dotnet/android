@@ -121,7 +121,6 @@ Logger::init_logging_categories () noexcept
 
 		if (set_category ("assembly", param, param_length, LOG_ASSEMBLY) ||
 		    set_category ("default",  param, param_length, LOG_DEFAULT) ||
-		    set_category ("debugger", param, param_length, LOG_DEBUGGER) ||
 		    set_category ("gc",       param, param_length, LOG_GC) ||
 		    set_category ("gref",     param, param_length, LOG_GREF) ||
 		    set_category ("lref",     param, param_length, LOG_LREF) ||

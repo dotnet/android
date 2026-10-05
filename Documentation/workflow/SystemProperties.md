@@ -22,7 +22,6 @@ comma-separated list of `NAME[=VALUE]` categories:
 * `all` enables all categories.
 * `assembly` logs assembly lookup and loading.
 * `default` enables general runtime messages.
-* `debugger` logs debugger-related native runtime messages.
 * `gc` logs garbage-collection and JNI reference messages.
 * `gref`, `gref=FILE`, and `gref+` enable global JNI reference logging.
 * `lref`, `lref=FILE`, and `lref+` enable local JNI reference logging.

@@ -12,10 +12,6 @@ namespace Android.Runtime {
 			get {return (Categories & LogCategories.Assembly) != 0;}
 		}
 
-		internal static bool LogDebugger {
-			get {return (Categories & LogCategories.Debugger) != 0;}
-		}
-
 		internal static bool LogGC {
 			get {return (Categories & LogCategories.GC) != 0;}
 		}
