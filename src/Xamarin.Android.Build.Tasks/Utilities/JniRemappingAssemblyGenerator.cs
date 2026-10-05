@@ -199,8 +199,13 @@ namespace Xamarin.Android.Tasks
 			return result;
 		}
 
-		static int SignatureSpecificity (string? signature) =>
-			string.IsNullOrEmpty (signature) ? 2 : signature [signature.Length - 1] == ')' ? 1 : 0;
+		static int SignatureSpecificity (string? signature)
+		{
+			if (signature == null || signature.Length == 0) {
+				return 2;
+			}
+			return signature [signature.Length - 1] == ')' ? 1 : 0;
+		}
 
 		static List<FieldType> SortFields (List<JniRemappingFieldReplacement> input)
 		{
